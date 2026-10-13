@@ -6,6 +6,8 @@ Create and revise editable motion graphics in After Effects with plain-language 
 
 Open this repository in Codex and describe the work you want to do. [AGENTS.md](AGENTS.md) routes the task to the right workspace.
 
+Public pre-release information: [product](release/website/index.md), [support](release/website/support.md), [privacy](release/website/privacy.md), and [terms](release/website/terms.md). The [local installation guide](plugin/docs/local-install.md) describes the development package; installation from this public Git source still needs separate-machine verification before a stable release.
+
 - [Product brief](product/brief.md): audience, promise and scope.
 - [PRD](product/prd.md): required v1 behavior and acceptance evidence.
 - [Roadmap](product/roadmap.md): current work and evidence still needed.
@@ -25,6 +27,6 @@ To rebuild, install the locked developer dependencies from plugin/runtime/ with 
 
 ## Repository and installation
 
-This is the canonical source repository. Its initial import preserves the existing package, library and notices. The previous installed Codex copy is a cache snapshot; future releases should be packaged from plugin/ and refreshed through Plugin Creator's supported install workflow. Do not keep editing the earlier prototype directory. The repo's [.agents/plugins/marketplace.json](.agents/plugins/marketplace.json) points a future Git-backed Codex marketplace at plugin/; it has not been published or clean-machine installed.
+This is the canonical public source repository. Its initial import preserves the existing package, library and notices. The previous installed Codex copy is a cache snapshot; future releases should be packaged from plugin/ and refreshed through Plugin Creator's supported install workflow. Do not keep editing the earlier prototype directory. The repo's [.agents/plugins/marketplace.json](.agents/plugins/marketplace.json) points a Git-backed Codex marketplace at plugin/; public-source installation has not yet passed the separate-machine acceptance test.
 
-This scaffold creates a local Git repository. Original-material licensing is documented; public hosting, the second-Mac install, directory submission and publication remain release tasks. See product/decisions.md for settled decisions and open questions.
+Original-material licensing is documented. The separate-Mac install, stable release and any OpenAI directory submission remain separate release tasks. See [product decisions](product/decisions.md) for settled decisions and open questions.
