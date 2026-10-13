@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "after-effects-studio": {
+      "command": "node",
+      "args": [
+        "./scripts/start.mjs"
+      ],
+      "cwd": ".",
+      "env": {
+        "AE_MCP_ENABLE_EVAL": "1"
+      }
+    }
+  }
+}

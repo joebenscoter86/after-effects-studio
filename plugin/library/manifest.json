@@ -1,0 +1,138 @@
+{
+  "version": 1,
+  "documents": [
+    {
+      "id": "motion-language",
+      "title": "The core motion language for every style",
+      "path": "language/core.md",
+      "kind": "foundation",
+      "sha256": "fff52aa6efab3f711ba62c9889adaa11742a9f28630f924c557b45e3cbb0dc7a"
+    },
+    {
+      "id": "production-workflow",
+      "title": "Portable cold-start production workflow",
+      "path": "language/production-workflow.md",
+      "kind": "foundation",
+      "sha256": "9fc76ca7fbcb96dfa066488ecd3929f09281e8343111667509b81f487799d9d8"
+    },
+    {
+      "id": "construction",
+      "title": "Detailed construction timing and gesture grammar",
+      "path": "language/construction.md",
+      "kind": "technique",
+      "sha256": "42041715fe8ccb10785f95a560d9a4cdeed855b428c80a7a3bc3cc67b3c6dd15"
+    },
+    {
+      "id": "camera-continuity",
+      "title": "Camera depth and continuous transitions",
+      "path": "language/camera-continuity.md",
+      "kind": "technique",
+      "sha256": "5615dd309b5f8985b1c7dd20587cde9b4d73e89441c3bad80b6a42bf2837ce09"
+    },
+    {
+      "id": "assets-depth",
+      "title": "Motion-ready art material quality and occlusion",
+      "path": "language/assets-depth.md",
+      "kind": "technique",
+      "sha256": "cd141625ff264e755a0a09db9533a25d9e2957f71ec2ece619ab311d44914d94"
+    },
+    {
+      "id": "type-evidence",
+      "title": "Typography narration and authentic evidence",
+      "path": "language/type-evidence.md",
+      "kind": "technique",
+      "sha256": "18139c1a86d3a288eef90cefc8a439fe5e8f618c8a9b7d9ab6b804c95aec2d74"
+    },
+    {
+      "id": "reference-study",
+      "title": "Measure and transfer a reference mechanism",
+      "path": "language/reference-study.md",
+      "kind": "technique",
+      "sha256": "5bb25d118177688914a5be8eac3123910748e918c4d4f24122530216cb8d8538"
+    },
+    {
+      "id": "failure-atlas",
+      "title": "Production failures causes and corrections",
+      "path": "language/failure-atlas.md",
+      "kind": "review",
+      "sha256": "8fcde0a3f3322d9978fc3dd23445a72056d6b6db6ec3c7b1628fe55788b7d2e7"
+    },
+    {
+      "id": "worked-scenes",
+      "title": "Three detailed source-derived scene studies",
+      "path": "examples/worked-scenes.md",
+      "kind": "examples",
+      "sha256": "8a4fac8e75b2d8a1305c0fdfb2b5b9774e9a7806002cdadfa00c7ee69ce61b2b"
+    },
+    {
+      "id": "brief-template",
+      "title": "Portable scene and production brief",
+      "path": "templates/brief.md",
+      "kind": "template",
+      "sha256": "f402f58dcdebd0d4ae40476bf16b1a6afdae94142f8b3db1a54d251cd7d2746a"
+    },
+    {
+      "id": "design",
+      "title": "Design before motion",
+      "path": "references/design.md",
+      "kind": "guidance",
+      "sha256": "57b855678671680d94978c00718d9cff5dbcd42129b23e18d53a313e846bbc6b"
+    },
+    {
+      "id": "timing",
+      "title": "Timing and motion vocabulary",
+      "path": "references/timing.md",
+      "kind": "guidance",
+      "sha256": "8f8e2f5a6d63fe5db76026d300ac174bf8e6612e39fcdb57b95ae94bc7da9c8f"
+    },
+    {
+      "id": "scripting",
+      "title": "Native AE scripting and build pitfalls",
+      "path": "references/scripting.md",
+      "kind": "guidance",
+      "sha256": "94524887d2c3a3d173d21a9813c424106b37a8785865f744f3016b2c081d1ab9"
+    },
+    {
+      "id": "quality",
+      "title": "Visual review and delivery checks",
+      "path": "references/quality.md",
+      "kind": "guidance",
+      "sha256": "ff4cb24df448c3432d34c6a400837f74204954cca98945ba7c3e7e7dcf9ab2d1"
+    },
+    {
+      "id": "scene-recipes",
+      "title": "Seven explanatory scene recipes",
+      "path": "recipes/recipes.md",
+      "kind": "recipes",
+      "sha256": "c7b11c39046c0ed5eaa97cc50fc60c768beb4c363e94f7015eef2867d346f1fe"
+    },
+    {
+      "id": "joeb-preset",
+      "title": "Optional JoeB paper navy vermilion preset",
+      "path": "presets/joeb.md",
+      "kind": "preset",
+      "sha256": "8c9bf32434bffef528a608dd245bcde29e534effe3dc4ba5846cc39620a5a229"
+    },
+    {
+      "id": "motion-jsx",
+      "title": "Portable brand-neutral motion helpers",
+      "path": "scripts/motion.jsx",
+      "kind": "code",
+      "sha256": "3958a0155433fde1ff54a49426e367930340fa7edb982fd4f0dba066c36c4407"
+    },
+    {
+      "id": "house-jsx",
+      "title": "JoeB rig helpers; requires configured rig and media",
+      "path": "presets/house.jsx",
+      "kind": "code",
+      "sha256": "984da7c19cee91955c7f3d4a3fbc9a2a404449073764542ba4053576330c9c14"
+    },
+    {
+      "id": "joeb-motion-jsx",
+      "title": "JoeB motion helpers; load after house-jsx",
+      "path": "presets/motion.jsx",
+      "kind": "code",
+      "sha256": "a7f956823f261c76440d970e10063b070b5ac6c4deca8d01e1d1c3c908fc5e0d"
+    }
+  ]
+}

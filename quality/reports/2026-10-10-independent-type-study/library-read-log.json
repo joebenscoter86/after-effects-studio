@@ -1,0 +1,50 @@
+[
+  {
+    "id": "motion-language",
+    "path": "library/language/core.md",
+    "sha256": "fff52aa6efab3f711ba62c9889adaa11742a9f28630f924c557b45e3cbb0dc7a",
+    "read_via": "ae_library"
+  },
+  {
+    "id": "production-workflow",
+    "path": "library/language/production-workflow.md",
+    "sha256": "9fc76ca7fbcb96dfa066488ecd3929f09281e8343111667509b81f487799d9d8",
+    "read_via": "ae_library"
+  },
+  {
+    "id": "type-evidence",
+    "path": "library/language/type-evidence.md",
+    "sha256": "18139c1a86d3a288eef90cefc8a439fe5e8f618c8a9b7d9ab6b804c95aec2d74",
+    "read_via": "ae_library"
+  },
+  {
+    "id": "failure-atlas",
+    "path": "library/language/failure-atlas.md",
+    "sha256": "8fcde0a3f3322d9978fc3dd23445a72056d6b6db6ec3c7b1628fe55788b7d2e7",
+    "read_via": "ae_library"
+  },
+  {
+    "id": "brief-template",
+    "path": "library/templates/brief.md",
+    "sha256": "f402f58dcdebd0d4ae40476bf16b1a6afdae94142f8b3db1a54d251cd7d2746a",
+    "read_via": "ae_library"
+  },
+  {
+    "id": "scripting",
+    "path": "library/references/scripting.md",
+    "sha256": "94524887d2c3a3d173d21a9813c424106b37a8785865f744f3016b2c081d1ab9",
+    "read_via": "ae_library"
+  },
+  {
+    "id": "quality",
+    "path": "library/references/quality.md",
+    "sha256": "ff4cb24df448c3432d34c6a400837f74204954cca98945ba7c3e7e7dcf9ab2d1",
+    "read_via": "ae_library"
+  },
+  {
+    "id": "motion-jsx",
+    "path": "library/scripts/motion.jsx",
+    "sha256": "3958a0155433fde1ff54a49426e367930340fa7edb982fd4f0dba066c36c4407",
+    "read_via": "ae_library"
+  }
+]

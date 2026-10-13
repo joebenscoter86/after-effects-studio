@@ -1,0 +1,29 @@
+import { z } from "zod";
+type Entry = {
+    id: string;
+    title: string;
+    path: string;
+    sha256: string;
+    kind: string;
+};
+export declare function readLibrary(document?: string, query?: string, root?: string): {
+    startHere: string[];
+    documents: Entry[];
+    document?: undefined;
+    title?: undefined;
+    kind?: undefined;
+    content?: undefined;
+} | {
+    document: string;
+    title: string;
+    kind: string;
+    content: string;
+    startHere?: undefined;
+    documents?: undefined;
+};
+export declare const libraryTool: import("./define-tool.js").ToolSpec<{
+    document: z.ZodOptional<z.ZodString>;
+    query: z.ZodOptional<z.ZodString>;
+}>;
+export {};
+//# sourceMappingURL=library.d.ts.map

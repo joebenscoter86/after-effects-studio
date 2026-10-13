@@ -1,0 +1,31 @@
+# AFT-17 — three-style portable craft comparison
+
+Current disposition (D-012, 2026-10-10): scoped AFT-17 assessment complete after the [fresh-session three-style comparison](../2026-10-10-portable-craft-comparison/report.md). The provisional/open statements below describe this earlier snapshot. AFT-9 remains a separate release reliability gate.
+
+Status: provisional comparison completed on the development Mac. The three proof-of-concept films have Joe's creative acceptance, but their AFT-9 dependency and a separate fresh-agent-session check remain open. This report does not close AFT-17 or claim the plugin's creative limit has been tested.
+
+## Basis
+
+The source checkout base is `e8b58fd58955866a1da7f31d11c9407947a5fc57` with uncommitted work. AFT-14–AFT-16 were built on macOS with AE 26.5x89 using installed local candidate `0.1.0+codex.20261007203609` (archive SHA-256 `3833850abab3bd8e6baa6073cf6ff6f43c46af87196b5791c6f4adae476300dd`). Each production report records its exact project inspection, before/after AEPs, rendered movies and limitations: [type identity](../2026-10-07-type-identity/report.md), [causal explainer](../2026-10-07-causal-explainer/report.md), and [concept product](../2026-10-07-product-sequence/report.md). The source for the concept product is recorded in [asset preparation](../2026-10-07-product-sequence/asset-prep.md).
+
+| Example | Appearance and visual operation | Revision and difficult passage | Scoped result |
+|---|---|---|---|
+| AFT-14 type identity | Dark typographic field, white wordmark, teal/cobalt accents; line becomes a timeline cursor | Tagline and accent change; guide corridor corrected after rendered overlap review | 17 native layers; paired 7-second AEP/movie deliveries passed reopen, full decode and playback; Joe accepted as proof of concept. |
+| AFT-15 causal explainer | Warm ivory/teal/coral diagram; one signal contacts a gate, which opens for queued dots | Contact moved nine frames later while dependent events retained causal order; label overlap and dot arrival corrected | 18 native layers; paired 8-second AEP/movie deliveries passed reopen, full decode and playback; Joe accepted as proof of concept. |
+| AFT-16 concept product | Warm studio photograph of fictional navy lamp, restrained gold, left-aligned type; guide resolves into the pictured arm | Line/copy and gold revised; Joe identified a guide that bowed away from the arm, then accepted the remeasured v3 handoff | Nine native layers plus one linked generated PNG; 8-second v3 AEP/movie passed reopen, asset/font checks, full decode and playback. |
+
+The contact sheets show different visual subjects, compositions and color relationships. AFT-15 and AFT-16 both use warm grounds, but one is an abstract state diagram and the other is a fixed photographic product study. Native structure and delivery checks establish editability and runtime behavior; Joe's separate judgments establish only that these are useful proof-of-concept examples. They do not establish superior creative quality or release readiness.
+
+## Portability and observed guidance gap
+
+The authored build scripts and delivered AEPs inspected for these runs reference no private Content checkout or personal MASTER rig. The bundled [production workflow](../../../plugin/library/language/production-workflow.md) explicitly routes from the user's request and assets, and the [core language](../../../plugin/library/language/core.md) makes JoeB appearance optional. AFT-16's generated image is a declared external input, not a plugin package dependency. The installed package served the 19 hashed library documents during earlier candidate checks, and this source checkout's offline MCP smoke check passed the handshake, all 19 library reads, default craft routing and traversal rejection after the change below.
+
+AFT-16 revealed one specific guidance miss: a native guide can meet the pictured arm at its ends yet miss its middle. Joe noticed this in the v2 film. The corrected v3 measures points along the source arm, maps them through the AE image transform and checks the overlap at dense intervals. That failure/correction pair was added to the packaged [failure atlas](../../../plugin/library/language/failure-atlas.md), its SHA-256 was regenerated in [the library manifest](../../../plugin/library/manifest.json), and a no-AE geometry/handoff prompt was added as eval 3 in [motion-studio evals](../../../plugin/evals/evals.json). The eval JSON parses with IDs 1–3. The offline smoke check passed after manifest regeneration. The affected AFT-16 demo was rerendered, reopened, decoded and accepted as v3. No broader library rewrite is supported by these three examples.
+
+## Open proof
+
+The demonstrations used fresh isolated MCP clients inside the ongoing development task. That does **not** prove that an independent fresh agent session will discover and use the packaged foundation and relevant techniques without repository context. A separate [AFT-7 fresh-task check](../2026-10-07-installed-first-session-1945/report.md) did prove installed-plugin attachment and a simple create/preview/revise journey on this Mac, but did not test these three styles or full movie craft. The new failure-atlas line and eval are in the source checkout but not in the installed candidate used for the three films; a later package rebuild and independent session should verify that exact payload. AFT-9 remains unresolved, so AFT-14–AFT-16 and their dependent AFT-17 keep their live Linear gates open. AFT-27 is the deliberately harder capability probe before final release review.
+
+## 2026-10-09 fresh-task supplement
+
+The refreshed installed candidate `0.1.0+codex.20261009184954` was used in a genuinely separate, repository-aware Codex task. The [bounded registration study](../2026-10-09-fresh-session-registration/report.md) logs eleven packaged reads, a new six-second native build, a caught/corrected measurement kink, dense overlap inspection, editable reopen and verified movie decode. This supersedes the earlier statement that the repair was not yet exercised from the installed payload. It does not newly validate all three styles or full-speed creative acceptance. AFT-17 and its AFT-9/AFT-14–AFT-16 dependency chain remain open.

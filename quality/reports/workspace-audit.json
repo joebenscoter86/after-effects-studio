@@ -1,0 +1,22 @@
+{
+  "scope": "Approved workspace scaffold, new routing documents, package relocation and Git exclusions. Imported historical/upstream documentation was not comprehensively re-audited.",
+  "status": "pass",
+  "errors": [],
+  "checks": [
+    "Four workspace contexts and all routed entry files exist",
+    "Only documented workspace directories at root",
+    "Root local Markdown links resolve",
+    "External development skills are present on this host",
+    "Expected empty leaves have .gitkeep",
+    "Runtime bundle remains eligible for Git; generated renders/raw reports excluded",
+    "Imported plugin is byte-identical to original; only context.md added",
+    "Plugin manifest and all three skills validate",
+    "Relocated MCP starts from unrelated directory and reads all19hash-verified resources without AE"
+  ],
+  "limitations": [
+    "No native AE mutation or new creative validation in this scaffold run",
+    "No remote Git repository or public release created",
+    "Existing installed Codex cache has not been migrated to this new source",
+    "The byte-identical imported runtime/dist generated output contains pre-existing trailing whitespace; non-generated staged files pass whitespace checks."
+  ]
+}

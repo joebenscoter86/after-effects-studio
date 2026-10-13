@@ -1,0 +1,47 @@
+{
+  "method": "QuickTime uninterrupted normal playback; live screenshots and elapsed-time observations, not continuous audiovisual perception",
+  "v1": [
+    {
+      "ms": 482,
+      "state": "The following is a diff from the previous accessibility tree for Window: \"threshold-v1.mp4\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t43 toggle button Description: play/pause, Value: on\n~\t61 slider (settable, float) Description: timeline, Value: 0.3851203501094091, Details: zero seconds\n~\t\t62 value indicator (settable, float) 0.3851203501094091\nThe focused UI element is 43 toggle button Description: play/pause, Value: on"
+    },
+    {
+      "ms": 2072,
+      "state": "The following is a diff from the previous accessibility tree for Window: \"threshold-v1.mp4\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t61 slider (settable, float) Description: timeline, Value: 1.99562363238512, Details: one second\n~\t\t62 value indicator (settable, float) 1.99562363238512\nThe focused UI element is 43 toggle button Description: play/pause, Value: on"
+    },
+    {
+      "ms": 4066,
+      "state": "The following is a diff from the previous accessibility tree for Window: \"threshold-v1.mp4\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t61 slider (settable, float) Description: timeline, Value: 4.043763676148797, Details: four seconds\n~\t\t62 value indicator (settable, float) 4.043763676148797\nThe focused UI element is 43 toggle button Description: play/pause, Value: on"
+    },
+    {
+      "ms": 6099,
+      "state": "The following is a diff from the previous accessibility tree for Window: \"threshold-v1.mp4\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t61 slider (settable, float) Description: timeline, Value: 6.039387308533916, Details: six seconds\n~\t\t62 value indicator (settable, float) 6.039387308533916\nThe focused UI element is 43 toggle button Description: play/pause, Value: on"
+    },
+    {
+      "ms": 8009,
+      "state": "The following is a diff from the previous accessibility tree for Window: \"threshold-v1.mp4\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t61 slider (settable, float) Description: timeline, Value: 7.964989059080962, Details: seven seconds\n~\t\t62 value indicator (settable, float) 7.964989059080962\nThe focused UI element is 43 toggle button Description: play/pause, Value: on"
+    }
+  ],
+  "v2": [
+    {
+      "ms": 440,
+      "state": "The following is a diff from the previous accessibility tree for Window: \"threshold-v2.mp4\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t43 toggle button Description: play/pause, Value: on\n~\t61 slider (settable, float) Description: timeline, Value: 0.3851203501094091, Details: zero seconds\n~\t\t62 value indicator (settable, float) 0.3851203501094091\nThe focused UI element is 43 toggle button Description: play/pause, Value: on"
+    },
+    {
+      "ms": 2084,
+      "state": "The following is a diff from the previous accessibility tree for Window: \"threshold-v2.mp4\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t61 slider (settable, float) Description: timeline, Value: 2.030634573304158, Details: two seconds\n~\t\t62 value indicator (settable, float) 2.030634573304158\nThe focused UI element is 43 toggle button Description: play/pause, Value: on"
+    },
+    {
+      "ms": 4047,
+      "state": "The following is a diff from the previous accessibility tree for Window: \"threshold-v2.mp4\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t61 slider (settable, float) Description: timeline, Value: 4.008752735229759, Details: four seconds\n~\t\t62 value indicator (settable, float) 4.008752735229759\nThe focused UI element is 43 toggle button Description: play/pause, Value: on"
+    },
+    {
+      "ms": 6014,
+      "state": "The following is a diff from the previous accessibility tree for Window: \"threshold-v2.mp4\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t61 slider (settable, float) Description: timeline, Value: 6.00437636761488, Details: six seconds\n~\t\t62 value indicator (settable, float) 6.00437636761488\nThe focused UI element is 43 toggle button Description: play/pause, Value: on"
+    },
+    {
+      "ms": 8135,
+      "state": "The following is a diff from the previous accessibility tree for Window: \"threshold-v2.mp4\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t43 toggle button Description: play/pause, Value: off\n~\t61 slider (settable, float) Description: timeline, Value: 8, Details: eight seconds\n~\t\t62 value indicator (settable, float) 8\nThe focused UI element is 43 toggle button Description: play/pause, Value: off"
+    }
+  ]
+}

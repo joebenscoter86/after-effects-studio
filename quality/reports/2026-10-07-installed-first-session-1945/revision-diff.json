@@ -1,0 +1,32 @@
+[
+  {
+    "path": "/exportedAt",
+    "before": "Wed Oct 07 2026 12:41:50 GMT-0700",
+    "after": "Wed Oct 07 2026 12:42:18 GMT-0700"
+  },
+  {
+    "path": "/items/0/layers/2/contentsGroup/groups/0/groups/0/groups/1/properties/3/keyframes/1/value/0",
+    "before": 0.33000001311302,
+    "after": 1
+  },
+  {
+    "path": "/items/0/layers/2/contentsGroup/groups/0/groups/0/groups/1/properties/3/keyframes/1/value/1",
+    "before": 0.87000000476837,
+    "after": 0.47999998927116
+  },
+  {
+    "path": "/items/0/layers/2/contentsGroup/groups/0/groups/0/groups/1/properties/3/keyframes/1/value/2",
+    "before": 0.68999999761581,
+    "after": 0.23000000417233
+  },
+  {
+    "path": "/items/0/layers/6/text",
+    "before": "Make room for clarity",
+    "after": "Bring every part into focus"
+  },
+  {
+    "path": "/items/0/layers/6/textGroup/properties/0/value/text",
+    "before": "Make room for clarity",
+    "after": "Bring every part into focus"
+  }
+]

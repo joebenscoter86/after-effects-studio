@@ -1,0 +1,19 @@
+{
+  "propertiesIdentical": true,
+  "layersIdentical": true,
+  "samplesIdentical": true,
+  "errors": [],
+  "comp": {
+    "id": 1,
+    "name": "AFT17 | THRESHOLD | MASTER",
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "duration": 8
+  },
+  "project": {
+    "numItems": 3,
+    "dirty": false,
+    "file": "<local-home>/after-effects-studio/quality/renders/2026-10-10-portable-causal-native/threshold-v1.aep"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "inspected": "2026-10-06",
+  "purpose": "Provenance only; source paths are never runtime dependencies",
+  "sources": [
+    {
+      "path": "production/joeb-motion-playbook.md",
+      "sha256": "1e5e26806b54f548ba27ab3f157b7c8e70c76f7ab282d0f0d427327c1ccde053"
+    },
+    {
+      "path": "production/vo-motion-graphic.md",
+      "sha256": "e836315a3e3625135888ca1898eddaef0accb4b62e14e331e4d8e652fb250e54"
+    },
+    {
+      "path": "production/joeb-star-workflow.md",
+      "sha256": "8f59187a77b4741110e07dd88ac565a9946881edd0f6d1dbbba99b0c439fd50a"
+    },
+    {
+      "path": ".claude/skills/joeb-reel/LEARNINGS.md",
+      "sha256": "26007803077ffb22b7e335dab894e141e7506a933aadc737e830f3f758690a1a"
+    },
+    {
+      "path": "production/after-effects/2026-10-05-house-polish-proto/scripts/b02.jsx",
+      "sha256": "5e430c141f63afb4dcca50b951c62ff4e2901282c89f47b1b42cf084c3fad08c"
+    },
+    {
+      "path": "production/after-effects/2026-10-05-house-polish-proto/scripts/b03.jsx",
+      "sha256": "f7918a31e1078971cd5ffa35a8274bd741d88f1d2dacb8bfb54986ec5ba024da"
+    },
+    {
+      "path": "production/after-effects/2026-10-05-house-polish-proto/mining/FINDINGS.md",
+      "sha256": "57cbad49dcca1db28750a79e0a795078a49d207b8987b08921224229be8c9276"
+    },
+    {
+      "path": "brands/joe-b/production-briefs/2026-08-11-give-it-the-keys/scene-v9/WHY-THIS-WORKED.md",
+      "sha256": "1b2a7a38b436b345d5e152ff0575ef86fbac9a05d142b8188fcc2472a253df39"
+    },
+    {
+      "path": "production/after-effects/house/motion.jsx",
+      "sha256": "a7f956823f261c76440d970e10063b070b5ac6c4deca8d01e1d1c3c908fc5e0d"
+    },
+    {
+      "path": "production/after-effects/house/house.jsx",
+      "sha256": "383516f7e80434cd3a9dd2937e3a4a2a1a52c43ed69eb10118f43d22f126cb37"
+    }
+  ]
+}

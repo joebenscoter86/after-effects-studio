@@ -1,0 +1,17 @@
+# AFT-22 reviewer-material preparation — 2026-10-08
+
+Status: draft improvement only; AFT-22 remains blocked by AFT-17 and AFT-20's live public destinations. No repository, page, directory listing or support channel was published.
+
+The source checkout base is `e8b58fd58955866a1da7f31d11c9407947a5fc57` with uncommitted work. Local candidate `0.1.0+codex.20261008101244` has archive SHA-256 `ec20ebffd4be6de6e7d6104b2d4ab506f476b324974bfc28f919867abe38b06a`; its package validation is in [the payload report](../2026-10-08-portable-package/report.md). This preparation did not connect to AE or assert new visual evidence.
+
+The [reviewer walkthrough](../../../release/submission/reviewer-walkthrough.md) now maps the product promise to verified first-use, three-film and editable-delivery reports, while explicitly naming AFT-9/AFT-17/AFT-18/AFT-27 and public-link gaps. The [privacy draft](../../../release/website/privacy.md) no longer names an obsolete candidate version; its design claims were checked against the current local stdio/IPC architecture and a source search found no explicit HTTP server, fetch or network listener in the plugin's runtime source and launcher. The disclosure still needs exact-candidate and legal review before publication. A link check found zero missing local Markdown targets across 12 release Markdown files.
+
+The source repository now has a [Git marketplace catalog](../../../.agents/plugins/marketplace.json) and [route draft](../../../release/submission/git-marketplace-route.md). Its proposed `jb-technology` selector and source path are internally consistent, but neither the public Git repository nor the install commands are live-tested.
+
+The current [OpenAI package guidance](https://developers.openai.com/plugins/build/plugins) confirms the local marketplace layout used for the second-Mac kit. The [submission field reference](https://developers.openai.com/plugins/deploy/submission) lists HTTPS product, support, privacy and terms URLs for MCP review. Those URL fields are not evidence that a Git-backed local marketplace has been published, or that a local AE controller is eligible for the universal directory. No guessed URL was inserted into the plugin manifest.
+
+Remaining work: public repository/page creation and link verification; a private security/privacy contact route; exact supported-build copy after AFT-18; final screenshots/clips after the harder AFT-27 probe; and final legal/asset/manifest review. Do not change AFT-22 to Done based on these drafts.
+
+A subsequent [source-tree audit](../../../release/submission/public-repo-audit.md) scanned 568 current Git candidate files. It found 34 local home-path occurrences in 14 files, chiefly historical test logs, and no key/token marker under its narrow patterns. These paths and raw evidence need human review or a faithful redacted publication copy before a public push. The [private reporting route](../../../release/submission/security-route.md) now proposes GitHub private vulnerability reporting, which must be enabled, owned and tested on the eventual repository. Neither gate is closed by the draft.
+
+The 2026-10-09 [publication redaction](../2026-10-09-public-source-redaction/report.md), [history-free review snapshot](../2026-10-09-public-source-snapshot/report.md) and [visible asset/notice check](../2026-10-09-public-assets/report.md) advance those preparations. They do not replace final human content, security or legal review, AFT-18, working public URLs, or publication authorization.

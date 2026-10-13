@@ -1,0 +1,655 @@
+{
+  "date": "2026-10-13",
+  "scope": "Approved D-013 Linear and repository planning update only; no runtime, native AE, outreach, public publication or submission performed.",
+  "summary": {
+    "total": 36,
+    "completed": 22,
+    "open": 14,
+    "errors": [],
+    "dependencyEdges": 65,
+    "codexDirectoryIndependent": true,
+    "statuses": {
+      "Backlog": 12,
+      "Done": 22,
+      "In Progress": 1,
+      "In Review": 1
+    }
+  },
+  "projectIndexVerified": true,
+  "newIssues": {
+    "route": "AFT-30",
+    "audit": "AFT-31",
+    "infrastructure": "AFT-32",
+    "lifecycle": "AFT-33",
+    "git-rehearsal": "AFT-34",
+    "directory-prep": "AFT-35",
+    "directory-submit": "AFT-36"
+  },
+  "issues": [
+    {
+      "id": "AFT-1",
+      "title": "Establish requirements, stage gates and repository baseline",
+      "status": "Done",
+      "milestone": "S0 — Build baseline",
+      "blockedBy": [],
+      "blocks": [
+        "AFT-13",
+        "AFT-19",
+        "AFT-2",
+        "AFT-20",
+        "AFT-3",
+        "AFT-4",
+        "AFT-5",
+        "AFT-6"
+      ],
+      "descriptionLength": 3363,
+      "authoritativeExecutionContract": false,
+      "completedContinuationNote": true,
+      "url": "https://linear.app/jkbtech/issue/AFT-1/establish-requirements-stage-gates-and-repository-baseline"
+    },
+    {
+      "id": "AFT-2",
+      "title": "Connect Linear and publish the execution backlog",
+      "status": "Done",
+      "milestone": "S0 — Build baseline",
+      "blockedBy": [
+        "AFT-1"
+      ],
+      "blocks": [
+        "AFT-23"
+      ],
+      "descriptionLength": 4212,
+      "authoritativeExecutionContract": false,
+      "completedContinuationNote": true,
+      "url": "https://linear.app/jkbtech/issue/AFT-2/connect-linear-and-publish-the-execution-backlog"
+    },
+    {
+      "id": "AFT-3",
+      "title": "Resolve the local-controller distribution route",
+      "status": "Done",
+      "milestone": "S1 — First use",
+      "blockedBy": [
+        "AFT-1"
+      ],
+      "blocks": [
+        "AFT-22",
+        "AFT-23"
+      ],
+      "descriptionLength": 4706,
+      "authoritativeExecutionContract": false,
+      "completedContinuationNote": true,
+      "url": "https://linear.app/jkbtech/issue/AFT-3/resolve-the-local-controller-distribution-route"
+    },
+    {
+      "id": "AFT-4",
+      "title": "Choose the v1 platform and host support matrix",
+      "status": "Done",
+      "milestone": "S1 — First use",
+      "blockedBy": [
+        "AFT-1"
+      ],
+      "blocks": [
+        "AFT-18",
+        "AFT-22",
+        "AFT-23"
+      ],
+      "descriptionLength": 4086,
+      "authoritativeExecutionContract": false,
+      "completedContinuationNote": true,
+      "url": "https://linear.app/jkbtech/issue/AFT-4/choose-the-v1-platform-and-host-support-matrix"
+    },
+    {
+      "id": "AFT-5",
+      "title": "Make first-use prerequisite diagnostics actionable",
+      "status": "Done",
+      "milestone": "S1 — First use",
+      "blockedBy": [
+        "AFT-1"
+      ],
+      "blocks": [
+        "AFT-7",
+        "AFT-8"
+      ],
+      "descriptionLength": 3586,
+      "authoritativeExecutionContract": false,
+      "completedContinuationNote": true,
+      "url": "https://linear.app/jkbtech/issue/AFT-5/make-first-use-prerequisite-diagnostics-actionable"
+    },
+    {
+      "id": "AFT-6",
+      "title": "Document and verify supported install, update and cache refresh",
+      "status": "Done",
+      "milestone": "S1 — First use",
+      "blockedBy": [
+        "AFT-1"
+      ],
+      "blocks": [
+        "AFT-21",
+        "AFT-33",
+        "AFT-7"
+      ],
+      "descriptionLength": 4829,
+      "authoritativeExecutionContract": false,
+      "completedContinuationNote": true,
+      "url": "https://linear.app/jkbtech/issue/AFT-6/document-and-verify-supported-install-update-and-cache-refresh"
+    },
+    {
+      "id": "AFT-7",
+      "title": "Complete the guided first-session journey",
+      "status": "Done",
+      "milestone": "S1 — First use",
+      "blockedBy": [
+        "AFT-5",
+        "AFT-6"
+      ],
+      "blocks": [
+        "AFT-11",
+        "AFT-18"
+      ],
+      "descriptionLength": 8290,
+      "authoritativeExecutionContract": false,
+      "completedContinuationNote": true,
+      "url": "https://linear.app/jkbtech/issue/AFT-7/complete-the-guided-first-session-journey"
+    },
+    {
+      "id": "AFT-8",
+      "title": "Explain setup and connection failures with recovery steps",
+      "status": "Done",
+      "milestone": "S1 — First use",
+      "blockedBy": [
+        "AFT-5"
+      ],
+      "blocks": [
+        "AFT-9"
+      ],
+      "descriptionLength": 3797,
+      "authoritativeExecutionContract": false,
+      "completedContinuationNote": true,
+      "url": "https://linear.app/jkbtech/issue/AFT-8/explain-setup-and-connection-failures-with-recovery-steps"
+    },
+    {
+      "id": "AFT-9",
+      "title": "Prove controlled uncertain-write recovery without duplicate mutations",
+      "status": "In Progress",
+      "milestone": "S2 — Safe revision and delivery",
+      "blockedBy": [
+        "AFT-13",
+        "AFT-8"
+      ],
+      "blocks": [
+        "AFT-23"
+      ],
+      "descriptionLength": 6841,
+      "authoritativeExecutionContract": true,
+      "completedContinuationNote": false,
+      "url": "https://linear.app/jkbtech/issue/AFT-9/prove-controlled-uncertain-write-recovery-without-duplicate-mutations"
+    },
+    {
+      "id": "AFT-10",
+      "title": "Verify preservation of existing and unsaved projects",
+      "status": "Done",
+      "milestone": "S2 — Safe revision and delivery",
+      "blockedBy": [
+        "AFT-13"
+      ],
+      "blocks": [
+        "AFT-11",
+        "AFT-23"
+      ],
+      "descriptionLength": 3665,
+      "authoritativeExecutionContract": false,
+      "completedContinuationNote": true,
+      "url": "https://linear.app/jkbtech/issue/AFT-10/verify-preservation-of-existing-and-unsaved-projects"
+    },
+    {
+      "id": "AFT-11",
+      "title": "Verify targeted scene revisions",
+      "status": "Done",
+      "milestone": "S2 — Safe revision and delivery",
+      "blockedBy": [
+        "AFT-10",
+        "AFT-7"
+      ],
+      "blocks": [
+        "AFT-12"
+      ],
+      "descriptionLength": 5102,
+      "authoritativeExecutionContract": false,
+      "completedContinuationNote": true,
+      "url": "https://linear.app/jkbtech/issue/AFT-11/verify-targeted-scene-revisions"
+    },
+    {
+      "id": "AFT-12",
+      "title": "Complete editable AEP and movie delivery",
+      "status": "Done",
+      "milestone": "S2 — Safe revision and delivery",
+      "blockedBy": [
+        "AFT-11"
+      ],
+      "blocks": [
+        "AFT-14",
+        "AFT-15",
+        "AFT-16",
+        "AFT-18"
+      ],
+      "descriptionLength": 4174,
+      "authoritativeExecutionContract": false,
+      "completedContinuationNote": true,
+      "url": "https://linear.app/jkbtech/issue/AFT-12/complete-editable-aep-and-movie-delivery"
+    },
+    {
+      "id": "AFT-13",
+      "title": "Define repeatable quality scenarios and evidence template",
+      "status": "Done",
+      "milestone": "S2 — Safe revision and delivery",
+      "blockedBy": [
+        "AFT-1"
+      ],
+      "blocks": [
+        "AFT-10",
+        "AFT-14",
+        "AFT-15",
+        "AFT-16",
+        "AFT-9"
+      ],
+      "descriptionLength": 3754,
+      "authoritativeExecutionContract": false,
+      "completedContinuationNote": true,
+      "url": "https://linear.app/jkbtech/issue/AFT-13/define-repeatable-quality-scenarios-and-evidence-template"
+    },
+    {
+      "id": "AFT-14",
+      "title": "Finish the type-led identity demonstration",
+      "status": "Done",
+      "milestone": "S3 — Creative proof",
+      "blockedBy": [
+        "AFT-12",
+        "AFT-13"
+      ],
+      "blocks": [
+        "AFT-17"
+      ],
+      "descriptionLength": 5235,
+      "authoritativeExecutionContract": false,
+      "completedContinuationNote": true,
+      "url": "https://linear.app/jkbtech/issue/AFT-14/finish-the-type-led-identity-demonstration"
+    },
+    {
+      "id": "AFT-15",
+      "title": "Finish the causal explainer demonstration",
+      "status": "Done",
+      "milestone": "S3 — Creative proof",
+      "blockedBy": [
+        "AFT-12",
+        "AFT-13"
+      ],
+      "blocks": [
+        "AFT-17"
+      ],
+      "descriptionLength": 5620,
+      "authoritativeExecutionContract": false,
+      "completedContinuationNote": true,
+      "url": "https://linear.app/jkbtech/issue/AFT-15/finish-the-causal-explainer-demonstration"
+    },
+    {
+      "id": "AFT-16",
+      "title": "Finish the original-art concept product demonstration",
+      "status": "Done",
+      "milestone": "S3 — Creative proof",
+      "blockedBy": [
+        "AFT-12",
+        "AFT-13"
+      ],
+      "blocks": [
+        "AFT-17"
+      ],
+      "descriptionLength": 5907,
+      "authoritativeExecutionContract": false,
+      "completedContinuationNote": true,
+      "url": "https://linear.app/jkbtech/issue/AFT-16/finish-the-original-art-concept-product-demonstration"
+    },
+    {
+      "id": "AFT-17",
+      "title": "Evaluate portable craft across all three styles",
+      "status": "Done",
+      "milestone": "S3 — Creative proof",
+      "blockedBy": [
+        "AFT-14",
+        "AFT-15",
+        "AFT-16"
+      ],
+      "blocks": [
+        "AFT-22",
+        "AFT-23",
+        "AFT-27"
+      ],
+      "descriptionLength": 5978,
+      "authoritativeExecutionContract": false,
+      "completedContinuationNote": true,
+      "url": "https://linear.app/jkbtech/issue/AFT-17/evaluate-portable-craft-across-all-three-styles"
+    },
+    {
+      "id": "AFT-18",
+      "title": "Run a separate-Mac install, create, revise and export acceptance test",
+      "status": "Backlog",
+      "milestone": "S4 — Release candidate",
+      "blockedBy": [
+        "AFT-12",
+        "AFT-21",
+        "AFT-4",
+        "AFT-7"
+      ],
+      "blocks": [
+        "AFT-23",
+        "AFT-34"
+      ],
+      "descriptionLength": 6967,
+      "authoritativeExecutionContract": true,
+      "completedContinuationNote": false,
+      "url": "https://linear.app/jkbtech/issue/AFT-18/run-a-separate-mac-install-create-revise-and-export-acceptance-test"
+    },
+    {
+      "id": "AFT-19",
+      "title": "Decide and apply original-material licensing",
+      "status": "Done",
+      "milestone": "S4 — Release candidate",
+      "blockedBy": [
+        "AFT-1"
+      ],
+      "blocks": [
+        "AFT-21",
+        "AFT-23"
+      ],
+      "descriptionLength": 4440,
+      "authoritativeExecutionContract": false,
+      "completedContinuationNote": true,
+      "url": "https://linear.app/jkbtech/issue/AFT-19/decide-and-apply-original-material-licensing"
+    },
+    {
+      "id": "AFT-20",
+      "title": "Finalize publisher, support ownership and publication-ready page content",
+      "status": "In Review",
+      "milestone": "S4 — Release candidate",
+      "blockedBy": [
+        "AFT-1"
+      ],
+      "blocks": [
+        "AFT-23",
+        "AFT-32"
+      ],
+      "descriptionLength": 6907,
+      "authoritativeExecutionContract": true,
+      "completedContinuationNote": false,
+      "url": "https://linear.app/jkbtech/issue/AFT-20/finalize-publisher-support-ownership-and-publication-ready-page"
+    },
+    {
+      "id": "AFT-21",
+      "title": "Build a reproducible and clean release package",
+      "status": "Done",
+      "milestone": "S4 — Release candidate",
+      "blockedBy": [
+        "AFT-19",
+        "AFT-6"
+      ],
+      "blocks": [
+        "AFT-18",
+        "AFT-23",
+        "AFT-33"
+      ],
+      "descriptionLength": 5912,
+      "authoritativeExecutionContract": false,
+      "completedContinuationNote": true,
+      "url": "https://linear.app/jkbtech/issue/AFT-21/build-a-reproducible-and-clean-release-package"
+    },
+    {
+      "id": "AFT-22",
+      "title": "Finalize trustworthy Codex install, listing and reviewer materials",
+      "status": "Backlog",
+      "milestone": "S4 — Release candidate",
+      "blockedBy": [
+        "AFT-17",
+        "AFT-3",
+        "AFT-32",
+        "AFT-4"
+      ],
+      "blocks": [
+        "AFT-23"
+      ],
+      "descriptionLength": 8210,
+      "authoritativeExecutionContract": true,
+      "completedContinuationNote": false,
+      "url": "https://linear.app/jkbtech/issue/AFT-22/finalize-trustworthy-codex-install-listing-and-reviewer-materials"
+    },
+    {
+      "id": "AFT-23",
+      "title": "Freeze and review the exact Codex release candidate",
+      "status": "Backlog",
+      "milestone": "S4 — Release candidate",
+      "blockedBy": [
+        "AFT-10",
+        "AFT-17",
+        "AFT-18",
+        "AFT-19",
+        "AFT-2",
+        "AFT-20",
+        "AFT-21",
+        "AFT-22",
+        "AFT-27",
+        "AFT-29",
+        "AFT-3",
+        "AFT-31",
+        "AFT-32",
+        "AFT-33",
+        "AFT-34",
+        "AFT-4",
+        "AFT-9"
+      ],
+      "blocks": [
+        "AFT-24",
+        "AFT-35"
+      ],
+      "descriptionLength": 7880,
+      "authoritativeExecutionContract": true,
+      "completedContinuationNote": false,
+      "url": "https://linear.app/jkbtech/issue/AFT-23/freeze-and-review-the-exact-codex-release-candidate"
+    },
+    {
+      "id": "AFT-24",
+      "title": "Publish the reviewed Codex Git release after authorization",
+      "status": "Backlog",
+      "milestone": "S5 — Public launch",
+      "blockedBy": [
+        "AFT-23"
+      ],
+      "blocks": [
+        "AFT-25"
+      ],
+      "descriptionLength": 5902,
+      "authoritativeExecutionContract": true,
+      "completedContinuationNote": false,
+      "url": "https://linear.app/jkbtech/issue/AFT-24/publish-the-reviewed-codex-git-release-after-authorization"
+    },
+    {
+      "id": "AFT-25",
+      "title": "Verify the released Codex artifact and close launch handoff",
+      "status": "Backlog",
+      "milestone": "S5 — Public launch",
+      "blockedBy": [
+        "AFT-24"
+      ],
+      "blocks": [],
+      "descriptionLength": 6041,
+      "authoritativeExecutionContract": true,
+      "completedContinuationNote": false,
+      "url": "https://linear.app/jkbtech/issue/AFT-25/verify-the-released-codex-artifact-and-close-launch-handoff"
+    },
+    {
+      "id": "AFT-26",
+      "title": "Fix color keyframe easing on native AE properties",
+      "status": "Done",
+      "milestone": "S2 — Safe revision and delivery",
+      "blockedBy": [],
+      "blocks": [],
+      "descriptionLength": 3531,
+      "authoritativeExecutionContract": false,
+      "completedContinuationNote": true,
+      "url": "https://linear.app/jkbtech/issue/AFT-26/fix-color-keyframe-easing-on-native-ae-properties"
+    },
+    {
+      "id": "AFT-27",
+      "title": "Probe the plugin's creative and control limits",
+      "status": "Done",
+      "milestone": "S3 — Creative proof",
+      "blockedBy": [
+        "AFT-17"
+      ],
+      "blocks": [
+        "AFT-23"
+      ],
+      "descriptionLength": 6002,
+      "authoritativeExecutionContract": false,
+      "completedContinuationNote": true,
+      "url": "https://linear.app/jkbtech/issue/AFT-27/probe-the-plugins-creative-and-control-limits"
+    },
+    {
+      "id": "AFT-28",
+      "title": "Keep ae_version_info read-only on a clean AE project",
+      "status": "Done",
+      "milestone": null,
+      "blockedBy": [],
+      "blocks": [],
+      "descriptionLength": 3149,
+      "authoritativeExecutionContract": false,
+      "completedContinuationNote": true,
+      "url": "https://linear.app/jkbtech/issue/AFT-28/keep-ae-version-info-read-only-on-a-clean-ae-project"
+    },
+    {
+      "id": "AFT-29",
+      "title": "Report render completion only when a new output file exists",
+      "status": "Done",
+      "milestone": null,
+      "blockedBy": [],
+      "blocks": [
+        "AFT-23"
+      ],
+      "descriptionLength": 6061,
+      "authoritativeExecutionContract": false,
+      "completedContinuationNote": true,
+      "url": "https://linear.app/jkbtech/issue/AFT-29/report-render-completion-only-when-a-new-output-file-exists"
+    },
+    {
+      "id": "AFT-30",
+      "title": "Confirm OpenAI's review route for the local AE controller",
+      "status": "Backlog",
+      "milestone": "Directory — local-controller eligibility and review",
+      "blockedBy": [],
+      "blocks": [
+        "AFT-35"
+      ],
+      "descriptionLength": 5574,
+      "authoritativeExecutionContract": true,
+      "completedContinuationNote": false,
+      "url": "https://linear.app/jkbtech/issue/AFT-30/confirm-openais-review-route-for-the-local-ae-controller"
+    },
+    {
+      "id": "AFT-31",
+      "title": "Complete publication source, asset and license review",
+      "status": "Backlog",
+      "milestone": "S4 — Release candidate",
+      "blockedBy": [],
+      "blocks": [
+        "AFT-23",
+        "AFT-32"
+      ],
+      "descriptionLength": 5452,
+      "authoritativeExecutionContract": true,
+      "completedContinuationNote": false,
+      "url": "https://linear.app/jkbtech/issue/AFT-31/complete-publication-source-asset-and-license-review"
+    },
+    {
+      "id": "AFT-32",
+      "title": "Publish reviewed repository and support pages after authorization",
+      "status": "Backlog",
+      "milestone": "S4 — Release candidate",
+      "blockedBy": [
+        "AFT-20",
+        "AFT-31"
+      ],
+      "blocks": [
+        "AFT-22",
+        "AFT-23",
+        "AFT-34"
+      ],
+      "descriptionLength": 6710,
+      "authoritativeExecutionContract": true,
+      "completedContinuationNote": false,
+      "url": "https://linear.app/jkbtech/issue/AFT-32/publish-reviewed-repository-and-support-pages-after-authorization"
+    },
+    {
+      "id": "AFT-33",
+      "title": "Verify update, uninstall and rollback preserve user work",
+      "status": "Backlog",
+      "milestone": "S4 — Release candidate",
+      "blockedBy": [
+        "AFT-21",
+        "AFT-6"
+      ],
+      "blocks": [
+        "AFT-23"
+      ],
+      "descriptionLength": 5206,
+      "authoritativeExecutionContract": true,
+      "completedContinuationNote": false,
+      "url": "https://linear.app/jkbtech/issue/AFT-33/verify-update-uninstall-and-rollback-preserve-user-work"
+    },
+    {
+      "id": "AFT-34",
+      "title": "Rehearse installation from the actual public Git marketplace",
+      "status": "Backlog",
+      "milestone": "S4 — Release candidate",
+      "blockedBy": [
+        "AFT-18",
+        "AFT-32"
+      ],
+      "blocks": [
+        "AFT-23"
+      ],
+      "descriptionLength": 5781,
+      "authoritativeExecutionContract": true,
+      "completedContinuationNote": false,
+      "url": "https://linear.app/jkbtech/issue/AFT-34/rehearse-installation-from-the-actual-public-git-marketplace"
+    },
+    {
+      "id": "AFT-35",
+      "title": "Prepare the route-specific OpenAI directory candidate and reviewer cases",
+      "status": "Backlog",
+      "milestone": "Directory — local-controller eligibility and review",
+      "blockedBy": [
+        "AFT-23",
+        "AFT-30"
+      ],
+      "blocks": [
+        "AFT-36"
+      ],
+      "descriptionLength": 6398,
+      "authoritativeExecutionContract": true,
+      "completedContinuationNote": false,
+      "url": "https://linear.app/jkbtech/issue/AFT-35/prepare-the-route-specific-openai-directory-candidate-and-reviewer"
+    },
+    {
+      "id": "AFT-36",
+      "title": "Submit, track review and publish the approved OpenAI listing",
+      "status": "Backlog",
+      "milestone": "Directory — local-controller eligibility and review",
+      "blockedBy": [
+        "AFT-35"
+      ],
+      "blocks": [],
+      "descriptionLength": 5637,
+      "authoritativeExecutionContract": true,
+      "completedContinuationNote": false,
+      "url": "https://linear.app/jkbtech/issue/AFT-36/submit-track-review-and-publish-the-approved-openai-listing"
+    }
+  ]
+}
+

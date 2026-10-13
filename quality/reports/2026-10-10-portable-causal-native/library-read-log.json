@@ -1,0 +1,44 @@
+[
+  {
+    "document": "motion-language",
+    "tool": "mcp__after_effects_studio__ae_library",
+    "ok": true,
+    "title": "The core motion language for every style"
+  },
+  {
+    "document": "production-workflow",
+    "tool": "mcp__after_effects_studio__ae_library",
+    "ok": true,
+    "title": "Portable cold-start production workflow"
+  },
+  {
+    "document": "brief-template",
+    "tool": "mcp__after_effects_studio__ae_library",
+    "ok": true,
+    "title": "Portable scene and production brief"
+  },
+  {
+    "document": "construction",
+    "tool": "mcp__after_effects_studio__ae_library",
+    "ok": true,
+    "title": "Detailed construction timing and gesture grammar"
+  },
+  {
+    "document": "quality",
+    "tool": "mcp__after_effects_studio__ae_library",
+    "ok": true,
+    "title": "Visual review and delivery checks"
+  },
+  {
+    "document": "failure-atlas",
+    "tool": "mcp__after_effects_studio__ae_library",
+    "ok": true,
+    "title": "Production failures causes and corrections"
+  },
+  {
+    "document": "scripting",
+    "tool": "mcp__after_effects_studio__ae_library",
+    "ok": true,
+    "title": "Native AE scripting and build pitfalls"
+  }
+]

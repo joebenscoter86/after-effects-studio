@@ -1,0 +1,34 @@
+{
+  "name": "after-effects-studio",
+  "version": "0.1.0+codex.20261011211837",
+  "description": "Native After Effects control guided by a detailed, production-derived motion language for any brand or style.",
+  "author": {
+    "name": "JB Technology LLC"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "After Effects Studio",
+    "shortDescription": "Create polished, editable motion in After Effects.",
+    "longDescription": "Create editable motion in local After Effects using a detailed production-derived craft system: visual operations, progressive construction, camera continuity, material quality, typography, measured timing, worked scenes and rendered review. Your own brand and style; all guidance included.",
+    "developerName": "JB Technology LLC",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Create a polished motion graphic in After Effects.",
+      "Inspect my AE project and improve its motion.",
+      "Create a motion graphic using my brand colors and visual style."
+    ],
+    "brandColor": "#14213D"
+  },
+  "mcpServers": "./.mcp.json",
+  "keywords": [
+    "after-effects",
+    "motion-graphics",
+    "animation",
+    "native",
+    "design"
+  ]
+}

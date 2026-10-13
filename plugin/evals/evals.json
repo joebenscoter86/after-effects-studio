@@ -1,0 +1,43 @@
+{
+  "skill_name": "motion-studio",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create a 9-second 16:9 native After Effects motion graphic explaining a fictional inbox review: six requests enter, four are deferred, and two approved requests carry into the next workspace. Use deep aubergine, warm ivory and electric mint, with an intentional geometric document-diagram style. No presenter, supplied media, voiceover or external art. Make the changing state easy to follow and the final result readable. Deliver an editable ES3 build function body for a new uniquely named 1280x720 composition plus the production brief. The build must not save, close, clear or switch the current project; it may add only its own comp, layers and assets. Return created comp IDs. Do not actually operate AE during this test.",
+      "expected_output": "Detailed transferable choreography; distinct palette; causal selection and matched carry; readable after-state; standalone native JSX without private rig/files.",
+      "files": [],
+      "assertions": [
+        "The authored build specifies a uniquely named 1280x720 composition lasting 9 seconds and includes a returned comp ID.",
+        "The build preserves the open project and has no dependency on private media, a personal rig, or the Content repository.",
+        "Six identifiable requests reach an explicit four-deferred/two-approved result, with the same two approved objects carried forward.",
+        "The brief and implementation describe operation-specific construction, causal action and a readable resolved hold with concrete timing.",
+        "The output follows the requested aubergine, ivory and mint look rather than imposing JoeB appearance.",
+        "The handoff distinguishes authored plans and code from unperformed AE execution and visual verification."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I want an 8-second luxury launch animation for a ceramic coffee grinder: dramatic black and burnt-orange lighting, a slow move around the real product, then the model name and price. I only have After Effects open. I have not provided a product image, 3D model, exact name or price, and no image-generation tool is available in this test. Give me a concrete production plan and identify what you need before a faithful final can be made.",
+      "expected_output": "Uses craft beyond house appearance; deliberate camera/material plan; explicitly requests real product and factual inputs; no fake premium blockout presented as final.",
+      "files": [],
+      "assertions": [
+        "The plan identifies missing authentic product visuals, exact model name and price as inputs to a faithful final.",
+        "The plan does not claim a true orbit from a single flat image or label a geometric substitute a finished faithful product.",
+        "The plan specifies an 8-second sequence with camera purpose, lighting/material direction and readable title/price hold.",
+        "The plan stays within the available tools and does not claim generated assets, AE execution or rendered verification."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "A fixed 1344x752 product image is centered at [960,540] and scaled to 146% in a 1920x1080 After Effects comp. A physical arm runs through these measured image-space centerline points, base to head: [1012,470], [977,325], [940,200], [830,115]. Design a native shape guide that draws along the arm before the image reveals. Give the mapped comp-space points, explain how you will keep the curve registered if the image scale changes slightly during the handoff, and specify the rendered frames needed to inspect the guide/image overlap. Do not operate AE or claim a visual pass; this is an authored plan only.",
+      "expected_output": "Maps measured source geometry through the image transform, constructs a curve through intermediate points rather than matching endpoints only, and leaves visual registration pending rendered overlap inspection.",
+      "files": [],
+      "assertions": [
+        "The mapped comp-space points are approximately [1456,677], [1405,466], [1351,283], [1191,159], in base-to-head order.",
+        "The guide path follows the measured intermediate points; matching only the endpoints is insufficient.",
+        "The plan accounts for the image layer's changing scale when setting the guide or tests the maximum expected registration error.",
+        "The proposed review uses dense rendered frames where the line and image overlap and does not claim that unrendered geometry already looks aligned."
+      ]
+    }
+  ]
+}

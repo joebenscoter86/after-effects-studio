@@ -1,0 +1,77 @@
+{
+  "algorithm": "SHA-256",
+  "artifacts": {
+    "threshold-v1.aep": {
+      "bytes": 614313,
+      "sha256": "b5f5da48bc9b3502778b5916d09c12b38ace413bb8299049aed29340d03d27a7"
+    },
+    "threshold-v1.mov": {
+      "bytes": 118626580,
+      "sha256": "4d5140aa65c4fea41408e67faeb1a322ee1a74bbde321762935acb1b8e9ada81"
+    },
+    "threshold-v1.mp4": {
+      "bytes": 3122123,
+      "sha256": "1d6c21366ef2bdb302caef9f57cd7d55751a29dea073fde8f501f02c0380c04a"
+    },
+    "threshold-v2.aep": {
+      "bytes": 659965,
+      "sha256": "321cc879a5ff9432775e7c594cbc19d04c0182b50a0f6c8abdb20436ec3a527a"
+    },
+    "threshold-v2.mov": {
+      "bytes": 118634148,
+      "sha256": "e90148edfe4b462c4836019a665ea14fcbf9b769b402c12ddddbeda5e5b88563"
+    },
+    "threshold-v2.mp4": {
+      "bytes": 3179949,
+      "sha256": "57e77f06fee04623864c0148fcf4e2ddf2d3e52dfb410b5caa247d66d00451dc"
+    },
+    "v1-broad-sheet.jpg": {
+      "bytes": 390916,
+      "sha256": "7a1af4c1358c663278fc4200006d41d220068580a2d4d403d417c170c3f38141"
+    },
+    "v1-contact-sheet.jpg": {
+      "bytes": 304665,
+      "sha256": "d698aceb8361cf44d18a7f87a3c5bffd6ee6dcf758240463e97e67c3c1436fac"
+    },
+    "v1-final-initial.png": {
+      "bytes": 121138,
+      "sha256": "7c231ee42c78e98e7210078ad12a30511ea8a46c242cc385a88f04fc8db0d446"
+    },
+    "v1-opening-sheet.jpg": {
+      "bytes": 409017,
+      "sha256": "c7d218e9309ab4eb27ea97c61f81e750eaf79213c6cbd9927dd6136e23f97b2f"
+    },
+    "v1-threshold-sheet.jpg": {
+      "bytes": 313299,
+      "sha256": "54c3715c6d8c74c1432b27197f63413d78bbfb1db995590cceb349ace6cb43f8"
+    },
+    "v1-travel-sheet.jpg": {
+      "bytes": 312663,
+      "sha256": "cea7ee0e0a5243483f6ce353b06d5dda6e1fbd72c8c9090cb52de23665028fd6"
+    },
+    "v2-broad-sheet.jpg": {
+      "bytes": 388588,
+      "sha256": "f8c411b4d205b6b3b2b07125c814beba63e6bdb1c94914964c13374bf5a54370"
+    },
+    "v2-contact-sheet.jpg": {
+      "bytes": 310131,
+      "sha256": "404645149d19294ba0e616c118ae15aca4c8136d001d72ac87802dfda2e84c15"
+    },
+    "v2-opening-sheet.jpg": {
+      "bytes": 416152,
+      "sha256": "4b7bb3e4fd32d95cc942af1ad8f62da8520e04b90dc7c5d3194c1c606b3b4846"
+    },
+    "v2-reopened-final.png": {
+      "bytes": 121130,
+      "sha256": "d3d366b489d2a0185522303dc4491696c9e9c801c129bf9f3f85ba0af514dd66"
+    },
+    "v2-threshold-sheet.jpg": {
+      "bytes": 313487,
+      "sha256": "907ec834f275b6557e3346d1511d230b15b839ef99210c6d713e1cd82b551fd4"
+    },
+    "v2-travel-sheet.jpg": {
+      "bytes": 314829,
+      "sha256": "06d174c8f75e9ad1873389c767893cc4592c48f2a6798caa681c9b6a3d843535"
+    }
+  }
+}

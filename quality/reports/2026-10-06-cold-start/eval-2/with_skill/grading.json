@@ -1,0 +1,43 @@
+{
+  "expectations": [
+    {
+      "text": "The plan identifies missing authentic product visuals, exact model name and price as inputs to a faithful final.",
+      "passed": true,
+      "evidence": "plan.md requests authentic product footage or faithful3D geometry, exact model name, price and currency."
+    },
+    {
+      "text": "The plan does not claim a true orbit from a single flat image or label a geometric substitute a finished faithful product.",
+      "passed": true,
+      "evidence": "plan.md distinguishes real orbit/geometry from a still-based push and clearly labels any blockout; no faithful final is claimed."
+    },
+    {
+      "text": "The plan specifies an 8-second sequence with camera purpose, lighting/material direction and readable title/price hold.",
+      "passed": true,
+      "evidence": "plan.md supplies an eight-second phased shot table, deliberate slow orbit and ceramic lighting direction, followed by a settled name/price hold."
+    },
+    {
+      "text": "The plan stays within the available tools and does not claim generated assets, AE execution or rendered verification.",
+      "passed": true,
+      "evidence": "plan.md states missing tools/assets and that no AE operation or rendering occurred."
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "total": 4,
+    "pass_rate": 1
+  },
+  "eval_feedback": {
+    "suggestions": [
+      "These assertions grade authoring completeness only. The separate native run failed before correction, so passing does not establish usable JSX or premium motion.",
+      "Both versions pass these simple prompts; more varied rendered scenes and human taste review are required to measure quality improvement."
+    ]
+  },
+  "claims": [
+    {
+      "claim": "Native render readiness",
+      "verified": false,
+      "evidence": "Not part of the agent authoring scope. Updated build failed native tangents; parent validation and corrections are recorded separately."
+    }
+  ]
+}

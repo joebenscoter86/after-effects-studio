@@ -1,0 +1,53 @@
+{
+  "expectations": [
+    {
+      "text": "The authored build specifies a uniquely named 1280x720 composition lasting 9 seconds and includes a returned comp ID.",
+      "passed": true,
+      "evidence": "build.jsx declares 1280x720/9s/30fps, timestamp-random name and compIds:[comp.id]. This checks authored code, not successful host execution."
+    },
+    {
+      "text": "The build preserves the open project and has no dependency on private media, a personal rig, or the Content repository.",
+      "passed": true,
+      "evidence": "build.jsx has no project save/close/open/clear, external file import or rig dependency; only new native comp/layers (baseline also creates owned null sources)."
+    },
+    {
+      "text": "Six identifiable requests reach an explicit four-deferred/two-approved result, with the same two approved objects carried forward.",
+      "passed": true,
+      "evidence": "build.jsx retains R02/R05 and moves the original document layers into the next workspace; four other documents move into the deferred surface."
+    },
+    {
+      "text": "The brief and implementation describe operation-specific construction, causal action and a readable resolved hold with concrete timing.",
+      "passed": true,
+      "evidence": "brief.md and build.jsx specify outline/fill/fold/ID/rule construction, exact scanner crossing triggers and a resolved f190-269 hold."
+    },
+    {
+      "text": "The output follows the requested aubergine, ivory and mint look rather than imposing JoeB appearance.",
+      "passed": true,
+      "evidence": "Color constants and brief follow aubergine/ivory/mint; neither uses the optional house appearance."
+    },
+    {
+      "text": "The handoff distinguishes authored plans and code from unperformed AE execution and visual verification.",
+      "passed": true,
+      "evidence": "handoff.md explicitly discloses no AE execution or render/playback validation in the authoring test."
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1
+  },
+  "eval_feedback": {
+    "suggestions": [
+      "These assertions grade authoring completeness only. The separate native run failed before correction, so passing does not establish usable JSX or premium motion.",
+      "Both versions pass these simple prompts; more varied rendered scenes and human taste review are required to measure quality improvement."
+    ]
+  },
+  "claims": [
+    {
+      "claim": "Native render readiness",
+      "verified": false,
+      "evidence": "Not part of the agent authoring scope. Updated build failed native tangents; parent validation and corrections are recorded separately."
+    }
+  ]
+}

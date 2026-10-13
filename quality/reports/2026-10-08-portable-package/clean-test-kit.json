@@ -1,0 +1,8 @@
+{
+  "kit": "<developer-home>/after-effects-studio/release/packages/after-effects-studio-clean-test-0.1.0+codex.20261008101244.zip",
+  "kit_sha256": "32a8c59254eed03a7816aaf84e931ecb492ab591fe552d86f7d1ba784e7f8b84",
+  "source_archive_sha256": "ec20ebffd4be6de6e7d6104b2d4ab506f476b324974bfc28f919867abe38b06a",
+  "plugin_version": "0.1.0+codex.20261008101244",
+  "plugin_file_count": 54,
+  "kit_file_count": 57
+}

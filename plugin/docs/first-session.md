@@ -1,0 +1,13 @@
+# Your first motion scene
+
+This is the guided local Codex desktop journey for the initial macOS/After Effects 2026 release scope. Use the [installation guide](local-install.md) to add the plugin and start a new Codex task. Public Git install steps are still being verified; the current `personal` source applies only to the development Mac.
+
+1. Open After Effects and the project you intend to use. An empty project is fine. Leave any unrelated work open; the plugin must inspect it before making changes. Run `node scripts/doctor.mjs` from the installed plugin folder if startup reports a missing prerequisite. A passing doctor means the files and application path were found, not that AE permissions work.
+2. In the new Codex task, say: “Use After Effects Studio. Check the AE version and current project read-only, then tell me whether the connection and required permissions work. Do not change the project yet.” If the connection fails, follow [connection and permission recovery](connection-recovery.md). A generic failure does not prove which permission was denied.
+3. Give the scene brief: “Create an editable five-second 16:9 scene about [subject]. The viewer should understand [takeaway]. Use [style/palette], and use only these assets: [files or none]. Inspect this exact project before writing, keep unrelated material intact, show me a rendered preview, and make a named composition for your work.” For a first try with no assets, an intentionally geometric explanation is suitable. A physical product or authentic brand claim needs real permitted artwork.
+4. Review the preview, then ask for one concrete revision, such as: “Change the main line to [exact copy] and the accent to [color]. Keep the rest of the scene and all unrelated project items intact. Show before/after rendered frames.” The agent should revise the owned comp rather than create a duplicate.
+5. Ask for the comp name, what native layers changed, the preview locations and any unperformed checks. Saving an AEP and exporting a complete movie are separate delivery steps; request them when wanted. Do not assume a sampled frame proves playback quality.
+
+If the agent reports a timeout after a possible write, ask it to inspect the actual AE project and identify any owned items before retrying. Do not repeat the same creation request blindly. A saved or unsaved existing project is real work; do not clear, close or overwrite it for a test.
+
+The plugin bundles its runtime and motion library. The creator should not need a Content checkout, private rig, paid asset service, Git clone, npm install, source build or manual MCP configuration. One clean second-Mac journey will verify the eventual public guide; this development guide is not yet novice-user acceptance evidence.

@@ -1,0 +1,3400 @@
+{
+  "date": "2026-10-07",
+  "timezone": "America/Los_Angeles",
+  "inventory": [
+    {
+      "name": "mcp__after_effects_studio__ae_catalog",
+      "description": "After Effects Studio: local native AE control with a detailed production-derived motion language for any brand or style. Before designing or building motion, read ae_library documents motion-language, production-workflow and brief-template; load construction, camera-continuity, assets-depth, type-evidence and worked-scenes as relevant. This craft foundation is the default for ALL styles, not an optional JoeB preset. Everything required is bundled; do not require the original repo, personal rig or assets. Inspect ae_context and discover exact operations with ae_catalog. eval.run enables custom ES3. A batch is not transactional; inspect failures or uncertain completion before retrying. Render and visually inspect actual artifacts, and distinguish technical success from visual quality. The paper/navy/vermilion JoeB appearance is optional.\n\nDiscover available atomic operations for ae_do. Without args: all categories with their operation names. With a category: detailed params per operation. Only operations this server will actually execute are listed. This tool is part of plugin `After Effects Studio`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__after_effects_studio__ae_catalog(args: {\n  // Filter by category. Omit to list all categories with operation counts, then drill into a specific category.\n  category?: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__after_effects_studio__ae_comp_info",
+      "description": "After Effects Studio: local native AE control with a detailed production-derived motion language for any brand or style. Before designing or building motion, read ae_library documents motion-language, production-workflow and brief-template; load construction, camera-continuity, assets-depth, type-evidence and worked-scenes as relevant. This craft foundation is the default for ALL styles, not an optional JoeB preset. Everything required is bundled; do not require the original repo, personal rig or assets. Inspect ae_context and discover exact operations with ae_catalog. eval.run enables custom ES3. A batch is not transactional; inspect failures or uncertain completion before retrying. Render and visually inspect actual artifacts, and distinguish technical success from visual quality. The paper/navy/vermilion JoeB appearance is optional.\n\nDetailed comp info: size, fps, duration, work area, motion blur, layer summaries. Pass a comp name or item id — or an ARRAY of them to fetch several comps in one call. This tool is part of plugin `After Effects Studio`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__after_effects_studio__ae_comp_info(args: {\n  // After Effects instance to address for this call, when several are running (AfterFX.exe -m): an instance id (its AE_MCP_INSTANCE at launch, or the `name` given to instance.start) or the name of the project file it has open. Omit to use this server's default (AE_MCP_INSTANCE, else the single live instance). ae_context and ae_do instance.list show what is live.\n  instance?: string;\n  // Composition name (exact match) or numeric item id — or an array of either to batch several comps into one round trip. If you don't know any, call ae_project_info first.\n  nameOrId: string | number | Array<string | number>;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__after_effects_studio__ae_context",
+      "description": "After Effects Studio: local native AE control with a detailed production-derived motion language for any brand or style. Before designing or building motion, read ae_library documents motion-language, production-workflow and brief-template; load construction, camera-continuity, assets-depth, type-evidence and worked-scenes as relevant. This craft foundation is the default for ALL styles, not an optional JoeB preset. Everything required is bundled; do not require the original repo, personal rig or assets. Inspect ae_context and discover exact operations with ae_catalog. eval.run enables custom ES3. A batch is not transactional; inspect failures or uncertain completion before retrying. Render and visually inspect actual artifacts, and distinguish technical success from visual quality. The paper/navy/vermilion JoeB appearance is optional.\n\nAmbient context: project state, active comp, selected layers, item list, AE.* helpers, ES3 rules, and the undo contract (every call = one auto undo group). Call at session start; then rely on ae_do response context. This tool is part of plugin `After Effects Studio`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__after_effects_studio__ae_context(args: {\n  // After Effects instance to address for this call, when several are running (AfterFX.exe -m): an instance id (its AE_MCP_INSTANCE at launch, or the `name` given to instance.start) or the name of the project file it has open. Omit to use this server's default (AE_MCP_INSTANCE, else the single live instance). ae_context and ae_do instance.list show what is live.\n  instance?: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__after_effects_studio__ae_do",
+      "description": "After Effects Studio: local native AE control with a detailed production-derived motion language for any brand or style. Before designing or building motion, read ae_library documents motion-language, production-workflow and brief-template; load construction, camera-continuity, assets-depth, type-evidence and worked-scenes as relevant. This craft foundation is the default for ALL styles, not an optional JoeB preset. Everything required is bundled; do not require the original repo, personal rig or assets. Inspect ae_context and discover exact operations with ae_catalog. eval.run enables custom ES3. A batch is not transactional; inspect failures or uncertain completion before retrying. Render and visually inspect actual artifacts, and distinguish technical success from visual quality. The paper/navy/vermilion JoeB appearance is optional.\n\nExecute an atomic operation by name (from ae_catalog). Arguments are validated against the operation's declared parameters before anything reaches AE. Have more than one operation to run? Wrap them in ONE batch.run instead of several ae_do calls — read/verify steps (comp.info, layer.info, render.frame) can ride in the same batch. Every call is automatically wrapped in ONE undo group: a single Ctrl+Z (or project.undo) reverts the entire call, and a batch.run counts as one call. Never call app.beginUndoGroup/endUndoGroup in eval.run code — the wrapper already did. The exception is undo/redo itself (project.undo, command.execute id 16/2035): those run outside the group and cannot ride inside a batch.run. Response includes ambient context (active comp, selected layers, project state) at zero extra round trips. Example: ae_do({ operation: 'keyframe.add', args: { comp: 'Main', layer: 1, property: ['Transform','Position'], time: 2, value: [960,540] } }). This tool is part of plugin `After Effects Studio`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__after_effects_studio__ae_do(args: {\n  // Arguments for the operation. Validated against ae_catalog's declared params: missing required args, wrong types, and unknown keys are rejected before AE is contacted. Omit for zero-param operations.\n  args?: { [key: string]: unknown; };\n  // After Effects instance to address for this call, when several are running (AfterFX.exe -m): an instance id (its AE_MCP_INSTANCE at launch, or the `name` given to instance.start) or the name of the project file it has open. Omit to use this server's default (AE_MCP_INSTANCE, else the single live instance). ae_context and ae_do instance.list show what is live.\n  instance?: string;\n  // Operation name from ae_catalog (e.g. 'layer.create_solid', 'keyframe.add').\n  operation: string;\n  // Per-call timeout in milliseconds (default 60000). Raise for long operations like render.start or big batch.run calls.\n  timeoutMs?: number;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__after_effects_studio__ae_layer_info",
+      "description": "After Effects Studio: local native AE control with a detailed production-derived motion language for any brand or style. Before designing or building motion, read ae_library documents motion-language, production-workflow and brief-template; load construction, camera-continuity, assets-depth, type-evidence and worked-scenes as relevant. This craft foundation is the default for ALL styles, not an optional JoeB preset. Everything required is bundled; do not require the original repo, personal rig or assets. Inspect ae_context and discover exact operations with ae_catalog. eval.run enables custom ES3. A batch is not transactional; inspect failures or uncertain completion before retrying. Render and visually inspect actual artifacts, and distinguish technical success from visual quality. The paper/navy/vermilion JoeB appearance is optional.\n\nFull layer info: transform, effects, masks, text, shape contents, keyframes (incl. interpolation names and bezier ease speed/influence). layerIndex accepts one index, an ARRAY of indices, or 'all' — auditing a whole comp is one call. detail:'summary' drops properties still at their default value (unkeyed, no expression) — start there for audits; the full tree is often 100KB+ per comp. Set includeProperties=false to skip the property tree walk entirely. This tool is part of plugin `After Effects Studio`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__after_effects_studio__ae_layer_info(args: {\n  // Composition name (exact match) or numeric item id.\n  compNameOrId: string | number;\n  // 'summary' omits properties still at their default value (no keyframes, no expression, never touched) — typically 5-10x smaller. Group skeletons are kept, so effects/masks still show. Default 'full'.\n  detail?: \"full\" | \"summary\";\n  // Include the full property tree (Transform/Effects/Masks/Text). Default true.\n  includeProperties?: boolean;\n  // After Effects instance to address for this call, when several are running (AfterFX.exe -m): an instance id (its AE_MCP_INSTANCE at launch, or the `name` given to instance.start) or the name of the project file it has open. Omit to use this server's default (AE_MCP_INSTANCE, else the single live instance). ae_context and ae_do instance.list show what is live.\n  instance?: string;\n  // 1-based layer index — or an array of indices, or 'all' for every layer in the comp, returned together in one round trip.\n  layerIndex: number | Array<number> | \"all\";\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__after_effects_studio__ae_library",
+      "description": "After Effects Studio: local native AE control with a detailed production-derived motion language for any brand or style. Before designing or building motion, read ae_library documents motion-language, production-workflow and brief-template; load construction, camera-continuity, assets-depth, type-evidence and worked-scenes as relevant. This craft foundation is the default for ALL styles, not an optional JoeB preset. Everything required is bundled; do not require the original repo, personal rig or assets. Inspect ae_context and discover exact operations with ae_catalog. eval.run enables custom ES3. A batch is not transactional; inspect failures or uncertain completion before retrying. Render and visually inspect actual artifacts, and distinguish technical success from visual quality. The paper/navy/vermilion JoeB appearance is optional.\n\nRead the bundled production-derived motion language, detailed choreography/camera/material modules, worked scenes and native JSX. Begin EVERY motion task with motion-language, production-workflow and brief-template. Craft applies to all styles; JoeB appearance is optional. Offline; no AE, original repo or account required. Omit document to list IDs and startHere; query filters the index. Pass an ID to read complete contents. This tool is part of plugin `After Effects Studio`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__after_effects_studio__ae_library(args: { document?: string; query?: string; }): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__after_effects_studio__ae_project_export_json",
+      "description": "After Effects Studio: local native AE control with a detailed production-derived motion language for any brand or style. Before designing or building motion, read ae_library documents motion-language, production-workflow and brief-template; load construction, camera-continuity, assets-depth, type-evidence and worked-scenes as relevant. This craft foundation is the default for ALL styles, not an optional JoeB preset. Everything required is bundled; do not require the original repo, personal rig or assets. Inspect ae_context and discover exact operations with ae_catalog. eval.run enables custom ES3. A batch is not transactional; inspect failures or uncertain completion before retrying. Render and visually inspect actual artifacts, and distinguish technical success from visual quality. The paper/navy/vermilion JoeB appearance is optional.\n\nSerialize the entire project to JSON (folders, comps, layers, keyframes, effects, shapes, markers, time remap, solids, file refs). Write to `outPath` or return inline. This tool is part of plugin `After Effects Studio`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__after_effects_studio__ae_project_export_json(args: {\n  // After Effects instance to address for this call, when several are running (AfterFX.exe -m): an instance id (its AE_MCP_INSTANCE at launch, or the `name` given to instance.start) or the name of the project file it has open. Omit to use this server's default (AE_MCP_INSTANCE, else the single live instance). ae_context and ae_do instance.list show what is live.\n  instance?: string;\n  // If set, write the exported JSON to this absolute path on disk. If omitted, the JSON is returned inline in the tool response (can get large).\n  outPath?: string;\n  // Pretty-print the JSON (2-space indent). Default: true when writing to disk, false otherwise.\n  pretty?: boolean;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__after_effects_studio__ae_project_import_json",
+      "description": "After Effects Studio: local native AE control with a detailed production-derived motion language for any brand or style. Before designing or building motion, read ae_library documents motion-language, production-workflow and brief-template; load construction, camera-continuity, assets-depth, type-evidence and worked-scenes as relevant. This craft foundation is the default for ALL styles, not an optional JoeB preset. Everything required is bundled; do not require the original repo, personal rig or assets. Inspect ae_context and discover exact operations with ae_catalog. eval.run enables custom ES3. A batch is not transactional; inspect failures or uncertain completion before retrying. Render and visually inspect actual artifacts, and distinguish technical success from visual quality. The paper/navy/vermilion JoeB appearance is optional.\n\nRebuild the project from JSON (produced by ae_project_export_json). Supports `clearFirst`, `dryRun` (validate-only), `skipValidation`. This tool is part of plugin `After Effects Studio`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__after_effects_studio__ae_project_import_json(args: {\n  // Remove all existing items from the current project before importing. Default: false (appends).\n  clearFirst?: boolean;\n  // If true, validate the document and return a plan without touching AE. Useful for debugging malformed exports.\n  dryRun?: boolean;\n  // Absolute path to a JSON document produced by ae_project_export_json. Mutually exclusive with `json`.\n  inPath?: string;\n  // After Effects instance to address for this call, when several are running (AfterFX.exe -m): an instance id (its AE_MCP_INSTANCE at launch, or the `name` given to instance.start) or the name of the project file it has open. Omit to use this server's default (AE_MCP_INSTANCE, else the single live instance). ae_context and ae_do instance.list show what is live.\n  instance?: string;\n  json?: unknown;\n  // Skip Node-side schema validation. Only use if you trust the input and want to hand broken data to AE for diagnosis.\n  skipValidation?: boolean;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__after_effects_studio__ae_project_info",
+      "description": "After Effects Studio: local native AE control with a detailed production-derived motion language for any brand or style. Before designing or building motion, read ae_library documents motion-language, production-workflow and brief-template; load construction, camera-continuity, assets-depth, type-evidence and worked-scenes as relevant. This craft foundation is the default for ALL styles, not an optional JoeB preset. Everything required is bundled; do not require the original repo, personal rig or assets. Inspect ae_context and discover exact operations with ae_catalog. eval.run enables custom ES3. A batch is not transactional; inspect failures or uncertain completion before retrying. Render and visually inspect actual artifacts, and distinguish technical success from visual quality. The paper/navy/vermilion JoeB appearance is optional.\n\nProject-level info: file path, dirty flag, all items with type/summary, active item. Start here. This tool is part of plugin `After Effects Studio`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__after_effects_studio__ae_project_info(args: {\n  // After Effects instance to address for this call, when several are running (AfterFX.exe -m): an instance id (its AE_MCP_INSTANCE at launch, or the `name` given to instance.start) or the name of the project file it has open. Omit to use this server's default (AE_MCP_INSTANCE, else the single live instance). ae_context and ae_do instance.list show what is live.\n  instance?: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__after_effects_studio__ae_render_frame",
+      "description": "After Effects Studio: local native AE control with a detailed production-derived motion language for any brand or style. Before designing or building motion, read ae_library documents motion-language, production-workflow and brief-template; load construction, camera-continuity, assets-depth, type-evidence and worked-scenes as relevant. This craft foundation is the default for ALL styles, not an optional JoeB preset. Everything required is bundled; do not require the original repo, personal rig or assets. Inspect ae_context and discover exact operations with ae_catalog. eval.run enables custom ES3. A batch is not transactional; inspect failures or uncertain completion before retrying. Render and visually inspect actual artifacts, and distinguish technical success from visual quality. The paper/navy/vermilion JoeB appearance is optional.\n\nRender one or more frames to PNG. Use to visually verify edits. The agent's 'eyes' — pair with mutations for a visual feedback loop. Headless and deterministic. Pass `time` for one frame, or `times` for several in ONE call (motion checks): files land at <outPath stem>_<index>.png and are listed in `frames`. `contactSheet` tiles every frame into one labelled PNG (<stem>_sheet.png) so a motion check is one image; `analyze` measures each capture (uniform edge bands = black bars / transparent margins, content bounds, coverage) so off-frame elements and letterboxing are caught numerically. In color-managed projects (workingSpace != None) the capture applies AE's own display transform via a transient OCIO Display Transform adjustment layer, and the PNG comes back viewer-accurate and sRGB-tagged. Where that layer cannot be used — read-only mode, an AE without the OCIO effect, or a failed capture calibration — the result falls back to a pure-math ACES conversion or to raw values with an explicit colorWarning; check colorPipeline / colorWarning on the response. This tool is part of plugin `After Effects Studio`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__after_effects_studio__ae_render_frame(args: {\n  // Measure each capture: uniform bands at every edge (width + transparent/color — black bars, letterboxing, empty margins), the bounding box of non-background pixels, coverage, mean RGB. Reported per frame as `analysis` (measured on the capture before color conversion).\n  analyze?: boolean;\n  // 'auto' (default): detect the working space and return a viewer-accurate, 8-bit sRGB-tagged PNG. 'off': raw legacy output (16-bit, untagged, working-space values — dark/wrong-looking in color-managed projects).\n  colorManaged?: \"auto\" | \"off\";\n  // Composition name or numeric item id.\n  compNameOrId: string | number;\n  // Tile all rendered frames into ONE labelled PNG (#index + time above each tile). Pass {} for defaults.\n  contactSheet?: {\n  // Tiles per row (default ceil(sqrt(n))).\n  columns?: number;\n  // Sheet path (default <outPath stem>_sheet.png).\n  outPath?: string;\n  // Tile width in px, never upscaled (default 480).\n  thumbWidth?: number;\n};\n  // After Effects instance to address for this call, when several are running (AfterFX.exe -m): an instance id (its AE_MCP_INSTANCE at launch, or the `name` given to instance.start) or the name of the project file it has open. Omit to use this server's default (AE_MCP_INSTANCE, else the single live instance). ae_context and ae_do instance.list show what is live.\n  instance?: string;\n  // Absolute path to write the PNG. Parent directory is created if missing. With `times`, used as the naming stem for every frame.\n  outPath: string;\n  // Time in seconds to render. Give exactly one of `time` or `times`.\n  time?: number;\n  // Several times in seconds, rendered in ONE call. Files are written as <outPath stem>_<index><ext> and reported in `frames` (index-aligned).\n  times?: Array<number>;\n  // If true, times are interpreted relative to comp.displayStartTime. Default false.\n  useDisplayStartTime?: boolean;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__after_effects_studio__ae_save_project",
+      "description": "After Effects Studio: local native AE control with a detailed production-derived motion language for any brand or style. Before designing or building motion, read ae_library documents motion-language, production-workflow and brief-template; load construction, camera-continuity, assets-depth, type-evidence and worked-scenes as relevant. This craft foundation is the default for ALL styles, not an optional JoeB preset. Everything required is bundled; do not require the original repo, personal rig or assets. Inspect ae_context and discover exact operations with ae_catalog. eval.run enables custom ES3. A batch is not transactional; inspect failures or uncertain completion before retrying. Render and visually inspect actual artifacts, and distinguish technical success from visual quality. The paper/navy/vermilion JoeB appearance is optional.\n\nSave the project. Pass `path` for Save As. This tool is part of plugin `After Effects Studio`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__after_effects_studio__ae_save_project(args: {\n  // After Effects instance to address for this call, when several are running (AfterFX.exe -m): an instance id (its AE_MCP_INSTANCE at launch, or the `name` given to instance.start) or the name of the project file it has open. Omit to use this server's default (AE_MCP_INSTANCE, else the single live instance). ae_context and ae_do instance.list show what is live.\n  instance?: string;\n  // Optional absolute path to save the project to (Save As). If omitted, save to the existing path — errors if the project has never been saved.\n  path?: string;\n}): Promise<CallToolResult>; };\n```"
+    },
+    {
+      "name": "mcp__after_effects_studio__ae_version_info",
+      "description": "After Effects Studio: local native AE control with a detailed production-derived motion language for any brand or style. Before designing or building motion, read ae_library documents motion-language, production-workflow and brief-template; load construction, camera-continuity, assets-depth, type-evidence and worked-scenes as relevant. This craft foundation is the default for ALL styles, not an optional JoeB preset. Everything required is bundled; do not require the original repo, personal rig or assets. Inspect ae_context and discover exact operations with ae_catalog. eval.run enables custom ES3. A batch is not transactional; inspect failures or uncertain completion before retrying. Render and visually inspect actual artifacts, and distinguish technical success from visual quality. The paper/navy/vermilion JoeB appearance is optional.\n\nAE version, build, capabilities (saveFrameToPng, app.effects, Socket). Call at session start to know what APIs are available. This tool is part of plugin `After Effects Studio`.\n\nexec tool declaration:\n```ts\ndeclare const tools: { mcp__after_effects_studio__ae_version_info(args: {\n  // After Effects instance to address for this call, when several are running (AfterFX.exe -m): an instance id (its AE_MCP_INSTANCE at launch, or the `name` given to instance.start) or the name of the project file it has open. Omit to use this server's default (AE_MCP_INSTANCE, else the single live instance). ae_context and ae_do instance.list show what is live.\n  instance?: string;\n}): Promise<CallToolResult>; };\n```"
+    }
+  ],
+  "events": [
+    {
+      "tool": "ae_version_info",
+      "args": {},
+      "response": {
+        "ok": true,
+        "result": {
+          "app": {
+            "version": "26.5x89",
+            "buildName": "26.5x89",
+            "buildNumber": 89,
+            "language": "en_US",
+            "memoryInUse": 1005993317,
+            "availableGPUs": 2
+          },
+          "capabilities": {
+            "saveFrameToPng": true,
+            "appEffects": true,
+            "bridgeTalk": true,
+            "socket": true
+          },
+          "project": {
+            "numItems": 0,
+            "file": null,
+            "dirty": true
+          },
+          "agent": null,
+          "server": {
+            "exportSchemaVersion": 2
+          }
+        },
+        "logs": [],
+        "durationMs": 329
+      }
+    },
+    {
+      "tool": "ae_context",
+      "args": {},
+      "response": {
+        "ok": true,
+        "result": {
+          "project": {
+            "file": null,
+            "dirty": true,
+            "numItems": 0,
+            "bitsPerChannel": 16
+          },
+          "instance": null,
+          "activeComp": null,
+          "selectedLayers": [],
+          "helpers": [
+            "AE.findCompByNameOrId(nameOrId)",
+            "AE.findComps(nameOrIdOrPattern) — '*' glob supported",
+            "AE.findItemById(id)",
+            "AE.findItem(idOrName) — any project item",
+            "AE.findFolder(idOrName) — null/undefined = root folder",
+            "AE.findLayerInComp(comp, indexOrNameOrIdRef) — accepts { id: n } (stable Layer.id, AE 22+)",
+            "AE.findLayerById(comp, id)",
+            "AE.resolveLayers(comp, target) — index | name | { id: n } | 'selected' | 'all' | array of those",
+            "AE.snapshotKeys(prop) / AE.applyKeys(prop, keys) / AE.removeAllKeys(prop)",
+            "AE.setEase(prop, keyIndex, inInf, outInf, inSpeed?, outSpeed?) — dims/spatial handled",
+            "AE.writeValue(prop, value, time?) / AE.readValue(prop, time?) — separated-dimension safe, __kind values accepted",
+            "AE.offsetValue(prop, delta) — shift a value or every keyframe",
+            "AE.applyKeySpecs(prop, [{time, value, interp?}], {replace, interp, spatialTangents}) — keyframe.apply's engine",
+            "AE.moveAnchor(layer, [x, y]) — anchor move with position compensation",
+            "AE.layerRect(layer, time) / AE.pointInRect(rect, preset) — anchor presets on rendered bounds",
+            "AE.shapeGroupBounds(group, {time, includeStroke}) / AE.shapeLayerBounds(layer, opts)",
+            "AE.walkShapeContents(contents, fn) / AE.recolorContents(contents, opts) / AE.canonicalGroup(group, precision)",
+            "AE.geometryShape('ellipse'|'rect', center, size, roundness) — a Shape for masks/paths",
+            "AE.propertyAtPath(root, path) — null instead of throwing",
+            "AE.ownerLayer(prop) — the layer a property belongs to",
+            "AE.bakeKeysAtTime(root, time) — freeze every animated property below root",
+            "AE.layerIdSnapshot(comp) / AE.layersSince(comp, snap) — which layers a command created",
+            "AE.withSelection(comp, layers, fn) — run a menu command on exactly these layers, selection restored",
+            "AE.rect(shapeLayerOrGroup, [w,h], [x,y], {name, roundness, fill:[r,g,b], stroke, strokeWidth}) — group+path+style in one call",
+            "AE.ellipse(shapeLayerOrGroup, [w,h], [x,y], {name, fill, stroke, strokeWidth})",
+            "AE.ensureParentDir(path) — mkdir -p for an output file, returns the File",
+            "AE.itemTypeName(item) — 'CompItem' | 'FootageItem' | 'FolderItem' | 'UnknownItem'",
+            "AE.serializeItemSummary(item)",
+            "AE.serializeLayerSummary(layer)",
+            "AE.serializeLayerFull(layer, opts) — opts.detail:'summary' drops default-value props",
+            "AE.serializeTransform(layer)",
+            "AE.serializePropertyGroup(group, depth, maxDepth, opts)",
+            "AE.serializeCompMarkers(comp)",
+            "AE.exportProject()",
+            "AE.importProject(doc, opts)",
+            "AE.safeGet(fn, fallback)",
+            "AE.valueToJson(val)"
+          ],
+          "es3Rules": [
+            "var only (no let/const)",
+            "function() {} only (no arrow =>)",
+            "string concat only (no template literals)",
+            "for(var i=0;i<n;i++) only (no for-of, no forEach/map/filter)",
+            "indexOf !== -1 (no includes/startsWith/endsWith)",
+            "NEVER chain ternaries: a ? b : c ? d : e parses LEFT-associative in ExtendScript — parenthesize or use if/else",
+            "log('msg') to push breadcrumbs",
+            "return <JSON-serializable> at end"
+          ],
+          "tips": [
+            "reparenting a layer that has keyframes: use layer.set_parent with jump:true (no transform compensation) — plain parent assignment rewrites values and corrupts keys",
+            "easing: keyframe.set_easing (op) or AE.setEase (eval) — both handle the spatial=1/per-dimension KeyframeEase bookkeeping",
+            "auditing a comp: ae_layer_info layerIndex:'all' with detail:'summary' skips default-value properties and includes key ease (speed/influence)",
+            "render queue output folders are auto-created on render.add_to_queue / render.set_output / render.start",
+            "many keys at once: keyframe.apply takes the whole list with per-key easing; its 'hold' only holds the OUT side, so a fade that ends in a hold key still fades",
+            "Position separated into X/Y (Separate Dimensions, or layers from 'Create Shapes from Vector Layer'): every write op and AE.writeValue route to the followers automatically",
+            "imported Illustrator layers: layer.convert_to_shapes (strips ' Outlines', can remove the source layer/footage); then shape.group_bounds / layer.split_groups to work per part",
+            "layer targets accept arrays everywhere they accept 'all' — [\"A\", \"B\", { id: 12 }] is one call",
+            "verifying motion: ae_render_frame times + contactSheet tiles the frames into one labelled PNG; analyze reports edge bands / content bounds; comp.sample reads values at several times",
+            "several After Effects instances (AfterFX.exe -m): each MCP server addresses ONE, chosen by AE_MCP_INSTANCE (instance id or open project file name); the response's instances[] lists what is live — if the project you need is open elsewhere, say so instead of editing the wrong one"
+          ],
+          "undoContract": [
+            "every ae_do / eval.run call is auto-wrapped in ONE undo group",
+            "one Ctrl+Z (or project.undo) reverts the entire call; batch.run = one call = one undo step",
+            "NEVER call app.beginUndoGroup/endUndoGroup in eval.run code — an unbalanced group corrupts undo for the session",
+            "undo/redo itself runs OUTSIDE the group: use project.undo (or command.execute 16/2035) as its own call — never inside batch.run, and never via eval.run",
+            "ae_save_project and files written to disk (rendered PNGs, exported JSON) are NOT undoable"
+          ],
+          "items": [],
+          "transport": {
+            "mode": "push"
+          },
+          "instances": []
+        },
+        "logs": [],
+        "durationMs": 246
+      }
+    },
+    {
+      "tool": "ae_do",
+      "args": {
+        "operation": "comp.create",
+        "args": {
+          "name": "AFT7_INSTALLED_1945_ALIGNMENT",
+          "width": 1920,
+          "height": 1080,
+          "fps": 30,
+          "duration": 5
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "ok": true,
+          "id": 25,
+          "name": "AFT7_INSTALLED_1945_ALIGNMENT"
+        },
+        "context": {
+          "project": {
+            "numItems": 1,
+            "dirty": true,
+            "file": null
+          },
+          "instance": null,
+          "activeComp": null,
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 249
+      }
+    },
+    {
+      "tool": "ae_do",
+      "args": {
+        "operation": "batch.run",
+        "args": {
+          "ops": [
+            {
+              "operation": "layer.create_shape",
+              "args": {
+                "comp": 25,
+                "name": "AFT7_Background"
+              }
+            },
+            {
+              "operation": "shape.add_group",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Background",
+                "name": "Geometry"
+              }
+            },
+            {
+              "operation": "shape.add_rect",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Background",
+                "groupIndex": 1,
+                "size": [
+                  1920,
+                  1080
+                ],
+                "roundness": 0
+              }
+            },
+            {
+              "operation": "shape.add_fill",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Background",
+                "groupIndex": 1,
+                "color": [
+                  0.055,
+                  0.065,
+                  0.075,
+                  1
+                ]
+              }
+            },
+            {
+              "operation": "transform.set",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Background",
+                "position": [
+                  960,
+                  540
+                ]
+              }
+            },
+            {
+              "operation": "layer.create_text",
+              "args": {
+                "comp": 25,
+                "name": "AFT7_Eyebrow",
+                "text": "A SIMPLE ALIGNMENT"
+              }
+            },
+            {
+              "operation": "text.set_style",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Eyebrow",
+                "font": "ArialMT",
+                "fontSize": 24,
+                "fillColor": [
+                  0.55,
+                  0.6,
+                  0.61
+                ],
+                "justification": "center"
+              }
+            },
+            {
+              "operation": "transform.set",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Eyebrow",
+                "position": [
+                  960,
+                  140
+                ]
+              }
+            },
+            {
+              "operation": "layer.create_text",
+              "args": {
+                "comp": 25,
+                "name": "AFT7_Title",
+                "text": "Make room for clarity"
+              }
+            },
+            {
+              "operation": "text.set_style",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Title",
+                "font": "Arial-BoldMT",
+                "fontSize": 78,
+                "fillColor": [
+                  0.94,
+                  0.94,
+                  0.9
+                ],
+                "justification": "center"
+              }
+            },
+            {
+              "operation": "transform.set",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Title",
+                "position": [
+                  960,
+                  260
+                ]
+              }
+            },
+            {
+              "operation": "layer.create_text",
+              "args": {
+                "comp": 25,
+                "name": "AFT7_Subtitle",
+                "text": "Three parts. One clear system."
+              }
+            },
+            {
+              "operation": "text.set_style",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Subtitle",
+                "font": "ArialMT",
+                "fontSize": 32,
+                "fillColor": [
+                  0.6,
+                  0.65,
+                  0.65
+                ],
+                "justification": "center"
+              }
+            },
+            {
+              "operation": "transform.set",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Subtitle",
+                "position": [
+                  960,
+                  330
+                ]
+              }
+            },
+            {
+              "operation": "layer.create_shape",
+              "args": {
+                "comp": 25,
+                "name": "AFT7_Baseline"
+              }
+            },
+            {
+              "operation": "shape.add_group",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Baseline",
+                "name": "Geometry"
+              }
+            },
+            {
+              "operation": "shape.add_rect",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Baseline",
+                "groupIndex": 1,
+                "size": [
+                  680,
+                  3
+                ],
+                "roundness": 0
+              }
+            },
+            {
+              "operation": "shape.add_fill",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Baseline",
+                "groupIndex": 1,
+                "color": [
+                  0.32,
+                  0.38,
+                  0.38,
+                  1
+                ]
+              }
+            },
+            {
+              "operation": "transform.set",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Baseline",
+                "position": [
+                  960,
+                  815
+                ]
+              }
+            },
+            {
+              "operation": "keyframe.apply",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Baseline",
+                "property": [
+                  "Transform",
+                  "Scale"
+                ],
+                "keys": [
+                  {
+                    "time": 0.2,
+                    "value": [
+                      0,
+                      100
+                    ],
+                    "interp": "ease",
+                    "inInfluence": 82,
+                    "outInfluence": 28
+                  },
+                  {
+                    "time": 0.65,
+                    "value": [
+                      100,
+                      100
+                    ],
+                    "interp": "ease",
+                    "inInfluence": 82,
+                    "outInfluence": 28
+                  }
+                ]
+              }
+            },
+            {
+              "operation": "layer.create_shape",
+              "args": {
+                "comp": 25,
+                "name": "AFT7_Bar_1"
+              }
+            },
+            {
+              "operation": "shape.add_group",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Bar_1",
+                "name": "Geometry"
+              }
+            },
+            {
+              "operation": "shape.add_rect",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Bar_1",
+                "groupIndex": 1,
+                "size": [
+                  140,
+                  240
+                ],
+                "roundness": 18
+              }
+            },
+            {
+              "operation": "shape.add_fill",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Bar_1",
+                "groupIndex": 1,
+                "color": [
+                  0.79,
+                  0.82,
+                  0.8,
+                  1
+                ]
+              }
+            },
+            {
+              "operation": "transform.set",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Bar_1",
+                "position": [
+                  670,
+                  570
+                ]
+              }
+            },
+            {
+              "operation": "keyframe.apply",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Bar_1",
+                "property": [
+                  "Transform",
+                  "Position"
+                ],
+                "keys": [
+                  {
+                    "time": 0.8,
+                    "value": [
+                      670,
+                      570
+                    ],
+                    "interp": "ease",
+                    "inInfluence": 82,
+                    "outInfluence": 28
+                  },
+                  {
+                    "time": 1.7,
+                    "value": [
+                      760,
+                      655
+                    ],
+                    "interp": "ease",
+                    "inInfluence": 82,
+                    "outInfluence": 28
+                  }
+                ],
+                "spatialTangents": "linear"
+              }
+            },
+            {
+              "operation": "keyframe.apply",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Bar_1",
+                "property": [
+                  "Transform",
+                  "Rotation"
+                ],
+                "keys": [
+                  {
+                    "time": 0.8,
+                    "value": -16,
+                    "interp": "ease",
+                    "inInfluence": 82,
+                    "outInfluence": 28
+                  },
+                  {
+                    "time": 1.7,
+                    "value": 0,
+                    "interp": "ease",
+                    "inInfluence": 82,
+                    "outInfluence": 28
+                  }
+                ]
+              }
+            },
+            {
+              "operation": "layer.create_shape",
+              "args": {
+                "comp": 25,
+                "name": "AFT7_Bar_2"
+              }
+            },
+            {
+              "operation": "shape.add_group",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Bar_2",
+                "name": "Geometry"
+              }
+            },
+            {
+              "operation": "shape.add_rect",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Bar_2",
+                "groupIndex": 1,
+                "size": [
+                  140,
+                  240
+                ],
+                "roundness": 18
+              }
+            },
+            {
+              "operation": "shape.add_fill",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Bar_2",
+                "groupIndex": 1,
+                "color": [
+                  0.79,
+                  0.82,
+                  0.8,
+                  1
+                ]
+              }
+            },
+            {
+              "operation": "transform.set",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Bar_2",
+                "position": [
+                  1000,
+                  620
+                ]
+              }
+            },
+            {
+              "operation": "keyframe.apply",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Bar_2",
+                "property": [
+                  "Transform",
+                  "Position"
+                ],
+                "keys": [
+                  {
+                    "time": 0.9500000000000001,
+                    "value": [
+                      1000,
+                      620
+                    ],
+                    "interp": "ease",
+                    "inInfluence": 82,
+                    "outInfluence": 28
+                  },
+                  {
+                    "time": 1.8499999999999999,
+                    "value": [
+                      960,
+                      655
+                    ],
+                    "interp": "ease",
+                    "inInfluence": 82,
+                    "outInfluence": 28
+                  }
+                ],
+                "spatialTangents": "linear"
+              }
+            },
+            {
+              "operation": "keyframe.apply",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Bar_2",
+                "property": [
+                  "Transform",
+                  "Rotation"
+                ],
+                "keys": [
+                  {
+                    "time": 0.9500000000000001,
+                    "value": 12,
+                    "interp": "ease",
+                    "inInfluence": 82,
+                    "outInfluence": 28
+                  },
+                  {
+                    "time": 1.8499999999999999,
+                    "value": 0,
+                    "interp": "ease",
+                    "inInfluence": 82,
+                    "outInfluence": 28
+                  }
+                ]
+              }
+            },
+            {
+              "operation": "layer.create_shape",
+              "args": {
+                "comp": 25,
+                "name": "AFT7_Bar_3"
+              }
+            },
+            {
+              "operation": "shape.add_group",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Bar_3",
+                "name": "Geometry"
+              }
+            },
+            {
+              "operation": "shape.add_rect",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Bar_3",
+                "groupIndex": 1,
+                "size": [
+                  140,
+                  240
+                ],
+                "roundness": 18
+              }
+            },
+            {
+              "operation": "shape.add_fill",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Bar_3",
+                "groupIndex": 1,
+                "color": [
+                  0.79,
+                  0.82,
+                  0.8,
+                  1
+                ]
+              }
+            },
+            {
+              "operation": "transform.set",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Bar_3",
+                "position": [
+                  1300,
+                  555
+                ]
+              }
+            },
+            {
+              "operation": "keyframe.apply",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Bar_3",
+                "property": [
+                  "Transform",
+                  "Position"
+                ],
+                "keys": [
+                  {
+                    "time": 1.1,
+                    "value": [
+                      1300,
+                      555
+                    ],
+                    "interp": "ease",
+                    "inInfluence": 82,
+                    "outInfluence": 28
+                  },
+                  {
+                    "time": 2,
+                    "value": [
+                      1160,
+                      655
+                    ],
+                    "interp": "ease",
+                    "inInfluence": 82,
+                    "outInfluence": 28
+                  }
+                ],
+                "spatialTangents": "linear"
+              }
+            },
+            {
+              "operation": "keyframe.apply",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Bar_3",
+                "property": [
+                  "Transform",
+                  "Rotation"
+                ],
+                "keys": [
+                  {
+                    "time": 1.1,
+                    "value": -9,
+                    "interp": "ease",
+                    "inInfluence": 82,
+                    "outInfluence": 28
+                  },
+                  {
+                    "time": 2,
+                    "value": 0,
+                    "interp": "ease",
+                    "inInfluence": 82,
+                    "outInfluence": 28
+                  }
+                ]
+              }
+            },
+            {
+              "operation": "keyframe.apply",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Bar_2",
+                "property": [
+                  "Contents",
+                  "Geometry",
+                  "Contents",
+                  "ADBE Vector Graphic - Fill",
+                  "ADBE Vector Fill Color"
+                ],
+                "keys": [
+                  {
+                    "time": 2,
+                    "value": [
+                      0.79,
+                      0.82,
+                      0.8,
+                      1
+                    ],
+                    "interp": "ease",
+                    "inInfluence": 82,
+                    "outInfluence": 28
+                  },
+                  {
+                    "time": 2.25,
+                    "value": [
+                      0.33,
+                      0.87,
+                      0.69,
+                      1
+                    ],
+                    "interp": "ease",
+                    "inInfluence": 82,
+                    "outInfluence": 28
+                  }
+                ]
+              }
+            },
+            {
+              "operation": "layer.create_text",
+              "args": {
+                "comp": 25,
+                "name": "AFT7_Caption",
+                "text": "EVERY PART HAS A PLACE"
+              }
+            },
+            {
+              "operation": "text.set_style",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Caption",
+                "font": "ArialMT",
+                "fontSize": 24,
+                "fillColor": [
+                  0.76,
+                  0.8,
+                  0.77
+                ],
+                "justification": "center"
+              }
+            },
+            {
+              "operation": "transform.set",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Caption",
+                "position": [
+                  960,
+                  930
+                ]
+              }
+            },
+            {
+              "operation": "keyframe.apply",
+              "args": {
+                "comp": 25,
+                "layer": "AFT7_Caption",
+                "property": [
+                  "Transform",
+                  "Opacity"
+                ],
+                "keys": [
+                  {
+                    "time": 2.05,
+                    "value": 0,
+                    "interp": "ease",
+                    "inInfluence": 82,
+                    "outInfluence": 28
+                  },
+                  {
+                    "time": 2.35,
+                    "value": 100,
+                    "interp": "ease",
+                    "inInfluence": 82,
+                    "outInfluence": 28
+                  }
+                ]
+              }
+            },
+            {
+              "operation": "timeline.set_active_comp",
+              "args": {
+                "comp": 25
+              }
+            },
+            {
+              "operation": "comp.info",
+              "args": {
+                "comp": 25
+              }
+            }
+          ],
+          "stopOnError": true
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "ok": true,
+          "error": null,
+          "results": [
+            {
+              "ok": true,
+              "index": 1,
+              "name": "AFT7_Background"
+            },
+            {
+              "ok": true,
+              "groupIndex": 1,
+              "name": "Geometry"
+            },
+            {
+              "ok": true,
+              "name": "Rectangle Path 1"
+            },
+            {
+              "ok": true,
+              "name": "Fill 1"
+            },
+            {
+              "ok": true,
+              "count": 1,
+              "layers": [
+                {
+                  "name": "AFT7_Background",
+                  "warnings": []
+                }
+              ]
+            },
+            {
+              "ok": true,
+              "index": 1,
+              "name": "AFT7_Eyebrow",
+              "boxText": false,
+              "vertical": false
+            },
+            {
+              "ok": true,
+              "warnings": []
+            },
+            {
+              "ok": true,
+              "count": 1,
+              "layers": [
+                {
+                  "name": "AFT7_Eyebrow",
+                  "warnings": []
+                }
+              ]
+            },
+            {
+              "ok": true,
+              "index": 1,
+              "name": "AFT7_Title",
+              "boxText": false,
+              "vertical": false
+            },
+            {
+              "ok": true,
+              "warnings": []
+            },
+            {
+              "ok": true,
+              "count": 1,
+              "layers": [
+                {
+                  "name": "AFT7_Title",
+                  "warnings": []
+                }
+              ]
+            },
+            {
+              "ok": true,
+              "index": 1,
+              "name": "AFT7_Subtitle",
+              "boxText": false,
+              "vertical": false
+            },
+            {
+              "ok": true,
+              "warnings": []
+            },
+            {
+              "ok": true,
+              "count": 1,
+              "layers": [
+                {
+                  "name": "AFT7_Subtitle",
+                  "warnings": []
+                }
+              ]
+            },
+            {
+              "ok": true,
+              "index": 1,
+              "name": "AFT7_Baseline"
+            },
+            {
+              "ok": true,
+              "groupIndex": 1,
+              "name": "Geometry"
+            },
+            {
+              "ok": true,
+              "name": "Rectangle Path 1"
+            },
+            {
+              "ok": true,
+              "name": "Fill 1"
+            },
+            {
+              "ok": true,
+              "count": 1,
+              "layers": [
+                {
+                  "name": "AFT7_Baseline",
+                  "warnings": []
+                }
+              ]
+            },
+            {
+              "ok": true,
+              "error": null,
+              "count": 1,
+              "layers": [
+                {
+                  "index": 1,
+                  "name": "AFT7_Baseline",
+                  "ok": true,
+                  "numKeys": 2,
+                  "separated": false,
+                  "warnings": []
+                }
+              ]
+            },
+            {
+              "ok": true,
+              "index": 1,
+              "name": "AFT7_Bar_1"
+            },
+            {
+              "ok": true,
+              "groupIndex": 1,
+              "name": "Geometry"
+            },
+            {
+              "ok": true,
+              "name": "Rectangle Path 1"
+            },
+            {
+              "ok": true,
+              "name": "Fill 1"
+            },
+            {
+              "ok": true,
+              "count": 1,
+              "layers": [
+                {
+                  "name": "AFT7_Bar_1",
+                  "warnings": []
+                }
+              ]
+            },
+            {
+              "ok": true,
+              "error": null,
+              "count": 1,
+              "layers": [
+                {
+                  "index": 1,
+                  "name": "AFT7_Bar_1",
+                  "ok": true,
+                  "numKeys": 2,
+                  "separated": false,
+                  "warnings": []
+                }
+              ]
+            },
+            {
+              "ok": true,
+              "error": null,
+              "count": 1,
+              "layers": [
+                {
+                  "index": 1,
+                  "name": "AFT7_Bar_1",
+                  "ok": true,
+                  "numKeys": 2,
+                  "separated": false,
+                  "warnings": []
+                }
+              ]
+            },
+            {
+              "ok": true,
+              "index": 1,
+              "name": "AFT7_Bar_2"
+            },
+            {
+              "ok": true,
+              "groupIndex": 1,
+              "name": "Geometry"
+            },
+            {
+              "ok": true,
+              "name": "Rectangle Path 1"
+            },
+            {
+              "ok": true,
+              "name": "Fill 1"
+            },
+            {
+              "ok": true,
+              "count": 1,
+              "layers": [
+                {
+                  "name": "AFT7_Bar_2",
+                  "warnings": []
+                }
+              ]
+            },
+            {
+              "ok": true,
+              "error": null,
+              "count": 1,
+              "layers": [
+                {
+                  "index": 1,
+                  "name": "AFT7_Bar_2",
+                  "ok": true,
+                  "numKeys": 2,
+                  "separated": false,
+                  "warnings": []
+                }
+              ]
+            },
+            {
+              "ok": true,
+              "error": null,
+              "count": 1,
+              "layers": [
+                {
+                  "index": 1,
+                  "name": "AFT7_Bar_2",
+                  "ok": true,
+                  "numKeys": 2,
+                  "separated": false,
+                  "warnings": []
+                }
+              ]
+            },
+            {
+              "ok": true,
+              "index": 1,
+              "name": "AFT7_Bar_3"
+            },
+            {
+              "ok": true,
+              "groupIndex": 1,
+              "name": "Geometry"
+            },
+            {
+              "ok": true,
+              "name": "Rectangle Path 1"
+            },
+            {
+              "ok": true,
+              "name": "Fill 1"
+            },
+            {
+              "ok": true,
+              "count": 1,
+              "layers": [
+                {
+                  "name": "AFT7_Bar_3",
+                  "warnings": []
+                }
+              ]
+            },
+            {
+              "ok": true,
+              "error": null,
+              "count": 1,
+              "layers": [
+                {
+                  "index": 1,
+                  "name": "AFT7_Bar_3",
+                  "ok": true,
+                  "numKeys": 2,
+                  "separated": false,
+                  "warnings": []
+                }
+              ]
+            },
+            {
+              "ok": true,
+              "error": null,
+              "count": 1,
+              "layers": [
+                {
+                  "index": 1,
+                  "name": "AFT7_Bar_3",
+                  "ok": true,
+                  "numKeys": 2,
+                  "separated": false,
+                  "warnings": []
+                }
+              ]
+            },
+            {
+              "ok": true,
+              "error": null,
+              "count": 1,
+              "layers": [
+                {
+                  "index": 2,
+                  "name": "AFT7_Bar_2",
+                  "ok": true,
+                  "numKeys": 2,
+                  "separated": false,
+                  "warnings": [
+                    "key 1 (t=2): After Effects error: Unable to call “setTemporalEaseAtKey” because of parameter 2. Value array does not have 1 elements. (line 866)",
+                    "key 2 (t=2.25): After Effects error: Unable to call “setTemporalEaseAtKey” because of parameter 2. Value array does not have 1 elements. (line 866)"
+                  ]
+                }
+              ]
+            },
+            {
+              "ok": true,
+              "index": 1,
+              "name": "AFT7_Caption",
+              "boxText": false,
+              "vertical": false
+            },
+            {
+              "ok": true,
+              "warnings": []
+            },
+            {
+              "ok": true,
+              "count": 1,
+              "layers": [
+                {
+                  "name": "AFT7_Caption",
+                  "warnings": []
+                }
+              ]
+            },
+            {
+              "ok": true,
+              "error": null,
+              "count": 1,
+              "layers": [
+                {
+                  "index": 1,
+                  "name": "AFT7_Caption",
+                  "ok": true,
+                  "numKeys": 2,
+                  "separated": false,
+                  "warnings": []
+                }
+              ]
+            },
+            {
+              "ok": true,
+              "name": "AFT7_INSTALLED_1945_ALIGNMENT"
+            },
+            {
+              "id": 25,
+              "name": "AFT7_INSTALLED_1945_ALIGNMENT",
+              "type": "CompItem",
+              "parentFolderId": 0,
+              "parentFolderName": "Root",
+              "label": 15,
+              "comment": "",
+              "width": 1920,
+              "height": 1080,
+              "frameRate": 30,
+              "duration": 5,
+              "layerCount": 9,
+              "bgColor": [
+                0,
+                0,
+                0
+              ],
+              "ok": true,
+              "found": true,
+              "workAreaStart": 0,
+              "workAreaDuration": 5,
+              "pixelAspect": 1,
+              "shutterAngle": 180,
+              "shutterPhase": 0,
+              "motionBlur": false,
+              "layers": [
+                {
+                  "index": 1,
+                  "id": 45,
+                  "name": "AFT7_Caption",
+                  "type": "TextLayer",
+                  "enabled": true,
+                  "solo": false,
+                  "shy": false,
+                  "locked": false,
+                  "inPoint": 0,
+                  "outPoint": 5,
+                  "startTime": 0,
+                  "stretch": 100,
+                  "parentIndex": null,
+                  "label": 1,
+                  "text": "EVERY PART HAS A PLACE",
+                  "fontSize": 24,
+                  "font": "ArialMT",
+                  "fillColor": [
+                    0.75999999046326,
+                    0.80000001192093,
+                    0.76999998092651
+                  ]
+                },
+                {
+                  "index": 2,
+                  "id": 44,
+                  "name": "AFT7_Bar_3",
+                  "type": "ShapeLayer",
+                  "enabled": true,
+                  "solo": false,
+                  "shy": false,
+                  "locked": false,
+                  "inPoint": 0,
+                  "outPoint": 5,
+                  "startTime": 0,
+                  "stretch": 100,
+                  "parentIndex": null,
+                  "label": 8
+                },
+                {
+                  "index": 3,
+                  "id": 43,
+                  "name": "AFT7_Bar_2",
+                  "type": "ShapeLayer",
+                  "enabled": true,
+                  "solo": false,
+                  "shy": false,
+                  "locked": false,
+                  "inPoint": 0,
+                  "outPoint": 5,
+                  "startTime": 0,
+                  "stretch": 100,
+                  "parentIndex": null,
+                  "label": 8
+                },
+                {
+                  "index": 4,
+                  "id": 42,
+                  "name": "AFT7_Bar_1",
+                  "type": "ShapeLayer",
+                  "enabled": true,
+                  "solo": false,
+                  "shy": false,
+                  "locked": false,
+                  "inPoint": 0,
+                  "outPoint": 5,
+                  "startTime": 0,
+                  "stretch": 100,
+                  "parentIndex": null,
+                  "label": 8
+                },
+                {
+                  "index": 5,
+                  "id": 41,
+                  "name": "AFT7_Baseline",
+                  "type": "ShapeLayer",
+                  "enabled": true,
+                  "solo": false,
+                  "shy": false,
+                  "locked": false,
+                  "inPoint": 0,
+                  "outPoint": 5,
+                  "startTime": 0,
+                  "stretch": 100,
+                  "parentIndex": null,
+                  "label": 8
+                },
+                {
+                  "index": 6,
+                  "id": 40,
+                  "name": "AFT7_Subtitle",
+                  "type": "TextLayer",
+                  "enabled": true,
+                  "solo": false,
+                  "shy": false,
+                  "locked": false,
+                  "inPoint": 0,
+                  "outPoint": 5,
+                  "startTime": 0,
+                  "stretch": 100,
+                  "parentIndex": null,
+                  "label": 1,
+                  "text": "Three parts. One clear system.",
+                  "fontSize": 32,
+                  "font": "ArialMT",
+                  "fillColor": [
+                    0.60000002384186,
+                    0.65000003576279,
+                    0.65000003576279
+                  ]
+                },
+                {
+                  "index": 7,
+                  "id": 39,
+                  "name": "AFT7_Title",
+                  "type": "TextLayer",
+                  "enabled": true,
+                  "solo": false,
+                  "shy": false,
+                  "locked": false,
+                  "inPoint": 0,
+                  "outPoint": 5,
+                  "startTime": 0,
+                  "stretch": 100,
+                  "parentIndex": null,
+                  "label": 1,
+                  "text": "Make room for clarity",
+                  "fontSize": 78,
+                  "font": "Arial-BoldMT",
+                  "fillColor": [
+                    0.93999999761581,
+                    0.93999999761581,
+                    0.89999997615814
+                  ]
+                },
+                {
+                  "index": 8,
+                  "id": 38,
+                  "name": "AFT7_Eyebrow",
+                  "type": "TextLayer",
+                  "enabled": true,
+                  "solo": false,
+                  "shy": false,
+                  "locked": false,
+                  "inPoint": 0,
+                  "outPoint": 5,
+                  "startTime": 0,
+                  "stretch": 100,
+                  "parentIndex": null,
+                  "label": 1,
+                  "text": "A SIMPLE ALIGNMENT",
+                  "fontSize": 24,
+                  "font": "ArialMT",
+                  "fillColor": [
+                    0.55000001192093,
+                    0.60000002384186,
+                    0.61000001430511
+                  ]
+                },
+                {
+                  "index": 9,
+                  "id": 37,
+                  "name": "AFT7_Background",
+                  "type": "ShapeLayer",
+                  "enabled": true,
+                  "solo": false,
+                  "shy": false,
+                  "locked": false,
+                  "inPoint": 0,
+                  "outPoint": 5,
+                  "startTime": 0,
+                  "stretch": 100,
+                  "parentIndex": null,
+                  "label": 8
+                }
+              ]
+            }
+          ],
+          "count": 48,
+          "failed": 0
+        },
+        "context": {
+          "project": {
+            "numItems": 1,
+            "dirty": true,
+            "file": null
+          },
+          "instance": null,
+          "activeComp": {
+            "id": 25,
+            "name": "AFT7_INSTALLED_1945_ALIGNMENT",
+            "width": 1920,
+            "height": 1080,
+            "fps": 30,
+            "duration": 5,
+            "numLayers": 9
+          },
+          "selectedLayers": [
+            {
+              "index": 1,
+              "name": "AFT7_Caption"
+            }
+          ]
+        },
+        "logs": [],
+        "durationMs": 572
+      }
+    },
+    {
+      "tool": "ae_layer_info",
+      "response": {
+        "ok": true,
+        "result": {
+          "index": 3,
+          "id": 43,
+          "name": "AFT7_Bar_2",
+          "type": "ShapeLayer",
+          "enabled": true,
+          "solo": false,
+          "shy": false,
+          "locked": false,
+          "inPoint": 0,
+          "outPoint": 5,
+          "startTime": 0,
+          "stretch": 100,
+          "parentIndex": null,
+          "label": 8,
+          "parent": null,
+          "transformGroup": {
+            "name": "Transform",
+            "matchName": "ADBE Transform Group",
+            "properties": [
+              {
+                "name": "Position",
+                "matchName": "ADBE Position",
+                "propertyValueType": "ThreeD_SPATIAL",
+                "value": [
+                  1000,
+                  620,
+                  0
+                ],
+                "keyframes": [
+                  {
+                    "time": 0.95,
+                    "value": [
+                      1000,
+                      620,
+                      0
+                    ],
+                    "inInterp": 6613,
+                    "outInterp": 6613,
+                    "inInterpName": "bezier",
+                    "outInterpName": "bezier",
+                    "inEase": [
+                      {
+                        "speed": 0,
+                        "influence": 82
+                      }
+                    ],
+                    "outEase": [
+                      {
+                        "speed": 0,
+                        "influence": 28
+                      }
+                    ]
+                  },
+                  {
+                    "time": 1.85,
+                    "value": [
+                      960,
+                      655,
+                      0
+                    ],
+                    "inInterp": 6613,
+                    "outInterp": 6613,
+                    "inInterpName": "bezier",
+                    "outInterpName": "bezier",
+                    "inEase": [
+                      {
+                        "speed": 0,
+                        "influence": 82
+                      }
+                    ],
+                    "outEase": [
+                      {
+                        "speed": 0,
+                        "influence": 28
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "X Position",
+                "matchName": "ADBE Position_0",
+                "propertyValueType": "OneD",
+                "value": 0
+              },
+              {
+                "name": "Y Position",
+                "matchName": "ADBE Position_1",
+                "propertyValueType": "OneD",
+                "value": 0
+              },
+              {
+                "name": "Rotation",
+                "matchName": "ADBE Rotate Z",
+                "propertyValueType": "OneD",
+                "value": 12,
+                "keyframes": [
+                  {
+                    "time": 0.95,
+                    "value": 12,
+                    "inInterp": 6613,
+                    "outInterp": 6613,
+                    "inInterpName": "bezier",
+                    "outInterpName": "bezier",
+                    "inEase": [
+                      {
+                        "speed": 0,
+                        "influence": 82
+                      }
+                    ],
+                    "outEase": [
+                      {
+                        "speed": 0,
+                        "influence": 28
+                      }
+                    ]
+                  },
+                  {
+                    "time": 1.85,
+                    "value": 0,
+                    "inInterp": 6613,
+                    "outInterp": 6613,
+                    "inInterpName": "bezier",
+                    "outInterpName": "bezier",
+                    "inEase": [
+                      {
+                        "speed": 0,
+                        "influence": 82
+                      }
+                    ],
+                    "outEase": [
+                      {
+                        "speed": 0,
+                        "influence": 28
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "groups": []
+          },
+          "effectsGroup": null,
+          "masksGroup": null,
+          "contentsGroup": {
+            "name": "Contents",
+            "matchName": "ADBE Root Vectors Group",
+            "properties": [],
+            "groups": [
+              {
+                "name": "Geometry",
+                "matchName": "ADBE Vector Group",
+                "properties": [],
+                "groups": [
+                  {
+                    "name": "Contents",
+                    "matchName": "ADBE Vectors Group",
+                    "properties": [],
+                    "groups": [
+                      {
+                        "name": "Rectangle Path 1",
+                        "matchName": "ADBE Vector Shape - Rect",
+                        "properties": [
+                          {
+                            "name": "Size",
+                            "matchName": "ADBE Vector Rect Size",
+                            "propertyValueType": "TwoD",
+                            "value": [
+                              140,
+                              240
+                            ]
+                          },
+                          {
+                            "name": "Roundness",
+                            "matchName": "ADBE Vector Rect Roundness",
+                            "propertyValueType": "OneD",
+                            "value": 18
+                          }
+                        ],
+                        "groups": []
+                      },
+                      {
+                        "name": "Fill 1",
+                        "matchName": "ADBE Vector Graphic - Fill",
+                        "properties": [
+                          {
+                            "name": "Color",
+                            "matchName": "ADBE Vector Fill Color",
+                            "propertyValueType": "COLOR",
+                            "value": [
+                              0.79000002145767,
+                              0.81999999284744,
+                              0.80000001192093,
+                              1
+                            ],
+                            "keyframes": [
+                              {
+                                "time": 2,
+                                "value": [
+                                  0.79000002145767,
+                                  0.81999999284744,
+                                  0.80000001192093,
+                                  1
+                                ],
+                                "inInterp": 6612,
+                                "outInterp": 6612,
+                                "inInterpName": "linear",
+                                "outInterpName": "linear"
+                              },
+                              {
+                                "time": 2.25,
+                                "value": [
+                                  0.33000001311302,
+                                  0.87000000476837,
+                                  0.68999999761581,
+                                  1
+                                ],
+                                "inInterp": 6612,
+                                "outInterp": 6612,
+                                "inInterpName": "linear",
+                                "outInterpName": "linear"
+                              }
+                            ]
+                          }
+                        ],
+                        "groups": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Transform",
+                    "matchName": "ADBE Vector Transform Group",
+                    "properties": [],
+                    "groups": []
+                  },
+                  {
+                    "name": "Material Options",
+                    "matchName": "ADBE Vector Materials Group",
+                    "properties": [],
+                    "groups": []
+                  }
+                ]
+              }
+            ]
+          },
+          "ok": true,
+          "found": true
+        },
+        "logs": [],
+        "durationMs": 246
+      }
+    },
+    {
+      "tool": "ae_do",
+      "args": {
+        "operation": "keyframe.apply",
+        "args": {
+          "comp": 25,
+          "layer": {
+            "id": 43
+          },
+          "property": [
+            "Contents",
+            "Geometry",
+            "Contents",
+            "ADBE Vector Graphic - Fill",
+            "ADBE Vector Fill Color"
+          ],
+          "replace": true,
+          "keys": [
+            {
+              "time": 2,
+              "value": [
+                0.79,
+                0.82,
+                0.8,
+                1
+              ],
+              "interp": "linear"
+            },
+            {
+              "time": 2.25,
+              "value": [
+                0.33,
+                0.87,
+                0.69,
+                1
+              ],
+              "interp": "linear"
+            }
+          ]
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "ok": true,
+          "error": null,
+          "count": 1,
+          "layers": [
+            {
+              "index": 3,
+              "name": "AFT7_Bar_2",
+              "ok": true,
+              "numKeys": 2,
+              "separated": false,
+              "warnings": []
+            }
+          ]
+        },
+        "context": {
+          "project": {
+            "numItems": 1,
+            "dirty": true,
+            "file": null
+          },
+          "instance": null,
+          "activeComp": {
+            "id": 25,
+            "name": "AFT7_INSTALLED_1945_ALIGNMENT",
+            "width": 1920,
+            "height": 1080,
+            "fps": 30,
+            "duration": 5,
+            "numLayers": 9
+          },
+          "selectedLayers": [
+            {
+              "index": 1,
+              "name": "AFT7_Caption"
+            },
+            {
+              "index": 3,
+              "name": "AFT7_Bar_2"
+            }
+          ]
+        },
+        "logs": [],
+        "durationMs": 250
+      }
+    },
+    {
+      "tool": "ae_comp_info",
+      "response": {
+        "ok": true,
+        "result": {
+          "id": 25,
+          "name": "AFT7_INSTALLED_1945_ALIGNMENT",
+          "type": "CompItem",
+          "parentFolderId": 0,
+          "parentFolderName": "Root",
+          "label": 15,
+          "comment": "",
+          "width": 1920,
+          "height": 1080,
+          "frameRate": 30,
+          "duration": 5,
+          "layerCount": 9,
+          "bgColor": [
+            0,
+            0,
+            0
+          ],
+          "ok": true,
+          "found": true,
+          "workAreaStart": 0,
+          "workAreaDuration": 5,
+          "pixelAspect": 1,
+          "shutterAngle": 180,
+          "shutterPhase": 0,
+          "motionBlur": false,
+          "layers": [
+            {
+              "index": 1,
+              "id": 45,
+              "name": "AFT7_Caption",
+              "type": "TextLayer",
+              "enabled": true,
+              "solo": false,
+              "shy": false,
+              "locked": false,
+              "inPoint": 0,
+              "outPoint": 5,
+              "startTime": 0,
+              "stretch": 100,
+              "parentIndex": null,
+              "label": 1,
+              "text": "EVERY PART HAS A PLACE",
+              "fontSize": 24,
+              "font": "ArialMT",
+              "fillColor": [
+                0.75999999046326,
+                0.80000001192093,
+                0.76999998092651
+              ]
+            },
+            {
+              "index": 2,
+              "id": 44,
+              "name": "AFT7_Bar_3",
+              "type": "ShapeLayer",
+              "enabled": true,
+              "solo": false,
+              "shy": false,
+              "locked": false,
+              "inPoint": 0,
+              "outPoint": 5,
+              "startTime": 0,
+              "stretch": 100,
+              "parentIndex": null,
+              "label": 8
+            },
+            {
+              "index": 3,
+              "id": 43,
+              "name": "AFT7_Bar_2",
+              "type": "ShapeLayer",
+              "enabled": true,
+              "solo": false,
+              "shy": false,
+              "locked": false,
+              "inPoint": 0,
+              "outPoint": 5,
+              "startTime": 0,
+              "stretch": 100,
+              "parentIndex": null,
+              "label": 8
+            },
+            {
+              "index": 4,
+              "id": 42,
+              "name": "AFT7_Bar_1",
+              "type": "ShapeLayer",
+              "enabled": true,
+              "solo": false,
+              "shy": false,
+              "locked": false,
+              "inPoint": 0,
+              "outPoint": 5,
+              "startTime": 0,
+              "stretch": 100,
+              "parentIndex": null,
+              "label": 8
+            },
+            {
+              "index": 5,
+              "id": 41,
+              "name": "AFT7_Baseline",
+              "type": "ShapeLayer",
+              "enabled": true,
+              "solo": false,
+              "shy": false,
+              "locked": false,
+              "inPoint": 0,
+              "outPoint": 5,
+              "startTime": 0,
+              "stretch": 100,
+              "parentIndex": null,
+              "label": 8
+            },
+            {
+              "index": 6,
+              "id": 40,
+              "name": "AFT7_Subtitle",
+              "type": "TextLayer",
+              "enabled": true,
+              "solo": false,
+              "shy": false,
+              "locked": false,
+              "inPoint": 0,
+              "outPoint": 5,
+              "startTime": 0,
+              "stretch": 100,
+              "parentIndex": null,
+              "label": 1,
+              "text": "Three parts. One clear system.",
+              "fontSize": 32,
+              "font": "ArialMT",
+              "fillColor": [
+                0.60000002384186,
+                0.65000003576279,
+                0.65000003576279
+              ]
+            },
+            {
+              "index": 7,
+              "id": 39,
+              "name": "AFT7_Title",
+              "type": "TextLayer",
+              "enabled": true,
+              "solo": false,
+              "shy": false,
+              "locked": false,
+              "inPoint": 0,
+              "outPoint": 5,
+              "startTime": 0,
+              "stretch": 100,
+              "parentIndex": null,
+              "label": 1,
+              "text": "Make room for clarity",
+              "fontSize": 78,
+              "font": "Arial-BoldMT",
+              "fillColor": [
+                0.93999999761581,
+                0.93999999761581,
+                0.89999997615814
+              ]
+            },
+            {
+              "index": 8,
+              "id": 38,
+              "name": "AFT7_Eyebrow",
+              "type": "TextLayer",
+              "enabled": true,
+              "solo": false,
+              "shy": false,
+              "locked": false,
+              "inPoint": 0,
+              "outPoint": 5,
+              "startTime": 0,
+              "stretch": 100,
+              "parentIndex": null,
+              "label": 1,
+              "text": "A SIMPLE ALIGNMENT",
+              "fontSize": 24,
+              "font": "ArialMT",
+              "fillColor": [
+                0.55000001192093,
+                0.60000002384186,
+                0.61000001430511
+              ]
+            },
+            {
+              "index": 9,
+              "id": 37,
+              "name": "AFT7_Background",
+              "type": "ShapeLayer",
+              "enabled": true,
+              "solo": false,
+              "shy": false,
+              "locked": false,
+              "inPoint": 0,
+              "outPoint": 5,
+              "startTime": 0,
+              "stretch": 100,
+              "parentIndex": null,
+              "label": 8
+            }
+          ]
+        },
+        "logs": [],
+        "durationMs": 165
+      }
+    },
+    {
+      "tool": "ae_do",
+      "args": {
+        "operation": "batch.run",
+        "args": {
+          "stopOnError": true,
+          "ops": [
+            {
+              "operation": "text.set_content",
+              "args": {
+                "comp": 25,
+                "layer": {
+                  "id": 39
+                },
+                "text": "Bring every part into focus"
+              }
+            },
+            {
+              "operation": "keyframe.set_value",
+              "args": {
+                "comp": 25,
+                "layer": {
+                  "id": 43
+                },
+                "property": [
+                  "Contents",
+                  "Geometry",
+                  "Contents",
+                  "ADBE Vector Graphic - Fill",
+                  "ADBE Vector Fill Color"
+                ],
+                "keyIndex": 2,
+                "value": [
+                  1,
+                  0.48,
+                  0.23,
+                  1
+                ]
+              }
+            },
+            {
+              "operation": "comp.info",
+              "args": {
+                "comp": 25
+              }
+            }
+          ]
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "ok": true,
+          "error": null,
+          "results": [
+            {
+              "ok": true,
+              "text": "Bring every part into focus"
+            },
+            {
+              "ok": true,
+              "keyIndex": 2
+            },
+            {
+              "id": 25,
+              "name": "AFT7_INSTALLED_1945_ALIGNMENT",
+              "type": "CompItem",
+              "parentFolderId": 0,
+              "parentFolderName": "Root",
+              "label": 15,
+              "comment": "",
+              "width": 1920,
+              "height": 1080,
+              "frameRate": 30,
+              "duration": 5,
+              "layerCount": 9,
+              "bgColor": [
+                0,
+                0,
+                0
+              ],
+              "ok": true,
+              "found": true,
+              "workAreaStart": 0,
+              "workAreaDuration": 5,
+              "pixelAspect": 1,
+              "shutterAngle": 180,
+              "shutterPhase": 0,
+              "motionBlur": false,
+              "layers": [
+                {
+                  "index": 1,
+                  "id": 45,
+                  "name": "AFT7_Caption",
+                  "type": "TextLayer",
+                  "enabled": true,
+                  "solo": false,
+                  "shy": false,
+                  "locked": false,
+                  "inPoint": 0,
+                  "outPoint": 5,
+                  "startTime": 0,
+                  "stretch": 100,
+                  "parentIndex": null,
+                  "label": 1,
+                  "text": "EVERY PART HAS A PLACE",
+                  "fontSize": 24,
+                  "font": "ArialMT",
+                  "fillColor": [
+                    0.75999999046326,
+                    0.80000001192093,
+                    0.76999998092651
+                  ]
+                },
+                {
+                  "index": 2,
+                  "id": 44,
+                  "name": "AFT7_Bar_3",
+                  "type": "ShapeLayer",
+                  "enabled": true,
+                  "solo": false,
+                  "shy": false,
+                  "locked": false,
+                  "inPoint": 0,
+                  "outPoint": 5,
+                  "startTime": 0,
+                  "stretch": 100,
+                  "parentIndex": null,
+                  "label": 8
+                },
+                {
+                  "index": 3,
+                  "id": 43,
+                  "name": "AFT7_Bar_2",
+                  "type": "ShapeLayer",
+                  "enabled": true,
+                  "solo": false,
+                  "shy": false,
+                  "locked": false,
+                  "inPoint": 0,
+                  "outPoint": 5,
+                  "startTime": 0,
+                  "stretch": 100,
+                  "parentIndex": null,
+                  "label": 8
+                },
+                {
+                  "index": 4,
+                  "id": 42,
+                  "name": "AFT7_Bar_1",
+                  "type": "ShapeLayer",
+                  "enabled": true,
+                  "solo": false,
+                  "shy": false,
+                  "locked": false,
+                  "inPoint": 0,
+                  "outPoint": 5,
+                  "startTime": 0,
+                  "stretch": 100,
+                  "parentIndex": null,
+                  "label": 8
+                },
+                {
+                  "index": 5,
+                  "id": 41,
+                  "name": "AFT7_Baseline",
+                  "type": "ShapeLayer",
+                  "enabled": true,
+                  "solo": false,
+                  "shy": false,
+                  "locked": false,
+                  "inPoint": 0,
+                  "outPoint": 5,
+                  "startTime": 0,
+                  "stretch": 100,
+                  "parentIndex": null,
+                  "label": 8
+                },
+                {
+                  "index": 6,
+                  "id": 40,
+                  "name": "AFT7_Subtitle",
+                  "type": "TextLayer",
+                  "enabled": true,
+                  "solo": false,
+                  "shy": false,
+                  "locked": false,
+                  "inPoint": 0,
+                  "outPoint": 5,
+                  "startTime": 0,
+                  "stretch": 100,
+                  "parentIndex": null,
+                  "label": 1,
+                  "text": "Three parts. One clear system.",
+                  "fontSize": 32,
+                  "font": "ArialMT",
+                  "fillColor": [
+                    0.60000002384186,
+                    0.65000003576279,
+                    0.65000003576279
+                  ]
+                },
+                {
+                  "index": 7,
+                  "id": 39,
+                  "name": "AFT7_Title",
+                  "type": "TextLayer",
+                  "enabled": true,
+                  "solo": false,
+                  "shy": false,
+                  "locked": false,
+                  "inPoint": 0,
+                  "outPoint": 5,
+                  "startTime": 0,
+                  "stretch": 100,
+                  "parentIndex": null,
+                  "label": 1,
+                  "text": "Bring every part into focus",
+                  "fontSize": 78,
+                  "font": "Arial-BoldMT",
+                  "fillColor": [
+                    0.93999999761581,
+                    0.93999999761581,
+                    0.89999997615814
+                  ]
+                },
+                {
+                  "index": 8,
+                  "id": 38,
+                  "name": "AFT7_Eyebrow",
+                  "type": "TextLayer",
+                  "enabled": true,
+                  "solo": false,
+                  "shy": false,
+                  "locked": false,
+                  "inPoint": 0,
+                  "outPoint": 5,
+                  "startTime": 0,
+                  "stretch": 100,
+                  "parentIndex": null,
+                  "label": 1,
+                  "text": "A SIMPLE ALIGNMENT",
+                  "fontSize": 24,
+                  "font": "ArialMT",
+                  "fillColor": [
+                    0.55000001192093,
+                    0.60000002384186,
+                    0.61000001430511
+                  ]
+                },
+                {
+                  "index": 9,
+                  "id": 37,
+                  "name": "AFT7_Background",
+                  "type": "ShapeLayer",
+                  "enabled": true,
+                  "solo": false,
+                  "shy": false,
+                  "locked": false,
+                  "inPoint": 0,
+                  "outPoint": 5,
+                  "startTime": 0,
+                  "stretch": 100,
+                  "parentIndex": null,
+                  "label": 8
+                }
+              ]
+            }
+          ],
+          "count": 3,
+          "failed": 0
+        },
+        "context": {
+          "project": {
+            "numItems": 1,
+            "dirty": true,
+            "file": null
+          },
+          "instance": null,
+          "activeComp": {
+            "id": 25,
+            "name": "AFT7_INSTALLED_1945_ALIGNMENT",
+            "width": 1920,
+            "height": 1080,
+            "fps": 30,
+            "duration": 5,
+            "numLayers": 9
+          },
+          "selectedLayers": [
+            {
+              "index": 1,
+              "name": "AFT7_Caption"
+            },
+            {
+              "index": 3,
+              "name": "AFT7_Bar_2"
+            }
+          ]
+        },
+        "logs": [],
+        "durationMs": 247
+      }
+    }
+  ],
+  "fonts": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\n  \"ok\": true,\n  \"result\": {\n    \"ok\": true,\n    \"total\": 17,\n    \"returned\": 15,\n    \"fonts\": [\n      {\n        \"postScriptName\": \"ArialMT\",\n        \"familyName\": \"Arial\",\n        \"styleName\": \"Regular\"\n      },\n      {\n        \"postScriptName\": \"Arial-ItalicMT\",\n        \"familyName\": \"Arial\",\n        \"styleName\": \"Italic\"\n      },\n      {\n        \"postScriptName\": \"Arial-BoldMT\",\n        \"familyName\": \"Arial\",\n        \"styleName\": \"Bold\"\n      },\n      {\n        \"postScriptName\": \"Arial-BoldItalicMT\",\n        \"familyName\": \"Arial\",\n        \"styleName\": \"Bold Italic\"\n      },\n      {\n        \"postScriptName\": \"Arial-Black\",\n        \"familyName\": \"Arial Black\",\n        \"styleName\": \"Regular\"\n      },\n      {\n        \"postScriptName\": \"ArialNarrow\",\n        \"familyName\": \"Arial Narrow\",\n        \"styleName\": \"Regular\"\n      },\n      {\n        \"postScriptName\": \"ArialNarrow-Italic\",\n        \"familyName\": \"Arial Narrow\",\n        \"styleName\": \"Italic\"\n      },\n      {\n        \"postScriptName\": \"ArialNarrow-Bold\",\n        \"familyName\": \"Arial Narrow\",\n        \"styleName\": \"Bold\"\n      },\n      {\n        \"postScriptName\": \"ArialNarrow-BoldItalic\",\n        \"familyName\": \"Arial Narrow\",\n        \"styleName\": \"Bold Italic\"\n      },\n      {\n        \"postScriptName\": \"ArialRoundedMTBold\",\n        \"familyName\": \"Arial Rounded MT Bold\",\n        \"styleName\": \"Regular\"\n      },\n      {\n        \"postScriptName\": \"ArialUnicodeMS\",\n        \"familyName\": \"Arial Unicode MS\",\n        \"styleName\": \"Regular\"\n      },\n      {\n        \"postScriptName\": \"ArialHebrew-Light\",\n        \"familyName\": \"Arial Hebrew\",\n        \"styleName\": \"Light\"\n      },\n      {\n        \"postScriptName\": \"ArialHebrew\",\n        \"familyName\": \"Arial Hebrew\",\n        \"styleName\": \"Regular\"\n      },\n      {\n        \"postScriptName\": \"ArialHebrew-Bold\",\n        \"familyName\": \"Arial Hebrew\",\n        \"styleName\": \"Bold\"\n      },\n      {\n        \"postScriptName\": \"ArialHebrewScholar-Light\",\n        \"familyName\": \"Arial Hebrew Scholar\",\n        \"styleName\": \"Light\"\n      }\n    ]\n  },\n  \"context\": {\n    \"project\": {\n      \"numItems\": 0,\n      \"dirty\": true,\n      \"file\": null\n    },\n    \"instance\": null,\n    \"activeComp\": null,\n    \"selectedLayers\": []\n  },\n  \"logs\": [],\n  \"durationMs\": 249\n}"
+      }
+    ],
+    "structuredContent": {
+      "ok": true,
+      "result": {
+        "ok": true,
+        "total": 17,
+        "returned": 15,
+        "fonts": [
+          {
+            "postScriptName": "ArialMT",
+            "familyName": "Arial",
+            "styleName": "Regular"
+          },
+          {
+            "postScriptName": "Arial-ItalicMT",
+            "familyName": "Arial",
+            "styleName": "Italic"
+          },
+          {
+            "postScriptName": "Arial-BoldMT",
+            "familyName": "Arial",
+            "styleName": "Bold"
+          },
+          {
+            "postScriptName": "Arial-BoldItalicMT",
+            "familyName": "Arial",
+            "styleName": "Bold Italic"
+          },
+          {
+            "postScriptName": "Arial-Black",
+            "familyName": "Arial Black",
+            "styleName": "Regular"
+          },
+          {
+            "postScriptName": "ArialNarrow",
+            "familyName": "Arial Narrow",
+            "styleName": "Regular"
+          },
+          {
+            "postScriptName": "ArialNarrow-Italic",
+            "familyName": "Arial Narrow",
+            "styleName": "Italic"
+          },
+          {
+            "postScriptName": "ArialNarrow-Bold",
+            "familyName": "Arial Narrow",
+            "styleName": "Bold"
+          },
+          {
+            "postScriptName": "ArialNarrow-BoldItalic",
+            "familyName": "Arial Narrow",
+            "styleName": "Bold Italic"
+          },
+          {
+            "postScriptName": "ArialRoundedMTBold",
+            "familyName": "Arial Rounded MT Bold",
+            "styleName": "Regular"
+          },
+          {
+            "postScriptName": "ArialUnicodeMS",
+            "familyName": "Arial Unicode MS",
+            "styleName": "Regular"
+          },
+          {
+            "postScriptName": "ArialHebrew-Light",
+            "familyName": "Arial Hebrew",
+            "styleName": "Light"
+          },
+          {
+            "postScriptName": "ArialHebrew",
+            "familyName": "Arial Hebrew",
+            "styleName": "Regular"
+          },
+          {
+            "postScriptName": "ArialHebrew-Bold",
+            "familyName": "Arial Hebrew",
+            "styleName": "Bold"
+          },
+          {
+            "postScriptName": "ArialHebrewScholar-Light",
+            "familyName": "Arial Hebrew Scholar",
+            "styleName": "Light"
+          }
+        ]
+      },
+      "context": {
+        "project": {
+          "numItems": 0,
+          "dirty": true,
+          "file": null
+        },
+        "instance": null,
+        "activeComp": null,
+        "selectedLayers": []
+      },
+      "logs": [],
+      "durationMs": 249
+    },
+    "isError": false
+  },
+  "beforeRender": {
+    "ok": true,
+    "result": {
+      "ok": true,
+      "frames": [
+        {
+          "ok": true,
+          "writtenTo": "<developer-home>/after-effects-studio/quality/renders/2026-10-07-installed-first-session-1945/before_0.png",
+          "time": 0,
+          "compName": "AFT7_INSTALLED_1945_ALIGNMENT",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct",
+          "analysis": {
+            "width": 1920,
+            "height": 1080,
+            "meanRgb": [
+              0.09887432587868114,
+              0.10984879892025629,
+              0.11795417322306674
+            ],
+            "uniform": false,
+            "background": {
+              "kind": "transparent",
+              "color": null
+            },
+            "contentBounds": {
+              "left": 0,
+              "top": 0,
+              "width": 1920,
+              "height": 1080
+            },
+            "coverage": 1,
+            "edges": {
+              "top": {
+                "width": 122,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "bottom": {
+                "width": 331,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "left": {
+                "width": 571,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "right": {
+                "width": 534,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              }
+            }
+          }
+        },
+        {
+          "ok": true,
+          "writtenTo": "<developer-home>/after-effects-studio/quality/renders/2026-10-07-installed-first-session-1945/before_1.png",
+          "time": 0.5,
+          "compName": "AFT7_INSTALLED_1945_ALIGNMENT",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct",
+          "analysis": {
+            "width": 1920,
+            "height": 1080,
+            "meanRgb": [
+              0.09912189826958417,
+              0.11014307416144187,
+              0.11823912274112285
+            ],
+            "uniform": false,
+            "background": {
+              "kind": "transparent",
+              "color": null
+            },
+            "contentBounds": {
+              "left": 0,
+              "top": 0,
+              "width": 1920,
+              "height": 1080
+            },
+            "coverage": 1,
+            "edges": {
+              "top": {
+                "width": 122,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "bottom": {
+                "width": 263,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "left": {
+                "width": 571,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "right": {
+                "width": 534,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              }
+            }
+          }
+        },
+        {
+          "ok": true,
+          "writtenTo": "<developer-home>/after-effects-studio/quality/renders/2026-10-07-installed-first-session-1945/before_2.png",
+          "time": 1.15,
+          "compName": "AFT7_INSTALLED_1945_ALIGNMENT",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct",
+          "analysis": {
+            "width": 1920,
+            "height": 1080,
+            "meanRgb": [
+              0.09913936817210692,
+              0.11016407113754895,
+              0.11825946607238931
+            ],
+            "uniform": false,
+            "background": {
+              "kind": "transparent",
+              "color": null
+            },
+            "contentBounds": {
+              "left": 0,
+              "top": 0,
+              "width": 1920,
+              "height": 1080
+            },
+            "coverage": 1,
+            "edges": {
+              "top": {
+                "width": 122,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "bottom": {
+                "width": 263,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "left": {
+                "width": 571,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "right": {
+                "width": 537,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              }
+            }
+          }
+        },
+        {
+          "ok": true,
+          "writtenTo": "<developer-home>/after-effects-studio/quality/renders/2026-10-07-installed-first-session-1945/before_3.png",
+          "time": 1.6,
+          "compName": "AFT7_INSTALLED_1945_ALIGNMENT",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct",
+          "analysis": {
+            "width": 1920,
+            "height": 1080,
+            "meanRgb": [
+              0.09913705572725622,
+              0.11016169531859298,
+              0.11825718456260892
+            ],
+            "uniform": false,
+            "background": {
+              "kind": "transparent",
+              "color": null
+            },
+            "contentBounds": {
+              "left": 0,
+              "top": 0,
+              "width": 1920,
+              "height": 1080
+            },
+            "coverage": 1,
+            "edges": {
+              "top": {
+                "width": 122,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "bottom": {
+                "width": 263,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "left": {
+                "width": 571,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "right": {
+                "width": 566,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              }
+            }
+          }
+        },
+        {
+          "ok": true,
+          "writtenTo": "<developer-home>/after-effects-studio/quality/renders/2026-10-07-installed-first-session-1945/before_4.png",
+          "time": 2.25,
+          "compName": "AFT7_INSTALLED_1945_ALIGNMENT",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct",
+          "analysis": {
+            "width": 1920,
+            "height": 1080,
+            "meanRgb": [
+              0.09224273281379386,
+              0.11148498159843838,
+              0.1169803717621075
+            ],
+            "uniform": false,
+            "background": {
+              "kind": "transparent",
+              "color": null
+            },
+            "contentBounds": {
+              "left": 0,
+              "top": 0,
+              "width": 1920,
+              "height": 1080
+            },
+            "coverage": 1,
+            "edges": {
+              "top": {
+                "width": 122,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "bottom": {
+                "width": 149,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "left": {
+                "width": 571,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "right": {
+                "width": 566,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              }
+            }
+          }
+        },
+        {
+          "ok": true,
+          "writtenTo": "<developer-home>/after-effects-studio/quality/renders/2026-10-07-installed-first-session-1945/before_5.png",
+          "time": 4.5,
+          "compName": "AFT7_INSTALLED_1945_ALIGNMENT",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct",
+          "analysis": {
+            "width": 1920,
+            "height": 1080,
+            "meanRgb": [
+              0.0922825576099601,
+              0.11152650063465086,
+              0.11701963355805574
+            ],
+            "uniform": false,
+            "background": {
+              "kind": "transparent",
+              "color": null
+            },
+            "contentBounds": {
+              "left": 0,
+              "top": 0,
+              "width": 1920,
+              "height": 1080
+            },
+            "coverage": 1,
+            "edges": {
+              "top": {
+                "width": 122,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "bottom": {
+                "width": 149,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "left": {
+                "width": 571,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "right": {
+                "width": 566,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "captureKind": "direct",
+      "compName": "AFT7_INSTALLED_1945_ALIGNMENT",
+      "workingSpace": "None",
+      "bitsPerChannel": 16,
+      "projectFile": null,
+      "method": "native",
+      "colorPipeline": "untagged 16-bit → 8-bit sRGB-tagged (values unchanged)",
+      "contactSheet": {
+        "writtenTo": "<developer-home>/after-effects-studio/quality/renders/2026-10-07-installed-first-session-1945/before_sheet.png",
+        "size": [
+          1952,
+          784
+        ],
+        "columns": 3,
+        "rows": 2,
+        "thumbSize": [
+          640,
+          360
+        ],
+        "frames": 6
+      }
+    },
+    "logs": [],
+    "durationMs": 166
+  },
+  "afterRender": {
+    "ok": true,
+    "result": {
+      "ok": true,
+      "frames": [
+        {
+          "ok": true,
+          "writtenTo": "<developer-home>/after-effects-studio/quality/renders/2026-10-07-installed-first-session-1945/after_0.png",
+          "time": 0,
+          "compName": "AFT7_INSTALLED_1945_ALIGNMENT",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct",
+          "analysis": {
+            "width": 1920,
+            "height": 1080,
+            "meanRgb": [
+              0.10060823123094842,
+              0.11156309642960843,
+              0.11957053002038467
+            ],
+            "uniform": false,
+            "background": {
+              "kind": "transparent",
+              "color": null
+            },
+            "contentBounds": {
+              "left": 0,
+              "top": 0,
+              "width": 1920,
+              "height": 1080
+            },
+            "coverage": 1,
+            "edges": {
+              "top": {
+                "width": 122,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "bottom": {
+                "width": 331,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "left": {
+                "width": 469,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "right": {
+                "width": 467,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              }
+            }
+          }
+        },
+        {
+          "ok": true,
+          "writtenTo": "<developer-home>/after-effects-studio/quality/renders/2026-10-07-installed-first-session-1945/after_1.png",
+          "time": 0.5,
+          "compName": "AFT7_INSTALLED_1945_ALIGNMENT",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct",
+          "analysis": {
+            "width": 1920,
+            "height": 1080,
+            "meanRgb": [
+              0.10085580362185145,
+              0.111857371670794,
+              0.11985547953844077
+            ],
+            "uniform": false,
+            "background": {
+              "kind": "transparent",
+              "color": null
+            },
+            "contentBounds": {
+              "left": 0,
+              "top": 0,
+              "width": 1920,
+              "height": 1080
+            },
+            "coverage": 1,
+            "edges": {
+              "top": {
+                "width": 122,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "bottom": {
+                "width": 263,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "left": {
+                "width": 469,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "right": {
+                "width": 467,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              }
+            }
+          }
+        },
+        {
+          "ok": true,
+          "writtenTo": "<developer-home>/after-effects-studio/quality/renders/2026-10-07-installed-first-session-1945/after_2.png",
+          "time": 1.15,
+          "compName": "AFT7_INSTALLED_1945_ALIGNMENT",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct",
+          "analysis": {
+            "width": 1920,
+            "height": 1080,
+            "meanRgb": [
+              0.10087327352437893,
+              0.11187836864690381,
+              0.11987582286971532
+            ],
+            "uniform": false,
+            "background": {
+              "kind": "transparent",
+              "color": null
+            },
+            "contentBounds": {
+              "left": 0,
+              "top": 0,
+              "width": 1920,
+              "height": 1080
+            },
+            "coverage": 1,
+            "edges": {
+              "top": {
+                "width": 122,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "bottom": {
+                "width": 263,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "left": {
+                "width": 469,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "right": {
+                "width": 467,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              }
+            }
+          }
+        },
+        {
+          "ok": true,
+          "writtenTo": "<developer-home>/after-effects-studio/quality/renders/2026-10-07-installed-first-session-1945/after_3.png",
+          "time": 1.6,
+          "compName": "AFT7_INSTALLED_1945_ALIGNMENT",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct",
+          "analysis": {
+            "width": 1920,
+            "height": 1080,
+            "meanRgb": [
+              0.10087096107951667,
+              0.11187599282794812,
+              0.11987354135993142
+            ],
+            "uniform": false,
+            "background": {
+              "kind": "transparent",
+              "color": null
+            },
+            "contentBounds": {
+              "left": 0,
+              "top": 0,
+              "width": 1920,
+              "height": 1080
+            },
+            "coverage": 1,
+            "edges": {
+              "top": {
+                "width": 122,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "bottom": {
+                "width": 263,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "left": {
+                "width": 469,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "right": {
+                "width": 467,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              }
+            }
+          }
+        },
+        {
+          "ok": true,
+          "writtenTo": "<developer-home>/after-effects-studio/quality/renders/2026-10-07-installed-first-session-1945/after_4.png",
+          "time": 2.25,
+          "compName": "AFT7_INSTALLED_1945_ALIGNMENT",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct",
+          "analysis": {
+            "width": 1920,
+            "height": 1080,
+            "meanRgb": [
+              0.1047447009739384,
+              0.10693168278274424,
+              0.11120401549574441
+            ],
+            "uniform": false,
+            "background": {
+              "kind": "transparent",
+              "color": null
+            },
+            "contentBounds": {
+              "left": 0,
+              "top": 0,
+              "width": 1920,
+              "height": 1080
+            },
+            "coverage": 1,
+            "edges": {
+              "top": {
+                "width": 122,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "bottom": {
+                "width": 149,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "left": {
+                "width": 469,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "right": {
+                "width": 467,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              }
+            }
+          }
+        },
+        {
+          "ok": true,
+          "writtenTo": "<developer-home>/after-effects-studio/quality/renders/2026-10-07-installed-first-session-1945/after_5.png",
+          "time": 4.5,
+          "compName": "AFT7_INSTALLED_1945_ALIGNMENT",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct",
+          "analysis": {
+            "width": 1920,
+            "height": 1080,
+            "meanRgb": [
+              0.10478452577010464,
+              0.10697320181895673,
+              0.11124327729169264
+            ],
+            "uniform": false,
+            "background": {
+              "kind": "transparent",
+              "color": null
+            },
+            "contentBounds": {
+              "left": 0,
+              "top": 0,
+              "width": 1920,
+              "height": 1080
+            },
+            "coverage": 1,
+            "edges": {
+              "top": {
+                "width": 122,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "bottom": {
+                "width": 149,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "left": {
+                "width": 469,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              },
+              "right": {
+                "width": 467,
+                "kind": "color",
+                "color": [
+                  0.05497825589379721,
+                  0.06498817425803007,
+                  0.07496757457846952
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "captureKind": "direct",
+      "compName": "AFT7_INSTALLED_1945_ALIGNMENT",
+      "workingSpace": "None",
+      "bitsPerChannel": 16,
+      "projectFile": null,
+      "method": "native",
+      "colorPipeline": "untagged 16-bit → 8-bit sRGB-tagged (values unchanged)",
+      "contactSheet": {
+        "writtenTo": "<developer-home>/after-effects-studio/quality/renders/2026-10-07-installed-first-session-1945/after_sheet.png",
+        "size": [
+          1952,
+          784
+        ],
+        "columns": 3,
+        "rows": 2,
+        "thumbSize": [
+          640,
+          360
+        ],
+        "frames": 6
+      }
+    },
+    "logs": [],
+    "durationMs": 247
+  }
+}

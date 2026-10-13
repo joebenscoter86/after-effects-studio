@@ -1,0 +1,7 @@
+# AFT-18 machine-route decision — 2026-10-09
+
+Result: no clean-machine execution. Joe identified the available cold AE Mac as company-managed and declined to transfer or run the executable test kit there. No file transfer, plugin installation, AE connection, native write or permission change was performed on that Mac. Gmail's attachment block prompted the concern; this record does not treat the block as a malware finding or as a control to work around.
+
+D-011 excludes that machine. The prepared local marketplace kit was rebuilt with the revised runbook and has SHA-256 `32a8c59254eed03a7816aaf84e931ecb492ab591fe552d86f7d1ba784e7f8b84`; the installable plugin archive remains `ec20ebffd4be6de6e7d6104b2d4ab506f476b324974bfc28f919867abe38b06a`. Two wrapper builds matched. This is not a clean-install result. Continue candidate work on the development Mac and keep all machine-specific portability, first-run permission, creator-install and public Git-source claims unverified. AFT-18 remains open until an eligible personally owned or expressly authorized separate Mac can run the exact candidate and [runbook](../../fixtures/clean-machine-runbook.md).
+
+This is a scheduling and evidence-boundary change, not a relaxation of the public-v1 release criterion. If a later limited preview is considered before AFT-18 passes, its distribution scope and risk require a separate explicit product/release decision.

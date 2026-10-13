@@ -1,0 +1,80 @@
+{
+  "comp_equal": true,
+  "layers_equal": true,
+  "property_count": [
+    5606,
+    5606
+  ],
+  "differences": [
+    {
+      "before": {
+        "path": "AFT17 Controls/ADBE Effect Parade#5/ADBE Slider Control#1/ADBE Slider Control-0001#1",
+        "matchName": "ADBE Slider Control-0001",
+        "value": 20,
+        "keys": [
+          {
+            "time": 1.5,
+            "value": 20
+          },
+          {
+            "time": 3.5,
+            "value": 26
+          },
+          {
+            "time": 4.16666666666667,
+            "value": 28
+          }
+        ]
+      },
+      "after": {
+        "path": "AFT17 Controls/ADBE Effect Parade#5/ADBE Slider Control#1/ADBE Slider Control-0001#1",
+        "matchName": "ADBE Slider Control-0001",
+        "value": 20,
+        "keys": [
+          {
+            "time": 1.5,
+            "value": 20
+          },
+          {
+            "time": 3.8,
+            "value": 26
+          },
+          {
+            "time": 4.46666666666667,
+            "value": 28
+          }
+        ]
+      }
+    },
+    {
+      "before": {
+        "path": "AFT17 Controls/ADBE Effect Parade#5/ADBE Slider Control#2/ADBE Slider Control-0001#1",
+        "matchName": "ADBE Slider Control-0001",
+        "value": 105
+      },
+      "after": {
+        "path": "AFT17 Controls/ADBE Effect Parade#5/ADBE Slider Control#2/ADBE Slider Control-0001#1",
+        "matchName": "ADBE Slider Control-0001",
+        "value": 114
+      }
+    }
+  ],
+  "events": {
+    "v1": {
+      "temperature_26": 105,
+      "signal_visible": 105,
+      "signal_at_receiver": 135,
+      "first_louver_change": 137,
+      "opening_label": 136,
+      "final_label": 159
+    },
+    "v2": {
+      "temperature_26": 114,
+      "signal_visible": 114,
+      "signal_at_receiver": 144,
+      "first_louver_change": 146,
+      "opening_label": 145,
+      "final_label": 168
+    }
+  }
+}

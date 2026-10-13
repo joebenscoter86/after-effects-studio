@@ -1,0 +1,17 @@
+# AFT-7 controlled first-session run
+
+Date: 2026-10-06 (America/Los_Angeles). Canonical source checkout `e8b58fd58955866a1da7f31d11c9407947a5fc57` plus uncommitted ticket changes. Package manifest version `0.1.0+codex.20261007034703`; manifest SHA-256 `05e0fbad89f98386f7a0158fa31fe43fa82fea003299057c6861974f9e03305e`, runtime bundle SHA-256 `085227474cd32e10eb6a446be4438e459730539efc1706f0f1ce8511450f4efb`. Development source was invoked directly through its MCP server, not a fresh Codex task or clean-machine/public install.
+
+Host: macOS 26.6.2, Node v25.9.0, AE 26.5x89. `doctor.mjs` passed file/path discovery and explicitly did not claim permission validation. A read-only MCP handshake, 19 library reads, catalog, `ae_version_info` and `ae_context` passed. The exact open project was an unsaved untitled project with `numItems=0`, no active comp and no selected layers. No unrelated work was present. One manual MCP call was made at a time during writes.
+
+## Owned scope and actions
+
+- Internal sample brief: five-second 960×540/30fps editable native scene about turning a design idea into motion and proof, using no private assets. The packaged `motion.jsx` helper and `examples/native-demo.jsx` created only `AES_AFT7_FIRST_SESSION_20261006` (item ID 13) and 44 native layers. No project save or switch occurred.
+- Rendered six before frames at 0.4, 1.0, 1.6, 2.4, 3.3 and 4.5 seconds. Inspected [the before contact sheet](../../renders/2026-10-06-first-session/before_sheet.png): the title remained readable, three panels constructed in order, and the final panel held. These are sampled-frame observations, not full-speed playback.
+- Read back the exact comp and layer IDs. A guarded revision changed title layer 49 from “Make the idea move.” to “From idea to proof.” and subtitle layer 50 from “Design. Choreograph. Verify.” to “Design it. Animate it. Verify it.” The comp remained ID 13 with 44 layers, so this did not create a duplicate scene. Rendered the same six times and inspected [the after contact sheet](../../renders/2026-10-06-first-session/after_sheet.png); the new copy fit the image and the panels remained intact.
+- A post-render read-only `ae_project_info` took about 47 seconds. A second read-only request was started while the first was pending; both eventually completed. The result still showed only item 13, the named comp, in the unsaved project. This delay is a connection/recovery observation for AFT-8; no write was retried during the uncertainty.
+- Guarded cleanup required `project.file=null`, `numItems=1`, item ID 13, the exact owned name, 44 layers and the revised title. It removed that comp only. Final `ae_project_info` confirmed the original unsaved project again had zero items. The render evidence and development-only call/scripts remain under ignored `quality/renders/2026-10-06-first-session/`.
+
+## Result and remaining checks
+
+Native creation, readback, sampled rendered preview, targeted revision, visual sample inspection and owned cleanup passed. The [creator-facing journey](../../../plugin/docs/first-session.md) now describes installation, permission check, project inspection, brief, preview and revision in natural language. This run did **not** use a fresh installed Codex task following that guide, produce a complete movie/AEP, check full-speed motion, establish second-machine portability or receive Joe's creative approval. Keep AFT-7 open until its fresh-task journey is exercised; AFT-12/AFT-18 own delivery and clean-machine acceptance.

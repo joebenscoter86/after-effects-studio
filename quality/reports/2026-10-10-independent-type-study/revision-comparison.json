@@ -1,0 +1,31 @@
+{
+  "changes": [
+    [
+      "/items/0/layers/0/text",
+      "Notes in motion.",
+      "Ideas with a place to land."
+    ],
+    [
+      "/items/0/layers/0/textGroup/properties/0/value/text",
+      "Notes in motion.",
+      "Ideas with a place to land."
+    ],
+    [
+      "/items/0/layers/1/contentsGroup/groups/0/groups/0/groups/1/properties/3/value/0",
+      0.14509804546833,
+      0.73725491762161
+    ],
+    [
+      "/items/0/layers/1/contentsGroup/groups/0/groups/0/groups/1/properties/3/value/1",
+      0.34901961684227,
+      0.38823530077934
+    ],
+    [
+      "/items/0/layers/1/contentsGroup/groups/0/groups/0/groups/1/properties/3/value/2",
+      0.839215695858,
+      0.24705882370472
+    ]
+  ],
+  "all_other_serialized_content_identical": true,
+  "both_reopened_serialized_contents_match": true
+}

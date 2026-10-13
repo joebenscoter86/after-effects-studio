@@ -1,0 +1,63 @@
+ M AGENTS.md
+ M README.md
+ M plugin/.codex-plugin/plugin.json
+ M plugin/.mcp.json
+ M plugin/PROVENANCE.md
+ M plugin/README.md
+ M plugin/runtime/dist/index.js
+ M plugin/runtime/src/errors.ts
+ M plugin/runtime/src/operations/footage.ts
+ M plugin/runtime/src/tools/render-frame.ts
+ M plugin/runtime/src/transport/AeTransport.ts
+ M plugin/runtime/src/transport/FileIpcTransport.ts
+ M plugin/runtime/tests/errors.test.ts
+ M plugin/runtime/tests/transport-offline.test.ts
+ M plugin/scripts/doctor.mjs
+ M plugin/scripts/start.mjs
+ M plugin/tests/smoke.mjs
+ M product/context.md
+ M product/decisions.md
+ M product/roadmap.md
+ M quality/context.md
+ M quality/release-criteria.md
+ M release/context.md
+ M release/listing-draft.md
+ M release/release-plan.md
+?? license.md
+?? plugin/docs/connection-recovery.md
+?? plugin/docs/first-session.md
+?? plugin/docs/local-install.md
+?? plugin/license.md
+?? plugin/runtime/tests/doctor.test.ts
+?? plugin/scripts/doctor-core.d.mts
+?? plugin/scripts/doctor-core.mjs
+?? product/backlog.md
+?? product/build-plan.md
+?? product/prd.md
+?? quality/fixtures/generate-mark.py
+?? quality/fixtures/geometry-mark.png
+?? quality/fixtures/platform-matrix.md
+?? quality/fixtures/scenarios.md
+?? quality/reports/2026-10-06-build-planning/
+?? quality/reports/2026-10-06-connection-recovery/
+?? quality/reports/2026-10-06-distribution-route/
+?? quality/reports/2026-10-06-first-session/
+?? quality/reports/2026-10-06-first-use/
+?? quality/reports/2026-10-06-install-update/
+?? quality/reports/2026-10-06-platform-scope/
+?? quality/reports/2026-10-06-project-preservation/
+?? quality/reports/2026-10-06-release-package/
+?? quality/reports/2026-10-06-revision/
+?? quality/reports/2026-10-06-uncertain-execution/
+?? quality/reports/2026-10-07-app-reopen/
+?? quality/reports/2026-10-07-fresh-task-first-session/
+?? quality/reports/2026-10-07-installed-first-session-1945/
+?? quality/reports/report-template.md
+?? release/build-package.py
+?? release/submission/licensing-inventory.md
+?? release/submission/local-controller-brief.md
+?? release/website/destination-plan.md
+?? release/website/index.md
+?? release/website/privacy.md
+?? release/website/support.md
+?? release/website/terms.md

@@ -1,0 +1,31 @@
+# AFT-12 editable delivery — 2026-10-07
+
+Result: **pass for this development-Mac AEP/movie handoff and a separate linked-asset relocation fixture.** The delivered five-second technical scene was saved, reopened, inspected as native layers, rendered identically after reopening, played at normal speed, and fully decoded. A copied linked-media fixture also reopened from a different folder while the original media path was unavailable. This is not a separate-machine install, final creative approval or a full product-art delivery.
+
+## Candidate and ownership
+
+- Source HEAD `e8b58fd58955866a1da7f31d11c9407947a5fc57` plus pre-existing uncommitted work; installed plugin `0.1.0+codex.20261007193805`, installed-tree SHA-256 `f390e6c46bd155aee8f6661b755a548cc70af73ba405077d68cc21207c24e206` as recorded in the [AFT-7 report](../2026-10-07-installed-first-session-1945/report.md). macOS 26.6.2, Node 25.9.0, AE 26.5x89.
+- Before saving: exact untitled, dirty project contained one owned comp ID 25, `AFT7_INSTALLED_1945_ALIGNMENT`, nine native layers, 1920×1080, 30 fps, five seconds; no other project items or linked footage. The AE queue had been returned to zero items after the [complete movie render](../2026-10-07-revision-playback/report.md).
+- Output folder `quality/renders/2026-10-07-delivery/` was absent before creation. The movie was copied with no overwrite from the inspected complete render; the AEP was saved directly to a new path. The linked fixture used a separate new folder. These checks establish non-overwrite for this run, not a general AE overwrite guard.
+
+## Main handoff
+
+| Artifact or check | Result |
+|---|---|
+| `after-effects-studio-sample.aep` | Save As succeeded; SHA-256 `18f1053a5a78a92819612a3dc55b0f5002fc3851d61056eb015de8bc90c6fba1`. Before intentional reopen, AE reported this exact file, clean, one item. The hash was unchanged after reopening. |
+| Native reopen | `project.open` reopened that exact clean AEP. `ae_project_info` found the same comp ID 25, nine layers, 1920×1080/30 fps/five seconds, 16-bit project. Layer readback found four TextLayers and five ShapeLayers with the original IDs 37–45; title ID 39 retained “Bring every part into focus.” `footage.list_missing` returned zero; this AEP has no linked footage to collect. |
+| Visual reopen | A fresh 4.5-second `reopened-hold.png` rendered from the reopened AEP. SHA-256 `343a1159b84152e4b91bf99094032dd66ba2642713d098797a29934690eaf737`, byte-for-byte equal to AFT-7's inspected `after_5.png`. Full-frame background coverage; no new clipping or color warning. |
+| `after-effects-studio-sample.mp4` | H.264, 1920×1080, 30 fps, 150 frames, 5.000 seconds, 1,691,570 bytes. SHA-256 `0fe56da5042318711279c007479b4e090493f35eba33e96e3158d1734bdeac80`, identical to the inspected source movie. The bundled [export verifier](export-verifier.json) passed complete ffmpeg decode; ffprobe metadata matched the AE comp. |
+| Playback | Actual movie played in QuickTime at normal speed during AFT-11 review. Entrance, bar alignment and final hold were observed without a visible jump, seam or duplicate. No audio exists, so no audio-sync result is claimed. |
+
+## Linked-asset handoff fixture
+
+A separate clean owned project imported the original geometric PNG from `quality/fixtures/geometry-mark.png` as footage ID 1, then used it in comp ID 2 `AFT12_LINKED_ASSET_FIXTURE` as one native footage layer. The source was copied to `linked-fixture/assets/geometry-mark.png` (SHA-256 `8ec20ec8da6701e7541d5e35fedb9092c18cfe67669d4df18d1b4f1c5a7caa85`), and `footage.replace` relinked ID 1 to that copy before Save As. Reopening `linked-fixture/linked-fixture.aep` showed the asset path inside the handoff folder, zero missing items and a successful 128×128 frame with a visible 50×50 mark at (39,39). A human inspected `linked-fixture/reopened.png`.
+
+To test relocation rather than merely relying on the original absolute path, the owned folder was copied to `relocated-fixture/`, and the original folder's `assets/` was temporarily renamed. Opening the copied AEP caused this AE build to find `relocated-fixture/assets/geometry-mark.png` automatically. Readback showed the new path and zero missing footage; the project was dirty after auto-relink, then saved clean. Its rendered frame matched the original reopened fixture PNG byte-for-byte (SHA-256 `aff060e6a02e56efada7359821255d97a599693336db90d5b7937f8abb7dec3c`). The original assets folder was restored, and the main delivered AEP was reopened clean in AE. This local relocation is not a second-machine or cross-version proof; manual relink may be necessary elsewhere.
+
+The agent-facing [delivery guide](../../../plugin/docs/delivery.md) now defines folder ownership, no-overwrite behavior, source inventory/copy/relink, complete movie export, intentional AEP reopen, moved-folder verification and separate visual/user approval. No private asset, rig or external artwork is required for these tests. AFT-18 still needs the exact candidate installed and exported on a genuinely separate Mac. The scene is a technical sample, not one of the three public creative demonstrations.
+
+After this native run, the new guide and its README link were installed as plugin version `0.1.0+codex.20261007202527` (451-file tree SHA-256 `04f4288d7e870bb05196d245ab30397dcc602ef7eeea418f5d4104acece21f79`). `codex mcp get` resolves to that cache, the guide exists in it, and its offline MCP handshake/library smoke passes. The native delivery checks above ran with the preceding installed version; no native rerun was claimed for this documentation-only cache refresh.
+
+The cache refresh occurred while this older Codex task still held its prior MCP connection. A subsequent read-only context attempt was discarded before AE picked it up, with AE's modal warning “Unable to execute script at line 1. File or folder does not exist.” The warning was dismissed through the visible AE UI; no native write was retried. The AE window still showed the saved main AEP and owned composition. This is a task-session lifecycle limitation after a local plugin update, not evidence that the delivered AEP failed to reopen; all reopen/render checks above preceded the update. A fresh task is required for further plugin-native checks against the newly installed version.

@@ -1,0 +1,23 @@
+# Local and private configuration
+.DS_Store
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+# Developer dependencies and caches
+node_modules/
+__pycache__/
+*.pyc
+coverage/
+.vitest/
+# Keep the self-contained runtime bundle; ignore scratch reports and logs
+*.log
+plugin/verification/*report.json
+quality/reports/local-smoke/
+quality/reports/raw/
+# Large generated output; keep folder placeholders
+quality/renders/*
+!quality/renders/.gitkeep
+release/packages/*
+!release/packages/.gitkeep

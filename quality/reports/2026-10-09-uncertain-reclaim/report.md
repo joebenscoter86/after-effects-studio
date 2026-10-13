@@ -1,0 +1,13 @@
+# AFT-9 request-reclaim race — 2026-10-09
+
+The file IPC transport previously ignored a failed request-file unlink after observing that a request existed. If AE consumed that file between the existence check and cleanup, the response could incorrectly claim that a write was never picked up and had been discarded. The stale-instance path was reproduced with an offline test that failed before the fix (`NO_INSTANCE` instead of `TIMEOUT`).
+
+The stale-instance, push-dialog, and phantom-launch cleanup paths now distinguish a reclaimed request from one that disappeared before reclamation. A disappeared request reports possible execution and directs the caller to inspect the actual AE project before retrying. The push-dialog path also leaves the busy lock in place to avoid immediate concurrent dispatch. The phantom-launch change has no native Windows verification on this macOS host.
+
+- Source checkout base: `e8b58fd58955866a1da7f31d11c9407947a5fc57`, with uncommitted work. Host: macOS development Mac. No AE connection, project write, or company-managed Mac use occurred in this run.
+- `plugin/runtime/tests/transport-pull.test.ts`: stale-instance cleanup race and push-dialog cleanup race simulated by consuming the request between file-existence observation and unlink. Both tests passed after the fix; the latter checked that the busy lock remains held.
+- Runtime typecheck and test typecheck passed. The full offline Vitest suite passed: 411 tests, 109 skipped across 42 files. Native/session-mutating and destructive suites were not enabled. Targeted `oxlint` on the changed transport source and test passed. Repository-wide `npm run lint` failed on pre-existing upstream JSX and generated `dist` diagnostics; no claim of a full lint pass is made.
+- Built the self-contained runtime and deterministic 54-file installable candidate `0.1.0+codex.20261009184954`: SHA-256 `ce507e03a6b288111849a65f7c9612efa9c85a640c2c176a2e5485d41038b6e3`. [Package hashes](package-build.json). The 57-file local clean-test kit SHA-256 is `7cad2fe72c4c4c2a6b0e6061a10f0f9feaa8dd7cb212e336946ce6712ffef2c4`; [kit metadata](clean-test-kit.json). Both archives are ignored local artifacts, not published or installed.
+- An unpacked copy passed offline MCP handshake, tool discovery, all 19 hashed library reads, default craft routing, traversal rejection, and policy-filtered catalog. Raw smoke output is ignored at `quality/renders/2026-10-09-uncertain-reclaim/smoke/smoke-report.json`.
+
+This establishes conservative recovery behavior under simulated races, not a naturally occurring possible-write timeout in AE. AFT-9 remains In Progress for that native observation. Do not induce a hang, replay an uncertain write, or touch unrelated projects to close it.

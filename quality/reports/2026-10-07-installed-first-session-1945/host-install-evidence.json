@@ -1,0 +1,55 @@
+{
+  "capturedAt": "2026-10-07T12:42:58.396850-07:00",
+  "doctor": {
+    "args": [
+      "node",
+      "<developer-home>/.codex/plugins/cache/personal/after-effects-studio/0.1.0+codex.20261007193805/scripts/doctor.mjs"
+    ],
+    "cwd": "/tmp",
+    "exitCode": 0,
+    "stdout": "{\n  \"ok\": true,\n  \"summary\": \"Prerequisites found. Live connection and permissions have not been checked.\",\n  \"checks\": [\n    {\n      \"name\": \"Node.js 24+\",\n      \"ok\": true,\n      \"detail\": \"25.9.0\"\n    },\n    {\n      \"name\": \"Supported operating system\",\n      \"ok\": true,\n      \"detail\": \"darwin\"\n    },\n    {\n      \"name\": \"Bundled runtime\",\n      \"ok\": true,\n      \"detail\": \"<developer-home>/.codex/plugins/cache/personal/after-effects-studio/0.1.0+codex.20261007193805/runtime/dist/index.js\"\n    },\n    {\n      \"name\": \"Motion library manifest\",\n      \"ok\": true,\n      \"detail\": \"<developer-home>/.codex/plugins/cache/personal/after-effects-studio/0.1.0+codex.20261007193805/library/manifest.json\"\n    },\n    {\n      \"name\": \"After Effects path\",\n      \"ok\": true,\n      \"detail\": \"/Applications/Adobe After Effects 2026/Adobe After Effects 2026.app\"\n    },\n    {\n      \"name\": \"ffmpeg\",\n      \"ok\": true,\n      \"optional\": true,\n      \"detail\": \"available on PATH\"\n    },\n    {\n      \"name\": \"ffprobe\",\n      \"ok\": true,\n      \"optional\": true,\n      \"detail\": \"available on PATH\"\n    }\n  ],\n  \"notes\": [\n    \"This check does not launch After Effects, inspect an open project, or change project contents.\",\n    \"A live connection is required to verify macOS Automation permission and After Effects scripting file access.\",\n    \"ffmpeg and ffprobe are only required by the optional movie export verifier.\"\n  ]\n}\n",
+    "stderr": ""
+  },
+  "mcp-get": {
+    "args": [
+      "codex",
+      "mcp",
+      "get",
+      "after-effects-studio"
+    ],
+    "cwd": null,
+    "exitCode": 0,
+    "stdout": "after-effects-studio\n  enabled: true\n  transport: stdio\n  command: node\n  args: ./scripts/start.mjs\n  cwd: <developer-home>/.codex/plugins/cache/personal/after-effects-studio/0.1.0+codex.20261007193805/.\n  env: AE_MCP_ENABLE_EVAL=*****\n  remove: codex mcp remove after-effects-studio\n",
+    "stderr": ""
+  },
+  "host": {
+    "args": [
+      "sw_vers"
+    ],
+    "cwd": null,
+    "exitCode": 0,
+    "stdout": "ProductName:\t\tmacOS\nProductVersion:\t\t26.6.2\nBuildVersion:\t\t25G83\n",
+    "stderr": ""
+  },
+  "node": {
+    "args": [
+      "node",
+      "--version"
+    ],
+    "cwd": null,
+    "exitCode": 0,
+    "stdout": "v25.9.0\n",
+    "stderr": ""
+  },
+  "revision": {
+    "args": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "cwd": null,
+    "exitCode": 0,
+    "stdout": "e8b58fd58955866a1da7f31d11c9407947a5fc57\n",
+    "stderr": ""
+  }
+}

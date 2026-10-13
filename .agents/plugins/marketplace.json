@@ -1,0 +1,20 @@
+{
+  "name": "jb-technology",
+  "interface": {
+    "displayName": "JB Technology"
+  },
+  "plugins": [
+    {
+      "name": "after-effects-studio",
+      "source": {
+        "source": "local",
+        "path": "./plugin"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

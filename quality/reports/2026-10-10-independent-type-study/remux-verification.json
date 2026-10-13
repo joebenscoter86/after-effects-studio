@@ -1,0 +1,14 @@
+{
+  "v1": {
+    "decoded_native_and_remuxed_sha256": "SHA256=9ec489fe7eef239dfbe083c303a6392603628d66bf44d558c9d6950a0bb4d72d",
+    "identical": true
+  },
+  "v2": {
+    "decoded_native_and_remuxed_sha256": "SHA256=9384f7713906182f983dbad9ecd43ceaf12d4a9ecc924ce5a81157ff4bf709d3",
+    "identical": true
+  },
+  "v1_mp4": {
+    "decoded_before_and_after_metadata_cleanup_sha256": "SHA256=b2cdd1bbfde0e6d35bef8bb87327f59b58b2864f181991e88e3a2c1efd572220",
+    "identical": true
+  }
+}

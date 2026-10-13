@@ -1,0 +1,26 @@
+{
+  "status": "public review copies; no publication authorized",
+  "entries": [
+    {
+      "file": "build-study.jsx",
+      "substitutions": 1,
+      "original_sha256": "df2c8c3450bcec61e3429f10e65895ef9a7b26d980cd73cea1a752971bec98da",
+      "public_sha256": "2b60e944679965bf097a08f1d87c66da6b361405e3b026c3236ca924ee4c6e45",
+      "raw_local_copy": "quality/reports/raw/2026-10-09-fresh-session-registration/build-study.jsx"
+    },
+    {
+      "file": "package-verification.json",
+      "substitutions": 1,
+      "original_sha256": "689b9892e84e9f25e2e3c4b06aa5618357fd0ee068fb379c8996c2291aa8bfb4",
+      "public_sha256": "ad986da0bff8c158f019229be976543ea002795b8cc3066588c10d0651ec4e33",
+      "raw_local_copy": "quality/reports/raw/2026-10-09-fresh-session-registration/package-verification.json"
+    },
+    {
+      "file": "report.md",
+      "substitutions": 1,
+      "original_sha256": "45074d6640934ffd409904a03c633de04bbeedee2afee91289077b36eada6b8f",
+      "public_sha256": "5a0d6fc2fc76446717f413dbc4daa2e8571cf272487a8874bd945418c672dddb",
+      "raw_local_copy": "quality/reports/raw/2026-10-09-fresh-session-registration/report.md"
+    }
+  ]
+}

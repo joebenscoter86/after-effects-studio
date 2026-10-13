@@ -1,0 +1,77 @@
+{
+  "replacement": "developer home path replaced with <developer-home>/ in public copy",
+  "entries": [
+    {
+      "path": "quality/reports/2026-10-06-install-update/local-refresh.md",
+      "replacements": 4,
+      "original_sha256": "14853551848ab126bf22e9915083a442815495eaeb2d26707f19f93a4f606250",
+      "public_sha256": "89cef13c3b23af97e8a9e32f737c308214a99d9627db7616a47790a1ca41fbea"
+    },
+    {
+      "path": "quality/reports/2026-10-07-color-easing/package-build.json",
+      "replacements": 1,
+      "original_sha256": "76bdd287e6046fe72c13d78c00ea47c86d5ad8cb455f8cb54bea4c246e5f46e9",
+      "public_sha256": "fe05b291ccc3eaa6d792cd09616e457ae3c2f2ce2ec3ab6d26a70a990f82e5c6"
+    },
+    {
+      "path": "quality/reports/2026-10-07-delivery/export-verifier.json",
+      "replacements": 2,
+      "original_sha256": "f178182e27309902c902ea1a3d828d773dd419b814989b109cf6f3a1fc2db8f4",
+      "public_sha256": "6886e5f3c444cd93273ded687faad20acc51b26e998c5a712a702db7b917a992"
+    },
+    {
+      "path": "quality/reports/2026-10-07-fresh-task-first-session/report.md",
+      "replacements": 1,
+      "original_sha256": "97d74ccd974286e1a3c3aeaf000987084beb7db8bc59df9b34487cba654a4621",
+      "public_sha256": "28ba20f5c0b9970a83346b9640d8b12362f00e3709113dc06dce3a058cb95ff3"
+    },
+    {
+      "path": "quality/reports/2026-10-07-installed-first-session-1945/host-install-evidence.json",
+      "replacements": 4,
+      "original_sha256": "cef7f3fa79cc88479ae841f3a0c742f3d978090563294cbaa4be61d0ce8782ee",
+      "public_sha256": "215f3c9cecc3eefcd96673566e337210fa50614577dde6ad1d9bb461ff4c8358"
+    },
+    {
+      "path": "quality/reports/2026-10-07-installed-first-session-1945/linear-update.json",
+      "replacements": 1,
+      "original_sha256": "dedfdac14d679187a6bf859bfd8bea04a627219f9d212c38db09f21269b7e353",
+      "public_sha256": "c26766e193223760e8483f08d6bfe4120b7aa0c60d71b339d096e334d2de6188"
+    },
+    {
+      "path": "quality/reports/2026-10-07-installed-first-session-1945/package-fingerprint.json",
+      "replacements": 1,
+      "original_sha256": "ec0464c17c31c391191c2d516ed8370ba716703d6664f98b06f4d2f10c57b6bc",
+      "public_sha256": "ac15780180bcec55cdfa630580cf2bd4731cbf578e71f069a0f9ad91f181504f"
+    },
+    {
+      "path": "quality/reports/2026-10-07-installed-first-session-1945/report.md",
+      "replacements": 1,
+      "original_sha256": "6fbbc5052a22e61dc09a32f5228e288b67331afc459ac145bba5f156a389f7b3",
+      "public_sha256": "ec0450e86a80b1dce98b3e871b1bb1f72feaaaf1a75b19c3f6c6357af3ac5e53"
+    },
+    {
+      "path": "quality/reports/2026-10-07-installed-first-session-1945/tool-evidence.json",
+      "replacements": 14,
+      "original_sha256": "5fb98a9513d1273d2948e1de2f9e5c61bc58349944116d429f4de7bcbb4dae99",
+      "public_sha256": "83df58012fbc769c9224a8272ef458db2f32e4a02887f2c9e1d3394d6a060f39"
+    },
+    {
+      "path": "quality/reports/2026-10-07-package-refresh/package-build.json",
+      "replacements": 1,
+      "original_sha256": "1561464263a92f4c6c5a5d5267272645966bc98ba5abfc40c62a257657185dd1",
+      "public_sha256": "adc96399a03c4b0e72c0743da874cc46550d85eaf5e9b3fbb9701a5eaac910a0"
+    },
+    {
+      "path": "quality/reports/2026-10-08-portable-package/clean-test-kit.json",
+      "replacements": 1,
+      "original_sha256": "e12c4be34af9b3ef54873cff181dee74d6686776e1f59808d1db0547a422bf8a",
+      "public_sha256": "399918dbcaf117529549308b2975f64bba51f082fc87a01399cc355b910aacd4"
+    },
+    {
+      "path": "quality/reports/2026-10-08-portable-package/package-build.json",
+      "replacements": 1,
+      "original_sha256": "002b09d8e5a8d185dbe076b8a0ae9b3c8a293603f9d0628e0e39da939ad5050b",
+      "public_sha256": "9c163dc3f9e13d1e8d76e3e8d5116289e19558ccb8faa89239e85ffd557524fe"
+    }
+  ]
+}

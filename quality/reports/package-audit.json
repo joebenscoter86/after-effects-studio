@@ -1,0 +1,152 @@
+{
+  "scope": "Package completeness audit; no runtime test or publication performed",
+  "plugin": "after-effects-studio",
+  "version": "0.1.0+codex.20261007025134",
+  "checks": [
+    {
+      "check": "Packaged knowledge: motion-language",
+      "passed": true,
+      "evidence": "language/core.md"
+    },
+    {
+      "check": "Packaged knowledge: production-workflow",
+      "passed": true,
+      "evidence": "language/production-workflow.md"
+    },
+    {
+      "check": "Packaged knowledge: construction",
+      "passed": true,
+      "evidence": "language/construction.md"
+    },
+    {
+      "check": "Packaged knowledge: camera-continuity",
+      "passed": true,
+      "evidence": "language/camera-continuity.md"
+    },
+    {
+      "check": "Packaged knowledge: assets-depth",
+      "passed": true,
+      "evidence": "language/assets-depth.md"
+    },
+    {
+      "check": "Packaged knowledge: type-evidence",
+      "passed": true,
+      "evidence": "language/type-evidence.md"
+    },
+    {
+      "check": "Packaged knowledge: reference-study",
+      "passed": true,
+      "evidence": "language/reference-study.md"
+    },
+    {
+      "check": "Packaged knowledge: failure-atlas",
+      "passed": true,
+      "evidence": "language/failure-atlas.md"
+    },
+    {
+      "check": "Packaged knowledge: worked-scenes",
+      "passed": true,
+      "evidence": "examples/worked-scenes.md"
+    },
+    {
+      "check": "Packaged knowledge: brief-template",
+      "passed": true,
+      "evidence": "templates/brief.md"
+    },
+    {
+      "check": "Packaged knowledge: design",
+      "passed": true,
+      "evidence": "references/design.md"
+    },
+    {
+      "check": "Packaged knowledge: timing",
+      "passed": true,
+      "evidence": "references/timing.md"
+    },
+    {
+      "check": "Packaged knowledge: scripting",
+      "passed": true,
+      "evidence": "references/scripting.md"
+    },
+    {
+      "check": "Packaged knowledge: quality",
+      "passed": true,
+      "evidence": "references/quality.md"
+    },
+    {
+      "check": "Packaged knowledge: scene-recipes",
+      "passed": true,
+      "evidence": "recipes/recipes.md"
+    },
+    {
+      "check": "Packaged knowledge: joeb-preset",
+      "passed": true,
+      "evidence": "presets/joeb.md"
+    },
+    {
+      "check": "Packaged knowledge: motion-jsx",
+      "passed": true,
+      "evidence": "scripts/motion.jsx"
+    },
+    {
+      "check": "Packaged knowledge: house-jsx",
+      "passed": true,
+      "evidence": "presets/house.jsx"
+    },
+    {
+      "check": "Packaged knowledge: joeb-motion-jsx",
+      "passed": true,
+      "evidence": "presets/motion.jsx"
+    },
+    {
+      "check": "Public listing subtitle length",
+      "passed": false,
+      "evidence": "50 characters; current public submission limit is30"
+    },
+    {
+      "check": "Public listing logo",
+      "passed": false,
+      "evidence": "Absent"
+    },
+    {
+      "check": "Public listing composerIcon",
+      "passed": false,
+      "evidence": "Absent"
+    },
+    {
+      "check": "Public MCP listing websiteURL",
+      "passed": false,
+      "evidence": "Absent"
+    },
+    {
+      "check": "Public MCP listing supportURL",
+      "passed": false,
+      "evidence": "Absent"
+    },
+    {
+      "check": "Public MCP listing privacyPolicyURL",
+      "passed": false,
+      "evidence": "Absent"
+    },
+    {
+      "check": "Public MCP listing termsOfServiceURL",
+      "passed": false,
+      "evidence": "Absent"
+    },
+    {
+      "check": "Declared release licensing terms",
+      "passed": false,
+      "evidence": "No top-level LICENSE or manifest license selected"
+    }
+  ],
+  "external_release_dependencies": [
+    "Confirm public directory support for local AE controller",
+    "Second-machine clean-install and complete-video tests",
+    "Developer identity and submission review",
+    "Monetization and licensing decision"
+  ],
+  "summary": {
+    "passed": 19,
+    "failed": 8
+  }
+}

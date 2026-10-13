@@ -1,0 +1,82 @@
+[
+  {
+    "path": "quality/renders/2026-10-07-installed-first-session-1945/after-project.json",
+    "bytes": 161124,
+    "sha256": "2bb056206053ac2472b202fbf5a89fb9536c3682b39235c4c3718e2c066b743f"
+  },
+  {
+    "path": "quality/renders/2026-10-07-installed-first-session-1945/after_0.png",
+    "bytes": 49078,
+    "sha256": "833149cd54fbf05746a772f6ef519640c3adcfb2851a00d1dda8957aee850a33"
+  },
+  {
+    "path": "quality/renders/2026-10-07-installed-first-session-1945/after_1.png",
+    "bytes": 49131,
+    "sha256": "ce36fc91c9b31da6c75ab1072497aaf85699411dcf1981c40eb9fbece00d55e7"
+  },
+  {
+    "path": "quality/renders/2026-10-07-installed-first-session-1945/after_2.png",
+    "bytes": 48601,
+    "sha256": "9960738e1435f8c1d476ee548d64b71d408742c2954efcc53daebea68274c95d"
+  },
+  {
+    "path": "quality/renders/2026-10-07-installed-first-session-1945/after_3.png",
+    "bytes": 42840,
+    "sha256": "450be730561e0f55eccba78c11f2b5985c030ef310539d1d7c0631cf5adae004"
+  },
+  {
+    "path": "quality/renders/2026-10-07-installed-first-session-1945/after_4.png",
+    "bytes": 45098,
+    "sha256": "2b0d2e15370d50beef20b1c5a0d55d4baac461a4db3d2daa07aeafae7ba7a147"
+  },
+  {
+    "path": "quality/renders/2026-10-07-installed-first-session-1945/after_5.png",
+    "bytes": 45138,
+    "sha256": "343a1159b84152e4b91bf99094032dd66ba2642713d098797a29934690eaf737"
+  },
+  {
+    "path": "quality/renders/2026-10-07-installed-first-session-1945/after_sheet.png",
+    "bytes": 48965,
+    "sha256": "3ec53b4775df62cfd54fbec657b4df159cfb0bd3005e628c920c7d5a89ce0bc1"
+  },
+  {
+    "path": "quality/renders/2026-10-07-installed-first-session-1945/before-project.json",
+    "bytes": 161127,
+    "sha256": "9ac2e95bd7c6ed1beb4b0176f0d43cbb573d15bfd13e0167a8268b71797e85db"
+  },
+  {
+    "path": "quality/renders/2026-10-07-installed-first-session-1945/before_0.png",
+    "bytes": 46242,
+    "sha256": "7a9f53fcd83bb8f7767de3815f02aff8fdadf7c75f33286a5eb91aa04e81b861"
+  },
+  {
+    "path": "quality/renders/2026-10-07-installed-first-session-1945/before_1.png",
+    "bytes": 46294,
+    "sha256": "ad69f6dcb1a41824f18520bab9a124334ea5894b278058f31308297f7dd3c60e"
+  },
+  {
+    "path": "quality/renders/2026-10-07-installed-first-session-1945/before_2.png",
+    "bytes": 45813,
+    "sha256": "d80bb760fc3419211b164d26071e2d87893b1a6114a634f9279bacba08ba6655"
+  },
+  {
+    "path": "quality/renders/2026-10-07-installed-first-session-1945/before_3.png",
+    "bytes": 40032,
+    "sha256": "e16762621d59693f07064391ba18b104519dff4d17a72d7bafe0622df7eb14de"
+  },
+  {
+    "path": "quality/renders/2026-10-07-installed-first-session-1945/before_4.png",
+    "bytes": 42088,
+    "sha256": "8df469003676d18804b50cedb2166595e288c50f8ba456c080628dbb392fd066"
+  },
+  {
+    "path": "quality/renders/2026-10-07-installed-first-session-1945/before_5.png",
+    "bytes": 42126,
+    "sha256": "19fa108730f3a8fe5aed6f660ba4c23e2afef5e5a5ed6f3c797f70a28f6bc646"
+  },
+  {
+    "path": "quality/renders/2026-10-07-installed-first-session-1945/before_sheet.png",
+    "bytes": 46871,
+    "sha256": "f4a5a0709d2984c6a5d507b56adcfba95df046c76035fa9ae98472912268c49f"
+  }
+]

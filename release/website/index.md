@@ -1,0 +1,13 @@
+# After Effects Studio
+
+Create and revise editable motion graphics in your local Adobe After Effects project with plain-language direction. After Effects Studio combines native AE control with a bundled motion-design library for construction, timing, typography, camera continuity and visual review. You choose the subject and style; the work stays editable in AE.
+
+The initial release is planned for local Codex desktop on macOS with After Effects 2026. Exact supported builds and installation steps will be published only after the release candidate passes a separate-machine test. A licensed AE installation and Node.js are required. The plugin does not include Adobe software, fonts, footage or third-party artwork.
+
+Use it to build an explanatory scene, inspect and improve an existing composition, or render frames to review a revision. The plugin can save local AE projects and export frames; complete movie delivery and visual quality require verification for the particular work. Native scripting permissions and an open AE project are part of the setup.
+
+After Effects Studio is free at launch for personal and paid client motion work. Editable AE projects and rendered outputs may be delivered to clients. The [original-material license](../../license.md) reserves standalone repackaging or resale of Joe Benscoter's plugin and motion library; upstream components retain their separate licenses. Publisher: JB Technology LLC.
+
+The installed package runs a bundled Node MCP server on your computer. It sends temporary local file messages to After Effects and uses operating-system scripting to make native changes. AE scripting-file access and, on macOS, Automation permission are required. With writes enabled, the plugin can read project structure and local paths, create/change/delete project items, run custom AE scripting, and save projects or exports to user-chosen paths. `AE_MCP_ENABLE_EVAL=0` disables custom scripting; `AE_MCP_READONLY=1` restricts project writes. Your prompts, tool results, project metadata and requested previews pass through your agent host; optional external asset services have separate practices. Removing the plugin does not remove saved AEPs or renders. Review the [privacy information](privacy.md) and [upstream notices](../../plugin/THIRD-PARTY-NOTICES.txt) before installing.
+
+This repository contains pre-release source. The [local installation guide](../../plugin/docs/local-install.md) describes the current development package; installation from the public Git source and supported build claims still require separate-machine verification. See [support](support.md) for help and private incident reporting. A stable release has not been announced.
