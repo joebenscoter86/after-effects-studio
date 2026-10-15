@@ -1,6 +1,6 @@
 {
   "name": "after-effects-studio",
-  "version": "0.1.0+codex.20261011211837",
+  "version": "0.1.0+codex.20261015232719",
   "description": "Native After Effects control guided by a detailed, production-derived motion language for any brand or style.",
   "author": {
     "name": "JB Technology LLC"
@@ -21,7 +21,13 @@
       "Inspect my AE project and improve its motion.",
       "Create a motion graphic using my brand colors and visual style."
     ],
-    "brandColor": "#14213D"
+    "brandColor": "#14213D",
+    "composerIcon": "./assets/gate-mark.svg",
+    "logo": "./assets/gate-mark.svg",
+    "websiteURL": "https://github.com/joebenscoter86/after-effects-studio/blob/main/release/website/index.md",
+    "supportURL": "https://github.com/joebenscoter86/after-effects-studio/blob/main/release/website/support.md",
+    "privacyPolicyURL": "https://github.com/joebenscoter86/after-effects-studio/blob/main/release/website/privacy.md",
+    "termsOfServiceURL": "https://github.com/joebenscoter86/after-effects-studio/blob/main/release/website/terms.md"
   },
   "mcpServers": "./.mcp.json",
   "keywords": [
