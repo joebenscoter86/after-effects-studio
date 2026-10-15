@@ -1,13 +1,13 @@
 # Codex Git release — review action sheet
 
-Status: **prepared, not authorized or published as stable.** AFT-33's lifecycle host check passed on the development Mac; AFT-23 final candidate review remains open. Do not execute this sheet until the exact candidate passes AFT-23 and Joe explicitly authorizes AFT-24's public release action.
+Status: **prepared, not authorized or published as stable.** [AFT-23's final candidate review](../../quality/reports/2026-10-15-release-candidate/report.md) passed for the exact archive below. Do not execute this sheet until Joe explicitly authorizes AFT-24's public release action.
 
 ## Proposed reviewed object
 
 - Public destination: [joebenscoter86/after-effects-studio](https://github.com/joebenscoter86/after-effects-studio), Git-backed marketplace `jb-technology`, package path `plugin/`.
 - Source review surface: [draft PR #2](https://github.com/joebenscoter86/after-effects-studio/pull/2), branch `codex/aft22-release-metadata`. Its reviewed source package rebuilds to the ZIP SHA-256 below; recheck the exact head at final freeze. Final merge commit and tag are not yet assigned.
 - Proposed plugin version: `0.1.0+codex.20261015232719`. Candidate ZIP: `release/packages/after-effects-studio-0.1.0+codex.20261015232719.zip`, SHA-256 `95dd810919b9761b7a20a4c74575253ae041656919411bc4f48615d454fa2226`. The ZIP is ignored/local; do not imply GitHub hosts it yet.
-- Proposed public tag: `v0.1.0` on the reviewed merge commit, only if AFT-23 confirms that version/ref and no bytes change. Do not reuse this tag if the candidate changes.
+- Proposed public action: merge only reviewed [draft PR #2](https://github.com/joebenscoter86/after-effects-studio/pull/2) into `main`, tag the resulting reviewed commit `v0.1.0`, create a GitHub Release using the notes below, and attach the exact ZIP/hash above. The tag is currently unused. No separate social announcement is part of this action.
 - Public copy: [draft release notes](../codex-release-notes-v1.md), with product/support/privacy/terms and install/removal links checked on the final ref.
 
 ## Before publication authorization
