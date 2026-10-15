@@ -4,4 +4,4 @@ After Effects Studio is published by JB Technology LLC. The plugin is free to us
 
 The upstream AE controller and bundled dependencies have separate rights and notices in [runtime/LICENSE](../../plugin/runtime/LICENSE) and [THIRD-PARTY-NOTICES.txt](../../plugin/THIRD-PARTY-NOTICES.txt). Adobe After Effects, the agent host, user assets and optional third-party tools have their own terms. You are responsible for rights to the media, fonts and artwork you supply.
 
-This page summarizes the pre-release source terms; it is not an additional license. The exact stable package, support scope, privacy information and any legal revisions must be checked before the stable release.
+This page summarizes the terms for the public v0.1.0 Git release; it is not an additional license. See the linked original-material license and upstream notices for the actual grants and restrictions.
