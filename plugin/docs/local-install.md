@@ -8,6 +8,10 @@ This guide records development and pre-release installation paths. The [public G
 - The plugin package includes its Node server and motion library. Installing npm developer dependencies, building source, cloning Git, and editing `.mcp.json` are not user steps.
 - AE access permissions are checked separately from file discovery. Run `node scripts/doctor.mjs` from the installed plugin folder for read-only prerequisite diagnostics; a live read-only connection is still needed to verify macOS Automation and AE scripting-file-access permission.
 
+## Source and permissions
+
+After Effects Studio is published by JB Technology LLC through the `joebenscoter86` [public GitHub repository](https://github.com/joebenscoter86/after-effects-studio). Codex downloads the plugin's executable local Node controller from that Git source and runs it on your Mac; the controller instructs your licensed local After Effects installation. Inspect the repository, package [provenance](../PROVENANCE.md), and [original-material license](../license.md) before installing if you need to evaluate trust. macOS Automation and After Effects scripting/file-access permissions may be needed for native control; use your normal organizational approval process and do not bypass a restriction. The [support page](https://github.com/joebenscoter86/after-effects-studio/blob/main/release/website/support.md) explains how to report problems. The removal commands below remove the plugin without deleting your AE projects or exports.
+
 ## Current personal marketplace install
 
 On this development Mac the `personal` marketplace already exposes `after-effects-studio`. Install it in the Codex app's Plugins Directory from Personal, or run:
