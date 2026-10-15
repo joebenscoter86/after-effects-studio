@@ -2,6 +2,7 @@
 """Build a byte-for-byte reproducible installable Codex plugin archive."""
 
 import hashlib
+import io
 import json
 from pathlib import Path
 import re
@@ -67,16 +68,21 @@ def main():
         raise SystemExit("Original-material terms missing")
     DEST.mkdir(parents=True, exist_ok=True)
     archive = DEST / f"after-effects-studio-{manifest['version']}.zip"
-    with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as out:
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as out:
         for name, data in sorted(entries.items()):
             info = zipfile.ZipInfo(PREFIX + name, FIXED_DATE)
             info.compress_type = zipfile.ZIP_DEFLATED
             info.external_attr = 0o100644 << 16
             out.writestr(info, data, compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)
+    archive_bytes = buffer.getvalue()
+    if archive.exists() and archive.read_bytes() != archive_bytes:
+        raise SystemExit(f"Version {manifest['version']} already has different package bytes; choose a new version before building")
+    archive.write_bytes(archive_bytes)
     payload = "".join(f"{sha(data)}  {name}\n" for name, data in entries.items()).encode()
     report = {
         "archive": str(archive),
-        "archive_sha256": sha(archive.read_bytes()),
+        "archive_sha256": sha(archive_bytes),
         "payload_sha256": sha(payload),
         "plugin_version": manifest["version"],
         "file_count": len(entries),
