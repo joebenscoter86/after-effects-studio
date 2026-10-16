@@ -2,11 +2,11 @@
 
 The plugin is free to use for personal and commercial motion work. Joe's original plugin and motion-library materials may not be repackaged or resold; see [the original-material license](license.md) and [source provenance](plugin/PROVENANCE.md). Upstream components keep their separate licenses.
 
-Create and revise editable motion graphics in After Effects with plain-language direction, guided by a detailed production-derived motion language. Free at launch; full public v1 is in preparation.
+Create and revise editable motion graphics in After Effects with plain-language direction, guided by a detailed production-derived motion language. The Codex Git release is available as v0.1.0; broader public-v1 and OpenAI directory work remain separate.
 
 Open this repository in Codex and describe the work you want to do. [AGENTS.md](AGENTS.md) routes the task to the right workspace.
 
-Public pre-release information: [product](release/website/index.md), [support](release/website/support.md), [privacy](release/website/privacy.md), and [terms](release/website/terms.md). The [installation guide](plugin/docs/local-install.md) gives the public Git marketplace route. A first install and full native journey passed on a separate Mac for the identified pre-release candidate; a stable release remains under review.
+Public release information: [product](release/website/index.md), [support](release/website/support.md), [privacy](release/website/privacy.md), and [terms](release/website/terms.md). The [installation guide](plugin/docs/local-install.md) gives the public Git marketplace route. The [v0.1.0 Git release](https://github.com/joebenscoter86/after-effects-studio/releases/tag/v0.1.0) is published. A separate-Mac native journey passed for an earlier public-Git candidate; post-release v0.1.0 acceptance is tracked in AFT-25.
 
 - [Product brief](product/brief.md): audience, promise and scope.
 - [PRD](product/prd.md): required v1 behavior and acceptance evidence.
@@ -29,4 +29,4 @@ To rebuild, install the locked developer dependencies from plugin/runtime/ with 
 
 This is the canonical public source repository. Its initial import preserves the existing package, library and notices. The previous installed Codex copy is a cache snapshot; future releases should be packaged from plugin/ and refreshed through the supported install workflow. Do not keep editing the earlier prototype directory. The repo's [.agents/plugins/marketplace.json](.agents/plugins/marketplace.json) points a Git-backed Codex marketplace at plugin/. Joe's [separate-Mac acceptance report](https://github.com/joebenscoter86/after-effects-studio/issues/1) records the tested public commit, installed-file match, first-use results and limitations.
 
-Original-material licensing is documented. Final candidate review, stable release, post-release verification and any OpenAI directory submission remain separate release tasks. See [product decisions](product/decisions.md) for settled decisions and open questions.
+Original-material licensing is documented. Candidate review and stable Git publication are complete. Post-release verification and any OpenAI directory submission remain separate tasks. See [product decisions](product/decisions.md) for settled decisions and open questions.
