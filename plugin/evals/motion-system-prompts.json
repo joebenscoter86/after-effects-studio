@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "frozenAt": "2026-10-15",
+  "protocol": {
+    "secondsPerRun": 1800,
+    "toolCallsPerRun": 100,
+    "repetitions": 2,
+    "versions": [
+      "released-v0.1.0",
+      "candidate"
+    ],
+    "models": [
+      {
+        "role": "normal",
+        "id": "gpt-6-astra",
+        "reasoningEffort": "high",
+        "availability": "inference preflight passed; isolated no-host-skills context confirmed"
+      },
+      {
+        "role": "lower-cost",
+        "id": "gpt-5.6-luna",
+        "reasoningEffort": "high",
+        "availability": "inference preflight passed; isolated no-host-skills context confirmed"
+      }
+    ],
+    "nativeConcurrency": 1,
+    "promptHashEncoding": "SHA-256 of exact prompt UTF-8; no trailing transformation",
+    "failurePolicy": "Record failed attempts; never substitute silent reruns. Planned blocked runs are not attempts.",
+    "preflightAmendment": "Before any creative attempt: gpt-6-luna and sol variants were rejected by account. Use supported gpt-5.6-luna. Exact creative prompt strings and hashes unchanged.",
+    "approvalMode": "Codex --approve-for-me automatic review; no bypass flags"
+  },
+  "prompts": [
+    {
+      "id": "MS-02",
+      "width": 1920,
+      "height": 1080,
+      "fps": 30,
+      "duration": 12,
+      "palette": [
+        "#F7F6F2",
+        "#184E55",
+        "#42A5B3"
+      ],
+      "copy": [
+        "A little water, used well.",
+        "Catch the rain.",
+        "Help the garden grow."
+      ],
+      "allowedAssets": [
+        "native AE text",
+        "native AE shapes",
+        "native AE effects"
+      ],
+      "prompt": "Create this original editable motion graphic in local After Effects using only the provided installed After Effects Studio plugin guidance and native tools. Inspect the current project before any write. Work only in the empty or explicitly test-owned project supplied for this run; stop if unrelated work is open. No Content repository, private rig, third-party template, external images, generation service, downloaded assets or font installation. Use available installed fonts and record resolved faces. No music or audio is required. All copy below is fictional evaluation copy, not a factual performance claim. Design hierarchy, purposeful movement and transitions; render and inspect frames plus full-speed playback when available. Deliver an editable AEP, a playable movie, a contact sheet and a concise report including actual checks, omissions, revisions, layer ownership and failures. Do not claim unperformed playback or user acceptance. Outputs go in the run directory provided by the harness. Do not read other runs or candidate/research guidance.\n\nA calm, three-beat water-conservation explainer. Make the relationship between collection and use visible, with an intentional transition between beats. No named visual style. Do not add statistics or logos.\nCanvas: 1920 × 1080; 30 fps; exactly 12 seconds.\nPalette: #F7F6F2, #184E55, #42A5B3.\nUse this copy verbatim, in this order:\n1. A little water, used well.\n2. Catch the rain.\n3. Help the garden grow.\nNo extra claims, dates, addresses or invented logos. Choose an appropriate installed font pairing; do not ask for aesthetic defaults already specified.\n",
+      "sha256": "cf1f9210c8f18faf2370330c149e8c3d4ec7ec7cb3fc84641a1897b54c0204f9"
+    },
+    {
+      "id": "MS-03",
+      "width": 1920,
+      "height": 1080,
+      "fps": 30,
+      "duration": 10,
+      "palette": [
+        "#F4EFE5",
+        "#2E3038",
+        "#77568A"
+      ],
+      "copy": [
+        "A new chapter opens.",
+        "Willow & Page",
+        "Independent books. Shared discoveries."
+      ],
+      "allowedAssets": [
+        "native AE text",
+        "native AE shapes",
+        "native AE effects"
+      ],
+      "prompt": "Create this original editable motion graphic in local After Effects using only the provided installed After Effects Studio plugin guidance and native tools. Inspect the current project before any write. Work only in the empty or explicitly test-owned project supplied for this run; stop if unrelated work is open. No Content repository, private rig, third-party template, external images, generation service, downloaded assets or font installation. Use available installed fonts and record resolved faces. No music or audio is required. All copy below is fictional evaluation copy, not a factual performance claim. Design hierarchy, purposeful movement and transitions; render and inspect frames plus full-speed playback when available. Deliver an editable AEP, a playable movie, a contact sheet and a concise report including actual checks, omissions, revisions, layer ownership and failures. Do not claim unperformed playback or user acceptance. Outputs go in the run directory provided by the harness. Do not read other runs or candidate/research guidance.\n\nA restrained editorial announcement for a fictional independent bookshop. Typography leads. Make a meaningful hierarchy and a readable resolved ending; use whitespace and expressive but restrained text animation.\nCanvas: 1920 × 1080; 30 fps; exactly 10 seconds.\nPalette: #F4EFE5, #2E3038, #77568A.\nUse this copy verbatim, in this order:\n1. A new chapter opens.\n2. Willow & Page\n3. Independent books. Shared discoveries.\nNo extra claims, dates, addresses or invented logos. Choose an appropriate installed font pairing; do not ask for aesthetic defaults already specified.\n",
+      "sha256": "dab85f78b6e4c3ad17bb4868064d2fb7f48cb6d92eef2b7beee470fcd608de47"
+    },
+    {
+      "id": "MS-06",
+      "width": 1080,
+      "height": 1920,
+      "fps": 30,
+      "duration": 12,
+      "palette": [
+        "#F5EEDC",
+        "#314A38",
+        "#D8A64B"
+      ],
+      "copy": [
+        "Grow something together.",
+        "The community garden",
+        "Bring a seed. Meet a neighbor."
+      ],
+      "allowedAssets": [
+        "native AE text",
+        "native AE shapes",
+        "native AE effects"
+      ],
+      "prompt": "Create this original editable motion graphic in local After Effects using only the provided installed After Effects Studio plugin guidance and native tools. Inspect the current project before any write. Work only in the empty or explicitly test-owned project supplied for this run; stop if unrelated work is open. No Content repository, private rig, third-party template, external images, generation service, downloaded assets or font installation. Use available installed fonts and record resolved faces. No music or audio is required. All copy below is fictional evaluation copy, not a factual performance claim. Design hierarchy, purposeful movement and transitions; render and inspect frames plus full-speed playback when available. Deliver an editable AEP, a playable movie, a contact sheet and a concise report including actual checks, omissions, revisions, layer ownership and failures. Do not claim unperformed playback or user acceptance. Outputs go in the run directory provided by the harness. Do not read other runs or candidate/research guidance.\n\nA warm paper-collage announcement for a fictional community garden. Use native paper/shapes and editable text only; generated or photographic cutouts are unavailable. Layering, edges, shadows and tactile movement should establish the look without sacrificing reading.\nCanvas: 1080 × 1920; 30 fps; exactly 12 seconds.\nPalette: #F5EEDC, #314A38, #D8A64B.\nUse this copy verbatim, in this order:\n1. Grow something together.\n2. The community garden\n3. Bring a seed. Meet a neighbor.\nNo extra claims, dates, addresses or invented logos. Choose an appropriate installed font pairing; do not ask for aesthetic defaults already specified.\n",
+      "sha256": "4db48cc5a98da4daae442391bbe06da57429f0335d3e18f0d42694a52145cc3b"
+    },
+    {
+      "id": "MS-07",
+      "width": 1920,
+      "height": 1080,
+      "fps": 30,
+      "duration": 12,
+      "palette": [
+        "#F2EDE4",
+        "#253C40",
+        "#C56F58"
+      ],
+      "copy": [
+        "Give it another life.",
+        "Repair Cafe",
+        "Bring a small item. Leave with a new skill."
+      ],
+      "allowedAssets": [
+        "native AE text",
+        "native AE shapes",
+        "native AE effects"
+      ],
+      "prompt": "Create this original editable motion graphic in local After Effects using only the provided installed After Effects Studio plugin guidance and native tools. Inspect the current project before any write. Work only in the empty or explicitly test-owned project supplied for this run; stop if unrelated work is open. No Content repository, private rig, third-party template, external images, generation service, downloaded assets or font installation. Use available installed fonts and record resolved faces. No music or audio is required. All copy below is fictional evaluation copy, not a factual performance claim. Design hierarchy, purposeful movement and transitions; render and inspect frames plus full-speed playback when available. Deliver an editable AEP, a playable movie, a contact sheet and a concise report including actual checks, omissions, revisions, layer ownership and failures. Do not claim unperformed playback or user acceptance. Outputs go in the run directory provided by the harness. Do not read other runs or candidate/research guidance.\n\nA paper-collage announcement for a fictional repair cafe with expressive animated typography. Combine tactile paper construction with readable text hierarchy into one coherent sequence. Include a meaningful transition. Use native shapes/paper only, no external imagery.\nCanvas: 1920 × 1080; 30 fps; exactly 12 seconds.\nPalette: #F2EDE4, #253C40, #C56F58.\nUse this copy verbatim, in this order:\n1. Give it another life.\n2. Repair Cafe\n3. Bring a small item. Leave with a new skill.\nNo extra claims, dates, addresses or invented logos. Choose an appropriate installed font pairing; do not ask for aesthetic defaults already specified.\n",
+      "sha256": "4e98a945f67b2c4300a34d0a59d358fed908e38479b70bc6d536ad4807e750bf"
+    }
+  ]
+}

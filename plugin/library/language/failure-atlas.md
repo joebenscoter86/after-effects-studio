@@ -30,7 +30,22 @@ These are practical diagnoses from actual motion production and plugin validatio
 | Light background reveals key residue | Dark preview hid matte defects | Inspect edges on the actual delivery ground; remeasure screen/spill |
 | “Library asset” differs from the brief | Decision relied on catalog prose | Open/render the asset before naming it |
 | Review export shows no recent edits | Build failed or connection dropped; stale project was rendered | Read back created IDs/counts and verify expected state before export |
+| Movie full-decodes but the recipient's player rejects it | The chosen codec/container is not playable in that native media stack; software decoding and container remuxing do not prove compatibility | Preserve the original, test the original in the target player/framework, and create a separately verified playback copy in a supported format; choose a tested output template for subsequent delivery |
 | Patching does not approach the reference | Each note was treated as a local effect request | Re-measure reference, rewrite visual operations, rebuild a representative passage |
+| A carry still feels like unrelated slides | Transition was added after separate pictures were designed | Rewrite the concept and choose an object/scale/frame relation that the next picture actually continues |
+| A collected resource never visibly reaches its use | The source vanished before departure, or a path/droplet was introduced separately from the carried object | Inspect source, seam and recipient-contact frames; keep one identifiable carrier through the action or simplify to a matched cut |
+| A persistent UI card arrives but still reads as an inbox item | Its position moved while its status/owner/date fields and nearby landing clearance were never revised | Keep one card, empty the source slot, update changed fields at contact, and inspect decoded departure/contact/settled/final frames for stale labels or covered destination copy |
+| A carrier reaches the destination while a decorative channel floats below it | Route endpoints and payload positions were authored in separate geometry or the collector faded before the departure was legible | Sample the delivered transfer at departure, quarters, midpoint and contact; bind route and payload to the same measured positions, or delete the misleading channel and show a direct/matched transfer |
+| Font is installed but text looks different | Family/display name resolved to a substitute or other variable instance | Read back the resolved face, check glyphs and remeasure after fallback |
+| A text-fit fix makes the headline unreadably small | Shrinking was used instead of a layout decision | Preserve exact copy and a minimum readable size; reflow, split or allocate space/time |
+| Review says the collision is fixed, export still shows it | Only one text role or a stale native sheet was checked | Inspect decoded delivered frames at the same times and all affected words |
+| A 30-fps recipe changes speed in another comp | Frame counts were copied without a time conversion | Convert measured frames to seconds, then quantize to the target rate |
+| Existing motion disappears during a style pass | An expression or unrelated keys were overwritten | Preflight every targeted property, preserve unknown expressions and scope changes to owned animation |
+| New geometry hides its own details | Shape-group order or layer stack was assumed | Re-fetch after additions and explicitly place strokes/details above fills |
+| Paper looks like a smooth UI card | Rounded rectangles and offsets substituted for material decisions | Choose believable edges, contact, depth and motion cadence; inspect their coherence at delivery scale |
+| Collage announcement loses its identity at the final invitation | The event name disappears and the last generic card has no persistent visual anchor | Keep the named subject legible or visibly represented while the invitation resolves; vary paper roles and check the final hold |
+| A paper fold crosses words after the scene settles | Material pieces were arranged before measuring resolved text bounds | Reserve a text-safe area; finish intentional entrance occlusion before the reading hold and inspect full-size delivered headline and invitation frames |
+| The final collage becomes type on a blank ground | Almost every substantial paper layer exited during the transition | Retain a legible paper surface and backing/foreground relationship around the invitation; inspect the delivered final hold at viewing size |
 
 ## Rejected shortcuts
 

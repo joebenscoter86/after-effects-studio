@@ -1,6 +1,6 @@
 # Construction, timing and gesture grammar
 
-Adapted from the October 6 motion playbook and the two house-polish scene scripts. The numbers below preserve the useful craft detail. They describe a proven fast explanatory style at 30 fps, not all genres. Convert frame values using the actual comp frame rate. If choosing a different pace, write the reason and preserve the sequence of attention.
+Adapted from the October 6 and October 15 motion playbook and the two house-polish scene scripts. The numbers below preserve the useful craft detail. They describe a proven fast explanatory style at 30 fps, not all genres. A measured N-frame gesture at 30 fps lasts N/30 seconds; preserve that duration at another frame rate unless intentionally changing the pace. Quantize boundaries to the target composition grid, not a hardcoded 30-fps timeline. If choosing a different pace, write the reason and preserve the sequence of attention.
 
 ## Anatomy of the explanatory section
 
@@ -48,3 +48,16 @@ One outgoing frame carries about 40% of the travel. Introduce the new scene on t
 ## Scene structure
 
 Group related layers beneath a dedicated scene null, establish its anchor and position before parenting, and key it only after placement. Children retain their own internal event timing while the carrier performs the hand-off. A traveling star that bridges sections must outlive the first section's outPoint. Keep typography screen-locked or scene-locked intentionally; do not accidentally inherit a whip.
+
+## Native construction checks
+
+These are implementation safeguards, distinct from the optional measured style above.
+
+- Record resting scale, position and anchor before animation. Footage scale is relative to its source pixels; key multiples of the resting scale rather than resetting to 100%.
+- Establish a carrier at its rest pose before parenting. Never parent into a zero-scale transform. To preserve comp-like child coordinates under an unparented identity carrier, set its anchor and position to the same chosen pivot before attaching children; a nested carrier instead uses its parent's coordinate space. Verify a known point at rest and in motion.
+- Parenting already-keyed children can rewrite their world transforms. Discover the native parenting operation's compensation behavior, set intended local transforms explicitly and inspect before/after. Parenting does not determine visual stacking.
+- In AE shape contents, earlier vector groups render above later groups. Put fold strokes and detail above fills intentionally. In the layer stack, place text and foreground rims explicitly; inspect the result rather than relying on creation order.
+- Adding a sibling to an indexed property group can invalidate a saved Property reference. Re-fetch handles after additions; use stable layer IDs and discovered match-name paths. Use the actual property dimensions, not assumed 2D arrays. Do not guess display names for rotation, masks or effects.
+- Inspect expressions and keys on every targeted property before changing them. An unknown expression is a conflict to preserve, not permission to overwrite. Scope removal to the intended owned animation and report uncertain partial mutations.
+- Changing startTime or setting in/out points can shift keys or extend a layer unexpectedly. Read back the resulting spans and keep visibility intervals frame-exact. Carried objects outlive the outgoing scene; ordinary layers stop at their intended boundary.
+- Match the contact geometry: a guide, fluid surface, paper label or shadow must follow the object's actual bounds and transform. Test intermediate frames, especially during tilt/scale; correct endpoints alone do not prove the path.

@@ -5,25 +5,64 @@ import { z } from "zod";
 import { PACKAGE_ROOT } from "../config.js";
 import { defineTool, jsonResult } from "./define-tool.js";
 import { errorResult } from "../errors.js";
+import { validateCatalog, findModules } from "./library-modules.js";
+function boundedFile(base, relative) {
+    const candidate = path.resolve(base, relative);
+    const inside = (file) => {
+        const rel = path.relative(base, file);
+        if (!rel || rel === ".." || rel.startsWith(".." + path.sep) || path.isAbsolute(rel))
+            throw new Error("Library path escapes bundle");
+    };
+    inside(candidate);
+    const file = realpathSync(candidate);
+    inside(file);
+    return file;
+}
 export function readLibrary(document, query, root = path.resolve(PACKAGE_ROOT, "../library")) {
     const base = realpathSync(root);
-    const manifest = JSON.parse(readFileSync(path.join(base, "manifest.json"), "utf8"));
+    const manifest = JSON.parse(readFileSync(boundedFile(base, "manifest.json"), "utf8"));
     const entries = manifest.documents;
+    const read = (entry) => {
+        const content = readFileSync(boundedFile(base, entry.path), "utf8");
+        if (createHash("sha256").update(content).digest("hex") !== entry.sha256)
+            throw new Error("Library hash mismatch: regenerate manifest after intentional edits");
+        return content;
+    };
     if (!document) {
-        const needle = query?.toLowerCase();
-        return { startHere: ["motion-language", "production-workflow", "brief-template"], documents: entries.filter(e => !needle || `${e.id} ${e.title} ${e.kind}`.toLowerCase().includes(needle)) };
+        const needle = query?.trim().toLowerCase();
+        const catalogEntry = entries.find(e => e.id === "module-catalog");
+        let catalog = { schemaVersion: 1, modules: [] };
+        if (catalogEntry) {
+            try {
+                const raw = JSON.parse(read(catalogEntry));
+                const sourceMap = JSON.parse(readFileSync(boundedFile(base, "source-map.json"), "utf8"));
+                catalog = validateCatalog(raw, { documentIds: new Set(entries.map(e => e.id)), provenanceIds: new Set((sourceMap.sources ?? []).map((s) => s.id).filter((id) => typeof id === "string")) });
+            }
+            catch (e) {
+                throw new Error(`Module catalog: ${e instanceof Error ? e.message : String(e)}`);
+            }
+        }
+        const matches = findModules(catalog, query);
+        const entryIds = new Set(matches.map(m => m.entryDocument));
+        const seen = new Set();
+        return {
+            startHere: ["motion-language", "production-workflow", "brief-template"],
+            documents: entries.filter(e => {
+                if (seen.has(e.id))
+                    return false;
+                if (!needle || `${e.id} ${e.title} ${e.kind}`.toLowerCase().includes(needle) || entryIds.has(e.id)) {
+                    seen.add(e.id);
+                    return true;
+                }
+                return false;
+            }),
+            modules: matches.map(({ id, kind, title, summary, entryDocument, requires, tags, evidence }) => ({ id, kind, title, summary, entryDocument, requires, tags, evidence })),
+        };
     }
     const entry = entries.find(e => e.id === document);
     if (!entry)
         throw new Error("Unknown library document. Call ae_library without arguments for valid IDs.");
-    const file = realpathSync(path.resolve(base, entry.path));
-    const rel = path.relative(base, file);
-    if (!rel || rel.startsWith("..") || path.isAbsolute(rel))
-        throw new Error("Library path escapes bundle");
-    const content = readFileSync(file, "utf8");
-    if (createHash("sha256").update(content).digest("hex") !== entry.sha256)
-        throw new Error("Library hash mismatch: regenerate manifest after intentional edits");
-    return { document: entry.id, title: entry.title, kind: entry.kind, content };
+    return { document: entry.id, title: entry.title, kind: entry.kind, content: read(entry) };
 }
 export const libraryTool = defineTool({
     name: "ae_library", title: "Motion design library", group: "document", effect: "read", blockedInReadOnly: false,

@@ -6,6 +6,16 @@ The section title tells the viewer what the idea is. Captions convey speech. Evi
 
 The pipeline's successful title treatment combined a structural line and expressive line, held across the section. That relationship is reusable; the exact fonts, palette and coordinates are optional. Pick installed fonts and render them at output size. Measure actual bounds with sourceRectAtTime and account for baseline, tracking and italic overhang.
 
+## Fit the message before selecting an effect
+
+Define one primary phrase and its reading order. Contrast size, weight, face or placement deliberately; a second font is useful when it gives a second role, not simply to meet a decorative quota. If the brief explicitly requires a pairing, verify two intended resolved faces are actually present in the final visible text.
+
+Check font availability and the resolved PostScript face after setting text. A display family name may resolve to a substitute or a different variable instance. Test the actual strings and glyphs. An approved installed fallback requires remeasurement; it is not a drop-in geometry assumption. Never silently install or bundle a font.
+
+Measure sourceRectAtTime at the relevant time, including left/top offsets and italic overhang, then map bounds through layer/parent/camera transforms. Source bounds are not screen bounds. Keep a chosen minimum readable size; if copy will not fit, reflow, increase its area, split the reading task or allow more time. Do not truncate exact copy or shrink it indefinitely. Review at intended viewing size, not only zoomed in.
+
+Give rules, tape and accents clearance from the full animated glyph envelope. A rule can miss the shop name but still cross another headline. Check all text at the intermediate and held poses. Phrase-replacement copies need one aligned hand-off, without a duplicate visible underneath.
+
 ## Text animation
 
 Use a text animator, mask or controlled reveal so the phrase builds internally. Related lines can stagger by two frames; the VO study used a three-frame opacity reveal and six-frame slide for phrase lines. If the headline carries visual energy, subtitles can remain plain hard cuts. Do not make “premium” mean every text layer scales, rotates, glows and highlights simultaneously.

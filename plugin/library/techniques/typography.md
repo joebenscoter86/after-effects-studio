@@ -1,0 +1,29 @@
+# Portable typography: design, measurement and fitting
+
+## Design a reading hierarchy
+
+Give each text block a job: title establishes the topic, statement carries the main point, emphasis isolates a meaningful word, captions support following spoken content, and labels attach information to a depicted object. A caption is not automatically a hero headline. Assign a primary block, then reduce the weight/size/contrast of supporting copy so the first glance has a clear destination.
+
+Choose the voice from the message. A compact heavy face can make a direct assertion; a contrasting serif with breathing room can feel editorial; one family in two weights can make instructions approachable; a large display phrase can supply a deliberate emphasis. These are options, not required font brands or a fixed sequence. A calm promise should not shake just because a shake is possible. Pair faces with a useful role contrast, not novelty; an expressive face must still carry its actual glyphs at delivery size.
+
+Break lines at meaning boundaries. Keep names and phrases intact when possible, inspect optical spacing and punctuation, and measure the chosen face before placing a rule or accent near descenders. Give the eye one primary movement to follow at a time; secondary motion may support it when the hierarchy remains clear. Avoid competing entrances and repeated loud peaks that erase contrast. Do not impose a fixed house coordinate grid on a different aspect ratio.
+
+Reading time begins when the needed words are settled and readable, not when the first glyph starts moving. Allocate more hold for longer copy or a new idea; reduce animation complexity before shortening comprehension time. When audio exists, coordinate emphasis with the relevant word without delaying essential reading. When silent, review whether a first-time viewer can follow the full message from the video alone. No fixed words-per-second rule establishes acceptance.
+
+Separate correctness from taste. Wrong copy, missing glyphs, clipping, insufficient contrast and broken editability require correction. A preferred serif, level of intensity or whitespace treatment is a visual judgment to explain, not an automatic score. Preserve user-approved wording and aesthetic constraints. Effects should support the readable layer; test glow/blur/transform interactions in rendered frames, and avoid copying a purchased template's code or assuming a universal effect stack works in every setup.
+
+## Native helper contract
+
+Load typography-jsx (or scripts/typography.jsx) to define AESType. Loading performs no host calls. These helpers accept explicit native text-layer references, without a MASTER composition or house preset. Font names are exact installed PostScript names, not family/display names. No font is bundled or installed.
+
+AESType.measure(layer,time) returns left/top/width/height/time/space:"source" from sourceRectAtTime. Empty or whitespace-only copy has zero drawable bounds. These are local source coordinates, not screen or world bounds. Point text has a baseline origin; paragraph text can have a negative box origin. Account for position, scale, parent transforms and box origin separately when laying out a scene.
+
+AESType.fit(layer,options) requires owner, ownedLayerIds containing the exact target ID, rect {left,top,width,height}, minFontSize, maxFontSize, wrap, time, requestedFont and fallbackFonts. Time is finite seconds within the composition. Dimensions and sizes must be positive. rect supplies source-space width/height limits; left/top are recorded intent, not a request to move the layer. This helper changes neither position nor scale. It preserves the complete existing copy and returns fontSize, overflow, bounds and resolvedFont inside the standard ok/created/warnings envelope.
+
+Use wrap:"preserve" for existing point text (explicit line breaks retained), or wrap:"paragraph" for existing paragraph text (native paragraph box resized to the supplied dimensions). Conversion between modes is refused. Fitting first tries the maximum, then the minimum and a bounded binary search. At minimum overflow stays explicit; copy is never truncated. A successful function result with overflow:true still requires a layout decision: enlarge the available area, split the approved copy, or change the layout. Never silently reduce the minimum.
+
+Font resolution checks the requested installed non-substitute face, then caller-approved fallbackFonts in order, with glyph coverage and post-write native fontObject readback. A fallback produces a warning and remeasurement. If no candidate is available, FONT_UNAVAILABLE occurs before any write. This verified-font route requires AE's FontObject.hasGlyphsFor capability (AE 25.1+); it does not download fonts or change font preferences. Initial scope is horizontal Latin with accents, combining marks and common punctuation. Unsupported scripts/directions are refused.
+
+Locked targets, keyed Source Text, and any existing Source Text expression (even disabled) are conflicts. Target membership is mandatory; a matching name prefix never grants ownership. Validation failures leave Source Text untouched. A native failure after a write attempts to restore the original TextDocument and reports NATIVE_ERROR, with uncertain:true if restoration fails or checked fields differ. This is best effort, not a transaction; inspect before retrying. Unrelated layers and transforms are never edited.
+
+Native evidence: quality/reports/2026-10-16-type-fit/report.md in the source repository. Tested on AE 26.5x89: accented copy, paragraph wrapping, approved missing-font fallback, empty copy, explicit minimum-size overflow, keyed/expressed Source Text and unavailable-font rejection. The contact sheet is a fitting fixture, not a typography style or final creative example. Entrance/phrase-replacement helpers are added by the next implementation ticket.

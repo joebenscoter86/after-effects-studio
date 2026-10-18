@@ -38,6 +38,127 @@
         "The plan accounts for the image layer's changing scale when setting the guide or tests the maximum expected registration error.",
         "The proposed review uses dense rendered frames where the line and image overlap and does not claim that unrendered geometry already looks aligned."
       ]
+    },
+    {
+      "id": 4,
+      "prompt": "Plan an editable kinetic typography announcement in After Effects, with calm blue and ivory titles. Do not operate AE.",
+      "expected_output": "Implicit typography routing; foundation and specialist documents actually read; concrete reading hierarchy and mechanism.",
+      "files": [],
+      "assertions": [
+        "Available skill discovery includes typography.",
+        "Trace records typography skill and foundation/specialist document reads.",
+        "No AE mutation is performed for the planning-only request."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Use $typography to plan an editorial After Effects title, without operating AE.",
+      "expected_output": "Explicit specialist starts independently with foundation and typography guidance.",
+      "files": [],
+      "assertions": [
+        "Trace records typography/SKILL.md and required library reads.",
+        "No recursive handoff back to motion-studio or requirement for a private rig."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Rewrite in plain English, returning only the sentence: The scheduled maintenance activity has reached its conclusion.",
+      "expected_output": "Plain sentence; no motion skill activation or AE call.",
+      "files": [],
+      "assertions": [
+        "No typography or other motion skill file is read.",
+        "No native operation or asset creation occurs."
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Plan an editable paper-collage motion invitation in After Effects using only native shapes and text. Do not operate AE.",
+      "expected_output": "Implicit collage routing with foundation and specialist reads; no generator or private asset dependency; abstract native subject disclosed.",
+      "files": [],
+      "assertions": [
+        "Available skill discovery includes paper-collage and the trace reads its SKILL.md.",
+        "Trace records foundation and paper-collage style/recipe document reads.",
+        "Plan makes a coherent paper material and assembly without claiming photographic art exists.",
+        "No AE mutation is performed for the planning-only request."
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Use $paper-collage to plan an abstract cut-paper garden announcement in After Effects. No generator and no AE operation yet.",
+      "expected_output": "Explicit paper-collage specialist starts independently and routes to native paper; typography is optional.",
+      "files": [],
+      "assertions": [
+        "Skill selection is visible (injected skill or SKILL.md read), and the trace reads required foundation/style documents without a recursive handoff.",
+        "No purchased assets, private rig or external account is required.",
+        "No AE mutation occurs."
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "Return only this sentence with normal capitalization: The meeting starts at noon.",
+      "expected_output": "Simple sentence; no paper-collage or motion skill activation.",
+      "files": [],
+      "assertions": [
+        "No paper-collage or other motion skill file is read.",
+        "No native operation or asset creation occurs."
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "Plan an 8-second editable River Day invitation in After Effects. Make the exact headline RIVER DAY the first read, use layered native cut-paper pieces to show separate neighborhoods joining one river, and give the supporting line Small actions. Shared water. a calm reveal. No supplied art or generator. Do not operate AE in this test.",
+      "expected_output": "Routes through foundation plus typography and paper-collage, combining readable native text with native paper assembly; does not claim a photographic material result or AE execution.",
+      "files": [],
+      "assertions": [
+        "Trace reads foundation, typography and paper-collage specialist guidance, without requiring the Content repository.",
+        "Exact headline and support copy remain editable AE text with explicit hierarchy and measured fit.",
+        "Native paper pieces assemble into a coherent relationship and are not misrepresented as photographic cutouts.",
+        "The plan includes start, assembly and readable landing checks and makes no unperformed render claim."
+      ]
+    },
+    {
+      "id": 11,
+      "prompt": "Revise the owned River Day After Effects scene: change the headline to Every block can help the river breathe, use a warm sand, brick and dark-indigo palette, and slow the paper arrivals. An unrelated sentinel composition and layer are present. Preserve those and any non-owned content. Describe the checks you will perform before operating AE; do not operate AE during this eval.",
+      "expected_output": "Scoped revision plan with exact text, fit and timing changes, pre/post sentinel snapshots, no duplicate scene fragments or mutation outside owned layers.",
+      "files": [],
+      "assertions": [
+        "The plan inspects current project and owner IDs before revision, and refuses unknown or dirty state.",
+        "It preserves unrelated sentinel composition and layer and compares their identity, copy, properties and structure after revision.",
+        "The long exact headline is remeasured against its paper surface instead of blindly keeping the old font size.",
+        "The plan changes only owned paper and type and checks scene layer count to catch duplicate fragments."
+      ]
+    },
+    {
+      "id": 12,
+      "prompt": "Plan a clean kinetic-type announcement in After Effects with no paper or collage styling. Use restrained motion and keep the words editable. Do not operate AE.",
+      "expected_output": "Typography-only routing, with no unwanted paper-collage activation.",
+      "files": [],
+      "assertions": [
+        "Typography guidance and foundation are read.",
+        "Paper-collage is not selected from the broad word motion alone.",
+        "The plan keeps text native and makes no AE execution claim."
+      ]
+    },
+    {
+      "id": 13,
+      "prompt": "Plan a native cut-paper garden scene in After Effects, with no on-screen text. Keep the movement calm and the shapes editable. Do not operate AE.",
+      "expected_output": "Paper-collage-only routing, with no unnecessary typography specialist requirement.",
+      "files": [],
+      "assertions": [
+        "Paper-collage guidance and foundation are read.",
+        "Typography is not selected merely because the word editable appears.",
+        "No generator, private asset or AE execution is claimed."
+      ]
+    },
+    {
+      "id": 14,
+      "prompt": "Our supplied brand guide usually uses energetic coral motion and a cool blue palette. For this one paper-collage title, I explicitly want calm movement and warm sand, brick and dark indigo. Plan it in After Effects without operating AE.",
+      "expected_output": "The explicit one-off direction wins over brand defaults while safe project ownership remains unchanged.",
+      "files": [],
+      "assertions": [
+        "The plan chooses restrained motion and the requested warm palette, and states why these override the usual brand defaults for this piece.",
+        "The plan does not infer that all future brand work has changed.",
+        "The collage remains editable and no AE mutation is claimed."
+      ]
     }
   ]
 }

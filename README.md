@@ -2,11 +2,11 @@
 
 The plugin is free to use for personal and commercial motion work. Joe's original plugin and motion-library materials may not be repackaged or resold; see [the original-material license](license.md) and [source provenance](plugin/PROVENANCE.md). Upstream components keep their separate licenses.
 
-Create and revise editable motion graphics in After Effects with plain-language direction, guided by a detailed production-derived motion language. The Codex Git release is available as v0.1.0; broader public-v1 and OpenAI directory work remain separate.
+Create and revise editable motion graphics in After Effects with plain-language direction, guided by a detailed production-derived motion language. The latest Codex Git release is v0.2.0; broader public-v1 and OpenAI directory work remain separate.
 
 Open this repository in Codex and describe the work you want to do. [AGENTS.md](AGENTS.md) routes the task to the right workspace.
 
-Public release information: [product](release/website/index.md), [support](release/website/support.md), [privacy](release/website/privacy.md), and [terms](release/website/terms.md). The [installation guide](plugin/docs/local-install.md) gives the public Git marketplace route. The [v0.1.0 Git release](https://github.com/joebenscoter86/after-effects-studio/releases/tag/v0.1.0) is published. A separate-Mac native journey passed for an earlier public-Git candidate; post-release v0.1.0 acceptance is tracked in AFT-25.
+Public release information: [product](release/website/index.md), [support](release/website/support.md), [privacy](release/website/privacy.md), and [terms](release/website/terms.md). The [installation guide](plugin/docs/local-install.md) gives the public Git marketplace route. The [v0.2.0 Git release](https://github.com/joebenscoter86/after-effects-studio/releases/tag/v0.2.0) is published. A separate-Mac native journey passed for an earlier public-Git candidate; the expanded v0.2.0 system was verified on the development Mac, but a separate-Mac v0.2.0 installation is not yet verified.
 
 - [Product brief](product/brief.md): audience, promise and scope.
 - [PRD](product/prd.md): required v1 behavior and acceptance evidence.

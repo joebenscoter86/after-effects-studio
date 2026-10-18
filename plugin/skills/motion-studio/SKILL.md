@@ -7,6 +7,8 @@ description: Create or revise motion graphics in Adobe After Effects using a det
 
 The user chooses the subject and visual style. This plugin supplies the detailed motion language developed in an existing production pipeline. Use that knowledge as the default for every motion task; it is not a JoeB-only preset. Native AE control is the execution layer.
 
+For visually demanding builds, suggest an available GPT-6-family model or newer; prefer GPT-6.1 Sol or GPT-6 Astra for complex layout and continuity. If the user is on a lower-cost model, continue the requested work and treat its render as a draft until the delivered frames pass visual review. A local comparison found GPT-5.6 Luna/high technically capable but visually unreliable on three of six first passes; GPT-6 Astra/high cleared the sampled faults in separate confirmations. Do not claim that every GPT-6 variant is validated, switch models without the user's choice, or equate model selection with creative acceptance.
+
 ## Cold start
 
 Read `ae_library` documents **motion-language**, **production-workflow**, and **brief-template** before designing the first scene. If the library tool is unavailable but the plugin is on disk, read `../../library/language/core.md`, `../../library/language/production-workflow.md`, and `../../library/templates/brief.md` relative to this skill directory. All required knowledge ships here; never require the original Content repo.
@@ -17,15 +19,27 @@ Inspect `ae_version_info` and `ae_context`, or run the plugin's doctor if no con
 
 | Task or problem | Library documents to read |
 |---|---|
-| Explanation, construction, sort, reveal or state change | construction, worked-scenes |
+| Explanation, construction, sort, reveal or state change | construction, worked-scenes; use worked-scenes D for source-to-use transfers |
 | Camera, depth, traversal or continuous transition | camera-continuity |
 | Product art, illustrated objects, compositing, material polish | assets-depth |
-| Typography, voiceover, captions, UI, factual evidence | type-evidence |
+| Animated text and kinetic typography | typography-technique, typography-recipes, typography-examples; sibling typography/SKILL.md |
+| Paper collage, cutouts or tactile cardstock | paper-collage-style, paper-collage-recipes, paper-collage-examples; sibling paper-collage/SKILL.md |
+| Voiceover, captions, UI, factual evidence | type-evidence |
 | Supplied reference or a look that isn't landing | reference-study, failure-atlas |
 | Native implementation | scripting, motion-jsx; sibling ae-control/SKILL.md |
 | Every review/delivery | quality, failure-atlas |
 
 Use ae_library with a document ID. The index returns relative paths for direct reading; load relevant modules, not every historical document. scene-recipes is a quick index; worked-scenes carries actual event/timing studies. timing is a compact lookup alongside construction.
+
+For an animated headline on paper, use the typography capability and paper-collage style together under the same foundation and one scene brief. Keep one owner for native writes; specialists supply guidance, not competing scene builders or a recursive handoff. A typography-only request does not activate collage, and a wordless collage does not require typography. A user-requested palette or pace intentionally overrides a supplied brand default; otherwise preserve the brand constraint, then apply style and general defaults. Project ownership and tool permission boundaries always remain in force. If a material conflict has unclear intent, ask one focused question.
+
+For a native-only type-led collage, read the type-led announcement in `paper-collage-examples` before designing, including its final-pose clearance test. Give the primary paper a visible edge/surface/shadow treatment with `AESCollage.paper` or an equivalent tested native stack, then keep the event name and invitation on readable surviving paper surfaces. Reserve nonoverlapping measured regions for the complete settled strings and place joins behind text or in the gap. A smooth polygon on an almost identical ground or a foreground card covering part of the event name is a failed scene, even when export and text checks pass.
+
+Prove the paper material before animating a full collage. Make one final-size still of the proposed primary sheet over its actual ground and inspect both its interior and edge: visible tonal/fiber variation must survive the delivered encode, a cut or irregular edge must stay legible, and contact plus softer offset shadow must separate it from the backer. If the still reads as a uniform polygon, revise the sheet with `AESCollage.paper` or an equivalent tested treatment before spending the run budget on timing, accents, or repeated layout adjustments. A readable final CTA does not excuse a flat material surface. Retest the settled final movie frame after export because compression can erase subtle grain.
+
+For a causal explainer, verify the source, moving carrier and changed recipient at the actual transition frames. If drawing a route, measure its source/recipient endpoints and keep the carrier on that same geometry at departure, quarters, midpoint and contact; if it cannot register, delete the route and use a direct carrier or matched cut. A disconnected guide or newly appearing stand-in fails the story. For type on paper, inspect whether the piece has a credible material role beyond a flat card and whether the named subject remains clear through the final invitation. Correct the brief and scene geometry when either relationship fails, before polishing easing or grain.
+
+At the final review, compare the delivered movie's hard middle and settled reading frames. In a transfer scene, look for a visible change at the source before the recipient reacts. In a paper scene, measure the title and invitation bounds and move foreground folds/scraps away from glyphs before calling the material treatment finished.
 
 ## Apply the language
 

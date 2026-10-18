@@ -1,0 +1,5 @@
+# Foundation smoke review
+
+Inspected the 14-frame contact sheet decoded from the delivered movie, including first and final frames. Copy is readable with clear left alignment and consistent margins. The droplet becomes collected water; the same collector slides to reveal its outlet, the water level drops as a connected route reaches the garden, and plants grow along it. This satisfies the scoped MS-02 foundation criterion for readable hierarchy and intentional continuity without a fixed JoeB look. No sampled essential clipping, water protrusion or text collision observed. Sparse transition moments retain the collector; final visual hold is short (about 1.2 seconds), while final copy is present longer.
+
+The independent decoder and metadata checks pass. Full-speed perceptual playback is still unperformed, so this accepts sampled hierarchy/continuity for the implementation smoke, not timing at speed, user acceptance or comparative improvement. The later paired evaluation remains required. The trial's locked-background partial revision and contact-sheet filter error are retained, with recovery evidence. The smoke does not replace or alter any frozen baseline.
