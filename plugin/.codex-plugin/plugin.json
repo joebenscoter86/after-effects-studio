@@ -1,7 +1,7 @@
 {
   "name": "after-effects-studio",
-  "version": "0.1.0+codex.20261015232719",
-  "description": "Native After Effects control guided by a detailed, production-derived motion language for any brand or style.",
+  "version": "0.2.0+codex.20261018",
+  "description": "Editable After Effects motion with native control, typography, paper collage, and a production-derived motion language.",
   "author": {
     "name": "JB Technology LLC"
   },
@@ -9,7 +9,7 @@
   "interface": {
     "displayName": "After Effects Studio",
     "shortDescription": "Create polished, editable motion in After Effects.",
-    "longDescription": "Create editable motion in local After Effects using a detailed production-derived craft system: visual operations, progressive construction, camera continuity, material quality, typography, measured timing, worked scenes and rendered review. Your own brand and style; all guidance included.",
+    "longDescription": "Create and revise editable motion in local After Effects with a bundled production-derived craft system, native typography and paper-collage helpers, worked examples and rendered review. Adapt the subject, brand and style to your brief.",
     "developerName": "JB Technology LLC",
     "category": "Productivity",
     "capabilities": [

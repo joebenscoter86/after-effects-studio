@@ -19,3 +19,5 @@ The bundled runtime needs Node 24+ and an installed licensed After Effects. Run 
 The plugin supports AE's exposed scripting API. Third-party custom UI controls, effect-specific dialogs and Adobe licensing are not bypassed. Query installed effects and fonts; don't invent availability. Some custom values (such as a LUT file picker) require an existing animation preset or user UI action.
 
 Use one controller at a time. The bundled native runtime serializes its own clients; unrelated CEP panels and the older Content shell bridge do not share that lock.
+
+For portable text fitting/entrances, read typography-jsx and typography-technique before calling AESType. Helpers use explicit owned layer IDs, protect existing Source Text animation/expressions and report partial completion. Ordinary native text operations remain available for supported needs outside helper scope; inspect and verify them independently.

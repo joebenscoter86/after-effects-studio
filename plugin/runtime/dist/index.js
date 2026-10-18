@@ -7357,10 +7357,10 @@ var util;
       return obj[e];
     });
   };
-  util2.objectKeys = typeof Object.keys === "function" ? (obj) => Object.keys(obj) : (object3) => {
+  util2.objectKeys = typeof Object.keys === "function" ? (obj) => Object.keys(obj) : (object4) => {
     const keys = [];
-    for (const key in object3) {
-      if (Object.prototype.hasOwnProperty.call(object3, key)) {
+    for (const key in object4) {
+      if (Object.prototype.hasOwnProperty.call(object4, key)) {
         keys.push(key);
       }
     }
@@ -11680,9 +11680,9 @@ function floatSafeRemainder2(val, step) {
   return ratio - roundedRatio;
 }
 var EVALUATING = /* @__PURE__ */ Symbol("evaluating");
-function defineLazy(object3, key, getter) {
+function defineLazy(object4, key, getter) {
   let value = void 0;
-  Object.defineProperty(object3, key, {
+  Object.defineProperty(object4, key, {
     get() {
       if (value === EVALUATING) {
         return void 0;
@@ -11694,7 +11694,7 @@ function defineLazy(object3, key, getter) {
       return value;
     },
     set(v) {
-      Object.defineProperty(object3, key, {
+      Object.defineProperty(object4, key, {
         value: v
         // configurable: true,
       });
@@ -28187,11 +28187,11 @@ function parseMapDef(def, refs) {
 
 // node_modules/zod-to-json-schema/dist/esm/parsers/nativeEnum.js
 function parseNativeEnumDef(def) {
-  const object3 = def.values;
+  const object4 = def.values;
   const actualKeys = Object.keys(def.values).filter((key) => {
-    return typeof object3[object3[key]] !== "number";
+    return typeof object4[object4[key]] !== "number";
   });
-  const actualValues = actualKeys.map((key) => object3[key]);
+  const actualValues = actualKeys.map((key) => object4[key]);
   const parsedTypes = Array.from(new Set(actualValues.map((values) => typeof values)));
   return {
     type: parsedTypes.length === 1 ? parsedTypes[0] === "string" ? "string" : "number" : ["string", "number"],
@@ -45458,22 +45458,144 @@ var ALL_TOOLS = [
 import { readFileSync, realpathSync } from "node:fs";
 import path11 from "node:path";
 import { createHash } from "node:crypto";
+
+// src/tools/library-modules.ts
+function object3(value) {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+function fail2(id, field, reason) {
+  throw new Error(`Module ${id}: ${field}: ${reason}`);
+}
+function string4(value, id, field) {
+  if (typeof value !== "string" || !value.trim()) fail2(id, field, "expected nonempty string");
+}
+function strings(value, id, field) {
+  if (!Array.isArray(value)) fail2(id, field, "expected string array");
+  value.forEach((v) => string4(v, id, field));
+}
+function isReportReference(value) {
+  if (value.startsWith("https://")) {
+    try {
+      const u = new URL(value);
+      return !u.username && !u.password && u.hostname.includes(".") && !/^(localhost|127\.|0\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.)/i.test(u.hostname);
+    } catch {
+      return false;
+    }
+  }
+  return /^quality\/reports\/[a-zA-Z0-9._/-]+$/.test(value) && !value.split("/").some((p) => !p || p === "." || p === "..");
+}
+function validateCatalog(raw, refs) {
+  if (!object3(raw) || raw.schemaVersion !== 1) fail2("<catalog>", "schemaVersion", "expected 1");
+  if (!Array.isArray(raw.modules)) fail2("<catalog>", "modules", "expected array");
+  const ids = /* @__PURE__ */ new Set();
+  for (const item of raw.modules) {
+    if (!object3(item)) fail2("<unknown>", "module", "expected object");
+    const id = typeof item.id === "string" ? item.id : "<unknown>";
+    for (const field of ["id", "title", "summary", "entryDocument"]) string4(item[field], id, field);
+    if (!/^[a-z][a-z0-9-]*$/.test(id)) fail2(id, "id", "expected lowercase hyphenated ID");
+    if (ids.has(id)) fail2(id, "id", "duplicate ID");
+    ids.add(id);
+    if (typeof item.kind !== "string" || !["foundation", "capability", "style"].includes(String(item.kind))) fail2(id, "kind", "unknown enum");
+    for (const field of ["tags", "whenToUse", "whenNotToUse", "requires", "documents", "compatibleWith", "assetRequirements", "fontRequirements", "fallbacks", "examples", "reviewChecks", "provenanceRefs"]) strings(item[field], id, field);
+    if (!Array.isArray(item.inputs)) fail2(id, "inputs", "expected array");
+    for (const input of item.inputs) {
+      if (!object3(input)) fail2(id, "inputs", "expected object");
+      string4(input.name, id, "inputs.name");
+      string4(input.constraints, id, "inputs.constraints");
+      if (typeof input.required !== "boolean") fail2(id, "inputs.required", "expected boolean");
+      if (input.default !== null && typeof input.default !== "string") fail2(id, "inputs.default", "expected string or null");
+    }
+    const e = item.evidence;
+    if (!object3(e)) fail2(id, "evidence", "expected object");
+    if (typeof e.technical !== "string" || !["not-tested", "passed", "failed"].includes(String(e.technical))) fail2(id, "evidence.technical", "unknown enum");
+    if (typeof e.visual !== "string" || !["not-reviewed", "accepted", "revision-needed"].includes(String(e.visual))) fail2(id, "evidence.visual", "unknown enum");
+    strings(e.reports, id, "evidence.reports");
+    if ((e.technical !== "not-tested" || e.visual !== "not-reviewed") && !e.reports.length) fail2(id, "evidence.reports", "tested or reviewed status requires evidence");
+    for (const report of e.reports) if (!isReportReference(report)) fail2(id, "evidence.reports", "expected repository report path or public HTTPS URL");
+  }
+  const catalog = raw;
+  for (const m of catalog.modules) {
+    const check2 = (field, values, valid) => {
+      for (const value of values) if (!valid.has(value)) fail2(m.id, field, `missing reference ${value}`);
+    };
+    check2("entryDocument", [m.entryDocument], refs.documentIds);
+    check2("documents", m.documents, refs.documentIds);
+    check2("examples", m.examples, refs.documentIds);
+    check2("requires", m.requires, ids);
+    check2("compatibleWith", m.compatibleWith, ids);
+    check2("provenanceRefs", m.provenanceRefs, refs.provenanceIds);
+  }
+  const byId = new Map(catalog.modules.map((m) => [m.id, m]));
+  const visiting = /* @__PURE__ */ new Set(), visited = /* @__PURE__ */ new Set();
+  function visit(id) {
+    if (visiting.has(id)) fail2(id, "requires", "dependency cycle");
+    if (visited.has(id)) return;
+    visiting.add(id);
+    for (const dep of byId.get(id).requires) visit(dep);
+    visiting.delete(id);
+    visited.add(id);
+  }
+  for (const id of ids) visit(id);
+  return catalog;
+}
+function findModules(catalog, query) {
+  const q = query?.trim().toLowerCase();
+  return catalog.modules.filter((m) => !q || [m.id, m.title, m.summary, ...m.tags].some((v) => v.toLowerCase().includes(q)));
+}
+
+// src/tools/library.ts
+function boundedFile(base, relative2) {
+  const candidate = path11.resolve(base, relative2);
+  const inside = (file3) => {
+    const rel = path11.relative(base, file3);
+    if (!rel || rel === ".." || rel.startsWith(".." + path11.sep) || path11.isAbsolute(rel)) throw new Error("Library path escapes bundle");
+  };
+  inside(candidate);
+  const file2 = realpathSync(candidate);
+  inside(file2);
+  return file2;
+}
 function readLibrary(document, query, root = path11.resolve(PACKAGE_ROOT, "../library")) {
   const base = realpathSync(root);
-  const manifest = JSON.parse(readFileSync(path11.join(base, "manifest.json"), "utf8"));
+  const manifest = JSON.parse(readFileSync(boundedFile(base, "manifest.json"), "utf8"));
   const entries = manifest.documents;
+  const read = (entry2) => {
+    const content = readFileSync(boundedFile(base, entry2.path), "utf8");
+    if (createHash("sha256").update(content).digest("hex") !== entry2.sha256) throw new Error("Library hash mismatch: regenerate manifest after intentional edits");
+    return content;
+  };
   if (!document) {
-    const needle = query?.toLowerCase();
-    return { startHere: ["motion-language", "production-workflow", "brief-template"], documents: entries.filter((e) => !needle || `${e.id} ${e.title} ${e.kind}`.toLowerCase().includes(needle)) };
+    const needle = query?.trim().toLowerCase();
+    const catalogEntry = entries.find((e) => e.id === "module-catalog");
+    let catalog = { schemaVersion: 1, modules: [] };
+    if (catalogEntry) {
+      try {
+        const raw = JSON.parse(read(catalogEntry));
+        const sourceMap = JSON.parse(readFileSync(boundedFile(base, "source-map.json"), "utf8"));
+        catalog = validateCatalog(raw, { documentIds: new Set(entries.map((e) => e.id)), provenanceIds: new Set((sourceMap.sources ?? []).map((s) => s.id).filter((id) => typeof id === "string")) });
+      } catch (e) {
+        throw new Error(`Module catalog: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    }
+    const matches = findModules(catalog, query);
+    const entryIds = new Set(matches.map((m) => m.entryDocument));
+    const seen = /* @__PURE__ */ new Set();
+    return {
+      startHere: ["motion-language", "production-workflow", "brief-template"],
+      documents: entries.filter((e) => {
+        if (seen.has(e.id)) return false;
+        if (!needle || `${e.id} ${e.title} ${e.kind}`.toLowerCase().includes(needle) || entryIds.has(e.id)) {
+          seen.add(e.id);
+          return true;
+        }
+        return false;
+      }),
+      modules: matches.map(({ id, kind, title, summary, entryDocument, requires, tags, evidence }) => ({ id, kind, title, summary, entryDocument, requires, tags, evidence }))
+    };
   }
   const entry = entries.find((e) => e.id === document);
   if (!entry) throw new Error("Unknown library document. Call ae_library without arguments for valid IDs.");
-  const file2 = realpathSync(path11.resolve(base, entry.path));
-  const rel = path11.relative(base, file2);
-  if (!rel || rel.startsWith("..") || path11.isAbsolute(rel)) throw new Error("Library path escapes bundle");
-  const content = readFileSync(file2, "utf8");
-  if (createHash("sha256").update(content).digest("hex") !== entry.sha256) throw new Error("Library hash mismatch: regenerate manifest after intentional edits");
-  return { document: entry.id, title: entry.title, kind: entry.kind, content };
+  return { document: entry.id, title: entry.title, kind: entry.kind, content: read(entry) };
 }
 var libraryTool = defineTool({
   name: "ae_library",

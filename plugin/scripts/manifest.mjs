@@ -3,6 +3,16 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 const root = new URL('../library/', import.meta.url);
 const docs = [
+ ['typography-examples','Portable typography worked examples','examples/typography.md','examples'],
+ ['typography-recipes','Editable typography entrance and replacement recipes','recipes/typography.md','recipes'],
+ ['typography-jsx','Portable typography measurement and fitting','scripts/typography.jsx','code'],
+ ['typography-technique','Typography native scope and fitting contract','techniques/typography.md','technique'],
+ ['paper-collage-recipes','Native paper and cutout material recipe','recipes/paper-collage.md','recipes'],
+ ['paper-collage-jsx','Native paper and deterministic cutout helpers','scripts/paper-collage.jsx','code'],
+ ['paper-collage-style','Portable paper collage material and motion profile','styles/paper-collage.md','style'],
+ ['paper-collage-examples','Worked native paper collage examples','examples/paper-collage.md','examples'],
+ ['module-catalog','Validated motion modules','modules.json','catalog'],
+ ['module-template','Motion module authoring contract','templates/module.md','template'],
  ['motion-language','The core motion language for every style','language/core.md','foundation'],
  ['production-workflow','Portable cold-start production workflow','language/production-workflow.md','foundation'],
  ['construction','Detailed construction timing and gesture grammar','language/construction.md','technique'],

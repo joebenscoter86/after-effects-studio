@@ -38,10 +38,11 @@ try{
  assert.equal(init.serverInfo.name,'after-effects-studio');
  child.stdin.write(JSON.stringify({jsonrpc:'2.0',method:'notifications/initialized'})+'\n');
  const ts=await rpc('tools/list');assert(ts.tools.some(t=>t.name==='ae_library'));report.tools=ts.tools.map(t=>t.name);
- const lib=await tool('ae_library');assert.equal(lib.documents.length,19);assert.deepEqual(lib.startHere,["motion-language","production-workflow","brief-template"]);
+ const lib=await tool('ae_library');assert.equal(lib.documents.length,29);assert.deepEqual(lib.startHere,["motion-language","production-workflow","brief-template"]);
+ assert.deepEqual(lib.modules.map(m=>m.id),['foundation','typography','paper-collage']);
  for(const d of lib.documents){const doc=await tool('ae_library',{document:d.id});assert(doc.content.length>100);}
  const bad=await rpc('tools/call',{name:'ae_library',arguments:{document:'../../package.json'}});assert.equal(bad.isError,true);
- report.checks.push('MCP handshake, tool discovery, all 19 hashed library documents and default craft routing and traversal rejection');
+ report.checks.push('MCP handshake, tool discovery, all 29 hashed library documents, three module routes, default craft routing and traversal rejection');
  const cat=await tool('ae_catalog');report.catalog=cat;report.checks.push('Offline policy-filtered operation catalog');
  if(live){
    const before=await tool('ae_context');

@@ -1,6 +1,6 @@
 # After Effects Studio privacy information
 
-Publisher: JB Technology LLC. This page describes the local stdio/IPC design in the public v0.1.0 Git release, reviewed against the release candidate on 2026-10-15.
+Publisher: JB Technology LLC. This page describes the local stdio/IPC design in the public v0.2.0 Git release. The native controller is unchanged from the tested v0.1.0 release; the expanded guidance and helpers were verified on the development Mac in October 2026.
 
 The bundled plugin runs a Node MCP server on your computer and uses local operating-system scripting plus temporary file messages to control your local After Effects installation. The bundled server does not start a web listener or include a hosted relay or product telemetry client. Its tools can read AE project structure, local paths and rendered frames, and can change or save a project when write access is enabled. You choose export destinations. Custom AE scripting is enabled by default and can access the capabilities allowed by AE and your machine; `AE_MCP_ENABLE_EVAL=0` disables that tool, and `AE_MCP_READONLY=1` restricts project changes.
 

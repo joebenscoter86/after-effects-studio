@@ -4,43 +4,232 @@
   "sources": [
     {
       "path": "production/joeb-motion-playbook.md",
-      "sha256": "1e5e26806b54f548ba27ab3f157b7c8e70c76f7ab282d0f0d427327c1ccde053"
+      "sha256": "1e5e26806b54f548ba27ab3f157b7c8e70c76f7ab282d0f0d427327c1ccde053",
+      "id": "historical-468f1182c634"
     },
     {
       "path": "production/vo-motion-graphic.md",
-      "sha256": "e836315a3e3625135888ca1898eddaef0accb4b62e14e331e4d8e652fb250e54"
+      "sha256": "e836315a3e3625135888ca1898eddaef0accb4b62e14e331e4d8e652fb250e54",
+      "id": "historical-48306e76ab28"
     },
     {
       "path": "production/joeb-star-workflow.md",
-      "sha256": "8f59187a77b4741110e07dd88ac565a9946881edd0f6d1dbbba99b0c439fd50a"
+      "sha256": "8f59187a77b4741110e07dd88ac565a9946881edd0f6d1dbbba99b0c439fd50a",
+      "id": "historical-f02d6044d0f6"
     },
     {
       "path": ".claude/skills/joeb-reel/LEARNINGS.md",
-      "sha256": "26007803077ffb22b7e335dab894e141e7506a933aadc737e830f3f758690a1a"
+      "sha256": "26007803077ffb22b7e335dab894e141e7506a933aadc737e830f3f758690a1a",
+      "id": "historical-21c4100073ef"
     },
     {
       "path": "production/after-effects/2026-10-05-house-polish-proto/scripts/b02.jsx",
-      "sha256": "5e430c141f63afb4dcca50b951c62ff4e2901282c89f47b1b42cf084c3fad08c"
+      "sha256": "5e430c141f63afb4dcca50b951c62ff4e2901282c89f47b1b42cf084c3fad08c",
+      "id": "historical-d27192e5269c"
     },
     {
       "path": "production/after-effects/2026-10-05-house-polish-proto/scripts/b03.jsx",
-      "sha256": "f7918a31e1078971cd5ffa35a8274bd741d88f1d2dacb8bfb54986ec5ba024da"
+      "sha256": "f7918a31e1078971cd5ffa35a8274bd741d88f1d2dacb8bfb54986ec5ba024da",
+      "id": "historical-d679c728a2eb"
     },
     {
       "path": "production/after-effects/2026-10-05-house-polish-proto/mining/FINDINGS.md",
-      "sha256": "57cbad49dcca1db28750a79e0a795078a49d207b8987b08921224229be8c9276"
+      "sha256": "57cbad49dcca1db28750a79e0a795078a49d207b8987b08921224229be8c9276",
+      "id": "historical-5d1918450243"
     },
     {
       "path": "brands/joe-b/production-briefs/2026-08-11-give-it-the-keys/scene-v9/WHY-THIS-WORKED.md",
-      "sha256": "1b2a7a38b436b345d5e152ff0575ef86fbac9a05d142b8188fcc2472a253df39"
+      "sha256": "1b2a7a38b436b345d5e152ff0575ef86fbac9a05d142b8188fcc2472a253df39",
+      "id": "historical-cabe6896afc6"
     },
     {
       "path": "production/after-effects/house/motion.jsx",
-      "sha256": "a7f956823f261c76440d970e10063b070b5ac6c4deca8d01e1d1c3c908fc5e0d"
+      "sha256": "a7f956823f261c76440d970e10063b070b5ac6c4deca8d01e1d1c3c908fc5e0d",
+      "id": "historical-c625dffb6f14"
     },
     {
       "path": "production/after-effects/house/house.jsx",
-      "sha256": "383516f7e80434cd3a9dd2937e3a4a2a1a52c43ed69eb10118f43d22f126cb37"
+      "sha256": "383516f7e80434cd3a9dd2937e3a4a2a1a52c43ed69eb10118f43d22f126cb37",
+      "id": "historical-9e1b7de50617"
+    },
+    {
+      "id": "content-motion-2026-10-15",
+      "path": "production/joeb-motion-playbook.md",
+      "sha256": "3a10f5b48836cfbaa29d6aaa15d9bf8c0ee99f623325a3b11acfce96af99aeb7",
+      "sourceRevision": "4e6de54f11b3ca9ffa7f2f55b9cdac62a31095c7",
+      "sections": "1,4,4a,6,8,9,10,11",
+      "adaptedTo": [
+        "language/core.md",
+        "language/production-workflow.md",
+        "language/construction.md",
+        "language/camera-continuity.md",
+        "language/type-evidence.md",
+        "language/failure-atlas.md",
+        "templates/brief.md"
+      ],
+      "scope": "Original portable prose adaptation. Continuity concepts credited to the source playbook study of onetake; no third-party code, films, private rig, media or fonts copied. House timings retained as optional measured examples.",
+      "evidence": "quality/reports/2026-10-16-motion-foundation/report.md",
+      "technicalStatus": "library-validation-and-native-smoke-passed",
+      "visualStatus": "sampled-hierarchy-and-continuity-reviewed; full-speed-unperformed"
+    },
+    {
+      "id": "released-baseline-observations-2026-10-16",
+      "path": "quality/reports/2026-10-15-motion-system-baseline/report.md",
+      "sourceRevision": "ed12236",
+      "classification": "original-local-validation-evidence",
+      "adaptedTo": [
+        "language/type-evidence.md",
+        "language/failure-atlas.md",
+        "language/production-workflow.md"
+      ],
+      "scope": "Guidance on font resolution, exact copy, all-text collision inspection and matching export frames. Qualitative observations only; no automated taste or superiority claim."
+    },
+    {
+      "id": "content-typography-2026-10-15",
+      "path": "production/joeb-typography-playbook.md",
+      "sha256": "c350712514cbc6e095c3b25c1dc81800f9bd9b1f5e17e81f6845ee5b4a949e4d",
+      "sourceRevision": "4e6de54f11b3ca9ffa7f2f55b9cdac62a31095c7",
+      "workingTreeStatus": "clean",
+      "sections": "\u00a7\u00a71,4\u20139,11",
+      "classification": "original-guidance-with-purchased-template-studies",
+      "destinations": [
+        "plugin/library/techniques/typography.md",
+        "plugin/library/recipes/typography.md"
+      ],
+      "adaptation": "Port roles, voice and reading guidance; implement generic native mechanisms independently. Exclude purchased MOGRT/font files and verbatim template code. Unbuilt proposals remain experimental.",
+      "ownershipBasis": "Joe confirmed original guidance is publishable; referenced third-party code/assets are excluded, not presumed cleared.",
+      "portStatus": "original-guidance-adapted; native-helper-code-independently-implemented",
+      "technicalStatus": "helper-native-and-routing-checks-passed",
+      "visualStatus": "sampled-example-frames-reviewed; full-speed-user-accepted-2026-10-16",
+      "attribution": "General role/voice/reading concepts adapted from Joe original playbook. Purchased template code, exact template choreography, font files and proprietary assets excluded. House rules are not universal."
+    },
+    {
+      "id": "content-paper-collage-style-2026-10-17",
+      "path": "production/styles/paper-collage/STYLE.md",
+      "sha256": "202eb3e0ae5c7f5930e3b4dd2092d5997165ed106a0bd8efbaa425e5b0a03d7b",
+      "sourceRevision": "f31340724258e85a98620fc031c0f0e95e0a1af9",
+      "workingTreeStatus": "clean-for-this-source",
+      "sections": "1-4,6-8",
+      "classification": "original-style-guidance-with-third-party-inspiration-reference",
+      "adaptedTo": ["styles/paper-collage.md", "recipes/paper-collage.md", "examples/paper-collage.md"],
+      "scope": "Original brand-neutral material and movement guidance adapted from Joe's source. No third-party engine, private proof media, halftone utility, source JSX or bundled fonts copied. Native abstract paper is disclosed as distinct from photographic halftone.",
+      "ownershipBasis": "Joe confirmed his guidance and writing are original and clean to publish; third-party inspiration and media are excluded.",
+      "evidence": "quality/reports/2026-10-17-collage-acceptance/report.md",
+      "technicalStatus": "native-helper-fixture-passed; isolated-specialist-routing-passed; native-example-render-and-decode-passed; installed-route-pending",
+      "visualStatus": "native-example-agent-reviewed-at-full-speed; user-acceptance-pending"
     }
-  ]
+  ],
+  "expansionInventory": {
+    "inspected": "2026-10-15",
+    "sourceRevision": "4e6de54f11b3ca9ffa7f2f55b9cdac62a31095c7",
+    "sources": [
+      {
+        "id": "content-motion-2026-10-15",
+        "path": "production/joeb-motion-playbook.md",
+        "sha256": "3a10f5b48836cfbaa29d6aaa15d9bf8c0ee99f623325a3b11acfce96af99aeb7",
+        "sourceRevision": "4e6de54f11b3ca9ffa7f2f55b9cdac62a31095c7",
+        "workingTreeStatus": "clean",
+        "sections": "\u00a7\u00a71,4,4a,6,8\u201311,16",
+        "classification": "original-guidance-with-third-party-references",
+        "destinations": [
+          "plugin/library/language/core.md",
+          "plugin/library/language/construction.md",
+          "plugin/library/language/camera-continuity.md",
+          "plugin/library/styles/paper-collage.md"
+        ],
+        "adaptation": "Port principles and pitfalls; generalize house values; no noncommercial reference code or films. Carry ideas only; preserve attribution. Native collage fallback replaces private generated kit.",
+        "ownershipBasis": "Joe confirmed original guidance is publishable; referenced third-party code/assets are excluded, not presumed cleared.",
+        "portStatus": "foundation-guidance-adapted; collage-port-pending",
+        "technicalStatus": "not-tested",
+        "visualStatus": "not-reviewed"
+      },
+      {
+        "id": "content-typography-2026-10-15",
+        "path": "production/joeb-typography-playbook.md",
+        "sha256": "c350712514cbc6e095c3b25c1dc81800f9bd9b1f5e17e81f6845ee5b4a949e4d",
+        "sourceRevision": "4e6de54f11b3ca9ffa7f2f55b9cdac62a31095c7",
+        "workingTreeStatus": "clean",
+        "sections": "\u00a7\u00a71,4\u20139,11",
+        "classification": "original-guidance-with-purchased-template-studies",
+        "destinations": [
+          "plugin/library/techniques/typography.md",
+          "plugin/library/recipes/typography.md"
+        ],
+        "adaptation": "Port roles, voice and reading guidance; implement generic native mechanisms independently. Exclude purchased MOGRT/font files and verbatim template code. Unbuilt proposals remain experimental.",
+        "ownershipBasis": "Joe confirmed original guidance is publishable; referenced third-party code/assets are excluded, not presumed cleared.",
+        "portStatus": "inventoried-not-ported",
+        "technicalStatus": "not-tested",
+        "visualStatus": "not-reviewed"
+      },
+      {
+        "id": "content-motion-helpers-2026-10-15",
+        "path": "production/after-effects/house/motion.jsx",
+        "sha256": "4a2365fcabae01021fb9fcdf7f73a20fd88f74521d578056c9c5b241f36dd8bb",
+        "sourceRevision": "4e6de54f11b3ca9ffa7f2f55b9cdac62a31095c7",
+        "workingTreeStatus": "clean",
+        "sections": "carry functions and collage block",
+        "classification": "rig-dependent-original-code-with-reference-attribution",
+        "destinations": [
+          "plugin/library/scripts/motion.jsx",
+          "plugin/library/scripts/paper-collage.jsx"
+        ],
+        "adaptation": "Do not copy entire file. Replace global comp/rig/private assets, implicit FPS and expression overwrite; explicit owned references and seed independent of index.",
+        "ownershipBasis": "Joe confirmed original guidance is publishable; referenced third-party code/assets are excluded, not presumed cleared.",
+        "portStatus": "inventoried-not-ported",
+        "technicalStatus": "not-tested",
+        "visualStatus": "not-reviewed"
+      },
+      {
+        "id": "content-house-helpers-2026-10-15",
+        "path": "production/after-effects/house/house.jsx",
+        "sha256": "6f2bd36c191363ba7061bb15f52f9ab1cf29f7154c055f0660f2ee4a1b407e57",
+        "sourceRevision": "4e6de54f11b3ca9ffa7f2f55b9cdac62a31095c7",
+        "workingTreeStatus": "clean",
+        "sections": "text helpers and hookStack",
+        "classification": "rig-dependent-code-with-purchased-template-derived-treatments",
+        "destinations": [
+          "plugin/library/scripts/typography.jsx"
+        ],
+        "adaptation": "No wholesale port. Use original portable measurement/fitting and native reveal mechanisms; no CAMERA/CAPTIONS_ANCHOR dependency or commercial fonts.",
+        "ownershipBasis": "Joe confirmed original guidance is publishable; referenced third-party code/assets are excluded, not presumed cleared.",
+        "portStatus": "inventoried-not-ported",
+        "technicalStatus": "not-tested",
+        "visualStatus": "not-reviewed"
+      },
+      {
+        "id": "content-collage-spike-2026-10-15",
+        "path": "production/after-effects/2026-10-15-collage-test/HANDOFF.md",
+        "sha256": "d7803a7e834930ba44e6004d4309a58643c2968c4ea2b32da8472f35100e435c",
+        "sourceRevision": "4e6de54f11b3ca9ffa7f2f55b9cdac62a31095c7",
+        "workingTreeStatus": "clean",
+        "sections": "State and limitations",
+        "classification": "experimental-production-evidence",
+        "destinations": [
+          "plugin/library/examples/paper-collage.md"
+        ],
+        "adaptation": "Reference learning only; no private media; note full-speed/sound review absent in source notes.",
+        "ownershipBasis": "Joe confirmed original guidance is publishable; referenced third-party code/assets are excluded, not presumed cleared.",
+        "portStatus": "inventoried-not-ported",
+        "technicalStatus": "not-tested",
+        "visualStatus": "not-reviewed"
+      },
+      {
+        "id": "content-collage-full-2026-10-15",
+        "path": "production/after-effects/2026-10-15-claude-watches-video/HANDOFF.md",
+        "sha256": "8ee38a30b56c29a9d36b286d2a5fa1b4c991b3f32a852f225a3a357ed91f3d55",
+        "sourceRevision": "4e6de54f11b3ca9ffa7f2f55b9cdac62a31095c7",
+        "workingTreeStatus": "clean",
+        "sections": "State and limitations",
+        "classification": "experimental-production-evidence",
+        "destinations": [
+          "plugin/library/examples/paper-collage.md"
+        ],
+        "adaptation": "Transfer seam/registration/time-remap lessons; do not claim public portable acceptance or copy private render/VO.",
+        "ownershipBasis": "Joe confirmed original guidance is publishable; referenced third-party code/assets are excluded, not presumed cleared.",
+        "portStatus": "inventoried-not-ported",
+        "technicalStatus": "not-tested",
+        "visualStatus": "not-reviewed"
+      }
+    ]
+  }
 }

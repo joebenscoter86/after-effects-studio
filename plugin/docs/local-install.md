@@ -1,6 +1,6 @@
 # Local installation and update
 
-This guide records development and pre-release installation paths. The [public Git-backed source](https://github.com/joebenscoter86/after-effects-studio) passed an offline smoke check on the development Mac on 2026-10-13. On 2026-10-15, Joe confirmed a first install on a separate Mac and the installed package passed a full native AE journey. This is pre-release acceptance, not a stable-release claim; the [redacted test report](https://github.com/joebenscoter86/after-effects-studio/issues/1) records the exact candidate and limitations.
+This guide covers the public v0.2.0 Git release and local installation. An earlier public-Git package passed a first install and native AE journey on a separate Mac; the expanded v0.2.0 system passed development-Mac tests, native builds and a fresh agent task. A separate-Mac v0.2.0 install remains unverified. The [redacted first-install report](https://github.com/joebenscoter86/after-effects-studio/issues/1) records the earlier package and limitations.
 
 ## Prerequisites for a creator
 
@@ -22,7 +22,7 @@ codex plugin add after-effects-studio@personal
 
 The command prints the installed cache path. Start a new Codex task so its skills and MCP tools are loaded from that version. In that task, ask for a read-only AE context check before permitting native writes. If the plugin is absent from Personal, the marketplace source is not configured on that machine; the command alone cannot discover this private source.
 
-## Public pre-release Git source
+## Public Git release
 
 On a machine with a supported Codex CLI, add this repository and then install its named plugin:
 
@@ -51,6 +51,6 @@ To remove only this plugin, run `codex plugin remove after-effects-studio@MARKET
 
 For rollback, restore a known-good, publisher-provided version of the marketplace/package and run `codex plugin add after-effects-studio@MARKETPLACE` again, then start a new task. The CLI help inspected on 2026-10-13 has no direct `plugin rollback` command or version pin on `plugin add`; retaining the prior package or a known Git ref is therefore necessary. Do not hand-edit an installed cache. The isolated AFT-33 lifecycle check restored an older package after removal; a fresh Codex CLI task reopened the owned AEP with its three editable layers, and the saved AEP and preview hashes remained unchanged. This was tested on the development Mac, not as a separate-Mac desktop UI hot-reload test.
 
-## Public path and remaining release check
+## Release verification boundary
 
-The public Git source and two Codex plugin commands are available. The separate-Mac first install and native first-use journey have passed for the candidate named above, with the original installer transcript unavailable. Do not describe this as one-click installation. The creator does not need Git commands or a source build. After the final stable release is published, repeat the public install and advertised journey against its exact released bytes (AFT-25).
+The public Git source and two Codex plugin commands are available. The separate-Mac first install and native first-use journey passed for an earlier package, with the original installer transcript unavailable. The expanded v0.2.0 release passed development-Mac native and fresh-agent checks; a separate-Mac install of this exact version has not yet been reported. The creator does not need Git commands or a source build.

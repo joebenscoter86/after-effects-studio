@@ -6,7 +6,7 @@ Use is free for personal and paid client motion work, including delivery of edit
 
 ## Use
 
-For the public pre-release source, follow the [Git marketplace install guide](docs/local-install.md), then start a new task. Ask, for example: “Create an editable six-second product explainer in After Effects. Use precise typography, a restrained palette, and show me a rendered preview.” The plugin supplies three skills and twelve MCP tools, including an offline motion library and the native operation catalog.
+For the public Git source, follow the [Git marketplace install guide](docs/local-install.md), then start a new task. Ask, for example: “Create an editable six-second product explainer in After Effects. Use precise typography, a restrained palette, and show me a rendered preview.” Version 0.2.0 supplies five skills and ten MCP tools, including an offline motion library and the native operation catalog.
 
 For installation, update, removal and restore, see [local installation and update](docs/local-install.md). Then follow [your first motion scene](docs/first-session.md) and [editable project and movie delivery](docs/delivery.md). The public Git source passed a first install and native create/revise/export/reopen journey on a separate Mac on 2026-10-15; the original installer transcript was not captured. Users do not need a Git clone, npm install, source build or manual MCP config edit.
 
@@ -28,7 +28,7 @@ Your instructions, tool inputs/results, project metadata and previews can reach 
 - Create and edit native compositions, text, shapes, masks, keyframes, expressions, effects, cameras, lights and footage using the catalog.
 - Run custom ExtendScript with `eval.run` for the exposed native scripting API.
 - Save projects, use render queue operations, export frames/contact sheets and exchange project JSON within the runtime's documented serialization limits.
-- Read 19 bundled documents and code libraries: the motion language, production workflow, construction timing, camera continuity, assets and depth, typography and evidence, reference study, failure atlas, three worked scenes, scene brief, core technical guides, optional JoeB appearance and reusable JSX.
+- Read 29 bundled documents and code libraries, including the refreshed motion foundation, typography and paper-collage modules, worked examples, scene brief, review guidance, optional JoeB appearance and reusable JSX. `ae_library` exposes module routing; the five skills cover motion-studio, ae-control, motion-review, typography and paper-collage.
 
 “Full access” means the exposed AE scripting API plus catalog operations, not every proprietary effect dialog or Adobe UI control. Query the catalog and installed effects rather than assuming coverage. This plugin enables custom scripting by default; `AE_MCP_ENABLE_EVAL=0` disables it and `AE_MCP_READONLY=1` restricts project mutations. Treat script inputs as executable code.
 
@@ -38,7 +38,11 @@ Inspect before writing, preserve unsaved work, and don't run competing controlle
 
 ## Motion language for every style
 
-The default skill and server instructions require the bundled motion language, production workflow and brief before creative work. Detailed techniques are loaded for the actual scene. Construction, causal action, state changes, persistent object identity, measured timing and rendered review come from the Content production work and apply to every palette and brand. These are self-contained portable adaptations, not links to a private checkout. See `docs/MIGRATION.md` for source coverage and exclusions. Future repository changes require an explicit plugin update.
+The default skill and server instructions require the bundled motion language, production workflow and brief before creative work. Detailed techniques are loaded for the actual scene. Construction, causal action, state changes, persistent object identity, measured timing and rendered review are adapted from Joe's production work and apply to every palette and brand. The typography skill supplies editable type planning and helpers; the paper-collage skill supplies native layered-paper methods and an optional cleared-asset route. These are self-contained portable adaptations, not links to a private checkout. See `docs/MIGRATION.md` and `PROVENANCE.md` for source coverage and exclusions. Future repository changes require an explicit plugin update.
+
+### Model choice for visual work
+
+For polished motion graphics, choose an available **GPT-6-family model or newer** in Codex. Start with GPT-6.1 Sol or GPT-6 Astra when the scene needs complex layout, object continuity or visual judgment. A faster or lower-cost model can still build editable drafts, but inspect its rendered frames closely before treating the work as finished. In a controlled local study, GPT-5.6 Luna/high completed six native technical tasks but had viewer-visible faults in three first-pass movies; separate GPT-6 Astra/high confirmations cleared the sampled faults in those three. That comparison does not prove every GPT-6 model or future model will pass. The plugin does not select or change your Codex model, and a stronger model does not replace full-size frame and playback review.
 
 ## Optional JoeB preset
 

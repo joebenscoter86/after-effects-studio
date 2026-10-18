@@ -1,5 +1,9 @@
 # A render is the evidence
 
+## Model choice and review effort
+
+For ambitious visual work, recommend an available GPT-6-family model or newer, with GPT-6.1 Sol or GPT-6 Astra as starting points for complex composition and continuity. This is a quality recommendation, not a prerequisite for using the native tools. A controlled local study showed that GPT-5.6 Luna/high could save, edit and export the tested scenes yet missed viewer-visible layout or material faults in three of six first-pass movies; separate GPT-6 Astra/high confirmations cleared those sampled faults. Other GPT-6 variants were not tested in that comparison. No model name is a quality guarantee: inspect the delivered frames and playback, especially at the first settled state after a transfer and after swapping assets with different geometry.
+
 ## Design and motion review
 
 Inspect full-frame captures at the beginning, build, peak overlap, hold and hand-off. Use contact sheets for temporal continuity and full-resolution stills for type and edges. Check the exported file, not only AE's viewer. Look for:

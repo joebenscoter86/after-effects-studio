@@ -2,32 +2,102 @@
   "version": 1,
   "documents": [
     {
+      "id": "typography-examples",
+      "title": "Portable typography worked examples",
+      "path": "examples/typography.md",
+      "kind": "examples",
+      "sha256": "47398b6abe0c6271cd4ffa7d3d969b018aaed48ca6761c90b1f9bb64e0fa37ae"
+    },
+    {
+      "id": "typography-recipes",
+      "title": "Editable typography entrance and replacement recipes",
+      "path": "recipes/typography.md",
+      "kind": "recipes",
+      "sha256": "c797f8d2ae20f7d257dad9372c532f7a8e0c6eb4f5b7c0195dddb13967579a25"
+    },
+    {
+      "id": "typography-jsx",
+      "title": "Portable typography measurement and fitting",
+      "path": "scripts/typography.jsx",
+      "kind": "code",
+      "sha256": "be053e6b2a013eda24aa77eae8c90abb773614a87bdd797df264b9ca9a2afa00"
+    },
+    {
+      "id": "typography-technique",
+      "title": "Typography native scope and fitting contract",
+      "path": "techniques/typography.md",
+      "kind": "technique",
+      "sha256": "86524c9ef6de4a2a37d471e88bfc789e454f1040afccad5ee9e3ebb6935b08dc"
+    },
+    {
+      "id": "paper-collage-recipes",
+      "title": "Native paper and cutout material recipe",
+      "path": "recipes/paper-collage.md",
+      "kind": "recipes",
+      "sha256": "250023961c24a81d611cefc98461ea2b3a74613cba2337a775bdffea1018b87c"
+    },
+    {
+      "id": "paper-collage-jsx",
+      "title": "Native paper and deterministic cutout helpers",
+      "path": "scripts/paper-collage.jsx",
+      "kind": "code",
+      "sha256": "9cf21e8ab04242009d76734298ea45d92dbc2887fb1919ec21a207d2dd1f51d2"
+    },
+    {
+      "id": "paper-collage-style",
+      "title": "Portable paper collage material and motion profile",
+      "path": "styles/paper-collage.md",
+      "kind": "style",
+      "sha256": "19a63a3a8cdc37d870466af83b72e0d26934ba6bcbd5a9ae35101aa8d616b367"
+    },
+    {
+      "id": "paper-collage-examples",
+      "title": "Worked native paper collage examples",
+      "path": "examples/paper-collage.md",
+      "kind": "examples",
+      "sha256": "b57e537f9279f1f6e4a138578bab8e512e5aa617e660e8f8663cc87f3248b457"
+    },
+    {
+      "id": "module-catalog",
+      "title": "Validated motion modules",
+      "path": "modules.json",
+      "kind": "catalog",
+      "sha256": "9eea4f3464ea44bd4ad7ae4fedb13193b3e9d5baf0a7c514a4d1a9d2f514ef59"
+    },
+    {
+      "id": "module-template",
+      "title": "Motion module authoring contract",
+      "path": "templates/module.md",
+      "kind": "template",
+      "sha256": "1fecd2eddde645594a1944a03e4b7ae4a5d017ca4baffde4f77ec773525f64f1"
+    },
+    {
       "id": "motion-language",
       "title": "The core motion language for every style",
       "path": "language/core.md",
       "kind": "foundation",
-      "sha256": "fff52aa6efab3f711ba62c9889adaa11742a9f28630f924c557b45e3cbb0dc7a"
+      "sha256": "5395c2d4c37df7c40aea10c0cc82412dac4faf59d2fe53019acd04da9b098a7c"
     },
     {
       "id": "production-workflow",
       "title": "Portable cold-start production workflow",
       "path": "language/production-workflow.md",
       "kind": "foundation",
-      "sha256": "9fc76ca7fbcb96dfa066488ecd3929f09281e8343111667509b81f487799d9d8"
+      "sha256": "37e88ad6ec62aab6fb74cda7aee242a8da4711e6a7be30875bc83ea668c24833"
     },
     {
       "id": "construction",
       "title": "Detailed construction timing and gesture grammar",
       "path": "language/construction.md",
       "kind": "technique",
-      "sha256": "42041715fe8ccb10785f95a560d9a4cdeed855b428c80a7a3bc3cc67b3c6dd15"
+      "sha256": "5cdeadfa6edb99408aa85ec3ecd785d8eec16104a3db3ed8f8571279234e6570"
     },
     {
       "id": "camera-continuity",
       "title": "Camera depth and continuous transitions",
       "path": "language/camera-continuity.md",
       "kind": "technique",
-      "sha256": "5615dd309b5f8985b1c7dd20587cde9b4d73e89441c3bad80b6a42bf2837ce09"
+      "sha256": "eab2f21ac006a93c9739d085ad739b1024c272fa7fc2bbbc8d15efc8248b2b89"
     },
     {
       "id": "assets-depth",
@@ -41,7 +111,7 @@
       "title": "Typography narration and authentic evidence",
       "path": "language/type-evidence.md",
       "kind": "technique",
-      "sha256": "18139c1a86d3a288eef90cefc8a439fe5e8f618c8a9b7d9ab6b804c95aec2d74"
+      "sha256": "f4b3698beb1d1042e283c984736bcea157ce47795569fc68b944357faf051151"
     },
     {
       "id": "reference-study",
@@ -55,21 +125,21 @@
       "title": "Production failures causes and corrections",
       "path": "language/failure-atlas.md",
       "kind": "review",
-      "sha256": "8fcde0a3f3322d9978fc3dd23445a72056d6b6db6ec3c7b1628fe55788b7d2e7"
+      "sha256": "000568bbad72fbae4c42fdfaccd3b4403c9eb2243919b69bda3b543b21f3a3f7"
     },
     {
       "id": "worked-scenes",
       "title": "Three detailed source-derived scene studies",
       "path": "examples/worked-scenes.md",
       "kind": "examples",
-      "sha256": "8a4fac8e75b2d8a1305c0fdfb2b5b9774e9a7806002cdadfa00c7ee69ce61b2b"
+      "sha256": "140d81cd3c53aa386192af566f235dd030a75807f7467aa509b9c01587040fab"
     },
     {
       "id": "brief-template",
       "title": "Portable scene and production brief",
       "path": "templates/brief.md",
       "kind": "template",
-      "sha256": "f402f58dcdebd0d4ae40476bf16b1a6afdae94142f8b3db1a54d251cd7d2746a"
+      "sha256": "ff3bf9e6f681e45570d981a14ec1cf46e7eacf800fc98c5df725287dc39dfecd"
     },
     {
       "id": "design",
@@ -97,7 +167,7 @@
       "title": "Visual review and delivery checks",
       "path": "references/quality.md",
       "kind": "guidance",
-      "sha256": "ff4cb24df448c3432d34c6a400837f74204954cca98945ba7c3e7e7dcf9ab2d1"
+      "sha256": "7a8dd8756f3af2332b9493af7471b4a03d5786a8ad2f34ca04b74cb6b9e03d51"
     },
     {
       "id": "scene-recipes",

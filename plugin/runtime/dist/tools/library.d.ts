@@ -9,6 +9,16 @@ type Entry = {
 export declare function readLibrary(document?: string, query?: string, root?: string): {
     startHere: string[];
     documents: Entry[];
+    modules: {
+        id: string;
+        kind: "style" | "foundation" | "capability";
+        title: string;
+        summary: string;
+        entryDocument: string;
+        requires: string[];
+        tags: string[];
+        evidence: import("./library-modules.js").Evidence;
+    }[];
     document?: undefined;
     title?: undefined;
     kind?: undefined;
@@ -20,6 +30,7 @@ export declare function readLibrary(document?: string, query?: string, root?: st
     content: string;
     startHere?: undefined;
     documents?: undefined;
+    modules?: undefined;
 };
 export declare const libraryTool: import("./define-tool.js").ToolSpec<{
     document: z.ZodOptional<z.ZodString>;
