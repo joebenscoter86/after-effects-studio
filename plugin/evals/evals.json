@@ -159,6 +159,20 @@
         "The plan does not infer that all future brand work has changed.",
         "The collage remains editable and no AE mutation is claimed."
       ]
+    },
+    {
+      "id": 15,
+      "prompt": "I want a ten-second motion graphic that shows how a library book goes from a return slot, through check-in, to being ready for the next reader. Give it a warm editorial feel. Propose the story and motion for my approval, then stop before touching After Effects. I have no artwork, narration or prescribed on-screen wording.",
+      "expected_output": "A creator-readable story accompanied by a frame-aware, build-ready beat plan that marks inferred defaults and leaves AE untouched.",
+      "files": [],
+      "assertions": [
+        "The proposal explains the return, check-in and ready-for-next-reader state in plain language without requiring the user to design keyframes.",
+        "The plan gives a reasoned composition size, frame rate and intended viewing context for the ten-second film, and identifies exact proposed on-screen wording rather than assuming the user supplied it.",
+        "Each beat has start/end times and frame boundaries, a visible action and resolved pose, and enough hold or reading information to build it.",
+        "The book or another named carrier has a traceable identity across the hard hand-off, with departure, contact and recipient-response frames plus seam-neighbor review targets.",
+        "The plan states which elements can be native and editable, which visual/font choices are inferred, and which missing assets would block a faithful final instead of claiming they exist.",
+        "The answer keeps creative approval separate from unshown build details and makes no AE operation, render or visual-pass claim."
+      ]
     }
   ]
 }
