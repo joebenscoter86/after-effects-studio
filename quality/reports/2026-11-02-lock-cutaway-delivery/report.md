@@ -1,3 +1,5 @@
+> Follow-up: Joe resumed and explicitly authorized saving/closing the intervening user project. The native bug is now reproduced and corrected in separately packaged RC.3; see [retest and remaining recovery-acceptance gate](../2026-11-02-project-open-preservation/report.md). This report retains the historical RC.2 failure and pause; it is not the current pause status.
+
 # AFT-56 — accepted V2 delivery and paused resume point
 
 Status: **creative plan/build/revision accepted; delivery preservation failed; AE paused at Joe's explicit request.** Do not mark AFT-56 Done. Joe selected “Accept V2 alignment edit,” then requested that all AE work pause so he can use it for another project. [Revision acceptance](revision-acceptance.json). No native operation was issued after the pause request. The evaluator had exited; no parent AE controller took over.

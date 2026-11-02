@@ -1,3 +1,5 @@
+> Superseded candidate: RC.2 failed project-file preservation during AFT-56. Do not publish this candidate; see [RC.3 action sheet](planning-rc3-action-sheet.md). Retain this exact historical object and its evidence.
+
 # Planning update RC.2 — review action sheet
 
 Status: prepared, not authorized for public prerelease publication. AFT-55 prepares the package and the next local test; choosing that test does not publish the candidate.

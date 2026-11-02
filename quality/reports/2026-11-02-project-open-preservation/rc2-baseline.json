@@ -1,0 +1,971 @@
+{
+  "label": "rc2-baseline",
+  "bundle": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/release/packages/planning-rc2-extracted/after-effects-studio",
+  "bundleHash": {
+    "sha256": "fb9798d734ba5be59b7f61df6f394a56dc57903ebd8706497e08cf5032c4a42a",
+    "bytes": 1745028
+  },
+  "events": [
+    {
+      "at": "2026-11-02T21:48:04.421Z",
+      "tool": "ae_context",
+      "args": {},
+      "response": {
+        "ok": true,
+        "result": {
+          "project": {
+            "file": null,
+            "dirty": false,
+            "numItems": 0,
+            "bitsPerChannel": 16
+          },
+          "instance": null,
+          "activeComp": null,
+          "selectedLayers": [],
+          "helpers": [
+            "AE.findCompByNameOrId(nameOrId)",
+            "AE.findComps(nameOrIdOrPattern) — '*' glob supported",
+            "AE.findItemById(id)",
+            "AE.findItem(idOrName) — any project item",
+            "AE.findFolder(idOrName) — null/undefined = root folder",
+            "AE.findLayerInComp(comp, indexOrNameOrIdRef) — accepts { id: n } (stable Layer.id, AE 22+)",
+            "AE.findLayerById(comp, id)",
+            "AE.resolveLayers(comp, target) — index | name | { id: n } | 'selected' | 'all' | array of those",
+            "AE.snapshotKeys(prop) / AE.applyKeys(prop, keys) / AE.removeAllKeys(prop)",
+            "AE.setEase(prop, keyIndex, inInf, outInf, inSpeed?, outSpeed?) — dims/spatial handled",
+            "AE.writeValue(prop, value, time?) / AE.readValue(prop, time?) — separated-dimension safe, __kind values accepted",
+            "AE.offsetValue(prop, delta) — shift a value or every keyframe",
+            "AE.applyKeySpecs(prop, [{time, value, interp?}], {replace, interp, spatialTangents}) — keyframe.apply's engine",
+            "AE.moveAnchor(layer, [x, y]) — anchor move with position compensation",
+            "AE.layerRect(layer, time) / AE.pointInRect(rect, preset) — anchor presets on rendered bounds",
+            "AE.shapeGroupBounds(group, {time, includeStroke}) / AE.shapeLayerBounds(layer, opts)",
+            "AE.walkShapeContents(contents, fn) / AE.recolorContents(contents, opts) / AE.canonicalGroup(group, precision)",
+            "AE.geometryShape('ellipse'|'rect', center, size, roundness) — a Shape for masks/paths",
+            "AE.propertyAtPath(root, path) — null instead of throwing",
+            "AE.ownerLayer(prop) — the layer a property belongs to",
+            "AE.bakeKeysAtTime(root, time) — freeze every animated property below root",
+            "AE.layerIdSnapshot(comp) / AE.layersSince(comp, snap) — which layers a command created",
+            "AE.withSelection(comp, layers, fn) — run a menu command on exactly these layers, selection restored",
+            "AE.rect(shapeLayerOrGroup, [w,h], [x,y], {name, roundness, fill:[r,g,b], stroke, strokeWidth}) — group+path+style in one call",
+            "AE.ellipse(shapeLayerOrGroup, [w,h], [x,y], {name, fill, stroke, strokeWidth})",
+            "AE.ensureParentDir(path) — mkdir -p for an output file, returns the File",
+            "AE.itemTypeName(item) — 'CompItem' | 'FootageItem' | 'FolderItem' | 'UnknownItem'",
+            "AE.serializeItemSummary(item)",
+            "AE.serializeLayerSummary(layer)",
+            "AE.serializeLayerFull(layer, opts) — opts.detail:'summary' drops default-value props",
+            "AE.serializeTransform(layer)",
+            "AE.serializePropertyGroup(group, depth, maxDepth, opts)",
+            "AE.serializeCompMarkers(comp)",
+            "AE.exportProject()",
+            "AE.importProject(doc, opts)",
+            "AE.safeGet(fn, fallback)",
+            "AE.valueToJson(val)"
+          ],
+          "es3Rules": [
+            "var only (no let/const)",
+            "function() {} only (no arrow =>)",
+            "string concat only (no template literals)",
+            "for(var i=0;i<n;i++) only (no for-of, no forEach/map/filter)",
+            "indexOf !== -1 (no includes/startsWith/endsWith)",
+            "NEVER chain ternaries: a ? b : c ? d : e parses LEFT-associative in ExtendScript — parenthesize or use if/else",
+            "log('msg') to push breadcrumbs",
+            "return <JSON-serializable> at end"
+          ],
+          "tips": [
+            "reparenting a layer that has keyframes: use layer.set_parent with jump:true (no transform compensation) — plain parent assignment rewrites values and corrupts keys",
+            "easing: keyframe.set_easing (op) or AE.setEase (eval) — both handle the spatial=1/per-dimension KeyframeEase bookkeeping",
+            "auditing a comp: ae_layer_info layerIndex:'all' with detail:'summary' skips default-value properties and includes key ease (speed/influence)",
+            "render queue output folders are auto-created on render.add_to_queue / render.set_output / render.start",
+            "many keys at once: keyframe.apply takes the whole list with per-key easing; its 'hold' only holds the OUT side, so a fade that ends in a hold key still fades",
+            "Position separated into X/Y (Separate Dimensions, or layers from 'Create Shapes from Vector Layer'): every write op and AE.writeValue route to the followers automatically",
+            "imported Illustrator layers: layer.convert_to_shapes (strips ' Outlines', can remove the source layer/footage); then shape.group_bounds / layer.split_groups to work per part",
+            "layer targets accept arrays everywhere they accept 'all' — [\"A\", \"B\", { id: 12 }] is one call",
+            "verifying motion: ae_render_frame times + contactSheet tiles the frames into one labelled PNG; analyze reports edge bands / content bounds; comp.sample reads values at several times",
+            "several After Effects instances (AfterFX.exe -m): each MCP server addresses ONE, chosen by AE_MCP_INSTANCE (instance id or open project file name); the response's instances[] lists what is live — if the project you need is open elsewhere, say so instead of editing the wrong one"
+          ],
+          "undoContract": [
+            "every ae_do / eval.run call is auto-wrapped in ONE undo group",
+            "one Ctrl+Z (or project.undo) reverts the entire call; batch.run = one call = one undo step",
+            "NEVER call app.beginUndoGroup/endUndoGroup in eval.run code — an unbalanced group corrupts undo for the session",
+            "undo/redo itself runs OUTSIDE the group: use project.undo (or command.execute 16/2035) as its own call — never inside batch.run, and never via eval.run",
+            "ae_save_project and files written to disk (rendered PNGs, exported JSON) are NOT undoable"
+          ],
+          "items": [],
+          "transport": {
+            "mode": "push"
+          },
+          "instances": []
+        },
+        "logs": [],
+        "durationMs": 250
+      }
+    },
+    {
+      "at": "2026-11-02T21:48:04.669Z",
+      "tool": "ae_version_info",
+      "args": {},
+      "response": {
+        "ok": true,
+        "result": {
+          "app": {
+            "version": "26.5x89",
+            "buildName": "26.5x89",
+            "buildNumber": 89,
+            "language": "en_US",
+            "memoryInUse": 2455888137,
+            "availableGPUs": 2
+          },
+          "capabilities": {
+            "saveFrameToPng": null,
+            "appEffects": true,
+            "bridgeTalk": true,
+            "socket": true
+          },
+          "project": {
+            "numItems": 0,
+            "file": null,
+            "dirty": false
+          },
+          "agent": null,
+          "server": {
+            "exportSchemaVersion": 2
+          }
+        },
+        "logs": [],
+        "durationMs": 246
+      }
+    },
+    {
+      "at": "2026-11-02T21:48:04.670Z",
+      "tool": "ae_catalog",
+      "args": {
+        "category": "eval"
+      },
+      "response": {
+        "ok": true,
+        "category": "eval",
+        "operations": [
+          {
+            "name": "eval.run",
+            "description": "Execute custom ExtendScript (ES3). LAST RESORT — check ae_catalog first for a dedicated operation. Code is a function body ending with `return <JSON-serializable>;`. AE.* helpers are in scope. `log(msg)` pushes breadcrumbs. The code already runs inside an automatic undo group (one Ctrl+Z reverts the call) — do NOT call app.beginUndoGroup/endUndoGroup yourself; an unbalanced group leaks past this call and corrupts undo for the whole session. Do NOT undo/redo from here either (app.executeCommand 16/2035): inside this call's group AE resolves them against it, so nothing is reverted — use the project.undo operation, which runs outside the group. Do NOT close/open/replace the project from here (app.open, app.newProject, app.project.close): the open undo group is orphaned at the project boundary, AE raises an async 'UndoGroup Mismatch' dialog, and undo stays broken for the session — use project.open / project.new, which run outside the group.",
+            "readOnly": false,
+            "params": [
+              {
+                "name": "code",
+                "type": "string",
+                "required": true,
+                "description": "ExtendScript function body"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "at": "2026-11-02T21:48:04.918Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "project.new",
+        "args": {
+          "save": false
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "ok": true,
+          "numItems": 0
+        },
+        "context": {
+          "project": {
+            "numItems": 0,
+            "dirty": false,
+            "file": null
+          },
+          "instance": null,
+          "activeComp": null,
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 246
+      }
+    },
+    {
+      "at": "2026-11-02T21:48:05.164Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "eval.run",
+        "args": {
+          "code": "app.project.items.addFolder(\"SAVED_MARKER\"); return {ok:true};"
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "ok": true
+        },
+        "context": {
+          "project": {
+            "numItems": 1,
+            "dirty": true,
+            "file": null
+          },
+          "instance": null,
+          "activeComp": null,
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 246
+      }
+    },
+    {
+      "at": "2026-11-02T21:48:05.411Z",
+      "tool": "ae_save_project",
+      "args": {
+        "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/same-file.aep"
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "ok": true,
+          "saved": true,
+          "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/same-file.aep"
+        },
+        "logs": [],
+        "durationMs": 245
+      }
+    },
+    {
+      "at": "2026-11-02T21:48:05.657Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "eval.run",
+        "args": {
+          "code": "app.project.item(1).name=\"UNSAVED_SAME\";return {ok:true};"
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "ok": true
+        },
+        "context": {
+          "project": {
+            "numItems": 1,
+            "dirty": true,
+            "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/same-file.aep"
+          },
+          "instance": null,
+          "activeComp": null,
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 245
+      }
+    },
+    {
+      "at": "2026-11-02T21:48:05.904Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "eval.run",
+        "args": {
+          "code": "var a=[];for(var i=1;i<=app.project.numItems;i++){a.push(app.project.item(i).name);}return {file:app.project.file?app.project.file.fsName:null,dirty:app.project.dirty,items:a,queue:app.project.renderQueue.numItems};"
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/same-file.aep",
+          "dirty": true,
+          "items": [
+            "UNSAVED_SAME"
+          ],
+          "queue": 0
+        },
+        "context": {
+          "project": {
+            "numItems": 1,
+            "dirty": true,
+            "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/same-file.aep"
+          },
+          "instance": null,
+          "activeComp": null,
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 246
+      }
+    },
+    {
+      "at": "2026-11-02T21:48:06.236Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "project.open",
+        "args": {
+          "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/same-file.aep",
+          "save": false
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "ok": true,
+          "numItems": 1,
+          "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/same-file.aep"
+        },
+        "context": {
+          "project": {
+            "numItems": 1,
+            "dirty": false,
+            "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/same-file.aep"
+          },
+          "instance": null,
+          "activeComp": null,
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 328
+      }
+    },
+    {
+      "at": "2026-11-02T21:48:06.402Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "eval.run",
+        "args": {
+          "code": "var a=[];for(var i=1;i<=app.project.numItems;i++){a.push(app.project.item(i).name);}return {file:app.project.file?app.project.file.fsName:null,dirty:app.project.dirty,items:a,queue:app.project.renderQueue.numItems};"
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/same-file.aep",
+          "dirty": false,
+          "items": [
+            "UNSAVED_SAME"
+          ],
+          "queue": 0
+        },
+        "context": {
+          "project": {
+            "numItems": 1,
+            "dirty": false,
+            "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/same-file.aep"
+          },
+          "instance": null,
+          "activeComp": null,
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 165
+      }
+    },
+    {
+      "at": "2026-11-02T21:48:06.567Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "project.new",
+        "args": {
+          "save": false
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "ok": true,
+          "numItems": 0
+        },
+        "context": {
+          "project": {
+            "numItems": 0,
+            "dirty": false,
+            "file": null
+          },
+          "instance": null,
+          "activeComp": null,
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 164
+      }
+    },
+    {
+      "at": "2026-11-02T21:48:06.732Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "eval.run",
+        "args": {
+          "code": "app.project.items.addFolder(\"SAVED_MARKER\"); return {ok:true};"
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "ok": true
+        },
+        "context": {
+          "project": {
+            "numItems": 1,
+            "dirty": true,
+            "file": null
+          },
+          "instance": null,
+          "activeComp": null,
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 164
+      }
+    },
+    {
+      "at": "2026-11-02T21:48:06.978Z",
+      "tool": "ae_save_project",
+      "args": {
+        "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/target.aep"
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "ok": true,
+          "saved": true,
+          "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/target.aep"
+        },
+        "logs": [],
+        "durationMs": 245
+      }
+    },
+    {
+      "at": "2026-11-02T21:48:07.143Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "project.new",
+        "args": {
+          "save": false
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "ok": true,
+          "numItems": 0
+        },
+        "context": {
+          "project": {
+            "numItems": 0,
+            "dirty": false,
+            "file": null
+          },
+          "instance": null,
+          "activeComp": null,
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 163
+      }
+    },
+    {
+      "at": "2026-11-02T21:48:07.307Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "eval.run",
+        "args": {
+          "code": "app.project.items.addFolder(\"SAVED_MARKER\"); return {ok:true};"
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "ok": true
+        },
+        "context": {
+          "project": {
+            "numItems": 1,
+            "dirty": true,
+            "file": null
+          },
+          "instance": null,
+          "activeComp": null,
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 164
+      }
+    },
+    {
+      "at": "2026-11-02T21:48:07.553Z",
+      "tool": "ae_save_project",
+      "args": {
+        "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/different-file.aep"
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "ok": true,
+          "saved": true,
+          "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/different-file.aep"
+        },
+        "logs": [],
+        "durationMs": 244
+      }
+    },
+    {
+      "at": "2026-11-02T21:48:07.718Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "eval.run",
+        "args": {
+          "code": "app.project.item(1).name=\"UNSAVED_DIFFERENT\";return {ok:true};"
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "ok": true
+        },
+        "context": {
+          "project": {
+            "numItems": 1,
+            "dirty": true,
+            "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/different-file.aep"
+          },
+          "instance": null,
+          "activeComp": null,
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 164
+      }
+    },
+    {
+      "at": "2026-11-02T21:48:07.882Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "eval.run",
+        "args": {
+          "code": "var a=[];for(var i=1;i<=app.project.numItems;i++){a.push(app.project.item(i).name);}return {file:app.project.file?app.project.file.fsName:null,dirty:app.project.dirty,items:a,queue:app.project.renderQueue.numItems};"
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/different-file.aep",
+          "dirty": true,
+          "items": [
+            "UNSAVED_DIFFERENT"
+          ],
+          "queue": 0
+        },
+        "context": {
+          "project": {
+            "numItems": 1,
+            "dirty": true,
+            "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/different-file.aep"
+          },
+          "instance": null,
+          "activeComp": null,
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 164
+      }
+    },
+    {
+      "at": "2026-11-02T21:48:08.129Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "project.open",
+        "args": {
+          "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/target.aep"
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "ok": true,
+          "numItems": 1,
+          "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/target.aep"
+        },
+        "context": {
+          "project": {
+            "numItems": 1,
+            "dirty": false,
+            "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/target.aep"
+          },
+          "instance": null,
+          "activeComp": null,
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 245
+      }
+    },
+    {
+      "at": "2026-11-02T21:48:08.295Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "eval.run",
+        "args": {
+          "code": "var a=[];for(var i=1;i<=app.project.numItems;i++){a.push(app.project.item(i).name);}return {file:app.project.file?app.project.file.fsName:null,dirty:app.project.dirty,items:a,queue:app.project.renderQueue.numItems};"
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/target.aep",
+          "dirty": false,
+          "items": [
+            "SAVED_MARKER"
+          ],
+          "queue": 0
+        },
+        "context": {
+          "project": {
+            "numItems": 1,
+            "dirty": false,
+            "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/target.aep"
+          },
+          "instance": null,
+          "activeComp": null,
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 165
+      }
+    },
+    {
+      "at": "2026-11-02T21:48:08.461Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "project.new",
+        "args": {
+          "save": false
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "ok": true,
+          "numItems": 0
+        },
+        "context": {
+          "project": {
+            "numItems": 0,
+            "dirty": false,
+            "file": null
+          },
+          "instance": null,
+          "activeComp": null,
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 165
+      }
+    },
+    {
+      "at": "2026-11-02T21:48:08.625Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "eval.run",
+        "args": {
+          "code": "app.project.items.addFolder(\"SAVED_MARKER\"); return {ok:true};"
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "ok": true
+        },
+        "context": {
+          "project": {
+            "numItems": 1,
+            "dirty": true,
+            "file": null
+          },
+          "instance": null,
+          "activeComp": null,
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 164
+      }
+    },
+    {
+      "at": "2026-11-02T21:48:08.871Z",
+      "tool": "ae_save_project",
+      "args": {
+        "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/missing-target.aep"
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "ok": true,
+          "saved": true,
+          "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/missing-target.aep"
+        },
+        "logs": [],
+        "durationMs": 245
+      }
+    },
+    {
+      "at": "2026-11-02T21:48:09.037Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "eval.run",
+        "args": {
+          "code": "app.project.item(1).name=\"UNSAVED_MISSING\";return {ok:true};"
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "ok": true
+        },
+        "context": {
+          "project": {
+            "numItems": 1,
+            "dirty": true,
+            "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/missing-target.aep"
+          },
+          "instance": null,
+          "activeComp": null,
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 165
+      }
+    },
+    {
+      "at": "2026-11-02T21:48:09.201Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "eval.run",
+        "args": {
+          "code": "var a=[];for(var i=1;i<=app.project.numItems;i++){a.push(app.project.item(i).name);}return {file:app.project.file?app.project.file.fsName:null,dirty:app.project.dirty,items:a,queue:app.project.renderQueue.numItems};"
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/missing-target.aep",
+          "dirty": true,
+          "items": [
+            "UNSAVED_MISSING"
+          ],
+          "queue": 0
+        },
+        "context": {
+          "project": {
+            "numItems": 1,
+            "dirty": true,
+            "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/missing-target.aep"
+          },
+          "instance": null,
+          "activeComp": null,
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 164
+      }
+    },
+    {
+      "at": "2026-11-02T21:48:09.447Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "project.open",
+        "args": {
+          "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/does-not-exist.aep",
+          "save": true
+        }
+      },
+      "response": {
+        "ok": false,
+        "error": {
+          "code": "OPERATION_FAILED",
+          "message": "project.open: file not found: /Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/does-not-exist.aep",
+          "retryable": false,
+          "details": {
+            "operation": "project.open",
+            "result": {
+              "ok": false,
+              "error": "file not found: /Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/does-not-exist.aep"
+            },
+            "context": {
+              "project": {
+                "numItems": 1,
+                "dirty": false,
+                "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/missing-target.aep"
+              },
+              "instance": null,
+              "activeComp": null,
+              "selectedLayers": []
+            }
+          },
+          "durationMs": 245
+        }
+      }
+    }
+  ],
+  "cases": [
+    {
+      "name": "same-file-discard",
+      "before": {
+        "sha256": "3071de1dbadb5004221e0c4a0aae7b8c83fc5623a2b2f97cc7967272fc906ed1",
+        "bytes": 9009
+      },
+      "nativeBefore": {
+        "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/same-file.aep",
+        "dirty": true,
+        "items": [
+          "UNSAVED_SAME"
+        ],
+        "queue": 0
+      },
+      "open": {
+        "ok": true,
+        "result": {
+          "ok": true,
+          "numItems": 1,
+          "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/same-file.aep"
+        },
+        "context": {
+          "project": {
+            "numItems": 1,
+            "dirty": false,
+            "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/same-file.aep"
+          },
+          "instance": null,
+          "activeComp": null,
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 328
+      },
+      "after": {
+        "sha256": "9204bbb59e57fae667179d05d676eb5965b0b72a4bafbf051050b9d73e650b2e",
+        "bytes": 9461
+      },
+      "nativeAfter": {
+        "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/same-file.aep",
+        "dirty": false,
+        "items": [
+          "UNSAVED_SAME"
+        ],
+        "queue": 0
+      },
+      "preserved": false
+    },
+    {
+      "name": "different-file-discard",
+      "before": {
+        "sha256": "ee7c71bc93fd041d9884ce2f0860d3ff1f00b0116cf86d50a1ff12ae8187fd45",
+        "bytes": 9009
+      },
+      "targetBefore": {
+        "sha256": "2f7f99c6d6e16780feaefcbb036ad3d98d3900ed1879b5a44672528a65bb92b0",
+        "bytes": 9009
+      },
+      "nativeBefore": {
+        "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/different-file.aep",
+        "dirty": true,
+        "items": [
+          "UNSAVED_DIFFERENT"
+        ],
+        "queue": 0
+      },
+      "open": {
+        "ok": true,
+        "result": {
+          "ok": true,
+          "numItems": 1,
+          "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/target.aep"
+        },
+        "context": {
+          "project": {
+            "numItems": 1,
+            "dirty": false,
+            "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/target.aep"
+          },
+          "instance": null,
+          "activeComp": null,
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 245
+      },
+      "after": {
+        "sha256": "798a469129898180d6300f15154de641092964fa06f65cf5420e7c6dc6eef496",
+        "bytes": 9467
+      },
+      "targetAfter": {
+        "sha256": "2f7f99c6d6e16780feaefcbb036ad3d98d3900ed1879b5a44672528a65bb92b0",
+        "bytes": 9009
+      },
+      "nativeAfter": {
+        "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/target.aep",
+        "dirty": false,
+        "items": [
+          "SAVED_MARKER"
+        ],
+        "queue": 0
+      },
+      "preserved": false
+    }
+  ],
+  "initialProject": {
+    "file": null,
+    "dirty": false,
+    "numItems": 0,
+    "bitsPerChannel": 16
+  },
+  "version": {
+    "ok": true,
+    "result": {
+      "app": {
+        "version": "26.5x89",
+        "buildName": "26.5x89",
+        "buildNumber": 89,
+        "language": "en_US",
+        "memoryInUse": 2455888137,
+        "availableGPUs": 2
+      },
+      "capabilities": {
+        "saveFrameToPng": null,
+        "appEffects": true,
+        "bridgeTalk": true,
+        "socket": true
+      },
+      "project": {
+        "numItems": 0,
+        "file": null,
+        "dirty": false
+      },
+      "agent": null,
+      "server": {
+        "exportSchemaVersion": 2
+      }
+    },
+    "logs": [],
+    "durationMs": 246
+  },
+  "catalog": {
+    "ok": true,
+    "category": "eval",
+    "operations": [
+      {
+        "name": "eval.run",
+        "description": "Execute custom ExtendScript (ES3). LAST RESORT — check ae_catalog first for a dedicated operation. Code is a function body ending with `return <JSON-serializable>;`. AE.* helpers are in scope. `log(msg)` pushes breadcrumbs. The code already runs inside an automatic undo group (one Ctrl+Z reverts the call) — do NOT call app.beginUndoGroup/endUndoGroup yourself; an unbalanced group leaks past this call and corrupts undo for the whole session. Do NOT undo/redo from here either (app.executeCommand 16/2035): inside this call's group AE resolves them against it, so nothing is reverted — use the project.undo operation, which runs outside the group. Do NOT close/open/replace the project from here (app.open, app.newProject, app.project.close): the open undo group is orphaned at the project boundary, AE raises an async 'UndoGroup Mismatch' dialog, and undo stays broken for the session — use project.open / project.new, which run outside the group.",
+        "readOnly": false,
+        "params": [
+          {
+            "name": "code",
+            "type": "string",
+            "required": true,
+            "description": "ExtendScript function body"
+          }
+        ]
+      }
+    ]
+  },
+  "error": "Error: {\"ok\":false,\"error\":{\"code\":\"OPERATION_FAILED\",\"message\":\"project.open: file not found: /Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/does-not-exist.aep\",\"retryable\":false,\"details\":{\"operation\":\"project.open\",\"result\":{\"ok\":false,\"error\":\"file not found: /Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/does-not-exist.aep\"},\"context\":{\"project\":{\"numItems\":1,\"dirty\":false,\"file\":\"/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc2-baseline/missing-target.aep\"},\"instance\":null,\"activeComp\":null,\"selectedLayers\":[]}},\"durationMs\":245}}",
+  "stderr": "[mcp-aftereffects] policy: readonly=off, categories=all, eval.run=ENABLED\n[mcp-aftereffects] mailbox: /var/folders/b2/tqg5qx251g96r6mtk4sysysc0000gn/T/mcp-aftereffects/runtime\n[mcp-aftereffects] instance: none registered yet — calls launch AfterFX.exe -r into the running After Effects (instances started with -m need the agent: `mcp-aftereffects install-agent`)\n[mcp-aftereffects] WRITE ACCESS IS ON — tools can create, mutate and delete project content. Set AE_MCP_READONLY=1 for inspection-only sessions.\n"
+}

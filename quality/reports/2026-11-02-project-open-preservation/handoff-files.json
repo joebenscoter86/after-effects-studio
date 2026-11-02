@@ -1,0 +1,12 @@
+{
+  "project": {
+    "path": "quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep",
+    "sha256": "6745dc3aadcfe8d09ac9f66338fab7b5654ca18b7c5676624e6d3fa78dec5ed1"
+  },
+  "playback": {
+    "path": "quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-revalidated-playback.mp4",
+    "sha256": "28c28ce5b895464c41fae28497044ea3db062840420842bba31b8c63d5c9148a",
+    "copiedFrom": "quality/renders/2026-11-02-lock-cutaway/delivery-v2-playback.mp4",
+    "comparison": "byte identical to already decoded and player-reviewed delivery movie; not a new playback review"
+  }
+}

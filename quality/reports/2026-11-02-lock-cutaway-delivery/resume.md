@@ -1,3 +1,5 @@
+> Superseded resume state: Joe resumed AE and explicitly authorized save/close. Correction and native retest are complete; read [the current report](../2026-11-02-project-open-preservation/report.md). The revalidated copy is open at 12 seconds; AFT-56 awaits recovery-handoff acceptance. The original pause record below is historical.
+
 # Resume after Joe's AE pause
 
 **Joe explicitly paused AE on 2026-11-02 to use it for another project. Do not call AE tools, reopen a project, render, or start a native evaluator until he resumes AE work.** The prior evaluator is finished; the temporary candidate plugin/marketplace are removed. Stable v0.2.0 remains enabled. Do not treat that enabled stable plugin as authority to touch AE.

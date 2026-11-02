@@ -1,0 +1,102 @@
+
+ RUN  v4.1.11 /Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/plugin/runtime
+
+ ❯ tests/project-open.test.ts (6 tests | 5 failed) 6ms
+     × discards dirty same-file state without rewriting its saved contents 3ms
+     × leaves the previous file untouched when opening a different file without saving 1ms
+     × checks the target exists before saving or discarding current work 0ms
+     × refuses save=true when current nonempty work has no save path 0ms
+     ✓ saves dirty current work only when save=true was requested 0ms
+     × does not open the target when the host refuses to close current work 1ms
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 1 passed (6)
+   Start at  13:43:51
+   Duration  249ms (transform 120ms, setup 0ms, import 155ms, tests 6ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/project-open.test.ts > project.open explicit save/discard contract > discards dirty same-file state without rewriting its saved contents
+AssertionError: expected 'unsaved edits' to be 'saved current' // Object.is equality
+
+Expected: "saved current"
+Received: "unsaved edits"
+
+ ❯ tests/project-open.test.ts:74:44
+     72|     const host = projectHost();
+     73|     expect(host.run({ path: "/current.aep", save: false }).ok).toBe(tr…
+     74|     expect(host.files.get("/current.aep")).toBe("saved current");
+       |                                            ^
+     75|     expect(host.current()?.contents).toBe("saved current");
+     76|     expect(host.current()?.dirty).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  tests/project-open.test.ts > project.open explicit save/discard contract > leaves the previous file untouched when opening a different file without saving
+AssertionError: expected 'unsaved edits' to be 'saved current' // Object.is equality
+
+Expected: "saved current"
+Received: "unsaved edits"
+
+ ❯ tests/project-open.test.ts:82:44
+     80|     const host = projectHost();
+     81|     expect(host.run({ path: "/target.aep" }).ok).toBe(true);
+     82|     expect(host.files.get("/current.aep")).toBe("saved current");
+       |                                            ^
+     83|     expect(host.current()?.file?.fsName).toBe("/target.aep");
+     84|     expect(host.current()?.contents).toBe("saved target");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  tests/project-open.test.ts > project.open explicit save/discard contract > checks the target exists before saving or discarding current work
+AssertionError: expected 'unsaved edits' to be 'saved current' // Object.is equality
+
+Expected: "saved current"
+Received: "unsaved edits"
+
+ ❯ tests/project-open.test.ts:90:44
+     88|     const host = projectHost();
+     89|     expect(host.run({ path: "/missing.aep", save: true }).ok).toBe(fal…
+     90|     expect(host.files.get("/current.aep")).toBe("saved current");
+       |                                            ^
+     91|     expect(host.current()?.contents).toBe("unsaved edits");
+     92|     expect(host.current()?.dirty).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  tests/project-open.test.ts > project.open explicit save/discard contract > refuses save=true when current nonempty work has no save path
+Error: host Save As dialog would be required
+ ❯ Object.save tests/project-open.test.ts:30:31
+     28|       dirty,
+     29|       save() {
+     30|         if (!this.file) throw new Error("host Save As dialog would be …
+       |                               ^
+     31|         files.set(this.file.fsName, this.contents);
+     32|         this.dirty = false;
+ ❯ Object.open tests/project-open.test.ts:52:33
+ ❯ evalmachine.<anonymous>:5:17
+ ❯ evalmachine.<anonymous>:7:12
+ ❯ Object.run tests/project-open.test.ts:61:14
+ ❯ tests/project-open.test.ts:97:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  tests/project-open.test.ts > project.open explicit save/discard contract > does not open the target when the host refuses to close current work
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/project-open.test.ts:112:63
+    110|   it("does not open the target when the host refuses to close current …
+    111|     const host = projectHost({ refuseClose: true });
+    112|     expect(host.run({ path: "/target.aep", save: false }).ok).toBe(fal…
+       |                                                               ^
+    113|     expect(host.current()?.file?.fsName).toBe("/current.aep");
+    114|     expect(host.current()?.contents).toBe("unsaved edits");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯

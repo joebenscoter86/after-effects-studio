@@ -1,0 +1,10 @@
+
+ RUN  v4.1.11 /Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/plugin/runtime
+
+ ✓ tests/project-open.test.ts (6 tests) 3ms
+ ✓ tests/undo-group.test.ts (14 tests) 3ms
+
+ Test Files  2 passed (2)
+      Tests  20 passed (20)
+   Start at  13:44:29
+   Duration  337ms (transform 102ms, setup 0ms, import 170ms, tests 6ms, environment 0ms)

@@ -36,7 +36,7 @@ Your instructions, tool inputs/results, project metadata and previews can reach 
 
 ## Existing projects
 
-Inspect before writing, preserve unsaved work, and don't run competing controllers against AE. Native runtime clients share their transport coordination, while unrelated CEP/cloud bridges do not. Batches are undo-grouped but do not roll back on failure; a timed-out request may have run. Save/export writes cannot be undone with project undo.
+Inspect before writing, preserve unsaved work, and don't run competing controllers against AE. Native runtime clients share their transport coordination, while unrelated CEP/cloud bridges do not. Batches are undo-grouped but do not roll back on failure; a timed-out request may have run. Save/export writes cannot be undone with project undo. `project.open` checks that the target exists before touching the current project. It explicitly discards unsaved changes unless `save=true` is requested; saving a nonempty untitled project requires a save path first. A refused close stops the open. Inspect and obtain permission before discarding user work.
 
 ## Motion language for every style
 

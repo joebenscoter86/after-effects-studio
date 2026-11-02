@@ -1,0 +1,471 @@
+{
+  "label": "rc3-managed-frames",
+  "bundle": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/release/packages/planning-rc3-extracted/after-effects-studio",
+  "bundleHash": {
+    "sha256": "2ab935d0a98fcd9ce21d439f1bb5c0aefae184daf14274db4efcafd8ae5655f2",
+    "bytes": 1745772
+  },
+  "events": [
+    {
+      "at": "2026-11-02T21:53:28.310Z",
+      "tool": "ae_context",
+      "args": {},
+      "response": {
+        "ok": true,
+        "result": {
+          "project": {
+            "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep",
+            "dirty": false,
+            "numItems": 4,
+            "bitsPerChannel": 16
+          },
+          "instance": null,
+          "activeComp": {
+            "id": 1,
+            "name": "PIN_TUMBLER_EXPLAINER_v01",
+            "width": 1920,
+            "height": 1080,
+            "fps": 30,
+            "duration": 22,
+            "numLayers": 40,
+            "bgColor": [
+              0.06274509803922,
+              0.08627450980392,
+              0.10980392156863
+            ]
+          },
+          "selectedLayers": [],
+          "helpers": [
+            "AE.findCompByNameOrId(nameOrId)",
+            "AE.findComps(nameOrIdOrPattern) — '*' glob supported",
+            "AE.findItemById(id)",
+            "AE.findItem(idOrName) — any project item",
+            "AE.findFolder(idOrName) — null/undefined = root folder",
+            "AE.findLayerInComp(comp, indexOrNameOrIdRef) — accepts { id: n } (stable Layer.id, AE 22+)",
+            "AE.findLayerById(comp, id)",
+            "AE.resolveLayers(comp, target) — index | name | { id: n } | 'selected' | 'all' | array of those",
+            "AE.snapshotKeys(prop) / AE.applyKeys(prop, keys) / AE.removeAllKeys(prop)",
+            "AE.setEase(prop, keyIndex, inInf, outInf, inSpeed?, outSpeed?) — dims/spatial handled",
+            "AE.writeValue(prop, value, time?) / AE.readValue(prop, time?) — separated-dimension safe, __kind values accepted",
+            "AE.offsetValue(prop, delta) — shift a value or every keyframe",
+            "AE.applyKeySpecs(prop, [{time, value, interp?}], {replace, interp, spatialTangents}) — keyframe.apply's engine",
+            "AE.moveAnchor(layer, [x, y]) — anchor move with position compensation",
+            "AE.layerRect(layer, time) / AE.pointInRect(rect, preset) — anchor presets on rendered bounds",
+            "AE.shapeGroupBounds(group, {time, includeStroke}) / AE.shapeLayerBounds(layer, opts)",
+            "AE.walkShapeContents(contents, fn) / AE.recolorContents(contents, opts) / AE.canonicalGroup(group, precision)",
+            "AE.geometryShape('ellipse'|'rect', center, size, roundness) — a Shape for masks/paths",
+            "AE.propertyAtPath(root, path) — null instead of throwing",
+            "AE.ownerLayer(prop) — the layer a property belongs to",
+            "AE.bakeKeysAtTime(root, time) — freeze every animated property below root",
+            "AE.layerIdSnapshot(comp) / AE.layersSince(comp, snap) — which layers a command created",
+            "AE.withSelection(comp, layers, fn) — run a menu command on exactly these layers, selection restored",
+            "AE.rect(shapeLayerOrGroup, [w,h], [x,y], {name, roundness, fill:[r,g,b], stroke, strokeWidth}) — group+path+style in one call",
+            "AE.ellipse(shapeLayerOrGroup, [w,h], [x,y], {name, fill, stroke, strokeWidth})",
+            "AE.ensureParentDir(path) — mkdir -p for an output file, returns the File",
+            "AE.itemTypeName(item) — 'CompItem' | 'FootageItem' | 'FolderItem' | 'UnknownItem'",
+            "AE.serializeItemSummary(item)",
+            "AE.serializeLayerSummary(layer)",
+            "AE.serializeLayerFull(layer, opts) — opts.detail:'summary' drops default-value props",
+            "AE.serializeTransform(layer)",
+            "AE.serializePropertyGroup(group, depth, maxDepth, opts)",
+            "AE.serializeCompMarkers(comp)",
+            "AE.exportProject()",
+            "AE.importProject(doc, opts)",
+            "AE.safeGet(fn, fallback)",
+            "AE.valueToJson(val)"
+          ],
+          "es3Rules": [
+            "var only (no let/const)",
+            "function() {} only (no arrow =>)",
+            "string concat only (no template literals)",
+            "for(var i=0;i<n;i++) only (no for-of, no forEach/map/filter)",
+            "indexOf !== -1 (no includes/startsWith/endsWith)",
+            "NEVER chain ternaries: a ? b : c ? d : e parses LEFT-associative in ExtendScript — parenthesize or use if/else",
+            "log('msg') to push breadcrumbs",
+            "return <JSON-serializable> at end"
+          ],
+          "tips": [
+            "reparenting a layer that has keyframes: use layer.set_parent with jump:true (no transform compensation) — plain parent assignment rewrites values and corrupts keys",
+            "easing: keyframe.set_easing (op) or AE.setEase (eval) — both handle the spatial=1/per-dimension KeyframeEase bookkeeping",
+            "auditing a comp: ae_layer_info layerIndex:'all' with detail:'summary' skips default-value properties and includes key ease (speed/influence)",
+            "render queue output folders are auto-created on render.add_to_queue / render.set_output / render.start",
+            "many keys at once: keyframe.apply takes the whole list with per-key easing; its 'hold' only holds the OUT side, so a fade that ends in a hold key still fades",
+            "Position separated into X/Y (Separate Dimensions, or layers from 'Create Shapes from Vector Layer'): every write op and AE.writeValue route to the followers automatically",
+            "imported Illustrator layers: layer.convert_to_shapes (strips ' Outlines', can remove the source layer/footage); then shape.group_bounds / layer.split_groups to work per part",
+            "layer targets accept arrays everywhere they accept 'all' — [\"A\", \"B\", { id: 12 }] is one call",
+            "verifying motion: ae_render_frame times + contactSheet tiles the frames into one labelled PNG; analyze reports edge bands / content bounds; comp.sample reads values at several times",
+            "several After Effects instances (AfterFX.exe -m): each MCP server addresses ONE, chosen by AE_MCP_INSTANCE (instance id or open project file name); the response's instances[] lists what is live — if the project you need is open elsewhere, say so instead of editing the wrong one"
+          ],
+          "undoContract": [
+            "every ae_do / eval.run call is auto-wrapped in ONE undo group",
+            "one Ctrl+Z (or project.undo) reverts the entire call; batch.run = one call = one undo step",
+            "NEVER call app.beginUndoGroup/endUndoGroup in eval.run code — an unbalanced group corrupts undo for the session",
+            "undo/redo itself runs OUTSIDE the group: use project.undo (or command.execute 16/2035) as its own call — never inside batch.run, and never via eval.run",
+            "ae_save_project and files written to disk (rendered PNGs, exported JSON) are NOT undoable"
+          ],
+          "items": [
+            {
+              "id": 13,
+              "name": "Solids",
+              "type": "FolderItem"
+            },
+            {
+              "id": 14,
+              "name": "AFT56_DARK_STAGE",
+              "type": "FootageItem"
+            },
+            {
+              "id": 16,
+              "name": "Null 1",
+              "type": "FootageItem"
+            },
+            {
+              "id": 1,
+              "name": "PIN_TUMBLER_EXPLAINER_v01",
+              "type": "CompItem"
+            }
+          ],
+          "transport": {
+            "mode": "push"
+          },
+          "instances": []
+        },
+        "logs": [],
+        "durationMs": 247
+      }
+    },
+    {
+      "at": "2026-11-02T21:53:28.558Z",
+      "tool": "ae_version_info",
+      "args": {},
+      "response": {
+        "ok": true,
+        "result": {
+          "app": {
+            "version": "26.5x89",
+            "buildName": "26.5x89",
+            "buildNumber": 89,
+            "language": "en_US",
+            "memoryInUse": 4075573179,
+            "availableGPUs": 2
+          },
+          "capabilities": {
+            "saveFrameToPng": true,
+            "appEffects": true,
+            "bridgeTalk": true,
+            "socket": true
+          },
+          "project": {
+            "numItems": 4,
+            "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep",
+            "dirty": false
+          },
+          "agent": null,
+          "server": {
+            "exportSchemaVersion": 2
+          }
+        },
+        "logs": [],
+        "durationMs": 246
+      }
+    },
+    {
+      "at": "2026-11-02T21:53:28.559Z",
+      "tool": "ae_catalog",
+      "args": {
+        "category": "eval"
+      },
+      "response": {
+        "ok": true,
+        "category": "eval",
+        "operations": [
+          {
+            "name": "eval.run",
+            "description": "Execute custom ExtendScript (ES3). LAST RESORT — check ae_catalog first for a dedicated operation. Code is a function body ending with `return <JSON-serializable>;`. AE.* helpers are in scope. `log(msg)` pushes breadcrumbs. The code already runs inside an automatic undo group (one Ctrl+Z reverts the call) — do NOT call app.beginUndoGroup/endUndoGroup yourself; an unbalanced group leaks past this call and corrupts undo for the whole session. Do NOT undo/redo from here either (app.executeCommand 16/2035): inside this call's group AE resolves them against it, so nothing is reverted — use the project.undo operation, which runs outside the group. Do NOT close/open/replace the project from here (app.open, app.newProject, app.project.close): the open undo group is orphaned at the project boundary, AE raises an async 'UndoGroup Mismatch' dialog, and undo stays broken for the session — use project.open / project.new, which run outside the group.",
+            "readOnly": false,
+            "params": [
+              {
+                "name": "code",
+                "type": "string",
+                "required": true,
+                "description": "ExtendScript function body"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "at": "2026-11-02T21:53:33.481Z",
+      "tool": "ae_render_frame",
+      "args": {
+        "compNameOrId": 1,
+        "times": [
+          1.2,
+          5.1,
+          9,
+          12,
+          15.733333333333333,
+          21.966666666666665
+        ],
+        "outPath": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-managed-frames/managed.png",
+        "contactSheet": {
+          "columns": 3,
+          "thumbWidth": 480
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "ok": true,
+          "frames": [
+            {
+              "ok": true,
+              "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-managed-frames/managed_0.png",
+              "time": 1.2,
+              "compName": "PIN_TUMBLER_EXPLAINER_v01",
+              "size": [
+                1920,
+                1080
+              ],
+              "captureKind": "direct"
+            },
+            {
+              "ok": true,
+              "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-managed-frames/managed_1.png",
+              "time": 5.1,
+              "compName": "PIN_TUMBLER_EXPLAINER_v01",
+              "size": [
+                1920,
+                1080
+              ],
+              "captureKind": "direct"
+            },
+            {
+              "ok": true,
+              "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-managed-frames/managed_2.png",
+              "time": 9,
+              "compName": "PIN_TUMBLER_EXPLAINER_v01",
+              "size": [
+                1920,
+                1080
+              ],
+              "captureKind": "direct"
+            },
+            {
+              "ok": true,
+              "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-managed-frames/managed_3.png",
+              "time": 12,
+              "compName": "PIN_TUMBLER_EXPLAINER_v01",
+              "size": [
+                1920,
+                1080
+              ],
+              "captureKind": "direct"
+            },
+            {
+              "ok": true,
+              "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-managed-frames/managed_4.png",
+              "time": 15.7333333333333,
+              "compName": "PIN_TUMBLER_EXPLAINER_v01",
+              "size": [
+                1920,
+                1080
+              ],
+              "captureKind": "direct"
+            },
+            {
+              "ok": true,
+              "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-managed-frames/managed_5.png",
+              "time": 21.9666666666667,
+              "compName": "PIN_TUMBLER_EXPLAINER_v01",
+              "size": [
+                1920,
+                1080
+              ],
+              "captureKind": "direct"
+            }
+          ],
+          "captureKind": "direct",
+          "compName": "PIN_TUMBLER_EXPLAINER_v01",
+          "workingSpace": "None",
+          "bitsPerChannel": 16,
+          "projectFile": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep",
+          "method": "native",
+          "colorPipeline": "untagged 16-bit → 8-bit sRGB-tagged (values unchanged)",
+          "contactSheet": {
+            "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-managed-frames/managed_sheet.png",
+            "size": [
+              1472,
+              604
+            ],
+            "columns": 3,
+            "rows": 2,
+            "thumbSize": [
+              480,
+              270
+            ],
+            "frames": 6
+          }
+        },
+        "logs": [],
+        "durationMs": 246
+      }
+    }
+  ],
+  "cases": [],
+  "initialProject": {
+    "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep",
+    "dirty": false,
+    "numItems": 4,
+    "bitsPerChannel": 16
+  },
+  "version": {
+    "ok": true,
+    "result": {
+      "app": {
+        "version": "26.5x89",
+        "buildName": "26.5x89",
+        "buildNumber": 89,
+        "language": "en_US",
+        "memoryInUse": 4075573179,
+        "availableGPUs": 2
+      },
+      "capabilities": {
+        "saveFrameToPng": true,
+        "appEffects": true,
+        "bridgeTalk": true,
+        "socket": true
+      },
+      "project": {
+        "numItems": 4,
+        "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep",
+        "dirty": false
+      },
+      "agent": null,
+      "server": {
+        "exportSchemaVersion": 2
+      }
+    },
+    "logs": [],
+    "durationMs": 246
+  },
+  "catalog": {
+    "ok": true,
+    "category": "eval",
+    "operations": [
+      {
+        "name": "eval.run",
+        "description": "Execute custom ExtendScript (ES3). LAST RESORT — check ae_catalog first for a dedicated operation. Code is a function body ending with `return <JSON-serializable>;`. AE.* helpers are in scope. `log(msg)` pushes breadcrumbs. The code already runs inside an automatic undo group (one Ctrl+Z reverts the call) — do NOT call app.beginUndoGroup/endUndoGroup yourself; an unbalanced group leaks past this call and corrupts undo for the whole session. Do NOT undo/redo from here either (app.executeCommand 16/2035): inside this call's group AE resolves them against it, so nothing is reverted — use the project.undo operation, which runs outside the group. Do NOT close/open/replace the project from here (app.open, app.newProject, app.project.close): the open undo group is orphaned at the project boundary, AE raises an async 'UndoGroup Mismatch' dialog, and undo stays broken for the session — use project.open / project.new, which run outside the group.",
+        "readOnly": false,
+        "params": [
+          {
+            "name": "code",
+            "type": "string",
+            "required": true,
+            "description": "ExtendScript function body"
+          }
+        ]
+      }
+    ]
+  },
+  "frames": {
+    "ok": true,
+    "result": {
+      "ok": true,
+      "frames": [
+        {
+          "ok": true,
+          "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-managed-frames/managed_0.png",
+          "time": 1.2,
+          "compName": "PIN_TUMBLER_EXPLAINER_v01",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct"
+        },
+        {
+          "ok": true,
+          "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-managed-frames/managed_1.png",
+          "time": 5.1,
+          "compName": "PIN_TUMBLER_EXPLAINER_v01",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct"
+        },
+        {
+          "ok": true,
+          "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-managed-frames/managed_2.png",
+          "time": 9,
+          "compName": "PIN_TUMBLER_EXPLAINER_v01",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct"
+        },
+        {
+          "ok": true,
+          "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-managed-frames/managed_3.png",
+          "time": 12,
+          "compName": "PIN_TUMBLER_EXPLAINER_v01",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct"
+        },
+        {
+          "ok": true,
+          "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-managed-frames/managed_4.png",
+          "time": 15.7333333333333,
+          "compName": "PIN_TUMBLER_EXPLAINER_v01",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct"
+        },
+        {
+          "ok": true,
+          "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-managed-frames/managed_5.png",
+          "time": 21.9666666666667,
+          "compName": "PIN_TUMBLER_EXPLAINER_v01",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct"
+        }
+      ],
+      "captureKind": "direct",
+      "compName": "PIN_TUMBLER_EXPLAINER_v01",
+      "workingSpace": "None",
+      "bitsPerChannel": 16,
+      "projectFile": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep",
+      "method": "native",
+      "colorPipeline": "untagged 16-bit → 8-bit sRGB-tagged (values unchanged)",
+      "contactSheet": {
+        "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-managed-frames/managed_sheet.png",
+        "size": [
+          1472,
+          604
+        ],
+        "columns": 3,
+        "rows": 2,
+        "thumbSize": [
+          480,
+          270
+        ],
+        "frames": 6
+      }
+    },
+    "logs": [],
+    "durationMs": 246
+  },
+  "finished": true,
+  "stderr": "[mcp-aftereffects] policy: readonly=off, categories=all, eval.run=ENABLED\n[mcp-aftereffects] mailbox: /var/folders/b2/tqg5qx251g96r6mtk4sysysc0000gn/T/mcp-aftereffects/runtime\n[mcp-aftereffects] instance: none registered yet — calls launch AfterFX.exe -r into the running After Effects (instances started with -m need the agent: `mcp-aftereffects install-agent`)\n[mcp-aftereffects] WRITE ACCESS IS ON — tools can create, mutate and delete project content. Set AE_MCP_READONLY=1 for inspection-only sessions.\n"
+}
