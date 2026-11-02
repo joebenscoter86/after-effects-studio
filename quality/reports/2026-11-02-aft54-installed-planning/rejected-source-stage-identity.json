@@ -1,0 +1,20 @@
+{
+  "version": "0.2.1-rc.1+aft54.20261023",
+  "sourceCommit": "679b7adde790ad965db61996ef4b656e43cd33b4",
+  "archiveSHA256": "42be5d722ded2d5b7a7be3ce573ea1c06efa3522570f1407daf2318103fe82fd",
+  "installedPath": "/Users/joeb/.codex/plugins/cache/aft54-local-test/after-effects-studio/0.2.1-rc.1+aft54.20261023",
+  "fileCount": 67,
+  "allCacheFilesMatch": false,
+  "extraCacheFileCount": 412,
+  "extraCacheFileExamples": [
+    "context.md",
+    "evals/evals.json",
+    "evals/motion-system-prompts.json",
+    "runtime/README.md",
+    "runtime/dist/agent-install.d.ts",
+    "runtime/dist/agent-install.d.ts.map"
+  ],
+  "mismatchedPaths": [
+    "runtime/package.json"
+  ]
+}

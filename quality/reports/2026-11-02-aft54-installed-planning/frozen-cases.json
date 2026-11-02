@@ -1,0 +1,31 @@
+{
+  "candidate": "after-effects-studio@aft54-local-test",
+  "version": "0.2.1-rc.1+aft54.20261023",
+  "boundary": "Use the installed After Effects Studio candidate from marketplace aft54-local-test for this planning-only request. Work only from this brief and that installed plugin's skills and bundled library. Do not read memory, previous sessions, any development checkout, quality report, eval file, or outside example. Do not delegate, browse the web, generate assets, launch or inspect After Effects, run its doctor, invoke native tools, render, install anything, or publish. You may read installed plugin files and use its bundled library. Include your proposed plan in your answer; do not write files. Stop before AE. These are isolation boundaries, not creative requirements.",
+  "cases": [
+    {
+      "id": "library-book",
+      "prompt": "I want a ten-second motion graphic that shows how a library book goes from a return slot, through check-in, to being ready for the next reader. Give it a warm editorial feel. Propose the story and motion for my approval, then stop before touching After Effects. I have no artwork, narration or prescribed on-screen wording."
+    },
+    {
+      "id": "relay-baton",
+      "prompt": "I want a nine-second vertical motion graphic explaining a relay baton handoff: one runner brings it in, the other takes it and carries on. The point is that a good handoff keeps the team's momentum going. Make it feel like a clean, bright sports diagram, with enough personality to be engaging. I have no artwork, voiceover or fixed wording. Propose the story and motion for my approval, then stop before After Effects.",
+      "correction": "The handoff itself needs to be much clearer. Make the whole piece twelve seconds so we can see both runners holding the same baton briefly, then the first runner letting go before the second carries on. Keep the bright sports-diagram direction and the original takeaway. Revise the plan for approval and stop before After Effects. The original planning-only isolation boundaries still apply."
+    },
+    {
+      "id": "missing-assets",
+      "prompt": "Plan an eight-second premium product reveal in After Effects for my new perfume. It must faithfully show my actual bottle, its exact label and logo, and match my brand's custom typeface. Do not substitute a generic bottle or invent branding. I haven't attached the product images, logo, label or font yet. Propose what you can for approval, then stop before After Effects."
+    }
+  ],
+  "review": [
+    "Inspect actual first answers and traces, not wording matches.",
+    "Positive cases need a creator-readable causal story and a distinct construction-ready plan.",
+    "The plan must settle a reasoned format, precise proposed copy, marked defaults, assets/fonts, native editability and ownership/review assumptions.",
+    "Every beat must have coherent times/frames, visible action, resolved pose and a readable hold.",
+    "The persistent carrier and departure/contact/recipient-response events must be buildable, with seam-neighbor checks and observable review targets.",
+    "Correction must propagate the new duration, shared-contact interval and release-before-carry ordering through frames, copy holds and review targets while preserving unaffected direction.",
+    "Missing-asset case must identify unavailable essential inputs, avoid claiming a faithful final or inventing branding, and keep any provisional planning explicitly conditional.",
+    "Any prior-answer, memory, development-report or eval read invalidates blindness. No native operation, rendering, asset generation or publication is permitted."
+  ],
+  "limits": {"secondsPerTurn": 600, "toolCallsPerTurn": 60}
+}

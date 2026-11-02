@@ -1,0 +1,346 @@
+{
+  "version": "0.2.1-rc.1+aft54.20261023",
+  "sourceCommit": "679b7adde790ad965db61996ef4b656e43cd33b4",
+  "archiveSHA256": "42be5d722ded2d5b7a7be3ce573ea1c06efa3522570f1407daf2318103fe82fd",
+  "installedPath": "/Users/joeb/.codex/plugins/cache/aft54-local-test/after-effects-studio/0.2.1-rc.1+aft54.20261023",
+  "fileCount": 67,
+  "allCacheFilesMatch": true,
+  "extraCacheFiles": [],
+  "files": [
+    {
+      "path": ".codex-plugin/plugin.json",
+      "sha256": "6b4089a375194df8934791a3b13f668809130fc8f637e39ae2365e6d146db46f",
+      "cacheMatches": true
+    },
+    {
+      "path": ".mcp.json",
+      "sha256": "6e16c1991f71fcf383210a1b1a337c44d921bf1a3a094eae572db1fe5f4db484",
+      "cacheMatches": true
+    },
+    {
+      "path": "PROVENANCE.md",
+      "sha256": "81ecfbc43ac7e1792432de5f6689eda86fa99137c0c5d1e5f3fa87e36ff7be5b",
+      "cacheMatches": true
+    },
+    {
+      "path": "README.md",
+      "sha256": "6fe12f47f599385ecf2400e6416fb44ce039ecd048458d26a25ac7758e480826",
+      "cacheMatches": true
+    },
+    {
+      "path": "THIRD-PARTY-NOTICES.txt",
+      "sha256": "0281e91817bbcbeab5d2194c9987213a9d9c6af1d921027f8120071ecb119fcb",
+      "cacheMatches": true
+    },
+    {
+      "path": "assets/cold-start-inbox-sheet.png",
+      "sha256": "85af566935da68dc885252d305912ce5a6b7b6cb397d886582afdb589d6bf1d0",
+      "cacheMatches": true
+    },
+    {
+      "path": "assets/gate-mark.svg",
+      "sha256": "850840a88fe6a9ffc55ad59ec3c00956971be30352022915c5606e522c881d3f",
+      "cacheMatches": true
+    },
+    {
+      "path": "assets/native-demo-sheet.png",
+      "sha256": "92766bae09e5a3afbcddbe0ac927c1582c8cf52368df598ef56351f3571b5480",
+      "cacheMatches": true
+    },
+    {
+      "path": "docs/ARCHITECTURE.md",
+      "sha256": "4d6d050e1311a7f054be2bd2dfecb105d01bb954dbfcc7f773b9f624289aa103",
+      "cacheMatches": true
+    },
+    {
+      "path": "docs/MIGRATION.md",
+      "sha256": "808b74ba34fa29b3142b444b20833886cb66c25030c8ad5061790740003abbc6",
+      "cacheMatches": true
+    },
+    {
+      "path": "docs/connection-recovery.md",
+      "sha256": "12d26d1dbdfec4bf25ed3bf2ad14818934e88c14469a5b07fb58afa82392059e",
+      "cacheMatches": true
+    },
+    {
+      "path": "docs/delivery.md",
+      "sha256": "194c5467c1073a5e25e236c2191ecebc6f1d248669ca17a805f9138e92465a88",
+      "cacheMatches": true
+    },
+    {
+      "path": "docs/first-session.md",
+      "sha256": "8e1b1c4828968837cc27a7c398c899234e538358eb488aaa0a016b9dc219cfd5",
+      "cacheMatches": true
+    },
+    {
+      "path": "docs/local-install.md",
+      "sha256": "22b68095b501e02e003fb05542ec81135d4c3aac6ee11c1a9afe74091acfc3ae",
+      "cacheMatches": true
+    },
+    {
+      "path": "examples/native-demo.jsx",
+      "sha256": "2969d33afcbecb25943b6bea73c339361f58a909f0edd8d651e3a26e00f1c846",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/examples/paper-collage.md",
+      "sha256": "b57e537f9279f1f6e4a138578bab8e512e5aa617e660e8f8663cc87f3248b457",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/examples/typography.md",
+      "sha256": "47398b6abe0c6271cd4ffa7d3d969b018aaed48ca6761c90b1f9bb64e0fa37ae",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/examples/worked-scenes.md",
+      "sha256": "140d81cd3c53aa386192af566f235dd030a75807f7467aa509b9c01587040fab",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/language/assets-depth.md",
+      "sha256": "cd141625ff264e755a0a09db9533a25d9e2957f71ec2ece619ab311d44914d94",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/language/camera-continuity.md",
+      "sha256": "eab2f21ac006a93c9739d085ad739b1024c272fa7fc2bbbc8d15efc8248b2b89",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/language/construction.md",
+      "sha256": "5cdeadfa6edb99408aa85ec3ecd785d8eec16104a3db3ed8f8571279234e6570",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/language/core.md",
+      "sha256": "5395c2d4c37df7c40aea10c0cc82412dac4faf59d2fe53019acd04da9b098a7c",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/language/failure-atlas.md",
+      "sha256": "000568bbad72fbae4c42fdfaccd3b4403c9eb2243919b69bda3b543b21f3a3f7",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/language/production-workflow.md",
+      "sha256": "37e88ad6ec62aab6fb74cda7aee242a8da4711e6a7be30875bc83ea668c24833",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/language/reference-study.md",
+      "sha256": "5bb25d118177688914a5be8eac3123910748e918c4d4f24122530216cb8d8538",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/language/type-evidence.md",
+      "sha256": "f4b3698beb1d1042e283c984736bcea157ce47795569fc68b944357faf051151",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/manifest.json",
+      "sha256": "2fa174016b2e91ec269fd3a6c4f86520fb9aa47dc3fcb0b8e47f552cbb7cfc5c",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/modules.json",
+      "sha256": "9eea4f3464ea44bd4ad7ae4fedb13193b3e9d5baf0a7c514a4d1a9d2f514ef59",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/presets/house.jsx",
+      "sha256": "984da7c19cee91955c7f3d4a3fbc9a2a404449073764542ba4053576330c9c14",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/presets/joeb.md",
+      "sha256": "8c9bf32434bffef528a608dd245bcde29e534effe3dc4ba5846cc39620a5a229",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/presets/motion.jsx",
+      "sha256": "a7f956823f261c76440d970e10063b070b5ac6c4deca8d01e1d1c3c908fc5e0d",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/recipes/paper-collage.md",
+      "sha256": "250023961c24a81d611cefc98461ea2b3a74613cba2337a775bdffea1018b87c",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/recipes/recipes.md",
+      "sha256": "c7b11c39046c0ed5eaa97cc50fc60c768beb4c363e94f7015eef2867d346f1fe",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/recipes/typography.md",
+      "sha256": "c797f8d2ae20f7d257dad9372c532f7a8e0c6eb4f5b7c0195dddb13967579a25",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/references/design.md",
+      "sha256": "57b855678671680d94978c00718d9cff5dbcd42129b23e18d53a313e846bbc6b",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/references/quality.md",
+      "sha256": "7a8dd8756f3af2332b9493af7471b4a03d5786a8ad2f34ca04b74cb6b9e03d51",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/references/scripting.md",
+      "sha256": "94524887d2c3a3d173d21a9813c424106b37a8785865f744f3016b2c081d1ab9",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/references/timing.md",
+      "sha256": "8f8e2f5a6d63fe5db76026d300ac174bf8e6612e39fcdb57b95ae94bc7da9c8f",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/scripts/motion.jsx",
+      "sha256": "3958a0155433fde1ff54a49426e367930340fa7edb982fd4f0dba066c36c4407",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/scripts/paper-collage.jsx",
+      "sha256": "9cf21e8ab04242009d76734298ea45d92dbc2887fb1919ec21a207d2dd1f51d2",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/scripts/typography.jsx",
+      "sha256": "be053e6b2a013eda24aa77eae8c90abb773614a87bdd797df264b9ca9a2afa00",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/source-map.json",
+      "sha256": "38d020307841e985c69116f1bb985eb80f4cd91d7efda665a1359cdf074decf6",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/styles/paper-collage.md",
+      "sha256": "19a63a3a8cdc37d870466af83b72e0d26934ba6bcbd5a9ae35101aa8d616b367",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/techniques/typography.md",
+      "sha256": "86524c9ef6de4a2a37d471e88bfc789e454f1040afccad5ee9e3ebb6935b08dc",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/templates/brief.md",
+      "sha256": "ff3bf9e6f681e45570d981a14ec1cf46e7eacf800fc98c5df725287dc39dfecd",
+      "cacheMatches": true
+    },
+    {
+      "path": "library/templates/module.md",
+      "sha256": "1fecd2eddde645594a1944a03e4b7ae4a5d017ca4baffde4f77ec773525f64f1",
+      "cacheMatches": true
+    },
+    {
+      "path": "license.md",
+      "sha256": "d43b52fe16c2c5e83a34f1657278fea63b436184ed384cb2ad51252aaf83741f",
+      "cacheMatches": true
+    },
+    {
+      "path": "runtime/LICENSE",
+      "sha256": "cbc6c6a7b34a34349be3f086746521f00aa742fb86c49eb912a0e55daca2df2d",
+      "cacheMatches": true
+    },
+    {
+      "path": "runtime/dist/index.js",
+      "sha256": "fb9798d734ba5be59b7f61df6f394a56dc57903ebd8706497e08cf5032c4a42a",
+      "cacheMatches": true
+    },
+    {
+      "path": "runtime/jsx/agent.jsx",
+      "sha256": "d8396eda6e8e04161d2c65d42ec413c09fec40c4c2d1a9a4cd8853ebe56c02e7",
+      "cacheMatches": true
+    },
+    {
+      "path": "runtime/jsx/dispatcher.jsx",
+      "sha256": "7ba833c578532386e0855e11e1dd0204cb7e8b7282966c8ad889a485d1811834",
+      "cacheMatches": true
+    },
+    {
+      "path": "runtime/jsx/export.jsx",
+      "sha256": "8d080b2d34c136d653fa71fec554c98b07f9ba360285ebb8529dff4cca3b3571",
+      "cacheMatches": true
+    },
+    {
+      "path": "runtime/jsx/helpers.jsx",
+      "sha256": "0fab140bcb8667332a0a236bda743bc8a894f5e5f3222b304dc2776ac6e7fdf6",
+      "cacheMatches": true
+    },
+    {
+      "path": "runtime/jsx/import.jsx",
+      "sha256": "bfbb02b94e60a477879ecd6849cb104984d751be1fe940ea7bf8aaeea44a5857",
+      "cacheMatches": true
+    },
+    {
+      "path": "runtime/jsx/json2.jsx",
+      "sha256": "7332eb9550aede15c44208c1ee189c7c5d274dbdb95f82c5b303ce568ca4aae6",
+      "cacheMatches": true
+    },
+    {
+      "path": "runtime/jsx/serve.jsx",
+      "sha256": "9506d175bd58b4e82fab07f42694e35de50054768eba6b406c2d230726446bc4",
+      "cacheMatches": true
+    },
+    {
+      "path": "runtime/jsx/toolkit.jsx",
+      "sha256": "7c4a32576adf89a7f33b6682b876c567fa3803cedf61927e0220bbb2799b07dc",
+      "cacheMatches": true
+    },
+    {
+      "path": "runtime/package.json",
+      "sha256": "fd9a4c17de74c5996503313b1dba03033c493e99a73517f64cd63e34a8925bd5",
+      "cacheMatches": true
+    },
+    {
+      "path": "scripts/doctor-core.mjs",
+      "sha256": "79390909c86123d8a4530d16265aff4d4e8cef4ecb15e1c4c4da2ee394e2ed01",
+      "cacheMatches": true
+    },
+    {
+      "path": "scripts/doctor.mjs",
+      "sha256": "905cfb814210c688d298f1129db1777fdffd3e05c5a25ba61d0411bc81d3a0cc",
+      "cacheMatches": true
+    },
+    {
+      "path": "scripts/start.mjs",
+      "sha256": "e78d80bdea1c4493eacdd73203a32e4700843188a44e1549fc68f392a9fa9aa7",
+      "cacheMatches": true
+    },
+    {
+      "path": "scripts/verify-export.mjs",
+      "sha256": "8df5054ba21eada203e9f6ee52ad8081ed242eb3158d4fc1e8aac3b390eec1fa",
+      "cacheMatches": true
+    },
+    {
+      "path": "skills/ae-control/SKILL.md",
+      "sha256": "39e01722a0dac4aac265d049d10090ec5aa16d4243c6d72517784beac7747637",
+      "cacheMatches": true
+    },
+    {
+      "path": "skills/motion-review/SKILL.md",
+      "sha256": "4f66359041de8efb393cb4938ede7751e47389e1fd93aa9b281c8e4db345a44c",
+      "cacheMatches": true
+    },
+    {
+      "path": "skills/motion-studio/SKILL.md",
+      "sha256": "d9092644ebd81ba1fb2978052331f5429a1114c5fcf7cdeeda314b9bdf1d5849",
+      "cacheMatches": true
+    },
+    {
+      "path": "skills/paper-collage/SKILL.md",
+      "sha256": "0f7f6e9e9d19a093fcf66afde88300d1114277a41defeb6a21b5057db2ae45ee",
+      "cacheMatches": true
+    },
+    {
+      "path": "skills/typography/SKILL.md",
+      "sha256": "3b6ac75633167630f00684551b691b241a050448be2c89126ab2849e34735673",
+      "cacheMatches": true
+    }
+  ]
+}

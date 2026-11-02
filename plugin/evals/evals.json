@@ -159,6 +159,45 @@
         "The plan does not infer that all future brand work has changed.",
         "The collage remains editable and no AE mutation is claimed."
       ]
+    },
+    {
+      "id": 15,
+      "prompt": "I want a ten-second motion graphic that shows how a library book goes from a return slot, through check-in, to being ready for the next reader. Give it a warm editorial feel. Propose the story and motion for my approval, then stop before touching After Effects. I have no artwork, narration or prescribed on-screen wording.",
+      "expected_output": "A creator-readable story accompanied by a frame-aware, build-ready beat plan that marks inferred defaults and leaves AE untouched.",
+      "files": [],
+      "assertions": [
+        "The proposal explains the return, check-in and ready-for-next-reader state in plain language without requiring the user to design keyframes.",
+        "The plan gives a reasoned composition size, frame rate and intended viewing context for the ten-second film, and identifies exact proposed on-screen wording rather than assuming the user supplied it.",
+        "Each beat has start/end times and frame boundaries, a visible action and resolved pose, and enough hold or reading information to build it.",
+        "The book or another named carrier has a traceable identity across the hard hand-off, with departure, contact and recipient-response frames plus seam-neighbor review targets.",
+        "The plan states which elements can be native and editable, which visual/font choices are inferred, and which missing assets would block a faithful final instead of claiming they exist.",
+        "The answer keeps creative approval separate from unshown build details and makes no AE operation, render or visual-pass claim."
+      ]
+    },
+    {
+      "id": 16,
+      "prompt": "I want a nine-second vertical motion graphic explaining a relay baton handoff: one runner brings it in, the other takes it and carries on. The point is that a good handoff keeps the team's momentum going. Make it feel like a clean, bright sports diagram, with enough personality to be engaging. I have no artwork, voiceover or fixed wording. Propose the story and motion for my approval, then stop before After Effects.",
+      "follow_up_prompt": "The handoff itself needs to be much clearer. Make the whole piece twelve seconds so we can see both runners holding the same baton briefly, then the first runner letting go before the second carries on. Keep the bright sports-diagram direction and the original takeaway. Revise the plan for approval and stop before After Effects. The original planning-only isolation boundaries still apply.",
+      "expected_output": "A creator-readable relay story and a separate frame-aware native build plan, followed by a coherent twelve-second revision that makes joint grip and release-before-carry visibly inspectable.",
+      "files": [],
+      "assertions": [
+        "The first answer supplies both deliverables with phone-viewing format, exact proposed copy, editable native geometry, marked defaults and coherent nine-second frame ranges.",
+        "One baton persists through the exchange, with receiver contact before giver release, continuous transform at ownership change and adjacent-frame review targets.",
+        "On the follow-up in the same session, the revision propagates twelve seconds through the beat timing, frame count and reading holds; joint grip is inspectable and the giver releases before the receiver carries on.",
+        "The correction preserves the bright sports-diagram direction and team-momentum takeaway while making no AE operation or creative-acceptance claim."
+      ]
+    },
+    {
+      "id": 17,
+      "prompt": "Plan an eight-second premium product reveal in After Effects for my new perfume. It must faithfully show my actual bottle, its exact label and logo, and match my brand's custom typeface. Do not substitute a generic bottle or invent branding. I haven't attached the product images, logo, label or font yet. Propose what you can for approval, then stop before After Effects.",
+      "expected_output": "A conditional concept that identifies the essential unavailable product and brand assets and does not invent a faithful bottle, label, logo or font.",
+      "files": [],
+      "assertions": [
+        "The response identifies supplied-image/geometry, label/logo and font dependencies as missing rather than claiming they exist.",
+        "It respects the prohibition on a generic bottle or invented branding and asks only for inputs or choices that determine a faithful result.",
+        "Any timing, composition or concept offered is clearly provisional; the agent does not represent an uninspected product as build-ready or verified.",
+        "No asset generation, AE inspection/mutation, render, install or publication occurs in the planning-only test."
+      ]
     }
   ]
 }
