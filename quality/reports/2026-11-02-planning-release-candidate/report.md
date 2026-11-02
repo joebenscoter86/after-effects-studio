@@ -37,3 +37,7 @@ The [end-to-end handoff](end-to-end-test-handoff.md) deliberately does not suppl
 ## Release boundary
 
 The candidate and [action sheet](../../../release/submission/planning-rc2-action-sheet.md) are prepared for review. Main, public tags, GitHub Release assets, stable marketplace configuration and directory submission were not changed. A draft PR exposes the proposed source for review; merging the RC version into main would itself change unpinned marketplace installs and is not part of preparation. A later authorized prerelease can instead tag the reviewed branch commit and use a pinned install. Public stable remains v0.2.0. First obtain Joe's choice of the next test direction/session, then the fresh agent's actual plan approval; publication remains a distinct decision.
+
+## AFT-56 continuation — same day
+
+After AFT-55 preparation closed, Joe authorized the fresh lock-cutaway planning session. The [separate planning report](../2026-11-02-lock-cutaway-planning/report.md) now preserves its 22-second first proposal, exact model/settings and trace. Planning structure/isolation passed; one precise copy correction is proposed for approval, and the axial turn remains a native proof point. The actual story/build plan awaits Joe's approval. The archive and distributable payload are unchanged; this continuation adds evidence only and does not retroactively turn AFT-55's earlier checks into a native pass.
