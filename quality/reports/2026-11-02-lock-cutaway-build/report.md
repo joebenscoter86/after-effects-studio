@@ -2,6 +2,8 @@
 
 Status: first complete native build saved and accepted by Joe on 2026-11-02; meaningful late edit and final delivery remain open. Joe approved the actual [review plan V1](../2026-11-02-lock-cutaway-planning/review-plan-v1.md), including its one explicit copy correction, and authorized the bounded AE build on 2026-11-02. This does not approve the unbuilt film, a late edit or publication.
 
+Follow-up: Joe chose the alignment-clarity edit after accepting this first build. V2 is now saved; its [late-edit report](../2026-11-02-lock-cutaway-late-edit/report.md) records preservation checks and the pending revision-review gate. The first-build evidence below remains historical.
+
 ## Candidate, host and approval
 
 The exact `0.2.1-rc.2+codex.20261102` ZIP (SHA-256 `16b8ea9dc200d8c315b03fb3b5546bb4ac85d95a699f128c7986df9ce4ab7b4d`) was reinstalled via the supported `aft56-local-test` marketplace. All 67 installed files matched; [cache identity](installed-identity.json). The tested payload is unchanged from candidate source `7bec6812dbb30e63ceb221379937e08b793ebe7d`; later PR #7 commits add evidence only.
