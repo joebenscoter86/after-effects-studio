@@ -1,6 +1,6 @@
 # AFT-56 — requested alignment-clarity edit
 
-Status: V2 saved and ready for Joe's review. Joe accepted the first complete lock film, then chose **“Make the five aligned joins clearer.”** [Actual request](revision-request.json). His acceptance of V2 and final delivery remain open.
+Status: V2 alignment edit accepted by Joe; subsequent delivery preservation failed and AE is paused. Joe accepted the first complete lock film, then chose **“Make the five aligned joins clearer.”** [Actual request](revision-request.json). His acceptance of V2 and final delivery remain open.
 
 ## Candidate, session and scope
 
@@ -31,3 +31,5 @@ An optional whole-project JSON export was rejected by the MCP host approval gate
 Joe has been asked to scrub 10–14.5 seconds in the open V2 comp and accept or revise the alignment emphasis. No V2 creative acceptance is inferred. After acceptance, finish editable/reopen and final playback-export verification; continue the same session and inspect the actual project before any native action. AFT-56 remains In Progress. No public merge, tag/release, stable upgrade or OpenAI submission is authorized by this test.
 
 After the evaluator exited, supported CLI removal cleared the temporary candidate installation and marketplace. Config inspection confirmed both absent and the stable plugin enabled. AE was left on saved V2 without another native operation. Reinstall/verify exact RC.2 before the final same-session continuation.
+
+Follow-up: Joe selected “Accept V2 alignment edit.” The [delivery report](../2026-11-02-lock-cutaway-delivery/report.md) records the verified export/reopen work and unexpected on-disk V2 rewrite. Do not infer delivery completion from this earlier successful revision. AE is paused; see the [resume handoff](../2026-11-02-lock-cutaway-delivery/resume.md).
