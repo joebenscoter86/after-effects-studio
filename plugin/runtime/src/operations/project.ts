@@ -25,11 +25,22 @@ registerOp({
   undoGroup: () => false,
   toJsx(args) {
     return `
-            if (${jsxVal(!!args.save)} && app.project.file) app.project.save();
             var f = new File(${jsxVal(args.path)});
             if (!f.exists) return { ok: false, error: "file not found: " + ${jsxVal(args.path)} };
-            app.open(f);
-            return { ok: true, numItems: app.project.numItems, file: app.project.file.fsName.replace(/\\\\/g,"/") };
+            if (app.project) {
+                if (${jsxVal(!!args.save)}) {
+                    if (app.project.file) { app.project.save(); }
+                    else if (app.project.numItems > 0) { return { ok: false, error: "current project has no file path — save it first (ae_save_project with a path) or pass save=false to discard" }; }
+                }
+                // Do not delegate the save/discard decision to app.open under
+                // suppressed dialogs, including when reopening the same file.
+                if (!app.project.close(CloseOptions.DO_NOT_SAVE_CHANGES)) {
+                    return { ok: false, error: "current project did not close; target was not opened" };
+                }
+            }
+            var _opened = app.open(f);
+            if (!_opened) return { ok: false, error: "app.open returned null" };
+            return { ok: true, numItems: _opened.numItems, file: _opened.file.fsName.replace(/\\\\/g,"/") };
         `;
   },
 });

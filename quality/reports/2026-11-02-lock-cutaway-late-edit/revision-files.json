@@ -1,0 +1,12 @@
+{
+  "pin-tumbler-v1.aep": {
+    "bytes": 1313607,
+    "sha256": "a0ac9092f0ac0185dbd27d7bc96624926526ec7fb7b330f0ca967488a70250cd"
+  },
+  "pin-tumbler-v2.aep": {
+    "bytes": 1377025,
+    "sha256": "db94c42e9b70c428dec4483e3e134f358e49eeeb7a00529e300c7de23c7e9511"
+  },
+  "v1Preserved": true,
+  "deniedExportCreatedFile": false
+}

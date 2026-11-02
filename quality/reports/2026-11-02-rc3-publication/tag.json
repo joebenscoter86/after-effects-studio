@@ -1,0 +1,10 @@
+{
+  "ref": "refs/tags/v0.2.1-rc.3",
+  "node_id": "REF_kwDOVIR-t7VyZWZzL3RhZ3MvdjAuMi4xLXJjLjM",
+  "url": "https://api.github.com/repos/joebenscoter86/after-effects-studio/git/refs/tags/v0.2.1-rc.3",
+  "object": {
+    "sha": "92edeb0b9f8d27bf092d68d967851c792d5d8451",
+    "type": "commit",
+    "url": "https://api.github.com/repos/joebenscoter86/after-effects-studio/git/commits/92edeb0b9f8d27bf092d68d967851c792d5d8451"
+  }
+}

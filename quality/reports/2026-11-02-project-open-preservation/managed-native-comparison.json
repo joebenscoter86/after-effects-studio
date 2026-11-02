@@ -1,0 +1,56 @@
+[
+  {
+    "sample": 0,
+    "pixelsEqual": true,
+    "meanAbsRGB": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "sample": 1,
+    "pixelsEqual": true,
+    "meanAbsRGB": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "sample": 2,
+    "pixelsEqual": true,
+    "meanAbsRGB": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "sample": 3,
+    "pixelsEqual": true,
+    "meanAbsRGB": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "sample": 4,
+    "pixelsEqual": true,
+    "meanAbsRGB": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "sample": 5,
+    "pixelsEqual": true,
+    "meanAbsRGB": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  }
+]

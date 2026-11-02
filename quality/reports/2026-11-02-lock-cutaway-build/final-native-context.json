@@ -1,0 +1,123 @@
+{
+  "ok": true,
+  "result": {
+    "project": {
+      "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/pin-tumbler-v1.aep",
+      "dirty": false,
+      "numItems": 4,
+      "bitsPerChannel": 16
+    },
+    "instance": null,
+    "activeComp": {
+      "id": 1,
+      "name": "PIN_TUMBLER_EXPLAINER_v01",
+      "width": 1920,
+      "height": 1080,
+      "fps": 30,
+      "duration": 22,
+      "numLayers": 40,
+      "bgColor": [
+        0.06274509803922,
+        0.08627450980392,
+        0.10980392156863
+      ]
+    },
+    "selectedLayers": [],
+    "helpers": [
+      "AE.findCompByNameOrId(nameOrId)",
+      "AE.findComps(nameOrIdOrPattern) \u2014 '*' glob supported",
+      "AE.findItemById(id)",
+      "AE.findItem(idOrName) \u2014 any project item",
+      "AE.findFolder(idOrName) \u2014 null/undefined = root folder",
+      "AE.findLayerInComp(comp, indexOrNameOrIdRef) \u2014 accepts { id: n } (stable Layer.id, AE 22+)",
+      "AE.findLayerById(comp, id)",
+      "AE.resolveLayers(comp, target) \u2014 index | name | { id: n } | 'selected' | 'all' | array of those",
+      "AE.snapshotKeys(prop) / AE.applyKeys(prop, keys) / AE.removeAllKeys(prop)",
+      "AE.setEase(prop, keyIndex, inInf, outInf, inSpeed?, outSpeed?) \u2014 dims/spatial handled",
+      "AE.writeValue(prop, value, time?) / AE.readValue(prop, time?) \u2014 separated-dimension safe, __kind values accepted",
+      "AE.offsetValue(prop, delta) \u2014 shift a value or every keyframe",
+      "AE.applyKeySpecs(prop, [{time, value, interp?}], {replace, interp, spatialTangents}) \u2014 keyframe.apply's engine",
+      "AE.moveAnchor(layer, [x, y]) \u2014 anchor move with position compensation",
+      "AE.layerRect(layer, time) / AE.pointInRect(rect, preset) \u2014 anchor presets on rendered bounds",
+      "AE.shapeGroupBounds(group, {time, includeStroke}) / AE.shapeLayerBounds(layer, opts)",
+      "AE.walkShapeContents(contents, fn) / AE.recolorContents(contents, opts) / AE.canonicalGroup(group, precision)",
+      "AE.geometryShape('ellipse'|'rect', center, size, roundness) \u2014 a Shape for masks/paths",
+      "AE.propertyAtPath(root, path) \u2014 null instead of throwing",
+      "AE.ownerLayer(prop) \u2014 the layer a property belongs to",
+      "AE.bakeKeysAtTime(root, time) \u2014 freeze every animated property below root",
+      "AE.layerIdSnapshot(comp) / AE.layersSince(comp, snap) \u2014 which layers a command created",
+      "AE.withSelection(comp, layers, fn) \u2014 run a menu command on exactly these layers, selection restored",
+      "AE.rect(shapeLayerOrGroup, [w,h], [x,y], {name, roundness, fill:[r,g,b], stroke, strokeWidth}) \u2014 group+path+style in one call",
+      "AE.ellipse(shapeLayerOrGroup, [w,h], [x,y], {name, fill, stroke, strokeWidth})",
+      "AE.ensureParentDir(path) \u2014 mkdir -p for an output file, returns the File",
+      "AE.itemTypeName(item) \u2014 'CompItem' | 'FootageItem' | 'FolderItem' | 'UnknownItem'",
+      "AE.serializeItemSummary(item)",
+      "AE.serializeLayerSummary(layer)",
+      "AE.serializeLayerFull(layer, opts) \u2014 opts.detail:'summary' drops default-value props",
+      "AE.serializeTransform(layer)",
+      "AE.serializePropertyGroup(group, depth, maxDepth, opts)",
+      "AE.serializeCompMarkers(comp)",
+      "AE.exportProject()",
+      "AE.importProject(doc, opts)",
+      "AE.safeGet(fn, fallback)",
+      "AE.valueToJson(val)"
+    ],
+    "es3Rules": [
+      "var only (no let/const)",
+      "function() {} only (no arrow =>)",
+      "string concat only (no template literals)",
+      "for(var i=0;i<n;i++) only (no for-of, no forEach/map/filter)",
+      "indexOf !== -1 (no includes/startsWith/endsWith)",
+      "NEVER chain ternaries: a ? b : c ? d : e parses LEFT-associative in ExtendScript \u2014 parenthesize or use if/else",
+      "log('msg') to push breadcrumbs",
+      "return <JSON-serializable> at end"
+    ],
+    "tips": [
+      "reparenting a layer that has keyframes: use layer.set_parent with jump:true (no transform compensation) \u2014 plain parent assignment rewrites values and corrupts keys",
+      "easing: keyframe.set_easing (op) or AE.setEase (eval) \u2014 both handle the spatial=1/per-dimension KeyframeEase bookkeeping",
+      "auditing a comp: ae_layer_info layerIndex:'all' with detail:'summary' skips default-value properties and includes key ease (speed/influence)",
+      "render queue output folders are auto-created on render.add_to_queue / render.set_output / render.start",
+      "many keys at once: keyframe.apply takes the whole list with per-key easing; its 'hold' only holds the OUT side, so a fade that ends in a hold key still fades",
+      "Position separated into X/Y (Separate Dimensions, or layers from 'Create Shapes from Vector Layer'): every write op and AE.writeValue route to the followers automatically",
+      "imported Illustrator layers: layer.convert_to_shapes (strips ' Outlines', can remove the source layer/footage); then shape.group_bounds / layer.split_groups to work per part",
+      "layer targets accept arrays everywhere they accept 'all' \u2014 [\"A\", \"B\", { id: 12 }] is one call",
+      "verifying motion: ae_render_frame times + contactSheet tiles the frames into one labelled PNG; analyze reports edge bands / content bounds; comp.sample reads values at several times",
+      "several After Effects instances (AfterFX.exe -m): each MCP server addresses ONE, chosen by AE_MCP_INSTANCE (instance id or open project file name); the response's instances[] lists what is live \u2014 if the project you need is open elsewhere, say so instead of editing the wrong one"
+    ],
+    "undoContract": [
+      "every ae_do / eval.run call is auto-wrapped in ONE undo group",
+      "one Ctrl+Z (or project.undo) reverts the entire call; batch.run = one call = one undo step",
+      "NEVER call app.beginUndoGroup/endUndoGroup in eval.run code \u2014 an unbalanced group corrupts undo for the session",
+      "undo/redo itself runs OUTSIDE the group: use project.undo (or command.execute 16/2035) as its own call \u2014 never inside batch.run, and never via eval.run",
+      "ae_save_project and files written to disk (rendered PNGs, exported JSON) are NOT undoable"
+    ],
+    "items": [
+      {
+        "id": 1,
+        "name": "PIN_TUMBLER_EXPLAINER_v01",
+        "type": "CompItem"
+      },
+      {
+        "id": 13,
+        "name": "Solids",
+        "type": "FolderItem"
+      },
+      {
+        "id": 14,
+        "name": "AFT56_DARK_STAGE",
+        "type": "FootageItem"
+      },
+      {
+        "id": 16,
+        "name": "Null 1",
+        "type": "FootageItem"
+      }
+    ],
+    "transport": {
+      "mode": "push"
+    },
+    "instances": []
+  },
+  "logs": [],
+  "durationMs": 328
+}

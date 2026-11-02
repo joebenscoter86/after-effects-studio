@@ -1,0 +1,11 @@
+{
+  "version": "0.2.1-rc.2+codex.20261102",
+  "archiveSHA256": "16b8ea9dc200d8c315b03fb3b5546bb4ac85d95a699f128c7986df9ce4ab7b4d",
+  "sourceCandidateCommit": "7bec6812dbb30e63ceb221379937e08b793ebe7d",
+  "pluginId": "after-effects-studio@aft56-local-test",
+  "cachePath": "/Users/joeb/.codex/plugins/cache/aft56-local-test/after-effects-studio/0.2.1-rc.2+codex.20261102",
+  "filesCompared": 67,
+  "allFilesMatch": true,
+  "extraFiles": [],
+  "skillSHA256": "d9092644ebd81ba1fb2978052331f5429a1114c5fcf7cdeeda314b9bdf1d5849"
+}

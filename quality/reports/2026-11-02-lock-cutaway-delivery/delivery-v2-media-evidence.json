@@ -1,0 +1,628 @@
+{
+  "commands": [
+    {
+      "name": "probe-intermediate",
+      "args": [
+        "/opt/homebrew/bin/ffprobe",
+        "-v",
+        "error",
+        "-show_streams",
+        "-show_format",
+        "-of",
+        "json",
+        "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/delivery-v2-intermediate.mov"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "encode",
+      "args": [
+        "/opt/homebrew/bin/ffmpeg",
+        "-n",
+        "-v",
+        "warning",
+        "-i",
+        "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/delivery-v2-intermediate.mov",
+        "-map",
+        "0:v:0",
+        "-an",
+        "-c:v",
+        "libx264",
+        "-preset",
+        "medium",
+        "-crf",
+        "17",
+        "-vf",
+        "scale=out_color_matrix=bt709:out_range=tv",
+        "-pix_fmt",
+        "yuv420p",
+        "-color_primaries",
+        "bt709",
+        "-color_trc",
+        "bt709",
+        "-colorspace",
+        "bt709",
+        "-color_range",
+        "tv",
+        "-movflags",
+        "+faststart",
+        "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/delivery-v2-playback.mp4"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "probe-playback",
+      "args": [
+        "/opt/homebrew/bin/ffprobe",
+        "-v",
+        "error",
+        "-count_frames",
+        "-show_streams",
+        "-show_format",
+        "-of",
+        "json",
+        "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/delivery-v2-playback.mp4"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "decode-intermediate",
+      "args": [
+        "/opt/homebrew/bin/ffmpeg",
+        "-v",
+        "error",
+        "-xerror",
+        "-i",
+        "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/delivery-v2-intermediate.mov",
+        "-map",
+        "0:v:0",
+        "-f",
+        "null",
+        "-"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "decode-playback",
+      "args": [
+        "/opt/homebrew/bin/ffmpeg",
+        "-v",
+        "error",
+        "-xerror",
+        "-i",
+        "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/delivery-v2-playback.mp4",
+        "-map",
+        "0:v:0",
+        "-f",
+        "null",
+        "-"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "intermediate-frame-extract",
+      "args": [
+        "/opt/homebrew/bin/ffmpeg",
+        "-n",
+        "-v",
+        "error",
+        "-i",
+        "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/delivery-v2-intermediate.mov",
+        "-vf",
+        "select=eq(n\\,36)+eq(n\\,153)+eq(n\\,270)+eq(n\\,360)+eq(n\\,472)+eq(n\\,659)",
+        "-fps_mode",
+        "vfr",
+        "-start_number",
+        "0",
+        "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/delivery-v2-intermediate-frame_%d.png"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "decoded-extract",
+      "args": [
+        "/opt/homebrew/bin/ffmpeg",
+        "-n",
+        "-v",
+        "error",
+        "-i",
+        "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/delivery-v2-playback.mp4",
+        "-vf",
+        "select=eq(n\\,36)+eq(n\\,153)+eq(n\\,270)+eq(n\\,360)+eq(n\\,472)+eq(n\\,659)",
+        "-fps_mode",
+        "vfr",
+        "-start_number",
+        "0",
+        "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/delivery-v2-decoded_%d.png"
+      ],
+      "returncode": 0
+    }
+  ],
+  "frames": [
+    36,
+    153,
+    270,
+    360,
+    472,
+    659
+  ],
+  "humanPlaybackReviewed": false,
+  "intermediate": {
+    "streams": [
+      {
+        "index": 0,
+        "codec_name": "prores",
+        "codec_long_name": "Apple ProRes (iCodec Pro)",
+        "profile": "Standard",
+        "codec_type": "video",
+        "codec_tag_string": "apcn",
+        "codec_tag": "0x6e637061",
+        "width": 1920,
+        "height": 1080,
+        "coded_width": 1920,
+        "coded_height": 1080,
+        "has_b_frames": 0,
+        "sample_aspect_ratio": "1:1",
+        "display_aspect_ratio": "16:9",
+        "pix_fmt": "yuv422p10le",
+        "level": -99,
+        "color_space": "bt709",
+        "color_transfer": "bt709",
+        "color_primaries": "bt709",
+        "field_order": "progressive",
+        "refs": 1,
+        "id": "0x1",
+        "r_frame_rate": "30/1",
+        "avg_frame_rate": "30/1",
+        "time_base": "1/30",
+        "start_pts": 0,
+        "start_time": "0.000000",
+        "duration_ts": 660,
+        "duration": "22.000000",
+        "bit_rate": "93689890",
+        "bits_per_raw_sample": "10",
+        "nb_frames": "660",
+        "disposition": {
+          "default": 1,
+          "dub": 0,
+          "original": 0,
+          "comment": 0,
+          "lyrics": 0,
+          "karaoke": 0,
+          "forced": 0,
+          "hearing_impaired": 0,
+          "visual_impaired": 0,
+          "clean_effects": 0,
+          "attached_pic": 0,
+          "timed_thumbnails": 0,
+          "non_diegetic": 0,
+          "captions": 0,
+          "descriptions": 0,
+          "metadata": 0,
+          "dependent": 0,
+          "still_image": 0,
+          "multilayer": 0
+        },
+        "tags": {
+          "creation_time": "2026-11-02T20:49:50.000000Z",
+          "language": "eng",
+          "handler_name": "Apple Video Media Handler",
+          "vendor_id": "appl",
+          "encoder": "Apple ProRes 422",
+          "timecode": "00:00:00:00"
+        }
+      },
+      {
+        "index": 1,
+        "codec_type": "data",
+        "codec_tag_string": "tmcd",
+        "codec_tag": "0x64636d74",
+        "id": "0x2",
+        "r_frame_rate": "0/0",
+        "avg_frame_rate": "30/1",
+        "time_base": "1/30",
+        "start_pts": 0,
+        "start_time": "0.000000",
+        "duration_ts": 660,
+        "duration": "22.000000",
+        "bit_rate": "1",
+        "nb_frames": "1",
+        "extradata_size": 18,
+        "disposition": {
+          "default": 1,
+          "dub": 0,
+          "original": 0,
+          "comment": 0,
+          "lyrics": 0,
+          "karaoke": 0,
+          "forced": 0,
+          "hearing_impaired": 0,
+          "visual_impaired": 0,
+          "clean_effects": 0,
+          "attached_pic": 0,
+          "timed_thumbnails": 0,
+          "non_diegetic": 0,
+          "captions": 0,
+          "descriptions": 0,
+          "metadata": 0,
+          "dependent": 0,
+          "still_image": 0,
+          "multilayer": 0
+        },
+        "tags": {
+          "creation_time": "2026-11-02T20:49:50.000000Z",
+          "language": "eng",
+          "handler_name": "Time Code Media Handler",
+          "timecode": "00:00:00:00"
+        }
+      }
+    ],
+    "format": {
+      "filename": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/delivery-v2-intermediate.mov",
+      "nb_streams": 2,
+      "nb_programs": 0,
+      "nb_stream_groups": 0,
+      "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+      "format_long_name": "QuickTime / MOV",
+      "start_time": "0.000000",
+      "duration": "22.000000",
+      "size": "258695780",
+      "bit_rate": "94071192",
+      "probe_score": 100,
+      "tags": {
+        "major_brand": "qt  ",
+        "minor_version": "537199360",
+        "compatible_brands": "qt  ",
+        "creation_time": "2026-11-02T20:49:50.000000Z"
+      }
+    }
+  },
+  "playback": {
+    "streams": [
+      {
+        "index": 0,
+        "codec_name": "h264",
+        "codec_long_name": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
+        "profile": "High",
+        "codec_type": "video",
+        "codec_tag_string": "avc1",
+        "codec_tag": "0x31637661",
+        "width": 1920,
+        "height": 1080,
+        "coded_width": 1920,
+        "coded_height": 1088,
+        "has_b_frames": 2,
+        "sample_aspect_ratio": "1:1",
+        "display_aspect_ratio": "16:9",
+        "pix_fmt": "yuv420p",
+        "level": 40,
+        "color_range": "tv",
+        "color_space": "bt709",
+        "color_transfer": "bt709",
+        "color_primaries": "bt709",
+        "chroma_location": "left",
+        "field_order": "progressive",
+        "refs": 4,
+        "is_avc": "true",
+        "nal_length_size": "4",
+        "id": "0x1",
+        "r_frame_rate": "30/1",
+        "avg_frame_rate": "30/1",
+        "time_base": "1/15360",
+        "start_pts": 0,
+        "start_time": "0.000000",
+        "duration_ts": 337920,
+        "duration": "22.000000",
+        "bit_rate": "462505",
+        "bits_per_raw_sample": "8",
+        "nb_frames": "660",
+        "nb_read_frames": "660",
+        "extradata_size": 51,
+        "disposition": {
+          "default": 1,
+          "dub": 0,
+          "original": 0,
+          "comment": 0,
+          "lyrics": 0,
+          "karaoke": 0,
+          "forced": 0,
+          "hearing_impaired": 0,
+          "visual_impaired": 0,
+          "clean_effects": 0,
+          "attached_pic": 0,
+          "timed_thumbnails": 0,
+          "non_diegetic": 0,
+          "captions": 0,
+          "descriptions": 0,
+          "metadata": 0,
+          "dependent": 0,
+          "still_image": 0,
+          "multilayer": 0
+        },
+        "tags": {
+          "language": "eng",
+          "handler_name": "Apple Video Media Handler",
+          "vendor_id": "[0][0][0][0]",
+          "encoder": "Lavc62.11.100 libx264",
+          "timecode": "00:00:00:00"
+        }
+      },
+      {
+        "index": 1,
+        "codec_type": "data",
+        "codec_tag_string": "tmcd",
+        "codec_tag": "0x64636d74",
+        "id": "0x2",
+        "r_frame_rate": "0/0",
+        "avg_frame_rate": "15360/512",
+        "time_base": "1/15360",
+        "start_pts": 0,
+        "start_time": "0.000000",
+        "duration_ts": 337920,
+        "duration": "22.000000",
+        "bit_rate": "1",
+        "nb_frames": "1",
+        "extradata_size": 20,
+        "disposition": {
+          "default": 0,
+          "dub": 0,
+          "original": 0,
+          "comment": 0,
+          "lyrics": 0,
+          "karaoke": 0,
+          "forced": 0,
+          "hearing_impaired": 0,
+          "visual_impaired": 0,
+          "clean_effects": 0,
+          "attached_pic": 0,
+          "timed_thumbnails": 0,
+          "non_diegetic": 0,
+          "captions": 0,
+          "descriptions": 0,
+          "metadata": 0,
+          "dependent": 0,
+          "still_image": 0,
+          "multilayer": 0
+        },
+        "tags": {
+          "language": "eng",
+          "handler_name": "Apple Video Media Handler",
+          "timecode": "00:00:00:00"
+        }
+      }
+    ],
+    "format": {
+      "filename": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/delivery-v2-playback.mp4",
+      "nb_streams": 2,
+      "nb_programs": 0,
+      "nb_stream_groups": 0,
+      "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+      "format_long_name": "QuickTime / MOV",
+      "start_time": "0.000000",
+      "duration": "22.000000",
+      "size": "1281154",
+      "bit_rate": "465874",
+      "probe_score": 100,
+      "tags": {
+        "major_brand": "isom",
+        "minor_version": "512",
+        "compatible_brands": "isomiso2avc1mp41",
+        "encoder": "Lavf62.3.100"
+      }
+    }
+  },
+  "fullDecode": {
+    "intermediate": "passed",
+    "playback": "passed"
+  },
+  "comparisons": [
+    {
+      "frame": 36,
+      "nativeVsIntermediate": {
+        "meanAbsoluteErrorRGB": [
+          1.020954861111111,
+          0.8582802854938272,
+          1.1887900270061729
+        ],
+        "maximumChannelError": 51,
+        "differenceBounds": [
+          0,
+          0,
+          1920,
+          1080
+        ]
+      },
+      "nativeVsPlayback": {
+        "meanAbsoluteErrorRGB": [
+          2.9573847415123455,
+          2.0233439429012345,
+          3.1309321952160496
+        ],
+        "maximumChannelError": 60,
+        "differenceBounds": [
+          0,
+          0,
+          1920,
+          1080
+        ]
+      }
+    },
+    {
+      "frame": 153,
+      "nativeVsIntermediate": {
+        "meanAbsoluteErrorRGB": [
+          1.025089699074074,
+          0.8385117669753086,
+          1.175013985339506
+        ],
+        "maximumChannelError": 54,
+        "differenceBounds": [
+          0,
+          0,
+          1920,
+          1080
+        ]
+      },
+      "nativeVsPlayback": {
+        "meanAbsoluteErrorRGB": [
+          2.9701567322530864,
+          2.0079750192901233,
+          3.1113633294753087
+        ],
+        "maximumChannelError": 63,
+        "differenceBounds": [
+          0,
+          0,
+          1920,
+          1080
+        ]
+      }
+    },
+    {
+      "frame": 270,
+      "nativeVsIntermediate": {
+        "meanAbsoluteErrorRGB": [
+          1.0291874035493827,
+          0.8385011574074074,
+          1.1745780285493828
+        ],
+        "maximumChannelError": 50,
+        "differenceBounds": [
+          0,
+          0,
+          1920,
+          1080
+        ]
+      },
+      "nativeVsPlayback": {
+        "meanAbsoluteErrorRGB": [
+          2.9462056327160493,
+          1.9683574459876543,
+          3.0835252700617284
+        ],
+        "maximumChannelError": 54,
+        "differenceBounds": [
+          0,
+          0,
+          1920,
+          1080
+        ]
+      }
+    },
+    {
+      "frame": 360,
+      "nativeVsIntermediate": {
+        "meanAbsoluteErrorRGB": [
+          1.0565089699074075,
+          0.8454562114197531,
+          1.1845992476851852
+        ],
+        "maximumChannelError": 57,
+        "differenceBounds": [
+          0,
+          0,
+          1920,
+          1080
+        ]
+      },
+      "nativeVsPlayback": {
+        "meanAbsoluteErrorRGB": [
+          3.017970196759259,
+          1.9880844907407407,
+          3.1238565779320986
+        ],
+        "maximumChannelError": 65,
+        "differenceBounds": [
+          0,
+          0,
+          1920,
+          1080
+        ]
+      }
+    },
+    {
+      "frame": 472,
+      "nativeVsIntermediate": {
+        "meanAbsoluteErrorRGB": [
+          1.0284119405864198,
+          0.838439911265432,
+          1.1618711419753087
+        ],
+        "maximumChannelError": 51,
+        "differenceBounds": [
+          0,
+          0,
+          1920,
+          1080
+        ]
+      },
+      "nativeVsPlayback": {
+        "meanAbsoluteErrorRGB": [
+          2.957860725308642,
+          1.9726933834876543,
+          3.104730902777778
+        ],
+        "maximumChannelError": 55,
+        "differenceBounds": [
+          0,
+          0,
+          1920,
+          1080
+        ]
+      }
+    },
+    {
+      "frame": 659,
+      "nativeVsIntermediate": {
+        "meanAbsoluteErrorRGB": [
+          1.0116869212962962,
+          0.8382624421296296,
+          1.1343561921296297
+        ],
+        "maximumChannelError": 53,
+        "differenceBounds": [
+          0,
+          0,
+          1920,
+          1080
+        ]
+      },
+      "nativeVsPlayback": {
+        "meanAbsoluteErrorRGB": [
+          2.9156577932098764,
+          1.9405825617283952,
+          3.056631462191358
+        ],
+        "maximumChannelError": 52,
+        "differenceBounds": [
+          0,
+          0,
+          1920,
+          1080
+        ]
+      }
+    }
+  ],
+  "files": {
+    "pin-tumbler-v1.aep": {
+      "bytes": 1313607,
+      "sha256": "a0ac9092f0ac0185dbd27d7bc96624926526ec7fb7b330f0ca967488a70250cd"
+    },
+    "pin-tumbler-v2.aep": {
+      "bytes": 1377025,
+      "sha256": "db94c42e9b70c428dec4483e3e134f358e49eeeb7a00529e300c7de23c7e9511"
+    },
+    "delivery-v2-intermediate.mov": {
+      "bytes": 258695780,
+      "sha256": "708600c22d50b598de6166122bbdfc9bf2f2683947cf7a902f69460ec9cf888e"
+    },
+    "delivery-v2-playback.mp4": {
+      "bytes": 1281154,
+      "sha256": "28c28ce5b895464c41fae28497044ea3db062840420842bba31b8c63d5c9148a"
+    }
+  },
+  "metadataPassed": true,
+  "colorNote": "Project working space None. Native capture is unchanged-values 16-bit to 8-bit sRGB-tagged PNG. Playback is BT.709-tagged limited-range YUV420 H.264. Numeric comparison uses decoded RGB values; player-managed gamma/display appearance remains for QuickTime review.",
+  "hashVerificationStage": "After encoding/full decode, before final queue cleanup and reopen",
+  "postCleanupAepPreservation": "FAILED: see delivery-v2-native-evidence.json and delivery-v2-review.md"
+}

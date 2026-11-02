@@ -1,0 +1,466 @@
+{
+  "compId": 1,
+  "name": "PIN_TUMBLER_EXPLAINER_v01",
+  "width": 1920,
+  "height": 1080,
+  "duration": 22,
+  "fps": 30,
+  "contactSamples": 530,
+  "maxNativeContactErrorPx": 6.878379401e-05,
+  "contactFailures": [],
+  "firstLiftFrames": [
+    109,
+    130,
+    157,
+    193,
+    237
+  ],
+  "alignment": [
+    {
+      "pin": 1,
+      "lowerJoinCenter": [
+        730,
+        567
+      ],
+      "upperJoinCenter": [
+        730,
+        567
+      ],
+      "errorPx": 0,
+      "shearWorldY": 155
+    },
+    {
+      "pin": 2,
+      "lowerJoinCenter": [
+        895,
+        550.5
+      ],
+      "upperJoinCenter": [
+        895,
+        550.5
+      ],
+      "errorPx": 0,
+      "shearWorldY": 155
+    },
+    {
+      "pin": 3,
+      "lowerJoinCenter": [
+        1060,
+        534
+      ],
+      "upperJoinCenter": [
+        1060,
+        534
+      ],
+      "errorPx": 0,
+      "shearWorldY": 155
+    },
+    {
+      "pin": 4,
+      "lowerJoinCenter": [
+        1225,
+        517.5
+      ],
+      "upperJoinCenter": [
+        1225,
+        517.5
+      ],
+      "errorPx": 0,
+      "shearWorldY": 155
+    },
+    {
+      "pin": 5,
+      "lowerJoinCenter": [
+        1390,
+        501
+      ],
+      "upperJoinCenter": [
+        1390,
+        501
+      ],
+      "errorPx": 0,
+      "shearWorldY": 155
+    }
+  ],
+  "stationaryTopMaximumMovementPx": 0,
+  "axialTurnProjectionMaximumErrorPx": 4.987544642e-05,
+  "expressionErrors": [],
+  "texts": [
+    {
+      "id": 51,
+      "text": "Shear line",
+      "font": "ArialMT",
+      "size": 30
+    },
+    {
+      "id": 50,
+      "text": "Bottom pin",
+      "font": "ArialMT",
+      "size": 30
+    },
+    {
+      "id": 49,
+      "text": "Top pin",
+      "font": "ArialMT",
+      "size": 30
+    },
+    {
+      "id": 48,
+      "text": "Spring",
+      "font": "ArialMT",
+      "size": 30
+    },
+    {
+      "id": 47,
+      "text": "The right heights.\rA clear turn.",
+      "font": "Arial-BoldMT",
+      "size": 52
+    },
+    {
+      "id": 46,
+      "text": "With the joins aligned, the plug can turn.",
+      "font": "Arial-BoldMT",
+      "size": 52
+    },
+    {
+      "id": 45,
+      "text": "Every join meets\rthe shear line.",
+      "font": "Arial-BoldMT",
+      "size": 52
+    },
+    {
+      "id": 44,
+      "text": "The key\u2019s cuts lift the pin pairs.",
+      "font": "Arial-BoldMT",
+      "size": 52
+    },
+    {
+      "id": 43,
+      "text": "Why the right key turns",
+      "font": "Arial-BoldMT",
+      "size": 52
+    }
+  ],
+  "layers": [
+    {
+      "id": 55,
+      "name": "AFT56_LEADER_SHEAR_LINE",
+      "index": 1,
+      "inPoint": 0.8,
+      "outPoint": 3,
+      "parentId": null
+    },
+    {
+      "id": 54,
+      "name": "AFT56_LEADER_BOTTOM_PIN",
+      "index": 2,
+      "inPoint": 0.8,
+      "outPoint": 3,
+      "parentId": null
+    },
+    {
+      "id": 53,
+      "name": "AFT56_LEADER_TOP_PIN",
+      "index": 3,
+      "inPoint": 0.8,
+      "outPoint": 3,
+      "parentId": null
+    },
+    {
+      "id": 52,
+      "name": "AFT56_LEADER_SPRING",
+      "index": 4,
+      "inPoint": 0.8,
+      "outPoint": 3,
+      "parentId": null
+    },
+    {
+      "id": 51,
+      "name": "AFT56_LABEL_SHEAR_LINE",
+      "index": 5,
+      "inPoint": 0.8,
+      "outPoint": 3,
+      "parentId": null
+    },
+    {
+      "id": 50,
+      "name": "AFT56_LABEL_BOTTOM_PIN",
+      "index": 6,
+      "inPoint": 0.8,
+      "outPoint": 3,
+      "parentId": null
+    },
+    {
+      "id": 49,
+      "name": "AFT56_LABEL_TOP_PIN",
+      "index": 7,
+      "inPoint": 0.8,
+      "outPoint": 3,
+      "parentId": null
+    },
+    {
+      "id": 48,
+      "name": "AFT56_LABEL_SPRING",
+      "index": 8,
+      "inPoint": 0.8,
+      "outPoint": 3,
+      "parentId": null
+    },
+    {
+      "id": 47,
+      "name": "AFT56_COPY_05",
+      "index": 9,
+      "inPoint": 18,
+      "outPoint": 22,
+      "parentId": null
+    },
+    {
+      "id": 46,
+      "name": "AFT56_COPY_04",
+      "index": 10,
+      "inPoint": 14,
+      "outPoint": 18,
+      "parentId": null
+    },
+    {
+      "id": 45,
+      "name": "AFT56_COPY_03",
+      "index": 11,
+      "inPoint": 10,
+      "outPoint": 14,
+      "parentId": null
+    },
+    {
+      "id": 44,
+      "name": "AFT56_COPY_02",
+      "index": 12,
+      "inPoint": 3,
+      "outPoint": 10,
+      "parentId": null
+    },
+    {
+      "id": 43,
+      "name": "AFT56_COPY_01",
+      "index": 13,
+      "inPoint": 0,
+      "outPoint": 3,
+      "parentId": null
+    },
+    {
+      "id": 42,
+      "name": "AFT56_ALIGNMENT_PROOF",
+      "index": 14,
+      "inPoint": 10,
+      "outPoint": 14.5,
+      "parentId": null
+    },
+    {
+      "id": 41,
+      "name": "AFT56_SHEAR_BOUNDARY",
+      "index": 15,
+      "inPoint": 0,
+      "outPoint": 22,
+      "parentId": null
+    },
+    {
+      "id": 40,
+      "name": "AFT56_HOUSING_STATIONARY_FRONT_RIM",
+      "index": 16,
+      "inPoint": 0,
+      "outPoint": 22,
+      "parentId": null
+    },
+    {
+      "id": 39,
+      "name": "AFT56_PLUG_ROTATING_LOWER_SHELL",
+      "index": 17,
+      "inPoint": 0,
+      "outPoint": 22,
+      "parentId": null
+    },
+    {
+      "id": 38,
+      "name": "AFT56_SPRING_5",
+      "index": 18,
+      "inPoint": 0,
+      "outPoint": 22,
+      "parentId": null
+    },
+    {
+      "id": 37,
+      "name": "AFT56_SPRING_4",
+      "index": 19,
+      "inPoint": 0,
+      "outPoint": 22,
+      "parentId": null
+    },
+    {
+      "id": 36,
+      "name": "AFT56_SPRING_3",
+      "index": 20,
+      "inPoint": 0,
+      "outPoint": 22,
+      "parentId": null
+    },
+    {
+      "id": 35,
+      "name": "AFT56_SPRING_2",
+      "index": 21,
+      "inPoint": 0,
+      "outPoint": 22,
+      "parentId": null
+    },
+    {
+      "id": 34,
+      "name": "AFT56_SPRING_1",
+      "index": 22,
+      "inPoint": 0,
+      "outPoint": 22,
+      "parentId": null
+    },
+    {
+      "id": 33,
+      "name": "AFT56_TOP_PIN_5",
+      "index": 23,
+      "inPoint": 0,
+      "outPoint": 22,
+      "parentId": null
+    },
+    {
+      "id": 32,
+      "name": "AFT56_TOP_PIN_4",
+      "index": 24,
+      "inPoint": 0,
+      "outPoint": 22,
+      "parentId": null
+    },
+    {
+      "id": 31,
+      "name": "AFT56_TOP_PIN_3",
+      "index": 25,
+      "inPoint": 0,
+      "outPoint": 22,
+      "parentId": null
+    },
+    {
+      "id": 30,
+      "name": "AFT56_TOP_PIN_2",
+      "index": 26,
+      "inPoint": 0,
+      "outPoint": 22,
+      "parentId": null
+    },
+    {
+      "id": 29,
+      "name": "AFT56_TOP_PIN_1",
+      "index": 27,
+      "inPoint": 0,
+      "outPoint": 22,
+      "parentId": null
+    },
+    {
+      "id": 28,
+      "name": "AFT56_BOTTOM_PIN_5",
+      "index": 28,
+      "inPoint": 0,
+      "outPoint": 22,
+      "parentId": null
+    },
+    {
+      "id": 27,
+      "name": "AFT56_BOTTOM_PIN_4",
+      "index": 29,
+      "inPoint": 0,
+      "outPoint": 22,
+      "parentId": null
+    },
+    {
+      "id": 26,
+      "name": "AFT56_BOTTOM_PIN_3",
+      "index": 30,
+      "inPoint": 0,
+      "outPoint": 22,
+      "parentId": null
+    },
+    {
+      "id": 25,
+      "name": "AFT56_BOTTOM_PIN_2",
+      "index": 31,
+      "inPoint": 0,
+      "outPoint": 22,
+      "parentId": null
+    },
+    {
+      "id": 24,
+      "name": "AFT56_BOTTOM_PIN_1",
+      "index": 32,
+      "inPoint": 0,
+      "outPoint": 22,
+      "parentId": null
+    },
+    {
+      "id": 23,
+      "name": "AFT56_KEY",
+      "index": 33,
+      "inPoint": 0,
+      "outPoint": 22,
+      "parentId": null
+    },
+    {
+      "id": 22,
+      "name": "AFT56_PLUG_FRONT_ANNULUS",
+      "index": 34,
+      "inPoint": 0,
+      "outPoint": 22,
+      "parentId": null
+    },
+    {
+      "id": 21,
+      "name": "AFT56_PLUG_REAR_CUTAWAY",
+      "index": 35,
+      "inPoint": 0,
+      "outPoint": 22,
+      "parentId": null
+    },
+    {
+      "id": 20,
+      "name": "AFT56_STATIONARY_PIN_CHAMBERS",
+      "index": 36,
+      "inPoint": 0,
+      "outPoint": 22,
+      "parentId": null
+    },
+    {
+      "id": 19,
+      "name": "AFT56_HOUSING_BACK",
+      "index": 37,
+      "inPoint": 0,
+      "outPoint": 22,
+      "parentId": null
+    },
+    {
+      "id": 18,
+      "name": "AFT56_GROUND_SHADOW",
+      "index": 38,
+      "inPoint": 0,
+      "outPoint": 22,
+      "parentId": null
+    },
+    {
+      "id": 17,
+      "name": "AFT56_CONTROLS",
+      "index": 39,
+      "inPoint": 0,
+      "outPoint": 22,
+      "parentId": null
+    },
+    {
+      "id": 15,
+      "name": "AFT56_DARK_STAGE",
+      "index": 40,
+      "inPoint": 0,
+      "outPoint": 22,
+      "parentId": null
+    }
+  ]
+}

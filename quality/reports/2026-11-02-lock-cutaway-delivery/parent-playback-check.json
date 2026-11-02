@@ -1,0 +1,21 @@
+{
+  "date": "2026-11-02",
+  "player": "QuickTime Player",
+  "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/delivery-v2-playback.mp4",
+  "sha256": "28c28ce5b895464c41fae28497044ea3db062840420842bba31b8c63d5c9148a",
+  "initialUIContention": "Stopped when QuickTime was being used for other clips; resumed only after Joe answered QuickTime is free now.",
+  "playbackObservedSeconds": [
+    0,
+    0.1925601750547046,
+    2.021881838074398,
+    7.221006564551423,
+    11.79431072210066,
+    16.46389496717724,
+    22
+  ],
+  "playedWithoutSeeking": true,
+  "endedPausedAtDuration": true,
+  "screenshotsInspected": true,
+  "visualFinding": "Expected opening/labels, insertion, emphasized alignment, axial turn and final copy were visible. No missing/clipped content or gross color defect observed in these sampled player views.",
+  "limits": "UI sampling during normal playback is not frame-by-frame perceptual proof, independent continuous human review or calibrated display-color equivalence. Silent approved movie; no audio stream/review."
+}

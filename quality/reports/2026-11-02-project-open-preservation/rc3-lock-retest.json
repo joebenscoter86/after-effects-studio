@@ -1,0 +1,1263 @@
+{
+  "label": "rc3-lock-retest",
+  "bundle": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/release/packages/planning-rc3-extracted/after-effects-studio",
+  "bundleHash": {
+    "sha256": "2ab935d0a98fcd9ce21d439f1bb5c0aefae184daf14274db4efcafd8ae5655f2",
+    "bytes": 1745772
+  },
+  "events": [
+    {
+      "at": "2026-11-02T21:50:58.793Z",
+      "tool": "ae_context",
+      "args": {},
+      "response": {
+        "ok": true,
+        "result": {
+          "project": {
+            "file": null,
+            "dirty": false,
+            "numItems": 0,
+            "bitsPerChannel": 16
+          },
+          "instance": null,
+          "activeComp": null,
+          "selectedLayers": [],
+          "helpers": [
+            "AE.findCompByNameOrId(nameOrId)",
+            "AE.findComps(nameOrIdOrPattern) \u2014 '*' glob supported",
+            "AE.findItemById(id)",
+            "AE.findItem(idOrName) \u2014 any project item",
+            "AE.findFolder(idOrName) \u2014 null/undefined = root folder",
+            "AE.findLayerInComp(comp, indexOrNameOrIdRef) \u2014 accepts { id: n } (stable Layer.id, AE 22+)",
+            "AE.findLayerById(comp, id)",
+            "AE.resolveLayers(comp, target) \u2014 index | name | { id: n } | 'selected' | 'all' | array of those",
+            "AE.snapshotKeys(prop) / AE.applyKeys(prop, keys) / AE.removeAllKeys(prop)",
+            "AE.setEase(prop, keyIndex, inInf, outInf, inSpeed?, outSpeed?) \u2014 dims/spatial handled",
+            "AE.writeValue(prop, value, time?) / AE.readValue(prop, time?) \u2014 separated-dimension safe, __kind values accepted",
+            "AE.offsetValue(prop, delta) \u2014 shift a value or every keyframe",
+            "AE.applyKeySpecs(prop, [{time, value, interp?}], {replace, interp, spatialTangents}) \u2014 keyframe.apply's engine",
+            "AE.moveAnchor(layer, [x, y]) \u2014 anchor move with position compensation",
+            "AE.layerRect(layer, time) / AE.pointInRect(rect, preset) \u2014 anchor presets on rendered bounds",
+            "AE.shapeGroupBounds(group, {time, includeStroke}) / AE.shapeLayerBounds(layer, opts)",
+            "AE.walkShapeContents(contents, fn) / AE.recolorContents(contents, opts) / AE.canonicalGroup(group, precision)",
+            "AE.geometryShape('ellipse'|'rect', center, size, roundness) \u2014 a Shape for masks/paths",
+            "AE.propertyAtPath(root, path) \u2014 null instead of throwing",
+            "AE.ownerLayer(prop) \u2014 the layer a property belongs to",
+            "AE.bakeKeysAtTime(root, time) \u2014 freeze every animated property below root",
+            "AE.layerIdSnapshot(comp) / AE.layersSince(comp, snap) \u2014 which layers a command created",
+            "AE.withSelection(comp, layers, fn) \u2014 run a menu command on exactly these layers, selection restored",
+            "AE.rect(shapeLayerOrGroup, [w,h], [x,y], {name, roundness, fill:[r,g,b], stroke, strokeWidth}) \u2014 group+path+style in one call",
+            "AE.ellipse(shapeLayerOrGroup, [w,h], [x,y], {name, fill, stroke, strokeWidth})",
+            "AE.ensureParentDir(path) \u2014 mkdir -p for an output file, returns the File",
+            "AE.itemTypeName(item) \u2014 'CompItem' | 'FootageItem' | 'FolderItem' | 'UnknownItem'",
+            "AE.serializeItemSummary(item)",
+            "AE.serializeLayerSummary(layer)",
+            "AE.serializeLayerFull(layer, opts) \u2014 opts.detail:'summary' drops default-value props",
+            "AE.serializeTransform(layer)",
+            "AE.serializePropertyGroup(group, depth, maxDepth, opts)",
+            "AE.serializeCompMarkers(comp)",
+            "AE.exportProject()",
+            "AE.importProject(doc, opts)",
+            "AE.safeGet(fn, fallback)",
+            "AE.valueToJson(val)"
+          ],
+          "es3Rules": [
+            "var only (no let/const)",
+            "function() {} only (no arrow =>)",
+            "string concat only (no template literals)",
+            "for(var i=0;i<n;i++) only (no for-of, no forEach/map/filter)",
+            "indexOf !== -1 (no includes/startsWith/endsWith)",
+            "NEVER chain ternaries: a ? b : c ? d : e parses LEFT-associative in ExtendScript \u2014 parenthesize or use if/else",
+            "log('msg') to push breadcrumbs",
+            "return <JSON-serializable> at end"
+          ],
+          "tips": [
+            "reparenting a layer that has keyframes: use layer.set_parent with jump:true (no transform compensation) \u2014 plain parent assignment rewrites values and corrupts keys",
+            "easing: keyframe.set_easing (op) or AE.setEase (eval) \u2014 both handle the spatial=1/per-dimension KeyframeEase bookkeeping",
+            "auditing a comp: ae_layer_info layerIndex:'all' with detail:'summary' skips default-value properties and includes key ease (speed/influence)",
+            "render queue output folders are auto-created on render.add_to_queue / render.set_output / render.start",
+            "many keys at once: keyframe.apply takes the whole list with per-key easing; its 'hold' only holds the OUT side, so a fade that ends in a hold key still fades",
+            "Position separated into X/Y (Separate Dimensions, or layers from 'Create Shapes from Vector Layer'): every write op and AE.writeValue route to the followers automatically",
+            "imported Illustrator layers: layer.convert_to_shapes (strips ' Outlines', can remove the source layer/footage); then shape.group_bounds / layer.split_groups to work per part",
+            "layer targets accept arrays everywhere they accept 'all' \u2014 [\"A\", \"B\", { id: 12 }] is one call",
+            "verifying motion: ae_render_frame times + contactSheet tiles the frames into one labelled PNG; analyze reports edge bands / content bounds; comp.sample reads values at several times",
+            "several After Effects instances (AfterFX.exe -m): each MCP server addresses ONE, chosen by AE_MCP_INSTANCE (instance id or open project file name); the response's instances[] lists what is live \u2014 if the project you need is open elsewhere, say so instead of editing the wrong one"
+          ],
+          "undoContract": [
+            "every ae_do / eval.run call is auto-wrapped in ONE undo group",
+            "one Ctrl+Z (or project.undo) reverts the entire call; batch.run = one call = one undo step",
+            "NEVER call app.beginUndoGroup/endUndoGroup in eval.run code \u2014 an unbalanced group corrupts undo for the session",
+            "undo/redo itself runs OUTSIDE the group: use project.undo (or command.execute 16/2035) as its own call \u2014 never inside batch.run, and never via eval.run",
+            "ae_save_project and files written to disk (rendered PNGs, exported JSON) are NOT undoable"
+          ],
+          "items": [],
+          "transport": {
+            "mode": "push"
+          },
+          "instances": []
+        },
+        "logs": [],
+        "durationMs": 247
+      }
+    },
+    {
+      "at": "2026-11-02T21:50:58.960Z",
+      "tool": "ae_version_info",
+      "args": {},
+      "response": {
+        "ok": true,
+        "result": {
+          "app": {
+            "version": "26.5x89",
+            "buildName": "26.5x89",
+            "buildNumber": 89,
+            "language": "en_US",
+            "memoryInUse": 2815564048,
+            "availableGPUs": 2
+          },
+          "capabilities": {
+            "saveFrameToPng": null,
+            "appEffects": true,
+            "bridgeTalk": true,
+            "socket": true
+          },
+          "project": {
+            "numItems": 0,
+            "file": null,
+            "dirty": false
+          },
+          "agent": null,
+          "server": {
+            "exportSchemaVersion": 2
+          }
+        },
+        "logs": [],
+        "durationMs": 166
+      }
+    },
+    {
+      "at": "2026-11-02T21:50:58.961Z",
+      "tool": "ae_catalog",
+      "args": {
+        "category": "eval"
+      },
+      "response": {
+        "ok": true,
+        "category": "eval",
+        "operations": [
+          {
+            "name": "eval.run",
+            "description": "Execute custom ExtendScript (ES3). LAST RESORT \u2014 check ae_catalog first for a dedicated operation. Code is a function body ending with `return <JSON-serializable>;`. AE.* helpers are in scope. `log(msg)` pushes breadcrumbs. The code already runs inside an automatic undo group (one Ctrl+Z reverts the call) \u2014 do NOT call app.beginUndoGroup/endUndoGroup yourself; an unbalanced group leaks past this call and corrupts undo for the whole session. Do NOT undo/redo from here either (app.executeCommand 16/2035): inside this call's group AE resolves them against it, so nothing is reverted \u2014 use the project.undo operation, which runs outside the group. Do NOT close/open/replace the project from here (app.open, app.newProject, app.project.close): the open undo group is orphaned at the project boundary, AE raises an async 'UndoGroup Mismatch' dialog, and undo stays broken for the session \u2014 use project.open / project.new, which run outside the group.",
+            "readOnly": false,
+            "params": [
+              {
+                "name": "code",
+                "type": "string",
+                "required": true,
+                "description": "ExtendScript function body"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "at": "2026-11-02T21:50:59.455Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "project.open",
+        "args": {
+          "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep",
+          "save": false
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "ok": true,
+          "numItems": 4,
+          "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep"
+        },
+        "context": {
+          "project": {
+            "numItems": 4,
+            "dirty": false,
+            "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep"
+          },
+          "instance": null,
+          "activeComp": {
+            "id": 1,
+            "name": "PIN_TUMBLER_EXPLAINER_v01",
+            "width": 1920,
+            "height": 1080,
+            "fps": 30,
+            "duration": 22,
+            "numLayers": 40
+          },
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 489
+      }
+    },
+    {
+      "at": "2026-11-02T21:51:01.207Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "eval.run",
+        "args": {
+          "code": "var c=AE.findCompByNameOrId(1);if(!c||c.name!==\"PIN_TUMBLER_EXPLAINER_v01\")throw Error(\"wrong owned comp\");c.time=12;var a=[];for(var i=1;i<=c.numLayers;i++){a.push(AE.serializeLayerFull(c.layer(i),{}));}return {id:c.id,name:c.name,width:c.width,height:c.height,duration:c.duration,fps:c.frameRate,layers:a};"
+        }
+      },
+      "responseSummary": {
+        "sha256": "bf6507c8461824f540cab1c4d2fbd72418cecc73b8d497b23fa84613c6773269",
+        "layers": 40,
+        "comp": {
+          "id": 1,
+          "name": "PIN_TUMBLER_EXPLAINER_v01",
+          "width": 1920,
+          "height": 1080,
+          "duration": 22,
+          "fps": 30
+        },
+        "serialization": "AE.serializeLayerFull at 12 seconds, canonical JSON of result; full trace retained locally"
+      }
+    },
+    {
+      "at": "2026-11-02T21:51:01.372Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "eval.run",
+        "args": {
+          "code": "var a=[];for(var i=1;i<=app.project.numItems;i++){a.push(app.project.item(i).name);}return {file:app.project.file?app.project.file.fsName:null,dirty:app.project.dirty,items:a,queue:app.project.renderQueue.numItems};"
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep",
+          "dirty": false,
+          "items": [
+            "Solids",
+            "AFT56_DARK_STAGE",
+            "Null 1",
+            "PIN_TUMBLER_EXPLAINER_v01"
+          ],
+          "queue": 0
+        },
+        "context": {
+          "project": {
+            "numItems": 4,
+            "dirty": false,
+            "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep"
+          },
+          "instance": null,
+          "activeComp": {
+            "id": 1,
+            "name": "PIN_TUMBLER_EXPLAINER_v01",
+            "width": 1920,
+            "height": 1080,
+            "fps": 30,
+            "duration": 22,
+            "numLayers": 40
+          },
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 164
+      }
+    },
+    {
+      "at": "2026-11-02T21:51:04.095Z",
+      "tool": "ae_render_frame",
+      "args": {
+        "compNameOrId": 1,
+        "times": [
+          1.2,
+          5.1,
+          9,
+          12,
+          15.733333333333333,
+          21.966666666666665
+        ],
+        "outPath": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/before.png",
+        "contactSheet": {
+          "columns": 3,
+          "thumbWidth": 480
+        },
+        "colorManaged": "off"
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "ok": true,
+          "frames": [
+            {
+              "ok": true,
+              "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/before_0.png",
+              "time": 1.2,
+              "compName": "PIN_TUMBLER_EXPLAINER_v01",
+              "size": [
+                1920,
+                1080
+              ],
+              "captureKind": "direct"
+            },
+            {
+              "ok": true,
+              "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/before_1.png",
+              "time": 5.1,
+              "compName": "PIN_TUMBLER_EXPLAINER_v01",
+              "size": [
+                1920,
+                1080
+              ],
+              "captureKind": "direct"
+            },
+            {
+              "ok": true,
+              "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/before_2.png",
+              "time": 9,
+              "compName": "PIN_TUMBLER_EXPLAINER_v01",
+              "size": [
+                1920,
+                1080
+              ],
+              "captureKind": "direct"
+            },
+            {
+              "ok": true,
+              "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/before_3.png",
+              "time": 12,
+              "compName": "PIN_TUMBLER_EXPLAINER_v01",
+              "size": [
+                1920,
+                1080
+              ],
+              "captureKind": "direct"
+            },
+            {
+              "ok": true,
+              "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/before_4.png",
+              "time": 15.7333333333333,
+              "compName": "PIN_TUMBLER_EXPLAINER_v01",
+              "size": [
+                1920,
+                1080
+              ],
+              "captureKind": "direct"
+            },
+            {
+              "ok": true,
+              "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/before_5.png",
+              "time": 21.9666666666667,
+              "compName": "PIN_TUMBLER_EXPLAINER_v01",
+              "size": [
+                1920,
+                1080
+              ],
+              "captureKind": "direct"
+            }
+          ],
+          "captureKind": "direct",
+          "compName": "PIN_TUMBLER_EXPLAINER_v01",
+          "workingSpace": "None",
+          "bitsPerChannel": 16,
+          "projectFile": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep",
+          "contactSheet": {
+            "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/before_sheet.png",
+            "size": [
+              1472,
+              604
+            ],
+            "columns": 3,
+            "rows": 2,
+            "thumbSize": [
+              480,
+              270
+            ],
+            "frames": 6
+          }
+        },
+        "logs": [],
+        "durationMs": 163
+      }
+    },
+    {
+      "at": "2026-11-02T21:51:04.342Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "render.add_to_queue",
+        "args": {
+          "comp": 1,
+          "outputPath": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/revalidated.mov"
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "ok": true,
+          "queueIndex": 1,
+          "compName": "PIN_TUMBLER_EXPLAINER_v01",
+          "outputPath": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/revalidated.mov"
+        },
+        "context": {
+          "project": {
+            "numItems": 4,
+            "dirty": true,
+            "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep"
+          },
+          "instance": null,
+          "activeComp": {
+            "id": 1,
+            "name": "PIN_TUMBLER_EXPLAINER_v01",
+            "width": 1920,
+            "height": 1080,
+            "fps": 30,
+            "duration": 22,
+            "numLayers": 40
+          },
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 246
+      }
+    },
+    {
+      "at": "2026-11-02T21:51:04.507Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "render.set_output",
+        "args": {
+          "queueIndex": 1,
+          "renderTemplate": "Best Settings",
+          "outputTemplate": "High Quality",
+          "outputPath": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/revalidated.mov"
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "ok": true,
+          "queueIndex": 1,
+          "comp": "PIN_TUMBLER_EXPLAINER_v01",
+          "timeSpanStart": 0,
+          "timeSpanDuration": 22,
+          "outputPath": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/revalidated.mov",
+          "warnings": []
+        },
+        "context": {
+          "project": {
+            "numItems": 4,
+            "dirty": true,
+            "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep"
+          },
+          "instance": null,
+          "activeComp": {
+            "id": 1,
+            "name": "PIN_TUMBLER_EXPLAINER_v01",
+            "width": 1920,
+            "height": 1080,
+            "fps": 30,
+            "duration": 22,
+            "numLayers": 40
+          },
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 164
+      }
+    },
+    {
+      "at": "2026-11-02T21:51:20.898Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "render.start",
+        "args": {}
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "ok": true,
+          "rendered": 1,
+          "error": null,
+          "items": [
+            {
+              "index": 1,
+              "done": true,
+              "verified": true,
+              "outputs": [
+                {
+                  "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/revalidated.mov",
+                  "exists": true,
+                  "bytes": 258698660,
+                  "modifiedMs": 1793656280000,
+                  "newlyWritten": true
+                }
+              ]
+            }
+          ]
+        },
+        "context": {
+          "project": {
+            "numItems": 4,
+            "dirty": true,
+            "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep"
+          },
+          "instance": null,
+          "activeComp": {
+            "id": 1,
+            "name": "PIN_TUMBLER_EXPLAINER_v01",
+            "width": 1920,
+            "height": 1080,
+            "fps": 30,
+            "duration": 22,
+            "numLayers": 40
+          },
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 16389
+      }
+    },
+    {
+      "at": "2026-11-02T21:51:21.068Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "eval.run",
+        "args": {
+          "code": "var a=[];for(var i=1;i<=app.project.numItems;i++){a.push(app.project.item(i).name);}return {file:app.project.file?app.project.file.fsName:null,dirty:app.project.dirty,items:a,queue:app.project.renderQueue.numItems};"
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep",
+          "dirty": true,
+          "items": [
+            "Solids",
+            "AFT56_DARK_STAGE",
+            "Null 1",
+            "PIN_TUMBLER_EXPLAINER_v01"
+          ],
+          "queue": 1
+        },
+        "context": {
+          "project": {
+            "numItems": 4,
+            "dirty": true,
+            "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep"
+          },
+          "instance": null,
+          "activeComp": {
+            "id": 1,
+            "name": "PIN_TUMBLER_EXPLAINER_v01",
+            "width": 1920,
+            "height": 1080,
+            "fps": 30,
+            "duration": 22,
+            "numLayers": 40
+          },
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 165
+      }
+    },
+    {
+      "at": "2026-11-02T21:51:21.555Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "project.open",
+        "args": {
+          "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep",
+          "save": false
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "ok": true,
+          "numItems": 4,
+          "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep"
+        },
+        "context": {
+          "project": {
+            "numItems": 4,
+            "dirty": false,
+            "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep"
+          },
+          "instance": null,
+          "activeComp": {
+            "id": 1,
+            "name": "PIN_TUMBLER_EXPLAINER_v01",
+            "width": 1920,
+            "height": 1080,
+            "fps": 30,
+            "duration": 22,
+            "numLayers": 40
+          },
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 486
+      }
+    },
+    {
+      "at": "2026-11-02T21:51:21.723Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "eval.run",
+        "args": {
+          "code": "var a=[];for(var i=1;i<=app.project.numItems;i++){a.push(app.project.item(i).name);}return {file:app.project.file?app.project.file.fsName:null,dirty:app.project.dirty,items:a,queue:app.project.renderQueue.numItems};"
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep",
+          "dirty": false,
+          "items": [
+            "Solids",
+            "AFT56_DARK_STAGE",
+            "Null 1",
+            "PIN_TUMBLER_EXPLAINER_v01"
+          ],
+          "queue": 0
+        },
+        "context": {
+          "project": {
+            "numItems": 4,
+            "dirty": false,
+            "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep"
+          },
+          "instance": null,
+          "activeComp": {
+            "id": 1,
+            "name": "PIN_TUMBLER_EXPLAINER_v01",
+            "width": 1920,
+            "height": 1080,
+            "fps": 30,
+            "duration": 22,
+            "numLayers": 40
+          },
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 165
+      }
+    },
+    {
+      "at": "2026-11-02T21:51:23.438Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "eval.run",
+        "args": {
+          "code": "var c=AE.findCompByNameOrId(1);if(!c||c.name!==\"PIN_TUMBLER_EXPLAINER_v01\")throw Error(\"wrong owned comp\");c.time=12;var a=[];for(var i=1;i<=c.numLayers;i++){a.push(AE.serializeLayerFull(c.layer(i),{}));}return {id:c.id,name:c.name,width:c.width,height:c.height,duration:c.duration,fps:c.frameRate,layers:a};"
+        }
+      },
+      "responseSummary": {
+        "sha256": "bf6507c8461824f540cab1c4d2fbd72418cecc73b8d497b23fa84613c6773269",
+        "layers": 40,
+        "comp": {
+          "id": 1,
+          "name": "PIN_TUMBLER_EXPLAINER_v01",
+          "width": 1920,
+          "height": 1080,
+          "duration": 22,
+          "fps": 30
+        },
+        "serialization": "AE.serializeLayerFull at 12 seconds, canonical JSON of result; full trace retained locally"
+      }
+    },
+    {
+      "at": "2026-11-02T21:51:25.920Z",
+      "tool": "ae_render_frame",
+      "args": {
+        "compNameOrId": 1,
+        "times": [
+          1.2,
+          5.1,
+          9,
+          12,
+          15.733333333333333,
+          21.966666666666665
+        ],
+        "outPath": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/after.png",
+        "contactSheet": {
+          "columns": 3,
+          "thumbWidth": 480
+        },
+        "colorManaged": "off"
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "ok": true,
+          "frames": [
+            {
+              "ok": true,
+              "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/after_0.png",
+              "time": 1.2,
+              "compName": "PIN_TUMBLER_EXPLAINER_v01",
+              "size": [
+                1920,
+                1080
+              ],
+              "captureKind": "direct"
+            },
+            {
+              "ok": true,
+              "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/after_1.png",
+              "time": 5.1,
+              "compName": "PIN_TUMBLER_EXPLAINER_v01",
+              "size": [
+                1920,
+                1080
+              ],
+              "captureKind": "direct"
+            },
+            {
+              "ok": true,
+              "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/after_2.png",
+              "time": 9,
+              "compName": "PIN_TUMBLER_EXPLAINER_v01",
+              "size": [
+                1920,
+                1080
+              ],
+              "captureKind": "direct"
+            },
+            {
+              "ok": true,
+              "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/after_3.png",
+              "time": 12,
+              "compName": "PIN_TUMBLER_EXPLAINER_v01",
+              "size": [
+                1920,
+                1080
+              ],
+              "captureKind": "direct"
+            },
+            {
+              "ok": true,
+              "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/after_4.png",
+              "time": 15.7333333333333,
+              "compName": "PIN_TUMBLER_EXPLAINER_v01",
+              "size": [
+                1920,
+                1080
+              ],
+              "captureKind": "direct"
+            },
+            {
+              "ok": true,
+              "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/after_5.png",
+              "time": 21.9666666666667,
+              "compName": "PIN_TUMBLER_EXPLAINER_v01",
+              "size": [
+                1920,
+                1080
+              ],
+              "captureKind": "direct"
+            }
+          ],
+          "captureKind": "direct",
+          "compName": "PIN_TUMBLER_EXPLAINER_v01",
+          "workingSpace": "None",
+          "bitsPerChannel": 16,
+          "projectFile": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep",
+          "contactSheet": {
+            "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/after_sheet.png",
+            "size": [
+              1472,
+              604
+            ],
+            "columns": 3,
+            "rows": 2,
+            "thumbSize": [
+              480,
+              270
+            ],
+            "frames": 6
+          }
+        },
+        "logs": [],
+        "durationMs": 163
+      }
+    },
+    {
+      "at": "2026-11-02T21:51:26.089Z",
+      "tool": "ae_do",
+      "args": {
+        "operation": "eval.run",
+        "args": {
+          "code": "var c=AE.findCompByNameOrId(1);c.time=12;c.openInViewer();return {comp:c.id,time:c.time};"
+        }
+      },
+      "response": {
+        "ok": true,
+        "result": {
+          "comp": 1,
+          "time": 12
+        },
+        "context": {
+          "project": {
+            "numItems": 4,
+            "dirty": false,
+            "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep"
+          },
+          "instance": null,
+          "activeComp": {
+            "id": 1,
+            "name": "PIN_TUMBLER_EXPLAINER_v01",
+            "width": 1920,
+            "height": 1080,
+            "fps": 30,
+            "duration": 22,
+            "numLayers": 40
+          },
+          "selectedLayers": []
+        },
+        "logs": [],
+        "durationMs": 163
+      }
+    }
+  ],
+  "cases": [],
+  "initialProject": {
+    "file": null,
+    "dirty": false,
+    "numItems": 0,
+    "bitsPerChannel": 16
+  },
+  "version": {
+    "ok": true,
+    "result": {
+      "app": {
+        "version": "26.5x89",
+        "buildName": "26.5x89",
+        "buildNumber": 89,
+        "language": "en_US",
+        "memoryInUse": 2815564048,
+        "availableGPUs": 2
+      },
+      "capabilities": {
+        "saveFrameToPng": null,
+        "appEffects": true,
+        "bridgeTalk": true,
+        "socket": true
+      },
+      "project": {
+        "numItems": 0,
+        "file": null,
+        "dirty": false
+      },
+      "agent": null,
+      "server": {
+        "exportSchemaVersion": 2
+      }
+    },
+    "logs": [],
+    "durationMs": 166
+  },
+  "catalog": {
+    "ok": true,
+    "category": "eval",
+    "operations": [
+      {
+        "name": "eval.run",
+        "description": "Execute custom ExtendScript (ES3). LAST RESORT \u2014 check ae_catalog first for a dedicated operation. Code is a function body ending with `return <JSON-serializable>;`. AE.* helpers are in scope. `log(msg)` pushes breadcrumbs. The code already runs inside an automatic undo group (one Ctrl+Z reverts the call) \u2014 do NOT call app.beginUndoGroup/endUndoGroup yourself; an unbalanced group leaks past this call and corrupts undo for the whole session. Do NOT undo/redo from here either (app.executeCommand 16/2035): inside this call's group AE resolves them against it, so nothing is reverted \u2014 use the project.undo operation, which runs outside the group. Do NOT close/open/replace the project from here (app.open, app.newProject, app.project.close): the open undo group is orphaned at the project boundary, AE raises an async 'UndoGroup Mismatch' dialog, and undo stays broken for the session \u2014 use project.open / project.new, which run outside the group.",
+        "readOnly": false,
+        "params": [
+          {
+            "name": "code",
+            "type": "string",
+            "required": true,
+            "description": "ExtendScript function body"
+          }
+        ]
+      }
+    ]
+  },
+  "sourceBefore": {
+    "sha256": "6745dc3aadcfe8d09ac9f66338fab7b5654ca18b7c5676624e6d3fa78dec5ed1",
+    "bytes": 1377929
+  },
+  "copyBefore": {
+    "sha256": "6745dc3aadcfe8d09ac9f66338fab7b5654ca18b7c5676624e6d3fa78dec5ed1",
+    "bytes": 1377929
+  },
+  "beforeState": {
+    "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep",
+    "dirty": false,
+    "items": [
+      "Solids",
+      "AFT56_DARK_STAGE",
+      "Null 1",
+      "PIN_TUMBLER_EXPLAINER_v01"
+    ],
+    "queue": 0
+  },
+  "framesBefore": {
+    "ok": true,
+    "result": {
+      "ok": true,
+      "frames": [
+        {
+          "ok": true,
+          "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/before_0.png",
+          "time": 1.2,
+          "compName": "PIN_TUMBLER_EXPLAINER_v01",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct"
+        },
+        {
+          "ok": true,
+          "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/before_1.png",
+          "time": 5.1,
+          "compName": "PIN_TUMBLER_EXPLAINER_v01",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct"
+        },
+        {
+          "ok": true,
+          "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/before_2.png",
+          "time": 9,
+          "compName": "PIN_TUMBLER_EXPLAINER_v01",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct"
+        },
+        {
+          "ok": true,
+          "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/before_3.png",
+          "time": 12,
+          "compName": "PIN_TUMBLER_EXPLAINER_v01",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct"
+        },
+        {
+          "ok": true,
+          "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/before_4.png",
+          "time": 15.7333333333333,
+          "compName": "PIN_TUMBLER_EXPLAINER_v01",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct"
+        },
+        {
+          "ok": true,
+          "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/before_5.png",
+          "time": 21.9666666666667,
+          "compName": "PIN_TUMBLER_EXPLAINER_v01",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct"
+        }
+      ],
+      "captureKind": "direct",
+      "compName": "PIN_TUMBLER_EXPLAINER_v01",
+      "workingSpace": "None",
+      "bitsPerChannel": 16,
+      "projectFile": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep",
+      "contactSheet": {
+        "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/before_sheet.png",
+        "size": [
+          1472,
+          604
+        ],
+        "columns": 3,
+        "rows": 2,
+        "thumbSize": [
+          480,
+          270
+        ],
+        "frames": 6
+      }
+    },
+    "logs": [],
+    "durationMs": 163
+  },
+  "addQueue": {
+    "ok": true,
+    "result": {
+      "ok": true,
+      "queueIndex": 1,
+      "compName": "PIN_TUMBLER_EXPLAINER_v01",
+      "outputPath": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/revalidated.mov"
+    },
+    "context": {
+      "project": {
+        "numItems": 4,
+        "dirty": true,
+        "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep"
+      },
+      "instance": null,
+      "activeComp": {
+        "id": 1,
+        "name": "PIN_TUMBLER_EXPLAINER_v01",
+        "width": 1920,
+        "height": 1080,
+        "fps": 30,
+        "duration": 22,
+        "numLayers": 40
+      },
+      "selectedLayers": []
+    },
+    "logs": [],
+    "durationMs": 246
+  },
+  "render": {
+    "ok": true,
+    "result": {
+      "ok": true,
+      "rendered": 1,
+      "error": null,
+      "items": [
+        {
+          "index": 1,
+          "done": true,
+          "verified": true,
+          "outputs": [
+            {
+              "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/revalidated.mov",
+              "exists": true,
+              "bytes": 258698660,
+              "modifiedMs": 1793656280000,
+              "newlyWritten": true
+            }
+          ]
+        }
+      ]
+    },
+    "context": {
+      "project": {
+        "numItems": 4,
+        "dirty": true,
+        "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep"
+      },
+      "instance": null,
+      "activeComp": {
+        "id": 1,
+        "name": "PIN_TUMBLER_EXPLAINER_v01",
+        "width": 1920,
+        "height": 1080,
+        "fps": 30,
+        "duration": 22,
+        "numLayers": 40
+      },
+      "selectedLayers": []
+    },
+    "logs": [],
+    "durationMs": 16389
+  },
+  "afterRenderHash": {
+    "sha256": "6745dc3aadcfe8d09ac9f66338fab7b5654ca18b7c5676624e6d3fa78dec5ed1",
+    "bytes": 1377929
+  },
+  "afterRenderState": {
+    "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep",
+    "dirty": true,
+    "items": [
+      "Solids",
+      "AFT56_DARK_STAGE",
+      "Null 1",
+      "PIN_TUMBLER_EXPLAINER_v01"
+    ],
+    "queue": 1
+  },
+  "reopen": {
+    "ok": true,
+    "result": {
+      "ok": true,
+      "numItems": 4,
+      "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep"
+    },
+    "context": {
+      "project": {
+        "numItems": 4,
+        "dirty": false,
+        "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep"
+      },
+      "instance": null,
+      "activeComp": {
+        "id": 1,
+        "name": "PIN_TUMBLER_EXPLAINER_v01",
+        "width": 1920,
+        "height": 1080,
+        "fps": 30,
+        "duration": 22,
+        "numLayers": 40
+      },
+      "selectedLayers": []
+    },
+    "logs": [],
+    "durationMs": 486
+  },
+  "afterReopenHash": {
+    "sha256": "6745dc3aadcfe8d09ac9f66338fab7b5654ca18b7c5676624e6d3fa78dec5ed1",
+    "bytes": 1377929
+  },
+  "afterReopenState": {
+    "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep",
+    "dirty": false,
+    "items": [
+      "Solids",
+      "AFT56_DARK_STAGE",
+      "Null 1",
+      "PIN_TUMBLER_EXPLAINER_v01"
+    ],
+    "queue": 0
+  },
+  "framesAfter": {
+    "ok": true,
+    "result": {
+      "ok": true,
+      "frames": [
+        {
+          "ok": true,
+          "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/after_0.png",
+          "time": 1.2,
+          "compName": "PIN_TUMBLER_EXPLAINER_v01",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct"
+        },
+        {
+          "ok": true,
+          "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/after_1.png",
+          "time": 5.1,
+          "compName": "PIN_TUMBLER_EXPLAINER_v01",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct"
+        },
+        {
+          "ok": true,
+          "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/after_2.png",
+          "time": 9,
+          "compName": "PIN_TUMBLER_EXPLAINER_v01",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct"
+        },
+        {
+          "ok": true,
+          "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/after_3.png",
+          "time": 12,
+          "compName": "PIN_TUMBLER_EXPLAINER_v01",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct"
+        },
+        {
+          "ok": true,
+          "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/after_4.png",
+          "time": 15.7333333333333,
+          "compName": "PIN_TUMBLER_EXPLAINER_v01",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct"
+        },
+        {
+          "ok": true,
+          "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/after_5.png",
+          "time": 21.9666666666667,
+          "compName": "PIN_TUMBLER_EXPLAINER_v01",
+          "size": [
+            1920,
+            1080
+          ],
+          "captureKind": "direct"
+        }
+      ],
+      "captureKind": "direct",
+      "compName": "PIN_TUMBLER_EXPLAINER_v01",
+      "workingSpace": "None",
+      "bitsPerChannel": 16,
+      "projectFile": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/pin-tumbler-observed-v2-revalidated.aep",
+      "contactSheet": {
+        "writtenTo": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/after_sheet.png",
+        "size": [
+          1472,
+          604
+        ],
+        "columns": 3,
+        "rows": 2,
+        "thumbSize": [
+          480,
+          270
+        ],
+        "frames": 6
+      }
+    },
+    "logs": [],
+    "durationMs": 163
+  },
+  "nativeEqual": true,
+  "filePreserved": true,
+  "sourceAfter": {
+    "sha256": "6745dc3aadcfe8d09ac9f66338fab7b5654ca18b7c5676624e6d3fa78dec5ed1",
+    "bytes": 1377929
+  },
+  "sourcePreserved": true,
+  "finished": true,
+  "stderr": "[mcp-aftereffects] policy: readonly=off, categories=all, eval.run=ENABLED\n[mcp-aftereffects] mailbox: /var/folders/b2/tqg5qx251g96r6mtk4sysysc0000gn/T/mcp-aftereffects/runtime\n[mcp-aftereffects] instance: none registered yet \u2014 calls launch AfterFX.exe -r into the running After Effects (instances started with -m need the agent: `mcp-aftereffects install-agent`)\n[mcp-aftereffects] WRITE ACCESS IS ON \u2014 tools can create, mutate and delete project content. Set AE_MCP_READONLY=1 for inspection-only sessions.\n",
+  "rawEvidence": {
+    "path": "quality/renders/2026-11-02-project-open-preservation/rc3-lock-retest/native-full-trace.json",
+    "sha256": "c5291b95f78e03449abca879f1963efb1708791c728d8419f6cf0ecaa52ec459",
+    "bytes": 24732519
+  },
+  "nativeBeforeSummary": {
+    "sha256": "bf6507c8461824f540cab1c4d2fbd72418cecc73b8d497b23fa84613c6773269",
+    "layers": 40,
+    "comp": {
+      "id": 1,
+      "name": "PIN_TUMBLER_EXPLAINER_v01",
+      "width": 1920,
+      "height": 1080,
+      "duration": 22,
+      "fps": 30
+    },
+    "serialization": "AE.serializeLayerFull at 12 seconds, canonical JSON of result; full trace retained locally"
+  },
+  "nativeAfterSummary": {
+    "sha256": "bf6507c8461824f540cab1c4d2fbd72418cecc73b8d497b23fa84613c6773269",
+    "layers": 40,
+    "comp": {
+      "id": 1,
+      "name": "PIN_TUMBLER_EXPLAINER_v01",
+      "width": 1920,
+      "height": 1080,
+      "duration": 22,
+      "fps": 30
+    },
+    "serialization": "AE.serializeLayerFull at 12 seconds, canonical JSON of result; full trace retained locally"
+  }
+}

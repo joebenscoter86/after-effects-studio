@@ -1,0 +1,613 @@
+{
+  "candidate": {
+    "name": "after-effects-studio@aft56-local-test",
+    "version": "0.2.1-rc.2+codex.20261102",
+    "archiveSha256": "16b8ea9dc200d8c315b03fb3b5546bb4ac85d95a699f128c7986df9ce4ab7b4d",
+    "controller": "aft56_candidate",
+    "binding": "evaluator invocation-scoped explicit stdio"
+  },
+  "nativeEditability": {
+    "ok": true,
+    "result": {
+      "compId": 1,
+      "name": "PIN_TUMBLER_EXPLAINER_v01",
+      "layerCount": 40,
+      "shapeLayers": 29,
+      "textLayers": 9,
+      "nullLayers": 1,
+      "paths": 186,
+      "keyframes": 161,
+      "expressions": 144,
+      "errors": [],
+      "layers": [
+        {
+          "id": 55,
+          "name": "AFT56_LEADER_SHEAR_LINE",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 54,
+          "name": "AFT56_LEADER_BOTTOM_PIN",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 53,
+          "name": "AFT56_LEADER_TOP_PIN",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 52,
+          "name": "AFT56_LEADER_SPRING",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 51,
+          "name": "AFT56_LABEL_SHEAR_LINE",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 50,
+          "name": "AFT56_LABEL_BOTTOM_PIN",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 49,
+          "name": "AFT56_LABEL_TOP_PIN",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 48,
+          "name": "AFT56_LABEL_SPRING",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 47,
+          "name": "AFT56_COPY_05",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 46,
+          "name": "AFT56_COPY_04",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 45,
+          "name": "AFT56_COPY_03",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 44,
+          "name": "AFT56_COPY_02",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 43,
+          "name": "AFT56_COPY_01",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 42,
+          "name": "AFT56_ALIGNMENT_PROOF",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 41,
+          "name": "AFT56_SHEAR_BOUNDARY",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 40,
+          "name": "AFT56_HOUSING_STATIONARY_FRONT_RIM",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 39,
+          "name": "AFT56_PLUG_ROTATING_LOWER_SHELL",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 38,
+          "name": "AFT56_SPRING_5",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 37,
+          "name": "AFT56_SPRING_4",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 36,
+          "name": "AFT56_SPRING_3",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 35,
+          "name": "AFT56_SPRING_2",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 34,
+          "name": "AFT56_SPRING_1",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 33,
+          "name": "AFT56_TOP_PIN_5",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 32,
+          "name": "AFT56_TOP_PIN_4",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 31,
+          "name": "AFT56_TOP_PIN_3",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 30,
+          "name": "AFT56_TOP_PIN_2",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 29,
+          "name": "AFT56_TOP_PIN_1",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 28,
+          "name": "AFT56_BOTTOM_PIN_5",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 27,
+          "name": "AFT56_BOTTOM_PIN_4",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 26,
+          "name": "AFT56_BOTTOM_PIN_3",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 25,
+          "name": "AFT56_BOTTOM_PIN_2",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 24,
+          "name": "AFT56_BOTTOM_PIN_1",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 23,
+          "name": "AFT56_KEY",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 22,
+          "name": "AFT56_PLUG_FRONT_ANNULUS",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 21,
+          "name": "AFT56_PLUG_REAR_CUTAWAY",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 20,
+          "name": "AFT56_STATIONARY_PIN_CHAMBERS",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 19,
+          "name": "AFT56_HOUSING_BACK",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 18,
+          "name": "AFT56_GROUND_SHADOW",
+          "locked": false,
+          "sourceId": null
+        },
+        {
+          "id": 17,
+          "name": "AFT56_CONTROLS",
+          "locked": false,
+          "sourceId": 16
+        },
+        {
+          "id": 15,
+          "name": "AFT56_DARK_STAGE",
+          "locked": false,
+          "sourceId": 14
+        }
+      ],
+      "text": [
+        {
+          "id": 51,
+          "text": "Shear line",
+          "font": "ArialMT",
+          "fontSize": 30,
+          "substitute": false
+        },
+        {
+          "id": 50,
+          "text": "Bottom pin",
+          "font": "ArialMT",
+          "fontSize": 30,
+          "substitute": false
+        },
+        {
+          "id": 49,
+          "text": "Top pin",
+          "font": "ArialMT",
+          "fontSize": 30,
+          "substitute": false
+        },
+        {
+          "id": 48,
+          "text": "Spring",
+          "font": "ArialMT",
+          "fontSize": 30,
+          "substitute": false
+        },
+        {
+          "id": 47,
+          "text": "The right heights.\rA clear turn.",
+          "font": "Arial-BoldMT",
+          "fontSize": 52,
+          "substitute": false
+        },
+        {
+          "id": 46,
+          "text": "With the joins aligned, the plug can turn.",
+          "font": "Arial-BoldMT",
+          "fontSize": 52,
+          "substitute": false
+        },
+        {
+          "id": 45,
+          "text": "Every join meets\rthe shear line.",
+          "font": "Arial-BoldMT",
+          "fontSize": 52,
+          "substitute": false
+        },
+        {
+          "id": 44,
+          "text": "The key\u2019s cuts lift the pin pairs.",
+          "font": "Arial-BoldMT",
+          "fontSize": 52,
+          "substitute": false
+        },
+        {
+          "id": 43,
+          "text": "Why the right key turns",
+          "font": "Arial-BoldMT",
+          "fontSize": 52,
+          "substitute": false
+        }
+      ],
+      "dependencies": [
+        {
+          "id": 14,
+          "name": "AFT56_DARK_STAGE",
+          "file": null,
+          "missing": false,
+          "sourceType": "[object SolidSource]"
+        },
+        {
+          "id": 16,
+          "name": "Null 1",
+          "file": null,
+          "missing": false,
+          "sourceType": "[object SolidSource]"
+        }
+      ],
+      "queueItems": 0,
+      "workingSpace": "None"
+    },
+    "context": {
+      "project": {
+        "numItems": 4,
+        "dirty": false,
+        "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/pin-tumbler-v2.aep"
+      },
+      "instance": null,
+      "activeComp": {
+        "id": 1,
+        "name": "PIN_TUMBLER_EXPLAINER_v01",
+        "width": 1920,
+        "height": 1080,
+        "fps": 30,
+        "duration": 22,
+        "numLayers": 40
+      },
+      "selectedLayers": []
+    },
+    "logs": [],
+    "durationMs": 898
+  },
+  "renderSettings": {
+    "ok": true,
+    "result": {
+      "ok": true,
+      "queueIndex": 1,
+      "comp": "PIN_TUMBLER_EXPLAINER_v01",
+      "renderSettings": {
+        "3:2 Pulldown": "Off",
+        "Color Depth": "Current Settings",
+        "Disk Cache": "Read Only",
+        "Effects": "Current Settings",
+        "Field Render": "Off",
+        "Frame Blending": "On for Checked Layers",
+        "Frame Rate": "Use comp's frame rate",
+        "Guide Layers": "All Off",
+        "Motion Blur": "On for Checked Layers",
+        "Proxy Use": "Use No Proxies",
+        "Quality": "Best",
+        "Resolution": "Full",
+        "Skip Existing Files": "false",
+        "Solo Switches": "Current Settings",
+        "Time Span": "Custom",
+        "Time Span Duration": "22.0",
+        "Time Span End": "22.0",
+        "Time Span Start": "0.0",
+        "Use comp's frame rate": "30.0",
+        "Use this frame rate": "30.0"
+      },
+      "outputModules": [
+        {
+          "index": 1,
+          "name": "High Quality",
+          "settings": {
+            "Audio Bit Depth": "16 Bit",
+            "Audio Channels": "Stereo",
+            "Audio Sample Rate": "48.000 kHz",
+            "Channels": "RGB",
+            "Color": "Premultiplied (Matted)",
+            "Crop": "false",
+            "Crop Bottom": "0",
+            "Crop Left": "0",
+            "Crop Right": "0",
+            "Crop Top": "0",
+            "Depth": "Millions of Colors",
+            "Format": "QuickTime",
+            "Include Project Link": "true",
+            "Include Source XMP Metadata": "false",
+            "Lock Aspect Ratio": "true",
+            "Output Audio": "Auto",
+            "Output File Info": {
+              "Full Flat Path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/delivery-v2-intermediate.mov",
+              "Base Path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway",
+              "Subfolder Path": "",
+              "File Name": "delivery-v2-intermediate.mov",
+              "File Template": "delivery-v2-intermediate.[fileExtension]"
+            },
+            "Post-Render Action": "None",
+            "Resize": "false",
+            "Resize Quality": "High",
+            "Resize to": "HD  \u2022  1920x1080 \u2022 24 fps",
+            "Starting #": "0",
+            "Use Comp Frame Number": "true",
+            "Use Region of Interest": "false",
+            "Video Output": "true"
+          }
+        }
+      ]
+    },
+    "context": {
+      "project": {
+        "numItems": 4,
+        "dirty": true,
+        "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/pin-tumbler-v2.aep"
+      },
+      "instance": null,
+      "activeComp": {
+        "id": 1,
+        "name": "PIN_TUMBLER_EXPLAINER_v01",
+        "width": 1920,
+        "height": 1080,
+        "fps": 30,
+        "duration": 22,
+        "numLayers": 40
+      },
+      "selectedLayers": []
+    },
+    "logs": [],
+    "durationMs": 417
+  },
+  "nativeRender": {
+    "ok": true,
+    "result": {
+      "ok": true,
+      "rendered": 1,
+      "error": null,
+      "items": [
+        {
+          "index": 1,
+          "done": true,
+          "verified": true,
+          "outputs": [
+            {
+              "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/delivery-v2-intermediate.mov",
+              "exists": true,
+              "bytes": 258695780,
+              "modifiedMs": 1793652734000,
+              "newlyWritten": true
+            }
+          ]
+        }
+      ]
+    },
+    "context": {
+      "project": {
+        "numItems": 4,
+        "dirty": true,
+        "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/pin-tumbler-v2.aep"
+      },
+      "instance": null,
+      "activeComp": {
+        "id": 1,
+        "name": "PIN_TUMBLER_EXPLAINER_v01",
+        "width": 1920,
+        "height": 1080,
+        "fps": 30,
+        "duration": 22,
+        "numLayers": 40
+      },
+      "selectedLayers": []
+    },
+    "logs": [],
+    "durationMs": 147060
+  },
+  "humanPlaybackReviewed": false,
+  "creativeChanges": false,
+  "firstReopenState": {
+    "ok": true,
+    "result": {
+      "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/pin-tumbler-v2.aep",
+      "dirty": false,
+      "queueItems": 1,
+      "compId": 1,
+      "name": "PIN_TUMBLER_EXPLAINER_v01",
+      "time": 12,
+      "layers": 40,
+      "activeCompId": 1,
+      "controllerId": 17,
+      "controls": [
+        {
+          "name": "AFT56_Key insertion",
+          "matchName": "ADBE Slider Control",
+          "keyCount": 4,
+          "expressionEnabled": false
+        },
+        {
+          "name": "AFT56_Axial turn degrees",
+          "matchName": "ADBE Slider Control",
+          "keyCount": 2,
+          "expressionEnabled": false
+        },
+        {
+          "name": "AFT56_Pin 1 tip",
+          "matchName": "ADBE Slider Control",
+          "keyCount": 0,
+          "expressionEnabled": true
+        },
+        {
+          "name": "AFT56_Pin 2 tip",
+          "matchName": "ADBE Slider Control",
+          "keyCount": 0,
+          "expressionEnabled": true
+        },
+        {
+          "name": "AFT56_Pin 3 tip",
+          "matchName": "ADBE Slider Control",
+          "keyCount": 0,
+          "expressionEnabled": true
+        },
+        {
+          "name": "AFT56_Pin 4 tip",
+          "matchName": "ADBE Slider Control",
+          "keyCount": 0,
+          "expressionEnabled": true
+        },
+        {
+          "name": "AFT56_Pin 5 tip",
+          "matchName": "ADBE Slider Control",
+          "keyCount": 0,
+          "expressionEnabled": true
+        }
+      ]
+    },
+    "context": {
+      "project": {
+        "numItems": 4,
+        "dirty": false,
+        "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/pin-tumbler-v2.aep"
+      },
+      "instance": null,
+      "activeComp": {
+        "id": 1,
+        "name": "PIN_TUMBLER_EXPLAINER_v01",
+        "width": 1920,
+        "height": 1080,
+        "fps": 30,
+        "duration": 22,
+        "numLayers": 40
+      },
+      "selectedLayers": []
+    },
+    "logs": [],
+    "durationMs": 981
+  },
+  "finalState": {
+    "file": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/pin-tumbler-v2.aep",
+    "dirty": false,
+    "queueItems": 0,
+    "compId": 1,
+    "compName": "PIN_TUMBLER_EXPLAINER_v01",
+    "layerCount": 40,
+    "time": 12,
+    "reopenedFramePixelIdentical": true
+  },
+  "cleanup": {
+    "retainedQueueItemAfterFirstReopen": true,
+    "ownedQueueItemRemoved": 1,
+    "reopenedAgainWithoutSaving": true
+  },
+  "observedFinalFileHashes": {
+    "pin-tumbler-v1.aep": "a0ac9092f0ac0185dbd27d7bc96624926526ec7fb7b330f0ca967488a70250cd",
+    "pin-tumbler-v2.aep": "6745dc3aadcfe8d09ac9f66338fab7b5654ca18b7c5676624e6d3fa78dec5ed1"
+  },
+  "preservationFailure": {
+    "expectedV2Sha256": "db94c42e9b70c428dec4483e3e134f358e49eeeb7a00529e300c7de23c7e9511",
+    "actualV2Sha256": "6745dc3aadcfe8d09ac9f66338fab7b5654ca18b7c5676624e6d3fa78dec5ed1",
+    "v1Unchanged": true,
+    "v2BytePreserved": false,
+    "explicitSaveCallMade": false,
+    "stage": "Detected after project.open(save:false), owned queue removal, and second project.open(save:false)",
+    "cause": "Unresolved",
+    "exactBackupInOwnedOutput": false,
+    "priorTurnFullPropertySnapshotAvailable": false,
+    "correctiveAction": "Stopped further reopening/saving. Preserved all current outputs and warning logs; documented failure."
+  }
+}

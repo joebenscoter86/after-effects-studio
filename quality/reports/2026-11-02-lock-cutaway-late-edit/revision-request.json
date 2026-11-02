@@ -1,0 +1,10 @@
+{
+  "date": "2026-11-02",
+  "firstBuildAccepted": true,
+  "question": "For AFT-56\u2019s late-edit test, what should change in the accepted lock film? I recommend making the five aligned joins easier to see before rotation. You can choose a suggestion or describe your own edit; the rest of the film will be preserved.",
+  "answer": "Make the five aligned joins clearer",
+  "questionCall": "call_a9e9059d7cf34cd1aa3a6d9944c26755",
+  "budgetSeconds": 1200,
+  "budgetTools": 80,
+  "session": "01a19d9c-8488-77b1-9fdf-de9951c219b5"
+}

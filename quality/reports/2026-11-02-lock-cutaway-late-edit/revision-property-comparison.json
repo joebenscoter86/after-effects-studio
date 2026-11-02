@@ -1,0 +1,264 @@
+{
+  "beforeCount": 40,
+  "afterCount": 40,
+  "changedLayers": [
+    {
+      "id": 42,
+      "name": "AFT56_ALIGNMENT_PROOF"
+    }
+  ],
+  "nonTargetedLayersIdentical": [
+    {
+      "id": 55,
+      "name": "AFT56_LEADER_SHEAR_LINE",
+      "identical": true
+    },
+    {
+      "id": 54,
+      "name": "AFT56_LEADER_BOTTOM_PIN",
+      "identical": true
+    },
+    {
+      "id": 53,
+      "name": "AFT56_LEADER_TOP_PIN",
+      "identical": true
+    },
+    {
+      "id": 52,
+      "name": "AFT56_LEADER_SPRING",
+      "identical": true
+    },
+    {
+      "id": 51,
+      "name": "AFT56_LABEL_SHEAR_LINE",
+      "identical": true
+    },
+    {
+      "id": 50,
+      "name": "AFT56_LABEL_BOTTOM_PIN",
+      "identical": true
+    },
+    {
+      "id": 49,
+      "name": "AFT56_LABEL_TOP_PIN",
+      "identical": true
+    },
+    {
+      "id": 48,
+      "name": "AFT56_LABEL_SPRING",
+      "identical": true
+    },
+    {
+      "id": 47,
+      "name": "AFT56_COPY_05",
+      "identical": true
+    },
+    {
+      "id": 46,
+      "name": "AFT56_COPY_04",
+      "identical": true
+    },
+    {
+      "id": 45,
+      "name": "AFT56_COPY_03",
+      "identical": true
+    },
+    {
+      "id": 44,
+      "name": "AFT56_COPY_02",
+      "identical": true
+    },
+    {
+      "id": 43,
+      "name": "AFT56_COPY_01",
+      "identical": true
+    },
+    {
+      "id": 41,
+      "name": "AFT56_SHEAR_BOUNDARY",
+      "identical": true
+    },
+    {
+      "id": 40,
+      "name": "AFT56_HOUSING_STATIONARY_FRONT_RIM",
+      "identical": true
+    },
+    {
+      "id": 39,
+      "name": "AFT56_PLUG_ROTATING_LOWER_SHELL",
+      "identical": true
+    },
+    {
+      "id": 38,
+      "name": "AFT56_SPRING_5",
+      "identical": true
+    },
+    {
+      "id": 37,
+      "name": "AFT56_SPRING_4",
+      "identical": true
+    },
+    {
+      "id": 36,
+      "name": "AFT56_SPRING_3",
+      "identical": true
+    },
+    {
+      "id": 35,
+      "name": "AFT56_SPRING_2",
+      "identical": true
+    },
+    {
+      "id": 34,
+      "name": "AFT56_SPRING_1",
+      "identical": true
+    },
+    {
+      "id": 33,
+      "name": "AFT56_TOP_PIN_5",
+      "identical": true
+    },
+    {
+      "id": 32,
+      "name": "AFT56_TOP_PIN_4",
+      "identical": true
+    },
+    {
+      "id": 31,
+      "name": "AFT56_TOP_PIN_3",
+      "identical": true
+    },
+    {
+      "id": 30,
+      "name": "AFT56_TOP_PIN_2",
+      "identical": true
+    },
+    {
+      "id": 29,
+      "name": "AFT56_TOP_PIN_1",
+      "identical": true
+    },
+    {
+      "id": 28,
+      "name": "AFT56_BOTTOM_PIN_5",
+      "identical": true
+    },
+    {
+      "id": 27,
+      "name": "AFT56_BOTTOM_PIN_4",
+      "identical": true
+    },
+    {
+      "id": 26,
+      "name": "AFT56_BOTTOM_PIN_3",
+      "identical": true
+    },
+    {
+      "id": 25,
+      "name": "AFT56_BOTTOM_PIN_2",
+      "identical": true
+    },
+    {
+      "id": 24,
+      "name": "AFT56_BOTTOM_PIN_1",
+      "identical": true
+    },
+    {
+      "id": 23,
+      "name": "AFT56_KEY",
+      "identical": true
+    },
+    {
+      "id": 22,
+      "name": "AFT56_PLUG_FRONT_ANNULUS",
+      "identical": true
+    },
+    {
+      "id": 21,
+      "name": "AFT56_PLUG_REAR_CUTAWAY",
+      "identical": true
+    },
+    {
+      "id": 20,
+      "name": "AFT56_STATIONARY_PIN_CHAMBERS",
+      "identical": true
+    },
+    {
+      "id": 19,
+      "name": "AFT56_HOUSING_BACK",
+      "identical": true
+    },
+    {
+      "id": 18,
+      "name": "AFT56_GROUND_SHADOW",
+      "identical": true
+    },
+    {
+      "id": 17,
+      "name": "AFT56_CONTROLS",
+      "identical": true
+    },
+    {
+      "id": 15,
+      "name": "AFT56_DARK_STAGE",
+      "identical": true
+    }
+  ],
+  "targetLayerTransformAndOpacityIdentical": true,
+  "originalTargetGroups": [
+    {
+      "group": "AFT56_Join tick 5",
+      "differences": [
+        {
+          "path": "/groups/0/groups/1/properties/1/value",
+          "before": 4,
+          "after": 6
+        }
+      ]
+    },
+    {
+      "group": "AFT56_Join tick 4",
+      "differences": [
+        {
+          "path": "/groups/0/groups/1/properties/1/value",
+          "before": 4,
+          "after": 6
+        }
+      ]
+    },
+    {
+      "group": "AFT56_Join tick 3",
+      "differences": [
+        {
+          "path": "/groups/0/groups/1/properties/1/value",
+          "before": 4,
+          "after": 6
+        }
+      ]
+    },
+    {
+      "group": "AFT56_Join tick 2",
+      "differences": [
+        {
+          "path": "/groups/0/groups/1/properties/1/value",
+          "before": 4,
+          "after": 6
+        }
+      ]
+    },
+    {
+      "group": "AFT56_Join tick 1",
+      "differences": [
+        {
+          "path": "/groups/0/groups/1/properties/1/value",
+          "before": 4,
+          "after": 6
+        }
+      ]
+    },
+    {
+      "group": "AFT56_Clear shear line",
+      "differences": []
+    }
+  ]
+}

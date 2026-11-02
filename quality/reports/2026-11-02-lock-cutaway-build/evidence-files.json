@@ -1,0 +1,432 @@
+[
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/audit-native-v1.jsx",
+    "bytes": 4315,
+    "sha256": "c585fe60c06b352fb96723588251683b57ad613023f231ebaa145e612bd7cab5"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/build-geometry-v1.jsx",
+    "bytes": 14208,
+    "sha256": "c7ae104f6f6e44df2482ebf4e4c50dcdf0d210dcfe22e359d2e7f874fa95f39c"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/build-review-v1.md",
+    "bytes": 6489,
+    "sha256": "15827571b8f93b85b20fa66cc9b857dd1f70b620492ddd0d149870fdc2ef1686"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/contact-strip_0.png",
+    "bytes": 114415,
+    "sha256": "e47e5bdb0109ac9b45c81c02a91b93765d8812ff2e0429df12c79330a06fb509"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/contact-strip_1.png",
+    "bytes": 114672,
+    "sha256": "30a08ada52fabe982976d7d1965de5b279c6d5d0740786005c0709f45c8a9431"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/contact-strip_10.png",
+    "bytes": 110423,
+    "sha256": "4bc16dae8d98140ce2dd46850e778e1525724924ad2d304f114407fcad30eece"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/contact-strip_11.png",
+    "bytes": 110568,
+    "sha256": "936c2524ee1e527065729eea3a8fc0ece8d5068e7bd7a467c86853f7833aa80d"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/contact-strip_12.png",
+    "bytes": 107758,
+    "sha256": "57ab35c4fbde3a864983c9c57542cb15735e4d2c1ac062693300d41fb410787e"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/contact-strip_13.png",
+    "bytes": 107630,
+    "sha256": "ab09db3a76c6d65497e9f65f73e535d933ba3f77e7fe308e3e1c2a5c46e91aec"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/contact-strip_14.png",
+    "bytes": 107457,
+    "sha256": "477073f5b3db5b2a5e722bebd2dafd8dd12cf6868d705a75dc58d37916580ff0"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/contact-strip_2.png",
+    "bytes": 114870,
+    "sha256": "bb134361f9e00c33db8d839df7de5985e9af2c2344fccd4aad162a7953b267a3"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/contact-strip_3.png",
+    "bytes": 113192,
+    "sha256": "2b1c78527f7d25150095337304f266fb923ee96f223e8eba56c70e60c9ed9ecf"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/contact-strip_4.png",
+    "bytes": 113252,
+    "sha256": "ba4853b92b46434f94144e3f88517c0f464d14428b48ae51da39db46de8a7eed"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/contact-strip_5.png",
+    "bytes": 112956,
+    "sha256": "f4926d0a19d264ba9351c2d34b1e72f49e6b29b12328fa89c742e2a71b37d941"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/contact-strip_6.png",
+    "bytes": 111678,
+    "sha256": "46246417604621fb26096a28252f8c9b7f573cab4e18ee0fb7126794c1099beb"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/contact-strip_7.png",
+    "bytes": 111637,
+    "sha256": "79395b455eb391170edf3386fdaada5530438f0bee901d89890064cdd7bcb615"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/contact-strip_8.png",
+    "bytes": 111725,
+    "sha256": "cdd7ef8fdb88f338a5da1e0019227d4fb1e4106260f80824966d574dca4ed671"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/contact-strip_9.png",
+    "bytes": 110185,
+    "sha256": "f7b179060eee1508d1b35c2706e7090e92dfedddf909bc70f2865f99ad35a334"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/contact-strip_sheet.png",
+    "bytes": 267770,
+    "sha256": "222960485bc3a86b289b1b34da98cc8b06648bbfc4c028a6febb9769459c0cb6"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/film-review_0.png",
+    "bytes": 113392,
+    "sha256": "4d3f18549aa5de17aad6f55b461f677c7e9cfca58702dc0e26c3bed463efb2c1"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/film-review_1.png",
+    "bytes": 127689,
+    "sha256": "b390f66e67378fe1a0915856e02a7ff7ec50c1ebef28e05fba80c3e59133061f"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/film-review_10.png",
+    "bytes": 106167,
+    "sha256": "3f8a1ee35715867de0eb48e87303d51062757a40cc37e927a63d787446df6b21"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/film-review_11.png",
+    "bytes": 96034,
+    "sha256": "748ca06d66fd1ed68a731247a0d0d350c9aa37511714c95f70bd6b834a04d517"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/film-review_12.png",
+    "bytes": 107269,
+    "sha256": "e0a11ba715e5a55b3a847ca14e65e6c23a0c147e5226a9cf82265886ae4d18da"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/film-review_13.png",
+    "bytes": 107329,
+    "sha256": "d05751c4f8821f35934b2a04aef712b0e8fd05fc77abe6874b90c3da7dcc4a80"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/film-review_14.png",
+    "bytes": 107329,
+    "sha256": "d05751c4f8821f35934b2a04aef712b0e8fd05fc77abe6874b90c3da7dcc4a80"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/film-review_15.png",
+    "bytes": 96447,
+    "sha256": "4528488b1eaf76087b74580b5ce19acda9dcea939c04705c510d45af2bd9603c"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/film-review_16.png",
+    "bytes": 111302,
+    "sha256": "ee66a1d0d5c69a0553ecb9f55f51e871e9eb80392418b974ab527e129bb741ea"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/film-review_17.png",
+    "bytes": 107242,
+    "sha256": "b8153b08da421909b748cca6003207e125bdf2029e014ed71fe16e64aa033b19"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/film-review_18.png",
+    "bytes": 130016,
+    "sha256": "1ee600c80b9786af8c88a5d47aa50000df4b7dd4b36b39d441f07b0823d21725"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/film-review_19.png",
+    "bytes": 123936,
+    "sha256": "c25f2f9f0cd48062291cb00f269872102b1e9ded25980e0f649a3f1ebb565672"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/film-review_2.png",
+    "bytes": 124952,
+    "sha256": "8a8fed65adcbc70b8f6c0dede071316017a6e36c62669b50696b09f4a8bc86f4"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/film-review_20.png",
+    "bytes": 109754,
+    "sha256": "e919f8535a3a8d887012d0e01705d053e9996453bfd538c9aac969c63badce81"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/film-review_21.png",
+    "bytes": 120624,
+    "sha256": "3eb0120db730aa2367ab4ccc723dc1667b35bc7e814b8a935bbc54e69390c829"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/film-review_22.png",
+    "bytes": 120624,
+    "sha256": "3eb0120db730aa2367ab4ccc723dc1667b35bc7e814b8a935bbc54e69390c829"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/film-review_3.png",
+    "bytes": 105162,
+    "sha256": "dc41423fa205ae3f7d5f19621dfb887cc47d6f52f8b478f14e10b59b8d19182e"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/film-review_4.png",
+    "bytes": 115841,
+    "sha256": "4c8f27124dbfd5b585a541a50fd928954667479f4ad5786d5f757f8097735a27"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/film-review_5.png",
+    "bytes": 114672,
+    "sha256": "30a08ada52fabe982976d7d1965de5b279c6d5d0740786005c0709f45c8a9431"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/film-review_6.png",
+    "bytes": 111756,
+    "sha256": "db0f073919bc8559e528baf8d4de6e4697dd1e1b2836dfc625ef64cb6407b581"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/film-review_7.png",
+    "bytes": 110299,
+    "sha256": "2c1710640a9e765b5343aac57c8be6912f84a73ee9cd0d7935b387417fd8249b"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/film-review_8.png",
+    "bytes": 106466,
+    "sha256": "aa28ec26dd283f35f0603b7edc826da3cc17e92c02af630a855006b387a9680b"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/film-review_9.png",
+    "bytes": 106167,
+    "sha256": "3f8a1ee35715867de0eb48e87303d51062757a40cc37e927a63d787446df6b21"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/film-review_sheet.png",
+    "bytes": 258930,
+    "sha256": "f578dfa731a310f1a8917d7d88530516791000eb7fd9fee464bacc8b962a7340"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/finish-film-v1.jsx",
+    "bytes": 7497,
+    "sha256": "e752760703e123d7cd462b209dd452f52d9edf57c49a141c1930190b10d282fb"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/geometry-manifest.json",
+    "bytes": 2689,
+    "sha256": "4a917b073a5568c09eeea9a60bb1c11d9a1786fcf47de6c6e03f5a35c908a444"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/native-audit.json",
+    "bytes": 8473,
+    "sha256": "735dfd34e9a2f220e8f12407d0066c2d3b480f1c03239ba0d0efb67d2f078d57"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/pin-tumbler-v1.aep",
+    "bytes": 1313607,
+    "sha256": "a0ac9092f0ac0185dbd27d7bc96624926526ec7fb7b330f0ca967488a70250cd"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/proof-corrected_0.png",
+    "bytes": 101917,
+    "sha256": "e3f22c10b229e6b9036622b72060ab3c46e54e18150c550689dc316a79e6c7d0"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/proof-corrected_1.png",
+    "bytes": 99111,
+    "sha256": "d3844336dead07dcdf272948a832a911362621c1763a5413c4a8bbf551671093"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/proof-corrected_2.png",
+    "bytes": 95228,
+    "sha256": "3d806b3f8d1195961fc9f085bf6342c445efac47c723cba438d2a59f5c693675"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/proof-corrected_3.png",
+    "bytes": 106185,
+    "sha256": "6174b8d67d9992cdcb178041b05be37ac69672a9602872b5b0d0374f2a1e32d7"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/proof-corrected_sheet.png",
+    "bytes": 139016,
+    "sha256": "492123c5ee489002eb8f477db79ec2246fda7173cdbe178a0bf516a5065a5326"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/proof_0.png",
+    "bytes": 96536,
+    "sha256": "e6f9142f90b39a5c2dee23a2a66eecc1a587025c325619670cea808983654843"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/proof_1.png",
+    "bytes": 96741,
+    "sha256": "9fbb14089ec1b6ec332211e1140c8f908b97a661cf254b09abd5d4aea94219a8"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/proof_2.png",
+    "bytes": 92565,
+    "sha256": "97bb0216ae2d904b40dcabd1ccde756c1b4dc936b897aafefe811d2b74b683fc"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/proof_3.png",
+    "bytes": 87503,
+    "sha256": "2c67feb4c1de69484c4a17814afe2f01c2da228366c51bea7b190c709365bb62"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/proof_4.png",
+    "bytes": 89517,
+    "sha256": "b6913dedd08488603f08384ad35ad1808f943002f30b6bb49d6dcda036aa05de"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/proof_5.png",
+    "bytes": 86837,
+    "sha256": "aa853568addfb7cdd48b905443902abd89757b2fb43b58bb6e66a4f0f2f9b156"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/proof_6.png",
+    "bytes": 107396,
+    "sha256": "39863a9a4a6bdf5c4048fc2a7452482d633b03dfa0ce6a5adb60c2f15e70804e"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/proof_7.png",
+    "bytes": 101752,
+    "sha256": "76b55c0a086bfadd306c92156c25e88ac6f3bcdaf3c0e45db670bf669a014188"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/proof_sheet.png",
+    "bytes": 249135,
+    "sha256": "fc1b3f16e1934aeb15f3fd3516149964d0b1e079ecbeef63659a81e4dd5ed26d"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/refine-proof-v1.jsx",
+    "bytes": 2678,
+    "sha256": "371fc6cce70852f7d1c7ac5fe355f3f492144e1f507470cbd276cf26e03022af"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/text-manifest.json",
+    "bytes": 2742,
+    "sha256": "a58cb2af0ef03f1cd55f9790e36523a4d7c2d77930b4642e7e84336d77a18f77"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/turn-strip_0.png",
+    "bytes": 106199,
+    "sha256": "683e44fbcf603724aab37ded004db8da59b2ebe61b1cc8c6a51e23ba803eab4a"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/turn-strip_1.png",
+    "bytes": 106337,
+    "sha256": "e0c692f5d3d0d96fcf7b430946a0e542825d9fdda1ecc294dc92fa475714196b"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/turn-strip_10.png",
+    "bytes": 107329,
+    "sha256": "d05751c4f8821f35934b2a04aef712b0e8fd05fc77abe6874b90c3da7dcc4a80"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/turn-strip_11.png",
+    "bytes": 111003,
+    "sha256": "4068dd2bac1bea1a4bd3d15016e1758efc0d5de9d008cf65faecfaca1d1bfb61"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/turn-strip_12.png",
+    "bytes": 110550,
+    "sha256": "402b34319cde5bfddddd9f1f8ce4ef6a1123d2f28b7b6dab60e2a32e73af1b44"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/turn-strip_13.png",
+    "bytes": 107242,
+    "sha256": "b8153b08da421909b748cca6003207e125bdf2029e014ed71fe16e64aa033b19"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/turn-strip_14.png",
+    "bytes": 107293,
+    "sha256": "9fe0074a3ae33b93443f354daa5029b34e11f5f1f180773653b7db7ef123494d"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/turn-strip_15.png",
+    "bytes": 107407,
+    "sha256": "342edf2fd69dc80770f7716730e6817d5e9c16578aa068fcad51a3b6938742fb"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/turn-strip_16.png",
+    "bytes": 115876,
+    "sha256": "6d7cc076b4ad724468b8a3c5cbb47d76789f1f28b917c4f6d690849dbf211c47"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/turn-strip_17.png",
+    "bytes": 130016,
+    "sha256": "1ee600c80b9786af8c88a5d47aa50000df4b7dd4b36b39d441f07b0823d21725"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/turn-strip_18.png",
+    "bytes": 121901,
+    "sha256": "457184f6052f688b4cfdca73887eb5b97fc6dd45cbe26d7a09d0a304eaba2e8b"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/turn-strip_19.png",
+    "bytes": 123822,
+    "sha256": "f2d81b4f318b7a425d26fd5bbcaf0b9b400d2eee22e4fce8da3321adb7bfc61f"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/turn-strip_2.png",
+    "bytes": 106167,
+    "sha256": "3f8a1ee35715867de0eb48e87303d51062757a40cc37e927a63d787446df6b21"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/turn-strip_20.png",
+    "bytes": 123936,
+    "sha256": "c25f2f9f0cd48062291cb00f269872102b1e9ded25980e0f649a3f1ebb565672"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/turn-strip_21.png",
+    "bytes": 123936,
+    "sha256": "c25f2f9f0cd48062291cb00f269872102b1e9ded25980e0f649a3f1ebb565672"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/turn-strip_3.png",
+    "bytes": 106167,
+    "sha256": "3f8a1ee35715867de0eb48e87303d51062757a40cc37e927a63d787446df6b21"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/turn-strip_4.png",
+    "bytes": 106167,
+    "sha256": "3f8a1ee35715867de0eb48e87303d51062757a40cc37e927a63d787446df6b21"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/turn-strip_5.png",
+    "bytes": 106167,
+    "sha256": "3f8a1ee35715867de0eb48e87303d51062757a40cc37e927a63d787446df6b21"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/turn-strip_6.png",
+    "bytes": 96034,
+    "sha256": "748ca06d66fd1ed68a731247a0d0d350c9aa37511714c95f70bd6b834a04d517"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/turn-strip_7.png",
+    "bytes": 103828,
+    "sha256": "125c275d082de708282500c3d8f413d5ae9bbf5a545609b87768cb471f0cb2ae"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/turn-strip_8.png",
+    "bytes": 107569,
+    "sha256": "2c3cb27a44ad6837b70beefeade18c7550549fb03e90ee25e7f703e31acfd503"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/turn-strip_9.png",
+    "bytes": 107329,
+    "sha256": "d05751c4f8821f35934b2a04aef712b0e8fd05fc77abe6874b90c3da7dcc4a80"
+  },
+  {
+    "path": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/renders/2026-11-02-lock-cutaway/turn-strip_sheet.png",
+    "bytes": 233304,
+    "sha256": "d02c933bcbb436440be45cf380102bcb95557875f8529105105cb983125de3ec"
+  }
+]

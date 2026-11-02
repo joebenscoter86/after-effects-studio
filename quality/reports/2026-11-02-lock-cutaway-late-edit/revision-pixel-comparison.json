@@ -1,0 +1,107 @@
+[
+  {
+    "frame": 36,
+    "pixelIdentical": true,
+    "differenceBounds": null
+  },
+  {
+    "frame": 153,
+    "pixelIdentical": true,
+    "differenceBounds": null
+  },
+  {
+    "frame": 299,
+    "pixelIdentical": true,
+    "differenceBounds": null
+  },
+  {
+    "frame": 300,
+    "pixelIdentical": true,
+    "differenceBounds": null
+  },
+  {
+    "frame": 306,
+    "pixelIdentical": false,
+    "differenceBounds": [
+      690,
+      506,
+      1100,
+      595
+    ]
+  },
+  {
+    "frame": 312,
+    "pixelIdentical": false,
+    "differenceBounds": [
+      690,
+      473,
+      1430,
+      595
+    ]
+  },
+  {
+    "frame": 324,
+    "pixelIdentical": false,
+    "differenceBounds": [
+      690,
+      473,
+      1430,
+      595
+    ]
+  },
+  {
+    "frame": 360,
+    "pixelIdentical": false,
+    "differenceBounds": [
+      690,
+      473,
+      1430,
+      595
+    ]
+  },
+  {
+    "frame": 419,
+    "pixelIdentical": false,
+    "differenceBounds": [
+      690,
+      473,
+      1430,
+      595
+    ]
+  },
+  {
+    "frame": 428,
+    "pixelIdentical": false,
+    "differenceBounds": [
+      690,
+      473,
+      1430,
+      595
+    ]
+  },
+  {
+    "frame": 434,
+    "pixelIdentical": false,
+    "differenceBounds": [
+      690,
+      473,
+      1430,
+      595
+    ]
+  },
+  {
+    "frame": 435,
+    "pixelIdentical": true,
+    "differenceBounds": null
+  },
+  {
+    "frame": 472,
+    "pixelIdentical": true,
+    "differenceBounds": null
+  },
+  {
+    "frame": 659,
+    "pixelIdentical": true,
+    "differenceBounds": null
+  }
+]
