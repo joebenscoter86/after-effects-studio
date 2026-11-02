@@ -1,0 +1,89 @@
+[
+  {
+    "case": "library-book-first",
+    "session": "01a19d78-6690-7b80-9663-3c7a63811eee",
+    "model": "gpt-6-astra",
+    "seconds": 87.39,
+    "toolCalls": 4,
+    "events": [
+      {
+        "type": "command_execution",
+        "command": "/bin/zsh -lc 'cat /Users/joeb/.codex/plugins/cache/aft54-local-test/after-effects-studio/0.2.1-rc.1+aft54.20261023/skills/motion-studio/SKILL.md'"
+      },
+      {
+        "type": "command_execution",
+        "command": "/bin/zsh -lc 'cat /Users/joeb/.codex/plugins/cache/aft54-local-test/after-effects-studio/0.2.1-rc.1+aft54.20261023/library/language/core.md /Users/joeb/.codex/plugins/cache/aft54-local-test/after-effects-studio/0.2.1-rc.1+aft54.20261023/library/language/production-workflow.md /Users/joeb/.codex/plugins/cache/aft54-local-test/after-effects-studio/0.2.1-rc.1+aft54.20261023/library/templates/brief.md'"
+      },
+      {
+        "type": "command_execution",
+        "command": "/bin/zsh -lc 'rg --files /Users/joeb/.codex/plugins/cache/aft54-local-test/after-effects-studio/0.2.1-rc.1+aft54.20261023/library'"
+      },
+      {
+        "type": "command_execution",
+        "command": "/bin/zsh -lc 'cat /Users/joeb/.codex/plugins/cache/aft54-local-test/after-effects-studio/0.2.1-rc.1+aft54.20261023/library/language/construction.md /Users/joeb/.codex/plugins/cache/aft54-local-test/after-effects-studio/0.2.1-rc.1+aft54.20261023/library/examples/worked-scenes.md'"
+      }
+    ]
+  },
+  {
+    "case": "missing-assets-first",
+    "session": "01a19d7c-3a0e-7120-8ee2-5999b20548e5",
+    "model": "gpt-6-astra",
+    "seconds": 51.23,
+    "toolCalls": 4,
+    "events": [
+      {
+        "type": "command_execution",
+        "command": "/bin/zsh -lc \"cat '/Users/joeb/.codex/plugins/cache/aft54-local-test/after-effects-studio/0.2.1-rc.1+aft54.20261023/skills/motion-studio/SKILL.md'\""
+      },
+      {
+        "type": "command_execution",
+        "command": "/bin/zsh -lc \"cat '/Users/joeb/.codex/plugins/cache/aft54-local-test/after-effects-studio/0.2.1-rc.1+aft54.20261023/library/language/core.md' '/Users/joeb/.codex/plugins/cache/aft54-local-test/after-effects-studio/0.2.1-rc.1+aft54.20261023/library/language/production-workflow.md' '/Users/joeb/.codex/plugins/cache/aft54-local-test/after-effects-studio/0.2.1-rc.1+aft54.20261023/library/templates/brief.md'\""
+      },
+      {
+        "type": "command_execution",
+        "command": "/bin/zsh -lc \"rg --files '/Users/joeb/.codex/plugins/cache/aft54-local-test/after-effects-studio/0.2.1-rc.1+aft54.20261023/library'\""
+      },
+      {
+        "type": "command_execution",
+        "command": "/bin/zsh -lc \"cat '/Users/joeb/.codex/plugins/cache/aft54-local-test/after-effects-studio/0.2.1-rc.1+aft54.20261023/library/language/assets-depth.md' '/Users/joeb/.codex/plugins/cache/aft54-local-test/after-effects-studio/0.2.1-rc.1+aft54.20261023/library/language/type-evidence.md'\""
+      }
+    ]
+  },
+  {
+    "case": "relay-baton-correction",
+    "session": "01a19d79-c9d4-7f72-8a68-a132cc34a3e0",
+    "model": "gpt-6-astra",
+    "seconds": 46.2,
+    "toolCalls": 0,
+    "events": []
+  },
+  {
+    "case": "relay-baton-first",
+    "session": "01a19d79-c9d4-7f72-8a68-a132cc34a3e0",
+    "model": "gpt-6-astra",
+    "seconds": 80.34,
+    "toolCalls": 5,
+    "events": [
+      {
+        "type": "command_execution",
+        "command": "/bin/zsh -lc 'cat /Users/joeb/.codex/plugins/cache/aft54-local-test/after-effects-studio/0.2.1-rc.1+aft54.20261023/skills/motion-studio/SKILL.md'"
+      },
+      {
+        "type": "command_execution",
+        "command": "/bin/zsh -lc 'cat /Users/joeb/.codex/plugins/cache/aft54-local-test/after-effects-studio/0.2.1-rc.1+aft54.20261023/library/language/core.md /Users/joeb/.codex/plugins/cache/aft54-local-test/after-effects-studio/0.2.1-rc.1+aft54.20261023/library/language/production-workflow.md /Users/joeb/.codex/plugins/cache/aft54-local-test/after-effects-studio/0.2.1-rc.1+aft54.20261023/library/templates/brief.md'"
+      },
+      {
+        "type": "command_execution",
+        "command": "/bin/zsh -lc 'ls /Users/joeb/.codex/plugins/cache/aft54-local-test/after-effects-studio/0.2.1-rc.1+aft54.20261023/library/language'"
+      },
+      {
+        "type": "command_execution",
+        "command": "/bin/zsh -lc 'rg --files /Users/joeb/.codex/plugins/cache/aft54-local-test/after-effects-studio/0.2.1-rc.1+aft54.20261023/library'"
+      },
+      {
+        "type": "command_execution",
+        "command": "/bin/zsh -lc 'cat /Users/joeb/.codex/plugins/cache/aft54-local-test/after-effects-studio/0.2.1-rc.1+aft54.20261023/library/language/construction.md /Users/joeb/.codex/plugins/cache/aft54-local-test/after-effects-studio/0.2.1-rc.1+aft54.20261023/library/examples/worked-scenes.md'"
+      }
+    ]
+  }
+]

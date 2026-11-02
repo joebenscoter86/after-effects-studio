@@ -1,0 +1,23 @@
+{
+  "temporaryPluginRemoved": true,
+  "temporaryMarketplaceRemoved": true,
+  "temporaryCacheRemoved": true,
+  "stablePlugin": {
+    "pluginId": "after-effects-studio@jb-technology",
+    "name": "after-effects-studio",
+    "marketplaceName": "jb-technology",
+    "version": "0.2.0+codex.20261018",
+    "installed": true,
+    "enabled": true,
+    "source": {
+      "source": "local",
+      "path": "/Users/joeb/.codex/.tmp/marketplaces/jb-technology/plugin"
+    },
+    "marketplaceSource": {
+      "sourceType": "git",
+      "source": "https://github.com/joebenscoter86/after-effects-studio.git"
+    },
+    "installPolicy": "AVAILABLE",
+    "authPolicy": "ON_INSTALL"
+  }
+}
