@@ -1,0 +1,10 @@
+{
+  "date": "2026-11-02",
+  "timezone": "America/Los_Angeles",
+  "userReply": "approved publish",
+  "approvedProposal": "Publish v0.2.1-rc.3 from 92edeb0b9f8d27bf092d68d967851c792d5d8451 as a public GitHub prerelease with reviewed ZIP and notes; retain v0.2.0 stable.",
+  "archiveSha256": "db30edab27a20b292ecea2843f24f4f7c00f9fdca088ccfb124a1e0e4ea37ae3",
+  "mainMergeIncluded": false,
+  "stableUpgradeIncluded": false,
+  "openaiSubmissionIncluded": false
+}

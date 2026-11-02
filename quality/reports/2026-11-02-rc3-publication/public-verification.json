@@ -1,0 +1,13 @@
+{
+  "publicReleaseUrl": "https://github.com/joebenscoter86/after-effects-studio/releases/tag/v0.2.1-rc.3",
+  "publishedAt": "2026-11-02T22:22:56Z",
+  "commit": "92edeb0b9f8d27bf092d68d967851c792d5d8451",
+  "prerelease": true,
+  "draft": false,
+  "mainUnchanged": "de8464109084a001af8210e2541b74df31fda474",
+  "latestStable": "v0.2.0",
+  "unauthenticatedAssetDownload": true,
+  "downloadSha256": "db30edab27a20b292ecea2843f24f4f7c00f9fdca088ccfb124a1e0e4ea37ae3",
+  "fileHashesMatched": 67,
+  "notesMatchPreparedBody": true
+}

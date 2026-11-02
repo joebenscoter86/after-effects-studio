@@ -1,6 +1,6 @@
 # After Effects Studio v0.2.1-rc.3 — release candidate
 
-Prepared locally for review; not tagged or published. Stable remains v0.2.0.
+Public GitHub prerelease. Stable remains v0.2.0.
 
 This candidate includes the brief-to-motion planning improvement: a creator-readable story proposal plus a separate construction-ready plan covering proposed copy, frame timing, assets/fonts, persistent objects, difficult handoffs and review targets. It retains the five skills and 29-document motion foundation. Reference-video style transfer remains separate work.
 
@@ -10,4 +10,4 @@ Verification: six regression tests; offline runtime suite 516 passed/four skippe
 
 Two reproducible 67-file builds; extracted and installed-cache MCP smoke; every installed byte matched the ZIP. Temporary installation removed. Supported initial target remains Codex desktop on macOS, licensed local AE 2026 and Node 24+. Other platforms/AE versions and a separate-Mac RC.3 run are unverified. Original-material terms and upstream notices are unchanged. OpenAI directory eligibility/submission is separate.
 
-Version: `0.2.1-rc.3+codex.20261102`. Local archive: `after-effects-studio-0.2.1-rc.3+codex.20261102.zip`, SHA-256 `db30edab27a20b292ecea2843f24f4f7c00f9fdca088ccfb124a1e0e4ea37ae3`. Proposed tag if later authorized: `v0.2.1-rc.3`. Pinned candidate installation is separate from the unpinned stable marketplace.
+Version: `0.2.1-rc.3+codex.20261102`. Release archive: `after-effects-studio-0.2.1-rc.3+codex.20261102.zip`, SHA-256 `db30edab27a20b292ecea2843f24f4f7c00f9fdca088ccfb124a1e0e4ea37ae3`. Tag: `v0.2.1-rc.3`. Pinned candidate installation is separate from the unpinned stable marketplace.
