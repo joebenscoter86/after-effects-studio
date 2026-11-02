@@ -1,0 +1,28 @@
+{
+  "candidate": "0.2.1-rc.2+codex.20261102",
+  "readonly": true,
+  "project": {
+    "file": null,
+    "dirty": false,
+    "numItems": 0,
+    "bitsPerChannel": 16
+  },
+  "AE": {
+    "version": "26.5x89",
+    "buildName": "26.5x89",
+    "buildNumber": 89,
+    "language": "en_US",
+    "memoryInUse": 2993309981,
+    "availableGPUs": 2
+  },
+  "capabilities": {
+    "saveFrameToPng": null,
+    "appEffects": true,
+    "bridgeTalk": true,
+    "socket": true
+  },
+  "transport": {
+    "mode": "push"
+  },
+  "nativeWritesDispatched": false
+}

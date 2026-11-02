@@ -1,0 +1,146 @@
+[
+  {
+    "id": 43,
+    "name": "AFT56_COPY_01",
+    "text": "Why the right key turns",
+    "font": "Arial-BoldMT",
+    "fontSize": 52,
+    "bounds": {
+      "x": 130,
+      "y": 92,
+      "width": 575.1484375,
+      "height": 48.166015625
+    },
+    "start": 0,
+    "end": 90,
+    "settled": 12
+  },
+  {
+    "id": 44,
+    "name": "AFT56_COPY_02",
+    "text": "The key\u2019s cuts lift the pin pairs.",
+    "font": "Arial-BoldMT",
+    "fontSize": 52,
+    "bounds": {
+      "x": 130,
+      "y": 92,
+      "width": 767.787109375,
+      "height": 48.80078125
+    },
+    "start": 90,
+    "end": 300,
+    "settled": 102
+  },
+  {
+    "id": 45,
+    "name": "AFT56_COPY_03",
+    "text": "Every join meets\rthe shear line.",
+    "font": "Arial-BoldMT",
+    "fontSize": 52,
+    "bounds": {
+      "x": 130,
+      "y": 92,
+      "width": 410.0078125,
+      "height": 99.7120323181152
+    },
+    "start": 300,
+    "end": 420,
+    "settled": 312
+  },
+  {
+    "id": 46,
+    "name": "AFT56_COPY_04",
+    "text": "With the joins aligned, the plug can turn.",
+    "font": "Arial-BoldMT",
+    "fontSize": 52,
+    "bounds": {
+      "x": 130,
+      "y": 92,
+      "width": 998.20703125,
+      "height": 48.166015625
+    },
+    "start": 420,
+    "end": 540,
+    "settled": 432
+  },
+  {
+    "id": 47,
+    "name": "AFT56_COPY_05",
+    "text": "The right heights.\rA clear turn.",
+    "font": "Arial-BoldMT",
+    "fontSize": 52,
+    "bounds": {
+      "x": 130,
+      "y": 92,
+      "width": 432.630859375,
+      "height": 99.7120323181152
+    },
+    "start": 540,
+    "end": 660,
+    "settled": 552
+  },
+  {
+    "id": 48,
+    "name": "AFT56_LABEL_SPRING",
+    "text": "Spring",
+    "font": "ArialMT",
+    "fontSize": 30,
+    "bounds": {
+      "x": 285,
+      "y": 335,
+      "width": 83.3642578125,
+      "height": 28.154296875
+    },
+    "start": 24,
+    "end": 90,
+    "settled": 36
+  },
+  {
+    "id": 49,
+    "name": "AFT56_LABEL_TOP_PIN",
+    "text": "Top pin",
+    "font": "ArialMT",
+    "fontSize": 30,
+    "bounds": {
+      "x": 285,
+      "y": 475,
+      "width": 93.9697265625,
+      "height": 27.4365234375
+    },
+    "start": 24,
+    "end": 90,
+    "settled": 36
+  },
+  {
+    "id": 50,
+    "name": "AFT56_LABEL_BOTTOM_PIN",
+    "text": "Bottom pin",
+    "font": "ArialMT",
+    "fontSize": 30,
+    "bounds": {
+      "x": 285,
+      "y": 620,
+      "width": 139.1455078125,
+      "height": 27.4365234375
+    },
+    "start": 24,
+    "end": 90,
+    "settled": 36
+  },
+  {
+    "id": 51,
+    "name": "AFT56_LABEL_SHEAR_LINE",
+    "text": "Shear line",
+    "font": "ArialMT",
+    "fontSize": 30,
+    "bounds": {
+      "x": 1600,
+      "y": 468,
+      "width": 132.4951171875,
+      "height": 22.20703125
+    },
+    "start": 24,
+    "end": 90,
+    "settled": 36
+  }
+]

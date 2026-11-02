@@ -1,0 +1,2 @@
+Error loading config.toml: invalid type: string "{\"AE_MCP_ENABLE_EVAL\": \"1\", \"AE_MCP_READONLY\": \"0\"}", expected a map
+in `mcp_servers.aft56_candidate.env`
