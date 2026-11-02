@@ -1,0 +1,186 @@
+{
+  "checks": [
+    "MCP handshake, tool discovery, all 29 hashed library documents, three module routes, default craft routing and traversal rejection",
+    "Offline policy-filtered operation catalog"
+  ],
+  "live": false,
+  "scratch": false,
+  "tools": [
+    "ae_project_info",
+    "ae_comp_info",
+    "ae_layer_info",
+    "ae_render_frame",
+    "ae_project_export_json",
+    "ae_version_info",
+    "ae_catalog",
+    "ae_do",
+    "ae_context",
+    "ae_library"
+  ],
+  "catalog": {
+    "ok": true,
+    "categories": [
+      {
+        "category": "batch",
+        "operationCount": 1,
+        "operations": [
+          "batch.run"
+        ]
+      },
+      {
+        "category": "command",
+        "operationCount": 2,
+        "operations": [
+          "command.find",
+          "command.list"
+        ]
+      },
+      {
+        "category": "comp",
+        "operationCount": 4,
+        "operations": [
+          "comp.list_renderers",
+          "comp.list_guides",
+          "comp.info",
+          "comp.sample"
+        ]
+      },
+      {
+        "category": "effect",
+        "operationCount": 2,
+        "operations": [
+          "effect.list_on_layer",
+          "effect.get_dropdown_items"
+        ]
+      },
+      {
+        "category": "egp",
+        "operationCount": 1,
+        "operations": [
+          "egp.list_controllers"
+        ]
+      },
+      {
+        "category": "font",
+        "operationCount": 8,
+        "operations": [
+          "font.list",
+          "font.list_missing",
+          "font.info",
+          "font.check_glyphs",
+          "font.list_used",
+          "font.list_duplicates",
+          "font.get_lists",
+          "font.get_default_for_script"
+        ]
+      },
+      {
+        "category": "footage",
+        "operationCount": 1,
+        "operations": [
+          "footage.list_missing"
+        ]
+      },
+      {
+        "category": "instance",
+        "operationCount": 2,
+        "operations": [
+          "instance.list",
+          "instance.dialogs"
+        ]
+      },
+      {
+        "category": "item",
+        "operationCount": 2,
+        "operations": [
+          "item.list",
+          "item.usages"
+        ]
+      },
+      {
+        "category": "layer",
+        "operationCount": 5,
+        "operations": [
+          "layer.list_guides",
+          "layer.bounds",
+          "layer.convert_point",
+          "layer.calculate_transform",
+          "layer.info"
+        ]
+      },
+      {
+        "category": "marker",
+        "operationCount": 1,
+        "operations": [
+          "marker.list"
+        ]
+      },
+      {
+        "category": "pref",
+        "operationCount": 2,
+        "operations": [
+          "pref.get",
+          "pref.get_setting"
+        ]
+      },
+      {
+        "category": "project",
+        "operationCount": 6,
+        "operations": [
+          "project.find_layers",
+          "project.list_effects",
+          "project.get_settings",
+          "project.parse_swatch",
+          "project.get_xmp",
+          "project.get_tool"
+        ]
+      },
+      {
+        "category": "property",
+        "operationCount": 2,
+        "operations": [
+          "property.get",
+          "property.list"
+        ]
+      },
+      {
+        "category": "render",
+        "operationCount": 4,
+        "operations": [
+          "render.get_settings",
+          "render.list_templates",
+          "render.status",
+          "render.frame"
+        ]
+      },
+      {
+        "category": "shape",
+        "operationCount": 2,
+        "operations": [
+          "shape.group_bounds",
+          "shape.signature"
+        ]
+      },
+      {
+        "category": "text",
+        "operationCount": 1,
+        "operations": [
+          "text.measure"
+        ]
+      },
+      {
+        "category": "viewer",
+        "operationCount": 2,
+        "operations": [
+          "viewer.get_state",
+          "viewer.set_options"
+        ]
+      }
+    ],
+    "totalOperations": 48,
+    "policy": "readonly=ON (no project mutations), categories=all, eval.run=disabled",
+    "undo": "every ae_do call runs in ONE automatic undo group — a single Ctrl+Z / project.undo reverts the whole call (batch.run included); never open an undo group yourself. undo/redo itself (project.undo, command.execute 16/2035) is the exception: it runs outside the group, so call it alone, never inside batch.run",
+    "note": "AE_MCP_READONLY=1 — only operations that cannot modify the project are listed."
+  },
+  "ok": true
+}

@@ -6,7 +6,9 @@ Use is free for personal and paid client motion work, including delivery of edit
 
 ## Use
 
-For the public Git source, follow the [Git marketplace install guide](docs/local-install.md), then start a new task. Ask, for example: “Create an editable six-second product explainer in After Effects. Use precise typography, a restrained palette, and show me a rendered preview.” Version 0.2.0 supplies five skills and ten MCP tools, including an offline motion library and the native operation catalog.
+For the public Git source, follow the [Git marketplace install guide](docs/local-install.md), then start a new task. Ask, for example: “Create an editable six-second product explainer in After Effects. Use precise typography, a restrained palette, and show me a rendered preview.” The package supplies five skills and ten MCP tools, including an offline motion library and the native operation catalog.
+
+For a loose brief that will become a build, the motion-studio skill provides a short creator-facing story and a separate construction-ready beat plan. The plan covers proposed copy, frame timing, persistent objects, handoffs, asset assumptions and review targets. Approval-before-AE requests receive both plans before native execution pauses; ideas-only requests stay proportional. Missing essential product or brand assets remain explicit blockers for a faithful build.
 
 For installation, update, removal and restore, see [local installation and update](docs/local-install.md). Then follow [your first motion scene](docs/first-session.md) and [editable project and movie delivery](docs/delivery.md). The public Git source passed a first install and native create/revise/export/reopen journey on a separate Mac on 2026-10-15; the original installer transcript was not captured. Users do not need a Git clone, npm install, source build or manual MCP config edit.
 

@@ -1,0 +1,27 @@
+{
+  "credentialMarkerFindings": [],
+  "historicalContentCheckoutFindings": [],
+  "absolutePathFiles": [
+    "quality/reports/2026-11-02-planning-release-candidate/installed-identity.json",
+    "quality/reports/2026-11-02-planning-release-candidate/package-identity.json",
+    "quality/reports/2026-10-23-brief-to-motion-m4/report.md",
+    "quality/reports/2026-11-02-aft54-installed-planning/cleanup-verification.json",
+    "quality/reports/2026-11-02-aft54-installed-planning/installed-identity.json",
+    "quality/reports/2026-11-02-aft54-installed-planning/library-book-first-run.json",
+    "quality/reports/2026-11-02-aft54-installed-planning/missing-assets-first-run.json",
+    "quality/reports/2026-11-02-aft54-installed-planning/rejected-cli-config.json",
+    "quality/reports/2026-11-02-aft54-installed-planning/rejected-model-config.json",
+    "quality/reports/2026-11-02-aft54-installed-planning/rejected-source-stage-identity.json",
+    "quality/reports/2026-11-02-aft54-installed-planning/relay-baton-correction-run.json",
+    "quality/reports/2026-11-02-aft54-installed-planning/relay-baton-first-run.json",
+    "quality/reports/2026-11-02-aft54-installed-planning/report.md",
+    "quality/reports/2026-11-02-aft54-installed-planning/trace-audit.json"
+  ],
+  "largeFiles": [
+    {
+      "path": "plugin/runtime/dist/index.js",
+      "bytes": 1745028
+    }
+  ],
+  "scope": "Final development source inventory before candidate commit; local evidence/script paths are outside the standalone ZIP. The reproducible builder independently rejects absolute home paths and credential markers in packaged text."
+}

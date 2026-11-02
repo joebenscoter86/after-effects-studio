@@ -1,0 +1,26 @@
+[
+  {
+    "field": "websiteURL",
+    "url": "https://github.com/joebenscoter86/after-effects-studio/blob/main/release/website/index.md",
+    "status": 200,
+    "resolvedURL": "https://github.com/joebenscoter86/after-effects-studio/blob/main/release/website/index.md"
+  },
+  {
+    "field": "supportURL",
+    "url": "https://github.com/joebenscoter86/after-effects-studio/blob/main/release/website/support.md",
+    "status": 200,
+    "resolvedURL": "https://github.com/joebenscoter86/after-effects-studio/blob/main/release/website/support.md"
+  },
+  {
+    "field": "privacyPolicyURL",
+    "url": "https://github.com/joebenscoter86/after-effects-studio/blob/main/release/website/privacy.md",
+    "status": 200,
+    "resolvedURL": "https://github.com/joebenscoter86/after-effects-studio/blob/main/release/website/privacy.md"
+  },
+  {
+    "field": "termsOfServiceURL",
+    "url": "https://github.com/joebenscoter86/after-effects-studio/blob/main/release/website/terms.md",
+    "status": 200,
+    "resolvedURL": "https://github.com/joebenscoter86/after-effects-studio/blob/main/release/website/terms.md"
+  }
+]

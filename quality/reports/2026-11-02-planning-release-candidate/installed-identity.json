@@ -1,0 +1,13 @@
+{
+  "pluginId": "after-effects-studio@aft55-local-test",
+  "version": "0.2.1-rc.2+codex.20261102",
+  "archiveSHA256": "16b8ea9dc200d8c315b03fb3b5546bb4ac85d95a699f128c7986df9ce4ab7b4d",
+  "installedPath": "/Users/joeb/.codex/plugins/cache/aft55-local-test/after-effects-studio/0.2.1-rc.2+codex.20261102",
+  "filesCompared": 67,
+  "allBytesMatch": true,
+  "extraFiles": [],
+  "sourceBase": "de8464109084a001af8210e2541b74df31fda474",
+  "node": "v25.9.0",
+  "macOS": "26.6.2",
+  "architecture": "arm64"
+}

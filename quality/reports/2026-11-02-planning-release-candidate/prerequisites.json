@@ -1,0 +1,43 @@
+{
+  "ok": true,
+  "summary": "Prerequisites found. Live connection and permissions have not been checked.",
+  "checks": [
+    {
+      "name": "Node.js 24+",
+      "ok": true,
+      "optional": false
+    },
+    {
+      "name": "Supported operating system",
+      "ok": true,
+      "optional": false
+    },
+    {
+      "name": "Bundled runtime",
+      "ok": true,
+      "optional": false
+    },
+    {
+      "name": "Motion library manifest",
+      "ok": true,
+      "optional": false
+    },
+    {
+      "name": "After Effects path",
+      "ok": true,
+      "optional": false
+    },
+    {
+      "name": "ffmpeg",
+      "ok": true,
+      "optional": true
+    },
+    {
+      "name": "ffprobe",
+      "ok": true,
+      "optional": true
+    }
+  ],
+  "liveConnectionVerified": false,
+  "AEProjectInspected": false
+}
