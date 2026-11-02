@@ -13,3 +13,7 @@ Installed offline MCP smoke passed handshake/tool discovery, all 29 hashed libra
 The existing chat was started with v0.2.0 tool/skill bindings. Installed success does not establish that this running chat has reloaded them. Refresh/restart Codex or start a fresh task before using the new binding; begin that task with read-only native context inspection. Do not invoke a stale cache binding merely to prove the upgrade. AE was left untouched by the install.
 
 Rollback if needed: use supported marketplace remove/add with the known-good v0.2.0 Git ref, reinstall after-effects-studio@jb-technology, and start a fresh task. The retained stable package is an additional recovery source; do not restore by editing an installed cache. This record is a development-Mac pinned Git install, not a separate-Mac portability test or a new RC.3 native-film evaluation.
+
+## Post-restart live check
+
+Joe restarted Codex and requested continuation. The host skill catalog now points to RC.3. Live ae_version_info and ae_context succeeded through the refreshed host tools: AE 26.5x89, clean revalidated lock project, comp PIN_TUMBLER_EXPLAINER_v01, 40 layers, 22 seconds. Native catalog reports 219 operations; bundled library index exposes 29 documents and foundation/typography/paper-collage routes. No save, open, render or native mutation occurred. [Post-restart evidence](post-restart-check.json). This closes the deferred connection check; it does not add a new creative or film acceptance.
