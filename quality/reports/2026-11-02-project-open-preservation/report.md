@@ -1,6 +1,6 @@
 # Project-open preservation correction — RC.3
 
-Status: native defect reproduced in frozen RC.2; smallest runtime correction and affected RC.3 engineering retests pass. AFT-56's original RC.2 delivery failure remains recorded. Acceptance of the revalidated replacement handoff is pending; do not relabel the original study as an unassisted RC.3 journey or claim restoration of the original accepted V2 bytes.
+Status: native defect reproduced in frozen RC.2; smallest runtime correction and affected RC.3 engineering retests pass. AFT-56's original RC.2 delivery failure remains recorded. Joe accepted the revalidated replacement handoff on 2026-11-02 ("i agree, accept"); AFT-56 can close with the recovery and intervention recorded. Do not relabel the original study as an unassisted RC.3 journey or claim restoration of the original accepted V2 bytes.
 
 ## Authority and isolation
 
@@ -49,7 +49,7 @@ RC.3: **0.2.1-rc.3+codex.20261102**, 67-file ZIP SHA-256 **db30edab27a20b292ecea
 
 Extracted and exact installed-cache offline smoke passed handshake, all 29 library reads, routes, traversal rejection and catalog. All 67 cache files matched the ZIP with no extras. Supported temporary install/removal was used; only an empty marketplace cache root remains. Stable v0.2.0 remains enabled, so the correction is not yet the default installed or public runtime. Plugin Creator is still absent; the repository builder and supported CLI remain the documented fallback.
 
-The engineering fix and affected retest are ready. **Joe must accept or reject the revalidated observed-V2 file as the final replacement handoff before closing AFT-56**, because the original accepted file cannot be restored byte-for-byte and full original pre-failure properties are unavailable. This asks about accepting the disclosed delivery recovery, not repeating the already approved creative work. AFT-56 remains In Progress until that decision. Publication, main merge, a new evaluator and stable upgrade remain separate. [Prepared RC.3 action sheet](../../../release/submission/planning-rc3-action-sheet.md) contains the later concrete prerelease proposal.
+The engineering fix and affected retest are ready. **Joe accepted the revalidated observed-V2 file as the final replacement handoff on 2026-11-02**, replying “i agree, accept” to the disclosed recovery decision. [Acceptance record](recovery-acceptance.json) identifies the unchanged AEP/playback hashes. This closes AFT-56 with an accepted recovery; the original accepted file cannot be restored byte-for-byte and full original pre-failure properties remain unavailable. The failed RC.2 delivery and parent intervention remain explicit. Publication, main merge, a new evaluator and stable upgrade remain separate. [Prepared RC.3 action sheet](../../../release/submission/planning-rc3-action-sheet.md) contains the later concrete prerelease proposal.
 
 ## Reproduction
 

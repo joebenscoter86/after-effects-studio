@@ -1,4 +1,4 @@
-> Superseded resume state: Joe resumed AE and explicitly authorized save/close. Correction and native retest are complete; read [the current report](../2026-11-02-project-open-preservation/report.md). The revalidated copy is open at 12 seconds; AFT-56 awaits recovery-handoff acceptance. The original pause record below is historical.
+> Superseded resume state: Joe resumed AE and explicitly authorized save/close. Correction and native retest are complete; read [the current report](../2026-11-02-project-open-preservation/report.md). The revalidated copy is open at 12 seconds; Joe accepted the recovery handoff on 2026-11-02; AFT-56 can close with the original failure retained. The original pause record below is historical.
 
 # Resume after Joe's AE pause
 
