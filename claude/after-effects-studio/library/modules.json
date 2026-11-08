@@ -1,0 +1,173 @@
+{
+  "schemaVersion": 1,
+  "modules": [
+    {
+      "id": "foundation",
+      "kind": "foundation",
+      "title": "Portable motion foundation",
+      "summary": "Build a readable visual argument through hierarchy, construction, continuity and reviewed native motion.",
+      "tags": [
+        "hierarchy",
+        "continuity",
+        "explainer",
+        "visual argument"
+      ],
+      "whenToUse": [
+        "Start every motion task here before selecting specialist capabilities or styles."
+      ],
+      "whenNotToUse": [
+        "This is guidance, not permission to replace unrelated AE projects."
+      ],
+      "entryDocument": "motion-language",
+      "requires": [],
+      "documents": [
+        "motion-language",
+        "production-workflow",
+        "brief-template",
+        "construction",
+        "camera-continuity",
+        "type-evidence",
+        "failure-atlas"
+      ],
+      "compatibleWith": [],
+      "inputs": [
+        {
+          "name": "primary message",
+          "required": true,
+          "default": null,
+          "constraints": "One clear viewer takeaway; infer sensible defaults and expose them in the brief."
+        }
+      ],
+      "assetRequirements": [
+        "No private rig or mandatory media."
+      ],
+      "fontRequirements": [
+        "Use installed faces; verify approved fallback and remeasure."
+      ],
+      "fallbacks": [
+        "Use native shapes and deliberate cuts when assets or continuity mechanisms are unsuitable."
+      ],
+      "examples": [
+        "worked-scenes"
+      ],
+      "reviewChecks": [
+        "Read order, text clearance, causal continuity, actual delivered frames and native editability.",
+        "Full-speed perceptual playback is distinct from sampled frame and full decode checks."
+      ],
+      "provenanceRefs": [
+        "content-motion-2026-10-15",
+        "released-baseline-observations-2026-10-16"
+      ],
+      "evidence": {
+        "technical": "passed",
+        "visual": "accepted",
+        "reports": [
+          "quality/reports/2026-10-16-motion-foundation/report.md",
+          "quality/reports/2026-10-16-motion-foundation/controller-review.md"
+        ]
+      }
+    },
+    {
+      "id": "typography",
+      "kind": "capability",
+      "title": "Editable motion typography",
+      "summary": "Design readable kinetic type, fit full copy, reveal words or lines and replace aligned phrases.",
+      "tags": [
+        "typography",
+        "kinetic type",
+        "animated text",
+        "headline",
+        "text animation"
+      ],
+      "whenToUse": [
+        "Text-led announcements, editorial titles, expressive emphasis and phrase replacement."
+      ],
+      "whenNotToUse": [
+        "Static copywriting or unverified non-Latin/vertical shaping."
+      ],
+      "entryDocument": "typography-technique",
+      "requires": [
+        "foundation"
+      ],
+      "documents": [
+        "typography-technique",
+        "typography-recipes",
+        "typography-examples",
+        "typography-jsx",
+        "type-evidence"
+      ],
+      "compatibleWith": ["paper-collage"],
+      "inputs": [
+        {
+          "name": "copy",
+          "required": true,
+          "default": null,
+          "constraints": "Exact approved copy and intended reading order."
+        },
+        {
+          "name": "intensity",
+          "required": false,
+          "default": "restrained",
+          "constraints": "Adapt to role and audience; helper intensity 0..1."
+        }
+      ],
+      "assetRequirements": [
+        "Native text; no required external artwork."
+      ],
+      "fontRequirements": [
+        "Installed approved faces; verify PostScript name and glyph coverage."
+      ],
+      "fallbacks": [
+        "Approved installed fallback and remeasurement.",
+        "Expand layout when the minimum font size cannot fit."
+      ],
+      "examples": [
+        "typography-examples"
+      ],
+      "reviewChecks": [
+        "Complete readable copy, glyph coverage, layout, reading time, editable layers and conflict preservation."
+      ],
+      "provenanceRefs": [
+        "content-typography-2026-10-15"
+      ],
+      "evidence": {
+        "technical": "passed",
+        "visual": "accepted",
+        "reports": [
+          "quality/reports/2026-10-16-typography-acceptance/report.md",
+          "quality/reports/2026-10-16-type-fit/report.md",
+          "quality/reports/2026-10-16-type-animation/report.md"
+        ]
+      }
+    },
+    {
+      "id": "paper-collage",
+      "kind": "style",
+      "title": "Editable native paper collage",
+      "summary": "Assemble cut-paper scenes with editable cards, purposeful overlap, shadows and seeded tactile motion.",
+      "tags": ["paper collage", "cut paper", "cutout", "cardstock", "tactile motion"],
+      "whenToUse": ["Paper collage, layered cardstock, cutout scenes and tactile paper movement."],
+      "whenNotToUse": ["Unrelated static writing or a faithful depiction of a real object without suitable artwork."],
+      "entryDocument": "paper-collage-style",
+      "requires": ["foundation"],
+      "documents": ["paper-collage-style", "paper-collage-recipes", "paper-collage-examples", "paper-collage-jsx", "assets-depth"],
+      "compatibleWith": ["typography"],
+      "inputs": [
+        {"name":"subject and takeaway","required":true,"default":null,"constraints":"State what the collage must communicate and whether a literal object is essential."},
+        {"name":"material route","required":false,"default":"native paper and shapes","constraints":"Supplied cutouts need rights, alpha and resolution checks; generation is optional."},
+        {"name":"motion intensity","required":false,"default":"restrained","constraints":"Set helper intensity 0..1; zero removes sampled boil."}
+      ],
+      "assetRequirements": ["Native route needs no supplied media. Literal photographic subjects require suitable cleared artwork."],
+      "fontRequirements": ["Use installed approved faces for native editable labels."],
+      "fallbacks": ["Disclose abstract native paper if literal artwork is absent; do not imply a specific object is depicted."],
+      "examples": ["paper-collage-examples"],
+      "reviewChecks": ["Read order, edge/alpha quality, contact/offset shadows, overlap seams, purposeful assembly, full-speed rhythm and native editability."],
+      "provenanceRefs": ["content-paper-collage-style-2026-10-17", "content-motion-2026-10-15"],
+      "evidence": {
+        "technical": "passed",
+        "visual": "accepted",
+        "reports": ["quality/reports/2026-10-17-collage-helpers/report.md", "quality/reports/2026-10-17-collage-acceptance/report.md", "quality/reports/2026-10-17-combined-motion/report.md"]
+      }
+    }
+  ]
+}
