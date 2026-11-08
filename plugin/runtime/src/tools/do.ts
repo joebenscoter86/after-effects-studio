@@ -18,6 +18,10 @@ export const doTool = defineTool({
   title: "Execute operation",
   description:
     "Execute an atomic operation by name (from ae_catalog). " +
+    "Operations can create, change and delete project content; open, close, clear and save projects; " +
+    "render and write files; run After Effects menu commands; change After Effects preferences; " +
+    "start or stop After Effects instances; and, through eval.run when enabled, run custom ExtendScript " +
+    "with the user's own access to After Effects, files and system commands. " +
     "Arguments are validated against the operation's declared parameters before anything reaches AE. " +
     "Have more than one operation to run? Wrap them in ONE batch.run instead of several ae_do calls — " +
     "read/verify steps (comp.info, layer.info, render.frame) can ride in the same batch. " +

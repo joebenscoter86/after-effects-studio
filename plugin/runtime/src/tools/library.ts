@@ -59,7 +59,7 @@ export function readLibrary(document?: string, query?: string, root = path.resol
 }
 export const libraryTool = defineTool({
   name: "ae_library", title: "Motion design library", group: "document", effect: "read", blockedInReadOnly: false,
-  description: "Read the bundled production-derived motion language, detailed choreography/camera/material modules, worked scenes and native JSX. Begin EVERY motion task with motion-language, production-workflow and brief-template. Craft applies to all styles; JoeB appearance is optional. Offline; no AE, original repo or account required. Omit document to list IDs and startHere; query filters the index. Pass an ID to read complete contents.",
+  description: "Read the bundled production-derived motion language, detailed choreography/camera/material modules, worked scenes and native JSX. Begin every After Effects motion task with motion-language, production-workflow and brief-template. Craft applies to all styles; JoeB appearance is optional. Offline; no AE, original repo or account required. Omit document to list IDs and startHere; query filters the index. Pass an ID to read complete contents.",
   inputShape: { document: z.string().optional(), query: z.string().optional() },
   handler: async ({ document, query }) => {
     try { return jsonResult(readLibrary(document, query)); }
