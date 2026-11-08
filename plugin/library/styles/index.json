@@ -1,0 +1,1343 @@
+{
+  "source": {
+    "repo": "Content",
+    "path": "production/styles",
+    "commit": "628f1c52"
+  },
+  "styles": [
+    {
+      "id": "art-deco",
+      "title": "Art Deco",
+      "tier": "native",
+      "summary": "A 1930s poster that moves: engraved gold line on warm lacquer black, built around one centre axis. Plaques, arches and doors unfold from the centre, a sunburst sits behind everything, light sweeps across the gold on the hits and bulbs switch on one by one, with one jewel colour kept for the thing the story follows.",
+      "goodFor": "A premium reveal or a big announcement that should feel like an event",
+      "triggers": [
+        "art deco",
+        "1920s",
+        "1930s",
+        "Gatsby",
+        "gold and black",
+        "gala",
+        "luxury",
+        "invitation",
+        "launch countdown"
+      ],
+      "module": "deco.jsx",
+      "moduleGlobal": "AESDeco",
+      "needs": [
+        "ffmpeg",
+        "node"
+      ],
+      "fonts": [
+        {
+          "family": "Limelight",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Poiret One",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Josefin Sans",
+          "style": "SemiBold",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [
+        "tools/plate.mjs"
+      ],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-16"
+    },
+    {
+      "id": "backrooms",
+      "title": "Liminal found footage",
+      "tier": "3d",
+      "summary": "A camcorder tape recovered from an empty, endless office: one handheld first-person take through mustard wallpaper, humming ceiling panels and fog that goes dark where the lights have died, with a laser-printed notice from Management, a CRT on a cart that is somewhere else when the camera looks back, and one red alarm lamp. Blender renders the rooms; After Effects owns the tape: the real clip on the CRT, auto-exposure after blackouts, a VHS pass with tracking tears, the camcorder OSD and title generator, and closed captions typed on as they are spoken.",
+      "goodFor": "Something eerie or unsettling, a 'nobody warned me about this' story",
+      "triggers": [
+        "found footage",
+        "liminal space",
+        "empty office",
+        "camcorder tape",
+        "VHS",
+        "eerie corridor",
+        "rule horror",
+        "fluorescent hallway"
+      ],
+      "module": "backrooms.jsx",
+      "moduleGlobal": "AESBackrooms",
+      "needs": [
+        "blender",
+        "ffmpeg",
+        "node"
+      ],
+      "fonts": [
+        {
+          "family": "VT323",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "IBM Plex Mono",
+          "style": "Medium",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Barlow Semi Condensed",
+          "style": "SemiBold",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [
+        "tools/plates.mjs"
+      ],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-22"
+    },
+    {
+      "id": "blueprint",
+      "title": "Blueprint",
+      "tier": "native",
+      "summary": "Engineering drawings that draw themselves on a sheet of cyanotype paper: white line work on Prussian blue in drafting order, hand-lettered notes, a title block, and one red stamp for the verdict.",
+      "goodFor": "How something works, an architecture or system explained part by part",
+      "triggers": [
+        "blueprint",
+        "technical drawing",
+        "engineering drawing",
+        "patent drawing",
+        "cyanotype",
+        "how it works",
+        "schematic"
+      ],
+      "module": "blueprint.jsx",
+      "moduleGlobal": "AESBlueprint",
+      "needs": [
+        "ffmpeg",
+        "node"
+      ],
+      "fonts": [
+        {
+          "family": "Architects Daughter",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "B612",
+          "style": "Bold",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "B612",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [
+        "tools/cyanotype.mjs"
+      ],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-16"
+    },
+    {
+      "id": "crt-terminal",
+      "title": "CRT terminal",
+      "tier": "native",
+      "summary": "Every image is real glyphs on a monospace grid behind a monochrome phosphor CRT.",
+      "goodFor": "Anything about code, terminals or what the AI is really doing underneath",
+      "triggers": [
+        "terminal",
+        "ASCII",
+        "CRT",
+        "retro computer",
+        "log file",
+        "machine reading"
+      ],
+      "module": "crt.jsx",
+      "moduleGlobal": "AESCrt",
+      "needs": [
+        "ffmpeg",
+        "node"
+      ],
+      "fonts": [
+        {
+          "family": "VT323",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [
+        "tools/glyphs.mjs"
+      ],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-16"
+    },
+    {
+      "id": "dark-keynote",
+      "title": "Dark keynote",
+      "tier": "native",
+      "summary": "A software launch film where the interface is the star: a near-black stage with a hairline grid and soft cool light, raised dark windows and cards, one luminous accent reserved for the one thing that matters, light sweeps that reveal, a giant number locking out of glyph noise, and captions as toast notifications.",
+      "goodFor": "A product or feature launch where the interface is the star",
+      "triggers": [
+        "dark keynote",
+        "product launch",
+        "launch film",
+        "SaaS",
+        "software reveal",
+        "app announcement",
+        "tech keynote"
+      ],
+      "module": "keynote.jsx",
+      "moduleGlobal": "AESKeynote",
+      "needs": [],
+      "fonts": [
+        {
+          "family": "Inter Tight",
+          "style": "SemiBold",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Inter Tight",
+          "style": "Medium",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "IBM Plex Mono",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "IBM Plex Mono",
+          "style": "Medium",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-16"
+    },
+    {
+      "id": "dataviz",
+      "title": "Data storytelling",
+      "tier": "native",
+      "summary": "A chart that tells the story: real numbers drawn mark by mark on cream paper by a red and blue pencil, handwritten notes pinned to the values, and every move a chart operation (a mark lands, an axis grows, the scale ratchets, the series morphs).",
+      "goodFor": "A real number or a before-and-after that carries the point",
+      "triggers": [
+        "data storytelling",
+        "chart that tells a story",
+        "data viz",
+        "animated chart",
+        "data journalism",
+        "numbers explained",
+        "scrollytelling"
+      ],
+      "module": "dataviz.jsx",
+      "moduleGlobal": "AESDataviz",
+      "needs": [
+        "ffmpeg",
+        "node"
+      ],
+      "fonts": [
+        {
+          "family": "Newsreader",
+          "style": "Medium",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Newsreader",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "IBM Plex Mono",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Caveat",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [
+        "tools/series.mjs",
+        "tools/frame.mjs"
+      ],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-16"
+    },
+    {
+      "id": "engraving",
+      "title": "Copperplate engraving",
+      "tier": "print",
+      "summary": "A copperplate engraving that cuts itself: every frame is a natural-history plate on cream laid paper, inside a pressed plate mark and a ruled border. Tone is made only of fine ink lines that swell where the form turns from the light: one hatching family for half-tones, a crossing family for shadow and a third for the deepest darks, cut in that order. Roman capitals are cut glyph by glyph, notes are written in copperplate script on a paper slip, a real frame is engraved inside a magnification roundel, and colour arrives last as a transparent hand-laid wash.",
+      "goodFor": "A deep dive or field guide that should feel scholarly",
+      "triggers": [
+        "engraving",
+        "copperplate",
+        "etching",
+        "intaglio",
+        "natural history plate",
+        "scientific illustration",
+        "museum label",
+        "antique print",
+        "cross-hatching",
+        "banknote engraving"
+      ],
+      "module": "engraving.jsx",
+      "moduleGlobal": "AESEngraving",
+      "needs": [
+        "ffmpeg",
+        "node"
+      ],
+      "fonts": [
+        {
+          "family": "Bodoni Moda",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Bodoni Moda",
+          "style": "Italic",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Pinyon Script",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [
+        "tools/tone.mjs"
+      ],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-17"
+    },
+    {
+      "id": "game-show",
+      "title": "Game Show",
+      "tier": "native",
+      "summary": "A rhythm-game variety show in flat vector: toy mascots with thick ink outlines hop on a fixed beat over candy-coloured stripes, dots and sunbursts. Every beat is a round with its own colour, things drop from the sky and land on the beat, captions are fat outlined telops, and a judgement word like Perfect! pops when a round is won.",
+      "goodFor": "A list, a quiz or a countdown with high energy",
+      "triggers": [
+        "game show",
+        "rhythm game",
+        "variety show",
+        "mascots",
+        "candy colours",
+        "playful explainer",
+        "rounds",
+        "quiz",
+        "judgement word",
+        "scoreboard"
+      ],
+      "module": "gameshow.jsx",
+      "moduleGlobal": "AESGameShow",
+      "needs": [
+        "ffmpeg",
+        "node"
+      ],
+      "fonts": [
+        {
+          "family": "Fredoka",
+          "style": "Bold",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Fredoka",
+          "style": "SemiBold",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [
+        "tools/frame.mjs"
+      ],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-16"
+    },
+    {
+      "id": "glass-product",
+      "title": "Glass product",
+      "tier": "3d",
+      "summary": "A launch film for a fictional glass object: one hero of clear and frosted glass, metal and light floating in an infinite black studio, outlined by strip lights it never shows, with rainbow edges, light that travels inside it, caustic rings on a black gloss floor, and slow exploded views that snap shut on the beat. Blender renders the object one shot per beat; After Effects owns the cuts, the ultra-thin type with its glint, and the frosted-glass subtitle slab.",
+      "goodFor": "A hero product reveal that should look like an Apple launch",
+      "triggers": [
+        "glass product",
+        "product render",
+        "launch film",
+        "transparent hardware",
+        "premium product reveal",
+        "exploded view",
+        "dark studio product",
+        "frosted glass"
+      ],
+      "module": "glass.jsx",
+      "moduleGlobal": "AESGlass",
+      "needs": [
+        "blender",
+        "ffmpeg",
+        "node"
+      ],
+      "fonts": [
+        {
+          "family": "Inter Tight",
+          "style": "ExtraLight",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Inter Tight",
+          "style": "Light",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Inter Tight",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [
+        "tools/plates.mjs"
+      ],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-22"
+    },
+    {
+      "id": "halftone-dossier",
+      "title": "Halftone dossier",
+      "tier": "print",
+      "summary": "A retro print case file: cream archive paper, overprinted halftone dots in a few flat inks, heavy serif headlines with misregistered shadows that pop in glyph by glyph, caption bars with a highlighted keyword, rubber stamps that slam with a shake and a flash, numbered exhibits pinned to a board, and a dot wipe between files.",
+      "goodFor": "Investigating something: case files, receipts, 'here is the evidence'",
+      "triggers": [
+        "halftone",
+        "case file",
+        "dossier",
+        "evidence board",
+        "rubber stamp",
+        "Ben-Day dots",
+        "pop-art print",
+        "exhibit",
+        "redacted"
+      ],
+      "module": "dossier.jsx",
+      "moduleGlobal": "AESDossier",
+      "needs": [
+        "ffmpeg",
+        "node"
+      ],
+      "fonts": [
+        {
+          "family": "Newsreader",
+          "style": "ExtraBold",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Titan One",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Space Mono",
+          "style": "Bold",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Anton",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [
+        "tools/screen.mjs",
+        "tools/print.mjs"
+      ],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-16"
+    },
+    {
+      "id": "hologram-hud",
+      "title": "Hologram HUD",
+      "tier": "native",
+      "summary": "A sci-fi spec scan: the subject is a glowing line wireframe above a round projector pad on a near-black stage, grown by a rising scan plane and seen through a slowly orbiting camera. Target boxes snap onto parts, leaders pull out to HUD cards, numbers roll out of garbage glyphs and turn the one warm accent the frame they become true, and corner brackets, rulers, a status line, telemetry and plated subtitles frame it all.",
+      "goodFor": "Scanning or analysing something; breaking a thing into labelled parts",
+      "triggers": [
+        "hologram",
+        "HUD",
+        "sci-fi interface",
+        "spec walkthrough",
+        "product specs",
+        "wireframe scan",
+        "teardown",
+        "trade-show loop"
+      ],
+      "module": "hologram.jsx",
+      "moduleGlobal": "AESHologram",
+      "needs": [
+        "ffmpeg",
+        "node"
+      ],
+      "fonts": [
+        {
+          "family": "Rajdhani",
+          "style": "Light",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Rajdhani",
+          "style": "Medium",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Rajdhani",
+          "style": "SemiBold",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Share Tech Mono",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [
+        "tools/holo.mjs"
+      ],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-16"
+    },
+    {
+      "id": "iso-infographic",
+      "title": "Isometric infographic",
+      "tier": "native",
+      "summary": "A system diagram that comes alive: a floating isometric diorama of flat three-tone blocks on a pale ground, thin ink label pins and route lines, numbers built from rows of identical icons, circular insets that open on a leader, and a camera that pans and zooms but never breaks the projection.",
+      "goodFor": "A workflow or system with several parts that connect",
+      "triggers": [
+        "isometric",
+        "infographic",
+        "explainer diagram",
+        "how it works",
+        "supply chain",
+        "system map",
+        "diorama",
+        "Isotype",
+        "process walkthrough"
+      ],
+      "module": "iso.jsx",
+      "moduleGlobal": "AESIso",
+      "needs": [],
+      "fonts": [
+        {
+          "family": "Poppins",
+          "style": "SemiBold",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Poppins",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-16"
+    },
+    {
+      "id": "living-screencast",
+      "title": "Living screencast",
+      "tier": "native",
+      "summary": "A product walkthrough that looks like a real screen recording: a redrawn, razor-sharp app window floating on wallpaper, a recording-software camera that pushes in to the cursor, and a chunky low-res pixel mascot that lives on the top edges of the UI and acts out what the software is doing.",
+      "goodFor": "Walking through a real app or tool on screen (Joe's favourite)",
+      "triggers": [
+        "screencast",
+        "screen recording",
+        "product walkthrough",
+        "app demo",
+        "software tutorial",
+        "feature launch",
+        "pixel mascot",
+        "onboarding video"
+      ],
+      "module": "screencast.jsx",
+      "moduleGlobal": "AESScreencast",
+      "needs": [
+        "ffmpeg",
+        "node"
+      ],
+      "fonts": [
+        {
+          "family": "Inter Tight",
+          "style": "Medium",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Inter Tight",
+          "style": "Bold",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Newsreader",
+          "style": "Medium",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "IBM Plex Mono",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [
+        "tools/frame.mjs"
+      ],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-16"
+    },
+    {
+      "id": "lowpoly-island",
+      "title": "Low-poly island",
+      "tier": "3d",
+      "summary": "A tiny faceted world seen through an orthographic isometric lens: an island of flat-shaded hexagonal tiles, box houses with prism roofs and cone trees floating in a faceted pastel sea, with no horizon, only a sky gradient. Everything that appears arrives with a bounce: tiles rise from the water with a splash ring and a damped overshoot, houses and pieces drop and squash, trees pop. Light tells the time: the facets go from airy day to an apricot dusk to a blue-violet night where only the windows, the lamps and a lighthouse beam keep their colour. The hero is the island and its lighthouse, which stacks piece by piece and switches on. Titles are wide-tracked geometric capitals whose letters rise from under a water line; subtitles are rounded, boxless, with a soft dark-blue shadow and a small tile icon.",
+      "goodFor": "Something that grows over time, a project or system built up piece by piece",
+      "triggers": [
+        "low poly",
+        "isometric island",
+        "tiny world",
+        "diorama",
+        "building something piece by piece",
+        "a town at nightfall",
+        "lights coming on",
+        "a day in time-lapse",
+        "growth",
+        "a startup's first year",
+        "calm world building",
+        "game trailer"
+      ],
+      "module": "lowpoly-island.jsx",
+      "moduleGlobal": "AESLowpolyIsland",
+      "needs": [
+        "blender",
+        "node"
+      ],
+      "fonts": [
+        {
+          "family": "Josefin Sans",
+          "style": "SemiBold",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Fredoka",
+          "style": "SemiBold",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [
+        "tools/plate.mjs"
+      ],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-22"
+    },
+    {
+      "id": "microgame",
+      "title": "Microgame frenzy",
+      "tier": "native",
+      "summary": "A rapid-fire party-game film: a loud toon game-show stage with a TV, a host, a lives board and a stage badge; each beat is a few-second microgame with one shouted command word, drawn in a completely different medium (crayon, pixel, Swiss type, amber terminal), and the film keeps getting faster.",
+      "goodFor": "Rapid-fire tips, one per beat, each in a different look",
+      "triggers": [
+        "microgame",
+        "party game",
+        "game show stage",
+        "rapid fire",
+        "speed up",
+        "style switch",
+        "command word",
+        "game trailer",
+        "onboarding steps"
+      ],
+      "module": "microgame.jsx",
+      "moduleGlobal": "AESMicrogame",
+      "needs": [
+        "ffmpeg",
+        "node"
+      ],
+      "fonts": [
+        {
+          "family": "Titan One",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Lilita One",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Silkscreen",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Inter Tight",
+          "style": "Bold",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "VT323",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Caveat",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [
+        "tools/frame.mjs"
+      ],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-16"
+    },
+    {
+      "id": "midcentury-toon",
+      "title": "Mid-century cartoon",
+      "tier": "painterly",
+      "summary": "A 1950s flat-colour, limited-animation follow-along film, like a classroom how-to or an appliance manual come to life. The star is a geometric presenter (egg head with the nose in the face line, a bob with a headband, a coral turtleneck) whose body holds still while one hand does every step: it points, on the beat, at what matters. Every drawing is a colour cel printed a few pixels down-right of its broken warm-ink line, re-registered on twos, so the picture shimmers like hand-printed paint. Rooms are one soft colour plane with a floor band and a broken horizon; the props are numbered medallions, round call-outs with a leader line, paper detail tags with a star bullet, dashed manual arrows, starbursts, sparkles and sunburst rays. Type is a 1950s script kicker, slab titles and numerals in ink over an offset colour plate, and a geometric sans for labels. Scenes change by colour-block wipes and irises through a medallion, never dissolves.",
+      "goodFor": "A how-to or tutorial with a friendly presenter",
+      "triggers": [
+        "mid-century cartoon",
+        "1950s cartoon",
+        "fifties cartoon",
+        "atomic age",
+        "UPA style",
+        "limited animation",
+        "flat colour cartoon",
+        "classroom film",
+        "how-to film",
+        "set-up guide",
+        "instruction manual",
+        "step by step",
+        "retro explainer",
+        "off-register print"
+      ],
+      "module": "midcentury-toon.jsx",
+      "moduleGlobal": "AESMidcenturyToon",
+      "needs": [
+        "ffmpeg",
+        "node"
+      ],
+      "fonts": [
+        {
+          "family": "Oleo Script",
+          "style": "Bold",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Alfa Slab One",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Jost",
+          "style": "SemiBold",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [
+        "tools/cel.mjs"
+      ],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-17"
+    },
+    {
+      "id": "one-line",
+      "title": "One-line drawing",
+      "tier": "native",
+      "summary": "A single ink line that never leaves the paper: everything on screen is that one line being drawn, the camera follows the nib, scenes morph instead of cutting, and the film pulls back at the end to show it was all one picture.",
+      "goodFor": "One idea that connects everything; elegant and minimal",
+      "triggers": [
+        "one line",
+        "one-line drawing",
+        "continuous line",
+        "single line drawing",
+        "line art animation",
+        "La Linea",
+        "minimal brand story",
+        "the pen never lifts"
+      ],
+      "module": "oneline.jsx",
+      "moduleGlobal": "AESOneLine",
+      "needs": [
+        "ffmpeg",
+        "node"
+      ],
+      "fonts": [
+        {
+          "family": "Caveat",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [
+        "tools/lineart.mjs"
+      ],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-16"
+    },
+    {
+      "id": "paper-lantern",
+      "title": "Paper-cut lightbox",
+      "tier": "print",
+      "summary": "A layered paper-cut shadow box lit from behind: every shot is a shallow box of flat cut card, back sheets bright and translucent, the front almost black, a warm light glowing through the paper and soft shadows falling from each sheet onto the next. Lamps switch on layer by layer, windows burn, sheets slide like paper on a stick, words are cut paper strips that grow from one edge on the spoken word, and the camera drifts, dollies and travels with depth parallax. Real footage glows through a window cut in the front sheet.",
+      "goodFor": "A warm, story-like moment told in layers of light",
+      "triggers": [
+        "paper lantern",
+        "paper-cut lightbox",
+        "shadow box",
+        "paper cut",
+        "layered paper",
+        "lightbox",
+        "backlit paper",
+        "mid-autumn",
+        "lantern festival",
+        "storybook",
+        "cozy night scene"
+      ],
+      "module": "lantern.jsx",
+      "moduleGlobal": "AESLantern",
+      "needs": [],
+      "fonts": [
+        {
+          "family": "Cormorant Garamond",
+          "style": "SemiBold",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Cormorant Garamond",
+          "style": "Medium",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Cormorant Garamond",
+          "style": "SemiBold Italic",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-17"
+    },
+    {
+      "id": "pictogram-motion",
+      "title": "Pictogram motion",
+      "tier": "native",
+      "summary": "A beat-locked flash-card film: a square grid of discs, half-discs and small patterned cells whose rows slide past each other, faceless geometric figures made of round-capped bars, and huge bold type that slides up out of masks, one hue per card.",
+      "goodFor": "A fast list of facts or steps on a strong beat",
+      "triggers": [
+        "pictogram",
+        "sports pictograms",
+        "games identity",
+        "flash cards",
+        "catalogue film",
+        "geometric pattern",
+        "broadcast graphics"
+      ],
+      "module": "pictogram.jsx",
+      "moduleGlobal": "AESPictogram",
+      "needs": [
+        "ffmpeg",
+        "node"
+      ],
+      "fonts": [
+        {
+          "family": "Inter Tight",
+          "style": "Black",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Inter Tight",
+          "style": "ExtraBold",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Space Mono",
+          "style": "Bold",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [
+        "tools/disc.mjs"
+      ],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-16"
+    },
+    {
+      "id": "risograph",
+      "title": "Risograph print",
+      "tier": "print",
+      "summary": "Animation that looks printed on a stencil duplicator: two or three translucent spot inks (blue, fluorescent pink, yellow) overprinted on warm paper, every tone a halftone dot screen fixed to the paper, plates that land a few pixels off and kick on the accents, a paper-white knockout halo around figures and type, and plates that roll in or lift away as the story turns.",
+      "goodFor": "A zine-feeling explainer with indie, creative energy",
+      "triggers": [
+        "risograph",
+        "riso",
+        "riso print",
+        "zine",
+        "spot colour print",
+        "overprint",
+        "misregistration",
+        "two-colour print",
+        "halftone poster"
+      ],
+      "module": "riso.jsx",
+      "moduleGlobal": "AESRiso",
+      "needs": [
+        "ffmpeg",
+        "node"
+      ],
+      "fonts": [
+        {
+          "family": "Archivo Black",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Josefin Sans",
+          "style": "SemiBold",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [
+        "tools/screen.mjs",
+        "tools/separate.mjs"
+      ],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-16"
+    },
+    {
+      "id": "rubber-hose",
+      "title": "Rubber hose cartoon",
+      "tier": "painterly",
+      "summary": "A 1930s black-and-white hand-inked cartoon, projected from a worn print. A living object is the star (here a clapperboard): rubber-hose arms and legs with no elbows, white four-finger gloves, pie eyes, big shoes, a body that squashes and stretches. The whole world breathes on one fixed beat, every drawing is on twos with a light line boil, the room behind is painted in soft middle greys, and the print flickers, weaves and jumps on every cut. Words are period cards: fat outlined script titles whose letters hop on the beat, Limelight sub-lines, and a near-black singalong card with a bouncing ball. Irises open and close the picture.",
+      "goodFor": "A comedic bit where an object comes alive",
+      "triggers": [
+        "rubber hose",
+        "1930s cartoon",
+        "old cartoon",
+        "vintage cartoon",
+        "black and white cartoon",
+        "pie eyes",
+        "white gloves",
+        "bouncing ball",
+        "singalong",
+        "mascot",
+        "jazz age",
+        "retro ad"
+      ],
+      "module": "rubber-hose.jsx",
+      "moduleGlobal": "AESRubberHose",
+      "needs": [
+        "ffmpeg",
+        "node"
+      ],
+      "fonts": [
+        {
+          "family": "Shrikhand",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Limelight",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "IM FELL English SC",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [
+        "tools/ink.mjs"
+      ],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-17"
+    },
+    {
+      "id": "silent-film",
+      "title": "Silent film",
+      "tier": "native",
+      "summary": "A 1920s silent picture as it looks projected: an inked, cross-hatched grey drawing on a flickering silver print that weaves, scratches and burns, set in a gate between velvet drapes above the footlights. Nobody speaks on screen; intertitle cards with deco borders carry the words, irises open and close on what matters, figures move hand-cranked at 16 fps, and real footage is redrawn into the same ink.",
+      "goodFor": "An old-way-versus-new-way contrast, played for laughs",
+      "triggers": [
+        "silent film",
+        "silent movie",
+        "1920s",
+        "old film",
+        "intertitles",
+        "picture house",
+        "film flicker",
+        "vintage film",
+        "Keaton",
+        "black and white film"
+      ],
+      "module": "silent.jsx",
+      "moduleGlobal": "AESSilent",
+      "needs": [
+        "ffmpeg",
+        "node"
+      ],
+      "fonts": [
+        {
+          "family": "Playfair Display SC",
+          "style": "Bold",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Playfair Display SC",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Old Standard TT",
+          "style": "Italic",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [
+        "tools/redraw.mjs"
+      ],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-16"
+    },
+    {
+      "id": "silkscreen-poster",
+      "title": "Silkscreen poster",
+      "tier": "print",
+      "summary": "A WPA-style screen-print travel poster printed on camera: four to six opaque flat inks, one squeegee pull per beat, stepped colour bands instead of gradients, slight misregistration with paper slivers, a dark info band whose facts print last, a real frame separated into three inks, and a series of posters hung on a wood wall at the end.",
+      "goodFor": "A destination or a big promise sold like a travel poster",
+      "triggers": [
+        "silkscreen poster",
+        "screen print",
+        "travel poster",
+        "national park poster",
+        "WPA poster",
+        "squeegee pull",
+        "poster series wall"
+      ],
+      "module": "silk.jsx",
+      "moduleGlobal": "AESSilk",
+      "needs": [
+        "ffmpeg",
+        "node"
+      ],
+      "fonts": [
+        {
+          "family": "Big Shoulders Display",
+          "style": "Black",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Big Shoulders Display",
+          "style": "ExtraBold",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Outfit",
+          "style": "SemiBold",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [
+        "tools/separate.mjs"
+      ],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-16"
+    },
+    {
+      "id": "spy-titles",
+      "title": "Spy titles",
+      "tier": "native",
+      "summary": "A 1960s cut-paper title sequence: four flat inks on paper, scissor-cut letters that are the set, a hatted silhouette agent on twos, a giant circle, hard cuts on the beat and a title assembled from the pieces.",
+      "goodFor": "A secret, a hack or a mission; something with intrigue",
+      "triggers": [
+        "spy titles",
+        "Saul Bass",
+        "cut-paper titles",
+        "opening titles",
+        "title sequence",
+        "1960s spy film",
+        "silhouette chase"
+      ],
+      "module": "spy.jsx",
+      "moduleGlobal": "AESSpy",
+      "needs": [
+        "ffmpeg",
+        "node"
+      ],
+      "fonts": [
+        {
+          "family": "Bebas Neue",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Anton",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [
+        "tools/inkprint.mjs"
+      ],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-16"
+    },
+    {
+      "id": "stained-glass",
+      "title": "Stained glass",
+      "tier": "print",
+      "summary": "A leaded glass window in a dark stone hall that is alive only where the sun touches it. Every picture is cut pieces of jewel glass (cobalt ground, ruby, gold, green) in black lead cames with faces painted in brown grisaille; an unlit pane is dark and milky, a lit one glows and throws a blurred copy of itself onto the floor. Things appear by being lit, never by fading; the camera tilts and pushes between the lancet, the rose window and an incised stone tablet that holds the titles. Real footage is cut into glass by the same rule, and the carry cracks the pane and mends it with new leads.",
+      "goodFor": "A big, reverent idea; something that feels like a revelation",
+      "triggers": [
+        "stained glass",
+        "church window",
+        "cathedral window",
+        "leaded glass",
+        "medieval",
+        "legend",
+        "heritage story",
+        "rose window",
+        "jewel colours",
+        "light through glass"
+      ],
+      "module": "stained-glass.jsx",
+      "moduleGlobal": "AESStainedGlass",
+      "needs": [
+        "ffmpeg",
+        "node"
+      ],
+      "fonts": [
+        {
+          "family": "Cinzel",
+          "style": "Bold",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "IM FELL English",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "IM FELL English",
+          "style": "Italic",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [
+        "tools/glass.mjs"
+      ],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-17"
+    },
+    {
+      "id": "swiss-motion",
+      "title": "Swiss motion",
+      "tier": "native",
+      "summary": "International Typographic Style in motion: a column grid, one grotesque, black on paper with one signal red, every element wiping or snapping onto the grid on the beat.",
+      "goodFor": "A clean, confident statement; the design-forward default",
+      "triggers": [
+        "Swiss",
+        "International Typographic Style",
+        "grid poster",
+        "modernist typography",
+        "editorial grid",
+        "clean graphic design"
+      ],
+      "module": "swiss.jsx",
+      "moduleGlobal": "AESSwiss",
+      "needs": [
+        "ffmpeg",
+        "node"
+      ],
+      "fonts": [
+        {
+          "family": "Inter Tight",
+          "style": "Bold",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "Inter Tight",
+          "style": "Medium",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [
+        "tools/print.mjs"
+      ],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-16"
+    },
+    {
+      "id": "tilt-shift",
+      "title": "Tilt-shift miniature",
+      "tier": "3d",
+      "summary": "A real-looking place filmed from high above through a tilted lens, so the whole world reads as a tabletop model. Only a thin horizontal strip of the frame is sharp and it sits on the subject; everything above and below melts into blur. The colour is sunny and freshly painted (whitewash, terracotta, cobalt shutters, turquoise water, candy-coloured cars and people), and the world runs in time-lapse: cars, boats, crowds and cloud shadows jump in short jittery steps like wind-up toys while the camera glides smoothly. The hero is a small harbour town and its rooftop billboard, which carries the titles in neon and the real clip as a screen; the band racks from one small subject to the next and a red van drives through it. Type belongs to the town's own signs: cobalt harbour-notice panels in a highway-sign grotesk and a monospace time-lapse clock that reads x12 TIME-LAPSE until time crashes to x1 REAL TIME.",
+      "goodFor": "Zooming out on a busy system; the big-picture view",
+      "triggers": [
+        "tilt-shift",
+        "miniature",
+        "tiny town",
+        "model railway",
+        "time-lapse",
+        "a city at rush hour",
+        "a day in the life of a place",
+        "a system with many small actors",
+        "logistics or a supply chain",
+        "one small thing that matters",
+        "slowing down to real time",
+        "a busy harbour or market"
+      ],
+      "module": "tilt-shift.jsx",
+      "moduleGlobal": "AESTiltShift",
+      "needs": [
+        "blender",
+        "ffmpeg",
+        "node"
+      ],
+      "fonts": [
+        {
+          "family": "Barlow Semi Condensed",
+          "style": "SemiBold",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "IBM Plex Mono",
+          "style": "Medium",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [
+        "tools/plate.mjs"
+      ],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-22"
+    },
+    {
+      "id": "ukiyoe",
+      "title": "Ukiyo-e woodblock print",
+      "tier": "print",
+      "summary": "Edo woodblock prints brought to life on a handscroll. Every view is a complete print on washi inside a thick and thin ink border: a sumi key line, a few flat colour blocks each a hair out of register, bokashi gradients in skies and grounds, woodgrain and specks in the ink, cream cartouches for titles and a red seal that stamps. Views print block by block (key line first, then each colour lands with a baren sweep), the camera slides right to left along the scroll between them, and a real frame of video is cut into the same blocks: key line, flesh, hair, a blue-grey beard, the garment. The same key block reprinted in a second palette is the move for before and after.",
+      "goodFor": "A journey or a landscape of ideas, told scroll by scroll",
+      "triggers": [
+        "ukiyo-e",
+        "woodblock print",
+        "Japanese print",
+        "Hokusai",
+        "Hiroshige",
+        "Edo",
+        "handscroll",
+        "bokashi",
+        "washi paper",
+        "flat colour print"
+      ],
+      "module": "ukiyoe.jsx",
+      "moduleGlobal": "AESUkiyoe",
+      "needs": [
+        "ffmpeg",
+        "node"
+      ],
+      "fonts": [
+        {
+          "family": "Shippori Mincho",
+          "style": "Medium",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [
+        "tools/blocks.mjs"
+      ],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-17"
+    },
+    {
+      "id": "whiteboard",
+      "title": "Whiteboard explainer",
+      "tier": "native",
+      "summary": "An explainer drawn live on one glossy dry-erase board: real single-line handwriting written stroke by stroke on the voice, floating markers with no hand, magnets that hold a print, and a camera that travels across the board instead of cutting.",
+      "goodFor": "Teaching a concept from scratch, explained as you'd draw it",
+      "triggers": [
+        "whiteboard",
+        "whiteboard explainer",
+        "dry erase",
+        "marker drawing",
+        "RSA animate",
+        "explain how it works",
+        "hand drawn explainer"
+      ],
+      "module": "whiteboard.jsx",
+      "moduleGlobal": "AESWhiteboard",
+      "needs": [
+        "ffmpeg",
+        "node"
+      ],
+      "fonts": [
+        {
+          "family": "Architects Daughter",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [
+        "tools/font.mjs",
+        "tools/print.mjs"
+      ],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-16"
+    },
+    {
+      "id": "woodcut",
+      "title": "Woodcut print",
+      "tier": "print",
+      "summary": "A relief print that carves itself: every frame is a black wood block on laid paper, and light exists only where a knife has cut it away. Pictures appear by being carved (cuts grow, brightest first), hatching gets wider where the image is brighter, titles are cut into the block and read backwards until the paper is pulled, captions are letterpress in the paper margin, and one copper colour plate glows out of the cuts for the single thing that matters. Real footage is carved by the same knife.",
+      "goodFor": "A bold, serious statement with grit",
+      "triggers": [
+        "woodcut",
+        "wood engraving",
+        "relief print",
+        "linocut",
+        "block print",
+        "wordless novel",
+        "folk tale",
+        "printmaking",
+        "carved print",
+        "black and white print"
+      ],
+      "module": "woodcut.jsx",
+      "moduleGlobal": "AESWoodcut",
+      "needs": [
+        "ffmpeg",
+        "node"
+      ],
+      "fonts": [
+        {
+          "family": "IM FELL English SC",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "IM FELL English",
+          "style": "Regular",
+          "license": "OFL-1.1"
+        },
+        {
+          "family": "IM FELL English",
+          "style": "Italic",
+          "license": "OFL-1.1"
+        }
+      ],
+      "tools": [
+        "tools/tone.mjs"
+      ],
+      "contentStatus": "proven",
+      "contentProof": "2026-10-16"
+    }
+  ]
+}

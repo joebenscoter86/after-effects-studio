@@ -90,7 +90,7 @@
       "sha256": "c350712514cbc6e095c3b25c1dc81800f9bd9b1f5e17e81f6845ee5b4a949e4d",
       "sourceRevision": "4e6de54f11b3ca9ffa7f2f55b9cdac62a31095c7",
       "workingTreeStatus": "clean",
-      "sections": "\u00a7\u00a71,4\u20139,11",
+      "sections": "§§1,4–9,11",
       "classification": "original-guidance-with-purchased-template-studies",
       "destinations": [
         "plugin/library/techniques/typography.md",
@@ -104,19 +104,504 @@
       "attribution": "General role/voice/reading concepts adapted from Joe original playbook. Purchased template code, exact template choreography, font files and proprietary assets excluded. House rules are not universal."
     },
     {
-      "id": "content-paper-collage-style-2026-10-17",
-      "path": "production/styles/paper-collage/STYLE.md",
-      "sha256": "202eb3e0ae5c7f5930e3b4dd2092d5997165ed106a0bd8efbaa425e5b0a03d7b",
-      "sourceRevision": "f31340724258e85a98620fc031c0f0e95e0a1af9",
-      "workingTreeStatus": "clean-for-this-source",
-      "sections": "1-4,6-8",
-      "classification": "original-style-guidance-with-third-party-inspiration-reference",
-      "adaptedTo": ["styles/paper-collage.md", "recipes/paper-collage.md", "examples/paper-collage.md"],
-      "scope": "Original brand-neutral material and movement guidance adapted from Joe's source. No third-party engine, private proof media, halftone utility, source JSX or bundled fonts copied. Native abstract paper is disclosed as distinct from photographic halftone.",
-      "ownershipBasis": "Joe confirmed his guidance and writing are original and clean to publish; third-party inspiration and media are excluded.",
-      "evidence": "quality/reports/2026-10-17-collage-acceptance/report.md",
-      "technicalStatus": "native-helper-fixture-passed; isolated-specialist-routing-passed; native-example-render-and-decode-passed; installed-route-pending",
-      "visualStatus": "native-example-agent-reviewed-at-full-speed; user-acceptance-pending"
+      "path": "production/styles/art-deco/STYLE.md",
+      "sha256": "e399dcabab4083bce0adb9e2e6e089e366bca7f87f3273f96a4f13ce0d305540",
+      "id": "historical-464c60e6fbe2"
+    },
+    {
+      "path": "production/styles/art-deco/deco.jsx",
+      "sha256": "dabb153a133b724b4162fcbeb8f1f5bafcd1c90d3039b3471e741610c7d0450b",
+      "id": "historical-b31014042d02"
+    },
+    {
+      "path": "production/styles/art-deco/tools/plate.mjs",
+      "sha256": "ee49418ca72ad74e407c890333cab39cdc6f60d887984d67fe5d2ba6d725689e",
+      "id": "historical-79d3a84f040f"
+    },
+    {
+      "path": "production/styles/backrooms/STYLE.md",
+      "sha256": "5d84be45cdf2c4db1d359845f081c421ae9157012879fbbae1eed738df73b5b8",
+      "id": "historical-7b01ee2e4761"
+    },
+    {
+      "path": "production/styles/backrooms/backrooms.jsx",
+      "sha256": "9c7828c53d90d419662673a43d6c9e1f1afaf1f0388a51936b7c3e54c6ec02c2",
+      "id": "historical-74e81793317e"
+    },
+    {
+      "path": "production/styles/backrooms/tools/plates.mjs",
+      "sha256": "6eb68da03abdfff75d9a7172e1e249532654920be33b722aacf5ad9b465ea7af",
+      "id": "historical-ff83a96360d4"
+    },
+    {
+      "path": "production/styles/backrooms/tools/rooms.py",
+      "sha256": "baff7f2cdb6dad45cac9d33b6c0a198e389ba634178709300968ae498b165abf",
+      "id": "historical-bd14bbff581e"
+    },
+    {
+      "path": "production/styles/blueprint/STYLE.md",
+      "sha256": "d7e16f6e0cb79db9dd25a9a194c732ede8cb883a9197e890026d5daa46997530",
+      "id": "historical-e39312dd5cec"
+    },
+    {
+      "path": "production/styles/blueprint/blueprint.jsx",
+      "sha256": "4cb239a96d285b07e9365ca7282b8fce40e27aaba4a77967ae3d3b6565f1deb6",
+      "id": "historical-54f776ff782a"
+    },
+    {
+      "path": "production/styles/blueprint/tools/cyanotype.mjs",
+      "sha256": "58b502a607a369eb2cd0b4ccc1b67a2d1dbc539d417d6f8fd85e3ea8b64e8a7e",
+      "id": "historical-50cb2c9b5098"
+    },
+    {
+      "path": "production/styles/crt-terminal/STYLE.md",
+      "sha256": "2d9a49b9d80f69a26b5b276af6eefdbe798af27a82dc1b3a9cd75fdccd576793",
+      "id": "historical-b931ff5fa25b"
+    },
+    {
+      "path": "production/styles/crt-terminal/crt.jsx",
+      "sha256": "c830d89a1cf5125d6575610c9eef0a38a32f852f8ee995eef1fe3af9271420f8",
+      "id": "historical-ea35655394b2"
+    },
+    {
+      "path": "production/styles/crt-terminal/tools/glyphs.mjs",
+      "sha256": "2c6e8593b35ce6a1c789f472e11cdeae0723cab8d708bc8a5091e40eed415e52",
+      "id": "historical-adaf203e5b4b"
+    },
+    {
+      "path": "production/styles/dark-keynote/STYLE.md",
+      "sha256": "0945941476f426b07c09ebfcace215b7088252a6f1c90b2620b79d459e736961",
+      "id": "historical-5543669a3fa6"
+    },
+    {
+      "path": "production/styles/dark-keynote/keynote.jsx",
+      "sha256": "bca836bb02656092bced0872000566a3529bc51ff697ced9664e29e111e00e44",
+      "id": "historical-68227df9e9fd"
+    },
+    {
+      "path": "production/styles/dataviz/STYLE.md",
+      "sha256": "5fbf22a09cc16d8bd433f50c31e730dc77899a2fc58a0c68060ba0fb8a5bfed3",
+      "id": "historical-ebe0c492e4f9"
+    },
+    {
+      "path": "production/styles/dataviz/dataviz.jsx",
+      "sha256": "e95e8c22c94f3f9b12258685e5555242ca34461e9d20bcf28d46bb55ee5d7eb4",
+      "id": "historical-db213bfe5f4a"
+    },
+    {
+      "path": "production/styles/dataviz/tools/frame.mjs",
+      "sha256": "d8f25fec638d77b1c37cbe8f65a349a56c7a7ba466a06a785dfdf39eec3f8018",
+      "id": "historical-89bd0ffde366"
+    },
+    {
+      "path": "production/styles/dataviz/tools/series.mjs",
+      "sha256": "314df6d611f7ad6be3d68eb5d17d6010b2ff27915a75b99dbb9e8599c9684c36",
+      "id": "historical-88250636c85e"
+    },
+    {
+      "path": "production/styles/engraving/STYLE.md",
+      "sha256": "6165c103682aec91b798a542f1b4d1fc58e3b44ebe52d54a5ba4f4a51eedf69b",
+      "id": "historical-28764e722da2"
+    },
+    {
+      "path": "production/styles/engraving/engraving.jsx",
+      "sha256": "8a47c722ed2800048b3cd00d5de0eeff422650cbd46d5ff2868b956459a334ec",
+      "id": "historical-f36c7259d1bc"
+    },
+    {
+      "path": "production/styles/engraving/tools/tone.mjs",
+      "sha256": "651ef3d6c6628d586933578dcd2800bdcfbf643cf711e9cb8f318d5f6bbad5f5",
+      "id": "historical-f2caec4b52b3"
+    },
+    {
+      "path": "production/styles/game-show/STYLE.md",
+      "sha256": "6979ff05211ef481d28f2ebedf763b2a836a4513a756f32848001f0b77101cf8",
+      "id": "historical-b518acf103fe"
+    },
+    {
+      "path": "production/styles/game-show/gameshow.jsx",
+      "sha256": "7800df145bae2c92d4b82d2824e4bcbfe6dfc5ce900d7b72671520c162fa93ef",
+      "id": "historical-c79fd84aeefd"
+    },
+    {
+      "path": "production/styles/game-show/tools/frame.mjs",
+      "sha256": "ae46b0f288b9da42618d7243c8c52d4144e61ea93980be5afc599a47705b1b07",
+      "id": "historical-9a1d268471b3"
+    },
+    {
+      "path": "production/styles/glass-product/STYLE.md",
+      "sha256": "deb0a9ae502e097380742e5f70a769f9237fd886556e4be9c36c4aa8a5192f55",
+      "id": "historical-2600acf17102"
+    },
+    {
+      "path": "production/styles/glass-product/glass.jsx",
+      "sha256": "ac68fd2806d0130092d0d78dc052b35876d89d9a36de66eddc9b426701bc4c41",
+      "id": "historical-bf2c797566ec"
+    },
+    {
+      "path": "production/styles/glass-product/tools/glass_scene.py",
+      "sha256": "9acef0c14ffc48e7c880e53ec1aceaaca81a1866e0dee5a87e598ba18422d42d",
+      "id": "historical-a414e55d9d99"
+    },
+    {
+      "path": "production/styles/glass-product/tools/plates.mjs",
+      "sha256": "3f8a05a5dccc91dd0551467687a692ad6a615b0cc213a544ec8e7ada6aea1248",
+      "id": "historical-369b0b186622"
+    },
+    {
+      "path": "production/styles/halftone-dossier/STYLE.md",
+      "sha256": "85dbbb91c590914e043e6e4321b0eb7abf7e68a697f2e9d0ca686bdb38bf8808",
+      "id": "historical-3e2cb2a36821"
+    },
+    {
+      "path": "production/styles/halftone-dossier/dossier.jsx",
+      "sha256": "c334b3f21a16d0c09811549ca87ed8a764d6a892d746d778d9462ae692b5f4dd",
+      "id": "historical-a89a10dd2fcf"
+    },
+    {
+      "path": "production/styles/halftone-dossier/tools/png.mjs",
+      "sha256": "1385c74e5e8b664da08b59ee7db8f8ccf5e144502ebda5f7e209bc01e383c384",
+      "id": "historical-57715496b455"
+    },
+    {
+      "path": "production/styles/halftone-dossier/tools/print.mjs",
+      "sha256": "34225f3683f4ea2507dc0c86fd0bbd1f9e43bc0b23a0a62b6e571f91ea1d83e6",
+      "id": "historical-65c3fe1d7d77"
+    },
+    {
+      "path": "production/styles/halftone-dossier/tools/screen.mjs",
+      "sha256": "b223423ce44cbdfa8aaab2fbadb07509b33ed2c35b96020e9c64db2acbf6e80e",
+      "id": "historical-6d8543acbc55"
+    },
+    {
+      "path": "production/styles/hologram-hud/STYLE.md",
+      "sha256": "37c2163b9a52f18045713f9f20507ac5bb6b8edae8521a0e1e6615c67b048b61",
+      "id": "historical-a033bed101be"
+    },
+    {
+      "path": "production/styles/hologram-hud/hologram.jsx",
+      "sha256": "aa03dd5b3d910cbdfd5068b297b6d2c845692cb1889d69888934975ae2818d7b",
+      "id": "historical-677419b1bbfd"
+    },
+    {
+      "path": "production/styles/hologram-hud/tools/holo.mjs",
+      "sha256": "1629d4cb716b04f947e2bdeaf9634c67b7528ba361cdc1fb7f74f562ccb05778",
+      "id": "historical-f0c9ca011a90"
+    },
+    {
+      "path": "production/styles/iso-infographic/STYLE.md",
+      "sha256": "0cfe79f4d0998708d0c44e1db58ec299dfba1f605b1e5b118d45c8a454c0d942",
+      "id": "historical-8a6b9aee1b90"
+    },
+    {
+      "path": "production/styles/iso-infographic/iso.jsx",
+      "sha256": "64ce7efa4202ea8e55e1b656cce92087eb474298fad6054cdf18ba1083b4b1ec",
+      "id": "historical-3f2e727bc78d"
+    },
+    {
+      "path": "production/styles/living-screencast/STYLE.md",
+      "sha256": "1757b399c9b19a65d4c8a4534610bc75bc3929847bfdde10b91004bab341a762",
+      "id": "historical-92b9e9076650"
+    },
+    {
+      "path": "production/styles/living-screencast/screencast.jsx",
+      "sha256": "e47799ded29db40e38dba6f7f95476da261d26310dbdbae74a2a1a16f560c00f",
+      "id": "historical-d9e051a0474b"
+    },
+    {
+      "path": "production/styles/living-screencast/tools/frame.mjs",
+      "sha256": "13eac1fe9d67035d193c9af5ec7793191154f203e55996d3813e577a49b7f349",
+      "id": "historical-56724cc8b434"
+    },
+    {
+      "path": "production/styles/lowpoly-island/STYLE.md",
+      "sha256": "ec57a499338a0bcf6291155bfaf920cb87653551fbce6c51d0315e4761d489dc",
+      "id": "historical-6c5841aea85f"
+    },
+    {
+      "path": "production/styles/lowpoly-island/lowpoly-island.jsx",
+      "sha256": "07940f4f508b6782ac62b75464353a66ce84de5682aa16ec32fead3ad00d5386",
+      "id": "historical-4e566f436f1f"
+    },
+    {
+      "path": "production/styles/lowpoly-island/tools/island.py",
+      "sha256": "0cc0db7969f27344d7d7fdf7ebb65259ebba4f6c9b4f7c6aac0eff8401d0d61c",
+      "id": "historical-170ce5142e28"
+    },
+    {
+      "path": "production/styles/lowpoly-island/tools/plate.mjs",
+      "sha256": "4f3e6007a5b36913d2e47f5ed35c1d423aa32c5a7cb7f258e35463fb8f6e3f4f",
+      "id": "historical-d2f4abc9431e"
+    },
+    {
+      "path": "production/styles/microgame/STYLE.md",
+      "sha256": "016daa6c617967a40a6639683afc2ab1c8d5b8643ffc0cecf42da7fe65dbb7df",
+      "id": "historical-e473479270ca"
+    },
+    {
+      "path": "production/styles/microgame/microgame.jsx",
+      "sha256": "60163258b91265fe10e06a62aff3de0a002e8e5e4d80312df686da4b8b610950",
+      "id": "historical-4e7f3cc62d89"
+    },
+    {
+      "path": "production/styles/microgame/tools/frame.mjs",
+      "sha256": "e59103bde3573966386ec4037efdf59d3cf0b220cf7a47a9fc6cdcc22eb82336",
+      "id": "historical-0d79bcc09544"
+    },
+    {
+      "path": "production/styles/midcentury-toon/STYLE.md",
+      "sha256": "d7899a7fd0b559bd9494b4c0c1b86824490867ac9a49e6f861cd98ffada2afa6",
+      "id": "historical-940f1f7e57a6"
+    },
+    {
+      "path": "production/styles/midcentury-toon/midcentury-toon.jsx",
+      "sha256": "a6f6d5fb79026b35e2f141f8165280fc92efc4710fe9dcf44f635aeb339df5f0",
+      "id": "historical-32b521c90121"
+    },
+    {
+      "path": "production/styles/midcentury-toon/tools/cel.mjs",
+      "sha256": "2a7575f96593948d25c24b1b7f91ec0e0a66e88ad140291b6a5809601edf7c3b",
+      "id": "historical-389485c7b6ce"
+    },
+    {
+      "path": "production/styles/one-line/STYLE.md",
+      "sha256": "0771358916d8401eb763da295a9b6e6c800353c63dedfe9ab5c9ea3d1cd057d9",
+      "id": "historical-47459bdf8502"
+    },
+    {
+      "path": "production/styles/one-line/oneline.jsx",
+      "sha256": "13bc53006e813f3cef5c0243118db6784741f3e44acfc4ca52dea4261af361d1",
+      "id": "historical-2d9154051207"
+    },
+    {
+      "path": "production/styles/one-line/tools/lineart.mjs",
+      "sha256": "7b55ca3cab992fbfcf9961ea27f05a2e6f1748904b72476ae5be4ca95928cd24",
+      "id": "historical-d5ddda5b2d56"
+    },
+    {
+      "path": "production/styles/paper-lantern/STYLE.md",
+      "sha256": "12a04bc1f62b3da3a7dc29f73c2a1efba40cfc8eb4c48659bbb7bd6687a85c1e",
+      "id": "historical-218cfb77d6cf"
+    },
+    {
+      "path": "production/styles/paper-lantern/lantern.jsx",
+      "sha256": "c0ff4f59f9806cdef839dcb9b841abae6e3248b12bcb9542b23bbc34eb219ebf",
+      "id": "historical-aaa9a178e599"
+    },
+    {
+      "path": "production/styles/pictogram-motion/STYLE.md",
+      "sha256": "d997cd4a3ea66a9d256ddc63467163c297882ea5fa2bc272ae369a36d2e8cb34",
+      "id": "historical-2a07234368f2"
+    },
+    {
+      "path": "production/styles/pictogram-motion/pictogram.jsx",
+      "sha256": "a0b6a6c2d0fdaa1f6d04d757b2642a104a96ef9c6d6196fed11efde3693f57a5",
+      "id": "historical-27094371cdf7"
+    },
+    {
+      "path": "production/styles/pictogram-motion/tools/disc.mjs",
+      "sha256": "22d1146045edc35db7c747799d82cf9f5704afa4bdb736858874825893143eb8",
+      "id": "historical-b1d9380b80a2"
+    },
+    {
+      "path": "production/styles/risograph/STYLE.md",
+      "sha256": "c1f78742f5a86384d29d97f87e2ebdac9e2234878bfd2fd5efb553d5cd875f82",
+      "id": "historical-96cfc2fc4cdf"
+    },
+    {
+      "path": "production/styles/risograph/riso.jsx",
+      "sha256": "e950c99cc0df37c5935c89d9815433fda2b149fd84394702eddda0fb43ce174a",
+      "id": "historical-1e325f95c1df"
+    },
+    {
+      "path": "production/styles/risograph/tools/screen.mjs",
+      "sha256": "02dea26980600851d8b5d79c2253d0a164bc7f3c92a50ee8cbde3a126729a50d",
+      "id": "historical-ad35863a07b8"
+    },
+    {
+      "path": "production/styles/risograph/tools/separate.mjs",
+      "sha256": "48bdab447396c57f3e405a3cf9f2ec9715b92e95284f955e439b2f9e6d1556a6",
+      "id": "historical-df57ba3df067"
+    },
+    {
+      "path": "production/styles/rubber-hose/STYLE.md",
+      "sha256": "286c1d296b90bfc8d12a473cf16a6ffcc73378efe087605033c51f570244548b",
+      "id": "historical-5f6d0f2046b6"
+    },
+    {
+      "path": "production/styles/rubber-hose/rubber-hose.jsx",
+      "sha256": "abd955b9eb0ba539b85dd6a7618c733d0781b6e2f7cb82dcf166d5af16488b04",
+      "id": "historical-b432bc2d583c"
+    },
+    {
+      "path": "production/styles/rubber-hose/tools/ink.mjs",
+      "sha256": "efdb7851fd2806979cab3c7db2a1eee9871c2a0f05ebcd6affbddf64e00903d6",
+      "id": "historical-81366cf01768"
+    },
+    {
+      "path": "production/styles/silent-film/STYLE.md",
+      "sha256": "c424b615bc67b3b5a874e0d3d62eac59957dcfab9b6a85beb21255a73f7b26bb",
+      "id": "historical-56eb69779878"
+    },
+    {
+      "path": "production/styles/silent-film/silent.jsx",
+      "sha256": "d792af5a7ebb8f776ea849f321330a2f04fcf535acb338670c640b6c0b32176f",
+      "id": "historical-4b36ff533a6e"
+    },
+    {
+      "path": "production/styles/silent-film/tools/redraw.mjs",
+      "sha256": "7fed266725723782f3e73238cdef7b4925c8e96eace399a44984c95a9d1d95c0",
+      "id": "historical-9d776f6db010"
+    },
+    {
+      "path": "production/styles/silkscreen-poster/STYLE.md",
+      "sha256": "abc7bc9131ad9819a322374420fb74ccbc596d8e38a26be8710ffce845a3c331",
+      "id": "historical-44fc5690cba6"
+    },
+    {
+      "path": "production/styles/silkscreen-poster/silk.jsx",
+      "sha256": "437bf52bee5a46524a3f5982884a8366c41c911751cc9b7e501888f41e6bf8a1",
+      "id": "historical-4a958b23c447"
+    },
+    {
+      "path": "production/styles/silkscreen-poster/tools/separate.mjs",
+      "sha256": "2f795fb3d7c47c0ea15a2fd9b9ec818a92d38b567caa5199a75ebb047e57cc37",
+      "id": "historical-73eabebd838f"
+    },
+    {
+      "path": "production/styles/spy-titles/STYLE.md",
+      "sha256": "a6a44779b2cc6f5448cc548230bf3744d0677c4c530b12d5556678c4707b1e7f",
+      "id": "historical-b52109cb1d46"
+    },
+    {
+      "path": "production/styles/spy-titles/spy.jsx",
+      "sha256": "1b98ebd6f5556cc8c2182613160a6f02721933f5cf6d93dbe70f418a797e1c9f",
+      "id": "historical-034cbba192f6"
+    },
+    {
+      "path": "production/styles/spy-titles/tools/inkprint.mjs",
+      "sha256": "1d8ebe8ac3054222efa250e42db8336f98899ab45f85aa841bdcd332707c2e60",
+      "id": "historical-4a4cc5807a38"
+    },
+    {
+      "path": "production/styles/stained-glass/STYLE.md",
+      "sha256": "87d7349bb4e8ac913cb296689cf987fcf0e59804e3226eddde464aab25d5ed77",
+      "id": "historical-824646db9843"
+    },
+    {
+      "path": "production/styles/stained-glass/stained-glass.jsx",
+      "sha256": "55ef930f7166469872707f2aeeaba0e67bf4011e56c2e0436b407e93ad9ca3ee",
+      "id": "historical-522f8b0b08fb"
+    },
+    {
+      "path": "production/styles/stained-glass/tools/glass.mjs",
+      "sha256": "0beca40784dff7e08af5218199df2017d64fd3ebed1fde42af178b5f62f78cb2",
+      "id": "historical-71d3f34431d1"
+    },
+    {
+      "path": "production/styles/swiss-motion/STYLE.md",
+      "sha256": "daeff8c0f167dc56616b8ed7f92784bf1ab4cb32766963712bccab0dd3e1762c",
+      "id": "historical-0a70bd488dab"
+    },
+    {
+      "path": "production/styles/swiss-motion/swiss.jsx",
+      "sha256": "020b2d484edbca492a22b3e436aa3bbe3436b84e09fce9b0034493a2fcef63ae",
+      "id": "historical-e2ba1f06051c"
+    },
+    {
+      "path": "production/styles/swiss-motion/tools/print.mjs",
+      "sha256": "ec41e4371c4030a849ebb395a36de2ce12e04be384c7724262b3e545a922cb81",
+      "id": "historical-83db14f40472"
+    },
+    {
+      "path": "production/styles/tilt-shift/STYLE.md",
+      "sha256": "21f8cd16aa71171c003335282280ce01dbeebb35c457eca074504747378f7d55",
+      "id": "historical-fd39f8d1c5f3"
+    },
+    {
+      "path": "production/styles/tilt-shift/tilt-shift.jsx",
+      "sha256": "0a5f2dffd41cf47a17c0b300a62bf9f14ed2fb30a15da33f20471e9fc9eaffd0",
+      "id": "historical-e7cef9e59960"
+    },
+    {
+      "path": "production/styles/tilt-shift/tools/plate.mjs",
+      "sha256": "ac5b1e6cecba368692748e9b22072fd298e2176aa0a7dfdc849ab35d684ad051",
+      "id": "historical-9d9880b8834f"
+    },
+    {
+      "path": "production/styles/tilt-shift/tools/town.py",
+      "sha256": "1fe6dff701e0309460ed0be8c5a4da72dab870ffdea56de59eae9ac294e998e0",
+      "id": "historical-b22c387e6aea"
+    },
+    {
+      "path": "production/styles/ukiyoe/STYLE.md",
+      "sha256": "f31740bd8f4bc49cd868a704210745306efed97b9957a37b996b9d94c0060086",
+      "id": "historical-b86b67550ff9"
+    },
+    {
+      "path": "production/styles/ukiyoe/tools/blocks.mjs",
+      "sha256": "db14c8a6a1d21023e8b40b86c5f2a8155bdd94a24e54bcf2c48934c764823bef",
+      "id": "historical-4358973c15b7"
+    },
+    {
+      "path": "production/styles/ukiyoe/ukiyoe.jsx",
+      "sha256": "92a85f9f028b9282c4379f9f88cfb3f36ba06155c14e97dd3c51c93e2f261051",
+      "id": "historical-230ffeb9a47e"
+    },
+    {
+      "path": "production/styles/whiteboard/STYLE.md",
+      "sha256": "d82d341ca41a1606be41eca1256c66bc106cd728df2da1d275aa511d02b9f48e",
+      "id": "historical-9463fb3a28bd"
+    },
+    {
+      "path": "production/styles/whiteboard/assets/fonts/EMSTech.json",
+      "sha256": "33f85da146a78017a2305776d2a5fd6fc2fd13373f852d24dad4fa4ced5b016d",
+      "id": "historical-a4ae41102eb1"
+    },
+    {
+      "path": "production/styles/whiteboard/assets/fonts/OFL-EMSTech.txt",
+      "sha256": "d54b1425e4dc37fd0e0c59a8e9e9d4a3c02da690a71900eaee336cddd430b8c9",
+      "id": "historical-3edf64e7fb23"
+    },
+    {
+      "path": "production/styles/whiteboard/tools/font.mjs",
+      "sha256": "b45fe4b4ce3aefa0bc545e5174b40b4b37901bfc728d612ff80054eba8c6e570",
+      "id": "historical-b986f08a4779"
+    },
+    {
+      "path": "production/styles/whiteboard/tools/print.mjs",
+      "sha256": "d794342513bcfe7ace75ebd3875778406aaa2d17877962957bf284810a07295e",
+      "id": "historical-e931112c649b"
+    },
+    {
+      "path": "production/styles/whiteboard/whiteboard.jsx",
+      "sha256": "d7d25a4fe6530f3a2b09b70c48b108baafb99dc37db0e182b0527cc2360d5868",
+      "id": "historical-d06b51efba1d"
+    },
+    {
+      "path": "production/styles/woodcut/STYLE.md",
+      "sha256": "470ca96d074f7f61eb0607dd5b4932db3cfbb67862b4f1eba8e0b195fbd3742e",
+      "id": "historical-090f688db40a"
+    },
+    {
+      "path": "production/styles/woodcut/tools/tone.mjs",
+      "sha256": "5ce27a7e022b29b18d87ef979021bd04540cbcd4dc06c058379cd07c86e358de",
+      "id": "historical-f6ed32169001"
+    },
+    {
+      "path": "production/styles/woodcut/woodcut.jsx",
+      "sha256": "3dcab2265053f73bc234e487f882c450e90fca3ea4ef8acf118abea007bd5b87",
+      "id": "historical-a172a48ebec9"
+    },
+    {
+      "path": "production/styles/harness/lib/aes-lib.jsx",
+      "sha256": "149e3a21e3b3da91a6813d4740045f4d1f339c82cd1fd5bc15f55bddeffa2333",
+      "id": "historical-f3820e58e342"
+    },
+    {
+      "path": "production/styles/art-deco/assets/LICENSE-lemo-opuscar.txt",
+      "sha256": "14c9ff6f14bfb2391e74fedb01c256891d2a3bba1c2acf5789901bdf77e54e33",
+      "id": "historical-64c4ee327720"
     }
   ],
   "expansionInventory": {
@@ -129,7 +614,7 @@
         "sha256": "3a10f5b48836cfbaa29d6aaa15d9bf8c0ee99f623325a3b11acfce96af99aeb7",
         "sourceRevision": "4e6de54f11b3ca9ffa7f2f55b9cdac62a31095c7",
         "workingTreeStatus": "clean",
-        "sections": "\u00a7\u00a71,4,4a,6,8\u201311,16",
+        "sections": "§§1,4,4a,6,8–11,16",
         "classification": "original-guidance-with-third-party-references",
         "destinations": [
           "plugin/library/language/core.md",
@@ -149,7 +634,7 @@
         "sha256": "c350712514cbc6e095c3b25c1dc81800f9bd9b1f5e17e81f6845ee5b4a949e4d",
         "sourceRevision": "4e6de54f11b3ca9ffa7f2f55b9cdac62a31095c7",
         "workingTreeStatus": "clean",
-        "sections": "\u00a7\u00a71,4\u20139,11",
+        "sections": "§§1,4–9,11",
         "classification": "original-guidance-with-purchased-template-studies",
         "destinations": [
           "plugin/library/techniques/typography.md",
