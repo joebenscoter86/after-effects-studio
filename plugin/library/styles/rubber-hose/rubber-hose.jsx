@@ -347,7 +347,7 @@ var AESRubberHose = (function () {
     vm.property("ADBE Mask Shape").setValue(ell(gw / 2, gh / 2, gw * .6, gh * .58)); vm.inverted = true; vm.property("ADBE Mask Feather").setValue([340, 340]); VI.opacity.setValue(58);
     return {}; }
 
-  // buildScene: the shared test scene (production/styles/scene) as a 1930s rubber hose short. comp = an empty 1080 x 1920 comp at scene.fps.
+  // buildScene: the shared test scene (the library's seven-beat test scene) as a 1930s rubber hose short. comp = an empty 1080 x 1920 comp at scene.fps.
   // STAGE (the gate) holds the painted room and CAST; CAST holds every drawing (on twos, with a line boil); the print pass runs on STAGE in
   // the main comp, inside a rounded gate on black. The hero (the clapperboard) is on screen in every beat.
   function buildScene(comp, scene, opts) {

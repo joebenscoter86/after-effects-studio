@@ -49,7 +49,7 @@ export function readLibrary(document?: string, query?: string, root = path.resol
         if (seen.has(e.id)) return false;
         if (!needle || `${e.id} ${e.title} ${e.kind}`.toLowerCase().includes(needle) || entryIds.has(e.id)) {seen.add(e.id); return true;}
         return false;
-      }),
+      }).map(({id, title, kind}) => ({id, title, kind})),
       modules: matches.map(({id,kind,title,summary,entryDocument,requires,tags,evidence}) => ({id,kind,title,summary,entryDocument,requires,tags,evidence})),
     };
   }

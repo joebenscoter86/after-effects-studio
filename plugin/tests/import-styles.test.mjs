@@ -131,7 +131,32 @@ test('records provenance for every imported file', async () => {
   const paths = map.sources.map((s) => s.path);
   assert.ok(paths.includes('production/styles/fixture-native/STYLE.md'));
   assert.ok(paths.includes('production/styles/fixture-native/tools/x.mjs'));
-  assert.ok(map.sources.every((s) => /^[0-9a-f]{64}$/.test(s.sha256)));
+  assert.ok(map.sources.filter((s) => s.id.startsWith('historical-')).every((s) => /^[0-9a-f]{64}$/.test(s.sha256)));
+});
+
+test('keeps provenance entries it did not create', async () => {
+  const from = await fixture();
+  const plugin = await fs.mkdtemp(path.join(os.tmpdir(), 'styles-dst-'));
+  const handWritten = { id: 'content-fixture-native-2026-10-17', path: 'production/styles/fixture-native/STYLE.md', sourceRevision: 'x' };
+  await write(plugin, 'library/source-map.json', JSON.stringify({ sources: [handWritten] }));
+  const args = { from, to: path.join(plugin, 'library'), skillDir: path.join(plugin, 'skills', 'visual-styles'), commit: 'abc1234' };
+  await importStyles(args);
+  await importStyles(args);
+  const map = JSON.parse(await fs.readFile(path.join(plugin, 'library', 'source-map.json'), 'utf8'));
+  assert.deepEqual(map.sources.filter((s) => s.id === handWritten.id), [handWritten]);
+});
+
+test('records the import as one module-level provenance entry', async () => {
+  const from = await fixture();
+  const { plugin, to, skillDir } = await runImport(from);
+  await importStyles({ from, to, skillDir, commit: 'def5678' });
+  const map = JSON.parse(await fs.readFile(path.join(plugin, 'library', 'source-map.json'), 'utf8'));
+  const entries = map.sources.filter((s) => s.id === 'content-style-library');
+  assert.equal(entries.length, 1);
+  assert.equal(entries[0].sourceRevision, 'def5678');
+  assert.equal(entries[0].path, 'production/styles');
+  assert.deepEqual(entries[0].styles, ['fixture-line', 'fixture-native']);
+  assert.match(entries[0].attribution, /LemoLab/);
 });
 
 test('re-import replaces earlier imports without duplicating provenance', async () => {
@@ -159,4 +184,55 @@ test('generated skill names every style and fits the limit', async () => {
   assert.ok(front[1].length <= 1024, `description is ${front[1].length} characters`);
   for (const title of ['Title fixture-native', 'Title fixture-line']) assert.ok(front[1].includes(title));
   assert.match(skill, /\| Title fixture-native \| `fixture-native` \| native \| Calm product explainers \|/);
+});
+
+test('adaptation rules rewrite proof notes, upstream clone paths and caches', async () => {
+  const from = await fixture();
+  await write(from, 'fixture-proof/style.json', styleJson('fixture-proof'));
+  await write(from, 'fixture-proof/STYLE.md', [
+    '# Proof',
+    'The proof is the shared test scene, built by `buildScene` and proven with `node production/styles/harness/prove.mjs fixture-proof`, which rebuilds it.',
+    'Adapted from Lemo-Opuscar (MIT, LemoLab), cloned at `~/Assets/lemo-opuscar/styles/fixture-proof/`.',
+    '- Cache: `~/Assets/joeb/styles/fixture-proof/` (`plate/`), per scene for reel renders.',
+    '',
+  ].join('\n'));
+  await write(from, 'fixture-proof/fixture-proof.jsx', '// buildScene: the shared test scene (production/styles/scene) as x.\n');
+  const { to, result } = await runImport(from);
+  const md = await fs.readFile(path.join(to, 'styles/fixture-proof/STYLE.md'), 'utf8');
+  assert.equal(md.split('\n')[1], "Before import, the shared test scene was built by `buildScene` from a blank project and rendered in the author's proof setup, then compared with Lemo-Opuscar's fixture-proof reference. In this plugin, render frames of your own build and check them against this file.");
+  assert.equal(md.split('\n')[2], 'Adapted from Lemo-Opuscar (MIT, LemoLab), at `https://github.com/lemomo-ai/lemo-opuscar/tree/main/styles/fixture-proof/`.');
+  assert.equal(md.split('\n')[3], '- Cache: the folder you pass as `--cache` (`plate/`).');
+  const jsx = await fs.readFile(path.join(to, 'styles/fixture-proof/fixture-proof.jsx'), 'utf8');
+  assert.equal(jsx, "// buildScene: the shared test scene (the library's seven-beat test scene) as x.\n");
+  assert.deepEqual(result.adaptations.filter((a) => a.file.startsWith('styles/fixture-proof/')), []);
+});
+
+// ---- The real imported library -------------------------------------------------
+
+const LIBRARY = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', 'library');
+
+test('every index entry has its files and every folder has an entry', async () => {
+  const index = JSON.parse(await fs.readFile(path.join(LIBRARY, 'styles/index.json'), 'utf8'));
+  const ids = index.styles.map((s) => s.id).sort();
+  assert.equal(ids.length, 30);
+  for (const s of index.styles) {
+    await fs.access(path.join(LIBRARY, 'styles', s.id, 'STYLE.md'));
+    await fs.access(path.join(LIBRARY, 'styles', s.id, s.module));
+    for (const tool of s.tools) await fs.access(path.join(LIBRARY, 'styles', s.id, tool));
+  }
+  const folders = (await fs.readdir(path.join(LIBRARY, 'styles'), { withFileTypes: true })).filter((e) => e.isDirectory()).map((e) => e.name).sort();
+  assert.deepEqual(folders, ids);
+});
+
+test('no shipped style file names a Content-only location', async () => {
+  const offenders = [];
+  for (const rel of await listFiles(path.join(LIBRARY, 'styles'))) {
+    let text = await fs.readFile(path.join(LIBRARY, 'styles', rel), 'utf8');
+    // The index's source block is provenance, which may name Content paths.
+    if (rel === 'index.json') text = JSON.stringify({ ...JSON.parse(text), source: undefined }, null, 2);
+    text.split('\n').forEach((line, i) => {
+      if (/~\/Assets|prove\.mjs|go\.sh|production\/styles|Higgsfield/.test(line)) offenders.push(`${rel}:${i + 1}`);
+    });
+  }
+  assert.deepEqual(offenders, []);
 });

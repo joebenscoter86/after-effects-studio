@@ -98,5 +98,5 @@ Acoustic and light: kalimba, marimba, nylon guitar, pizzicato, woodblock and han
 
 ## Reference
 
-- Lemo-Opuscar, `styles/iso-infographic/STYLE.md` and `poster.jpg` (MIT, LemoLab), cloned at `~/Assets/lemo-opuscar`.
+- Lemo-Opuscar, `styles/iso-infographic/STYLE.md` and `poster.jpg` (MIT, LemoLab), at `https://github.com/lemomo-ai/lemo-opuscar/tree/main`.
 - Proof: `proof/compare.jpg` (the reference poster above our seven beats), `proof/sheet.jpg`, `proof/proof.mp4` (local, not in git).

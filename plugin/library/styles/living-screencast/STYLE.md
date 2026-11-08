@@ -77,6 +77,6 @@ Invented features or renamed modes: check every label against the product. The m
 
 ## Reference
 
-The proof is the shared test scene, built by `buildScene` and proven with `node production/styles/harness/prove.mjs living-screencast`, which rebuilds it from a blank project and renders it with aerender. `proof/compare.jpg` sets it beside Lemo-Opuscar's living-screencast poster.
+Before import, the shared test scene was built by `buildScene` from a blank project and rendered in the author's proof setup, then compared with Lemo-Opuscar's living-screencast reference. In this plugin, render frames of your own build and check them against this file.
 
 Build time: about 5.6 s for 117 layers, render about 24 s; every text key goes in through one batched call per layer (`AESLib.textKeys` / `AESLib.bakeText`).

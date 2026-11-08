@@ -67,6 +67,6 @@ Too many thin columns look like a chart: fewer, wider modules. Tilting a layout 
 
 ## Reference
 
-The proof is the shared test scene, built by `buildScene` and proven with `node production/styles/harness/prove.mjs swiss-motion`, which rebuilds it from a blank project and renders it with aerender. `proof/compare.jpg` sets it beside Lemo-Opuscar's swiss-motion poster.
+Before import, the shared test scene was built by `buildScene` from a blank project and rendered in the author's proof setup, then compared with Lemo-Opuscar's swiss-motion reference. In this plugin, render frames of your own build and check them against this file.
 
 Build time: about 1.6 s for 55 layers; every text key goes in through one batched call per layer (`AESLib.textKeys`).

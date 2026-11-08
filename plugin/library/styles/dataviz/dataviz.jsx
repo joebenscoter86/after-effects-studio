@@ -104,7 +104,7 @@ var AESDataviz = (function () {
   function wordsIn(list, t0, t1) { var r = []; for (var i = 0; i < list.length; i++) if (list[i].s >= t0 - .05 && list[i].s < t1 - .02) r.push(list[i]); return r; }
   function clearOwned(comp, prefix) { AESLib.clearOwned(comp, prefix); }
 
-  // buildScene: the shared test scene (production/styles/scene) as a data story. comp = an empty 1080 x 1920 comp at scene.fps.
+  // buildScene: the shared test scene (the library's seven-beat test scene) as a data story. comp = an empty 1080 x 1920 comp at scene.fps.
   // Sheet A (top of the paper): one dot per spoken word, its height the word's real length in seconds, coloured on a ramp centred on the mean.
   // Sheet B (1500 px further down the same paper): the real frame pinned as a print, then the clip's real brightness, one value per frame (338),
   // which breaks the frame at the cut and makes the scale ratchet. The camera pans down to B and back; the carry is the series morphing into

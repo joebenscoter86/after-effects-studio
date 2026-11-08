@@ -51,7 +51,7 @@ The rooms are a Blender plate; everything the camcorder adds is built by `buildS
 
 **Gotchas found while proving it**
 
-- `prove.mjs` checks every tool named in `needs` on the PATH, and Blender is not on it (it is called by its app path): `needs` lists node and ffmpeg only, and `plates.mjs` finds Blender itself (or `BLENDER`).
+- Blender is called by its app path, not the PATH: `plates.mjs` finds it at `/Applications/Blender.app` or through `BLENDER`.
 - The battery's bar handles went invalid once more shape groups were added beside them ("Object is invalid"): the bars are re-fetched from the root group by index after every group exists.
 - With Optics Compensation at FOV 22 on the tape, the frame's corners went black and curved like a TV tube, and the head-switching copy (no barrel) showed as a stray strip under them. Every copy of the tape goes through the same `lens` (overscale 107, FOV 12), and the head-switching band is masked at the bottom of the visible picture, not of the layer.
 - The first proof was washed out next to the reference: AgX plus the fog flatten the mustard. Saturation 28 and gamma 0.94 in the tape pass, and hard-edged wallpaper stripes in Blender, brought it back.
@@ -65,7 +65,7 @@ The rooms are a Blender plate; everything the camcorder adds is built by `buildS
 
 - Fonts (OFL, bundled in `assets/fonts/`): VT323, IBM Plex Mono Medium, Barlow Semi Condensed SemiBold (Blender reads the bundled Barlow file for the notice).
 - Blender 5.2 (`/Applications/Blender.app`, or set `BLENDER`), run locally and headless by `tools/plates.mjs` (Node 20+, ffmpeg). No GPU rental, no generated images.
-- Cache: `~/Assets/joeb/styles/backrooms/` (`plates-<key>/plates.mp4`, `data.json`, `plates.json`), per scene for reel renders.
+- Cache: the folder you pass as `--cache` (`plates-<key>/plates.mp4`, `data.json`, `plates.json`).
 - Effects: all stock (listed in `style.json`).
 
 ## 8. Pitfalls of the medium
@@ -80,4 +80,4 @@ The rooms are a Blender plate; everything the camcorder adds is built by `buildS
 
 ## Reference
 
-Lemo-Opuscar `backrooms` (MIT, LemoLab): `~/Assets/lemo-opuscar/styles/backrooms/STYLE.md` and its demo (`demo/world.js`, `vhs.js`, `osd.js`, `subs.js`, `thing2d.js`, `story.js`). License copy in `assets/LICENSE-lemo-opuscar.txt`.
+Lemo-Opuscar `backrooms` (MIT, LemoLab): `https://github.com/lemomo-ai/lemo-opuscar/tree/main/styles/backrooms/STYLE.md` and its demo (`demo/world.js`, `vhs.js`, `osd.js`, `subs.js`, `thing2d.js`, `story.js`). License copy in `assets/LICENSE-lemo-opuscar.txt`.

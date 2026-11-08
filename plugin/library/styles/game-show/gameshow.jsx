@@ -185,7 +185,7 @@ var AESGameShow = (function () {
       group(L, "C" + i).property("ADBE Vector Transform Group").property("ADBE Vector Rotation").expression = "(time - " + n3(t0) + ") * " + n3(rs) + " + " + n3(ph * 40) + ";"; }
     return span(L, t0, t1); }
 
-  // buildScene: the shared test scene (production/styles/scene) as a seven-round game show. comp = an empty 1080 x 1920 comp at scene.fps.
+  // buildScene: the shared test scene (the library's seven-beat test scene) as a seven-round game show. comp = an empty 1080 x 1920 comp at scene.fps.
   // Each beat is a round in its own set, hard-cut with a white flash; a corner banner names the round; cast and props drop in on the grid and hop;
   // the subtitles are telops on the floor band. The real frame is a polaroid card that pops in, comes back as a thumbnail in the round ribbon,
   // grows out of its slot and stays as the finale's card under a "Perfect!" while the crowd drops in.

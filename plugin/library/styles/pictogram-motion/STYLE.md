@@ -87,4 +87,4 @@ Figure parts spreading into the text column: keep the stage on top and the text 
 
 ## Reference
 
-The proof is the shared test scene, built by `buildScene` and proven with `node production/styles/harness/prove.mjs pictogram-motion`, which rebuilds it from a blank project and renders it with aerender. `proof/compare.jpg` sets it beside Lemo-Opuscar's pictogram-motion poster.
+Before import, the shared test scene was built by `buildScene` from a blank project and rendered in the author's proof setup, then compared with Lemo-Opuscar's pictogram-motion reference. In this plugin, render frames of your own build and check them against this file.

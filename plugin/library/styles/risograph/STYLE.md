@@ -72,6 +72,6 @@ Three halftoned plates in one area are mud: two plates, one tint. A main colour 
 
 ## Reference
 
-The proof is the shared test scene, built by `buildScene` and proven with `node production/styles/harness/prove.mjs risograph`, which rebuilds it from a blank project and renders it with aerender. `proof/compare.jpg` sets it beside Lemo-Opuscar's risograph poster.
+Before import, the shared test scene was built by `buildScene` from a blank project and rendered in the author's proof setup, then compared with Lemo-Opuscar's risograph reference. In this plugin, render frames of your own build and check them against this file.
 
 Build time: about 5 s for 56 layers (three plate comps over one ART comp); render about 55 s alone, about 170 s with the finer grain while other proofs shared the machine. The count and the typed line are one batched Source Text call each (`AESLib.bakeText`).

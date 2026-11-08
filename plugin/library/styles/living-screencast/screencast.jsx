@@ -169,7 +169,7 @@ var AESScreencast = (function () {
   function onset(ws, i, fb) { return ws[i] ? ws[i].s : fb; }
   function clearOwned(comp, prefix) { AESLib.clearOwned(comp, prefix); }
 
-  // buildScene: the shared test scene (production/styles/scene) as a screencast of a proof tool whose beat strip lists the scene's real beats.
+  // buildScene: the shared test scene (the library's seven-beat test scene) as a screencast of a proof tool whose beat strip lists the scene's real beats.
   // comp = an empty 1080 x 1920 comp at scene.fps. The UI is light; the mascot is the only saturated hue; overlays sit in screen space.
   function buildScene(comp, scene, opts) {
     fontOK(); TXT = [];

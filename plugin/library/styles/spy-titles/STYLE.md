@@ -76,6 +76,6 @@ A black figure on a black ground vanishes: give every location a ground the figu
 
 ## Reference
 
-The proof is the shared test scene, built by `buildScene` and proven with `node production/styles/harness/prove.mjs spy-titles`, which rebuilds it from a blank project and renders it with aerender. `proof/compare.jpg` sets it beside Lemo-Opuscar's spy-titles poster.
+Before import, the shared test scene was built by `buildScene` from a blank project and rendered in the author's proof setup, then compared with Lemo-Opuscar's spy-titles reference. In this plugin, render frames of your own build and check them against this file.
 
 Build time: about 23 s for 211 layers (most of it is measuring letters with probe layers; every credit letter is its own layer); render about 51 s. The number counts with one batched Source Text call (`AESLib.bakeText`); no letter is ever keyed one Source Text key at a time.

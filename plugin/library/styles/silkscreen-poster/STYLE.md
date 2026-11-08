@@ -87,4 +87,4 @@ Not built into the module. Lemo's palette fits: acoustic, hand-played instrument
 ## Reference
 
 - Lemo-Opuscar `styles/silkscreen-poster` (MIT, LemoLab): `STYLE.md`, `poster.jpg`, the demo engine `demo/engine/silk.js` (read for technique only, never copied).
-- Shared scene: `production/styles/scene/`.
+- Shared scene: the library's seven-beat test scene (not shipped).

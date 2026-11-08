@@ -151,7 +151,7 @@ var AESDeco = (function () {
     var Wg = sh(comp, P + "_WEDGES", { paths: wedges, fill: PALETTE.ray, fillOp: 13, anchor: [cx, cy] });
     var Ry = sh(comp, P + "_RAYS", { paths: lines, stroke: PALETTE.ray, w: 1.8, opacity: 60, draw: { t: .05, dur: .8, mode: "end" }, anchor: [cx, cy], t0: 0 });
     lin(Wg.rotation, [0, comp.duration], [0, 5]); lin(Ry.rotation, [0, comp.duration], [0, 5]); out.push(Wg); out.push(Ry); return out; }
-  // the shared test scene (production/styles/scene) as one moving deco poster. comp = an empty 1080 x 1920 comp at scene.fps.
+  // the shared test scene (the library's seven-beat test scene) as one moving deco poster. comp = an empty 1080 x 1920 comp at scene.fps.
   // Title: a point, a hairline, the plaque opens from the axis under an arch and the title unfolds word by word. Picture: three arched windows open,
   // their figures engrave themselves, a frame and a plaque bind them into one picture. Doors close over it and open on the real frame, gilded, on a
   // jewel mat. Number: the frame rises, a dial unfolds and its needle counts 338 while bulbs switch on. Line: a subtitle card unfolds and the words

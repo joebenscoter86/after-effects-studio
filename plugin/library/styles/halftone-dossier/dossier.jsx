@@ -223,7 +223,7 @@ var AESDossier = (function () {
   function wordsIn(list, t0, t1) { var r = []; for (var i = 0; i < list.length; i++) if (list[i].s >= t0 - .05 && list[i].s < t1) r.push(list[i]); return r; }
   function clearOwned(comp, prefix) { AESLib.clearOwned(comp, prefix); }
 
-  // buildScene: the shared test scene (production/styles/scene) as a case file read out one exhibit at a time.
+  // buildScene: the shared test scene (the library's seven-beat test scene) as a case file read out one exhibit at a time.
   // comp = an empty 1080 x 1920 comp at scene.fps. opts.assets: screen45, screen15, wipe (dot screens) and print (the real frame, printed).
   function buildScene(comp, scene, opts) {
     fontOK(); var P = opts.prefix || "DOSS", C = PALETTE, A = opts.assets, B = scene.beat, W = comp.width, H = comp.height, notes = [], WL = scene.wordList, END = comp.duration;

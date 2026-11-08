@@ -4,7 +4,7 @@
 // and files it as one H.264 plus data.json (the TV screen's corners, blur and fog per frame; the blackouts and the tape tear).
 // node tools/plates.mjs --scene <dir> --cache <dir> --out <cache>/plates.json [--cached-only] [--force]
 // Cached in <cache>/plates-<key>/ by a hash of rooms.py, scene.json and the notice font: a matching cache returns at once. Render it
-// by hand before proving (a few minutes on an M5), because prove.mjs runs prepare while it holds the After Effects lock.
+// by hand before building (a few minutes on an M5), so After Effects is not left waiting on it.
 // Frames go to a scratch folder deleted once plates.mp4 is filed; an interrupted render resumes from the frames on disk.
 import fs from 'node:fs'; import path from 'node:path'; import crypto from 'node:crypto'; import { spawnSync } from 'node:child_process'; import { fileURLToPath } from 'node:url';
 const HERE = path.dirname(fileURLToPath(import.meta.url)), PKG = path.resolve(HERE, '..');

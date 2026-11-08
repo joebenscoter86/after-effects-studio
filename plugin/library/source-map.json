@@ -104,6 +104,69 @@
       "attribution": "General role/voice/reading concepts adapted from Joe original playbook. Purchased template code, exact template choreography, font files and proprietary assets excluded. House rules are not universal."
     },
     {
+      "id": "content-paper-collage-style-2026-10-17",
+      "path": "production/styles/paper-collage/STYLE.md",
+      "sha256": "202eb3e0ae5c7f5930e3b4dd2092d5997165ed106a0bd8efbaa425e5b0a03d7b",
+      "sourceRevision": "f31340724258e85a98620fc031c0f0e95e0a1af9",
+      "workingTreeStatus": "clean-for-this-source",
+      "sections": "1-4,6-8",
+      "classification": "original-style-guidance-with-third-party-inspiration-reference",
+      "adaptedTo": [
+        "styles/paper-collage.md",
+        "recipes/paper-collage.md",
+        "examples/paper-collage.md"
+      ],
+      "scope": "Original brand-neutral material and movement guidance adapted from Joe's source. No third-party engine, private proof media, halftone utility, source JSX or bundled fonts copied. Native abstract paper is disclosed as distinct from photographic halftone.",
+      "ownershipBasis": "Joe confirmed his guidance and writing are original and clean to publish; third-party inspiration and media are excluded.",
+      "evidence": "quality/reports/2026-10-17-collage-acceptance/report.md",
+      "technicalStatus": "native-helper-fixture-passed; isolated-specialist-routing-passed; native-example-render-and-decode-passed; installed-route-pending",
+      "visualStatus": "native-example-agent-reviewed-at-full-speed; user-acceptance-pending"
+    },
+    {
+      "id": "content-style-library",
+      "path": "production/styles",
+      "sourceRevision": "628f1c52",
+      "styles": [
+        "art-deco",
+        "backrooms",
+        "blueprint",
+        "crt-terminal",
+        "dark-keynote",
+        "dataviz",
+        "engraving",
+        "game-show",
+        "glass-product",
+        "halftone-dossier",
+        "hologram-hud",
+        "iso-infographic",
+        "living-screencast",
+        "lowpoly-island",
+        "microgame",
+        "midcentury-toon",
+        "one-line",
+        "paper-lantern",
+        "pictogram-motion",
+        "risograph",
+        "rubber-hose",
+        "silent-film",
+        "silkscreen-poster",
+        "spy-titles",
+        "stained-glass",
+        "swiss-motion",
+        "tilt-shift",
+        "ukiyoe",
+        "whiteboard",
+        "woodcut"
+      ],
+      "classification": "mit-licensed-adaptation",
+      "adaptedTo": [
+        "library/styles/",
+        "skills/visual-styles/SKILL.md"
+      ],
+      "scope": "Proven Content style packages that need no generated art: STYLE.md, the ES3 module and the tools each needs. Font binaries, proofs and generated pieces are not copied. Content-only notes are rewritten by plugin/scripts/import-styles.mjs.",
+      "attribution": "Styles adapted from Lemo-Opuscar (MIT, Copyright (c) 2026 LemoLab, https://github.com/lemomo-ai/lemo-opuscar); grammar and native After Effects ports by Joe Benscoter. Each STYLE.md states what it takes from its source."
+    },
+    {
       "path": "production/styles/art-deco/STYLE.md",
       "sha256": "e399dcabab4083bce0adb9e2e6e089e366bca7f87f3273f96a4f13ce0d305540",
       "id": "historical-464c60e6fbe2"

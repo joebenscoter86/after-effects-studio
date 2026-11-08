@@ -79,6 +79,6 @@ Pick data columns by header name, never by index, and print every fact the narra
 
 ## Reference
 
-The proof is the shared test scene, built by `buildScene` and proven with `node production/styles/harness/prove.mjs dataviz`, which rebuilds it from a blank project and renders it with aerender. `proof/compare.jpg` sets it beside Lemo-Opuscar's dataviz poster.
+Before import, the shared test scene was built by `buildScene` from a blank project and rendered in the author's proof setup, then compared with Lemo-Opuscar's dataviz reference. In this plugin, render frames of your own build and check them against this file.
 
 Build time: about 4.8 s for 158 layers; every text key goes in through one batched call per layer (`AESLib.textKeys`).

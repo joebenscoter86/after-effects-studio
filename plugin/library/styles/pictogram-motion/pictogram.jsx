@@ -140,7 +140,7 @@ var AESPictogram = (function () {
   function wordsIn(list, t0, t1) { var r = []; for (var i = 0; i < list.length; i++) if (list[i].s >= t0 - .05 && list[i].s < t1 - .02) r.push(list[i]); return r; }
   function clearOwned(comp, prefix) { AESLib.clearOwned(comp, prefix); }
 
-  // buildScene: the shared test scene (production/styles/scene) as seven cards of a pictogram film. comp = an empty 1080 x 1920 comp at scene.fps.
+  // buildScene: the shared test scene (the library's seven-beat test scene) as seven cards of a pictogram film. comp = an empty 1080 x 1920 comp at scene.fps.
   // Each beat is a card in its own hue (the rows whip one cell at every cut while Tint swaps the hue); stage on top, text column below, HUD in
   // the corners, a caption band and a tick bar at the bottom. The real frame is printed inside the stage disc, pushed to full bleed for the carry,
   // and shrinks back to become the end card's sun disc.

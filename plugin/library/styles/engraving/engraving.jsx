@@ -217,7 +217,7 @@ var AESEngraving = (function () {
   function ruleNodes(cx, y, half) { return [{ k: "rect", x: cx - half, y: y - 1.5, w: 2 * half, h: 3, fill: PALETTE.ink }, { k: "rect", x: cx - half + 40, y: y + 8, w: 2 * half - 80, h: 1.2, fill: PALETTE.ink },
     { k: "poly", pts: [[cx, y - 10], [cx + 10, y], [cx, y + 10], [cx - 10, y]], fill: PALETTE.ink }]; }
 
-  // buildScene: the shared test scene (production/styles/scene) as six plates of one natural-history book. comp = an empty 1080 x 1920 comp.
+  // buildScene: the shared test scene (the library's seven-beat test scene) as six plates of one natural-history book. comp = an empty 1080 x 1920 comp.
   // DRAW holds the tone drawing; F1..F3 hatch it; INK multiplies the families in cutting order; SHEET prints the ink on laid paper with
   // the plate mark, border, cut lettering and washes; the main comp breathes over the sheet, peels the held proof and lays the note slips.
   function buildScene(comp, scene, opts) {

@@ -90,5 +90,5 @@ The world is a Blender plate; everything on and around it is built by `buildScen
 
 ## Reference
 
-- Lemo-Opuscar `tilt-shift` (MIT, LemoLab): `~/Assets/lemo-opuscar/styles/tilt-shift/STYLE.md`, `DEMO.md` and `demo/`.
+- Lemo-Opuscar `tilt-shift` (MIT, LemoLab): `https://github.com/lemomo-ai/lemo-opuscar/tree/main/styles/tilt-shift/STYLE.md`, `DEMO.md` and `demo/`.
 - Grammar: tilt-shift time-lapse photography (high vantage, the blur band, time-lapse rhythm, cloud shadows). No real places, landmarks or brands.

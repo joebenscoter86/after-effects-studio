@@ -180,7 +180,7 @@ var AESSpy = (function () {
   function onsets(list) { var r = []; for (var i = 0; i < list.length; i++) r.push(list[i].s); return r; }
   function clearOwned(comp, prefix) { AESLib.clearOwned(comp, prefix); }
 
-  // buildScene: the shared test scene (production/styles/scene) as a spy title sequence. comp = an empty 1080 x 1920 comp at scene.fps.
+  // buildScene: the shared test scene (the library's seven-beat test scene) as a spy title sequence. comp = an empty 1080 x 1920 comp at scene.fps.
   // Every beat is a new location with its own ground, cut hard on the voice; the credits are the set; the agent crosses the picture;
   // the keyhole circle (the real frame) is the object of the chase and ends as the full stop of the title.
   function buildScene(comp, scene, opts) {

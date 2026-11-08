@@ -74,6 +74,6 @@ A gold point on pure black reads as a broken frame: keep the warm centre and the
 
 ## Reference
 
-The proof is the shared test scene, built by `buildScene` and proven with `node production/styles/harness/prove.mjs art-deco`, which rebuilds it from a blank project and renders it with aerender. `proof/compare.jpg` sets it beside Lemo-Opuscar's art-deco poster.
+Before import, the shared test scene was built by `buildScene` from a blank project and rendered in the author's proof setup, then compared with Lemo-Opuscar's art-deco reference. In this plugin, render frames of your own build and check them against this file.
 
 Build time: about 2.5 s for about 140 layers across the main comp and ART; the only text keys are the counter's, in one batched call (`AESLib.bakeText`).

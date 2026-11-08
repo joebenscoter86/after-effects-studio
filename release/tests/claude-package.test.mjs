@@ -201,6 +201,13 @@ test('every vendored package has a license and a notice', async () => {
   }
 });
 
+test('notices credit the style library source', async () => {
+  const { outDir } = await sharedBuild();
+  const notices = await fs.readFile(path.join(outDir, 'THIRD-PARTY-NOTICES.txt'), 'utf8');
+  assert.match(notices, /Lemo-Opuscar/);
+  assert.match(notices, /Copyright \(c\) 2026 LemoLab/);
+});
+
 test('vendored modules are not ignored by git', () => {
   const r = spawnSync('git', ['check-ignore', '-q', 'claude/after-effects-studio/runtime/node_modules/zod/package.json'], { cwd: ROOT });
   assert.equal(r.status, 1, 'the vendored runtime would be dropped from a Git-based install');

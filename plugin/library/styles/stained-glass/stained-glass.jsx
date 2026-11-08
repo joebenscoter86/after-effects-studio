@@ -188,7 +188,7 @@ var AESStainedGlass = (function () {
       var mid = (A.a + Bc.a + (i === n - 1 ? 2 * Math.PI : 0)) / 2; polys.push({ pts: p, dir: [Math.cos(mid), Math.sin(mid)] }); }
     return { cuts: cuts, polys: polys }; }
 
-  // buildScene: the shared test scene (production/styles/scene) as one window read pane by pane. comp = an empty 1080 x 1920 comp.
+  // buildScene: the shared test scene (the library's seven-beat test scene) as one window read pane by pane. comp = an empty 1080 x 1920 comp.
   function buildScene(comp0, scene, opts) {
     fontOK(); var P = opts.prefix || "STGL", A = opts.assets, B = scene.beat, WL = scene.wordList, D = comp0.duration, fps = comp0.frameRate, notes = [];
     AESLib.clearOwned(comp0, P);

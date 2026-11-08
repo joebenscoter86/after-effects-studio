@@ -121,7 +121,7 @@ var AESWhiteboard = (function () {
   function solid(comp, name, color, w, h) { return comp.layers.addSolid(color, name, Math.round(w), Math.round(h), 1); }
   function c4(c) { return [c[0], c[1], c[2], 1]; }
   // ---- the scene ----
-  // the shared test scene (production/styles/scene) written on one big board (3600 x 5400). Each beat owns a region; the camera travels
+  // the shared test scene (the library's seven-beat test scene) written on one big board (3600 x 5400). Each beat owns a region; the camera travels
   // between regions (and once returns to one), rides the drawn arrow into the last region, then pulls back past the board edge to the wall.
   function buildScene(comp, scene, opts) {
     fontOK(); N = 0; JOBS = []; var P = opts.prefix || "WHITEB", A = opts.assets, B = scene.beat, Wd = comp.width, Ht = comp.height, WL = scene.wordList, fps = scene.fps, notes = [];

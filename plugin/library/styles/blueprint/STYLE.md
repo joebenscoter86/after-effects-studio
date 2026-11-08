@@ -57,7 +57,7 @@ Contrapuntal, mechanical music: harpsichord, bassoon, spiccato strings, harp, ce
 - Fractal Noise's Transform section is not a property group in scripting: `Scale`, `Uniform Scaling`, `Scale Width`, `Scale Height` and `Rotation` sit flat on the effect (`fx.property("Scale")`).
 - Centre justification did not take on a new text layer (the stamp's word sat right of its box, the NOTE number spilled out of its cell): anchor from `sourceRectAtTime(0, false)` instead, as Swiss motion found for flush left.
 - The verdict stamp is timed to the last spoken word's onset, not its end, so it lands on the word and holds through the end card.
-- A build that throws leaves its untitled project open in AE, and the next proof (anyone's) then stops on "untitled and has unsaved changes". The harness now discards an untitled project whose only comps are named PROOF, and closes the project it started when a build throws.
+- A build that throws can leave its untitled project open in AE. Inspect it before the next build, and never discard unsaved work you did not create.
 - Coating streaks and mottle read as scratches above about 10% opacity once the page is lit correctly: streaks 6% Soft Light, mottle 14% Overlay.
 
 **Close, not identical:** the reference draws on a WebGL sheet shader with true ink bleed, wet stains and line weights that scale with zoom (screen width = sheet width x zoom^0.65); here the paper is stacked stock effects and the lines scale with the camera null. The proof scene has no mechanism, exploded view or "one real thing"; a reel adds those when its story has them.
@@ -72,6 +72,6 @@ A figure near the sheet edge shows the table in the wide: keep margins. Line wor
 
 ## Reference
 
-The proof is the shared test scene, built by `buildScene` and proven with `node production/styles/harness/prove.mjs blueprint`, which rebuilds it from a blank project and renders it with aerender. `proof/compare.jpg` sets it beside Lemo-Opuscar's blueprint poster.
+Before import, the shared test scene was built by `buildScene` from a blank project and rendered in the author's proof setup, then compared with Lemo-Opuscar's blueprint reference. In this plugin, render frames of your own build and check them against this file.
 
 Build time: about 2 s for 147 layers; the number and the NOTE tag each take one batched Source Text call (`AESLib.bakeText`, `AESLib.textKeys`); lettering is a range-selector animator, never Source Text keys.

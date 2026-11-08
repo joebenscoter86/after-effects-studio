@@ -59,7 +59,7 @@ Every stroke sounds: felt on gloss (a hiss band around 2 to 7.5 kHz with body at
 - ExtendScript groups a nested ternary left to right: `a ? b : c ? d : e` runs as `(a ? b : c) ? d : e`. A centring line `o.center ? x - w / 2 : o.right ? x - w : x` right-aligned every centred word, and a clamp written as one ternary returned the maximum when the value was below the minimum (the first blue line came out at 20 px wide). Never nest a ternary in a module: parenthesise it or use if/else. The same pattern sits in `AESLib.text` (justification) and `AESLib.ease` (the exit ease) and is likely the "justification does not take" gotcha other packages recorded; not changed here.
 - Trim Paths set to Individually draws the paths of a group in the order they were added (the first added is drawn first), each in proportion to its length, so a pen baked from the same lengths stays on the trim head.
 - Make the camera nulls at identity and parent every board layer before keying them: setting `parent` keeps the world position, so a layer parented after the camera moved lands somewhere else.
-- The scene folder is not visible from AE (the harness strips it), so the frame comes in through a prepare tool (`tools/print.mjs`) like every other input.
+- After Effects may not see the scene folder, so the frame comes in through a prepare tool (`tools/print.mjs`) like every other input.
 - The sheen at 9% with 140 px blur read as stripes across every beat; 5% with 220 px blur reads as gloss.
 - Lettering at 7.5% of cap height looked thin beside the poster; 10% (6 to 22 px) matches it.
 
@@ -75,6 +75,6 @@ One pen with too many jobs drifts later and later: give each pass a window and h
 
 ## Reference
 
-The proof is the shared test scene, built by `buildScene` and proven with `node production/styles/harness/prove.mjs whiteboard`, which rebuilds it from a blank project and renders it with aerender. `proof/compare.jpg` sets it beside Lemo-Opuscar's whiteboard poster.
+Before import, the shared test scene was built by `buildScene` from a blank project and rendered in the author's proof setup, then compared with Lemo-Opuscar's whiteboard reference. In this plugin, render frames of your own build and check them against this file.
 
 Build time: about 5 s for 63 layers (43 ink jobs); render about 90 s. The subtitles take one batched Source Text call (`AESLib.textKeys`); every board word is a Trim Paths write-on, never Source Text keys.

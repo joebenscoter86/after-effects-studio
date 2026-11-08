@@ -15,6 +15,55 @@ const PRIVATE_HOME = /\/Users\/[A-Za-z0-9._-]+\/|\/home\/[A-Za-z0-9._-]+\//;
 const CONTENT_REF = /~\/Assets|production\/|harness|prove\.mjs|go\.sh|Higgsfield|joeb/i;
 const LEMO_LICENSE = 'assets/LICENSE-lemo-opuscar.txt';
 const sha256 = (data) => createHash('sha256').update(data).digest('hex');
+const LEMO = 'https://github.com/lemomo-ai/lemo-opuscar/tree/main';
+
+// Rewrites that make imported text true for a plugin user. Re-running the importer reapplies them,
+// so the imported copies are never edited by hand.
+const RULES = [
+  [/^The proof is the shared test scene, built by `buildScene` and proven with `node production\/styles\/harness\/prove\.mjs ([a-z0-9-]+)`.*$/gm,
+    (_, id) => `Before import, the shared test scene was built by \`buildScene\` from a blank project and rendered in the author's proof setup, then compared with Lemo-Opuscar's ${id} reference. In this plugin, render frames of your own build and check them against this file.`],
+  [/\(production\/styles\/scene\)/g, () => "(the library's seven-beat test scene)"],
+  [/(cloned at )?`~\/Assets\/lemo-opuscar/g, (_, cloned) => `${cloned ? 'at ' : ''}\`${LEMO}`],
+  [/Cache: `~\/Assets\/joeb\/styles\/[a-z0-9-]+\/` \(([^)]*)\), per scene for reel renders\./g, (_, what) => `Cache: the folder you pass as \`--cache\` (${what}).`],
+  [/before proving \(/g, () => 'before building ('],
+  [/because prove\.mjs runs prepare while it holds the After Effects lock\./g, () => 'so After Effects is not left waiting on it.'],
+];
+
+// Exact, per-file replacements for Content-specific notes. A missing original means upstream changed: fail loudly.
+const EDITS = {
+  'backrooms/STYLE.md': [[
+    '- `prove.mjs` checks every tool named in `needs` on the PATH, and Blender is not on it (it is called by its app path): `needs` lists node and ffmpeg only, and `plates.mjs` finds Blender itself (or `BLENDER`).',
+    '- Blender is called by its app path, not the PATH: `plates.mjs` finds it at `/Applications/Blender.app` or through `BLENDER`.']],
+  'blueprint/STYLE.md': [[
+    '- A build that throws leaves its untitled project open in AE, and the next proof (anyone\'s) then stops on "untitled and has unsaved changes". The harness now discards an untitled project whose only comps are named PROOF, and closes the project it started when a build throws.',
+    '- A build that throws can leave its untitled project open in AE. Inspect it before the next build, and never discard unsaved work you did not create.']],
+  'lowpoly-island/STYLE.md': [[
+    '- The proof harness passes the scene to After Effects without its folder, so `words.json` cannot be read there: the line beat\'s word times travel in `track.json` from `island.py`, which reads them anyway to light a window per word.',
+    '- After Effects may not see the scene folder, so the line beat\'s word times travel in `track.json` from `island.py`, which reads them anyway to light a window per word.']],
+  'paper-lantern/STYLE.md': [[
+    /^- The bridge can drop mid-build \(network\) and `prove\.mjs` then reports an empty response.*\n/m, '']],
+  'whiteboard/STYLE.md': [[
+    '- The scene folder is not visible from AE (the harness strips it), so the frame comes in through a prepare tool (`tools/print.mjs`) like every other input.',
+    '- After Effects may not see the scene folder, so the frame comes in through a prepare tool (`tools/print.mjs`) like every other input.']],
+  'glass-product/STYLE.md': [
+    ['Frames are cached under `~/Assets/joeb/styles/glass-product/frames/<shot>/`;', 'Frames are cached under `<cache>/frames/<shot>/`;'],
+    ['- No Higgsfield pieces: every object is modelled and rendered in Blender.', '- No generated pieces: every object is modelled and rendered in Blender.']],
+  'glass-product/tools/glass_scene.py': [[
+    '    clip = os.path.expanduser(OPT.get("clip", "~/Assets/joeb/styles/scene/clip.mp4"))',
+    '    if "clip" not in OPT:\n        sys.exit("glass_scene.py: the input shot needs clip=<path to your footage>")\n    clip = os.path.expanduser(OPT["clip"])']],
+  'silkscreen-poster/STYLE.md': [['- Shared scene: `production/styles/scene/`.', "- Shared scene: the library's seven-beat test scene (not shipped)."]],
+};
+
+function adapt(id, rel, text) {
+  let out = text.replaceAll(`production/styles/${id}/`, `library/styles/${id}/`);
+  for (const [pattern, replace] of RULES) out = out.replace(pattern, replace);
+  for (const [from, to] of EDITS[`${id}/${rel}`] ?? []) {
+    const hit = typeof from === 'string' ? out.includes(from) : from.test(out);
+    if (!hit) throw new Error(`import-styles: expected text not found in ${id}/${rel}; upstream changed, review the edit`);
+    out = typeof from === 'string' ? out.replace(from, to) : out.replace(from, to);
+  }
+  return out;
+}
 
 async function exists(p) {
   try { await fs.access(p); return true; } catch { return false; }
@@ -120,7 +169,7 @@ export async function importStyles({ from, to, skillDir, commit }) {
       if (!NO_SCAN.test(rel)) {
         const text = source.toString('utf8');
         if (PRIVATE_HOME.test(text)) throw new Error(`private home path in ${style.id}/${rel}`);
-        const rewritten = text.replaceAll(`production/styles/${style.id}/`, `library/styles/${style.id}/`);
+        const rewritten = adapt(style.id, rel, text);
         rewritten.split('\n').forEach((line, i) => {
           if (CONTENT_REF.test(line)) adaptations.push({ file: out, line: i + 1, text: line.trim() });
         });
@@ -170,7 +219,19 @@ export async function importStyles({ from, to, skillDir, commit }) {
   const map = JSON.parse(await fs.readFile(mapPath, 'utf8'));
   const ours = new Set(staged.map((f) => f.sourcePath));
   const prefixes = [...previous, ...selected.map((s) => s.id)].map((id) => `production/styles/${id}/`);
-  map.sources = map.sources.filter((s) => !ours.has(s.path) && !prefixes.some((p) => s.path.startsWith(p)));
+  // Remove only what an import wrote: the import entry and per-file historical-* entries under imported folders.
+  const importedFile = (s) => s.id?.startsWith('historical-') && (ours.has(s.path) || prefixes.some((p) => s.path.startsWith(p)));
+  map.sources = map.sources.filter((s) => s.id !== 'content-style-library' && !importedFile(s));
+  map.sources.push({
+    id: 'content-style-library',
+    path: 'production/styles',
+    sourceRevision: commit,
+    styles: selected.map((s) => s.id),
+    classification: 'mit-licensed-adaptation',
+    adaptedTo: ['library/styles/', 'skills/visual-styles/SKILL.md'],
+    scope: 'Proven Content style packages that need no generated art: STYLE.md, the ES3 module and the tools each needs. Font binaries, proofs and generated pieces are not copied. Content-only notes are rewritten by plugin/scripts/import-styles.mjs.',
+    attribution: 'Styles adapted from Lemo-Opuscar (MIT, Copyright (c) 2026 LemoLab, https://github.com/lemomo-ai/lemo-opuscar); grammar and native After Effects ports by Joe Benscoter. Each STYLE.md states what it takes from its source.',
+  });
   for (const f of staged) map.sources.push({ path: f.sourcePath, sha256: f.sourceSha, id: `historical-${sha256(f.sourcePath).slice(0, 12)}` });
   await fs.writeFile(mapPath, `${JSON.stringify(map, null, 2)}\n`);
 

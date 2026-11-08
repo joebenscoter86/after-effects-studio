@@ -275,7 +275,7 @@ var AESMidcenturyToon = (function () {
 
   function wordsIn(list, t0, t1) { var r = []; for (var i = 0; i < list.length; i++) if (list[i].s >= t0 - .05 && list[i].s < t1) r.push(list[i]); return r; }
 
-  // buildScene: the shared test scene (production/styles/scene) as a 1950s follow-along film. comp = an empty 1080 x 1920 comp at scene.fps.
+  // buildScene: the shared test scene (the library's seven-beat test scene) as a 1950s follow-along film. comp = an empty 1080 x 1920 comp at scene.fps.
   // STAGE holds the grounds (on ones), CAST (every drawing, on twos with a light line boil) and the wipes and irises above it; the main comp
   // holds STAGE with the camera's slow push, then paper grain and a warm vignette. The presenter holds still in every beat; the hand is the step.
   function buildScene(comp, scene, opts) {

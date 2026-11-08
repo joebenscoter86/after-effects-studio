@@ -79,4 +79,4 @@ Stock After Effects effects only: Posterize Time, Turbulent Displace, Fractal No
 
 ## Reference
 
-Lemo-Opuscar `styles/midcentury-toon` (MIT, LemoLab), cloned at `~/Assets/lemo-opuscar/styles/midcentury-toon/` (`STYLE.md`, `DEMO.md`, `poster.jpg`, the demo engine in `demo/`). Grammar after early-1950s limited animation, 1950s classroom films and appliance manuals; no character, drawing or lettering is copied.
+Lemo-Opuscar `styles/midcentury-toon` (MIT, LemoLab), at `https://github.com/lemomo-ai/lemo-opuscar/tree/main/styles/midcentury-toon/` (`STYLE.md`, `DEMO.md`, `poster.jpg`, the demo engine in `demo/`). Grammar after early-1950s limited animation, 1950s classroom films and appliance manuals; no character, drawing or lettering is copied.

@@ -70,6 +70,6 @@ A hard white glint reads as a sticker reflection: keep the light band soft and u
 
 ## Reference
 
-The proof is the shared test scene, built by `buildScene` and proven with `node production/styles/harness/prove.mjs dark-keynote`, which rebuilds it from a blank project and renders it with aerender. `proof/compare.jpg` sets it beside Lemo-Opuscar's dark-keynote poster.
+Before import, the shared test scene was built by `buildScene` from a blank project and rendered in the author's proof setup, then compared with Lemo-Opuscar's dark-keynote reference. In this plugin, render frames of your own build and check them against this file.
 
 Build time: about 3.5 s for 63 layers, render about 17 s; every text key goes in through one batched call per layer (`AESLib.textKeys`).

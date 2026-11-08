@@ -82,4 +82,4 @@ Target boxes that balloon or drift off the part read as a bug: compute them from
 
 ## Reference
 
-The proof is the shared test scene, built by `buildScene` and proven with `node production/styles/harness/prove.mjs hologram-hud`, which rebuilds it from a blank project and renders it with aerender. `proof/compare.jpg` sets it beside Lemo-Opuscar's hologram-hud poster.
+Before import, the shared test scene was built by `buildScene` from a blank project and rendered in the author's proof setup, then compared with Lemo-Opuscar's hologram-hud reference. In this plugin, render frames of your own build and check them against this file.

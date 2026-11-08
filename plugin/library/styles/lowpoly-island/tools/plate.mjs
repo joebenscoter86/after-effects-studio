@@ -1,7 +1,7 @@
 // node tools/plate.mjs --scene <scene dir> --cache <dir> [--samples N] [--cached-only]
 // The island plate: tools/island.py rendered by Blender (local, EEVEE) into <cache>/plate/island_NNNN.png plus <cache>/track.json.
 // Cached by a hash of island.py, the scene, its words and the font: a matching cache returns at once. Render it before proving
-// (about 6 to 10 minutes on an M5), because prove.mjs runs prepare while it holds the After Effects lock.
+// (about 6 to 10 minutes on an M5), so After Effects is not left waiting on it.
 // --cached-only fails instead of rendering (the second prepare entry, which only names track.json).
 import fs from 'node:fs'; import path from 'node:path'; import crypto from 'node:crypto'; import { spawnSync } from 'node:child_process'; import { fileURLToPath } from 'node:url';
 const HERE = path.dirname(fileURLToPath(import.meta.url)), a = process.argv.slice(2), opt = k => { const i = a.indexOf(k); return i >= 0 ? a[i + 1] : null; };

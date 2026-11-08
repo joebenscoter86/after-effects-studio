@@ -117,7 +117,7 @@ var AESBlueprint = (function () {
     B.property("ADBE Mask Parade").property(1).property("ADBE Mask Feather").setValue([150, 150]); B.property("ADBE Mask Parade").property(1).property("ADBE Mask Offset").setValue(-30);
     B.property("ADBE Mask Parade").property(1).inverted = true; B.opacity.setValue(16); out.push(B);
     return out; }
-  // the shared test scene (production/styles/scene) on one blueprint sheet. comp = an empty 1080 x 1920 comp at scene.fps.
+  // the shared test scene (the library's seven-beat test scene) on one blueprint sheet. comp = an empty 1080 x 1920 comp at scene.fps.
   // The header is the title; three figures are drafted in order; the real frame becomes a cyanotype print with its edges traced; a dimension counts
   // the frames; the spoken line is a drawing note; a section line turns the print into pure line work; the camera pulls back to the whole sheet and
   // the verdict is stamped in red on the title block.

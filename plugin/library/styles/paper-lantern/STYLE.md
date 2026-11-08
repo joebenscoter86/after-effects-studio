@@ -85,7 +85,6 @@ Position and Scale carry the rig expression: `k = 1 + (CAM.scale / 100 - 1) * p`
 - `words()` placed by its left edge (`o.left`) still called `setValue([o.x, o.y])` first, with `o.x` undefined: one or the other, never both.
 - A cloud placed above the moon collided with the end title (gold card over cream cloud reads as mush). Keep the sky above the moon clear for paper words; clouds sit beside or below the light.
 - Fires drawn in pale gold with Glow 1.3 clipped to white triangles. Emissive pieces that are not the main source take the lantern orange and Glow intensity 0.6 or less; only the moon or the main lamp may clip.
-- The bridge can drop mid-build (network) and `prove.mjs` then reports an empty response with no result file: nothing is wrong with the module, rerun. If it says AE is not connected, the Higgsfield panel needs Connect pressed (Joe).
 - Measured: 123 layers across eight comps, build about 8 s, render about 85 s with aerender.
 
 **Close, not identical:** Lemo renders real lit planes in WebGL (a backlight shader with pulp translucency, true cast shadows from a top spot, depth of field and bloom). Here the backlight is a radial Ramp per sheet, the cast shadow is a Drop Shadow straight down, depth of field is a blur on the front sheet, and pulp is one Soft Light Fractal Noise over the whole frame rather than per sheet. The camera is a 2.5D parallax rig, not an AE 3D camera. Subtitles hold for their beat (about 1.4 s), shorter than Lemo's 1.8 s minimum, because the scene's beats are short.
@@ -107,4 +106,4 @@ Position and Scale carry the rig expression: `k = 1 + (CAM.scale / 100 - 1) * p`
 
 ## Reference
 
-Lemo-Opuscar `styles/paper-lantern` ("Paper-cut Lightbox", MIT, LemoLab), cloned at `~/Assets/lemo-opuscar/styles/paper-lantern`. Grammar from commercial paper-cut shadow-box lamps, Lotte Reiniger's silhouette films for the jointed figure, and Chinese paper-cut motifs (auspicious clouds, stepped gables, mountains).
+Lemo-Opuscar `styles/paper-lantern` ("Paper-cut Lightbox", MIT, LemoLab), at `https://github.com/lemomo-ai/lemo-opuscar/tree/main/styles/paper-lantern`. Grammar from commercial paper-cut shadow-box lamps, Lotte Reiniger's silhouette films for the jointed figure, and Chinese paper-cut motifs (auspicious clouds, stepped gables, mountains).

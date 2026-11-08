@@ -176,7 +176,7 @@ var AESWoodcut = (function () {
       n.push({ k: "poly", pts: [[cx + dx * r0 + nx * w0, cy + dy * r0 + ny * w0], [cx + dx * r1 + nx * w1, cy + dy * r1 + ny * w1], [cx + dx * r1 - nx * w1, cy + dy * r1 - ny * w1], [cx + dx * r0 - nx * w0, cy + dy * r0 - ny * w0]], fill: 1 }); }
     return n; }
 
-  // buildScene: the shared test scene (production/styles/scene) as seven plates of a woodcut novel. comp = an empty 1080 x 1920 comp.
+  // buildScene: the shared test scene (the library's seven-beat test scene) as seven plates of a woodcut novel. comp = an empty 1080 x 1920 comp.
   // DRAW holds the tone drawing, CARVE cuts it, SHEET prints it on paper; the main comp holds the block (title), the sheet, the blank
   // paper that lays down and soaks through, the peeled impression (carry), the letterpress captions and the plate numbers.
   function buildScene(comp, scene, opts) {

@@ -86,4 +86,4 @@ Stock After Effects effects only: Posterize Time, Turbulent Displace, Fractal No
 
 ## Reference
 
-Lemo-Opuscar `styles/rubber-hose` (MIT, LemoLab), cloned at `~/Assets/lemo-opuscar/styles/rubber-hose/` (`STYLE.md`, `DEMO.md`, `poster.jpg`, the demo engine in `demo/`). Grammar after early 1930s sound cartoons; no character, name or design is copied.
+Lemo-Opuscar `styles/rubber-hose` (MIT, LemoLab), at `https://github.com/lemomo-ai/lemo-opuscar/tree/main/styles/rubber-hose/` (`STYLE.md`, `DEMO.md`, `poster.jpg`, the demo engine in `demo/`). Grammar after early 1930s sound cartoons; no character, name or design is copied.

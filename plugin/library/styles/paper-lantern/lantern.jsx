@@ -215,7 +215,7 @@ var AESLantern = (function () {
     light(S, "BLOSSOM", blossoms(70, 80, hy + 220, 1.15, 9), { depth: 1, glow: 14, inten: .9, on: T(6) === null ? null : T(6) + .1, off: O(0), t0: t0, t1: t1 }).property("ADBE Effect Parade").addProperty("ADBE Gaussian Blur 2").property("Blurriness").setValue(4);
     return hy; }
 
-  // buildScene: the shared test scene (production/styles/scene) as seven shots inside paper-cut lightboxes. comp = an empty 1080 x 1920 comp.
+  // buildScene: the shared test scene (the library's seven-beat test scene) as seven shots inside paper-cut lightboxes. comp = an empty 1080 x 1920 comp.
   function buildScene(comp, scene, opts) {
     fontOK(); var P = opts.prefix || "LANT", A = opts.assets, B = scene.beat, W = comp.width, H = comp.height, D = comp.duration, fps = comp.frameRate, notes = [], WL = scene.wordList;
     AESLib.clearOwned(comp, P); var comps = [];

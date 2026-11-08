@@ -81,6 +81,6 @@ A failure at high tempo goes unread: make the action overshoot and hit something
 
 ## Reference
 
-The proof is the shared test scene, built by `buildScene` and proven with `node production/styles/harness/prove.mjs microgame`, which rebuilds it from a blank project and renders it with aerender. `proof/compare.jpg` sets it beside Lemo-Opuscar's microgame poster.
+Before import, the shared test scene was built by `buildScene` from a blank project and rendered in the author's proof setup, then compared with Lemo-Opuscar's microgame reference. In this plugin, render frames of your own build and check them against this file.
 
 Build time: about 10 s for 163 layers across seven comps, render about 43 s; every text key goes in through one batched call per layer (`AESLib.textKeys` / `AESLib.bakeText`).

@@ -65,6 +65,6 @@ Every dark pixel becomes a character (threshold, gamma about 1.25, local contras
 
 ## Reference
 
-The proof is the shared test scene, built by `buildScene` and proven with `node production/styles/harness/prove.mjs crt-terminal`, which rebuilds it from a blank project and renders it with aerender. `proof/compare.jpg` sets it beside Lemo-Opuscar's ascii-crt poster.
+Before import, the shared test scene was built by `buildScene` from a blank project and rendered in the author's proof setup, then compared with Lemo-Opuscar's crt-terminal reference. In this plugin, render frames of your own build and check them against this file.
 
 Build time: every text key goes in through one `setValuesAtTimes` call per layer (`AESLib.textKeys`). Writing keys one at a time froze After Effects for minutes on this scene; batched, the proof builds in about 6 s.

@@ -273,7 +273,7 @@ var AESSilent = (function () {
     H.position.expression = "posterizeTime(12); seedRandom(Math.floor(time * 12) + " + dir + ", true); value + [random(-1.5, 1.5), random(-1.5, 1.5)];";
     H.opacity.setValue(dir === 45 ? 92 : 85); return H; }
 
-  // buildScene: the shared test scene (production/styles/scene) as a one-reel silent picture. comp = an empty 1080 x 1920 comp at scene.fps.
+  // buildScene: the shared test scene (the library's seven-beat test scene) as a one-reel silent picture. comp = an empty 1080 x 1920 comp at scene.fps.
   // The gate (a portrait print, see STYLE.md 8) sits between the drapes; inside it, DRAW holds the picture, FILM hatches it, and the print pass
   // runs on the FILM layer in the main comp. Cards: the title (narration), the number (shout), the line (tender), the end (narration, the echo).
   function buildScene(comp, scene, opts) {

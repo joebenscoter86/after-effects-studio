@@ -135,7 +135,7 @@ var AESKeynote = (function () {
   function wordsIn(list, t0, t1) { var r = []; for (var i = 0; i < list.length; i++) if (list[i].s >= t0 - .05 && list[i].s < t1) r.push(list[i]); return r; }
   function clearOwned(comp, prefix) { AESLib.clearOwned(comp, prefix); }
   // ---------------------------------------------------------------------------------------------------------------------------
-  // buildScene: the shared test scene (production/styles/scene) as a keynote. comp = an empty 1080 x 1920 comp at scene.fps.
+  // buildScene: the shared test scene (the library's seven-beat test scene) as a keynote. comp = an empty 1080 x 1920 comp at scene.fps.
   // One window carries the film: it opens on the picture, holds the real frame, closes CRT-style for the number, returns for the carry
   // and is squashed into the one accent tile the end card stands under.
   function buildScene(comp, scene, opts) {

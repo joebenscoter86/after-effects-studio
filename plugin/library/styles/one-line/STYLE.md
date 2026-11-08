@@ -79,6 +79,6 @@ Stray connectors ruin a reveal: every extra line reads as a wrinkle or a scar, s
 
 ## Reference
 
-The proof is the shared test scene, built by `buildScene` and proven with `node production/styles/harness/prove.mjs one-line`, which rebuilds it from a blank project and renders it with aerender. `proof/compare.jpg` sets it beside Lemo-Opuscar's one-line poster.
+Before import, the shared test scene was built by `buildScene` from a blank project and rendered in the author's proof setup, then compared with Lemo-Opuscar's one-line reference. In this plugin, render frames of your own build and check them against this file.
 
 Build time: about 12 s for 36 layers (about 400 line chunks over the seven beats); render about 60 s. Every written word is one batched Source Text call per layer (`AESLib.bakeText`); the line itself is Trim Paths, never Source Text keys.

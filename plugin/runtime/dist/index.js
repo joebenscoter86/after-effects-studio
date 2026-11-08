@@ -50887,7 +50887,7 @@ function readLibrary(document, query, root = path11.resolve(PACKAGE_ROOT, "../li
           return true;
         }
         return false;
-      }),
+      }).map(({ id, title, kind }) => ({ id, title, kind })),
       modules: matches.map(({ id, kind, title, summary, entryDocument, requires, tags, evidence }) => ({ id, kind, title, summary, entryDocument, requires, tags, evidence }))
     };
   }

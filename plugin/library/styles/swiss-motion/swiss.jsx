@@ -75,7 +75,7 @@ var AESSwiss = (function () {
   // the spoken words that start inside [t0, t1), in order
   function wordsIn(list, t0, t1) { var r = []; for (var i = 0; i < list.length; i++) if (list[i].s >= t0 - .05 && list[i].s < t1) r.push(list[i]); return r; }
   function clearOwned(comp, prefix) { AESLib.clearOwned(comp, prefix); }
-  // buildScene: the shared test scene (production/styles/scene) in the Swiss style. comp = an empty 1080 x 1920 comp at scene.fps.
+  // buildScene: the shared test scene (the library's seven-beat test scene) in the Swiss style. comp = an empty 1080 x 1920 comp at scene.fps.
   // The title is the programme and holds the top of the page; the beats replace one another in the lower field; the photo is the artifact,
   // pushed to full bleed for the carry and knife-cut to the red rule the end card stands on.
   function buildScene(comp, scene, opts) {

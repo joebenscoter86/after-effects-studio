@@ -584,7 +584,9 @@ def link_strips():
 # ---------------------------------------------------------------------------------------------------- main
 def clip_frames():
     """The input shot's display: the scene clip's frames from clipss for 1.5 s, cropped square around the face (ffmpeg, cached)."""
-    clip = os.path.expanduser(OPT.get("clip", "~/Assets/joeb/styles/scene/clip.mp4"))
+    if "clip" not in OPT:
+        sys.exit("glass_scene.py: the input shot needs clip=<path to your footage>")
+    clip = os.path.expanduser(OPT["clip"])
     d = os.path.join(OUT, "_clip"); os.makedirs(d, exist_ok=True)
     if len([f for f in os.listdir(d) if f.endswith(".png")]) < N:
         crop = OPT.get("crop", "640:640:220:1215")

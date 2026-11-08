@@ -156,7 +156,7 @@ var AESRiso = (function () {
   function wordsIn(list, t0, t1) { var r = []; for (var i = 0; i < list.length; i++) if (list[i].s >= t0 - .05 && list[i].s < t1) r.push(list[i]); return r; }
   function clearOwned(comp, prefix) { AESLib.clearOwned(comp, prefix); }
 
-  // buildScene: the shared test scene (production/styles/scene) as a riso print. comp = an empty 1080 x 1920 comp at scene.fps.
+  // buildScene: the shared test scene (the library's seven-beat test scene) as a riso print. comp = an empty 1080 x 1920 comp at scene.fps.
   // Plates as narrative: the title opens in one ink and the other two roll in on the voice; the real frame is separated into blue and pink;
   // the number overprints the hill; the line is a lateral track with a registration drift that snaps on the downbeat; the photo becomes a
   // pink disc that overprints the frame and shrinks into the sun; the end lifts two plates away and leaves the last line in one ink.
