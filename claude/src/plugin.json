@@ -2,7 +2,7 @@
   "name": "after-effects-studio",
   "displayName": "After Effects Studio",
   "version": "0.2.0",
-  "description": "Editable After Effects motion with native control, typography, paper collage, and a production-derived motion language.",
+  "description": "Editable After Effects motion with native control, typography, paper collage, a 30-style visual style library, and a production-derived motion language.",
   "author": {
     "name": "JB Technology LLC"
   },
