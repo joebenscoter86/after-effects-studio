@@ -24,6 +24,16 @@ function makeDoctor(overrides: Partial<DoctorOptions> = {}) {
 }
 
 describe('doctor diagnostics', () => {
+  it('finds an installed release newer than the built-in list', () => {
+    const app = '/Applications/Adobe After Effects 2027/Adobe After Effects 2027.app';
+    const files = new Set(['/pkg/runtime/dist/index.js', '/pkg/library/manifest.json', app]);
+    const report = makeDoctor({
+      fileExists: (p) => files.has(p),
+      listDir: (dir) => (dir === '/Applications' ? ['Adobe After Effects 2027', 'Adobe Photoshop 2027'] : []),
+    });
+    expect(report.checks.find((x) => x.name === 'After Effects path')!.detail).toBe(app);
+  });
+
   it('reports a ready local setup without claiming that AE permissions were checked', () => {
     const report = makeDoctor();
     expect(report.ok).toBe(true);

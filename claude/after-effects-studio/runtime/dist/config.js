@@ -1,4 +1,4 @@
-import { existsSync, statSync } from "node:fs";
+import { existsSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -89,10 +89,22 @@ const DEFAULT_AE_PATHS_DARWIN = [
   "/Applications/Adobe After Effects 2025/Adobe After Effects 2025.app",
   "/Applications/Adobe After Effects 2024/Adobe After Effects 2024.app"
 ];
-function resolveAfterFxPath(platform = process.platform) {
+const AE_RELEASE_DIR = /^Adobe After Effects (\d{4})$/;
+function discoverAfterFxPaths(platform = process.platform, root = platform === "darwin" ? "/Applications" : "C:/Program Files/Adobe") {
+  let names;
+  try {
+    names = readdirSync(root);
+  } catch {
+    return [];
+  }
+  return names.map((name) => ({ name, year: AE_RELEASE_DIR.exec(name)?.[1] })).filter((e) => e.year !== void 0).sort((a, b) => Number(b.year) - Number(a.year)).map(({ name, year }) => platform === "darwin" ? path.join(root, name, `Adobe After Effects ${year}.app`) : path.join(root, name, "Support Files", "AfterFX.exe")).filter((candidate) => existsSync(candidate));
+}
+function resolveAfterFxPath(platform = process.platform, root) {
   for (const env of [process.env.AE_MCP_EXE, process.env.AE_EXE]) {
     if (env && existsSync(env)) return env;
   }
+  const discovered = discoverAfterFxPaths(platform, root);
+  if (discovered.length) return discovered[0];
   const candidates = platform === "darwin" ? DEFAULT_AE_PATHS_DARWIN : DEFAULT_AE_PATHS_WIN32;
   for (const candidate of candidates) {
     if (existsSync(candidate)) return candidate;
@@ -164,6 +176,7 @@ export {
   RUNTIME_POINTER_PATH,
   RUNTIME_ROOT,
   STALE_RUNTIME_FILE_MS,
+  discoverAfterFxPaths,
   instanceDirFor,
   instanceTargetFromEnv,
   rejectedOutputPath,

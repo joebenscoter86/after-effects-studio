@@ -1,4 +1,4 @@
-import { existsSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, statSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -18,9 +18,22 @@ function usableAePath(candidate, platform, fileExists, stat) {
   try { return stat(candidate).isDirectory(); } catch { return false; }
 }
 
-function resolveAeCandidate({ env, platform, fileExists, stat }) {
+// Any installed yearly release under the default Adobe folder, newest first (mirrors runtime config.ts).
+function installedAePaths(platform, listDir) {
+  const root = platform === 'darwin' ? '/Applications' : platform === 'win32' ? 'C:/Program Files/Adobe' : null;
+  if (!root) return [];
+  let names;
+  try { names = listDir(root); } catch { return []; }
+  return names
+    .map(name => ({ name, year: /^Adobe After Effects (\d{4})$/.exec(name)?.[1] }))
+    .filter(e => e.year)
+    .sort((a, b) => Number(b.year) - Number(a.year))
+    .map(({ name, year }) => platform === 'darwin' ? `${root}/${name}/Adobe After Effects ${year}.app` : `${root}/${name}/Support Files/AfterFX.exe`);
+}
+
+function resolveAeCandidate({ env, platform, fileExists, stat, listDir }) {
   const overrides = [env.AE_MCP_EXE, env.AE_EXE].map(value => value?.trim()).filter(Boolean);
-  const candidates = [...overrides, ...(DEFAULT_AE_PATHS[platform] || [])];
+  const candidates = [...overrides, ...installedAePaths(platform, listDir), ...(DEFAULT_AE_PATHS[platform] || [])];
   return candidates.find(candidate => usableAePath(candidate, platform, fileExists, stat)) || null;
 }
 
@@ -31,6 +44,7 @@ export function diagnose({
   env = process.env,
   fileExists = existsSync,
   stat = statSync,
+  listDir = readdirSync,
   run = (name) => spawnSync(name, ['-version'], { encoding: 'utf8', timeout: 5_000 }),
 } = {}) {
   const checks = [];
@@ -51,14 +65,14 @@ export function diagnose({
     hint: 'Restore plugin/library/manifest.json and the packaged library folder, then reinstall the plugin.',
   }));
 
-  const ae = resolveAeCandidate({ env, platform, fileExists, stat });
+  const ae = resolveAeCandidate({ env, platform, fileExists, stat, listDir });
   const configuredPath = [env.AE_MCP_EXE, env.AE_EXE].map(value => value?.trim()).find(Boolean);
   checks.push(check('After Effects path', ae !== null, ae || configuredPath || 'No supported default installation found', {
     hint: configuredPath
       ? `The configured path was not found or is not a usable After Effects app: ${configuredPath}. Correct AE_MCP_EXE (or legacy AE_EXE) to the .app bundle on macOS or AfterFX.exe on Windows, then restart the agent host.`
       : platform === 'darwin'
-        ? 'Install After Effects 2024, 2025, or 2026 in /Applications, or set AE_MCP_EXE to its .app bundle. Restart the agent host after changing it.'
-        : 'Install After Effects 2024, 2025, or 2026 in the default Adobe folder, or set AE_MCP_EXE to the full AfterFX.exe path. Restart the agent host after changing it.',
+        ? 'Install After Effects 2024 or newer in /Applications, or set AE_MCP_EXE to its .app bundle. Restart the agent host after changing it.'
+        : 'Install After Effects 2024 or newer in the default Adobe folder, or set AE_MCP_EXE to the full AfterFX.exe path. Restart the agent host after changing it.',
   }));
 
   for (const executable of ['ffmpeg', 'ffprobe']) {

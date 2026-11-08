@@ -1,4 +1,4 @@
-import { existsSync, statSync } from "node:fs";
+import { existsSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -197,17 +197,43 @@ const DEFAULT_AE_PATHS_DARWIN = [
     "/Applications/Adobe After Effects 2025/Adobe After Effects 2025.app",
     "/Applications/Adobe After Effects 2024/Adobe After Effects 2024.app",
 ];
+const AE_RELEASE_DIR = /^Adobe After Effects (\d{4})$/;
+/**
+ * Installed yearly releases under the default Adobe folder, newest first: any
+ * "Adobe After Effects <year>" folder that holds the app (macOS) or AfterFX.exe
+ * (Windows). A missing or unreadable folder yields an empty list.
+ */
+export function discoverAfterFxPaths(platform = process.platform, root = platform === "darwin" ? "/Applications" : "C:/Program Files/Adobe") {
+    let names;
+    try {
+        names = readdirSync(root);
+    }
+    catch {
+        return [];
+    }
+    return names
+        .map((name) => ({ name, year: AE_RELEASE_DIR.exec(name)?.[1] }))
+        .filter((e) => e.year !== undefined)
+        .sort((a, b) => Number(b.year) - Number(a.year))
+        .map(({ name, year }) => platform === "darwin"
+        ? path.join(root, name, `Adobe After Effects ${year}.app`)
+        : path.join(root, name, "Support Files", "AfterFX.exe"))
+        .filter((candidate) => existsSync(candidate));
+}
 /**
  * Locate After Effects — AfterFX.exe on Windows, the .app bundle on macOS.
  * Honors AE_MCP_EXE (and the legacy AE_EXE name) first so the user can
- * override without editing source, then probes the default install paths for
- * AE 2026 → 2025 → 2024.
+ * override without editing source, then the newest installed yearly release,
+ * then the known default paths for AE 2026 → 2025 → 2024.
  */
-export function resolveAfterFxPath(platform = process.platform) {
+export function resolveAfterFxPath(platform = process.platform, root) {
     for (const env of [process.env.AE_MCP_EXE, process.env.AE_EXE]) {
         if (env && existsSync(env))
             return env;
     }
+    const discovered = discoverAfterFxPaths(platform, root);
+    if (discovered.length)
+        return discovered[0];
     const candidates = platform === "darwin" ? DEFAULT_AE_PATHS_DARWIN : DEFAULT_AE_PATHS_WIN32;
     for (const candidate of candidates) {
         if (existsSync(candidate))
