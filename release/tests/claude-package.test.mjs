@@ -160,3 +160,57 @@ test('check mode detects drift', async () => {
   assert.equal(drift.status, 1);
   assert.match(drift.stdout, /skills\/ae-control\/SKILL\.md/);
 });
+
+// ---- Task 2: readable runtime -------------------------------------------------
+
+const LICENSE_NAMES = ['LICENSE', 'LICENSE.md', 'LICENSE.txt', 'LICENSE-MIT', 'license', 'license.md'];
+
+async function vendoredPackageDirs(nodeModules) {
+  const dirs = [];
+  for (const rel of await listFiles(nodeModules)) {
+    if (!rel.endsWith('/package.json')) continue;
+    const dir = path.posix.dirname(rel);
+    // A package root sits directly under node_modules, or under a scope folder.
+    if (/(^|\/node_modules\/)(@[^/]+\/)?[^/@][^/]*$/.test(dir)) dirs.push(dir);
+  }
+  return dirs;
+}
+
+test('runtime is readable and within limits', async () => {
+  const { outDir } = await sharedBuild();
+  const runtimeFiles = await listFiles(path.join(outDir, 'runtime'));
+  for (const rel of runtimeFiles) {
+    const { size } = await fs.stat(path.join(outDir, 'runtime', rel));
+    assert.ok(size <= 262_144, `runtime/${rel} is ${size} bytes`);
+  }
+  const entry = await fs.readFile(path.join(outDir, 'runtime/dist/index.js'), 'utf8');
+  assert.match(entry, /registerTool/);
+  assert.ok(runtimeFiles.includes('dist/tools/do.js'), 'own modules are emitted file by file');
+});
+
+test('every vendored package has a license and a notice', async () => {
+  const { outDir } = await sharedBuild();
+  const notices = await fs.readFile(path.join(outDir, 'THIRD-PARTY-NOTICES.txt'), 'utf8');
+  const nodeModules = path.join(outDir, 'runtime/node_modules');
+  const dirs = await vendoredPackageDirs(nodeModules);
+  assert.ok(dirs.includes('zod') && dirs.includes('@modelcontextprotocol/sdk'), `vendored: ${dirs.join(', ')}`);
+  for (const dir of dirs) {
+    const { name } = JSON.parse(await fs.readFile(path.join(nodeModules, dir, 'package.json'), 'utf8'));
+    const entries = await fs.readdir(path.join(nodeModules, dir));
+    assert.ok(LICENSE_NAMES.some((n) => entries.includes(n)), `${dir} has no license file`);
+    assert.ok(notices.includes(`${name}@`), `${name} missing from THIRD-PARTY-NOTICES.txt`);
+  }
+});
+
+test('vendored modules are not ignored by git', () => {
+  const r = spawnSync('git', ['check-ignore', '-q', 'claude/after-effects-studio/runtime/node_modules/zod/package.json'], { cwd: ROOT });
+  assert.equal(r.status, 1, 'the vendored runtime would be dropped from a Git-based install');
+});
+
+test('builder fails cleanly without installed deps', async () => {
+  const { buildReadableRuntime } = await import('../claude-runtime.mjs');
+  const bare = await tmp('claude-bare-runtime-');
+  for (const rel of ['package.json', 'LICENSE']) await fs.copyFile(path.join(PLUGIN, 'runtime', rel), path.join(bare, rel));
+  await fs.cp(path.join(PLUGIN, 'runtime/src'), path.join(bare, 'src'), { recursive: true });
+  await assert.rejects(buildReadableRuntime(bare, await tmp('claude-bare-out-')), /npm ci --ignore-scripts/);
+});

@@ -9,6 +9,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkPackage } from './claude-checks.mjs';
+import { buildReadableRuntime } from './claude-runtime.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PLUGIN = path.join(ROOT, 'plugin');
@@ -42,10 +43,6 @@ async function copy(from, to) {
   await fs.copyFile(from, to);
 }
 
-export async function copyBundledRuntime(pluginRuntimeDir, outRuntimeDir) {
-  await copy(path.join(pluginRuntimeDir, 'dist', 'index.js'), path.join(outRuntimeDir, 'dist', 'index.js'));
-}
-
 function assertSafeOutDir(outDir) {
   const resolved = path.resolve(outDir);
   for (const guarded of [ROOT, PLUGIN, CLAUDE_SRC, os.homedir(), path.parse(resolved).root]) {
@@ -57,7 +54,7 @@ function assertSafeOutDir(outDir) {
   return resolved;
 }
 
-export async function buildClaudePackage({ outDir, runtime = copyBundledRuntime } = {}) {
+export async function buildClaudePackage({ outDir, runtime = buildReadableRuntime } = {}) {
   const manifestText = await fs.readFile(path.join(CLAUDE_SRC, 'plugin.json'), 'utf8');
   const manifest = JSON.parse(manifestText);
   const out = assertSafeOutDir(outDir ?? path.join(ROOT, 'claude', manifest.name));
