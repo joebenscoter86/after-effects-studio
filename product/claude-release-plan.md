@@ -52,7 +52,7 @@ after-effects-studio/
   LICENSE                   original-material terms + pointer to runtime MIT
   PROVENANCE.md, THIRD-PARTY-NOTICES.txt
   skills/  library/  assets/  docs/  examples/
-  runtime/                  readable server build, LICENSE, jsx/
+  runtime/                  readable server build (dist/), vendored node_modules/, LICENSE, jsx/
   scripts/                  doctor, verify-export
 ```
 
@@ -75,7 +75,7 @@ CL-2 and CL-3 change shared runtime code. Re-run the Codex runtime tests and smo
 
 ### CL-1 — Claude package builder
 
-Add a builder next to `release/build-package.py` that copies an allowlist from `plugin/` into a generated Claude folder, writes the Claude manifest, `.mcp.json` and root `start.mjs`, and adds the Claude-only README and docs from the Claude source folder outside `plugin/`. It runs the same library hash checks as the Codex build. It fails if the output contains `.DS_Store`, symlinks, a top-level `bin/`, `package.json`/lockfiles, a non-image file over 256 KiB (unless CL-2 records an accepted exception) or more than 512 files.
+Add a builder next to `release/build-package.py` that copies an allowlist from `plugin/` into a generated Claude folder, writes the Claude manifest, `.mcp.json` and root `start.mjs`, and adds the Claude-only README and docs from the Claude source folder outside `plugin/`. It runs the same library hash checks as the Codex build. It fails if the output contains `.DS_Store`, symlinks, a top-level `bin/`, any lockfile, a `package.json` at the package root (the runtime's own and vendored dependencies' `package.json` files are needed by Node and sit below the root), a non-image file over 256 KiB (unless CL-2 records an accepted exception) or more than 512 files.
 
 Done when: the builder produces the folder reproducibly, its output passes `claude plugin validate --strict`, and a check proves the generated skills and library match `plugin/` byte for byte.
 

@@ -25,7 +25,7 @@ This repository is the canonical development workspace. Read this map first, the
 | Improve motion knowledge | plugin/context.md, relevant library module, plugin/evals/evals.json | Unrelated runtime code | Skill Creator; local plugin/skills/motion-studio/SKILL.md |
 | Test motion or reliability | quality/context.md, quality/release-criteria.md, relevant scenario | Marketing drafts | Local plugin/skills/motion-review/SKILL.md and plugin/skills/ae-control/SKILL.md |
 | Prepare a public release | release/context.md, release/release-plan.md, verified quality reports | Unrelated implementation | Plugin Creator |
-| Prepare the Claude release | product/claude-release-plan.md, D-014, quality/reports/2026-11-08-claude-directory-route/research.md | Codex marketplace and install docs | `claude plugin validate --strict` |
+| Prepare the Claude release | product/claude-release-plan.md, product/claude-implementation-plan.md, D-014, quality/reports/2026-11-08-claude-directory-route/research.md | Codex marketplace and install docs | `claude plugin validate --strict` |
 | Audit this workspace | AGENTS.md and the four context.md files | Render contents | Workspace Architect |
 
 External skills are development aids, not end-user dependencies. Resolve their installed SKILL.md when needed. Do not load every skill at startup.
