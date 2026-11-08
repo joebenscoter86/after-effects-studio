@@ -2,8 +2,10 @@
 // Generate the Claude plugin package from canonical plugin/ plus the Claude-only files in claude/src/.
 // Never edit the output by hand (claude-release-plan.md, CL-1).
 //
-//   node release/build-claude-package.mjs [--out <dir>]          write the package (default claude/<name>/)
+//   node release/build-claude-package.mjs [--out <dir>]          write the package (default claude/<name>/);
+//                                                                exit 1 if it breaks a directory rule
 //   node release/build-claude-package.mjs --check [--out <dir>]  rebuild in a temp dir; exit 1 on drift
+//   --src <dir> replaces claude/src (used by tests)
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -43,9 +45,9 @@ async function copy(from, to) {
   await fs.copyFile(from, to);
 }
 
-function assertSafeOutDir(outDir) {
+function assertSafeOutDir(outDir, claudeSrc) {
   const resolved = path.resolve(outDir);
-  for (const guarded of [ROOT, PLUGIN, CLAUDE_SRC, os.homedir(), path.parse(resolved).root]) {
+  for (const guarded of [ROOT, PLUGIN, CLAUDE_SRC, claudeSrc, os.homedir(), path.parse(resolved).root]) {
     const rel = path.relative(resolved, guarded);
     if (rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel))) {
       throw new Error(`refusing to clear ${resolved}: it contains or equals ${guarded}`);
@@ -54,10 +56,9 @@ function assertSafeOutDir(outDir) {
   return resolved;
 }
 
-export async function buildClaudePackage({ outDir, runtime = buildReadableRuntime } = {}) {
-  const manifestText = await fs.readFile(path.join(CLAUDE_SRC, 'plugin.json'), 'utf8');
-  const manifest = JSON.parse(manifestText);
-  const out = assertSafeOutDir(outDir ?? path.join(ROOT, 'claude', manifest.name));
+export async function buildClaudePackage({ outDir, runtime = buildReadableRuntime, claudeSrc = CLAUDE_SRC } = {}) {
+  const manifest = JSON.parse(await fs.readFile(path.join(claudeSrc, 'plugin.json'), 'utf8'));
+  const out = assertSafeOutDir(outDir ?? path.join(ROOT, 'claude', manifest.name), path.resolve(claudeSrc));
 
   await fs.rm(out, { recursive: true, force: true });
   await fs.mkdir(out, { recursive: true });
@@ -74,16 +75,16 @@ export async function buildClaudePackage({ outDir, runtime = buildReadableRuntim
   await fs.writeFile(path.join(out, 'runtime', 'package.json'),
     `${JSON.stringify({ name: 'after-effects-studio-runtime', version, private: true, type: 'module' })}\n`);
 
-  await copy(path.join(CLAUDE_SRC, 'plugin.json'), path.join(out, '.claude-plugin', 'plugin.json'));
-  await copy(path.join(CLAUDE_SRC, 'mcp.json'), path.join(out, '.mcp.json'));
-  await copy(path.join(CLAUDE_SRC, 'start.mjs'), path.join(out, 'start.mjs'));
+  await copy(path.join(claudeSrc, 'plugin.json'), path.join(out, '.claude-plugin', 'plugin.json'));
+  await copy(path.join(claudeSrc, 'mcp.json'), path.join(out, '.mcp.json'));
+  await copy(path.join(claudeSrc, 'start.mjs'), path.join(out, 'start.mjs'));
   await copy(path.join(PLUGIN, 'license.md'), path.join(out, 'LICENSE'));
-  if (await exists(path.join(CLAUDE_SRC, 'README.md'))) {
-    await copy(path.join(CLAUDE_SRC, 'README.md'), path.join(out, 'README.md'));
+  if (await exists(path.join(claudeSrc, 'README.md'))) {
+    await copy(path.join(claudeSrc, 'README.md'), path.join(out, 'README.md'));
   }
-  if (await exists(path.join(CLAUDE_SRC, 'docs'))) {
-    for (const rel of await listTree(path.join(CLAUDE_SRC, 'docs'))) {
-      await copy(path.join(CLAUDE_SRC, 'docs', rel), path.join(out, 'docs', rel));
+  if (await exists(path.join(claudeSrc, 'docs'))) {
+    for (const rel of await listTree(path.join(claudeSrc, 'docs'))) {
+      await copy(path.join(claudeSrc, 'docs', rel), path.join(out, 'docs', rel));
     }
   }
 
@@ -119,13 +120,15 @@ async function listTreeAll(root, rel = '') {
 async function main(argv) {
   const check = argv.includes('--check');
   const i = argv.indexOf('--out');
-  const manifest = JSON.parse(await fs.readFile(path.join(CLAUDE_SRC, 'plugin.json'), 'utf8'));
+  const j = argv.indexOf('--src');
+  const claudeSrc = path.resolve(j >= 0 ? argv[j + 1] : CLAUDE_SRC);
+  const manifest = JSON.parse(await fs.readFile(path.join(claudeSrc, 'plugin.json'), 'utf8'));
   const target = path.resolve(i >= 0 ? argv[i + 1] : path.join(ROOT, 'claude', manifest.name));
 
   if (check) {
     const scratch = await fs.mkdtemp(path.join(os.tmpdir(), 'claude-check-'));
     try {
-      const { outDir } = await buildClaudePackage({ outDir: path.join(scratch, manifest.name) });
+      const { outDir } = await buildClaudePackage({ outDir: path.join(scratch, manifest.name), claudeSrc });
       const changes = await diffTrees(outDir, target);
       if (changes.length) {
         console.log(`${path.relative(ROOT, target) || target} is stale; rebuild with node release/build-claude-package.mjs`);
@@ -139,10 +142,10 @@ async function main(argv) {
     }
   }
 
-  const { outDir, files, violations } = await buildClaudePackage({ outDir: target });
+  const { outDir, files, violations } = await buildClaudePackage({ outDir: target, claudeSrc });
   console.log(`wrote ${files.length} files to ${path.relative(ROOT, outDir) || outDir}`);
   for (const line of violations) console.log(`violation: ${line}`);
-  return 0;
+  return violations.length ? 1 : 0;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

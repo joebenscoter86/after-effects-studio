@@ -116,7 +116,6 @@ test('manifest and MCP config', async () => {
   assert.equal(server.command, 'node');
   assert.deepEqual(server.args, ['${CLAUDE_PLUGIN_ROOT}/start.mjs']);
   assert.equal(server.cwd, undefined);
-  assert.equal(server.env.AE_MCP_ENABLE_EVAL, '1');
 });
 
 test('LICENSE equals license.md and both are present', async () => {
@@ -213,4 +212,83 @@ test('builder fails cleanly without installed deps', async () => {
   for (const rel of ['package.json', 'LICENSE']) await fs.copyFile(path.join(PLUGIN, 'runtime', rel), path.join(bare, rel));
   await fs.cp(path.join(PLUGIN, 'runtime/src'), path.join(bare, 'src'), { recursive: true });
   await assert.rejects(buildReadableRuntime(bare, await tmp('claude-bare-out-')), /npm ci --ignore-scripts/);
+});
+
+// ---- Task 6: Claude docs and fatal violations ---------------------------------
+
+function section(markdown, heading) {
+  const start = markdown.indexOf(`\n${heading}\n`);
+  if (start < 0) return '';
+  const rest = markdown.slice(start + heading.length + 2);
+  const next = rest.search(/\n## /);
+  return next < 0 ? rest : rest.slice(0, next);
+}
+
+test('README covers directory requirements', async () => {
+  const { outDir } = await sharedBuild();
+  const readme = await fs.readFile(path.join(outDir, 'README.md'), 'utf8');
+  const prose = readme.replace(/```[\s\S]*?```/g, ' ').split(/\s+/).filter((w) => /[A-Za-z]/.test(w));
+  assert.ok(prose.length >= 40, `README prose has ${prose.length} words`);
+  for (const heading of ['## Requirements', '## Where it works', '## What it runs and sends', '## Privacy',
+    '## Example prompts', '## Install', '## Remove']) {
+    assert.ok(readme.includes(`\n${heading}\n`), `missing heading ${heading}`);
+  }
+  const prompts = section(readme, '## Example prompts').split('\n').filter((l) => /^\s*[-*] \S/.test(l));
+  assert.ok(prompts.length >= 3, `only ${prompts.length} example prompts`);
+  for (const needle of ['Node.js 24', 'nodejs.org', 'AE_MCP_READONLY=1', 'AE_MCP_ENABLE_EVAL=0']) {
+    assert.ok(readme.includes(needle), `README does not mention ${needle}`);
+  }
+});
+
+test('install commands match the manifest name', async () => {
+  const { outDir } = await sharedBuild();
+  const { name } = JSON.parse(await fs.readFile(path.join(ROOT, 'claude/src/plugin.json'), 'utf8'));
+  const install = await fs.readFile(path.join(outDir, 'docs/local-install.md'), 'utf8');
+  assert.ok(install.includes(`claude plugin install ${name}@jb-technology`));
+  assert.ok(install.includes(`claude plugin uninstall ${name}@jb-technology`));
+  const readme = await fs.readFile(path.join(outDir, 'README.md'), 'utf8');
+  assert.ok(readme.includes(`claude plugin install ${name}@jb-technology`));
+});
+
+test('build output passes all checks', async () => {
+  const { outDir } = await sharedBuild();
+  assert.deepEqual(await checkPackage(outDir), []);
+});
+
+test('builder exits 1 on violations', async () => {
+  const src = await tmp('claude-src-');
+  await fs.cp(path.join(ROOT, 'claude/src'), src, { recursive: true });
+  await write(src, 'docs/extra.md', 'Start a new Codex task.\n');
+  const outDir = path.join(await tmp('claude-violation-'), 'after-effects-studio');
+  const r = spawnSync(process.execPath, [BUILDER, '--src', src, '--out', outDir], { encoding: 'utf8' });
+  assert.equal(r.status, 1, r.stdout + r.stderr);
+  assert.match(r.stdout, /docs\/extra\.md/);
+});
+
+// Start the packaged server the way Claude Code does: ${CLAUDE_PLUGIN_ROOT} substituted,
+// the user's environment overlaid by the config's own env, launched from another folder.
+async function catalogCategories(outDir, userEnv) {
+  const { mcpServers } = JSON.parse(await fs.readFile(path.join(outDir, '.mcp.json'), 'utf8'));
+  const server = mcpServers['after-effects-studio'];
+  const sub = (v) => v.replaceAll('${CLAUDE_PLUGIN_ROOT}', outDir);
+  const input = [
+    { jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 't', version: '1' } } },
+    { jsonrpc: '2.0', method: 'notifications/initialized' },
+    { jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'ae_catalog', arguments: {} } },
+  ].map((m) => JSON.stringify(m)).join('\n') + '\n';
+  const env = { ...process.env, ...userEnv, ...(server.env ?? {}) };
+  for (const key of Object.keys(env)) if (env[key] === undefined) delete env[key];
+  const r = spawnSync(sub(server.command), server.args.map(sub), { cwd: os.tmpdir(), env, input, encoding: 'utf8', timeout: 20_000 });
+  const reply = r.stdout.split('\n').filter(Boolean).map((l) => JSON.parse(l)).find((m) => m.id === 2);
+  assert.ok(reply, `no catalog reply: ${r.stderr}`);
+  const body = reply.result.structuredContent ?? JSON.parse(reply.result.content[0].text);
+  return body.categories.map((c) => c.category);
+}
+
+test('custom scripting is on by default and the user can turn it off', async () => {
+  const { outDir } = await sharedBuild();
+  const defaults = await catalogCategories(outDir, { AE_MCP_ENABLE_EVAL: undefined });
+  assert.ok(defaults.includes('eval'), 'eval.run should be available by default');
+  const off = await catalogCategories(outDir, { AE_MCP_ENABLE_EVAL: '0' });
+  assert.ok(!off.includes('eval'), 'AE_MCP_ENABLE_EVAL=0 in the user environment must remove eval.run');
 });

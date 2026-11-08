@@ -2,10 +2,7 @@
   "mcpServers": {
     "after-effects-studio": {
       "command": "node",
-      "args": ["${CLAUDE_PLUGIN_ROOT}/start.mjs"],
-      "env": {
-        "AE_MCP_ENABLE_EVAL": "1"
-      }
+      "args": ["${CLAUDE_PLUGIN_ROOT}/start.mjs"]
     }
   }
 }

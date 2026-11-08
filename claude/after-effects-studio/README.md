@@ -1,55 +1,74 @@
 # After Effects Studio
 
-One Codex plugin for local After Effects control, motion design guidance, reusable JSX, and visual quality checks. This is a Codex plugin that drives the native application, not a compiled Adobe effect or a required CEP panel.
+Create and revise editable motion graphics in your own copy of Adobe After Effects, working from Claude. The plugin pairs native After Effects control with a bundled, production-derived motion language: briefs, construction, camera continuity, typography, paper collage, worked scenes and visual review. You choose the subject, brand and style. The plugin builds native, editable compositions and shows you rendered frames so you can judge the result before you accept it.
 
-Use is free for personal and paid client motion work, including delivery of editable AE projects. [`license.md`](license.md) covers Joe's original materials; [`PROVENANCE.md`](PROVENANCE.md), `runtime/LICENSE`, and [`THIRD-PARTY-NOTICES.txt`](THIRD-PARTY-NOTICES.txt) identify separately licensed upstream components.
+Published by JB Technology LLC. Free for personal and paid client work, including delivery of editable projects. Terms are in [LICENSE](LICENSE). The upstream runtime and bundled dependencies keep their own licenses: see [PROVENANCE.md](PROVENANCE.md), `runtime/LICENSE` and [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt).
 
-## Use
+## Requirements
 
-For the public Git source, follow the [Git marketplace install guide](docs/local-install.md), then start a new task. Ask, for example: “Create an editable six-second product explainer in After Effects. Use precise typography, a restrained palette, and show me a rendered preview.” Version 0.2.0 supplies five skills and ten MCP tools, including an offline motion library and the native operation catalog.
+- macOS with a licensed copy of Adobe After Effects 2026.
+- Node.js 24 or newer, installed with the installer from [nodejs.org](https://nodejs.org). Check with `node -v`. The Claude desktop app may not find a Node installed with Homebrew or nvm.
+- Claude Code, or a Cowork session running on your Mac (see below).
+- macOS asks once whether Claude, or the terminal that runs it, may control After Effects. Allow it. For renders and exports, After Effects needs **Allow Scripts to Write Files and Access Network** turned on in Preferences → Scripting & Expressions.
+- Optional: `ffmpeg` and `ffprobe` for the bundled export verifier.
 
-For installation, update, removal and restore, see [local installation and update](docs/local-install.md). Then follow [your first motion scene](docs/first-session.md) and [editable project and movie delivery](docs/delivery.md). The public Git source passed a first install and native create/revise/export/reopen journey on a separate Mac on 2026-10-15; the original installer transcript was not captured. Users do not need a Git clone, npm install, source build or manual MCP config edit.
+## Where it works
 
-Requires Node.js 24+ and a licensed After Effects installation. The initial product release targets local Codex desktop on macOS with AE 2026. The separate-Mac rehearsal tested macOS 26.6.2, Codex desktop 26.930.61225, CLI 0.144.1, Node 26.5.0 and AE 26.5x89; these are tested builds, not a broad compatibility guarantee. The underlying runtime also has Windows code and AE 2024–2026 discovery paths, which are not product support claims. Run `node scripts/doctor.mjs` to check prerequisites. The report identifies required failures and next steps. A custom install path uses `AE_MCP_EXE`; legacy `AE_EXE` is also recognized. Restart the agent host after changing either variable. `ffmpeg` and `ffprobe` are optional for normal plugin use. The bundled export verifier needs them; a complete decode can also be checked with the operating system's AVFoundation tools and recorded as such. macOS may ask for Automation access; enable AE's “Allow Scripts to Write Files and Access Network” preference when needed.
+| Where | What you get |
+|---|---|
+| Claude Code on your Mac | After Effects control, plus the skills and motion library |
+| A Cowork session running on your Mac | Intended to match Claude Code; still being verified |
+| Regular Claude chat, or Cowork running in the cloud | The skills only. After Effects control needs a session on the Mac that runs After Effects; there is no cloud relay |
 
-The doctor checks local files and path discovery; it does not test live AE connectivity or permission grants. For a failed connection, use [connection and permission recovery](docs/connection-recovery.md). It distinguishes an explicit macOS Automation denial from a timeout and requires project inspection before any uncertain write is retried.
+## What it runs and sends
 
-The server is bundled: users do not need npm dependencies, a Content checkout, a Higgsfield account, or an AE panel. Generated images and video are optional inputs from separately available tools.
+- **A local server.** Claude starts `node start.mjs` from the plugin folder, which runs the bundled server in `runtime/` over standard input and output. It opens no network port, uses no cloud relay and needs no account.
+- **After Effects scripting.** The server asks macOS to run scripts in After Effects and exchanges temporary request and response files with it in a per-user temporary folder.
+- **Write access, on by default.** Through its tools, Claude can create, change and delete items in the open project; open, close and save projects; render frames and movies to paths you choose; run After Effects menu commands; change After Effects preferences; and start or stop After Effects.
+- **Custom scripting, on by default.** The `eval.run` operation runs custom ExtendScript with your user account's access to After Effects, your files and system commands. Treat a script like any code you run.
+- **Turning things off.** Start Claude with `AE_MCP_ENABLE_EVAL=0` to remove custom scripting, or `AE_MCP_READONLY=1` to make the session inspection-only, for example `AE_MCP_READONLY=1 claude`.
+- **What reaches Claude.** Your requests, tool inputs and results, project metadata such as item and layer names and settings, and the preview frames you ask for. The plugin does not upload your project or media to JB Technology LLC or anyone else.
 
-## What runs locally and what access it has
+## Privacy
 
-The installed plugin starts its bundled Node MCP server with standard input/output. That server exchanges temporary request and response files with AE and asks the operating system to run AE scripts. It does not start a public web server or require a publisher account. The OS/AE permissions allow the controller to inspect the open project and, when writes are enabled, create, change or delete native items and save AEPs/exports to paths you choose. `eval.run` can run custom AE scripting and is enabled by default; set `AE_MCP_ENABLE_EVAL=0` to remove that capability or `AE_MCP_READONLY=1` to restrict project writes. The per-user mailbox is temporary, but your saved AEPs and exports remain where you put them.
+The plugin runs on your Mac and has no server of its own. JB Technology LLC receives nothing from it. Read the full [privacy statement](https://github.com/joebenscoter86/after-effects-studio/blob/main/release/website/privacy.md). Anthropic's terms cover how Claude handles your conversation, and any asset or generation tool you use alongside the plugin has its own policy.
 
-Your instructions, tool inputs/results, project metadata and previews can reach the Codex host as part of the task. Optional asset services have their own data handling. The plugin does not automatically upload the complete AE project to JB Technology LLC. Use [connection recovery](docs/connection-recovery.md) if permissions or AE state prevent a call. Use [local installation and update](docs/local-install.md) for supported removal/restore commands; removing the plugin does not delete your project files. Inspect the exact project before a write, especially after a timeout. The original-material grant, upstream MIT license and dependency notices are linked above so you can inspect the executable source and rights before installing.
+## Example prompts
 
-## Capabilities
+- Check the After Effects version and my current project read-only, and tell me whether the connection works. Don't change anything yet.
+- Create a polished motion graphic in After Effects.
+- Inspect my AE project and improve its motion.
+- Create a motion graphic using my brand colors and visual style.
 
-- Inspect projects, comps, layers, properties and installed host capabilities.
-- Create and edit native compositions, text, shapes, masks, keyframes, expressions, effects, cameras, lights and footage using the catalog.
-- Run custom ExtendScript with `eval.run` for the exposed native scripting API.
-- Save projects, use render queue operations, export frames/contact sheets and exchange project JSON within the runtime's documented serialization limits.
-- Read 29 bundled documents and code libraries, including the refreshed motion foundation, typography and paper-collage modules, worked examples, scene brief, review guidance, optional JoeB appearance and reusable JSX. `ae_library` exposes module routing; the five skills cover motion-studio, ae-control, motion-review, typography and paper-collage.
+## Install
 
-“Full access” means the exposed AE scripting API plus catalog operations, not every proprietary effect dialog or Adobe UI control. Query the catalog and installed effects rather than assuming coverage. This plugin enables custom scripting by default; `AE_MCP_ENABLE_EVAL=0` disables it and `AE_MCP_READONLY=1` restricts project mutations. Treat script inputs as executable code.
+In Claude Code, add the marketplace and install the plugin:
 
-## Existing projects
+```
+claude plugin marketplace add joebenscoter86/after-effects-studio
+claude plugin install after-effects-studio@jb-technology
+```
 
-Inspect before writing, preserve unsaved work, and don't run competing controllers against AE. Native runtime clients share their transport coordination, while unrelated CEP/cloud bridges do not. Batches are undo-grouped but do not roll back on failure; a timed-out request may have run. Save/export writes cannot be undone with project undo.
+Or in one step inside a Claude Code session:
 
-## Motion language for every style
+```
+/plugin install after-effects-studio --marketplace joebenscoter86/after-effects-studio
+```
 
-The default skill and server instructions require the bundled motion language, production workflow and brief before creative work. Detailed techniques are loaded for the actual scene. Construction, causal action, state changes, persistent object identity, measured timing and rendered review are adapted from Joe's production work and apply to every palette and brand. The typography skill supplies editable type planning and helpers; the paper-collage skill supplies native layered-paper methods and an optional cleared-asset route. These are self-contained portable adaptations, not links to a private checkout. See `docs/MIGRATION.md` and `PROVENANCE.md` for source coverage and exclusions. Future repository changes require an explicit plugin update.
+In the Claude app, open Customize → Plugins → Add marketplace, enter `joebenscoter86/after-effects-studio`, then install After Effects Studio. Restart Claude, open After Effects, and follow [your first motion scene](docs/first-session.md). [Installation and update](docs/local-install.md) covers updates, and [connection and permission recovery](docs/connection-recovery.md) covers failed connections.
 
-### Model choice for visual work
+## Remove
 
-For polished motion graphics, choose an available **GPT-6-family model or newer** in Codex. Start with GPT-6.1 Sol or GPT-6 Astra when the scene needs complex layout, object continuity or visual judgment. A faster or lower-cost model can still build editable drafts, but inspect its rendered frames closely before treating the work as finished. In a controlled local study, GPT-5.6 Luna/high completed six native technical tasks but had viewer-visible faults in three first-pass movies; separate GPT-6 Astra/high confirmations cleared the sampled faults in those three. That comparison does not prove every GPT-6 model or future model will pass. The plugin does not select or change your Codex model, and a stronger model does not replace full-size frame and playback review.
+```
+claude plugin uninstall after-effects-studio@jb-technology
+```
 
-## Optional JoeB preset
+Removing the plugin does not touch your After Effects projects, renders or exports.
 
-The production-derived craft workflow is the default. JoeB is a selectable look derived from the 2026-10-06 Content playbook. `library/presets/house.jsx` and `motion.jsx` are the user's existing helper code, with machine-specific asset defaults removed. They require a compatible MASTER rig and configured local media; no footage, proprietary template packs, LUTs, fonts or generated asset kit is bundled. The independent `library/scripts/motion.jsx` works without that rig.
+## Working with existing projects
 
-## Development
+Claude inspects the open project before it writes and keeps unrelated work, including an unsaved project. Run one After Effects controller at a time. Each tool call is one undo step, but a failed batch does not roll back, and a request that timed out may still have run: inspect the project before retrying. Saves and exports cannot be undone with project undo.
 
-Source and runtime tests are included. In `runtime/`, run `npm ci --ignore-scripts`; then from the plugin root run `node scripts/build.mjs`. Run `npm run typecheck` and `npx vitest run --exclude 'tests/e2e/**'` in runtime. Do not run upstream E2E suites on an important open project. `node tests/smoke.mjs` checks the shipped MCP without AE; `--live` adds read-only host checks; `--scratch` additionally builds, renders and removes a uniquely named scratch comp in the current project.
+## What's inside
 
-After intentional library edits regenerate its hashed index with `node scripts/manifest.mjs`. See `PROVENANCE.md` for source attribution, `docs/ARCHITECTURE.md` for packaging and `verification/RESULTS.md` for actual validation status. Install/reinstall through the plugin-creator workflow so Codex refreshes its cache.
+Five skills (motion-studio, ae-control, motion-review, typography and paper-collage), twelve tools, and a hashed library of 29 documents and code helpers that the `ae_library` tool serves offline. The motion language applies to every style; the paper, navy and vermilion JoeB look is an optional preset. [Architecture](docs/ARCHITECTURE.md) describes the package.
