@@ -4,6 +4,7 @@ import {readFileSync,mkdirSync,writeFileSync} from 'node:fs';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {randomUUID} from 'node:crypto';
 import {resolve} from 'node:path';
+import {tmpdir} from 'node:os';
 import assert from 'node:assert/strict';
 const pluginRootArg=process.argv.indexOf('--plugin-root');
 const root=pluginRootArg>=0?pathToFileURL(process.argv[pluginRootArg+1].replace(/\/$/,'')+'/'):new URL('../',import.meta.url);
@@ -13,11 +14,25 @@ const live=scratch||emptyProjectCheck||process.argv.includes('--live');
 const outputArg=process.argv.indexOf('--output');
 const output=outputArg>=0?process.argv[outputArg+1]:fileURLToPath(new URL('../verification/',import.meta.url));
 mkdirSync(output,{recursive:true});
+const hostArg=process.argv.indexOf('--host');
+const host=hostArg>=0?process.argv[hostArg+1]:'codex';
+const cwdArg=process.argv.indexOf('--cwd');
 const config=JSON.parse(readFileSync(new URL('.mcp.json',root),'utf8')).mcpServers['after-effects-studio'];
 assert(config,'Missing after-effects-studio MCP registration');
-assert.equal(config.cwd,'.','MCP working directory must resolve to the installed plugin root');
+let launchCwd;
+if(host==='claude'){
+ // Claude Code substitutes the plugin root and starts the server from the user's working directory.
+ assert.equal(config.cwd,undefined,'Claude MCP config must not set cwd');
+ const pluginRoot=fileURLToPath(root).replace(/\/$/,'');
+ const sub=v=>v.replaceAll('${CLAUDE_PLUGIN_ROOT}',pluginRoot);
+ config.command=sub(config.command);config.args=config.args.map(sub);
+ launchCwd=cwdArg>=0?process.argv[cwdArg+1]:tmpdir();
+}else{
+ assert.equal(config.cwd,'.','MCP working directory must resolve to the installed plugin root');
+ launchCwd=resolve(fileURLToPath(root),config.cwd);
+}
 assert(config.args.every(arg=>!arg.includes('${')),'MCP arguments contain an unresolved variable');
-const child=spawn(config.command,config.args,{cwd:resolve(fileURLToPath(root),config.cwd),env:{...process.env,...config.env,AE_MCP_READONLY:scratch||emptyProjectCheck?'0':'1'},stdio:['pipe','pipe','pipe']});
+const child=spawn(config.command,config.args,{cwd:launchCwd,env:{...process.env,...config.env,AE_MCP_READONLY:scratch||emptyProjectCheck?'0':'1'},stdio:['pipe','pipe','pipe']});
 let next=1,buffer='',stderr='';const pending=new Map();
 child.stderr.on('data',d=>stderr+=d);
 child.stdout.on('data',d=>{
