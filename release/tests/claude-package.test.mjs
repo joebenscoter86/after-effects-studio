@@ -333,3 +333,25 @@ test('custom scripting is on by default and the user can turn it off', async () 
   const off = await catalogCategories(outDir, { AE_MCP_ENABLE_EVAL: '0' });
   assert.ok(!off.includes('eval'), 'AE_MCP_ENABLE_EVAL=0 in the user environment must remove eval.run');
 });
+
+// ---- CL-9: the style library in the Claude package ---------------------------------
+
+test('README discloses style tool dependencies and the six skills', async () => {
+  const { outDir } = await sharedBuild();
+  const readme = await fs.readFile(path.join(outDir, 'README.md'), 'utf8');
+  const disclosure = section(readme, '## Requirements') + section(readme, '## What it runs and sends');
+  assert.match(disclosure, /ffmpeg/);
+  assert.match(disclosure, /Blender/);
+  const skills = (await fs.readdir(path.join(outDir, 'skills'))).sort();
+  assert.equal(skills.length, 6);
+  assert.match(readme, /Six skills \(/);
+  for (const skill of skills) assert.ok(readme.includes(skill), `README does not name ${skill}`);
+});
+
+test('the package ships the style library without fonts', async () => {
+  const { outDir, files } = await sharedBuild();
+  const index = JSON.parse(await fs.readFile(path.join(outDir, 'library/styles/index.json'), 'utf8'));
+  assert.equal(index.styles.length, 30);
+  assert.deepEqual(files.filter((f) => f.startsWith('library/styles/') && /\.(ttf|otf|woff2?)$/i.test(f)), []);
+  await fs.access(path.join(outDir, 'skills/visual-styles/SKILL.md'));
+});
