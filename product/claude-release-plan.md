@@ -168,6 +168,13 @@ In the portal, choose Plugin bundle, the repository, the package path and a trac
 
 Done when: the listing is live, it installs from the directory on a clean Claude Code config and in Customize → Plugins, and a report records the exact listed version.
 
+## Progress (2026-11-08, end of the first build session)
+
+- **CL-1 to CL-4: built and reviewed.** Generated package `claude/after-effects-studio/` (503 files with the styles) passes `claude plugin validate --strict` and the release tests; a whole-branch review's Important findings are fixed. The License 1.1 text waits for Joe in [license-1.1-draft.md](license-1.1-draft.md); `license.md` stays 1.0.
+- **CL-9: Tasks 1–4 done** ([claude-style-library-plan.md](claude-style-library-plan.md)): 30 styles imported, routed through `ae_library` and the `visual-styles` skill, packaged, and policy-reviewed. Task 5 (sampled builds in After Effects) is not run.
+- **CL-5: partial** ([report](../quality/reports/2026-11-08-claude-local-validation/report.md)). A Git-clone marketplace install, uninstall, server starts and a read-only live check on After Effects 27.0x78 pass. Found and fixed: the runtime could not find After Effects 2027.
+- **Waiting on Joe:** how native test builds may use After Effects (his live reel project is open), a refreshed Claude Code CLI login for headless sessions, the License 1.1 text, the plugin name, and which After Effects versions to advertise.
+
 ## Joe's decisions (2026-11-08)
 
 1. **Shared source changes are allowed.** Changes useful to both Codex and Claude, such as rewording the GPT model guidance in `motion-studio/SKILL.md` and `library/references/quality.md` (with the library manifest regenerated), or policy-driven tool and server-instruction wording, go into canonical `plugin/`. They reach Codex users in the next Codex version after its normal tests, never in a frozen candidate. Claude-only files, such as the manifest, MCP config, README and Claude install docs, live in a Claude source folder outside `plugin/` and are built into the package.
