@@ -2,7 +2,7 @@
 
 > International Typographic Style in motion: a column grid, one grotesque, ink on paper with one signal colour, and movement as exact as a printing press.
 
-Adapted for native After Effects from Lemo-Opuscar's *Swiss Motion Graphics* style (MIT, LemoLab; see `assets/LICENSE-lemo-opuscar.txt`). Grammar only: never copy a historical poster's composition, never use Helvetica or Akzidenz files, never name a real institution on a poster.
+Adapted for native After Effects from Lemo-Opuscar's *Swiss Motion Graphics* style (MIT, LemoLab; see `library/styles/LICENSE-lemo-opuscar.txt`). Grammar only: never copy a historical poster's composition, never use Helvetica or Akzidenz files, never name a real institution on a poster.
 
 ## 1. What it is, and what it is not
 
@@ -49,7 +49,7 @@ Music with a grid of its own: a steady pulse whose subdivisions give the snap du
 6. Groups and cuts: `group(comp, name, x, y, layers)` parents layers to a null anchored at (x, y) without moving them; `knife(comp, name, group, x, y, len, t)` draws the signal line across at y and collapses the group to it, landing on `t`.
 7. Numbers: a giant numeral climbs in held Source Text steps (one `AESLib.textKeys` call) while a bar under it snaps to each step.
 
-**Gotchas found while proving it**
+**Gotchas found while building it**
 
 - Left justification on a new text layer did not take in the proof: every word rendered centred on its x, so flush-left lines piled up and the caption row ran off the left edge. `word()` now sets the anchor to the ink's left edge (`sourceRectAtTime(0, false).left`, baseline 0), which is flush left whatever the justification says; `measure()` returns the rect's width only.
 - A knife on a group that was already pushed (the carry) must read the group's scale at the cut time (`valueAtTime`), not `.value`, which is the value at the comp's current time and would snap it back to 100% first.
@@ -59,7 +59,7 @@ Music with a grid of its own: a steady pulse whose subdivisions give the snap du
 
 ## 7. Dependencies
 
-Inter Tight installed with its Bold and Medium styles (`assets/fonts/InterTight[wght].ttf`, OFL; `AESSwiss.fontOK()` checks). Node 20+ and ffmpeg for `tools/print.mjs`. No effects: shape layers, text layers, masks, nulls and Trim Paths only.
+Inter Tight installed with its Bold and Medium styles (free (OFL) from Google Fonts, not included; `AESSwiss.fontOK()` checks). Node 20+ and ffmpeg for `tools/print.mjs`. No effects: shape layers, text layers, masks, nulls and Trim Paths only.
 
 ## 8. Pitfalls of the medium
 

@@ -2,7 +2,7 @@
 
 > An explainer drawn live on one glossy dry-erase board: single-line handwriting that is actually written stroke by stroke, floating markers with no hand, magnets that hold things up, and a camera that travels across the board instead of cutting.
 
-Adapted for native After Effects from Lemo-Opuscar's *Whiteboard Explainer* style (MIT, LemoLab; see `assets/LICENSE-lemo-opuscar.txt`). Grammar only: never copy RSA Animate, Cognitive Media or minutephysics drawings, characters, hands or music.
+Adapted for native After Effects from Lemo-Opuscar's *Whiteboard Explainer* style (MIT, LemoLab; see `library/styles/LICENSE-lemo-opuscar.txt`). Grammar only: never copy RSA Animate, Cognitive Media or minutephysics drawings, characters, hands or music.
 
 ## 1. What it is, and what it is not
 
@@ -54,7 +54,7 @@ Every stroke sounds: felt on gloss (a hiss band around 2 to 7.5 kHz with body at
 8. Pens: one marker per colour (felt nib, cone, white barrel, colour band, cap) and a blurred silhouette for its shadow, both in screen space and baked per frame from the jobs: on a stroke the nib sits on the trim head; between jobs less than 0.9 s apart it hops (the shadow slides out and blurs with the lift); longer gaps send it off frame and bring it back 0.32 s before its next stroke; after its last job it flies into the tray during the pull back.
 9. Subtitles: one text layer with every line keyed in one `AESLib.textKeys` call, centred by an anchor expression on `sourceRectAtTime`; the label's width follows the line by expression.
 
-**Gotchas found while proving it**
+**Gotchas found while building it**
 
 - ExtendScript groups a nested ternary left to right: `a ? b : c ? d : e` runs as `(a ? b : c) ? d : e`. A centring line `o.center ? x - w / 2 : o.right ? x - w : x` right-aligned every centred word, and a clamp written as one ternary returned the maximum when the value was below the minimum (the first blue line came out at 20 px wide). Never nest a ternary in a module: parenthesise it or use if/else. The same pattern sits in `AESLib.text` (justification) and `AESLib.ease` (the exit ease) and is likely the "justification does not take" gotcha other packages recorded; not changed here.
 - Trim Paths set to Individually draws the paths of a group in the order they were added (the first added is drawn first), each in proportion to its length, so a pen baked from the same lengths stays on the trim head.
@@ -67,7 +67,7 @@ Every stroke sounds: felt on gloss (a hiss band around 2 to 7.5 kHz with body at
 
 ## 7. Dependencies
 
-Architects Daughter Regular installed (`assets/fonts/`, OFL) for subtitles. EMS Tech is not an installed font: its stroke data ships as `assets/fonts/EMSTech.json` (OFL, `OFL-EMSTech.txt`). Node 20+ for `tools/font.mjs`, Node and ffmpeg for `tools/print.mjs`. Stock effects only: Gradient Ramp, Fractal Noise, Drop Shadow, Gaussian Blur, plus shape layers, Trim Paths and a few expressions (subtitle anchor and label width).
+Architects Daughter Regular installed (free (OFL) from Google Fonts, not included) for subtitles. EMS Tech is not an installed font: its stroke data ships as `assets/fonts/EMSTech.json` (OFL, `OFL-EMSTech.txt`). Node 20+ for `tools/font.mjs`, Node and ffmpeg for `tools/print.mjs`. Stock effects only: Gradient Ramp, Fractal Noise, Drop Shadow, Gaussian Blur, plus shape layers, Trim Paths and a few expressions (subtitle anchor and label width).
 
 ## 8. Pitfalls of the medium
 

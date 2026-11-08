@@ -26,14 +26,28 @@ function installedAePaths(platform, listDir) {
   try { names = listDir(root); } catch { return []; }
   return names
     .map(name => ({ name, year: /^Adobe After Effects (\d{4})$/.exec(name)?.[1] }))
-    .filter(e => e.year)
+    .filter(e => e.year && Number(e.year) >= 2024)
     .sort((a, b) => Number(b.year) - Number(a.year))
     .map(({ name, year }) => platform === 'darwin' ? `${root}/${name}/Adobe After Effects ${year}.app` : `${root}/${name}/Support Files/AfterFX.exe`);
 }
 
-function resolveAeCandidate({ env, platform, fileExists, stat, listDir }) {
+// Running releases on macOS, from `ps` (mirrors runningAfterFxApps in config.ts).
+function psRunningAeApps() {
+  const r = spawnSync('ps', ['-axo', 'command='], { encoding: 'utf8', timeout: 2_000 });
+  const apps = new Set();
+  for (const line of (r.stdout || '').split('\n')) {
+    const m = /^(.*\/Adobe After Effects \d{4}\.app)\/Contents\/MacOS\/After Effects(?:\s|$)/.exec(line.trim());
+    if (m) apps.add(m[1]);
+  }
+  return [...apps];
+}
+
+// Same order as the server: AE_MCP_EXE, a running release, the supported 2026 → 2024, then newer releases.
+function resolveAeCandidate({ env, platform, fileExists, stat, listDir, runningApps }) {
   const overrides = [env.AE_MCP_EXE, env.AE_EXE].map(value => value?.trim()).filter(Boolean);
-  const candidates = [...overrides, ...installedAePaths(platform, listDir), ...(DEFAULT_AE_PATHS[platform] || [])];
+  const installed = installedAePaths(platform, listDir);
+  const supported = ['2026', '2025', '2024'].flatMap(y => installed.filter(p => p.includes(`Adobe After Effects ${y}/`)));
+  const candidates = [...overrides, ...(platform === 'darwin' ? runningApps() : []), ...supported, ...installed, ...(DEFAULT_AE_PATHS[platform] || [])];
   return candidates.find(candidate => usableAePath(candidate, platform, fileExists, stat)) || null;
 }
 
@@ -45,6 +59,7 @@ export function diagnose({
   fileExists = existsSync,
   stat = statSync,
   listDir = readdirSync,
+  runningApps = psRunningAeApps,
   run = (name) => spawnSync(name, ['-version'], { encoding: 'utf8', timeout: 5_000 }),
 } = {}) {
   const checks = [];
@@ -65,7 +80,8 @@ export function diagnose({
     hint: 'Restore plugin/library/manifest.json and the packaged library folder, then reinstall the plugin.',
   }));
 
-  const ae = resolveAeCandidate({ env, platform, fileExists, stat, listDir });
+  const ae = resolveAeCandidate({ env, platform, fileExists, stat, listDir, runningApps });
+  const installedReleases = installedAePaths(platform, listDir).filter(p => usableAePath(p, platform, fileExists, stat));
   const configuredPath = [env.AE_MCP_EXE, env.AE_EXE].map(value => value?.trim()).find(Boolean);
   checks.push(check('After Effects path', ae !== null, ae || configuredPath || 'No supported default installation found', {
     hint: configuredPath
@@ -99,6 +115,9 @@ export function diagnose({
       'This check does not launch After Effects, inspect an open project, or change project contents.',
       'A live connection is required to verify macOS Automation permission and After Effects scripting file access.',
       'ffmpeg and ffprobe are only required by the optional movie export verifier.',
+      ...(installedReleases.length > 1 && ae
+        ? [`Several After Effects releases are installed (${installedReleases.map(p => /(\d{4})/.exec(p.split('/').at(-2))?.[1]).join(', ')}); the plugin uses ${ae} unless another release is running or AE_MCP_EXE is set.`]
+        : []),
     ],
   };
 }

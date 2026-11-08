@@ -2,7 +2,7 @@
 
 > An object is scanned into a glowing wireframe above a projector pad; target boxes lock onto it, leaders pull out to HUD cards, and every number rolls out of garbage glyphs into the real value, turning the one warm accent on the frame it becomes true.
 
-Adapted for native After Effects from Lemo-Opuscar's *Sci-fi Hologram HUD* style (MIT, LemoLab; see `assets/LICENSE-lemo-opuscar.txt`). Grammar only: copy no film's HUD layouts, icons, fonts or colours, and never name a film franchise in a film made with it.
+Adapted for native After Effects from Lemo-Opuscar's *Sci-fi Hologram HUD* style (MIT, LemoLab; see `library/styles/LICENSE-lemo-opuscar.txt`). Grammar only: copy no film's HUD layouts, icons, fonts or colours, and never name a film franchise in a film made with it.
 
 ## 1. What it is, and what it is not
 
@@ -60,7 +60,7 @@ Music first, on a grid: one bar is one information beat and every lock lands on 
 9. **Leader, card, chip.** The leader is one shape layer (a ring plus a two-segment polyline) drawn with Trim Paths. The value card is a plate with a decoding label, the rolled value in the accent, a unit and a typed detail line. On docking, the card's layers fade 0.3 s and a chip (plate, mono label, value in the accent, unit) slides 52 px into the rail.
 10. **Beam.** A solid with a vertical `ADBE Ramp` (hue at the pad, black at the top), a feathered trapezoid mask, `Add`, at 16% under a panel and 34% at ignition settling to 20%.
 
-**Gotchas found while proving it**
+**Gotchas found while building it**
 
 - A path property fetched before a sibling Fill was added to the same vector group was dead by the time it was keyed ("Object is invalid" on `setValuesAtTimes` in `scanMatte`). Re-fetch a property after adding anything beside it; the same goes for a stroke after its dashes are added.
 - With the scan parked at -0.4 under the pad, the near edge of the bust's base ring still projected below the front and showed before the scan started. Park it at -1.2 and jump to just under the pad one frame before the rise.
@@ -74,7 +74,7 @@ Music first, on a grid: one bar is one information beat and every lock lands on 
 
 ## 7. Dependencies
 
-Rajdhani Light, Medium and SemiBold and Share Tech Mono Regular installed (`assets/fonts/`, OFL; `AESHologram.fontOK()` checks). Node 20+ and ffmpeg for `tools/holo.mjs` (the real frame cropped and greyed, and its line art). Stock effects only: Gradient Ramp, Glow, Fill, Tint, Slider Control, plus shape layers, Repeaters, Trim Paths, masks, track mattes and `createPath` expressions. No generated pieces: the wireframes are data in the module.
+Rajdhani Light, Medium and SemiBold and Share Tech Mono Regular installed (free (OFL) from Google Fonts, not included; `AESHologram.fontOK()` checks). Node 20+ and ffmpeg for `tools/holo.mjs` (the real frame cropped and greyed, and its line art). Stock effects only: Gradient Ramp, Glow, Fill, Tint, Slider Control, plus shape layers, Repeaters, Trim Paths, masks, track mattes and `createPath` expressions. No generated pieces: the wireframes are data in the module.
 
 ## 8. Pitfalls of the medium
 

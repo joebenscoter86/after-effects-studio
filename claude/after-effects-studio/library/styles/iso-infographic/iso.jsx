@@ -2,7 +2,7 @@
 // Read styles/iso-infographic/STYLE.md first. A floating diorama board in true isometric (30 degree axes, never rotated), flat solids in three
 // tones per face (top light, +y side mid, +x side dark), ink only for the infographic furniture (pins, leaders, routes, rings), Isotype numbers
 // built from identical icons, a circular inset that opens on a leader, and a 2D camera with a log-interpolated zoom.
-// Adapted from Lemo-Opuscar's iso-infographic style (MIT, LemoLab); see assets/LICENSE-lemo-opuscar.txt.
+// Adapted from Lemo-Opuscar's iso-infographic style (MIT, LemoLab); see library/styles/LICENSE-lemo-opuscar.txt.
 var AESIso = (function () {
   var FAM = "Poppins";
   function hex(h) { return [parseInt(h.substr(0, 2), 16) / 255, parseInt(h.substr(2, 2), 16) / 255, parseInt(h.substr(4, 2), 16) / 255]; }

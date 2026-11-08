@@ -2,7 +2,7 @@
 // Read styles/dark-keynote/STYLE.md first. A software launch film where the interface is the star: a near-black stage with a hairline grid
 // and soft cool light, raised dark windows and cards, one luminous accent reserved for the one thing that matters, light sweeps that
 // reveal, a giant number locking out of glyph noise, captions as toast notifications. Everything lands on the beat with one small overshoot.
-// Adapted from Lemo-Opuscar's dark-keynote style (MIT, LemoLab); see assets/LICENSE-lemo-opuscar.txt.
+// Adapted from Lemo-Opuscar's dark-keynote style (MIT, LemoLab); see library/styles/LICENSE-lemo-opuscar.txt.
 var AESKeynote = (function () {
   var SANS = "Inter Tight", MONO = "IBM Plex Mono";
   function hex(h) { return [parseInt(h.substr(1, 2), 16) / 255, parseInt(h.substr(3, 2), 16) / 255, parseInt(h.substr(5, 2), 16) / 255]; }

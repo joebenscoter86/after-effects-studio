@@ -4,7 +4,7 @@
 // (white = lit), and LIT = GLASS luma-matted by LIGHT and multiplied by the sun's colour. In the ROOM the window is GLASS darkened and
 // milky (unlit) with LIT added on top and glowing, LIT again corner-pinned and blurred onto the floor, and additive shafts between them.
 // The main comp holds the ROOM as the camera (anchor and scale keys), the banderole captions and the crack flash.
-// Adapted from Lemo-Opuscar's stained-glass style (MIT, LemoLab); see assets/LICENSE-lemo-opuscar.txt.
+// Adapted from Lemo-Opuscar's stained-glass style (MIT, LemoLab); see library/styles/LICENSE-lemo-opuscar.txt.
 var AESStainedGlass = (function () {
   var CIN = "Cinzel", FELL = "IM FELL English";
   var C = { cobalt: [.125, .278, .69], cobaltD: [.086, .188, .494], sky: [.3, .46, .78], ruby: [.69, .118, .18], gold: [.878, .667, .165], green: [.184, .498, .235],

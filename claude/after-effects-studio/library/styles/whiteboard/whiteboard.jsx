@@ -2,7 +2,7 @@
 // Read styles/whiteboard/STYLE.md first. An explainer written live on one glossy dry-erase board: single-line handwriting written stroke by
 // stroke (EMS Tech stroke data, OFL), floating markers with a cast shadow and no hand, magnets, and a camera that travels across the board
 // instead of cutting. Ink multiplies onto the board; nothing fades in, bounces or animates as a block of type.
-// Adapted from Lemo-Opuscar's whiteboard style (MIT, LemoLab); see assets/LICENSE-lemo-opuscar.txt.
+// Adapted from Lemo-Opuscar's whiteboard style (MIT, LemoLab); see library/styles/LICENSE-lemo-opuscar.txt.
 var AESWhiteboard = (function () {
   var SUB = "Architects Daughter";
   var PALETTE = { board0: [.973, .969, .953], board1: [.910, .906, .886], wall: [.74, .73, .70], frame: [.66, .67, .69], ink: [.137, .149, .173],

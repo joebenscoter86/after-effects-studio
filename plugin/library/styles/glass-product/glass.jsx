@@ -3,7 +3,7 @@
 // object and its light (tools/glass_scene.py renders one plate per beat: the sweep, the dispersion, the comet pulses, the exploded view,
 // the caustic rings). After Effects owns the cut on every beat, a small extra push on each plate, the bloom above the highlights, a
 // couple of frames of micro shake on the snap, the ultra-thin wide type with a diagonal glint, and the frosted-glass subtitle slab.
-// Adapted from Lemo-Opuscar's glass-product style (MIT, LemoLab); see assets/LICENSE-lemo-opuscar.txt.
+// Adapted from Lemo-Opuscar's glass-product style (MIT, LemoLab); see library/styles/LICENSE-lemo-opuscar.txt.
 var AESGlass = (function () {
   var SANS = "Inter Tight";
   function hex(h) { return [parseInt(h.substr(1, 2), 16) / 255, parseInt(h.substr(3, 2), 16) / 255, parseInt(h.substr(5, 2), 16) / 255]; }

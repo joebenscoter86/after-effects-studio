@@ -1,7 +1,7 @@
 // Swiss motion style: brand-neutral ES3 helpers. No project mutation happens at load.
 // Read styles/swiss-motion/STYLE.md first. A column grid, one grotesque (Inter Tight), ink on paper with one signal colour. Every element
 // arrives by a clip-reveal or a wipe that lands on the beat with one precise ease; deletions are knife cuts; nothing fades, bounces or glows.
-// Adapted from Lemo-Opuscar's swiss-motion style (MIT, LemoLab); see assets/LICENSE-lemo-opuscar.txt.
+// Adapted from Lemo-Opuscar's swiss-motion style (MIT, LemoLab); see library/styles/LICENSE-lemo-opuscar.txt.
 var AESSwiss = (function () {
   var FAM = "Inter Tight";
   var PALETTE = { page: [.918, .914, .898], paper: [1, 1, 1], ink: [.067, .067, .067], grey: [.812, .808, .788], guide: [.84, .835, .82], note: [.43, .43, .42], signal: [.89, .024, .075] };

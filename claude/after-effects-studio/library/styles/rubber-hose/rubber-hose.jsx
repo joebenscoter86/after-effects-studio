@@ -4,7 +4,7 @@
 // beat in front of a soft grey painted room, every drawing on twos (12 fps) with a light line boil, inside a rounded gate on a worn print
 // (flicker, weave, a jump on every cut, scratches, dust, a hair, a vignette). Words are period cards: fat outlined script titles that hop
 // in a travelling wave, Limelight sub-lines, and a near-black singalong card with a bouncing ball.
-// Adapted from Lemo-Opuscar's rubber-hose style (MIT, LemoLab); see assets/LICENSE-lemo-opuscar.txt.
+// Adapted from Lemo-Opuscar's rubber-hose style (MIT, LemoLab); see library/styles/LICENSE-lemo-opuscar.txt.
 var AESRubberHose = (function () {
   var SCRIPT = "Shrikhand", DECO = "Limelight", CARD = "IM FELL English SC";
   function g(v) { return [v, v, v]; }

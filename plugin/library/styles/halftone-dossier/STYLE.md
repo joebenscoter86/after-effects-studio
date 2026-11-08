@@ -85,7 +85,7 @@ Module `dossier.jsx` (`AESDossier`), built on `AESLib`. Layer names start with t
 10. **HUD** (`hud`): case number, the EXHIBIT chip whose number is keyed per beat in one `textKeys` call, the REC box with a dot that blinks (a sheet-coloured cover, opacity expression). Above the pages, below the wipe.
 11. **Paper texture** (`paperTexture`), over everything: Fractal Noise mottling (Overlay 11 %), a blurred centre fold (Multiply 16 %), a vignette (feathered elliptical mask, Multiply 16 %), sheet specks (high-contrast Fractal Noise, Screen) and ink specks (an ink solid through a luma matte of the same kind of noise), both reseeded at 15 fps.
 
-**Gotchas found while proving it**
+**Gotchas found while building it**
 
 - A new shape layer from `comp.layers.addShape()` sits at the comp centre with anchor (0, 0): a path drawn in comp coordinates (the red string) landed 540, 960 off and ran out of frame. Zero its position (`piece` does this for every other shape).
 - The dot wipe's coarse screen first used k 0.75, which puts the cell corners at 0.94: after Exposure the "full" cover still showed star-shaped gaps of paper at every corner. k 0.88 puts the corners at 0.8 and full density covers. The wipe ink is also Normal, not Multiply, or the page below shows through the navy.
@@ -98,7 +98,7 @@ Module `dossier.jsx` (`AESDossier`), built on `AESLib`. Layer names start with t
 
 ## 7. Dependencies
 
-Fonts (OFL, bundled in `assets/fonts/`): Newsreader ExtraBold (variable font), Titan One, Space Mono Bold, Anton. Node 20+ for `tools/screen.mjs`; Node 20+ and ffmpeg for `tools/print.mjs`. Stock effects only: Ramp, Exposure, Roughen Edges, Turbulent Displace, Fractal Noise, Gaussian Blur, track mattes. No generated pieces: the exhibits are drawn natively.
+Fonts (free (OFL) from Google Fonts, not included): Newsreader ExtraBold (variable font), Titan One, Space Mono Bold, Anton. Node 20+ for `tools/screen.mjs`; Node 20+ and ffmpeg for `tools/print.mjs`. Stock effects only: Ramp, Exposure, Roughen Edges, Turbulent Displace, Fractal Noise, Gaussian Blur, track mattes. No generated pieces: the exhibits are drawn natively.
 
 ## 8. Pitfalls of the medium
 
@@ -111,4 +111,4 @@ Fonts (OFL, bundled in `assets/fonts/`): Newsreader ExtraBold (variable font), T
 
 ## Reference
 
-Lemo-Opuscar `styles/halftone-dossier` (MIT, LemoLab; `assets/LICENSE-lemo-opuscar.txt`), grammar from Ben-Day-dot pop-art printing, riso and offset overprint zines, police mugshot height charts and case-file folders. Proof: `proof/compare.jpg`, `proof/proof.mp4`.
+Lemo-Opuscar `styles/halftone-dossier` (MIT, LemoLab; `library/styles/LICENSE-lemo-opuscar.txt`), grammar from Ben-Day-dot pop-art printing, riso and offset overprint zines, police mugshot height charts and case-file folders. Proof: `proof/compare.jpg`, `proof/proof.mp4`.

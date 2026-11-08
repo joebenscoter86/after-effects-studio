@@ -2,7 +2,7 @@
 
 > A relief print that carves itself: every frame is a black wood block on laid paper, and light exists only where a knife has cut it away.
 
-Adapted for native After Effects from Lemo-Opuscar's *Woodcut Print* style (MIT, LemoLab; see `assets/LICENSE-lemo-opuscar.txt`). Grammar only, after the wordless woodcut novels (Masereel, Lynd Ward), Kollwitz's gouges and Dore's line spacing: never their plates, figures, borders or titles.
+Adapted for native After Effects from Lemo-Opuscar's *Woodcut Print* style (MIT, LemoLab; see `library/styles/LICENSE-lemo-opuscar.txt`). Grammar only, after the wordless woodcut novels (Masereel, Lynd Ward), Kollwitz's gouges and Dore's line spacing: never their plates, figures, borders or titles.
 
 ## 1. What it is, and what it is not
 
@@ -61,7 +61,7 @@ Four comps: **DRAW** (block size, 952 x 1380) holds the tone drawing; **SCREEN**
 9. The peel: SHEET again, 3D, time remap held at a frame of the input, hinged at its top edge, Rotate X keyed 0 to -96 from "becomes" to "next", slow then fast (its bottom swings towards the camera), revealing the live sheet below.
 10. Captions and plate numbers: `AESLib.text` in ink in the margins, opacity keyed, Roughen Edges border 1.4 on captions. Every text change goes through `AESLib.textKeys` / `AESLib.bakeText` in one call per layer.
 
-**Gotchas found while proving it**
+**Gotchas found while building it**
 
 - Multiply is the wrong mode for the colour plate: copper times ink is visibly darker than ink, so the plate's rectangle showed over the black. Darken keeps the ink exactly and colours only the cut paper. The plate also has to sit under the grain, specks and paper texture, or their lift shows its box.
 - Roughen Edges' Scale has a minimum of 10 from scripting (8 throws "out of range 10 to 1000").
@@ -74,7 +74,7 @@ Four comps: **DRAW** (block size, 952 x 1380) holds the tone drawing; **SCREEN**
 ## 7. Dependencies
 
 - After Effects 2023 or later (`Layer.setTrackMatte`).
-- Fonts (OFL, bundled in `assets/fonts/`): IM FELL English SC Regular, IM FELL English Regular and Italic.
+- Fonts (free (OFL) from Google Fonts, not included): IM FELL English SC Regular, IM FELL English Regular and Italic.
 - Node 20+ and ffmpeg for `tools/tone.mjs`. No generated pieces.
 
 ## 8. Pitfalls of the medium

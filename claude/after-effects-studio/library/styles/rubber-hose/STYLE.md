@@ -60,7 +60,7 @@ Module `rubber-hose.jsx`, global `AESRubberHose`. Comps: `CAST` (gate size, ever
 13. **The gate.** A black shape with an even-odd hole (rounded rect r 28) and a blurred black stroke on the hole's edge as the inner shadow.
 14. Every text change goes through `AESLib.textKeys` / `AESLib.bakeText`, one call per layer.
 
-**Gotchas found while proving it**
+**Gotchas found while building it**
 
 - **Draw the card plate before its text.** `layers.add` puts each new layer on top, so a plate made after its title hides it. Build back to front.
 - **Rest the gloves at hip height, not at the feet.** Hands at body y -150 sat on the shoes and read as a second pair of feet; -210 to -230 reads as hands.
@@ -72,7 +72,7 @@ Module `rubber-hose.jsx`, global `AESRubberHose`. Comps: `CAST` (gate size, ever
 
 ## 7. Dependencies
 
-Stock After Effects effects only: Posterize Time, Turbulent Displace, Fractal Noise, Tint, Brightness and Contrast, Gaussian Blur, Noise, Drop Shadow. Fonts (OFL, `assets/fonts/`): Shrikhand, Limelight, IM Fell English SC. Node 20+ and ffmpeg for `tools/ink.mjs`. No generated pieces: the cast, the set and the cards are native shape layers.
+Stock After Effects effects only: Posterize Time, Turbulent Displace, Fractal Noise, Tint, Brightness and Contrast, Gaussian Blur, Noise, Drop Shadow. Fonts (free (OFL) from Google Fonts, not included): Shrikhand, Limelight, IM Fell English SC. Node 20+ and ffmpeg for `tools/ink.mjs`. No generated pieces: the cast, the set and the cards are native shape layers.
 
 ## 8. Pitfalls of the medium
 

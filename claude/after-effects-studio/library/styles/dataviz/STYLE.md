@@ -2,7 +2,7 @@
 
 > A chart that tells the story: real numbers drawn mark by mark on cream paper by a red and blue pencil, handwritten notes pinned to the values, and the chart itself as the camera, the rhythm and the plot.
 
-Adapted for native After Effects from Lemo-Opuscar's *Data Storytelling* style (MIT, LemoLab; see `assets/LICENSE-lemo-opuscar.txt`). Grammar only: its references (one dot as a character, warming stripes, scrollytelling with pinned notes) are traditions, not layouts to copy, and they are never named in the film.
+Adapted for native After Effects from Lemo-Opuscar's *Data Storytelling* style (MIT, LemoLab; see `library/styles/LICENSE-lemo-opuscar.txt`). Grammar only: its references (one dot as a character, warming stripes, scrollytelling with pinned notes) are traditions, not layouts to copy, and they are never named in the film.
 
 ## 1. What it is, and what it is not
 
@@ -58,7 +58,7 @@ Foley is graphite, paper and wood: tick-and-paper taps on each mark, scratches f
 8. **Pencil.** Native shapes (hex body with two facets, wood cone, coloured lead), its anchor at the tip, rotated 34 degrees so only the tip end shows from the lower right, with a Drop Shadow whose Distance and Softness grow with lift. A `Performer` collects taps, writing and moves in any order, sorts them and keys Position, Distance and Softness in one call each. The lead flip is held fill-colour keys.
 9. **Caption band.** A paper-colour rect over the bottom of the frame in screen space, a hairline rule, a mono kicker per beat and one Newsreader text layer per spoken word (in on its onset, out at the beat's end).
 
-**Gotchas found while proving it**
+**Gotchas found while building it**
 
 - Right and centred labels came out off by half their width (the y ticks ran into the axis). The rect `sourceRectAtTime` returns straight after a text layer is made can be stale: a diagnostic showed the layer ended right-justified (left -78, width 76) while its anchor had been set from another rect. `txt()` sets every layer left and records right or centred ones; `realign()` re-anchors them from a fresh rect once the build is done. Flush-left layers anchored at `r.left` were never affected.
 - A text layer with Source Text keys shows its first key's value before that key, so plot B's ticks showed the rescaled range before the ratchet. Every re-labelling layer gets a key at 0 with its starting text (still one `AESLib.textKeys` call).
@@ -71,7 +71,7 @@ Foley is graphite, paper and wood: tick-and-paper taps on each mark, scratches f
 
 ## 7. Dependencies
 
-Newsreader (Medium and Regular), IBM Plex Mono Regular and Caveat Regular installed (OFL, bundled in `assets/fonts/`; `AESDataviz.fontOK()` checks). Effects: Fractal Noise and Drop Shadow. Node 20+ and ffmpeg for `tools/series.mjs` and `tools/frame.mjs`.
+Newsreader (Medium and Regular), IBM Plex Mono Regular and Caveat Regular installed (free (OFL) from Google Fonts, not included; `AESDataviz.fontOK()` checks). Effects: Fractal Noise and Drop Shadow. Node 20+ and ffmpeg for `tools/series.mjs` and `tools/frame.mjs`.
 
 ## 8. Pitfalls of the medium
 

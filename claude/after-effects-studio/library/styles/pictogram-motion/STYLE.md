@@ -2,7 +2,7 @@
 
 > A beat-locked flash-card film: a square grid of discs and patterned cells whose rows slide past each other, faceless figures of round-capped bars, and huge bold type that slides up out of masks, one hue per card.
 
-Adapted for native After Effects from Lemo-Opuscar's *Pictogram Motion* style (MIT, LemoLab; see `assets/LICENSE-lemo-opuscar.txt`). Grammar only: never copy a real games' pictograms, emblem, slogan, pattern artwork or colour names, and never name a real event in the film.
+Adapted for native After Effects from Lemo-Opuscar's *Pictogram Motion* style (MIT, LemoLab; see `library/styles/LICENSE-lemo-opuscar.txt`). Grammar only: never copy a real games' pictograms, emblem, slogan, pattern artwork or colour names, and never name a real event in the film.
 
 ## 1. What it is, and what it is not
 
@@ -67,7 +67,7 @@ Motion blur is on for the comp, the rows, the figure bands, props, titles and th
 
 Build time: about 5 s for 134 layers (about 2 s of it the eleven pattern rows); render about 2 minutes with aerender.
 
-**Gotchas found while proving it**
+**Gotchas found while building it**
 
 - Effect colour properties (Tint's Map Black To and Map White To, a shape fill) ease as ONE dimension: `setTemporalEaseAtKey` with four `KeyframeEase` objects fails ("Value array does not have 1 elements"). `easeArr()` gives colours a single ease.
 - Set `inPoint` before `outPoint` on a layer whose keys are added afterwards: the numeral set its out point first and then its in point, and stayed on screen through every later card.
@@ -79,7 +79,7 @@ Build time: about 5 s for 134 layers (about 2 s of it the eleven pattern rows); 
 
 ## 7. Dependencies
 
-Inter Tight installed with its Black and ExtraBold styles (`assets/fonts/InterTight[wght].ttf`, OFL) and Space Mono Bold (`assets/fonts/SpaceMono-Bold.ttf`, OFL); `AESPictogram.fontOK()` checks. Node 20+ and ffmpeg for `tools/disc.mjs`. Effects: Tint and Noise only; everything else is shape layers, text layers, masks and keys.
+Inter Tight installed with its Black and ExtraBold styles (free (OFL) from Google Fonts, not included) and Space Mono Bold (free (OFL) from Google Fonts, not included); `AESPictogram.fontOK()` checks. Node 20+ and ffmpeg for `tools/disc.mjs`. Effects: Tint and Noise only; everything else is shape layers, text layers, masks and keys.
 
 ## 8. Pitfalls of the medium
 

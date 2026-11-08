@@ -65,7 +65,7 @@ All in one comp at 1080 x 1920, built by `AESGameShow.buildScene` (module `games
 
 Text keys go through `AESLib.textKeys` or `AESLib.bakeText`, one call per layer (the counter and the typed line).
 
-**Gotchas found while proving it**
+**Gotchas found while building it**
 
 - Parenting a child to a layer whose scale is already keyed from 0 hides the child for good (script parenting compensates at time 0, where the parent's scale is 0). The ribbon's slot numbers vanished in the first proof. Parent first, then add the pop keys, or pop each layer on its own (the scoreboard bulbs do).
 - One adjustment layer for the punch and the snap zoom cropped the corner banner during the zoom. The zoom now has its own adjustment layer under the telops and banners, and only the beat punch sits above everything.
@@ -75,7 +75,7 @@ Text keys go through `AESLib.textKeys` or `AESLib.bakeText`, one call per layer 
 
 ## 7. Dependencies
 
-- Fredoka (OFL), bundled in `assets/fonts/` (the variable font exposes Bold and SemiBold). Install it before proving; After Effects may need a restart to list it.
+- Fredoka (free (OFL) from Google Fonts, not included) (the variable font exposes Bold and SemiBold). Install it before building; After Effects may need a restart to list it.
 - Effects: Drop Shadow, Transform. Everything else is shape layers, text and expressions.
 - `tools/frame.mjs` (Node 20+ and ffmpeg): crops the real frame out of the scene's input still and sizes it for the card.
 - No generated pieces.
@@ -90,4 +90,4 @@ Text keys go through `AESLib.textKeys` or `AESLib.bakeText`, one call per layer 
 
 ## Reference
 
-Lemo-Opuscar `styles/game-show` (MIT, LemoLab), `STYLE.md` and its poster; licence in `assets/LICENSE-lemo-opuscar.txt`. Grammar only: no names, characters, UI or music from the rhythm-game and variety-show references it cites.
+Lemo-Opuscar `styles/game-show` (MIT, LemoLab), `STYLE.md` and its poster; licence in `library/styles/LICENSE-lemo-opuscar.txt`. Grammar only: no names, characters, UI or music from the rhythm-game and variety-show references it cites.

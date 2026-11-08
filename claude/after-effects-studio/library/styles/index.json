@@ -15,7 +15,6 @@
         "art deco",
         "1920s",
         "1930s",
-        "Gatsby",
         "gold and black",
         "gala",
         "luxury",
@@ -32,24 +31,28 @@
         {
           "family": "Limelight",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Poiret One",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Josefin Sans",
           "style": "SemiBold",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [
         "tools/plate.mjs"
       ],
       "contentStatus": "proven",
-      "contentProof": "2026-10-16"
+      "contentProof": "2026-10-16",
+      "pluginProof": null
     },
     {
       "id": "backrooms",
@@ -78,24 +81,28 @@
         {
           "family": "VT323",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "IBM Plex Mono",
           "style": "Medium",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Barlow Semi Condensed",
           "style": "SemiBold",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [
         "tools/plates.mjs"
       ],
       "contentStatus": "proven",
-      "contentProof": "2026-10-22"
+      "contentProof": "2026-10-22",
+      "pluginProof": null
     },
     {
       "id": "blueprint",
@@ -122,24 +129,28 @@
         {
           "family": "Architects Daughter",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "B612",
           "style": "Bold",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "B612",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [
         "tools/cyanotype.mjs"
       ],
       "contentStatus": "proven",
-      "contentProof": "2026-10-16"
+      "contentProof": "2026-10-16",
+      "pluginProof": null
     },
     {
       "id": "crt-terminal",
@@ -165,14 +176,16 @@
         {
           "family": "VT323",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [
         "tools/glyphs.mjs"
       ],
       "contentStatus": "proven",
-      "contentProof": "2026-10-16"
+      "contentProof": "2026-10-16",
+      "pluginProof": null
     },
     {
       "id": "dark-keynote",
@@ -196,27 +209,32 @@
         {
           "family": "Inter Tight",
           "style": "SemiBold",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Inter Tight",
           "style": "Medium",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "IBM Plex Mono",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "IBM Plex Mono",
           "style": "Medium",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [],
       "contentStatus": "proven",
-      "contentProof": "2026-10-16"
+      "contentProof": "2026-10-16",
+      "pluginProof": null
     },
     {
       "id": "dataviz",
@@ -243,22 +261,26 @@
         {
           "family": "Newsreader",
           "style": "Medium",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Newsreader",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "IBM Plex Mono",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Caveat",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [
@@ -266,7 +288,8 @@
         "tools/frame.mjs"
       ],
       "contentStatus": "proven",
-      "contentProof": "2026-10-16"
+      "contentProof": "2026-10-16",
+      "pluginProof": null
     },
     {
       "id": "engraving",
@@ -296,24 +319,28 @@
         {
           "family": "Bodoni Moda",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Bodoni Moda",
           "style": "Italic",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Pinyon Script",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [
         "tools/tone.mjs"
       ],
       "contentStatus": "proven",
-      "contentProof": "2026-10-17"
+      "contentProof": "2026-10-17",
+      "pluginProof": null
     },
     {
       "id": "game-show",
@@ -343,26 +370,29 @@
         {
           "family": "Fredoka",
           "style": "Bold",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Fredoka",
           "style": "SemiBold",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [
         "tools/frame.mjs"
       ],
       "contentStatus": "proven",
-      "contentProof": "2026-10-16"
+      "contentProof": "2026-10-16",
+      "pluginProof": null
     },
     {
       "id": "glass-product",
       "title": "Glass product",
       "tier": "3d",
       "summary": "A launch film for a fictional glass object: one hero of clear and frosted glass, metal and light floating in an infinite black studio, outlined by strip lights it never shows, with rainbow edges, light that travels inside it, caustic rings on a black gloss floor, and slow exploded views that snap shut on the beat. Blender renders the object one shot per beat; After Effects owns the cuts, the ultra-thin type with its glint, and the frosted-glass subtitle slab.",
-      "goodFor": "A hero product reveal that should look like an Apple launch",
+      "goodFor": "A hero product reveal that should feel like a premium product launch",
       "triggers": [
         "glass product",
         "product render",
@@ -384,24 +414,28 @@
         {
           "family": "Inter Tight",
           "style": "ExtraLight",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Inter Tight",
           "style": "Light",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Inter Tight",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [
         "tools/plates.mjs"
       ],
       "contentStatus": "proven",
-      "contentProof": "2026-10-22"
+      "contentProof": "2026-10-22",
+      "pluginProof": null
     },
     {
       "id": "halftone-dossier",
@@ -430,22 +464,26 @@
         {
           "family": "Newsreader",
           "style": "ExtraBold",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Titan One",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Space Mono",
           "style": "Bold",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Anton",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [
@@ -453,7 +491,8 @@
         "tools/print.mjs"
       ],
       "contentStatus": "proven",
-      "contentProof": "2026-10-16"
+      "contentProof": "2026-10-16",
+      "pluginProof": null
     },
     {
       "id": "hologram-hud",
@@ -481,29 +520,34 @@
         {
           "family": "Rajdhani",
           "style": "Light",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Rajdhani",
           "style": "Medium",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Rajdhani",
           "style": "SemiBold",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Share Tech Mono",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [
         "tools/holo.mjs"
       ],
       "contentStatus": "proven",
-      "contentProof": "2026-10-16"
+      "contentProof": "2026-10-16",
+      "pluginProof": null
     },
     {
       "id": "iso-infographic",
@@ -529,24 +573,27 @@
         {
           "family": "Poppins",
           "style": "SemiBold",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Poppins",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [],
       "contentStatus": "proven",
-      "contentProof": "2026-10-16"
+      "contentProof": "2026-10-16",
+      "pluginProof": null
     },
     {
       "id": "living-screencast",
       "title": "Living screencast",
       "tier": "native",
       "summary": "A product walkthrough that looks like a real screen recording: a redrawn, razor-sharp app window floating on wallpaper, a recording-software camera that pushes in to the cursor, and a chunky low-res pixel mascot that lives on the top edges of the UI and acts out what the software is doing.",
-      "goodFor": "Walking through a real app or tool on screen (Joe's favourite)",
+      "goodFor": "Walking through a real app or tool on screen",
       "triggers": [
         "screencast",
         "screen recording",
@@ -567,29 +614,34 @@
         {
           "family": "Inter Tight",
           "style": "Medium",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Inter Tight",
           "style": "Bold",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Newsreader",
           "style": "Medium",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "IBM Plex Mono",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [
         "tools/frame.mjs"
       ],
       "contentStatus": "proven",
-      "contentProof": "2026-10-16"
+      "contentProof": "2026-10-16",
+      "pluginProof": null
     },
     {
       "id": "lowpoly-island",
@@ -621,19 +673,22 @@
         {
           "family": "Josefin Sans",
           "style": "SemiBold",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Fredoka",
           "style": "SemiBold",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [
         "tools/plate.mjs"
       ],
       "contentStatus": "proven",
-      "contentProof": "2026-10-22"
+      "contentProof": "2026-10-22",
+      "pluginProof": null
     },
     {
       "id": "microgame",
@@ -662,39 +717,46 @@
         {
           "family": "Titan One",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Lilita One",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Silkscreen",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Inter Tight",
           "style": "Bold",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "VT323",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Caveat",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [
         "tools/frame.mjs"
       ],
       "contentStatus": "proven",
-      "contentProof": "2026-10-16"
+      "contentProof": "2026-10-16",
+      "pluginProof": null
     },
     {
       "id": "midcentury-toon",
@@ -728,24 +790,28 @@
         {
           "family": "Oleo Script",
           "style": "Bold",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Alfa Slab One",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Jost",
           "style": "SemiBold",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [
         "tools/cel.mjs"
       ],
       "contentStatus": "proven",
-      "contentProof": "2026-10-17"
+      "contentProof": "2026-10-17",
+      "pluginProof": null
     },
     {
       "id": "one-line",
@@ -759,7 +825,6 @@
         "continuous line",
         "single line drawing",
         "line art animation",
-        "La Linea",
         "minimal brand story",
         "the pen never lifts"
       ],
@@ -773,14 +838,16 @@
         {
           "family": "Caveat",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [
         "tools/lineart.mjs"
       ],
       "contentStatus": "proven",
-      "contentProof": "2026-10-16"
+      "contentProof": "2026-10-16",
+      "pluginProof": null
     },
     {
       "id": "paper-lantern",
@@ -808,22 +875,26 @@
         {
           "family": "Cormorant Garamond",
           "style": "SemiBold",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Cormorant Garamond",
           "style": "Medium",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Cormorant Garamond",
           "style": "SemiBold Italic",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [],
       "contentStatus": "proven",
-      "contentProof": "2026-10-17"
+      "contentProof": "2026-10-17",
+      "pluginProof": null
     },
     {
       "id": "pictogram-motion",
@@ -850,24 +921,28 @@
         {
           "family": "Inter Tight",
           "style": "Black",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Inter Tight",
           "style": "ExtraBold",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Space Mono",
           "style": "Bold",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [
         "tools/disc.mjs"
       ],
       "contentStatus": "proven",
-      "contentProof": "2026-10-16"
+      "contentProof": "2026-10-16",
+      "pluginProof": null
     },
     {
       "id": "risograph",
@@ -896,12 +971,14 @@
         {
           "family": "Archivo Black",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Josefin Sans",
           "style": "SemiBold",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [
@@ -909,7 +986,8 @@
         "tools/separate.mjs"
       ],
       "contentStatus": "proven",
-      "contentProof": "2026-10-16"
+      "contentProof": "2026-10-16",
+      "pluginProof": null
     },
     {
       "id": "rubber-hose",
@@ -941,24 +1019,28 @@
         {
           "family": "Shrikhand",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Limelight",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "IM FELL English SC",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [
         "tools/ink.mjs"
       ],
       "contentStatus": "proven",
-      "contentProof": "2026-10-17"
+      "contentProof": "2026-10-17",
+      "pluginProof": null
     },
     {
       "id": "silent-film",
@@ -988,24 +1070,28 @@
         {
           "family": "Playfair Display SC",
           "style": "Bold",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Playfair Display SC",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Old Standard TT",
           "style": "Italic",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [
         "tools/redraw.mjs"
       ],
       "contentStatus": "proven",
-      "contentProof": "2026-10-16"
+      "contentProof": "2026-10-16",
+      "pluginProof": null
     },
     {
       "id": "silkscreen-poster",
@@ -1032,24 +1118,28 @@
         {
           "family": "Big Shoulders Display",
           "style": "Black",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Big Shoulders Display",
           "style": "ExtraBold",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Outfit",
           "style": "SemiBold",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [
         "tools/separate.mjs"
       ],
       "contentStatus": "proven",
-      "contentProof": "2026-10-16"
+      "contentProof": "2026-10-16",
+      "pluginProof": null
     },
     {
       "id": "spy-titles",
@@ -1076,19 +1166,22 @@
         {
           "family": "Bebas Neue",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Anton",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [
         "tools/inkprint.mjs"
       ],
       "contentStatus": "proven",
-      "contentProof": "2026-10-16"
+      "contentProof": "2026-10-16",
+      "pluginProof": null
     },
     {
       "id": "stained-glass",
@@ -1118,24 +1211,28 @@
         {
           "family": "Cinzel",
           "style": "Bold",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "IM FELL English",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "IM FELL English",
           "style": "Italic",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [
         "tools/glass.mjs"
       ],
       "contentStatus": "proven",
-      "contentProof": "2026-10-17"
+      "contentProof": "2026-10-17",
+      "pluginProof": null
     },
     {
       "id": "swiss-motion",
@@ -1161,19 +1258,22 @@
         {
           "family": "Inter Tight",
           "style": "Bold",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "Inter Tight",
           "style": "Medium",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [
         "tools/print.mjs"
       ],
       "contentStatus": "proven",
-      "contentProof": "2026-10-16"
+      "contentProof": "2026-10-16",
+      "pluginProof": null
     },
     {
       "id": "tilt-shift",
@@ -1206,19 +1306,22 @@
         {
           "family": "Barlow Semi Condensed",
           "style": "SemiBold",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "IBM Plex Mono",
           "style": "Medium",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [
         "tools/plate.mjs"
       ],
       "contentStatus": "proven",
-      "contentProof": "2026-10-22"
+      "contentProof": "2026-10-22",
+      "pluginProof": null
     },
     {
       "id": "ukiyoe",
@@ -1248,14 +1351,16 @@
         {
           "family": "Shippori Mincho",
           "style": "Medium",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [
         "tools/blocks.mjs"
       ],
       "contentStatus": "proven",
-      "contentProof": "2026-10-17"
+      "contentProof": "2026-10-17",
+      "pluginProof": null
     },
     {
       "id": "whiteboard",
@@ -1268,7 +1373,6 @@
         "whiteboard explainer",
         "dry erase",
         "marker drawing",
-        "RSA animate",
         "explain how it works",
         "hand drawn explainer"
       ],
@@ -1282,7 +1386,8 @@
         {
           "family": "Architects Daughter",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [
@@ -1290,7 +1395,8 @@
         "tools/print.mjs"
       ],
       "contentStatus": "proven",
-      "contentProof": "2026-10-16"
+      "contentProof": "2026-10-16",
+      "pluginProof": null
     },
     {
       "id": "woodcut",
@@ -1320,24 +1426,28 @@
         {
           "family": "IM FELL English SC",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "IM FELL English",
           "style": "Regular",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         },
         {
           "family": "IM FELL English",
           "style": "Italic",
-          "license": "OFL-1.1"
+          "license": "OFL-1.1",
+          "source": "Google Fonts"
         }
       ],
       "tools": [
         "tools/tone.mjs"
       ],
       "contentStatus": "proven",
-      "contentProof": "2026-10-16"
+      "contentProof": "2026-10-16",
+      "pluginProof": null
     }
   ]
 }

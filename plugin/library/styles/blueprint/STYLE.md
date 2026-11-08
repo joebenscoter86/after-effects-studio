@@ -2,7 +2,7 @@
 
 > Engineering drawings that draw themselves on a sheet of cyanotype paper: white line work on Prussian blue, laid down in drafting order, with notes and dimensions that move.
 
-Adapted for native After Effects from Lemo-Opuscar's *Blueprint* style (MIT, LemoLab; see `assets/LICENSE-lemo-opuscar.txt`). Grammar only: never copy a real patent, a real inventor's machine or signature, or any film's credit sequence.
+Adapted for native After Effects from Lemo-Opuscar's *Blueprint* style (MIT, LemoLab; see `library/styles/LICENSE-lemo-opuscar.txt`). Grammar only: never copy a real patent, a real inventor's machine or signature, or any film's credit sequence.
 
 ## 1. What it is, and what it is not
 
@@ -51,7 +51,7 @@ Contrapuntal, mechanical music: harpsichord, bassoon, spiccato strings, harp, ce
 7. A photograph: `tools/cyanotype.mjs` crops the frame to the figure and writes a grey `tone` print and a white-on-black edge `trace`. In AE the tone is tinted (black to black, white to `[.5, .64, .86]`) and screened at 50% so the blue shows through its shadows; the trace is tinted to the line colour and added. Both are revealed left to right by a keyed mask behind a scan line.
 8. The ink adjustment layer (Gaussian Blur 0.8; Glow based on Color Channels, threshold 92%, radius 12, intensity 0.6) sits over the drawing; the stamp (two rounded rects and B612 Bold text in the stamp red, Roughen Edges, 88% opacity, scale 128 to 100 in 0.07 s) sits above it so it does not glow.
 
-**Gotchas found while proving it**
+**Gotchas found while building it**
 
 - Glow on an adjustment layer over an opaque page: a Glow added by script glowed on alpha, so the whole sheet bloomed and every pixel's blue clipped at 255 (an electric cyan page) before a single line was drawn. Set `Glow Based On` to 2 (Color Channels) explicitly, and keep the threshold above the paper's brightest channel (92%) so only the line work glows.
 - Fractal Noise's Transform section is not a property group in scripting: `Scale`, `Uniform Scaling`, `Scale Width`, `Scale Height` and `Rotation` sit flat on the effect (`fx.property("Scale")`).
@@ -64,7 +64,7 @@ Contrapuntal, mechanical music: harpsichord, bassoon, spiccato strings, harp, ce
 
 ## 7. Dependencies
 
-Architects Daughter Regular and B612 Bold and Regular installed (`assets/fonts/`, OFL; `AESBlueprint.fontOK()` checks). Node 20+ and ffmpeg for `tools/cyanotype.mjs`. Stock effects only: Gradient Ramp, Drop Shadow, Fractal Noise, Tint, Gaussian Blur, Glow, Roughen Edges, plus shape layers, Trim Paths, masks, text animators and one expression per nib.
+Architects Daughter Regular and B612 Bold and Regular installed (free (OFL) from Google Fonts, not included; `AESBlueprint.fontOK()` checks). Node 20+ and ffmpeg for `tools/cyanotype.mjs`. Stock effects only: Gradient Ramp, Drop Shadow, Fractal Noise, Tint, Gaussian Blur, Glow, Roughen Edges, plus shape layers, Trim Paths, masks, text animators and one expression per nib.
 
 ## 8. Pitfalls of the medium
 

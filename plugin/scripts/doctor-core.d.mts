@@ -21,6 +21,7 @@ export interface DoctorOptions {
   fileExists?: (path: string) => boolean;
   stat?: (path: string) => { isDirectory(): boolean };
   listDir?: (path: string) => string[];
+  runningApps?: () => string[];
   run?: (name: string) => { status: number | null; error?: { code?: string } };
 }
 

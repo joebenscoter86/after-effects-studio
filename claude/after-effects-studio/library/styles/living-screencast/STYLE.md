@@ -2,7 +2,7 @@
 
 > A screen recording that is not a recording: a redrawn, razor-sharp app window on wallpaper, a recording-software camera that pushes in to the cursor and the caret, and a chunky low-res pixel mascot that lives on the top edges of the UI and acts out what the software is doing.
 
-Adapted for native After Effects from Lemo-Opuscar's *Living Screencast* style (MIT, LemoLab; see `assets/LICENSE-lemo-opuscar.txt`). Grammar only: its references (screen-recording apps with auto-zoom, guided product tours, mascot-led apps, playful launch films) are traditions, not layouts to copy. The mascot in this package is our own (an orange block with an antenna); never reuse another product's character, UI, music or footage.
+Adapted for native After Effects from Lemo-Opuscar's *Living Screencast* style (MIT, LemoLab; see `library/styles/LICENSE-lemo-opuscar.txt`). Grammar only: its references (screen-recording apps with auto-zoom, guided product tours, mascot-led apps, playful launch films) are traditions, not layouts to copy. The mascot in this package is our own (an orange block with an antenna); never reuse another product's character, UI, music or footage.
 
 ## 1. What it is, and what it is not
 
@@ -55,7 +55,7 @@ Two resolutions in the music: a hi-fi band (piano, upright bass, brushed kit, gl
 7. **Camera.** `camAt(W, H, s, cx, cy)` turns a scale and a point of interest into the world null's position, clamped so the screen always covers the frame. Scale and position are keyed in one call each. Directional Blur on an adjustment layer only during the whip; a feathered inverted mask on a black solid for the spotlight.
 8. **Overlays.** Frosted glass is a Fast Box Blur adjustment layer with an alpha track matte (the pill shape, a disabled copy) under a white pill at about 65% with a white hairline. Captions are one centred text layer per beat inside a pill whose Rect Size is hold-keyed to the line's width.
 
-**Gotchas found while proving it**
+**Gotchas found while building it**
 
 - Back-to-back karaoke hops looked like hovering in mid-beat stills: with one landing per spoken word (some 0.07 s apart) the mascot is airborne most of the time. Merge words closer than 0.12 s into one landing, start each hop at 40% of the gap after the last landing, and keep the hop low (24 px). The landing frames sit exactly on the edge; the reference's own karaoke hops are just as continuous.
 - The progress row under the card sat in the mascot's lane on the way to the composer (its body covered "Counted"). The row clears (0.2 s fade) once the count is done, before the mascot crosses it: a text-free lane has to be planned, not hoped for.
@@ -69,7 +69,7 @@ Two resolutions in the music: a hi-fi band (piano, upright bass, brushed kit, gl
 
 ## 7. Dependencies
 
-Inter Tight (Medium and Bold), Newsreader Medium and IBM Plex Mono Regular installed (OFL, bundled in `assets/fonts/`; `AESScreencast.fontOK()` checks). Effects: Gradient Ramp, Drop Shadow, Gaussian Blur, Fast Box Blur, Directional Blur. Node 20+ and ffmpeg for `tools/frame.mjs` (sizes the real frame for the viewer pane).
+Inter Tight (Medium and Bold), Newsreader Medium and IBM Plex Mono Regular installed (free (OFL) from Google Fonts, not included; `AESScreencast.fontOK()` checks). Effects: Gradient Ramp, Drop Shadow, Gaussian Blur, Fast Box Blur, Directional Blur. Node 20+ and ffmpeg for `tools/frame.mjs` (sizes the real frame for the viewer pane).
 
 ## 8. Pitfalls of the medium
 

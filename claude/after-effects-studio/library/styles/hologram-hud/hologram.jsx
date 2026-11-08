@@ -4,7 +4,7 @@
 // on the frame they become true, all framed by HUD furniture (corner brackets, rulers, status line, telemetry) and HUD subtitles.
 // The wireframes are real 3D: every path is a createPath expression that projects its 3D points through one camera null (yaw, pitch,
 // distance, focal), so the orbit, crane and push are a handful of native keys and the pad, the scan plane and the objects stay in register.
-// Adapted from Lemo-Opuscar's hologram-hud style (MIT, LemoLab); see assets/LICENSE-lemo-opuscar.txt.
+// Adapted from Lemo-Opuscar's hologram-hud style (MIT, LemoLab); see library/styles/LICENSE-lemo-opuscar.txt.
 var AESHologram = (function () {
   var SANS = "Rajdhani", MONO = "Share Tech Mono";
   function hex(h) { return [parseInt(h.substr(1, 2), 16) / 255, parseInt(h.substr(3, 2), 16) / 255, parseInt(h.substr(5, 2), 16) / 255]; }

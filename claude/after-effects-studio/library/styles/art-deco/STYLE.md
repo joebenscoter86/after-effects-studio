@@ -2,7 +2,7 @@
 
 > Black lacquer, engraved gold line and airbrushed geometry: a 1930s poster that moves. Every composition has one centre axis, things open and close along it, and light arrives as bulbs switching on one by one.
 
-Adapted for native After Effects from Lemo-Opuscar's *Art Deco* style (MIT, LemoLab; see `assets/LICENSE-lemo-opuscar.txt`). Grammar only: never copy a real poster layout, a real building, a typeface design or a melody.
+Adapted for native After Effects from Lemo-Opuscar's *Art Deco* style (MIT, LemoLab; see `library/styles/LICENSE-lemo-opuscar.txt`). Grammar only: never copy a real poster layout, a real building, a typeface design or a melody.
 
 ## 1. What it is, and what it is not
 
@@ -52,7 +52,7 @@ Symphonic jazz of the 1920s and 30s, not a 60s big band: stride or concert piano
 6. The jewel colour lives in the main comp **under** the gold layer (where ART is empty it shows; where ART has lacquer, the lacquer hides it). Ivory subtitles (`spoken()`) and bulbs (`bulb()`) sit above the gold. Then a vignette (an inverted, feathered mask on a black solid at 55%) and grain (`ADBE Noise` at 3.5 on an adjustment layer).
 7. Numbers: the counter is one `AESLib.bakeText` call (a held step per frame on an ease-out curve) with an anchor expression that keeps it centred as it widens; the needle's rotation is keyed on the same curve, and each bulb switches on when the needle passes it.
 
-**Gotchas found while proving it**
+**Gotchas found while building it**
 
 - Gilding the real frame through the same luma matte as the line work made it read as a solarised print: Bevel Alpha and Glow embossed every bright patch and the metal bands ran across the face. The photo now lives in the main comp **under** the gold layer with a Tint (black to lacquer, white to pale gold), so it reads as a sepia gold print, and the doors' lacquer in ART still hides it until they split.
 - A group folded to a sliver (`hinge` keys at 0) still drew as a hairline on the axis for the whole film before it opened. `hinge()` now moves the in point of every child to the first key when it starts folded, and the out point to the last key when it ends folded (keeping each out point when the in point moves).
@@ -66,7 +66,7 @@ Symphonic jazz of the 1920s and 30s, not a 60s big band: stride or concert piano
 
 ## 7. Dependencies
 
-Limelight Regular, Poiret One Regular and Josefin Sans SemiBold installed (`assets/fonts/`, all OFL; `AESDeco.fontOK()` checks). Node 20+ and ffmpeg for `tools/plate.mjs` (a real frame cropped and printed grey with lifted contrast, so the luma matte gilds it). Stock effects only: Gradient Ramp, 4-Color Gradient, Fractal Noise, Fill, CC Light Sweep, Bevel Alpha, Drop Shadow, Glow, Noise.
+Limelight Regular, Poiret One Regular and Josefin Sans SemiBold installed (all free (OFL) from Google Fonts, not included; `AESDeco.fontOK()` checks). Node 20+ and ffmpeg for `tools/plate.mjs` (a real frame cropped and printed grey with lifted contrast, so the luma matte gilds it). Stock effects only: Gradient Ramp, 4-Color Gradient, Fractal Noise, Fill, CC Light Sweep, Bevel Alpha, Drop Shadow, Glow, Noise.
 
 ## 8. Pitfalls of the medium
 

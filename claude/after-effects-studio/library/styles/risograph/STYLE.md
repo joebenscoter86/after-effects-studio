@@ -2,7 +2,7 @@
 
 > Animation that looks printed, frame by frame, on a stencil duplicator: two or three translucent spot inks overprinted on warm paper, halftone dots fixed to the sheet, ink grain, and plates that never quite line up.
 
-Adapted for native After Effects from Lemo-Opuscar's *Risograph Print* style (MIT, LemoLab; see `assets/LICENSE-lemo-opuscar.txt`). Grammar only, after real riso prints and the small-figure-in-a-wide-world tradition of riso illustration: never a machine maker's brand, logo or trade dress (ink names are colour references only), and never a real illustrator's characters or compositions.
+Adapted for native After Effects from Lemo-Opuscar's *Risograph Print* style (MIT, LemoLab; see `library/styles/LICENSE-lemo-opuscar.txt`). Grammar only, after real riso prints and the small-figure-in-a-wide-world tradition of riso illustration: never a machine maker's brand, logo or trade dress (ink names are colour references only), and never a real illustrator's characters or compositions.
 
 ## 1. What it is, and what it is not
 
@@ -53,7 +53,7 @@ Warm, dry, handmade, slightly lo-fi: upright or electric bass, vibraphone or mar
 8. **Figures and pieces** move on twos: `posterizeTime(12); value;` on position and rotation, limbs driven by one clock expression on twos (`figure()`, feet at the layer origin, 300 px tall at scale 100, legs and arms `24 sin p` and opposite, a pink scarf). Camera nulls and the photo's push are keyed on ones.
 9. **Text keys.** The count and the typed line are one `AESLib.bakeText` call per layer. Never key Source Text one call per key.
 
-**Gotchas found while proving it**
+**Gotchas found while building it**
 
 - Fractal Noise will not go below scale 10, which made the ink grain and pinholes blobby next to a 9 px dot screen. Render the noise solid 2 to 2.5 times the frame size and scale the layer down by the same factor.
 - A solid printed at density 1 needs headroom over the screen's top value plus the Levels cut, or the grain punches it full of holes: with the screen topping out at 0.82 and the cut at 0.06, a solid has 0.12 to spare, and the grain layers stay under that except at the pinholes.
@@ -64,7 +64,7 @@ Warm, dry, handmade, slightly lo-fi: upright or electric bass, vibraphone or mar
 
 ## 7. Dependencies
 
-Archivo Black Regular and Josefin Sans SemiBold installed (`assets/fonts/`, OFL; `AESRiso.fontOK()` checks). Node 20+ and ffmpeg for `tools/screen.mjs` (one halftone screen per plate) and `tools/separate.mjs` (a real frame into plate densities). Stock effects only: Shift Channels, Levels, Tint, Fractal Noise, Fill, Simple Choker, plus shape layers, masks, text strokes and blending modes (Add, Subtract, Multiply).
+Archivo Black Regular and Josefin Sans SemiBold installed (free (OFL) from Google Fonts, not included; `AESRiso.fontOK()` checks). Node 20+ and ffmpeg for `tools/screen.mjs` (one halftone screen per plate) and `tools/separate.mjs` (a real frame into plate densities). Stock effects only: Shift Channels, Levels, Tint, Fractal Noise, Fill, Simple Choker, plus shape layers, masks, text strokes and blending modes (Add, Subtract, Multiply).
 
 ## 8. Pitfalls of the medium
 

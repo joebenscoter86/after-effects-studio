@@ -2,7 +2,7 @@
 
 > A leaded glass window seen from inside a dark stone hall, alive only where the sun touches it: light is the clock, the camera and the story.
 
-Adapted for native After Effects from Lemo-Opuscar's *Stained Glass* style (MIT, LemoLab; see `assets/LICENSE-lemo-opuscar.txt`). Grammar only, after 12th and 13th century Chartres glass (colour logic, grisaille, leading), the window prologue of *Beauty and the Beast* (1991, pane by pane) and the glass knight of *Young Sherlock Holmes* (1985, glass that cracks and recombines): never their figures, compositions or music. Secular: no crosses, saints, halos or other religious imagery.
+Adapted for native After Effects from Lemo-Opuscar's *Stained Glass* style (MIT, LemoLab; see `library/styles/LICENSE-lemo-opuscar.txt`). Grammar only, after 12th and 13th century Chartres glass (colour logic, grisaille, leading), the window prologue of *Beauty and the Beast* (1991, pane by pane) and the glass knight of *Young Sherlock Holmes* (1985, glass that cracks and recombines): never their figures, compositions or music. Secular: no crosses, saints, halos or other religious imagery.
 
 ## 1. What it is, and what it is not
 
@@ -64,12 +64,12 @@ Seven comps. **GLASS** (640 x 1500, the lancet) holds the pieces; **LIGHT** (the
 11. The carry: the still cut into six shards (`shardPolys(impact, n, radius, seed)`: jagged cuts from an impact), each the still with a polygon mask, all alpha-matted by the medallion disc; cracks are the same cuts as lead lines in white, Trim End 0 to 100 in 0.25 s on the word, then held to the lead colour and widened once the shards are back; shards step 10 then 26 px out along their bisector, staggered a sixteenth of a second, and back two words later; weld sparks (four-point stars) flash at the ring. The main comp adds a two-frame shake and a white flash (Add 55% to 0 in 0.1 s).
 12. Banderoles, `banderole()`: a parchment shape with a gentle sag, a rule and curled ends, scale X 4 to 100 from the centre; the text's opacity steps on at 0.2 s. Every text change goes through `AESLib.textKeys` / `AESLib.bakeText` in one call per layer.
 
-**Gotchas found while proving it**
+**Gotchas found while building it**
 
 - A medallion ring drawn as a filled ruby disc with the ground on top works only when there is a ground: over footage (the input and carry panes) the disc covered the face completely. Draw the ring as a thick stroke band (radius halfway between ring and ground, width the difference) with separate lead circles, and add the ground disc only when the scene has one.
 - Lit glass blows out fast. LIT is added on top of the unlit window, so with Exposure +0.35 and Glow (threshold 55, intensity 0.7) cobalt went cyan and white glass went pure white, washing away grisaille text and the count. LIT at Exposure -0.35, Glow threshold 72 / intensity 0.45, white glass at `#C7D1B8` and a darker grisaille (`#331C0F`) keep jewel blue and legible painting.
 - The Overlay cloud texture at 34% made the cobalt mottled and cyan; 16% reads as glass thickness.
-- Cutting footage by nearest palette colour gave a posterised orange-and-black blob, not glass (Joe's QA): three flesh tones and the blue-pushed shadows cut the face into many small regions crossed by leads, and the grisaille sat under them. Cut by role instead (skin, bright, dark, foliage, room), keep the face one flesh pane, and let the grisaille carry the features: that is how a glazier leads a face, and it stays recognisable.
+- Cutting footage by nearest palette colour gave a posterised orange-and-black blob, not glass (found in review): three flesh tones and the blue-pushed shadows cut the face into many small regions crossed by leads, and the grisaille sat under them. Cut by role instead (skin, bright, dark, foliage, room), keep the face one flesh pane, and let the grisaille carry the features: that is how a glazier leads a face, and it stays recognisable.
 - Flesh burns yellow under a gold sun: the footage layers take Exposure -1.1 and saturation -18 inside GLASS (LIT is added on top of the unlit pane, so a pane that looks right flat doubles when lit) (Lemo: flesh darker than you think).
 - Dust spread over the whole shaft landed as white specks on the gilded end title; the dust mask stops at the sill.
 - A saddle bar through the rose's centre crossed the count; the rose has no bar.
@@ -78,7 +78,7 @@ Seven comps. **GLASS** (640 x 1500, the lancet) holds the pieces; **LIGHT** (the
 ## 7. Dependencies
 
 - After Effects 2023 or later (`Layer.setTrackMatte`, several layers sharing one matte).
-- Fonts (OFL, bundled in `assets/fonts/`): Cinzel Bold (the variable font's named instance), IM FELL English Regular and Italic.
+- Fonts (free (OFL) from Google Fonts, not included): Cinzel Bold (the variable font's named instance), IM FELL English Regular and Italic.
 - Node 20+ and ffmpeg for `tools/glass.mjs`. No generated pieces.
 
 ## 8. Pitfalls of the medium

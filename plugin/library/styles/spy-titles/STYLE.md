@@ -2,7 +2,7 @@
 
 > A cut-paper, four-ink opening title for a film that never existed: silhouettes move through sets built out of the credits themselves, every beat is a hard cut, and the title is assembled from the pieces.
 
-Adapted for native After Effects from Lemo-Opuscar's *60s Spy Title Sequence* style (MIT, LemoLab; see `assets/LICENSE-lemo-opuscar.txt`). Grammar only, after the 1960s cut-paper title tradition: never a gun-barrel opening, never a real film's logo, lettering, characters or shots, and credits name fictional roles only, never real people.
+Adapted for native After Effects from Lemo-Opuscar's *60s Spy Title Sequence* style (MIT, LemoLab; see `library/styles/LICENSE-lemo-opuscar.txt`). Grammar only, after the 1960s cut-paper title tradition: never a gun-barrel opening, never a real film's logo, lettering, characters or shots, and credits name fictional roles only, never real people.
 
 ## 1. What it is, and what it is not
 
@@ -55,7 +55,7 @@ A 1960s spy big band: stacked staccato brass stabs (the cuts), surf guitar twang
 9. The object of the chase: a mustard circle on a black keyline returns at the keyhole circle's exact centre and radius after the truck in (a match cut), then travels and scales on ones to the title's full stop.
 10. Paper: `paperTexture(comp, prefix)` adds the mottle, fibres, ink voids and grain on top.
 
-**Gotchas found while proving it**
+**Gotchas found while building it**
 
 - A new text layer ignores the justification it is given (asked for left, it came back right-aligned, with `left` about minus its width), so ink left and right edges are not stable: lay letters out from ink **widths** only (the width of each prefix is letter i's right edge from the line's ink left) and anchor each letter from its own `sourceRectAtTime`.
 - Re-setting one probe layer's Source Text and reading `sourceRectAtTime` again returned the first measurement every time, so every letter of a line piled onto one spot. Measure with a fresh probe layer per string, then remove it.
@@ -68,7 +68,7 @@ A 1960s spy big band: stacked staccato brass stabs (the cuts), surf guitar twang
 
 ## 7. Dependencies
 
-Bebas Neue Regular and Anton Regular installed (`assets/fonts/`, OFL; `AESSpy.fontOK()` checks). Node 20+ and ffmpeg for `tools/inkprint.mjs`. Stock effects only: Roughen Edges, Drop Shadow, Fractal Noise, Noise, plus shape layers, masks, text strokes and one clock expression per moving limb.
+Bebas Neue Regular and Anton Regular installed (free (OFL) from Google Fonts, not included; `AESSpy.fontOK()` checks). Node 20+ and ffmpeg for `tools/inkprint.mjs`. Stock effects only: Roughen Edges, Drop Shadow, Fractal Noise, Noise, plus shape layers, masks, text strokes and one clock expression per moving limb.
 
 ## 8. Pitfalls of the medium
 

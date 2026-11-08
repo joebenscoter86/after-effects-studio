@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { discoverAfterFxPaths, resolveAfterFxPath } from "../src/config.js";
+import { discoverAfterFxPaths, resolveAfterFxPath, runningAfterFxApps } from "../src/config.js";
 
 function macRoot(years: string[], extra: string[] = []): string {
   const root = mkdtempSync(path.join(os.tmpdir(), "ae-apps-"));
@@ -48,12 +48,33 @@ describe("After Effects discovery", () => {
 
   it("resolves a version newer than the built-in list", () => {
     const root = macRoot(["2027"]);
-    expect(resolveAfterFxPath("darwin", root)).toBe(path.join(root, "Adobe After Effects 2027", "Adobe After Effects 2027.app"));
+    expect(resolveAfterFxPath("darwin", root, () => [])).toBe(path.join(root, "Adobe After Effects 2027", "Adobe After Effects 2027.app"));
   });
 
   it("still prefers AE_MCP_EXE", () => {
     const root = macRoot(["2027", "2026"]);
     process.env.AE_MCP_EXE = path.join(root, "Adobe After Effects 2026", "Adobe After Effects 2026.app");
-    expect(resolveAfterFxPath("darwin", root)).toBe(process.env.AE_MCP_EXE);
+    expect(resolveAfterFxPath("darwin", root, () => [])).toBe(process.env.AE_MCP_EXE);
+  });
+
+  it("prefers the release that is already running", () => {
+    const root = macRoot(["2026", "2027"]);
+    const app2027 = path.join(root, "Adobe After Effects 2027", "Adobe After Effects 2027.app");
+    expect(resolveAfterFxPath("darwin", root, () => [app2027])).toBe(app2027);
+  });
+
+  it("prefers the supported 2026 over a newer release that is not running", () => {
+    const root = macRoot(["2026", "2027"]);
+    expect(resolveAfterFxPath("darwin", root, () => [])).toBe(path.join(root, "Adobe After Effects 2026", "Adobe After Effects 2026.app"));
+  });
+
+  it("ignores releases older than 2024", () => {
+    const root = macRoot(["2023", "2024"]);
+    expect(discoverAfterFxPaths("darwin", root)).toEqual([path.join(root, "Adobe After Effects 2024", "Adobe After Effects 2024.app")]);
+  });
+
+  it("reads running releases from the process list", () => {
+    const ps = "/usr/libexec/x\n/Applications/Adobe After Effects 2027/Adobe After Effects 2027.app/Contents/MacOS/After Effects -psn\n/Applications/Adobe After Effects 2027/Adobe After Effects 2027.app/Contents/MacOS/dynamiclinkmanager\n";
+    expect(runningAfterFxApps(ps)).toEqual(["/Applications/Adobe After Effects 2027/Adobe After Effects 2027.app"]);
   });
 });

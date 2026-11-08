@@ -206,6 +206,8 @@ test('notices credit the style library source', async () => {
   const notices = await fs.readFile(path.join(outDir, 'THIRD-PARTY-NOTICES.txt'), 'utf8');
   assert.match(notices, /Lemo-Opuscar/);
   assert.match(notices, /Copyright \(c\) 2026 LemoLab/);
+  assert.match(notices, /EMS Tech/);
+  assert.match(notices, /SIL OPEN FONT LICENSE/i);
 });
 
 test('no file of the built package is ignored by git', async () => {

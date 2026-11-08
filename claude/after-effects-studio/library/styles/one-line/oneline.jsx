@@ -2,7 +2,7 @@
 // Read styles/one-line/STYLE.md first. A single ink line that never leaves the paper: the whole scene is ONE point array, drawn by
 // Trim Paths in short chunks (so the width can follow pen pressure), a camera that follows the nib with lag and anticipation, only a
 // pen shadow above the paper, one accent stretch used once, a blot where the pen stops, and a pull back that shows it was one picture.
-// Adapted from Lemo-Opuscar's one-line style (MIT, LemoLab); see assets/LICENSE-lemo-opuscar.txt.
+// Adapted from Lemo-Opuscar's one-line style (MIT, LemoLab); see library/styles/LICENSE-lemo-opuscar.txt.
 var AESOneLine = (function () {
   var FACE = "Caveat";
   var PALETTE = { paper: [.957, .937, .894], paper1: [.90, .875, .83], ink: [.114, .102, .090], accent: [.722, .196, .165], rim: [.05, .045, .04] };

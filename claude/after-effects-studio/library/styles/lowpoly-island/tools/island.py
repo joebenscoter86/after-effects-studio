@@ -19,7 +19,7 @@ FPS = SC_JSON["fps"]; DUR = SC_JSON["duration"]; NF = int(math.ceil(DUR * FPS))
 tT, tP, tI, tN, tL, tC, tE = (B[k]["t0"] for k in ("title", "picture", "input", "number", "line", "carry", "end"))
 RES = tuple(int(v) for v in OPT["res"].split("x")) if "res" in OPT else (SC_JSON["width"], SC_JSON["height"])
 HERE = os.path.dirname(os.path.abspath(__file__))
-FONT = OPT.get("font", os.path.join(HERE, "..", "assets", "fonts", "Fredoka[wdth,wght].ttf"))
+FONT = OPT.get("font")  # fonts are not shipped: an installed Fredoka, else Blender's built-in font
 random.seed(7)
 
 def tf(f): return (f - 1) / FPS          # frame -> seconds (frame 1 is t = 0)
@@ -450,10 +450,10 @@ ob("dev_btn", mesh_ico(), (0, .05, .955), (.03, .02, .03), col=P["glass"], paren
 NUM = (-40.0, 0.0)
 digits = str(B["number"].get("value", 338))
 nw = [w["s"] for w in WORDS if tN - 0.05 <= w["s"] < tL - 0.05]
-fnt = bpy.data.fonts.load(FONT)
+fnt = bpy.data.fonts.load(FONT) if FONT and os.path.exists(FONT) else None
 DIG = []
 for i, ch in enumerate(digits):
-    cu = bpy.data.curves.new("dig%d" % i, "FONT"); cu.body = ch; cu.font = fnt; cu.size = 2.0; cu.extrude = 0.2
+    cu = bpy.data.curves.new("dig%d" % i, "FONT"); cu.body = ch; cu.font = fnt or cu.font; cu.size = 2.0; cu.extrude = 0.2
     cu.resolution_u = 3; cu.align_x = "CENTER"; cu.align_y = "BOTTOM"; cu.bevel_depth = 0
     tmp = bpy.data.objects.new("dtmp%d" % i, cu); sc.collection.objects.link(tmp)
     dg = bpy.context.evaluated_depsgraph_get(); mesh = bpy.data.meshes.new_from_object(tmp.evaluated_get(dg)); bpy.data.objects.remove(tmp)

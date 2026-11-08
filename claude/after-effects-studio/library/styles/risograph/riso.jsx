@@ -3,7 +3,7 @@
 // (R = plate 1, G = plate 2, B = plate 3; black = paper). Normal blending is a knockout, Add is an overprint. Each plate comp takes one channel
 // (Shift Channels), subtracts its own halftone screen (a PNG fixed to the paper, tools/screen.mjs) and ink grain, cuts it with Levels and
 // prints it in its ink with Tint; the plates multiply on warm paper in the main comp, each a few pixels off, kicking on the accents.
-// Adapted from Lemo-Opuscar's risograph style (MIT, LemoLab); see assets/LICENSE-lemo-opuscar.txt.
+// Adapted from Lemo-Opuscar's risograph style (MIT, LemoLab); see library/styles/LICENSE-lemo-opuscar.txt.
 var AESRiso = (function () {
   var TITLE = "Archivo Black", CAP = "Josefin Sans";
   function hex(h) { return [parseInt(h.substr(0, 2), 16) / 255, parseInt(h.substr(2, 2), 16) / 255, parseInt(h.substr(4, 2), 16) / 255]; }

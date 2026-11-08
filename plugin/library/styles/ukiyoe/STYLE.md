@@ -2,7 +2,7 @@
 
 > Edo woodblock prints brought to life on a handscroll: a sumi key line, a few flat colour blocks each a hair out of register, bokashi skies, paper you can feel, and a camera that slides from print to print.
 
-Adapted for native After Effects from Lemo-Opuscar's *Ukiyo-e* style (MIT, LemoLab; see `assets/LICENSE-lemo-opuscar.txt`). Grammar only, after the landscape and actor prints of the 19th century (Hokusai, Hiroshige, the okubi-e head portraits) and the anime *Mononoke*: never a specific print, its composition or its characters (no copy of *The Great Wave* or *Red Fuji*).
+Adapted for native After Effects from Lemo-Opuscar's *Ukiyo-e* style (MIT, LemoLab; see `library/styles/LICENSE-lemo-opuscar.txt`). Grammar only, after the landscape and actor prints of the 19th century (Hokusai, Hiroshige, the okubi-e head portraits) and the anime *Mononoke*: never a specific print, its composition or its characters (no copy of *The Great Wave* or *Red Fuji*).
 
 ## 1. What it is, and what it is not
 
@@ -57,7 +57,7 @@ Comps: one **INK** comp per view (the image area, 908 x 1600: the blocks), one *
 8. Camera: the SCROLL layer's anchor point holds on a sheet's centre and is keyed to the next one 0.12 s before each beat (0.34 s, ease 80/80). Comp motion blur on, shutter 180.
 9. Subtitles: Shippori Mincho 42 on a cream slip with a seal, fixed at y 1716, opacity up in 0.12 s, text printed in with the sweep. Every text change goes through `AESLib.textKeys` / `AESLib.bakeText` in one call per layer (the count).
 
-**Gotchas found while proving it**
+**Gotchas found while building it**
 
 - A new shape layer sits at the comp centre with anchor 0: nodes drawn in comp coordinates came out half a sheet off (the border drew a cross through every print). Set anchor and position to 0 for any layer whose shapes use absolute coordinates.
 - Inside one shape layer, groups added later draw below earlier ones: a slip that emitted its fills before its key lines hid the inner half of its border. Emit the key groups first.
@@ -70,7 +70,7 @@ Comps: one **INK** comp per view (the image area, 908 x 1600: the blocks), one *
 ## 7. Dependencies
 
 - After Effects 2023 or later (`Layer.setTrackMatte`).
-- Font (OFL, bundled in `assets/fonts/`): Shippori Mincho Medium (Latin and the kanji of the cartouches and seals).
+- Font (free (OFL) from Google Fonts, not included): Shippori Mincho Medium (Latin and the kanji of the cartouches and seals).
 - Node 20+ and ffmpeg for `tools/blocks.mjs`. No generated pieces: every view is drawn natively, and the portrait is cut from the scene's own clip.
 
 ## 8. Pitfalls of the medium

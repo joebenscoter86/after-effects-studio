@@ -10,7 +10,7 @@ var AESCrt = (function () {
     green: { dim: [.06, .4, .12], mid: [.14, .7, .25], bold: [.35, 1, .45], tag: [.3, .95, .4], glowA: [.3, 1, .4, 1], glowB: [.05, .35, .1, 1], glass: [.015, .03, .02], beam: [.7, 1, .75] },
     white: { dim: [.35, .36, .38], mid: [.65, .67, .7], bold: [.95, .96, 1], tag: [.9, .92, .95], glowA: [.9, .93, 1, 1], glowB: [.3, .32, .4, 1], glass: [.025, .026, .03], beam: [1, 1, 1] }
   };
-  function fontOK() { var f = app.fonts.getFontsByFamilyNameAndStyleName("VT323", "Regular"); if (!f || !f.length) throw new Error("VT323 is not installed: install assets/fonts/VT323-Regular.ttf (OFL), then retry"); return true; }
+  function fontOK() { var f = app.fonts.getFontsByFamilyNameAndStyleName("VT323", "Regular"); if (!f || !f.length) throw new Error("VT323 is not installed: install the free VT323 font (OFL, Google Fonts), then retry"); return true; }
   function readJSON(path) { var f = new File(path); if (!f.exists) throw new Error("missing " + path); f.encoding = "UTF-8"; f.open("r"); var s = f.read(); f.close(); return eval("(" + s + ")"); }
   // a monospace text layer anchored at its first baseline, left edge. cw = cell width in px (font size = cw / 0.4, leading = 2 cw)
   function mono(comp, name, str, cw, color, x, row0Top) {

@@ -26,5 +26,7 @@ for(const dir of [...packages].sort()){
 }
 const styleLicense=new URL('../library/styles/LICENSE-lemo-opuscar.txt',import.meta.url);
 if(existsSync(styleLicense))notices.push('Lemo-Opuscar (style grammars adapted in library/styles/)\n'+readFileSync(styleLicense,'utf8'));
+const emsTech=new URL('../library/styles/whiteboard/assets/fonts/OFL-EMSTech.txt',import.meta.url);
+if(existsSync(emsTech))notices.push('EMS Tech font stroke data (library/styles/whiteboard/assets/fonts/EMSTech.json)\n'+readFileSync(emsTech,'utf8'));
 writeFileSync(new URL('../THIRD-PARTY-NOTICES.txt',import.meta.url),notices.join('\n\n========================================\n\n'));
 console.log('Built self-contained MCP server. No npm install required by plugin users.');

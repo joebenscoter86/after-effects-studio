@@ -2,7 +2,7 @@
 
 > A launch film for a fictional object of glass, metal and light floating in an infinite black studio: strips it never shows draw its outline with rainbow edges, light travels inside it, caustic rings spread on the floor, and its parts float apart and snap shut on the beat.
 
-Adapted from Lemo-Opuscar's *Glass Product Render* style (MIT, LemoLab; see `assets/LICENSE-lemo-opuscar.txt`). Grammar only: the object is always fictional; never a real product silhouette (a famous phone, earbud or watch outline), a real brand, logo, typeface or interface, and never name a real launch film.
+Adapted from Lemo-Opuscar's *Glass Product Render* style (MIT, LemoLab; see `library/styles/LICENSE-lemo-opuscar.txt`). Grammar only: the object is always fictional; never a real product silhouette (a famous phone, earbud or watch outline), a real brand, logo, typeface or interface, and never name a real launch film.
 
 ## 1. What it is, and what it is not
 
@@ -66,7 +66,7 @@ The object and its light are Blender plates; After Effects cuts them, pushes the
 6. **Subtitle slab** (`slab()`): an adjustment layer the size of the comp with a rounded-rect mask (the bar), `ADBE Gaussian Blur 2` 34 (repeat edge pixels) and `ADBE Easy Levels2` (Output Black 0.05, Output White 0.6, Gamma 1.15), so the bar is the live frame blurred and lifted but no brighter than 60%; a shape layer with the bar in cool white at 9% and a 1.2 px white stroke at 22%; a 160 px accent line on the top edge with a glow; the line in Light 42 px. The bar is sized from the measured line. The line beat keys one word per spoken word (`AESLib.textKeys`).
 7. **Beats**: title (the context huge in caps, the hero as a slogan, a glint), picture, input and carry on the slab, line typed on the slab, number (the glass digits in the plate, a tracked label under them that grows on the spoken words, a glint), end (the end line ultra-thin in the upper third clearing from blur on its first word, a tracked credit, a glint).
 
-**Gotchas found while proving it**
+**Gotchas found while building it**
 
 - Cycles in Blender 5.2 has no dispersion input on the Principled or Glass BSDF: fake it with three tinted refraction lobes at slightly different IORs. Keep the IOR spread small (about 0.065 in all) or a whole face takes a red or blue cast.
 - A tall strip's mirror image on a gloss floor is a white column running from the object toward the camera. Hiding the strip from glossy rays would also hide it in the glass: light-link the strips to every object except the floor instead. A text (FONT) object must be in that receiver collection too, or the glass digits render black.
@@ -83,9 +83,9 @@ The object and its light are Blender plates; After Effects cuts them, pushes the
 
 ## 7. Dependencies
 
-- **Blender 5.2** at `/Applications/Blender.app` (Cycles with Metal) to render the plates; not needed once the plates are in the cache. A full set for the shared scene is about 324 frames, about 17 s a frame on the M5 GPU when nothing else is rendering (about 95 minutes). No Runpod or paid GPU without Joe's go on the price.
+- **Blender 5.2** at `/Applications/Blender.app` (Cycles with Metal) to render the plates; not needed once the plates are in the cache. A full set for the shared scene is about 324 frames, about 17 s a frame on the M5 GPU when nothing else is rendering (about 95 minutes).
 - **ffmpeg** for `tools/plates.mjs` (ProRes encode) and the input shot's clip frames; Node 20+.
-- **Inter Tight** installed with its ExtraLight, Light and Regular styles (`assets/fonts/InterTight[wght].ttf`, OFL); `AESGlass.fontOK()` checks. The glass digits use Inter ExtraBold (`~/Library/Fonts/Inter-ExtraBold.otf`, OFL) when it is installed, else Blender's default font.
+- **Inter Tight** installed with its ExtraLight, Light and Regular styles (free (OFL) from Google Fonts, not included); `AESGlass.fontOK()` checks. The glass digits use Inter ExtraBold (`~/Library/Fonts/Inter-ExtraBold.otf`, OFL) when it is installed, else Blender's default font.
 - Effects: `ADBE Gaussian Blur 2`, `ADBE Glo2`, `ADBE Easy Levels2` (stock).
 - No generated pieces: every object is modelled and rendered in Blender.
 

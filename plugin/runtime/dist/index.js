@@ -36772,6 +36772,7 @@ var StdioServerTransport = class {
 };
 
 // src/config.ts
+import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as os from "node:os";
@@ -36864,6 +36865,22 @@ var DEFAULT_AE_PATHS_DARWIN = [
   "/Applications/Adobe After Effects 2024/Adobe After Effects 2024.app"
 ];
 var AE_RELEASE_DIR = /^Adobe After Effects (\d{4})$/;
+var SUPPORTED_AE_YEARS = [2026, 2025, 2024];
+var MIN_AE_YEAR = 2024;
+var AE_APP_IN_PROCESS = /^(.*\/Adobe After Effects \d{4}\.app)\/Contents\/MacOS\/After Effects(?:\s|$)/;
+function runningAfterFxApps(psOutput) {
+  let text = psOutput;
+  if (text === void 0) {
+    const r = spawnSync("ps", ["-axo", "command="], { encoding: "utf8", timeout: 2e3 });
+    text = r.stdout ?? "";
+  }
+  const apps = /* @__PURE__ */ new Set();
+  for (const line of text.split("\n")) {
+    const m = AE_APP_IN_PROCESS.exec(line.trim());
+    if (m?.[1]) apps.add(m[1]);
+  }
+  return [...apps];
+}
 function discoverAfterFxPaths(platform = process.platform, root = platform === "darwin" ? "/Applications" : "C:/Program Files/Adobe") {
   let names;
   try {
@@ -36871,14 +36888,18 @@ function discoverAfterFxPaths(platform = process.platform, root = platform === "
   } catch {
     return [];
   }
-  return names.map((name) => ({ name, year: AE_RELEASE_DIR.exec(name)?.[1] })).filter((e) => e.year !== void 0).sort((a, b) => Number(b.year) - Number(a.year)).map(({ name, year }) => platform === "darwin" ? path.join(root, name, `Adobe After Effects ${year}.app`) : path.join(root, name, "Support Files", "AfterFX.exe")).filter((candidate) => existsSync(candidate));
+  return names.map((name) => ({ name, year: AE_RELEASE_DIR.exec(name)?.[1] })).filter((e) => e.year !== void 0 && Number(e.year) >= MIN_AE_YEAR).sort((a, b) => Number(b.year) - Number(a.year)).map(({ name, year }) => platform === "darwin" ? path.join(root, name, `Adobe After Effects ${year}.app`) : path.join(root, name, "Support Files", "AfterFX.exe")).filter((candidate) => existsSync(candidate));
 }
-function resolveAfterFxPath(platform = process.platform, root) {
+function resolveAfterFxPath(platform = process.platform, root, running = () => platform === "darwin" ? runningAfterFxApps() : []) {
   for (const env of [process.env.AE_MCP_EXE, process.env.AE_EXE]) {
     if (env && existsSync(env)) return env;
   }
   const discovered = discoverAfterFxPaths(platform, root);
-  if (discovered.length) return discovered[0];
+  const yearOf = (p) => Number(/Adobe After Effects (\d{4})/.exec(p)?.[1]);
+  const live = running().filter((app) => existsSync(app));
+  const supported = SUPPORTED_AE_YEARS.flatMap((y) => discovered.filter((p) => yearOf(p) === y));
+  const ordered = [...live, ...supported, ...discovered];
+  if (ordered.length) return ordered[0];
   const candidates = platform === "darwin" ? DEFAULT_AE_PATHS_DARWIN : DEFAULT_AE_PATHS_WIN32;
   for (const candidate of candidates) {
     if (existsSync(candidate)) return candidate;

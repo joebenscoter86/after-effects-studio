@@ -2,7 +2,7 @@
 
 > An intaglio plate that engraves itself: fine ink lines swell where the form turns from the light, crossing families build the shadows, lettering is cut glyph by glyph, and colour arrives last as a hand-laid wash.
 
-Adapted for native After Effects from Lemo-Opuscar's *Copperplate Engraving* style (MIT, LemoLab; see `assets/LICENSE-lemo-opuscar.txt`). Grammar only, after nineteenth-century natural-history plates and the burin line of Hogarth and Dore: never their plates, poses, borders or titles.
+Adapted for native After Effects from Lemo-Opuscar's *Copperplate Engraving* style (MIT, LemoLab; see `library/styles/LICENSE-lemo-opuscar.txt`). Grammar only, after nineteenth-century natural-history plates and the burin line of Hogarth and Dore: never their plates, poses, borders or titles.
 
 ## 1. What it is, and what it is not
 
@@ -66,19 +66,19 @@ Comps: **DRAW** (frame size, white) holds the tone drawing; three **family** com
 8. The proof pulled: SHEET again (2D), time remap held at a frame of plate III, anchored at its top-left corner. From just before "becomes" it lifts over 0.3 s (scale 100 to 103, rotation 0 to -2.5, Drop Shadow at 135 degrees rising from nothing to distance 30 and softness 60), then is drawn away to (-0.55 W, -1.12 H) turning to -9 degrees by just after "next", slow then fast, the shadow stretching to distance 70 and softness 120. Its scale multiplies the sheet's breathing push so nothing jumps at the cut.
 9. Note slips (main comp): a slip-coloured solid with Roughen Edges (border 5, the deckle) and a Drop Shadow, scaled 103 to 100 as it is laid down; Pinyon Script written left to right by a Linear Wipe.
 
-**Gotchas found while proving it**
+**Gotchas found while building it**
 
 - `setSpatialTangentsAtKey` on a 2D position still wants three-value arrays (`[x, y, 0]`); two values throw "Value array does not have 3 elements" and the roundel flies straight.
 - A Linear Wipe at 90 degrees, keyed from 100 to 0, reveals from the right; script must be written with 270 to run left to right.
 - A cast-shadow ellipse is part of the tone drawing, so it hatches too: keep shadows inside any ruled frame or their lines poke through it.
 - The real frame's tone curve decides how much skin stays bare paper. Too bright (skin at 0.93) and the face loses its hatching and a wash over it reads as a flat blob; keep skin about 0.86 and lay the wash on the face only, not the whole medallion.
 - A flat page hinged in 3D about its top edge (Rotate X, no camera) read as a skewed trapezoid, not a page; CC Page Turn's corner controls folded unpredictably and laid the mirrored back over the plate. The proof pulled off the bed in 2D with a growing, softening drop shadow reads as paper and is fully predictable.
-- A trailing `//` comment pasted onto a line that ends a block swallows the closing brace; the bridge only says "After Effects reported an error executing the command". Syntax-check the module with Node before proving.
+- A trailing `//` comment pasted onto a line that ends a block swallows the closing brace; the bridge only says "After Effects reported an error executing the command". Syntax-check the module with Node before building.
 
 ## 7. Dependencies
 
 - After Effects 2023 or later.
-- Fonts (OFL, bundled in `assets/fonts/`): Bodoni Moda Regular and Italic (variable), Pinyon Script Regular.
+- Fonts (free (OFL) from Google Fonts, not included): Bodoni Moda Regular and Italic (variable), Pinyon Script Regular.
 - Node 20+ and ffmpeg for `tools/tone.mjs`. No generated pieces.
 
 ## 8. Pitfalls of the medium

@@ -79,7 +79,7 @@ Position and Scale carry the rig expression: `k = 1 + (CAM.scale / 100 - 1) * p`
 
 **Main comp, top to bottom:** captions; vignette (black solid, inverted elliptical mask, feather 420, 55%); fibre grain (Fractal Noise stretched 70 x 14 on a solid 2.2 times the frame, scaled down, Overlay 14%); pulp mottle (Fractal Noise scale 260, Soft Light 34%); the light-off black; the curtain halves; the box frame (wood `#3A2414` with a 14 px black lining, scale linked to the end shot); the shots; the room (a warm radial spill on near-black) under the end shot.
 
-**Gotchas found while proving it**
+**Gotchas found while building it**
 
 - A light switched by opacity keys cannot take a later `opacity.setValue()` (AE refuses setValue on a keyed property and the build stops). `light()` takes the resting opacity as `o.op` and scales its on and off keys to it.
 - `words()` placed by its left edge (`o.left`) still called `setValue([o.x, o.y])` first, with `o.x` undefined: one or the other, never both.
@@ -92,7 +92,7 @@ Position and Scale carry the rig expression: `k = 1 + (CAM.scale / 100 - 1) * p`
 ## 7. Dependencies
 
 - After Effects 2023 or later.
-- Fonts (OFL, bundled in `assets/fonts/`): Cormorant Garamond SemiBold, Medium and SemiBold Italic (the variable files carry all three named styles). `AESLantern.fontOK()` checks.
+- Fonts (free (OFL) from Google Fonts, not included): Cormorant Garamond SemiBold, Medium and SemiBold Italic (the variable files carry all three named styles). `AESLantern.fontOK()` checks.
 - Effects, all stock: `ADBE Ramp`, `ADBE Tint`, `ADBE Bevel Alpha`, `ADBE Drop Shadow`, `ADBE Glo2`, `ADBE Gaussian Blur 2`, `ADBE Fractal Noise`, `ADBE Linear Wipe`.
 - No tools and no generated pieces: every sheet is drawn in AE. The real frame comes from the scene's clip.
 

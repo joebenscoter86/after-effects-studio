@@ -2,7 +2,7 @@
 
 > A 1920s one-reel picture as it looks projected: an inked, hatched grey drawing on a flickering silver print in a gate between velvet drapes, intertitles instead of voices, and a pianist in the pit.
 
-Adapted for native After Effects from Lemo-Opuscar's *1920s Silent Film* style (MIT, LemoLab; see `assets/LICENSE-lemo-opuscar.txt`). Grammar only, after Keaton's locked-off wide shots, Lloyd's near-miss, Melies's iris and trick cut, and the photoplay cue sheet: never the Tramp look (bowler, toothbrush moustache, cane), never a real film's gags, shots or title cards, never a published melody.
+Adapted for native After Effects from Lemo-Opuscar's *1920s Silent Film* style (MIT, LemoLab; see `library/styles/LICENSE-lemo-opuscar.txt`). Grammar only, after Keaton's locked-off wide shots, Lloyd's near-miss, Melies's iris and trick cut, and the photoplay cue sheet: never the Tramp look (bowler, toothbrush moustache, cane), never a real film's gags, shots or title cards, never a published melody.
 
 ## 1. What it is, and what it is not
 
@@ -57,7 +57,7 @@ Three comps. **DRAW** (gate size, 960 x 1320 in the proof) holds the picture: to
 10. The house, `theatre(comp, P, gate)`: stage lip and footlights (Glow), a piano and a pianist whose head bobs on sixes, a row of heads, two drapes and a valance from `velvet()` (Fractal Noise stretched to vertical folds, 26 or 14 wide by 6000 high, then Tint to `#080102` / `#6B0D12`), a scalloped mask and a brass cord with tassels, the screen's spill (radial Ramp, Multiply, the gate masked out) and the footlights' warm glow from below (linear Ramp, Add 70%). The drapes part in the first 0.7 s by scale X from their outer edges.
 11. The end: `burnThrough()` grows a char ring, a brown edge and the lamp's white (each roughened, 1500% over the last half second) from one point in the print.
 
-**Gotchas found while proving it**
+**Gotchas found while building it**
 
 - Threshold's Level is on a 0 to 1 scale from scripting, not 0 to 255: `setValue(118)` clamps to "everything is dark" and hatches the whole frame evenly. Use 0.46 and 0.29.
 - The first build used a luma track matte (a disabled DRAW copy with Threshold and Invert) and hatched every value; with the Level clamped, that matte was all white. The matte-free pass above (the threshold copy itself cut into stripes and multiplied) needs no matte layer at all, so it stayed.
@@ -68,7 +68,7 @@ Three comps. **DRAW** (gate size, 960 x 1320 in the proof) holds the picture: to
 ## 7. Dependencies
 
 - After Effects 2023 or later (`Layer.setTrackMatte` with a matte layer anywhere in the stack).
-- Fonts (OFL, bundled in `assets/fonts/`): Playfair Display SC Bold and Regular, Old Standard TT Italic.
+- Fonts (free (OFL) from Google Fonts, not included): Playfair Display SC Bold and Regular, Old Standard TT Italic.
 - Node 20+ and ffmpeg for `tools/redraw.mjs`. No generated pieces.
 
 ## 8. Pitfalls of the medium

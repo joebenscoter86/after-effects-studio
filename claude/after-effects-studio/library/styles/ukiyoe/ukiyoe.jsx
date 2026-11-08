@@ -4,7 +4,7 @@
 // fibres over all. Views print block by block (key first, then each colour lands with a diagonal baren sweep, sliding into register).
 // The sheets are mounted side by side on one long handscroll and the camera slides right to left between them. A real frame of video is
 // cut into the same blocks by tools/blocks.mjs (key, flesh, hair, beard, garment mattes) and printed like any other view.
-// Adapted from Lemo-Opuscar's ukiyoe style (MIT, LemoLab); see assets/LICENSE-lemo-opuscar.txt.
+// Adapted from Lemo-Opuscar's ukiyoe style (MIT, LemoLab); see library/styles/LICENSE-lemo-opuscar.txt.
 var AESUkiyoe = (function () {
   var MIN = "Shippori Mincho", MED = "Medium";
   var PALETTE = { paper: [.937, .894, .8], mount: [.75, .643, .455], sumi: [.11, .102, .114], prussian: [.122, .239, .451], paleBlue: [.561, .682, .796],

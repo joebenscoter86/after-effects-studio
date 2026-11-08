@@ -3,7 +3,7 @@
 // one antenna) with one heavy ink outline, a candy set per round (stripes, polka dots or a sunburst over a darker floor band), fat outlined
 // telops with hard offset shadows, things that drop from the sky and land on the beat, a judgement word on the round's last hit, a beat punch
 // in the frame and a short white flash on every hard cut.
-// Adapted from Lemo-Opuscar's game-show style (MIT, LemoLab); see assets/LICENSE-lemo-opuscar.txt.
+// Adapted from Lemo-Opuscar's game-show style (MIT, LemoLab); see library/styles/LICENSE-lemo-opuscar.txt.
 var AESGameShow = (function () {
   var FAM = "Fredoka", BOLD = "Bold", SEMI = "SemiBold";
   var BPM = 138, BEAT = 60 / BPM, Q = BEAT / 2;                                                   // the grid: every event sits on a half beat of its round

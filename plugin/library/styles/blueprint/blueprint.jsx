@@ -1,7 +1,7 @@
 // Blueprint style: brand-neutral ES3 helpers. No project mutation happens at load.
 // Read styles/blueprint/STYLE.md first. White technical line work drawn on a sheet of cyanotype paper in drafting order, hand-lettered notes,
 // a title block, one red rubber stamp for the verdict. Every stroke draws on with a glowing nib; nothing fades, bounces or turns 3D.
-// Adapted from Lemo-Opuscar's blueprint style (MIT, LemoLab); see assets/LICENSE-lemo-opuscar.txt.
+// Adapted from Lemo-Opuscar's blueprint style (MIT, LemoLab); see library/styles/LICENSE-lemo-opuscar.txt.
 var AESBlueprint = (function () {
   var HAND = "Architects Daughter", TECH = "B612";
   var PALETTE = { deep: [.07, .16, .36], light: [.13, .28, .6], line: [.906, .941, .976], dim: [.78, .86, .95], table: [.051, .067, .086], stamp: [.80, .16, .14] };

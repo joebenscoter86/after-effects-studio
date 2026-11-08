@@ -2,7 +2,7 @@
 
 > A system diagram comes alive: a floating isometric diorama of flat three-tone blocks, thin ink label pins and route lines, numbers built from identical icons, and insets that open on a leader, under a camera that pans and zooms but never breaks the projection.
 
-Adapted for native After Effects from Lemo-Opuscar's *Isometric Infographic* style (MIT, LemoLab; see `assets/LICENSE-lemo-opuscar.txt`). Grammar only: its references (true-isometric puzzle-game architecture, cutaway city-builder dioramas, science explainer channels, the Isotype picture language of Otto Neurath and Gerd Arntz, *Powers of Ten*) are traditions, not designs to copy. Use none of their characters, buildings, icons, palettes or music.
+Adapted for native After Effects from Lemo-Opuscar's *Isometric Infographic* style (MIT, LemoLab; see `library/styles/LICENSE-lemo-opuscar.txt`). Grammar only: its references (true-isometric puzzle-game architecture, cutaway city-builder dioramas, science explainer channels, the Isotype picture language of Otto Neurath and Gerd Arntz, *Powers of Ten*) are traditions, not designs to copy. Use none of their characters, buildings, icons, palettes or music.
 
 ## 1. What it is, and what it is not
 
@@ -68,7 +68,7 @@ Acoustic and light: kalimba, marimba, nylon guitar, pizzicato, woodblock and han
 8. **Focus.** An adjustment solid with Tint (black to ink mixed 35% toward the ground, white to warm white) sits directly under the device's layer; its opacity keys in to about 80% for the beat.
 9. **Subtitles and legend.** Screen space. A card is a shape layer with a fill group (opacity in) and a border group (Trim Paths draws it first); its chip is a tiny iso cube; the words are typed with one `AESLib.textKeys` call. The legend card rides a null that slides up 60 px.
 
-**Gotchas found while proving it**
+**Gotchas found while building it**
 
 - Moving a shape group (`moveTo`) or adding a sibling group invalidates every handle to the other groups in that layer ("Object is invalid"). Finish a group (paths, fill, stroke, Trim) before adding the next one, and reorder by name (`top(layer, name)`), fetching groups again afterwards.
 - A local variable named like a helper (`var top = [...]` inside a function that calls `top()`) fails as "Function Array is undefined".
@@ -82,7 +82,7 @@ Acoustic and light: kalimba, marimba, nylon guitar, pizzicato, woodblock and han
 
 ## 7. Dependencies
 
-- Fonts: Poppins SemiBold and Regular (OFL, bundled in `assets/fonts/`; install both before proving). Jost, the reference's face, is not installed; Poppins is the closest installed geometric sans.
+- Fonts: Poppins SemiBold and Regular (free (OFL) from Google Fonts, not included; install both before building). Jost, the reference's face, is not installed; Poppins is the closest installed geometric sans.
 - Effects: Tint, Gaussian Blur (both stock).
 - No tools, no generated pieces: everything is drawn by AE. The proof reads the scene's clip (`scene.clip`) for the inset.
 

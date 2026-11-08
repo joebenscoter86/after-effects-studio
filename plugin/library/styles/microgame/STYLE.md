@@ -2,7 +2,7 @@
 
 > A rapid-fire party-game film: one shouted command word, a few seconds, one action, one result; every microgame drawn in a completely different medium, all held together by one loud toon game-show stage, and the whole film keeps getting faster.
 
-Adapted for native After Effects from Lemo-Opuscar's *Microgame Frenzy* style (MIT, LemoLab; see `assets/LICENSE-lemo-opuscar.txt`). Grammar only: its genre reference (party microgame collections) is a tradition, not a layout to copy. The host (a round-faced presenter in a top hat), the hero (a round helmet with a visor and an antenna ball), the stage and every game in this package are our own; never use another game's name, characters, UI, microgames or music.
+Adapted for native After Effects from Lemo-Opuscar's *Microgame Frenzy* style (MIT, LemoLab; see `library/styles/LICENSE-lemo-opuscar.txt`). Grammar only: its genre reference (party microgame collections) is a tradition, not a layout to copy. The host (a round-faced presenter in a top hat), the hero (a round helmet with a visor and an antenna ball), the stage and every game in this package are our own; never use another game's name, characters, UI, microgames or music.
 
 ## 1. What it is, and what it is not
 
@@ -59,7 +59,7 @@ Music first: a tempo grid and a cue table before any animation, every picture hi
 9. **Boss.** Fifteen tiles: each is an earlier game comp with Time Remapping frozen on its last good frame and a rectangular mask, flipping (scale X 100 to 0) into a masked tile of the real frame (0 to 100) in a diagonal wave; an ink grid over the seams until the picture is whole.
 10. **HUD.** The fuse (Trim Paths start on the rope, knots hidden with hold keys on group opacity, a glowing spark star), the command words and the banners are not parented, so they stay the same size while the camera moves.
 
-**Gotchas found while proving it**
+**Gotchas found while building it**
 
 - Parenting compensates for the parent's transform at the current time: a layer drawn around its own origin and then parented to a null that is already keyed somewhere else lands far away. `attach()` parents and then resets the position to the parent's origin; a null is rotated only after its children are parented.
 - With Separate Dimensions on, `layer.property("ADBE Position_0")` returns null on a shape layer (the matchname lives under the Transform group); use `layer.transform.xPosition` and `yPosition`. `keys()` throws with the values and times when it is handed a missing property, which names the culprit in one render instead of a bare "null is not an object".
@@ -73,7 +73,7 @@ Music first: a tempo grid and a cue table before any animation, every picture hi
 
 ## 7. Dependencies
 
-Titan One, Lilita One, Silkscreen, Inter Tight Bold, VT323 and Caveat installed (all OFL, bundled in `assets/fonts/`; `AESMicrogame.fontOK()` checks). Effects: Venetian Blinds, Turbulent Displace, Roughen Edges, Fractal Noise, Mosaic, Posterize, Glow, Drop Shadow, Transform, CC Vignette. Node 20+ and ffmpeg for `tools/frame.mjs` (fills the real frame to the game size).
+Titan One, Lilita One, Silkscreen, Inter Tight Bold, VT323 and Caveat installed (all free (OFL) from Google Fonts, not included; `AESMicrogame.fontOK()` checks). Effects: Venetian Blinds, Turbulent Displace, Roughen Edges, Fractal Noise, Mosaic, Posterize, Glow, Drop Shadow, Transform, CC Vignette. Node 20+ and ffmpeg for `tools/frame.mjs` (fills the real frame to the game size).
 
 ## 8. Pitfalls of the medium
 

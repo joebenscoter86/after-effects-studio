@@ -6,7 +6,7 @@
 // at the frame edges, the lighthouse beam (a Gaussian ribbon and a wider halo from the lamp toward the tracked tip), and the type:
 // geometric caps (Josefin Sans) whose letters rise from under a water line with a damped overshoot, rounded subtitles (Fredoka) with a
 // soft dark-blue shadow and a small flat-shaded tile icon whose top follows the time of day.
-// Adapted from Lemo-Opuscar's lowpoly-island style (MIT, LemoLab); see assets/LICENSE-lemo-opuscar.txt.
+// Adapted from Lemo-Opuscar's lowpoly-island style (MIT, LemoLab); see library/styles/LICENSE-lemo-opuscar.txt.
 var AESLowpolyIsland = (function () {
   var CAPF = "Josefin Sans", CAPS = "SemiBold", SUBF = "Fredoka", SUBS = "SemiBold";
   function hex(h) { return [parseInt(h.substr(1, 2), 16) / 255, parseInt(h.substr(3, 2), 16) / 255, parseInt(h.substr(5, 2), 16) / 255]; }

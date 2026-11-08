@@ -6,7 +6,7 @@
 // noise, lifted blacks, barrel and vignette, a head-switching band, tracking tears, dropouts, a drifting white balance), and on top,
 // untouched by the tape: the camcorder OSD (REC, battery, counter, date and time in a bitmap face with a black outline), the title
 // generator, and closed captions (white monospace on a black box per row, typed on word by word).
-// Adapted from Lemo-Opuscar's backrooms style (MIT, LemoLab); see assets/LICENSE-lemo-opuscar.txt.
+// Adapted from Lemo-Opuscar's backrooms style (MIT, LemoLab); see library/styles/LICENSE-lemo-opuscar.txt.
 var AESBackrooms = (function () {
   var OSDF = "VT323", OSDS = "Regular", CCF = "IBM Plex Mono", CCS = "Medium";
   function hex(h) { return [parseInt(h.substr(1, 2), 16) / 255, parseInt(h.substr(3, 2), 16) / 255, parseInt(h.substr(5, 2), 16) / 255]; }

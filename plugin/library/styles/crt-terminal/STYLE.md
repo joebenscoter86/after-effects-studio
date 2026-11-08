@@ -46,7 +46,7 @@ Original analog-synth score (detuned saws and squares through a resonant low-pas
 4. Subtitles: `AESCrt.logStrip(SCREEN, words, { y, cw, cols })` with `[[start, end, "WORD"], ...]` from a transcript.
 5. The tube: `AESCrt.crtStack(OUTPUT, SCREEN, { phosphor, powerOn: [0, .42] })` adds glass, the screen in Add mode with a power-on (scale + exposure + beam line by expression), two Glows (bloom and halo), noise, ~1% flicker, 3 px scanlines, Optics Compensation curvature, a vignette and a rounded bezel.
 
-**Gotchas found while proving it (each cost a render):**
+**Gotchas found while building it (each cost a render):**
 - `aerender` drops text driven by a JSON footage expression (`footage().sourceData`): the frames render in the AE UI but come out blank on the command line. Always bake keys.
 - AE Glow on "Original" colours drifts to lemon when red clips. Set Glow Colors to A & B with the phosphor's two colours (`PHOSPHOR.*.glowA/glowB`).
 - The phosphor's tier colours are tuned under that glow; pure brightness-scaled amber reads yellow-white.
@@ -57,7 +57,7 @@ Original analog-synth score (detuned saws and squares through a resonant low-pas
 
 ## 7. Dependencies
 
-VT323 installed (`assets/fonts/VT323-Regular.ttf`, OFL; `AESCrt.fontOK()` checks). Node 20+ and ffmpeg for `tools/glyphs.mjs`. Stock effects only: Glow, Noise, Exposure, Venetian Blinds, Optics Compensation, CC Vignette, masks.
+VT323 installed (free (OFL) from Google Fonts, not included; `AESCrt.fontOK()` checks). Node 20+ and ffmpeg for `tools/glyphs.mjs`. Stock effects only: Glow, Noise, Exposure, Venetian Blinds, Optics Compensation, CC Vignette, masks.
 
 ## 8. Pitfalls of the medium
 

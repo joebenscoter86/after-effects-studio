@@ -11,6 +11,7 @@ Published by JB Technology LLC. Free for personal and paid client work, includin
 - Claude Code, or a Cowork session running on your Mac (see below).
 - macOS asks once whether Claude, or the terminal that runs it, may control After Effects. Allow it. For renders and exports, After Effects needs **Allow Scripts to Write Files and Access Network** turned on in Preferences → Scripting & Expressions.
 - Optional: `ffmpeg` and `ffprobe` for the bundled export verifier and for the footage tools most visual styles use; Blender for the four 3D styles (backrooms, glass product, low-poly island and tilt-shift).
+- Fonts: each visual style names the free (OFL) Google Fonts families it uses. None are bundled; install the ones a style needs, or let Claude substitute a similar installed family.
 
 ## Where it works
 
@@ -26,7 +27,7 @@ Published by JB Technology LLC. Free for personal and paid client work, includin
 - **After Effects scripting.** The server asks macOS to run scripts in After Effects and exchanges temporary request and response files with it in a per-user temporary folder.
 - **After Effects dialogs.** When a modal dialog blocks scripting, the server reads its text to report it, which needs macOS Accessibility permission for the app running Claude. The `instance.dismiss_dialog` operation can close such a dialog by its cancel action (what Escape does) or press the only button of a one-button warning; it never answers a save prompt with Save or Don't Save.
 - **Write access, on by default.** Through its tools, Claude can create, change and delete items in the open project; open, close and save projects; render frames and movies to paths you choose; run After Effects menu commands; change After Effects preferences; and start or stop After Effects.
-- **Style tools.** Most visual styles include small Node scripts that prepare your footage or stills with ffmpeg, and the 3D styles render plates with Blender. Claude runs one only when a build needs it; it reads the input files you name and writes to a cache folder you choose.
+- **Style tools.** Most visual styles include small Node scripts that prepare your footage or stills with ffmpeg, and the 3D styles render plates with Blender. Claude runs one only when a build needs it; it reads the input files you name and writes to a cache folder you choose, replacing its own earlier outputs there. The 3D plate scripts render the library's seven-beat test scene format, so a scene of your own means adapting the script or building without plates.
 - **Custom scripting, on by default.** The `eval.run` operation runs custom ExtendScript with your user account's access to After Effects, your files and system commands. Treat a script like any code you run.
 - **Turning things off.** Start Claude with `AE_MCP_ENABLE_EVAL=0` to remove custom scripting, or `AE_MCP_READONLY=1` to make the session inspection-only, for example `AE_MCP_READONLY=1 claude`.
 - **What reaches Claude.** Your requests, tool inputs and results, project metadata such as item and layer names and settings, and the preview frames you ask for. The plugin does not upload your project or media to JB Technology LLC or anyone else.

@@ -6,7 +6,7 @@
 // grade (saturation, contrast, warm highlights, vignette); a screen-space band that follows the subject; and the type, which belongs
 // to the town's own signage: cobalt harbour-notice panels in a highway-sign grotesk (Barlow) and a monospace time-lapse clock
 // (IBM Plex Mono) that reads x12 TIME-LAPSE until time drops to x1 REAL TIME.
-// Adapted from Lemo-Opuscar's tilt-shift style (MIT, LemoLab); see assets/LICENSE-lemo-opuscar.txt.
+// Adapted from Lemo-Opuscar's tilt-shift style (MIT, LemoLab); see library/styles/LICENSE-lemo-opuscar.txt.
 var AESTiltShift = (function () {
   var SIGNF = "Barlow Semi Condensed", SIGNS = "SemiBold", MONOF = "IBM Plex Mono", MONOS = "Medium";
   function hex(h) { return [parseInt(h.substr(1, 2), 16) / 255, parseInt(h.substr(3, 2), 16) / 255, parseInt(h.substr(5, 2), 16) / 255]; }

@@ -2,7 +2,7 @@
 // Read styles/dataviz/STYLE.md first. One sheet of cream paper under a 2D camera (a world null); every mark is a real number; a red and blue
 // pencil draws the marks; handwritten notes (Caveat) are pinned to values with a wobbly leader and an un-closed ring; colour encodes the value
 // only (a diverging ramp centred on the mean); transitions are chart operations (axes grow, the scale ratchets, the series morphs), never fades.
-// Adapted from Lemo-Opuscar's dataviz style (MIT, LemoLab); see assets/LICENSE-lemo-opuscar.txt.
+// Adapted from Lemo-Opuscar's dataviz style (MIT, LemoLab); see library/styles/LICENSE-lemo-opuscar.txt.
 var AESDataviz = (function () {
   var SERIF = "Newsreader", MONO = "IBM Plex Mono", HAND = "Caveat";
   function hex(h) { return [parseInt(h.substr(1, 2), 16) / 255, parseInt(h.substr(3, 2), 16) / 255, parseInt(h.substr(5, 2), 16) / 255]; }

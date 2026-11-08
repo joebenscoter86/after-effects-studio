@@ -3,7 +3,7 @@
 // (a real print screen: density field minus a dot screen, pushed through Exposure, used as a luma matte for a flat ink), heavy serif
 // headlines that pop in glyph by glyph over a misregistered shadow, caption bars with a highlighted keyword, rubber stamps that slam
 // with a shake and a flash, numbered exhibits pinned to a board, and a dot wipe between files.
-// Adapted from Lemo-Opuscar's halftone-dossier style (MIT, LemoLab); see assets/LICENSE-lemo-opuscar.txt.
+// Adapted from Lemo-Opuscar's halftone-dossier style (MIT, LemoLab); see library/styles/LICENSE-lemo-opuscar.txt.
 var AESDossier = (function () {
   function hex(h) { return [parseInt(h.substr(0, 2), 16) / 255, parseInt(h.substr(2, 2), 16) / 255, parseInt(h.substr(4, 2), 16) / 255]; }
   // a paper ground, one dark ink, four spot inks (overprint shadow, highlight, accent, stamp red). Face is the one local colour.

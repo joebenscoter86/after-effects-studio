@@ -3,7 +3,7 @@
 // own layer, revealed by a linear squeegee pull (a ragged-front alpha matte shared by every layer of that pull), slightly off register, with
 // an overprint ghost and an ink-thickness rim. Skies are stepped bands, never gradients. The dark info band prints last. Posters change by a
 // foreground silhouette truck or a diagonal re-ink squeegee, and end hung together on a wood wall.
-// Adapted from Lemo-Opuscar's silkscreen-poster style (MIT, LemoLab); see assets/LICENSE-lemo-opuscar.txt.
+// Adapted from Lemo-Opuscar's silkscreen-poster style (MIT, LemoLab); see library/styles/LICENSE-lemo-opuscar.txt.
 var AESSilk = (function () {
   var DISP = "Big Shoulders Display", LAB = "Outfit";
   function hex(h) { h = h.replace("#", ""); return [parseInt(h.substr(0, 2), 16) / 255, parseInt(h.substr(2, 2), 16) / 255, parseInt(h.substr(4, 2), 16) / 255]; }

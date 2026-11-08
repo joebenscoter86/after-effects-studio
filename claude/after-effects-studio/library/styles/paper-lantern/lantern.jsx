@@ -4,7 +4,7 @@
 // Tint (the lamp switched off: 100 = dim, 0 = lit), Bevel Alpha (the warm rim on the top edge, the dark band below), Drop Shadow (the top
 // spot's soft shadow on the sheet behind) and, near the lens, Gaussian Blur (depth of field). Light sources and windows are emissive shapes
 // with Glow. The camera is a 2.5D rig: each shot comp has a CAM null, and every sheet's position and scale follow it by its depth factor.
-// Adapted from Lemo-Opuscar's paper-lantern style (MIT, LemoLab); see assets/LICENSE-lemo-opuscar.txt.
+// Adapted from Lemo-Opuscar's paper-lantern style (MIT, LemoLab); see library/styles/LICENSE-lemo-opuscar.txt.
 var AESLantern = (function () {
   var FACE = "Cormorant Garamond";
   function hex(h) { return [parseInt(h.substr(0, 2), 16) / 255, parseInt(h.substr(2, 2), 16) / 255, parseInt(h.substr(4, 2), 16) / 255]; }

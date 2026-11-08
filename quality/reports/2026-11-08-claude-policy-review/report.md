@@ -69,3 +69,14 @@ Reviewed on 2026-11-08 after the import of 30 styles (Content commit `628f1c52`)
 | Image generation | all 30 | Pass. Styles needing generated pieces were excluded (policy 4B); the 3D styles render with local Blender, not a generator. |
 
 No renames or rewording were needed. Upstream attribution: Lemo-Opuscar (MIT, Copyright (c) 2026 LemoLab) in `THIRD-PARTY-NOTICES.txt`, `PROVENANCE.md` and `library/styles/LICENSE-lemo-opuscar.txt`.
+
+### Picker text (added after the second review)
+
+The first style pass covered titles, summaries and `STYLE.md` but not the `goodFor` lines and `triggers` that ship in `visual-styles/SKILL.md` and `library/styles/index.json`. Verdicts:
+
+| Text | Verdict and action |
+|---|---|
+| glass-product `goodFor`: "should look like an Apple launch" | Changed to "should feel like a premium product launch" (names a company's product events). |
+| Triggers "La Linea" (one-line), "RSA animate" (whiteboard), "Gatsby" (art-deco) | Removed: a cartoon series, a branded video series and a novel/film title. The importer drops them on every run. |
+| Triggers "Saul Bass" (spy-titles) and "Keaton" (silent-film) | Kept: historical designers and performers named as a period reference, the same nominative use as the artists in the `STYLE.md` files; the notes forbid copying their work. |
+| "(Joe's favourite)" in living-screencast's `goodFor`, and other owner or harness notes | Removed or rewritten by importer rules, so no picker text names Content, its harness or its owner. |

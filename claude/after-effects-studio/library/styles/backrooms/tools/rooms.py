@@ -22,7 +22,7 @@ FPS = SCN["fps"]; DUR = SCN["duration"]; NF = int(math.ceil(DUR * FPS))
 tT, tP, tI, tN, tL, tC, tE = (B[k]["t0"] for k in ("title", "picture", "input", "number", "line", "carry", "end"))
 RES = tuple(int(v) for v in OPT.get("res", "720x1280").split("x"))
 HERE = os.path.dirname(os.path.abspath(__file__))
-FONT = OPT.get("notice", os.path.join(HERE, "..", "assets", "fonts", "BarlowSemiCondensed-SemiBold.ttf"))
+FONT = OPT.get("notice")  # fonts are not shipped: an installed Barlow Semi Condensed, else Blender's built-in font
 OW, OH = SCN["width"], SCN["height"]             # the track is in the comp's pixels whatever the render size
 random.seed(43)
 
@@ -211,9 +211,9 @@ def notice(name, cx, y, cz, w, h, lines, facing="-y"):
     plane(name, cx, y, cz, w, h, M_PAPER, facing)
     for k, (tx, ty) in enumerate(((-w / 2 + .03, h / 2 - .01), (w / 2 - .03, h / 2 - .01))):
         tp = plane(name + "_tape", cx + tx, y - .0015, cz + ty, .07, .025, M_TAPE, facing); tp.rotation_euler = (0, math.radians(18 if k else -18), 0)
-    fnt = bpy.data.fonts.load(FONT)
+    fnt = bpy.data.fonts.load(FONT) if FONT and os.path.exists(FONT) else None
     for (txt, size, dz, align, xo) in lines:
-        cu = bpy.data.curves.new(name + "_t", "FONT"); cu.body = txt; cu.font = fnt; cu.size = size; cu.align_x = align; cu.align_y = "TOP"
+        cu = bpy.data.curves.new(name + "_t", "FONT"); cu.body = txt; cu.font = fnt or cu.font; cu.size = size; cu.align_x = align; cu.align_y = "TOP"
         ob = bpy.data.objects.new(name + "_t", cu); ob.data.materials.append(M_INK); COL.objects.link(ob)
         ob.rotation_euler = (math.radians(90), 0, 0)
         ax = {"LEFT": cx - w / 2 + .03, "CENTER": cx, "RIGHT": cx + w / 2 - .03}[align] + xo

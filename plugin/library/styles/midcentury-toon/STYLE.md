@@ -53,7 +53,7 @@ Module `midcentury-toon.jsx`, global `AESMidcenturyToon`. Comps: `CAST` (comp si
 9. **STAGE.** One ground layer per scene (`ground`: wall plane, floor band from y 1640, a horizon line with gaps, a wavy line and plus marks in the band), then CAST, then the transitions: `wipe` (a copy of the next ground with an ink leading edge sliding in over the 0.26 s before the cut), the medallion door (an ink disc scaling 100 to 2600 % over 0.3 s from the medallion's centre), `iris` (an ink layer with an even-odd hole) to open the end and to close it.
 10. **The stand and the paper.** In the main comp: a paper solid, STAGE with a scale expression (3 % push per scene, reset on each cut), Fractal Noise tooth (Overlay 12 %), a large Fractal Noise brush mottling (Soft Light 22 %), mono Noise 3, a warm brown vignette (inverted feathered ellipse, Multiply 30 %).
 
-**Gotchas found while proving it**
+**Gotchas found while building it**
 
 - **Set a shape layer's position to (0, 0) when its nodes are in comp coordinates.** A new shape layer sits at the comp's centre; with the anchor at (0, 0) every ground and arrow landed 540 x 960 off, and the floor band vanished.
 - **Dash a stroke after the layer is drawn, and never touch the Dashes' Offset.** Dashes added inside the emitter failed with "the property or a parent property is hidden". `emit` now only names the stroke (`BRK<dash>_<n>`); `breakLines` walks the finished layer, re-resolves each stroke from the root by index and adds Dash 1 and Gap 1. Setting the dash Offset still failed, so the dash length is varied per node instead.
@@ -64,7 +64,7 @@ Module `midcentury-toon.jsx`, global `AESMidcenturyToon`. Comps: `CAST` (comp si
 
 ## 7. Dependencies
 
-Stock After Effects effects only: Posterize Time, Turbulent Displace, Fractal Noise, Noise. Fonts (OFL, `assets/fonts/`): Oleo Script Bold, Alfa Slab One, Jost (variable, SemiBold instance). Node 20+ and ffmpeg for `tools/cel.mjs`. No generated pieces: the presenter, the props, the grounds and the cards are native shape layers.
+Stock After Effects effects only: Posterize Time, Turbulent Displace, Fractal Noise, Noise. Fonts (free (OFL) from Google Fonts, not included): Oleo Script Bold, Alfa Slab One, Jost (variable, SemiBold instance). Node 20+ and ffmpeg for `tools/cel.mjs`. No generated pieces: the presenter, the props, the grounds and the cards are native shape layers.
 
 ## 8. Pitfalls of the medium
 

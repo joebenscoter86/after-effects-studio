@@ -25,7 +25,7 @@ const N = Math.max(1, Math.round(DUR * FPS)), SX = 4, SY = 4, PW = COLS * SX, PH
 const ff = spawnSync('ffmpeg', ['-v', 'error', '-ss', String(START), '-i', IN, '-t', String(N / FPS * SPEED), '-vf', `fps=${FPS / SPEED},scale=${PW}:${PH}:flags=area`, '-frames:v', String(N), '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'], { maxBuffer: 2 ** 31 });
 if (ff.status) { console.error('ffmpeg failed\n' + ff.stderr); process.exit(1); }
 const FR = PW * PH * 3, got = Math.floor(ff.stdout.length / FR);
-// the VT323 ramp (char, brightness) in increasing ink, measured once from the font (bundled: assets/fonts/VT323-Regular.ttf)
+// the VT323 ramp (char, brightness) in increasing ink, measured once from the font (VT323, free from Google Fonts)
 const RAMP = [[' ', 0], ['-', .42], ['-', .7], [':', .42], ['-', 1], ['+', .42], [':', .7], ['=', .7], [':', 1], ['=', 1], ['*', .7], ['+', 1], ['*', 1], ['%', .7], ['#', .7], ['@', .7], ['%', 1], ['#', 1], ['@', 1]];
 const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map(v => (v + .5) / 16 - .5);
 function pick(L, i, j, d = .6) { const n = RAMP.length - 1; let h = Math.sin(i * 12.9898 + j * 78.233) * 43758.5453; h -= Math.floor(h);

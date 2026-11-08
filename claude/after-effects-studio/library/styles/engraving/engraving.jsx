@@ -4,7 +4,7 @@
 // crossing the one before, so line width swells where the form turns from the light and the cut order is outline and first hatching, then
 // crossing, then the darks. The ink prints over cream laid paper inside a pressed plate mark; lettering is cut glyph by glyph, notes are
 // written in script on a paper slip, and colour arrives last as a transparent wash laid under the ink.
-// Adapted from Lemo-Opuscar's engraving style (MIT, LemoLab); see assets/LICENSE-lemo-opuscar.txt.
+// Adapted from Lemo-Opuscar's engraving style (MIT, LemoLab); see library/styles/LICENSE-lemo-opuscar.txt.
 var AESEngraving = (function () {
   var BOD = "Bodoni Moda", PIN = "Pinyon Script";
   var PALETTE = { ink: [.11, .082, .063], paper: [.945, .91, .824], paperOuter: [.91, .875, .78], slip: [.969, .945, .882], bevelLight: [.99, .975, .94],

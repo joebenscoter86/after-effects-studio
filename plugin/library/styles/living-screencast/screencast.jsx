@@ -3,7 +3,7 @@
 // type (sharp at any zoom) and floats on wallpaper; a recording-software camera pushes in to the cursor and the caret; a mascot made of big
 // square pixels lives on the top edges of the UI and acts out what the software does. Two actors, never a hand: the cursor is the user,
 // the mascot is the software. Overlays are information only (chapter pill, caption pill, key HUD, time-lapse tag).
-// Adapted from Lemo-Opuscar's living-screencast style (MIT, LemoLab); see assets/LICENSE-lemo-opuscar.txt. The mascot here is our own.
+// Adapted from Lemo-Opuscar's living-screencast style (MIT, LemoLab); see library/styles/LICENSE-lemo-opuscar.txt. The mascot here is our own.
 var AESScreencast = (function () {
   var UI = "Inter Tight", SERIF = "Newsreader", MONO = "IBM Plex Mono";
   function hex(h) { return [parseInt(h.substr(1, 2), 16) / 255, parseInt(h.substr(3, 2), 16) / 255, parseInt(h.substr(5, 2), 16) / 255]; }

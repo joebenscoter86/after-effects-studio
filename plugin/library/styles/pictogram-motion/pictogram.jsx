@@ -1,7 +1,7 @@
 // Pictogram motion style: brand-neutral ES3 helpers. No project mutation happens at load.
 // Read styles/pictogram-motion/STYLE.md first. A square grid of discs and patterned cells whose rows slide past each other, faceless figures of
 // round-capped bars, a 900-weight grotesk that slides up out of masks, mono HUD meta. One hue per card, printed by Tint from five greys.
-// Adapted from Lemo-Opuscar's pictogram-motion style (MIT, LemoLab); see assets/LICENSE-lemo-opuscar.txt.
+// Adapted from Lemo-Opuscar's pictogram-motion style (MIT, LemoLab); see library/styles/LICENSE-lemo-opuscar.txt.
 var AESPictogram = (function () {
   var FAM = "Inter Tight", MONO = "Space Mono", C = 180;                                        // C: the grid cell, 1/6 of the frame width
   function hex(h) { return [parseInt(h.substr(0, 2), 16) / 255, parseInt(h.substr(2, 2), 16) / 255, parseInt(h.substr(4, 2), 16) / 255]; }

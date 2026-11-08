@@ -5,7 +5,7 @@
 // medallions, round call-outs with a leader line, detail tags with a star bullet, starbursts, sparkles and sunburst rays. Type is a 1950s
 // script kicker (Oleo Script Bold), slab titles and numerals in ink over an offset colour plate (Alfa Slab One) and a geometric sans for
 // labels (Jost). Drawings on twos; the camera glides on ones; scenes change by colour-block wipes and irises, never dissolves.
-// Adapted from Lemo-Opuscar's midcentury-toon style (MIT, LemoLab); see assets/LICENSE-lemo-opuscar.txt.
+// Adapted from Lemo-Opuscar's midcentury-toon style (MIT, LemoLab); see library/styles/LICENSE-lemo-opuscar.txt.
 var AESMidcenturyToon = (function () {
   var SCRIPT = "Oleo Script", SLAB = "Alfa Slab One", SANS = "Jost";
   function hex(h) { return [parseInt(h.substr(1, 2), 16) / 255, parseInt(h.substr(3, 2), 16) / 255, parseInt(h.substr(5, 2), 16) / 255]; }

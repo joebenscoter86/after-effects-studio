@@ -12,7 +12,8 @@ import { fileURLToPath } from 'node:url';
 const FONT_BINARY = /\.(ttf|otf|woff2?)$/i;
 const NO_SCAN = /\.(png|jpe?g|gif|webp|ttf|otf|woff2?)$/i;
 const PRIVATE_HOME = /\/Users\/[A-Za-z0-9._-]+\/|\/home\/[A-Za-z0-9._-]+\//;
-const CONTENT_REF = /~\/Assets|production\/|harness|prove\.mjs|go\.sh|Higgsfield|joeb/i;
+export const CONTENT_REF = /~\/Assets|production\/|harness|prove\.mjs|\bprov(e|es|ing)\b|go\.sh|Higgsfield|\bJoe\b|joeb|Runpod|assets\/LICENSE-lemo-opuscar/i;
+const FONT_SOURCE = 'free (OFL) from Google Fonts, not included';
 const LEMO_LICENSE = 'assets/LICENSE-lemo-opuscar.txt';
 const sha256 = (data) => createHash('sha256').update(data).digest('hex');
 const LEMO = 'https://github.com/lemomo-ai/lemo-opuscar/tree/main';
@@ -27,32 +28,75 @@ const RULES = [
   [/Cache: `~\/Assets\/joeb\/styles\/[a-z0-9-]+\/` \(([^)]*)\), per scene for reel renders\./g, (_, what) => `Cache: the folder you pass as \`--cache\` (${what}).`],
   [/before proving \(/g, () => 'before building ('],
   [/because prove\.mjs runs prepare while it holds the After Effects lock\./g, () => 'so After Effects is not left waiting on it.'],
+  [/(?:, because |: | \()prove runs prepare while it holds the After Effects lock\)?\./g, () => ', so After Effects is not left waiting on it.'],
+  [/before proving/gi, (m) => (m.startsWith('BEFORE') ? 'BEFORE building' : 'before building')],
+  [/found while proving it/g, () => 'found while building it'],
+  [/ \(Joe's QA\)/g, () => ' (found in review)'],
+  [/ \(Joe's favourite\)/g, () => ''],
+  [/assets\/LICENSE-lemo-opuscar\.txt/g, () => 'library/styles/LICENSE-lemo-opuscar.txt'],
+  // Fonts are not shipped: say where they come from instead of pointing at files that are not there.
+  [/\((all )?OFL, bundled in `assets\/fonts\/`([;)])/g, (_, all, end) => `(${all ? 'all ' : ''}${FONT_SOURCE}${end}`],
+  [/\(`assets\/fonts\/(?!EMSTech)[^`]*`, (all )?OFL([;)])/g, (_, all, end) => `(${all ? 'all ' : ''}${FONT_SOURCE}${end}`],
+  [/Fonts? \(OFL, (?:bundled in )?`assets\/fonts\/`\)/g, (m) => `${m.startsWith('Fonts') ? 'Fonts' : 'Font'} (${FONT_SOURCE})`],
+  [/\(OFL\), bundled in `assets\/fonts\/`/g, () => `(${FONT_SOURCE})`],
 ];
+
+// Fonts are not shipped. A tool that needs one looks for FONT_PATH, then the user's and the system's font folders.
+const FIND_FONT = "import os from 'node:os';\n// Fonts are not shipped: use FONT_PATH or an installed copy; with none, Blender falls back to its built-in font.\n"
+  + "const findFont = (name) => [process.env.FONT_PATH, path.join(os.homedir(), 'Library', 'Fonts', name), path.join('/Library/Fonts', name)].find((p) => p && fs.existsSync(p)) || null;\n";
 
 // Exact, per-file replacements for Content-specific notes. A missing original means upstream changed: fail loudly.
 const EDITS = {
-  'backrooms/STYLE.md': [[
-    '- `prove.mjs` checks every tool named in `needs` on the PATH, and Blender is not on it (it is called by its app path): `needs` lists node and ffmpeg only, and `plates.mjs` finds Blender itself (or `BLENDER`).',
-    '- Blender is called by its app path, not the PATH: `plates.mjs` finds it at `/Applications/Blender.app` or through `BLENDER`.']],
   'blueprint/STYLE.md': [[
     '- A build that throws leaves its untitled project open in AE, and the next proof (anyone\'s) then stops on "untitled and has unsaved changes". The harness now discards an untitled project whose only comps are named PROOF, and closes the project it started when a build throws.',
     '- A build that throws can leave its untitled project open in AE. Inspect it before the next build, and never discard unsaved work you did not create.']],
-  'lowpoly-island/STYLE.md': [[
-    '- The proof harness passes the scene to After Effects without its folder, so `words.json` cannot be read there: the line beat\'s word times travel in `track.json` from `island.py`, which reads them anyway to light a window per word.',
-    '- After Effects may not see the scene folder, so the line beat\'s word times travel in `track.json` from `island.py`, which reads them anyway to light a window per word.']],
   'paper-lantern/STYLE.md': [[
     /^- The bridge can drop mid-build \(network\) and `prove\.mjs` then reports an empty response.*\n/m, '']],
   'whiteboard/STYLE.md': [[
     '- The scene folder is not visible from AE (the harness strips it), so the frame comes in through a prepare tool (`tools/print.mjs`) like every other input.',
     '- After Effects may not see the scene folder, so the frame comes in through a prepare tool (`tools/print.mjs`) like every other input.']],
-  'glass-product/STYLE.md': [
-    ['Frames are cached under `~/Assets/joeb/styles/glass-product/frames/<shot>/`;', 'Frames are cached under `<cache>/frames/<shot>/`;'],
-    ['- No Higgsfield pieces: every object is modelled and rendered in Blender.', '- No generated pieces: every object is modelled and rendered in Blender.']],
   'glass-product/tools/glass_scene.py': [[
     '    clip = os.path.expanduser(OPT.get("clip", "~/Assets/joeb/styles/scene/clip.mp4"))',
     '    if "clip" not in OPT:\n        sys.exit("glass_scene.py: the input shot needs clip=<path to your footage>")\n    clip = os.path.expanduser(OPT["clip"])']],
   'silkscreen-poster/STYLE.md': [['- Shared scene: `production/styles/scene/`.', "- Shared scene: the library's seven-beat test scene (not shipped)."]],
+  'lowpoly-island/STYLE.md': [
+    ['- The proof harness passes the scene to After Effects without its folder, so `words.json` cannot be read there: the line beat\'s word times travel in `track.json` from `island.py`, which reads them anyway to light a window per word.',
+      '- After Effects may not see the scene folder, so the line beat\'s word times travel in `track.json` from `island.py`, which reads them anyway to light a window per word.'],
+    ['Blender reads the bundled Fredoka file for the 3D digits.', 'For the 3D digits Blender uses an installed Fredoka (or the file in `FONT_PATH`), else its built-in font.']],
+  'backrooms/STYLE.md': [
+    ['- `prove.mjs` checks every tool named in `needs` on the PATH, and Blender is not on it (it is called by its app path): `needs` lists node and ffmpeg only, and `plates.mjs` finds Blender itself (or `BLENDER`).',
+      '- Blender is called by its app path, not the PATH: `plates.mjs` finds it at `/Applications/Blender.app` or through `BLENDER`.'],
+    ['(Blender reads the bundled Barlow file for the notice)', '(for the notice Blender uses an installed Barlow Semi Condensed, or the file in `FONT_PATH`, else its built-in font)']],
+  'glass-product/STYLE.md': [
+    ['Frames are cached under `~/Assets/joeb/styles/glass-product/frames/<shot>/`;', 'Frames are cached under `<cache>/frames/<shot>/`;'],
+    ['- No Higgsfield pieces: every object is modelled and rendered in Blender.', '- No generated pieces: every object is modelled and rendered in Blender.'],
+    [" No Runpod or paid GPU without Joe's go on the price.", '']],
+  'crt-terminal/crt.jsx': [['install assets/fonts/VT323-Regular.ttf (OFL)', 'install the free VT323 font (OFL, Google Fonts)']],
+  'crt-terminal/tools/glyphs.mjs': [['(bundled: assets/fonts/VT323-Regular.ttf)', '(VT323, free from Google Fonts)']],
+  'lowpoly-island/tools/plate.mjs': [
+    ["const font = path.join(HERE, '..', 'assets', 'fonts', 'Fredoka[wdth,wght].ttf');", FIND_FONT + "const font = findFont('Fredoka[wdth,wght].ttf');"],
+    ["for (const f of [path.join(HERE, 'island.py'), sceneFile, words, font]) h.update(fs.readFileSync(f));", "for (const f of [path.join(HERE, 'island.py'), sceneFile, words, font].filter(Boolean)) h.update(fs.readFileSync(f));"],
+    ["`samples=${samples}`, `font=${font}`]", "`samples=${samples}`, ...(font ? [`font=${font}`] : [])]"]],
+  'lowpoly-island/tools/island.py': [
+    ['FONT = OPT.get("font", os.path.join(HERE, "..", "assets", "fonts", "Fredoka[wdth,wght].ttf"))', 'FONT = OPT.get("font")  # fonts are not shipped: an installed Fredoka, else Blender\'s built-in font'],
+    ['fnt = bpy.data.fonts.load(FONT)\n', 'fnt = bpy.data.fonts.load(FONT) if FONT and os.path.exists(FONT) else None\n'],
+    ['cu.body = ch; cu.font = fnt; cu.size = 2.0;', 'cu.body = ch; cu.font = fnt or cu.font; cu.size = 2.0;']],
+  'tilt-shift/tools/plate.mjs': [
+    ["const font = path.join(HERE, '..', 'assets', 'fonts', 'BarlowSemiCondensed-SemiBold.ttf');", FIND_FONT + "const font = findFont('BarlowSemiCondensed-SemiBold.ttf');"],
+    ["for (const f of [path.join(HERE, 'town.py'), sceneFile, words, font]) h.update(fs.readFileSync(f));", "for (const f of [path.join(HERE, 'town.py'), sceneFile, words, font].filter(Boolean)) h.update(fs.readFileSync(f));"],
+    ["`samples=${samples}`, `font=${font}`]", "`samples=${samples}`, ...(font ? [`font=${font}`] : [])]"]],
+  'backrooms/tools/plates.mjs': [
+    ["const rooms = path.join(HERE, 'rooms.py'), font = path.join(PKG, 'assets', 'fonts', 'BarlowSemiCondensed-SemiBold.ttf');", FIND_FONT + "const rooms = path.join(HERE, 'rooms.py'), font = findFont('BarlowSemiCondensed-SemiBold.ttf');"],
+    [".update(fs.readFileSync(font)).digest('hex')", ".update(font ? fs.readFileSync(font) : '').digest('hex')"],
+    ["frames, `notice=${font}`]", "frames, ...(font ? [`notice=${font}`] : [])]"]],
+  'backrooms/tools/rooms.py': [
+    ['FONT = OPT.get("notice", os.path.join(HERE, "..", "assets", "fonts", "BarlowSemiCondensed-SemiBold.ttf"))', 'FONT = OPT.get("notice")  # fonts are not shipped: an installed Barlow Semi Condensed, else Blender\'s built-in font'],
+    ['    fnt = bpy.data.fonts.load(FONT)\n', '    fnt = bpy.data.fonts.load(FONT) if FONT and os.path.exists(FONT) else None\n'],
+    ['cu.body = txt; cu.font = fnt; cu.size = size;', 'cu.body = txt; cu.font = fnt or cu.font; cu.size = size;']],
 };
+// Summary, good-for and trigger text that ships in the index and the skill.
+const FIELD_EDITS = { 'glass-product': [['should look like an Apple launch', 'should feel like a premium product launch']] };
+const TRIGGER_EXCLUDE = /la linea|rsa animate|gatsby/i;
 
 function adapt(id, rel, text) {
   let out = text.replaceAll(`production/styles/${id}/`, `library/styles/${id}/`);
@@ -126,7 +170,9 @@ function skillMarkdown(entries) {
   const list = titles.length > 1 ? `${titles.slice(0, -1).join(', ')} or ${titles.at(-1)}` : titles[0];
   const description = `Build After Effects motion graphics in a named visual style from the bundled style library: ${list}. `
     + 'Use when the user names one of these looks, asks which styles are available, or wants help choosing a style; ordinary motion work without a named look does not need it.';
-  const rows = entries.map((s) => `| ${s.title} | \`${s.id}\` | ${s.tier} | ${s.goodFor} | ${s.needs.length ? s.needs.join(', ') : 'none'} |`);
+  if (description.length > 1024) throw new Error(`visual-styles description is ${description.length} characters; the limit is 1024`);
+  const fonts = (s) => [...new Set(s.fonts.map((f) => f.family))].join(', ') || 'none';
+  const rows = entries.map((s) => `| ${s.title} | \`${s.id}\` | ${s.tier} | ${s.goodFor} | ${fonts(s)} | ${s.needs.length ? s.needs.join(', ') : 'none'} |`);
   return `---
 name: visual-styles
 description: ${description}
@@ -134,18 +180,21 @@ description: ${description}
 
 # Visual styles
 
-${entries.length} visual styles, each with a written grammar (type, colour, motion, camera), an After Effects recipe and an ES3 module. Read through \`ae_library\`: **motion-language**, **production-workflow** and **brief-template** first (the foundation for every style), then **style-index**, then the chosen style's **style-<id>**. When building with its helpers, also read **style-lib-jsx** and **style-<id>-jsx**. If the library tool is unavailable, the same files are at \`../../library/styles/index.json\`, \`../../library/styles/<id>/STYLE.md\`, the module named in the index, and \`../../library/styles/aes-lib.jsx\`, relative to this skill's folder.
+${entries.length} visual styles, each with a written grammar (type, colour, motion, camera), an After Effects recipe and an ES3 module. Also available: **Paper collage** (\`paper-collage\`), which has its own skill and library module.
 
-1. Choose the style with the user from the table below. If they describe a look that is not listed, name the closest style and say how it differs.
+Read through \`ae_library\`: **motion-language**, **production-workflow** and **brief-template** first (the foundation for every style), then the chosen style's **style-<id>**. The table below already holds what \`style-index\` lists; read the index only for a style's tools or its proof status. If the library tool is unavailable, the same files are at \`../../library/styles/<id>/STYLE.md\` and \`../../library/styles/index.json\` relative to this skill's folder.
+
+1. Choose the style with the user from the table. If they describe a look that is not listed, name the closest style and say how it differs.
 2. Write the brief in the style's grammar (STYLE.md sections 2 to 4), adapted to the user's subject. A style is a grammar, not a template.
-3. Check what the style needs (the table and STYLE.md section 7). Fonts are free families named in the index: use them if installed, otherwise choose a fallback and remeasure. Footage tools need Node and often ffmpeg; the 3D styles render plates with Blender. Ask before running a tool; tools read the inputs you give them and write to a cache folder you choose.
-4. Build natively with \`ae_do\` and \`eval.run\`: load \`aes-lib.jsx\`, then the style's module, and follow the AE recipe (STYLE.md section 6). The module's \`buildScene(comp, scene, opts)\` builds the library's seven-beat test scene; read it as a worked example of the technique, not as a builder for the user's scene.
-5. Render frames and check them against STYLE.md before showing the user.
+3. Fonts: each style uses the free (OFL) families in the Fonts column, from Google Fonts; none are included. A module's \`fontOK()\` stops the build when one is missing. Install the family, or substitute the closest installed family of the same kind by replacing the family name in the module text before loading it, and remeasure the text.
+4. Tools: most styles prepare footage or stills with small Node scripts that use ffmpeg; the 3D styles render plates with Blender. Ask before running one; it reads the input files you name and writes to a cache folder you choose, replacing its own earlier outputs there. The 3D plate scripts render the library's seven-beat test scene format (\`scene.json\` with the beats title, picture, input, number, line, carry and end, plus \`words.json\`); for the user's own scene, adapt the script's beats or build the recipe's native layers without plates.
+5. Build natively with \`ae_do\` and \`eval.run\`. Each \`eval.run\` call runs in its own function scope, so load the shared helpers and the style's module in the same call as the code that uses them, for example \`$.evalFile(File(LIB + "/styles/aes-lib.jsx")); $.evalFile(File(LIB + "/styles/<id>/<module>"));\` followed by your build code, where \`LIB\` is the absolute path of the \`library\` folder two levels above this skill's folder. Follow the AE recipe (STYLE.md section 6). The module's \`buildScene(comp, scene, opts)\` builds the library's seven-beat test scene; read it as a worked example of the technique, not as a builder for the user's scene.
+6. Render frames and check them against STYLE.md before showing the user.
 
-The styles are adaptations of Lemo-Opuscar (MIT, LemoLab), each proven in the author's own test harness before import. \`style-index\` records each style's proof status; a style not yet built through this plugin is labelled as such.
+The styles are adaptations of Lemo-Opuscar (MIT, LemoLab). In \`style-index\`, \`contentStatus\` and \`contentProof\` record that a style was proven in the author's own proof setup before import; \`pluginProof\` stays null until the style has been built and checked through this plugin. Say which applies when you present a style.
 
-| Style | id | Tier | Good for | Needs |
-|---|---|---|---|---|
+| Style | id | Tier | Good for | Fonts | Needs |
+|---|---|---|---|---|---|
 ${rows.join('\n')}
 `;
 }
@@ -192,20 +241,31 @@ export async function importStyles({ from, to, skillDir, commit }) {
     const toolText = staged.filter((f) => f.out.startsWith(`styles/${style.id}/tools/`)).map((f) => f.data.toString('utf8')).join('\n');
     const needs = new Set((style.tools ?? []).flatMap((t) => t.needs ?? []));
     if (/blender/i.test(toolText)) needs.add('blender');
+    const field = (text) => {
+      let out = text;
+      for (const [pattern, replace] of RULES) out = out.replace(pattern, replace);
+      for (const [from, to] of FIELD_EDITS[style.id] ?? []) out = out.replace(from, to);
+      return out;
+    };
     entries.push({
-      id: style.id, title: style.title, tier: style.tier, summary: style.summary,
-      goodFor: notes[style.id]?.goodFor ?? firstSentence(style.summary),
-      triggers: style.triggers, module: style.module, moduleGlobal: style.moduleGlobal,
+      id: style.id, title: style.title, tier: style.tier, summary: field(style.summary),
+      goodFor: field(notes[style.id]?.goodFor ?? firstSentence(style.summary)),
+      triggers: style.triggers.filter((t) => !TRIGGER_EXCLUDE.test(t)).map(field),
+      module: style.module, moduleGlobal: style.moduleGlobal,
       needs: [...needs].sort(),
-      fonts: (style.fonts ?? []).map(({ family, style: face, license: lic }) => ({ family, style: face, license: lic })),
+      fonts: (style.fonts ?? []).map(({ family, style: face, license: lic }) => ({ family, style: face, license: lic, source: 'Google Fonts' })),
       tools: (style.tools ?? []).map((t) => t.file),
       contentStatus: style.status, contentProof: style.proof?.date ?? null,
+      pluginProof: null,
     });
   }
 
   // Replace earlier imports: only folders an earlier index listed, plus this run's.
   const indexPath = path.join(to, 'styles', 'index.json');
-  const previous = await exists(indexPath) ? JSON.parse(await fs.readFile(indexPath, 'utf8')).styles.map((s) => s.id) : [];
+  const previousIndex = await exists(indexPath) ? JSON.parse(await fs.readFile(indexPath, 'utf8')).styles : [];
+  const previous = previousIndex.map((s) => s.id);
+  // Plugin-route evidence belongs to the plugin, not to Content: keep it across re-imports.
+  for (const entry of entries) entry.pluginProof = previousIndex.find((s) => s.id === entry.id)?.pluginProof ?? null;
   for (const id of new Set([...previous, ...selected.map((s) => s.id)])) {
     await fs.rm(path.join(to, 'styles', id), { recursive: true, force: true });
   }

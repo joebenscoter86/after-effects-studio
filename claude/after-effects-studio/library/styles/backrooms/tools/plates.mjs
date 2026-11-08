@@ -13,8 +13,11 @@ const sceneDir = opt('--scene'), cache = opt('--cache'), out = opt('--out');
 if (!sceneDir || !cache || !out) { console.error('usage: plates.mjs --scene <dir> --cache <dir> --out <json> [--cached-only] [--force]'); process.exit(2); }
 const die = m => { console.error(m); process.exit(1); };
 const sceneFile = path.join(sceneDir, 'scene.json'), scene = JSON.parse(fs.readFileSync(sceneFile, 'utf8'));
-const rooms = path.join(HERE, 'rooms.py'), font = path.join(PKG, 'assets', 'fonts', 'BarlowSemiCondensed-SemiBold.ttf');
-const key = crypto.createHash('sha1').update(fs.readFileSync(rooms)).update(fs.readFileSync(sceneFile)).update(fs.readFileSync(path.join(sceneDir, scene.words || 'words.json'))).update(fs.readFileSync(font)).digest('hex').slice(0, 10);
+import os from 'node:os';
+// Fonts are not shipped: use FONT_PATH or an installed copy; with none, Blender falls back to its built-in font.
+const findFont = (name) => [process.env.FONT_PATH, path.join(os.homedir(), 'Library', 'Fonts', name), path.join('/Library/Fonts', name)].find((p) => p && fs.existsSync(p)) || null;
+const rooms = path.join(HERE, 'rooms.py'), font = findFont('BarlowSemiCondensed-SemiBold.ttf');
+const key = crypto.createHash('sha1').update(fs.readFileSync(rooms)).update(fs.readFileSync(sceneFile)).update(fs.readFileSync(path.join(sceneDir, scene.words || 'words.json'))).update(font ? fs.readFileSync(font) : '').digest('hex').slice(0, 10);
 const dir = path.join(cache, `plates-${key}`), mp4 = path.join(dir, 'plates.mp4'), data = path.join(dir, 'data.json');
 const done = () => fs.existsSync(mp4) && fs.existsSync(data);
 if (flag('--force')) fs.rmSync(dir, { recursive: true, force: true });
@@ -24,7 +27,7 @@ if (!done()) {
   if (!fs.existsSync(blender)) die(`Blender not found at ${blender} (set BLENDER)`);
   const frames = path.join(dir, 'frames'); fs.mkdirSync(frames, { recursive: true });
   console.error(`rendering the rooms plate into ${frames} (a few minutes)`);
-  const r = spawnSync(blender, ['-b', '--factory-startup', '--python', rooms, '--', sceneFile, frames, `notice=${font}`], { encoding: 'utf8', maxBuffer: 2 ** 28, stdio: ['ignore', 'pipe', 'pipe'] });
+  const r = spawnSync(blender, ['-b', '--factory-startup', '--python', rooms, '--', sceneFile, frames, ...(font ? [`notice=${font}`] : [])], { encoding: 'utf8', maxBuffer: 2 ** 28, stdio: ['ignore', 'pipe', 'pipe'] });
   if (!/ROOMS DONE/.test(r.stdout || '')) die('Blender failed:\n' + String(r.stdout || '').split('\n').filter(l => /Error|Traceback|line /.test(l)).slice(-12).join('\n') + (r.stderr || '').slice(-2000));
   const n = Math.ceil(scene.duration * scene.fps), have = fs.readdirSync(frames).filter(f => /^f_\d{4}\.png$/.test(f)).length;
   if (have < n) die(`only ${have} of ${n} frames rendered; rerun to resume`);

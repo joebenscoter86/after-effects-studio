@@ -2,7 +2,7 @@
 // Read styles/spy-titles/STYLE.md first. A 1960s cut-paper opening title: four opaque inks, scissor-cut edges (Roughen Edges in layer space,
 // so a moving piece keeps its edge), a cut gap and a small paper shadow on every piece, credits that are the set, a hatted silhouette agent
 // whose limbs step on twos, hard cuts on the beat, a giant circle, and a title assembled from the pieces at the end.
-// Adapted from Lemo-Opuscar's spy-titles style (MIT, LemoLab); see assets/LICENSE-lemo-opuscar.txt.
+// Adapted from Lemo-Opuscar's spy-titles style (MIT, LemoLab); see library/styles/LICENSE-lemo-opuscar.txt.
 var AESSpy = (function () {
   var FAM = "Bebas Neue", TITLE = "Anton";
   function hex(h) { return [parseInt(h.substr(0, 2), 16) / 255, parseInt(h.substr(2, 2), 16) / 255, parseInt(h.substr(4, 2), 16) / 255]; }

@@ -3,7 +3,7 @@
 // carved by one knife pass (a soft line screen added in Linear Light, roughened, then Threshold), so cut width follows tone and brights
 // carve first. The carved plate prints in ink on laid paper inside a ragged block edge, captions are letterpress in the margin, and one
 // copper plate (Darken) shows only where wood was cut away.
-// Adapted from Lemo-Opuscar's woodcut style (MIT, LemoLab); see assets/LICENSE-lemo-opuscar.txt.
+// Adapted from Lemo-Opuscar's woodcut style (MIT, LemoLab); see library/styles/LICENSE-lemo-opuscar.txt.
 var AESWoodcut = (function () {
   var SC = "IM FELL English SC", FELL = "IM FELL English";
   var PALETTE = { ink: [.09, .075, .06], paper: [.937, .902, .824], copper: [.76, .35, .17], woodInked: [.141, .102, .071], woodPale: [.725, .541, .357],

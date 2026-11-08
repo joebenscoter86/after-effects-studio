@@ -3,7 +3,7 @@
 // darks by one global pass (Venetian Blinds through a luma matte of the drawing itself), printed on silver stock (Tint, flicker, weave, grain,
 // scratches, dust, burn), sampled hand-cranked at 16 fps inside a rounded gate between velvet drapes, above the footlights and a dark house.
 // Nobody speaks on screen: intertitle cards with deco borders carry the words; irises open and close on what matters.
-// Adapted from Lemo-Opuscar's silent-film style (MIT, LemoLab); see assets/LICENSE-lemo-opuscar.txt.
+// Adapted from Lemo-Opuscar's silent-film style (MIT, LemoLab); see library/styles/LICENSE-lemo-opuscar.txt.
 var AESSilent = (function () {
   var TITLE = "Playfair Display SC", ITAL = "Old Standard TT";
   function g(v) { return [v, v, v]; }

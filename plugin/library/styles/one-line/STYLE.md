@@ -2,7 +2,7 @@
 
 > A single ink line that never leaves the paper. Everything on screen is that one line being drawn; scenes do not cut, they morph, and the last pull back shows it was all one picture.
 
-Adapted for native After Effects from Lemo-Opuscar's *One-line Drawing* style (MIT, LemoLab; see `assets/LICENSE-lemo-opuscar.txt`). Grammar only: the references are Cavandoli's *La Linea*, Gjon Mili's light drawings of Picasso and McLaren's lines drawn to music. Never copy La Linea's character or voice, or any specific continuous-line illustration.
+Adapted for native After Effects from Lemo-Opuscar's *One-line Drawing* style (MIT, LemoLab; see `library/styles/LICENSE-lemo-opuscar.txt`). Grammar only: the references are Cavandoli's *La Linea*, Gjon Mili's light drawings of Picasso and McLaren's lines drawn to music. Never copy La Linea's character or voice, or any specific continuous-line illustration.
 
 ## 1. What it is, and what it is not
 
@@ -57,7 +57,7 @@ One solo instrument, one unbroken melodic line, written to the drawing: a cello,
 9. Pen shadow and contact dot in screen space, baked per frame from the nib through the camera; after the stop the shadow lifts (drifts, grows, fades).
 10. Subtitles: one Caveat layer per spoken line with a paper-coloured stroke as the halo, placed by its measured width so the write-on grows from a fixed left edge, one `bakeText` call each, fading out as the next begins.
 
-**Gotchas found while proving it**
+**Gotchas found while building it**
 
 - The paper fibres as Fractal Noise at contrast 260, Scale Height 9, Multiply 6% read as brushed metal across every beat; contrast 160, brightness +30, Scale Height 5 at 3% reads as paper.
 - A pen shadow wedge 900 px long at 20% read as a pole standing on the paper; 560 px with blur 26 at 15% reads as the pen above it.
@@ -71,7 +71,7 @@ One solo instrument, one unbroken melodic line, written to the drawing: a cello,
 
 ## 7. Dependencies
 
-Caveat Regular installed (`assets/fonts/Caveat[wght].ttf`, OFL). Node 20+ and ffmpeg for `tools/lineart.mjs`. Stock effects only: Fractal Noise, Gradient Ramp, Gaussian Blur, Tint, Linear Wipe, plus shape layers, Trim Paths, a Slider Control and one expression per line chunk (the width clamp).
+Caveat Regular installed (free (OFL) from Google Fonts, not included). Node 20+ and ffmpeg for `tools/lineart.mjs`. Stock effects only: Fractal Noise, Gradient Ramp, Gaussian Blur, Tint, Linear Wipe, plus shape layers, Trim Paths, a Slider Control and one expression per line chunk (the width clamp).
 
 ## 8. Pitfalls of the medium
 

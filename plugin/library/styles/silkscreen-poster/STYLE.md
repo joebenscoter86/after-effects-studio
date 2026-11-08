@@ -57,7 +57,7 @@ Not built into the module. Lemo's palette fits: acoustic, hand-played instrument
 5. **Main comp, bottom to top:** the WALL null (anchor and position at the last poster's place on the wall), the wood (planks, then a Fractal Noise grain layer in Overlay at 22 %), the poster layers at 104 % with a soft hang shadow and their squeegees (parented to the poster), the wall copies, the re-ink matte and blade, the pine trucks (motion blur on), then paper mottle (Overlay 14 %), fibres (Soft Light 9 %), pinholes (Screen 40 %) and grain (Noise 4 %).
 6. **Camera:** WALL holds the last poster full-frame (scale 104 / 44) until the end beat, then eases to 100 %, revealing the series.
 
-**Gotchas found while proving it**
+**Gotchas found while building it**
 
 - Bevel Alpha's handle must be taken from the `addProperty` result, not by index: on a footage layer the Fill effect comes first and index 2 is the Drop Shadow.
 - A reused poster precomp must not get its squeegees again (they are separate layers and would replay at the original times).

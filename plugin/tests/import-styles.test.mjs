@@ -112,7 +112,7 @@ test('index lists needs, adding blender when a tool calls it', async () => {
   assert.equal(native.goodFor, 'Calm product explainers');
   assert.equal(native.contentStatus, 'proven');
   assert.equal(native.contentProof, '2026-10-16');
-  assert.deepEqual(native.fonts, [{ family: 'Inter Tight', style: 'Medium', license: 'OFL-1.1' }]);
+  assert.deepEqual(native.fonts, [{ family: 'Inter Tight', style: 'Medium', license: 'OFL-1.1', source: 'Google Fonts' }]);
   const line = index.styles.find((s) => s.id === 'fixture-line');
   assert.deepEqual(line.needs, ['node']);
   assert.equal(line.goodFor, 'The fixture-line look.');
@@ -235,4 +235,82 @@ test('no shipped style file names a Content-only location', async () => {
     });
   }
   assert.deepEqual(offenders, []);
+});
+
+// ---- Second review --------------------------------------------------------------
+
+import { spawnSync } from 'node:child_process';
+
+test('3D tools stop on a missing Blender, not on a font file that is not shipped', async () => {
+  const scene = await fs.mkdtemp(path.join(os.tmpdir(), 'scene-'));
+  await write(scene, 'scene.json', JSON.stringify({ id: 't', width: 1080, height: 1920, fps: 30, duration: 1, words: 'words.json', beats: [] }));
+  await write(scene, 'words.json', '[]');
+  const runs = [
+    ['lowpoly-island/tools/plate.mjs', ['--scene', scene, '--cache', await fs.mkdtemp(path.join(os.tmpdir(), 'c-'))]],
+    ['tilt-shift/tools/plate.mjs', ['--scene', scene, '--cache', await fs.mkdtemp(path.join(os.tmpdir(), 'c-'))]],
+    ['backrooms/tools/plates.mjs', ['--scene', scene, '--cache', await fs.mkdtemp(path.join(os.tmpdir(), 'c-')), '--out', path.join(os.tmpdir(), 'p.json')]],
+  ];
+  for (const [tool, args] of runs) {
+    const r = spawnSync(process.execPath, [path.join(LIBRARY, 'styles', tool), ...args], { encoding: 'utf8', env: { ...process.env, BLENDER: '/nonexistent/Blender', FONT_PATH: '' } });
+    const out = r.stdout + r.stderr;
+    assert.notEqual(r.status, 0, `${tool} should fail without Blender`);
+    assert.doesNotMatch(out, /\.ttf|assets\/fonts/, `${tool} failed on a font: ${out.slice(0, 300)}`);
+    assert.match(out, /Blender|ENOENT.*nonexistent/i, `${tool}: ${out.slice(0, 300)}`);
+  }
+});
+
+test('no shipped style file points at font files that are not shipped', async () => {
+  const offenders = [];
+  for (const rel of await listFiles(path.join(LIBRARY, 'styles'))) {
+    if (rel.startsWith('whiteboard/assets/fonts/')) continue;
+    const text = await fs.readFile(path.join(LIBRARY, 'styles', rel), 'utf8');
+    text.split('\n').forEach((line, i) => {
+      if (/assets\/fonts\/(?!EMSTech|OFL-EMSTech)/.test(line)) offenders.push(`${rel}:${i + 1}`);
+    });
+  }
+  assert.deepEqual(offenders, []);
+});
+
+test('nothing users see names Content, its harness or its owner', async () => {
+  const CONTENT = /~\/Assets|production\/|harness|prove\.mjs|\bprov(e|es|ing)\b|go\.sh|Higgsfield|\bJoe\b|joeb|Runpod|assets\/LICENSE-lemo-opuscar/i;
+  const offenders = [];
+  const scan = (label, text) => text.split('\n').forEach((line, i) => { if (CONTENT.test(line)) offenders.push(`${label}:${i + 1}: ${line.trim().slice(0, 80)}`); });
+  for (const rel of await listFiles(path.join(LIBRARY, 'styles'))) {
+    if (rel === 'paper-collage.md') continue; // the plugin's own document, not imported from Content
+    let text = await fs.readFile(path.join(LIBRARY, 'styles', rel), 'utf8');
+    if (rel === 'index.json') text = JSON.stringify({ ...JSON.parse(text), source: undefined }, null, 2);
+    scan(rel, text);
+  }
+  scan('SKILL.md', await fs.readFile(path.join(LIBRARY, '..', 'skills', 'visual-styles', 'SKILL.md'), 'utf8'));
+  assert.deepEqual(offenders, []);
+});
+
+test('picker triggers name no brand or franchise', async () => {
+  const index = JSON.parse(await fs.readFile(path.join(LIBRARY, 'styles/index.json'), 'utf8'));
+  const triggers = index.styles.flatMap((s) => s.triggers);
+  for (const banned of [/la linea/i, /rsa animate/i, /gatsby/i, /apple/i]) {
+    assert.deepEqual(triggers.filter((t) => banned.test(t)), [], `trigger matches ${banned}`);
+  }
+  assert.deepEqual(index.styles.filter((s) => /apple/i.test(s.goodFor + s.summary)).map((s) => s.id), []);
+});
+
+test('the skill lists every style, paper collage included, with its fonts', async () => {
+  const skill = await fs.readFile(path.join(LIBRARY, '..', 'skills', 'visual-styles', 'SKILL.md'), 'utf8');
+  assert.match(skill, /\| Style \| id \| Tier \| Good for \| Fonts \| Needs \|/);
+  assert.match(skill, /paper-collage/);
+  assert.match(skill, /\| Woodcut print \| `woodcut` \| print \| [^|]+ \| IM FELL/);
+});
+
+test('plugin-side proof survives a re-import', async () => {
+  const from = await fixture();
+  const { to, skillDir } = await runImport(from);
+  const indexPath = path.join(to, 'styles', 'index.json');
+  const index = JSON.parse(await fs.readFile(indexPath, 'utf8'));
+  assert.ok(index.styles.every((s) => s.pluginProof === null));
+  index.styles.find((s) => s.id === 'fixture-native').pluginProof = { date: '2026-11-09', report: 'quality/reports/x/report.md' };
+  await fs.writeFile(indexPath, JSON.stringify(index));
+  await importStyles({ from, to, skillDir, commit: 'abc1234' });
+  const again = JSON.parse(await fs.readFile(indexPath, 'utf8'));
+  assert.deepEqual(again.styles.find((s) => s.id === 'fixture-native').pluginProof, { date: '2026-11-09', report: 'quality/reports/x/report.md' });
+  assert.equal(again.styles.find((s) => s.id === 'fixture-line').pluginProof, null);
 });

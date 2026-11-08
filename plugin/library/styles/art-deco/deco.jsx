@@ -3,7 +3,7 @@
 // luma matte over a banded metal (white = gold, grey = airbrushed gold volume, black = lacquer that hides what is behind it). One centre axis:
 // plaques, arches and doors unfold from it and fold back into it. A sunburst sits behind everything, light sweeps the gold on the hits, bulbs
 // switch on one by one with an overshoot, and one jewel colour (the mat behind the real frame) follows the protagonist.
-// Adapted from Lemo-Opuscar's art-deco style (MIT, LemoLab); see assets/LICENSE-lemo-opuscar.txt.
+// Adapted from Lemo-Opuscar's art-deco style (MIT, LemoLab); see library/styles/LICENSE-lemo-opuscar.txt.
 var AESDeco = (function () {
   var TITLE = "Limelight", NUMS = "Poiret One", SANS = "Josefin Sans", SANS_STYLE = "SemiBold";
   var PALETTE = { lacquer: [.035, .027, .016], warm: [.20, .14, .06], goldDark: [.42, .29, .10], gold: [.80, .62, .30], goldLight: [.93, .81, .52],

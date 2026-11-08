@@ -2,7 +2,7 @@
 
 > A software launch film where the interface itself is the star: a near-black stage, a hairline grid, soft cool light, one luminous accent, and UI that lands on the beat with one small overshoot.
 
-Adapted for native After Effects from Lemo-Opuscar's *Dark Tech Keynote* style (MIT, LemoLab; see `assets/LICENSE-lemo-opuscar.txt`). Grammar only: never use a real company's interface, system controls, fonts, logos or names, never draw traffic-light window buttons, menu bars or docks, and never name a real keynote in the film.
+Adapted for native After Effects from Lemo-Opuscar's *Dark Tech Keynote* style (MIT, LemoLab; see `library/styles/LICENSE-lemo-opuscar.txt`). Grammar only: never use a real company's interface, system controls, fonts, logos or names, never draw traffic-light window buttons, menu bars or docks, and never name a real keynote in the film.
 
 ## 1. What it is, and what it is not
 
@@ -52,7 +52,7 @@ Tuned percussion and pads (marimba, vibraphone, glockenspiel, celesta, a synth p
 8. **Toast**: a pill sized from the measured line, a glowing dot, the text, all parented to a null that rises in; each layer's opacity fades 0.16 s in and 0.14 s out.
 9. **The real frame**: the source clip in the window's content area, cropped by a rounded mask in layer space (`[84, 1222, 912, 640]` of the 1080 x 1920 source), `startTime` set so the beat opens on `clipStart`, audio off, revealed by the light.
 
-**Gotchas found while proving it**
+**Gotchas found while building it**
 
 - A local named `base` (the typed-line prefix) silently replaced the stage solid's variable of the same name in the same function, and the build died at the end on `base.moveToEnd`. ExtendScript has function scope only: give every layer handle in `buildScene` a name nothing else uses (`stg`).
 - A Source Text with a single key holds that value for all time, before the key too: the window title read "clip.mp4" during the picture beat. Key the first value at 0 as well (two keys in one `textKeys` call).
@@ -62,7 +62,7 @@ Tuned percussion and pads (marimba, vibraphone, glockenspiel, celesta, a synth p
 
 ## 7. Dependencies
 
-Inter Tight installed with its SemiBold and Medium styles (`assets/fonts/InterTight[wght].ttf`, OFL), IBM Plex Mono Regular and Medium (`assets/fonts/`, OFL); `AESKeynote.fontOK()` checks. Effects: `ADBE Ramp`, `ADBE Gaussian Blur 2`, `ADBE Glo2` (all stock). No tools, no generated pieces: everything is drawn in AE.
+Inter Tight installed with its SemiBold and Medium styles (free (OFL) from Google Fonts, not included), IBM Plex Mono Regular and Medium (free (OFL) from Google Fonts, not included); `AESKeynote.fontOK()` checks. Effects: `ADBE Ramp`, `ADBE Gaussian Blur 2`, `ADBE Glo2` (all stock). No tools, no generated pieces: everything is drawn in AE.
 
 ## 8. Pitfalls of the medium
 

@@ -3,7 +3,7 @@
 // a lives board and a stage badge, thick ink outlines and one hard shadow) and a run of microgames, each a shouted command word, a few
 // seconds, one action and one result, each drawn in a completely different medium (crayon, pixel, Swiss type, amber terminal). Games play
 // inside the TV; the camera pushes into the screen to start one and shrinks back out to return; everything speeds up as it goes.
-// Adapted from Lemo-Opuscar's microgame style (MIT, LemoLab); see assets/LICENSE-lemo-opuscar.txt. Host, hero and games here are our own.
+// Adapted from Lemo-Opuscar's microgame style (MIT, LemoLab); see library/styles/LICENSE-lemo-opuscar.txt. Host, hero and games here are our own.
 var AESMicrogame = (function () {
   var DISPLAY = "Titan One", ROUND = "Lilita One", PIXEL = "Silkscreen", SWISS = "Inter Tight", MONO = "VT323", HAND = "Caveat";
   function hex(h) { return [parseInt(h.substr(1, 2), 16) / 255, parseInt(h.substr(3, 2), 16) / 255, parseInt(h.substr(5, 2), 16) / 255]; }

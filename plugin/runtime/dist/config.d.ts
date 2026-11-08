@@ -74,6 +74,8 @@ export declare function unsafePointerDirWarning(dir?: string): string | null;
 export declare function uncheckedMailboxAclWarning(platform?: NodeJS.Platform): string | null;
 /** Every startup warning about the mailbox location, in report order. */
 export declare function runtimeDirWarnings(): string[];
+/** macOS: the .app bundles of After Effects releases that are running now, read from `ps` output. */
+export declare function runningAfterFxApps(psOutput?: string): string[];
 /**
  * Installed yearly releases under the default Adobe folder, newest first: any
  * "Adobe After Effects <year>" folder that holds the app (macOS) or AfterFX.exe
@@ -83,10 +85,11 @@ export declare function discoverAfterFxPaths(platform?: NodeJS.Platform, root?: 
 /**
  * Locate After Effects — AfterFX.exe on Windows, the .app bundle on macOS.
  * Honors AE_MCP_EXE (and the legacy AE_EXE name) first so the user can
- * override without editing source, then the newest installed yearly release,
- * then the known default paths for AE 2026 → 2025 → 2024.
+ * override without editing source. Then a release that is already running (so
+ * the agent talks to the After Effects the user has open), then the supported
+ * releases 2026 → 2025 → 2024, then any newer installed release, newest first.
  */
-export declare function resolveAfterFxPath(platform?: NodeJS.Platform, root?: string): string;
+export declare function resolveAfterFxPath(platform?: NodeJS.Platform, root?: string, running?: () => string[]): string;
 /** Default per-call timeout (ms) for JSX execution before we give up polling. */
 export declare const DEFAULT_TIMEOUT_MS = 60000;
 /** Poll interval (ms) while waiting for our response file to appear. */
