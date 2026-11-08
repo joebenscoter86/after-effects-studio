@@ -54,3 +54,18 @@ Server `instructions`: changed (2C/2D) from "Before designing or building motion
 
 - These are shared `plugin/` changes (D-014 decision 1). The Codex bundle `plugin/runtime/dist/index.js` was rebuilt with `node plugin/scripts/build.mjs`; Codex users receive the wording and dependency updates in the next Codex version after its normal tests, never in a frozen candidate.
 - Remaining limits: whether a reviewer accepts one generic destructive dispatcher is unknown until review; the plan keeps it and answers a hold with these notes.
+
+## Style library (CL-9)
+
+Reviewed on 2026-11-08 after the import of 30 styles (Content commit `628f1c52`): each style's title, summary and `STYLE.md` section 1, plus a scan of every `STYLE.md` for product, brand, franchise and named-creator references. Checks: policy sections 1 and 2 (no facilitation of infringement, accurate descriptions, no instruction to call other software) and whether a name or text imitates a specific product, franchise or living artist's protected work.
+
+| Finding | Styles | Verdict |
+|---|---|---|
+| Titles and ids name genres, techniques or periods (art deco, blueprint, CRT terminal, risograph, ukiyo-e, rubber hose, silent film, spy titles, game show, tilt-shift, and so on) | all 30 | Pass. Genre names, not products or franchises. `backrooms` is titled "Liminal found footage" and names an internet-folklore setting, not a work. |
+| Named historical artists and traditions (Hokusai, Hiroshige, Masereel, Lynd Ward, Kollwitz, Doré, Lotte Reiniger) | ukiyoe, woodcut, engraving, paper-lantern | Pass. Each note limits itself to grammar and says not to copy plates, figures, borders or titles. |
+| Trademarked words used descriptively: "Risograph" (the printing process), "Helvetica" (named only as a font not to use), "Keynote" (a launch event), "Apple silicon" (render timing note), "Mickey-mousing" (the film-scoring term) | risograph, swiss-motion, dark-keynote, glass-product, rubber-hose, silent-film | Pass. Nominative or generic use; no logo, product UI or character. |
+| Explicit anti-copying guards in the notes ("not a Chaplin pastiche", "not a spy parody with gadgets and gun barrels", "never name a real institution on a poster") | silent-film, spy-titles, swiss-motion and others | Pass. |
+| Instructions to call other software | all 30 | Pass. Tools are local Node scripts the agent runs only when a build needs them; the README discloses ffmpeg and Blender. |
+| Image generation | all 30 | Pass. Styles needing generated pieces were excluded (policy 4B); the 3D styles render with local Blender, not a generator. |
+
+No renames or rewording were needed. Upstream attribution: Lemo-Opuscar (MIT, Copyright (c) 2026 LemoLab) in `THIRD-PARTY-NOTICES.txt`, `PROVENANCE.md` and `library/styles/LICENSE-lemo-opuscar.txt`.
