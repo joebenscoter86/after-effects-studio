@@ -51,7 +51,7 @@ function readLibrary(document, query, root = path.resolve(PACKAGE_ROOT, "../libr
           return true;
         }
         return false;
-      }),
+      }).map(({ id, title, kind }) => ({ id, title, kind })),
       modules: matches.map(({ id, kind, title, summary, entryDocument, requires, tags, evidence }) => ({ id, kind, title, summary, entryDocument, requires, tags, evidence }))
     };
   }

@@ -208,9 +208,43 @@ test('notices credit the style library source', async () => {
   assert.match(notices, /Copyright \(c\) 2026 LemoLab/);
 });
 
-test('vendored modules are not ignored by git', () => {
-  const r = spawnSync('git', ['check-ignore', '-q', 'claude/after-effects-studio/runtime/node_modules/zod/package.json'], { cwd: ROOT });
-  assert.equal(r.status, 1, 'the vendored runtime would be dropped from a Git-based install');
+test('no file of the built package is ignored by git', async () => {
+  const { outDir, files } = await sharedBuild();
+  const { name } = JSON.parse(await fs.readFile(path.join(ROOT, 'claude/src/plugin.json'), 'utf8'));
+  assert.equal(path.basename(outDir), name);
+  const input = files.map((f) => `claude/${name}/${f}`).join('\n') + '\n';
+  const r = spawnSync('git', ['check-ignore', '--stdin', '--no-index'], { cwd: ROOT, input, encoding: 'utf8' });
+  assert.equal(r.stdout, '', 'these files would be dropped from a Git-based install');
+});
+
+test('a renamed package keeps its vendored runtime in git', () => {
+  const r = spawnSync('git', ['check-ignore', '-q', '--no-index', 'claude/renamed-plugin/runtime/node_modules/zod/package.json'], { cwd: ROOT });
+  assert.equal(r.status, 1, 'the ignore exception must not depend on the plugin name');
+});
+
+test('the committed package matches a fresh build', () => {
+  const r = spawnSync(process.execPath, [BUILDER, '--check'], { encoding: 'utf8' });
+  assert.equal(r.status, 0, `rebuild with node release/build-claude-package.mjs and commit:\n${r.stdout}`);
+});
+
+test('refuses to clear a folder that is not a previous build', async () => {
+  const outDir = await tmp('claude-userdir-');
+  await write(outDir, 'notes.txt', 'mine\n');
+  await assert.rejects(buildClaudePackage({ outDir }), /refus/i);
+  assert.equal(await fs.readFile(path.join(outDir, 'notes.txt'), 'utf8'), 'mine\n');
+  const empty = await tmp('claude-empty-');
+  await buildClaudePackage({ outDir: empty });
+  await fs.access(path.join(empty, '.claude-plugin/plugin.json'));
+});
+
+test('vendored versions must match the lockfile', async () => {
+  const { checkLockedVersions } = await import('../claude-runtime.mjs');
+  const dir = await tmp('claude-lock-');
+  await write(dir, 'package-lock.json', JSON.stringify({ packages: { 'node_modules/zod': { version: '4.6.7' }, 'node_modules/@x/y': { version: '1.0.0' } } }));
+  await write(dir, 'node_modules/zod/package.json', JSON.stringify({ name: 'zod', version: '4.4.3' }));
+  await write(dir, 'node_modules/@x/y/package.json', JSON.stringify({ name: '@x/y', version: '1.0.0' }));
+  const problems = await checkLockedVersions(dir, [path.join(dir, 'node_modules/zod'), path.join(dir, 'node_modules/@x/y')]);
+  assert.deepEqual(problems, ['zod 4.4.3 is installed but the lockfile has 4.6.7']);
 });
 
 test('builder fails cleanly without installed deps', async () => {

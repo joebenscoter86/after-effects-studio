@@ -22,8 +22,9 @@ Published by JB Technology LLC. Free for personal and paid client work, includin
 
 ## What it runs and sends
 
-- **A local server.** Claude starts `node start.mjs` from the plugin folder, which runs the bundled server in `runtime/` over standard input and output. It opens no network port, uses no cloud relay and needs no account.
+- **A local server.** Claude runs the plugin's `start.mjs` with Node, which starts the bundled server in `runtime/` and talks to Claude over standard input and output. It opens no network port, uses no cloud relay and needs no account.
 - **After Effects scripting.** The server asks macOS to run scripts in After Effects and exchanges temporary request and response files with it in a per-user temporary folder.
+- **After Effects dialogs.** When a modal dialog blocks scripting, the server reads its text to report it, which needs macOS Accessibility permission for the app running Claude. The `instance.dismiss_dialog` operation can close such a dialog by its cancel action (what Escape does) or press the only button of a one-button warning; it never answers a save prompt with Save or Don't Save.
 - **Write access, on by default.** Through its tools, Claude can create, change and delete items in the open project; open, close and save projects; render frames and movies to paths you choose; run After Effects menu commands; change After Effects preferences; and start or stop After Effects.
 - **Custom scripting, on by default.** The `eval.run` operation runs custom ExtendScript with your user account's access to After Effects, your files and system commands. Treat a script like any code you run.
 - **Turning things off.** Start Claude with `AE_MCP_ENABLE_EVAL=0` to remove custom scripting, or `AE_MCP_READONLY=1` to make the session inspection-only, for example `AE_MCP_READONLY=1 claude`.

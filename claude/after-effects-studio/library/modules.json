@@ -168,6 +168,75 @@
         "visual": "accepted",
         "reports": ["quality/reports/2026-10-17-collage-helpers/report.md", "quality/reports/2026-10-17-collage-acceptance/report.md", "quality/reports/2026-10-17-combined-motion/report.md"]
       }
+    },
+    {
+      "id": "visual-styles",
+      "kind": "style",
+      "title": "Visual style library",
+      "summary": "Thirty named looks, each with a written grammar, an After Effects recipe and a worked ES3 module; choose one and adapt it to the brief.",
+      "tags": [
+        "visual style",
+        "named look",
+        "art direction",
+        "style library",
+        "print",
+        "native",
+        "3d"
+      ],
+      "whenToUse": [
+        "The user names a look from the style index, asks which styles exist, or wants help choosing a visual style."
+      ],
+      "whenNotToUse": [
+        "Ordinary motion work with the user's own brand or style; the foundation alone covers it."
+      ],
+      "entryDocument": "style-index",
+      "requires": [
+        "foundation"
+      ],
+      "documents": [
+        "style-index",
+        "style-lib-jsx"
+      ],
+      "compatibleWith": [
+        "typography"
+      ],
+      "inputs": [
+        {
+          "name": "style",
+          "required": true,
+          "default": null,
+          "constraints": "An id from style-index, or the closest match to the look the user describes, with the difference stated."
+        },
+        {
+          "name": "subject and takeaway",
+          "required": true,
+          "default": null,
+          "constraints": "The style is a grammar for the user's subject, not a template."
+        }
+      ],
+      "assetRequirements": [
+        "Footage tools need the user's own input files; the 3D styles render plates with Blender. No generated art is required."
+      ],
+      "fontRequirements": [
+        "Each style names free font families; use installed faces or an approved fallback and remeasure."
+      ],
+      "fallbacks": [
+        "If a tool's prerequisite is missing, build the native layers of the recipe and say which treatment was skipped."
+      ],
+      "examples": [
+        "style-index"
+      ],
+      "reviewChecks": [
+        "Rendered frames read as the style described in its STYLE.md, plus the foundation's read order, clearance and continuity checks."
+      ],
+      "provenanceRefs": [
+        "content-style-library"
+      ],
+      "evidence": {
+        "technical": "not-tested",
+        "visual": "not-reviewed",
+        "reports": []
+      }
     }
   ]
 }

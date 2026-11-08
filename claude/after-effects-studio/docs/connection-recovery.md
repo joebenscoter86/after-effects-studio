@@ -4,6 +4,7 @@ Start with `node scripts/doctor.mjs` in the installed plugin folder. It checks N
 
 | Result | What it establishes | Next action |
 |---|---|---|
+| The server does not start, or no After Effects Studio tools appear | The host could not run Node.js 24+: Node is missing, too old, or installed where a desktop app does not look (Homebrew or nvm). The server prints a Node.js 24 message when it is too old. | Run `node -v` in Terminal. Install Node.js 24 or newer with the installer from nodejs.org, then restart the agent host. Your host's MCP or plugin status view shows whether the server started; in Claude Code that is `/mcp`. |
 | Doctor reports missing AE or a bad `AE_MCP_EXE` path | AE was not found at a supported path; no native call was made | Install/open licensed AE 2026 or point `AE_MCP_EXE` to its `.app` bundle, restart the agent host and rerun doctor. |
 | `AE_NOT_FOUND` or `NO_INSTANCE` | The requested AE executable or running target was unavailable. The error names whether a request was discarded before pickup. | Check the named app/instance and any open dialog. Open AE and retry a **read-only** context check. Do not open or replace a project as a connectivity test. |
 | `AUTOMATION_DENIED` | AppleScript reported macOS denial (`-1743` or explicit Apple-events text); the request was not dispatched into AE. | In System Settings → Privacy & Security → Automation, allow the agent host to control Adobe After Effects. Then retry a read-only context check. Do not treat a generic timeout as proof of this permission state. |

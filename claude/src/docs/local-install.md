@@ -1,6 +1,6 @@
 # Installation and update
 
-After Effects Studio installs from the `jb-technology` marketplace in the public repository `joebenscoter86/after-effects-studio`. Nothing is cloned or built on your Mac, and no npm install runs.
+After Effects Studio installs from the `jb-technology` marketplace in the public repository `joebenscoter86/after-effects-studio`. Adding the marketplace downloads the repository; nothing is built on your Mac and no npm install runs.
 
 ## Requirements
 
@@ -46,7 +46,7 @@ To forget the marketplace as well, run `claude plugin marketplace remove jb-tech
 
 ## Check the installation
 
-From the plugin's installed folder, `node scripts/doctor.mjs` checks Node, the package files and the After Effects path without launching After Effects. A passing result does not prove that macOS Automation or After Effects scripting permission works; the read-only check in [your first motion scene](first-session.md) does.
+From the plugin's installed folder (Claude Code keeps it under `~/.claude/plugins/cache/jb-technology/after-effects-studio/`), `node scripts/doctor.mjs` checks Node, the package files and the After Effects path without launching After Effects. A passing result does not prove that macOS Automation or After Effects scripting permission works; the read-only check in [your first motion scene](first-session.md) does.
 
 ## Local development
 

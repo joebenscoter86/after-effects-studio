@@ -15,7 +15,7 @@
 - Start from the head of `public/main`. Never edit `codex/planning-release-candidate` or any frozen Codex candidate. `plugin/skills/motion-studio/SKILL.md` also changed on that branch; expect a merge conflict when it lands and keep both intents.
 - `plugin/` stays the single maintained source. Never hand-edit `claude/after-effects-studio/`; it is builder output.
 - Package rules (blocking or held): `.claude-plugin/plugin.json` present; README of at least 40 words; LICENSE present; no `.DS_Store`, symlinks, submodules or LFS pointers; no path outside the plugin folder; no top-level `bin/`; no lockfile anywhere and no `package.json` at the package root; every non-image, non-font file under 256 KiB (262,144 bytes); at most 512 files.
-- The MCP server starts as plain `node ${CLAUDE_PLUGIN_ROOT}/start.mjs`, with no `cwd`, shell, `npm run` or launcher. Keep `AE_MCP_ENABLE_EVAL=1` in its `env`.
+- The MCP server starts as plain `node ${CLAUDE_PLUGIN_ROOT}/start.mjs`, with no `cwd`, shell, `npm run` or launcher, and no `env` override: `start.mjs` turns custom scripting on when `AE_MCP_ENABLE_EVAL` is unset, so a user's `AE_MCP_ENABLE_EVAL=0` still works. (Amended after Task 6: an `env` entry in the config overrode the user's choice.)
 - `start.mjs` exits with the existing Node 24 message when `process.versions.node` major is below 24.
 - The MCP server name stays `after-effects-studio`. The plugin name is read from `claude/src/plugin.json`; Joe may still rename it, so no code hard-codes it.
 - The Claude marketplace name is `jb-technology`, matching the Codex catalog, so documented install commands are `claude plugin marketplace add joebenscoter86/after-effects-studio` then `claude plugin install <name>@jb-technology`.
@@ -28,7 +28,7 @@
 - **Vendored dependencies dropped by `.gitignore`.** The root `.gitignore` ignores every `node_modules/`, so a Git-based install would lack `zod` and the server would crash at start. Pinned by the `git check-ignore` test in Task 2.
 - **Server launched from an unrelated working directory.** Claude starts servers from the user's project folder, not the plugin root. Pinned by the Task 3 smoke run with `cwd` set to a temp directory.
 - **Install path containing spaces.** Desktop app plugin paths can sit under `Application Support`. Pinned by the Task 3 smoke run from a copied package path containing a space.
-- **Stale Claude package after a `plugin/` edit.** A library or skill change without a rebuild ships old content. Pinned by `--check` drift detection in Task 1 and the byte-for-byte comparison test.
+- **Stale Claude package after a `plugin/` edit.** A library or skill change without a rebuild ships old content. Pinned by the release test that runs `--check` against the committed package (added in the final-review fix pass; the byte-for-byte test only compares a fresh build with `plugin/`).
 - **Library hash mismatch after shared wording edits.** Editing `quality.md` without regenerating `library/manifest.json` makes `ae_library` reject the document. Pinned by Task 5's manifest regeneration and the existing library tests.
 
 ---

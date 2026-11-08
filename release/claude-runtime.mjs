@@ -39,6 +39,19 @@ function packageRootOf(file, nodeModules) {
   throw new Error(`no package root for ${file}`);
 }
 
+// Each vendored package must be the version package-lock.json pins; a stale node_modules would ship old code.
+export async function checkLockedVersions(pluginRuntimeDir, packageRoots) {
+  const lock = JSON.parse(await fs.readFile(path.join(pluginRuntimeDir, 'package-lock.json'), 'utf8'));
+  const problems = [];
+  for (const root of packageRoots) {
+    const rel = path.relative(pluginRuntimeDir, root).split(path.sep).join('/');
+    const { name, version } = JSON.parse(await fs.readFile(path.join(root, 'package.json'), 'utf8'));
+    const locked = lock.packages?.[rel]?.version;
+    if (locked !== version) problems.push(`${name} ${version} is installed but the lockfile has ${locked ?? 'no entry'}`);
+  }
+  return problems;
+}
+
 export async function buildReadableRuntime(pluginRuntimeDir, outRuntimeDir) {
   const nodeModules = path.join(pluginRuntimeDir, 'node_modules');
   if (!existsSync(path.join(nodeModules, 'esbuild')) || !existsSync(path.join(nodeModules, '@modelcontextprotocol'))) {
@@ -86,6 +99,8 @@ export async function buildReadableRuntime(pluginRuntimeDir, outRuntimeDir) {
       if (dir === root) break;
     }
   }
+  const stale = await checkLockedVersions(pluginRuntimeDir, [...roots]);
+  if (stale.length) throw new Error(`installed dependencies differ from package-lock.json (${stale.join('; ')}); run npm ci --ignore-scripts in ${pluginRuntimeDir}`);
   for (const root of roots) {
     const license = LICENSE_NAMES.find((n) => existsSync(path.join(root, n)));
     if (!license) throw new Error(`missing license file for vendored package at ${root}`);

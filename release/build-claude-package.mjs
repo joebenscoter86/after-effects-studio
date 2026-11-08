@@ -60,6 +60,13 @@ export async function buildClaudePackage({ outDir, runtime = buildReadableRuntim
   const manifest = JSON.parse(await fs.readFile(path.join(claudeSrc, 'plugin.json'), 'utf8'));
   const out = assertSafeOutDir(outDir ?? path.join(ROOT, 'claude', manifest.name), path.resolve(claudeSrc));
 
+  // Clear only an empty folder or a previous build, never someone's other files.
+  if (await exists(out)) {
+    const entries = await fs.readdir(out);
+    if (entries.length && !(await exists(path.join(out, '.claude-plugin', 'plugin.json')))) {
+      throw new Error(`refusing to clear ${out}: it is not empty and holds no previous plugin build`);
+    }
+  }
   await fs.rm(out, { recursive: true, force: true });
   await fs.mkdir(out, { recursive: true });
 
