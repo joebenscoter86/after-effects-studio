@@ -1,6 +1,6 @@
 # Connection and permission recovery
 
-Start with `node scripts/doctor.mjs` in the installed plugin folder. It checks Node, package files and the AE path without launching AE. A passing result does **not** verify macOS Automation or AE scripting permission. In a new Codex task, ask the plugin for `ae_version_info` and `ae_context` before allowing a project write.
+Start with `node scripts/doctor.mjs` in the installed plugin folder. It checks Node, package files and the AE path without launching AE. A passing result does **not** verify macOS Automation or AE scripting permission. In a new task, ask the plugin for `ae_version_info` and `ae_context` before allowing a project write.
 
 | Result | What it establishes | Next action |
 |---|---|---|

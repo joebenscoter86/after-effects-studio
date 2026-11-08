@@ -2,7 +2,7 @@
 
 ## Model choice and review effort
 
-For ambitious visual work, recommend an available GPT-6-family model or newer, with GPT-6.1 Sol or GPT-6 Astra as starting points for complex composition and continuity. This is a quality recommendation, not a prerequisite for using the native tools. A controlled local study showed that GPT-5.6 Luna/high could save, edit and export the tested scenes yet missed viewer-visible layout or material faults in three of six first-pass movies; separate GPT-6 Astra/high confirmations cleared those sampled faults. Other GPT-6 variants were not tested in that comparison. No model name is a quality guarantee: inspect the delivered frames and playback, especially at the first settled state after a transfer and after swapping assets with different geometry.
+For visually demanding builds, suggest the most capable model available in your host. A lower-cost model can still build editable drafts; treat its render as a draft until the delivered frames pass visual review. Do not switch models without the user's choice, and never treat model choice as creative acceptance.
 
 ## Design and motion review
 
