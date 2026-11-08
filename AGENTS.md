@@ -25,6 +25,7 @@ This repository is the canonical development workspace. Read this map first, the
 | Improve motion knowledge | plugin/context.md, relevant library module, plugin/evals/evals.json | Unrelated runtime code | Skill Creator; local plugin/skills/motion-studio/SKILL.md |
 | Test motion or reliability | quality/context.md, quality/release-criteria.md, relevant scenario | Marketing drafts | Local plugin/skills/motion-review/SKILL.md and plugin/skills/ae-control/SKILL.md |
 | Prepare a public release | release/context.md, release/release-plan.md, verified quality reports | Unrelated implementation | Plugin Creator |
+| Prepare the Claude release | product/claude-release-plan.md, D-014, quality/reports/2026-11-08-claude-directory-route/research.md | Codex marketplace and install docs | `claude plugin validate --strict` |
 | Audit this workspace | AGENTS.md and the four context.md files | Render contents | Workspace Architect |
 
 External skills are development aids, not end-user dependencies. Resolve their installed SKILL.md when needed. Do not load every skill at startup.
@@ -42,3 +43,5 @@ Inspect the exact current AE project before native writes. Only one controller o
 ## Where to resume
 
 Read product/release-execution-plan.md for the detailed D-013 plan approved 2026-10-13, then the current Linear ticket. product/roadmap.md retains evidence context; product/build-plan.md defines six stages; product/backlog.md maps the baseline and follow-up tickets. Linear owns live execution status. Recovery, separate-Mac installation, source/rights review, page preparation and lifecycle tests can proceed independently. AFT-32 publishes reviewed infrastructure only after authorization; AFT-34 rehearses real public-Git installation before AFT-23 freezes the Codex candidate. AFT-24/AFT-25 handle Codex launch; AFT-30/AFT-35/AFT-36 handle the separate nonblocking directory path. Scaffold and planning completion do not close release requirements.
+
+The Claude release is a separate track (D-014): read product/claude-release-plan.md. Its CL-keys are local planning keys until Linear tickets exist. The Claude package is generated from plugin/; never edit generated output by hand.
