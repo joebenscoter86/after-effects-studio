@@ -186,6 +186,9 @@ Done when: the listing is live, it installs from the directory on a clean Claude
 ## Still open for Joe
 
 1. **Plugin name.** `after-effects-studio` will likely be held as a brand match for Adobe. Keep it and explain the descriptive use to the reviewer, or choose a distinct slug while keeping "After Effects Studio" as the display name (D-009). Settle it before CL-4 finalizes docs; renaming after CL-6 breaks existing installs.
+   - Checked 2026-11-09: the directory's brand check covers `name`, `displayName` and `author.name` alike ("can't be mistaken for an existing plugin, publisher, connector, or well-known brand that isn't yours", [pre-submission checklist](https://claude.com/docs/plugins/pre-submission-checklist)); a hold is not a rejection. A new slug under the same display name does not avoid it.
+   - Adobe's [trademark page](https://www.adobe.com/legal/permissions/trademarks.html), in its section for plug-in and extension developers, says a developer "may not incorporate or include any Adobe trademark in your ... product name", and allows referential use such as "[Your product name] plug-in for Adobe Photoshop®". "After Effects Studio" puts the mark in the product name; a distinct name described as "for Adobe After Effects" is the permitted form. The same applies to the published Codex package and the repository name, which is a separate call.
+   - No Claude listing or install exists yet, so renaming the Claude package now costs no user an install.
 2. **Marketplace publication** at CL-6.
 3. **Directory submission and terms** at CL-8, plus the monitored contact email and the paid Claude account or organization that submits as JB Technology LLC.
 4. ~~The CL-10 reel~~: done 2026-11-09 (army of agents, rebuilt through the plugin; Joe: "Yes, it counts"). Still his: whether to merge Content branch `cl10-plugin-route`.
