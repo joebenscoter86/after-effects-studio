@@ -22,9 +22,15 @@ registerOp({
   undoGroup: () => false,
   toJsx(args) {
     return `
-            if (${jsxVal(!!args.save)} && app.project.file) app.project.save();
             var f = new File(${jsxVal(args.path)});
             if (!f.exists) return { ok: false, error: "file not found: " + ${jsxVal(args.path)} };
+            if (${jsxVal(!!args.save)}) {
+                if (app.project.dirty && !app.project.file) return { ok: false, error: "the open project is untitled and has unsaved changes: Save As first (ae_save_project with path), or open with save false to discard them" };
+                if (app.project.dirty) app.project.save();
+            } else if (app.project.dirty) {
+                // dialogs are suppressed, and AE answers app.open's "save changes?" with its default, Save: close without saving first
+                app.project.close(CloseOptions.DO_NOT_SAVE_CHANGES);
+            }
             app.open(f);
             // A project saved by an older After Effects opens as an untitled converted copy: no file until it is saved
             if (!app.project.file) return { ok: true, numItems: app.project.numItems, file: null, untitled: true,
