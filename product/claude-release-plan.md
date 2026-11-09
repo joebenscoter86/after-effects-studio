@@ -81,7 +81,7 @@ after-effects-studio/
 | CL-7 | Separate-Mac install and native journey from the public marketplace | CL-6 |
 | CL-8 | Directory submission, review and listing verification | CL-7, Joe's authorization |
 
-Keys are stable identifiers; the table and the sections below are in working order. CL-2, CL-3 and CL-9 change shared `plugin/` content. Re-run the Codex runtime tests, library hash checks and smoke checks after them so the Codex package stays good. CL-1–CL-4 have an implementation plan ([claude-implementation-plan.md](claude-implementation-plan.md)); CL-9 has [claude-style-library-plan.md](claude-style-library-plan.md) and CL-10 has [claude-reel-acceptance-plan.md](claude-reel-acceptance-plan.md) (written 2026-11-09, waiting on Joe's review).
+Keys are stable identifiers; the table and the sections below are in working order. CL-2, CL-3 and CL-9 change shared `plugin/` content. Re-run the Codex runtime tests, library hash checks and smoke checks after them so the Codex package stays good. CL-1–CL-4 have an implementation plan ([claude-implementation-plan.md](claude-implementation-plan.md)); CL-9 has [claude-style-library-plan.md](claude-style-library-plan.md) and CL-10 has [claude-reel-acceptance-plan.md](claude-reel-acceptance-plan.md) (Joe approved it 2026-11-09; Tasks 1 to 3, the Content change, are done on Content branch `cl10-plugin-route`, not merged; the rehearsal and the reel are next).
 
 ### CL-1 — Claude package builder
 

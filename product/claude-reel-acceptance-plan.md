@@ -62,11 +62,11 @@
 
 **Interfaces:**
 - Consumes: Task 1's manifest and exit 3.
-- Produces: `new_reel.sh` on the plugin route sets `AE_OPEN=<rig>/house-rig.aep` and `AE_SAVEAS=<reel .aep>` for its setup call (they land in the manifest's `open` and `saveAs`) and drops the setup script's own `app.open`/`app.project.save(new File(...))` lines. `render.sh` accepts `PURGED=1`.
+- Produces: `new_reel.sh` on the plugin route sets `AE_OPEN=<rig>/house-rig.aep` and `AE_SAVEAS=<reel .aep>` for its setup call (they land in the manifest's `open` and `saveAs`) and drops the setup script's own `app.open`/`app.project.save(new File(...))` lines. `render.sh` on the plugin route renders only after a `.plugin-purged` stamp newer than `modes.json` (as built: the first draft's `PURGED=1` flag could be exported and skip later purges).
 
 - [ ] **Step 1: Write the failing tests:**
   - `test_new_reel_setup_hands_off_the_project_step`: the manifest has `open` ending `house-rig.aep` and `saveAs` the reel's `.aep`; the script has no `app.open(`. `new_reel.sh` stops after the setup handoff with the next command to run once it has been run.
-  - `test_render_on_the_plugin_route_wants_the_purge_first`: without `PURGED=1` it exits 1 before aerender, naming `project.purge`; with it, step 2 is skipped and `checks.txt` says the purge ran through the plugin.
+  - `test_render_on_the_plugin_route_wants_the_purge_first`: without a fresh stamp, or while a handoff waits, it exits 1 before aerender, naming `project.purge`; with one, step 2 is skipped, the stamp is used up and `checks.txt` says the purge ran through the plugin.
   - `test_sheet_on_the_plugin_route_points_at_ae_render_frame` and `test_wait_on_the_plugin_route_says_the_call_waits`: exit 1 with that message.
 - [ ] **Step 2: Run them.** Expected: fail.
 - [ ] **Step 3: Implement** the four changes; each is a guarded branch at the top of its script.
@@ -77,7 +77,7 @@
 
 This is the procedure the Content session follows; it is written in Task 2's commit and checked here against the plugin's real tool names.
 
-- [ ] **Step 1: Write the runbook.** Before the night: the bridge connector off for the session, the proxy stopped (`pgrep -f higgsfield-bridge-proxy` shows nothing), `ae_context` answers through the plugin, `ae_project_info` read and recorded. For each handoff: read the manifest; if the open project is dirty and not the reel's, stop for Joe; `open` → `ae_do` `project.open`; `saveAs` → `ae_save_project` with `path`; `project` not open → `project.open`; then `ae_do` `eval.run` `return $.evalFile(<script>);` with `timeoutMs` 1,800,000; then delete the manifest and its script. On a timeout: poll `ae_project_info` every 30 s up to 30 min, then read `/tmp/house-last.log`. Contact sheets: `ae_render_frame` with `contactSheet` `{columns: 3, thumbWidth: 466}`, saved to the reel's `qc/`. Before `render.sh`: `ae_do` `project.purge` `all`, then `PURGED=1 ../../house/render.sh <tag>`.
+- [ ] **Step 1: Write the runbook.** Before the night: the bridge connector off for the session, the proxy stopped (`pgrep -f higgsfield-bridge-proxy` shows nothing), `ae_context` answers through the plugin, `ae_project_info` read and recorded. For each handoff: read the manifest; if the open project is dirty and not the reel's, stop for Joe; `open` → `ae_do` `project.open`; `saveAs` → `ae_save_project` with `path`; `project` not open → `project.open`; then `ae_do` `eval.run` `return $.evalFile(<script>);` with `timeoutMs` 1,800,000; then delete the manifest and its script. On a timeout: poll `ae_project_info` every 30 s up to 30 min, then read `/tmp/house-last.log`. Contact sheets: `ae_render_frame` with `contactSheet` `{columns: 3, thumbWidth: 466}`, saved to the reel's `qc/`. Before `render.sh`: `ae_do` `project.purge` `all`, then `touch .plugin-purged`, then `../../house/render.sh <tag>`. (As built, the dirty-project rule is exact: stop unless the open project's path is the manifest's `project`; after a timeout, accept only logs newer than the manifest.)
 - [ ] **Step 2: Check every tool and operation name** in the runbook against `ae_catalog` and the server's tool list through the installed package (read-only call). Expected: all exist.
 
 ### Task 4: Rehearsal on a scratch reel (A/B against the bridge)
@@ -87,7 +87,7 @@ Proves the route before a real reel touches it. Needs After Effects free and Joe
 The reference build `production/after-effects/2026-10-28-house-brief-test/` has hand-filled section files and no `words.json`, so the rehearsal reuses its build files rather than a fresh scaffold.
 
 - [ ] **Step 1: Bridge route.** `new_reel.sh 2026-11-xx-cl10-rehearsal-bridge <the reference reel's take>`, then copy the reference reel's `scripts/` build files (`00-reset.jsx`, `b*.jsx`, `STYLES`, and `THEME` and `LOOK` if present; not `PROJECT`, `LOCKED` or `build.sh`) into the new `scripts/`, and run `./build.sh`, timing it. Record `last-build.log`, `modes.json`, `titles.json`.
-- [ ] **Step 2: Plugin route.** Turn the bridge off and stop the proxy, then repeat Step 1 with `AE_ROUTE=plugin` as `2026-11-xx-cl10-rehearsal-plugin`, running each handoff (the setup's included) through the runbook. Expected: `modes.json` and `titles.json` identical to Step 1's; `last-build.log` has no `ERR`; no UndoGroup dialog; `project.undo` answers afterwards.
+- [ ] **Step 2: Plugin route.** Turn the bridge off and stop the proxy, then repeat Step 1 with `AE_ROUTE=plugin` as `2026-11-xx-cl10-rehearsal-plugin`, running each handoff (the setup's included) through the runbook. Expected: `modes.json` and `titles.json` identical to Step 1's; `last-build.log` has no `ERR`; no UndoGroup dialog; `project.undo` answers afterwards; the hook card's curly quotes render as quotes, not `â€œ` (the handoff is UTF-8 with a BOM; confirm After Effects reads it so).
 - [ ] **Step 3: Render both** with `render.sh`. Expected: both `checks.txt` PASS and the contact sheets match frame for frame by eye.
 - [ ] **Step 4: Clean up** both scratch reels' projects and folders by name; leave After Effects as found. Write the rehearsal into the CL-10 report as its first section.
 
