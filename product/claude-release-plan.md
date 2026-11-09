@@ -81,7 +81,7 @@ after-effects-studio/
 | CL-7 | Separate-Mac install and native journey from the public marketplace | CL-6 |
 | CL-8 | Directory submission, review and listing verification | CL-7, Joe's authorization |
 
-Keys are stable identifiers; the table and the sections below are in working order. CL-2, CL-3 and CL-9 change shared `plugin/` content. Re-run the Codex runtime tests, library hash checks and smoke checks after them so the Codex package stays good. CL-1–CL-4 have an implementation plan ([claude-implementation-plan.md](claude-implementation-plan.md)); CL-9 has [claude-style-library-plan.md](claude-style-library-plan.md) and CL-10 has [claude-reel-acceptance-plan.md](claude-reel-acceptance-plan.md) (Joe approved it 2026-11-09; Tasks 1 to 3, the Content change, are done on Content branch `cl10-plugin-route`, not merged; Task 4, the rehearsal, passed after two `project.open` fixes; Task 5, Joe's posted army-of-agents reel rebuilt through the plugin, matches its master frame for frame, technical Pass, [report](../quality/reports/2026-11-09-claude-reel-acceptance/report.md); Joe's word on it is open).
+Keys are stable identifiers; the table and the sections below are in working order. CL-2, CL-3 and CL-9 change shared `plugin/` content. Re-run the Codex runtime tests, library hash checks and smoke checks after them so the Codex package stays good. CL-1–CL-4 have an implementation plan ([claude-implementation-plan.md](claude-implementation-plan.md)); CL-9 has [claude-style-library-plan.md](claude-style-library-plan.md) and CL-10 has [claude-reel-acceptance-plan.md](claude-reel-acceptance-plan.md) (Joe approved it 2026-11-09; Tasks 1 to 3, the Content change, are done on Content branch `cl10-plugin-route`, not merged; Task 4, the rehearsal, passed after two `project.open` fixes; Task 5, Joe's posted army-of-agents reel rebuilt through the plugin, matches its master frame for frame, [report](../quality/reports/2026-11-09-claude-reel-acceptance/report.md); **CL-10 passed**, Joe 2026-11-09: "Yes, it counts").
 
 ### CL-1 — Claude package builder
 
@@ -188,7 +188,8 @@ Done when: the listing is live, it installs from the directory on a clean Claude
 1. **Plugin name.** `after-effects-studio` will likely be held as a brand match for Adobe. Keep it and explain the descriptive use to the reviewer, or choose a distinct slug while keeping "After Effects Studio" as the display name (D-009). Settle it before CL-4 finalizes docs; renaming after CL-6 breaks existing installs.
 2. **Marketplace publication** at CL-6.
 3. **Directory submission and terms** at CL-8, plus the monitored contact email and the paid Claude account or organization that submits as JB Technology LLC.
-4. **The CL-10 reel** and approval of the `go.sh` change on a Content branch.
+4. ~~The CL-10 reel~~: done 2026-11-09 (army of agents, rebuilt through the plugin; Joe: "Yes, it counts"). Still his: whether to merge Content branch `cl10-plugin-route`.
+5. **License 1.1 text** (`product/license-1.1-draft.md`) and **which After Effects versions to advertise** (the README says 2026; testing ran on 2027), both before CL-6.
 
 ## Calls made in planning
 

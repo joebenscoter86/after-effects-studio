@@ -75,7 +75,7 @@ Joe chose the army-of-agents reel (`2026-11-08-projects-part-three`), posted tod
 - **Picture against the posted master `army-of-agents.mp4`:** the same picture result, 0 failing frames. The audio differs only by the music bed (g2), which is mixed outside After Effects.
 - **Evidence:** `quality/renders/2026-11-09-cl10-army-of-agents/` (render, five contact sheets, checks, build record and logs, and `army-side-by-side.png`, two moments master against copy).
 
-**Result: technical Pass.** Every After Effects operation from the build on went through the plugin, and the picture is the one Joe accepted and posted. Joe's acceptance is his to record.
+**Result: Pass.** Technical: every After Effects operation from the build on went through the plugin, and the picture is the one Joe accepted and posted. Joe's acceptance (2026-11-09, recorded separately from the technical result): asked whether this rebuild counts as CL-10's pass, he answered "Yes, it counts".
 
 What this run did not exercise:
 - the Stage 7 iteration loop (`--nosave` beat builds, contact sheets, a fix pass on new notes);
@@ -84,6 +84,7 @@ What this run did not exercise:
 
 ## Still open
 
-- Whether Joe counts the rebuild as CL-10's pass, or wants a new reel run through the plugin from Stage 7 in a Claude Code session with the package installed from the local marketplace.
+- Not exercised by CL-10, as Joe accepted it: the Stage 7 iteration loop on the plugin route, and a Claude Code session driving the package installed from a local marketplace. The first new reel built on the plugin route covers both.
+- The Content branch `cl10-plugin-route` is not merged into Content; merging is Joe's call.
 - `render.sh` defaults to an After Effects 2026 `aerender` path that is not installed; this run set `AERENDER` to 2027. That's a Content setting for Joe, not part of the route.
 - Speed: the plugin's `eval.run` took 22 s where the bridge's whole `build.sh` took 15 s. Both are well inside the 30-minute timeout. Recorded, not chased.
