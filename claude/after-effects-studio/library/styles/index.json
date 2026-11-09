@@ -234,7 +234,12 @@
       "tools": [],
       "contentStatus": "proven",
       "contentProof": "2026-10-16",
-      "pluginProof": null
+      "pluginProof": {
+        "date": "2026-11-08",
+        "report": "quality/reports/2026-11-08-style-library-proofs/report.md",
+        "technical": "passed",
+        "visual": "not-reviewed"
+      }
     },
     {
       "id": "dataviz",
@@ -688,7 +693,12 @@
       ],
       "contentStatus": "proven",
       "contentProof": "2026-10-22",
-      "pluginProof": null
+      "pluginProof": {
+        "date": "2026-11-08",
+        "report": "quality/reports/2026-11-08-style-library-proofs/report.md",
+        "technical": "passed",
+        "visual": "not-reviewed"
+      }
     },
     {
       "id": "microgame",
@@ -811,7 +821,12 @@
       ],
       "contentStatus": "proven",
       "contentProof": "2026-10-17",
-      "pluginProof": null
+      "pluginProof": {
+        "date": "2026-11-08",
+        "report": "quality/reports/2026-11-08-style-library-proofs/report.md",
+        "technical": "passed",
+        "visual": "not-reviewed"
+      }
     },
     {
       "id": "one-line",
@@ -894,7 +909,12 @@
       "tools": [],
       "contentStatus": "proven",
       "contentProof": "2026-10-17",
-      "pluginProof": null
+      "pluginProof": {
+        "date": "2026-11-08",
+        "report": "quality/reports/2026-11-08-style-library-proofs/report.md",
+        "technical": "passed",
+        "visual": "not-reviewed"
+      }
     },
     {
       "id": "pictogram-motion",

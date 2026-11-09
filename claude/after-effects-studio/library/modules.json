@@ -233,9 +233,11 @@
         "content-style-library"
       ],
       "evidence": {
-        "technical": "not-tested",
+        "technical": "passed",
         "visual": "not-reviewed",
-        "reports": []
+        "reports": [
+          "quality/reports/2026-11-08-style-library-proofs/report.md"
+        ]
       }
     }
   ]

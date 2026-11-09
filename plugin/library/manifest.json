@@ -62,7 +62,7 @@
       "title": "Validated motion modules",
       "path": "modules.json",
       "kind": "catalog",
-      "sha256": "afb7af2d3b5a944738861b13828d0c1c983a1338a7814bac5813cbca9917cc17"
+      "sha256": "ae01b9c94aef9eedc6fb353c48459cacaf8e2aecc9b37562d409cf34cfcea880"
     },
     {
       "id": "module-template",
@@ -209,7 +209,7 @@
       "title": "Visual style library index: tiers, uses and needs",
       "path": "styles/index.json",
       "kind": "catalog",
-      "sha256": "7a13c5037e44a8e6cfa7a0a5cbc536d18c756094af0b36070852aa2574b0a62f"
+      "sha256": "25b496c5ed7d22a86addf235b41d6701e08eb04f67ea705825748507d0f4cabd"
     },
     {
       "id": "style-lib-jsx",

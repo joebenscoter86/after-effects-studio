@@ -176,6 +176,13 @@ test('refuses a private home path', async () => {
   await assert.rejects(runImport(from), /fixture-native\.jsx/);
 });
 
+test('generated skill warns that buildScene carries the test scene\'s own lines and pacing', async () => {
+  const { skillDir } = await runImport(await fixture());
+  const skill = await fs.readFile(path.join(skillDir, 'SKILL.md'), 'utf8');
+  assert.match(skill, /captions and labels are the test scene's own lines/);
+  assert.match(skill, /about ten seconds/);
+});
+
 test('generated skill names every style and fits the limit', async () => {
   const { skillDir } = await runImport(await fixture());
   const skill = await fs.readFile(path.join(skillDir, 'SKILL.md'), 'utf8');
