@@ -26,6 +26,9 @@ registerOp({
             var f = new File(${jsxVal(args.path)});
             if (!f.exists) return { ok: false, error: "file not found: " + ${jsxVal(args.path)} };
             app.open(f);
+            // A project saved by an older After Effects opens as an untitled converted copy: no file until it is saved
+            if (!app.project.file) return { ok: true, numItems: app.project.numItems, file: null, untitled: true,
+                note: "opened as an untitled copy (a project from an older After Effects version); Save As (ae_save_project with path) to keep it" };
             return { ok: true, numItems: app.project.numItems, file: app.project.file.fsName.replace(/\\\\/g,"/") };
         `;
   }

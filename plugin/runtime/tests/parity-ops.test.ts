@@ -906,3 +906,27 @@ describe("layer.set_props enum coercion", () => {
     expect(jsx).toContain('AE.coerceLayerPropValue("enabled", false)');
   });
 });
+
+describe("project.open on a project that opens untitled", () => {
+  // After Effects opens a project saved by an older version as an untitled converted copy: app.project.file is null until it is saved
+  // (found opening the JoeB house rig in AE 2027, 2026-11-09). The op must report that, not throw on app.project.file.fsName.
+  const run = (fileAfterOpen: { fsName: string } | null) => {
+    const body = getOp("project.open")!.toJsx({ path: "/rig/house-rig.aep" });
+    const app = { project: { file: null as { fsName: string } | null, numItems: 0, save() {} }, open() { app.project = { file: fileAfterOpen, numItems: 42, save() {} }; } };
+    function File(this: { exists: boolean }) { this.exists = true; }
+    return new Function("app", "File", body)(app, File);
+  };
+  it("returns file null and says the project opened as an untitled copy", () => {
+    const r = run(null);
+    expect(r.ok).toBe(true);
+    expect(r.file).toBeNull();
+    expect(r.untitled).toBe(true);
+    expect(String(r.note)).toMatch(/older version|Save As/i);
+    expect(r.numItems).toBe(42);
+  });
+  it("still returns the file of a project that opens as itself", () => {
+    const r = run({ fsName: "/rig/house-rig.aep" });
+    expect(r).toMatchObject({ ok: true, file: "/rig/house-rig.aep", numItems: 42 });
+    expect(r.untitled).toBeUndefined();
+  });
+});
