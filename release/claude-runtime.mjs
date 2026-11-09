@@ -107,12 +107,43 @@ export async function buildReadableRuntime(pluginRuntimeDir, outRuntimeDir) {
     vendor.add(path.join(root, license));
   }
 
+  // The Claude app refuses an uploaded plugin with "@" in a path, so a scoped package (@scope/name) is vendored as
+  // scope-name and the server's own imports are rewritten to match. Node resolves a bare name by its folder, not by
+  // the name field in its package.json, so the copied files stay unchanged.
+  const renames = new Map();
+  for (const root of roots) {
+    const name = path.relative(nodeModules, root).split(path.sep).join('/');
+    if (!name.startsWith('@')) continue;
+    const flat = name.slice(1).replace('/', '-');
+    if ([...roots].some((r) => path.relative(nodeModules, r) === flat)) throw new Error(`cannot vendor ${name} as ${flat}: that package is also vendored`);
+    renames.set(name, flat);
+  }
+  const outRel = (rel) => {
+    const parts = rel.split(path.sep);
+    const i = parts.indexOf('node_modules');
+    if (i >= 0 && parts[i + 1]?.startsWith('@') && renames.has(`${parts[i + 1]}/${parts[i + 2]}`)) parts.splice(i + 1, 2, renames.get(`${parts[i + 1]}/${parts[i + 2]}`));
+    return parts.join(path.sep);
+  };
+
   const vendorFiles = [];
   for (const file of [...vendor].sort()) {
-    const rel = path.relative(pluginRuntimeDir, file);
+    const rel = outRel(path.relative(pluginRuntimeDir, file));
     await copyFile(file, path.join(outRuntimeDir, rel));
     vendorFiles.push(rel);
   }
-  const packages = [...roots].map((r) => path.relative(nodeModules, r)).sort();
+  // Real import and export statements only (line-anchored), so example code in a JSDoc comment is left alone.
+  const SPECIFIER = /^(\s*(?:import|export)\b[^\n]*?\bfrom\s*["']|\s*import\s*\(\s*["'])(@[^"'/]+\/[^"'/]+)(\/[^"']*)?(["'])/gm;
+  for (const rel of [...appFiles, ...vendorFiles.filter((f) => f.endsWith('.js'))]) {
+    const file = path.join(outRuntimeDir, rel), text = await fs.readFile(file, 'utf8');
+    const next = text.replace(SPECIFIER, (all, head, name, sub, tail) => {
+      if (!renames.has(name)) throw new Error(`${rel} imports ${name}, which is not vendored`);
+      return `${head}${renames.get(name)}${sub || ''}${tail}`;
+    });
+    if (next !== text) {
+      if (vendorFiles.includes(rel)) throw new Error(`${rel} is a vendored file that imports a scoped package; it would have to be changed`);
+      await fs.writeFile(file, next);
+    }
+  }
+  const packages = [...roots].map((r) => path.relative(nodeModules, r).split(path.sep).join('/')).map((n) => renames.get(n) ?? n).sort();
   return { appFiles, vendorFiles, packages };
 }

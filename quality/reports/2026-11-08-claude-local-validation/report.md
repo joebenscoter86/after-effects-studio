@@ -106,3 +106,7 @@ What the failures with the plugin mean:
   - 15, assertion 5: the plan did not separate what is native and editable, what was inferred, and which missing assets would block a faithful finish.
 
 One run per arm is a single sample. The canonical protocol uses three, so individual case scores are noisy, but the direction across the suite is clear.
+
+**Cowork install, first attempt.** The repository is not published, so the app's "Add marketplace" route was not available. A zip of the committed package was uploaded instead (Customize → Plugins). The app refused it: "Zip file contains path with invalid characters". The cause was the vendored MCP SDK's npm scope folder, `runtime/node_modules/@modelcontextprotocol/sdk`: the "@" was the only character outside letters, digits, ".", "_", "-" and "/".
+
+Fixed in the package builder. The SDK is now vendored as `runtime/node_modules/modelcontextprotocol-sdk`, unchanged inside, and the server's two imports of it are rewritten to that name. The builder stops if any other scoped import would need rewriting, and `checkPackage` now rejects any path with such a character. After the fix the zip holds no such path; `claude --plugin-dir <zip>` loads all six skills; the server answers `ae_version_info` (27.0x78); and the offline and live smokes pass. The Cowork session itself is still to be run.

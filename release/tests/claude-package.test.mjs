@@ -72,6 +72,7 @@ test('checkPackage flags each rule once', async () => {
   await write(dir, 'docs/private.md', 'see /Users/someone/secret\n');
   await write(dir, 'assets/lfs.bin', 'version https://git-lfs.github.com/spec/v1\noid sha256:abc\n');
   await write(dir, '.gitmodules', '[submodule "x"]\n');
+  await write(dir, 'runtime/node_modules/@scope/pkg/index.js', 'export {};\n');
   await fs.symlink('/etc/hosts', path.join(dir, 'link'));
   for (let i = 0; i < 510; i += 1) await write(dir, `filler/f${i}.txt`, 'x\n');
 
@@ -79,7 +80,7 @@ test('checkPackage flags each rule once', async () => {
   const rules = [
     /manifest/i, /README/, /LICENSE/, /\.DS_Store/, /symlink/i, /bin\//, /lockfile/i,
     /root package\.json/i, /262,?144|256 KiB/i, /more than 512/i, /codex|gpt-/i,
-    /private path|credential/i, /LFS/, /submodule/i,
+    /private path|credential/i, /LFS/, /submodule/i, /character the Claude app/i,
   ];
   for (const rule of rules) {
     const hits = violations.filter((v) => rule.test(v));
@@ -187,12 +188,24 @@ test('runtime is readable and within limits', async () => {
   assert.ok(runtimeFiles.includes('dist/tools/do.js'), 'own modules are emitted file by file');
 });
 
+test('every path is one the Claude app accepts in an uploaded plugin', async () => {
+  const { outDir } = await sharedBuild();
+  const bad = (await listFiles(outDir)).filter((rel) => /[^A-Za-z0-9._\/-]/.test(rel));
+  assert.deepEqual(bad, []);
+  const imports = [];
+  for (const rel of (await listFiles(path.join(outDir, 'runtime'))).filter((f) => f.endsWith('.js'))) {
+    const text = await fs.readFile(path.join(outDir, 'runtime', rel), 'utf8');
+    for (const m of text.matchAll(/^\s*(?:(?:import|export)\b[^\n]*?\bfrom\s*|import\s*\(\s*)["'](@[^"']+)["']/gm)) imports.push(`${rel}: ${m[1]}`);
+  }
+  assert.deepEqual(imports, [], 'no runtime file imports a scoped package name');
+});
+
 test('every vendored package has a license and a notice', async () => {
   const { outDir } = await sharedBuild();
   const notices = await fs.readFile(path.join(outDir, 'THIRD-PARTY-NOTICES.txt'), 'utf8');
   const nodeModules = path.join(outDir, 'runtime/node_modules');
   const dirs = await vendoredPackageDirs(nodeModules);
-  assert.ok(dirs.includes('zod') && dirs.includes('@modelcontextprotocol/sdk'), `vendored: ${dirs.join(', ')}`);
+  assert.ok(dirs.includes('zod') && dirs.includes('modelcontextprotocol-sdk'), `vendored: ${dirs.join(', ')}`);
   for (const dir of dirs) {
     const { name } = JSON.parse(await fs.readFile(path.join(nodeModules, dir, 'package.json'), 'utf8'));
     const entries = await fs.readdir(path.join(nodeModules, dir));

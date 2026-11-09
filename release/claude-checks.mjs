@@ -43,6 +43,9 @@ export async function checkPackage(dir) {
   if (entries.some((e) => e.kind === 'dir' && e.rel === 'bin')) v.push('top-level bin/ makes claude.ai and Cowork refuse the plugin');
   if (has('package.json')) v.push('root package.json is not allowed');
   if (files.length > MAX_FILES) v.push(`${files.length} files: more than ${MAX_FILES} is held for review`);
+  // The Claude app refuses an uploaded plugin whose archive holds any other character ("Zip file contains path with invalid characters").
+  const unsafe = entries.filter((e) => /[^A-Za-z0-9._/-]/.test(e.rel)).map((e) => e.rel);
+  if (unsafe.length) v.push(`path with a character the Claude app rejects in an uploaded plugin (use letters, digits, ".", "_", "-"): ${unsafe.slice(0, 3).join(', ')}${unsafe.length > 3 ? ` and ${unsafe.length - 3} more` : ''}`);
 
   for (const e of entries) {
     const base = path.posix.basename(e.rel);

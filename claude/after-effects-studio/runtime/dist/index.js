@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { createRequire } from "node:module";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { McpServer } from "modelcontextprotocol-sdk/server/mcp.js";
+import { StdioServerTransport } from "modelcontextprotocol-sdk/server/stdio.js";
 import { runCli } from "./cli.js";
 import { RUNTIME_DIR, instanceTargetFromEnv } from "./config.js";
 import { errorResult } from "./errors.js";
