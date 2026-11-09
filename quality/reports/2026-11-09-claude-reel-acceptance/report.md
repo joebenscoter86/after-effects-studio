@@ -1,4 +1,4 @@
-# 2026-11-09 — CL-10 reel acceptance: the rehearsal (bridge against plugin) passes after two plugin fixes; the real reel is still to run
+# 2026-11-09 — CL-10 reel acceptance: a posted JoeB reel rebuilt through the plugin matches its master; the rehearsal found and fixed two plugin bugs
 
 - Scenario ID and requirement: CL-10 in [claude-release-plan.md](../../../product/claude-release-plan.md), Task 4 of [claude-reel-acceptance-plan.md](../../../product/claude-reel-acceptance-plan.md): before a real JoeB reel goes through the plugin, build the same house reel twice from scratch, once through the Higgsfield bridge and once through the plugin route, and compare.
 - Operator and prior familiarity: Claude (Opus 5.5) in the Claude desktop app's Code tab; author of the plugin route and of the package.
@@ -59,8 +59,31 @@ The plugin route was driven the way the runbook (`Content/.claude/skills/joeb-re
    - `/tmp/house-last.log` now holds the rehearsal's last build log; `projects-part-three` keeps its own in its `scripts/last-build.log`.
 5. **Earlier in the day:** the first failing-test run of `tests/test_route.py` reached the real bridge (recorded in the plan ledger). Seven probe scripts ran; nothing was changed. The tests now fake `node` on PATH and refuse unless the lock path can be overridden.
 
+## The real reel: army of agents, rebuilt through the plugin
+
+Joe chose the army-of-agents reel (`2026-11-08-projects-part-three`), posted today from Content worktree `awesome-heisenberg-c4eae3` (picture lock v3b, then bed g2, master, cover). It was already accepted and posted, so it was rebuilt as a copy, `2026-11-09-cl10-army-of-agents`. Its project, folders and posted files were only read.
+
+- **Same inputs.** The house libraries the copy built with (`house.jsx`, `motion.jsx`, `reel.jsx`, `joeb-house.jsx`, `aes-lib.jsx`) are byte-identical to the reel's worktree. The copy used the reel's own build files (`00-reset.jsx`, `b00-face.jsx` to `b99.jsx`, `STYLES`, `THEME` light, `LOOK` polish), its `face-match.json` and its take `raw-remotion-prores-lt.mov`.
+- **Every After Effects call went through the plugin route.**
+  - Setup: `project.open` opened the rig and reported it untitled, the fixed behaviour. Then `ae_save_project`, then the setup script.
+  - The whole build: one 411 KB handoff, `eval.run` 25.1 s, "built: 351 layers".
+  - `project.purge`, then `render.sh`, whose aerender ran 340 s.
+  - Nothing went through the bridge.
+- **Build record:** `modes.json` and `titles.json` are byte-identical to the posted reel's. `last-build.log` has the same text.
+- **Checks:** PASS, every scan. The text is identical to the locked render's checks apart from the name and the purge line: dropout, safe line, frame 1, blank, titles, screens (12 entries), take (15 camera moves), hue, and the face report.
+- **Picture against the locked render `qc/render-v3b.mp4`:** 1,452 frames each, 0 failing, mean 0.071 levels, worst tile 5.41 (limit 6). The audio is identical.
+- **Picture against the posted master `army-of-agents.mp4`:** the same picture result, 0 failing frames. The audio differs only by the music bed (g2), which is mixed outside After Effects.
+- **Evidence:** `quality/renders/2026-11-09-cl10-army-of-agents/` (render, five contact sheets, checks, build record and logs, and `army-side-by-side.png`, two moments master against copy).
+
+**Result: technical Pass.** Every After Effects operation from the build on went through the plugin, and the picture is the one Joe accepted and posted. Joe's acceptance is his to record.
+
+What this run did not exercise:
+- the Stage 7 iteration loop (`--nosave` beat builds, contact sheets, a fix pass on new notes);
+- a Claude Code session using the plugin installed from a local marketplace. The calls went through the packaged server via the operator's runner, as in the rehearsal;
+- Stage 9 and 10 work outside After Effects (the bed mix, the cover), which no route changes.
+
 ## Still open
 
-- Task 5, the real reel: Joe names it and installs the package from the local marketplace in his own Claude Code, and the other bridge sessions are closed for the night.
+- Whether Joe counts the rebuild as CL-10's pass, or wants a new reel run through the plugin from Stage 7 in a Claude Code session with the package installed from the local marketplace.
 - `render.sh` defaults to an After Effects 2026 `aerender` path that is not installed; this run set `AERENDER` to 2027. That's a Content setting for Joe, not part of the route.
 - Speed: the plugin's `eval.run` took 22 s where the bridge's whole `build.sh` took 15 s. Both are well inside the 30-minute timeout. Recorded, not chased.
