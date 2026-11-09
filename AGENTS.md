@@ -13,7 +13,7 @@ This repository is the canonical development workspace. Read this map first, the
 - quality/: context.md, release-criteria.md, fixtures/, reports/ and renders/. Reproducible scenarios and inspected evidence. The canonical skill test prompts remain in plugin/evals/.
 - release/: context.md, release-plan.md, listing-draft.md, submission/, website/ and packages/. Public distribution and launch materials.
 - README.md explains getting started. .gitignore excludes local secrets, dependencies and large generated output. CLAUDE.md is a pointer only.
-- claude/: src/ holds the Claude-only sources (manifest, MCP config, launcher, README and docs); after-effects-studio/ is the generated Claude package. Never edit the generated folder; after any plugin/ or claude/src change run `node release/build-claude-package.mjs` and commit the result (`node --test 'release/tests/*.test.mjs'` fails while it is stale).
+- claude/: src/ holds the Claude-only sources (manifest, MCP config, launcher, README and docs); after-effects-studio/ is the generated Claude package. Never edit the generated folder; after any plugin/ or claude/src change run `node release/build-claude-package.mjs` and commit the result (`node --test 'release/tests/*.test.mjs'` fails while it is stale). `node release/claude-evals.mjs --out <package copy>/evals` writes the canonical evals as a `claude plugin eval` suite into a scratch copy of the package; the suite is not shipped.
 - .agents/plugins/marketplace.json is the source-repository Codex marketplace catalog for the planned Git-backed route. It points at plugin/ and does not make the repository public.
 
 ## Routing

@@ -45,6 +45,6 @@ The painterly still came from a macOS sample picture (`/Library/User Pictures/Fl
 
 ## Still open
 
-- A fresh Claude session choosing `visual-styles` on its own and building one of these scenes (needs `claude auth login`).
+- Done after the CLI login was refreshed: a fresh session given only "make it look like a slick dark software keynote" loaded `motion-studio`, found `dark-keynote` through the library index and built a new scene with it in After Effects ([CL-5 report](../2026-11-08-claude-local-validation/report.md), third run). `visual-styles` itself did not load: the request described the look rather than naming it, and a question about which styles to use was answered from the skill's description.
 - Joe's visual review of the four contact sheets.
 - The other 26 styles have Content's proof only (`contentProof`), not a plugin build.
