@@ -24,7 +24,7 @@
 | Uninstall and marketplace removal | Pass | Both commands succeed and `claude plugin list` is empty; Claude Code keeps the cached copy on disk |
 | After Effects discovery | Fail, then fixed | Before `2641415`, the server and doctor knew only AE 2024–2026 and reported `AE_NOT_FOUND`. After the fix both find AE 2027 unaided |
 | Read-only live check | Pass | `ae_version_info` reports 27.0x78; `ae_context` identical before and after; no permission prompt appeared (Automation already granted to this host) |
-| macOS Automation prompt wording | Unverified | Permission was already granted, so no prompt was shown |
+| macOS Automation prompt wording | Pass (fourth run) | In Cowork, macOS asked whether Claude may control After Effects (Joe's paraphrase; the exact text was not captured). This matches the README and the first-session guide |
 | Missing or old Node behaviour inside the Claude app | Unverified | Needs a machine or account without Node 24 on the app's path |
 | Skills registered | Pass | `claude plugin details`: six skills, one MCP server, about 596 always-on tokens (visual-styles about 210) |
 | Skills trigger in a model session (third run, below) | Pass | After the login was refreshed, a fresh session asked for a "slick dark software keynote" title loaded `motion-studio`, found `dark-keynote` through the library index and built it in After Effects. A session asked which styles suit a promo answered from the `visual-styles` description without loading the skill (see below) |
@@ -32,8 +32,8 @@
 | Create in After Effects (second run, below) | Pass | One `batch.run` of native operations (no custom scripting): `comp.create`, `layer.create_text`, `text.set_style` (Inter Tight SemiBold 140), `keyframe.apply` for position and opacity, `layer.create_shape` with a rounded rectangle and fill, scale keys; frames at 0.1, 0.4, 0.8 and 2 s show the title fading up and the bar growing |
 | Revision (second run) | Pass after a second revision | `text.set_content` ("Hello again, studio"), an earlier fade with `keyframe.apply` `replace`, `comp.set_props` duration 3 s. The longer line overflowed the frame at 140 px; `text.set_style` 112 px and `layer.bounds` put it at x 84 to 999 of 1080 |
 | Export (second run) | Pass | `render.add_to_queue` and `render.start` reported the file as newly written and verified; `scripts/verify-export.mjs`: H.264, 1080 x 1920, 30 fps, 90 frames, 3.0 s, full decode passed. The default output module wrote `.mp4` although `.mov` was asked for, and the tool reported the real path |
+| Cowork session on this Mac (fourth run, below) | Pass | Joe installed the fixed zip in the Claude app; a Cowork task controlled After Effects and built a 20-second explainer |
 | `claude plugin eval` against a no-plugin baseline (third run, below) | Pass | All 17 canonical cases, one run per arm: with the plugin 0.86, without 0.65, a mean gain of +0.21. The plugin scored at least as well as the baseline on every case and higher on eight. The two unrelated-request controls loaded no plugin skill in either arm |
-| Cowork session on this Mac | Not run | Needs the Claude app driven by Joe |
 | Joe's creative acceptance | Not applicable yet | — |
 
 ## Failures, corrections and cleanup
@@ -110,3 +110,18 @@ One run per arm is a single sample. The canonical protocol uses three, so indivi
 **Cowork install, first attempt.** The repository is not published, so the app's "Add marketplace" route was not available. A zip of the committed package was uploaded instead (Customize → Plugins). The app refused it: "Zip file contains path with invalid characters". The cause was the vendored MCP SDK's npm scope folder, `runtime/node_modules/@modelcontextprotocol/sdk`: the "@" was the only character outside letters, digits, ".", "_", "-" and "/".
 
 Fixed in the package builder. The SDK is now vendored as `runtime/node_modules/modelcontextprotocol-sdk`, unchanged inside, and the server's two imports of it are rewritten to that name. The builder stops if any other scoped import would need rewriting, and `checkPackage` now rejects any path with such a character. After the fix the zip holds no such path; `claude --plugin-dir <zip>` loads all six skills; the server answers `ae_version_info` (27.0x78); and the offline and live smokes pass. The Cowork session itself is still to be run.
+
+## Fourth run: Cowork in the Claude app (same day, driven by Joe)
+
+- **Install.** Joe uploaded the fixed zip (`7e0c756`) under Customize → Plugins. The app accepted it, after refusing the first zip for the "@" path above.
+- **Prompt.** Joe asked a Cowork task for a graphic explainer that deconstructs the iPhone Duo. The task researched the specs on the web first.
+- **Permission.** When it first reached After Effects, macOS asked whether **Claude** may control After Effects, and Joe allowed it. A macOS Automation prompt naming the Claude app means the plugin's server ran on the Mac itself, not in a cloud sandbox, which was the main open question for Cowork.
+- **Node.** The app started the server with this Mac's Homebrew Node 25, so the README's warning that the app may not find a Homebrew or nvm Node did not apply here. It stays, since other setups differ.
+- **Result.** `DUO_MAIN`, 1920x1080, 30 fps, 20 seconds, with two precomps (`DUO_WALL`, `DUO_OUTERUI`) and drawn bases, all native layers. Read-only frames at 15 times show:
+  - the closed phone, opening to its 7.6-inch inner display;
+  - an isometric tilt into an exploded view, with seven layers separating one at a time, each labelled with a number, a title and a mono note (inner display cover, folding OLED, titanium plate, precision hinge, logic board with chip and memory, two batteries, titanium enclosure);
+  - reassembly, then an end card: "Two displays. One hinge."
+- **Joe's verdict:** "it did a pretty damn good job". He chose not to push it toward photorealism for this test.
+- **Saved.** The session saved the project as `~/Desktop/reel-props/claude/iphone-duo-explainer.aep`. This review left it unchanged (not dirty) and did not render a movie into it. Frames are in `quality/renders/2026-11-08-cowork/` (git-ignored).
+- **Content caveat.** The on-screen specs came from the session's own web research about a product that is not yet released. The plugin does not check facts, so a published version needs the numbers checked.
+- **README.** The Cowork row now says it works the same as Claude Code, with the first-time macOS prompt.

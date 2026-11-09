@@ -18,7 +18,7 @@ Published by JB Technology LLC. Free for personal and paid client work, includin
 | Where | What you get |
 |---|---|
 | Claude Code on your Mac | After Effects control, plus the skills and motion library |
-| A Cowork session running on your Mac | Intended to match Claude Code; still being verified |
+| A Cowork session running on your Mac | The same as Claude Code. The first time, macOS asks whether Claude may control After Effects |
 | Regular Claude chat, or Cowork running in the cloud | The skills only. After Effects control needs a session on the Mac that runs After Effects; there is no cloud relay |
 
 ## What it runs and sends
