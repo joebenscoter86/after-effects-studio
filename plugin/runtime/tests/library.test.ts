@@ -4,6 +4,10 @@ import os from "node:os";
 import path from "node:path";
 import { readLibrary } from "../src/tools/library.js";
 describe("studio library", () => {
+  it("lists documents by id, title and kind only, so the listing stays small", () => {
+    // Paths and hashes are for the server; Claude reads documents by id. Policy 5B asks for frugal responses.
+    for (const doc of readLibrary().documents ?? []) expect(Object.keys(doc).toSorted()).toEqual(["id", "kind", "title"]);
+  });
   it("lists and reads the shipped design and portable JSX without AE", () => {
     const ids = readLibrary().documents!.map(d=>d.id);
     expect(new Set(ids).size).toBe(ids.length);

@@ -4,6 +4,7 @@ import {readFileSync,mkdirSync,writeFileSync} from 'node:fs';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {randomUUID} from 'node:crypto';
 import {resolve} from 'node:path';
+import {tmpdir} from 'node:os';
 import assert from 'node:assert/strict';
 const pluginRootArg=process.argv.indexOf('--plugin-root');
 const root=pluginRootArg>=0?pathToFileURL(process.argv[pluginRootArg+1].replace(/\/$/,'')+'/'):new URL('../',import.meta.url);
@@ -13,11 +14,27 @@ const live=scratch||emptyProjectCheck||process.argv.includes('--live');
 const outputArg=process.argv.indexOf('--output');
 const output=outputArg>=0?process.argv[outputArg+1]:fileURLToPath(new URL('../verification/',import.meta.url));
 mkdirSync(output,{recursive:true});
-const config=JSON.parse(readFileSync(new URL('.mcp.json',root),'utf8')).mcpServers['after-effects-studio'];
-assert(config,'Missing after-effects-studio MCP registration');
-assert.equal(config.cwd,'.','MCP working directory must resolve to the installed plugin root');
+const hostArg=process.argv.indexOf('--host');
+const host=hostArg>=0?process.argv[hostArg+1]:'codex';
+const cwdArg=process.argv.indexOf('--cwd');
+// The server is named after the package: the Claude package's manifest name (comp-room), or after-effects-studio for Codex.
+const serverName=host==='claude'?JSON.parse(readFileSync(new URL('.claude-plugin/plugin.json',root),'utf8')).name:'after-effects-studio';
+const config=JSON.parse(readFileSync(new URL('.mcp.json',root),'utf8')).mcpServers[serverName];
+assert(config,`Missing ${serverName} MCP registration`);
+let launchCwd;
+if(host==='claude'){
+ // Claude Code substitutes the plugin root and starts the server from the user's working directory.
+ assert.equal(config.cwd,undefined,'Claude MCP config must not set cwd');
+ const pluginRoot=fileURLToPath(root).replace(/\/$/,'');
+ const sub=v=>v.replaceAll('${CLAUDE_PLUGIN_ROOT}',pluginRoot);
+ config.command=sub(config.command);config.args=config.args.map(sub);
+ launchCwd=cwdArg>=0?process.argv[cwdArg+1]:tmpdir();
+}else{
+ assert.equal(config.cwd,'.','MCP working directory must resolve to the installed plugin root');
+ launchCwd=resolve(fileURLToPath(root),config.cwd);
+}
 assert(config.args.every(arg=>!arg.includes('${')),'MCP arguments contain an unresolved variable');
-const child=spawn(config.command,config.args,{cwd:resolve(fileURLToPath(root),config.cwd),env:{...process.env,...config.env,AE_MCP_READONLY:scratch||emptyProjectCheck?'0':'1'},stdio:['pipe','pipe','pipe']});
+const child=spawn(config.command,config.args,{cwd:launchCwd,env:{...process.env,...config.env,AE_MCP_READONLY:scratch||emptyProjectCheck?'0':'1'},stdio:['pipe','pipe','pipe']});
 let next=1,buffer='',stderr='';const pending=new Map();
 child.stderr.on('data',d=>stderr+=d);
 child.stdout.on('data',d=>{
@@ -35,14 +52,14 @@ const report={checks:[],live,scratch};
 let scratchId=null;
 try{
  const init=await rpc('initialize',{protocolVersion:'2024-11-05',capabilities:{},clientInfo:{name:'studio-smoke',version:'1.0.0'}});
- assert.equal(init.serverInfo.name,'after-effects-studio');
+ assert.equal(init.serverInfo.name,serverName);
  child.stdin.write(JSON.stringify({jsonrpc:'2.0',method:'notifications/initialized'})+'\n');
  const ts=await rpc('tools/list');assert(ts.tools.some(t=>t.name==='ae_library'));report.tools=ts.tools.map(t=>t.name);
- const lib=await tool('ae_library');assert.equal(lib.documents.length,29);assert.deepEqual(lib.startHere,["motion-language","production-workflow","brief-template"]);
- assert.deepEqual(lib.modules.map(m=>m.id),['foundation','typography','paper-collage']);
+ const lib=await tool('ae_library');assert.equal(lib.documents.length,91);assert.deepEqual(lib.startHere,["motion-language","production-workflow","brief-template"]);
+ assert.deepEqual(lib.modules.map(m=>m.id),['foundation','typography','paper-collage','visual-styles']);
  for(const d of lib.documents){const doc=await tool('ae_library',{document:d.id});assert(doc.content.length>100);}
  const bad=await rpc('tools/call',{name:'ae_library',arguments:{document:'../../package.json'}});assert.equal(bad.isError,true);
- report.checks.push('MCP handshake, tool discovery, all 29 hashed library documents, three module routes, default craft routing and traversal rejection');
+ report.checks.push('MCP handshake, tool discovery, all 91 hashed library documents, four module routes, default craft routing and traversal rejection');
  const cat=await tool('ae_catalog');report.catalog=cat;report.checks.push('Offline policy-filtered operation catalog');
  if(live){
    const before=await tool('ae_context');

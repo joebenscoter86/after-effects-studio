@@ -906,3 +906,65 @@ describe("layer.set_props enum coercion", () => {
     expect(jsx).toContain('AE.coerceLayerPropValue("enabled", false)');
   });
 });
+
+describe("project.open on a project that opens untitled", () => {
+  // After Effects opens a project saved by an older version as an untitled converted copy: app.project.file is null until it is saved
+  // (found opening the JoeB house rig in AE 2027, 2026-11-09). The op must report that, not throw on app.project.file.fsName.
+  const run = (fileAfterOpen: { fsName: string } | null) => {
+    const body = getOp("project.open")!.toJsx({ path: "/rig/house-rig.aep" });
+    const app = { project: { file: null as { fsName: string } | null, numItems: 0, save() {} }, open() { app.project = { file: fileAfterOpen, numItems: 42, save() {} }; } };
+    function File(this: { exists: boolean }) { this.exists = true; }
+    return new Function("app", "File", body)(app, File);
+  };
+  it("returns file null and says the project opened as an untitled copy", () => {
+    const r = run(null);
+    expect(r.ok).toBe(true);
+    expect(r.file).toBeNull();
+    expect(r.untitled).toBe(true);
+    expect(String(r.note)).toMatch(/older version|Save As/i);
+    expect(r.numItems).toBe(42);
+  });
+  it("still returns the file of a project that opens as itself", () => {
+    const r = run({ fsName: "/rig/house-rig.aep" });
+    expect(r).toMatchObject({ ok: true, file: "/rig/house-rig.aep", numItems: 42 });
+    expect(r.untitled).toBeUndefined();
+  });
+});
+
+describe("project.open never saves a dirty project it was not asked to save", () => {
+  // AE answers app.open's "save changes?" prompt with its default, Save, while the dispatcher suppresses dialogs: project.open with save
+  // false wrote a dirty project over its file (found in the CL-10 rehearsal, 2026-11-09). It must close the current project without saving.
+  type Proj = { file: { fsName: string } | null; dirty: boolean; numItems: number; save(): void; close(o: unknown): boolean };
+  const run = (args: Record<string, unknown>, start: { file: string | null; dirty: boolean }) => {
+    const log: string[] = [];
+    const proj = (file: string | null, dirty: boolean): Proj => {
+      const p: Proj = {
+        file: file ? { fsName: file } : null, dirty, numItems: 3,
+        save() { log.push("save " + file); p.dirty = false; }, close(o) { log.push("close " + String(o)); closed = true; return true; },
+      };
+      return p;
+    };
+    let closed = false;
+    const app = { project: proj(start.file, start.dirty), open() { if (app.project.dirty && !closed) log.push("save " + start.file + " (AE's default answer)"); app.project = proj("/b.aep", false); } };
+    function File(this: { exists: boolean }) { this.exists = true; }
+    const CloseOptions = { DO_NOT_SAVE_CHANGES: "DO_NOT_SAVE_CHANGES", SAVE_CHANGES: "SAVE_CHANGES", PROMPT_TO_SAVE_CHANGES: "PROMPT" };
+    const r = new Function("app", "File", "CloseOptions", getOp("project.open")!.toJsx(args))(app, File, CloseOptions);
+    return { r, log };
+  };
+  it("closes a dirty project without saving when save is false", () => {
+    const { r, log } = run({ path: "/b.aep" }, { file: "/a.aep", dirty: true });
+    expect(r.ok).toBe(true);
+    expect(log).toEqual(["close DO_NOT_SAVE_CHANGES"]);
+  });
+  it("saves first when asked, then opens", () => {
+    const { log } = run({ path: "/b.aep", save: true }, { file: "/a.aep", dirty: true });
+    expect(log[0]).toBe("save /a.aep");
+    expect(log.filter((l) => l.includes("default answer"))).toEqual([]);
+  });
+  it("refuses to save an untitled dirty project instead of letting AE pick", () => {
+    const { r, log } = run({ path: "/b.aep", save: true }, { file: null, dirty: true });
+    expect(r.ok).toBe(false);
+    expect(String(r.error)).toMatch(/untitled|Save As/i);
+    expect(log).toEqual([]);
+  });
+});

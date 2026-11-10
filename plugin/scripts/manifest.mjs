@@ -33,6 +33,12 @@ const docs = [
  ['house-jsx','JoeB rig helpers; requires configured rig and media','presets/house.jsx','code'],
  ['joeb-motion-jsx','JoeB motion helpers; load after house-jsx','presets/motion.jsx','code'],
 ];
+// The style library (CL-9): one index, the shared helpers, and each imported style's notes and module.
+const styleIndex = JSON.parse(readFileSync(new URL('styles/index.json', root), 'utf8'));
+docs.push(['style-index','Visual style library index: tiers, uses and needs','styles/index.json','catalog'],
+ ['style-lib-jsx','Shared ES3 helpers for every style (AESLib)','styles/aes-lib.jsx','code']);
+for (const s of styleIndex.styles) docs.push([`style-${s.id}`,`${s.title} style`,`styles/${s.id}/STYLE.md`,'style'],
+ [`style-${s.id}-jsx`,`${s.title} helpers (${s.moduleGlobal})`,`styles/${s.id}/${s.module}`,'code']);
 const manifest = {version:1, documents:docs.map(([id,title,path,kind]) => ({id,title,path,kind,sha256:createHash('sha256').update(readFileSync(new URL(path,root))).digest('hex')}))};
 writeFileSync(new URL('manifest.json',root),JSON.stringify(manifest,null,2)+'\n');
 console.log(`Indexed ${docs.length} documents in ${fileURLToPath(root)}`);

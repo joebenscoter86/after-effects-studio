@@ -1,0 +1,24 @@
+{
+  "name": "comp-room",
+  "displayName": "Comp Room",
+  "version": "0.2.0",
+  "description": "Editable motion for Adobe After Effects: native control, typography, paper collage, a 30-style visual style library, and a production-derived motion language.",
+  "author": {
+    "name": "JB Technology LLC"
+  },
+  "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/joebenscoter86/after-effects-studio/blob/main/release/website/index.md",
+  "documentationUrl": "https://github.com/joebenscoter86/after-effects-studio/blob/main/release/website/index.md",
+  "supportUrl": "https://github.com/joebenscoter86/after-effects-studio/blob/main/release/website/support.md",
+  "privacyPolicyUrl": "https://github.com/joebenscoter86/after-effects-studio/blob/main/release/website/privacy.md",
+  "termsOfServiceUrl": "https://github.com/joebenscoter86/after-effects-studio/blob/main/release/website/terms.md",
+  "repository": "https://github.com/joebenscoter86/after-effects-studio",
+  "icon": "./assets/gate-mark.svg",
+  "keywords": [
+    "after-effects",
+    "motion-graphics",
+    "animation",
+    "native",
+    "design"
+  ]
+}

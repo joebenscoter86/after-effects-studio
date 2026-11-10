@@ -1,0 +1,642 @@
+{
+  "version": 1,
+  "documents": [
+    {
+      "id": "typography-examples",
+      "title": "Portable typography worked examples",
+      "path": "examples/typography.md",
+      "kind": "examples",
+      "sha256": "47398b6abe0c6271cd4ffa7d3d969b018aaed48ca6761c90b1f9bb64e0fa37ae"
+    },
+    {
+      "id": "typography-recipes",
+      "title": "Editable typography entrance and replacement recipes",
+      "path": "recipes/typography.md",
+      "kind": "recipes",
+      "sha256": "c797f8d2ae20f7d257dad9372c532f7a8e0c6eb4f5b7c0195dddb13967579a25"
+    },
+    {
+      "id": "typography-jsx",
+      "title": "Portable typography measurement and fitting",
+      "path": "scripts/typography.jsx",
+      "kind": "code",
+      "sha256": "be053e6b2a013eda24aa77eae8c90abb773614a87bdd797df264b9ca9a2afa00"
+    },
+    {
+      "id": "typography-technique",
+      "title": "Typography native scope and fitting contract",
+      "path": "techniques/typography.md",
+      "kind": "technique",
+      "sha256": "86524c9ef6de4a2a37d471e88bfc789e454f1040afccad5ee9e3ebb6935b08dc"
+    },
+    {
+      "id": "paper-collage-recipes",
+      "title": "Native paper and cutout material recipe",
+      "path": "recipes/paper-collage.md",
+      "kind": "recipes",
+      "sha256": "250023961c24a81d611cefc98461ea2b3a74613cba2337a775bdffea1018b87c"
+    },
+    {
+      "id": "paper-collage-jsx",
+      "title": "Native paper and deterministic cutout helpers",
+      "path": "scripts/paper-collage.jsx",
+      "kind": "code",
+      "sha256": "9cf21e8ab04242009d76734298ea45d92dbc2887fb1919ec21a207d2dd1f51d2"
+    },
+    {
+      "id": "paper-collage-style",
+      "title": "Portable paper collage material and motion profile",
+      "path": "styles/paper-collage.md",
+      "kind": "style",
+      "sha256": "19a63a3a8cdc37d870466af83b72e0d26934ba6bcbd5a9ae35101aa8d616b367"
+    },
+    {
+      "id": "paper-collage-examples",
+      "title": "Worked native paper collage examples",
+      "path": "examples/paper-collage.md",
+      "kind": "examples",
+      "sha256": "b57e537f9279f1f6e4a138578bab8e512e5aa617e660e8f8663cc87f3248b457"
+    },
+    {
+      "id": "module-catalog",
+      "title": "Validated motion modules",
+      "path": "modules.json",
+      "kind": "catalog",
+      "sha256": "ae01b9c94aef9eedc6fb353c48459cacaf8e2aecc9b37562d409cf34cfcea880"
+    },
+    {
+      "id": "module-template",
+      "title": "Motion module authoring contract",
+      "path": "templates/module.md",
+      "kind": "template",
+      "sha256": "1fecd2eddde645594a1944a03e4b7ae4a5d017ca4baffde4f77ec773525f64f1"
+    },
+    {
+      "id": "motion-language",
+      "title": "The core motion language for every style",
+      "path": "language/core.md",
+      "kind": "foundation",
+      "sha256": "5395c2d4c37df7c40aea10c0cc82412dac4faf59d2fe53019acd04da9b098a7c"
+    },
+    {
+      "id": "production-workflow",
+      "title": "Portable cold-start production workflow",
+      "path": "language/production-workflow.md",
+      "kind": "foundation",
+      "sha256": "37e88ad6ec62aab6fb74cda7aee242a8da4711e6a7be30875bc83ea668c24833"
+    },
+    {
+      "id": "construction",
+      "title": "Detailed construction timing and gesture grammar",
+      "path": "language/construction.md",
+      "kind": "technique",
+      "sha256": "5cdeadfa6edb99408aa85ec3ecd785d8eec16104a3db3ed8f8571279234e6570"
+    },
+    {
+      "id": "camera-continuity",
+      "title": "Camera depth and continuous transitions",
+      "path": "language/camera-continuity.md",
+      "kind": "technique",
+      "sha256": "eab2f21ac006a93c9739d085ad739b1024c272fa7fc2bbbc8d15efc8248b2b89"
+    },
+    {
+      "id": "assets-depth",
+      "title": "Motion-ready art material quality and occlusion",
+      "path": "language/assets-depth.md",
+      "kind": "technique",
+      "sha256": "cd141625ff264e755a0a09db9533a25d9e2957f71ec2ece619ab311d44914d94"
+    },
+    {
+      "id": "type-evidence",
+      "title": "Typography narration and authentic evidence",
+      "path": "language/type-evidence.md",
+      "kind": "technique",
+      "sha256": "f4b3698beb1d1042e283c984736bcea157ce47795569fc68b944357faf051151"
+    },
+    {
+      "id": "reference-study",
+      "title": "Measure and transfer a reference mechanism",
+      "path": "language/reference-study.md",
+      "kind": "technique",
+      "sha256": "5bb25d118177688914a5be8eac3123910748e918c4d4f24122530216cb8d8538"
+    },
+    {
+      "id": "failure-atlas",
+      "title": "Production failures causes and corrections",
+      "path": "language/failure-atlas.md",
+      "kind": "review",
+      "sha256": "000568bbad72fbae4c42fdfaccd3b4403c9eb2243919b69bda3b543b21f3a3f7"
+    },
+    {
+      "id": "worked-scenes",
+      "title": "Three detailed source-derived scene studies",
+      "path": "examples/worked-scenes.md",
+      "kind": "examples",
+      "sha256": "140d81cd3c53aa386192af566f235dd030a75807f7467aa509b9c01587040fab"
+    },
+    {
+      "id": "brief-template",
+      "title": "Portable scene and production brief",
+      "path": "templates/brief.md",
+      "kind": "template",
+      "sha256": "ff3bf9e6f681e45570d981a14ec1cf46e7eacf800fc98c5df725287dc39dfecd"
+    },
+    {
+      "id": "design",
+      "title": "Design before motion",
+      "path": "references/design.md",
+      "kind": "guidance",
+      "sha256": "57b855678671680d94978c00718d9cff5dbcd42129b23e18d53a313e846bbc6b"
+    },
+    {
+      "id": "timing",
+      "title": "Timing and motion vocabulary",
+      "path": "references/timing.md",
+      "kind": "guidance",
+      "sha256": "8f8e2f5a6d63fe5db76026d300ac174bf8e6612e39fcdb57b95ae94bc7da9c8f"
+    },
+    {
+      "id": "scripting",
+      "title": "Native AE scripting and build pitfalls",
+      "path": "references/scripting.md",
+      "kind": "guidance",
+      "sha256": "94524887d2c3a3d173d21a9813c424106b37a8785865f744f3016b2c081d1ab9"
+    },
+    {
+      "id": "quality",
+      "title": "Visual review and delivery checks",
+      "path": "references/quality.md",
+      "kind": "guidance",
+      "sha256": "7049f8ef14afbf18f944c5bd5b25ec712ba2b7c0dbeb55a360a73c2e1e6e2986"
+    },
+    {
+      "id": "scene-recipes",
+      "title": "Seven explanatory scene recipes",
+      "path": "recipes/recipes.md",
+      "kind": "recipes",
+      "sha256": "c7b11c39046c0ed5eaa97cc50fc60c768beb4c363e94f7015eef2867d346f1fe"
+    },
+    {
+      "id": "joeb-preset",
+      "title": "Optional JoeB paper navy vermilion preset",
+      "path": "presets/joeb.md",
+      "kind": "preset",
+      "sha256": "8c9bf32434bffef528a608dd245bcde29e534effe3dc4ba5846cc39620a5a229"
+    },
+    {
+      "id": "motion-jsx",
+      "title": "Portable brand-neutral motion helpers",
+      "path": "scripts/motion.jsx",
+      "kind": "code",
+      "sha256": "3958a0155433fde1ff54a49426e367930340fa7edb982fd4f0dba066c36c4407"
+    },
+    {
+      "id": "house-jsx",
+      "title": "JoeB rig helpers; requires configured rig and media",
+      "path": "presets/house.jsx",
+      "kind": "code",
+      "sha256": "984da7c19cee91955c7f3d4a3fbc9a2a404449073764542ba4053576330c9c14"
+    },
+    {
+      "id": "joeb-motion-jsx",
+      "title": "JoeB motion helpers; load after house-jsx",
+      "path": "presets/motion.jsx",
+      "kind": "code",
+      "sha256": "a7f956823f261c76440d970e10063b070b5ac6c4deca8d01e1d1c3c908fc5e0d"
+    },
+    {
+      "id": "style-index",
+      "title": "Visual style library index: tiers, uses and needs",
+      "path": "styles/index.json",
+      "kind": "catalog",
+      "sha256": "25b496c5ed7d22a86addf235b41d6701e08eb04f67ea705825748507d0f4cabd"
+    },
+    {
+      "id": "style-lib-jsx",
+      "title": "Shared ES3 helpers for every style (AESLib)",
+      "path": "styles/aes-lib.jsx",
+      "kind": "code",
+      "sha256": "149e3a21e3b3da91a6813d4740045f4d1f339c82cd1fd5bc15f55bddeffa2333"
+    },
+    {
+      "id": "style-art-deco",
+      "title": "Art Deco style",
+      "path": "styles/art-deco/STYLE.md",
+      "kind": "style",
+      "sha256": "daa664deb8cea8e0c1a4c4eba5cd4e01c43a1adfeec2df0f9ac6da7c771ca0e5"
+    },
+    {
+      "id": "style-art-deco-jsx",
+      "title": "Art Deco helpers (AESDeco)",
+      "path": "styles/art-deco/deco.jsx",
+      "kind": "code",
+      "sha256": "3554f4971e0a408f6da43ba07b58be7bc6d76854ed7c287d8fd5ed00d855ef46"
+    },
+    {
+      "id": "style-backrooms",
+      "title": "Liminal found footage style",
+      "path": "styles/backrooms/STYLE.md",
+      "kind": "style",
+      "sha256": "dccaf546aa7080873b32e5dfa1ad9ae4f25056fe78166695e69e7c5a96390f24"
+    },
+    {
+      "id": "style-backrooms-jsx",
+      "title": "Liminal found footage helpers (AESBackrooms)",
+      "path": "styles/backrooms/backrooms.jsx",
+      "kind": "code",
+      "sha256": "e20c26c8dc4a717d2240b5516d0002502f7274d02e6d7a2e8e5c14a716225f93"
+    },
+    {
+      "id": "style-blueprint",
+      "title": "Blueprint style",
+      "path": "styles/blueprint/STYLE.md",
+      "kind": "style",
+      "sha256": "88fca1b4b6bdd7de417c478e1520ee4a84f799878f35c22d3e8a6fa270c8b98e"
+    },
+    {
+      "id": "style-blueprint-jsx",
+      "title": "Blueprint helpers (AESBlueprint)",
+      "path": "styles/blueprint/blueprint.jsx",
+      "kind": "code",
+      "sha256": "00d3ff24bafaabb09ce119588629279ad9e769e34977d9822ed739ea810bc41d"
+    },
+    {
+      "id": "style-crt-terminal",
+      "title": "CRT terminal style",
+      "path": "styles/crt-terminal/STYLE.md",
+      "kind": "style",
+      "sha256": "7c893da26706d3f4662dc84ec50b4c18ef30c1b5fcc9b19fa7d1b4fbe517a090"
+    },
+    {
+      "id": "style-crt-terminal-jsx",
+      "title": "CRT terminal helpers (AESCrt)",
+      "path": "styles/crt-terminal/crt.jsx",
+      "kind": "code",
+      "sha256": "37572e43754be50986ef18bda1afd0e7f26f32f0cc93c6a985e2d95d1a64668b"
+    },
+    {
+      "id": "style-dark-keynote",
+      "title": "Dark keynote style",
+      "path": "styles/dark-keynote/STYLE.md",
+      "kind": "style",
+      "sha256": "44208b5be1127b008d50b404fb2f09bca3769b9f0aa34216177a3dae524bb594"
+    },
+    {
+      "id": "style-dark-keynote-jsx",
+      "title": "Dark keynote helpers (AESKeynote)",
+      "path": "styles/dark-keynote/keynote.jsx",
+      "kind": "code",
+      "sha256": "bec2c1bc7a38134c01a2fd94b738515ca0be9108ea02e52921f234ddd0ed1498"
+    },
+    {
+      "id": "style-dataviz",
+      "title": "Data storytelling style",
+      "path": "styles/dataviz/STYLE.md",
+      "kind": "style",
+      "sha256": "9a9491e302743c84b5d26ae83aaa633fb63c8a757854b21bd0814da464a3b746"
+    },
+    {
+      "id": "style-dataviz-jsx",
+      "title": "Data storytelling helpers (AESDataviz)",
+      "path": "styles/dataviz/dataviz.jsx",
+      "kind": "code",
+      "sha256": "01c7e97bf1f686c3a73bf1743c8519ef52e89b8df1bee3b91e582c1e50524e32"
+    },
+    {
+      "id": "style-engraving",
+      "title": "Copperplate engraving style",
+      "path": "styles/engraving/STYLE.md",
+      "kind": "style",
+      "sha256": "a6278a4cde35e7fe178cd38e268ff8758f0571aa6252b71aaae90e50bba0c2cc"
+    },
+    {
+      "id": "style-engraving-jsx",
+      "title": "Copperplate engraving helpers (AESEngraving)",
+      "path": "styles/engraving/engraving.jsx",
+      "kind": "code",
+      "sha256": "24583c6be7788ff10005760dc99a209ab91cb680390eb45ca785b858b8f06412"
+    },
+    {
+      "id": "style-game-show",
+      "title": "Game Show style",
+      "path": "styles/game-show/STYLE.md",
+      "kind": "style",
+      "sha256": "d2d34ca548a8f7decc0bd252afdb49fb3ed4d75ffc8c40de75cd944cc4e98256"
+    },
+    {
+      "id": "style-game-show-jsx",
+      "title": "Game Show helpers (AESGameShow)",
+      "path": "styles/game-show/gameshow.jsx",
+      "kind": "code",
+      "sha256": "6e803d381a1a153d70737d285f2bfa0ab46102ed791f7f2e581c25f26f1dda5a"
+    },
+    {
+      "id": "style-glass-product",
+      "title": "Glass product style",
+      "path": "styles/glass-product/STYLE.md",
+      "kind": "style",
+      "sha256": "28d3bf65e7c588249667f3eeb6db7adccd1a2c2685a7f301b3ef99d598e95f51"
+    },
+    {
+      "id": "style-glass-product-jsx",
+      "title": "Glass product helpers (AESGlass)",
+      "path": "styles/glass-product/glass.jsx",
+      "kind": "code",
+      "sha256": "5284a2e66878777521e11847fbcf500556375093b10df1b04887fed33cd1891b"
+    },
+    {
+      "id": "style-halftone-dossier",
+      "title": "Halftone dossier style",
+      "path": "styles/halftone-dossier/STYLE.md",
+      "kind": "style",
+      "sha256": "ab61c8c1931c6b76aab3b471360281f1fe82b7ff2c4e76bf488f3e40e59cfbf5"
+    },
+    {
+      "id": "style-halftone-dossier-jsx",
+      "title": "Halftone dossier helpers (AESDossier)",
+      "path": "styles/halftone-dossier/dossier.jsx",
+      "kind": "code",
+      "sha256": "4b5414d724f875c7ff40848abb8e55fd4944b305f7f81493982e91db55c06090"
+    },
+    {
+      "id": "style-hologram-hud",
+      "title": "Hologram HUD style",
+      "path": "styles/hologram-hud/STYLE.md",
+      "kind": "style",
+      "sha256": "5fb16dbab399b47d54040da818cd02b5589f6b9a3b74914d504931112e8812b1"
+    },
+    {
+      "id": "style-hologram-hud-jsx",
+      "title": "Hologram HUD helpers (AESHologram)",
+      "path": "styles/hologram-hud/hologram.jsx",
+      "kind": "code",
+      "sha256": "066a349be091b2ed7aee26df51b0abefd11320e1611555257ddba714dd48e57e"
+    },
+    {
+      "id": "style-iso-infographic",
+      "title": "Isometric infographic style",
+      "path": "styles/iso-infographic/STYLE.md",
+      "kind": "style",
+      "sha256": "68ffa01a4d6b9e82af59bade50a2dfc58cb669e1bbb5c050262063942deb0443"
+    },
+    {
+      "id": "style-iso-infographic-jsx",
+      "title": "Isometric infographic helpers (AESIso)",
+      "path": "styles/iso-infographic/iso.jsx",
+      "kind": "code",
+      "sha256": "0bd423a9aa4a9c1de5080e91a1346403e1572737eca027ad6d29bba1e644c88b"
+    },
+    {
+      "id": "style-living-screencast",
+      "title": "Living screencast style",
+      "path": "styles/living-screencast/STYLE.md",
+      "kind": "style",
+      "sha256": "ec12f487f425bef0cab95e9363ce103b48e6eb774c0d3e2566295a64263ac77f"
+    },
+    {
+      "id": "style-living-screencast-jsx",
+      "title": "Living screencast helpers (AESScreencast)",
+      "path": "styles/living-screencast/screencast.jsx",
+      "kind": "code",
+      "sha256": "853b2f6875b7d5a30f91d6749756cbca92a69dc1bf4ebc06c1ca6e28918c5c08"
+    },
+    {
+      "id": "style-lowpoly-island",
+      "title": "Low-poly island style",
+      "path": "styles/lowpoly-island/STYLE.md",
+      "kind": "style",
+      "sha256": "aacc809cfc5320e759e384acf233b8a7e5a3b6c13b041db5af09f7cc935ade3d"
+    },
+    {
+      "id": "style-lowpoly-island-jsx",
+      "title": "Low-poly island helpers (AESLowpolyIsland)",
+      "path": "styles/lowpoly-island/lowpoly-island.jsx",
+      "kind": "code",
+      "sha256": "32ec818fd85608693efbfc577d1a0d0bc0b3af0519d3e50f1614905da4f68c13"
+    },
+    {
+      "id": "style-microgame",
+      "title": "Microgame frenzy style",
+      "path": "styles/microgame/STYLE.md",
+      "kind": "style",
+      "sha256": "3d1d68fa6712626244b14fd04a8051237f6bfe4b2676022a31e3d2b643794d0b"
+    },
+    {
+      "id": "style-microgame-jsx",
+      "title": "Microgame frenzy helpers (AESMicrogame)",
+      "path": "styles/microgame/microgame.jsx",
+      "kind": "code",
+      "sha256": "76315db8dddb37e106c3447de1e1656e2abec0284ac57beae6ec32987b7c02cc"
+    },
+    {
+      "id": "style-midcentury-toon",
+      "title": "Mid-century cartoon style",
+      "path": "styles/midcentury-toon/STYLE.md",
+      "kind": "style",
+      "sha256": "d1434469c00b55abb57f1714cd9d5cb8f703e7ef3c54a0517f79f22034fb117d"
+    },
+    {
+      "id": "style-midcentury-toon-jsx",
+      "title": "Mid-century cartoon helpers (AESMidcenturyToon)",
+      "path": "styles/midcentury-toon/midcentury-toon.jsx",
+      "kind": "code",
+      "sha256": "2c7eb372aedcd097108ebfd42755e1e56aee735dce72cad7f8f672dadea3141b"
+    },
+    {
+      "id": "style-one-line",
+      "title": "One-line drawing style",
+      "path": "styles/one-line/STYLE.md",
+      "kind": "style",
+      "sha256": "dd6374da1b599e6cfe4d1bb2cb48ebe7358108089de523b96d92705818c3c189"
+    },
+    {
+      "id": "style-one-line-jsx",
+      "title": "One-line drawing helpers (AESOneLine)",
+      "path": "styles/one-line/oneline.jsx",
+      "kind": "code",
+      "sha256": "42b404f07313876a734cca3e2c904077f6deab4df79351900bccf1af8b1ff9ed"
+    },
+    {
+      "id": "style-paper-lantern",
+      "title": "Paper-cut lightbox style",
+      "path": "styles/paper-lantern/STYLE.md",
+      "kind": "style",
+      "sha256": "72faf486300871edf8939741a244f615d220fb69424a0c56f529d0d11df04786"
+    },
+    {
+      "id": "style-paper-lantern-jsx",
+      "title": "Paper-cut lightbox helpers (AESLantern)",
+      "path": "styles/paper-lantern/lantern.jsx",
+      "kind": "code",
+      "sha256": "8998a085dfa9da33e5d78cf17ea342bfd7a442ca733d9e3434c6b63e1b6543f8"
+    },
+    {
+      "id": "style-pictogram-motion",
+      "title": "Pictogram motion style",
+      "path": "styles/pictogram-motion/STYLE.md",
+      "kind": "style",
+      "sha256": "8d8d5461de44ed971f8c6f116277a8474d83ddda04364f1058393c8d27a838b9"
+    },
+    {
+      "id": "style-pictogram-motion-jsx",
+      "title": "Pictogram motion helpers (AESPictogram)",
+      "path": "styles/pictogram-motion/pictogram.jsx",
+      "kind": "code",
+      "sha256": "a8845c6ef36d43b42a50df78f46c6a93e453cb1722c91dc5e64a7f103508a3f5"
+    },
+    {
+      "id": "style-risograph",
+      "title": "Risograph print style",
+      "path": "styles/risograph/STYLE.md",
+      "kind": "style",
+      "sha256": "dc77d32b5598a6e4f93fcd252740958c406350b8456ee8abd67b7b86f12e574c"
+    },
+    {
+      "id": "style-risograph-jsx",
+      "title": "Risograph print helpers (AESRiso)",
+      "path": "styles/risograph/riso.jsx",
+      "kind": "code",
+      "sha256": "1e5f34afbf6586388eb4b9f77011ef790330851e2c1812bed790e4bb2a33a32b"
+    },
+    {
+      "id": "style-rubber-hose",
+      "title": "Rubber hose cartoon style",
+      "path": "styles/rubber-hose/STYLE.md",
+      "kind": "style",
+      "sha256": "49e76906ac2b5a9d7cda21ca8d7407776dc3ffbdce52c2aeb0a25fbe61b03896"
+    },
+    {
+      "id": "style-rubber-hose-jsx",
+      "title": "Rubber hose cartoon helpers (AESRubberHose)",
+      "path": "styles/rubber-hose/rubber-hose.jsx",
+      "kind": "code",
+      "sha256": "1394dfcaced6988d291d1cf384be56c88652c0adad020f1ee2bcf5f66033f365"
+    },
+    {
+      "id": "style-silent-film",
+      "title": "Silent film style",
+      "path": "styles/silent-film/STYLE.md",
+      "kind": "style",
+      "sha256": "586f863be9097825d561ef53f6063bea07612db07abd5334759eba9f891b70e0"
+    },
+    {
+      "id": "style-silent-film-jsx",
+      "title": "Silent film helpers (AESSilent)",
+      "path": "styles/silent-film/silent.jsx",
+      "kind": "code",
+      "sha256": "6c53f87abe6b1f89f230c9feccaefe0709a9120e505c85432168a0ccc80baa26"
+    },
+    {
+      "id": "style-silkscreen-poster",
+      "title": "Silkscreen poster style",
+      "path": "styles/silkscreen-poster/STYLE.md",
+      "kind": "style",
+      "sha256": "4ef2449bc281f4bebf36fef4f8e5f827fd5e663d49e5915243c5dce0bfbda96a"
+    },
+    {
+      "id": "style-silkscreen-poster-jsx",
+      "title": "Silkscreen poster helpers (AESSilk)",
+      "path": "styles/silkscreen-poster/silk.jsx",
+      "kind": "code",
+      "sha256": "d1ee5bab77ef1d679bbbf8f6324b572cdb9a9715cf48a385df1ede5e579fbedf"
+    },
+    {
+      "id": "style-spy-titles",
+      "title": "Spy titles style",
+      "path": "styles/spy-titles/STYLE.md",
+      "kind": "style",
+      "sha256": "729c319d796d91b281acd9836d0ec8bd57925f550d4c8a48d1f9827eb08cd0fa"
+    },
+    {
+      "id": "style-spy-titles-jsx",
+      "title": "Spy titles helpers (AESSpy)",
+      "path": "styles/spy-titles/spy.jsx",
+      "kind": "code",
+      "sha256": "bfebd17e40d5c7b11b0a199a227a8262b5ebad1e3d0e888742e7ab99c3943e1e"
+    },
+    {
+      "id": "style-stained-glass",
+      "title": "Stained glass style",
+      "path": "styles/stained-glass/STYLE.md",
+      "kind": "style",
+      "sha256": "15a834f3ae28e4a075ec8aefb24034bffe0e8366086be2ac77dd53db6a5b8a21"
+    },
+    {
+      "id": "style-stained-glass-jsx",
+      "title": "Stained glass helpers (AESStainedGlass)",
+      "path": "styles/stained-glass/stained-glass.jsx",
+      "kind": "code",
+      "sha256": "608a20aa9366aef7282d1874e0db54cb4b63612966ad0f2b8f5cd6f161331e14"
+    },
+    {
+      "id": "style-swiss-motion",
+      "title": "Swiss motion style",
+      "path": "styles/swiss-motion/STYLE.md",
+      "kind": "style",
+      "sha256": "046739ee535a6e469832d5daa468e2467a8cc683de50fa9265cae0b60d1f1169"
+    },
+    {
+      "id": "style-swiss-motion-jsx",
+      "title": "Swiss motion helpers (AESSwiss)",
+      "path": "styles/swiss-motion/swiss.jsx",
+      "kind": "code",
+      "sha256": "c624e4e96092cebaeb571978b502060f615a4d606ff111b562a58482f84c22eb"
+    },
+    {
+      "id": "style-tilt-shift",
+      "title": "Tilt-shift miniature style",
+      "path": "styles/tilt-shift/STYLE.md",
+      "kind": "style",
+      "sha256": "b61401f430ea741d85496fc4bd85e67705d0633fd4738fa77772790cdca057e1"
+    },
+    {
+      "id": "style-tilt-shift-jsx",
+      "title": "Tilt-shift miniature helpers (AESTiltShift)",
+      "path": "styles/tilt-shift/tilt-shift.jsx",
+      "kind": "code",
+      "sha256": "3de118056cc01761751e5adb61340f932e681d0f0b97c181840e9c7a22c75c87"
+    },
+    {
+      "id": "style-ukiyoe",
+      "title": "Ukiyo-e woodblock print style",
+      "path": "styles/ukiyoe/STYLE.md",
+      "kind": "style",
+      "sha256": "961e78af4e231a622a4757f0d61de56fc532d5b56e1a93a64d4fa63e1a50f5c3"
+    },
+    {
+      "id": "style-ukiyoe-jsx",
+      "title": "Ukiyo-e woodblock print helpers (AESUkiyoe)",
+      "path": "styles/ukiyoe/ukiyoe.jsx",
+      "kind": "code",
+      "sha256": "30990c6288b524e13a68d69526a6f1b81d921a160362fb578523e4bf8af8a920"
+    },
+    {
+      "id": "style-whiteboard",
+      "title": "Whiteboard explainer style",
+      "path": "styles/whiteboard/STYLE.md",
+      "kind": "style",
+      "sha256": "f95ce7d7385a5a079b356b5027c613417e095cc2a6bd02ff784b2fe2b8db6760"
+    },
+    {
+      "id": "style-whiteboard-jsx",
+      "title": "Whiteboard explainer helpers (AESWhiteboard)",
+      "path": "styles/whiteboard/whiteboard.jsx",
+      "kind": "code",
+      "sha256": "4899ed87b04d6705ae5825f400941fd743a21d8f002e551e82ca71181eba4014"
+    },
+    {
+      "id": "style-woodcut",
+      "title": "Woodcut print style",
+      "path": "styles/woodcut/STYLE.md",
+      "kind": "style",
+      "sha256": "8e94f8647ff5311880f22129fc82dbbcfdc553aae1bb326ad800cafd547afc49"
+    },
+    {
+      "id": "style-woodcut-jsx",
+      "title": "Woodcut print helpers (AESWoodcut)",
+      "path": "styles/woodcut/woodcut.jsx",
+      "kind": "code",
+      "sha256": "555a86a5ebad48cd0dc2799a936f542bffc3f32060b06641f8331a1e13cdf992"
+    }
+  ]
+}

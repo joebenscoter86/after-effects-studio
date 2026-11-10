@@ -1,4 +1,5 @@
-import { existsSync, statSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { existsSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -212,27 +213,82 @@ export function runtimeDirWarnings(): string[] {
 }
 
 const DEFAULT_AE_PATHS_WIN32 = [
+  "C:/Program Files/Adobe/Adobe After Effects 2027/Support Files/AfterFX.exe",
   "C:/Program Files/Adobe/Adobe After Effects 2026/Support Files/AfterFX.exe",
   "C:/Program Files/Adobe/Adobe After Effects 2025/Support Files/AfterFX.exe",
   "C:/Program Files/Adobe/Adobe After Effects 2024/Support Files/AfterFX.exe",
 ];
 
 const DEFAULT_AE_PATHS_DARWIN = [
+  "/Applications/Adobe After Effects 2027/Adobe After Effects 2027.app",
   "/Applications/Adobe After Effects 2026/Adobe After Effects 2026.app",
   "/Applications/Adobe After Effects 2025/Adobe After Effects 2025.app",
   "/Applications/Adobe After Effects 2024/Adobe After Effects 2024.app",
 ];
 
+const AE_RELEASE_DIR = /^Adobe After Effects (\d{4})$/;
+/** Releases the plugin is tested against, preferred in this order over any newer one that is not running. */
+const SUPPORTED_AE_YEARS = [2027, 2026, 2025, 2024];
+const MIN_AE_YEAR = 2024;
+const AE_APP_IN_PROCESS = /^(.*\/Adobe After Effects \d{4}\.app)\/Contents\/MacOS\/After Effects(?:\s|$)/;
+
+/** macOS: the .app bundles of After Effects releases that are running now, read from `ps` output. */
+export function runningAfterFxApps(psOutput?: string): string[] {
+  let text = psOutput;
+  if (text === undefined) {
+    const r = spawnSync("ps", ["-axo", "command="], { encoding: "utf8", timeout: 2_000 });
+    text = r.stdout ?? "";
+  }
+  const apps = new Set<string>();
+  for (const line of text.split("\n")) {
+    const m = AE_APP_IN_PROCESS.exec(line.trim());
+    if (m?.[1]) apps.add(m[1]);
+  }
+  return [...apps];
+}
+
+/**
+ * Installed yearly releases under the default Adobe folder, newest first: any
+ * "Adobe After Effects <year>" folder that holds the app (macOS) or AfterFX.exe
+ * (Windows). A missing or unreadable folder yields an empty list.
+ */
+export function discoverAfterFxPaths(
+  platform: NodeJS.Platform = process.platform,
+  root: string = platform === "darwin" ? "/Applications" : "C:/Program Files/Adobe",
+): string[] {
+  let names: string[];
+  try { names = readdirSync(root); } catch { return []; }
+  return names
+    .map((name) => ({ name, year: AE_RELEASE_DIR.exec(name)?.[1] }))
+    .filter((e): e is { name: string; year: string } => e.year !== undefined && Number(e.year) >= MIN_AE_YEAR)
+    .sort((a, b) => Number(b.year) - Number(a.year))
+    .map(({ name, year }) => platform === "darwin"
+      ? path.join(root, name, `Adobe After Effects ${year}.app`)
+      : path.join(root, name, "Support Files", "AfterFX.exe"))
+    .filter((candidate) => existsSync(candidate));
+}
+
 /**
  * Locate After Effects — AfterFX.exe on Windows, the .app bundle on macOS.
  * Honors AE_MCP_EXE (and the legacy AE_EXE name) first so the user can
- * override without editing source, then probes the default install paths for
- * AE 2026 → 2025 → 2024.
+ * override without editing source. Then a release that is already running (so
+ * the agent talks to the After Effects the user has open), then the supported
+ * releases 2027 → 2026 → 2025 → 2024, then any newer installed release, newest first.
  */
-export function resolveAfterFxPath(platform: NodeJS.Platform = process.platform): string {
+export function resolveAfterFxPath(
+  platform: NodeJS.Platform = process.platform,
+  root?: string,
+  running: () => string[] = () => (platform === "darwin" ? runningAfterFxApps() : []),
+): string {
   for (const env of [process.env.AE_MCP_EXE, process.env.AE_EXE]) {
     if (env && existsSync(env)) return env;
   }
+  const discovered = discoverAfterFxPaths(platform, root);
+  const yearOf = (p: string) => Number(/Adobe After Effects (\d{4})/.exec(p)?.[1]);
+  const live = running().filter((app) => existsSync(app));
+  const supported = SUPPORTED_AE_YEARS.flatMap((y) => discovered.filter((p) => yearOf(p) === y));
+  const ordered = [...live, ...supported, ...discovered];
+  if (ordered.length) return ordered[0]!;
   const candidates = platform === "darwin" ? DEFAULT_AE_PATHS_DARWIN : DEFAULT_AE_PATHS_WIN32;
   for (const candidate of candidates) {
     if (existsSync(candidate)) return candidate;

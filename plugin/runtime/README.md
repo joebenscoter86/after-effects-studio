@@ -144,7 +144,7 @@ In some environments, such as when After Effects is installed in a non-standard 
 
 If After Effects is not in the standard installation path, you can specify the executable location using `AE_MCP_EXE`.
 
-By default, it automatically searches for After Effects in the order of 2026 → 2025 → 2024.
+By default it uses a release that is already running (macOS), then 2026 → 2025 → 2024, then any newer installed release; releases before 2024 are ignored.
 
 ### Limiting Operation Scope
 

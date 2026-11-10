@@ -64,7 +64,7 @@ def main():
     ).encode()
     if b"Native AE runtime" not in entries["THIRD-PARTY-NOTICES.txt"]:
         raise SystemExit("Upstream notice missing")
-    if b"Original Materials License 1.0" not in entries["license.md"]:
+    if not re.search(rb"Original Materials License 1\.\d+", entries["license.md"]):
         raise SystemExit("Original-material terms missing")
     DEST.mkdir(parents=True, exist_ok=True)
     archive = DEST / f"after-effects-studio-{manifest['version']}.zip"

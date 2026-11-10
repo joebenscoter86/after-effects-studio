@@ -8,7 +8,7 @@ export const projectImportTool = defineTool({
     name: "ae_project_import_json",
     title: "Import project JSON",
     description: "Rebuild the project from JSON (produced by ae_project_export_json). " +
-        "Supports `clearFirst`, `dryRun` (validate-only), `skipValidation`.",
+        "Supports `clearFirst` (removes every existing project item before importing), `dryRun` (validate-only), `skipValidation`.",
     group: "document",
     blockedInReadOnly: true,
     effect: "destructive",

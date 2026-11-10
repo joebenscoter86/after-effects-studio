@@ -13,6 +13,7 @@ This repository is the canonical development workspace. Read this map first, the
 - quality/: context.md, release-criteria.md, fixtures/, reports/ and renders/. Reproducible scenarios and inspected evidence. The canonical skill test prompts remain in plugin/evals/.
 - release/: context.md, release-plan.md, listing-draft.md, submission/, website/ and packages/. Public distribution and launch materials.
 - README.md explains getting started. .gitignore excludes local secrets, dependencies and large generated output. CLAUDE.md is a pointer only.
+- claude/: src/ holds the Claude-only sources (manifest, MCP config, launcher, README and docs); after-effects-studio/ is the generated Claude package. Never edit the generated folder; after any plugin/ or claude/src change run `node release/build-claude-package.mjs` and commit the result (`node --test 'release/tests/*.test.mjs'` fails while it is stale). `node release/claude-evals.mjs --out <package copy>/evals` writes the canonical evals as a `claude plugin eval` suite into a scratch copy of the package; the suite is not shipped.
 - .agents/plugins/marketplace.json is the source-repository Codex marketplace catalog for the planned Git-backed route. It points at plugin/ and does not make the repository public.
 
 ## Routing
@@ -25,6 +26,7 @@ This repository is the canonical development workspace. Read this map first, the
 | Improve motion knowledge | plugin/context.md, relevant library module, plugin/evals/evals.json | Unrelated runtime code | Skill Creator; local plugin/skills/motion-studio/SKILL.md |
 | Test motion or reliability | quality/context.md, quality/release-criteria.md, relevant scenario | Marketing drafts | Local plugin/skills/motion-review/SKILL.md and plugin/skills/ae-control/SKILL.md |
 | Prepare a public release | release/context.md, release/release-plan.md, verified quality reports | Unrelated implementation | Plugin Creator |
+| Prepare the Claude release | product/claude-release-plan.md, product/claude-implementation-plan.md, D-014, D-015, quality/reports/2026-11-08-claude-directory-route/research.md | Codex marketplace and install docs | `claude plugin validate --strict` |
 | Audit this workspace | AGENTS.md and the four context.md files | Render contents | Workspace Architect |
 
 External skills are development aids, not end-user dependencies. Resolve their installed SKILL.md when needed. Do not load every skill at startup.
@@ -42,3 +44,5 @@ Inspect the exact current AE project before native writes. Only one controller o
 ## Where to resume
 
 Read product/release-execution-plan.md for the detailed D-013 plan approved 2026-10-13, then the current Linear ticket. product/roadmap.md retains evidence context; product/build-plan.md defines six stages; product/backlog.md maps the baseline and follow-up tickets. Linear owns live execution status. Recovery, separate-Mac installation, source/rights review, page preparation and lifecycle tests can proceed independently. AFT-32 publishes reviewed infrastructure only after authorization; AFT-34 rehearses real public-Git installation before AFT-23 freezes the Codex candidate. AFT-24/AFT-25 handle Codex launch; AFT-30/AFT-35/AFT-36 handle the separate nonblocking directory path. Scaffold and planning completion do not close release requirements.
+
+The Claude release is a separate track (D-014, D-015): read product/claude-release-plan.md. Its CL-keys are local planning keys until Linear tickets exist. The Claude package is generated from plugin/; never edit generated output by hand.

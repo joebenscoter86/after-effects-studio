@@ -3,11 +3,11 @@ name: motion-studio
 description: Create or revise motion graphics in Adobe After Effects using a detailed production-derived motion language. Use whenever the user asks for an explainer, product animation, animated diagram, title sequence, kinetic typography, reel graphics, or more polished AE motion. Adapts to any brand and style; includes measured choreography, camera grammar, worked scenes and visual review.
 ---
 
-# After Effects Studio: universal style, a specific craft foundation
+# Motion studio: universal style, a specific craft foundation
 
 The user chooses the subject and visual style. This plugin supplies the detailed motion language developed in an existing production pipeline. Use that knowledge as the default for every motion task; it is not a JoeB-only preset. Native AE control is the execution layer.
 
-For visually demanding builds, suggest an available GPT-6-family model or newer; prefer GPT-6.1 Sol or GPT-6 Astra for complex layout and continuity. If the user is on a lower-cost model, continue the requested work and treat its render as a draft until the delivered frames pass visual review. A local comparison found GPT-5.6 Luna/high technically capable but visually unreliable on three of six first passes; GPT-6 Astra/high cleared the sampled faults in separate confirmations. Do not claim that every GPT-6 variant is validated, switch models without the user's choice, or equate model selection with creative acceptance.
+For visually demanding builds, suggest the most capable model available in your host. A lower-cost model can still build editable drafts; treat its render as a draft until the delivered frames pass visual review. Do not switch models without the user's choice, and never treat model choice as creative acceptance.
 
 ## Cold start
 

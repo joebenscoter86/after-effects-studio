@@ -90,6 +90,20 @@ describe("mcp server over stdio (offline)", () => {
     expect(byName.get("ae_render_frame")).toMatchObject({ destructiveHint: false });
   });
 
+  it("every tool declares a title and a behaviour hint", async () => {
+    // Anthropic's directory policy requires both on every tool.
+    const res = (await client.listTools()) as {
+      tools: Array<{ name: string; title?: unknown; annotations?: Record<string, unknown> }>;
+    };
+    expect(res.tools.length).toBe(EXPECTED_TOOLS.length);
+    for (const tool of res.tools) {
+      expect(typeof tool.title === "string" && tool.title.trim().length > 0, `${tool.name} title`).toBe(true);
+      const hints = tool.annotations ?? {};
+      const hinted = hints.readOnlyHint === true || typeof hints.destructiveHint === "boolean";
+      expect(hinted, `${tool.name} needs readOnlyHint: true or a boolean destructiveHint`).toBe(true);
+    }
+  });
+
   it("ae_do rejects a misspelled argument key instead of silently dropping it", async () => {
     const text = await client.callExpectError("ae_do", {
       operation: "keyframe.add",

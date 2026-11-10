@@ -24,6 +24,29 @@ function makeDoctor(overrides: Partial<DoctorOptions> = {}) {
 }
 
 describe('doctor diagnostics', () => {
+  it('names the release it uses when several are installed', () => {
+    const app26 = '/Applications/Adobe After Effects 2026/Adobe After Effects 2026.app';
+    const app27 = '/Applications/Adobe After Effects 2027/Adobe After Effects 2027.app';
+    const files = new Set(['/pkg/runtime/dist/index.js', '/pkg/library/manifest.json', app26, app27]);
+    const report = makeDoctor({
+      fileExists: (p) => files.has(p),
+      listDir: (dir) => (dir === '/Applications' ? ['Adobe After Effects 2026', 'Adobe After Effects 2027'] : []),
+      runningApps: () => [],
+    });
+    expect(report.checks.find((x) => x.name === 'After Effects path')!.detail).toBe(app27);
+    expect(report.notes.join(' ')).toMatch(/2027, 2026.*Adobe After Effects 2027\.app/);
+  });
+
+  it('finds an installed release newer than the built-in list', () => {
+    const app = '/Applications/Adobe After Effects 2028/Adobe After Effects 2028.app';
+    const files = new Set(['/pkg/runtime/dist/index.js', '/pkg/library/manifest.json', app]);
+    const report = makeDoctor({
+      fileExists: (p) => files.has(p),
+      listDir: (dir) => (dir === '/Applications' ? ['Adobe After Effects 2028', 'Adobe Photoshop 2028'] : []),
+    });
+    expect(report.checks.find((x) => x.name === 'After Effects path')!.detail).toBe(app);
+  });
+
   it('reports a ready local setup without claiming that AE permissions were checked', () => {
     const report = makeDoctor();
     expect(report.ok).toBe(true);
