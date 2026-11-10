@@ -374,6 +374,29 @@ test('no shipped file names the old product', async () => {
   assert.deepEqual(hits, []);
 });
 
+// Directory checklist: a bundled image is shown in the README with Markdown image syntax, and no file names a
+// bundled image in backticks or a code block (a reviewer hold otherwise). The manifest's icon is exempt.
+test('bundled images follow the directory image rule', async () => {
+  const { outDir, files } = await sharedBuild();
+  const { icon } = JSON.parse(await fs.readFile(path.join(outDir, '.claude-plugin/plugin.json'), 'utf8'));
+  const images = files.filter((f) => /\.(png|jpe?g|gif|webp|svg)$/i.test(f));
+  const readme = await fs.readFile(path.join(outDir, 'README.md'), 'utf8');
+  const unshown = images.filter((f) => f !== path.normalize(icon) && !readme.includes(`](${f})`));
+  assert.deepEqual(unshown, [], 'bundled images missing from the README');
+  const named = [];
+  for (const rel of files) {
+    if (rel.startsWith('runtime/node_modules/') || !/\.(md|txt|json|mjs|js|jsx)$/.test(rel)) continue;
+    const text = await fs.readFile(path.join(outDir, rel), 'utf8');
+    const spans = [...text.matchAll(/```[\s\S]*?```|`[^`\n]*`/g)].map((m) => m[0]);
+    for (const img of images) {
+      const base = path.basename(img);
+      const stem = base.replace(/\.[^.]+$/, '');
+      if (spans.some((s) => s.includes(base) || (s.includes(stem) && /\*/.test(s)) || s.includes(img))) named.push(`${rel} names ${img}`);
+    }
+  }
+  assert.deepEqual(named, []);
+});
+
 test('custom scripting is on by default and the user can turn it off', async () => {
   const { outDir } = await sharedBuild();
   const defaults = await catalogCategories(outDir, { AE_MCP_ENABLE_EVAL: undefined });
