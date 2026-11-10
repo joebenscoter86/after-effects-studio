@@ -125,3 +125,18 @@ Fixed in the package builder. The SDK is now vendored as `runtime/node_modules/m
 - **Saved.** The session saved the project as `~/Desktop/reel-props/claude/iphone-duo-explainer.aep`. This review left it unchanged (not dirty) and did not render a movie into it. Frames are in `quality/renders/2026-11-08-cowork/` (git-ignored).
 - **Content caveat.** The on-screen specs came from the session's own web research about a product that is not yet released. The plugin does not check facts, so a published version needs the numbers checked.
 - **README.** The Cowork row now says it works the same as Claude Code, with the first-time macOS prompt.
+
+## Re-check after the Comp Room rename (2026-11-09)
+
+The package was renamed `comp-room` (D-016) after the runs above, so the install checks were repeated on the same Mac with Claude Code CLI 2.1.302 and Node 25.9.0. Nothing touched After Effects.
+
+| Check | Result | Evidence |
+|---|---|---|
+| Offline smoke, package and Codex `plugin/` | Pass | `plugin/tests/smoke.mjs` on both. The Claude run first failed because the smoke still looked for an `after-effects-studio` server; it now takes the name from the package manifest (`d785e48`). The failing run had a fake `node` first on PATH, which was never called |
+| Marketplace install from a Git clone | Pass | A fresh clone of `d785e48` with a test-only `.claude-plugin/marketplace.json`, under a throwaway `CLAUDE_CONFIG_DIR`. `comp-room@jb-technology` 0.2.0 installed to `plugins/cache/jb-technology/comp-room/0.2.0/`, 503 files byte-identical to `claude/comp-room` |
+| What Claude Code registers | Pass | `claude plugin details`: "Comp Room (comp-room) 0.2.0", six skills, one MCP server `comp-room`, about 579 always-on tokens |
+| Server start by Claude Code | Pass | `claude mcp list` reports `plugin:comp-room:comp-room` connected (with `AE_MCP_READONLY=1`); its tools are named `mcp__plugin_comp-room_comp-room__*`, as the eval suite expects |
+| Offline smoke from the installed copy | Pass | The smoke against the cache path: handshake as `comp-room`, 91 library documents, four modules, the catalog |
+| Uninstall and marketplace removal | Pass | Both succeed and `claude plugin list` is empty. Joe's own `~/.claude` settings, marketplaces and installed plugins have no `comp-room` or `jb-technology` entry |
+
+Not repeated: the live After Effects create, revision and export, and the Cowork run. The rename touched names and wording only, apart from the runtime now taking its server name from `runtime/package.json` and preferring After Effects 2027, and the unit and release tests cover both.
