@@ -178,11 +178,16 @@ export class FileIpcTransport {
         const deadline = started + timeoutMs;
         let requestConsumed = false;
         let lastLivenessAt = started;
+        const unreadable = new UnreadableResponseWatch();
         while (Date.now() < deadline) {
-            const parsed = await this.tryReadResponse(responsePath);
-            if (parsed) {
+            const read = await this.tryReadResponse(responsePath);
+            if (read.kind === "ready") {
                 await this.safeUnlink(responsePath);
-                return this.toEvalResult(parsed, Date.now() - started);
+                return this.toEvalResult(read.response, Date.now() - started);
+            }
+            if (unreadable.settled(read, Date.now()) && read.kind === "unreadable") {
+                await this.safeUnlink(responsePath);
+                return unreadableResponseFailure(read, started);
             }
             const now = Date.now();
             if (!requestConsumed && now - lastLivenessAt >= LIVENESS_CHECK_MS) {
@@ -303,11 +308,16 @@ export class FileIpcTransport {
             let lastLaunchAt = started;
             let lastRefreshAt = started;
             let requestConsumed = false;
+            const unreadable = new UnreadableResponseWatch();
             while (Date.now() < deadline) {
-                const parsed = await this.tryReadResponse(responsePath);
-                if (parsed) {
+                const read = await this.tryReadResponse(responsePath);
+                if (read.kind === "ready") {
                     await this.safeUnlink(responsePath);
-                    return this.toEvalResult(parsed, Date.now() - started);
+                    return this.toEvalResult(read.response, Date.now() - started);
+                }
+                if (unreadable.settled(read, Date.now()) && read.kind === "unreadable") {
+                    await this.safeUnlink(responsePath);
+                    return unreadableResponseFailure(read, started);
                 }
                 if (spawnState.error !== null) {
                     return await this.spawnFailure(spawnState.error, requestPath, started);
@@ -588,17 +598,15 @@ export class FileIpcTransport {
         };
     }
     async tryReadResponse(responsePath) {
+        let raw;
         try {
-            const raw = await fs.readFile(responsePath, "utf8");
-            if (!raw)
-                return null;
-            return JSON.parse(raw);
+            raw = await fs.readFile(responsePath, "utf8");
         }
         catch {
-            // Missing (normal, still waiting) or a torn read of a file being renamed
-            // into place — either way, poll again.
-            return null;
+            // Missing: normal, still waiting.
+            return { kind: "pending" };
         }
+        return readResponseText(raw);
     }
     /** Unlink and report whether the file was actually there. */
     async safeUnlink(p) {
@@ -666,6 +674,60 @@ function failure(errorCode, message, extra = {}) {
     };
 }
 /** DIALOG_OPEN: what the dialogs say first, then what became of the call. */
+/**
+ * How long an unparseable response may sit unchanged before it is final.
+ *
+ * serve.jsx writes a tmp file and renames it into place, so a response that
+ * does not parse is at worst a torn read of that rename — gone by the next
+ * poll. One that is still there, the same size, after this long was written
+ * that way and will never get better.
+ */
+export const UNREADABLE_RESPONSE_GRACE_MS = 2_000;
+/** Classify the text of a response file. Empty means not written yet. */
+export function readResponseText(raw) {
+    if (!raw)
+        return { kind: "pending" };
+    try {
+        return { kind: "ready", response: JSON.parse(raw) };
+    }
+    catch {
+        return { kind: "unreadable", bytes: Buffer.byteLength(raw, "utf8"), tail: raw.slice(-80) };
+    }
+}
+/**
+ * Decides when an unreadable response stops being "maybe still arriving".
+ * Feed it every look at the file; it answers true once the same unreadable
+ * content has sat for UNREADABLE_RESPONSE_GRACE_MS.
+ */
+export class UnreadableResponseWatch {
+    since = null;
+    bytes = -1;
+    settled(read, now) {
+        if (read.kind !== "unreadable") {
+            this.since = null;
+            this.bytes = -1;
+            return false;
+        }
+        if (this.since === null || read.bytes !== this.bytes) {
+            this.since = now;
+            this.bytes = read.bytes;
+            return false;
+        }
+        return now - this.since >= UNREADABLE_RESPONSE_GRACE_MS;
+    }
+}
+/**
+ * The failure for a response that arrived but cannot be parsed. Before this
+ * existed the caller waited out its whole timeout on such a file.
+ */
+export function unreadableResponseFailure(read, started) {
+    return failure("DISPATCHER", `After Effects wrote a response that is not valid JSON (${read.bytes} bytes, ending in ${JSON.stringify(read.tail)}); ` +
+        "the script already ran", {
+        durationMs: Date.now() - started,
+        hint: "The response was cut off while it was being written, usually by a value its writer could not encode. " +
+            "Whatever the call does to the project has already happened: inspect the actual project state before retrying a write.",
+    });
+}
 function dialogFailure(dialogs, outcome, started) {
     return failure("DIALOG_OPEN", `${dialogBlockMessage(dialogs)} — ${outcome}`, {
         durationMs: Date.now() - started,
