@@ -1,0 +1,17 @@
+{
+  "name": "jb-technology",
+  "owner": {
+    "name": "JB Technology LLC"
+  },
+  "metadata": {
+    "description": "Plugins published by JB Technology LLC."
+  },
+  "plugins": [
+    {
+      "name": "comp-room",
+      "source": "./claude/comp-room",
+      "description": "Editable motion for Adobe After Effects: native control, typography, paper collage, a 30-style visual style library, and a production-derived motion language.",
+      "category": "design"
+    }
+  ]
+}
