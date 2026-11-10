@@ -4,7 +4,7 @@ Status: approved by Joe on 2026-11-08, together with the v1 scope and three plan
 
 ## Intent
 
-Bring After Effects Studio to Claude users with the same promise as the Codex release: create and revise editable motion in local After Effects, guided by the bundled motion language. Reuse the existing skills, library and native runtime. Distribute first through a self-hosted Claude marketplace in the public repository, then through Anthropic's directory as a community plugin bundle.
+Bring After Effects Studio to Claude users, under the Claude name Comp Room (D-016), with the same promise as the Codex release: create and revise editable motion in local After Effects, guided by the bundled motion language. Reuse the existing skills, library and native runtime. Distribute first through a self-hosted Claude marketplace in the public repository, then through Anthropic's directory as a community plugin bundle.
 
 ## Goals
 
@@ -51,7 +51,7 @@ Bring After Effects Studio to Claude users with the same promise as the Codex re
 The Claude package is a generated folder with this layout:
 
 ```
-after-effects-studio/
+comp-room/
   .claude-plugin/plugin.json
   .mcp.json                 node ${CLAUDE_PLUGIN_ROOT}/start.mjs
   start.mjs                 Node 24 check, then imports the runtime (no "..")
@@ -170,7 +170,7 @@ Done when: the listing is live, it installs from the directory on a clean Claude
 
 ## Progress (2026-11-08, after the After Effects session)
 
-- **CL-1 to CL-4: built and reviewed.** Generated package `claude/after-effects-studio/` (503 files with the styles) passes `claude plugin validate --strict` and the release tests; a whole-branch review's Important findings are fixed. The License 1.1 text waits for Joe in [license-1.1-draft.md](license-1.1-draft.md); `license.md` stays 1.0.
+- **CL-1 to CL-4: built and reviewed.** Generated package `claude/comp-room/` (503 files with the styles; it was `claude/after-effects-studio/` before the D-016 rename) passes `claude plugin validate --strict` and the release tests; a whole-branch review's Important findings are fixed. The License 1.1 text waits for Joe in [license-1.1-draft.md](license-1.1-draft.md); `license.md` stays 1.0.
 - **CL-9: Tasks 1–4 done** ([claude-style-library-plan.md](claude-style-library-plan.md)): 30 styles imported, routed through `ae_library` and the `visual-styles` skill, packaged, and policy-reviewed. A second whole-branch review's Critical and Important findings are fixed (the 3D tools no longer need unshipped fonts; fonts, scene limits and proof labels are stated truthfully; discovery prefers the running After Effects). Task 5 ran ([report](../quality/reports/2026-11-08-style-library-proofs/report.md)): `dark-keynote`, `paper-lantern`, `midcentury-toon` and `lowpoly-island` were each built as a new five-second scene through the package's server on After Effects 27.0x78 and checked against their STYLE.md; their `pluginProof` and the module's technical evidence are recorded, visual review waits for Joe. The runs drove the server directly because the CLI login has expired, so a fresh session choosing the skill is still unverified. They found one skill gap, now fixed: `buildScene` carries the test scene's own captions and pacing.
 - **CL-5: done** ([report](../quality/reports/2026-11-08-claude-local-validation/report.md)). Passing on After Effects 27.0x78: a Git-clone marketplace install and uninstall, server starts, a read-only live check, a native create, revision and export, fresh `claude -p` sessions with only the plugin (one picked `dark-keynote` from a described look and built, checked and fixed a title in After Effects), the read-only switch reaching the server, and `claude plugin eval` on the 17 canonical cases (0.86 with the plugin, 0.65 without). Found and fixed: the runtime could not find After Effects 2027. Cowork passed too: Joe installed the package as a zip in the Claude app (after a fix for an "@" in a vendored path that the uploader refused), macOS asked whether Claude may control After Effects, and a Cowork task built a 20-second exploded-view explainer. The README now says Cowork on the Mac works like Claude Code.
 - **Waiting on Joe:** a look at the style and Drizzle movies, the License 1.1 text, the plugin name, and which After Effects versions to advertise.
@@ -185,7 +185,7 @@ Done when: the listing is live, it installs from the directory on a clean Claude
 
 ## Still open for Joe
 
-1. **Plugin name.** `after-effects-studio` will likely be held as a brand match for Adobe. Keep it and explain the descriptive use to the reviewer, or choose a distinct slug while keeping "After Effects Studio" as the display name (D-009). Settle it before CL-4 finalizes docs; renaming after CL-6 breaks existing installs.
+1. ~~**Plugin name.**~~ Settled 2026-11-09 (D-016): the Claude plugin is **Comp Room**, slug `comp-room`, described as "for Adobe After Effects". Joe picked it over Keyline Studio and Keyframe Studio after a clash check. Still his: renaming the Codex package and the repository (a separate call), and the USPTO and EUIPO exact-match searches before CL-6. The research that settled it:
    - Checked 2026-11-09: the directory's brand check covers `name`, `displayName` and `author.name` alike ("can't be mistaken for an existing plugin, publisher, connector, or well-known brand that isn't yours", [pre-submission checklist](https://claude.com/docs/plugins/pre-submission-checklist)); a hold is not a rejection. A new slug under the same display name does not avoid it.
    - Adobe's [trademark page](https://www.adobe.com/legal/permissions/trademarks.html), in its section for plug-in and extension developers, says a developer "may not incorporate or include any Adobe trademark in your ... product name", and allows referential use such as "[Your product name] plug-in for Adobe Photoshop®". "After Effects Studio" puts the mark in the product name; a distinct name described as "for Adobe After Effects" is the permitted form. The same applies to the published Codex package and the repository name, which is a separate call.
    - No Claude listing or install exists yet, so renaming the Claude package now costs no user an install.
@@ -193,6 +193,7 @@ Done when: the listing is live, it installs from the directory on a clean Claude
 3. **Directory submission and terms** at CL-8, plus the monitored contact email and the paid Claude account or organization that submits as JB Technology LLC.
 4. ~~The CL-10 reel~~: done 2026-11-09 (army of agents, rebuilt through the plugin; Joe: "Yes, it counts"). Still his: whether to merge Content branch `cl10-plugin-route`.
 5. **License 1.1 text** (`product/license-1.1-draft.md`) and **which After Effects versions to advertise** (the README says 2026; testing ran on 2027), both before CL-6.
+6. **Left over from the Comp Room rename (D-016)**, before CL-6: the website pages the Claude manifest links to (`release/website/` index, privacy, terms, support) name only After Effects Studio and should also name Comp Room; the License 1.1 draft now names both, for Joe's approval with the rest of its text; the bundled `assets/native-demo-sheet.png` still shows the old "AFTER EFFECTS STUDIO" label and needs a new render of `examples/native-demo.jsx` in After Effects.
 
 ## Calls made in planning
 

@@ -9,7 +9,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const PLUGIN_NAME = 'after-effects-studio';
+const PLUGIN_NAME = JSON.parse(await fs.readFile(path.join(ROOT, 'claude', 'src', 'plugin.json'), 'utf8')).name;
 // Read-only built-ins only. The plugin's MCP tools are granted on the command line (`--allow-tools`), read tools only,
 // so no case can change the open After Effects project.
 export const ALLOWED_TOOLS = ['Read', 'Glob', 'Grep', 'Skill', 'ToolSearch'];

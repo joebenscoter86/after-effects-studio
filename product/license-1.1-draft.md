@@ -2,7 +2,7 @@
 
 Status: drafted 2026-11-08 under D-014 decision 2 and CL-4; waiting for Joe's approval or edits. `license.md` and `plugin/license.md` stay at 1.0 until Joe approves. On approval, apply this text to both files (keeping each file's own relative paths), add a sentence to D-008, and rebuild both packages.
 
-The only changes from 1.0: the title says 1.1, and the **Authorized sources** paragraph is new.
+The only changes from 1.0: the title says 1.1, the **Authorized sources** paragraph is new, and the first paragraph names the Claude package, Comp Room (D-016).
 
 ---
 
@@ -10,7 +10,7 @@ The only changes from 1.0: the title says 1.1, and the **Authorized sources** pa
 
 Copyright (c) 2026 Joe Benscoter. All rights reserved except as expressly granted below.
 
-This license applies only to Joe Benscoter's original code, motion guidance, skills, examples, documentation, artwork, and adaptations included in After Effects Studio (the **Original Materials**). It does not replace the MIT license for the upstream native runtime at `plugin/runtime/LICENSE` or the separate licenses for bundled dependencies recorded in `plugin/THIRD-PARTY-NOTICES.txt`. Those components retain all rights their own licenses grant. See `plugin/PROVENANCE.md` for the source boundary.
+This license applies only to Joe Benscoter's original code, motion guidance, skills, examples, documentation, artwork, and adaptations included in After Effects Studio and its Claude package, Comp Room (the **Original Materials**). It does not replace the MIT license for the upstream native runtime at `plugin/runtime/LICENSE` or the separate licenses for bundled dependencies recorded in `plugin/THIRD-PARTY-NOTICES.txt`. Those components retain all rights their own licenses grant. See `plugin/PROVENANCE.md` for the source boundary.
 
 You may, at no charge:
 
@@ -19,7 +19,7 @@ You may, at no charge:
 3. Modify the Original Materials privately for your own or your organization's use.
 4. Deliver, publish, license, or sell work you create with the plugin, including rendered video, images, and editable After Effects projects. A recipient may use and edit the material embedded in such a project as needed to use that project. No credit to Joe Benscoter is required in your output.
 
-**Authorized sources** are: (a) the public repository at https://github.com/joebenscoter86/after-effects-studio and the plugin marketplaces it publishes; (b) the After Effects Studio listing in Anthropic's plugin directory published by JB Technology LLC; and (c) an organization administrator who obtained an unmodified copy from (a) or (b) and makes it available only to members of that organization.
+**Authorized sources** are: (a) the public repository at https://github.com/joebenscoter86/after-effects-studio and the plugin marketplaces it publishes; (b) the Comp Room listing in Anthropic's plugin directory published by JB Technology LLC; and (c) an organization administrator who obtained an unmodified copy from (a) or (b) and makes it available only to members of that organization.
 
 You may not distribute, publish, sublicense, repackage, or sell the Original Materials, or modified versions of them, as a plugin, library, skill, template collection, source bundle, or other standalone product or service without Joe Benscoter's separate written permission. Delivering an ordinary motion-work output under item 4 is permitted; embedding substantially the Original Materials as a way to distribute them is not. You may share a link to the authorized plugin source or installation instructions so others can obtain their own copy.
 

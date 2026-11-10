@@ -33,7 +33,7 @@ async function listFiles(root, rel = '') {
   return out;
 }
 
-const README_OK = 'After Effects Studio creates and revises editable motion graphics in a local copy of Adobe After Effects. '
+const README_OK = 'Comp Room creates and revises editable motion graphics in a local copy of Adobe After Effects. '
   + 'It bundles a production-derived motion language, native control tools, worked examples and review guidance, '
   + 'so a request becomes an editable project with rendered frames you can inspect before accepting the result.\n';
 
@@ -50,7 +50,7 @@ async function cleanFixture() {
 let shared;
 async function sharedBuild() {
   shared ??= (async () => {
-    const outDir = path.join(await tmp('claude-build-'), 'after-effects-studio');
+    const outDir = path.join(await tmp('claude-build-'), 'comp-room');
     return buildClaudePackage({ outDir });
   })();
   return shared;
@@ -112,8 +112,12 @@ test('manifest and MCP config', async () => {
   const { outDir } = await sharedBuild();
   const manifest = await fs.readFile(path.join(outDir, '.claude-plugin/plugin.json'));
   assert.ok(manifest.equals(await fs.readFile(path.join(ROOT, 'claude/src/plugin.json'))));
+  const { name, displayName } = JSON.parse(manifest);
+  assert.equal(name, 'comp-room');
+  assert.equal(displayName, 'Comp Room');
   const mcp = JSON.parse(await fs.readFile(path.join(outDir, '.mcp.json'), 'utf8'));
-  const server = mcp.mcpServers['after-effects-studio'];
+  assert.deepEqual(Object.keys(mcp.mcpServers), ['comp-room']);
+  const server = mcp.mcpServers['comp-room'];
   assert.equal(server.command, 'node');
   assert.deepEqual(server.args, ['${CLAUDE_PLUGIN_ROOT}/start.mjs']);
   assert.equal(server.cwd, undefined);
@@ -132,11 +136,11 @@ test('runtime package.json is minimal', async () => {
   const { outDir } = await sharedBuild();
   const { version } = JSON.parse(await fs.readFile(path.join(PLUGIN, 'runtime/package.json'), 'utf8'));
   const pkg = JSON.parse(await fs.readFile(path.join(outDir, 'runtime/package.json'), 'utf8'));
-  assert.deepEqual(pkg, { name: 'after-effects-studio-runtime', version, private: true, type: 'module' });
+  assert.deepEqual(pkg, { name: 'comp-room-runtime', version, private: true, type: 'module', serverName: 'comp-room' });
 });
 
 test('a rebuild removes files that are no longer produced', async () => {
-  const outDir = path.join(await tmp('claude-rebuild-'), 'after-effects-studio');
+  const outDir = path.join(await tmp('claude-rebuild-'), 'comp-room');
   await buildClaudePackage({ outDir });
   await write(outDir, 'stale/leftover.md', 'old\n');
   const { files } = await buildClaudePackage({ outDir });
@@ -150,7 +154,7 @@ test('builder refuses to write over the repository or plugin/', async () => {
 });
 
 test('check mode detects drift', async () => {
-  const outDir = path.join(await tmp('claude-drift-'), 'after-effects-studio');
+  const outDir = path.join(await tmp('claude-drift-'), 'comp-room');
   const build = spawnSync(process.execPath, [BUILDER, '--out', outDir], { encoding: 'utf8' });
   assert.equal(build.status, 0, build.stderr);
   const clean = spawnSync(process.execPath, [BUILDER, '--check', '--out', outDir], { encoding: 'utf8' });
@@ -315,7 +319,7 @@ test('builder exits 1 on violations', async () => {
   const src = await tmp('claude-src-');
   await fs.cp(path.join(ROOT, 'claude/src'), src, { recursive: true });
   await write(src, 'docs/extra.md', 'Start a new Codex task.\n');
-  const outDir = path.join(await tmp('claude-violation-'), 'after-effects-studio');
+  const outDir = path.join(await tmp('claude-violation-'), 'comp-room');
   const r = spawnSync(process.execPath, [BUILDER, '--src', src, '--out', outDir], { encoding: 'utf8' });
   assert.equal(r.status, 1, r.stdout + r.stderr);
   assert.match(r.stdout, /docs\/extra\.md/);
@@ -325,7 +329,7 @@ test('builder exits 1 on violations', async () => {
 // the user's environment overlaid by the config's own env, launched from another folder.
 async function catalogCategories(outDir, userEnv) {
   const { mcpServers } = JSON.parse(await fs.readFile(path.join(outDir, '.mcp.json'), 'utf8'));
-  const server = mcpServers['after-effects-studio'];
+  const server = mcpServers['comp-room'];
   const sub = (v) => v.replaceAll('${CLAUDE_PLUGIN_ROOT}', outDir);
   const input = [
     { jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 't', version: '1' } } },
@@ -340,6 +344,35 @@ async function catalogCategories(outDir, userEnv) {
   const body = reply.result.structuredContent ?? JSON.parse(reply.result.content[0].text);
   return body.categories.map((c) => c.category);
 }
+
+// Adobe's trademark guidelines bar its marks from a plug-in's product name (D-entry for the Comp Room rename).
+// The repository URL keeps its name; the license waits on Joe's approval of its text.
+test('the packaged server introduces itself as comp-room', async () => {
+  const { outDir } = await sharedBuild();
+  const { mcpServers } = JSON.parse(await fs.readFile(path.join(outDir, '.mcp.json'), 'utf8'));
+  const server = mcpServers['comp-room'];
+  const sub = (v) => v.replaceAll('${CLAUDE_PLUGIN_ROOT}', outDir);
+  const input = JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 't', version: '1' } } }) + '\n';
+  const r = spawnSync(sub(server.command), server.args.map(sub), { cwd: os.tmpdir(), input, encoding: 'utf8', timeout: 20_000 });
+  const reply = r.stdout.split('\n').filter(Boolean).map((l) => JSON.parse(l)).find((m) => m.id === 1);
+  assert.ok(reply, `no initialize reply: ${r.stderr}`);
+  assert.equal(reply.result.serverInfo.name, 'comp-room');
+  assert.doesNotMatch(reply.result.instructions, /After Effects Studio/i);
+});
+
+test('no shipped file names the old product', async () => {
+  const { outDir, files } = await sharedBuild();
+  const exempt = new Set(['LICENSE', 'license.md']);
+  const hits = [];
+  for (const rel of files) {
+    if (exempt.has(rel) || rel.startsWith('runtime/node_modules/')) continue;
+    // The runtime is shared: the Codex package's server name stays the fallback, and this package's serverName overrides it.
+    const text = (await fs.readFile(path.join(outDir, rel), 'utf8'))
+      .replaceAll('joebenscoter86/after-effects-studio', '').replace('serverName ?? "after-effects-studio"', '');
+    if (/after[- ]effects[- ]studio/i.test(text)) hits.push(rel);
+  }
+  assert.deepEqual(hits, []);
+});
 
 test('custom scripting is on by default and the user can turn it off', async () => {
   const { outDir } = await sharedBuild();

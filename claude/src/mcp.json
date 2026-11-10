@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "after-effects-studio": {
+    "comp-room": {
       "command": "node",
       "args": ["${CLAUDE_PLUGIN_ROOT}/start.mjs"]
     }

@@ -23,7 +23,7 @@ function label(name,txt,size,x,y,color) {
 var ink=[0.92,0.94,0.96],muted=[0.50,0.58,0.67],accent=[0.40,0.90,0.72];
 for(var i=0;i<15;i++){var g=box('AES_GRID_'+i,60+i*60,270,1,450,[0.085,0.105,0.14]);}
 for(var j=0;j<8;j++){box('AES_ROW_'+j,480,60+j*60,840,1,[0.085,0.105,0.14]);}
-label('AES_EYEBROW','AFTER EFFECTS STUDIO',13,60,58,accent);
+label('AES_EYEBROW','MOTION DEMO',13,60,58,accent);
 var title=label('AES_TITLE','Make the idea move.',52,60,150,ink);
 AESMotion.keys(title.position,[0,0.6],[[60,175],[60,150]],'settle');
 AESMotion.keys(title.opacity,[0,0.32],[0,100],'linear');

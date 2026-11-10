@@ -39,7 +39,7 @@ test('the prompt body is the canonical prompt, with Codex skill syntax made Clau
     assert.match(head, /^max_turns: \d+$/m);
     assert.match(head, /allowed_tools: \[.*Skill.*\]/);
   }
-  assert.equal(claudePrompt('Use $typography to plan an editorial After Effects title.'), '/after-effects-studio:typography Plan an editorial After Effects title.');
+  assert.equal(claudePrompt('Use $typography to plan an editorial After Effects title.'), '/comp-room:typography Plan an editorial After Effects title.');
   assert.equal(claudePrompt('Plan a title. No $ signs here.'), 'Plan a title. No $ signs here.');
 });
 
@@ -82,7 +82,7 @@ test('negative controls score a no-plugin-skill check; every other case reports 
       assert.ok(!files.includes('plugin-skill.md'), `case ${c.id}`);
     } else {
       const { head } = frontMatter(await fs.readFile(path.join(g, 'plugin-skill.md'), 'utf8'));
-      assert.match(head, /^type: tool_used$/m); assert.match(head, /^tool: Skill$/m); assert.match(head, /after-effects-studio/);
+      assert.match(head, /^type: tool_used$/m); assert.match(head, /^tool: Skill$/m); assert.match(head, /comp-room/);
     }
   }
   assert.deepEqual(CANON.evals.filter((c) => /no .*skill activation/i.test(c.expected_output)).map((c) => c.id), [6, 9]);

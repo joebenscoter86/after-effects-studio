@@ -1,6 +1,6 @@
 # Installation and update
 
-After Effects Studio installs from the `jb-technology` marketplace in the public repository `joebenscoter86/after-effects-studio`. Adding the marketplace downloads the repository; nothing is built on your Mac and no npm install runs.
+Comp Room installs from the `jb-technology` marketplace in the public repository `joebenscoter86/after-effects-studio`. Adding the marketplace downloads the repository; nothing is built on your Mac and no npm install runs.
 
 ## Requirements
 
@@ -12,26 +12,26 @@ After Effects Studio installs from the `jb-technology` marketplace in the public
 
 ```
 claude plugin marketplace add joebenscoter86/after-effects-studio
-claude plugin install after-effects-studio@jb-technology
+claude plugin install comp-room@jb-technology
 ```
 
 Inside a running session, the one-step form is:
 
 ```
-/plugin install after-effects-studio --marketplace joebenscoter86/after-effects-studio
+/plugin install comp-room --marketplace joebenscoter86/after-effects-studio
 ```
 
 Restart Claude Code so the plugin's server starts, then follow [your first motion scene](first-session.md).
 
 ## Claude app and Cowork
 
-Open Customize → Plugins → Add marketplace, enter `joebenscoter86/after-effects-studio`, and install After Effects Studio. After Effects control needs a Cowork session running on your Mac. In regular chat, or a Cowork session in the cloud, only the skills load.
+Open Customize → Plugins → Add marketplace, enter `joebenscoter86/after-effects-studio`, and install Comp Room. After Effects control needs a Cowork session running on your Mac. In regular chat, or a Cowork session in the cloud, only the skills load.
 
 ## Update
 
 ```
 claude plugin marketplace update jb-technology
-claude plugin update after-effects-studio@jb-technology
+claude plugin update comp-room@jb-technology
 ```
 
 Restart Claude afterwards. In the Claude app, update the plugin from Customize → Plugins.
@@ -39,21 +39,21 @@ Restart Claude afterwards. In the Claude app, update the plugin from Customize �
 ## Remove
 
 ```
-claude plugin uninstall after-effects-studio@jb-technology
+claude plugin uninstall comp-room@jb-technology
 ```
 
 To forget the marketplace as well, run `claude plugin marketplace remove jb-technology`. Removing the plugin does not delete or change your After Effects projects, renders or exports.
 
 ## Check the installation
 
-From the plugin's installed folder (Claude Code keeps it under `~/.claude/plugins/cache/jb-technology/after-effects-studio/`), `node scripts/doctor.mjs` checks Node, the package files and the After Effects path without launching After Effects. A passing result does not prove that macOS Automation or After Effects scripting permission works; the read-only check in [your first motion scene](first-session.md) does.
+From the plugin's installed folder (Claude Code keeps it under `~/.claude/plugins/cache/jb-technology/comp-room/`), `node scripts/doctor.mjs` checks Node, the package files and the After Effects path without launching After Effects. A passing result does not prove that macOS Automation or After Effects scripting permission works; the read-only check in [your first motion scene](first-session.md) does.
 
 ## Local development
 
 From a checkout of the repository, load the generated package directly:
 
 ```
-claude --plugin-dir claude/after-effects-studio
+claude --plugin-dir claude/comp-room
 ```
 
 The package is generated from `plugin/` with `node release/build-claude-package.mjs`; never edit it by hand. `node release/build-claude-package.mjs --check` reports a stale package.

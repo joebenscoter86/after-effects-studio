@@ -74,7 +74,7 @@ export function diagnose({
   const runtimePath = join(root, '..', 'runtime', 'dist', 'index.js');
   const libraryPath = join(root, '..', 'library', 'manifest.json');
   checks.push(check('Bundled runtime', fileExists(runtimePath), runtimePath, {
-    hint: 'Restore plugin/runtime/dist/index.js from the complete After Effects Studio package, then reinstall the plugin.',
+    hint: 'Restore plugin/runtime/dist/index.js from the complete plugin package, then reinstall the plugin.',
   }));
   checks.push(check('Motion library manifest', fileExists(libraryPath), libraryPath, {
     hint: 'Restore plugin/library/manifest.json and the packaged library folder, then reinstall the plugin.',

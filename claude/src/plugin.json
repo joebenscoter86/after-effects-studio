@@ -1,8 +1,8 @@
 {
-  "name": "after-effects-studio",
-  "displayName": "After Effects Studio",
+  "name": "comp-room",
+  "displayName": "Comp Room",
   "version": "0.2.0",
-  "description": "Editable After Effects motion with native control, typography, paper collage, a 30-style visual style library, and a production-derived motion language.",
+  "description": "Editable motion for Adobe After Effects: native control, typography, paper collage, a 30-style visual style library, and a production-derived motion language.",
   "author": {
     "name": "JB Technology LLC"
   },

@@ -1,6 +1,6 @@
 ---
 name: ae-control
-description: Control local Adobe After Effects through the After Effects Studio MCP. Use for project inspection, compositions, layers, shapes, text, masks, effects, keyframes, expressions, footage, native scripting, saving, and rendering.
+description: Control local Adobe After Effects through this plugin's MCP server. Use for project inspection, compositions, layers, shapes, text, masks, effects, keyframes, expressions, footage, native scripting, saving, and rendering.
 ---
 
 # Native After Effects control

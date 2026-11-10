@@ -3,7 +3,7 @@ name: motion-studio
 description: Create or revise motion graphics in Adobe After Effects using a detailed production-derived motion language. Use whenever the user asks for an explainer, product animation, animated diagram, title sequence, kinetic typography, reel graphics, or more polished AE motion. Adapts to any brand and style; includes measured choreography, camera grammar, worked scenes and visual review.
 ---
 
-# After Effects Studio: universal style, a specific craft foundation
+# Motion studio: universal style, a specific craft foundation
 
 The user chooses the subject and visual style. This plugin supplies the detailed motion language developed in an existing production pipeline. Use that knowledge as the default for every motion task; it is not a JoeB-only preset. Native AE control is the execution layer.
 

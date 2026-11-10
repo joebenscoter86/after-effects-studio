@@ -11,12 +11,12 @@ import "./operations/index.js";
 import { ALL_TOOLS } from "./tools/index.js";
 import { libraryTool } from "./tools/library.js";
 const require2 = createRequire(import.meta.url);
-const { version } = require2("../package.json");
+const { version, serverName } = require2("../package.json");
 const transport = new FileIpcTransport();
 const server = new McpServer({
-  name: "after-effects-studio",
+  name: serverName ?? "after-effects-studio",
   version
-}, { instructions: "After Effects Studio: local native AE control with a detailed production-derived motion language for any brand or style. Before designing or building motion in After Effects, read ae_library documents motion-language, production-workflow and brief-template; load construction, camera-continuity, assets-depth, type-evidence and worked-scenes as relevant. This craft foundation is the default for all styles, not an optional JoeB preset. Everything required is bundled; do not require the original repo, personal rig or assets. Inspect ae_context and discover exact operations with ae_catalog. eval.run enables custom ES3. A batch is not transactional; inspect failures or uncertain completion before retrying. Render and visually inspect actual artifacts, and distinguish technical success from visual quality. The paper/navy/vermilion JoeB appearance is optional." });
+}, { instructions: "Local native After Effects control with a detailed production-derived motion language for any brand or style. Before designing or building motion in After Effects, read ae_library documents motion-language, production-workflow and brief-template; load construction, camera-continuity, assets-depth, type-evidence and worked-scenes as relevant. This craft foundation is the default for all styles, not an optional JoeB preset. Everything required is bundled; do not require the original repo, personal rig or assets. Inspect ae_context and discover exact operations with ae_catalog. eval.run enables custom ES3. A batch is not transactional; inspect failures or uncertain completion before retrying. Render and visually inspect actual artifacts, and distinguish technical success from visual quality. The paper/navy/vermilion JoeB appearance is optional." });
 function annotationsFor(tool) {
   switch (tool.effect) {
     case "read":

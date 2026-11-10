@@ -1,6 +1,6 @@
-# After Effects Studio
+# Comp Room
 
-Create and revise editable motion graphics in your own copy of Adobe After Effects, working from Claude. The plugin pairs native After Effects control with a bundled, production-derived motion language: briefs, construction, camera continuity, typography, paper collage, worked scenes and visual review. You choose the subject, brand and style. The plugin builds native, editable compositions and shows you rendered frames so you can judge the result before you accept it.
+Comp Room is a plugin for Adobe After Effects. Working from Claude, it creates and revises editable motion graphics in your own copy. The plugin pairs native After Effects control with a bundled, production-derived motion language: briefs, construction, camera continuity, typography, paper collage, worked scenes and visual review. You choose the subject, brand and style. The plugin builds native, editable compositions and shows you rendered frames so you can judge the result before you accept it.
 
 Published by JB Technology LLC. Free for personal and paid client work, including delivery of editable projects. Terms are in [LICENSE](LICENSE). The upstream runtime and bundled dependencies keep their own licenses: see [PROVENANCE.md](PROVENANCE.md), `runtime/LICENSE` and [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt).
 
@@ -50,21 +50,21 @@ In Claude Code, add the marketplace and install the plugin:
 
 ```
 claude plugin marketplace add joebenscoter86/after-effects-studio
-claude plugin install after-effects-studio@jb-technology
+claude plugin install comp-room@jb-technology
 ```
 
 Or in one step inside a Claude Code session:
 
 ```
-/plugin install after-effects-studio --marketplace joebenscoter86/after-effects-studio
+/plugin install comp-room --marketplace joebenscoter86/after-effects-studio
 ```
 
-In the Claude app, open Customize → Plugins → Add marketplace, enter `joebenscoter86/after-effects-studio`, then install After Effects Studio. Restart Claude, open After Effects, and follow [your first motion scene](docs/first-session.md). [Installation and update](docs/local-install.md) covers updates, and [connection and permission recovery](docs/connection-recovery.md) covers failed connections.
+In the Claude app, open Customize → Plugins → Add marketplace, enter `joebenscoter86/after-effects-studio`, then install Comp Room. Restart Claude, open After Effects, and follow [your first motion scene](docs/first-session.md). [Installation and update](docs/local-install.md) covers updates, and [connection and permission recovery](docs/connection-recovery.md) covers failed connections.
 
 ## Remove
 
 ```
-claude plugin uninstall after-effects-studio@jb-technology
+claude plugin uninstall comp-room@jb-technology
 ```
 
 Removing the plugin does not touch your After Effects projects, renders or exports.

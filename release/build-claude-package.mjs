@@ -80,7 +80,7 @@ export async function buildClaudePackage({ outDir, runtime = buildReadableRuntim
   await runtime(path.join(PLUGIN, 'runtime'), path.join(out, 'runtime'));
   const { version } = JSON.parse(await fs.readFile(path.join(PLUGIN, 'runtime', 'package.json'), 'utf8'));
   await fs.writeFile(path.join(out, 'runtime', 'package.json'),
-    `${JSON.stringify({ name: 'after-effects-studio-runtime', version, private: true, type: 'module' })}\n`);
+    `${JSON.stringify({ name: `${manifest.name}-runtime`, version, private: true, type: 'module', serverName: manifest.name })}\n`);
 
   await copy(path.join(claudeSrc, 'plugin.json'), path.join(out, '.claude-plugin', 'plugin.json'));
   await copy(path.join(claudeSrc, 'mcp.json'), path.join(out, '.mcp.json'));
