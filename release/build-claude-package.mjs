@@ -24,6 +24,8 @@ const FILES = [
 ];
 const TREES = ['assets', 'docs', 'examples', 'library', 'skills', 'runtime/jsx'];
 const JUNK = new Set(['.DS_Store']);
+// Codex listing art the Claude package never uses. The directory holds any bundled image the README does not show.
+const CLAUDE_SKIP = new Set(['assets/cold-start-inbox-sheet.png', 'assets/native-demo-sheet.png']);
 
 async function exists(p) {
   try { await fs.access(p); return true; } catch { return false; }
@@ -73,6 +75,7 @@ export async function buildClaudePackage({ outDir, runtime = buildReadableRuntim
   for (const rel of FILES) await copy(path.join(PLUGIN, rel), path.join(out, rel));
   for (const tree of TREES) {
     for (const rel of await listTree(path.join(PLUGIN, tree))) {
+      if (CLAUDE_SKIP.has(`${tree}/${rel}`)) continue;
       await copy(path.join(PLUGIN, tree, rel), path.join(out, tree, rel));
     }
   }
