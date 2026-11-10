@@ -39517,6 +39517,11 @@ registerOp({
             if (_inT !== null || _outT !== null) {
                 if (_inT === null) _inT = _node.keyInSpatialTangent(_ki);
                 if (_outT === null) _outT = _node.keyOutSpatialTangent(_ki);
+                // Position is a three-component property even on a 2D layer:
+                // AE rejects [x, y] there ("Value array does not have 3 elements").
+                var _dims = _node.keyValue(_ki).length;
+                _inT = AE.fitSpatialTangent(_inT, _dims);
+                _outT = AE.fitSpatialTangent(_outT, _dims);
                 _node.setSpatialTangentsAtKey(_ki, _inT, _outT);
             }
             var _cont = ${jsxVal(args.continuous ?? null)};
@@ -41008,8 +41013,8 @@ registerOp({
             ${args.position !== void 0 ? `_rxf.property("ADBE Vector Repeater Position").setValue(${jsxVal(args.position)});` : ""}
             ${args.rotation !== void 0 ? `_rxf.property("ADBE Vector Repeater Rotation").setValue(${jsxVal(args.rotation)});` : ""}
             ${args.scale !== void 0 ? `_rxf.property("ADBE Vector Repeater Scale").setValue(${jsxVal(args.scale)});` : ""}
-            ${args.startOpacity !== void 0 ? `_rxf.property("ADBE Vector Repeater Start Opacity").setValue(${jsxVal(args.startOpacity)});` : ""}
-            ${args.endOpacity !== void 0 ? `_rxf.property("ADBE Vector Repeater End Opacity").setValue(${jsxVal(args.endOpacity)});` : ""}
+            ${args.startOpacity !== void 0 ? `_rxf.property("ADBE Vector Repeater Opacity 1").setValue(${jsxVal(args.startOpacity)});` : ""}
+            ${args.endOpacity !== void 0 ? `_rxf.property("ADBE Vector Repeater Opacity 2").setValue(${jsxVal(args.endOpacity)});` : ""}
             return { ok: true, name: _rep.name };
         `;
   }
@@ -49085,6 +49090,7 @@ var CODE = `
             "AE.rect(shapeLayerOrGroup, [w,h], [x,y], {name, roundness, fill:[r,g,b], stroke, strokeWidth}) \u2014 group+path+style in one call",
             "AE.ellipse(shapeLayerOrGroup, [w,h], [x,y], {name, fill, stroke, strokeWidth})",
             "AE.ensureParentDir(path) \u2014 mkdir -p for an output file, returns the File",
+            "AE.fitSpatialTangent(tangent, dims) \u2014 pad or trim a spatial tangent to the property's component count (Position holds 3 even on a 2D layer)",
             "AE.itemTypeName(item) \u2014 'CompItem' | 'FootageItem' | 'FolderItem' | 'UnknownItem'",
             "AE.serializeItemSummary(item)",
             "AE.serializeLayerSummary(layer)",
@@ -50724,7 +50730,12 @@ var saveProjectTool = defineTool({
     const code = `
         var _path = ${jsxVal(args.path ?? null)};
         if (_path) {
-            var f = new File(_path);
+            // Save As into a folder that does not exist yet fails inside AE on a
+            // temp file name; create the folder first, as the render ops do.
+            var f = AE.ensureParentDir(_path);
+            if (f.parent && !f.parent.exists) {
+                return { ok: false, saved: false, error: "cannot create folder " + f.parent.fsName.replace(/\\\\/g, "/") + " for the project file" };
+            }
             app.project.save(f);
             return { ok: true, saved: true, path: f.fsName.replace(/\\\\/g, "/") };
         }

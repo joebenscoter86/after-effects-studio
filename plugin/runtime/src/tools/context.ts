@@ -48,6 +48,7 @@ const CODE = `
             "AE.rect(shapeLayerOrGroup, [w,h], [x,y], {name, roundness, fill:[r,g,b], stroke, strokeWidth}) — group+path+style in one call",
             "AE.ellipse(shapeLayerOrGroup, [w,h], [x,y], {name, fill, stroke, strokeWidth})",
             "AE.ensureParentDir(path) — mkdir -p for an output file, returns the File",
+            "AE.fitSpatialTangent(tangent, dims) — pad or trim a spatial tangent to the property's component count (Position holds 3 even on a 2D layer)",
             "AE.itemTypeName(item) — 'CompItem' | 'FootageItem' | 'FolderItem' | 'UnknownItem'",
             "AE.serializeItemSummary(item)",
             "AE.serializeLayerSummary(layer)",
