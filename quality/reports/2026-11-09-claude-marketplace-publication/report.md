@@ -19,6 +19,6 @@
 | Server start by Claude Code | Pass | `claude mcp list` (with `AE_MCP_READONLY=1`): `plugin:comp-room:comp-room` connected, started from the installed copy |
 | Offline smoke from the installed copy | Pass | `plugin/tests/smoke.mjs --host claude`: handshake as `comp-room`, 91 library documents, catalog |
 | Joe's own Claude configuration | Unchanged | No `comp-room` or `jb-technology` entry in `~/.claude` |
-| Customize → Plugins → Add marketplace in the Claude app | Not run | Needs Joe's Claude app; the next step for him |
+| Install in the Claude app | Pass | Joe installed Comp Room from the published marketplace in the Claude app (2026-11-09). This Code session then loaded its six skills and its 12 tools as `mcp__plugin_comp-room_comp-room__*`. Searching the app's plugin directory does not find it, as expected: the directory listing is CL-8 |
 
-**Result:** Pass for the Claude Code part of CL-6. The Claude app check remains.
+**Result:** Pass. CL-6 is done.
