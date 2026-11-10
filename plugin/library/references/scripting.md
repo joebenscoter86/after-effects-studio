@@ -16,6 +16,18 @@ ExtendScript uses ES3: var, function expressions, ordinary loops and concatenati
 - Color-managed frame captures can use temporary layers and calibration comps. For a strict inspection-only session use AE_MCP_READONLY=1 and review any colorWarning.
 - A native render can block AE. Use intentional render settings, one controller at a time, and a timeout appropriate to the job. A timeout is uncertain completion, not permission to resubmit.
 
+## Effect value scales
+
+Scripting does not always use the scale the Effect Controls panel shows. Before writing effect values, call `effect.describe` for the effect: each row gives the value type, the current value and, where After Effects reports them, `minValue` and `maxValue` in scripting units. `effect.set_property` refuses a value outside that range, or of the wrong type or number of dimensions, and names the valid range; nothing is written. A property with no reported range is written as given. If After Effects' reported range is itself wrong, pass `skipCheck: true`. Colours are 0 to 1 per channel in scripting.
+
+Observed in After Effects 2027 (27.0), from the 2026-11-09 limits test:
+
+- Gradient Wipe: Transition Completion takes 0 to 1 in scripting; the panel shows percent. A write of 25 failed with "Value 25 out of range 0 to 1".
+- Gradient Wipe: Transition Softness takes 0 to 1 in scripting; the panel shows percent.
+- Threshold: Level takes 0 to 1 in scripting, not 0 to 255 as in the panel. A level written on the panel's scale renders pure black.
+
+Not yet verified: Glow's Glow Threshold. The library's styles write 20 to 92 and describe them as percent, which fits a 0 to 100 scale, not 0 to 255. Read the range with `effect.describe` before relying on either.
+
 ## House library integration
 
 The optional `house-jsx` and `joeb-motion-jsx` are real extracted pipeline code. They require a MASTER composition with the documented JoeB rig, correct fonts, media and AES_HOUSE_CONFIG paths. They are not a blank-project template. Use `motion-jsx` for independent scenes. Read `joeb-preset` before selecting these helpers.
