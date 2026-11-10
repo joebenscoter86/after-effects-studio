@@ -2,9 +2,9 @@ import { promises as fs } from "node:fs";
 import * as path from "node:path";
 import { z } from "zod";
 import { measureCaptureTransfer, calibrationKey } from "../color/calibration.js";
-import { decodePng, encodePngSrgb8 } from "../color/png16.js";
+import { decodePng, encodePngGray8, encodePngSrgb8, encodePngSrgbRgba8, } from "../color/png16.js";
 import { readFileSettled } from "../color/settled-read.js";
-import { analyzeFrame, composeContactSheet, frameLabel, } from "../color/sheet.js";
+import { analyzeFrame, compareRegions, composeContactSheet, flattenOver, frameLabel, histogramOf, rgbHex, sampleRegions, } from "../color/sheet.js";
 import { profileForWorkingSpace, sceneLinearToDisplaySrgb } from "../color/transform.js";
 import { rejectedOutputPath } from "../config.js";
 import { errorResult } from "../errors.js";
@@ -12,6 +12,27 @@ import { readOnlyMode } from "../policy.js";
 import { RENDER_FRAME_FN } from "../operations/snippets.js";
 import { jsxVal } from "../registry.js";
 import { defineTool, toMcpResult } from "./define-tool.js";
+/** Said once per response, so every number can be traced to the pixels it came from. */
+const MEASUREMENT_STAGES = {
+    capture: "the PNG as saveFrameToPng wrote it, before any colour conversion: working-space values " +
+        "(scaled by AE's capture transfer in colour-managed projects), straight alpha, 8 or 16 bits",
+    output: "the file as written (writtenTo): after colour conversion and the channels/over handling " +
+        "when colorManaged is auto, so 8-bit display values; the same as the capture when colorManaged " +
+        "is off or the conversion failed",
+};
+const HISTOGRAM_DEFAULT_BINS = 32;
+const layerRefSchema = z.union([
+    z.string(),
+    z.number().int().positive(),
+    z.object({ id: z.number().int() }),
+]);
+const regionSchema = z.object({
+    name: z.string().min(1).describe("Label reported back with the numbers."),
+    x: z.number().int().describe("Left edge (or the point), capture pixels from the left."),
+    y: z.number().int().describe("Top edge (or the point), capture pixels from the top."),
+    width: z.number().int().positive().optional().describe("Omit with height for a single pixel."),
+    height: z.number().int().positive().optional(),
+});
 export const renderFrameTool = defineTool({
     name: "ae_render_frame",
     title: "Render frame",
@@ -26,7 +47,17 @@ export const renderFrameTool = defineTool({
         "display transform via a transient OCIO Display Transform adjustment layer, and the PNG comes back " +
         "viewer-accurate and sRGB-tagged. Where that layer cannot be used — read-only mode, an AE without the " +
         "OCIO effect, or a failed capture calibration — the result falls back to a pure-math ACES conversion or " +
-        "to raw values with an explicit colorWarning; check colorPipeline / colorWarning on the response.",
+        "to raw values with an explicit colorWarning; check colorPipeline / colorWarning on the response. " +
+        "Seeing the matte: `channels` picks what the file holds — 'rgb' (default, transparency composited over " +
+        "`over`: the comp background, a checkerboard or a colour such as '#ff00ff'), 'rgba' (alpha kept), or " +
+        "'alpha' (the matte as greyscale: white opaque, black transparent). `isolate` renders one layer or a " +
+        "list alone (cameras and lights stay as they are), then restores every layer switch, even when the " +
+        "render fails. `alphaChannel` reports whether the capture carried alpha at all. " +
+        "Reading colour: `sample` takes named points or rectangles and returns mean / min / max per channel " +
+        "and alpha coverage for each; `histogram` counts the whole frame per channel; `compare` (with `times` " +
+        "and `sample`) reports each region's difference between two of the rendered frames. Every number is " +
+        "labelled with its stage — 'capture' (before colour conversion) or 'output' (the file as written) — " +
+        "described once in `measurementStages`.",
     group: "render",
     // Survives read-only mode: it writes a PNG, and the visual verification loop
     // is the whole point of an audit session. Note this is NOT a
@@ -92,7 +123,67 @@ export const renderFrameTool = defineTool({
             outPath: z.string().optional().describe("Sheet path (default <outPath stem>_sheet.png)."),
         })
             .optional()
-            .describe("Tile all rendered frames into ONE labelled PNG (#index + time above each tile). Pass {} for defaults."),
+            .describe("Tile all rendered frames into ONE labelled PNG (#index + time above each tile). Pass {} for defaults. " +
+            "Frames that carry alpha (channels 'rgba') are shown over a checkerboard on the sheet."),
+        channels: z
+            .enum(["rgb", "rgba", "alpha"])
+            .optional()
+            .describe("What the written file holds. 'rgb' (default): 8-bit sRGB, transparency composited over `over`. " +
+            "'rgba': 8-bit sRGB with the alpha channel kept (straight, unpremultiplied). 'alpha': the matte " +
+            "as 8-bit greyscale, white = opaque, black = transparent. Needs colorManaged 'auto'. If the " +
+            "capture has no alpha channel, `alphaWarning` says so."),
+        over: z
+            .union([
+            z.enum(["background", "checkerboard"]),
+            z.string().regex(/^#[0-9a-fA-F]{6}$/),
+            z.array(z.number().min(0).max(1)).length(3),
+        ])
+            .optional()
+            .describe("With channels 'rgb': what transparent pixels are shown against. 'background' (default): the " +
+            "comp's background colour. 'checkerboard': light and dark grey squares, so transparency is " +
+            "visible. A colour as '#rrggbb' or [r, g, b] in 0..1 — magenta shows holes in a key."),
+        isolate: z
+            .union([layerRefSchema, z.array(layerRefSchema).min(1)])
+            .optional()
+            .describe("Render these layers alone: a layer (index, name, or { id }) or a list. Every other layer is " +
+            "switched off for the capture, adjustment layers included; camera, light and audio-only " +
+            "layers are left as they are; named layers are switched on even if they were off (to see a matte layer); solo " +
+            "is cleared. Every switch is restored afterwards, even when the render fails, and `isolation` " +
+            "reports it. Top-level layers of this comp only. Not available in read-only mode."),
+        sample: z
+            .object({
+            regions: z.array(regionSchema).min(1).max(64),
+            stage: z
+                .enum(["both", "capture", "output"])
+                .optional()
+                .describe("Which pixels to measure (default 'both'; see measurementStages)."),
+        })
+            .optional()
+            .describe("Read colour values. Named points ({ name, x, y }) or rectangles (+ width, height) in capture " +
+            "pixels (comp pixels at full resolution); regions running off the frame are clipped. Per " +
+            "region and stage: mean / min / max of r, g, b (0..1), alpha mean / min / max and the shares " +
+            "of opaque, partly covered and transparent pixels; 'output' also gives meanHex. Reported as " +
+            "`samples` (per frame with `times`)."),
+        histogram: z
+            .union([
+            z.boolean(),
+            z.object({
+                bins: z.number().int().min(2).max(256).optional().describe("Default 32."),
+                stage: z.enum(["output", "capture"]).optional().describe("Default 'output'."),
+            }),
+        ])
+            .optional()
+            .describe("Whole-frame per-channel histogram: pixel counts for r, g, b (and a when present) in equal " +
+            "bins over 0..1, 1.0 in the last bin. `true` for defaults."),
+        compare: z
+            .object({
+            from: z.number().int().nonnegative().optional().describe("Index into `times` (default 0)."),
+            to: z.number().int().nonnegative().optional().describe("Index into `times` (default 1)."),
+        })
+            .optional()
+            .describe("With `times` and `sample`: each region's difference between two rendered frames, to − from, " +
+            "per stage: meanDelta (signed average shift), meanAbsDelta and maxAbsDelta per channel, and " +
+            "the same for alpha. Reported as `comparison`."),
     },
     handler: async (args, transport) => {
         if ((args.time === undefined) === (args.times === undefined)) {
@@ -100,6 +191,9 @@ export const renderFrameTool = defineTool({
                 hint: "`time: 1.5` renders one frame; `times: [0, 1, 2]` renders several in one call.",
             });
         }
+        const checked = checkEyesOptions(args);
+        if ("error" in checked)
+            return checked.error;
         const rejection = rejectedOutputPath(args.outPath);
         if (rejection !== null) {
             return errorResult("IO", rejection, {
@@ -117,9 +211,109 @@ export const renderFrameTool = defineTool({
                 });
             }
         }
-        return nativeFlow(args, abs, transport);
+        return nativeFlow(args, checked.options, abs, transport);
     },
 });
+function invalid(message, hint) {
+    return { error: errorResult("INVALID_ARGS", message, hint ? { hint } : {}) };
+}
+/** "#rrggbb" or [r, g, b] in 0..1 → Rgb; null when neither. */
+function parseColor(value) {
+    if (typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value)) {
+        return [1, 3, 5].map((i) => parseInt(value.slice(i, i + 2), 16) / 255);
+    }
+    if (Array.isArray(value) &&
+        value.length === 3 &&
+        value.every((v) => typeof v === "number" && v >= 0 && v <= 1)) {
+        return [value[0], value[1], value[2]];
+    }
+    return null;
+}
+/**
+ * The cross-field rules for the eyes options. Run in the handler (not only
+ * in the schema) so they hold for direct handler calls too, and always
+ * before After Effects is contacted.
+ */
+function checkEyesOptions(args) {
+    const channels = args.channels ?? "rgb";
+    if (args.colorManaged === "off" && (channels !== "rgb" || args.over !== undefined)) {
+        return invalid("`channels` and `over` need colorManaged 'auto'", "colorManaged 'off' returns the raw capture untouched (it already keeps any alpha AE wrote).");
+    }
+    let over = "background";
+    if (args.over !== undefined) {
+        if (channels !== "rgb") {
+            return invalid(`\`over\` applies only to channels 'rgb', not '${channels}'`, "'rgba' keeps transparency in the file; 'alpha' is the matte itself.");
+        }
+        if (args.over === "checkerboard")
+            over = { kind: "checkerboard" };
+        else if (args.over !== "background") {
+            const color = parseColor(args.over);
+            if (color === null) {
+                return invalid("`over` must be 'background', 'checkerboard', '#rrggbb' or [r, g, b] in 0..1");
+            }
+            over = { kind: "color", color };
+        }
+    }
+    let isolate = null;
+    if (args.isolate !== undefined) {
+        isolate = Array.isArray(args.isolate) ? args.isolate : [args.isolate];
+        if (isolate.length === 0)
+            return invalid("`isolate` needs at least one layer");
+        if (readOnlyMode()) {
+            return {
+                error: errorResult("FORBIDDEN", "`isolate` switches layers off and back on, and AE_MCP_READONLY=1 is set", {
+                    hint: "Unset AE_MCP_READONLY, or render without isolate.",
+                }),
+            };
+        }
+    }
+    let sample = null;
+    if (args.sample !== undefined) {
+        const regions = args.sample.regions ?? [];
+        if (regions.length === 0)
+            return invalid("`sample.regions` needs at least one region");
+        const names = new Set();
+        for (const r of regions) {
+            if (names.has(r.name))
+                return invalid(`region name '${r.name}' is used twice`);
+            names.add(r.name);
+        }
+        const stage = args.sample.stage ?? "both";
+        sample = { regions, stages: stage === "both" ? ["capture", "output"] : [stage] };
+    }
+    let histogram = null;
+    if (args.histogram !== undefined && args.histogram !== false) {
+        const h = args.histogram === true ? {} : args.histogram;
+        histogram = { bins: h.bins ?? HISTOGRAM_DEFAULT_BINS, stage: h.stage ?? "output" };
+    }
+    let compare = null;
+    if (args.compare !== undefined) {
+        const n = args.times?.length ?? 0;
+        if (n < 2)
+            return invalid("`compare` needs `times` with at least two frames");
+        if (sample === null) {
+            return invalid("`compare` needs `sample`: it reports differences for the sampled regions");
+        }
+        const from = args.compare.from ?? 0;
+        const to = args.compare.to ?? 1;
+        if (from >= n || to >= n)
+            return invalid(`\`compare\` indices must be below ${n}, the number of times`);
+        if (from === to)
+            return invalid("`compare.from` and `compare.to` must be different frames");
+        compare = { from, to };
+    }
+    return {
+        options: {
+            channels,
+            over,
+            overGiven: args.over !== undefined,
+            isolate,
+            sample,
+            histogram,
+            compare,
+        },
+    };
+}
 /** Default sheet path: the frame stem plus `_sheet`. */
 function sheetPathFor(abs, explicit) {
     if (explicit !== undefined)
@@ -127,53 +321,6 @@ function sheetPathFor(abs, explicit) {
     const ext = path.extname(abs) || ".png";
     const stem = abs.slice(0, abs.length - (path.extname(abs).length || 0));
     return `${stem}_sheet${ext}`;
-}
-/**
- * Measure every written capture. Runs on the raw files — before any color
- * conversion — because that is where the alpha channel still is, and
- * "transparent margin" vs "black bar" is the distinction the check exists
- * for. Failures never fail the render: they are reported as a warning.
- */
-async function attachAnalysis(payload, frames, written, multi) {
-    try {
-        for (const [i, file] of written.entries()) {
-            const analysis = analyzeFrame(decodePng(await readFileSettled(file)));
-            if (multi)
-                frames[i].analysis = analysis;
-            else
-                payload.analysis = analysis;
-        }
-    }
-    catch (err) {
-        payload.analysisWarning = `analysis failed: ${err instanceof Error ? err.message : String(err)}`;
-    }
-}
-/** Tile the FINAL files (after color processing) into one labelled sheet. */
-async function attachContactSheet(payload, frames, written, sheetPath, opts) {
-    try {
-        const images = [];
-        for (const file of written)
-            images.push(decodePng(await readFileSettled(file)));
-        const labels = frames.map((f, i) => frameLabel(i, f.time));
-        const sheet = composeContactSheet(images, {
-            columns: opts.columns,
-            thumbWidth: opts.thumbWidth,
-            labels,
-        });
-        await fs.mkdir(path.dirname(sheetPath), { recursive: true });
-        await fs.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
-        payload.contactSheet = {
-            writtenTo: sheetPath,
-            size: [sheet.width, sheet.height],
-            columns: sheet.columns,
-            rows: sheet.rows,
-            thumbSize: [sheet.thumbWidth, sheet.thumbHeight],
-            frames: images.length,
-        };
-    }
-    catch (err) {
-        payload.contactSheetWarning = `contact sheet failed: ${err instanceof Error ? err.message : String(err)}`;
-    }
 }
 /** Per-frame output paths: the single path as-is, or stem_<index><ext> for `times`. */
 function framePaths(abs, count, multi) {
@@ -186,23 +333,82 @@ function framePaths(abs, count, multi) {
         out.push(`${stem}_${i}${ext}`);
     return out;
 }
-async function nativeFlow(args, abs, transport) {
-    const multi = args.times !== undefined;
-    const times = args.times ?? [args.time];
-    const paths = framePaths(abs, times.length, multi);
-    // Color-managed projects: instead of reimplementing the view transform,
-    // make AE apply its own — drop a transient adjustment layer carrying an
-    // "OCIO Display Transform" effect on top of the comp and capture that.
-    // Verified bit-near (mean 0.04/255) against a viewer-referenced capture;
-    // the only artifact is the linear capture scale, which the calibration
-    // pass restores. An adjustment layer (not a wrapper comp) so the viewer
-    // keeps showing the same comp — and ONE layer serves every requested
-    // frame, which is why `times` is cheaper than repeated single calls.
-    // Mutating (one undo group, self-cleaning), so read-only mode falls back
-    // to the pure-math conversion below.
-    const tryOcio = args.colorManaged !== "off" && !readOnlyMode();
-    const code = `
+/**
+ * `isolate`, inside After Effects. _isolateLayers resolves every reference
+ * first (nothing changes when one is missing), records each layer's enabled,
+ * solo and locked switches, then shows only the named layers. Camera and
+ * light layers keep their switch: turning a camera off changes the picture
+ * of everything else. Audio-only layers are not touched. A locked layer is
+ * unlocked to change it and locked
+ * again on restore. _restoreLayers puts every recorded switch back, newest
+ * change first, and names any layer it could not restore.
+ */
+const ISOLATE_FN = `
+    function _refText(ref) {
+        if (typeof ref === "string") return '"' + ref + '"';
+        if (typeof ref === "number") return "index " + ref;
+        if (ref && typeof ref.id === "number") return "id " + ref.id;
+        return String(ref);
+    }
+    function _restoreLayers(saved) {
+        var failed = [];
+        for (var i = saved.length - 1; i >= 0; i--) {
+            var s = saved[i];
+            if (!s.changed) continue;
+            try {
+                if (s.layer.locked) s.layer.locked = false;
+                if (s.layer.enabled !== s.enabled) s.layer.enabled = s.enabled;
+                if (s.hasSolo && s.layer.solo !== s.solo) s.layer.solo = s.solo;
+                if (s.locked) s.layer.locked = true;
+            } catch (eRestore) {
+                failed.push(AE.safeGet(function () { return s.layer.index + " " + s.layer.name; }, "?") + ": " + AE.errText(eRestore));
+            }
+        }
+        return failed;
+    }
+    function _isolateLayers(c, refs) {
+        var keep = {};
+        var named = [];
+        for (var ri = 0; ri < refs.length; ri++) {
+            var hit = AE.findLayerInComp(c, refs[ri]);
+            if (!hit) return { ok: false, error: "isolate: no layer matching " + _refText(refs[ri]) + " in comp " + c.name };
+            if (keep["k" + hit.index]) continue;
+            keep["k" + hit.index] = true;
+            named.push({ index: hit.index, name: hit.name });
+        }
+        var saved = [];
+        var changed = 0;
+        try {
+            for (var li = 1; li <= c.numLayers; li++) {
+                var L = c.layer(li);
+                // Audio-only layers put nothing in the picture, and their
+                // video switch may refuse to change: leave them be.
+                if (AE.safeGet(function () { return L.hasVideo; }, true) === false) continue;
+                var mn = AE.safeGet(function () { return L.matchName; }, "");
+                var view = (mn === "ADBE Camera Layer" || mn === "ADBE Light Layer");
+                var s = { layer: L, enabled: L.enabled, locked: !!L.locked, hasSolo: false, solo: false, changed: false };
+                try { s.solo = !!L.solo; s.hasSolo = true; } catch (eSolo) { }
+                saved.push(s);
+                var want = keep["k" + L.index] ? true : (view ? s.enabled : false);
+                if (want === s.enabled && !s.solo) continue;
+                s.changed = true;
+                changed++;
+                if (s.locked) L.locked = false;
+                if (s.solo) L.solo = false;
+                if (L.enabled !== want) L.enabled = want;
+            }
+        } catch (eIso) {
+            var undone = _restoreLayers(saved);
+            return { ok: false, error: "isolate: could not switch layers (" + AE.errText(eIso) + ")" + (undone.length ? "; NOT restored: " + undone.join("; ") : "; every switch restored") };
+        }
+        return { ok: true, saved: saved, layers: named, changed: changed };
+    }
+`;
+/** Options the JSX needs; everything else happens in Node on the captures. */
+function renderJsx(args, times, paths, tryOcio, isolate) {
+    return `
         ${RENDER_FRAME_FN}
+        ${ISOLATE_FN}
         var _arg = ${jsxVal(args.compNameOrId)};
         var comp = AE.findCompByNameOrId(_arg);
         if (!comp) return { ok: false, error: "no comp matching " + String(_arg) };
@@ -233,6 +439,7 @@ async function nativeFlow(args, abs, transport) {
         var _paths = ${jsxVal(paths)};
         var _useDst = ${jsxVal(!!args.useDisplayStartTime)};
         var _useOcio = ${jsxVal(tryOcio)} && _ws !== "None" && _ws !== "";
+        var _isolate = ${jsxVal(isolate)};
         var _frames = [];
         function _renderAll(kind) {
             for (var _fi = 0; _fi < _times.length; _fi++) {
@@ -241,47 +448,86 @@ async function nativeFlow(args, abs, transport) {
                 _frames.push(_r);
             }
         }
-        if (_useOcio) {
-            var _adj = null;
-            var _adjSrc = null;
-            try {
-                _adj = comp.layers.addSolid([1, 1, 1], "__mcp_ocio__", comp.width, comp.height, comp.pixelAspect);
-                _adjSrc = _adj.source;
-                _adj.adjustmentLayer = true;
-                try {
-                    var _maxT = _times[0];
-                    for (var _mi = 1; _mi < _times.length; _mi++) { if (_times[_mi] > _maxT) _maxT = _times[_mi]; }
-                    if (_useDst) _maxT = _maxT + comp.displayStartTime;
-                    if (_adj.outPoint < _maxT + comp.frameDuration) _adj.outPoint = _maxT + comp.frameDuration;
-                } catch (eOp) { }
-                var _fxOk = false;
-                try {
-                    _adj.property("Effects").addProperty("ADBE OCIO Display Transform");
-                    _fxOk = true;
-                } catch (eFx) { /* pre-OCIO AE or ICC color engine */ }
-                if (_fxOk) _renderAll("ocio");
-            } catch (eTmp) { /* fall through to direct capture */ }
-            if (_adj) { try { _adj.remove(); } catch (eRm) { } }
-            if (_adjSrc) { try { _adjSrc.remove(); } catch (eRs) { } }
+        var _iso = null;
+        if (_isolate !== null) {
+            _iso = _isolateLayers(comp, _isolate);
+            if (!_iso.ok) return { ok: false, error: _iso.error };
         }
-        if (_frames.length === 0) _renderAll("direct");
+        var _renderError = null;
+        try {
+            if (_useOcio) {
+                var _adj = null;
+                var _adjSrc = null;
+                try {
+                    _adj = comp.layers.addSolid([1, 1, 1], "__mcp_ocio__", comp.width, comp.height, comp.pixelAspect);
+                    _adjSrc = _adj.source;
+                    _adj.adjustmentLayer = true;
+                    try {
+                        var _maxT = _times[0];
+                        for (var _mi = 1; _mi < _times.length; _mi++) { if (_times[_mi] > _maxT) _maxT = _times[_mi]; }
+                        if (_useDst) _maxT = _maxT + comp.displayStartTime;
+                        if (_adj.outPoint < _maxT + comp.frameDuration) _adj.outPoint = _maxT + comp.frameDuration;
+                    } catch (eOp) { }
+                    var _fxOk = false;
+                    try {
+                        _adj.property("Effects").addProperty("ADBE OCIO Display Transform");
+                        _fxOk = true;
+                    } catch (eFx) { /* pre-OCIO AE or ICC color engine */ }
+                    if (_fxOk) _renderAll("ocio");
+                } catch (eTmp) { /* fall through to direct capture */ }
+                if (_adj) { try { _adj.remove(); } catch (eRm) { } }
+                if (_adjSrc) { try { _adjSrc.remove(); } catch (eRs) { } }
+            }
+            if (_frames.length === 0) _renderAll("direct");
+        } catch (eRender) {
+            _renderError = eRender;
+        }
+        var _isoReport = null;
+        if (_iso) {
+            var _notRestored = _restoreLayers(_iso.saved);
+            _isoReport = { layers: _iso.layers, changed: _iso.changed, restored: _notRestored.length === 0 };
+            if (_notRestored.length) _isoReport.notRestored = _notRestored;
+        }
+        if (_renderError !== null) {
+            var _fail = { ok: false, error: "render failed: " + AE.errText(_renderError) };
+            if (_isoReport) _fail.isolation = _isoReport;
+            return _fail;
+        }
         var _allOk = true;
         var _firstError = null;
         for (var _ci = 0; _ci < _frames.length; _ci++) {
             if (!_frames[_ci].ok) { _allOk = false; if (_firstError === null) _firstError = _frames[_ci].error; }
         }
         var _out = { ok: _allOk, frames: _frames, captureKind: _frames.length > 0 ? _frames[0].captureKind : null };
+        if (_isoReport) _out.isolation = _isoReport;
         if (!_allOk) _out.error = _firstError;
         if (_allOk) {
             _out.compName = comp.name;
             _out.workingSpace = _ws;
             _out.bitsPerChannel = AE.safeGet(function () { return app.project.bitsPerChannel; }, 8);
             _out.projectFile = app.project.file ? app.project.file.fsName.replace(/\\\\/g, "/") : null;
+            _out.bgColor = AE.safeGet(function () { return [comp.bgColor[0], comp.bgColor[1], comp.bgColor[2]]; }, null);
         }
         return _out;
     `;
+}
+async function nativeFlow(args, opts, abs, transport) {
+    const multi = args.times !== undefined;
+    const times = args.times ?? [args.time];
+    const paths = framePaths(abs, times.length, multi);
+    // Color-managed projects: instead of reimplementing the view transform,
+    // make AE apply its own — drop a transient adjustment layer carrying an
+    // "OCIO Display Transform" effect on top of the comp and capture that.
+    // Verified bit-near (mean 0.04/255) against a viewer-referenced capture;
+    // the only artifact is the linear capture scale, which the calibration
+    // pass restores. An adjustment layer (not a wrapper comp) so the viewer
+    // keeps showing the same comp — and ONE layer serves every requested
+    // frame, which is why `times` is cheaper than repeated single calls.
+    // Mutating (one undo group, self-cleaning), so read-only mode falls back
+    // to the pure-math conversion below.
+    const tryOcio = args.colorManaged !== "off" && !readOnlyMode();
     const result = await transport.execute({
-        code,
+        code: renderJsx(args, times, paths, tryOcio, opts.isolate),
         label: "render_frame",
         timeoutMs: 120_000 + (times.length - 1) * 30_000,
     });
@@ -300,58 +546,252 @@ async function nativeFlow(args, abs, transport) {
     if (!payload || payload.ok !== true) {
         return toMcpResult(result);
     }
+    if (payload.isolation && !payload.isolation.restored) {
+        payload.isolationWarning =
+            "some layer switches could not be restored after isolate — check these layers in the timeline: " +
+                (payload.isolation.notRestored ?? []).join("; ");
+    }
     const written = (multi ? frames.map((f) => f.writtenTo) : [payload.writtenTo]).filter((p) => typeof p === "string");
-    // Analysis first: it wants the raw capture, alpha channel included.
-    if (args.analyze)
-        await attachAnalysis(payload, frames, written, multi);
-    if (args.colorManaged !== "off") {
+    /** Attach a per-frame result where this response shape keeps it. */
+    const put = (i, key, value) => {
+        if (multi)
+            frames[i][key] = value;
+        else
+            payload[key] = value;
+    };
+    // How the files will be written, decided once (it may need a calibration
+    // round trip). Null leaves the raw captures on disk.
+    const managed = args.colorManaged !== "off";
+    let convert = null;
+    let backdrop = null;
+    if (managed) {
         payload.method = "native";
-        await colorPostProcess(payload, written, transport);
+        payload.channels = opts.channels;
+        convert = await colorConversion(payload, transport);
+        if (convert === null && (opts.channels !== "rgb" || opts.overGiven)) {
+            payload.channelsWarning =
+                "colour conversion failed (see colorWarning), so the raw capture was kept and `channels` / `over` were not applied";
+        }
+        if (convert !== null && opts.channels === "rgb")
+            backdrop = chooseBackdrop(payload, opts);
+    }
+    // One frame at a time, as before these options: a decoded 1080p frame is
+    // tens of MB, so only the frames `compare` and the sheet need are kept.
+    const keep = new Set(opts.compare ? [opts.compare.from, opts.compare.to] : []);
+    const kept = new Map();
+    const sheetImages = [];
+    let withAlpha = 0;
+    let writing = convert !== null;
+    for (const [i, file] of written.entries()) {
+        // The capture as AE wrote it, read before anything rewrites it: analysis
+        // and the 'capture' stage need the raw pixels, alpha channel included.
+        let capture;
+        try {
+            capture = decodePng(await readFileSettled(file));
+        }
+        catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            payload.captureWarning = `could not read the capture: ${msg}`;
+            if (args.analyze)
+                payload.analysisWarning = `analysis failed: ${msg}`;
+            if (managed)
+                payload.colorWarning = `color post-processing failed, file left as raw capture: ${msg}`;
+            return toMcpResult(result);
+        }
+        if (capture.alpha)
+            withAlpha++;
+        if (args.analyze) {
+            try {
+                put(i, "analysis", analyzeFrame(capture));
+            }
+            catch (err) {
+                payload.analysisWarning = `analysis failed: ${err instanceof Error ? err.message : String(err)}`;
+            }
+        }
+        // The written file, decoded: what the 'output' stage and the sheet see.
+        let output = capture;
+        if (writing && convert !== null) {
+            try {
+                output = await writeOutput(file, capture, convert, opts.channels, backdrop);
+            }
+            catch (err) {
+                payload.colorWarning = `color post-processing failed, file left as raw capture: ${err instanceof Error ? err.message : String(err)}`;
+                writing = false;
+            }
+        }
+        const pixels = { capture, output };
+        if (opts.sample)
+            put(i, "samples", sampleReport(pixels, opts.sample));
+        if (opts.histogram) {
+            const { bins, stage } = opts.histogram;
+            put(i, "histogram", { stage, ...histogramOf(pixels[stage], bins) });
+        }
+        if (keep.has(i))
+            kept.set(i, pixels);
+        if (args.contactSheet)
+            sheetImages.push(output);
+    }
+    payload.alphaChannel =
+        withAlpha === 0 ? "absent" : withAlpha === written.length ? "present" : "mixed";
+    if (convert !== null && payload.alphaChannel === "absent") {
+        if (opts.channels === "alpha") {
+            payload.alphaWarning =
+                "the capture has no alpha channel, so the matte is all white (fully opaque). If this comp should " +
+                    "be transparent here, saveFrameToPng did not write alpha for it.";
+        }
+        else if (opts.channels === "rgba") {
+            payload.alphaWarning =
+                "the capture has no alpha channel, so the file's alpha is fully opaque";
+        }
+        else if (opts.overGiven) {
+            payload.alphaWarning =
+                "the capture has no alpha channel, so there was nothing to composite over `over`";
+        }
+    }
+    if (opts.compare && opts.sample) {
+        const { from, to } = opts.compare;
+        const a = kept.get(from);
+        const b = kept.get(to);
+        if (a && b) {
+            const report = opts.sample.regions.map((r) => ({ name: r.name }));
+            for (const stage of opts.sample.stages) {
+                compareRegions(a[stage], b[stage], opts.sample.regions).forEach((diff, j) => {
+                    report[j][stage] = stageBlock(diff, stage);
+                });
+            }
+            payload.comparison = {
+                from: { index: from, time: frames[from]?.time },
+                to: { index: to, time: frames[to]?.time },
+                regions: report,
+            };
+        }
+    }
+    const stages = new Set([
+        ...(opts.sample?.stages ?? []),
+        ...(opts.histogram ? [opts.histogram.stage] : []),
+    ]);
+    if (stages.size > 0) {
+        payload.measurementStages = {};
+        for (const s of stages)
+            payload.measurementStages[s] = MEASUREMENT_STAGES[s];
     }
     // The sheet last, from the files as they will be viewed.
     if (args.contactSheet) {
-        await attachContactSheet(payload, frames, written, sheetPathFor(abs, args.contactSheet.outPath), args.contactSheet);
+        await attachContactSheet(payload, frames, sheetImages, sheetPathFor(abs, args.contactSheet.outPath), args.contactSheet);
     }
     return toMcpResult(result);
 }
+/** Drop the name (reported once per region) and add the display hex where it means something. */
+function stageBlock(stats, stage) {
+    const { name: _name, ...rest } = stats;
+    if (stage === "output" && Array.isArray(rest.mean))
+        rest.meanHex = rgbHex(rest.mean);
+    return rest;
+}
+/** One frame's `sample` report: each region, once per requested stage. */
+function sampleReport(pixels, sample) {
+    const report = sample.regions.map((r) => ({ name: r.name }));
+    for (const stage of sample.stages) {
+        sampleRegions(pixels[stage], sample.regions).forEach((stats, j) => {
+            report[j][stage] = stageBlock(stats, stage);
+        });
+    }
+    return report;
+}
+/** What transparency is composited over for channels 'rgb', reported on the payload. */
+function chooseBackdrop(payload, opts) {
+    if (opts.over === "background") {
+        const bg = payload.bgColor ?? [0, 0, 0];
+        payload.over = "background";
+        payload.backgroundColor = bg;
+        return { kind: "color", color: bg };
+    }
+    payload.over = opts.over.kind === "checkerboard" ? "checkerboard" : opts.over.color;
+    return opts.over;
+}
+/** Tile the final images into one labelled sheet; alpha is shown over the checkerboard. */
+async function attachContactSheet(payload, frames, images, sheetPath, opts) {
+    try {
+        const tiles = images.map((img) => img.alpha ? { ...img, rgb: flattenOver(img, { kind: "checkerboard" }) } : img);
+        const labels = frames.map((f, i) => frameLabel(i, f.time));
+        const sheet = composeContactSheet(tiles, {
+            columns: opts.columns,
+            thumbWidth: opts.thumbWidth,
+            labels,
+        });
+        await fs.mkdir(path.dirname(sheetPath), { recursive: true });
+        await fs.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+        payload.contactSheet = {
+            writtenTo: sheetPath,
+            size: [sheet.width, sheet.height],
+            columns: sheet.columns,
+            rows: sheet.rows,
+            thumbSize: [sheet.thumbWidth, sheet.thumbHeight],
+            frames: images.length,
+        };
+    }
+    catch (err) {
+        payload.contactSheetWarning = `contact sheet failed: ${err instanceof Error ? err.message : String(err)}`;
+    }
+}
 /**
- * Convert the captures in place to viewer-accurate, sRGB-tagged 8-bit PNGs
- * (see the tool description for the three pipelines). Reports through
- * payload.colorPipeline / payload.colorWarning; never throws.
+ * Convert one capture's RGB, write the file `channels` asks for over the
+ * capture, and return that file decoded. Alpha is coverage, not colour: it
+ * is never converted.
  */
-async function colorPostProcess(payload, written, transport) {
+async function writeOutput(file, capture, convert, channels, backdrop) {
+    const { width, height } = capture;
+    const opaque = () => new Float64Array(width * height).fill(1);
+    let bytes;
+    if (channels === "alpha") {
+        bytes = encodePngGray8(width, height, capture.alpha ?? opaque());
+    }
+    else {
+        const rgb = Float64Array.from(capture.rgb);
+        convert(rgb);
+        bytes =
+            channels === "rgba"
+                ? encodePngSrgbRgba8(width, height, rgb, capture.alpha ?? opaque())
+                : encodePngSrgb8(width, height, flattenOver({ ...capture, rgb }, backdrop));
+    }
+    await fs.writeFile(file, bytes);
+    return decodePng(bytes);
+}
+/**
+ * Decide how the captures are converted to viewer-accurate sRGB (see the
+ * tool description for the three pipelines) and return the conversion,
+ * applied in place to RGB only — alpha is coverage, not colour, and is never
+ * converted. Reports through payload.colorPipeline / payload.colorWarning;
+ * returns null (and never throws) when the files must stay raw.
+ */
+async function colorConversion(payload, transport) {
     const workingSpace = payload.workingSpace ?? "None";
     try {
         if (workingSpace === "None" || workingSpace === "") {
             // Values are already display-referred; the only fix needed is an
             // explicit color tag so viewers stop guessing at the 16-bit file.
-            for (const file of written) {
-                const img = decodePng(await readFileSettled(file));
-                await fs.writeFile(file, encodePngSrgb8(img.width, img.height, img.rgb));
-            }
             payload.colorPipeline = "untagged 16-bit → 8-bit sRGB-tagged (values unchanged)";
-            return;
+            return () => { };
         }
         const calib = await measureCaptureTransfer(transport, calibrationKey(payload.projectFile ?? null, workingSpace, payload.bitsPerChannel ?? 8), !readOnlyMode());
         const calibFailed = "error" in calib || calib.kind === "unknown";
         const gain = !calibFailed && calib.kind === "linear" ? 1 / calib.scale : 1;
+        const applyGain = (rgb) => {
+            if (gain !== 1)
+                for (let i = 0; i < rgb.length; i++)
+                    rgb[i] *= gain;
+        };
         if (payload.captureKind === "ocio") {
             if (calibFailed) {
                 payload.colorWarning =
                     `AE applied its display transform, but the capture scale could not be measured (${"error" in calib ? calib.error : "non-linear transfer"}) — ` +
                         "the file is uniformly dark by that unknown scale. Verify colors against the AE viewer manually.";
-                return;
-            }
-            for (const file of written) {
-                const img = decodePng(await readFileSettled(file));
-                for (let i = 0; i < img.rgb.length; i++)
-                    img.rgb[i] *= gain;
-                await fs.writeFile(file, encodePngSrgb8(img.width, img.height, img.rgb));
+                return null;
             }
             payload.colorPipeline =
                 "AE OCIO display transform (viewer-exact, any working space)" +
                     (gain !== 1 ? ` + capture scale 1/${gain.toFixed(2)} restored` : "");
-            return;
+            return applyGain;
         }
         // Direct capture of a color-managed project (read-only mode, or an AE
         // without the OCIO effect): pure-math fallback for the working spaces we
@@ -361,26 +801,24 @@ async function colorPostProcess(payload, written, transport) {
             payload.colorWarning =
                 `working space '${workingSpace}' has no built-in conversion — the file contains raw working-space ` +
                     "values and will not match the viewer. Verify colors against the AE viewer manually if they matter here.";
-            return;
+            return null;
         }
         if (calibFailed) {
             payload.colorWarning =
                 `could not characterize this AE version's capture transfer (${"error" in calib ? calib.error : "non-linear transfer"}) — ` +
                     "the file contains raw working-space values. Verify colors against the AE viewer manually if they matter here.";
-            return;
-        }
-        for (const file of written) {
-            const img = decodePng(await readFileSettled(file));
-            for (let i = 0; i < img.rgb.length; i++)
-                img.rgb[i] *= gain;
-            sceneLinearToDisplaySrgb(img.rgb, profile.toRec709);
-            await fs.writeFile(file, encodePngSrgb8(img.width, img.height, img.rgb));
+            return null;
         }
         payload.colorPipeline =
             `${profile.note}` + (gain !== 1 ? ` (capture scale 1/${gain.toFixed(2)} restored)` : "");
+        return (rgb) => {
+            applyGain(rgb);
+            sceneLinearToDisplaySrgb(rgb, profile.toRec709);
+        };
     }
     catch (err) {
         payload.colorWarning = `color post-processing failed, file left as raw capture: ${err instanceof Error ? err.message : String(err)}`;
+        return null;
     }
 }
 //# sourceMappingURL=render-frame.js.map

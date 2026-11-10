@@ -102,6 +102,172 @@ function analyzeFrame(img) {
     }
   };
 }
+const CHECKERBOARD = {
+  size: 16,
+  light: [0.8, 0.8, 0.8],
+  dark: [0.6, 0.6, 0.6]
+};
+function flattenOver(img, backdrop) {
+  const out = Float64Array.from(img.rgb);
+  const alpha = img.alpha;
+  if (!alpha) return out;
+  const { width, height } = img;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const p = y * width + x;
+      const a = alpha[p];
+      if (a >= 1) continue;
+      const bg = backdrop.kind === "color" ? backdrop.color : (Math.floor(x / CHECKERBOARD.size) + Math.floor(y / CHECKERBOARD.size)) % 2 === 0 ? CHECKERBOARD.light : CHECKERBOARD.dark;
+      const i = p * 3;
+      out[i] = out[i] * a + bg[0] * (1 - a);
+      out[i + 1] = out[i + 1] * a + bg[1] * (1 - a);
+      out[i + 2] = out[i + 2] * a + bg[2] * (1 - a);
+    }
+  }
+  return out;
+}
+const r4 = (v) => Math.round(v * 1e4) / 1e4;
+const r4rgb = (v) => [r4(v[0]), r4(v[1]), r4(v[2])];
+function clipRegion(img, region) {
+  const x0 = Math.floor(region.x);
+  const y0 = Math.floor(region.y);
+  const x1 = x0 + Math.max(1, Math.floor(region.width ?? 1));
+  const y1 = y0 + Math.max(1, Math.floor(region.height ?? 1));
+  const cx0 = Math.max(0, x0);
+  const cy0 = Math.max(0, y0);
+  const cx1 = Math.min(img.width, x1);
+  const cy1 = Math.min(img.height, y1);
+  if (cx1 <= cx0 || cy1 <= cy0) return null;
+  return {
+    rect: { x: cx0, y: cy0, width: cx1 - cx0, height: cy1 - cy0 },
+    clipped: cx0 !== x0 || cy0 !== y0 || cx1 !== x1 || cy1 !== y1
+  };
+}
+function outside(img, region) {
+  return { name: region.name, error: `region is outside the ${img.width}\xD7${img.height} frame` };
+}
+function sampleRegions(img, regions) {
+  return regions.map((region) => {
+    const clip = clipRegion(img, region);
+    if (!clip) return outside(img, region);
+    const { rect } = clip;
+    const sum = [0, 0, 0];
+    const min = [Infinity, Infinity, Infinity];
+    const max = [-Infinity, -Infinity, -Infinity];
+    let aSum = 0;
+    let aMin = Infinity;
+    let aMax = -Infinity;
+    let opaque = 0;
+    let transparent = 0;
+    for (let y = rect.y; y < rect.y + rect.height; y++) {
+      for (let x = rect.x; x < rect.x + rect.width; x++) {
+        const p = y * img.width + x;
+        for (let c = 0; c < 3; c++) {
+          const v = img.rgb[p * 3 + c];
+          sum[c] += v;
+          if (v < min[c]) min[c] = v;
+          if (v > max[c]) max[c] = v;
+        }
+        if (img.alpha) {
+          const a = img.alpha[p];
+          aSum += a;
+          if (a < aMin) aMin = a;
+          if (a > aMax) aMax = a;
+          if (a >= 1 - TOL) opaque++;
+          else if (a <= TOL) transparent++;
+        }
+      }
+    }
+    const n = rect.width * rect.height;
+    return {
+      name: region.name,
+      rect,
+      clipped: clip.clipped,
+      pixels: n,
+      mean: r4rgb([sum[0] / n, sum[1] / n, sum[2] / n]),
+      min: r4rgb(min),
+      max: r4rgb(max),
+      alpha: img.alpha ? {
+        mean: r4(aSum / n),
+        min: r4(aMin),
+        max: r4(aMax),
+        opaqueShare: r4(opaque / n),
+        partialShare: r4((n - opaque - transparent) / n),
+        transparentShare: r4(transparent / n)
+      } : null
+    };
+  });
+}
+function histogramOf(img, bins) {
+  const n = img.width * img.height;
+  const counts = [0, 1, 2].map(() => Array.from({ length: bins }, () => 0));
+  const aCounts = img.alpha ? Array.from({ length: bins }, () => 0) : void 0;
+  const bin = (v) => Math.min(bins - 1, Math.max(0, Math.floor(v * bins)));
+  for (let p = 0; p < n; p++) {
+    for (let c = 0; c < 3; c++) counts[c][bin(img.rgb[p * 3 + c])]++;
+    if (aCounts && img.alpha) aCounts[bin(img.alpha[p])]++;
+  }
+  return {
+    bins,
+    pixels: n,
+    r: counts[0],
+    g: counts[1],
+    b: counts[2],
+    ...aCounts ? { a: aCounts } : {}
+  };
+}
+function compareRegions(from, to, regions) {
+  if (from.width !== to.width || from.height !== to.height) {
+    throw new Error(
+      `cannot compare frames of different size (${from.width}\xD7${from.height} vs ${to.width}\xD7${to.height})`
+    );
+  }
+  const withAlpha = from.alpha !== void 0 && to.alpha !== void 0;
+  return regions.map((region) => {
+    const clip = clipRegion(from, region);
+    if (!clip) return outside(from, region);
+    const { rect } = clip;
+    const delta = [0, 0, 0];
+    const absSum = [0, 0, 0];
+    const absMax = [0, 0, 0];
+    let aDelta = 0;
+    let aAbs = 0;
+    let aMax = 0;
+    for (let y = rect.y; y < rect.y + rect.height; y++) {
+      for (let x = rect.x; x < rect.x + rect.width; x++) {
+        const p = y * from.width + x;
+        for (let c = 0; c < 3; c++) {
+          const d = to.rgb[p * 3 + c] - from.rgb[p * 3 + c];
+          delta[c] += d;
+          absSum[c] += Math.abs(d);
+          if (Math.abs(d) > absMax[c]) absMax[c] = Math.abs(d);
+        }
+        if (withAlpha) {
+          const d = to.alpha[p] - from.alpha[p];
+          aDelta += d;
+          aAbs += Math.abs(d);
+          if (Math.abs(d) > aMax) aMax = Math.abs(d);
+        }
+      }
+    }
+    const n = rect.width * rect.height;
+    return {
+      name: region.name,
+      rect,
+      clipped: clip.clipped,
+      pixels: n,
+      meanDelta: r4rgb([delta[0] / n, delta[1] / n, delta[2] / n]),
+      meanAbsDelta: r4rgb([absSum[0] / n, absSum[1] / n, absSum[2] / n]),
+      maxAbsDelta: r4rgb(absMax),
+      alpha: withAlpha ? { meanDelta: r4(aDelta / n), meanAbsDelta: r4(aAbs / n), maxAbsDelta: r4(aMax) } : null
+    };
+  });
+}
+function rgbHex(rgb) {
+  return `#${rgb.map(
+    (v) => Math.round(Math.min(1, Math.max(0, v)) * 255).toString(16).padStart(2, "0")
+  ).join("")}`;
+}
 function resample(img, tw, th) {
   const out = new Float64Array(tw * th * 3);
   const counts = new Float64Array(tw * th);
@@ -219,8 +385,14 @@ function frameLabel(index, time) {
   return time === void 0 ? `#${index}` : `#${index} ${time.toFixed(3)}s`;
 }
 export {
+  CHECKERBOARD,
   analyzeFrame,
+  compareRegions,
   composeContactSheet,
+  flattenOver,
   frameLabel,
-  resample
+  histogramOf,
+  resample,
+  rgbHex,
+  sampleRegions
 };
