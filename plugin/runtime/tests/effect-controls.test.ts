@@ -483,7 +483,7 @@ describe("effect.set_property checks before it writes", () => {
     expect(res.ok).toBe(false);
     expect(res.error).toContain("Transition Completion");
     expect(res.error).toContain("0 to 1");
-    expect(res.range).toEqual({ min: 0, max: 1 });
+    expect(res.range).toMatchObject({ min: 0, max: 1, source: "after-effects" });
     expect(fx.property(1).writes).toEqual([]);
   });
 
@@ -533,6 +533,165 @@ describe("effect.set_property checks before it writes", () => {
   });
 });
 
+// ------------------------------------- known scales and untrustworthy ranges
+//
+// Live, After Effects 2027 (stage 5 checks, 2026-11-10): Threshold's Level
+// (ADBE Threshold2-0001) reports -30000 to 30000 while scripting takes 0 to 1,
+// so a write of 128 passed the reported-range check. Keylight's Screen Colour
+// (COLOR) reports about plus or minus 3.9 million. Ranges that wide are After
+// Effects' placeholders, not limits.
+
+/** Threshold as After Effects 2027 reports it to scripting. */
+function threshold(): Any {
+  return fakeGroup(
+    "Threshold",
+    "ADBE Threshold2",
+    [fakeProp({ name: "Level", matchName: "ADBE Threshold2-0001", type: "OneD", value: 0.5, min: -30000, max: 30000 })],
+    { propertyType: PT.INDEXED_GROUP, propertyIndex: 1, enabled: true },
+  );
+}
+
+describe("known effect scales", () => {
+  it("is a table keyed by matchName that starts with Threshold Level at 0 to 1", () => {
+    const AE = loadAE();
+
+    expect(AE.KNOWN_EFFECT_SCALES["ADBE Threshold2-0001"]).toMatchObject({ min: 0, max: 1 });
+  });
+
+  it("gives every entry a range and a note saying where it was observed", () => {
+    const AE = loadAE();
+    const entries = Object.entries(AE.KNOWN_EFFECT_SCALES) as Array<[string, Any]>;
+
+    expect(entries.length).toBeGreaterThan(0);
+    for (const [matchName, e] of entries) {
+      expect(matchName).toMatch(/^ADBE /);
+      expect(typeof e.min).toBe("number");
+      expect(typeof e.max).toBe("number");
+      expect(e.min).toBeLessThan(e.max);
+      expect(e.note).toMatch(/After Effects 20\d\d/);
+    }
+  });
+
+  it("effect.describe shows the known range and says it is known from testing", () => {
+    const AE = loadAE();
+    const row = AE.describeEffect(threshold()).properties[0];
+
+    expect(row).toMatchObject({
+      name: "Level",
+      value: 0.5,
+      minValue: 0,
+      maxValue: 1,
+      rangeSource: "known-scale",
+      reportedRange: { min: -30000, max: 30000 },
+    });
+    expect(row.rangeNote).toContain("0 to 1");
+  });
+
+  it("effect.describe marks a range After Effects reported as reported", () => {
+    const AE = loadAE();
+    const row = AE.describeEffect(gradientWipe()).properties[0];
+
+    expect(row.rangeSource).toBe("after-effects");
+    expect(row).not.toHaveProperty("reportedRange");
+    expect(row).not.toHaveProperty("rangeUntrusted");
+  });
+
+  it("effect.set_property refuses a Threshold Level on the panel's 0 to 255 scale", () => {
+    const fx = threshold();
+    const res = runOp(
+      "effect.set_property",
+      { comp: "Main", layer: 1, effectIndex: 1, property: ["Level"], value: 128 },
+      [fx],
+    );
+
+    expect(res.ok).toBe(false);
+    expect(res.error).toContain("Level");
+    expect(res.error).toContain("128");
+    expect(res.error).toContain("0 to 1");
+    expect(res.error).toContain("-30000 to 30000");
+    expect(res.range).toMatchObject({ min: 0, max: 1, source: "known-scale" });
+    expect(fx.property(1).writes).toEqual([]);
+  });
+
+  it("effect.set_property writes a Threshold Level inside the known range", () => {
+    const fx = threshold();
+    const res = runOp(
+      "effect.set_property",
+      { comp: "Main", layer: 1, effectIndex: 1, property: ["Level"], value: 0.5 },
+      [fx],
+    );
+
+    expect(res.ok).toBe(true);
+    expect(fx.property(1).writes).toEqual([{ time: null, value: 0.5 }]);
+  });
+
+  it("skipCheck still overrides a known range", () => {
+    const fx = threshold();
+    const res = runOp(
+      "effect.set_property",
+      { comp: "Main", layer: 1, effectIndex: 1, property: ["Level"], value: 128, skipCheck: true },
+      [fx],
+    );
+
+    expect(res).toMatchObject({ ok: true, checked: false });
+    expect(fx.property(1).writes).toEqual([{ time: null, value: 128 }]);
+  });
+
+  it("layer info marks a known range but adds nothing to ordinary reported ones", () => {
+    const AE = loadAE();
+
+    expect(AE.serializeProperty(threshold().property(1), { controls: true })).toMatchObject({
+      minValue: 0,
+      maxValue: 1,
+      rangeSource: "known-scale",
+    });
+    expect(AE.serializeProperty(gradientWipe().property(1), { controls: true })).not.toHaveProperty("rangeSource");
+  });
+});
+
+describe("absurdly wide reported ranges", () => {
+  it("marks a range of plus or minus 30000 or more as untrusted in effect.describe", () => {
+    const AE = loadAE();
+    const fx = fakeGroup("Some Effect", "ADBE Some Effect", [
+      fakeProp({ name: "Amount", matchName: "ADBE Some Effect-0001", type: "OneD", value: 3, min: -30000, max: 30000 }),
+      fakeProp({ name: "Screen Colour", matchName: "Keylight 906-0002", type: "COLOR", value: [0, 1, 0, 1], min: -3.9e6, max: 3.9e6 }),
+    ]);
+    const rows = AE.describeEffect(fx).properties;
+
+    for (const row of rows) {
+      expect(row.rangeSource).toBe("after-effects");
+      expect(row.rangeUntrusted).toBe(true);
+      expect(row.rangeNote).toMatch(/not a real limit/);
+    }
+  });
+
+  it("does not mark ordinary wide ranges", () => {
+    const AE = loadAE();
+    const fx = fakeGroup("Keylight (1.2)", "Keylight 906", [
+      fakeProp({ name: "Screen Gain", matchName: "Keylight 906-0010", type: "OneD", value: 100, min: 0, max: 5000 }),
+      fakeProp({ name: "Screen Shrink/Grow", matchName: "Keylight 906-0020", type: "OneD", value: 0, min: -5000, max: 5000 }),
+      fakeProp({ name: "Glow Threshold", matchName: "ADBE Glo2-0002", type: "OneD", value: 153, min: 0, max: 255, unitsText: "percent" }),
+    ]);
+
+    for (const row of AE.describeEffect(fx).properties) expect(row).not.toHaveProperty("rangeUntrusted");
+  });
+
+  it("layer info marks an untrusted range too", () => {
+    const AE = loadAE();
+    const p = fakeProp({ name: "Amount", matchName: "ADBE Some Effect-0001", type: "OneD", value: 3, min: -30000, max: 30000 });
+
+    expect(AE.serializeProperty(p, { controls: true }).rangeUntrusted).toBe(true);
+  });
+
+  it("an untrusted range still bounds writes, as After Effects itself would", () => {
+    const AE = loadAE();
+    const p = fakeProp({ name: "Amount", matchName: "ADBE Some Effect-0001", type: "OneD", value: 3, min: -30000, max: 30000 });
+
+    expect(AE.checkPropertyWrite(p, 128)).toBeNull();
+    expect(AE.checkPropertyWrite(p, 40000)).toContain("-30000 to 30000");
+  });
+});
+
 // ---------------------------------------------------------------- item 4
 
 describe("scripting documentation records scale differences", () => {
@@ -552,5 +711,17 @@ describe("scripting documentation records scale differences", () => {
   it("points to effect.describe and skipCheck", () => {
     expect(section).toContain("effect.describe");
     expect(section).toContain("skipCheck");
+  });
+
+  it("records Glow Threshold as observed at 0 to 255, with units text that says percent", () => {
+    expect(section).not.toMatch(/Not yet verified[^\n]*Glow/);
+    expect(section).toMatch(/Glow[^\n]*Glow Threshold[^\n]*0 to 255/);
+    expect(section).toMatch(/Glow Threshold[^\n]*153/);
+    expect(section).toMatch(/unitsText[^\n]*percent/);
+  });
+
+  it("says what protects Threshold Level: the known-scale table, because the reported range is wrong", () => {
+    expect(section).toMatch(/Threshold[^\n]*-30000 to 30000/);
+    expect(section).toContain("AE.KNOWN_EFFECT_SCALES");
   });
 });

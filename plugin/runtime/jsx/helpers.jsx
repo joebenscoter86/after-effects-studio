@@ -581,23 +581,85 @@ AE.valueToJson = function (val, _depth) {
 // ---------- Effect controls: ranges, units, checked writes ----------
 
 /**
+ * Scripting scales After Effects reports wrongly, keyed by property matchName.
+ * Each entry is the range scripting really accepts, found by testing, with a
+ * note saying what was observed and where. An entry replaces the reported
+ * range in effect.describe, layer info and effect.set_property's check
+ * (skipCheck still overrides it). To add one: test the property live, add
+ * { min, max, note } here and a line under "Effect value scales" in
+ * library/references/scripting.md.
+ */
+AE.KNOWN_EFFECT_SCALES = {
+    "ADBE Threshold2-0001": {
+        min: 0,
+        max: 1,
+        note: "Threshold Level takes 0 to 1 in scripting (the panel shows 0 to 255); After Effects 2027 reports -30000 to 30000, which is not the real limit."
+    }
+};
+
+/**
+ * A reported bound this far from zero is After Effects' placeholder for "no
+ * real limit" (Threshold Level reports -30000 to 30000, Keylight's Screen
+ * Colour about plus or minus 3.9 million), not a usable scale.
+ */
+AE.WIDE_RANGE_LIMIT = 30000;
+
+/**
  * The range After Effects reports for a property, as { min, max } with null
  * for a side it does not report (hasMin/hasMax false, or the read threw).
- * The range is in SCRIPTING units, which can differ from what the Effect
- * Controls panel shows (Gradient Wipe completion is 0..1 here, 0..100% there).
  */
-AE.propertyRange = function (prop) {
+AE.reportedRange = function (prop) {
     var r = { min: null, max: null };
     try { if (prop.hasMin === true && typeof prop.minValue === "number") r.min = prop.minValue; } catch (eMin) {}
     try { if (prop.hasMax === true && typeof prop.maxValue === "number") r.max = prop.maxValue; } catch (eMax) {}
     return r;
 };
 
-/** Copy range, units and canVaryOverTime onto `out`, leaving out what AE does not report. */
-AE._addControlFields = function (prop, out) {
+/**
+ * The range to trust for a property, in SCRIPTING units (which can differ
+ * from the Effect Controls panel: Gradient Wipe completion is 0..1 here,
+ * 0..100% there). { min, max, source } where source is "known-scale" (from
+ * AE.KNOWN_EFFECT_SCALES; `reported` and `note` say what AE claimed),
+ * "after-effects" (as reported; `untrusted` and `note` when absurdly wide),
+ * or null when there is no range at all.
+ */
+AE.propertyRange = function (prop) {
+    var rep = AE.reportedRange(prop);
+    var mn = AE.safeGet(function () { return prop.matchName; }, "");
+    var known = (typeof mn === "string" && AE.KNOWN_EFFECT_SCALES.hasOwnProperty(mn)) ? AE.KNOWN_EFFECT_SCALES[mn] : null;
+    if (known) return { min: known.min, max: known.max, source: "known-scale", note: known.note, reported: rep };
+    if (rep.min === null && rep.max === null) return { min: null, max: null, source: null };
+    var r = { min: rep.min, max: rep.max, source: "after-effects" };
+    var lim = AE.WIDE_RANGE_LIMIT;
+    if ((rep.min !== null && Math.abs(rep.min) >= lim) || (rep.max !== null && Math.abs(rep.max) >= lim)) {
+        r.untrusted = true;
+        r.note = "After Effects reports " + AE._rangeText(rep) + "; a range this wide is its placeholder, not a real limit. " +
+            "Check library/references/scripting.md or test a value before trusting a scale.";
+    }
+    return r;
+};
+
+/**
+ * Copy range, units and canVaryOverTime onto `out`, leaving out what AE does
+ * not report. A known or untrusted range is always marked (rangeSource,
+ * rangeNote, reportedRange / rangeUntrusted); `verbose` also marks ordinary
+ * reported ranges, as effect.describe does.
+ */
+AE._addControlFields = function (prop, out, verbose) {
     var r = AE.propertyRange(prop);
     if (r.min !== null) out.minValue = r.min;
     if (r.max !== null) out.maxValue = r.max;
+    if (r.source === "known-scale") {
+        out.rangeSource = "known-scale";
+        if (r.reported.min !== null || r.reported.max !== null) out.reportedRange = r.reported;
+        out.rangeNote = r.note;
+    } else if (r.source === "after-effects") {
+        if (verbose || r.untrusted) out.rangeSource = "after-effects";
+        if (r.untrusted) {
+            out.rangeUntrusted = true;
+            out.rangeNote = r.note;
+        }
+    }
     var units = AE.safeGet(function () { return prop.unitsText; }, "");
     if (typeof units === "string" && units.length > 0) out.unitsText = units;
     var cv = AE.safeGet(function () { return prop.canVaryOverTime; }, null);
@@ -671,9 +733,15 @@ AE.checkPropertyWrite = function (prop, value) {
     if (r.min === null && r.max === null) return null;
     for (var n = 0; n < nums.length; n++) {
         if ((r.min !== null && nums[n] < r.min) || (r.max !== null && nums[n] > r.max)) {
+            if (r.source === "known-scale") {
+                var claimed = (r.reported.min !== null || r.reported.max !== null) ? AE._rangeText(r.reported) : "no range";
+                return label + " refused " + given + ": its scripting scale is " + AE._rangeText(r) +
+                    ", known from testing (After Effects reports " + claimed + ", which is wrong). " + r.note +
+                    " If this known scale is itself wrong, pass skipCheck: true.";
+            }
             var units = AE.safeGet(function () { return prop.unitsText; }, "");
             return label + " refused " + given + ": After Effects reports a valid range of " + AE._rangeText(r) +
-                " in scripting" + (units ? " (" + units + ")" : "") +
+                " in scripting" + (units ? " (units text: " + units + ")" : "") +
                 ". The Effect Controls panel can show another scale (percent, 0 to 255). " +
                 "If After Effects' reported range is itself wrong, pass skipCheck: true.";
         }
@@ -716,7 +784,7 @@ AE.describeEffect = function (fx) {
                 valueType: AE.PROPERTY_VALUE_TYPE_NAMES[pvt] || pvt
             };
             try { row.value = AE.valueToJson(child.value); } catch (eVal) { row.value = null; }
-            AE._addControlFields(child, row);
+            AE._addControlFields(child, row, true);
             row.numKeys = AE.safeGet(function () { return child.numKeys; }, 0);
             var ex = AE.safeGet(function () {
                 return (child.canSetExpression && child.expressionEnabled && child.expression) ? child.expression : null;
