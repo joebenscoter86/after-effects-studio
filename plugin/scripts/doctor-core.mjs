@@ -4,8 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const DEFAULT_AE_PATHS = {
-  darwin: ['2026', '2025', '2024'].map(y => `/Applications/Adobe After Effects ${y}/Adobe After Effects ${y}.app`),
-  win32: ['2026', '2025', '2024'].map(y => `C:/Program Files/Adobe/Adobe After Effects ${y}/Support Files/AfterFX.exe`),
+  darwin: ['2027', '2026', '2025', '2024'].map(y => `/Applications/Adobe After Effects ${y}/Adobe After Effects ${y}.app`),
+  win32: ['2027', '2026', '2025', '2024'].map(y => `C:/Program Files/Adobe/Adobe After Effects ${y}/Support Files/AfterFX.exe`),
 };
 
 function check(name, ok, detail, { optional = false, hint } = {}) {
@@ -42,11 +42,11 @@ function psRunningAeApps() {
   return [...apps];
 }
 
-// Same order as the server: AE_MCP_EXE, a running release, the supported 2026 → 2024, then newer releases.
+// Same order as the server: AE_MCP_EXE, a running release, the supported 2027 → 2024, then newer releases.
 function resolveAeCandidate({ env, platform, fileExists, stat, listDir, runningApps }) {
   const overrides = [env.AE_MCP_EXE, env.AE_EXE].map(value => value?.trim()).filter(Boolean);
   const installed = installedAePaths(platform, listDir);
-  const supported = ['2026', '2025', '2024'].flatMap(y => installed.filter(p => p.includes(`Adobe After Effects ${y}/`)));
+  const supported = ['2027', '2026', '2025', '2024'].flatMap(y => installed.filter(p => p.includes(`Adobe After Effects ${y}/`)));
   const candidates = [...overrides, ...(platform === 'darwin' ? runningApps() : []), ...supported, ...installed, ...(DEFAULT_AE_PATHS[platform] || [])];
   return candidates.find(candidate => usableAePath(candidate, platform, fileExists, stat)) || null;
 }

@@ -1,6 +1,6 @@
 # Your first motion scene
 
-This is the guided first session in Claude Code, or in a Cowork session running on your Mac, with macOS and After Effects 2026. Install the plugin first with [installation and update](local-install.md).
+This is the guided first session in Claude Code, or in a Cowork session running on your Mac, with macOS and After Effects 2027. Install the plugin first with [installation and update](local-install.md).
 
 For a polished scene, use the most capable model available to you. A lower-cost model can build editable drafts, but inspect its rendered frames closely. Model choice never replaces checking the actual movie.
 

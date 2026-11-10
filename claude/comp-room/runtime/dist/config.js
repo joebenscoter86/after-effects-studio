@@ -81,17 +81,19 @@ function runtimeDirWarnings() {
   return warnings.filter((w) => w !== null);
 }
 const DEFAULT_AE_PATHS_WIN32 = [
+  "C:/Program Files/Adobe/Adobe After Effects 2027/Support Files/AfterFX.exe",
   "C:/Program Files/Adobe/Adobe After Effects 2026/Support Files/AfterFX.exe",
   "C:/Program Files/Adobe/Adobe After Effects 2025/Support Files/AfterFX.exe",
   "C:/Program Files/Adobe/Adobe After Effects 2024/Support Files/AfterFX.exe"
 ];
 const DEFAULT_AE_PATHS_DARWIN = [
+  "/Applications/Adobe After Effects 2027/Adobe After Effects 2027.app",
   "/Applications/Adobe After Effects 2026/Adobe After Effects 2026.app",
   "/Applications/Adobe After Effects 2025/Adobe After Effects 2025.app",
   "/Applications/Adobe After Effects 2024/Adobe After Effects 2024.app"
 ];
 const AE_RELEASE_DIR = /^Adobe After Effects (\d{4})$/;
-const SUPPORTED_AE_YEARS = [2026, 2025, 2024];
+const SUPPORTED_AE_YEARS = [2027, 2026, 2025, 2024];
 const MIN_AE_YEAR = 2024;
 const AE_APP_IN_PROCESS = /^(.*\/Adobe After Effects \d{4}\.app)\/Contents\/MacOS\/After Effects(?:\s|$)/;
 function runningAfterFxApps(psOutput) {

@@ -47,8 +47,8 @@ describe("After Effects discovery", () => {
   });
 
   it("resolves a version newer than the built-in list", () => {
-    const root = macRoot(["2027"]);
-    expect(resolveAfterFxPath("darwin", root, () => [])).toBe(path.join(root, "Adobe After Effects 2027", "Adobe After Effects 2027.app"));
+    const root = macRoot(["2028"]);
+    expect(resolveAfterFxPath("darwin", root, () => [])).toBe(path.join(root, "Adobe After Effects 2028", "Adobe After Effects 2028.app"));
   });
 
   it("still prefers AE_MCP_EXE", () => {
@@ -63,9 +63,14 @@ describe("After Effects discovery", () => {
     expect(resolveAfterFxPath("darwin", root, () => [app2027])).toBe(app2027);
   });
 
-  it("prefers the supported 2026 over a newer release that is not running", () => {
+  it("prefers the supported 2027 over a newer release that is not running", () => {
+    const root = macRoot(["2027", "2028"]);
+    expect(resolveAfterFxPath("darwin", root, () => [])).toBe(path.join(root, "Adobe After Effects 2027", "Adobe After Effects 2027.app"));
+  });
+
+  it("prefers the newest tested release, 2027, over 2026 when neither is running", () => {
     const root = macRoot(["2026", "2027"]);
-    expect(resolveAfterFxPath("darwin", root, () => [])).toBe(path.join(root, "Adobe After Effects 2026", "Adobe After Effects 2026.app"));
+    expect(resolveAfterFxPath("darwin", root, () => [])).toBe(path.join(root, "Adobe After Effects 2027", "Adobe After Effects 2027.app"));
   });
 
   it("ignores releases older than 2024", () => {

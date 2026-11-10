@@ -1,6 +1,6 @@
 # Proposed Original Materials License 1.1 (draft, not in force)
 
-Status: drafted 2026-11-08 under D-014 decision 2 and CL-4; waiting for Joe's approval or edits. `license.md` and `plugin/license.md` stay at 1.0 until Joe approves. On approval, apply this text to both files (keeping each file's own relative paths), add a sentence to D-008, and rebuild both packages.
+Status: drafted 2026-11-08 under D-014 decision 2 and CL-4. Approved by Joe on 2026-11-09 ("no issue") and applied the same day to `license.md` and `plugin/license.md`, each with its own relative paths; D-008 records it. The Claude package is rebuilt; the Codex package picks it up in its next version. This file is now the record of the change.
 
 The only changes from 1.0: the title says 1.1, the **Authorized sources** paragraph is new, and the first paragraph names the Claude package, Comp Room (D-016).
 

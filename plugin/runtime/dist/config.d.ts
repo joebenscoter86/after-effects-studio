@@ -87,7 +87,7 @@ export declare function discoverAfterFxPaths(platform?: NodeJS.Platform, root?: 
  * Honors AE_MCP_EXE (and the legacy AE_EXE name) first so the user can
  * override without editing source. Then a release that is already running (so
  * the agent talks to the After Effects the user has open), then the supported
- * releases 2026 → 2025 → 2024, then any newer installed release, newest first.
+ * releases 2027 → 2026 → 2025 → 2024, then any newer installed release, newest first.
  */
 export declare function resolveAfterFxPath(platform?: NodeJS.Platform, root?: string, running?: () => string[]): string;
 /** Default per-call timeout (ms) for JSX execution before we give up polling. */

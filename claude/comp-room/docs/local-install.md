@@ -4,7 +4,7 @@ Comp Room installs from the `jb-technology` marketplace in the public repository
 
 ## Requirements
 
-- macOS with a licensed copy of Adobe After Effects 2026.
+- macOS with a licensed copy of Adobe After Effects 2027.
 - Node.js 24 or newer from the installer at [nodejs.org](https://nodejs.org). Run `node -v` in Terminal to check. The Claude desktop app starts plugins without your shell profile, so a Node installed with Homebrew or nvm may be invisible to it even when Terminal finds it. The nodejs.org installer puts Node where the app can find it.
 - If After Effects is installed somewhere unusual, set `AE_MCP_EXE` to its `.app` bundle in the environment that starts Claude, then restart.
 

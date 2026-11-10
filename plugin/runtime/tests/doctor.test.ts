@@ -33,16 +33,16 @@ describe('doctor diagnostics', () => {
       listDir: (dir) => (dir === '/Applications' ? ['Adobe After Effects 2026', 'Adobe After Effects 2027'] : []),
       runningApps: () => [],
     });
-    expect(report.checks.find((x) => x.name === 'After Effects path')!.detail).toBe(app26);
-    expect(report.notes.join(' ')).toMatch(/2027, 2026.*Adobe After Effects 2026\.app/);
+    expect(report.checks.find((x) => x.name === 'After Effects path')!.detail).toBe(app27);
+    expect(report.notes.join(' ')).toMatch(/2027, 2026.*Adobe After Effects 2027\.app/);
   });
 
   it('finds an installed release newer than the built-in list', () => {
-    const app = '/Applications/Adobe After Effects 2027/Adobe After Effects 2027.app';
+    const app = '/Applications/Adobe After Effects 2028/Adobe After Effects 2028.app';
     const files = new Set(['/pkg/runtime/dist/index.js', '/pkg/library/manifest.json', app]);
     const report = makeDoctor({
       fileExists: (p) => files.has(p),
-      listDir: (dir) => (dir === '/Applications' ? ['Adobe After Effects 2027', 'Adobe Photoshop 2027'] : []),
+      listDir: (dir) => (dir === '/Applications' ? ['Adobe After Effects 2028', 'Adobe Photoshop 2028'] : []),
     });
     expect(report.checks.find((x) => x.name === 'After Effects path')!.detail).toBe(app);
   });

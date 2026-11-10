@@ -6,7 +6,7 @@ Published by JB Technology LLC. Free for personal and paid client work, includin
 
 ## Requirements
 
-- macOS with a licensed copy of Adobe After Effects 2026.
+- macOS with a licensed copy of Adobe After Effects 2027.
 - Node.js 24 or newer, installed with the installer from [nodejs.org](https://nodejs.org). Check with `node -v`. The Claude desktop app may not find a Node installed with Homebrew or nvm.
 - Claude Code, or a Cowork session running on your Mac (see below).
 - macOS asks once whether Claude, or the terminal that runs it, may control After Effects. Allow it. For renders and exports, After Effects needs **Allow Scripts to Write Files and Access Network** turned on in Preferences → Scripting & Expressions.
