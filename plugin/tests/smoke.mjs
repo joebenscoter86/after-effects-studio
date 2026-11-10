@@ -17,8 +17,10 @@ mkdirSync(output,{recursive:true});
 const hostArg=process.argv.indexOf('--host');
 const host=hostArg>=0?process.argv[hostArg+1]:'codex';
 const cwdArg=process.argv.indexOf('--cwd');
-const config=JSON.parse(readFileSync(new URL('.mcp.json',root),'utf8')).mcpServers['after-effects-studio'];
-assert(config,'Missing after-effects-studio MCP registration');
+// The server is named after the package: the Claude package's manifest name (comp-room), or after-effects-studio for Codex.
+const serverName=host==='claude'?JSON.parse(readFileSync(new URL('.claude-plugin/plugin.json',root),'utf8')).name:'after-effects-studio';
+const config=JSON.parse(readFileSync(new URL('.mcp.json',root),'utf8')).mcpServers[serverName];
+assert(config,`Missing ${serverName} MCP registration`);
 let launchCwd;
 if(host==='claude'){
  // Claude Code substitutes the plugin root and starts the server from the user's working directory.
@@ -50,7 +52,7 @@ const report={checks:[],live,scratch};
 let scratchId=null;
 try{
  const init=await rpc('initialize',{protocolVersion:'2024-11-05',capabilities:{},clientInfo:{name:'studio-smoke',version:'1.0.0'}});
- assert.equal(init.serverInfo.name,'after-effects-studio');
+ assert.equal(init.serverInfo.name,serverName);
  child.stdin.write(JSON.stringify({jsonrpc:'2.0',method:'notifications/initialized'})+'\n');
  const ts=await rpc('tools/list');assert(ts.tools.some(t=>t.name==='ae_library'));report.tools=ts.tools.map(t=>t.name);
  const lib=await tool('ae_library');assert.equal(lib.documents.length,91);assert.deepEqual(lib.startHere,["motion-language","production-workflow","brief-template"]);
