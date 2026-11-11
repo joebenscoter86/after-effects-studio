@@ -4,6 +4,18 @@ import { z } from "zod";
 
 import { measureCaptureTransfer, calibrationKey } from "../color/calibration.js";
 import {
+  alphaChange,
+  edgeArgsError,
+  measureEdge,
+  resolveEdgeThresholds,
+  summarizeFlicker,
+  type AlphaFrame,
+  type EdgeReport,
+  type EdgeThresholdArgs,
+  type EdgeThresholds,
+  type FlickerPair,
+} from "../color/matte.js";
+import {
   decodePng,
   encodePngGray8,
   encodePngSrgb8,
@@ -54,6 +66,7 @@ interface RenderedFrame {
   analysis?: FrameAnalysis;
   samples?: RegionReport[];
   histogram?: StagedHistogram;
+  edge?: EdgeReport;
 }
 
 interface IsolationReport {
@@ -108,6 +121,10 @@ interface RenderFramePayload {
     to: { index: number; time: number | undefined };
     regions: RegionReport[];
   };
+  edge?: EdgeReport;
+  edgeThresholds?: EdgeThresholds;
+  edgeFlicker?: { pairs: FlickerPair[]; overall: ReturnType<typeof summarizeFlicker> };
+  edgeWarning?: string;
   captureWarning?: string;
 }
 
@@ -137,6 +154,7 @@ interface EyesOptions {
   sample: { regions: RegionSpec[]; stages: Stage[] } | null;
   histogram: { bins: number; stage: Stage } | null;
   compare: { from: number; to: number } | null;
+  edge: EdgeThresholdArgs | null;
 }
 
 /** Said once per response, so every number can be traced to the pixels it came from. */
@@ -195,7 +213,13 @@ export const renderFrameTool = defineTool({
     "render fails. `alphaChannel` reports whether the capture carried alpha at all. " +
     "Reading colour: `sample` takes named points or rectangles and returns mean / min / max per channel " +
     "and alpha coverage for each; `histogram` counts the whole frame per channel; `compare` (with `times` " +
-    "and `sample`) reports each region's difference between two of the rendered frames. Every number is " +
+    "and `sample`) reports each region's difference between two of the rendered frames. " +
+    "Matte quality: `edge` reports, from the capture's alpha, the shares of opaque / partly transparent / " +
+    "transparent pixels, edge width (typical and worst, px), holes, specks, partly transparent patches " +
+    "that are not thin edges (an unkeyed screen, a remnant), the soft edge's colour with the comp " +
+    "background taken out and whether it leans to the screen colour (spill), and with `times` the " +
+    "frame-to-frame change in alpha along the edge, inside the solid area and outside it (flicker). " +
+    "It reports numbers and places, never a pass or fail. Every number is " +
     "labelled with its stage — 'capture' (before colour conversion) or 'output' (the file as written) — " +
     "described once in `measurementStages`.",
   group: "render",
@@ -349,6 +373,98 @@ export const renderFrameTool = defineTool({
           "per stage: meanDelta (signed average shift), meanAbsDelta and maxAbsDelta per channel, and " +
           "the same for alpha. Reported as `comparison`.",
       ),
+    edge: z
+      .union([
+        z.boolean(),
+        z.object({
+          transparent: z
+            .number()
+            .min(0)
+            .max(1)
+            .optional()
+            .describe(
+              "Alpha at or below counts as transparent. Default 2/255 (as `sample` counts).",
+            ),
+          opaque: z
+            .number()
+            .min(0)
+            .max(1)
+            .optional()
+            .describe("Alpha at or above counts as opaque. Default 1 − 2/255."),
+          maxEdgeWidth: z
+            .number()
+            .min(1)
+            .optional()
+            .describe(
+              "Widest transition still called a thin edge, px; wider partly transparent regions are " +
+                "reported as patches, and it is the edge band for flicker. Default 1% of the frame's " +
+                "shorter side, at least 4 (11 at 1080×1920).",
+            ),
+          mainAreaShare: z
+            .number()
+            .min(0)
+            .max(1)
+            .optional()
+            .describe(
+              "An island of covered pixels at least this share of the largest is a main solid area, " +
+                "smaller ones are specks. Default 0.25.",
+            ),
+          listed: z
+            .number()
+            .int()
+            .min(0)
+            .max(50)
+            .optional()
+            .describe(
+              "How many holes, specks, patches and solid areas are listed (all are counted). Default 5.",
+            ),
+          screen: z
+            .enum(["green", "blue"])
+            .optional()
+            .describe("Screen colour spill is read against. Default 'green'."),
+          spillMinAlpha: z
+            .number()
+            .min(0)
+            .max(1)
+            .optional()
+            .describe(
+              "Partly transparent pixels below this alpha are left out of the spill colour. Default 0.1.",
+            ),
+          spillThreshold: z
+            .number()
+            .min(0)
+            .max(1)
+            .optional()
+            .describe(
+              "The soft edge leans to the screen when its screen channel exceeds the larger other " +
+                "channel by more than this, and by this much more than the solid area's own. Default 0.03.",
+            ),
+          changeAbove: z
+            .number()
+            .min(0)
+            .max(1)
+            .optional()
+            .describe("Flicker: an alpha change above this counts as changed. Default 0.05."),
+        }),
+      ])
+      .optional()
+      .describe(
+        "Matte quality as numbers, measured on the capture's alpha (stage 'capture'); `true` for the " +
+          "defaults. Reported as `edge` (per frame with `times`), with the thresholds used as " +
+          "`edgeThresholds`: shares {opaque, partial, transparent}; width {typical (median), p90, worst, " +
+          "worstAt, samples, unmeasured} — px the alpha takes from transparent to opaque across the 50% " +
+          "contour of the main solid areas (0 = hard edge; unmeasured = the alpha never reaches " +
+          "transparent or opaque anywhere, as when the screen is left partly opaque); solidAreas; holes " +
+          "{count, area, transparentArea, largest, list} — regions below opaque enclosed by the solid " +
+          "area (not touching the frame edge); specks {count, area, list} — islands outside the main " +
+          "areas; patches {count, area, list} — partly transparent regions thicker than maxEdgeWidth; " +
+          "spill {mean, solidMean, excess, solidExcess, leansToScreen, reading} — the straight colour of " +
+          "the partly transparent pixels (comp background taken out) against the solid just inside the " +
+          "edge. Boxes are {x, y, width, height} in capture pixels. With two or more `times`: " +
+          "`edgeFlicker` {pairs, overall} — mean / max change in alpha and the changed share and bounds, " +
+          "for consecutive frames, split into edge, inside (a hole opening counts here) and outside " +
+          "(specks); real motion counts as change too.",
+      ),
   },
   handler: async (args, transport) => {
     if ((args.time === undefined) === (args.times === undefined)) {
@@ -412,6 +528,7 @@ function checkEyesOptions(args: {
   sample?: SampleArgs;
   histogram?: boolean | HistogramArgs;
   compare?: { from?: number; to?: number };
+  edge?: boolean | EdgeThresholdArgs;
 }): { options: EyesOptions } | { error: ReturnType<typeof errorResult> } {
   const channels = args.channels ?? "rgb";
   if (args.colorManaged === "off" && (channels !== "rgb" || args.over !== undefined)) {
@@ -491,6 +608,15 @@ function checkEyesOptions(args: {
     compare = { from, to };
   }
 
+  let edge: EyesOptions["edge"] = null;
+  if (args.edge !== undefined && args.edge !== false) {
+    edge = args.edge === true ? {} : args.edge;
+    if (typeof edge !== "object" || edge === null)
+      return invalid("`edge` must be true or an object");
+    const problem = edgeArgsError(edge as Record<string, unknown>);
+    if (problem !== null) return invalid(problem);
+  }
+
   return {
     options: {
       channels,
@@ -500,6 +626,7 @@ function checkEyesOptions(args: {
       sample,
       histogram,
       compare,
+      edge,
     },
   };
 }
@@ -765,7 +892,7 @@ async function nativeFlow(
     (p): p is string => typeof p === "string",
   );
   /** Attach a per-frame result where this response shape keeps it. */
-  const put = <K extends "analysis" | "samples" | "histogram">(
+  const put = <K extends "analysis" | "samples" | "histogram" | "edge">(
     i: number,
     key: K,
     value: RenderedFrame[K],
@@ -798,6 +925,10 @@ async function nativeFlow(
   const keep = new Set<number>(opts.compare ? [opts.compare.from, opts.compare.to] : []);
   const kept = new Map<number, Record<Stage, DecodedPng>>();
   const sheetImages: DecodedPng[] = [];
+  // Matte quality: only the previous frame's alpha and zones are kept, for flicker.
+  const edgePairs: FlickerPair[] = [];
+  let edgePrev: { index: number; frame: AlphaFrame } | null = null;
+  let edgeMeasured = 0;
   let withAlpha = 0;
   let writing = convert !== null;
   for (const [i, file] of written.entries()) {
@@ -815,6 +946,29 @@ async function nativeFlow(
       return toMcpResult(result);
     }
     if (capture.alpha) withAlpha++;
+    if (opts.edge) {
+      if (!capture.alpha) edgePrev = null;
+      else {
+        try {
+          const t = resolveEdgeThresholds(opts.edge, capture.width, capture.height);
+          payload.edgeThresholds ??= t;
+          const { report, frame } = measureEdge(capture, bg ?? [0, 0, 0], t);
+          put(i, "edge", report);
+          edgeMeasured++;
+          if (edgePrev !== null && edgePrev.index === i - 1) {
+            edgePairs.push({
+              from: { index: i - 1, time: frames[i - 1]?.time },
+              to: { index: i, time: frames[i]?.time },
+              ...alphaChange(edgePrev.frame, frame, t),
+            });
+          }
+          edgePrev = multi ? { index: i, frame } : null;
+        } catch (err) {
+          payload.edgeWarning = `edge measurement failed: ${err instanceof Error ? err.message : String(err)}`;
+          edgePrev = null;
+        }
+      }
+    }
     if (args.analyze) {
       try {
         put(i, "analysis", analyzeFrame(capture));
@@ -877,6 +1031,21 @@ async function nativeFlow(
     }
   }
 
+  if (opts.edge) {
+    if (withAlpha < written.length) {
+      payload.edgeWarning =
+        `${written.length - withAlpha} of ${written.length} captures have no alpha channel, so their ` +
+        "matte could not be measured (a comp with no transparency, or an AE that flattens)";
+    } else if (edgeMeasured > 0 && bg === null) {
+      payload.edgeWarning =
+        "the comp background colour (bgColor) is unknown, so the soft edge's colour was recovered as if " +
+        "it were black; the spill reading may carry the real background";
+    }
+    if (edgePairs.length > 0) {
+      payload.edgeFlicker = { pairs: edgePairs, overall: summarizeFlicker(edgePairs) };
+    }
+  }
+
   if (opts.compare && opts.sample) {
     const { from, to } = opts.compare;
     const a = kept.get(from);
@@ -899,6 +1068,7 @@ async function nativeFlow(
   const stages = new Set<Stage>([
     ...(opts.sample?.stages ?? []),
     ...(opts.histogram ? [opts.histogram.stage] : []),
+    ...(opts.edge ? (["capture"] as const) : []),
   ]);
   if (stages.size > 0) {
     payload.measurementStages = {};

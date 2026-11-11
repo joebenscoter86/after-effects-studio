@@ -34,6 +34,33 @@
 //   opaque-rgb16.png   16-bit RGB with no alpha channel, every pixel
 //                      (0.25, 0.5, 0.75): a capture of a comp with no
 //                      transparency, or an AE that flattens.
+//
+// The matte-*, spill-* and flicker-* fixtures (agent-eyes stage 3, the
+// `edge` report) are 64×48 captures as AE writes them: straight colour laid
+// over the comp background, captured = colour·a + bg·(1 − a). Each holds one
+// subject: an opaque core x 18..45, y 10..37, then a soft edge two pixels
+// wide, alpha 0.75 at Chebyshev distance 1 from the core and 0.25 at
+// distance 2 (so the subject covers x 16..47, y 8..39), colour (0.8, 0.6, 0.5).
+// Everything else is empty (alpha 0). Background black unless named.
+//   matte-clean-rgba16.png   just the subject.
+//   matte-hole-rgba16.png    plus a hole in the core: x 30..33, y 22..25 at
+//                            alpha 0 inside a one-pixel ring (x 29..34,
+//                            y 21..26) at alpha 0.5; and one pixel (40, 32)
+//                            at alpha 0.4.
+//   matte-specks-rgba16.png  plus three specks in the empty area: x 3..4,
+//                            y 3..4 at alpha 1; (58, 5) at alpha 0.3;
+//                            x 55..57, y 44 at alpha 1.
+//   matte-patch-rgba16.png   plus a half-transparent patch beside the subject
+//                            (a chair remnant): x 48..59, y 14..33, alpha 0.5,
+//                            colour (0.5, 0.5, 0.5), touching the soft edge.
+//   spill-black-rgba16.png   the soft edge's colour is green-tinted
+//                            (0.4, 0.7, 0.3); the core stays (0.8, 0.6, 0.5).
+//   spill-magenta-rgba16.png the same over a magenta comp background
+//                            (0.8, 0.1, 0.6).
+//   flicker-a-rgba16.png     the subject as in matte-clean.
+//   flicker-b-rgba16.png     the next frame: on the right side (x 46, 47) the
+//                            soft edge reads 0.4 and 0.1 instead of 0.75 and
+//                            0.25. Nothing else changes.
 
 import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -41,8 +68,6 @@ import { fileURLToPath } from "node:url";
 import * as zlib from "node:zlib";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const W = 32;
-const H = 24;
 
 function chunk(type, data) {
   const head = Buffer.alloc(8);
@@ -54,7 +79,7 @@ function chunk(type, data) {
 }
 
 /** pixel(x, y) → array of channel values 0..1; colorType 2 (RGB) or 6 (RGBA). */
-function encode(bitDepth, colorType, pixel) {
+function encode(bitDepth, colorType, pixel, W = 32, H = 24) {
   const channels = colorType === 6 ? 4 : 3;
   const bps = bitDepth / 8;
   const stride = W * channels * bps;
@@ -115,6 +140,63 @@ function aeCapture(bg) {
   };
 }
 
+// ---- stage 3: matte quality (64×48) ----
+const MW = 64;
+const MH = 48;
+const SKIN = [0.8, 0.6, 0.5];
+
+/** Chebyshev distance from the subject's opaque core (0 inside it). */
+function ring(x, y) {
+  const dx = x < 18 ? 18 - x : x > 45 ? x - 45 : 0;
+  const dy = y < 10 ? 10 - y : y > 37 ? y - 37 : 0;
+  return Math.max(dx, dy);
+}
+
+/** The subject: [straight colour, alpha], or null outside it. */
+function subject(x, y, edge = SKIN, ramp = [0.75, 0.25]) {
+  const d = ring(x, y);
+  if (d === 0) return [SKIN, 1];
+  if (d <= ramp.length) return [edge, ramp[d - 1]];
+  return null;
+}
+
+/** Lay straight [colour, alpha] over the comp background, as AE writes the capture. */
+function overBg(bg, straight) {
+  return (x, y) => {
+    const s = straight(x, y) ?? [[0, 0, 0], 0];
+    const [c, a] = s;
+    return [c[0] * a + bg[0] * (1 - a), c[1] * a + bg[1] * (1 - a), c[2] * a + bg[2] * (1 - a), a];
+  };
+}
+
+const matte = (bg, straight) => encode(16, 6, overBg(bg, straight), MW, MH);
+const BLACK = [0, 0, 0];
+
+function withHole(x, y) {
+  if (x >= 30 && x <= 33 && y >= 22 && y <= 25) return [SKIN, 0];
+  if (x >= 29 && x <= 34 && y >= 21 && y <= 26) return [SKIN, 0.5];
+  if (x === 40 && y === 32) return [SKIN, 0.4];
+  return subject(x, y);
+}
+
+function withSpecks(x, y) {
+  if (x >= 3 && x <= 4 && y >= 3 && y <= 4) return [SKIN, 1];
+  if (x === 58 && y === 5) return [SKIN, 0.3];
+  if (x >= 55 && x <= 57 && y === 44) return [SKIN, 1];
+  return subject(x, y);
+}
+
+function withPatch(x, y) {
+  if (x >= 48 && x <= 59 && y >= 14 && y <= 33) return [[0.5, 0.5, 0.5], 0.5];
+  return subject(x, y);
+}
+
+const GREENISH = [0.4, 0.7, 0.3];
+
+function flickered(x, y) {
+  return x >= 46 ? subject(x, y, SKIN, [0.4, 0.1]) : subject(x, y);
+}
+
 const files = {
   "ae-blue-bg-rgba16.png": encode(16, 6, aeCapture([0, 0, 1])),
   "ae-blue-bg-rgba8.png": encode(8, 6, aeCapture([0, 0, 1])),
@@ -123,6 +205,14 @@ const files = {
   "keyed-rgba8.png": encode(8, 6, keyed([0.8, 0.6, 0.5])),
   "keyed-moved-rgba16.png": encode(16, 6, keyed([0.9, 0.5, 0.5])),
   "opaque-rgb16.png": encode(16, 2, () => [0.25, 0.5, 0.75]),
+  "matte-clean-rgba16.png": matte(BLACK, (x, y) => subject(x, y)),
+  "matte-hole-rgba16.png": matte(BLACK, withHole),
+  "matte-specks-rgba16.png": matte(BLACK, withSpecks),
+  "matte-patch-rgba16.png": matte(BLACK, withPatch),
+  "spill-black-rgba16.png": matte(BLACK, (x, y) => subject(x, y, GREENISH)),
+  "spill-magenta-rgba16.png": matte([0.8, 0.1, 0.6], (x, y) => subject(x, y, GREENISH)),
+  "flicker-a-rgba16.png": matte(BLACK, (x, y) => subject(x, y)),
+  "flicker-b-rgba16.png": matte(BLACK, flickered),
 };
 for (const [name, bytes] of Object.entries(files)) writeFileSync(join(HERE, name), bytes);
 console.log(`wrote ${Object.keys(files).length} fixtures to ${HERE}`);

@@ -505,6 +505,112 @@ describe("compare", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Stage 3: edge (matte quality as numbers)
+// ---------------------------------------------------------------------------
+
+// 64×48 matte fixtures over a black comp background (layout in make-fixtures.mjs).
+const BLACK_BG: Rgb = [0, 0, 0];
+const MAGENTA_BG: Rgb = [0.8, 0.1, 0.6];
+
+describe("edge", () => {
+  it("reports matte quality for one frame, with the thresholds it used", async () => {
+    const { res, isError } = await render(
+      { time: 0, edge: true },
+      ["matte-patch-rgba16.png"],
+      BLACK_BG,
+    );
+    expect(isError).toBe(false);
+    expect(res.edge.stage).toBe("capture");
+    expect(res.edge.patches.count).toBe(1);
+    expect(res.edge.width.typical).toBe(2);
+    expect(res.edgeThresholds.maxEdgeWidth).toBe(4);
+    expect(res.edgeThresholds.opaque).toBeCloseTo(1 - 2 / 255, 6);
+    expect(res.measurementStages.capture).toMatch(/before any colour conversion/);
+    expect(res.edgeFlicker).toBeUndefined();
+  });
+
+  it("un-mattes the soft edge with the comp background before reading its colour", async () => {
+    const { res } = await render({ time: 0, edge: true }, ["spill-magenta-rgba16.png"], MAGENTA_BG);
+    expect(res.edge.spill.mean[1]).toBeCloseTo(0.7, 3);
+    expect(res.edge.spill.leansToScreen).toBe(true);
+    expect(res.edgeWarning).toBeUndefined();
+  });
+
+  it("says so when the comp background is unknown, and un-mattes as if it were black", async () => {
+    const { res } = await render({ time: 0, edge: true }, ["spill-black-rgba16.png"], null);
+    expect(res.edge.spill.leansToScreen).toBe(true);
+    expect(res.edgeWarning).toMatch(/background colour \(bgColor\) is unknown/);
+  });
+
+  it("passes caller thresholds through", async () => {
+    const { res } = await render(
+      { time: 0, edge: { listed: 1, maxEdgeWidth: 40 } },
+      ["matte-specks-rgba16.png"],
+      BLACK_BG,
+    );
+    expect(res.edge.specks.count).toBe(3);
+    expect(res.edge.specks.list).toHaveLength(1);
+    expect(res.edgeThresholds.maxEdgeWidth).toBe(40);
+    expect(res.edgeThresholds.listed).toBe(1);
+  });
+
+  it("with times: a report per frame, and flicker per pair and overall", async () => {
+    const { res } = await render(
+      { times: [0, 0.04, 0.08], edge: true },
+      ["flicker-a-rgba16.png", "flicker-b-rgba16.png", "flicker-b-rgba16.png"],
+      BLACK_BG,
+    );
+    expect(res.edge).toBeUndefined();
+    expect(res.frames).toHaveLength(3);
+    for (const f of res.frames) expect(f.edge.solidAreas.count).toBe(1);
+    const { pairs, overall } = res.edgeFlicker;
+    expect(pairs).toHaveLength(2);
+    expect(pairs[0].from).toEqual({ index: 0, time: 0 });
+    expect(pairs[0].to).toEqual({ index: 1, time: 0.04 });
+    expect(pairs[0].edge.meanAbsDelta).toBeGreaterThan(0);
+    expect(pairs[0].inside.meanAbsDelta).toBe(0);
+    expect(pairs[1].edge.meanAbsDelta).toBe(0);
+    expect(overall.edge.maxAbsDelta).toBeCloseTo(0.35, 3);
+    expect(overall.edge.meanAbsDelta).toBeCloseTo(pairs[0].edge.meanAbsDelta / 2, 3);
+    expect(overall.edge.worstPair).toEqual({ from: 0, to: 1 });
+    expect(overall.inside.meanAbsDelta).toBe(0);
+  });
+
+  it("works on the raw capture with colorManaged off", async () => {
+    const { res, isError } = await render(
+      { time: 0, edge: true, colorManaged: "off" },
+      ["matte-hole-rgba16.png"],
+      BLACK_BG,
+    );
+    expect(isError).toBe(false);
+    expect(res.edge.holes.count).toBe(2);
+  });
+
+  it("warns instead of measuring when the capture has no alpha channel", async () => {
+    const { res, isError } = await render({ times: [0, 1], edge: true }, ["opaque-rgb16.png"]);
+    expect(isError).toBe(false);
+    expect(res.frames[0].edge).toBeUndefined();
+    expect(res.edgeFlicker).toBeUndefined();
+    expect(res.edgeWarning).toMatch(/no alpha channel/);
+  });
+
+  const refusedEdge = [
+    ["transparent at or above opaque", { transparent: 0.5, opaque: 0.4 }],
+    ["an alpha threshold outside 0..1", { opaque: 1.5 }],
+    ["a zero maxEdgeWidth", { maxEdgeWidth: 0 }],
+    ["an unknown screen colour", { screen: "red" }],
+  ] as const;
+  for (const [what, edge] of refusedEdge) {
+    it(`refuses ${what} before After Effects is contacted`, async () => {
+      const { res, isError, transport } = await render({ time: 0, edge });
+      expect(isError).toBe(true);
+      expect(res.error.code).toBe("INVALID_ARGS");
+      expect(transport.calls).toHaveLength(0);
+    });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // isolate: the generated JSX, run against a mock comp
 // ---------------------------------------------------------------------------
 
