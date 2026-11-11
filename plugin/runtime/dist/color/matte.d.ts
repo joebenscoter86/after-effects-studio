@@ -20,6 +20,8 @@ export interface EdgeThresholds {
     spillThreshold: number;
     /** A pixel's alpha change above this counts as changed (flicker shares and bounds). */
     changeAbove: number;
+    /** Side of the square window a patch's densest part is reported in, px. */
+    patchWindow: number;
 }
 export type EdgeThresholdArgs = Partial<EdgeThresholds>;
 /**
@@ -41,9 +43,13 @@ export type EdgeThresholdArgs = Partial<EdgeThresholds>;
  *   channel; smaller leans are within grading noise.
  * - changeAbove 0.05: alpha changes below this are invisible in practice;
  *   8-bit capture noise alone is 1/255.
+ * - patchWindow: four times maxEdgeWidth (44 px at 1080×1920): large enough
+ *   to hold a remnant worth fixing, small enough that a long band's box does
+ *   not hide where most of it is.
  */
-export declare const EDGE_DEFAULTS: Omit<EdgeThresholds, "maxEdgeWidth"> & {
+export declare const EDGE_DEFAULTS: Omit<EdgeThresholds, "maxEdgeWidth" | "patchWindow"> & {
     maxEdgeWidth: "auto";
+    patchWindow: "auto";
 };
 /** The alpha that marks the boundary itself, where edge width is sampled. */
 export declare const CONTOUR_ALPHA = 0.5;
@@ -114,10 +120,7 @@ export interface EdgeReport {
     patches: {
         count: number;
         area: number;
-        list: Array<Box & {
-            area: number;
-            meanAlpha: number;
-        }>;
+        list: PatchEntry[];
     };
     spill: {
         screen: Screen;
@@ -132,6 +135,28 @@ export interface EdgeReport {
         solidExcess: number | null;
         leansToScreen: boolean;
         reading: string;
+    };
+}
+/** One listed patch: its box, and what is inside the box. */
+export interface PatchEntry extends Box {
+    area: number;
+    meanAlpha: number;
+    /**
+     * The patch pixel deepest inside it (farthest from any transparent or
+     * opaque pixel), and the patch's thickness there: distance to the nearest
+     * transparent + nearest opaque pixel − 1, as edge width is measured, or
+     * twice the depth − 1 where one of the two does not exist in the frame.
+     */
+    thickest: {
+        x: number;
+        y: number;
+        thickness: number;
+    };
+    /** The patchWindow-square window (clipped to the box) holding the most patch pixels. */
+    densest: Box & {
+        pixels: number;
+        share: number;
+        meanAlpha: number;
     };
 }
 /** What one frame leaves for the next frame's flicker numbers. */
@@ -157,6 +182,31 @@ export interface AlphaChange {
     outside: ZoneChange;
     all: ZoneChange;
 }
+/**
+ * Distance from every pixel to the nearest pixel where `isSource` holds;
+ * Infinity if none. Exported for the screen measurement (screen.ts).
+ */
+export declare function distanceTo(alpha: Float64Array, width: number, height: number, isSource: (a: number) => boolean, scratch: Float32Array, out: Float32Array): void;
+export interface Region {
+    area: number;
+    minX: number;
+    minY: number;
+    maxX: number;
+    maxY: number;
+    alphaSum: number;
+    alphaMax: number;
+    transparent: number;
+    touchesBorder: boolean;
+}
+export declare const newRegion: () => Region;
+export declare function addPixel(r: Region, x: number, y: number, a: number): void;
+export declare const box: (r: Region) => Box;
+/**
+ * Flood-fill every region of pixels where `inSet` holds (4- or 8-connected),
+ * writing 1-based region ids into `labels` and returning one Region each.
+ * Exported for the screen measurement (screen.ts).
+ */
+export declare function labelRegions(alpha: Float64Array, width: number, height: number, inSet: (p: number) => boolean, eight: boolean, labels: Int32Array, queue: Int32Array, transparentAt: number): Region[];
 /**
  * Measure one capture's matte. `bg` is the comp background AE laid the
  * capture's RGB over (see unmatte); it is taken out before the spill colour

@@ -170,6 +170,13 @@
       "sha256": "7049f8ef14afbf18f944c5bd5b25ec712ba2b7c0dbeb55a360a73c2e1e6e2986"
     },
     {
+      "id": "keying",
+      "title": "Green-screen keying and compositing procedure",
+      "path": "references/keying.md",
+      "kind": "guidance",
+      "sha256": "1e59647f7bfeeaafeb52da080caf8ab445c70d14aa2ac7460494ebc186c8028d"
+    },
+    {
       "id": "scene-recipes",
       "title": "Seven explanatory scene recipes",
       "path": "recipes/recipes.md",

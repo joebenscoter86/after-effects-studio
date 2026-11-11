@@ -8,6 +8,7 @@ import "./shape.js";
 import "./project.js";
 import "./text.js";
 import "./mask.js";
+import "./keying.js";
 import "./command.js";
 import "./property.js";
 import "./marker.js";

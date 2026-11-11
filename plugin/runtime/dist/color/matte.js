@@ -48,6 +48,9 @@
  *   channel; smaller leans are within grading noise.
  * - changeAbove 0.05: alpha changes below this are invisible in practice;
  *   8-bit capture noise alone is 1/255.
+ * - patchWindow: four times maxEdgeWidth (44 px at 1080×1920): large enough
+ *   to hold a remnant worth fixing, small enough that a long band's box does
+ *   not hide where most of it is.
  */
 export const EDGE_DEFAULTS = {
     transparent: 2 / 255,
@@ -59,6 +62,7 @@ export const EDGE_DEFAULTS = {
     spillMinAlpha: 0.1,
     spillThreshold: 0.03,
     changeAbove: 0.05,
+    patchWindow: "auto",
 };
 /** The alpha that marks the boundary itself, where edge width is sampled. */
 export const CONTOUR_ALPHA = 0.5;
@@ -68,16 +72,18 @@ export function autoMaxEdgeWidth(width, height) {
 }
 /** Caller overrides on top of the defaults, for a frame of this size. */
 export function resolveEdgeThresholds(args, width, height) {
+    const maxEdgeWidth = args.maxEdgeWidth ?? autoMaxEdgeWidth(width, height);
     return {
         transparent: args.transparent ?? EDGE_DEFAULTS.transparent,
         opaque: args.opaque ?? EDGE_DEFAULTS.opaque,
-        maxEdgeWidth: args.maxEdgeWidth ?? autoMaxEdgeWidth(width, height),
+        maxEdgeWidth,
         mainAreaShare: args.mainAreaShare ?? EDGE_DEFAULTS.mainAreaShare,
         listed: args.listed ?? EDGE_DEFAULTS.listed,
         screen: args.screen ?? EDGE_DEFAULTS.screen,
         spillMinAlpha: args.spillMinAlpha ?? EDGE_DEFAULTS.spillMinAlpha,
         spillThreshold: args.spillThreshold ?? EDGE_DEFAULTS.spillThreshold,
         changeAbove: args.changeAbove ?? EDGE_DEFAULTS.changeAbove,
+        patchWindow: args.patchWindow ?? Math.round(4 * maxEdgeWidth),
     };
 }
 /** Why a set of caller thresholds cannot be used, or null when it can. */
@@ -96,6 +102,10 @@ export function edgeArgsError(args) {
     const w = args.maxEdgeWidth;
     if (w !== undefined && (typeof w !== "number" || !Number.isFinite(w) || w < 1)) {
         return "`edge.maxEdgeWidth` must be at least 1 (pixels)";
+    }
+    const pw = args.patchWindow;
+    if (pw !== undefined && (typeof pw !== "number" || !Number.isFinite(pw) || pw < 1)) {
+        return "`edge.patchWindow` must be at least 1 (pixels)";
     }
     const listed = args.listed;
     if (listed !== undefined && (!Number.isInteger(listed) || listed < 0)) {
@@ -160,8 +170,11 @@ function dt1d(f, n, d, v, z) {
         d[q] = (q - r) * (q - r) + f[r];
     }
 }
-/** Distance from every pixel to the nearest pixel where `isSource` holds; Infinity if none. */
-function distanceTo(alpha, width, height, isSource, scratch, out) {
+/**
+ * Distance from every pixel to the nearest pixel where `isSource` holds;
+ * Infinity if none. Exported for the screen measurement (screen.ts).
+ */
+export function distanceTo(alpha, width, height, isSource, scratch, out) {
     const n = Math.max(width, height);
     const f = new Float64Array(n);
     const d = new Float64Array(n);
@@ -183,7 +196,7 @@ function distanceTo(alpha, width, height, isSource, scratch, out) {
             out[row + x] = d[x] >= INF / 2 ? Infinity : Math.sqrt(d[x]);
     }
 }
-const newRegion = () => ({
+export const newRegion = () => ({
     area: 0,
     minX: Infinity,
     minY: Infinity,
@@ -194,7 +207,7 @@ const newRegion = () => ({
     transparent: 0,
     touchesBorder: false,
 });
-function addPixel(r, x, y, a) {
+export function addPixel(r, x, y, a) {
     r.area++;
     if (x < r.minX)
         r.minX = x;
@@ -208,7 +221,7 @@ function addPixel(r, x, y, a) {
     if (a > r.alphaMax)
         r.alphaMax = a;
 }
-const box = (r) => ({
+export const box = (r) => ({
     x: r.minX,
     y: r.minY,
     width: r.maxX - r.minX + 1,
@@ -221,8 +234,9 @@ const N8Y = [0, 0, 1, -1, 1, -1, 1, -1];
 /**
  * Flood-fill every region of pixels where `inSet` holds (4- or 8-connected),
  * writing 1-based region ids into `labels` and returning one Region each.
+ * Exported for the screen measurement (screen.ts).
  */
-function labelRegions(alpha, width, height, inSet, eight, labels, queue, transparentAt) {
+export function labelRegions(alpha, width, height, inSet, eight, labels, queue, transparentAt) {
     labels.fill(0);
     const regions = [];
     const nx = eight ? N8X : N4X;
@@ -405,7 +419,11 @@ export function measureEdge(img, bg, t) {
         const x = p % width;
         addPixel(patchRegions[labels[p] - 1], x, (p - x) / width, alpha[p]);
     }
+    const patchId = new Map(patchRegions.map((r, i) => [r, i + 1]));
     patchRegions.sort(byArea);
+    const patchList = patchRegions
+        .slice(0, t.listed)
+        .map((r) => patchEntry(r, patchId.get(r), labels, alpha, dT, dO, width, t.patchWindow));
     // Spill: straight colour of the soft edge and of the solid just inside it.
     const edgeSum = [0, 0, 0];
     const solidSum = [0, 0, 0];
@@ -478,7 +496,7 @@ export function measureEdge(img, bg, t) {
         patches: {
             count: patchRegions.length,
             area: patchRegions.reduce((s, r) => s + r.area, 0),
-            list: patchRegions.slice(0, t.listed).map(holeEntry),
+            list: patchList,
         },
         spill: {
             screen: t.screen,
@@ -495,6 +513,80 @@ export function measureEdge(img, bg, t) {
 }
 function holeEntry(r) {
     return { ...box(r), area: r.area, meanAlpha: r4(r.alphaSum / r.area) };
+}
+/** A patch's box plus where it is thickest and its densest window (see PatchEntry). */
+function patchEntry(r, id, labels, alpha, dT, dO, width, window) {
+    const b = box(r);
+    // Thickest: the deepest pixel.
+    let depth = -1;
+    let at = { x: b.x, y: b.y };
+    let thickness = 0;
+    for (let y = b.y; y < b.y + b.height; y++) {
+        for (let x = b.x; x < b.x + b.width; x++) {
+            const p = y * width + x;
+            if (labels[p] !== id)
+                continue;
+            const m = Math.min(dT[p], dO[p]);
+            if (m > depth) {
+                depth = m;
+                at = { x, y };
+                thickness =
+                    Number.isFinite(dT[p]) && Number.isFinite(dO[p]) ? dT[p] + dO[p] - 1 : 2 * m - 1;
+            }
+        }
+    }
+    // Densest window: summed-area tables of patch pixels and their alpha over the box.
+    const bw = b.width;
+    const bh = b.height;
+    const ww = Math.max(1, Math.min(Math.round(window), bw));
+    const wh = Math.max(1, Math.min(Math.round(window), bh));
+    const sc = new Float64Array((bw + 1) * (bh + 1));
+    const sa = new Float64Array((bw + 1) * (bh + 1));
+    const W = bw + 1;
+    for (let j = 0; j < bh; j++) {
+        let rowC = 0;
+        let rowA = 0;
+        for (let i = 0; i < bw; i++) {
+            const p = (b.y + j) * width + (b.x + i);
+            if (labels[p] === id) {
+                rowC++;
+                rowA += alpha[p];
+            }
+            sc[(j + 1) * W + i + 1] = sc[j * W + i + 1] + rowC;
+            sa[(j + 1) * W + i + 1] = sa[j * W + i + 1] + rowA;
+        }
+    }
+    const rect = (s, i, j) => s[(j + wh) * W + i + ww] - s[j * W + i + ww] - s[(j + wh) * W + i] + s[j * W + i];
+    let bestC = -1;
+    let bestA = 0;
+    let bi = 0;
+    let bj = 0;
+    for (let j = 0; j + wh <= bh; j++) {
+        for (let i = 0; i + ww <= bw; i++) {
+            const c = rect(sc, i, j);
+            if (c > bestC) {
+                bestC = c;
+                bestA = rect(sa, i, j);
+                bi = i;
+                bj = j;
+            }
+        }
+    }
+    return {
+        ...b,
+        area: r.area,
+        meanAlpha: r4(r.alphaSum / r.area),
+        thickest: { ...at, thickness: r2(Math.max(0, thickness)) },
+        densest: {
+            x: b.x + bi,
+            y: b.y + bj,
+            width: ww,
+            height: wh,
+            pixels: bestC,
+            share: r4(bestC / (ww * wh)),
+            meanAlpha: bestC > 0 ? r4(bestA / bestC) : 0,
+        },
+    };
 }
 function spillReading(t, pixels, excess, solidExcess, leans) {
     const other = t.screen === "green" ? "red and blue" : "red and green";

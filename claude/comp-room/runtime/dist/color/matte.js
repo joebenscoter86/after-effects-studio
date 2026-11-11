@@ -7,23 +7,26 @@ const EDGE_DEFAULTS = {
   screen: "green",
   spillMinAlpha: 0.1,
   spillThreshold: 0.03,
-  changeAbove: 0.05
+  changeAbove: 0.05,
+  patchWindow: "auto"
 };
 const CONTOUR_ALPHA = 0.5;
 function autoMaxEdgeWidth(width, height) {
   return Math.max(4, Math.round(0.01 * Math.min(width, height)));
 }
 function resolveEdgeThresholds(args, width, height) {
+  const maxEdgeWidth = args.maxEdgeWidth ?? autoMaxEdgeWidth(width, height);
   return {
     transparent: args.transparent ?? EDGE_DEFAULTS.transparent,
     opaque: args.opaque ?? EDGE_DEFAULTS.opaque,
-    maxEdgeWidth: args.maxEdgeWidth ?? autoMaxEdgeWidth(width, height),
+    maxEdgeWidth,
     mainAreaShare: args.mainAreaShare ?? EDGE_DEFAULTS.mainAreaShare,
     listed: args.listed ?? EDGE_DEFAULTS.listed,
     screen: args.screen ?? EDGE_DEFAULTS.screen,
     spillMinAlpha: args.spillMinAlpha ?? EDGE_DEFAULTS.spillMinAlpha,
     spillThreshold: args.spillThreshold ?? EDGE_DEFAULTS.spillThreshold,
-    changeAbove: args.changeAbove ?? EDGE_DEFAULTS.changeAbove
+    changeAbove: args.changeAbove ?? EDGE_DEFAULTS.changeAbove,
+    patchWindow: args.patchWindow ?? Math.round(4 * maxEdgeWidth)
   };
 }
 function edgeArgsError(args) {
@@ -40,6 +43,10 @@ function edgeArgsError(args) {
   const w = args.maxEdgeWidth;
   if (w !== void 0 && (typeof w !== "number" || !Number.isFinite(w) || w < 1)) {
     return "`edge.maxEdgeWidth` must be at least 1 (pixels)";
+  }
+  const pw = args.patchWindow;
+  if (pw !== void 0 && (typeof pw !== "number" || !Number.isFinite(pw) || pw < 1)) {
+    return "`edge.patchWindow` must be at least 1 (pixels)";
   }
   const listed = args.listed;
   if (listed !== void 0 && (!Number.isInteger(listed) || listed < 0)) {
@@ -314,7 +321,9 @@ function measureEdge(img, bg, t) {
     const x = p % width;
     addPixel(patchRegions[labels[p] - 1], x, (p - x) / width, alpha[p]);
   }
+  const patchId = new Map(patchRegions.map((r, i) => [r, i + 1]));
   patchRegions.sort(byArea);
+  const patchList = patchRegions.slice(0, t.listed).map((r) => patchEntry(r, patchId.get(r), labels, alpha, dT, dO, width, t.patchWindow));
   const edgeSum = [0, 0, 0];
   const solidSum = [0, 0, 0];
   let edgeCount = 0;
@@ -381,7 +390,7 @@ function measureEdge(img, bg, t) {
     patches: {
       count: patchRegions.length,
       area: patchRegions.reduce((s, r) => s + r.area, 0),
-      list: patchRegions.slice(0, t.listed).map(holeEntry)
+      list: patchList
     },
     spill: {
       screen: t.screen,
@@ -398,6 +407,75 @@ function measureEdge(img, bg, t) {
 }
 function holeEntry(r) {
   return { ...box(r), area: r.area, meanAlpha: r4(r.alphaSum / r.area) };
+}
+function patchEntry(r, id, labels, alpha, dT, dO, width, window) {
+  const b = box(r);
+  let depth = -1;
+  let at = { x: b.x, y: b.y };
+  let thickness = 0;
+  for (let y = b.y; y < b.y + b.height; y++) {
+    for (let x = b.x; x < b.x + b.width; x++) {
+      const p = y * width + x;
+      if (labels[p] !== id) continue;
+      const m = Math.min(dT[p], dO[p]);
+      if (m > depth) {
+        depth = m;
+        at = { x, y };
+        thickness = Number.isFinite(dT[p]) && Number.isFinite(dO[p]) ? dT[p] + dO[p] - 1 : 2 * m - 1;
+      }
+    }
+  }
+  const bw = b.width;
+  const bh = b.height;
+  const ww = Math.max(1, Math.min(Math.round(window), bw));
+  const wh = Math.max(1, Math.min(Math.round(window), bh));
+  const sc = new Float64Array((bw + 1) * (bh + 1));
+  const sa = new Float64Array((bw + 1) * (bh + 1));
+  const W = bw + 1;
+  for (let j = 0; j < bh; j++) {
+    let rowC = 0;
+    let rowA = 0;
+    for (let i = 0; i < bw; i++) {
+      const p = (b.y + j) * width + (b.x + i);
+      if (labels[p] === id) {
+        rowC++;
+        rowA += alpha[p];
+      }
+      sc[(j + 1) * W + i + 1] = sc[j * W + i + 1] + rowC;
+      sa[(j + 1) * W + i + 1] = sa[j * W + i + 1] + rowA;
+    }
+  }
+  const rect = (s, i, j) => s[(j + wh) * W + i + ww] - s[j * W + i + ww] - s[(j + wh) * W + i] + s[j * W + i];
+  let bestC = -1;
+  let bestA = 0;
+  let bi = 0;
+  let bj = 0;
+  for (let j = 0; j + wh <= bh; j++) {
+    for (let i = 0; i + ww <= bw; i++) {
+      const c = rect(sc, i, j);
+      if (c > bestC) {
+        bestC = c;
+        bestA = rect(sa, i, j);
+        bi = i;
+        bj = j;
+      }
+    }
+  }
+  return {
+    ...b,
+    area: r.area,
+    meanAlpha: r4(r.alphaSum / r.area),
+    thickest: { ...at, thickness: r2(Math.max(0, thickness)) },
+    densest: {
+      x: b.x + bi,
+      y: b.y + bj,
+      width: ww,
+      height: wh,
+      pixels: bestC,
+      share: r4(bestC / (ww * wh)),
+      meanAlpha: bestC > 0 ? r4(bestA / bestC) : 0
+    }
+  };
 }
 function spillReading(t, pixels, excess, solidExcess, leans) {
   const other = t.screen === "green" ? "red and blue" : "red and green";
@@ -492,10 +570,15 @@ function summarizeFlicker(pairs) {
 export {
   CONTOUR_ALPHA,
   EDGE_DEFAULTS,
+  addPixel,
   alphaChange,
   autoMaxEdgeWidth,
+  box,
+  distanceTo,
   edgeArgsError,
+  labelRegions,
   measureEdge,
+  newRegion,
   resolveEdgeThresholds,
   summarizeFlicker
 };
