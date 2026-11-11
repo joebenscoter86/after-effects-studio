@@ -52493,7 +52493,9 @@ var CHECK_COMP_SHAPE = {
     "Capture size: 1 full, 2 half, 4 quarter (default; 270\xD7480 for 1080\xD71920). Applied through the comp's resolutionFactor before saveFrameToPng and put back afterwards, even when the script fails. Whether saveFrameToPng honours it is measured on the PNG that comes back (`capture`): a full-size capture is shrunk in Node to the asked size, so the numbers mean the same either way."
   ),
   maxFrames: external_exports.number().int().min(1).max(2e3).optional().describe("Frames checked per call at most (default 300); the rest is left for `next`."),
-  chunkFrames: external_exports.number().int().min(1).max(120).optional().describe("Frames per After Effects script (default 30)."),
+  chunkFrames: external_exports.number().int().min(1).max(300).optional().describe(
+    "Frames per After Effects script (default 100). A script returns as soon as it has asked for the frames; the files arrive over the following seconds and the wait for them grows with the count."
+  ),
   thresholds: thresholdsSchema,
   safeArea: external_exports.object({
     percent: external_exports.number().min(0).max(45).optional().describe("Inset on each side, as a percent of the frame's width (left/right) and height (top/bottom)."),
@@ -52558,7 +52560,7 @@ async function checkComp(args, transport2) {
   const every = args.every ?? 1;
   const downsample = args.downsample ?? 4;
   const maxFrames = args.maxFrames ?? 300;
-  const chunkFrames = args.chunkFrames ?? 30;
+  const chunkFrames = args.chunkFrames ?? 100;
   const t = resolveWatchThresholds(
     args.thresholds ?? {}
   );
@@ -52810,6 +52812,11 @@ async function checkComp(args, transport2) {
     framesPerSecond: total > 0 ? r3(measuredFrames / total) : null,
     msPerFrame: measuredFrames > 0 ? { capture: r3(captureSeconds * 1e3 / measuredFrames), read: r3((readSeconds - measureSeconds) * 1e3 / measuredFrames), measure: r3(measureSeconds * 1e3 / measuredFrames) } : null
   };
+  if (info?.resolution?.set || info?.captureKind === "ocio") {
+    notes.push(
+      `${info?.resolution?.set ? "the comp's resolution was set for the captures" : "a colour-managed capture layer was added"} and put back afterwards; After Effects still marks the project as changed (unsaved), which cannot be avoided`
+    );
+  }
   if (readOnly) {
     notes.push("read-only mode: the comp's resolution and the OCIO capture layer were not touched, so captures were full size (slower) and colour came from the pure-math conversion");
   }
@@ -52882,7 +52889,7 @@ async function runStructure(args, transport2, plan, first, end, fd) {
       compsWalked: s.expressions.compsWalked,
       propertiesVisited: s.expressions.propertiesVisited,
       ...s.expressions.truncated ? { truncated: true } : {},
-      note: "read after the frames were rendered: expressionError may only be filled in once After Effects has evaluated the expression"
+      note: "read after the frames were rendered (expressionError is filled in when a broken expression is set; read late in case a just-opened project fills it only when evaluated)"
     }
   };
 }
