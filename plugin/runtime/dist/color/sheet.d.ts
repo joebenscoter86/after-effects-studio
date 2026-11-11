@@ -170,6 +170,8 @@ export interface SheetImage {
 }
 /** Area-averaging downscale to exactly tw×th. */
 export declare function resample(img: DecodedPng, tw: number, th: number): Float64Array;
+/** Width of one label character on a sheet, px: labels longer than a tile is wide run into the next tile. */
+export declare const LABEL_CHAR_PX: number;
 /** Tile frames into one image with a label strip above each tile. */
 export declare function composeContactSheet(frames: DecodedPng[], opts?: SheetOptions): SheetImage;
 /** Label text for a frame: "#3 1.500s" — only characters the font has. */
