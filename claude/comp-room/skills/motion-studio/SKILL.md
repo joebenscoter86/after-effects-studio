@@ -28,7 +28,7 @@ Inspect `ae_version_info` and `ae_context`, or run the plugin's doctor if no con
 | Voiceover, captions, UI, factual evidence | type-evidence |
 | Supplied reference or a look that isn't landing | reference-study, failure-atlas |
 | Native implementation | scripting, motion-jsx; sibling ae-control/SKILL.md |
-| Every review/delivery | quality, failure-atlas |
+| Every review/delivery | review, quality, failure-atlas |
 
 Use ae_library with a document ID. The index returns relative paths for direct reading; load relevant modules, not every historical document. scene-recipes is a quick index; worked-scenes carries actual event/timing studies. timing is a compact lookup alongside construction.
 
@@ -59,6 +59,16 @@ For a new look, test a bounded hard transition and an ordinary explanatory beat.
 Discover exact operations via ae_catalog. Use this plugin's native tools; no cloud bridge is required. eval.run executes custom ES3. Name owned layers, preserve unrelated work, read back results and inspect uncertain completion before retrying. Portable motion-jsx has no rig, brand or media dependency.
 
 Render first-readable, peak-action, overlap, hold and transition frames. Inspect actual images, fix defects, and render again. Review a playable export for motion rhythm/audio; state plainly if that check cannot be done. A successful script or automated score does not establish premium quality.
+
+## Review before you say it is done
+
+Do not say a build is done, finished or ready until this step is complete. Read `review` through `ae_library` for the details.
+
+1. Run `ae_check_comp` on the delivered comp, repeating with `next.startFrame` until `next` is null. Fix what is plainly wrong and re-run it.
+2. Render the moments that matter as files: `ae_render_frame` strips around each cut and hit, full-size stills of each reading hold, and a preview movie (`render.preview`) where the host can play one.
+3. Hand the review to a reviewer that did not build the piece, with only the brief, the report and its sheet, and those file paths; not your notes, reasoning or list of fixes. In Claude Code, delegate to the plugin's agent `comp-room:motion-reviewer`. In another host that can start a fresh agent, start one with the motion-review skill and the same material. If the host cannot, do a frames-only pass yourself: judge only from the brief, the report and the frames, and say in the hand-over that the review was not independent.
+4. Fix what the review found, re-run `ae_check_comp`, re-render the changed moments and review again with that fresh evidence. Stop after two review passes, or sooner when nothing is left at `first-watch` or `careful-watch`.
+5. Hand over as `review` describes: what was found, what was fixed, what was left and why (each `ae_check_comp` flag fixed or named as intended, with its reason), and what nobody could check.
 
 Deliver editable project/assets and the requested verified export. Separate technical validation, visual judgment and user approval. Record accepted recipes in the user's project with timings and evidence.
 
