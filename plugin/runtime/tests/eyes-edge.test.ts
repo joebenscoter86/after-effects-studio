@@ -14,6 +14,7 @@ import { describe, expect, it } from "vitest";
 import {
   EDGE_DEFAULTS,
   alphaChange,
+  edgeArgsError,
   measureEdge,
   resolveEdgeThresholds,
   type EdgeThresholdArgs,
@@ -240,6 +241,61 @@ describe("partly transparent patches that are not thin edges", () => {
     expect(report.patches.list[0].meanAlpha).toBeCloseTo(0.05, 3);
     expect(report.width.typical).toBeNull();
     expect(report.width.unmeasured).toBeGreaterThan(0);
+  });
+});
+
+describe("a matte read from luminance (Keylight's matte views)", () => {
+  // Measured live: Keylight View 5 (Screen Matte) captures the matte in grey
+  // RGB with alpha 1 everywhere, so the alpha reads fully opaque.
+  const luma = fixture("matte-luma-rgba16.png");
+
+  it("reads a matte view as fully opaque by default, as before", () => {
+    const { report } = measure(luma);
+    expect(report.matteFrom).toBe("alpha");
+    expect(report.shares.opaque).toBe(1);
+  });
+
+  it("measures the same matte from luminance as from the alpha it shows", () => {
+    const fromLuma = measure(luma, BLACK, { from: "luma" }).report;
+    const fromAlpha = measure(fixture("matte-patch-rgba16.png")).report;
+    expect(fromLuma.matteFrom).toBe("luma");
+    expect(fromLuma.shares).toEqual(fromAlpha.shares);
+    expect(fromLuma.width).toEqual(fromAlpha.width);
+    expect(fromLuma.patches.count).toBe(1);
+    expect(fromLuma.patches.list[0]).toMatchObject({
+      x: fromAlpha.patches.list[0].x,
+      width: fromAlpha.patches.list[0].width,
+    });
+    expect(fromLuma.holes.count).toBe(fromAlpha.holes.count);
+  });
+
+  it("does not report a spill colour, and says why", () => {
+    const { spill } = measure(luma, BLACK, { from: "luma" }).report;
+    expect(spill.mean).toBeNull();
+    expect(spill.solidMean).toBeNull();
+    expect(spill.excess).toBeNull();
+    expect(spill.leansToScreen).toBe(false);
+    expect(spill.reading).toMatch(/luminance/);
+  });
+
+  it("works on a capture without an alpha channel", () => {
+    const img = { ...luma, alpha: undefined } as DecodedPng;
+    expect(measure(img, BLACK, { from: "luma" }).report.patches.count).toBe(1);
+  });
+
+  it("feeds flicker from the luminance matte", () => {
+    const t = resolveEdgeThresholds({ from: "luma" }, luma.width, luma.height);
+    const a = measureEdge(luma, BLACK, t).frame;
+    const b = measureEdge(fixture("matte-luma-rgba16.png"), BLACK, t).frame;
+    expect(alphaChange(a, b, t).all.maxAbsDelta).toBe(0);
+    expect(Math.max(...a.alpha)).toBeCloseTo(1, 6);
+    expect(Math.min(...a.alpha)).toBe(0);
+  });
+
+  it("defaults to alpha and refuses an unknown source", () => {
+    expect(EDGE_DEFAULTS.from).toBe("alpha");
+    expect(edgeArgsError({ from: "red" })).toMatch(/from/);
+    expect(edgeArgsError({ from: "luma" })).toBeNull();
   });
 });
 

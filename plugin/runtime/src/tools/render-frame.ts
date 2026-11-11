@@ -394,6 +394,15 @@ export const renderFrameTool = defineTool({
       .union([
         z.boolean(),
         z.object({
+          from: z
+            .enum(["alpha", "luma"])
+            .optional()
+            .describe(
+              "Where the matte is read: 'alpha' (default, the keyed result's coverage) or 'luma' " +
+                "(Rec. 709 luminance of the capture), for Keylight's Screen Matte (View 5) and Combined " +
+                "Matte (8) views, which write the matte in grey RGB with alpha 1 everywhere. With 'luma' " +
+                "spill is not read and no alpha channel is needed.",
+            ),
           transparent: z
             .number()
             .min(0)
@@ -474,8 +483,9 @@ export const renderFrameTool = defineTool({
       ])
       .optional()
       .describe(
-        "Matte quality as numbers, measured on the capture's alpha (stage 'capture'); `true` for the " +
-          "defaults. Reported as `edge` (per frame with `times`), with the thresholds used as " +
+        "Matte quality as numbers, measured on the capture's alpha (stage 'capture'), or with " +
+          "`from: 'luma'` on its luminance (Keylight's matte views); `true` for the defaults. Each report " +
+          "says `matteFrom`. Reported as `edge` (per frame with `times`), with the thresholds used as " +
           "`edgeThresholds`: shares {opaque, partial, transparent}; width {typical (median), p90, worst, " +
           "worstAt, samples, unmeasured} — px the alpha takes from transparent to opaque across the 50% " +
           "contour of the main solid areas (0 = hard edge; unmeasured = the alpha never reaches " +
@@ -1076,6 +1086,7 @@ async function nativeFlow(
   const edgePairs: FlickerPair[] = [];
   let edgePrev: { index: number; frame: AlphaFrame } | null = null;
   let edgeMeasured = 0;
+  let edgeFromLuma = 0;
   let withAlpha = 0;
   let writing = convert !== null;
   for (const [i, file] of written.entries()) {
@@ -1094,7 +1105,9 @@ async function nativeFlow(
     }
     if (capture.alpha) withAlpha++;
     if (opts.edge) {
-      if (!capture.alpha) edgePrev = null;
+      const fromLuma = opts.edge.from === "luma";
+      if (fromLuma) edgeFromLuma++;
+      if (!capture.alpha && !fromLuma) edgePrev = null;
       else {
         try {
           const t = resolveEdgeThresholds(opts.edge, capture.width, capture.height);
@@ -1188,11 +1201,11 @@ async function nativeFlow(
   }
 
   if (opts.edge) {
-    if (withAlpha < written.length) {
+    if (edgeFromLuma === 0 && withAlpha < written.length) {
       payload.edgeWarning =
         `${written.length - withAlpha} of ${written.length} captures have no alpha channel, so their ` +
         "matte could not be measured (a comp with no transparency, or an AE that flattens)";
-    } else if (edgeMeasured > 0 && bg === null) {
+    } else if (edgeFromLuma === 0 && edgeMeasured > 0 && bg === null) {
       payload.edgeWarning =
         "the comp background colour (bgColor) is unknown, so the soft edge's colour was recovered as if " +
         "it were black; the spill reading may carry the real background";

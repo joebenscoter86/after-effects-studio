@@ -61,6 +61,10 @@
 //   flicker-b-rgba16.png     the next frame: on the right side (x 46, 47) the
 //                            soft edge reads 0.4 and 0.1 instead of 0.75 and
 //                            0.25. Nothing else changes.
+//   matte-luma-rgba16.png    the matte-patch matte as Keylight's Screen Matte
+//                            view writes it (measured live): the matte in grey
+//                            RGB (r = g = b = alpha of matte-patch), alpha 1
+//                            everywhere.
 //
 // The screen-* fixtures (agent-eyes stage 6, the `screen` report) are 96×64
 // renders of UN-KEYED source footage: every pixel opaque (alpha 1), as a
@@ -258,6 +262,16 @@ const files = {
   "spill-magenta-rgba16.png": matte([0.8, 0.1, 0.6], (x, y) => subject(x, y, GREENISH)),
   "flicker-a-rgba16.png": matte(BLACK, (x, y) => subject(x, y)),
   "flicker-b-rgba16.png": matte(BLACK, flickered),
+  "matte-luma-rgba16.png": encode(
+    16,
+    6,
+    (x, y) => {
+      const a = (withPatch(x, y) ?? [null, 0])[1];
+      return [a, a, a, 1];
+    },
+    MW,
+    MH,
+  ),
   "screen-even-rgba16.png": encode(
     16,
     6,

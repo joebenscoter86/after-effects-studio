@@ -597,12 +597,34 @@ describe("edge", () => {
     expect(res.edgeWarning).toMatch(/no alpha channel/);
   });
 
+  it("reads a Keylight matte view from luminance when asked", async () => {
+    const { res, isError } = await render(
+      { time: 0, edge: { from: "luma" } },
+      ["matte-luma-rgba16.png"],
+      BLACK_BG,
+    );
+    expect(isError).toBe(false);
+    expect(res.edge.matteFrom).toBe("luma");
+    expect(res.edge.patches.count).toBe(1);
+    expect(res.edge.spill.mean).toBeNull();
+    expect(res.edgeThresholds.from).toBe("luma");
+    expect(res.edgeWarning).toBeUndefined();
+  });
+
+  it("measures from luminance even when the capture has no alpha channel", async () => {
+    const { res } = await render({ times: [0, 1], edge: { from: "luma" } }, ["opaque-rgb16.png"]);
+    expect(res.frames[0].edge.matteFrom).toBe("luma");
+    expect(res.edgeFlicker.pairs).toHaveLength(1);
+    expect(res.edgeWarning).toBeUndefined();
+  });
+
   const refusedEdge = [
     ["transparent at or above opaque", { transparent: 0.5, opaque: 0.4 }],
     ["an alpha threshold outside 0..1", { opaque: 1.5 }],
     ["a zero maxEdgeWidth", { maxEdgeWidth: 0 }],
     ["an unknown screen colour", { screen: "red" }],
     ["a zero patchWindow", { patchWindow: 0 }],
+    ["an unknown matte source", { from: "red" }],
   ] as const;
   for (const [what, edge] of refusedEdge) {
     it(`refuses ${what} before After Effects is contacted`, async () => {
