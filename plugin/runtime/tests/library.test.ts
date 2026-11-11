@@ -32,6 +32,10 @@ describe("studio library", () => {
     expect(doc).toMatch(/Intermediate Result.*Key Cleaner.*Advanced Spill Suppressor/s);
     expect(doc).toMatch(/magenta/);
     expect(doc).toMatch(/[Ss]top/);
+    // Measured in the stage 6 live check.
+    expect(doc).toContain('from: "luma"');
+    expect(doc).toMatch(/7\.1 to 15\.1 px/);
+    expect(doc).toMatch(/before and after/);
   });
   it("rejects arbitrary paths instead of reading a user file", () => {
     expect(() => readLibrary("../../package.json")).toThrow("Unknown library");
