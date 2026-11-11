@@ -1,4 +1,4 @@
-// Grading for the picture evals (plugin/evals/evals.json ids 18 to 20): the
+// Grading for the picture evals (plugin/evals/evals.json ids 18 to 22): the
 // thresholds, in one table per eval, and the functions that turn rendered
 // frames into one result per check. The measurements are the plugin's own
 // (runtime/dist/color: measureEdge, alphaChange, measureScreen,
@@ -31,7 +31,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { FINISH, GRADE, KEYING, OVER, SCENES } from './scenes.mjs';
+import { FINISH, GRADE, KEYING, OVER, REVIEW, SCENES } from './scenes.mjs';
 
 export const THRESHOLDS = {
   keying: [
@@ -92,6 +92,14 @@ export const THRESHOLDS = {
     { id: 'clean-quiet', max: 0, unit: 'findings', what: 'findings named for the clean comp',
       why: 'the clean comp holds a steady move and a still title: nothing a viewer would flag, so any finding there is a false alarm', source: 'the scene as built (scenes.mjs FINISH, clean)', guess: false },
   ],
+  review: [
+    { id: 'findings-readable', setup: true, equals: 'yes', unit: '', what: 'picture-grade/findings.json exists and every finding is in the review form (kind, from, where, evidence, severity)',
+      why: 'the checks read the findings file; a review not in the form the review document asks for cannot be scored', source: 'the plan (node grade.mjs review --plan); library review.md', guess: false },
+    { id: 'found', min: 3, unit: 'of 4', what: 'planted defects named with their kind and a time inside the span where they show',
+      why: 'four defects are planted, each visible in the frames to a careful viewer; three of four is the bar the review step is meant to clear, and one miss is allowed because only one of the four is fully given away by ae_check_comp', source: 'the scene as built (scenes.mjs REVIEW); the stage 2 brief', guess: true },
+    { id: 'stray', max: 2, unit: 'findings', what: 'findings that match no planted defect',
+      why: 'the comp has nothing else wrong that the setup put there; two extras allow a reviewer to name a real nit the setup did not plan, more means listing everything, which a review must not pass by', source: 'the scene as built (scenes.mjs REVIEW); the stage 2 brief', guess: true },
+  ],
 };
 
 /** The scored check ids of an eval, in verdict order ("<eval>.<check>"). */
@@ -103,6 +111,7 @@ export const EVALS = {
   grade: { scene: GRADE, setup: 'grade-plate.jsx', renders: ['grade_0.png'] },
   over: { scene: OVER, setup: 'over-still.jsx', renders: ['glow-still.png', 'over-reference_0.png'] },
   finish: { scene: FINISH, setup: 'finish-check.jsx', renders: [], findings: 'findings.json' },
+  review: { scene: REVIEW, setup: 'review-plate.jsx', renders: [], findings: 'findings.json', encoded: true },
 };
 
 /** Import the plugin's measuring modules from a runtime dist folder. */
@@ -370,6 +379,81 @@ export function gradeFinish(findings) {
 }
 
 // ---------------------------------------------------------------------------
+// The independent review: graded on the reviewer's findings, not on a render
+// ---------------------------------------------------------------------------
+
+/** The review document's severity scale (library review.md), most noticed first. */
+export const SEVERITIES = ['first-watch', 'careful-watch', 'polish'];
+/** Kinds a finding may have. More than were planted, so the list does not say what to look for. */
+export const REVIEW_KINDS = ['colour', 'focus', 'timing', 'edge', 'framing', 'exposure', 'motion', 'continuity', 'other'];
+/** Seconds either side of a defect's span inside which a named time counts: three frames at 30 fps. */
+export const REVIEW_TOLERANCE = 0.1;
+
+/** Where each planted defect shows, in seconds, by the kind a reviewer would file it under (from the scene). */
+export const REVIEW_TRUTH = (() => {
+  const s = REVIEW, sec = (f) => f / s.fps;
+  const [t1, t2] = s.takes;
+  return {
+    edge: { what: 'a light fringe round the presenter in take 1', from: sec(t1.fromFrame), to: sec(t1.toFrame + 1) },
+    colour: { what: 'the presenter in take 2 graded toward magenta against the neutral wall', from: sec(t2.fromFrame), to: sec(t2.toFrame + 1) },
+    focus: { what: 'the wall blurred while the presenter stays sharp', from: sec(s.soft.fromFrame), to: sec(s.soft.toFrame + 1) },
+    timing: { what: `the badge lands on frame ${s.badge.landFrame}, ${s.badge.landFrame - s.marker.frame} frames after the "${s.marker.name}" marker`,
+      from: sec(s.marker.frame), to: sec(s.badge.landFrame) },
+  };
+})();
+
+const isText = (v) => typeof v === 'string' && v.trim().length > 0;
+const isSeconds = (v) => typeof v === 'number' && Number.isFinite(v);
+
+/** Null when `doc` is a review in the document's form, else what is wrong. */
+function reviewError(doc) {
+  if (!doc || typeof doc !== 'object' || Array.isArray(doc)) return 'findings.json missing or not a JSON object';
+  if (!Array.isArray(doc.findings)) return 'findings is not a list';
+  for (const [i, f] of doc.findings.entries()) {
+    const at = `findings[${i}]`;
+    if (!f || typeof f !== 'object') return `${at} is not an object`;
+    if (!REVIEW_KINDS.includes(f.kind)) return `${at}.kind is ${JSON.stringify(f.kind)}, not one of ${REVIEW_KINDS.join(', ')}`;
+    if (!isSeconds(f.from)) return `${at}.from is not a number of seconds`;
+    if (f.to !== undefined && !isSeconds(f.to)) return `${at}.to is not a number of seconds`;
+    if (!SEVERITIES.includes(f.severity)) return `${at}.severity is ${JSON.stringify(f.severity)}, not one of ${SEVERITIES.join(', ')}`;
+    for (const k of ['where', 'evidence']) if (!isText(f[k])) return `${at}.${k} is missing or empty`;
+  }
+  for (const k of ['intended', 'notJudged']) if (doc[k] !== undefined && !Array.isArray(doc[k])) return `${k} is not a list`;
+  return null;
+}
+
+const matches = (f, kind) => f.kind === kind
+  && f.from >= REVIEW_TRUTH[kind].from - REVIEW_TOLERANCE && f.from <= REVIEW_TRUTH[kind].to + REVIEW_TOLERANCE;
+
+/**
+ * doc: the parsed picture-grade/findings.json, { findings: [...], intended?: [...], notJudged?: [...] }.
+ * A planted defect is found when a finding of its kind starts inside the span
+ * where it shows (give or take REVIEW_TOLERANCE). A finding that matches no
+ * defect is stray; more findings of a defect already found are neither.
+ * `intended` (flags the reviewer judged intended) and `notJudged` are read for
+ * form only.
+ */
+export function gradeReview(doc) {
+  const T = table('review');
+  const why = reviewError(doc);
+  const setup = [why === null ? result('review', T['findings-readable'], 'yes') : failed('review', T['findings-readable'], why)];
+  const invalid = invalidIfSetupFailed('review', setup);
+  if (invalid) return invalid;
+  const kinds = Object.keys(REVIEW_TRUTH);
+  const hit = Object.fromEntries(kinds.map((k) => [k, doc.findings.filter((f) => matches(f, k))]));
+  const found = kinds.filter((k) => hit[k].length > 0);
+  const stray = doc.findings.filter((f) => !kinds.some((k) => matches(f, k)));
+  const per = kinds.map((k) => (hit[k].length ? `${k} ${r4(hit[k][0].from)} s` : `${k} not named`)).join('; ');
+  return {
+    setup,
+    checks: [
+      result('review', T.found, found.length, per),
+      result('review', T.stray, stray.length, stray.length ? stray.map((f) => `${f.kind} ${r4(f.from)} s`).join('; ') : 'none'),
+    ],
+  };
+}
+
+// ---------------------------------------------------------------------------
 
 const line = (kind, r) => `${kind} ${r.id} ${r.pass ? 'PASS' : 'FAIL'} | measured: ${r.what} | value: ${r.value} | limit: ${r.limit}`;
 
@@ -389,6 +473,7 @@ export function formatVerdict(name, res) {
 export function renderPlan(name, dir) {
   const f = (file) => JSON.stringify(path.join(dir, file));
   if (name === 'finish') return finishPlan(dir);
+  if (name === 'review') return reviewPlan(dir);
   const head = `Final renders for the ${name} eval. Make these calls exactly, once, when your work is finished, then run the grader without --plan. ` +
     `Ids come from what the setup script returned. With \`frames\`, ae_render_frame writes <outPath stem>_<index>.png (key_0.png, grade_0.png, ...); the grader reads those.\n`;
   const limits = THRESHOLDS[name].filter((t) => !t.setup).map((t) => `  ${name}.${t.id}: ${t.what}, limit ${limitText(t)}`).join('\n');
@@ -421,6 +506,20 @@ function finishPlan(dir) {
     `Checks and limits:\n${limits}\n`;
 }
 
+/** The review eval has no final render: the reviewer writes its review, and the grader reads that. */
+function reviewPlan(dir) {
+  const limits = THRESHOLDS.review.filter((t) => !t.setup).map((t) => `  review.${t.id}: ${t.what}, limit ${limitText(t)}`).join('\n');
+  return 'Findings for the review eval. When your review is done, and not before, write it to ' +
+    `${JSON.stringify(path.join(dir, EVALS.review.findings))}, then run the grader without --plan. The file is JSON in the review document's form: ` +
+    '{ "findings": [ <finding>, ... ], "intended": [ { "from": seconds, "note": why it is intended }, ... ], "notJudged": [ "what you could not judge", ... ] }. ' +
+    'One finding per defect a viewer would notice, most noticeable first, each ' +
+    `{ "kind": one of ${REVIEW_KINDS.map((k) => `"${k}"`).join(', ')}, "from": seconds from the comp's start where it starts, "to": seconds (for a span), ` +
+    '"where": where in the frame, "what": what a viewer sees, "evidence": the file or number it rests on, ' +
+    `"severity": one of ${SEVERITIES.map((k) => `"${k}"`).join(', ')} }. ` +
+    'A flag from the whole-piece check that the brief explains goes in "intended", not in "findings". Leave "findings" empty if you find nothing.\n' +
+    `Checks and limits:\n${limits}\n`;
+}
+
 /** Read an eval's renders from `dir` (missing files come back null) and grade them. */
 export async function gradeDir(name, dir, rt) {
   const read = async (file) => {
@@ -437,6 +536,11 @@ export async function gradeDir(name, dir, rt) {
     let findings = null;
     try { findings = JSON.parse(await fs.readFile(path.join(dir, EVALS.finish.findings), 'utf8')); } catch { findings = null; }
     return gradeFinish(findings);
+  }
+  if (name === 'review') {
+    let doc = null;
+    try { doc = JSON.parse(await fs.readFile(path.join(dir, EVALS.review.findings), 'utf8')); } catch { doc = null; }
+    return gradeReview(doc);
   }
   const [still, reference] = await Promise.all(EVALS.over.renders.map(read));
   if (!still) return allFailed('over', 'glow-still.png missing', reference ? [] : [failed('over', table('over')['reference-is-over'], 'over-reference_0.png missing')]);

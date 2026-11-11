@@ -92,9 +92,11 @@ export async function buildClaudePackage({ outDir, runtime = buildReadableRuntim
   if (await exists(path.join(claudeSrc, 'README.md'))) {
     await copy(path.join(claudeSrc, 'README.md'), path.join(out, 'README.md'));
   }
-  if (await exists(path.join(claudeSrc, 'docs'))) {
-    for (const rel of await listTree(path.join(claudeSrc, 'docs'))) {
-      await copy(path.join(claudeSrc, 'docs', rel), path.join(out, 'docs', rel));
+  // docs/ adds Claude-only pages; agents/ holds the plugin's subagent definitions (the reviewer), Claude only.
+  for (const tree of ['docs', 'agents']) {
+    if (!(await exists(path.join(claudeSrc, tree)))) continue;
+    for (const rel of await listTree(path.join(claudeSrc, tree))) {
+      await copy(path.join(claudeSrc, tree, rel), path.join(out, tree, rel));
     }
   }
 

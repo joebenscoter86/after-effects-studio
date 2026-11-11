@@ -234,4 +234,104 @@ export const FINISH = {
   glare: { name: "glare", fromFrame: 120, toFrame: 134, centre: [300, 1100], radius: 140, feather: 40, colour: [1, 1, 1] },
 };
 
-export const SCENES = { keying: KEYING, grade: GRADE, over: OVER, finish: FINISH };
+/** The grade error of the second take: out = true × cast per channel (red and blue up, green down: magenta). */
+const REVIEW_CAST = [1.14, 0.88, 1.12];
+const castOf = (c) => c.map((v, i) => Math.round(Math.min(1, v * REVIEW_CAST[i]) * 1e4) / 1e4);
+// The presenter, in comp pixels at take 1's framing: trousers, shirt, neck, head. Each a masked solid the size of the comp.
+const PRESENTER = [
+  { name: "trousers", colour: [0.12, 0.12, 0.13], polygon: [[780, 860], [1140, 860], [1150, 1100], [770, 1100]] },
+  { name: "shirt", colour: [0.62, 0.62, 0.62], polygon: [[760, 560], [1160, 560], [1180, 880], [740, 880]] },
+  { name: "neck", colour: [0.67, 0.46, 0.4], polygon: [[925, 500], [995, 500], [995, 580], [925, 580]] },
+  { name: "head", colour: [0.67, 0.46, 0.4], polygon: ellipse(960, 410, 105, 130) },
+];
+
+/**
+ * The independent review (eval 22): one comp, 1920x1080 at 30 fps, 6 s, a
+ * composited presenter over a studio wall, with four planted defects a
+ * reviewer has to find. Everything is solids and masks.
+ *   plate: a neutral grey wall with a fine grid of darker lines (detail that
+ *     shows focus), a precomp larger than the frame so a blur has no edge.
+ *   take 1 (frames 0..89): the presenter with a light fringe `fringe.width` px
+ *     wide all round (the masks grown, behind the parts): the outline defect.
+ *   take 2 (frames 90..179), after an intended cut, closer: the presenter's
+ *     colours put through REVIEW_CAST (magenta) against the neutral wall: the
+ *     colour defect.
+ *   plate soft (frames soft.fromFrame..soft.toFrame): the plate blurred while
+ *     the presenter stays sharp: the focus defect.
+ *   badge: drops in from above the frame and should land on the comp marker
+ *     `marker` (2.0 s); it lands on landFrame, several frames late: the
+ *     timing defect.
+ * Both takes drift a little, so the picture never freezes.
+ */
+export const REVIEW = {
+  id: "review-plate",
+  version: 1,
+  width: 1920,
+  height: 1080,
+  fps: 30,
+  frames: 180,
+  bg: [0, 0, 0],
+  marker: { name: "hit", frame: 60, comment: "the badge lands here" },
+  plate: { name: "plate", width: 2112, height: 1272, wall: [0.46, 0.46, 0.46], lines: [0.34, 0.34, 0.34], lineWidth: 4, spacing: 48 },
+  soft: { name: "plate soft", fromFrame: 120, toFrame: 149, blur: 30 },
+  fringe: { colour: [0.92, 0.92, 0.9], width: 4 },
+  partFeather: 1,
+  takes: [
+    { name: "take 1", fromFrame: 0, toFrame: 89, fringe: true, cast: null, anchor: [960, 540], scale: 100, fromPos: [900, 540], toPos: [1020, 540],
+      parts: PRESENTER },
+    { name: "take 2", fromFrame: 90, toFrame: 179, fringe: false, cast: REVIEW_CAST, anchor: [960, 1080], scale: 125, fromPos: [1000, 1080], toPos: [1120, 1080],
+      parts: PRESENTER.map((p) => ({ ...p, colour: castOf(p.colour) })) },
+  ],
+  badge: { name: "badge", colour: [0.95, 0.5, 0.15], size: [360, 140], x: 1500, fromY: -120, toY: 220, fromFrame: 45, landFrame: 68, toFrame: 89 },
+  /** The brief the reviewer is handed (the eval prompt carries the same text). */
+  brief: "A 6-second 1920x1080 teaser at 30 fps. A presenter, keyed, composited over a studio wall plate; it must read as one shot filmed in that room. " +
+    "Two takes: take 1 from 0 to 3.0 s, then a cut to take 2 (closer) at 3.0 s, held to 6.0 s. The orange badge (a stand-in for the price tag) drops in " +
+    "from the top and must land on the beat at the comp marker \"hit\", 2.0 s. No on-screen copy.",
+};
+
+const rectPts = (x, y, w, h) => [[x, y], [x + w, y], [x + w, y + h], [x, y + h]];
+
+/**
+ * REVIEW as a generic build: comps in the order they are made, each with its
+ * layers bottom to top. Layer: { name, solid?: colour, comp?: id, size?,
+ * span?: [fromFrame, toFrame], masks?: [{ points, feather?, grow? }],
+ * effects?: [{ matchName, set: [[property index, value]] }], anchor?, scale?,
+ * position?: [x, y] | [[frame, [x, y]], ...] (linear keys) }. The main comp
+ * has `markers`. Names are neutral: what the comp holds is found by looking.
+ * review-plate.jsx carries this, base64-encoded, so a reviewer who reads the
+ * setup script to run it learns nothing from it.
+ */
+export function reviewBuild(scene = REVIEW) {
+  const P = scene.plate;
+  const grid = [];
+  for (let x = P.spacing / 2; x < P.width; x += P.spacing) grid.push({ points: rectPts(x - P.lineWidth / 2, 0, P.lineWidth, P.height) });
+  for (let y = P.spacing / 2; y < P.height; y += P.spacing) grid.push({ points: rectPts(0, y - P.lineWidth / 2, P.width, P.lineWidth) });
+  const plate = { id: "plate", name: "plate", size: [P.width, P.height], layers: [
+    { name: "wall", solid: P.wall },
+    { name: "wall detail", solid: P.lines, masks: grid },
+  ] };
+  const takes = scene.takes.map((t, i) => ({ id: `take${i + 1}`, name: t.name, size: [scene.width, scene.height], layers: [
+    ...(t.fringe ? [{ name: "presenter 0", solid: scene.fringe.colour,
+      masks: t.parts.map((p) => ({ points: p.polygon, feather: scene.partFeather, grow: scene.fringe.width })) }] : []),
+    ...t.parts.map((p, j) => ({ name: `presenter ${j + 1}`, solid: p.colour, masks: [{ points: p.polygon, feather: scene.partFeather }] })),
+  ] }));
+  const B = scene.badge;
+  const main = { id: "main", name: "review", size: [scene.width, scene.height], main: true,
+    markers: [{ frame: scene.marker.frame, name: scene.marker.name, comment: scene.marker.comment }],
+    layers: [
+      { name: "plate", comp: "plate" },
+      { name: "plate", comp: "plate", span: [scene.soft.fromFrame, scene.soft.toFrame],
+        effects: [{ matchName: "ADBE Gaussian Blur 2", set: [[1, scene.soft.blur]] }] },
+      ...scene.takes.map((t, i) => ({ name: t.name, comp: `take${i + 1}`, span: [t.fromFrame, t.toFrame], anchor: t.anchor, scale: t.scale,
+        position: [[t.fromFrame, t.fromPos], [t.toFrame, t.toPos]] })),
+      { name: B.name, solid: B.colour, size: B.size, span: [B.fromFrame, B.toFrame], position: [[B.fromFrame, [B.x, B.fromY]], [B.landFrame, [B.x, B.toY]]] },
+    ] };
+  return { id: scene.id, version: scene.version, width: scene.width, height: scene.height, fps: scene.fps, frames: scene.frames, bg: scene.bg,
+    comps: [plate, ...takes, main] };
+}
+
+/** The build as the setup script carries it: base64 of its JSON. */
+export const encodeBuild = (build) => Buffer.from(JSON.stringify(build), "utf8").toString("base64");
+export const decodeBuild = (text) => JSON.parse(Buffer.from(text, "base64").toString("utf8"));
+
+export const SCENES = { keying: KEYING, grade: GRADE, over: OVER, finish: FINISH, review: REVIEW };

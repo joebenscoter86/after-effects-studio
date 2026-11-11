@@ -2,10 +2,10 @@
 // The picture evals' grader. The agent under test runs it twice from its
 // working folder:
 //
-//   node grade.mjs <keying|grade|over> --plan   print the final ae_render_frame calls (paths in
-//                                               ./picture-grade/) and every check's limit
-//   node grade.mjs <keying|grade|over>          grade those renders ONCE: print the verdict and write
-//                                               picture-grade/verdict.txt and verdict.json
+//   node grade.mjs <name> --plan   print what to hand in (the final ae_render_frame calls, paths in
+//                                  ./picture-grade/, or the findings file and its form) and every check's limit
+//   node grade.mjs <name>          grade what was handed in ONCE: print the verdict and write
+//                                  picture-grade/verdict.txt and verdict.json
 //
 // A second grade is refused (exit 3) and leaves the first verdict as it was,
 // so the verdict is the state the agent finished in. The eval suite's regex

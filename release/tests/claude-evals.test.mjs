@@ -111,7 +111,7 @@ test('refuses to write into a folder that already holds files', async () => {
 test('the canonical evals: 17 planning cases and the picture cases, ids in order', () => {
   assert.equal(PLAN.evals.length, 17);
   assert.deepEqual(CANON.evals.map((c) => c.id), CANON.evals.map((_, i) => i + 1));
-  assert.deepEqual(PICTURES.map((c) => c.picture.check), ['keying', 'grade', 'over', 'finish']);
+  assert.deepEqual(PICTURES.map((c) => c.picture.check), ['keying', 'grade', 'over', 'finish', 'review']);
   for (const c of PICTURES) {
     for (const f of c.files) assert.ok(f.startsWith('picture/'), f);
     assert.ok(c.files.includes(`picture/${c.picture.setup}`));
@@ -126,6 +126,14 @@ test('the grade prompt names the same reference regions the grader samples', asy
   const { GRADE } = await import('../../plugin/evals/picture/scenes.mjs');
   const prompt = PICTURES.find((c) => c.picture.check === 'grade').prompt;
   for (const [name, b] of Object.entries(GRADE.regions)) assert.ok(prompt.includes(`${name} (${b.x}, ${b.y}, ${b.width}, ${b.height})`), name);
+});
+
+test('the review prompt hands over the same brief the setup returns, and the review is its own skill\'s job', async () => {
+  const { REVIEW } = await import('../../plugin/evals/picture/scenes.mjs');
+  const c = PICTURES.find((x) => x.picture.check === 'review');
+  assert.ok(c.prompt.includes(`The brief: ${REVIEW.brief} `));
+  assert.match(claudePrompt(c.prompt), /^\/comp-room:motion-review /);
+  assert.match(c.prompt, /do not decode/);
 });
 
 test('the default set leaves the picture cases out', async () => {

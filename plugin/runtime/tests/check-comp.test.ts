@@ -18,7 +18,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { decodePng, encodePngSrgb8 } from "../src/color/png16.js";
 import { checkCompTool } from "../src/tools/check-comp.js";
 // @ts-expect-error: a plain .mjs module without types (the eval's scene, shared with its setup script)
-import { FINISH } from "../../evals/picture/scenes.mjs";
+import { FINISH, REVIEW } from "../../evals/picture/scenes.mjs";
 import { captureJsx, structureJsx } from "../src/tools/check-comp-jsx.js";
 import type { AeTransport, EvalRequest, EvalResult } from "../src/transport/AeTransport.js";
 
@@ -78,7 +78,10 @@ function fakeAe(opts: {
   structure?: unknown;
   missingFootage?: unknown[];
   paint?: (k: number, w: number, h: number) => Float64Array;
+  /** Comp size, when not the 1080x1920 default. */
+  size?: [number, number];
 }): Fake {
+  const [compW, compH] = opts.size ?? [CW, CH];
   const calls: EvalRequest[] = [];
   const ok = (result: unknown): EvalResult => ({
     ok: true,
@@ -99,8 +102,8 @@ function fakeAe(opts: {
           ok: true,
           compName: "Main",
           compId: 1,
-          width: CW,
-          height: CH,
+          width: compW,
+          height: compH,
           frameDuration: 1 / FPS,
           duration: opts.frames / FPS,
           workAreaStart: 0,
@@ -117,8 +120,8 @@ function fakeAe(opts: {
         const paths = JSON.parse(/var _paths = (.*);/.exec(req.code)![1]) as string[];
         const factor = JSON.parse(/var _factor = (.*);/.exec(req.code)![1]) as number | null;
         const d = opts.honourFactor === false || factor === null ? 1 : factor;
-        const w = Math.round(CW / d);
-        const h = Math.round(CH / d);
+        const w = Math.round(compW / d);
+        const h = Math.round(compH / d);
         const out = [];
         for (const [i, k] of frames.entries()) {
           await fs.mkdir(path.dirname(paths[i]), { recursive: true });
@@ -599,4 +602,146 @@ describe("ae_check_comp on a Node model of the eval's comps", () => {
     expect(res.stretches).toEqual([]);
     expect(res.sheet).toBeNull();
   }, 30_000);
+});
+
+// ---------------------------------------------------------------------------
+// The review eval's comp (plugin/evals/picture: REVIEW), modelled in Node
+// ---------------------------------------------------------------------------
+
+type Pt = [number, number];
+type Edges = { nx: number; ny: number; c: number }[];
+/** A convex polygon's edges as outward unit normals: distance = max(n·p − c), negative inside, mitred outside the corners. */
+function edgesOf(poly: Pt[]): Edges {
+  let cx = 0, cy = 0;
+  for (const [px, py] of poly) { cx += px / poly.length; cy += py / poly.length; }
+  return poly.map(([ax, ay], i) => {
+    const [bx, by] = poly[(i + 1) % poly.length];
+    let nx = by - ay, ny = -(bx - ax);
+    const len = Math.hypot(nx, ny);
+    nx /= len; ny /= len;
+    if (nx * (cx - ax) + ny * (cy - ay) > 0) { nx = -nx; ny = -ny; }
+    return { nx, ny, c: nx * ax + ny * ay };
+  });
+}
+function convexDistance(edges: Edges, x: number, y: number): number {
+  let d = -Infinity;
+  for (const e of edges) { const v = e.nx * x + e.ny * y - e.c; if (v > d) d = v; }
+  return d;
+}
+
+/** Box-blur a w×h RGB image three times with radius r (about a Gaussian). */
+function blurRgb(src: Float64Array, w: number, h: number, r: number): Float64Array {
+  let a = Float64Array.from(src), b = new Float64Array(src.length);
+  for (let pass = 0; pass < 6; pass++) {
+    const horiz = pass % 2 === 0;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) for (let c = 0; c < 3; c++) {
+      let sum = 0, n = 0;
+      for (let t = -r; t <= r; t++) {
+        const xx = horiz ? Math.min(w - 1, Math.max(0, x + t)) : x;
+        const yy = horiz ? y : Math.min(h - 1, Math.max(0, y + t));
+        sum += a[(yy * w + xx) * 3 + c]; n++;
+      }
+      b[(y * w + x) * 3 + c] = sum / n;
+    }
+    [a, b] = [b, a];
+  }
+  return a;
+}
+
+/**
+ * A picture of REVIEW at frame k (captured a quarter of a frame in, as
+ * ae_check_comp does), drawn the way the setup script builds it: the wall and
+ * its grid, the blurred copy over its span, the take on screen with its
+ * parts (and take 1's fringe) at the take's drifting position, the badge.
+ * Mask feather is a 1 px ramp; the mask expansion is a mitred offset.
+ */
+const reviewPlates = new Map<string, { sharp: Float64Array; soft: Float64Array }>();
+function reviewFrame(k: number, w: number, h: number): Float64Array {
+  const R = REVIEW;
+  const s = w / R.width;
+  const P = R.plate;
+  const key = `${w}x${h}`;
+  if (!reviewPlates.has(key)) {
+    const ox = (P.width - R.width) / 2, oy = (P.height - R.height) / 2;
+    const pw = Math.round(P.width * s), ph = Math.round(P.height * s);
+    const plate = new Float64Array(pw * ph * 3);
+    for (let y = 0; y < ph; y++) for (let x = 0; x < pw; x++) {
+      const X = (x + 0.5) / s, Y = (y + 0.5) / s;
+      // Coverage of the grid lines (lineWidth wide, centred on spacing/2 + n*spacing) at this pixel, as an area estimate.
+      const cover = (v: number) => {
+        const m = ((v - P.spacing / 2) % P.spacing + P.spacing) % P.spacing;
+        const dist = Math.min(m, P.spacing - m);
+        return Math.max(0, Math.min(1, (P.lineWidth / 2 - dist) * s + 0.5));
+      };
+      const a = Math.max(cover(X), cover(Y));
+      for (let c = 0; c < 3; c++) plate[(y * pw + x) * 3 + c] = P.wall[c] * (1 - a) + P.lines[c] * a;
+    }
+    const crop = (img: Float64Array) => {
+      const out = new Float64Array(w * h * 3);
+      const x0 = Math.round(ox * s), y0 = Math.round(oy * s);
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) for (let c = 0; c < 3; c++)
+        out[(y * w + x) * 3 + c] = img[((y + y0) * pw + x + x0) * 3 + c];
+      return out;
+    };
+    reviewPlates.set(key, { sharp: crop(plate), soft: crop(blurRgb(plate, pw, ph, Math.max(1, Math.round((R.soft.blur * s) / 2)))) });
+  }
+  const plates = reviewPlates.get(key)!;
+  const rgb = Float64Array.from(k >= R.soft.fromFrame && k <= R.soft.toFrame ? plates.soft : plates.sharp);
+  const t = k + 0.25;
+  const lerp = (a: number[], b: number[], f: number) => a.map((v, i) => v + (b[i] - v) * Math.max(0, Math.min(1, f)));
+  const over = (i: number, c: number[], a: number) => { for (let ch = 0; ch < 3; ch++) rgb[i + ch] = rgb[i + ch] * (1 - a) + c[ch] * a; };
+  const take = R.takes.find((tk: any) => k >= tk.fromFrame && k <= tk.toFrame);
+  if (take) {
+    const pos = lerp(take.fromPos, take.toPos, (t - take.fromFrame) / (take.toFrame - take.fromFrame));
+    const sc = take.scale / 100;
+    const layers: { colour: number[]; polys: Edges[]; grow: number }[] = [];
+    if (take.fringe) layers.push({ colour: R.fringe.colour, polys: take.parts.map((p: any) => edgesOf(p.polygon)), grow: R.fringe.width });
+    for (const p of take.parts) layers.push({ colour: p.colour, polys: [edgesOf(p.polygon)], grow: 0 });
+    // Only the pixels near the presenter can change.
+    const all = take.parts.flatMap((p: any) => p.polygon) as Pt[];
+    const toOut = ([X, Y]: Pt): Pt => [(pos[0] + (X - take.anchor[0]) * sc) * s, (pos[1] + (Y - take.anchor[1]) * sc) * s];
+    const out = all.map(toOut);
+    const pad = (R.fringe.width + 2) * sc * s + 2;
+    const x0 = Math.max(0, Math.floor(Math.min(...out.map((q) => q[0])) - pad)), x1 = Math.min(w, Math.ceil(Math.max(...out.map((q) => q[0])) + pad));
+    const y0 = Math.max(0, Math.floor(Math.min(...out.map((q) => q[1])) - pad)), y1 = Math.min(h, Math.ceil(Math.max(...out.map((q) => q[1])) + pad));
+    for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
+      // The pixel centre in the take's own (precomp) pixels.
+      const X = take.anchor[0] + ((x + 0.5) / s - pos[0]) / sc, Y = take.anchor[1] + ((y + 0.5) / s - pos[1]) / sc;
+      for (const L of layers) {
+        let d = Infinity;
+        for (const poly of L.polys) d = Math.min(d, convexDistance(poly, X, Y) - L.grow);
+        // Distance in output pixels, feathered over about a pixel.
+        const a = Math.max(0, Math.min(1, 0.5 - d * sc * s));
+        if (a > 0) over((y * w + x) * 3, L.colour, a);
+      }
+    }
+  }
+  const B = R.badge;
+  if (k >= B.fromFrame && k <= B.toFrame) {
+    const by = B.fromY + (B.toY - B.fromY) * Math.min(1, (t - B.fromFrame) / (B.landFrame - B.fromFrame));
+    for (let y = Math.max(0, Math.round((by - B.size[1] / 2) * s)); y < Math.min(h, Math.round((by + B.size[1] / 2) * s)); y++)
+      for (let x = Math.round((B.x - B.size[0] / 2) * s); x < Math.round((B.x + B.size[0] / 2) * s); x++) over((y * w + x) * 3, B.colour, 1);
+  }
+  return rgb;
+}
+
+describe("ae_check_comp on a Node model of the review eval's comp", () => {
+  it("gives away the cut and the soft plate's edges as jumps, and says nothing of the colour, the fringe or the late badge", async () => {
+    const ae = fakeAe({ frames: REVIEW.frames, size: [REVIEW.width, REVIEW.height], paint: (k, w, h) => reviewFrame(k, w, h) });
+    const { res } = await check({ structure: false }, ae);
+    const R = REVIEW;
+    // The intended cut to take 2, and the jumps where the wall goes soft and sharp again: the report says when, not what.
+    expect(res.flags.map((f: any) => [f.kind, f.frame])).toEqual([
+      ["cut", R.takes[1].fromFrame],
+      ["cut", R.soft.fromFrame],
+      ["cut", R.soft.toFrame + 1],
+    ]);
+    // The soft wall's jumps cover the whole frame (the wall changes everywhere); the take cut sits round the presenter.
+    for (const f of res.flags.slice(1)) expect(f.box).toEqual({ x: 0, y: 0, width: R.width, height: R.height });
+    expect(res.flags[0].box.width).toBeLessThan(R.width / 2);
+    // Nothing for the colour of take 2, the fringe of take 1 or the badge landing late: those need looking at frames.
+    expect(res.flags.some((f: any) => f.frame >= R.badge.fromFrame && f.frame <= R.badge.landFrame + 2)).toBe(false);
+    expect(res.stretches).toEqual([]);
+    expect(res.extremes.clipHighAll.max).toBe(0);
+  }, 60_000);
 });

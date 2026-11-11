@@ -279,6 +279,26 @@
         "Trace shows no change to either comp: no write operation on the setup's comps after the setup ran.",
         "The answer names the four seeded problems with their times and says the clean comp showed nothing, without claiming a problem the checks did not show."
       ]
+    },
+    {
+      "id": 22,
+      "prompt": "Use $motion-review to review a finished piece you did not build, in the open After Effects project, using only the plugin's read and render tools. First run this eval's setup script `review-plate.jsx` once, unchanged, as the code of the eval.run operation; it builds the delivered comp and returns `reviewComp` and the brief. Its data is encoded on purpose: do not decode it; judge the comp. Then run `node grade.mjs review --plan`: it prints where your review goes, its form and every check's limit. The brief: A 6-second 1920x1080 teaser at 30 fps. A presenter, keyed, composited over a studio wall plate; it must read as one shot filmed in that room. Two takes: take 1 from 0 to 3.0 s, then a cut to take 2 (closer) at 3.0 s, held to 6.0 s. The orange badge (a stand-in for the price tag) drops in from the top and must land on the beat at the comp marker \"hit\", 2.0 s. No on-screen copy. Review the whole delivered comp the way the plugin's review document (ae_library `review`) says: start with ae_check_comp over the whole work area, then look at frames at full size where it matters, and name each defect a viewer would notice with its time, where in the frame, the evidence it rests on and a severity; put each flag the brief explains in `intended`, and say what you could not judge. Change nothing in the comp. When your review is finished, and not before, write the findings file the plan describes, then run `node grade.mjs review` once. The grade runs once and is final. Work only on the items the setup made; do not save, close, clear or switch the project, and do not use the render queue or undo. Say how you reviewed and what you found.",
+      "expected_output": "The whole comp checked with ae_check_comp, the flags it raised judged against the brief (the cut at 3.0 s as intended; the changes it flags at 4.0 and 5.0 s traced to what changes there), full-size frames rendered at the moments that matter, and four defects named with times: in take 1 (0 to 3.0 s) a light fringe a few pixels wide round the presenter; in take 2 (3.0 to 6.0 s) the presenter graded toward magenta against the neutral wall; the wall blurred from 4.0 to 5.0 s while the presenter stays sharp; the badge landing on frame 68 (2.27 s), eight frames after the \"hit\" marker at 2.0 s. The found check needs three of the four with a time inside the span where each shows; at most two findings may match nothing. Only a run against After Effects shows whether the setup builds the comp it claims (an effect property set by index, a mask's expansion on a feathered mask, the comp marker); the no-plugin baseline has no After Effects tools, so it scores 0 on every picture check by construction.",
+      "files": [
+        "picture/review-plate.jsx",
+        "picture/grade.mjs",
+        "picture/checks.mjs",
+        "picture/scenes.mjs"
+      ],
+      "picture": {
+        "check": "review",
+        "setup": "review-plate.jsx"
+      },
+      "assertions": [
+        "Trace shows the setup script run once through eval.run, then ae_check_comp over the review comp's whole work area before the findings were written, and full-size frames rendered with ae_render_frame at moments the report or the brief points to.",
+        "Trace shows no change to the review comp: no write operation on the setup's items after the setup ran, and no attempt to decode the setup's data.",
+        "The answer gives the findings ranked by what a viewer would notice, each with a time, where in the frame, its evidence and a severity, says which flags it judged intended and why, and states what it could not judge, with no score or pass or fail verdict."
+      ]
     }
   ]
 }
