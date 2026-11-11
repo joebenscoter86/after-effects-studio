@@ -11,6 +11,8 @@ State what was reviewed (project, comp, version, times, export), then rank findi
 
 Avoid scores that pretend to predict reach. Event density is a craft choice. A technically clean but generic result is not ready if the brief demands distinctive motion. A gorgeous still does not prove motion pacing or audio sync. Report unperformed playback/audio checks plainly.
 
+To check motion: `ae_render_frame` with `strip: { at, frames }` renders the frames around a moment into one sheet with `diff` on (frame-to-frame change, and pops, stutters and cuts flagged), `diff` with `times` does the same for chosen times, and `render.preview` (through `ae_do`) renders a quick movie to watch at speed. The flags are hints from numbers; watch the movie before judging pacing.
+
 For animated text, read typography-technique and typography-recipes. Check actual glyphs/resolved fonts, full copy, meaningful line breaks, optical spacing, source versus screen bounds, accent clearance and settled reading time. Verify editable text and original-copy traceability after replacement. Report taste judgments in words; do not turn a score or successful helper call into visual acceptance.
 
 For paper collage, read paper-collage-style and paper-collage-recipes. Inspect cutout alpha and paper edges over contrasting backgrounds, contact/offset shadows, overlap order, seam continuity, material consistency and text clearance at full resolution. A smooth label beside stepped paper can be intentional; do not treat matched cadence as a default requirement. Verify the supplied-asset rights record or the disclosed native-only fallback, and keep full-speed perceptual judgment separate from helper success.

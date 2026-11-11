@@ -6524,11 +6524,11 @@ var require_format = __commonJS({
           }
           function getFormat(fmtDef) {
             const code = fmtDef instanceof RegExp ? (0, codegen_1.regexpCode)(fmtDef) : opts.code.formats ? (0, codegen_1._)`${opts.code.formats}${(0, codegen_1.getProperty)(schema)}` : void 0;
-            const fmt = gen.scopeValue("formats", { key: schema, ref: fmtDef, code });
+            const fmt2 = gen.scopeValue("formats", { key: schema, ref: fmtDef, code });
             if (typeof fmtDef == "object" && !(fmtDef instanceof RegExp)) {
-              return [fmtDef.type || "string", fmtDef.validate, (0, codegen_1._)`${fmt}.validate`];
+              return [fmtDef.type || "string", fmtDef.validate, (0, codegen_1._)`${fmt2}.validate`];
             }
-            return ["string", fmtDef, fmt];
+            return ["string", fmtDef, fmt2];
           }
           function validCondition() {
             if (typeof formatDef == "object" && !(formatDef instanceof RegExp) && formatDef.async) {
@@ -7190,8 +7190,8 @@ var require_limit = __commonJS({
             ref: self.formats,
             code: opts.code.formats
           });
-          const fmt = gen.const("fmt", (0, codegen_1._)`${fmts}[${fCxt.schemaCode}]`);
-          cxt.fail$data((0, codegen_1.or)((0, codegen_1._)`typeof ${fmt} != "object"`, (0, codegen_1._)`${fmt} instanceof RegExp`, (0, codegen_1._)`typeof ${fmt}.compare != "function"`, compareCode(fmt)));
+          const fmt2 = gen.const("fmt", (0, codegen_1._)`${fmts}[${fCxt.schemaCode}]`);
+          cxt.fail$data((0, codegen_1.or)((0, codegen_1._)`typeof ${fmt2} != "object"`, (0, codegen_1._)`${fmt2} instanceof RegExp`, (0, codegen_1._)`typeof ${fmt2}.compare != "function"`, compareCode(fmt2)));
         }
         function validateFormat() {
           const format = fCxt.schema;
@@ -7201,15 +7201,15 @@ var require_limit = __commonJS({
           if (typeof fmtDef != "object" || fmtDef instanceof RegExp || typeof fmtDef.compare != "function") {
             throw new Error(`"${keyword}": format "${format}" does not define "compare" function`);
           }
-          const fmt = gen.scopeValue("formats", {
+          const fmt2 = gen.scopeValue("formats", {
             key: format,
             ref: fmtDef,
             code: opts.code.formats ? (0, codegen_1._)`${opts.code.formats}${(0, codegen_1.getProperty)(format)}` : void 0
           });
-          cxt.fail$data(compareCode(fmt));
+          cxt.fail$data(compareCode(fmt2));
         }
-        function compareCode(fmt) {
-          return (0, codegen_1._)`${fmt}.compare(${data}, ${schemaCode}) ${KWDs[keyword].fail} 0`;
+        function compareCode(fmt2) {
+          return (0, codegen_1._)`${fmt2}.compare(${data}, ${schemaCode}) ${KWDs[keyword].fail} 0`;
         }
       },
       dependencies: ["format"]
@@ -15033,7 +15033,7 @@ function handleIntersectionResults(result, left, right) {
   const unrecKeys = /* @__PURE__ */ new Map();
   let unrecIssue;
   const keyIssues = /* @__PURE__ */ new Map();
-  const collect = (iss, side) => {
+  const collect = (iss, side2) => {
     let keys;
     if (iss.code === "unrecognized_keys" && !iss.path?.length) {
       unrecIssue ?? (unrecIssue = iss);
@@ -15049,7 +15049,7 @@ function handleIntersectionResults(result, left, right) {
     for (const k of keys) {
       if (!unrecKeys.has(k))
         unrecKeys.set(k, {});
-      unrecKeys.get(k)[side] = true;
+      unrecKeys.get(k)[side2] = true;
     }
     return true;
   };
@@ -24417,45 +24417,45 @@ var PATTERN_IS_COMPLETE = /* @__PURE__ */ new Set([
   "xid"
 ]);
 function generateStringFormatCheck(doc, ctx, def, accessor, needsValue = true) {
-  const fmt = def.format;
-  if (fmt === "base64") {
+  const fmt2 = def.format;
+  if (fmt2 === "base64") {
     const validator = addConstant(ctx, isValidBase64);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (fmt === "base64url") {
+  if (fmt2 === "base64url") {
     const validator = addConstant(ctx, isValidBase64URL);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (fmt === "jwt") {
+  if (fmt2 === "jwt") {
     const validator = addConstant(ctx, isValidJWT2);
     const alg = addConstant(ctx, def.alg ?? null);
     doc.write(`if (!${validator}(${accessor}, ${alg})) return INVALID;`);
     return accessor;
   }
-  if (fmt === "ipv6") {
+  if (fmt2 === "ipv6") {
     const validator = addConstant(ctx, isValidIPv6);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (fmt === "cidrv6") {
+  if (fmt2 === "cidrv6") {
     const validator = addConstant(ctx, isValidCIDRv6);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (fmt === "credit_card") {
+  if (fmt2 === "credit_card") {
     const validator = addConstant(ctx, isValidCreditCard);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (fmt === "iban") {
+  if (fmt2 === "iban") {
     const validator = addConstant(ctx, isValidIBAN);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
   const formatDef = def;
-  if (fmt === "url" || fmt === "httpurl" || formatDef.normalize || formatDef.hostname !== void 0 || formatDef.protocol !== void 0) {
+  if (fmt2 === "url" || fmt2 === "httpurl" || formatDef.normalize || formatDef.hostname !== void 0 || formatDef.protocol !== void 0) {
     const parseConst = addConstant(ctx, validateURL);
     const defConst = addConstant(ctx, def);
     const trimVar = newVar(ctx);
@@ -24481,12 +24481,12 @@ function generateStringFormatCheck(doc, ctx, def, accessor, needsValue = true) {
   const customFn = def.fn;
   if (customFn) {
     if (isAsyncFunction(customFn))
-      throw new ZodCompileUnsupportedError(`async string format ${fmt}`);
+      throw new ZodCompileUnsupportedError(`async string format ${fmt2}`);
     const fnConst = addConstant(ctx, customFn);
     doc.write(`if (!${fnConst}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (PATTERN_IS_COMPLETE.has(fmt) && def.pattern) {
+  if (PATTERN_IS_COMPLETE.has(fmt2) && def.pattern) {
     const patternConst = addConstant(ctx, def.pattern);
     doc.write(`${patternConst}.lastIndex = 0;`);
     doc.write(`if (!${patternConst}.test(${accessor})) return INVALID;`);
@@ -31165,11 +31165,11 @@ function deepPartial(schema) {
 }
 
 // node_modules/zod/v4/classic/in-out.js
-function withChecks(side, checks) {
+function withChecks(side2, checks) {
   if (!checks?.length)
-    return side;
-  const def = side._zod.def;
-  return clone(side, mergeDefs(def, { checks: [...def.checks ?? [], ...checks] }), { parent: true });
+    return side2;
+  const def = side2._zod.def;
+  return clone(side2, mergeDefs(def, { checks: [...def.checks ?? [], ...checks] }), { parent: true });
 }
 function outSide(def) {
   return withChecks(def.out, def.checks);
@@ -45696,6 +45696,34 @@ registerOp({
 
 // src/operations/render.ts
 init_registry();
+var READ_TEMPLATES_FN = `
+    function _readTemplates(_item) {
+        var _render = [];
+        var _output = [];
+        try { _render = _item.templates; } catch (eR) {}
+        try { _output = _item.outputModule(1).templates; } catch (eO) {}
+        return { renderTemplates: _render, outputTemplates: _output };
+    }
+`;
+var QUEUE_CHANGE_NOTE = "the project is left modified (unsaved): a render-queue item was added and removed. Nothing in the comps changed; save or revert as you normally would";
+var PARK_QUEUE_FN = `
+    function _parkQueue(rq) {
+        var _parked = [];
+        for (var _pi = 1; _pi <= rq.numItems; _pi++) {
+            var _ex = rq.item(_pi);
+            var _was = false;
+            try { _was = _ex.render; } catch (eR) {}
+            _parked.push(_was);
+            if (_was) { try { _ex.render = false; } catch (eP) {} }
+        }
+        return _parked;
+    }
+    function _unparkQueue(rq, _parked) {
+        for (var _ui = 0; _ui < _parked.length && _ui < rq.numItems; _ui++) {
+            if (_parked[_ui]) { try { rq.item(_ui + 1).render = true; } catch (eU) {} }
+        }
+    }
+`;
 registerOp({
   name: "render.add_to_queue",
   category: "render",
@@ -46146,18 +46174,38 @@ registerOp({
   name: "render.list_templates",
   category: "render",
   readOnly: true,
-  description: "List available render-settings templates and output-module templates. The render queue must have at least one item (templates are read from a queue item).",
-  params: [],
-  toJsx() {
+  description: "List available render-settings templates and output-module templates. They are read from a queue item: the first one, or, when the queue is empty and `comp` is given, a temporary item for that comp that is removed again (the project is then left modified by the queue change; render.preview with listTemplates does the same).",
+  params: [
+    {
+      name: "comp",
+      type: "any",
+      description: "Comp name or id for a temporary queue item, used only when the queue is empty",
+      required: false
+    }
+  ],
+  toJsx(args) {
     return `
+            ${READ_TEMPLATES_FN}
             var rq = app.project.renderQueue;
-            if (rq.numItems === 0) return { ok: false, error: "add a comp to the render queue first (render.add_to_queue) \u2014 templates are read from a queue item" };
-            var _rqi = rq.item(1);
-            var _render = [];
-            var _output = [];
-            try { _render = _rqi.templates; } catch (eR) {}
-            try { _output = _rqi.outputModule(1).templates; } catch (eO) {}
-            return { ok: true, renderTemplates: _render, outputTemplates: _output };
+            if (rq.numItems > 0) {
+                var _first = _readTemplates(rq.item(1));
+                return { ok: true, renderTemplates: _first.renderTemplates, outputTemplates: _first.outputTemplates };
+            }
+            var _compArg = ${jsxVal(args.comp ?? null)};
+            if (${jsxVal(readOnlyMode())}) return { ok: false, error: "the render queue is empty, and AE_MCP_READONLY=1 forbids the temporary queue item that would modify the project" };
+            if (_compArg === null) return { ok: false, error: "the render queue is empty: pass comp (a temporary item is added, read and removed), or use render.preview with listTemplates" };
+            var _comp = AE.findCompByNameOrId(_compArg);
+            if (!_comp) return { ok: false, error: "no comp matching " + String(_compArg) };
+            var _tmp = null;
+            try {
+                _tmp = rq.items.add(_comp);
+                var _read = _readTemplates(_tmp);
+                return { ok: true, renderTemplates: _read.renderTemplates, outputTemplates: _read.outputTemplates, temporaryItem: true, projectModified: true, projectNote: ${jsxVal(QUEUE_CHANGE_NOTE)} };
+            } catch (eT) {
+                return { ok: false, error: "could not read templates: " + AE.errText(eT) };
+            } finally {
+                if (_tmp) { try { _tmp.remove(); } catch (eRm) {} }
+            }
         `;
   }
 });
@@ -46306,15 +46354,9 @@ registerOp({
             var _variants = ${jsxVal(variants)};
             var _tpl = ${jsxVal(template)};
             var rq = app.project.renderQueue;
+            ${PARK_QUEUE_FN}
             // Only the temporary item may render: park every existing item.
-            var _parked = [];
-            for (var _pi = 1; _pi <= rq.numItems; _pi++) {
-                var _ex = rq.item(_pi);
-                var _was = false;
-                try { _was = _ex.render; } catch (eR) {}
-                _parked.push(_was);
-                if (_was) { try { _ex.render = false; } catch (eP) {} }
-            }
+            var _parked = _parkQueue(rq);
             var _results = [];
             var _failed = 0;
             try {
@@ -46360,9 +46402,7 @@ registerOp({
                     _results.push(_entry);
                 }
             } finally {
-                for (var _ui = 0; _ui < _parked.length && _ui < rq.numItems; _ui++) {
-                    if (_parked[_ui]) { try { rq.item(_ui + 1).render = true; } catch (eU) {} }
-                }
+                _unparkQueue(rq, _parked);
             }
             return { ok: _failed === 0, error: _failed === 0 ? null : (_failed + " of " + _results.length + " variants failed"), rendered: _results.length - _failed, variants: _results };
         `;
@@ -46411,6 +46451,196 @@ registerOp({
                 return { ok: true, type: "output", name: ${jsxVal(args.name)} };
             }
             return { ok: false, error: "type must be render|output" };
+        `;
+  }
+});
+var PREVIEW_RESOLUTIONS = {
+  full: "Full",
+  half: "Half",
+  third: "Third",
+  quarter: "Quarter"
+};
+registerOp({
+  name: "render.preview",
+  category: "render",
+  description: "Render a quick preview movie of a comp's work area (or the whole comp, or a span) through the render queue, so it can be watched at speed. Adds ONE temporary queue item, renders only that item (others are parked and their Render checkboxes restored), then removes it: the queue is left as it was found. Never overwrites an existing file unless overwrite is true; creates the output folder. Returns outputPath, timeSpanStart, durationSeconds, frameCount, frameRate, renderSeconds (wall clock of the render), elapsedSeconds (AE's own count), bytes, outputTemplate, resolution (+ resolutionReadBack) and warnings. Blocks until done: raise ae_do timeoutMs for long comps (235 frames at 1080\xD71920 with 'High Quality' took about 20 s). Defaults are what is known to work: output template 'High Quality' (a ProRes .mov) at full resolution; resolution 'half' was measured live (540\xD7960 from 1080\xD71920, about a third of the time). listTemplates: true renders nothing and returns the render-settings and output-module template names, read from a temporary queue item that is removed again. Every answer carries projectModified: true and projectNote: adding and removing a queue item leaves the project unsaved.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "outputPath",
+      type: "string",
+      description: "Movie file path (the output template may change the extension; the path AE actually wrote is returned). Required unless listTemplates",
+      required: false
+    },
+    {
+      name: "listTemplates",
+      type: "boolean",
+      description: "Render nothing: return renderTemplates and outputTemplates, read from a temporary queue item for comp that is removed again",
+      required: false,
+      default: false
+    },
+    {
+      name: "span",
+      type: "string",
+      description: "workArea (default) | comp \u2014 what to render when no explicit time span is given",
+      required: false,
+      default: "workArea"
+    },
+    {
+      name: "timeSpanStart",
+      type: "number",
+      description: "Explicit span start in seconds (comp time); overrides span",
+      required: false
+    },
+    {
+      name: "timeSpanDuration",
+      type: "number",
+      description: "Explicit span duration in seconds; overrides span",
+      required: false
+    },
+    {
+      name: "outputTemplate",
+      type: "string",
+      description: "Output module template (default 'High Quality'); refused, with the available names, when it does not exist",
+      required: false,
+      default: "High Quality"
+    },
+    {
+      name: "renderTemplate",
+      type: "string",
+      description: "Render settings template (default: the queue item's own default)",
+      required: false
+    },
+    {
+      name: "resolution",
+      type: "string",
+      description: "full (default, untouched) | half | third | quarter. Set through setSettings({ Resolution }) and read back; resolutionReadBack and a warning say whether it took",
+      required: false,
+      default: "full"
+    },
+    {
+      name: "renderSettings",
+      type: "object",
+      description: "Raw render settings applied to the temporary item (RenderQueueItem.setSettings, keys from render.get_settings), after renderTemplate and resolution",
+      required: false
+    },
+    {
+      name: "overwrite",
+      type: "boolean",
+      description: "Replace an existing file at the output path (default false: refuse)",
+      required: false,
+      default: false
+    }
+  ],
+  toJsx(args) {
+    if (args.listTemplates === true) {
+      return `
+            ${jsxCompPreamble(args)}
+            ${READ_TEMPLATES_FN}
+            var rq = app.project.renderQueue;
+            if (AE.safeGet(function () { return rq.rendering; }, false)) return { ok: false, error: "the render queue is already rendering; wait for it to finish" };
+            var _tmp = null;
+            try {
+                _tmp = rq.items.add(_comp);
+                var _read = _readTemplates(_tmp);
+                return { ok: true, renderTemplates: _read.renderTemplates, outputTemplates: _read.outputTemplates, projectModified: true, projectNote: ${jsxVal(QUEUE_CHANGE_NOTE)} };
+            } catch (eT) {
+                return { ok: false, error: "could not read templates: " + AE.errText(eT), projectModified: true, projectNote: ${jsxVal(QUEUE_CHANGE_NOTE)} };
+            } finally {
+                if (_tmp) { try { _tmp.remove(); } catch (eRm) {} }
+            }
+        `;
+    }
+    if (typeof args.outputPath !== "string" || args.outputPath === "")
+      return jsxFail("outputPath is required (unless listTemplates is true)");
+    const span = args.span ?? "workArea";
+    if (span !== "workArea" && span !== "comp") return jsxFail("span must be workArea or comp");
+    const resolution = String(args.resolution ?? "full").toLowerCase();
+    if (!(resolution in PREVIEW_RESOLUTIONS))
+      return jsxFail("resolution must be full, half, third or quarter");
+    if (args.timeSpanStart === void 0 !== (args.timeSpanDuration === void 0))
+      return jsxFail("give both timeSpanStart and timeSpanDuration, or neither");
+    if (args.timeSpanDuration !== void 0 && !(Number(args.timeSpanDuration) > 0))
+      return jsxFail("timeSpanDuration must be above 0");
+    return `
+            ${jsxCompPreamble(args)}
+            ${PARK_QUEUE_FN}
+            var rq = app.project.renderQueue;
+            if (AE.safeGet(function () { return rq.rendering; }, false)) return { ok: false, error: "the render queue is already rendering; wait for it to finish" };
+            var _overwrite = ${jsxVal(!!args.overwrite)};
+            var _want = ${jsxVal(String(args.outputPath))};
+            function _meta(_path) {
+                var _f = new File(_path);
+                if (!_f.exists) return { exists: false, bytes: 0, modifiedMs: null };
+                var _d = _f.modified;
+                return { exists: true, bytes: _f.length, modifiedMs: _d ? _d.getTime() : null };
+            }
+            var _existing = _meta(_want);
+            if (_existing.exists && !_overwrite) return { ok: false, error: "a file already exists at " + _want + "; pass overwrite: true to replace it, or choose another outputPath", existing: _want };
+            var _w = [];
+            var _out = null;
+            var _rqi = null;
+            var _numBefore = rq.numItems;
+            var _parked = _parkQueue(rq);
+            try {
+                _rqi = rq.items.add(_comp);
+                ${args.renderTemplate !== void 0 ? `var _wr = AE.applyTemplate(_rqi, ${jsxVal(args.renderTemplate)}, "renderTemplate"); if (_wr) throw new Error(_wr);` : ""}
+                var _om = _rqi.outputModule(1);
+                var _wo = AE.applyTemplate(_om, ${jsxVal(args.outputTemplate ?? "High Quality")}, "outputTemplate");
+                if (_wo) throw new Error(_wo);
+                var _start = ${args.timeSpanStart !== void 0 ? jsxVal(args.timeSpanStart) : span === "comp" ? "0" : "_comp.workAreaStart"};
+                var _dur = ${args.timeSpanDuration !== void 0 ? jsxVal(args.timeSpanDuration) : span === "comp" ? "_comp.duration" : "_comp.workAreaDuration"};
+                _rqi.timeSpanStart = _start;
+                _rqi.timeSpanDuration = _dur;
+                var _res = ${jsxVal(resolution)};
+                var _resBack = null;
+                if (_res !== "full") {
+                    var _resName = ${jsxVal(PREVIEW_RESOLUTIONS[resolution])};
+                    try { _rqi.setSettings({ "Resolution": _resName }); } catch (eRs) { _w.push("resolution: setSettings failed: " + AE.errText(eRs)); }
+                    try { _resBack = _rqi.getSettings(GetSettingsFormat.STRING_SETTABLE)["Resolution"]; } catch (eRb) { _w.push("resolution: could not read it back: " + AE.errText(eRb)); }
+                    if (_resBack !== null && String(_resBack) !== _resName) _w.push("resolution: asked for " + _resName + " but the item reads " + String(_resBack) + " \u2014 the preview may be full size");
+                }
+                ${args.renderSettings !== void 0 ? `try { _rqi.setSettings(${jsxVal(args.renderSettings)}); } catch (eSs) { _w.push("renderSettings: " + AE.errText(eSs)); }` : ""}
+                _om.file = AE.ensureParentDir(_want);
+                var _path = _om.file ? _om.file.fsName.replace(/\\\\/g, "/") : _want;
+                var _before = _meta(_path);
+                if (_path !== _want && _before.exists && !_overwrite) throw new Error("the output template writes " + _path + ", which already exists; pass overwrite: true to replace it");
+                var _t0 = new Date().getTime();
+                rq.render();
+                var _t1 = new Date().getTime();
+                var _after = _meta(_path);
+                var _fresh = _after.exists && _after.bytes > 0 &&
+                    (!_before.exists || _after.bytes !== _before.bytes || (_after.modifiedMs !== null && _after.modifiedMs !== _before.modifiedMs));
+                var _status = _rqi.status;
+                var _fd = _comp.frameDuration;
+                _out = {
+                    ok: _status === RQItemStatus.DONE && _fresh,
+                    outputPath: _path,
+                    span: ${args.timeSpanStart !== void 0 ? '"custom"' : jsxVal(span)},
+                    timeSpanStart: _start,
+                    durationSeconds: _dur,
+                    frameCount: Math.round(_dur / _fd),
+                    frameRate: Math.round(1e3 / _fd) / 1e3,
+                    renderSeconds: Math.round(_t1 - _t0) / 1000,
+                    elapsedSeconds: AE.safeGet(function () { return _rqi.elapsedSeconds; }, null),
+                    bytes: _after.bytes,
+                    outputTemplate: ${jsxVal(args.outputTemplate ?? "High Quality")},
+                    resolution: _res,
+                    overwritten: _before.exists,
+                    warnings: _w
+                };
+                if (_res !== "full") _out.resolutionReadBack = _resBack;
+                if (!_out.ok) _out.error = _status !== RQItemStatus.DONE ? "the render did not finish (status " + String(_status) + ")" : "the render left no new file at " + _path;
+            } catch (eP) {
+                _out = { ok: false, error: "preview render failed: " + AE.errText(eP), warnings: _w };
+            } finally {
+                if (_rqi) { try { _rqi.remove(); } catch (eRm) { _w.push("could not remove the preview's queue item: " + AE.errText(eRm)); } }
+                _unparkQueue(rq, _parked);
+            }
+            if (rq.numItems !== _numBefore) _w.push("the render queue has " + rq.numItems + " items, it had " + _numBefore);
+            _out.projectModified = true;
+            _out.projectNote = ${jsxVal(QUEUE_CHANGE_NOTE)};
+            return _out;
         `;
   }
 });
@@ -50608,34 +50838,117 @@ function encodePngGray8(width, height, values) {
 
 // src/color/settled-read.ts
 import { promises as fs7 } from "node:fs";
+var SETTLE_BASE_MS = 15e3;
+var SETTLE_PER_HD_FRAME_MS = 3e3;
+var SETTLE_MIN_PER_FRAME_MS = 1e3;
+var HD_PIXELS = 1080 * 1920;
+var POLL_MS = 60;
+var IEND = Buffer.from([0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130]);
 function sleep3(ms) {
   return new Promise((resolve9) => setTimeout(resolve9, ms));
 }
-async function readFileSettled(filePath, timeoutMs = 15e3, stableMs = 250) {
-  const deadline = Date.now() + timeoutMs;
-  let lastSize = -1;
-  let lastChange = Date.now();
-  for (; ; ) {
-    let size = -1;
-    try {
-      size = (await fs7.stat(filePath)).size;
-    } catch {
-    }
-    if (size >= 0) {
-      if (size !== lastSize) {
-        lastSize = size;
-        lastChange = Date.now();
-      } else if (size > 0 && Date.now() - lastChange >= stableMs) {
-        return fs7.readFile(filePath);
+function settleTimeoutFor(frames, pixelsPerFrame) {
+  const n = Math.max(1, Math.floor(frames));
+  const perFrame = Math.max(
+    SETTLE_MIN_PER_FRAME_MS,
+    Math.round(SETTLE_PER_HD_FRAME_MS * Math.max(0, pixelsPerFrame) / HD_PIXELS)
+  );
+  return SETTLE_BASE_MS + (n - 1) * perFrame;
+}
+async function stampFiles(paths) {
+  return Promise.all(
+    paths.map(async (p) => {
+      try {
+        const st = await fs7.stat(p, { bigint: true });
+        return { exists: true, size: Number(st.size), mtimeNs: st.mtimeNs, ino: st.ino };
+      } catch {
+        return { exists: false, size: 0, mtimeNs: 0n, ino: 0n };
       }
-    }
-    if (Date.now() > deadline) {
-      throw new Error(
-        `file did not settle within ${timeoutMs}ms (saveFrameToPng writes asynchronously): ${filePath}`
-      );
-    }
-    await sleep3(60);
+    })
+  );
+}
+async function endsWithIend(p, size) {
+  if (size < IEND.length) return false;
+  let fh = null;
+  try {
+    fh = await fs7.open(p, "r");
+    const tail = Buffer.alloc(IEND.length);
+    await fh.read(tail, 0, IEND.length, size - IEND.length);
+    return tail.equals(IEND);
+  } catch {
+    return false;
+  } finally {
+    await fh?.close();
   }
+}
+async function waitForSettled(paths, opts) {
+  const stableMs = opts.stableMs ?? 250;
+  const start = Date.now();
+  const deadline = start + opts.timeoutMs;
+  const done = /* @__PURE__ */ new Set();
+  const state = paths.map(() => ({
+    size: -1,
+    changedAt: start,
+    status: "missing"
+  }));
+  for (; ; ) {
+    await Promise.all(
+      paths.map(async (p, i) => {
+        if (done.has(i)) return;
+        const s = state[i];
+        let st = null;
+        try {
+          st = await fs7.stat(p, { bigint: true });
+        } catch {
+        }
+        if (st === null) {
+          s.status = "missing";
+          s.size = -1;
+          return;
+        }
+        const size = Number(st.size);
+        const was = opts.before?.[i];
+        if (was?.exists && was.size === size && was.mtimeNs === st.mtimeNs && was.ino === st.ino) {
+          s.status = "unchanged";
+          s.size = size;
+          return;
+        }
+        if (size !== s.size) {
+          s.size = size;
+          s.changedAt = Date.now();
+        }
+        if (size === 0) {
+          s.status = "empty";
+          return;
+        }
+        s.status = "writing";
+        if (await endsWithIend(p, size) || Date.now() - s.changedAt >= stableMs) done.add(i);
+      })
+    );
+    if (done.size === paths.length || Date.now() > deadline) break;
+    await sleep3(POLL_MS);
+  }
+  const settled = [...done].sort((a, b) => a - b);
+  const unsettled = [];
+  for (const [i, p] of paths.entries()) {
+    if (done.has(i)) continue;
+    unsettled.push({
+      index: i,
+      path: p,
+      state: state[i].status,
+      bytes: Math.max(0, state[i].size)
+    });
+  }
+  return { settled, unsettled, waitedMs: Date.now() - start, timeoutMs: opts.timeoutMs };
+}
+async function readFileSettled(filePath, timeoutMs = SETTLE_BASE_MS, stableMs = 250) {
+  const res = await waitForSettled([filePath], { timeoutMs, stableMs });
+  if (res.settled.length === 0) {
+    throw new Error(
+      `file did not settle within ${timeoutMs}ms (saveFrameToPng writes asynchronously): ${filePath}`
+    );
+  }
+  return fs7.readFile(filePath);
 }
 
 // src/color/calibration.ts
@@ -51543,7 +51856,7 @@ function measureScreen(img, t) {
   const evenness = measureEvenness(img, isScreen, measuredAt, ch, kind, t);
   const grain = measureGrain(img, isScreen, ch, kind, t);
   const near = nearSubject ? nearSubject.colour : null;
-  const fmt = (c) => `(${c.map((v) => v.toFixed(3)).join(", ")})`;
+  const fmt2 = (c) => `(${c.map((v) => v.toFixed(3)).join(", ")})`;
   base.screenPixels = count;
   base.share = r42(count / measured);
   base.bounds = { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
@@ -51551,7 +51864,7 @@ function measureScreen(img, t) {
   base.subject = subject;
   base.evenness = evenness;
   base.grain = grain;
-  base.reading = `${kind} screen, ${Math.round(base.share * 100)}% of the measured pixels; median ${fmt(median)}` + (near ? `, near the subject ${fmt(near)}` : "") + `. ${evenness.reading}. ${grain ? grain.reading : "grain not measured (no screen pixel has screen all round it)"}.`;
+  base.reading = `${kind} screen, ${Math.round(base.share * 100)}% of the measured pixels; median ${fmt2(median)}` + (near ? `, near the subject ${fmt2(near)}` : "") + `. ${evenness.reading}. ${grain ? grain.reading : "grain not measured (no screen pixel has screen all round it)"}.`;
   return base;
 }
 function measureEvenness(img, isScreen, measuredAt, ch, kind, t) {
@@ -51800,14 +52113,14 @@ function lineUniform(img, fixed, horizontal) {
   }
   return { uniform: true, transparent, color: first };
 }
-function edgeBand(img, side) {
-  const horizontal = side === "top" || side === "bottom";
+function edgeBand(img, side2) {
+  const horizontal = side2 === "top" || side2 === "bottom";
   const n = horizontal ? img.height : img.width;
   let width = 0;
   let color = null;
   let transparent = true;
   for (let i = 0; i < n; i++) {
-    const fixed = side === "top" || side === "left" ? i : n - 1 - i;
+    const fixed = side2 === "top" || side2 === "left" ? i : n - 1 - i;
     const line = lineUniform(img, fixed, horizontal);
     if (!line.uniform) break;
     if (color === null) color = line.color;
@@ -52079,6 +52392,9 @@ var GLYPHS = {
   ".": [".....", ".....", ".....", ".....", ".....", ".##..", ".##.."],
   ":": [".....", ".##..", ".##..", ".....", ".##..", ".##..", "....."],
   "-": [".....", ".....", ".....", "#####", ".....", ".....", "....."],
+  ">": [".#...", "..#..", "...#.", "....#", "...#.", "..#..", ".#..."],
+  x: [".....", ".....", "#...#", ".#.#.", "..#..", ".#.#.", "#...#"],
+  "!": ["..#..", "..#..", "..#..", "..#..", "..#..", ".....", "..#.."],
   "#": [".#.#.", ".#.#.", "#####", ".#.#.", "#####", ".#.#.", ".#.#."],
   s: [".....", ".....", ".####", "#....", ".###.", "....#", "####."],
   f: ["..##.", ".#...", "###..", ".#...", ".#...", ".#...", ".#..."],
@@ -52157,6 +52473,314 @@ function composeContactSheet(frames, opts = {}) {
 }
 function frameLabel(index, time3) {
   return time3 === void 0 ? `#${index}` : `#${index} ${time3.toFixed(3)}s`;
+}
+
+// src/color/motion.ts
+var DIFF_DEFAULTS = {
+  changeAbove: 0.04,
+  spikeRatio: 3,
+  holdRatio: 0.25,
+  quietBelow: 2e-3,
+  movingShare: 5e-4,
+  window: 3,
+  amplify: 8,
+  repeatBelow: 1e-4
+};
+var LIMITS = {
+  changeAbove: { min: 0, max: 1 },
+  spikeRatio: { min: 1, max: 1e3, above: true },
+  holdRatio: { min: 0, max: 1, above: true },
+  quietBelow: { min: 0, max: 1 },
+  movingShare: { min: 0, max: 1 },
+  window: { min: 1, max: 16, int: true },
+  amplify: { min: 1, max: 1e3 },
+  repeatBelow: { min: 0, max: 1 }
+};
+function resolveDiffThresholds(args = {}) {
+  const out = { ...DIFF_DEFAULTS };
+  for (const key of Object.keys(DIFF_DEFAULTS)) {
+    const v = args[key];
+    if (typeof v === "number") out[key] = v;
+  }
+  return out;
+}
+function diffArgsError(args) {
+  for (const [key, value] of Object.entries(args)) {
+    if (key === "sheet") continue;
+    const limit = LIMITS[key];
+    if (!limit) {
+      return `\`diff.${key}\` is not an option (options: ${Object.keys(LIMITS).join(", ")}, sheet)`;
+    }
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+      return `\`diff.${key}\` must be a number`;
+    }
+    const low = limit.above ? value <= limit.min : value < limit.min;
+    if (low || value > limit.max || limit.int && !Number.isInteger(value)) {
+      const range = limit.above ? `above ${limit.min} and at most ${limit.max}` : `${limit.min} to ${limit.max}`;
+      return `\`diff.${key}\` must be ${limit.int ? "a whole number " : ""}${range}, not ${value}`;
+    }
+  }
+  return null;
+}
+function pictureOf(img, straight) {
+  const n = img.width * img.height;
+  const out = new Float32Array(n * 3);
+  const a = straight ? img.alpha : void 0;
+  if (!a) {
+    out.set(img.rgb);
+    return out;
+  }
+  for (let p = 0; p < n; p++) {
+    const w = a[p];
+    const i = p * 3;
+    out[i] = img.rgb[i] * w;
+    out[i + 1] = img.rgb[i + 1] * w;
+    out[i + 2] = img.rgb[i + 2] * w;
+  }
+  return out;
+}
+var r6 = (v) => Math.round(v * 1e6) / 1e6;
+function rectStats(prev, cur, width, x0, y0, x1, y1, above, perPixel) {
+  let sum = 0;
+  let maxAbs = 0;
+  let changed = 0;
+  let bx0 = Infinity;
+  let by0 = Infinity;
+  let bx1 = -1;
+  let by1 = -1;
+  for (let y = y0; y < y1; y++) {
+    let i = (y * width + x0) * 3;
+    for (let x = x0; x < x1; x++, i += 3) {
+      const dr = Math.abs(cur[i] - prev[i]);
+      const dg = Math.abs(cur[i + 1] - prev[i + 1]);
+      const db = Math.abs(cur[i + 2] - prev[i + 2]);
+      const m = dr > dg ? dr > db ? dr : db : dg > db ? dg : db;
+      const mean = (dr + dg + db) / 3;
+      sum += mean;
+      if (m > maxAbs) maxAbs = m;
+      if (m > above) {
+        changed++;
+        if (x < bx0) bx0 = x;
+        if (x > bx1) bx1 = x;
+        if (y < by0) by0 = y;
+        if (y > by1) by1 = y;
+      }
+      if (perPixel) perPixel(x, y, mean);
+    }
+  }
+  const pixels = (x1 - x0) * (y1 - y0);
+  return {
+    pixels,
+    change: r6(pixels > 0 ? sum / pixels : 0),
+    maxAbsDelta: r6(maxAbs),
+    changedPixels: changed,
+    changedShare: r6(pixels > 0 ? changed / pixels : 0),
+    changedBounds: changed > 0 ? { x: bx0, y: by0, width: bx1 - bx0 + 1, height: by1 - by0 + 1 } : null
+  };
+}
+function pictureChange(prev, cur, width, height, t, opts = {}) {
+  let perPixel;
+  let sums = null;
+  let counts = null;
+  const tw = opts.thumb?.width ?? 0;
+  if (opts.thumb) {
+    const th = opts.thumb.height;
+    sums = new Float64Array(tw * th);
+    counts = new Float64Array(tw * th);
+    const col = new Int32Array(width);
+    for (let x = 0; x < width; x++) col[x] = Math.min(tw - 1, Math.floor(x * tw / width));
+    const row = new Int32Array(height);
+    for (let y = 0; y < height; y++) row[y] = Math.min(th - 1, Math.floor(y * th / height)) * tw;
+    const s = sums;
+    const c = counts;
+    perPixel = (x, y, mean) => {
+      const k = row[y] + col[x];
+      s[k] += mean;
+      c[k]++;
+    };
+  }
+  const all = rectStats(prev, cur, width, 0, 0, width, height, t.changeAbove, perPixel);
+  const out = { all };
+  if (opts.regions) {
+    out.regions = opts.regions.map((region) => {
+      const clip = clipRegion({ width, height }, region);
+      if (!clip)
+        return { name: region.name, error: `region is outside the ${width}\xD7${height} frame` };
+      const { x, y, width: w, height: h } = clip.rect;
+      return {
+        name: region.name,
+        ...rectStats(prev, cur, width, x, y, x + w, y + h, t.changeAbove)
+      };
+    });
+  }
+  if (sums && counts) {
+    const thumb = new Float64Array(sums.length);
+    for (let k = 0; k < sums.length; k++) {
+      thumb[k] = counts[k] > 0 ? Math.min(1, sums[k] / counts[k] * t.amplify) : 0;
+    }
+    out.thumb = thumb;
+  }
+  return out;
+}
+function lowerMedian(values) {
+  const s = [...values].sort((a, b) => a - b);
+  return s[Math.floor((s.length - 1) / 2)];
+}
+function side(pairs, p, dir, window, skip) {
+  const changes = [];
+  const shares = [];
+  for (let k = 1; k <= window; k++) {
+    const j = p + dir * k;
+    if (j < 0 || j >= pairs.length) break;
+    if (skip.has(j)) continue;
+    changes.push(pairs[j].change);
+    shares.push(pairs[j].changedShare);
+  }
+  if (changes.length === 0) return null;
+  return { change: lowerMedian(changes), share: lowerMedian(shares) };
+}
+var fmt = (v) => v.toFixed(4);
+var frameText = (f) => `#${f.index}${f.time === void 0 ? "" : ` (${r6(f.time)} s)`}`;
+function summarizeSeries(pairs, t) {
+  const n = pairs.length;
+  const changes = pairs.map((p) => p.change);
+  let largest = 0;
+  let smallest = 0;
+  for (let i = 1; i < n; i++) {
+    if (changes[i] > changes[largest]) largest = i;
+    if (changes[i] < changes[smallest]) smallest = i;
+  }
+  const summary = {
+    pairs: n,
+    median: n > 0 ? r6(lowerMedian(changes)) : 0,
+    mean: n > 0 ? r6(changes.reduce((a, b) => a + b, 0) / n) : 0,
+    largest: { pair: largest, change: n > 0 ? changes[largest] : 0 },
+    smallest: { pair: smallest, change: n > 0 ? changes[smallest] : 0 },
+    flags: [],
+    reading: ""
+  };
+  if (n < 2) {
+    summary.reading = n === 0 ? "no pair of consecutive frames to compare" : "one pair: nothing to compare it with, so nothing is flagged (render at least three frames)";
+    return summary;
+  }
+  const repeats = new Set(pairs.flatMap((p, i) => p.change <= t.repeatBelow ? [i] : []));
+  const near = (i, set2) => {
+    for (let k = 1; k <= t.window; k++) if (set2.has(i - k) || set2.has(i + k)) return true;
+    return false;
+  };
+  const spike = pairs.map((p, i) => {
+    if (repeats.has(i) || p.changedShare < t.movingShare) return null;
+    const sides = [
+      side(pairs, i, -1, t.window, repeats),
+      side(pairs, i, 1, t.window, repeats)
+    ].filter((s) => s !== null);
+    if (sides.length === 0) return null;
+    const reference = Math.max(...sides.map((s) => s.change), t.quietBelow);
+    if (sides.some((s) => p.change < t.spikeRatio * Math.max(s.change, t.quietBelow)))
+      return null;
+    return { reference, edge: i === 0 || i === n - 1, besideRepeat: near(i, repeats) };
+  });
+  const spikes = new Set(spike.flatMap((s, i) => s ? [i] : []));
+  const repeatNote = " (a repeated frame is next to it and was left out of the comparison)";
+  const flags = [];
+  for (let i = 0; i < n; i++) {
+    const s = spike[i];
+    if (!s) continue;
+    const runStart = i === 0 || !spike[i - 1];
+    if (!runStart) continue;
+    let end = i;
+    while (end + 1 < n && spike[end + 1]) end++;
+    if (end === i + 1) {
+      const reference = Math.max(s.reference, spike[end].reference);
+      const change = Math.min(pairs[i].change, pairs[end].change);
+      const frame = pairs[i].to;
+      const flag = {
+        kind: "pop",
+        pairs: [i, end],
+        frame,
+        change,
+        reference: r6(reference),
+        ratio: r6(change / reference),
+        reading: `frame ${frameText(frame)} differs from the frames before and after it by ${fmt(change)} or more, while its neighbours change about ${fmt(reference)}: a one-frame pop`
+      };
+      if (s.besideRepeat || spike[end].besideRepeat) {
+        flag.besideRepeat = true;
+        flag.reading += repeatNote;
+      }
+      flags.push(flag);
+      continue;
+    }
+    for (let j = i; j <= end; j++) {
+      const sj = spike[j];
+      const between = [pairs[j].from, pairs[j].to];
+      const flag = {
+        kind: "cut",
+        pairs: [j],
+        between,
+        change: pairs[j].change,
+        reference: r6(sj.reference),
+        ratio: r6(pairs[j].change / sj.reference),
+        reading: `${frameText(between[0])} to ${frameText(between[1])} changes ${fmt(pairs[j].change)}, ${(pairs[j].change / sj.reference).toFixed(1)}\xD7 its neighbours: a cut or a jump`
+      };
+      if (sj.edge) {
+        flag.atSeriesEdge = true;
+        flag.reading += " (first or last pair: it could also be a pop of the end frame)";
+      }
+      if (sj.besideRepeat) {
+        flag.besideRepeat = true;
+        flag.reading += repeatNote;
+      }
+      flags.push(flag);
+    }
+  }
+  const moving = (s) => s !== null && s.change >= t.quietBelow && s.share >= t.movingShare;
+  const notSpikes = /* @__PURE__ */ new Set([...spikes, ...repeats]);
+  const neighbours = (i) => [i - 1, i + 1].filter((j) => j >= 0 && j < n && !repeats.has(j));
+  for (let i = 0; i < n; i++) {
+    if (spikes.has(i)) continue;
+    const before = side(pairs, i, -1, t.window, notSpikes);
+    const after = side(pairs, i, 1, t.window, notSpikes);
+    const frame = pairs[i].to;
+    const unreliablePairs = neighbours(i);
+    const unreliable = unreliablePairs.length > 0 ? `; pair${unreliablePairs.length > 1 ? "s" : ""} ${unreliablePairs.join(" and ")} beside it ${unreliablePairs.length > 1 ? "are" : "is"} measured across the repeat, so ${unreliablePairs.length > 1 ? "their readings are" : "its reading is"} unreliable` : "";
+    if (before && after && moving(before) && moving(after)) {
+      const reference2 = Math.min(before.change, after.change);
+      if (pairs[i].change > t.holdRatio * reference2) continue;
+      flags.push({
+        kind: "stutter",
+        pairs: [i],
+        frame,
+        change: pairs[i].change,
+        reference: r6(reference2),
+        ratio: r6(pairs[i].change / reference2),
+        unreliablePairs,
+        reading: `frame ${frameText(frame)} barely changes from the one before (${fmt(pairs[i].change)}) while the frames around it move about ${fmt(reference2)}: a repeated frame, a stutter${unreliable}. Rounded times can do this: a time just below a frame boundary renders the frame before (see frameWarning)`
+      });
+      continue;
+    }
+    if (!repeats.has(i)) continue;
+    const rawBefore = side(pairs, i, -1, t.window, spikes);
+    const rawAfter = side(pairs, i, 1, t.window, spikes);
+    const atEdge = rawBefore === null || rawAfter === null;
+    if (!atEdge || !(moving(rawBefore) || moving(rawAfter))) continue;
+    const reference = (moving(rawBefore) ? rawBefore : rawAfter).change;
+    flags.push({
+      kind: "repeat",
+      pairs: [i],
+      frame,
+      change: pairs[i].change,
+      reference: r6(reference),
+      ratio: r6(pairs[i].change / reference),
+      atSeriesEdge: true,
+      unreliablePairs,
+      reading: `frame ${frameText(frame)} repeats the one before (change ${fmt(pairs[i].change)}) beside motion of about ${fmt(reference)}, at the ${rawBefore === null ? "start" : "end"} of the series, so a stutter cannot be told from a hold${unreliable}`
+    });
+  }
+  flags.sort((a, b) => a.pairs[0] - b.pairs[0]);
+  summary.flags = flags;
+  const counts = ["pop", "stutter", "cut", "repeat"].map((k) => [k, flags.filter((f) => f.kind === k).length]).filter(([, c]) => c > 0).map(([k, c]) => `${c} ${k}${c > 1 ? "s" : ""}`);
+  summary.reading = `${n} pairs, median change ${fmt(summary.median)}, largest ${fmt(summary.largest.change)} (pair ${largest}); ` + (flags.length === 0 ? "no pair stands out from its neighbours" : `${counts.join(", ")}: ${flags.map((f) => `${f.kind} at pair ${f.pairs.join("+")}`).join("; ")}`);
+  return summary;
 }
 
 // src/color/transform.ts
@@ -52240,6 +52864,30 @@ function profileForWorkingSpace(workingSpace) {
 
 // src/tools/render-frame.ts
 init_registry();
+var STRIP_DEFAULT_MAX_DIMENSION = 360;
+var FRAME_PICK = 0.25;
+var NEAR_FRAME_BOUNDARY = 0.02;
+function frameWarnings(frames, near = NEAR_FRAME_BOUNDARY) {
+  const parts = [];
+  const firstAt = /* @__PURE__ */ new Map();
+  for (const [i, f] of frames.entries()) {
+    if (typeof f.frame !== "number") continue;
+    const seen = firstAt.get(f.frame);
+    if (seen === void 0) firstAt.set(f.frame, i);
+    else parts.push(`#${seen} and #${i} both render frame ${f.frame}`);
+  }
+  for (const [i, f] of frames.entries()) {
+    if (typeof f.frame !== "number" || typeof f.frameOffset !== "number") continue;
+    const below = 1 - f.frameOffset;
+    if (below > 0 && below <= near) {
+      parts.push(
+        `#${i} (${f.time} s) renders frame ${f.frame}, ${(below * 100).toFixed(1)}% of a frame below frame ${f.frame + 1}`
+      );
+    }
+  }
+  if (parts.length === 0) return void 0;
+  return `${parts.join("; ")}. A time resolves to the frame it falls in, so a rounded time just below a boundary renders the frame before and a series of rounded times can repeat frames (diff then reads stutters). Pass \`frames: [..]\` to address frames by number, or exact times.`;
+}
 var MEASUREMENT_STAGES = {
   capture: "the PNG as saveFrameToPng wrote it, before any colour conversion: working-space values (scaled by AE's capture transfer in colour-managed projects), 8 or 16 bits. Its RGB is already laid over the comp background colour (`bgColor`): capture = colour\xB7alpha + bgColor\xB7(1 \u2212 alpha), so a half-covered pixel reads half background and an empty one reads bgColor; on a black background that is premultiplied colour. Alpha is the coverage AE wrote",
   output: "the file as written (writtenTo), after colour conversion when colorManaged is auto, so 8-bit display values. With channels 'rgb': over the comp background as AE composited it, or over `over`. With 'rgba': the colour recovered from under the background (straight, 0 where alpha is 0), plus alpha. With 'alpha': the matte, in r = g = b. The same as the capture when colorManaged is off or the conversion failed"
@@ -52260,7 +52908,7 @@ var regionSchema = external_exports.object({
 var renderFrameTool = defineTool({
   name: "ae_render_frame",
   title: "Render frame",
-  description: "Render one or more frames to PNG. Use to visually verify edits. The agent's 'eyes' \u2014 pair with mutations for a visual feedback loop. Headless and deterministic. Pass `time` for one frame, or `times` for several in ONE call (motion checks): files land at <outPath stem>_<index>.png and are listed in `frames`. `contactSheet` tiles every frame into one labelled PNG (<stem>_sheet.png) so a motion check is one image; `analyze` measures each capture (uniform edge bands = black bars / transparent margins, content bounds, coverage) so off-frame elements and letterboxing are caught numerically. In color-managed projects (workingSpace != None) the capture applies AE's own display transform via a transient OCIO Display Transform adjustment layer, and the PNG comes back viewer-accurate and sRGB-tagged. Where that layer cannot be used \u2014 read-only mode, an AE without the OCIO effect, or a failed capture calibration \u2014 the result falls back to a pure-math ACES conversion or to raw values with an explicit colorWarning; check colorPipeline / colorWarning on the response. Seeing the matte: `channels` picks what the file holds \u2014 'rgb' (default, transparency composited over `over`: the comp background as AE composites it, a checkerboard or a colour such as '#ff00ff'), 'rgba' (alpha kept, straight colour), or 'alpha' (the matte as greyscale: white opaque, black transparent). `isolate` renders one layer or a list alone (cameras and lights stay as they are), then restores every layer switch, even when the render fails. `alphaChannel` reports whether the capture carried alpha at all. Reading colour: `sample` takes named points or rectangles and returns mean / min / max per channel and alpha coverage for each; `histogram` counts the whole frame per channel; `compare` (with `times` and `sample`) reports each region's difference between two of the rendered frames. Matte quality: `edge` reports, from the capture's alpha, the shares of opaque / partly transparent / transparent pixels, edge width (typical and worst, px), holes, specks, partly transparent patches that are not thin edges (an unkeyed screen, a remnant), the soft edge's colour with the comp background taken out and whether it leans to the screen colour (spill), and with `times` the frame-to-frame change in alpha along the edge, inside the solid area and outside it (flicker). Green screen: `screen`, on a render of the UN-KEYED source (Keylight View 'source' or the key off, the keyed layer isolated), reports green or blue, which pixels are screen and their share, a suggested screen colour (the median, and the colour just outside the subject), evenness on a grid (darkest and brightest cells, the spread as a ratio, the darker side) and grain. It reports numbers and places, never a pass or fail. Every number is labelled with its stage \u2014 'capture' (before colour conversion) or 'output' (the file as written) \u2014 described once in `measurementStages`.",
+  description: "Render one or more frames to PNG. Use to visually verify edits. The agent's 'eyes' \u2014 pair with mutations for a visual feedback loop. Headless and deterministic. Pass `time` for one frame, or `times` for several in ONE call (motion checks): files land at <outPath stem>_<index>.png and are listed in `frames`. `contactSheet` tiles every frame into one labelled PNG (<stem>_sheet.png) so a motion check is one image; `analyze` measures each capture (uniform edge bands = black bars / transparent margins, content bounds, coverage) so off-frame elements and letterboxing are caught numerically. In color-managed projects (workingSpace != None) the capture applies AE's own display transform via a transient OCIO Display Transform adjustment layer, and the PNG comes back viewer-accurate and sRGB-tagged. Where that layer cannot be used \u2014 read-only mode, an AE without the OCIO effect, or a failed capture calibration \u2014 the result falls back to a pure-math ACES conversion or to raw values with an explicit colorWarning; check colorPipeline / colorWarning on the response. Seeing the matte: `channels` picks what the file holds \u2014 'rgb' (default, transparency composited over `over`: the comp background as AE composites it, a checkerboard or a colour such as '#ff00ff'), 'rgba' (alpha kept, straight colour), or 'alpha' (the matte as greyscale: white opaque, black transparent). `isolate` renders one layer or a list alone (cameras and lights stay as they are), then restores every layer switch, even when the render fails. `alphaChannel` reports whether the capture carried alpha at all. Reading colour: `sample` takes named points or rectangles and returns mean / min / max per channel and alpha coverage for each; `histogram` counts the whole frame per channel; `compare` (with `times` and `sample`) reports each region's difference between two of the rendered frames. Matte quality: `edge` reports, from the capture's alpha, the shares of opaque / partly transparent / transparent pixels, edge width (typical and worst, px), holes, specks, partly transparent patches that are not thin edges (an unkeyed screen, a remnant), the soft edge's colour with the comp background taken out and whether it leans to the screen colour (spill), and with `times` the frame-to-frame change in alpha along the edge, inside the solid area and outside it (flicker). Green screen: `screen`, on a render of the UN-KEYED source (Keylight View 'source' or the key off, the keyed layer isolated), reports green or blue, which pixels are screen and their share, a suggested screen colour (the median, and the colour just outside the subject), evenness on a grid (darkest and brightest cells, the spread as a ratio, the darker side) and grain. Watching motion: `diff` (with `times`) reports how much the picture changes between consecutive frames, where, and per `sample` region, and flags pairs that stand out (a one-frame pop, a stutter where a frame repeats, a cut); `strip: { at, frames }` renders the frames around a moment into one small contact sheet with diff on. For playback at speed, render.preview (ae_do) writes a quick movie. It reports numbers and places, never a pass or fail. Every number is labelled with its stage \u2014 'capture' (before colour conversion) or 'output' (the file as written) \u2014 described once in `measurementStages`.",
   group: "render",
   // Survives read-only mode: it writes a PNG, and the visual verification loop
   // is the whole point of an audit session. Note this is NOT a
@@ -52274,9 +52922,24 @@ var renderFrameTool = defineTool({
   effect: "write",
   inputShape: {
     compNameOrId: external_exports.union([external_exports.string(), external_exports.number()]).describe("Composition name or numeric item id."),
-    time: external_exports.number().nonnegative().optional().describe("Time in seconds to render. Give exactly one of `time` or `times`."),
+    time: external_exports.number().nonnegative().optional().describe(
+      "Time in seconds to render. Give exactly one of `time`, `times`, `strip` or `frames`. Each rendered frame reports `frame` (the frame the time falls in: floor(time / frameDuration), worked out in After Effects) and `frameOffset` (where in it, 0..1); `frameWarning` says when two times land on one frame or a time sits within 2% of a frame below a boundary (a rounded time renders the frame before). Times are never moved."
+    ),
     times: external_exports.array(external_exports.number().nonnegative()).min(1).max(32).optional().describe(
       "Several times in seconds, rendered in ONE call. Files are written as <outPath stem>_<index><ext> and reported in `frames` (index-aligned)."
+    ),
+    strip: external_exports.object({
+      at: external_exports.number().nonnegative().describe("The moment, seconds (snapped to the nearest frame)."),
+      frames: external_exports.number().int().min(2).max(32).describe("How many consecutive frames, centred on `at` (one more after it when even)."),
+      step: external_exports.number().int().positive().optional().describe("Frames between rendered frames. Default 1 (every frame)."),
+      maxDimension: external_exports.number().int().min(16).max(2048).optional().describe(
+        "Longest side of each tile on the sheets, px. Default 360. The frames themselves are rendered at the comp's size."
+      )
+    }).optional().describe(
+      "'What happens around this moment' in one call: N consecutive frames around `at`, worked out from the comp's frame rate inside After Effects and rendered through the `times` path (files <stem>_<index>, listed in `frames`), tiled small into the contact sheet, with `diff` and its sheet on (pass `diff: false` to skip, or diff options to tune). The window is shifted to stay inside the comp; `strip` in the response says where it landed. Instead of `time` / `times`."
+    ),
+    frames: external_exports.array(external_exports.number().int().nonnegative()).min(1).max(32).optional().describe(
+      "Frame numbers (0 = the comp's first frame) instead of times: each is rendered a quarter of a frame inside it, so a time never lands on the frame before. Through the `times` path: files <stem>_<index>, reported in `frames` with their `frame`. Instead of `time` / `times` / `strip`."
     ),
     outPath: external_exports.string().describe(
       "Absolute path to write the PNG. Parent directory is created if missing. With `times`, used as the naming stem for every frame."
@@ -52284,6 +52947,9 @@ var renderFrameTool = defineTool({
     useDisplayStartTime: external_exports.boolean().optional().describe("If true, times are interpreted relative to comp.displayStartTime. Default false."),
     colorManaged: external_exports.enum(["auto", "off"]).optional().describe(
       "'auto' (default): detect the working space and return a viewer-accurate, 8-bit sRGB-tagged PNG. 'off': raw legacy output (16-bit, untagged, working-space values \u2014 dark/wrong-looking in color-managed projects)."
+    ),
+    settleTimeoutMs: external_exports.number().int().positive().max(6e5).optional().describe(
+      "How long to wait for the captures to finish writing (saveFrameToPng writes after the script returns). Default: 15 s for one frame, plus 3 s for each further 1080\xD71920 frame (scaled by size, at least 1 s each). Frames that do not finish are named in `captureSettle` and marked failed in `frames`; the others are still measured."
     ),
     analyze: external_exports.boolean().optional().describe(
       "Measure each capture: uniform bands at every edge (width + transparent/color \u2014 black bars, letterboxing, empty margins), the bounding box of non-background pixels, coverage, mean RGB. Reported per frame as `analysis` (measured on the capture before color conversion)."
@@ -52399,15 +53065,75 @@ var renderFrameTool = defineTool({
       })
     ]).optional().describe(
       "Measure a green or blue screen, on the capture (stage 'capture'), opaque pixels only; `true` for the defaults. Render the UN-KEYED source: set Keylight's View to 'source' (key.view) or switch the key off, and isolate the keyed layer. Reported as `screen` (per frame with `times`), with the thresholds used as `screenThresholds`: screen ('green' | 'blue' | null), chosen, measured / leftOut pixels, screenPixels, share, bounds; colour {median, mean, nearSubject {colour, pixels, band}} \u2014 the suggested Screen Colour; subject {box, area, share}; evenness {columns, rows, cells [{column, row, box, screenShare, mean, luma, level}], darkest, brightest, levelRatio, lumaRatio, uneven, extent (5th to 95th percentile of the screen pixels' positions), horizontal (right / left) and vertical (bottom / top) read across that extent, darkerSide (every side darker past unevenRatio, strongest first), reading}; grain {stdDev, level, steps8bit, samples, grainy, reading}; reading; warning; screenColourNote (capture values and what they mean for Keylight's Screen Colour)."
+    ),
+    diff: external_exports.union([
+      external_exports.boolean(),
+      external_exports.object({
+        changeAbove: external_exports.number().min(0).max(1).optional().describe(
+          "A pixel has changed when one of its channels moved by more than this (display values). Default 0.04, about ten 8-bit steps: well above frame-to-frame grain."
+        ),
+        spikeRatio: external_exports.number().optional().describe(
+          "A pair stands out as a spike when its change is at least this many times its neighbours' on each side it has. Default 3."
+        ),
+        holdRatio: external_exports.number().optional().describe(
+          "A pair is a hold (a repeated frame) when its change is at most this share of the moving neighbours' on both sides. Default 0.25."
+        ),
+        quietBelow: external_exports.number().min(0).max(1).optional().describe(
+          "Mean changes below this read as no visible change: neighbours this quiet are not moving, and a spike is measured against at least this. Default 0.002."
+        ),
+        movingShare: external_exports.number().min(0).max(1).optional().describe(
+          "Neighbours count as moving, and a spike counts, only with at least this share of pixels changed. Default 0.0005 (about 1,000 pixels at 1080\xD71920)."
+        ),
+        window: external_exports.number().int().optional().describe("Pairs on each side compared with a pair. Default 3."),
+        amplify: external_exports.number().optional().describe("Gain of the difference images on the diff sheet. Default 8."),
+        repeatBelow: external_exports.number().min(0).max(1).optional().describe(
+          "A pair changing this little is a repeated frame (identical frames read 0); repeats are never a reference for other pairs. Default 0.0001."
+        ),
+        sheet: external_exports.union([
+          external_exports.boolean(),
+          external_exports.object({
+            columns: external_exports.number().int().positive().optional(),
+            thumbWidth: external_exports.number().int().min(16).max(2048).optional(),
+            outPath: external_exports.string().optional().describe("Default <outPath stem>_diff.png.")
+          })
+        ]).optional().describe(
+          "Also write the difference images, amplified and labelled '#from>to change' ('!' on flagged pairs), tiled into one PNG beside the contact sheet. Default off; on with `strip`."
+        )
+      })
+    ]).optional().describe(
+      "Frame-to-frame change, with `times` (two or more) or `strip`; `true` for the defaults. Measured on the written file (stage 'output', display values; `diff.picture` says what exactly: with the default rgb output the capture is already over the comp background, so transparent areas do not change). Reported as `diff` {stage, picture, pairs, series} with the thresholds used as `diffThresholds`. Each consecutive pair: from, to, change (mean absolute difference over pixels and channels, 0..1), maxAbsDelta, changedPixels, changedShare (a channel moved by more than changeAbove), changedBounds, and with `sample` the same per region. series: pairs, median, mean, largest, smallest, flags [{kind 'pop' | 'stutter' | 'cut' | 'repeat', pairs, frame or between, change, reference, ratio, atSeriesEdge?, besideRepeat?, unreliablePairs?, reading}], reading. A pop is a frame that differs from both neighbours; a stutter a frame that repeats the one before while the frames around it move; a cut one pair far above its neighbours; a repeat an unchanged pair at the start or end of the series beside motion. Repeated frames are never a reference, and the pairs beside one are named unreliable. Flags are hints from numbers: look at the frames."
     )
   },
   handler: async (args, transport2) => {
-    if (args.time === void 0 === (args.times === void 0)) {
-      return errorResult("INVALID_ARGS", "give exactly one of `time` or `times`", {
-        hint: "`time: 1.5` renders one frame; `times: [0, 1, 2]` renders several in one call."
-      });
+    const given = [args.time, args.times, args.strip, args.frames].filter(
+      (v) => v !== void 0
+    ).length;
+    if (given !== 1) {
+      return errorResult(
+        "INVALID_ARGS",
+        "give exactly one of `time`, `times`, `strip` or `frames`",
+        {
+          hint: "`time: 1.5` renders one frame; `times: [0, 1, 2]` renders several in one call; `strip: { at: 1.5, frames: 9 }` renders the frames around a moment; `frames: [42, 43]` renders frames by number."
+        }
+      );
     }
-    const checked = checkEyesOptions(args);
+    if (args.frames !== void 0 && (!Array.isArray(args.frames) || args.frames.length < 1 || args.frames.length > 32 || !args.frames.every((k) => Number.isInteger(k) && k >= 0))) {
+      return errorResult(
+        "INVALID_ARGS",
+        "`frames` must be 1 to 32 whole frame numbers, 0 or more (0 = the comp's first frame)"
+      );
+    }
+    if (args.settleTimeoutMs !== void 0 && !(Number.isInteger(args.settleTimeoutMs) && args.settleTimeoutMs > 0)) {
+      return errorResult("INVALID_ARGS", "`settleTimeoutMs` must be a positive whole number of ms");
+    }
+    let strip = null;
+    if (args.strip !== void 0) {
+      const planned = planStrip(args.strip);
+      if ("error" in planned) return planned.error;
+      strip = planned.plan;
+    }
+    const count = strip?.frames ?? args.frames?.length ?? args.times?.length ?? 1;
+    const checked = checkEyesOptions({ ...args, count }, strip !== null);
     if ("error" in checked) return checked.error;
     const rejection = rejectedOutputPath(args.outPath);
     if (rejection !== null) {
@@ -52426,7 +53152,7 @@ var renderFrameTool = defineTool({
         });
       }
     }
-    return nativeFlow(args, checked.options, abs, transport2);
+    return nativeFlow(args, checked.options, abs, transport2, strip);
   }
 });
 function invalid(message, hint) {
@@ -52441,7 +53167,7 @@ function parseColor(value) {
   }
   return null;
 }
-function checkEyesOptions(args) {
+function checkEyesOptions(args, isStrip = false) {
   const channels = args.channels ?? "rgb";
   if (args.colorManaged === "off" && (channels !== "rgb" || args.over !== void 0)) {
     return invalid(
@@ -52503,8 +53229,8 @@ function checkEyesOptions(args) {
   }
   let compare = null;
   if (args.compare !== void 0) {
-    const n = args.times?.length ?? 0;
-    if (n < 2) return invalid("`compare` needs `times` with at least two frames");
+    const n = args.count;
+    if (n < 2) return invalid("`compare` needs `times` (or `strip`) with at least two frames");
     if (sample === null) {
       return invalid("`compare` needs `sample`: it reports differences for the sampled regions");
     }
@@ -52531,6 +53257,29 @@ function checkEyesOptions(args) {
     const problem = screenArgsError(screen);
     if (problem !== null) return invalid(problem);
   }
+  let diff = null;
+  const diffArg = args.diff ?? (isStrip ? true : void 0);
+  if (diffArg !== void 0 && diffArg !== false) {
+    const d = diffArg === true ? {} : diffArg;
+    if (typeof d !== "object" || d === null) return invalid("`diff` must be true or an object");
+    if (args.count < 2) {
+      return invalid(
+        "`diff` needs `times` with at least two frames, or `strip`",
+        "It compares consecutive rendered frames: `times: [1, 1.04, 1.08], diff: true`."
+      );
+    }
+    const problem = diffArgsError(d);
+    if (problem !== null) return invalid(problem);
+    const { sheet: sheetArg, ...thresholds } = d;
+    const sheetOn = sheetArg ?? isStrip;
+    if (sheetOn !== false && sheetOn !== true && (typeof sheetOn !== "object" || sheetOn === null)) {
+      return invalid("`diff.sheet` must be true, false or an object");
+    }
+    diff = {
+      thresholds: resolveDiffThresholds(thresholds),
+      sheet: sheetOn === false ? null : sheetOn === true ? {} : sheetOn
+    };
+  }
   return {
     options: {
       channels,
@@ -52541,9 +53290,32 @@ function checkEyesOptions(args) {
       histogram,
       compare,
       edge,
-      screen
+      screen,
+      diff
     }
   };
+}
+function planStrip(strip) {
+  const fail3 = (message) => ({
+    error: errorResult("INVALID_ARGS", message, {
+      hint: "`strip: { at: 2.5, frames: 9 }` renders the nine frames around 2.5 s."
+    })
+  });
+  if (typeof strip !== "object" || strip === null) return fail3("`strip` must be an object");
+  const { at, frames } = strip;
+  const step = strip.step ?? 1;
+  const maxDimension = strip.maxDimension ?? STRIP_DEFAULT_MAX_DIMENSION;
+  if (typeof at !== "number" || !Number.isFinite(at) || at < 0)
+    return fail3("`strip.at` must be a time in seconds, 0 or more");
+  if (!Number.isInteger(frames) || frames < 2 || frames > 32)
+    return fail3("`strip.frames` must be a whole number from 2 to 32");
+  if (!Number.isInteger(step) || step < 1)
+    return fail3("`strip.step` must be a whole number, 1 or more");
+  if (!Number.isInteger(maxDimension) || maxDimension < 16 || maxDimension > 2048)
+    return fail3("`strip.maxDimension` must be a whole number of px from 16 to 2048");
+  const first = -Math.floor((frames - 1) / 2);
+  const offsets = Array.from({ length: frames }, (_, k) => (first + k) * step);
+  return { plan: { at, offsets, frames, step, maxDimension } };
 }
 function sheetPathFor(abs, explicit) {
   if (explicit !== void 0) return path10.resolve(explicit).replace(/\\/g, "/");
@@ -52620,7 +53392,7 @@ var ISOLATE_FN = `
         return { ok: true, saved: saved, layers: named, changed: changed };
     }
 `;
-function renderJsx(args, times, paths, tryOcio, isolate) {
+function renderJsx(args, times, paths, tryOcio, isolate, strip = null, frameNums = null) {
   return `
         ${RENDER_FRAME_FN}
         ${ISOLATE_FN}
@@ -52651,7 +53423,43 @@ function renderJsx(args, times, paths, tryOcio, isolate) {
         if (_missingMedia.length) return { ok: false, error: "source media missing for comp " + comp.name + "; restore or relink before rendering", missingFootage: _missingMedia };
         var _ws = AE.safeGet(function () { return app.project.workingSpace; }, "None");
         var _times = ${jsxVal(times)};
+        var _strip = ${jsxVal(strip === null ? null : { at: strip.at, offsets: strip.offsets })};
+        var _frameNums = ${jsxVal(frameNums)};
         var _paths = ${jsxVal(paths)};
+        var _pick = ${jsxVal(FRAME_PICK)};
+        var _stripOut = null;
+        if (_frameNums !== null) {
+            var _lastF = Math.max(0, Math.round(comp.duration / comp.frameDuration) - 1);
+            _times = [];
+            for (var _ni = 0; _ni < _frameNums.length; _ni++) {
+                if (_frameNums[_ni] > _lastF) return { ok: false, error: "frame " + _frameNums[_ni] + " is past the comp's last frame, " + _lastF + " (comp " + comp.name + ")" };
+                _times.push((_frameNums[_ni] + _pick) * comp.frameDuration);
+            }
+        }
+        if (_strip !== null) {
+            var _fd = comp.frameDuration;
+            var _lastK = Math.max(0, Math.round(comp.duration / _fd) - 1);
+            var _k0 = Math.round(_strip.at / _fd);
+            var _offs = _strip.offsets;
+            var _shift = 0;
+            if (_k0 + _offs[_offs.length - 1] > _lastK) _shift = _lastK - (_k0 + _offs[_offs.length - 1]);
+            if (_k0 + _offs[0] + _shift < 0) _shift = -(_k0 + _offs[0]);
+            _times = [];
+            var _clamped = 0;
+            for (var _si = 0; _si < _offs.length; _si++) {
+                var _k = _k0 + _offs[_si] + _shift;
+                if (_k > _lastK) { _k = _lastK; _clamped++; }
+                _times.push((_k + _pick) * _fd);
+            }
+            _stripOut = {
+                at: Math.round(_k0 * _fd * 1e6) / 1e6,
+                frameRate: Math.round(1e3 / _fd) / 1e3,
+                firstFrame: _k0 + _offs[0] + _shift,
+                lastFrame: Math.min(_lastK, _k0 + _offs[_offs.length - 1] + _shift),
+                shiftedFrames: _shift
+            };
+            if (_clamped > 0) _stripOut.note = "the comp is shorter than the strip: the last " + _clamped + " frames repeat the comp's last frame (they read as stutters in diff)";
+        }
         var _useDst = ${jsxVal(!!args.useDisplayStartTime)};
         var _useOcio = ${jsxVal(tryOcio)} && _ws !== "None" && _ws !== "";
         var _isolate = ${jsxVal(isolate)};
@@ -52660,6 +53468,15 @@ function renderJsx(args, times, paths, tryOcio, isolate) {
             for (var _fi = 0; _fi < _times.length; _fi++) {
                 var _r = _renderFrame(comp, _times[_fi], _paths[_fi], _useDst);
                 _r.captureKind = kind;
+                if (_r.ok) {
+                    // The frame this time falls in, counted from frame 0 in the
+                    // convention of time; within a millionth of a frame of a
+                    // boundary counts as on it (k / fps in floating point).
+                    var _pos = _times[_fi] / comp.frameDuration;
+                    var _fk = Math.floor(_pos + 1e-6);
+                    _r.frame = _fk;
+                    _r.frameOffset = Math.max(0, Math.round((_pos - _fk) * 1e6) / 1e6);
+                }
                 _frames.push(_r);
             }
         }
@@ -52715,6 +53532,7 @@ function renderJsx(args, times, paths, tryOcio, isolate) {
         }
         var _out = { ok: _allOk, frames: _frames, captureKind: _frames.length > 0 ? _frames[0].captureKind : null };
         if (_isoReport) _out.isolation = _isoReport;
+        if (_stripOut) _out.strip = _stripOut;
         if (!_allOk) _out.error = _firstError;
         if (_allOk) {
             _out.compName = comp.name;
@@ -52726,22 +53544,42 @@ function renderJsx(args, times, paths, tryOcio, isolate) {
         return _out;
     `;
 }
-async function nativeFlow(args, opts, abs, transport2) {
-  const multi = args.times !== void 0;
-  const times = args.times ?? [args.time];
-  const paths = framePaths(abs, times.length, multi);
+async function nativeFlow(args, opts, abs, transport2, strip = null) {
+  const frameNums = args.frames ?? null;
+  const multi = args.times !== void 0 || strip !== null || frameNums !== null;
+  const times = strip !== null || frameNums !== null ? null : args.times ?? [args.time];
+  const count = strip?.frames ?? frameNums?.length ?? times?.length ?? 1;
+  const paths = framePaths(abs, count, multi);
+  const contactSheet = args.contactSheet ?? (strip !== null ? {} : void 0);
+  const before = await stampFiles(paths);
   const tryOcio = args.colorManaged !== "off" && !readOnlyMode();
   const result = await transport2.execute({
-    code: renderJsx(args, times, paths, tryOcio, opts.isolate),
+    code: renderJsx(args, times, paths, tryOcio, opts.isolate, strip, frameNums),
     label: "render_frame",
-    timeoutMs: 12e4 + (times.length - 1) * 3e4
+    timeoutMs: 12e4 + (count - 1) * 3e4
   });
   if (!result.ok) return toMcpResult(result);
   const payload = result.result;
   const frames = payload?.frames ?? [];
+  const frameSize = frames[0]?.size;
+  if (payload && strip !== null) {
+    payload.strip = {
+      at: strip.at,
+      frames: strip.frames,
+      step: strip.step,
+      maxDimension: strip.maxDimension,
+      ...payload.strip
+    };
+  }
+  if (payload && payload.ok === true) {
+    const warning = frameWarnings(frames);
+    if (warning !== void 0) payload.frameWarning = warning;
+  }
   if (payload && payload.ok === true && !multi && frames.length === 1) {
     payload.writtenTo = frames[0].writtenTo;
     payload.time = frames[0].time;
+    if (frames[0].frame !== void 0) payload.frame = frames[0].frame;
+    if (frames[0].frameOffset !== void 0) payload.frameOffset = frames[0].frameOffset;
     payload.size = frames[0].size;
     delete payload.frames;
   }
@@ -52772,9 +53610,38 @@ async function nativeFlow(args, opts, abs, transport2) {
   }
   const bg = validRgb(payload.bgColor);
   const unmatting = convert !== null && (opts.channels === "rgba" || backdrop !== null);
+  const settle2 = await waitForSettled(written, {
+    timeoutMs: args.settleTimeoutMs ?? settleTimeoutFor(written.length, frameSize ? frameSize[0] * frameSize[1] : 1080 * 1920),
+    before: before.slice(0, written.length)
+  });
+  payload.captureSettle = settle2;
+  if (settle2.unsettled.length > 0) {
+    const secs = (settle2.timeoutMs / 1e3).toFixed(1);
+    for (const u of settle2.unsettled) {
+      if (!multi || !frames[u.index]) continue;
+      frames[u.index].ok = false;
+      frames[u.index].error = `the capture did not finish writing within ${secs} s (${u.state}, ${u.bytes} bytes)`;
+    }
+    payload.captureWarning = `${settle2.unsettled.length} of ${written.length} captures did not finish writing within ${secs} s (saveFrameToPng writes asynchronously): frames ${settle2.unsettled.map((u) => u.index).join(", ")}. ` + (settle2.settled.length > 0 ? "The others were measured; see captureSettle, or render the missing ones again with a longer settleTimeoutMs." : "Nothing could be measured; try again with a longer settleTimeoutMs.");
+    if (settle2.settled.length === 0) {
+      if (args.analyze) payload.analysisWarning = "analysis failed: no capture finished writing";
+      if (managed)
+        payload.colorWarning = "color post-processing failed, file left as raw capture: no capture finished writing";
+      return toMcpResult(result);
+    }
+  }
+  const finished = new Set(settle2.settled);
   const keep = new Set(opts.compare ? [opts.compare.from, opts.compare.to] : []);
   const kept = /* @__PURE__ */ new Map();
   const sheetImages = [];
+  const sheetLabels = [];
+  let sheetThumb = null;
+  const diffPairs = [];
+  const diffThumbs = [];
+  let diffPrev = null;
+  let diffThumb = null;
+  const diffSkipped = [];
+  let read = 0;
   const edgePairs = [];
   let edgePrev = null;
   let edgeMeasured = 0;
@@ -52782,9 +53649,11 @@ async function nativeFlow(args, opts, abs, transport2) {
   let withAlpha = 0;
   let writing = convert !== null;
   for (const [i, file2] of written.entries()) {
+    if (!finished.has(i)) continue;
     let capture;
     try {
-      capture = decodePng(await readFileSettled(file2));
+      capture = decodePng(await fs9.readFile(file2));
+      read++;
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       payload.captureWarning = `could not read the capture: ${msg}`;
@@ -52858,10 +53727,66 @@ async function nativeFlow(args, opts, abs, transport2) {
       put(i, "histogram", { stage, ...histogramOf(pixels[stage], bins) });
     }
     if (keep.has(i)) kept.set(i, pixels);
-    if (args.contactSheet)
-      sheetImages.push(output2 === capture ? { ...capture, alpha: void 0 } : output2);
+    const straight = output2 !== capture && output2.alpha !== void 0;
+    if (contactSheet) {
+      sheetThumb ??= thumbSizeFor(
+        output2,
+        contactSheet.thumbWidth ?? stripThumbWidth(strip, output2)
+      );
+      sheetImages.push(
+        sheetTile(output2 === capture ? { ...capture, alpha: void 0 } : output2, sheetThumb)
+      );
+      sheetLabels.push(frameLabel(i, frames[i]?.time ?? payload.time));
+    }
+    if (opts.diff) {
+      payload.diffThresholds ??= opts.diff.thresholds;
+      const pic = pictureOf(output2, straight);
+      const { width, height } = output2;
+      if (diffPrev !== null && diffPrev.index !== i - 1) {
+        diffSkipped.push(`${diffPrev.index}>${i} (frames between are missing)`);
+      } else if (diffPrev !== null && (diffPrev.width !== width || diffPrev.height !== height)) {
+        diffSkipped.push(`${i - 1}>${i} (frame sizes differ)`);
+      } else if (diffPrev !== null) {
+        if (opts.diff.sheet) {
+          diffThumb ??= thumbSizeFor(
+            output2,
+            opts.diff.sheet.thumbWidth ?? contactSheet?.thumbWidth ?? stripThumbWidth(strip, output2)
+          );
+        }
+        try {
+          const res = pictureChange(diffPrev.pic, pic, width, height, opts.diff.thresholds, {
+            regions: opts.sample?.regions,
+            thumb: diffThumb ?? void 0
+          });
+          const pair = {
+            from: { index: i - 1, time: frames[i - 1]?.time },
+            to: { index: i, time: frames[i]?.time },
+            ...res.all
+          };
+          if (res.regions) pair.regions = res.regions;
+          if (res.thumb && diffThumb) {
+            const grey = new Float64Array(res.thumb.length * 3);
+            for (let k = 0; k < res.thumb.length; k++) grey.fill(res.thumb[k], k * 3, k * 3 + 3);
+            diffThumbs.push({
+              pair: diffPairs.length,
+              img: { width: diffThumb.width, height: diffThumb.height, rgb: grey, bitDepth: 8 }
+            });
+          }
+          diffPairs.push(pair);
+        } catch (err) {
+          payload.diffWarning = `diff failed: ${err instanceof Error ? err.message : String(err)}`;
+        }
+      }
+      payload.diff ??= {
+        stage: "output",
+        picture: diffPicture(output2 === capture, opts.channels, payload.over),
+        pairs: [],
+        series: summarizeSeries([], opts.diff.thresholds)
+      };
+      diffPrev = { index: i, pic, width, height };
+    }
   }
-  payload.alphaChannel = withAlpha === 0 ? "absent" : withAlpha === written.length ? "present" : "mixed";
+  payload.alphaChannel = withAlpha === 0 ? "absent" : withAlpha === read ? "present" : "mixed";
   if (unmatting && withAlpha > 0 && bg === null) {
     payload.channelsWarning = "the comp background colour (bgColor) is unknown, so the colour under it was recovered as if it were black; soft edges may carry the real background";
   }
@@ -52875,8 +53800,8 @@ async function nativeFlow(args, opts, abs, transport2) {
     }
   }
   if (opts.edge) {
-    if (edgeFromLuma === 0 && withAlpha < written.length) {
-      payload.edgeWarning = `${written.length - withAlpha} of ${written.length} captures have no alpha channel, so their matte could not be measured (a comp with no transparency, or an AE that flattens)`;
+    if (edgeFromLuma === 0 && withAlpha < read) {
+      payload.edgeWarning = `${read - withAlpha} of ${read} captures have no alpha channel, so their matte could not be measured (a comp with no transparency, or an AE that flattens)`;
     } else if (edgeFromLuma === 0 && edgeMeasured > 0 && bg === null) {
       payload.edgeWarning = "the comp background colour (bgColor) is unknown, so the soft edge's colour was recovered as if it were black; the spill reading may carry the real background";
     }
@@ -52902,25 +53827,104 @@ async function nativeFlow(args, opts, abs, transport2) {
       };
     }
   }
+  if (opts.diff && payload.diff) {
+    payload.diff.pairs = diffPairs;
+    payload.diff.series = summarizeSeries(diffPairs, opts.diff.thresholds);
+    if (diffSkipped.length > 0) {
+      payload.diffWarning = `some consecutive pairs were not compared: ${diffSkipped.join("; ")}` + (settle2.unsettled.length > 0 ? " \u2014 captures missing, see captureSettle" : "");
+    }
+  }
   const stages = /* @__PURE__ */ new Set([
     ...opts.sample?.stages ?? [],
     ...opts.histogram ? [opts.histogram.stage] : [],
-    ...opts.edge || opts.screen ? ["capture"] : []
+    ...opts.edge || opts.screen ? ["capture"] : [],
+    ...opts.diff ? ["output"] : []
   ]);
   if (stages.size > 0) {
     payload.measurementStages = {};
     for (const s of stages) payload.measurementStages[s] = MEASUREMENT_STAGES[s];
   }
-  if (args.contactSheet) {
+  if (contactSheet && sheetImages.length > 0) {
     await attachContactSheet(
       payload,
-      frames,
+      sheetLabels,
       sheetImages,
-      sheetPathFor(abs, args.contactSheet.outPath),
-      args.contactSheet
+      sheetPathFor(abs, contactSheet.outPath),
+      contactSheet
+    );
+  }
+  if (opts.diff?.sheet && payload.diff && diffThumbs.length > 0) {
+    await attachDiffSheet(
+      payload,
+      payload.diff,
+      diffThumbs,
+      abs,
+      opts.diff.sheet,
+      opts.diff.thresholds
     );
   }
   return toMcpResult(result);
+}
+function thumbSizeFor(img, thumbWidth) {
+  const width = Math.max(16, Math.min(thumbWidth ?? 480, img.width));
+  return { width, height: Math.max(1, Math.round(img.height * width / img.width)) };
+}
+function stripThumbWidth(strip, img) {
+  if (strip === null) return void 0;
+  return Math.max(
+    1,
+    Math.round(strip.maxDimension * img.width / Math.max(img.width, img.height))
+  );
+}
+function sheetTile(img, thumb) {
+  const flat = img.alpha ? { ...img, rgb: flattenOver(img, { kind: "checkerboard" }), alpha: void 0 } : img;
+  if (flat.width <= thumb.width) return flat;
+  return {
+    ...flat,
+    width: thumb.width,
+    height: thumb.height,
+    rgb: resample(flat, thumb.width, thumb.height)
+  };
+}
+function diffPicture(raw, channels, over) {
+  if (raw) {
+    return "the capture as AE wrote it (no colour conversion: colorManaged off, or the conversion failed): its RGB already laid over the comp background (bgColor), so empty areas read the background in both frames; alpha not compared";
+  }
+  if (channels === "alpha") return "the written file: the matte (alpha as grey), white opaque";
+  if (channels === "rgba") {
+    return "the written file's straight colour weighted by its alpha (as over black), so colour under transparent pixels does not count";
+  }
+  if (over === void 0 || over === "background") {
+    return "the written file: the picture as AE composited it over the comp background (bgColor), so transparent areas read the background in both frames and do not change";
+  }
+  return "the written file: the picture laid over `over`, so transparent areas read that backdrop";
+}
+async function attachDiffSheet(payload, diff, thumbs, abs, opts, t) {
+  try {
+    const flagged = new Set(diff.series.flags.flatMap((f) => f.pairs));
+    const labels = thumbs.map(({ pair }) => {
+      const p = diff.pairs[pair];
+      return `#${p.from.index}>${p.to.index} ${p.change.toFixed(4)}${flagged.has(pair) ? " !" : ""}`;
+    });
+    const sheet = composeContactSheet(
+      thumbs.map((th) => th.img),
+      { columns: opts.columns, thumbWidth: thumbs[0].img.width, labels }
+    );
+    const sheetPath = opts.outPath !== void 0 ? path10.resolve(opts.outPath).replace(/\\/g, "/") : `${abs.slice(0, abs.length - path10.extname(abs).length)}_diff${path10.extname(abs) || ".png"}`;
+    await fs9.mkdir(path10.dirname(sheetPath), { recursive: true });
+    await fs9.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+    payload.diffSheet = {
+      writtenTo: sheetPath,
+      size: [sheet.width, sheet.height],
+      columns: sheet.columns,
+      rows: sheet.rows,
+      thumbSize: [sheet.thumbWidth, sheet.thumbHeight],
+      frames: thumbs.length,
+      amplify: t.amplify
+    };
+  } catch (err) {
+    payload.diffWarning = `diff sheet failed: ${err instanceof Error ? err.message : String(err)}`;
+  }
 }
 function stageBlock(stats, stage) {
   const { name: _name, ...rest } = stats;
@@ -52947,15 +53951,11 @@ function chooseBackdrop(payload, opts) {
 function validRgb(value) {
   return Array.isArray(value) && value.length === 3 && value.every((v) => typeof v === "number" && Number.isFinite(v)) ? [value[0], value[1], value[2]] : null;
 }
-async function attachContactSheet(payload, frames, images, sheetPath, opts) {
+async function attachContactSheet(payload, labels, tiles, sheetPath, opts) {
   try {
-    const tiles = images.map(
-      (img) => img.alpha ? { ...img, rgb: flattenOver(img, { kind: "checkerboard" }) } : img
-    );
-    const labels = frames.map((f, i) => frameLabel(i, f.time));
     const sheet = composeContactSheet(tiles, {
       columns: opts.columns,
-      thumbWidth: opts.thumbWidth,
+      thumbWidth: opts.thumbWidth ?? tiles[0].width,
       labels
     });
     await fs9.mkdir(path10.dirname(sheetPath), { recursive: true });
@@ -52966,7 +53966,7 @@ async function attachContactSheet(payload, frames, images, sheetPath, opts) {
       columns: sheet.columns,
       rows: sheet.rows,
       thumbSize: [sheet.thumbWidth, sheet.thumbHeight],
-      frames: images.length
+      frames: tiles.length
     };
   } catch (err) {
     payload.contactSheetWarning = `contact sheet failed: ${err instanceof Error ? err.message : String(err)}`;

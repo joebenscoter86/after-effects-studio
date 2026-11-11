@@ -199,7 +199,7 @@ export function flattenOver(img, backdrop) {
 const r4 = (v) => Math.round(v * 1e4) / 1e4;
 const r4rgb = (v) => [r4(v[0]), r4(v[1]), r4(v[2])];
 /** Clip a region to the frame; null when nothing of it is inside. */
-function clipRegion(img, region) {
+export function clipRegion(img, region) {
     const x0 = Math.floor(region.x);
     const y0 = Math.floor(region.y);
     const x1 = x0 + Math.max(1, Math.floor(region.width ?? 1));
@@ -384,7 +384,8 @@ export function resample(img, tw, th) {
     }
     return out;
 }
-// 5×7 glyphs for the only text the sheet ever carries: "#<index> <time>s".
+// 5×7 glyphs for the only text the sheets ever carry: "#<index> <time>s" on the
+// contact sheet, "#<from>><to> <change> x<gain> !" on the diff sheet.
 const GLYPHS = {
     "0": [".###.", "#...#", "#..##", "#.#.#", "##..#", "#...#", ".###."],
     "1": ["..#..", ".##..", "..#..", "..#..", "..#..", "..#..", ".###."],
@@ -399,6 +400,9 @@ const GLYPHS = {
     ".": [".....", ".....", ".....", ".....", ".....", ".##..", ".##.."],
     ":": [".....", ".##..", ".##..", ".....", ".##..", ".##..", "....."],
     "-": [".....", ".....", ".....", "#####", ".....", ".....", "....."],
+    ">": [".#...", "..#..", "...#.", "....#", "...#.", "..#..", ".#..."],
+    x: [".....", ".....", "#...#", ".#.#.", "..#..", ".#.#.", "#...#"],
+    "!": ["..#..", "..#..", "..#..", "..#..", "..#..", ".....", "..#.."],
     "#": [".#.#.", ".#.#.", "#####", ".#.#.", "#####", ".#.#.", ".#.#."],
     s: [".....", ".....", ".####", "#....", ".###.", "....#", "####."],
     f: ["..##.", ".#...", "###..", ".#...", ".#...", ".#...", ".#..."],

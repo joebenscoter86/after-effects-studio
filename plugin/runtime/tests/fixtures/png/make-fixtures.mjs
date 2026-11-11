@@ -83,6 +83,24 @@
 //                            of every pixel (subject too) moved by a uniform
 //                            random amount in ±0.06 (standard deviation
 //                            0.0346), from a fixed seed; 8 bits.
+//
+// The motion-* fixtures (agent-eyes stage 4, the `diff` report) are 64×48
+// opaque captures (alpha 1 everywhere, a full-frame comp), eight frames per
+// series, for frame-to-frame change. Scene A: background (0.3, 0.3, 0.35), a
+// 10×10 orange square (0.9, 0.5, 0.2) at y 19..28 whose left edge is
+// x = 6 + 4·k in frame k (a steady move, 4 px a frame).
+//   motion-smooth-<k>.png   scene A, frame k = 0..7.
+//   A stutter needs no file of its own: frames 0, 1, 2, 3, 3, 5, 6, 7 (frame 4
+//   repeats frame 3, then the move catches up).
+//   motion-pop-4.png        scene A frame 4 plus a 14×14 near-white block
+//                           (0.95, 0.95, 0.95) at x 44..57, y 4..17, on that
+//                           frame only (a one-frame pop): series 0..3, pop-4, 5..7.
+//   motion-cut-<k>.png      scene B, frames k = 4..7, for a hard cut after frame
+//                           3: background (0.1, 0.2, 0.5), a 12×12 green square
+//                           (0.2, 0.8, 0.3) at x 26..37 whose top is y = 4 + 3·(k − 4).
+//   motion-noise-<k>.png    a static scene (scene A frame 0) with grain: every
+//                           channel moved by a uniform random amount in ±0.02,
+//                           a different fixed seed per frame, k = 0..7.
 
 import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -246,6 +264,43 @@ function grain(amp, seed = 12345) {
 const EVEN_GREEN = [0.25, 0.55, 0.3];
 const uneven = (x) => [0.25, 0.5, 0.3].map((v) => v * (0.8 + (0.4 * x) / 95));
 
+// ---- stage 4: motion (64×48) ----
+const SCENE_A = [0.3, 0.3, 0.35];
+const ORANGE = [0.9, 0.5, 0.2];
+
+function sceneA(k, extra = null, noise = null) {
+  return (x, y) => {
+    let c = SCENE_A;
+    const left = 6 + 4 * k;
+    if (x >= left && x <= left + 9 && y >= 19 && y <= 28) c = ORANGE;
+    if (extra && extra(x, y)) c = [0.95, 0.95, 0.95];
+    const n = noise ? noise() : [0, 0, 0];
+    return [0, 1, 2].map((i) => Math.min(1, Math.max(0, c[i] + n[i]))).concat(1);
+  };
+}
+
+function sceneB(k) {
+  return (x, y) => {
+    const top = 4 + 3 * (k - 4);
+    const inSquare = x >= 26 && x <= 37 && y >= top && y <= top + 11;
+    return [...(inSquare ? [0.2, 0.8, 0.3] : [0.1, 0.2, 0.5]), 1];
+  };
+}
+
+const motion = {};
+for (let k = 0; k < 8; k++) {
+  motion[`motion-smooth-${k}.png`] = encode(16, 6, sceneA(k), MW, MH);
+  motion[`motion-noise-${k}.png`] = encode(16, 6, sceneA(0, null, grain(0.02, 1000 + k)), MW, MH);
+}
+for (let k = 4; k < 8; k++) motion[`motion-cut-${k}.png`] = encode(16, 6, sceneB(k), MW, MH);
+motion["motion-pop-4.png"] = encode(
+  16,
+  6,
+  sceneA(4, (x, y) => x >= 44 && x <= 57 && y >= 4 && y <= 17),
+  MW,
+  MH,
+);
+
 const files = {
   "ae-blue-bg-rgba16.png": encode(16, 6, aeCapture([0, 0, 1])),
   "ae-blue-bg-rgba8.png": encode(8, 6, aeCapture([0, 0, 1])),
@@ -307,6 +362,7 @@ const files = {
     SW,
     SH,
   ),
+  ...motion,
 };
 for (const [name, bytes] of Object.entries(files)) writeFileSync(join(HERE, name), bytes);
 console.log(`wrote ${Object.keys(files).length} fixtures to ${HERE}`);
