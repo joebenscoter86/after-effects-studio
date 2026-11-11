@@ -23,6 +23,7 @@ Inspect `ae_version_info` and `ae_context`, or run the plugin's doctor if no con
 | Camera, depth, traversal or continuous transition | camera-continuity |
 | Product art, illustrated objects, compositing, material polish | assets-depth |
 | Animated text and kinetic typography | typography-technique, typography-recipes, typography-examples; sibling typography/SKILL.md |
+| Green-screen keying, spill, grading a keyed subject to a plate | keying |
 | Paper collage, cutouts or tactile cardstock | paper-collage-style, paper-collage-recipes, paper-collage-examples; sibling paper-collage/SKILL.md |
 | Voiceover, captions, UI, factual evidence | type-evidence |
 | Supplied reference or a look that isn't landing | reference-study, failure-atlas |

@@ -5119,8 +5119,8 @@ var require_multipleOf = __commonJS({
         const { gen, data, schemaCode, it } = cxt;
         const prec = it.opts.multipleOfPrecision;
         const res = gen.let("res");
-        const invalid = prec ? (0, codegen_1._)`Math.abs(Math.round(${res}) - ${res}) > 1e-${prec}` : (0, codegen_1._)`${res} !== parseInt(${res})`;
-        cxt.fail$data((0, codegen_1._)`(${schemaCode} === 0 || (${res} = ${data}/${schemaCode}, ${invalid}))`);
+        const invalid2 = prec ? (0, codegen_1._)`Math.abs(Math.round(${res}) - ${res}) > 1e-${prec}` : (0, codegen_1._)`${res} !== parseInt(${res})`;
+        cxt.fail$data((0, codegen_1._)`(${schemaCode} === 0 || (${res} = ${data}/${schemaCode}, ${invalid2}))`);
       }
     };
     exports.default = def;
@@ -14522,7 +14522,7 @@ function handleCatchall(proms, input2, payload, ctx, def, inst, abortEarly) {
     }
     const r = _catchall.run({ value: input2[key], issues: [] }, ctx);
     if (r instanceof Promise) {
-      proms.push(r.then((r2) => handlePropertyResult(r2, payload, key, input2, optin, optout)));
+      proms.push(r.then((r3) => handlePropertyResult(r3, payload, key, input2, optin, optout)));
     } else {
       handlePropertyResult(r, payload, key, input2, optin, optout);
     }
@@ -14610,7 +14610,7 @@ var $ZodObject = /* @__PURE__ */ $constructor("$ZodObject", (inst, def) => {
       const optout = el._zod.optout;
       const r = el._zod.run({ value: input2[key], issues: [] }, ctx);
       if (r instanceof Promise) {
-        proms.push(r.then((r2) => handlePropertyResult(r2, payload, key, input2, optin, optout)));
+        proms.push(r.then((r3) => handlePropertyResult(r3, payload, key, input2, optin, optout)));
       } else {
         handlePropertyResult(r, payload, key, input2, optin, optout);
       }
@@ -16037,7 +16037,7 @@ var $ZodCustom = /* @__PURE__ */ $constructor("$ZodCustom", (inst, def) => {
     const input2 = payload.value;
     const r = def.fn(input2);
     if (r instanceof Promise) {
-      return r.then((r2) => handleRefineResult(r2, payload, input2, inst));
+      return r.then((r3) => handleRefineResult(r3, payload, input2, inst));
     }
     handleRefineResult(r, payload, input2, inst);
     return;
@@ -39962,7 +39962,7 @@ registerOp({
   name: "effect.list_on_layer",
   category: "effect",
   readOnly: true,
-  description: "List all effects currently applied to a layer with their matchNames and properties.",
+  description: "List the effects on a layer: index, name, matchName, enabled, and each top-level property's index, name and matchName. A short index on purpose; use effect.describe for one effect's values, value types, ranges and menu items before writing with effect.set_property.",
   params: [
     { name: "comp", type: "any", description: "Comp name or id", required: true },
     {
@@ -39991,9 +39991,58 @@ registerOp({
   }
 });
 registerOp({
+  name: "effect.describe",
+  category: "effect",
+  readOnly: true,
+  description: "Describe one effect on a layer as a flat table of every settable property, nested ones included: display-name path (usable as effect.set_property's property), matchName path, value type, current value, minValue/maxValue where After Effects reports them, units, whether it can be keyed, key count, expression, and menu items where the API exposes them (Dropdown Menu Control, AE 26+). Ranges are in scripting units, which can differ from the Effect Controls panel. Read this before writing effect values.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "layer",
+      type: "any",
+      description: "1-based layer index, or the layer name",
+      required: true
+    },
+    {
+      name: "effect",
+      type: "any",
+      description: "1-based effect index, effect display name, or effect matchName",
+      required: true
+    }
+  ],
+  toJsx(args) {
+    return `
+            ${jsxCompLayerPreamble(args)}
+            var _fxRoot = _layer.property("Effects");
+            if (!_fxRoot) return { ok: false, error: "layer has no Effects group" };
+            var _fxArg = ${jsxVal(args.effect)};
+            var _eff = null;
+            try { _eff = _fxRoot.property(_fxArg); } catch (eEf) { _eff = null; }
+            if (!_eff) {
+                var _have = [];
+                for (var _hi = 1; _hi <= _fxRoot.numProperties; _hi++) _have.push(_hi + " " + _fxRoot.property(_hi).name);
+                return { ok: false, error: "no effect matching " + _fxArg + " on layer '" + _layer.name + "'; effects: " + (_have.length ? _have.join(", ") : "none") };
+            }
+            var _desc = AE.describeEffect(_eff);
+            return {
+                ok: true,
+                effect: {
+                    index: AE.safeGet(function () { return _eff.propertyIndex; }, null),
+                    name: _eff.name,
+                    matchName: _eff.matchName,
+                    enabled: AE.safeGet(function () { return _eff.enabled; }, null)
+                },
+                properties: _desc.properties,
+                count: _desc.properties.length,
+                skippedNoValue: _desc.skippedNoValue
+            };
+        `;
+  }
+});
+registerOp({
   name: "effect.set_property",
   category: "effect",
-  description: "Set a property value on an effect. Property path is relative to the effect (e.g. ['Blurriness'] for Gaussian Blur).",
+  description: "Set a property value on an effect. Property path is relative to the effect (e.g. ['Blurriness'] for Gaussian Blur); display names or matchNames. Before writing, the value is checked against what After Effects reports: a wrong type or number of dimensions, or a value outside the reported range, is refused with the valid range named, and nothing is written. Ranges are in scripting units, which can differ from the Effect Controls panel (Gradient Wipe completion is 0 to 1, not percent). A property with no reported range is written as given. Read ranges first with effect.describe.",
   params: [
     { name: "comp", type: "any", description: "Comp name or id", required: true },
     {
@@ -40015,6 +40064,12 @@ registerOp({
       type: "number",
       description: "If set, creates a keyframe at this time",
       required: false
+    },
+    {
+      name: "skipCheck",
+      type: "boolean",
+      description: "Write without checking type, dimensions or the reported range. Only for the rare property whose range After Effects reports wrongly; After Effects may still reject the value.",
+      required: false
     }
   ],
   toJsx(args) {
@@ -40032,12 +40087,21 @@ registerOp({
                 _node = _next;
             }
             var _time = ${jsxVal(args.time ?? null)};
-            if (_time !== null) {
-                _node.setValueAtTime(_time, ${jsxVal(args.value)});
-            } else {
-                _node.setValue(${jsxVal(args.value)});
+            var _val = ${jsxVal(args.value)};
+            var _check = ${jsxVal(args.skipCheck !== true)};
+            if (_check) {
+                var _refusal = AE.checkPropertyWrite(_node, _val);
+                if (_refusal !== null) {
+                    var _rg = AE.propertyRange(_node);
+                    return { ok: false, error: _refusal, name: _node.name, matchName: _node.matchName, value: _val, range: _rg };
+                }
             }
-            return { ok: true, name: _node.name, matchName: _node.matchName };
+            if (_time !== null) {
+                _node.setValueAtTime(_time, _val);
+            } else {
+                _node.setValue(_val);
+            }
+            return { ok: true, name: _node.name, matchName: _node.matchName, checked: _check };
         `;
   }
 });
@@ -43790,6 +43854,528 @@ registerOp({
             var _name = _mask.name;
             _mask.remove();
             return { ok: true, removed: _name, remaining: _masks.numProperties };
+        `;
+  }
+});
+registerOp({
+  name: "mask.get",
+  category: "mask",
+  readOnly: true,
+  description: "Read a layer's masks back: index, name, mode by name (Add, Subtract, Intersect, Lighten, Darken, Difference, None \u2014 the names mask.add and mask.set_props take, plus the raw modeValue), inverted, locked, feather [x, y], expansion, opacity, featherFalloff, closed, vertexCount, vertices, inTangents and outTangents (layer space), featherPoints (variable-width feather), and numKeys / keyframed for path, feather, opacity and expansion. Read the masks before changing them with mask.set_path or mask.set_props. A wide feather on a garbage mask reads as a soft patch in ae_render_frame's edge report.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "layer",
+      type: "any",
+      description: "1-based layer index, or the layer name",
+      required: true
+    },
+    {
+      name: "mask",
+      type: "any",
+      description: "1-based mask index or mask name. Default: every mask on the layer.",
+      required: false
+    },
+    {
+      name: "time",
+      type: "number",
+      description: "Read the values at this comp time (seconds). Default: the current time.",
+      required: false
+    }
+  ],
+  toJsx(args) {
+    if (args.mask !== void 0 && typeof args.mask !== "number" && typeof args.mask !== "string") {
+      return jsxFail("mask must be a 1-based index or a mask name");
+    }
+    return `
+            ${jsxCompLayerPreamble(args)}
+            var _masks = _layer.property("ADBE Mask Parade");
+            if (!_masks) return { ok: false, error: "layer '" + _layer.name + "' cannot carry masks (camera or light?)" };
+            var _want = ${jsxVal(args.mask ?? null)};
+            var _time = ${jsxVal(args.time ?? null)};
+            var _n = _masks.numProperties;
+            var _have = [];
+            for (var _hi = 1; _hi <= _n; _hi++) _have.push(_hi + " " + _masks.property(_hi).name);
+            var _haveText = _have.length ? _have.join(", ") : "none";
+            var _sel = [];
+            if (_want === null) {
+                for (var _ai = 1; _ai <= _n; _ai++) _sel.push(_ai);
+            } else if (typeof _want === "number") {
+                if (_want < 1 || _want > _n) return { ok: false, error: "no mask at index " + _want + " (masks: " + _haveText + ")" };
+                _sel.push(_want);
+            } else {
+                for (var _si = 1; _si <= _n; _si++) if (_masks.property(_si).name === _want) _sel.push(_si);
+                if (_sel.length === 0) return { ok: false, error: "no mask named '" + _want + "' (masks: " + _haveText + ")" };
+            }
+            var _list = [];
+            for (var _li = 0; _li < _sel.length; _li++) _list.push(AE.describeMask(_masks.property(_sel[_li]), _sel[_li], _time));
+            return { ok: true, layer: _layer.name, time: _time, count: _list.length, masks: _list };
+        `;
+  }
+});
+
+// src/operations/keying.ts
+init_registry();
+var KEYLIGHT_MATCH_NAME = "Keylight 906";
+var KEY_CLEANER_MATCH_NAME = "ADBE KeyCleaner";
+var SPILL_SUPPRESSOR_MATCH_NAME = "ADBE Spill2";
+var VIEW_MATCH_NAME = "Keylight 906-0002";
+var SCREEN_COLOUR_MATCH_NAME = "Keylight 906-0004";
+var KEYLIGHT_VIEWS = [
+  "source",
+  "source_alpha",
+  "corrected_source",
+  "colour_correction_edges",
+  "screen_matte",
+  "inside_mask",
+  "outside_mask",
+  "combined_matte",
+  "status",
+  "intermediate_result",
+  "final_result"
+];
+var VIEW_LIST = KEYLIGHT_VIEWS.map((v, i) => `${v} (${i + 1})`).join(", ");
+var KEYLIGHT_SETTINGS = {
+  screenColour: {
+    matchName: SCREEN_COLOUR_MATCH_NAME,
+    kind: "colour",
+    doc: "Screen Colour [r, g, b] 0..1, capture values: from ae_render_frame `screen` (colour.nearSubject or colour.median) on the un-keyed source"
+  },
+  screenGain: {
+    matchName: "Keylight 906-0005",
+    kind: "number",
+    doc: "Screen Gain, 0..5000 (default 100)"
+  },
+  screenBalance: {
+    matchName: "Keylight 906-0006",
+    kind: "number",
+    doc: "Screen Balance, 0..100 (default 50)"
+  },
+  despillBias: {
+    matchName: "Keylight 906-0007",
+    kind: "colour",
+    doc: "Despill Bias [r, g, b] 0..1 (default 0.498 grey)"
+  },
+  alphaBias: {
+    matchName: "Keylight 906-0008",
+    kind: "colour",
+    doc: "Alpha Bias [r, g, b] 0..1 (default 0.498 grey)"
+  },
+  lockBiases: {
+    matchName: "Keylight 906-0009",
+    kind: "switch",
+    doc: "Lock Biases Together (default on)"
+  },
+  screenPreBlur: {
+    matchName: "Keylight 906-0010",
+    kind: "number",
+    doc: "Screen Pre-blur, 0..5000 (default 0)"
+  },
+  clipBlack: {
+    matchName: "Keylight 906-0012",
+    kind: "number",
+    doc: "Clip Black, 0..100 (default 0)"
+  },
+  clipWhite: {
+    matchName: "Keylight 906-0013",
+    kind: "number",
+    doc: "Clip White, 0..100 (default 100)"
+  },
+  clipRollback: {
+    matchName: "Keylight 906-0014",
+    kind: "number",
+    doc: "Clip Rollback, 0..5000 (default 0)"
+  },
+  screenShrinkGrow: {
+    matchName: "Keylight 906-0015",
+    kind: "number",
+    doc: "Screen Shrink/Grow, -5000..5000 (default 0)"
+  },
+  screenSoftness: {
+    matchName: "Keylight 906-0016",
+    kind: "number",
+    doc: "Screen Softness, 0..5000 (default 0)"
+  },
+  despotBlack: {
+    matchName: "Keylight 906-0017",
+    kind: "number",
+    doc: "Screen Despot Black, 0..5000 (default 0)"
+  },
+  despotWhite: {
+    matchName: "Keylight 906-0018",
+    kind: "number",
+    doc: "Screen Despot White, 0..5000 (default 0)"
+  }
+};
+var KEY_CLEANER_SETTINGS = {
+  additionalEdgeRadius: {
+    matchName: "ADBE KeyCleaner-0006",
+    kind: "number",
+    doc: "Additional Edge Radius, 0..250 (default 10)"
+  },
+  reduceChatter: {
+    matchName: "ADBE KeyCleaner-0002",
+    kind: "switch",
+    doc: "Reduce Chatter (default off)"
+  },
+  alphaContrast: {
+    matchName: "ADBE KeyCleaner-0016",
+    kind: "number",
+    doc: "Alpha Contrast, 0..100 (default 0)"
+  },
+  strength: {
+    matchName: "ADBE KeyCleaner-0001",
+    kind: "number",
+    doc: "Strength, 0..100 (default 100)"
+  }
+};
+var SPILL_SUPPRESSOR_SETTINGS = {
+  method: { matchName: "ADBE Spill2-0001", kind: "number", doc: "Method, 1 or 2 (default 1)" },
+  suppression: {
+    matchName: "ADBE Spill2-1001",
+    kind: "number",
+    doc: "Suppression, 0..100 (default 100)"
+  },
+  keyColor: {
+    matchName: "ADBE Spill2-0003",
+    kind: "colour",
+    doc: "Key Color [r, g, b] 0..1 (default pure green), or 'keylight' for Keylight's Screen Colour"
+  },
+  tolerance: {
+    matchName: "ADBE Spill2-0004",
+    kind: "number",
+    doc: "Tolerance, 0..100 (default 50)"
+  },
+  desaturate: {
+    matchName: "ADBE Spill2-0005",
+    kind: "number",
+    doc: "Desaturate, 0..100 (default 50)"
+  },
+  spillRange: {
+    matchName: "ADBE Spill2-0006",
+    kind: "number",
+    doc: "Spill Range, 0..100 (default 50)"
+  },
+  spillColorCorrection: {
+    matchName: "ADBE Spill2-0007",
+    kind: "number",
+    doc: "Spill Color Correction, 0..100 (default 50)"
+  },
+  lumaCorrection: {
+    matchName: "ADBE Spill2-0008",
+    kind: "number",
+    doc: "Luma Correction, 0..100 (default 0)"
+  }
+};
+function readMap(settings, extra = {}) {
+  const out = { ...extra };
+  for (const [k, s] of Object.entries(settings)) out[k] = s.matchName;
+  return out;
+}
+function colourValue(name, v) {
+  const ok = Array.isArray(v) && (v.length === 3 || v.length === 4) && v.every((c2) => typeof c2 === "number" && Number.isFinite(c2) && c2 >= 0 && c2 <= 1);
+  if (!ok) {
+    return `\`${name}\` must be [r, g, b] or [r, g, b, a] with each number in 0..1 (capture values); got ${JSON.stringify(v)}`;
+  }
+  const c = v;
+  return c.length === 3 ? [...c, 1] : [...c];
+}
+function settingValue(name, s, v) {
+  if (s.kind === "colour") return colourValue(name, v);
+  if (s.kind === "switch") {
+    if (typeof v !== "boolean" && v !== 0 && v !== 1) return `\`${name}\` must be true or false`;
+    return v === true || v === 1 ? 1 : 0;
+  }
+  if (typeof v !== "number" || !Number.isFinite(v))
+    return `\`${name}\` must be a number; got ${JSON.stringify(v)}`;
+  return v;
+}
+function keylightViewNumber(v) {
+  if (typeof v === "number" && Number.isInteger(v) && v >= 1 && v <= KEYLIGHT_VIEWS.length)
+    return v;
+  if (typeof v === "string") {
+    const norm = v.trim().toLowerCase().replace(/[\s-]+/g, "_").replace(/color/g, "colour");
+    const i = KEYLIGHT_VIEWS.indexOf(norm);
+    if (i >= 0) return i + 1;
+  }
+  return `unknown Keylight view ${JSON.stringify(v)}; views: ${VIEW_LIST}`;
+}
+var keylightIndexParam = {
+  name: "effectIndex",
+  type: "number",
+  description: "1-based index of the Keylight to use when the layer has several (it must be Keylight). Default: the first Keylight in the stack.",
+  required: false
+};
+var compLayerParams = [
+  { name: "comp", type: "any", description: "Comp name or id", required: true },
+  {
+    name: "layer",
+    type: "any",
+    description: "1-based layer index, or the layer name",
+    required: true
+  }
+];
+var FX_ROOT_JSX = `
+            var _fxRoot = _layer.property("ADBE Effect Parade");
+            if (!_fxRoot) return { ok: false, error: "layer '" + _layer.name + "' cannot carry effects" };
+`;
+function keylightLookupJsx(effectIndexJsx, hint) {
+  return `
+            var _kl = AE.pickEffect(_fxRoot, ${jsxVal(KEYLIGHT_MATCH_NAME)}, "Keylight", ${effectIndexJsx});
+            if (_kl.error) return { ok: false, error: _kl.error };
+            if (_kl.index === null) return { ok: false, error: "layer '" + _layer.name + "' has no Keylight (effects: " + AE.effectListText(_fxRoot) + ")" + ${jsxVal(hint)} };
+`;
+}
+registerOp({
+  name: "key.keylight",
+  category: "key",
+  description: "Key a layer with Keylight from measured values: add Keylight (Keylight 906) if the layer has none, or update the one there, then read every setting back. Measure first: render the un-keyed source with ae_render_frame { screen: true } and pass colour.nearSubject (or colour.median) as screenColour. Every value is checked against After Effects' reported range before anything is written; a refusal writes nothing and removes a Keylight this call added. Returns effectIndex, added, keylightCount, written, values (view and every setting below, as read back) and the effect order. With no settings it only reads. Then look at the result with key.view (screen_matte, status) and ae_render_frame { edge: true }.",
+  params: [
+    ...compLayerParams,
+    keylightIndexParam,
+    ...Object.entries(KEYLIGHT_SETTINGS).map(([name, s]) => ({
+      name,
+      type: s.kind === "colour" ? "array" : s.kind === "switch" ? "boolean" : "number",
+      description: s.doc,
+      required: false
+    }))
+  ],
+  toJsx(args) {
+    const writes = [];
+    for (const [key, s] of Object.entries(KEYLIGHT_SETTINGS)) {
+      if (args[key] === void 0) continue;
+      const v = settingValue(key, s, args[key]);
+      if (typeof v === "string") return jsxFail(v);
+      writes.push({ key, matchName: s.matchName, value: v });
+    }
+    const addHint = "; adding one needs screenColour: measure it from the un-keyed source with ae_render_frame { screen: true } and pass colour.nearSubject or colour.median";
+    return `
+            ${jsxCompLayerPreamble(args)}
+            ${FX_ROOT_JSX}
+            var _pick = AE.pickEffect(_fxRoot, ${jsxVal(KEYLIGHT_MATCH_NAME)}, "Keylight", ${jsxVal(args.effectIndex ?? null)});
+            if (_pick.error) return { ok: false, error: _pick.error };
+            var _writes = ${jsxVal(writes)};
+            var _idx = _pick.index;
+            var _added = false;
+            if (_idx === null) {
+                if (!${jsxVal(args.screenColour !== void 0)}) {
+                    return { ok: false, error: "layer '" + _layer.name + "' has no Keylight (effects: " + AE.effectListText(_fxRoot) + ")" + ${jsxVal(addHint)} };
+                }
+                _idx = _fxRoot.addProperty(${jsxVal(KEYLIGHT_MATCH_NAME)}).propertyIndex;
+                _added = true;
+            }
+            var _refused = AE.checkEffectWrites(_fxRoot.property(_idx), _writes);
+            if (_refused.length > 0) {
+                if (_added) { try { _fxRoot.property(_idx).remove(); } catch (eRm) {} }
+                var _msgs = [];
+                for (var _ri = 0; _ri < _refused.length; _ri++) _msgs.push(_refused[_ri].error);
+                return { ok: false, error: "nothing written: " + _msgs.join("; "), refused: _refused, removedAddedKeylight: _added };
+            }
+            var _failed = AE.applyEffectWrites(_fxRoot.property(_idx), _writes);
+            var _written = [];
+            for (var _wi = 0; _wi < _writes.length; _wi++) {
+                var _bad = false;
+                for (var _fi = 0; _fi < _failed.length; _fi++) if (_failed[_fi].setting === _writes[_wi].key) _bad = true;
+                if (!_bad) _written.push(_writes[_wi].key);
+            }
+            var _out = {
+                ok: _failed.length === 0,
+                effectIndex: _idx,
+                added: _added,
+                keylightCount: _pick.count + (_added ? 1 : 0),
+                name: _fxRoot.property(_idx).name,
+                written: _written,
+                values: AE.readEffectValues(_fxRoot.property(_idx), ${jsxVal(readMap(KEYLIGHT_SETTINGS, { view: VIEW_MATCH_NAME }))}),
+                order: AE.effectOrder(_fxRoot)
+            };
+            if (_failed.length > 0) {
+                _out.failed = _failed;
+                _out.error = "After Effects rejected " + _failed.length + " of the checked writes; the rest were written";
+            }
+            return _out;
+        `;
+  }
+});
+registerOp({
+  name: "key.view",
+  category: "key",
+  description: "Set Keylight's View and report the previous one (pass previous.number back to restore it). Look at the key in screen_matte (the key's own matte, before the layer masks), combined_matte (with the masks), status (white solid, black clear, grey partly transparent) and intermediate_result (keyed, without Keylight's own despill). Use source to measure the screen with ae_render_frame { screen: true }. The view is not keyframable.",
+  params: [
+    ...compLayerParams,
+    {
+      name: "view",
+      type: "any",
+      description: `View by name or number: ${VIEW_LIST}. Spaces, hyphens and 'color' are accepted (Screen Matte, final-result).`,
+      required: true
+    },
+    keylightIndexParam
+  ],
+  toJsx(args) {
+    const view = keylightViewNumber(args.view);
+    if (typeof view === "string") return jsxFail(view);
+    return `
+            ${jsxCompLayerPreamble(args)}
+            ${FX_ROOT_JSX}
+            ${keylightLookupJsx(jsxVal(args.effectIndex ?? null), "; add one with key.keylight")}
+            var _names = ${jsxVal(KEYLIGHT_VIEWS)};
+            var _viewProp = _fxRoot.property(_kl.index).property(${jsxVal(VIEW_MATCH_NAME)});
+            if (!_viewProp) return { ok: false, error: "Keylight has no View property " + ${jsxVal(VIEW_MATCH_NAME)} };
+            var _prev = AE.safeGet(function () { return _viewProp.value; }, null);
+            var _want = ${jsxVal(view)};
+            var _why = AE.checkPropertyWrite(_viewProp, _want);
+            if (_why !== null) return { ok: false, error: _why };
+            _viewProp.setValue(_want);
+            var _now = AE.safeGet(function () { return _viewProp.value; }, null);
+            return {
+                ok: true,
+                effectIndex: _kl.index,
+                view: { number: _now, name: _names[_now - 1] || null },
+                previous: { number: _prev, name: _prev === null ? null : (_names[_prev - 1] || null) }
+            };
+        `;
+  }
+});
+function cleanupGroup(name, v, settings) {
+  if (v === false) return { want: false };
+  if (v === void 0 || v === true) return { want: true, writes: [], fromKeylight: false };
+  if (typeof v !== "object" || v === null || Array.isArray(v)) {
+    return `\`${name}\` must be an object of settings, true (defaults) or false (leave it out); got ${JSON.stringify(v)}`;
+  }
+  const writes = [];
+  let fromKeylight = false;
+  for (const [key, val] of Object.entries(v)) {
+    const s = settings[key];
+    if (!s)
+      return `\`${name}.${key}\` is not a setting; settings: ${Object.keys(settings).join(", ")}`;
+    if (key === "keyColor" && val === "keylight") {
+      fromKeylight = true;
+      continue;
+    }
+    const value = settingValue(`${name}.${key}`, s, val);
+    if (typeof value === "string") return value;
+    writes.push({ key, matchName: s.matchName, value });
+  }
+  return { want: true, writes, fromKeylight };
+}
+registerOp({
+  name: "key.cleanup",
+  category: "key",
+  description: "Add or update Key Cleaner (ADBE KeyCleaner) and Advanced Spill Suppressor (ADBE Spill2) after the layer's Keylight, in that order, moving existing ones into place, with their main settings (checked before writing; a refusal writes and moves nothing and removes what this call added). Adobe's intended chain is Keylight on Intermediate Result (View 10), then Key Cleaner, then Advanced Spill Suppressor: with Keylight on Final Result, Keylight has already despilled what the others receive. The caller chooses: keylightView: 'intermediate_result' sets that view; otherwise the view is left and a chainNote says so. Returns keylight {index, view}, keyCleaner and spillSuppressor {index, added, written, values} (null when left out), the effect order, and chainNote. Remove spill only after the matte is right; read edge spill on the final alpha afterwards.",
+  params: [
+    ...compLayerParams,
+    {
+      name: "keyCleaner",
+      type: "any",
+      description: `Key Cleaner settings object, true for its defaults (the default), or false to leave it out. Settings: ${Object.entries(
+        KEY_CLEANER_SETTINGS
+      ).map(([k, s]) => `${k} (${s.doc})`).join("; ")}.`,
+      required: false
+    },
+    {
+      name: "spillSuppressor",
+      type: "any",
+      description: `Advanced Spill Suppressor settings object, true for its defaults (the default), or false to leave it out. Settings: ${Object.entries(
+        SPILL_SUPPRESSOR_SETTINGS
+      ).map(([k, s]) => `${k} (${s.doc})`).join("; ")}. Which Method value is Standard and which Ultra was not confirmed live.`,
+      required: false
+    },
+    {
+      name: "keylightView",
+      type: "any",
+      description: "Also set Keylight's View (name or number, as key.view); 'intermediate_result' for Adobe's intended chain.",
+      required: false
+    },
+    { ...keylightIndexParam, name: "keylightIndex" }
+  ],
+  toJsx(args) {
+    const kc = cleanupGroup("keyCleaner", args.keyCleaner, KEY_CLEANER_SETTINGS);
+    if (typeof kc === "string") return jsxFail(kc);
+    const ss = cleanupGroup("spillSuppressor", args.spillSuppressor, SPILL_SUPPRESSOR_SETTINGS);
+    if (typeof ss === "string") return jsxFail(ss);
+    let view = null;
+    if (args.keylightView !== void 0) {
+      const v = keylightViewNumber(args.keylightView);
+      if (typeof v === "string") return jsxFail(`keylightView: ${v}`);
+      view = v;
+    }
+    const chainNote = "Adobe's intended chain is Keylight on Intermediate Result (10), then Key Cleaner, then Advanced Spill Suppressor; on any other view Keylight hands the cleanup effects its own output (on Final Result already despilled). Pass keylightView: 'intermediate_result' (or use key.view) for that chain.";
+    return `
+            ${jsxCompLayerPreamble(args)}
+            ${FX_ROOT_JSX}
+            ${keylightLookupJsx(jsxVal(args.keylightIndex ?? null), "; key the layer with key.keylight first")}
+            var _names = ${jsxVal(KEYLIGHT_VIEWS)};
+            var _wantKC = ${jsxVal(kc.want)};
+            var _wantSS = ${jsxVal(ss.want)};
+            var _kcWrites = ${jsxVal(kc.want ? kc.writes : [])};
+            var _ssWrites = ${jsxVal(ss.want ? ss.writes : [])};
+            var _view = ${jsxVal(view)};
+            var _track = { kl: _kl.index, kc: null, ss: null };
+            var _kcAnchorOnly = false;
+            var _kcFound = AE.pickEffect(_fxRoot, ${jsxVal(KEY_CLEANER_MATCH_NAME)}, "Key Cleaner", null);
+            if (_wantKC) _track.kc = _kcFound.index;
+            else if (_kcFound.index !== null && _kcFound.index > _kl.index) { _track.kc = _kcFound.index; _kcAnchorOnly = true; }
+            if (_wantSS) _track.ss = AE.pickEffect(_fxRoot, ${jsxVal(SPILL_SUPPRESSOR_MATCH_NAME)}, "Advanced Spill Suppressor", null).index;
+            if (${jsxVal(ss.want && ss.fromKeylight)}) {
+                var _sc = AE.safeGet(function () { return AE.valueToJson(_fxRoot.property(_kl.index).property(${jsxVal(SCREEN_COLOUR_MATCH_NAME)}).value); }, null);
+                if (!_sc) return { ok: false, error: "could not read Keylight's Screen Colour for keyColor 'keylight'" };
+                _ssWrites.push({ key: "keyColor", matchName: ${jsxVal(SPILL_SUPPRESSOR_SETTINGS.keyColor.matchName)}, value: _sc });
+            }
+            var _kcAdded = false;
+            var _ssAdded = false;
+            if (_wantKC && _track.kc === null) { _track.kc = _fxRoot.addProperty(${jsxVal(KEY_CLEANER_MATCH_NAME)}).propertyIndex; _kcAdded = true; }
+            if (_wantSS && _track.ss === null) { _track.ss = _fxRoot.addProperty(${jsxVal(SPILL_SUPPRESSOR_MATCH_NAME)}).propertyIndex; _ssAdded = true; }
+            var _refused = [];
+            if (_wantKC) _refused = _refused.concat(AE.checkEffectWrites(_fxRoot.property(_track.kc), _kcWrites));
+            if (_wantSS) _refused = _refused.concat(AE.checkEffectWrites(_fxRoot.property(_track.ss), _ssWrites));
+            if (_view !== null) {
+                var _vw = AE.checkPropertyWrite(_fxRoot.property(_track.kl).property(${jsxVal(VIEW_MATCH_NAME)}), _view);
+                if (_vw !== null) _refused.push({ setting: "keylightView", error: _vw });
+            }
+            if (_refused.length > 0) {
+                var _drop = [];
+                if (_kcAdded) _drop.push(_track.kc);
+                if (_ssAdded) _drop.push(_track.ss);
+                _drop.sort(function (a, b) { return b - a; });
+                for (var _di = 0; _di < _drop.length; _di++) { try { _fxRoot.property(_drop[_di]).remove(); } catch (eRm) {} }
+                var _msgs = [];
+                for (var _ri = 0; _ri < _refused.length; _ri++) _msgs.push(_refused[_ri].error);
+                return { ok: false, error: "nothing written or moved: " + _msgs.join("; "), refused: _refused };
+            }
+            if (_wantKC) AE.placeTrackedAfter(_fxRoot, _track, "kc", "kl");
+            if (_wantSS) AE.placeTrackedAfter(_fxRoot, _track, "ss", _track.kc !== null ? "kc" : "kl");
+            var _failed = [];
+            if (_wantKC) _failed = _failed.concat(AE.applyEffectWrites(_fxRoot.property(_track.kc), _kcWrites));
+            if (_wantSS) _failed = _failed.concat(AE.applyEffectWrites(_fxRoot.property(_track.ss), _ssWrites));
+            var _viewProp = _fxRoot.property(_track.kl).property(${jsxVal(VIEW_MATCH_NAME)});
+            if (_view !== null) {
+                try { _viewProp.setValue(_view); } catch (eV) { _failed.push({ setting: "keylightView", error: AE.errText(eV) }); }
+            }
+            function _keys(ws) { var o = []; for (var i = 0; i < ws.length; i++) o.push(ws[i].key); return o; }
+            var _nowView = AE.safeGet(function () { return _viewProp.value; }, null);
+            var _out = {
+                ok: _failed.length === 0,
+                keylight: { index: _track.kl, view: { number: _nowView, name: _names[_nowView - 1] || null } },
+                keyCleaner: _wantKC ? {
+                    index: _track.kc,
+                    added: _kcAdded,
+                    written: _keys(_kcWrites),
+                    values: AE.readEffectValues(_fxRoot.property(_track.kc), ${jsxVal(readMap(KEY_CLEANER_SETTINGS))})
+                } : null,
+                spillSuppressor: _wantSS ? {
+                    index: _track.ss,
+                    added: _ssAdded,
+                    written: _keys(_ssWrites),
+                    values: AE.readEffectValues(_fxRoot.property(_track.ss), ${jsxVal(readMap(SPILL_SUPPRESSOR_SETTINGS))})
+                } : null,
+                order: AE.effectOrder(_fxRoot)
+            };
+            if (_kcAnchorOnly) _out.keyCleanerLeftAsIs = _track.kc;
+            if (_nowView !== 10) _out.chainNote = ${jsxVal(chainNote)};
+            if (_failed.length > 0) {
+                _out.failed = _failed;
+                _out.error = "After Effects rejected " + _failed.length + " of the checked writes; the rest were written";
+            }
+            return _out;
         `;
   }
 });
@@ -49974,37 +50560,50 @@ function chunk(type, data) {
   crc.writeUInt32BE(zlib.crc32(crcBody) >>> 0, 0);
   return Buffer.concat([head, data, crc]);
 }
-function encodePngSrgb8(width, height, rgb) {
-  const stride = width * 3;
+var to8 = (v) => Math.round(Math.min(1, Math.max(0, v)) * 255);
+function encode8(width, height, colorType, srgbTags, write) {
+  const channels = colorType === 0 ? 1 : colorType === 2 ? 3 : 4;
+  const stride = width * channels;
   const raw = Buffer.alloc(height * (stride + 1));
   for (let y = 0; y < height; y++) {
     const rowStart = y * (stride + 1);
     raw[rowStart] = 0;
-    for (let x = 0; x < width; x++) {
-      const src = (y * width + x) * 3;
-      const dst = rowStart + 1 + x * 3;
-      for (let ch = 0; ch < 3; ch++) {
-        const v = Math.round(Math.min(1, Math.max(0, rgb[src + ch])) * 255);
-        raw[dst + ch] = v;
-      }
-    }
+    for (let x = 0; x < width; x++) write(y * width + x, raw, rowStart + 1 + x * channels);
   }
   const ihdr = Buffer.alloc(13);
   ihdr.writeUInt32BE(width, 0);
   ihdr.writeUInt32BE(height, 4);
   ihdr.writeUInt8(8, 8);
-  ihdr.writeUInt8(2, 9);
+  ihdr.writeUInt8(colorType, 9);
   const gama = Buffer.alloc(4);
   gama.writeUInt32BE(45455, 0);
   return Buffer.concat([
     PNG_SIGNATURE,
     chunk("IHDR", ihdr),
-    chunk("sRGB", Buffer.from([0])),
-    // perceptual intent
-    chunk("gAMA", gama),
+    ...srgbTags ? [chunk("sRGB", Buffer.from([0])), chunk("gAMA", gama)] : [],
     chunk("IDAT", zlib.deflateSync(raw, { level: 6 })),
     chunk("IEND", Buffer.alloc(0))
   ]);
+}
+function encodePngSrgb8(width, height, rgb) {
+  return encode8(width, height, 2, true, (p, out, at) => {
+    out[at] = to8(rgb[p * 3]);
+    out[at + 1] = to8(rgb[p * 3 + 1]);
+    out[at + 2] = to8(rgb[p * 3 + 2]);
+  });
+}
+function encodePngSrgbRgba8(width, height, rgb, alpha) {
+  return encode8(width, height, 6, true, (p, out, at) => {
+    out[at] = to8(rgb[p * 3]);
+    out[at + 1] = to8(rgb[p * 3 + 1]);
+    out[at + 2] = to8(rgb[p * 3 + 2]);
+    out[at + 3] = to8(alpha[p]);
+  });
+}
+function encodePngGray8(width, height, values) {
+  return encode8(width, height, 0, false, (p, out, at) => {
+    out[at] = to8(values[p]);
+  });
 }
 
 // src/color/settled-read.ts
@@ -50122,6 +50721,1042 @@ async function measureCaptureTransfer(transport2, key, allowRender = true) {
   }
 }
 
+// src/color/matte.ts
+var EDGE_DEFAULTS = {
+  from: "alpha",
+  transparent: 2 / 255,
+  opaque: 1 - 2 / 255,
+  maxEdgeWidth: "auto",
+  mainAreaShare: 0.25,
+  listed: 5,
+  screen: "green",
+  spillMinAlpha: 0.1,
+  spillThreshold: 0.03,
+  changeAbove: 0.05,
+  patchWindow: "auto"
+};
+var CONTOUR_ALPHA = 0.5;
+function autoMaxEdgeWidth(width, height) {
+  return Math.max(4, Math.round(0.01 * Math.min(width, height)));
+}
+function resolveEdgeThresholds(args, width, height) {
+  const maxEdgeWidth = args.maxEdgeWidth ?? autoMaxEdgeWidth(width, height);
+  return {
+    from: args.from ?? EDGE_DEFAULTS.from,
+    transparent: args.transparent ?? EDGE_DEFAULTS.transparent,
+    opaque: args.opaque ?? EDGE_DEFAULTS.opaque,
+    maxEdgeWidth,
+    mainAreaShare: args.mainAreaShare ?? EDGE_DEFAULTS.mainAreaShare,
+    listed: args.listed ?? EDGE_DEFAULTS.listed,
+    screen: args.screen ?? EDGE_DEFAULTS.screen,
+    spillMinAlpha: args.spillMinAlpha ?? EDGE_DEFAULTS.spillMinAlpha,
+    spillThreshold: args.spillThreshold ?? EDGE_DEFAULTS.spillThreshold,
+    changeAbove: args.changeAbove ?? EDGE_DEFAULTS.changeAbove,
+    patchWindow: args.patchWindow ?? Math.round(4 * maxEdgeWidth)
+  };
+}
+function edgeArgsError(args) {
+  const unit = ["transparent", "opaque", "mainAreaShare", "spillMinAlpha", "changeAbove"];
+  for (const key of unit) {
+    const v = args[key];
+    if (v !== void 0 && (typeof v !== "number" || !(v >= 0 && v <= 1))) {
+      return `\`edge.${key}\` must be a number in 0..1`;
+    }
+  }
+  const t = args.transparent ?? EDGE_DEFAULTS.transparent;
+  const o = args.opaque ?? EDGE_DEFAULTS.opaque;
+  if (t >= o) return "`edge.transparent` must be below `edge.opaque`";
+  const w = args.maxEdgeWidth;
+  if (w !== void 0 && (typeof w !== "number" || !Number.isFinite(w) || w < 1)) {
+    return "`edge.maxEdgeWidth` must be at least 1 (pixels)";
+  }
+  const pw = args.patchWindow;
+  if (pw !== void 0 && (typeof pw !== "number" || !Number.isFinite(pw) || pw < 1)) {
+    return "`edge.patchWindow` must be at least 1 (pixels)";
+  }
+  const listed = args.listed;
+  if (listed !== void 0 && (!Number.isInteger(listed) || listed < 0)) {
+    return "`edge.listed` must be a whole number, 0 or more";
+  }
+  const s = args.spillThreshold;
+  if (s !== void 0 && (typeof s !== "number" || !(s >= 0 && s <= 1))) {
+    return "`edge.spillThreshold` must be a number in 0..1";
+  }
+  if (args.from !== void 0 && args.from !== "alpha" && args.from !== "luma") {
+    return "`edge.from` must be 'alpha' or 'luma'";
+  }
+  if (args.screen !== void 0 && args.screen !== "green" && args.screen !== "blue") {
+    return "`edge.screen` must be 'green' or 'blue'";
+  }
+  return null;
+}
+var OUTSIDE = 0;
+var EDGE = 1;
+var INSIDE = 2;
+var r2 = (v) => Math.round(v * 100) / 100;
+var r4 = (v) => Math.round(v * 1e4) / 1e4;
+var r4rgb = (v) => [r4(v[0]), r4(v[1]), r4(v[2])];
+var INF = 1e20;
+function dt1d(f, n, d, v, z2) {
+  let k = -1;
+  for (let q = 0; q < n; q++) {
+    const fq = f[q];
+    if (fq >= INF) continue;
+    if (k < 0) {
+      k = 0;
+      v[0] = q;
+      z2[0] = -Infinity;
+      z2[1] = Infinity;
+      continue;
+    }
+    let s = 0;
+    for (; ; ) {
+      const r = v[k];
+      s = (fq + q * q - (f[r] + r * r)) / (2 * q - 2 * r);
+      if (s <= z2[k]) k--;
+      else break;
+    }
+    k++;
+    v[k] = q;
+    z2[k] = s;
+    z2[k + 1] = Infinity;
+  }
+  if (k < 0) {
+    d.fill(INF, 0, n);
+    return;
+  }
+  let j = 0;
+  for (let q = 0; q < n; q++) {
+    while (z2[j + 1] < q) j++;
+    const r = v[j];
+    d[q] = (q - r) * (q - r) + f[r];
+  }
+}
+function distanceTo(alpha, width, height, isSource, scratch, out) {
+  const n = Math.max(width, height);
+  const f = new Float64Array(n);
+  const d = new Float64Array(n);
+  const v = new Int32Array(n);
+  const z2 = new Float64Array(n + 1);
+  for (let x = 0; x < width; x++) {
+    for (let y = 0; y < height; y++) f[y] = isSource(alpha[y * width + x]) ? 0 : INF;
+    dt1d(f, height, d, v, z2);
+    for (let y = 0; y < height; y++) scratch[y * width + x] = d[y];
+  }
+  for (let y = 0; y < height; y++) {
+    const row = y * width;
+    for (let x = 0; x < width; x++) f[x] = scratch[row + x];
+    dt1d(f, width, d, v, z2);
+    for (let x = 0; x < width; x++) out[row + x] = d[x] >= INF / 2 ? Infinity : Math.sqrt(d[x]);
+  }
+}
+var newRegion = () => ({
+  area: 0,
+  minX: Infinity,
+  minY: Infinity,
+  maxX: -1,
+  maxY: -1,
+  alphaSum: 0,
+  alphaMax: 0,
+  transparent: 0,
+  touchesBorder: false
+});
+function addPixel(r, x, y, a) {
+  r.area++;
+  if (x < r.minX) r.minX = x;
+  if (x > r.maxX) r.maxX = x;
+  if (y < r.minY) r.minY = y;
+  if (y > r.maxY) r.maxY = y;
+  r.alphaSum += a;
+  if (a > r.alphaMax) r.alphaMax = a;
+}
+var box = (r) => ({
+  x: r.minX,
+  y: r.minY,
+  width: r.maxX - r.minX + 1,
+  height: r.maxY - r.minY + 1
+});
+var N4X = [1, -1, 0, 0];
+var N4Y = [0, 0, 1, -1];
+var N8X = [1, -1, 0, 0, 1, 1, -1, -1];
+var N8Y = [0, 0, 1, -1, 1, -1, 1, -1];
+function labelRegions(alpha, width, height, inSet, eight, labels, queue, transparentAt) {
+  labels.fill(0);
+  const regions = [];
+  const nx = eight ? N8X : N4X;
+  const ny = eight ? N8Y : N4Y;
+  const total = width * height;
+  for (let start = 0; start < total; start++) {
+    if (labels[start] !== 0 || !inSet(start)) continue;
+    const region = newRegion();
+    regions.push(region);
+    const id = regions.length;
+    labels[start] = id;
+    let head = 0;
+    let tail = 0;
+    queue[tail++] = start;
+    while (head < tail) {
+      const p = queue[head++];
+      const x = p % width;
+      const y = (p - x) / width;
+      const a = alpha[p];
+      addPixel(region, x, y, a);
+      if (a <= transparentAt) region.transparent++;
+      if (x === 0 || y === 0 || x === width - 1 || y === height - 1) region.touchesBorder = true;
+      for (let k = 0; k < nx.length; k++) {
+        const qx = x + nx[k];
+        const qy = y + ny[k];
+        if (qx < 0 || qy < 0 || qx >= width || qy >= height) continue;
+        const q = qy * width + qx;
+        if (labels[q] !== 0 || !inSet(q)) continue;
+        labels[q] = id;
+        queue[tail++] = q;
+      }
+    }
+  }
+  return regions;
+}
+var byArea = (a, b) => b.area - a.area;
+function screenExcess(c, screen) {
+  return screen === "green" ? c[1] - Math.max(c[0], c[2]) : c[2] - Math.max(c[0], c[1]);
+}
+function lumaMatte(img) {
+  const n = img.width * img.height;
+  const out = new Float64Array(n);
+  const rgb = img.rgb;
+  for (let p = 0; p < n; p++) {
+    const r = rgb[p * 3];
+    const g = rgb[p * 3 + 1];
+    const b = rgb[p * 3 + 2];
+    const y = r === g && g === b ? r : 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    out[p] = y < 0 ? 0 : y > 1 ? 1 : y;
+  }
+  return out;
+}
+function measureEdge(img, bg, t) {
+  const fromLuma = t.from === "luma";
+  const alpha = fromLuma ? lumaMatte(img) : img.alpha;
+  if (!alpha) throw new Error("the capture has no alpha channel");
+  const { width, height } = img;
+  const n = width * height;
+  const isT = (a) => a <= t.transparent;
+  const isO = (a) => a >= t.opaque;
+  let opaque = 0;
+  let transparent = 0;
+  for (let p = 0; p < n; p++) {
+    if (isO(alpha[p])) opaque++;
+    else if (isT(alpha[p])) transparent++;
+  }
+  const scratch = new Float32Array(n);
+  const dT = new Float32Array(n);
+  const dO = new Float32Array(n);
+  distanceTo(alpha, width, height, isT, scratch, dT);
+  distanceTo(alpha, width, height, isO, scratch, dO);
+  const labels = new Int32Array(n);
+  const queue = new Int32Array(n);
+  const islands = labelRegions(
+    alpha,
+    width,
+    height,
+    (p) => alpha[p] > t.transparent,
+    true,
+    labels,
+    queue,
+    t.transparent
+  );
+  const largest = islands.reduce((m2, r) => Math.max(m2, r.area), 0);
+  const isMain = islands.map((r) => r.area > 0 && r.area >= t.mainAreaShare * largest);
+  const mains = islands.filter((_, i) => isMain[i]).sort(byArea);
+  const specks = islands.filter((_, i) => !isMain[i]).sort(byArea);
+  const widths = [];
+  let unmeasured = 0;
+  let worst = -1;
+  let worstAt = null;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const p = y * width + x;
+      if (alpha[p] < CONTOUR_ALPHA || labels[p] === 0 || !isMain[labels[p] - 1]) continue;
+      let onContour = false;
+      for (let k = 0; k < 4 && !onContour; k++) {
+        const qx = x + N4X[k];
+        const qy = y + N4Y[k];
+        if (qx < 0 || qy < 0 || qx >= width || qy >= height) continue;
+        if (alpha[qy * width + qx] < CONTOUR_ALPHA) onContour = true;
+      }
+      if (!onContour) continue;
+      const sum = dT[p] + dO[p];
+      if (!Number.isFinite(sum)) {
+        unmeasured++;
+        continue;
+      }
+      const w = Math.max(0, sum - 1);
+      widths.push(w);
+      if (w > worst) {
+        worst = w;
+        worstAt = { x, y };
+      }
+    }
+  }
+  widths.sort((a, b) => a - b);
+  const m = widths.length;
+  const median = m === 0 ? null : m % 2 ? widths[(m - 1) / 2] : (widths[m / 2 - 1] + widths[m / 2]) / 2;
+  const belowOpaque = labelRegions(
+    alpha,
+    width,
+    height,
+    (p) => alpha[p] < t.opaque,
+    false,
+    labels,
+    queue,
+    t.transparent
+  );
+  const holes = belowOpaque.filter((r) => !r.touchesBorder).sort(byArea);
+  const half = t.maxEdgeWidth / 2;
+  const isPartial = (p) => alpha[p] > t.transparent && alpha[p] < t.opaque;
+  const isCore = (p) => isPartial(p) && Math.min(dT[p], dO[p]) > half;
+  labels.fill(0);
+  let tail = 0;
+  let ids = 0;
+  for (let start = 0; start < n; start++) {
+    if (labels[start] !== 0 || !isCore(start)) continue;
+    ids++;
+    labels[start] = ids;
+    let head = tail;
+    queue[tail++] = start;
+    while (head < tail) {
+      const p = queue[head++];
+      const x = p % width;
+      const y = (p - x) / width;
+      for (let k = 0; k < 8; k++) {
+        const qx = x + N8X[k];
+        const qy = y + N8Y[k];
+        if (qx < 0 || qy < 0 || qx >= width || qy >= height) continue;
+        const q = qy * width + qx;
+        if (labels[q] !== 0 || !isCore(q)) continue;
+        labels[q] = ids;
+        queue[tail++] = q;
+      }
+    }
+  }
+  let levelStart = 0;
+  let levelEnd = tail;
+  for (let step = 0; step < Math.ceil(half) && levelStart < levelEnd; step++) {
+    for (let i = levelStart; i < levelEnd; i++) {
+      const p = queue[i];
+      const x = p % width;
+      const y = (p - x) / width;
+      for (let k = 0; k < 8; k++) {
+        const qx = x + N8X[k];
+        const qy = y + N8Y[k];
+        if (qx < 0 || qy < 0 || qx >= width || qy >= height) continue;
+        const q = qy * width + qx;
+        if (labels[q] !== 0 || !isPartial(q)) continue;
+        labels[q] = labels[p];
+        queue[tail++] = q;
+      }
+    }
+    levelStart = levelEnd;
+    levelEnd = tail;
+  }
+  const patchRegions = Array.from({ length: ids }, newRegion);
+  for (let i = 0; i < tail; i++) {
+    const p = queue[i];
+    const x = p % width;
+    addPixel(patchRegions[labels[p] - 1], x, (p - x) / width, alpha[p]);
+  }
+  const patchId = new Map(patchRegions.map((r, i) => [r, i + 1]));
+  patchRegions.sort(byArea);
+  const patchList = patchRegions.slice(0, t.listed).map((r) => patchEntry(r, patchId.get(r), labels, alpha, dT, dO, width, t.patchWindow));
+  const edgeSum = [0, 0, 0];
+  const solidSum = [0, 0, 0];
+  let edgeCount = 0;
+  let solidCount = 0;
+  const zones = new Uint8Array(n);
+  const M = t.maxEdgeWidth;
+  for (let p = 0; p < n; p++) {
+    const a = alpha[p];
+    zones[p] = dT[p] <= M && dO[p] <= M ? EDGE : a >= CONTOUR_ALPHA ? INSIDE : OUTSIDE;
+    const partial2 = a > t.transparent && a < t.opaque;
+    const solid = a >= t.opaque && dT[p] <= M;
+    if (fromLuma || !(partial2 && a >= t.spillMinAlpha) && !solid) continue;
+    const sum = solid ? solidSum : edgeSum;
+    for (let c = 0; c < 3; c++) {
+      const v = img.rgb[p * 3 + c];
+      sum[c] += a >= 1 ? v : Math.min(1, Math.max(0, (v - bg[c] * (1 - a)) / a));
+    }
+    if (solid) solidCount++;
+    else edgeCount++;
+  }
+  const meanOf = (s, k) => k === 0 ? null : [s[0] / k, s[1] / k, s[2] / k];
+  const edgeMean = meanOf(edgeSum, edgeCount);
+  const solidMean = meanOf(solidSum, solidCount);
+  const excess = edgeMean ? screenExcess(edgeMean, t.screen) : null;
+  const solidExcess = solidMean ? screenExcess(solidMean, t.screen) : null;
+  const leans = excess !== null && excess > t.spillThreshold && (solidExcess === null || excess - solidExcess > t.spillThreshold);
+  const report = {
+    stage: "capture",
+    matteFrom: t.from,
+    pixels: n,
+    shares: {
+      opaque: r4(opaque / n),
+      partial: r4((n - opaque - transparent) / n),
+      transparent: r4(transparent / n)
+    },
+    width: {
+      typical: median === null ? null : r2(median),
+      p90: m === 0 ? null : r2(widths[Math.floor(0.9 * (m - 1))]),
+      worst: m === 0 ? null : r2(worst),
+      worstAt,
+      samples: m,
+      unmeasured
+    },
+    solidAreas: {
+      count: mains.length,
+      list: mains.slice(0, t.listed).map((r) => ({ ...box(r), area: r.area }))
+    },
+    holes: {
+      count: holes.length,
+      area: holes.reduce((s, r) => s + r.area, 0),
+      transparentArea: holes.reduce((s, r) => s + r.transparent, 0),
+      largest: holes.length ? holeEntry(holes[0]) : null,
+      list: holes.slice(0, t.listed).map(holeEntry)
+    },
+    specks: {
+      count: specks.length,
+      area: specks.reduce((s, r) => s + r.area, 0),
+      list: specks.slice(0, t.listed).map((r) => ({
+        ...box(r),
+        area: r.area,
+        meanAlpha: r4(r.alphaSum / r.area),
+        maxAlpha: r4(r.alphaMax)
+      }))
+    },
+    patches: {
+      count: patchRegions.length,
+      area: patchRegions.reduce((s, r) => s + r.area, 0),
+      list: patchList
+    },
+    spill: {
+      screen: t.screen,
+      pixels: edgeCount,
+      mean: edgeMean ? r4rgb(edgeMean) : null,
+      solidMean: solidMean ? r4rgb(solidMean) : null,
+      excess: excess === null ? null : r4(excess),
+      solidExcess: solidExcess === null ? null : r4(solidExcess),
+      leansToScreen: leans,
+      reading: fromLuma ? "not read: the matte came from luminance (a Keylight matte view), which carries no subject colour; read spill on the keyed result with `from: 'alpha'`" : spillReading(t, edgeCount, excess, solidExcess, leans)
+    }
+  };
+  return { report, frame: { width, height, alpha: Float32Array.from(alpha), zones } };
+}
+function holeEntry(r) {
+  return { ...box(r), area: r.area, meanAlpha: r4(r.alphaSum / r.area) };
+}
+function patchEntry(r, id, labels, alpha, dT, dO, width, window) {
+  const b = box(r);
+  let depth = -1;
+  let at = { x: b.x, y: b.y };
+  let thickness = 0;
+  for (let y = b.y; y < b.y + b.height; y++) {
+    for (let x = b.x; x < b.x + b.width; x++) {
+      const p = y * width + x;
+      if (labels[p] !== id) continue;
+      const m = Math.min(dT[p], dO[p]);
+      if (m > depth) {
+        depth = m;
+        at = { x, y };
+        thickness = Number.isFinite(dT[p]) && Number.isFinite(dO[p]) ? dT[p] + dO[p] - 1 : 2 * m - 1;
+      }
+    }
+  }
+  const bw = b.width;
+  const bh = b.height;
+  const ww = Math.max(1, Math.min(Math.round(window), bw));
+  const wh = Math.max(1, Math.min(Math.round(window), bh));
+  const sc = new Float64Array((bw + 1) * (bh + 1));
+  const sa = new Float64Array((bw + 1) * (bh + 1));
+  const W = bw + 1;
+  for (let j = 0; j < bh; j++) {
+    let rowC = 0;
+    let rowA = 0;
+    for (let i = 0; i < bw; i++) {
+      const p = (b.y + j) * width + (b.x + i);
+      if (labels[p] === id) {
+        rowC++;
+        rowA += alpha[p];
+      }
+      sc[(j + 1) * W + i + 1] = sc[j * W + i + 1] + rowC;
+      sa[(j + 1) * W + i + 1] = sa[j * W + i + 1] + rowA;
+    }
+  }
+  const rect = (s, i, j) => s[(j + wh) * W + i + ww] - s[j * W + i + ww] - s[(j + wh) * W + i] + s[j * W + i];
+  let bestC = -1;
+  let bestA = 0;
+  let bi = 0;
+  let bj = 0;
+  for (let j = 0; j + wh <= bh; j++) {
+    for (let i = 0; i + ww <= bw; i++) {
+      const c = rect(sc, i, j);
+      if (c > bestC) {
+        bestC = c;
+        bestA = rect(sa, i, j);
+        bi = i;
+        bj = j;
+      }
+    }
+  }
+  return {
+    ...b,
+    area: r.area,
+    meanAlpha: r4(r.alphaSum / r.area),
+    thickest: { ...at, thickness: r2(Math.max(0, thickness)) },
+    densest: {
+      x: b.x + bi,
+      y: b.y + bj,
+      width: ww,
+      height: wh,
+      pixels: bestC,
+      share: r4(bestC / (ww * wh)),
+      meanAlpha: bestC > 0 ? r4(bestA / bestC) : 0
+    }
+  };
+}
+function spillReading(t, pixels, excess, solidExcess, leans) {
+  const other = t.screen === "green" ? "red and blue" : "red and green";
+  if (pixels === 0 || excess === null) {
+    return `no partly transparent pixels at or above alpha ${t.spillMinAlpha} to read a colour from`;
+  }
+  const lean = `its ${t.screen} exceeds the larger of ${other} by ${excess.toFixed(3)}`;
+  const versus = solidExcess === null ? "" : `; the solid area just inside the edge: ${solidExcess.toFixed(3)}`;
+  return leans ? `the soft edge leans ${t.screen} (likely spill): ${lean}${versus}` : `the soft edge does not lean ${t.screen} beyond the subject's own colour: ${lean}${versus}`;
+}
+var zoneAcc = () => ({
+  pixels: 0,
+  sum: 0,
+  max: 0,
+  changed: 0,
+  minX: Infinity,
+  minY: Infinity,
+  maxX: -1,
+  maxY: -1
+});
+function finishZone(z2) {
+  return {
+    pixels: z2.pixels,
+    meanAbsDelta: z2.pixels ? r4(z2.sum / z2.pixels) : 0,
+    maxAbsDelta: r4(z2.max),
+    changedShare: z2.pixels ? r4(z2.changed / z2.pixels) : 0,
+    changedBounds: z2.changed === 0 ? null : { x: z2.minX, y: z2.minY, width: z2.maxX - z2.minX + 1, height: z2.maxY - z2.minY + 1 }
+  };
+}
+function alphaChange(prev, cur, t) {
+  if (prev.width !== cur.width || prev.height !== cur.height) {
+    throw new Error(
+      `cannot compare frames of different size (${prev.width}\xD7${prev.height} vs ${cur.width}\xD7${cur.height})`
+    );
+  }
+  const { width } = cur;
+  const acc = [zoneAcc(), zoneAcc(), zoneAcc()];
+  const all = zoneAcc();
+  const n = width * cur.height;
+  for (let p = 0; p < n; p++) {
+    const zp = prev.zones[p];
+    const zc = cur.zones[p];
+    const zone = zp === INSIDE || zc === INSIDE ? INSIDE : zp === OUTSIDE || zc === OUTSIDE ? OUTSIDE : EDGE;
+    const d = Math.abs(cur.alpha[p] - prev.alpha[p]);
+    for (const z2 of [acc[zone], all]) {
+      z2.pixels++;
+      z2.sum += d;
+      if (d > z2.max) z2.max = d;
+      if (d > t.changeAbove) {
+        z2.changed++;
+        const x = p % width;
+        const y = (p - x) / width;
+        if (x < z2.minX) z2.minX = x;
+        if (x > z2.maxX) z2.maxX = x;
+        if (y < z2.minY) z2.minY = y;
+        if (y > z2.maxY) z2.maxY = y;
+      }
+    }
+  }
+  return {
+    edge: finishZone(acc[EDGE]),
+    inside: finishZone(acc[INSIDE]),
+    outside: finishZone(acc[OUTSIDE]),
+    all: finishZone(all)
+  };
+}
+function summarizeFlicker(pairs) {
+  const zone = (key) => {
+    let mean = 0;
+    let max = 0;
+    let share = 0;
+    let worst = null;
+    for (const pair of pairs) {
+      const z2 = pair[key];
+      mean += z2.meanAbsDelta;
+      share += z2.changedShare;
+      if (z2.maxAbsDelta > max) max = z2.maxAbsDelta;
+      if (z2.meanAbsDelta > 0 && (worst === null || z2.meanAbsDelta > worst[key].meanAbsDelta)) {
+        worst = pair;
+      }
+    }
+    const k = Math.max(1, pairs.length);
+    return {
+      meanAbsDelta: r4(mean / k),
+      maxAbsDelta: r4(max),
+      changedShare: r4(share / k),
+      worstPair: worst ? { from: worst.from.index, to: worst.to.index } : null
+    };
+  };
+  return { edge: zone("edge"), inside: zone("inside"), outside: zone("outside"), all: zone("all") };
+}
+
+// src/color/screen.ts
+var SCREEN_DEFAULTS = {
+  screen: "auto",
+  minExcess: 0.04,
+  minDominance: 0.15,
+  minScreenShare: 0.02,
+  opaque: 1 - 2 / 255,
+  columns: "auto",
+  rows: "auto",
+  minCellShare: 0.25,
+  nearSkip: "auto",
+  nearBand: "auto",
+  unevenRatio: 1.1,
+  grainAbove: 0.01
+};
+var SCREEN_COLOUR_NOTE = "Colours are capture values: the opaque pixels of the render as saveFrameToPng wrote them, so the comp background does not mix in. In a project with no working space (8 bpc, as measured live in After Effects 2027) these are the footage's own 0..1 values, the scale Keylight's Screen Colour takes, so colour.nearSubject (or colour.median) can go to key.keylight's screenColour as it is. In a colour-managed project they are working-space values scaled by After Effects' capture transfer; that has not been checked against Keylight, so confirm the key with the Screen Matte and Status views. Measure the source un-keyed (Keylight View 'source', or the key off, and isolate the layer): a keyed render has no screen left, and Keylight despills what it outputs.";
+function autoGrid(width, height) {
+  const short = Math.min(width, height);
+  const across = 4;
+  const along = Math.max(1, Math.round(across * Math.max(width, height) / short));
+  return width <= height ? { columns: across, rows: along } : { columns: along, rows: across };
+}
+function resolveScreenThresholds(args, width, height) {
+  const grid = autoGrid(width, height);
+  const short = Math.min(width, height);
+  return {
+    screen: args.screen ?? SCREEN_DEFAULTS.screen,
+    minExcess: args.minExcess ?? SCREEN_DEFAULTS.minExcess,
+    minDominance: args.minDominance ?? SCREEN_DEFAULTS.minDominance,
+    minScreenShare: args.minScreenShare ?? SCREEN_DEFAULTS.minScreenShare,
+    opaque: args.opaque ?? SCREEN_DEFAULTS.opaque,
+    columns: args.columns ?? grid.columns,
+    rows: args.rows ?? grid.rows,
+    minCellShare: args.minCellShare ?? SCREEN_DEFAULTS.minCellShare,
+    nearSkip: args.nearSkip ?? Math.max(2, Math.round(0.01 * short)),
+    nearBand: args.nearBand ?? Math.max(4, Math.round(0.05 * short)),
+    unevenRatio: args.unevenRatio ?? SCREEN_DEFAULTS.unevenRatio,
+    grainAbove: args.grainAbove ?? SCREEN_DEFAULTS.grainAbove
+  };
+}
+function screenArgsError(args) {
+  if (args.screen !== void 0 && args.screen !== "auto" && args.screen !== "green" && args.screen !== "blue") {
+    return "`screen.screen` must be 'auto', 'green' or 'blue'";
+  }
+  for (const key of [
+    "minExcess",
+    "minDominance",
+    "minScreenShare",
+    "opaque",
+    "minCellShare",
+    "grainAbove"
+  ]) {
+    const v = args[key];
+    if (v !== void 0 && (typeof v !== "number" || !(v >= 0 && v <= 1))) {
+      return `\`screen.${key}\` must be a number in 0..1`;
+    }
+  }
+  for (const key of ["columns", "rows"]) {
+    const v = args[key];
+    if (v !== void 0 && (!Number.isInteger(v) || v < 1 || v > 64)) {
+      return `\`screen.${key}\` must be a whole number from 1 to 64`;
+    }
+  }
+  const skip = args.nearSkip;
+  if (skip !== void 0 && (typeof skip !== "number" || !Number.isFinite(skip) || skip < 0)) {
+    return "`screen.nearSkip` must be 0 or more (pixels)";
+  }
+  const band = args.nearBand;
+  if (band !== void 0 && (typeof band !== "number" || !Number.isFinite(band) || band < 1)) {
+    return "`screen.nearBand` must be at least 1 (pixels)";
+  }
+  const u = args.unevenRatio;
+  if (u !== void 0 && (typeof u !== "number" || !Number.isFinite(u) || u < 1)) {
+    return "`screen.unevenRatio` must be a number of 1 or more";
+  }
+  return null;
+}
+var r42 = (v) => Math.round(v * 1e4) / 1e4;
+var r4rgb2 = (v) => [r42(v[0]), r42(v[1]), r42(v[2])];
+var luma = (c) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+var CH = { green: 1, blue: 2 };
+function screenTest(rgb, p, ch, t) {
+  const v = rgb[p * 3 + ch];
+  const others = ch === 1 ? Math.max(rgb[p * 3], rgb[p * 3 + 2]) : Math.max(rgb[p * 3], rgb[p * 3 + 1]);
+  const lead = v - others;
+  return lead >= t.minExcess && lead >= t.minDominance * v;
+}
+var BINS = 65536;
+function histMedian(h, count) {
+  const out = [0, 0, 0];
+  const half = (count + 1) / 2;
+  for (let c = 0; c < 3; c++) {
+    let acc = 0;
+    const base = c * BINS;
+    for (let b = 0; b < BINS; b++) {
+      acc += h[base + b];
+      if (acc >= half) {
+        out[c] = b / (BINS - 1);
+        break;
+      }
+    }
+  }
+  return out;
+}
+function addToHist(h, rgb, p) {
+  for (let c = 0; c < 3; c++) {
+    const v = Math.min(1, Math.max(0, rgb[p * 3 + c]));
+    h[c * BINS + Math.round(v * (BINS - 1))]++;
+  }
+}
+function measureScreen(img, t) {
+  const { width, height, rgb } = img;
+  const alpha = img.alpha;
+  const n = width * height;
+  const measuredAt = (p) => !alpha || alpha[p] >= t.opaque;
+  let measured = 0;
+  for (let p = 0; p < n; p++) if (measuredAt(p)) measured++;
+  const leftOut = n - measured;
+  const kinds = t.screen === "auto" ? ["green", "blue"] : [t.screen];
+  let kind = kinds[0];
+  let best = -1;
+  for (const k of kinds) {
+    let count2 = 0;
+    for (let p = 0; p < n; p++) if (measuredAt(p) && screenTest(rgb, p, CH[k], t)) count2++;
+    if (count2 > best) {
+      best = count2;
+      kind = k;
+    }
+  }
+  const ch = CH[kind];
+  const found = measured > 0 && best / measured >= t.minScreenShare && best > 0;
+  const base = {
+    stage: "capture",
+    values: "capture",
+    screen: found ? kind : null,
+    chosen: t.screen === "auto" ? "detected" : "given",
+    pixels: n,
+    measured,
+    leftOut,
+    screenPixels: 0,
+    share: 0,
+    bounds: null,
+    colour: null,
+    subject: null,
+    evenness: null,
+    grain: null,
+    reading: "",
+    screenColourNote: SCREEN_COLOUR_NOTE
+  };
+  if (leftOut > n / 2) {
+    base.warning = `${Math.round(100 * leftOut / n)}% of the frame is transparent or partly transparent, as a keyed render is. Measure the source: set Keylight's View to 'source' (key.view) or switch the key off, and isolate the keyed layer so nothing else is in the render.`;
+  }
+  if (!found) {
+    const what = t.screen === "auto" ? "green or blue" : t.screen;
+    base.reading = `no ${what} screen found: fewer than ${Math.round(t.minScreenShare * 100)}% of the ${measured} measured pixels have ${what} leading the other channels by at least ${t.minExcess} and ${Math.round(t.minDominance * 100)}% of its level`;
+    return base;
+  }
+  const isScreen = new Uint8Array(n);
+  const hist = new Uint32Array(3 * BINS);
+  const sum = [0, 0, 0];
+  let count = 0;
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -1;
+  let maxY = -1;
+  for (let p = 0; p < n; p++) {
+    if (!measuredAt(p) || !screenTest(rgb, p, ch, t)) continue;
+    isScreen[p] = 1;
+    count++;
+    addToHist(hist, rgb, p);
+    for (let c = 0; c < 3; c++) sum[c] += rgb[p * 3 + c];
+    const x = p % width;
+    const y = (p - x) / width;
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  }
+  const median = histMedian(hist, count);
+  const mean = [sum[0] / count, sum[1] / count, sum[2] / count];
+  const labels = new Int32Array(n);
+  const queue = new Int32Array(n);
+  const ones = alpha ?? new Float64Array(n).fill(1);
+  const regions = labelRegions(
+    ones,
+    width,
+    height,
+    (p) => measuredAt(p) && isScreen[p] === 0,
+    true,
+    labels,
+    queue,
+    -1
+  );
+  let subjectId = 0;
+  for (let i = 0; i < regions.length; i++) {
+    if (subjectId === 0 || regions[i].area > regions[subjectId - 1].area) subjectId = i + 1;
+  }
+  let subject = null;
+  let nearSubject = null;
+  if (subjectId > 0) {
+    const s = regions[subjectId - 1];
+    subject = {
+      box: { x: s.minX, y: s.minY, width: s.maxX - s.minX + 1, height: s.maxY - s.minY + 1 },
+      area: s.area,
+      share: r42(s.area / n)
+    };
+    const mask = new Float64Array(n);
+    for (let p = 0; p < n; p++) if (labels[p] === subjectId) mask[p] = 1;
+    const scratch = new Float32Array(n);
+    const dist = new Float32Array(n);
+    distanceTo(mask, width, height, (a) => a > 0.5, scratch, dist);
+    const from = t.nearSkip;
+    const to = t.nearSkip + t.nearBand;
+    const nearHist = new Uint32Array(3 * BINS);
+    let nearCount = 0;
+    for (let p = 0; p < n; p++) {
+      if (isScreen[p] === 0 || !(dist[p] > from && dist[p] <= to)) continue;
+      addToHist(nearHist, rgb, p);
+      nearCount++;
+    }
+    if (nearCount > 0) {
+      nearSubject = {
+        colour: r4rgb2(histMedian(nearHist, nearCount)),
+        pixels: nearCount,
+        band: { from, to }
+      };
+    }
+  }
+  const evenness = measureEvenness(img, isScreen, measuredAt, ch, kind, t);
+  const grain = measureGrain(img, isScreen, ch, kind, t);
+  const near = nearSubject ? nearSubject.colour : null;
+  const fmt = (c) => `(${c.map((v) => v.toFixed(3)).join(", ")})`;
+  base.screenPixels = count;
+  base.share = r42(count / measured);
+  base.bounds = { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
+  base.colour = { median: r4rgb2(median), mean: r4rgb2(mean), nearSubject };
+  base.subject = subject;
+  base.evenness = evenness;
+  base.grain = grain;
+  base.reading = `${kind} screen, ${Math.round(base.share * 100)}% of the measured pixels; median ${fmt(median)}` + (near ? `, near the subject ${fmt(near)}` : "") + `. ${evenness.reading}. ${grain ? grain.reading : "grain not measured (no screen pixel has screen all round it)"}.`;
+  return base;
+}
+function measureEvenness(img, isScreen, measuredAt, ch, kind, t) {
+  const { width, height, rgb } = img;
+  const cols = Math.min(t.columns, width);
+  const rows = Math.min(t.rows, height);
+  const xs = Array.from({ length: cols + 1 }, (_, i) => Math.floor(i * width / cols));
+  const ys = Array.from({ length: rows + 1 }, (_, i) => Math.floor(i * height / rows));
+  const cells = [];
+  let s1 = 0;
+  let su = 0;
+  let sv = 0;
+  let suu = 0;
+  let suv = 0;
+  let svv = 0;
+  let sl = 0;
+  let sul = 0;
+  let svl = 0;
+  const du = Math.max(1, width - 1);
+  const dv = Math.max(1, height - 1);
+  const perX = new Float64Array(width);
+  const perY = new Float64Array(height);
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      let m = 0;
+      let k = 0;
+      const acc = [0, 0, 0];
+      for (let y = ys[r]; y < ys[r + 1]; y++) {
+        for (let x = xs[c]; x < xs[c + 1]; x++) {
+          const p = y * width + x;
+          if (!measuredAt(p)) continue;
+          m++;
+          if (isScreen[p] === 0) continue;
+          k++;
+          for (let q = 0; q < 3; q++) acc[q] += rgb[p * 3 + q];
+          perX[x]++;
+          perY[y]++;
+          const u = x / du;
+          const v = y / dv;
+          const l = rgb[p * 3 + ch];
+          s1++;
+          su += u;
+          sv += v;
+          suu += u * u;
+          suv += u * v;
+          svv += v * v;
+          sl += l;
+          sul += u * l;
+          svl += v * l;
+        }
+      }
+      const cellMean = k > 0 ? [acc[0] / k, acc[1] / k, acc[2] / k] : null;
+      cells.push({
+        column: c,
+        row: r,
+        box: { x: xs[c], y: ys[r], width: xs[c + 1] - xs[c], height: ys[r + 1] - ys[r] },
+        screenShare: m > 0 ? r42(k / m) : 0,
+        mean: cellMean ? r4rgb2(cellMean) : null,
+        luma: cellMean ? r42(luma(cellMean)) : null,
+        level: cellMean ? r42(cellMean[ch]) : null
+      });
+    }
+  }
+  const eligible = cells.filter(
+    (c) => c.level !== null && c.screenShare >= t.minCellShare
+  );
+  let darkest = null;
+  let brightest = null;
+  for (const c of eligible) {
+    if (darkest === null || c.level < darkest.level) darkest = c;
+    if (brightest === null || c.level > brightest.level) brightest = c;
+  }
+  const levelRatio = darkest && brightest && darkest.level > 0 ? r42(brightest.level / darkest.level) : null;
+  const lumaRatio = darkest && brightest && darkest.luma > 0 ? r42(brightest.luma / darkest.luma) : null;
+  const uneven = levelRatio !== null && levelRatio > t.unevenRatio;
+  const plane = solve3(
+    [
+      [s1, su, sv],
+      [su, suu, suv],
+      [sv, suv, svv]
+    ],
+    [sl, sul, svl]
+  );
+  const [x0, x1] = percentileRange(perX, s1);
+  const [y0, y1] = percentileRange(perY, s1);
+  const extent = { x: x0, y: y0, width: x1 - x0 + 1, height: y1 - y0 + 1 };
+  let horizontal = null;
+  let vertical = null;
+  if (plane && s1 > 0) {
+    const [a, b, c] = plane;
+    const at = (u, v) => a + b * u + c * v;
+    const ratio = (hi, lo) => lo > 0 && hi > 0 ? r42(hi / lo) : null;
+    const uc = su / s1;
+    const vc = sv / s1;
+    if (x1 > x0) horizontal = ratio(at(x1 / du, vc), at(x0 / du, vc));
+    if (y1 > y0) vertical = ratio(at(uc, y1 / dv), at(uc, y0 / dv));
+  }
+  const sides = [];
+  if (horizontal !== null) {
+    sides.push({
+      side: horizontal > 1 ? "left" : "right",
+      strength: Math.max(horizontal, 1 / horizontal)
+    });
+  }
+  if (vertical !== null) {
+    sides.push({
+      side: vertical > 1 ? "top" : "bottom",
+      strength: Math.max(vertical, 1 / vertical)
+    });
+  }
+  const darkerSide = sides.filter((d) => d.strength > t.unevenRatio).sort((p, q) => q.strength - p.strength).map((d) => d.side);
+  const where = (c) => `cell ${c.column},${c.row} at x ${c.box.x}, y ${c.box.y}`;
+  let reading;
+  if (darkest === null || brightest === null || levelRatio === null) {
+    reading = `no grid cell is at least ${Math.round(t.minCellShare * 100)}% screen, so evenness was not read`;
+  } else {
+    const spread = `the screen's ${kind} level runs from ${darkest.level.toFixed(3)} (${where(darkest)}) to ${brightest.level.toFixed(3)} (${where(brightest)}), ${levelRatio.toFixed(2)}x`;
+    reading = uneven ? `uneven: ${spread}` + (darkerSide.length ? `, darker on the ${darkerSide.join(" and the ")}` : "") + ". One Screen Colour will not fit all of it: key from the colour near the subject, then check the darker part in the Screen Matte view (Clip Black, a second key, or a garbage mask)" : `even: ${spread}`;
+  }
+  return {
+    columns: cols,
+    rows,
+    cellWidth: xs[1] - xs[0],
+    cellHeight: ys[1] - ys[0],
+    cells,
+    darkest,
+    brightest,
+    levelRatio,
+    lumaRatio,
+    uneven,
+    extent,
+    horizontal,
+    vertical,
+    darkerSide,
+    reading
+  };
+}
+function percentileRange(counts, total) {
+  if (total <= 0) return [0, counts.length - 1];
+  const lo = 0.05 * total;
+  const hi = 0.95 * total;
+  let acc = 0;
+  let first = -1;
+  let last = counts.length - 1;
+  for (let i = 0; i < counts.length; i++) {
+    acc += counts[i];
+    if (first < 0 && acc >= lo) first = i;
+    if (acc >= hi) {
+      last = i;
+      break;
+    }
+  }
+  return [Math.max(0, first), last];
+}
+function solve3(m, v) {
+  const det = (a) => a[0][0] * (a[1][1] * a[2][2] - a[1][2] * a[2][1]) - a[0][1] * (a[1][0] * a[2][2] - a[1][2] * a[2][0]) + a[0][2] * (a[1][0] * a[2][1] - a[1][1] * a[2][0]);
+  const d = det(m);
+  if (!Number.isFinite(d) || Math.abs(d) < 1e-12) return null;
+  const col = (i) => m.map((row, r) => row.map((x, c) => c === i ? v[r] : x));
+  return [det(col(0)) / d, det(col(1)) / d, det(col(2)) / d];
+}
+function measureGrain(img, isScreen, ch, kind, t) {
+  const { width, height, rgb } = img;
+  const ss = [0, 0, 0];
+  let k = 0;
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      const p = y * width + x;
+      if (isScreen[p] === 0) continue;
+      let all = true;
+      for (let dy = -1; dy <= 1 && all; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          if (isScreen[p + dy * width + dx] === 0) {
+            all = false;
+            break;
+          }
+        }
+      }
+      if (!all) continue;
+      for (let c = 0; c < 3; c++) {
+        let s = 0;
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) s += rgb[(p + dy * width + dx) * 3 + c];
+        }
+        const d = rgb[p * 3 + c] - s / 9;
+        ss[c] += d * d;
+      }
+      k++;
+    }
+  }
+  if (k === 0) return null;
+  const sd = [0, 1, 2].map((c) => Math.sqrt(ss[c] / k * 9 / 8));
+  const level = sd[ch];
+  const grainy = level > t.grainAbove;
+  const steps = level * 255;
+  return {
+    stdDev: r4rgb2(sd),
+    level: r42(level),
+    steps8bit: Math.round(steps * 100) / 100,
+    samples: k,
+    grainy,
+    reading: `grain: ${kind} varies by ${level.toFixed(4)} (standard deviation, about ${steps.toFixed(1)} 8-bit steps) about its local mean` + (grainy ? "; grainy enough to break a hard matte into specks and chatter, so try Keylight's Screen Pre-blur before raising Clip Black" : "; fine enough not to need pre-blur")
+  };
+}
+
 // src/color/sheet.ts
 var TOL = 2 / 255;
 function px(img, x, y) {
@@ -50226,6 +51861,186 @@ function analyzeFrame(img) {
       right: edgeBand(img, "right")
     }
   };
+}
+var CHECKERBOARD = {
+  size: 16,
+  light: [0.8, 0.8, 0.8],
+  dark: [0.6, 0.6, 0.6]
+};
+function unmatte(img, bg) {
+  const out = Float64Array.from(img.rgb);
+  const alpha = img.alpha;
+  if (!alpha) return out;
+  for (let p = 0; p < alpha.length; p++) {
+    const a = alpha[p];
+    if (a >= 1) continue;
+    const i = p * 3;
+    for (let c = 0; c < 3; c++) {
+      out[i + c] = a <= 0 ? 0 : Math.min(1, Math.max(0, (out[i + c] - bg[c] * (1 - a)) / a));
+    }
+  }
+  return out;
+}
+function flattenOver(img, backdrop) {
+  const out = Float64Array.from(img.rgb);
+  const alpha = img.alpha;
+  if (!alpha) return out;
+  const { width, height } = img;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const p = y * width + x;
+      const a = alpha[p];
+      if (a >= 1) continue;
+      const bg = backdrop.kind === "color" ? backdrop.color : (Math.floor(x / CHECKERBOARD.size) + Math.floor(y / CHECKERBOARD.size)) % 2 === 0 ? CHECKERBOARD.light : CHECKERBOARD.dark;
+      const i = p * 3;
+      out[i] = out[i] * a + bg[0] * (1 - a);
+      out[i + 1] = out[i + 1] * a + bg[1] * (1 - a);
+      out[i + 2] = out[i + 2] * a + bg[2] * (1 - a);
+    }
+  }
+  return out;
+}
+var r43 = (v) => Math.round(v * 1e4) / 1e4;
+var r4rgb3 = (v) => [r43(v[0]), r43(v[1]), r43(v[2])];
+function clipRegion(img, region) {
+  const x0 = Math.floor(region.x);
+  const y0 = Math.floor(region.y);
+  const x1 = x0 + Math.max(1, Math.floor(region.width ?? 1));
+  const y1 = y0 + Math.max(1, Math.floor(region.height ?? 1));
+  const cx0 = Math.max(0, x0);
+  const cy0 = Math.max(0, y0);
+  const cx1 = Math.min(img.width, x1);
+  const cy1 = Math.min(img.height, y1);
+  if (cx1 <= cx0 || cy1 <= cy0) return null;
+  return {
+    rect: { x: cx0, y: cy0, width: cx1 - cx0, height: cy1 - cy0 },
+    clipped: cx0 !== x0 || cy0 !== y0 || cx1 !== x1 || cy1 !== y1
+  };
+}
+function outside(img, region) {
+  return { name: region.name, error: `region is outside the ${img.width}\xD7${img.height} frame` };
+}
+function sampleRegions(img, regions) {
+  return regions.map((region) => {
+    const clip = clipRegion(img, region);
+    if (!clip) return outside(img, region);
+    const { rect } = clip;
+    const sum = [0, 0, 0];
+    const min = [Infinity, Infinity, Infinity];
+    const max = [-Infinity, -Infinity, -Infinity];
+    let aSum = 0;
+    let aMin = Infinity;
+    let aMax = -Infinity;
+    let opaque = 0;
+    let transparent = 0;
+    for (let y = rect.y; y < rect.y + rect.height; y++) {
+      for (let x = rect.x; x < rect.x + rect.width; x++) {
+        const p = y * img.width + x;
+        for (let c = 0; c < 3; c++) {
+          const v = img.rgb[p * 3 + c];
+          sum[c] += v;
+          if (v < min[c]) min[c] = v;
+          if (v > max[c]) max[c] = v;
+        }
+        if (img.alpha) {
+          const a = img.alpha[p];
+          aSum += a;
+          if (a < aMin) aMin = a;
+          if (a > aMax) aMax = a;
+          if (a >= 1 - TOL) opaque++;
+          else if (a <= TOL) transparent++;
+        }
+      }
+    }
+    const n = rect.width * rect.height;
+    return {
+      name: region.name,
+      rect,
+      clipped: clip.clipped,
+      pixels: n,
+      mean: r4rgb3([sum[0] / n, sum[1] / n, sum[2] / n]),
+      min: r4rgb3(min),
+      max: r4rgb3(max),
+      alpha: img.alpha ? {
+        mean: r43(aSum / n),
+        min: r43(aMin),
+        max: r43(aMax),
+        opaqueShare: r43(opaque / n),
+        partialShare: r43((n - opaque - transparent) / n),
+        transparentShare: r43(transparent / n)
+      } : null
+    };
+  });
+}
+function histogramOf(img, bins) {
+  const n = img.width * img.height;
+  const counts = [0, 1, 2].map(() => Array.from({ length: bins }, () => 0));
+  const aCounts = img.alpha ? Array.from({ length: bins }, () => 0) : void 0;
+  const bin = (v) => Math.min(bins - 1, Math.max(0, Math.floor(v * bins)));
+  for (let p = 0; p < n; p++) {
+    for (let c = 0; c < 3; c++) counts[c][bin(img.rgb[p * 3 + c])]++;
+    if (aCounts && img.alpha) aCounts[bin(img.alpha[p])]++;
+  }
+  return {
+    bins,
+    pixels: n,
+    r: counts[0],
+    g: counts[1],
+    b: counts[2],
+    ...aCounts ? { a: aCounts } : {}
+  };
+}
+function compareRegions(from, to, regions) {
+  if (from.width !== to.width || from.height !== to.height) {
+    throw new Error(
+      `cannot compare frames of different size (${from.width}\xD7${from.height} vs ${to.width}\xD7${to.height})`
+    );
+  }
+  const withAlpha = from.alpha !== void 0 && to.alpha !== void 0;
+  return regions.map((region) => {
+    const clip = clipRegion(from, region);
+    if (!clip) return outside(from, region);
+    const { rect } = clip;
+    const delta = [0, 0, 0];
+    const absSum = [0, 0, 0];
+    const absMax = [0, 0, 0];
+    let aDelta = 0;
+    let aAbs = 0;
+    let aMax = 0;
+    for (let y = rect.y; y < rect.y + rect.height; y++) {
+      for (let x = rect.x; x < rect.x + rect.width; x++) {
+        const p = y * from.width + x;
+        for (let c = 0; c < 3; c++) {
+          const d = to.rgb[p * 3 + c] - from.rgb[p * 3 + c];
+          delta[c] += d;
+          absSum[c] += Math.abs(d);
+          if (Math.abs(d) > absMax[c]) absMax[c] = Math.abs(d);
+        }
+        if (withAlpha) {
+          const d = to.alpha[p] - from.alpha[p];
+          aDelta += d;
+          aAbs += Math.abs(d);
+          if (Math.abs(d) > aMax) aMax = Math.abs(d);
+        }
+      }
+    }
+    const n = rect.width * rect.height;
+    return {
+      name: region.name,
+      rect,
+      clipped: clip.clipped,
+      pixels: n,
+      meanDelta: r4rgb3([delta[0] / n, delta[1] / n, delta[2] / n]),
+      meanAbsDelta: r4rgb3([absSum[0] / n, absSum[1] / n, absSum[2] / n]),
+      maxAbsDelta: r4rgb3(absMax),
+      alpha: withAlpha ? { meanDelta: r43(aDelta / n), meanAbsDelta: r43(aAbs / n), maxAbsDelta: r43(aMax) } : null
+    };
+  });
+}
+function rgbHex(rgb) {
+  return `#${rgb.map(
+    (v) => Math.round(Math.min(1, Math.max(0, v)) * 255).toString(16).padStart(2, "0")
+  ).join("")}`;
 }
 function resample(img, tw, th) {
   const out = new Float64Array(tw * th * 3);
@@ -50425,10 +52240,27 @@ function profileForWorkingSpace(workingSpace) {
 
 // src/tools/render-frame.ts
 init_registry();
+var MEASUREMENT_STAGES = {
+  capture: "the PNG as saveFrameToPng wrote it, before any colour conversion: working-space values (scaled by AE's capture transfer in colour-managed projects), 8 or 16 bits. Its RGB is already laid over the comp background colour (`bgColor`): capture = colour\xB7alpha + bgColor\xB7(1 \u2212 alpha), so a half-covered pixel reads half background and an empty one reads bgColor; on a black background that is premultiplied colour. Alpha is the coverage AE wrote",
+  output: "the file as written (writtenTo), after colour conversion when colorManaged is auto, so 8-bit display values. With channels 'rgb': over the comp background as AE composited it, or over `over`. With 'rgba': the colour recovered from under the background (straight, 0 where alpha is 0), plus alpha. With 'alpha': the matte, in r = g = b. The same as the capture when colorManaged is off or the conversion failed"
+};
+var HISTOGRAM_DEFAULT_BINS = 32;
+var layerRefSchema = external_exports.union([
+  external_exports.string(),
+  external_exports.number().int().positive(),
+  external_exports.object({ id: external_exports.number().int() })
+]);
+var regionSchema = external_exports.object({
+  name: external_exports.string().min(1).describe("Label reported back with the numbers."),
+  x: external_exports.number().int().describe("Left edge (or the point), capture pixels from the left."),
+  y: external_exports.number().int().describe("Top edge (or the point), capture pixels from the top."),
+  width: external_exports.number().int().positive().optional().describe("Omit with height for a single pixel."),
+  height: external_exports.number().int().positive().optional()
+});
 var renderFrameTool = defineTool({
   name: "ae_render_frame",
   title: "Render frame",
-  description: "Render one or more frames to PNG. Use to visually verify edits. The agent's 'eyes' \u2014 pair with mutations for a visual feedback loop. Headless and deterministic. Pass `time` for one frame, or `times` for several in ONE call (motion checks): files land at <outPath stem>_<index>.png and are listed in `frames`. `contactSheet` tiles every frame into one labelled PNG (<stem>_sheet.png) so a motion check is one image; `analyze` measures each capture (uniform edge bands = black bars / transparent margins, content bounds, coverage) so off-frame elements and letterboxing are caught numerically. In color-managed projects (workingSpace != None) the capture applies AE's own display transform via a transient OCIO Display Transform adjustment layer, and the PNG comes back viewer-accurate and sRGB-tagged. Where that layer cannot be used \u2014 read-only mode, an AE without the OCIO effect, or a failed capture calibration \u2014 the result falls back to a pure-math ACES conversion or to raw values with an explicit colorWarning; check colorPipeline / colorWarning on the response.",
+  description: "Render one or more frames to PNG. Use to visually verify edits. The agent's 'eyes' \u2014 pair with mutations for a visual feedback loop. Headless and deterministic. Pass `time` for one frame, or `times` for several in ONE call (motion checks): files land at <outPath stem>_<index>.png and are listed in `frames`. `contactSheet` tiles every frame into one labelled PNG (<stem>_sheet.png) so a motion check is one image; `analyze` measures each capture (uniform edge bands = black bars / transparent margins, content bounds, coverage) so off-frame elements and letterboxing are caught numerically. In color-managed projects (workingSpace != None) the capture applies AE's own display transform via a transient OCIO Display Transform adjustment layer, and the PNG comes back viewer-accurate and sRGB-tagged. Where that layer cannot be used \u2014 read-only mode, an AE without the OCIO effect, or a failed capture calibration \u2014 the result falls back to a pure-math ACES conversion or to raw values with an explicit colorWarning; check colorPipeline / colorWarning on the response. Seeing the matte: `channels` picks what the file holds \u2014 'rgb' (default, transparency composited over `over`: the comp background as AE composites it, a checkerboard or a colour such as '#ff00ff'), 'rgba' (alpha kept, straight colour), or 'alpha' (the matte as greyscale: white opaque, black transparent). `isolate` renders one layer or a list alone (cameras and lights stay as they are), then restores every layer switch, even when the render fails. `alphaChannel` reports whether the capture carried alpha at all. Reading colour: `sample` takes named points or rectangles and returns mean / min / max per channel and alpha coverage for each; `histogram` counts the whole frame per channel; `compare` (with `times` and `sample`) reports each region's difference between two of the rendered frames. Matte quality: `edge` reports, from the capture's alpha, the shares of opaque / partly transparent / transparent pixels, edge width (typical and worst, px), holes, specks, partly transparent patches that are not thin edges (an unkeyed screen, a remnant), the soft edge's colour with the comp background taken out and whether it leans to the screen colour (spill), and with `times` the frame-to-frame change in alpha along the edge, inside the solid area and outside it (flicker). Green screen: `screen`, on a render of the UN-KEYED source (Keylight View 'source' or the key off, the keyed layer isolated), reports green or blue, which pixels are screen and their share, a suggested screen colour (the median, and the colour just outside the subject), evenness on a grid (darkest and brightest cells, the spread as a ratio, the darker side) and grain. It reports numbers and places, never a pass or fail. Every number is labelled with its stage \u2014 'capture' (before colour conversion) or 'output' (the file as written) \u2014 described once in `measurementStages`.",
   group: "render",
   // Survives read-only mode: it writes a PNG, and the visual verification loop
   // is the whole point of an audit session. Note this is NOT a
@@ -50461,7 +52293,112 @@ var renderFrameTool = defineTool({
       thumbWidth: external_exports.number().int().min(16).max(2048).optional().describe("Tile width in px, never upscaled (default 480)."),
       outPath: external_exports.string().optional().describe("Sheet path (default <outPath stem>_sheet.png).")
     }).optional().describe(
-      "Tile all rendered frames into ONE labelled PNG (#index + time above each tile). Pass {} for defaults."
+      "Tile all rendered frames into ONE labelled PNG (#index + time above each tile). Pass {} for defaults. Frames that carry alpha (channels 'rgba') are shown over a checkerboard on the sheet."
+    ),
+    channels: external_exports.enum(["rgb", "rgba", "alpha"]).optional().describe(
+      "What the written file holds. 'rgb' (default): 8-bit sRGB, transparency composited over `over`. 'rgba': 8-bit sRGB with the alpha channel kept and straight colour (AE lays its capture over the comp background; that background is taken out again). 'alpha': the matte as 8-bit greyscale, white = opaque, black = transparent. Needs colorManaged 'auto'. If the capture has no alpha channel, `alphaWarning` says so."
+    ),
+    over: external_exports.union([
+      external_exports.enum(["background", "checkerboard"]),
+      external_exports.string().regex(/^#[0-9a-fA-F]{6}$/),
+      external_exports.array(external_exports.number().min(0).max(1)).length(3)
+    ]).optional().describe(
+      "With channels 'rgb': what transparent pixels are shown against. 'background' (default): the comp's background colour (`bgColor`), as AE itself composites the capture. 'checkerboard': light and dark grey squares, so transparency is visible. A colour as '#rrggbb' or [r, g, b] in 0..1 \u2014 magenta shows holes in a key. For the last two the comp background is taken out of the capture first, so soft edges show the new backdrop only."
+    ),
+    isolate: external_exports.union([layerRefSchema, external_exports.array(layerRefSchema).min(1)]).optional().describe(
+      "Render these layers alone: a layer (index, name, or { id }) or a list. Every other layer is switched off for the capture, adjustment layers included; camera, light and audio-only layers are left as they are; named layers are switched on even if they were off (to see a matte layer); solo is cleared. Every switch is restored afterwards, even when the render fails, and `isolation` reports it. Top-level layers of this comp only. Not available in read-only mode."
+    ),
+    sample: external_exports.object({
+      regions: external_exports.array(regionSchema).min(1).max(64),
+      stage: external_exports.enum(["both", "capture", "output"]).optional().describe("Which pixels to measure (default 'both'; see measurementStages).")
+    }).optional().describe(
+      "Read colour values. Named points ({ name, x, y }) or rectangles (+ width, height) in capture pixels (comp pixels at full resolution); regions running off the frame are clipped. Per region and stage: mean / min / max of r, g, b (0..1), alpha mean / min / max and the shares of opaque, partly covered and transparent pixels; 'output' also gives meanHex. Reported as `samples` (per frame with `times`)."
+    ),
+    histogram: external_exports.union([
+      external_exports.boolean(),
+      external_exports.object({
+        bins: external_exports.number().int().min(2).max(256).optional().describe("Default 32."),
+        stage: external_exports.enum(["output", "capture"]).optional().describe("Default 'output'.")
+      })
+    ]).optional().describe(
+      "Whole-frame per-channel histogram: pixel counts for r, g, b (and a when present) in equal bins over 0..1, 1.0 in the last bin. `true` for defaults."
+    ),
+    compare: external_exports.object({
+      from: external_exports.number().int().nonnegative().optional().describe("Index into `times` (default 0)."),
+      to: external_exports.number().int().nonnegative().optional().describe("Index into `times` (default 1).")
+    }).optional().describe(
+      "With `times` and `sample`: each region's difference between two rendered frames, to \u2212 from, per stage: meanDelta (signed average shift), meanAbsDelta and maxAbsDelta per channel, and the same for alpha. Reported as `comparison`."
+    ),
+    edge: external_exports.union([
+      external_exports.boolean(),
+      external_exports.object({
+        from: external_exports.enum(["alpha", "luma"]).optional().describe(
+          "Where the matte is read: 'alpha' (default, the keyed result's coverage) or 'luma' (Rec. 709 luminance of the capture), for Keylight's Screen Matte (View 5) and Combined Matte (8) views, which write the matte in grey RGB with alpha 1 everywhere. With 'luma' spill is not read and no alpha channel is needed."
+        ),
+        transparent: external_exports.number().min(0).max(1).optional().describe(
+          "Alpha at or below counts as transparent. Default 2/255 (as `sample` counts)."
+        ),
+        opaque: external_exports.number().min(0).max(1).optional().describe("Alpha at or above counts as opaque. Default 1 \u2212 2/255."),
+        maxEdgeWidth: external_exports.number().min(1).optional().describe(
+          "Widest transition still called a thin edge, px; wider partly transparent regions are reported as patches, and it is the edge band for flicker. Default 1% of the frame's shorter side, at least 4 (11 at 1080\xD71920)."
+        ),
+        mainAreaShare: external_exports.number().min(0).max(1).optional().describe(
+          "An island of covered pixels at least this share of the largest is a main solid area, smaller ones are specks. Default 0.25."
+        ),
+        listed: external_exports.number().int().min(0).max(50).optional().describe(
+          "How many holes, specks, patches and solid areas are listed (all are counted). Default 5."
+        ),
+        screen: external_exports.enum(["green", "blue"]).optional().describe("Screen colour spill is read against. Default 'green'."),
+        spillMinAlpha: external_exports.number().min(0).max(1).optional().describe(
+          "Partly transparent pixels below this alpha are left out of the spill colour. Default 0.1."
+        ),
+        spillThreshold: external_exports.number().min(0).max(1).optional().describe(
+          "The soft edge leans to the screen when its screen channel exceeds the larger other channel by more than this, and by this much more than the solid area's own. Default 0.03."
+        ),
+        changeAbove: external_exports.number().min(0).max(1).optional().describe("Flicker: an alpha change above this counts as changed. Default 0.05."),
+        patchWindow: external_exports.number().min(1).optional().describe(
+          "Side of the square window each patch's densest part is reported in, px. Default 4 \xD7 maxEdgeWidth (44 at 1080\xD71920)."
+        )
+      })
+    ]).optional().describe(
+      "Matte quality as numbers, measured on the capture's alpha (stage 'capture'), or with `from: 'luma'` on its luminance (Keylight's matte views); `true` for the defaults. Each report says `matteFrom`. Reported as `edge` (per frame with `times`), with the thresholds used as `edgeThresholds`: shares {opaque, partial, transparent}; width {typical (median), p90, worst, worstAt, samples, unmeasured} \u2014 px the alpha takes from transparent to opaque across the 50% contour of the main solid areas (0 = hard edge; unmeasured = the alpha never reaches transparent or opaque anywhere, as when the screen is left partly opaque); solidAreas; holes {count, area, transparentArea, largest, list} \u2014 regions below opaque enclosed by the solid area (not touching the frame edge); specks {count, area, list} \u2014 islands outside the main areas; patches {count, area, list} \u2014 partly transparent regions thicker than maxEdgeWidth, each with its box, thickest {x, y, thickness} (the deepest point and the thickness there, px) and densest {x, y, width, height, pixels, share, meanAlpha} (the patchWindow square holding most of it, so a long band's box does not hide where it is); spill {mean, solidMean, excess, solidExcess, leansToScreen, reading} \u2014 the straight colour of the partly transparent pixels (comp background taken out) against the solid just inside the edge. Boxes are {x, y, width, height} in capture pixels. With two or more `times`: `edgeFlicker` {pairs, overall} \u2014 mean / max change in alpha and the changed share and bounds, for consecutive frames, split into edge, inside (a hole opening counts here) and outside (specks); real motion counts as change too."
+    ),
+    screen: external_exports.union([
+      external_exports.boolean(),
+      external_exports.object({
+        screen: external_exports.enum(["auto", "green", "blue"]).optional().describe(
+          "Which screen to look for. Default 'auto': green or blue, whichever has more pixels."
+        ),
+        minExcess: external_exports.number().min(0).max(1).optional().describe(
+          "A pixel is screen when its screen channel leads the larger other channel by at least this (capture values). Default 0.04."
+        ),
+        minDominance: external_exports.number().min(0).max(1).optional().describe("\u2026and by at least this share of its own level. Default 0.15."),
+        minScreenShare: external_exports.number().min(0).max(1).optional().describe(
+          "Fewer screen pixels than this share of the measured ones means no screen. Default 0.02."
+        ),
+        opaque: external_exports.number().min(0).max(1).optional().describe(
+          "Pixels with alpha below this are left out (masked or transparent). Default 1 \u2212 2/255."
+        ),
+        columns: external_exports.number().int().min(1).max(64).optional().describe(
+          "Evenness grid columns. Default: four cells across the shorter side, square-ish cells."
+        ),
+        rows: external_exports.number().int().min(1).max(64).optional().describe("Evenness grid rows. Default as columns."),
+        minCellShare: external_exports.number().min(0).max(1).optional().describe(
+          "A cell needs this share of screen pixels to count as darkest or brightest. Default 0.25."
+        ),
+        nearSkip: external_exports.number().min(0).optional().describe(
+          "The near-subject colour is read from screen pixels starting this many px from the subject. Default 1% of the shorter side, at least 2 (11 at 1080\xD71920)."
+        ),
+        nearBand: external_exports.number().min(1).optional().describe(
+          "\u2026in a band this many px wide. Default 5% of the shorter side, at least 4 (54 at 1080)."
+        ),
+        unevenRatio: external_exports.number().min(1).optional().describe("A brightest / darkest level ratio above this reads as uneven. Default 1.1."),
+        grainAbove: external_exports.number().min(0).max(1).optional().describe(
+          "A screen-channel grain standard deviation above this reads as grainy. Default 0.01."
+        )
+      })
+    ]).optional().describe(
+      "Measure a green or blue screen, on the capture (stage 'capture'), opaque pixels only; `true` for the defaults. Render the UN-KEYED source: set Keylight's View to 'source' (key.view) or switch the key off, and isolate the keyed layer. Reported as `screen` (per frame with `times`), with the thresholds used as `screenThresholds`: screen ('green' | 'blue' | null), chosen, measured / leftOut pixels, screenPixels, share, bounds; colour {median, mean, nearSubject {colour, pixels, band}} \u2014 the suggested Screen Colour; subject {box, area, share}; evenness {columns, rows, cells [{column, row, box, screenShare, mean, luma, level}], darkest, brightest, levelRatio, lumaRatio, uneven, extent (5th to 95th percentile of the screen pixels' positions), horizontal (right / left) and vertical (bottom / top) read across that extent, darkerSide (every side darker past unevenRatio, strongest first), reading}; grain {stdDev, level, steps8bit, samples, grainy, reading}; reading; warning; screenColourNote (capture values and what they mean for Keylight's Screen Colour)."
     )
   },
   handler: async (args, transport2) => {
@@ -50470,6 +52407,8 @@ var renderFrameTool = defineTool({
         hint: "`time: 1.5` renders one frame; `times: [0, 1, 2]` renders several in one call."
       });
     }
+    const checked = checkEyesOptions(args);
+    if ("error" in checked) return checked.error;
     const rejection = rejectedOutputPath(args.outPath);
     if (rejection !== null) {
       return errorResult("IO", rejection, {
@@ -50487,49 +52426,130 @@ var renderFrameTool = defineTool({
         });
       }
     }
-    return nativeFlow(args, abs, transport2);
+    return nativeFlow(args, checked.options, abs, transport2);
   }
 });
+function invalid(message, hint) {
+  return { error: errorResult("INVALID_ARGS", message, hint ? { hint } : {}) };
+}
+function parseColor(value) {
+  if (typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value)) {
+    return [1, 3, 5].map((i) => parseInt(value.slice(i, i + 2), 16) / 255);
+  }
+  if (Array.isArray(value) && value.length === 3 && value.every((v) => typeof v === "number" && v >= 0 && v <= 1)) {
+    return [value[0], value[1], value[2]];
+  }
+  return null;
+}
+function checkEyesOptions(args) {
+  const channels = args.channels ?? "rgb";
+  if (args.colorManaged === "off" && (channels !== "rgb" || args.over !== void 0)) {
+    return invalid(
+      "`channels` and `over` need colorManaged 'auto'",
+      "colorManaged 'off' returns the raw capture untouched (it already keeps any alpha AE wrote)."
+    );
+  }
+  let over = "background";
+  if (args.over !== void 0) {
+    if (channels !== "rgb") {
+      return invalid(
+        `\`over\` applies only to channels 'rgb', not '${channels}'`,
+        "'rgba' keeps transparency in the file; 'alpha' is the matte itself."
+      );
+    }
+    if (args.over === "checkerboard") over = { kind: "checkerboard" };
+    else if (args.over !== "background") {
+      const color = parseColor(args.over);
+      if (color === null) {
+        return invalid(
+          "`over` must be 'background', 'checkerboard', '#rrggbb' or [r, g, b] in 0..1"
+        );
+      }
+      over = { kind: "color", color };
+    }
+  }
+  let isolate = null;
+  if (args.isolate !== void 0) {
+    isolate = Array.isArray(args.isolate) ? args.isolate : [args.isolate];
+    if (isolate.length === 0) return invalid("`isolate` needs at least one layer");
+    if (readOnlyMode()) {
+      return {
+        error: errorResult(
+          "FORBIDDEN",
+          "`isolate` switches layers off and back on, and AE_MCP_READONLY=1 is set",
+          {
+            hint: "Unset AE_MCP_READONLY, or render without isolate."
+          }
+        )
+      };
+    }
+  }
+  let sample = null;
+  if (args.sample !== void 0) {
+    const regions = args.sample.regions ?? [];
+    if (regions.length === 0) return invalid("`sample.regions` needs at least one region");
+    const names = /* @__PURE__ */ new Set();
+    for (const r of regions) {
+      if (names.has(r.name)) return invalid(`region name '${r.name}' is used twice`);
+      names.add(r.name);
+    }
+    const stage = args.sample.stage ?? "both";
+    sample = { regions, stages: stage === "both" ? ["capture", "output"] : [stage] };
+  }
+  let histogram = null;
+  if (args.histogram !== void 0 && args.histogram !== false) {
+    const h = args.histogram === true ? {} : args.histogram;
+    histogram = { bins: h.bins ?? HISTOGRAM_DEFAULT_BINS, stage: h.stage ?? "output" };
+  }
+  let compare = null;
+  if (args.compare !== void 0) {
+    const n = args.times?.length ?? 0;
+    if (n < 2) return invalid("`compare` needs `times` with at least two frames");
+    if (sample === null) {
+      return invalid("`compare` needs `sample`: it reports differences for the sampled regions");
+    }
+    const from = args.compare.from ?? 0;
+    const to = args.compare.to ?? 1;
+    if (from >= n || to >= n)
+      return invalid(`\`compare\` indices must be below ${n}, the number of times`);
+    if (from === to) return invalid("`compare.from` and `compare.to` must be different frames");
+    compare = { from, to };
+  }
+  let edge = null;
+  if (args.edge !== void 0 && args.edge !== false) {
+    edge = args.edge === true ? {} : args.edge;
+    if (typeof edge !== "object" || edge === null)
+      return invalid("`edge` must be true or an object");
+    const problem = edgeArgsError(edge);
+    if (problem !== null) return invalid(problem);
+  }
+  let screen = null;
+  if (args.screen !== void 0 && args.screen !== false) {
+    screen = args.screen === true ? {} : args.screen;
+    if (typeof screen !== "object" || screen === null)
+      return invalid("`screen` must be true or an object");
+    const problem = screenArgsError(screen);
+    if (problem !== null) return invalid(problem);
+  }
+  return {
+    options: {
+      channels,
+      over,
+      overGiven: args.over !== void 0,
+      isolate,
+      sample,
+      histogram,
+      compare,
+      edge,
+      screen
+    }
+  };
+}
 function sheetPathFor(abs, explicit) {
   if (explicit !== void 0) return path10.resolve(explicit).replace(/\\/g, "/");
   const ext = path10.extname(abs) || ".png";
   const stem = abs.slice(0, abs.length - (path10.extname(abs).length || 0));
   return `${stem}_sheet${ext}`;
-}
-async function attachAnalysis(payload, frames, written, multi) {
-  try {
-    for (const [i, file2] of written.entries()) {
-      const analysis = analyzeFrame(decodePng(await readFileSettled(file2)));
-      if (multi) frames[i].analysis = analysis;
-      else payload.analysis = analysis;
-    }
-  } catch (err) {
-    payload.analysisWarning = `analysis failed: ${err instanceof Error ? err.message : String(err)}`;
-  }
-}
-async function attachContactSheet(payload, frames, written, sheetPath, opts) {
-  try {
-    const images = [];
-    for (const file2 of written) images.push(decodePng(await readFileSettled(file2)));
-    const labels = frames.map((f, i) => frameLabel(i, f.time));
-    const sheet = composeContactSheet(images, {
-      columns: opts.columns,
-      thumbWidth: opts.thumbWidth,
-      labels
-    });
-    await fs9.mkdir(path10.dirname(sheetPath), { recursive: true });
-    await fs9.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
-    payload.contactSheet = {
-      writtenTo: sheetPath,
-      size: [sheet.width, sheet.height],
-      columns: sheet.columns,
-      rows: sheet.rows,
-      thumbSize: [sheet.thumbWidth, sheet.thumbHeight],
-      frames: images.length
-    };
-  } catch (err) {
-    payload.contactSheetWarning = `contact sheet failed: ${err instanceof Error ? err.message : String(err)}`;
-  }
 }
 function framePaths(abs, count, multi) {
   if (!multi) return [abs];
@@ -50539,13 +52559,71 @@ function framePaths(abs, count, multi) {
   for (let i = 0; i < count; i++) out.push(`${stem}_${i}${ext}`);
   return out;
 }
-async function nativeFlow(args, abs, transport2) {
-  const multi = args.times !== void 0;
-  const times = args.times ?? [args.time];
-  const paths = framePaths(abs, times.length, multi);
-  const tryOcio = args.colorManaged !== "off" && !readOnlyMode();
-  const code = `
+var ISOLATE_FN = `
+    function _refText(ref) {
+        if (typeof ref === "string") return '"' + ref + '"';
+        if (typeof ref === "number") return "index " + ref;
+        if (ref && typeof ref.id === "number") return "id " + ref.id;
+        return String(ref);
+    }
+    function _restoreLayers(saved) {
+        var failed = [];
+        for (var i = saved.length - 1; i >= 0; i--) {
+            var s = saved[i];
+            if (!s.changed) continue;
+            try {
+                if (s.layer.locked) s.layer.locked = false;
+                if (s.layer.enabled !== s.enabled) s.layer.enabled = s.enabled;
+                if (s.hasSolo && s.layer.solo !== s.solo) s.layer.solo = s.solo;
+                if (s.locked) s.layer.locked = true;
+            } catch (eRestore) {
+                failed.push(AE.safeGet(function () { return s.layer.index + " " + s.layer.name; }, "?") + ": " + AE.errText(eRestore));
+            }
+        }
+        return failed;
+    }
+    function _isolateLayers(c, refs) {
+        var keep = {};
+        var named = [];
+        for (var ri = 0; ri < refs.length; ri++) {
+            var hit = AE.findLayerInComp(c, refs[ri]);
+            if (!hit) return { ok: false, error: "isolate: no layer matching " + _refText(refs[ri]) + " in comp " + c.name };
+            if (keep["k" + hit.index]) continue;
+            keep["k" + hit.index] = true;
+            named.push({ index: hit.index, name: hit.name });
+        }
+        var saved = [];
+        var changed = 0;
+        try {
+            for (var li = 1; li <= c.numLayers; li++) {
+                var L = c.layer(li);
+                // Audio-only layers put nothing in the picture, and their
+                // video switch may refuse to change: leave them be.
+                if (AE.safeGet(function () { return L.hasVideo; }, true) === false) continue;
+                var mn = AE.safeGet(function () { return L.matchName; }, "");
+                var view = (mn === "ADBE Camera Layer" || mn === "ADBE Light Layer");
+                var s = { layer: L, enabled: L.enabled, locked: !!L.locked, hasSolo: false, solo: false, changed: false };
+                try { s.solo = !!L.solo; s.hasSolo = true; } catch (eSolo) { }
+                saved.push(s);
+                var want = keep["k" + L.index] ? true : (view ? s.enabled : false);
+                if (want === s.enabled && !s.solo) continue;
+                s.changed = true;
+                changed++;
+                if (s.locked) L.locked = false;
+                if (s.solo) L.solo = false;
+                if (L.enabled !== want) L.enabled = want;
+            }
+        } catch (eIso) {
+            var undone = _restoreLayers(saved);
+            return { ok: false, error: "isolate: could not switch layers (" + AE.errText(eIso) + ")" + (undone.length ? "; NOT restored: " + undone.join("; ") : "; every switch restored") };
+        }
+        return { ok: true, saved: saved, layers: named, changed: changed };
+    }
+`;
+function renderJsx(args, times, paths, tryOcio, isolate) {
+  return `
         ${RENDER_FRAME_FN}
+        ${ISOLATE_FN}
         var _arg = ${jsxVal(args.compNameOrId)};
         var comp = AE.findCompByNameOrId(_arg);
         if (!comp) return { ok: false, error: "no comp matching " + String(_arg) };
@@ -50576,6 +52654,7 @@ async function nativeFlow(args, abs, transport2) {
         var _paths = ${jsxVal(paths)};
         var _useDst = ${jsxVal(!!args.useDisplayStartTime)};
         var _useOcio = ${jsxVal(tryOcio)} && _ws !== "None" && _ws !== "";
+        var _isolate = ${jsxVal(isolate)};
         var _frames = [];
         function _renderAll(kind) {
             for (var _fi = 0; _fi < _times.length; _fi++) {
@@ -50584,47 +52663,76 @@ async function nativeFlow(args, abs, transport2) {
                 _frames.push(_r);
             }
         }
-        if (_useOcio) {
-            var _adj = null;
-            var _adjSrc = null;
-            try {
-                _adj = comp.layers.addSolid([1, 1, 1], "__mcp_ocio__", comp.width, comp.height, comp.pixelAspect);
-                _adjSrc = _adj.source;
-                _adj.adjustmentLayer = true;
-                try {
-                    var _maxT = _times[0];
-                    for (var _mi = 1; _mi < _times.length; _mi++) { if (_times[_mi] > _maxT) _maxT = _times[_mi]; }
-                    if (_useDst) _maxT = _maxT + comp.displayStartTime;
-                    if (_adj.outPoint < _maxT + comp.frameDuration) _adj.outPoint = _maxT + comp.frameDuration;
-                } catch (eOp) { }
-                var _fxOk = false;
-                try {
-                    _adj.property("Effects").addProperty("ADBE OCIO Display Transform");
-                    _fxOk = true;
-                } catch (eFx) { /* pre-OCIO AE or ICC color engine */ }
-                if (_fxOk) _renderAll("ocio");
-            } catch (eTmp) { /* fall through to direct capture */ }
-            if (_adj) { try { _adj.remove(); } catch (eRm) { } }
-            if (_adjSrc) { try { _adjSrc.remove(); } catch (eRs) { } }
+        var _iso = null;
+        if (_isolate !== null) {
+            _iso = _isolateLayers(comp, _isolate);
+            if (!_iso.ok) return { ok: false, error: _iso.error };
         }
-        if (_frames.length === 0) _renderAll("direct");
+        var _renderError = null;
+        try {
+            if (_useOcio) {
+                var _adj = null;
+                var _adjSrc = null;
+                try {
+                    _adj = comp.layers.addSolid([1, 1, 1], "__mcp_ocio__", comp.width, comp.height, comp.pixelAspect);
+                    _adjSrc = _adj.source;
+                    _adj.adjustmentLayer = true;
+                    try {
+                        var _maxT = _times[0];
+                        for (var _mi = 1; _mi < _times.length; _mi++) { if (_times[_mi] > _maxT) _maxT = _times[_mi]; }
+                        if (_useDst) _maxT = _maxT + comp.displayStartTime;
+                        if (_adj.outPoint < _maxT + comp.frameDuration) _adj.outPoint = _maxT + comp.frameDuration;
+                    } catch (eOp) { }
+                    var _fxOk = false;
+                    try {
+                        _adj.property("Effects").addProperty("ADBE OCIO Display Transform");
+                        _fxOk = true;
+                    } catch (eFx) { /* pre-OCIO AE or ICC color engine */ }
+                    if (_fxOk) _renderAll("ocio");
+                } catch (eTmp) { /* fall through to direct capture */ }
+                if (_adj) { try { _adj.remove(); } catch (eRm) { } }
+                if (_adjSrc) { try { _adjSrc.remove(); } catch (eRs) { } }
+            }
+            if (_frames.length === 0) _renderAll("direct");
+        } catch (eRender) {
+            _renderError = eRender;
+        }
+        var _isoReport = null;
+        if (_iso) {
+            var _notRestored = _restoreLayers(_iso.saved);
+            _isoReport = { layers: _iso.layers, changed: _iso.changed, restored: _notRestored.length === 0 };
+            if (_notRestored.length) _isoReport.notRestored = _notRestored;
+        }
+        if (_renderError !== null) {
+            var _fail = { ok: false, error: "render failed: " + AE.errText(_renderError) };
+            if (_isoReport) _fail.isolation = _isoReport;
+            return _fail;
+        }
         var _allOk = true;
         var _firstError = null;
         for (var _ci = 0; _ci < _frames.length; _ci++) {
             if (!_frames[_ci].ok) { _allOk = false; if (_firstError === null) _firstError = _frames[_ci].error; }
         }
         var _out = { ok: _allOk, frames: _frames, captureKind: _frames.length > 0 ? _frames[0].captureKind : null };
+        if (_isoReport) _out.isolation = _isoReport;
         if (!_allOk) _out.error = _firstError;
         if (_allOk) {
             _out.compName = comp.name;
             _out.workingSpace = _ws;
             _out.bitsPerChannel = AE.safeGet(function () { return app.project.bitsPerChannel; }, 8);
             _out.projectFile = app.project.file ? app.project.file.fsName.replace(/\\\\/g, "/") : null;
+            _out.bgColor = AE.safeGet(function () { return [comp.bgColor[0], comp.bgColor[1], comp.bgColor[2]]; }, null);
         }
         return _out;
     `;
+}
+async function nativeFlow(args, opts, abs, transport2) {
+  const multi = args.times !== void 0;
+  const times = args.times ?? [args.time];
+  const paths = framePaths(abs, times.length, multi);
+  const tryOcio = args.colorManaged !== "off" && !readOnlyMode();
   const result = await transport2.execute({
-    code,
+    code: renderJsx(args, times, paths, tryOcio, opts.isolate),
     label: "render_frame",
     timeoutMs: 12e4 + (times.length - 1) * 3e4
   });
@@ -50640,35 +52748,255 @@ async function nativeFlow(args, abs, transport2) {
   if (!payload || payload.ok !== true) {
     return toMcpResult(result);
   }
+  if (payload.isolation && !payload.isolation.restored) {
+    payload.isolationWarning = "some layer switches could not be restored after isolate \u2014 check these layers in the timeline: " + (payload.isolation.notRestored ?? []).join("; ");
+  }
   const written = (multi ? frames.map((f) => f.writtenTo) : [payload.writtenTo]).filter(
     (p) => typeof p === "string"
   );
-  if (args.analyze) await attachAnalysis(payload, frames, written, multi);
-  if (args.colorManaged !== "off") {
+  const put = (i, key, value) => {
+    if (multi) frames[i][key] = value;
+    else payload[key] = value;
+  };
+  const managed = args.colorManaged !== "off";
+  let convert = null;
+  let backdrop = null;
+  if (managed) {
     payload.method = "native";
-    await colorPostProcess(payload, written, transport2);
+    payload.channels = opts.channels;
+    convert = await colorConversion(payload, transport2);
+    if (convert === null && (opts.channels !== "rgb" || opts.overGiven)) {
+      payload.channelsWarning = "colour conversion failed (see colorWarning), so the raw capture was kept and `channels` / `over` were not applied";
+    }
+    if (convert !== null && opts.channels === "rgb") backdrop = chooseBackdrop(payload, opts);
+  }
+  const bg = validRgb(payload.bgColor);
+  const unmatting = convert !== null && (opts.channels === "rgba" || backdrop !== null);
+  const keep = new Set(opts.compare ? [opts.compare.from, opts.compare.to] : []);
+  const kept = /* @__PURE__ */ new Map();
+  const sheetImages = [];
+  const edgePairs = [];
+  let edgePrev = null;
+  let edgeMeasured = 0;
+  let edgeFromLuma = 0;
+  let withAlpha = 0;
+  let writing = convert !== null;
+  for (const [i, file2] of written.entries()) {
+    let capture;
+    try {
+      capture = decodePng(await readFileSettled(file2));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      payload.captureWarning = `could not read the capture: ${msg}`;
+      if (args.analyze) payload.analysisWarning = `analysis failed: ${msg}`;
+      if (managed)
+        payload.colorWarning = `color post-processing failed, file left as raw capture: ${msg}`;
+      return toMcpResult(result);
+    }
+    if (capture.alpha) withAlpha++;
+    if (opts.edge) {
+      const fromLuma = opts.edge.from === "luma";
+      if (fromLuma) edgeFromLuma++;
+      if (!capture.alpha && !fromLuma) edgePrev = null;
+      else {
+        try {
+          const t = resolveEdgeThresholds(opts.edge, capture.width, capture.height);
+          payload.edgeThresholds ??= t;
+          const { report, frame } = measureEdge(capture, bg ?? [0, 0, 0], t);
+          put(i, "edge", report);
+          edgeMeasured++;
+          if (edgePrev !== null && edgePrev.index === i - 1) {
+            edgePairs.push({
+              from: { index: i - 1, time: frames[i - 1]?.time },
+              to: { index: i, time: frames[i]?.time },
+              ...alphaChange(edgePrev.frame, frame, t)
+            });
+          }
+          edgePrev = multi ? { index: i, frame } : null;
+        } catch (err) {
+          payload.edgeWarning = `edge measurement failed: ${err instanceof Error ? err.message : String(err)}`;
+          edgePrev = null;
+        }
+      }
+    }
+    if (opts.screen) {
+      try {
+        const t = resolveScreenThresholds(opts.screen, capture.width, capture.height);
+        payload.screenThresholds ??= t;
+        put(i, "screen", measureScreen(capture, t));
+      } catch (err) {
+        payload.screenWarning = `screen measurement failed: ${err instanceof Error ? err.message : String(err)}`;
+      }
+    }
+    if (args.analyze) {
+      try {
+        put(i, "analysis", analyzeFrame(capture));
+      } catch (err) {
+        payload.analysisWarning = `analysis failed: ${err instanceof Error ? err.message : String(err)}`;
+      }
+    }
+    let output2 = capture;
+    if (writing && convert !== null) {
+      try {
+        output2 = await writeOutput(
+          file2,
+          capture,
+          convert,
+          opts.channels,
+          backdrop,
+          bg ?? [0, 0, 0]
+        );
+      } catch (err) {
+        payload.colorWarning = `color post-processing failed, file left as raw capture: ${err instanceof Error ? err.message : String(err)}`;
+        writing = false;
+      }
+    }
+    const pixels = { capture, output: output2 };
+    if (opts.sample) put(i, "samples", sampleReport(pixels, opts.sample));
+    if (opts.histogram) {
+      const { bins, stage } = opts.histogram;
+      put(i, "histogram", { stage, ...histogramOf(pixels[stage], bins) });
+    }
+    if (keep.has(i)) kept.set(i, pixels);
+    if (args.contactSheet)
+      sheetImages.push(output2 === capture ? { ...capture, alpha: void 0 } : output2);
+  }
+  payload.alphaChannel = withAlpha === 0 ? "absent" : withAlpha === written.length ? "present" : "mixed";
+  if (unmatting && withAlpha > 0 && bg === null) {
+    payload.channelsWarning = "the comp background colour (bgColor) is unknown, so the colour under it was recovered as if it were black; soft edges may carry the real background";
+  }
+  if (convert !== null && payload.alphaChannel === "absent") {
+    if (opts.channels === "alpha") {
+      payload.alphaWarning = "the capture has no alpha channel, so the matte is all white (fully opaque). If this comp should be transparent here, saveFrameToPng did not write alpha for it.";
+    } else if (opts.channels === "rgba") {
+      payload.alphaWarning = "the capture has no alpha channel, so the file's alpha is fully opaque";
+    } else if (opts.overGiven) {
+      payload.alphaWarning = "the capture has no alpha channel, so there was nothing to composite over `over`";
+    }
+  }
+  if (opts.edge) {
+    if (edgeFromLuma === 0 && withAlpha < written.length) {
+      payload.edgeWarning = `${written.length - withAlpha} of ${written.length} captures have no alpha channel, so their matte could not be measured (a comp with no transparency, or an AE that flattens)`;
+    } else if (edgeFromLuma === 0 && edgeMeasured > 0 && bg === null) {
+      payload.edgeWarning = "the comp background colour (bgColor) is unknown, so the soft edge's colour was recovered as if it were black; the spill reading may carry the real background";
+    }
+    if (edgePairs.length > 0) {
+      payload.edgeFlicker = { pairs: edgePairs, overall: summarizeFlicker(edgePairs) };
+    }
+  }
+  if (opts.compare && opts.sample) {
+    const { from, to } = opts.compare;
+    const a = kept.get(from);
+    const b = kept.get(to);
+    if (a && b) {
+      const report = opts.sample.regions.map((r) => ({ name: r.name }));
+      for (const stage of opts.sample.stages) {
+        compareRegions(a[stage], b[stage], opts.sample.regions).forEach((diff, j) => {
+          report[j][stage] = stageBlock(diff, stage);
+        });
+      }
+      payload.comparison = {
+        from: { index: from, time: frames[from]?.time },
+        to: { index: to, time: frames[to]?.time },
+        regions: report
+      };
+    }
+  }
+  const stages = /* @__PURE__ */ new Set([
+    ...opts.sample?.stages ?? [],
+    ...opts.histogram ? [opts.histogram.stage] : [],
+    ...opts.edge || opts.screen ? ["capture"] : []
+  ]);
+  if (stages.size > 0) {
+    payload.measurementStages = {};
+    for (const s of stages) payload.measurementStages[s] = MEASUREMENT_STAGES[s];
   }
   if (args.contactSheet) {
     await attachContactSheet(
       payload,
       frames,
-      written,
+      sheetImages,
       sheetPathFor(abs, args.contactSheet.outPath),
       args.contactSheet
     );
   }
   return toMcpResult(result);
 }
-async function colorPostProcess(payload, written, transport2) {
+function stageBlock(stats, stage) {
+  const { name: _name, ...rest } = stats;
+  if (stage === "output" && Array.isArray(rest.mean)) rest.meanHex = rgbHex(rest.mean);
+  return rest;
+}
+function sampleReport(pixels, sample) {
+  const report = sample.regions.map((r) => ({ name: r.name }));
+  for (const stage of sample.stages) {
+    sampleRegions(pixels[stage], sample.regions).forEach((stats, j) => {
+      report[j][stage] = stageBlock(stats, stage);
+    });
+  }
+  return report;
+}
+function chooseBackdrop(payload, opts) {
+  if (opts.over === "background") {
+    payload.over = "background";
+    return null;
+  }
+  payload.over = opts.over.kind === "checkerboard" ? "checkerboard" : opts.over.color;
+  return opts.over;
+}
+function validRgb(value) {
+  return Array.isArray(value) && value.length === 3 && value.every((v) => typeof v === "number" && Number.isFinite(v)) ? [value[0], value[1], value[2]] : null;
+}
+async function attachContactSheet(payload, frames, images, sheetPath, opts) {
+  try {
+    const tiles = images.map(
+      (img) => img.alpha ? { ...img, rgb: flattenOver(img, { kind: "checkerboard" }) } : img
+    );
+    const labels = frames.map((f, i) => frameLabel(i, f.time));
+    const sheet = composeContactSheet(tiles, {
+      columns: opts.columns,
+      thumbWidth: opts.thumbWidth,
+      labels
+    });
+    await fs9.mkdir(path10.dirname(sheetPath), { recursive: true });
+    await fs9.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+    payload.contactSheet = {
+      writtenTo: sheetPath,
+      size: [sheet.width, sheet.height],
+      columns: sheet.columns,
+      rows: sheet.rows,
+      thumbSize: [sheet.thumbWidth, sheet.thumbHeight],
+      frames: images.length
+    };
+  } catch (err) {
+    payload.contactSheetWarning = `contact sheet failed: ${err instanceof Error ? err.message : String(err)}`;
+  }
+}
+async function writeOutput(file2, capture, convert, channels, backdrop, bg) {
+  const { width, height } = capture;
+  const opaque = () => new Float64Array(width * height).fill(1);
+  let bytes;
+  if (channels === "alpha") {
+    bytes = encodePngGray8(width, height, capture.alpha ?? opaque());
+  } else if (channels === "rgb" && backdrop === null) {
+    const rgb = Float64Array.from(capture.rgb);
+    convert(rgb);
+    bytes = encodePngSrgb8(width, height, rgb);
+  } else {
+    const rgb = unmatte(capture, bg);
+    convert(rgb);
+    bytes = channels === "rgba" ? encodePngSrgbRgba8(width, height, rgb, capture.alpha ?? opaque()) : encodePngSrgb8(width, height, flattenOver({ ...capture, rgb }, backdrop));
+  }
+  await fs9.writeFile(file2, bytes);
+  return decodePng(bytes);
+}
+async function colorConversion(payload, transport2) {
   const workingSpace = payload.workingSpace ?? "None";
   try {
     if (workingSpace === "None" || workingSpace === "") {
-      for (const file2 of written) {
-        const img = decodePng(await readFileSettled(file2));
-        await fs9.writeFile(file2, encodePngSrgb8(img.width, img.height, img.rgb));
-      }
       payload.colorPipeline = "untagged 16-bit \u2192 8-bit sRGB-tagged (values unchanged)";
-      return;
+      return () => {
+      };
     }
     const calib = await measureCaptureTransfer(
       transport2,
@@ -50677,37 +53005,34 @@ async function colorPostProcess(payload, written, transport2) {
     );
     const calibFailed = "error" in calib || calib.kind === "unknown";
     const gain = !calibFailed && calib.kind === "linear" ? 1 / calib.scale : 1;
+    const applyGain = (rgb) => {
+      if (gain !== 1) for (let i = 0; i < rgb.length; i++) rgb[i] *= gain;
+    };
     if (payload.captureKind === "ocio") {
       if (calibFailed) {
         payload.colorWarning = `AE applied its display transform, but the capture scale could not be measured (${"error" in calib ? calib.error : "non-linear transfer"}) \u2014 the file is uniformly dark by that unknown scale. Verify colors against the AE viewer manually.`;
-        return;
-      }
-      for (const file2 of written) {
-        const img = decodePng(await readFileSettled(file2));
-        for (let i = 0; i < img.rgb.length; i++) img.rgb[i] *= gain;
-        await fs9.writeFile(file2, encodePngSrgb8(img.width, img.height, img.rgb));
+        return null;
       }
       payload.colorPipeline = "AE OCIO display transform (viewer-exact, any working space)" + (gain !== 1 ? ` + capture scale 1/${gain.toFixed(2)} restored` : "");
-      return;
+      return applyGain;
     }
     const profile = profileForWorkingSpace(workingSpace);
     if (profile === null) {
       payload.colorWarning = `working space '${workingSpace}' has no built-in conversion \u2014 the file contains raw working-space values and will not match the viewer. Verify colors against the AE viewer manually if they matter here.`;
-      return;
+      return null;
     }
     if (calibFailed) {
       payload.colorWarning = `could not characterize this AE version's capture transfer (${"error" in calib ? calib.error : "non-linear transfer"}) \u2014 the file contains raw working-space values. Verify colors against the AE viewer manually if they matter here.`;
-      return;
-    }
-    for (const file2 of written) {
-      const img = decodePng(await readFileSettled(file2));
-      for (let i = 0; i < img.rgb.length; i++) img.rgb[i] *= gain;
-      sceneLinearToDisplaySrgb(img.rgb, profile.toRec709);
-      await fs9.writeFile(file2, encodePngSrgb8(img.width, img.height, img.rgb));
+      return null;
     }
     payload.colorPipeline = `${profile.note}` + (gain !== 1 ? ` (capture scale 1/${gain.toFixed(2)} restored)` : "");
+    return (rgb) => {
+      applyGain(rgb);
+      sceneLinearToDisplaySrgb(rgb, profile.toRec709);
+    };
   } catch (err) {
     payload.colorWarning = `color post-processing failed, file left as raw capture: ${err instanceof Error ? err.message : String(err)}`;
+    return null;
   }
 }
 

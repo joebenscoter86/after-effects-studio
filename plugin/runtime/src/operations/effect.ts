@@ -69,7 +69,7 @@ registerOp({
   category: "effect",
   readOnly: true,
   description:
-    "List all effects currently applied to a layer with their matchNames and properties.",
+    "List the effects on a layer: index, name, matchName, enabled, and each top-level property's index, name and matchName. A short index on purpose; use effect.describe for one effect's values, value types, ranges and menu items before writing with effect.set_property.",
   params: [
     { name: "comp", type: "any", description: "Comp name or id", required: true },
     {
@@ -99,10 +99,61 @@ registerOp({
 });
 
 registerOp({
+  name: "effect.describe",
+  category: "effect",
+  readOnly: true,
+  description:
+    "Describe one effect on a layer as a flat table of every settable property, nested ones included: display-name path (usable as effect.set_property's property), matchName path, value type, current value, minValue/maxValue where After Effects reports them, units, whether it can be keyed, key count, expression, and menu items where the API exposes them (Dropdown Menu Control, AE 26+). Ranges are in scripting units, which can differ from the Effect Controls panel. Read this before writing effect values.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "layer",
+      type: "any",
+      description: "1-based layer index, or the layer name",
+      required: true,
+    },
+    {
+      name: "effect",
+      type: "any",
+      description: "1-based effect index, effect display name, or effect matchName",
+      required: true,
+    },
+  ],
+  toJsx(args) {
+    return `
+            ${jsxCompLayerPreamble(args)}
+            var _fxRoot = _layer.property("Effects");
+            if (!_fxRoot) return { ok: false, error: "layer has no Effects group" };
+            var _fxArg = ${jsxVal(args.effect)};
+            var _eff = null;
+            try { _eff = _fxRoot.property(_fxArg); } catch (eEf) { _eff = null; }
+            if (!_eff) {
+                var _have = [];
+                for (var _hi = 1; _hi <= _fxRoot.numProperties; _hi++) _have.push(_hi + " " + _fxRoot.property(_hi).name);
+                return { ok: false, error: "no effect matching " + _fxArg + " on layer '" + _layer.name + "'; effects: " + (_have.length ? _have.join(", ") : "none") };
+            }
+            var _desc = AE.describeEffect(_eff);
+            return {
+                ok: true,
+                effect: {
+                    index: AE.safeGet(function () { return _eff.propertyIndex; }, null),
+                    name: _eff.name,
+                    matchName: _eff.matchName,
+                    enabled: AE.safeGet(function () { return _eff.enabled; }, null)
+                },
+                properties: _desc.properties,
+                count: _desc.properties.length,
+                skippedNoValue: _desc.skippedNoValue
+            };
+        `;
+  },
+});
+
+registerOp({
   name: "effect.set_property",
   category: "effect",
   description:
-    "Set a property value on an effect. Property path is relative to the effect (e.g. ['Blurriness'] for Gaussian Blur).",
+    "Set a property value on an effect. Property path is relative to the effect (e.g. ['Blurriness'] for Gaussian Blur); display names or matchNames. Before writing, the value is checked against what After Effects reports: a wrong type or number of dimensions, or a value outside the reported range, is refused with the valid range named, and nothing is written. Ranges are in scripting units, which can differ from the Effect Controls panel (Gradient Wipe completion is 0 to 1, not percent). A property with no reported range is written as given. Read ranges first with effect.describe.",
   params: [
     { name: "comp", type: "any", description: "Comp name or id", required: true },
     {
@@ -125,6 +176,13 @@ registerOp({
       description: "If set, creates a keyframe at this time",
       required: false,
     },
+    {
+      name: "skipCheck",
+      type: "boolean",
+      description:
+        "Write without checking type, dimensions or the reported range. Only for the rare property whose range After Effects reports wrongly; After Effects may still reject the value.",
+      required: false,
+    },
   ],
   toJsx(args) {
     return `
@@ -141,12 +199,21 @@ registerOp({
                 _node = _next;
             }
             var _time = ${jsxVal(args.time ?? null)};
-            if (_time !== null) {
-                _node.setValueAtTime(_time, ${jsxVal(args.value)});
-            } else {
-                _node.setValue(${jsxVal(args.value)});
+            var _val = ${jsxVal(args.value)};
+            var _check = ${jsxVal(args.skipCheck !== true)};
+            if (_check) {
+                var _refusal = AE.checkPropertyWrite(_node, _val);
+                if (_refusal !== null) {
+                    var _rg = AE.propertyRange(_node);
+                    return { ok: false, error: _refusal, name: _node.name, matchName: _node.matchName, value: _val, range: _rg };
+                }
             }
-            return { ok: true, name: _node.name, matchName: _node.matchName };
+            if (_time !== null) {
+                _node.setValueAtTime(_time, _val);
+            } else {
+                _node.setValue(_val);
+            }
+            return { ok: true, name: _node.name, matchName: _node.matchName, checked: _check };
         `;
   },
 });

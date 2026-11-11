@@ -2,7 +2,8 @@
 // node:zlib for the IDAT stream, hand-rolled chunk framing and scanline
 // (un)filtering. Scope is deliberately narrow — exactly what
 // CompItem.saveFrameToPng emits (8/16-bit, RGB/RGBA/gray, non-interlaced)
-// on the way in, and 8-bit RGB with sRGB tags on the way out.
+// on the way in, and 8-bit RGB or RGBA with sRGB tags, or an untagged 8-bit
+// greyscale matte, on the way out.
 import * as zlib from "node:zlib";
 const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 function readChunks(buf) {
@@ -136,6 +137,40 @@ function chunk(type, data) {
     crc.writeUInt32BE(zlib.crc32(crcBody) >>> 0, 0);
     return Buffer.concat([head, data, crc]);
 }
+const to8 = (v) => Math.round(Math.min(1, Math.max(0, v)) * 255);
+/**
+ * 8-bit PNG from a per-pixel writer. `colorType` 0 (gray), 2 (RGB) or 6
+ * (RGBA); `srgbTags` adds sRGB + gAMA, which belong on colour images and not
+ * on a matte, whose values are coverage rather than colour.
+ */
+function encode8(width, height, colorType, srgbTags, write) {
+    const channels = colorType === 0 ? 1 : colorType === 2 ? 3 : 4;
+    const stride = width * channels;
+    const raw = Buffer.alloc(height * (stride + 1));
+    for (let y = 0; y < height; y++) {
+        const rowStart = y * (stride + 1);
+        raw[rowStart] = 0; // filter: none — zlib still compresses flat regions well
+        for (let x = 0; x < width; x++)
+            write(y * width + x, raw, rowStart + 1 + x * channels);
+    }
+    const ihdr = Buffer.alloc(13);
+    ihdr.writeUInt32BE(width, 0);
+    ihdr.writeUInt32BE(height, 4);
+    ihdr.writeUInt8(8, 8); // bit depth
+    ihdr.writeUInt8(colorType, 9);
+    // compression 0, filter 0, interlace 0 already zeroed
+    const gama = Buffer.alloc(4);
+    gama.writeUInt32BE(45455, 0);
+    return Buffer.concat([
+        PNG_SIGNATURE,
+        chunk("IHDR", ihdr),
+        ...(srgbTags
+            ? [chunk("sRGB", Buffer.from([0])) /* perceptual intent */, chunk("gAMA", gama)]
+            : []),
+        chunk("IDAT", zlib.deflateSync(raw, { level: 6 })),
+        chunk("IEND", Buffer.alloc(0)),
+    ]);
+}
 /**
  * Encode normalized RGB into an 8-bit PNG carrying explicit sRGB tags
  * (sRGB + gAMA), so every viewer agrees on the color space — the untagged
@@ -143,35 +178,29 @@ function chunk(type, data) {
  * reports.
  */
 export function encodePngSrgb8(width, height, rgb) {
-    const stride = width * 3;
-    const raw = Buffer.alloc(height * (stride + 1));
-    for (let y = 0; y < height; y++) {
-        const rowStart = y * (stride + 1);
-        raw[rowStart] = 0; // filter: none — zlib still compresses flat regions well
-        for (let x = 0; x < width; x++) {
-            const src = (y * width + x) * 3;
-            const dst = rowStart + 1 + x * 3;
-            for (let ch = 0; ch < 3; ch++) {
-                const v = Math.round(Math.min(1, Math.max(0, rgb[src + ch])) * 255);
-                raw[dst + ch] = v;
-            }
-        }
-    }
-    const ihdr = Buffer.alloc(13);
-    ihdr.writeUInt32BE(width, 0);
-    ihdr.writeUInt32BE(height, 4);
-    ihdr.writeUInt8(8, 8); // bit depth
-    ihdr.writeUInt8(2, 9); // color type RGB
-    // compression 0, filter 0, interlace 0 already zeroed
-    const gama = Buffer.alloc(4);
-    gama.writeUInt32BE(45455, 0);
-    return Buffer.concat([
-        PNG_SIGNATURE,
-        chunk("IHDR", ihdr),
-        chunk("sRGB", Buffer.from([0])), // perceptual intent
-        chunk("gAMA", gama),
-        chunk("IDAT", zlib.deflateSync(raw, { level: 6 })),
-        chunk("IEND", Buffer.alloc(0)),
-    ]);
+    return encode8(width, height, 2, true, (p, out, at) => {
+        out[at] = to8(rgb[p * 3]);
+        out[at + 1] = to8(rgb[p * 3 + 1]);
+        out[at + 2] = to8(rgb[p * 3 + 2]);
+    });
+}
+/**
+ * 8-bit RGBA with the same sRGB tags. Alpha is straight (unassociated), as
+ * the PNG format defines it: the RGB under a transparent pixel is kept, not
+ * multiplied away.
+ */
+export function encodePngSrgbRgba8(width, height, rgb, alpha) {
+    return encode8(width, height, 6, true, (p, out, at) => {
+        out[at] = to8(rgb[p * 3]);
+        out[at + 1] = to8(rgb[p * 3 + 1]);
+        out[at + 2] = to8(rgb[p * 3 + 2]);
+        out[at + 3] = to8(alpha[p]);
+    });
+}
+/** 8-bit greyscale with no colour tags: a matte, 0 = transparent, 1 = opaque. */
+export function encodePngGray8(width, height, values) {
+    return encode8(width, height, 0, false, (p, out, at) => {
+        out[at] = to8(values[p]);
+    });
 }
 //# sourceMappingURL=png16.js.map

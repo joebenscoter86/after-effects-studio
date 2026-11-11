@@ -1,4 +1,4 @@
-// Mask operations — add, set path, set properties.
+// Mask operations — add, set path, set properties, read back.
 
 import { registerOp, jsxFail, jsxVal, jsxCompLayerPreamble } from "../registry.js";
 
@@ -427,6 +427,65 @@ registerOp({
             var _name = _mask.name;
             _mask.remove();
             return { ok: true, removed: _name, remaining: _masks.numProperties };
+        `;
+  },
+});
+
+registerOp({
+  name: "mask.get",
+  category: "mask",
+  readOnly: true,
+  description:
+    "Read a layer's masks back: index, name, mode by name (Add, Subtract, Intersect, Lighten, Darken, Difference, None — the names mask.add and mask.set_props take, plus the raw modeValue), inverted, locked, feather [x, y], expansion, opacity, featherFalloff, closed, vertexCount, vertices, inTangents and outTangents (layer space), featherPoints (variable-width feather), and numKeys / keyframed for path, feather, opacity and expansion. " +
+    "Read the masks before changing them with mask.set_path or mask.set_props. A wide feather on a garbage mask reads as a soft patch in ae_render_frame's edge report.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "layer",
+      type: "any",
+      description: "1-based layer index, or the layer name",
+      required: true,
+    },
+    {
+      name: "mask",
+      type: "any",
+      description: "1-based mask index or mask name. Default: every mask on the layer.",
+      required: false,
+    },
+    {
+      name: "time",
+      type: "number",
+      description: "Read the values at this comp time (seconds). Default: the current time.",
+      required: false,
+    },
+  ],
+  toJsx(args) {
+    if (args.mask !== undefined && typeof args.mask !== "number" && typeof args.mask !== "string") {
+      return jsxFail("mask must be a 1-based index or a mask name");
+    }
+    return `
+            ${jsxCompLayerPreamble(args)}
+            var _masks = _layer.property("ADBE Mask Parade");
+            if (!_masks) return { ok: false, error: "layer '" + _layer.name + "' cannot carry masks (camera or light?)" };
+            var _want = ${jsxVal(args.mask ?? null)};
+            var _time = ${jsxVal(args.time ?? null)};
+            var _n = _masks.numProperties;
+            var _have = [];
+            for (var _hi = 1; _hi <= _n; _hi++) _have.push(_hi + " " + _masks.property(_hi).name);
+            var _haveText = _have.length ? _have.join(", ") : "none";
+            var _sel = [];
+            if (_want === null) {
+                for (var _ai = 1; _ai <= _n; _ai++) _sel.push(_ai);
+            } else if (typeof _want === "number") {
+                if (_want < 1 || _want > _n) return { ok: false, error: "no mask at index " + _want + " (masks: " + _haveText + ")" };
+                _sel.push(_want);
+            } else {
+                for (var _si = 1; _si <= _n; _si++) if (_masks.property(_si).name === _want) _sel.push(_si);
+                if (_sel.length === 0) return { ok: false, error: "no mask named '" + _want + "' (masks: " + _haveText + ")" };
+            }
+            var _list = [];
+            for (var _li = 0; _li < _sel.length; _li++) _list.push(AE.describeMask(_masks.property(_sel[_li]), _sel[_li], _time));
+            return { ok: true, layer: _layer.name, time: _time, count: _list.length, masks: _list };
         `;
   },
 });

@@ -1,0 +1,272 @@
+import type { DecodedPng } from "./png16.js";
+import type { Rgb } from "./sheet.js";
+export type Screen = "green" | "blue";
+/** Where the matte is read from: the capture's alpha, or its luminance (Keylight's matte views). */
+export type MatteFrom = "alpha" | "luma";
+export interface EdgeThresholds {
+    /**
+     * Read the matte from the capture's alpha (default), or from its Rec. 709
+     * luminance: Keylight's Screen Matte and Combined Matte views write the
+     * matte in grey RGB with alpha 1 everywhere (measured live), so their
+     * alpha says nothing.
+     */
+    from: MatteFrom;
+    /** Alpha at or below this counts as transparent. */
+    transparent: number;
+    /** Alpha at or above this counts as opaque. */
+    opaque: number;
+    /** Widest transition still called a thin edge, in px; also the edge band for flicker. */
+    maxEdgeWidth: number;
+    /** An island at least this share of the largest one's area is a main area, not a speck. */
+    mainAreaShare: number;
+    /** How many holes, specks, patches and main areas are listed (all are counted). */
+    listed: number;
+    /** The screen colour spill is read against. */
+    screen: Screen;
+    /** Partly transparent pixels below this alpha are left out of the spill colour. */
+    spillMinAlpha: number;
+    /** How far the screen channel must exceed the other two (and the solid area's own lean). */
+    spillThreshold: number;
+    /** A pixel's alpha change above this counts as changed (flicker shares and bounds). */
+    changeAbove: number;
+    /** Side of the square window a patch's densest part is reported in, px. */
+    patchWindow: number;
+}
+export type EdgeThresholdArgs = Partial<EdgeThresholds>;
+/**
+ * The defaults and why:
+ * - transparent / opaque: two 8-bit steps from 0 and 1, the same cut `sample`
+ *   uses for its alpha shares, so the two reports agree. Anything a key leaves
+ *   above that in the screen is real (it will show over a bright plate).
+ * - maxEdgeWidth: 1% of the frame's shorter side, at least 4 px (11 px at
+ *   1080×1920). A keyed hair or shoulder edge at HD is a few pixels; wider
+ *   transitions (heavy motion blur, a half-keyed remnant, an unkeyed screen)
+ *   are reported as patches so they are not averaged into "edge".
+ * - mainAreaShare 0.25: a second subject a quarter of the first's size is a
+ *   subject; smaller islands are specks. Main areas are listed, so nothing is
+ *   hidden either way.
+ * - listed 5: enough to find the worst places without flooding the response.
+ * - spillMinAlpha 0.1: un-matting divides by alpha, so below ~0.1 a pixel's
+ *   recovered colour is mostly quantisation noise.
+ * - spillThreshold 0.03: about eight 8-bit steps of lean towards the screen
+ *   channel; smaller leans are within grading noise.
+ * - changeAbove 0.05: alpha changes below this are invisible in practice;
+ *   8-bit capture noise alone is 1/255.
+ * - from "alpha": the keyed result's coverage. "luma" only for a render
+ *   whose RGB is the matte (Keylight View 5 or 8); spill is not read then.
+ * - patchWindow: four times maxEdgeWidth (44 px at 1080×1920): large enough
+ *   to hold a remnant worth fixing, small enough that a long band's box does
+ *   not hide where most of it is.
+ */
+export declare const EDGE_DEFAULTS: Omit<EdgeThresholds, "maxEdgeWidth" | "patchWindow"> & {
+    maxEdgeWidth: "auto";
+    patchWindow: "auto";
+};
+/** The alpha that marks the boundary itself, where edge width is sampled. */
+export declare const CONTOUR_ALPHA = 0.5;
+/** Default maxEdgeWidth for a frame: 1% of the shorter side, at least 4 px. */
+export declare function autoMaxEdgeWidth(width: number, height: number): number;
+/** Caller overrides on top of the defaults, for a frame of this size. */
+export declare function resolveEdgeThresholds(args: EdgeThresholdArgs, width: number, height: number): EdgeThresholds;
+/** Why a set of caller thresholds cannot be used, or null when it can. */
+export declare function edgeArgsError(args: Record<string, unknown>): string | null;
+export interface Box {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+export interface EdgeReport {
+    /** Always "capture": the alpha as saveFrameToPng wrote it (see measurementStages). */
+    stage: "capture";
+    /** "alpha": the capture's alpha; "luma": its luminance, for a render whose RGB is the matte. */
+    matteFrom: MatteFrom;
+    pixels: number;
+    shares: {
+        opaque: number;
+        partial: number;
+        transparent: number;
+    };
+    width: {
+        /** Median over the main areas' 50% contour, px; null when nothing could be measured. */
+        typical: number | null;
+        p90: number | null;
+        worst: number | null;
+        worstAt: {
+            x: number;
+            y: number;
+        } | null;
+        /** Contour pixels measured. */
+        samples: number;
+        /** Contour pixels where the alpha never reaches transparent (or opaque) anywhere in the frame. */
+        unmeasured: number;
+    };
+    solidAreas: {
+        count: number;
+        list: Array<Box & {
+            area: number;
+        }>;
+    };
+    holes: {
+        count: number;
+        area: number;
+        /** Hole pixels at or below `transparent` (the rest are partly transparent). */
+        transparentArea: number;
+        largest: (Box & {
+            area: number;
+            meanAlpha: number;
+        }) | null;
+        list: Array<Box & {
+            area: number;
+            meanAlpha: number;
+        }>;
+    };
+    specks: {
+        count: number;
+        area: number;
+        list: Array<Box & {
+            area: number;
+            meanAlpha: number;
+            maxAlpha: number;
+        }>;
+    };
+    patches: {
+        count: number;
+        area: number;
+        list: PatchEntry[];
+    };
+    spill: {
+        screen: Screen;
+        /** Partly transparent pixels at or above spillMinAlpha that the colour is read from. */
+        pixels: number;
+        /** Their mean straight colour, comp background taken out; capture values. */
+        mean: Rgb | null;
+        /** Mean colour of the opaque pixels within maxEdgeWidth of a transparent pixel. */
+        solidMean: Rgb | null;
+        /** Screen channel minus the larger of the other two, for `mean` and `solidMean`. */
+        excess: number | null;
+        solidExcess: number | null;
+        leansToScreen: boolean;
+        reading: string;
+    };
+}
+/** One listed patch: its box, and what is inside the box. */
+export interface PatchEntry extends Box {
+    area: number;
+    meanAlpha: number;
+    /**
+     * The patch pixel deepest inside it (farthest from any transparent or
+     * opaque pixel), and the patch's thickness there: distance to the nearest
+     * transparent + nearest opaque pixel − 1, as edge width is measured, or
+     * twice the depth − 1 where one of the two does not exist in the frame.
+     */
+    thickest: {
+        x: number;
+        y: number;
+        thickness: number;
+    };
+    /** The patchWindow-square window (clipped to the box) holding the most patch pixels. */
+    densest: Box & {
+        pixels: number;
+        share: number;
+        meanAlpha: number;
+    };
+}
+/** What one frame leaves for the next frame's flicker numbers. */
+export interface AlphaFrame {
+    width: number;
+    height: number;
+    alpha: Float32Array;
+    /** Per pixel: 0 outside, 1 edge, 2 inside (see measureEdge). */
+    zones: Uint8Array;
+}
+export interface ZoneChange {
+    pixels: number;
+    meanAbsDelta: number;
+    maxAbsDelta: number;
+    /** Share of the zone's pixels whose alpha changed by more than changeAbove. */
+    changedShare: number;
+    /** Bounding box of those pixels, or null. */
+    changedBounds: Box | null;
+}
+export interface AlphaChange {
+    edge: ZoneChange;
+    inside: ZoneChange;
+    outside: ZoneChange;
+    all: ZoneChange;
+}
+/**
+ * Distance from every pixel to the nearest pixel where `isSource` holds;
+ * Infinity if none. Exported for the screen measurement (screen.ts).
+ */
+export declare function distanceTo(alpha: Float64Array, width: number, height: number, isSource: (a: number) => boolean, scratch: Float32Array, out: Float32Array): void;
+export interface Region {
+    area: number;
+    minX: number;
+    minY: number;
+    maxX: number;
+    maxY: number;
+    alphaSum: number;
+    alphaMax: number;
+    transparent: number;
+    touchesBorder: boolean;
+}
+export declare const newRegion: () => Region;
+export declare function addPixel(r: Region, x: number, y: number, a: number): void;
+export declare const box: (r: Region) => Box;
+/**
+ * Flood-fill every region of pixels where `inSet` holds (4- or 8-connected),
+ * writing 1-based region ids into `labels` and returning one Region each.
+ * Exported for the screen measurement (screen.ts).
+ */
+export declare function labelRegions(alpha: Float64Array, width: number, height: number, inSet: (p: number) => boolean, eight: boolean, labels: Int32Array, queue: Int32Array, transparentAt: number): Region[];
+/**
+ * The matte in a render whose RGB is the matte (Keylight's Screen Matte and
+ * Combined Matte views): Rec. 709 luminance of the capture values, clamped to
+ * 0..1; a grey pixel (r = g = b) is taken as it is.
+ */
+export declare function lumaMatte(img: DecodedPng): Float64Array;
+/**
+ * Measure one capture's matte. `bg` is the comp background AE laid the
+ * capture's RGB over (see unmatte); it is taken out before the spill colour
+ * is read. The matte is the capture's alpha, or with `t.from` "luma" its
+ * luminance (then spill is not read: there is no subject colour). Throws when
+ * the matte comes from alpha and the capture has none.
+ */
+export declare function measureEdge(img: DecodedPng, bg: Rgb, t: EdgeThresholds): {
+    report: EdgeReport;
+    frame: AlphaFrame;
+};
+/**
+ * The change in alpha from `prev` to `cur`, split by where it happened. Each
+ * frame marks its pixels as edge (within maxEdgeWidth of both a transparent
+ * and an opaque pixel), inside (otherwise, alpha ≥ 0.5) or outside. A pixel
+ * inside the solid area in either frame counts as inside — so a hole opening
+ * or closing is inside, not edge; otherwise outside in either frame counts
+ * as outside (specks appearing); the rest is edge. Real motion is change
+ * too: read these on a held shot, or against how much the subject moves.
+ */
+export declare function alphaChange(prev: AlphaFrame, cur: AlphaFrame, t: EdgeThresholds): AlphaChange;
+export interface FlickerPair extends AlphaChange {
+    from: {
+        index: number;
+        time: number | undefined;
+    };
+    to: {
+        index: number;
+        time: number | undefined;
+    };
+}
+export interface FlickerSummary {
+    meanAbsDelta: number;
+    maxAbsDelta: number;
+    changedShare: number;
+    /** The pair with the largest meanAbsDelta in this zone, or null when nothing changed. */
+    worstPair: {
+        from: number;
+        to: number;
+    } | null;
+}
+/** Over every pair: mean of the per-pair means, the largest single change, the worst pair. */
+export declare function summarizeFlicker(pairs: FlickerPair[]): Record<"edge" | "inside" | "outside" | "all", FlickerSummary>;
+//# sourceMappingURL=matte.d.ts.map

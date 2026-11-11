@@ -122,39 +122,54 @@ function chunk(type, data) {
   crc.writeUInt32BE(zlib.crc32(crcBody) >>> 0, 0);
   return Buffer.concat([head, data, crc]);
 }
-function encodePngSrgb8(width, height, rgb) {
-  const stride = width * 3;
+const to8 = (v) => Math.round(Math.min(1, Math.max(0, v)) * 255);
+function encode8(width, height, colorType, srgbTags, write) {
+  const channels = colorType === 0 ? 1 : colorType === 2 ? 3 : 4;
+  const stride = width * channels;
   const raw = Buffer.alloc(height * (stride + 1));
   for (let y = 0; y < height; y++) {
     const rowStart = y * (stride + 1);
     raw[rowStart] = 0;
-    for (let x = 0; x < width; x++) {
-      const src = (y * width + x) * 3;
-      const dst = rowStart + 1 + x * 3;
-      for (let ch = 0; ch < 3; ch++) {
-        const v = Math.round(Math.min(1, Math.max(0, rgb[src + ch])) * 255);
-        raw[dst + ch] = v;
-      }
-    }
+    for (let x = 0; x < width; x++) write(y * width + x, raw, rowStart + 1 + x * channels);
   }
   const ihdr = Buffer.alloc(13);
   ihdr.writeUInt32BE(width, 0);
   ihdr.writeUInt32BE(height, 4);
   ihdr.writeUInt8(8, 8);
-  ihdr.writeUInt8(2, 9);
+  ihdr.writeUInt8(colorType, 9);
   const gama = Buffer.alloc(4);
   gama.writeUInt32BE(45455, 0);
   return Buffer.concat([
     PNG_SIGNATURE,
     chunk("IHDR", ihdr),
-    chunk("sRGB", Buffer.from([0])),
-    // perceptual intent
-    chunk("gAMA", gama),
+    ...srgbTags ? [chunk("sRGB", Buffer.from([0])), chunk("gAMA", gama)] : [],
     chunk("IDAT", zlib.deflateSync(raw, { level: 6 })),
     chunk("IEND", Buffer.alloc(0))
   ]);
 }
+function encodePngSrgb8(width, height, rgb) {
+  return encode8(width, height, 2, true, (p, out, at) => {
+    out[at] = to8(rgb[p * 3]);
+    out[at + 1] = to8(rgb[p * 3 + 1]);
+    out[at + 2] = to8(rgb[p * 3 + 2]);
+  });
+}
+function encodePngSrgbRgba8(width, height, rgb, alpha) {
+  return encode8(width, height, 6, true, (p, out, at) => {
+    out[at] = to8(rgb[p * 3]);
+    out[at + 1] = to8(rgb[p * 3 + 1]);
+    out[at + 2] = to8(rgb[p * 3 + 2]);
+    out[at + 3] = to8(alpha[p]);
+  });
+}
+function encodePngGray8(width, height, values) {
+  return encode8(width, height, 0, false, (p, out, at) => {
+    out[at] = to8(values[p]);
+  });
+}
 export {
   decodePng,
-  encodePngSrgb8
+  encodePngGray8,
+  encodePngSrgb8,
+  encodePngSrgbRgba8
 };

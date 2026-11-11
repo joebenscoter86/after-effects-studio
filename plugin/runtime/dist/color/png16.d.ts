@@ -20,4 +20,12 @@ export declare function decodePng(buf: Buffer): DecodedPng;
  * reports.
  */
 export declare function encodePngSrgb8(width: number, height: number, rgb: Float64Array): Buffer;
+/**
+ * 8-bit RGBA with the same sRGB tags. Alpha is straight (unassociated), as
+ * the PNG format defines it: the RGB under a transparent pixel is kept, not
+ * multiplied away.
+ */
+export declare function encodePngSrgbRgba8(width: number, height: number, rgb: Float64Array, alpha: Float64Array): Buffer;
+/** 8-bit greyscale with no colour tags: a matte, 0 = transparent, 1 = opaque. */
+export declare function encodePngGray8(width: number, height: number, values: Float64Array): Buffer;
 //# sourceMappingURL=png16.d.ts.map

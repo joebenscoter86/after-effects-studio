@@ -160,7 +160,7 @@
       "title": "Native AE scripting and build pitfalls",
       "path": "references/scripting.md",
       "kind": "guidance",
-      "sha256": "94524887d2c3a3d173d21a9813c424106b37a8785865f744f3016b2c081d1ab9"
+      "sha256": "7e7e8fa641cd41cb83811d3cb3c5c2ea97a227d385c4aa1d35b058530538165d"
     },
     {
       "id": "quality",
@@ -168,6 +168,13 @@
       "path": "references/quality.md",
       "kind": "guidance",
       "sha256": "7049f8ef14afbf18f944c5bd5b25ec712ba2b7c0dbeb55a360a73c2e1e6e2986"
+    },
+    {
+      "id": "keying",
+      "title": "Green-screen keying and compositing procedure",
+      "path": "references/keying.md",
+      "kind": "guidance",
+      "sha256": "1c6b24fc2c4cee303b6c73ec56a539dc8ff3ea5caeb1c961ffcfaec8b48eacd1"
     },
     {
       "id": "scene-recipes",

@@ -44,8 +44,13 @@ function summarize(description) {
   return cleaned.slice(0, cutoff + 1).trim();
 }
 
+// "<outPath stem>" would otherwise render as an (invisible) HTML tag.
+function escapeText(s) {
+  return s.replace(/</g, "&lt;");
+}
+
 function escapeCell(s) {
-  return s.replace(/\\/g, "\\\\").replace(/\|/g, "\\|");
+  return escapeText(s).replace(/\\/g, "\\\\").replace(/\|/g, "\\|");
 }
 
 function renderGroupSection(meta, tools) {
@@ -73,6 +78,9 @@ function render(tools) {
   const sections = GROUP_META.filter((m) => byGroup.has(m.id)).map((m) =>
     renderGroupSection(m, byGroup.get(m.id)),
   );
+  const details = GROUP_META.filter((m) => byGroup.has(m.id))
+    .flatMap((m) => byGroup.get(m.id))
+    .map(renderToolDetail);
 
   const header = `# Tool reference
 
@@ -83,7 +91,23 @@ Generated from \`src/tools/**\` via \`npm run docs:tools\` — do not edit by ha
 ${tools.length} tools across ${sections.length} groups.
 `;
 
-  return `${header}\n${sections.join("\n")}`;
+  return `${header}\n${sections.join("\n")}\n## Parameters\n\nEach tool's full description and its inputs, from the tool schemas.\n\n${details.join("\n")}`;
+}
+
+// One tool in full: its whole description, then every input with the
+// description its schema carries. Nested fields are summarised by their
+// parent's description; the schema itself is the exact contract.
+function renderToolDetail(tool) {
+  const rows = Object.entries(tool.inputShape).map(([key, schema]) => {
+    const required = schema.safeParse(undefined).success ? "no" : "yes";
+    const text = (schema.description ?? "").replace(/\s+/g, " ").trim();
+    return `| \`${key}\` | ${required} | ${escapeCell(text)} |`;
+  });
+  const table = rows.length
+    ? `| Parameter | Required | Description |\n| --- | --- | --- |\n${rows.join("\n")}\n`
+    : "No parameters.\n";
+  const description = escapeText(tool.description.replace(/\s+/g, " ").trim());
+  return `### \`${tool.name}\`\n\n${description}\n\n${table}`;
 }
 
 const content = render(ALL_TOOLS);

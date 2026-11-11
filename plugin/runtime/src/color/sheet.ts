@@ -167,6 +167,320 @@ export function analyzeFrame(img: DecodedPng): FrameAnalysis {
 }
 
 // ---------------------------------------------------------------------------
+// Transparency: what a transparent pixel is shown against
+// ---------------------------------------------------------------------------
+
+/** The checkerboard drawn behind transparency: mid greys, so black and white both read. */
+export const CHECKERBOARD: { size: number; light: Rgb; dark: Rgb } = {
+  size: 16,
+  light: [0.8, 0.8, 0.8],
+  dark: [0.6, 0.6, 0.6],
+};
+
+export type Backdrop = { kind: "color"; color: Rgb } | { kind: "checkerboard" };
+
+/**
+ * The colour under a capture's comp background. saveFrameToPng writes an
+ * alpha channel, but its RGB is already laid over the comp background colour
+ * (measured live, AE 27.0, 8 and 16 bpc): captured = colour·a + bg·(1 − a).
+ * So colour = (captured − bg·(1 − a)) / a, clamped to 0..1, and 0 where
+ * a = 0 (nothing covers the pixel, so there is no colour to recover). On a
+ * black background this is un-premultiplying. Returns a new RGB buffer; an
+ * image without alpha comes back as an unchanged copy.
+ */
+export function unmatte(img: DecodedPng, bg: Rgb): Float64Array {
+  const out = Float64Array.from(img.rgb);
+  const alpha = img.alpha;
+  if (!alpha) return out;
+  for (let p = 0; p < alpha.length; p++) {
+    const a = alpha[p];
+    if (a >= 1) continue;
+    const i = p * 3;
+    for (let c = 0; c < 3; c++) {
+      out[i + c] = a <= 0 ? 0 : Math.min(1, Math.max(0, (out[i + c] - bg[c] * (1 - a)) / a));
+    }
+  }
+  return out;
+}
+
+/**
+ * Composite straight (unassociated) colour over a backdrop:
+ * out = rgb·a + backdrop·(1 − a). Returns a new RGB buffer; an image without
+ * alpha comes back as an unchanged copy. A raw capture is not straight (see
+ * unmatte): take its comp background out first.
+ */
+export function flattenOver(img: DecodedPng, backdrop: Backdrop): Float64Array {
+  const out = Float64Array.from(img.rgb);
+  const alpha = img.alpha;
+  if (!alpha) return out;
+  const { width, height } = img;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const p = y * width + x;
+      const a = alpha[p];
+      if (a >= 1) continue;
+      const bg =
+        backdrop.kind === "color"
+          ? backdrop.color
+          : (Math.floor(x / CHECKERBOARD.size) + Math.floor(y / CHECKERBOARD.size)) % 2 === 0
+            ? CHECKERBOARD.light
+            : CHECKERBOARD.dark;
+      const i = p * 3;
+      out[i] = out[i] * a + bg[0] * (1 - a);
+      out[i + 1] = out[i + 1] * a + bg[1] * (1 - a);
+      out[i + 2] = out[i + 2] * a + bg[2] * (1 - a);
+    }
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// Reading colour: regions, histograms, differences between frames
+// ---------------------------------------------------------------------------
+
+/** A named point (no width/height: one pixel) or rectangle, in capture pixels. */
+export interface RegionSpec {
+  name: string;
+  x: number;
+  y: number;
+  width?: number;
+  height?: number;
+}
+
+export interface PixelRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface AlphaStats {
+  mean: number;
+  min: number;
+  max: number;
+  /** Shares (0..1) of the region's pixels that are fully opaque, partly covered, fully transparent. */
+  opaqueShare: number;
+  partialShare: number;
+  transparentShare: number;
+}
+
+export interface RegionStats {
+  name: string;
+  /** The rectangle actually measured, after clipping to the frame. */
+  rect: PixelRect;
+  clipped: boolean;
+  pixels: number;
+  /** Per channel [r, g, b], 0..1, rounded to 4 decimals. */
+  mean: Rgb;
+  min: Rgb;
+  max: Rgb;
+  /** Null when the image has no alpha channel. */
+  alpha: AlphaStats | null;
+}
+
+export interface RegionError {
+  name: string;
+  error: string;
+}
+
+const r4 = (v: number) => Math.round(v * 1e4) / 1e4;
+const r4rgb = (v: Rgb): Rgb => [r4(v[0]), r4(v[1]), r4(v[2])];
+
+/** Clip a region to the frame; null when nothing of it is inside. */
+function clipRegion(
+  img: DecodedPng,
+  region: RegionSpec,
+): { rect: PixelRect; clipped: boolean } | null {
+  const x0 = Math.floor(region.x);
+  const y0 = Math.floor(region.y);
+  const x1 = x0 + Math.max(1, Math.floor(region.width ?? 1));
+  const y1 = y0 + Math.max(1, Math.floor(region.height ?? 1));
+  const cx0 = Math.max(0, x0);
+  const cy0 = Math.max(0, y0);
+  const cx1 = Math.min(img.width, x1);
+  const cy1 = Math.min(img.height, y1);
+  if (cx1 <= cx0 || cy1 <= cy0) return null;
+  return {
+    rect: { x: cx0, y: cy0, width: cx1 - cx0, height: cy1 - cy0 },
+    clipped: cx0 !== x0 || cy0 !== y0 || cx1 !== x1 || cy1 !== y1,
+  };
+}
+
+function outside(img: DecodedPng, region: RegionSpec): RegionError {
+  return { name: region.name, error: `region is outside the ${img.width}×${img.height} frame` };
+}
+
+/** Mean, minimum and maximum per channel, and alpha coverage, for each region. */
+export function sampleRegions(
+  img: DecodedPng,
+  regions: RegionSpec[],
+): Array<RegionStats | RegionError> {
+  return regions.map((region) => {
+    const clip = clipRegion(img, region);
+    if (!clip) return outside(img, region);
+    const { rect } = clip;
+    const sum: Rgb = [0, 0, 0];
+    const min: Rgb = [Infinity, Infinity, Infinity];
+    const max: Rgb = [-Infinity, -Infinity, -Infinity];
+    let aSum = 0;
+    let aMin = Infinity;
+    let aMax = -Infinity;
+    let opaque = 0;
+    let transparent = 0;
+    for (let y = rect.y; y < rect.y + rect.height; y++) {
+      for (let x = rect.x; x < rect.x + rect.width; x++) {
+        const p = y * img.width + x;
+        for (let c = 0; c < 3; c++) {
+          const v = img.rgb[p * 3 + c];
+          sum[c] += v;
+          if (v < min[c]) min[c] = v;
+          if (v > max[c]) max[c] = v;
+        }
+        if (img.alpha) {
+          const a = img.alpha[p];
+          aSum += a;
+          if (a < aMin) aMin = a;
+          if (a > aMax) aMax = a;
+          if (a >= 1 - TOL) opaque++;
+          else if (a <= TOL) transparent++;
+        }
+      }
+    }
+    const n = rect.width * rect.height;
+    return {
+      name: region.name,
+      rect,
+      clipped: clip.clipped,
+      pixels: n,
+      mean: r4rgb([sum[0] / n, sum[1] / n, sum[2] / n]),
+      min: r4rgb(min),
+      max: r4rgb(max),
+      alpha: img.alpha
+        ? {
+            mean: r4(aSum / n),
+            min: r4(aMin),
+            max: r4(aMax),
+            opaqueShare: r4(opaque / n),
+            partialShare: r4((n - opaque - transparent) / n),
+            transparentShare: r4(transparent / n),
+          }
+        : null,
+    };
+  });
+}
+
+export interface FrameHistogram {
+  bins: number;
+  pixels: number;
+  /** Pixel counts per bin, bin i covering [i/bins, (i+1)/bins); 1.0 lands in the last bin. */
+  r: number[];
+  g: number[];
+  b: number[];
+  /** Present only when the image has an alpha channel. */
+  a?: number[];
+}
+
+/** Whole-frame per-channel histogram with `bins` equal-width bins over 0..1. */
+export function histogramOf(img: DecodedPng, bins: number): FrameHistogram {
+  const n = img.width * img.height;
+  const counts = [0, 1, 2].map(() => Array.from({ length: bins }, () => 0));
+  const aCounts = img.alpha ? Array.from({ length: bins }, () => 0) : undefined;
+  const bin = (v: number) => Math.min(bins - 1, Math.max(0, Math.floor(v * bins)));
+  for (let p = 0; p < n; p++) {
+    for (let c = 0; c < 3; c++) counts[c][bin(img.rgb[p * 3 + c])]++;
+    if (aCounts && img.alpha) aCounts[bin(img.alpha[p])]++;
+  }
+  return {
+    bins,
+    pixels: n,
+    r: counts[0],
+    g: counts[1],
+    b: counts[2],
+    ...(aCounts ? { a: aCounts } : {}),
+  };
+}
+
+export interface RegionDiff {
+  name: string;
+  rect: PixelRect;
+  clipped: boolean;
+  pixels: number;
+  /** Mean of (to − from) per channel: the region's average shift, signed. */
+  meanDelta: Rgb;
+  /** Mean of |to − from| per channel: how much its pixels changed. */
+  meanAbsDelta: Rgb;
+  maxAbsDelta: Rgb;
+  /** Null unless both frames have an alpha channel. */
+  alpha: { meanDelta: number; meanAbsDelta: number; maxAbsDelta: number } | null;
+}
+
+/** Per-region differences between two frames of the same size, `to` minus `from`. */
+export function compareRegions(
+  from: DecodedPng,
+  to: DecodedPng,
+  regions: RegionSpec[],
+): Array<RegionDiff | RegionError> {
+  if (from.width !== to.width || from.height !== to.height) {
+    throw new Error(
+      `cannot compare frames of different size (${from.width}×${from.height} vs ${to.width}×${to.height})`,
+    );
+  }
+  const withAlpha = from.alpha !== undefined && to.alpha !== undefined;
+  return regions.map((region) => {
+    const clip = clipRegion(from, region);
+    if (!clip) return outside(from, region);
+    const { rect } = clip;
+    const delta: Rgb = [0, 0, 0];
+    const absSum: Rgb = [0, 0, 0];
+    const absMax: Rgb = [0, 0, 0];
+    let aDelta = 0;
+    let aAbs = 0;
+    let aMax = 0;
+    for (let y = rect.y; y < rect.y + rect.height; y++) {
+      for (let x = rect.x; x < rect.x + rect.width; x++) {
+        const p = y * from.width + x;
+        for (let c = 0; c < 3; c++) {
+          const d = to.rgb[p * 3 + c] - from.rgb[p * 3 + c];
+          delta[c] += d;
+          absSum[c] += Math.abs(d);
+          if (Math.abs(d) > absMax[c]) absMax[c] = Math.abs(d);
+        }
+        if (withAlpha) {
+          const d = (to.alpha as Float64Array)[p] - (from.alpha as Float64Array)[p];
+          aDelta += d;
+          aAbs += Math.abs(d);
+          if (Math.abs(d) > aMax) aMax = Math.abs(d);
+        }
+      }
+    }
+    const n = rect.width * rect.height;
+    return {
+      name: region.name,
+      rect,
+      clipped: clip.clipped,
+      pixels: n,
+      meanDelta: r4rgb([delta[0] / n, delta[1] / n, delta[2] / n]),
+      meanAbsDelta: r4rgb([absSum[0] / n, absSum[1] / n, absSum[2] / n]),
+      maxAbsDelta: r4rgb(absMax),
+      alpha: withAlpha
+        ? { meanDelta: r4(aDelta / n), meanAbsDelta: r4(aAbs / n), maxAbsDelta: r4(aMax) }
+        : null,
+    };
+  });
+}
+
+/** "#rrggbb" for an RGB triple in 0..1, as an 8-bit file stores it. */
+export function rgbHex(rgb: Rgb): string {
+  return `#${rgb
+    .map((v) =>
+      Math.round(Math.min(1, Math.max(0, v)) * 255)
+        .toString(16)
+        .padStart(2, "0"),
+    )
+    .join("")}`;
+}
+
+// ---------------------------------------------------------------------------
 // Contact sheet
 // ---------------------------------------------------------------------------
 
