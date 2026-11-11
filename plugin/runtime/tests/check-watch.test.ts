@@ -210,6 +210,8 @@ describe("PieceWatcher", () => {
     expect(r.framesChecked).toBe(30);
     expect(r.flags.some((f) => f.kind === "pop")).toBe(false);
     expect(r.notes.join(" ")).toMatch(/one-frame pop .*missed/);
+    expect(r.notes.join(" ")).toMatch(/1 frame in every 2 was checked/);
+    expect(r.notes.join(" ")).not.toMatch(/\dth frame/);
     const frozen = r.stretches.filter((s) => s.kind === "frozen");
     expect(frozen).toHaveLength(1);
     // Sampled frames 20..38 are the same picture; the true hold may run up to every - 1 frames past each end.

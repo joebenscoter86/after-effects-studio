@@ -896,6 +896,8 @@ const SHORT: Record<string, string> = {
 interface SheetTile {
   frame: number;
   kinds: string[];
+  /** Which moment of a finding the tile shows, when it is not the obvious one. */
+  why?: string[];
 }
 
 async function makeSheet(
@@ -913,17 +915,30 @@ async function makeSheet(
   tag: string,
 ): Promise<Record<string, unknown> | null> {
   const tiles = new Map<number, SheetTile>();
-  const add = (frame: number, kind: string) => {
+  const add = (frame: number, kind: string, why?: string) => {
     const k = Math.max(range.from, Math.min(range.to, frame));
     const tile = tiles.get(k) ?? { frame: k, kinds: [] };
     if (!tile.kinds.includes(kind)) tile.kinds.push(kind);
+    if (why !== undefined) (tile.why ??= []).push(why);
     tiles.set(k, tile);
   };
   for (const f of flags) add(f.frame, f.kind);
   for (const s of stretches) add(s.kind === "frozen" ? s.from.frame : (s.worst?.frame ?? s.from.frame), s.kind);
-  const off = (structure?.offFrame as { findings?: Array<{ edge: string; worstAt: { frame: number } }> } | undefined)
-    ?.findings ?? [];
-  for (const o of off) add(o.worstAt.frame, `off-${o.edge}`);
+  const off =
+    (
+      structure?.offFrame as
+        | { findings?: Array<{ edge: string; layer: { name: string }; from: { time: number; frame: number } }> }
+        | undefined
+    )?.findings ?? [];
+  // The first sampled time past the edge, not worstAt: a layer wholly out at
+  // its worst moment shows nothing on the tile.
+  for (const o of off) {
+    add(
+      o.from.frame,
+      `off-${o.edge}`,
+      `off-${o.edge}: "${o.layer.name}" at the first sampled time past the ${o.edge} edge (${o.from.time} s), while still partly in frame; the finding's worstAt is when it is furthest out`,
+    );
+  }
   if (tiles.size === 0) return null;
   const all = [...tiles.values()].sort((a, b) => a.frame - b.frame);
   const chosen = all.slice(0, maxTiles);
@@ -934,7 +949,7 @@ async function makeSheet(
   if ("error" in res) return { writtenTo: null, error: `the sheet's frames could not be captured: ${res.error}` };
   const images: DecodedPng[] = [];
   const labels: string[] = [];
-  const kept: Array<{ frame: number; time: number; kinds: string[]; path: string }> = [];
+  const kept: Array<{ frame: number; time: number; kinds: string[]; why?: string[]; path: string }> = [];
   for (const c of chosen) {
     const got = res.frames.find((f) => f.frame === c.frame);
     if (!got?.path) continue;
@@ -942,7 +957,7 @@ async function makeSheet(
       const pic = await readPicture(got.path, target, convert);
       await fs.writeFile(got.path, encodePngSrgb8(pic.width, pic.height, pic.rgb));
       images.push({ width: pic.width, height: pic.height, rgb: pic.rgb, bitDepth: 8 });
-      kept.push({ frame: c.frame, time: r6(c.frame * fd), kinds: c.kinds, path: got.path });
+      kept.push({ frame: c.frame, time: r6(c.frame * fd), kinds: c.kinds, ...(c.why ? { why: c.why } : {}), path: got.path });
     } catch {
       await fs.rm(got.path, { force: true });
     }

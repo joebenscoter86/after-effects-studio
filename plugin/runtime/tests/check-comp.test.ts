@@ -227,11 +227,14 @@ describe("ae_check_comp: one call over a seeded comp", () => {
     expect(sheet.writtenTo).toMatch(/check-sheet-0-89\.png$/);
     expect(existsSync(sheet.writtenTo)).toBe(true);
     const frames = sheet.frames.map((f: any) => f.frame);
-    expect(frames).toEqual(expect.arrayContaining([20, 40, 70, 45]));
+    expect(frames).toEqual(expect.arrayContaining([20, 40, 70, 30]));
     const kinds = Object.fromEntries(sheet.frames.map((f: any) => [f.frame, f.kinds.join("+")]));
     expect(kinds[20]).toMatch(/pop/);
     expect(kinds[40]).toBe("frozen");
-    expect(kinds[45]).toBe("off-right");
+    // The off-frame tile is the finding's first sampled time (1 s, frame 30), not worstAt (1.5 s).
+    expect(kinds[30]).toBe("off-right");
+    const offTile = sheet.frames.find((f: any) => f.frame === 30);
+    expect(offTile.why.join(" ")).toMatch(/first sampled time past the right edge \(1 s\)/);
     const files = (await fs.readdir(dir)).sort();
     expect(files).toEqual(
       [path.basename(sheet.writtenTo), ...frames.map((k: number) => `frame-${k}.png`)].sort(),
