@@ -296,6 +296,24 @@ describe("ae_check_comp: bounded calls", () => {
   });
 });
 
+describe("ae_check_comp: range", () => {
+  it("clamps the range to the comp's duration (After Effects writes frames past the end without an error)", async () => {
+    const ae = fakeAe({ frames: 30 });
+    const { res } = await check({ from: 0, to: 10, sheet: false, structure: false }, ae);
+    expect(res.range.to.frame).toBe(29);
+    const asked = ae.calls
+      .filter((c) => c.label === "check_comp_capture")
+      .flatMap((c) => JSON.parse(/var _frameNums = (.*);/.exec(c.code)![1]) as number[]);
+    expect(Math.max(...asked)).toBe(29);
+  });
+
+  it("says the project is left marked as changed when the resolution was set", async () => {
+    const ae = fakeAe({ frames: 10 });
+    const { res } = await check({ sheet: false, structure: false }, ae);
+    expect(res.notes.join(" ")).toMatch(/marks the project as changed/);
+  });
+});
+
 describe("ae_check_comp: capture size", () => {
   it("works when saveFrameToPng ignores the reduced size: says so and shrinks in Node", async () => {
     const ae = fakeAe({ frames: 12, seed: { flash: 5 }, honourFactor: false });
