@@ -66,6 +66,7 @@ describe("summarizeSeries", () => {
     const s = series([0.008, 0.008, 0.008, 0, 0.016, 0.008, 0.008]);
     expect(kinds(s)).toEqual(["stutter"]);
     expect(s.flags[0].pairs).toEqual([3]);
+    expect(s.flags[0].unreliablePairs).toEqual([2, 4]);
     expect(s.flags[0].frame).toEqual({ index: 4, time: 4 / 25 });
   });
 
@@ -115,6 +116,56 @@ describe("summarizeSeries", () => {
     expect(strict.flags).toEqual([]);
   });
 
+  it("does not measure a pair against a repeated frame beside it, and flags the repeat", () => {
+    // Found live: the first pair (0.019) read as a cut because its only
+    // neighbour was a repeated frame (change exactly 0).
+    const s = series([0.019, 0]);
+    expect(kinds(s)).toEqual(["repeat"]);
+    expect(s.flags[0].pairs).toEqual([1]);
+    expect(s.flags[0].frame).toEqual({ index: 2, time: 2 / 25 });
+    expect(s.flags[0].unreliablePairs).toEqual([0]);
+    expect(s.flags[0].reading).toMatch(/unreliable/);
+  });
+
+  it("reads rounded times that repeat every third frame as stutters, not cuts", () => {
+    const n = 0.006;
+    const s = series([n, n, 0, 2 * n, n, 0, 2 * n, n]);
+    expect(kinds(s)).toEqual(["stutter", "stutter"]);
+    expect(s.flags[0].pairs).toEqual([2]);
+    expect(s.flags[0].unreliablePairs).toEqual([1, 3]);
+    expect(s.flags[1].pairs).toEqual([5]);
+  });
+
+  it("still finds a cut beside a repeat, against the pairs that are not repeats, and says so", () => {
+    const s = series([0.006, 0.006, 0, 0.15, 0.006, 0.006]);
+    expect(kinds(s)).toEqual(["stutter", "cut"]);
+    const cut = s.flags[1];
+    expect(cut.pairs).toEqual([3]);
+    expect(cut.reference).toBeCloseTo(0.006, 6);
+    expect(cut.besideRepeat).toBe(true);
+    expect(cut.reading).toMatch(/repeated frame/);
+  });
+
+  it("flags nothing in a still series where every pair repeats", () => {
+    expect(series([0, 0, 0, 0], 0).flags).toEqual([]);
+  });
+
+  it("counts a pair as a repeat up to repeatBelow", () => {
+    expect(DIFF_DEFAULTS.repeatBelow).toBe(0.0001);
+    const near = series([0.019, 0.00005]);
+    expect(kinds(near)).toEqual(["repeat"]);
+    const strict = summarizeSeries(
+      [0.019, 0.00005].map((change, i) => ({
+        from: { index: i, time: undefined },
+        to: { index: i + 1, time: undefined },
+        change,
+        changedShare: 0.02,
+      })),
+      resolveDiffThresholds({ repeatBelow: 0 }),
+    );
+    expect(strict.flags.map((f) => f.kind)).not.toContain("repeat");
+  });
+
   it("reports a single pair without flags (nothing to stand out from)", () => {
     const s = series([0.2]);
     expect(s.pairs).toBe(1);
@@ -132,6 +183,7 @@ describe("diff thresholds", () => {
       movingShare: 0.0005,
       window: 3,
       amplify: 8,
+      repeatBelow: 0.0001,
     });
   });
 

@@ -22,6 +22,7 @@ interface MockOm {
 
 interface MockItem {
   comp: { name: string };
+  templates: string[];
   render: boolean;
   status: string;
   timeSpanStart: number;
@@ -70,6 +71,7 @@ function makeItem(
   };
   const item: MockItem = {
     comp,
+    templates: ["Best Settings", "Draft Settings"],
     render,
     status,
     timeSpanStart: 0,
@@ -106,8 +108,13 @@ const COMP = {
   height: 1920,
 };
 
-function run(args: Record<string, unknown>, world: World, comp: typeof COMP | null = COMP) {
-  const code = getOp("render.preview")!.toJsx(args);
+function run(
+  args: Record<string, unknown>,
+  world: World,
+  comp: typeof COMP | null = COMP,
+  opName = "render.preview",
+) {
+  const code = getOp(opName)!.toJsx(args);
   let clock = 1_000;
   const MockFile = class {
     constructor(readonly fsName: string) {}
@@ -345,5 +352,79 @@ describe("render.preview", () => {
     const out = run({ comp: "Main", outputPath: OUT }, world({ writes: false }));
     expect(out.ok).toBe(false);
     expect(out.error).toMatch(/no new file/);
+  });
+
+  it("says the project is left modified by the queue change", () => {
+    const out = run({ comp: "Main", outputPath: OUT }, world());
+    expect(out.projectModified).toBe(true);
+    expect(out.projectNote).toMatch(/render-queue item was added and removed/);
+  });
+
+  it("lists the templates through a temporary item, leaving the queue as it was", () => {
+    const w = world();
+    const other = makeItem(w, { name: "Other" });
+    w.items.push(other);
+    const out = run({ comp: "Main", listTemplates: true }, w);
+    expect(out).toMatchObject({
+      ok: true,
+      outputTemplates: TEMPLATES,
+      renderTemplates: ["Best Settings", "Draft Settings"],
+      projectModified: true,
+    });
+    expect(w.items).toEqual([other]);
+    expect(other.render).toBe(true);
+    expect(w.renderedWhileFlags).toEqual([]);
+  });
+
+  it("refuses a missing comp when listing templates", () => {
+    const w = world();
+    const out = run({ comp: "Nope", listTemplates: true }, w);
+    expect(out.ok).toBe(false);
+    expect(out.error).toMatch(/no comp matching Nope/);
+  });
+
+  it("needs an outputPath unless it is only listing templates", () => {
+    const out = run({ comp: "Main" }, world());
+    expect(out.ok).toBe(false);
+    expect(out.error).toMatch(/outputPath/);
+  });
+});
+
+describe("render.list_templates with an empty queue", () => {
+  it("reads through a temporary item for the named comp and removes it", () => {
+    const w = world();
+    const out = run({ comp: "Main" }, w, COMP, "render.list_templates");
+    expect(out).toMatchObject({ ok: true, outputTemplates: TEMPLATES, temporaryItem: true });
+    expect(w.items).toHaveLength(0);
+  });
+
+  it("still reads from the first item when the queue has one, adding nothing", () => {
+    const w = world();
+    w.items.push(makeItem(w, { name: "Other" }));
+    const out = run({}, w, COMP, "render.list_templates");
+    expect(out).toMatchObject({ ok: true, outputTemplates: TEMPLATES });
+    expect(out.temporaryItem).toBeUndefined();
+    expect(w.items).toHaveLength(1);
+  });
+
+  it("adds nothing in read-only mode", () => {
+    const before = process.env.AE_MCP_READONLY;
+    process.env.AE_MCP_READONLY = "1";
+    try {
+      const w = world();
+      const out = run({ comp: "Main" }, w, COMP, "render.list_templates");
+      expect(out.ok).toBe(false);
+      expect(out.error).toMatch(/AE_MCP_READONLY/);
+      expect(w.items).toHaveLength(0);
+    } finally {
+      if (before === undefined) delete process.env.AE_MCP_READONLY;
+      else process.env.AE_MCP_READONLY = before;
+    }
+  });
+
+  it("says to name a comp when the queue is empty", () => {
+    const out = run({}, world(), COMP, "render.list_templates");
+    expect(out.ok).toBe(false);
+    expect(out.error).toMatch(/comp/);
   });
 });

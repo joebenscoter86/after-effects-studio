@@ -1,5 +1,6 @@
 // Render queue operations.
 
+import { readOnlyMode } from "../policy.js";
 import { registerOp, jsxFail, jsxVal, jsxCompPreamble } from "../registry.js";
 
 /**
@@ -9,6 +10,21 @@ import { registerOp, jsxFail, jsxVal, jsxCompPreamble } from "../registry.js";
  * Items are addressed by index, so the temporary item must be added after
  * parking (it lands at the end) and removed before unparking.
  */
+/** Template names as a queue item and its first output module list them. */
+const READ_TEMPLATES_FN = `
+    function _readTemplates(_item) {
+        var _render = [];
+        var _output = [];
+        try { _render = _item.templates; } catch (eR) {}
+        try { _output = _item.outputModule(1).templates; } catch (eO) {}
+        return { renderTemplates: _render, outputTemplates: _output };
+    }
+`;
+
+/** Said on every render.preview answer and on a list that used a temporary item. */
+const QUEUE_CHANGE_NOTE =
+  "the project is left modified (unsaved): a render-queue item was added and removed. Nothing in the comps changed; save or revert as you normally would";
+
 const PARK_QUEUE_FN = `
     function _parkQueue(rq) {
         var _parked = [];
@@ -499,18 +515,38 @@ registerOp({
   category: "render",
   readOnly: true,
   description:
-    "List available render-settings templates and output-module templates. The render queue must have at least one item (templates are read from a queue item).",
-  params: [],
-  toJsx() {
+    "List available render-settings templates and output-module templates. They are read from a queue item: the first one, or, when the queue is empty and `comp` is given, a temporary item for that comp that is removed again (the project is then left modified by the queue change; render.preview with listTemplates does the same).",
+  params: [
+    {
+      name: "comp",
+      type: "any",
+      description: "Comp name or id for a temporary queue item, used only when the queue is empty",
+      required: false,
+    },
+  ],
+  toJsx(args) {
     return `
+            ${READ_TEMPLATES_FN}
             var rq = app.project.renderQueue;
-            if (rq.numItems === 0) return { ok: false, error: "add a comp to the render queue first (render.add_to_queue) — templates are read from a queue item" };
-            var _rqi = rq.item(1);
-            var _render = [];
-            var _output = [];
-            try { _render = _rqi.templates; } catch (eR) {}
-            try { _output = _rqi.outputModule(1).templates; } catch (eO) {}
-            return { ok: true, renderTemplates: _render, outputTemplates: _output };
+            if (rq.numItems > 0) {
+                var _first = _readTemplates(rq.item(1));
+                return { ok: true, renderTemplates: _first.renderTemplates, outputTemplates: _first.outputTemplates };
+            }
+            var _compArg = ${jsxVal(args.comp ?? null)};
+            if (${jsxVal(readOnlyMode())}) return { ok: false, error: "the render queue is empty, and AE_MCP_READONLY=1 forbids the temporary queue item that would modify the project" };
+            if (_compArg === null) return { ok: false, error: "the render queue is empty: pass comp (a temporary item is added, read and removed), or use render.preview with listTemplates" };
+            var _comp = AE.findCompByNameOrId(_compArg);
+            if (!_comp) return { ok: false, error: "no comp matching " + String(_compArg) };
+            var _tmp = null;
+            try {
+                _tmp = rq.items.add(_comp);
+                var _read = _readTemplates(_tmp);
+                return { ok: true, renderTemplates: _read.renderTemplates, outputTemplates: _read.outputTemplates, temporaryItem: true, projectModified: true, projectNote: ${jsxVal(QUEUE_CHANGE_NOTE)} };
+            } catch (eT) {
+                return { ok: false, error: "could not read templates: " + AE.errText(eT) };
+            } finally {
+                if (_tmp) { try { _tmp.remove(); } catch (eRm) {} }
+            }
         `;
   },
 });
@@ -790,15 +826,25 @@ registerOp({
     "Never overwrites an existing file unless overwrite is true; creates the output folder. Returns outputPath, timeSpanStart, durationSeconds, frameCount, frameRate, " +
     "renderSeconds (wall clock of the render), elapsedSeconds (AE's own count), bytes, outputTemplate, resolution (+ resolutionReadBack) and warnings. " +
     "Blocks until done: raise ae_do timeoutMs for long comps (235 frames at 1080×1920 with 'High Quality' took about 20 s). " +
-    "Defaults are what is known to work: output template 'High Quality' (a .mov) at full resolution; discover other template names with render.list_templates.",
+    "Defaults are what is known to work: output template 'High Quality' (a ProRes .mov) at full resolution; resolution 'half' was measured live (540×960 from 1080×1920, about a third of the time). " +
+    "listTemplates: true renders nothing and returns the render-settings and output-module template names, read from a temporary queue item that is removed again. " +
+    "Every answer carries projectModified: true and projectNote: adding and removing a queue item leaves the project unsaved.",
   params: [
     { name: "comp", type: "any", description: "Comp name or id", required: true },
     {
       name: "outputPath",
       type: "string",
       description:
-        "Movie file path (the output template may change the extension; the path AE actually wrote is returned)",
-      required: true,
+        "Movie file path (the output template may change the extension; the path AE actually wrote is returned). Required unless listTemplates",
+      required: false,
+    },
+    {
+      name: "listTemplates",
+      type: "boolean",
+      description:
+        "Render nothing: return renderTemplates and outputTemplates, read from a temporary queue item for comp that is removed again",
+      required: false,
+      default: false,
     },
     {
       name: "span",
@@ -857,6 +903,26 @@ registerOp({
     },
   ],
   toJsx(args) {
+    if (args.listTemplates === true) {
+      return `
+            ${jsxCompPreamble(args)}
+            ${READ_TEMPLATES_FN}
+            var rq = app.project.renderQueue;
+            if (AE.safeGet(function () { return rq.rendering; }, false)) return { ok: false, error: "the render queue is already rendering; wait for it to finish" };
+            var _tmp = null;
+            try {
+                _tmp = rq.items.add(_comp);
+                var _read = _readTemplates(_tmp);
+                return { ok: true, renderTemplates: _read.renderTemplates, outputTemplates: _read.outputTemplates, projectModified: true, projectNote: ${jsxVal(QUEUE_CHANGE_NOTE)} };
+            } catch (eT) {
+                return { ok: false, error: "could not read templates: " + AE.errText(eT), projectModified: true, projectNote: ${jsxVal(QUEUE_CHANGE_NOTE)} };
+            } finally {
+                if (_tmp) { try { _tmp.remove(); } catch (eRm) {} }
+            }
+        `;
+    }
+    if (typeof args.outputPath !== "string" || args.outputPath === "")
+      return jsxFail("outputPath is required (unless listTemplates is true)");
     const span = args.span ?? "workArea";
     if (span !== "workArea" && span !== "comp") return jsxFail("span must be workArea or comp");
     const resolution = String(args.resolution ?? "full").toLowerCase();
@@ -942,6 +1008,8 @@ registerOp({
                 _unparkQueue(rq, _parked);
             }
             if (rq.numItems !== _numBefore) _w.push("the render queue has " + rq.numItems + " items, it had " + _numBefore);
+            _out.projectModified = true;
+            _out.projectNote = ${jsxVal(QUEUE_CHANGE_NOTE)};
             return _out;
         `;
   },
