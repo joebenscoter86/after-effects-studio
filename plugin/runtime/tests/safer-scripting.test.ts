@@ -269,15 +269,39 @@ describe("undo and redo", () => {
     });
   }
 
-  it("project.undo reverts the last step with dialogs suppressed", () => {
+  it("project.undo reverts the last step with dialogs suppressed, and says the project changed", () => {
     const ae = new FakeAe();
     ae.userStep("A");
     ae.userStep("B");
     const res = run(ae, "project.undo", { count: 1 });
     expect(res.ok).toBe(true);
-    expect(res.result).toMatchObject({ ok: true, done: 1, aeErrors: [] });
+    expect(res.result).toMatchObject({ ok: true, commandsRun: 1, changed: true, aeErrors: [] });
     expect(ae.names()).toEqual(["A"]);
     expect(ae.commands).toEqual([{ id: 16, suppressed: true }]);
+  });
+
+  it("never reports a step undone when the history was empty", () => {
+    // Live, 2026-11-10: project.undo on an empty history answered
+    // { done: 1, undone: 1 }.
+    const ae = new FakeAe();
+    const res = run(ae, "project.undo", {});
+    const result = res.result as Record<string, unknown>;
+    expect(result.ok).toBe(true);
+    expect(result.changed).toBe(false);
+    expect(result).not.toHaveProperty("undone");
+    expect(result).not.toHaveProperty("done");
+    expect(String(result.effect)).toMatch(/no change .*was seen/);
+    expect(String(result.effect)).toMatch(/history was empty|nothing to undo/);
+  });
+
+  it("sees an undo of a layer rename in the active comp", () => {
+    const ae = new FakeAe();
+    const comp = ae.userStep("MAIN");
+    ae.setActive(comp);
+    ae.userLayerStep(comp, "L1");
+    ae.userRenameLayerStep(comp, 1, "L1 renamed");
+    const res = run(ae, "project.undo", {});
+    expect((res.result as { changed: boolean }).changed).toBe(true);
   });
 
   it("project.redo replays it", () => {
@@ -285,9 +309,27 @@ describe("undo and redo", () => {
     ae.userStep("A");
     run(ae, "project.undo", {});
     const res = run(ae, "project.redo", { count: 1 });
-    expect(res.result).toMatchObject({ ok: true, done: 1 });
+    expect(res.result).toMatchObject({ ok: true, commandsRun: 1, changed: true });
     expect(ae.names()).toEqual(["A"]);
     expect(ae.commands.map((c) => c.id)).toEqual([16, 2035]);
+  });
+
+  it("project.redo with nothing to redo says no change was seen", () => {
+    const ae = new FakeAe();
+    ae.userStep("A");
+    const res = run(ae, "project.redo", {});
+    const result = res.result as Record<string, unknown>;
+    expect(result.changed).toBe(false);
+    expect(result).not.toHaveProperty("redone");
+    expect(String(result.effect)).toMatch(/nothing to redo/);
+  });
+
+  it("counts only the commands that changed something", () => {
+    const ae = new FakeAe();
+    ae.userStep("A");
+    const res = run(ae, "project.undo", { count: 3 });
+    expect(res.result).toMatchObject({ commandsRun: 3, changed: true, commandsWithChange: 1 });
+    expect(ae.names()).toEqual([]);
   });
 
   it("says in its result when After Effects reported an error", () => {
@@ -306,9 +348,9 @@ describe("undo and redo", () => {
     ae.userStep("A");
     ae.undoBehaviour = "throw";
     const res = run(ae, "project.undo", { count: 3 });
-    const result = res.result as { ok: boolean; done: number; error: string };
+    const result = res.result as { ok: boolean; commandsRun: number; error: string };
     expect(result.ok).toBe(false);
-    expect(result.done).toBe(0);
+    expect(result.commandsRun).toBe(0);
     expect(result.error).toMatch(/undo 1 of 3 threw/);
     expect(ae.commands).toHaveLength(1);
   });
@@ -317,7 +359,7 @@ describe("undo and redo", () => {
     const ae = new FakeAe();
     ae.userStep("A");
     const res = run(ae, "command.execute", { id: 16 });
-    expect(res.result).toMatchObject({ ok: true, commandId: 16, done: 1 });
+    expect(res.result).toMatchObject({ ok: true, commandId: 16, commandsRun: 1, changed: true });
     expect(ae.names()).toEqual([]);
   });
 });

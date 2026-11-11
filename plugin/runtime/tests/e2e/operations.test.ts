@@ -298,8 +298,12 @@ describe("e2e operations", () => {
       });
       expect(added.layers).toHaveLength(before.layers.length + 2);
 
-      const undone = await o().run<{ ok: boolean; undone: number }>("project.undo", { count: 1 });
-      expect(undone.undone).toBe(1);
+      const undone = await o().run<{ ok: boolean; commandsRun: number; changed: boolean | null }>(
+        "project.undo",
+        { count: 1 },
+      );
+      expect(undone.commandsRun).toBe(1);
+      expect(undone.changed).toBe(true);
 
       // One batch = one undo step: both layers are gone, and nothing older is.
       const after = await o().run<{ layers: Array<{ name: string }> }>("comp.info", {

@@ -174,6 +174,7 @@ export class FakeAe {
         return ae.items.length;
       },
       file: null as null | { fsName: string },
+      activeItem: null as unknown,
       item(i: number) {
         const it = ae.items[i - 1];
         if (!it) throw new Error(`item index ${i} out of range`);
@@ -245,6 +246,15 @@ export class FakeAe {
         });
       },
     };
+    if (numLayers !== undefined) {
+      const comp = item as FakeItem & { layers?: unknown[]; layer?: (i: number) => unknown };
+      comp.layers = [];
+      comp.layer = (i: number) => {
+        const l = comp.layers?.[i - 1];
+        if (!l) throw new Error(`layer index ${i} out of range`);
+        return l;
+      };
+    }
     this.items.push(item);
     this.record({
       label: `add ${name}`,
@@ -260,6 +270,43 @@ export class FakeAe {
     const item = this.addItem(name, "Composition", 0);
     (this.app.endUndoGroup as () => void)();
     return item;
+  }
+
+  /** Make `item` the active comp (what the timeline shows). */
+  setActive(item: FakeItem): void {
+    (this.app.project as { activeItem: unknown }).activeItem = item;
+  }
+
+  /** The user adds a layer named `name` to `comp`, as its own undo step. */
+  userLayerStep(comp: FakeItem, name: string): void {
+    const c = comp as FakeItem & { layers: Array<{ name: string }> };
+    const layers = c.layers;
+    const layer = { name, inPoint: 0, outPoint: 1, enabled: true };
+    (this.app.beginUndoGroup as () => void)();
+    layers.push(layer);
+    c.numLayers = layers.length;
+    this.record({
+      label: `add layer ${name}`,
+      revert: () => {
+        layers.splice(layers.indexOf(layer), 1);
+        c.numLayers = layers.length;
+      },
+      replay: () => {
+        layers.push(layer);
+        c.numLayers = layers.length;
+      },
+    });
+    (this.app.endUndoGroup as () => void)();
+  }
+
+  /** The user renames layer `index` of `comp`, as its own undo step (no item-level change). */
+  userRenameLayerStep(comp: FakeItem, index: number, name: string): void {
+    const layer = (comp as FakeItem & { layers: Array<{ name: string }> }).layers[index - 1];
+    const old = layer.name;
+    (this.app.beginUndoGroup as () => void)();
+    layer.name = name;
+    this.record({ label: `rename ${old}`, revert: () => (layer.name = old), replay: () => (layer.name = name) });
+    (this.app.endUndoGroup as () => void)();
   }
 
   names(): string[] {

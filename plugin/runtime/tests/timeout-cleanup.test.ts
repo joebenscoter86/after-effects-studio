@@ -311,3 +311,66 @@ describe("a pull request that times out after pickup", () => {
     await transport.close();
   });
 });
+
+describe("when a transport starts", () => {
+  // Live, 2026-11-10: a `.response-<id>.json.tmp` left by an earlier request
+  // from another server process stayed in the runtime folder.
+  async function until(check: () => Promise<boolean>, ms = 2_000): Promise<boolean> {
+    const deadline = Date.now() + ms;
+    while (Date.now() < deadline) {
+      if (await check()) return true;
+      await sleep(25);
+    }
+    return check();
+  }
+
+  it("sweeps temp responses and requests older than a few minutes, and keeps fresh ones", async () => {
+    const old = [
+      path.join(RUNTIME_DIR, `.response-${randomUUID()}.json.tmp`),
+      path.join(RUNTIME_DIR, `.request-${randomUUID()}.json.tmp`),
+    ];
+    const fresh = path.join(RUNTIME_DIR, `.response-${randomUUID()}.json.tmp`);
+    for (const p of [...old, fresh]) await fs.writeFile(p, "", "utf8");
+    for (const p of old) await ago(p, 10 * 60_000);
+
+    const transport = new FileIpcTransport({ instance: null, scanDialogs: noDialogs });
+    expect(await until(async () => !(await exists(old[0])) && !(await exists(old[1])))).toBe(true);
+    expect(await exists(fresh)).toBe(true);
+    await transport.close();
+    await fs.unlink(fresh).catch(() => {});
+  });
+
+  it("sweeps them in a live instance's mailbox too", async () => {
+    const dir = instanceDirFor(`t-${randomUUID().slice(0, 8)}`);
+    await fs.mkdir(dir, { recursive: true });
+    await fs.writeFile(
+      path.join(dir, HEARTBEAT_FILENAME),
+      JSON.stringify({ id: path.basename(dir), ts: Date.now(), busy: false }),
+      "utf8",
+    );
+    const stale = path.join(dir, `.response-${randomUUID()}.json.tmp`);
+    await fs.writeFile(stale, "", "utf8");
+    await ago(stale, 10 * 60_000);
+
+    const transport = new FileIpcTransport({ instance: null, scanDialogs: noDialogs });
+    expect(await until(async () => !(await exists(stale)))).toBe(true);
+    await transport.close();
+    await fs.rm(dir, { recursive: true, force: true });
+  });
+
+  it("removes a lock nobody has refreshed for minutes, but never a live one", async () => {
+    await fs.writeFile(BUSY_LOCK_PATH, JSON.stringify({ pid: 0, id: "gone" }), "utf8");
+    await ago(BUSY_LOCK_PATH, 5 * 60_000);
+    const first = new FileIpcTransport({ instance: null, scanDialogs: noDialogs });
+    expect(await until(async () => !(await exists(BUSY_LOCK_PATH)))).toBe(true);
+    await first.close();
+
+    // A live owner refreshes every 15 s: its lock is always fresh.
+    await fs.writeFile(BUSY_LOCK_PATH, JSON.stringify({ pid: process.pid, id: "live" }), "utf8");
+    await ago(BUSY_LOCK_PATH, 20_000);
+    const second = new FileIpcTransport({ instance: null, scanDialogs: noDialogs });
+    await sleep(300);
+    expect(await lockId()).toBe("live");
+    await second.close();
+  });
+});
