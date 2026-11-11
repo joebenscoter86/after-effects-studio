@@ -20,6 +20,7 @@ import {
   histogramOf,
   rgbHex,
   sampleRegions,
+  unmatte,
   type Backdrop,
   type FrameAnalysis,
   type FrameHistogram,
@@ -94,7 +95,6 @@ interface RenderFramePayload {
   bgColor?: Rgb | null;
   channels?: Channels;
   over?: "background" | "checkerboard" | Rgb;
-  backgroundColor?: Rgb;
   alphaChannel?: "present" | "absent" | "mixed";
   alphaWarning?: string;
   channelsWarning?: string;
@@ -143,11 +143,16 @@ interface EyesOptions {
 const MEASUREMENT_STAGES: Record<Stage, string> = {
   capture:
     "the PNG as saveFrameToPng wrote it, before any colour conversion: working-space values " +
-    "(scaled by AE's capture transfer in colour-managed projects), straight alpha, 8 or 16 bits",
+    "(scaled by AE's capture transfer in colour-managed projects), 8 or 16 bits. Its RGB is already " +
+    "laid over the comp background colour (`bgColor`): capture = colour·alpha + bgColor·(1 − alpha), " +
+    "so a half-covered pixel reads half background and an empty one reads bgColor; on a black " +
+    "background that is premultiplied colour. Alpha is the coverage AE wrote",
   output:
-    "the file as written (writtenTo): after colour conversion and the channels/over handling " +
-    "when colorManaged is auto, so 8-bit display values; the same as the capture when colorManaged " +
-    "is off or the conversion failed",
+    "the file as written (writtenTo), after colour conversion when colorManaged is auto, so 8-bit " +
+    "display values. With channels 'rgb': over the comp background as AE composited it, or over " +
+    "`over`. With 'rgba': the colour recovered from under the background (straight, 0 where alpha " +
+    "is 0), plus alpha. With 'alpha': the matte, in r = g = b. The same as the capture when " +
+    "colorManaged is off or the conversion failed",
 };
 
 const HISTOGRAM_DEFAULT_BINS = 32;
@@ -183,7 +188,8 @@ export const renderFrameTool = defineTool({
     "OCIO effect, or a failed capture calibration — the result falls back to a pure-math ACES conversion or " +
     "to raw values with an explicit colorWarning; check colorPipeline / colorWarning on the response. " +
     "Seeing the matte: `channels` picks what the file holds — 'rgb' (default, transparency composited over " +
-    "`over`: the comp background, a checkerboard or a colour such as '#ff00ff'), 'rgba' (alpha kept), or " +
+    "`over`: the comp background as AE composites it, a checkerboard or a colour such as '#ff00ff'), " +
+    "'rgba' (alpha kept, straight colour), or " +
     "'alpha' (the matte as greyscale: white opaque, black transparent). `isolate` renders one layer or a " +
     "list alone (cameras and lights stay as they are), then restores every layer switch, even when the " +
     "render fails. `alphaChannel` reports whether the capture carried alpha at all. " +
@@ -274,7 +280,8 @@ export const renderFrameTool = defineTool({
       .optional()
       .describe(
         "What the written file holds. 'rgb' (default): 8-bit sRGB, transparency composited over `over`. " +
-          "'rgba': 8-bit sRGB with the alpha channel kept (straight, unpremultiplied). 'alpha': the matte " +
+          "'rgba': 8-bit sRGB with the alpha channel kept and straight colour (AE lays its capture over " +
+          "the comp background; that background is taken out again). 'alpha': the matte " +
           "as 8-bit greyscale, white = opaque, black = transparent. Needs colorManaged 'auto'. If the " +
           "capture has no alpha channel, `alphaWarning` says so.",
       ),
@@ -287,8 +294,10 @@ export const renderFrameTool = defineTool({
       .optional()
       .describe(
         "With channels 'rgb': what transparent pixels are shown against. 'background' (default): the " +
-          "comp's background colour. 'checkerboard': light and dark grey squares, so transparency is " +
-          "visible. A colour as '#rrggbb' or [r, g, b] in 0..1 — magenta shows holes in a key.",
+          "comp's background colour (`bgColor`), as AE itself composites the capture. 'checkerboard': " +
+          "light and dark grey squares, so transparency is visible. A colour as '#rrggbb' or [r, g, b] " +
+          "in 0..1 — magenta shows holes in a key. For the last two the comp background is taken out of " +
+          "the capture first, so soft edges show the new backdrop only.",
       ),
     isolate: z
       .union([layerRefSchema, z.array(layerRefSchema).min(1)])
@@ -780,6 +789,9 @@ async function nativeFlow(
     }
     if (convert !== null && opts.channels === "rgb") backdrop = chooseBackdrop(payload, opts);
   }
+  // AE lays the capture's RGB over this colour; un-matting needs it.
+  const bg = validRgb(payload.bgColor);
+  const unmatting = convert !== null && (opts.channels === "rgba" || backdrop !== null);
 
   // One frame at a time, as before these options: a decoded 1080p frame is
   // tens of MB, so only the frames `compare` and the sheet need are kept.
@@ -815,7 +827,14 @@ async function nativeFlow(
     let output = capture;
     if (writing && convert !== null) {
       try {
-        output = await writeOutput(file, capture, convert, opts.channels, backdrop);
+        output = await writeOutput(
+          file,
+          capture,
+          convert,
+          opts.channels,
+          backdrop,
+          bg ?? [0, 0, 0],
+        );
       } catch (err) {
         payload.colorWarning = `color post-processing failed, file left as raw capture: ${
           err instanceof Error ? err.message : String(err)
@@ -831,11 +850,19 @@ async function nativeFlow(
       put(i, "histogram", { stage, ...histogramOf(pixels[stage], bins) });
     }
     if (keep.has(i)) kept.set(i, pixels);
-    if (args.contactSheet) sheetImages.push(output);
+    // A raw capture is already over the comp background: tile it as AE
+    // wrote it. Only an rgba file this call wrote holds straight colour.
+    if (args.contactSheet)
+      sheetImages.push(output === capture ? { ...capture, alpha: undefined } : output);
   }
 
   payload.alphaChannel =
     withAlpha === 0 ? "absent" : withAlpha === written.length ? "present" : "mixed";
+  if (unmatting && withAlpha > 0 && bg === null) {
+    payload.channelsWarning =
+      "the comp background colour (bgColor) is unknown, so the colour under it was recovered as if it " +
+      "were black; soft edges may carry the real background";
+  }
   if (convert !== null && payload.alphaChannel === "absent") {
     if (opts.channels === "alpha") {
       payload.alphaWarning =
@@ -914,16 +941,26 @@ function sampleReport(
   return report;
 }
 
-/** What transparency is composited over for channels 'rgb', reported on the payload. */
-function chooseBackdrop(payload: RenderFramePayload, opts: EyesOptions): Backdrop {
+/**
+ * What transparency is composited over for channels 'rgb', reported on the
+ * payload. Null for the comp background: AE already composited the capture
+ * over it (bgColor), so the colour is left as it is.
+ */
+function chooseBackdrop(payload: RenderFramePayload, opts: EyesOptions): Backdrop | null {
   if (opts.over === "background") {
-    const bg = payload.bgColor ?? [0, 0, 0];
     payload.over = "background";
-    payload.backgroundColor = bg;
-    return { kind: "color", color: bg };
+    return null;
   }
   payload.over = opts.over.kind === "checkerboard" ? "checkerboard" : opts.over.color;
   return opts.over;
+}
+
+function validRgb(value: unknown): Rgb | null {
+  return Array.isArray(value) &&
+    value.length === 3 &&
+    value.every((v) => typeof v === "number" && Number.isFinite(v))
+    ? [value[0], value[1], value[2]]
+    : null;
 }
 
 /** Tile the final images into one labelled sheet; alpha is shown over the checkerboard. */
@@ -962,7 +999,10 @@ async function attachContactSheet(
 /**
  * Convert one capture's RGB, write the file `channels` asks for over the
  * capture, and return that file decoded. Alpha is coverage, not colour: it
- * is never converted.
+ * is never converted. The capture's RGB is already over the comp background
+ * `bg` (see unmatte): kept as it is for the default rgb file, taken out for
+ * 'rgba' (straight colour, as PNG alpha means) and before laying the colour
+ * over another backdrop.
  */
 async function writeOutput(
   file: string,
@@ -970,14 +1010,19 @@ async function writeOutput(
   convert: Convert,
   channels: Channels,
   backdrop: Backdrop | null,
+  bg: Rgb,
 ): Promise<DecodedPng> {
   const { width, height } = capture;
   const opaque = () => new Float64Array(width * height).fill(1);
   let bytes: Buffer;
   if (channels === "alpha") {
     bytes = encodePngGray8(width, height, capture.alpha ?? opaque());
-  } else {
+  } else if (channels === "rgb" && backdrop === null) {
     const rgb = Float64Array.from(capture.rgb);
+    convert(rgb);
+    bytes = encodePngSrgb8(width, height, rgb);
+  } else {
+    const rgb = unmatte(capture, bg);
     convert(rgb);
     bytes =
       channels === "rgba"

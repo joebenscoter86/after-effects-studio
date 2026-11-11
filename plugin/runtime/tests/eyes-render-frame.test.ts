@@ -22,14 +22,25 @@ import { renderFrameTool } from "../src/tools/render-frame.js";
 import type { AeTransport, EvalRequest, EvalResult } from "../src/transport/AeTransport.js";
 
 const FIXTURES = path.join(path.dirname(fileURLToPath(import.meta.url)), "fixtures", "png");
-const BG: [number, number, number] = [0.1, 0.2, 0.3];
+type Rgb = [number, number, number];
+
+// The default fixture is a capture as saveFrameToPng really writes it
+// (measured live): RGB already laid over the comp background, here blue.
+// Layout in make-fixtures.mjs. Points: empty (0, 0), half red (10, 6) at
+// alpha A, opaque green (18, 10).
+const AE_BLUE = "ae-blue-bg-rgba16.png";
+const BLUE: Rgb = [0, 0, 1];
+const A = 128 / 255;
+const EMPTY = [0, 0] as const;
+const HALF_RED = [10, 6] as const;
+const GREEN = [18, 10] as const;
 
 interface FakeTransport extends AeTransport {
   calls: EvalRequest[];
 }
 
 /** Fake AE: writes fixtures[i] to the i-th requested path; reports a None working space. */
-function fakeAe(fixtures: string[]): FakeTransport {
+function fakeAe(fixtures: string[], bgColor: Rgb | null = BLUE): FakeTransport {
   const calls: EvalRequest[] = [];
   return {
     calls,
@@ -59,7 +70,7 @@ function fakeAe(fixtures: string[]): FakeTransport {
           workingSpace: "None",
           bitsPerChannel: 16,
           projectFile: null,
-          bgColor: BG,
+          bgColor,
         },
         error: null,
         errorCode: null,
@@ -74,9 +85,10 @@ function fakeAe(fixtures: string[]): FakeTransport {
 type Structured = Record<string, any>;
 async function render(
   args: Record<string, unknown>,
-  fixtures: string[] = ["keyed-rgba16.png"],
+  fixtures: string[] = [AE_BLUE],
+  bgColor: Rgb | null = BLUE,
 ): Promise<{ res: Structured; isError: boolean; transport: FakeTransport }> {
-  const transport = fakeAe(fixtures);
+  const transport = fakeAe(fixtures, bgColor);
   const out = await renderFrameTool.handler(
     { compNameOrId: "Main", outPath: path.join(dir, "f.png"), ...args } as never,
     transport,
@@ -99,6 +111,7 @@ function pixel(file: string, x: number, y: number): number[] {
   return out;
 }
 const q = (v: number) => Math.round(v * 255) / 255;
+const at = (file: string, p: readonly [number, number]) => pixel(file, p[0], p[1]);
 
 let dir: string;
 beforeEach(async () => {
@@ -112,17 +125,32 @@ afterEach(async () => {
 // Stage 1: channels and over
 // ---------------------------------------------------------------------------
 
+// AE lays the capture's RGB over the comp background, so the numbers below
+// are the ones measured live: half red over blue is (128, 0, 127) at alpha
+// 128; over magenta it must be (255, 0, 127), over the light checkerboard
+// square (230, 102, 102).
+
 describe("channels: rgb (default)", () => {
-  it("composites transparency over the comp background and writes 8-bit RGB", async () => {
+  it("leaves the capture's colour as AE composited it over the comp background", async () => {
     const { res, isError } = await render({ time: 0 });
     expect(isError).toBe(false);
     const file = res.writtenTo as string;
     expect(colorType(file)).toBe(2);
-    expect(pixel(file, 0, 0)).toEqual(BG.map(q));
-    expect(pixel(file, 12, 10)).toEqual([0.8, 0.6, 0.5].map(q));
-    const edge = pixel(file, 24, 10);
-    expect(edge[0]).toBeCloseTo(q(0.5 * 0.8 + 0.5 * BG[0]), 6);
+    expect(at(file, EMPTY)).toEqual([0, 0, 1]);
+    expect(at(file, HALF_RED)).toEqual([128 / 255, 0, 127 / 255]);
+    expect(at(file, GREEN)).toEqual([0, 1, 0]);
     expect(res).toMatchObject({ channels: "rgb", over: "background", alphaChannel: "present" });
+  });
+
+  it("reports the comp background as bgColor, with no second key for it", async () => {
+    const { res } = await render({ time: 0 });
+    expect(res.bgColor).toEqual(BLUE);
+    expect(res.backgroundColor).toBeUndefined();
+  });
+
+  it("does not darken soft edges on a black background (no second multiply by alpha)", async () => {
+    const { res } = await render({ time: 0 }, ["ae-black-bg-rgba16.png"], [0, 0, 0]);
+    expect(at(res.writtenTo, HALF_RED)).toEqual([128 / 255, 0, 0]);
   });
 
   it("leaves an opaque capture's values as they were", async () => {
@@ -133,28 +161,49 @@ describe("channels: rgb (default)", () => {
 });
 
 describe("over", () => {
+  it("takes the comp background out before laying the colour over a hex colour", async () => {
+    const { res } = await render({ time: 0, over: "#ff00ff" });
+    expect(at(res.writtenTo, EMPTY)).toEqual([1, 0, 1]);
+    // colour·a + magenta·(1 − a) = (a + 1 − a, 0, 1 − a).
+    expect(at(res.writtenTo, HALF_RED)).toEqual([1, 0, 127 / 255]);
+    expect(at(res.writtenTo, GREEN)).toEqual([0, 1, 0]);
+    expect(res.over).toEqual([1, 0, 1]);
+  });
+
+  it("gives the same result whatever background AE laid the capture over", async () => {
+    const { res } = await render(
+      { time: 0, over: "#ff00ff" },
+      ["ae-black-bg-rgba16.png"],
+      [0, 0, 0],
+    );
+    expect(at(res.writtenTo, HALF_RED)).toEqual([1, 0, 127 / 255]);
+    expect(at(res.writtenTo, EMPTY)).toEqual([1, 0, 1]);
+  });
+
   it("checkerboard shows transparency as light and dark squares", async () => {
     const { res } = await render({ time: 0, over: "checkerboard" });
     expect(pixel(res.writtenTo, 0, 0)).toEqual(CHECKERBOARD.light.map(q));
     expect(pixel(res.writtenTo, CHECKERBOARD.size, 0)).toEqual(CHECKERBOARD.dark.map(q));
-    expect(pixel(res.writtenTo, 12, 10)).toEqual([0.8, 0.6, 0.5].map(q));
+    // Half red over the light square: (a + 0.8·(1 − a), 0.8·(1 − a), 0.8·(1 − a)).
+    expect(at(res.writtenTo, HALF_RED)).toEqual([230, 102, 102].map((v) => v / 255));
     expect(res.over).toBe("checkerboard");
   });
 
-  it("accepts a hex colour, such as magenta to show a matte's holes", async () => {
-    const { res } = await render({ time: 0, over: "#ff00ff" });
-    expect(pixel(res.writtenTo, 0, 0)).toEqual([1, 0, 1]);
-    // Half-covered edge, from the fixture's exact 16-bit values.
-    const a = 32768 / 65535;
-    const edge = pixel(res.writtenTo, 24, 10);
-    expect(edge[0]).toBeCloseTo(q((52428 / 65535) * a + 1 * (1 - a)), 6);
-    expect(edge[1]).toBeCloseTo(q((39321 / 65535) * a), 6);
-    expect(res.over).toEqual([1, 0, 1]);
+  it("accepts an [r, g, b] colour in 0..1", async () => {
+    const { res } = await render({ time: 0, over: [1, 1, 1] });
+    expect(at(res.writtenTo, EMPTY)).toEqual([1, 1, 1]);
+    expect(at(res.writtenTo, HALF_RED)).toEqual([1, 127 / 255, 127 / 255]);
   });
 
-  it("accepts an [r, g, b] colour in 0..1", async () => {
-    const { res } = await render({ time: 0, over: [0, 0, 1] });
-    expect(pixel(res.writtenTo, 0, 0)).toEqual([0, 0, 1]);
+  it("works on an 8-bit capture too", async () => {
+    const { res } = await render({ time: 0, over: "#ff00ff" }, ["ae-blue-bg-rgba8.png"]);
+    expect(at(res.writtenTo, HALF_RED)).toEqual([1, 0, 127 / 255]);
+  });
+
+  it("says so when the comp background colour is unknown, and treats it as black", async () => {
+    const { res } = await render({ time: 0, over: "#ff00ff" }, ["ae-black-bg-rgba16.png"], null);
+    expect(res.channelsWarning).toMatch(/background colour.*unknown/);
+    expect(at(res.writtenTo, HALF_RED)).toEqual([1, 0, 127 / 255]);
   });
 
   it("warns that there was nothing to composite when the capture has no alpha", async () => {
@@ -165,14 +214,24 @@ describe("over", () => {
 });
 
 describe("channels: rgba", () => {
-  it("keeps the alpha channel and the straight RGB under it", async () => {
+  it("keeps the alpha channel and recovers the colour from under the comp background", async () => {
     const { res } = await render({ time: 0, channels: "rgba" });
     const file = res.writtenTo as string;
     expect(colorType(file)).toBe(6);
-    expect(pixel(file, 0, 0)).toEqual([0, 1, 0, 0]);
-    expect(pixel(file, 24, 10)[3]).toBeCloseTo(128 / 255, 6);
-    expect(pixel(file, 12, 10)).toEqual([...[0.8, 0.6, 0.5].map(q), 1]);
+    // Straight colour, as PNG alpha means: the red solid itself, not red mixed with blue.
+    expect(at(file, HALF_RED)).toEqual([1, 0, 0, A]);
+    expect(at(file, GREEN)).toEqual([0, 1, 0, 1]);
+    expect(at(file, EMPTY)).toEqual([0, 0, 0, 0]);
     expect(res.channels).toBe("rgba");
+  });
+
+  it("recovers the same colour from a black background", async () => {
+    const { res } = await render(
+      { time: 0, channels: "rgba" },
+      ["ae-black-bg-rgba16.png"],
+      [0, 0, 0],
+    );
+    expect(at(res.writtenTo, HALF_RED)).toEqual([1, 0, 0, A]);
   });
 
   it("warns when the capture had no alpha to keep", async () => {
@@ -187,14 +246,14 @@ describe("channels: alpha", () => {
     const { res } = await render({ time: 0, channels: "alpha" });
     const file = res.writtenTo as string;
     expect(colorType(file)).toBe(0);
-    expect(pixel(file, 0, 0)).toEqual([0, 0, 0]);
-    expect(pixel(file, 12, 10)).toEqual([1, 1, 1]);
-    expect(pixel(file, 24, 10)[0]).toBeCloseTo(128 / 255, 6);
+    expect(at(file, EMPTY)).toEqual([0, 0, 0]);
+    expect(at(file, GREEN)).toEqual([1, 1, 1]);
+    expect(at(file, HALF_RED)[0]).toBeCloseTo(A, 6);
   });
 
   it("an 8-bit RGBA capture gives the same matte", async () => {
-    const { res } = await render({ time: 0, channels: "alpha" }, ["keyed-rgba8.png"]);
-    expect(pixel(res.writtenTo, 24, 10)[0]).toBeCloseTo(128 / 255, 6);
+    const { res } = await render({ time: 0, channels: "alpha" }, ["ae-blue-bg-rgba8.png"]);
+    expect(at(res.writtenTo, HALF_RED)[0]).toBeCloseTo(A, 6);
   });
 
   it("says plainly when the capture had no alpha channel at all", async () => {
@@ -280,23 +339,34 @@ describe("analyze and the contact sheet work with every channels option", () => 
       // Analysis reads the capture, where the alpha channel still is.
       for (const f of res.frames) {
         expect(f.analysis.background.kind).toBe("transparent");
-        expect(f.analysis.contentBounds).toEqual({ left: 8, top: 4, width: 17, height: 16 });
+        expect(f.analysis.contentBounds).toEqual({ left: 8, top: 4, width: 16, height: 16 });
       }
       const sheetFile = res.contactSheet.writtenTo as string;
       expect(res.contactSheet.frames).toBe(2);
       expect(colorType(sheetFile)).toBe(2);
-      // Tile 0's top-left pixel is screen (transparent in the capture).
-      const tileX = 8;
-      const tileY = 8 + 7 * 2 + 6;
-      const screen = pixel(sheetFile, tileX, tileY);
-      if (channels === "rgb") expect(screen).toEqual(BG.map(q));
+      // Tile 0's top-left pixel is empty (transparent in the capture).
+      const screen = pixel(sheetFile, TILE_X, TILE_Y);
+      if (channels === "rgb") expect(screen).toEqual(BLUE);
       if (channels === "alpha") expect(screen).toEqual([0, 0, 0]);
-      // An RGBA file is shown on the sheet over the checkerboard, never as
-      // its raw green.
+      // An RGBA file is shown on the sheet over the checkerboard.
       if (channels === "rgba") expect(screen).toEqual(CHECKERBOARD.light.map(q));
     });
   }
+
+  it("colorManaged off: the raw capture is tiled as AE wrote it, over the comp background", async () => {
+    const { res, isError } = await render({
+      times: [0, 0.5],
+      colorManaged: "off",
+      contactSheet: { thumbWidth: 32 },
+    });
+    expect(isError).toBe(false);
+    expect(pixel(res.contactSheet.writtenTo, TILE_X, TILE_Y)).toEqual(BLUE);
+  });
 });
+
+/** Tile 0's top-left pixel on a sheet of 32-px tiles. */
+const TILE_X = 8;
+const TILE_Y = 8 + 7 * 2 + 6;
 
 describe("over with times and a contact sheet", () => {
   it("applies the same background to every frame", async () => {
@@ -315,27 +385,49 @@ const REGIONS = [
   { name: "edge", x: 24, y: 10 },
 ];
 
+const AE_REGIONS = [
+  { name: "halfRed", x: 8, y: 4, width: 8, height: 8 },
+  { name: "green", x: 16, y: 4, width: 8, height: 16 },
+  { name: "empty", x: 0, y: 0, width: 4, height: 4 },
+];
+
 describe("sample", () => {
   it("measures each region on the capture (before conversion) and on the written file", async () => {
-    const { res } = await render({ time: 0, sample: { regions: REGIONS } });
-    expect(res.measurementStages.capture).toMatch(/before any colour conversion/);
+    const { res } = await render({ time: 0, sample: { regions: AE_REGIONS } });
+    const [halfRed, green, empty] = res.samples;
+    expect(halfRed.name).toBe("halfRed");
+    // The capture's RGB is over the comp background, as AE wrote it.
+    expect(halfRed.capture.mean).toEqual([0.502, 0, 0.498]);
+    expect(halfRed.capture.alpha.mean).toBe(0.502);
+    expect(empty.capture.mean).toEqual(BLUE);
+    expect(empty.capture.alpha.transparentShare).toBe(1);
+    expect(green.capture.mean).toEqual([0, 1, 0]);
+    // The default rgb file is the same picture.
+    expect(halfRed.output.meanHex).toBe("#80007f");
+    expect(empty.output.mean).toEqual(BLUE);
+    expect(empty.output.alpha).toBeNull();
+  });
+
+  it("says plainly that the capture's colour is laid over the comp background", async () => {
+    const { res } = await render({ time: 0, sample: { regions: AE_REGIONS } });
+    const capture = res.measurementStages.capture as string;
+    expect(capture).toMatch(/before any colour conversion/);
+    expect(capture).toMatch(/over the comp background colour \(`bgColor`\)/);
+    expect(capture).not.toMatch(/straight alpha/);
     expect(res.measurementStages.output).toMatch(/file as written/);
-    const [skin, screen, edge] = res.samples;
-    expect(skin.name).toBe("skin");
-    expect(skin.capture.mean[0]).toBeCloseTo(0.8, 4);
-    expect(skin.output.mean[0]).toBeCloseTo(q(0.8), 4);
-    // Under alpha 0 the capture still holds the screen's green; the output
-    // shows what the default rgb file shows: the comp background.
-    expect(screen.capture.mean).toEqual([0, 1, 0]);
-    expect(screen.capture.alpha.transparentShare).toBe(1);
-    expect(screen.output.mean[2]).toBeCloseTo(q(BG[2]), 4);
-    expect(screen.output.alpha).toBeNull();
-    expect(edge.capture.alpha.mean).toBeCloseTo(0.5, 4);
-    expect(skin.output.meanHex).toBe("#cc9980");
+    expect(res.measurementStages.output).toMatch(
+      /'rgba'.*colour recovered from under the background/,
+    );
+  });
+
+  it("with channels rgba, the output stage measures the colour without the background", async () => {
+    const { res } = await render({ time: 0, channels: "rgba", sample: { regions: AE_REGIONS } });
+    expect(res.samples[0].output.mean).toEqual([1, 0, 0]);
+    expect(res.samples[0].output.alpha.mean).toBe(0.502);
   });
 
   it("can be limited to one stage", async () => {
-    const { res } = await render({ time: 0, sample: { regions: REGIONS, stage: "capture" } });
+    const { res } = await render({ time: 0, sample: { regions: AE_REGIONS, stage: "capture" } });
     expect(res.samples[0].capture).toBeDefined();
     expect(res.samples[0].output).toBeUndefined();
     expect(res.measurementStages.output).toBeUndefined();
@@ -345,11 +437,12 @@ describe("sample", () => {
     const { res } = await render({
       times: [0, 1],
       channels: "alpha",
-      sample: { regions: REGIONS },
+      sample: { regions: AE_REGIONS },
     });
     for (const f of res.frames) {
-      expect(f.samples[0].output.mean).toEqual([1, 1, 1]);
-      expect(f.samples[1].output.mean).toEqual([0, 0, 0]);
+      expect(f.samples[0].output.mean).toEqual([0.502, 0.502, 0.502]);
+      expect(f.samples[1].output.mean).toEqual([1, 1, 1]);
+      expect(f.samples[2].output.mean).toEqual([0, 0, 0]);
     }
     expect(res.samples).toBeUndefined();
   });
@@ -377,7 +470,8 @@ describe("histogram", () => {
     const { res } = await render({ times: [0], histogram: { bins: 4, stage: "capture" } });
     const h = res.frames[0].histogram;
     expect(h.stage).toBe("capture");
-    expect(h.a).toEqual([496, 0, 16, 256]);
+    // 576 empty pixels, 64 half covered (alpha 0.502), 128 opaque.
+    expect(h.a).toEqual([576, 0, 64, 128]);
   });
 });
 

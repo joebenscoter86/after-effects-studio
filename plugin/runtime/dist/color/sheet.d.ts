@@ -50,11 +50,20 @@ export type Backdrop = {
     kind: "checkerboard";
 };
 /**
- * Composite an image's straight (unassociated) alpha over a backdrop:
+ * The colour under a capture's comp background. saveFrameToPng writes an
+ * alpha channel, but its RGB is already laid over the comp background colour
+ * (measured live, AE 27.0, 8 and 16 bpc): captured = colour·a + bg·(1 − a).
+ * So colour = (captured − bg·(1 − a)) / a, clamped to 0..1, and 0 where
+ * a = 0 (nothing covers the pixel, so there is no colour to recover). On a
+ * black background this is un-premultiplying. Returns a new RGB buffer; an
+ * image without alpha comes back as an unchanged copy.
+ */
+export declare function unmatte(img: DecodedPng, bg: Rgb): Float64Array;
+/**
+ * Composite straight (unassociated) colour over a backdrop:
  * out = rgb·a + backdrop·(1 − a). Returns a new RGB buffer; an image without
- * alpha comes back as an unchanged copy. Straight alpha is what the PNG
- * format defines; whether saveFrameToPng follows it is one of the checks the
- * live test records.
+ * alpha comes back as an unchanged copy. A raw capture is not straight (see
+ * unmatte): take its comp background out first.
  */
 export declare function flattenOver(img: DecodedPng, backdrop: Backdrop): Float64Array;
 /** A named point (no width/height: one pixel) or rectangle, in capture pixels. */

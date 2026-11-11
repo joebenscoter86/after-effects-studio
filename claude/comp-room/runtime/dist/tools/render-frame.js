@@ -17,7 +17,8 @@ import {
   frameLabel,
   histogramOf,
   rgbHex,
-  sampleRegions
+  sampleRegions,
+  unmatte
 } from "../color/sheet.js";
 import { profileForWorkingSpace, sceneLinearToDisplaySrgb } from "../color/transform.js";
 import { rejectedOutputPath } from "../config.js";
@@ -27,8 +28,8 @@ import { RENDER_FRAME_FN } from "../operations/snippets.js";
 import { jsxVal } from "../registry.js";
 import { defineTool, toMcpResult } from "./define-tool.js";
 const MEASUREMENT_STAGES = {
-  capture: "the PNG as saveFrameToPng wrote it, before any colour conversion: working-space values (scaled by AE's capture transfer in colour-managed projects), straight alpha, 8 or 16 bits",
-  output: "the file as written (writtenTo): after colour conversion and the channels/over handling when colorManaged is auto, so 8-bit display values; the same as the capture when colorManaged is off or the conversion failed"
+  capture: "the PNG as saveFrameToPng wrote it, before any colour conversion: working-space values (scaled by AE's capture transfer in colour-managed projects), 8 or 16 bits. Its RGB is already laid over the comp background colour (`bgColor`): capture = colour\xB7alpha + bgColor\xB7(1 \u2212 alpha), so a half-covered pixel reads half background and an empty one reads bgColor; on a black background that is premultiplied colour. Alpha is the coverage AE wrote",
+  output: "the file as written (writtenTo), after colour conversion when colorManaged is auto, so 8-bit display values. With channels 'rgb': over the comp background as AE composited it, or over `over`. With 'rgba': the colour recovered from under the background (straight, 0 where alpha is 0), plus alpha. With 'alpha': the matte, in r = g = b. The same as the capture when colorManaged is off or the conversion failed"
 };
 const HISTOGRAM_DEFAULT_BINS = 32;
 const layerRefSchema = z.union([
@@ -46,7 +47,7 @@ const regionSchema = z.object({
 const renderFrameTool = defineTool({
   name: "ae_render_frame",
   title: "Render frame",
-  description: "Render one or more frames to PNG. Use to visually verify edits. The agent's 'eyes' \u2014 pair with mutations for a visual feedback loop. Headless and deterministic. Pass `time` for one frame, or `times` for several in ONE call (motion checks): files land at <outPath stem>_<index>.png and are listed in `frames`. `contactSheet` tiles every frame into one labelled PNG (<stem>_sheet.png) so a motion check is one image; `analyze` measures each capture (uniform edge bands = black bars / transparent margins, content bounds, coverage) so off-frame elements and letterboxing are caught numerically. In color-managed projects (workingSpace != None) the capture applies AE's own display transform via a transient OCIO Display Transform adjustment layer, and the PNG comes back viewer-accurate and sRGB-tagged. Where that layer cannot be used \u2014 read-only mode, an AE without the OCIO effect, or a failed capture calibration \u2014 the result falls back to a pure-math ACES conversion or to raw values with an explicit colorWarning; check colorPipeline / colorWarning on the response. Seeing the matte: `channels` picks what the file holds \u2014 'rgb' (default, transparency composited over `over`: the comp background, a checkerboard or a colour such as '#ff00ff'), 'rgba' (alpha kept), or 'alpha' (the matte as greyscale: white opaque, black transparent). `isolate` renders one layer or a list alone (cameras and lights stay as they are), then restores every layer switch, even when the render fails. `alphaChannel` reports whether the capture carried alpha at all. Reading colour: `sample` takes named points or rectangles and returns mean / min / max per channel and alpha coverage for each; `histogram` counts the whole frame per channel; `compare` (with `times` and `sample`) reports each region's difference between two of the rendered frames. Every number is labelled with its stage \u2014 'capture' (before colour conversion) or 'output' (the file as written) \u2014 described once in `measurementStages`.",
+  description: "Render one or more frames to PNG. Use to visually verify edits. The agent's 'eyes' \u2014 pair with mutations for a visual feedback loop. Headless and deterministic. Pass `time` for one frame, or `times` for several in ONE call (motion checks): files land at <outPath stem>_<index>.png and are listed in `frames`. `contactSheet` tiles every frame into one labelled PNG (<stem>_sheet.png) so a motion check is one image; `analyze` measures each capture (uniform edge bands = black bars / transparent margins, content bounds, coverage) so off-frame elements and letterboxing are caught numerically. In color-managed projects (workingSpace != None) the capture applies AE's own display transform via a transient OCIO Display Transform adjustment layer, and the PNG comes back viewer-accurate and sRGB-tagged. Where that layer cannot be used \u2014 read-only mode, an AE without the OCIO effect, or a failed capture calibration \u2014 the result falls back to a pure-math ACES conversion or to raw values with an explicit colorWarning; check colorPipeline / colorWarning on the response. Seeing the matte: `channels` picks what the file holds \u2014 'rgb' (default, transparency composited over `over`: the comp background as AE composites it, a checkerboard or a colour such as '#ff00ff'), 'rgba' (alpha kept, straight colour), or 'alpha' (the matte as greyscale: white opaque, black transparent). `isolate` renders one layer or a list alone (cameras and lights stay as they are), then restores every layer switch, even when the render fails. `alphaChannel` reports whether the capture carried alpha at all. Reading colour: `sample` takes named points or rectangles and returns mean / min / max per channel and alpha coverage for each; `histogram` counts the whole frame per channel; `compare` (with `times` and `sample`) reports each region's difference between two of the rendered frames. Every number is labelled with its stage \u2014 'capture' (before colour conversion) or 'output' (the file as written) \u2014 described once in `measurementStages`.",
   group: "render",
   // Survives read-only mode: it writes a PNG, and the visual verification loop
   // is the whole point of an audit session. Note this is NOT a
@@ -82,14 +83,14 @@ const renderFrameTool = defineTool({
       "Tile all rendered frames into ONE labelled PNG (#index + time above each tile). Pass {} for defaults. Frames that carry alpha (channels 'rgba') are shown over a checkerboard on the sheet."
     ),
     channels: z.enum(["rgb", "rgba", "alpha"]).optional().describe(
-      "What the written file holds. 'rgb' (default): 8-bit sRGB, transparency composited over `over`. 'rgba': 8-bit sRGB with the alpha channel kept (straight, unpremultiplied). 'alpha': the matte as 8-bit greyscale, white = opaque, black = transparent. Needs colorManaged 'auto'. If the capture has no alpha channel, `alphaWarning` says so."
+      "What the written file holds. 'rgb' (default): 8-bit sRGB, transparency composited over `over`. 'rgba': 8-bit sRGB with the alpha channel kept and straight colour (AE lays its capture over the comp background; that background is taken out again). 'alpha': the matte as 8-bit greyscale, white = opaque, black = transparent. Needs colorManaged 'auto'. If the capture has no alpha channel, `alphaWarning` says so."
     ),
     over: z.union([
       z.enum(["background", "checkerboard"]),
       z.string().regex(/^#[0-9a-fA-F]{6}$/),
       z.array(z.number().min(0).max(1)).length(3)
     ]).optional().describe(
-      "With channels 'rgb': what transparent pixels are shown against. 'background' (default): the comp's background colour. 'checkerboard': light and dark grey squares, so transparency is visible. A colour as '#rrggbb' or [r, g, b] in 0..1 \u2014 magenta shows holes in a key."
+      "With channels 'rgb': what transparent pixels are shown against. 'background' (default): the comp's background colour (`bgColor`), as AE itself composites the capture. 'checkerboard': light and dark grey squares, so transparency is visible. A colour as '#rrggbb' or [r, g, b] in 0..1 \u2014 magenta shows holes in a key. For the last two the comp background is taken out of the capture first, so soft edges show the new backdrop only."
     ),
     isolate: z.union([layerRefSchema, z.array(layerRefSchema).min(1)]).optional().describe(
       "Render these layers alone: a layer (index, name, or { id }) or a list. Every other layer is switched off for the capture, adjustment layers included; camera, light and audio-only layers are left as they are; named layers are switched on even if they were off (to see a matte layer); solo is cleared. Every switch is restored afterwards, even when the render fails, and `isolation` reports it. Top-level layers of this comp only. Not available in read-only mode."
@@ -467,6 +468,8 @@ async function nativeFlow(args, opts, abs, transport) {
     }
     if (convert !== null && opts.channels === "rgb") backdrop = chooseBackdrop(payload, opts);
   }
+  const bg = validRgb(payload.bgColor);
+  const unmatting = convert !== null && (opts.channels === "rgba" || backdrop !== null);
   const keep = new Set(opts.compare ? [opts.compare.from, opts.compare.to] : []);
   const kept = /* @__PURE__ */ new Map();
   const sheetImages = [];
@@ -495,7 +498,14 @@ async function nativeFlow(args, opts, abs, transport) {
     let output = capture;
     if (writing && convert !== null) {
       try {
-        output = await writeOutput(file, capture, convert, opts.channels, backdrop);
+        output = await writeOutput(
+          file,
+          capture,
+          convert,
+          opts.channels,
+          backdrop,
+          bg ?? [0, 0, 0]
+        );
       } catch (err) {
         payload.colorWarning = `color post-processing failed, file left as raw capture: ${err instanceof Error ? err.message : String(err)}`;
         writing = false;
@@ -508,9 +518,13 @@ async function nativeFlow(args, opts, abs, transport) {
       put(i, "histogram", { stage, ...histogramOf(pixels[stage], bins) });
     }
     if (keep.has(i)) kept.set(i, pixels);
-    if (args.contactSheet) sheetImages.push(output);
+    if (args.contactSheet)
+      sheetImages.push(output === capture ? { ...capture, alpha: void 0 } : output);
   }
   payload.alphaChannel = withAlpha === 0 ? "absent" : withAlpha === written.length ? "present" : "mixed";
+  if (unmatting && withAlpha > 0 && bg === null) {
+    payload.channelsWarning = "the comp background colour (bgColor) is unknown, so the colour under it was recovered as if it were black; soft edges may carry the real background";
+  }
   if (convert !== null && payload.alphaChannel === "absent") {
     if (opts.channels === "alpha") {
       payload.alphaWarning = "the capture has no alpha channel, so the matte is all white (fully opaque). If this comp should be transparent here, saveFrameToPng did not write alpha for it.";
@@ -573,13 +587,14 @@ function sampleReport(pixels, sample) {
 }
 function chooseBackdrop(payload, opts) {
   if (opts.over === "background") {
-    const bg = payload.bgColor ?? [0, 0, 0];
     payload.over = "background";
-    payload.backgroundColor = bg;
-    return { kind: "color", color: bg };
+    return null;
   }
   payload.over = opts.over.kind === "checkerboard" ? "checkerboard" : opts.over.color;
   return opts.over;
+}
+function validRgb(value) {
+  return Array.isArray(value) && value.length === 3 && value.every((v) => typeof v === "number" && Number.isFinite(v)) ? [value[0], value[1], value[2]] : null;
 }
 async function attachContactSheet(payload, frames, images, sheetPath, opts) {
   try {
@@ -606,14 +621,18 @@ async function attachContactSheet(payload, frames, images, sheetPath, opts) {
     payload.contactSheetWarning = `contact sheet failed: ${err instanceof Error ? err.message : String(err)}`;
   }
 }
-async function writeOutput(file, capture, convert, channels, backdrop) {
+async function writeOutput(file, capture, convert, channels, backdrop, bg) {
   const { width, height } = capture;
   const opaque = () => new Float64Array(width * height).fill(1);
   let bytes;
   if (channels === "alpha") {
     bytes = encodePngGray8(width, height, capture.alpha ?? opaque());
-  } else {
+  } else if (channels === "rgb" && backdrop === null) {
     const rgb = Float64Array.from(capture.rgb);
+    convert(rgb);
+    bytes = encodePngSrgb8(width, height, rgb);
+  } else {
+    const rgb = unmatte(capture, bg);
     convert(rgb);
     bytes = channels === "rgba" ? encodePngSrgbRgba8(width, height, rgb, capture.alpha ?? opaque()) : encodePngSrgb8(width, height, flattenOver({ ...capture, rgb }, backdrop));
   }

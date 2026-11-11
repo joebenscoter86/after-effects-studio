@@ -21,6 +21,7 @@ import {
   flattenOver,
   histogramOf,
   sampleRegions,
+  unmatte,
 } from "../src/color/sheet.js";
 
 const FIXTURES = path.join(path.dirname(fileURLToPath(import.meta.url)), "fixtures", "png");
@@ -105,6 +106,55 @@ describe("flattenOver", () => {
   it("returns an unchanged copy when the image has no alpha", () => {
     const img = fixture("opaque-rgb16.png");
     const out = flattenOver(img, { kind: "color", color: [1, 0, 1] });
+    expect(out).not.toBe(img.rgb);
+    expect(Array.from(out)).toEqual(Array.from(img.rgb));
+  });
+});
+
+// saveFrameToPng lays RGB over the comp background (measured live):
+// captured = colour·a + bg·(1 − a). unmatte gives the colour back.
+describe("unmatte", () => {
+  it("recovers the colour from a capture laid over a blue background", () => {
+    const img = fixture("ae-blue-bg-rgba16.png");
+    const out = unmatte(img, [0, 0, 1]);
+    const red = rgbAt(out, 32, 10, 6);
+    expect(red[0]).toBeCloseTo(1, 6);
+    expect(red[1]).toBeCloseTo(0, 6);
+    expect(red[2]).toBeCloseTo(0, 6);
+    expect(rgbAt(out, 32, 18, 10)).toEqual([0, 1, 0]);
+    // No colour where nothing covers the pixel.
+    expect(rgbAt(out, 32, 0, 0)).toEqual([0, 0, 0]);
+    // The input is not modified.
+    expect(rgbAt(img.rgb, 32, 0, 0)).toEqual([0, 0, 1]);
+  });
+
+  it("on a black background divides out the alpha, as for premultiplied colour", () => {
+    const out = unmatte(fixture("ae-black-bg-rgba16.png"), [0, 0, 0]);
+    expect(rgbAt(out, 32, 10, 6)[0]).toBeCloseTo(1, 6);
+  });
+
+  it("an 8-bit capture gives the same colour, kept within 0..1", () => {
+    const out = unmatte(fixture("ae-blue-bg-rgba8.png"), [0, 0, 1]);
+    const red = rgbAt(out, 32, 10, 6);
+    expect(red[0]).toBeCloseTo(1, 6);
+    expect(red[2]).toBeGreaterThanOrEqual(0);
+  });
+
+  it("with flattenOver, re-lays the colour over a new backdrop", () => {
+    const img = fixture("ae-blue-bg-rgba16.png");
+    const out = flattenOver(
+      { ...img, rgb: unmatte(img, [0, 0, 1]) },
+      { kind: "color", color: [1, 0, 1] },
+    );
+    const a = 128 / 255;
+    const red = rgbAt(out, 32, 10, 6);
+    expect(red[0]).toBeCloseTo(1, 6);
+    expect(red[2]).toBeCloseTo(1 - a, 6);
+  });
+
+  it("returns an unchanged copy when the image has no alpha", () => {
+    const img = fixture("opaque-rgb16.png");
+    const out = unmatte(img, [0, 0, 1]);
     expect(out).not.toBe(img.rgb);
     expect(Array.from(out)).toEqual(Array.from(img.rgb));
   });

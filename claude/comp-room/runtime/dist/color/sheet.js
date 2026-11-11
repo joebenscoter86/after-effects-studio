@@ -107,6 +107,20 @@ const CHECKERBOARD = {
   light: [0.8, 0.8, 0.8],
   dark: [0.6, 0.6, 0.6]
 };
+function unmatte(img, bg) {
+  const out = Float64Array.from(img.rgb);
+  const alpha = img.alpha;
+  if (!alpha) return out;
+  for (let p = 0; p < alpha.length; p++) {
+    const a = alpha[p];
+    if (a >= 1) continue;
+    const i = p * 3;
+    for (let c = 0; c < 3; c++) {
+      out[i + c] = a <= 0 ? 0 : Math.min(1, Math.max(0, (out[i + c] - bg[c] * (1 - a)) / a));
+    }
+  }
+  return out;
+}
 function flattenOver(img, backdrop) {
   const out = Float64Array.from(img.rgb);
   const alpha = img.alpha;
@@ -394,5 +408,6 @@ export {
   histogramOf,
   resample,
   rgbHex,
-  sampleRegions
+  sampleRegions,
+  unmatte
 };
