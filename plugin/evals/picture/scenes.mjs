@@ -271,7 +271,7 @@ export const REVIEW = {
   fps: 30,
   frames: 180,
   bg: [0, 0, 0],
-  marker: { name: "hit", frame: 60, comment: "the badge lands here" },
+  marker: { name: "hit", frame: 60, comment: "hit" },
   plate: { name: "plate", width: 2112, height: 1272, wall: [0.46, 0.46, 0.46], lines: [0.34, 0.34, 0.34], lineWidth: 4, spacing: 48 },
   soft: { name: "plate soft", fromFrame: 120, toFrame: 149, blur: 30 },
   fringe: { colour: [0.92, 0.92, 0.9], width: 4 },

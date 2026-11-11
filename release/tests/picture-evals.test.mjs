@@ -266,6 +266,10 @@ test('review: the scene puts each planted defect where the truth says', () => {
   assert.equal(REVIEW_TRUTH.focus.from, s.soft.fromFrame / s.fps);
   assert.equal(REVIEW_TRUTH.timing.from, s.marker.frame / s.fps);
   assert.ok(s.badge.landFrame - s.marker.frame >= 6, 'the badge lands several frames after the marker');
+  // The marker reads as the brief names it: After Effects shows a comp marker by its comment.
+  assert.equal(s.marker.comment, s.marker.name);
+  assert.ok(s.brief.includes(`marker "${s.marker.comment}", ${s.marker.frame / s.fps}.0 s`), s.brief);
+  assert.deepEqual(reviewBuild(s).comps.find((c) => c.main).markers, [{ frame: s.marker.frame, name: 'hit', comment: 'hit' }]);
   assert.ok(s.takes[0].fringe && !s.takes[1].fringe && !s.takes[0].cast && s.takes[1].cast);
   // The cast leans magenta: red and blue up, green down.
   const [r, g, b] = s.takes[1].cast;

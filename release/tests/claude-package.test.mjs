@@ -494,6 +494,8 @@ test('the reviewer agent can look but not change anything', async () => {
   assert.match(body, /ae_library/);
   assert.match(body, /`review`/);
   assert.match(body, /first-watch/);
+  // It can read the markers a brief names (ae_comp_info lists them; it has no ae_do for marker.list).
+  assert.match(body, /markers/);
 });
 
 test('every plugin tool the reviewer agent names is one the packaged server serves', async () => {

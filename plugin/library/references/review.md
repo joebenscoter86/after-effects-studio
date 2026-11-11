@@ -15,7 +15,7 @@ A builder knows what each moment was meant to show and sees that. A fresh viewer
 4. Frames at the moments that matter, as file paths: `ae_render_frame` strips (`strip: { at, frames }`) around each cut, hit and hand-off, and full-size stills of each reading hold.
 5. A preview movie (`render.preview` through `ae_do`), where the host can play one.
 
-Not the builder's notes, reasoning, earlier drafts or list of what it already fixed: they tell the reviewer where to look, and it stops seeing the rest. The reviewer may render more frames and read comp and layer info. It changes nothing.
+Not the builder's notes, reasoning, earlier drafts or list of what it already fixed: they tell the reviewer where to look, and it stops seeing the rest. The reviewer may render more frames and read comp and layer info; `ae_comp_info` lists the comp's markers with their times and comments, so a beat the brief names can be checked against its marker. It changes nothing.
 
 ## What the reviewer returns
 

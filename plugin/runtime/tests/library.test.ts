@@ -55,6 +55,8 @@ describe("studio library", () => {
     // Delegation, with the fallback said out loud.
     expect(doc).toContain("comp-room:motion-reviewer");
     expect(doc).toMatch(/not independent/);
+    // Marker times are where the reviewer can read them.
+    expect(doc).toMatch(/ae_comp_info` lists the comp's markers/);
   });
   it("makes the review a required step of a build, and the reviewer's skill starts from the whole piece", () => {
     const skill = (name: string) => readFileSync(new URL(`../../skills/${name}/SKILL.md`, import.meta.url), "utf8");
