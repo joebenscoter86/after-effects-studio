@@ -7,6 +7,7 @@ The tools:
 - `ae_render_frame` with `screen: true` measures the screen in the un-keyed source.
 - `ae_render_frame` with `edge: true` measures a matte: shares, edge width, holes, specks, patches, spill and, with `times`, flicker.
 - `ae_render_frame` with `sample`, `channels`, `over`, `isolate` and `times` reads colours, shows the matte and lays the key over a test colour.
+- `ae_render_frame` with `diff` (with `times`) or `strip` measures how the picture changes from frame to frame and flags pops, stutters and cuts; `render.preview` (through `ae_do`) renders a quick movie to watch at speed.
 - `key.keylight` adds or updates Keylight from measured values and reads every setting back.
 - `key.view` switches Keylight's view and reports the previous one.
 - `key.cleanup` adds Key Cleaner and Advanced Spill Suppressor after Keylight.
@@ -180,6 +181,22 @@ ae_render_frame { compNameOrId, times: [t, t + 1/fps, t + 2/fps, t + 3/fps], out
 ```
 
 Read `edgeFlicker.overall.edge` and `worstPair`. Real motion counts as change too, so judge it on held frames. Chatter along the edge points to Screen Pre-blur or Key Cleaner's Reduce Chatter.
+
+`edgeFlicker` measures the matte's alpha. To see the composite move, and to catch a frame that jumps, use `strip` on the final comp (not isolated), around the moment you are judging:
+
+```
+ae_render_frame { compNameOrId, strip: { at: t, frames: 9 }, outPath }
+```
+
+It renders the nine frames around `t` into one small contact sheet and turns on `diff`: per consecutive pair, `change` (mean absolute difference of the picture), `changedShare`, `changedBounds`, and in `diff.series` the median and the pairs that stand out. A `pop` is one frame that differs from both neighbours, a `stutter` a frame that repeats the one before while the rest moves, a `cut` one pair far above its neighbours. The diff sheet (`<stem>_diff.png`) shows each pair's change amplified 8×: chatter shows as a lit outline around the subject on held frames, real motion as the moving part. Add `sample` regions (an edge box, the face, the plate) to see where a change comes from. The flags are hints; numbers for a good key over a plate have not been measured yet.
+
+Then watch it at speed. Stills do not show flicker the way playback does:
+
+```
+ae_do { operation: "render.preview", args: { comp: "<comp>", outputPath: "<scratch>/preview.mov" }, timeoutMs: 180000 }
+```
+
+It renders the work area through the render queue with the `High Quality` template, removes its queue item afterwards and returns the movie's path, duration, frame count and render time. Report what you saw in the movie separately from the numbers.
 
 ### 11. Restore and finish
 
