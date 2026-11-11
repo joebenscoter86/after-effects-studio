@@ -3,12 +3,19 @@ export declare const renderFrameTool: import("./define-tool.js").ToolSpec<{
     compNameOrId: z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>;
     time: z.ZodOptional<z.ZodNumber>;
     times: z.ZodOptional<z.ZodArray<z.ZodNumber>>;
+    strip: z.ZodOptional<z.ZodObject<{
+        at: z.ZodNumber;
+        frames: z.ZodNumber;
+        step: z.ZodOptional<z.ZodNumber>;
+        maxDimension: z.ZodOptional<z.ZodNumber>;
+    }, z.core.$strip>>;
     outPath: z.ZodString;
     useDisplayStartTime: z.ZodOptional<z.ZodBoolean>;
     colorManaged: z.ZodOptional<z.ZodEnum<{
         auto: "auto";
         off: "off";
     }>>;
+    settleTimeoutMs: z.ZodOptional<z.ZodNumber>;
     analyze: z.ZodOptional<z.ZodBoolean>;
     contactSheet: z.ZodOptional<z.ZodObject<{
         columns: z.ZodOptional<z.ZodNumber>;
@@ -90,6 +97,20 @@ export declare const renderFrameTool: import("./define-tool.js").ToolSpec<{
         nearBand: z.ZodOptional<z.ZodNumber>;
         unevenRatio: z.ZodOptional<z.ZodNumber>;
         grainAbove: z.ZodOptional<z.ZodNumber>;
+    }, z.core.$strip>]>>;
+    diff: z.ZodOptional<z.ZodUnion<readonly [z.ZodBoolean, z.ZodObject<{
+        changeAbove: z.ZodOptional<z.ZodNumber>;
+        spikeRatio: z.ZodOptional<z.ZodNumber>;
+        holdRatio: z.ZodOptional<z.ZodNumber>;
+        quietBelow: z.ZodOptional<z.ZodNumber>;
+        movingShare: z.ZodOptional<z.ZodNumber>;
+        window: z.ZodOptional<z.ZodNumber>;
+        amplify: z.ZodOptional<z.ZodNumber>;
+        sheet: z.ZodOptional<z.ZodUnion<readonly [z.ZodBoolean, z.ZodObject<{
+            columns: z.ZodOptional<z.ZodNumber>;
+            thumbWidth: z.ZodOptional<z.ZodNumber>;
+            outPath: z.ZodOptional<z.ZodString>;
+        }, z.core.$strip>]>>;
     }, z.core.$strip>]>>;
 }>;
 //# sourceMappingURL=render-frame.d.ts.map
