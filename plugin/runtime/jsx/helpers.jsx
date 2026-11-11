@@ -578,7 +578,233 @@ AE.valueToJson = function (val, _depth) {
     return null;
 };
 
-AE.serializeProperty = function (prop) {
+// ---------- Effect controls: ranges, units, checked writes ----------
+
+/**
+ * Scripting scales After Effects reports wrongly, keyed by property matchName.
+ * Each entry is the range scripting really accepts, found by testing, with a
+ * note saying what was observed and where. An entry replaces the reported
+ * range in effect.describe, layer info and effect.set_property's check
+ * (skipCheck still overrides it). To add one: test the property live, add
+ * { min, max, note } here and a line under "Effect value scales" in
+ * library/references/scripting.md.
+ */
+AE.KNOWN_EFFECT_SCALES = {
+    "ADBE Threshold2-0001": {
+        min: 0,
+        max: 1,
+        note: "Threshold Level takes 0 to 1 in scripting (the panel shows 0 to 255); After Effects 2027 reports -30000 to 30000, which is not the real limit."
+    }
+};
+
+/**
+ * A reported bound this far from zero is After Effects' placeholder for "no
+ * real limit" (Threshold Level reports -30000 to 30000, Keylight's Screen
+ * Colour about plus or minus 3.9 million), not a usable scale.
+ */
+AE.WIDE_RANGE_LIMIT = 30000;
+
+/**
+ * The range After Effects reports for a property, as { min, max } with null
+ * for a side it does not report (hasMin/hasMax false, or the read threw).
+ */
+AE.reportedRange = function (prop) {
+    var r = { min: null, max: null };
+    try { if (prop.hasMin === true && typeof prop.minValue === "number") r.min = prop.minValue; } catch (eMin) {}
+    try { if (prop.hasMax === true && typeof prop.maxValue === "number") r.max = prop.maxValue; } catch (eMax) {}
+    return r;
+};
+
+/**
+ * The range to trust for a property, in SCRIPTING units (which can differ
+ * from the Effect Controls panel: Gradient Wipe completion is 0..1 here,
+ * 0..100% there). { min, max, source } where source is "known-scale" (from
+ * AE.KNOWN_EFFECT_SCALES; `reported` and `note` say what AE claimed),
+ * "after-effects" (as reported; `untrusted` and `note` when absurdly wide),
+ * or null when there is no range at all.
+ */
+AE.propertyRange = function (prop) {
+    var rep = AE.reportedRange(prop);
+    var mn = AE.safeGet(function () { return prop.matchName; }, "");
+    var known = (typeof mn === "string" && AE.KNOWN_EFFECT_SCALES.hasOwnProperty(mn)) ? AE.KNOWN_EFFECT_SCALES[mn] : null;
+    if (known) return { min: known.min, max: known.max, source: "known-scale", note: known.note, reported: rep };
+    if (rep.min === null && rep.max === null) return { min: null, max: null, source: null };
+    var r = { min: rep.min, max: rep.max, source: "after-effects" };
+    var lim = AE.WIDE_RANGE_LIMIT;
+    if ((rep.min !== null && Math.abs(rep.min) >= lim) || (rep.max !== null && Math.abs(rep.max) >= lim)) {
+        r.untrusted = true;
+        r.note = "After Effects reports " + AE._rangeText(rep) + "; a range this wide is its placeholder, not a real limit. " +
+            "Check library/references/scripting.md or test a value before trusting a scale.";
+    }
+    return r;
+};
+
+/**
+ * Copy range, units and canVaryOverTime onto `out`, leaving out what AE does
+ * not report. A known or untrusted range is always marked (rangeSource,
+ * rangeNote, reportedRange / rangeUntrusted); `verbose` also marks ordinary
+ * reported ranges, as effect.describe does.
+ */
+AE._addControlFields = function (prop, out, verbose) {
+    var r = AE.propertyRange(prop);
+    if (r.min !== null) out.minValue = r.min;
+    if (r.max !== null) out.maxValue = r.max;
+    if (r.source === "known-scale") {
+        out.rangeSource = "known-scale";
+        if (r.reported.min !== null || r.reported.max !== null) out.reportedRange = r.reported;
+        out.rangeNote = r.note;
+    } else if (r.source === "after-effects") {
+        if (verbose || r.untrusted) out.rangeSource = "after-effects";
+        if (r.untrusted) {
+            out.rangeUntrusted = true;
+            out.rangeNote = r.note;
+        }
+    }
+    var units = AE.safeGet(function () { return prop.unitsText; }, "");
+    if (typeof units === "string" && units.length > 0) out.unitsText = units;
+    var cv = AE.safeGet(function () { return prop.canVaryOverTime; }, null);
+    if (cv === true || cv === false) out.canVaryOverTime = cv;
+    return out;
+};
+
+/** Range as words for a refusal message: "0 to 1", "at least 0", "at most 255". */
+AE._rangeText = function (r) {
+    if (r.min !== null && r.max !== null) return String(r.min) + " to " + String(r.max);
+    if (r.min !== null) return "at least " + String(r.min);
+    return "at most " + String(r.max);
+};
+
+/** Short text for a value in a refusal message. */
+AE._valueText = function (v) {
+    try {
+        if (typeof v === "string") return "\"" + v + "\"";
+        if (v instanceof Array) {
+            var parts = [];
+            for (var i = 0; i < v.length; i++) parts.push(AE._valueText(v[i]));
+            return "[" + parts.join(", ") + "]";
+        }
+        if (v === null || v === undefined) return "null";
+        if (typeof v === "object") return "an object";
+        return String(v);
+    } catch (eVt) { return "the value"; }
+};
+
+/**
+ * Check a value against what After Effects reports for `prop` BEFORE a write.
+ * Returns null when the write may go ahead, or a refusal message naming the
+ * property, the value given and what is valid. Only what AE reports is
+ * enforced: no reported range means any number; custom, shape, text and
+ * marker values are left to AE. A range that cannot be read never blocks.
+ */
+AE.checkPropertyWrite = function (prop, value) {
+    var pvt = prop.propertyValueType;
+    var label = "property '" + prop.name + "' (" + prop.matchName + ")";
+    var typeName = AE.PROPERTY_VALUE_TYPE_NAMES[pvt] || String(pvt);
+    var given = AE._valueText(value);
+    if (pvt === PropertyValueType.NO_VALUE) return label + " has no value to set (it is a group or a placeholder)";
+    var dims = null; // allowed array lengths; 0 means a single number
+    if (pvt === PropertyValueType.OneD || pvt === PropertyValueType.LAYER_INDEX || pvt === PropertyValueType.MASK_INDEX) dims = [0];
+    else if (pvt === PropertyValueType.TwoD || pvt === PropertyValueType.TwoD_SPATIAL) dims = [2];
+    else if (pvt === PropertyValueType.ThreeD || pvt === PropertyValueType.ThreeD_SPATIAL) dims = [2, 3];
+    else if (pvt === PropertyValueType.COLOR) dims = [3, 4];
+    if (dims === null) return null;
+    var nums = [];
+    if (dims[0] === 0) {
+        if (typeof value === "boolean") nums.push(value ? 1 : 0);
+        else if (typeof value === "number" && !isNaN(value)) nums.push(value);
+        else return label + " (" + typeName + ") expects one number; got " + given;
+    } else {
+        var want = dims.length === 1 ? String(dims[0]) : String(dims[0]) + " or " + String(dims[1]);
+        var okShape = value instanceof Array;
+        if (okShape) {
+            var lenOk = false;
+            for (var d = 0; d < dims.length; d++) if (value.length === dims[d]) lenOk = true;
+            okShape = lenOk;
+        }
+        if (okShape) {
+            for (var k = 0; k < value.length; k++) {
+                if (typeof value[k] !== "number" || isNaN(value[k])) { okShape = false; break; }
+                nums.push(value[k]);
+            }
+        }
+        if (!okShape) return label + " (" + typeName + ") expects an array of " + want + " numbers; got " + given;
+    }
+    var r = AE.propertyRange(prop);
+    if (r.min === null && r.max === null) return null;
+    for (var n = 0; n < nums.length; n++) {
+        if ((r.min !== null && nums[n] < r.min) || (r.max !== null && nums[n] > r.max)) {
+            if (r.source === "known-scale") {
+                var claimed = (r.reported.min !== null || r.reported.max !== null) ? AE._rangeText(r.reported) : "no range";
+                return label + " refused " + given + ": its scripting scale is " + AE._rangeText(r) +
+                    ", known from testing (After Effects reports " + claimed + ", which is wrong). " + r.note +
+                    " If this known scale is itself wrong, pass skipCheck: true.";
+            }
+            var units = AE.safeGet(function () { return prop.unitsText; }, "");
+            return label + " refused " + given + ": After Effects reports a valid range of " + AE._rangeText(r) +
+                " in scripting" + (units ? " (units text: " + units + ")" : "") +
+                ". The Effect Controls panel can show another scale (percent, 0 to 255). " +
+                "If After Effects' reported range is itself wrong, pass skipCheck: true.";
+        }
+    }
+    return null;
+};
+
+/**
+ * Every settable property of one effect as a flat table. Each row carries the
+ * display-name path (usable as effect.set_property's `property`), the
+ * matchName path (stable across languages), value type, current value, range,
+ * units, whether it can be keyed, key count and, where the API exposes them
+ * (Dropdown Menu Control, AE 26+), the menu items. NO_VALUE leaves are
+ * counted, not listed. Each read is guarded so one bad property cannot end
+ * the walk.
+ */
+AE.describeEffect = function (fx) {
+    var rows = [];
+    var skipped = 0;
+    function walk(group, names, matches, depth) {
+        if (depth > 8) return;
+        var n = AE.safeGet(function () { return group.numProperties; }, 0);
+        for (var i = 1; i <= n; i++) {
+            var child = null;
+            try { child = group.property(i); } catch (eCh) { child = null; }
+            if (!child) continue;
+            var cName = AE.safeGet(function () { return child.name; }, "");
+            var cMatch = AE.safeGet(function () { return child.matchName; }, "");
+            var path = names.concat([cName]);
+            var mpath = matches.concat([cMatch]);
+            var ptype = AE.safeGet(function () { return child.propertyType; }, null);
+            if (ptype !== PropertyType.PROPERTY) { walk(child, path, mpath, depth + 1); continue; }
+            var pvt = AE.safeGet(function () { return child.propertyValueType; }, null);
+            if (pvt === PropertyValueType.NO_VALUE) { skipped++; continue; }
+            var row = {
+                path: path,
+                matchPath: mpath,
+                name: cName,
+                matchName: cMatch,
+                valueType: AE.PROPERTY_VALUE_TYPE_NAMES[pvt] || pvt
+            };
+            try { row.value = AE.valueToJson(child.value); } catch (eVal) { row.value = null; }
+            AE._addControlFields(child, row, true);
+            row.numKeys = AE.safeGet(function () { return child.numKeys; }, 0);
+            var ex = AE.safeGet(function () {
+                return (child.canSetExpression && child.expressionEnabled && child.expression) ? child.expression : null;
+            }, null);
+            if (ex) row.expression = ex;
+            var isDd = AE.safeGet(function () { return child.isDropdownEffect === true; }, false);
+            if (isDd) {
+                var opts = AE.safeGet(function () { return AE.valueToJson(child.propertyParameters); }, null);
+                if (opts && opts.length) row.options = opts;
+            }
+            rows.push(row);
+        }
+    }
+    walk(fx, [], [], 0);
+    return { properties: rows, skippedNoValue: skipped };
+};
+
+// opts.controls adds range, units and canVaryOverTime (AE._addControlFields);
+// off by default so markers, exports and summaries stay small.
+AE.serializeProperty = function (prop, opts) {
     var out = {
         name: prop.name,
         matchName: prop.matchName,
@@ -593,6 +819,7 @@ AE.serializeProperty = function (prop) {
     } catch (e) {
         out.value = null;
     }
+    if (opts && opts.controls) AE._addControlFields(prop, out);
     if (prop.canSetExpression && prop.expressionEnabled && prop.expression && prop.expression.length > 0) {
         out.expression = prop.expression;
     }
@@ -667,7 +894,7 @@ AE.serializePropertyGroup = function (group, depth, maxDepth, opts) {
         if (!child) continue;
         if (child.propertyType === PropertyType.PROPERTY) {
             if (opts && opts.onlyModified && !AE._propertyMatters(child)) continue;
-            out.properties.push(AE.serializeProperty(child));
+            out.properties.push(AE.serializeProperty(child, opts));
         } else if (child.propertyType === PropertyType.NAMED_GROUP || child.propertyType === PropertyType.INDEXED_GROUP) {
             out.groups.push(AE.serializePropertyGroup(child, depth + 1, maxDepth, opts));
         }
@@ -705,13 +932,21 @@ AE.propertyGroupIsEmpty = function (g) {
 // that exist on every layer (Transform, Material Options, Audio) collapse to
 // null when nothing in them was touched; Effects/Masks/Text/Contents keep
 // their skeleton so their existence still shows.
+// opts.controls=false (the project export) leaves out ranges, units and
+// canVaryOverTime; full detail carries them, summary detail never does.
+AE._layerWalkOpts = function (opts) {
+    if (opts.detail === "summary") return { onlyModified: true };
+    if (opts.controls === false) return null;
+    return { controls: true };
+};
+
 AE.serializeLayerFull = function (layer, opts) {
     opts = opts || {};
     var out = AE.serializeLayerSummary(layer);
     // Parent by index for simple remapping on import.
     out.parent = layer.parent ? { index: layer.parent.index, name: layer.parent.name } : null;
     var summary = opts.detail === "summary";
-    var walkOpts = summary ? { onlyModified: true } : null;
+    var walkOpts = AE._layerWalkOpts(opts);
     function collapse(g) { return (summary && AE.propertyGroupIsEmpty(g)) ? null : g; }
     // Property tree (Transform + Effects + Masks + Text + Contents + Material Options + Audio)
     if (opts.includeProperties !== false) {

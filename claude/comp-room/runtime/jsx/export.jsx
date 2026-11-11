@@ -34,7 +34,7 @@ AE.exportProject = function () {
             entry.layers = [];
             for (var li = 1; li <= it.numLayers; li++) {
                 var lay = it.layer(li);
-                entry.layers.push(AE.serializeLayerFull(lay, { includeProperties: true }));
+                entry.layers.push(AE.serializeLayerFull(lay, { includeProperties: true, controls: false }));
             }
             entry.markers = AE.serializeCompMarkers(it);
         }
