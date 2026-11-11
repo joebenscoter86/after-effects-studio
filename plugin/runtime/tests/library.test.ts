@@ -50,7 +50,8 @@ describe("studio library", () => {
     expect(doc).toMatch(/two review passes/);
     // Flags are fixed or named as intended; the two real whole-piece examples.
     expect(doc).toMatch(/intended/);
-    expect(doc).toMatch(/two frames after the footage cut/);
+    expect(doc).toMatch(/stray frames of another take just before a cut/);
+    expect(doc).toMatch(/two jumps close together, render every frame between them/);
     expect(doc).toMatch(/stray frames of the next take/);
     // Delegation, with the fallback said out loud.
     expect(doc).toContain("comp-room:motion-reviewer");

@@ -38,7 +38,7 @@ No score, no pass or fail, no overall verdict. The list says what is there; the 
 
 Every `ae_check_comp` flag ends as one of two things: fixed, or named in the hand-over with the reason it is intended (a held title is a frozen stretch, a fade to black is near-black, white type sits at 255). The reviewer checks each flag against the frames and the brief and reports it as a defect only when it is not intended. Two defects from a real piece that only a whole-piece check showed:
 
-- a title and caption that changed two frames after the footage cut: on stills it looked like one cut, the check flagged two;
+- two stray frames of another take just before a cut in the supplied footage, so the picture jumped two frames ahead of the cut the title and caption were on: on stills it looked like one cut, and it was found because the check flagged two jumps two frames apart (when the report shows two jumps close together, render every frame between them);
 - two stray frames of the next take at the end of the piece, after the last moment anyone had rendered.
 
 Some defects raise no flag: a colour cast, a soft background, a fringe and a beat hit late are steady states or timing against the brief. Only looking at frames against the brief finds them, so the frames are not optional when the report is clean.

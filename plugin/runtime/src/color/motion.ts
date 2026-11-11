@@ -370,7 +370,10 @@ const frameText = (f: FrameRef) => `#${f.index}${f.time === undefined ? "" : ` (
 
 /**
  * Median, extremes and the pairs that stand out. A spike stands out from the
- * neighbours on every side it has (so a move starting from rest is not a cut):
+ * neighbours on every side it has (so a move starting from rest is not a cut),
+ * by spikeRatio over the median of up to `window` pairs on that side; a pair
+ * is looked at a second time with the spikes already found left out of its
+ * neighbours, so a smaller jump beside a larger one is still reported:
  * two spikes in a row are a one-frame pop of the frame they share, a lone
  * spike is a cut (or a jump). A hold — a pair that barely changes while the
  * neighbours on both sides move — is a stutter: a repeated frame. Spikes are
@@ -413,19 +416,29 @@ export function summarizeSeries(pairs: SeriesPair[], t: DiffThresholds): SeriesS
     for (let k = 1; k <= t.window; k++) if (set.has(i - k) || set.has(i + k)) return true;
     return false;
   };
-  const spike: Array<{ reference: number; edge: boolean; besideRepeat: boolean } | null> =
-    pairs.map((p, i) => {
-      if (repeats.has(i) || p.changedShare < t.movingShare) return null;
-      const sides = [
-        side(pairs, i, -1, t.window, repeats),
-        side(pairs, i, 1, t.window, repeats),
-      ].filter((s): s is Side => s !== null);
-      if (sides.length === 0) return null;
-      const reference = Math.max(...sides.map((s) => s.change), t.quietBelow);
-      if (sides.some((s) => p.change < t.spikeRatio * Math.max(s.change, t.quietBelow)))
-        return null;
-      return { reference, edge: i === 0 || i === n - 1, besideRepeat: near(i, repeats) };
-    });
+  type Spike = { reference: number; edge: boolean; besideRepeat: boolean };
+  const standsOut = (p: SeriesPair, i: number, skip: Set<number>): Spike | null => {
+    if (repeats.has(i) || p.changedShare < t.movingShare) return null;
+    const sides = [side(pairs, i, -1, t.window, skip), side(pairs, i, 1, t.window, skip)].filter(
+      (s): s is Side => s !== null,
+    );
+    if (sides.length === 0) return null;
+    const reference = Math.max(...sides.map((s) => s.change), t.quietBelow);
+    if (sides.some((s) => p.change < t.spikeRatio * Math.max(s.change, t.quietBelow))) return null;
+    return { reference, edge: i === 0 || i === n - 1, besideRepeat: near(i, repeats) };
+  };
+  const first: Array<Spike | null> = pairs.map((p, i) => standsOut(p, i, repeats));
+  // Second look, with the pairs that already stand out left out of every other
+  // pair's neighbours: a jump two frames before a larger cut is measured against
+  // the ordinary pairs around it, not against the cut in its window (found on a
+  // real comp: stray frames of another take just before the cut). Ordinary
+  // motion beside a cut still has to stand spikeRatio clear of its own
+  // neighbours, so it does not become a second cut.
+  const firstSpikes = new Set(first.flatMap((s, i) => (s ? [i] : [])));
+  const skipBoth = new Set([...repeats, ...firstSpikes]);
+  const spike: Array<Spike | null> = pairs.map(
+    (p, i) => first[i] ?? (firstSpikes.size > 0 ? standsOut(p, i, skipBoth) : null),
+  );
   const spikes = new Set(spike.flatMap((s, i) => (s ? [i] : [])));
   const repeatNote = " (a repeated frame is next to it and was left out of the comparison)";
 
