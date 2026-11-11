@@ -177,6 +177,53 @@ describe("partly transparent patches that are not thin edges", () => {
     expect(report.width.typical).toBe(2);
   });
 
+  it("says where the patch is thickest, and how thick it is there", () => {
+    // Partly transparent from x 46 (the soft edge) to x 59: 14 px between the
+    // opaque core (x 45) and the empty frame (x 60).
+    const patch = measure(fixture("matte-patch-rgba16.png")).report.patches.list[0];
+    expect(patch.thickest.thickness).toBeGreaterThanOrEqual(12);
+    expect(patch.thickest.thickness).toBeLessThanOrEqual(15);
+    expect(patch.thickest.x).toBeGreaterThanOrEqual(48);
+    expect(patch.thickest.x).toBeLessThanOrEqual(59);
+    expect(patch.thickest.y).toBeGreaterThanOrEqual(14);
+    expect(patch.thickest.y).toBeLessThanOrEqual(33);
+  });
+
+  it("finds the densest window of a long band, so the box does not hide what is in it", () => {
+    // An L-shaped soft band 12 px thick along the top and down the right side,
+    // with a 40×40 soft blob on it: one patch whose box covers most of the frame.
+    const inBand = (x: number, y: number) =>
+      (y >= 10 && y <= 21 && x >= 10 && x <= 189) || (x >= 178 && x <= 189 && y >= 10 && y <= 109);
+    const inBlob = (x: number, y: number) => x >= 60 && x <= 99 && y >= 10 && y <= 49;
+    const img = image(200, 120, (x, y) => (inBand(x, y) || inBlob(x, y) ? 0.5 : 0));
+    const { report, frame } = measure(img);
+    expect(frame.width).toBe(200);
+    expect(report.patches.count).toBe(1);
+    const patch = report.patches.list[0];
+    expect(patch).toMatchObject({ x: 10, y: 10, width: 180, height: 100 });
+    // The densest window (4 × maxEdgeWidth = 16 px square here) sits on the blob.
+    const d = patch.densest;
+    expect(d.width).toBe(16);
+    expect(d.height).toBe(16);
+    expect(d.x).toBeGreaterThanOrEqual(60);
+    expect(d.x + d.width - 1).toBeLessThanOrEqual(99);
+    expect(d.y).toBeGreaterThanOrEqual(10);
+    expect(d.y + d.height - 1).toBeLessThanOrEqual(49);
+    expect(d.pixels).toBe(256);
+    expect(d.share).toBe(1);
+    expect(d.meanAlpha).toBeCloseTo(0.5, 3);
+    // Thickest at the blob's middle: about its 40 px width, not the band's 12.
+    expect(inBlob(patch.thickest.x, patch.thickest.y)).toBe(true);
+    expect(patch.thickest.thickness).toBeGreaterThanOrEqual(35);
+    expect(patch.thickest.thickness).toBeLessThanOrEqual(41);
+  });
+
+  it("takes the window size as a threshold", () => {
+    const { report } = measure(fixture("matte-patch-rgba16.png"), BLACK, { patchWindow: 6 });
+    expect(report.patches.list[0].densest).toMatchObject({ width: 6, height: 6, pixels: 36 });
+    expect(resolveEdgeThresholds({}, 1080, 1920).patchWindow).toBe(44);
+  });
+
   it("calls the same patch a thin edge when maxEdgeWidth is raised past it", () => {
     const { report } = measure(fixture("matte-patch-rgba16.png"), BLACK, { maxEdgeWidth: 40 });
     expect(report.patches.count).toBe(0);

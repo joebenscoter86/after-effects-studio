@@ -524,6 +524,9 @@ describe("edge", () => {
     expect(res.edge.patches.count).toBe(1);
     expect(res.edge.width.typical).toBe(2);
     expect(res.edgeThresholds.maxEdgeWidth).toBe(4);
+    expect(res.edgeThresholds.patchWindow).toBe(16);
+    expect(res.edge.patches.list[0].thickest.thickness).toBeGreaterThan(10);
+    expect(res.edge.patches.list[0].densest.pixels).toBeGreaterThan(0);
     expect(res.edgeThresholds.opaque).toBeCloseTo(1 - 2 / 255, 6);
     expect(res.measurementStages.capture).toMatch(/before any colour conversion/);
     expect(res.edgeFlicker).toBeUndefined();
@@ -599,6 +602,7 @@ describe("edge", () => {
     ["an alpha threshold outside 0..1", { opaque: 1.5 }],
     ["a zero maxEdgeWidth", { maxEdgeWidth: 0 }],
     ["an unknown screen colour", { screen: "red" }],
+    ["a zero patchWindow", { patchWindow: 0 }],
   ] as const;
   for (const [what, edge] of refusedEdge) {
     it(`refuses ${what} before After Effects is contacted`, async () => {

@@ -462,6 +462,14 @@ export const renderFrameTool = defineTool({
             .max(1)
             .optional()
             .describe("Flicker: an alpha change above this counts as changed. Default 0.05."),
+          patchWindow: z
+            .number()
+            .min(1)
+            .optional()
+            .describe(
+              "Side of the square window each patch's densest part is reported in, px. Default " +
+                "4 × maxEdgeWidth (44 at 1080×1920).",
+            ),
         }),
       ])
       .optional()
@@ -474,7 +482,10 @@ export const renderFrameTool = defineTool({
           "transparent or opaque anywhere, as when the screen is left partly opaque); solidAreas; holes " +
           "{count, area, transparentArea, largest, list} — regions below opaque enclosed by the solid " +
           "area (not touching the frame edge); specks {count, area, list} — islands outside the main " +
-          "areas; patches {count, area, list} — partly transparent regions thicker than maxEdgeWidth; " +
+          "areas; patches {count, area, list} — partly transparent regions thicker than maxEdgeWidth, each " +
+          "with its box, thickest {x, y, thickness} (the deepest point and the thickness there, px) and " +
+          "densest {x, y, width, height, pixels, share, meanAlpha} (the patchWindow square holding most " +
+          "of it, so a long band's box does not hide where it is); " +
           "spill {mean, solidMean, excess, solidExcess, leansToScreen, reading} — the straight colour of " +
           "the partly transparent pixels (comp background taken out) against the solid just inside the " +
           "edge. Boxes are {x, y, width, height} in capture pixels. With two or more `times`: " +

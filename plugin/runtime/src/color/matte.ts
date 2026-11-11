@@ -54,6 +54,8 @@ export interface EdgeThresholds {
   spillThreshold: number;
   /** A pixel's alpha change above this counts as changed (flicker shares and bounds). */
   changeAbove: number;
+  /** Side of the square window a patch's densest part is reported in, px. */
+  patchWindow: number;
 }
 
 export type EdgeThresholdArgs = Partial<EdgeThresholds>;
@@ -77,8 +79,14 @@ export type EdgeThresholdArgs = Partial<EdgeThresholds>;
  *   channel; smaller leans are within grading noise.
  * - changeAbove 0.05: alpha changes below this are invisible in practice;
  *   8-bit capture noise alone is 1/255.
+ * - patchWindow: four times maxEdgeWidth (44 px at 1080×1920): large enough
+ *   to hold a remnant worth fixing, small enough that a long band's box does
+ *   not hide where most of it is.
  */
-export const EDGE_DEFAULTS: Omit<EdgeThresholds, "maxEdgeWidth"> & { maxEdgeWidth: "auto" } = {
+export const EDGE_DEFAULTS: Omit<EdgeThresholds, "maxEdgeWidth" | "patchWindow"> & {
+  maxEdgeWidth: "auto";
+  patchWindow: "auto";
+} = {
   transparent: 2 / 255,
   opaque: 1 - 2 / 255,
   maxEdgeWidth: "auto",
@@ -88,6 +96,7 @@ export const EDGE_DEFAULTS: Omit<EdgeThresholds, "maxEdgeWidth"> & { maxEdgeWidt
   spillMinAlpha: 0.1,
   spillThreshold: 0.03,
   changeAbove: 0.05,
+  patchWindow: "auto",
 };
 
 /** The alpha that marks the boundary itself, where edge width is sampled. */
@@ -104,16 +113,18 @@ export function resolveEdgeThresholds(
   width: number,
   height: number,
 ): EdgeThresholds {
+  const maxEdgeWidth = args.maxEdgeWidth ?? autoMaxEdgeWidth(width, height);
   return {
     transparent: args.transparent ?? EDGE_DEFAULTS.transparent,
     opaque: args.opaque ?? EDGE_DEFAULTS.opaque,
-    maxEdgeWidth: args.maxEdgeWidth ?? autoMaxEdgeWidth(width, height),
+    maxEdgeWidth,
     mainAreaShare: args.mainAreaShare ?? EDGE_DEFAULTS.mainAreaShare,
     listed: args.listed ?? EDGE_DEFAULTS.listed,
     screen: args.screen ?? EDGE_DEFAULTS.screen,
     spillMinAlpha: args.spillMinAlpha ?? EDGE_DEFAULTS.spillMinAlpha,
     spillThreshold: args.spillThreshold ?? EDGE_DEFAULTS.spillThreshold,
     changeAbove: args.changeAbove ?? EDGE_DEFAULTS.changeAbove,
+    patchWindow: args.patchWindow ?? Math.round(4 * maxEdgeWidth),
   };
 }
 
@@ -132,6 +143,10 @@ export function edgeArgsError(args: Record<string, unknown>): string | null {
   const w = args.maxEdgeWidth;
   if (w !== undefined && (typeof w !== "number" || !Number.isFinite(w) || w < 1)) {
     return "`edge.maxEdgeWidth` must be at least 1 (pixels)";
+  }
+  const pw = args.patchWindow;
+  if (pw !== undefined && (typeof pw !== "number" || !Number.isFinite(pw) || pw < 1)) {
+    return "`edge.patchWindow` must be at least 1 (pixels)";
   }
   const listed = args.listed;
   if (listed !== undefined && (!Number.isInteger(listed) || (listed as number) < 0)) {
@@ -188,7 +203,7 @@ export interface EdgeReport {
     area: number;
     list: Array<Box & { area: number; meanAlpha: number; maxAlpha: number }>;
   };
-  patches: { count: number; area: number; list: Array<Box & { area: number; meanAlpha: number }> };
+  patches: { count: number; area: number; list: PatchEntry[] };
   spill: {
     screen: Screen;
     /** Partly transparent pixels at or above spillMinAlpha that the colour is read from. */
@@ -203,6 +218,21 @@ export interface EdgeReport {
     leansToScreen: boolean;
     reading: string;
   };
+}
+
+/** One listed patch: its box, and what is inside the box. */
+export interface PatchEntry extends Box {
+  area: number;
+  meanAlpha: number;
+  /**
+   * The patch pixel deepest inside it (farthest from any transparent or
+   * opaque pixel), and the patch's thickness there: distance to the nearest
+   * transparent + nearest opaque pixel − 1, as edge width is measured, or
+   * twice the depth − 1 where one of the two does not exist in the frame.
+   */
+  thickest: { x: number; y: number; thickness: number };
+  /** The patchWindow-square window (clipped to the box) holding the most patch pixels. */
+  densest: Box & { pixels: number; share: number; meanAlpha: number };
 }
 
 /** What one frame leaves for the next frame's flicker numbers. */
@@ -576,7 +606,11 @@ export function measureEdge(
     const x = p % width;
     addPixel(patchRegions[labels[p] - 1], x, (p - x) / width, alpha[p]);
   }
+  const patchId = new Map(patchRegions.map((r, i) => [r, i + 1]));
   patchRegions.sort(byArea);
+  const patchList = patchRegions
+    .slice(0, t.listed)
+    .map((r) => patchEntry(r, patchId.get(r)!, labels, alpha, dT, dO, width, t.patchWindow));
 
   // Spill: straight colour of the soft edge and of the solid just inside it.
   const edgeSum: Rgb = [0, 0, 0];
@@ -650,7 +684,7 @@ export function measureEdge(
     patches: {
       count: patchRegions.length,
       area: patchRegions.reduce((s, r) => s + r.area, 0),
-      list: patchRegions.slice(0, t.listed).map(holeEntry),
+      list: patchList,
     },
     spill: {
       screen: t.screen,
@@ -668,6 +702,90 @@ export function measureEdge(
 
 function holeEntry(r: Region): Box & { area: number; meanAlpha: number } {
   return { ...box(r), area: r.area, meanAlpha: r4(r.alphaSum / r.area) };
+}
+
+/** A patch's box plus where it is thickest and its densest window (see PatchEntry). */
+function patchEntry(
+  r: Region,
+  id: number,
+  labels: Int32Array,
+  alpha: Float64Array,
+  dT: Float32Array,
+  dO: Float32Array,
+  width: number,
+  window: number,
+): PatchEntry {
+  const b = box(r);
+  // Thickest: the deepest pixel.
+  let depth = -1;
+  let at = { x: b.x, y: b.y };
+  let thickness = 0;
+  for (let y = b.y; y < b.y + b.height; y++) {
+    for (let x = b.x; x < b.x + b.width; x++) {
+      const p = y * width + x;
+      if (labels[p] !== id) continue;
+      const m = Math.min(dT[p], dO[p]);
+      if (m > depth) {
+        depth = m;
+        at = { x, y };
+        thickness =
+          Number.isFinite(dT[p]) && Number.isFinite(dO[p]) ? dT[p] + dO[p] - 1 : 2 * m - 1;
+      }
+    }
+  }
+  // Densest window: summed-area tables of patch pixels and their alpha over the box.
+  const bw = b.width;
+  const bh = b.height;
+  const ww = Math.max(1, Math.min(Math.round(window), bw));
+  const wh = Math.max(1, Math.min(Math.round(window), bh));
+  const sc = new Float64Array((bw + 1) * (bh + 1));
+  const sa = new Float64Array((bw + 1) * (bh + 1));
+  const W = bw + 1;
+  for (let j = 0; j < bh; j++) {
+    let rowC = 0;
+    let rowA = 0;
+    for (let i = 0; i < bw; i++) {
+      const p = (b.y + j) * width + (b.x + i);
+      if (labels[p] === id) {
+        rowC++;
+        rowA += alpha[p];
+      }
+      sc[(j + 1) * W + i + 1] = sc[j * W + i + 1] + rowC;
+      sa[(j + 1) * W + i + 1] = sa[j * W + i + 1] + rowA;
+    }
+  }
+  const rect = (s: Float64Array, i: number, j: number) =>
+    s[(j + wh) * W + i + ww] - s[j * W + i + ww] - s[(j + wh) * W + i] + s[j * W + i];
+  let bestC = -1;
+  let bestA = 0;
+  let bi = 0;
+  let bj = 0;
+  for (let j = 0; j + wh <= bh; j++) {
+    for (let i = 0; i + ww <= bw; i++) {
+      const c = rect(sc, i, j);
+      if (c > bestC) {
+        bestC = c;
+        bestA = rect(sa, i, j);
+        bi = i;
+        bj = j;
+      }
+    }
+  }
+  return {
+    ...b,
+    area: r.area,
+    meanAlpha: r4(r.alphaSum / r.area),
+    thickest: { ...at, thickness: r2(Math.max(0, thickness)) },
+    densest: {
+      x: b.x + bi,
+      y: b.y + bj,
+      width: ww,
+      height: wh,
+      pixels: bestC,
+      share: r4(bestC / (ww * wh)),
+      meanAlpha: bestC > 0 ? r4(bestA / bestC) : 0,
+    },
+  };
 }
 
 function spillReading(
