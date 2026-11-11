@@ -109,6 +109,9 @@ registerOp({
     "rolled back before the error is returned — its changes are undone with dialogs suppressed, and details.rollback " +
     "says whether that succeeded and what is left if not; returning { ok: false } is not a throw and is not rolled back. " +
     "Pass rollback: false for deliberately incremental work whose partial result you want to keep. " +
+    "No undo is ever issued for a call that changed the render queue, and after a scripted render-queue change in the " +
+    "session rollback is refused unless acceptRenderQueueRisk: true (After Effects 2027 has gone into crash recovery on " +
+    "undo after such changes — observed twice, a precaution); details.rollback then lists addedItems and what to do next. " +
     "Do NOT call app.beginUndoGroup/endUndoGroup yourself; an unbalanced group leaks past this call and corrupts undo for " +
     "the whole session (and defeats the rollback). Do NOT undo/redo from here either (app.executeCommand 16/2035): inside " +
     "this call's group AE resolves them against it, so nothing is reverted — use project.undo / project.redo, which run " +
@@ -140,6 +143,13 @@ registerOp({
       type: "boolean",
       description:
         "Default true: if the code throws, undo the call's changes before returning the error. false keeps the partial result.",
+      required: false,
+    },
+    {
+      name: "acceptRenderQueueRisk",
+      type: "boolean",
+      description:
+        "Default false. After a scripted render-queue change in this After Effects session, undo is refused (After Effects 2027 has gone into crash recovery on undo after such changes — observed twice; a precaution). Pass true only when the user accepts that risk, ideally after saving.",
       required: false,
     },
   ],

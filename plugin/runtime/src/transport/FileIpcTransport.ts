@@ -184,6 +184,7 @@ interface MailboxRequest {
   undoGroup: boolean;
   suppressDialogs: boolean;
   rollback: boolean;
+  acceptRenderQueueRisk: boolean;
 }
 
 export interface DispatcherResponse {
@@ -389,6 +390,7 @@ export class FileIpcTransport implements AeTransport {
       // Explicit as well: a missing field means "no rollback" to serve.jsx,
       // and rollback only ever applies inside an undo group.
       rollback: req.undoGroup !== false && req.rollback === true,
+      acceptRenderQueueRisk: req.acceptRenderQueueRisk === true,
     };
 
     if (target.mode === "pull") {

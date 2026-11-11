@@ -113,14 +113,16 @@ AE_MCP.projectSignature = function () {
         var limit = AE_MCP.SIGNATURE_ITEM_LIMIT;
         var m = n < limit ? n : limit;
         var h = 7;
+        var ids = {};
         for (var i = 1; i <= m; i++) {
             var it = p.item(i);
+            ids["i" + String(it.id)] = true;
             var layers = "-";
             try { if (typeof it.numLayers === "number") layers = String(it.numLayers); } catch (eL) { /* not a comp */ }
             var s = String(it.id) + ":" + String(it.name) + ":" + layers + ";";
             for (var c = 0; c < s.length; c++) h = (h * 31 + s.charCodeAt(c)) % 2147483647;
         }
-        return { numItems: n, hash: String(h), partial: n > limit, file: AE_MCP.projectFile() };
+        return { numItems: n, hash: String(h), partial: n > limit, file: AE_MCP.projectFile(), ids: ids };
     } catch (eSig) {
         return null;
     }
@@ -209,10 +211,24 @@ AE_MCP.undoSignature = function () {
  * it could not be read. The result never counts a step as undone: it counts
  * commands run, and commands after which the project changed.
  */
-AE_MCP.undoRedo = function (commandId, count) {
+AE_MCP.undoRedo = function (commandId, count, acceptRenderQueueRisk) {
     var n = (typeof count === "number" && count > 0) ? Math.floor(count) : 1;
     var redo = (commandId === AE_MCP.REDO_COMMAND_ID);
     var what = redo ? "redo" : "undo";
+    var flag = AE_MCP.session().renderQueueChanged;
+    if (flag && acceptRenderQueueRisk !== true) {
+        return {
+            ok: false,
+            refused: true,
+            requested: n,
+            commandsRun: 0,
+            changed: false,
+            renderQueueRisk: flag,
+            error: what + " refused: " + AE_MCP.renderQueueRiskMessage(flag) + ". Nothing was sent. " +
+                "To " + what + " anyway, save the project first and pass acceptRenderQueueRisk: true; " +
+                "opening or creating a project (project.open / project.new) clears this"
+        };
+    }
     var run = 0;
     var withChange = 0;
     var unknown = false;
@@ -259,6 +275,106 @@ AE_MCP.undoRedo = function (commandId, count) {
     }
     return out;
 };
+
+// --- The render queue and undo ---------------------------------------------
+// Live, 2026-11-10 (undo-hazard-live-finding.md): twice, an undo issued by a
+// script in a session where a script had changed the render queue went wrong.
+// First an error box that blocked all scripting (an item had been added and
+// rendered); then After Effects crashed inside the undo request, saved a
+// recovery copy of the project and wrote a crash log (an item had been added
+// and removed by render.list_templates). Every undo that worked that day was
+// in a session with no render-queue change. Two observations: a precaution,
+// not a proven cause. So:
+//   - a rollback never undoes a request that changed the render queue;
+//   - a request that changes it sets a flag in the engine's global state,
+//     and while it is set rollback and undo/redo refuse unless the caller
+//     passes acceptRenderQueueRisk: true;
+//   - project.open and project.new clear it (a new undo history).
+
+AE_MCP.RENDER_QUEUE_RISK_NOTE = "After Effects 2027 has gone into crash recovery on undo after scripted render-queue changes " +
+    "(observed twice on 2026-11-10; a precaution, not a proven cause)";
+
+/** Session state that outlives one request: `$.global` while the engine lives. */
+AE_MCP.session = function () {
+    try {
+        if (!$.global.AE_MCP_SESSION) $.global.AE_MCP_SESSION = { renderQueueChanged: null };
+        return $.global.AE_MCP_SESSION;
+    } catch (eGlobal) {
+        if (!AE_MCP.fallbackSession) AE_MCP.fallbackSession = { renderQueueChanged: null };
+        return AE_MCP.fallbackSession;
+    }
+};
+
+/**
+ * A cheap signature of the render queue: item count and, per item, its comp
+ * id, status and output-module count. Null when it cannot be read.
+ */
+AE_MCP.renderQueueSignature = function () {
+    try {
+        var rq = app.project.renderQueue;
+        var n = rq.numItems;
+        var s = String(n) + ";";
+        for (var i = 1; i <= n; i++) {
+            var it = rq.item(i);
+            var compId = "?";
+            try { compId = it.comp ? String(it.comp.id) : "-"; } catch (eComp) { /* unreadable */ }
+            s += compId + ":" + String(it.status) + ":" + String(it.numOutputModules) + ";";
+        }
+        return s;
+    } catch (eRq) {
+        return null;
+    }
+};
+
+/**
+ * Does this code change the render queue? A signature taken before and after
+ * cannot see an item added and removed again in the same request (the
+ * render.list_templates pattern that preceded the crash), so the code is read
+ * as well: it mentions renderQueue AND calls something that changes it.
+ */
+AE_MCP.codeTouchesRenderQueue = function (code) {
+    var c = String(code);
+    if (c.indexOf("renderQueue") === -1) return false;
+    return /\.(add|remove|render|duplicate|applyTemplate|setSettings?)\s*\(|\.(render|file)\s*=[^=]/.test(c);
+};
+
+/** Record that a request changed the render queue in this session. */
+AE_MCP.noteRenderQueueChange = function (label, how) {
+    var sess = AE_MCP.session();
+    sess.renderQueueChanged = { by: String(label), how: String(how), at: new Date().toString() };
+};
+
+/** project.open / project.new: a new undo history, so the risk no longer applies. */
+AE_MCP.clearRenderQueueRisk = function (why) {
+    var sess = AE_MCP.session();
+    sess.renderQueueChanged = null;
+    sess.clearedBy = String(why);
+    sess.clearedInRequest = AE_MCP.currentRequestId || null;
+};
+
+/** One sentence on the session flag, for a refusal. */
+AE_MCP.renderQueueRiskMessage = function (flag) {
+    return "a request earlier in this After Effects session changed the render queue (" + String(flag.by) +
+        ", " + String(flag.at) + "), and " + AE_MCP.RENDER_QUEUE_RISK_NOTE;
+};
+
+/** Up to 50 items present now that were not in `sigBefore`. */
+AE_MCP.addedItems = function (sigBefore) {
+    var out = [];
+    if (!sigBefore || !sigBefore.ids) return out;
+    try {
+        var n = app.project.numItems;
+        for (var i = 1; i <= n && out.length < 50; i++) {
+            var it = app.project.item(i);
+            if (!sigBefore.ids["i" + String(it.id)]) out.push({ id: it.id, name: String(it.name) });
+        }
+    } catch (eAdded) { /* partial list */ }
+    return out;
+};
+
+AE_MCP.RENDER_QUEUE_NEXT = "Inspect the project; remove what the call added with ordinary operations (the ids are in addedItems) " +
+    "— deleting does not use undo. Revert by undo only if you accept the risk: save the project first, then project.undo " +
+    "with acceptRenderQueueRisk: true. Opening or creating a project clears the risk.";
 
 /** The marker that makes the open group certain to hold a step of this request's own. */
 AE_MCP.addRollbackMarker = function (requestId) {
@@ -605,6 +721,12 @@ AE_MCP.serveRequest = function (requestFile, mailboxDir, logPath) {
     // missing field is the old contract, where a failed call kept its changes.
     var wantRollback = wantUndoGroup && request.rollback === true;
     var sigBefore = wantRollback ? AE_MCP.projectSignature() : null;
+    // The render queue, before anything runs, on every request: any of them
+    // can change it, and the session flag must hear about it.
+    AE_MCP.currentRequestId = requestId;
+    var rqBefore = AE_MCP.renderQueueSignature();
+    var rqFlagAtStart = AE_MCP.session().renderQueueChanged;
+    var acceptRqRisk = request.acceptRenderQueueRisk === true;
     var undoOpen = false;
     var dialogsSuppressed = false;
     var ran = false;
@@ -672,14 +794,59 @@ AE_MCP.serveRequest = function (requestFile, mailboxDir, logPath) {
         // A throw from new Function itself is a compile error: nothing ran,
         // so there is nothing to revert and no undo is issued.
         var needRollback = (threw && ran) || control.rollbackRequested !== null;
+        // Did this request change the render queue? true / false / null
+        // (could not be read).
+        var rqAfter = AE_MCP.renderQueueSignature();
+        var rqChanged = (rqBefore === null || rqAfter === null) ? null : (rqBefore !== rqAfter);
+        var rqHow = rqChanged ? "the render queue differs from how the request found it" : null;
+        if (ran && AE_MCP.codeTouchesRenderQueue(request.code)) {
+            rqChanged = true;
+            rqHow = rqHow || "the code calls something that changes the render queue";
+        }
+        if (rqChanged === true) {
+            var sessNow = AE_MCP.session();
+            // project.open / project.new clear the flag inside the request,
+            // and the new project's queue naturally differs from the old one.
+            if (sessNow.clearedInRequest !== requestId) AE_MCP.noteRenderQueueChange(request.label || "action", rqHow);
+        }
+        // A rollback that must not undo, decided BEFORE the marker goes in
+        // (a marker that is never undone would be left in the project).
+        var rqBlock = null;
+        if (needRollback && wantRollback) {
+            if (rqChanged !== false) {
+                rqBlock = (rqChanged === true
+                    ? "the call changed the render queue (" + rqHow + ")"
+                    : "the render queue could not be read, so a render-queue change cannot be ruled out") +
+                    ", and " + AE_MCP.RENDER_QUEUE_RISK_NOTE + "; no undo was issued";
+            } else if (rqFlagAtStart && !acceptRqRisk) {
+                rqBlock = AE_MCP.renderQueueRiskMessage(rqFlagAtStart) + "; no undo was issued. Pass acceptRenderQueueRisk: true " +
+                    "to roll back anyway (save first), or open or create a project to clear this";
+            }
+        }
         var marker = null;
         if (undoOpen) {
-            if (needRollback && wantRollback) marker = AE_MCP.addRollbackMarker(requestId);
+            if (needRollback && wantRollback && rqBlock === null) marker = AE_MCP.addRollbackMarker(requestId);
             try { app.endUndoGroup(); } catch (eEnd) { /* ignore */ }
         }
-        if (needRollback) {
+        var rqReport = { changedInRequest: rqChanged, sessionFlag: AE_MCP.session().renderQueueChanged };
+        if (needRollback && wantRollback && rqBlock !== null) {
+            var added = AE_MCP.addedItems(sigBefore);
+            var addedNames = [];
+            for (var ai = 0; ai < added.length; ai++) addedNames.push("'" + added[ai].name + "' (id " + String(added[ai].id) + ")");
+            response.rollback = {
+                attempted: false, rolledBack: false, verified: "none",
+                reason: rqBlock,
+                left: AE_MCP.KEPT_AS_ONE_STEP + (addedNames.length ? "; items it added: " + addedNames.join(", ") : ""),
+                next: AE_MCP.RENDER_QUEUE_NEXT,
+                addedItems: added,
+                renderQueue: rqReport,
+                aeErrors: [], before: AE_MCP.sigSummary(sigBefore), after: null
+            };
+        } else if (needRollback) {
             if (wantRollback && marker !== null) {
                 response.rollback = AE_MCP.rollBack(marker, sigBefore, dialogsSuppressed);
+                response.rollback.renderQueue = rqReport;
+                if (!response.rollback.rolledBack) response.rollback.addedItems = AE_MCP.addedItems(sigBefore);
             } else if (wantUndoGroup && request.rollback === false) {
                 response.rollback = {
                     attempted: false, rolledBack: false, verified: "none",

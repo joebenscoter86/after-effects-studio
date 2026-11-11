@@ -13,6 +13,13 @@
 //     inside one group is one step holding two changes;
 //   - app.executeCommand(16) reverts exactly the top step, 2035 replays the
 //     last reverted one (measured for undo: probes C and E);
+//   - the render queue: items.add(comp) and item.remove() are undoable
+//     changes like any other, render() sets every queued item's status to
+//     DONE (not undoable); the item's status, comp and output count are what
+//     a script can read cheaply;
+//   - `$.global` (the engine's global object) persists from one request to
+//     the next in the same After Effects session — NOT measured for the
+//     DoScript and agent paths;
 //   - app.onError(text, severity) is how a script hears about an error After
 //     Effects reports while dialogs are suppressed — NOT measured; the knobs
 //     below let a test make undo report through it, throw, or do nothing.
@@ -124,6 +131,7 @@ export interface ServeOptions {
   suppressDialogs?: boolean;
   rollback?: boolean;
   label?: string;
+  acceptRenderQueueRisk?: boolean;
 }
 
 export interface ServedResponse {
@@ -163,6 +171,10 @@ export class FakeAe {
   readonly modals: string[] = [];
   /** When true, addFolder throws (a project that cannot take the rollback marker). */
   refuseFolders = false;
+  /** Render queue items. status: 3013 QUEUED, 3015 DONE (After Effects' RQItemStatus values). */
+  readonly rqItems: Array<{ comp: FakeItem; status: number; numOutputModules: number; remove(): void }> = [];
+  /** `$.global`, shared by every request this fake serves (one After Effects session). */
+  readonly engineGlobal: Record<string, unknown> = {};
 
   /** The global `app` the JSX sees. */
   readonly app: Record<string, unknown>;
@@ -179,6 +191,24 @@ export class FakeAe {
         const it = ae.items[i - 1];
         if (!it) throw new Error(`item index ${i} out of range`);
         return it;
+      },
+      renderQueue: {
+        get numItems() {
+          return ae.rqItems.length;
+        },
+        item(i: number) {
+          const it = ae.rqItems[i - 1];
+          if (!it) throw new Error(`render queue index ${i} out of range`);
+          return it;
+        },
+        items: {
+          add(comp: FakeItem) {
+            return ae.addRenderQueueItem(comp);
+          },
+        },
+        render() {
+          for (const it of ae.rqItems) if (it.status === 3013) it.status = 3015;
+        },
       },
       itemByID(id: number) {
         return ae.items.find((it) => it.id === id) ?? null;
@@ -262,6 +292,31 @@ export class FakeAe {
       replay: () => this.items.push(item),
     });
     return item;
+  }
+
+  addRenderQueueItem(comp: FakeItem) {
+    const ae = this;
+    const rq = {
+      comp,
+      status: 3013,
+      numOutputModules: 1,
+      remove() {
+        const at = ae.rqItems.indexOf(rq);
+        ae.rqItems.splice(at, 1);
+        ae.record({
+          label: "remove rq item",
+          revert: () => ae.rqItems.splice(at, 0, rq),
+          replay: () => ae.rqItems.splice(ae.rqItems.indexOf(rq), 1),
+        });
+      },
+    };
+    this.rqItems.push(rq);
+    this.record({
+      label: "add rq item",
+      revert: () => this.rqItems.splice(this.rqItems.indexOf(rq), 1),
+      replay: () => this.rqItems.push(rq),
+    });
+    return rq;
   }
 
   /** A change the user made before the request: its own undo step. */
@@ -372,6 +427,9 @@ export class FakeAe {
         undoGroup: options.undoGroup ?? true,
         suppressDialogs: options.suppressDialogs ?? true,
         ...(options.rollback === undefined ? {} : { rollback: options.rollback }),
+        ...(options.acceptRenderQueueRisk === undefined
+          ? {}
+          : { acceptRenderQueueRisk: options.acceptRenderQueueRisk }),
       }),
     );
     const src = readFileSync(SERVE_PATH, "utf8");
@@ -379,21 +437,24 @@ export class FakeAe {
     // AE is the helpers.jsx namespace; serve.jsx keeps its own formatter, and
     // batch code only needs AE.errText from it.
     const AE = { errText: (e: unknown) => (e instanceof Error ? e.message : String(e)) };
-    const load = new Function("File", "Folder", "app", "JSON", "AE", `${src}\nreturn AE_MCP;`) as (
+    const load = new Function("File", "Folder", "app", "JSON", "AE", "$", `${src}\nreturn AE_MCP;`) as (
       ...args: unknown[]
     ) => { serveRequest(f: unknown, dir: string, log: string): void };
-    const AE_MCP = load(FakeFile, undefined, this.app, extendScriptJson(), AE);
+    const dollar = { global: this.engineGlobal };
+    const AE_MCP = load(FakeFile, undefined, this.app, extendScriptJson(), AE, dollar);
     // Code compiled by serve.jsx's `new Function` sees only globals, as in
     // ExtendScript, where AE and AE_MCP are globals of the script engine.
     const g = globalThis as Record<string, unknown>;
-    const saved = { AE: g.AE, AE_MCP: g.AE_MCP };
+    const saved = { AE: g.AE, AE_MCP: g.AE_MCP, $: g.$ };
     g.AE = AE;
     g.AE_MCP = AE_MCP;
+    g.$ = dollar;
     try {
       AE_MCP.serveRequest(new FakeFile(requestPath), MAILBOX, `${MAILBOX}/dispatcher.log`);
     } finally {
       g.AE = saved.AE;
       g.AE_MCP = saved.AE_MCP;
+      g.$ = saved.$;
     }
     const raw = this.disk.get(`${MAILBOX}/response-${id}.json`);
     if (raw === undefined) throw new Error("serve.jsx wrote no response");

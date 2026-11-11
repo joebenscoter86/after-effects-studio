@@ -47,6 +47,13 @@ export interface EvalRequest {
    * (Operation.rollback).
    */
   rollback?: boolean;
+  /**
+   * Lift the session-level render-queue block on rollback (default false).
+   * serve.jsx refuses to undo after a scripted render-queue change in the
+   * session; this is the caller saying it accepts that risk. A request that
+   * itself changed the render queue is never undone, override or not.
+   */
+  acceptRenderQueueRisk?: boolean;
   /** Per-call timeout in milliseconds. */
   timeoutMs?: number;
   /**
@@ -77,6 +84,12 @@ export interface RollbackReport {
   left: string | null;
   /** Errors After Effects reported (app.onError) while the undo ran with dialogs suppressed. */
   aeErrors: string[];
+  /** What to do next, when the rollback was refused because of the render queue. */
+  next?: string | null;
+  /** Items present after the call that were not there before (up to 50), when the rollback did not succeed. */
+  addedItems?: Array<{ id: number; name: string }>;
+  /** Whether this call changed the render queue (null: unreadable), and the session flag. */
+  renderQueue?: { changedInRequest: boolean | null; sessionFlag: unknown };
   before?: { numItems: number; hash: string } | null;
   after?: { numItems: number; hash: string } | null;
 }
