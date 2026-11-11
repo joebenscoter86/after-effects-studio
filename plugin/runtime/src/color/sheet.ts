@@ -287,8 +287,8 @@ const r4 = (v: number) => Math.round(v * 1e4) / 1e4;
 const r4rgb = (v: Rgb): Rgb => [r4(v[0]), r4(v[1]), r4(v[2])];
 
 /** Clip a region to the frame; null when nothing of it is inside. */
-function clipRegion(
-  img: DecodedPng,
+export function clipRegion(
+  img: { width: number; height: number },
   region: RegionSpec,
 ): { rect: PixelRect; clipped: boolean } | null {
   const x0 = Math.floor(region.x);
@@ -530,7 +530,8 @@ export function resample(img: DecodedPng, tw: number, th: number): Float64Array 
   return out;
 }
 
-// 5×7 glyphs for the only text the sheet ever carries: "#<index> <time>s".
+// 5×7 glyphs for the only text the sheets ever carry: "#<index> <time>s" on the
+// contact sheet, "#<from>><to> <change> x<gain> !" on the diff sheet.
 const GLYPHS: Record<string, string[]> = {
   "0": [".###.", "#...#", "#..##", "#.#.#", "##..#", "#...#", ".###."],
   "1": ["..#..", ".##..", "..#..", "..#..", "..#..", "..#..", ".###."],
@@ -545,6 +546,9 @@ const GLYPHS: Record<string, string[]> = {
   ".": [".....", ".....", ".....", ".....", ".....", ".##..", ".##.."],
   ":": [".....", ".##..", ".##..", ".....", ".##..", ".##..", "....."],
   "-": [".....", ".....", ".....", "#####", ".....", ".....", "....."],
+  ">": [".#...", "..#..", "...#.", "....#", "...#.", "..#..", ".#..."],
+  x: [".....", ".....", "#...#", ".#.#.", "..#..", ".#.#.", "#...#"],
+  "!": ["..#..", "..#..", "..#..", "..#..", "..#..", ".....", "..#.."],
   "#": [".#.#.", ".#.#.", "#####", ".#.#.", "#####", ".#.#.", ".#.#."],
   s: [".....", ".....", ".####", "#....", ".###.", "....#", "####."],
   f: ["..##.", ".#...", "###..", ".#...", ".#...", ".#...", ".#..."],

@@ -30,12 +30,30 @@ import {
   type ScreenReport,
   type ScreenThresholds,
 } from "../color/screen.js";
-import { readFileSettled } from "../color/settled-read.js";
+import {
+  diffArgsError,
+  pictureChange,
+  pictureOf,
+  resolveDiffThresholds,
+  summarizeSeries,
+  type DiffThresholdArgs,
+  type DiffThresholds,
+  type PictureChangeStats,
+  type RegionChange,
+  type SeriesSummary,
+} from "../color/motion.js";
+import {
+  settleTimeoutFor,
+  stampFiles,
+  waitForSettled,
+  type UnsettledFile,
+} from "../color/settled-read.js";
 import {
   analyzeFrame,
   compareRegions,
   composeContactSheet,
   flattenOver,
+  resample,
   frameLabel,
   histogramOf,
   rgbHex,
@@ -138,7 +156,56 @@ interface RenderFramePayload {
   screenThresholds?: ScreenThresholds;
   screenWarning?: string;
   captureWarning?: string;
+  /** Which captures finished writing (saveFrameToPng writes asynchronously). */
+  captureSettle?: {
+    settled: number[];
+    unsettled: UnsettledFile[];
+    waitedMs: number;
+    timeoutMs: number;
+  };
+  diff?: DiffReport;
+  diffThresholds?: DiffThresholds;
+  diffSheet?: ContactSheetReport & { amplify: number };
+  diffWarning?: string;
+  strip?: Record<string, unknown>;
 }
+
+interface DiffPair extends PictureChangeStats {
+  from: { index: number; time: number | undefined };
+  to: { index: number; time: number | undefined };
+  regions?: RegionChange[];
+}
+
+interface DiffReport {
+  stage: "output";
+  /** What exactly was compared, in words (depends on channels / colorManaged). */
+  picture: string;
+  pairs: DiffPair[];
+  series: SeriesSummary;
+}
+
+interface StripArgs {
+  at: number;
+  frames: number;
+  step?: number;
+  maxDimension?: number;
+}
+
+/** What the JSX needs for a strip: times are worked out there, from the comp's frame duration. */
+interface StripPlan {
+  at: number;
+  /** Frame offsets from the moment, already multiplied by step. */
+  offsets: number[];
+  frames: number;
+  step: number;
+  maxDimension: number;
+}
+
+interface DiffArgs extends DiffThresholdArgs {
+  sheet?: boolean | ContactSheetArgs;
+}
+
+const STRIP_DEFAULT_MAX_DIMENSION = 360;
 
 interface ContactSheetArgs {
   columns?: number;
@@ -168,6 +235,7 @@ interface EyesOptions {
   compare: { from: number; to: number } | null;
   edge: EdgeThresholdArgs | null;
   screen: ScreenArgs | null;
+  diff: { thresholds: DiffThresholds; sheet: ContactSheetArgs | null } | null;
 }
 
 /** Said once per response, so every number can be traced to the pixels it came from. */
@@ -236,6 +304,10 @@ export const renderFrameTool = defineTool({
     "off, the keyed layer isolated), reports green or blue, which pixels are screen and their share, " +
     "a suggested screen colour (the median, and the colour just outside the subject), evenness on a " +
     "grid (darkest and brightest cells, the spread as a ratio, the darker side) and grain. " +
+    "Watching motion: `diff` (with `times`) reports how much the picture changes between consecutive " +
+    "frames, where, and per `sample` region, and flags pairs that stand out (a one-frame pop, a stutter " +
+    "where a frame repeats, a cut); `strip: { at, frames }` renders the frames around a moment into one " +
+    "small contact sheet with diff on. For playback at speed, render.preview (ae_do) writes a quick movie. " +
     "It reports numbers and places, never a pass or fail. Every number is " +
     "labelled with its stage — 'capture' (before colour conversion) or 'output' (the file as written) — " +
     "described once in `measurementStages`.",
@@ -258,7 +330,7 @@ export const renderFrameTool = defineTool({
       .number()
       .nonnegative()
       .optional()
-      .describe("Time in seconds to render. Give exactly one of `time` or `times`."),
+      .describe("Time in seconds to render. Give exactly one of `time`, `times` or `strip`."),
     times: z
       .array(z.number().nonnegative())
       .min(1)
@@ -267,6 +339,44 @@ export const renderFrameTool = defineTool({
       .describe(
         "Several times in seconds, rendered in ONE call. Files are written as " +
           "<outPath stem>_<index><ext> and reported in `frames` (index-aligned).",
+      ),
+    strip: z
+      .object({
+        at: z
+          .number()
+          .nonnegative()
+          .describe("The moment, seconds (snapped to the nearest frame)."),
+        frames: z
+          .number()
+          .int()
+          .min(2)
+          .max(32)
+          .describe("How many consecutive frames, centred on `at` (one more after it when even)."),
+        step: z
+          .number()
+          .int()
+          .positive()
+          .optional()
+          .describe("Frames between rendered frames. Default 1 (every frame)."),
+        maxDimension: z
+          .number()
+          .int()
+          .min(16)
+          .max(2048)
+          .optional()
+          .describe(
+            "Longest side of each tile on the sheets, px. Default 360. The frames themselves are " +
+              "rendered at the comp's size.",
+          ),
+      })
+      .optional()
+      .describe(
+        "'What happens around this moment' in one call: N consecutive frames around `at`, worked out " +
+          "from the comp's frame rate inside After Effects and rendered through the `times` path " +
+          "(files <stem>_<index>, listed in `frames`), tiled small into the contact sheet, with `diff` " +
+          "and its sheet on (pass `diff: false` to skip, or diff options to tune). The window is " +
+          "shifted to stay inside the comp; `strip` in the response says where it landed. Instead " +
+          "of `time` / `times`.",
       ),
     outPath: z
       .string()
@@ -285,6 +395,18 @@ export const renderFrameTool = defineTool({
         "'auto' (default): detect the working space and return a viewer-accurate, 8-bit sRGB-tagged PNG. " +
           "'off': raw legacy output (16-bit, untagged, working-space values — dark/wrong-looking in " +
           "color-managed projects).",
+      ),
+    settleTimeoutMs: z
+      .number()
+      .int()
+      .positive()
+      .max(600_000)
+      .optional()
+      .describe(
+        "How long to wait for the captures to finish writing (saveFrameToPng writes after the script " +
+          "returns). Default: 15 s for one frame, plus 3 s for each further 1080×1920 frame (scaled " +
+          "by size, at least 1 s each). Frames that do not finish are named in `captureSettle` and " +
+          "marked failed in `frames`; the others are still measured.",
       ),
     analyze: z
       .boolean()
@@ -613,14 +735,116 @@ export const renderFrameTool = defineTool({
           "grain {stdDev, level, steps8bit, samples, grainy, reading}; reading; warning; " +
           "screenColourNote (capture values and what they mean for Keylight's Screen Colour).",
       ),
+    diff: z
+      .union([
+        z.boolean(),
+        z.object({
+          changeAbove: z
+            .number()
+            .min(0)
+            .max(1)
+            .optional()
+            .describe(
+              "A pixel has changed when one of its channels moved by more than this (display " +
+                "values). Default 0.04, about ten 8-bit steps: well above frame-to-frame grain.",
+            ),
+          spikeRatio: z
+            .number()
+            .optional()
+            .describe(
+              "A pair stands out as a spike when its change is at least this many times its " +
+                "neighbours' on each side it has. Default 3.",
+            ),
+          holdRatio: z
+            .number()
+            .optional()
+            .describe(
+              "A pair is a hold (a repeated frame) when its change is at most this share of the " +
+                "moving neighbours' on both sides. Default 0.25.",
+            ),
+          quietBelow: z
+            .number()
+            .min(0)
+            .max(1)
+            .optional()
+            .describe(
+              "Mean changes below this read as no visible change: neighbours this quiet are not " +
+                "moving, and a spike is measured against at least this. Default 0.002.",
+            ),
+          movingShare: z
+            .number()
+            .min(0)
+            .max(1)
+            .optional()
+            .describe(
+              "Neighbours count as moving, and a spike counts, only with at least this share of " +
+                "pixels changed. Default 0.0005 (about 1,000 pixels at 1080×1920).",
+            ),
+          window: z
+            .number()
+            .int()
+            .optional()
+            .describe("Pairs on each side compared with a pair. Default 3."),
+          amplify: z
+            .number()
+            .optional()
+            .describe("Gain of the difference images on the diff sheet. Default 8."),
+          sheet: z
+            .union([
+              z.boolean(),
+              z.object({
+                columns: z.number().int().positive().optional(),
+                thumbWidth: z.number().int().min(16).max(2048).optional(),
+                outPath: z.string().optional().describe("Default <outPath stem>_diff.png."),
+              }),
+            ])
+            .optional()
+            .describe(
+              "Also write the difference images, amplified and labelled '#from>to change' ('!' " +
+                "on flagged pairs), tiled into one PNG beside the contact sheet. Default off; on " +
+                "with `strip`.",
+            ),
+        }),
+      ])
+      .optional()
+      .describe(
+        "Frame-to-frame change, with `times` (two or more) or `strip`; `true` for the defaults. " +
+          "Measured on the written file (stage 'output', display values; `diff.picture` says what " +
+          "exactly: with the default rgb output the capture is already over the comp background, " +
+          "so transparent areas do not change). Reported as `diff` {stage, picture, pairs, series} " +
+          "with the thresholds used as `diffThresholds`. Each consecutive pair: from, to, change " +
+          "(mean absolute difference over pixels and channels, 0..1), maxAbsDelta, changedPixels, " +
+          "changedShare (a channel moved by more than changeAbove), changedBounds, and with " +
+          "`sample` the same per region. series: pairs, median, mean, largest, smallest, flags " +
+          "[{kind 'pop' | 'stutter' | 'cut', pairs, frame or between, change, reference, ratio, " +
+          "atSeriesEdge?, reading}], reading. A pop is a frame that differs from both neighbours; " +
+          "a stutter a frame that repeats the one before while the frames around it move; a cut " +
+          "one pair far above its neighbours. Flags are hints from numbers: look at the frames.",
+      ),
   },
   handler: async (args, transport) => {
-    if ((args.time === undefined) === (args.times === undefined)) {
-      return errorResult("INVALID_ARGS", "give exactly one of `time` or `times`", {
-        hint: "`time: 1.5` renders one frame; `times: [0, 1, 2]` renders several in one call.",
+    const given = [args.time, args.times, args.strip].filter((v) => v !== undefined).length;
+    if (given !== 1) {
+      return errorResult("INVALID_ARGS", "give exactly one of `time`, `times` or `strip`", {
+        hint:
+          "`time: 1.5` renders one frame; `times: [0, 1, 2]` renders several in one call; " +
+          "`strip: { at: 1.5, frames: 9 }` renders the frames around a moment.",
       });
     }
-    const checked = checkEyesOptions(args);
+    if (
+      args.settleTimeoutMs !== undefined &&
+      !(Number.isInteger(args.settleTimeoutMs) && args.settleTimeoutMs > 0)
+    ) {
+      return errorResult("INVALID_ARGS", "`settleTimeoutMs` must be a positive whole number of ms");
+    }
+    let strip: StripPlan | null = null;
+    if (args.strip !== undefined) {
+      const planned = planStrip(args.strip);
+      if ("error" in planned) return planned.error;
+      strip = planned.plan;
+    }
+    const count = strip?.frames ?? args.times?.length ?? 1;
+    const checked = checkEyesOptions({ ...args, count }, strip !== null);
     if ("error" in checked) return checked.error;
     const rejection = rejectedOutputPath(args.outPath);
     if (rejection !== null) {
@@ -639,7 +863,7 @@ export const renderFrameTool = defineTool({
         });
       }
     }
-    return nativeFlow(args, checked.options, abs, transport);
+    return nativeFlow(args, checked.options, abs, transport, strip);
   },
 });
 
@@ -667,18 +891,24 @@ function parseColor(value: unknown): Rgb | null {
  * in the schema) so they hold for direct handler calls too, and always
  * before After Effects is contacted.
  */
-function checkEyesOptions(args: {
-  times?: number[];
-  colorManaged?: "auto" | "off";
-  channels?: Channels;
-  over?: unknown;
-  isolate?: LayerRef | LayerRef[];
-  sample?: SampleArgs;
-  histogram?: boolean | HistogramArgs;
-  compare?: { from?: number; to?: number };
-  edge?: boolean | EdgeThresholdArgs;
-  screen?: boolean | ScreenArgs;
-}): { options: EyesOptions } | { error: ReturnType<typeof errorResult> } {
+function checkEyesOptions(
+  args: {
+    /** How many frames the call renders (time: 1, times: its length, strip: its frames). */
+    count: number;
+    colorManaged?: "auto" | "off";
+    channels?: Channels;
+    over?: unknown;
+    isolate?: LayerRef | LayerRef[];
+    sample?: SampleArgs;
+    histogram?: boolean | HistogramArgs;
+    compare?: { from?: number; to?: number };
+    edge?: boolean | EdgeThresholdArgs;
+    screen?: boolean | ScreenArgs;
+    diff?: boolean | DiffArgs;
+    contactSheet?: ContactSheetArgs;
+  },
+  isStrip = false,
+): { options: EyesOptions } | { error: ReturnType<typeof errorResult> } {
   const channels = args.channels ?? "rgb";
   if (args.colorManaged === "off" && (channels !== "rgb" || args.over !== undefined)) {
     return invalid(
@@ -744,8 +974,8 @@ function checkEyesOptions(args: {
 
   let compare: EyesOptions["compare"] = null;
   if (args.compare !== undefined) {
-    const n = args.times?.length ?? 0;
-    if (n < 2) return invalid("`compare` needs `times` with at least two frames");
+    const n = args.count;
+    if (n < 2) return invalid("`compare` needs `times` (or `strip`) with at least two frames");
     if (sample === null) {
       return invalid("`compare` needs `sample`: it reports differences for the sampled regions");
     }
@@ -775,6 +1005,34 @@ function checkEyesOptions(args: {
     if (problem !== null) return invalid(problem);
   }
 
+  let diff: EyesOptions["diff"] = null;
+  const diffArg = args.diff ?? (isStrip ? true : undefined);
+  if (diffArg !== undefined && diffArg !== false) {
+    const d = diffArg === true ? {} : diffArg;
+    if (typeof d !== "object" || d === null) return invalid("`diff` must be true or an object");
+    if (args.count < 2) {
+      return invalid(
+        "`diff` needs `times` with at least two frames, or `strip`",
+        "It compares consecutive rendered frames: `times: [1, 1.04, 1.08], diff: true`.",
+      );
+    }
+    const problem = diffArgsError(d as Record<string, unknown>);
+    if (problem !== null) return invalid(problem);
+    const { sheet: sheetArg, ...thresholds } = d;
+    const sheetOn = sheetArg ?? isStrip;
+    if (
+      sheetOn !== false &&
+      sheetOn !== true &&
+      (typeof sheetOn !== "object" || sheetOn === null)
+    ) {
+      return invalid("`diff.sheet` must be true, false or an object");
+    }
+    diff = {
+      thresholds: resolveDiffThresholds(thresholds),
+      sheet: sheetOn === false ? null : sheetOn === true ? {} : sheetOn,
+    };
+  }
+
   return {
     options: {
       channels,
@@ -786,8 +1044,35 @@ function checkEyesOptions(args: {
       compare,
       edge,
       screen,
+      diff,
     },
   };
+}
+
+/** Check `strip` and turn it into frame offsets; the times are worked out in After Effects. */
+function planStrip(
+  strip: StripArgs,
+): { plan: StripPlan } | { error: ReturnType<typeof errorResult> } {
+  const fail = (message: string) => ({
+    error: errorResult("INVALID_ARGS", message, {
+      hint: "`strip: { at: 2.5, frames: 9 }` renders the nine frames around 2.5 s.",
+    }),
+  });
+  if (typeof strip !== "object" || strip === null) return fail("`strip` must be an object");
+  const { at, frames } = strip;
+  const step = strip.step ?? 1;
+  const maxDimension = strip.maxDimension ?? STRIP_DEFAULT_MAX_DIMENSION;
+  if (typeof at !== "number" || !Number.isFinite(at) || at < 0)
+    return fail("`strip.at` must be a time in seconds, 0 or more");
+  if (!Number.isInteger(frames) || frames < 2 || frames > 32)
+    return fail("`strip.frames` must be a whole number from 2 to 32");
+  if (!Number.isInteger(step) || step < 1)
+    return fail("`strip.step` must be a whole number, 1 or more");
+  if (!Number.isInteger(maxDimension) || maxDimension < 16 || maxDimension > 2048)
+    return fail("`strip.maxDimension` must be a whole number of px from 16 to 2048");
+  const first = -Math.floor((frames - 1) / 2);
+  const offsets = Array.from({ length: frames }, (_, k) => (first + k) * step);
+  return { plan: { at, offsets, frames, step, maxDimension } };
 }
 
 /** Default sheet path: the frame stem plus `_sheet`. */
@@ -883,11 +1168,15 @@ const ISOLATE_FN = `
 /** Options the JSX needs; everything else happens in Node on the captures. */
 function renderJsx(
   args: { compNameOrId: string | number; useDisplayStartTime?: boolean },
-  times: number[],
+  times: number[] | null,
   paths: string[],
   tryOcio: boolean,
   isolate: LayerRef[] | null,
+  strip: StripPlan | null = null,
 ): string {
+  // A strip's times come from the comp's own frame duration: snap the moment
+  // to a frame, lay the offsets around it, shift the window to stay inside
+  // the comp (frames 0 .. last, in the same time convention as `time`).
   return `
         ${RENDER_FRAME_FN}
         ${ISOLATE_FN}
@@ -918,7 +1207,33 @@ function renderJsx(
         if (_missingMedia.length) return { ok: false, error: "source media missing for comp " + comp.name + "; restore or relink before rendering", missingFootage: _missingMedia };
         var _ws = AE.safeGet(function () { return app.project.workingSpace; }, "None");
         var _times = ${jsxVal(times)};
+        var _strip = ${jsxVal(strip === null ? null : { at: strip.at, offsets: strip.offsets })};
         var _paths = ${jsxVal(paths)};
+        var _stripOut = null;
+        if (_strip !== null) {
+            var _fd = comp.frameDuration;
+            var _lastK = Math.max(0, Math.round(comp.duration / _fd) - 1);
+            var _k0 = Math.round(_strip.at / _fd);
+            var _offs = _strip.offsets;
+            var _shift = 0;
+            if (_k0 + _offs[_offs.length - 1] > _lastK) _shift = _lastK - (_k0 + _offs[_offs.length - 1]);
+            if (_k0 + _offs[0] + _shift < 0) _shift = -(_k0 + _offs[0]);
+            _times = [];
+            var _clamped = 0;
+            for (var _si = 0; _si < _offs.length; _si++) {
+                var _k = _k0 + _offs[_si] + _shift;
+                if (_k > _lastK) { _k = _lastK; _clamped++; }
+                _times.push(_k * _fd);
+            }
+            _stripOut = {
+                at: Math.round(_k0 * _fd * 1e6) / 1e6,
+                frameRate: Math.round(1e3 / _fd) / 1e3,
+                firstFrame: _k0 + _offs[0] + _shift,
+                lastFrame: Math.min(_lastK, _k0 + _offs[_offs.length - 1] + _shift),
+                shiftedFrames: _shift
+            };
+            if (_clamped > 0) _stripOut.note = "the comp is shorter than the strip: the last " + _clamped + " frames repeat the comp's last frame (they read as stutters in diff)";
+        }
         var _useDst = ${jsxVal(!!args.useDisplayStartTime)};
         var _useOcio = ${jsxVal(tryOcio)} && _ws !== "None" && _ws !== "";
         var _isolate = ${jsxVal(isolate)};
@@ -982,6 +1297,7 @@ function renderJsx(
         }
         var _out = { ok: _allOk, frames: _frames, captureKind: _frames.length > 0 ? _frames[0].captureKind : null };
         if (_isoReport) _out.isolation = _isoReport;
+        if (_stripOut) _out.strip = _stripOut;
         if (!_allOk) _out.error = _firstError;
         if (_allOk) {
             _out.compName = comp.name;
@@ -1003,14 +1319,22 @@ async function nativeFlow(
     colorManaged?: "auto" | "off";
     analyze?: boolean;
     contactSheet?: ContactSheetArgs;
+    settleTimeoutMs?: number;
   },
   opts: EyesOptions,
   abs: string,
   transport: AeTransport,
+  strip: StripPlan | null = null,
 ) {
-  const multi = args.times !== undefined;
-  const times = args.times ?? [args.time as number];
-  const paths = framePaths(abs, times.length, multi);
+  const multi = args.times !== undefined || strip !== null;
+  // A strip goes down the `times` path; its times are worked out in AE.
+  const times = strip !== null ? null : (args.times ?? [args.time as number]);
+  const count = strip?.frames ?? times?.length ?? 1;
+  const paths = framePaths(abs, count, multi);
+  const contactSheet = args.contactSheet ?? (strip !== null ? {} : undefined);
+  // What was at each path before the render, so a left-over file is never
+  // taken for this call's capture.
+  const before = await stampFiles(paths);
   // Color-managed projects: instead of reimplementing the view transform,
   // make AE apply its own — drop a transient adjustment layer carrying an
   // "OCIO Display Transform" effect on top of the comp and capture that.
@@ -1023,13 +1347,23 @@ async function nativeFlow(
   // to the pure-math conversion below.
   const tryOcio = args.colorManaged !== "off" && !readOnlyMode();
   const result = await transport.execute({
-    code: renderJsx(args, times, paths, tryOcio, opts.isolate),
+    code: renderJsx(args, times, paths, tryOcio, opts.isolate, strip),
     label: "render_frame",
-    timeoutMs: 120_000 + (times.length - 1) * 30_000,
+    timeoutMs: 120_000 + (count - 1) * 30_000,
   });
   if (!result.ok) return toMcpResult(result);
   const payload = result.result as RenderFramePayload;
   const frames = payload?.frames ?? [];
+  const frameSize = frames[0]?.size;
+  if (payload && strip !== null) {
+    payload.strip = {
+      at: strip.at,
+      frames: strip.frames,
+      step: strip.step,
+      maxDimension: strip.maxDimension,
+      ...payload.strip,
+    };
+  }
   // Single-frame calls keep the pre-`times` response shape (top-level
   // writtenTo/time/size); multi-frame calls report through `frames`.
   if (payload && payload.ok === true && !multi && frames.length === 1) {
@@ -1079,11 +1413,55 @@ async function nativeFlow(
   const bg = validRgb(payload.bgColor);
   const unmatting = convert !== null && (opts.channels === "rgba" || backdrop !== null);
 
+  // saveFrameToPng writes after the script returns: wait for every capture
+  // at once, with a budget that grows with the frames and their size, and
+  // keep the ones that finished.
+  const settle = await waitForSettled(written, {
+    timeoutMs:
+      args.settleTimeoutMs ??
+      settleTimeoutFor(written.length, frameSize ? frameSize[0] * frameSize[1] : 1080 * 1920),
+    before: before.slice(0, written.length),
+  });
+  payload.captureSettle = settle;
+  if (settle.unsettled.length > 0) {
+    const secs = (settle.timeoutMs / 1000).toFixed(1);
+    for (const u of settle.unsettled) {
+      if (!multi || !frames[u.index]) continue;
+      frames[u.index].ok = false;
+      frames[u.index].error =
+        `the capture did not finish writing within ${secs} s (${u.state}, ${u.bytes} bytes)`;
+    }
+    payload.captureWarning =
+      `${settle.unsettled.length} of ${written.length} captures did not finish writing within ${secs} s ` +
+      `(saveFrameToPng writes asynchronously): frames ${settle.unsettled.map((u) => u.index).join(", ")}. ` +
+      (settle.settled.length > 0
+        ? "The others were measured; see captureSettle, or render the missing ones again with a longer settleTimeoutMs."
+        : "Nothing could be measured; try again with a longer settleTimeoutMs.");
+    if (settle.settled.length === 0) {
+      if (args.analyze) payload.analysisWarning = "analysis failed: no capture finished writing";
+      if (managed)
+        payload.colorWarning =
+          "color post-processing failed, file left as raw capture: no capture finished writing";
+      return toMcpResult(result);
+    }
+  }
+  const finished = new Set(settle.settled);
+
   // One frame at a time, as before these options: a decoded 1080p frame is
-  // tens of MB, so only the frames `compare` and the sheet need are kept.
+  // tens of MB, so only the frames `compare` needs are kept whole; the sheets
+  // keep thumbnails.
   const keep = new Set<number>(opts.compare ? [opts.compare.from, opts.compare.to] : []);
   const kept = new Map<number, Record<Stage, DecodedPng>>();
   const sheetImages: DecodedPng[] = [];
+  const sheetLabels: string[] = [];
+  let sheetThumb: { width: number; height: number } | null = null;
+  // Frame differences: only the previous frame's picture is kept.
+  const diffPairs: DiffPair[] = [];
+  const diffThumbs: Array<{ pair: number; img: DecodedPng }> = [];
+  let diffPrev: { index: number; pic: Float32Array; width: number; height: number } | null = null;
+  let diffThumb: { width: number; height: number } | null = null;
+  const diffSkipped: string[] = [];
+  let read = 0;
   // Matte quality: only the previous frame's alpha and zones are kept, for flicker.
   const edgePairs: FlickerPair[] = [];
   let edgePrev: { index: number; frame: AlphaFrame } | null = null;
@@ -1092,11 +1470,13 @@ async function nativeFlow(
   let withAlpha = 0;
   let writing = convert !== null;
   for (const [i, file] of written.entries()) {
+    if (!finished.has(i)) continue;
     // The capture as AE wrote it, read before anything rewrites it: analysis
     // and the 'capture' stage need the raw pixels, alpha channel included.
     let capture: DecodedPng;
     try {
-      capture = decodePng(await readFileSettled(file));
+      capture = decodePng(await fs.readFile(file));
+      read++;
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       payload.captureWarning = `could not read the capture: ${msg}`;
@@ -1177,12 +1557,70 @@ async function nativeFlow(
     if (keep.has(i)) kept.set(i, pixels);
     // A raw capture is already over the comp background: tile it as AE
     // wrote it. Only an rgba file this call wrote holds straight colour.
-    if (args.contactSheet)
-      sheetImages.push(output === capture ? { ...capture, alpha: undefined } : output);
+    const straight = output !== capture && output.alpha !== undefined;
+    if (contactSheet) {
+      sheetThumb ??= thumbSizeFor(
+        output,
+        contactSheet.thumbWidth ?? stripThumbWidth(strip, output),
+      );
+      sheetImages.push(
+        sheetTile(output === capture ? { ...capture, alpha: undefined } : output, sheetThumb),
+      );
+      sheetLabels.push(frameLabel(i, frames[i]?.time ?? payload.time));
+    }
+
+    if (opts.diff) {
+      payload.diffThresholds ??= opts.diff.thresholds;
+      const pic = pictureOf(output, straight);
+      const { width, height } = output;
+      if (diffPrev !== null && diffPrev.index !== i - 1) {
+        diffSkipped.push(`${diffPrev.index}>${i} (frames between are missing)`);
+      } else if (diffPrev !== null && (diffPrev.width !== width || diffPrev.height !== height)) {
+        diffSkipped.push(`${i - 1}>${i} (frame sizes differ)`);
+      } else if (diffPrev !== null) {
+        if (opts.diff.sheet) {
+          diffThumb ??= thumbSizeFor(
+            output,
+            opts.diff.sheet.thumbWidth ??
+              contactSheet?.thumbWidth ??
+              stripThumbWidth(strip, output),
+          );
+        }
+        try {
+          const res = pictureChange(diffPrev.pic, pic, width, height, opts.diff.thresholds, {
+            regions: opts.sample?.regions,
+            thumb: diffThumb ?? undefined,
+          });
+          const pair: DiffPair = {
+            from: { index: i - 1, time: frames[i - 1]?.time },
+            to: { index: i, time: frames[i]?.time },
+            ...res.all,
+          };
+          if (res.regions) pair.regions = res.regions;
+          if (res.thumb && diffThumb) {
+            const grey = new Float64Array(res.thumb.length * 3);
+            for (let k = 0; k < res.thumb.length; k++) grey.fill(res.thumb[k], k * 3, k * 3 + 3);
+            diffThumbs.push({
+              pair: diffPairs.length,
+              img: { width: diffThumb.width, height: diffThumb.height, rgb: grey, bitDepth: 8 },
+            });
+          }
+          diffPairs.push(pair);
+        } catch (err) {
+          payload.diffWarning = `diff failed: ${err instanceof Error ? err.message : String(err)}`;
+        }
+      }
+      payload.diff ??= {
+        stage: "output",
+        picture: diffPicture(output === capture, opts.channels, payload.over),
+        pairs: [],
+        series: summarizeSeries([], opts.diff.thresholds),
+      };
+      diffPrev = { index: i, pic, width, height };
+    }
   }
 
-  payload.alphaChannel =
-    withAlpha === 0 ? "absent" : withAlpha === written.length ? "present" : "mixed";
+  payload.alphaChannel = withAlpha === 0 ? "absent" : withAlpha === read ? "present" : "mixed";
   if (unmatting && withAlpha > 0 && bg === null) {
     payload.channelsWarning =
       "the comp background colour (bgColor) is unknown, so the colour under it was recovered as if it " +
@@ -1203,9 +1641,9 @@ async function nativeFlow(
   }
 
   if (opts.edge) {
-    if (edgeFromLuma === 0 && withAlpha < written.length) {
+    if (edgeFromLuma === 0 && withAlpha < read) {
       payload.edgeWarning =
-        `${written.length - withAlpha} of ${written.length} captures have no alpha channel, so their ` +
+        `${read - withAlpha} of ${read} captures have no alpha channel, so their ` +
         "matte could not be measured (a comp with no transparency, or an AE that flattens)";
     } else if (edgeFromLuma === 0 && edgeMeasured > 0 && bg === null) {
       payload.edgeWarning =
@@ -1236,27 +1674,149 @@ async function nativeFlow(
     }
   }
 
+  if (opts.diff && payload.diff) {
+    payload.diff.pairs = diffPairs;
+    payload.diff.series = summarizeSeries(diffPairs, opts.diff.thresholds);
+    if (diffSkipped.length > 0) {
+      payload.diffWarning =
+        `some consecutive pairs were not compared: ${diffSkipped.join("; ")}` +
+        (settle.unsettled.length > 0 ? " — captures missing, see captureSettle" : "");
+    }
+  }
+
   const stages = new Set<Stage>([
     ...(opts.sample?.stages ?? []),
     ...(opts.histogram ? [opts.histogram.stage] : []),
     ...(opts.edge || opts.screen ? (["capture"] as const) : []),
+    ...(opts.diff ? (["output"] as const) : []),
   ]);
   if (stages.size > 0) {
     payload.measurementStages = {};
     for (const s of stages) payload.measurementStages[s] = MEASUREMENT_STAGES[s];
   }
 
-  // The sheet last, from the files as they will be viewed.
-  if (args.contactSheet) {
+  // The sheets last, from the files as they will be viewed.
+  if (contactSheet && sheetImages.length > 0) {
     await attachContactSheet(
       payload,
-      frames,
+      sheetLabels,
       sheetImages,
-      sheetPathFor(abs, args.contactSheet.outPath),
-      args.contactSheet,
+      sheetPathFor(abs, contactSheet.outPath),
+      contactSheet,
+    );
+  }
+  if (opts.diff?.sheet && payload.diff && diffThumbs.length > 0) {
+    await attachDiffSheet(
+      payload,
+      payload.diff,
+      diffThumbs,
+      abs,
+      opts.diff.sheet,
+      opts.diff.thresholds,
     );
   }
   return toMcpResult(result);
+}
+
+/** Tile size for a sheet: `thumbWidth` (never above the frame's width, at least 16), the frame's aspect. */
+function thumbSizeFor(
+  img: DecodedPng,
+  thumbWidth: number | undefined,
+): { width: number; height: number } {
+  const width = Math.max(16, Math.min(thumbWidth ?? 480, img.width));
+  return { width, height: Math.max(1, Math.round((img.height * width) / img.width)) };
+}
+
+/** With a strip, tiles are sized so their longest side is maxDimension. */
+function stripThumbWidth(strip: StripPlan | null, img: DecodedPng): number | undefined {
+  if (strip === null) return undefined;
+  return Math.max(
+    1,
+    Math.round((strip.maxDimension * img.width) / Math.max(img.width, img.height)),
+  );
+}
+
+/**
+ * One contact-sheet tile, shrunk now so the sheet never holds whole frames.
+ * Alpha is shown over the checkerboard first, at full size, as before. A
+ * frame no bigger than the tile is kept as it is (composeContactSheet then
+ * does what it always did).
+ */
+function sheetTile(img: DecodedPng, thumb: { width: number; height: number }): DecodedPng {
+  const flat = img.alpha
+    ? { ...img, rgb: flattenOver(img, { kind: "checkerboard" }), alpha: undefined }
+    : img;
+  if (flat.width <= thumb.width) return flat;
+  return {
+    ...flat,
+    width: thumb.width,
+    height: thumb.height,
+    rgb: resample(flat, thumb.width, thumb.height),
+  };
+}
+
+/** What `diff` compared, in words. */
+function diffPicture(raw: boolean, channels: Channels, over: RenderFramePayload["over"]): string {
+  if (raw) {
+    return (
+      "the capture as AE wrote it (no colour conversion: colorManaged off, or the conversion failed): " +
+      "its RGB already laid over the comp background (bgColor), so empty areas read the background in " +
+      "both frames; alpha not compared"
+    );
+  }
+  if (channels === "alpha") return "the written file: the matte (alpha as grey), white opaque";
+  if (channels === "rgba") {
+    return (
+      "the written file's straight colour weighted by its alpha (as over black), so colour under " +
+      "transparent pixels does not count"
+    );
+  }
+  if (over === undefined || over === "background") {
+    return (
+      "the written file: the picture as AE composited it over the comp background (bgColor), so " +
+      "transparent areas read the background in both frames and do not change"
+    );
+  }
+  return "the written file: the picture laid over `over`, so transparent areas read that backdrop";
+}
+
+/** The difference images, amplified, tiled into one labelled sheet (<stem>_diff.png). */
+async function attachDiffSheet(
+  payload: RenderFramePayload,
+  diff: DiffReport,
+  thumbs: Array<{ pair: number; img: DecodedPng }>,
+  abs: string,
+  opts: ContactSheetArgs,
+  t: DiffThresholds,
+): Promise<void> {
+  try {
+    const flagged = new Set(diff.series.flags.flatMap((f) => f.pairs));
+    const labels = thumbs.map(({ pair }) => {
+      const p = diff.pairs[pair];
+      return `#${p.from.index}>${p.to.index} ${p.change.toFixed(4)}${flagged.has(pair) ? " !" : ""}`;
+    });
+    const sheet = composeContactSheet(
+      thumbs.map((th) => th.img),
+      { columns: opts.columns, thumbWidth: thumbs[0].img.width, labels },
+    );
+    const sheetPath =
+      opts.outPath !== undefined
+        ? path.resolve(opts.outPath).replace(/\\/g, "/")
+        : `${abs.slice(0, abs.length - path.extname(abs).length)}_diff${path.extname(abs) || ".png"}`;
+    await fs.mkdir(path.dirname(sheetPath), { recursive: true });
+    await fs.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+    payload.diffSheet = {
+      writtenTo: sheetPath,
+      size: [sheet.width, sheet.height],
+      columns: sheet.columns,
+      rows: sheet.rows,
+      thumbSize: [sheet.thumbWidth, sheet.thumbHeight],
+      frames: thumbs.length,
+      amplify: t.amplify,
+    };
+  } catch (err) {
+    payload.diffWarning = `diff sheet failed: ${err instanceof Error ? err.message : String(err)}`;
+  }
 }
 
 type Convert = (rgb: Float64Array) => void;
@@ -1304,22 +1864,19 @@ function validRgb(value: unknown): Rgb | null {
     : null;
 }
 
-/** Tile the final images into one labelled sheet; alpha is shown over the checkerboard. */
+/** Tile the final images into one labelled sheet. */
 async function attachContactSheet(
   payload: RenderFramePayload,
-  frames: RenderedFrame[],
-  images: DecodedPng[],
+  labels: string[],
+  tiles: DecodedPng[],
   sheetPath: string,
   opts: ContactSheetArgs,
 ): Promise<void> {
   try {
-    const tiles = images.map((img) =>
-      img.alpha ? { ...img, rgb: flattenOver(img, { kind: "checkerboard" }) } : img,
-    );
-    const labels = frames.map((f, i) => frameLabel(i, f.time));
+    // Tiles arrive already flattened over the checkerboard and shrunk (sheetTile).
     const sheet = composeContactSheet(tiles, {
       columns: opts.columns,
-      thumbWidth: opts.thumbWidth,
+      thumbWidth: opts.thumbWidth ?? tiles[0].width,
       labels,
     });
     await fs.mkdir(path.dirname(sheetPath), { recursive: true });
@@ -1330,7 +1887,7 @@ async function attachContactSheet(
       columns: sheet.columns,
       rows: sheet.rows,
       thumbSize: [sheet.thumbWidth, sheet.thumbHeight],
-      frames: images.length,
+      frames: tiles.length,
     };
   } catch (err) {
     payload.contactSheetWarning = `contact sheet failed: ${err instanceof Error ? err.message : String(err)}`;
