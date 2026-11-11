@@ -544,16 +544,23 @@ const SHORT = {
 };
 async function makeSheet(source, outDir, flags, stretches, structure, fd, range, target, convert, maxTiles, thumbWidth, tag) {
   const tiles = /* @__PURE__ */ new Map();
-  const add = (frame, kind) => {
+  const add = (frame, kind, why) => {
     const k = Math.max(range.from, Math.min(range.to, frame));
     const tile = tiles.get(k) ?? { frame: k, kinds: [] };
     if (!tile.kinds.includes(kind)) tile.kinds.push(kind);
+    if (why !== void 0) (tile.why ??= []).push(why);
     tiles.set(k, tile);
   };
   for (const f of flags) add(f.frame, f.kind);
   for (const s of stretches) add(s.kind === "frozen" ? s.from.frame : s.worst?.frame ?? s.from.frame, s.kind);
   const off = structure?.offFrame?.findings ?? [];
-  for (const o of off) add(o.worstAt.frame, `off-${o.edge}`);
+  for (const o of off) {
+    add(
+      o.from.frame,
+      `off-${o.edge}`,
+      `off-${o.edge}: "${o.layer.name}" at the first sampled time past the ${o.edge} edge (${o.from.time} s), while still partly in frame; the finding's worstAt is when it is furthest out`
+    );
+  }
   if (tiles.size === 0) return null;
   const all = [...tiles.values()].sort((a, b) => a.frame - b.frame);
   const chosen = all.slice(0, maxTiles);
@@ -572,7 +579,7 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
       const pic = await readPicture(got.path, target, convert);
       await fs.writeFile(got.path, encodePngSrgb8(pic.width, pic.height, pic.rgb));
       images.push({ width: pic.width, height: pic.height, rgb: pic.rgb, bitDepth: 8 });
-      kept.push({ frame: c.frame, time: r6(c.frame * fd), kinds: c.kinds, path: got.path });
+      kept.push({ frame: c.frame, time: r6(c.frame * fd), kinds: c.kinds, ...c.why ? { why: c.why } : {}, path: got.path });
     } catch {
       await fs.rm(got.path, { force: true });
     }

@@ -50966,23 +50966,23 @@ var GLYPHS = {
   c: [".....", ".....", ".###.", "#....", "#....", "#...#", ".###."],
   d: ["....#", "....#", ".####", "#...#", "#...#", "#...#", ".####"],
   e: [".....", ".....", ".###.", "#...#", "#####", "#....", ".###."],
-  g: [".....", ".####", "#...#", "#...#", ".####", "....#", ".###."],
+  g: [".....", ".....", ".####", "#...#", "#...#", "#...#", ".####", "....#", ".###."],
   h: ["#....", "#....", "####.", "#...#", "#...#", "#...#", "#...#"],
   i: ["..#..", ".....", ".##..", "..#..", "..#..", "..#..", ".###."],
-  j: ["...#.", ".....", "..##.", "...#.", "...#.", "#..#.", ".##.."],
+  j: ["...#.", ".....", "..##.", "...#.", "...#.", "...#.", "...#.", "#..#.", ".##.."],
   k: ["#....", "#....", "#..#.", "#.#..", "##...", "#.#..", "#..#."],
   l: [".##..", "..#..", "..#..", "..#..", "..#..", "..#..", ".###."],
   m: [".....", ".....", "##.#.", "#.#.#", "#.#.#", "#...#", "#...#"],
   n: [".....", ".....", "####.", "#...#", "#...#", "#...#", "#...#"],
   o: [".....", ".....", ".###.", "#...#", "#...#", "#...#", ".###."],
-  p: [".....", ".....", "####.", "#...#", "####.", "#....", "#...."],
-  q: [".....", ".....", ".####", "#...#", ".####", "....#", "....#"],
+  p: [".....", ".....", "####.", "#...#", "#...#", "#...#", "####.", "#....", "#...."],
+  q: [".....", ".....", ".####", "#...#", "#...#", "#...#", ".####", "....#", "....#"],
   r: [".....", ".....", "#.##.", "##..#", "#....", "#....", "#...."],
   t: [".#...", ".#...", "###..", ".#...", ".#...", ".#..#", "..##."],
   u: [".....", ".....", "#...#", "#...#", "#...#", "#..##", ".##.#"],
   v: [".....", ".....", "#...#", "#...#", "#...#", ".#.#.", "..#.."],
   w: [".....", ".....", "#...#", "#...#", "#.#.#", "#.#.#", ".#.#."],
-  y: [".....", ".....", "#...#", "#...#", ".####", "....#", ".###."],
+  y: [".....", ".....", "#...#", "#...#", "#...#", "#...#", ".####", "....#", ".###."],
   z: [".....", ".....", "#####", "...#.", "..#..", ".#...", "#####"],
   "+": [".....", "..#..", "..#..", "#####", "..#..", "..#..", "....."],
   " ": [".....", ".....", ".....", ".....", ".....", ".....", "....."]
@@ -50996,7 +50996,7 @@ function drawText(rgb, width, x0, y0, text, color) {
   let cx = x0;
   for (const ch of text) {
     const glyph = GLYPHS[ch] ?? GLYPHS[" "];
-    for (let gy = 0; gy < GLYPH_H; gy++) {
+    for (let gy = 0; gy < glyph.length; gy++) {
       for (let gx = 0; gx < GLYPH_W; gx++) {
         if (glyph[gy][gx] !== "#") continue;
         for (let sy = 0; sy < FONT_SCALE; sy++) {
@@ -51055,7 +51055,7 @@ function composeContactSheet(frames, opts = {}) {
       }
     }
     const label = opts.labels?.[n] ?? `#${n}`;
-    drawText(rgb, width, x0 + 2, y0 + 3, label, [0.95, 0.95, 0.95]);
+    drawText(rgb, width, x0 + 2, y0 + 2, label, [0.95, 0.95, 0.95]);
   }
   return { width, height, rgb, columns, rows, thumbWidth, thumbHeight };
 }
@@ -51609,7 +51609,7 @@ var PieceWatcher = class {
     }
     if (every > 1) {
       notes.push(
-        `every ${every}: only every ${every}th frame was checked, so a one-frame pop or flash on a frame in between is missed; a stutter or repeat here means two frames ${every} apart look the same while the frames around them move; frozen and other stretches may run up to ${every - 1} frame${every > 2 ? "s" : ""} further at each end`
+        `every ${every}: 1 frame in every ${every} was checked, so a one-frame pop or flash on a frame in between is missed; a stutter or repeat here means two frames ${every} apart look the same while the frames around them move; frozen and other stretches may run up to ${every - 1} frame${every > 2 ? "s" : ""} further at each end`
       );
     }
     const owned = this.frames.filter((f) => this.ownedFrame(f.frame));
@@ -51688,7 +51688,7 @@ var PieceWatcher = class {
     const pair = into(frame);
     let reading = sf.reading;
     if (every > 1 && (sf.kind === "stutter" || sf.kind === "repeat")) {
-      reading += ` (checked every ${every} frames: frames ${frame - every} and ${frame} look the same; a hold of at least ${every + 1} frames, or motion that came back to the same place)`;
+      reading += ` (1 frame in every ${every} checked: frames ${frame - every} and ${frame} look the same; a hold of at least ${every + 1} frames, or motion that came back to the same place)`;
     }
     const flag = {
       kind: sf.kind,
@@ -52901,16 +52901,23 @@ var SHORT = {
 };
 async function makeSheet(source, outDir, flags, stretches, structure, fd, range, target, convert, maxTiles, thumbWidth, tag) {
   const tiles = /* @__PURE__ */ new Map();
-  const add = (frame, kind) => {
+  const add = (frame, kind, why) => {
     const k = Math.max(range.from, Math.min(range.to, frame));
     const tile = tiles.get(k) ?? { frame: k, kinds: [] };
     if (!tile.kinds.includes(kind)) tile.kinds.push(kind);
+    if (why !== void 0) (tile.why ??= []).push(why);
     tiles.set(k, tile);
   };
   for (const f of flags) add(f.frame, f.kind);
   for (const s of stretches) add(s.kind === "frozen" ? s.from.frame : s.worst?.frame ?? s.from.frame, s.kind);
   const off = structure?.offFrame?.findings ?? [];
-  for (const o of off) add(o.worstAt.frame, `off-${o.edge}`);
+  for (const o of off) {
+    add(
+      o.from.frame,
+      `off-${o.edge}`,
+      `off-${o.edge}: "${o.layer.name}" at the first sampled time past the ${o.edge} edge (${o.from.time} s), while still partly in frame; the finding's worstAt is when it is furthest out`
+    );
+  }
   if (tiles.size === 0) return null;
   const all = [...tiles.values()].sort((a, b) => a.frame - b.frame);
   const chosen = all.slice(0, maxTiles);
@@ -52929,7 +52936,7 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
       const pic = await readPicture(got.path, target, convert);
       await fs7.writeFile(got.path, encodePngSrgb8(pic.width, pic.height, pic.rgb));
       images.push({ width: pic.width, height: pic.height, rgb: pic.rgb, bitDepth: 8 });
-      kept.push({ frame: c.frame, time: r63(c.frame * fd), kinds: c.kinds, path: got.path });
+      kept.push({ frame: c.frame, time: r63(c.frame * fd), kinds: c.kinds, ...c.why ? { why: c.why } : {}, path: got.path });
     } catch {
       await fs7.rm(got.path, { force: true });
     }

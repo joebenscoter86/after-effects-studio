@@ -294,7 +294,7 @@ export class PieceWatcher {
             notes.push(`${this.gaps} gap${this.gaps > 1 ? "s" : ""} in the checked frames (a capture missing, or the size changed): pairs were not compared across ${this.gaps > 1 ? "them" : "it"}`);
         }
         if (every > 1) {
-            notes.push(`every ${every}: only every ${every}th frame was checked, so a one-frame pop or flash on a frame in between is missed; ` +
+            notes.push(`every ${every}: 1 frame in every ${every} was checked, so a one-frame pop or flash on a frame in between is missed; ` +
                 `a stutter or repeat here means two frames ${every} apart look the same while the frames around them move; ` +
                 `frozen and other stretches may run up to ${every - 1} frame${every > 2 ? "s" : ""} further at each end`);
         }
@@ -373,7 +373,7 @@ export class PieceWatcher {
         const pair = into(frame);
         let reading = sf.reading;
         if (every > 1 && (sf.kind === "stutter" || sf.kind === "repeat")) {
-            reading += ` (checked every ${every} frames: frames ${frame - every} and ${frame} look the same; a hold of at least ${every + 1} frames, or motion that came back to the same place)`;
+            reading += ` (1 frame in every ${every} checked: frames ${frame - every} and ${frame} look the same; a hold of at least ${every + 1} frames, or motion that came back to the same place)`;
         }
         const flag = {
             kind: sf.kind,
