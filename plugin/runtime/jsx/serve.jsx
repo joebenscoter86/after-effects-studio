@@ -15,10 +15,13 @@
 //   - the id comes from the FILENAME, not the JSON body, so even a corrupt or
 //     unparseable request gets a correlated response instead of stranding the
 //     caller for a full timeout;
-//   - `code` is evaluated as a function body with `app`, `log` and `payload`
-//     in scope, inside an undo group unless the request said `undoGroup:
-//     false`, with modal dialogs suppressed unless it said `suppressDialogs:
-//     false`;
+//   - `code` is evaluated as a function body with `app`, `log`, `payload`
+//     and `__mcp` in scope, inside an undo group unless the request said
+//     `undoGroup: false`, with modal dialogs suppressed unless it said
+//     `suppressDialogs: false`;
+//   - with `rollback: true`, a grouped request whose code throws is undone
+//     before the response is written, and the response says how that went
+//     (see AE_MCP.rollBack);
 //   - every failure mode writes a response. An exception escaping to AE's
 //     modal error dialog would block scripting for the rest of the session.
 //
@@ -57,6 +60,222 @@ AE_MCP.errStack = function (e) {
     } catch (eSt) {
         return null;
     }
+};
+
+// --- Undo, redo and rollback -----------------------------------------------
+// Measured on After Effects 2027 (2026-11-10, side-session note
+// undo-hazard-live-finding.md):
+//   A  a call that changes nothing leaves NO undo step, so an undo issued
+//      after it reverts whatever the user did before;
+//   B  a change made inside the open group always records a step;
+//   C  a script that throws leaves its partial change applied, as one step;
+//   E  undo issued from inside the same request, after its group is closed,
+//      reverts that request's changes and nothing earlier;
+//   and once, late in a long session, an undo raised an After Effects error
+//   box that blocked all scripting until a person clicked it.
+//
+// So a rollback (a) adds a marker folder INSIDE the still-open group, which
+// makes the group certain to exist (B) and gives the undo something of its
+// own to consume (A), (b) closes the group, (c) undoes once with dialogs
+// suppressed and app.onError listening, and (d) checks: the marker gone
+// means the whole group was reverted (a group is one step, so the request's
+// changes went with it), and a signature of the project's items taken before
+// the call must match again. It never retries. A marker is added only on the
+// failure path, never on a call that succeeds, so the user's undo history is
+// untouched by ordinary calls.
+
+AE_MCP.UNDO_COMMAND_ID = 16;
+AE_MCP.REDO_COMMAND_ID = 2035;
+/** Items hashed into a signature; past this only the first ones and the count are compared. */
+AE_MCP.SIGNATURE_ITEM_LIMIT = 1000;
+AE_MCP.ROLLBACK_MARKER_PREFIX = "mcp-rollback-";
+
+/** fsName of the open project file, or null (unsaved, or unreadable). */
+AE_MCP.projectFile = function () {
+    try {
+        var f = app.project.file;
+        return f ? String(f.fsName) : null;
+    } catch (e) {
+        return null;
+    }
+};
+
+/**
+ * A short signature of the project's items: count, and a hash of each item's
+ * id, name and layer count (first SIGNATURE_ITEM_LIMIT items). It sees items
+ * added, removed or renamed and layers added or removed; it does not see a
+ * property value change. Null when the project cannot be read.
+ */
+AE_MCP.projectSignature = function () {
+    try {
+        var p = app.project;
+        var n = p.numItems;
+        var limit = AE_MCP.SIGNATURE_ITEM_LIMIT;
+        var m = n < limit ? n : limit;
+        var h = 7;
+        for (var i = 1; i <= m; i++) {
+            var it = p.item(i);
+            var layers = "-";
+            try { if (typeof it.numLayers === "number") layers = String(it.numLayers); } catch (eL) { /* not a comp */ }
+            var s = String(it.id) + ":" + String(it.name) + ":" + layers + ";";
+            for (var c = 0; c < s.length; c++) h = (h * 31 + s.charCodeAt(c)) % 2147483647;
+        }
+        return { numItems: n, hash: String(h), partial: n > limit, file: AE_MCP.projectFile() };
+    } catch (eSig) {
+        return null;
+    }
+};
+
+/** True while an item with this id is still in the project. */
+AE_MCP.itemExists = function (id) {
+    try {
+        if (typeof app.project.itemByID === "function") {
+            var direct = app.project.itemByID(id);
+            if (direct) return true;
+        }
+    } catch (eById) { /* older After Effects: fall back to a scan */ }
+    try {
+        var n = app.project.numItems;
+        for (var i = 1; i <= n; i++) {
+            if (app.project.item(i).id === id) return true;
+        }
+    } catch (eScan) { /* unreadable */ }
+    return false;
+};
+
+/**
+ * Run the Undo or Redo menu command once and report what happened: whether
+ * it threw, and every error After Effects reported through app.onError while
+ * it ran (with dialogs suppressed that is where an error box's text goes, if
+ * anywhere — not yet confirmed live). The previous onError is restored.
+ */
+AE_MCP.runUndoCommand = function (commandId) {
+    var out = { threw: null, aeErrors: [] };
+    var prev = null;
+    var hadPrev = false;
+    try { prev = app.onError; hadPrev = true; } catch (eGet) { /* no onError */ }
+    try {
+        app.onError = function (text, severity) {
+            try {
+                out.aeErrors.push(String(text) + (severity ? " (" + String(severity) + ")" : ""));
+            } catch (ePush) { /* ignore */ }
+        };
+    } catch (eSet) { /* cannot listen; report what we can */ }
+    try {
+        app.executeCommand(commandId);
+    } catch (eCmd) {
+        out.threw = AE_MCP.describeError(eCmd);
+    }
+    try { app.onError = hadPrev ? prev : null; } catch (eRestore) { /* ignore */ }
+    return out;
+};
+
+/**
+ * Undo or redo `count` times for project.undo / project.redo and
+ * command.execute 16/2035. Stops at the first throw; reports AE's errors.
+ */
+AE_MCP.undoRedo = function (commandId, count) {
+    var n = (typeof count === "number" && count > 0) ? Math.floor(count) : 1;
+    var done = 0;
+    var errors = [];
+    var threw = null;
+    for (var i = 0; i < n; i++) {
+        var r = AE_MCP.runUndoCommand(commandId);
+        for (var e = 0; e < r.aeErrors.length; e++) errors.push(r.aeErrors[e]);
+        if (r.threw !== null) { threw = r.threw; break; }
+        done++;
+    }
+    var what = (commandId === AE_MCP.REDO_COMMAND_ID) ? "redo" : "undo";
+    var out = { ok: threw === null, requested: n, done: done, aeErrors: errors };
+    if (threw !== null) out.error = what + " " + String(done + 1) + " of " + String(n) + " threw: " + threw;
+    if (errors.length > 0) {
+        out.warning = "After Effects reported " + String(errors.length) + " error(s) during " + what +
+            " (dialogs were suppressed, so none was shown): " + errors.join(" | ") +
+            " — inspect the project before relying on the result";
+    }
+    return out;
+};
+
+/** The marker that makes the open group certain to hold a step of this request's own. */
+AE_MCP.addRollbackMarker = function (requestId) {
+    try {
+        var f = app.project.items.addFolder(AE_MCP.ROLLBACK_MARKER_PREFIX + requestId);
+        return { id: f.id, name: String(f.name), error: null };
+    } catch (e) {
+        return { id: null, name: null, error: AE_MCP.describeError(e) };
+    }
+};
+
+AE_MCP.KEPT_AS_ONE_STEP = "the call's changes up to the failure are still applied, as one undo step";
+
+AE_MCP.sigSummary = function (sig) {
+    return sig ? { numItems: sig.numItems, hash: sig.hash } : null;
+};
+
+/**
+ * Revert the request whose group was just closed with `marker` inside it.
+ * `sigBefore` is the signature taken before the request ran. Never retries
+ * and never throws.
+ */
+AE_MCP.rollBack = function (marker, sigBefore, dialogsAlreadySuppressed) {
+    var rb = {
+        attempted: false,
+        rolledBack: false,
+        verified: "none",
+        reason: null,
+        left: null,
+        aeErrors: [],
+        before: AE_MCP.sigSummary(sigBefore),
+        after: null
+    };
+    try {
+        if (marker.error !== null) {
+            rb.reason = "could not add the rollback marker inside the call's undo group (" + marker.error +
+                "); without it an undo could revert the user's previous action instead, so none was issued";
+            rb.left = AE_MCP.KEPT_AS_ONE_STEP;
+            return rb;
+        }
+        if (sigBefore && AE_MCP.projectFile() !== sigBefore.file) {
+            rb.reason = "the project was replaced or saved under another name during the call; undo would act on a different history, so none was issued";
+            rb.left = "unknown: inspect the project that is open now";
+            return rb;
+        }
+        var ownSuppress = false;
+        if (!dialogsAlreadySuppressed) {
+            try { app.beginSuppressDialogs(); ownSuppress = true; } catch (eSup) { /* run anyway */ }
+        }
+        rb.attempted = true;
+        var u = AE_MCP.runUndoCommand(AE_MCP.UNDO_COMMAND_ID);
+        if (ownSuppress) {
+            try { app.endSuppressDialogs(false); } catch (eEndSup) { /* ignore */ }
+        }
+        rb.aeErrors = u.aeErrors;
+        var after = AE_MCP.projectSignature();
+        rb.after = AE_MCP.sigSummary(after);
+        var markerGone = !AE_MCP.itemExists(marker.id);
+        var same = (sigBefore && after) ? (sigBefore.numItems === after.numItems && sigBefore.hash === after.hash) : null;
+        var markerNote = "the rollback marker folder '" + marker.name + "' (item id " + String(marker.id) + ")";
+        if (u.threw !== null) {
+            rb.reason = "the undo command threw: " + u.threw;
+        } else if (!markerGone) {
+            rb.reason = "the undo did not take effect: " + markerNote + " is still in the project";
+        } else if (same === false) {
+            rb.reason = "the undo ran, but the project's items do not match their state before the call";
+        } else {
+            rb.rolledBack = true;
+        }
+        if (markerGone && same === true) rb.verified = (sigBefore && sigBefore.partial) ? "partial" : "signature";
+        else if (markerGone) rb.verified = "marker";
+        if (!rb.rolledBack) {
+            rb.left = markerGone
+                ? "unknown: an undo ran; inspect the project before doing anything else"
+                : AE_MCP.KEPT_AS_ONE_STEP + ", together with " + markerNote + "; inspect the project, then one project.undo would revert both";
+        }
+    } catch (eRb) {
+        rb.reason = "rollback failed: " + AE_MCP.describeError(eRb);
+        rb.left = "unknown: inspect the project before doing anything else";
+    }
+    return rb;
 };
 
 /** Fire-and-forget append to a log file; errors are swallowed so logging never breaks serving. */
@@ -137,7 +356,10 @@ AE_MCP.serveRequest = function (requestFile, mailboxDir, logPath) {
         // arithmetic that maps it back (it knows the wrapper layout).
         line: null,
         stack: null,
-        logs: []
+        logs: [],
+        // How a rollback of this request went (AE_MCP.rollBack), or null
+        // when none was needed.
+        rollback: null
     };
 
     var responsePath = mailboxDir + "/response-" + requestId + ".json";
@@ -301,24 +523,38 @@ AE_MCP.serveRequest = function (requestFile, mailboxDir, logPath) {
 
     // --- Execute user code, normally inside an undo group --------------
     // `undoGroup: false` marks a request that DRIVES the undo stack (Undo,
-    // Redo). AE resolves those against the group that is still open, so
-    // wrapping them reverts nothing the caller asked for and leaves the
-    // stack describing a step that never happened — such a request runs
-    // bare. A missing field means the old contract: group it.
+    // Redo) or crosses a project boundary (open, new). AE resolves Undo/Redo
+    // against the group that is still open, so wrapping them reverts nothing
+    // the caller asked for — such a request runs bare. A missing field means
+    // the old contract: group it.
     var undoLabel = "mcp-aftereffects: " + (request.label || "action");
     var wantUndoGroup = (request.undoGroup !== false);
     // Dialog suppression is its OWN request field, not the undo-group
-    // condition: project boundary requests (project.open / project.new)
-    // run ungrouped yet are exactly the calls most likely to pop a modal
-    // (missing footage/fonts on open). Only requests that DRIVE the undo
-    // stack — Undo/Redo — must stay unsuppressed: beginSuppressDialogs
-    // opens an undo-transaction-like scope of its own, so wrapping them
-    // makes AE resolve Undo against THAT scope (nothing reverts, the
-    // stack pops unbalanced, "UndoGroup Mismatch" warnings, broken redo).
-    // A missing field means the old contract: suppress when grouping.
+    // condition: project boundary requests run ungrouped yet are exactly the
+    // calls most likely to pop a modal (missing footage/fonts on open), and
+    // undo/redo now run suppressed too (an undo once raised an error box that
+    // blocked all scripting). A missing field means the old contract:
+    // suppress when grouping.
     var wantSuppress = (typeof request.suppressDialogs === "boolean") ? request.suppressDialogs : wantUndoGroup;
+    // Roll back when the code throws (or asks to, see __mcp below). Only for
+    // grouped requests, and only when the request says so explicitly: a
+    // missing field is the old contract, where a failed call kept its changes.
+    var wantRollback = wantUndoGroup && request.rollback === true;
+    var sigBefore = wantRollback ? AE_MCP.projectSignature() : null;
     var undoOpen = false;
     var dialogsSuppressed = false;
+    var ran = false;
+    var threw = false;
+    // `__mcp` is the code's handle on this request. requestRollback(why)
+    // marks a request that RETURNED normally for rollback — batch.run with
+    // stopOnError uses it to revert the whole batch while still returning
+    // every child's result.
+    var control = { rollbackRequested: null };
+    var mcpHandle = {
+        requestRollback: function (why) {
+            control.rollbackRequested = (why === undefined || why === null) ? "requested by the code" : String(why);
+        }
+    };
     response.phase = "execute";
     try {
         if (wantSuppress) {
@@ -343,20 +579,25 @@ AE_MCP.serveRequest = function (requestFile, mailboxDir, logPath) {
         // User code is a function body. Convention: `return <JSON-serializable>;`
         // `log(msg)` pushes breadcrumbs into response.logs; `payload` carries
         // bulk data that was NOT inlined into the source (see EvalRequest).
+        // All parameters sit on new Function's header line, so the body's
+        // line numbering is the same as before __mcp existed.
         var logs = response.logs;
         var fn = new Function(
-            "app", "log", "payload",
+            "app", "log", "payload", "__mcp",
             request.code
         );
+        ran = true;
         var result = fn(
             app,
             function (msg) { logs.push(String(msg)); },
-            (typeof request.payload === "undefined") ? null : request.payload
+            (typeof request.payload === "undefined") ? null : request.payload,
+            mcpHandle
         );
 
         response.result = (typeof result === "undefined") ? null : result;
         response.ok = true;
     } catch (eExec) {
+        threw = true;
         response.ok = false;
         response.error = describeError(eExec);
         response.stack = errStack(eExec);
@@ -364,8 +605,30 @@ AE_MCP.serveRequest = function (requestFile, mailboxDir, logPath) {
             if (eExec && eExec.line !== undefined && eExec.line !== null) response.line = Number(eExec.line);
         } catch (eLine) { /* line stays null */ }
     } finally {
+        // A throw from new Function itself is a compile error: nothing ran,
+        // so there is nothing to revert and no undo is issued.
+        var needRollback = (threw && ran) || control.rollbackRequested !== null;
+        var marker = null;
         if (undoOpen) {
+            if (needRollback && wantRollback) marker = AE_MCP.addRollbackMarker(requestId);
             try { app.endUndoGroup(); } catch (eEnd) { /* ignore */ }
+        }
+        if (needRollback) {
+            if (wantRollback && marker !== null) {
+                response.rollback = AE_MCP.rollBack(marker, sigBefore, dialogsSuppressed);
+            } else if (wantUndoGroup && request.rollback === false) {
+                response.rollback = {
+                    attempted: false, rolledBack: false, verified: "none",
+                    reason: "rollback was turned off for this request",
+                    left: AE_MCP.KEPT_AS_ONE_STEP, aeErrors: [], before: null, after: null
+                };
+            }
+        } else if (threw && !ran && wantRollback) {
+            response.rollback = {
+                attempted: false, rolledBack: false, verified: "none",
+                reason: "the code did not compile, so nothing ran and nothing needed reverting",
+                left: null, aeErrors: [], before: null, after: null
+            };
         }
         if (dialogsSuppressed) {
             // false: do NOT replay the suppressed alerts — that replay is

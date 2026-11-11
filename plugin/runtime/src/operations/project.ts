@@ -1,7 +1,7 @@
 // Project-level operations — clear, delete item, find layers, list effects.
 
 import { registerOp, jsxVal, jsxCompPreamble } from "../registry.js";
-import { UNDO_COMMAND_ID } from "./command.js";
+import { REDO_COMMAND_ID, UNDO_COMMAND_ID } from "./command.js";
 
 registerOp({
   name: "project.open",
@@ -123,7 +123,10 @@ registerOp({
   name: "project.undo",
   category: "project",
   description:
-    "Undo the last action. Equivalent to Ctrl+Z. Each prior ae_do call is ONE undo step (its automatic undo group), so count=1 reverts the whole previous call, batch included.",
+    "Undo the last action. Equivalent to Ctrl+Z. Each prior ae_do call is ONE undo step (its automatic undo group), so count=1 reverts the whole previous call, batch included. " +
+    "Runs with After Effects' dialogs suppressed (an undo once raised an error box that blocked all scripting until a person clicked it); " +
+    "the result's aeErrors and warning carry anything After Effects reported, and an undo that throws stops the loop and fails the call. " +
+    "A failed call that was rolled back already left no step of its own: do not undo again for it.",
   params: [
     {
       name: "count",
@@ -137,15 +140,40 @@ registerOp({
   // resolves each Undo against the group that is still open: the previous
   // call — the one the caller wants back — is never reverted, and the group
   // this call closes afterwards leaves the stack out of step with the project.
-  // Dialog suppression opens the same kind of scope, so it opts out of both.
+  // Dialog suppression stays ON (the default): see AE_MCP.undoRedo in
+  // jsx/serve.jsx and the stage 7 hand-over for what the live run must confirm.
   undoGroup: () => false,
-  suppressDialogs: () => false,
   toJsx(args) {
     // Menu command ID (see command.list / hyperbrew command-ID table): 16 = Undo.
     return `
-            var n = ${jsxVal(args.count ?? 1)};
-            for (var i = 0; i < n; i++) app.executeCommand(${UNDO_COMMAND_ID});
-            return { ok: true, undone: n };
+            var _u = AE_MCP.undoRedo(${UNDO_COMMAND_ID}, ${jsxVal(args.count ?? 1)});
+            _u.undone = _u.done;
+            return _u;
+        `;
+  },
+});
+
+registerOp({
+  name: "project.redo",
+  category: "project",
+  description:
+    "Redo the last undone action. Equivalent to Ctrl+Shift+Z. Runs like project.undo: outside the undo group, " +
+    "with dialogs suppressed, reporting any error After Effects raised (aeErrors, warning).",
+  params: [
+    {
+      name: "count",
+      type: "number",
+      description: "Number of redos (default 1)",
+      required: false,
+      default: 1,
+    },
+  ],
+  undoGroup: () => false,
+  toJsx(args) {
+    return `
+            var _r = AE_MCP.undoRedo(${REDO_COMMAND_ID}, ${jsxVal(args.count ?? 1)});
+            _r.redone = _r.done;
+            return _r;
         `;
   },
 });
