@@ -145,11 +145,16 @@ class FileIpcTransport {
     const deadline = started + timeoutMs;
     let requestConsumed = false;
     let lastLivenessAt = started;
+    const unreadable = new UnreadableResponseWatch();
     while (Date.now() < deadline) {
-      const parsed = await this.tryReadResponse(responsePath);
-      if (parsed) {
+      const read = await this.tryReadResponse(responsePath);
+      if (read.kind === "ready") {
         await this.safeUnlink(responsePath);
-        return this.toEvalResult(parsed, Date.now() - started);
+        return this.toEvalResult(read.response, Date.now() - started);
+      }
+      if (unreadable.settled(read, Date.now()) && read.kind === "unreadable") {
+        await this.safeUnlink(responsePath);
+        return unreadableResponseFailure(read, started);
       }
       const now = Date.now();
       if (!requestConsumed && now - lastLivenessAt >= LIVENESS_CHECK_MS) {
@@ -233,11 +238,16 @@ class FileIpcTransport {
       let lastLaunchAt = started;
       let lastRefreshAt = started;
       let requestConsumed = false;
+      const unreadable = new UnreadableResponseWatch();
       while (Date.now() < deadline) {
-        const parsed = await this.tryReadResponse(responsePath);
-        if (parsed) {
+        const read = await this.tryReadResponse(responsePath);
+        if (read.kind === "ready") {
           await this.safeUnlink(responsePath);
-          return this.toEvalResult(parsed, Date.now() - started);
+          return this.toEvalResult(read.response, Date.now() - started);
+        }
+        if (unreadable.settled(read, Date.now()) && read.kind === "unreadable") {
+          await this.safeUnlink(responsePath);
+          return unreadableResponseFailure(read, started);
         }
         if (spawnState.error !== null) {
           return await this.spawnFailure(spawnState.error, requestPath, started);
@@ -491,13 +501,13 @@ class FileIpcTransport {
     };
   }
   async tryReadResponse(responsePath) {
+    let raw;
     try {
-      const raw = await fs.readFile(responsePath, "utf8");
-      if (!raw) return null;
-      return JSON.parse(raw);
+      raw = await fs.readFile(responsePath, "utf8");
     } catch {
-      return null;
+      return { kind: "pending" };
     }
+    return readResponseText(raw);
   }
   /** Unlink and report whether the file was actually there. */
   async safeUnlink(p) {
@@ -552,6 +562,42 @@ ${extra.hint}` : message,
     ...extra.dialogs ? { dialogs: extra.dialogs } : {}
   };
 }
+const UNREADABLE_RESPONSE_GRACE_MS = 2e3;
+function readResponseText(raw) {
+  if (!raw) return { kind: "pending" };
+  try {
+    return { kind: "ready", response: JSON.parse(raw) };
+  } catch {
+    return { kind: "unreadable", bytes: Buffer.byteLength(raw, "utf8"), tail: raw.slice(-80) };
+  }
+}
+class UnreadableResponseWatch {
+  since = null;
+  bytes = -1;
+  settled(read, now) {
+    if (read.kind !== "unreadable") {
+      this.since = null;
+      this.bytes = -1;
+      return false;
+    }
+    if (this.since === null || read.bytes !== this.bytes) {
+      this.since = now;
+      this.bytes = read.bytes;
+      return false;
+    }
+    return now - this.since >= UNREADABLE_RESPONSE_GRACE_MS;
+  }
+}
+function unreadableResponseFailure(read, started) {
+  return failure(
+    "DISPATCHER",
+    `After Effects wrote a response that is not valid JSON (${read.bytes} bytes, ending in ${JSON.stringify(read.tail)}); the script already ran`,
+    {
+      durationMs: Date.now() - started,
+      hint: "The response was cut off while it was being written, usually by a value its writer could not encode. Whatever the call does to the project has already happened: inspect the actual project state before retrying a write."
+    }
+  );
+}
 function dialogFailure(dialogs, outcome, started) {
   return failure("DIALOG_OPEN", `${dialogBlockMessage(dialogs)} \u2014 ${outcome}`, {
     durationMs: Date.now() - started,
@@ -570,6 +616,10 @@ function serializeRequest(request) {
 }
 export {
   FileIpcTransport,
+  UNREADABLE_RESPONSE_GRACE_MS,
+  UnreadableResponseWatch,
   isAutomationDenial,
-  serializeRequest
+  readResponseText,
+  serializeRequest,
+  unreadableResponseFailure
 };

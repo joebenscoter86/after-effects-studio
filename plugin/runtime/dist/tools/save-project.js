@@ -20,7 +20,12 @@ export const saveProjectTool = defineTool({
         const code = `
         var _path = ${jsxVal(args.path ?? null)};
         if (_path) {
-            var f = new File(_path);
+            // Save As into a folder that does not exist yet fails inside AE on a
+            // temp file name; create the folder first, as the render ops do.
+            var f = AE.ensureParentDir(_path);
+            if (f.parent && !f.parent.exists) {
+                return { ok: false, saved: false, error: "cannot create folder " + f.parent.fsName.replace(/\\\\/g, "/") + " for the project file" };
+            }
             app.project.save(f);
             return { ok: true, saved: true, path: f.fsName.replace(/\\\\/g, "/") };
         }

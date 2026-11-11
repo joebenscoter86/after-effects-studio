@@ -469,6 +469,11 @@ registerOp({
             if (_inT !== null || _outT !== null) {
                 if (_inT === null) _inT = _node.keyInSpatialTangent(_ki);
                 if (_outT === null) _outT = _node.keyOutSpatialTangent(_ki);
+                // Position is a three-component property even on a 2D layer:
+                // AE rejects [x, y] there ("Value array does not have 3 elements").
+                var _dims = _node.keyValue(_ki).length;
+                _inT = AE.fitSpatialTangent(_inT, _dims);
+                _outT = AE.fitSpatialTangent(_outT, _dims);
                 _node.setSpatialTangentsAtKey(_ki, _inT, _outT);
             }
             var _cont = ${jsxVal(args.continuous ?? null)};

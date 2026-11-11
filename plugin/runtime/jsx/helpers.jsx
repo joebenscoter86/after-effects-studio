@@ -1157,6 +1157,22 @@ AE.ellipse = function (parent, size, position, opts) {
     return grp;
 };
 
+// ---------- Spatial tangents ----------
+
+// Fit a spatial tangent to the number of components the property really has:
+// pad with zeros, or drop components it has no room for. A 2D layer's Position
+// still holds three components, and setSpatialTangentsAtKey rejects a tangent
+// of any other length ("Value array does not have 3 elements"). null means
+// "keep the current tangent" and passes through.
+AE.fitSpatialTangent = function (tangent, dims) {
+    if (tangent === null || tangent === undefined) return null;
+    var out = [];
+    for (var i = 0; i < dims; i++) {
+        out.push(i < tangent.length ? tangent[i] : 0);
+    }
+    return out;
+};
+
 // ---------- Filesystem ----------
 
 // Create the parent directory chain for a file path (string or File) and
