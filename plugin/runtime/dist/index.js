@@ -2993,7 +2993,7 @@ var require_compile = __commonJS({
       const schOrFunc = root.refs[ref];
       if (schOrFunc)
         return schOrFunc;
-      let _sch = resolve9.call(this, root, ref);
+      let _sch = resolve10.call(this, root, ref);
       if (_sch === void 0) {
         const schema = (_a3 = root.localRefs) === null || _a3 === void 0 ? void 0 : _a3[ref];
         const { schemaId } = this.opts;
@@ -3020,7 +3020,7 @@ var require_compile = __commonJS({
     function sameSchemaEnv(s1, s2) {
       return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
     }
-    function resolve9(root, ref) {
+    function resolve10(root, ref) {
       let sch;
       while (typeof (sch = this.refs[ref]) == "string")
         ref = sch;
@@ -3271,8 +3271,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path12) {
-      let input2 = path12;
+    function removeDotSegments(path13) {
+      let input2 = path13;
       const output2 = [];
       let nextSlash = -1;
       let len = 0;
@@ -3346,11 +3346,11 @@ var require_utils = __commonJS({
       }
       return output2.join("");
     }
-    function removeDotSegmentsRelative(path12) {
-      if (path12 === "" || path12[0] === "/") {
-        return removeDotSegments(path12);
+    function removeDotSegmentsRelative(path13) {
+      if (path13 === "" || path13[0] === "/") {
+        return removeDotSegments(path13);
       }
-      const segments = path12.split("/");
+      const segments = path13.split("/");
       const last = segments.length - 1;
       const output2 = [];
       let trailingDirectory = false;
@@ -3713,8 +3713,8 @@ var require_schemes = __commonJS({
       }
       if (wsComponent.resourceName) {
         const queryIndex = wsComponent.resourceName.indexOf("?");
-        const path12 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
-        wsComponent.path = path12 && path12 !== "/" ? path12 : void 0;
+        const path13 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
+        wsComponent.path = path13 && path13 !== "/" ? path13 : void 0;
         wsComponent.query = queryIndex === -1 ? void 0 : wsComponent.resourceName.slice(queryIndex + 1);
         wsComponent.resourceName = void 0;
       }
@@ -3884,7 +3884,7 @@ var require_fast_uri = __commonJS({
       }
       return uri;
     }
-    function resolve9(baseURI, relativeURI, options) {
+    function resolve10(baseURI, relativeURI, options) {
       const schemelessOptions = options ? Object.assign({ scheme: "null" }, options) : { scheme: "null" };
       const {
         parsed: baseParsed,
@@ -3920,50 +3920,50 @@ var require_fast_uri = __commonJS({
       schemelessOptions.skipEscape = true;
       return serialize(resolved, schemelessOptions);
     }
-    function resolveComponent(base, relative2, options, skipNormalization) {
+    function resolveComponent(base, relative3, options, skipNormalization) {
       const target = {};
       if (!skipNormalization) {
         base = parse3(serialize(base, options), options);
-        relative2 = parse3(serialize(relative2, options), options);
+        relative3 = parse3(serialize(relative3, options), options);
       }
       options = options || {};
-      if (!options.tolerant && relative2.scheme) {
-        target.scheme = relative2.scheme;
-        target.userinfo = relative2.userinfo;
-        target.host = relative2.host;
-        target.port = relative2.port;
-        target.path = removeDotSegments(relative2.path || "");
-        target.query = relative2.query;
+      if (!options.tolerant && relative3.scheme) {
+        target.scheme = relative3.scheme;
+        target.userinfo = relative3.userinfo;
+        target.host = relative3.host;
+        target.port = relative3.port;
+        target.path = removeDotSegments(relative3.path || "");
+        target.query = relative3.query;
       } else {
-        if (relative2.userinfo !== void 0 || relative2.host !== void 0 || relative2.port !== void 0) {
-          target.userinfo = relative2.userinfo;
-          target.host = relative2.host;
-          target.port = relative2.port;
-          target.path = removeDotSegments(relative2.path || "");
-          target.query = relative2.query;
+        if (relative3.userinfo !== void 0 || relative3.host !== void 0 || relative3.port !== void 0) {
+          target.userinfo = relative3.userinfo;
+          target.host = relative3.host;
+          target.port = relative3.port;
+          target.path = removeDotSegments(relative3.path || "");
+          target.query = relative3.query;
         } else {
-          if (!relative2.path) {
+          if (!relative3.path) {
             target.path = base.path;
-            if (relative2.query !== void 0) {
-              target.query = relative2.query;
+            if (relative3.query !== void 0) {
+              target.query = relative3.query;
             } else {
               target.query = base.query;
             }
           } else {
-            if (relative2.path[0] === "/") {
-              target.path = removeDotSegments(relative2.path);
+            if (relative3.path[0] === "/") {
+              target.path = removeDotSegments(relative3.path);
             } else {
               const baseHasAuthority = base.userinfo !== void 0 || base.host !== void 0 || base.port !== void 0;
               if (baseHasAuthority && !base.path) {
-                target.path = "/" + relative2.path;
+                target.path = "/" + relative3.path;
               } else if (!base.path) {
-                target.path = relative2.path;
+                target.path = relative3.path;
               } else {
-                target.path = base.path.slice(0, base.path.lastIndexOf("/") + 1) + relative2.path;
+                target.path = base.path.slice(0, base.path.lastIndexOf("/") + 1) + relative3.path;
               }
               target.path = base.scheme === void 0 && !baseHasAuthority && target.path[0] !== "/" ? removeDotSegmentsRelative(target.path) : removeDotSegments(target.path);
             }
-            target.query = relative2.query;
+            target.query = relative3.query;
           }
           target.userinfo = base.userinfo;
           target.host = base.host;
@@ -3971,7 +3971,7 @@ var require_fast_uri = __commonJS({
         }
         target.scheme = base.scheme;
       }
-      target.fragment = relative2.fragment;
+      target.fragment = relative3.fragment;
       return target;
     }
     function equal(uriA, uriB, options) {
@@ -4275,7 +4275,7 @@ var require_fast_uri = __commonJS({
     var fastUri = {
       SCHEMES,
       normalize,
-      resolve: resolve9,
+      resolve: resolve10,
       resolveComponent,
       equal,
       serialize,
@@ -7264,6 +7264,185 @@ var require_dist = __commonJS({
   }
 });
 
+// src/config.ts
+import { spawnSync } from "node:child_process";
+import { existsSync, readdirSync, statSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import * as os from "node:os";
+import * as path from "node:path";
+function findPackageRoot(startDir) {
+  let dir = startDir;
+  for (; ; ) {
+    if (existsSync(path.join(dir, "package.json"))) return dir;
+    const parent = path.dirname(dir);
+    if (parent === dir) {
+      throw new Error(`mcp-aftereffects: no package.json found above ${startDir}`);
+    }
+    dir = parent;
+  }
+}
+function resolveRuntimeDir() {
+  const override = process.env.AE_MCP_RUNTIME_DIR?.trim();
+  return override ? path.resolve(override) : DEFAULT_RUNTIME_DIR;
+}
+function requestPathFor(id) {
+  return path.join(RUNTIME_DIR, `${REQUEST_PREFIX}${id}.json`);
+}
+function responsePathFor(id) {
+  return path.join(RUNTIME_DIR, `${RESPONSE_PREFIX}${id}.json`);
+}
+function rejectedOutputPath(outPath) {
+  const abs = path.resolve(outPath);
+  const roots = [path.resolve(RUNTIME_DIR), path.resolve(RUNTIME_ROOT)];
+  for (const root of roots) {
+    const rel = path.relative(root, abs);
+    const inside = rel === "" || !rel.startsWith("..") && !path.isAbsolute(rel);
+    if (inside) {
+      return `refusing to write inside the mcp-aftereffects IPC mailbox (${root}). That directory is the transport's trust boundary \u2014 pick a path outside it.`;
+    }
+  }
+  return null;
+}
+function looseWriteScope(dir) {
+  if (process.platform === "win32") return null;
+  let mode;
+  try {
+    mode = statSync(dir).mode;
+  } catch {
+    return null;
+  }
+  if ((mode & 18) === 0) return null;
+  return { scope: (mode & 2) !== 0 ? "world" : "group", mode: mode & 511 };
+}
+function unsafeRuntimeDirWarning(dir = RUNTIME_DIR) {
+  const loose = looseWriteScope(dir);
+  if (loose === null) return null;
+  return `mailbox ${dir} is ${loose.scope}-writable (mode ${loose.mode.toString(8)}). Any local account that can write there can execute code inside After Effects. Fix with: chmod 700 ${JSON.stringify(dir)} \u2014 or unset AE_MCP_RUNTIME_DIR to use the per-user default.`;
+}
+function unsafePointerDirWarning(dir = RUNTIME_ROOT) {
+  const loose = looseWriteScope(dir);
+  if (loose === null) return null;
+  return `mailbox pointer directory ${dir} is ${loose.scope}-writable (mode ${loose.mode.toString(8)}). It holds ${path.basename(RUNTIME_POINTER_PATH)}, which the dispatcher follows to locate the mailbox, so any local account that can write there can point After Effects at a mailbox of its own. Fix with: chmod 700 ${JSON.stringify(dir)}`;
+}
+function uncheckedMailboxAclWarning(platform = process.platform) {
+  if (platform !== "win32" || !RUNTIME_DIR_IS_CUSTOM) return null;
+  return `mailbox ${RUNTIME_DIR} comes from AE_MCP_RUNTIME_DIR and its Windows ACL is not verified here. Any account that can write there can execute code inside After Effects \u2014 keep the mailbox on a per-user path (not a shared, world-writable, or synced folder), or unset AE_MCP_RUNTIME_DIR to use the default under the per-user temp dir.`;
+}
+function runtimeDirWarnings() {
+  const warnings = [unsafeRuntimeDirWarning(RUNTIME_DIR)];
+  if (path.resolve(RUNTIME_DIR) !== path.resolve(RUNTIME_ROOT)) {
+    warnings.push(unsafePointerDirWarning(RUNTIME_ROOT));
+  }
+  warnings.push(uncheckedMailboxAclWarning());
+  return warnings.filter((w) => w !== null);
+}
+function runningAfterFxApps(psOutput) {
+  let text = psOutput;
+  if (text === void 0) {
+    const r = spawnSync("ps", ["-axo", "command="], { encoding: "utf8", timeout: 2e3 });
+    text = r.stdout ?? "";
+  }
+  const apps = /* @__PURE__ */ new Set();
+  for (const line of text.split("\n")) {
+    const m = AE_APP_IN_PROCESS.exec(line.trim());
+    if (m?.[1]) apps.add(m[1]);
+  }
+  return [...apps];
+}
+function discoverAfterFxPaths(platform = process.platform, root = platform === "darwin" ? "/Applications" : "C:/Program Files/Adobe") {
+  let names;
+  try {
+    names = readdirSync(root);
+  } catch {
+    return [];
+  }
+  return names.map((name) => ({ name, year: AE_RELEASE_DIR.exec(name)?.[1] })).filter((e) => e.year !== void 0 && Number(e.year) >= MIN_AE_YEAR).sort((a, b) => Number(b.year) - Number(a.year)).map(({ name, year }) => platform === "darwin" ? path.join(root, name, `Adobe After Effects ${year}.app`) : path.join(root, name, "Support Files", "AfterFX.exe")).filter((candidate) => existsSync(candidate));
+}
+function resolveAfterFxPath(platform = process.platform, root, running = () => platform === "darwin" ? runningAfterFxApps() : []) {
+  for (const env of [process.env.AE_MCP_EXE, process.env.AE_EXE]) {
+    if (env && existsSync(env)) return env;
+  }
+  const discovered = discoverAfterFxPaths(platform, root);
+  const yearOf = (p) => Number(/Adobe After Effects (\d{4})/.exec(p)?.[1]);
+  const live = running().filter((app) => existsSync(app));
+  const supported = SUPPORTED_AE_YEARS.flatMap((y) => discovered.filter((p) => yearOf(p) === y));
+  const ordered = [...live, ...supported, ...discovered];
+  if (ordered.length) return ordered[0];
+  const candidates = platform === "darwin" ? DEFAULT_AE_PATHS_DARWIN : DEFAULT_AE_PATHS_WIN32;
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) return candidate;
+  }
+  throw new Error(
+    platform === "darwin" ? 'Could not locate After Effects. Set the AE_MCP_EXE env var to the .app bundle, e.g. "/Applications/Adobe After Effects 2026/Adobe After Effects 2026.app"' : 'Could not locate AfterFX.exe. Set the AE_MCP_EXE env var to the full path, e.g. "C:/Program Files/Adobe/Adobe After Effects 2026/Support Files/AfterFX.exe"'
+  );
+}
+function instanceDirFor(id) {
+  return path.join(INSTANCES_DIR, id);
+}
+function sanitizeInstanceId(raw) {
+  if (raw === null || raw === void 0) return null;
+  let s = raw.trim();
+  if (s.length === 0) return null;
+  s = s.replace(/[^A-Za-z0-9._-]+/g, "-").replace(/^[-.]+|[-.]+$/g, "");
+  if (s.length > INSTANCE_ID_MAX_LENGTH) s = s.slice(0, INSTANCE_ID_MAX_LENGTH);
+  return s.length > 0 ? s : null;
+}
+function instanceTargetFromEnv(env = process.env) {
+  const value = env.AE_MCP_INSTANCE?.trim();
+  return value ? value : null;
+}
+var PACKAGE_ROOT, DISPATCHER_JSX, RUNTIME_ROOT, DEFAULT_RUNTIME_DIR, RUNTIME_POINTER_PATH, RUNTIME_DIR_MODE, RUNTIME_DIR, RUNTIME_DIR_IS_CUSTOM, REQUEST_PREFIX, RESPONSE_PREFIX, STALE_RUNTIME_FILE_MS, DEFAULT_AE_PATHS_WIN32, DEFAULT_AE_PATHS_DARWIN, AE_RELEASE_DIR, SUPPORTED_AE_YEARS, MIN_AE_YEAR, AE_APP_IN_PROCESS, DEFAULT_TIMEOUT_MS, POLL_INTERVAL_MS, BUSY_LOCK_PATH, BUSY_LOCK_STALE_MS, BUSY_LOCK_REFRESH_MS, RELAUNCH_UNCONSUMED_AFTER_MS, MAX_LAUNCH_ATTEMPTS, INSTANCES_DIRNAME, INSTANCES_DIR, HEARTBEAT_FILENAME, HEARTBEAT_STALE_MS, HEARTBEAT_BUSY_STALE_MS, INSTANCE_DIR_SWEEP_MS, LIVENESS_CHECK_MS, AGENT_JSX, AGENT_STUB_FILENAME, INSTANCE_ID_MAX_LENGTH, PHANTOM_LAUNCH_MS;
+var init_config = __esm({
+  "src/config.ts"() {
+    "use strict";
+    PACKAGE_ROOT = findPackageRoot(path.dirname(fileURLToPath(import.meta.url)));
+    DISPATCHER_JSX = path.join(PACKAGE_ROOT, "jsx", "dispatcher.jsx");
+    RUNTIME_ROOT = path.join(os.tmpdir(), "mcp-aftereffects");
+    DEFAULT_RUNTIME_DIR = path.join(RUNTIME_ROOT, "runtime");
+    RUNTIME_POINTER_PATH = path.join(RUNTIME_ROOT, "runtime-dir.txt");
+    RUNTIME_DIR_MODE = 448;
+    RUNTIME_DIR = resolveRuntimeDir();
+    RUNTIME_DIR_IS_CUSTOM = path.resolve(RUNTIME_DIR) !== path.resolve(DEFAULT_RUNTIME_DIR);
+    REQUEST_PREFIX = "request-";
+    RESPONSE_PREFIX = "response-";
+    STALE_RUNTIME_FILE_MS = 60 * 60 * 1e3;
+    DEFAULT_AE_PATHS_WIN32 = [
+      "C:/Program Files/Adobe/Adobe After Effects 2027/Support Files/AfterFX.exe",
+      "C:/Program Files/Adobe/Adobe After Effects 2026/Support Files/AfterFX.exe",
+      "C:/Program Files/Adobe/Adobe After Effects 2025/Support Files/AfterFX.exe",
+      "C:/Program Files/Adobe/Adobe After Effects 2024/Support Files/AfterFX.exe"
+    ];
+    DEFAULT_AE_PATHS_DARWIN = [
+      "/Applications/Adobe After Effects 2027/Adobe After Effects 2027.app",
+      "/Applications/Adobe After Effects 2026/Adobe After Effects 2026.app",
+      "/Applications/Adobe After Effects 2025/Adobe After Effects 2025.app",
+      "/Applications/Adobe After Effects 2024/Adobe After Effects 2024.app"
+    ];
+    AE_RELEASE_DIR = /^Adobe After Effects (\d{4})$/;
+    SUPPORTED_AE_YEARS = [2027, 2026, 2025, 2024];
+    MIN_AE_YEAR = 2024;
+    AE_APP_IN_PROCESS = /^(.*\/Adobe After Effects \d{4}\.app)\/Contents\/MacOS\/After Effects(?:\s|$)/;
+    DEFAULT_TIMEOUT_MS = 6e4;
+    POLL_INTERVAL_MS = 80;
+    BUSY_LOCK_PATH = path.join(RUNTIME_DIR, "dispatcher-busy.lock");
+    BUSY_LOCK_STALE_MS = 9e4;
+    BUSY_LOCK_REFRESH_MS = 15e3;
+    RELAUNCH_UNCONSUMED_AFTER_MS = 2500;
+    MAX_LAUNCH_ATTEMPTS = 3;
+    INSTANCES_DIRNAME = "instances";
+    INSTANCES_DIR = path.join(RUNTIME_DIR, INSTANCES_DIRNAME);
+    HEARTBEAT_FILENAME = "heartbeat.json";
+    HEARTBEAT_STALE_MS = 5e3;
+    HEARTBEAT_BUSY_STALE_MS = 15 * 6e4;
+    INSTANCE_DIR_SWEEP_MS = STALE_RUNTIME_FILE_MS;
+    LIVENESS_CHECK_MS = 1e3;
+    AGENT_JSX = path.join(PACKAGE_ROOT, "jsx", "agent.jsx");
+    AGENT_STUB_FILENAME = "mcp-aftereffects-agent.jsx";
+    INSTANCE_ID_MAX_LENGTH = 64;
+    PHANTOM_LAUNCH_MS = 4e3;
+  }
+});
+
 // src/registry.ts
 function registerOp(op) {
   if (op.appConfig && !op.params.some((p) => p.name === APP_CONFIG_CONFIRM_PARAM.name)) {
@@ -7285,6 +7464,13 @@ function listOps(category) {
 }
 function wantsUndoGroup(op, args) {
   return op.undoGroup ? op.undoGroup(args) : true;
+}
+function wantsRollback(op, args) {
+  if (!wantsUndoGroup(op, args)) return false;
+  return op.rollback ? op.rollback(args) : !op.readOnly;
+}
+function prepareOp(op, args) {
+  return op.prepare ? op.prepare(args) : { ok: true, args };
 }
 function wantsDialogSuppression(op, args) {
   return op.suppressDialogs ? op.suppressDialogs(args) : true;
@@ -7360,19 +7546,132 @@ var init_registry = __esm({
 
 // src/operations/eval.ts
 var eval_exports = {};
+__export(eval_exports, {
+  MAX_SCRIPT_ARGS_BYTES: () => MAX_SCRIPT_ARGS_BYTES,
+  MAX_SCRIPT_FILE_BYTES: () => MAX_SCRIPT_FILE_BYTES,
+  readScriptFile: () => readScriptFile
+});
+import { readFileSync, realpathSync, statSync as statSync2 } from "node:fs";
+import * as path7 from "node:path";
+function realOrResolved(p) {
+  try {
+    return realpathSync(p);
+  } catch {
+    return path7.resolve(p);
+  }
+}
+function isInside(p, root) {
+  const rel = path7.relative(root, p);
+  return rel === "" || !rel.startsWith("..") && !path7.isAbsolute(rel);
+}
+function refuse(error62, hint) {
+  return hint ? { ok: false, error: error62, hint } : { ok: false, error: error62 };
+}
+function readScriptFile(file2) {
+  if (!path7.isAbsolute(file2)) {
+    return {
+      ok: false,
+      error: `file must be an absolute path (got '${file2}'): the server's working directory is not yours`
+    };
+  }
+  let stat;
+  try {
+    stat = statSync2(file2);
+  } catch (err) {
+    const code = err.code;
+    return code === "ENOENT" || code === "ENOTDIR" ? { ok: false, error: `script file ${file2} does not exist` } : { ok: false, error: `cannot read script file ${file2}: ${err.message}` };
+  }
+  if (!stat.isFile()) return { ok: false, error: `${file2} is not a file` };
+  if (stat.size === 0) return { ok: false, error: `script file ${file2} is empty` };
+  if (stat.size > MAX_SCRIPT_FILE_BYTES) {
+    return {
+      ok: false,
+      error: `script file ${file2} is too large (${stat.size} bytes; the limit is ${MAX_SCRIPT_FILE_BYTES})`,
+      hint: "Split it, or move bulk data out of the code into a file the script reads itself."
+    };
+  }
+  const real = realOrResolved(file2);
+  for (const root of [RUNTIME_DIR, RUNTIME_ROOT]) {
+    if (isInside(real, realOrResolved(root))) {
+      return {
+        ok: false,
+        error: `refusing to run a script from inside the plugin's mailbox (${root})`,
+        hint: "Keep scripts somewhere of your own; the mailbox only carries the plugin's requests."
+      };
+    }
+  }
+  let text;
+  try {
+    text = readFileSync(real, "utf8");
+  } catch (err) {
+    return { ok: false, error: `cannot read script file ${file2}: ${err.message}` };
+  }
+  if (text.indexOf("\0") !== -1) {
+    return { ok: false, error: `script file ${file2} looks binary (it contains NUL bytes); eval.run takes ExtendScript source` };
+  }
+  if (text.charCodeAt(0) === 65279) text = text.slice(1);
+  text = text.replace(/\r\n?/g, "\n");
+  return { ok: true, code: text };
+}
+var MAX_SCRIPT_FILE_BYTES, MAX_SCRIPT_ARGS_BYTES;
 var init_eval = __esm({
   "src/operations/eval.ts"() {
     "use strict";
+    init_config();
     init_registry();
+    MAX_SCRIPT_FILE_BYTES = 1024 * 1024;
+    MAX_SCRIPT_ARGS_BYTES = 1024 * 1024;
     registerOp({
       name: "eval.run",
       category: "eval",
-      description: "Execute custom ExtendScript (ES3). LAST RESORT \u2014 check ae_catalog first for a dedicated operation. Code is a function body ending with `return <JSON-serializable>;`. AE.* helpers are in scope. `log(msg)` pushes breadcrumbs. The code already runs inside an automatic undo group (one Ctrl+Z reverts the call) \u2014 do NOT call app.beginUndoGroup/endUndoGroup yourself; an unbalanced group leaks past this call and corrupts undo for the whole session. Do NOT undo/redo from here either (app.executeCommand 16/2035): inside this call's group AE resolves them against it, so nothing is reverted \u2014 use the project.undo operation, which runs outside the group. Do NOT close/open/replace the project from here (app.open, app.newProject, app.project.close): the open undo group is orphaned at the project boundary, AE raises an async 'UndoGroup Mismatch' dialog, and undo stays broken for the session \u2014 use project.open / project.new, which run outside the group.",
+      description: "Execute custom ExtendScript (ES3). LAST RESORT \u2014 check ae_catalog first for a dedicated operation. Pass the code inline as `code`, or as a script `file` (an absolute path; read and checked before After Effects is contacted) \u2014 exactly one of the two. Code is a function body ending with `return <JSON-serializable>;`. AE.* helpers are in scope, and `args` holds the optional `args` value you pass (null when omitted). `log(msg)` pushes breadcrumbs. An error reports the line in YOUR code (or file:line), not in the plugin's wrapper. The code already runs inside an automatic undo group (one Ctrl+Z reverts the call). If it THROWS, the call is rolled back before the error is returned \u2014 its changes are undone with dialogs suppressed, and details.rollback says whether that succeeded and what is left if not; returning { ok: false } is not a throw and is not rolled back. Pass rollback: false for deliberately incremental work whose partial result you want to keep. Do NOT call app.beginUndoGroup/endUndoGroup yourself; an unbalanced group leaks past this call and corrupts undo for the whole session (and defeats the rollback). Do NOT undo/redo from here either (app.executeCommand 16/2035): inside this call's group AE resolves them against it, so nothing is reverted \u2014 use project.undo / project.redo, which run outside the group. Do NOT close/open/replace the project from here (app.open, app.newProject, app.project.close): the open undo group is orphaned at the project boundary, AE raises an async 'UndoGroup Mismatch' dialog, and undo stays broken for the session \u2014 use project.open / project.new, which run outside the group.",
       params: [
-        { name: "code", type: "string", description: "ExtendScript function body", required: true }
+        {
+          name: "code",
+          type: "string",
+          description: "ExtendScript function body. Give this or `file`, not both.",
+          required: false
+        },
+        {
+          name: "file",
+          type: "string",
+          description: "Absolute path to a script file holding the function body (UTF-8, at most 1 MiB, not inside the plugin's mailbox). Give this or `code`, not both.",
+          required: false
+        },
+        {
+          name: "args",
+          type: "any",
+          description: "Any JSON value, available to the code as `args` (null when omitted).",
+          required: false
+        },
+        {
+          name: "rollback",
+          type: "boolean",
+          description: "Default true: if the code throws, undo the call's changes before returning the error. false keeps the partial result.",
+          required: false
+        }
       ],
+      rollback: (args) => args.rollback !== false,
+      prepare(args) {
+        const hasCode = typeof args.code === "string";
+        const hasFile = typeof args.file === "string";
+        if (hasCode === hasFile) {
+          return refuse("give either `code` (inline ExtendScript) or `file` (an absolute path to a script), not both and not neither");
+        }
+        if (args.args !== void 0) {
+          const size = Buffer.byteLength(JSON.stringify(args.args) ?? "null", "utf8");
+          if (size > MAX_SCRIPT_ARGS_BYTES) {
+            return refuse(`args is too large (${size} bytes serialized; the limit is ${MAX_SCRIPT_ARGS_BYTES})`);
+          }
+        }
+        if (!hasFile) return { ok: true, args };
+        const file2 = String(args.file);
+        const read = readScriptFile(file2);
+        if (!read.ok) return refuse(read.error, read.hint);
+        return { ok: true, args: { ...args, code: read.code }, source: { file: file2 } };
+      },
       toJsx(args) {
-        return String(args.code);
+        return `var args = ${jsxVal(args.args)}; ${String(args.code)}`;
       }
     });
   }
@@ -7755,8 +8054,8 @@ function getErrorMap() {
 
 // node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path12, errorMaps, issueData } = params;
-  const fullPath = [...path12, ...issueData.path || []];
+  const { data, path: path13, errorMaps, issueData } = params;
+  const fullPath = [...path13, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -7871,11 +8170,11 @@ var errorUtil;
 
 // node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path12, key) {
+  constructor(parent, value, path13, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path12;
+    this._path = path13;
     this._key = key;
   }
   get path() {
@@ -11830,10 +12129,10 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path12) {
-  if (!path12)
+function getElementAtPath(obj, path13) {
+  if (!path13)
     return obj;
-  return path12.reduce((acc, key) => acc?.[key], obj);
+  return path13.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -12173,11 +12472,11 @@ function explicitlyAborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path12, issues) {
+function prefixIssues(path13, issues) {
   return issues.map((iss) => {
     var _a3;
     (_a3 = iss).path ?? (_a3.path = []);
-    iss.path.unshift(path12);
+    iss.path.unshift(path13);
     return iss;
   });
 }
@@ -12639,16 +12938,16 @@ function flattenError(error62, mapper = (issue2) => issue2.message) {
 }
 function formatError(error62, mapper = (issue2) => issue2.message) {
   const fieldErrors = { _errors: [] };
-  const processError = (error63, path12 = []) => {
+  const processError = (error63, path13 = []) => {
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path12, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path13, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path12, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path13, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path12, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path13, ...issue2.path]);
       } else {
-        const fullpath = [...path12, ...issue2.path];
+        const fullpath = [...path13, ...issue2.path];
         if (fullpath.length === 0) {
           fieldErrors._errors.push(mapper(issue2));
         } else {
@@ -12687,17 +12986,17 @@ function formatError(error62, mapper = (issue2) => issue2.message) {
 }
 function treeifyError(error62, mapper = (issue2) => issue2.message) {
   const result = { errors: [] };
-  const processError = (error63, path12 = []) => {
+  const processError = (error63, path13 = []) => {
     var _a3;
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path12, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path13, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path12, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path13, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path12, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path13, ...issue2.path]);
       } else {
-        const fullpath = [...path12, ...issue2.path];
+        const fullpath = [...path13, ...issue2.path];
         if (fullpath.length === 0) {
           result.errors.push(mapper(issue2));
           continue;
@@ -12736,8 +13035,8 @@ function treeifyError(error62, mapper = (issue2) => issue2.message) {
 }
 function toDotPath(_path) {
   const segs = [];
-  const path12 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
-  for (const seg of path12) {
+  const path13 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
+  for (const seg of path13) {
     if (typeof seg === "number")
       segs.push(`[${seg}]`);
     else if (typeof seg === "symbol")
@@ -16080,7 +16379,7 @@ var recursive = /* @__PURE__ */ new WeakMap();
 var NONE = 0;
 var ASSUMED = 1;
 var PROVEN = 2;
-function isRecursive(inst, stack, resolve9) {
+function isRecursive(inst, stack, resolve10) {
   const cached2 = recursive.get(inst);
   if (cached2 !== void 0)
     return cached2 ? PROVEN : NONE;
@@ -16090,7 +16389,7 @@ function isRecursive(inst, stack, resolve9) {
   let result = NONE;
   const check2 = (child) => {
     if (result !== PROVEN && child?._zod) {
-      const answer = isRecursive(child, stack, resolve9);
+      const answer = isRecursive(child, stack, resolve10);
       if (answer > result)
         result = answer;
     }
@@ -16101,7 +16400,7 @@ function isRecursive(inst, stack, resolve9) {
       const desc = Object.getOwnPropertyDescriptor(sh, key);
       if (spread && !desc.enumerable)
         continue;
-      const child = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve9) : NONE;
+      const child = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve10) : NONE;
       if (child > answer)
         answer = child;
     }
@@ -16165,7 +16464,7 @@ function isRecursive(inst, stack, resolve9) {
       break;
     // `$ZodLazy` caches its inner on the def, so a resolved edge is followed exactly
     case "lazy": {
-      const inner = def._cachedInner ?? (resolve9 ? inst._zod.innerType : void 0);
+      const inner = def._cachedInner ?? (resolve10 ? inst._zod.innerType : void 0);
       merge2(inner ? isRecursive(inner, stack, false) : ASSUMED);
       break;
     }
@@ -28288,11 +28587,11 @@ function normalizeObjectSchema(schema) {
   }
   return void 0;
 }
-function getDotPath(path12) {
-  if (path12.length === 0) {
+function getDotPath(path13) {
+  if (path13.length === 0) {
     return "object root";
   }
-  return path12.reduce((acc, seg, index) => {
+  return path13.reduce((acc, seg, index) => {
     if (index === 0) {
       return String(seg);
     }
@@ -30519,13 +30818,13 @@ function resolveRef(ref, ctx) {
   if (!ref.startsWith("#")) {
     throw new Error("External $ref is not supported, only local refs (#/...) are allowed");
   }
-  const path12 = ref.slice(1).split("/").filter(Boolean);
-  if (path12.length === 0) {
+  const path13 = ref.slice(1).split("/").filter(Boolean);
+  if (path13.length === 0) {
     return ctx.rootSchema;
   }
   const defsKey = ctx.version === "draft-2020-12" ? "$defs" : "definitions";
-  if (path12[0] === defsKey) {
-    const key = path12[1] === void 0 ? void 0 : decodeJSONPointerSegment(path12[1]);
+  if (path13[0] === defsKey) {
+    const key = path13[1] === void 0 ? void 0 : decodeJSONPointerSegment(path13[1]);
     if (!key || !ctx.defs[key]) {
       throw new Error(`Reference not found: ${ref}`);
     }
@@ -34603,7 +34902,7 @@ var Protocol = class {
           return;
         }
         const pollInterval = task2.pollInterval ?? this._options?.defaultTaskPollInterval ?? 1e3;
-        await new Promise((resolve9) => setTimeout(resolve9, pollInterval));
+        await new Promise((resolve10) => setTimeout(resolve10, pollInterval));
         options?.signal?.throwIfAborted();
       }
     } catch (error62) {
@@ -34620,7 +34919,7 @@ var Protocol = class {
    */
   request(request, resultSchema, options) {
     const { relatedRequestId, resumptionToken, onresumptiontoken, task, relatedTask } = options ?? {};
-    return new Promise((resolve9, reject) => {
+    return new Promise((resolve10, reject) => {
       const earlyReject = (error62) => {
         reject(error62);
       };
@@ -34698,7 +34997,7 @@ var Protocol = class {
           if (!parseResult.success) {
             reject(parseResult.error);
           } else {
-            resolve9(parseResult.data);
+            resolve10(parseResult.data);
           }
         } catch (error62) {
           reject(error62);
@@ -34960,12 +35259,12 @@ var Protocol = class {
       }
     } catch {
     }
-    return new Promise((resolve9, reject) => {
+    return new Promise((resolve10, reject) => {
       if (signal.aborted) {
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
         return;
       }
-      const timeoutId = setTimeout(resolve9, interval);
+      const timeoutId = setTimeout(resolve10, interval);
       signal.addEventListener("abort", () => {
         clearTimeout(timeoutId);
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
@@ -36096,7 +36395,7 @@ var McpServer = class {
     let task = createTaskResult.task;
     const pollInterval = task.pollInterval ?? 5e3;
     while (task.status !== "completed" && task.status !== "failed" && task.status !== "cancelled") {
-      await new Promise((resolve9) => setTimeout(resolve9, pollInterval));
+      await new Promise((resolve10) => setTimeout(resolve10, pollInterval));
       const updatedTask = await extra.taskStore.getTask(taskId);
       if (!updatedTask) {
         throw new McpError(ErrorCode.InternalError, `Task ${taskId} not found during polling`);
@@ -36760,196 +37059,28 @@ var StdioServerTransport = class {
     this.onclose?.();
   }
   send(message) {
-    return new Promise((resolve9) => {
+    return new Promise((resolve10) => {
       const json2 = serializeMessage(message);
       if (this._stdout.write(json2)) {
-        resolve9();
+        resolve10();
       } else {
-        this._stdout.once("drain", resolve9);
+        this._stdout.once("drain", resolve10);
       }
     });
   }
 };
 
-// src/config.ts
-import { spawnSync } from "node:child_process";
-import { existsSync, readdirSync, statSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import * as os from "node:os";
-import * as path from "node:path";
-function findPackageRoot(startDir) {
-  let dir = startDir;
-  for (; ; ) {
-    if (existsSync(path.join(dir, "package.json"))) return dir;
-    const parent = path.dirname(dir);
-    if (parent === dir) {
-      throw new Error(`mcp-aftereffects: no package.json found above ${startDir}`);
-    }
-    dir = parent;
-  }
-}
-var PACKAGE_ROOT = findPackageRoot(path.dirname(fileURLToPath(import.meta.url)));
-var DISPATCHER_JSX = path.join(PACKAGE_ROOT, "jsx", "dispatcher.jsx");
-var RUNTIME_ROOT = path.join(os.tmpdir(), "mcp-aftereffects");
-var DEFAULT_RUNTIME_DIR = path.join(RUNTIME_ROOT, "runtime");
-var RUNTIME_POINTER_PATH = path.join(RUNTIME_ROOT, "runtime-dir.txt");
-var RUNTIME_DIR_MODE = 448;
-function resolveRuntimeDir() {
-  const override = process.env.AE_MCP_RUNTIME_DIR?.trim();
-  return override ? path.resolve(override) : DEFAULT_RUNTIME_DIR;
-}
-var RUNTIME_DIR = resolveRuntimeDir();
-var RUNTIME_DIR_IS_CUSTOM = path.resolve(RUNTIME_DIR) !== path.resolve(DEFAULT_RUNTIME_DIR);
-var REQUEST_PREFIX = "request-";
-var RESPONSE_PREFIX = "response-";
-function requestPathFor(id) {
-  return path.join(RUNTIME_DIR, `${REQUEST_PREFIX}${id}.json`);
-}
-function responsePathFor(id) {
-  return path.join(RUNTIME_DIR, `${RESPONSE_PREFIX}${id}.json`);
-}
-var STALE_RUNTIME_FILE_MS = 60 * 60 * 1e3;
-function rejectedOutputPath(outPath) {
-  const abs = path.resolve(outPath);
-  const roots = [path.resolve(RUNTIME_DIR), path.resolve(RUNTIME_ROOT)];
-  for (const root of roots) {
-    const rel = path.relative(root, abs);
-    const inside = rel === "" || !rel.startsWith("..") && !path.isAbsolute(rel);
-    if (inside) {
-      return `refusing to write inside the mcp-aftereffects IPC mailbox (${root}). That directory is the transport's trust boundary \u2014 pick a path outside it.`;
-    }
-  }
-  return null;
-}
-function looseWriteScope(dir) {
-  if (process.platform === "win32") return null;
-  let mode;
-  try {
-    mode = statSync(dir).mode;
-  } catch {
-    return null;
-  }
-  if ((mode & 18) === 0) return null;
-  return { scope: (mode & 2) !== 0 ? "world" : "group", mode: mode & 511 };
-}
-function unsafeRuntimeDirWarning(dir = RUNTIME_DIR) {
-  const loose = looseWriteScope(dir);
-  if (loose === null) return null;
-  return `mailbox ${dir} is ${loose.scope}-writable (mode ${loose.mode.toString(8)}). Any local account that can write there can execute code inside After Effects. Fix with: chmod 700 ${JSON.stringify(dir)} \u2014 or unset AE_MCP_RUNTIME_DIR to use the per-user default.`;
-}
-function unsafePointerDirWarning(dir = RUNTIME_ROOT) {
-  const loose = looseWriteScope(dir);
-  if (loose === null) return null;
-  return `mailbox pointer directory ${dir} is ${loose.scope}-writable (mode ${loose.mode.toString(8)}). It holds ${path.basename(RUNTIME_POINTER_PATH)}, which the dispatcher follows to locate the mailbox, so any local account that can write there can point After Effects at a mailbox of its own. Fix with: chmod 700 ${JSON.stringify(dir)}`;
-}
-function uncheckedMailboxAclWarning(platform = process.platform) {
-  if (platform !== "win32" || !RUNTIME_DIR_IS_CUSTOM) return null;
-  return `mailbox ${RUNTIME_DIR} comes from AE_MCP_RUNTIME_DIR and its Windows ACL is not verified here. Any account that can write there can execute code inside After Effects \u2014 keep the mailbox on a per-user path (not a shared, world-writable, or synced folder), or unset AE_MCP_RUNTIME_DIR to use the default under the per-user temp dir.`;
-}
-function runtimeDirWarnings() {
-  const warnings = [unsafeRuntimeDirWarning(RUNTIME_DIR)];
-  if (path.resolve(RUNTIME_DIR) !== path.resolve(RUNTIME_ROOT)) {
-    warnings.push(unsafePointerDirWarning(RUNTIME_ROOT));
-  }
-  warnings.push(uncheckedMailboxAclWarning());
-  return warnings.filter((w) => w !== null);
-}
-var DEFAULT_AE_PATHS_WIN32 = [
-  "C:/Program Files/Adobe/Adobe After Effects 2027/Support Files/AfterFX.exe",
-  "C:/Program Files/Adobe/Adobe After Effects 2026/Support Files/AfterFX.exe",
-  "C:/Program Files/Adobe/Adobe After Effects 2025/Support Files/AfterFX.exe",
-  "C:/Program Files/Adobe/Adobe After Effects 2024/Support Files/AfterFX.exe"
-];
-var DEFAULT_AE_PATHS_DARWIN = [
-  "/Applications/Adobe After Effects 2027/Adobe After Effects 2027.app",
-  "/Applications/Adobe After Effects 2026/Adobe After Effects 2026.app",
-  "/Applications/Adobe After Effects 2025/Adobe After Effects 2025.app",
-  "/Applications/Adobe After Effects 2024/Adobe After Effects 2024.app"
-];
-var AE_RELEASE_DIR = /^Adobe After Effects (\d{4})$/;
-var SUPPORTED_AE_YEARS = [2027, 2026, 2025, 2024];
-var MIN_AE_YEAR = 2024;
-var AE_APP_IN_PROCESS = /^(.*\/Adobe After Effects \d{4}\.app)\/Contents\/MacOS\/After Effects(?:\s|$)/;
-function runningAfterFxApps(psOutput) {
-  let text = psOutput;
-  if (text === void 0) {
-    const r = spawnSync("ps", ["-axo", "command="], { encoding: "utf8", timeout: 2e3 });
-    text = r.stdout ?? "";
-  }
-  const apps = /* @__PURE__ */ new Set();
-  for (const line of text.split("\n")) {
-    const m = AE_APP_IN_PROCESS.exec(line.trim());
-    if (m?.[1]) apps.add(m[1]);
-  }
-  return [...apps];
-}
-function discoverAfterFxPaths(platform = process.platform, root = platform === "darwin" ? "/Applications" : "C:/Program Files/Adobe") {
-  let names;
-  try {
-    names = readdirSync(root);
-  } catch {
-    return [];
-  }
-  return names.map((name) => ({ name, year: AE_RELEASE_DIR.exec(name)?.[1] })).filter((e) => e.year !== void 0 && Number(e.year) >= MIN_AE_YEAR).sort((a, b) => Number(b.year) - Number(a.year)).map(({ name, year }) => platform === "darwin" ? path.join(root, name, `Adobe After Effects ${year}.app`) : path.join(root, name, "Support Files", "AfterFX.exe")).filter((candidate) => existsSync(candidate));
-}
-function resolveAfterFxPath(platform = process.platform, root, running = () => platform === "darwin" ? runningAfterFxApps() : []) {
-  for (const env of [process.env.AE_MCP_EXE, process.env.AE_EXE]) {
-    if (env && existsSync(env)) return env;
-  }
-  const discovered = discoverAfterFxPaths(platform, root);
-  const yearOf = (p) => Number(/Adobe After Effects (\d{4})/.exec(p)?.[1]);
-  const live = running().filter((app) => existsSync(app));
-  const supported = SUPPORTED_AE_YEARS.flatMap((y) => discovered.filter((p) => yearOf(p) === y));
-  const ordered = [...live, ...supported, ...discovered];
-  if (ordered.length) return ordered[0];
-  const candidates = platform === "darwin" ? DEFAULT_AE_PATHS_DARWIN : DEFAULT_AE_PATHS_WIN32;
-  for (const candidate of candidates) {
-    if (existsSync(candidate)) return candidate;
-  }
-  throw new Error(
-    platform === "darwin" ? 'Could not locate After Effects. Set the AE_MCP_EXE env var to the .app bundle, e.g. "/Applications/Adobe After Effects 2026/Adobe After Effects 2026.app"' : 'Could not locate AfterFX.exe. Set the AE_MCP_EXE env var to the full path, e.g. "C:/Program Files/Adobe/Adobe After Effects 2026/Support Files/AfterFX.exe"'
-  );
-}
-var DEFAULT_TIMEOUT_MS = 6e4;
-var POLL_INTERVAL_MS = 80;
-var BUSY_LOCK_PATH = path.join(RUNTIME_DIR, "dispatcher-busy.lock");
-var BUSY_LOCK_STALE_MS = 9e4;
-var BUSY_LOCK_REFRESH_MS = 15e3;
-var RELAUNCH_UNCONSUMED_AFTER_MS = 2500;
-var MAX_LAUNCH_ATTEMPTS = 3;
-var INSTANCES_DIRNAME = "instances";
-var INSTANCES_DIR = path.join(RUNTIME_DIR, INSTANCES_DIRNAME);
-var HEARTBEAT_FILENAME = "heartbeat.json";
-function instanceDirFor(id) {
-  return path.join(INSTANCES_DIR, id);
-}
-var HEARTBEAT_STALE_MS = 5e3;
-var HEARTBEAT_BUSY_STALE_MS = 15 * 6e4;
-var INSTANCE_DIR_SWEEP_MS = STALE_RUNTIME_FILE_MS;
-var LIVENESS_CHECK_MS = 1e3;
-var AGENT_JSX = path.join(PACKAGE_ROOT, "jsx", "agent.jsx");
-var AGENT_STUB_FILENAME = "mcp-aftereffects-agent.jsx";
-var INSTANCE_ID_MAX_LENGTH = 64;
-function sanitizeInstanceId(raw) {
-  if (raw === null || raw === void 0) return null;
-  let s = raw.trim();
-  if (s.length === 0) return null;
-  s = s.replace(/[^A-Za-z0-9._-]+/g, "-").replace(/^[-.]+|[-.]+$/g, "");
-  if (s.length > INSTANCE_ID_MAX_LENGTH) s = s.slice(0, INSTANCE_ID_MAX_LENGTH);
-  return s.length > 0 ? s : null;
-}
-function instanceTargetFromEnv(env = process.env) {
-  const value = env.AE_MCP_INSTANCE?.trim();
-  return value ? value : null;
-}
-var PHANTOM_LAUNCH_MS = 4e3;
+// src/cli.ts
+init_config();
 
 // src/agent-install.ts
+init_config();
 import { promises as fs } from "node:fs";
 import * as os2 from "node:os";
 import * as path2 from "node:path";
 
 // src/transport/launcher.ts
+init_config();
 function jsxPath(p) {
   return `'${p.replace(/\\/g, "/").replace(/'/g, "\\'")}'`;
 }
@@ -37114,6 +37245,7 @@ async function uninstallAgent(opts = {}) {
 }
 
 // src/transport/instances.ts
+init_config();
 import { promises as fs2 } from "node:fs";
 import * as path3 from "node:path";
 function isAlive(heartbeat, now = Date.now()) {
@@ -37345,6 +37477,9 @@ async function runCli(argv, out = (line) => process.stdout.write(`${line}
   }
 }
 
+// src/index.ts
+init_config();
+
 // src/errors.ts
 var RETRYABLE = /* @__PURE__ */ new Set();
 function isRetryable(code) {
@@ -37437,6 +37572,7 @@ function policySummary() {
 }
 
 // src/transport/FileIpcTransport.ts
+init_config();
 import { spawn as nodeSpawn } from "node:child_process";
 import { mkdirSync, promises as fs3, unlinkSync, writeFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
@@ -37653,7 +37789,7 @@ if (mode === 'dismiss') {
 function encodeScript(script) {
   return Buffer.from(script, "utf16le").toString("base64");
 }
-var defaultRunner = (script, env) => new Promise((resolve9, reject) => {
+var defaultRunner = (script, env) => new Promise((resolve10, reject) => {
   execFile(
     "powershell.exe",
     [
@@ -37671,10 +37807,10 @@ var defaultRunner = (script, env) => new Promise((resolve9, reject) => {
       encoding: "utf8",
       maxBuffer: 1024 * 1024
     },
-    (err, stdout) => err ? reject(err) : resolve9(stdout)
+    (err, stdout) => err ? reject(err) : resolve10(stdout)
   );
 });
-var defaultOsascriptRunner = (script, env) => new Promise((resolve9, reject) => {
+var defaultOsascriptRunner = (script, env) => new Promise((resolve10, reject) => {
   execFile(
     "/usr/bin/osascript",
     ["-l", "JavaScript", "-e", script],
@@ -37684,7 +37820,7 @@ var defaultOsascriptRunner = (script, env) => new Promise((resolve9, reject) => 
       encoding: "utf8",
       maxBuffer: 1024 * 1024
     },
-    (err, stdout) => err ? reject(err) : resolve9(stdout)
+    (err, stdout) => err ? reject(err) : resolve10(stdout)
   );
 });
 var runner = defaultRunner;
@@ -37780,6 +37916,11 @@ function dialogHint(dialogs) {
 }
 
 // src/transport/FileIpcTransport.ts
+var REAP_INTERVAL_MS = 1e3;
+var EMPTY_TMP_GRACE_MS = 1e4;
+var UNCLAIMED_RESPONSE_GRACE_MS = 2e3;
+var ORPHAN_WATCH_MS = 30 * 6e4;
+var PICKED_UP_TIMEOUT_NOTE = "The most likely cause is a modal dialog in After Effects \u2014 an error box raised by the script (an undo raised one on 2026-11-10) or a warning \u2014 which blocks all scripting until a person clicks it; instance.dialogs may not list it, so look at the After Effects window. Once it is dismissed the script finishes and the plugin cleans up after it (busy lock, temp response).";
 var FileIpcTransport = class {
   afterFxPath = null;
   inflight = Promise.resolve();
@@ -37788,8 +37929,14 @@ var FileIpcTransport = class {
   instanceOption;
   spawnFn;
   scanDialogs;
+  reapIntervalMs;
+  emptyTmpGraceMs;
+  orphans = /* @__PURE__ */ new Map();
+  reapTimer = null;
   constructor(options = {}) {
     this.instanceOption = options.instance;
+    this.reapIntervalMs = options.reapIntervalMs ?? REAP_INTERVAL_MS;
+    this.emptyTmpGraceMs = options.emptyTmpGraceMs ?? EMPTY_TMP_GRACE_MS;
     this.spawnFn = options.spawn ?? ((command, args, opts) => nodeSpawn(command, args, opts));
     this.scanDialogs = options.scanDialogs ?? (() => scanAeDialogs());
     try {
@@ -37847,8 +37994,14 @@ var FileIpcTransport = class {
       release();
     }
   }
+  /** Stop watching for the leftovers of timed-out requests. */
+  async close() {
+    if (this.reapTimer !== null) clearInterval(this.reapTimer);
+    this.reapTimer = null;
+  }
   async executeOne(req) {
     const started = Date.now();
+    await this.reapOrphans();
     const timeoutMs = req.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     if (this.setupError !== null) {
       return failure2("TRANSPORT", this.setupError, {
@@ -37873,7 +38026,10 @@ var FileIpcTransport = class {
       // missing field to true, and "group this" must not depend on a key
       // surviving the trip.
       undoGroup: req.undoGroup !== false,
-      suppressDialogs: req.suppressDialogs !== false
+      suppressDialogs: req.suppressDialogs !== false,
+      // Explicit as well: a missing field means "no rollback" to serve.jsx,
+      // and rollback only ever applies inside an undo group.
+      rollback: req.undoGroup !== false && req.rollback === true
     };
     if (target.mode === "pull") {
       return this.executePull(request, target.instance, started, timeoutMs);
@@ -37910,6 +38066,7 @@ var FileIpcTransport = class {
           const current = await readInstance(dir, now);
           if (!current.alive) {
             const reclaimed2 = await this.safeUnlink(requestPath);
+            if (!reclaimed2) this.watchOrphan(request.id, dir);
             const outcome = reclaimed2 ? "the request was never picked up and has been discarded" : "the request disappeared before it could be reclaimed; the operation may have started";
             const dialogs = await this.scanDialogs();
             if (dialogs.length > 0) {
@@ -37933,12 +38090,13 @@ var FileIpcTransport = class {
       await sleep(POLL_INTERVAL_MS);
     }
     const reclaimed = await this.safeUnlink(requestPath);
-    const pullTimeoutMessage = `timeout after ${timeoutMs}ms waiting for After Effects instance '${instance.id}' to respond` + (reclaimed ? " (the request was never picked up and has been discarded)" : " (the request WAS picked up by the instance; the operation may still be running)");
+    if (!reclaimed) this.watchOrphan(request.id, dir);
+    const pullTimeoutMessage = `timeout after ${timeoutMs}ms waiting for After Effects instance '${instance.id}' to respond` + (reclaimed ? " (the request was never picked up and has been discarded)" : ` (the request WAS picked up by the instance; the operation may still be running). ${PICKED_UP_TIMEOUT_NOTE}`);
     const pullDialogs = await this.scanDialogs();
     if (pullDialogs.length > 0) return dialogFailure(pullDialogs, pullTimeoutMessage, started);
     return failure2("TIMEOUT", pullTimeoutMessage, {
       durationMs: Date.now() - started,
-      hint: "Is After Effects showing a modal dialog, or rendering/previewing? Scripts wait for both. For a long operation, raise timeoutMs."
+      hint: "Is After Effects showing a modal dialog, or rendering/previewing? Scripts wait for both. For a long operation, raise timeoutMs. Inspect the project before repeating a write."
     });
   }
   // --- Push: launch the dispatcher into the registered instance ---------------
@@ -38014,6 +38172,7 @@ var FileIpcTransport = class {
             if (dialogs.length > 0) {
               const reclaimed2 = await this.safeUnlink(requestPath);
               leaveLockForRunningScript = !reclaimed2;
+              if (!reclaimed2) this.watchOrphan(id, RUNTIME_DIR);
               return dialogFailure(
                 dialogs,
                 reclaimed2 ? `the request was never picked up after ${attempts} launch attempt${attempts === 1 ? "" : "s"} and has been discarded` : "the request disappeared before it could be reclaimed; the operation may have started",
@@ -38029,6 +38188,7 @@ var FileIpcTransport = class {
       }
       const reclaimed = await this.safeUnlink(requestPath);
       leaveLockForRunningScript = !reclaimed;
+      if (!reclaimed) this.watchOrphan(id, RUNTIME_DIR);
       const pushDialogs = await this.scanDialogs();
       if (pushDialogs.length > 0) {
         return dialogFailure(
@@ -38039,7 +38199,7 @@ var FileIpcTransport = class {
       }
       return failure2(
         "TIMEOUT",
-        `timeout after ${timeoutMs}ms waiting for After Effects to respond` + (reclaimed ? ` (the request was never picked up by AE after ${attempts} launch attempt${attempts === 1 ? "" : "s"} and has been discarded)` : " (the request WAS picked up by AE; the operation may still be running)"),
+        `timeout after ${timeoutMs}ms waiting for After Effects to respond` + (reclaimed ? ` (the request was never picked up by AE after ${attempts} launch attempt${attempts === 1 ? "" : "s"} and has been discarded)` : ` (the request WAS picked up by AE; the operation may still be running). ${PICKED_UP_TIMEOUT_NOTE}`),
         {
           durationMs: Date.now() - started,
           hint: "Is AE running with a project open? Is 'Allow Scripts to Write Files and Access Network' enabled? Is AE showing a modal dialog (e.g. 'Attempt was made to run a second script')? Dismiss it \u2014 scripting is blocked while it is open. " + (process.platform === "darwin" ? "Is your MCP client allowed to control After Effects (System Settings \u2192 Privacy & Security \u2192 Automation)? " : "") + "Do not repeat a write until you inspect the actual project state. Preserve unsaved work; do not force-quit AE as routine recovery."
@@ -38160,12 +38320,83 @@ var FileIpcTransport = class {
           const stat = await fs3.stat(BUSY_LOCK_PATH);
           if (Date.now() - stat.mtimeMs > BUSY_LOCK_STALE_MS) {
             await this.safeUnlink(BUSY_LOCK_PATH);
+          } else {
+            const holder = await this.lockHolder();
+            if (holder !== null && holder !== id && await this.requestFinished(holder, RUNTIME_DIR, true)) {
+              await this.safeUnlink(BUSY_LOCK_PATH);
+            }
           }
         } catch {
         }
         if (Date.now() >= deadline) return false;
         await sleep(POLL_INTERVAL_MS);
       }
+    }
+  }
+  /** Id recorded in the busy lock, or null when there is none or it is unreadable. */
+  async lockHolder() {
+    try {
+      const raw = await fs3.readFile(BUSY_LOCK_PATH, "utf8");
+      const holder = JSON.parse(raw).id;
+      return typeof holder === "string" ? holder : null;
+    } catch {
+      return null;
+    }
+  }
+  /**
+   * Has request `id` (served from `dir`) visibly finished? True when its
+   * response is there (and, for a request that is not ours, has sat unclaimed
+   * for UNCLAIMED_RESPONSE_GRACE_MS), or when all that is left is an empty
+   * tmp response untouched for emptyTmpGraceMs — which is then removed.
+   */
+  async requestFinished(id, dir, foreign) {
+    const responsePath = path4.join(dir, `${RESPONSE_PREFIX}${id}.json`);
+    try {
+      const stat = await fs3.stat(responsePath);
+      if (!foreign || Date.now() - stat.mtimeMs >= UNCLAIMED_RESPONSE_GRACE_MS) return true;
+    } catch {
+    }
+    const tmpPath = path4.join(dir, `.${RESPONSE_PREFIX}${id}.json.tmp`);
+    try {
+      const stat = await fs3.stat(tmpPath);
+      if (stat.size === 0 && Date.now() - stat.mtimeMs >= this.emptyTmpGraceMs) {
+        await this.safeUnlink(tmpPath);
+        return true;
+      }
+    } catch {
+    }
+    return false;
+  }
+  /** Watch the leftovers of a request that timed out after After Effects picked it up. */
+  watchOrphan(id, dir) {
+    this.orphans.set(id, { id, dir, watchUntil: Date.now() + ORPHAN_WATCH_MS });
+    if (this.reapTimer === null) {
+      this.reapTimer = setInterval(() => void this.reapOrphans(), this.reapIntervalMs);
+      this.reapTimer.unref?.();
+    }
+  }
+  /**
+   * For every watched request that has finished: remove its late response and
+   * tmp file (nobody is waiting for them any more) and release the busy lock
+   * if it is still the one that request held. Never throws.
+   */
+  async reapOrphans() {
+    for (const orphan of Array.from(this.orphans.values())) {
+      try {
+        if (await this.requestFinished(orphan.id, orphan.dir, false)) {
+          await this.safeUnlink(path4.join(orphan.dir, `${RESPONSE_PREFIX}${orphan.id}.json`));
+          await this.safeUnlink(path4.join(orphan.dir, `.${RESPONSE_PREFIX}${orphan.id}.json.tmp`));
+          await this.releaseBusyLock(orphan.id);
+          this.orphans.delete(orphan.id);
+        } else if (Date.now() > orphan.watchUntil) {
+          this.orphans.delete(orphan.id);
+        }
+      } catch {
+      }
+    }
+    if (this.orphans.size === 0 && this.reapTimer !== null) {
+      clearInterval(this.reapTimer);
+      this.reapTimer = null;
     }
   }
   /**
@@ -38230,7 +38461,8 @@ var FileIpcTransport = class {
         errorCode: null,
         stack: null,
         logs: parsed.logs ?? [],
-        durationMs
+        durationMs,
+        ...parsed.rollback ? { rollback: parsed.rollback } : {}
       };
     }
     const dispatchFailure = parsed.phase === "dispatch";
@@ -38242,7 +38474,8 @@ var FileIpcTransport = class {
       line: typeof parsed.line === "number" ? parsed.line : null,
       stack: parsed.stack,
       logs: parsed.logs ?? [],
-      durationMs
+      durationMs,
+      ...parsed.rollback ? { rollback: parsed.rollback } : {}
     };
   }
   async tryReadResponse(responsePath) {
@@ -38354,7 +38587,7 @@ function isAutomationDenial(message) {
   return /(?:-1743\b|not (?:authorized|permitted) to send apple events)/i.test(message);
 }
 function sleep(ms) {
-  return new Promise((resolve9) => setTimeout(resolve9, ms));
+  return new Promise((resolve10) => setTimeout(resolve10, ms));
 }
 function serializeRequest(request) {
   return JSON.stringify(request).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
@@ -41400,16 +41633,21 @@ function isUndoRedoCommandId(id) {
 registerOp({
   name: "command.execute",
   category: "command",
-  description: "Execute an AE menu command by its numeric ID. Use command.list to discover common IDs. Undo (16) and Redo (2035) run outside this call's undo group, so they revert/replay the PREVIOUS call.",
+  description: "Execute an AE menu command by its numeric ID. Use command.list to discover common IDs. Undo (16) and Redo (2035) run outside this call's undo group, so they revert/replay the PREVIOUS call; like project.undo / project.redo they run with dialogs suppressed and report any error After Effects raised.",
   params: [{ name: "id", type: "number", description: "Menu command ID", required: true }],
   // Undo/Redo must not be executed inside an open undo group — AE applies them
   // to that group and the requested step survives. Everything else groups
-  // normally, so one Ctrl+Z still reverts one call.
+  // normally, so one Ctrl+Z still reverts one call. Dialog suppression is on
+  // for every command, Undo/Redo included (see project.undo).
   undoGroup: (args) => !isUndoRedoCommandId(args.id),
-  // Same pair: dialog suppression opens an undo-transaction-like scope that
-  // Undo/Redo would resolve against, so they skip it too.
-  suppressDialogs: (args) => !isUndoRedoCommandId(args.id),
   toJsx(args) {
+    if (isUndoRedoCommandId(args.id)) {
+      return `
+            var _c = AE_MCP.undoRedo(${jsxVal(args.id)}, 1);
+            _c.commandId = ${jsxVal(args.id)};
+            return _c;
+        `;
+    }
     return `
             app.executeCommand(${jsxVal(args.id)});
             return { ok: true, commandId: ${jsxVal(args.id)} };
@@ -41588,7 +41826,7 @@ registerOp({
 registerOp({
   name: "project.undo",
   category: "project",
-  description: "Undo the last action. Equivalent to Ctrl+Z. Each prior ae_do call is ONE undo step (its automatic undo group), so count=1 reverts the whole previous call, batch included.",
+  description: "Undo the last action. Equivalent to Ctrl+Z. Each prior ae_do call is ONE undo step (its automatic undo group), so count=1 reverts the whole previous call, batch included. Runs with After Effects' dialogs suppressed (an undo once raised an error box that blocked all scripting until a person clicked it); the result's aeErrors and warning carry anything After Effects reported, and an undo that throws stops the loop and fails the call. A failed call that was rolled back already left no step of its own: do not undo again for it.",
   params: [
     {
       name: "count",
@@ -41602,14 +41840,36 @@ registerOp({
   // resolves each Undo against the group that is still open: the previous
   // call — the one the caller wants back — is never reverted, and the group
   // this call closes afterwards leaves the stack out of step with the project.
-  // Dialog suppression opens the same kind of scope, so it opts out of both.
+  // Dialog suppression stays ON (the default): see AE_MCP.undoRedo in
+  // jsx/serve.jsx and the stage 7 hand-over for what the live run must confirm.
   undoGroup: () => false,
-  suppressDialogs: () => false,
   toJsx(args) {
     return `
-            var n = ${jsxVal(args.count ?? 1)};
-            for (var i = 0; i < n; i++) app.executeCommand(${UNDO_COMMAND_ID});
-            return { ok: true, undone: n };
+            var _u = AE_MCP.undoRedo(${UNDO_COMMAND_ID}, ${jsxVal(args.count ?? 1)});
+            _u.undone = _u.done;
+            return _u;
+        `;
+  }
+});
+registerOp({
+  name: "project.redo",
+  category: "project",
+  description: "Redo the last undone action. Equivalent to Ctrl+Shift+Z. Runs like project.undo: outside the undo group, with dialogs suppressed, reporting any error After Effects raised (aeErrors, warning).",
+  params: [
+    {
+      name: "count",
+      type: "number",
+      description: "Number of redos (default 1)",
+      required: false,
+      default: 1
+    }
+  ],
+  undoGroup: () => false,
+  toJsx(args) {
+    return `
+            var _r = AE_MCP.undoRedo(${REDO_COMMAND_ID}, ${jsxVal(args.count ?? 1)});
+            _r.redone = _r.done;
+            return _r;
         `;
   }
 });
@@ -45085,7 +45345,7 @@ init_registry();
 registerOp({
   name: "batch.run",
   category: "batch",
-  description: "Execute multiple operations in a single IPC call (~400ms total instead of 400ms \xD7 N). Operations run sequentially inside ONE undo group \u2014 a single Ctrl+Z reverts the whole batch, however many ops it contained. That group is also why undo/redo children (project.undo, command.execute id 16/2035) are rejected here: call those as their own ae_do. If one fails, subsequent ops still run unless stopOnError. Results array matches input order; the response reports how many failed. Mix in read/verify children \u2014 comp.info, layer.info, render.frame \u2014 to mutate AND verify in the same call, e.g. [...mutations, { operation: 'render.frame', args: { \u2026 } }].",
+  description: "Execute multiple operations in a single IPC call (~400ms total instead of 400ms \xD7 N). Operations run sequentially inside ONE undo group \u2014 a single Ctrl+Z reverts the whole batch, however many ops it contained. That group is also why undo/redo children (project.undo, command.execute id 16/2035) are rejected here: call those as their own ae_do. If one fails, subsequent ops still run unless stopOnError. With stopOnError, a failure rolls the WHOLE batch back (one undo, issued before the response, reported in details.rollback) and still returns every child's result; pass rollback: false to keep the operations that ran before the failure instead \u2014 the result's `kept` says which. Without stopOnError nothing is rolled back: the other children's changes stand. Results array matches input order; the response reports how many failed. Mix in read/verify children \u2014 comp.info, layer.info, render.frame \u2014 to mutate AND verify in the same call, e.g. [...mutations, { operation: 'render.frame', args: { \u2026 } }].",
   params: [
     {
       name: "ops",
@@ -45096,13 +45356,22 @@ registerOp({
     {
       name: "stopOnError",
       type: "boolean",
-      description: "Stop executing remaining ops if one fails (default false)",
+      description: "Stop at the first failing op (default false). The batch is then rolled back as a whole unless rollback is false.",
+      required: false
+    },
+    {
+      name: "rollback",
+      type: "boolean",
+      description: "Default true. With stopOnError, revert the whole batch when an op fails, and revert it if the batch itself throws. false keeps whatever ran before the failure (for deliberately incremental work); the result's `kept` names it.",
       required: false
     }
   ],
   // The wrapper itself mutates nothing; each child is gated individually below,
   // so a batch of read-only operations stays usable under AE_MCP_READONLY.
   readOnly: true,
+  // The children mutate even though the wrapper is read-only, so batch.run
+  // decides its own rollback rather than taking the read-only default.
+  rollback: (args) => args.rollback !== false,
   toJsx(args) {
     if (!Array.isArray(args.ops)) {
       return `
@@ -45111,6 +45380,7 @@ registerOp({
     }
     const ops = args.ops;
     const stopOnError = !!args.stopOnError;
+    const rollback = args.rollback !== false;
     const opBlocks = [];
     for (let i = 0; i < ops.length; i++) {
       const entry = ops[i];
@@ -45153,17 +45423,22 @@ registerOp({
         );
         continue;
       }
-      const jsx = op.toJsx(validated.value);
+      const prepared = prepareOp(op, validated.value);
+      if (!prepared.ok) {
+        opBlocks.push(rejectBlock(i, `'${op.name}': ${prepared.error}`, stopOnError));
+        continue;
+      }
+      const jsx = op.toJsx(prepared.args);
       opBlocks.push(`
                 if (!_stopped) {
                     try {
                         var _r${i} = (function() { ${jsx} })();
-                        if (_r${i} && _r${i}.ok === false) { _failed++; ${stopOnError ? `_stopped = true;` : ""} }
+                        if (_r${i} && _r${i}.ok === false) { _failed++; ${stopOnError ? `_stopped = true; _stoppedAt = ${i};` : ""} }
                         _results.push(_r${i});
                     } catch(e) {
                         _failed++;
                         _results.push({ ok: false, error: AE.errText(e) });
-                        ${stopOnError ? "_stopped = true;" : ""}
+                        ${stopOnError ? `_stopped = true; _stoppedAt = ${i};` : ""}
                     }
                 } else {
                     _results.push({ skipped: true });
@@ -45174,13 +45449,33 @@ registerOp({
             var _results = [];
             var _failed = 0;
             var _stopped = false;
+            var _stoppedAt = -1;
             ${opBlocks.join("\n")}
+            var _kept = null;
+            var _rollbackRequested = false;
+            if (_stopped) {
+                if (${rollback ? "true" : "false"} && typeof __mcp !== "undefined" && __mcp && __mcp.requestRollback) {
+                    // serve.jsx reverts the whole request after this returns.
+                    __mcp.requestRollback("batch.run stopped at operation " + _stoppedAt);
+                    _rollbackRequested = true;
+                } else {
+                    if (_stoppedAt === 0) _kept = "nothing ran before it";
+                    else if (_stoppedAt === 1) _kept = "operation 0 ran and was kept";
+                    else _kept = "operations 0 to " + (_stoppedAt - 1) + " ran and were kept";
+                    _kept += "; operation " + _stoppedAt + " failed (any change it made before failing was kept too)" +
+                        "; the operations after it were skipped";
+                }
+            }
             return {
                 ok: _failed === 0,
-                error: _failed === 0 ? null : (_failed + " of " + _results.length + " operations failed"),
+                error: _failed === 0 ? null : (_failed + " of " + _results.length + " operations failed" +
+                    (_rollbackRequested ? "; the batch is being rolled back (stopOnError)" : "")),
                 results: _results,
                 count: _results.length,
-                failed: _failed
+                failed: _failed,
+                stoppedAt: _stopped ? _stoppedAt : null,
+                rollbackRequested: _rollbackRequested,
+                kept: _kept
             };
         `;
   }
@@ -45193,7 +45488,7 @@ function rejectBlock(index, message, stopOnError) {
                 if (!_stopped) {
                     _failed++;
                     _results.push({ ok: false, error: ${jsxVal(message)}, index: ${index} });
-                    ${stopOnError ? "_stopped = true;" : ""}
+                    ${stopOnError ? `_stopped = true; _stoppedAt = ${index};` : ""}
                 } else {
                     _results.push({ skipped: true });
                 }
@@ -46416,8 +46711,9 @@ registerOp({
 });
 
 // src/operations/inspect.ts
-import * as path5 from "node:path";
+init_config();
 init_registry();
+import * as path5 from "node:path";
 
 // src/operations/snippets.ts
 var COMP_INFO_FN = `
@@ -49056,6 +49352,7 @@ registerOp({
 import { spawn } from "node:child_process";
 import { promises as fs4 } from "node:fs";
 import * as path6 from "node:path";
+init_config();
 init_registry();
 var INSTALL_CMD = "npx @kumoproductions/mcp-aftereffects install-agent";
 var DEFAULT_START_TIMEOUT_MS = 12e4;
@@ -49068,7 +49365,7 @@ function nodeOnly(name) {
 function fail(error62, extra = {}) {
   return { ok: false, error: error62, ...extra };
 }
-var sleep2 = (ms) => new Promise((resolve9) => setTimeout(resolve9, ms));
+var sleep2 = (ms) => new Promise((resolve10) => setTimeout(resolve10, ms));
 function summarizeInstance(i) {
   return {
     label: instanceLabel(i),
@@ -49715,7 +50012,12 @@ var CODE = `
             "every ae_do / eval.run call is auto-wrapped in ONE undo group",
             "one Ctrl+Z (or project.undo) reverts the entire call; batch.run = one call = one undo step",
             "NEVER call app.beginUndoGroup/endUndoGroup in eval.run code \u2014 an unbalanced group corrupts undo for the session",
-            "undo/redo itself runs OUTSIDE the group: use project.undo (or command.execute 16/2035) as its own call \u2014 never inside batch.run, and never via eval.run",
+            "if a call that changes the project THROWS, its own changes are rolled back before the error is returned: a marker is added inside the still-open group, the group is closed and undone once with dialogs suppressed; details.rollback says whether it worked (rolledBack, verified) and what is left if not \u2014 never undo again for a call that was rolled back",
+            "a call that changed nothing is never followed by an undo (that would revert the user's previous action); read-only calls and calls outside the group (undo, redo, project open/new) are never rolled back",
+            "eval.run and batch.run take rollback: false to keep a partial result; batch.run with stopOnError rolls the whole batch back unless rollback: false, and without stopOnError nothing is rolled back",
+            "after a rollback, Redo would replay the failed call (and its marker folder): do not redo it",
+            "undo/redo itself runs OUTSIDE the group, with dialogs suppressed: use project.undo / project.redo (or command.execute 16/2035) as its own call \u2014 never inside batch.run, and never via eval.run; their result reports any error After Effects raised (aeErrors, warning)",
+            "a timeout AFTER the request was picked up most likely means a modal dialog in After Effects (instance.dialogs may not see it): look at the After Effects window before retrying",
             "ae_save_project and files written to disk (rendered PNGs, exported JSON) are NOT undoable"
         ]
     };
@@ -49755,7 +50057,7 @@ var CODE = `
 var contextTool = defineTool({
   name: "ae_context",
   title: "Session context",
-  description: "Ambient context: project state, active comp, selected layers, item list, AE.* helpers, ES3 rules, and the undo contract (every call = one auto undo group). Call at session start; then rely on ae_do response context.",
+  description: "Ambient context: project state, active comp, selected layers, item list, AE.* helpers, ES3 rules, and the undo contract (every call = one auto undo group; a call that throws is rolled back). Call at session start; then rely on ae_do response context.",
   group: "inspect",
   blockedInReadOnly: false,
   effect: "read",
@@ -49790,7 +50092,7 @@ init_registry();
 var doTool = defineTool({
   name: "ae_do",
   title: "Execute operation",
-  description: "Execute an atomic operation by name (from ae_catalog). Operations can create, change and delete project content; open, close, clear and save projects; render and write files; run After Effects menu commands; change After Effects preferences; start or stop After Effects instances; read and close dialogs that block scripting; and, through eval.run when enabled, run custom ExtendScript with the user's own access to After Effects, files and system commands. Arguments are validated against the operation's declared parameters before anything reaches AE. Have more than one operation to run? Wrap them in ONE batch.run instead of several ae_do calls \u2014 read/verify steps (comp.info, layer.info, render.frame) can ride in the same batch. Every call is automatically wrapped in ONE undo group: a single Ctrl+Z (or project.undo) reverts the entire call, and a batch.run counts as one call. Never call app.beginUndoGroup/endUndoGroup in eval.run code \u2014 the wrapper already did. The exception is undo/redo itself (project.undo, command.execute id 16/2035): those run outside the group and cannot ride inside a batch.run. Response includes ambient context (active comp, selected layers, project state) at zero extra round trips. Example: ae_do({ operation: 'keyframe.add', args: { comp: 'Main', layer: 1, property: ['Transform','Position'], time: 2, value: [960,540] } })",
+  description: "Execute an atomic operation by name (from ae_catalog). Operations can create, change and delete project content; open, close, clear and save projects; render and write files; run After Effects menu commands; change After Effects preferences; start or stop After Effects instances; read and close dialogs that block scripting; and, through eval.run when enabled, run custom ExtendScript with the user's own access to After Effects, files and system commands. Arguments are validated against the operation's declared parameters before anything reaches AE. Have more than one operation to run? Wrap them in ONE batch.run instead of several ae_do calls \u2014 read/verify steps (comp.info, layer.info, render.frame) can ride in the same batch. Every call is automatically wrapped in ONE undo group: a single Ctrl+Z (or project.undo) reverts the entire call, and a batch.run counts as one call. If a call that changes the project THROWS, its own changes are rolled back before the error is returned (one undo, with dialogs suppressed); details.rollback says whether that worked and what is left if not. eval.run and batch.run take rollback: false to keep a partial result. Never call app.beginUndoGroup/endUndoGroup in eval.run code \u2014 the wrapper already did. The exception is undo/redo itself (project.undo, project.redo, command.execute id 16/2035): those run outside the group, with dialogs suppressed, report any error After Effects raised, and cannot ride inside a batch.run. Response includes ambient context (active comp, selected layers, project state) at zero extra round trips. Example: ae_do({ operation: 'keyframe.add', args: { comp: 'Main', layer: 1, property: ['Transform','Position'], time: 2, value: [960,540] } })",
   group: "operations",
   // NOT withheld in read-only mode: ae_do is the only way to reach the
   // read-only operations, and withholding it would leave ae_catalog listing
@@ -49856,11 +50158,20 @@ var doTool = defineTool({
         hint: "Ask the user first if they have not explicitly requested this change."
       });
     }
+    const prepared = prepareOp(op, validated.value);
+    if (!prepared.ok) {
+      return errorResult("INVALID_ARGS", `invalid arguments for '${op.name}': ${prepared.error}`, {
+        details: { operation: op.name },
+        ...prepared.hint ? { hint: prepared.hint } : {}
+      });
+    }
+    const opArgs = prepared.args;
+    const sourceFile = prepared.source?.file ?? null;
     if (op.run) {
       const started = Date.now();
       let opResult2;
       try {
-        opResult2 = await op.run(validated.value, transport2);
+        opResult2 = await op.run(opArgs, transport2);
       } catch (err) {
         return errorResult(
           "TRANSPORT",
@@ -49888,7 +50199,7 @@ var doTool = defineTool({
         durationMs: Date.now() - started
       });
     }
-    const userJsx = op.toJsx(validated.value);
+    const userJsx = op.toJsx(opArgs);
     const wrappedCode = `
         var _opResult = (function() {
             ${userJsx}
@@ -49903,33 +50214,43 @@ var doTool = defineTool({
       // Undo/Redo opt out (Operation.undoGroup): they must reach AE with no
       // group open, or they resolve against this call's own group instead of
       // the previous call the caller means to revert.
-      undoGroup: wantsUndoGroup(op, validated.value),
-      // Undo/Redo also opt out of dialog suppression (Operation.suppressDialogs)
-      // — the suppression scope would swallow the undo the same way a group
-      // does. Project boundary ops keep suppression despite running ungrouped.
-      suppressDialogs: wantsDialogSuppression(op, validated.value),
+      undoGroup: wantsUndoGroup(op, opArgs),
+      // Undo/Redo now keep dialog suppression too: an undo once raised an
+      // After Effects error box that blocked all scripting until a person
+      // clicked it (2026-11-10). Operation.suppressDialogs can still opt out.
+      suppressDialogs: wantsDialogSuppression(op, opArgs),
+      // A throw inside the group is rolled back (Operation.rollback).
+      rollback: wantsRollback(op, opArgs),
       timeoutMs: doArgs.timeoutMs ?? 6e4
     });
     if (!result.ok) {
-      return errorResult(result.errorCode ?? "TRANSPORT", result.error ?? "unknown failure", {
+      const location = jsxErrorLocation(result.line, wrappedCode, wrapperLinesAboveUserJsx, op.name, {
+        userLines: countLines(userJsx) + 1,
+        file: sourceFile
+      });
+      const message = callerLineMessage(result.error ?? "unknown failure", result.line, location) + rollbackSentence(result.rollback);
+      return errorResult(result.errorCode ?? "TRANSPORT", message, {
         details: {
           operation: op.name,
-          ...jsxErrorLocation(result.line, wrappedCode, wrapperLinesAboveUserJsx, op.name),
+          ...location,
+          ...result.rollback ? { rollback: result.rollback } : {},
           ...result.dialogs?.length ? { dialogs: result.dialogs } : {}
         },
         stack: result.stack,
         logs: result.logs,
-        durationMs: result.durationMs,
-        ...typeof result.line === "number" && op.name === "eval.run" ? {
-          hint: "The '(line N)' in the message counts lines of the ASSEMBLED script, not your code \u2014 details.userCodeLine is the 1-based line in the code you passed, and details.codeExcerpt shows the failing spot."
-        } : {}
+        durationMs: result.durationMs
       });
     }
     const { result: opResult, context } = result.result;
     const reported = jsxReportedFailure(opResult);
     if (reported) {
-      return errorResult("OPERATION_FAILED", `${op.name}: ${reported.error}`, {
-        details: { operation: op.name, result: opResult, context },
+      return errorResult("OPERATION_FAILED", `${op.name}: ${reported.error}${rollbackSentence(result.rollback)}`, {
+        details: {
+          operation: op.name,
+          result: opResult,
+          context,
+          ...result.rollback ? { rollback: result.rollback } : {}
+        },
         logs: result.logs,
         durationMs: result.durationMs,
         ...isBatchShaped(opResult) ? {
@@ -49941,10 +50262,23 @@ var doTool = defineTool({
       result: opResult,
       context,
       logs: result.logs,
-      durationMs: result.durationMs
+      durationMs: result.durationMs,
+      ...result.rollback ? { rollback: result.rollback } : {}
     });
   }
 });
+function rollbackSentence(rb) {
+  if (!rb) return "";
+  const errors = rb.aeErrors?.length ? ` After Effects reported during the undo: ${rb.aeErrors.join(" | ")}.` : "";
+  if (rb.rolledBack) {
+    const checked = rb.verified === "signature" ? "checked against the project's items before the call" : rb.verified === "partial" ? "checked against the first 1000 items and the item count" : "checked by the rollback marker only";
+    return ` \u2014 Rolled back: the call's changes were undone before this error was returned (${checked}).${errors}`;
+  }
+  if (!rb.attempted) {
+    return ` \u2014 Not rolled back (${rb.reason ?? "no reason given"})${rb.left ? `: ${rb.left}` : ""}.${errors}`;
+  }
+  return ` \u2014 NOT rolled back: ${rb.reason ?? "the rollback could not be confirmed"}. Left: ${rb.left ?? "unknown \u2014 inspect the project"}.${errors}`;
+}
 function isBatchShaped(opResult) {
   if (opResult === null || typeof opResult !== "object") return false;
   return Array.isArray(opResult.results);
@@ -49955,12 +50289,22 @@ function countLines(text) {
   return n;
 }
 var NEW_FUNCTION_HEADER_LINES = 1;
-function jsxErrorLocation(line, wrappedCode, wrapperLinesAboveUserJsx, opName) {
+function jsxErrorLocation(line, wrappedCode, wrapperLinesAboveUserJsx, opName, source) {
   if (typeof line !== "number" || !Number.isFinite(line)) return {};
   const wrappedLine = line - NEW_FUNCTION_HEADER_LINES;
   const out = { errorLine: line };
   const userLine = wrappedLine - wrapperLinesAboveUserJsx;
-  if (opName === "eval.run" && userLine >= 1) out.userCodeLine = userLine;
+  if (opName === "eval.run") {
+    if (userLine >= 1 && userLine <= source.userLines) {
+      out.userCodeLine = userLine;
+      if (source.file !== null) {
+        out.file = source.file;
+        out.fileLine = userLine;
+      }
+    } else {
+      out.inWrapper = true;
+    }
+  }
   const lines = wrappedCode.split("\n");
   if (wrappedLine >= 1 && wrappedLine <= lines.length) {
     const from = Math.max(1, wrappedLine - 2);
@@ -49974,6 +50318,20 @@ function jsxErrorLocation(line, wrappedCode, wrapperLinesAboveUserJsx, opName) {
     out.codeExcerpt = excerpt.join("\n");
   }
   return out;
+}
+function callerLineMessage(message, line, location) {
+  if (typeof line !== "number") return message;
+  const raw = `(line ${line})`;
+  if (message.indexOf(raw) === -1) return message;
+  let replacement = null;
+  if (typeof location.fileLine === "number" && typeof location.file === "string") {
+    replacement = `(${location.file}:${location.fileLine})`;
+  } else if (typeof location.userCodeLine === "number") {
+    replacement = `(line ${location.userCodeLine} of your code)`;
+  } else if (location.inWrapper === true) {
+    replacement = `(line ${line} of the plugin's wrapper, not your code \u2014 see details.codeExcerpt)`;
+  }
+  return replacement === null ? message : message.replace(raw, replacement);
 }
 
 // src/tools/layer-info.ts
@@ -50046,7 +50404,8 @@ var layerInfoTool = defineTool({
 
 // src/tools/project-export.ts
 import { promises as fs5 } from "node:fs";
-import * as path7 from "node:path";
+import * as path8 from "node:path";
+init_config();
 var projectExportTool = defineTool({
   name: "ae_project_export_json",
   title: "Export project JSON",
@@ -50067,7 +50426,7 @@ var projectExportTool = defineTool({
       const rejection = rejectedOutputPath(args.outPath);
       if (rejection !== null) {
         return errorResult("IO", rejection, {
-          details: { outPath: path7.resolve(args.outPath) },
+          details: { outPath: path8.resolve(args.outPath) },
           hint: "Write the document somewhere outside the mailbox, or omit outPath to receive it inline."
         });
       }
@@ -50086,9 +50445,9 @@ var projectExportTool = defineTool({
     const pretty = args.pretty ?? !!args.outPath;
     const jsonText = JSON.stringify(doc, null, pretty ? 2 : 0);
     if (args.outPath) {
-      const abs = path7.resolve(args.outPath);
+      const abs = path8.resolve(args.outPath);
       try {
-        await fs5.mkdir(path7.dirname(abs), { recursive: true });
+        await fs5.mkdir(path8.dirname(abs), { recursive: true });
         await fs5.writeFile(abs, jsonText, "utf8");
       } catch (err) {
         return errorResult(
@@ -50121,7 +50480,7 @@ var projectExportTool = defineTool({
 
 // src/tools/project-import.ts
 import { promises as fs6 } from "node:fs";
-import * as path8 from "node:path";
+import * as path9 from "node:path";
 
 // src/schema.ts
 var SCHEMA_VERSION = 2;
@@ -50130,11 +50489,11 @@ var SCHEMA_VERSION = 2;
 var Validator = class {
   issues = [];
   warnings = [];
-  err(path12, message) {
-    this.issues.push({ path: path12, message });
+  err(path13, message) {
+    this.issues.push({ path: path13, message });
   }
-  warn(path12, message) {
-    this.warnings.push({ path: path12, message });
+  warn(path13, message) {
+    this.warnings.push({ path: path13, message });
   }
   isObject(v) {
     return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -50235,64 +50594,64 @@ function validateAeProjectDoc(doc) {
   }
   return { ok: v.issues.length === 0, issues: v.issues, warnings: v.warnings };
 }
-function validateLayer(v, path12, layer) {
+function validateLayer(v, path13, layer) {
   if (!v.isObject(layer)) {
-    v.err(path12, "not an object");
+    v.err(path13, "not an object");
     return;
   }
-  if (typeof layer.index !== "number") v.err(`${path12}.index`, "missing or not a number");
-  if (typeof layer.name !== "string") v.err(`${path12}.name`, "missing or not a string");
-  if (typeof layer.type !== "string") v.err(`${path12}.type`, "missing or not a string");
+  if (typeof layer.index !== "number") v.err(`${path13}.index`, "missing or not a number");
+  if (typeof layer.name !== "string") v.err(`${path13}.name`, "missing or not a string");
+  if (typeof layer.type !== "string") v.err(`${path13}.type`, "missing or not a string");
   else if (["AVLayer", "TextLayer", "ShapeLayer", "CameraLayer", "LightLayer", "Layer"].indexOf(
     layer.type
   ) === -1) {
-    v.warn(`${path12}.type`, `unknown layer type: ${layer.type}`);
+    v.warn(`${path13}.type`, `unknown layer type: ${layer.type}`);
   }
   if (layer.transformGroup)
-    validatePropertyGroup(v, `${path12}.transformGroup`, layer.transformGroup);
-  if (layer.effectsGroup) validatePropertyGroup(v, `${path12}.effectsGroup`, layer.effectsGroup);
-  if (layer.masksGroup) validatePropertyGroup(v, `${path12}.masksGroup`, layer.masksGroup);
-  if (layer.textGroup) validatePropertyGroup(v, `${path12}.textGroup`, layer.textGroup);
-  if (layer.contentsGroup) validatePropertyGroup(v, `${path12}.contentsGroup`, layer.contentsGroup);
-  if (layer.markers) validateProperty(v, `${path12}.markers`, layer.markers);
+    validatePropertyGroup(v, `${path13}.transformGroup`, layer.transformGroup);
+  if (layer.effectsGroup) validatePropertyGroup(v, `${path13}.effectsGroup`, layer.effectsGroup);
+  if (layer.masksGroup) validatePropertyGroup(v, `${path13}.masksGroup`, layer.masksGroup);
+  if (layer.textGroup) validatePropertyGroup(v, `${path13}.textGroup`, layer.textGroup);
+  if (layer.contentsGroup) validatePropertyGroup(v, `${path13}.contentsGroup`, layer.contentsGroup);
+  if (layer.markers) validateProperty(v, `${path13}.markers`, layer.markers);
   if (layer.timeRemapProperty)
-    validateProperty(v, `${path12}.timeRemapProperty`, layer.timeRemapProperty);
+    validateProperty(v, `${path13}.timeRemapProperty`, layer.timeRemapProperty);
 }
-function validatePropertyGroup(v, path12, group) {
+function validatePropertyGroup(v, path13, group) {
   if (!v.isObject(group)) {
-    v.err(path12, "not an object");
+    v.err(path13, "not an object");
     return;
   }
-  if (typeof group.matchName !== "string") v.err(`${path12}.matchName`, "missing or not a string");
+  if (typeof group.matchName !== "string") v.err(`${path13}.matchName`, "missing or not a string");
   if (Array.isArray(group.properties)) {
     for (let i = 0; i < group.properties.length; i++) {
-      validateProperty(v, `${path12}.properties[${i}]`, group.properties[i]);
+      validateProperty(v, `${path13}.properties[${i}]`, group.properties[i]);
     }
   }
   if (Array.isArray(group.groups)) {
     for (let i = 0; i < group.groups.length; i++) {
-      validatePropertyGroup(v, `${path12}.groups[${i}]`, group.groups[i]);
+      validatePropertyGroup(v, `${path13}.groups[${i}]`, group.groups[i]);
     }
   }
 }
-function validateProperty(v, path12, prop) {
+function validateProperty(v, path13, prop) {
   if (!v.isObject(prop)) {
-    v.err(path12, "not an object");
+    v.err(path13, "not an object");
     return;
   }
-  if (typeof prop.matchName !== "string") v.err(`${path12}.matchName`, "missing or not a string");
+  if (typeof prop.matchName !== "string") v.err(`${path13}.matchName`, "missing or not a string");
   if (Array.isArray(prop.keyframes)) {
     for (let i = 0; i < prop.keyframes.length; i++) {
-      validateKeyframe(v, `${path12}.keyframes[${i}]`, prop.keyframes[i]);
+      validateKeyframe(v, `${path13}.keyframes[${i}]`, prop.keyframes[i]);
     }
   }
 }
-function validateKeyframe(v, path12, kf) {
+function validateKeyframe(v, path13, kf) {
   if (!v.isObject(kf)) {
-    v.err(path12, "not an object");
+    v.err(path13, "not an object");
     return;
   }
-  if (typeof kf.time !== "number") v.err(`${path12}.time`, "missing or not a number");
+  if (typeof kf.time !== "number") v.err(`${path13}.time`, "missing or not a number");
 }
 
 // src/tools/project-import.ts
@@ -50321,7 +50680,7 @@ var projectImportTool = defineTool({
   handler: async (args, transport2) => {
     let doc;
     if (args.inPath) {
-      const abs = path8.resolve(args.inPath);
+      const abs = path9.resolve(args.inPath);
       try {
         doc = JSON.parse(await fs6.readFile(abs, "utf8"));
       } catch (err) {
@@ -50426,14 +50785,14 @@ var projectInfoTool = defineTool({
 
 // src/tools/render-frame.ts
 import { promises as fs9 } from "node:fs";
-import * as path10 from "node:path";
+import * as path11 from "node:path";
 
 // src/color/calibration.ts
 init_registry();
 import { randomUUID as randomUUID2 } from "node:crypto";
 import { promises as fs8 } from "node:fs";
 import * as os3 from "node:os";
-import * as path9 from "node:path";
+import * as path10 from "node:path";
 
 // src/color/png16.ts
 import * as zlib from "node:zlib";
@@ -50609,7 +50968,7 @@ function encodePngGray8(width, height, values) {
 // src/color/settled-read.ts
 import { promises as fs7 } from "node:fs";
 function sleep3(ms) {
-  return new Promise((resolve9) => setTimeout(resolve9, ms));
+  return new Promise((resolve10) => setTimeout(resolve10, ms));
 }
 async function readFileSettled(filePath, timeoutMs = 15e3, stableMs = 250) {
   const deadline = Date.now() + timeoutMs;
@@ -50671,7 +51030,7 @@ async function measureCaptureTransfer(transport2, key, allowRender = true) {
       error: "calibration needs a (transient, undo-grouped) render of a temporary comp, which read-only mode forbids"
     };
   }
-  const pngPath = path9.join(os3.tmpdir(), `mcp-ae-calib-${randomUUID2()}.png`).replace(/\\/g, "/");
+  const pngPath = path10.join(os3.tmpdir(), `mcp-ae-calib-${randomUUID2()}.png`).replace(/\\/g, "/");
   const code = `
         var _vals = ${jsxVal(CALIB_VALUES)};
         var _patch = ${jsxVal(PATCH)};
@@ -52239,6 +52598,7 @@ function profileForWorkingSpace(workingSpace) {
 }
 
 // src/tools/render-frame.ts
+init_config();
 init_registry();
 var MEASUREMENT_STAGES = {
   capture: "the PNG as saveFrameToPng wrote it, before any colour conversion: working-space values (scaled by AE's capture transfer in colour-managed projects), 8 or 16 bits. Its RGB is already laid over the comp background colour (`bgColor`): capture = colour\xB7alpha + bgColor\xB7(1 \u2212 alpha), so a half-covered pixel reads half background and an empty one reads bgColor; on a black background that is premultiplied colour. Alpha is the coverage AE wrote",
@@ -52412,16 +52772,16 @@ var renderFrameTool = defineTool({
     const rejection = rejectedOutputPath(args.outPath);
     if (rejection !== null) {
       return errorResult("IO", rejection, {
-        details: { outPath: path10.resolve(args.outPath) },
+        details: { outPath: path11.resolve(args.outPath) },
         hint: "Render to a path outside the mailbox."
       });
     }
-    const abs = path10.resolve(args.outPath).replace(/\\/g, "/");
+    const abs = path11.resolve(args.outPath).replace(/\\/g, "/");
     if (args.contactSheet?.outPath !== void 0) {
       const sheetRejection = rejectedOutputPath(args.contactSheet.outPath);
       if (sheetRejection !== null) {
         return errorResult("IO", sheetRejection, {
-          details: { outPath: path10.resolve(args.contactSheet.outPath) },
+          details: { outPath: path11.resolve(args.contactSheet.outPath) },
           hint: "Write the contact sheet to a path outside the mailbox."
         });
       }
@@ -52546,15 +52906,15 @@ function checkEyesOptions(args) {
   };
 }
 function sheetPathFor(abs, explicit) {
-  if (explicit !== void 0) return path10.resolve(explicit).replace(/\\/g, "/");
-  const ext = path10.extname(abs) || ".png";
-  const stem = abs.slice(0, abs.length - (path10.extname(abs).length || 0));
+  if (explicit !== void 0) return path11.resolve(explicit).replace(/\\/g, "/");
+  const ext = path11.extname(abs) || ".png";
+  const stem = abs.slice(0, abs.length - (path11.extname(abs).length || 0));
   return `${stem}_sheet${ext}`;
 }
 function framePaths(abs, count, multi) {
   if (!multi) return [abs];
-  const ext = path10.extname(abs) || ".png";
-  const stem = abs.slice(0, abs.length - (path10.extname(abs).length || 0));
+  const ext = path11.extname(abs) || ".png";
+  const stem = abs.slice(0, abs.length - (path11.extname(abs).length || 0));
   const out = [];
   for (let i = 0; i < count; i++) out.push(`${stem}_${i}${ext}`);
   return out;
@@ -52958,7 +53318,7 @@ async function attachContactSheet(payload, frames, images, sheetPath, opts) {
       thumbWidth: opts.thumbWidth,
       labels
     });
-    await fs9.mkdir(path10.dirname(sheetPath), { recursive: true });
+    await fs9.mkdir(path11.dirname(sheetPath), { recursive: true });
     await fs9.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
     payload.contactSheet = {
       writtenTo: sheetPath,
@@ -53179,9 +53539,10 @@ var ALL_TOOLS = [
 ].map((tool) => withInstanceParam(tool));
 
 // src/tools/library.ts
-import { readFileSync, realpathSync } from "node:fs";
-import path11 from "node:path";
+import { readFileSync as readFileSync2, realpathSync as realpathSync2 } from "node:fs";
+import path12 from "node:path";
 import { createHash } from "node:crypto";
+init_config();
 
 // src/tools/library-modules.ts
 function object3(value) {
@@ -53268,23 +53629,23 @@ function findModules(catalog, query) {
 }
 
 // src/tools/library.ts
-function boundedFile(base, relative2) {
-  const candidate = path11.resolve(base, relative2);
+function boundedFile(base, relative3) {
+  const candidate = path12.resolve(base, relative3);
   const inside = (file3) => {
-    const rel = path11.relative(base, file3);
-    if (!rel || rel === ".." || rel.startsWith(".." + path11.sep) || path11.isAbsolute(rel)) throw new Error("Library path escapes bundle");
+    const rel = path12.relative(base, file3);
+    if (!rel || rel === ".." || rel.startsWith(".." + path12.sep) || path12.isAbsolute(rel)) throw new Error("Library path escapes bundle");
   };
   inside(candidate);
-  const file2 = realpathSync(candidate);
+  const file2 = realpathSync2(candidate);
   inside(file2);
   return file2;
 }
-function readLibrary(document, query, root = path11.resolve(PACKAGE_ROOT, "../library")) {
-  const base = realpathSync(root);
-  const manifest = JSON.parse(readFileSync(boundedFile(base, "manifest.json"), "utf8"));
+function readLibrary(document, query, root = path12.resolve(PACKAGE_ROOT, "../library")) {
+  const base = realpathSync2(root);
+  const manifest = JSON.parse(readFileSync2(boundedFile(base, "manifest.json"), "utf8"));
   const entries = manifest.documents;
   const read = (entry2) => {
-    const content = readFileSync(boundedFile(base, entry2.path), "utf8");
+    const content = readFileSync2(boundedFile(base, entry2.path), "utf8");
     if (createHash("sha256").update(content).digest("hex") !== entry2.sha256) throw new Error("Library hash mismatch: regenerate manifest after intentional edits");
     return content;
   };
@@ -53295,7 +53656,7 @@ function readLibrary(document, query, root = path11.resolve(PACKAGE_ROOT, "../li
     if (catalogEntry) {
       try {
         const raw = JSON.parse(read(catalogEntry));
-        const sourceMap = JSON.parse(readFileSync(boundedFile(base, "source-map.json"), "utf8"));
+        const sourceMap = JSON.parse(readFileSync2(boundedFile(base, "source-map.json"), "utf8"));
         catalog = validateCatalog(raw, { documentIds: new Set(entries.map((e) => e.id)), provenanceIds: new Set((sourceMap.sources ?? []).map((s) => s.id).filter((id) => typeof id === "string")) });
       } catch (e) {
         throw new Error(`Module catalog: ${e instanceof Error ? e.message : String(e)}`);
@@ -53345,7 +53706,7 @@ var transport = new FileIpcTransport();
 var server = new McpServer({
   name: serverName ?? "after-effects-studio",
   version: version2
-}, { instructions: "Local native After Effects control with a detailed production-derived motion language for any brand or style. Before designing or building motion in After Effects, read ae_library documents motion-language, production-workflow and brief-template; load construction, camera-continuity, assets-depth, type-evidence and worked-scenes as relevant. This craft foundation is the default for all styles, not an optional JoeB preset. Everything required is bundled; do not require the original repo, personal rig or assets. Inspect ae_context and discover exact operations with ae_catalog. eval.run enables custom ES3. A batch is not transactional; inspect failures or uncertain completion before retrying. Render and visually inspect actual artifacts, and distinguish technical success from visual quality. The paper/navy/vermilion JoeB appearance is optional." });
+}, { instructions: "Local native After Effects control with a detailed production-derived motion language for any brand or style. Before designing or building motion in After Effects, read ae_library documents motion-language, production-workflow and brief-template; load construction, camera-continuity, assets-depth, type-evidence and worked-scenes as relevant. This craft foundation is the default for all styles, not an optional JoeB preset. Everything required is bundled; do not require the original repo, personal rig or assets. Inspect ae_context and discover exact operations with ae_catalog. eval.run enables custom ES3. A call that throws is rolled back and says whether that worked (details.rollback); a batch.run is rolled back only with stopOnError. Inspect failures, unconfirmed rollbacks and timeouts before retrying. Render and visually inspect actual artifacts, and distinguish technical success from visual quality. The paper/navy/vermilion JoeB appearance is optional." });
 function annotationsFor(tool) {
   switch (tool.effect) {
     case "read":

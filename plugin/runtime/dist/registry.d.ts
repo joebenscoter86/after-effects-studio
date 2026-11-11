@@ -59,6 +59,23 @@ export interface Operation {
      * modal (missing footage/fonts on open).
      */
     suppressDialogs?(args: Record<string, unknown>): boolean;
+    /**
+     * Whether a failure of this call is rolled back: when the code throws
+     * inside the call's undo group, serve.jsx reverts the call's own changes
+     * before answering (see jsx/serve.jsx, AE_MCP.rollBack). Omitted means yes
+     * for operations that mutate and no for read-only ones (a call that changed
+     * nothing has nothing to revert, and every undo is a chance for After
+     * Effects to raise an error box). Calls outside an undo group are never
+     * rolled back. eval.run and batch.run take `rollback: false` from the caller.
+     */
+    rollback?(args: Record<string, unknown>): boolean;
+    /**
+     * Node-side checks and preparation that must pass before After Effects is
+     * contacted — eval.run reads its script `file` here. Return the arguments to
+     * generate code from, or an error that ae_do reports as INVALID_ARGS (and
+     * batch.run as that child's failure). Runs after argument validation.
+     */
+    prepare?(args: Record<string, unknown>): PrepareResult;
     /** Generate the JSX code body (function body, ends with `return ...;`). */
     toJsx(args: Record<string, unknown>): string;
     /**
@@ -73,6 +90,17 @@ export interface Operation {
      */
     run?(args: Record<string, unknown>, transport: AeTransport): Promise<unknown>;
 }
+export type PrepareResult = {
+    ok: true;
+    args: Record<string, unknown>;
+    source?: {
+        file: string;
+    };
+} | {
+    ok: false;
+    error: string;
+    hint?: string;
+};
 /** The consent parameter injected into every appConfig operation. */
 export declare const APP_CONFIG_CONFIRM_PARAM: OperationParam;
 export declare function registerOp(op: Operation): void;
@@ -86,6 +114,10 @@ export declare function getOp(name: string): Operation | undefined;
 export declare function listOps(category?: string): Operation[];
 /** True when `op` may run inside the dispatcher's automatic undo group. */
 export declare function wantsUndoGroup(op: Operation, args: Record<string, unknown>): boolean;
+/** True when a failure of `op` inside its undo group is rolled back (see Operation.rollback). */
+export declare function wantsRollback(op: Operation, args: Record<string, unknown>): boolean;
+/** Run `op.prepare` if it has one; otherwise the arguments pass through unchanged. */
+export declare function prepareOp(op: Operation, args: Record<string, unknown>): PrepareResult;
 /** True when the dispatcher may suppress modal dialogs around `op`. */
 export declare function wantsDialogSuppression(op: Operation, args: Record<string, unknown>): boolean;
 export declare function listCategories(): string[];

@@ -1,5 +1,5 @@
 import type { Readable } from "node:stream";
-import type { AeTransport, EvalRequest, EvalResult } from "./AeTransport.js";
+import type { AeTransport, EvalRequest, EvalResult, RollbackReport } from "./AeTransport.js";
 import { type AeDialog } from "./dialogs.js";
 import { type TargetResolution } from "./instances.js";
 /**
@@ -34,7 +34,36 @@ export interface FileIpcTransportOptions {
     spawn?: SpawnFn;
     /** Modal-dialog scan; defaults to scanAeDialogs (Windows and macOS). Injectable for tests. */
     scanDialogs?: () => Promise<AeDialog[]>;
+    /**
+     * How often the leftovers of a request that timed out after pickup are
+     * looked at in the background (default 1 s): its late response, its empty
+     * tmp response, its busy lock.
+     */
+    reapIntervalMs?: number;
+    /**
+     * How long a zero-byte `.response-<id>.json.tmp` must sit untouched before
+     * it is taken as the remains of a write that failed rather than one in
+     * progress (default 10 s; serve.jsx writes a whole response in one call).
+     */
+    emptyTmpGraceMs?: number;
 }
+/** Default for FileIpcTransportOptions.reapIntervalMs. */
+export declare const REAP_INTERVAL_MS = 1000;
+/** Default for FileIpcTransportOptions.emptyTmpGraceMs. */
+export declare const EMPTY_TMP_GRACE_MS = 10000;
+/**
+ * A response nobody has collected for this long has no live owner polling for
+ * it (owners poll every POLL_INTERVAL_MS), so the script that wrote it is done.
+ */
+export declare const UNCLAIMED_RESPONSE_GRACE_MS = 2000;
+/** How long the leftovers of a timed-out request are watched for. */
+export declare const ORPHAN_WATCH_MS: number;
+/**
+ * Said with every timeout after pickup. Live, 2026-11-10: an undo raised an
+ * After Effects error box mid-script; the call timed out "picked up", and
+ * instance.dialogs returned no dialogs while the box was up.
+ */
+export declare const PICKED_UP_TIMEOUT_NOTE: string;
 export interface DispatcherResponse {
     id: string | null;
     ok: boolean;
@@ -52,6 +81,8 @@ export interface DispatcherResponse {
     line?: number | null;
     stack: string | null;
     logs: string[];
+    /** How a rollback of the call went; absent from dispatchers predating stage 7. */
+    rollback?: RollbackReport | null;
 }
 /**
  * File-IPC transport. Two ways to reach After Effects, chosen per call by
@@ -94,6 +125,10 @@ export declare class FileIpcTransport implements AeTransport {
     private readonly instanceOption;
     private readonly spawnFn;
     private readonly scanDialogs;
+    private readonly reapIntervalMs;
+    private readonly emptyTmpGraceMs;
+    private readonly orphans;
+    private reapTimer;
     constructor(options?: FileIpcTransportOptions);
     /** Where the next call would go. For ae_context and the startup banner; never throws. */
     describeTarget(instance?: string): Promise<TargetResolution>;
@@ -104,6 +139,8 @@ export declare class FileIpcTransport implements AeTransport {
      */
     private resolveTarget;
     execute(req: EvalRequest): Promise<EvalResult>;
+    /** Stop watching for the leftovers of timed-out requests. */
+    close(): Promise<void>;
     private executeOne;
     private executePull;
     private executePush;
@@ -138,6 +175,23 @@ export declare class FileIpcTransport implements AeTransport {
      * keep waiting.
      */
     private acquireBusyLock;
+    /** Id recorded in the busy lock, or null when there is none or it is unreadable. */
+    private lockHolder;
+    /**
+     * Has request `id` (served from `dir`) visibly finished? True when its
+     * response is there (and, for a request that is not ours, has sat unclaimed
+     * for UNCLAIMED_RESPONSE_GRACE_MS), or when all that is left is an empty
+     * tmp response untouched for emptyTmpGraceMs — which is then removed.
+     */
+    private requestFinished;
+    /** Watch the leftovers of a request that timed out after After Effects picked it up. */
+    private watchOrphan;
+    /**
+     * For every watched request that has finished: remove its late response and
+     * tmp file (nobody is waiting for them any more) and release the busy lock
+     * if it is still the one that request held. Never throws.
+     */
+    private reapOrphans;
     /**
      * True while the lock on disk is the one this call created. A call whose
      * event loop stalls past BUSY_LOCK_STALE_MS (a laptop suspend is enough —

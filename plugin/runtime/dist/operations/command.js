@@ -12,16 +12,22 @@ registerOp({
     name: "command.execute",
     category: "command",
     description: "Execute an AE menu command by its numeric ID. Use command.list to discover common IDs. " +
-        "Undo (16) and Redo (2035) run outside this call's undo group, so they revert/replay the PREVIOUS call.",
+        "Undo (16) and Redo (2035) run outside this call's undo group, so they revert/replay the PREVIOUS call; " +
+        "like project.undo / project.redo they run with dialogs suppressed and report any error After Effects raised.",
     params: [{ name: "id", type: "number", description: "Menu command ID", required: true }],
     // Undo/Redo must not be executed inside an open undo group — AE applies them
     // to that group and the requested step survives. Everything else groups
-    // normally, so one Ctrl+Z still reverts one call.
+    // normally, so one Ctrl+Z still reverts one call. Dialog suppression is on
+    // for every command, Undo/Redo included (see project.undo).
     undoGroup: (args) => !isUndoRedoCommandId(args.id),
-    // Same pair: dialog suppression opens an undo-transaction-like scope that
-    // Undo/Redo would resolve against, so they skip it too.
-    suppressDialogs: (args) => !isUndoRedoCommandId(args.id),
     toJsx(args) {
+        if (isUndoRedoCommandId(args.id)) {
+            return `
+            var _c = AE_MCP.undoRedo(${jsxVal(args.id)}, 1);
+            _c.commandId = ${jsxVal(args.id)};
+            return _c;
+        `;
+        }
         return `
             app.executeCommand(${jsxVal(args.id)});
             return { ok: true, commandId: ${jsxVal(args.id)} };

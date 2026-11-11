@@ -31,6 +31,14 @@ export interface EvalRequest {
      * suppression — they are the calls most likely to pop a modal.
      */
     suppressDialogs?: boolean;
+    /**
+     * Roll the call back if its code throws (default false, the old contract).
+     * Only honoured inside an undo group: serve.jsx adds a marker inside the
+     * still-open group, closes it, undoes once with dialogs suppressed and
+     * reports the outcome in EvalResult.rollback. ae_do sets it per operation
+     * (Operation.rollback).
+     */
+    rollback?: boolean;
     /** Per-call timeout in milliseconds. */
     timeoutMs?: number;
     /**
@@ -40,6 +48,34 @@ export interface EvalRequest {
      * honour it; a transport with a single fixed destination ignores it.
      */
     instance?: string;
+}
+/** What became of a rollback (jsx/serve.jsx, AE_MCP.rollBack). */
+export interface RollbackReport {
+    /** An undo was issued. */
+    attempted: boolean;
+    /** The undo ran without throwing and the checks below confirm the call's changes are gone. */
+    rolledBack: boolean;
+    /**
+     * How far the result was checked: "signature" (the marker is gone and every
+     * item matches its state before the call), "partial" (the same, over the
+     * first 1000 items and the count), "marker" (only the marker could be
+     * checked), "none".
+     */
+    verified: string;
+    /** Why no undo was issued, or why it did not succeed. Null on success. */
+    reason: string | null;
+    /** What is still applied when the rollback did not succeed. */
+    left: string | null;
+    /** Errors After Effects reported (app.onError) while the undo ran with dialogs suppressed. */
+    aeErrors: string[];
+    before?: {
+        numItems: number;
+        hash: string;
+    } | null;
+    after?: {
+        numItems: number;
+        hash: string;
+    } | null;
 }
 export interface EvalResult {
     ok: boolean;
@@ -72,6 +108,8 @@ export interface EvalResult {
      * (DIALOG_OPEN). Handles can be passed to `instance.dismiss_dialog`.
      */
     dialogs?: AeDialog[];
+    /** Present when the call needed a rollback: what was tried and what is left. */
+    rollback?: RollbackReport | null;
 }
 export interface AeTransport {
     /** Execute a JSX snippet and return the parsed response. Never throws — errors are surfaced via `ok: false`. */

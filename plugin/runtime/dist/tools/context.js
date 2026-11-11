@@ -86,7 +86,12 @@ const CODE = `
             "every ae_do / eval.run call is auto-wrapped in ONE undo group",
             "one Ctrl+Z (or project.undo) reverts the entire call; batch.run = one call = one undo step",
             "NEVER call app.beginUndoGroup/endUndoGroup in eval.run code — an unbalanced group corrupts undo for the session",
-            "undo/redo itself runs OUTSIDE the group: use project.undo (or command.execute 16/2035) as its own call — never inside batch.run, and never via eval.run",
+            "if a call that changes the project THROWS, its own changes are rolled back before the error is returned: a marker is added inside the still-open group, the group is closed and undone once with dialogs suppressed; details.rollback says whether it worked (rolledBack, verified) and what is left if not — never undo again for a call that was rolled back",
+            "a call that changed nothing is never followed by an undo (that would revert the user's previous action); read-only calls and calls outside the group (undo, redo, project open/new) are never rolled back",
+            "eval.run and batch.run take rollback: false to keep a partial result; batch.run with stopOnError rolls the whole batch back unless rollback: false, and without stopOnError nothing is rolled back",
+            "after a rollback, Redo would replay the failed call (and its marker folder): do not redo it",
+            "undo/redo itself runs OUTSIDE the group, with dialogs suppressed: use project.undo / project.redo (or command.execute 16/2035) as its own call — never inside batch.run, and never via eval.run; their result reports any error After Effects raised (aeErrors, warning)",
+            "a timeout AFTER the request was picked up most likely means a modal dialog in After Effects (instance.dialogs may not see it): look at the After Effects window before retrying",
             "ae_save_project and files written to disk (rendered PNGs, exported JSON) are NOT undoable"
         ]
     };
@@ -127,7 +132,7 @@ export const contextTool = defineTool({
     name: "ae_context",
     title: "Session context",
     description: "Ambient context: project state, active comp, selected layers, item list, " +
-        "AE.* helpers, ES3 rules, and the undo contract (every call = one auto undo group). " +
+        "AE.* helpers, ES3 rules, and the undo contract (every call = one auto undo group; a call that throws is rolled back). " +
         "Call at session start; then rely on ae_do response context.",
     group: "inspect",
     blockedInReadOnly: false,

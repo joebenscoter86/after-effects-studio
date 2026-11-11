@@ -26,6 +26,13 @@ function listOps(category) {
 function wantsUndoGroup(op, args) {
   return op.undoGroup ? op.undoGroup(args) : true;
 }
+function wantsRollback(op, args) {
+  if (!wantsUndoGroup(op, args)) return false;
+  return op.rollback ? op.rollback(args) : !op.readOnly;
+}
+function prepareOp(op, args) {
+  return op.prepare ? op.prepare(args) : { ok: true, args };
+}
 function wantsDialogSuppression(op, args) {
   return op.suppressDialogs ? op.suppressDialogs(args) : true;
 }
@@ -101,7 +108,9 @@ export {
   jsxVal,
   listCategories,
   listOps,
+  prepareOp,
   registerOp,
   wantsDialogSuppression,
+  wantsRollback,
   wantsUndoGroup
 };

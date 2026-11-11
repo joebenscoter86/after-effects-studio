@@ -42,6 +42,16 @@ export function listOps(category) {
 export function wantsUndoGroup(op, args) {
     return op.undoGroup ? op.undoGroup(args) : true;
 }
+/** True when a failure of `op` inside its undo group is rolled back (see Operation.rollback). */
+export function wantsRollback(op, args) {
+    if (!wantsUndoGroup(op, args))
+        return false;
+    return op.rollback ? op.rollback(args) : !op.readOnly;
+}
+/** Run `op.prepare` if it has one; otherwise the arguments pass through unchanged. */
+export function prepareOp(op, args) {
+    return op.prepare ? op.prepare(args) : { ok: true, args };
+}
 /** True when the dispatcher may suppress modal dialogs around `op`. */
 export function wantsDialogSuppression(op, args) {
     return op.suppressDialogs ? op.suppressDialogs(args) : true;

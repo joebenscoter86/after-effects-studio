@@ -35,6 +35,11 @@ import {
   sweepDeadInstanceDirs
 } from "./instances.js";
 import { buildLaunchPlan } from "./launcher.js";
+const REAP_INTERVAL_MS = 1e3;
+const EMPTY_TMP_GRACE_MS = 1e4;
+const UNCLAIMED_RESPONSE_GRACE_MS = 2e3;
+const ORPHAN_WATCH_MS = 30 * 6e4;
+const PICKED_UP_TIMEOUT_NOTE = "The most likely cause is a modal dialog in After Effects \u2014 an error box raised by the script (an undo raised one on 2026-11-10) or a warning \u2014 which blocks all scripting until a person clicks it; instance.dialogs may not list it, so look at the After Effects window. Once it is dismissed the script finishes and the plugin cleans up after it (busy lock, temp response).";
 class FileIpcTransport {
   afterFxPath = null;
   inflight = Promise.resolve();
@@ -43,8 +48,14 @@ class FileIpcTransport {
   instanceOption;
   spawnFn;
   scanDialogs;
+  reapIntervalMs;
+  emptyTmpGraceMs;
+  orphans = /* @__PURE__ */ new Map();
+  reapTimer = null;
   constructor(options = {}) {
     this.instanceOption = options.instance;
+    this.reapIntervalMs = options.reapIntervalMs ?? REAP_INTERVAL_MS;
+    this.emptyTmpGraceMs = options.emptyTmpGraceMs ?? EMPTY_TMP_GRACE_MS;
     this.spawnFn = options.spawn ?? ((command, args, opts) => nodeSpawn(command, args, opts));
     this.scanDialogs = options.scanDialogs ?? (() => scanAeDialogs());
     try {
@@ -102,8 +113,14 @@ class FileIpcTransport {
       release();
     }
   }
+  /** Stop watching for the leftovers of timed-out requests. */
+  async close() {
+    if (this.reapTimer !== null) clearInterval(this.reapTimer);
+    this.reapTimer = null;
+  }
   async executeOne(req) {
     const started = Date.now();
+    await this.reapOrphans();
     const timeoutMs = req.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     if (this.setupError !== null) {
       return failure("TRANSPORT", this.setupError, {
@@ -128,7 +145,10 @@ class FileIpcTransport {
       // missing field to true, and "group this" must not depend on a key
       // surviving the trip.
       undoGroup: req.undoGroup !== false,
-      suppressDialogs: req.suppressDialogs !== false
+      suppressDialogs: req.suppressDialogs !== false,
+      // Explicit as well: a missing field means "no rollback" to serve.jsx,
+      // and rollback only ever applies inside an undo group.
+      rollback: req.undoGroup !== false && req.rollback === true
     };
     if (target.mode === "pull") {
       return this.executePull(request, target.instance, started, timeoutMs);
@@ -165,6 +185,7 @@ class FileIpcTransport {
           const current = await readInstance(dir, now);
           if (!current.alive) {
             const reclaimed2 = await this.safeUnlink(requestPath);
+            if (!reclaimed2) this.watchOrphan(request.id, dir);
             const outcome = reclaimed2 ? "the request was never picked up and has been discarded" : "the request disappeared before it could be reclaimed; the operation may have started";
             const dialogs = await this.scanDialogs();
             if (dialogs.length > 0) {
@@ -188,12 +209,13 @@ class FileIpcTransport {
       await sleep(POLL_INTERVAL_MS);
     }
     const reclaimed = await this.safeUnlink(requestPath);
-    const pullTimeoutMessage = `timeout after ${timeoutMs}ms waiting for After Effects instance '${instance.id}' to respond` + (reclaimed ? " (the request was never picked up and has been discarded)" : " (the request WAS picked up by the instance; the operation may still be running)");
+    if (!reclaimed) this.watchOrphan(request.id, dir);
+    const pullTimeoutMessage = `timeout after ${timeoutMs}ms waiting for After Effects instance '${instance.id}' to respond` + (reclaimed ? " (the request was never picked up and has been discarded)" : ` (the request WAS picked up by the instance; the operation may still be running). ${PICKED_UP_TIMEOUT_NOTE}`);
     const pullDialogs = await this.scanDialogs();
     if (pullDialogs.length > 0) return dialogFailure(pullDialogs, pullTimeoutMessage, started);
     return failure("TIMEOUT", pullTimeoutMessage, {
       durationMs: Date.now() - started,
-      hint: "Is After Effects showing a modal dialog, or rendering/previewing? Scripts wait for both. For a long operation, raise timeoutMs."
+      hint: "Is After Effects showing a modal dialog, or rendering/previewing? Scripts wait for both. For a long operation, raise timeoutMs. Inspect the project before repeating a write."
     });
   }
   // --- Push: launch the dispatcher into the registered instance ---------------
@@ -269,6 +291,7 @@ class FileIpcTransport {
             if (dialogs.length > 0) {
               const reclaimed2 = await this.safeUnlink(requestPath);
               leaveLockForRunningScript = !reclaimed2;
+              if (!reclaimed2) this.watchOrphan(id, RUNTIME_DIR);
               return dialogFailure(
                 dialogs,
                 reclaimed2 ? `the request was never picked up after ${attempts} launch attempt${attempts === 1 ? "" : "s"} and has been discarded` : "the request disappeared before it could be reclaimed; the operation may have started",
@@ -284,6 +307,7 @@ class FileIpcTransport {
       }
       const reclaimed = await this.safeUnlink(requestPath);
       leaveLockForRunningScript = !reclaimed;
+      if (!reclaimed) this.watchOrphan(id, RUNTIME_DIR);
       const pushDialogs = await this.scanDialogs();
       if (pushDialogs.length > 0) {
         return dialogFailure(
@@ -294,7 +318,7 @@ class FileIpcTransport {
       }
       return failure(
         "TIMEOUT",
-        `timeout after ${timeoutMs}ms waiting for After Effects to respond` + (reclaimed ? ` (the request was never picked up by AE after ${attempts} launch attempt${attempts === 1 ? "" : "s"} and has been discarded)` : " (the request WAS picked up by AE; the operation may still be running)"),
+        `timeout after ${timeoutMs}ms waiting for After Effects to respond` + (reclaimed ? ` (the request was never picked up by AE after ${attempts} launch attempt${attempts === 1 ? "" : "s"} and has been discarded)` : ` (the request WAS picked up by AE; the operation may still be running). ${PICKED_UP_TIMEOUT_NOTE}`),
         {
           durationMs: Date.now() - started,
           hint: "Is AE running with a project open? Is 'Allow Scripts to Write Files and Access Network' enabled? Is AE showing a modal dialog (e.g. 'Attempt was made to run a second script')? Dismiss it \u2014 scripting is blocked while it is open. " + (process.platform === "darwin" ? "Is your MCP client allowed to control After Effects (System Settings \u2192 Privacy & Security \u2192 Automation)? " : "") + "Do not repeat a write until you inspect the actual project state. Preserve unsaved work; do not force-quit AE as routine recovery."
@@ -415,12 +439,83 @@ class FileIpcTransport {
           const stat = await fs.stat(BUSY_LOCK_PATH);
           if (Date.now() - stat.mtimeMs > BUSY_LOCK_STALE_MS) {
             await this.safeUnlink(BUSY_LOCK_PATH);
+          } else {
+            const holder = await this.lockHolder();
+            if (holder !== null && holder !== id && await this.requestFinished(holder, RUNTIME_DIR, true)) {
+              await this.safeUnlink(BUSY_LOCK_PATH);
+            }
           }
         } catch {
         }
         if (Date.now() >= deadline) return false;
         await sleep(POLL_INTERVAL_MS);
       }
+    }
+  }
+  /** Id recorded in the busy lock, or null when there is none or it is unreadable. */
+  async lockHolder() {
+    try {
+      const raw = await fs.readFile(BUSY_LOCK_PATH, "utf8");
+      const holder = JSON.parse(raw).id;
+      return typeof holder === "string" ? holder : null;
+    } catch {
+      return null;
+    }
+  }
+  /**
+   * Has request `id` (served from `dir`) visibly finished? True when its
+   * response is there (and, for a request that is not ours, has sat unclaimed
+   * for UNCLAIMED_RESPONSE_GRACE_MS), or when all that is left is an empty
+   * tmp response untouched for emptyTmpGraceMs — which is then removed.
+   */
+  async requestFinished(id, dir, foreign) {
+    const responsePath = path.join(dir, `${RESPONSE_PREFIX}${id}.json`);
+    try {
+      const stat = await fs.stat(responsePath);
+      if (!foreign || Date.now() - stat.mtimeMs >= UNCLAIMED_RESPONSE_GRACE_MS) return true;
+    } catch {
+    }
+    const tmpPath = path.join(dir, `.${RESPONSE_PREFIX}${id}.json.tmp`);
+    try {
+      const stat = await fs.stat(tmpPath);
+      if (stat.size === 0 && Date.now() - stat.mtimeMs >= this.emptyTmpGraceMs) {
+        await this.safeUnlink(tmpPath);
+        return true;
+      }
+    } catch {
+    }
+    return false;
+  }
+  /** Watch the leftovers of a request that timed out after After Effects picked it up. */
+  watchOrphan(id, dir) {
+    this.orphans.set(id, { id, dir, watchUntil: Date.now() + ORPHAN_WATCH_MS });
+    if (this.reapTimer === null) {
+      this.reapTimer = setInterval(() => void this.reapOrphans(), this.reapIntervalMs);
+      this.reapTimer.unref?.();
+    }
+  }
+  /**
+   * For every watched request that has finished: remove its late response and
+   * tmp file (nobody is waiting for them any more) and release the busy lock
+   * if it is still the one that request held. Never throws.
+   */
+  async reapOrphans() {
+    for (const orphan of Array.from(this.orphans.values())) {
+      try {
+        if (await this.requestFinished(orphan.id, orphan.dir, false)) {
+          await this.safeUnlink(path.join(orphan.dir, `${RESPONSE_PREFIX}${orphan.id}.json`));
+          await this.safeUnlink(path.join(orphan.dir, `.${RESPONSE_PREFIX}${orphan.id}.json.tmp`));
+          await this.releaseBusyLock(orphan.id);
+          this.orphans.delete(orphan.id);
+        } else if (Date.now() > orphan.watchUntil) {
+          this.orphans.delete(orphan.id);
+        }
+      } catch {
+      }
+    }
+    if (this.orphans.size === 0 && this.reapTimer !== null) {
+      clearInterval(this.reapTimer);
+      this.reapTimer = null;
     }
   }
   /**
@@ -485,7 +580,8 @@ class FileIpcTransport {
         errorCode: null,
         stack: null,
         logs: parsed.logs ?? [],
-        durationMs
+        durationMs,
+        ...parsed.rollback ? { rollback: parsed.rollback } : {}
       };
     }
     const dispatchFailure = parsed.phase === "dispatch";
@@ -497,7 +593,8 @@ class FileIpcTransport {
       line: typeof parsed.line === "number" ? parsed.line : null,
       stack: parsed.stack,
       logs: parsed.logs ?? [],
-      durationMs
+      durationMs,
+      ...parsed.rollback ? { rollback: parsed.rollback } : {}
     };
   }
   async tryReadResponse(responsePath) {
@@ -615,7 +712,12 @@ function serializeRequest(request) {
   return JSON.stringify(request).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
 }
 export {
+  EMPTY_TMP_GRACE_MS,
   FileIpcTransport,
+  ORPHAN_WATCH_MS,
+  PICKED_UP_TIMEOUT_NOTE,
+  REAP_INTERVAL_MS,
+  UNCLAIMED_RESPONSE_GRACE_MS,
   UNREADABLE_RESPONSE_GRACE_MS,
   UnreadableResponseWatch,
   isAutomationDenial,
