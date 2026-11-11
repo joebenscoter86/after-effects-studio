@@ -32,7 +32,10 @@ export interface FileIpcTransportOptions {
     instance?: string | null;
     /** Process launcher; defaults to child_process.spawn. */
     spawn?: SpawnFn;
-    /** Modal-dialog scan; defaults to scanAeDialogs (Windows and macOS). Injectable for tests. */
+    /**
+     * Modal-window scan; defaults to scanAeWindows (Windows and macOS), which
+     * marks After Effects' script progress window. Injectable for tests.
+     */
     scanDialogs?: () => Promise<AeDialog[]>;
     /**
      * How often the leftovers of a request that timed out after pickup are
@@ -47,6 +50,13 @@ export interface FileIpcTransportOptions {
      */
     emptyTmpGraceMs?: number;
 }
+/** A temp request/response file older than this is an orphan (see sweepStaleFiles). */
+export declare const ORPHAN_TMP_SWEEP_MS: number;
+/**
+ * Delete `.request-*.json.tmp` and `.response-*.json.tmp` in `dir` older than
+ * ORPHAN_TMP_SWEEP_MS. Best-effort; never throws.
+ */
+export declare function sweepOrphanTmpFiles(dir: string, now?: number): Promise<string[]>;
 /** Default for FileIpcTransportOptions.reapIntervalMs. */
 export declare const REAP_INTERVAL_MS = 1000;
 /** Default for FileIpcTransportOptions.emptyTmpGraceMs. */
@@ -175,6 +185,12 @@ export declare class FileIpcTransport implements AeTransport {
      * keep waiting.
      */
     private acquireBusyLock;
+    /**
+     * What After Effects is showing: real dialogs, and its own script progress
+     * window (a script still running), kept apart so the progress window is
+     * never reported as a dialog or offered for dismissal.
+     */
+    private lookAtAe;
     /** Id recorded in the busy lock, or null when there is none or it is unreadable. */
     private lockHolder;
     /**

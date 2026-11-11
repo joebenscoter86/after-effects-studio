@@ -170,24 +170,88 @@ AE_MCP.runUndoCommand = function (commandId) {
     return out;
 };
 
+/** Layers of the active comp hashed into an undo signature; past this only their count. */
+AE_MCP.UNDO_LAYER_LIMIT = 500;
+
+/**
+ * projectSignature plus the active comp's layers (name, in and out point,
+ * enabled), so undoing a layer rename, trim or switch is seen too. Property
+ * values (keyframes, effects) are still not seen. Null when unreadable.
+ */
+AE_MCP.undoSignature = function () {
+    var base = AE_MCP.projectSignature();
+    if (base === null) return null;
+    var h = Number(base.hash);
+    try {
+        var ai = app.project.activeItem;
+        if (ai && typeof ai.numLayers === "number" && typeof ai.layer === "function") {
+            var n = ai.numLayers;
+            var m = n < AE_MCP.UNDO_LAYER_LIMIT ? n : AE_MCP.UNDO_LAYER_LIMIT;
+            var s = "active:" + String(ai.id) + ":" + String(n) + ";";
+            for (var i = 1; i <= m; i++) {
+                var l = ai.layer(i);
+                s += String(l.name) + "|" + String(l.inPoint) + "|" + String(l.outPoint) + "|" + String(l.enabled) + ";";
+            }
+            for (var c = 0; c < s.length; c++) h = (h * 31 + s.charCodeAt(c)) % 2147483647;
+        }
+    } catch (eActive) { /* no active comp detail; the item signature stands */ }
+    return { numItems: base.numItems, hash: String(h) };
+};
+
 /**
  * Undo or redo `count` times for project.undo / project.redo and
  * command.execute 16/2035. Stops at the first throw; reports AE's errors.
+ *
+ * The menu command gives no sign of whether there was anything to undo, so
+ * each command is bracketed by undoSignature(): `changed` is true when the
+ * project visibly changed, false when nothing that check sees changed (an
+ * empty history — or a step that only changed property values), null when
+ * it could not be read. The result never counts a step as undone: it counts
+ * commands run, and commands after which the project changed.
  */
 AE_MCP.undoRedo = function (commandId, count) {
     var n = (typeof count === "number" && count > 0) ? Math.floor(count) : 1;
-    var done = 0;
+    var redo = (commandId === AE_MCP.REDO_COMMAND_ID);
+    var what = redo ? "redo" : "undo";
+    var run = 0;
+    var withChange = 0;
+    var unknown = false;
     var errors = [];
     var threw = null;
     for (var i = 0; i < n; i++) {
+        var before = AE_MCP.undoSignature();
         var r = AE_MCP.runUndoCommand(commandId);
         for (var e = 0; e < r.aeErrors.length; e++) errors.push(r.aeErrors[e]);
         if (r.threw !== null) { threw = r.threw; break; }
-        done++;
+        run++;
+        var after = AE_MCP.undoSignature();
+        if (before === null || after === null) unknown = true;
+        else if (before.numItems !== after.numItems || before.hash !== after.hash) withChange++;
     }
-    var what = (commandId === AE_MCP.REDO_COMMAND_ID) ? "redo" : "undo";
-    var out = { ok: threw === null, requested: n, done: done, aeErrors: errors };
-    if (threw !== null) out.error = what + " " + String(done + 1) + " of " + String(n) + " threw: " + threw;
+    var changed = (withChange > 0) ? true : (unknown ? null : false);
+    var effect;
+    if (changed === true) {
+        effect = "the project changed (its items, or the active comp's layers) after " + String(withChange) +
+            " of the " + String(run) + " " + what + " command(s) run";
+    } else if (changed === false) {
+        effect = "no change to the project's items or the active comp's layers was seen after " + String(run) + " " + what +
+            " command(s): either there was nothing to " + what +
+            (redo ? "" : " (the history was empty)") +
+            ", or the step changed only property values, which this check cannot see — do not count it as a step " +
+            (redo ? "redone" : "undone") + " without inspecting";
+    } else {
+        effect = "the " + what + " command ran " + String(run) + " time(s); whether the project changed could not be read";
+    }
+    var out = {
+        ok: threw === null,
+        requested: n,
+        commandsRun: run,
+        commandsWithChange: withChange,
+        changed: changed,
+        effect: effect,
+        aeErrors: errors
+    };
+    if (threw !== null) out.error = what + " " + String(run + 1) + " of " + String(n) + " threw: " + threw;
     if (errors.length > 0) {
         out.warning = "After Effects reported " + String(errors.length) + " error(s) during " + what +
             " (dialogs were suppressed, so none was shown): " + errors.join(" | ") +

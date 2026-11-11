@@ -19,7 +19,56 @@ export interface AeDialog {
     accessibility?: boolean;
     /** macOS only: when the owning process launched (ms since epoch). */
     startedAt?: number;
+    /**
+     * macOS only: the window's own name (CGWindowName; empty when the process
+     * running this server may not read window names).
+     */
+    title?: string;
+    /** macOS only: the CG window layer. */
+    layer?: number;
+    /**
+     * Set when this is not a dialog but After Effects' own "Executing Script
+     * ..." progress window — a script is still running. Its only action cancels
+     * that script, so it is never offered for dismissal. "name": recognised by
+     * its window name; "size": the name was unavailable, so recognised by the
+     * measured shape (layer 8, 363 x 181, no readable text). See
+     * scriptProgressMatch.
+     */
+    scriptProgress?: "name" | "size";
 }
+/**
+ * After Effects' progress window while a script runs, as measured on After
+ * Effects 2027 / macOS on 2026-11-10: CG layer 8, 363 x 181, named
+ * "Executing Script ...". Idle, AE had one on-screen window (layer 0).
+ */
+export declare const SCRIPT_PROGRESS_NAME: RegExp;
+export declare const SCRIPT_PROGRESS_SHAPE: {
+    layer: number;
+    width: number;
+    height: number;
+    tolerance: number;
+};
+/**
+ * Is this scanned window the script progress window? By name when either the
+ * window name or its text is readable; otherwise by shape, but only for a
+ * window with no readable text at all (a real dialog of that size whose text
+ * can be read is never taken for it).
+ */
+export declare function scriptProgressMatch(d: {
+    text: string;
+    width: number;
+    height: number;
+    title?: string;
+    layer?: number;
+}): "name" | "size" | null;
+/** Split a scan into real dialogs and script progress windows. */
+export declare function splitScriptProgress(windows: AeDialog[]): {
+    dialogs: AeDialog[];
+    scripts: AeDialog[];
+};
+/** The sentence a failure carries when only the script progress window was found. */
+export declare function scriptRunningMessage(scripts: AeDialog[]): string;
+export declare const SCRIPT_RUNNING_HINT: string;
 export interface DismissResult {
     /** The id named a visible After Effects dialog and its cancel action was sent. */
     posted: boolean;
@@ -28,10 +77,11 @@ export interface DismissResult {
     /** What the dialog said (null when it was not found). */
     text: string | null;
     /**
-     * Why nothing was sent, when posted is false: no such dialog, or no
-     * Accessibility permission (macOS).
+     * Why nothing was sent, when posted is false: no such dialog, no
+     * Accessibility permission (macOS), or the window is After Effects' script
+     * progress window, which is never closed.
      */
-    reason?: "not_found" | "no_permission";
+    reason?: "not_found" | "no_permission" | "script_progress";
 }
 /** Runs a script and resolves with its stdout. Injectable for tests. */
 export type ScriptRunner = (script: string, env: Record<string, string>) => Promise<string>;
@@ -47,10 +97,13 @@ export declare function dialogScanSupported(platform?: NodeJS.Platform): boolean
 /** Parse the scan's JSON output; anything unexpected yields no dialogs. */
 export declare function parseDialogScan(raw: string): AeDialog[];
 /**
- * The modal dialogs every running After Effects is showing. Best-effort:
+ * Every window the scan takes for a modal, including After Effects' own
+ * script progress window, which is marked (`scriptProgress`). Best-effort:
  * unsupported platform, no PowerShell, or a scan that fails all report none —
  * this only ever adds information to a failure, it must not cause one.
  */
+export declare function scanAeWindows(platform?: NodeJS.Platform): Promise<AeDialog[]>;
+/** The modal dialogs every running After Effects is showing (never the script progress window). */
 export declare function scanAeDialogs(platform?: NodeJS.Platform): Promise<AeDialog[]>;
 /**
  * Close a dialog by its cancel action, never a decision (see the header: a

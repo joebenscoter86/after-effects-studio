@@ -7,6 +7,7 @@ import {
   BUSY_LOCK_REFRESH_MS,
   BUSY_LOCK_STALE_MS,
   DEFAULT_TIMEOUT_MS,
+  INSTANCES_DIR,
   LIVENESS_CHECK_MS,
   MAX_LAUNCH_ATTEMPTS,
   PHANTOM_LAUNCH_MS,
@@ -26,7 +27,14 @@ import {
   responsePathFor,
   runtimeDirWarnings
 } from "../config.js";
-import { dialogBlockMessage, dialogHint, scanAeDialogs } from "./dialogs.js";
+import {
+  SCRIPT_RUNNING_HINT,
+  dialogBlockMessage,
+  dialogHint,
+  scanAeWindows,
+  scriptRunningMessage,
+  splitScriptProgress
+} from "./dialogs.js";
 import {
   describeInstance,
   listInstances,
@@ -35,6 +43,30 @@ import {
   sweepDeadInstanceDirs
 } from "./instances.js";
 import { buildLaunchPlan } from "./launcher.js";
+const ORPHAN_TMP_SWEEP_MS = 5 * 6e4;
+async function sweepOrphanTmpFiles(dir, now = Date.now()) {
+  const removed = [];
+  let entries;
+  try {
+    entries = await fs.readdir(dir);
+  } catch {
+    return removed;
+  }
+  for (const entry of entries) {
+    const isTmp = (entry.startsWith(`.${REQUEST_PREFIX}`) || entry.startsWith(`.${RESPONSE_PREFIX}`)) && entry.endsWith(".json.tmp");
+    if (!isTmp) continue;
+    const full = path.join(dir, entry);
+    try {
+      const stat = await fs.stat(full);
+      if (stat.isFile() && now - stat.mtimeMs > ORPHAN_TMP_SWEEP_MS) {
+        await fs.unlink(full);
+        removed.push(entry);
+      }
+    } catch {
+    }
+  }
+  return removed;
+}
 const REAP_INTERVAL_MS = 1e3;
 const EMPTY_TMP_GRACE_MS = 1e4;
 const UNCLAIMED_RESPONSE_GRACE_MS = 2e3;
@@ -57,7 +89,7 @@ class FileIpcTransport {
     this.reapIntervalMs = options.reapIntervalMs ?? REAP_INTERVAL_MS;
     this.emptyTmpGraceMs = options.emptyTmpGraceMs ?? EMPTY_TMP_GRACE_MS;
     this.spawnFn = options.spawn ?? ((command, args, opts) => nodeSpawn(command, args, opts));
-    this.scanDialogs = options.scanDialogs ?? (() => scanAeDialogs());
+    this.scanDialogs = options.scanDialogs ?? (() => scanAeWindows());
     try {
       mkdirSync(RUNTIME_DIR, { recursive: true, mode: RUNTIME_DIR_MODE });
       if (RUNTIME_DIR_IS_CUSTOM) {
@@ -129,8 +161,14 @@ class FileIpcTransport {
     }
     const target = await this.resolveTarget(req.instance);
     if (target.mode === "error") {
-      const dialogs = await this.scanDialogs();
+      const { dialogs, scripts } = await this.lookAtAe();
       if (dialogs.length > 0) return dialogFailure(dialogs, target.message, started);
+      if (scripts.length > 0) {
+        return failure("NO_INSTANCE", `${target.message} \u2014 ${scriptRunningMessage(scripts)}`, {
+          durationMs: Date.now() - started,
+          hint: SCRIPT_RUNNING_HINT
+        });
+      }
       return failure("NO_INSTANCE", target.message, {
         durationMs: Date.now() - started,
         hint: target.hint
@@ -187,12 +225,19 @@ class FileIpcTransport {
             const reclaimed2 = await this.safeUnlink(requestPath);
             if (!reclaimed2) this.watchOrphan(request.id, dir);
             const outcome = reclaimed2 ? "the request was never picked up and has been discarded" : "the request disappeared before it could be reclaimed; the operation may have started";
-            const dialogs = await this.scanDialogs();
+            const { dialogs, scripts } = await this.lookAtAe();
             if (dialogs.length > 0) {
               return dialogFailure(
                 dialogs,
                 `After Effects instance '${instance.id}' stopped responding; ${outcome}`,
                 started
+              );
+            }
+            if (scripts.length > 0) {
+              return failure(
+                reclaimed2 ? "NO_INSTANCE" : "TIMEOUT",
+                `After Effects instance '${instance.id}' stopped responding: ${scriptRunningMessage(scripts)}; ${outcome}`,
+                { durationMs: Date.now() - started, hint: SCRIPT_RUNNING_HINT }
               );
             }
             return failure(
@@ -210,9 +255,16 @@ class FileIpcTransport {
     }
     const reclaimed = await this.safeUnlink(requestPath);
     if (!reclaimed) this.watchOrphan(request.id, dir);
-    const pullTimeoutMessage = `timeout after ${timeoutMs}ms waiting for After Effects instance '${instance.id}' to respond` + (reclaimed ? " (the request was never picked up and has been discarded)" : ` (the request WAS picked up by the instance; the operation may still be running). ${PICKED_UP_TIMEOUT_NOTE}`);
-    const pullDialogs = await this.scanDialogs();
-    if (pullDialogs.length > 0) return dialogFailure(pullDialogs, pullTimeoutMessage, started);
+    const pullTimeoutBase = `timeout after ${timeoutMs}ms waiting for After Effects instance '${instance.id}' to respond` + (reclaimed ? " (the request was never picked up and has been discarded)" : " (the request WAS picked up by the instance; the operation may still be running)");
+    const pull = await this.lookAtAe();
+    if (pull.dialogs.length > 0) return dialogFailure(pull.dialogs, pullTimeoutBase, started);
+    if (pull.scripts.length > 0) {
+      return failure("TIMEOUT", `${pullTimeoutBase}. ${scriptRunningMessage(pull.scripts)}.`, {
+        durationMs: Date.now() - started,
+        hint: SCRIPT_RUNNING_HINT
+      });
+    }
+    const pullTimeoutMessage = reclaimed ? pullTimeoutBase : `${pullTimeoutBase}. ${PICKED_UP_TIMEOUT_NOTE}`;
     return failure("TIMEOUT", pullTimeoutMessage, {
       durationMs: Date.now() - started,
       hint: "Is After Effects showing a modal dialog, or rendering/previewing? Scripts wait for both. For a long operation, raise timeoutMs. Inspect the project before repeating a write."
@@ -228,9 +280,15 @@ class FileIpcTransport {
       });
     }
     if ((await listInstances()).some((i) => !i.alive)) {
-      const dialogs = await this.scanDialogs();
+      const { dialogs, scripts } = await this.lookAtAe();
       if (dialogs.length > 0) {
         return dialogFailure(dialogs, "nothing was sent to After Effects", started);
+      }
+      if (scripts.length > 0) {
+        return failure("TIMEOUT", `${scriptRunningMessage(scripts)}; nothing was sent to After Effects`, {
+          durationMs: Date.now() - started,
+          hint: SCRIPT_RUNNING_HINT
+        });
       }
     }
     const id = request.id;
@@ -287,7 +345,12 @@ class FileIpcTransport {
               return await this.phantomFailure(spawnState, requestPath, started);
             }
           } else if (attempts < MAX_LAUNCH_ATTEMPTS && now - lastLaunchAt >= RELAUNCH_UNCONSUMED_AFTER_MS * attempts) {
-            const dialogs = await this.scanDialogs();
+            const { dialogs, scripts } = await this.lookAtAe();
+            if (dialogs.length === 0 && scripts.length > 0) {
+              lastLaunchAt = Date.now();
+              await sleep(POLL_INTERVAL_MS);
+              continue;
+            }
             if (dialogs.length > 0) {
               const reclaimed2 = await this.safeUnlink(requestPath);
               leaveLockForRunningScript = !reclaimed2;
@@ -308,7 +371,14 @@ class FileIpcTransport {
       const reclaimed = await this.safeUnlink(requestPath);
       leaveLockForRunningScript = !reclaimed;
       if (!reclaimed) this.watchOrphan(id, RUNTIME_DIR);
-      const pushDialogs = await this.scanDialogs();
+      const { dialogs: pushDialogs, scripts: pushScripts } = await this.lookAtAe();
+      if (pushDialogs.length === 0 && pushScripts.length > 0) {
+        return failure(
+          "TIMEOUT",
+          `timeout after ${timeoutMs}ms waiting for After Effects to respond` + (reclaimed ? " (the request was never picked up and has been discarded)" : " (the request WAS picked up by AE; the operation may still be running)") + `. ${scriptRunningMessage(pushScripts)}.`,
+          { durationMs: Date.now() - started, hint: SCRIPT_RUNNING_HINT }
+        );
+      }
       if (pushDialogs.length > 0) {
         return dialogFailure(
           pushDialogs,
@@ -451,6 +521,14 @@ class FileIpcTransport {
         await sleep(POLL_INTERVAL_MS);
       }
     }
+  }
+  /**
+   * What After Effects is showing: real dialogs, and its own script progress
+   * window (a script still running), kept apart so the progress window is
+   * never reported as a dialog or offered for dismissal.
+   */
+  async lookAtAe() {
+    return splitScriptProgress(await this.scanDialogs());
   }
   /** Id recorded in the busy lock, or null when there is none or it is unreadable. */
   async lockHolder() {
@@ -636,6 +714,13 @@ class FileIpcTransport {
         } catch {
         }
       }
+      await sweepOrphanTmpFiles(RUNTIME_DIR);
+      try {
+        for (const entry of await fs.readdir(INSTANCES_DIR)) {
+          await sweepOrphanTmpFiles(path.join(INSTANCES_DIR, entry));
+        }
+      } catch {
+      }
       try {
         const lockStat = await fs.stat(BUSY_LOCK_PATH);
         if (Date.now() - lockStat.mtimeMs > BUSY_LOCK_STALE_MS) await fs.unlink(BUSY_LOCK_PATH);
@@ -714,6 +799,7 @@ function serializeRequest(request) {
 export {
   EMPTY_TMP_GRACE_MS,
   FileIpcTransport,
+  ORPHAN_TMP_SWEEP_MS,
   ORPHAN_WATCH_MS,
   PICKED_UP_TIMEOUT_NOTE,
   REAP_INTERVAL_MS,
@@ -723,5 +809,6 @@ export {
   isAutomationDenial,
   readResponseText,
   serializeRequest,
+  sweepOrphanTmpFiles,
   unreadableResponseFailure
 };

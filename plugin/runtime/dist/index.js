@@ -37580,6 +37580,27 @@ import * as path4 from "node:path";
 
 // src/transport/dialogs.ts
 import { execFile } from "node:child_process";
+var SCRIPT_PROGRESS_NAME = /^\s*executing script\b/i;
+var SCRIPT_PROGRESS_SHAPE = { layer: 8, width: 363, height: 181, tolerance: 2 };
+function scriptProgressMatch(d) {
+  if (SCRIPT_PROGRESS_NAME.test(d.title ?? "") || SCRIPT_PROGRESS_NAME.test(d.text)) return "name";
+  const shape = SCRIPT_PROGRESS_SHAPE;
+  if (!d.title && !d.text && d.layer === shape.layer && Math.abs(d.width - shape.width) <= shape.tolerance && Math.abs(d.height - shape.height) <= shape.tolerance) {
+    return "size";
+  }
+  return null;
+}
+function splitScriptProgress(windows) {
+  return {
+    dialogs: windows.filter((w) => !w.scriptProgress),
+    scripts: windows.filter((w) => !!w.scriptProgress)
+  };
+}
+function scriptRunningMessage(scripts) {
+  const how = scripts.every((s) => s.scriptProgress === "name") ? "its 'Executing Script' progress window is up" : "a window shaped like its 'Executing Script' progress window is up (its name could not be read, so it was recognised by size)";
+  return `After Effects is still running a script (${how}): it is busy, not blocked by a dialog`;
+}
+var SCRIPT_RUNNING_HINT = "Do not close that window: its only action cancels the running script. Wait for the script to finish (raise timeoutMs for long work), then inspect the project before repeating a write.";
 var SCAN_TIMEOUT_MS = 8e3;
 var HELPER = String.raw`
 Add-Type @"
@@ -37728,7 +37749,8 @@ function scan() {
     var pid = w.kCGWindowOwnerPID, b = w.kCGWindowBounds;
     if (!procs[pid] || !(w.kCGWindowAlpha > 0)) return;
     var d = { pid: pid, id: pid + ':' + w.kCGWindowNumber, text: '', width: Math.round(b.Width), height: Math.round(b.Height),
-      window: titles[pid] || null, accessibility: trusted, startedAt: procs[pid].startedAt, number: w.kCGWindowNumber, el: null };
+      window: titles[pid] || null, accessibility: trusted, startedAt: procs[pid].startedAt, number: w.kCGWindowNumber, el: null,
+      title: w.kCGWindowName || '', layer: w.kCGWindowLayer };
     var modal = !!GUESSED_LAYERS[w.kCGWindowLayer];
     if (trusted) {
       var app = axApp(pid, cache);
@@ -37742,7 +37764,15 @@ function scan() {
   });
   return found;
 }
-function strip(d) { return { pid: d.pid, id: d.id, text: d.text, width: d.width, height: d.height, window: d.window, accessibility: d.accessibility, startedAt: d.startedAt }; }
+function strip(d) { return { pid: d.pid, id: d.id, text: d.text, width: d.width, height: d.height, window: d.window, accessibility: d.accessibility, startedAt: d.startedAt, title: d.title, layer: d.layer }; }
+// AE's "Executing Script ..." progress window (layer 8, 363 x 181): its only
+// action cancels the running script, so it is never dismissed. Same rule as
+// scriptProgressMatch in dialogs.ts.
+function isScriptProgress(d) {
+  var named = /^\s*executing script\b/i;
+  if (named.test(d.title || '') || named.test(d.text || '')) return true;
+  return !d.title && !d.text && d.layer === 8 && Math.abs(d.width - 363) <= 2 && Math.abs(d.height - 181) <= 2;
+}
 function gone(number) {
   for (var i = 0; i < 10; i++) {
     delay(0.1);
@@ -37755,6 +37785,7 @@ function dismiss(target) {
   var d = null;
   scan().forEach(function (x) { if (x.id === target) d = x; });
   if (!d) { none.reason = 'not_found'; return none; }
+  if (isScriptProgress(d)) { none.reason = 'script_progress'; return none; }
   if (!trusted) { none.reason = 'no_permission'; return none; }
   var cancel = d.el ? axElement(d.el, 'AXCancelButton') : null;
   if (cancel) {
@@ -37855,12 +37886,17 @@ function parseDialogScan(raw) {
       height: typeof e.height === "number" ? e.height : 0,
       window: typeof e.window === "string" && e.window.length > 0 ? e.window : null,
       ...typeof e.accessibility === "boolean" ? { accessibility: e.accessibility } : {},
-      ...typeof e.startedAt === "number" && e.startedAt > 0 ? { startedAt: e.startedAt } : {}
+      ...typeof e.startedAt === "number" && e.startedAt > 0 ? { startedAt: e.startedAt } : {},
+      ...typeof e.title === "string" ? { title: e.title.trim() } : {},
+      ...typeof e.layer === "number" ? { layer: e.layer } : {}
     });
+    const last = out[out.length - 1];
+    const progress = scriptProgressMatch(last);
+    if (progress !== null) last.scriptProgress = progress;
   }
   return out;
 }
-async function scanAeDialogs(platform = process.platform) {
+async function scanAeWindows(platform = process.platform) {
   if (!scanSupported(platform)) return [];
   try {
     const raw = platform === "darwin" ? await osascriptRunner(DARWIN_SCRIPT, { AE_MCP_DIALOG_MODE: "scan" }) : await runner(SCAN_SCRIPT, {});
@@ -37869,7 +37905,10 @@ async function scanAeDialogs(platform = process.platform) {
     return [];
   }
 }
-var DISMISS_REASONS = /* @__PURE__ */ new Set(["not_found", "no_permission"]);
+async function scanAeDialogs(platform = process.platform) {
+  return splitScriptProgress(await scanAeWindows(platform)).dialogs;
+}
+var DISMISS_REASONS = /* @__PURE__ */ new Set(["not_found", "no_permission", "script_progress"]);
 async function dismissAeDialog(id, platform = process.platform) {
   const notFound = {
     posted: false,
@@ -37916,6 +37955,30 @@ function dialogHint(dialogs) {
 }
 
 // src/transport/FileIpcTransport.ts
+var ORPHAN_TMP_SWEEP_MS = 5 * 6e4;
+async function sweepOrphanTmpFiles(dir, now = Date.now()) {
+  const removed = [];
+  let entries;
+  try {
+    entries = await fs3.readdir(dir);
+  } catch {
+    return removed;
+  }
+  for (const entry of entries) {
+    const isTmp = (entry.startsWith(`.${REQUEST_PREFIX}`) || entry.startsWith(`.${RESPONSE_PREFIX}`)) && entry.endsWith(".json.tmp");
+    if (!isTmp) continue;
+    const full = path4.join(dir, entry);
+    try {
+      const stat = await fs3.stat(full);
+      if (stat.isFile() && now - stat.mtimeMs > ORPHAN_TMP_SWEEP_MS) {
+        await fs3.unlink(full);
+        removed.push(entry);
+      }
+    } catch {
+    }
+  }
+  return removed;
+}
 var REAP_INTERVAL_MS = 1e3;
 var EMPTY_TMP_GRACE_MS = 1e4;
 var UNCLAIMED_RESPONSE_GRACE_MS = 2e3;
@@ -37938,7 +38001,7 @@ var FileIpcTransport = class {
     this.reapIntervalMs = options.reapIntervalMs ?? REAP_INTERVAL_MS;
     this.emptyTmpGraceMs = options.emptyTmpGraceMs ?? EMPTY_TMP_GRACE_MS;
     this.spawnFn = options.spawn ?? ((command, args, opts) => nodeSpawn(command, args, opts));
-    this.scanDialogs = options.scanDialogs ?? (() => scanAeDialogs());
+    this.scanDialogs = options.scanDialogs ?? (() => scanAeWindows());
     try {
       mkdirSync(RUNTIME_DIR, { recursive: true, mode: RUNTIME_DIR_MODE });
       if (RUNTIME_DIR_IS_CUSTOM) {
@@ -38010,8 +38073,14 @@ var FileIpcTransport = class {
     }
     const target = await this.resolveTarget(req.instance);
     if (target.mode === "error") {
-      const dialogs = await this.scanDialogs();
+      const { dialogs, scripts } = await this.lookAtAe();
       if (dialogs.length > 0) return dialogFailure(dialogs, target.message, started);
+      if (scripts.length > 0) {
+        return failure2("NO_INSTANCE", `${target.message} \u2014 ${scriptRunningMessage(scripts)}`, {
+          durationMs: Date.now() - started,
+          hint: SCRIPT_RUNNING_HINT
+        });
+      }
       return failure2("NO_INSTANCE", target.message, {
         durationMs: Date.now() - started,
         hint: target.hint
@@ -38068,12 +38137,19 @@ var FileIpcTransport = class {
             const reclaimed2 = await this.safeUnlink(requestPath);
             if (!reclaimed2) this.watchOrphan(request.id, dir);
             const outcome = reclaimed2 ? "the request was never picked up and has been discarded" : "the request disappeared before it could be reclaimed; the operation may have started";
-            const dialogs = await this.scanDialogs();
+            const { dialogs, scripts } = await this.lookAtAe();
             if (dialogs.length > 0) {
               return dialogFailure(
                 dialogs,
                 `After Effects instance '${instance.id}' stopped responding; ${outcome}`,
                 started
+              );
+            }
+            if (scripts.length > 0) {
+              return failure2(
+                reclaimed2 ? "NO_INSTANCE" : "TIMEOUT",
+                `After Effects instance '${instance.id}' stopped responding: ${scriptRunningMessage(scripts)}; ${outcome}`,
+                { durationMs: Date.now() - started, hint: SCRIPT_RUNNING_HINT }
               );
             }
             return failure2(
@@ -38091,9 +38167,16 @@ var FileIpcTransport = class {
     }
     const reclaimed = await this.safeUnlink(requestPath);
     if (!reclaimed) this.watchOrphan(request.id, dir);
-    const pullTimeoutMessage = `timeout after ${timeoutMs}ms waiting for After Effects instance '${instance.id}' to respond` + (reclaimed ? " (the request was never picked up and has been discarded)" : ` (the request WAS picked up by the instance; the operation may still be running). ${PICKED_UP_TIMEOUT_NOTE}`);
-    const pullDialogs = await this.scanDialogs();
-    if (pullDialogs.length > 0) return dialogFailure(pullDialogs, pullTimeoutMessage, started);
+    const pullTimeoutBase = `timeout after ${timeoutMs}ms waiting for After Effects instance '${instance.id}' to respond` + (reclaimed ? " (the request was never picked up and has been discarded)" : " (the request WAS picked up by the instance; the operation may still be running)");
+    const pull = await this.lookAtAe();
+    if (pull.dialogs.length > 0) return dialogFailure(pull.dialogs, pullTimeoutBase, started);
+    if (pull.scripts.length > 0) {
+      return failure2("TIMEOUT", `${pullTimeoutBase}. ${scriptRunningMessage(pull.scripts)}.`, {
+        durationMs: Date.now() - started,
+        hint: SCRIPT_RUNNING_HINT
+      });
+    }
+    const pullTimeoutMessage = reclaimed ? pullTimeoutBase : `${pullTimeoutBase}. ${PICKED_UP_TIMEOUT_NOTE}`;
     return failure2("TIMEOUT", pullTimeoutMessage, {
       durationMs: Date.now() - started,
       hint: "Is After Effects showing a modal dialog, or rendering/previewing? Scripts wait for both. For a long operation, raise timeoutMs. Inspect the project before repeating a write."
@@ -38109,9 +38192,15 @@ var FileIpcTransport = class {
       });
     }
     if ((await listInstances()).some((i) => !i.alive)) {
-      const dialogs = await this.scanDialogs();
+      const { dialogs, scripts } = await this.lookAtAe();
       if (dialogs.length > 0) {
         return dialogFailure(dialogs, "nothing was sent to After Effects", started);
+      }
+      if (scripts.length > 0) {
+        return failure2("TIMEOUT", `${scriptRunningMessage(scripts)}; nothing was sent to After Effects`, {
+          durationMs: Date.now() - started,
+          hint: SCRIPT_RUNNING_HINT
+        });
       }
     }
     const id = request.id;
@@ -38168,7 +38257,12 @@ var FileIpcTransport = class {
               return await this.phantomFailure(spawnState, requestPath, started);
             }
           } else if (attempts < MAX_LAUNCH_ATTEMPTS && now - lastLaunchAt >= RELAUNCH_UNCONSUMED_AFTER_MS * attempts) {
-            const dialogs = await this.scanDialogs();
+            const { dialogs, scripts } = await this.lookAtAe();
+            if (dialogs.length === 0 && scripts.length > 0) {
+              lastLaunchAt = Date.now();
+              await sleep(POLL_INTERVAL_MS);
+              continue;
+            }
             if (dialogs.length > 0) {
               const reclaimed2 = await this.safeUnlink(requestPath);
               leaveLockForRunningScript = !reclaimed2;
@@ -38189,7 +38283,14 @@ var FileIpcTransport = class {
       const reclaimed = await this.safeUnlink(requestPath);
       leaveLockForRunningScript = !reclaimed;
       if (!reclaimed) this.watchOrphan(id, RUNTIME_DIR);
-      const pushDialogs = await this.scanDialogs();
+      const { dialogs: pushDialogs, scripts: pushScripts } = await this.lookAtAe();
+      if (pushDialogs.length === 0 && pushScripts.length > 0) {
+        return failure2(
+          "TIMEOUT",
+          `timeout after ${timeoutMs}ms waiting for After Effects to respond` + (reclaimed ? " (the request was never picked up and has been discarded)" : " (the request WAS picked up by AE; the operation may still be running)") + `. ${scriptRunningMessage(pushScripts)}.`,
+          { durationMs: Date.now() - started, hint: SCRIPT_RUNNING_HINT }
+        );
+      }
       if (pushDialogs.length > 0) {
         return dialogFailure(
           pushDialogs,
@@ -38332,6 +38433,14 @@ var FileIpcTransport = class {
         await sleep(POLL_INTERVAL_MS);
       }
     }
+  }
+  /**
+   * What After Effects is showing: real dialogs, and its own script progress
+   * window (a script still running), kept apart so the progress window is
+   * never reported as a dialog or offered for dismissal.
+   */
+  async lookAtAe() {
+    return splitScriptProgress(await this.scanDialogs());
   }
   /** Id recorded in the busy lock, or null when there is none or it is unreadable. */
   async lockHolder() {
@@ -38516,6 +38625,13 @@ var FileIpcTransport = class {
           if (stat.mtimeMs < cutoff) await fs3.unlink(full);
         } catch {
         }
+      }
+      await sweepOrphanTmpFiles(RUNTIME_DIR);
+      try {
+        for (const entry of await fs3.readdir(INSTANCES_DIR)) {
+          await sweepOrphanTmpFiles(path4.join(INSTANCES_DIR, entry));
+        }
+      } catch {
       }
       try {
         const lockStat = await fs3.stat(BUSY_LOCK_PATH);
@@ -41826,7 +41942,7 @@ registerOp({
 registerOp({
   name: "project.undo",
   category: "project",
-  description: "Undo the last action. Equivalent to Ctrl+Z. Each prior ae_do call is ONE undo step (its automatic undo group), so count=1 reverts the whole previous call, batch included. Runs with After Effects' dialogs suppressed (an undo once raised an error box that blocked all scripting until a person clicked it); the result's aeErrors and warning carry anything After Effects reported, and an undo that throws stops the loop and fails the call. A failed call that was rolled back already left no step of its own: do not undo again for it.",
+  description: "Undo the last action. Equivalent to Ctrl+Z. Each prior ae_do call is ONE undo step (its automatic undo group), so count=1 reverts the whole previous call, batch included. Runs with After Effects' dialogs suppressed (an undo once raised an error box that blocked all scripting until a person clicked it); the result's aeErrors and warning carry anything After Effects reported, and an undo that throws stops the loop and fails the call. The result counts commands run (commandsRun), not steps undone: `changed` says whether the project's items or the active comp's layers changed (false means the history was empty OR the step only changed property values \u2014 inspect before assuming either), and `effect` says it in words. A failed call that was rolled back already left no step of its own: do not undo again for it.",
   params: [
     {
       name: "count",
@@ -41845,16 +41961,14 @@ registerOp({
   undoGroup: () => false,
   toJsx(args) {
     return `
-            var _u = AE_MCP.undoRedo(${UNDO_COMMAND_ID}, ${jsxVal(args.count ?? 1)});
-            _u.undone = _u.done;
-            return _u;
+            return AE_MCP.undoRedo(${UNDO_COMMAND_ID}, ${jsxVal(args.count ?? 1)});
         `;
   }
 });
 registerOp({
   name: "project.redo",
   category: "project",
-  description: "Redo the last undone action. Equivalent to Ctrl+Shift+Z. Runs like project.undo: outside the undo group, with dialogs suppressed, reporting any error After Effects raised (aeErrors, warning).",
+  description: "Redo the last undone action. Equivalent to Ctrl+Shift+Z. Runs like project.undo: outside the undo group, with dialogs suppressed, reporting any error After Effects raised (aeErrors, warning), and saying whether the project changed (changed, effect) rather than counting steps redone.",
   params: [
     {
       name: "count",
@@ -41867,9 +41981,7 @@ registerOp({
   undoGroup: () => false,
   toJsx(args) {
     return `
-            var _r = AE_MCP.undoRedo(${REDO_COMMAND_ID}, ${jsxVal(args.count ?? 1)});
-            _r.redone = _r.done;
-            return _r;
+            return AE_MCP.undoRedo(${REDO_COMMAND_ID}, ${jsxVal(args.count ?? 1)});
         `;
   }
 });
@@ -49689,15 +49801,17 @@ registerOp({
 registerOp({
   name: "instance.dialogs",
   category: "instance",
-  description: "List the modal dialogs every running After Effects is showing \u2014 the message text, the owning process and its window title, and an id for instance.dismiss_dialog. While a dialog is open no script runs (calls fail with DIALOG_OPEN, or an instance stops ticking), and the dialog is often hidden behind the main window. Windows and macOS. On macOS the text is read only with Accessibility permission for the app running this server; without it dialogs are still listed, with empty text (`accessibility: false`).",
+  description: "List the modal dialogs every running After Effects is showing \u2014 the message text, the owning process and its window title, and an id for instance.dismiss_dialog. While a dialog is open no script runs (calls fail with DIALOG_OPEN, or an instance stops ticking), and the dialog is often hidden behind the main window. Windows and macOS. On macOS the text is read only with Accessibility permission for the app running this server; without it dialogs are still listed, with empty text (`accessibility: false`). After Effects' own 'Executing Script ...' progress window is not a dialog: it is reported under scriptRunning (a script is still running), never offered for dismissal \u2014 its only action cancels the script.",
   params: [],
   readOnly: true,
   toJsx: () => nodeOnly("instance.dialogs"),
   async run() {
-    const dialogs = await scanAeDialogs();
+    const { dialogs, scripts } = splitScriptProgress(await scanAeWindows());
     return {
       ok: true,
       dialogs,
+      scriptRunning: scripts.map((w) => ({ pid: w.pid, id: w.id, matchedBy: w.scriptProgress })),
+      ...scripts.length > 0 ? { note: `A script is still running. ${scriptRunningMessage(scripts)}. ${SCRIPT_RUNNING_HINT}` } : {},
       supported: dialogScanSupported()
     };
   }
@@ -49720,7 +49834,14 @@ registerOp({
       return fail("instance.dismiss_dialog is only available on Windows and macOS");
     }
     const id = typeof args.id === "string" ? args.id.trim() : "";
-    const r = await dismissAeDialog(id);
+    const progress = (await scanAeWindows()).find((w) => w.id === id && w.scriptProgress);
+    const r = progress ? { posted: false, closed: false, text: null, reason: "script_progress" } : await dismissAeDialog(id);
+    if (r.reason === "script_progress") {
+      return fail(
+        `window ${id} is After Effects' 'Executing Script' progress window, not a dialog: a script is still running, and that window's only action would cancel it. Nothing was sent.`,
+        { hint: SCRIPT_RUNNING_HINT }
+      );
+    }
     if (r.reason === "no_permission") {
       return fail(`cannot close After Effects dialog ${id}: no Accessibility permission`, {
         hint: ACCESSIBILITY_HINT
