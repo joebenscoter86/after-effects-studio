@@ -16,6 +16,11 @@ export interface DiffThresholds {
     window: number;
     /** Gain of the difference images on the diff sheet. */
     amplify: number;
+    /**
+     * A pair whose change is at most this is a repeated frame (identical
+     * pictures read 0). Repeats are never used as a reference for other pairs.
+     */
+    repeatBelow: number;
 }
 export type DiffThresholdArgs = Partial<DiffThresholds>;
 /**
@@ -38,6 +43,11 @@ export type DiffThresholdArgs = Partial<DiffThresholds>;
  * - window 3: three pairs each side is enough to tell a pop from a change of
  *   speed, short enough to follow an ease.
  * - amplify 8: a change of 0.03 shows at a quarter of full white on the sheet.
+ * - repeatBelow 0.0001: a repeated frame reads exactly 0 (measured live: ten
+ *   pairs from rounded times, all 0); 0.0001 is a fortieth of an 8-bit step
+ *   on average, far below any grain, so only a repeat (or a frame differing
+ *   in a few pixels) is below it. A repeat beside a pair would otherwise be
+ *   that pair's reference and make an ordinary change read as a cut.
  */
 export declare const DIFF_DEFAULTS: DiffThresholds;
 export declare function resolveDiffThresholds(args?: DiffThresholdArgs): DiffThresholds;
@@ -92,7 +102,7 @@ export interface SeriesPair {
     change: number;
     changedShare: number;
 }
-export type FlagKind = "pop" | "stutter" | "cut";
+export type FlagKind = "pop" | "stutter" | "cut" | "repeat";
 export interface SeriesFlag {
     kind: FlagKind;
     /** Indices into `pairs`. */
@@ -107,6 +117,14 @@ export interface SeriesFlag {
     ratio: number;
     /** The pair is the first or last of the series, so only one side could be compared. */
     atSeriesEdge?: boolean;
+    /** cut / pop: a repeated frame is among the neighbours; it was left out of the reference. */
+    besideRepeat?: boolean;
+    /**
+     * stutter / repeat: the pairs next to the repeated frame. Their change is
+     * measured across a repeat (the one after spans two frames' motion), so
+     * read them with care.
+     */
+    unreliablePairs?: number[];
     reading: string;
 }
 export interface SeriesSummary {
@@ -131,6 +149,10 @@ export interface SeriesSummary {
  * spike is a cut (or a jump). A hold — a pair that barely changes while the
  * neighbours on both sides move — is a stutter: a repeated frame. Spikes are
  * left out of a hold's neighbours, so the pair beside a pop is not a stutter.
+ * Repeated frames (change ≤ repeatBelow) are left out of every reference (a 0
+ * beside a pair would make an ordinary change read as a cut); a repeat at the
+ * start or end of the series beside motion is flagged `repeat`, and stutters
+ * and repeats name the pairs beside them as unreliable.
  */
 export declare function summarizeSeries(pairs: SeriesPair[], t: DiffThresholds): SeriesSummary;
 //# sourceMappingURL=motion.d.ts.map

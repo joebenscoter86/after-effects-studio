@@ -52,6 +52,29 @@ import { RENDER_FRAME_FN } from "../operations/snippets.js";
 import { jsxVal } from "../registry.js";
 import { defineTool, toMcpResult } from "./define-tool.js";
 const STRIP_DEFAULT_MAX_DIMENSION = 360;
+const FRAME_PICK = 0.25;
+const NEAR_FRAME_BOUNDARY = 0.02;
+function frameWarnings(frames, near = NEAR_FRAME_BOUNDARY) {
+  const parts = [];
+  const firstAt = /* @__PURE__ */ new Map();
+  for (const [i, f] of frames.entries()) {
+    if (typeof f.frame !== "number") continue;
+    const seen = firstAt.get(f.frame);
+    if (seen === void 0) firstAt.set(f.frame, i);
+    else parts.push(`#${seen} and #${i} both render frame ${f.frame}`);
+  }
+  for (const [i, f] of frames.entries()) {
+    if (typeof f.frame !== "number" || typeof f.frameOffset !== "number") continue;
+    const below = 1 - f.frameOffset;
+    if (below > 0 && below <= near) {
+      parts.push(
+        `#${i} (${f.time} s) renders frame ${f.frame}, ${(below * 100).toFixed(1)}% of a frame below frame ${f.frame + 1}`
+      );
+    }
+  }
+  if (parts.length === 0) return void 0;
+  return `${parts.join("; ")}. A time resolves to the frame it falls in, so a rounded time just below a boundary renders the frame before and a series of rounded times can repeat frames (diff then reads stutters). Pass \`frames: [..]\` to address frames by number, or exact times.`;
+}
 const MEASUREMENT_STAGES = {
   capture: "the PNG as saveFrameToPng wrote it, before any colour conversion: working-space values (scaled by AE's capture transfer in colour-managed projects), 8 or 16 bits. Its RGB is already laid over the comp background colour (`bgColor`): capture = colour\xB7alpha + bgColor\xB7(1 \u2212 alpha), so a half-covered pixel reads half background and an empty one reads bgColor; on a black background that is premultiplied colour. Alpha is the coverage AE wrote",
   output: "the file as written (writtenTo), after colour conversion when colorManaged is auto, so 8-bit display values. With channels 'rgb': over the comp background as AE composited it, or over `over`. With 'rgba': the colour recovered from under the background (straight, 0 where alpha is 0), plus alpha. With 'alpha': the matte, in r = g = b. The same as the capture when colorManaged is off or the conversion failed"
@@ -86,7 +109,9 @@ const renderFrameTool = defineTool({
   effect: "write",
   inputShape: {
     compNameOrId: z.union([z.string(), z.number()]).describe("Composition name or numeric item id."),
-    time: z.number().nonnegative().optional().describe("Time in seconds to render. Give exactly one of `time`, `times` or `strip`."),
+    time: z.number().nonnegative().optional().describe(
+      "Time in seconds to render. Give exactly one of `time`, `times`, `strip` or `frames`. Each rendered frame reports `frame` (the frame the time falls in: floor(time / frameDuration), worked out in After Effects) and `frameOffset` (where in it, 0..1); `frameWarning` says when two times land on one frame or a time sits within 2% of a frame below a boundary (a rounded time renders the frame before). Times are never moved."
+    ),
     times: z.array(z.number().nonnegative()).min(1).max(32).optional().describe(
       "Several times in seconds, rendered in ONE call. Files are written as <outPath stem>_<index><ext> and reported in `frames` (index-aligned)."
     ),
@@ -99,6 +124,9 @@ const renderFrameTool = defineTool({
       )
     }).optional().describe(
       "'What happens around this moment' in one call: N consecutive frames around `at`, worked out from the comp's frame rate inside After Effects and rendered through the `times` path (files <stem>_<index>, listed in `frames`), tiled small into the contact sheet, with `diff` and its sheet on (pass `diff: false` to skip, or diff options to tune). The window is shifted to stay inside the comp; `strip` in the response says where it landed. Instead of `time` / `times`."
+    ),
+    frames: z.array(z.number().int().nonnegative()).min(1).max(32).optional().describe(
+      "Frame numbers (0 = the comp's first frame) instead of times: each is rendered a quarter of a frame inside it, so a time never lands on the frame before. Through the `times` path: files <stem>_<index>, reported in `frames` with their `frame`. Instead of `time` / `times` / `strip`."
     ),
     outPath: z.string().describe(
       "Absolute path to write the PNG. Parent directory is created if missing. With `times`, used as the naming stem for every frame."
@@ -245,6 +273,9 @@ const renderFrameTool = defineTool({
         ),
         window: z.number().int().optional().describe("Pairs on each side compared with a pair. Default 3."),
         amplify: z.number().optional().describe("Gain of the difference images on the diff sheet. Default 8."),
+        repeatBelow: z.number().min(0).max(1).optional().describe(
+          "A pair changing this little is a repeated frame (identical frames read 0); repeats are never a reference for other pairs. Default 0.0001."
+        ),
         sheet: z.union([
           z.boolean(),
           z.object({
@@ -257,15 +288,27 @@ const renderFrameTool = defineTool({
         )
       })
     ]).optional().describe(
-      "Frame-to-frame change, with `times` (two or more) or `strip`; `true` for the defaults. Measured on the written file (stage 'output', display values; `diff.picture` says what exactly: with the default rgb output the capture is already over the comp background, so transparent areas do not change). Reported as `diff` {stage, picture, pairs, series} with the thresholds used as `diffThresholds`. Each consecutive pair: from, to, change (mean absolute difference over pixels and channels, 0..1), maxAbsDelta, changedPixels, changedShare (a channel moved by more than changeAbove), changedBounds, and with `sample` the same per region. series: pairs, median, mean, largest, smallest, flags [{kind 'pop' | 'stutter' | 'cut', pairs, frame or between, change, reference, ratio, atSeriesEdge?, reading}], reading. A pop is a frame that differs from both neighbours; a stutter a frame that repeats the one before while the frames around it move; a cut one pair far above its neighbours. Flags are hints from numbers: look at the frames."
+      "Frame-to-frame change, with `times` (two or more) or `strip`; `true` for the defaults. Measured on the written file (stage 'output', display values; `diff.picture` says what exactly: with the default rgb output the capture is already over the comp background, so transparent areas do not change). Reported as `diff` {stage, picture, pairs, series} with the thresholds used as `diffThresholds`. Each consecutive pair: from, to, change (mean absolute difference over pixels and channels, 0..1), maxAbsDelta, changedPixels, changedShare (a channel moved by more than changeAbove), changedBounds, and with `sample` the same per region. series: pairs, median, mean, largest, smallest, flags [{kind 'pop' | 'stutter' | 'cut' | 'repeat', pairs, frame or between, change, reference, ratio, atSeriesEdge?, besideRepeat?, unreliablePairs?, reading}], reading. A pop is a frame that differs from both neighbours; a stutter a frame that repeats the one before while the frames around it move; a cut one pair far above its neighbours; a repeat an unchanged pair at the start or end of the series beside motion. Repeated frames are never a reference, and the pairs beside one are named unreliable. Flags are hints from numbers: look at the frames."
     )
   },
   handler: async (args, transport) => {
-    const given = [args.time, args.times, args.strip].filter((v) => v !== void 0).length;
+    const given = [args.time, args.times, args.strip, args.frames].filter(
+      (v) => v !== void 0
+    ).length;
     if (given !== 1) {
-      return errorResult("INVALID_ARGS", "give exactly one of `time`, `times` or `strip`", {
-        hint: "`time: 1.5` renders one frame; `times: [0, 1, 2]` renders several in one call; `strip: { at: 1.5, frames: 9 }` renders the frames around a moment."
-      });
+      return errorResult(
+        "INVALID_ARGS",
+        "give exactly one of `time`, `times`, `strip` or `frames`",
+        {
+          hint: "`time: 1.5` renders one frame; `times: [0, 1, 2]` renders several in one call; `strip: { at: 1.5, frames: 9 }` renders the frames around a moment; `frames: [42, 43]` renders frames by number."
+        }
+      );
+    }
+    if (args.frames !== void 0 && (!Array.isArray(args.frames) || args.frames.length < 1 || args.frames.length > 32 || !args.frames.every((k) => Number.isInteger(k) && k >= 0))) {
+      return errorResult(
+        "INVALID_ARGS",
+        "`frames` must be 1 to 32 whole frame numbers, 0 or more (0 = the comp's first frame)"
+      );
     }
     if (args.settleTimeoutMs !== void 0 && !(Number.isInteger(args.settleTimeoutMs) && args.settleTimeoutMs > 0)) {
       return errorResult("INVALID_ARGS", "`settleTimeoutMs` must be a positive whole number of ms");
@@ -276,7 +319,7 @@ const renderFrameTool = defineTool({
       if ("error" in planned) return planned.error;
       strip = planned.plan;
     }
-    const count = strip?.frames ?? args.times?.length ?? 1;
+    const count = strip?.frames ?? args.frames?.length ?? args.times?.length ?? 1;
     const checked = checkEyesOptions({ ...args, count }, strip !== null);
     if ("error" in checked) return checked.error;
     const rejection = rejectedOutputPath(args.outPath);
@@ -536,7 +579,7 @@ const ISOLATE_FN = `
         return { ok: true, saved: saved, layers: named, changed: changed };
     }
 `;
-function renderJsx(args, times, paths, tryOcio, isolate, strip = null) {
+function renderJsx(args, times, paths, tryOcio, isolate, strip = null, frameNums = null) {
   return `
         ${RENDER_FRAME_FN}
         ${ISOLATE_FN}
@@ -568,8 +611,18 @@ function renderJsx(args, times, paths, tryOcio, isolate, strip = null) {
         var _ws = AE.safeGet(function () { return app.project.workingSpace; }, "None");
         var _times = ${jsxVal(times)};
         var _strip = ${jsxVal(strip === null ? null : { at: strip.at, offsets: strip.offsets })};
+        var _frameNums = ${jsxVal(frameNums)};
         var _paths = ${jsxVal(paths)};
+        var _pick = ${jsxVal(FRAME_PICK)};
         var _stripOut = null;
+        if (_frameNums !== null) {
+            var _lastF = Math.max(0, Math.round(comp.duration / comp.frameDuration) - 1);
+            _times = [];
+            for (var _ni = 0; _ni < _frameNums.length; _ni++) {
+                if (_frameNums[_ni] > _lastF) return { ok: false, error: "frame " + _frameNums[_ni] + " is past the comp's last frame, " + _lastF + " (comp " + comp.name + ")" };
+                _times.push((_frameNums[_ni] + _pick) * comp.frameDuration);
+            }
+        }
         if (_strip !== null) {
             var _fd = comp.frameDuration;
             var _lastK = Math.max(0, Math.round(comp.duration / _fd) - 1);
@@ -583,7 +636,7 @@ function renderJsx(args, times, paths, tryOcio, isolate, strip = null) {
             for (var _si = 0; _si < _offs.length; _si++) {
                 var _k = _k0 + _offs[_si] + _shift;
                 if (_k > _lastK) { _k = _lastK; _clamped++; }
-                _times.push(_k * _fd);
+                _times.push((_k + _pick) * _fd);
             }
             _stripOut = {
                 at: Math.round(_k0 * _fd * 1e6) / 1e6,
@@ -602,6 +655,15 @@ function renderJsx(args, times, paths, tryOcio, isolate, strip = null) {
             for (var _fi = 0; _fi < _times.length; _fi++) {
                 var _r = _renderFrame(comp, _times[_fi], _paths[_fi], _useDst);
                 _r.captureKind = kind;
+                if (_r.ok) {
+                    // The frame this time falls in, counted from frame 0 in the
+                    // convention of time; within a millionth of a frame of a
+                    // boundary counts as on it (k / fps in floating point).
+                    var _pos = _times[_fi] / comp.frameDuration;
+                    var _fk = Math.floor(_pos + 1e-6);
+                    _r.frame = _fk;
+                    _r.frameOffset = Math.max(0, Math.round((_pos - _fk) * 1e6) / 1e6);
+                }
                 _frames.push(_r);
             }
         }
@@ -670,15 +732,16 @@ function renderJsx(args, times, paths, tryOcio, isolate, strip = null) {
     `;
 }
 async function nativeFlow(args, opts, abs, transport, strip = null) {
-  const multi = args.times !== void 0 || strip !== null;
-  const times = strip !== null ? null : args.times ?? [args.time];
-  const count = strip?.frames ?? times?.length ?? 1;
+  const frameNums = args.frames ?? null;
+  const multi = args.times !== void 0 || strip !== null || frameNums !== null;
+  const times = strip !== null || frameNums !== null ? null : args.times ?? [args.time];
+  const count = strip?.frames ?? frameNums?.length ?? times?.length ?? 1;
   const paths = framePaths(abs, count, multi);
   const contactSheet = args.contactSheet ?? (strip !== null ? {} : void 0);
   const before = await stampFiles(paths);
   const tryOcio = args.colorManaged !== "off" && !readOnlyMode();
   const result = await transport.execute({
-    code: renderJsx(args, times, paths, tryOcio, opts.isolate, strip),
+    code: renderJsx(args, times, paths, tryOcio, opts.isolate, strip, frameNums),
     label: "render_frame",
     timeoutMs: 12e4 + (count - 1) * 3e4
   });
@@ -695,9 +758,15 @@ async function nativeFlow(args, opts, abs, transport, strip = null) {
       ...payload.strip
     };
   }
+  if (payload && payload.ok === true) {
+    const warning = frameWarnings(frames);
+    if (warning !== void 0) payload.frameWarning = warning;
+  }
   if (payload && payload.ok === true && !multi && frames.length === 1) {
     payload.writtenTo = frames[0].writtenTo;
     payload.time = frames[0].time;
+    if (frames[0].frame !== void 0) payload.frame = frames[0].frame;
+    if (frames[0].frameOffset !== void 0) payload.frameOffset = frames[0].frameOffset;
     payload.size = frames[0].size;
     delete payload.frames;
   }
@@ -1154,5 +1223,8 @@ async function colorConversion(payload, transport) {
   }
 }
 export {
+  FRAME_PICK,
+  NEAR_FRAME_BOUNDARY,
+  frameWarnings,
   renderFrameTool
 };

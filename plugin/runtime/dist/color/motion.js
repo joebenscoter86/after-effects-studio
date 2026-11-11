@@ -38,6 +38,11 @@ import { clipRegion } from "./sheet.js";
  * - window 3: three pairs each side is enough to tell a pop from a change of
  *   speed, short enough to follow an ease.
  * - amplify 8: a change of 0.03 shows at a quarter of full white on the sheet.
+ * - repeatBelow 0.0001: a repeated frame reads exactly 0 (measured live: ten
+ *   pairs from rounded times, all 0); 0.0001 is a fortieth of an 8-bit step
+ *   on average, far below any grain, so only a repeat (or a frame differing
+ *   in a few pixels) is below it. A repeat beside a pair would otherwise be
+ *   that pair's reference and make an ordinary change read as a cut.
  */
 export const DIFF_DEFAULTS = {
     changeAbove: 0.04,
@@ -47,6 +52,7 @@ export const DIFF_DEFAULTS = {
     movingShare: 0.0005,
     window: 3,
     amplify: 8,
+    repeatBelow: 0.0001,
 };
 const LIMITS = {
     changeAbove: { min: 0, max: 1 },
@@ -56,6 +62,7 @@ const LIMITS = {
     movingShare: { min: 0, max: 1 },
     window: { min: 1, max: 16, int: true },
     amplify: { min: 1, max: 1000 },
+    repeatBelow: { min: 0, max: 1 },
 };
 export function resolveDiffThresholds(args = {}) {
     const out = { ...DIFF_DEFAULTS };
@@ -233,6 +240,10 @@ const frameText = (f) => `#${f.index}${f.time === undefined ? "" : ` (${r6(f.tim
  * spike is a cut (or a jump). A hold — a pair that barely changes while the
  * neighbours on both sides move — is a stutter: a repeated frame. Spikes are
  * left out of a hold's neighbours, so the pair beside a pop is not a stutter.
+ * Repeated frames (change ≤ repeatBelow) are left out of every reference (a 0
+ * beside a pair would make an ordinary change read as a cut); a repeat at the
+ * start or end of the series beside motion is flagged `repeat`, and stutters
+ * and repeats name the pairs beside them as unreliable.
  */
 export function summarizeSeries(pairs, t) {
     const n = pairs.length;
@@ -261,19 +272,31 @@ export function summarizeSeries(pairs, t) {
                 : "one pair: nothing to compare it with, so nothing is flagged (render at least three frames)";
         return summary;
     }
-    const none = new Set();
+    // Repeated frames are never a reference: a 0 beside a pair would make an
+    // ordinary change look like a cut.
+    const repeats = new Set(pairs.flatMap((p, i) => (p.change <= t.repeatBelow ? [i] : [])));
+    const near = (i, set) => {
+        for (let k = 1; k <= t.window; k++)
+            if (set.has(i - k) || set.has(i + k))
+                return true;
+        return false;
+    };
     const spike = pairs.map((p, i) => {
-        if (p.changedShare < t.movingShare)
+        if (repeats.has(i) || p.changedShare < t.movingShare)
             return null;
-        const sides = [side(pairs, i, -1, t.window, none), side(pairs, i, 1, t.window, none)].filter((s) => s !== null);
+        const sides = [
+            side(pairs, i, -1, t.window, repeats),
+            side(pairs, i, 1, t.window, repeats),
+        ].filter((s) => s !== null);
         if (sides.length === 0)
             return null;
         const reference = Math.max(...sides.map((s) => s.change), t.quietBelow);
         if (sides.some((s) => p.change < t.spikeRatio * Math.max(s.change, t.quietBelow)))
             return null;
-        return { reference, edge: sides.length < 2 };
+        return { reference, edge: i === 0 || i === n - 1, besideRepeat: near(i, repeats) };
     });
     const spikes = new Set(spike.flatMap((s, i) => (s ? [i] : [])));
+    const repeatNote = " (a repeated frame is next to it and was left out of the comparison)";
     const flags = [];
     for (let i = 0; i < n; i++) {
         const s = spike[i];
@@ -289,7 +312,7 @@ export function summarizeSeries(pairs, t) {
             const reference = Math.max(s.reference, spike[end].reference);
             const change = Math.min(pairs[i].change, pairs[end].change);
             const frame = pairs[i].to;
-            flags.push({
+            const flag = {
                 kind: "pop",
                 pairs: [i, end],
                 frame,
@@ -297,7 +320,12 @@ export function summarizeSeries(pairs, t) {
                 reference: r6(reference),
                 ratio: r6(change / reference),
                 reading: `frame ${frameText(frame)} differs from the frames before and after it by ${fmt(change)} or more, while its neighbours change about ${fmt(reference)}: a one-frame pop`,
-            });
+            };
+            if (s.besideRepeat || spike[end].besideRepeat) {
+                flag.besideRepeat = true;
+                flag.reading += repeatNote;
+            }
+            flags.push(flag);
             continue;
         }
         for (let j = i; j <= end; j++) {
@@ -316,36 +344,67 @@ export function summarizeSeries(pairs, t) {
                 flag.atSeriesEdge = true;
                 flag.reading += " (first or last pair: it could also be a pop of the end frame)";
             }
+            if (sj.besideRepeat) {
+                flag.besideRepeat = true;
+                flag.reading += repeatNote;
+            }
             flags.push(flag);
         }
     }
+    const moving = (s) => s !== null && s.change >= t.quietBelow && s.share >= t.movingShare;
+    const notSpikes = new Set([...spikes, ...repeats]);
+    const neighbours = (i) => [i - 1, i + 1].filter((j) => j >= 0 && j < n && !repeats.has(j));
     for (let i = 0; i < n; i++) {
         if (spikes.has(i))
             continue;
-        const before = side(pairs, i, -1, t.window, spikes);
-        const after = side(pairs, i, 1, t.window, spikes);
-        if (!before || !after)
-            continue;
-        const moving = (s) => s.change >= t.quietBelow && s.share >= t.movingShare;
-        if (!moving(before) || !moving(after))
-            continue;
-        const reference = Math.min(before.change, after.change);
-        if (pairs[i].change > t.holdRatio * reference)
-            continue;
+        const before = side(pairs, i, -1, t.window, notSpikes);
+        const after = side(pairs, i, 1, t.window, notSpikes);
         const frame = pairs[i].to;
+        const unreliablePairs = neighbours(i);
+        const unreliable = unreliablePairs.length > 0
+            ? `; pair${unreliablePairs.length > 1 ? "s" : ""} ${unreliablePairs.join(" and ")} beside it ${unreliablePairs.length > 1 ? "are" : "is"} measured across the repeat, so ${unreliablePairs.length > 1 ? "their readings are" : "its reading is"} unreliable`
+            : "";
+        if (before && after && moving(before) && moving(after)) {
+            const reference = Math.min(before.change, after.change);
+            if (pairs[i].change > t.holdRatio * reference)
+                continue;
+            flags.push({
+                kind: "stutter",
+                pairs: [i],
+                frame,
+                change: pairs[i].change,
+                reference: r6(reference),
+                ratio: r6(pairs[i].change / reference),
+                unreliablePairs,
+                reading: `frame ${frameText(frame)} barely changes from the one before (${fmt(pairs[i].change)}) while the frames around it move about ${fmt(reference)}: a repeated frame, a stutter${unreliable}. Rounded times can do this: a time just below a frame boundary renders the frame before (see frameWarning)`,
+            });
+            continue;
+        }
+        if (!repeats.has(i))
+            continue;
+        // A repeat at the start or end of the series, beside motion: a stutter
+        // cannot be told from the start or end of a hold, so say what is known.
+        const rawBefore = side(pairs, i, -1, t.window, spikes);
+        const rawAfter = side(pairs, i, 1, t.window, spikes);
+        const atEdge = rawBefore === null || rawAfter === null;
+        if (!atEdge || !(moving(rawBefore) || moving(rawAfter)))
+            continue;
+        const reference = (moving(rawBefore) ? rawBefore : rawAfter).change;
         flags.push({
-            kind: "stutter",
+            kind: "repeat",
             pairs: [i],
             frame,
             change: pairs[i].change,
             reference: r6(reference),
             ratio: r6(pairs[i].change / reference),
-            reading: `frame ${frameText(frame)} barely changes from the one before (${fmt(pairs[i].change)}) while the frames around it move about ${fmt(reference)}: a repeated frame, a stutter`,
+            atSeriesEdge: true,
+            unreliablePairs,
+            reading: `frame ${frameText(frame)} repeats the one before (change ${fmt(pairs[i].change)}) beside motion of about ${fmt(reference)}, at the ${rawBefore === null ? "start" : "end"} of the series, so a stutter cannot be told from a hold${unreliable}`,
         });
     }
     flags.sort((a, b) => a.pairs[0] - b.pairs[0]);
     summary.flags = flags;
-    const counts = ["pop", "stutter", "cut"]
+    const counts = ["pop", "stutter", "cut", "repeat"]
         .map((k) => [k, flags.filter((f) => f.kind === k).length])
         .filter(([, c]) => c > 0)
         .map(([k, c]) => `${c} ${k}${c > 1 ? "s" : ""}`);

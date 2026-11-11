@@ -16,6 +16,52 @@ import { RENDER_FRAME_FN } from "../operations/snippets.js";
 import { jsxVal } from "../registry.js";
 import { defineTool, toMcpResult } from "./define-tool.js";
 const STRIP_DEFAULT_MAX_DIMENSION = 360;
+/**
+ * Where inside a frame `frames` and `strip` render: a quarter of a frame past
+ * its start. Found live: a time a hair below a boundary renders the frame
+ * before (1.4333 for 43/30 rendered frame 42), and an exact boundary is at
+ * the mercy of floating point. A quarter in is the same frame whether After
+ * Effects floors the time or rounds it.
+ */
+export const FRAME_PICK = 0.25;
+/**
+ * A requested time within this fraction of a frame below the next frame's
+ * start is reported (frameWarning): 2% of a frame, 0.7 ms at 30 fps. Times
+ * rounded to four decimals land there (43/30 → 1.4333 is 0.1% below frame 43);
+ * a time deliberately between frames is not.
+ */
+export const NEAR_FRAME_BOUNDARY = 0.02;
+/**
+ * The warning for a call's requested times, or undefined: two times that
+ * resolve to the same frame, and times just below a frame boundary. The
+ * times are never moved; this only says what After Effects will render.
+ */
+export function frameWarnings(frames, near = NEAR_FRAME_BOUNDARY) {
+    const parts = [];
+    const firstAt = new Map();
+    for (const [i, f] of frames.entries()) {
+        if (typeof f.frame !== "number")
+            continue;
+        const seen = firstAt.get(f.frame);
+        if (seen === undefined)
+            firstAt.set(f.frame, i);
+        else
+            parts.push(`#${seen} and #${i} both render frame ${f.frame}`);
+    }
+    for (const [i, f] of frames.entries()) {
+        if (typeof f.frame !== "number" || typeof f.frameOffset !== "number")
+            continue;
+        const below = 1 - f.frameOffset;
+        if (below > 0 && below <= near) {
+            parts.push(`#${i} (${f.time} s) renders frame ${f.frame}, ${(below * 100).toFixed(1)}% of a frame below frame ${f.frame + 1}`);
+        }
+    }
+    if (parts.length === 0)
+        return undefined;
+    return (`${parts.join("; ")}. A time resolves to the frame it falls in, so a rounded time just below a boundary ` +
+        "renders the frame before and a series of rounded times can repeat frames (diff then reads stutters). " +
+        "Pass `frames: [..]` to address frames by number, or exact times.");
+}
 /** Said once per response, so every number can be traced to the pixels it came from. */
 const MEASUREMENT_STAGES = {
     capture: "the PNG as saveFrameToPng wrote it, before any colour conversion: working-space values " +
@@ -101,7 +147,11 @@ export const renderFrameTool = defineTool({
             .number()
             .nonnegative()
             .optional()
-            .describe("Time in seconds to render. Give exactly one of `time`, `times` or `strip`."),
+            .describe("Time in seconds to render. Give exactly one of `time`, `times`, `strip` or `frames`. Each " +
+            "rendered frame reports `frame` (the frame the time falls in: floor(time / frameDuration), " +
+            "worked out in After Effects) and `frameOffset` (where in it, 0..1); `frameWarning` says when " +
+            "two times land on one frame or a time sits within 2% of a frame below a boundary (a rounded " +
+            "time renders the frame before). Times are never moved."),
         times: z
             .array(z.number().nonnegative())
             .min(1)
@@ -143,6 +193,14 @@ export const renderFrameTool = defineTool({
             "and its sheet on (pass `diff: false` to skip, or diff options to tune). The window is " +
             "shifted to stay inside the comp; `strip` in the response says where it landed. Instead " +
             "of `time` / `times`."),
+        frames: z
+            .array(z.number().int().nonnegative())
+            .min(1)
+            .max(32)
+            .optional()
+            .describe("Frame numbers (0 = the comp's first frame) instead of times: each is rendered a quarter of a " +
+            "frame inside it, so a time never lands on the frame before. Through the `times` path: files " +
+            "<stem>_<index>, reported in `frames` with their `frame`. Instead of `time` / `times` / `strip`."),
         outPath: z
             .string()
             .describe("Absolute path to write the PNG. Parent directory is created if missing. " +
@@ -484,6 +542,13 @@ export const renderFrameTool = defineTool({
                     .number()
                     .optional()
                     .describe("Gain of the difference images on the diff sheet. Default 8."),
+                repeatBelow: z
+                    .number()
+                    .min(0)
+                    .max(1)
+                    .optional()
+                    .describe("A pair changing this little is a repeated frame (identical frames read 0); repeats are " +
+                    "never a reference for other pairs. Default 0.0001."),
                 sheet: z
                     .union([
                     z.boolean(),
@@ -508,18 +573,28 @@ export const renderFrameTool = defineTool({
             "(mean absolute difference over pixels and channels, 0..1), maxAbsDelta, changedPixels, " +
             "changedShare (a channel moved by more than changeAbove), changedBounds, and with " +
             "`sample` the same per region. series: pairs, median, mean, largest, smallest, flags " +
-            "[{kind 'pop' | 'stutter' | 'cut', pairs, frame or between, change, reference, ratio, " +
-            "atSeriesEdge?, reading}], reading. A pop is a frame that differs from both neighbours; " +
-            "a stutter a frame that repeats the one before while the frames around it move; a cut " +
-            "one pair far above its neighbours. Flags are hints from numbers: look at the frames."),
+            "[{kind 'pop' | 'stutter' | 'cut' | 'repeat', pairs, frame or between, change, reference, " +
+            "ratio, atSeriesEdge?, besideRepeat?, unreliablePairs?, reading}], reading. A pop is a frame " +
+            "that differs from both neighbours; a stutter a frame that repeats the one before while the " +
+            "frames around it move; a cut one pair far above its neighbours; a repeat an unchanged pair " +
+            "at the start or end of the series beside motion. Repeated frames are never a reference, and " +
+            "the pairs beside one are named unreliable. Flags are hints from numbers: look at the frames."),
     },
     handler: async (args, transport) => {
-        const given = [args.time, args.times, args.strip].filter((v) => v !== undefined).length;
+        const given = [args.time, args.times, args.strip, args.frames].filter((v) => v !== undefined).length;
         if (given !== 1) {
-            return errorResult("INVALID_ARGS", "give exactly one of `time`, `times` or `strip`", {
+            return errorResult("INVALID_ARGS", "give exactly one of `time`, `times`, `strip` or `frames`", {
                 hint: "`time: 1.5` renders one frame; `times: [0, 1, 2]` renders several in one call; " +
-                    "`strip: { at: 1.5, frames: 9 }` renders the frames around a moment.",
+                    "`strip: { at: 1.5, frames: 9 }` renders the frames around a moment; " +
+                    "`frames: [42, 43]` renders frames by number.",
             });
+        }
+        if (args.frames !== undefined &&
+            (!Array.isArray(args.frames) ||
+                args.frames.length < 1 ||
+                args.frames.length > 32 ||
+                !args.frames.every((k) => Number.isInteger(k) && k >= 0))) {
+            return errorResult("INVALID_ARGS", "`frames` must be 1 to 32 whole frame numbers, 0 or more (0 = the comp's first frame)");
         }
         if (args.settleTimeoutMs !== undefined &&
             !(Number.isInteger(args.settleTimeoutMs) && args.settleTimeoutMs > 0)) {
@@ -532,7 +607,7 @@ export const renderFrameTool = defineTool({
                 return planned.error;
             strip = planned.plan;
         }
-        const count = strip?.frames ?? args.times?.length ?? 1;
+        const count = strip?.frames ?? args.frames?.length ?? args.times?.length ?? 1;
         const checked = checkEyesOptions({ ...args, count }, strip !== null);
         if ("error" in checked)
             return checked.error;
@@ -816,7 +891,7 @@ const ISOLATE_FN = `
     }
 `;
 /** Options the JSX needs; everything else happens in Node on the captures. */
-function renderJsx(args, times, paths, tryOcio, isolate, strip = null) {
+function renderJsx(args, times, paths, tryOcio, isolate, strip = null, frameNums = null) {
     // A strip's times come from the comp's own frame duration: snap the moment
     // to a frame, lay the offsets around it, shift the window to stay inside
     // the comp (frames 0 .. last, in the same time convention as `time`).
@@ -851,8 +926,18 @@ function renderJsx(args, times, paths, tryOcio, isolate, strip = null) {
         var _ws = AE.safeGet(function () { return app.project.workingSpace; }, "None");
         var _times = ${jsxVal(times)};
         var _strip = ${jsxVal(strip === null ? null : { at: strip.at, offsets: strip.offsets })};
+        var _frameNums = ${jsxVal(frameNums)};
         var _paths = ${jsxVal(paths)};
+        var _pick = ${jsxVal(FRAME_PICK)};
         var _stripOut = null;
+        if (_frameNums !== null) {
+            var _lastF = Math.max(0, Math.round(comp.duration / comp.frameDuration) - 1);
+            _times = [];
+            for (var _ni = 0; _ni < _frameNums.length; _ni++) {
+                if (_frameNums[_ni] > _lastF) return { ok: false, error: "frame " + _frameNums[_ni] + " is past the comp's last frame, " + _lastF + " (comp " + comp.name + ")" };
+                _times.push((_frameNums[_ni] + _pick) * comp.frameDuration);
+            }
+        }
         if (_strip !== null) {
             var _fd = comp.frameDuration;
             var _lastK = Math.max(0, Math.round(comp.duration / _fd) - 1);
@@ -866,7 +951,7 @@ function renderJsx(args, times, paths, tryOcio, isolate, strip = null) {
             for (var _si = 0; _si < _offs.length; _si++) {
                 var _k = _k0 + _offs[_si] + _shift;
                 if (_k > _lastK) { _k = _lastK; _clamped++; }
-                _times.push(_k * _fd);
+                _times.push((_k + _pick) * _fd);
             }
             _stripOut = {
                 at: Math.round(_k0 * _fd * 1e6) / 1e6,
@@ -885,6 +970,15 @@ function renderJsx(args, times, paths, tryOcio, isolate, strip = null) {
             for (var _fi = 0; _fi < _times.length; _fi++) {
                 var _r = _renderFrame(comp, _times[_fi], _paths[_fi], _useDst);
                 _r.captureKind = kind;
+                if (_r.ok) {
+                    // The frame this time falls in, counted from frame 0 in the
+                    // convention of time; within a millionth of a frame of a
+                    // boundary counts as on it (k / fps in floating point).
+                    var _pos = _times[_fi] / comp.frameDuration;
+                    var _fk = Math.floor(_pos + 1e-6);
+                    _r.frame = _fk;
+                    _r.frameOffset = Math.max(0, Math.round((_pos - _fk) * 1e6) / 1e6);
+                }
                 _frames.push(_r);
             }
         }
@@ -953,10 +1047,11 @@ function renderJsx(args, times, paths, tryOcio, isolate, strip = null) {
     `;
 }
 async function nativeFlow(args, opts, abs, transport, strip = null) {
-    const multi = args.times !== undefined || strip !== null;
-    // A strip goes down the `times` path; its times are worked out in AE.
-    const times = strip !== null ? null : (args.times ?? [args.time]);
-    const count = strip?.frames ?? times?.length ?? 1;
+    const frameNums = args.frames ?? null;
+    const multi = args.times !== undefined || strip !== null || frameNums !== null;
+    // A strip and frame numbers go down the `times` path; their times are worked out in AE.
+    const times = strip !== null || frameNums !== null ? null : (args.times ?? [args.time]);
+    const count = strip?.frames ?? frameNums?.length ?? times?.length ?? 1;
     const paths = framePaths(abs, count, multi);
     const contactSheet = args.contactSheet ?? (strip !== null ? {} : undefined);
     // What was at each path before the render, so a left-over file is never
@@ -974,7 +1069,7 @@ async function nativeFlow(args, opts, abs, transport, strip = null) {
     // to the pure-math conversion below.
     const tryOcio = args.colorManaged !== "off" && !readOnlyMode();
     const result = await transport.execute({
-        code: renderJsx(args, times, paths, tryOcio, opts.isolate, strip),
+        code: renderJsx(args, times, paths, tryOcio, opts.isolate, strip, frameNums),
         label: "render_frame",
         timeoutMs: 120_000 + (count - 1) * 30_000,
     });
@@ -994,9 +1089,18 @@ async function nativeFlow(args, opts, abs, transport, strip = null) {
     }
     // Single-frame calls keep the pre-`times` response shape (top-level
     // writtenTo/time/size); multi-frame calls report through `frames`.
+    if (payload && payload.ok === true) {
+        const warning = frameWarnings(frames);
+        if (warning !== undefined)
+            payload.frameWarning = warning;
+    }
     if (payload && payload.ok === true && !multi && frames.length === 1) {
         payload.writtenTo = frames[0].writtenTo;
         payload.time = frames[0].time;
+        if (frames[0].frame !== undefined)
+            payload.frame = frames[0].frame;
+        if (frames[0].frameOffset !== undefined)
+            payload.frameOffset = frames[0].frameOffset;
         payload.size = frames[0].size;
         delete payload.frames;
     }

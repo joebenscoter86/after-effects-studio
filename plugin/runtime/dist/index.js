@@ -45696,6 +45696,16 @@ registerOp({
 
 // src/operations/render.ts
 init_registry();
+var READ_TEMPLATES_FN = `
+    function _readTemplates(_item) {
+        var _render = [];
+        var _output = [];
+        try { _render = _item.templates; } catch (eR) {}
+        try { _output = _item.outputModule(1).templates; } catch (eO) {}
+        return { renderTemplates: _render, outputTemplates: _output };
+    }
+`;
+var QUEUE_CHANGE_NOTE = "the project is left modified (unsaved): a render-queue item was added and removed. Nothing in the comps changed; save or revert as you normally would";
 var PARK_QUEUE_FN = `
     function _parkQueue(rq) {
         var _parked = [];
@@ -46164,18 +46174,38 @@ registerOp({
   name: "render.list_templates",
   category: "render",
   readOnly: true,
-  description: "List available render-settings templates and output-module templates. The render queue must have at least one item (templates are read from a queue item).",
-  params: [],
-  toJsx() {
+  description: "List available render-settings templates and output-module templates. They are read from a queue item: the first one, or, when the queue is empty and `comp` is given, a temporary item for that comp that is removed again (the project is then left modified by the queue change; render.preview with listTemplates does the same).",
+  params: [
+    {
+      name: "comp",
+      type: "any",
+      description: "Comp name or id for a temporary queue item, used only when the queue is empty",
+      required: false
+    }
+  ],
+  toJsx(args) {
     return `
+            ${READ_TEMPLATES_FN}
             var rq = app.project.renderQueue;
-            if (rq.numItems === 0) return { ok: false, error: "add a comp to the render queue first (render.add_to_queue) \u2014 templates are read from a queue item" };
-            var _rqi = rq.item(1);
-            var _render = [];
-            var _output = [];
-            try { _render = _rqi.templates; } catch (eR) {}
-            try { _output = _rqi.outputModule(1).templates; } catch (eO) {}
-            return { ok: true, renderTemplates: _render, outputTemplates: _output };
+            if (rq.numItems > 0) {
+                var _first = _readTemplates(rq.item(1));
+                return { ok: true, renderTemplates: _first.renderTemplates, outputTemplates: _first.outputTemplates };
+            }
+            var _compArg = ${jsxVal(args.comp ?? null)};
+            if (${jsxVal(readOnlyMode())}) return { ok: false, error: "the render queue is empty, and AE_MCP_READONLY=1 forbids the temporary queue item that would modify the project" };
+            if (_compArg === null) return { ok: false, error: "the render queue is empty: pass comp (a temporary item is added, read and removed), or use render.preview with listTemplates" };
+            var _comp = AE.findCompByNameOrId(_compArg);
+            if (!_comp) return { ok: false, error: "no comp matching " + String(_compArg) };
+            var _tmp = null;
+            try {
+                _tmp = rq.items.add(_comp);
+                var _read = _readTemplates(_tmp);
+                return { ok: true, renderTemplates: _read.renderTemplates, outputTemplates: _read.outputTemplates, temporaryItem: true, projectModified: true, projectNote: ${jsxVal(QUEUE_CHANGE_NOTE)} };
+            } catch (eT) {
+                return { ok: false, error: "could not read templates: " + AE.errText(eT) };
+            } finally {
+                if (_tmp) { try { _tmp.remove(); } catch (eRm) {} }
+            }
         `;
   }
 });
@@ -46433,14 +46463,21 @@ var PREVIEW_RESOLUTIONS = {
 registerOp({
   name: "render.preview",
   category: "render",
-  description: "Render a quick preview movie of a comp's work area (or the whole comp, or a span) through the render queue, so it can be watched at speed. Adds ONE temporary queue item, renders only that item (others are parked and their Render checkboxes restored), then removes it: the queue is left as it was found. Never overwrites an existing file unless overwrite is true; creates the output folder. Returns outputPath, timeSpanStart, durationSeconds, frameCount, frameRate, renderSeconds (wall clock of the render), elapsedSeconds (AE's own count), bytes, outputTemplate, resolution (+ resolutionReadBack) and warnings. Blocks until done: raise ae_do timeoutMs for long comps (235 frames at 1080\xD71920 with 'High Quality' took about 20 s). Defaults are what is known to work: output template 'High Quality' (a .mov) at full resolution; discover other template names with render.list_templates.",
+  description: "Render a quick preview movie of a comp's work area (or the whole comp, or a span) through the render queue, so it can be watched at speed. Adds ONE temporary queue item, renders only that item (others are parked and their Render checkboxes restored), then removes it: the queue is left as it was found. Never overwrites an existing file unless overwrite is true; creates the output folder. Returns outputPath, timeSpanStart, durationSeconds, frameCount, frameRate, renderSeconds (wall clock of the render), elapsedSeconds (AE's own count), bytes, outputTemplate, resolution (+ resolutionReadBack) and warnings. Blocks until done: raise ae_do timeoutMs for long comps (235 frames at 1080\xD71920 with 'High Quality' took about 20 s). Defaults are what is known to work: output template 'High Quality' (a ProRes .mov) at full resolution; resolution 'half' was measured live (540\xD7960 from 1080\xD71920, about a third of the time). listTemplates: true renders nothing and returns the render-settings and output-module template names, read from a temporary queue item that is removed again. Every answer carries projectModified: true and projectNote: adding and removing a queue item leaves the project unsaved.",
   params: [
     { name: "comp", type: "any", description: "Comp name or id", required: true },
     {
       name: "outputPath",
       type: "string",
-      description: "Movie file path (the output template may change the extension; the path AE actually wrote is returned)",
-      required: true
+      description: "Movie file path (the output template may change the extension; the path AE actually wrote is returned). Required unless listTemplates",
+      required: false
+    },
+    {
+      name: "listTemplates",
+      type: "boolean",
+      description: "Render nothing: return renderTemplates and outputTemplates, read from a temporary queue item for comp that is removed again",
+      required: false,
+      default: false
     },
     {
       name: "span",
@@ -46496,6 +46533,26 @@ registerOp({
     }
   ],
   toJsx(args) {
+    if (args.listTemplates === true) {
+      return `
+            ${jsxCompPreamble(args)}
+            ${READ_TEMPLATES_FN}
+            var rq = app.project.renderQueue;
+            if (AE.safeGet(function () { return rq.rendering; }, false)) return { ok: false, error: "the render queue is already rendering; wait for it to finish" };
+            var _tmp = null;
+            try {
+                _tmp = rq.items.add(_comp);
+                var _read = _readTemplates(_tmp);
+                return { ok: true, renderTemplates: _read.renderTemplates, outputTemplates: _read.outputTemplates, projectModified: true, projectNote: ${jsxVal(QUEUE_CHANGE_NOTE)} };
+            } catch (eT) {
+                return { ok: false, error: "could not read templates: " + AE.errText(eT), projectModified: true, projectNote: ${jsxVal(QUEUE_CHANGE_NOTE)} };
+            } finally {
+                if (_tmp) { try { _tmp.remove(); } catch (eRm) {} }
+            }
+        `;
+    }
+    if (typeof args.outputPath !== "string" || args.outputPath === "")
+      return jsxFail("outputPath is required (unless listTemplates is true)");
     const span = args.span ?? "workArea";
     if (span !== "workArea" && span !== "comp") return jsxFail("span must be workArea or comp");
     const resolution = String(args.resolution ?? "full").toLowerCase();
@@ -46581,6 +46638,8 @@ registerOp({
                 _unparkQueue(rq, _parked);
             }
             if (rq.numItems !== _numBefore) _w.push("the render queue has " + rq.numItems + " items, it had " + _numBefore);
+            _out.projectModified = true;
+            _out.projectNote = ${jsxVal(QUEUE_CHANGE_NOTE)};
             return _out;
         `;
   }
@@ -52424,7 +52483,8 @@ var DIFF_DEFAULTS = {
   quietBelow: 2e-3,
   movingShare: 5e-4,
   window: 3,
-  amplify: 8
+  amplify: 8,
+  repeatBelow: 1e-4
 };
 var LIMITS = {
   changeAbove: { min: 0, max: 1 },
@@ -52433,7 +52493,8 @@ var LIMITS = {
   quietBelow: { min: 0, max: 1 },
   movingShare: { min: 0, max: 1 },
   window: { min: 1, max: 16, int: true },
-  amplify: { min: 1, max: 1e3 }
+  amplify: { min: 1, max: 1e3 },
+  repeatBelow: { min: 0, max: 1 }
 };
 function resolveDiffThresholds(args = {}) {
   const out = { ...DIFF_DEFAULTS };
@@ -52602,18 +52663,25 @@ function summarizeSeries(pairs, t) {
     summary.reading = n === 0 ? "no pair of consecutive frames to compare" : "one pair: nothing to compare it with, so nothing is flagged (render at least three frames)";
     return summary;
   }
-  const none = /* @__PURE__ */ new Set();
+  const repeats = new Set(pairs.flatMap((p, i) => p.change <= t.repeatBelow ? [i] : []));
+  const near = (i, set2) => {
+    for (let k = 1; k <= t.window; k++) if (set2.has(i - k) || set2.has(i + k)) return true;
+    return false;
+  };
   const spike = pairs.map((p, i) => {
-    if (p.changedShare < t.movingShare) return null;
-    const sides = [side(pairs, i, -1, t.window, none), side(pairs, i, 1, t.window, none)].filter(
-      (s) => s !== null
-    );
+    if (repeats.has(i) || p.changedShare < t.movingShare) return null;
+    const sides = [
+      side(pairs, i, -1, t.window, repeats),
+      side(pairs, i, 1, t.window, repeats)
+    ].filter((s) => s !== null);
     if (sides.length === 0) return null;
     const reference = Math.max(...sides.map((s) => s.change), t.quietBelow);
-    if (sides.some((s) => p.change < t.spikeRatio * Math.max(s.change, t.quietBelow))) return null;
-    return { reference, edge: sides.length < 2 };
+    if (sides.some((s) => p.change < t.spikeRatio * Math.max(s.change, t.quietBelow)))
+      return null;
+    return { reference, edge: i === 0 || i === n - 1, besideRepeat: near(i, repeats) };
   });
   const spikes = new Set(spike.flatMap((s, i) => s ? [i] : []));
+  const repeatNote = " (a repeated frame is next to it and was left out of the comparison)";
   const flags = [];
   for (let i = 0; i < n; i++) {
     const s = spike[i];
@@ -52626,7 +52694,7 @@ function summarizeSeries(pairs, t) {
       const reference = Math.max(s.reference, spike[end].reference);
       const change = Math.min(pairs[i].change, pairs[end].change);
       const frame = pairs[i].to;
-      flags.push({
+      const flag = {
         kind: "pop",
         pairs: [i, end],
         frame,
@@ -52634,7 +52702,12 @@ function summarizeSeries(pairs, t) {
         reference: r6(reference),
         ratio: r6(change / reference),
         reading: `frame ${frameText(frame)} differs from the frames before and after it by ${fmt(change)} or more, while its neighbours change about ${fmt(reference)}: a one-frame pop`
-      });
+      };
+      if (s.besideRepeat || spike[end].besideRepeat) {
+        flag.besideRepeat = true;
+        flag.reading += repeatNote;
+      }
+      flags.push(flag);
       continue;
     }
     for (let j = i; j <= end; j++) {
@@ -52653,32 +52726,59 @@ function summarizeSeries(pairs, t) {
         flag.atSeriesEdge = true;
         flag.reading += " (first or last pair: it could also be a pop of the end frame)";
       }
+      if (sj.besideRepeat) {
+        flag.besideRepeat = true;
+        flag.reading += repeatNote;
+      }
       flags.push(flag);
     }
   }
+  const moving = (s) => s !== null && s.change >= t.quietBelow && s.share >= t.movingShare;
+  const notSpikes = /* @__PURE__ */ new Set([...spikes, ...repeats]);
+  const neighbours = (i) => [i - 1, i + 1].filter((j) => j >= 0 && j < n && !repeats.has(j));
   for (let i = 0; i < n; i++) {
     if (spikes.has(i)) continue;
-    const before = side(pairs, i, -1, t.window, spikes);
-    const after = side(pairs, i, 1, t.window, spikes);
-    if (!before || !after) continue;
-    const moving = (s) => s.change >= t.quietBelow && s.share >= t.movingShare;
-    if (!moving(before) || !moving(after)) continue;
-    const reference = Math.min(before.change, after.change);
-    if (pairs[i].change > t.holdRatio * reference) continue;
+    const before = side(pairs, i, -1, t.window, notSpikes);
+    const after = side(pairs, i, 1, t.window, notSpikes);
     const frame = pairs[i].to;
+    const unreliablePairs = neighbours(i);
+    const unreliable = unreliablePairs.length > 0 ? `; pair${unreliablePairs.length > 1 ? "s" : ""} ${unreliablePairs.join(" and ")} beside it ${unreliablePairs.length > 1 ? "are" : "is"} measured across the repeat, so ${unreliablePairs.length > 1 ? "their readings are" : "its reading is"} unreliable` : "";
+    if (before && after && moving(before) && moving(after)) {
+      const reference2 = Math.min(before.change, after.change);
+      if (pairs[i].change > t.holdRatio * reference2) continue;
+      flags.push({
+        kind: "stutter",
+        pairs: [i],
+        frame,
+        change: pairs[i].change,
+        reference: r6(reference2),
+        ratio: r6(pairs[i].change / reference2),
+        unreliablePairs,
+        reading: `frame ${frameText(frame)} barely changes from the one before (${fmt(pairs[i].change)}) while the frames around it move about ${fmt(reference2)}: a repeated frame, a stutter${unreliable}. Rounded times can do this: a time just below a frame boundary renders the frame before (see frameWarning)`
+      });
+      continue;
+    }
+    if (!repeats.has(i)) continue;
+    const rawBefore = side(pairs, i, -1, t.window, spikes);
+    const rawAfter = side(pairs, i, 1, t.window, spikes);
+    const atEdge = rawBefore === null || rawAfter === null;
+    if (!atEdge || !(moving(rawBefore) || moving(rawAfter))) continue;
+    const reference = (moving(rawBefore) ? rawBefore : rawAfter).change;
     flags.push({
-      kind: "stutter",
+      kind: "repeat",
       pairs: [i],
       frame,
       change: pairs[i].change,
       reference: r6(reference),
       ratio: r6(pairs[i].change / reference),
-      reading: `frame ${frameText(frame)} barely changes from the one before (${fmt(pairs[i].change)}) while the frames around it move about ${fmt(reference)}: a repeated frame, a stutter`
+      atSeriesEdge: true,
+      unreliablePairs,
+      reading: `frame ${frameText(frame)} repeats the one before (change ${fmt(pairs[i].change)}) beside motion of about ${fmt(reference)}, at the ${rawBefore === null ? "start" : "end"} of the series, so a stutter cannot be told from a hold${unreliable}`
     });
   }
   flags.sort((a, b) => a.pairs[0] - b.pairs[0]);
   summary.flags = flags;
-  const counts = ["pop", "stutter", "cut"].map((k) => [k, flags.filter((f) => f.kind === k).length]).filter(([, c]) => c > 0).map(([k, c]) => `${c} ${k}${c > 1 ? "s" : ""}`);
+  const counts = ["pop", "stutter", "cut", "repeat"].map((k) => [k, flags.filter((f) => f.kind === k).length]).filter(([, c]) => c > 0).map(([k, c]) => `${c} ${k}${c > 1 ? "s" : ""}`);
   summary.reading = `${n} pairs, median change ${fmt(summary.median)}, largest ${fmt(summary.largest.change)} (pair ${largest}); ` + (flags.length === 0 ? "no pair stands out from its neighbours" : `${counts.join(", ")}: ${flags.map((f) => `${f.kind} at pair ${f.pairs.join("+")}`).join("; ")}`);
   return summary;
 }
@@ -52765,6 +52865,29 @@ function profileForWorkingSpace(workingSpace) {
 // src/tools/render-frame.ts
 init_registry();
 var STRIP_DEFAULT_MAX_DIMENSION = 360;
+var FRAME_PICK = 0.25;
+var NEAR_FRAME_BOUNDARY = 0.02;
+function frameWarnings(frames, near = NEAR_FRAME_BOUNDARY) {
+  const parts = [];
+  const firstAt = /* @__PURE__ */ new Map();
+  for (const [i, f] of frames.entries()) {
+    if (typeof f.frame !== "number") continue;
+    const seen = firstAt.get(f.frame);
+    if (seen === void 0) firstAt.set(f.frame, i);
+    else parts.push(`#${seen} and #${i} both render frame ${f.frame}`);
+  }
+  for (const [i, f] of frames.entries()) {
+    if (typeof f.frame !== "number" || typeof f.frameOffset !== "number") continue;
+    const below = 1 - f.frameOffset;
+    if (below > 0 && below <= near) {
+      parts.push(
+        `#${i} (${f.time} s) renders frame ${f.frame}, ${(below * 100).toFixed(1)}% of a frame below frame ${f.frame + 1}`
+      );
+    }
+  }
+  if (parts.length === 0) return void 0;
+  return `${parts.join("; ")}. A time resolves to the frame it falls in, so a rounded time just below a boundary renders the frame before and a series of rounded times can repeat frames (diff then reads stutters). Pass \`frames: [..]\` to address frames by number, or exact times.`;
+}
 var MEASUREMENT_STAGES = {
   capture: "the PNG as saveFrameToPng wrote it, before any colour conversion: working-space values (scaled by AE's capture transfer in colour-managed projects), 8 or 16 bits. Its RGB is already laid over the comp background colour (`bgColor`): capture = colour\xB7alpha + bgColor\xB7(1 \u2212 alpha), so a half-covered pixel reads half background and an empty one reads bgColor; on a black background that is premultiplied colour. Alpha is the coverage AE wrote",
   output: "the file as written (writtenTo), after colour conversion when colorManaged is auto, so 8-bit display values. With channels 'rgb': over the comp background as AE composited it, or over `over`. With 'rgba': the colour recovered from under the background (straight, 0 where alpha is 0), plus alpha. With 'alpha': the matte, in r = g = b. The same as the capture when colorManaged is off or the conversion failed"
@@ -52799,7 +52922,9 @@ var renderFrameTool = defineTool({
   effect: "write",
   inputShape: {
     compNameOrId: external_exports.union([external_exports.string(), external_exports.number()]).describe("Composition name or numeric item id."),
-    time: external_exports.number().nonnegative().optional().describe("Time in seconds to render. Give exactly one of `time`, `times` or `strip`."),
+    time: external_exports.number().nonnegative().optional().describe(
+      "Time in seconds to render. Give exactly one of `time`, `times`, `strip` or `frames`. Each rendered frame reports `frame` (the frame the time falls in: floor(time / frameDuration), worked out in After Effects) and `frameOffset` (where in it, 0..1); `frameWarning` says when two times land on one frame or a time sits within 2% of a frame below a boundary (a rounded time renders the frame before). Times are never moved."
+    ),
     times: external_exports.array(external_exports.number().nonnegative()).min(1).max(32).optional().describe(
       "Several times in seconds, rendered in ONE call. Files are written as <outPath stem>_<index><ext> and reported in `frames` (index-aligned)."
     ),
@@ -52812,6 +52937,9 @@ var renderFrameTool = defineTool({
       )
     }).optional().describe(
       "'What happens around this moment' in one call: N consecutive frames around `at`, worked out from the comp's frame rate inside After Effects and rendered through the `times` path (files <stem>_<index>, listed in `frames`), tiled small into the contact sheet, with `diff` and its sheet on (pass `diff: false` to skip, or diff options to tune). The window is shifted to stay inside the comp; `strip` in the response says where it landed. Instead of `time` / `times`."
+    ),
+    frames: external_exports.array(external_exports.number().int().nonnegative()).min(1).max(32).optional().describe(
+      "Frame numbers (0 = the comp's first frame) instead of times: each is rendered a quarter of a frame inside it, so a time never lands on the frame before. Through the `times` path: files <stem>_<index>, reported in `frames` with their `frame`. Instead of `time` / `times` / `strip`."
     ),
     outPath: external_exports.string().describe(
       "Absolute path to write the PNG. Parent directory is created if missing. With `times`, used as the naming stem for every frame."
@@ -52958,6 +53086,9 @@ var renderFrameTool = defineTool({
         ),
         window: external_exports.number().int().optional().describe("Pairs on each side compared with a pair. Default 3."),
         amplify: external_exports.number().optional().describe("Gain of the difference images on the diff sheet. Default 8."),
+        repeatBelow: external_exports.number().min(0).max(1).optional().describe(
+          "A pair changing this little is a repeated frame (identical frames read 0); repeats are never a reference for other pairs. Default 0.0001."
+        ),
         sheet: external_exports.union([
           external_exports.boolean(),
           external_exports.object({
@@ -52970,15 +53101,27 @@ var renderFrameTool = defineTool({
         )
       })
     ]).optional().describe(
-      "Frame-to-frame change, with `times` (two or more) or `strip`; `true` for the defaults. Measured on the written file (stage 'output', display values; `diff.picture` says what exactly: with the default rgb output the capture is already over the comp background, so transparent areas do not change). Reported as `diff` {stage, picture, pairs, series} with the thresholds used as `diffThresholds`. Each consecutive pair: from, to, change (mean absolute difference over pixels and channels, 0..1), maxAbsDelta, changedPixels, changedShare (a channel moved by more than changeAbove), changedBounds, and with `sample` the same per region. series: pairs, median, mean, largest, smallest, flags [{kind 'pop' | 'stutter' | 'cut', pairs, frame or between, change, reference, ratio, atSeriesEdge?, reading}], reading. A pop is a frame that differs from both neighbours; a stutter a frame that repeats the one before while the frames around it move; a cut one pair far above its neighbours. Flags are hints from numbers: look at the frames."
+      "Frame-to-frame change, with `times` (two or more) or `strip`; `true` for the defaults. Measured on the written file (stage 'output', display values; `diff.picture` says what exactly: with the default rgb output the capture is already over the comp background, so transparent areas do not change). Reported as `diff` {stage, picture, pairs, series} with the thresholds used as `diffThresholds`. Each consecutive pair: from, to, change (mean absolute difference over pixels and channels, 0..1), maxAbsDelta, changedPixels, changedShare (a channel moved by more than changeAbove), changedBounds, and with `sample` the same per region. series: pairs, median, mean, largest, smallest, flags [{kind 'pop' | 'stutter' | 'cut' | 'repeat', pairs, frame or between, change, reference, ratio, atSeriesEdge?, besideRepeat?, unreliablePairs?, reading}], reading. A pop is a frame that differs from both neighbours; a stutter a frame that repeats the one before while the frames around it move; a cut one pair far above its neighbours; a repeat an unchanged pair at the start or end of the series beside motion. Repeated frames are never a reference, and the pairs beside one are named unreliable. Flags are hints from numbers: look at the frames."
     )
   },
   handler: async (args, transport2) => {
-    const given = [args.time, args.times, args.strip].filter((v) => v !== void 0).length;
+    const given = [args.time, args.times, args.strip, args.frames].filter(
+      (v) => v !== void 0
+    ).length;
     if (given !== 1) {
-      return errorResult("INVALID_ARGS", "give exactly one of `time`, `times` or `strip`", {
-        hint: "`time: 1.5` renders one frame; `times: [0, 1, 2]` renders several in one call; `strip: { at: 1.5, frames: 9 }` renders the frames around a moment."
-      });
+      return errorResult(
+        "INVALID_ARGS",
+        "give exactly one of `time`, `times`, `strip` or `frames`",
+        {
+          hint: "`time: 1.5` renders one frame; `times: [0, 1, 2]` renders several in one call; `strip: { at: 1.5, frames: 9 }` renders the frames around a moment; `frames: [42, 43]` renders frames by number."
+        }
+      );
+    }
+    if (args.frames !== void 0 && (!Array.isArray(args.frames) || args.frames.length < 1 || args.frames.length > 32 || !args.frames.every((k) => Number.isInteger(k) && k >= 0))) {
+      return errorResult(
+        "INVALID_ARGS",
+        "`frames` must be 1 to 32 whole frame numbers, 0 or more (0 = the comp's first frame)"
+      );
     }
     if (args.settleTimeoutMs !== void 0 && !(Number.isInteger(args.settleTimeoutMs) && args.settleTimeoutMs > 0)) {
       return errorResult("INVALID_ARGS", "`settleTimeoutMs` must be a positive whole number of ms");
@@ -52989,7 +53132,7 @@ var renderFrameTool = defineTool({
       if ("error" in planned) return planned.error;
       strip = planned.plan;
     }
-    const count = strip?.frames ?? args.times?.length ?? 1;
+    const count = strip?.frames ?? args.frames?.length ?? args.times?.length ?? 1;
     const checked = checkEyesOptions({ ...args, count }, strip !== null);
     if ("error" in checked) return checked.error;
     const rejection = rejectedOutputPath(args.outPath);
@@ -53249,7 +53392,7 @@ var ISOLATE_FN = `
         return { ok: true, saved: saved, layers: named, changed: changed };
     }
 `;
-function renderJsx(args, times, paths, tryOcio, isolate, strip = null) {
+function renderJsx(args, times, paths, tryOcio, isolate, strip = null, frameNums = null) {
   return `
         ${RENDER_FRAME_FN}
         ${ISOLATE_FN}
@@ -53281,8 +53424,18 @@ function renderJsx(args, times, paths, tryOcio, isolate, strip = null) {
         var _ws = AE.safeGet(function () { return app.project.workingSpace; }, "None");
         var _times = ${jsxVal(times)};
         var _strip = ${jsxVal(strip === null ? null : { at: strip.at, offsets: strip.offsets })};
+        var _frameNums = ${jsxVal(frameNums)};
         var _paths = ${jsxVal(paths)};
+        var _pick = ${jsxVal(FRAME_PICK)};
         var _stripOut = null;
+        if (_frameNums !== null) {
+            var _lastF = Math.max(0, Math.round(comp.duration / comp.frameDuration) - 1);
+            _times = [];
+            for (var _ni = 0; _ni < _frameNums.length; _ni++) {
+                if (_frameNums[_ni] > _lastF) return { ok: false, error: "frame " + _frameNums[_ni] + " is past the comp's last frame, " + _lastF + " (comp " + comp.name + ")" };
+                _times.push((_frameNums[_ni] + _pick) * comp.frameDuration);
+            }
+        }
         if (_strip !== null) {
             var _fd = comp.frameDuration;
             var _lastK = Math.max(0, Math.round(comp.duration / _fd) - 1);
@@ -53296,7 +53449,7 @@ function renderJsx(args, times, paths, tryOcio, isolate, strip = null) {
             for (var _si = 0; _si < _offs.length; _si++) {
                 var _k = _k0 + _offs[_si] + _shift;
                 if (_k > _lastK) { _k = _lastK; _clamped++; }
-                _times.push(_k * _fd);
+                _times.push((_k + _pick) * _fd);
             }
             _stripOut = {
                 at: Math.round(_k0 * _fd * 1e6) / 1e6,
@@ -53315,6 +53468,15 @@ function renderJsx(args, times, paths, tryOcio, isolate, strip = null) {
             for (var _fi = 0; _fi < _times.length; _fi++) {
                 var _r = _renderFrame(comp, _times[_fi], _paths[_fi], _useDst);
                 _r.captureKind = kind;
+                if (_r.ok) {
+                    // The frame this time falls in, counted from frame 0 in the
+                    // convention of time; within a millionth of a frame of a
+                    // boundary counts as on it (k / fps in floating point).
+                    var _pos = _times[_fi] / comp.frameDuration;
+                    var _fk = Math.floor(_pos + 1e-6);
+                    _r.frame = _fk;
+                    _r.frameOffset = Math.max(0, Math.round((_pos - _fk) * 1e6) / 1e6);
+                }
                 _frames.push(_r);
             }
         }
@@ -53383,15 +53545,16 @@ function renderJsx(args, times, paths, tryOcio, isolate, strip = null) {
     `;
 }
 async function nativeFlow(args, opts, abs, transport2, strip = null) {
-  const multi = args.times !== void 0 || strip !== null;
-  const times = strip !== null ? null : args.times ?? [args.time];
-  const count = strip?.frames ?? times?.length ?? 1;
+  const frameNums = args.frames ?? null;
+  const multi = args.times !== void 0 || strip !== null || frameNums !== null;
+  const times = strip !== null || frameNums !== null ? null : args.times ?? [args.time];
+  const count = strip?.frames ?? frameNums?.length ?? times?.length ?? 1;
   const paths = framePaths(abs, count, multi);
   const contactSheet = args.contactSheet ?? (strip !== null ? {} : void 0);
   const before = await stampFiles(paths);
   const tryOcio = args.colorManaged !== "off" && !readOnlyMode();
   const result = await transport2.execute({
-    code: renderJsx(args, times, paths, tryOcio, opts.isolate, strip),
+    code: renderJsx(args, times, paths, tryOcio, opts.isolate, strip, frameNums),
     label: "render_frame",
     timeoutMs: 12e4 + (count - 1) * 3e4
   });
@@ -53408,9 +53571,15 @@ async function nativeFlow(args, opts, abs, transport2, strip = null) {
       ...payload.strip
     };
   }
+  if (payload && payload.ok === true) {
+    const warning = frameWarnings(frames);
+    if (warning !== void 0) payload.frameWarning = warning;
+  }
   if (payload && payload.ok === true && !multi && frames.length === 1) {
     payload.writtenTo = frames[0].writtenTo;
     payload.time = frames[0].time;
+    if (frames[0].frame !== void 0) payload.frame = frames[0].frame;
+    if (frames[0].frameOffset !== void 0) payload.frameOffset = frames[0].frameOffset;
     payload.size = frames[0].size;
     delete payload.frames;
   }
