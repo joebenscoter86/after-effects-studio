@@ -1,14 +1,47 @@
 import { z } from "zod";
+/**
+ * Where inside a frame `frames` and `strip` render: a quarter of a frame past
+ * its start. Found live: a time a hair below a boundary renders the frame
+ * before (1.4333 for 43/30 rendered frame 42), and an exact boundary is at
+ * the mercy of floating point. A quarter in is the same frame whether After
+ * Effects floors the time or rounds it.
+ */
+export declare const FRAME_PICK = 0.25;
+/**
+ * A requested time within this fraction of a frame below the next frame's
+ * start is reported (frameWarning): 2% of a frame, 0.7 ms at 30 fps. Times
+ * rounded to four decimals land there (43/30 → 1.4333 is 0.1% below frame 43);
+ * a time deliberately between frames is not.
+ */
+export declare const NEAR_FRAME_BOUNDARY = 0.02;
+/**
+ * The warning for a call's requested times, or undefined: two times that
+ * resolve to the same frame, and times just below a frame boundary. The
+ * times are never moved; this only says what After Effects will render.
+ */
+export declare function frameWarnings(frames: Array<{
+    time?: number;
+    frame?: number;
+    frameOffset?: number;
+}>, near?: number): string | undefined;
 export declare const renderFrameTool: import("./define-tool.js").ToolSpec<{
     compNameOrId: z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>;
     time: z.ZodOptional<z.ZodNumber>;
     times: z.ZodOptional<z.ZodArray<z.ZodNumber>>;
+    strip: z.ZodOptional<z.ZodObject<{
+        at: z.ZodNumber;
+        frames: z.ZodNumber;
+        step: z.ZodOptional<z.ZodNumber>;
+        maxDimension: z.ZodOptional<z.ZodNumber>;
+    }, z.core.$strip>>;
+    frames: z.ZodOptional<z.ZodArray<z.ZodNumber>>;
     outPath: z.ZodString;
     useDisplayStartTime: z.ZodOptional<z.ZodBoolean>;
     colorManaged: z.ZodOptional<z.ZodEnum<{
         auto: "auto";
         off: "off";
     }>>;
+    settleTimeoutMs: z.ZodOptional<z.ZodNumber>;
     analyze: z.ZodOptional<z.ZodBoolean>;
     contactSheet: z.ZodOptional<z.ZodObject<{
         columns: z.ZodOptional<z.ZodNumber>;
@@ -90,6 +123,21 @@ export declare const renderFrameTool: import("./define-tool.js").ToolSpec<{
         nearBand: z.ZodOptional<z.ZodNumber>;
         unevenRatio: z.ZodOptional<z.ZodNumber>;
         grainAbove: z.ZodOptional<z.ZodNumber>;
+    }, z.core.$strip>]>>;
+    diff: z.ZodOptional<z.ZodUnion<readonly [z.ZodBoolean, z.ZodObject<{
+        changeAbove: z.ZodOptional<z.ZodNumber>;
+        spikeRatio: z.ZodOptional<z.ZodNumber>;
+        holdRatio: z.ZodOptional<z.ZodNumber>;
+        quietBelow: z.ZodOptional<z.ZodNumber>;
+        movingShare: z.ZodOptional<z.ZodNumber>;
+        window: z.ZodOptional<z.ZodNumber>;
+        amplify: z.ZodOptional<z.ZodNumber>;
+        repeatBelow: z.ZodOptional<z.ZodNumber>;
+        sheet: z.ZodOptional<z.ZodUnion<readonly [z.ZodBoolean, z.ZodObject<{
+            columns: z.ZodOptional<z.ZodNumber>;
+            thumbWidth: z.ZodOptional<z.ZodNumber>;
+            outPath: z.ZodOptional<z.ZodString>;
+        }, z.core.$strip>]>>;
     }, z.core.$strip>]>>;
 }>;
 //# sourceMappingURL=render-frame.d.ts.map

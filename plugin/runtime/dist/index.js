@@ -2993,7 +2993,7 @@ var require_compile = __commonJS({
       const schOrFunc = root.refs[ref];
       if (schOrFunc)
         return schOrFunc;
-      let _sch = resolve9.call(this, root, ref);
+      let _sch = resolve10.call(this, root, ref);
       if (_sch === void 0) {
         const schema = (_a3 = root.localRefs) === null || _a3 === void 0 ? void 0 : _a3[ref];
         const { schemaId } = this.opts;
@@ -3020,7 +3020,7 @@ var require_compile = __commonJS({
     function sameSchemaEnv(s1, s2) {
       return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
     }
-    function resolve9(root, ref) {
+    function resolve10(root, ref) {
       let sch;
       while (typeof (sch = this.refs[ref]) == "string")
         ref = sch;
@@ -3271,8 +3271,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path12) {
-      let input2 = path12;
+    function removeDotSegments(path13) {
+      let input2 = path13;
       const output2 = [];
       let nextSlash = -1;
       let len = 0;
@@ -3346,11 +3346,11 @@ var require_utils = __commonJS({
       }
       return output2.join("");
     }
-    function removeDotSegmentsRelative(path12) {
-      if (path12 === "" || path12[0] === "/") {
-        return removeDotSegments(path12);
+    function removeDotSegmentsRelative(path13) {
+      if (path13 === "" || path13[0] === "/") {
+        return removeDotSegments(path13);
       }
-      const segments = path12.split("/");
+      const segments = path13.split("/");
       const last = segments.length - 1;
       const output2 = [];
       let trailingDirectory = false;
@@ -3713,8 +3713,8 @@ var require_schemes = __commonJS({
       }
       if (wsComponent.resourceName) {
         const queryIndex = wsComponent.resourceName.indexOf("?");
-        const path12 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
-        wsComponent.path = path12 && path12 !== "/" ? path12 : void 0;
+        const path13 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
+        wsComponent.path = path13 && path13 !== "/" ? path13 : void 0;
         wsComponent.query = queryIndex === -1 ? void 0 : wsComponent.resourceName.slice(queryIndex + 1);
         wsComponent.resourceName = void 0;
       }
@@ -3884,7 +3884,7 @@ var require_fast_uri = __commonJS({
       }
       return uri;
     }
-    function resolve9(baseURI, relativeURI, options) {
+    function resolve10(baseURI, relativeURI, options) {
       const schemelessOptions = options ? Object.assign({ scheme: "null" }, options) : { scheme: "null" };
       const {
         parsed: baseParsed,
@@ -3920,50 +3920,50 @@ var require_fast_uri = __commonJS({
       schemelessOptions.skipEscape = true;
       return serialize(resolved, schemelessOptions);
     }
-    function resolveComponent(base, relative2, options, skipNormalization) {
+    function resolveComponent(base, relative3, options, skipNormalization) {
       const target = {};
       if (!skipNormalization) {
         base = parse3(serialize(base, options), options);
-        relative2 = parse3(serialize(relative2, options), options);
+        relative3 = parse3(serialize(relative3, options), options);
       }
       options = options || {};
-      if (!options.tolerant && relative2.scheme) {
-        target.scheme = relative2.scheme;
-        target.userinfo = relative2.userinfo;
-        target.host = relative2.host;
-        target.port = relative2.port;
-        target.path = removeDotSegments(relative2.path || "");
-        target.query = relative2.query;
+      if (!options.tolerant && relative3.scheme) {
+        target.scheme = relative3.scheme;
+        target.userinfo = relative3.userinfo;
+        target.host = relative3.host;
+        target.port = relative3.port;
+        target.path = removeDotSegments(relative3.path || "");
+        target.query = relative3.query;
       } else {
-        if (relative2.userinfo !== void 0 || relative2.host !== void 0 || relative2.port !== void 0) {
-          target.userinfo = relative2.userinfo;
-          target.host = relative2.host;
-          target.port = relative2.port;
-          target.path = removeDotSegments(relative2.path || "");
-          target.query = relative2.query;
+        if (relative3.userinfo !== void 0 || relative3.host !== void 0 || relative3.port !== void 0) {
+          target.userinfo = relative3.userinfo;
+          target.host = relative3.host;
+          target.port = relative3.port;
+          target.path = removeDotSegments(relative3.path || "");
+          target.query = relative3.query;
         } else {
-          if (!relative2.path) {
+          if (!relative3.path) {
             target.path = base.path;
-            if (relative2.query !== void 0) {
-              target.query = relative2.query;
+            if (relative3.query !== void 0) {
+              target.query = relative3.query;
             } else {
               target.query = base.query;
             }
           } else {
-            if (relative2.path[0] === "/") {
-              target.path = removeDotSegments(relative2.path);
+            if (relative3.path[0] === "/") {
+              target.path = removeDotSegments(relative3.path);
             } else {
               const baseHasAuthority = base.userinfo !== void 0 || base.host !== void 0 || base.port !== void 0;
               if (baseHasAuthority && !base.path) {
-                target.path = "/" + relative2.path;
+                target.path = "/" + relative3.path;
               } else if (!base.path) {
-                target.path = relative2.path;
+                target.path = relative3.path;
               } else {
-                target.path = base.path.slice(0, base.path.lastIndexOf("/") + 1) + relative2.path;
+                target.path = base.path.slice(0, base.path.lastIndexOf("/") + 1) + relative3.path;
               }
               target.path = base.scheme === void 0 && !baseHasAuthority && target.path[0] !== "/" ? removeDotSegmentsRelative(target.path) : removeDotSegments(target.path);
             }
-            target.query = relative2.query;
+            target.query = relative3.query;
           }
           target.userinfo = base.userinfo;
           target.host = base.host;
@@ -3971,7 +3971,7 @@ var require_fast_uri = __commonJS({
         }
         target.scheme = base.scheme;
       }
-      target.fragment = relative2.fragment;
+      target.fragment = relative3.fragment;
       return target;
     }
     function equal(uriA, uriB, options) {
@@ -4275,7 +4275,7 @@ var require_fast_uri = __commonJS({
     var fastUri = {
       SCHEMES,
       normalize,
-      resolve: resolve9,
+      resolve: resolve10,
       resolveComponent,
       equal,
       serialize,
@@ -6524,11 +6524,11 @@ var require_format = __commonJS({
           }
           function getFormat(fmtDef) {
             const code = fmtDef instanceof RegExp ? (0, codegen_1.regexpCode)(fmtDef) : opts.code.formats ? (0, codegen_1._)`${opts.code.formats}${(0, codegen_1.getProperty)(schema)}` : void 0;
-            const fmt = gen.scopeValue("formats", { key: schema, ref: fmtDef, code });
+            const fmt2 = gen.scopeValue("formats", { key: schema, ref: fmtDef, code });
             if (typeof fmtDef == "object" && !(fmtDef instanceof RegExp)) {
-              return [fmtDef.type || "string", fmtDef.validate, (0, codegen_1._)`${fmt}.validate`];
+              return [fmtDef.type || "string", fmtDef.validate, (0, codegen_1._)`${fmt2}.validate`];
             }
-            return ["string", fmtDef, fmt];
+            return ["string", fmtDef, fmt2];
           }
           function validCondition() {
             if (typeof formatDef == "object" && !(formatDef instanceof RegExp) && formatDef.async) {
@@ -7190,8 +7190,8 @@ var require_limit = __commonJS({
             ref: self.formats,
             code: opts.code.formats
           });
-          const fmt = gen.const("fmt", (0, codegen_1._)`${fmts}[${fCxt.schemaCode}]`);
-          cxt.fail$data((0, codegen_1.or)((0, codegen_1._)`typeof ${fmt} != "object"`, (0, codegen_1._)`${fmt} instanceof RegExp`, (0, codegen_1._)`typeof ${fmt}.compare != "function"`, compareCode(fmt)));
+          const fmt2 = gen.const("fmt", (0, codegen_1._)`${fmts}[${fCxt.schemaCode}]`);
+          cxt.fail$data((0, codegen_1.or)((0, codegen_1._)`typeof ${fmt2} != "object"`, (0, codegen_1._)`${fmt2} instanceof RegExp`, (0, codegen_1._)`typeof ${fmt2}.compare != "function"`, compareCode(fmt2)));
         }
         function validateFormat() {
           const format = fCxt.schema;
@@ -7201,15 +7201,15 @@ var require_limit = __commonJS({
           if (typeof fmtDef != "object" || fmtDef instanceof RegExp || typeof fmtDef.compare != "function") {
             throw new Error(`"${keyword}": format "${format}" does not define "compare" function`);
           }
-          const fmt = gen.scopeValue("formats", {
+          const fmt2 = gen.scopeValue("formats", {
             key: format,
             ref: fmtDef,
             code: opts.code.formats ? (0, codegen_1._)`${opts.code.formats}${(0, codegen_1.getProperty)(format)}` : void 0
           });
-          cxt.fail$data(compareCode(fmt));
+          cxt.fail$data(compareCode(fmt2));
         }
-        function compareCode(fmt) {
-          return (0, codegen_1._)`${fmt}.compare(${data}, ${schemaCode}) ${KWDs[keyword].fail} 0`;
+        function compareCode(fmt2) {
+          return (0, codegen_1._)`${fmt2}.compare(${data}, ${schemaCode}) ${KWDs[keyword].fail} 0`;
         }
       },
       dependencies: ["format"]
@@ -7264,6 +7264,185 @@ var require_dist = __commonJS({
   }
 });
 
+// src/config.ts
+import { spawnSync } from "node:child_process";
+import { existsSync, readdirSync, statSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import * as os from "node:os";
+import * as path from "node:path";
+function findPackageRoot(startDir) {
+  let dir = startDir;
+  for (; ; ) {
+    if (existsSync(path.join(dir, "package.json"))) return dir;
+    const parent = path.dirname(dir);
+    if (parent === dir) {
+      throw new Error(`mcp-aftereffects: no package.json found above ${startDir}`);
+    }
+    dir = parent;
+  }
+}
+function resolveRuntimeDir() {
+  const override = process.env.AE_MCP_RUNTIME_DIR?.trim();
+  return override ? path.resolve(override) : DEFAULT_RUNTIME_DIR;
+}
+function requestPathFor(id) {
+  return path.join(RUNTIME_DIR, `${REQUEST_PREFIX}${id}.json`);
+}
+function responsePathFor(id) {
+  return path.join(RUNTIME_DIR, `${RESPONSE_PREFIX}${id}.json`);
+}
+function rejectedOutputPath(outPath) {
+  const abs = path.resolve(outPath);
+  const roots = [path.resolve(RUNTIME_DIR), path.resolve(RUNTIME_ROOT)];
+  for (const root of roots) {
+    const rel = path.relative(root, abs);
+    const inside = rel === "" || !rel.startsWith("..") && !path.isAbsolute(rel);
+    if (inside) {
+      return `refusing to write inside the mcp-aftereffects IPC mailbox (${root}). That directory is the transport's trust boundary \u2014 pick a path outside it.`;
+    }
+  }
+  return null;
+}
+function looseWriteScope(dir) {
+  if (process.platform === "win32") return null;
+  let mode;
+  try {
+    mode = statSync(dir).mode;
+  } catch {
+    return null;
+  }
+  if ((mode & 18) === 0) return null;
+  return { scope: (mode & 2) !== 0 ? "world" : "group", mode: mode & 511 };
+}
+function unsafeRuntimeDirWarning(dir = RUNTIME_DIR) {
+  const loose = looseWriteScope(dir);
+  if (loose === null) return null;
+  return `mailbox ${dir} is ${loose.scope}-writable (mode ${loose.mode.toString(8)}). Any local account that can write there can execute code inside After Effects. Fix with: chmod 700 ${JSON.stringify(dir)} \u2014 or unset AE_MCP_RUNTIME_DIR to use the per-user default.`;
+}
+function unsafePointerDirWarning(dir = RUNTIME_ROOT) {
+  const loose = looseWriteScope(dir);
+  if (loose === null) return null;
+  return `mailbox pointer directory ${dir} is ${loose.scope}-writable (mode ${loose.mode.toString(8)}). It holds ${path.basename(RUNTIME_POINTER_PATH)}, which the dispatcher follows to locate the mailbox, so any local account that can write there can point After Effects at a mailbox of its own. Fix with: chmod 700 ${JSON.stringify(dir)}`;
+}
+function uncheckedMailboxAclWarning(platform = process.platform) {
+  if (platform !== "win32" || !RUNTIME_DIR_IS_CUSTOM) return null;
+  return `mailbox ${RUNTIME_DIR} comes from AE_MCP_RUNTIME_DIR and its Windows ACL is not verified here. Any account that can write there can execute code inside After Effects \u2014 keep the mailbox on a per-user path (not a shared, world-writable, or synced folder), or unset AE_MCP_RUNTIME_DIR to use the default under the per-user temp dir.`;
+}
+function runtimeDirWarnings() {
+  const warnings = [unsafeRuntimeDirWarning(RUNTIME_DIR)];
+  if (path.resolve(RUNTIME_DIR) !== path.resolve(RUNTIME_ROOT)) {
+    warnings.push(unsafePointerDirWarning(RUNTIME_ROOT));
+  }
+  warnings.push(uncheckedMailboxAclWarning());
+  return warnings.filter((w) => w !== null);
+}
+function runningAfterFxApps(psOutput) {
+  let text = psOutput;
+  if (text === void 0) {
+    const r = spawnSync("ps", ["-axo", "command="], { encoding: "utf8", timeout: 2e3 });
+    text = r.stdout ?? "";
+  }
+  const apps = /* @__PURE__ */ new Set();
+  for (const line of text.split("\n")) {
+    const m = AE_APP_IN_PROCESS.exec(line.trim());
+    if (m?.[1]) apps.add(m[1]);
+  }
+  return [...apps];
+}
+function discoverAfterFxPaths(platform = process.platform, root = platform === "darwin" ? "/Applications" : "C:/Program Files/Adobe") {
+  let names;
+  try {
+    names = readdirSync(root);
+  } catch {
+    return [];
+  }
+  return names.map((name) => ({ name, year: AE_RELEASE_DIR.exec(name)?.[1] })).filter((e) => e.year !== void 0 && Number(e.year) >= MIN_AE_YEAR).sort((a, b) => Number(b.year) - Number(a.year)).map(({ name, year }) => platform === "darwin" ? path.join(root, name, `Adobe After Effects ${year}.app`) : path.join(root, name, "Support Files", "AfterFX.exe")).filter((candidate) => existsSync(candidate));
+}
+function resolveAfterFxPath(platform = process.platform, root, running = () => platform === "darwin" ? runningAfterFxApps() : []) {
+  for (const env of [process.env.AE_MCP_EXE, process.env.AE_EXE]) {
+    if (env && existsSync(env)) return env;
+  }
+  const discovered = discoverAfterFxPaths(platform, root);
+  const yearOf = (p) => Number(/Adobe After Effects (\d{4})/.exec(p)?.[1]);
+  const live = running().filter((app) => existsSync(app));
+  const supported = SUPPORTED_AE_YEARS.flatMap((y) => discovered.filter((p) => yearOf(p) === y));
+  const ordered = [...live, ...supported, ...discovered];
+  if (ordered.length) return ordered[0];
+  const candidates = platform === "darwin" ? DEFAULT_AE_PATHS_DARWIN : DEFAULT_AE_PATHS_WIN32;
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) return candidate;
+  }
+  throw new Error(
+    platform === "darwin" ? 'Could not locate After Effects. Set the AE_MCP_EXE env var to the .app bundle, e.g. "/Applications/Adobe After Effects 2026/Adobe After Effects 2026.app"' : 'Could not locate AfterFX.exe. Set the AE_MCP_EXE env var to the full path, e.g. "C:/Program Files/Adobe/Adobe After Effects 2026/Support Files/AfterFX.exe"'
+  );
+}
+function instanceDirFor(id) {
+  return path.join(INSTANCES_DIR, id);
+}
+function sanitizeInstanceId(raw) {
+  if (raw === null || raw === void 0) return null;
+  let s = raw.trim();
+  if (s.length === 0) return null;
+  s = s.replace(/[^A-Za-z0-9._-]+/g, "-").replace(/^[-.]+|[-.]+$/g, "");
+  if (s.length > INSTANCE_ID_MAX_LENGTH) s = s.slice(0, INSTANCE_ID_MAX_LENGTH);
+  return s.length > 0 ? s : null;
+}
+function instanceTargetFromEnv(env = process.env) {
+  const value = env.AE_MCP_INSTANCE?.trim();
+  return value ? value : null;
+}
+var PACKAGE_ROOT, DISPATCHER_JSX, RUNTIME_ROOT, DEFAULT_RUNTIME_DIR, RUNTIME_POINTER_PATH, RUNTIME_DIR_MODE, RUNTIME_DIR, RUNTIME_DIR_IS_CUSTOM, REQUEST_PREFIX, RESPONSE_PREFIX, STALE_RUNTIME_FILE_MS, DEFAULT_AE_PATHS_WIN32, DEFAULT_AE_PATHS_DARWIN, AE_RELEASE_DIR, SUPPORTED_AE_YEARS, MIN_AE_YEAR, AE_APP_IN_PROCESS, DEFAULT_TIMEOUT_MS, POLL_INTERVAL_MS, BUSY_LOCK_PATH, BUSY_LOCK_STALE_MS, BUSY_LOCK_REFRESH_MS, RELAUNCH_UNCONSUMED_AFTER_MS, MAX_LAUNCH_ATTEMPTS, INSTANCES_DIRNAME, INSTANCES_DIR, HEARTBEAT_FILENAME, HEARTBEAT_STALE_MS, HEARTBEAT_BUSY_STALE_MS, INSTANCE_DIR_SWEEP_MS, LIVENESS_CHECK_MS, AGENT_JSX, AGENT_STUB_FILENAME, INSTANCE_ID_MAX_LENGTH, PHANTOM_LAUNCH_MS;
+var init_config = __esm({
+  "src/config.ts"() {
+    "use strict";
+    PACKAGE_ROOT = findPackageRoot(path.dirname(fileURLToPath(import.meta.url)));
+    DISPATCHER_JSX = path.join(PACKAGE_ROOT, "jsx", "dispatcher.jsx");
+    RUNTIME_ROOT = path.join(os.tmpdir(), "mcp-aftereffects");
+    DEFAULT_RUNTIME_DIR = path.join(RUNTIME_ROOT, "runtime");
+    RUNTIME_POINTER_PATH = path.join(RUNTIME_ROOT, "runtime-dir.txt");
+    RUNTIME_DIR_MODE = 448;
+    RUNTIME_DIR = resolveRuntimeDir();
+    RUNTIME_DIR_IS_CUSTOM = path.resolve(RUNTIME_DIR) !== path.resolve(DEFAULT_RUNTIME_DIR);
+    REQUEST_PREFIX = "request-";
+    RESPONSE_PREFIX = "response-";
+    STALE_RUNTIME_FILE_MS = 60 * 60 * 1e3;
+    DEFAULT_AE_PATHS_WIN32 = [
+      "C:/Program Files/Adobe/Adobe After Effects 2027/Support Files/AfterFX.exe",
+      "C:/Program Files/Adobe/Adobe After Effects 2026/Support Files/AfterFX.exe",
+      "C:/Program Files/Adobe/Adobe After Effects 2025/Support Files/AfterFX.exe",
+      "C:/Program Files/Adobe/Adobe After Effects 2024/Support Files/AfterFX.exe"
+    ];
+    DEFAULT_AE_PATHS_DARWIN = [
+      "/Applications/Adobe After Effects 2027/Adobe After Effects 2027.app",
+      "/Applications/Adobe After Effects 2026/Adobe After Effects 2026.app",
+      "/Applications/Adobe After Effects 2025/Adobe After Effects 2025.app",
+      "/Applications/Adobe After Effects 2024/Adobe After Effects 2024.app"
+    ];
+    AE_RELEASE_DIR = /^Adobe After Effects (\d{4})$/;
+    SUPPORTED_AE_YEARS = [2027, 2026, 2025, 2024];
+    MIN_AE_YEAR = 2024;
+    AE_APP_IN_PROCESS = /^(.*\/Adobe After Effects \d{4}\.app)\/Contents\/MacOS\/After Effects(?:\s|$)/;
+    DEFAULT_TIMEOUT_MS = 6e4;
+    POLL_INTERVAL_MS = 80;
+    BUSY_LOCK_PATH = path.join(RUNTIME_DIR, "dispatcher-busy.lock");
+    BUSY_LOCK_STALE_MS = 9e4;
+    BUSY_LOCK_REFRESH_MS = 15e3;
+    RELAUNCH_UNCONSUMED_AFTER_MS = 2500;
+    MAX_LAUNCH_ATTEMPTS = 3;
+    INSTANCES_DIRNAME = "instances";
+    INSTANCES_DIR = path.join(RUNTIME_DIR, INSTANCES_DIRNAME);
+    HEARTBEAT_FILENAME = "heartbeat.json";
+    HEARTBEAT_STALE_MS = 5e3;
+    HEARTBEAT_BUSY_STALE_MS = 15 * 6e4;
+    INSTANCE_DIR_SWEEP_MS = STALE_RUNTIME_FILE_MS;
+    LIVENESS_CHECK_MS = 1e3;
+    AGENT_JSX = path.join(PACKAGE_ROOT, "jsx", "agent.jsx");
+    AGENT_STUB_FILENAME = "mcp-aftereffects-agent.jsx";
+    INSTANCE_ID_MAX_LENGTH = 64;
+    PHANTOM_LAUNCH_MS = 4e3;
+  }
+});
+
 // src/registry.ts
 function registerOp(op) {
   if (op.appConfig && !op.params.some((p) => p.name === APP_CONFIG_CONFIRM_PARAM.name)) {
@@ -7285,6 +7464,13 @@ function listOps(category) {
 }
 function wantsUndoGroup(op, args) {
   return op.undoGroup ? op.undoGroup(args) : true;
+}
+function wantsRollback(op, args) {
+  if (!wantsUndoGroup(op, args)) return false;
+  return op.rollback ? op.rollback(args) : !op.readOnly;
+}
+function prepareOp(op, args) {
+  return op.prepare ? op.prepare(args) : { ok: true, args };
 }
 function wantsDialogSuppression(op, args) {
   return op.suppressDialogs ? op.suppressDialogs(args) : true;
@@ -7342,6 +7528,9 @@ var init_registry = __esm({
         // Which After Effects instance answered (its resident agent's id), so
         // a session driving several never has to guess where an edit landed.
         try { _ctx.instance = $.global.AE_MCP_AGENT ? $.global.AE_MCP_AGENT.state.id : null; } catch (eInst) { _ctx.instance = null; }
+        // Set once a request changed the render queue in this session: undo
+        // and rollback refuse until a project is opened or created.
+        try { var _sess = $.global.AE_MCP_SESSION; if (_sess && _sess.renderQueueChanged) _ctx.undoBlocked = { reason: "render queue changed by a script in this session", by: _sess.renderQueueChanged.by, at: _sess.renderQueueChanged.at }; } catch (eSess) {}
         if (_ai && _ai instanceof CompItem) {
             _ctx.activeComp = { id: _ai.id, name: _ai.name, width: _ai.width, height: _ai.height, fps: _ai.frameRate, duration: _ai.duration, numLayers: _ai.numLayers };
             var _sel = [];
@@ -7360,19 +7549,138 @@ var init_registry = __esm({
 
 // src/operations/eval.ts
 var eval_exports = {};
+__export(eval_exports, {
+  MAX_SCRIPT_ARGS_BYTES: () => MAX_SCRIPT_ARGS_BYTES,
+  MAX_SCRIPT_FILE_BYTES: () => MAX_SCRIPT_FILE_BYTES,
+  readScriptFile: () => readScriptFile
+});
+import { readFileSync, realpathSync, statSync as statSync2 } from "node:fs";
+import * as path7 from "node:path";
+function realOrResolved(p) {
+  try {
+    return realpathSync(p);
+  } catch {
+    return path7.resolve(p);
+  }
+}
+function isInside(p, root) {
+  const rel = path7.relative(root, p);
+  return rel === "" || !rel.startsWith("..") && !path7.isAbsolute(rel);
+}
+function refuse(error62, hint) {
+  return hint ? { ok: false, error: error62, hint } : { ok: false, error: error62 };
+}
+function readScriptFile(file2) {
+  if (!path7.isAbsolute(file2)) {
+    return {
+      ok: false,
+      error: `file must be an absolute path (got '${file2}'): the server's working directory is not yours`
+    };
+  }
+  let stat;
+  try {
+    stat = statSync2(file2);
+  } catch (err) {
+    const code = err.code;
+    return code === "ENOENT" || code === "ENOTDIR" ? { ok: false, error: `script file ${file2} does not exist` } : { ok: false, error: `cannot read script file ${file2}: ${err.message}` };
+  }
+  if (!stat.isFile()) return { ok: false, error: `${file2} is not a file` };
+  if (stat.size === 0) return { ok: false, error: `script file ${file2} is empty` };
+  if (stat.size > MAX_SCRIPT_FILE_BYTES) {
+    return {
+      ok: false,
+      error: `script file ${file2} is too large (${stat.size} bytes; the limit is ${MAX_SCRIPT_FILE_BYTES})`,
+      hint: "Split it, or move bulk data out of the code into a file the script reads itself."
+    };
+  }
+  const real = realOrResolved(file2);
+  for (const root of [RUNTIME_DIR, RUNTIME_ROOT]) {
+    if (isInside(real, realOrResolved(root))) {
+      return {
+        ok: false,
+        error: `refusing to run a script from inside the plugin's mailbox (${root})`,
+        hint: "Keep scripts somewhere of your own; the mailbox only carries the plugin's requests."
+      };
+    }
+  }
+  let text;
+  try {
+    text = readFileSync(real, "utf8");
+  } catch (err) {
+    return { ok: false, error: `cannot read script file ${file2}: ${err.message}` };
+  }
+  if (text.indexOf("\0") !== -1) {
+    return { ok: false, error: `script file ${file2} looks binary (it contains NUL bytes); eval.run takes ExtendScript source` };
+  }
+  if (text.charCodeAt(0) === 65279) text = text.slice(1);
+  text = text.replace(/\r\n?/g, "\n");
+  return { ok: true, code: text };
+}
+var MAX_SCRIPT_FILE_BYTES, MAX_SCRIPT_ARGS_BYTES;
 var init_eval = __esm({
   "src/operations/eval.ts"() {
     "use strict";
+    init_config();
     init_registry();
+    MAX_SCRIPT_FILE_BYTES = 1024 * 1024;
+    MAX_SCRIPT_ARGS_BYTES = 1024 * 1024;
     registerOp({
       name: "eval.run",
       category: "eval",
-      description: "Execute custom ExtendScript (ES3). LAST RESORT \u2014 check ae_catalog first for a dedicated operation. Code is a function body ending with `return <JSON-serializable>;`. AE.* helpers are in scope. `log(msg)` pushes breadcrumbs. The code already runs inside an automatic undo group (one Ctrl+Z reverts the call) \u2014 do NOT call app.beginUndoGroup/endUndoGroup yourself; an unbalanced group leaks past this call and corrupts undo for the whole session. Do NOT undo/redo from here either (app.executeCommand 16/2035): inside this call's group AE resolves them against it, so nothing is reverted \u2014 use the project.undo operation, which runs outside the group. Do NOT close/open/replace the project from here (app.open, app.newProject, app.project.close): the open undo group is orphaned at the project boundary, AE raises an async 'UndoGroup Mismatch' dialog, and undo stays broken for the session \u2014 use project.open / project.new, which run outside the group.",
+      description: "Execute custom ExtendScript (ES3). LAST RESORT \u2014 check ae_catalog first for a dedicated operation. Pass the code inline as `code`, or as a script `file` (an absolute path; read and checked before After Effects is contacted) \u2014 exactly one of the two. Code is a function body ending with `return <JSON-serializable>;`. AE.* helpers are in scope, and `args` holds the optional `args` value you pass (null when omitted). `log(msg)` pushes breadcrumbs. An error reports the line in YOUR code (or file:line), not in the plugin's wrapper. The code already runs inside an automatic undo group (one Ctrl+Z reverts the call). If it THROWS, the call is rolled back before the error is returned \u2014 its changes are undone with dialogs suppressed, and details.rollback says whether that succeeded and what is left if not; returning { ok: false } is not a throw and is not rolled back. Pass rollback: false for deliberately incremental work whose partial result you want to keep. No undo is ever issued for a call that changed the render queue, and after a scripted render-queue change in the session rollback is refused unless acceptRenderQueueRisk: true (After Effects 2027 has gone into crash recovery on undo after such changes \u2014 observed twice, a precaution); details.rollback then lists addedItems and what to do next. Do NOT call app.beginUndoGroup/endUndoGroup yourself; an unbalanced group leaks past this call and corrupts undo for the whole session (and defeats the rollback). Do NOT undo/redo from here either (app.executeCommand 16/2035): inside this call's group AE resolves them against it, so nothing is reverted \u2014 use project.undo / project.redo, which run outside the group. Do NOT close/open/replace the project from here (app.open, app.newProject, app.project.close): the open undo group is orphaned at the project boundary, AE raises an async 'UndoGroup Mismatch' dialog, and undo stays broken for the session \u2014 use project.open / project.new, which run outside the group.",
       params: [
-        { name: "code", type: "string", description: "ExtendScript function body", required: true }
+        {
+          name: "code",
+          type: "string",
+          description: "ExtendScript function body. Give this or `file`, not both.",
+          required: false
+        },
+        {
+          name: "file",
+          type: "string",
+          description: "Absolute path to a script file holding the function body (UTF-8, at most 1 MiB, not inside the plugin's mailbox). Give this or `code`, not both.",
+          required: false
+        },
+        {
+          name: "args",
+          type: "any",
+          description: "Any JSON value, available to the code as `args` (null when omitted).",
+          required: false
+        },
+        {
+          name: "rollback",
+          type: "boolean",
+          description: "Default true: if the code throws, undo the call's changes before returning the error. false keeps the partial result.",
+          required: false
+        },
+        {
+          name: "acceptRenderQueueRisk",
+          type: "boolean",
+          description: "Default false. After a scripted render-queue change in this After Effects session, undo is refused (After Effects 2027 has gone into crash recovery on undo after such changes \u2014 observed twice; a precaution). Pass true only when the user accepts that risk, ideally after saving.",
+          required: false
+        }
       ],
+      rollback: (args) => args.rollback !== false,
+      prepare(args) {
+        const hasCode = typeof args.code === "string";
+        const hasFile = typeof args.file === "string";
+        if (hasCode === hasFile) {
+          return refuse("give either `code` (inline ExtendScript) or `file` (an absolute path to a script), not both and not neither");
+        }
+        if (args.args !== void 0) {
+          const size = Buffer.byteLength(JSON.stringify(args.args) ?? "null", "utf8");
+          if (size > MAX_SCRIPT_ARGS_BYTES) {
+            return refuse(`args is too large (${size} bytes serialized; the limit is ${MAX_SCRIPT_ARGS_BYTES})`);
+          }
+        }
+        if (!hasFile) return { ok: true, args };
+        const file2 = String(args.file);
+        const read = readScriptFile(file2);
+        if (!read.ok) return refuse(read.error, read.hint);
+        return { ok: true, args: { ...args, code: read.code }, source: { file: file2 } };
+      },
       toJsx(args) {
-        return String(args.code);
+        return `var args = ${jsxVal(args.args)}; ${String(args.code)}`;
       }
     });
   }
@@ -7755,8 +8063,8 @@ function getErrorMap() {
 
 // node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path12, errorMaps, issueData } = params;
-  const fullPath = [...path12, ...issueData.path || []];
+  const { data, path: path13, errorMaps, issueData } = params;
+  const fullPath = [...path13, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -7871,11 +8179,11 @@ var errorUtil;
 
 // node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path12, key) {
+  constructor(parent, value, path13, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path12;
+    this._path = path13;
     this._key = key;
   }
   get path() {
@@ -11830,10 +12138,10 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path12) {
-  if (!path12)
+function getElementAtPath(obj, path13) {
+  if (!path13)
     return obj;
-  return path12.reduce((acc, key) => acc?.[key], obj);
+  return path13.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -12173,11 +12481,11 @@ function explicitlyAborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path12, issues) {
+function prefixIssues(path13, issues) {
   return issues.map((iss) => {
     var _a3;
     (_a3 = iss).path ?? (_a3.path = []);
-    iss.path.unshift(path12);
+    iss.path.unshift(path13);
     return iss;
   });
 }
@@ -12639,16 +12947,16 @@ function flattenError(error62, mapper = (issue2) => issue2.message) {
 }
 function formatError(error62, mapper = (issue2) => issue2.message) {
   const fieldErrors = { _errors: [] };
-  const processError = (error63, path12 = []) => {
+  const processError = (error63, path13 = []) => {
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path12, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path13, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path12, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path13, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path12, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path13, ...issue2.path]);
       } else {
-        const fullpath = [...path12, ...issue2.path];
+        const fullpath = [...path13, ...issue2.path];
         if (fullpath.length === 0) {
           fieldErrors._errors.push(mapper(issue2));
         } else {
@@ -12687,17 +12995,17 @@ function formatError(error62, mapper = (issue2) => issue2.message) {
 }
 function treeifyError(error62, mapper = (issue2) => issue2.message) {
   const result = { errors: [] };
-  const processError = (error63, path12 = []) => {
+  const processError = (error63, path13 = []) => {
     var _a3;
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path12, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path13, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path12, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path13, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path12, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path13, ...issue2.path]);
       } else {
-        const fullpath = [...path12, ...issue2.path];
+        const fullpath = [...path13, ...issue2.path];
         if (fullpath.length === 0) {
           result.errors.push(mapper(issue2));
           continue;
@@ -12736,8 +13044,8 @@ function treeifyError(error62, mapper = (issue2) => issue2.message) {
 }
 function toDotPath(_path) {
   const segs = [];
-  const path12 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
-  for (const seg of path12) {
+  const path13 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
+  for (const seg of path13) {
     if (typeof seg === "number")
       segs.push(`[${seg}]`);
     else if (typeof seg === "symbol")
@@ -15033,7 +15341,7 @@ function handleIntersectionResults(result, left, right) {
   const unrecKeys = /* @__PURE__ */ new Map();
   let unrecIssue;
   const keyIssues = /* @__PURE__ */ new Map();
-  const collect = (iss, side) => {
+  const collect = (iss, side2) => {
     let keys;
     if (iss.code === "unrecognized_keys" && !iss.path?.length) {
       unrecIssue ?? (unrecIssue = iss);
@@ -15049,7 +15357,7 @@ function handleIntersectionResults(result, left, right) {
     for (const k of keys) {
       if (!unrecKeys.has(k))
         unrecKeys.set(k, {});
-      unrecKeys.get(k)[side] = true;
+      unrecKeys.get(k)[side2] = true;
     }
     return true;
   };
@@ -16080,7 +16388,7 @@ var recursive = /* @__PURE__ */ new WeakMap();
 var NONE = 0;
 var ASSUMED = 1;
 var PROVEN = 2;
-function isRecursive(inst, stack, resolve9) {
+function isRecursive(inst, stack, resolve10) {
   const cached2 = recursive.get(inst);
   if (cached2 !== void 0)
     return cached2 ? PROVEN : NONE;
@@ -16090,7 +16398,7 @@ function isRecursive(inst, stack, resolve9) {
   let result = NONE;
   const check2 = (child) => {
     if (result !== PROVEN && child?._zod) {
-      const answer = isRecursive(child, stack, resolve9);
+      const answer = isRecursive(child, stack, resolve10);
       if (answer > result)
         result = answer;
     }
@@ -16101,7 +16409,7 @@ function isRecursive(inst, stack, resolve9) {
       const desc = Object.getOwnPropertyDescriptor(sh, key);
       if (spread && !desc.enumerable)
         continue;
-      const child = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve9) : NONE;
+      const child = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve10) : NONE;
       if (child > answer)
         answer = child;
     }
@@ -16165,7 +16473,7 @@ function isRecursive(inst, stack, resolve9) {
       break;
     // `$ZodLazy` caches its inner on the def, so a resolved edge is followed exactly
     case "lazy": {
-      const inner = def._cachedInner ?? (resolve9 ? inst._zod.innerType : void 0);
+      const inner = def._cachedInner ?? (resolve10 ? inst._zod.innerType : void 0);
       merge2(inner ? isRecursive(inner, stack, false) : ASSUMED);
       break;
     }
@@ -24417,45 +24725,45 @@ var PATTERN_IS_COMPLETE = /* @__PURE__ */ new Set([
   "xid"
 ]);
 function generateStringFormatCheck(doc, ctx, def, accessor, needsValue = true) {
-  const fmt = def.format;
-  if (fmt === "base64") {
+  const fmt2 = def.format;
+  if (fmt2 === "base64") {
     const validator = addConstant(ctx, isValidBase64);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (fmt === "base64url") {
+  if (fmt2 === "base64url") {
     const validator = addConstant(ctx, isValidBase64URL);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (fmt === "jwt") {
+  if (fmt2 === "jwt") {
     const validator = addConstant(ctx, isValidJWT2);
     const alg = addConstant(ctx, def.alg ?? null);
     doc.write(`if (!${validator}(${accessor}, ${alg})) return INVALID;`);
     return accessor;
   }
-  if (fmt === "ipv6") {
+  if (fmt2 === "ipv6") {
     const validator = addConstant(ctx, isValidIPv6);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (fmt === "cidrv6") {
+  if (fmt2 === "cidrv6") {
     const validator = addConstant(ctx, isValidCIDRv6);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (fmt === "credit_card") {
+  if (fmt2 === "credit_card") {
     const validator = addConstant(ctx, isValidCreditCard);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (fmt === "iban") {
+  if (fmt2 === "iban") {
     const validator = addConstant(ctx, isValidIBAN);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
   const formatDef = def;
-  if (fmt === "url" || fmt === "httpurl" || formatDef.normalize || formatDef.hostname !== void 0 || formatDef.protocol !== void 0) {
+  if (fmt2 === "url" || fmt2 === "httpurl" || formatDef.normalize || formatDef.hostname !== void 0 || formatDef.protocol !== void 0) {
     const parseConst = addConstant(ctx, validateURL);
     const defConst = addConstant(ctx, def);
     const trimVar = newVar(ctx);
@@ -24481,12 +24789,12 @@ function generateStringFormatCheck(doc, ctx, def, accessor, needsValue = true) {
   const customFn = def.fn;
   if (customFn) {
     if (isAsyncFunction(customFn))
-      throw new ZodCompileUnsupportedError(`async string format ${fmt}`);
+      throw new ZodCompileUnsupportedError(`async string format ${fmt2}`);
     const fnConst = addConstant(ctx, customFn);
     doc.write(`if (!${fnConst}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (PATTERN_IS_COMPLETE.has(fmt) && def.pattern) {
+  if (PATTERN_IS_COMPLETE.has(fmt2) && def.pattern) {
     const patternConst = addConstant(ctx, def.pattern);
     doc.write(`${patternConst}.lastIndex = 0;`);
     doc.write(`if (!${patternConst}.test(${accessor})) return INVALID;`);
@@ -28288,11 +28596,11 @@ function normalizeObjectSchema(schema) {
   }
   return void 0;
 }
-function getDotPath(path12) {
-  if (path12.length === 0) {
+function getDotPath(path13) {
+  if (path13.length === 0) {
     return "object root";
   }
-  return path12.reduce((acc, seg, index) => {
+  return path13.reduce((acc, seg, index) => {
     if (index === 0) {
       return String(seg);
     }
@@ -30519,13 +30827,13 @@ function resolveRef(ref, ctx) {
   if (!ref.startsWith("#")) {
     throw new Error("External $ref is not supported, only local refs (#/...) are allowed");
   }
-  const path12 = ref.slice(1).split("/").filter(Boolean);
-  if (path12.length === 0) {
+  const path13 = ref.slice(1).split("/").filter(Boolean);
+  if (path13.length === 0) {
     return ctx.rootSchema;
   }
   const defsKey = ctx.version === "draft-2020-12" ? "$defs" : "definitions";
-  if (path12[0] === defsKey) {
-    const key = path12[1] === void 0 ? void 0 : decodeJSONPointerSegment(path12[1]);
+  if (path13[0] === defsKey) {
+    const key = path13[1] === void 0 ? void 0 : decodeJSONPointerSegment(path13[1]);
     if (!key || !ctx.defs[key]) {
       throw new Error(`Reference not found: ${ref}`);
     }
@@ -31165,11 +31473,11 @@ function deepPartial(schema) {
 }
 
 // node_modules/zod/v4/classic/in-out.js
-function withChecks(side, checks) {
+function withChecks(side2, checks) {
   if (!checks?.length)
-    return side;
-  const def = side._zod.def;
-  return clone(side, mergeDefs(def, { checks: [...def.checks ?? [], ...checks] }), { parent: true });
+    return side2;
+  const def = side2._zod.def;
+  return clone(side2, mergeDefs(def, { checks: [...def.checks ?? [], ...checks] }), { parent: true });
 }
 function outSide(def) {
   return withChecks(def.out, def.checks);
@@ -34603,7 +34911,7 @@ var Protocol = class {
           return;
         }
         const pollInterval = task2.pollInterval ?? this._options?.defaultTaskPollInterval ?? 1e3;
-        await new Promise((resolve9) => setTimeout(resolve9, pollInterval));
+        await new Promise((resolve10) => setTimeout(resolve10, pollInterval));
         options?.signal?.throwIfAborted();
       }
     } catch (error62) {
@@ -34620,7 +34928,7 @@ var Protocol = class {
    */
   request(request, resultSchema, options) {
     const { relatedRequestId, resumptionToken, onresumptiontoken, task, relatedTask } = options ?? {};
-    return new Promise((resolve9, reject) => {
+    return new Promise((resolve10, reject) => {
       const earlyReject = (error62) => {
         reject(error62);
       };
@@ -34698,7 +35006,7 @@ var Protocol = class {
           if (!parseResult.success) {
             reject(parseResult.error);
           } else {
-            resolve9(parseResult.data);
+            resolve10(parseResult.data);
           }
         } catch (error62) {
           reject(error62);
@@ -34960,12 +35268,12 @@ var Protocol = class {
       }
     } catch {
     }
-    return new Promise((resolve9, reject) => {
+    return new Promise((resolve10, reject) => {
       if (signal.aborted) {
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
         return;
       }
-      const timeoutId = setTimeout(resolve9, interval);
+      const timeoutId = setTimeout(resolve10, interval);
       signal.addEventListener("abort", () => {
         clearTimeout(timeoutId);
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
@@ -36096,7 +36404,7 @@ var McpServer = class {
     let task = createTaskResult.task;
     const pollInterval = task.pollInterval ?? 5e3;
     while (task.status !== "completed" && task.status !== "failed" && task.status !== "cancelled") {
-      await new Promise((resolve9) => setTimeout(resolve9, pollInterval));
+      await new Promise((resolve10) => setTimeout(resolve10, pollInterval));
       const updatedTask = await extra.taskStore.getTask(taskId);
       if (!updatedTask) {
         throw new McpError(ErrorCode.InternalError, `Task ${taskId} not found during polling`);
@@ -36760,196 +37068,28 @@ var StdioServerTransport = class {
     this.onclose?.();
   }
   send(message) {
-    return new Promise((resolve9) => {
+    return new Promise((resolve10) => {
       const json2 = serializeMessage(message);
       if (this._stdout.write(json2)) {
-        resolve9();
+        resolve10();
       } else {
-        this._stdout.once("drain", resolve9);
+        this._stdout.once("drain", resolve10);
       }
     });
   }
 };
 
-// src/config.ts
-import { spawnSync } from "node:child_process";
-import { existsSync, readdirSync, statSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import * as os from "node:os";
-import * as path from "node:path";
-function findPackageRoot(startDir) {
-  let dir = startDir;
-  for (; ; ) {
-    if (existsSync(path.join(dir, "package.json"))) return dir;
-    const parent = path.dirname(dir);
-    if (parent === dir) {
-      throw new Error(`mcp-aftereffects: no package.json found above ${startDir}`);
-    }
-    dir = parent;
-  }
-}
-var PACKAGE_ROOT = findPackageRoot(path.dirname(fileURLToPath(import.meta.url)));
-var DISPATCHER_JSX = path.join(PACKAGE_ROOT, "jsx", "dispatcher.jsx");
-var RUNTIME_ROOT = path.join(os.tmpdir(), "mcp-aftereffects");
-var DEFAULT_RUNTIME_DIR = path.join(RUNTIME_ROOT, "runtime");
-var RUNTIME_POINTER_PATH = path.join(RUNTIME_ROOT, "runtime-dir.txt");
-var RUNTIME_DIR_MODE = 448;
-function resolveRuntimeDir() {
-  const override = process.env.AE_MCP_RUNTIME_DIR?.trim();
-  return override ? path.resolve(override) : DEFAULT_RUNTIME_DIR;
-}
-var RUNTIME_DIR = resolveRuntimeDir();
-var RUNTIME_DIR_IS_CUSTOM = path.resolve(RUNTIME_DIR) !== path.resolve(DEFAULT_RUNTIME_DIR);
-var REQUEST_PREFIX = "request-";
-var RESPONSE_PREFIX = "response-";
-function requestPathFor(id) {
-  return path.join(RUNTIME_DIR, `${REQUEST_PREFIX}${id}.json`);
-}
-function responsePathFor(id) {
-  return path.join(RUNTIME_DIR, `${RESPONSE_PREFIX}${id}.json`);
-}
-var STALE_RUNTIME_FILE_MS = 60 * 60 * 1e3;
-function rejectedOutputPath(outPath) {
-  const abs = path.resolve(outPath);
-  const roots = [path.resolve(RUNTIME_DIR), path.resolve(RUNTIME_ROOT)];
-  for (const root of roots) {
-    const rel = path.relative(root, abs);
-    const inside = rel === "" || !rel.startsWith("..") && !path.isAbsolute(rel);
-    if (inside) {
-      return `refusing to write inside the mcp-aftereffects IPC mailbox (${root}). That directory is the transport's trust boundary \u2014 pick a path outside it.`;
-    }
-  }
-  return null;
-}
-function looseWriteScope(dir) {
-  if (process.platform === "win32") return null;
-  let mode;
-  try {
-    mode = statSync(dir).mode;
-  } catch {
-    return null;
-  }
-  if ((mode & 18) === 0) return null;
-  return { scope: (mode & 2) !== 0 ? "world" : "group", mode: mode & 511 };
-}
-function unsafeRuntimeDirWarning(dir = RUNTIME_DIR) {
-  const loose = looseWriteScope(dir);
-  if (loose === null) return null;
-  return `mailbox ${dir} is ${loose.scope}-writable (mode ${loose.mode.toString(8)}). Any local account that can write there can execute code inside After Effects. Fix with: chmod 700 ${JSON.stringify(dir)} \u2014 or unset AE_MCP_RUNTIME_DIR to use the per-user default.`;
-}
-function unsafePointerDirWarning(dir = RUNTIME_ROOT) {
-  const loose = looseWriteScope(dir);
-  if (loose === null) return null;
-  return `mailbox pointer directory ${dir} is ${loose.scope}-writable (mode ${loose.mode.toString(8)}). It holds ${path.basename(RUNTIME_POINTER_PATH)}, which the dispatcher follows to locate the mailbox, so any local account that can write there can point After Effects at a mailbox of its own. Fix with: chmod 700 ${JSON.stringify(dir)}`;
-}
-function uncheckedMailboxAclWarning(platform = process.platform) {
-  if (platform !== "win32" || !RUNTIME_DIR_IS_CUSTOM) return null;
-  return `mailbox ${RUNTIME_DIR} comes from AE_MCP_RUNTIME_DIR and its Windows ACL is not verified here. Any account that can write there can execute code inside After Effects \u2014 keep the mailbox on a per-user path (not a shared, world-writable, or synced folder), or unset AE_MCP_RUNTIME_DIR to use the default under the per-user temp dir.`;
-}
-function runtimeDirWarnings() {
-  const warnings = [unsafeRuntimeDirWarning(RUNTIME_DIR)];
-  if (path.resolve(RUNTIME_DIR) !== path.resolve(RUNTIME_ROOT)) {
-    warnings.push(unsafePointerDirWarning(RUNTIME_ROOT));
-  }
-  warnings.push(uncheckedMailboxAclWarning());
-  return warnings.filter((w) => w !== null);
-}
-var DEFAULT_AE_PATHS_WIN32 = [
-  "C:/Program Files/Adobe/Adobe After Effects 2027/Support Files/AfterFX.exe",
-  "C:/Program Files/Adobe/Adobe After Effects 2026/Support Files/AfterFX.exe",
-  "C:/Program Files/Adobe/Adobe After Effects 2025/Support Files/AfterFX.exe",
-  "C:/Program Files/Adobe/Adobe After Effects 2024/Support Files/AfterFX.exe"
-];
-var DEFAULT_AE_PATHS_DARWIN = [
-  "/Applications/Adobe After Effects 2027/Adobe After Effects 2027.app",
-  "/Applications/Adobe After Effects 2026/Adobe After Effects 2026.app",
-  "/Applications/Adobe After Effects 2025/Adobe After Effects 2025.app",
-  "/Applications/Adobe After Effects 2024/Adobe After Effects 2024.app"
-];
-var AE_RELEASE_DIR = /^Adobe After Effects (\d{4})$/;
-var SUPPORTED_AE_YEARS = [2027, 2026, 2025, 2024];
-var MIN_AE_YEAR = 2024;
-var AE_APP_IN_PROCESS = /^(.*\/Adobe After Effects \d{4}\.app)\/Contents\/MacOS\/After Effects(?:\s|$)/;
-function runningAfterFxApps(psOutput) {
-  let text = psOutput;
-  if (text === void 0) {
-    const r = spawnSync("ps", ["-axo", "command="], { encoding: "utf8", timeout: 2e3 });
-    text = r.stdout ?? "";
-  }
-  const apps = /* @__PURE__ */ new Set();
-  for (const line of text.split("\n")) {
-    const m = AE_APP_IN_PROCESS.exec(line.trim());
-    if (m?.[1]) apps.add(m[1]);
-  }
-  return [...apps];
-}
-function discoverAfterFxPaths(platform = process.platform, root = platform === "darwin" ? "/Applications" : "C:/Program Files/Adobe") {
-  let names;
-  try {
-    names = readdirSync(root);
-  } catch {
-    return [];
-  }
-  return names.map((name) => ({ name, year: AE_RELEASE_DIR.exec(name)?.[1] })).filter((e) => e.year !== void 0 && Number(e.year) >= MIN_AE_YEAR).sort((a, b) => Number(b.year) - Number(a.year)).map(({ name, year }) => platform === "darwin" ? path.join(root, name, `Adobe After Effects ${year}.app`) : path.join(root, name, "Support Files", "AfterFX.exe")).filter((candidate) => existsSync(candidate));
-}
-function resolveAfterFxPath(platform = process.platform, root, running = () => platform === "darwin" ? runningAfterFxApps() : []) {
-  for (const env of [process.env.AE_MCP_EXE, process.env.AE_EXE]) {
-    if (env && existsSync(env)) return env;
-  }
-  const discovered = discoverAfterFxPaths(platform, root);
-  const yearOf = (p) => Number(/Adobe After Effects (\d{4})/.exec(p)?.[1]);
-  const live = running().filter((app) => existsSync(app));
-  const supported = SUPPORTED_AE_YEARS.flatMap((y) => discovered.filter((p) => yearOf(p) === y));
-  const ordered = [...live, ...supported, ...discovered];
-  if (ordered.length) return ordered[0];
-  const candidates = platform === "darwin" ? DEFAULT_AE_PATHS_DARWIN : DEFAULT_AE_PATHS_WIN32;
-  for (const candidate of candidates) {
-    if (existsSync(candidate)) return candidate;
-  }
-  throw new Error(
-    platform === "darwin" ? 'Could not locate After Effects. Set the AE_MCP_EXE env var to the .app bundle, e.g. "/Applications/Adobe After Effects 2026/Adobe After Effects 2026.app"' : 'Could not locate AfterFX.exe. Set the AE_MCP_EXE env var to the full path, e.g. "C:/Program Files/Adobe/Adobe After Effects 2026/Support Files/AfterFX.exe"'
-  );
-}
-var DEFAULT_TIMEOUT_MS = 6e4;
-var POLL_INTERVAL_MS = 80;
-var BUSY_LOCK_PATH = path.join(RUNTIME_DIR, "dispatcher-busy.lock");
-var BUSY_LOCK_STALE_MS = 9e4;
-var BUSY_LOCK_REFRESH_MS = 15e3;
-var RELAUNCH_UNCONSUMED_AFTER_MS = 2500;
-var MAX_LAUNCH_ATTEMPTS = 3;
-var INSTANCES_DIRNAME = "instances";
-var INSTANCES_DIR = path.join(RUNTIME_DIR, INSTANCES_DIRNAME);
-var HEARTBEAT_FILENAME = "heartbeat.json";
-function instanceDirFor(id) {
-  return path.join(INSTANCES_DIR, id);
-}
-var HEARTBEAT_STALE_MS = 5e3;
-var HEARTBEAT_BUSY_STALE_MS = 15 * 6e4;
-var INSTANCE_DIR_SWEEP_MS = STALE_RUNTIME_FILE_MS;
-var LIVENESS_CHECK_MS = 1e3;
-var AGENT_JSX = path.join(PACKAGE_ROOT, "jsx", "agent.jsx");
-var AGENT_STUB_FILENAME = "mcp-aftereffects-agent.jsx";
-var INSTANCE_ID_MAX_LENGTH = 64;
-function sanitizeInstanceId(raw) {
-  if (raw === null || raw === void 0) return null;
-  let s = raw.trim();
-  if (s.length === 0) return null;
-  s = s.replace(/[^A-Za-z0-9._-]+/g, "-").replace(/^[-.]+|[-.]+$/g, "");
-  if (s.length > INSTANCE_ID_MAX_LENGTH) s = s.slice(0, INSTANCE_ID_MAX_LENGTH);
-  return s.length > 0 ? s : null;
-}
-function instanceTargetFromEnv(env = process.env) {
-  const value = env.AE_MCP_INSTANCE?.trim();
-  return value ? value : null;
-}
-var PHANTOM_LAUNCH_MS = 4e3;
+// src/cli.ts
+init_config();
 
 // src/agent-install.ts
+init_config();
 import { promises as fs } from "node:fs";
 import * as os2 from "node:os";
 import * as path2 from "node:path";
 
 // src/transport/launcher.ts
+init_config();
 function jsxPath(p) {
   return `'${p.replace(/\\/g, "/").replace(/'/g, "\\'")}'`;
 }
@@ -37114,6 +37254,7 @@ async function uninstallAgent(opts = {}) {
 }
 
 // src/transport/instances.ts
+init_config();
 import { promises as fs2 } from "node:fs";
 import * as path3 from "node:path";
 function isAlive(heartbeat, now = Date.now()) {
@@ -37345,6 +37486,9 @@ async function runCli(argv, out = (line) => process.stdout.write(`${line}
   }
 }
 
+// src/index.ts
+init_config();
+
 // src/errors.ts
 var RETRYABLE = /* @__PURE__ */ new Set();
 function isRetryable(code) {
@@ -37437,6 +37581,7 @@ function policySummary() {
 }
 
 // src/transport/FileIpcTransport.ts
+init_config();
 import { spawn as nodeSpawn } from "node:child_process";
 import { mkdirSync, promises as fs3, unlinkSync, writeFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
@@ -37444,6 +37589,27 @@ import * as path4 from "node:path";
 
 // src/transport/dialogs.ts
 import { execFile } from "node:child_process";
+var SCRIPT_PROGRESS_NAME = /^\s*executing script\b/i;
+var SCRIPT_PROGRESS_SHAPE = { layer: 8, width: 363, height: 181, tolerance: 2 };
+function scriptProgressMatch(d) {
+  if (SCRIPT_PROGRESS_NAME.test(d.title ?? "") || SCRIPT_PROGRESS_NAME.test(d.text)) return "name";
+  const shape = SCRIPT_PROGRESS_SHAPE;
+  if (!d.title && !d.text && d.layer === shape.layer && Math.abs(d.width - shape.width) <= shape.tolerance && Math.abs(d.height - shape.height) <= shape.tolerance) {
+    return "size";
+  }
+  return null;
+}
+function splitScriptProgress(windows) {
+  return {
+    dialogs: windows.filter((w) => !w.scriptProgress),
+    scripts: windows.filter((w) => !!w.scriptProgress)
+  };
+}
+function scriptRunningMessage(scripts) {
+  const how = scripts.every((s) => s.scriptProgress === "name") ? "its 'Executing Script' progress window is up" : "a window shaped like its 'Executing Script' progress window is up (its name could not be read, so it was recognised by size)";
+  return `After Effects is still running a script (${how}): it is busy, not blocked by a dialog`;
+}
+var SCRIPT_RUNNING_HINT = "Do not close that window: its only action cancels the running script. Wait for the script to finish (raise timeoutMs for long work), then inspect the project before repeating a write.";
 var SCAN_TIMEOUT_MS = 8e3;
 var HELPER = String.raw`
 Add-Type @"
@@ -37592,7 +37758,8 @@ function scan() {
     var pid = w.kCGWindowOwnerPID, b = w.kCGWindowBounds;
     if (!procs[pid] || !(w.kCGWindowAlpha > 0)) return;
     var d = { pid: pid, id: pid + ':' + w.kCGWindowNumber, text: '', width: Math.round(b.Width), height: Math.round(b.Height),
-      window: titles[pid] || null, accessibility: trusted, startedAt: procs[pid].startedAt, number: w.kCGWindowNumber, el: null };
+      window: titles[pid] || null, accessibility: trusted, startedAt: procs[pid].startedAt, number: w.kCGWindowNumber, el: null,
+      title: w.kCGWindowName || '', layer: w.kCGWindowLayer };
     var modal = !!GUESSED_LAYERS[w.kCGWindowLayer];
     if (trusted) {
       var app = axApp(pid, cache);
@@ -37606,7 +37773,15 @@ function scan() {
   });
   return found;
 }
-function strip(d) { return { pid: d.pid, id: d.id, text: d.text, width: d.width, height: d.height, window: d.window, accessibility: d.accessibility, startedAt: d.startedAt }; }
+function strip(d) { return { pid: d.pid, id: d.id, text: d.text, width: d.width, height: d.height, window: d.window, accessibility: d.accessibility, startedAt: d.startedAt, title: d.title, layer: d.layer }; }
+// AE's "Executing Script ..." progress window (layer 8, 363 x 181): its only
+// action cancels the running script, so it is never dismissed. Same rule as
+// scriptProgressMatch in dialogs.ts.
+function isScriptProgress(d) {
+  var named = /^\s*executing script\b/i;
+  if (named.test(d.title || '') || named.test(d.text || '')) return true;
+  return !d.title && !d.text && d.layer === 8 && Math.abs(d.width - 363) <= 2 && Math.abs(d.height - 181) <= 2;
+}
 function gone(number) {
   for (var i = 0; i < 10; i++) {
     delay(0.1);
@@ -37619,6 +37794,7 @@ function dismiss(target) {
   var d = null;
   scan().forEach(function (x) { if (x.id === target) d = x; });
   if (!d) { none.reason = 'not_found'; return none; }
+  if (isScriptProgress(d)) { none.reason = 'script_progress'; return none; }
   if (!trusted) { none.reason = 'no_permission'; return none; }
   var cancel = d.el ? axElement(d.el, 'AXCancelButton') : null;
   if (cancel) {
@@ -37653,7 +37829,7 @@ if (mode === 'dismiss') {
 function encodeScript(script) {
   return Buffer.from(script, "utf16le").toString("base64");
 }
-var defaultRunner = (script, env) => new Promise((resolve9, reject) => {
+var defaultRunner = (script, env) => new Promise((resolve10, reject) => {
   execFile(
     "powershell.exe",
     [
@@ -37671,10 +37847,10 @@ var defaultRunner = (script, env) => new Promise((resolve9, reject) => {
       encoding: "utf8",
       maxBuffer: 1024 * 1024
     },
-    (err, stdout) => err ? reject(err) : resolve9(stdout)
+    (err, stdout) => err ? reject(err) : resolve10(stdout)
   );
 });
-var defaultOsascriptRunner = (script, env) => new Promise((resolve9, reject) => {
+var defaultOsascriptRunner = (script, env) => new Promise((resolve10, reject) => {
   execFile(
     "/usr/bin/osascript",
     ["-l", "JavaScript", "-e", script],
@@ -37684,7 +37860,7 @@ var defaultOsascriptRunner = (script, env) => new Promise((resolve9, reject) => 
       encoding: "utf8",
       maxBuffer: 1024 * 1024
     },
-    (err, stdout) => err ? reject(err) : resolve9(stdout)
+    (err, stdout) => err ? reject(err) : resolve10(stdout)
   );
 });
 var runner = defaultRunner;
@@ -37719,12 +37895,17 @@ function parseDialogScan(raw) {
       height: typeof e.height === "number" ? e.height : 0,
       window: typeof e.window === "string" && e.window.length > 0 ? e.window : null,
       ...typeof e.accessibility === "boolean" ? { accessibility: e.accessibility } : {},
-      ...typeof e.startedAt === "number" && e.startedAt > 0 ? { startedAt: e.startedAt } : {}
+      ...typeof e.startedAt === "number" && e.startedAt > 0 ? { startedAt: e.startedAt } : {},
+      ...typeof e.title === "string" ? { title: e.title.trim() } : {},
+      ...typeof e.layer === "number" ? { layer: e.layer } : {}
     });
+    const last = out[out.length - 1];
+    const progress = scriptProgressMatch(last);
+    if (progress !== null) last.scriptProgress = progress;
   }
   return out;
 }
-async function scanAeDialogs(platform = process.platform) {
+async function scanAeWindows(platform = process.platform) {
   if (!scanSupported(platform)) return [];
   try {
     const raw = platform === "darwin" ? await osascriptRunner(DARWIN_SCRIPT, { AE_MCP_DIALOG_MODE: "scan" }) : await runner(SCAN_SCRIPT, {});
@@ -37733,7 +37914,10 @@ async function scanAeDialogs(platform = process.platform) {
     return [];
   }
 }
-var DISMISS_REASONS = /* @__PURE__ */ new Set(["not_found", "no_permission"]);
+async function scanAeDialogs(platform = process.platform) {
+  return splitScriptProgress(await scanAeWindows(platform)).dialogs;
+}
+var DISMISS_REASONS = /* @__PURE__ */ new Set(["not_found", "no_permission", "script_progress"]);
 async function dismissAeDialog(id, platform = process.platform) {
   const notFound = {
     posted: false,
@@ -37780,6 +37964,35 @@ function dialogHint(dialogs) {
 }
 
 // src/transport/FileIpcTransport.ts
+var ORPHAN_TMP_SWEEP_MS = 5 * 6e4;
+async function sweepOrphanTmpFiles(dir, now = Date.now()) {
+  const removed = [];
+  let entries;
+  try {
+    entries = await fs3.readdir(dir);
+  } catch {
+    return removed;
+  }
+  for (const entry of entries) {
+    const isTmp = (entry.startsWith(`.${REQUEST_PREFIX}`) || entry.startsWith(`.${RESPONSE_PREFIX}`)) && entry.endsWith(".json.tmp");
+    if (!isTmp) continue;
+    const full = path4.join(dir, entry);
+    try {
+      const stat = await fs3.stat(full);
+      if (stat.isFile() && now - stat.mtimeMs > ORPHAN_TMP_SWEEP_MS) {
+        await fs3.unlink(full);
+        removed.push(entry);
+      }
+    } catch {
+    }
+  }
+  return removed;
+}
+var REAP_INTERVAL_MS = 1e3;
+var EMPTY_TMP_GRACE_MS = 1e4;
+var UNCLAIMED_RESPONSE_GRACE_MS = 2e3;
+var ORPHAN_WATCH_MS = 30 * 6e4;
+var PICKED_UP_TIMEOUT_NOTE = "The most likely cause is a modal dialog in After Effects \u2014 an error box raised by the script (an undo raised one on 2026-11-10) or a warning \u2014 which blocks all scripting until a person clicks it; instance.dialogs may not list it, so look at the After Effects window. Once it is dismissed the script finishes and the plugin cleans up after it (busy lock, temp response).";
 var FileIpcTransport = class {
   afterFxPath = null;
   inflight = Promise.resolve();
@@ -37788,10 +38001,16 @@ var FileIpcTransport = class {
   instanceOption;
   spawnFn;
   scanDialogs;
+  reapIntervalMs;
+  emptyTmpGraceMs;
+  orphans = /* @__PURE__ */ new Map();
+  reapTimer = null;
   constructor(options = {}) {
     this.instanceOption = options.instance;
+    this.reapIntervalMs = options.reapIntervalMs ?? REAP_INTERVAL_MS;
+    this.emptyTmpGraceMs = options.emptyTmpGraceMs ?? EMPTY_TMP_GRACE_MS;
     this.spawnFn = options.spawn ?? ((command, args, opts) => nodeSpawn(command, args, opts));
-    this.scanDialogs = options.scanDialogs ?? (() => scanAeDialogs());
+    this.scanDialogs = options.scanDialogs ?? (() => scanAeWindows());
     try {
       mkdirSync(RUNTIME_DIR, { recursive: true, mode: RUNTIME_DIR_MODE });
       if (RUNTIME_DIR_IS_CUSTOM) {
@@ -37847,8 +38066,14 @@ var FileIpcTransport = class {
       release();
     }
   }
+  /** Stop watching for the leftovers of timed-out requests. */
+  async close() {
+    if (this.reapTimer !== null) clearInterval(this.reapTimer);
+    this.reapTimer = null;
+  }
   async executeOne(req) {
     const started = Date.now();
+    await this.reapOrphans();
     const timeoutMs = req.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     if (this.setupError !== null) {
       return failure2("TRANSPORT", this.setupError, {
@@ -37857,8 +38082,14 @@ var FileIpcTransport = class {
     }
     const target = await this.resolveTarget(req.instance);
     if (target.mode === "error") {
-      const dialogs = await this.scanDialogs();
+      const { dialogs, scripts } = await this.lookAtAe();
       if (dialogs.length > 0) return dialogFailure(dialogs, target.message, started);
+      if (scripts.length > 0) {
+        return failure2("NO_INSTANCE", `${target.message} \u2014 ${scriptRunningMessage(scripts)}`, {
+          durationMs: Date.now() - started,
+          hint: SCRIPT_RUNNING_HINT
+        });
+      }
       return failure2("NO_INSTANCE", target.message, {
         durationMs: Date.now() - started,
         hint: target.hint
@@ -37873,7 +38104,11 @@ var FileIpcTransport = class {
       // missing field to true, and "group this" must not depend on a key
       // surviving the trip.
       undoGroup: req.undoGroup !== false,
-      suppressDialogs: req.suppressDialogs !== false
+      suppressDialogs: req.suppressDialogs !== false,
+      // Explicit as well: a missing field means "no rollback" to serve.jsx,
+      // and rollback only ever applies inside an undo group.
+      rollback: req.undoGroup !== false && req.rollback === true,
+      acceptRenderQueueRisk: req.acceptRenderQueueRisk === true
     };
     if (target.mode === "pull") {
       return this.executePull(request, target.instance, started, timeoutMs);
@@ -37910,13 +38145,21 @@ var FileIpcTransport = class {
           const current = await readInstance(dir, now);
           if (!current.alive) {
             const reclaimed2 = await this.safeUnlink(requestPath);
+            if (!reclaimed2) this.watchOrphan(request.id, dir);
             const outcome = reclaimed2 ? "the request was never picked up and has been discarded" : "the request disappeared before it could be reclaimed; the operation may have started";
-            const dialogs = await this.scanDialogs();
+            const { dialogs, scripts } = await this.lookAtAe();
             if (dialogs.length > 0) {
               return dialogFailure(
                 dialogs,
                 `After Effects instance '${instance.id}' stopped responding; ${outcome}`,
                 started
+              );
+            }
+            if (scripts.length > 0) {
+              return failure2(
+                reclaimed2 ? "NO_INSTANCE" : "TIMEOUT",
+                `After Effects instance '${instance.id}' stopped responding: ${scriptRunningMessage(scripts)}; ${outcome}`,
+                { durationMs: Date.now() - started, hint: SCRIPT_RUNNING_HINT }
               );
             }
             return failure2(
@@ -37933,12 +38176,20 @@ var FileIpcTransport = class {
       await sleep(POLL_INTERVAL_MS);
     }
     const reclaimed = await this.safeUnlink(requestPath);
-    const pullTimeoutMessage = `timeout after ${timeoutMs}ms waiting for After Effects instance '${instance.id}' to respond` + (reclaimed ? " (the request was never picked up and has been discarded)" : " (the request WAS picked up by the instance; the operation may still be running)");
-    const pullDialogs = await this.scanDialogs();
-    if (pullDialogs.length > 0) return dialogFailure(pullDialogs, pullTimeoutMessage, started);
+    if (!reclaimed) this.watchOrphan(request.id, dir);
+    const pullTimeoutBase = `timeout after ${timeoutMs}ms waiting for After Effects instance '${instance.id}' to respond` + (reclaimed ? " (the request was never picked up and has been discarded)" : " (the request WAS picked up by the instance; the operation may still be running)");
+    const pull = await this.lookAtAe();
+    if (pull.dialogs.length > 0) return dialogFailure(pull.dialogs, pullTimeoutBase, started);
+    if (pull.scripts.length > 0) {
+      return failure2("TIMEOUT", `${pullTimeoutBase}. ${scriptRunningMessage(pull.scripts)}.`, {
+        durationMs: Date.now() - started,
+        hint: SCRIPT_RUNNING_HINT
+      });
+    }
+    const pullTimeoutMessage = reclaimed ? pullTimeoutBase : `${pullTimeoutBase}. ${PICKED_UP_TIMEOUT_NOTE}`;
     return failure2("TIMEOUT", pullTimeoutMessage, {
       durationMs: Date.now() - started,
-      hint: "Is After Effects showing a modal dialog, or rendering/previewing? Scripts wait for both. For a long operation, raise timeoutMs."
+      hint: "Is After Effects showing a modal dialog, or rendering/previewing? Scripts wait for both. For a long operation, raise timeoutMs. Inspect the project before repeating a write."
     });
   }
   // --- Push: launch the dispatcher into the registered instance ---------------
@@ -37951,9 +38202,15 @@ var FileIpcTransport = class {
       });
     }
     if ((await listInstances()).some((i) => !i.alive)) {
-      const dialogs = await this.scanDialogs();
+      const { dialogs, scripts } = await this.lookAtAe();
       if (dialogs.length > 0) {
         return dialogFailure(dialogs, "nothing was sent to After Effects", started);
+      }
+      if (scripts.length > 0) {
+        return failure2("TIMEOUT", `${scriptRunningMessage(scripts)}; nothing was sent to After Effects`, {
+          durationMs: Date.now() - started,
+          hint: SCRIPT_RUNNING_HINT
+        });
       }
     }
     const id = request.id;
@@ -38010,10 +38267,16 @@ var FileIpcTransport = class {
               return await this.phantomFailure(spawnState, requestPath, started);
             }
           } else if (attempts < MAX_LAUNCH_ATTEMPTS && now - lastLaunchAt >= RELAUNCH_UNCONSUMED_AFTER_MS * attempts) {
-            const dialogs = await this.scanDialogs();
+            const { dialogs, scripts } = await this.lookAtAe();
+            if (dialogs.length === 0 && scripts.length > 0) {
+              lastLaunchAt = Date.now();
+              await sleep(POLL_INTERVAL_MS);
+              continue;
+            }
             if (dialogs.length > 0) {
               const reclaimed2 = await this.safeUnlink(requestPath);
               leaveLockForRunningScript = !reclaimed2;
+              if (!reclaimed2) this.watchOrphan(id, RUNTIME_DIR);
               return dialogFailure(
                 dialogs,
                 reclaimed2 ? `the request was never picked up after ${attempts} launch attempt${attempts === 1 ? "" : "s"} and has been discarded` : "the request disappeared before it could be reclaimed; the operation may have started",
@@ -38029,7 +38292,15 @@ var FileIpcTransport = class {
       }
       const reclaimed = await this.safeUnlink(requestPath);
       leaveLockForRunningScript = !reclaimed;
-      const pushDialogs = await this.scanDialogs();
+      if (!reclaimed) this.watchOrphan(id, RUNTIME_DIR);
+      const { dialogs: pushDialogs, scripts: pushScripts } = await this.lookAtAe();
+      if (pushDialogs.length === 0 && pushScripts.length > 0) {
+        return failure2(
+          "TIMEOUT",
+          `timeout after ${timeoutMs}ms waiting for After Effects to respond` + (reclaimed ? " (the request was never picked up and has been discarded)" : " (the request WAS picked up by AE; the operation may still be running)") + `. ${scriptRunningMessage(pushScripts)}.`,
+          { durationMs: Date.now() - started, hint: SCRIPT_RUNNING_HINT }
+        );
+      }
       if (pushDialogs.length > 0) {
         return dialogFailure(
           pushDialogs,
@@ -38039,7 +38310,7 @@ var FileIpcTransport = class {
       }
       return failure2(
         "TIMEOUT",
-        `timeout after ${timeoutMs}ms waiting for After Effects to respond` + (reclaimed ? ` (the request was never picked up by AE after ${attempts} launch attempt${attempts === 1 ? "" : "s"} and has been discarded)` : " (the request WAS picked up by AE; the operation may still be running)"),
+        `timeout after ${timeoutMs}ms waiting for After Effects to respond` + (reclaimed ? ` (the request was never picked up by AE after ${attempts} launch attempt${attempts === 1 ? "" : "s"} and has been discarded)` : ` (the request WAS picked up by AE; the operation may still be running). ${PICKED_UP_TIMEOUT_NOTE}`),
         {
           durationMs: Date.now() - started,
           hint: "Is AE running with a project open? Is 'Allow Scripts to Write Files and Access Network' enabled? Is AE showing a modal dialog (e.g. 'Attempt was made to run a second script')? Dismiss it \u2014 scripting is blocked while it is open. " + (process.platform === "darwin" ? "Is your MCP client allowed to control After Effects (System Settings \u2192 Privacy & Security \u2192 Automation)? " : "") + "Do not repeat a write until you inspect the actual project state. Preserve unsaved work; do not force-quit AE as routine recovery."
@@ -38160,12 +38431,91 @@ var FileIpcTransport = class {
           const stat = await fs3.stat(BUSY_LOCK_PATH);
           if (Date.now() - stat.mtimeMs > BUSY_LOCK_STALE_MS) {
             await this.safeUnlink(BUSY_LOCK_PATH);
+          } else {
+            const holder = await this.lockHolder();
+            if (holder !== null && holder !== id && await this.requestFinished(holder, RUNTIME_DIR, true)) {
+              await this.safeUnlink(BUSY_LOCK_PATH);
+            }
           }
         } catch {
         }
         if (Date.now() >= deadline) return false;
         await sleep(POLL_INTERVAL_MS);
       }
+    }
+  }
+  /**
+   * What After Effects is showing: real dialogs, and its own script progress
+   * window (a script still running), kept apart so the progress window is
+   * never reported as a dialog or offered for dismissal.
+   */
+  async lookAtAe() {
+    return splitScriptProgress(await this.scanDialogs());
+  }
+  /** Id recorded in the busy lock, or null when there is none or it is unreadable. */
+  async lockHolder() {
+    try {
+      const raw = await fs3.readFile(BUSY_LOCK_PATH, "utf8");
+      const holder = JSON.parse(raw).id;
+      return typeof holder === "string" ? holder : null;
+    } catch {
+      return null;
+    }
+  }
+  /**
+   * Has request `id` (served from `dir`) visibly finished? True when its
+   * response is there (and, for a request that is not ours, has sat unclaimed
+   * for UNCLAIMED_RESPONSE_GRACE_MS), or when all that is left is an empty
+   * tmp response untouched for emptyTmpGraceMs — which is then removed.
+   */
+  async requestFinished(id, dir, foreign) {
+    const responsePath = path4.join(dir, `${RESPONSE_PREFIX}${id}.json`);
+    try {
+      const stat = await fs3.stat(responsePath);
+      if (!foreign || Date.now() - stat.mtimeMs >= UNCLAIMED_RESPONSE_GRACE_MS) return true;
+    } catch {
+    }
+    const tmpPath = path4.join(dir, `.${RESPONSE_PREFIX}${id}.json.tmp`);
+    try {
+      const stat = await fs3.stat(tmpPath);
+      if (stat.size === 0 && Date.now() - stat.mtimeMs >= this.emptyTmpGraceMs) {
+        await this.safeUnlink(tmpPath);
+        return true;
+      }
+    } catch {
+    }
+    return false;
+  }
+  /** Watch the leftovers of a request that timed out after After Effects picked it up. */
+  watchOrphan(id, dir) {
+    this.orphans.set(id, { id, dir, watchUntil: Date.now() + ORPHAN_WATCH_MS });
+    if (this.reapTimer === null) {
+      this.reapTimer = setInterval(() => void this.reapOrphans(), this.reapIntervalMs);
+      this.reapTimer.unref?.();
+    }
+  }
+  /**
+   * For every watched request that has finished: remove its late response and
+   * tmp file (nobody is waiting for them any more) and release the busy lock
+   * if it is still the one that request held. Never throws.
+   */
+  async reapOrphans() {
+    for (const orphan of Array.from(this.orphans.values())) {
+      try {
+        if (await this.requestFinished(orphan.id, orphan.dir, false)) {
+          await this.safeUnlink(path4.join(orphan.dir, `${RESPONSE_PREFIX}${orphan.id}.json`));
+          await this.safeUnlink(path4.join(orphan.dir, `.${RESPONSE_PREFIX}${orphan.id}.json.tmp`));
+          await this.releaseBusyLock(orphan.id);
+          this.orphans.delete(orphan.id);
+        } else if (Date.now() > orphan.watchUntil) {
+          this.orphans.delete(orphan.id);
+        }
+      } catch {
+      }
+    }
+    if (this.orphans.size === 0 && this.reapTimer !== null) {
+      clearInterval(this.reapTimer);
+      this.reapTimer = null;
     }
   }
   /**
@@ -38230,7 +38580,8 @@ var FileIpcTransport = class {
         errorCode: null,
         stack: null,
         logs: parsed.logs ?? [],
-        durationMs
+        durationMs,
+        ...parsed.rollback ? { rollback: parsed.rollback } : {}
       };
     }
     const dispatchFailure = parsed.phase === "dispatch";
@@ -38242,7 +38593,8 @@ var FileIpcTransport = class {
       line: typeof parsed.line === "number" ? parsed.line : null,
       stack: parsed.stack,
       logs: parsed.logs ?? [],
-      durationMs
+      durationMs,
+      ...parsed.rollback ? { rollback: parsed.rollback } : {}
     };
   }
   async tryReadResponse(responsePath) {
@@ -38283,6 +38635,13 @@ var FileIpcTransport = class {
           if (stat.mtimeMs < cutoff) await fs3.unlink(full);
         } catch {
         }
+      }
+      await sweepOrphanTmpFiles(RUNTIME_DIR);
+      try {
+        for (const entry of await fs3.readdir(INSTANCES_DIR)) {
+          await sweepOrphanTmpFiles(path4.join(INSTANCES_DIR, entry));
+        }
+      } catch {
       }
       try {
         const lockStat = await fs3.stat(BUSY_LOCK_PATH);
@@ -38354,7 +38713,7 @@ function isAutomationDenial(message) {
   return /(?:-1743\b|not (?:authorized|permitted) to send apple events)/i.test(message);
 }
 function sleep(ms) {
-  return new Promise((resolve9) => setTimeout(resolve9, ms));
+  return new Promise((resolve10) => setTimeout(resolve10, ms));
 }
 function serializeRequest(request) {
   return JSON.stringify(request).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
@@ -41400,16 +41759,29 @@ function isUndoRedoCommandId(id) {
 registerOp({
   name: "command.execute",
   category: "command",
-  description: "Execute an AE menu command by its numeric ID. Use command.list to discover common IDs. Undo (16) and Redo (2035) run outside this call's undo group, so they revert/replay the PREVIOUS call.",
-  params: [{ name: "id", type: "number", description: "Menu command ID", required: true }],
+  description: "Execute an AE menu command by its numeric ID. Use command.list to discover common IDs. Undo (16) and Redo (2035) run outside this call's undo group, so they revert/replay the PREVIOUS call; like project.undo / project.redo they run with dialogs suppressed, report any error After Effects raised, and are refused after a scripted render-queue change in the session unless acceptRenderQueueRisk: true.",
+  params: [
+    { name: "id", type: "number", description: "Menu command ID", required: true },
+    {
+      name: "acceptRenderQueueRisk",
+      type: "boolean",
+      description: "Default false. After a scripted render-queue change in this After Effects session, Undo/Redo (16/2035) are refused (After Effects 2027 has gone into crash recovery on undo after such changes \u2014 observed twice; a precaution). Pass true only when the user accepts that risk, ideally after saving.",
+      required: false
+    }
+  ],
   // Undo/Redo must not be executed inside an open undo group — AE applies them
   // to that group and the requested step survives. Everything else groups
-  // normally, so one Ctrl+Z still reverts one call.
+  // normally, so one Ctrl+Z still reverts one call. Dialog suppression is on
+  // for every command, Undo/Redo included (see project.undo).
   undoGroup: (args) => !isUndoRedoCommandId(args.id),
-  // Same pair: dialog suppression opens an undo-transaction-like scope that
-  // Undo/Redo would resolve against, so they skip it too.
-  suppressDialogs: (args) => !isUndoRedoCommandId(args.id),
   toJsx(args) {
+    if (isUndoRedoCommandId(args.id)) {
+      return `
+            var _c = AE_MCP.undoRedo(${jsxVal(args.id)}, 1, ${jsxVal(args.acceptRenderQueueRisk === true)});
+            _c.commandId = ${jsxVal(args.id)};
+            return _c;
+        `;
+    }
     return `
             app.executeCommand(${jsxVal(args.id)});
             return { ok: true, commandId: ${jsxVal(args.id)} };
@@ -41505,6 +41877,8 @@ registerOp({
                 app.project.close(CloseOptions.DO_NOT_SAVE_CHANGES);
             }
             app.open(f);
+            // A new undo history: the render-queue undo block no longer applies.
+            try { AE_MCP.clearRenderQueueRisk("project.open"); } catch (eClr) {}
             // A project saved by an older After Effects opens as an untitled converted copy: no file until it is saved
             if (!app.project.file) return { ok: true, numItems: app.project.numItems, file: null, untitled: true,
                 note: "opened as an untitled copy (a project from an older After Effects version); Save As (ae_save_project with path) to keep it" };
@@ -41588,7 +41962,7 @@ registerOp({
 registerOp({
   name: "project.undo",
   category: "project",
-  description: "Undo the last action. Equivalent to Ctrl+Z. Each prior ae_do call is ONE undo step (its automatic undo group), so count=1 reverts the whole previous call, batch included.",
+  description: "Undo the last action. Equivalent to Ctrl+Z. Each prior ae_do call is ONE undo step (its automatic undo group), so count=1 reverts the whole previous call, batch included. Runs with After Effects' dialogs suppressed (an undo once raised an error box that blocked all scripting until a person clicked it); the result's aeErrors and warning carry anything After Effects reported, and an undo that throws stops the loop and fails the call. The result counts commands run (commandsRun), not steps undone: `changed` says whether the project's items or the active comp's layers changed (false means the history was empty OR the step only changed property values \u2014 inspect before assuming either), and `effect` says it in words. After a scripted render-queue change in this After Effects session it refuses (refused: true) unless acceptRenderQueueRisk: true \u2014 After Effects 2027 crashed on undo after such changes (observed twice on 2026-11-10; a precaution, not a proven cause). Save first if you override; project.open / project.new clear the block. A failed call that was rolled back already left no step of its own: do not undo again for it.",
   params: [
     {
       name: "count",
@@ -41596,20 +41970,50 @@ registerOp({
       description: "Number of undos (default 1)",
       required: false,
       default: 1
+    },
+    {
+      name: "acceptRenderQueueRisk",
+      type: "boolean",
+      description: "Default false. After a scripted render-queue change in this After Effects session, undo is refused (After Effects 2027 has gone into crash recovery on undo after such changes \u2014 observed twice; a precaution). Pass true only when the user accepts that risk, ideally after saving.",
+      required: false
     }
   ],
   // Runs OUTSIDE the dispatcher's automatic undo group. Wrapped in one, AE
   // resolves each Undo against the group that is still open: the previous
   // call — the one the caller wants back — is never reverted, and the group
   // this call closes afterwards leaves the stack out of step with the project.
-  // Dialog suppression opens the same kind of scope, so it opts out of both.
+  // Dialog suppression stays ON (the default): see AE_MCP.undoRedo in
+  // jsx/serve.jsx and the stage 7 hand-over for what the live run must confirm.
   undoGroup: () => false,
-  suppressDialogs: () => false,
   toJsx(args) {
     return `
-            var n = ${jsxVal(args.count ?? 1)};
-            for (var i = 0; i < n; i++) app.executeCommand(${UNDO_COMMAND_ID});
-            return { ok: true, undone: n };
+            return AE_MCP.undoRedo(${UNDO_COMMAND_ID}, ${jsxVal(args.count ?? 1)}, ${jsxVal(args.acceptRenderQueueRisk === true)});
+        `;
+  }
+});
+registerOp({
+  name: "project.redo",
+  category: "project",
+  description: "Redo the last undone action. Equivalent to Ctrl+Shift+Z. Runs like project.undo: outside the undo group, with dialogs suppressed, reporting any error After Effects raised (aeErrors, warning), and saying whether the project changed (changed, effect) rather than counting steps redone. Refused after a scripted render-queue change in the session unless acceptRenderQueueRisk: true, like project.undo.",
+  params: [
+    {
+      name: "count",
+      type: "number",
+      description: "Number of redos (default 1)",
+      required: false,
+      default: 1
+    },
+    {
+      name: "acceptRenderQueueRisk",
+      type: "boolean",
+      description: "Default false. After a scripted render-queue change in this After Effects session, undo is refused (After Effects 2027 has gone into crash recovery on undo after such changes \u2014 observed twice; a precaution). Pass true only when the user accepts that risk, ideally after saving.",
+      required: false
+    }
+  ],
+  undoGroup: () => false,
+  toJsx(args) {
+    return `
+            return AE_MCP.undoRedo(${REDO_COMMAND_ID}, ${jsxVal(args.count ?? 1)}, ${jsxVal(args.acceptRenderQueueRisk === true)});
         `;
   }
 });
@@ -42194,6 +42598,7 @@ registerOp({
             app.project.close(CloseOptions.DO_NOT_SAVE_CHANGES);
             var _p = app.newProject();
             if (!_p) return { ok: false, error: "app.newProject returned null" };
+            try { AE_MCP.clearRenderQueueRisk("project.new"); } catch (eClr) {}
             return { ok: true, numItems: _p.numItems };
         `;
   }
@@ -45085,7 +45490,7 @@ init_registry();
 registerOp({
   name: "batch.run",
   category: "batch",
-  description: "Execute multiple operations in a single IPC call (~400ms total instead of 400ms \xD7 N). Operations run sequentially inside ONE undo group \u2014 a single Ctrl+Z reverts the whole batch, however many ops it contained. That group is also why undo/redo children (project.undo, command.execute id 16/2035) are rejected here: call those as their own ae_do. If one fails, subsequent ops still run unless stopOnError. Results array matches input order; the response reports how many failed. Mix in read/verify children \u2014 comp.info, layer.info, render.frame \u2014 to mutate AND verify in the same call, e.g. [...mutations, { operation: 'render.frame', args: { \u2026 } }].",
+  description: "Execute multiple operations in a single IPC call (~400ms total instead of 400ms \xD7 N). Operations run sequentially inside ONE undo group \u2014 a single Ctrl+Z reverts the whole batch, however many ops it contained. That group is also why undo/redo children (project.undo, command.execute id 16/2035) are rejected here: call those as their own ae_do. If one fails, subsequent ops still run unless stopOnError. With stopOnError, a failure rolls the WHOLE batch back (one undo, issued before the response, reported in details.rollback) and still returns every child's result; pass rollback: false to keep the operations that ran before the failure instead \u2014 the result's `kept` says which. Without stopOnError nothing is rolled back: the other children's changes stand. Results array matches input order; the response reports how many failed. Mix in read/verify children \u2014 comp.info, layer.info, render.frame \u2014 to mutate AND verify in the same call, e.g. [...mutations, { operation: 'render.frame', args: { \u2026 } }].",
   params: [
     {
       name: "ops",
@@ -45096,13 +45501,28 @@ registerOp({
     {
       name: "stopOnError",
       type: "boolean",
-      description: "Stop executing remaining ops if one fails (default false)",
+      description: "Stop at the first failing op (default false). The batch is then rolled back as a whole unless rollback is false.",
+      required: false
+    },
+    {
+      name: "rollback",
+      type: "boolean",
+      description: "Default true. With stopOnError, revert the whole batch when an op fails, and revert it if the batch itself throws. false keeps whatever ran before the failure (for deliberately incremental work); the result's `kept` names it.",
+      required: false
+    },
+    {
+      name: "acceptRenderQueueRisk",
+      type: "boolean",
+      description: "Default false. After a scripted render-queue change in this After Effects session, undo is refused (After Effects 2027 has gone into crash recovery on undo after such changes \u2014 observed twice; a precaution). Pass true only when the user accepts that risk, ideally after saving.",
       required: false
     }
   ],
   // The wrapper itself mutates nothing; each child is gated individually below,
   // so a batch of read-only operations stays usable under AE_MCP_READONLY.
   readOnly: true,
+  // The children mutate even though the wrapper is read-only, so batch.run
+  // decides its own rollback rather than taking the read-only default.
+  rollback: (args) => args.rollback !== false,
   toJsx(args) {
     if (!Array.isArray(args.ops)) {
       return `
@@ -45111,6 +45531,7 @@ registerOp({
     }
     const ops = args.ops;
     const stopOnError = !!args.stopOnError;
+    const rollback = args.rollback !== false;
     const opBlocks = [];
     for (let i = 0; i < ops.length; i++) {
       const entry = ops[i];
@@ -45153,17 +45574,22 @@ registerOp({
         );
         continue;
       }
-      const jsx = op.toJsx(validated.value);
+      const prepared = prepareOp(op, validated.value);
+      if (!prepared.ok) {
+        opBlocks.push(rejectBlock(i, `'${op.name}': ${prepared.error}`, stopOnError));
+        continue;
+      }
+      const jsx = op.toJsx(prepared.args);
       opBlocks.push(`
                 if (!_stopped) {
                     try {
                         var _r${i} = (function() { ${jsx} })();
-                        if (_r${i} && _r${i}.ok === false) { _failed++; ${stopOnError ? `_stopped = true;` : ""} }
+                        if (_r${i} && _r${i}.ok === false) { _failed++; ${stopOnError ? `_stopped = true; _stoppedAt = ${i};` : ""} }
                         _results.push(_r${i});
                     } catch(e) {
                         _failed++;
                         _results.push({ ok: false, error: AE.errText(e) });
-                        ${stopOnError ? "_stopped = true;" : ""}
+                        ${stopOnError ? `_stopped = true; _stoppedAt = ${i};` : ""}
                     }
                 } else {
                     _results.push({ skipped: true });
@@ -45174,13 +45600,33 @@ registerOp({
             var _results = [];
             var _failed = 0;
             var _stopped = false;
+            var _stoppedAt = -1;
             ${opBlocks.join("\n")}
+            var _kept = null;
+            var _rollbackRequested = false;
+            if (_stopped) {
+                if (${rollback ? "true" : "false"} && typeof __mcp !== "undefined" && __mcp && __mcp.requestRollback) {
+                    // serve.jsx reverts the whole request after this returns.
+                    __mcp.requestRollback("batch.run stopped at operation " + _stoppedAt);
+                    _rollbackRequested = true;
+                } else {
+                    if (_stoppedAt === 0) _kept = "nothing ran before it";
+                    else if (_stoppedAt === 1) _kept = "operation 0 ran and was kept";
+                    else _kept = "operations 0 to " + (_stoppedAt - 1) + " ran and were kept";
+                    _kept += "; operation " + _stoppedAt + " failed (any change it made before failing was kept too)" +
+                        "; the operations after it were skipped";
+                }
+            }
             return {
                 ok: _failed === 0,
-                error: _failed === 0 ? null : (_failed + " of " + _results.length + " operations failed"),
+                error: _failed === 0 ? null : (_failed + " of " + _results.length + " operations failed" +
+                    (_rollbackRequested ? "; the batch is being rolled back (stopOnError)" : "")),
                 results: _results,
                 count: _results.length,
-                failed: _failed
+                failed: _failed,
+                stoppedAt: _stopped ? _stoppedAt : null,
+                rollbackRequested: _rollbackRequested,
+                kept: _kept
             };
         `;
   }
@@ -45193,7 +45639,7 @@ function rejectBlock(index, message, stopOnError) {
                 if (!_stopped) {
                     _failed++;
                     _results.push({ ok: false, error: ${jsxVal(message)}, index: ${index} });
-                    ${stopOnError ? "_stopped = true;" : ""}
+                    ${stopOnError ? `_stopped = true; _stoppedAt = ${index};` : ""}
                 } else {
                     _results.push({ skipped: true });
                 }
@@ -45696,10 +46142,39 @@ registerOp({
 
 // src/operations/render.ts
 init_registry();
+var RENDER_QUEUE_UNDO_WARNING = " After this, undo and rollback are refused for the rest of the After Effects session unless acceptRenderQueueRisk: true: After Effects 2027 has gone into crash recovery on undo after scripted render-queue changes (observed twice on 2026-11-10; a precaution, not a proven cause). Save the project before undoing anything afterwards; project.open / project.new clear the block.";
+var READ_TEMPLATES_FN = `
+    function _readTemplates(_item) {
+        var _render = [];
+        var _output = [];
+        try { _render = _item.templates; } catch (eR) {}
+        try { _output = _item.outputModule(1).templates; } catch (eO) {}
+        return { renderTemplates: _render, outputTemplates: _output };
+    }
+`;
+var QUEUE_CHANGE_NOTE = "the project is left modified (unsaved): a render-queue item was added and removed. Nothing in the comps changed; save or revert as you normally would";
+var PARK_QUEUE_FN = `
+    function _parkQueue(rq) {
+        var _parked = [];
+        for (var _pi = 1; _pi <= rq.numItems; _pi++) {
+            var _ex = rq.item(_pi);
+            var _was = false;
+            try { _was = _ex.render; } catch (eR) {}
+            _parked.push(_was);
+            if (_was) { try { _ex.render = false; } catch (eP) {} }
+        }
+        return _parked;
+    }
+    function _unparkQueue(rq, _parked) {
+        for (var _ui = 0; _ui < _parked.length && _ui < rq.numItems; _ui++) {
+            if (_parked[_ui]) { try { rq.item(_ui + 1).render = true; } catch (eU) {} }
+        }
+    }
+`;
 registerOp({
   name: "render.add_to_queue",
   category: "render",
-  description: "Add a composition to the render queue. Optionally set output path.",
+  description: "Add a composition to the render queue. Optionally set output path." + RENDER_QUEUE_UNDO_WARNING,
   params: [
     { name: "comp", type: "any", description: "Comp name or id", required: true },
     {
@@ -45728,7 +46203,7 @@ registerOp({
 registerOp({
   name: "render.start",
   category: "render",
-  description: "Render queued items and verify each output file was newly written. Blocks until complete. Missing output directories are created first. Completed items are not counted as new renders.",
+  description: "Render queued items and verify each output file was newly written. Blocks until complete. Missing output directories are created first. Completed items are not counted as new renders." + RENDER_QUEUE_UNDO_WARNING,
   params: [],
   toJsx() {
     return `
@@ -46103,7 +46578,7 @@ registerOp({
 registerOp({
   name: "render.remove_item",
   category: "render",
-  description: "Remove ONE item from the render queue by its 1-based index (render.clear_queue removes all).",
+  description: "Remove ONE item from the render queue by its 1-based index (render.clear_queue removes all)." + RENDER_QUEUE_UNDO_WARNING,
   params: [
     {
       name: "queueIndex",
@@ -46146,18 +46621,38 @@ registerOp({
   name: "render.list_templates",
   category: "render",
   readOnly: true,
-  description: "List available render-settings templates and output-module templates. The render queue must have at least one item (templates are read from a queue item).",
-  params: [],
-  toJsx() {
+  description: "List available render-settings templates and output-module templates. They are read from a queue item: the first one, or, when the queue is empty and `comp` is given, a temporary item for that comp that is removed again (the project is then left modified by the queue change; render.preview with listTemplates does the same). A temporary item counts as a render-queue change:" + RENDER_QUEUE_UNDO_WARNING,
+  params: [
+    {
+      name: "comp",
+      type: "any",
+      description: "Comp name or id for a temporary queue item, used only when the queue is empty",
+      required: false
+    }
+  ],
+  toJsx(args) {
     return `
+            ${READ_TEMPLATES_FN}
             var rq = app.project.renderQueue;
-            if (rq.numItems === 0) return { ok: false, error: "add a comp to the render queue first (render.add_to_queue) \u2014 templates are read from a queue item" };
-            var _rqi = rq.item(1);
-            var _render = [];
-            var _output = [];
-            try { _render = _rqi.templates; } catch (eR) {}
-            try { _output = _rqi.outputModule(1).templates; } catch (eO) {}
-            return { ok: true, renderTemplates: _render, outputTemplates: _output };
+            if (rq.numItems > 0) {
+                var _first = _readTemplates(rq.item(1));
+                return { ok: true, renderTemplates: _first.renderTemplates, outputTemplates: _first.outputTemplates };
+            }
+            var _compArg = ${jsxVal(args.comp ?? null)};
+            if (${jsxVal(readOnlyMode())}) return { ok: false, error: "the render queue is empty, and AE_MCP_READONLY=1 forbids the temporary queue item that would modify the project" };
+            if (_compArg === null) return { ok: false, error: "the render queue is empty: pass comp (a temporary item is added, read and removed), or use render.preview with listTemplates" };
+            var _comp = AE.findCompByNameOrId(_compArg);
+            if (!_comp) return { ok: false, error: "no comp matching " + String(_compArg) };
+            var _tmp = null;
+            try {
+                _tmp = rq.items.add(_comp);
+                var _read = _readTemplates(_tmp);
+                return { ok: true, renderTemplates: _read.renderTemplates, outputTemplates: _read.outputTemplates, temporaryItem: true, projectModified: true, projectNote: ${jsxVal(QUEUE_CHANGE_NOTE)} };
+            } catch (eT) {
+                return { ok: false, error: "could not read templates: " + AE.errText(eT) };
+            } finally {
+                if (_tmp) { try { _tmp.remove(); } catch (eRm) {} }
+            }
         `;
   }
 });
@@ -46306,15 +46801,9 @@ registerOp({
             var _variants = ${jsxVal(variants)};
             var _tpl = ${jsxVal(template)};
             var rq = app.project.renderQueue;
+            ${PARK_QUEUE_FN}
             // Only the temporary item may render: park every existing item.
-            var _parked = [];
-            for (var _pi = 1; _pi <= rq.numItems; _pi++) {
-                var _ex = rq.item(_pi);
-                var _was = false;
-                try { _was = _ex.render; } catch (eR) {}
-                _parked.push(_was);
-                if (_was) { try { _ex.render = false; } catch (eP) {} }
-            }
+            var _parked = _parkQueue(rq);
             var _results = [];
             var _failed = 0;
             try {
@@ -46360,9 +46849,7 @@ registerOp({
                     _results.push(_entry);
                 }
             } finally {
-                for (var _ui = 0; _ui < _parked.length && _ui < rq.numItems; _ui++) {
-                    if (_parked[_ui]) { try { rq.item(_ui + 1).render = true; } catch (eU) {} }
-                }
+                _unparkQueue(rq, _parked);
             }
             return { ok: _failed === 0, error: _failed === 0 ? null : (_failed + " of " + _results.length + " variants failed"), rendered: _results.length - _failed, variants: _results };
         `;
@@ -46414,10 +46901,201 @@ registerOp({
         `;
   }
 });
+var PREVIEW_RESOLUTIONS = {
+  full: "Full",
+  half: "Half",
+  third: "Third",
+  quarter: "Quarter"
+};
+registerOp({
+  name: "render.preview",
+  category: "render",
+  description: "Render a quick preview movie of a comp's work area (or the whole comp, or a span) through the render queue, so it can be watched at speed. Adds ONE temporary queue item, renders only that item (others are parked and their Render checkboxes restored), then removes it: the queue is left as it was found. Never overwrites an existing file unless overwrite is true; creates the output folder. Returns outputPath, timeSpanStart, durationSeconds, frameCount, frameRate, renderSeconds (wall clock of the render), elapsedSeconds (AE's own count), bytes, outputTemplate, resolution (+ resolutionReadBack) and warnings. It changes the render queue:" + RENDER_QUEUE_UNDO_WARNING + " Blocks until done: raise ae_do timeoutMs for long comps (235 frames at 1080\xD71920 with 'High Quality' took about 20 s). Defaults are what is known to work: output template 'High Quality' (a ProRes .mov) at full resolution; resolution 'half' was measured live (540\xD7960 from 1080\xD71920, about a third of the time). listTemplates: true renders nothing and returns the render-settings and output-module template names, read from a temporary queue item that is removed again. Every answer carries projectModified: true and projectNote: adding and removing a queue item leaves the project unsaved.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "outputPath",
+      type: "string",
+      description: "Movie file path (the output template may change the extension; the path AE actually wrote is returned). Required unless listTemplates",
+      required: false
+    },
+    {
+      name: "listTemplates",
+      type: "boolean",
+      description: "Render nothing: return renderTemplates and outputTemplates, read from a temporary queue item for comp that is removed again",
+      required: false,
+      default: false
+    },
+    {
+      name: "span",
+      type: "string",
+      description: "workArea (default) | comp \u2014 what to render when no explicit time span is given",
+      required: false,
+      default: "workArea"
+    },
+    {
+      name: "timeSpanStart",
+      type: "number",
+      description: "Explicit span start in seconds (comp time); overrides span",
+      required: false
+    },
+    {
+      name: "timeSpanDuration",
+      type: "number",
+      description: "Explicit span duration in seconds; overrides span",
+      required: false
+    },
+    {
+      name: "outputTemplate",
+      type: "string",
+      description: "Output module template (default 'High Quality'); refused, with the available names, when it does not exist",
+      required: false,
+      default: "High Quality"
+    },
+    {
+      name: "renderTemplate",
+      type: "string",
+      description: "Render settings template (default: the queue item's own default)",
+      required: false
+    },
+    {
+      name: "resolution",
+      type: "string",
+      description: "full (default, untouched) | half | third | quarter. Set through setSettings({ Resolution }) and read back; resolutionReadBack and a warning say whether it took",
+      required: false,
+      default: "full"
+    },
+    {
+      name: "renderSettings",
+      type: "object",
+      description: "Raw render settings applied to the temporary item (RenderQueueItem.setSettings, keys from render.get_settings), after renderTemplate and resolution",
+      required: false
+    },
+    {
+      name: "overwrite",
+      type: "boolean",
+      description: "Replace an existing file at the output path (default false: refuse)",
+      required: false,
+      default: false
+    }
+  ],
+  toJsx(args) {
+    if (args.listTemplates === true) {
+      return `
+            ${jsxCompPreamble(args)}
+            ${READ_TEMPLATES_FN}
+            var rq = app.project.renderQueue;
+            if (AE.safeGet(function () { return rq.rendering; }, false)) return { ok: false, error: "the render queue is already rendering; wait for it to finish" };
+            var _tmp = null;
+            try {
+                _tmp = rq.items.add(_comp);
+                var _read = _readTemplates(_tmp);
+                return { ok: true, renderTemplates: _read.renderTemplates, outputTemplates: _read.outputTemplates, projectModified: true, projectNote: ${jsxVal(QUEUE_CHANGE_NOTE)} };
+            } catch (eT) {
+                return { ok: false, error: "could not read templates: " + AE.errText(eT), projectModified: true, projectNote: ${jsxVal(QUEUE_CHANGE_NOTE)} };
+            } finally {
+                if (_tmp) { try { _tmp.remove(); } catch (eRm) {} }
+            }
+        `;
+    }
+    if (typeof args.outputPath !== "string" || args.outputPath === "")
+      return jsxFail("outputPath is required (unless listTemplates is true)");
+    const span = args.span ?? "workArea";
+    if (span !== "workArea" && span !== "comp") return jsxFail("span must be workArea or comp");
+    const resolution = String(args.resolution ?? "full").toLowerCase();
+    if (!(resolution in PREVIEW_RESOLUTIONS))
+      return jsxFail("resolution must be full, half, third or quarter");
+    if (args.timeSpanStart === void 0 !== (args.timeSpanDuration === void 0))
+      return jsxFail("give both timeSpanStart and timeSpanDuration, or neither");
+    if (args.timeSpanDuration !== void 0 && !(Number(args.timeSpanDuration) > 0))
+      return jsxFail("timeSpanDuration must be above 0");
+    return `
+            ${jsxCompPreamble(args)}
+            ${PARK_QUEUE_FN}
+            var rq = app.project.renderQueue;
+            if (AE.safeGet(function () { return rq.rendering; }, false)) return { ok: false, error: "the render queue is already rendering; wait for it to finish" };
+            var _overwrite = ${jsxVal(!!args.overwrite)};
+            var _want = ${jsxVal(String(args.outputPath))};
+            function _meta(_path) {
+                var _f = new File(_path);
+                if (!_f.exists) return { exists: false, bytes: 0, modifiedMs: null };
+                var _d = _f.modified;
+                return { exists: true, bytes: _f.length, modifiedMs: _d ? _d.getTime() : null };
+            }
+            var _existing = _meta(_want);
+            if (_existing.exists && !_overwrite) return { ok: false, error: "a file already exists at " + _want + "; pass overwrite: true to replace it, or choose another outputPath", existing: _want };
+            var _w = [];
+            var _out = null;
+            var _rqi = null;
+            var _numBefore = rq.numItems;
+            var _parked = _parkQueue(rq);
+            try {
+                _rqi = rq.items.add(_comp);
+                ${args.renderTemplate !== void 0 ? `var _wr = AE.applyTemplate(_rqi, ${jsxVal(args.renderTemplate)}, "renderTemplate"); if (_wr) throw new Error(_wr);` : ""}
+                var _om = _rqi.outputModule(1);
+                var _wo = AE.applyTemplate(_om, ${jsxVal(args.outputTemplate ?? "High Quality")}, "outputTemplate");
+                if (_wo) throw new Error(_wo);
+                var _start = ${args.timeSpanStart !== void 0 ? jsxVal(args.timeSpanStart) : span === "comp" ? "0" : "_comp.workAreaStart"};
+                var _dur = ${args.timeSpanDuration !== void 0 ? jsxVal(args.timeSpanDuration) : span === "comp" ? "_comp.duration" : "_comp.workAreaDuration"};
+                _rqi.timeSpanStart = _start;
+                _rqi.timeSpanDuration = _dur;
+                var _res = ${jsxVal(resolution)};
+                var _resBack = null;
+                if (_res !== "full") {
+                    var _resName = ${jsxVal(PREVIEW_RESOLUTIONS[resolution])};
+                    try { _rqi.setSettings({ "Resolution": _resName }); } catch (eRs) { _w.push("resolution: setSettings failed: " + AE.errText(eRs)); }
+                    try { _resBack = _rqi.getSettings(GetSettingsFormat.STRING_SETTABLE)["Resolution"]; } catch (eRb) { _w.push("resolution: could not read it back: " + AE.errText(eRb)); }
+                    if (_resBack !== null && String(_resBack) !== _resName) _w.push("resolution: asked for " + _resName + " but the item reads " + String(_resBack) + " \u2014 the preview may be full size");
+                }
+                ${args.renderSettings !== void 0 ? `try { _rqi.setSettings(${jsxVal(args.renderSettings)}); } catch (eSs) { _w.push("renderSettings: " + AE.errText(eSs)); }` : ""}
+                _om.file = AE.ensureParentDir(_want);
+                var _path = _om.file ? _om.file.fsName.replace(/\\\\/g, "/") : _want;
+                var _before = _meta(_path);
+                if (_path !== _want && _before.exists && !_overwrite) throw new Error("the output template writes " + _path + ", which already exists; pass overwrite: true to replace it");
+                var _t0 = new Date().getTime();
+                rq.render();
+                var _t1 = new Date().getTime();
+                var _after = _meta(_path);
+                var _fresh = _after.exists && _after.bytes > 0 &&
+                    (!_before.exists || _after.bytes !== _before.bytes || (_after.modifiedMs !== null && _after.modifiedMs !== _before.modifiedMs));
+                var _status = _rqi.status;
+                var _fd = _comp.frameDuration;
+                _out = {
+                    ok: _status === RQItemStatus.DONE && _fresh,
+                    outputPath: _path,
+                    span: ${args.timeSpanStart !== void 0 ? '"custom"' : jsxVal(span)},
+                    timeSpanStart: _start,
+                    durationSeconds: _dur,
+                    frameCount: Math.round(_dur / _fd),
+                    frameRate: Math.round(1e3 / _fd) / 1e3,
+                    renderSeconds: Math.round(_t1 - _t0) / 1000,
+                    elapsedSeconds: AE.safeGet(function () { return _rqi.elapsedSeconds; }, null),
+                    bytes: _after.bytes,
+                    outputTemplate: ${jsxVal(args.outputTemplate ?? "High Quality")},
+                    resolution: _res,
+                    overwritten: _before.exists,
+                    warnings: _w
+                };
+                if (_res !== "full") _out.resolutionReadBack = _resBack;
+                if (!_out.ok) _out.error = _status !== RQItemStatus.DONE ? "the render did not finish (status " + String(_status) + ")" : "the render left no new file at " + _path;
+            } catch (eP) {
+                _out = { ok: false, error: "preview render failed: " + AE.errText(eP), warnings: _w };
+            } finally {
+                if (_rqi) { try { _rqi.remove(); } catch (eRm) { _w.push("could not remove the preview's queue item: " + AE.errText(eRm)); } }
+                _unparkQueue(rq, _parked);
+            }
+            if (rq.numItems !== _numBefore) _w.push("the render queue has " + rq.numItems + " items, it had " + _numBefore);
+            _out.projectModified = true;
+            _out.projectNote = ${jsxVal(QUEUE_CHANGE_NOTE)};
+            return _out;
+        `;
+  }
+});
 
 // src/operations/inspect.ts
-import * as path5 from "node:path";
+init_config();
 init_registry();
+import * as path5 from "node:path";
 
 // src/operations/snippets.ts
 var COMP_INFO_FN = `
@@ -49056,6 +49734,7 @@ registerOp({
 import { spawn } from "node:child_process";
 import { promises as fs4 } from "node:fs";
 import * as path6 from "node:path";
+init_config();
 init_registry();
 var INSTALL_CMD = "npx @kumoproductions/mcp-aftereffects install-agent";
 var DEFAULT_START_TIMEOUT_MS = 12e4;
@@ -49068,7 +49747,7 @@ function nodeOnly(name) {
 function fail(error62, extra = {}) {
   return { ok: false, error: error62, ...extra };
 }
-var sleep2 = (ms) => new Promise((resolve9) => setTimeout(resolve9, ms));
+var sleep2 = (ms) => new Promise((resolve10) => setTimeout(resolve10, ms));
 function summarizeInstance(i) {
   return {
     label: instanceLabel(i),
@@ -49392,15 +50071,17 @@ registerOp({
 registerOp({
   name: "instance.dialogs",
   category: "instance",
-  description: "List the modal dialogs every running After Effects is showing \u2014 the message text, the owning process and its window title, and an id for instance.dismiss_dialog. While a dialog is open no script runs (calls fail with DIALOG_OPEN, or an instance stops ticking), and the dialog is often hidden behind the main window. Windows and macOS. On macOS the text is read only with Accessibility permission for the app running this server; without it dialogs are still listed, with empty text (`accessibility: false`).",
+  description: "List the modal dialogs every running After Effects is showing \u2014 the message text, the owning process and its window title, and an id for instance.dismiss_dialog. While a dialog is open no script runs (calls fail with DIALOG_OPEN, or an instance stops ticking), and the dialog is often hidden behind the main window. Windows and macOS. On macOS the text is read only with Accessibility permission for the app running this server; without it dialogs are still listed, with empty text (`accessibility: false`). After Effects' own 'Executing Script ...' progress window is not a dialog: it is reported under scriptRunning (a script is still running), never offered for dismissal \u2014 its only action cancels the script.",
   params: [],
   readOnly: true,
   toJsx: () => nodeOnly("instance.dialogs"),
   async run() {
-    const dialogs = await scanAeDialogs();
+    const { dialogs, scripts } = splitScriptProgress(await scanAeWindows());
     return {
       ok: true,
       dialogs,
+      scriptRunning: scripts.map((w) => ({ pid: w.pid, id: w.id, matchedBy: w.scriptProgress })),
+      ...scripts.length > 0 ? { note: `A script is still running. ${scriptRunningMessage(scripts)}. ${SCRIPT_RUNNING_HINT}` } : {},
       supported: dialogScanSupported()
     };
   }
@@ -49423,7 +50104,14 @@ registerOp({
       return fail("instance.dismiss_dialog is only available on Windows and macOS");
     }
     const id = typeof args.id === "string" ? args.id.trim() : "";
-    const r = await dismissAeDialog(id);
+    const progress = (await scanAeWindows()).find((w) => w.id === id && w.scriptProgress);
+    const r = progress ? { posted: false, closed: false, text: null, reason: "script_progress" } : await dismissAeDialog(id);
+    if (r.reason === "script_progress") {
+      return fail(
+        `window ${id} is After Effects' 'Executing Script' progress window, not a dialog: a script is still running, and that window's only action would cancel it. Nothing was sent.`,
+        { hint: SCRIPT_RUNNING_HINT }
+      );
+    }
     if (r.reason === "no_permission") {
       return fail(`cannot close After Effects dialog ${id}: no Accessibility permission`, {
         hint: ACCESSIBILITY_HINT
@@ -49715,7 +50403,13 @@ var CODE = `
             "every ae_do / eval.run call is auto-wrapped in ONE undo group",
             "one Ctrl+Z (or project.undo) reverts the entire call; batch.run = one call = one undo step",
             "NEVER call app.beginUndoGroup/endUndoGroup in eval.run code \u2014 an unbalanced group corrupts undo for the session",
-            "undo/redo itself runs OUTSIDE the group: use project.undo (or command.execute 16/2035) as its own call \u2014 never inside batch.run, and never via eval.run",
+            "if a call that changes the project THROWS, its own changes are rolled back before the error is returned: a marker is added inside the still-open group, the group is closed and undone once with dialogs suppressed; details.rollback says whether it worked (rolledBack, verified) and what is left if not \u2014 never undo again for a call that was rolled back",
+            "a call that changed nothing is never followed by an undo (that would revert the user's previous action); read-only calls and calls outside the group (undo, redo, project open/new) are never rolled back",
+            "eval.run and batch.run take rollback: false to keep a partial result; batch.run with stopOnError rolls the whole batch back unless rollback: false, and without stopOnError nothing is rolled back",
+            "after a rollback, Redo would replay the failed call (and its marker folder): do not redo it",
+            "render queue: After Effects 2027 has gone into crash recovery on undo after scripted render-queue changes (observed twice on 2026-11-10; a precaution, not a proven cause). A call that changed the render queue is never rolled back (details.rollback lists addedItems and what to do next), and once any call changed it, rollback and project.undo / project.redo / command 16/2035 refuse for the rest of the session unless acceptRenderQueueRisk: true (save first). project.open / project.new clear the block; ae_do's context shows undoBlocked while it is set",
+            "undo/redo itself runs OUTSIDE the group, with dialogs suppressed: use project.undo / project.redo (or command.execute 16/2035) as its own call \u2014 never inside batch.run, and never via eval.run; their result reports any error After Effects raised (aeErrors, warning)",
+            "a timeout AFTER the request was picked up most likely means a modal dialog in After Effects (instance.dialogs may not see it): look at the After Effects window before retrying",
             "ae_save_project and files written to disk (rendered PNGs, exported JSON) are NOT undoable"
         ]
     };
@@ -49755,7 +50449,7 @@ var CODE = `
 var contextTool = defineTool({
   name: "ae_context",
   title: "Session context",
-  description: "Ambient context: project state, active comp, selected layers, item list, AE.* helpers, ES3 rules, and the undo contract (every call = one auto undo group). Call at session start; then rely on ae_do response context.",
+  description: "Ambient context: project state, active comp, selected layers, item list, AE.* helpers, ES3 rules, and the undo contract (every call = one auto undo group; a call that throws is rolled back). Call at session start; then rely on ae_do response context.",
   group: "inspect",
   blockedInReadOnly: false,
   effect: "read",
@@ -49790,7 +50484,7 @@ init_registry();
 var doTool = defineTool({
   name: "ae_do",
   title: "Execute operation",
-  description: "Execute an atomic operation by name (from ae_catalog). Operations can create, change and delete project content; open, close, clear and save projects; render and write files; run After Effects menu commands; change After Effects preferences; start or stop After Effects instances; read and close dialogs that block scripting; and, through eval.run when enabled, run custom ExtendScript with the user's own access to After Effects, files and system commands. Arguments are validated against the operation's declared parameters before anything reaches AE. Have more than one operation to run? Wrap them in ONE batch.run instead of several ae_do calls \u2014 read/verify steps (comp.info, layer.info, render.frame) can ride in the same batch. Every call is automatically wrapped in ONE undo group: a single Ctrl+Z (or project.undo) reverts the entire call, and a batch.run counts as one call. Never call app.beginUndoGroup/endUndoGroup in eval.run code \u2014 the wrapper already did. The exception is undo/redo itself (project.undo, command.execute id 16/2035): those run outside the group and cannot ride inside a batch.run. Response includes ambient context (active comp, selected layers, project state) at zero extra round trips. Example: ae_do({ operation: 'keyframe.add', args: { comp: 'Main', layer: 1, property: ['Transform','Position'], time: 2, value: [960,540] } })",
+  description: "Execute an atomic operation by name (from ae_catalog). Operations can create, change and delete project content; open, close, clear and save projects; render and write files; run After Effects menu commands; change After Effects preferences; start or stop After Effects instances; read and close dialogs that block scripting; and, through eval.run when enabled, run custom ExtendScript with the user's own access to After Effects, files and system commands. Arguments are validated against the operation's declared parameters before anything reaches AE. Have more than one operation to run? Wrap them in ONE batch.run instead of several ae_do calls \u2014 read/verify steps (comp.info, layer.info, render.frame) can ride in the same batch. Every call is automatically wrapped in ONE undo group: a single Ctrl+Z (or project.undo) reverts the entire call, and a batch.run counts as one call. If a call that changes the project THROWS, its own changes are rolled back before the error is returned (one undo, with dialogs suppressed); details.rollback says whether that worked and what is left if not. eval.run and batch.run take rollback: false to keep a partial result. Never call app.beginUndoGroup/endUndoGroup in eval.run code \u2014 the wrapper already did. The exception is undo/redo itself (project.undo, project.redo, command.execute id 16/2035): those run outside the group, with dialogs suppressed, report any error After Effects raised, and cannot ride inside a batch.run. Response includes ambient context (active comp, selected layers, project state) at zero extra round trips. Example: ae_do({ operation: 'keyframe.add', args: { comp: 'Main', layer: 1, property: ['Transform','Position'], time: 2, value: [960,540] } })",
   group: "operations",
   // NOT withheld in read-only mode: ae_do is the only way to reach the
   // read-only operations, and withholding it would leave ae_catalog listing
@@ -49856,11 +50550,20 @@ var doTool = defineTool({
         hint: "Ask the user first if they have not explicitly requested this change."
       });
     }
+    const prepared = prepareOp(op, validated.value);
+    if (!prepared.ok) {
+      return errorResult("INVALID_ARGS", `invalid arguments for '${op.name}': ${prepared.error}`, {
+        details: { operation: op.name },
+        ...prepared.hint ? { hint: prepared.hint } : {}
+      });
+    }
+    const opArgs = prepared.args;
+    const sourceFile = prepared.source?.file ?? null;
     if (op.run) {
       const started = Date.now();
       let opResult2;
       try {
-        opResult2 = await op.run(validated.value, transport2);
+        opResult2 = await op.run(opArgs, transport2);
       } catch (err) {
         return errorResult(
           "TRANSPORT",
@@ -49888,7 +50591,7 @@ var doTool = defineTool({
         durationMs: Date.now() - started
       });
     }
-    const userJsx = op.toJsx(validated.value);
+    const userJsx = op.toJsx(opArgs);
     const wrappedCode = `
         var _opResult = (function() {
             ${userJsx}
@@ -49903,33 +50606,46 @@ var doTool = defineTool({
       // Undo/Redo opt out (Operation.undoGroup): they must reach AE with no
       // group open, or they resolve against this call's own group instead of
       // the previous call the caller means to revert.
-      undoGroup: wantsUndoGroup(op, validated.value),
-      // Undo/Redo also opt out of dialog suppression (Operation.suppressDialogs)
-      // — the suppression scope would swallow the undo the same way a group
-      // does. Project boundary ops keep suppression despite running ungrouped.
-      suppressDialogs: wantsDialogSuppression(op, validated.value),
+      undoGroup: wantsUndoGroup(op, opArgs),
+      // Undo/Redo now keep dialog suppression too: an undo once raised an
+      // After Effects error box that blocked all scripting until a person
+      // clicked it (2026-11-10). Operation.suppressDialogs can still opt out.
+      suppressDialogs: wantsDialogSuppression(op, opArgs),
+      // A throw inside the group is rolled back (Operation.rollback).
+      rollback: wantsRollback(op, opArgs),
+      // Only operations that declare the argument can pass it (unknown keys
+      // are rejected above): eval.run, batch.run and the undo/redo ones.
+      acceptRenderQueueRisk: opArgs.acceptRenderQueueRisk === true,
       timeoutMs: doArgs.timeoutMs ?? 6e4
     });
     if (!result.ok) {
-      return errorResult(result.errorCode ?? "TRANSPORT", result.error ?? "unknown failure", {
+      const location = jsxErrorLocation(result.line, wrappedCode, wrapperLinesAboveUserJsx, op.name, {
+        userLines: countLines(userJsx) + 1,
+        file: sourceFile
+      });
+      const message = callerLineMessage(result.error ?? "unknown failure", result.line, location) + rollbackSentence(result.rollback);
+      return errorResult(result.errorCode ?? "TRANSPORT", message, {
         details: {
           operation: op.name,
-          ...jsxErrorLocation(result.line, wrappedCode, wrapperLinesAboveUserJsx, op.name),
+          ...location,
+          ...result.rollback ? { rollback: result.rollback } : {},
           ...result.dialogs?.length ? { dialogs: result.dialogs } : {}
         },
         stack: result.stack,
         logs: result.logs,
-        durationMs: result.durationMs,
-        ...typeof result.line === "number" && op.name === "eval.run" ? {
-          hint: "The '(line N)' in the message counts lines of the ASSEMBLED script, not your code \u2014 details.userCodeLine is the 1-based line in the code you passed, and details.codeExcerpt shows the failing spot."
-        } : {}
+        durationMs: result.durationMs
       });
     }
     const { result: opResult, context } = result.result;
     const reported = jsxReportedFailure(opResult);
     if (reported) {
-      return errorResult("OPERATION_FAILED", `${op.name}: ${reported.error}`, {
-        details: { operation: op.name, result: opResult, context },
+      return errorResult("OPERATION_FAILED", `${op.name}: ${reported.error}${rollbackSentence(result.rollback)}`, {
+        details: {
+          operation: op.name,
+          result: opResult,
+          context,
+          ...result.rollback ? { rollback: result.rollback } : {}
+        },
         logs: result.logs,
         durationMs: result.durationMs,
         ...isBatchShaped(opResult) ? {
@@ -49941,10 +50657,24 @@ var doTool = defineTool({
       result: opResult,
       context,
       logs: result.logs,
-      durationMs: result.durationMs
+      durationMs: result.durationMs,
+      ...result.rollback ? { rollback: result.rollback } : {}
     });
   }
 });
+function rollbackSentence(rb) {
+  if (!rb) return "";
+  const errors = rb.aeErrors?.length ? ` After Effects reported during the undo: ${rb.aeErrors.join(" | ")}.` : "";
+  if (rb.rolledBack) {
+    const checked = rb.verified === "signature" ? "checked against the project's items before the call" : rb.verified === "partial" ? "checked against the first 1000 items and the item count" : "checked by the rollback marker only";
+    return ` \u2014 Rolled back: the call's changes were undone before this error was returned (${checked}).${errors}`;
+  }
+  const next = rb.next ? ` Next: ${rb.next}` : "";
+  if (!rb.attempted) {
+    return ` \u2014 Not rolled back (${rb.reason ?? "no reason given"})${rb.left ? `: ${rb.left}` : ""}.${next}${errors}`;
+  }
+  return ` \u2014 NOT rolled back: ${rb.reason ?? "the rollback could not be confirmed"}. Left: ${rb.left ?? "unknown \u2014 inspect the project"}.${next}${errors}`;
+}
 function isBatchShaped(opResult) {
   if (opResult === null || typeof opResult !== "object") return false;
   return Array.isArray(opResult.results);
@@ -49955,12 +50685,22 @@ function countLines(text) {
   return n;
 }
 var NEW_FUNCTION_HEADER_LINES = 1;
-function jsxErrorLocation(line, wrappedCode, wrapperLinesAboveUserJsx, opName) {
+function jsxErrorLocation(line, wrappedCode, wrapperLinesAboveUserJsx, opName, source) {
   if (typeof line !== "number" || !Number.isFinite(line)) return {};
   const wrappedLine = line - NEW_FUNCTION_HEADER_LINES;
   const out = { errorLine: line };
   const userLine = wrappedLine - wrapperLinesAboveUserJsx;
-  if (opName === "eval.run" && userLine >= 1) out.userCodeLine = userLine;
+  if (opName === "eval.run") {
+    if (userLine >= 1 && userLine <= source.userLines) {
+      out.userCodeLine = userLine;
+      if (source.file !== null) {
+        out.file = source.file;
+        out.fileLine = userLine;
+      }
+    } else {
+      out.inWrapper = true;
+    }
+  }
   const lines = wrappedCode.split("\n");
   if (wrappedLine >= 1 && wrappedLine <= lines.length) {
     const from = Math.max(1, wrappedLine - 2);
@@ -49974,6 +50714,20 @@ function jsxErrorLocation(line, wrappedCode, wrapperLinesAboveUserJsx, opName) {
     out.codeExcerpt = excerpt.join("\n");
   }
   return out;
+}
+function callerLineMessage(message, line, location) {
+  if (typeof line !== "number") return message;
+  const raw = `(line ${line})`;
+  if (message.indexOf(raw) === -1) return message;
+  let replacement = null;
+  if (typeof location.fileLine === "number" && typeof location.file === "string") {
+    replacement = `(${location.file}:${location.fileLine})`;
+  } else if (typeof location.userCodeLine === "number") {
+    replacement = `(line ${location.userCodeLine} of your code)`;
+  } else if (location.inWrapper === true) {
+    replacement = `(line ${line} of the plugin's wrapper, not your code \u2014 see details.codeExcerpt)`;
+  }
+  return replacement === null ? message : message.replace(raw, replacement);
 }
 
 // src/tools/layer-info.ts
@@ -50046,7 +50800,8 @@ var layerInfoTool = defineTool({
 
 // src/tools/project-export.ts
 import { promises as fs5 } from "node:fs";
-import * as path7 from "node:path";
+import * as path8 from "node:path";
+init_config();
 var projectExportTool = defineTool({
   name: "ae_project_export_json",
   title: "Export project JSON",
@@ -50067,7 +50822,7 @@ var projectExportTool = defineTool({
       const rejection = rejectedOutputPath(args.outPath);
       if (rejection !== null) {
         return errorResult("IO", rejection, {
-          details: { outPath: path7.resolve(args.outPath) },
+          details: { outPath: path8.resolve(args.outPath) },
           hint: "Write the document somewhere outside the mailbox, or omit outPath to receive it inline."
         });
       }
@@ -50086,9 +50841,9 @@ var projectExportTool = defineTool({
     const pretty = args.pretty ?? !!args.outPath;
     const jsonText = JSON.stringify(doc, null, pretty ? 2 : 0);
     if (args.outPath) {
-      const abs = path7.resolve(args.outPath);
+      const abs = path8.resolve(args.outPath);
       try {
-        await fs5.mkdir(path7.dirname(abs), { recursive: true });
+        await fs5.mkdir(path8.dirname(abs), { recursive: true });
         await fs5.writeFile(abs, jsonText, "utf8");
       } catch (err) {
         return errorResult(
@@ -50121,7 +50876,7 @@ var projectExportTool = defineTool({
 
 // src/tools/project-import.ts
 import { promises as fs6 } from "node:fs";
-import * as path8 from "node:path";
+import * as path9 from "node:path";
 
 // src/schema.ts
 var SCHEMA_VERSION = 2;
@@ -50130,11 +50885,11 @@ var SCHEMA_VERSION = 2;
 var Validator = class {
   issues = [];
   warnings = [];
-  err(path12, message) {
-    this.issues.push({ path: path12, message });
+  err(path13, message) {
+    this.issues.push({ path: path13, message });
   }
-  warn(path12, message) {
-    this.warnings.push({ path: path12, message });
+  warn(path13, message) {
+    this.warnings.push({ path: path13, message });
   }
   isObject(v) {
     return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -50235,64 +50990,64 @@ function validateAeProjectDoc(doc) {
   }
   return { ok: v.issues.length === 0, issues: v.issues, warnings: v.warnings };
 }
-function validateLayer(v, path12, layer) {
+function validateLayer(v, path13, layer) {
   if (!v.isObject(layer)) {
-    v.err(path12, "not an object");
+    v.err(path13, "not an object");
     return;
   }
-  if (typeof layer.index !== "number") v.err(`${path12}.index`, "missing or not a number");
-  if (typeof layer.name !== "string") v.err(`${path12}.name`, "missing or not a string");
-  if (typeof layer.type !== "string") v.err(`${path12}.type`, "missing or not a string");
+  if (typeof layer.index !== "number") v.err(`${path13}.index`, "missing or not a number");
+  if (typeof layer.name !== "string") v.err(`${path13}.name`, "missing or not a string");
+  if (typeof layer.type !== "string") v.err(`${path13}.type`, "missing or not a string");
   else if (["AVLayer", "TextLayer", "ShapeLayer", "CameraLayer", "LightLayer", "Layer"].indexOf(
     layer.type
   ) === -1) {
-    v.warn(`${path12}.type`, `unknown layer type: ${layer.type}`);
+    v.warn(`${path13}.type`, `unknown layer type: ${layer.type}`);
   }
   if (layer.transformGroup)
-    validatePropertyGroup(v, `${path12}.transformGroup`, layer.transformGroup);
-  if (layer.effectsGroup) validatePropertyGroup(v, `${path12}.effectsGroup`, layer.effectsGroup);
-  if (layer.masksGroup) validatePropertyGroup(v, `${path12}.masksGroup`, layer.masksGroup);
-  if (layer.textGroup) validatePropertyGroup(v, `${path12}.textGroup`, layer.textGroup);
-  if (layer.contentsGroup) validatePropertyGroup(v, `${path12}.contentsGroup`, layer.contentsGroup);
-  if (layer.markers) validateProperty(v, `${path12}.markers`, layer.markers);
+    validatePropertyGroup(v, `${path13}.transformGroup`, layer.transformGroup);
+  if (layer.effectsGroup) validatePropertyGroup(v, `${path13}.effectsGroup`, layer.effectsGroup);
+  if (layer.masksGroup) validatePropertyGroup(v, `${path13}.masksGroup`, layer.masksGroup);
+  if (layer.textGroup) validatePropertyGroup(v, `${path13}.textGroup`, layer.textGroup);
+  if (layer.contentsGroup) validatePropertyGroup(v, `${path13}.contentsGroup`, layer.contentsGroup);
+  if (layer.markers) validateProperty(v, `${path13}.markers`, layer.markers);
   if (layer.timeRemapProperty)
-    validateProperty(v, `${path12}.timeRemapProperty`, layer.timeRemapProperty);
+    validateProperty(v, `${path13}.timeRemapProperty`, layer.timeRemapProperty);
 }
-function validatePropertyGroup(v, path12, group) {
+function validatePropertyGroup(v, path13, group) {
   if (!v.isObject(group)) {
-    v.err(path12, "not an object");
+    v.err(path13, "not an object");
     return;
   }
-  if (typeof group.matchName !== "string") v.err(`${path12}.matchName`, "missing or not a string");
+  if (typeof group.matchName !== "string") v.err(`${path13}.matchName`, "missing or not a string");
   if (Array.isArray(group.properties)) {
     for (let i = 0; i < group.properties.length; i++) {
-      validateProperty(v, `${path12}.properties[${i}]`, group.properties[i]);
+      validateProperty(v, `${path13}.properties[${i}]`, group.properties[i]);
     }
   }
   if (Array.isArray(group.groups)) {
     for (let i = 0; i < group.groups.length; i++) {
-      validatePropertyGroup(v, `${path12}.groups[${i}]`, group.groups[i]);
+      validatePropertyGroup(v, `${path13}.groups[${i}]`, group.groups[i]);
     }
   }
 }
-function validateProperty(v, path12, prop) {
+function validateProperty(v, path13, prop) {
   if (!v.isObject(prop)) {
-    v.err(path12, "not an object");
+    v.err(path13, "not an object");
     return;
   }
-  if (typeof prop.matchName !== "string") v.err(`${path12}.matchName`, "missing or not a string");
+  if (typeof prop.matchName !== "string") v.err(`${path13}.matchName`, "missing or not a string");
   if (Array.isArray(prop.keyframes)) {
     for (let i = 0; i < prop.keyframes.length; i++) {
-      validateKeyframe(v, `${path12}.keyframes[${i}]`, prop.keyframes[i]);
+      validateKeyframe(v, `${path13}.keyframes[${i}]`, prop.keyframes[i]);
     }
   }
 }
-function validateKeyframe(v, path12, kf) {
+function validateKeyframe(v, path13, kf) {
   if (!v.isObject(kf)) {
-    v.err(path12, "not an object");
+    v.err(path13, "not an object");
     return;
   }
-  if (typeof kf.time !== "number") v.err(`${path12}.time`, "missing or not a number");
+  if (typeof kf.time !== "number") v.err(`${path13}.time`, "missing or not a number");
 }
 
 // src/tools/project-import.ts
@@ -50321,7 +51076,7 @@ var projectImportTool = defineTool({
   handler: async (args, transport2) => {
     let doc;
     if (args.inPath) {
-      const abs = path8.resolve(args.inPath);
+      const abs = path9.resolve(args.inPath);
       try {
         doc = JSON.parse(await fs6.readFile(abs, "utf8"));
       } catch (err) {
@@ -50426,14 +51181,14 @@ var projectInfoTool = defineTool({
 
 // src/tools/render-frame.ts
 import { promises as fs9 } from "node:fs";
-import * as path10 from "node:path";
+import * as path11 from "node:path";
 
 // src/color/calibration.ts
 init_registry();
 import { randomUUID as randomUUID2 } from "node:crypto";
 import { promises as fs8 } from "node:fs";
 import * as os3 from "node:os";
-import * as path9 from "node:path";
+import * as path10 from "node:path";
 
 // src/color/png16.ts
 import * as zlib from "node:zlib";
@@ -50608,34 +51363,117 @@ function encodePngGray8(width, height, values) {
 
 // src/color/settled-read.ts
 import { promises as fs7 } from "node:fs";
+var SETTLE_BASE_MS = 15e3;
+var SETTLE_PER_HD_FRAME_MS = 3e3;
+var SETTLE_MIN_PER_FRAME_MS = 1e3;
+var HD_PIXELS = 1080 * 1920;
+var POLL_MS = 60;
+var IEND = Buffer.from([0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130]);
 function sleep3(ms) {
-  return new Promise((resolve9) => setTimeout(resolve9, ms));
+  return new Promise((resolve10) => setTimeout(resolve10, ms));
 }
-async function readFileSettled(filePath, timeoutMs = 15e3, stableMs = 250) {
-  const deadline = Date.now() + timeoutMs;
-  let lastSize = -1;
-  let lastChange = Date.now();
-  for (; ; ) {
-    let size = -1;
-    try {
-      size = (await fs7.stat(filePath)).size;
-    } catch {
-    }
-    if (size >= 0) {
-      if (size !== lastSize) {
-        lastSize = size;
-        lastChange = Date.now();
-      } else if (size > 0 && Date.now() - lastChange >= stableMs) {
-        return fs7.readFile(filePath);
+function settleTimeoutFor(frames, pixelsPerFrame) {
+  const n = Math.max(1, Math.floor(frames));
+  const perFrame = Math.max(
+    SETTLE_MIN_PER_FRAME_MS,
+    Math.round(SETTLE_PER_HD_FRAME_MS * Math.max(0, pixelsPerFrame) / HD_PIXELS)
+  );
+  return SETTLE_BASE_MS + (n - 1) * perFrame;
+}
+async function stampFiles(paths) {
+  return Promise.all(
+    paths.map(async (p) => {
+      try {
+        const st = await fs7.stat(p, { bigint: true });
+        return { exists: true, size: Number(st.size), mtimeNs: st.mtimeNs, ino: st.ino };
+      } catch {
+        return { exists: false, size: 0, mtimeNs: 0n, ino: 0n };
       }
-    }
-    if (Date.now() > deadline) {
-      throw new Error(
-        `file did not settle within ${timeoutMs}ms (saveFrameToPng writes asynchronously): ${filePath}`
-      );
-    }
-    await sleep3(60);
+    })
+  );
+}
+async function endsWithIend(p, size) {
+  if (size < IEND.length) return false;
+  let fh = null;
+  try {
+    fh = await fs7.open(p, "r");
+    const tail = Buffer.alloc(IEND.length);
+    await fh.read(tail, 0, IEND.length, size - IEND.length);
+    return tail.equals(IEND);
+  } catch {
+    return false;
+  } finally {
+    await fh?.close();
   }
+}
+async function waitForSettled(paths, opts) {
+  const stableMs = opts.stableMs ?? 250;
+  const start = Date.now();
+  const deadline = start + opts.timeoutMs;
+  const done = /* @__PURE__ */ new Set();
+  const state = paths.map(() => ({
+    size: -1,
+    changedAt: start,
+    status: "missing"
+  }));
+  for (; ; ) {
+    await Promise.all(
+      paths.map(async (p, i) => {
+        if (done.has(i)) return;
+        const s = state[i];
+        let st = null;
+        try {
+          st = await fs7.stat(p, { bigint: true });
+        } catch {
+        }
+        if (st === null) {
+          s.status = "missing";
+          s.size = -1;
+          return;
+        }
+        const size = Number(st.size);
+        const was = opts.before?.[i];
+        if (was?.exists && was.size === size && was.mtimeNs === st.mtimeNs && was.ino === st.ino) {
+          s.status = "unchanged";
+          s.size = size;
+          return;
+        }
+        if (size !== s.size) {
+          s.size = size;
+          s.changedAt = Date.now();
+        }
+        if (size === 0) {
+          s.status = "empty";
+          return;
+        }
+        s.status = "writing";
+        if (await endsWithIend(p, size) || Date.now() - s.changedAt >= stableMs) done.add(i);
+      })
+    );
+    if (done.size === paths.length || Date.now() > deadline) break;
+    await sleep3(POLL_MS);
+  }
+  const settled = [...done].sort((a, b) => a - b);
+  const unsettled = [];
+  for (const [i, p] of paths.entries()) {
+    if (done.has(i)) continue;
+    unsettled.push({
+      index: i,
+      path: p,
+      state: state[i].status,
+      bytes: Math.max(0, state[i].size)
+    });
+  }
+  return { settled, unsettled, waitedMs: Date.now() - start, timeoutMs: opts.timeoutMs };
+}
+async function readFileSettled(filePath, timeoutMs = SETTLE_BASE_MS, stableMs = 250) {
+  const res = await waitForSettled([filePath], { timeoutMs, stableMs });
+  if (res.settled.length === 0) {
+    throw new Error(
+      `file did not settle within ${timeoutMs}ms (saveFrameToPng writes asynchronously): ${filePath}`
+    );
+  }
+  return fs7.readFile(filePath);
 }
 
 // src/color/calibration.ts
@@ -50671,7 +51509,7 @@ async function measureCaptureTransfer(transport2, key, allowRender = true) {
       error: "calibration needs a (transient, undo-grouped) render of a temporary comp, which read-only mode forbids"
     };
   }
-  const pngPath = path9.join(os3.tmpdir(), `mcp-ae-calib-${randomUUID2()}.png`).replace(/\\/g, "/");
+  const pngPath = path10.join(os3.tmpdir(), `mcp-ae-calib-${randomUUID2()}.png`).replace(/\\/g, "/");
   const code = `
         var _vals = ${jsxVal(CALIB_VALUES)};
         var _patch = ${jsxVal(PATCH)};
@@ -51543,7 +52381,7 @@ function measureScreen(img, t) {
   const evenness = measureEvenness(img, isScreen, measuredAt, ch, kind, t);
   const grain = measureGrain(img, isScreen, ch, kind, t);
   const near = nearSubject ? nearSubject.colour : null;
-  const fmt = (c) => `(${c.map((v) => v.toFixed(3)).join(", ")})`;
+  const fmt2 = (c) => `(${c.map((v) => v.toFixed(3)).join(", ")})`;
   base.screenPixels = count;
   base.share = r42(count / measured);
   base.bounds = { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
@@ -51551,7 +52389,7 @@ function measureScreen(img, t) {
   base.subject = subject;
   base.evenness = evenness;
   base.grain = grain;
-  base.reading = `${kind} screen, ${Math.round(base.share * 100)}% of the measured pixels; median ${fmt(median)}` + (near ? `, near the subject ${fmt(near)}` : "") + `. ${evenness.reading}. ${grain ? grain.reading : "grain not measured (no screen pixel has screen all round it)"}.`;
+  base.reading = `${kind} screen, ${Math.round(base.share * 100)}% of the measured pixels; median ${fmt2(median)}` + (near ? `, near the subject ${fmt2(near)}` : "") + `. ${evenness.reading}. ${grain ? grain.reading : "grain not measured (no screen pixel has screen all round it)"}.`;
   return base;
 }
 function measureEvenness(img, isScreen, measuredAt, ch, kind, t) {
@@ -51800,14 +52638,14 @@ function lineUniform(img, fixed, horizontal) {
   }
   return { uniform: true, transparent, color: first };
 }
-function edgeBand(img, side) {
-  const horizontal = side === "top" || side === "bottom";
+function edgeBand(img, side2) {
+  const horizontal = side2 === "top" || side2 === "bottom";
   const n = horizontal ? img.height : img.width;
   let width = 0;
   let color = null;
   let transparent = true;
   for (let i = 0; i < n; i++) {
-    const fixed = side === "top" || side === "left" ? i : n - 1 - i;
+    const fixed = side2 === "top" || side2 === "left" ? i : n - 1 - i;
     const line = lineUniform(img, fixed, horizontal);
     if (!line.uniform) break;
     if (color === null) color = line.color;
@@ -52079,6 +52917,9 @@ var GLYPHS = {
   ".": [".....", ".....", ".....", ".....", ".....", ".##..", ".##.."],
   ":": [".....", ".##..", ".##..", ".....", ".##..", ".##..", "....."],
   "-": [".....", ".....", ".....", "#####", ".....", ".....", "....."],
+  ">": [".#...", "..#..", "...#.", "....#", "...#.", "..#..", ".#..."],
+  x: [".....", ".....", "#...#", ".#.#.", "..#..", ".#.#.", "#...#"],
+  "!": ["..#..", "..#..", "..#..", "..#..", "..#..", ".....", "..#.."],
   "#": [".#.#.", ".#.#.", "#####", ".#.#.", "#####", ".#.#.", ".#.#."],
   s: [".....", ".....", ".####", "#....", ".###.", "....#", "####."],
   f: ["..##.", ".#...", "###..", ".#...", ".#...", ".#...", ".#..."],
@@ -52157,6 +52998,314 @@ function composeContactSheet(frames, opts = {}) {
 }
 function frameLabel(index, time3) {
   return time3 === void 0 ? `#${index}` : `#${index} ${time3.toFixed(3)}s`;
+}
+
+// src/color/motion.ts
+var DIFF_DEFAULTS = {
+  changeAbove: 0.04,
+  spikeRatio: 3,
+  holdRatio: 0.25,
+  quietBelow: 2e-3,
+  movingShare: 5e-4,
+  window: 3,
+  amplify: 8,
+  repeatBelow: 1e-4
+};
+var LIMITS = {
+  changeAbove: { min: 0, max: 1 },
+  spikeRatio: { min: 1, max: 1e3, above: true },
+  holdRatio: { min: 0, max: 1, above: true },
+  quietBelow: { min: 0, max: 1 },
+  movingShare: { min: 0, max: 1 },
+  window: { min: 1, max: 16, int: true },
+  amplify: { min: 1, max: 1e3 },
+  repeatBelow: { min: 0, max: 1 }
+};
+function resolveDiffThresholds(args = {}) {
+  const out = { ...DIFF_DEFAULTS };
+  for (const key of Object.keys(DIFF_DEFAULTS)) {
+    const v = args[key];
+    if (typeof v === "number") out[key] = v;
+  }
+  return out;
+}
+function diffArgsError(args) {
+  for (const [key, value] of Object.entries(args)) {
+    if (key === "sheet") continue;
+    const limit = LIMITS[key];
+    if (!limit) {
+      return `\`diff.${key}\` is not an option (options: ${Object.keys(LIMITS).join(", ")}, sheet)`;
+    }
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+      return `\`diff.${key}\` must be a number`;
+    }
+    const low = limit.above ? value <= limit.min : value < limit.min;
+    if (low || value > limit.max || limit.int && !Number.isInteger(value)) {
+      const range = limit.above ? `above ${limit.min} and at most ${limit.max}` : `${limit.min} to ${limit.max}`;
+      return `\`diff.${key}\` must be ${limit.int ? "a whole number " : ""}${range}, not ${value}`;
+    }
+  }
+  return null;
+}
+function pictureOf(img, straight) {
+  const n = img.width * img.height;
+  const out = new Float32Array(n * 3);
+  const a = straight ? img.alpha : void 0;
+  if (!a) {
+    out.set(img.rgb);
+    return out;
+  }
+  for (let p = 0; p < n; p++) {
+    const w = a[p];
+    const i = p * 3;
+    out[i] = img.rgb[i] * w;
+    out[i + 1] = img.rgb[i + 1] * w;
+    out[i + 2] = img.rgb[i + 2] * w;
+  }
+  return out;
+}
+var r6 = (v) => Math.round(v * 1e6) / 1e6;
+function rectStats(prev, cur, width, x0, y0, x1, y1, above, perPixel) {
+  let sum = 0;
+  let maxAbs = 0;
+  let changed = 0;
+  let bx0 = Infinity;
+  let by0 = Infinity;
+  let bx1 = -1;
+  let by1 = -1;
+  for (let y = y0; y < y1; y++) {
+    let i = (y * width + x0) * 3;
+    for (let x = x0; x < x1; x++, i += 3) {
+      const dr = Math.abs(cur[i] - prev[i]);
+      const dg = Math.abs(cur[i + 1] - prev[i + 1]);
+      const db = Math.abs(cur[i + 2] - prev[i + 2]);
+      const m = dr > dg ? dr > db ? dr : db : dg > db ? dg : db;
+      const mean = (dr + dg + db) / 3;
+      sum += mean;
+      if (m > maxAbs) maxAbs = m;
+      if (m > above) {
+        changed++;
+        if (x < bx0) bx0 = x;
+        if (x > bx1) bx1 = x;
+        if (y < by0) by0 = y;
+        if (y > by1) by1 = y;
+      }
+      if (perPixel) perPixel(x, y, mean);
+    }
+  }
+  const pixels = (x1 - x0) * (y1 - y0);
+  return {
+    pixels,
+    change: r6(pixels > 0 ? sum / pixels : 0),
+    maxAbsDelta: r6(maxAbs),
+    changedPixels: changed,
+    changedShare: r6(pixels > 0 ? changed / pixels : 0),
+    changedBounds: changed > 0 ? { x: bx0, y: by0, width: bx1 - bx0 + 1, height: by1 - by0 + 1 } : null
+  };
+}
+function pictureChange(prev, cur, width, height, t, opts = {}) {
+  let perPixel;
+  let sums = null;
+  let counts = null;
+  const tw = opts.thumb?.width ?? 0;
+  if (opts.thumb) {
+    const th = opts.thumb.height;
+    sums = new Float64Array(tw * th);
+    counts = new Float64Array(tw * th);
+    const col = new Int32Array(width);
+    for (let x = 0; x < width; x++) col[x] = Math.min(tw - 1, Math.floor(x * tw / width));
+    const row = new Int32Array(height);
+    for (let y = 0; y < height; y++) row[y] = Math.min(th - 1, Math.floor(y * th / height)) * tw;
+    const s = sums;
+    const c = counts;
+    perPixel = (x, y, mean) => {
+      const k = row[y] + col[x];
+      s[k] += mean;
+      c[k]++;
+    };
+  }
+  const all = rectStats(prev, cur, width, 0, 0, width, height, t.changeAbove, perPixel);
+  const out = { all };
+  if (opts.regions) {
+    out.regions = opts.regions.map((region) => {
+      const clip = clipRegion({ width, height }, region);
+      if (!clip)
+        return { name: region.name, error: `region is outside the ${width}\xD7${height} frame` };
+      const { x, y, width: w, height: h } = clip.rect;
+      return {
+        name: region.name,
+        ...rectStats(prev, cur, width, x, y, x + w, y + h, t.changeAbove)
+      };
+    });
+  }
+  if (sums && counts) {
+    const thumb = new Float64Array(sums.length);
+    for (let k = 0; k < sums.length; k++) {
+      thumb[k] = counts[k] > 0 ? Math.min(1, sums[k] / counts[k] * t.amplify) : 0;
+    }
+    out.thumb = thumb;
+  }
+  return out;
+}
+function lowerMedian(values) {
+  const s = [...values].sort((a, b) => a - b);
+  return s[Math.floor((s.length - 1) / 2)];
+}
+function side(pairs, p, dir, window, skip) {
+  const changes = [];
+  const shares = [];
+  for (let k = 1; k <= window; k++) {
+    const j = p + dir * k;
+    if (j < 0 || j >= pairs.length) break;
+    if (skip.has(j)) continue;
+    changes.push(pairs[j].change);
+    shares.push(pairs[j].changedShare);
+  }
+  if (changes.length === 0) return null;
+  return { change: lowerMedian(changes), share: lowerMedian(shares) };
+}
+var fmt = (v) => v.toFixed(4);
+var frameText = (f) => `#${f.index}${f.time === void 0 ? "" : ` (${r6(f.time)} s)`}`;
+function summarizeSeries(pairs, t) {
+  const n = pairs.length;
+  const changes = pairs.map((p) => p.change);
+  let largest = 0;
+  let smallest = 0;
+  for (let i = 1; i < n; i++) {
+    if (changes[i] > changes[largest]) largest = i;
+    if (changes[i] < changes[smallest]) smallest = i;
+  }
+  const summary = {
+    pairs: n,
+    median: n > 0 ? r6(lowerMedian(changes)) : 0,
+    mean: n > 0 ? r6(changes.reduce((a, b) => a + b, 0) / n) : 0,
+    largest: { pair: largest, change: n > 0 ? changes[largest] : 0 },
+    smallest: { pair: smallest, change: n > 0 ? changes[smallest] : 0 },
+    flags: [],
+    reading: ""
+  };
+  if (n < 2) {
+    summary.reading = n === 0 ? "no pair of consecutive frames to compare" : "one pair: nothing to compare it with, so nothing is flagged (render at least three frames)";
+    return summary;
+  }
+  const repeats = new Set(pairs.flatMap((p, i) => p.change <= t.repeatBelow ? [i] : []));
+  const near = (i, set2) => {
+    for (let k = 1; k <= t.window; k++) if (set2.has(i - k) || set2.has(i + k)) return true;
+    return false;
+  };
+  const spike = pairs.map((p, i) => {
+    if (repeats.has(i) || p.changedShare < t.movingShare) return null;
+    const sides = [
+      side(pairs, i, -1, t.window, repeats),
+      side(pairs, i, 1, t.window, repeats)
+    ].filter((s) => s !== null);
+    if (sides.length === 0) return null;
+    const reference = Math.max(...sides.map((s) => s.change), t.quietBelow);
+    if (sides.some((s) => p.change < t.spikeRatio * Math.max(s.change, t.quietBelow)))
+      return null;
+    return { reference, edge: i === 0 || i === n - 1, besideRepeat: near(i, repeats) };
+  });
+  const spikes = new Set(spike.flatMap((s, i) => s ? [i] : []));
+  const repeatNote = " (a repeated frame is next to it and was left out of the comparison)";
+  const flags = [];
+  for (let i = 0; i < n; i++) {
+    const s = spike[i];
+    if (!s) continue;
+    const runStart = i === 0 || !spike[i - 1];
+    if (!runStart) continue;
+    let end = i;
+    while (end + 1 < n && spike[end + 1]) end++;
+    if (end === i + 1) {
+      const reference = Math.max(s.reference, spike[end].reference);
+      const change = Math.min(pairs[i].change, pairs[end].change);
+      const frame = pairs[i].to;
+      const flag = {
+        kind: "pop",
+        pairs: [i, end],
+        frame,
+        change,
+        reference: r6(reference),
+        ratio: r6(change / reference),
+        reading: `frame ${frameText(frame)} differs from the frames before and after it by ${fmt(change)} or more, while its neighbours change about ${fmt(reference)}: a one-frame pop`
+      };
+      if (s.besideRepeat || spike[end].besideRepeat) {
+        flag.besideRepeat = true;
+        flag.reading += repeatNote;
+      }
+      flags.push(flag);
+      continue;
+    }
+    for (let j = i; j <= end; j++) {
+      const sj = spike[j];
+      const between = [pairs[j].from, pairs[j].to];
+      const flag = {
+        kind: "cut",
+        pairs: [j],
+        between,
+        change: pairs[j].change,
+        reference: r6(sj.reference),
+        ratio: r6(pairs[j].change / sj.reference),
+        reading: `${frameText(between[0])} to ${frameText(between[1])} changes ${fmt(pairs[j].change)}, ${(pairs[j].change / sj.reference).toFixed(1)}\xD7 its neighbours: a cut or a jump`
+      };
+      if (sj.edge) {
+        flag.atSeriesEdge = true;
+        flag.reading += " (first or last pair: it could also be a pop of the end frame)";
+      }
+      if (sj.besideRepeat) {
+        flag.besideRepeat = true;
+        flag.reading += repeatNote;
+      }
+      flags.push(flag);
+    }
+  }
+  const moving = (s) => s !== null && s.change >= t.quietBelow && s.share >= t.movingShare;
+  const notSpikes = /* @__PURE__ */ new Set([...spikes, ...repeats]);
+  const neighbours = (i) => [i - 1, i + 1].filter((j) => j >= 0 && j < n && !repeats.has(j));
+  for (let i = 0; i < n; i++) {
+    if (spikes.has(i)) continue;
+    const before = side(pairs, i, -1, t.window, notSpikes);
+    const after = side(pairs, i, 1, t.window, notSpikes);
+    const frame = pairs[i].to;
+    const unreliablePairs = neighbours(i);
+    const unreliable = unreliablePairs.length > 0 ? `; pair${unreliablePairs.length > 1 ? "s" : ""} ${unreliablePairs.join(" and ")} beside it ${unreliablePairs.length > 1 ? "are" : "is"} measured across the repeat, so ${unreliablePairs.length > 1 ? "their readings are" : "its reading is"} unreliable` : "";
+    if (before && after && moving(before) && moving(after)) {
+      const reference2 = Math.min(before.change, after.change);
+      if (pairs[i].change > t.holdRatio * reference2) continue;
+      flags.push({
+        kind: "stutter",
+        pairs: [i],
+        frame,
+        change: pairs[i].change,
+        reference: r6(reference2),
+        ratio: r6(pairs[i].change / reference2),
+        unreliablePairs,
+        reading: `frame ${frameText(frame)} barely changes from the one before (${fmt(pairs[i].change)}) while the frames around it move about ${fmt(reference2)}: a repeated frame, a stutter${unreliable}. Rounded times can do this: a time just below a frame boundary renders the frame before (see frameWarning)`
+      });
+      continue;
+    }
+    if (!repeats.has(i)) continue;
+    const rawBefore = side(pairs, i, -1, t.window, spikes);
+    const rawAfter = side(pairs, i, 1, t.window, spikes);
+    const atEdge = rawBefore === null || rawAfter === null;
+    if (!atEdge || !(moving(rawBefore) || moving(rawAfter))) continue;
+    const reference = (moving(rawBefore) ? rawBefore : rawAfter).change;
+    flags.push({
+      kind: "repeat",
+      pairs: [i],
+      frame,
+      change: pairs[i].change,
+      reference: r6(reference),
+      ratio: r6(pairs[i].change / reference),
+      atSeriesEdge: true,
+      unreliablePairs,
+      reading: `frame ${frameText(frame)} repeats the one before (change ${fmt(pairs[i].change)}) beside motion of about ${fmt(reference)}, at the ${rawBefore === null ? "start" : "end"} of the series, so a stutter cannot be told from a hold${unreliable}`
+    });
+  }
+  flags.sort((a, b) => a.pairs[0] - b.pairs[0]);
+  summary.flags = flags;
+  const counts = ["pop", "stutter", "cut", "repeat"].map((k) => [k, flags.filter((f) => f.kind === k).length]).filter(([, c]) => c > 0).map(([k, c]) => `${c} ${k}${c > 1 ? "s" : ""}`);
+  summary.reading = `${n} pairs, median change ${fmt(summary.median)}, largest ${fmt(summary.largest.change)} (pair ${largest}); ` + (flags.length === 0 ? "no pair stands out from its neighbours" : `${counts.join(", ")}: ${flags.map((f) => `${f.kind} at pair ${f.pairs.join("+")}`).join("; ")}`);
+  return summary;
 }
 
 // src/color/transform.ts
@@ -52239,7 +53388,32 @@ function profileForWorkingSpace(workingSpace) {
 }
 
 // src/tools/render-frame.ts
+init_config();
 init_registry();
+var STRIP_DEFAULT_MAX_DIMENSION = 360;
+var FRAME_PICK = 0.25;
+var NEAR_FRAME_BOUNDARY = 0.02;
+function frameWarnings(frames, near = NEAR_FRAME_BOUNDARY) {
+  const parts = [];
+  const firstAt = /* @__PURE__ */ new Map();
+  for (const [i, f] of frames.entries()) {
+    if (typeof f.frame !== "number") continue;
+    const seen = firstAt.get(f.frame);
+    if (seen === void 0) firstAt.set(f.frame, i);
+    else parts.push(`#${seen} and #${i} both render frame ${f.frame}`);
+  }
+  for (const [i, f] of frames.entries()) {
+    if (typeof f.frame !== "number" || typeof f.frameOffset !== "number") continue;
+    const below = 1 - f.frameOffset;
+    if (below > 0 && below <= near) {
+      parts.push(
+        `#${i} (${f.time} s) renders frame ${f.frame}, ${(below * 100).toFixed(1)}% of a frame below frame ${f.frame + 1}`
+      );
+    }
+  }
+  if (parts.length === 0) return void 0;
+  return `${parts.join("; ")}. A time resolves to the frame it falls in, so a rounded time just below a boundary renders the frame before and a series of rounded times can repeat frames (diff then reads stutters). Pass \`frames: [..]\` to address frames by number, or exact times.`;
+}
 var MEASUREMENT_STAGES = {
   capture: "the PNG as saveFrameToPng wrote it, before any colour conversion: working-space values (scaled by AE's capture transfer in colour-managed projects), 8 or 16 bits. Its RGB is already laid over the comp background colour (`bgColor`): capture = colour\xB7alpha + bgColor\xB7(1 \u2212 alpha), so a half-covered pixel reads half background and an empty one reads bgColor; on a black background that is premultiplied colour. Alpha is the coverage AE wrote",
   output: "the file as written (writtenTo), after colour conversion when colorManaged is auto, so 8-bit display values. With channels 'rgb': over the comp background as AE composited it, or over `over`. With 'rgba': the colour recovered from under the background (straight, 0 where alpha is 0), plus alpha. With 'alpha': the matte, in r = g = b. The same as the capture when colorManaged is off or the conversion failed"
@@ -52260,7 +53434,7 @@ var regionSchema = external_exports.object({
 var renderFrameTool = defineTool({
   name: "ae_render_frame",
   title: "Render frame",
-  description: "Render one or more frames to PNG. Use to visually verify edits. The agent's 'eyes' \u2014 pair with mutations for a visual feedback loop. Headless and deterministic. Pass `time` for one frame, or `times` for several in ONE call (motion checks): files land at <outPath stem>_<index>.png and are listed in `frames`. `contactSheet` tiles every frame into one labelled PNG (<stem>_sheet.png) so a motion check is one image; `analyze` measures each capture (uniform edge bands = black bars / transparent margins, content bounds, coverage) so off-frame elements and letterboxing are caught numerically. In color-managed projects (workingSpace != None) the capture applies AE's own display transform via a transient OCIO Display Transform adjustment layer, and the PNG comes back viewer-accurate and sRGB-tagged. Where that layer cannot be used \u2014 read-only mode, an AE without the OCIO effect, or a failed capture calibration \u2014 the result falls back to a pure-math ACES conversion or to raw values with an explicit colorWarning; check colorPipeline / colorWarning on the response. Seeing the matte: `channels` picks what the file holds \u2014 'rgb' (default, transparency composited over `over`: the comp background as AE composites it, a checkerboard or a colour such as '#ff00ff'), 'rgba' (alpha kept, straight colour), or 'alpha' (the matte as greyscale: white opaque, black transparent). `isolate` renders one layer or a list alone (cameras and lights stay as they are), then restores every layer switch, even when the render fails. `alphaChannel` reports whether the capture carried alpha at all. Reading colour: `sample` takes named points or rectangles and returns mean / min / max per channel and alpha coverage for each; `histogram` counts the whole frame per channel; `compare` (with `times` and `sample`) reports each region's difference between two of the rendered frames. Matte quality: `edge` reports, from the capture's alpha, the shares of opaque / partly transparent / transparent pixels, edge width (typical and worst, px), holes, specks, partly transparent patches that are not thin edges (an unkeyed screen, a remnant), the soft edge's colour with the comp background taken out and whether it leans to the screen colour (spill), and with `times` the frame-to-frame change in alpha along the edge, inside the solid area and outside it (flicker). Green screen: `screen`, on a render of the UN-KEYED source (Keylight View 'source' or the key off, the keyed layer isolated), reports green or blue, which pixels are screen and their share, a suggested screen colour (the median, and the colour just outside the subject), evenness on a grid (darkest and brightest cells, the spread as a ratio, the darker side) and grain. It reports numbers and places, never a pass or fail. Every number is labelled with its stage \u2014 'capture' (before colour conversion) or 'output' (the file as written) \u2014 described once in `measurementStages`.",
+  description: "Render one or more frames to PNG. Use to visually verify edits. The agent's 'eyes' \u2014 pair with mutations for a visual feedback loop. Headless and deterministic. Pass `time` for one frame, or `times` for several in ONE call (motion checks): files land at <outPath stem>_<index>.png and are listed in `frames`. `contactSheet` tiles every frame into one labelled PNG (<stem>_sheet.png) so a motion check is one image; `analyze` measures each capture (uniform edge bands = black bars / transparent margins, content bounds, coverage) so off-frame elements and letterboxing are caught numerically. In color-managed projects (workingSpace != None) the capture applies AE's own display transform via a transient OCIO Display Transform adjustment layer, and the PNG comes back viewer-accurate and sRGB-tagged. Where that layer cannot be used \u2014 read-only mode, an AE without the OCIO effect, or a failed capture calibration \u2014 the result falls back to a pure-math ACES conversion or to raw values with an explicit colorWarning; check colorPipeline / colorWarning on the response. Seeing the matte: `channels` picks what the file holds \u2014 'rgb' (default, transparency composited over `over`: the comp background as AE composites it, a checkerboard or a colour such as '#ff00ff'), 'rgba' (alpha kept, straight colour), or 'alpha' (the matte as greyscale: white opaque, black transparent). `isolate` renders one layer or a list alone (cameras and lights stay as they are), then restores every layer switch, even when the render fails. `alphaChannel` reports whether the capture carried alpha at all. Reading colour: `sample` takes named points or rectangles and returns mean / min / max per channel and alpha coverage for each; `histogram` counts the whole frame per channel; `compare` (with `times` and `sample`) reports each region's difference between two of the rendered frames. Matte quality: `edge` reports, from the capture's alpha, the shares of opaque / partly transparent / transparent pixels, edge width (typical and worst, px), holes, specks, partly transparent patches that are not thin edges (an unkeyed screen, a remnant), the soft edge's colour with the comp background taken out and whether it leans to the screen colour (spill), and with `times` the frame-to-frame change in alpha along the edge, inside the solid area and outside it (flicker). Green screen: `screen`, on a render of the UN-KEYED source (Keylight View 'source' or the key off, the keyed layer isolated), reports green or blue, which pixels are screen and their share, a suggested screen colour (the median, and the colour just outside the subject), evenness on a grid (darkest and brightest cells, the spread as a ratio, the darker side) and grain. Watching motion: `diff` (with `times`) reports how much the picture changes between consecutive frames, where, and per `sample` region, and flags pairs that stand out (a one-frame pop, a stutter where a frame repeats, a cut); `strip: { at, frames }` renders the frames around a moment into one small contact sheet with diff on. For playback at speed, render.preview (ae_do) writes a quick movie. It reports numbers and places, never a pass or fail. Every number is labelled with its stage \u2014 'capture' (before colour conversion) or 'output' (the file as written) \u2014 described once in `measurementStages`.",
   group: "render",
   // Survives read-only mode: it writes a PNG, and the visual verification loop
   // is the whole point of an audit session. Note this is NOT a
@@ -52274,9 +53448,24 @@ var renderFrameTool = defineTool({
   effect: "write",
   inputShape: {
     compNameOrId: external_exports.union([external_exports.string(), external_exports.number()]).describe("Composition name or numeric item id."),
-    time: external_exports.number().nonnegative().optional().describe("Time in seconds to render. Give exactly one of `time` or `times`."),
+    time: external_exports.number().nonnegative().optional().describe(
+      "Time in seconds to render. Give exactly one of `time`, `times`, `strip` or `frames`. Each rendered frame reports `frame` (the frame the time falls in: floor(time / frameDuration), worked out in After Effects) and `frameOffset` (where in it, 0..1); `frameWarning` says when two times land on one frame or a time sits within 2% of a frame below a boundary (a rounded time renders the frame before). Times are never moved."
+    ),
     times: external_exports.array(external_exports.number().nonnegative()).min(1).max(32).optional().describe(
       "Several times in seconds, rendered in ONE call. Files are written as <outPath stem>_<index><ext> and reported in `frames` (index-aligned)."
+    ),
+    strip: external_exports.object({
+      at: external_exports.number().nonnegative().describe("The moment, seconds (snapped to the nearest frame)."),
+      frames: external_exports.number().int().min(2).max(32).describe("How many consecutive frames, centred on `at` (one more after it when even)."),
+      step: external_exports.number().int().positive().optional().describe("Frames between rendered frames. Default 1 (every frame)."),
+      maxDimension: external_exports.number().int().min(16).max(2048).optional().describe(
+        "Longest side of each tile on the sheets, px. Default 360. The frames themselves are rendered at the comp's size."
+      )
+    }).optional().describe(
+      "'What happens around this moment' in one call: N consecutive frames around `at`, worked out from the comp's frame rate inside After Effects and rendered through the `times` path (files <stem>_<index>, listed in `frames`), tiled small into the contact sheet, with `diff` and its sheet on (pass `diff: false` to skip, or diff options to tune). The window is shifted to stay inside the comp; `strip` in the response says where it landed. Instead of `time` / `times`."
+    ),
+    frames: external_exports.array(external_exports.number().int().nonnegative()).min(1).max(32).optional().describe(
+      "Frame numbers (0 = the comp's first frame) instead of times: each is rendered a quarter of a frame inside it, so a time never lands on the frame before. Through the `times` path: files <stem>_<index>, reported in `frames` with their `frame`. Instead of `time` / `times` / `strip`."
     ),
     outPath: external_exports.string().describe(
       "Absolute path to write the PNG. Parent directory is created if missing. With `times`, used as the naming stem for every frame."
@@ -52284,6 +53473,9 @@ var renderFrameTool = defineTool({
     useDisplayStartTime: external_exports.boolean().optional().describe("If true, times are interpreted relative to comp.displayStartTime. Default false."),
     colorManaged: external_exports.enum(["auto", "off"]).optional().describe(
       "'auto' (default): detect the working space and return a viewer-accurate, 8-bit sRGB-tagged PNG. 'off': raw legacy output (16-bit, untagged, working-space values \u2014 dark/wrong-looking in color-managed projects)."
+    ),
+    settleTimeoutMs: external_exports.number().int().positive().max(6e5).optional().describe(
+      "How long to wait for the captures to finish writing (saveFrameToPng writes after the script returns). Default: 15 s for one frame, plus 3 s for each further 1080\xD71920 frame (scaled by size, at least 1 s each). Frames that do not finish are named in `captureSettle` and marked failed in `frames`; the others are still measured."
     ),
     analyze: external_exports.boolean().optional().describe(
       "Measure each capture: uniform bands at every edge (width + transparent/color \u2014 black bars, letterboxing, empty margins), the bounding box of non-background pixels, coverage, mean RGB. Reported per frame as `analysis` (measured on the capture before color conversion)."
@@ -52399,34 +53591,94 @@ var renderFrameTool = defineTool({
       })
     ]).optional().describe(
       "Measure a green or blue screen, on the capture (stage 'capture'), opaque pixels only; `true` for the defaults. Render the UN-KEYED source: set Keylight's View to 'source' (key.view) or switch the key off, and isolate the keyed layer. Reported as `screen` (per frame with `times`), with the thresholds used as `screenThresholds`: screen ('green' | 'blue' | null), chosen, measured / leftOut pixels, screenPixels, share, bounds; colour {median, mean, nearSubject {colour, pixels, band}} \u2014 the suggested Screen Colour; subject {box, area, share}; evenness {columns, rows, cells [{column, row, box, screenShare, mean, luma, level}], darkest, brightest, levelRatio, lumaRatio, uneven, extent (5th to 95th percentile of the screen pixels' positions), horizontal (right / left) and vertical (bottom / top) read across that extent, darkerSide (every side darker past unevenRatio, strongest first), reading}; grain {stdDev, level, steps8bit, samples, grainy, reading}; reading; warning; screenColourNote (capture values and what they mean for Keylight's Screen Colour)."
+    ),
+    diff: external_exports.union([
+      external_exports.boolean(),
+      external_exports.object({
+        changeAbove: external_exports.number().min(0).max(1).optional().describe(
+          "A pixel has changed when one of its channels moved by more than this (display values). Default 0.04, about ten 8-bit steps: well above frame-to-frame grain."
+        ),
+        spikeRatio: external_exports.number().optional().describe(
+          "A pair stands out as a spike when its change is at least this many times its neighbours' on each side it has. Default 3."
+        ),
+        holdRatio: external_exports.number().optional().describe(
+          "A pair is a hold (a repeated frame) when its change is at most this share of the moving neighbours' on both sides. Default 0.25."
+        ),
+        quietBelow: external_exports.number().min(0).max(1).optional().describe(
+          "Mean changes below this read as no visible change: neighbours this quiet are not moving, and a spike is measured against at least this. Default 0.002."
+        ),
+        movingShare: external_exports.number().min(0).max(1).optional().describe(
+          "Neighbours count as moving, and a spike counts, only with at least this share of pixels changed. Default 0.0005 (about 1,000 pixels at 1080\xD71920)."
+        ),
+        window: external_exports.number().int().optional().describe("Pairs on each side compared with a pair. Default 3."),
+        amplify: external_exports.number().optional().describe("Gain of the difference images on the diff sheet. Default 8."),
+        repeatBelow: external_exports.number().min(0).max(1).optional().describe(
+          "A pair changing this little is a repeated frame (identical frames read 0); repeats are never a reference for other pairs. Default 0.0001."
+        ),
+        sheet: external_exports.union([
+          external_exports.boolean(),
+          external_exports.object({
+            columns: external_exports.number().int().positive().optional(),
+            thumbWidth: external_exports.number().int().min(16).max(2048).optional(),
+            outPath: external_exports.string().optional().describe("Default <outPath stem>_diff.png.")
+          })
+        ]).optional().describe(
+          "Also write the difference images, amplified and labelled '#from>to change' ('!' on flagged pairs), tiled into one PNG beside the contact sheet. Default off; on with `strip`."
+        )
+      })
+    ]).optional().describe(
+      "Frame-to-frame change, with `times` (two or more) or `strip`; `true` for the defaults. Measured on the written file (stage 'output', display values; `diff.picture` says what exactly: with the default rgb output the capture is already over the comp background, so transparent areas do not change). Reported as `diff` {stage, picture, pairs, series} with the thresholds used as `diffThresholds`. Each consecutive pair: from, to, change (mean absolute difference over pixels and channels, 0..1), maxAbsDelta, changedPixels, changedShare (a channel moved by more than changeAbove), changedBounds, and with `sample` the same per region. series: pairs, median, mean, largest, smallest, flags [{kind 'pop' | 'stutter' | 'cut' | 'repeat', pairs, frame or between, change, reference, ratio, atSeriesEdge?, besideRepeat?, unreliablePairs?, reading}], reading. A pop is a frame that differs from both neighbours; a stutter a frame that repeats the one before while the frames around it move; a cut one pair far above its neighbours; a repeat an unchanged pair at the start or end of the series beside motion. Repeated frames are never a reference, and the pairs beside one are named unreliable. Flags are hints from numbers: look at the frames."
     )
   },
   handler: async (args, transport2) => {
-    if (args.time === void 0 === (args.times === void 0)) {
-      return errorResult("INVALID_ARGS", "give exactly one of `time` or `times`", {
-        hint: "`time: 1.5` renders one frame; `times: [0, 1, 2]` renders several in one call."
-      });
+    const given = [args.time, args.times, args.strip, args.frames].filter(
+      (v) => v !== void 0
+    ).length;
+    if (given !== 1) {
+      return errorResult(
+        "INVALID_ARGS",
+        "give exactly one of `time`, `times`, `strip` or `frames`",
+        {
+          hint: "`time: 1.5` renders one frame; `times: [0, 1, 2]` renders several in one call; `strip: { at: 1.5, frames: 9 }` renders the frames around a moment; `frames: [42, 43]` renders frames by number."
+        }
+      );
     }
-    const checked = checkEyesOptions(args);
+    if (args.frames !== void 0 && (!Array.isArray(args.frames) || args.frames.length < 1 || args.frames.length > 32 || !args.frames.every((k) => Number.isInteger(k) && k >= 0))) {
+      return errorResult(
+        "INVALID_ARGS",
+        "`frames` must be 1 to 32 whole frame numbers, 0 or more (0 = the comp's first frame)"
+      );
+    }
+    if (args.settleTimeoutMs !== void 0 && !(Number.isInteger(args.settleTimeoutMs) && args.settleTimeoutMs > 0)) {
+      return errorResult("INVALID_ARGS", "`settleTimeoutMs` must be a positive whole number of ms");
+    }
+    let strip = null;
+    if (args.strip !== void 0) {
+      const planned = planStrip(args.strip);
+      if ("error" in planned) return planned.error;
+      strip = planned.plan;
+    }
+    const count = strip?.frames ?? args.frames?.length ?? args.times?.length ?? 1;
+    const checked = checkEyesOptions({ ...args, count }, strip !== null);
     if ("error" in checked) return checked.error;
     const rejection = rejectedOutputPath(args.outPath);
     if (rejection !== null) {
       return errorResult("IO", rejection, {
-        details: { outPath: path10.resolve(args.outPath) },
+        details: { outPath: path11.resolve(args.outPath) },
         hint: "Render to a path outside the mailbox."
       });
     }
-    const abs = path10.resolve(args.outPath).replace(/\\/g, "/");
+    const abs = path11.resolve(args.outPath).replace(/\\/g, "/");
     if (args.contactSheet?.outPath !== void 0) {
       const sheetRejection = rejectedOutputPath(args.contactSheet.outPath);
       if (sheetRejection !== null) {
         return errorResult("IO", sheetRejection, {
-          details: { outPath: path10.resolve(args.contactSheet.outPath) },
+          details: { outPath: path11.resolve(args.contactSheet.outPath) },
           hint: "Write the contact sheet to a path outside the mailbox."
         });
       }
     }
-    return nativeFlow(args, checked.options, abs, transport2);
+    return nativeFlow(args, checked.options, abs, transport2, strip);
   }
 });
 function invalid(message, hint) {
@@ -52441,7 +53693,7 @@ function parseColor(value) {
   }
   return null;
 }
-function checkEyesOptions(args) {
+function checkEyesOptions(args, isStrip = false) {
   const channels = args.channels ?? "rgb";
   if (args.colorManaged === "off" && (channels !== "rgb" || args.over !== void 0)) {
     return invalid(
@@ -52503,8 +53755,8 @@ function checkEyesOptions(args) {
   }
   let compare = null;
   if (args.compare !== void 0) {
-    const n = args.times?.length ?? 0;
-    if (n < 2) return invalid("`compare` needs `times` with at least two frames");
+    const n = args.count;
+    if (n < 2) return invalid("`compare` needs `times` (or `strip`) with at least two frames");
     if (sample === null) {
       return invalid("`compare` needs `sample`: it reports differences for the sampled regions");
     }
@@ -52531,6 +53783,29 @@ function checkEyesOptions(args) {
     const problem = screenArgsError(screen);
     if (problem !== null) return invalid(problem);
   }
+  let diff = null;
+  const diffArg = args.diff ?? (isStrip ? true : void 0);
+  if (diffArg !== void 0 && diffArg !== false) {
+    const d = diffArg === true ? {} : diffArg;
+    if (typeof d !== "object" || d === null) return invalid("`diff` must be true or an object");
+    if (args.count < 2) {
+      return invalid(
+        "`diff` needs `times` with at least two frames, or `strip`",
+        "It compares consecutive rendered frames: `times: [1, 1.04, 1.08], diff: true`."
+      );
+    }
+    const problem = diffArgsError(d);
+    if (problem !== null) return invalid(problem);
+    const { sheet: sheetArg, ...thresholds } = d;
+    const sheetOn = sheetArg ?? isStrip;
+    if (sheetOn !== false && sheetOn !== true && (typeof sheetOn !== "object" || sheetOn === null)) {
+      return invalid("`diff.sheet` must be true, false or an object");
+    }
+    diff = {
+      thresholds: resolveDiffThresholds(thresholds),
+      sheet: sheetOn === false ? null : sheetOn === true ? {} : sheetOn
+    };
+  }
   return {
     options: {
       channels,
@@ -52541,20 +53816,43 @@ function checkEyesOptions(args) {
       histogram,
       compare,
       edge,
-      screen
+      screen,
+      diff
     }
   };
 }
+function planStrip(strip) {
+  const fail3 = (message) => ({
+    error: errorResult("INVALID_ARGS", message, {
+      hint: "`strip: { at: 2.5, frames: 9 }` renders the nine frames around 2.5 s."
+    })
+  });
+  if (typeof strip !== "object" || strip === null) return fail3("`strip` must be an object");
+  const { at, frames } = strip;
+  const step = strip.step ?? 1;
+  const maxDimension = strip.maxDimension ?? STRIP_DEFAULT_MAX_DIMENSION;
+  if (typeof at !== "number" || !Number.isFinite(at) || at < 0)
+    return fail3("`strip.at` must be a time in seconds, 0 or more");
+  if (!Number.isInteger(frames) || frames < 2 || frames > 32)
+    return fail3("`strip.frames` must be a whole number from 2 to 32");
+  if (!Number.isInteger(step) || step < 1)
+    return fail3("`strip.step` must be a whole number, 1 or more");
+  if (!Number.isInteger(maxDimension) || maxDimension < 16 || maxDimension > 2048)
+    return fail3("`strip.maxDimension` must be a whole number of px from 16 to 2048");
+  const first = -Math.floor((frames - 1) / 2);
+  const offsets = Array.from({ length: frames }, (_, k) => (first + k) * step);
+  return { plan: { at, offsets, frames, step, maxDimension } };
+}
 function sheetPathFor(abs, explicit) {
-  if (explicit !== void 0) return path10.resolve(explicit).replace(/\\/g, "/");
-  const ext = path10.extname(abs) || ".png";
-  const stem = abs.slice(0, abs.length - (path10.extname(abs).length || 0));
+  if (explicit !== void 0) return path11.resolve(explicit).replace(/\\/g, "/");
+  const ext = path11.extname(abs) || ".png";
+  const stem = abs.slice(0, abs.length - (path11.extname(abs).length || 0));
   return `${stem}_sheet${ext}`;
 }
 function framePaths(abs, count, multi) {
   if (!multi) return [abs];
-  const ext = path10.extname(abs) || ".png";
-  const stem = abs.slice(0, abs.length - (path10.extname(abs).length || 0));
+  const ext = path11.extname(abs) || ".png";
+  const stem = abs.slice(0, abs.length - (path11.extname(abs).length || 0));
   const out = [];
   for (let i = 0; i < count; i++) out.push(`${stem}_${i}${ext}`);
   return out;
@@ -52620,7 +53918,7 @@ var ISOLATE_FN = `
         return { ok: true, saved: saved, layers: named, changed: changed };
     }
 `;
-function renderJsx(args, times, paths, tryOcio, isolate) {
+function renderJsx(args, times, paths, tryOcio, isolate, strip = null, frameNums = null) {
   return `
         ${RENDER_FRAME_FN}
         ${ISOLATE_FN}
@@ -52651,7 +53949,43 @@ function renderJsx(args, times, paths, tryOcio, isolate) {
         if (_missingMedia.length) return { ok: false, error: "source media missing for comp " + comp.name + "; restore or relink before rendering", missingFootage: _missingMedia };
         var _ws = AE.safeGet(function () { return app.project.workingSpace; }, "None");
         var _times = ${jsxVal(times)};
+        var _strip = ${jsxVal(strip === null ? null : { at: strip.at, offsets: strip.offsets })};
+        var _frameNums = ${jsxVal(frameNums)};
         var _paths = ${jsxVal(paths)};
+        var _pick = ${jsxVal(FRAME_PICK)};
+        var _stripOut = null;
+        if (_frameNums !== null) {
+            var _lastF = Math.max(0, Math.round(comp.duration / comp.frameDuration) - 1);
+            _times = [];
+            for (var _ni = 0; _ni < _frameNums.length; _ni++) {
+                if (_frameNums[_ni] > _lastF) return { ok: false, error: "frame " + _frameNums[_ni] + " is past the comp's last frame, " + _lastF + " (comp " + comp.name + ")" };
+                _times.push((_frameNums[_ni] + _pick) * comp.frameDuration);
+            }
+        }
+        if (_strip !== null) {
+            var _fd = comp.frameDuration;
+            var _lastK = Math.max(0, Math.round(comp.duration / _fd) - 1);
+            var _k0 = Math.round(_strip.at / _fd);
+            var _offs = _strip.offsets;
+            var _shift = 0;
+            if (_k0 + _offs[_offs.length - 1] > _lastK) _shift = _lastK - (_k0 + _offs[_offs.length - 1]);
+            if (_k0 + _offs[0] + _shift < 0) _shift = -(_k0 + _offs[0]);
+            _times = [];
+            var _clamped = 0;
+            for (var _si = 0; _si < _offs.length; _si++) {
+                var _k = _k0 + _offs[_si] + _shift;
+                if (_k > _lastK) { _k = _lastK; _clamped++; }
+                _times.push((_k + _pick) * _fd);
+            }
+            _stripOut = {
+                at: Math.round(_k0 * _fd * 1e6) / 1e6,
+                frameRate: Math.round(1e3 / _fd) / 1e3,
+                firstFrame: _k0 + _offs[0] + _shift,
+                lastFrame: Math.min(_lastK, _k0 + _offs[_offs.length - 1] + _shift),
+                shiftedFrames: _shift
+            };
+            if (_clamped > 0) _stripOut.note = "the comp is shorter than the strip: the last " + _clamped + " frames repeat the comp's last frame (they read as stutters in diff)";
+        }
         var _useDst = ${jsxVal(!!args.useDisplayStartTime)};
         var _useOcio = ${jsxVal(tryOcio)} && _ws !== "None" && _ws !== "";
         var _isolate = ${jsxVal(isolate)};
@@ -52660,6 +53994,15 @@ function renderJsx(args, times, paths, tryOcio, isolate) {
             for (var _fi = 0; _fi < _times.length; _fi++) {
                 var _r = _renderFrame(comp, _times[_fi], _paths[_fi], _useDst);
                 _r.captureKind = kind;
+                if (_r.ok) {
+                    // The frame this time falls in, counted from frame 0 in the
+                    // convention of time; within a millionth of a frame of a
+                    // boundary counts as on it (k / fps in floating point).
+                    var _pos = _times[_fi] / comp.frameDuration;
+                    var _fk = Math.floor(_pos + 1e-6);
+                    _r.frame = _fk;
+                    _r.frameOffset = Math.max(0, Math.round((_pos - _fk) * 1e6) / 1e6);
+                }
                 _frames.push(_r);
             }
         }
@@ -52715,6 +54058,7 @@ function renderJsx(args, times, paths, tryOcio, isolate) {
         }
         var _out = { ok: _allOk, frames: _frames, captureKind: _frames.length > 0 ? _frames[0].captureKind : null };
         if (_isoReport) _out.isolation = _isoReport;
+        if (_stripOut) _out.strip = _stripOut;
         if (!_allOk) _out.error = _firstError;
         if (_allOk) {
             _out.compName = comp.name;
@@ -52726,22 +54070,42 @@ function renderJsx(args, times, paths, tryOcio, isolate) {
         return _out;
     `;
 }
-async function nativeFlow(args, opts, abs, transport2) {
-  const multi = args.times !== void 0;
-  const times = args.times ?? [args.time];
-  const paths = framePaths(abs, times.length, multi);
+async function nativeFlow(args, opts, abs, transport2, strip = null) {
+  const frameNums = args.frames ?? null;
+  const multi = args.times !== void 0 || strip !== null || frameNums !== null;
+  const times = strip !== null || frameNums !== null ? null : args.times ?? [args.time];
+  const count = strip?.frames ?? frameNums?.length ?? times?.length ?? 1;
+  const paths = framePaths(abs, count, multi);
+  const contactSheet = args.contactSheet ?? (strip !== null ? {} : void 0);
+  const before = await stampFiles(paths);
   const tryOcio = args.colorManaged !== "off" && !readOnlyMode();
   const result = await transport2.execute({
-    code: renderJsx(args, times, paths, tryOcio, opts.isolate),
+    code: renderJsx(args, times, paths, tryOcio, opts.isolate, strip, frameNums),
     label: "render_frame",
-    timeoutMs: 12e4 + (times.length - 1) * 3e4
+    timeoutMs: 12e4 + (count - 1) * 3e4
   });
   if (!result.ok) return toMcpResult(result);
   const payload = result.result;
   const frames = payload?.frames ?? [];
+  const frameSize = frames[0]?.size;
+  if (payload && strip !== null) {
+    payload.strip = {
+      at: strip.at,
+      frames: strip.frames,
+      step: strip.step,
+      maxDimension: strip.maxDimension,
+      ...payload.strip
+    };
+  }
+  if (payload && payload.ok === true) {
+    const warning = frameWarnings(frames);
+    if (warning !== void 0) payload.frameWarning = warning;
+  }
   if (payload && payload.ok === true && !multi && frames.length === 1) {
     payload.writtenTo = frames[0].writtenTo;
     payload.time = frames[0].time;
+    if (frames[0].frame !== void 0) payload.frame = frames[0].frame;
+    if (frames[0].frameOffset !== void 0) payload.frameOffset = frames[0].frameOffset;
     payload.size = frames[0].size;
     delete payload.frames;
   }
@@ -52772,9 +54136,38 @@ async function nativeFlow(args, opts, abs, transport2) {
   }
   const bg = validRgb(payload.bgColor);
   const unmatting = convert !== null && (opts.channels === "rgba" || backdrop !== null);
+  const settle2 = await waitForSettled(written, {
+    timeoutMs: args.settleTimeoutMs ?? settleTimeoutFor(written.length, frameSize ? frameSize[0] * frameSize[1] : 1080 * 1920),
+    before: before.slice(0, written.length)
+  });
+  payload.captureSettle = settle2;
+  if (settle2.unsettled.length > 0) {
+    const secs = (settle2.timeoutMs / 1e3).toFixed(1);
+    for (const u of settle2.unsettled) {
+      if (!multi || !frames[u.index]) continue;
+      frames[u.index].ok = false;
+      frames[u.index].error = `the capture did not finish writing within ${secs} s (${u.state}, ${u.bytes} bytes)`;
+    }
+    payload.captureWarning = `${settle2.unsettled.length} of ${written.length} captures did not finish writing within ${secs} s (saveFrameToPng writes asynchronously): frames ${settle2.unsettled.map((u) => u.index).join(", ")}. ` + (settle2.settled.length > 0 ? "The others were measured; see captureSettle, or render the missing ones again with a longer settleTimeoutMs." : "Nothing could be measured; try again with a longer settleTimeoutMs.");
+    if (settle2.settled.length === 0) {
+      if (args.analyze) payload.analysisWarning = "analysis failed: no capture finished writing";
+      if (managed)
+        payload.colorWarning = "color post-processing failed, file left as raw capture: no capture finished writing";
+      return toMcpResult(result);
+    }
+  }
+  const finished = new Set(settle2.settled);
   const keep = new Set(opts.compare ? [opts.compare.from, opts.compare.to] : []);
   const kept = /* @__PURE__ */ new Map();
   const sheetImages = [];
+  const sheetLabels = [];
+  let sheetThumb = null;
+  const diffPairs = [];
+  const diffThumbs = [];
+  let diffPrev = null;
+  let diffThumb = null;
+  const diffSkipped = [];
+  let read = 0;
   const edgePairs = [];
   let edgePrev = null;
   let edgeMeasured = 0;
@@ -52782,9 +54175,11 @@ async function nativeFlow(args, opts, abs, transport2) {
   let withAlpha = 0;
   let writing = convert !== null;
   for (const [i, file2] of written.entries()) {
+    if (!finished.has(i)) continue;
     let capture;
     try {
-      capture = decodePng(await readFileSettled(file2));
+      capture = decodePng(await fs9.readFile(file2));
+      read++;
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       payload.captureWarning = `could not read the capture: ${msg}`;
@@ -52858,10 +54253,66 @@ async function nativeFlow(args, opts, abs, transport2) {
       put(i, "histogram", { stage, ...histogramOf(pixels[stage], bins) });
     }
     if (keep.has(i)) kept.set(i, pixels);
-    if (args.contactSheet)
-      sheetImages.push(output2 === capture ? { ...capture, alpha: void 0 } : output2);
+    const straight = output2 !== capture && output2.alpha !== void 0;
+    if (contactSheet) {
+      sheetThumb ??= thumbSizeFor(
+        output2,
+        contactSheet.thumbWidth ?? stripThumbWidth(strip, output2)
+      );
+      sheetImages.push(
+        sheetTile(output2 === capture ? { ...capture, alpha: void 0 } : output2, sheetThumb)
+      );
+      sheetLabels.push(frameLabel(i, frames[i]?.time ?? payload.time));
+    }
+    if (opts.diff) {
+      payload.diffThresholds ??= opts.diff.thresholds;
+      const pic = pictureOf(output2, straight);
+      const { width, height } = output2;
+      if (diffPrev !== null && diffPrev.index !== i - 1) {
+        diffSkipped.push(`${diffPrev.index}>${i} (frames between are missing)`);
+      } else if (diffPrev !== null && (diffPrev.width !== width || diffPrev.height !== height)) {
+        diffSkipped.push(`${i - 1}>${i} (frame sizes differ)`);
+      } else if (diffPrev !== null) {
+        if (opts.diff.sheet) {
+          diffThumb ??= thumbSizeFor(
+            output2,
+            opts.diff.sheet.thumbWidth ?? contactSheet?.thumbWidth ?? stripThumbWidth(strip, output2)
+          );
+        }
+        try {
+          const res = pictureChange(diffPrev.pic, pic, width, height, opts.diff.thresholds, {
+            regions: opts.sample?.regions,
+            thumb: diffThumb ?? void 0
+          });
+          const pair = {
+            from: { index: i - 1, time: frames[i - 1]?.time },
+            to: { index: i, time: frames[i]?.time },
+            ...res.all
+          };
+          if (res.regions) pair.regions = res.regions;
+          if (res.thumb && diffThumb) {
+            const grey = new Float64Array(res.thumb.length * 3);
+            for (let k = 0; k < res.thumb.length; k++) grey.fill(res.thumb[k], k * 3, k * 3 + 3);
+            diffThumbs.push({
+              pair: diffPairs.length,
+              img: { width: diffThumb.width, height: diffThumb.height, rgb: grey, bitDepth: 8 }
+            });
+          }
+          diffPairs.push(pair);
+        } catch (err) {
+          payload.diffWarning = `diff failed: ${err instanceof Error ? err.message : String(err)}`;
+        }
+      }
+      payload.diff ??= {
+        stage: "output",
+        picture: diffPicture(output2 === capture, opts.channels, payload.over),
+        pairs: [],
+        series: summarizeSeries([], opts.diff.thresholds)
+      };
+      diffPrev = { index: i, pic, width, height };
+    }
   }
-  payload.alphaChannel = withAlpha === 0 ? "absent" : withAlpha === written.length ? "present" : "mixed";
+  payload.alphaChannel = withAlpha === 0 ? "absent" : withAlpha === read ? "present" : "mixed";
   if (unmatting && withAlpha > 0 && bg === null) {
     payload.channelsWarning = "the comp background colour (bgColor) is unknown, so the colour under it was recovered as if it were black; soft edges may carry the real background";
   }
@@ -52875,8 +54326,8 @@ async function nativeFlow(args, opts, abs, transport2) {
     }
   }
   if (opts.edge) {
-    if (edgeFromLuma === 0 && withAlpha < written.length) {
-      payload.edgeWarning = `${written.length - withAlpha} of ${written.length} captures have no alpha channel, so their matte could not be measured (a comp with no transparency, or an AE that flattens)`;
+    if (edgeFromLuma === 0 && withAlpha < read) {
+      payload.edgeWarning = `${read - withAlpha} of ${read} captures have no alpha channel, so their matte could not be measured (a comp with no transparency, or an AE that flattens)`;
     } else if (edgeFromLuma === 0 && edgeMeasured > 0 && bg === null) {
       payload.edgeWarning = "the comp background colour (bgColor) is unknown, so the soft edge's colour was recovered as if it were black; the spill reading may carry the real background";
     }
@@ -52902,25 +54353,104 @@ async function nativeFlow(args, opts, abs, transport2) {
       };
     }
   }
+  if (opts.diff && payload.diff) {
+    payload.diff.pairs = diffPairs;
+    payload.diff.series = summarizeSeries(diffPairs, opts.diff.thresholds);
+    if (diffSkipped.length > 0) {
+      payload.diffWarning = `some consecutive pairs were not compared: ${diffSkipped.join("; ")}` + (settle2.unsettled.length > 0 ? " \u2014 captures missing, see captureSettle" : "");
+    }
+  }
   const stages = /* @__PURE__ */ new Set([
     ...opts.sample?.stages ?? [],
     ...opts.histogram ? [opts.histogram.stage] : [],
-    ...opts.edge || opts.screen ? ["capture"] : []
+    ...opts.edge || opts.screen ? ["capture"] : [],
+    ...opts.diff ? ["output"] : []
   ]);
   if (stages.size > 0) {
     payload.measurementStages = {};
     for (const s of stages) payload.measurementStages[s] = MEASUREMENT_STAGES[s];
   }
-  if (args.contactSheet) {
+  if (contactSheet && sheetImages.length > 0) {
     await attachContactSheet(
       payload,
-      frames,
+      sheetLabels,
       sheetImages,
-      sheetPathFor(abs, args.contactSheet.outPath),
-      args.contactSheet
+      sheetPathFor(abs, contactSheet.outPath),
+      contactSheet
+    );
+  }
+  if (opts.diff?.sheet && payload.diff && diffThumbs.length > 0) {
+    await attachDiffSheet(
+      payload,
+      payload.diff,
+      diffThumbs,
+      abs,
+      opts.diff.sheet,
+      opts.diff.thresholds
     );
   }
   return toMcpResult(result);
+}
+function thumbSizeFor(img, thumbWidth) {
+  const width = Math.max(16, Math.min(thumbWidth ?? 480, img.width));
+  return { width, height: Math.max(1, Math.round(img.height * width / img.width)) };
+}
+function stripThumbWidth(strip, img) {
+  if (strip === null) return void 0;
+  return Math.max(
+    1,
+    Math.round(strip.maxDimension * img.width / Math.max(img.width, img.height))
+  );
+}
+function sheetTile(img, thumb) {
+  const flat = img.alpha ? { ...img, rgb: flattenOver(img, { kind: "checkerboard" }), alpha: void 0 } : img;
+  if (flat.width <= thumb.width) return flat;
+  return {
+    ...flat,
+    width: thumb.width,
+    height: thumb.height,
+    rgb: resample(flat, thumb.width, thumb.height)
+  };
+}
+function diffPicture(raw, channels, over) {
+  if (raw) {
+    return "the capture as AE wrote it (no colour conversion: colorManaged off, or the conversion failed): its RGB already laid over the comp background (bgColor), so empty areas read the background in both frames; alpha not compared";
+  }
+  if (channels === "alpha") return "the written file: the matte (alpha as grey), white opaque";
+  if (channels === "rgba") {
+    return "the written file's straight colour weighted by its alpha (as over black), so colour under transparent pixels does not count";
+  }
+  if (over === void 0 || over === "background") {
+    return "the written file: the picture as AE composited it over the comp background (bgColor), so transparent areas read the background in both frames and do not change";
+  }
+  return "the written file: the picture laid over `over`, so transparent areas read that backdrop";
+}
+async function attachDiffSheet(payload, diff, thumbs, abs, opts, t) {
+  try {
+    const flagged = new Set(diff.series.flags.flatMap((f) => f.pairs));
+    const labels = thumbs.map(({ pair }) => {
+      const p = diff.pairs[pair];
+      return `#${p.from.index}>${p.to.index} ${p.change.toFixed(4)}${flagged.has(pair) ? " !" : ""}`;
+    });
+    const sheet = composeContactSheet(
+      thumbs.map((th) => th.img),
+      { columns: opts.columns, thumbWidth: thumbs[0].img.width, labels }
+    );
+    const sheetPath = opts.outPath !== void 0 ? path11.resolve(opts.outPath).replace(/\\/g, "/") : `${abs.slice(0, abs.length - path11.extname(abs).length)}_diff${path11.extname(abs) || ".png"}`;
+    await fs9.mkdir(path11.dirname(sheetPath), { recursive: true });
+    await fs9.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+    payload.diffSheet = {
+      writtenTo: sheetPath,
+      size: [sheet.width, sheet.height],
+      columns: sheet.columns,
+      rows: sheet.rows,
+      thumbSize: [sheet.thumbWidth, sheet.thumbHeight],
+      frames: thumbs.length,
+      amplify: t.amplify
+    };
+  } catch (err) {
+    payload.diffWarning = `diff sheet failed: ${err instanceof Error ? err.message : String(err)}`;
+  }
 }
 function stageBlock(stats, stage) {
   const { name: _name, ...rest } = stats;
@@ -52947,18 +54477,14 @@ function chooseBackdrop(payload, opts) {
 function validRgb(value) {
   return Array.isArray(value) && value.length === 3 && value.every((v) => typeof v === "number" && Number.isFinite(v)) ? [value[0], value[1], value[2]] : null;
 }
-async function attachContactSheet(payload, frames, images, sheetPath, opts) {
+async function attachContactSheet(payload, labels, tiles, sheetPath, opts) {
   try {
-    const tiles = images.map(
-      (img) => img.alpha ? { ...img, rgb: flattenOver(img, { kind: "checkerboard" }) } : img
-    );
-    const labels = frames.map((f, i) => frameLabel(i, f.time));
     const sheet = composeContactSheet(tiles, {
       columns: opts.columns,
-      thumbWidth: opts.thumbWidth,
+      thumbWidth: opts.thumbWidth ?? tiles[0].width,
       labels
     });
-    await fs9.mkdir(path10.dirname(sheetPath), { recursive: true });
+    await fs9.mkdir(path11.dirname(sheetPath), { recursive: true });
     await fs9.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
     payload.contactSheet = {
       writtenTo: sheetPath,
@@ -52966,7 +54492,7 @@ async function attachContactSheet(payload, frames, images, sheetPath, opts) {
       columns: sheet.columns,
       rows: sheet.rows,
       thumbSize: [sheet.thumbWidth, sheet.thumbHeight],
-      frames: images.length
+      frames: tiles.length
     };
   } catch (err) {
     payload.contactSheetWarning = `contact sheet failed: ${err instanceof Error ? err.message : String(err)}`;
@@ -53179,9 +54705,10 @@ var ALL_TOOLS = [
 ].map((tool) => withInstanceParam(tool));
 
 // src/tools/library.ts
-import { readFileSync, realpathSync } from "node:fs";
-import path11 from "node:path";
+import { readFileSync as readFileSync2, realpathSync as realpathSync2 } from "node:fs";
+import path12 from "node:path";
 import { createHash } from "node:crypto";
+init_config();
 
 // src/tools/library-modules.ts
 function object3(value) {
@@ -53268,23 +54795,23 @@ function findModules(catalog, query) {
 }
 
 // src/tools/library.ts
-function boundedFile(base, relative2) {
-  const candidate = path11.resolve(base, relative2);
+function boundedFile(base, relative3) {
+  const candidate = path12.resolve(base, relative3);
   const inside = (file3) => {
-    const rel = path11.relative(base, file3);
-    if (!rel || rel === ".." || rel.startsWith(".." + path11.sep) || path11.isAbsolute(rel)) throw new Error("Library path escapes bundle");
+    const rel = path12.relative(base, file3);
+    if (!rel || rel === ".." || rel.startsWith(".." + path12.sep) || path12.isAbsolute(rel)) throw new Error("Library path escapes bundle");
   };
   inside(candidate);
-  const file2 = realpathSync(candidate);
+  const file2 = realpathSync2(candidate);
   inside(file2);
   return file2;
 }
-function readLibrary(document, query, root = path11.resolve(PACKAGE_ROOT, "../library")) {
-  const base = realpathSync(root);
-  const manifest = JSON.parse(readFileSync(boundedFile(base, "manifest.json"), "utf8"));
+function readLibrary(document, query, root = path12.resolve(PACKAGE_ROOT, "../library")) {
+  const base = realpathSync2(root);
+  const manifest = JSON.parse(readFileSync2(boundedFile(base, "manifest.json"), "utf8"));
   const entries = manifest.documents;
   const read = (entry2) => {
-    const content = readFileSync(boundedFile(base, entry2.path), "utf8");
+    const content = readFileSync2(boundedFile(base, entry2.path), "utf8");
     if (createHash("sha256").update(content).digest("hex") !== entry2.sha256) throw new Error("Library hash mismatch: regenerate manifest after intentional edits");
     return content;
   };
@@ -53295,7 +54822,7 @@ function readLibrary(document, query, root = path11.resolve(PACKAGE_ROOT, "../li
     if (catalogEntry) {
       try {
         const raw = JSON.parse(read(catalogEntry));
-        const sourceMap = JSON.parse(readFileSync(boundedFile(base, "source-map.json"), "utf8"));
+        const sourceMap = JSON.parse(readFileSync2(boundedFile(base, "source-map.json"), "utf8"));
         catalog = validateCatalog(raw, { documentIds: new Set(entries.map((e) => e.id)), provenanceIds: new Set((sourceMap.sources ?? []).map((s) => s.id).filter((id) => typeof id === "string")) });
       } catch (e) {
         throw new Error(`Module catalog: ${e instanceof Error ? e.message : String(e)}`);
@@ -53345,7 +54872,7 @@ var transport = new FileIpcTransport();
 var server = new McpServer({
   name: serverName ?? "after-effects-studio",
   version: version2
-}, { instructions: "Local native After Effects control with a detailed production-derived motion language for any brand or style. Before designing or building motion in After Effects, read ae_library documents motion-language, production-workflow and brief-template; load construction, camera-continuity, assets-depth, type-evidence and worked-scenes as relevant. This craft foundation is the default for all styles, not an optional JoeB preset. Everything required is bundled; do not require the original repo, personal rig or assets. Inspect ae_context and discover exact operations with ae_catalog. eval.run enables custom ES3. A batch is not transactional; inspect failures or uncertain completion before retrying. Render and visually inspect actual artifacts, and distinguish technical success from visual quality. The paper/navy/vermilion JoeB appearance is optional." });
+}, { instructions: "Local native After Effects control with a detailed production-derived motion language for any brand or style. Before designing or building motion in After Effects, read ae_library documents motion-language, production-workflow and brief-template; load construction, camera-continuity, assets-depth, type-evidence and worked-scenes as relevant. This craft foundation is the default for all styles, not an optional JoeB preset. Everything required is bundled; do not require the original repo, personal rig or assets. Inspect ae_context and discover exact operations with ae_catalog. eval.run enables custom ES3. A call that throws is rolled back and says whether that worked (details.rollback); a batch.run is rolled back only with stopOnError. Inspect failures, unconfirmed rollbacks and timeouts before retrying. Render and visually inspect actual artifacts, and distinguish technical success from visual quality. The paper/navy/vermilion JoeB appearance is optional." });
 function annotationsFor(tool) {
   switch (tool.effect) {
     case "read":

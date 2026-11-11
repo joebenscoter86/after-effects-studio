@@ -71,7 +71,7 @@ Removing the plugin does not touch your After Effects projects, renders or expor
 
 ## Working with existing projects
 
-Claude inspects the open project before it writes and keeps unrelated work, including an unsaved project. Run one After Effects controller at a time. Each tool call is one undo step, but a failed batch does not roll back, and a request that timed out may still have run: inspect the project before retrying. Saves and exports cannot be undone with project undo.
+Claude inspects the open project before it writes and keeps unrelated work, including an unsaved project. Run one After Effects controller at a time. Each tool call is one undo step. A call that throws is rolled back before the error comes back, and the error says whether that worked; a batch is rolled back only when it was run with `stopOnError`. After a script changes the render queue, undo and rollback are refused for the rest of the After Effects session unless the call says it accepts the risk, because After Effects 2027 has crashed on undo after such changes. A request that timed out may still have run: inspect the project before retrying. Saves and exports cannot be undone with project undo.
 
 ## What's inside
 

@@ -106,6 +106,14 @@ export interface RegionError {
     name: string;
     error: string;
 }
+/** Clip a region to the frame; null when nothing of it is inside. */
+export declare function clipRegion(img: {
+    width: number;
+    height: number;
+}, region: RegionSpec): {
+    rect: PixelRect;
+    clipped: boolean;
+} | null;
 /** Mean, minimum and maximum per channel, and alpha coverage, for each region. */
 export declare function sampleRegions(img: DecodedPng, regions: RegionSpec[]): Array<RegionStats | RegionError>;
 export interface FrameHistogram {

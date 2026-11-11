@@ -77,14 +77,19 @@ describe("ae_do", () => {
 });
 
 describe("dialog suppression", () => {
-  it("only undo/redo opt out; project boundary ops keep suppression", () => {
-    expect(wantsDialogSuppression(getOp("project.undo")!, {})).toBe(false);
+  // Stage 7 changed this on purpose. Undo/redo used to run unsuppressed (an
+  // upstream comment claimed the suppression scope swallows Undo; no repo
+  // evidence). On 2026-11-10 an unsuppressed project.undo raised an After
+  // Effects error box that blocked all scripting until a person clicked it,
+  // so undo/redo now run suppressed and report errors instead. The live check
+  // in the stage 7 hand-over confirms undo still reverts under suppression.
+  it("every operation keeps suppression, undo/redo and project boundary ops included", () => {
+    expect(wantsDialogSuppression(getOp("project.undo")!, {})).toBe(true);
+    expect(wantsDialogSuppression(getOp("project.redo")!, {})).toBe(true);
     const cmd = getOp("command.execute")!;
-    expect(wantsDialogSuppression(cmd, { id: 16 })).toBe(false);
-    expect(wantsDialogSuppression(cmd, { id: 2035 })).toBe(false);
+    expect(wantsDialogSuppression(cmd, { id: 16 })).toBe(true);
+    expect(wantsDialogSuppression(cmd, { id: 2035 })).toBe(true);
     expect(wantsDialogSuppression(cmd, { id: 2040 })).toBe(true);
-    // project.open / project.new run ungrouped, but they are the calls most
-    // likely to pop a modal (missing footage/fonts) — they stay suppressed.
     for (const name of ["project.open", "project.new", "layer.create_null"]) {
       expect(wantsDialogSuppression(getOp(name)!, {}), name).toBe(true);
     }
@@ -100,10 +105,11 @@ describe("dialog suppression", () => {
     expect(transport.calls[0].suppressDialogs).toBe(true);
   });
 
-  it("ae_do sends suppressDialogs:false for undo", async () => {
+  it("ae_do sends undoGroup:false and suppressDialogs:true for undo", async () => {
     const transport = nullTransport(OK_RESPONSE);
     await doTool.handler({ operation: "project.undo", args: {} }, transport);
-    expect(transport.calls[0].suppressDialogs).toBe(false);
+    expect(transport.calls[0].undoGroup).toBe(false);
+    expect(transport.calls[0].suppressDialogs).toBe(true);
   });
 });
 
@@ -160,7 +166,10 @@ describe("request server (serve.jsx)", () => {
     // project boundary requests (project.open / project.new) run ungrouped AND
     // suppressed — they are the calls most likely to pop a modal — so the
     // decision is its own request field, not the undo-group condition.
-    expect(DISPATCHER.match(/app\.beginSuppressDialogs\(\)/g)).toHaveLength(1);
+    // Two call sites: the request's own (behind wantSuppress) and the
+    // rollback's, which suppresses only when the request did not already.
+    expect(DISPATCHER.match(/app\.beginSuppressDialogs\(\)/g)).toHaveLength(2);
+    expect(DISPATCHER).toMatch(/if \(!dialogsAlreadySuppressed\) \{\s*try \{ app\.beginSuppressDialogs\(\)/);
     const guard = /if \(wantSuppress\) \{([\s\S]*?)app\.beginSuppressDialogs\(\)/.exec(DISPATCHER);
     expect(guard, "beginSuppressDialogs must sit behind the wantSuppress guard").toBeTruthy();
     // A request without the field falls back to the old contract (suppress

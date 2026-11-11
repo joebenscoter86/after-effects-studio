@@ -1,4 +1,25 @@
 import { execFile } from "node:child_process";
+const SCRIPT_PROGRESS_NAME = /^\s*executing script\b/i;
+const SCRIPT_PROGRESS_SHAPE = { layer: 8, width: 363, height: 181, tolerance: 2 };
+function scriptProgressMatch(d) {
+  if (SCRIPT_PROGRESS_NAME.test(d.title ?? "") || SCRIPT_PROGRESS_NAME.test(d.text)) return "name";
+  const shape = SCRIPT_PROGRESS_SHAPE;
+  if (!d.title && !d.text && d.layer === shape.layer && Math.abs(d.width - shape.width) <= shape.tolerance && Math.abs(d.height - shape.height) <= shape.tolerance) {
+    return "size";
+  }
+  return null;
+}
+function splitScriptProgress(windows) {
+  return {
+    dialogs: windows.filter((w) => !w.scriptProgress),
+    scripts: windows.filter((w) => !!w.scriptProgress)
+  };
+}
+function scriptRunningMessage(scripts) {
+  const how = scripts.every((s) => s.scriptProgress === "name") ? "its 'Executing Script' progress window is up" : "a window shaped like its 'Executing Script' progress window is up (its name could not be read, so it was recognised by size)";
+  return `After Effects is still running a script (${how}): it is busy, not blocked by a dialog`;
+}
+const SCRIPT_RUNNING_HINT = "Do not close that window: its only action cancels the running script. Wait for the script to finish (raise timeoutMs for long work), then inspect the project before repeating a write.";
 const SCAN_TIMEOUT_MS = 8e3;
 const HELPER = String.raw`
 Add-Type @"
@@ -147,7 +168,8 @@ function scan() {
     var pid = w.kCGWindowOwnerPID, b = w.kCGWindowBounds;
     if (!procs[pid] || !(w.kCGWindowAlpha > 0)) return;
     var d = { pid: pid, id: pid + ':' + w.kCGWindowNumber, text: '', width: Math.round(b.Width), height: Math.round(b.Height),
-      window: titles[pid] || null, accessibility: trusted, startedAt: procs[pid].startedAt, number: w.kCGWindowNumber, el: null };
+      window: titles[pid] || null, accessibility: trusted, startedAt: procs[pid].startedAt, number: w.kCGWindowNumber, el: null,
+      title: w.kCGWindowName || '', layer: w.kCGWindowLayer };
     var modal = !!GUESSED_LAYERS[w.kCGWindowLayer];
     if (trusted) {
       var app = axApp(pid, cache);
@@ -161,7 +183,15 @@ function scan() {
   });
   return found;
 }
-function strip(d) { return { pid: d.pid, id: d.id, text: d.text, width: d.width, height: d.height, window: d.window, accessibility: d.accessibility, startedAt: d.startedAt }; }
+function strip(d) { return { pid: d.pid, id: d.id, text: d.text, width: d.width, height: d.height, window: d.window, accessibility: d.accessibility, startedAt: d.startedAt, title: d.title, layer: d.layer }; }
+// AE's "Executing Script ..." progress window (layer 8, 363 x 181): its only
+// action cancels the running script, so it is never dismissed. Same rule as
+// scriptProgressMatch in dialogs.ts.
+function isScriptProgress(d) {
+  var named = /^\s*executing script\b/i;
+  if (named.test(d.title || '') || named.test(d.text || '')) return true;
+  return !d.title && !d.text && d.layer === 8 && Math.abs(d.width - 363) <= 2 && Math.abs(d.height - 181) <= 2;
+}
 function gone(number) {
   for (var i = 0; i < 10; i++) {
     delay(0.1);
@@ -174,6 +204,7 @@ function dismiss(target) {
   var d = null;
   scan().forEach(function (x) { if (x.id === target) d = x; });
   if (!d) { none.reason = 'not_found'; return none; }
+  if (isScriptProgress(d)) { none.reason = 'script_progress'; return none; }
   if (!trusted) { none.reason = 'no_permission'; return none; }
   var cancel = d.el ? axElement(d.el, 'AXCancelButton') : null;
   if (cancel) {
@@ -288,12 +319,17 @@ function parseDialogScan(raw) {
       height: typeof e.height === "number" ? e.height : 0,
       window: typeof e.window === "string" && e.window.length > 0 ? e.window : null,
       ...typeof e.accessibility === "boolean" ? { accessibility: e.accessibility } : {},
-      ...typeof e.startedAt === "number" && e.startedAt > 0 ? { startedAt: e.startedAt } : {}
+      ...typeof e.startedAt === "number" && e.startedAt > 0 ? { startedAt: e.startedAt } : {},
+      ...typeof e.title === "string" ? { title: e.title.trim() } : {},
+      ...typeof e.layer === "number" ? { layer: e.layer } : {}
     });
+    const last = out[out.length - 1];
+    const progress = scriptProgressMatch(last);
+    if (progress !== null) last.scriptProgress = progress;
   }
   return out;
 }
-async function scanAeDialogs(platform = process.platform) {
+async function scanAeWindows(platform = process.platform) {
   if (!scanSupported(platform)) return [];
   try {
     const raw = platform === "darwin" ? await osascriptRunner(DARWIN_SCRIPT, { AE_MCP_DIALOG_MODE: "scan" }) : await runner(SCAN_SCRIPT, {});
@@ -302,7 +338,10 @@ async function scanAeDialogs(platform = process.platform) {
     return [];
   }
 }
-const DISMISS_REASONS = /* @__PURE__ */ new Set(["not_found", "no_permission"]);
+async function scanAeDialogs(platform = process.platform) {
+  return splitScriptProgress(await scanAeWindows(platform)).dialogs;
+}
+const DISMISS_REASONS = /* @__PURE__ */ new Set(["not_found", "no_permission", "script_progress"]);
 async function dismissAeDialog(id, platform = process.platform) {
   const notFound = {
     posted: false,
@@ -351,6 +390,9 @@ export {
   ACCESSIBILITY_HINT,
   DARWIN_SCRIPT,
   DIALOG_HINT,
+  SCRIPT_PROGRESS_NAME,
+  SCRIPT_PROGRESS_SHAPE,
+  SCRIPT_RUNNING_HINT,
   describeDialogs,
   dialogBlockMessage,
   dialogHint,
@@ -358,6 +400,10 @@ export {
   dismissAeDialog,
   parseDialogScan,
   scanAeDialogs,
+  scanAeWindows,
+  scriptProgressMatch,
+  scriptRunningMessage,
   setOsascriptRunner,
-  setPowerShellRunner
+  setPowerShellRunner,
+  splitScriptProgress
 };

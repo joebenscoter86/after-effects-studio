@@ -16,7 +16,11 @@ import {
   dialogHint,
   dialogScanSupported,
   dismissAeDialog,
-  scanAeDialogs
+  scanAeDialogs,
+  scanAeWindows,
+  splitScriptProgress,
+  scriptRunningMessage,
+  SCRIPT_RUNNING_HINT
 } from "../transport/dialogs.js";
 import {
   describeInstance,
@@ -360,15 +364,17 @@ registerOp({
 registerOp({
   name: "instance.dialogs",
   category: "instance",
-  description: "List the modal dialogs every running After Effects is showing \u2014 the message text, the owning process and its window title, and an id for instance.dismiss_dialog. While a dialog is open no script runs (calls fail with DIALOG_OPEN, or an instance stops ticking), and the dialog is often hidden behind the main window. Windows and macOS. On macOS the text is read only with Accessibility permission for the app running this server; without it dialogs are still listed, with empty text (`accessibility: false`).",
+  description: "List the modal dialogs every running After Effects is showing \u2014 the message text, the owning process and its window title, and an id for instance.dismiss_dialog. While a dialog is open no script runs (calls fail with DIALOG_OPEN, or an instance stops ticking), and the dialog is often hidden behind the main window. Windows and macOS. On macOS the text is read only with Accessibility permission for the app running this server; without it dialogs are still listed, with empty text (`accessibility: false`). After Effects' own 'Executing Script ...' progress window is not a dialog: it is reported under scriptRunning (a script is still running), never offered for dismissal \u2014 its only action cancels the script.",
   params: [],
   readOnly: true,
   toJsx: () => nodeOnly("instance.dialogs"),
   async run() {
-    const dialogs = await scanAeDialogs();
+    const { dialogs, scripts } = splitScriptProgress(await scanAeWindows());
     return {
       ok: true,
       dialogs,
+      scriptRunning: scripts.map((w) => ({ pid: w.pid, id: w.id, matchedBy: w.scriptProgress })),
+      ...scripts.length > 0 ? { note: `A script is still running. ${scriptRunningMessage(scripts)}. ${SCRIPT_RUNNING_HINT}` } : {},
       supported: dialogScanSupported()
     };
   }
@@ -391,7 +397,14 @@ registerOp({
       return fail("instance.dismiss_dialog is only available on Windows and macOS");
     }
     const id = typeof args.id === "string" ? args.id.trim() : "";
-    const r = await dismissAeDialog(id);
+    const progress = (await scanAeWindows()).find((w) => w.id === id && w.scriptProgress);
+    const r = progress ? { posted: false, closed: false, text: null, reason: "script_progress" } : await dismissAeDialog(id);
+    if (r.reason === "script_progress") {
+      return fail(
+        `window ${id} is After Effects' 'Executing Script' progress window, not a dialog: a script is still running, and that window's only action would cancel it. Nothing was sent.`,
+        { hint: SCRIPT_RUNNING_HINT }
+      );
+    }
     if (r.reason === "no_permission") {
       return fail(`cannot close After Effects dialog ${id}: no Accessibility permission`, {
         hint: ACCESSIBILITY_HINT

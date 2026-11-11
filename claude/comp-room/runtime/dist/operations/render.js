@@ -1,8 +1,38 @@
+import { readOnlyMode } from "../policy.js";
 import { registerOp, jsxFail, jsxVal, jsxCompPreamble } from "../registry.js";
+const RENDER_QUEUE_UNDO_WARNING = " After this, undo and rollback are refused for the rest of the After Effects session unless acceptRenderQueueRisk: true: After Effects 2027 has gone into crash recovery on undo after scripted render-queue changes (observed twice on 2026-11-10; a precaution, not a proven cause). Save the project before undoing anything afterwards; project.open / project.new clear the block.";
+const READ_TEMPLATES_FN = `
+    function _readTemplates(_item) {
+        var _render = [];
+        var _output = [];
+        try { _render = _item.templates; } catch (eR) {}
+        try { _output = _item.outputModule(1).templates; } catch (eO) {}
+        return { renderTemplates: _render, outputTemplates: _output };
+    }
+`;
+const QUEUE_CHANGE_NOTE = "the project is left modified (unsaved): a render-queue item was added and removed. Nothing in the comps changed; save or revert as you normally would";
+const PARK_QUEUE_FN = `
+    function _parkQueue(rq) {
+        var _parked = [];
+        for (var _pi = 1; _pi <= rq.numItems; _pi++) {
+            var _ex = rq.item(_pi);
+            var _was = false;
+            try { _was = _ex.render; } catch (eR) {}
+            _parked.push(_was);
+            if (_was) { try { _ex.render = false; } catch (eP) {} }
+        }
+        return _parked;
+    }
+    function _unparkQueue(rq, _parked) {
+        for (var _ui = 0; _ui < _parked.length && _ui < rq.numItems; _ui++) {
+            if (_parked[_ui]) { try { rq.item(_ui + 1).render = true; } catch (eU) {} }
+        }
+    }
+`;
 registerOp({
   name: "render.add_to_queue",
   category: "render",
-  description: "Add a composition to the render queue. Optionally set output path.",
+  description: "Add a composition to the render queue. Optionally set output path." + RENDER_QUEUE_UNDO_WARNING,
   params: [
     { name: "comp", type: "any", description: "Comp name or id", required: true },
     {
@@ -31,7 +61,7 @@ registerOp({
 registerOp({
   name: "render.start",
   category: "render",
-  description: "Render queued items and verify each output file was newly written. Blocks until complete. Missing output directories are created first. Completed items are not counted as new renders.",
+  description: "Render queued items and verify each output file was newly written. Blocks until complete. Missing output directories are created first. Completed items are not counted as new renders." + RENDER_QUEUE_UNDO_WARNING,
   params: [],
   toJsx() {
     return `
@@ -406,7 +436,7 @@ registerOp({
 registerOp({
   name: "render.remove_item",
   category: "render",
-  description: "Remove ONE item from the render queue by its 1-based index (render.clear_queue removes all).",
+  description: "Remove ONE item from the render queue by its 1-based index (render.clear_queue removes all)." + RENDER_QUEUE_UNDO_WARNING,
   params: [
     {
       name: "queueIndex",
@@ -449,18 +479,38 @@ registerOp({
   name: "render.list_templates",
   category: "render",
   readOnly: true,
-  description: "List available render-settings templates and output-module templates. The render queue must have at least one item (templates are read from a queue item).",
-  params: [],
-  toJsx() {
+  description: "List available render-settings templates and output-module templates. They are read from a queue item: the first one, or, when the queue is empty and `comp` is given, a temporary item for that comp that is removed again (the project is then left modified by the queue change; render.preview with listTemplates does the same). A temporary item counts as a render-queue change:" + RENDER_QUEUE_UNDO_WARNING,
+  params: [
+    {
+      name: "comp",
+      type: "any",
+      description: "Comp name or id for a temporary queue item, used only when the queue is empty",
+      required: false
+    }
+  ],
+  toJsx(args) {
     return `
+            ${READ_TEMPLATES_FN}
             var rq = app.project.renderQueue;
-            if (rq.numItems === 0) return { ok: false, error: "add a comp to the render queue first (render.add_to_queue) \u2014 templates are read from a queue item" };
-            var _rqi = rq.item(1);
-            var _render = [];
-            var _output = [];
-            try { _render = _rqi.templates; } catch (eR) {}
-            try { _output = _rqi.outputModule(1).templates; } catch (eO) {}
-            return { ok: true, renderTemplates: _render, outputTemplates: _output };
+            if (rq.numItems > 0) {
+                var _first = _readTemplates(rq.item(1));
+                return { ok: true, renderTemplates: _first.renderTemplates, outputTemplates: _first.outputTemplates };
+            }
+            var _compArg = ${jsxVal(args.comp ?? null)};
+            if (${jsxVal(readOnlyMode())}) return { ok: false, error: "the render queue is empty, and AE_MCP_READONLY=1 forbids the temporary queue item that would modify the project" };
+            if (_compArg === null) return { ok: false, error: "the render queue is empty: pass comp (a temporary item is added, read and removed), or use render.preview with listTemplates" };
+            var _comp = AE.findCompByNameOrId(_compArg);
+            if (!_comp) return { ok: false, error: "no comp matching " + String(_compArg) };
+            var _tmp = null;
+            try {
+                _tmp = rq.items.add(_comp);
+                var _read = _readTemplates(_tmp);
+                return { ok: true, renderTemplates: _read.renderTemplates, outputTemplates: _read.outputTemplates, temporaryItem: true, projectModified: true, projectNote: ${jsxVal(QUEUE_CHANGE_NOTE)} };
+            } catch (eT) {
+                return { ok: false, error: "could not read templates: " + AE.errText(eT) };
+            } finally {
+                if (_tmp) { try { _tmp.remove(); } catch (eRm) {} }
+            }
         `;
   }
 });
@@ -609,15 +659,9 @@ registerOp({
             var _variants = ${jsxVal(variants)};
             var _tpl = ${jsxVal(template)};
             var rq = app.project.renderQueue;
+            ${PARK_QUEUE_FN}
             // Only the temporary item may render: park every existing item.
-            var _parked = [];
-            for (var _pi = 1; _pi <= rq.numItems; _pi++) {
-                var _ex = rq.item(_pi);
-                var _was = false;
-                try { _was = _ex.render; } catch (eR) {}
-                _parked.push(_was);
-                if (_was) { try { _ex.render = false; } catch (eP) {} }
-            }
+            var _parked = _parkQueue(rq);
             var _results = [];
             var _failed = 0;
             try {
@@ -663,9 +707,7 @@ registerOp({
                     _results.push(_entry);
                 }
             } finally {
-                for (var _ui = 0; _ui < _parked.length && _ui < rq.numItems; _ui++) {
-                    if (_parked[_ui]) { try { rq.item(_ui + 1).render = true; } catch (eU) {} }
-                }
+                _unparkQueue(rq, _parked);
             }
             return { ok: _failed === 0, error: _failed === 0 ? null : (_failed + " of " + _results.length + " variants failed"), rendered: _results.length - _failed, variants: _results };
         `;
@@ -714,6 +756,196 @@ registerOp({
                 return { ok: true, type: "output", name: ${jsxVal(args.name)} };
             }
             return { ok: false, error: "type must be render|output" };
+        `;
+  }
+});
+const PREVIEW_RESOLUTIONS = {
+  full: "Full",
+  half: "Half",
+  third: "Third",
+  quarter: "Quarter"
+};
+registerOp({
+  name: "render.preview",
+  category: "render",
+  description: "Render a quick preview movie of a comp's work area (or the whole comp, or a span) through the render queue, so it can be watched at speed. Adds ONE temporary queue item, renders only that item (others are parked and their Render checkboxes restored), then removes it: the queue is left as it was found. Never overwrites an existing file unless overwrite is true; creates the output folder. Returns outputPath, timeSpanStart, durationSeconds, frameCount, frameRate, renderSeconds (wall clock of the render), elapsedSeconds (AE's own count), bytes, outputTemplate, resolution (+ resolutionReadBack) and warnings. It changes the render queue:" + RENDER_QUEUE_UNDO_WARNING + " Blocks until done: raise ae_do timeoutMs for long comps (235 frames at 1080\xD71920 with 'High Quality' took about 20 s). Defaults are what is known to work: output template 'High Quality' (a ProRes .mov) at full resolution; resolution 'half' was measured live (540\xD7960 from 1080\xD71920, about a third of the time). listTemplates: true renders nothing and returns the render-settings and output-module template names, read from a temporary queue item that is removed again. Every answer carries projectModified: true and projectNote: adding and removing a queue item leaves the project unsaved.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "outputPath",
+      type: "string",
+      description: "Movie file path (the output template may change the extension; the path AE actually wrote is returned). Required unless listTemplates",
+      required: false
+    },
+    {
+      name: "listTemplates",
+      type: "boolean",
+      description: "Render nothing: return renderTemplates and outputTemplates, read from a temporary queue item for comp that is removed again",
+      required: false,
+      default: false
+    },
+    {
+      name: "span",
+      type: "string",
+      description: "workArea (default) | comp \u2014 what to render when no explicit time span is given",
+      required: false,
+      default: "workArea"
+    },
+    {
+      name: "timeSpanStart",
+      type: "number",
+      description: "Explicit span start in seconds (comp time); overrides span",
+      required: false
+    },
+    {
+      name: "timeSpanDuration",
+      type: "number",
+      description: "Explicit span duration in seconds; overrides span",
+      required: false
+    },
+    {
+      name: "outputTemplate",
+      type: "string",
+      description: "Output module template (default 'High Quality'); refused, with the available names, when it does not exist",
+      required: false,
+      default: "High Quality"
+    },
+    {
+      name: "renderTemplate",
+      type: "string",
+      description: "Render settings template (default: the queue item's own default)",
+      required: false
+    },
+    {
+      name: "resolution",
+      type: "string",
+      description: "full (default, untouched) | half | third | quarter. Set through setSettings({ Resolution }) and read back; resolutionReadBack and a warning say whether it took",
+      required: false,
+      default: "full"
+    },
+    {
+      name: "renderSettings",
+      type: "object",
+      description: "Raw render settings applied to the temporary item (RenderQueueItem.setSettings, keys from render.get_settings), after renderTemplate and resolution",
+      required: false
+    },
+    {
+      name: "overwrite",
+      type: "boolean",
+      description: "Replace an existing file at the output path (default false: refuse)",
+      required: false,
+      default: false
+    }
+  ],
+  toJsx(args) {
+    if (args.listTemplates === true) {
+      return `
+            ${jsxCompPreamble(args)}
+            ${READ_TEMPLATES_FN}
+            var rq = app.project.renderQueue;
+            if (AE.safeGet(function () { return rq.rendering; }, false)) return { ok: false, error: "the render queue is already rendering; wait for it to finish" };
+            var _tmp = null;
+            try {
+                _tmp = rq.items.add(_comp);
+                var _read = _readTemplates(_tmp);
+                return { ok: true, renderTemplates: _read.renderTemplates, outputTemplates: _read.outputTemplates, projectModified: true, projectNote: ${jsxVal(QUEUE_CHANGE_NOTE)} };
+            } catch (eT) {
+                return { ok: false, error: "could not read templates: " + AE.errText(eT), projectModified: true, projectNote: ${jsxVal(QUEUE_CHANGE_NOTE)} };
+            } finally {
+                if (_tmp) { try { _tmp.remove(); } catch (eRm) {} }
+            }
+        `;
+    }
+    if (typeof args.outputPath !== "string" || args.outputPath === "")
+      return jsxFail("outputPath is required (unless listTemplates is true)");
+    const span = args.span ?? "workArea";
+    if (span !== "workArea" && span !== "comp") return jsxFail("span must be workArea or comp");
+    const resolution = String(args.resolution ?? "full").toLowerCase();
+    if (!(resolution in PREVIEW_RESOLUTIONS))
+      return jsxFail("resolution must be full, half, third or quarter");
+    if (args.timeSpanStart === void 0 !== (args.timeSpanDuration === void 0))
+      return jsxFail("give both timeSpanStart and timeSpanDuration, or neither");
+    if (args.timeSpanDuration !== void 0 && !(Number(args.timeSpanDuration) > 0))
+      return jsxFail("timeSpanDuration must be above 0");
+    return `
+            ${jsxCompPreamble(args)}
+            ${PARK_QUEUE_FN}
+            var rq = app.project.renderQueue;
+            if (AE.safeGet(function () { return rq.rendering; }, false)) return { ok: false, error: "the render queue is already rendering; wait for it to finish" };
+            var _overwrite = ${jsxVal(!!args.overwrite)};
+            var _want = ${jsxVal(String(args.outputPath))};
+            function _meta(_path) {
+                var _f = new File(_path);
+                if (!_f.exists) return { exists: false, bytes: 0, modifiedMs: null };
+                var _d = _f.modified;
+                return { exists: true, bytes: _f.length, modifiedMs: _d ? _d.getTime() : null };
+            }
+            var _existing = _meta(_want);
+            if (_existing.exists && !_overwrite) return { ok: false, error: "a file already exists at " + _want + "; pass overwrite: true to replace it, or choose another outputPath", existing: _want };
+            var _w = [];
+            var _out = null;
+            var _rqi = null;
+            var _numBefore = rq.numItems;
+            var _parked = _parkQueue(rq);
+            try {
+                _rqi = rq.items.add(_comp);
+                ${args.renderTemplate !== void 0 ? `var _wr = AE.applyTemplate(_rqi, ${jsxVal(args.renderTemplate)}, "renderTemplate"); if (_wr) throw new Error(_wr);` : ""}
+                var _om = _rqi.outputModule(1);
+                var _wo = AE.applyTemplate(_om, ${jsxVal(args.outputTemplate ?? "High Quality")}, "outputTemplate");
+                if (_wo) throw new Error(_wo);
+                var _start = ${args.timeSpanStart !== void 0 ? jsxVal(args.timeSpanStart) : span === "comp" ? "0" : "_comp.workAreaStart"};
+                var _dur = ${args.timeSpanDuration !== void 0 ? jsxVal(args.timeSpanDuration) : span === "comp" ? "_comp.duration" : "_comp.workAreaDuration"};
+                _rqi.timeSpanStart = _start;
+                _rqi.timeSpanDuration = _dur;
+                var _res = ${jsxVal(resolution)};
+                var _resBack = null;
+                if (_res !== "full") {
+                    var _resName = ${jsxVal(PREVIEW_RESOLUTIONS[resolution])};
+                    try { _rqi.setSettings({ "Resolution": _resName }); } catch (eRs) { _w.push("resolution: setSettings failed: " + AE.errText(eRs)); }
+                    try { _resBack = _rqi.getSettings(GetSettingsFormat.STRING_SETTABLE)["Resolution"]; } catch (eRb) { _w.push("resolution: could not read it back: " + AE.errText(eRb)); }
+                    if (_resBack !== null && String(_resBack) !== _resName) _w.push("resolution: asked for " + _resName + " but the item reads " + String(_resBack) + " \u2014 the preview may be full size");
+                }
+                ${args.renderSettings !== void 0 ? `try { _rqi.setSettings(${jsxVal(args.renderSettings)}); } catch (eSs) { _w.push("renderSettings: " + AE.errText(eSs)); }` : ""}
+                _om.file = AE.ensureParentDir(_want);
+                var _path = _om.file ? _om.file.fsName.replace(/\\\\/g, "/") : _want;
+                var _before = _meta(_path);
+                if (_path !== _want && _before.exists && !_overwrite) throw new Error("the output template writes " + _path + ", which already exists; pass overwrite: true to replace it");
+                var _t0 = new Date().getTime();
+                rq.render();
+                var _t1 = new Date().getTime();
+                var _after = _meta(_path);
+                var _fresh = _after.exists && _after.bytes > 0 &&
+                    (!_before.exists || _after.bytes !== _before.bytes || (_after.modifiedMs !== null && _after.modifiedMs !== _before.modifiedMs));
+                var _status = _rqi.status;
+                var _fd = _comp.frameDuration;
+                _out = {
+                    ok: _status === RQItemStatus.DONE && _fresh,
+                    outputPath: _path,
+                    span: ${args.timeSpanStart !== void 0 ? '"custom"' : jsxVal(span)},
+                    timeSpanStart: _start,
+                    durationSeconds: _dur,
+                    frameCount: Math.round(_dur / _fd),
+                    frameRate: Math.round(1e3 / _fd) / 1e3,
+                    renderSeconds: Math.round(_t1 - _t0) / 1000,
+                    elapsedSeconds: AE.safeGet(function () { return _rqi.elapsedSeconds; }, null),
+                    bytes: _after.bytes,
+                    outputTemplate: ${jsxVal(args.outputTemplate ?? "High Quality")},
+                    resolution: _res,
+                    overwritten: _before.exists,
+                    warnings: _w
+                };
+                if (_res !== "full") _out.resolutionReadBack = _resBack;
+                if (!_out.ok) _out.error = _status !== RQItemStatus.DONE ? "the render did not finish (status " + String(_status) + ")" : "the render left no new file at " + _path;
+            } catch (eP) {
+                _out = { ok: false, error: "preview render failed: " + AE.errText(eP), warnings: _w };
+            } finally {
+                if (_rqi) { try { _rqi.remove(); } catch (eRm) { _w.push("could not remove the preview's queue item: " + AE.errText(eRm)); } }
+                _unparkQueue(rq, _parked);
+            }
+            if (rq.numItems !== _numBefore) _w.push("the render queue has " + rq.numItems + " items, it had " + _numBefore);
+            _out.projectModified = true;
+            _out.projectNote = ${jsxVal(QUEUE_CHANGE_NOTE)};
+            return _out;
         `;
   }
 });

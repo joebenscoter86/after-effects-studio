@@ -18,7 +18,7 @@ import * as path from "node:path";
 import { agentInstallStatus } from "../agent-install.js";
 import { HEARTBEAT_STALE_MS, instanceDirFor, rejectedOutputPath, resolveAfterFxPath, sanitizeInstanceId, } from "../config.js";
 import { jsxFail, jsxVal, registerOp } from "../registry.js";
-import { ACCESSIBILITY_HINT, dialogBlockMessage, dialogHint, dialogScanSupported, dismissAeDialog, scanAeDialogs, } from "../transport/dialogs.js";
+import { ACCESSIBILITY_HINT, dialogBlockMessage, dialogHint, dialogScanSupported, dismissAeDialog, scanAeDialogs, scanAeWindows, splitScriptProgress, scriptRunningMessage, SCRIPT_RUNNING_HINT, } from "../transport/dialogs.js";
 import { describeInstance, instanceLabel, listInstances, readInstance, } from "../transport/instances.js";
 import { buildInstanceLaunchPlan } from "../transport/launcher.js";
 const INSTALL_CMD = "npx @kumoproductions/mcp-aftereffects install-agent";
@@ -387,15 +387,21 @@ registerOp({
         "and its window title, and an id for instance.dismiss_dialog. While a dialog is open no script runs " +
         "(calls fail with DIALOG_OPEN, or an instance stops ticking), and the dialog is often hidden behind the " +
         "main window. Windows and macOS. On macOS the text is read only with Accessibility permission for the " +
-        "app running this server; without it dialogs are still listed, with empty text (`accessibility: false`).",
+        "app running this server; without it dialogs are still listed, with empty text (`accessibility: false`). " +
+        "After Effects' own 'Executing Script ...' progress window is not a dialog: it is reported under " +
+        "scriptRunning (a script is still running), never offered for dismissal — its only action cancels the script.",
     params: [],
     readOnly: true,
     toJsx: () => nodeOnly("instance.dialogs"),
     async run() {
-        const dialogs = await scanAeDialogs();
+        const { dialogs, scripts } = splitScriptProgress(await scanAeWindows());
         return {
             ok: true,
             dialogs,
+            scriptRunning: scripts.map((w) => ({ pid: w.pid, id: w.id, matchedBy: w.scriptProgress })),
+            ...(scripts.length > 0
+                ? { note: `A script is still running. ${scriptRunningMessage(scripts)}. ${SCRIPT_RUNNING_HINT}` }
+                : {}),
             supported: dialogScanSupported(),
         };
     },
@@ -424,7 +430,16 @@ registerOp({
             return fail("instance.dismiss_dialog is only available on Windows and macOS");
         }
         const id = typeof args.id === "string" ? args.id.trim() : "";
-        const r = await dismissAeDialog(id);
+        // The script progress window is refused here and again inside the
+        // dismiss script, so its cancel action can never be sent.
+        const progress = (await scanAeWindows()).find((w) => w.id === id && w.scriptProgress);
+        const r = progress
+            ? { posted: false, closed: false, text: null, reason: "script_progress" }
+            : await dismissAeDialog(id);
+        if (r.reason === "script_progress") {
+            return fail(`window ${id} is After Effects' 'Executing Script' progress window, not a dialog: a script is still running, ` +
+                "and that window's only action would cancel it. Nothing was sent.", { hint: SCRIPT_RUNNING_HINT });
+        }
         if (r.reason === "no_permission") {
             return fail(`cannot close After Effects dialog ${id}: no Accessibility permission`, {
                 hint: ACCESSIBILITY_HINT,
