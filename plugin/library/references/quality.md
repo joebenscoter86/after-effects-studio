@@ -17,6 +17,12 @@ Inspect full-frame captures at the beginning, build, peak overlap, hold and hand
 - Proper alpha/key edges, no green spill, wrong blend mode or double shadows.
 - Seam continuity, source-media completeness and no obsolete asset paths.
 
+## Whole-piece check
+
+A few stills show the moments you chose; a viewer sees every frame. Before handing over a piece, and after any change late in the build, run `ae_check_comp` on the delivered comp. It renders every frame of the work area at quarter size, measures each one and lists what stands out: a one-frame flash or pop, a cut or jump, a repeated frame, a stretch where nothing moves (half a second or more by default), near-black or near-white frames, highlights clipped to 255 with the box they sit in, text that leaves the frame (or a safe area) while visible, missing fonts and footage, and expressions in error. One contact sheet shows the flagged moments.
+
+Read every flag as a fact to judge, not a verdict: a held title is a frozen stretch, a fade to black is a near-black stretch, pure white type sits at 255 by design. Look at the sheet, then render the moments that matter at full size with `ae_render_frame` (`frames: [...]`) before changing anything. A long comp takes more than one call: repeat it with the `next.startFrame` it returns until `next` is null; the structure findings come with the last call. `every: 2` halves the time but can miss a one-frame flash; use it for a first pass, not the final one. A clean result means none of these measures found anything, not that the piece is good: keep the design and motion review above.
+
 Contact sheets cannot prove playback rhythm, sound balance or lip sync. Play the export at speed for those checks. If this interface cannot play audiovisual content, report that limitation separately from inspected frames.
 
 ## Technical delivery

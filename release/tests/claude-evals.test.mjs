@@ -111,7 +111,7 @@ test('refuses to write into a folder that already holds files', async () => {
 test('the canonical evals: 17 planning cases and the picture cases, ids in order', () => {
   assert.equal(PLAN.evals.length, 17);
   assert.deepEqual(CANON.evals.map((c) => c.id), CANON.evals.map((_, i) => i + 1));
-  assert.deepEqual(PICTURES.map((c) => c.picture.check), ['keying', 'grade', 'over']);
+  assert.deepEqual(PICTURES.map((c) => c.picture.check), ['keying', 'grade', 'over', 'finish']);
   for (const c of PICTURES) {
     for (const f of c.files) assert.ok(f.startsWith('picture/'), f);
     assert.ok(c.files.includes(`picture/${c.picture.setup}`));

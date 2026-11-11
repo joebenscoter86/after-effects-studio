@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
 import {
-  THRESHOLDS, checkIds, formatVerdict, gradeGrade, gradeKeying, gradeOver, loadRuntime, renderPlan, EVALS,
+  THRESHOLDS, checkIds, formatVerdict, gradeFinish, gradeGrade, gradeKeying, gradeOver, loadRuntime, renderPlan, EVALS,
 } from '../../plugin/evals/picture/checks.mjs';
 import { SCENES, GRADE } from '../../plugin/evals/picture/scenes.mjs';
 import { gradeFrame, keyedFrame, keyingSource, overFile, undoGradeError, writePng } from './picture-model.mjs';
@@ -158,4 +158,63 @@ test('the grader CLI reports missing renders as failed checks, not a crash', asy
   const out = (await run(process.execPath, [path.join(PICTURE, 'grade.mjs'), 'over'], { cwd })).stdout;
   assert.match(out, /PICTURE-CHECK over\.still-has-alpha FAIL \| measured: .*missing/);
   assert.match(out, /PICTURE-RESULT over 0\/\d+ checks passed/);
+});
+
+// ---------------------------------------------------------------------------
+// The whole-piece check (eval 21): graded on the findings the agent writes
+// ---------------------------------------------------------------------------
+
+const FOUND = {
+  seeded: [
+    { kind: 'flash', from: 1.2 },
+    { kind: 'frozen', from: 2.0, to: 2.6667 },
+    { kind: 'off-frame', from: 3.4, note: 'Title past the right edge' },
+    { kind: 'clipped', from: 4.0, to: 4.4667 },
+    { kind: 'other', from: 4.0, note: 'jump where the glare appears' },
+  ],
+  clean: [],
+};
+
+test('finish: the four seeded defects named at their times pass, extras in the seeded comp are not scored', () => {
+  const r = gradeFinish(FOUND);
+  assert.deepEqual(failing(r.checks), []);
+  assert.deepEqual(r.checks.map((c) => c.id), checkIds('finish'));
+});
+
+test('finish: a missing defect, a wrong time or a finding in the clean comp fails', () => {
+  const without = (kind) => ({ ...FOUND, seeded: FOUND.seeded.filter((f) => f.kind !== kind) });
+  assert.deepEqual(failing(gradeFinish(without('flash')).checks), ['flash']);
+  assert.match(byId(gradeFinish(without('frozen')).checks).frozen.value, /no frozen named/);
+  const late = { ...FOUND, seeded: FOUND.seeded.map((f) => (f.kind === 'flash' ? { ...f, from: 1.3 } : f)) };
+  assert.deepEqual(failing(gradeFinish(late).checks), ['flash']);
+  const early = { ...FOUND, seeded: FOUND.seeded.map((f) => (f.kind === 'off-frame' ? { ...f, from: 0 } : f)) };
+  assert.deepEqual(failing(gradeFinish(early).checks), ['off-frame']);
+  const short = { ...FOUND, seeded: FOUND.seeded.map((f) => (f.kind === 'frozen' ? { ...f, to: 2.3 } : f)) };
+  assert.deepEqual(failing(gradeFinish(short).checks), ['frozen']);
+  const noisy = { ...FOUND, clean: [{ kind: 'other', from: 1 }] };
+  assert.deepEqual(failing(gradeFinish(noisy).checks), ['clean-quiet']);
+  const all = gradeFinish({ seeded: [], clean: [] });
+  assert.deepEqual(failing(all.checks), ['clipped', 'flash', 'frozen', 'off-frame']);
+});
+
+test('finish: a missing or malformed findings file marks the run invalid', () => {
+  for (const bad of [null, [], { seeded: [{ kind: 'pop', from: 1 }], clean: [] }, { seeded: [{ kind: 'flash' }], clean: [] }, { seeded: [] }]) {
+    const r = gradeFinish(bad);
+    assert.equal(r.setup[0].pass, false, JSON.stringify(bad));
+    assert.ok(r.checks.every((c) => !c.pass && /invalid/.test(c.value)));
+  }
+});
+
+test('finish: the grader CLI prints the findings format, grades the file once', async () => {
+  const cwd = await fs.mkdtemp(path.join(os.tmpdir(), 'picture-'));
+  const cli = path.join(PICTURE, 'grade.mjs');
+  const plan = (await run(process.execPath, [cli, 'finish', '--plan'], { cwd })).stdout;
+  const file = path.join(await fs.realpath(cwd), 'picture-grade', 'findings.json');
+  assert.ok(plan.includes(JSON.stringify(file)), plan);
+  assert.doesNotMatch(plan, /ae_render_frame/);
+  assert.equal(plan, renderPlan('finish', path.dirname(file)));
+  await fs.writeFile(file, JSON.stringify(FOUND));
+  const out = (await run(process.execPath, [cli, 'finish'], { cwd })).stdout;
+  assert.match(out, /PICTURE-RESULT finish 5\/5 checks passed/);
+  await assert.rejects(run(process.execPath, [cli, 'finish'], { cwd }), (e) => e.code === 3);
 });

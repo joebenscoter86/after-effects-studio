@@ -1,6 +1,7 @@
 // Footage operations — replace source files, interpret footage, proxies.
 
 import { registerOp, jsxVal } from "../registry.js";
+import { LIST_MISSING_FOOTAGE_FN } from "./snippets.js";
 
 /** Footage-item lookup preamble (defines `_item`, validated as FootageItem). */
 function jsxFootagePreamble(args: Record<string, unknown>): string {
@@ -238,25 +239,8 @@ registerOp({
   params: [],
   toJsx() {
     return `
-            var _missing = [];
-            for (var _i = 1; _i <= app.project.numItems; _i++) {
-                var _it = app.project.item(_i);
-                if (!(_it instanceof FootageItem)) continue;
-                var _isMissing = AE.safeGet(function () { return _it.footageMissing; }, false);
-                if (!_isMissing) continue;
-                _missing.push({
-                    id: _it.id,
-                    name: _it.name,
-                    missingPath: AE.safeGet(function () { return _it.mainSource.missingFootagePath; }, null),
-                    usedInComps: AE.safeGet(function () {
-                        var _u = [];
-                        var _comps = _it.usedIn;
-                        for (var _ci = 0; _ci < _comps.length; _ci++) _u.push(_comps[_ci].name);
-                        return _u;
-                    }, [])
-                });
-            }
-            return { ok: true, count: _missing.length, items: _missing };
+            ${LIST_MISSING_FOOTAGE_FN}
+            return _listMissingFootage();
         `;
   },
 });
