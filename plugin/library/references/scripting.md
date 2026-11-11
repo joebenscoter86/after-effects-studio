@@ -16,6 +16,24 @@ ExtendScript uses ES3: var, function expressions, ordinary loops and concatenati
 - Color-managed frame captures can use temporary layers and calibration comps. For a strict inspection-only session use AE_MCP_READONLY=1 and review any colorWarning.
 - A native render can block AE. Use intentional render settings, one controller at a time, and a timeout appropriate to the job. A timeout is uncertain completion, not permission to resubmit.
 
+## Failures, rollback and script files
+
+Observed in After Effects 2027 (27.0) on 2026-11-10: a script that throws part-way leaves what it already changed applied, as one undo step; a call that changes nothing leaves no undo step at all, so an undo after it reverts the user's previous action; and an undo once raised an After Effects error box that blocked all scripting until a person clicked it.
+
+What the plugin does about it:
+
+- A call that changes the project and throws is rolled back before the error is returned. Inside the call's still-open undo group the plugin adds a marker folder (`mcp-rollback-<request id>`), closes the group, and undoes once with dialogs suppressed. The marker makes the step certain to be the call's own, so the user's previous action is never reverted. It never retries.
+- `details.rollback` says what happened: `rolledBack` (true only when the undo ran without throwing and the checks pass), `verified` (`signature`: the marker is gone and every item matches its id, name and layer count from before the call; `partial`: the same over the first 1000 items and the count; `marker`: only the marker could be checked), `reason`, `left` (what is still applied when it did not work), and `aeErrors` (anything After Effects reported during the undo). The item check does not see property values, but the marker being gone means the whole group was undone, because a group is one undo step.
+- When `rolledBack` is false, inspect before doing anything else. If the undo did not take effect, the call's changes and the marker folder are still there as one undo step.
+- After a rollback, Redo would replay the failed call, marker included. Do not redo it, and do not undo again for it.
+- Read-only calls, and calls that run outside the undo group (undo, redo, project open and new), are never rolled back. A script that returns `{ ok: false }` has not thrown and is not rolled back: throw when you want the call reverted.
+- `eval.run` and `batch.run` take `rollback: false` for deliberately incremental work whose partial result should stay. `batch.run` with `stopOnError` rolls back the whole batch when a child fails and still returns every child's result; with `rollback: false` its `kept` field names the operations that stayed. Without `stopOnError` nothing is rolled back and the other children's changes stand.
+- `project.undo`, `project.redo` and `command.execute` 16/2035 run with dialogs suppressed and report errors After Effects raised in `aeErrors` and `warning`. An undo that throws stops the loop and fails the call.
+
+Script files: `eval.run` takes `file`, an absolute path to a UTF-8 script of at most 1 MiB, instead of `code`. It is checked and read before After Effects is contacted (it must exist, be a file, be readable, not be empty or binary, and not sit inside the plugin's mailbox). Pass data as `args` (any JSON value); the script reads it as `args`, inline code too. The same helpers, undo group and rollback apply. Errors name the line in your code (`(line 3 of your code)`) or the file and line (`(/path/build.jsx:12)`), not a line of the plugin's wrapper.
+
+A timeout after the request was picked up means the script was running in After Effects when the call gave up. The most likely cause is a modal dialog (an error box the script raised, or a warning), which blocks all scripting until a person clicks it, and `instance.dialogs` may not list it. Look at the After Effects window, do not resend the request, and inspect the project once After Effects answers again. When the script finally finishes, the plugin removes the busy lock and any empty temp response that request left, either as soon as the late response arrives or when the next request starts.
+
 ## Effect value scales
 
 Scripting does not always use the scale the Effect Controls panel shows. Before writing effect values, call `effect.describe` for the effect: each row gives the value type, the current value and `minValue` and `maxValue` in scripting units, with `rangeSource` saying where the range came from. `effect.set_property` refuses a value outside that range, or of the wrong type or number of dimensions, and names the valid range; nothing is written. A property with no range is written as given. Colours are 0 to 1 per channel in scripting.
