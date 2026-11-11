@@ -8,9 +8,12 @@ import {
   denyAppConfig,
   getOp,
   listOps,
+  prepareOp,
   wantsDialogSuppression,
+  wantsRollback,
   wantsUndoGroup,
 } from "../registry.js";
+import type { RollbackReport } from "../transport/AeTransport.js";
 import { defineTool, jsonResult, jsxReportedFailure } from "./define-tool.js";
 
 export const doTool = defineTool({
@@ -27,9 +30,13 @@ export const doTool = defineTool({
     "Have more than one operation to run? Wrap them in ONE batch.run instead of several ae_do calls — " +
     "read/verify steps (comp.info, layer.info, render.frame) can ride in the same batch. " +
     "Every call is automatically wrapped in ONE undo group: a single Ctrl+Z (or project.undo) reverts " +
-    "the entire call, and a batch.run counts as one call. Never call app.beginUndoGroup/endUndoGroup " +
-    "in eval.run code — the wrapper already did. The exception is undo/redo itself (project.undo, " +
-    "command.execute id 16/2035): those run outside the group and cannot ride inside a batch.run. " +
+    "the entire call, and a batch.run counts as one call. If a call that changes the project THROWS, its own " +
+    "changes are rolled back before the error is returned (one undo, with dialogs suppressed); details.rollback " +
+    "says whether that worked and what is left if not. eval.run and batch.run take rollback: false to keep a " +
+    "partial result. Never call app.beginUndoGroup/endUndoGroup " +
+    "in eval.run code — the wrapper already did. The exception is undo/redo itself (project.undo, project.redo, " +
+    "command.execute id 16/2035): those run outside the group, with dialogs suppressed, report any error After " +
+    "Effects raised, and cannot ride inside a batch.run. " +
     "Response includes ambient context (active comp, selected layers, project state) at zero extra round trips. " +
     "Example: ae_do({ operation: 'keyframe.add', args: { comp: 'Main', layer: 1, " +
     "property: ['Transform','Position'], time: 2, value: [960,540] } })",
@@ -124,6 +131,18 @@ export const doTool = defineTool({
       });
     }
 
+    // Node-side checks that must pass before After Effects is contacted
+    // (eval.run reads and vets its script file here).
+    const prepared = prepareOp(op, validated.value);
+    if (!prepared.ok) {
+      return errorResult("INVALID_ARGS", `invalid arguments for '${op.name}': ${prepared.error}`, {
+        details: { operation: op.name },
+        ...(prepared.hint ? { hint: prepared.hint } : {}),
+      });
+    }
+    const opArgs = prepared.args;
+    const sourceFile = prepared.source?.file ?? null;
+
     // Node-side operations (instance.start / stop / list) manage After Effects
     // from outside it: no ExtendScript, no undo group, no ambient context —
     // they report what they did and the transport they used.
@@ -131,7 +150,7 @@ export const doTool = defineTool({
       const started = Date.now();
       let opResult: unknown;
       try {
-        opResult = await op.run(validated.value, transport);
+        opResult = await op.run(opArgs, transport);
       } catch (err) {
         return errorResult(
           "TRANSPORT",
@@ -161,7 +180,7 @@ export const doTool = defineTool({
     }
 
     // Generate JSX from the operation's toJsx, then append ambient context gathering.
-    const userJsx = op.toJsx(validated.value);
+    const userJsx = op.toJsx(opArgs);
     const wrappedCode = `
         var _opResult = (function() {
             ${userJsx}
@@ -180,32 +199,37 @@ export const doTool = defineTool({
       // Undo/Redo opt out (Operation.undoGroup): they must reach AE with no
       // group open, or they resolve against this call's own group instead of
       // the previous call the caller means to revert.
-      undoGroup: wantsUndoGroup(op, validated.value),
-      // Undo/Redo also opt out of dialog suppression (Operation.suppressDialogs)
-      // — the suppression scope would swallow the undo the same way a group
-      // does. Project boundary ops keep suppression despite running ungrouped.
-      suppressDialogs: wantsDialogSuppression(op, validated.value),
+      undoGroup: wantsUndoGroup(op, opArgs),
+      // Undo/Redo now keep dialog suppression too: an undo once raised an
+      // After Effects error box that blocked all scripting until a person
+      // clicked it (2026-11-10). Operation.suppressDialogs can still opt out.
+      suppressDialogs: wantsDialogSuppression(op, opArgs),
+      // A throw inside the group is rolled back (Operation.rollback).
+      rollback: wantsRollback(op, opArgs),
+      // Only operations that declare the argument can pass it (unknown keys
+      // are rejected above): eval.run, batch.run and the undo/redo ones.
+      acceptRenderQueueRisk: opArgs.acceptRenderQueueRisk === true,
       timeoutMs: doArgs.timeoutMs ?? 60_000,
     });
 
     if (!result.ok) {
-      return errorResult(result.errorCode ?? "TRANSPORT", result.error ?? "unknown failure", {
+      const location = jsxErrorLocation(result.line, wrappedCode, wrapperLinesAboveUserJsx, op.name, {
+        userLines: countLines(userJsx) + 1,
+        file: sourceFile,
+      });
+      const message =
+        callerLineMessage(result.error ?? "unknown failure", result.line, location) +
+        rollbackSentence(result.rollback);
+      return errorResult(result.errorCode ?? "TRANSPORT", message, {
         details: {
           operation: op.name,
-          ...jsxErrorLocation(result.line, wrappedCode, wrapperLinesAboveUserJsx, op.name),
+          ...location,
+          ...(result.rollback ? { rollback: result.rollback } : {}),
           ...(result.dialogs?.length ? { dialogs: result.dialogs } : {}),
         },
         stack: result.stack,
         logs: result.logs,
         durationMs: result.durationMs,
-        ...(typeof result.line === "number" && op.name === "eval.run"
-          ? {
-              hint:
-                "The '(line N)' in the message counts lines of the ASSEMBLED script, not your code — " +
-                "details.userCodeLine is the 1-based line in the code you passed, and details.codeExcerpt " +
-                "shows the failing spot.",
-            }
-          : {}),
       });
     }
 
@@ -218,8 +242,13 @@ export const doTool = defineTool({
     // longer reach the model as a successful call.
     const reported = jsxReportedFailure(opResult);
     if (reported) {
-      return errorResult("OPERATION_FAILED", `${op.name}: ${reported.error}`, {
-        details: { operation: op.name, result: opResult, context },
+      return errorResult("OPERATION_FAILED", `${op.name}: ${reported.error}${rollbackSentence(result.rollback)}`, {
+        details: {
+          operation: op.name,
+          result: opResult,
+          context,
+          ...(result.rollback ? { rollback: result.rollback } : {}),
+        },
         logs: result.logs,
         durationMs: result.durationMs,
         ...(isBatchShaped(opResult)
@@ -235,9 +264,35 @@ export const doTool = defineTool({
       context,
       logs: result.logs,
       durationMs: result.durationMs,
+      ...(result.rollback ? { rollback: result.rollback } : {}),
     });
   },
 });
+
+/**
+ * One sentence on what became of the rollback, for the error message — the
+ * structured report rides in details.rollback. Empty when none was needed.
+ */
+export function rollbackSentence(rb: RollbackReport | null | undefined): string {
+  if (!rb) return "";
+  const errors = rb.aeErrors?.length
+    ? ` After Effects reported during the undo: ${rb.aeErrors.join(" | ")}.`
+    : "";
+  if (rb.rolledBack) {
+    const checked =
+      rb.verified === "signature"
+        ? "checked against the project's items before the call"
+        : rb.verified === "partial"
+          ? "checked against the first 1000 items and the item count"
+          : "checked by the rollback marker only";
+    return ` — Rolled back: the call's changes were undone before this error was returned (${checked}).${errors}`;
+  }
+  const next = rb.next ? ` Next: ${rb.next}` : "";
+  if (!rb.attempted) {
+    return ` — Not rolled back (${rb.reason ?? "no reason given"})${rb.left ? `: ${rb.left}` : ""}.${next}${errors}`;
+  }
+  return ` — NOT rolled back: ${rb.reason ?? "the rollback could not be confirmed"}. Left: ${rb.left ?? "unknown — inspect the project"}.${next}${errors}`;
+}
 
 /** True for a batch.run-style result carrying a per-child `results` array. */
 function isBatchShaped(opResult: unknown): boolean {
@@ -261,15 +316,17 @@ const NEW_FUNCTION_HEADER_LINES = 1;
 /**
  * Map the dispatcher's error line back to the code the caller can actually
  * see. Returns `errorLine` (raw, as reported), `userCodeLine` (1-based line
- * in the operation's own JSX — for eval.run, the caller's script), and
- * `codeExcerpt` (the failing line ±2 of the assembled script). Empty when the
- * dispatcher predates the field or the script failed before compiling.
+ * in the operation's own JSX — for eval.run, the caller's script), `file` and
+ * `fileLine` when eval.run ran a script file, and `codeExcerpt` (the failing
+ * line ±2 of the assembled script). Empty when the dispatcher predates the
+ * field or the script failed before compiling.
  */
 function jsxErrorLocation(
   line: number | null | undefined,
   wrappedCode: string,
   wrapperLinesAboveUserJsx: number,
   opName: string,
+  source: { userLines: number; file: string | null },
 ): Record<string, unknown> {
   if (typeof line !== "number" || !Number.isFinite(line)) return {};
   const wrappedLine = line - NEW_FUNCTION_HEADER_LINES; // 1-based into wrappedCode
@@ -277,7 +334,17 @@ function jsxErrorLocation(
   const userLine = wrappedLine - wrapperLinesAboveUserJsx;
   // Only eval.run's code is something the caller wrote line-by-line; for other
   // operations the excerpt is the useful part and a "user line" would mislead.
-  if (opName === "eval.run" && userLine >= 1) out.userCodeLine = userLine;
+  if (opName === "eval.run") {
+    if (userLine >= 1 && userLine <= source.userLines) {
+      out.userCodeLine = userLine;
+      if (source.file !== null) {
+        out.file = source.file;
+        out.fileLine = userLine;
+      }
+    } else {
+      out.inWrapper = true;
+    }
+  }
   const lines = wrappedCode.split("\n");
   if (wrappedLine >= 1 && wrappedLine <= lines.length) {
     const from = Math.max(1, wrappedLine - 2);
@@ -291,4 +358,30 @@ function jsxErrorLocation(
     out.codeExcerpt = excerpt.join("\n");
   }
   return out;
+}
+
+/**
+ * Rewrite the "(line N)" serve.jsx appends — a line of the ASSEMBLED script —
+ * as the line in what the caller wrote: "(line 1 of your code)", or
+ * "(/path/build.jsx:12)" for a script file. A line in the plugin's own
+ * wrapper says so. Messages from operations other than eval.run are left as
+ * they are (their code is generated, and details.codeExcerpt shows the spot).
+ */
+function callerLineMessage(
+  message: string,
+  line: number | null | undefined,
+  location: Record<string, unknown>,
+): string {
+  if (typeof line !== "number") return message;
+  const raw = `(line ${line})`;
+  if (message.indexOf(raw) === -1) return message;
+  let replacement: string | null = null;
+  if (typeof location.fileLine === "number" && typeof location.file === "string") {
+    replacement = `(${location.file}:${location.fileLine})`;
+  } else if (typeof location.userCodeLine === "number") {
+    replacement = `(line ${location.userCodeLine} of your code)`;
+  } else if (location.inWrapper === true) {
+    replacement = `(line ${line} of the plugin's wrapper, not your code — see details.codeExcerpt)`;
+  }
+  return replacement === null ? message : message.replace(raw, replacement);
 }

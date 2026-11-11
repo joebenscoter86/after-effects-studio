@@ -55,6 +55,48 @@
 // System Events is deliberately not used: the first Apple event to it raises
 // an Automation consent prompt — itself a modal — and blocks until answered.
 import { execFile } from "node:child_process";
+/**
+ * After Effects' progress window while a script runs, as measured on After
+ * Effects 2027 / macOS on 2026-11-10: CG layer 8, 363 x 181, named
+ * "Executing Script ...". Idle, AE had one on-screen window (layer 0).
+ */
+export const SCRIPT_PROGRESS_NAME = /^\s*executing script\b/i;
+export const SCRIPT_PROGRESS_SHAPE = { layer: 8, width: 363, height: 181, tolerance: 2 };
+/**
+ * Is this scanned window the script progress window? By name when either the
+ * window name or its text is readable; otherwise by shape, but only for a
+ * window with no readable text at all (a real dialog of that size whose text
+ * can be read is never taken for it).
+ */
+export function scriptProgressMatch(d) {
+    if (SCRIPT_PROGRESS_NAME.test(d.title ?? "") || SCRIPT_PROGRESS_NAME.test(d.text))
+        return "name";
+    const shape = SCRIPT_PROGRESS_SHAPE;
+    if (!d.title &&
+        !d.text &&
+        d.layer === shape.layer &&
+        Math.abs(d.width - shape.width) <= shape.tolerance &&
+        Math.abs(d.height - shape.height) <= shape.tolerance) {
+        return "size";
+    }
+    return null;
+}
+/** Split a scan into real dialogs and script progress windows. */
+export function splitScriptProgress(windows) {
+    return {
+        dialogs: windows.filter((w) => !w.scriptProgress),
+        scripts: windows.filter((w) => !!w.scriptProgress),
+    };
+}
+/** The sentence a failure carries when only the script progress window was found. */
+export function scriptRunningMessage(scripts) {
+    const how = scripts.every((s) => s.scriptProgress === "name")
+        ? "its 'Executing Script' progress window is up"
+        : "a window shaped like its 'Executing Script' progress window is up (its name could not be read, so it was recognised by size)";
+    return `After Effects is still running a script (${how}): it is busy, not blocked by a dialog`;
+}
+export const SCRIPT_RUNNING_HINT = "Do not close that window: its only action cancels the running script. Wait for the script to finish " +
+    "(raise timeoutMs for long work), then inspect the project before repeating a write.";
 const SCAN_TIMEOUT_MS = 8_000;
 // Shared C# helper. Kept to what the scan and the dismiss need; everything
 // goes through SendMessageTimeout so a hung window cannot hang the scan.
@@ -210,7 +252,8 @@ function scan() {
     var pid = w.kCGWindowOwnerPID, b = w.kCGWindowBounds;
     if (!procs[pid] || !(w.kCGWindowAlpha > 0)) return;
     var d = { pid: pid, id: pid + ':' + w.kCGWindowNumber, text: '', width: Math.round(b.Width), height: Math.round(b.Height),
-      window: titles[pid] || null, accessibility: trusted, startedAt: procs[pid].startedAt, number: w.kCGWindowNumber, el: null };
+      window: titles[pid] || null, accessibility: trusted, startedAt: procs[pid].startedAt, number: w.kCGWindowNumber, el: null,
+      title: w.kCGWindowName || '', layer: w.kCGWindowLayer };
     var modal = !!GUESSED_LAYERS[w.kCGWindowLayer];
     if (trusted) {
       var app = axApp(pid, cache);
@@ -224,7 +267,15 @@ function scan() {
   });
   return found;
 }
-function strip(d) { return { pid: d.pid, id: d.id, text: d.text, width: d.width, height: d.height, window: d.window, accessibility: d.accessibility, startedAt: d.startedAt }; }
+function strip(d) { return { pid: d.pid, id: d.id, text: d.text, width: d.width, height: d.height, window: d.window, accessibility: d.accessibility, startedAt: d.startedAt, title: d.title, layer: d.layer }; }
+// AE's "Executing Script ..." progress window (layer 8, 363 x 181): its only
+// action cancels the running script, so it is never dismissed. Same rule as
+// scriptProgressMatch in dialogs.ts.
+function isScriptProgress(d) {
+  var named = /^\s*executing script\b/i;
+  if (named.test(d.title || '') || named.test(d.text || '')) return true;
+  return !d.title && !d.text && d.layer === 8 && Math.abs(d.width - 363) <= 2 && Math.abs(d.height - 181) <= 2;
+}
 function gone(number) {
   for (var i = 0; i < 10; i++) {
     delay(0.1);
@@ -237,6 +288,7 @@ function dismiss(target) {
   var d = null;
   scan().forEach(function (x) { if (x.id === target) d = x; });
   if (!d) { none.reason = 'not_found'; return none; }
+  if (isScriptProgress(d)) { none.reason = 'script_progress'; return none; }
   if (!trusted) { none.reason = 'no_permission'; return none; }
   var cancel = d.el ? axElement(d.el, 'AXCancelButton') : null;
   if (cancel) {
@@ -349,16 +401,23 @@ export function parseDialogScan(raw) {
             window: typeof e.window === "string" && e.window.length > 0 ? e.window : null,
             ...(typeof e.accessibility === "boolean" ? { accessibility: e.accessibility } : {}),
             ...(typeof e.startedAt === "number" && e.startedAt > 0 ? { startedAt: e.startedAt } : {}),
+            ...(typeof e.title === "string" ? { title: e.title.trim() } : {}),
+            ...(typeof e.layer === "number" ? { layer: e.layer } : {}),
         });
+        const last = out[out.length - 1];
+        const progress = scriptProgressMatch(last);
+        if (progress !== null)
+            last.scriptProgress = progress;
     }
     return out;
 }
 /**
- * The modal dialogs every running After Effects is showing. Best-effort:
+ * Every window the scan takes for a modal, including After Effects' own
+ * script progress window, which is marked (`scriptProgress`). Best-effort:
  * unsupported platform, no PowerShell, or a scan that fails all report none —
  * this only ever adds information to a failure, it must not cause one.
  */
-export async function scanAeDialogs(platform = process.platform) {
+export async function scanAeWindows(platform = process.platform) {
     if (!scanSupported(platform))
         return [];
     try {
@@ -371,7 +430,11 @@ export async function scanAeDialogs(platform = process.platform) {
         return [];
     }
 }
-const DISMISS_REASONS = new Set(["not_found", "no_permission"]);
+/** The modal dialogs every running After Effects is showing (never the script progress window). */
+export async function scanAeDialogs(platform = process.platform) {
+    return splitScriptProgress(await scanAeWindows(platform)).dialogs;
+}
+const DISMISS_REASONS = new Set(["not_found", "no_permission", "script_progress"]);
 /**
  * Close a dialog by its cancel action, never a decision (see the header: a
  * save prompt is cancelled, not answered). The id must name a dialog the scan

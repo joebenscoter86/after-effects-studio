@@ -853,8 +853,9 @@ describe("e2e: egp / viewer / project / shape", () => {
         { operation: "layer.create_null", args: { comp: "post_boundary", name: "pb_b" } },
       ],
     });
-    const undone = await o().run<{ undone: number }>("project.undo", { count: 1 });
-    expect(undone.undone).toBe(1);
+    const undone = await o().run<{ commandsRun: number; changed: boolean | null }>("project.undo", { count: 1 });
+    expect(undone.commandsRun).toBe(1);
+    expect(undone.changed).toBe(true);
     const after = await o().run<{ layers: unknown[] }>("comp.info", { comp: "post_boundary" });
     expect(after.layers, "one undo must revert the whole batch").toHaveLength(0);
   });

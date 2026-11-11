@@ -59,6 +59,23 @@ export interface Operation {
      * modal (missing footage/fonts on open).
      */
     suppressDialogs?(args: Record<string, unknown>): boolean;
+    /**
+     * Whether a failure of this call is rolled back: when the code throws
+     * inside the call's undo group, serve.jsx reverts the call's own changes
+     * before answering (see jsx/serve.jsx, AE_MCP.rollBack). Omitted means yes
+     * for operations that mutate and no for read-only ones (a call that changed
+     * nothing has nothing to revert, and every undo is a chance for After
+     * Effects to raise an error box). Calls outside an undo group are never
+     * rolled back. eval.run and batch.run take `rollback: false` from the caller.
+     */
+    rollback?(args: Record<string, unknown>): boolean;
+    /**
+     * Node-side checks and preparation that must pass before After Effects is
+     * contacted — eval.run reads its script `file` here. Return the arguments to
+     * generate code from, or an error that ae_do reports as INVALID_ARGS (and
+     * batch.run as that child's failure). Runs after argument validation.
+     */
+    prepare?(args: Record<string, unknown>): PrepareResult;
     /** Generate the JSX code body (function body, ends with `return ...;`). */
     toJsx(args: Record<string, unknown>): string;
     /**
@@ -73,6 +90,17 @@ export interface Operation {
      */
     run?(args: Record<string, unknown>, transport: AeTransport): Promise<unknown>;
 }
+export type PrepareResult = {
+    ok: true;
+    args: Record<string, unknown>;
+    source?: {
+        file: string;
+    };
+} | {
+    ok: false;
+    error: string;
+    hint?: string;
+};
 /** The consent parameter injected into every appConfig operation. */
 export declare const APP_CONFIG_CONFIRM_PARAM: OperationParam;
 export declare function registerOp(op: Operation): void;
@@ -86,6 +114,10 @@ export declare function getOp(name: string): Operation | undefined;
 export declare function listOps(category?: string): Operation[];
 /** True when `op` may run inside the dispatcher's automatic undo group. */
 export declare function wantsUndoGroup(op: Operation, args: Record<string, unknown>): boolean;
+/** True when a failure of `op` inside its undo group is rolled back (see Operation.rollback). */
+export declare function wantsRollback(op: Operation, args: Record<string, unknown>): boolean;
+/** Run `op.prepare` if it has one; otherwise the arguments pass through unchanged. */
+export declare function prepareOp(op: Operation, args: Record<string, unknown>): PrepareResult;
 /** True when the dispatcher may suppress modal dialogs around `op`. */
 export declare function wantsDialogSuppression(op: Operation, args: Record<string, unknown>): boolean;
 export declare function listCategories(): string[];
@@ -121,5 +153,5 @@ export declare function jsxCompLayerPreamble(args: Record<string, unknown>): str
 /** Build property lookup from a path array. */
 export declare function jsxPropertyLookup(pathArg?: string): string;
 /** Ambient context JSX snippet — appended to every ae_do response. */
-export declare const AMBIENT_CONTEXT_JSX = "\n    var _ctx = {};\n    try {\n        var _ai = app.project.activeItem;\n            _ctx.project = { numItems: app.project.numItems, dirty: app.project.dirty, file: app.project.file ? app.project.file.fsName.replace(/\\\\/g,\"/\") : null };\n        // Which After Effects instance answered (its resident agent's id), so\n        // a session driving several never has to guess where an edit landed.\n        try { _ctx.instance = $.global.AE_MCP_AGENT ? $.global.AE_MCP_AGENT.state.id : null; } catch (eInst) { _ctx.instance = null; }\n        if (_ai && _ai instanceof CompItem) {\n            _ctx.activeComp = { id: _ai.id, name: _ai.name, width: _ai.width, height: _ai.height, fps: _ai.frameRate, duration: _ai.duration, numLayers: _ai.numLayers };\n            var _sel = [];\n            for (var _si = 1; _si <= _ai.numLayers; _si++) {\n                if (_ai.layer(_si).selected) _sel.push({ index: _si, name: _ai.layer(_si).name });\n            }\n            _ctx.selectedLayers = _sel;\n        } else {\n            _ctx.activeComp = null;\n            _ctx.selectedLayers = [];\n        }\n    } catch (eCtx) { _ctx.error = AE.errText(eCtx); }\n";
+export declare const AMBIENT_CONTEXT_JSX = "\n    var _ctx = {};\n    try {\n        var _ai = app.project.activeItem;\n            _ctx.project = { numItems: app.project.numItems, dirty: app.project.dirty, file: app.project.file ? app.project.file.fsName.replace(/\\\\/g,\"/\") : null };\n        // Which After Effects instance answered (its resident agent's id), so\n        // a session driving several never has to guess where an edit landed.\n        try { _ctx.instance = $.global.AE_MCP_AGENT ? $.global.AE_MCP_AGENT.state.id : null; } catch (eInst) { _ctx.instance = null; }\n        // Set once a request changed the render queue in this session: undo\n        // and rollback refuse until a project is opened or created.\n        try { var _sess = $.global.AE_MCP_SESSION; if (_sess && _sess.renderQueueChanged) _ctx.undoBlocked = { reason: \"render queue changed by a script in this session\", by: _sess.renderQueueChanged.by, at: _sess.renderQueueChanged.at }; } catch (eSess) {}\n        if (_ai && _ai instanceof CompItem) {\n            _ctx.activeComp = { id: _ai.id, name: _ai.name, width: _ai.width, height: _ai.height, fps: _ai.frameRate, duration: _ai.duration, numLayers: _ai.numLayers };\n            var _sel = [];\n            for (var _si = 1; _si <= _ai.numLayers; _si++) {\n                if (_ai.layer(_si).selected) _sel.push({ index: _si, name: _ai.layer(_si).name });\n            }\n            _ctx.selectedLayers = _sel;\n        } else {\n            _ctx.activeComp = null;\n            _ctx.selectedLayers = [];\n        }\n    } catch (eCtx) { _ctx.error = AE.errText(eCtx); }\n";
 //# sourceMappingURL=registry.d.ts.map

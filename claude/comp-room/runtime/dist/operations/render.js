@@ -1,5 +1,6 @@
 import { readOnlyMode } from "../policy.js";
 import { registerOp, jsxFail, jsxVal, jsxCompPreamble } from "../registry.js";
+const RENDER_QUEUE_UNDO_WARNING = " After this, undo and rollback are refused for the rest of the After Effects session unless acceptRenderQueueRisk: true: After Effects 2027 has gone into crash recovery on undo after scripted render-queue changes (observed twice on 2026-11-10; a precaution, not a proven cause). Save the project before undoing anything afterwards; project.open / project.new clear the block.";
 const READ_TEMPLATES_FN = `
     function _readTemplates(_item) {
         var _render = [];
@@ -31,7 +32,7 @@ const PARK_QUEUE_FN = `
 registerOp({
   name: "render.add_to_queue",
   category: "render",
-  description: "Add a composition to the render queue. Optionally set output path.",
+  description: "Add a composition to the render queue. Optionally set output path." + RENDER_QUEUE_UNDO_WARNING,
   params: [
     { name: "comp", type: "any", description: "Comp name or id", required: true },
     {
@@ -60,7 +61,7 @@ registerOp({
 registerOp({
   name: "render.start",
   category: "render",
-  description: "Render queued items and verify each output file was newly written. Blocks until complete. Missing output directories are created first. Completed items are not counted as new renders.",
+  description: "Render queued items and verify each output file was newly written. Blocks until complete. Missing output directories are created first. Completed items are not counted as new renders." + RENDER_QUEUE_UNDO_WARNING,
   params: [],
   toJsx() {
     return `
@@ -435,7 +436,7 @@ registerOp({
 registerOp({
   name: "render.remove_item",
   category: "render",
-  description: "Remove ONE item from the render queue by its 1-based index (render.clear_queue removes all).",
+  description: "Remove ONE item from the render queue by its 1-based index (render.clear_queue removes all)." + RENDER_QUEUE_UNDO_WARNING,
   params: [
     {
       name: "queueIndex",
@@ -478,7 +479,7 @@ registerOp({
   name: "render.list_templates",
   category: "render",
   readOnly: true,
-  description: "List available render-settings templates and output-module templates. They are read from a queue item: the first one, or, when the queue is empty and `comp` is given, a temporary item for that comp that is removed again (the project is then left modified by the queue change; render.preview with listTemplates does the same).",
+  description: "List available render-settings templates and output-module templates. They are read from a queue item: the first one, or, when the queue is empty and `comp` is given, a temporary item for that comp that is removed again (the project is then left modified by the queue change; render.preview with listTemplates does the same). A temporary item counts as a render-queue change:" + RENDER_QUEUE_UNDO_WARNING,
   params: [
     {
       name: "comp",
@@ -767,7 +768,7 @@ const PREVIEW_RESOLUTIONS = {
 registerOp({
   name: "render.preview",
   category: "render",
-  description: "Render a quick preview movie of a comp's work area (or the whole comp, or a span) through the render queue, so it can be watched at speed. Adds ONE temporary queue item, renders only that item (others are parked and their Render checkboxes restored), then removes it: the queue is left as it was found. Never overwrites an existing file unless overwrite is true; creates the output folder. Returns outputPath, timeSpanStart, durationSeconds, frameCount, frameRate, renderSeconds (wall clock of the render), elapsedSeconds (AE's own count), bytes, outputTemplate, resolution (+ resolutionReadBack) and warnings. Blocks until done: raise ae_do timeoutMs for long comps (235 frames at 1080\xD71920 with 'High Quality' took about 20 s). Defaults are what is known to work: output template 'High Quality' (a ProRes .mov) at full resolution; resolution 'half' was measured live (540\xD7960 from 1080\xD71920, about a third of the time). listTemplates: true renders nothing and returns the render-settings and output-module template names, read from a temporary queue item that is removed again. Every answer carries projectModified: true and projectNote: adding and removing a queue item leaves the project unsaved.",
+  description: "Render a quick preview movie of a comp's work area (or the whole comp, or a span) through the render queue, so it can be watched at speed. Adds ONE temporary queue item, renders only that item (others are parked and their Render checkboxes restored), then removes it: the queue is left as it was found. Never overwrites an existing file unless overwrite is true; creates the output folder. Returns outputPath, timeSpanStart, durationSeconds, frameCount, frameRate, renderSeconds (wall clock of the render), elapsedSeconds (AE's own count), bytes, outputTemplate, resolution (+ resolutionReadBack) and warnings. It changes the render queue:" + RENDER_QUEUE_UNDO_WARNING + " Blocks until done: raise ae_do timeoutMs for long comps (235 frames at 1080\xD71920 with 'High Quality' took about 20 s). Defaults are what is known to work: output template 'High Quality' (a ProRes .mov) at full resolution; resolution 'half' was measured live (540\xD7960 from 1080\xD71920, about a third of the time). listTemplates: true renders nothing and returns the render-settings and output-module template names, read from a temporary queue item that is removed again. Every answer carries projectModified: true and projectNote: adding and removing a queue item leaves the project unsaved.",
   params: [
     { name: "comp", type: "any", description: "Comp name or id", required: true },
     {
