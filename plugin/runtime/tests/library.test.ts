@@ -21,6 +21,18 @@ describe("studio library", () => {
     expect(readLibrary("design").content).toContain("Design before motion");
     expect(readLibrary("motion-jsx").content).toContain("AESMotion");
   });
+  it("serves the keying and compositing procedure with the facts measured live", () => {
+    // Agent-eyes stage 6. The facts an agent would otherwise get wrong.
+    const doc = readLibrary("keying").content!;
+    for (const op of ["key.keylight", "key.view", "key.cleanup", "mask.get", "screen: true", "edge: true"]) expect(doc).toContain(op);
+    expect(doc).toMatch(/comp background/);
+    expect(doc).toMatch(/despills/);
+    expect(doc).toMatch(/feather/);
+    expect(doc).toMatch(/0\.37.*0\.56/);
+    expect(doc).toMatch(/Intermediate Result.*Key Cleaner.*Advanced Spill Suppressor/s);
+    expect(doc).toMatch(/magenta/);
+    expect(doc).toMatch(/[Ss]top/);
+  });
   it("rejects arbitrary paths instead of reading a user file", () => {
     expect(() => readLibrary("../../package.json")).toThrow("Unknown library");
   });
