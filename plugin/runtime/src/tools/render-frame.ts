@@ -607,7 +607,9 @@ export const renderFrameTool = defineTool({
           "leftOut pixels, screenPixels, share, bounds; colour {median, mean, nearSubject {colour, pixels, " +
           "band}} — the suggested Screen Colour; subject {box, area, share}; evenness {columns, rows, " +
           "cells [{column, row, box, screenShare, mean, luma, level}], darkest, brightest, levelRatio, " +
-          "lumaRatio, uneven, horizontal (right / left), vertical (bottom / top), darkerSide, reading}; " +
+          "lumaRatio, uneven, extent (5th to 95th percentile of the screen pixels' positions), horizontal " +
+          "(right / left) and vertical (bottom / top) read across that extent, darkerSide (every side " +
+          "darker past unevenRatio, strongest first), reading}; " +
           "grain {stdDev, level, steps8bit, samples, grainy, reading}; reading; warning; " +
           "screenColourNote (capture values and what they mean for Keylight's Screen Colour).",
       ),

@@ -649,7 +649,7 @@ describe("screen", () => {
     expect(res.screen.values).toBe("capture");
     expect(res.screen.screen).toBe("green");
     expect(res.screen.evenness.uneven).toBe(true);
-    expect(res.screen.evenness.darkerSide).toBe("left");
+    expect(res.screen.evenness.darkerSide).toEqual(["left"]);
     expect(res.screen.colour.nearSubject.colour[1]).toBeGreaterThan(res.screen.colour.median[1]);
     expect(res.screen.screenColourNote).toMatch(/Screen Colour/);
     expect(res.screenThresholds).toMatchObject({ columns: 6, rows: 4, minExcess: 0.04 });

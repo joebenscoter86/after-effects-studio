@@ -176,10 +176,16 @@ describe("an uneven green screen (1.5x from left to right)", () => {
 
   it("says which side is darker", () => {
     // A plane fitted to the screen's level over its pixels, so the subject
-    // hiding part of the screen does not tilt it: right / left and bottom / top.
-    expect(r.evenness!.darkerSide).toBe("left");
-    expect(r.evenness!.horizontal!).toBeCloseTo(1.5, 2);
-    expect(r.evenness!.vertical!).toBeCloseTo(1, 2);
+    // hiding part of the screen does not tilt it, read at the ends of the
+    // extent where screen was measured (5th to 95th percentile of the screen
+    // pixels' positions: x 3..92, y 2..60 here): right / left, bottom / top.
+    expect(r.evenness!.extent).toEqual({ x: 3, y: 2, width: 90, height: 59 });
+    expect(r.evenness!.darkerSide).toEqual(["left"]);
+    expect(r.evenness!.horizontal!).toBeCloseTo(
+      (0.8 + (0.4 * 92) / 95) / (0.8 + (0.4 * 3) / 95),
+      3,
+    );
+    expect(r.evenness!.vertical!).toBeCloseTo(1, 3);
   });
 
   it("picks the colour near the subject, brighter here than the screen's median", () => {
@@ -192,6 +198,42 @@ describe("an uneven green screen (1.5x from left to right)", () => {
 
   it("still counts every screen pixel, dark side included", () => {
     expect(r.screenPixels).toBe(6144 - 1152);
+  });
+});
+
+describe("evenness over the measured extent", () => {
+  it("does not extrapolate past where screen was measured (a masked source)", () => {
+    // Screen only in the top 20 rows, green 0.5 at y 0 to 0.6 at y 19; the
+    // rest masked out. Fitting a plane and reading it at the frame's bottom
+    // edge would claim 1.83x; over the screen's own rows it is 1.19x.
+    const img = image(
+      80,
+      80,
+      (_x, y) => [0.25, 0.5 + (0.1 * Math.min(y, 19)) / 19, 0.3],
+      (_x, y) => (y < 20 ? 1 : 0),
+    );
+    const e = measure(img).evenness!;
+    expect(e.extent).toEqual({ x: 3, y: 0, width: 73, height: 19 });
+    expect(e.vertical!).toBeCloseTo((0.5 + (0.1 * 18) / 19) / 0.5, 3);
+    expect(e.horizontal!).toBeCloseTo(1, 3);
+    expect(e.darkerSide).toEqual(["top"]);
+  });
+
+  it("names every side past the threshold, strongest first", () => {
+    // Brighter to the right (0.8x to 1.2x) and darker towards the bottom (1.1x to 0.9x).
+    const img = image(80, 80, (x, y) => {
+      const f = (0.8 + (0.4 * x) / 79) * (1.1 - (0.2 * y) / 79);
+      return [0.25 * f, 0.5 * f, 0.3 * f];
+    });
+    const e = measure(img).evenness!;
+    expect(e.horizontal!).toBeGreaterThan(1.3);
+    expect(e.vertical!).toBeLessThan(1 / 1.15);
+    expect(e.darkerSide).toEqual(["left", "bottom"]);
+    expect(e.reading).toMatch(/darker on the left and the bottom/);
+  });
+
+  it("names no side on an even screen", () => {
+    expect(measure(fixture("screen-even-rgba16.png")).evenness!.darkerSide).toEqual([]);
   });
 });
 
