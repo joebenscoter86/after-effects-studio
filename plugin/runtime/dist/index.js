@@ -7528,6 +7528,9 @@ var init_registry = __esm({
         // Which After Effects instance answered (its resident agent's id), so
         // a session driving several never has to guess where an edit landed.
         try { _ctx.instance = $.global.AE_MCP_AGENT ? $.global.AE_MCP_AGENT.state.id : null; } catch (eInst) { _ctx.instance = null; }
+        // Set once a request changed the render queue in this session: undo
+        // and rollback refuse until a project is opened or created.
+        try { var _sess = $.global.AE_MCP_SESSION; if (_sess && _sess.renderQueueChanged) _ctx.undoBlocked = { reason: "render queue changed by a script in this session", by: _sess.renderQueueChanged.by, at: _sess.renderQueueChanged.at }; } catch (eSess) {}
         if (_ai && _ai instanceof CompItem) {
             _ctx.activeComp = { id: _ai.id, name: _ai.name, width: _ai.width, height: _ai.height, fps: _ai.frameRate, duration: _ai.duration, numLayers: _ai.numLayers };
             var _sel = [];
@@ -7624,7 +7627,7 @@ var init_eval = __esm({
     registerOp({
       name: "eval.run",
       category: "eval",
-      description: "Execute custom ExtendScript (ES3). LAST RESORT \u2014 check ae_catalog first for a dedicated operation. Pass the code inline as `code`, or as a script `file` (an absolute path; read and checked before After Effects is contacted) \u2014 exactly one of the two. Code is a function body ending with `return <JSON-serializable>;`. AE.* helpers are in scope, and `args` holds the optional `args` value you pass (null when omitted). `log(msg)` pushes breadcrumbs. An error reports the line in YOUR code (or file:line), not in the plugin's wrapper. The code already runs inside an automatic undo group (one Ctrl+Z reverts the call). If it THROWS, the call is rolled back before the error is returned \u2014 its changes are undone with dialogs suppressed, and details.rollback says whether that succeeded and what is left if not; returning { ok: false } is not a throw and is not rolled back. Pass rollback: false for deliberately incremental work whose partial result you want to keep. Do NOT call app.beginUndoGroup/endUndoGroup yourself; an unbalanced group leaks past this call and corrupts undo for the whole session (and defeats the rollback). Do NOT undo/redo from here either (app.executeCommand 16/2035): inside this call's group AE resolves them against it, so nothing is reverted \u2014 use project.undo / project.redo, which run outside the group. Do NOT close/open/replace the project from here (app.open, app.newProject, app.project.close): the open undo group is orphaned at the project boundary, AE raises an async 'UndoGroup Mismatch' dialog, and undo stays broken for the session \u2014 use project.open / project.new, which run outside the group.",
+      description: "Execute custom ExtendScript (ES3). LAST RESORT \u2014 check ae_catalog first for a dedicated operation. Pass the code inline as `code`, or as a script `file` (an absolute path; read and checked before After Effects is contacted) \u2014 exactly one of the two. Code is a function body ending with `return <JSON-serializable>;`. AE.* helpers are in scope, and `args` holds the optional `args` value you pass (null when omitted). `log(msg)` pushes breadcrumbs. An error reports the line in YOUR code (or file:line), not in the plugin's wrapper. The code already runs inside an automatic undo group (one Ctrl+Z reverts the call). If it THROWS, the call is rolled back before the error is returned \u2014 its changes are undone with dialogs suppressed, and details.rollback says whether that succeeded and what is left if not; returning { ok: false } is not a throw and is not rolled back. Pass rollback: false for deliberately incremental work whose partial result you want to keep. No undo is ever issued for a call that changed the render queue, and after a scripted render-queue change in the session rollback is refused unless acceptRenderQueueRisk: true (After Effects 2027 has gone into crash recovery on undo after such changes \u2014 observed twice, a precaution); details.rollback then lists addedItems and what to do next. Do NOT call app.beginUndoGroup/endUndoGroup yourself; an unbalanced group leaks past this call and corrupts undo for the whole session (and defeats the rollback). Do NOT undo/redo from here either (app.executeCommand 16/2035): inside this call's group AE resolves them against it, so nothing is reverted \u2014 use project.undo / project.redo, which run outside the group. Do NOT close/open/replace the project from here (app.open, app.newProject, app.project.close): the open undo group is orphaned at the project boundary, AE raises an async 'UndoGroup Mismatch' dialog, and undo stays broken for the session \u2014 use project.open / project.new, which run outside the group.",
       params: [
         {
           name: "code",
@@ -7648,6 +7651,12 @@ var init_eval = __esm({
           name: "rollback",
           type: "boolean",
           description: "Default true: if the code throws, undo the call's changes before returning the error. false keeps the partial result.",
+          required: false
+        },
+        {
+          name: "acceptRenderQueueRisk",
+          type: "boolean",
+          description: "Default false. After a scripted render-queue change in this After Effects session, undo is refused (After Effects 2027 has gone into crash recovery on undo after such changes \u2014 observed twice; a precaution). Pass true only when the user accepts that risk, ideally after saving.",
           required: false
         }
       ],
@@ -38098,7 +38107,8 @@ var FileIpcTransport = class {
       suppressDialogs: req.suppressDialogs !== false,
       // Explicit as well: a missing field means "no rollback" to serve.jsx,
       // and rollback only ever applies inside an undo group.
-      rollback: req.undoGroup !== false && req.rollback === true
+      rollback: req.undoGroup !== false && req.rollback === true,
+      acceptRenderQueueRisk: req.acceptRenderQueueRisk === true
     };
     if (target.mode === "pull") {
       return this.executePull(request, target.instance, started, timeoutMs);
@@ -41749,8 +41759,16 @@ function isUndoRedoCommandId(id) {
 registerOp({
   name: "command.execute",
   category: "command",
-  description: "Execute an AE menu command by its numeric ID. Use command.list to discover common IDs. Undo (16) and Redo (2035) run outside this call's undo group, so they revert/replay the PREVIOUS call; like project.undo / project.redo they run with dialogs suppressed and report any error After Effects raised.",
-  params: [{ name: "id", type: "number", description: "Menu command ID", required: true }],
+  description: "Execute an AE menu command by its numeric ID. Use command.list to discover common IDs. Undo (16) and Redo (2035) run outside this call's undo group, so they revert/replay the PREVIOUS call; like project.undo / project.redo they run with dialogs suppressed, report any error After Effects raised, and are refused after a scripted render-queue change in the session unless acceptRenderQueueRisk: true.",
+  params: [
+    { name: "id", type: "number", description: "Menu command ID", required: true },
+    {
+      name: "acceptRenderQueueRisk",
+      type: "boolean",
+      description: "Default false. After a scripted render-queue change in this After Effects session, Undo/Redo (16/2035) are refused (After Effects 2027 has gone into crash recovery on undo after such changes \u2014 observed twice; a precaution). Pass true only when the user accepts that risk, ideally after saving.",
+      required: false
+    }
+  ],
   // Undo/Redo must not be executed inside an open undo group — AE applies them
   // to that group and the requested step survives. Everything else groups
   // normally, so one Ctrl+Z still reverts one call. Dialog suppression is on
@@ -41759,7 +41777,7 @@ registerOp({
   toJsx(args) {
     if (isUndoRedoCommandId(args.id)) {
       return `
-            var _c = AE_MCP.undoRedo(${jsxVal(args.id)}, 1);
+            var _c = AE_MCP.undoRedo(${jsxVal(args.id)}, 1, ${jsxVal(args.acceptRenderQueueRisk === true)});
             _c.commandId = ${jsxVal(args.id)};
             return _c;
         `;
@@ -41859,6 +41877,8 @@ registerOp({
                 app.project.close(CloseOptions.DO_NOT_SAVE_CHANGES);
             }
             app.open(f);
+            // A new undo history: the render-queue undo block no longer applies.
+            try { AE_MCP.clearRenderQueueRisk("project.open"); } catch (eClr) {}
             // A project saved by an older After Effects opens as an untitled converted copy: no file until it is saved
             if (!app.project.file) return { ok: true, numItems: app.project.numItems, file: null, untitled: true,
                 note: "opened as an untitled copy (a project from an older After Effects version); Save As (ae_save_project with path) to keep it" };
@@ -41942,7 +41962,7 @@ registerOp({
 registerOp({
   name: "project.undo",
   category: "project",
-  description: "Undo the last action. Equivalent to Ctrl+Z. Each prior ae_do call is ONE undo step (its automatic undo group), so count=1 reverts the whole previous call, batch included. Runs with After Effects' dialogs suppressed (an undo once raised an error box that blocked all scripting until a person clicked it); the result's aeErrors and warning carry anything After Effects reported, and an undo that throws stops the loop and fails the call. The result counts commands run (commandsRun), not steps undone: `changed` says whether the project's items or the active comp's layers changed (false means the history was empty OR the step only changed property values \u2014 inspect before assuming either), and `effect` says it in words. A failed call that was rolled back already left no step of its own: do not undo again for it.",
+  description: "Undo the last action. Equivalent to Ctrl+Z. Each prior ae_do call is ONE undo step (its automatic undo group), so count=1 reverts the whole previous call, batch included. Runs with After Effects' dialogs suppressed (an undo once raised an error box that blocked all scripting until a person clicked it); the result's aeErrors and warning carry anything After Effects reported, and an undo that throws stops the loop and fails the call. The result counts commands run (commandsRun), not steps undone: `changed` says whether the project's items or the active comp's layers changed (false means the history was empty OR the step only changed property values \u2014 inspect before assuming either), and `effect` says it in words. After a scripted render-queue change in this After Effects session it refuses (refused: true) unless acceptRenderQueueRisk: true \u2014 After Effects 2027 crashed on undo after such changes (observed twice on 2026-11-10; a precaution, not a proven cause). Save first if you override; project.open / project.new clear the block. A failed call that was rolled back already left no step of its own: do not undo again for it.",
   params: [
     {
       name: "count",
@@ -41950,6 +41970,12 @@ registerOp({
       description: "Number of undos (default 1)",
       required: false,
       default: 1
+    },
+    {
+      name: "acceptRenderQueueRisk",
+      type: "boolean",
+      description: "Default false. After a scripted render-queue change in this After Effects session, undo is refused (After Effects 2027 has gone into crash recovery on undo after such changes \u2014 observed twice; a precaution). Pass true only when the user accepts that risk, ideally after saving.",
+      required: false
     }
   ],
   // Runs OUTSIDE the dispatcher's automatic undo group. Wrapped in one, AE
@@ -41961,14 +41987,14 @@ registerOp({
   undoGroup: () => false,
   toJsx(args) {
     return `
-            return AE_MCP.undoRedo(${UNDO_COMMAND_ID}, ${jsxVal(args.count ?? 1)});
+            return AE_MCP.undoRedo(${UNDO_COMMAND_ID}, ${jsxVal(args.count ?? 1)}, ${jsxVal(args.acceptRenderQueueRisk === true)});
         `;
   }
 });
 registerOp({
   name: "project.redo",
   category: "project",
-  description: "Redo the last undone action. Equivalent to Ctrl+Shift+Z. Runs like project.undo: outside the undo group, with dialogs suppressed, reporting any error After Effects raised (aeErrors, warning), and saying whether the project changed (changed, effect) rather than counting steps redone.",
+  description: "Redo the last undone action. Equivalent to Ctrl+Shift+Z. Runs like project.undo: outside the undo group, with dialogs suppressed, reporting any error After Effects raised (aeErrors, warning), and saying whether the project changed (changed, effect) rather than counting steps redone. Refused after a scripted render-queue change in the session unless acceptRenderQueueRisk: true, like project.undo.",
   params: [
     {
       name: "count",
@@ -41976,12 +42002,18 @@ registerOp({
       description: "Number of redos (default 1)",
       required: false,
       default: 1
+    },
+    {
+      name: "acceptRenderQueueRisk",
+      type: "boolean",
+      description: "Default false. After a scripted render-queue change in this After Effects session, undo is refused (After Effects 2027 has gone into crash recovery on undo after such changes \u2014 observed twice; a precaution). Pass true only when the user accepts that risk, ideally after saving.",
+      required: false
     }
   ],
   undoGroup: () => false,
   toJsx(args) {
     return `
-            return AE_MCP.undoRedo(${REDO_COMMAND_ID}, ${jsxVal(args.count ?? 1)});
+            return AE_MCP.undoRedo(${REDO_COMMAND_ID}, ${jsxVal(args.count ?? 1)}, ${jsxVal(args.acceptRenderQueueRisk === true)});
         `;
   }
 });
@@ -42566,6 +42598,7 @@ registerOp({
             app.project.close(CloseOptions.DO_NOT_SAVE_CHANGES);
             var _p = app.newProject();
             if (!_p) return { ok: false, error: "app.newProject returned null" };
+            try { AE_MCP.clearRenderQueueRisk("project.new"); } catch (eClr) {}
             return { ok: true, numItems: _p.numItems };
         `;
   }
@@ -45476,6 +45509,12 @@ registerOp({
       type: "boolean",
       description: "Default true. With stopOnError, revert the whole batch when an op fails, and revert it if the batch itself throws. false keeps whatever ran before the failure (for deliberately incremental work); the result's `kept` names it.",
       required: false
+    },
+    {
+      name: "acceptRenderQueueRisk",
+      type: "boolean",
+      description: "Default false. After a scripted render-queue change in this After Effects session, undo is refused (After Effects 2027 has gone into crash recovery on undo after such changes \u2014 observed twice; a precaution). Pass true only when the user accepts that risk, ideally after saving.",
+      required: false
     }
   ],
   // The wrapper itself mutates nothing; each child is gated individually below,
@@ -46103,10 +46142,11 @@ registerOp({
 
 // src/operations/render.ts
 init_registry();
+var RENDER_QUEUE_UNDO_WARNING = " After this, undo and rollback are refused for the rest of the After Effects session unless acceptRenderQueueRisk: true: After Effects 2027 has gone into crash recovery on undo after scripted render-queue changes (observed twice on 2026-11-10; a precaution, not a proven cause). Save the project before undoing anything afterwards; project.open / project.new clear the block.";
 registerOp({
   name: "render.add_to_queue",
   category: "render",
-  description: "Add a composition to the render queue. Optionally set output path.",
+  description: "Add a composition to the render queue. Optionally set output path." + RENDER_QUEUE_UNDO_WARNING,
   params: [
     { name: "comp", type: "any", description: "Comp name or id", required: true },
     {
@@ -46135,7 +46175,7 @@ registerOp({
 registerOp({
   name: "render.start",
   category: "render",
-  description: "Render queued items and verify each output file was newly written. Blocks until complete. Missing output directories are created first. Completed items are not counted as new renders.",
+  description: "Render queued items and verify each output file was newly written. Blocks until complete. Missing output directories are created first. Completed items are not counted as new renders." + RENDER_QUEUE_UNDO_WARNING,
   params: [],
   toJsx() {
     return `
@@ -46510,7 +46550,7 @@ registerOp({
 registerOp({
   name: "render.remove_item",
   category: "render",
-  description: "Remove ONE item from the render queue by its 1-based index (render.clear_queue removes all).",
+  description: "Remove ONE item from the render queue by its 1-based index (render.clear_queue removes all)." + RENDER_QUEUE_UNDO_WARNING,
   params: [
     {
       name: "queueIndex",
@@ -46553,7 +46593,7 @@ registerOp({
   name: "render.list_templates",
   category: "render",
   readOnly: true,
-  description: "List available render-settings templates and output-module templates. The render queue must have at least one item (templates are read from a queue item).",
+  description: "List available render-settings templates and output-module templates. The render queue must have at least one item (templates are read from a queue item). If it adds a temporary queue item to read them, that counts as a render-queue change:" + RENDER_QUEUE_UNDO_WARNING,
   params: [],
   toJsx() {
     return `
@@ -50137,6 +50177,7 @@ var CODE = `
             "a call that changed nothing is never followed by an undo (that would revert the user's previous action); read-only calls and calls outside the group (undo, redo, project open/new) are never rolled back",
             "eval.run and batch.run take rollback: false to keep a partial result; batch.run with stopOnError rolls the whole batch back unless rollback: false, and without stopOnError nothing is rolled back",
             "after a rollback, Redo would replay the failed call (and its marker folder): do not redo it",
+            "render queue: After Effects 2027 has gone into crash recovery on undo after scripted render-queue changes (observed twice on 2026-11-10; a precaution, not a proven cause). A call that changed the render queue is never rolled back (details.rollback lists addedItems and what to do next), and once any call changed it, rollback and project.undo / project.redo / command 16/2035 refuse for the rest of the session unless acceptRenderQueueRisk: true (save first). project.open / project.new clear the block; ae_do's context shows undoBlocked while it is set",
             "undo/redo itself runs OUTSIDE the group, with dialogs suppressed: use project.undo / project.redo (or command.execute 16/2035) as its own call \u2014 never inside batch.run, and never via eval.run; their result reports any error After Effects raised (aeErrors, warning)",
             "a timeout AFTER the request was picked up most likely means a modal dialog in After Effects (instance.dialogs may not see it): look at the After Effects window before retrying",
             "ae_save_project and files written to disk (rendered PNGs, exported JSON) are NOT undoable"
@@ -50342,6 +50383,9 @@ var doTool = defineTool({
       suppressDialogs: wantsDialogSuppression(op, opArgs),
       // A throw inside the group is rolled back (Operation.rollback).
       rollback: wantsRollback(op, opArgs),
+      // Only operations that declare the argument can pass it (unknown keys
+      // are rejected above): eval.run, batch.run and the undo/redo ones.
+      acceptRenderQueueRisk: opArgs.acceptRenderQueueRisk === true,
       timeoutMs: doArgs.timeoutMs ?? 6e4
     });
     if (!result.ok) {
@@ -50395,10 +50439,11 @@ function rollbackSentence(rb) {
     const checked = rb.verified === "signature" ? "checked against the project's items before the call" : rb.verified === "partial" ? "checked against the first 1000 items and the item count" : "checked by the rollback marker only";
     return ` \u2014 Rolled back: the call's changes were undone before this error was returned (${checked}).${errors}`;
   }
+  const next = rb.next ? ` Next: ${rb.next}` : "";
   if (!rb.attempted) {
-    return ` \u2014 Not rolled back (${rb.reason ?? "no reason given"})${rb.left ? `: ${rb.left}` : ""}.${errors}`;
+    return ` \u2014 Not rolled back (${rb.reason ?? "no reason given"})${rb.left ? `: ${rb.left}` : ""}.${next}${errors}`;
   }
-  return ` \u2014 NOT rolled back: ${rb.reason ?? "the rollback could not be confirmed"}. Left: ${rb.left ?? "unknown \u2014 inspect the project"}.${errors}`;
+  return ` \u2014 NOT rolled back: ${rb.reason ?? "the rollback could not be confirmed"}. Left: ${rb.left ?? "unknown \u2014 inspect the project"}.${next}${errors}`;
 }
 function isBatchShaped(opResult) {
   if (opResult === null || typeof opResult !== "object") return false;

@@ -32,6 +32,8 @@ registerOp({
                 app.project.close(CloseOptions.DO_NOT_SAVE_CHANGES);
             }
             app.open(f);
+            // A new undo history: the render-queue undo block no longer applies.
+            try { AE_MCP.clearRenderQueueRisk("project.open"); } catch (eClr) {}
             // A project saved by an older After Effects opens as an untitled converted copy: no file until it is saved
             if (!app.project.file) return { ok: true, numItems: app.project.numItems, file: null, untitled: true,
                 note: "opened as an untitled copy (a project from an older After Effects version); Save As (ae_save_project with path) to keep it" };
@@ -115,7 +117,7 @@ registerOp({
 registerOp({
   name: "project.undo",
   category: "project",
-  description: "Undo the last action. Equivalent to Ctrl+Z. Each prior ae_do call is ONE undo step (its automatic undo group), so count=1 reverts the whole previous call, batch included. Runs with After Effects' dialogs suppressed (an undo once raised an error box that blocked all scripting until a person clicked it); the result's aeErrors and warning carry anything After Effects reported, and an undo that throws stops the loop and fails the call. The result counts commands run (commandsRun), not steps undone: `changed` says whether the project's items or the active comp's layers changed (false means the history was empty OR the step only changed property values \u2014 inspect before assuming either), and `effect` says it in words. A failed call that was rolled back already left no step of its own: do not undo again for it.",
+  description: "Undo the last action. Equivalent to Ctrl+Z. Each prior ae_do call is ONE undo step (its automatic undo group), so count=1 reverts the whole previous call, batch included. Runs with After Effects' dialogs suppressed (an undo once raised an error box that blocked all scripting until a person clicked it); the result's aeErrors and warning carry anything After Effects reported, and an undo that throws stops the loop and fails the call. The result counts commands run (commandsRun), not steps undone: `changed` says whether the project's items or the active comp's layers changed (false means the history was empty OR the step only changed property values \u2014 inspect before assuming either), and `effect` says it in words. After a scripted render-queue change in this After Effects session it refuses (refused: true) unless acceptRenderQueueRisk: true \u2014 After Effects 2027 crashed on undo after such changes (observed twice on 2026-11-10; a precaution, not a proven cause). Save first if you override; project.open / project.new clear the block. A failed call that was rolled back already left no step of its own: do not undo again for it.",
   params: [
     {
       name: "count",
@@ -123,6 +125,12 @@ registerOp({
       description: "Number of undos (default 1)",
       required: false,
       default: 1
+    },
+    {
+      name: "acceptRenderQueueRisk",
+      type: "boolean",
+      description: "Default false. After a scripted render-queue change in this After Effects session, undo is refused (After Effects 2027 has gone into crash recovery on undo after such changes \u2014 observed twice; a precaution). Pass true only when the user accepts that risk, ideally after saving.",
+      required: false
     }
   ],
   // Runs OUTSIDE the dispatcher's automatic undo group. Wrapped in one, AE
@@ -134,14 +142,14 @@ registerOp({
   undoGroup: () => false,
   toJsx(args) {
     return `
-            return AE_MCP.undoRedo(${UNDO_COMMAND_ID}, ${jsxVal(args.count ?? 1)});
+            return AE_MCP.undoRedo(${UNDO_COMMAND_ID}, ${jsxVal(args.count ?? 1)}, ${jsxVal(args.acceptRenderQueueRisk === true)});
         `;
   }
 });
 registerOp({
   name: "project.redo",
   category: "project",
-  description: "Redo the last undone action. Equivalent to Ctrl+Shift+Z. Runs like project.undo: outside the undo group, with dialogs suppressed, reporting any error After Effects raised (aeErrors, warning), and saying whether the project changed (changed, effect) rather than counting steps redone.",
+  description: "Redo the last undone action. Equivalent to Ctrl+Shift+Z. Runs like project.undo: outside the undo group, with dialogs suppressed, reporting any error After Effects raised (aeErrors, warning), and saying whether the project changed (changed, effect) rather than counting steps redone. Refused after a scripted render-queue change in the session unless acceptRenderQueueRisk: true, like project.undo.",
   params: [
     {
       name: "count",
@@ -149,12 +157,18 @@ registerOp({
       description: "Number of redos (default 1)",
       required: false,
       default: 1
+    },
+    {
+      name: "acceptRenderQueueRisk",
+      type: "boolean",
+      description: "Default false. After a scripted render-queue change in this After Effects session, undo is refused (After Effects 2027 has gone into crash recovery on undo after such changes \u2014 observed twice; a precaution). Pass true only when the user accepts that risk, ideally after saving.",
+      required: false
     }
   ],
   undoGroup: () => false,
   toJsx(args) {
     return `
-            return AE_MCP.undoRedo(${REDO_COMMAND_ID}, ${jsxVal(args.count ?? 1)});
+            return AE_MCP.undoRedo(${REDO_COMMAND_ID}, ${jsxVal(args.count ?? 1)}, ${jsxVal(args.acceptRenderQueueRisk === true)});
         `;
   }
 });
@@ -739,6 +753,7 @@ registerOp({
             app.project.close(CloseOptions.DO_NOT_SAVE_CHANGES);
             var _p = app.newProject();
             if (!_p) return { ok: false, error: "app.newProject returned null" };
+            try { AE_MCP.clearRenderQueueRisk("project.new"); } catch (eClr) {}
             return { ok: true, numItems: _p.numItems };
         `;
   }

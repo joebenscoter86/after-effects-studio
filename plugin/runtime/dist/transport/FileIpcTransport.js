@@ -236,6 +236,7 @@ export class FileIpcTransport {
             // Explicit as well: a missing field means "no rollback" to serve.jsx,
             // and rollback only ever applies inside an undo group.
             rollback: req.undoGroup !== false && req.rollback === true,
+            acceptRenderQueueRisk: req.acceptRenderQueueRisk === true,
         };
         if (target.mode === "pull") {
             return this.executePull(request, target.instance, started, timeoutMs);

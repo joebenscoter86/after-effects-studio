@@ -1,9 +1,14 @@
 // Render queue operations.
 import { registerOp, jsxFail, jsxVal, jsxCompPreamble } from "../registry.js";
+/**
+ * Said by every operation that changes the render queue (stage 7). serve.jsx
+ * enforces it; this tells the caller before they find out by a refusal.
+ */
+const RENDER_QUEUE_UNDO_WARNING = " After this, undo and rollback are refused for the rest of the After Effects session unless acceptRenderQueueRisk: true: After Effects 2027 has gone into crash recovery on undo after scripted render-queue changes (observed twice on 2026-11-10; a precaution, not a proven cause). Save the project before undoing anything afterwards; project.open / project.new clear the block.";
 registerOp({
     name: "render.add_to_queue",
     category: "render",
-    description: "Add a composition to the render queue. Optionally set output path.",
+    description: "Add a composition to the render queue. Optionally set output path." + RENDER_QUEUE_UNDO_WARNING,
     params: [
         { name: "comp", type: "any", description: "Comp name or id", required: true },
         {
@@ -34,7 +39,8 @@ registerOp({
 registerOp({
     name: "render.start",
     category: "render",
-    description: "Render queued items and verify each output file was newly written. Blocks until complete. Missing output directories are created first. Completed items are not counted as new renders.",
+    description: "Render queued items and verify each output file was newly written. Blocks until complete. Missing output directories are created first. Completed items are not counted as new renders." +
+        RENDER_QUEUE_UNDO_WARNING,
     params: [],
     toJsx() {
         return `
@@ -394,7 +400,8 @@ registerOp({
 registerOp({
     name: "render.remove_item",
     category: "render",
-    description: "Remove ONE item from the render queue by its 1-based index (render.clear_queue removes all).",
+    description: "Remove ONE item from the render queue by its 1-based index (render.clear_queue removes all)." +
+        RENDER_QUEUE_UNDO_WARNING,
     params: [
         {
             name: "queueIndex",
@@ -437,7 +444,9 @@ registerOp({
     name: "render.list_templates",
     category: "render",
     readOnly: true,
-    description: "List available render-settings templates and output-module templates. The render queue must have at least one item (templates are read from a queue item).",
+    description: "List available render-settings templates and output-module templates. The render queue must have at least one item (templates are read from a queue item)." +
+        " If it adds a temporary queue item to read them, that counts as a render-queue change:" +
+        RENDER_QUEUE_UNDO_WARNING,
     params: [],
     toJsx() {
         return `

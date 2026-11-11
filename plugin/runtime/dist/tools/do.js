@@ -172,6 +172,9 @@ export const doTool = defineTool({
             suppressDialogs: wantsDialogSuppression(op, opArgs),
             // A throw inside the group is rolled back (Operation.rollback).
             rollback: wantsRollback(op, opArgs),
+            // Only operations that declare the argument can pass it (unknown keys
+            // are rejected above): eval.run, batch.run and the undo/redo ones.
+            acceptRenderQueueRisk: opArgs.acceptRenderQueueRisk === true,
             timeoutMs: doArgs.timeoutMs ?? 60_000,
         });
         if (!result.ok) {
@@ -244,10 +247,11 @@ export function rollbackSentence(rb) {
                 : "checked by the rollback marker only";
         return ` — Rolled back: the call's changes were undone before this error was returned (${checked}).${errors}`;
     }
+    const next = rb.next ? ` Next: ${rb.next}` : "";
     if (!rb.attempted) {
-        return ` — Not rolled back (${rb.reason ?? "no reason given"})${rb.left ? `: ${rb.left}` : ""}.${errors}`;
+        return ` — Not rolled back (${rb.reason ?? "no reason given"})${rb.left ? `: ${rb.left}` : ""}.${next}${errors}`;
     }
-    return ` — NOT rolled back: ${rb.reason ?? "the rollback could not be confirmed"}. Left: ${rb.left ?? "unknown — inspect the project"}.${errors}`;
+    return ` — NOT rolled back: ${rb.reason ?? "the rollback could not be confirmed"}. Left: ${rb.left ?? "unknown — inspect the project"}.${next}${errors}`;
 }
 /** True for a batch.run-style result carrying a per-child `results` array. */
 function isBatchShaped(opResult) {

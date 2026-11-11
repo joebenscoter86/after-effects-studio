@@ -13,8 +13,17 @@ registerOp({
     category: "command",
     description: "Execute an AE menu command by its numeric ID. Use command.list to discover common IDs. " +
         "Undo (16) and Redo (2035) run outside this call's undo group, so they revert/replay the PREVIOUS call; " +
-        "like project.undo / project.redo they run with dialogs suppressed and report any error After Effects raised.",
-    params: [{ name: "id", type: "number", description: "Menu command ID", required: true }],
+        "like project.undo / project.redo they run with dialogs suppressed, report any error After Effects raised, and are " +
+        "refused after a scripted render-queue change in the session unless acceptRenderQueueRisk: true.",
+    params: [
+        { name: "id", type: "number", description: "Menu command ID", required: true },
+        {
+            name: "acceptRenderQueueRisk",
+            type: "boolean",
+            description: "Default false. After a scripted render-queue change in this After Effects session, Undo/Redo (16/2035) are refused (After Effects 2027 has gone into crash recovery on undo after such changes — observed twice; a precaution). Pass true only when the user accepts that risk, ideally after saving.",
+            required: false,
+        },
+    ],
     // Undo/Redo must not be executed inside an open undo group — AE applies them
     // to that group and the requested step survives. Everything else groups
     // normally, so one Ctrl+Z still reverts one call. Dialog suppression is on
@@ -23,7 +32,7 @@ registerOp({
     toJsx(args) {
         if (isUndoRedoCommandId(args.id)) {
             return `
-            var _c = AE_MCP.undoRedo(${jsxVal(args.id)}, 1);
+            var _c = AE_MCP.undoRedo(${jsxVal(args.id)}, 1, ${jsxVal(args.acceptRenderQueueRisk === true)});
             _c.commandId = ${jsxVal(args.id)};
             return _c;
         `;

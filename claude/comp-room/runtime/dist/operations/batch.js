@@ -23,6 +23,12 @@ registerOp({
       type: "boolean",
       description: "Default true. With stopOnError, revert the whole batch when an op fails, and revert it if the batch itself throws. false keeps whatever ran before the failure (for deliberately incremental work); the result's `kept` names it.",
       required: false
+    },
+    {
+      name: "acceptRenderQueueRisk",
+      type: "boolean",
+      description: "Default false. After a scripted render-queue change in this After Effects session, undo is refused (After Effects 2027 has gone into crash recovery on undo after such changes \u2014 observed twice; a precaution). Pass true only when the user accepts that risk, ideally after saving.",
+      required: false
     }
   ],
   // The wrapper itself mutates nothing; each child is gated individually below,

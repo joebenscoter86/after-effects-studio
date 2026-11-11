@@ -145,6 +145,9 @@ const doTool = defineTool({
       suppressDialogs: wantsDialogSuppression(op, opArgs),
       // A throw inside the group is rolled back (Operation.rollback).
       rollback: wantsRollback(op, opArgs),
+      // Only operations that declare the argument can pass it (unknown keys
+      // are rejected above): eval.run, batch.run and the undo/redo ones.
+      acceptRenderQueueRisk: opArgs.acceptRenderQueueRisk === true,
       timeoutMs: doArgs.timeoutMs ?? 6e4
     });
     if (!result.ok) {
@@ -198,10 +201,11 @@ function rollbackSentence(rb) {
     const checked = rb.verified === "signature" ? "checked against the project's items before the call" : rb.verified === "partial" ? "checked against the first 1000 items and the item count" : "checked by the rollback marker only";
     return ` \u2014 Rolled back: the call's changes were undone before this error was returned (${checked}).${errors}`;
   }
+  const next = rb.next ? ` Next: ${rb.next}` : "";
   if (!rb.attempted) {
-    return ` \u2014 Not rolled back (${rb.reason ?? "no reason given"})${rb.left ? `: ${rb.left}` : ""}.${errors}`;
+    return ` \u2014 Not rolled back (${rb.reason ?? "no reason given"})${rb.left ? `: ${rb.left}` : ""}.${next}${errors}`;
   }
-  return ` \u2014 NOT rolled back: ${rb.reason ?? "the rollback could not be confirmed"}. Left: ${rb.left ?? "unknown \u2014 inspect the project"}.${errors}`;
+  return ` \u2014 NOT rolled back: ${rb.reason ?? "the rollback could not be confirmed"}. Left: ${rb.left ?? "unknown \u2014 inspect the project"}.${next}${errors}`;
 }
 function isBatchShaped(opResult) {
   if (opResult === null || typeof opResult !== "object") return false;
