@@ -1,1 +1,1 @@
-{"version":3,"file":"render-frame.d.ts","sourceRoot":"","sources":["../../src/tools/render-frame.ts"],"names":[],"mappings":"AAEA,OAAO,EAAE,CAAC,EAAE,MAAM,KAAK,CAAC;AA2KxB,eAAO,MAAM,eAAe;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;EA8M1B,CAAC"}
+{"version":3,"file":"render-frame.d.ts","sourceRoot":"","sources":["../../src/tools/render-frame.ts"],"names":[],"mappings":"AAEA,OAAO,EAAE,CAAC,EAAE,MAAM,KAAK,CAAC;AA6LxB,eAAO,MAAM,eAAe;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;EAgT1B,CAAC"}

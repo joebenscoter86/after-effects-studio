@@ -54,5 +54,19 @@ export declare const renderFrameTool: import("./define-tool.js").ToolSpec<{
         from: z.ZodOptional<z.ZodNumber>;
         to: z.ZodOptional<z.ZodNumber>;
     }, z.core.$strip>>;
+    edge: z.ZodOptional<z.ZodUnion<readonly [z.ZodBoolean, z.ZodObject<{
+        transparent: z.ZodOptional<z.ZodNumber>;
+        opaque: z.ZodOptional<z.ZodNumber>;
+        maxEdgeWidth: z.ZodOptional<z.ZodNumber>;
+        mainAreaShare: z.ZodOptional<z.ZodNumber>;
+        listed: z.ZodOptional<z.ZodNumber>;
+        screen: z.ZodOptional<z.ZodEnum<{
+            green: "green";
+            blue: "blue";
+        }>>;
+        spillMinAlpha: z.ZodOptional<z.ZodNumber>;
+        spillThreshold: z.ZodOptional<z.ZodNumber>;
+        changeAbove: z.ZodOptional<z.ZodNumber>;
+    }, z.core.$strip>]>>;
 }>;
 //# sourceMappingURL=render-frame.d.ts.map

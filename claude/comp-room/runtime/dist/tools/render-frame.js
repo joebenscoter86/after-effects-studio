@@ -3,6 +3,13 @@ import * as path from "node:path";
 import { z } from "zod";
 import { measureCaptureTransfer, calibrationKey } from "../color/calibration.js";
 import {
+  alphaChange,
+  edgeArgsError,
+  measureEdge,
+  resolveEdgeThresholds,
+  summarizeFlicker
+} from "../color/matte.js";
+import {
   decodePng,
   encodePngGray8,
   encodePngSrgb8,
@@ -47,7 +54,7 @@ const regionSchema = z.object({
 const renderFrameTool = defineTool({
   name: "ae_render_frame",
   title: "Render frame",
-  description: "Render one or more frames to PNG. Use to visually verify edits. The agent's 'eyes' \u2014 pair with mutations for a visual feedback loop. Headless and deterministic. Pass `time` for one frame, or `times` for several in ONE call (motion checks): files land at <outPath stem>_<index>.png and are listed in `frames`. `contactSheet` tiles every frame into one labelled PNG (<stem>_sheet.png) so a motion check is one image; `analyze` measures each capture (uniform edge bands = black bars / transparent margins, content bounds, coverage) so off-frame elements and letterboxing are caught numerically. In color-managed projects (workingSpace != None) the capture applies AE's own display transform via a transient OCIO Display Transform adjustment layer, and the PNG comes back viewer-accurate and sRGB-tagged. Where that layer cannot be used \u2014 read-only mode, an AE without the OCIO effect, or a failed capture calibration \u2014 the result falls back to a pure-math ACES conversion or to raw values with an explicit colorWarning; check colorPipeline / colorWarning on the response. Seeing the matte: `channels` picks what the file holds \u2014 'rgb' (default, transparency composited over `over`: the comp background as AE composites it, a checkerboard or a colour such as '#ff00ff'), 'rgba' (alpha kept, straight colour), or 'alpha' (the matte as greyscale: white opaque, black transparent). `isolate` renders one layer or a list alone (cameras and lights stay as they are), then restores every layer switch, even when the render fails. `alphaChannel` reports whether the capture carried alpha at all. Reading colour: `sample` takes named points or rectangles and returns mean / min / max per channel and alpha coverage for each; `histogram` counts the whole frame per channel; `compare` (with `times` and `sample`) reports each region's difference between two of the rendered frames. Every number is labelled with its stage \u2014 'capture' (before colour conversion) or 'output' (the file as written) \u2014 described once in `measurementStages`.",
+  description: "Render one or more frames to PNG. Use to visually verify edits. The agent's 'eyes' \u2014 pair with mutations for a visual feedback loop. Headless and deterministic. Pass `time` for one frame, or `times` for several in ONE call (motion checks): files land at <outPath stem>_<index>.png and are listed in `frames`. `contactSheet` tiles every frame into one labelled PNG (<stem>_sheet.png) so a motion check is one image; `analyze` measures each capture (uniform edge bands = black bars / transparent margins, content bounds, coverage) so off-frame elements and letterboxing are caught numerically. In color-managed projects (workingSpace != None) the capture applies AE's own display transform via a transient OCIO Display Transform adjustment layer, and the PNG comes back viewer-accurate and sRGB-tagged. Where that layer cannot be used \u2014 read-only mode, an AE without the OCIO effect, or a failed capture calibration \u2014 the result falls back to a pure-math ACES conversion or to raw values with an explicit colorWarning; check colorPipeline / colorWarning on the response. Seeing the matte: `channels` picks what the file holds \u2014 'rgb' (default, transparency composited over `over`: the comp background as AE composites it, a checkerboard or a colour such as '#ff00ff'), 'rgba' (alpha kept, straight colour), or 'alpha' (the matte as greyscale: white opaque, black transparent). `isolate` renders one layer or a list alone (cameras and lights stay as they are), then restores every layer switch, even when the render fails. `alphaChannel` reports whether the capture carried alpha at all. Reading colour: `sample` takes named points or rectangles and returns mean / min / max per channel and alpha coverage for each; `histogram` counts the whole frame per channel; `compare` (with `times` and `sample`) reports each region's difference between two of the rendered frames. Matte quality: `edge` reports, from the capture's alpha, the shares of opaque / partly transparent / transparent pixels, edge width (typical and worst, px), holes, specks, partly transparent patches that are not thin edges (an unkeyed screen, a remnant), the soft edge's colour with the comp background taken out and whether it leans to the screen colour (spill), and with `times` the frame-to-frame change in alpha along the edge, inside the solid area and outside it (flicker). It reports numbers and places, never a pass or fail. Every number is labelled with its stage \u2014 'capture' (before colour conversion) or 'output' (the file as written) \u2014 described once in `measurementStages`.",
   group: "render",
   // Survives read-only mode: it writes a PNG, and the visual verification loop
   // is the whole point of an audit session. Note this is NOT a
@@ -115,6 +122,34 @@ const renderFrameTool = defineTool({
       to: z.number().int().nonnegative().optional().describe("Index into `times` (default 1).")
     }).optional().describe(
       "With `times` and `sample`: each region's difference between two rendered frames, to \u2212 from, per stage: meanDelta (signed average shift), meanAbsDelta and maxAbsDelta per channel, and the same for alpha. Reported as `comparison`."
+    ),
+    edge: z.union([
+      z.boolean(),
+      z.object({
+        transparent: z.number().min(0).max(1).optional().describe(
+          "Alpha at or below counts as transparent. Default 2/255 (as `sample` counts)."
+        ),
+        opaque: z.number().min(0).max(1).optional().describe("Alpha at or above counts as opaque. Default 1 \u2212 2/255."),
+        maxEdgeWidth: z.number().min(1).optional().describe(
+          "Widest transition still called a thin edge, px; wider partly transparent regions are reported as patches, and it is the edge band for flicker. Default 1% of the frame's shorter side, at least 4 (11 at 1080\xD71920)."
+        ),
+        mainAreaShare: z.number().min(0).max(1).optional().describe(
+          "An island of covered pixels at least this share of the largest is a main solid area, smaller ones are specks. Default 0.25."
+        ),
+        listed: z.number().int().min(0).max(50).optional().describe(
+          "How many holes, specks, patches and solid areas are listed (all are counted). Default 5."
+        ),
+        screen: z.enum(["green", "blue"]).optional().describe("Screen colour spill is read against. Default 'green'."),
+        spillMinAlpha: z.number().min(0).max(1).optional().describe(
+          "Partly transparent pixels below this alpha are left out of the spill colour. Default 0.1."
+        ),
+        spillThreshold: z.number().min(0).max(1).optional().describe(
+          "The soft edge leans to the screen when its screen channel exceeds the larger other channel by more than this, and by this much more than the solid area's own. Default 0.03."
+        ),
+        changeAbove: z.number().min(0).max(1).optional().describe("Flicker: an alpha change above this counts as changed. Default 0.05.")
+      })
+    ]).optional().describe(
+      "Matte quality as numbers, measured on the capture's alpha (stage 'capture'); `true` for the defaults. Reported as `edge` (per frame with `times`), with the thresholds used as `edgeThresholds`: shares {opaque, partial, transparent}; width {typical (median), p90, worst, worstAt, samples, unmeasured} \u2014 px the alpha takes from transparent to opaque across the 50% contour of the main solid areas (0 = hard edge; unmeasured = the alpha never reaches transparent or opaque anywhere, as when the screen is left partly opaque); solidAreas; holes {count, area, transparentArea, largest, list} \u2014 regions below opaque enclosed by the solid area (not touching the frame edge); specks {count, area, list} \u2014 islands outside the main areas; patches {count, area, list} \u2014 partly transparent regions thicker than maxEdgeWidth; spill {mean, solidMean, excess, solidExcess, leansToScreen, reading} \u2014 the straight colour of the partly transparent pixels (comp background taken out) against the solid just inside the edge. Boxes are {x, y, width, height} in capture pixels. With two or more `times`: `edgeFlicker` {pairs, overall} \u2014 mean / max change in alpha and the changed share and bounds, for consecutive frames, split into edge, inside (a hole opening counts here) and outside (specks); real motion counts as change too."
     )
   },
   handler: async (args, transport) => {
@@ -231,6 +266,14 @@ function checkEyesOptions(args) {
     if (from === to) return invalid("`compare.from` and `compare.to` must be different frames");
     compare = { from, to };
   }
+  let edge = null;
+  if (args.edge !== void 0 && args.edge !== false) {
+    edge = args.edge === true ? {} : args.edge;
+    if (typeof edge !== "object" || edge === null)
+      return invalid("`edge` must be true or an object");
+    const problem = edgeArgsError(edge);
+    if (problem !== null) return invalid(problem);
+  }
   return {
     options: {
       channels,
@@ -239,7 +282,8 @@ function checkEyesOptions(args) {
       isolate,
       sample,
       histogram,
-      compare
+      compare,
+      edge
     }
   };
 }
@@ -473,6 +517,9 @@ async function nativeFlow(args, opts, abs, transport) {
   const keep = new Set(opts.compare ? [opts.compare.from, opts.compare.to] : []);
   const kept = /* @__PURE__ */ new Map();
   const sheetImages = [];
+  const edgePairs = [];
+  let edgePrev = null;
+  let edgeMeasured = 0;
   let withAlpha = 0;
   let writing = convert !== null;
   for (const [i, file] of written.entries()) {
@@ -488,6 +535,29 @@ async function nativeFlow(args, opts, abs, transport) {
       return toMcpResult(result);
     }
     if (capture.alpha) withAlpha++;
+    if (opts.edge) {
+      if (!capture.alpha) edgePrev = null;
+      else {
+        try {
+          const t = resolveEdgeThresholds(opts.edge, capture.width, capture.height);
+          payload.edgeThresholds ??= t;
+          const { report, frame } = measureEdge(capture, bg ?? [0, 0, 0], t);
+          put(i, "edge", report);
+          edgeMeasured++;
+          if (edgePrev !== null && edgePrev.index === i - 1) {
+            edgePairs.push({
+              from: { index: i - 1, time: frames[i - 1]?.time },
+              to: { index: i, time: frames[i]?.time },
+              ...alphaChange(edgePrev.frame, frame, t)
+            });
+          }
+          edgePrev = multi ? { index: i, frame } : null;
+        } catch (err) {
+          payload.edgeWarning = `edge measurement failed: ${err instanceof Error ? err.message : String(err)}`;
+          edgePrev = null;
+        }
+      }
+    }
     if (args.analyze) {
       try {
         put(i, "analysis", analyzeFrame(capture));
@@ -534,6 +604,16 @@ async function nativeFlow(args, opts, abs, transport) {
       payload.alphaWarning = "the capture has no alpha channel, so there was nothing to composite over `over`";
     }
   }
+  if (opts.edge) {
+    if (withAlpha < written.length) {
+      payload.edgeWarning = `${written.length - withAlpha} of ${written.length} captures have no alpha channel, so their matte could not be measured (a comp with no transparency, or an AE that flattens)`;
+    } else if (edgeMeasured > 0 && bg === null) {
+      payload.edgeWarning = "the comp background colour (bgColor) is unknown, so the soft edge's colour was recovered as if it were black; the spill reading may carry the real background";
+    }
+    if (edgePairs.length > 0) {
+      payload.edgeFlicker = { pairs: edgePairs, overall: summarizeFlicker(edgePairs) };
+    }
+  }
   if (opts.compare && opts.sample) {
     const { from, to } = opts.compare;
     const a = kept.get(from);
@@ -554,7 +634,8 @@ async function nativeFlow(args, opts, abs, transport) {
   }
   const stages = /* @__PURE__ */ new Set([
     ...opts.sample?.stages ?? [],
-    ...opts.histogram ? [opts.histogram.stage] : []
+    ...opts.histogram ? [opts.histogram.stage] : [],
+    ...opts.edge ? ["capture"] : []
   ]);
   if (stages.size > 0) {
     payload.measurementStages = {};

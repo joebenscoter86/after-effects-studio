@@ -14522,7 +14522,7 @@ function handleCatchall(proms, input2, payload, ctx, def, inst, abortEarly) {
     }
     const r = _catchall.run({ value: input2[key], issues: [] }, ctx);
     if (r instanceof Promise) {
-      proms.push(r.then((r2) => handlePropertyResult(r2, payload, key, input2, optin, optout)));
+      proms.push(r.then((r3) => handlePropertyResult(r3, payload, key, input2, optin, optout)));
     } else {
       handlePropertyResult(r, payload, key, input2, optin, optout);
     }
@@ -14610,7 +14610,7 @@ var $ZodObject = /* @__PURE__ */ $constructor("$ZodObject", (inst, def) => {
       const optout = el._zod.optout;
       const r = el._zod.run({ value: input2[key], issues: [] }, ctx);
       if (r instanceof Promise) {
-        proms.push(r.then((r2) => handlePropertyResult(r2, payload, key, input2, optin, optout)));
+        proms.push(r.then((r3) => handlePropertyResult(r3, payload, key, input2, optin, optout)));
       } else {
         handlePropertyResult(r, payload, key, input2, optin, optout);
       }
@@ -16037,7 +16037,7 @@ var $ZodCustom = /* @__PURE__ */ $constructor("$ZodCustom", (inst, def) => {
     const input2 = payload.value;
     const r = def.fn(input2);
     if (r instanceof Promise) {
-      return r.then((r2) => handleRefineResult(r2, payload, input2, inst));
+      return r.then((r3) => handleRefineResult(r3, payload, input2, inst));
     }
     handleRefineResult(r, payload, input2, inst);
     return;
@@ -50199,6 +50199,499 @@ async function measureCaptureTransfer(transport2, key, allowRender = true) {
   }
 }
 
+// src/color/matte.ts
+var EDGE_DEFAULTS = {
+  transparent: 2 / 255,
+  opaque: 1 - 2 / 255,
+  maxEdgeWidth: "auto",
+  mainAreaShare: 0.25,
+  listed: 5,
+  screen: "green",
+  spillMinAlpha: 0.1,
+  spillThreshold: 0.03,
+  changeAbove: 0.05
+};
+var CONTOUR_ALPHA = 0.5;
+function autoMaxEdgeWidth(width, height) {
+  return Math.max(4, Math.round(0.01 * Math.min(width, height)));
+}
+function resolveEdgeThresholds(args, width, height) {
+  return {
+    transparent: args.transparent ?? EDGE_DEFAULTS.transparent,
+    opaque: args.opaque ?? EDGE_DEFAULTS.opaque,
+    maxEdgeWidth: args.maxEdgeWidth ?? autoMaxEdgeWidth(width, height),
+    mainAreaShare: args.mainAreaShare ?? EDGE_DEFAULTS.mainAreaShare,
+    listed: args.listed ?? EDGE_DEFAULTS.listed,
+    screen: args.screen ?? EDGE_DEFAULTS.screen,
+    spillMinAlpha: args.spillMinAlpha ?? EDGE_DEFAULTS.spillMinAlpha,
+    spillThreshold: args.spillThreshold ?? EDGE_DEFAULTS.spillThreshold,
+    changeAbove: args.changeAbove ?? EDGE_DEFAULTS.changeAbove
+  };
+}
+function edgeArgsError(args) {
+  const unit = ["transparent", "opaque", "mainAreaShare", "spillMinAlpha", "changeAbove"];
+  for (const key of unit) {
+    const v = args[key];
+    if (v !== void 0 && (typeof v !== "number" || !(v >= 0 && v <= 1))) {
+      return `\`edge.${key}\` must be a number in 0..1`;
+    }
+  }
+  const t = args.transparent ?? EDGE_DEFAULTS.transparent;
+  const o = args.opaque ?? EDGE_DEFAULTS.opaque;
+  if (t >= o) return "`edge.transparent` must be below `edge.opaque`";
+  const w = args.maxEdgeWidth;
+  if (w !== void 0 && (typeof w !== "number" || !Number.isFinite(w) || w < 1)) {
+    return "`edge.maxEdgeWidth` must be at least 1 (pixels)";
+  }
+  const listed = args.listed;
+  if (listed !== void 0 && (!Number.isInteger(listed) || listed < 0)) {
+    return "`edge.listed` must be a whole number, 0 or more";
+  }
+  const s = args.spillThreshold;
+  if (s !== void 0 && (typeof s !== "number" || !(s >= 0 && s <= 1))) {
+    return "`edge.spillThreshold` must be a number in 0..1";
+  }
+  if (args.screen !== void 0 && args.screen !== "green" && args.screen !== "blue") {
+    return "`edge.screen` must be 'green' or 'blue'";
+  }
+  return null;
+}
+var OUTSIDE = 0;
+var EDGE = 1;
+var INSIDE = 2;
+var r2 = (v) => Math.round(v * 100) / 100;
+var r4 = (v) => Math.round(v * 1e4) / 1e4;
+var r4rgb = (v) => [r4(v[0]), r4(v[1]), r4(v[2])];
+var INF = 1e20;
+function dt1d(f, n, d, v, z2) {
+  let k = -1;
+  for (let q = 0; q < n; q++) {
+    const fq = f[q];
+    if (fq >= INF) continue;
+    if (k < 0) {
+      k = 0;
+      v[0] = q;
+      z2[0] = -Infinity;
+      z2[1] = Infinity;
+      continue;
+    }
+    let s = 0;
+    for (; ; ) {
+      const r = v[k];
+      s = (fq + q * q - (f[r] + r * r)) / (2 * q - 2 * r);
+      if (s <= z2[k]) k--;
+      else break;
+    }
+    k++;
+    v[k] = q;
+    z2[k] = s;
+    z2[k + 1] = Infinity;
+  }
+  if (k < 0) {
+    d.fill(INF, 0, n);
+    return;
+  }
+  let j = 0;
+  for (let q = 0; q < n; q++) {
+    while (z2[j + 1] < q) j++;
+    const r = v[j];
+    d[q] = (q - r) * (q - r) + f[r];
+  }
+}
+function distanceTo(alpha, width, height, isSource, scratch, out) {
+  const n = Math.max(width, height);
+  const f = new Float64Array(n);
+  const d = new Float64Array(n);
+  const v = new Int32Array(n);
+  const z2 = new Float64Array(n + 1);
+  for (let x = 0; x < width; x++) {
+    for (let y = 0; y < height; y++) f[y] = isSource(alpha[y * width + x]) ? 0 : INF;
+    dt1d(f, height, d, v, z2);
+    for (let y = 0; y < height; y++) scratch[y * width + x] = d[y];
+  }
+  for (let y = 0; y < height; y++) {
+    const row = y * width;
+    for (let x = 0; x < width; x++) f[x] = scratch[row + x];
+    dt1d(f, width, d, v, z2);
+    for (let x = 0; x < width; x++) out[row + x] = d[x] >= INF / 2 ? Infinity : Math.sqrt(d[x]);
+  }
+}
+var newRegion = () => ({
+  area: 0,
+  minX: Infinity,
+  minY: Infinity,
+  maxX: -1,
+  maxY: -1,
+  alphaSum: 0,
+  alphaMax: 0,
+  transparent: 0,
+  touchesBorder: false
+});
+function addPixel(r, x, y, a) {
+  r.area++;
+  if (x < r.minX) r.minX = x;
+  if (x > r.maxX) r.maxX = x;
+  if (y < r.minY) r.minY = y;
+  if (y > r.maxY) r.maxY = y;
+  r.alphaSum += a;
+  if (a > r.alphaMax) r.alphaMax = a;
+}
+var box = (r) => ({
+  x: r.minX,
+  y: r.minY,
+  width: r.maxX - r.minX + 1,
+  height: r.maxY - r.minY + 1
+});
+var N4X = [1, -1, 0, 0];
+var N4Y = [0, 0, 1, -1];
+var N8X = [1, -1, 0, 0, 1, 1, -1, -1];
+var N8Y = [0, 0, 1, -1, 1, -1, 1, -1];
+function labelRegions(alpha, width, height, inSet, eight, labels, queue, transparentAt) {
+  labels.fill(0);
+  const regions = [];
+  const nx = eight ? N8X : N4X;
+  const ny = eight ? N8Y : N4Y;
+  const total = width * height;
+  for (let start = 0; start < total; start++) {
+    if (labels[start] !== 0 || !inSet(start)) continue;
+    const region = newRegion();
+    regions.push(region);
+    const id = regions.length;
+    labels[start] = id;
+    let head = 0;
+    let tail = 0;
+    queue[tail++] = start;
+    while (head < tail) {
+      const p = queue[head++];
+      const x = p % width;
+      const y = (p - x) / width;
+      const a = alpha[p];
+      addPixel(region, x, y, a);
+      if (a <= transparentAt) region.transparent++;
+      if (x === 0 || y === 0 || x === width - 1 || y === height - 1) region.touchesBorder = true;
+      for (let k = 0; k < nx.length; k++) {
+        const qx = x + nx[k];
+        const qy = y + ny[k];
+        if (qx < 0 || qy < 0 || qx >= width || qy >= height) continue;
+        const q = qy * width + qx;
+        if (labels[q] !== 0 || !inSet(q)) continue;
+        labels[q] = id;
+        queue[tail++] = q;
+      }
+    }
+  }
+  return regions;
+}
+var byArea = (a, b) => b.area - a.area;
+function screenExcess(c, screen) {
+  return screen === "green" ? c[1] - Math.max(c[0], c[2]) : c[2] - Math.max(c[0], c[1]);
+}
+function measureEdge(img, bg, t) {
+  const alpha = img.alpha;
+  if (!alpha) throw new Error("the capture has no alpha channel");
+  const { width, height } = img;
+  const n = width * height;
+  const isT = (a) => a <= t.transparent;
+  const isO = (a) => a >= t.opaque;
+  let opaque = 0;
+  let transparent = 0;
+  for (let p = 0; p < n; p++) {
+    if (isO(alpha[p])) opaque++;
+    else if (isT(alpha[p])) transparent++;
+  }
+  const scratch = new Float32Array(n);
+  const dT = new Float32Array(n);
+  const dO = new Float32Array(n);
+  distanceTo(alpha, width, height, isT, scratch, dT);
+  distanceTo(alpha, width, height, isO, scratch, dO);
+  const labels = new Int32Array(n);
+  const queue = new Int32Array(n);
+  const islands = labelRegions(
+    alpha,
+    width,
+    height,
+    (p) => alpha[p] > t.transparent,
+    true,
+    labels,
+    queue,
+    t.transparent
+  );
+  const largest = islands.reduce((m2, r) => Math.max(m2, r.area), 0);
+  const isMain = islands.map((r) => r.area > 0 && r.area >= t.mainAreaShare * largest);
+  const mains = islands.filter((_, i) => isMain[i]).sort(byArea);
+  const specks = islands.filter((_, i) => !isMain[i]).sort(byArea);
+  const widths = [];
+  let unmeasured = 0;
+  let worst = -1;
+  let worstAt = null;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const p = y * width + x;
+      if (alpha[p] < CONTOUR_ALPHA || labels[p] === 0 || !isMain[labels[p] - 1]) continue;
+      let onContour = false;
+      for (let k = 0; k < 4 && !onContour; k++) {
+        const qx = x + N4X[k];
+        const qy = y + N4Y[k];
+        if (qx < 0 || qy < 0 || qx >= width || qy >= height) continue;
+        if (alpha[qy * width + qx] < CONTOUR_ALPHA) onContour = true;
+      }
+      if (!onContour) continue;
+      const sum = dT[p] + dO[p];
+      if (!Number.isFinite(sum)) {
+        unmeasured++;
+        continue;
+      }
+      const w = Math.max(0, sum - 1);
+      widths.push(w);
+      if (w > worst) {
+        worst = w;
+        worstAt = { x, y };
+      }
+    }
+  }
+  widths.sort((a, b) => a - b);
+  const m = widths.length;
+  const median = m === 0 ? null : m % 2 ? widths[(m - 1) / 2] : (widths[m / 2 - 1] + widths[m / 2]) / 2;
+  const belowOpaque = labelRegions(
+    alpha,
+    width,
+    height,
+    (p) => alpha[p] < t.opaque,
+    false,
+    labels,
+    queue,
+    t.transparent
+  );
+  const holes = belowOpaque.filter((r) => !r.touchesBorder).sort(byArea);
+  const half = t.maxEdgeWidth / 2;
+  const isPartial = (p) => alpha[p] > t.transparent && alpha[p] < t.opaque;
+  const isCore = (p) => isPartial(p) && Math.min(dT[p], dO[p]) > half;
+  labels.fill(0);
+  let tail = 0;
+  let ids = 0;
+  for (let start = 0; start < n; start++) {
+    if (labels[start] !== 0 || !isCore(start)) continue;
+    ids++;
+    labels[start] = ids;
+    let head = tail;
+    queue[tail++] = start;
+    while (head < tail) {
+      const p = queue[head++];
+      const x = p % width;
+      const y = (p - x) / width;
+      for (let k = 0; k < 8; k++) {
+        const qx = x + N8X[k];
+        const qy = y + N8Y[k];
+        if (qx < 0 || qy < 0 || qx >= width || qy >= height) continue;
+        const q = qy * width + qx;
+        if (labels[q] !== 0 || !isCore(q)) continue;
+        labels[q] = ids;
+        queue[tail++] = q;
+      }
+    }
+  }
+  let levelStart = 0;
+  let levelEnd = tail;
+  for (let step = 0; step < Math.ceil(half) && levelStart < levelEnd; step++) {
+    for (let i = levelStart; i < levelEnd; i++) {
+      const p = queue[i];
+      const x = p % width;
+      const y = (p - x) / width;
+      for (let k = 0; k < 8; k++) {
+        const qx = x + N8X[k];
+        const qy = y + N8Y[k];
+        if (qx < 0 || qy < 0 || qx >= width || qy >= height) continue;
+        const q = qy * width + qx;
+        if (labels[q] !== 0 || !isPartial(q)) continue;
+        labels[q] = labels[p];
+        queue[tail++] = q;
+      }
+    }
+    levelStart = levelEnd;
+    levelEnd = tail;
+  }
+  const patchRegions = Array.from({ length: ids }, newRegion);
+  for (let i = 0; i < tail; i++) {
+    const p = queue[i];
+    const x = p % width;
+    addPixel(patchRegions[labels[p] - 1], x, (p - x) / width, alpha[p]);
+  }
+  patchRegions.sort(byArea);
+  const edgeSum = [0, 0, 0];
+  const solidSum = [0, 0, 0];
+  let edgeCount = 0;
+  let solidCount = 0;
+  const zones = new Uint8Array(n);
+  const M = t.maxEdgeWidth;
+  for (let p = 0; p < n; p++) {
+    const a = alpha[p];
+    zones[p] = dT[p] <= M && dO[p] <= M ? EDGE : a >= CONTOUR_ALPHA ? INSIDE : OUTSIDE;
+    const partial2 = a > t.transparent && a < t.opaque;
+    const solid = a >= t.opaque && dT[p] <= M;
+    if (!(partial2 && a >= t.spillMinAlpha) && !solid) continue;
+    const sum = solid ? solidSum : edgeSum;
+    for (let c = 0; c < 3; c++) {
+      const v = img.rgb[p * 3 + c];
+      sum[c] += a >= 1 ? v : Math.min(1, Math.max(0, (v - bg[c] * (1 - a)) / a));
+    }
+    if (solid) solidCount++;
+    else edgeCount++;
+  }
+  const meanOf = (s, k) => k === 0 ? null : [s[0] / k, s[1] / k, s[2] / k];
+  const edgeMean = meanOf(edgeSum, edgeCount);
+  const solidMean = meanOf(solidSum, solidCount);
+  const excess = edgeMean ? screenExcess(edgeMean, t.screen) : null;
+  const solidExcess = solidMean ? screenExcess(solidMean, t.screen) : null;
+  const leans = excess !== null && excess > t.spillThreshold && (solidExcess === null || excess - solidExcess > t.spillThreshold);
+  const report = {
+    stage: "capture",
+    pixels: n,
+    shares: {
+      opaque: r4(opaque / n),
+      partial: r4((n - opaque - transparent) / n),
+      transparent: r4(transparent / n)
+    },
+    width: {
+      typical: median === null ? null : r2(median),
+      p90: m === 0 ? null : r2(widths[Math.floor(0.9 * (m - 1))]),
+      worst: m === 0 ? null : r2(worst),
+      worstAt,
+      samples: m,
+      unmeasured
+    },
+    solidAreas: {
+      count: mains.length,
+      list: mains.slice(0, t.listed).map((r) => ({ ...box(r), area: r.area }))
+    },
+    holes: {
+      count: holes.length,
+      area: holes.reduce((s, r) => s + r.area, 0),
+      transparentArea: holes.reduce((s, r) => s + r.transparent, 0),
+      largest: holes.length ? holeEntry(holes[0]) : null,
+      list: holes.slice(0, t.listed).map(holeEntry)
+    },
+    specks: {
+      count: specks.length,
+      area: specks.reduce((s, r) => s + r.area, 0),
+      list: specks.slice(0, t.listed).map((r) => ({
+        ...box(r),
+        area: r.area,
+        meanAlpha: r4(r.alphaSum / r.area),
+        maxAlpha: r4(r.alphaMax)
+      }))
+    },
+    patches: {
+      count: patchRegions.length,
+      area: patchRegions.reduce((s, r) => s + r.area, 0),
+      list: patchRegions.slice(0, t.listed).map(holeEntry)
+    },
+    spill: {
+      screen: t.screen,
+      pixels: edgeCount,
+      mean: edgeMean ? r4rgb(edgeMean) : null,
+      solidMean: solidMean ? r4rgb(solidMean) : null,
+      excess: excess === null ? null : r4(excess),
+      solidExcess: solidExcess === null ? null : r4(solidExcess),
+      leansToScreen: leans,
+      reading: spillReading(t, edgeCount, excess, solidExcess, leans)
+    }
+  };
+  return { report, frame: { width, height, alpha: Float32Array.from(alpha), zones } };
+}
+function holeEntry(r) {
+  return { ...box(r), area: r.area, meanAlpha: r4(r.alphaSum / r.area) };
+}
+function spillReading(t, pixels, excess, solidExcess, leans) {
+  const other = t.screen === "green" ? "red and blue" : "red and green";
+  if (pixels === 0 || excess === null) {
+    return `no partly transparent pixels at or above alpha ${t.spillMinAlpha} to read a colour from`;
+  }
+  const lean = `its ${t.screen} exceeds the larger of ${other} by ${excess.toFixed(3)}`;
+  const versus = solidExcess === null ? "" : `; the solid area just inside the edge: ${solidExcess.toFixed(3)}`;
+  return leans ? `the soft edge leans ${t.screen} (likely spill): ${lean}${versus}` : `the soft edge does not lean ${t.screen} beyond the subject's own colour: ${lean}${versus}`;
+}
+var zoneAcc = () => ({
+  pixels: 0,
+  sum: 0,
+  max: 0,
+  changed: 0,
+  minX: Infinity,
+  minY: Infinity,
+  maxX: -1,
+  maxY: -1
+});
+function finishZone(z2) {
+  return {
+    pixels: z2.pixels,
+    meanAbsDelta: z2.pixels ? r4(z2.sum / z2.pixels) : 0,
+    maxAbsDelta: r4(z2.max),
+    changedShare: z2.pixels ? r4(z2.changed / z2.pixels) : 0,
+    changedBounds: z2.changed === 0 ? null : { x: z2.minX, y: z2.minY, width: z2.maxX - z2.minX + 1, height: z2.maxY - z2.minY + 1 }
+  };
+}
+function alphaChange(prev, cur, t) {
+  if (prev.width !== cur.width || prev.height !== cur.height) {
+    throw new Error(
+      `cannot compare frames of different size (${prev.width}\xD7${prev.height} vs ${cur.width}\xD7${cur.height})`
+    );
+  }
+  const { width } = cur;
+  const acc = [zoneAcc(), zoneAcc(), zoneAcc()];
+  const all = zoneAcc();
+  const n = width * cur.height;
+  for (let p = 0; p < n; p++) {
+    const zp = prev.zones[p];
+    const zc = cur.zones[p];
+    const zone = zp === INSIDE || zc === INSIDE ? INSIDE : zp === OUTSIDE || zc === OUTSIDE ? OUTSIDE : EDGE;
+    const d = Math.abs(cur.alpha[p] - prev.alpha[p]);
+    for (const z2 of [acc[zone], all]) {
+      z2.pixels++;
+      z2.sum += d;
+      if (d > z2.max) z2.max = d;
+      if (d > t.changeAbove) {
+        z2.changed++;
+        const x = p % width;
+        const y = (p - x) / width;
+        if (x < z2.minX) z2.minX = x;
+        if (x > z2.maxX) z2.maxX = x;
+        if (y < z2.minY) z2.minY = y;
+        if (y > z2.maxY) z2.maxY = y;
+      }
+    }
+  }
+  return {
+    edge: finishZone(acc[EDGE]),
+    inside: finishZone(acc[INSIDE]),
+    outside: finishZone(acc[OUTSIDE]),
+    all: finishZone(all)
+  };
+}
+function summarizeFlicker(pairs) {
+  const zone = (key) => {
+    let mean = 0;
+    let max = 0;
+    let share = 0;
+    let worst = null;
+    for (const pair of pairs) {
+      const z2 = pair[key];
+      mean += z2.meanAbsDelta;
+      share += z2.changedShare;
+      if (z2.maxAbsDelta > max) max = z2.maxAbsDelta;
+      if (z2.meanAbsDelta > 0 && (worst === null || z2.meanAbsDelta > worst[key].meanAbsDelta)) {
+        worst = pair;
+      }
+    }
+    const k = Math.max(1, pairs.length);
+    return {
+      meanAbsDelta: r4(mean / k),
+      maxAbsDelta: r4(max),
+      changedShare: r4(share / k),
+      worstPair: worst ? { from: worst.from.index, to: worst.to.index } : null
+    };
+  };
+  return { edge: zone("edge"), inside: zone("inside"), outside: zone("outside"), all: zone("all") };
+}
+
 // src/color/sheet.ts
 var TOL = 2 / 255;
 function px(img, x, y) {
@@ -50342,8 +50835,8 @@ function flattenOver(img, backdrop) {
   }
   return out;
 }
-var r4 = (v) => Math.round(v * 1e4) / 1e4;
-var r4rgb = (v) => [r4(v[0]), r4(v[1]), r4(v[2])];
+var r42 = (v) => Math.round(v * 1e4) / 1e4;
+var r4rgb2 = (v) => [r42(v[0]), r42(v[1]), r42(v[2])];
 function clipRegion(img, region) {
   const x0 = Math.floor(region.x);
   const y0 = Math.floor(region.y);
@@ -50400,16 +50893,16 @@ function sampleRegions(img, regions) {
       rect,
       clipped: clip.clipped,
       pixels: n,
-      mean: r4rgb([sum[0] / n, sum[1] / n, sum[2] / n]),
-      min: r4rgb(min),
-      max: r4rgb(max),
+      mean: r4rgb2([sum[0] / n, sum[1] / n, sum[2] / n]),
+      min: r4rgb2(min),
+      max: r4rgb2(max),
       alpha: img.alpha ? {
-        mean: r4(aSum / n),
-        min: r4(aMin),
-        max: r4(aMax),
-        opaqueShare: r4(opaque / n),
-        partialShare: r4((n - opaque - transparent) / n),
-        transparentShare: r4(transparent / n)
+        mean: r42(aSum / n),
+        min: r42(aMin),
+        max: r42(aMax),
+        opaqueShare: r42(opaque / n),
+        partialShare: r42((n - opaque - transparent) / n),
+        transparentShare: r42(transparent / n)
       } : null
     };
   });
@@ -50472,10 +50965,10 @@ function compareRegions(from, to, regions) {
       rect,
       clipped: clip.clipped,
       pixels: n,
-      meanDelta: r4rgb([delta[0] / n, delta[1] / n, delta[2] / n]),
-      meanAbsDelta: r4rgb([absSum[0] / n, absSum[1] / n, absSum[2] / n]),
-      maxAbsDelta: r4rgb(absMax),
-      alpha: withAlpha ? { meanDelta: r4(aDelta / n), meanAbsDelta: r4(aAbs / n), maxAbsDelta: r4(aMax) } : null
+      meanDelta: r4rgb2([delta[0] / n, delta[1] / n, delta[2] / n]),
+      meanAbsDelta: r4rgb2([absSum[0] / n, absSum[1] / n, absSum[2] / n]),
+      maxAbsDelta: r4rgb2(absMax),
+      alpha: withAlpha ? { meanDelta: r42(aDelta / n), meanAbsDelta: r42(aAbs / n), maxAbsDelta: r42(aMax) } : null
     };
   });
 }
@@ -50702,7 +51195,7 @@ var regionSchema = external_exports.object({
 var renderFrameTool = defineTool({
   name: "ae_render_frame",
   title: "Render frame",
-  description: "Render one or more frames to PNG. Use to visually verify edits. The agent's 'eyes' \u2014 pair with mutations for a visual feedback loop. Headless and deterministic. Pass `time` for one frame, or `times` for several in ONE call (motion checks): files land at <outPath stem>_<index>.png and are listed in `frames`. `contactSheet` tiles every frame into one labelled PNG (<stem>_sheet.png) so a motion check is one image; `analyze` measures each capture (uniform edge bands = black bars / transparent margins, content bounds, coverage) so off-frame elements and letterboxing are caught numerically. In color-managed projects (workingSpace != None) the capture applies AE's own display transform via a transient OCIO Display Transform adjustment layer, and the PNG comes back viewer-accurate and sRGB-tagged. Where that layer cannot be used \u2014 read-only mode, an AE without the OCIO effect, or a failed capture calibration \u2014 the result falls back to a pure-math ACES conversion or to raw values with an explicit colorWarning; check colorPipeline / colorWarning on the response. Seeing the matte: `channels` picks what the file holds \u2014 'rgb' (default, transparency composited over `over`: the comp background as AE composites it, a checkerboard or a colour such as '#ff00ff'), 'rgba' (alpha kept, straight colour), or 'alpha' (the matte as greyscale: white opaque, black transparent). `isolate` renders one layer or a list alone (cameras and lights stay as they are), then restores every layer switch, even when the render fails. `alphaChannel` reports whether the capture carried alpha at all. Reading colour: `sample` takes named points or rectangles and returns mean / min / max per channel and alpha coverage for each; `histogram` counts the whole frame per channel; `compare` (with `times` and `sample`) reports each region's difference between two of the rendered frames. Every number is labelled with its stage \u2014 'capture' (before colour conversion) or 'output' (the file as written) \u2014 described once in `measurementStages`.",
+  description: "Render one or more frames to PNG. Use to visually verify edits. The agent's 'eyes' \u2014 pair with mutations for a visual feedback loop. Headless and deterministic. Pass `time` for one frame, or `times` for several in ONE call (motion checks): files land at <outPath stem>_<index>.png and are listed in `frames`. `contactSheet` tiles every frame into one labelled PNG (<stem>_sheet.png) so a motion check is one image; `analyze` measures each capture (uniform edge bands = black bars / transparent margins, content bounds, coverage) so off-frame elements and letterboxing are caught numerically. In color-managed projects (workingSpace != None) the capture applies AE's own display transform via a transient OCIO Display Transform adjustment layer, and the PNG comes back viewer-accurate and sRGB-tagged. Where that layer cannot be used \u2014 read-only mode, an AE without the OCIO effect, or a failed capture calibration \u2014 the result falls back to a pure-math ACES conversion or to raw values with an explicit colorWarning; check colorPipeline / colorWarning on the response. Seeing the matte: `channels` picks what the file holds \u2014 'rgb' (default, transparency composited over `over`: the comp background as AE composites it, a checkerboard or a colour such as '#ff00ff'), 'rgba' (alpha kept, straight colour), or 'alpha' (the matte as greyscale: white opaque, black transparent). `isolate` renders one layer or a list alone (cameras and lights stay as they are), then restores every layer switch, even when the render fails. `alphaChannel` reports whether the capture carried alpha at all. Reading colour: `sample` takes named points or rectangles and returns mean / min / max per channel and alpha coverage for each; `histogram` counts the whole frame per channel; `compare` (with `times` and `sample`) reports each region's difference between two of the rendered frames. Matte quality: `edge` reports, from the capture's alpha, the shares of opaque / partly transparent / transparent pixels, edge width (typical and worst, px), holes, specks, partly transparent patches that are not thin edges (an unkeyed screen, a remnant), the soft edge's colour with the comp background taken out and whether it leans to the screen colour (spill), and with `times` the frame-to-frame change in alpha along the edge, inside the solid area and outside it (flicker). It reports numbers and places, never a pass or fail. Every number is labelled with its stage \u2014 'capture' (before colour conversion) or 'output' (the file as written) \u2014 described once in `measurementStages`.",
   group: "render",
   // Survives read-only mode: it writes a PNG, and the visual verification loop
   // is the whole point of an audit session. Note this is NOT a
@@ -50770,6 +51263,34 @@ var renderFrameTool = defineTool({
       to: external_exports.number().int().nonnegative().optional().describe("Index into `times` (default 1).")
     }).optional().describe(
       "With `times` and `sample`: each region's difference between two rendered frames, to \u2212 from, per stage: meanDelta (signed average shift), meanAbsDelta and maxAbsDelta per channel, and the same for alpha. Reported as `comparison`."
+    ),
+    edge: external_exports.union([
+      external_exports.boolean(),
+      external_exports.object({
+        transparent: external_exports.number().min(0).max(1).optional().describe(
+          "Alpha at or below counts as transparent. Default 2/255 (as `sample` counts)."
+        ),
+        opaque: external_exports.number().min(0).max(1).optional().describe("Alpha at or above counts as opaque. Default 1 \u2212 2/255."),
+        maxEdgeWidth: external_exports.number().min(1).optional().describe(
+          "Widest transition still called a thin edge, px; wider partly transparent regions are reported as patches, and it is the edge band for flicker. Default 1% of the frame's shorter side, at least 4 (11 at 1080\xD71920)."
+        ),
+        mainAreaShare: external_exports.number().min(0).max(1).optional().describe(
+          "An island of covered pixels at least this share of the largest is a main solid area, smaller ones are specks. Default 0.25."
+        ),
+        listed: external_exports.number().int().min(0).max(50).optional().describe(
+          "How many holes, specks, patches and solid areas are listed (all are counted). Default 5."
+        ),
+        screen: external_exports.enum(["green", "blue"]).optional().describe("Screen colour spill is read against. Default 'green'."),
+        spillMinAlpha: external_exports.number().min(0).max(1).optional().describe(
+          "Partly transparent pixels below this alpha are left out of the spill colour. Default 0.1."
+        ),
+        spillThreshold: external_exports.number().min(0).max(1).optional().describe(
+          "The soft edge leans to the screen when its screen channel exceeds the larger other channel by more than this, and by this much more than the solid area's own. Default 0.03."
+        ),
+        changeAbove: external_exports.number().min(0).max(1).optional().describe("Flicker: an alpha change above this counts as changed. Default 0.05.")
+      })
+    ]).optional().describe(
+      "Matte quality as numbers, measured on the capture's alpha (stage 'capture'); `true` for the defaults. Reported as `edge` (per frame with `times`), with the thresholds used as `edgeThresholds`: shares {opaque, partial, transparent}; width {typical (median), p90, worst, worstAt, samples, unmeasured} \u2014 px the alpha takes from transparent to opaque across the 50% contour of the main solid areas (0 = hard edge; unmeasured = the alpha never reaches transparent or opaque anywhere, as when the screen is left partly opaque); solidAreas; holes {count, area, transparentArea, largest, list} \u2014 regions below opaque enclosed by the solid area (not touching the frame edge); specks {count, area, list} \u2014 islands outside the main areas; patches {count, area, list} \u2014 partly transparent regions thicker than maxEdgeWidth; spill {mean, solidMean, excess, solidExcess, leansToScreen, reading} \u2014 the straight colour of the partly transparent pixels (comp background taken out) against the solid just inside the edge. Boxes are {x, y, width, height} in capture pixels. With two or more `times`: `edgeFlicker` {pairs, overall} \u2014 mean / max change in alpha and the changed share and bounds, for consecutive frames, split into edge, inside (a hole opening counts here) and outside (specks); real motion counts as change too."
     )
   },
   handler: async (args, transport2) => {
@@ -50886,6 +51407,14 @@ function checkEyesOptions(args) {
     if (from === to) return invalid("`compare.from` and `compare.to` must be different frames");
     compare = { from, to };
   }
+  let edge = null;
+  if (args.edge !== void 0 && args.edge !== false) {
+    edge = args.edge === true ? {} : args.edge;
+    if (typeof edge !== "object" || edge === null)
+      return invalid("`edge` must be true or an object");
+    const problem = edgeArgsError(edge);
+    if (problem !== null) return invalid(problem);
+  }
   return {
     options: {
       channels,
@@ -50894,7 +51423,8 @@ function checkEyesOptions(args) {
       isolate,
       sample,
       histogram,
-      compare
+      compare,
+      edge
     }
   };
 }
@@ -51128,6 +51658,9 @@ async function nativeFlow(args, opts, abs, transport2) {
   const keep = new Set(opts.compare ? [opts.compare.from, opts.compare.to] : []);
   const kept = /* @__PURE__ */ new Map();
   const sheetImages = [];
+  const edgePairs = [];
+  let edgePrev = null;
+  let edgeMeasured = 0;
   let withAlpha = 0;
   let writing = convert !== null;
   for (const [i, file2] of written.entries()) {
@@ -51143,6 +51676,29 @@ async function nativeFlow(args, opts, abs, transport2) {
       return toMcpResult(result);
     }
     if (capture.alpha) withAlpha++;
+    if (opts.edge) {
+      if (!capture.alpha) edgePrev = null;
+      else {
+        try {
+          const t = resolveEdgeThresholds(opts.edge, capture.width, capture.height);
+          payload.edgeThresholds ??= t;
+          const { report, frame } = measureEdge(capture, bg ?? [0, 0, 0], t);
+          put(i, "edge", report);
+          edgeMeasured++;
+          if (edgePrev !== null && edgePrev.index === i - 1) {
+            edgePairs.push({
+              from: { index: i - 1, time: frames[i - 1]?.time },
+              to: { index: i, time: frames[i]?.time },
+              ...alphaChange(edgePrev.frame, frame, t)
+            });
+          }
+          edgePrev = multi ? { index: i, frame } : null;
+        } catch (err) {
+          payload.edgeWarning = `edge measurement failed: ${err instanceof Error ? err.message : String(err)}`;
+          edgePrev = null;
+        }
+      }
+    }
     if (args.analyze) {
       try {
         put(i, "analysis", analyzeFrame(capture));
@@ -51189,6 +51745,16 @@ async function nativeFlow(args, opts, abs, transport2) {
       payload.alphaWarning = "the capture has no alpha channel, so there was nothing to composite over `over`";
     }
   }
+  if (opts.edge) {
+    if (withAlpha < written.length) {
+      payload.edgeWarning = `${written.length - withAlpha} of ${written.length} captures have no alpha channel, so their matte could not be measured (a comp with no transparency, or an AE that flattens)`;
+    } else if (edgeMeasured > 0 && bg === null) {
+      payload.edgeWarning = "the comp background colour (bgColor) is unknown, so the soft edge's colour was recovered as if it were black; the spill reading may carry the real background";
+    }
+    if (edgePairs.length > 0) {
+      payload.edgeFlicker = { pairs: edgePairs, overall: summarizeFlicker(edgePairs) };
+    }
+  }
   if (opts.compare && opts.sample) {
     const { from, to } = opts.compare;
     const a = kept.get(from);
@@ -51209,7 +51775,8 @@ async function nativeFlow(args, opts, abs, transport2) {
   }
   const stages = /* @__PURE__ */ new Set([
     ...opts.sample?.stages ?? [],
-    ...opts.histogram ? [opts.histogram.stage] : []
+    ...opts.histogram ? [opts.histogram.stage] : [],
+    ...opts.edge ? ["capture"] : []
   ]);
   if (stages.size > 0) {
     payload.measurementStages = {};
