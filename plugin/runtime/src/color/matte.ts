@@ -282,8 +282,11 @@ function dt1d(f: Float64Array, n: number, d: Float64Array, v: Int32Array, z: Flo
   }
 }
 
-/** Distance from every pixel to the nearest pixel where `isSource` holds; Infinity if none. */
-function distanceTo(
+/**
+ * Distance from every pixel to the nearest pixel where `isSource` holds;
+ * Infinity if none. Exported for the screen measurement (screen.ts).
+ */
+export function distanceTo(
   alpha: Float64Array,
   width: number,
   height: number,
@@ -313,7 +316,7 @@ function distanceTo(
 // Connected regions
 // ---------------------------------------------------------------------------
 
-interface Region {
+export interface Region {
   area: number;
   minX: number;
   minY: number;
@@ -325,7 +328,7 @@ interface Region {
   touchesBorder: boolean;
 }
 
-const newRegion = (): Region => ({
+export const newRegion = (): Region => ({
   area: 0,
   minX: Infinity,
   minY: Infinity,
@@ -337,7 +340,7 @@ const newRegion = (): Region => ({
   touchesBorder: false,
 });
 
-function addPixel(r: Region, x: number, y: number, a: number): void {
+export function addPixel(r: Region, x: number, y: number, a: number): void {
   r.area++;
   if (x < r.minX) r.minX = x;
   if (x > r.maxX) r.maxX = x;
@@ -347,7 +350,7 @@ function addPixel(r: Region, x: number, y: number, a: number): void {
   if (a > r.alphaMax) r.alphaMax = a;
 }
 
-const box = (r: Region): Box => ({
+export const box = (r: Region): Box => ({
   x: r.minX,
   y: r.minY,
   width: r.maxX - r.minX + 1,
@@ -362,8 +365,9 @@ const N8Y = [0, 0, 1, -1, 1, -1, 1, -1];
 /**
  * Flood-fill every region of pixels where `inSet` holds (4- or 8-connected),
  * writing 1-based region ids into `labels` and returning one Region each.
+ * Exported for the screen measurement (screen.ts).
  */
-function labelRegions(
+export function labelRegions(
   alpha: Float64Array,
   width: number,
   height: number,

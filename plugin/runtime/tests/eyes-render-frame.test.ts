@@ -611,6 +611,77 @@ describe("edge", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Stage 6: screen (measuring the green screen in the un-keyed source)
+// ---------------------------------------------------------------------------
+
+// 96×64 opaque source renders (layout in make-fixtures.mjs).
+describe("screen", () => {
+  it("measures the screen in one frame, with the thresholds it used", async () => {
+    const { res, isError } = await render({ time: 0, screen: true }, ["screen-uneven-rgba16.png"]);
+    expect(isError).toBe(false);
+    expect(res.screen.stage).toBe("capture");
+    expect(res.screen.values).toBe("capture");
+    expect(res.screen.screen).toBe("green");
+    expect(res.screen.evenness.uneven).toBe(true);
+    expect(res.screen.evenness.darkerSide).toBe("left");
+    expect(res.screen.colour.nearSubject.colour[1]).toBeGreaterThan(res.screen.colour.median[1]);
+    expect(res.screen.screenColourNote).toMatch(/Screen Colour/);
+    expect(res.screenThresholds).toMatchObject({ columns: 6, rows: 4, minExcess: 0.04 });
+    expect(res.measurementStages.capture).toBeDefined();
+  });
+
+  it("measures each frame with `times`", async () => {
+    const { res } = await render({ times: [0, 1], screen: true }, [
+      "screen-even-rgba16.png",
+      "screen-blue-rgba16.png",
+    ]);
+    expect(res.screen).toBeUndefined();
+    expect(res.frames[0].screen.screen).toBe("green");
+    expect(res.frames[1].screen.screen).toBe("blue");
+  });
+
+  it("takes overrides", async () => {
+    const { res } = await render({ time: 0, screen: { screen: "blue", columns: 2, rows: 2 } }, [
+      "screen-even-rgba16.png",
+    ]);
+    expect(res.screen.screen).toBeNull();
+    expect(res.screen.reading).toMatch(/no blue screen/);
+    expect(res.screenThresholds).toMatchObject({ screen: "blue", columns: 2, rows: 2 });
+  });
+
+  it("works on the raw capture with colorManaged off, beside edge", async () => {
+    const { res, isError } = await render(
+      { time: 0, screen: true, edge: true, colorManaged: "off" },
+      ["screen-even-rgba16.png"],
+    );
+    expect(isError).toBe(false);
+    expect(res.screen.screen).toBe("green");
+    expect(res.edge.shares.opaque).toBe(1);
+  });
+
+  it("measures a capture with no alpha channel as opaque", async () => {
+    const { res } = await render({ time: 0, screen: true }, ["opaque-rgb16.png"]);
+    // Every pixel is (0.25, 0.5, 0.75): blue leads by 0.25, a third of its level.
+    expect(res.screen.measured).toBe(32 * 24);
+    expect(res.screen.screen).toBe("blue");
+  });
+
+  const refusedScreen = [
+    ["an unknown screen", { screen: "red" }],
+    ["a zero-column grid", { columns: 0 }],
+    ["a share outside 0..1", { minExcess: 1.5 }],
+  ] as const;
+  for (const [what, screen] of refusedScreen) {
+    it(`refuses ${what} before After Effects is contacted`, async () => {
+      const { res, isError, transport } = await render({ time: 0, screen });
+      expect(isError).toBe(true);
+      expect(res.error.code).toBe("INVALID_ARGS");
+      expect(transport.calls).toHaveLength(0);
+    });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // isolate: the generated JSX, run against a mock comp
 // ---------------------------------------------------------------------------
 

@@ -61,6 +61,24 @@
 //   flicker-b-rgba16.png     the next frame: on the right side (x 46, 47) the
 //                            soft edge reads 0.4 and 0.1 instead of 0.75 and
 //                            0.25. Nothing else changes.
+//
+// The screen-* fixtures (agent-eyes stage 6, the `screen` report) are 96×64
+// renders of UN-KEYED source footage: every pixel opaque (alpha 1), as a
+// source render of a full-frame clip comes back. Each holds a subject, a
+// rectangle in colour (0.8, 0.6, 0.5) from y 16 to the bottom edge (a person
+// cut by the frame), x 36..59 unless named. Synthetic; no real footage.
+//   screen-even-rgba16.png   an even green screen (0.25, 0.55, 0.3).
+//   screen-uneven-rgba16.png a green screen whose level runs 1.5x from left to
+//                            right: (0.25, 0.5, 0.3)·f, f = 0.8 + 0.4·x/95, so
+//                            green 0.4 at x 0 to 0.6 at x 95. Subject at
+//                            x 60..83 (on the brighter side).
+//   screen-blue-rgba16.png   an even blue screen (0.15, 0.3, 0.7).
+//   screen-none-rgba16.png   no screen: a grey wall (0.6, 0.6, 0.6) above
+//                            y 32, a brown floor (0.5, 0.4, 0.3) below.
+//   screen-grainy-rgba8.png  the even green screen with grain: every channel
+//                            of every pixel (subject too) moved by a uniform
+//                            random amount in ±0.06 (standard deviation
+//                            0.0346), from a fixed seed; 8 bits.
 
 import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -197,6 +215,33 @@ function flickered(x, y) {
   return x >= 46 ? subject(x, y, SKIN, [0.4, 0.1]) : subject(x, y);
 }
 
+// ---- stage 6: screen measurement (96×64) ----
+const SW = 96;
+const SH = 64;
+
+/** A source render: opaque everywhere, the subject over `screenAt(x, y)`. */
+function source(screenAt, subjectX0 = 36, noise = null) {
+  return (x, y) => {
+    const inSubject = y >= 16 && x >= subjectX0 && x <= subjectX0 + 23;
+    const c = inSubject ? SKIN : screenAt(x, y);
+    const n = noise ? noise() : [0, 0, 0];
+    return [0, 1, 2].map((i) => Math.min(1, Math.max(0, c[i] + n[i]))).concat(1);
+  };
+}
+
+/** Deterministic uniform grain in ±amp per channel (a small LCG; same bytes every run). */
+function grain(amp, seed = 12345) {
+  let s = seed >>> 0;
+  const next = () => {
+    s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+  return () => [0, 1, 2].map(() => (next() * 2 - 1) * amp);
+}
+
+const EVEN_GREEN = [0.25, 0.55, 0.3];
+const uneven = (x) => [0.25, 0.5, 0.3].map((v) => v * (0.8 + (0.4 * x) / 95));
+
 const files = {
   "ae-blue-bg-rgba16.png": encode(16, 6, aeCapture([0, 0, 1])),
   "ae-blue-bg-rgba8.png": encode(8, 6, aeCapture([0, 0, 1])),
@@ -213,6 +258,41 @@ const files = {
   "spill-magenta-rgba16.png": matte([0.8, 0.1, 0.6], (x, y) => subject(x, y, GREENISH)),
   "flicker-a-rgba16.png": matte(BLACK, (x, y) => subject(x, y)),
   "flicker-b-rgba16.png": matte(BLACK, flickered),
+  "screen-even-rgba16.png": encode(
+    16,
+    6,
+    source(() => EVEN_GREEN),
+    SW,
+    SH,
+  ),
+  "screen-uneven-rgba16.png": encode(
+    16,
+    6,
+    source((x) => uneven(x), 60),
+    SW,
+    SH,
+  ),
+  "screen-blue-rgba16.png": encode(
+    16,
+    6,
+    source(() => [0.15, 0.3, 0.7]),
+    SW,
+    SH,
+  ),
+  "screen-none-rgba16.png": encode(
+    16,
+    6,
+    source((_x, y) => (y < 32 ? [0.6, 0.6, 0.6] : [0.5, 0.4, 0.3])),
+    SW,
+    SH,
+  ),
+  "screen-grainy-rgba8.png": encode(
+    8,
+    6,
+    source(() => EVEN_GREEN, 36, grain(0.06)),
+    SW,
+    SH,
+  ),
 };
 for (const [name, bytes] of Object.entries(files)) writeFileSync(join(HERE, name), bytes);
 console.log(`wrote ${Object.keys(files).length} fixtures to ${HERE}`);

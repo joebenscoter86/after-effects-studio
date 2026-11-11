@@ -802,6 +802,189 @@ AE.describeEffect = function (fx) {
     return { properties: rows, skippedNoValue: skipped };
 };
 
+// ---------- Keying kit: effects by matchName, checked group writes, masks ----------
+
+/** 1-based indices of the effects in `fxRoot` whose matchName is `matchName`. */
+AE.effectIndicesByMatchName = function (fxRoot, matchName) {
+    var out = [];
+    var n = AE.safeGet(function () { return fxRoot.numProperties; }, 0);
+    for (var i = 1; i <= n; i++) {
+        var mn = AE.safeGet(function () { return fxRoot.property(i).matchName; }, "");
+        if (mn === matchName) out.push(i);
+    }
+    return out;
+};
+
+/** "1 Gaussian Blur, 2 Keylight (1.2)", or "none": for error messages. */
+AE.effectListText = function (fxRoot) {
+    var parts = [];
+    var n = AE.safeGet(function () { return fxRoot.numProperties; }, 0);
+    for (var i = 1; i <= n; i++) {
+        parts.push(i + " " + AE.safeGet(function () { return fxRoot.property(i).name; }, "?"));
+    }
+    return parts.length ? parts.join(", ") : "none";
+};
+
+/** The effect stack as [{ index, name, matchName }]. */
+AE.effectOrder = function (fxRoot) {
+    var out = [];
+    var n = AE.safeGet(function () { return fxRoot.numProperties; }, 0);
+    for (var i = 1; i <= n; i++) {
+        var fx = fxRoot.property(i);
+        out.push({ index: i, name: fx.name, matchName: fx.matchName });
+    }
+    return out;
+};
+
+/**
+ * Find an effect by matchName. With `index` (1-based) the effect there must
+ * have that matchName; without, the first one is taken. Returns { index,
+ * count } (index null when there is none) or { error }. `label` names the
+ * effect in messages ("Keylight").
+ */
+AE.pickEffect = function (fxRoot, matchName, label, index) {
+    var found = AE.effectIndicesByMatchName(fxRoot, matchName);
+    var n = fxRoot.numProperties;
+    if (index !== null && index !== undefined) {
+        if (index < 1 || index > n) {
+            return { error: "no effect at index " + index + " (layer has " + n + " effects: " + AE.effectListText(fxRoot) + ")" };
+        }
+        var fx = fxRoot.property(index);
+        if (fx.matchName !== matchName) {
+            return { error: "effect " + index + " is '" + fx.name + "' (" + fx.matchName + "), not " + label + " (" + matchName + ")" };
+        }
+        return { index: index, count: found.length };
+    }
+    if (found.length === 0) return { index: null, count: 0 };
+    return { index: found[0], count: found.length };
+};
+
+/**
+ * Check every write in `writes` ([{ key, matchName, value }]) against the
+ * effect's properties with AE.checkPropertyWrite, BEFORE anything is
+ * written. Returns the refusals: [{ setting, error, range? }].
+ */
+AE.checkEffectWrites = function (fx, writes) {
+    var refused = [];
+    for (var i = 0; i < writes.length; i++) {
+        var w = writes[i];
+        var p = null;
+        try { p = fx.property(w.matchName); } catch (eP) { p = null; }
+        if (!p) {
+            refused.push({ setting: w.key, error: "'" + fx.name + "' has no property " + w.matchName });
+            continue;
+        }
+        var why = AE.checkPropertyWrite(p, w.value);
+        if (why !== null) refused.push({ setting: w.key, error: why, range: AE.propertyRange(p) });
+    }
+    return refused;
+};
+
+/** Write checked values; returns the writes After Effects still rejected: [{ setting, error }]. */
+AE.applyEffectWrites = function (fx, writes) {
+    var failed = [];
+    for (var i = 0; i < writes.length; i++) {
+        var w = writes[i];
+        try { fx.property(w.matchName).setValue(w.value); } catch (eW) { failed.push({ setting: w.key, error: AE.errText(eW) }); }
+    }
+    return failed;
+};
+
+/** { key: value } for every key of `map` ({ key: matchName }), each read guarded. */
+AE.readEffectValues = function (fx, map) {
+    var out = {};
+    for (var k in map) {
+        if (!map.hasOwnProperty(k)) continue;
+        var mn = map[k];
+        out[k] = AE.safeGet(function () { return AE.valueToJson(fx.property(mn).value); }, null);
+    }
+    return out;
+};
+
+/**
+ * Move the effect tracked as `key` in `track` ({ name: 1-based index or
+ * null }) to index `to`, and renumber every other tracked index the move
+ * shifts. Indices, not references: After Effects can invalidate effect
+ * references when the stack changes.
+ */
+AE.moveTrackedEffect = function (fxRoot, track, key, to) {
+    var from = track[key];
+    if (from === to) return;
+    fxRoot.property(from).moveTo(to);
+    for (var k in track) {
+        if (!track.hasOwnProperty(k) || k === key || track[k] === null) continue;
+        var i = track[k];
+        if (from < to && i > from && i <= to) track[k] = i - 1;
+        else if (from > to && i >= to && i < from) track[k] = i + 1;
+    }
+    track[key] = to;
+};
+
+/** Place the tracked effect `key` directly after the tracked effect `anchorKey`. */
+AE.placeTrackedAfter = function (fxRoot, track, key, anchorKey) {
+    var from = track[key];
+    var anchor = track[anchorKey];
+    if (from === anchor + 1) return;
+    AE.moveTrackedEffect(fxRoot, track, key, from > anchor ? anchor + 1 : anchor);
+};
+
+/** A MaskMode value by the name mask.add / mask.set_props take ("Add", "Subtract", …), or null. */
+AE.maskModeName = function (mode) {
+    var names = [["ADD", "Add"], ["SUBTRACT", "Subtract"], ["INTERSECT", "Intersect"], ["LIGHTEN", "Lighten"],
+        ["DARKEN", "Darken"], ["DIFFERENCE", "Difference"], ["NONE", "None"]];
+    for (var i = 0; i < names.length; i++) {
+        try { if (mode === MaskMode[names[i][0]]) return names[i][1]; } catch (eMm) {}
+    }
+    return null;
+};
+
+/** "smooth" or "linear", as mask.set_props takes it, or null. */
+AE.maskFalloffName = function (falloff) {
+    try {
+        if (falloff === MaskFeatherFalloff.FFO_SMOOTH) return "smooth";
+        if (falloff === MaskFeatherFalloff.FFO_LINEAR) return "linear";
+    } catch (eFf) {}
+    return null;
+};
+
+/** One mask read back for mask.get; `time` null reads the current value. */
+AE.describeMask = function (m, index, time) {
+    function leaf(mn) { return AE.safeGet(function () { return m.property(mn); }, null); }
+    function raw(p) {
+        if (!p) return null;
+        return AE.safeGet(function () { return time === null ? p.value : p.valueAtTime(time, false); }, null);
+    }
+    function keys(p) { return p ? AE.safeGet(function () { return p.numKeys; }, 0) : 0; }
+    var path = leaf("ADBE Mask Shape");
+    var feather = leaf("ADBE Mask Feather");
+    var opacity = leaf("ADBE Mask Opacity");
+    var expansion = leaf("ADBE Mask Offset");
+    var shape = raw(path);
+    var verts = shape ? AE.valueToJson(AE.safeGet(function () { return shape.vertices; }, null)) : null;
+    var mode = AE.safeGet(function () { return m.maskMode; }, null);
+    var nk = { path: keys(path), feather: keys(feather), opacity: keys(opacity), expansion: keys(expansion) };
+    return {
+        index: index,
+        name: AE.safeGet(function () { return m.name; }, null),
+        mode: AE.maskModeName(mode),
+        modeValue: mode === null ? null : Number(mode),
+        inverted: AE.safeGet(function () { return m.inverted; }, null),
+        locked: AE.safeGet(function () { return m.locked; }, null),
+        featherFalloff: AE.maskFalloffName(AE.safeGet(function () { return m.maskFeatherFalloff; }, null)),
+        feather: AE.valueToJson(raw(feather)),
+        expansion: AE.valueToJson(raw(expansion)),
+        opacity: AE.valueToJson(raw(opacity)),
+        closed: shape ? AE.safeGet(function () { return shape.closed === true; }, null) : null,
+        vertexCount: verts ? verts.length : 0,
+        vertices: verts,
+        inTangents: shape ? AE.valueToJson(AE.safeGet(function () { return shape.inTangents; }, null)) : null,
+        outTangents: shape ? AE.valueToJson(AE.safeGet(function () { return shape.outTangents; }, null)) : null,
+        featherPoints: shape ? AE.safeGet(function () { return shape.featherSegLocs.length; }, 0) : 0,
+        numKeys: nk,
+        keyframed: { path: nk.path > 0, feather: nk.feather > 0, opacity: nk.opacity > 0, expansion: nk.expansion > 0 }
+    };
+};
+
 // opts.controls adds range, units and canVaryOverTime (AE._addControlFields);
 // off by default so markers, exports and summaries stay small.
 AE.serializeProperty = function (prop, opts) {

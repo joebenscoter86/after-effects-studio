@@ -22,6 +22,14 @@ import {
   encodePngSrgbRgba8,
   type DecodedPng,
 } from "../color/png16.js";
+import {
+  measureScreen,
+  resolveScreenThresholds,
+  screenArgsError,
+  type ScreenArgs,
+  type ScreenReport,
+  type ScreenThresholds,
+} from "../color/screen.js";
 import { readFileSettled } from "../color/settled-read.js";
 import {
   analyzeFrame,
@@ -67,6 +75,7 @@ interface RenderedFrame {
   samples?: RegionReport[];
   histogram?: StagedHistogram;
   edge?: EdgeReport;
+  screen?: ScreenReport;
 }
 
 interface IsolationReport {
@@ -125,6 +134,9 @@ interface RenderFramePayload {
   edgeThresholds?: EdgeThresholds;
   edgeFlicker?: { pairs: FlickerPair[]; overall: ReturnType<typeof summarizeFlicker> };
   edgeWarning?: string;
+  screen?: ScreenReport;
+  screenThresholds?: ScreenThresholds;
+  screenWarning?: string;
   captureWarning?: string;
 }
 
@@ -155,6 +167,7 @@ interface EyesOptions {
   histogram: { bins: number; stage: Stage } | null;
   compare: { from: number; to: number } | null;
   edge: EdgeThresholdArgs | null;
+  screen: ScreenArgs | null;
 }
 
 /** Said once per response, so every number can be traced to the pixels it came from. */
@@ -219,6 +232,10 @@ export const renderFrameTool = defineTool({
     "that are not thin edges (an unkeyed screen, a remnant), the soft edge's colour with the comp " +
     "background taken out and whether it leans to the screen colour (spill), and with `times` the " +
     "frame-to-frame change in alpha along the edge, inside the solid area and outside it (flicker). " +
+    "Green screen: `screen`, on a render of the UN-KEYED source (Keylight View 'source' or the key " +
+    "off, the keyed layer isolated), reports green or blue, which pixels are screen and their share, " +
+    "a suggested screen colour (the median, and the colour just outside the subject), evenness on a " +
+    "grid (darkest and brightest cells, the spread as a ratio, the darker side) and grain. " +
     "It reports numbers and places, never a pass or fail. Every number is " +
     "labelled with its stage — 'capture' (before colour conversion) or 'output' (the file as written) — " +
     "described once in `measurementStages`.",
@@ -465,6 +482,114 @@ export const renderFrameTool = defineTool({
           "for consecutive frames, split into edge, inside (a hole opening counts here) and outside " +
           "(specks); real motion counts as change too.",
       ),
+    screen: z
+      .union([
+        z.boolean(),
+        z.object({
+          screen: z
+            .enum(["auto", "green", "blue"])
+            .optional()
+            .describe(
+              "Which screen to look for. Default 'auto': green or blue, whichever has more pixels.",
+            ),
+          minExcess: z
+            .number()
+            .min(0)
+            .max(1)
+            .optional()
+            .describe(
+              "A pixel is screen when its screen channel leads the larger other channel by at least " +
+                "this (capture values). Default 0.04.",
+            ),
+          minDominance: z
+            .number()
+            .min(0)
+            .max(1)
+            .optional()
+            .describe("…and by at least this share of its own level. Default 0.15."),
+          minScreenShare: z
+            .number()
+            .min(0)
+            .max(1)
+            .optional()
+            .describe(
+              "Fewer screen pixels than this share of the measured ones means no screen. Default 0.02.",
+            ),
+          opaque: z
+            .number()
+            .min(0)
+            .max(1)
+            .optional()
+            .describe(
+              "Pixels with alpha below this are left out (masked or transparent). Default 1 − 2/255.",
+            ),
+          columns: z
+            .number()
+            .int()
+            .min(1)
+            .max(64)
+            .optional()
+            .describe(
+              "Evenness grid columns. Default: four cells across the shorter side, square-ish cells.",
+            ),
+          rows: z
+            .number()
+            .int()
+            .min(1)
+            .max(64)
+            .optional()
+            .describe("Evenness grid rows. Default as columns."),
+          minCellShare: z
+            .number()
+            .min(0)
+            .max(1)
+            .optional()
+            .describe(
+              "A cell needs this share of screen pixels to count as darkest or brightest. Default 0.25.",
+            ),
+          nearSkip: z
+            .number()
+            .min(0)
+            .optional()
+            .describe(
+              "The near-subject colour is read from screen pixels starting this many px from the subject. " +
+                "Default 1% of the shorter side, at least 2 (11 at 1080×1920).",
+            ),
+          nearBand: z
+            .number()
+            .min(1)
+            .optional()
+            .describe(
+              "…in a band this many px wide. Default 5% of the shorter side, at least 4 (54 at 1080).",
+            ),
+          unevenRatio: z
+            .number()
+            .min(1)
+            .optional()
+            .describe("A brightest / darkest level ratio above this reads as uneven. Default 1.1."),
+          grainAbove: z
+            .number()
+            .min(0)
+            .max(1)
+            .optional()
+            .describe(
+              "A screen-channel grain standard deviation above this reads as grainy. Default 0.01.",
+            ),
+        }),
+      ])
+      .optional()
+      .describe(
+        "Measure a green or blue screen, on the capture (stage 'capture'), opaque pixels only; `true` for " +
+          "the defaults. Render the UN-KEYED source: set Keylight's View to 'source' (key.view) or switch " +
+          "the key off, and isolate the keyed layer. Reported as `screen` (per frame with `times`), with " +
+          "the thresholds used as `screenThresholds`: screen ('green' | 'blue' | null), chosen, measured / " +
+          "leftOut pixels, screenPixels, share, bounds; colour {median, mean, nearSubject {colour, pixels, " +
+          "band}} — the suggested Screen Colour; subject {box, area, share}; evenness {columns, rows, " +
+          "cells [{column, row, box, screenShare, mean, luma, level}], darkest, brightest, levelRatio, " +
+          "lumaRatio, uneven, horizontal (right / left), vertical (bottom / top), darkerSide, reading}; " +
+          "grain {stdDev, level, steps8bit, samples, grainy, reading}; reading; warning; " +
+          "screenColourNote (capture values and what they mean for Keylight's Screen Colour).",
+      ),
   },
   handler: async (args, transport) => {
     if ((args.time === undefined) === (args.times === undefined)) {
@@ -529,6 +654,7 @@ function checkEyesOptions(args: {
   histogram?: boolean | HistogramArgs;
   compare?: { from?: number; to?: number };
   edge?: boolean | EdgeThresholdArgs;
+  screen?: boolean | ScreenArgs;
 }): { options: EyesOptions } | { error: ReturnType<typeof errorResult> } {
   const channels = args.channels ?? "rgb";
   if (args.colorManaged === "off" && (channels !== "rgb" || args.over !== undefined)) {
@@ -617,6 +743,15 @@ function checkEyesOptions(args: {
     if (problem !== null) return invalid(problem);
   }
 
+  let screen: EyesOptions["screen"] = null;
+  if (args.screen !== undefined && args.screen !== false) {
+    screen = args.screen === true ? {} : args.screen;
+    if (typeof screen !== "object" || screen === null)
+      return invalid("`screen` must be true or an object");
+    const problem = screenArgsError(screen as Record<string, unknown>);
+    if (problem !== null) return invalid(problem);
+  }
+
   return {
     options: {
       channels,
@@ -627,6 +762,7 @@ function checkEyesOptions(args: {
       histogram,
       compare,
       edge,
+      screen,
     },
   };
 }
@@ -892,7 +1028,7 @@ async function nativeFlow(
     (p): p is string => typeof p === "string",
   );
   /** Attach a per-frame result where this response shape keeps it. */
-  const put = <K extends "analysis" | "samples" | "histogram" | "edge">(
+  const put = <K extends "analysis" | "samples" | "histogram" | "edge" | "screen">(
     i: number,
     key: K,
     value: RenderedFrame[K],
@@ -967,6 +1103,15 @@ async function nativeFlow(
           payload.edgeWarning = `edge measurement failed: ${err instanceof Error ? err.message : String(err)}`;
           edgePrev = null;
         }
+      }
+    }
+    if (opts.screen) {
+      try {
+        const t = resolveScreenThresholds(opts.screen, capture.width, capture.height);
+        payload.screenThresholds ??= t;
+        put(i, "screen", measureScreen(capture, t));
+      } catch (err) {
+        payload.screenWarning = `screen measurement failed: ${err instanceof Error ? err.message : String(err)}`;
       }
     }
     if (args.analyze) {
@@ -1068,7 +1213,7 @@ async function nativeFlow(
   const stages = new Set<Stage>([
     ...(opts.sample?.stages ?? []),
     ...(opts.histogram ? [opts.histogram.stage] : []),
-    ...(opts.edge ? (["capture"] as const) : []),
+    ...(opts.edge || opts.screen ? (["capture"] as const) : []),
   ]);
   if (stages.size > 0) {
     payload.measurementStages = {};
