@@ -45733,6 +45733,8 @@ var COMP_INFO_FN = `
         _ciOut.shutterAngle = c.shutterAngle;
         _ciOut.shutterPhase = c.shutterPhase;
         _ciOut.motionBlur = c.motionBlur;
+        // Comp markers (time, comment, duration per key), or null when there are none.
+        _ciOut.markers = AE.serializeCompMarkers(c);
         _ciOut.layers = _ciLayers;
         return _ciOut;
     }
@@ -52967,7 +52969,7 @@ init_registry();
 var compInfoTool = defineTool({
   name: "ae_comp_info",
   title: "Comp info",
-  description: "Detailed comp info: size, fps, duration, work area, motion blur, layer summaries. Pass a comp name or item id \u2014 or an ARRAY of them to fetch several comps in one call.",
+  description: "Detailed comp info: size, fps, duration, work area, motion blur, comp markers (`markers.keyframes`: each `time` in seconds and `value.comment`, `value.duration`; null when there are none), layer summaries. Pass a comp name or item id \u2014 or an ARRAY of them to fetch several comps in one call.",
   group: "inspect",
   blockedInReadOnly: false,
   effect: "read",

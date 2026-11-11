@@ -5,7 +5,7 @@ import { defineTool, toMcpResult } from "./define-tool.js";
 const compInfoTool = defineTool({
   name: "ae_comp_info",
   title: "Comp info",
-  description: "Detailed comp info: size, fps, duration, work area, motion blur, layer summaries. Pass a comp name or item id \u2014 or an ARRAY of them to fetch several comps in one call.",
+  description: "Detailed comp info: size, fps, duration, work area, motion blur, comp markers (`markers.keyframes`: each `time` in seconds and `value.comment`, `value.duration`; null when there are none), layer summaries. Pass a comp name or item id \u2014 or an ARRAY of them to fetch several comps in one call.",
   group: "inspect",
   blockedInReadOnly: false,
   effect: "read",

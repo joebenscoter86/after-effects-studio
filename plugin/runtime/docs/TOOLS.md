@@ -10,13 +10,13 @@ Generated from `src/tools/**` via `npm run docs:tools` — do not edit by hand. 
 
 Read-only project/comp/layer introspection.
 
-| Tool              | Description                                                                                                                                                                                    |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ae_project_info` | Project-level info: file path, dirty flag, all items with type/summary, active item.                                                                                                           |
-| `ae_comp_info`    | Detailed comp info: size, fps, duration, work area, motion blur, layer summaries.                                                                                                              |
-| `ae_layer_info`   | Full layer info: transform, effects, masks, text, shape contents, keyframes (incl.                                                                                                             |
-| `ae_version_info` | AE version, build, and read-only capabilities (saveFrameToPng, app.effects, Socket).                                                                                                           |
-| `ae_context`      | Ambient context: project state, active comp, selected layers, item list, AE.* helpers, ES3 rules, and the undo contract (every call = one auto undo group; a call that throws is rolled back). |
+| Tool              | Description                                                                                                                                                                                                   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ae_project_info` | Project-level info: file path, dirty flag, all items with type/summary, active item.                                                                                                                          |
+| `ae_comp_info`    | Detailed comp info: size, fps, duration, work area, motion blur, comp markers (`markers.keyframes`: each `time` in seconds and `value.comment`, `value.duration`; null when there are none), layer summaries. |
+| `ae_layer_info`   | Full layer info: transform, effects, masks, text, shape contents, keyframes (incl.                                                                                                                            |
+| `ae_version_info` | AE version, build, and read-only capabilities (saveFrameToPng, app.effects, Socket).                                                                                                                          |
+| `ae_context`      | Ambient context: project state, active comp, selected layers, item list, AE.* helpers, ES3 rules, and the undo contract (every call = one auto undo group; a call that throws is rolled back).                |
 
 ## Document
 
@@ -60,7 +60,7 @@ Project-level info: file path, dirty flag, all items with type/summary, active i
 
 ### `ae_comp_info`
 
-Detailed comp info: size, fps, duration, work area, motion blur, layer summaries. Pass a comp name or item id — or an ARRAY of them to fetch several comps in one call.
+Detailed comp info: size, fps, duration, work area, motion blur, comp markers (`markers.keyframes`: each `time` in seconds and `value.comment`, `value.duration`; null when there are none), layer summaries. Pass a comp name or item id — or an ARRAY of them to fetch several comps in one call.
 
 | Parameter  | Required | Description                                                                                                                                                                                                                                                                                                                                                              |
 | ---------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
