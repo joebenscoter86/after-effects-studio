@@ -144,7 +144,10 @@ export interface SeriesSummary {
 }
 /**
  * Median, extremes and the pairs that stand out. A spike stands out from the
- * neighbours on every side it has (so a move starting from rest is not a cut):
+ * neighbours on every side it has (so a move starting from rest is not a cut),
+ * by spikeRatio over the median of up to `window` pairs on that side; a pair
+ * is looked at a second time with the spikes already found left out of its
+ * neighbours, so a smaller jump beside a larger one is still reported:
  * two spikes in a row are a one-frame pop of the frame they share, a lone
  * spike is a cut (or a jump). A hold — a pair that barely changes while the
  * neighbours on both sides move — is a stutter: a repeated frame. Spikes are
