@@ -120,10 +120,16 @@ export interface ScreenReport {
         levelRatio: number | null;
         lumaRatio: number | null;
         uneven: boolean;
-        /** Fitted level at the right edge / the left edge, and bottom / top. */
+        /**
+         * Where screen was measured: the 5th to 95th percentile of the screen
+         * pixels' x and y. horizontal and vertical are read across it.
+         */
+        extent: Box;
+        /** Fitted level at the extent's right end / its left end, and bottom / top, through the screen's centroid. */
         horizontal: number | null;
         vertical: number | null;
-        darkerSide: "left" | "right" | "top" | "bottom" | null;
+        /** Every side darker by more than unevenRatio, strongest first; empty when none is. */
+        darkerSide: Array<"left" | "right" | "top" | "bottom">;
         reading: string;
     } | null;
     grain: {

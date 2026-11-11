@@ -1,7 +1,16 @@
 import type { DecodedPng } from "./png16.js";
 import type { Rgb } from "./sheet.js";
 export type Screen = "green" | "blue";
+/** Where the matte is read from: the capture's alpha, or its luminance (Keylight's matte views). */
+export type MatteFrom = "alpha" | "luma";
 export interface EdgeThresholds {
+    /**
+     * Read the matte from the capture's alpha (default), or from its Rec. 709
+     * luminance: Keylight's Screen Matte and Combined Matte views write the
+     * matte in grey RGB with alpha 1 everywhere (measured live), so their
+     * alpha says nothing.
+     */
+    from: MatteFrom;
     /** Alpha at or below this counts as transparent. */
     transparent: number;
     /** Alpha at or above this counts as opaque. */
@@ -43,6 +52,8 @@ export type EdgeThresholdArgs = Partial<EdgeThresholds>;
  *   channel; smaller leans are within grading noise.
  * - changeAbove 0.05: alpha changes below this are invisible in practice;
  *   8-bit capture noise alone is 1/255.
+ * - from "alpha": the keyed result's coverage. "luma" only for a render
+ *   whose RGB is the matte (Keylight View 5 or 8); spill is not read then.
  * - patchWindow: four times maxEdgeWidth (44 px at 1080×1920): large enough
  *   to hold a remnant worth fixing, small enough that a long band's box does
  *   not hide where most of it is.
@@ -68,6 +79,8 @@ export interface Box {
 export interface EdgeReport {
     /** Always "capture": the alpha as saveFrameToPng wrote it (see measurementStages). */
     stage: "capture";
+    /** "alpha": the capture's alpha; "luma": its luminance, for a render whose RGB is the matte. */
+    matteFrom: MatteFrom;
     pixels: number;
     shares: {
         opaque: number;
@@ -208,9 +221,17 @@ export declare const box: (r: Region) => Box;
  */
 export declare function labelRegions(alpha: Float64Array, width: number, height: number, inSet: (p: number) => boolean, eight: boolean, labels: Int32Array, queue: Int32Array, transparentAt: number): Region[];
 /**
+ * The matte in a render whose RGB is the matte (Keylight's Screen Matte and
+ * Combined Matte views): Rec. 709 luminance of the capture values, clamped to
+ * 0..1; a grey pixel (r = g = b) is taken as it is.
+ */
+export declare function lumaMatte(img: DecodedPng): Float64Array;
+/**
  * Measure one capture's matte. `bg` is the comp background AE laid the
  * capture's RGB over (see unmatte); it is taken out before the spill colour
- * is read. Throws when the capture has no alpha channel.
+ * is read. The matte is the capture's alpha, or with `t.from` "luma" its
+ * luminance (then spill is not read: there is no subject colour). Throws when
+ * the matte comes from alpha and the capture has none.
  */
 export declare function measureEdge(img: DecodedPng, bg: Rgb, t: EdgeThresholds): {
     report: EdgeReport;

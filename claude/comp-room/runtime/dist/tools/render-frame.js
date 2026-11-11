@@ -131,6 +131,9 @@ const renderFrameTool = defineTool({
     edge: z.union([
       z.boolean(),
       z.object({
+        from: z.enum(["alpha", "luma"]).optional().describe(
+          "Where the matte is read: 'alpha' (default, the keyed result's coverage) or 'luma' (Rec. 709 luminance of the capture), for Keylight's Screen Matte (View 5) and Combined Matte (8) views, which write the matte in grey RGB with alpha 1 everywhere. With 'luma' spill is not read and no alpha channel is needed."
+        ),
         transparent: z.number().min(0).max(1).optional().describe(
           "Alpha at or below counts as transparent. Default 2/255 (as `sample` counts)."
         ),
@@ -157,7 +160,7 @@ const renderFrameTool = defineTool({
         )
       })
     ]).optional().describe(
-      "Matte quality as numbers, measured on the capture's alpha (stage 'capture'); `true` for the defaults. Reported as `edge` (per frame with `times`), with the thresholds used as `edgeThresholds`: shares {opaque, partial, transparent}; width {typical (median), p90, worst, worstAt, samples, unmeasured} \u2014 px the alpha takes from transparent to opaque across the 50% contour of the main solid areas (0 = hard edge; unmeasured = the alpha never reaches transparent or opaque anywhere, as when the screen is left partly opaque); solidAreas; holes {count, area, transparentArea, largest, list} \u2014 regions below opaque enclosed by the solid area (not touching the frame edge); specks {count, area, list} \u2014 islands outside the main areas; patches {count, area, list} \u2014 partly transparent regions thicker than maxEdgeWidth, each with its box, thickest {x, y, thickness} (the deepest point and the thickness there, px) and densest {x, y, width, height, pixels, share, meanAlpha} (the patchWindow square holding most of it, so a long band's box does not hide where it is); spill {mean, solidMean, excess, solidExcess, leansToScreen, reading} \u2014 the straight colour of the partly transparent pixels (comp background taken out) against the solid just inside the edge. Boxes are {x, y, width, height} in capture pixels. With two or more `times`: `edgeFlicker` {pairs, overall} \u2014 mean / max change in alpha and the changed share and bounds, for consecutive frames, split into edge, inside (a hole opening counts here) and outside (specks); real motion counts as change too."
+      "Matte quality as numbers, measured on the capture's alpha (stage 'capture'), or with `from: 'luma'` on its luminance (Keylight's matte views); `true` for the defaults. Each report says `matteFrom`. Reported as `edge` (per frame with `times`), with the thresholds used as `edgeThresholds`: shares {opaque, partial, transparent}; width {typical (median), p90, worst, worstAt, samples, unmeasured} \u2014 px the alpha takes from transparent to opaque across the 50% contour of the main solid areas (0 = hard edge; unmeasured = the alpha never reaches transparent or opaque anywhere, as when the screen is left partly opaque); solidAreas; holes {count, area, transparentArea, largest, list} \u2014 regions below opaque enclosed by the solid area (not touching the frame edge); specks {count, area, list} \u2014 islands outside the main areas; patches {count, area, list} \u2014 partly transparent regions thicker than maxEdgeWidth, each with its box, thickest {x, y, thickness} (the deepest point and the thickness there, px) and densest {x, y, width, height, pixels, share, meanAlpha} (the patchWindow square holding most of it, so a long band's box does not hide where it is); spill {mean, solidMean, excess, solidExcess, leansToScreen, reading} \u2014 the straight colour of the partly transparent pixels (comp background taken out) against the solid just inside the edge. Boxes are {x, y, width, height} in capture pixels. With two or more `times`: `edgeFlicker` {pairs, overall} \u2014 mean / max change in alpha and the changed share and bounds, for consecutive frames, split into edge, inside (a hole opening counts here) and outside (specks); real motion counts as change too."
     ),
     screen: z.union([
       z.boolean(),
@@ -194,7 +197,7 @@ const renderFrameTool = defineTool({
         )
       })
     ]).optional().describe(
-      "Measure a green or blue screen, on the capture (stage 'capture'), opaque pixels only; `true` for the defaults. Render the UN-KEYED source: set Keylight's View to 'source' (key.view) or switch the key off, and isolate the keyed layer. Reported as `screen` (per frame with `times`), with the thresholds used as `screenThresholds`: screen ('green' | 'blue' | null), chosen, measured / leftOut pixels, screenPixels, share, bounds; colour {median, mean, nearSubject {colour, pixels, band}} \u2014 the suggested Screen Colour; subject {box, area, share}; evenness {columns, rows, cells [{column, row, box, screenShare, mean, luma, level}], darkest, brightest, levelRatio, lumaRatio, uneven, horizontal (right / left), vertical (bottom / top), darkerSide, reading}; grain {stdDev, level, steps8bit, samples, grainy, reading}; reading; warning; screenColourNote (capture values and what they mean for Keylight's Screen Colour)."
+      "Measure a green or blue screen, on the capture (stage 'capture'), opaque pixels only; `true` for the defaults. Render the UN-KEYED source: set Keylight's View to 'source' (key.view) or switch the key off, and isolate the keyed layer. Reported as `screen` (per frame with `times`), with the thresholds used as `screenThresholds`: screen ('green' | 'blue' | null), chosen, measured / leftOut pixels, screenPixels, share, bounds; colour {median, mean, nearSubject {colour, pixels, band}} \u2014 the suggested Screen Colour; subject {box, area, share}; evenness {columns, rows, cells [{column, row, box, screenShare, mean, luma, level}], darkest, brightest, levelRatio, lumaRatio, uneven, extent (5th to 95th percentile of the screen pixels' positions), horizontal (right / left) and vertical (bottom / top) read across that extent, darkerSide (every side darker past unevenRatio, strongest first), reading}; grain {stdDev, level, steps8bit, samples, grainy, reading}; reading; warning; screenColourNote (capture values and what they mean for Keylight's Screen Colour)."
     )
   },
   handler: async (args, transport) => {
@@ -574,6 +577,7 @@ async function nativeFlow(args, opts, abs, transport) {
   const edgePairs = [];
   let edgePrev = null;
   let edgeMeasured = 0;
+  let edgeFromLuma = 0;
   let withAlpha = 0;
   let writing = convert !== null;
   for (const [i, file] of written.entries()) {
@@ -590,7 +594,9 @@ async function nativeFlow(args, opts, abs, transport) {
     }
     if (capture.alpha) withAlpha++;
     if (opts.edge) {
-      if (!capture.alpha) edgePrev = null;
+      const fromLuma = opts.edge.from === "luma";
+      if (fromLuma) edgeFromLuma++;
+      if (!capture.alpha && !fromLuma) edgePrev = null;
       else {
         try {
           const t = resolveEdgeThresholds(opts.edge, capture.width, capture.height);
@@ -668,9 +674,9 @@ async function nativeFlow(args, opts, abs, transport) {
     }
   }
   if (opts.edge) {
-    if (withAlpha < written.length) {
+    if (edgeFromLuma === 0 && withAlpha < written.length) {
       payload.edgeWarning = `${written.length - withAlpha} of ${written.length} captures have no alpha channel, so their matte could not be measured (a comp with no transparency, or an AE that flattens)`;
-    } else if (edgeMeasured > 0 && bg === null) {
+    } else if (edgeFromLuma === 0 && edgeMeasured > 0 && bg === null) {
       payload.edgeWarning = "the comp background colour (bgColor) is unknown, so the soft edge's colour was recovered as if it were black; the spill reading may carry the real background";
     }
     if (edgePairs.length > 0) {

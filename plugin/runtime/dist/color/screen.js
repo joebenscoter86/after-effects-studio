@@ -19,7 +19,11 @@
 //     the darkest and brightest cells (only cells at least `minCellShare`
 //     screen) with their boxes, the spread as a ratio, and a plane fitted to
 //     the level over every screen pixel, giving the left-to-right and
-//     top-to-bottom ratios even where the subject hides part of the screen;
+//     top-to-bottom ratios even where the subject hides part of the screen.
+//     The plane is read only across the extent where screen was measured
+//     (5th to 95th percentile of the screen pixels' x and y), never
+//     extrapolated to the frame's edges (a masked source has screen in part
+//     of the frame only), and every side darker past unevenRatio is named;
 //   - grain: the standard deviation of each channel about its 3×3 local mean,
 //     on screen pixels whose neighbours are all screen (a smooth gradient
 //     cancels out of a 3×3 mean, so unevenness does not count as grain).
@@ -351,6 +355,9 @@ function measureEvenness(img, isScreen, measuredAt, ch, kind, t) {
     let svl = 0;
     const du = Math.max(1, width - 1);
     const dv = Math.max(1, height - 1);
+    // Screen pixels per column and per row, for the measured extent.
+    const perX = new Float64Array(width);
+    const perY = new Float64Array(height);
     for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
             let m = 0;
@@ -367,6 +374,8 @@ function measureEvenness(img, isScreen, measuredAt, ch, kind, t) {
                     k++;
                     for (let q = 0; q < 3; q++)
                         acc[q] += rgb[p * 3 + q];
+                    perX[x]++;
+                    perY[y]++;
                     const u = x / du;
                     const v = y / dv;
                     const l = rgb[p * 3 + ch];
@@ -411,22 +420,39 @@ function measureEvenness(img, isScreen, measuredAt, ch, kind, t) {
         [su, suu, suv],
         [sv, suv, svv],
     ], [sl, sul, svl]);
+    const [x0, x1] = percentileRange(perX, s1);
+    const [y0, y1] = percentileRange(perY, s1);
+    const extent = { x: x0, y: y0, width: x1 - x0 + 1, height: y1 - y0 + 1 };
     let horizontal = null;
     let vertical = null;
-    if (plane) {
+    if (plane && s1 > 0) {
         const [a, b, c] = plane;
         const at = (u, v) => a + b * u + c * v;
         const ratio = (hi, lo) => (lo > 0 && hi > 0 ? r4(hi / lo) : null);
-        horizontal = ratio(at(1, 0.5), at(0, 0.5));
-        vertical = ratio(at(0.5, 1), at(0.5, 0));
+        const uc = su / s1;
+        const vc = sv / s1;
+        if (x1 > x0)
+            horizontal = ratio(at(x1 / du, vc), at(x0 / du, vc));
+        if (y1 > y0)
+            vertical = ratio(at(uc, y1 / dv), at(uc, y0 / dv));
     }
-    const strength = (r) => (r === null ? 0 : Math.max(r, 1 / r));
-    let darkerSide = null;
-    const hs = strength(horizontal);
-    const vs = strength(vertical);
-    if (Math.max(hs, vs) > t.unevenRatio) {
-        darkerSide = hs >= vs ? (horizontal > 1 ? "left" : "right") : vertical > 1 ? "top" : "bottom";
+    const sides = [];
+    if (horizontal !== null) {
+        sides.push({
+            side: horizontal > 1 ? "left" : "right",
+            strength: Math.max(horizontal, 1 / horizontal),
+        });
     }
+    if (vertical !== null) {
+        sides.push({
+            side: vertical > 1 ? "top" : "bottom",
+            strength: Math.max(vertical, 1 / vertical),
+        });
+    }
+    const darkerSide = sides
+        .filter((d) => d.strength > t.unevenRatio)
+        .sort((p, q) => q.strength - p.strength)
+        .map((d) => d.side);
     const where = (c) => `cell ${c.column},${c.row} at x ${c.box.x}, y ${c.box.y}`;
     let reading;
     if (darkest === null || brightest === null || levelRatio === null) {
@@ -437,7 +463,7 @@ function measureEvenness(img, isScreen, measuredAt, ch, kind, t) {
             `${brightest.level.toFixed(3)} (${where(brightest)}), ${levelRatio.toFixed(2)}x`;
         reading = uneven
             ? `uneven: ${spread}` +
-                (darkerSide ? `, darker on the ${darkerSide}` : "") +
+                (darkerSide.length ? `, darker on the ${darkerSide.join(" and the ")}` : "") +
                 ". One Screen Colour will not fit all of it: key from the colour near the subject, then " +
                 "check the darker part in the Screen Matte view (Clip Black, a second key, or a garbage mask)"
             : `even: ${spread}`;
@@ -453,11 +479,32 @@ function measureEvenness(img, isScreen, measuredAt, ch, kind, t) {
         levelRatio,
         lumaRatio,
         uneven,
+        extent,
         horizontal,
         vertical,
         darkerSide,
         reading,
     };
+}
+/** First and last index holding the 5th and 95th percentile of `counts` (total `total`). */
+function percentileRange(counts, total) {
+    if (total <= 0)
+        return [0, counts.length - 1];
+    const lo = 0.05 * total;
+    const hi = 0.95 * total;
+    let acc = 0;
+    let first = -1;
+    let last = counts.length - 1;
+    for (let i = 0; i < counts.length; i++) {
+        acc += counts[i];
+        if (first < 0 && acc >= lo)
+            first = i;
+        if (acc >= hi) {
+            last = i;
+            break;
+        }
+    }
+    return [Math.max(0, first), last];
 }
 function solve3(m, v) {
     const det = (a) => a[0][0] * (a[1][1] * a[2][2] - a[1][2] * a[2][1]) -

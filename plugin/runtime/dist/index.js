@@ -50723,6 +50723,7 @@ async function measureCaptureTransfer(transport2, key, allowRender = true) {
 
 // src/color/matte.ts
 var EDGE_DEFAULTS = {
+  from: "alpha",
   transparent: 2 / 255,
   opaque: 1 - 2 / 255,
   maxEdgeWidth: "auto",
@@ -50741,6 +50742,7 @@ function autoMaxEdgeWidth(width, height) {
 function resolveEdgeThresholds(args, width, height) {
   const maxEdgeWidth = args.maxEdgeWidth ?? autoMaxEdgeWidth(width, height);
   return {
+    from: args.from ?? EDGE_DEFAULTS.from,
     transparent: args.transparent ?? EDGE_DEFAULTS.transparent,
     opaque: args.opaque ?? EDGE_DEFAULTS.opaque,
     maxEdgeWidth,
@@ -50779,6 +50781,9 @@ function edgeArgsError(args) {
   const s = args.spillThreshold;
   if (s !== void 0 && (typeof s !== "number" || !(s >= 0 && s <= 1))) {
     return "`edge.spillThreshold` must be a number in 0..1";
+  }
+  if (args.from !== void 0 && args.from !== "alpha" && args.from !== "luma") {
+    return "`edge.from` must be 'alpha' or 'luma'";
   }
   if (args.screen !== void 0 && args.screen !== "green" && args.screen !== "blue") {
     return "`edge.screen` must be 'green' or 'blue'";
@@ -50915,8 +50920,22 @@ var byArea = (a, b) => b.area - a.area;
 function screenExcess(c, screen) {
   return screen === "green" ? c[1] - Math.max(c[0], c[2]) : c[2] - Math.max(c[0], c[1]);
 }
+function lumaMatte(img) {
+  const n = img.width * img.height;
+  const out = new Float64Array(n);
+  const rgb = img.rgb;
+  for (let p = 0; p < n; p++) {
+    const r = rgb[p * 3];
+    const g = rgb[p * 3 + 1];
+    const b = rgb[p * 3 + 2];
+    const y = r === g && g === b ? r : 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    out[p] = y < 0 ? 0 : y > 1 ? 1 : y;
+  }
+  return out;
+}
 function measureEdge(img, bg, t) {
-  const alpha = img.alpha;
+  const fromLuma = t.from === "luma";
+  const alpha = fromLuma ? lumaMatte(img) : img.alpha;
   if (!alpha) throw new Error("the capture has no alpha channel");
   const { width, height } = img;
   const n = width * height;
@@ -51059,7 +51078,7 @@ function measureEdge(img, bg, t) {
     zones[p] = dT[p] <= M && dO[p] <= M ? EDGE : a >= CONTOUR_ALPHA ? INSIDE : OUTSIDE;
     const partial2 = a > t.transparent && a < t.opaque;
     const solid = a >= t.opaque && dT[p] <= M;
-    if (!(partial2 && a >= t.spillMinAlpha) && !solid) continue;
+    if (fromLuma || !(partial2 && a >= t.spillMinAlpha) && !solid) continue;
     const sum = solid ? solidSum : edgeSum;
     for (let c = 0; c < 3; c++) {
       const v = img.rgb[p * 3 + c];
@@ -51076,6 +51095,7 @@ function measureEdge(img, bg, t) {
   const leans = excess !== null && excess > t.spillThreshold && (solidExcess === null || excess - solidExcess > t.spillThreshold);
   const report = {
     stage: "capture",
+    matteFrom: t.from,
     pixels: n,
     shares: {
       opaque: r4(opaque / n),
@@ -51124,7 +51144,7 @@ function measureEdge(img, bg, t) {
       excess: excess === null ? null : r4(excess),
       solidExcess: solidExcess === null ? null : r4(solidExcess),
       leansToScreen: leans,
-      reading: spillReading(t, edgeCount, excess, solidExcess, leans)
+      reading: fromLuma ? "not read: the matte came from luminance (a Keylight matte view), which carries no subject colour; read spill on the keyed result with `from: 'alpha'`" : spillReading(t, edgeCount, excess, solidExcess, leans)
     }
   };
   return { report, frame: { width, height, alpha: Float32Array.from(alpha), zones } };
@@ -51552,6 +51572,8 @@ function measureEvenness(img, isScreen, measuredAt, ch, kind, t) {
   let svl = 0;
   const du = Math.max(1, width - 1);
   const dv = Math.max(1, height - 1);
+  const perX = new Float64Array(width);
+  const perY = new Float64Array(height);
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       let m = 0;
@@ -51565,6 +51587,8 @@ function measureEvenness(img, isScreen, measuredAt, ch, kind, t) {
           if (isScreen[p] === 0) continue;
           k++;
           for (let q = 0; q < 3; q++) acc[q] += rgb[p * 3 + q];
+          perX[x]++;
+          perY[y]++;
           const u = x / du;
           const v = y / dv;
           const l = rgb[p * 3 + ch];
@@ -51611,29 +51635,41 @@ function measureEvenness(img, isScreen, measuredAt, ch, kind, t) {
     ],
     [sl, sul, svl]
   );
+  const [x0, x1] = percentileRange(perX, s1);
+  const [y0, y1] = percentileRange(perY, s1);
+  const extent = { x: x0, y: y0, width: x1 - x0 + 1, height: y1 - y0 + 1 };
   let horizontal = null;
   let vertical = null;
-  if (plane) {
+  if (plane && s1 > 0) {
     const [a, b, c] = plane;
     const at = (u, v) => a + b * u + c * v;
     const ratio = (hi, lo) => lo > 0 && hi > 0 ? r42(hi / lo) : null;
-    horizontal = ratio(at(1, 0.5), at(0, 0.5));
-    vertical = ratio(at(0.5, 1), at(0.5, 0));
+    const uc = su / s1;
+    const vc = sv / s1;
+    if (x1 > x0) horizontal = ratio(at(x1 / du, vc), at(x0 / du, vc));
+    if (y1 > y0) vertical = ratio(at(uc, y1 / dv), at(uc, y0 / dv));
   }
-  const strength = (r) => r === null ? 0 : Math.max(r, 1 / r);
-  let darkerSide = null;
-  const hs = strength(horizontal);
-  const vs = strength(vertical);
-  if (Math.max(hs, vs) > t.unevenRatio) {
-    darkerSide = hs >= vs ? horizontal > 1 ? "left" : "right" : vertical > 1 ? "top" : "bottom";
+  const sides = [];
+  if (horizontal !== null) {
+    sides.push({
+      side: horizontal > 1 ? "left" : "right",
+      strength: Math.max(horizontal, 1 / horizontal)
+    });
   }
+  if (vertical !== null) {
+    sides.push({
+      side: vertical > 1 ? "top" : "bottom",
+      strength: Math.max(vertical, 1 / vertical)
+    });
+  }
+  const darkerSide = sides.filter((d) => d.strength > t.unevenRatio).sort((p, q) => q.strength - p.strength).map((d) => d.side);
   const where = (c) => `cell ${c.column},${c.row} at x ${c.box.x}, y ${c.box.y}`;
   let reading;
   if (darkest === null || brightest === null || levelRatio === null) {
     reading = `no grid cell is at least ${Math.round(t.minCellShare * 100)}% screen, so evenness was not read`;
   } else {
     const spread = `the screen's ${kind} level runs from ${darkest.level.toFixed(3)} (${where(darkest)}) to ${brightest.level.toFixed(3)} (${where(brightest)}), ${levelRatio.toFixed(2)}x`;
-    reading = uneven ? `uneven: ${spread}` + (darkerSide ? `, darker on the ${darkerSide}` : "") + ". One Screen Colour will not fit all of it: key from the colour near the subject, then check the darker part in the Screen Matte view (Clip Black, a second key, or a garbage mask)" : `even: ${spread}`;
+    reading = uneven ? `uneven: ${spread}` + (darkerSide.length ? `, darker on the ${darkerSide.join(" and the ")}` : "") + ". One Screen Colour will not fit all of it: key from the colour near the subject, then check the darker part in the Screen Matte view (Clip Black, a second key, or a garbage mask)" : `even: ${spread}`;
   }
   return {
     columns: cols,
@@ -51646,11 +51682,29 @@ function measureEvenness(img, isScreen, measuredAt, ch, kind, t) {
     levelRatio,
     lumaRatio,
     uneven,
+    extent,
     horizontal,
     vertical,
     darkerSide,
     reading
   };
+}
+function percentileRange(counts, total) {
+  if (total <= 0) return [0, counts.length - 1];
+  const lo = 0.05 * total;
+  const hi = 0.95 * total;
+  let acc = 0;
+  let first = -1;
+  let last = counts.length - 1;
+  for (let i = 0; i < counts.length; i++) {
+    acc += counts[i];
+    if (first < 0 && acc >= lo) first = i;
+    if (acc >= hi) {
+      last = i;
+      break;
+    }
+  }
+  return [Math.max(0, first), last];
 }
 function solve3(m, v) {
   const det = (a) => a[0][0] * (a[1][1] * a[2][2] - a[1][2] * a[2][1]) - a[0][1] * (a[1][0] * a[2][2] - a[1][2] * a[2][0]) + a[0][2] * (a[1][0] * a[2][1] - a[1][1] * a[2][0]);
@@ -52278,6 +52332,9 @@ var renderFrameTool = defineTool({
     edge: external_exports.union([
       external_exports.boolean(),
       external_exports.object({
+        from: external_exports.enum(["alpha", "luma"]).optional().describe(
+          "Where the matte is read: 'alpha' (default, the keyed result's coverage) or 'luma' (Rec. 709 luminance of the capture), for Keylight's Screen Matte (View 5) and Combined Matte (8) views, which write the matte in grey RGB with alpha 1 everywhere. With 'luma' spill is not read and no alpha channel is needed."
+        ),
         transparent: external_exports.number().min(0).max(1).optional().describe(
           "Alpha at or below counts as transparent. Default 2/255 (as `sample` counts)."
         ),
@@ -52304,7 +52361,7 @@ var renderFrameTool = defineTool({
         )
       })
     ]).optional().describe(
-      "Matte quality as numbers, measured on the capture's alpha (stage 'capture'); `true` for the defaults. Reported as `edge` (per frame with `times`), with the thresholds used as `edgeThresholds`: shares {opaque, partial, transparent}; width {typical (median), p90, worst, worstAt, samples, unmeasured} \u2014 px the alpha takes from transparent to opaque across the 50% contour of the main solid areas (0 = hard edge; unmeasured = the alpha never reaches transparent or opaque anywhere, as when the screen is left partly opaque); solidAreas; holes {count, area, transparentArea, largest, list} \u2014 regions below opaque enclosed by the solid area (not touching the frame edge); specks {count, area, list} \u2014 islands outside the main areas; patches {count, area, list} \u2014 partly transparent regions thicker than maxEdgeWidth, each with its box, thickest {x, y, thickness} (the deepest point and the thickness there, px) and densest {x, y, width, height, pixels, share, meanAlpha} (the patchWindow square holding most of it, so a long band's box does not hide where it is); spill {mean, solidMean, excess, solidExcess, leansToScreen, reading} \u2014 the straight colour of the partly transparent pixels (comp background taken out) against the solid just inside the edge. Boxes are {x, y, width, height} in capture pixels. With two or more `times`: `edgeFlicker` {pairs, overall} \u2014 mean / max change in alpha and the changed share and bounds, for consecutive frames, split into edge, inside (a hole opening counts here) and outside (specks); real motion counts as change too."
+      "Matte quality as numbers, measured on the capture's alpha (stage 'capture'), or with `from: 'luma'` on its luminance (Keylight's matte views); `true` for the defaults. Each report says `matteFrom`. Reported as `edge` (per frame with `times`), with the thresholds used as `edgeThresholds`: shares {opaque, partial, transparent}; width {typical (median), p90, worst, worstAt, samples, unmeasured} \u2014 px the alpha takes from transparent to opaque across the 50% contour of the main solid areas (0 = hard edge; unmeasured = the alpha never reaches transparent or opaque anywhere, as when the screen is left partly opaque); solidAreas; holes {count, area, transparentArea, largest, list} \u2014 regions below opaque enclosed by the solid area (not touching the frame edge); specks {count, area, list} \u2014 islands outside the main areas; patches {count, area, list} \u2014 partly transparent regions thicker than maxEdgeWidth, each with its box, thickest {x, y, thickness} (the deepest point and the thickness there, px) and densest {x, y, width, height, pixels, share, meanAlpha} (the patchWindow square holding most of it, so a long band's box does not hide where it is); spill {mean, solidMean, excess, solidExcess, leansToScreen, reading} \u2014 the straight colour of the partly transparent pixels (comp background taken out) against the solid just inside the edge. Boxes are {x, y, width, height} in capture pixels. With two or more `times`: `edgeFlicker` {pairs, overall} \u2014 mean / max change in alpha and the changed share and bounds, for consecutive frames, split into edge, inside (a hole opening counts here) and outside (specks); real motion counts as change too."
     ),
     screen: external_exports.union([
       external_exports.boolean(),
@@ -52341,7 +52398,7 @@ var renderFrameTool = defineTool({
         )
       })
     ]).optional().describe(
-      "Measure a green or blue screen, on the capture (stage 'capture'), opaque pixels only; `true` for the defaults. Render the UN-KEYED source: set Keylight's View to 'source' (key.view) or switch the key off, and isolate the keyed layer. Reported as `screen` (per frame with `times`), with the thresholds used as `screenThresholds`: screen ('green' | 'blue' | null), chosen, measured / leftOut pixels, screenPixels, share, bounds; colour {median, mean, nearSubject {colour, pixels, band}} \u2014 the suggested Screen Colour; subject {box, area, share}; evenness {columns, rows, cells [{column, row, box, screenShare, mean, luma, level}], darkest, brightest, levelRatio, lumaRatio, uneven, horizontal (right / left), vertical (bottom / top), darkerSide, reading}; grain {stdDev, level, steps8bit, samples, grainy, reading}; reading; warning; screenColourNote (capture values and what they mean for Keylight's Screen Colour)."
+      "Measure a green or blue screen, on the capture (stage 'capture'), opaque pixels only; `true` for the defaults. Render the UN-KEYED source: set Keylight's View to 'source' (key.view) or switch the key off, and isolate the keyed layer. Reported as `screen` (per frame with `times`), with the thresholds used as `screenThresholds`: screen ('green' | 'blue' | null), chosen, measured / leftOut pixels, screenPixels, share, bounds; colour {median, mean, nearSubject {colour, pixels, band}} \u2014 the suggested Screen Colour; subject {box, area, share}; evenness {columns, rows, cells [{column, row, box, screenShare, mean, luma, level}], darkest, brightest, levelRatio, lumaRatio, uneven, extent (5th to 95th percentile of the screen pixels' positions), horizontal (right / left) and vertical (bottom / top) read across that extent, darkerSide (every side darker past unevenRatio, strongest first), reading}; grain {stdDev, level, steps8bit, samples, grainy, reading}; reading; warning; screenColourNote (capture values and what they mean for Keylight's Screen Colour)."
     )
   },
   handler: async (args, transport2) => {
@@ -52721,6 +52778,7 @@ async function nativeFlow(args, opts, abs, transport2) {
   const edgePairs = [];
   let edgePrev = null;
   let edgeMeasured = 0;
+  let edgeFromLuma = 0;
   let withAlpha = 0;
   let writing = convert !== null;
   for (const [i, file2] of written.entries()) {
@@ -52737,7 +52795,9 @@ async function nativeFlow(args, opts, abs, transport2) {
     }
     if (capture.alpha) withAlpha++;
     if (opts.edge) {
-      if (!capture.alpha) edgePrev = null;
+      const fromLuma = opts.edge.from === "luma";
+      if (fromLuma) edgeFromLuma++;
+      if (!capture.alpha && !fromLuma) edgePrev = null;
       else {
         try {
           const t = resolveEdgeThresholds(opts.edge, capture.width, capture.height);
@@ -52815,9 +52875,9 @@ async function nativeFlow(args, opts, abs, transport2) {
     }
   }
   if (opts.edge) {
-    if (withAlpha < written.length) {
+    if (edgeFromLuma === 0 && withAlpha < written.length) {
       payload.edgeWarning = `${written.length - withAlpha} of ${written.length} captures have no alpha channel, so their matte could not be measured (a comp with no transparency, or an AE that flattens)`;
-    } else if (edgeMeasured > 0 && bg === null) {
+    } else if (edgeFromLuma === 0 && edgeMeasured > 0 && bg === null) {
       payload.edgeWarning = "the comp background colour (bgColor) is unknown, so the soft edge's colour was recovered as if it were black; the spill reading may carry the real background";
     }
     if (edgePairs.length > 0) {

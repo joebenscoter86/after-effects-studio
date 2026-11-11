@@ -55,6 +55,10 @@ export declare const renderFrameTool: import("./define-tool.js").ToolSpec<{
         to: z.ZodOptional<z.ZodNumber>;
     }, z.core.$strip>>;
     edge: z.ZodOptional<z.ZodUnion<readonly [z.ZodBoolean, z.ZodObject<{
+        from: z.ZodOptional<z.ZodEnum<{
+            alpha: "alpha";
+            luma: "luma";
+        }>>;
         transparent: z.ZodOptional<z.ZodNumber>;
         opaque: z.ZodOptional<z.ZodNumber>;
         maxEdgeWidth: z.ZodOptional<z.ZodNumber>;

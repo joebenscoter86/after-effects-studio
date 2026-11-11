@@ -1,4 +1,5 @@
 const EDGE_DEFAULTS = {
+  from: "alpha",
   transparent: 2 / 255,
   opaque: 1 - 2 / 255,
   maxEdgeWidth: "auto",
@@ -17,6 +18,7 @@ function autoMaxEdgeWidth(width, height) {
 function resolveEdgeThresholds(args, width, height) {
   const maxEdgeWidth = args.maxEdgeWidth ?? autoMaxEdgeWidth(width, height);
   return {
+    from: args.from ?? EDGE_DEFAULTS.from,
     transparent: args.transparent ?? EDGE_DEFAULTS.transparent,
     opaque: args.opaque ?? EDGE_DEFAULTS.opaque,
     maxEdgeWidth,
@@ -55,6 +57,9 @@ function edgeArgsError(args) {
   const s = args.spillThreshold;
   if (s !== void 0 && (typeof s !== "number" || !(s >= 0 && s <= 1))) {
     return "`edge.spillThreshold` must be a number in 0..1";
+  }
+  if (args.from !== void 0 && args.from !== "alpha" && args.from !== "luma") {
+    return "`edge.from` must be 'alpha' or 'luma'";
   }
   if (args.screen !== void 0 && args.screen !== "green" && args.screen !== "blue") {
     return "`edge.screen` must be 'green' or 'blue'";
@@ -191,8 +196,22 @@ const byArea = (a, b) => b.area - a.area;
 function screenExcess(c, screen) {
   return screen === "green" ? c[1] - Math.max(c[0], c[2]) : c[2] - Math.max(c[0], c[1]);
 }
+function lumaMatte(img) {
+  const n = img.width * img.height;
+  const out = new Float64Array(n);
+  const rgb = img.rgb;
+  for (let p = 0; p < n; p++) {
+    const r = rgb[p * 3];
+    const g = rgb[p * 3 + 1];
+    const b = rgb[p * 3 + 2];
+    const y = r === g && g === b ? r : 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    out[p] = y < 0 ? 0 : y > 1 ? 1 : y;
+  }
+  return out;
+}
 function measureEdge(img, bg, t) {
-  const alpha = img.alpha;
+  const fromLuma = t.from === "luma";
+  const alpha = fromLuma ? lumaMatte(img) : img.alpha;
   if (!alpha) throw new Error("the capture has no alpha channel");
   const { width, height } = img;
   const n = width * height;
@@ -335,7 +354,7 @@ function measureEdge(img, bg, t) {
     zones[p] = dT[p] <= M && dO[p] <= M ? EDGE : a >= CONTOUR_ALPHA ? INSIDE : OUTSIDE;
     const partial = a > t.transparent && a < t.opaque;
     const solid = a >= t.opaque && dT[p] <= M;
-    if (!(partial && a >= t.spillMinAlpha) && !solid) continue;
+    if (fromLuma || !(partial && a >= t.spillMinAlpha) && !solid) continue;
     const sum = solid ? solidSum : edgeSum;
     for (let c = 0; c < 3; c++) {
       const v = img.rgb[p * 3 + c];
@@ -352,6 +371,7 @@ function measureEdge(img, bg, t) {
   const leans = excess !== null && excess > t.spillThreshold && (solidExcess === null || excess - solidExcess > t.spillThreshold);
   const report = {
     stage: "capture",
+    matteFrom: t.from,
     pixels: n,
     shares: {
       opaque: r4(opaque / n),
@@ -400,7 +420,7 @@ function measureEdge(img, bg, t) {
       excess: excess === null ? null : r4(excess),
       solidExcess: solidExcess === null ? null : r4(solidExcess),
       leansToScreen: leans,
-      reading: spillReading(t, edgeCount, excess, solidExcess, leans)
+      reading: fromLuma ? "not read: the matte came from luminance (a Keylight matte view), which carries no subject colour; read spill on the keyed result with `from: 'alpha'`" : spillReading(t, edgeCount, excess, solidExcess, leans)
     }
   };
   return { report, frame: { width, height, alpha: Float32Array.from(alpha), zones } };
@@ -577,6 +597,7 @@ export {
   distanceTo,
   edgeArgsError,
   labelRegions,
+  lumaMatte,
   measureEdge,
   newRegion,
   resolveEdgeThresholds,

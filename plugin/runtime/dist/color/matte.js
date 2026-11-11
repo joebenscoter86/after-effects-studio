@@ -48,11 +48,14 @@
  *   channel; smaller leans are within grading noise.
  * - changeAbove 0.05: alpha changes below this are invisible in practice;
  *   8-bit capture noise alone is 1/255.
+ * - from "alpha": the keyed result's coverage. "luma" only for a render
+ *   whose RGB is the matte (Keylight View 5 or 8); spill is not read then.
  * - patchWindow: four times maxEdgeWidth (44 px at 1080×1920): large enough
  *   to hold a remnant worth fixing, small enough that a long band's box does
  *   not hide where most of it is.
  */
 export const EDGE_DEFAULTS = {
+    from: "alpha",
     transparent: 2 / 255,
     opaque: 1 - 2 / 255,
     maxEdgeWidth: "auto",
@@ -74,6 +77,7 @@ export function autoMaxEdgeWidth(width, height) {
 export function resolveEdgeThresholds(args, width, height) {
     const maxEdgeWidth = args.maxEdgeWidth ?? autoMaxEdgeWidth(width, height);
     return {
+        from: args.from ?? EDGE_DEFAULTS.from,
         transparent: args.transparent ?? EDGE_DEFAULTS.transparent,
         opaque: args.opaque ?? EDGE_DEFAULTS.opaque,
         maxEdgeWidth,
@@ -114,6 +118,9 @@ export function edgeArgsError(args) {
     const s = args.spillThreshold;
     if (s !== undefined && (typeof s !== "number" || !(s >= 0 && s <= 1))) {
         return "`edge.spillThreshold` must be a number in 0..1";
+    }
+    if (args.from !== undefined && args.from !== "alpha" && args.from !== "luma") {
+        return "`edge.from` must be 'alpha' or 'luma'";
     }
     if (args.screen !== undefined && args.screen !== "green" && args.screen !== "blue") {
         return "`edge.screen` must be 'green' or 'blue'";
@@ -285,12 +292,33 @@ function screenExcess(c, screen) {
     return screen === "green" ? c[1] - Math.max(c[0], c[2]) : c[2] - Math.max(c[0], c[1]);
 }
 /**
+ * The matte in a render whose RGB is the matte (Keylight's Screen Matte and
+ * Combined Matte views): Rec. 709 luminance of the capture values, clamped to
+ * 0..1; a grey pixel (r = g = b) is taken as it is.
+ */
+export function lumaMatte(img) {
+    const n = img.width * img.height;
+    const out = new Float64Array(n);
+    const rgb = img.rgb;
+    for (let p = 0; p < n; p++) {
+        const r = rgb[p * 3];
+        const g = rgb[p * 3 + 1];
+        const b = rgb[p * 3 + 2];
+        const y = r === g && g === b ? r : 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        out[p] = y < 0 ? 0 : y > 1 ? 1 : y;
+    }
+    return out;
+}
+/**
  * Measure one capture's matte. `bg` is the comp background AE laid the
  * capture's RGB over (see unmatte); it is taken out before the spill colour
- * is read. Throws when the capture has no alpha channel.
+ * is read. The matte is the capture's alpha, or with `t.from` "luma" its
+ * luminance (then spill is not read: there is no subject colour). Throws when
+ * the matte comes from alpha and the capture has none.
  */
 export function measureEdge(img, bg, t) {
-    const alpha = img.alpha;
+    const fromLuma = t.from === "luma";
+    const alpha = fromLuma ? lumaMatte(img) : img.alpha;
     if (!alpha)
         throw new Error("the capture has no alpha channel");
     const { width, height } = img;
@@ -436,7 +464,7 @@ export function measureEdge(img, bg, t) {
         zones[p] = dT[p] <= M && dO[p] <= M ? EDGE : a >= CONTOUR_ALPHA ? INSIDE : OUTSIDE;
         const partial = a > t.transparent && a < t.opaque;
         const solid = a >= t.opaque && dT[p] <= M;
-        if (!(partial && a >= t.spillMinAlpha) && !solid)
+        if (fromLuma || (!(partial && a >= t.spillMinAlpha) && !solid))
             continue;
         const sum = solid ? solidSum : edgeSum;
         for (let c = 0; c < 3; c++) {
@@ -458,6 +486,7 @@ export function measureEdge(img, bg, t) {
         (solidExcess === null || excess - solidExcess > t.spillThreshold);
     const report = {
         stage: "capture",
+        matteFrom: t.from,
         pixels: n,
         shares: {
             opaque: r4(opaque / n),
@@ -506,7 +535,10 @@ export function measureEdge(img, bg, t) {
             excess: excess === null ? null : r4(excess),
             solidExcess: solidExcess === null ? null : r4(solidExcess),
             leansToScreen: leans,
-            reading: spillReading(t, edgeCount, excess, solidExcess, leans),
+            reading: fromLuma
+                ? "not read: the matte came from luminance (a Keylight matte view), which carries no subject " +
+                    "colour; read spill on the keyed result with `from: 'alpha'`"
+                : spillReading(t, edgeCount, excess, solidExcess, leans),
         },
     };
     return { report, frame: { width, height, alpha: Float32Array.from(alpha), zones } };
