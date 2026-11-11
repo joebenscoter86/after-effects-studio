@@ -6,11 +6,17 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 
-import { writeEvalSuite, claudePrompt } from '../claude-evals.mjs';
+import { writeEvalSuite, claudePrompt, pictureCommand } from '../claude-evals.mjs';
+import { THRESHOLDS } from '../../plugin/evals/picture/checks.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const CANON = JSON.parse(await fs.readFile(path.join(ROOT, 'plugin', 'evals', 'evals.json'), 'utf8'));
+// The planning set (the default): every case without `picture`. The picture set is tested at the end.
+const PLAN = { ...CANON, evals: CANON.evals.filter((c) => !c.picture) };
+const PICTURES = CANON.evals.filter((c) => c.picture);
 const tmp = (prefix) => fs.mkdtemp(path.join(os.tmpdir(), prefix));
 
 function frontMatter(text) {
@@ -22,17 +28,17 @@ function frontMatter(text) {
 test('writes one case per canonical prompt, in order', async () => {
   const out = path.join(await tmp('evals-'), 'evals');
   const cases = await writeEvalSuite(CANON, out);
-  assert.equal(cases.length, CANON.evals.length);
+  assert.equal(cases.length, PLAN.evals.length);
   const dirs = (await fs.readdir(out)).sort();
-  assert.equal(dirs.length, CANON.evals.length);
+  assert.equal(dirs.length, PLAN.evals.length);
   assert.match(dirs[0], /^01-/);
-  assert.match(dirs.at(-1), new RegExp(`^${String(CANON.evals.length).padStart(2, '0')}-`));
+  assert.match(dirs.at(-1), new RegExp(`^${String(PLAN.evals.length).padStart(2, '0')}-`));
 });
 
 test('the prompt body is the canonical prompt, with Codex skill syntax made Claude syntax', async () => {
   const out = path.join(await tmp('evals-'), 'evals');
   await writeEvalSuite(CANON, out);
-  for (const [i, c] of CANON.evals.entries()) {
+  for (const [i, c] of PLAN.evals.entries()) {
     const dir = (await fs.readdir(out)).sort()[i];
     const { head, body } = frontMatter(await fs.readFile(path.join(out, dir, 'prompt.md'), 'utf8'));
     assert.equal(body.trim(), claudePrompt(c.prompt).trim());
@@ -46,7 +52,7 @@ test('the prompt body is the canonical prompt, with Codex skill syntax made Clau
 test('one LLM grader per canonical assertion, carrying the expected output as context', async () => {
   const out = path.join(await tmp('evals-'), 'evals');
   await writeEvalSuite(CANON, out);
-  for (const [i, c] of CANON.evals.entries()) {
+  for (const [i, c] of PLAN.evals.entries()) {
     const dir = path.join(out, (await fs.readdir(out)).sort()[i], 'graders');
     const files = (await fs.readdir(dir)).filter((f) => /^assertion-\d+\.md$/.test(f)).sort();
     assert.equal(files.length, c.assertions.length, `case ${c.id}`);
@@ -62,7 +68,7 @@ test('one LLM grader per canonical assertion, carrying the expected output as co
 test('process assertions are judged on the trace, outcome assertions on the final message', async () => {
   const out = path.join(await tmp('evals-'), 'evals');
   await writeEvalSuite(CANON, out);
-  const read = async (id, k) => { const i = CANON.evals.findIndex((c) => c.id === id);
+  const read = async (id, k) => { const i = PLAN.evals.findIndex((c) => c.id === id);
     return frontMatter(await fs.readFile(path.join(out, (await fs.readdir(out)).sort()[i], 'graders', `assertion-${k}.md`), 'utf8')).head; };
   assert.match(await read(5, 1), /^focus: trace$/m);                     // "Trace records typography/SKILL.md ..."
   assert.match(await read(6, 1), /^focus: trace$/m);                     // "No typography or other motion skill file is read."
@@ -73,7 +79,7 @@ test('negative controls score a no-plugin-skill check; every other case reports 
   const out = path.join(await tmp('evals-'), 'evals');
   await writeEvalSuite(CANON, out);
   const dirs = (await fs.readdir(out)).sort();
-  for (const [i, c] of CANON.evals.entries()) {
+  for (const [i, c] of PLAN.evals.entries()) {
     const g = path.join(out, dirs[i], 'graders'), files = await fs.readdir(g);
     const negative = /no .*skill activation/i.test(c.expected_output);
     if (negative) {
@@ -85,7 +91,7 @@ test('negative controls score a no-plugin-skill check; every other case reports 
       assert.match(head, /^type: tool_used$/m); assert.match(head, /^tool: Skill$/m); assert.match(head, /comp-room/);
     }
   }
-  assert.deepEqual(CANON.evals.filter((c) => /no .*skill activation/i.test(c.expected_output)).map((c) => c.id), [6, 9]);
+  assert.deepEqual(PLAN.evals.filter((c) => /no .*skill activation/i.test(c.expected_output)).map((c) => c.id), [6, 9]);
 });
 
 test('the cases grant only read-only built-in tools; MCP grants stay on the command line', async () => {
@@ -100,4 +106,83 @@ test('refuses to write into a folder that already holds files', async () => {
   const out = await tmp('evals-');
   await fs.writeFile(path.join(out, 'keep.txt'), 'x');
   await assert.rejects(writeEvalSuite(CANON, out), /not empty/);
+});
+
+test('the canonical evals: 17 planning cases and the picture cases, ids in order', () => {
+  assert.equal(PLAN.evals.length, 17);
+  assert.deepEqual(CANON.evals.map((c) => c.id), CANON.evals.map((_, i) => i + 1));
+  assert.deepEqual(PICTURES.map((c) => c.picture.check), ['keying', 'grade', 'over']);
+  for (const c of PICTURES) {
+    for (const f of c.files) assert.ok(f.startsWith('picture/'), f);
+    assert.ok(c.files.includes(`picture/${c.picture.setup}`));
+    assert.match(c.prompt, new RegExp(`\`${c.picture.setup.replace('.', '\\.')}\``));
+    assert.match(c.prompt, new RegExp(`node grade\\.mjs ${c.picture.check} --plan`));
+    assert.match(c.prompt, /render queue/);
+    assert.match(c.expected_output, /scores 0 on every picture check by construction/);
+  }
+});
+
+test('the grade prompt names the same reference regions the grader samples', async () => {
+  const { GRADE } = await import('../../plugin/evals/picture/scenes.mjs');
+  const prompt = PICTURES.find((c) => c.picture.check === 'grade').prompt;
+  for (const [name, b] of Object.entries(GRADE.regions)) assert.ok(prompt.includes(`${name} (${b.x}, ${b.y}, ${b.width}, ${b.height})`), name);
+});
+
+test('the default set leaves the picture cases out', async () => {
+  const out = path.join(await tmp('evals-'), 'evals');
+  const cases = await writeEvalSuite(CANON, out);
+  assert.equal(cases.length, PLAN.evals.length);
+  for (const dir of await fs.readdir(out)) {
+    const { head } = frontMatter(await fs.readFile(path.join(out, dir, 'prompt.md'), 'utf8'));
+    assert.doesNotMatch(head, /Bash|picture/);
+  }
+});
+
+test('the picture set: each case carries its setup and grader, a scoped Bash grant and one regex grader per check', async () => {
+  const out = path.join(await tmp('evals-'), 'evals');
+  const dist = path.join(ROOT, 'plugin', 'runtime', 'dist');
+  const cases = await writeEvalSuite(CANON, out, { set: 'picture', runtimeDist: dist });
+  assert.deepEqual(cases.map((c) => c.id), PICTURES.map((c) => c.id));
+  const dirs = (await fs.readdir(out)).sort();
+  assert.match(dirs[0], /^18-/);
+  for (const [i, c] of PICTURES.entries()) {
+    const dir = path.join(out, dirs[i]);
+    for (const f of ['grade.mjs', 'checks.mjs', 'scenes.mjs', c.picture.setup, 'grade-config.json']) await fs.access(path.join(dir, f));
+    const { head, body } = frontMatter(await fs.readFile(path.join(dir, 'prompt.md'), 'utf8'));
+    assert.ok(head.includes(`"Bash(node ${path.join(dir, 'grade.mjs')}:*)"`), head);
+    assert.match(head, /^tags: \[picture\]$/m);
+    assert.ok(body.includes(path.join(dir, c.picture.setup)));
+    const ids = THRESHOLDS[c.picture.check].filter((t) => !t.setup).map((t) => t.id);
+    const files = (await fs.readdir(path.join(dir, 'graders'))).filter((f) => f.startsWith('check-')).sort();
+    assert.deepEqual(files, ids.map((id) => `check-${id}.md`).sort());
+    for (const id of ids) {
+      const g = frontMatter(await fs.readFile(path.join(dir, 'graders', `check-${id}.md`), 'utf8'));
+      assert.match(g.head, /^type: regex$/m);
+      assert.match(g.head, /^target: \{source: file, path: picture-grade\/verdict\.txt\}$/m);
+      const pattern = g.head.match(/^pattern: '(.*)'$/m)[1];
+      const re = new RegExp(pattern, 'm');
+      assert.ok(re.test(`x\nPICTURE-CHECK ${c.picture.check}.${id} PASS | measured: a | value: 1 | limit: 2\n`));
+      assert.ok(!re.test(`PICTURE-CHECK ${c.picture.check}.${id} FAIL | measured: a | value: 1 | limit: 2\n`));
+    }
+    assert.equal(cases[i].graders, c.assertions.length + ids.length);
+  }
+  const cmd = pictureCommand('/copy', cases);
+  assert.match(cmd, / -j 1 /);
+  assert.match(cmd, /ae_do'/);
+  assert.match(cmd, /ae_render_frame'/);
+  for (const c of cases) assert.ok(cmd.includes(`'${c.bash}'`));
+});
+
+test('a picture case\'s copied grader runs from the case folder with its config', async () => {
+  const out = path.join(await tmp('evals-'), 'evals');
+  await writeEvalSuite(CANON, out, { set: 'picture', runtimeDist: path.join(ROOT, 'plugin', 'runtime', 'dist') });
+  const dir = path.join(out, (await fs.readdir(out)).sort()[2]);
+  const cwd = await tmp('run-');
+  const { stdout } = await promisify(execFile)(process.execPath, [path.join(dir, 'grade.mjs'), 'over'], { cwd });
+  assert.match(stdout, /^PICTURE-RESULT over 0\/2 checks passed$/m);
+});
+
+test('the picture set refuses to guess where the runtime is', async () => {
+  const out = path.join(await tmp('evals-'), 'evals');
+  await assert.rejects(writeEvalSuite(CANON, out, { set: 'picture' }), /no runtime\/dist/);
 });

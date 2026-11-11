@@ -198,6 +198,67 @@
         "Any timing, composition or concept offered is clearly provisional; the agent does not represent an uninspected product as build-ready or verified.",
         "No asset generation, AE inspection/mutation, render, install or publication occurs in the planning-only test."
       ]
+    },
+    {
+      "id": 18,
+      "prompt": "Key a green-screen shot in the open After Effects project, using only the plugin's tools, and measure it as you go. First run this eval's setup script `keying-shot.jsx` once, unchanged, as the code of the eval.run operation; it builds a synthetic test shot (no footage) and returns `keyComp`, `sourceComp` and the layer name. Then run `node grade.mjs keying --plan`: it prints the final renders and every check's limit. In `keyComp`, the layer `green shot` is the footage: a green screen lit unevenly (one side about 1.5x brighter), fine grain, a figure with soft edges and fine hair strands that drifts slightly over the first frames and then holds, and a small grey stand in the top-left corner that is not screen. Key that layer so the screen and the stand are fully transparent, the figure is fully opaque, and the edge stays soft but thin and steady from frame to frame. Keep the key on the layer `green shot` itself; do not edit inside `sourceComp` or its precomp, and do not rebuild the matte from the setup's own layers. When your work is finished, and not before, make exactly the final ae_render_frame calls `node grade.mjs keying --plan` printed, then run `node grade.mjs keying` once. The grade runs once and is final. Work only on the items the setup made; do not save, close, clear or switch the project, and do not use the render queue or undo. Report what you changed, in order, with the edge numbers before and after.",
+      "expected_output": "The screen measured on the un-keyed source, Keylight set from that measurement on the green shot layer, a garbage mask over the stand, the matte read with edge before and after each change, the grader's renders made exactly as planned and one grade run; an honest report of numbers and what was looked at. Only a run against After Effects shows whether the setup builds the shot it claims; the thresholds were calibrated on a Node model whose soft edges are linear ramps, and real feathers are not; the no-plugin baseline has no After Effects tools, so it scores 0 on every picture check by construction.",
+      "files": [
+        "picture/keying-shot.jsx",
+        "picture/grade.mjs",
+        "picture/checks.mjs",
+        "picture/scenes.mjs"
+      ],
+      "picture": {
+        "check": "keying",
+        "setup": "keying-shot.jsx"
+      },
+      "assertions": [
+        "Trace shows the setup script run once through eval.run and the screen measured with ae_render_frame `screen` on the un-keyed source before the key's Screen Colour was set.",
+        "Trace shows the key made with the plugin's keying operations on the green shot layer, and no operation that edits the source comp, its figure precomp or their layers.",
+        "Trace shows the final ae_render_frame calls made exactly as the grader's plan printed them, after the last change to the key, followed by a single grade run.",
+        "The report lists the changes in order with edge numbers before and after, and says which results were checked by numbers and which by looking."
+      ]
+    },
+    {
+      "id": 19,
+      "prompt": "Grade a subject to sit in its plate in the open After Effects project, using only the plugin's tools. First run this eval's setup script `grade-plate.jsx` once, unchanged, as the code of the eval.run operation; it builds a synthetic plate and subject (no footage) and returns `gradeComp` and the reference regions. Then run `node grade.mjs grade --plan`: it prints the final render and every check's limit. The subject layer `subject` was shot under different light: its colours carry a warm cast and raised blacks. Grade the layer `subject` itself (effects on that layer) so that its shadow, neutral and highlight regions match the plate's, using these named regions in comp pixels (x, y, width, height): subject shadow (780, 820, 300, 220), plate shadow (140, 360, 220, 580); subject neutral (800, 620, 200, 120), plate neutral (1440, 290, 270, 270); subject highlight (800, 480, 120, 80), plate highlight (1490, 740, 270, 170). Measure with ae_render_frame `sample` before and after each change, and do not crush the blacks or clip the whites (check the histogram). Leave the plate as it is. When your work is finished, and not before, make exactly the final ae_render_frame calls `node grade.mjs grade --plan` printed, then run `node grade.mjs grade` once. The grade runs once and is final. Work only on the items the setup made; do not save, close, clear or switch the project, and do not use the render queue or undo. Report the sampled values before and after, per region.",
+      "expected_output": "Samples of all six regions before grading, a grade on the subject layer found and range-checked through the plugin (for example Levels per channel), samples after each change converging to within 0.02 per channel, a histogram check, the plate untouched, the planned render and one grade run. Only a run against After Effects shows whether the setup builds the shot it claims; the thresholds were calibrated on a Node model whose soft edges are linear ramps, and real feathers are not; the no-plugin baseline has no After Effects tools, so it scores 0 on every picture check by construction.",
+      "files": [
+        "picture/grade-plate.jsx",
+        "picture/grade.mjs",
+        "picture/checks.mjs",
+        "picture/scenes.mjs"
+      ],
+      "picture": {
+        "check": "grade",
+        "setup": "grade-plate.jsx"
+      },
+      "assertions": [
+        "Trace shows the setup script run once through eval.run and the six named regions sampled with ae_render_frame `sample` before the first grading change.",
+        "Trace shows the grade applied as effects on the subject layer through plugin operations, with no operation on the plate layer or inside either precomp.",
+        "Trace shows the final ae_render_frame call made exactly as the grader's plan printed it, after the last grading change, followed by a single grade run.",
+        "The report gives each region's sampled values before and after and the remaining difference per channel, without claiming a match the numbers do not show."
+      ]
+    },
+    {
+      "id": 20,
+      "prompt": "Make a reusable still of a soft glow in the open After Effects project, using only the plugin's tools. First run this eval's setup script `over-still.jsx` once, unchanged, as the code of the eval.run operation; it builds a comp with a strong pink background colour and one feathered layer, `glow`, and returns `overComp`. Then run `node grade.mjs over --plan`: it prints where the still goes, the reference render and the checks. The client will lay the still over other backgrounds themselves, as a PNG with straight colour and alpha, so the glow's soft edge must carry no trace of the comp's pink. Write the still of `glow` at frame 0 to the path the plan names, without changing the comp's background colour. When your work is finished, and not before, make exactly the final ae_render_frame calls `node grade.mjs over --plan` printed, then run `node grade.mjs over` once. The grade runs once and is final. Work only on the items the setup made; do not save, close, clear or switch the project, and do not use the render queue or undo. Say how you made the still and why its colour is straight.",
+      "expected_output": "The still rendered with the glow isolated and channels 'rgba' (straight colour, the comp background taken out), not a raw capture whose RGB is laid over the pink background; the reference made with `over` as planned and one grade run. Only a run against After Effects shows whether the setup builds the shot it claims; the thresholds were calibrated on a Node model whose soft edges are linear ramps, and real feathers are not; the no-plugin baseline has no After Effects tools, so it scores 0 on every picture check by construction.",
+      "files": [
+        "picture/over-still.jsx",
+        "picture/grade.mjs",
+        "picture/checks.mjs",
+        "picture/scenes.mjs"
+      ],
+      "picture": {
+        "check": "over",
+        "setup": "over-still.jsx"
+      },
+      "assertions": [
+        "Trace shows the setup script run once through eval.run and the still written with ae_render_frame channels 'rgba' (or another route that takes the comp background out), not colorManaged 'off' or a plain rgb capture.",
+        "The answer explains that a capture's RGB is laid over the comp background and that the still's colour is straight because that background was taken out."
+      ]
     }
   ]
 }

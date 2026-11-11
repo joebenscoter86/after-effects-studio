@@ -2,7 +2,7 @@
 
 Use this room to prove user-visible behavior, craft quality and recoverability.
 
-Read release-criteria.md, [the scenario matrix](fixtures/scenarios.md), the relevant scenario and the local motion-review/ae-control skills. Use [report-template.md](reports/report-template.md) for new runs. Canonical authoring prompts live in ../plugin/evals/evals.json. fixtures/ holds small permitted inputs; reports/ holds dated results, corrections and evidence pointers; renders/ holds ignored native projects and media.
+Read release-criteria.md, [the scenario matrix](fixtures/scenarios.md), the relevant scenario and the local motion-review/ae-control skills. Use [report-template.md](reports/report-template.md) for new runs. Canonical authoring prompts live in ../plugin/evals/evals.json; the picture evals there (ids 18 to 20) are graded by numbers read from rendered frames, with thresholds in ../plugin/evals/picture/checks.mjs. fixtures/ holds small permitted inputs; reports/ holds dated results, corrections and evidence pointers; renders/ holds ignored native projects and media.
 
 Use ../product/prd.md for requirement IDs, ../product/release-execution-plan.md (D-013) and the current Linear description for remaining acceptance checks, and ../product/backlog.md for identifier mapping. AFT-9 uses controlled test-only response failure with real native-state inspection; do not wait for a spontaneous timeout. AFT-18 proceeds independently; AFT-33 adds lifecycle checks and AFT-34 proves real public Git installation. Attach dated evidence to the corresponding Linear issue; a completed planning document is not a release-criteria pass.
 
