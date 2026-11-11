@@ -183,31 +183,79 @@ AE_MCP.serveRequest = function (requestFile, mailboxDir, logPath) {
             var phase = (response.phase === "execute") ? "execute" : "dispatch";
             var body = "{\"id\":\"" + jsonSafeAscii(requestId)
                 + "\",\"ok\":false,\"phase\":\"" + phase
-                + "\",\"result\":null,\"error\":\"" + jsonSafeAscii("could not serialize response: " + why)
+                + "\",\"result\":null,\"error\":\"" + jsonSafeAscii("could not write response: " + why)
                 + "\",\"stack\":null,\"logs\":[]}";
-            var tmp = new File(tmpPath);
-            tmp.encoding = "UTF-8";
-            if (!tmp.open("w")) return;
-            tmp.write(body);
-            tmp.close();
-            promoteTmp(tmp);
+            // Same verified write: a fallback that is itself cut off would
+            // strand the caller just as the original would have.
+            writeVerified(body);
         } catch (eFb) { /* nothing left to try; the caller will time out */ }
     }
 
+    /**
+     * Rewrite serialized JSON as pure ASCII: every character from 0x7f up
+     * becomes a \uXXXX escape (in JSON output those only occur inside
+     * strings, so the document means exactly the same thing).
+     *
+     * Two reasons, both about File.write. It cannot encode an unpaired
+     * surrogate as UTF-8 — it stops there and leaves a cut-off file — and
+     * After Effects produces such strings itself: "Create Shapes from Text"
+     * names an emoji's vector group with half of its surrogate pair. And
+     * with one byte per character, the size on disk can be checked against
+     * the text (see writeVerified), which catches any other short write.
+     */
+    function asciiJson(text) {
+        if (!/[^\x00-\x7e]/.test(text)) return text;
+        var parts = [];
+        var last = 0;
+        for (var i = 0; i < text.length; i++) {
+            var code = text.charCodeAt(i);
+            if (code < 0x7f) continue;
+            var hex = code.toString(16);
+            while (hex.length < 4) hex = "0" + hex;
+            parts.push(text.substring(last, i));
+            parts.push("\\u" + hex);
+            last = i + 1;
+        }
+        parts.push(text.substring(last));
+        return parts.join("");
+    }
+
+    /**
+     * Write ASCII `text` to the tmp file and confirm all of it arrived.
+     * Returns null on success, else why not. A file that is renamed into
+     * place must be complete: the caller treats an unparseable response as
+     * "still being written" and would poll it until its timeout.
+     */
+    function writeVerified(text) {
+        var tmp = new File(tmpPath);
+        tmp.encoding = "UTF-8";
+        if (!tmp.open("w")) return "cannot open tmp response for write: " + tmp.error;
+        var wrote = tmp.write(text);
+        var writeError = tmp.error;
+        tmp.close();
+        var problem = null;
+        if (!wrote) {
+            problem = "write failed: " + writeError;
+        } else if (tmp.length !== text.length) {
+            problem = "short write: " + String(tmp.length) + " of " + String(text.length) + " bytes reached the disk";
+        }
+        if (problem !== null) {
+            try { tmp.remove(); } catch (eRmTmp) { /* ignore */ }
+            return problem;
+        }
+        promoteTmp(tmp);
+        return null;
+    }
+
     function writeResponse() {
+        var why = null;
         try {
-            var tmp = new File(tmpPath);
-            tmp.encoding = "UTF-8";
-            if (!tmp.open("w")) {
-                appendLog("FATAL: cannot open tmp response for write: " + tmp.error);
-                return;
-            }
-            tmp.write(JSON.stringify(response));
-            tmp.close();
-            promoteTmp(tmp);
+            why = writeVerified(asciiJson(JSON.stringify(response)));
         } catch (e) {
-            var why = describeError(e);
-            appendLog("FATAL: writeResponse threw: " + why);
+            why = describeError(e);
+        }
+        if (why !== null) {
+            appendLog("FATAL: could not write response: " + why);
             writeFallbackResponse(why);
         }
     }

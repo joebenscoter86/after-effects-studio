@@ -35,6 +35,24 @@ export interface FileIpcTransportOptions {
     /** Modal-dialog scan; defaults to scanAeDialogs (Windows and macOS). Injectable for tests. */
     scanDialogs?: () => Promise<AeDialog[]>;
 }
+export interface DispatcherResponse {
+    id: string | null;
+    ok: boolean;
+    /** "dispatch" = failed before running our code; "execute" = our code threw. */
+    phase?: "dispatch" | "execute";
+    result: unknown;
+    error: string | null;
+    /**
+     * 1-based line in the compiled function body where execution threw
+     * (ExtendScript Error.line). Absent/null from dispatchers predating the
+     * field. new Function's synthesized header is line 1, so the wrapped
+     * request code starts at line 2 — callers that know the wrapper layout
+     * (ae_do) translate this to a line in the code they assembled.
+     */
+    line?: number | null;
+    stack: string | null;
+    logs: string[];
+}
 /**
  * File-IPC transport. Two ways to reach After Effects, chosen per call by
  * `resolveTarget` (see transport/instances.ts):
@@ -150,6 +168,46 @@ export declare class FileIpcTransport implements AeTransport {
      */
     private sweepStaleFiles;
 }
+/** DIALOG_OPEN: what the dialogs say first, then what became of the call. */
+/**
+ * How long an unparseable response may sit unchanged before it is final.
+ *
+ * serve.jsx writes a tmp file and renames it into place, so a response that
+ * does not parse is at worst a torn read of that rename — gone by the next
+ * poll. One that is still there, the same size, after this long was written
+ * that way and will never get better.
+ */
+export declare const UNREADABLE_RESPONSE_GRACE_MS = 2000;
+/** What one look at a response file found. */
+export type ResponseRead = {
+    kind: "pending";
+} | {
+    kind: "ready";
+    response: DispatcherResponse;
+} | {
+    kind: "unreadable";
+    bytes: number;
+    tail: string;
+};
+/** Classify the text of a response file. Empty means not written yet. */
+export declare function readResponseText(raw: string): ResponseRead;
+/**
+ * Decides when an unreadable response stops being "maybe still arriving".
+ * Feed it every look at the file; it answers true once the same unreadable
+ * content has sat for UNREADABLE_RESPONSE_GRACE_MS.
+ */
+export declare class UnreadableResponseWatch {
+    private since;
+    private bytes;
+    settled(read: ResponseRead, now: number): boolean;
+}
+/**
+ * The failure for a response that arrived but cannot be parsed. Before this
+ * existed the caller waited out its whole timeout on such a file.
+ */
+export declare function unreadableResponseFailure(read: Extract<ResponseRead, {
+    kind: "unreadable";
+}>, started: number): EvalResult;
 /** AppleScript's -1743 is an explicit macOS Automation denial, not a generic launch failure. */
 export declare function isAutomationDenial(message: string): boolean;
 /**

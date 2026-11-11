@@ -37890,11 +37890,16 @@ var FileIpcTransport = class {
     const deadline = started + timeoutMs;
     let requestConsumed = false;
     let lastLivenessAt = started;
+    const unreadable = new UnreadableResponseWatch();
     while (Date.now() < deadline) {
-      const parsed = await this.tryReadResponse(responsePath);
-      if (parsed) {
+      const read = await this.tryReadResponse(responsePath);
+      if (read.kind === "ready") {
         await this.safeUnlink(responsePath);
-        return this.toEvalResult(parsed, Date.now() - started);
+        return this.toEvalResult(read.response, Date.now() - started);
+      }
+      if (unreadable.settled(read, Date.now()) && read.kind === "unreadable") {
+        await this.safeUnlink(responsePath);
+        return unreadableResponseFailure(read, started);
       }
       const now = Date.now();
       if (!requestConsumed && now - lastLivenessAt >= LIVENESS_CHECK_MS) {
@@ -37978,11 +37983,16 @@ var FileIpcTransport = class {
       let lastLaunchAt = started;
       let lastRefreshAt = started;
       let requestConsumed = false;
+      const unreadable = new UnreadableResponseWatch();
       while (Date.now() < deadline) {
-        const parsed = await this.tryReadResponse(responsePath);
-        if (parsed) {
+        const read = await this.tryReadResponse(responsePath);
+        if (read.kind === "ready") {
           await this.safeUnlink(responsePath);
-          return this.toEvalResult(parsed, Date.now() - started);
+          return this.toEvalResult(read.response, Date.now() - started);
+        }
+        if (unreadable.settled(read, Date.now()) && read.kind === "unreadable") {
+          await this.safeUnlink(responsePath);
+          return unreadableResponseFailure(read, started);
         }
         if (spawnState.error !== null) {
           return await this.spawnFailure(spawnState.error, requestPath, started);
@@ -38236,13 +38246,13 @@ var FileIpcTransport = class {
     };
   }
   async tryReadResponse(responsePath) {
+    let raw;
     try {
-      const raw = await fs3.readFile(responsePath, "utf8");
-      if (!raw) return null;
-      return JSON.parse(raw);
+      raw = await fs3.readFile(responsePath, "utf8");
     } catch {
-      return null;
+      return { kind: "pending" };
     }
+    return readResponseText(raw);
   }
   /** Unlink and report whether the file was actually there. */
   async safeUnlink(p) {
@@ -38296,6 +38306,42 @@ ${extra.hint}` : message,
     durationMs: extra.durationMs ?? 0,
     ...extra.dialogs ? { dialogs: extra.dialogs } : {}
   };
+}
+var UNREADABLE_RESPONSE_GRACE_MS = 2e3;
+function readResponseText(raw) {
+  if (!raw) return { kind: "pending" };
+  try {
+    return { kind: "ready", response: JSON.parse(raw) };
+  } catch {
+    return { kind: "unreadable", bytes: Buffer.byteLength(raw, "utf8"), tail: raw.slice(-80) };
+  }
+}
+var UnreadableResponseWatch = class {
+  since = null;
+  bytes = -1;
+  settled(read, now) {
+    if (read.kind !== "unreadable") {
+      this.since = null;
+      this.bytes = -1;
+      return false;
+    }
+    if (this.since === null || read.bytes !== this.bytes) {
+      this.since = now;
+      this.bytes = read.bytes;
+      return false;
+    }
+    return now - this.since >= UNREADABLE_RESPONSE_GRACE_MS;
+  }
+};
+function unreadableResponseFailure(read, started) {
+  return failure2(
+    "DISPATCHER",
+    `After Effects wrote a response that is not valid JSON (${read.bytes} bytes, ending in ${JSON.stringify(read.tail)}); the script already ran`,
+    {
+      durationMs: Date.now() - started,
+      hint: "The response was cut off while it was being written, usually by a value its writer could not encode. Whatever the call does to the project has already happened: inspect the actual project state before retrying a write."
+    }
+  );
 }
 function dialogFailure(dialogs, outcome, started) {
   return failure2("DIALOG_OPEN", `${dialogBlockMessage(dialogs)} \u2014 ${outcome}`, {
@@ -39471,6 +39517,11 @@ registerOp({
             if (_inT !== null || _outT !== null) {
                 if (_inT === null) _inT = _node.keyInSpatialTangent(_ki);
                 if (_outT === null) _outT = _node.keyOutSpatialTangent(_ki);
+                // Position is a three-component property even on a 2D layer:
+                // AE rejects [x, y] there ("Value array does not have 3 elements").
+                var _dims = _node.keyValue(_ki).length;
+                _inT = AE.fitSpatialTangent(_inT, _dims);
+                _outT = AE.fitSpatialTangent(_outT, _dims);
                 _node.setSpatialTangentsAtKey(_ki, _inT, _outT);
             }
             var _cont = ${jsxVal(args.continuous ?? null)};
@@ -40962,8 +41013,8 @@ registerOp({
             ${args.position !== void 0 ? `_rxf.property("ADBE Vector Repeater Position").setValue(${jsxVal(args.position)});` : ""}
             ${args.rotation !== void 0 ? `_rxf.property("ADBE Vector Repeater Rotation").setValue(${jsxVal(args.rotation)});` : ""}
             ${args.scale !== void 0 ? `_rxf.property("ADBE Vector Repeater Scale").setValue(${jsxVal(args.scale)});` : ""}
-            ${args.startOpacity !== void 0 ? `_rxf.property("ADBE Vector Repeater Start Opacity").setValue(${jsxVal(args.startOpacity)});` : ""}
-            ${args.endOpacity !== void 0 ? `_rxf.property("ADBE Vector Repeater End Opacity").setValue(${jsxVal(args.endOpacity)});` : ""}
+            ${args.startOpacity !== void 0 ? `_rxf.property("ADBE Vector Repeater Opacity 1").setValue(${jsxVal(args.startOpacity)});` : ""}
+            ${args.endOpacity !== void 0 ? `_rxf.property("ADBE Vector Repeater Opacity 2").setValue(${jsxVal(args.endOpacity)});` : ""}
             return { ok: true, name: _rep.name };
         `;
   }
@@ -49039,6 +49090,7 @@ var CODE = `
             "AE.rect(shapeLayerOrGroup, [w,h], [x,y], {name, roundness, fill:[r,g,b], stroke, strokeWidth}) \u2014 group+path+style in one call",
             "AE.ellipse(shapeLayerOrGroup, [w,h], [x,y], {name, fill, stroke, strokeWidth})",
             "AE.ensureParentDir(path) \u2014 mkdir -p for an output file, returns the File",
+            "AE.fitSpatialTangent(tangent, dims) \u2014 pad or trim a spatial tangent to the property's component count (Position holds 3 even on a 2D layer)",
             "AE.itemTypeName(item) \u2014 'CompItem' | 'FootageItem' | 'FolderItem' | 'UnknownItem'",
             "AE.serializeItemSummary(item)",
             "AE.serializeLayerSummary(layer)",
@@ -50678,7 +50730,12 @@ var saveProjectTool = defineTool({
     const code = `
         var _path = ${jsxVal(args.path ?? null)};
         if (_path) {
-            var f = new File(_path);
+            // Save As into a folder that does not exist yet fails inside AE on a
+            // temp file name; create the folder first, as the render ops do.
+            var f = AE.ensureParentDir(_path);
+            if (f.parent && !f.parent.exists) {
+                return { ok: false, saved: false, error: "cannot create folder " + f.parent.fsName.replace(/\\\\/g, "/") + " for the project file" };
+            }
             app.project.save(f);
             return { ok: true, saved: true, path: f.fsName.replace(/\\\\/g, "/") };
         }

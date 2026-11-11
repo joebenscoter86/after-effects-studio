@@ -476,8 +476,8 @@ registerOp({
             ${args.position !== void 0 ? `_rxf.property("ADBE Vector Repeater Position").setValue(${jsxVal(args.position)});` : ""}
             ${args.rotation !== void 0 ? `_rxf.property("ADBE Vector Repeater Rotation").setValue(${jsxVal(args.rotation)});` : ""}
             ${args.scale !== void 0 ? `_rxf.property("ADBE Vector Repeater Scale").setValue(${jsxVal(args.scale)});` : ""}
-            ${args.startOpacity !== void 0 ? `_rxf.property("ADBE Vector Repeater Start Opacity").setValue(${jsxVal(args.startOpacity)});` : ""}
-            ${args.endOpacity !== void 0 ? `_rxf.property("ADBE Vector Repeater End Opacity").setValue(${jsxVal(args.endOpacity)});` : ""}
+            ${args.startOpacity !== void 0 ? `_rxf.property("ADBE Vector Repeater Opacity 1").setValue(${jsxVal(args.startOpacity)});` : ""}
+            ${args.endOpacity !== void 0 ? `_rxf.property("ADBE Vector Repeater Opacity 2").setValue(${jsxVal(args.endOpacity)});` : ""}
             return { ok: true, name: _rep.name };
         `;
   }

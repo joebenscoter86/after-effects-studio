@@ -227,6 +227,41 @@ describe("pull path", () => {
     expect(await listMail(agent.dir, RESPONSE_PREFIX)).toEqual([]);
   });
 
+  it("fails within seconds, not at the timeout, when the response it gets is cut off", async () => {
+    // Heartbeat only: this test plays the serving side itself so it can
+    // deliver the response After Effects wrote on 2026-11-09 — renamed into
+    // place complete, but ending mid-string.
+    agent = new FakeAgent(null);
+    await agent.start();
+    const launcher = recordingSpawn(() => {});
+    const transport = new FileIpcTransport({ instance: agent.id, spawn: launcher.spawn });
+
+    const started = Date.now();
+    const pending = transport.execute({ code: "return 'a name the writer could not encode';", timeoutMs: 30_000 });
+    let id: string | null = null;
+    while (id === null && Date.now() - started < 5_000) {
+      const requests = await listMail(agent.dir, REQUEST_PREFIX);
+      if (requests.length > 0) {
+        id = requests[0].slice(REQUEST_PREFIX.length, -".json".length);
+        await fs.unlink(path.join(agent.dir, requests[0]));
+      } else {
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      }
+    }
+    expect(id, "the request never reached the instance mailbox").not.toBeNull();
+    const cutOff = `{"id":"${id}","ok":true,"phase":"execute","result":{"groups":[{"name":"`;
+    await fs.writeFile(path.join(agent.dir, `${RESPONSE_PREFIX}${id}.json`), cutOff, "utf8");
+
+    const res = await pending;
+
+    expect(res.ok).toBe(false);
+    expect(res.errorCode).toBe("DISPATCHER");
+    expect(res.error).toContain("not valid JSON");
+    expect(Date.now() - started).toBeLessThan(10_000);
+    // The unreadable file is cleared away, not left for a later sweep.
+    expect(await listMail(agent.dir, RESPONSE_PREFIX)).toEqual([]);
+  });
+
   it("reports a consumed write as uncertain when its real response is withheld from the client", async () => {
     const applied: string[] = [];
     agent = new FakeAgent((request) => {
@@ -249,7 +284,7 @@ describe("pull path", () => {
     const readBoundary = fault as unknown as {
       tryReadResponse: (responsePath: string) => Promise<unknown>;
     };
-    const intercepted = vi.spyOn(readBoundary, "tryReadResponse").mockResolvedValue(null);
+    const intercepted = vi.spyOn(readBoundary, "tryReadResponse").mockResolvedValue({ kind: "pending" });
     let faultResult;
     try {
       faultResult = await fault.execute({ code: "owned-fault", timeoutMs: 650 });
