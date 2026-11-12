@@ -389,12 +389,19 @@ export declare function outlineTracker(opts?: OutlineOptions): {
  * counted as. Under 20 px are single specks of noise (3 px on frame 249);
  * over 2,000 px is another object, not a speck. `neck`: a piece joined to the
  * cut-out by a neck up to 2 px wide counts as apart (an opening of 1 px).
+ * `minRun`: a speck stops a check only when the same piece is there on at
+ * least this many frames in a row. On that file and on the cut-out matted at
+ * 2176 x 3840 (cutout-12c), every piece of chair that lasted was on 2 or more
+ * frames in a row (15, 2, 5 and 3), while bits on single frames (chair by the
+ * left arm, a wisp of hair on frame 105) were each there for a thirtieth of a
+ * second. Two files of one take: the limits and minRun come from them alone.
  */
 export declare const SPECK_DEFAULTS: {
     opaque: number;
     minArea: number;
     maxArea: number;
     neck: number;
+    minRun: number;
 };
 export interface SpeckPiece {
     x: number;
@@ -406,7 +413,9 @@ export interface SpeckPiece {
 /**
  * Small opaque pieces apart from the main cut-out, or joined to it only by a
  * neck up to 2 px wide: opaque at `opaque` alpha or more, `minArea` to
- * `maxArea` px, not touching the frame edge. Largest first.
+ * `maxArea` px, not touching the frame edge. Largest first. Works inside the
+ * box around the opaque pixels and grows labels back only over the pixels
+ * the erosion took (about 5.5 ms a 1080 x 1920 frame, 1.8 s for 320).
  */
 export declare function speckPieces(alpha: Float64Array, width: number, height: number, opts?: Partial<typeof SPECK_DEFAULTS>): SpeckPiece[];
 //# sourceMappingURL=matte.d.ts.map

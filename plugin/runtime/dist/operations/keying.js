@@ -3219,6 +3219,23 @@ function speckAccepted(p, accept) {
         return cx >= b.x && cx <= b.x + b.width && cy >= b.y && cy <= b.y + b.height;
     });
 }
+/** The most frames in a row on which the same piece is there (its boxes overlap or touch from one frame to the next). */
+function longestSpeckRun(t) {
+    const touch = (a, b) => a.x <= b.x + b.width && b.x <= a.x + a.width && a.y <= b.y + b.height && b.y <= a.y + a.height;
+    const run = new Map();
+    let best = 0;
+    const sorted = t.pieces.slice().sort((a, b) => a.frame - b.frame);
+    sorted.forEach((p, i) => {
+        let len = 1;
+        sorted.forEach((q, j) => {
+            if (q.frame === p.frame - 1 && touch(q.box, p.box))
+                len = Math.max(len, (run.get(j) ?? 1) + 1);
+        });
+        run.set(i, len);
+        best = Math.max(best, len);
+    });
+    return best;
+}
 const SPECK_JOIN_PX = 40;
 function addSpeck(tracks, frame, p) {
     const near = (b) => p.x < b.x + b.width + SPECK_JOIN_PX &&
@@ -3234,9 +3251,11 @@ function addSpeck(tracks, frame, p) {
             largestArea: p.area,
             largestFrame: frame,
             smallestArea: p.area,
+            pieces: [{ frame, box: pb }],
         });
         return;
     }
+    t.pieces.push({ frame, box: pb });
     if (!t.frames.includes(frame))
         t.frames.push(frame);
     const x0 = Math.min(t.box.x, pb.x);
@@ -3288,6 +3307,10 @@ export async function runCheckFile(args, io) {
         minArea: typeof args.speckMinArea === "number" ? args.speckMinArea : SPECK_DEFAULTS.minArea,
         maxArea: typeof args.speckMaxArea === "number" ? args.speckMaxArea : SPECK_DEFAULTS.maxArea,
     };
+    const speckMinRun = typeof args.speckMinFrames === "number" && args.speckMinFrames >= 1
+        ? Math.floor(args.speckMinFrames)
+        : SPECK_DEFAULTS.minRun;
+    const speckTime = { ms: 0, frames: 0 };
     const specks = [];
     const specksAccepted = [];
     const setup = await io.execute(fileCompJsx({ path: file, item }), {
@@ -3319,7 +3342,8 @@ export async function runCheckFile(args, io) {
         for (const t of tracks)
             n.add(t.bestFrame);
         for (const t of specks)
-            n.add(t.largestFrame);
+            if (longestSpeckRun(t) >= speckMinRun)
+                n.add(t.largestFrame);
         return n;
     };
     const release = async (frame) => {
@@ -3345,8 +3369,11 @@ export async function runCheckFile(args, io) {
                 if (!img.alpha)
                     return;
                 outline.add(r.frame, img.alpha, img.rgb, img.width, img.height);
+                const tSpeck = performance.now();
                 for (const p of speckPieces(img.alpha, img.width, img.height, speckLimits))
                     addSpeck(speckAccepted(p, accept) ? specksAccepted : specks, r.frame, p);
+                speckTime.ms += performance.now() - tSpeck;
+                speckTime.frames++;
             })).readings;
             for (const r of got) {
                 readings.push(r);
@@ -3449,7 +3476,7 @@ export async function runCheckFile(args, io) {
     const pictureFrames = new Set([
         ...tracks.map((t) => t.bestFrame),
         ...jumps.flatMap((j) => [j.from, j.to]),
-        ...specks.map((t) => t.largestFrame),
+        ...specks.filter((t) => longestSpeckRun(t) >= speckMinRun).map((t) => t.largestFrame),
     ]);
     const pictureOf = new Map();
     let pictureBytes = 0;
@@ -3524,16 +3551,29 @@ export async function runCheckFile(args, io) {
             ? ` (each frame and the next), one pair every ${step} frames, and the first and last three frames`
             : "") +
         ` compared for jumps over ${jumpLimit} in opaque share.`;
-    const passText = jumps.length || frozenFindings.length || specks.length
+    const passText = jumps.length || frozenFindings.length || specks.some((t) => longestSpeckRun(t) >= speckMinRun)
         ? `No hole or opening of ${fmt(limit)} px or more on the ${byFrame.size} frames read.`
         : `Nothing over the limit on ${byFrame.size} of ${readings.length} frames read; no jump between neighbouring frames over ${jumpLimit}; the picture is at ${picture ?? "(none)"}.`;
     const sum = summarize(readings, limit, accept, picture, passText);
-    const speckFindings = specks.map((t) => {
+    const lasting = specks.filter((t) => longestSpeckRun(t) >= speckMinRun);
+    const brief = specks.filter((t) => longestSpeckRun(t) < speckMinRun);
+    const speckNotes = brief.map((t) => ({
+        kind: "speck",
+        frames: t.frames.slice().sort((a, b) => a - b),
+        longestRun: longestSpeckRun(t),
+        largestArea: t.largestArea,
+        box: t.box,
+    }));
+    const briefText = brief.length
+        ? ` ${plural(brief.length, "small piece")} apart from the cut-out on single frames, never on ${speckMinRun} or more frames in a row (${brief.map((t) => `frame${t.frames.length > 1 ? "s" : ""} ${frameRanges(t.frames.slice().sort((a, b) => a - b))}, ${t.largestArea} px at (${t.box.x}, ${t.box.y})`).join("; ")}): a flash of a thirtieth of a second that nobody sees, or a wisp of hair, so not a stop; listed in notes.`
+        : "";
+    const speckFindings = lasting.map((t) => {
         const frames = t.frames.slice().sort((a, b) => a - b);
         const b = t.box;
         return {
             kind: "speck",
             frames,
+            longestRun: longestSpeckRun(t),
             largestArea: t.largestArea,
             largestFrame: t.largestFrame,
             smallestArea: t.smallestArea,
@@ -3575,9 +3615,15 @@ export async function runCheckFile(args, io) {
         outline: outlineResult,
         checked: sum.checked,
         compared,
-        speckLimits: { ...speckLimits, opaque: SPECK_DEFAULTS.opaque, neckPx: 2 * SPECK_DEFAULTS.neck },
+        notes: speckNotes,
+        speckLimits: {
+            ...speckLimits,
+            minFrames: speckMinRun,
+            opaque: SPECK_DEFAULTS.opaque,
+            neckPx: 2 * SPECK_DEFAULTS.neck,
+        },
         opaque,
-        inOut: `${sum.text}${jumpText}${frozenText}${speckFindings.map((f) => ` ${f.reading}`).join("")}${opaqueText} ${compared}${stop && picture ? ` Look at the picture (${picture}).` : ""}`,
+        inOut: `${sum.text}${jumpText}${frozenText}${speckFindings.map((f) => ` ${f.reading}`).join("")}${briefText}${opaqueText} ${compared}${stop && picture ? ` Look at the picture (${picture}).` : ""}`,
         picture,
         pictures,
         frameReadings: readings.map((r) => ({
@@ -3592,6 +3638,7 @@ export async function runCheckFile(args, io) {
         timing: {
             render: roundTally(renders),
             pixels: roundTally(pixels),
+            speck: { ms: Math.round(speckTime.ms), frames: speckTime.frames },
             totalMs: Math.round(since(started)),
         },
         next: stop
@@ -3707,7 +3754,7 @@ registerOp({
     category: "subject",
     description: "Check a rendered cut-out movie (from subject.render_cutout) frame by frame: brings it into a throwaway comp, reads frames in batches of at most 32 (every frame up to maxFrames, default " +
         `${CHECK_FILE_MAX_FRAMES}; beyond it pairs of neighbouring frames in steps, always the first and last three), and reports holes and openings (as subject.check: holeLimit, accept), the opaque share of every frame, and a 'jump' finding when neighbouring frames differ by more than jumpLimit (default ${CHECK_FILE_JUMP_LIMIT}: on the take of 2026-11-11 the rendered cut-out ran 0.279 to 0.314 with no step over 0.012, and a dropped microphone is about 0.05). ` +
-        "A speck is a small opaque piece apart from the cut-out, or joined to it by a neck a pixel or two wide, not touching the frame edge: speckMinArea to speckMaxArea px (default 20 to 2,000, chosen on the 4K fresh-session file, where a sliver of chair 1 to 5 px off the right arm read 20 to 240 px on about 40 frames and nothing else in 320 frames was caught); findings of kind 'speck' give the frames, the largest area and frame, the box and a picture; they stop, since a new render keeps them, and accept: [{ kind: 'speck', box }] takes one off. " +
+        "A speck is a small opaque piece apart from the cut-out, or joined to it by a neck a pixel or two wide, not touching the frame edge: speckMinArea to speckMaxArea px (default 20 to 2,000, chosen on the 4K fresh-session file, where a sliver of chair 1 to 5 px off the right arm read 20 to 240 px on about 40 frames and nothing else in 320 frames was caught); findings of kind 'speck' give the frames, the longest run of frames in a row, the largest area and frame, the box and a picture; a speck on at least speckMinFrames frames in a row (default 2) stops, since a new render keeps it, and a shorter one (a single-frame flash, a wisp of hair) goes to notes and one sentence of inOut. accept: [{ kind: 'speck', box }] takes one off. Checked through a real subject.check_file run on two files of one take (2026-11-12); the limits come from those two files. timing.speck is the pass's own cost (about 5.5 ms a 1080 x 1920 frame). " +
         "Only true neighbours are compared, and `compared` says which. A frame that could not be read is 'not-checked' and stops. Pictures: the largest frame of each finding not accepted and both frames of each jump, full size, and a sheet of up to 24 frames; `pictures` counts them and their bytes. Each raw capture is removed once read unless keepCaptures (one run on the take had left 630 MB). The throwaway comp is removed afterwards, and the imported footage too unless keepFootage. " +
         "`outline` says how much the outline changed between neighbouring frames and over frozenGap frames (share of the frame whose alpha changed by more than 0.1, at full size); a run where it did not move is a 'frozen' finding (the selection is probably not tracking, as after replacing the layer's footage; accept: [{ kind: \"frozen\" }] for a subject that really is still). The frozen limits are not yet calibrated live. " +
         "Measured: about 0.55 s a frame reading the file. Returns stop, findings, accepted, checked, compared, opaque, outline, inOut, picture, frameReadings, timing.",
@@ -3746,6 +3793,12 @@ registerOp({
             name: "speckMinArea",
             type: "number",
             description: `Smallest piece apart from the cut-out reported as a speck, px (default ${SPECK_DEFAULTS.minArea}).`,
+            required: false,
+        },
+        {
+            name: "speckMinFrames",
+            type: "number",
+            description: `A speck stops the check only when the same piece is there on at least this many frames in a row (default ${SPECK_DEFAULTS.minRun}); shorter ones go to notes.`,
             required: false,
         },
         {

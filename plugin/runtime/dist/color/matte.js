@@ -1043,123 +1043,292 @@ export function outlineTracker(opts = {}) {
  * counted as. Under 20 px are single specks of noise (3 px on frame 249);
  * over 2,000 px is another object, not a speck. `neck`: a piece joined to the
  * cut-out by a neck up to 2 px wide counts as apart (an opening of 1 px).
+ * `minRun`: a speck stops a check only when the same piece is there on at
+ * least this many frames in a row. On that file and on the cut-out matted at
+ * 2176 x 3840 (cutout-12c), every piece of chair that lasted was on 2 or more
+ * frames in a row (15, 2, 5 and 3), while bits on single frames (chair by the
+ * left arm, a wisp of hair on frame 105) were each there for a thirtieth of a
+ * second. Two files of one take: the limits and minRun come from them alone.
  */
-export const SPECK_DEFAULTS = { opaque: 0.5, minArea: 20, maxArea: 2000, neck: 1 };
-/** Erode a 0/1 mask with a 3 x 3 cross, `times` times. */
-function erodeCross(m, w, h, times) {
-    let cur = m;
-    for (let t = 0; t < times; t++) {
-        const next = new Uint8Array(cur.length);
-        for (let y = 1; y < h - 1; y++)
-            for (let x = 1; x < w - 1; x++) {
-                const p = y * w + x;
-                next[p] = cur[p] & cur[p - 1] & cur[p + 1] & cur[p - w] & cur[p + w];
-            }
-        cur = next;
+export const SPECK_DEFAULTS = { opaque: 0.5, minArea: 20, maxArea: 2000, neck: 1, minRun: 2 };
+function statAdd(st, id, x, y, onEdge) {
+    if (st.area[id] === undefined) {
+        st.area[id] = 0;
+        st.minX[id] = x;
+        st.minY[id] = y;
+        st.maxX[id] = x;
+        st.maxY[id] = y;
+        st.edge[id] = false;
     }
-    return cur;
-}
-/** 8-connected pieces of a 0/1 mask: labels (1-based) and the regions. */
-function labelMask(m, w, h) {
-    const a = new Float64Array(m.length);
-    for (let i = 0; i < m.length; i++)
-        a[i] = m[i];
-    const labels = new Int32Array(m.length);
-    const regions = labelRegions(a, w, h, (p) => m[p] === 1, true, labels, new Int32Array(m.length), -1);
-    return { labels, regions };
+    st.area[id]++;
+    if (x < st.minX[id])
+        st.minX[id] = x;
+    if (x > st.maxX[id])
+        st.maxX[id] = x;
+    if (y < st.minY[id])
+        st.minY[id] = y;
+    if (y > st.maxY[id])
+        st.maxY[id] = y;
+    if (onEdge)
+        st.edge[id] = true;
 }
 /**
  * Small opaque pieces apart from the main cut-out, or joined to it only by a
  * neck up to 2 px wide: opaque at `opaque` alpha or more, `minArea` to
- * `maxArea` px, not touching the frame edge. Largest first.
+ * `maxArea` px, not touching the frame edge. Largest first. Works inside the
+ * box around the opaque pixels and grows labels back only over the pixels
+ * the erosion took (about 5.5 ms a 1080 x 1920 frame, 1.8 s for 320).
  */
 export function speckPieces(alpha, width, height, opts = {}) {
     const o = { ...SPECK_DEFAULTS, ...opts };
-    const w = width;
-    const m = new Uint8Array(w * height);
-    for (let i = 0; i < m.length; i++)
-        m[i] = alpha[i] >= o.opaque ? 1 : 0;
-    // Erode by the neck, label what is left, then grow the labels back over the opaque pixels:
-    // a piece joined only by a neck up to 2 px wide comes back as its own label.
-    const { labels } = labelMask(erodeCross(m, w, height, o.neck), w, height);
-    for (let t = 0; t < o.neck + 1; t++) {
-        const grown = labels.slice();
-        for (let y = 0; y < height; y++)
-            for (let x = 0; x < w; x++) {
-                const p = y * w + x;
-                if (!m[p] || labels[p])
-                    continue;
-                const n = (x > 0 && labels[p - 1]) ||
-                    (x < w - 1 && labels[p + 1]) ||
-                    (y > 0 && labels[p - w]) ||
-                    (y < height - 1 && labels[p + w]) ||
-                    0;
-                if (n)
-                    grown[p] = n;
+    // The box around the opaque pixels, one pixel larger where the frame allows.
+    let bx0 = width;
+    let by0 = height;
+    let bx1 = -1;
+    let by1 = -1;
+    for (let y = 0; y < height; y++) {
+        const row = y * width;
+        let first = -1;
+        let last = -1;
+        for (let x = 0; x < width; x++)
+            if (alpha[row + x] >= o.opaque) {
+                if (first < 0)
+                    first = x;
+                last = x;
             }
-        labels.set(grown);
-    }
-    // Opaque pixels no grown label reached (pieces thinner than the neck) are labelled as they stand.
-    const rest = new Uint8Array(m.length);
-    for (let i = 0; i < m.length; i++)
-        rest[i] = m[i] && !labels[i] ? 1 : 0;
-    const thin = labelMask(rest, w, height);
-    const stats = new Map();
-    const add = (key, x, y) => {
-        let s = stats.get(key);
-        if (!s)
-            stats.set(key, (s = { minX: x, minY: y, maxX: x, maxY: y, area: 0, edge: false }));
-        s.area++;
-        if (x < s.minX)
-            s.minX = x;
-        if (x > s.maxX)
-            s.maxX = x;
-        if (y < s.minY)
-            s.minY = y;
-        if (y > s.maxY)
-            s.maxY = y;
-        if (x === 0 || y === 0 || x === w - 1 || y === height - 1)
-            s.edge = true;
-    };
-    for (let y = 0; y < height; y++)
-        for (let x = 0; x < w; x++) {
-            const p = y * w + x;
-            if (labels[p])
-                add(`g${labels[p]}`, x, y);
-            else if (thin.labels[p])
-                add(`t${thin.labels[p]}`, x, y);
-        }
-    // The main cut-out is the largest piece; a thin piece touching it is part of it (a hair, a mic cable).
-    const list = [...stats.values()].sort((a, b) => b.area - a.area);
-    const main = list[0];
-    if (!main)
-        return [];
-    const pieces = [];
-    for (const [key, s] of stats) {
-        if (s === main || s.edge || s.area < o.minArea || s.area > o.maxArea)
+        if (first < 0)
             continue;
-        if (key.startsWith("t")) {
-            // A thin piece is a speck only when no grown piece touches it.
-            let touches = false;
-            const id = Number(key.slice(1));
-            for (let y = s.minY; y <= s.maxY && !touches; y++)
-                for (let x = s.minX; x <= s.maxX && !touches; x++) {
-                    const p = y * w + x;
-                    if (thin.labels[p] !== id)
-                        continue;
-                    for (const q of [p - 1, p + 1, p - w, p + w, p - w - 1, p - w + 1, p + w - 1, p + w + 1])
-                        if (q >= 0 && q < m.length && labels[q])
-                            touches = true;
+        if (first < bx0)
+            bx0 = first;
+        if (last > bx1)
+            bx1 = last;
+        if (y < by0)
+            by0 = y;
+        by1 = y;
+    }
+    if (bx1 < 0)
+        return [];
+    bx0 = Math.max(0, bx0 - 1);
+    by0 = Math.max(0, by0 - 1);
+    bx1 = Math.min(width - 1, bx1 + 1);
+    by1 = Math.min(height - 1, by1 + 1);
+    const w = bx1 - bx0 + 1;
+    const h = by1 - by0 + 1;
+    const n = w * h;
+    const m = new Uint8Array(n);
+    for (let y = 0; y < h; y++) {
+        const src = (y + by0) * width + bx0;
+        for (let x = 0; x < w; x++)
+            m[y * w + x] = alpha[src + x] >= o.opaque ? 1 : 0;
+    }
+    const onEdge = (x, y) => x + bx0 === 0 || y + by0 === 0 || x + bx0 === width - 1 || y + by0 === height - 1;
+    // Erode by the neck (a 3 x 3 cross); `ring` holds the opaque pixels the erosion took.
+    let er = m;
+    for (let t = 0; t < o.neck; t++) {
+        const next = new Uint8Array(n);
+        for (let y = 1; y < h - 1; y++)
+            for (let x = 1; x < w - 1; x++) {
+                const p = y * w + x;
+                next[p] = er[p] & er[p - 1] & er[p + 1] & er[p - w] & er[p + w];
+            }
+        er = next;
+    }
+    let ring = [];
+    for (let p = 0; p < n; p++)
+        if (m[p] && !er[p])
+            ring.push(p);
+    // Label what is left (8-connected), with each label's area and box gathered as it fills.
+    const labels = new Int32Array(n);
+    const queue = new Int32Array(n);
+    const st = { area: [], minX: [], minY: [], maxX: [], maxY: [], edge: [] };
+    /** Fill one 8-connected piece of `mask` from `start` as label `id`; record its stats. */
+    const fill = (mask, start, id) => {
+        labels[start] = id;
+        let head = 0;
+        let tail = 0;
+        queue[tail++] = start;
+        let x0 = w;
+        let y0 = h;
+        let x1 = -1;
+        let y1 = -1;
+        while (head < tail) {
+            const p = queue[head++];
+            const x = p % w;
+            const y = (p - x) / w;
+            if (x < x0)
+                x0 = x;
+            if (x > x1)
+                x1 = x;
+            if (y < y0)
+                y0 = y;
+            if (y > y1)
+                y1 = y;
+            const ya = y > 0 ? -1 : 0;
+            const yb = y < h - 1 ? 1 : 0;
+            const xa = x > 0 ? -1 : 0;
+            const xb = x < w - 1 ? 1 : 0;
+            for (let dy = ya; dy <= yb; dy++)
+                for (let dx = xa; dx <= xb; dx++) {
+                    const q = p + dy * w + dx;
+                    if (mask[q] && !labels[q]) {
+                        labels[q] = id;
+                        queue[tail++] = q;
+                    }
                 }
-            if (touches)
-                continue;
         }
+        st.area[id] = tail;
+        st.minX[id] = x0;
+        st.minY[id] = y0;
+        st.maxX[id] = x1;
+        st.maxY[id] = y1;
+        st.edge[id] = onEdge(x0, y0) || onEdge(x1, y1);
+    };
+    // The eroded mask is labelled by row runs joined with union-find (8-connected): runs, not pixels.
+    const rs = [];
+    const reEnd = [];
+    const ry = [];
+    const parent = [];
+    const find = (i) => {
+        while (parent[i] !== i) {
+            parent[i] = parent[parent[i]];
+            i = parent[i];
+        }
+        return i;
+    };
+    let prevFrom = 0;
+    let prevTo = 0;
+    for (let y = 0; y < h; y++) {
+        const rowFrom = rs.length;
+        const row = y * w;
+        let x = 0;
+        while (x < w) {
+            if (!er[row + x]) {
+                x++;
+                continue;
+            }
+            const x0 = x;
+            while (x < w && er[row + x])
+                x++;
+            const r = rs.length;
+            rs.push(x0);
+            reEnd.push(x);
+            ry.push(y);
+            parent.push(r);
+            // Runs in the row above touching [x0 - 1, x] (8-connected).
+            for (let k = prevFrom; k < prevTo; k++) {
+                if (reEnd[k] < x0 || rs[k] > x)
+                    continue;
+                const a = find(k);
+                const b2 = find(r);
+                if (a !== b2)
+                    parent[Math.max(a, b2)] = Math.min(a, b2);
+            }
+        }
+        prevFrom = rowFrom;
+        prevTo = rs.length;
+    }
+    const idOf = new Map();
+    let grownEnd = 1;
+    for (let k = 0; k < rs.length; k++) {
+        const root = find(k);
+        let id = idOf.get(root);
+        if (id === undefined) {
+            id = grownEnd++;
+            idOf.set(root, id);
+            st.area[id] = 0;
+            st.minX[id] = rs[k];
+            st.minY[id] = ry[k];
+            st.maxX[id] = reEnd[k] - 1;
+            st.maxY[id] = ry[k];
+            st.edge[id] = false;
+        }
+        const len = reEnd[k] - rs[k];
+        st.area[id] += len;
+        if (rs[k] < st.minX[id])
+            st.minX[id] = rs[k];
+        if (reEnd[k] - 1 > st.maxX[id])
+            st.maxX[id] = reEnd[k] - 1;
+        if (ry[k] < st.minY[id])
+            st.minY[id] = ry[k];
+        if (ry[k] > st.maxY[id])
+            st.maxY[id] = ry[k];
+        if (onEdge(rs[k], ry[k]) || onEdge(reEnd[k] - 1, ry[k]))
+            st.edge[id] = true;
+        labels.fill(id, ry[k] * w + rs[k], ry[k] * w + reEnd[k]);
+    }
+    // Grow the labels back over the ring: a piece joined only by a neck up to 2 px wide comes back as its own label.
+    for (let t = 0; t < o.neck + 1 && ring.length; t++) {
+        const take = [];
+        const left = [];
+        for (const p of ring) {
+            const x = p % w;
+            const v = (x > 0 && labels[p - 1]) ||
+                (x < w - 1 && labels[p + 1]) ||
+                (p >= w && labels[p - w]) ||
+                (p + w < n && labels[p + w]) ||
+                0;
+            if (v)
+                take.push([p, v]);
+            else
+                left.push(p);
+        }
+        for (const [p, v] of take) {
+            labels[p] = v;
+            const x = p % w;
+            const y = (p - x) / w;
+            statAdd(st, v, x, y, onEdge(x, y));
+        }
+        ring = left;
+        if (!take.length)
+            break;
+    }
+    // Ring pixels no grown label reached (pieces thinner than the neck) get labels of their own.
+    const rest = new Uint8Array(n);
+    for (const p of ring)
+        rest[p] = 1;
+    let end = grownEnd;
+    for (const p of ring)
+        if (!labels[p])
+            fill(rest, p, end++);
+    // A thin label touching a grown one is part of it (a hair, a cable).
+    const touchesGrown = new Uint8Array(end);
+    for (const p of ring) {
+        const id = labels[p];
+        if (touchesGrown[id])
+            continue;
+        const x = p % w;
+        const y = (p - x) / w;
+        for (let dy = -1; dy <= 1 && !touchesGrown[id]; dy++)
+            for (let dx = -1; dx <= 1; dx++) {
+                const xx = x + dx;
+                const yy = y + dy;
+                if (xx < 0 || yy < 0 || xx >= w || yy >= h)
+                    continue;
+                const q = labels[yy * w + xx];
+                if (q && q < grownEnd) {
+                    touchesGrown[id] = 1;
+                    break;
+                }
+            }
+    }
+    // The main cut-out is the largest piece.
+    let main = 1;
+    for (let id = 1; id < end; id++)
+        if ((st.area[id] ?? 0) > (st.area[main] ?? 0))
+            main = id;
+    const pieces = [];
+    for (let id = 1; id < end; id++) {
+        const a = st.area[id] ?? 0;
+        if (id === main || st.edge[id] || a < o.minArea || a > o.maxArea)
+            continue;
+        if (id >= grownEnd && touchesGrown[id])
+            continue;
         pieces.push({
-            x: s.minX,
-            y: s.minY,
-            width: s.maxX - s.minX + 1,
-            height: s.maxY - s.minY + 1,
-            area: s.area,
+            x: st.minX[id] + bx0,
+            y: st.minY[id] + by0,
+            width: st.maxX[id] - st.minX[id] + 1,
+            height: st.maxY[id] - st.minY[id] + 1,
+            area: a,
         });
     }
     return pieces.sort((p, q) => q.area - p.area);
