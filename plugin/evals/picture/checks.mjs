@@ -31,7 +31,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { GRADE, KEYING, OVER, SCENES } from './scenes.mjs';
+import { FINISH, GRADE, KEYING, OVER, SCENES } from './scenes.mjs';
 
 export const THRESHOLDS = {
   keying: [
@@ -78,6 +78,20 @@ export const THRESHOLDS = {
     { id: 'matches-over', max: 0.01, unit: 'per channel', what: 'largest channel mean |difference| in the soft ring: the still laid over navy as straight colour vs the reference',
       why: 'straight colour composites to what `over` gives within 8-bit rounding; a capture whose RGB still holds the pink background differs by about 0.1 there', source: 'F5', guess: false },
   ],
+  finish: [
+    { id: 'findings-readable', setup: true, equals: 'yes', unit: '', what: 'picture-grade/findings.json exists and holds the seeded and clean lists',
+      why: 'every check reads the findings file; without it nothing the agent concluded can be scored', source: 'the plan (node grade.mjs finish --plan)', guess: false },
+    { id: 'flash', max: 0.05, unit: 's', what: 'error of the named one-frame flash time against the seeded flash',
+      why: 'the flash is one frame long; 0.05 s is a frame and a half at 30 fps, so naming the frame before or after still counts and anything further does not', source: 'the scene as built (scenes.mjs FINISH.flash)', guess: false },
+    { id: 'frozen', max: 0.1, unit: 's', what: 'larger of the errors of the named frozen stretch start and end against the seeded hold',
+      why: 'the hold runs from frame 60 to 80; three frames either way allows a stretch reported from the last moving frame or with every 2', source: 'the scene as built (scenes.mjs FINISH.frozen)', guess: false },
+    { id: 'off-frame', min: 3, max: 4.5, unit: 's', what: 'named time the title starts to leave the frame',
+      why: 'the title only moves between 3.0 and 4.5 s and is wholly off frame by the end of the slide; when inside that it crosses the edge depends on the font width, which the setup does not fix', source: 'the scene as built (scenes.mjs FINISH.title)', guess: true },
+    { id: 'clipped', max: 0.1, unit: 's', what: 'error of the named clipped-highlight start against the seeded glare',
+      why: 'the glare appears on frame 120 (4.0 s); three frames allows a stretch reported with every 2 or from the first sampled frame', source: 'the scene as built (scenes.mjs FINISH.glare)', guess: false },
+    { id: 'clean-quiet', max: 0, unit: 'findings', what: 'findings named for the clean comp',
+      why: 'the clean comp holds a steady move and a still title: nothing a viewer would flag, so any finding there is a false alarm', source: 'the scene as built (scenes.mjs FINISH, clean)', guess: false },
+  ],
 };
 
 /** The scored check ids of an eval, in verdict order ("<eval>.<check>"). */
@@ -88,6 +102,7 @@ export const EVALS = {
   keying: { scene: KEYING, setup: 'keying-shot.jsx', renders: ['key-source_0.png', ...KEYING.gradeFrames.keyed.map((_, i) => `key_${i}.png`)] },
   grade: { scene: GRADE, setup: 'grade-plate.jsx', renders: ['grade_0.png'] },
   over: { scene: OVER, setup: 'over-still.jsx', renders: ['glow-still.png', 'over-reference_0.png'] },
+  finish: { scene: FINISH, setup: 'finish-check.jsx', renders: [], findings: 'findings.json' },
 };
 
 /** Import the plugin's measuring modules from a runtime dist folder. */
@@ -293,6 +308,68 @@ export function gradeOver(images, rt) {
 // ---------------------------------------------------------------------------
 // Verdict and plan
 // ---------------------------------------------------------------------------
+// The whole-piece check: graded on what the agent names, not on a render
+// ---------------------------------------------------------------------------
+
+/** Where each seeded defect is, in seconds, from the scene. */
+export const FINISH_TRUTH = {
+  flash: FINISH.flash.frame / FINISH.fps,
+  frozen: { from: FINISH.frozen.fromFrame / FINISH.fps, to: FINISH.frozen.toFrame / FINISH.fps },
+  offFrame: { from: FINISH.title.moveFromFrame / FINISH.fps, to: FINISH.title.moveToFrame / FINISH.fps },
+  clipped: FINISH.glare.fromFrame / FINISH.fps,
+};
+
+export const FINISH_KINDS = ['flash', 'frozen', 'off-frame', 'clipped', 'other'];
+
+/** Null when `list` is a findings list ([{ kind, from, to? }]), else what is wrong. */
+function listError(list, name) {
+  if (!Array.isArray(list)) return `${name} is not a list`;
+  for (const [i, f] of list.entries()) {
+    if (!f || typeof f !== 'object') return `${name}[${i}] is not an object`;
+    if (!FINISH_KINDS.includes(f.kind)) return `${name}[${i}].kind is ${JSON.stringify(f.kind)}, not one of ${FINISH_KINDS.join(', ')}`;
+    if (typeof f.from !== 'number' || !Number.isFinite(f.from)) return `${name}[${i}].from is not a number of seconds`;
+    if (f.to !== undefined && (typeof f.to !== 'number' || !Number.isFinite(f.to))) return `${name}[${i}].to is not a number of seconds`;
+  }
+  return null;
+}
+
+/**
+ * findings: the parsed picture-grade/findings.json, { seeded: [...], clean: [...] },
+ * each item { kind: flash | frozen | off-frame | clipped | other, from: s, to?: s }.
+ * For each seeded defect the closest named item of its kind is scored; any
+ * finding for the clean comp is a false alarm. Extra findings for the seeded
+ * comp (the jump where the glare appears, say) are not scored.
+ */
+export function gradeFinish(findings) {
+  const T = table('finish');
+  const why = !findings || typeof findings !== 'object' || Array.isArray(findings)
+    ? 'findings.json missing or not a JSON object'
+    : listError(findings.seeded, 'seeded') ?? listError(findings.clean, 'clean');
+  const setup = [why === null ? result('finish', T['findings-readable'], 'yes') : failed('finish', T['findings-readable'], why)];
+  const invalid = invalidIfSetupFailed('finish', setup);
+  if (invalid) return invalid;
+  const of = (kind) => findings.seeded.filter((f) => f.kind === kind);
+  const checks = [];
+  const scored = (id, kind, err) => {
+    const items = of(kind);
+    checks.push(items.length === 0
+      ? failed('finish', T[id], `no ${kind} named for the seeded comp`)
+      : result('finish', T[id], r4(Math.min(...items.map(err)))));
+  };
+  scored('flash', 'flash', (f) => Math.abs(f.from - FINISH_TRUTH.flash));
+  scored('frozen', 'frozen', (f) => Math.max(Math.abs(f.from - FINISH_TRUTH.frozen.from), Math.abs((f.to ?? f.from) - FINISH_TRUTH.frozen.to)));
+  // The off-frame value is the named time itself (the one closest to the middle of the slide when several are named).
+  const offs = of('off-frame');
+  const mid = (FINISH_TRUTH.offFrame.from + FINISH_TRUTH.offFrame.to) / 2;
+  checks.push(offs.length === 0
+    ? failed('finish', T['off-frame'], 'no off-frame named for the seeded comp')
+    : result('finish', T['off-frame'], r4(offs.reduce((a, b) => (Math.abs(b.from - mid) < Math.abs(a.from - mid) ? b : a)).from)));
+  scored('clipped', 'clipped', (f) => Math.abs(f.from - FINISH_TRUTH.clipped));
+  checks.push(result('finish', T['clean-quiet'], findings.clean.length));
+  return { setup, checks };
+}
+
+// ---------------------------------------------------------------------------
 
 const line = (kind, r) => `${kind} ${r.id} ${r.pass ? 'PASS' : 'FAIL'} | measured: ${r.what} | value: ${r.value} | limit: ${r.limit}`;
 
@@ -311,6 +388,7 @@ export function formatVerdict(name, res) {
 /** The exact final ae_render_frame calls for an eval, writing into `dir`. */
 export function renderPlan(name, dir) {
   const f = (file) => JSON.stringify(path.join(dir, file));
+  if (name === 'finish') return finishPlan(dir);
   const head = `Final renders for the ${name} eval. Make these calls exactly, once, when your work is finished, then run the grader without --plan. ` +
     `Ids come from what the setup script returned. With \`frames\`, ae_render_frame writes <outPath stem>_<index>.png (key_0.png, grade_0.png, ...); the grader reads those.\n`;
   const limits = THRESHOLDS[name].filter((t) => !t.setup).map((t) => `  ${name}.${t.id}: ${t.what}, limit ${limitText(t)}`).join('\n');
@@ -331,6 +409,18 @@ export function renderPlan(name, dir) {
   return `${head}${calls.map((c) => `- ${c}`).join('\n')}\nChecks and limits:\n${limits}\n`;
 }
 
+/** The finish eval has no final render: the agent writes what it found, and the grader reads that. */
+function finishPlan(dir) {
+  const limits = THRESHOLDS.finish.filter((t) => !t.setup).map((t) => `  finish.${t.id}: ${t.what}, limit ${limitText(t)}`).join('\n');
+  return 'Findings for the finish eval. When your checks are done, and not before, write what a viewer would notice in each comp to ' +
+    `${JSON.stringify(path.join(dir, EVALS.finish.findings))}, then run the grader without --plan. The file is JSON: ` +
+    '{ "seeded": [ <finding>, ... ], "clean": [ <finding>, ... ] }, one finding per problem, each ' +
+    `{ "kind": one of ${FINISH_KINDS.map((k) => `"${k}"`).join(', ')}, "from": seconds from the comp's start, "to": seconds (for a stretch), "note": what you saw }. ` +
+    '"flash" is a one-frame flash or pop, "frozen" a stretch where the picture stops changing, "off-frame" a layer leaving the frame, ' +
+    '"clipped" a highlight clipped to white, "other" anything else. Leave a list empty when the comp has nothing to report.\n' +
+    `Checks and limits:\n${limits}\n`;
+}
+
 /** Read an eval's renders from `dir` (missing files come back null) and grade them. */
 export async function gradeDir(name, dir, rt) {
   const read = async (file) => {
@@ -343,6 +433,11 @@ export async function gradeDir(name, dir, rt) {
     return gradeKeying({ source, keyed }, rt);
   }
   if (name === 'grade') return gradeGrade({ frame: await read(EVALS.grade.renders[0]) }, rt);
+  if (name === 'finish') {
+    let findings = null;
+    try { findings = JSON.parse(await fs.readFile(path.join(dir, EVALS.finish.findings), 'utf8')); } catch { findings = null; }
+    return gradeFinish(findings);
+  }
   const [still, reference] = await Promise.all(EVALS.over.renders.map(read));
   if (!still) return allFailed('over', 'glow-still.png missing', reference ? [] : [failed('over', table('over')['reference-is-over'], 'over-reference_0.png missing')]);
   return gradeOver({ still, reference }, rt);

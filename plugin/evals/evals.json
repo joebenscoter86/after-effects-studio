@@ -259,6 +259,26 @@
         "Trace shows the setup script run once through eval.run and the still written with ae_render_frame channels 'rgba' (or another route that takes the comp background out), not colorManaged 'off' or a plain rgb capture.",
         "The answer explains that a capture's RGB is laid over the comp background and that the still's colour is straight because that background was taken out."
       ]
+    },
+    {
+      "id": 21,
+      "prompt": "Find what a viewer would notice in two comps in the open After Effects project, using only the plugin's tools. First run this eval's setup script `finish-check.jsx` once, unchanged, as the code of the eval.run operation; it builds two 5-second comps and returns `seededComp` and `cleanComp`. Then run `node grade.mjs finish --plan`: it prints where your findings go, their format and every check's limit. Check each whole comp, not a few stills, and name every problem a viewer would see, with the time it starts (and ends, for a stretch) in seconds from the comp's start; a comp with nothing wrong gets an empty list. Change nothing in either comp. When your checks are finished, and not before, write the findings file the plan describes, then run `node grade.mjs finish` once. The grade runs once and is final. Work only on the items the setup made; do not save, close, clear or switch the project, and do not use the render queue or undo. Say how you checked each comp and what you found.",
+      "expected_output": "Both comps checked frame by frame (ae_check_comp over each comp's work area, or an equivalent walk of every frame), the seeded comp's four defects named with their times (a one-frame white flash at 1.2 s, the picture frozen from 2.0 to 2.67 s, the title leaving the right edge during its slide after 3.0 s, a highlight clipped to white from 4.0 s) and nothing named for the clean comp; jumps the tool flags where the glare appears or the freeze ends may be mentioned as extras. Only a run against After Effects shows whether the setup builds the comps it claims (the title's width in the default font is not fixed, so the off-frame limit spans the slide); the no-plugin baseline has no After Effects tools, so it scores 0 on every picture check by construction.",
+      "files": [
+        "picture/finish-check.jsx",
+        "picture/grade.mjs",
+        "picture/checks.mjs",
+        "picture/scenes.mjs"
+      ],
+      "picture": {
+        "check": "finish",
+        "setup": "finish-check.jsx"
+      },
+      "assertions": [
+        "Trace shows the setup script run once through eval.run and each comp's whole work area checked (ae_check_comp, or renders of every frame), not only a few stills.",
+        "Trace shows no change to either comp: no write operation on the setup's comps after the setup ran.",
+        "The answer names the four seeded problems with their times and says the clean comp showed nothing, without claiming a problem the checks did not show."
+      ]
     }
   ]
 }

@@ -204,4 +204,34 @@ export const OVER = {
   ring: { inner: 150, outer: 300 },
 };
 
-export const SCENES = { keying: KEYING, grade: GRADE, over: OVER };
+/**
+ * The whole-piece check: two comps built side by side, 1080x1920 at 30 fps,
+ * 150 frames (5 s), a dark blue-grey background, a square "dot" that moves
+ * left to right the whole time, and a centred title.
+ *   seeded: four defects at known frames. A one-frame white flash
+ *     (`flash.frame`); the dot holds still from frozen.fromFrame to
+ *     frozen.toFrame (nothing else moves then, so the whole picture is frozen);
+ *     the title slides right from title.moveFromFrame to title.moveToFrame and
+ *     leaves the frame on the way (when exactly depends on the font's width);
+ *     a white feathered glare (`glare`) clipped to 255 from glare.fromFrame to
+ *     glare.toFrame.
+ *   clean: the same dot moving steadily from start to end and the title held
+ *     in place; nothing a viewer would flag.
+ * Nothing is pure white except the flash and the glare (the title is 0.95).
+ */
+export const FINISH = {
+  id: "finish-check",
+  version: 1,
+  width: 1080,
+  height: 1920,
+  fps: 30,
+  frames: 150,
+  bg: [0.12, 0.14, 0.2],
+  dot: { name: "dot", size: 160, colour: [0.85, 0.55, 0.3], y: 1500, fromX: 150, toX: 930 },
+  flash: { name: "flash", frame: 36, colour: [1, 1, 1] },
+  frozen: { fromFrame: 60, toFrame: 80 },
+  title: { name: "Title", text: "FINISH", fontSize: 140, colour: [0.95, 0.93, 0.88], x: 540, y: 700, moveFromFrame: 90, moveToFrame: 135, toX: 1500 },
+  glare: { name: "glare", fromFrame: 120, toFrame: 134, centre: [300, 1100], radius: 140, feather: 40, colour: [1, 1, 1] },
+};
+
+export const SCENES = { keying: KEYING, grade: GRADE, over: OVER, finish: FINISH };

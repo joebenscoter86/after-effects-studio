@@ -27,7 +27,7 @@ export const TIMEOUT_SECONDS = 600;
 // Picture cases build, key or grade, measure and render: more turns and time, and the plugin's write tools.
 export const PICTURE_MAX_TURNS = 80;
 export const PICTURE_TIMEOUT_SECONDS = 1800;
-export const PICTURE_TOOLS = ['ae_do', 'ae_render_frame'].map((t) => `mcp__plugin_${PLUGIN_NAME}_${PLUGIN_NAME}__${t}`);
+export const PICTURE_TOOLS = ['ae_do', 'ae_render_frame', 'ae_check_comp'].map((t) => `mcp__plugin_${PLUGIN_NAME}_${PLUGIN_NAME}__${t}`);
 const PICTURE_SRC = path.join(ROOT, 'plugin', 'evals', 'picture');
 const PICTURE_SHARED = ['grade.mjs', 'checks.mjs', 'scenes.mjs'];
 const VERDICT = 'picture-grade/verdict.txt';

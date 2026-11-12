@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { resolveTarget } from "../transport/instances.js";
 import { catalogTool } from "./catalog.js";
+import { checkCompTool } from "./check-comp.js";
 import { compInfoTool } from "./comp-info.js";
 import { contextTool } from "./context.js";
 import { doTool } from "./do.js";
@@ -57,6 +58,7 @@ export const ALL_TOOLS = [
     compInfoTool,
     layerInfoTool,
     renderFrameTool,
+    checkCompTool,
     saveProjectTool,
     projectExportTool,
     projectImportTool,

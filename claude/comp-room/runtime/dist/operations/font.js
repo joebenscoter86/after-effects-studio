@@ -1,4 +1,5 @@
 import { registerOp, jsxVal } from "../registry.js";
+import { LIST_MISSING_FONTS_FN } from "./snippets.js";
 const FONT_INFO_JSX = `
     function _fontInfo(_font) {
         function _enumStr(v) {
@@ -89,20 +90,8 @@ registerOp({
   params: [],
   toJsx() {
     return `
-            if (!app.fonts) return { ok: false, error: "app.fonts needs AE 24.0+" };
-            var _missing = [];
-            try {
-                var _list = app.fonts.missingOrSubstitutedFonts;
-                for (var _i = 0; _i < _list.length; _i++) {
-                    var _font = _list[_i];
-                    _missing.push({
-                        postScriptName: AE.safeGet(function () { return _font.postScriptName; }, null),
-                        familyName: AE.safeGet(function () { return _font.familyName; }, null),
-                        styleName: AE.safeGet(function () { return _font.styleName; }, null)
-                    });
-                }
-            } catch (eM) { return { ok: false, error: "missingOrSubstitutedFonts failed: " + AE.errText(eM) }; }
-            return { ok: true, count: _missing.length, fonts: _missing };
+            ${LIST_MISSING_FONTS_FN}
+            return _listMissingFonts();
         `;
   }
 });

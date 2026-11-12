@@ -9,6 +9,7 @@ import { McpTestClient } from "./harness.js";
 const EXPECTED_TOOLS = [
   "ae_library",
   "ae_catalog",
+  "ae_check_comp",
   "ae_comp_info",
   "ae_context",
   "ae_do",

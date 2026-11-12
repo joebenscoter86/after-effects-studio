@@ -1,4 +1,5 @@
 import { registerOp, jsxVal, jsxCompLayerPreamble } from "../registry.js";
+import { COMP_CORNERS_FN } from "./snippets.js";
 registerOp({
   name: "layer.bounds",
   category: "layer",
@@ -28,6 +29,7 @@ registerOp({
   ],
   toJsx(args) {
     return `
+            ${COMP_CORNERS_FN}
             ${jsxCompLayerPreamble(args)}
             if (typeof _layer.sourceRectAtTime !== "function") return { ok: false, error: "layer has no sourceRectAtTime (camera/light?)" };
             var _t = ${jsxVal(args.time ?? null)};
@@ -46,12 +48,7 @@ registerOp({
                     // a visible edit made by a read-only call.
                     try {
                         _comp.time = _t;
-                        _out.compSpace = {
-                            topLeft: AE.valueToJson(_layer.sourcePointToComp([_r.left, _r.top])),
-                            topRight: AE.valueToJson(_layer.sourcePointToComp([_r.left + _r.width, _r.top])),
-                            bottomLeft: AE.valueToJson(_layer.sourcePointToComp([_r.left, _r.top + _r.height])),
-                            bottomRight: AE.valueToJson(_layer.sourcePointToComp([_r.left + _r.width, _r.top + _r.height]))
-                        };
+                        _out.compSpace = _compCorners(_layer, _r);
                     } finally {
                         _comp.time = _prevT;
                     }

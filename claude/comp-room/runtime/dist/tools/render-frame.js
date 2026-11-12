@@ -1,7 +1,6 @@
 import { promises as fs } from "node:fs";
 import * as path from "node:path";
 import { z } from "zod";
-import { measureCaptureTransfer, calibrationKey } from "../color/calibration.js";
 import {
   alphaChange,
   edgeArgsError,
@@ -44,12 +43,16 @@ import {
   sampleRegions,
   unmatte
 } from "../color/sheet.js";
-import { profileForWorkingSpace, sceneLinearToDisplaySrgb } from "../color/transform.js";
 import { rejectedOutputPath } from "../config.js";
 import { errorResult } from "../errors.js";
 import { readOnlyMode } from "../policy.js";
-import { RENDER_FRAME_FN } from "../operations/snippets.js";
+import {
+  MISSING_SOURCES_FN,
+  OCIO_CAPTURE_FN,
+  RENDER_FRAME_FN
+} from "../operations/snippets.js";
 import { jsxVal } from "../registry.js";
+import { colorConversion, validRgb } from "./capture-shared.js";
 import { defineTool, toMcpResult } from "./define-tool.js";
 const STRIP_DEFAULT_MAX_DIMENSION = 360;
 const FRAME_PICK = 0.25;
@@ -582,31 +585,13 @@ const ISOLATE_FN = `
 function renderJsx(args, times, paths, tryOcio, isolate, strip = null, frameNums = null) {
   return `
         ${RENDER_FRAME_FN}
+        ${MISSING_SOURCES_FN}
+        ${OCIO_CAPTURE_FN}
         ${ISOLATE_FN}
         var _arg = ${jsxVal(args.compNameOrId)};
         var comp = AE.findCompByNameOrId(_arg);
         if (!comp) return { ok: false, error: "no comp matching " + String(_arg) };
-        var _missingMedia = [];
-        var _seenComps = {};
-        var _seenFootage = {};
-        function _checkSources(_comp) {
-            if (_seenComps[_comp.id]) return;
-            _seenComps[_comp.id] = true;
-            for (var _li = 1; _li <= _comp.numLayers; _li++) {
-                var _source = AE.safeGet(function () { return _comp.layer(_li).source; }, null);
-                if (!_source) continue;
-                if (_source instanceof CompItem) { _checkSources(_source); continue; }
-                if (!(_source instanceof FootageItem) || _seenFootage[_source.id]) continue;
-                _seenFootage[_source.id] = true;
-                var _file = AE.safeGet(function () { return _source.file; }, null);
-                var _missing = AE.safeGet(function () { return _source.footageMissing; }, false);
-                if (!_missing && (!_file || _file.exists)) continue;
-                var _missingPath = AE.safeGet(function () { return _source.mainSource.missingFootagePath; }, null);
-                if (!_missingPath && _file) _missingPath = _file.fsName;
-                _missingMedia.push({ id: _source.id, name: _source.name, path: _missingPath });
-            }
-        }
-        _checkSources(comp);
+        var _missingMedia = _missingSources(comp);
         if (_missingMedia.length) return { ok: false, error: "source media missing for comp " + comp.name + "; restore or relink before rendering", missingFootage: _missingMedia };
         var _ws = AE.safeGet(function () { return app.project.workingSpace; }, "None");
         var _times = ${jsxVal(times)};
@@ -675,27 +660,10 @@ function renderJsx(args, times, paths, tryOcio, isolate, strip = null, frameNums
         var _renderError = null;
         try {
             if (_useOcio) {
-                var _adj = null;
-                var _adjSrc = null;
-                try {
-                    _adj = comp.layers.addSolid([1, 1, 1], "__mcp_ocio__", comp.width, comp.height, comp.pixelAspect);
-                    _adjSrc = _adj.source;
-                    _adj.adjustmentLayer = true;
-                    try {
-                        var _maxT = _times[0];
-                        for (var _mi = 1; _mi < _times.length; _mi++) { if (_times[_mi] > _maxT) _maxT = _times[_mi]; }
-                        if (_useDst) _maxT = _maxT + comp.displayStartTime;
-                        if (_adj.outPoint < _maxT + comp.frameDuration) _adj.outPoint = _maxT + comp.frameDuration;
-                    } catch (eOp) { }
-                    var _fxOk = false;
-                    try {
-                        _adj.property("Effects").addProperty("ADBE OCIO Display Transform");
-                        _fxOk = true;
-                    } catch (eFx) { /* pre-OCIO AE or ICC color engine */ }
-                    if (_fxOk) _renderAll("ocio");
-                } catch (eTmp) { /* fall through to direct capture */ }
-                if (_adj) { try { _adj.remove(); } catch (eRm) { } }
-                if (_adjSrc) { try { _adjSrc.remove(); } catch (eRs) { } }
+                var _maxT = _times[0];
+                for (var _mi = 1; _mi < _times.length; _mi++) { if (_times[_mi] > _maxT) _maxT = _times[_mi]; }
+                if (_useDst) _maxT = _maxT + comp.displayStartTime;
+                _captureWithOcio(comp, _maxT, _renderAll);
             }
             if (_frames.length === 0) _renderAll("direct");
         } catch (eRender) {
@@ -1135,9 +1103,6 @@ function chooseBackdrop(payload, opts) {
   payload.over = opts.over.kind === "checkerboard" ? "checkerboard" : opts.over.color;
   return opts.over;
 }
-function validRgb(value) {
-  return Array.isArray(value) && value.length === 3 && value.every((v) => typeof v === "number" && Number.isFinite(v)) ? [value[0], value[1], value[2]] : null;
-}
 async function attachContactSheet(payload, labels, tiles, sheetPath, opts) {
   try {
     const sheet = composeContactSheet(tiles, {
@@ -1176,51 +1141,6 @@ async function writeOutput(file, capture, convert, channels, backdrop, bg) {
   }
   await fs.writeFile(file, bytes);
   return decodePng(bytes);
-}
-async function colorConversion(payload, transport) {
-  const workingSpace = payload.workingSpace ?? "None";
-  try {
-    if (workingSpace === "None" || workingSpace === "") {
-      payload.colorPipeline = "untagged 16-bit \u2192 8-bit sRGB-tagged (values unchanged)";
-      return () => {
-      };
-    }
-    const calib = await measureCaptureTransfer(
-      transport,
-      calibrationKey(payload.projectFile ?? null, workingSpace, payload.bitsPerChannel ?? 8),
-      !readOnlyMode()
-    );
-    const calibFailed = "error" in calib || calib.kind === "unknown";
-    const gain = !calibFailed && calib.kind === "linear" ? 1 / calib.scale : 1;
-    const applyGain = (rgb) => {
-      if (gain !== 1) for (let i = 0; i < rgb.length; i++) rgb[i] *= gain;
-    };
-    if (payload.captureKind === "ocio") {
-      if (calibFailed) {
-        payload.colorWarning = `AE applied its display transform, but the capture scale could not be measured (${"error" in calib ? calib.error : "non-linear transfer"}) \u2014 the file is uniformly dark by that unknown scale. Verify colors against the AE viewer manually.`;
-        return null;
-      }
-      payload.colorPipeline = "AE OCIO display transform (viewer-exact, any working space)" + (gain !== 1 ? ` + capture scale 1/${gain.toFixed(2)} restored` : "");
-      return applyGain;
-    }
-    const profile = profileForWorkingSpace(workingSpace);
-    if (profile === null) {
-      payload.colorWarning = `working space '${workingSpace}' has no built-in conversion \u2014 the file contains raw working-space values and will not match the viewer. Verify colors against the AE viewer manually if they matter here.`;
-      return null;
-    }
-    if (calibFailed) {
-      payload.colorWarning = `could not characterize this AE version's capture transfer (${"error" in calib ? calib.error : "non-linear transfer"}) \u2014 the file contains raw working-space values. Verify colors against the AE viewer manually if they matter here.`;
-      return null;
-    }
-    payload.colorPipeline = `${profile.note}` + (gain !== 1 ? ` (capture scale 1/${gain.toFixed(2)} restored)` : "");
-    return (rgb) => {
-      applyGain(rgb);
-      sceneLinearToDisplaySrgb(rgb, profile.toRec709);
-    };
-  } catch (err) {
-    payload.colorWarning = `color post-processing failed, file left as raw capture: ${err instanceof Error ? err.message : String(err)}`;
-    return null;
-  }
 }
 export {
   FRAME_PICK,

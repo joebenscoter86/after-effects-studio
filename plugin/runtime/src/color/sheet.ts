@@ -531,7 +531,9 @@ export function resample(img: DecodedPng, tw: number, th: number): Float64Array 
 }
 
 // 5×7 glyphs for the only text the sheets ever carry: "#<index> <time>s" on the
-// contact sheet, "#<from>><to> <change> x<gain> !" on the diff sheet.
+// contact sheet, "#<from>><to> <change> x<gain> !" on the diff sheet, and
+// "<time>s <kind>" (lowercase words such as "pop", "frozen", "off-right") on
+// the ae_check_comp sheet.
 const GLYPHS: Record<string, string[]> = {
   "0": [".###.", "#...#", "#..##", "#.#.#", "##..#", "#...#", ".###."],
   "1": ["..#..", ".##..", "..#..", "..#..", "..#..", "..#..", ".###."],
@@ -552,12 +554,41 @@ const GLYPHS: Record<string, string[]> = {
   "#": [".#.#.", ".#.#.", "#####", ".#.#.", "#####", ".#.#.", ".#.#."],
   s: [".....", ".....", ".####", "#....", ".###.", "....#", "####."],
   f: ["..##.", ".#...", "###..", ".#...", ".#...", ".#...", ".#..."],
+  a: [".....", ".....", ".###.", "....#", ".####", "#...#", ".####"],
+  b: ["#....", "#....", "####.", "#...#", "#...#", "#...#", "####."],
+  c: [".....", ".....", ".###.", "#....", "#....", "#...#", ".###."],
+  d: ["....#", "....#", ".####", "#...#", "#...#", "#...#", ".####"],
+  e: [".....", ".....", ".###.", "#...#", "#####", "#....", ".###."],
+  g: [".....", ".....", ".####", "#...#", "#...#", "#...#", ".####", "....#", ".###."],
+  h: ["#....", "#....", "####.", "#...#", "#...#", "#...#", "#...#"],
+  i: ["..#..", ".....", ".##..", "..#..", "..#..", "..#..", ".###."],
+  j: ["...#.", ".....", "..##.", "...#.", "...#.", "...#.", "...#.", "#..#.", ".##.."],
+  k: ["#....", "#....", "#..#.", "#.#..", "##...", "#.#..", "#..#."],
+  l: [".##..", "..#..", "..#..", "..#..", "..#..", "..#..", ".###."],
+  m: [".....", ".....", "##.#.", "#.#.#", "#.#.#", "#...#", "#...#"],
+  n: [".....", ".....", "####.", "#...#", "#...#", "#...#", "#...#"],
+  o: [".....", ".....", ".###.", "#...#", "#...#", "#...#", ".###."],
+  p: [".....", ".....", "####.", "#...#", "#...#", "#...#", "####.", "#....", "#...."],
+  q: [".....", ".....", ".####", "#...#", "#...#", "#...#", ".####", "....#", "....#"],
+  r: [".....", ".....", "#.##.", "##..#", "#....", "#....", "#...."],
+  t: [".#...", ".#...", "###..", ".#...", ".#...", ".#..#", "..##."],
+  u: [".....", ".....", "#...#", "#...#", "#...#", "#..##", ".##.#"],
+  v: [".....", ".....", "#...#", "#...#", "#...#", ".#.#.", "..#.."],
+  w: [".....", ".....", "#...#", "#...#", "#.#.#", "#.#.#", ".#.#."],
+  y: [".....", ".....", "#...#", "#...#", "#...#", "#...#", ".####", "....#", ".###."],
+  z: [".....", ".....", "#####", "...#.", "..#..", ".#...", "#####"],
+  "+": [".....", "..#..", "..#..", "#####", "..#..", "..#..", "....."],
   " ": [".....", ".....", ".....", ".....", ".....", ".....", "....."],
 };
 const GLYPH_W = 5;
+/** Rows from the top of a glyph to its baseline; g, j, p, q and y add two rows below it. */
 const GLYPH_H = 7;
 const FONT_SCALE = 2;
+// Text starts 2 px into the strip: 7 rows to the baseline plus 2 descender rows
+// end 18 px down, inside the 20 px strip.
 const LABEL_H = GLYPH_H * FONT_SCALE + 6;
+/** Width of one label character on a sheet, px: labels longer than a tile is wide run into the next tile. */
+export const LABEL_CHAR_PX = (GLYPH_W + 1) * FONT_SCALE;
 
 function drawText(
   rgb: Float64Array,
@@ -570,7 +601,7 @@ function drawText(
   let cx = x0;
   for (const ch of text) {
     const glyph = GLYPHS[ch] ?? GLYPHS[" "];
-    for (let gy = 0; gy < GLYPH_H; gy++) {
+    for (let gy = 0; gy < glyph.length; gy++) {
       for (let gx = 0; gx < GLYPH_W; gx++) {
         if (glyph[gy][gx] !== "#") continue;
         for (let sy = 0; sy < FONT_SCALE; sy++) {
@@ -632,7 +663,7 @@ export function composeContactSheet(frames: DecodedPng[], opts: SheetOptions = {
       }
     }
     const label = opts.labels?.[n] ?? `#${n}`;
-    drawText(rgb, width, x0 + 2, y0 + 3, label, [0.95, 0.95, 0.95]);
+    drawText(rgb, width, x0 + 2, y0 + 2, label, [0.95, 0.95, 0.95]);
   }
   return { width, height, rgb, columns, rows, thumbWidth, thumbHeight };
 }
