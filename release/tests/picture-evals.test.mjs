@@ -10,11 +10,13 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
+import vm from 'node:vm';
 
 import {
-  THRESHOLDS, checkIds, formatVerdict, gradeFinish, gradeGrade, gradeKeying, gradeOver, loadRuntime, renderPlan, EVALS,
+  THRESHOLDS, checkIds, formatVerdict, gradeFinish, gradeGrade, gradeKeying, gradeOver, gradeReview, loadRuntime, renderPlan, EVALS,
+  REVIEW_TRUTH, REVIEW_KINDS, SEVERITIES,
 } from '../../plugin/evals/picture/checks.mjs';
-import { SCENES, GRADE } from '../../plugin/evals/picture/scenes.mjs';
+import { SCENES, GRADE, decodeBuild, reviewBuild } from '../../plugin/evals/picture/scenes.mjs';
 import { gradeFrame, keyedFrame, keyingSource, overFile, undoGradeError, writePng } from './picture-model.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -36,9 +38,25 @@ const GOOD = gradeKeying({ source: SOURCE, keyed: keyedOf('good') }, rt);
 test('every setup script carries the same scene the grader reads', async () => {
   for (const [name, ev] of Object.entries(EVALS)) {
     const jsx = await fs.readFile(path.join(PICTURE, ev.setup), 'utf8');
-    const m = jsx.match(/\/\/ SCENE-BEGIN\n\s*var SCENE = (.*);\n\s*\/\/ SCENE-END/);
-    assert.ok(m, `${ev.setup} has a SCENE block`);
-    assert.deepEqual(JSON.parse(m[1]), SCENES[name], `${ev.setup} matches scenes.mjs`);
+    if (ev.encoded) {
+      const m = jsx.match(/\/\/ SCENE-BEGIN\n\s*var DATA = "([A-Za-z0-9+/=]+)";\n\s*\/\/ SCENE-END/);
+      assert.ok(m, `${ev.setup} has an encoded SCENE block`);
+      assert.deepEqual(decodeBuild(m[1]), reviewBuild(SCENES[name]),
+        `${ev.setup} matches scenes.mjs: its DATA line must be encodeBuild(reviewBuild())`);
+      // The script's own ES3 decoder gives back the same build.
+      const fn = jsx.match(/function decode\(s\) \{[\s\S]*?\n\}/)[0];
+      assert.deepEqual(JSON.parse(vm.runInNewContext(`${fn}; decode(${JSON.stringify(m[1])})`)), reviewBuild(SCENES[name]));
+      // Neither the script nor the layer names it makes say what was planted.
+      const plain = jsx.replace(m[1], '');
+      assert.doesNotMatch(plain, /\b(magenta|cast|fringe|halo|soft|blur\w*|late|landFrame)\b/i, `${ev.setup} reads as a generic builder`);
+      const names = reviewBuild(SCENES[name]).comps.flatMap((c) => [c.name, ...c.layers.map((l) => l.name)]);
+      assert.deepEqual(names.filter((n) => /\b(magenta|cast|fringe|soft|blur|late|outline)\b/i.test(n)), []);
+      assert.ok(jsx.includes(`var BRIEF = ${JSON.stringify(SCENES[name].brief)};`), `${ev.setup} hands over the brief in scenes.mjs`);
+    } else {
+      const m = jsx.match(/\/\/ SCENE-BEGIN\n\s*var SCENE = (.*);\n\s*\/\/ SCENE-END/);
+      assert.ok(m, `${ev.setup} has a SCENE block`);
+      assert.deepEqual(JSON.parse(m[1]), SCENES[name], `${ev.setup} matches scenes.mjs`);
+    }
     assert.doesNotMatch(jsx, /renderQueue|executeCommand|beginUndoGroup|endUndoGroup|\.remove\(\)|app\.open|newProject|\.close\(/,
       `${ev.setup} uses no render queue, undo, removal or project switch`);
     assert.match(jsx, /bitsPerChannel/);
@@ -217,4 +235,119 @@ test('finish: the grader CLI prints the findings format, grades the file once', 
   const out = (await run(process.execPath, [cli, 'finish'], { cwd })).stdout;
   assert.match(out, /PICTURE-RESULT finish 5\/5 checks passed/);
   await assert.rejects(run(process.execPath, [cli, 'finish'], { cwd }), (e) => e.code === 3);
+});
+
+// ---------------------------------------------------------------------------
+// The independent review (eval 22): a reviewer names four planted defects
+// ---------------------------------------------------------------------------
+
+const finding = (kind, from, extra = {}) => ({
+  kind, from, where: 'the subject', evidence: 'frame-0042.png', severity: 'careful-watch', ...extra,
+});
+const REVIEWED = {
+  findings: [
+    finding('colour', 3.0, { to: 6.0, severity: 'first-watch', where: "presenter's shirt and face, take 2", evidence: 'shirt samples r 0.71 g 0.55 b 0.69 against the wall 0.46 grey' }),
+    finding('focus', 4.0, { to: 5.0, where: 'the wall behind the presenter', evidence: 'cut flags at 4.0 and 5.0 s; the grid lines are gone at 4.5 s' }),
+    finding('timing', 2.2667, { where: 'orange badge, top right', evidence: 'strip around 2.0 s: the badge is still falling at the hit marker, lands on frame 68' }),
+    finding('edge', 1.0, { to: 3.0, where: "presenter's outline, take 1", evidence: 'full-size frame at 1.0 s: a light line about 4 px wide around the head and shoulders' }),
+  ],
+  intended: [{ from: 3.0, note: 'cut to take 2, in the brief' }],
+  notJudged: ['motion at speed: no preview movie', 'sound'],
+};
+const withFindings = (list) => ({ ...REVIEWED, findings: list });
+const drop = (...kinds) => withFindings(REVIEWED.findings.filter((f) => !kinds.includes(f.kind)));
+const moved = (kind, from) => REVIEWED.findings.map((f) => (f.kind === kind ? { ...f, from, to: undefined } : f));
+
+test('review: the scene puts each planted defect where the truth says', () => {
+  const s = SCENES.review;
+  assert.equal(REVIEW_TRUTH.edge.from, 0);
+  assert.equal(REVIEW_TRUTH.edge.to, s.takes[1].fromFrame / s.fps);
+  assert.equal(REVIEW_TRUTH.colour.from, s.takes[1].fromFrame / s.fps);
+  assert.equal(REVIEW_TRUTH.focus.from, s.soft.fromFrame / s.fps);
+  assert.equal(REVIEW_TRUTH.timing.from, s.marker.frame / s.fps);
+  assert.ok(s.badge.landFrame - s.marker.frame >= 6, 'the badge lands several frames after the marker');
+  // The marker reads as the brief names it: After Effects shows a comp marker by its comment.
+  assert.equal(s.marker.comment, s.marker.name);
+  assert.ok(s.brief.includes(`marker "${s.marker.comment}", ${s.marker.frame / s.fps}.0 s`), s.brief);
+  assert.deepEqual(reviewBuild(s).comps.find((c) => c.main).markers, [{ frame: s.marker.frame, name: 'hit', comment: 'hit' }]);
+  assert.ok(s.takes[0].fringe && !s.takes[1].fringe && !s.takes[0].cast && s.takes[1].cast);
+  // The cast leans magenta: red and blue up, green down.
+  const [r, g, b] = s.takes[1].cast;
+  assert.ok(r > 1 && b > 1 && g < 1);
+  // Decoy kinds, so the list of kinds does not say what was planted.
+  assert.ok(REVIEW_KINDS.length >= 7 && REVIEW_KINDS.includes('other'));
+  assert.deepEqual(SEVERITIES, ['first-watch', 'careful-watch', 'polish']);
+});
+
+test('review: all four named at their times pass, intended flags and what was not judged are not scored', () => {
+  const r = gradeReview(REVIEWED);
+  assert.deepEqual(failing(r.checks), []);
+  assert.deepEqual(r.checks.map((c) => c.id), checkIds('review'));
+  assert.equal(byId(r.checks).found.values[0], 4);
+  assert.equal(byId(r.checks).stray.values[0], 0);
+});
+
+test('review: three of four still pass; two missing fail', () => {
+  assert.deepEqual(failing(gradeReview(drop('edge')).checks), []);
+  assert.match(byId(gradeReview(drop('edge')).checks).found.what, /edge not named/);
+  assert.deepEqual(failing(gradeReview(drop('edge', 'timing')).checks), ['found']);
+});
+
+test('review: a wrong time does not count, and counts as stray', () => {
+  // The cast named in take 1, where the subject is neutral.
+  const wrong = gradeReview(withFindings(moved('colour', 1.0)));
+  assert.equal(byId(wrong.checks).found.values[0], 3);
+  assert.equal(byId(wrong.checks).stray.values[0], 1);
+  // The hit named well after the landing; and the soft plate a second late: two misses fail.
+  const two = gradeReview(withFindings(moved('timing', 2.6).map((f) => (f.kind === 'focus' ? { ...f, from: 5.4, to: undefined } : f))));
+  assert.deepEqual(failing(two.checks), ['found']);
+  // A defect named under the wrong kind is not a match.
+  const kind = gradeReview(withFindings(REVIEWED.findings.map((f) => (f.kind === 'edge' ? { ...f, kind: 'colour' } : f))));
+  assert.equal(byId(kind.checks).found.values[0], 3);
+});
+
+test('review: a flood of findings fails, even when it covers every defect', () => {
+  const flood = [];
+  for (const kind of ['colour', 'focus', 'timing', 'edge']) for (let t = 0; t < 6; t += 0.5) flood.push(finding(kind, t));
+  const r = gradeReview(withFindings(flood));
+  assert.equal(byId(r.checks).found.values[0], 4);
+  assert.deepEqual(failing(r.checks), ['stray']);
+  // Two extras are allowed: a reviewer may see something the setup did not plant.
+  const extras = withFindings([...REVIEWED.findings, finding('other', 0.5), finding('motion', 5.5)]);
+  assert.deepEqual(failing(gradeReview(extras).checks), []);
+  const three = withFindings([...REVIEWED.findings, finding('other', 0.5), finding('motion', 5.5), finding('framing', 1.5)]);
+  assert.deepEqual(failing(gradeReview(three).checks), ['stray']);
+});
+
+test('review: duplicates of a named defect are neither counted twice nor stray', () => {
+  const dup = withFindings([...REVIEWED.findings, finding('colour', 4.5)]);
+  const r = gradeReview(dup);
+  assert.equal(byId(r.checks).found.values[0], 4);
+  assert.equal(byId(r.checks).stray.values[0], 0);
+});
+
+test('review: a findings file not in the review form marks the run invalid', () => {
+  const strip = (key) => withFindings(REVIEWED.findings.map((f, i) => (i === 0 ? Object.fromEntries(Object.entries(f).filter(([k]) => k !== key)) : f)));
+  for (const bad of [null, [], { intended: [] }, strip('severity'), strip('evidence'), strip('where'), strip('from'),
+    withFindings([finding('cast', 3)]), withFindings([finding('colour', 3, { severity: 'major' })]), { ...REVIEWED, intended: 'none' }]) {
+    const r = gradeReview(bad);
+    assert.equal(r.setup[0].pass, false, JSON.stringify(bad));
+    assert.ok(r.checks.every((c) => !c.pass && /invalid/.test(c.value)));
+  }
+});
+
+test('review: the grader CLI prints the findings format, grades the file once', async () => {
+  const cwd = await fs.mkdtemp(path.join(os.tmpdir(), 'picture-'));
+  const cli = path.join(PICTURE, 'grade.mjs');
+  const plan = (await run(process.execPath, [cli, 'review', '--plan'], { cwd })).stdout;
+  const file = path.join(await fs.realpath(cwd), 'picture-grade', 'findings.json');
+  assert.ok(plan.includes(JSON.stringify(file)), plan);
+  assert.equal(plan, renderPlan('review', path.dirname(file)));
+  for (const s of [...REVIEW_KINDS, ...SEVERITIES, 'where', 'evidence', 'intended', 'notJudged']) assert.ok(plan.includes(s), s);
+  // The plan must not give away what was planted.
+  assert.doesNotMatch(plan, /\b(magenta|blur\w*|fringe|halo|late|marker|cast)\b/i);
+  await fs.writeFile(file, JSON.stringify(REVIEWED));
+  const out = (await run(process.execPath, [cli, 'review'], { cwd })).stdout;
+  assert.match(out, /PICTURE-RESULT review 2\/2 checks passed/);
+  await assert.rejects(run(process.execPath, [cli, 'review'], { cwd }), (e) => e.code === 3);
 });

@@ -13,6 +13,8 @@ const COMP_INFO_FN = `
         _ciOut.shutterAngle = c.shutterAngle;
         _ciOut.shutterPhase = c.shutterPhase;
         _ciOut.motionBlur = c.motionBlur;
+        // Comp markers (time, comment, duration per key), or null when there are none.
+        _ciOut.markers = AE.serializeCompMarkers(c);
         _ciOut.layers = _ciLayers;
         return _ciOut;
     }

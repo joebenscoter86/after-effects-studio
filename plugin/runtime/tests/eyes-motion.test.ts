@@ -166,6 +166,32 @@ describe("summarizeSeries", () => {
     expect(strict.flags.map((f) => f.kind)).not.toContain("repeat");
   });
 
+  it("reports a jump two frames before a larger cut, not only the larger one", () => {
+    // Found on a real comp (pro finish stage 2): two stray frames of another take
+    // (123, 124) before the real cut at 125. Pair changes measured with diff at full
+    // size; the piece's median pair change is 0.0037. Only 124→125 was flagged: the
+    // pairs after 122→123 are 0.0106, 0.0881, 0.0079, whose median (0.0106) the
+    // larger jump pulls up, so 0.0309 read as 2.9×, under spikeRatio.
+    const q = 0.0037;
+    const real = series([q, q, q, q, q, 0.030916, 0.010602, 0.088058, 0.007895, 0.008805, 0.0082, 0.0085]);
+    expect(real.flags.map((f) => [f.kind, f.pairs[0]])).toEqual([["cut", 5], ["cut", 7]]);
+    expect(real.flags[0].ratio).toBeGreaterThan(t.spikeRatio);
+    // The same shape in round numbers: a jump, one ordinary pair, a larger jump.
+    const synthetic = series([0.004, 0.004, 0.004, 0.004, 0.03, 0.011, 0.09, 0.008, 0.008, 0.008]);
+    expect(synthetic.flags.map((f) => [f.kind, f.pairs[0]])).toEqual([["cut", 4], ["cut", 6]]);
+  });
+
+  it("does not call ordinary motion beside a cut a second cut", () => {
+    const q = 0.004;
+    const after = series([q, q, q, q, 0.09, 1.5 * q, 1.5 * q, 1.5 * q, 1.5 * q, 1.5 * q]);
+    expect(after.flags.map((f) => [f.kind, f.pairs[0]])).toEqual([["cut", 4]]);
+    const before = series([1.5 * q, 1.5 * q, 1.5 * q, 1.5 * q, 0.09, q, q, q, q]);
+    expect(before.flags.map((f) => [f.kind, f.pairs[0]])).toEqual([["cut", 4]]);
+    // Nor a pair just under the ratio beside two cuts.
+    const between = series([q, q, q, q, 0.09, 2.5 * q, 0.09, q, q, q]);
+    expect(between.flags.map((f) => f.kind)).toEqual(["cut", "cut"]);
+  });
+
   it("reports a single pair without flags (nothing to stand out from)", () => {
     const s = series([0.2]);
     expect(s.pairs).toBe(1);

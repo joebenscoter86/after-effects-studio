@@ -426,3 +426,86 @@ test('the package ships the style library without fonts', async () => {
   assert.deepEqual(files.filter((f) => f.startsWith('library/styles/') && /\.(ttf|otf|woff2?)$/i.test(f)), []);
   await fs.access(path.join(outDir, 'skills/visual-styles/SKILL.md'));
 });
+
+// ---- Pro finish stage 2: the reviewer agent -----------------------------------
+
+// The plugin's own MCP tools as Claude Code names them. Observed in a live session, not documented.
+const pluginTool = (name, server, tool) => `mcp__plugin_${name}_${server}__${tool}`;
+// The reviewer may read files and look; it may not change the project, write files or run commands.
+const REVIEWER_PLUGIN_TOOLS = ['ae_check_comp', 'ae_render_frame', 'ae_comp_info', 'ae_layer_info', 'ae_context', 'ae_library'];
+const REVIEWER_BUILT_INS = new Set(['Read', 'Glob', 'Grep', 'ToolSearch']);
+
+function frontMatter(text) {
+  const m = text.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+  assert.ok(m, 'the agent file starts with a frontmatter block');
+  const fields = {};
+  for (const line of m[1].split('\n')) {
+    if (/^\s*(#|$)/.test(line)) continue;
+    const kv = line.match(/^([A-Za-z]+):\s*(.*)$/);
+    assert.ok(kv, `frontmatter line is key: value: ${line}`);
+    fields[kv[1]] = kv[2];
+  }
+  return { fields, head: m[1], body: m[2] };
+}
+
+async function serverToolNames(outDir) {
+  const { mcpServers } = JSON.parse(await fs.readFile(path.join(outDir, '.mcp.json'), 'utf8'));
+  const server = mcpServers['comp-room'];
+  const sub = (v) => v.replaceAll('${CLAUDE_PLUGIN_ROOT}', outDir);
+  const input = [
+    { jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 't', version: '1' } } },
+    { jsonrpc: '2.0', method: 'notifications/initialized' },
+    { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} },
+  ].map((m) => JSON.stringify(m)).join('\n') + '\n';
+  const env = { ...process.env, ...(server.env ?? {}) };
+  delete env.AE_MCP_READONLY;
+  const r = spawnSync(sub(server.command), server.args.map(sub), { cwd: os.tmpdir(), env, input, encoding: 'utf8', timeout: 20_000 });
+  const reply = r.stdout.split('\n').filter(Boolean).map((l) => JSON.parse(l)).find((m) => m.id === 2);
+  assert.ok(reply, `no tools/list reply: ${r.stderr}`);
+  return reply.result.tools.map((t) => t.name);
+}
+
+test('the reviewer agent ships in agents/, copied from claude/src', async () => {
+  const { outDir, files } = await sharedBuild();
+  assert.ok(files.includes('agents/motion-reviewer.md'), files.filter((f) => f.startsWith('agents')).join(', '));
+  const built = await fs.readFile(path.join(outDir, 'agents/motion-reviewer.md'));
+  assert.ok(built.equals(await fs.readFile(path.join(ROOT, 'claude/src/agents/motion-reviewer.md'))));
+});
+
+test('the reviewer agent can look but not change anything', async () => {
+  const { outDir } = await sharedBuild();
+  const text = await fs.readFile(path.join(outDir, 'agents/motion-reviewer.md'), 'utf8');
+  const { fields, head, body } = frontMatter(text);
+  assert.equal(fields.name, 'motion-reviewer');
+  assert.ok(fields.description.length > 40, 'a description Claude can choose the agent by');
+  assert.equal(fields.permissionMode, undefined, 'plugin agents ignore permissionMode; tools is the limit');
+  assert.match(head, /observed/i, 'the frontmatter says the MCP tool names are observed, not documented');
+  const tools = fields.tools.split(',').map((t) => t.trim()).filter(Boolean);
+  const { name } = JSON.parse(await fs.readFile(path.join(outDir, '.claude-plugin/plugin.json'), 'utf8'));
+  const { mcpServers } = JSON.parse(await fs.readFile(path.join(outDir, '.mcp.json'), 'utf8'));
+  const [server] = Object.keys(mcpServers);
+  const mcp = tools.filter((t) => t.startsWith('mcp__'));
+  assert.deepEqual(mcp.sort(), REVIEWER_PLUGIN_TOOLS.map((t) => pluginTool(name, server, t)).sort());
+  for (const t of tools.filter((x) => !x.startsWith('mcp__'))) assert.ok(REVIEWER_BUILT_INS.has(t), `${t} is not a read-only built-in`);
+  for (const banned of ['ae_do', 'ae_project_import_json', 'ae_project_export_json', 'ae_save_project', 'Write', 'Edit', 'Bash', 'Agent', 'NotebookEdit']) {
+    assert.ok(!tools.some((t) => t === banned || t.endsWith(`__${banned}`)), `${banned} must not be granted`);
+  }
+  // Its brief: read the review procedure through ae_library and return the ranked list.
+  assert.match(body, /ae_library/);
+  assert.match(body, /`review`/);
+  assert.match(body, /first-watch/);
+  // It can read the markers a brief names (ae_comp_info lists them; it has no ae_do for marker.list).
+  assert.match(body, /markers/);
+});
+
+test('every plugin tool the reviewer agent names is one the packaged server serves', async () => {
+  const { outDir } = await sharedBuild();
+  const { fields } = frontMatter(await fs.readFile(path.join(outDir, 'agents/motion-reviewer.md'), 'utf8'));
+  const { name } = JSON.parse(await fs.readFile(path.join(outDir, '.claude-plugin/plugin.json'), 'utf8'));
+  const { mcpServers } = JSON.parse(await fs.readFile(path.join(outDir, '.mcp.json'), 'utf8'));
+  const [server] = Object.keys(mcpServers);
+  const served = new Set((await serverToolNames(outDir)).map((t) => pluginTool(name, server, t)));
+  assert.ok(served.size >= 10, `the server listed ${served.size} tools`);
+  const named = fields.tools.split(',').map((t) => t.trim()).filter((t) => t.startsWith('mcp__'));
+  assert.deepEqual(named.filter((t) => !served.has(t)), []);
+});

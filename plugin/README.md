@@ -28,7 +28,7 @@ Your instructions, tool inputs/results, project metadata and previews can reach 
 - Create and edit native compositions, text, shapes, masks, keyframes, expressions, effects, cameras, lights and footage using the catalog.
 - Run custom ExtendScript with `eval.run` for the exposed native scripting API.
 - Save projects, use render queue operations, export frames/contact sheets and exchange project JSON within the runtime's documented serialization limits.
-- Read 91 bundled documents and code libraries, including the refreshed motion foundation, typography and paper-collage modules, worked examples, scene brief, review guidance, optional JoeB appearance, reusable JSX and 30 visual styles. `ae_library` exposes module routing; the six skills cover motion-studio, ae-control, motion-review, typography, paper-collage and visual-styles.
+- Read 93 bundled documents and code libraries, including the refreshed motion foundation, typography and paper-collage modules, worked examples, scene brief, review guidance, optional JoeB appearance, reusable JSX and 30 visual styles. `ae_library` exposes module routing; the six skills cover motion-studio, ae-control, motion-review, typography, paper-collage and visual-styles.
 
 “Full access” means the exposed AE scripting API plus catalog operations, not every proprietary effect dialog or Adobe UI control. Query the catalog and installed effects rather than assuming coverage. This plugin enables custom scripting by default; `AE_MCP_ENABLE_EVAL=0` disables it and `AE_MCP_READONLY=1` restricts project mutations. Treat script inputs as executable code.
 

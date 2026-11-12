@@ -45733,6 +45733,8 @@ var COMP_INFO_FN = `
         _ciOut.shutterAngle = c.shutterAngle;
         _ciOut.shutterPhase = c.shutterPhase;
         _ciOut.motionBlur = c.motionBlur;
+        // Comp markers (time, comment, duration per key), or null when there are none.
+        _ciOut.markers = AE.serializeCompMarkers(c);
         _ciOut.layers = _ciLayers;
         return _ciOut;
     }
@@ -51256,18 +51258,22 @@ function summarizeSeries(pairs, t) {
     for (let k = 1; k <= t.window; k++) if (set2.has(i - k) || set2.has(i + k)) return true;
     return false;
   };
-  const spike = pairs.map((p, i) => {
+  const standsOut = (p, i, skip) => {
     if (repeats.has(i) || p.changedShare < t.movingShare) return null;
-    const sides = [
-      side(pairs, i, -1, t.window, repeats),
-      side(pairs, i, 1, t.window, repeats)
-    ].filter((s) => s !== null);
+    const sides = [side(pairs, i, -1, t.window, skip), side(pairs, i, 1, t.window, skip)].filter(
+      (s) => s !== null
+    );
     if (sides.length === 0) return null;
     const reference = Math.max(...sides.map((s) => s.change), t.quietBelow);
-    if (sides.some((s) => p.change < t.spikeRatio * Math.max(s.change, t.quietBelow)))
-      return null;
+    if (sides.some((s) => p.change < t.spikeRatio * Math.max(s.change, t.quietBelow))) return null;
     return { reference, edge: i === 0 || i === n - 1, besideRepeat: near(i, repeats) };
-  });
+  };
+  const first = pairs.map((p, i) => standsOut(p, i, repeats));
+  const firstSpikes = new Set(first.flatMap((s, i) => s ? [i] : []));
+  const skipBoth = /* @__PURE__ */ new Set([...repeats, ...firstSpikes]);
+  const spike = pairs.map(
+    (p, i) => first[i] ?? (firstSpikes.size > 0 ? standsOut(p, i, skipBoth) : null)
+  );
   const spikes = new Set(spike.flatMap((s, i) => s ? [i] : []));
   const repeatNote = " (a repeated frame is next to it and was left out of the comparison)";
   const flags = [];
@@ -52967,7 +52973,7 @@ init_registry();
 var compInfoTool = defineTool({
   name: "ae_comp_info",
   title: "Comp info",
-  description: "Detailed comp info: size, fps, duration, work area, motion blur, layer summaries. Pass a comp name or item id \u2014 or an ARRAY of them to fetch several comps in one call.",
+  description: "Detailed comp info: size, fps, duration, work area, motion blur, comp markers (`markers.keyframes`: each `time` in seconds and `value.comment`, `value.duration`; null when there are none), layer summaries. Pass a comp name or item id \u2014 or an ARRAY of them to fetch several comps in one call.",
   group: "inspect",
   blockedInReadOnly: false,
   effect: "read",

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { readLibrary } from "../src/tools/library.js";
@@ -36,6 +36,43 @@ describe("studio library", () => {
     expect(doc).toContain('from: "luma"');
     expect(doc).toMatch(/7\.1 to 15\.1 px/);
     expect(doc).toMatch(/before and after/);
+  });
+  it("serves the review procedure both build skills point to", () => {
+    // Pro finish stage 2: a review by someone who did not build the piece.
+    const doc = readLibrary("review").content!;
+    expect(readLibrary().documents!.find(d => d.id === "review")?.kind).toBe("guidance");
+    // What the reviewer is handed, and what it is not.
+    for (const s of ["brief", "ae_check_comp", "ae_render_frame", "render.preview", "builder's notes"]) expect(doc).toContain(s);
+    // The severity scale and the form of a finding.
+    for (const s of ["first-watch", "careful-watch", "polish", "evidence", "Not judged"]) expect(doc).toContain(s);
+    expect(doc).toMatch(/[Nn]o score/);
+    // The loop's stop rule.
+    expect(doc).toMatch(/two review passes/);
+    // Flags are fixed or named as intended; the two real whole-piece examples.
+    expect(doc).toMatch(/intended/);
+    expect(doc).toMatch(/stray frames of another take just before a cut/);
+    expect(doc).toMatch(/two jumps close together, render every frame between them/);
+    expect(doc).toMatch(/stray frames of the next take/);
+    // Delegation, with the fallback said out loud.
+    expect(doc).toContain("comp-room:motion-reviewer");
+    expect(doc).toMatch(/not independent/);
+    // Marker times are where the reviewer can read them.
+    expect(doc).toMatch(/ae_comp_info` lists the comp's markers/);
+  });
+  it("makes the review a required step of a build, and the reviewer's skill starts from the whole piece", () => {
+    const skill = (name: string) => readFileSync(new URL(`../../skills/${name}/SKILL.md`, import.meta.url), "utf8");
+    const studio = skill("motion-studio");
+    expect(studio).toMatch(/ae_check_comp/);
+    expect(studio).toMatch(/`review`/);
+    expect(studio).toMatch(/comp-room:motion-reviewer/);
+    expect(studio).toMatch(/not independent/);
+    expect(studio).toMatch(/[Dd]o not (say|call)[^.]*done/);
+    const review = skill("motion-review");
+    expect(review).toMatch(/ae_check_comp/);
+    expect(review).toMatch(/`review`/);
+    expect(review).toMatch(/first-watch/);
+    // Short enough to follow: the reviewer's skill was 18 lines before this stage.
+    expect(review.split("\n").length).toBeLessThan(40);
   });
   it("rejects arbitrary paths instead of reading a user file", () => {
     expect(() => readLibrary("../../package.json")).toThrow("Unknown library");

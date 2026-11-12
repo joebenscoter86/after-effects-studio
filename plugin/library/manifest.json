@@ -170,6 +170,13 @@
       "sha256": "7998a34f9cf305a699339a3393ef0b7d243ef7f9e862caa480fa030ce515eaca"
     },
     {
+      "id": "review",
+      "title": "Review by someone who did not build the piece",
+      "path": "references/review.md",
+      "kind": "guidance",
+      "sha256": "93910c276308c0a15eef9c64f3e3001b6896c2b3080c2ba6c5beac1e62a34968"
+    },
+    {
       "id": "keying",
       "title": "Green-screen keying and compositing procedure",
       "path": "references/keying.md",
