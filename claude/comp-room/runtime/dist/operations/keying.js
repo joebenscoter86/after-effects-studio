@@ -613,6 +613,7 @@ const VIEWER_FULL_JSX = `
                 return _fid;
             }
 `;
+const VIEWER_NOTE = "View > Resolution > Full sets the comp's resolutionFactor (measured in After Effects 27.0, with the comp open in the viewer); verified means the comp read [1, 1] after the command and again after the Layer panel opened. Starting from the viewer's Auto setting (it drew at Half while the comp was set to Full on 2026-11-11) is not verified, and a script cannot choose Auto. If the yellow full-resolution bar shows, step 4 has the user choose Full.";
 const COUNT_NOTE = "A selection count is not a check: it does not say what was selected. Run subject.check and look at its picture before building anything on the cut-out.";
 const NEED_CLICK = "run subject.prepare and ask the user for the click, relaying its steps word for word";
 const OBJECT_MATTE_JSX = `
@@ -734,7 +735,7 @@ const REMOVE_NOTE = "To take out one wrong selection (a second click that landed
 registerOp({
   name: "subject.prepare",
   category: "subject",
-  description: "Get a footage layer ready for the one manual step of a subject matte (After Effects 2027's Object Matte, the old Roto Brush): the user clicks the subject once with the Object Matte Tool; a script cannot make that selection. This call brings the comp forward, sets the comp's resolution to Full, moves to `time` (default: the layer's in point; pick a frame where the subject is clearly visible), selects only that layer, opens it in the Layer panel and chooses View > Resolution > Full there (viewerResolution: the menu command is looked up by its name 'Full', and a script cannot read whether the viewer then draws at Full; not verified). It adds no effect and does not pick the tool. Returns notice and steps (the user's instructions, with the clip's name and the subject filled in) and userMessage (both as one text): relay them to the user word for word. Also returns did (the steps done), couldNotDo (any that failed, with the error; beforeSteps then says what to tell the user first) and existing (an Object Matte already on the layer and its selections). After the user says done, run subject.check before building anything. Verified in After Effects 27.0 on a real take, apart from the View > Resolution > Full step.",
+  description: "Get a footage layer ready for the one manual step of a subject matte (After Effects 2027's Object Matte, the old Roto Brush): the user clicks the subject once with the Object Matte Tool; a script cannot make that selection. This call brings the comp forward, chooses View > Resolution > Full and reads the comp's resolution back (viewerResolution: verified only when it reads [1, 1] after the command and after the Layer panel opens; starting from the viewer's Auto setting is not verified), moves to `time` (default: the layer's in point; pick a frame where the subject is clearly visible), selects only that layer and opens it in the Layer panel. It adds no effect and does not pick the tool. Returns notice and steps (the user's instructions, with the clip's name and the subject filled in) and userMessage (both as one text): relay them to the user word for word. Also returns did (the steps done), couldNotDo (any that failed, with the error; beforeSteps then says what to tell the user first) and existing (an Object Matte already on the layer and its selections). After the user says done, run subject.check before building anything. Verified in After Effects 27.0 on a real take, apart from the resolution step as written here.",
   params: [
     ...compLayerParams,
     {
@@ -773,7 +774,25 @@ registerOp({
                 try { fn(); _did.push(what); } catch (eSt) { _couldNot.push({ step: what, error: AE.errText(eSt) }); }
             }
             _step("brought the comp forward", function () { _comp.openInViewer(); });
-            _step("set the comp's resolution to Full (the viewer can still draw at another resolution while it is on Auto)", function () { _comp.resolutionFactor = [1, 1]; });
+            ${VIEWER_FULL_JSX}
+            function _resNow() { return AE.safeGet(function () { return [_comp.resolutionFactor[0], _comp.resolutionFactor[1]]; }, null); }
+            function _isFull(r) { return r !== null && r[0] === 1 && r[1] === 1; }
+            function _resText(r) { return r === null ? "unknown" : "[" + r[0] + ", " + r[1] + "]"; }
+            var _viewer = { command: "Full", commandId: null, before: _resNow(), after: null, afterLayerPanel: null, verified: false, note: ${jsxVal(VIEWER_NOTE)} };
+            try {
+                _viewer.commandId = _viewerToFull();
+                _viewer.after = _resNow();
+                if (_isFull(_viewer.after)) _did.push("chose View > Resolution > Full (the comp's resolution now reads [1, 1])");
+                else _couldNot.push({ step: "chose View > Resolution > Full", error: "the comp's resolution still reads " + _resText(_viewer.after) + " after View > Resolution > Full" });
+            } catch (eFull) {
+                var _fullMsg = AE.errText(eFull);
+                try {
+                    _comp.resolutionFactor = [1, 1];
+                    _fullMsg += "; set the comp's resolutionFactor to [1, 1] instead (the viewer can still draw at another resolution while it is on Auto)";
+                } catch (eRes) { _fullMsg += "; setting the comp's resolutionFactor failed too: " + AE.errText(eRes); }
+                _viewer.after = _resNow();
+                _couldNot.push({ step: "chose View > Resolution > Full", error: _fullMsg });
+            }
             _step("moved to " + _t + " s", function () { _comp.time = _t; });
             _step("selected only layer '" + _layer.name + "'", function () {
                 for (var _li = 1; _li <= _comp.numLayers; _li++) { var _l = _comp.layer(_li); if (_l.selected) _l.selected = false; }
@@ -786,13 +805,10 @@ registerOp({
                 app.executeCommand(_id);
                 _opened = true;
             });
-            ${VIEWER_FULL_JSX}
-            var _viewer = { command: "Full", commandId: null, verified: false,
-                note: "chose View > Resolution > Full for the Layer panel; a script cannot read the viewer's resolution, so whether it now draws at Full is not known. If After Effects' yellow bar asks for full resolution, step 4 has the user choose it" };
-            if (_opened) {
-                _step("chose View > Resolution > Full", function () { _viewer.commandId = _viewerToFull(); });
-            } else {
-                _couldNot.push({ step: "chose View > Resolution > Full", error: "skipped: the Layer panel did not open, and the command acts on the active viewer" });
+            _viewer.afterLayerPanel = _resNow();
+            if (_viewer.commandId !== null && _isFull(_viewer.after)) {
+                if (_isFull(_viewer.afterLayerPanel)) _viewer.verified = true;
+                else _couldNot.push({ step: "kept the resolution at Full", error: "the comp's resolution read " + _resText(_viewer.afterLayerPanel) + " after the Layer panel opened" });
             }
             var _pick = AE.pickEffect(_fxRoot, ${jsxVal(OBJECT_MATTE_MATCH_NAME)}, "Object Matte", null);
             var _existing = { objectMatte: _pick.index !== null, effectIndex: _pick.index, count: _pick.count || 0, selections: [] };
