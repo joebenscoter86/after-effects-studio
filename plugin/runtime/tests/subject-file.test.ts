@@ -15,6 +15,7 @@ import {
   CHECK_FILE_JUMP_LIMIT,
   RENDER_MARGIN_BYTES,
   aeCacheRoot,
+  cacheBytesFor,
   checkFileFrames,
   diskReport,
   renderCutoutBytes,
@@ -66,6 +67,9 @@ const PLAN = {
   fillLayer: "raw_nogreen.mp4 gap fill",
   keep: ["raw_nogreen.mp4", "raw_nogreen.mp4 gap fill"],
   span: { start: 0, duration: 10.6667, frames: 320, frameRate: 30 },
+  compSize: [1080, 1920],
+  sourceSize: [2176, 3840],
+  aeCache: { folder: null, version: "27.0x52" },
   templates: {
     output: [
       "High Quality",
@@ -727,12 +731,13 @@ describe("free space before a render", () => {
       needed: expect.any(Number),
       margin: RENDER_MARGIN_BYTES,
     });
+    expect(res.space.parts).toMatchObject({ movie: expect.any(Number), cache: expect.any(Number) });
     expect(io.calls.filter((c: Any) => c.label === "subject.render_cutout")).toEqual([]);
   });
 
   it("renders when there is room", async () => {
     const io = renderIO();
-    io.freeBytes = async () => 20 * GB;
+    io.freeBytes = async () => 30 * GB;
     expect(
       (await runRenderCutout({ comp: "Main", layer: 1, outputPath: path.join(dir, "cut.mov") }, io))
         .ok,
@@ -742,7 +747,7 @@ describe("free space before a render", () => {
   it("on a timeout, adds the free space and names a full drive as the likely cause when it is low", async () => {
     const io = renderIO();
     let calls = 0;
-    io.freeBytes = async () => (++calls === 1 ? 20 * GB : 0.4 * GB);
+    io.freeBytes = async () => (++calls === 1 ? 30 * GB : 0.4 * GB);
     const exec = io.execute;
     io.execute = async (code: string, opts: Any) =>
       opts.label === "subject.render_cutout"
@@ -839,5 +844,64 @@ describe("subject.status reads the disk cache folder", () => {
     expect(body).toContain("Disk Cache Controls");
     expect(body).toContain("Folder 7");
     expect(body).not.toMatch(/setPref|savePrefAsString|purge/i);
+  });
+});
+
+// ------------------------------------- the cache a render writes (about 19 GB for the take)
+
+describe("the cache a render writes", () => {
+  it("is estimated at a 16-bit RGBA frame of the source for every frame tracked through", () => {
+    expect(cacheBytesFor(320, [2176, 3840])).toBe(320 * 2176 * 3840 * 8); // 21.4 GB; 19 GB measured
+  });
+
+  it("render_cutout needs the movie, the cache and the margin on one drive, and refuses with the parts", async () => {
+    const io = renderIO();
+    io.freeBytes = async () => 10 * GB;
+    const res = await runRenderCutout(
+      { comp: "Main", layer: 1, outputPath: path.join(dir, "cut.mov") },
+      io,
+    );
+    expect(res.ok).toBe(false);
+    expect(res.error).toMatch(/cache/);
+    expect(res.space.parts.cache).toBe(cacheBytesFor(320, [2176, 3840]));
+    expect(res.space.parts.movie).toBeCloseTo(243.2e6, -5);
+    expect(res.space.needed).toBe(Math.round(res.space.parts.movie + res.space.parts.cache));
+  });
+
+  it("checks the cache's drive and the output's drive each against its own share when they differ", async () => {
+    const cacheDir = path.join(dir, "cachevol");
+    const plan = { ...PLAN, aeCache: { folder: cacheDir, version: "27.0x52" } };
+    const io = renderIO(plan);
+    io.volumeOf = async (d: string) => (d.startsWith(cacheDir) ? "cache-volume" : "output-volume");
+    io.freeBytes = async (d: string) => (d.startsWith(cacheDir) ? 10 * GB : 5 * GB);
+    const res = await runRenderCutout(
+      { comp: "Main", layer: 1, outputPath: path.join(dir, "cut.mov") },
+      io,
+    );
+    expect(res.ok).toBe(false);
+    expect(res.space.where).toBe(path.join(cacheDir, "Adobe", "After Effects", "27.0"));
+    expect(res.space.volumes).toHaveLength(2);
+    // With room for the cache on its own drive, the output's drive needs only the movie and the margin.
+    io.freeBytes = async (d: string) => (d.startsWith(cacheDir) ? 30 * GB : 5 * GB);
+    const ok = await runRenderCutout(
+      { comp: "Main", layer: 1, outputPath: path.join(dir, "cut2.mov") },
+      io,
+    );
+    expect(ok.ok).toBe(true);
+    expect(ok.space.volumes.map((v: Any) => v.ok)).toEqual([true, true]);
+  });
+
+  it("says in its result how much the render should add to the cache, and to purge once the file is checked", async () => {
+    const io = renderIO();
+    io.freeBytes = async () => 60 * GB;
+    const res = await runRenderCutout(
+      { comp: "Main", layer: 1, outputPath: path.join(dir, "cut.mov") },
+      io,
+    );
+    expect(res.ok).toBe(true);
+    expect(res.space.parts.cache).toBe(cacheBytesFor(320, [2176, 3840]));
+    expect(res.next).toMatch(/Edit > Purge > All Memory & Disk Cache/);
+    expect(res.next).toMatch(/about 21\.4 GB/);
+    expect(res.cacheNote).toMatch(/nothing was deleted/i);
   });
 });

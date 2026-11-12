@@ -1145,3 +1145,24 @@ describe("free space before writing pictures", () => {
     expect(renders(io)).toEqual([]);
   });
 });
+
+describe("the cache a check across the clip writes", () => {
+  it("counts the span of frames After Effects tracks through, not the frames read", async () => {
+    const low = fakeIO(() => matte(), {
+      status: async () => APART as Any,
+      freeBytes: async () => 5e9,
+    });
+    const across = await runSubjectCheck(
+      { comp: "Main", layer: 1, outDir: dir, across: true },
+      low,
+    );
+    expect(across.ok).toBe(false);
+    expect(across.space.parts.cache).toBe(281 * 2176 * 3840 * 8); // frames 0 to 280
+    expect(renders(low)).toEqual([]);
+    const quick = await runSubjectCheck(
+      { comp: "Main", layer: 1, outDir: dir },
+      fakeIO(() => matte(), { status: async () => APART as Any, freeBytes: async () => 5e9 }),
+    );
+    expect(quick.ok).toBe(true); // frames 13 to 17: about 0.3 GB of cache
+  });
+});
