@@ -943,6 +943,9 @@ function world({
   fullWorks = true,
   inPoint = 0,
   outPoint = 10,
+  scale = null as number[] | null,
+  file = null as string | null,
+  hasAudio = false,
 } = {}): World {
   const calls: string[] = [];
   const parade = new Parade();
@@ -955,13 +958,26 @@ function world({
   }
   const layer: Any = {
     name: "presenter.mov",
-    source: source ? { name: "presenter.mov", width: 2176, height: 3840 } : null,
+    source: source
+      ? {
+          name: "presenter.mov",
+          width: 2176,
+          height: 3840,
+          hasAudio,
+          ...(file ? { file: { fsName: file } } : {}),
+        }
+      : null,
     inPoint,
     outPoint,
     startTime: 0,
     selected: false,
     sourcePointToComp: (p: number[]) => [p[0] / 2, p[1] / 2],
     property(k: string) {
+      if (k === "ADBE Transform Group" && scale)
+        return {
+          property: (n: string) =>
+            n === "ADBE Scale" ? { value: scale, valueAtTime: () => scale } : null,
+        };
       return k === "ADBE Effect Parade" || k === "Effects" ? parade : null;
     },
   };
@@ -1234,6 +1250,26 @@ describe("subject.prepare", () => {
         clickFrame: 15,
       },
     ]);
+  });
+});
+
+describe("subject.prepare: the footage", () => {
+  it("reports the source size, the comp size, the layer's scale, the frames, the file and whether it has sound", () => {
+    const w = world({ scale: [50, 50, 100], file: "/Volumes/Work/take.mp4", hasAudio: true });
+    const res = runIn("subject.prepare", {}, w);
+    expect(res.footage).toEqual({
+      sourceSize: [2176, 3840],
+      compSize: [1080, 1920],
+      scale: [50, 50],
+      frames: 300,
+      file: "/Volumes/Work/take.mp4",
+      hasAudio: true,
+    });
+  });
+
+  it("reads null where the layer has no scale or the source no file", () => {
+    const res = runIn("subject.prepare", {}, world());
+    expect(res.footage).toMatchObject({ scale: null, file: null, hasAudio: false });
   });
 });
 

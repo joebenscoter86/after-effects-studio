@@ -23,6 +23,7 @@ import {
   cutoutFindings,
   runFillGaps,
   runSubjectCheck,
+  runSubjectPrepare,
   type CutoutIO,
 } from "../src/operations/keying.js";
 import { getOp } from "../src/registry.js";
@@ -476,7 +477,7 @@ describe("subject.check", () => {
     expect(res.findings[0].frames.length).toBe(9);
     expect(res.inOut).toMatch(/hole.*2,400 px.*\(80, 150, 40 × 60\)/);
     expect(res.frames[0].holesUnderLimit).toEqual({ count: 1, area: 120 });
-    expect(res.next).toMatch(/show the user the picture/i);
+    expect(res.next).toMatch(/In your reply, before the next call, tell the user what is out.*picture.s path/);
   });
 
   it("stops on an opening that runs off the frame edge, the missed microphone of 2026-11-11", async () => {
@@ -526,13 +527,23 @@ describe("subject.check", () => {
     expect(res.inOut).toMatch(/Checked 0 of 9 frames/);
   });
 
-  it("reports the close clicks as a finding, and never takes the count as confirmation", async () => {
+  it("on a clean matte, close clicks are a note that does not stop, and the count is never confirmation", async () => {
     const res = await runSubjectCheck(
       { comp: "Main", layer: 1, outDir: dir, across: true, frozenFrames: 1e9 },
       fakeIO(() => matte()),
     );
-    expect(res.findings).toEqual([expect.objectContaining({ kind: "close-clicks" })]);
-    expect(res.stop).toBe(true);
+    expect(res.findings).toEqual([]);
+    expect(res.stop).toBe(false);
+    expect(res.notes).toEqual([
+      expect.objectContaining({
+        kind: "close-clicks",
+        pairs: [expect.objectContaining({ a: "Add Object 2", b: "Add Object 1" })],
+      }),
+    ]);
+    expect(res.inOut).toMatch(/1 pair of clicks closer than 109 source pixels/);
+    expect(res.inOut).toMatch(/nothing is missing/);
+    expect(res.inOut).not.toMatch(/probably selected the same thing/);
+    expect(res.next).not.toMatch(/^Stop/);
     expect(res.clicks).toEqual([
       {
         name: "Add Object 2",
@@ -964,14 +975,48 @@ describe("subject.check: a frame that does not repeat", () => {
 });
 
 describe("subject.check: what to do about close clicks", () => {
-  it("says to take the later click out, and that the matte did not change on the take", async () => {
+  it("with something missing, they are a finding: take the later click out, and the matte did not change on the take", async () => {
     const res = await runSubjectCheck(
       { comp: "Main", layer: 1, outDir: dir, across: true, frozenFrames: 1e9 },
-      fakeIO(() => matte()),
+      fakeIO(() => matte([MIC])),
     );
+    expect(res.stop).toBe(true);
+    expect(res.findings.map((x: Any) => x.kind)).toEqual(["hole", "close-clicks"]);
     const f = res.findings.find((x: Any) => x.kind === "close-clicks");
     expect(f.advice).toMatch(/subject\.remove_selection \{ selection: "Add Object 2" \}/);
     expect(f.advice).toMatch(/did not change/);
+    expect(res.notes).toEqual([]);
+    expect(res.inOut).toMatch(
+      /a click meant for something else \(a microphone\) may have landed on the subject again/,
+    );
+  });
+
+  it("twelve clicks on the pieces of a microphone: one sentence, no stop, when nothing is missing", async () => {
+    const pieces = Array.from({ length: 12 }, (_, i) => ({
+      index: i + 1,
+      name: `Add Object ${i + 1}`,
+      kind: "object",
+      point: [1000 + (i % 4) * 20, 2400 + Math.floor(i / 4) * 20],
+      clickTime: 0.49999667,
+      clickFrame: 15,
+    }));
+    const res = await runSubjectCheck(
+      { comp: "Main", layer: 1, outDir: dir, frozenFrames: 1e9 },
+      fakeIO(() => matte(), { status: async () => ({ ...STATUS_OK, selections: pieces }) as Any }),
+    );
+    expect(res.stop).toBe(false);
+    expect(res.findings).toEqual([]);
+    expect(res.notes[0].pairs.length).toBeGreaterThan(10);
+    expect(res.inOut.match(/closer than/g)).toHaveLength(1);
+    expect(res.inOut).not.toMatch(/remove_selection/);
+  });
+
+  it("a frame not checked counts as something missing", async () => {
+    const res = await runSubjectCheck(
+      { comp: "Main", layer: 1, outDir: dir, across: true, frozenFrames: 1e9 },
+      fakeIO(() => matte(), { fail: new Set([40]) }),
+    );
+    expect(res.findings.map((x: Any) => x.kind)).toEqual(["not-checked", "close-clicks"]);
   });
 });
 
@@ -1265,5 +1310,144 @@ describe("subject.fill_gaps: footage with no sound", () => {
     );
     expect(res.layers.audio).toMatch(/no audio: nothing to switch off/);
     expect(res.next).not.toMatch(/could not be switched off/);
+  });
+});
+
+const TAKE_4K = {
+  sourceSize: [2176, 3840],
+  compSize: [1080, 1920],
+  scale: [50, 50],
+  frames: 320,
+  file: "/Volumes/Work/take.mp4",
+  hasAudio: true,
+};
+
+function prepIO(
+  footage: Any,
+  probe: Any = [{ channels: 2, layout: "stereo" }],
+): {
+  calls: string[];
+  execute: (code: string) => Promise<Any>;
+  probeAudio: (f: string) => Promise<Any>;
+} {
+  const calls: string[] = [];
+  return {
+    calls,
+    execute: async () => ({
+      ok: true,
+      comp: "Main",
+      layer: "take.mp4",
+      did: [],
+      couldNotDo: [],
+      steps: ["one", "two"],
+      notice: "notice",
+      userMessage: "notice\n1. one\n2. two",
+      relay:
+        "Give the user notice and steps word for word (userMessage holds both); do not paraphrase them. Then wait for 'done' and run subject.status.",
+      footage,
+    }),
+    probeAudio: async (f: string) => {
+      calls.push(f);
+      return probe;
+    },
+  };
+}
+
+describe("subject.prepare: footage much larger than the comp", () => {
+  it("is registered to run in Node, with the click's JSX inside", () => {
+    const op = getOp("subject.prepare")!;
+    expect(op.run).toBeTypeOf("function");
+    expect(op.toJsx({ comp: "Main", layer: 1 })).toMatch(/Open Layer/);
+  });
+
+  it("a 4K take scaled to 50% in a 1080 x 1920 comp: says so before the click, with the numbers and the copy to make", async () => {
+    const res = await runSubjectPrepare({ comp: "Main", layer: 1 }, prepIO(TAKE_4K));
+    expect(res.sourceAdvice).toMatchObject({
+      sourceSize: [2176, 3840],
+      compSize: [1080, 1920],
+      scale: [50, 50],
+      deliverySize: [1088, 1920],
+      frames: 320,
+      cacheAtSource: 320 * 2176 * 3840 * 8,
+      cacheAtDelivery: 320 * 1088 * 1920 * 8,
+    });
+    const r = res.sourceAdvice.reading;
+    expect(r).toMatch(/2176 × 3840/);
+    expect(r).toMatch(/1080 × 1920/);
+    expect(r).toMatch(/21\.4 GB/);
+    expect(r).toMatch(/5\.3 GB/);
+    expect(r).toMatch(/before the click/i);
+    expect(r).toMatch(/freezes/);
+    expect(res.sourceAdvice.copy).toMatch(
+      /^ffmpeg -i "\/Volumes\/Work\/take\.mp4" .*scale=1088:1920/,
+    );
+    expect(res.relay).toMatch(/^Do not give the user the steps yet/);
+    expect(res.relay).toMatch(/sourceAdvice/);
+  });
+
+  it("gives no advice when the footage is near the comp's size, or shown at full size", async () => {
+    for (const footage of [
+      { ...TAKE_4K, sourceSize: [1088, 1920], scale: [100, 100] },
+      { ...TAKE_4K, scale: [100, 100] }, // a 4K take cropped, not scaled down
+      { ...TAKE_4K, scale: [80, 80] }, // shrunk by 1.25
+      { ...TAKE_4K, scale: null },
+    ]) {
+      const res = await runSubjectPrepare({ comp: "Main", layer: 1 }, prepIO(footage));
+      expect(res.sourceAdvice, JSON.stringify(footage)).toBeUndefined();
+      expect(res.relay).toMatch(/^Give the user notice and steps word for word/);
+    }
+  });
+
+  it("passes a failed preparation through untouched", async () => {
+    const io = prepIO(TAKE_4K);
+    io.execute = async () => ({ ok: false, error: "time 7 is outside layer 'take.mp4'" });
+    const res = await runSubjectPrepare({ comp: "Main", layer: 1 }, io);
+    expect(res).toEqual({ ok: false, error: "time 7 is outside layer 'take.mp4'" });
+    expect(io.calls).toEqual([]);
+  });
+});
+
+describe("subject.prepare: the take's sound", () => {
+  it("warns when the sound has more than two channels, and says how to extract the voice", async () => {
+    const io = prepIO({ ...TAKE_4K, sourceSize: [1088, 1920], scale: [100, 100] }, [
+      { channels: 4, layout: "4.0" },
+    ]);
+    const res = await runSubjectPrepare({ comp: "Main", layer: 1 }, io);
+    expect(io.calls).toEqual(["/Volumes/Work/take.mp4"]);
+    expect(res.soundAdvice.channels).toBe(4);
+    expect(res.soundAdvice.reading).toMatch(/4 channels/);
+    expect(res.soundAdvice.reading).toMatch(/silence/);
+    expect(res.soundAdvice.reading).toMatch(/measure the delivered file's sound/i);
+    expect(res.soundAdvice.extract).toBe(
+      'ffmpeg -i "/Volumes/Work/take.mp4" -map 0:a:0 -af "pan=mono|c0=c0" -c:a pcm_s16le "/Volumes/Work/take_voice.wav"',
+    );
+    expect(res.relay).toMatch(/soundAdvice/);
+  });
+
+  it("says nothing for stereo sound, or for footage with no sound in the file either", async () => {
+    const stereo = await runSubjectPrepare({ comp: "Main", layer: 1 }, prepIO(TAKE_4K));
+    expect(stereo.soundAdvice).toBeUndefined();
+    expect(stereo.relay).not.toMatch(/Sound:/);
+    const io = prepIO({ ...TAKE_4K, hasAudio: false }, []);
+    const silent = await runSubjectPrepare({ comp: "Main", layer: 1 }, io);
+    expect(io.calls).toEqual(["/Volumes/Work/take.mp4"]);
+    expect(silent.soundAdvice).toBeUndefined();
+    expect(silent.soundNote).toBeUndefined();
+  });
+
+  it("warns when the file has sound that After Effects does not report", async () => {
+    const res = await runSubjectPrepare(
+      { comp: "Main", layer: 1 },
+      prepIO({ ...TAKE_4K, hasAudio: false }, [{ channels: 2, layout: "stereo" }]),
+    );
+    expect(res.soundAdvice.reading).toMatch(/After Effects does not report/);
+    expect(res.soundAdvice.afterEffectsHasAudio).toBe(false);
+  });
+
+  it("says when the channels could not be counted, and to measure the sound anyway", async () => {
+    const res = await runSubjectPrepare({ comp: "Main", layer: 1 }, prepIO(TAKE_4K, null));
+    expect(res.soundAdvice).toBeUndefined();
+    expect(res.soundNote).toMatch(/could not count/);
+    expect(res.soundNote).toMatch(/measure the delivered file's sound/i);
   });
 });
