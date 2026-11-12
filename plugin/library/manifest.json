@@ -174,14 +174,14 @@
       "title": "Review by someone who did not build the piece",
       "path": "references/review.md",
       "kind": "guidance",
-      "sha256": "93910c276308c0a15eef9c64f3e3001b6896c2b3080c2ba6c5beac1e62a34968"
+      "sha256": "d8125ffdcc3d4114f159cb04a58feec0faaa0aeac6b36dfdaf6e1ae1c9b4ec75"
     },
     {
       "id": "keying",
       "title": "Green-screen keying and compositing procedure",
       "path": "references/keying.md",
       "kind": "guidance",
-      "sha256": "a2938ec4f2fcb6838dc12497a9b52b88e9967d2d76d330a50c66789dc5b7f49a"
+      "sha256": "16773b0eb4070d5ad27b2e0f269021d08b471c5f7ff4e92112bf2e07b7e1bcb9"
     },
     {
       "id": "scene-recipes",

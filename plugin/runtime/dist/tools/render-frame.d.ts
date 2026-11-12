@@ -72,15 +72,15 @@ export declare const renderFrameTool: import("./define-tool.js").ToolSpec<{
         }, z.core.$strip>>;
         stage: z.ZodOptional<z.ZodEnum<{
             both: "both";
-            output: "output";
             capture: "capture";
+            output: "output";
         }>>;
     }, z.core.$strip>>;
     histogram: z.ZodOptional<z.ZodUnion<readonly [z.ZodBoolean, z.ZodObject<{
         bins: z.ZodOptional<z.ZodNumber>;
         stage: z.ZodOptional<z.ZodEnum<{
-            output: "output";
             capture: "capture";
+            output: "output";
         }>>;
     }, z.core.$strip>]>>;
     compare: z.ZodOptional<z.ZodObject<{

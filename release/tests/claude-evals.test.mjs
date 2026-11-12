@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 
-import { writeEvalSuite, claudePrompt, pictureCommand } from '../claude-evals.mjs';
+import { writeEvalSuite, claudePrompt, pictureCommand, checkAnswer, subjectSteps, ANSWER_CHECKS } from '../claude-evals.mjs';
 import { THRESHOLDS } from '../../plugin/evals/picture/checks.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -32,7 +32,7 @@ test('writes one case per canonical prompt, in order', async () => {
   const dirs = (await fs.readdir(out)).sort();
   assert.equal(dirs.length, PLAN.evals.length);
   assert.match(dirs[0], /^01-/);
-  assert.match(dirs.at(-1), new RegExp(`^${String(PLAN.evals.length).padStart(2, '0')}-`));
+  assert.match(dirs.at(-1), new RegExp(`^${String(PLAN.evals.at(-1).id).padStart(2, '0')}-`));
 });
 
 test('the prompt body is the canonical prompt, with Codex skill syntax made Claude syntax', async () => {
@@ -108,8 +108,8 @@ test('refuses to write into a folder that already holds files', async () => {
   await assert.rejects(writeEvalSuite(CANON, out), /not empty/);
 });
 
-test('the canonical evals: 17 planning cases and the picture cases, ids in order', () => {
-  assert.equal(PLAN.evals.length, 17);
+test('the canonical evals: 18 planning cases and the picture cases, ids in order', () => {
+  assert.equal(PLAN.evals.length, 18);
   assert.deepEqual(CANON.evals.map((c) => c.id), CANON.evals.map((_, i) => i + 1));
   assert.deepEqual(PICTURES.map((c) => c.picture.check), ['keying', 'grade', 'over', 'finish', 'review']);
   for (const c of PICTURES) {
@@ -193,4 +193,78 @@ test('a picture case\'s copied grader runs from the case folder with its config'
 test('the picture set refuses to guess where the runtime is', async () => {
   const out = path.join(await tmp('evals-'), 'evals');
   await assert.rejects(writeEvalSuite(CANON, out, { set: 'picture' }), /no runtime\/dist/);
+});
+
+// The subject-matte planning case (stages 12, 12b): it passes only when the answer gives the manual-click notice up
+// front, every click step from keying.md word for word and in order, and subject.check before further building with a
+// hole shown to the user.
+const SUBJECT = PLAN.evals.find((c) => c.answer_checks?.includes('subject-steps'));
+const CHECK = 'After you say done, and before anything else is built, I run subject.check: it renders the cut-out across the clip, and if it finds a hole (a missed microphone) I stop and show you the picture.';
+const STEPS = await subjectSteps();
+const NOTICE = 'One step here needs you in After Effects: a single click on you in the clip, about ten seconds, once the footage is in its comp and before the background goes behind you.';
+const PLAN_BODY = Array.from({ length: 12 }, (_, i) => `Beat ${i + 1}, frames ${i * 75} to ${i * 75 + 74}: the title and the background move as described, with holds and eases chosen from the motion language.`).join('\n');
+const list = (steps) => steps.map((t, i) => `${i + 1}. ${t}`).join('\n');
+const FILE = 'Then I render the cut-out once with subject.render_cutout, check every frame of the file with subject.check_file, and build the piece on it with subject.use_cutout.';
+const answer = ({ notice = NOTICE, steps = STEPS, noticeLast = false, check = CHECK, file = FILE } = {}) =>
+  noticeLast ? `Story proposal.\n\n${PLAN_BODY}\n\n${list(steps)}\n\n${check}\n\n${file}\n\n${notice}` : `${notice}\n\nStory proposal.\n\nThe click:\n\n${list(steps)}\n\n${check}\n\n${file}\n\n${PLAN_BODY}\n`;
+const ALL_PASS = { 'subject-notice-first': true, 'subject-steps': true, 'subject-check-first': true, 'subject-file-first': true };
+const verdict = async (text) => Object.fromEntries((await checkAnswer(SUBJECT, text)).map((r) => [r.id, r.pass]));
+
+test('the subject-matte case: a footage brief with no green screen, graded by both answer checks', () => {
+  assert.ok(SUBJECT, 'a planning case with answer checks');
+  assert.match(SUBJECT.prompt, /no green screen/);
+  assert.match(SUBJECT.prompt, /stop before After Effects/);
+  assert.deepEqual(SUBJECT.answer_checks, ['subject-notice-first', 'subject-steps', 'subject-check-first', 'subject-file-first']);
+  assert.equal(STEPS.length, 7);
+  for (const id of SUBJECT.answer_checks) assert.ok(ANSWER_CHECKS[id]);
+  assert.match(SUBJECT.assertions.join(' '), /ten seconds/);
+  assert.match(SUBJECT.assertions.join(' '), /seven click steps/);
+  assert.match(SUBJECT.assertions.join(' '), /subject\.check right after the click and before anything else is built/);
+  for (const c of CANON.evals.filter((x) => x !== SUBJECT)) assert.equal(c.answer_checks, undefined, `case ${c.id}`);
+});
+
+test('the subject-matte case passes an answer with the notice first, the steps and the check before building', async () => {
+  assert.deepEqual(await verdict(answer()), ALL_PASS);
+  // The clip's name and the subject filled in, markdown emphasis and curly quotes still pass.
+  const filled = STEPS.map((t, i) => i === 0 ? t.replace("the clip's name", '"desk-talk.mov"')
+    : i === 4 ? 'Move the pointer over **yourself** in the Layer panel. You tint magenta. Click once.'
+    : i === 5 ? t.replace('Do not click the person again.', 'Do not click yourself again.')
+    : t.replace(/"([^"]*)"/g, '“$1”'));
+  assert.deepEqual(await verdict(answer({ steps: filled })), ALL_PASS);
+});
+
+test('the subject-matte case fails without the notice, with it last, or with a step changed, dropped or moved', async () => {
+  const noNotice = await verdict(answer({ notice: 'Here is the plan.' }));
+  assert.equal(noNotice['subject-notice-first'], false);
+  assert.equal((await verdict(answer({ notice: 'One manual click in After Effects will be needed.' })))['subject-notice-first'], false); // no time given
+  assert.equal((await verdict(answer({ noticeLast: true })))['subject-notice-first'], false);
+  const paraphrased = STEPS.map((t, i) => i === 1 ? 'Pick the Object Matte Tool in the toolbar.' : t);
+  assert.equal((await verdict(answer({ steps: paraphrased })))['subject-steps'], false);
+  assert.equal((await verdict(answer({ steps: STEPS.slice(0, 5) })))['subject-steps'], false);
+  const swapped = [STEPS[0], STEPS[2], STEPS[1], ...STEPS.slice(3)];
+  assert.equal((await verdict(answer({ steps: swapped })))['subject-steps'], false);
+  assert.equal((await verdict(answer({ steps: STEPS.map((t) => t.replace('No Spacebar and no Freeze are needed.', 'Then press Spacebar.')) })))['subject-steps'], false);
+});
+
+test('the subject-matte case fails without subject.check, with it not before building, or with no hole shown', async () => {
+  assert.equal((await verdict(answer({ check: 'After you say done I look at the cut-out.' })))['subject-check-first'], false);
+  assert.equal((await verdict(answer({ check: 'Then I run subject.check and show you the picture of any hole.' })))['subject-check-first'], false);
+  assert.equal((await verdict(answer({ check: 'Before anything else is built I run subject.check on the cut-out.' })))['subject-check-first'], false);
+  // An opening counts as well as a hole: the missed microphone ran off the frame edge.
+  assert.equal((await verdict(answer({ check: 'Before anything else is built I run subject.check; an opening it finds, such as a missed microphone, I show you in its picture.' })))['subject-check-first'], true);
+  // A selection count instead of the check: the run of 2026-11-11.
+  assert.equal((await verdict(answer({ check: 'subject.status says 2 objects selected, so the cut-out is done before anything else is built.' })))['subject-check-first'], false);
+});
+
+test('the subject-matte case fails without the render and the file check, or with them out of order', async () => {
+  const v = async (file) => (await verdict(answer({ file })))['subject-file-first'];
+  assert.equal(await v('Then I build the piece on the live matte.'), false);
+  assert.equal(await v('Then I render it with subject.render_cutout and build on it.'), false);
+  assert.equal(await v('First subject.check_file, then subject.render_cutout.'), false);
+  assert.equal(await v('I render with subject.render_cutout, put it in with subject.use_cutout, then run subject.check_file.'), false);
+  assert.equal(await v(FILE), true);
+});
+
+test('answer checks refuse a name they do not know', async () => {
+  await assert.rejects(checkAnswer({ id: 99, answer_checks: ['nope'] }, 'x'), /unknown answer check nope/);
 });

@@ -275,7 +275,7 @@ function measureEdge(img, bg, t) {
   }
   widths.sort((a, b) => a - b);
   const m = widths.length;
-  const median = m === 0 ? null : m % 2 ? widths[(m - 1) / 2] : (widths[m / 2 - 1] + widths[m / 2]) / 2;
+  const median2 = m === 0 ? null : m % 2 ? widths[(m - 1) / 2] : (widths[m / 2 - 1] + widths[m / 2]) / 2;
   const belowOpaque = labelRegions(
     alpha,
     width,
@@ -379,7 +379,7 @@ function measureEdge(img, bg, t) {
       transparent: r4(transparent / n)
     },
     width: {
-      typical: median === null ? null : r2(median),
+      typical: median2 === null ? null : r2(median2),
       p90: m === 0 ? null : r2(widths[Math.floor(0.9 * (m - 1))]),
       worst: m === 0 ? null : r2(worst),
       worstAt,
@@ -587,19 +587,511 @@ function summarizeFlicker(pairs) {
   };
   return { edge: zone("edge"), inside: zone("inside"), outside: zone("outside"), all: zone("all") };
 }
+function enclosedHoles(alpha, width, height, opts = {}) {
+  const below = opts.below ?? EDGE_DEFAULTS.opaque;
+  const minArea = opts.minArea ?? 1;
+  const n = width * height;
+  const a = alpha instanceof Float64Array ? alpha : Float64Array.from(alpha);
+  const labels = new Int32Array(n);
+  const queue = new Int32Array(n);
+  const regions = labelRegions(
+    a,
+    width,
+    height,
+    (p) => a[p] < below,
+    false,
+    labels,
+    queue,
+    EDGE_DEFAULTS.transparent
+  );
+  const keep = new Uint8Array(regions.length + 1);
+  const holes = [];
+  const dropped = { count: 0, area: 0 };
+  const leftOut = { count: 0, area: 0 };
+  const entry = (r) => ({
+    ...box(r),
+    area: r.area,
+    meanAlpha: Math.round(r.alphaSum / r.area * 1e3) / 1e3
+  });
+  regions.forEach((r, i) => {
+    if (r.touchesBorder) return;
+    if (r.area < minArea) {
+      dropped.count++;
+      dropped.area += r.area;
+      return;
+    }
+    if (opts.keep && !opts.keep(entry(r))) {
+      leftOut.count++;
+      leftOut.area += r.area;
+      return;
+    }
+    keep[i + 1] = 1;
+    holes.push({ r, id: i + 1 });
+  });
+  const mask = new Uint8Array(n);
+  for (let p = 0; p < n; p++) if (keep[labels[p]]) mask[p] = 1;
+  holes.sort((x, y) => y.r.area - x.r.area);
+  return { holes: holes.map(({ r }) => entry(r)), mask, dropped, leftOut };
+}
+function growMask(mask, width, height, radius) {
+  if (radius <= 0) return Uint8Array.from(mask);
+  const src = Float64Array.from(mask);
+  const scratch = new Float32Array(width * height);
+  const dist = new Float32Array(width * height);
+  distanceTo(src, width, height, (v) => v > 0, scratch, dist);
+  const out = new Uint8Array(width * height);
+  for (let p = 0; p < out.length; p++) if (dist[p] <= radius + 1e-9) out[p] = 1;
+  return out;
+}
+function cutoutRegions(alpha, width, height, opts = {}) {
+  const below = opts.below ?? EDGE_DEFAULTS.opaque;
+  const minArea = opts.minArea ?? 1;
+  const n = width * height;
+  const a = Float64Array.from(alpha);
+  const original = alpha;
+  const sealedEdge = new Int8Array(n).fill(-1);
+  const EDGES = ["top", "bottom", "left", "right"];
+  const edgePixels = (e) => {
+    const out = [];
+    if (e < 2) {
+      const y = e === 0 ? 0 : height - 1;
+      for (let x = 0; x < width; x++) out.push(y * width + x);
+    } else {
+      const x = e === 2 ? 0 : width - 1;
+      for (let y = 0; y < height; y++) out.push(y * width + x);
+    }
+    return out;
+  };
+  for (let e = 0; e < 4; e++) {
+    const px = edgePixels(e);
+    let first = -1;
+    let last = -1;
+    let count = 0;
+    for (let i = 0; i < px.length; i++)
+      if (original[px[i]] >= below) {
+        if (first < 0) first = i;
+        last = i;
+        count++;
+      }
+    if (count < 2) continue;
+    for (let i = first; i <= last; i++) {
+      const p = px[i];
+      if (original[p] < below) {
+        if (sealedEdge[p] < 0) sealedEdge[p] = e;
+        a[p] = 1;
+      }
+    }
+  }
+  const labels = new Int32Array(n);
+  const queue = new Int32Array(n);
+  const regions = labelRegions(
+    a,
+    width,
+    height,
+    (p) => a[p] < below,
+    false,
+    labels,
+    queue,
+    EDGE_DEFAULTS.transparent
+  );
+  const extra = regions.map(() => ({
+    area: 0,
+    sum: 0,
+    minX: Infinity,
+    minY: Infinity,
+    maxX: -1,
+    maxY: -1,
+    edges: /* @__PURE__ */ new Set()
+  }));
+  for (let p = 0; p < n; p++) {
+    const e = sealedEdge[p];
+    if (e < 0) continue;
+    const x = p % width;
+    const y = (p - x) / width;
+    const q = e === 0 ? p + width : e === 1 ? p - width : e === 2 ? p + 1 : p - 1;
+    const qx = q % width;
+    const qy = (q - qx) / width;
+    if (q < 0 || q >= n || e >= 2 && Math.abs(qy - y) !== 0) continue;
+    const id = labels[q];
+    if (!id || regions[id - 1].touchesBorder) continue;
+    const r = extra[id - 1];
+    r.area++;
+    r.sum += original[p];
+    r.minX = Math.min(r.minX, x);
+    r.maxX = Math.max(r.maxX, x);
+    r.minY = Math.min(r.minY, y);
+    r.maxY = Math.max(r.maxY, y);
+    r.edges.add(EDGES[e]);
+  }
+  const holes = [];
+  const openings = [];
+  const dropped = { count: 0, area: 0 };
+  regions.forEach((r, i) => {
+    if (r.touchesBorder) return;
+    const x = extra[i];
+    const area = r.area + x.area;
+    if (area < minArea) {
+      dropped.count++;
+      dropped.area += area;
+      return;
+    }
+    const minX = Math.min(r.minX, x.minX);
+    const minY = Math.min(r.minY, x.minY);
+    const entry = {
+      x: minX,
+      y: minY,
+      width: Math.max(r.maxX, x.maxX) - minX + 1,
+      height: Math.max(r.maxY, x.maxY) - minY + 1,
+      area,
+      meanAlpha: Math.round((r.alphaSum + x.sum) / area * 1e3) / 1e3
+    };
+    if (x.edges.size > 0) openings.push({ ...entry, edges: EDGES.filter((e) => x.edges.has(e)) });
+    else holes.push(entry);
+  });
+  holes.sort((p, q) => q.area - p.area);
+  openings.sort((p, q) => q.area - p.area);
+  return { holes, openings, dropped };
+}
+const median = (xs) => {
+  if (!xs.length) return null;
+  const s = [...xs].sort((a, b) => a - b);
+  const m = s.length;
+  return m % 2 ? s[(m - 1) / 2] : (s[m / 2 - 1] + s[m / 2]) / 2;
+};
+const r6 = (n) => Math.round(n * 1e6) / 1e6;
+function outlineTracker(opts = {}) {
+  const gap = opts.gap ?? 30;
+  const limit = opts.limit ?? 2e-3;
+  const minFrames = opts.minFrames ?? 60;
+  const step = Math.round((opts.step ?? 0.1) * 255);
+  const lumaStep = Math.round(0.05 * 255);
+  const ring = [];
+  const neighbours = [];
+  const windows = [];
+  const changed = (x, y) => {
+    let n = 0;
+    for (let p = 0; p < x.length; p++) if (Math.abs(x[p] - y[p]) > step) n++;
+    return n / x.length;
+  };
+  const footage = (p, c) => {
+    let n = 0;
+    for (let i = 0; i < p.a.length; i++)
+      if (p.a[i] >= 250 && c.a[i] >= 250 && Math.abs(p.l[i] - c.l[i]) > lumaStep) n++;
+    return n / p.a.length;
+  };
+  return {
+    add(frame, alpha, rgb, width, height) {
+      const n = width * height;
+      const a = new Uint8Array(n);
+      const l = new Uint8Array(n);
+      for (let p = 0; p < n; p++) {
+        a[p] = Math.round(Math.min(1, Math.max(0, alpha[p])) * 255);
+        if (rgb)
+          l[p] = Math.round(
+            Math.min(
+              1,
+              Math.max(0, 0.2126 * rgb[p * 3] + 0.7152 * rgb[p * 3 + 1] + 0.0722 * rgb[p * 3 + 2])
+            ) * 255
+          );
+      }
+      const cur = { frame, a, l };
+      const prev = ring[ring.length - 1];
+      if (prev && prev.frame === frame - 1) neighbours.push(changed(prev.a, a));
+      let partner;
+      for (const e of ring) if (e.frame <= frame - gap) partner = e;
+      if (partner)
+        windows.push({
+          a: partner.frame,
+          b: frame,
+          drift: changed(partner.a, a),
+          footage: footage(partner, cur)
+        });
+      ring.push(cur);
+      let keepFrom = 0;
+      for (let i = 0; i < ring.length; i++) if (ring[i].frame <= frame + 1 - gap) keepFrom = i;
+      ring.splice(0, keepFrom);
+    },
+    result() {
+      const frozen = [];
+      let run = [];
+      const close = () => {
+        if (run.length >= 2) {
+          const from = run[0].a;
+          const to = run[run.length - 1].b;
+          if (to - from + 1 >= minFrames)
+            frozen.push({
+              from,
+              to,
+              length: to - from + 1,
+              drift: r6(Math.max(...run.map((w) => w.drift))),
+              footageChange: r6(median(run.map((w) => w.footage)) ?? 0)
+            });
+        }
+        run = [];
+      };
+      for (const w of windows) {
+        if (w.drift < limit) run.push(w);
+        else close();
+      }
+      close();
+      const stats = (xs) => ({
+        min: xs.length ? r6(Math.min(...xs)) : null,
+        median: xs.length ? r6(median(xs)) : null,
+        max: xs.length ? r6(Math.max(...xs)) : null
+      });
+      return {
+        at: "full size: the share of the frame whose alpha changed by more than " + (opts.step ?? 0.1),
+        neighbours: { ...stats(neighbours), pairs: neighbours.length },
+        drift: { gap, ...stats(windows.map((w) => w.drift)), windows: windows.length },
+        limits: { gap, limit, minFrames, step: opts.step ?? 0.1 },
+        frozen
+      };
+    }
+  };
+}
+const SPECK_DEFAULTS = { opaque: 0.5, minArea: 20, maxArea: 2e3, neck: 1, minRun: 2 };
+function statAdd(st, id, x, y, onEdge) {
+  if (st.area[id] === void 0) {
+    st.area[id] = 0;
+    st.minX[id] = x;
+    st.minY[id] = y;
+    st.maxX[id] = x;
+    st.maxY[id] = y;
+    st.edge[id] = false;
+  }
+  st.area[id]++;
+  if (x < st.minX[id]) st.minX[id] = x;
+  if (x > st.maxX[id]) st.maxX[id] = x;
+  if (y < st.minY[id]) st.minY[id] = y;
+  if (y > st.maxY[id]) st.maxY[id] = y;
+  if (onEdge) st.edge[id] = true;
+}
+function speckPieces(alpha, width, height, opts = {}) {
+  const o = { ...SPECK_DEFAULTS, ...opts };
+  let bx0 = width;
+  let by0 = height;
+  let bx1 = -1;
+  let by1 = -1;
+  for (let y = 0; y < height; y++) {
+    const row = y * width;
+    let first = -1;
+    let last = -1;
+    for (let x = 0; x < width; x++)
+      if (alpha[row + x] >= o.opaque) {
+        if (first < 0) first = x;
+        last = x;
+      }
+    if (first < 0) continue;
+    if (first < bx0) bx0 = first;
+    if (last > bx1) bx1 = last;
+    if (y < by0) by0 = y;
+    by1 = y;
+  }
+  if (bx1 < 0) return [];
+  bx0 = Math.max(0, bx0 - 1);
+  by0 = Math.max(0, by0 - 1);
+  bx1 = Math.min(width - 1, bx1 + 1);
+  by1 = Math.min(height - 1, by1 + 1);
+  const w = bx1 - bx0 + 1;
+  const h = by1 - by0 + 1;
+  const n = w * h;
+  const m = new Uint8Array(n);
+  for (let y = 0; y < h; y++) {
+    const src = (y + by0) * width + bx0;
+    for (let x = 0; x < w; x++) m[y * w + x] = alpha[src + x] >= o.opaque ? 1 : 0;
+  }
+  const onEdge = (x, y) => x + bx0 === 0 || y + by0 === 0 || x + bx0 === width - 1 || y + by0 === height - 1;
+  let er = m;
+  for (let t = 0; t < o.neck; t++) {
+    const next = new Uint8Array(n);
+    for (let y = 1; y < h - 1; y++)
+      for (let x = 1; x < w - 1; x++) {
+        const p = y * w + x;
+        next[p] = er[p] & er[p - 1] & er[p + 1] & er[p - w] & er[p + w];
+      }
+    er = next;
+  }
+  let ring = [];
+  for (let p = 0; p < n; p++) if (m[p] && !er[p]) ring.push(p);
+  const labels = new Int32Array(n);
+  const queue = new Int32Array(n);
+  const st = { area: [], minX: [], minY: [], maxX: [], maxY: [], edge: [] };
+  const fill = (mask, start, id) => {
+    labels[start] = id;
+    let head = 0;
+    let tail = 0;
+    queue[tail++] = start;
+    let x0 = w;
+    let y0 = h;
+    let x1 = -1;
+    let y1 = -1;
+    while (head < tail) {
+      const p = queue[head++];
+      const x = p % w;
+      const y = (p - x) / w;
+      if (x < x0) x0 = x;
+      if (x > x1) x1 = x;
+      if (y < y0) y0 = y;
+      if (y > y1) y1 = y;
+      const ya = y > 0 ? -1 : 0;
+      const yb = y < h - 1 ? 1 : 0;
+      const xa = x > 0 ? -1 : 0;
+      const xb = x < w - 1 ? 1 : 0;
+      for (let dy = ya; dy <= yb; dy++)
+        for (let dx = xa; dx <= xb; dx++) {
+          const q = p + dy * w + dx;
+          if (mask[q] && !labels[q]) {
+            labels[q] = id;
+            queue[tail++] = q;
+          }
+        }
+    }
+    st.area[id] = tail;
+    st.minX[id] = x0;
+    st.minY[id] = y0;
+    st.maxX[id] = x1;
+    st.maxY[id] = y1;
+    st.edge[id] = onEdge(x0, y0) || onEdge(x1, y1);
+  };
+  const rs = [];
+  const reEnd = [];
+  const ry = [];
+  const parent = [];
+  const find = (i) => {
+    while (parent[i] !== i) {
+      parent[i] = parent[parent[i]];
+      i = parent[i];
+    }
+    return i;
+  };
+  let prevFrom = 0;
+  let prevTo = 0;
+  for (let y = 0; y < h; y++) {
+    const rowFrom = rs.length;
+    const row = y * w;
+    let x = 0;
+    while (x < w) {
+      if (!er[row + x]) {
+        x++;
+        continue;
+      }
+      const x0 = x;
+      while (x < w && er[row + x]) x++;
+      const r = rs.length;
+      rs.push(x0);
+      reEnd.push(x);
+      ry.push(y);
+      parent.push(r);
+      for (let k = prevFrom; k < prevTo; k++) {
+        if (reEnd[k] < x0 || rs[k] > x) continue;
+        const a = find(k);
+        const b2 = find(r);
+        if (a !== b2) parent[Math.max(a, b2)] = Math.min(a, b2);
+      }
+    }
+    prevFrom = rowFrom;
+    prevTo = rs.length;
+  }
+  const idOf = /* @__PURE__ */ new Map();
+  let grownEnd = 1;
+  for (let k = 0; k < rs.length; k++) {
+    const root = find(k);
+    let id = idOf.get(root);
+    if (id === void 0) {
+      id = grownEnd++;
+      idOf.set(root, id);
+      st.area[id] = 0;
+      st.minX[id] = rs[k];
+      st.minY[id] = ry[k];
+      st.maxX[id] = reEnd[k] - 1;
+      st.maxY[id] = ry[k];
+      st.edge[id] = false;
+    }
+    const len = reEnd[k] - rs[k];
+    st.area[id] += len;
+    if (rs[k] < st.minX[id]) st.minX[id] = rs[k];
+    if (reEnd[k] - 1 > st.maxX[id]) st.maxX[id] = reEnd[k] - 1;
+    if (ry[k] < st.minY[id]) st.minY[id] = ry[k];
+    if (ry[k] > st.maxY[id]) st.maxY[id] = ry[k];
+    if (onEdge(rs[k], ry[k]) || onEdge(reEnd[k] - 1, ry[k])) st.edge[id] = true;
+    labels.fill(id, ry[k] * w + rs[k], ry[k] * w + reEnd[k]);
+  }
+  for (let t = 0; t < o.neck + 1 && ring.length; t++) {
+    const take = [];
+    const left = [];
+    for (const p of ring) {
+      const x = p % w;
+      const v = x > 0 && labels[p - 1] || x < w - 1 && labels[p + 1] || p >= w && labels[p - w] || p + w < n && labels[p + w] || 0;
+      if (v) take.push([p, v]);
+      else left.push(p);
+    }
+    for (const [p, v] of take) {
+      labels[p] = v;
+      const x = p % w;
+      const y = (p - x) / w;
+      statAdd(st, v, x, y, onEdge(x, y));
+    }
+    ring = left;
+    if (!take.length) break;
+  }
+  const rest = new Uint8Array(n);
+  for (const p of ring) rest[p] = 1;
+  let end = grownEnd;
+  for (const p of ring) if (!labels[p]) fill(rest, p, end++);
+  const touchesGrown = new Uint8Array(end);
+  for (const p of ring) {
+    const id = labels[p];
+    if (touchesGrown[id]) continue;
+    const x = p % w;
+    const y = (p - x) / w;
+    for (let dy = -1; dy <= 1 && !touchesGrown[id]; dy++)
+      for (let dx = -1; dx <= 1; dx++) {
+        const xx = x + dx;
+        const yy = y + dy;
+        if (xx < 0 || yy < 0 || xx >= w || yy >= h) continue;
+        const q = labels[yy * w + xx];
+        if (q && q < grownEnd) {
+          touchesGrown[id] = 1;
+          break;
+        }
+      }
+  }
+  let main = 1;
+  for (let id = 1; id < end; id++) if ((st.area[id] ?? 0) > (st.area[main] ?? 0)) main = id;
+  const pieces = [];
+  for (let id = 1; id < end; id++) {
+    const a = st.area[id] ?? 0;
+    if (id === main || st.edge[id] || a < o.minArea || a > o.maxArea) continue;
+    if (id >= grownEnd && touchesGrown[id]) continue;
+    pieces.push({
+      x: st.minX[id] + bx0,
+      y: st.minY[id] + by0,
+      width: st.maxX[id] - st.minX[id] + 1,
+      height: st.maxY[id] - st.minY[id] + 1,
+      area: a
+    });
+  }
+  return pieces.sort((p, q) => q.area - p.area);
+}
 export {
   CONTOUR_ALPHA,
   EDGE_DEFAULTS,
+  SPECK_DEFAULTS,
   addPixel,
   alphaChange,
   autoMaxEdgeWidth,
   box,
+  cutoutRegions,
   distanceTo,
   edgeArgsError,
+  enclosedHoles,
+  growMask,
   labelRegions,
   lumaMatte,
   measureEdge,
   newRegion,
+  outlineTracker,
   resolveEdgeThresholds,
+  speckPieces,
   summarizeFlicker
 };

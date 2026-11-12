@@ -76,6 +76,104 @@ async function findRuntimeDist(outDir) {
   }
 }
 
+// Answer checks: a planning case's `answer_checks` names checks that read the agent's final answer without a model.
+// They are run offline here (release tests give each a passing and failing answer); the suite still grades the case
+// with its LLM assertions. The click steps are read from keying.md, where subject.prepare's text is quoted.
+const KEYING_MD = path.join(ROOT, 'plugin', 'library', 'references', 'keying.md');
+
+/** The click steps as keying.md quotes them ("Tell the user first"), in order. */
+export async function subjectSteps() {
+  const md = await fs.readFile(KEYING_MD, 'utf8');
+  const sec = md.split('\n### Tell the user first\n')[1]?.split('\n### ')[0];
+  if (!sec) throw new Error('keying.md has no "Tell the user first" section');
+  const steps = [...sec.matchAll(/^(\d+)\. (.+)$/gm)].map((m) => m[2]);
+  if (steps.length < 6) throw new Error(`keying.md quotes ${steps.length} click steps; expected at least 6`);
+  return steps;
+}
+
+// Straight quotes, no markdown emphasis or quote markers, one space: a step pasted into a list or a blockquote still reads the same.
+const plain = (t) => t.replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/\*\*|__|`/g, '').replace(/^\s*>\s?/gm, '').replace(/\s+/g, ' ');
+
+/** A step as a pattern: its words exactly, with the clip's name (step 1) and the subject (step 4) free. */
+function stepPattern(step) {
+  let re = escapeRe(plain(step));
+  re = re.replace(escapeRe("the clip's name"), `(?:the clip's name|"[^"]{1,80}"|[^)]{1,80})`);
+  re = re.replace(escapeRe('over the person in the Layer panel. They tint magenta.'),
+    '(?:over the person in the Layer panel\\. They tint magenta\\.|over [^.]{1,60} in the Layer panel\\. [^.]{1,60} tints? magenta\\.)');
+  re = re.replace(escapeRe('Do not click the person again.'), 'Do not click [^.]{1,60} again\\.');
+  return new RegExp(re);
+}
+
+export const ANSWER_CHECKS = {
+  'subject-notice-first': {
+    what: 'the answer says up front that one manual click in After Effects is needed and that it takes about ten seconds',
+    async check(answer) {
+      const text = plain(answer);
+      // A sentence (or two) naming a manual step or a click by the user, and about ten seconds.
+      const m = text.match(/[^.!?]*(?:manual|by hand|your click|you(?:'ll| will)? (?:need to )?click|one click|a single click)[^.!?]*[.!?](?:[^.!?]*[.!?]){0,2}/i);
+      if (!m || !/\b(?:ten|10) seconds\b/i.test(m[0])) return { pass: false, why: 'no notice of a manual click that takes about ten seconds' };
+      // Up front: within the first quarter of the answer (at least its first 1200 characters), and before the steps.
+      const limit = Math.max(1200, Math.floor(text.length / 4));
+      if (m.index > limit) return { pass: false, why: `the notice starts at character ${m.index}, after the first ${limit}` };
+      const step2 = text.search(stepPattern((await subjectSteps())[1]));
+      if (step2 >= 0 && step2 < m.index) return { pass: false, why: 'the notice comes after the steps' };
+      return { pass: true, why: `notice at character ${m.index}` };
+    },
+  },
+  'subject-steps': {
+    what: "the answer gives the click steps from keying.md word for word and in order (the clip's name and the subject may be filled in)",
+    async check(answer) {
+      const text = plain(answer);
+      let from = 0;
+      for (const [i, step] of (await subjectSteps()).entries()) {
+        const m = stepPattern(step).exec(text.slice(from));
+        if (!m) return { pass: false, why: `step ${i + 1} is missing, changed or out of order: ${step}` };
+        from += m.index + m[0].length;
+      }
+      return { pass: true, why: 'every step, in order' };
+    },
+  },
+  'subject-check-first': {
+    what: 'the answer runs subject.check after the click and before anything else is built, and says a hole or opening it finds is shown to the user',
+    async check(answer) {
+      const text = plain(answer);
+      const at = [...text.matchAll(/subject\.check/g)].map((m) => m.index);
+      if (!at.length) return { pass: false, why: 'subject.check is not in the plan' };
+      const before = /before (?:any|anything|further|more|other|the rest)\b[^.]{0,60}?\b(?:build|built|building|compositing|composite|else|work)/i;
+      if (!at.some((i) => before.test(text.slice(Math.max(0, i - 300), i + 300))))
+        return { pass: false, why: 'subject.check is not said to come before anything else is built' };
+      if (!/\b(?:show|picture)[^.]{0,150}\b(?:hole|opening)|\b(?:hole|opening)[^.]{0,150}\b(?:show|picture)/i.test(text))
+        return { pass: false, why: 'the answer does not say a hole or opening is shown to the user' };
+      return { pass: true, why: `subject.check at character ${at[0]}, before further building, with the hole shown` };
+    },
+  },
+  'subject-file-first': {
+    what: 'the answer renders the cut-out once (subject.render_cutout) and checks the file (subject.check_file) before building on it',
+    async check(answer) {
+      const text = plain(answer);
+      const render = text.search(/subject\.render_cutout/);
+      const file = text.search(/subject\.check_file/);
+      if (render < 0) return { pass: false, why: 'subject.render_cutout is not in the plan' };
+      if (file < 0) return { pass: false, why: 'subject.check_file is not in the plan' };
+      if (file < render) return { pass: false, why: 'the file is checked before it is rendered' };
+      const use = text.search(/subject\.use_cutout/);
+      if (use >= 0 && use < file) return { pass: false, why: 'the file is built on before it is checked' };
+      return { pass: true, why: 'render, then check the file, then build on it' };
+    },
+  },
+};
+
+/** Run a case's answer checks on an answer: [{ id, pass, why }]. */
+export async function checkAnswer(c, answer) {
+  const out = [];
+  for (const id of c.answer_checks ?? []) {
+    const check = ANSWER_CHECKS[id];
+    if (!check) throw new Error(`case ${c.id}: unknown answer check ${id}`);
+    out.push({ id, ...(await check.check(answer)) });
+  }
+  return out;
+}
+
 export async function writeEvalSuite(canon, outDir, { set = 'planning', runtimeDist } = {}) {
   if (!['planning', 'picture'].includes(set)) throw new Error(`unknown set ${set}`);
   try { if ((await fs.readdir(outDir)).length) throw new Error(`${outDir} is not empty`); }

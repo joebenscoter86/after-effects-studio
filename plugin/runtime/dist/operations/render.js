@@ -5,7 +5,7 @@ import { registerOp, jsxFail, jsxVal, jsxCompPreamble } from "../registry.js";
  * Said by every operation that changes the render queue (stage 7). serve.jsx
  * enforces it; this tells the caller before they find out by a refusal.
  */
-const RENDER_QUEUE_UNDO_WARNING = " After this, undo and rollback are refused for the rest of the After Effects session unless acceptRenderQueueRisk: true: After Effects 2027 has gone into crash recovery on undo after scripted render-queue changes (observed twice on 2026-11-10; a precaution, not a proven cause). Save the project before undoing anything afterwards; project.open / project.new clear the block.";
+export const RENDER_QUEUE_UNDO_WARNING = " After this, undo and rollback are refused for the rest of the After Effects session unless acceptRenderQueueRisk: true: After Effects 2027 has gone into crash recovery on undo after scripted render-queue changes (observed twice on 2026-11-10; a precaution, not a proven cause). Save the project before undoing anything afterwards; project.open / project.new clear the block.";
 /**
  * Park and unpark the render queue, for operations that render one temporary
  * item of their own (render.variants, render.preview): every existing item's
@@ -24,8 +24,8 @@ const READ_TEMPLATES_FN = `
     }
 `;
 /** Said on every render.preview answer and on a list that used a temporary item. */
-const QUEUE_CHANGE_NOTE = "the project is left modified (unsaved): a render-queue item was added and removed. Nothing in the comps changed; save or revert as you normally would";
-const PARK_QUEUE_FN = `
+export const QUEUE_CHANGE_NOTE = "the project is left modified (unsaved): a render-queue item was added and removed. Nothing in the comps changed; save or revert as you normally would";
+export const PARK_QUEUE_FN = `
     function _parkQueue(rq) {
         var _parked = [];
         for (var _pi = 1; _pi <= rq.numItems; _pi++) {

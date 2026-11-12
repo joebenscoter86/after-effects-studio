@@ -700,6 +700,7 @@ function renderJsx(args, times, paths, tryOcio, isolate, strip = null, frameNums
     `;
 }
 async function nativeFlow(args, opts, abs, transport, strip = null) {
+  const startedAt = performance.now();
   const frameNums = args.frames ?? null;
   const multi = args.times !== void 0 || strip !== null || frameNums !== null;
   const times = strip !== null || frameNums !== null ? null : args.times ?? [args.time];
@@ -713,6 +714,7 @@ async function nativeFlow(args, opts, abs, transport, strip = null) {
     label: "render_frame",
     timeoutMs: 12e4 + (count - 1) * 3e4
   });
+  const aeCallMs = performance.now() - startedAt;
   if (!result.ok) return toMcpResult(result);
   const payload = result.result;
   const frames = payload?.frames ?? [];
@@ -1018,6 +1020,13 @@ async function nativeFlow(args, opts, abs, transport, strip = null) {
       opts.diff.thresholds
     );
   }
+  const totalMs = performance.now() - startedAt;
+  payload.timing = {
+    aeCallMs: Math.round(aeCallMs),
+    settleMs: settle.waitedMs,
+    nodeMs: Math.max(0, Math.round(totalMs - aeCallMs - settle.waitedMs)),
+    totalMs: Math.round(totalMs)
+  };
   return toMcpResult(result);
 }
 function thumbSizeFor(img, thumbWidth) {

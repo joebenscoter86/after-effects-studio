@@ -2993,7 +2993,7 @@ var require_compile = __commonJS({
       const schOrFunc = root.refs[ref];
       if (schOrFunc)
         return schOrFunc;
-      let _sch = resolve11.call(this, root, ref);
+      let _sch = resolve12.call(this, root, ref);
       if (_sch === void 0) {
         const schema = (_a3 = root.localRefs) === null || _a3 === void 0 ? void 0 : _a3[ref];
         const { schemaId } = this.opts;
@@ -3020,7 +3020,7 @@ var require_compile = __commonJS({
     function sameSchemaEnv(s1, s2) {
       return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
     }
-    function resolve11(root, ref) {
+    function resolve12(root, ref) {
       let sch;
       while (typeof (sch = this.refs[ref]) == "string")
         ref = sch;
@@ -3271,8 +3271,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path14) {
-      let input2 = path14;
+    function removeDotSegments(path15) {
+      let input2 = path15;
       const output2 = [];
       let nextSlash = -1;
       let len = 0;
@@ -3346,11 +3346,11 @@ var require_utils = __commonJS({
       }
       return output2.join("");
     }
-    function removeDotSegmentsRelative(path14) {
-      if (path14 === "" || path14[0] === "/") {
-        return removeDotSegments(path14);
+    function removeDotSegmentsRelative(path15) {
+      if (path15 === "" || path15[0] === "/") {
+        return removeDotSegments(path15);
       }
-      const segments = path14.split("/");
+      const segments = path15.split("/");
       const last = segments.length - 1;
       const output2 = [];
       let trailingDirectory = false;
@@ -3713,8 +3713,8 @@ var require_schemes = __commonJS({
       }
       if (wsComponent.resourceName) {
         const queryIndex = wsComponent.resourceName.indexOf("?");
-        const path14 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
-        wsComponent.path = path14 && path14 !== "/" ? path14 : void 0;
+        const path15 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
+        wsComponent.path = path15 && path15 !== "/" ? path15 : void 0;
         wsComponent.query = queryIndex === -1 ? void 0 : wsComponent.resourceName.slice(queryIndex + 1);
         wsComponent.resourceName = void 0;
       }
@@ -3884,7 +3884,7 @@ var require_fast_uri = __commonJS({
       }
       return uri;
     }
-    function resolve11(baseURI, relativeURI, options) {
+    function resolve12(baseURI, relativeURI, options) {
       const schemelessOptions = options ? Object.assign({ scheme: "null" }, options) : { scheme: "null" };
       const {
         parsed: baseParsed,
@@ -4275,7 +4275,7 @@ var require_fast_uri = __commonJS({
     var fastUri = {
       SCHEMES,
       normalize,
-      resolve: resolve11,
+      resolve: resolve12,
       resolveComponent,
       equal,
       serialize,
@@ -6524,11 +6524,11 @@ var require_format = __commonJS({
           }
           function getFormat(fmtDef) {
             const code = fmtDef instanceof RegExp ? (0, codegen_1.regexpCode)(fmtDef) : opts.code.formats ? (0, codegen_1._)`${opts.code.formats}${(0, codegen_1.getProperty)(schema)}` : void 0;
-            const fmt3 = gen.scopeValue("formats", { key: schema, ref: fmtDef, code });
+            const fmt4 = gen.scopeValue("formats", { key: schema, ref: fmtDef, code });
             if (typeof fmtDef == "object" && !(fmtDef instanceof RegExp)) {
-              return [fmtDef.type || "string", fmtDef.validate, (0, codegen_1._)`${fmt3}.validate`];
+              return [fmtDef.type || "string", fmtDef.validate, (0, codegen_1._)`${fmt4}.validate`];
             }
-            return ["string", fmtDef, fmt3];
+            return ["string", fmtDef, fmt4];
           }
           function validCondition() {
             if (typeof formatDef == "object" && !(formatDef instanceof RegExp) && formatDef.async) {
@@ -7190,8 +7190,8 @@ var require_limit = __commonJS({
             ref: self.formats,
             code: opts.code.formats
           });
-          const fmt3 = gen.const("fmt", (0, codegen_1._)`${fmts}[${fCxt.schemaCode}]`);
-          cxt.fail$data((0, codegen_1.or)((0, codegen_1._)`typeof ${fmt3} != "object"`, (0, codegen_1._)`${fmt3} instanceof RegExp`, (0, codegen_1._)`typeof ${fmt3}.compare != "function"`, compareCode(fmt3)));
+          const fmt4 = gen.const("fmt", (0, codegen_1._)`${fmts}[${fCxt.schemaCode}]`);
+          cxt.fail$data((0, codegen_1.or)((0, codegen_1._)`typeof ${fmt4} != "object"`, (0, codegen_1._)`${fmt4} instanceof RegExp`, (0, codegen_1._)`typeof ${fmt4}.compare != "function"`, compareCode(fmt4)));
         }
         function validateFormat() {
           const format = fCxt.schema;
@@ -7201,15 +7201,15 @@ var require_limit = __commonJS({
           if (typeof fmtDef != "object" || fmtDef instanceof RegExp || typeof fmtDef.compare != "function") {
             throw new Error(`"${keyword}": format "${format}" does not define "compare" function`);
           }
-          const fmt3 = gen.scopeValue("formats", {
+          const fmt4 = gen.scopeValue("formats", {
             key: format,
             ref: fmtDef,
             code: opts.code.formats ? (0, codegen_1._)`${opts.code.formats}${(0, codegen_1.getProperty)(format)}` : void 0
           });
-          cxt.fail$data(compareCode(fmt3));
+          cxt.fail$data(compareCode(fmt4));
         }
-        function compareCode(fmt3) {
-          return (0, codegen_1._)`${fmt3}.compare(${data}, ${schemaCode}) ${KWDs[keyword].fail} 0`;
+        function compareCode(fmt4) {
+          return (0, codegen_1._)`${fmt4}.compare(${data}, ${schemaCode}) ${KWDs[keyword].fail} 0`;
         }
       },
       dependencies: ["format"]
@@ -7251,12 +7251,12 @@ var require_dist = __commonJS({
         throw new Error(`Unknown format "${name}"`);
       return f;
     };
-    function addFormats(ajv, list, fs11, exportName) {
+    function addFormats(ajv, list, fs12, exportName) {
       var _a3;
       var _b;
       (_a3 = (_b = ajv.opts.code).formats) !== null && _a3 !== void 0 ? _a3 : _b.formats = (0, codegen_1._)`require("ajv-formats/dist/formats").${exportName}`;
       for (const f of list)
-        ajv.addFormat(f, fs11[f]);
+        ajv.addFormat(f, fs12[f]);
     }
     module.exports = exports = formatsPlugin;
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -7555,23 +7555,23 @@ __export(eval_exports, {
   readScriptFile: () => readScriptFile
 });
 import { readFileSync, realpathSync, statSync as statSync2 } from "node:fs";
-import * as path7 from "node:path";
+import * as path10 from "node:path";
 function realOrResolved(p) {
   try {
     return realpathSync(p);
   } catch {
-    return path7.resolve(p);
+    return path10.resolve(p);
   }
 }
 function isInside(p, root) {
-  const rel = path7.relative(root, p);
-  return rel === "" || !rel.startsWith("..") && !path7.isAbsolute(rel);
+  const rel = path10.relative(root, p);
+  return rel === "" || !rel.startsWith("..") && !path10.isAbsolute(rel);
 }
 function refuse(error62, hint) {
   return hint ? { ok: false, error: error62, hint } : { ok: false, error: error62 };
 }
 function readScriptFile(file2) {
-  if (!path7.isAbsolute(file2)) {
+  if (!path10.isAbsolute(file2)) {
     return {
       ok: false,
       error: `file must be an absolute path (got '${file2}'): the server's working directory is not yours`
@@ -8063,8 +8063,8 @@ function getErrorMap() {
 
 // node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path14, errorMaps, issueData } = params;
-  const fullPath = [...path14, ...issueData.path || []];
+  const { data, path: path15, errorMaps, issueData } = params;
+  const fullPath = [...path15, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -8179,11 +8179,11 @@ var errorUtil;
 
 // node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path14, key) {
+  constructor(parent, value, path15, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path14;
+    this._path = path15;
     this._key = key;
   }
   get path() {
@@ -12138,10 +12138,10 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path14) {
-  if (!path14)
+function getElementAtPath(obj, path15) {
+  if (!path15)
     return obj;
-  return path14.reduce((acc, key) => acc?.[key], obj);
+  return path15.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -12481,11 +12481,11 @@ function explicitlyAborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path14, issues) {
+function prefixIssues(path15, issues) {
   return issues.map((iss) => {
     var _a3;
     (_a3 = iss).path ?? (_a3.path = []);
-    iss.path.unshift(path14);
+    iss.path.unshift(path15);
     return iss;
   });
 }
@@ -12947,16 +12947,16 @@ function flattenError(error62, mapper = (issue2) => issue2.message) {
 }
 function formatError(error62, mapper = (issue2) => issue2.message) {
   const fieldErrors = { _errors: [] };
-  const processError = (error63, path14 = []) => {
+  const processError = (error63, path15 = []) => {
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path14, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path15, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path14, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path15, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path14, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path15, ...issue2.path]);
       } else {
-        const fullpath = [...path14, ...issue2.path];
+        const fullpath = [...path15, ...issue2.path];
         if (fullpath.length === 0) {
           fieldErrors._errors.push(mapper(issue2));
         } else {
@@ -12995,17 +12995,17 @@ function formatError(error62, mapper = (issue2) => issue2.message) {
 }
 function treeifyError(error62, mapper = (issue2) => issue2.message) {
   const result = { errors: [] };
-  const processError = (error63, path14 = []) => {
+  const processError = (error63, path15 = []) => {
     var _a3;
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path14, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path15, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path14, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path15, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path14, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path15, ...issue2.path]);
       } else {
-        const fullpath = [...path14, ...issue2.path];
+        const fullpath = [...path15, ...issue2.path];
         if (fullpath.length === 0) {
           result.errors.push(mapper(issue2));
           continue;
@@ -13044,8 +13044,8 @@ function treeifyError(error62, mapper = (issue2) => issue2.message) {
 }
 function toDotPath(_path) {
   const segs = [];
-  const path14 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
-  for (const seg of path14) {
+  const path15 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
+  for (const seg of path15) {
     if (typeof seg === "number")
       segs.push(`[${seg}]`);
     else if (typeof seg === "symbol")
@@ -15179,8 +15179,8 @@ var $ZodXor = /* @__PURE__ */ $constructor("$ZodXor", (inst, def) => {
     });
   };
 });
-function getDiscriminatedOption(union2, value) {
-  const internals = union2._zod;
+function getDiscriminatedOption(union3, value) {
+  const internals = union3._zod;
   let map2 = internals.bag.optionsMap;
   if (!map2) {
     map2 = discriminatorMap(internals.def);
@@ -16388,7 +16388,7 @@ var recursive = /* @__PURE__ */ new WeakMap();
 var NONE = 0;
 var ASSUMED = 1;
 var PROVEN = 2;
-function isRecursive(inst, stack, resolve11) {
+function isRecursive(inst, stack, resolve12) {
   const cached2 = recursive.get(inst);
   if (cached2 !== void 0)
     return cached2 ? PROVEN : NONE;
@@ -16398,7 +16398,7 @@ function isRecursive(inst, stack, resolve11) {
   let result = NONE;
   const check2 = (child) => {
     if (result !== PROVEN && child?._zod) {
-      const answer = isRecursive(child, stack, resolve11);
+      const answer = isRecursive(child, stack, resolve12);
       if (answer > result)
         result = answer;
     }
@@ -16409,7 +16409,7 @@ function isRecursive(inst, stack, resolve11) {
       const desc = Object.getOwnPropertyDescriptor(sh, key);
       if (spread && !desc.enumerable)
         continue;
-      const child = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve11) : NONE;
+      const child = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve12) : NONE;
       if (child > answer)
         answer = child;
     }
@@ -16473,7 +16473,7 @@ function isRecursive(inst, stack, resolve11) {
       break;
     // `$ZodLazy` caches its inner on the def, so a resolved edge is followed exactly
     case "lazy": {
-      const inner = def._cachedInner ?? (resolve11 ? inst._zod.innerType : void 0);
+      const inner = def._cachedInner ?? (resolve12 ? inst._zod.innerType : void 0);
       merge2(inner ? isRecursive(inner, stack, false) : ASSUMED);
       break;
     }
@@ -22032,8 +22032,8 @@ var error43 = () => {
       case "not_multiple_of":
         return `N\xFAmero inv\xE1lido: deve ser m\xFAltiplo de ${issue2.divisor}`;
       case "unrecognized_keys": {
-        const plural2 = issue2.keys.length > 1 ? "s" : "";
-        return `Chave${plural2} inv\xE1lida${plural2}: ${joinValues(issue2.keys, ", ")}`;
+        const plural3 = issue2.keys.length > 1 ? "s" : "";
+        return `Chave${plural3} inv\xE1lida${plural3}: ${joinValues(issue2.keys, ", ")}`;
       }
       case "invalid_key":
         return `Entrada inv\xE1lida n${translateOriginWithArticle(issue2.origin, "definite")}`;
@@ -22177,8 +22177,8 @@ var error44 = () => {
       case "not_multiple_of":
         return `N\xFAmero inv\xE1lido: deve ser m\xFAltiplo de ${issue2.divisor}`;
       case "unrecognized_keys": {
-        const plural2 = issue2.keys.length > 1 ? "s" : "";
-        return `Chave${plural2} inv\xE1lida${plural2}: ${joinValues(issue2.keys, ", ")}`;
+        const plural3 = issue2.keys.length > 1 ? "s" : "";
+        return `Chave${plural3} inv\xE1lida${plural3}: ${joinValues(issue2.keys, ", ")}`;
       }
       case "invalid_key":
         return `Entrada inv\xE1lida n${translateOriginWithArticle(issue2.origin, "definite")}`;
@@ -24725,45 +24725,45 @@ var PATTERN_IS_COMPLETE = /* @__PURE__ */ new Set([
   "xid"
 ]);
 function generateStringFormatCheck(doc, ctx, def, accessor, needsValue = true) {
-  const fmt3 = def.format;
-  if (fmt3 === "base64") {
+  const fmt4 = def.format;
+  if (fmt4 === "base64") {
     const validator = addConstant(ctx, isValidBase64);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (fmt3 === "base64url") {
+  if (fmt4 === "base64url") {
     const validator = addConstant(ctx, isValidBase64URL);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (fmt3 === "jwt") {
+  if (fmt4 === "jwt") {
     const validator = addConstant(ctx, isValidJWT2);
     const alg = addConstant(ctx, def.alg ?? null);
     doc.write(`if (!${validator}(${accessor}, ${alg})) return INVALID;`);
     return accessor;
   }
-  if (fmt3 === "ipv6") {
+  if (fmt4 === "ipv6") {
     const validator = addConstant(ctx, isValidIPv6);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (fmt3 === "cidrv6") {
+  if (fmt4 === "cidrv6") {
     const validator = addConstant(ctx, isValidCIDRv6);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (fmt3 === "credit_card") {
+  if (fmt4 === "credit_card") {
     const validator = addConstant(ctx, isValidCreditCard);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (fmt3 === "iban") {
+  if (fmt4 === "iban") {
     const validator = addConstant(ctx, isValidIBAN);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
   const formatDef = def;
-  if (fmt3 === "url" || fmt3 === "httpurl" || formatDef.normalize || formatDef.hostname !== void 0 || formatDef.protocol !== void 0) {
+  if (fmt4 === "url" || fmt4 === "httpurl" || formatDef.normalize || formatDef.hostname !== void 0 || formatDef.protocol !== void 0) {
     const parseConst = addConstant(ctx, validateURL);
     const defConst = addConstant(ctx, def);
     const trimVar = newVar(ctx);
@@ -24789,12 +24789,12 @@ function generateStringFormatCheck(doc, ctx, def, accessor, needsValue = true) {
   const customFn = def.fn;
   if (customFn) {
     if (isAsyncFunction(customFn))
-      throw new ZodCompileUnsupportedError(`async string format ${fmt3}`);
+      throw new ZodCompileUnsupportedError(`async string format ${fmt4}`);
     const fnConst = addConstant(ctx, customFn);
     doc.write(`if (!${fnConst}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (PATTERN_IS_COMPLETE.has(fmt3) && def.pattern) {
+  if (PATTERN_IS_COMPLETE.has(fmt4) && def.pattern) {
     const patternConst = addConstant(ctx, def.pattern);
     doc.write(`${patternConst}.lastIndex = 0;`);
     doc.write(`if (!${patternConst}.test(${accessor})) return INVALID;`);
@@ -27222,12 +27222,12 @@ function foldIntersection(json2) {
   if (!unions.length) {
     folded = foldObjects(allOf);
   } else {
-    const union2 = unions[0];
-    const keyword = UNION_KEYS.find((k) => Array.isArray(union2[k]));
-    if (Object.keys(union2).length !== 1)
+    const union3 = unions[0];
+    const keyword = UNION_KEYS.find((k) => Array.isArray(union3[k]));
+    if (Object.keys(union3).length !== 1)
       return;
-    const rest = allOf.filter((m) => m !== union2);
-    const branches = union2[keyword].map((branch) => foldObjects([...rest, branch]));
+    const rest = allOf.filter((m) => m !== union3);
+    const branches = union3[keyword].map((branch) => foldObjects([...rest, branch]));
     if (branches.some((b) => !b))
       return;
     folded = { [keyword]: branches };
@@ -28596,11 +28596,11 @@ function normalizeObjectSchema(schema) {
   }
   return void 0;
 }
-function getDotPath(path14) {
-  if (path14.length === 0) {
+function getDotPath(path15) {
+  if (path15.length === 0) {
     return "object root";
   }
-  return path14.reduce((acc, seg, index) => {
+  return path15.reduce((acc, seg, index) => {
     if (index === 0) {
       return String(seg);
     }
@@ -30827,13 +30827,13 @@ function resolveRef(ref, ctx) {
   if (!ref.startsWith("#")) {
     throw new Error("External $ref is not supported, only local refs (#/...) are allowed");
   }
-  const path14 = ref.slice(1).split("/").filter(Boolean);
-  if (path14.length === 0) {
+  const path15 = ref.slice(1).split("/").filter(Boolean);
+  if (path15.length === 0) {
     return ctx.rootSchema;
   }
   const defsKey = ctx.version === "draft-2020-12" ? "$defs" : "definitions";
-  if (path14[0] === defsKey) {
-    const key = path14[1] === void 0 ? void 0 : decodeJSONPointerSegment(path14[1]);
+  if (path15[0] === defsKey) {
+    const key = path15[1] === void 0 ? void 0 : decodeJSONPointerSegment(path15[1]);
     if (!key || !ctx.defs[key]) {
       throw new Error(`Reference not found: ${ref}`);
     }
@@ -34911,7 +34911,7 @@ var Protocol = class {
           return;
         }
         const pollInterval = task2.pollInterval ?? this._options?.defaultTaskPollInterval ?? 1e3;
-        await new Promise((resolve11) => setTimeout(resolve11, pollInterval));
+        await new Promise((resolve12) => setTimeout(resolve12, pollInterval));
         options?.signal?.throwIfAborted();
       }
     } catch (error62) {
@@ -34928,7 +34928,7 @@ var Protocol = class {
    */
   request(request, resultSchema, options) {
     const { relatedRequestId, resumptionToken, onresumptiontoken, task, relatedTask } = options ?? {};
-    return new Promise((resolve11, reject) => {
+    return new Promise((resolve12, reject) => {
       const earlyReject = (error62) => {
         reject(error62);
       };
@@ -35006,7 +35006,7 @@ var Protocol = class {
           if (!parseResult.success) {
             reject(parseResult.error);
           } else {
-            resolve11(parseResult.data);
+            resolve12(parseResult.data);
           }
         } catch (error62) {
           reject(error62);
@@ -35268,12 +35268,12 @@ var Protocol = class {
       }
     } catch {
     }
-    return new Promise((resolve11, reject) => {
+    return new Promise((resolve12, reject) => {
       if (signal.aborted) {
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
         return;
       }
-      const timeoutId = setTimeout(resolve11, interval);
+      const timeoutId = setTimeout(resolve12, interval);
       signal.addEventListener("abort", () => {
         clearTimeout(timeoutId);
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
@@ -36404,7 +36404,7 @@ var McpServer = class {
     let task = createTaskResult.task;
     const pollInterval = task.pollInterval ?? 5e3;
     while (task.status !== "completed" && task.status !== "failed" && task.status !== "cancelled") {
-      await new Promise((resolve11) => setTimeout(resolve11, pollInterval));
+      await new Promise((resolve12) => setTimeout(resolve12, pollInterval));
       const updatedTask = await extra.taskStore.getTask(taskId);
       if (!updatedTask) {
         throw new McpError(ErrorCode.InternalError, `Task ${taskId} not found during polling`);
@@ -37068,12 +37068,12 @@ var StdioServerTransport = class {
     this.onclose?.();
   }
   send(message) {
-    return new Promise((resolve11) => {
+    return new Promise((resolve12) => {
       const json2 = serializeMessage(message);
       if (this._stdout.write(json2)) {
-        resolve11();
+        resolve12();
       } else {
-        this._stdout.once("drain", resolve11);
+        this._stdout.once("drain", resolve12);
       }
     });
   }
@@ -37829,7 +37829,7 @@ if (mode === 'dismiss') {
 function encodeScript(script) {
   return Buffer.from(script, "utf16le").toString("base64");
 }
-var defaultRunner = (script, env) => new Promise((resolve11, reject) => {
+var defaultRunner = (script, env) => new Promise((resolve12, reject) => {
   execFile(
     "powershell.exe",
     [
@@ -37847,10 +37847,10 @@ var defaultRunner = (script, env) => new Promise((resolve11, reject) => {
       encoding: "utf8",
       maxBuffer: 1024 * 1024
     },
-    (err, stdout) => err ? reject(err) : resolve11(stdout)
+    (err, stdout) => err ? reject(err) : resolve12(stdout)
   );
 });
-var defaultOsascriptRunner = (script, env) => new Promise((resolve11, reject) => {
+var defaultOsascriptRunner = (script, env) => new Promise((resolve12, reject) => {
   execFile(
     "/usr/bin/osascript",
     ["-l", "JavaScript", "-e", script],
@@ -37860,7 +37860,7 @@ var defaultOsascriptRunner = (script, env) => new Promise((resolve11, reject) =>
       encoding: "utf8",
       maxBuffer: 1024 * 1024
     },
-    (err, stdout) => err ? reject(err) : resolve11(stdout)
+    (err, stdout) => err ? reject(err) : resolve12(stdout)
   );
 });
 var runner = defaultRunner;
@@ -38713,7 +38713,7 @@ function isAutomationDenial(message) {
   return /(?:-1743\b|not (?:authorized|permitted) to send apple events)/i.test(message);
 }
 function sleep(ms) {
-  return new Promise((resolve11) => setTimeout(resolve11, ms));
+  return new Promise((resolve12) => setTimeout(resolve12, ms));
 }
 function serializeRequest(request) {
   return JSON.stringify(request).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
@@ -44320,1974 +44320,1698 @@ registerOp({
 });
 
 // src/operations/keying.ts
-init_registry();
-var KEYLIGHT_MATCH_NAME = "Keylight 906";
-var KEY_CLEANER_MATCH_NAME = "ADBE KeyCleaner";
-var SPILL_SUPPRESSOR_MATCH_NAME = "ADBE Spill2";
-var VIEW_MATCH_NAME = "Keylight 906-0002";
-var SCREEN_COLOUR_MATCH_NAME = "Keylight 906-0004";
-var KEYLIGHT_VIEWS = [
-  "source",
-  "source_alpha",
-  "corrected_source",
-  "colour_correction_edges",
-  "screen_matte",
-  "inside_mask",
-  "outside_mask",
-  "combined_matte",
-  "status",
-  "intermediate_result",
-  "final_result"
-];
-var VIEW_LIST = KEYLIGHT_VIEWS.map((v, i) => `${v} (${i + 1})`).join(", ");
-var KEYLIGHT_SETTINGS = {
-  screenColour: {
-    matchName: SCREEN_COLOUR_MATCH_NAME,
-    kind: "colour",
-    doc: "Screen Colour [r, g, b] 0..1, capture values: from ae_render_frame `screen` (colour.nearSubject or colour.median) on the un-keyed source"
-  },
-  screenGain: {
-    matchName: "Keylight 906-0005",
-    kind: "number",
-    doc: "Screen Gain, 0..5000 (default 100)"
-  },
-  screenBalance: {
-    matchName: "Keylight 906-0006",
-    kind: "number",
-    doc: "Screen Balance, 0..100 (default 50)"
-  },
-  despillBias: {
-    matchName: "Keylight 906-0007",
-    kind: "colour",
-    doc: "Despill Bias [r, g, b] 0..1 (default 0.498 grey)"
-  },
-  alphaBias: {
-    matchName: "Keylight 906-0008",
-    kind: "colour",
-    doc: "Alpha Bias [r, g, b] 0..1 (default 0.498 grey)"
-  },
-  lockBiases: {
-    matchName: "Keylight 906-0009",
-    kind: "switch",
-    doc: "Lock Biases Together (default on)"
-  },
-  screenPreBlur: {
-    matchName: "Keylight 906-0010",
-    kind: "number",
-    doc: "Screen Pre-blur, 0..5000 (default 0)"
-  },
-  clipBlack: {
-    matchName: "Keylight 906-0012",
-    kind: "number",
-    doc: "Clip Black, 0..100 (default 0)"
-  },
-  clipWhite: {
-    matchName: "Keylight 906-0013",
-    kind: "number",
-    doc: "Clip White, 0..100 (default 100)"
-  },
-  clipRollback: {
-    matchName: "Keylight 906-0014",
-    kind: "number",
-    doc: "Clip Rollback, 0..5000 (default 0)"
-  },
-  screenShrinkGrow: {
-    matchName: "Keylight 906-0015",
-    kind: "number",
-    doc: "Screen Shrink/Grow, -5000..5000 (default 0)"
-  },
-  screenSoftness: {
-    matchName: "Keylight 906-0016",
-    kind: "number",
-    doc: "Screen Softness, 0..5000 (default 0)"
-  },
-  despotBlack: {
-    matchName: "Keylight 906-0017",
-    kind: "number",
-    doc: "Screen Despot Black, 0..5000 (default 0)"
-  },
-  despotWhite: {
-    matchName: "Keylight 906-0018",
-    kind: "number",
-    doc: "Screen Despot White, 0..5000 (default 0)"
-  }
+import { execFile as execFile2 } from "node:child_process";
+import { promises as fs7 } from "node:fs";
+import * as path7 from "node:path";
+
+// src/color/matte.ts
+var EDGE_DEFAULTS = {
+  from: "alpha",
+  transparent: 2 / 255,
+  opaque: 1 - 2 / 255,
+  maxEdgeWidth: "auto",
+  mainAreaShare: 0.25,
+  listed: 5,
+  screen: "green",
+  spillMinAlpha: 0.1,
+  spillThreshold: 0.03,
+  changeAbove: 0.05,
+  patchWindow: "auto"
 };
-var KEY_CLEANER_SETTINGS = {
-  additionalEdgeRadius: {
-    matchName: "ADBE KeyCleaner-0006",
-    kind: "number",
-    doc: "Additional Edge Radius, 0..250 (default 10)"
-  },
-  reduceChatter: {
-    matchName: "ADBE KeyCleaner-0002",
-    kind: "switch",
-    doc: "Reduce Chatter (default off)"
-  },
-  alphaContrast: {
-    matchName: "ADBE KeyCleaner-0016",
-    kind: "number",
-    doc: "Alpha Contrast, 0..100 (default 0)"
-  },
-  strength: {
-    matchName: "ADBE KeyCleaner-0001",
-    kind: "number",
-    doc: "Strength, 0..100 (default 100)"
+var CONTOUR_ALPHA = 0.5;
+function autoMaxEdgeWidth(width, height) {
+  return Math.max(4, Math.round(0.01 * Math.min(width, height)));
+}
+function resolveEdgeThresholds(args, width, height) {
+  const maxEdgeWidth = args.maxEdgeWidth ?? autoMaxEdgeWidth(width, height);
+  return {
+    from: args.from ?? EDGE_DEFAULTS.from,
+    transparent: args.transparent ?? EDGE_DEFAULTS.transparent,
+    opaque: args.opaque ?? EDGE_DEFAULTS.opaque,
+    maxEdgeWidth,
+    mainAreaShare: args.mainAreaShare ?? EDGE_DEFAULTS.mainAreaShare,
+    listed: args.listed ?? EDGE_DEFAULTS.listed,
+    screen: args.screen ?? EDGE_DEFAULTS.screen,
+    spillMinAlpha: args.spillMinAlpha ?? EDGE_DEFAULTS.spillMinAlpha,
+    spillThreshold: args.spillThreshold ?? EDGE_DEFAULTS.spillThreshold,
+    changeAbove: args.changeAbove ?? EDGE_DEFAULTS.changeAbove,
+    patchWindow: args.patchWindow ?? Math.round(4 * maxEdgeWidth)
+  };
+}
+function edgeArgsError(args) {
+  const unit = ["transparent", "opaque", "mainAreaShare", "spillMinAlpha", "changeAbove"];
+  for (const key of unit) {
+    const v = args[key];
+    if (v !== void 0 && (typeof v !== "number" || !(v >= 0 && v <= 1))) {
+      return `\`edge.${key}\` must be a number in 0..1`;
+    }
   }
-};
-var SPILL_SUPPRESSOR_SETTINGS = {
-  method: { matchName: "ADBE Spill2-0001", kind: "number", doc: "Method, 1 or 2 (default 1)" },
-  suppression: {
-    matchName: "ADBE Spill2-1001",
-    kind: "number",
-    doc: "Suppression, 0..100 (default 100)"
-  },
-  keyColor: {
-    matchName: "ADBE Spill2-0003",
-    kind: "colour",
-    doc: "Key Color [r, g, b] 0..1 (default pure green), or 'keylight' for Keylight's Screen Colour"
-  },
-  tolerance: {
-    matchName: "ADBE Spill2-0004",
-    kind: "number",
-    doc: "Tolerance, 0..100 (default 50)"
-  },
-  desaturate: {
-    matchName: "ADBE Spill2-0005",
-    kind: "number",
-    doc: "Desaturate, 0..100 (default 50)"
-  },
-  spillRange: {
-    matchName: "ADBE Spill2-0006",
-    kind: "number",
-    doc: "Spill Range, 0..100 (default 50)"
-  },
-  spillColorCorrection: {
-    matchName: "ADBE Spill2-0007",
-    kind: "number",
-    doc: "Spill Color Correction, 0..100 (default 50)"
-  },
-  lumaCorrection: {
-    matchName: "ADBE Spill2-0008",
-    kind: "number",
-    doc: "Luma Correction, 0..100 (default 0)"
+  const t = args.transparent ?? EDGE_DEFAULTS.transparent;
+  const o = args.opaque ?? EDGE_DEFAULTS.opaque;
+  if (t >= o) return "`edge.transparent` must be below `edge.opaque`";
+  const w = args.maxEdgeWidth;
+  if (w !== void 0 && (typeof w !== "number" || !Number.isFinite(w) || w < 1)) {
+    return "`edge.maxEdgeWidth` must be at least 1 (pixels)";
   }
-};
-function readMap(settings, extra = {}) {
-  const out = { ...extra };
-  for (const [k, s] of Object.entries(settings)) out[k] = s.matchName;
+  const pw = args.patchWindow;
+  if (pw !== void 0 && (typeof pw !== "number" || !Number.isFinite(pw) || pw < 1)) {
+    return "`edge.patchWindow` must be at least 1 (pixels)";
+  }
+  const listed = args.listed;
+  if (listed !== void 0 && (!Number.isInteger(listed) || listed < 0)) {
+    return "`edge.listed` must be a whole number, 0 or more";
+  }
+  const s = args.spillThreshold;
+  if (s !== void 0 && (typeof s !== "number" || !(s >= 0 && s <= 1))) {
+    return "`edge.spillThreshold` must be a number in 0..1";
+  }
+  if (args.from !== void 0 && args.from !== "alpha" && args.from !== "luma") {
+    return "`edge.from` must be 'alpha' or 'luma'";
+  }
+  if (args.screen !== void 0 && args.screen !== "green" && args.screen !== "blue") {
+    return "`edge.screen` must be 'green' or 'blue'";
+  }
+  return null;
+}
+var OUTSIDE = 0;
+var EDGE = 1;
+var INSIDE = 2;
+var r2 = (v) => Math.round(v * 100) / 100;
+var r4 = (v) => Math.round(v * 1e4) / 1e4;
+var r4rgb = (v) => [r4(v[0]), r4(v[1]), r4(v[2])];
+var INF = 1e20;
+function dt1d(f, n, d, v, z2) {
+  let k = -1;
+  for (let q = 0; q < n; q++) {
+    const fq = f[q];
+    if (fq >= INF) continue;
+    if (k < 0) {
+      k = 0;
+      v[0] = q;
+      z2[0] = -Infinity;
+      z2[1] = Infinity;
+      continue;
+    }
+    let s = 0;
+    for (; ; ) {
+      const r = v[k];
+      s = (fq + q * q - (f[r] + r * r)) / (2 * q - 2 * r);
+      if (s <= z2[k]) k--;
+      else break;
+    }
+    k++;
+    v[k] = q;
+    z2[k] = s;
+    z2[k + 1] = Infinity;
+  }
+  if (k < 0) {
+    d.fill(INF, 0, n);
+    return;
+  }
+  let j = 0;
+  for (let q = 0; q < n; q++) {
+    while (z2[j + 1] < q) j++;
+    const r = v[j];
+    d[q] = (q - r) * (q - r) + f[r];
+  }
+}
+function distanceTo(alpha, width, height, isSource, scratch, out) {
+  const n = Math.max(width, height);
+  const f = new Float64Array(n);
+  const d = new Float64Array(n);
+  const v = new Int32Array(n);
+  const z2 = new Float64Array(n + 1);
+  for (let x = 0; x < width; x++) {
+    for (let y = 0; y < height; y++) f[y] = isSource(alpha[y * width + x]) ? 0 : INF;
+    dt1d(f, height, d, v, z2);
+    for (let y = 0; y < height; y++) scratch[y * width + x] = d[y];
+  }
+  for (let y = 0; y < height; y++) {
+    const row = y * width;
+    for (let x = 0; x < width; x++) f[x] = scratch[row + x];
+    dt1d(f, width, d, v, z2);
+    for (let x = 0; x < width; x++) out[row + x] = d[x] >= INF / 2 ? Infinity : Math.sqrt(d[x]);
+  }
+}
+var newRegion = () => ({
+  area: 0,
+  minX: Infinity,
+  minY: Infinity,
+  maxX: -1,
+  maxY: -1,
+  alphaSum: 0,
+  alphaMax: 0,
+  transparent: 0,
+  touchesBorder: false
+});
+function addPixel(r, x, y, a) {
+  r.area++;
+  if (x < r.minX) r.minX = x;
+  if (x > r.maxX) r.maxX = x;
+  if (y < r.minY) r.minY = y;
+  if (y > r.maxY) r.maxY = y;
+  r.alphaSum += a;
+  if (a > r.alphaMax) r.alphaMax = a;
+}
+var box = (r) => ({
+  x: r.minX,
+  y: r.minY,
+  width: r.maxX - r.minX + 1,
+  height: r.maxY - r.minY + 1
+});
+var N4X = [1, -1, 0, 0];
+var N4Y = [0, 0, 1, -1];
+var N8X = [1, -1, 0, 0, 1, 1, -1, -1];
+var N8Y = [0, 0, 1, -1, 1, -1, 1, -1];
+function labelRegions(alpha, width, height, inSet, eight, labels, queue, transparentAt) {
+  labels.fill(0);
+  const regions = [];
+  const nx = eight ? N8X : N4X;
+  const ny = eight ? N8Y : N4Y;
+  const total = width * height;
+  for (let start = 0; start < total; start++) {
+    if (labels[start] !== 0 || !inSet(start)) continue;
+    const region = newRegion();
+    regions.push(region);
+    const id = regions.length;
+    labels[start] = id;
+    let head = 0;
+    let tail = 0;
+    queue[tail++] = start;
+    while (head < tail) {
+      const p = queue[head++];
+      const x = p % width;
+      const y = (p - x) / width;
+      const a = alpha[p];
+      addPixel(region, x, y, a);
+      if (a <= transparentAt) region.transparent++;
+      if (x === 0 || y === 0 || x === width - 1 || y === height - 1) region.touchesBorder = true;
+      for (let k = 0; k < nx.length; k++) {
+        const qx = x + nx[k];
+        const qy = y + ny[k];
+        if (qx < 0 || qy < 0 || qx >= width || qy >= height) continue;
+        const q = qy * width + qx;
+        if (labels[q] !== 0 || !inSet(q)) continue;
+        labels[q] = id;
+        queue[tail++] = q;
+      }
+    }
+  }
+  return regions;
+}
+var byArea = (a, b) => b.area - a.area;
+function screenExcess(c, screen) {
+  return screen === "green" ? c[1] - Math.max(c[0], c[2]) : c[2] - Math.max(c[0], c[1]);
+}
+function lumaMatte(img) {
+  const n = img.width * img.height;
+  const out = new Float64Array(n);
+  const rgb = img.rgb;
+  for (let p = 0; p < n; p++) {
+    const r = rgb[p * 3];
+    const g = rgb[p * 3 + 1];
+    const b = rgb[p * 3 + 2];
+    const y = r === g && g === b ? r : 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    out[p] = y < 0 ? 0 : y > 1 ? 1 : y;
+  }
   return out;
 }
-function colourValue(name, v) {
-  const ok = Array.isArray(v) && (v.length === 3 || v.length === 4) && v.every((c2) => typeof c2 === "number" && Number.isFinite(c2) && c2 >= 0 && c2 <= 1);
-  if (!ok) {
-    return `\`${name}\` must be [r, g, b] or [r, g, b, a] with each number in 0..1 (capture values); got ${JSON.stringify(v)}`;
+function measureEdge(img, bg, t) {
+  const fromLuma = t.from === "luma";
+  const alpha = fromLuma ? lumaMatte(img) : img.alpha;
+  if (!alpha) throw new Error("the capture has no alpha channel");
+  const { width, height } = img;
+  const n = width * height;
+  const isT = (a) => a <= t.transparent;
+  const isO = (a) => a >= t.opaque;
+  let opaque = 0;
+  let transparent = 0;
+  for (let p = 0; p < n; p++) {
+    if (isO(alpha[p])) opaque++;
+    else if (isT(alpha[p])) transparent++;
   }
-  const c = v;
-  return c.length === 3 ? [...c, 1] : [...c];
-}
-function settingValue(name, s, v) {
-  if (s.kind === "colour") return colourValue(name, v);
-  if (s.kind === "switch") {
-    if (typeof v !== "boolean" && v !== 0 && v !== 1) return `\`${name}\` must be true or false`;
-    return v === true || v === 1 ? 1 : 0;
-  }
-  if (typeof v !== "number" || !Number.isFinite(v))
-    return `\`${name}\` must be a number; got ${JSON.stringify(v)}`;
-  return v;
-}
-function keylightViewNumber(v) {
-  if (typeof v === "number" && Number.isInteger(v) && v >= 1 && v <= KEYLIGHT_VIEWS.length)
-    return v;
-  if (typeof v === "string") {
-    const norm = v.trim().toLowerCase().replace(/[\s-]+/g, "_").replace(/color/g, "colour");
-    const i = KEYLIGHT_VIEWS.indexOf(norm);
-    if (i >= 0) return i + 1;
-  }
-  return `unknown Keylight view ${JSON.stringify(v)}; views: ${VIEW_LIST}`;
-}
-var keylightIndexParam = {
-  name: "effectIndex",
-  type: "number",
-  description: "1-based index of the Keylight to use when the layer has several (it must be Keylight). Default: the first Keylight in the stack.",
-  required: false
-};
-var compLayerParams = [
-  { name: "comp", type: "any", description: "Comp name or id", required: true },
-  {
-    name: "layer",
-    type: "any",
-    description: "1-based layer index, or the layer name",
-    required: true
-  }
-];
-var FX_ROOT_JSX = `
-            var _fxRoot = _layer.property("ADBE Effect Parade");
-            if (!_fxRoot) return { ok: false, error: "layer '" + _layer.name + "' cannot carry effects" };
-`;
-function keylightLookupJsx(effectIndexJsx, hint) {
-  return `
-            var _kl = AE.pickEffect(_fxRoot, ${jsxVal(KEYLIGHT_MATCH_NAME)}, "Keylight", ${effectIndexJsx});
-            if (_kl.error) return { ok: false, error: _kl.error };
-            if (_kl.index === null) return { ok: false, error: "layer '" + _layer.name + "' has no Keylight (effects: " + AE.effectListText(_fxRoot) + ")" + ${jsxVal(hint)} };
-`;
-}
-registerOp({
-  name: "key.keylight",
-  category: "key",
-  description: "Key a layer with Keylight from measured values: add Keylight (Keylight 906) if the layer has none, or update the one there, then read every setting back. Measure first: render the un-keyed source with ae_render_frame { screen: true } and pass colour.nearSubject (or colour.median) as screenColour. Every value is checked against After Effects' reported range before anything is written; a refusal writes nothing and removes a Keylight this call added. Returns effectIndex, added, keylightCount, written, values (view and every setting below, as read back) and the effect order. With no settings it only reads. Then look at the result with key.view (screen_matte, status) and ae_render_frame { edge: true }.",
-  params: [
-    ...compLayerParams,
-    keylightIndexParam,
-    ...Object.entries(KEYLIGHT_SETTINGS).map(([name, s]) => ({
-      name,
-      type: s.kind === "colour" ? "array" : s.kind === "switch" ? "boolean" : "number",
-      description: s.doc,
-      required: false
-    }))
-  ],
-  toJsx(args) {
-    const writes = [];
-    for (const [key, s] of Object.entries(KEYLIGHT_SETTINGS)) {
-      if (args[key] === void 0) continue;
-      const v = settingValue(key, s, args[key]);
-      if (typeof v === "string") return jsxFail(v);
-      writes.push({ key, matchName: s.matchName, value: v });
-    }
-    const addHint = "; adding one needs screenColour: measure it from the un-keyed source with ae_render_frame { screen: true } and pass colour.nearSubject or colour.median";
-    return `
-            ${jsxCompLayerPreamble(args)}
-            ${FX_ROOT_JSX}
-            var _pick = AE.pickEffect(_fxRoot, ${jsxVal(KEYLIGHT_MATCH_NAME)}, "Keylight", ${jsxVal(args.effectIndex ?? null)});
-            if (_pick.error) return { ok: false, error: _pick.error };
-            var _writes = ${jsxVal(writes)};
-            var _idx = _pick.index;
-            var _added = false;
-            if (_idx === null) {
-                if (!${jsxVal(args.screenColour !== void 0)}) {
-                    return { ok: false, error: "layer '" + _layer.name + "' has no Keylight (effects: " + AE.effectListText(_fxRoot) + ")" + ${jsxVal(addHint)} };
-                }
-                _idx = _fxRoot.addProperty(${jsxVal(KEYLIGHT_MATCH_NAME)}).propertyIndex;
-                _added = true;
-            }
-            var _refused = AE.checkEffectWrites(_fxRoot.property(_idx), _writes);
-            if (_refused.length > 0) {
-                if (_added) { try { _fxRoot.property(_idx).remove(); } catch (eRm) {} }
-                var _msgs = [];
-                for (var _ri = 0; _ri < _refused.length; _ri++) _msgs.push(_refused[_ri].error);
-                return { ok: false, error: "nothing written: " + _msgs.join("; "), refused: _refused, removedAddedKeylight: _added };
-            }
-            var _failed = AE.applyEffectWrites(_fxRoot.property(_idx), _writes);
-            var _written = [];
-            for (var _wi = 0; _wi < _writes.length; _wi++) {
-                var _bad = false;
-                for (var _fi = 0; _fi < _failed.length; _fi++) if (_failed[_fi].setting === _writes[_wi].key) _bad = true;
-                if (!_bad) _written.push(_writes[_wi].key);
-            }
-            var _out = {
-                ok: _failed.length === 0,
-                effectIndex: _idx,
-                added: _added,
-                keylightCount: _pick.count + (_added ? 1 : 0),
-                name: _fxRoot.property(_idx).name,
-                written: _written,
-                values: AE.readEffectValues(_fxRoot.property(_idx), ${jsxVal(readMap(KEYLIGHT_SETTINGS, { view: VIEW_MATCH_NAME }))}),
-                order: AE.effectOrder(_fxRoot)
-            };
-            if (_failed.length > 0) {
-                _out.failed = _failed;
-                _out.error = "After Effects rejected " + _failed.length + " of the checked writes; the rest were written";
-            }
-            return _out;
-        `;
-  }
-});
-registerOp({
-  name: "key.view",
-  category: "key",
-  description: "Set Keylight's View and report the previous one (pass previous.number back to restore it). Look at the key in screen_matte (the key's own matte, before the layer masks), combined_matte (with the masks), status (white solid, black clear, grey partly transparent) and intermediate_result (keyed, without Keylight's own despill). Use source to measure the screen with ae_render_frame { screen: true }. The view is not keyframable.",
-  params: [
-    ...compLayerParams,
-    {
-      name: "view",
-      type: "any",
-      description: `View by name or number: ${VIEW_LIST}. Spaces, hyphens and 'color' are accepted (Screen Matte, final-result).`,
-      required: true
-    },
-    keylightIndexParam
-  ],
-  toJsx(args) {
-    const view = keylightViewNumber(args.view);
-    if (typeof view === "string") return jsxFail(view);
-    return `
-            ${jsxCompLayerPreamble(args)}
-            ${FX_ROOT_JSX}
-            ${keylightLookupJsx(jsxVal(args.effectIndex ?? null), "; add one with key.keylight")}
-            var _names = ${jsxVal(KEYLIGHT_VIEWS)};
-            var _viewProp = _fxRoot.property(_kl.index).property(${jsxVal(VIEW_MATCH_NAME)});
-            if (!_viewProp) return { ok: false, error: "Keylight has no View property " + ${jsxVal(VIEW_MATCH_NAME)} };
-            var _prev = AE.safeGet(function () { return _viewProp.value; }, null);
-            var _want = ${jsxVal(view)};
-            var _why = AE.checkPropertyWrite(_viewProp, _want);
-            if (_why !== null) return { ok: false, error: _why };
-            _viewProp.setValue(_want);
-            var _now = AE.safeGet(function () { return _viewProp.value; }, null);
-            return {
-                ok: true,
-                effectIndex: _kl.index,
-                view: { number: _now, name: _names[_now - 1] || null },
-                previous: { number: _prev, name: _prev === null ? null : (_names[_prev - 1] || null) }
-            };
-        `;
-  }
-});
-function cleanupGroup(name, v, settings) {
-  if (v === false) return { want: false };
-  if (v === void 0 || v === true) return { want: true, writes: [], fromKeylight: false };
-  if (typeof v !== "object" || v === null || Array.isArray(v)) {
-    return `\`${name}\` must be an object of settings, true (defaults) or false (leave it out); got ${JSON.stringify(v)}`;
-  }
-  const writes = [];
-  let fromKeylight = false;
-  for (const [key, val] of Object.entries(v)) {
-    const s = settings[key];
-    if (!s)
-      return `\`${name}.${key}\` is not a setting; settings: ${Object.keys(settings).join(", ")}`;
-    if (key === "keyColor" && val === "keylight") {
-      fromKeylight = true;
-      continue;
-    }
-    const value = settingValue(`${name}.${key}`, s, val);
-    if (typeof value === "string") return value;
-    writes.push({ key, matchName: s.matchName, value });
-  }
-  return { want: true, writes, fromKeylight };
-}
-registerOp({
-  name: "key.cleanup",
-  category: "key",
-  description: "Add or update Key Cleaner (ADBE KeyCleaner) and Advanced Spill Suppressor (ADBE Spill2) after the layer's Keylight, in that order, moving existing ones into place, with their main settings (checked before writing; a refusal writes and moves nothing and removes what this call added). Adobe's intended chain is Keylight on Intermediate Result (View 10), then Key Cleaner, then Advanced Spill Suppressor: with Keylight on Final Result, Keylight has already despilled what the others receive. The caller chooses: keylightView: 'intermediate_result' sets that view; otherwise the view is left and a chainNote says so. Returns keylight {index, view}, keyCleaner and spillSuppressor {index, added, written, values} (null when left out), the effect order, and chainNote. Remove spill only after the matte is right; read edge spill on the final alpha afterwards.",
-  params: [
-    ...compLayerParams,
-    {
-      name: "keyCleaner",
-      type: "any",
-      description: `Key Cleaner settings object, true for its defaults (the default), or false to leave it out. Settings: ${Object.entries(
-        KEY_CLEANER_SETTINGS
-      ).map(([k, s]) => `${k} (${s.doc})`).join("; ")}.`,
-      required: false
-    },
-    {
-      name: "spillSuppressor",
-      type: "any",
-      description: `Advanced Spill Suppressor settings object, true for its defaults (the default), or false to leave it out. Settings: ${Object.entries(
-        SPILL_SUPPRESSOR_SETTINGS
-      ).map(([k, s]) => `${k} (${s.doc})`).join("; ")}. Which Method value is Standard and which Ultra was not confirmed live.`,
-      required: false
-    },
-    {
-      name: "keylightView",
-      type: "any",
-      description: "Also set Keylight's View (name or number, as key.view); 'intermediate_result' for Adobe's intended chain.",
-      required: false
-    },
-    { ...keylightIndexParam, name: "keylightIndex" }
-  ],
-  toJsx(args) {
-    const kc = cleanupGroup("keyCleaner", args.keyCleaner, KEY_CLEANER_SETTINGS);
-    if (typeof kc === "string") return jsxFail(kc);
-    const ss = cleanupGroup("spillSuppressor", args.spillSuppressor, SPILL_SUPPRESSOR_SETTINGS);
-    if (typeof ss === "string") return jsxFail(ss);
-    let view = null;
-    if (args.keylightView !== void 0) {
-      const v = keylightViewNumber(args.keylightView);
-      if (typeof v === "string") return jsxFail(`keylightView: ${v}`);
-      view = v;
-    }
-    const chainNote = "Adobe's intended chain is Keylight on Intermediate Result (10), then Key Cleaner, then Advanced Spill Suppressor; on any other view Keylight hands the cleanup effects its own output (on Final Result already despilled). Pass keylightView: 'intermediate_result' (or use key.view) for that chain.";
-    return `
-            ${jsxCompLayerPreamble(args)}
-            ${FX_ROOT_JSX}
-            ${keylightLookupJsx(jsxVal(args.keylightIndex ?? null), "; key the layer with key.keylight first")}
-            var _names = ${jsxVal(KEYLIGHT_VIEWS)};
-            var _wantKC = ${jsxVal(kc.want)};
-            var _wantSS = ${jsxVal(ss.want)};
-            var _kcWrites = ${jsxVal(kc.want ? kc.writes : [])};
-            var _ssWrites = ${jsxVal(ss.want ? ss.writes : [])};
-            var _view = ${jsxVal(view)};
-            var _track = { kl: _kl.index, kc: null, ss: null };
-            var _kcAnchorOnly = false;
-            var _kcFound = AE.pickEffect(_fxRoot, ${jsxVal(KEY_CLEANER_MATCH_NAME)}, "Key Cleaner", null);
-            if (_wantKC) _track.kc = _kcFound.index;
-            else if (_kcFound.index !== null && _kcFound.index > _kl.index) { _track.kc = _kcFound.index; _kcAnchorOnly = true; }
-            if (_wantSS) _track.ss = AE.pickEffect(_fxRoot, ${jsxVal(SPILL_SUPPRESSOR_MATCH_NAME)}, "Advanced Spill Suppressor", null).index;
-            if (${jsxVal(ss.want && ss.fromKeylight)}) {
-                var _sc = AE.safeGet(function () { return AE.valueToJson(_fxRoot.property(_kl.index).property(${jsxVal(SCREEN_COLOUR_MATCH_NAME)}).value); }, null);
-                if (!_sc) return { ok: false, error: "could not read Keylight's Screen Colour for keyColor 'keylight'" };
-                _ssWrites.push({ key: "keyColor", matchName: ${jsxVal(SPILL_SUPPRESSOR_SETTINGS.keyColor.matchName)}, value: _sc });
-            }
-            var _kcAdded = false;
-            var _ssAdded = false;
-            if (_wantKC && _track.kc === null) { _track.kc = _fxRoot.addProperty(${jsxVal(KEY_CLEANER_MATCH_NAME)}).propertyIndex; _kcAdded = true; }
-            if (_wantSS && _track.ss === null) { _track.ss = _fxRoot.addProperty(${jsxVal(SPILL_SUPPRESSOR_MATCH_NAME)}).propertyIndex; _ssAdded = true; }
-            var _refused = [];
-            if (_wantKC) _refused = _refused.concat(AE.checkEffectWrites(_fxRoot.property(_track.kc), _kcWrites));
-            if (_wantSS) _refused = _refused.concat(AE.checkEffectWrites(_fxRoot.property(_track.ss), _ssWrites));
-            if (_view !== null) {
-                var _vw = AE.checkPropertyWrite(_fxRoot.property(_track.kl).property(${jsxVal(VIEW_MATCH_NAME)}), _view);
-                if (_vw !== null) _refused.push({ setting: "keylightView", error: _vw });
-            }
-            if (_refused.length > 0) {
-                var _drop = [];
-                if (_kcAdded) _drop.push(_track.kc);
-                if (_ssAdded) _drop.push(_track.ss);
-                _drop.sort(function (a, b) { return b - a; });
-                for (var _di = 0; _di < _drop.length; _di++) { try { _fxRoot.property(_drop[_di]).remove(); } catch (eRm) {} }
-                var _msgs = [];
-                for (var _ri = 0; _ri < _refused.length; _ri++) _msgs.push(_refused[_ri].error);
-                return { ok: false, error: "nothing written or moved: " + _msgs.join("; "), refused: _refused };
-            }
-            if (_wantKC) AE.placeTrackedAfter(_fxRoot, _track, "kc", "kl");
-            if (_wantSS) AE.placeTrackedAfter(_fxRoot, _track, "ss", _track.kc !== null ? "kc" : "kl");
-            var _failed = [];
-            if (_wantKC) _failed = _failed.concat(AE.applyEffectWrites(_fxRoot.property(_track.kc), _kcWrites));
-            if (_wantSS) _failed = _failed.concat(AE.applyEffectWrites(_fxRoot.property(_track.ss), _ssWrites));
-            var _viewProp = _fxRoot.property(_track.kl).property(${jsxVal(VIEW_MATCH_NAME)});
-            if (_view !== null) {
-                try { _viewProp.setValue(_view); } catch (eV) { _failed.push({ setting: "keylightView", error: AE.errText(eV) }); }
-            }
-            function _keys(ws) { var o = []; for (var i = 0; i < ws.length; i++) o.push(ws[i].key); return o; }
-            var _nowView = AE.safeGet(function () { return _viewProp.value; }, null);
-            var _out = {
-                ok: _failed.length === 0,
-                keylight: { index: _track.kl, view: { number: _nowView, name: _names[_nowView - 1] || null } },
-                keyCleaner: _wantKC ? {
-                    index: _track.kc,
-                    added: _kcAdded,
-                    written: _keys(_kcWrites),
-                    values: AE.readEffectValues(_fxRoot.property(_track.kc), ${jsxVal(readMap(KEY_CLEANER_SETTINGS))})
-                } : null,
-                spillSuppressor: _wantSS ? {
-                    index: _track.ss,
-                    added: _ssAdded,
-                    written: _keys(_ssWrites),
-                    values: AE.readEffectValues(_fxRoot.property(_track.ss), ${jsxVal(readMap(SPILL_SUPPRESSOR_SETTINGS))})
-                } : null,
-                order: AE.effectOrder(_fxRoot)
-            };
-            if (_kcAnchorOnly) _out.keyCleanerLeftAsIs = _track.kc;
-            if (_nowView !== 10) _out.chainNote = ${jsxVal(chainNote)};
-            if (_failed.length > 0) {
-                _out.failed = _failed;
-                _out.error = "After Effects rejected " + _failed.length + " of the checked writes; the rest were written";
-            }
-            return _out;
-        `;
-  }
-});
-
-// src/operations/property.ts
-init_registry();
-registerOp({
-  name: "property.set",
-  category: "property",
-  description: "Set any layer property by path. layer can be index, name, 'selected', or 'all'.",
-  params: [
-    { name: "comp", type: "any", description: "Comp name or id", required: true },
-    {
-      name: "layer",
-      type: "any",
-      description: "Layer index, name, 'selected', or 'all'",
-      required: true
-    },
-    {
-      name: "property",
-      type: "array",
-      description: 'Property path, e.g. ["Transform","Position"]',
-      required: true
-    },
-    { name: "value", type: "any", description: "Value to set", required: true }
-  ],
-  toJsx(args) {
-    return `
-            ${jsxCompPreamble(args)}
-            var _layers = AE.resolveLayers(_comp, ${jsxVal(args.layer)});
-            if (_layers.length === 0) return { ok: false, error: "no layers matched" };
-            var _propPath = ${jsxVal(args.property)};
-            var _results = [];
-            for (var _li = 0; _li < _layers.length; _li++) {
-                var _layer = _layers[_li];
-                try {
-                    var _node = _layer;
-                    for (var _pi = 0; _pi < _propPath.length; _pi++) {
-                        _node = _node.property(_propPath[_pi]);
-                        if (!_node) throw new Error("not found: " + _propPath[_pi]);
-                    }
-                    // Separated dimensions and __kind values route through
-                    // AE.writeValue; setValue on a separated leader throws.
-                    var _wr = AE.writeValue(_node, ${jsxVal(args.value)});
-                    _results.push({ name: _layer.name, ok: true, separated: _wr.separated });
-                } catch(e) {
-                    _results.push({ name: _layer.name, ok: false, error: AE.errText(e).substring(0, 50) });
-                }
-            }
-            return { ok: true, count: _results.length, layers: _results };
-        `;
-  }
-});
-registerOp({
-  name: "property.get",
-  category: "property",
-  readOnly: true,
-  description: "Get the current value of any layer property by path.",
-  params: [
-    { name: "comp", type: "any", description: "Comp name or id", required: true },
-    {
-      name: "layer",
-      type: "any",
-      description: "1-based layer index, or the layer name",
-      required: true
-    },
-    { name: "property", type: "array", description: "Property path", required: true },
-    {
-      name: "time",
-      type: "number",
-      description: "If set, get value at this time (for animated properties)",
-      required: false
-    }
-  ],
-  toJsx(args) {
-    return `
-            ${jsxCompLayerPreamble(args)}
-            var _propPath = ${jsxVal(args.property)};
-            ${jsxPropertyLookup()}
-            var _val;
-            if (${jsxVal(args.time ?? null)} !== null) {
-                _val = _node.valueAtTime(${jsxVal(args.time)}, false);
-            } else {
-                _val = _node.value;
-            }
-            return {
-                ok: true,
-                name: _node.name,
-                matchName: _node.matchName,
-                value: AE.valueToJson(_val),
-                numKeys: _node.numKeys || 0,
-                hasExpression: _node.canSetExpression ? _node.expressionEnabled : false
-            };
-        `;
-  }
-});
-registerOp({
-  name: "property.list",
-  category: "property",
-  readOnly: true,
-  description: "List child properties/groups at a given path. Useful for discovering what's inside a property group.",
-  params: [
-    { name: "comp", type: "any", description: "Comp name or id", required: true },
-    {
-      name: "layer",
-      type: "any",
-      description: "1-based layer index, or the layer name",
-      required: true
-    },
-    {
-      name: "property",
-      type: "array",
-      description: "Property path to a group. Use [] for the layer root.",
-      required: true
-    }
-  ],
-  toJsx(args) {
-    return `
-            ${jsxCompLayerPreamble(args)}
-            var _propPath = ${jsxVal(args.property)};
-            ${jsxPropertyLookup()}
-            if (!_node.numProperties) return { ok: false, error: "not a property group (leaf property)" };
-            var children = [];
-            for (var i = 1; i <= _node.numProperties; i++) {
-                var ch = _node.property(i);
-                children.push({
-                    index: i,
-                    name: ch.name,
-                    matchName: ch.matchName,
-                    isGroup: ch.propertyType !== PropertyType.PROPERTY,
-                    numChildren: ch.numProperties || 0
-                });
-            }
-            return { ok: true, path: _propPath, children: children };
-        `;
-  }
-});
-registerOp({
-  name: "property.add",
-  category: "property",
-  description: `Add a property to an indexed group by matchName (PropertyGroup.addProperty). Unlocks text animators ('ADBE Text Animator' on ["Text","Animators"]), layer styles, shape contents, etc. Use property.list to discover group paths.`,
-  params: [
-    { name: "comp", type: "any", description: "Comp name or id", required: true },
-    {
-      name: "layer",
-      type: "any",
-      description: "1-based layer index, or the layer name",
-      required: true
-    },
-    {
-      name: "property",
-      type: "array",
-      description: 'Path to the group to add into, e.g. ["Text","Animators"]. Use [] for layer root.',
-      required: true
-    },
-    {
-      name: "matchName",
-      type: "string",
-      description: 'Match name (or display name) of the property to add, e.g. "ADBE Text Animator". NOTE: adding to an indexed group re-creates it, invalidating prior property references.',
-      required: true
-    },
-    { name: "name", type: "string", description: "Rename the new property", required: false }
-  ],
-  toJsx(args) {
-    const renameJsx = args.name ? `try { _added.name = ${jsxVal(args.name)}; } catch (eName) {}` : "";
-    return `
-            ${jsxCompLayerPreamble(args)}
-            var _propPath = ${jsxVal(args.property)};
-            ${jsxPropertyLookup()}
-            var _mn = ${jsxVal(args.matchName)};
-            var _canAdd = false;
-            try { _canAdd = _node.canAddProperty(_mn); } catch (eCan) {
-                return { ok: false, error: "not a property group that supports addProperty" };
-            }
-            if (!_canAdd) return { ok: false, error: "group '" + _node.matchName + "' cannot add '" + _mn + "'" };
-            var _added = _node.addProperty(_mn);
-            ${renameJsx}
-            return { ok: true, name: _added.name, matchName: _added.matchName, propertyIndex: _added.propertyIndex };
-        `;
-  }
-});
-registerOp({
-  name: "property.remove",
-  category: "property",
-  description: "Remove a property or group by path (Property.remove). Works on members of indexed groups: effects, masks, shape contents, text animators, layer styles.",
-  params: [
-    { name: "comp", type: "any", description: "Comp name or id", required: true },
-    {
-      name: "layer",
-      type: "any",
-      description: "1-based layer index, or the layer name",
-      required: true
-    },
-    {
-      name: "property",
-      type: "array",
-      description: "Path to the property to remove",
-      required: true
-    }
-  ],
-  toJsx(args) {
-    return `
-            ${jsxCompLayerPreamble(args)}
-            var _propPath = ${jsxVal(args.property)};
-            // An empty path leaves _node === _layer, and Layer.remove() would
-            // delete the whole layer. property.add accepts [] for the layer
-            // root, so a caller has every reason to try it here too.
-            if (!_propPath.length) return { ok: false, error: "property path is empty \u2014 that would remove the layer itself, not a property" };
-            ${jsxPropertyLookup()}
-            var _removedName = _node.name;
-            try { _node.remove(); } catch (eRm) {
-                return { ok: false, error: "cannot remove '" + _removedName + "': " + AE.errText(eRm) };
-            }
-            return { ok: true, removed: _removedName };
-        `;
-  }
-});
-registerOp({
-  name: "property.separate_dimensions",
-  category: "property",
-  description: "Separate (or rejoin) the dimensions of a multi-dimensional property such as Position. When separated, animate the followers (e.g. X Position) individually.",
-  params: [
-    { name: "comp", type: "any", description: "Comp name or id", required: true },
-    {
-      name: "layer",
-      type: "any",
-      description: "1-based layer index, or the layer name",
-      required: true
-    },
-    {
-      name: "property",
-      type: "array",
-      description: "Property path (e.g. Position)",
-      required: true
-    },
-    {
-      name: "separated",
-      type: "boolean",
-      description: "true=separate, false=rejoin",
-      required: true
-    }
-  ],
-  toJsx(args) {
-    return `
-            ${jsxCompLayerPreamble(args)}
-            var _propPath = ${jsxVal(args.property)};
-            ${jsxPropertyLookup()}
-            if (!_node.isSeparationLeader) return { ok: false, error: "property cannot separate dimensions" };
-            _node.dimensionsSeparated = ${jsxVal(!!args.separated)};
-            return { ok: true, dimensionsSeparated: _node.dimensionsSeparated };
-        `;
-  }
-});
-registerOp({
-  name: "property.move",
-  category: "property",
-  description: "Reorder a property within its parent INDEXED group (PropertyBase.moveTo): masks, shape contents, text animators. For effects use effect.move.",
-  params: [
-    { name: "comp", type: "any", description: "Comp name or id", required: true },
-    {
-      name: "layer",
-      type: "any",
-      description: "1-based layer index, or the layer name",
-      required: true
-    },
-    {
-      name: "property",
-      type: "array",
-      description: "Path to the property to move (a member of an indexed group)",
-      required: true
-    },
-    {
-      name: "toIndex",
-      type: "number",
-      description: "1-based target position within the parent group",
-      required: true
-    }
-  ],
-  toJsx(args) {
-    return `
-            ${jsxCompLayerPreamble(args)}
-            var _propPath = ${jsxVal(args.property)};
-            ${jsxPropertyLookup()}
-            var _parent = _node.parentProperty;
-            if (!_parent || _parent.propertyType !== PropertyType.INDEXED_GROUP) {
-                return { ok: false, error: "property is not a member of an indexed group \u2014 only those can be reordered" };
-            }
-            var _to = ${jsxVal(args.toIndex)};
-            if (_to < 1 || _to > _parent.numProperties) return { ok: false, error: "toIndex out of range (1-" + _parent.numProperties + ")" };
-            try { _node.moveTo(_to); } catch (eMv) { return { ok: false, error: "moveTo failed: " + AE.errText(eMv) }; }
-            var _order = [];
-            for (var _i = 1; _i <= _parent.numProperties; _i++) _order.push(_parent.property(_i).name);
-            return { ok: true, order: _order };
-        `;
-  }
-});
-registerOp({
-  name: "property.select",
-  category: "property",
-  description: "Select or deselect a property in the timeline (PropertyBase.selected) - stages it for UI-side actions and makes it visible with the U-shortcut workflow.",
-  params: [
-    { name: "comp", type: "any", description: "Comp name or id", required: true },
-    {
-      name: "layer",
-      type: "any",
-      description: "1-based layer index, or the layer name",
-      required: true
-    },
-    { name: "property", type: "array", description: "Property path", required: true },
-    {
-      name: "selected",
-      type: "boolean",
-      description: "true=select, false=deselect (default true)",
-      required: false,
-      default: true
-    }
-  ],
-  toJsx(args) {
-    return `
-            ${jsxCompLayerPreamble(args)}
-            var _propPath = ${jsxVal(args.property)};
-            ${jsxPropertyLookup()}
-            try { _node.selected = ${jsxVal(args.selected !== false)}; } catch (eSl) { return { ok: false, error: "selected set failed: " + AE.errText(eSl) }; }
-            return { ok: true, property: _node.name, selected: _node.selected };
-        `;
-  }
-});
-
-// src/operations/marker.ts
-init_registry();
-function jsxMarkerPreamble(args) {
-  if (args.layer !== void 0 && args.layer !== null) {
-    return `
-        ${jsxCompLayerPreamble(args)}
-        var _mp = _layer.property("Marker");
-        if (!_mp) return { ok: false, error: "layer has no Marker property" };
-    `;
-  }
-  return `
-        ${jsxCompPreamble(args)}
-        var _mp = _comp.markerProperty;
-        if (!_mp) return { ok: false, error: "comp has no marker property" };
-    `;
-}
-function jsxMarkerKeyLookup(args) {
-  return `
-        var _ki = ${jsxVal(args.keyIndex ?? null)};
-        var _t = ${jsxVal(args.time ?? null)};
-        if (_ki === null && _t === null) return { ok: false, error: "pass keyIndex or time" };
-        if (_mp.numKeys === 0) return { ok: false, error: "no markers" };
-        if (_ki === null) {
-            _ki = _mp.nearestKeyIndex(_t);
-            // nearestKeyIndex has no distance limit: with a single marker at 0s,
-            // asking for t=10 returns that marker. These lookups feed destructive
-            // ops, so require the hit to land on the requested time (within half
-            // a frame) rather than silently retargeting the only marker there is.
-            var _tol = 0.5 * (_comp.frameDuration || (1 / 30));
-            if (Math.abs(_mp.keyTime(_ki) - _t) > _tol) {
-                return { ok: false, error: "no marker at " + _t + "s (nearest is at " + _mp.keyTime(_ki) + "s) \u2014 pass keyIndex to target it explicitly" };
-            }
-        }
-        if (_ki < 1 || _ki > _mp.numKeys) return { ok: false, error: "marker index out of range (1-" + _mp.numKeys + ")" };
-    `;
-}
-function jsxMarkerFieldSets(args) {
-  const sets = [];
-  if (args.label !== void 0) sets.push(`_mv.label = ${jsxVal(args.label)};`);
-  if (args.duration !== void 0) sets.push(`_mv.duration = ${jsxVal(args.duration)};`);
-  if (args.chapter !== void 0) sets.push(`_mv.chapter = ${jsxVal(args.chapter)};`);
-  if (args.url !== void 0) sets.push(`_mv.url = ${jsxVal(args.url)};`);
-  if (args.frameTarget !== void 0) sets.push(`_mv.frameTarget = ${jsxVal(args.frameTarget)};`);
-  if (args.cuePointName !== void 0)
-    sets.push(`_mv.cuePointName = ${jsxVal(args.cuePointName)};`);
-  if (args.eventCuePoint !== void 0)
-    sets.push(`_mv.eventCuePoint = ${jsxVal(args.eventCuePoint)};`);
-  if (args.params !== void 0) {
-    sets.push(`
-            try {
-                var _prm = ${jsxVal(args.params)};
-                var _prmStr = {};
-                for (var _pk in _prm) { if (_prm.hasOwnProperty(_pk)) _prmStr[_pk] = String(_prm[_pk]); }
-                _mv.setParameters(_prmStr);
-            } catch (ePrm) { _w.push("params: " + AE.errText(ePrm)); }
-        `);
-  }
-  if (args.protectedRegion !== void 0)
-    sets.push(
-      `try { _mv.protectedRegion = ${jsxVal(args.protectedRegion)}; } catch (ePr) { _w.push("protectedRegion: " + AE.errText(ePr)); }`
-    );
-  return sets.join("\n");
-}
-var MARKER_FIELD_PARAMS = [
-  { name: "label", type: "number", description: "Label color index (0-16)", required: false },
-  { name: "duration", type: "number", description: "Marker duration in seconds", required: false },
-  { name: "chapter", type: "string", description: "Chapter link text", required: false },
-  { name: "url", type: "string", description: "Web link URL", required: false },
-  {
-    name: "frameTarget",
-    type: "string",
-    description: "Web link frame target (used with url)",
-    required: false
-  },
-  {
-    name: "cuePointName",
-    type: "string",
-    description: "Flash Video cue point name",
-    required: false
-  },
-  {
-    name: "eventCuePoint",
-    type: "boolean",
-    description: "true = event cue point, false = navigation cue point",
-    required: false
-  },
-  {
-    name: "params",
-    type: "object",
-    description: 'Cue point key/value parameters, e.g. { "speaker": "A" } (values stringified)',
-    required: false
-  },
-  {
-    name: "protectedRegion",
-    type: "boolean",
-    description: "Protected-region flag (comp markers only)",
-    required: false
-  }
-];
-registerOp({
-  name: "marker.add_comp",
-  category: "marker",
-  description: "Add a marker to a composition at a given time.",
-  params: [
-    { name: "comp", type: "any", description: "Comp name or id", required: true },
-    { name: "time", type: "number", description: "Time in seconds", required: true },
-    {
-      name: "comment",
-      type: "string",
-      description: "Marker comment text",
-      required: false,
-      default: ""
-    },
-    ...MARKER_FIELD_PARAMS
-  ],
-  toJsx(args) {
-    return `
-            ${jsxCompPreamble(args)}
-            var _mv = new MarkerValue(${jsxVal(args.comment ?? "")});
-            var _w = [];
-            ${jsxMarkerFieldSets(args)}
-            _comp.markerProperty.setValueAtTime(${jsxVal(args.time)}, _mv);
-            return { ok: true, numMarkers: _comp.markerProperty.numKeys, warnings: _w };
-        `;
-  }
-});
-registerOp({
-  name: "marker.add_layer",
-  category: "marker",
-  description: "Add a marker to a layer at a given time.",
-  params: [
-    { name: "comp", type: "any", description: "Comp name or id", required: true },
-    {
-      name: "layer",
-      type: "any",
-      description: "1-based layer index, or the layer name",
-      required: true
-    },
-    { name: "time", type: "number", description: "Time in seconds", required: true },
-    {
-      name: "comment",
-      type: "string",
-      description: "Marker comment text",
-      required: false,
-      default: ""
-    },
-    ...MARKER_FIELD_PARAMS
-  ],
-  toJsx(args) {
-    return `
-            ${jsxCompLayerPreamble(args)}
-            var _mv = new MarkerValue(${jsxVal(args.comment ?? "")});
-            var _w = [];
-            ${jsxMarkerFieldSets(args)}
-            _layer.property("Marker").setValueAtTime(${jsxVal(args.time)}, _mv);
-            return { ok: true, numMarkers: _layer.property("Marker").numKeys, warnings: _w };
-        `;
-  }
-});
-registerOp({
-  name: "marker.remove",
-  category: "marker",
-  description: "Remove a marker from a comp (default) or a layer (pass layer). Target by keyIndex or nearest time.",
-  params: [
-    { name: "comp", type: "any", description: "Comp name or id", required: true },
-    {
-      name: "layer",
-      type: "any",
-      description: "Layer index or name \u2014 omit for comp markers",
-      required: false
-    },
-    { name: "keyIndex", type: "number", description: "1-based marker index", required: false },
-    {
-      name: "time",
-      type: "number",
-      description: "Remove the marker nearest to this time (used when keyIndex omitted)",
-      required: false
-    }
-  ],
-  toJsx(args) {
-    return `
-            ${jsxMarkerPreamble(args)}
-            ${jsxMarkerKeyLookup(args)}
-            var _removedTime = _mp.keyTime(_ki);
-            _mp.removeKey(_ki);
-            return { ok: true, removedTime: _removedTime, numMarkers: _mp.numKeys };
-        `;
-  }
-});
-registerOp({
-  name: "marker.update",
-  category: "marker",
-  description: "Update fields of an existing marker on a comp (default) or a layer (pass layer). Target by keyIndex or nearest time. Only the passed fields change.",
-  params: [
-    { name: "comp", type: "any", description: "Comp name or id", required: true },
-    {
-      name: "layer",
-      type: "any",
-      description: "Layer index or name \u2014 omit for comp markers",
-      required: false
-    },
-    { name: "keyIndex", type: "number", description: "1-based marker index", required: false },
-    {
-      name: "time",
-      type: "number",
-      description: "Update the marker nearest to this time (used when keyIndex omitted)",
-      required: false
-    },
-    { name: "comment", type: "string", description: "New comment", required: false },
-    ...MARKER_FIELD_PARAMS
-  ],
-  toJsx(args) {
-    const commentSet = args.comment !== void 0 ? `_mv.comment = ${jsxVal(args.comment)};` : "";
-    return `
-            ${jsxMarkerPreamble(args)}
-            ${jsxMarkerKeyLookup(args)}
-            var _mv = _mp.keyValue(_ki);
-            var _w = [];
-            ${commentSet}
-            ${jsxMarkerFieldSets(args)}
-            _mp.setValueAtKey(_ki, _mv);
-            return { ok: true, keyIndex: _ki, time: _mp.keyTime(_ki), warnings: _w };
-        `;
-  }
-});
-registerOp({
-  name: "marker.list",
-  category: "marker",
-  readOnly: true,
-  description: "List all markers on a comp (default) or a layer (pass layer).",
-  params: [
-    { name: "comp", type: "any", description: "Comp name or id", required: true },
-    {
-      name: "layer",
-      type: "any",
-      description: "Layer index or name \u2014 omit for comp markers",
-      required: false
-    }
-  ],
-  toJsx(args) {
-    return `
-            ${jsxMarkerPreamble(args)}
-            var _markers = [];
-            for (var _mi = 1; _mi <= _mp.numKeys; _mi++) {
-                var _v = _mp.keyValue(_mi);
-                _markers.push({
-                    index: _mi,
-                    time: _mp.keyTime(_mi),
-                    comment: AE.safeGet(function () { return _v.comment; }, ""),
-                    duration: AE.safeGet(function () { return _v.duration; }, 0),
-                    label: AE.safeGet(function () { return _v.label; }, 0),
-                    chapter: AE.safeGet(function () { return _v.chapter; }, ""),
-                    url: AE.safeGet(function () { return _v.url; }, ""),
-                    frameTarget: AE.safeGet(function () { return _v.frameTarget; }, ""),
-                    cuePointName: AE.safeGet(function () { return _v.cuePointName; }, ""),
-                    eventCuePoint: AE.safeGet(function () { return _v.eventCuePoint; }, false),
-                    params: AE.safeGet(function () { return _v.getParameters(); }, {}),
-                    protectedRegion: AE.safeGet(function () { return _v.protectedRegion; }, false)
-                });
-            }
-            return { ok: true, count: _markers.length, markers: _markers };
-        `;
-  }
-});
-
-// src/opschema.ts
-function isPlainObject3(v) {
-  return typeof v === "object" && v !== null && !Array.isArray(v);
-}
-function typeMatches(type, v) {
-  switch (type) {
-    case "string":
-      return typeof v === "string";
-    case "number":
-      return typeof v === "number" && Number.isFinite(v);
-    case "boolean":
-      return typeof v === "boolean";
-    case "array":
-      return Array.isArray(v);
-    case "object":
-      return isPlainObject3(v);
-    case "any":
-      return true;
-  }
-}
-function describeValue(v) {
-  if (v === null) return "null";
-  if (Array.isArray(v)) return "array";
-  if (typeof v === "number" && !Number.isFinite(v)) return "non-finite number";
-  return typeof v;
-}
-function levenshtein(a, b) {
-  if (a === b) return 0;
-  const prev = Array.from({ length: b.length + 1 }, (_, j) => j);
-  const curr = Array.from({ length: b.length + 1 }, () => 0);
-  for (let i = 1; i <= a.length; i++) {
-    curr[0] = i;
-    for (let j = 1; j <= b.length; j++) {
-      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      curr[j] = Math.min(curr[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
-    }
-    for (let j = 0; j <= b.length; j++) prev[j] = curr[j];
-  }
-  return prev[b.length];
-}
-function suggestName(key, candidates) {
-  const lowered = key.toLowerCase();
-  let best = null;
-  let bestDistance = Number.POSITIVE_INFINITY;
-  for (const candidate of candidates) {
-    const distance = levenshtein(lowered, candidate.toLowerCase());
-    if (distance < bestDistance) {
-      bestDistance = distance;
-      best = candidate;
-    }
-  }
-  if (best === null) return null;
-  const budget = Math.max(1, Math.floor(Math.max(key.length, best.length) * 0.4));
-  return bestDistance <= budget ? best : null;
-}
-function summarizeParams(params) {
-  return params.map(
-    (p) => `${p.name}: ${p.type} (${p.required ? "required" : "optional"}${p.nullable ? ", nullable" : ""})`
+  const scratch = new Float32Array(n);
+  const dT = new Float32Array(n);
+  const dO = new Float32Array(n);
+  distanceTo(alpha, width, height, isT, scratch, dT);
+  distanceTo(alpha, width, height, isO, scratch, dO);
+  const labels = new Int32Array(n);
+  const queue = new Int32Array(n);
+  const islands = labelRegions(
+    alpha,
+    width,
+    height,
+    (p) => alpha[p] > t.transparent,
+    true,
+    labels,
+    queue,
+    t.transparent
   );
+  const largest = islands.reduce((m2, r) => Math.max(m2, r.area), 0);
+  const isMain = islands.map((r) => r.area > 0 && r.area >= t.mainAreaShare * largest);
+  const mains = islands.filter((_, i) => isMain[i]).sort(byArea);
+  const specks = islands.filter((_, i) => !isMain[i]).sort(byArea);
+  const widths = [];
+  let unmeasured = 0;
+  let worst = -1;
+  let worstAt = null;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const p = y * width + x;
+      if (alpha[p] < CONTOUR_ALPHA || labels[p] === 0 || !isMain[labels[p] - 1]) continue;
+      let onContour = false;
+      for (let k = 0; k < 4 && !onContour; k++) {
+        const qx = x + N4X[k];
+        const qy = y + N4Y[k];
+        if (qx < 0 || qy < 0 || qx >= width || qy >= height) continue;
+        if (alpha[qy * width + qx] < CONTOUR_ALPHA) onContour = true;
+      }
+      if (!onContour) continue;
+      const sum = dT[p] + dO[p];
+      if (!Number.isFinite(sum)) {
+        unmeasured++;
+        continue;
+      }
+      const w = Math.max(0, sum - 1);
+      widths.push(w);
+      if (w > worst) {
+        worst = w;
+        worstAt = { x, y };
+      }
+    }
+  }
+  widths.sort((a, b) => a - b);
+  const m = widths.length;
+  const median2 = m === 0 ? null : m % 2 ? widths[(m - 1) / 2] : (widths[m / 2 - 1] + widths[m / 2]) / 2;
+  const belowOpaque = labelRegions(
+    alpha,
+    width,
+    height,
+    (p) => alpha[p] < t.opaque,
+    false,
+    labels,
+    queue,
+    t.transparent
+  );
+  const holes = belowOpaque.filter((r) => !r.touchesBorder).sort(byArea);
+  const half = t.maxEdgeWidth / 2;
+  const isPartial = (p) => alpha[p] > t.transparent && alpha[p] < t.opaque;
+  const isCore = (p) => isPartial(p) && Math.min(dT[p], dO[p]) > half;
+  labels.fill(0);
+  let tail = 0;
+  let ids = 0;
+  for (let start = 0; start < n; start++) {
+    if (labels[start] !== 0 || !isCore(start)) continue;
+    ids++;
+    labels[start] = ids;
+    let head = tail;
+    queue[tail++] = start;
+    while (head < tail) {
+      const p = queue[head++];
+      const x = p % width;
+      const y = (p - x) / width;
+      for (let k = 0; k < 8; k++) {
+        const qx = x + N8X[k];
+        const qy = y + N8Y[k];
+        if (qx < 0 || qy < 0 || qx >= width || qy >= height) continue;
+        const q = qy * width + qx;
+        if (labels[q] !== 0 || !isCore(q)) continue;
+        labels[q] = ids;
+        queue[tail++] = q;
+      }
+    }
+  }
+  let levelStart = 0;
+  let levelEnd = tail;
+  for (let step = 0; step < Math.ceil(half) && levelStart < levelEnd; step++) {
+    for (let i = levelStart; i < levelEnd; i++) {
+      const p = queue[i];
+      const x = p % width;
+      const y = (p - x) / width;
+      for (let k = 0; k < 8; k++) {
+        const qx = x + N8X[k];
+        const qy = y + N8Y[k];
+        if (qx < 0 || qy < 0 || qx >= width || qy >= height) continue;
+        const q = qy * width + qx;
+        if (labels[q] !== 0 || !isPartial(q)) continue;
+        labels[q] = labels[p];
+        queue[tail++] = q;
+      }
+    }
+    levelStart = levelEnd;
+    levelEnd = tail;
+  }
+  const patchRegions = Array.from({ length: ids }, newRegion);
+  for (let i = 0; i < tail; i++) {
+    const p = queue[i];
+    const x = p % width;
+    addPixel(patchRegions[labels[p] - 1], x, (p - x) / width, alpha[p]);
+  }
+  const patchId = new Map(patchRegions.map((r, i) => [r, i + 1]));
+  patchRegions.sort(byArea);
+  const patchList = patchRegions.slice(0, t.listed).map((r) => patchEntry(r, patchId.get(r), labels, alpha, dT, dO, width, t.patchWindow));
+  const edgeSum = [0, 0, 0];
+  const solidSum = [0, 0, 0];
+  let edgeCount = 0;
+  let solidCount = 0;
+  const zones = new Uint8Array(n);
+  const M = t.maxEdgeWidth;
+  for (let p = 0; p < n; p++) {
+    const a = alpha[p];
+    zones[p] = dT[p] <= M && dO[p] <= M ? EDGE : a >= CONTOUR_ALPHA ? INSIDE : OUTSIDE;
+    const partial2 = a > t.transparent && a < t.opaque;
+    const solid = a >= t.opaque && dT[p] <= M;
+    if (fromLuma || !(partial2 && a >= t.spillMinAlpha) && !solid) continue;
+    const sum = solid ? solidSum : edgeSum;
+    for (let c = 0; c < 3; c++) {
+      const v = img.rgb[p * 3 + c];
+      sum[c] += a >= 1 ? v : Math.min(1, Math.max(0, (v - bg[c] * (1 - a)) / a));
+    }
+    if (solid) solidCount++;
+    else edgeCount++;
+  }
+  const meanOf = (s, k) => k === 0 ? null : [s[0] / k, s[1] / k, s[2] / k];
+  const edgeMean = meanOf(edgeSum, edgeCount);
+  const solidMean = meanOf(solidSum, solidCount);
+  const excess = edgeMean ? screenExcess(edgeMean, t.screen) : null;
+  const solidExcess = solidMean ? screenExcess(solidMean, t.screen) : null;
+  const leans = excess !== null && excess > t.spillThreshold && (solidExcess === null || excess - solidExcess > t.spillThreshold);
+  const report = {
+    stage: "capture",
+    matteFrom: t.from,
+    pixels: n,
+    shares: {
+      opaque: r4(opaque / n),
+      partial: r4((n - opaque - transparent) / n),
+      transparent: r4(transparent / n)
+    },
+    width: {
+      typical: median2 === null ? null : r2(median2),
+      p90: m === 0 ? null : r2(widths[Math.floor(0.9 * (m - 1))]),
+      worst: m === 0 ? null : r2(worst),
+      worstAt,
+      samples: m,
+      unmeasured
+    },
+    solidAreas: {
+      count: mains.length,
+      list: mains.slice(0, t.listed).map((r) => ({ ...box(r), area: r.area }))
+    },
+    holes: {
+      count: holes.length,
+      area: holes.reduce((s, r) => s + r.area, 0),
+      transparentArea: holes.reduce((s, r) => s + r.transparent, 0),
+      largest: holes.length ? holeEntry(holes[0]) : null,
+      list: holes.slice(0, t.listed).map(holeEntry)
+    },
+    specks: {
+      count: specks.length,
+      area: specks.reduce((s, r) => s + r.area, 0),
+      list: specks.slice(0, t.listed).map((r) => ({
+        ...box(r),
+        area: r.area,
+        meanAlpha: r4(r.alphaSum / r.area),
+        maxAlpha: r4(r.alphaMax)
+      }))
+    },
+    patches: {
+      count: patchRegions.length,
+      area: patchRegions.reduce((s, r) => s + r.area, 0),
+      list: patchList
+    },
+    spill: {
+      screen: t.screen,
+      pixels: edgeCount,
+      mean: edgeMean ? r4rgb(edgeMean) : null,
+      solidMean: solidMean ? r4rgb(solidMean) : null,
+      excess: excess === null ? null : r4(excess),
+      solidExcess: solidExcess === null ? null : r4(solidExcess),
+      leansToScreen: leans,
+      reading: fromLuma ? "not read: the matte came from luminance (a Keylight matte view), which carries no subject colour; read spill on the keyed result with `from: 'alpha'`" : spillReading(t, edgeCount, excess, solidExcess, leans)
+    }
+  };
+  return { report, frame: { width, height, alpha: Float32Array.from(alpha), zones } };
 }
-function validateOpArgs(op, raw) {
-  if (raw === void 0 || raw === null) raw = {};
-  if (!isPlainObject3(raw)) {
+function holeEntry(r) {
+  return { ...box(r), area: r.area, meanAlpha: r4(r.alphaSum / r.area) };
+}
+function patchEntry(r, id, labels, alpha, dT, dO, width, window) {
+  const b = box(r);
+  let depth = -1;
+  let at = { x: b.x, y: b.y };
+  let thickness = 0;
+  for (let y = b.y; y < b.y + b.height; y++) {
+    for (let x = b.x; x < b.x + b.width; x++) {
+      const p = y * width + x;
+      if (labels[p] !== id) continue;
+      const m = Math.min(dT[p], dO[p]);
+      if (m > depth) {
+        depth = m;
+        at = { x, y };
+        thickness = Number.isFinite(dT[p]) && Number.isFinite(dO[p]) ? dT[p] + dO[p] - 1 : 2 * m - 1;
+      }
+    }
+  }
+  const bw = b.width;
+  const bh = b.height;
+  const ww = Math.max(1, Math.min(Math.round(window), bw));
+  const wh = Math.max(1, Math.min(Math.round(window), bh));
+  const sc = new Float64Array((bw + 1) * (bh + 1));
+  const sa = new Float64Array((bw + 1) * (bh + 1));
+  const W = bw + 1;
+  for (let j = 0; j < bh; j++) {
+    let rowC = 0;
+    let rowA = 0;
+    for (let i = 0; i < bw; i++) {
+      const p = (b.y + j) * width + (b.x + i);
+      if (labels[p] === id) {
+        rowC++;
+        rowA += alpha[p];
+      }
+      sc[(j + 1) * W + i + 1] = sc[j * W + i + 1] + rowC;
+      sa[(j + 1) * W + i + 1] = sa[j * W + i + 1] + rowA;
+    }
+  }
+  const rect = (s, i, j) => s[(j + wh) * W + i + ww] - s[j * W + i + ww] - s[(j + wh) * W + i] + s[j * W + i];
+  let bestC = -1;
+  let bestA = 0;
+  let bi = 0;
+  let bj = 0;
+  for (let j = 0; j + wh <= bh; j++) {
+    for (let i = 0; i + ww <= bw; i++) {
+      const c = rect(sc, i, j);
+      if (c > bestC) {
+        bestC = c;
+        bestA = rect(sa, i, j);
+        bi = i;
+        bj = j;
+      }
+    }
+  }
+  return {
+    ...b,
+    area: r.area,
+    meanAlpha: r4(r.alphaSum / r.area),
+    thickest: { ...at, thickness: r2(Math.max(0, thickness)) },
+    densest: {
+      x: b.x + bi,
+      y: b.y + bj,
+      width: ww,
+      height: wh,
+      pixels: bestC,
+      share: r4(bestC / (ww * wh)),
+      meanAlpha: bestC > 0 ? r4(bestA / bestC) : 0
+    }
+  };
+}
+function spillReading(t, pixels, excess, solidExcess, leans) {
+  const other = t.screen === "green" ? "red and blue" : "red and green";
+  if (pixels === 0 || excess === null) {
+    return `no partly transparent pixels at or above alpha ${t.spillMinAlpha} to read a colour from`;
+  }
+  const lean = `its ${t.screen} exceeds the larger of ${other} by ${excess.toFixed(3)}`;
+  const versus = solidExcess === null ? "" : `; the solid area just inside the edge: ${solidExcess.toFixed(3)}`;
+  return leans ? `the soft edge leans ${t.screen} (likely spill): ${lean}${versus}` : `the soft edge does not lean ${t.screen} beyond the subject's own colour: ${lean}${versus}`;
+}
+var zoneAcc = () => ({
+  pixels: 0,
+  sum: 0,
+  max: 0,
+  changed: 0,
+  minX: Infinity,
+  minY: Infinity,
+  maxX: -1,
+  maxY: -1
+});
+function finishZone(z2) {
+  return {
+    pixels: z2.pixels,
+    meanAbsDelta: z2.pixels ? r4(z2.sum / z2.pixels) : 0,
+    maxAbsDelta: r4(z2.max),
+    changedShare: z2.pixels ? r4(z2.changed / z2.pixels) : 0,
+    changedBounds: z2.changed === 0 ? null : { x: z2.minX, y: z2.minY, width: z2.maxX - z2.minX + 1, height: z2.maxY - z2.minY + 1 }
+  };
+}
+function alphaChange(prev, cur, t) {
+  if (prev.width !== cur.width || prev.height !== cur.height) {
+    throw new Error(
+      `cannot compare frames of different size (${prev.width}\xD7${prev.height} vs ${cur.width}\xD7${cur.height})`
+    );
+  }
+  const { width } = cur;
+  const acc = [zoneAcc(), zoneAcc(), zoneAcc()];
+  const all = zoneAcc();
+  const n = width * cur.height;
+  for (let p = 0; p < n; p++) {
+    const zp = prev.zones[p];
+    const zc = cur.zones[p];
+    const zone = zp === INSIDE || zc === INSIDE ? INSIDE : zp === OUTSIDE || zc === OUTSIDE ? OUTSIDE : EDGE;
+    const d = Math.abs(cur.alpha[p] - prev.alpha[p]);
+    for (const z2 of [acc[zone], all]) {
+      z2.pixels++;
+      z2.sum += d;
+      if (d > z2.max) z2.max = d;
+      if (d > t.changeAbove) {
+        z2.changed++;
+        const x = p % width;
+        const y = (p - x) / width;
+        if (x < z2.minX) z2.minX = x;
+        if (x > z2.maxX) z2.maxX = x;
+        if (y < z2.minY) z2.minY = y;
+        if (y > z2.maxY) z2.maxY = y;
+      }
+    }
+  }
+  return {
+    edge: finishZone(acc[EDGE]),
+    inside: finishZone(acc[INSIDE]),
+    outside: finishZone(acc[OUTSIDE]),
+    all: finishZone(all)
+  };
+}
+function summarizeFlicker(pairs) {
+  const zone = (key) => {
+    let mean = 0;
+    let max = 0;
+    let share = 0;
+    let worst = null;
+    for (const pair of pairs) {
+      const z2 = pair[key];
+      mean += z2.meanAbsDelta;
+      share += z2.changedShare;
+      if (z2.maxAbsDelta > max) max = z2.maxAbsDelta;
+      if (z2.meanAbsDelta > 0 && (worst === null || z2.meanAbsDelta > worst[key].meanAbsDelta)) {
+        worst = pair;
+      }
+    }
+    const k = Math.max(1, pairs.length);
     return {
-      ok: false,
-      issues: [{ path: "args", message: `must be an object, got ${describeValue(raw)}` }]
+      meanAbsDelta: r4(mean / k),
+      maxAbsDelta: r4(max),
+      changedShare: r4(share / k),
+      worstPair: worst ? { from: worst.from.index, to: worst.to.index } : null
     };
+  };
+  return { edge: zone("edge"), inside: zone("inside"), outside: zone("outside"), all: zone("all") };
+}
+function enclosedHoles(alpha, width, height, opts = {}) {
+  const below = opts.below ?? EDGE_DEFAULTS.opaque;
+  const minArea = opts.minArea ?? 1;
+  const n = width * height;
+  const a = alpha instanceof Float64Array ? alpha : Float64Array.from(alpha);
+  const labels = new Int32Array(n);
+  const queue = new Int32Array(n);
+  const regions = labelRegions(
+    a,
+    width,
+    height,
+    (p) => a[p] < below,
+    false,
+    labels,
+    queue,
+    EDGE_DEFAULTS.transparent
+  );
+  const keep = new Uint8Array(regions.length + 1);
+  const holes = [];
+  const dropped = { count: 0, area: 0 };
+  const leftOut = { count: 0, area: 0 };
+  const entry = (r) => ({
+    ...box(r),
+    area: r.area,
+    meanAlpha: Math.round(r.alphaSum / r.area * 1e3) / 1e3
+  });
+  regions.forEach((r, i) => {
+    if (r.touchesBorder) return;
+    if (r.area < minArea) {
+      dropped.count++;
+      dropped.area += r.area;
+      return;
+    }
+    if (opts.keep && !opts.keep(entry(r))) {
+      leftOut.count++;
+      leftOut.area += r.area;
+      return;
+    }
+    keep[i + 1] = 1;
+    holes.push({ r, id: i + 1 });
+  });
+  const mask = new Uint8Array(n);
+  for (let p = 0; p < n; p++) if (keep[labels[p]]) mask[p] = 1;
+  holes.sort((x, y) => y.r.area - x.r.area);
+  return { holes: holes.map(({ r }) => entry(r)), mask, dropped, leftOut };
+}
+function growMask(mask, width, height, radius) {
+  if (radius <= 0) return Uint8Array.from(mask);
+  const src = Float64Array.from(mask);
+  const scratch = new Float32Array(width * height);
+  const dist = new Float32Array(width * height);
+  distanceTo(src, width, height, (v) => v > 0, scratch, dist);
+  const out = new Uint8Array(width * height);
+  for (let p = 0; p < out.length; p++) if (dist[p] <= radius + 1e-9) out[p] = 1;
+  return out;
+}
+function cutoutRegions(alpha, width, height, opts = {}) {
+  const below = opts.below ?? EDGE_DEFAULTS.opaque;
+  const minArea = opts.minArea ?? 1;
+  const n = width * height;
+  const a = Float64Array.from(alpha);
+  const original = alpha;
+  const sealedEdge = new Int8Array(n).fill(-1);
+  const EDGES = ["top", "bottom", "left", "right"];
+  const edgePixels = (e) => {
+    const out = [];
+    if (e < 2) {
+      const y = e === 0 ? 0 : height - 1;
+      for (let x = 0; x < width; x++) out.push(y * width + x);
+    } else {
+      const x = e === 2 ? 0 : width - 1;
+      for (let y = 0; y < height; y++) out.push(y * width + x);
+    }
+    return out;
+  };
+  for (let e = 0; e < 4; e++) {
+    const px2 = edgePixels(e);
+    let first = -1;
+    let last = -1;
+    let count = 0;
+    for (let i = 0; i < px2.length; i++)
+      if (original[px2[i]] >= below) {
+        if (first < 0) first = i;
+        last = i;
+        count++;
+      }
+    if (count < 2) continue;
+    for (let i = first; i <= last; i++) {
+      const p = px2[i];
+      if (original[p] < below) {
+        if (sealedEdge[p] < 0) sealedEdge[p] = e;
+        a[p] = 1;
+      }
+    }
   }
-  const issues = [];
-  const declared = op.params;
-  const declaredNames = declared.map((p) => p.name);
-  for (const param of declared) {
-    const value = raw[param.name];
-    if (value === void 0) {
-      if (param.required) {
-        issues.push({
-          path: param.name,
-          message: `missing required parameter (${param.type}) \u2014 ${param.description}`
+  const labels = new Int32Array(n);
+  const queue = new Int32Array(n);
+  const regions = labelRegions(
+    a,
+    width,
+    height,
+    (p) => a[p] < below,
+    false,
+    labels,
+    queue,
+    EDGE_DEFAULTS.transparent
+  );
+  const extra = regions.map(() => ({
+    area: 0,
+    sum: 0,
+    minX: Infinity,
+    minY: Infinity,
+    maxX: -1,
+    maxY: -1,
+    edges: /* @__PURE__ */ new Set()
+  }));
+  for (let p = 0; p < n; p++) {
+    const e = sealedEdge[p];
+    if (e < 0) continue;
+    const x = p % width;
+    const y = (p - x) / width;
+    const q = e === 0 ? p + width : e === 1 ? p - width : e === 2 ? p + 1 : p - 1;
+    const qx = q % width;
+    const qy = (q - qx) / width;
+    if (q < 0 || q >= n || e >= 2 && Math.abs(qy - y) !== 0) continue;
+    const id = labels[q];
+    if (!id || regions[id - 1].touchesBorder) continue;
+    const r = extra[id - 1];
+    r.area++;
+    r.sum += original[p];
+    r.minX = Math.min(r.minX, x);
+    r.maxX = Math.max(r.maxX, x);
+    r.minY = Math.min(r.minY, y);
+    r.maxY = Math.max(r.maxY, y);
+    r.edges.add(EDGES[e]);
+  }
+  const holes = [];
+  const openings = [];
+  const dropped = { count: 0, area: 0 };
+  regions.forEach((r, i) => {
+    if (r.touchesBorder) return;
+    const x = extra[i];
+    const area = r.area + x.area;
+    if (area < minArea) {
+      dropped.count++;
+      dropped.area += area;
+      return;
+    }
+    const minX = Math.min(r.minX, x.minX);
+    const minY = Math.min(r.minY, x.minY);
+    const entry = {
+      x: minX,
+      y: minY,
+      width: Math.max(r.maxX, x.maxX) - minX + 1,
+      height: Math.max(r.maxY, x.maxY) - minY + 1,
+      area,
+      meanAlpha: Math.round((r.alphaSum + x.sum) / area * 1e3) / 1e3
+    };
+    if (x.edges.size > 0) openings.push({ ...entry, edges: EDGES.filter((e) => x.edges.has(e)) });
+    else holes.push(entry);
+  });
+  holes.sort((p, q) => q.area - p.area);
+  openings.sort((p, q) => q.area - p.area);
+  return { holes, openings, dropped };
+}
+var median = (xs) => {
+  if (!xs.length) return null;
+  const s = [...xs].sort((a, b) => a - b);
+  const m = s.length;
+  return m % 2 ? s[(m - 1) / 2] : (s[m / 2 - 1] + s[m / 2]) / 2;
+};
+var r6 = (n) => Math.round(n * 1e6) / 1e6;
+function outlineTracker(opts = {}) {
+  const gap = opts.gap ?? 30;
+  const limit = opts.limit ?? 2e-3;
+  const minFrames = opts.minFrames ?? 60;
+  const step = Math.round((opts.step ?? 0.1) * 255);
+  const lumaStep = Math.round(0.05 * 255);
+  const ring = [];
+  const neighbours = [];
+  const windows = [];
+  const changed = (x, y) => {
+    let n = 0;
+    for (let p = 0; p < x.length; p++) if (Math.abs(x[p] - y[p]) > step) n++;
+    return n / x.length;
+  };
+  const footage = (p, c) => {
+    let n = 0;
+    for (let i = 0; i < p.a.length; i++)
+      if (p.a[i] >= 250 && c.a[i] >= 250 && Math.abs(p.l[i] - c.l[i]) > lumaStep) n++;
+    return n / p.a.length;
+  };
+  return {
+    add(frame, alpha, rgb, width, height) {
+      const n = width * height;
+      const a = new Uint8Array(n);
+      const l = new Uint8Array(n);
+      for (let p = 0; p < n; p++) {
+        a[p] = Math.round(Math.min(1, Math.max(0, alpha[p])) * 255);
+        if (rgb)
+          l[p] = Math.round(
+            Math.min(
+              1,
+              Math.max(0, 0.2126 * rgb[p * 3] + 0.7152 * rgb[p * 3 + 1] + 0.0722 * rgb[p * 3 + 2])
+            ) * 255
+          );
+      }
+      const cur = { frame, a, l };
+      const prev = ring[ring.length - 1];
+      if (prev && prev.frame === frame - 1) neighbours.push(changed(prev.a, a));
+      let partner;
+      for (const e of ring) if (e.frame <= frame - gap) partner = e;
+      if (partner)
+        windows.push({
+          a: partner.frame,
+          b: frame,
+          drift: changed(partner.a, a),
+          footage: footage(partner, cur)
         });
-      }
-      continue;
-    }
-    if (value === null) {
-      if (!param.nullable && param.type !== "any") {
-        issues.push({
-          path: param.name,
-          message: `must be ${param.type}, got null \u2014 omit the key instead of passing null`
-        });
-      }
-      continue;
-    }
-    if (!typeMatches(param.type, value)) {
-      issues.push({
-        path: param.name,
-        message: `must be ${param.type}, got ${describeValue(value)}`
-      });
-    }
-  }
-  for (const key of Object.keys(raw)) {
-    if (declaredNames.includes(key)) continue;
-    if (raw[key] === void 0) continue;
-    const suggestion = suggestName(key, declaredNames);
-    issues.push({
-      path: key,
-      message: suggestion ? `unknown parameter \u2014 did you mean '${suggestion}'?` : `unknown parameter (this operation accepts: ${declaredNames.join(", ") || "no parameters"})`
-    });
-  }
-  if (issues.length > 0) return { ok: false, issues };
-  return { ok: true, value: raw };
-}
-
-// src/operations/batch.ts
-init_registry();
-registerOp({
-  name: "batch.run",
-  category: "batch",
-  description: "Execute multiple operations in a single IPC call (~400ms total instead of 400ms \xD7 N). Operations run sequentially inside ONE undo group \u2014 a single Ctrl+Z reverts the whole batch, however many ops it contained. That group is also why undo/redo children (project.undo, command.execute id 16/2035) are rejected here: call those as their own ae_do. If one fails, subsequent ops still run unless stopOnError. With stopOnError, a failure rolls the WHOLE batch back (one undo, issued before the response, reported in details.rollback) and still returns every child's result; pass rollback: false to keep the operations that ran before the failure instead \u2014 the result's `kept` says which. Without stopOnError nothing is rolled back: the other children's changes stand. Results array matches input order; the response reports how many failed. Mix in read/verify children \u2014 comp.info, layer.info, render.frame \u2014 to mutate AND verify in the same call, e.g. [...mutations, { operation: 'render.frame', args: { \u2026 } }].",
-  params: [
-    {
-      name: "ops",
-      type: "array",
-      description: 'Array of { operation, args } objects, e.g. [{ "operation": "layer.create_solid", "args": { "comp": "Main", "color": [1,0,0] } }]',
-      required: true
+      ring.push(cur);
+      let keepFrom = 0;
+      for (let i = 0; i < ring.length; i++) if (ring[i].frame <= frame + 1 - gap) keepFrom = i;
+      ring.splice(0, keepFrom);
     },
-    {
-      name: "stopOnError",
-      type: "boolean",
-      description: "Stop at the first failing op (default false). The batch is then rolled back as a whole unless rollback is false.",
-      required: false
-    },
-    {
-      name: "rollback",
-      type: "boolean",
-      description: "Default true. With stopOnError, revert the whole batch when an op fails, and revert it if the batch itself throws. false keeps whatever ran before the failure (for deliberately incremental work); the result's `kept` names it.",
-      required: false
-    },
-    {
-      name: "acceptRenderQueueRisk",
-      type: "boolean",
-      description: "Default false. After a scripted render-queue change in this After Effects session, undo is refused (After Effects 2027 has gone into crash recovery on undo after such changes \u2014 observed twice; a precaution). Pass true only when the user accepts that risk, ideally after saving.",
-      required: false
-    }
-  ],
-  // The wrapper itself mutates nothing; each child is gated individually below,
-  // so a batch of read-only operations stays usable under AE_MCP_READONLY.
-  readOnly: true,
-  // The children mutate even though the wrapper is read-only, so batch.run
-  // decides its own rollback rather than taking the read-only default.
-  rollback: (args) => args.rollback !== false,
-  toJsx(args) {
-    if (!Array.isArray(args.ops)) {
-      return `
-                return { ok: false, error: "ops must be an array" };
-            `;
-    }
-    const ops = args.ops;
-    const stopOnError = !!args.stopOnError;
-    const rollback = args.rollback !== false;
-    const opBlocks = [];
-    for (let i = 0; i < ops.length; i++) {
-      const entry = ops[i];
-      const opName = entry && typeof entry === "object" && typeof entry.operation === "string" ? entry.operation : void 0;
-      const op = opName !== void 0 ? getOp(opName) : void 0;
-      if (!op) {
-        const withheld = opName !== void 0 ? denyUnregisteredOperation(opName) : null;
-        opBlocks.push(
-          rejectBlock(
-            i,
-            withheld ? denialText(withheld) : `unknown operation: ${String(opName)}`,
-            stopOnError
-          )
-        );
-        continue;
-      }
-      const denial = denyOperation(op);
-      if (denial) {
-        opBlocks.push(rejectBlock(i, denialText(denial), stopOnError));
-        continue;
-      }
-      const validated = validateOpArgs(op, entry.args);
-      if (!validated.ok) {
-        const detail = `invalid arguments for '${op.name}': ` + validated.issues.map((issue2) => `${issue2.path} \u2014 ${issue2.message}`).join("; ") + ` (expects ${summarizeParams(op.params).join(", ") || "no parameters"})`;
-        opBlocks.push(rejectBlock(i, detail, stopOnError));
-        continue;
-      }
-      const consent = denyAppConfig(op, validated.value);
-      if (consent) {
-        opBlocks.push(rejectBlock(i, consent, stopOnError));
-        continue;
-      }
-      if (!wantsUndoGroup(op, validated.value)) {
-        opBlocks.push(
-          rejectBlock(
-            i,
-            `'${op.name}' cannot run inside batch.run \u2014 the batch is one undo group and undo/redo must not run inside one. Call it as its own ae_do.`,
-            stopOnError
-          )
-        );
-        continue;
-      }
-      const prepared = prepareOp(op, validated.value);
-      if (!prepared.ok) {
-        opBlocks.push(rejectBlock(i, `'${op.name}': ${prepared.error}`, stopOnError));
-        continue;
-      }
-      const jsx = op.toJsx(prepared.args);
-      opBlocks.push(`
-                if (!_stopped) {
-                    try {
-                        var _r${i} = (function() { ${jsx} })();
-                        if (_r${i} && _r${i}.ok === false) { _failed++; ${stopOnError ? `_stopped = true; _stoppedAt = ${i};` : ""} }
-                        _results.push(_r${i});
-                    } catch(e) {
-                        _failed++;
-                        _results.push({ ok: false, error: AE.errText(e) });
-                        ${stopOnError ? `_stopped = true; _stoppedAt = ${i};` : ""}
-                    }
-                } else {
-                    _results.push({ skipped: true });
-                }
-            `);
-    }
-    return `
-            var _results = [];
-            var _failed = 0;
-            var _stopped = false;
-            var _stoppedAt = -1;
-            ${opBlocks.join("\n")}
-            var _kept = null;
-            var _rollbackRequested = false;
-            if (_stopped) {
-                if (${rollback ? "true" : "false"} && typeof __mcp !== "undefined" && __mcp && __mcp.requestRollback) {
-                    // serve.jsx reverts the whole request after this returns.
-                    __mcp.requestRollback("batch.run stopped at operation " + _stoppedAt);
-                    _rollbackRequested = true;
-                } else {
-                    if (_stoppedAt === 0) _kept = "nothing ran before it";
-                    else if (_stoppedAt === 1) _kept = "operation 0 ran and was kept";
-                    else _kept = "operations 0 to " + (_stoppedAt - 1) + " ran and were kept";
-                    _kept += "; operation " + _stoppedAt + " failed (any change it made before failing was kept too)" +
-                        "; the operations after it were skipped";
-                }
-            }
-            return {
-                ok: _failed === 0,
-                error: _failed === 0 ? null : (_failed + " of " + _results.length + " operations failed" +
-                    (_rollbackRequested ? "; the batch is being rolled back (stopOnError)" : "")),
-                results: _results,
-                count: _results.length,
-                failed: _failed,
-                stoppedAt: _stopped ? _stoppedAt : null,
-                rollbackRequested: _rollbackRequested,
-                kept: _kept
-            };
-        `;
-  }
-});
-function denialText(denial) {
-  return denial.hint ? `${denial.message} \u2014 ${denial.hint}` : denial.message;
-}
-function rejectBlock(index, message, stopOnError) {
-  return `
-                if (!_stopped) {
-                    _failed++;
-                    _results.push({ ok: false, error: ${jsxVal(message)}, index: ${index} });
-                    ${stopOnError ? `_stopped = true; _stoppedAt = ${index};` : ""}
-                } else {
-                    _results.push({ skipped: true });
-                }
-            `;
-}
-
-// src/operations/timeline.ts
-init_registry();
-registerOp({
-  name: "timeline.set_time",
-  category: "timeline",
-  description: "Set the current time indicator (CTI) in a composition.",
-  params: [
-    { name: "comp", type: "any", description: "Comp name or id", required: true },
-    { name: "time", type: "number", description: "Time in seconds", required: true }
-  ],
-  toJsx(args) {
-    return `
-            ${jsxCompPreamble(args)}
-            _comp.time = ${jsxVal(args.time)};
-            return { ok: true, time: _comp.time };
-        `;
-  }
-});
-registerOp({
-  name: "timeline.set_active_comp",
-  category: "timeline",
-  description: "Set the active (visible in UI) composition. Opens it in the viewer.",
-  params: [{ name: "comp", type: "any", description: "Comp name or id", required: true }],
-  toJsx(args) {
-    return `
-            ${jsxCompPreamble(args)}
-            _comp.openInViewer();
-            return { ok: true, name: _comp.name };
-        `;
-  }
-});
-registerOp({
-  name: "timeline.select_layers",
-  category: "timeline",
-  description: "Select (or deselect) layers in a comp by index.",
-  params: [
-    { name: "comp", type: "any", description: "Comp name or id", required: true },
-    {
-      name: "indices",
-      type: "array",
-      description: "Array of 1-based layer indices to select",
-      required: true
-    },
-    {
-      name: "deselectOthers",
-      type: "boolean",
-      description: "Deselect all other layers first (default true)",
-      required: false,
-      default: true
-    }
-  ],
-  toJsx(args) {
-    return `
-            ${jsxCompPreamble(args)}
-            var _indices = ${jsxVal(args.indices)};
-            if (${jsxVal(args.deselectOthers !== false)}) {
-                for (var i = 1; i <= _comp.numLayers; i++) _comp.layer(i).selected = false;
-            }
-            for (var j = 0; j < _indices.length; j++) {
-                if (_indices[j] >= 1 && _indices[j] <= _comp.numLayers) {
-                    _comp.layer(_indices[j]).selected = true;
-                }
-            }
-            return { ok: true, selected: _indices.length };
-        `;
-  }
-});
-
-// src/operations/layer-advanced.ts
-init_registry();
-
-// src/operations/snippets.ts
-var COMP_INFO_FN = `
-    function _compInfo(c) {
-        var _ciLayers = [];
-        for (var _ci = 1; _ci <= c.numLayers; _ci++) {
-            _ciLayers.push(AE.serializeLayerSummary(c.layer(_ci)));
-        }
-        var _ciOut = AE.serializeItemSummary(c);
-        _ciOut.ok = true;
-        _ciOut.found = true;
-        _ciOut.workAreaStart = c.workAreaStart;
-        _ciOut.workAreaDuration = c.workAreaDuration;
-        _ciOut.pixelAspect = c.pixelAspect;
-        _ciOut.shutterAngle = c.shutterAngle;
-        _ciOut.shutterPhase = c.shutterPhase;
-        _ciOut.motionBlur = c.motionBlur;
-        // Comp markers (time, comment, duration per key), or null when there are none.
-        _ciOut.markers = AE.serializeCompMarkers(c);
-        _ciOut.layers = _ciLayers;
-        return _ciOut;
-    }
-`;
-var LAYER_FULL_FN = `
-    function _layerFull(l, incl, detail) {
-        var _lfOut = AE.serializeLayerFull(l, { includeProperties: incl, detail: detail });
-        _lfOut.ok = true;
-        _lfOut.found = true;
-        return _lfOut;
-    }
-`;
-var RENDER_FRAME_FN = `
-    function _renderFrame(c, t0, outAbs, useDst) {
-        var _rfT = t0;
-        if (useDst) _rfT = _rfT + c.displayStartTime;
-        var _rfFile = AE.ensureParentDir(outAbs);
-        try {
-            c.saveFrameToPng(_rfT, _rfFile);
-            return {
-                ok: true,
-                writtenTo: _rfFile.fsName.replace(/\\\\/g, "/"),
-                time: _rfT,
-                compName: c.name,
-                size: [c.width, c.height]
-            };
-        } catch (eRf) {
-            return { ok: false, error: "saveFrameToPng failed: " + AE.errText(eRf) };
-        }
-    }
-`;
-var MISSING_SOURCES_FN = `
-    function _missingSources(_msRoot) {
-        var _msOut = [];
-        var _msComps = {};
-        var _msFootage = {};
-        function _msWalk(_comp) {
-            if (_msComps[_comp.id]) return;
-            _msComps[_comp.id] = true;
-            for (var _li = 1; _li <= _comp.numLayers; _li++) {
-                var _source = AE.safeGet(function () { return _comp.layer(_li).source; }, null);
-                if (!_source) continue;
-                if (_source instanceof CompItem) { _msWalk(_source); continue; }
-                if (!(_source instanceof FootageItem) || _msFootage[_source.id]) continue;
-                _msFootage[_source.id] = true;
-                var _file = AE.safeGet(function () { return _source.file; }, null);
-                var _missing = AE.safeGet(function () { return _source.footageMissing; }, false);
-                if (!_missing && (!_file || _file.exists)) continue;
-                var _missingPath = AE.safeGet(function () { return _source.mainSource.missingFootagePath; }, null);
-                if (!_missingPath && _file) _missingPath = _file.fsName;
-                _msOut.push({ id: _source.id, name: _source.name, path: _missingPath });
-            }
-        }
-        _msWalk(_msRoot);
-        return _msOut;
-    }
-`;
-var OCIO_CAPTURE_FN = `
-    function _captureWithOcio(c, maxT, renderAll) {
-        var _adj = null;
-        var _adjSrc = null;
-        var _ran = false;
-        try {
-            _adj = c.layers.addSolid([1, 1, 1], "__mcp_ocio__", c.width, c.height, c.pixelAspect);
-            _adjSrc = _adj.source;
-            _adj.adjustmentLayer = true;
-            try {
-                if (_adj.outPoint < maxT + c.frameDuration) _adj.outPoint = maxT + c.frameDuration;
-            } catch (eOp) { }
-            var _fxOk = false;
-            try {
-                _adj.property("Effects").addProperty("ADBE OCIO Display Transform");
-                _fxOk = true;
-            } catch (eFx) { /* pre-OCIO AE or ICC color engine */ }
-            if (_fxOk) { _ran = true; renderAll("ocio"); }
-        } catch (eTmp) { /* fall through to direct capture */ }
-        if (_adj) { try { _adj.remove(); } catch (eRm) { } }
-        if (_adjSrc) { try { _adjSrc.remove(); } catch (eRs) { } }
-        return _ran;
-    }
-`;
-var LIST_MISSING_FONTS_FN = `
-    function _listMissingFonts() {
-        if (!app.fonts) return { ok: false, error: "app.fonts needs AE 24.0+" };
-        var _missing = [];
-        try {
-            var _list = app.fonts.missingOrSubstitutedFonts;
-            for (var _i = 0; _i < _list.length; _i++) {
-                var _font = _list[_i];
-                _missing.push({
-                    postScriptName: AE.safeGet(function () { return _font.postScriptName; }, null),
-                    familyName: AE.safeGet(function () { return _font.familyName; }, null),
-                    styleName: AE.safeGet(function () { return _font.styleName; }, null)
-                });
-            }
-        } catch (eM) { return { ok: false, error: "missingOrSubstitutedFonts failed: " + AE.errText(eM) }; }
-        return { ok: true, count: _missing.length, fonts: _missing };
-    }
-`;
-var LIST_MISSING_FOOTAGE_FN = `
-    function _listMissingFootage() {
-        var _missing = [];
-        for (var _i = 1; _i <= app.project.numItems; _i++) {
-            var _it = app.project.item(_i);
-            if (!(_it instanceof FootageItem)) continue;
-            var _isMissing = AE.safeGet(function () { return _it.footageMissing; }, false);
-            if (!_isMissing) continue;
-            _missing.push({
-                id: _it.id,
-                name: _it.name,
-                missingPath: AE.safeGet(function () { return _it.mainSource.missingFootagePath; }, null),
-                usedInComps: AE.safeGet(function () {
-                    var _u = [];
-                    var _comps = _it.usedIn;
-                    for (var _ci = 0; _ci < _comps.length; _ci++) _u.push(_comps[_ci].name);
-                    return _u;
-                }, [])
+    result() {
+      const frozen = [];
+      let run = [];
+      const close = () => {
+        if (run.length >= 2) {
+          const from = run[0].a;
+          const to = run[run.length - 1].b;
+          if (to - from + 1 >= minFrames)
+            frozen.push({
+              from,
+              to,
+              length: to - from + 1,
+              drift: r6(Math.max(...run.map((w) => w.drift))),
+              footageChange: r6(median(run.map((w) => w.footage)) ?? 0)
             });
         }
-        return { ok: true, count: _missing.length, items: _missing };
+        run = [];
+      };
+      for (const w of windows) {
+        if (w.drift < limit) run.push(w);
+        else close();
+      }
+      close();
+      const stats = (xs) => ({
+        min: xs.length ? r6(Math.min(...xs)) : null,
+        median: xs.length ? r6(median(xs)) : null,
+        max: xs.length ? r6(Math.max(...xs)) : null
+      });
+      return {
+        at: "full size: the share of the frame whose alpha changed by more than " + (opts.step ?? 0.1),
+        neighbours: { ...stats(neighbours), pairs: neighbours.length },
+        drift: { gap, ...stats(windows.map((w) => w.drift)), windows: windows.length },
+        limits: { gap, limit, minFrames, step: opts.step ?? 0.1 },
+        frozen
+      };
     }
-`;
-var COMP_CORNERS_FN = `
-    function _compCorners(layer, r) {
-        return {
-            topLeft: AE.valueToJson(layer.sourcePointToComp([r.left, r.top])),
-            topRight: AE.valueToJson(layer.sourcePointToComp([r.left + r.width, r.top])),
-            bottomLeft: AE.valueToJson(layer.sourcePointToComp([r.left, r.top + r.height])),
-            bottomRight: AE.valueToJson(layer.sourcePointToComp([r.left + r.width, r.top + r.height]))
-        };
+  };
+}
+var SPECK_DEFAULTS = { opaque: 0.5, minArea: 20, maxArea: 2e3, neck: 1, minRun: 2 };
+function statAdd(st, id, x, y, onEdge) {
+  if (st.area[id] === void 0) {
+    st.area[id] = 0;
+    st.minX[id] = x;
+    st.minY[id] = y;
+    st.maxX[id] = x;
+    st.maxY[id] = y;
+    st.edge[id] = false;
+  }
+  st.area[id]++;
+  if (x < st.minX[id]) st.minX[id] = x;
+  if (x > st.maxX[id]) st.maxX[id] = x;
+  if (y < st.minY[id]) st.minY[id] = y;
+  if (y > st.maxY[id]) st.maxY[id] = y;
+  if (onEdge) st.edge[id] = true;
+}
+function speckPieces(alpha, width, height, opts = {}) {
+  const o = { ...SPECK_DEFAULTS, ...opts };
+  let bx0 = width;
+  let by0 = height;
+  let bx1 = -1;
+  let by1 = -1;
+  for (let y = 0; y < height; y++) {
+    const row = y * width;
+    let first = -1;
+    let last = -1;
+    for (let x = 0; x < width; x++)
+      if (alpha[row + x] >= o.opaque) {
+        if (first < 0) first = x;
+        last = x;
+      }
+    if (first < 0) continue;
+    if (first < bx0) bx0 = first;
+    if (last > bx1) bx1 = last;
+    if (y < by0) by0 = y;
+    by1 = y;
+  }
+  if (bx1 < 0) return [];
+  bx0 = Math.max(0, bx0 - 1);
+  by0 = Math.max(0, by0 - 1);
+  bx1 = Math.min(width - 1, bx1 + 1);
+  by1 = Math.min(height - 1, by1 + 1);
+  const w = bx1 - bx0 + 1;
+  const h = by1 - by0 + 1;
+  const n = w * h;
+  const m = new Uint8Array(n);
+  for (let y = 0; y < h; y++) {
+    const src = (y + by0) * width + bx0;
+    for (let x = 0; x < w; x++) m[y * w + x] = alpha[src + x] >= o.opaque ? 1 : 0;
+  }
+  const onEdge = (x, y) => x + bx0 === 0 || y + by0 === 0 || x + bx0 === width - 1 || y + by0 === height - 1;
+  let er = m;
+  for (let t = 0; t < o.neck; t++) {
+    const next = new Uint8Array(n);
+    for (let y = 1; y < h - 1; y++)
+      for (let x = 1; x < w - 1; x++) {
+        const p = y * w + x;
+        next[p] = er[p] & er[p - 1] & er[p + 1] & er[p - w] & er[p + w];
+      }
+    er = next;
+  }
+  let ring = [];
+  for (let p = 0; p < n; p++) if (m[p] && !er[p]) ring.push(p);
+  const labels = new Int32Array(n);
+  const queue = new Int32Array(n);
+  const st = { area: [], minX: [], minY: [], maxX: [], maxY: [], edge: [] };
+  const fill = (mask, start, id) => {
+    labels[start] = id;
+    let head = 0;
+    let tail = 0;
+    queue[tail++] = start;
+    let x0 = w;
+    let y0 = h;
+    let x1 = -1;
+    let y1 = -1;
+    while (head < tail) {
+      const p = queue[head++];
+      const x = p % w;
+      const y = (p - x) / w;
+      if (x < x0) x0 = x;
+      if (x > x1) x1 = x;
+      if (y < y0) y0 = y;
+      if (y > y1) y1 = y;
+      const ya = y > 0 ? -1 : 0;
+      const yb = y < h - 1 ? 1 : 0;
+      const xa = x > 0 ? -1 : 0;
+      const xb = x < w - 1 ? 1 : 0;
+      for (let dy = ya; dy <= yb; dy++)
+        for (let dx = xa; dx <= xb; dx++) {
+          const q = p + dy * w + dx;
+          if (mask[q] && !labels[q]) {
+            labels[q] = id;
+            queue[tail++] = q;
+          }
+        }
     }
-`;
+    st.area[id] = tail;
+    st.minX[id] = x0;
+    st.minY[id] = y0;
+    st.maxX[id] = x1;
+    st.maxY[id] = y1;
+    st.edge[id] = onEdge(x0, y0) || onEdge(x1, y1);
+  };
+  const rs = [];
+  const reEnd = [];
+  const ry = [];
+  const parent = [];
+  const find = (i) => {
+    while (parent[i] !== i) {
+      parent[i] = parent[parent[i]];
+      i = parent[i];
+    }
+    return i;
+  };
+  let prevFrom = 0;
+  let prevTo = 0;
+  for (let y = 0; y < h; y++) {
+    const rowFrom = rs.length;
+    const row = y * w;
+    let x = 0;
+    while (x < w) {
+      if (!er[row + x]) {
+        x++;
+        continue;
+      }
+      const x0 = x;
+      while (x < w && er[row + x]) x++;
+      const r = rs.length;
+      rs.push(x0);
+      reEnd.push(x);
+      ry.push(y);
+      parent.push(r);
+      for (let k = prevFrom; k < prevTo; k++) {
+        if (reEnd[k] < x0 || rs[k] > x) continue;
+        const a = find(k);
+        const b2 = find(r);
+        if (a !== b2) parent[Math.max(a, b2)] = Math.min(a, b2);
+      }
+    }
+    prevFrom = rowFrom;
+    prevTo = rs.length;
+  }
+  const idOf = /* @__PURE__ */ new Map();
+  let grownEnd = 1;
+  for (let k = 0; k < rs.length; k++) {
+    const root = find(k);
+    let id = idOf.get(root);
+    if (id === void 0) {
+      id = grownEnd++;
+      idOf.set(root, id);
+      st.area[id] = 0;
+      st.minX[id] = rs[k];
+      st.minY[id] = ry[k];
+      st.maxX[id] = reEnd[k] - 1;
+      st.maxY[id] = ry[k];
+      st.edge[id] = false;
+    }
+    const len = reEnd[k] - rs[k];
+    st.area[id] += len;
+    if (rs[k] < st.minX[id]) st.minX[id] = rs[k];
+    if (reEnd[k] - 1 > st.maxX[id]) st.maxX[id] = reEnd[k] - 1;
+    if (ry[k] < st.minY[id]) st.minY[id] = ry[k];
+    if (ry[k] > st.maxY[id]) st.maxY[id] = ry[k];
+    if (onEdge(rs[k], ry[k]) || onEdge(reEnd[k] - 1, ry[k])) st.edge[id] = true;
+    labels.fill(id, ry[k] * w + rs[k], ry[k] * w + reEnd[k]);
+  }
+  for (let t = 0; t < o.neck + 1 && ring.length; t++) {
+    const take = [];
+    const left = [];
+    for (const p of ring) {
+      const x = p % w;
+      const v = x > 0 && labels[p - 1] || x < w - 1 && labels[p + 1] || p >= w && labels[p - w] || p + w < n && labels[p + w] || 0;
+      if (v) take.push([p, v]);
+      else left.push(p);
+    }
+    for (const [p, v] of take) {
+      labels[p] = v;
+      const x = p % w;
+      const y = (p - x) / w;
+      statAdd(st, v, x, y, onEdge(x, y));
+    }
+    ring = left;
+    if (!take.length) break;
+  }
+  const rest = new Uint8Array(n);
+  for (const p of ring) rest[p] = 1;
+  let end = grownEnd;
+  for (const p of ring) if (!labels[p]) fill(rest, p, end++);
+  const touchesGrown = new Uint8Array(end);
+  for (const p of ring) {
+    const id = labels[p];
+    if (touchesGrown[id]) continue;
+    const x = p % w;
+    const y = (p - x) / w;
+    for (let dy = -1; dy <= 1 && !touchesGrown[id]; dy++)
+      for (let dx = -1; dx <= 1; dx++) {
+        const xx = x + dx;
+        const yy = y + dy;
+        if (xx < 0 || yy < 0 || xx >= w || yy >= h) continue;
+        const q = labels[yy * w + xx];
+        if (q && q < grownEnd) {
+          touchesGrown[id] = 1;
+          break;
+        }
+      }
+  }
+  let main2 = 1;
+  for (let id = 1; id < end; id++) if ((st.area[id] ?? 0) > (st.area[main2] ?? 0)) main2 = id;
+  const pieces = [];
+  for (let id = 1; id < end; id++) {
+    const a = st.area[id] ?? 0;
+    if (id === main2 || st.edge[id] || a < o.minArea || a > o.maxArea) continue;
+    if (id >= grownEnd && touchesGrown[id]) continue;
+    pieces.push({
+      x: st.minX[id] + bx0,
+      y: st.minY[id] + by0,
+      width: st.maxX[id] - st.minX[id] + 1,
+      height: st.maxY[id] - st.minY[id] + 1,
+      area: a
+    });
+  }
+  return pieces.sort((p, q) => q.area - p.area);
+}
 
-// src/operations/layer-advanced.ts
-registerOp({
-  name: "layer.bounds",
-  category: "layer",
-  readOnly: true,
-  description: "Measure a layer's rendered bounds via sourceRectAtTime \u2014 essential for aligning/fitting text and shape layers. Returns layer-space rect and, when the host supports it, comp-space corners.",
-  params: [
-    { name: "comp", type: "any", description: "Comp name or id", required: true },
-    {
-      name: "layer",
-      type: "any",
-      description: "1-based layer index, or the layer name",
-      required: true
-    },
-    {
-      name: "time",
-      type: "number",
-      description: "Time in seconds (default: current comp time)",
-      required: false
-    },
-    {
-      name: "includeExtents",
-      type: "boolean",
-      description: "Include pixel extents beyond the layer edges (default false)",
-      required: false,
-      default: false
+// src/color/png16.ts
+import * as zlib from "node:zlib";
+var PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+function readChunks(buf) {
+  if (!buf.subarray(0, 8).equals(PNG_SIGNATURE)) throw new Error("not a PNG file");
+  const chunks = [];
+  let pos = 8;
+  while (pos + 8 <= buf.length) {
+    const length = buf.readUInt32BE(pos);
+    const type = buf.toString("latin1", pos + 4, pos + 8);
+    chunks.push({ type, data: buf.subarray(pos + 8, pos + 8 + length) });
+    pos += 12 + length;
+    if (type === "IEND") break;
+  }
+  return chunks;
+}
+function channelsFor(colorType) {
+  switch (colorType) {
+    case 0:
+      return 1;
+    // grayscale
+    case 2:
+      return 3;
+    // RGB
+    case 4:
+      return 2;
+    // gray + alpha
+    case 6:
+      return 4;
+    // RGBA
+    default:
+      throw new Error(`unsupported PNG color type ${colorType} (palette images are out of scope)`);
+  }
+}
+function paeth(a, b, c) {
+  const p = a + b - c;
+  const pa = Math.abs(p - a);
+  const pb = Math.abs(p - b);
+  const pc = Math.abs(p - c);
+  if (pa <= pb && pa <= pc) return a;
+  return pb <= pc ? b : c;
+}
+function decodePng(buf) {
+  const chunks = readChunks(buf);
+  const ihdr = chunks.find((c) => c.type === "IHDR");
+  if (!ihdr) throw new Error("PNG missing IHDR");
+  const width = ihdr.data.readUInt32BE(0);
+  const height = ihdr.data.readUInt32BE(4);
+  const bitDepth = ihdr.data.readUInt8(8);
+  const colorType = ihdr.data.readUInt8(9);
+  const interlace = ihdr.data.readUInt8(12);
+  if (interlace !== 0) throw new Error("interlaced PNG is not supported");
+  if (bitDepth !== 8 && bitDepth !== 16) throw new Error(`unsupported PNG bit depth ${bitDepth}`);
+  const channels = channelsFor(colorType);
+  const idat = Buffer.concat(chunks.filter((c) => c.type === "IDAT").map((c) => c.data));
+  const raw = zlib.inflateSync(idat);
+  const bytesPerSample = bitDepth / 8;
+  const bytesPerPixel = channels * bytesPerSample;
+  const stride = width * bytesPerPixel;
+  if (raw.length < height * (stride + 1)) throw new Error("PNG pixel data truncated");
+  const rgb = new Float64Array(width * height * 3);
+  const hasAlpha = channels === 2 || channels === 4;
+  const alpha = hasAlpha ? new Float64Array(width * height) : void 0;
+  const maxVal = bitDepth === 16 ? 65535 : 255;
+  const prev = Buffer.alloc(stride);
+  const cur = Buffer.alloc(stride);
+  const grayish = channels <= 2;
+  for (let y = 0; y < height; y++) {
+    const rowStart = y * (stride + 1);
+    const filter = raw[rowStart];
+    raw.copy(cur, 0, rowStart + 1, rowStart + 1 + stride);
+    switch (filter) {
+      case 0:
+        break;
+      case 1:
+        for (let i = bytesPerPixel; i < stride; i++)
+          cur[i] = cur[i] + cur[i - bytesPerPixel] & 255;
+        break;
+      case 2:
+        for (let i = 0; i < stride; i++) cur[i] = cur[i] + prev[i] & 255;
+        break;
+      case 3:
+        for (let i = 0; i < stride; i++) {
+          const left = i >= bytesPerPixel ? cur[i - bytesPerPixel] : 0;
+          cur[i] = cur[i] + (left + prev[i] >> 1) & 255;
+        }
+        break;
+      case 4:
+        for (let i = 0; i < stride; i++) {
+          const left = i >= bytesPerPixel ? cur[i - bytesPerPixel] : 0;
+          const upLeft = i >= bytesPerPixel ? prev[i - bytesPerPixel] : 0;
+          cur[i] = cur[i] + paeth(left, prev[i], upLeft) & 255;
+        }
+        break;
+      default:
+        throw new Error(`unknown PNG filter ${filter} at row ${y}`);
     }
-  ],
-  toJsx(args) {
-    return `
-            ${COMP_CORNERS_FN}
-            ${jsxCompLayerPreamble(args)}
-            if (typeof _layer.sourceRectAtTime !== "function") return { ok: false, error: "layer has no sourceRectAtTime (camera/light?)" };
-            var _t = ${jsxVal(args.time ?? null)};
-            if (_t === null) _t = _comp.time;
-            var _r = _layer.sourceRectAtTime(_t, ${jsxVal(args.includeExtents ?? false)});
-            var _out = { ok: true, time: _t, layerSpace: { top: _r.top, left: _r.left, width: _r.width, height: _r.height } };
-            // Comp-space corners via sourcePointToComp (AE 13.2+; meaningful for
-            // text layers \u2014 reflects the first character at the current comp
-            // time). The function evaluates at the current time, so nudge and restore.
-            try {
-                if (typeof _layer.sourcePointToComp === "function") {
-                    var _prevT = _comp.time;
-                    // finally, not a trailing assignment: sourcePointToComp is
-                    // documented for text layers and can throw on others, and
-                    // this op is readOnly \u2014 leaving the playhead moved would be
-                    // a visible edit made by a read-only call.
-                    try {
-                        _comp.time = _t;
-                        _out.compSpace = _compCorners(_layer, _r);
-                    } finally {
-                        _comp.time = _prevT;
-                    }
-                }
-            } catch (eSp) {}
-            return _out;
-        `;
-  }
-});
-registerOp({
-  name: "layer.convert_point",
-  category: "layer",
-  readOnly: true,
-  description: "Convert a point between layer source space and comp space (sourcePointToComp / compPointToSource, AE 13.2+; designed for text layers \u2014 evaluates at the first character at the given time).",
-  params: [
-    { name: "comp", type: "any", description: "Comp name or id", required: true },
-    {
-      name: "layer",
-      type: "any",
-      description: "1-based layer index, or the layer name",
-      required: true
-    },
-    {
-      name: "direction",
-      type: "string",
-      description: "sourceToComp|compToSource",
-      required: true
-    },
-    { name: "point", type: "array", description: "[x, y] point to convert", required: true },
-    {
-      name: "time",
-      type: "number",
-      description: "Evaluate at this time (default: current comp time)",
-      required: false
+    for (let x = 0; x < width; x++) {
+      const px2 = x * bytesPerPixel;
+      const out = (y * width + x) * 3;
+      for (let ch = 0; ch < 3; ch++) {
+        const srcCh = grayish ? 0 : ch;
+        const off = px2 + srcCh * bytesPerSample;
+        const v = bitDepth === 16 ? cur.readUInt16BE(off) : cur[off];
+        rgb[out + ch] = v / maxVal;
+      }
+      if (alpha) {
+        const off = px2 + (channels - 1) * bytesPerSample;
+        const a = bitDepth === 16 ? cur.readUInt16BE(off) : cur[off];
+        alpha[y * width + x] = a / maxVal;
+      }
     }
-  ],
-  toJsx(args) {
-    return `
-            ${jsxCompLayerPreamble(args)}
-            var _toComp = ${jsxVal(args.direction)} === "sourceToComp";
-            var _fn = _toComp ? _layer.sourcePointToComp : _layer.compPointToSource;
-            if (typeof _fn !== "function") return { ok: false, error: "point conversion unavailable on this layer (text layers, AE 13.2+)" };
-            var _t = ${jsxVal(args.time ?? null)};
-            var _prevT = _comp.time;
-            if (_t !== null) _comp.time = _t;
-            var _res;
-            try {
-                _res = _toComp ? _layer.sourcePointToComp(${jsxVal(args.point)}) : _layer.compPointToSource(${jsxVal(args.point)});
-            } catch (eCv) {
-                _comp.time = _prevT;
-                return { ok: false, error: "conversion failed: " + AE.errText(eCv) };
-            }
-            if (_t !== null) _comp.time = _prevT;
-            return { ok: true, point: AE.valueToJson(_res) };
-        `;
+    cur.copy(prev);
   }
-});
-registerOp({
-  name: "layer.apply_preset",
-  category: "layer",
-  description: "Apply an animation preset (.ffx file) to a layer \u2014 applies effects/keyframes in one call.",
-  params: [
-    { name: "comp", type: "any", description: "Comp name or id", required: true },
-    {
-      name: "layer",
-      type: "any",
-      description: "1-based layer index, or the layer name",
-      required: true
+  return alpha ? { width, height, rgb, alpha, bitDepth } : { width, height, rgb, bitDepth };
+}
+function chunk(type, data) {
+  const head = Buffer.alloc(8);
+  head.writeUInt32BE(data.length, 0);
+  head.write(type, 4, "latin1");
+  const crcBody = Buffer.concat([head.subarray(4), data]);
+  const crc = Buffer.alloc(4);
+  crc.writeUInt32BE(zlib.crc32(crcBody) >>> 0, 0);
+  return Buffer.concat([head, data, crc]);
+}
+var to8 = (v) => Math.round(Math.min(1, Math.max(0, v)) * 255);
+function encode8(width, height, colorType, srgbTags, write, level = 6) {
+  const channels = colorType === 0 ? 1 : colorType === 2 ? 3 : 4;
+  const stride = width * channels;
+  const raw = Buffer.alloc(height * (stride + 1));
+  for (let y = 0; y < height; y++) {
+    const rowStart = y * (stride + 1);
+    raw[rowStart] = 0;
+    for (let x = 0; x < width; x++) write(y * width + x, raw, rowStart + 1 + x * channels);
+  }
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(width, 0);
+  ihdr.writeUInt32BE(height, 4);
+  ihdr.writeUInt8(8, 8);
+  ihdr.writeUInt8(colorType, 9);
+  const gama = Buffer.alloc(4);
+  gama.writeUInt32BE(45455, 0);
+  return Buffer.concat([
+    PNG_SIGNATURE,
+    chunk("IHDR", ihdr),
+    ...srgbTags ? [chunk("sRGB", Buffer.from([0])), chunk("gAMA", gama)] : [],
+    chunk("IDAT", zlib.deflateSync(raw, { level })),
+    chunk("IEND", Buffer.alloc(0))
+  ]);
+}
+function encodePngSrgb8(width, height, rgb, level = 6) {
+  return encode8(
+    width,
+    height,
+    2,
+    true,
+    (p, out, at) => {
+      out[at] = to8(rgb[p * 3]);
+      out[at + 1] = to8(rgb[p * 3 + 1]);
+      out[at + 2] = to8(rgb[p * 3 + 2]);
     },
-    {
-      name: "path",
-      type: "string",
-      description: "Absolute path to the .ffx preset",
-      required: true
+    level
+  );
+}
+function encodePngSrgbRgba8(width, height, rgb, alpha) {
+  return encode8(width, height, 6, true, (p, out, at) => {
+    out[at] = to8(rgb[p * 3]);
+    out[at + 1] = to8(rgb[p * 3 + 1]);
+    out[at + 2] = to8(rgb[p * 3 + 2]);
+    out[at + 3] = to8(alpha[p]);
+  });
+}
+function encodePngGray8(width, height, values) {
+  return encode8(width, height, 0, false, (p, out, at) => {
+    out[at] = to8(values[p]);
+  });
+}
+
+// src/color/sheet.ts
+var TOL = 2 / 255;
+function px(img, x, y) {
+  const i = (y * img.width + x) * 3;
+  return [img.rgb[i], img.rgb[i + 1], img.rgb[i + 2]];
+}
+function same(a, b) {
+  return Math.abs(a[0] - b[0]) <= TOL && Math.abs(a[1] - b[1]) <= TOL && Math.abs(a[2] - b[2]) <= TOL;
+}
+function isBackground(img, x, y, bg) {
+  if (img.alpha) return img.alpha[y * img.width + x] <= TOL;
+  return bg !== null && same(px(img, x, y), bg);
+}
+function cornerColor(img) {
+  const corners = [
+    px(img, 0, 0),
+    px(img, img.width - 1, 0),
+    px(img, 0, img.height - 1),
+    px(img, img.width - 1, img.height - 1)
+  ];
+  let best = corners[0];
+  let bestCount = 0;
+  for (const c of corners) {
+    const count = corners.filter((o) => same(o, c)).length;
+    if (count > bestCount) {
+      best = c;
+      bestCount = count;
     }
-  ],
-  toJsx(args) {
-    return `
-            ${jsxCompLayerPreamble(args)}
-            var _f = new File(${jsxVal(args.path)});
-            if (!_f.exists) return { ok: false, error: "preset file not found: " + ${jsxVal(args.path)} };
-            // applyPreset can target the comp's selected layers (e.g. presets that
-            // create layers), so pin the selection to the target layer first \u2014
-            // then put the user's selection back. "selected" is a real
-            // addressing mode elsewhere in this registry and is reported in the
-            // ambient context, so leaving it rewritten would silently retarget
-            // later operations in the same batch. Layer references, not
-            // indices: a preset may insert layers and shift every index.
-            var _prevSel = [];
-            for (var _si = 1; _si <= _comp.numLayers; _si++) {
-                var _sl = _comp.layer(_si);
-                if (_sl.selected) _prevSel.push(_sl);
-                _sl.selected = false;
-            }
-            _layer.selected = true;
-            try {
-                _layer.applyPreset(_f);
-            } finally {
-                for (var _di = 1; _di <= _comp.numLayers; _di++) {
-                    try { _comp.layer(_di).selected = false; } catch (eDs) {}
-                }
-                for (var _ri = 0; _ri < _prevSel.length; _ri++) {
-                    try { _prevSel[_ri].selected = true; } catch (eRs) {}
-                }
-            }
-            var _fx = 0;
-            try { _fx = _layer.property("Effects").numProperties; } catch (eFx) {}
-            return { ok: true, applied: _f.displayName, numEffects: _fx };
-        `;
   }
-});
-registerOp({
-  name: "layer.replace_source",
-  category: "layer",
-  description: "Replace a layer's source with another project item (footage or comp), keeping keyframes/effects. Set fixExpressions=false to skip expression rewriting.",
-  params: [
-    { name: "comp", type: "any", description: "Comp name or id", required: true },
-    {
-      name: "layer",
-      type: "any",
-      description: "1-based layer index, or the layer name",
-      required: true
-    },
-    {
-      name: "item",
-      type: "any",
-      description: "New source: project item id (number) or name (string)",
-      required: true
-    },
-    {
-      name: "fixExpressions",
-      type: "boolean",
-      description: "Rewrite expressions that reference the old source (default true)",
-      required: false,
-      default: true
+  return best;
+}
+function lineUniform(img, fixed, horizontal) {
+  const n = horizontal ? img.width : img.height;
+  const first = horizontal ? px(img, 0, fixed) : px(img, fixed, 0);
+  let transparent = img.alpha !== void 0;
+  for (let i = 0; i < n; i++) {
+    const x = horizontal ? i : fixed;
+    const y = horizontal ? fixed : i;
+    if (transparent && img.alpha[y * img.width + x] > TOL) transparent = false;
+    if (!same(px(img, x, y), first)) return { uniform: false, transparent: false, color: first };
+  }
+  return { uniform: true, transparent, color: first };
+}
+function edgeBand(img, side2) {
+  const horizontal = side2 === "top" || side2 === "bottom";
+  const n = horizontal ? img.height : img.width;
+  let width = 0;
+  let color = null;
+  let transparent = true;
+  for (let i = 0; i < n; i++) {
+    const fixed = side2 === "top" || side2 === "left" ? i : n - 1 - i;
+    const line = lineUniform(img, fixed, horizontal);
+    if (!line.uniform) break;
+    if (color === null) color = line.color;
+    else if (!same(color, line.color)) break;
+    if (!line.transparent) transparent = false;
+    width++;
+  }
+  if (width === 0) return { width: 0, kind: "none", color: null };
+  return { width, kind: transparent && img.alpha ? "transparent" : "color", color };
+}
+function analyzeFrame(img) {
+  const { width, height } = img;
+  const bgColor = img.alpha ? null : cornerColor(img);
+  const sum = [0, 0, 0];
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+  let content = 0;
+  const first = px(img, 0, 0);
+  let uniform = true;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 3;
+      sum[0] += img.rgb[i];
+      sum[1] += img.rgb[i + 1];
+      sum[2] += img.rgb[i + 2];
+      if (uniform && !same(px(img, x, y), first)) uniform = false;
+      if (!isBackground(img, x, y, bgColor)) {
+        content++;
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
     }
-  ],
-  toJsx(args) {
-    return `
-            ${jsxCompLayerPreamble(args)}
-            if (!(_layer instanceof AVLayer)) return { ok: false, error: "layer has no source (not an AVLayer)" };
-            var _item = AE.findItem(${jsxVal(args.item)});
-            if (!_item) return { ok: false, error: "no project item matching " + ${jsxVal(String(args.item))} };
-            if (_item instanceof FolderItem) return { ok: false, error: "item is a folder, not footage/comp" };
-            _layer.replaceSource(_item, ${jsxVal(args.fixExpressions !== false)});
-            return { ok: true, layer: _layer.name, source: _item.name };
-        `;
   }
-});
-registerOp({
-  name: "layer.set_track_matte",
-  category: "layer",
-  description: "Set (or remove) a track matte on a layer. Uses AVLayer.setTrackMatte (AE 23.0+): the matte can be ANY layer in the comp \u2014 it does not need to sit directly above the target.",
-  params: [
-    { name: "comp", type: "any", description: "Comp name or id", required: true },
-    {
-      name: "layer",
-      type: "any",
-      description: "1-based index (or name) of the layer to apply matte TO",
-      required: true
-    },
-    {
-      name: "matteLayer",
-      type: "any",
-      description: "Matte source layer: 1-based index or name. Ignored when matteType is 'none'.",
-      required: false
-    },
-    {
-      name: "matteType",
-      type: "string",
-      description: "alpha|alphaInverted|luma|lumaInverted|none",
-      required: true
+  const total = width * height;
+  return {
+    width,
+    height,
+    meanRgb: [sum[0] / total, sum[1] / total, sum[2] / total],
+    uniform,
+    background: img.alpha ? { kind: "transparent", color: null } : { kind: "color", color: bgColor },
+    contentBounds: content === 0 ? null : { left: minX, top: minY, width: maxX - minX + 1, height: maxY - minY + 1 },
+    coverage: content / total,
+    edges: {
+      top: edgeBand(img, "top"),
+      bottom: edgeBand(img, "bottom"),
+      left: edgeBand(img, "left"),
+      right: edgeBand(img, "right")
     }
-  ],
-  toJsx(args) {
-    return `
-            ${jsxCompLayerPreamble(args)}
-            var _matteMap = {
-                "alpha": TrackMatteType.ALPHA,
-                "alphaInverted": TrackMatteType.ALPHA_INVERTED,
-                "luma": TrackMatteType.LUMA,
-                "lumaInverted": TrackMatteType.LUMA_INVERTED,
-                "none": TrackMatteType.NO_TRACK_MATTE
-            };
-            var _type = _matteMap[${jsxVal(args.matteType)}];
-            if (!_type && ${jsxVal(args.matteType)} !== "none") return { ok: false, error: "unknown matteType" };
-            if (${jsxVal(args.matteType)} === "none") {
-                _layer.removeTrackMatte();
-                return { ok: true, layer: _layer.name, matte: null };
-            }
-            var _matteArg = ${jsxVal(args.matteLayer ?? null)};
-            if (_matteArg === null) return { ok: false, error: "matteLayer is required when matteType is not 'none'" };
-            var _matte = AE.findLayerInComp(_comp, _matteArg);
-            if (!_matte) return { ok: false, error: "no matte layer matching " + String(_matteArg) };
-            if (_matte === _layer) return { ok: false, error: "a layer cannot be its own track matte" };
-            _layer.setTrackMatte(_matte, _type);
-            return { ok: true, layer: _layer.name, matte: _matte.name };
-        `;
-  }
-});
-registerOp({
-  name: "layer.set_blend_mode",
-  category: "layer",
-  description: "Set blending mode on a layer.",
-  params: [
-    { name: "comp", type: "any", description: "Comp name or id", required: true },
-    {
-      name: "layer",
-      type: "any",
-      description: "1-based layer index, or the layer name",
-      required: true
-    },
-    {
-      name: "mode",
-      type: "string",
-      description: "normal|add|multiply|screen|overlay|softLight|hardLight|difference|exclusion|colorDodge|colorBurn|darken|lighten|stencilAlpha|stencilLuma|silhouetteAlpha|silhouetteLuma",
-      required: true
+  };
+}
+var CHECKERBOARD = {
+  size: 16,
+  light: [0.8, 0.8, 0.8],
+  dark: [0.6, 0.6, 0.6]
+};
+function unmatte(img, bg) {
+  const out = Float64Array.from(img.rgb);
+  const alpha = img.alpha;
+  if (!alpha) return out;
+  for (let p = 0; p < alpha.length; p++) {
+    const a = alpha[p];
+    if (a >= 1) continue;
+    const i = p * 3;
+    for (let c = 0; c < 3; c++) {
+      out[i + c] = a <= 0 ? 0 : Math.min(1, Math.max(0, (out[i + c] - bg[c] * (1 - a)) / a));
     }
-  ],
-  toJsx(args) {
-    return `
-            ${jsxCompLayerPreamble(args)}
-            var _modeMap = {
-                "normal": BlendingMode.NORMAL, "add": BlendingMode.ADD,
-                "multiply": BlendingMode.MULTIPLY, "screen": BlendingMode.SCREEN,
-                "overlay": BlendingMode.OVERLAY, "softLight": BlendingMode.SOFT_LIGHT,
-                "hardLight": BlendingMode.HARD_LIGHT, "difference": BlendingMode.DIFFERENCE,
-                "exclusion": BlendingMode.EXCLUSION, "colorDodge": BlendingMode.COLOR_DODGE,
-                "colorBurn": BlendingMode.COLOR_BURN, "darken": BlendingMode.DARKEN,
-                "lighten": BlendingMode.LIGHTEN, "stencilAlpha": BlendingMode.STENCIL_ALPHA,
-                "stencilLuma": BlendingMode.STENCIL_LUMA,
-                "silhouetteAlpha": BlendingMode.SILHOUETTE_ALPHA,
-                "silhouetteLuma": BlendingMode.SILHOUETTE_LUMA
-            };
-            var _mode = _modeMap[${jsxVal(args.mode)}];
-            if (!_mode) return { ok: false, error: "unknown blend mode: " + ${jsxVal(args.mode)} };
-            _layer.blendingMode = _mode;
-            return { ok: true, layer: _layer.name, mode: ${jsxVal(args.mode)} };
-        `;
   }
-});
-registerOp({
-  name: "layer.split",
-  category: "layer",
-  description: "Split a layer at a given time. Creates a new layer that starts at the split time.",
-  params: [
-    { name: "comp", type: "any", description: "Comp name or id", required: true },
-    {
-      name: "layer",
-      type: "any",
-      description: "1-based layer index, or the layer name",
-      required: true
-    },
-    { name: "time", type: "number", description: "Time in seconds to split at", required: true }
-  ],
-  toJsx(args) {
-    return `
-            ${jsxCompLayerPreamble(args)}
-            var _t = ${jsxVal(args.time)};
-            if (typeof _t !== "number") return { ok: false, error: "time must be a number" };
-            if (_t <= _layer.inPoint || _t >= _layer.outPoint) {
-                return { ok: false, error: "split time " + _t + " is outside the layer's span (" + _layer.inPoint + ", " + _layer.outPoint + ")" };
-            }
-            var _dup = _layer.duplicate();
-            _layer.outPoint = _t;
-            _dup.inPoint = _t;
-            return { ok: true, originalIndex: _layer.index, newIndex: _dup.index, splitTime: _t };
-        `;
-  }
-});
-registerOp({
-  name: "layer.copy_to_comp",
-  category: "layer",
-  description: "Copy a layer into another comp. The copy is identified by its Layer.id (never by assuming it landed on top). Options: timeOffset/startTime to place it in time, bakeAtTime to freeze every animated property at that source time and drop the keys (match-cut copies), name to rename. The copy keeps the source comp's span \u2014 use layer.set_timing outPoint:'comp' to extend it.",
-  params: [
-    { name: "comp", type: "any", description: "Source comp name or id", required: true },
-    {
-      name: "layer",
-      type: "any",
-      description: "1-based layer index, name, or { id } in the source comp",
-      required: true
-    },
-    { name: "targetComp", type: "any", description: "Target comp name or id", required: true },
-    {
-      name: "timeOffset",
-      type: "number",
-      description: "Seconds added to the copy's startTime",
-      required: false
-    },
-    {
-      name: "startTime",
-      type: "number",
-      description: "Absolute startTime for the copy (applied after timeOffset)",
-      required: false
-    },
-    {
-      name: "bakeAtTime",
-      type: "number",
-      description: "Freeze every keyframed property of the copy at this SOURCE-comp time and remove its keys",
-      required: false
-    },
-    { name: "name", type: "string", description: "Rename the copy", required: false }
-  ],
-  toJsx(args) {
-    return `
-            ${jsxCompLayerPreamble(args)}
-            var _target = AE.findCompByNameOrId(${jsxVal(args.targetComp)});
-            if (!_target) return { ok: false, error: "target comp not found" };
-            var _snap = AE.layerIdSnapshot(_target);
-            _layer.copyToComp(_target);
-            var _added = AE.layersSince(_target, _snap);
-            if (_added.length !== 1) {
-                return { ok: false, error: "copyToComp added " + _added.length + " layers to " + _target.name + " (expected 1)" };
-            }
-            var _newLayer = _added[0];
-            var _baked = 0;
-            var _bakeT = ${jsxVal(args.bakeAtTime ?? null)};
-            if (_bakeT !== null) _baked = AE.bakeKeysAtTime(_newLayer, _bakeT);
-            var _off = ${jsxVal(args.timeOffset ?? null)};
-            if (_off !== null) _newLayer.startTime = _newLayer.startTime + _off;
-            var _start = ${jsxVal(args.startTime ?? null)};
-            if (_start !== null) _newLayer.startTime = _start;
-            ${args.name ? `_newLayer.name = ${jsxVal(args.name)};` : ""}
-            return { ok: true, copied: _layer.name, targetComp: _target.name, newIndex: _newLayer.index, newName: _newLayer.name, newId: AE.safeGet(function () { return _newLayer.id; }, null), startTime: _newLayer.startTime, inPoint: _newLayer.inPoint, outPoint: _newLayer.outPoint, bakedProperties: _baked };
-        `;
-  }
-});
-registerOp({
-  name: "layer.calculate_transform",
-  category: "layer",
-  readOnly: true,
-  description: "Calculate the transform that maps a 3D layer onto three corner points (AVLayer.calculateTransformFromPoints) - corner-pin style placement in 3D space. Calculation-only: returns anchorPoint/position/x-y-zRotation/scale without touching the layer \u2014 apply them with property.set / layer.set_props.",
-  params: [
-    { name: "comp", type: "any", description: "Comp name or id", required: true },
-    {
-      name: "layer",
-      type: "any",
-      description: "1-based layer index, or the layer name (3D layer)",
-      required: true
-    },
-    {
-      name: "topLeft",
-      type: "array",
-      description: "[x,y,z] world point for the layer's top-left",
-      required: true
-    },
-    {
-      name: "topRight",
-      type: "array",
-      description: "[x,y,z] world point for the top-right",
-      required: true
-    },
-    {
-      name: "bottomLeft",
-      type: "array",
-      description: "[x,y,z] world point for the bottom-left. The scripting guide names this pointBottomRight, but the implementation expects the bottom-left (the guide's own example passes bl): a true bottom-right returns the same placement with zScale skewed by sin(corner angle) \u2014 verified on AE 26.3.",
-      required: true
+  return out;
+}
+function flattenOver(img, backdrop) {
+  const out = Float64Array.from(img.rgb);
+  const alpha = img.alpha;
+  if (!alpha) return out;
+  const { width, height } = img;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const p = y * width + x;
+      const a = alpha[p];
+      if (a >= 1) continue;
+      const bg = backdrop.kind === "color" ? backdrop.color : (Math.floor(x / CHECKERBOARD.size) + Math.floor(y / CHECKERBOARD.size)) % 2 === 0 ? CHECKERBOARD.light : CHECKERBOARD.dark;
+      const i = p * 3;
+      out[i] = out[i] * a + bg[0] * (1 - a);
+      out[i + 1] = out[i + 1] * a + bg[1] * (1 - a);
+      out[i + 2] = out[i + 2] * a + bg[2] * (1 - a);
     }
-  ],
-  toJsx(args) {
-    return `
-            ${jsxCompLayerPreamble(args)}
-            if (typeof _layer.calculateTransformFromPoints !== "function") return { ok: false, error: "calculateTransformFromPoints is not available on this layer" };
-            if (!_layer.threeDLayer) return { ok: false, error: "layer must be 3D (threeDLayer: true) for calculateTransformFromPoints" };
-            var _xf = null;
-            try { _xf = _layer.calculateTransformFromPoints(${jsxVal(args.topLeft)}, ${jsxVal(args.topRight)}, ${jsxVal(args.bottomLeft)}); } catch (eCt) { return { ok: false, error: "calculateTransformFromPoints failed: " + AE.errText(eCt) }; }
-            return { ok: true, transform: AE.valueToJson(_xf) };
-        `;
   }
-});
+  return out;
+}
+var r42 = (v) => Math.round(v * 1e4) / 1e4;
+var r4rgb2 = (v) => [r42(v[0]), r42(v[1]), r42(v[2])];
+function clipRegion(img, region) {
+  const x0 = Math.floor(region.x);
+  const y0 = Math.floor(region.y);
+  const x1 = x0 + Math.max(1, Math.floor(region.width ?? 1));
+  const y1 = y0 + Math.max(1, Math.floor(region.height ?? 1));
+  const cx0 = Math.max(0, x0);
+  const cy0 = Math.max(0, y0);
+  const cx1 = Math.min(img.width, x1);
+  const cy1 = Math.min(img.height, y1);
+  if (cx1 <= cx0 || cy1 <= cy0) return null;
+  return {
+    rect: { x: cx0, y: cy0, width: cx1 - cx0, height: cy1 - cy0 },
+    clipped: cx0 !== x0 || cy0 !== y0 || cx1 !== x1 || cy1 !== y1
+  };
+}
+function outside(img, region) {
+  return { name: region.name, error: `region is outside the ${img.width}\xD7${img.height} frame` };
+}
+function sampleRegions(img, regions) {
+  return regions.map((region) => {
+    const clip = clipRegion(img, region);
+    if (!clip) return outside(img, region);
+    const { rect } = clip;
+    const sum = [0, 0, 0];
+    const min = [Infinity, Infinity, Infinity];
+    const max = [-Infinity, -Infinity, -Infinity];
+    let aSum = 0;
+    let aMin = Infinity;
+    let aMax = -Infinity;
+    let opaque = 0;
+    let transparent = 0;
+    for (let y = rect.y; y < rect.y + rect.height; y++) {
+      for (let x = rect.x; x < rect.x + rect.width; x++) {
+        const p = y * img.width + x;
+        for (let c = 0; c < 3; c++) {
+          const v = img.rgb[p * 3 + c];
+          sum[c] += v;
+          if (v < min[c]) min[c] = v;
+          if (v > max[c]) max[c] = v;
+        }
+        if (img.alpha) {
+          const a = img.alpha[p];
+          aSum += a;
+          if (a < aMin) aMin = a;
+          if (a > aMax) aMax = a;
+          if (a >= 1 - TOL) opaque++;
+          else if (a <= TOL) transparent++;
+        }
+      }
+    }
+    const n = rect.width * rect.height;
+    return {
+      name: region.name,
+      rect,
+      clipped: clip.clipped,
+      pixels: n,
+      mean: r4rgb2([sum[0] / n, sum[1] / n, sum[2] / n]),
+      min: r4rgb2(min),
+      max: r4rgb2(max),
+      alpha: img.alpha ? {
+        mean: r42(aSum / n),
+        min: r42(aMin),
+        max: r42(aMax),
+        opaqueShare: r42(opaque / n),
+        partialShare: r42((n - opaque - transparent) / n),
+        transparentShare: r42(transparent / n)
+      } : null
+    };
+  });
+}
+function histogramOf(img, bins) {
+  const n = img.width * img.height;
+  const counts = [0, 1, 2].map(() => Array.from({ length: bins }, () => 0));
+  const aCounts = img.alpha ? Array.from({ length: bins }, () => 0) : void 0;
+  const bin = (v) => Math.min(bins - 1, Math.max(0, Math.floor(v * bins)));
+  for (let p = 0; p < n; p++) {
+    for (let c = 0; c < 3; c++) counts[c][bin(img.rgb[p * 3 + c])]++;
+    if (aCounts && img.alpha) aCounts[bin(img.alpha[p])]++;
+  }
+  return {
+    bins,
+    pixels: n,
+    r: counts[0],
+    g: counts[1],
+    b: counts[2],
+    ...aCounts ? { a: aCounts } : {}
+  };
+}
+function compareRegions(from, to, regions) {
+  if (from.width !== to.width || from.height !== to.height) {
+    throw new Error(
+      `cannot compare frames of different size (${from.width}\xD7${from.height} vs ${to.width}\xD7${to.height})`
+    );
+  }
+  const withAlpha = from.alpha !== void 0 && to.alpha !== void 0;
+  return regions.map((region) => {
+    const clip = clipRegion(from, region);
+    if (!clip) return outside(from, region);
+    const { rect } = clip;
+    const delta = [0, 0, 0];
+    const absSum = [0, 0, 0];
+    const absMax = [0, 0, 0];
+    let aDelta = 0;
+    let aAbs = 0;
+    let aMax = 0;
+    for (let y = rect.y; y < rect.y + rect.height; y++) {
+      for (let x = rect.x; x < rect.x + rect.width; x++) {
+        const p = y * from.width + x;
+        for (let c = 0; c < 3; c++) {
+          const d = to.rgb[p * 3 + c] - from.rgb[p * 3 + c];
+          delta[c] += d;
+          absSum[c] += Math.abs(d);
+          if (Math.abs(d) > absMax[c]) absMax[c] = Math.abs(d);
+        }
+        if (withAlpha) {
+          const d = to.alpha[p] - from.alpha[p];
+          aDelta += d;
+          aAbs += Math.abs(d);
+          if (Math.abs(d) > aMax) aMax = Math.abs(d);
+        }
+      }
+    }
+    const n = rect.width * rect.height;
+    return {
+      name: region.name,
+      rect,
+      clipped: clip.clipped,
+      pixels: n,
+      meanDelta: r4rgb2([delta[0] / n, delta[1] / n, delta[2] / n]),
+      meanAbsDelta: r4rgb2([absSum[0] / n, absSum[1] / n, absSum[2] / n]),
+      maxAbsDelta: r4rgb2(absMax),
+      alpha: withAlpha ? { meanDelta: r42(aDelta / n), meanAbsDelta: r42(aAbs / n), maxAbsDelta: r42(aMax) } : null
+    };
+  });
+}
+function rgbHex(rgb) {
+  return `#${rgb.map(
+    (v) => Math.round(Math.min(1, Math.max(0, v)) * 255).toString(16).padStart(2, "0")
+  ).join("")}`;
+}
+function resample(img, tw, th) {
+  const out = new Float64Array(tw * th * 3);
+  const counts = new Float64Array(tw * th);
+  for (let y = 0; y < img.height; y++) {
+    const ty = Math.min(th - 1, Math.floor(y * th / img.height));
+    for (let x = 0; x < img.width; x++) {
+      const tx = Math.min(tw - 1, Math.floor(x * tw / img.width));
+      const si = (y * img.width + x) * 3;
+      const di = (ty * tw + tx) * 3;
+      out[di] += img.rgb[si];
+      out[di + 1] += img.rgb[si + 1];
+      out[di + 2] += img.rgb[si + 2];
+      counts[ty * tw + tx]++;
+    }
+  }
+  for (let i = 0; i < tw * th; i++) {
+    const c = counts[i] || 1;
+    out[i * 3] /= c;
+    out[i * 3 + 1] /= c;
+    out[i * 3 + 2] /= c;
+  }
+  return out;
+}
+var GLYPHS = {
+  "0": [".###.", "#...#", "#..##", "#.#.#", "##..#", "#...#", ".###."],
+  "1": ["..#..", ".##..", "..#..", "..#..", "..#..", "..#..", ".###."],
+  "2": [".###.", "#...#", "....#", "...#.", "..#..", ".#...", "#####"],
+  "3": ["#####", "...#.", "..#..", "...#.", "....#", "#...#", ".###."],
+  "4": ["...#.", "..##.", ".#.#.", "#..#.", "#####", "...#.", "...#."],
+  "5": ["#####", "#....", "####.", "....#", "....#", "#...#", ".###."],
+  "6": ["..##.", ".#...", "#....", "####.", "#...#", "#...#", ".###."],
+  "7": ["#####", "....#", "...#.", "..#..", ".#...", ".#...", ".#..."],
+  "8": [".###.", "#...#", "#...#", ".###.", "#...#", "#...#", ".###."],
+  "9": [".###.", "#...#", "#...#", ".####", "....#", "...#.", ".##.."],
+  ".": [".....", ".....", ".....", ".....", ".....", ".##..", ".##.."],
+  ":": [".....", ".##..", ".##..", ".....", ".##..", ".##..", "....."],
+  "-": [".....", ".....", ".....", "#####", ".....", ".....", "....."],
+  ">": [".#...", "..#..", "...#.", "....#", "...#.", "..#..", ".#..."],
+  x: [".....", ".....", "#...#", ".#.#.", "..#..", ".#.#.", "#...#"],
+  "!": ["..#..", "..#..", "..#..", "..#..", "..#..", ".....", "..#.."],
+  "#": [".#.#.", ".#.#.", "#####", ".#.#.", "#####", ".#.#.", ".#.#."],
+  s: [".....", ".....", ".####", "#....", ".###.", "....#", "####."],
+  f: ["..##.", ".#...", "###..", ".#...", ".#...", ".#...", ".#..."],
+  a: [".....", ".....", ".###.", "....#", ".####", "#...#", ".####"],
+  b: ["#....", "#....", "####.", "#...#", "#...#", "#...#", "####."],
+  c: [".....", ".....", ".###.", "#....", "#....", "#...#", ".###."],
+  d: ["....#", "....#", ".####", "#...#", "#...#", "#...#", ".####"],
+  e: [".....", ".....", ".###.", "#...#", "#####", "#....", ".###."],
+  g: [".....", ".....", ".####", "#...#", "#...#", "#...#", ".####", "....#", ".###."],
+  h: ["#....", "#....", "####.", "#...#", "#...#", "#...#", "#...#"],
+  i: ["..#..", ".....", ".##..", "..#..", "..#..", "..#..", ".###."],
+  j: ["...#.", ".....", "..##.", "...#.", "...#.", "...#.", "...#.", "#..#.", ".##.."],
+  k: ["#....", "#....", "#..#.", "#.#..", "##...", "#.#..", "#..#."],
+  l: [".##..", "..#..", "..#..", "..#..", "..#..", "..#..", ".###."],
+  m: [".....", ".....", "##.#.", "#.#.#", "#.#.#", "#...#", "#...#"],
+  n: [".....", ".....", "####.", "#...#", "#...#", "#...#", "#...#"],
+  o: [".....", ".....", ".###.", "#...#", "#...#", "#...#", ".###."],
+  p: [".....", ".....", "####.", "#...#", "#...#", "#...#", "####.", "#....", "#...."],
+  q: [".....", ".....", ".####", "#...#", "#...#", "#...#", ".####", "....#", "....#"],
+  r: [".....", ".....", "#.##.", "##..#", "#....", "#....", "#...."],
+  t: [".#...", ".#...", "###..", ".#...", ".#...", ".#..#", "..##."],
+  u: [".....", ".....", "#...#", "#...#", "#...#", "#..##", ".##.#"],
+  v: [".....", ".....", "#...#", "#...#", "#...#", ".#.#.", "..#.."],
+  w: [".....", ".....", "#...#", "#...#", "#.#.#", "#.#.#", ".#.#."],
+  y: [".....", ".....", "#...#", "#...#", "#...#", "#...#", ".####", "....#", ".###."],
+  z: [".....", ".....", "#####", "...#.", "..#..", ".#...", "#####"],
+  "+": [".....", "..#..", "..#..", "#####", "..#..", "..#..", "....."],
+  " ": [".....", ".....", ".....", ".....", ".....", ".....", "....."]
+};
+var GLYPH_W = 5;
+var GLYPH_H = 7;
+var FONT_SCALE = 2;
+var LABEL_H = GLYPH_H * FONT_SCALE + 6;
+var LABEL_CHAR_PX = (GLYPH_W + 1) * FONT_SCALE;
+function drawText(rgb, width, x0, y0, text, color) {
+  let cx = x0;
+  for (const ch of text) {
+    const glyph = GLYPHS[ch] ?? GLYPHS[" "];
+    for (let gy = 0; gy < glyph.length; gy++) {
+      for (let gx = 0; gx < GLYPH_W; gx++) {
+        if (glyph[gy][gx] !== "#") continue;
+        for (let sy = 0; sy < FONT_SCALE; sy++) {
+          for (let sx = 0; sx < FONT_SCALE; sx++) {
+            const x = cx + gx * FONT_SCALE + sx;
+            const y = y0 + gy * FONT_SCALE + sy;
+            const i = (y * width + x) * 3;
+            rgb[i] = color[0];
+            rgb[i + 1] = color[1];
+            rgb[i + 2] = color[2];
+          }
+        }
+      }
+    }
+    cx += (GLYPH_W + 1) * FONT_SCALE;
+  }
+}
+function composeContactSheet(frames, opts = {}) {
+  if (frames.length === 0) throw new Error("contact sheet needs at least one frame");
+  const gap = opts.gap ?? 8;
+  const bg = opts.background ?? [0.12, 0.12, 0.12];
+  const columns = Math.max(
+    1,
+    Math.min(frames.length, opts.columns ?? Math.ceil(Math.sqrt(frames.length)))
+  );
+  const rows = Math.ceil(frames.length / columns);
+  const srcW = Math.max(...frames.map((f) => f.width));
+  const srcH = Math.max(...frames.map((f) => f.height));
+  const thumbWidth = Math.max(16, Math.min(opts.thumbWidth ?? 480, srcW));
+  const thumbHeight = Math.max(1, Math.round(srcH * thumbWidth / srcW));
+  const cellW = thumbWidth;
+  const cellH = LABEL_H + thumbHeight;
+  const width = gap + columns * (cellW + gap);
+  const height = gap + rows * (cellH + gap);
+  const rgb = new Float64Array(width * height * 3);
+  for (let i = 0; i < width * height; i++) {
+    rgb[i * 3] = bg[0];
+    rgb[i * 3 + 1] = bg[1];
+    rgb[i * 3 + 2] = bg[2];
+  }
+  for (const [n, frame] of frames.entries()) {
+    const col = n % columns;
+    const row = Math.floor(n / columns);
+    const x0 = gap + col * (cellW + gap);
+    const y0 = gap + row * (cellH + gap);
+    const tw = Math.max(1, Math.min(thumbWidth, Math.round(frame.width * thumbWidth / srcW)));
+    const th = Math.max(1, Math.min(thumbHeight, Math.round(frame.height * tw / frame.width)));
+    const thumb = resample(frame, tw, th);
+    for (let y = 0; y < th; y++) {
+      for (let x = 0; x < tw; x++) {
+        const si = (y * tw + x) * 3;
+        const di = ((y0 + LABEL_H + y) * width + (x0 + x)) * 3;
+        rgb[di] = thumb[si];
+        rgb[di + 1] = thumb[si + 1];
+        rgb[di + 2] = thumb[si + 2];
+      }
+    }
+    const label = opts.labels?.[n] ?? `#${n}`;
+    drawText(rgb, width, x0 + 2, y0 + 2, label, [0.95, 0.95, 0.95]);
+  }
+  return { width, height, rgb, columns, rows, thumbWidth, thumbHeight };
+}
+function frameLabel(index, time3) {
+  return time3 === void 0 ? `#${index}` : `#${index} ${time3.toFixed(3)}s`;
+}
+
+// src/operations/keying.ts
+init_config();
+init_registry();
 
 // src/operations/render.ts
 init_registry();
@@ -47241,10 +46965,7244 @@ registerOp({
   }
 });
 
+// src/tools/render-frame.ts
+import { promises as fs6 } from "node:fs";
+import * as path6 from "node:path";
+
+// src/color/screen.ts
+var SCREEN_DEFAULTS = {
+  screen: "auto",
+  minExcess: 0.04,
+  minDominance: 0.15,
+  minScreenShare: 0.02,
+  opaque: 1 - 2 / 255,
+  columns: "auto",
+  rows: "auto",
+  minCellShare: 0.25,
+  nearSkip: "auto",
+  nearBand: "auto",
+  unevenRatio: 1.1,
+  grainAbove: 0.01
+};
+var SCREEN_COLOUR_NOTE = "Colours are capture values: the opaque pixels of the render as saveFrameToPng wrote them, so the comp background does not mix in. In a project with no working space (8 bpc, as measured live in After Effects 2027) these are the footage's own 0..1 values, the scale Keylight's Screen Colour takes, so colour.nearSubject (or colour.median) can go to key.keylight's screenColour as it is. In a colour-managed project they are working-space values scaled by After Effects' capture transfer; that has not been checked against Keylight, so confirm the key with the Screen Matte and Status views. Measure the source un-keyed (Keylight View 'source', or the key off, and isolate the layer): a keyed render has no screen left, and Keylight despills what it outputs.";
+function autoGrid(width, height) {
+  const short = Math.min(width, height);
+  const across = 4;
+  const along = Math.max(1, Math.round(across * Math.max(width, height) / short));
+  return width <= height ? { columns: across, rows: along } : { columns: along, rows: across };
+}
+function resolveScreenThresholds(args, width, height) {
+  const grid = autoGrid(width, height);
+  const short = Math.min(width, height);
+  return {
+    screen: args.screen ?? SCREEN_DEFAULTS.screen,
+    minExcess: args.minExcess ?? SCREEN_DEFAULTS.minExcess,
+    minDominance: args.minDominance ?? SCREEN_DEFAULTS.minDominance,
+    minScreenShare: args.minScreenShare ?? SCREEN_DEFAULTS.minScreenShare,
+    opaque: args.opaque ?? SCREEN_DEFAULTS.opaque,
+    columns: args.columns ?? grid.columns,
+    rows: args.rows ?? grid.rows,
+    minCellShare: args.minCellShare ?? SCREEN_DEFAULTS.minCellShare,
+    nearSkip: args.nearSkip ?? Math.max(2, Math.round(0.01 * short)),
+    nearBand: args.nearBand ?? Math.max(4, Math.round(0.05 * short)),
+    unevenRatio: args.unevenRatio ?? SCREEN_DEFAULTS.unevenRatio,
+    grainAbove: args.grainAbove ?? SCREEN_DEFAULTS.grainAbove
+  };
+}
+function screenArgsError(args) {
+  if (args.screen !== void 0 && args.screen !== "auto" && args.screen !== "green" && args.screen !== "blue") {
+    return "`screen.screen` must be 'auto', 'green' or 'blue'";
+  }
+  for (const key of [
+    "minExcess",
+    "minDominance",
+    "minScreenShare",
+    "opaque",
+    "minCellShare",
+    "grainAbove"
+  ]) {
+    const v = args[key];
+    if (v !== void 0 && (typeof v !== "number" || !(v >= 0 && v <= 1))) {
+      return `\`screen.${key}\` must be a number in 0..1`;
+    }
+  }
+  for (const key of ["columns", "rows"]) {
+    const v = args[key];
+    if (v !== void 0 && (!Number.isInteger(v) || v < 1 || v > 64)) {
+      return `\`screen.${key}\` must be a whole number from 1 to 64`;
+    }
+  }
+  const skip = args.nearSkip;
+  if (skip !== void 0 && (typeof skip !== "number" || !Number.isFinite(skip) || skip < 0)) {
+    return "`screen.nearSkip` must be 0 or more (pixels)";
+  }
+  const band = args.nearBand;
+  if (band !== void 0 && (typeof band !== "number" || !Number.isFinite(band) || band < 1)) {
+    return "`screen.nearBand` must be at least 1 (pixels)";
+  }
+  const u = args.unevenRatio;
+  if (u !== void 0 && (typeof u !== "number" || !Number.isFinite(u) || u < 1)) {
+    return "`screen.unevenRatio` must be a number of 1 or more";
+  }
+  return null;
+}
+var r43 = (v) => Math.round(v * 1e4) / 1e4;
+var r4rgb3 = (v) => [r43(v[0]), r43(v[1]), r43(v[2])];
+var luma = (c) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+var CH = { green: 1, blue: 2 };
+function screenTest(rgb, p, ch, t) {
+  const v = rgb[p * 3 + ch];
+  const others = ch === 1 ? Math.max(rgb[p * 3], rgb[p * 3 + 2]) : Math.max(rgb[p * 3], rgb[p * 3 + 1]);
+  const lead = v - others;
+  return lead >= t.minExcess && lead >= t.minDominance * v;
+}
+var BINS = 65536;
+function histMedian(h, count) {
+  const out = [0, 0, 0];
+  const half = (count + 1) / 2;
+  for (let c = 0; c < 3; c++) {
+    let acc = 0;
+    const base = c * BINS;
+    for (let b = 0; b < BINS; b++) {
+      acc += h[base + b];
+      if (acc >= half) {
+        out[c] = b / (BINS - 1);
+        break;
+      }
+    }
+  }
+  return out;
+}
+function addToHist(h, rgb, p) {
+  for (let c = 0; c < 3; c++) {
+    const v = Math.min(1, Math.max(0, rgb[p * 3 + c]));
+    h[c * BINS + Math.round(v * (BINS - 1))]++;
+  }
+}
+function measureScreen(img, t) {
+  const { width, height, rgb } = img;
+  const alpha = img.alpha;
+  const n = width * height;
+  const measuredAt = (p) => !alpha || alpha[p] >= t.opaque;
+  let measured = 0;
+  for (let p = 0; p < n; p++) if (measuredAt(p)) measured++;
+  const leftOut = n - measured;
+  const kinds = t.screen === "auto" ? ["green", "blue"] : [t.screen];
+  let kind = kinds[0];
+  let best = -1;
+  for (const k of kinds) {
+    let count2 = 0;
+    for (let p = 0; p < n; p++) if (measuredAt(p) && screenTest(rgb, p, CH[k], t)) count2++;
+    if (count2 > best) {
+      best = count2;
+      kind = k;
+    }
+  }
+  const ch = CH[kind];
+  const found = measured > 0 && best / measured >= t.minScreenShare && best > 0;
+  const base = {
+    stage: "capture",
+    values: "capture",
+    screen: found ? kind : null,
+    chosen: t.screen === "auto" ? "detected" : "given",
+    pixels: n,
+    measured,
+    leftOut,
+    screenPixels: 0,
+    share: 0,
+    bounds: null,
+    colour: null,
+    subject: null,
+    evenness: null,
+    grain: null,
+    reading: "",
+    screenColourNote: SCREEN_COLOUR_NOTE
+  };
+  if (leftOut > n / 2) {
+    base.warning = `${Math.round(100 * leftOut / n)}% of the frame is transparent or partly transparent, as a keyed render is. Measure the source: set Keylight's View to 'source' (key.view) or switch the key off, and isolate the keyed layer so nothing else is in the render.`;
+  }
+  if (!found) {
+    const what = t.screen === "auto" ? "green or blue" : t.screen;
+    base.reading = `no ${what} screen found: fewer than ${Math.round(t.minScreenShare * 100)}% of the ${measured} measured pixels have ${what} leading the other channels by at least ${t.minExcess} and ${Math.round(t.minDominance * 100)}% of its level`;
+    return base;
+  }
+  const isScreen = new Uint8Array(n);
+  const hist = new Uint32Array(3 * BINS);
+  const sum = [0, 0, 0];
+  let count = 0;
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -1;
+  let maxY = -1;
+  for (let p = 0; p < n; p++) {
+    if (!measuredAt(p) || !screenTest(rgb, p, ch, t)) continue;
+    isScreen[p] = 1;
+    count++;
+    addToHist(hist, rgb, p);
+    for (let c = 0; c < 3; c++) sum[c] += rgb[p * 3 + c];
+    const x = p % width;
+    const y = (p - x) / width;
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  }
+  const median2 = histMedian(hist, count);
+  const mean = [sum[0] / count, sum[1] / count, sum[2] / count];
+  const labels = new Int32Array(n);
+  const queue = new Int32Array(n);
+  const ones = alpha ?? new Float64Array(n).fill(1);
+  const regions = labelRegions(
+    ones,
+    width,
+    height,
+    (p) => measuredAt(p) && isScreen[p] === 0,
+    true,
+    labels,
+    queue,
+    -1
+  );
+  let subjectId = 0;
+  for (let i = 0; i < regions.length; i++) {
+    if (subjectId === 0 || regions[i].area > regions[subjectId - 1].area) subjectId = i + 1;
+  }
+  let subject = null;
+  let nearSubject = null;
+  if (subjectId > 0) {
+    const s = regions[subjectId - 1];
+    subject = {
+      box: { x: s.minX, y: s.minY, width: s.maxX - s.minX + 1, height: s.maxY - s.minY + 1 },
+      area: s.area,
+      share: r43(s.area / n)
+    };
+    const mask = new Float64Array(n);
+    for (let p = 0; p < n; p++) if (labels[p] === subjectId) mask[p] = 1;
+    const scratch = new Float32Array(n);
+    const dist = new Float32Array(n);
+    distanceTo(mask, width, height, (a) => a > 0.5, scratch, dist);
+    const from = t.nearSkip;
+    const to = t.nearSkip + t.nearBand;
+    const nearHist = new Uint32Array(3 * BINS);
+    let nearCount = 0;
+    for (let p = 0; p < n; p++) {
+      if (isScreen[p] === 0 || !(dist[p] > from && dist[p] <= to)) continue;
+      addToHist(nearHist, rgb, p);
+      nearCount++;
+    }
+    if (nearCount > 0) {
+      nearSubject = {
+        colour: r4rgb3(histMedian(nearHist, nearCount)),
+        pixels: nearCount,
+        band: { from, to }
+      };
+    }
+  }
+  const evenness = measureEvenness(img, isScreen, measuredAt, ch, kind, t);
+  const grain = measureGrain(img, isScreen, ch, kind, t);
+  const near = nearSubject ? nearSubject.colour : null;
+  const fmt4 = (c) => `(${c.map((v) => v.toFixed(3)).join(", ")})`;
+  base.screenPixels = count;
+  base.share = r43(count / measured);
+  base.bounds = { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
+  base.colour = { median: r4rgb3(median2), mean: r4rgb3(mean), nearSubject };
+  base.subject = subject;
+  base.evenness = evenness;
+  base.grain = grain;
+  base.reading = `${kind} screen, ${Math.round(base.share * 100)}% of the measured pixels; median ${fmt4(median2)}` + (near ? `, near the subject ${fmt4(near)}` : "") + `. ${evenness.reading}. ${grain ? grain.reading : "grain not measured (no screen pixel has screen all round it)"}.`;
+  return base;
+}
+function measureEvenness(img, isScreen, measuredAt, ch, kind, t) {
+  const { width, height, rgb } = img;
+  const cols = Math.min(t.columns, width);
+  const rows = Math.min(t.rows, height);
+  const xs = Array.from({ length: cols + 1 }, (_, i) => Math.floor(i * width / cols));
+  const ys = Array.from({ length: rows + 1 }, (_, i) => Math.floor(i * height / rows));
+  const cells = [];
+  let s1 = 0;
+  let su = 0;
+  let sv = 0;
+  let suu = 0;
+  let suv = 0;
+  let svv = 0;
+  let sl = 0;
+  let sul = 0;
+  let svl = 0;
+  const du = Math.max(1, width - 1);
+  const dv = Math.max(1, height - 1);
+  const perX = new Float64Array(width);
+  const perY = new Float64Array(height);
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      let m = 0;
+      let k = 0;
+      const acc = [0, 0, 0];
+      for (let y = ys[r]; y < ys[r + 1]; y++) {
+        for (let x = xs[c]; x < xs[c + 1]; x++) {
+          const p = y * width + x;
+          if (!measuredAt(p)) continue;
+          m++;
+          if (isScreen[p] === 0) continue;
+          k++;
+          for (let q = 0; q < 3; q++) acc[q] += rgb[p * 3 + q];
+          perX[x]++;
+          perY[y]++;
+          const u = x / du;
+          const v = y / dv;
+          const l = rgb[p * 3 + ch];
+          s1++;
+          su += u;
+          sv += v;
+          suu += u * u;
+          suv += u * v;
+          svv += v * v;
+          sl += l;
+          sul += u * l;
+          svl += v * l;
+        }
+      }
+      const cellMean = k > 0 ? [acc[0] / k, acc[1] / k, acc[2] / k] : null;
+      cells.push({
+        column: c,
+        row: r,
+        box: { x: xs[c], y: ys[r], width: xs[c + 1] - xs[c], height: ys[r + 1] - ys[r] },
+        screenShare: m > 0 ? r43(k / m) : 0,
+        mean: cellMean ? r4rgb3(cellMean) : null,
+        luma: cellMean ? r43(luma(cellMean)) : null,
+        level: cellMean ? r43(cellMean[ch]) : null
+      });
+    }
+  }
+  const eligible = cells.filter(
+    (c) => c.level !== null && c.screenShare >= t.minCellShare
+  );
+  let darkest = null;
+  let brightest = null;
+  for (const c of eligible) {
+    if (darkest === null || c.level < darkest.level) darkest = c;
+    if (brightest === null || c.level > brightest.level) brightest = c;
+  }
+  const levelRatio = darkest && brightest && darkest.level > 0 ? r43(brightest.level / darkest.level) : null;
+  const lumaRatio = darkest && brightest && darkest.luma > 0 ? r43(brightest.luma / darkest.luma) : null;
+  const uneven = levelRatio !== null && levelRatio > t.unevenRatio;
+  const plane = solve3(
+    [
+      [s1, su, sv],
+      [su, suu, suv],
+      [sv, suv, svv]
+    ],
+    [sl, sul, svl]
+  );
+  const [x0, x1] = percentileRange(perX, s1);
+  const [y0, y1] = percentileRange(perY, s1);
+  const extent = { x: x0, y: y0, width: x1 - x0 + 1, height: y1 - y0 + 1 };
+  let horizontal = null;
+  let vertical = null;
+  if (plane && s1 > 0) {
+    const [a, b, c] = plane;
+    const at = (u, v) => a + b * u + c * v;
+    const ratio = (hi, lo) => lo > 0 && hi > 0 ? r43(hi / lo) : null;
+    const uc = su / s1;
+    const vc = sv / s1;
+    if (x1 > x0) horizontal = ratio(at(x1 / du, vc), at(x0 / du, vc));
+    if (y1 > y0) vertical = ratio(at(uc, y1 / dv), at(uc, y0 / dv));
+  }
+  const sides = [];
+  if (horizontal !== null) {
+    sides.push({
+      side: horizontal > 1 ? "left" : "right",
+      strength: Math.max(horizontal, 1 / horizontal)
+    });
+  }
+  if (vertical !== null) {
+    sides.push({
+      side: vertical > 1 ? "top" : "bottom",
+      strength: Math.max(vertical, 1 / vertical)
+    });
+  }
+  const darkerSide = sides.filter((d) => d.strength > t.unevenRatio).sort((p, q) => q.strength - p.strength).map((d) => d.side);
+  const where = (c) => `cell ${c.column},${c.row} at x ${c.box.x}, y ${c.box.y}`;
+  let reading;
+  if (darkest === null || brightest === null || levelRatio === null) {
+    reading = `no grid cell is at least ${Math.round(t.minCellShare * 100)}% screen, so evenness was not read`;
+  } else {
+    const spread = `the screen's ${kind} level runs from ${darkest.level.toFixed(3)} (${where(darkest)}) to ${brightest.level.toFixed(3)} (${where(brightest)}), ${levelRatio.toFixed(2)}x`;
+    reading = uneven ? `uneven: ${spread}` + (darkerSide.length ? `, darker on the ${darkerSide.join(" and the ")}` : "") + ". One Screen Colour will not fit all of it: key from the colour near the subject, then check the darker part in the Screen Matte view (Clip Black, a second key, or a garbage mask)" : `even: ${spread}`;
+  }
+  return {
+    columns: cols,
+    rows,
+    cellWidth: xs[1] - xs[0],
+    cellHeight: ys[1] - ys[0],
+    cells,
+    darkest,
+    brightest,
+    levelRatio,
+    lumaRatio,
+    uneven,
+    extent,
+    horizontal,
+    vertical,
+    darkerSide,
+    reading
+  };
+}
+function percentileRange(counts, total) {
+  if (total <= 0) return [0, counts.length - 1];
+  const lo = 0.05 * total;
+  const hi = 0.95 * total;
+  let acc = 0;
+  let first = -1;
+  let last = counts.length - 1;
+  for (let i = 0; i < counts.length; i++) {
+    acc += counts[i];
+    if (first < 0 && acc >= lo) first = i;
+    if (acc >= hi) {
+      last = i;
+      break;
+    }
+  }
+  return [Math.max(0, first), last];
+}
+function solve3(m, v) {
+  const det = (a) => a[0][0] * (a[1][1] * a[2][2] - a[1][2] * a[2][1]) - a[0][1] * (a[1][0] * a[2][2] - a[1][2] * a[2][0]) + a[0][2] * (a[1][0] * a[2][1] - a[1][1] * a[2][0]);
+  const d = det(m);
+  if (!Number.isFinite(d) || Math.abs(d) < 1e-12) return null;
+  const col = (i) => m.map((row, r) => row.map((x, c) => c === i ? v[r] : x));
+  return [det(col(0)) / d, det(col(1)) / d, det(col(2)) / d];
+}
+function measureGrain(img, isScreen, ch, kind, t) {
+  const { width, height, rgb } = img;
+  const ss = [0, 0, 0];
+  let k = 0;
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      const p = y * width + x;
+      if (isScreen[p] === 0) continue;
+      let all = true;
+      for (let dy = -1; dy <= 1 && all; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          if (isScreen[p + dy * width + dx] === 0) {
+            all = false;
+            break;
+          }
+        }
+      }
+      if (!all) continue;
+      for (let c = 0; c < 3; c++) {
+        let s = 0;
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) s += rgb[(p + dy * width + dx) * 3 + c];
+        }
+        const d = rgb[p * 3 + c] - s / 9;
+        ss[c] += d * d;
+      }
+      k++;
+    }
+  }
+  if (k === 0) return null;
+  const sd = [0, 1, 2].map((c) => Math.sqrt(ss[c] / k * 9 / 8));
+  const level = sd[ch];
+  const grainy = level > t.grainAbove;
+  const steps = level * 255;
+  return {
+    stdDev: r4rgb3(sd),
+    level: r43(level),
+    steps8bit: Math.round(steps * 100) / 100,
+    samples: k,
+    grainy,
+    reading: `grain: ${kind} varies by ${level.toFixed(4)} (standard deviation, about ${steps.toFixed(1)} 8-bit steps) about its local mean` + (grainy ? "; grainy enough to break a hard matte into specks and chatter, so try Keylight's Screen Pre-blur before raising Clip Black" : "; fine enough not to need pre-blur")
+  };
+}
+
+// src/color/motion.ts
+var DIFF_DEFAULTS = {
+  changeAbove: 0.04,
+  spikeRatio: 3,
+  holdRatio: 0.25,
+  quietBelow: 2e-3,
+  movingShare: 5e-4,
+  window: 3,
+  amplify: 8,
+  repeatBelow: 1e-4
+};
+var LIMITS = {
+  changeAbove: { min: 0, max: 1 },
+  spikeRatio: { min: 1, max: 1e3, above: true },
+  holdRatio: { min: 0, max: 1, above: true },
+  quietBelow: { min: 0, max: 1 },
+  movingShare: { min: 0, max: 1 },
+  window: { min: 1, max: 16, int: true },
+  amplify: { min: 1, max: 1e3 },
+  repeatBelow: { min: 0, max: 1 }
+};
+function resolveDiffThresholds(args = {}) {
+  const out = { ...DIFF_DEFAULTS };
+  for (const key of Object.keys(DIFF_DEFAULTS)) {
+    const v = args[key];
+    if (typeof v === "number") out[key] = v;
+  }
+  return out;
+}
+function diffArgsError(args) {
+  for (const [key, value] of Object.entries(args)) {
+    if (key === "sheet") continue;
+    const limit = LIMITS[key];
+    if (!limit) {
+      return `\`diff.${key}\` is not an option (options: ${Object.keys(LIMITS).join(", ")}, sheet)`;
+    }
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+      return `\`diff.${key}\` must be a number`;
+    }
+    const low = limit.above ? value <= limit.min : value < limit.min;
+    if (low || value > limit.max || limit.int && !Number.isInteger(value)) {
+      const range = limit.above ? `above ${limit.min} and at most ${limit.max}` : `${limit.min} to ${limit.max}`;
+      return `\`diff.${key}\` must be ${limit.int ? "a whole number " : ""}${range}, not ${value}`;
+    }
+  }
+  return null;
+}
+function pictureOf(img, straight) {
+  const n = img.width * img.height;
+  const out = new Float32Array(n * 3);
+  const a = straight ? img.alpha : void 0;
+  if (!a) {
+    out.set(img.rgb);
+    return out;
+  }
+  for (let p = 0; p < n; p++) {
+    const w = a[p];
+    const i = p * 3;
+    out[i] = img.rgb[i] * w;
+    out[i + 1] = img.rgb[i + 1] * w;
+    out[i + 2] = img.rgb[i + 2] * w;
+  }
+  return out;
+}
+var r62 = (v) => Math.round(v * 1e6) / 1e6;
+function rectStats(prev, cur, width, x0, y0, x1, y1, above, perPixel) {
+  let sum = 0;
+  let maxAbs = 0;
+  let changed = 0;
+  let bx0 = Infinity;
+  let by0 = Infinity;
+  let bx1 = -1;
+  let by1 = -1;
+  for (let y = y0; y < y1; y++) {
+    let i = (y * width + x0) * 3;
+    for (let x = x0; x < x1; x++, i += 3) {
+      const dr = Math.abs(cur[i] - prev[i]);
+      const dg = Math.abs(cur[i + 1] - prev[i + 1]);
+      const db = Math.abs(cur[i + 2] - prev[i + 2]);
+      const m = dr > dg ? dr > db ? dr : db : dg > db ? dg : db;
+      const mean = (dr + dg + db) / 3;
+      sum += mean;
+      if (m > maxAbs) maxAbs = m;
+      if (m > above) {
+        changed++;
+        if (x < bx0) bx0 = x;
+        if (x > bx1) bx1 = x;
+        if (y < by0) by0 = y;
+        if (y > by1) by1 = y;
+      }
+      if (perPixel) perPixel(x, y, mean);
+    }
+  }
+  const pixels = (x1 - x0) * (y1 - y0);
+  return {
+    pixels,
+    change: r62(pixels > 0 ? sum / pixels : 0),
+    maxAbsDelta: r62(maxAbs),
+    changedPixels: changed,
+    changedShare: r62(pixels > 0 ? changed / pixels : 0),
+    changedBounds: changed > 0 ? { x: bx0, y: by0, width: bx1 - bx0 + 1, height: by1 - by0 + 1 } : null
+  };
+}
+function pictureChange(prev, cur, width, height, t, opts = {}) {
+  let perPixel;
+  let sums = null;
+  let counts = null;
+  const tw = opts.thumb?.width ?? 0;
+  if (opts.thumb) {
+    const th = opts.thumb.height;
+    sums = new Float64Array(tw * th);
+    counts = new Float64Array(tw * th);
+    const col = new Int32Array(width);
+    for (let x = 0; x < width; x++) col[x] = Math.min(tw - 1, Math.floor(x * tw / width));
+    const row = new Int32Array(height);
+    for (let y = 0; y < height; y++) row[y] = Math.min(th - 1, Math.floor(y * th / height)) * tw;
+    const s = sums;
+    const c = counts;
+    perPixel = (x, y, mean) => {
+      const k = row[y] + col[x];
+      s[k] += mean;
+      c[k]++;
+    };
+  }
+  const all = rectStats(prev, cur, width, 0, 0, width, height, t.changeAbove, perPixel);
+  const out = { all };
+  if (opts.regions) {
+    out.regions = opts.regions.map((region) => {
+      const clip = clipRegion({ width, height }, region);
+      if (!clip)
+        return { name: region.name, error: `region is outside the ${width}\xD7${height} frame` };
+      const { x, y, width: w, height: h } = clip.rect;
+      return {
+        name: region.name,
+        ...rectStats(prev, cur, width, x, y, x + w, y + h, t.changeAbove)
+      };
+    });
+  }
+  if (sums && counts) {
+    const thumb = new Float64Array(sums.length);
+    for (let k = 0; k < sums.length; k++) {
+      thumb[k] = counts[k] > 0 ? Math.min(1, sums[k] / counts[k] * t.amplify) : 0;
+    }
+    out.thumb = thumb;
+  }
+  return out;
+}
+function lowerMedian(values) {
+  const s = [...values].sort((a, b) => a - b);
+  return s[Math.floor((s.length - 1) / 2)];
+}
+function side(pairs, p, dir, window, skip) {
+  const changes = [];
+  const shares = [];
+  for (let k = 1; k <= window; k++) {
+    const j = p + dir * k;
+    if (j < 0 || j >= pairs.length) break;
+    if (skip.has(j)) continue;
+    changes.push(pairs[j].change);
+    shares.push(pairs[j].changedShare);
+  }
+  if (changes.length === 0) return null;
+  return { change: lowerMedian(changes), share: lowerMedian(shares) };
+}
+var fmt = (v) => v.toFixed(4);
+var frameText = (f) => `#${f.index}${f.time === void 0 ? "" : ` (${r62(f.time)} s)`}`;
+function summarizeSeries(pairs, t) {
+  const n = pairs.length;
+  const changes = pairs.map((p) => p.change);
+  let largest = 0;
+  let smallest = 0;
+  for (let i = 1; i < n; i++) {
+    if (changes[i] > changes[largest]) largest = i;
+    if (changes[i] < changes[smallest]) smallest = i;
+  }
+  const summary = {
+    pairs: n,
+    median: n > 0 ? r62(lowerMedian(changes)) : 0,
+    mean: n > 0 ? r62(changes.reduce((a, b) => a + b, 0) / n) : 0,
+    largest: { pair: largest, change: n > 0 ? changes[largest] : 0 },
+    smallest: { pair: smallest, change: n > 0 ? changes[smallest] : 0 },
+    flags: [],
+    reading: ""
+  };
+  if (n < 2) {
+    summary.reading = n === 0 ? "no pair of consecutive frames to compare" : "one pair: nothing to compare it with, so nothing is flagged (render at least three frames)";
+    return summary;
+  }
+  const repeats = new Set(pairs.flatMap((p, i) => p.change <= t.repeatBelow ? [i] : []));
+  const near = (i, set2) => {
+    for (let k = 1; k <= t.window; k++) if (set2.has(i - k) || set2.has(i + k)) return true;
+    return false;
+  };
+  const standsOut = (p, i, skip) => {
+    if (repeats.has(i) || p.changedShare < t.movingShare) return null;
+    const sides = [side(pairs, i, -1, t.window, skip), side(pairs, i, 1, t.window, skip)].filter(
+      (s) => s !== null
+    );
+    if (sides.length === 0) return null;
+    const reference = Math.max(...sides.map((s) => s.change), t.quietBelow);
+    if (sides.some((s) => p.change < t.spikeRatio * Math.max(s.change, t.quietBelow))) return null;
+    return { reference, edge: i === 0 || i === n - 1, besideRepeat: near(i, repeats) };
+  };
+  const first = pairs.map((p, i) => standsOut(p, i, repeats));
+  const firstSpikes = new Set(first.flatMap((s, i) => s ? [i] : []));
+  const skipBoth = /* @__PURE__ */ new Set([...repeats, ...firstSpikes]);
+  const spike = pairs.map(
+    (p, i) => first[i] ?? (firstSpikes.size > 0 ? standsOut(p, i, skipBoth) : null)
+  );
+  const spikes = new Set(spike.flatMap((s, i) => s ? [i] : []));
+  const repeatNote = " (a repeated frame is next to it and was left out of the comparison)";
+  const flags = [];
+  for (let i = 0; i < n; i++) {
+    const s = spike[i];
+    if (!s) continue;
+    const runStart = i === 0 || !spike[i - 1];
+    if (!runStart) continue;
+    let end = i;
+    while (end + 1 < n && spike[end + 1]) end++;
+    if (end === i + 1) {
+      const reference = Math.max(s.reference, spike[end].reference);
+      const change = Math.min(pairs[i].change, pairs[end].change);
+      const frame = pairs[i].to;
+      const flag = {
+        kind: "pop",
+        pairs: [i, end],
+        frame,
+        change,
+        reference: r62(reference),
+        ratio: r62(change / reference),
+        reading: `frame ${frameText(frame)} differs from the frames before and after it by ${fmt(change)} or more, while its neighbours change about ${fmt(reference)}: a one-frame pop`
+      };
+      if (s.besideRepeat || spike[end].besideRepeat) {
+        flag.besideRepeat = true;
+        flag.reading += repeatNote;
+      }
+      flags.push(flag);
+      continue;
+    }
+    for (let j = i; j <= end; j++) {
+      const sj = spike[j];
+      const between = [pairs[j].from, pairs[j].to];
+      const flag = {
+        kind: "cut",
+        pairs: [j],
+        between,
+        change: pairs[j].change,
+        reference: r62(sj.reference),
+        ratio: r62(pairs[j].change / sj.reference),
+        reading: `${frameText(between[0])} to ${frameText(between[1])} changes ${fmt(pairs[j].change)}, ${(pairs[j].change / sj.reference).toFixed(1)}\xD7 its neighbours: a cut or a jump`
+      };
+      if (sj.edge) {
+        flag.atSeriesEdge = true;
+        flag.reading += " (first or last pair: it could also be a pop of the end frame)";
+      }
+      if (sj.besideRepeat) {
+        flag.besideRepeat = true;
+        flag.reading += repeatNote;
+      }
+      flags.push(flag);
+    }
+  }
+  const moving = (s) => s !== null && s.change >= t.quietBelow && s.share >= t.movingShare;
+  const notSpikes = /* @__PURE__ */ new Set([...spikes, ...repeats]);
+  const neighbours = (i) => [i - 1, i + 1].filter((j) => j >= 0 && j < n && !repeats.has(j));
+  for (let i = 0; i < n; i++) {
+    if (spikes.has(i)) continue;
+    const before = side(pairs, i, -1, t.window, notSpikes);
+    const after = side(pairs, i, 1, t.window, notSpikes);
+    const frame = pairs[i].to;
+    const unreliablePairs = neighbours(i);
+    const unreliable = unreliablePairs.length > 0 ? `; pair${unreliablePairs.length > 1 ? "s" : ""} ${unreliablePairs.join(" and ")} beside it ${unreliablePairs.length > 1 ? "are" : "is"} measured across the repeat, so ${unreliablePairs.length > 1 ? "their readings are" : "its reading is"} unreliable` : "";
+    if (before && after && moving(before) && moving(after)) {
+      const reference2 = Math.min(before.change, after.change);
+      if (pairs[i].change > t.holdRatio * reference2) continue;
+      flags.push({
+        kind: "stutter",
+        pairs: [i],
+        frame,
+        change: pairs[i].change,
+        reference: r62(reference2),
+        ratio: r62(pairs[i].change / reference2),
+        unreliablePairs,
+        reading: `frame ${frameText(frame)} barely changes from the one before (${fmt(pairs[i].change)}) while the frames around it move about ${fmt(reference2)}: a repeated frame, a stutter${unreliable}. Rounded times can do this: a time just below a frame boundary renders the frame before (see frameWarning)`
+      });
+      continue;
+    }
+    if (!repeats.has(i)) continue;
+    const rawBefore = side(pairs, i, -1, t.window, spikes);
+    const rawAfter = side(pairs, i, 1, t.window, spikes);
+    const atEdge = rawBefore === null || rawAfter === null;
+    if (!atEdge || !(moving(rawBefore) || moving(rawAfter))) continue;
+    const reference = (moving(rawBefore) ? rawBefore : rawAfter).change;
+    flags.push({
+      kind: "repeat",
+      pairs: [i],
+      frame,
+      change: pairs[i].change,
+      reference: r62(reference),
+      ratio: r62(pairs[i].change / reference),
+      atSeriesEdge: true,
+      unreliablePairs,
+      reading: `frame ${frameText(frame)} repeats the one before (change ${fmt(pairs[i].change)}) beside motion of about ${fmt(reference)}, at the ${rawBefore === null ? "start" : "end"} of the series, so a stutter cannot be told from a hold${unreliable}`
+    });
+  }
+  flags.sort((a, b) => a.pairs[0] - b.pairs[0]);
+  summary.flags = flags;
+  const counts = ["pop", "stutter", "cut", "repeat"].map((k) => [k, flags.filter((f) => f.kind === k).length]).filter(([, c]) => c > 0).map(([k, c]) => `${c} ${k}${c > 1 ? "s" : ""}`);
+  summary.reading = `${n} pairs, median change ${fmt(summary.median)}, largest ${fmt(summary.largest.change)} (pair ${largest}); ` + (flags.length === 0 ? "no pair stands out from its neighbours" : `${counts.join(", ")}: ${flags.map((f) => `${f.kind} at pair ${f.pairs.join("+")}`).join("; ")}`);
+  return summary;
+}
+
+// src/color/settled-read.ts
+import { promises as fs4 } from "node:fs";
+var SETTLE_BASE_MS = 15e3;
+var SETTLE_PER_HD_FRAME_MS = 3e3;
+var SETTLE_MIN_PER_FRAME_MS = 1e3;
+var HD_PIXELS = 1080 * 1920;
+var POLL_MS = 60;
+var IEND = Buffer.from([0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130]);
+function sleep2(ms) {
+  return new Promise((resolve12) => setTimeout(resolve12, ms));
+}
+function settleTimeoutFor(frames, pixelsPerFrame) {
+  const n = Math.max(1, Math.floor(frames));
+  const perFrame = Math.max(
+    SETTLE_MIN_PER_FRAME_MS,
+    Math.round(SETTLE_PER_HD_FRAME_MS * Math.max(0, pixelsPerFrame) / HD_PIXELS)
+  );
+  return SETTLE_BASE_MS + (n - 1) * perFrame;
+}
+async function stampFiles(paths) {
+  return Promise.all(
+    paths.map(async (p) => {
+      try {
+        const st = await fs4.stat(p, { bigint: true });
+        return { exists: true, size: Number(st.size), mtimeNs: st.mtimeNs, ino: st.ino };
+      } catch {
+        return { exists: false, size: 0, mtimeNs: 0n, ino: 0n };
+      }
+    })
+  );
+}
+async function endsWithIend(p, size) {
+  if (size < IEND.length) return false;
+  let fh = null;
+  try {
+    fh = await fs4.open(p, "r");
+    const tail = Buffer.alloc(IEND.length);
+    await fh.read(tail, 0, IEND.length, size - IEND.length);
+    return tail.equals(IEND);
+  } catch {
+    return false;
+  } finally {
+    await fh?.close();
+  }
+}
+async function waitForSettled(paths, opts) {
+  const stableMs = opts.stableMs ?? 250;
+  const start = Date.now();
+  const deadline = start + opts.timeoutMs;
+  const done = /* @__PURE__ */ new Set();
+  const state = paths.map(() => ({
+    size: -1,
+    changedAt: start,
+    status: "missing"
+  }));
+  for (; ; ) {
+    await Promise.all(
+      paths.map(async (p, i) => {
+        if (done.has(i)) return;
+        const s = state[i];
+        let st = null;
+        try {
+          st = await fs4.stat(p, { bigint: true });
+        } catch {
+        }
+        if (st === null) {
+          s.status = "missing";
+          s.size = -1;
+          return;
+        }
+        const size = Number(st.size);
+        const was = opts.before?.[i];
+        if (was?.exists && was.size === size && was.mtimeNs === st.mtimeNs && was.ino === st.ino) {
+          s.status = "unchanged";
+          s.size = size;
+          return;
+        }
+        if (size !== s.size) {
+          s.size = size;
+          s.changedAt = Date.now();
+        }
+        if (size === 0) {
+          s.status = "empty";
+          return;
+        }
+        s.status = "writing";
+        if (await endsWithIend(p, size) || Date.now() - s.changedAt >= stableMs) done.add(i);
+      })
+    );
+    if (done.size === paths.length || Date.now() > deadline) break;
+    await sleep2(POLL_MS);
+  }
+  const settled = [...done].sort((a, b) => a - b);
+  const unsettled = [];
+  for (const [i, p] of paths.entries()) {
+    if (done.has(i)) continue;
+    unsettled.push({
+      index: i,
+      path: p,
+      state: state[i].status,
+      bytes: Math.max(0, state[i].size)
+    });
+  }
+  return { settled, unsettled, waitedMs: Date.now() - start, timeoutMs: opts.timeoutMs };
+}
+async function readFileSettled(filePath, timeoutMs = SETTLE_BASE_MS, stableMs = 250) {
+  const res = await waitForSettled([filePath], { timeoutMs, stableMs });
+  if (res.settled.length === 0) {
+    throw new Error(
+      `file did not settle within ${timeoutMs}ms (saveFrameToPng writes asynchronously): ${filePath}`
+    );
+  }
+  return fs4.readFile(filePath);
+}
+
+// src/tools/render-frame.ts
+init_config();
+
+// src/operations/snippets.ts
+var COMP_INFO_FN = `
+    function _compInfo(c) {
+        var _ciLayers = [];
+        for (var _ci = 1; _ci <= c.numLayers; _ci++) {
+            _ciLayers.push(AE.serializeLayerSummary(c.layer(_ci)));
+        }
+        var _ciOut = AE.serializeItemSummary(c);
+        _ciOut.ok = true;
+        _ciOut.found = true;
+        _ciOut.workAreaStart = c.workAreaStart;
+        _ciOut.workAreaDuration = c.workAreaDuration;
+        _ciOut.pixelAspect = c.pixelAspect;
+        _ciOut.shutterAngle = c.shutterAngle;
+        _ciOut.shutterPhase = c.shutterPhase;
+        _ciOut.motionBlur = c.motionBlur;
+        // Comp markers (time, comment, duration per key), or null when there are none.
+        _ciOut.markers = AE.serializeCompMarkers(c);
+        _ciOut.layers = _ciLayers;
+        return _ciOut;
+    }
+`;
+var LAYER_FULL_FN = `
+    function _layerFull(l, incl, detail) {
+        var _lfOut = AE.serializeLayerFull(l, { includeProperties: incl, detail: detail });
+        _lfOut.ok = true;
+        _lfOut.found = true;
+        return _lfOut;
+    }
+`;
+var RENDER_FRAME_FN = `
+    function _renderFrame(c, t0, outAbs, useDst) {
+        var _rfT = t0;
+        if (useDst) _rfT = _rfT + c.displayStartTime;
+        var _rfFile = AE.ensureParentDir(outAbs);
+        try {
+            c.saveFrameToPng(_rfT, _rfFile);
+            return {
+                ok: true,
+                writtenTo: _rfFile.fsName.replace(/\\\\/g, "/"),
+                time: _rfT,
+                compName: c.name,
+                size: [c.width, c.height]
+            };
+        } catch (eRf) {
+            return { ok: false, error: "saveFrameToPng failed: " + AE.errText(eRf) };
+        }
+    }
+`;
+var MISSING_SOURCES_FN = `
+    function _missingSources(_msRoot) {
+        var _msOut = [];
+        var _msComps = {};
+        var _msFootage = {};
+        function _msWalk(_comp) {
+            if (_msComps[_comp.id]) return;
+            _msComps[_comp.id] = true;
+            for (var _li = 1; _li <= _comp.numLayers; _li++) {
+                var _source = AE.safeGet(function () { return _comp.layer(_li).source; }, null);
+                if (!_source) continue;
+                if (_source instanceof CompItem) { _msWalk(_source); continue; }
+                if (!(_source instanceof FootageItem) || _msFootage[_source.id]) continue;
+                _msFootage[_source.id] = true;
+                var _file = AE.safeGet(function () { return _source.file; }, null);
+                var _missing = AE.safeGet(function () { return _source.footageMissing; }, false);
+                if (!_missing && (!_file || _file.exists)) continue;
+                var _missingPath = AE.safeGet(function () { return _source.mainSource.missingFootagePath; }, null);
+                if (!_missingPath && _file) _missingPath = _file.fsName;
+                _msOut.push({ id: _source.id, name: _source.name, path: _missingPath });
+            }
+        }
+        _msWalk(_msRoot);
+        return _msOut;
+    }
+`;
+var OCIO_CAPTURE_FN = `
+    function _captureWithOcio(c, maxT, renderAll) {
+        var _adj = null;
+        var _adjSrc = null;
+        var _ran = false;
+        try {
+            _adj = c.layers.addSolid([1, 1, 1], "__mcp_ocio__", c.width, c.height, c.pixelAspect);
+            _adjSrc = _adj.source;
+            _adj.adjustmentLayer = true;
+            try {
+                if (_adj.outPoint < maxT + c.frameDuration) _adj.outPoint = maxT + c.frameDuration;
+            } catch (eOp) { }
+            var _fxOk = false;
+            try {
+                _adj.property("Effects").addProperty("ADBE OCIO Display Transform");
+                _fxOk = true;
+            } catch (eFx) { /* pre-OCIO AE or ICC color engine */ }
+            if (_fxOk) { _ran = true; renderAll("ocio"); }
+        } catch (eTmp) { /* fall through to direct capture */ }
+        if (_adj) { try { _adj.remove(); } catch (eRm) { } }
+        if (_adjSrc) { try { _adjSrc.remove(); } catch (eRs) { } }
+        return _ran;
+    }
+`;
+var LIST_MISSING_FONTS_FN = `
+    function _listMissingFonts() {
+        if (!app.fonts) return { ok: false, error: "app.fonts needs AE 24.0+" };
+        var _missing = [];
+        try {
+            var _list = app.fonts.missingOrSubstitutedFonts;
+            for (var _i = 0; _i < _list.length; _i++) {
+                var _font = _list[_i];
+                _missing.push({
+                    postScriptName: AE.safeGet(function () { return _font.postScriptName; }, null),
+                    familyName: AE.safeGet(function () { return _font.familyName; }, null),
+                    styleName: AE.safeGet(function () { return _font.styleName; }, null)
+                });
+            }
+        } catch (eM) { return { ok: false, error: "missingOrSubstitutedFonts failed: " + AE.errText(eM) }; }
+        return { ok: true, count: _missing.length, fonts: _missing };
+    }
+`;
+var LIST_MISSING_FOOTAGE_FN = `
+    function _listMissingFootage() {
+        var _missing = [];
+        for (var _i = 1; _i <= app.project.numItems; _i++) {
+            var _it = app.project.item(_i);
+            if (!(_it instanceof FootageItem)) continue;
+            var _isMissing = AE.safeGet(function () { return _it.footageMissing; }, false);
+            if (!_isMissing) continue;
+            _missing.push({
+                id: _it.id,
+                name: _it.name,
+                missingPath: AE.safeGet(function () { return _it.mainSource.missingFootagePath; }, null),
+                usedInComps: AE.safeGet(function () {
+                    var _u = [];
+                    var _comps = _it.usedIn;
+                    for (var _ci = 0; _ci < _comps.length; _ci++) _u.push(_comps[_ci].name);
+                    return _u;
+                }, [])
+            });
+        }
+        return { ok: true, count: _missing.length, items: _missing };
+    }
+`;
+var COMP_CORNERS_FN = `
+    function _compCorners(layer, r) {
+        return {
+            topLeft: AE.valueToJson(layer.sourcePointToComp([r.left, r.top])),
+            topRight: AE.valueToJson(layer.sourcePointToComp([r.left + r.width, r.top])),
+            bottomLeft: AE.valueToJson(layer.sourcePointToComp([r.left, r.top + r.height])),
+            bottomRight: AE.valueToJson(layer.sourcePointToComp([r.left + r.width, r.top + r.height]))
+        };
+    }
+`;
+
+// src/tools/render-frame.ts
+init_registry();
+
+// src/color/calibration.ts
+init_registry();
+import { randomUUID as randomUUID2 } from "node:crypto";
+import { promises as fs5 } from "node:fs";
+import * as os3 from "node:os";
+import * as path5 from "node:path";
+var CALIB_VALUES = [0.05, 0.18, 0.5, 1];
+var PATCH = 40;
+var cache = /* @__PURE__ */ new Map();
+function calibrationKey(projectFile, workingSpace, bitsPerChannel) {
+  return `${projectFile ?? "(unsaved)"}|${workingSpace}|${bitsPerChannel}`;
+}
+function analyzeCalibrationPng(buf) {
+  const img = decodePng(buf);
+  const samples = [];
+  for (let i = 0; i < CALIB_VALUES.length; i++) {
+    const x = PATCH * i + PATCH / 2;
+    const y = Math.floor(img.height / 2);
+    samples.push({ input: CALIB_VALUES[i], output: img.rgb[(y * img.width + x) * 3] });
+  }
+  const ratios = samples.map((s) => s.output / s.input);
+  const min = Math.min(...ratios);
+  const max = Math.max(...ratios);
+  if (min > 0 && max / min < 1.03) {
+    const scale = ratios.reduce((a, b) => a + b, 0) / ratios.length;
+    if (Math.abs(scale - 1) < 0.02) return { kind: "identity", scale: 1, samples };
+    return { kind: "linear", scale, samples };
+  }
+  return { kind: "unknown", scale: 1, samples };
+}
+async function measureCaptureTransfer(transport2, key, allowRender = true) {
+  const cached2 = cache.get(key);
+  if (cached2) return cached2;
+  if (!allowRender) {
+    return {
+      error: "calibration needs a (transient, undo-grouped) render of a temporary comp, which read-only mode forbids"
+    };
+  }
+  const pngPath = path5.join(os3.tmpdir(), `mcp-ae-calib-${randomUUID2()}.png`).replace(/\\/g, "/");
+  const code = `
+        var _vals = ${jsxVal(CALIB_VALUES)};
+        var _patch = ${jsxVal(PATCH)};
+        var _w = _patch * _vals.length;
+        var _tmp = app.project.items.addComp("__mcp_calibration__", _w, _patch, 1, 1, 24);
+        var _srcs = [];
+        var _out = { ok: true };
+        try {
+            for (var _i = 0; _i < _vals.length; _i++) {
+                var _v = _vals[_i];
+                var _s = _tmp.layers.addSolid([_v, _v, _v], "c" + _i, _patch, _patch, 1);
+                if (_s.source) _srcs.push(_s.source);
+                _s.property("Transform").property("Position").setValue([_patch * _i + _patch / 2, _patch / 2]);
+            }
+            _tmp.saveFrameToPng(0, new File(${jsxVal(pngPath)}));
+            _out.saved = true;
+        } catch (eCal) { _out.ok = false; _out.error = AE.errText(eCal); }
+        try { _tmp.remove(); } catch (eRm) { /* leave for undo */ }
+        for (var _j = 0; _j < _srcs.length; _j++) { try { _srcs[_j].remove(); } catch (eRs) { } }
+        return _out;
+    `;
+  const result = await transport2.execute({ code, label: "capture_calibration", timeoutMs: 6e4 });
+  if (!result.ok) return { error: `calibration render failed: ${result.error}` };
+  const payload = result.result;
+  if (!payload || payload.ok !== true || payload.saved !== true) {
+    return { error: `calibration failed inside AE: ${payload?.error ?? "no result"}` };
+  }
+  let buf;
+  try {
+    buf = await readFileSettled(pngPath);
+  } catch (err) {
+    return {
+      error: `calibration PNG unreadable: ${err instanceof Error ? err.message : String(err)}`
+    };
+  } finally {
+    fs5.unlink(pngPath).catch(() => {
+    });
+  }
+  try {
+    const analysis = analyzeCalibrationPng(buf);
+    cache.set(key, analysis);
+    return analysis;
+  } catch (err) {
+    return {
+      error: `calibration analysis failed: ${err instanceof Error ? err.message : String(err)}`
+    };
+  }
+}
+
+// src/color/transform.ts
+var AP1_TO_REC709 = [
+  [1.70505099, -0.62179212, -0.08325887],
+  [-0.13025642, 1.1408047, -0.01054832],
+  [-0.02400336, -0.12896898, 1.15297233]
+];
+var AP0_TO_REC709 = [
+  [2.52140088, -1.13399574, -0.38756249],
+  [-0.27621892, 1.37259556, -0.09628267],
+  [-0.01538264, -0.15292998, 1.16835777]
+];
+var IDENTITY = [
+  [1, 0, 0],
+  [0, 1, 0],
+  [0, 0, 1]
+];
+var HILL_IN = [
+  [0.59719, 0.35458, 0.04823],
+  [0.076, 0.90834, 0.01566],
+  [0.0284, 0.13383, 0.83777]
+];
+var HILL_OUT = [
+  [1.60475, -0.53108, -0.07367],
+  [-0.10208, 1.10813, -605e-5],
+  [-327e-5, -0.07276, 1.07602]
+];
+function srgbEncode(x) {
+  const v = Math.min(1, Math.max(0, x));
+  return v <= 31308e-7 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055;
+}
+function apply(m, r, g, b) {
+  return [
+    m[0][0] * r + m[0][1] * g + m[0][2] * b,
+    m[1][0] * r + m[1][1] * g + m[1][2] * b,
+    m[2][0] * r + m[2][1] * g + m[2][2] * b
+  ];
+}
+function rrtOdtFit(v) {
+  return (v * (v + 0.0245786) - 90537e-9) / (v * (0.983729 * v + 0.432951) + 0.238081);
+}
+function sceneLinearToDisplaySrgb(rgb, toRec709) {
+  for (let i = 0; i < rgb.length; i += 3) {
+    let [r, g, b] = apply(toRec709, rgb[i], rgb[i + 1], rgb[i + 2]);
+    r = Math.max(0, r);
+    g = Math.max(0, g);
+    b = Math.max(0, b);
+    [r, g, b] = apply(HILL_IN, r, g, b);
+    r = rrtOdtFit(r);
+    g = rrtOdtFit(g);
+    b = rrtOdtFit(b);
+    [r, g, b] = apply(HILL_OUT, r, g, b);
+    rgb[i] = srgbEncode(r);
+    rgb[i + 1] = srgbEncode(g);
+    rgb[i + 2] = srgbEncode(b);
+  }
+}
+function profileForWorkingSpace(workingSpace) {
+  const ws = workingSpace.toLowerCase();
+  if (ws.includes("acescg")) {
+    return {
+      toRec709: AP1_TO_REC709,
+      note: "ACEScg \u2192 sRGB via ACES output transform (RRT+ODT fit)"
+    };
+  }
+  if (ws.includes("aces2065") || ws.includes("aces 2065")) {
+    return {
+      toRec709: AP0_TO_REC709,
+      note: "ACES2065-1 \u2192 sRGB via ACES output transform (RRT+ODT fit)"
+    };
+  }
+  if (ws.includes("scene-referred rec.709") || ws.includes("linear rec.709")) {
+    return {
+      toRec709: IDENTITY,
+      note: "linear Rec.709 \u2192 sRGB via ACES output transform (RRT+ODT fit)"
+    };
+  }
+  return null;
+}
+
+// src/tools/capture-shared.ts
+function validRgb(value) {
+  return Array.isArray(value) && value.length === 3 && value.every((v) => typeof v === "number" && Number.isFinite(v)) ? [value[0], value[1], value[2]] : null;
+}
+async function colorConversion(payload, transport2) {
+  const workingSpace = payload.workingSpace ?? "None";
+  try {
+    if (workingSpace === "None" || workingSpace === "") {
+      payload.colorPipeline = "untagged 16-bit \u2192 8-bit sRGB-tagged (values unchanged)";
+      return () => {
+      };
+    }
+    const calib = await measureCaptureTransfer(
+      transport2,
+      calibrationKey(payload.projectFile ?? null, workingSpace, payload.bitsPerChannel ?? 8),
+      !readOnlyMode()
+    );
+    const calibFailed = "error" in calib || calib.kind === "unknown";
+    const gain = !calibFailed && calib.kind === "linear" ? 1 / calib.scale : 1;
+    const applyGain = (rgb) => {
+      if (gain !== 1) for (let i = 0; i < rgb.length; i++) rgb[i] *= gain;
+    };
+    if (payload.captureKind === "ocio") {
+      if (calibFailed) {
+        payload.colorWarning = `AE applied its display transform, but the capture scale could not be measured (${"error" in calib ? calib.error : "non-linear transfer"}) \u2014 the file is uniformly dark by that unknown scale. Verify colors against the AE viewer manually.`;
+        return null;
+      }
+      payload.colorPipeline = "AE OCIO display transform (viewer-exact, any working space)" + (gain !== 1 ? ` + capture scale 1/${gain.toFixed(2)} restored` : "");
+      return applyGain;
+    }
+    const profile = profileForWorkingSpace(workingSpace);
+    if (profile === null) {
+      payload.colorWarning = `working space '${workingSpace}' has no built-in conversion \u2014 the file contains raw working-space values and will not match the viewer. Verify colors against the AE viewer manually if they matter here.`;
+      return null;
+    }
+    if (calibFailed) {
+      payload.colorWarning = `could not characterize this AE version's capture transfer (${"error" in calib ? calib.error : "non-linear transfer"}) \u2014 the file contains raw working-space values. Verify colors against the AE viewer manually if they matter here.`;
+      return null;
+    }
+    payload.colorPipeline = `${profile.note}` + (gain !== 1 ? ` (capture scale 1/${gain.toFixed(2)} restored)` : "");
+    return (rgb) => {
+      applyGain(rgb);
+      sceneLinearToDisplaySrgb(rgb, profile.toRec709);
+    };
+  } catch (err) {
+    payload.colorWarning = `color post-processing failed, file left as raw capture: ${err instanceof Error ? err.message : String(err)}`;
+    return null;
+  }
+}
+
+// src/tools/define-tool.ts
+function defineTool(spec) {
+  return spec;
+}
+function jsonResult(payload) {
+  const envelope = { ok: true, ...payload };
+  return {
+    content: [{ type: "text", text: JSON.stringify(envelope, null, 2) }],
+    structuredContent: envelope,
+    isError: false
+  };
+}
+function jsxReportedFailure(result) {
+  if (result === null || typeof result !== "object" || Array.isArray(result)) return null;
+  const r = result;
+  if (r.ok !== false) return null;
+  return { error: typeof r.error === "string" ? r.error : "operation reported ok: false" };
+}
+function toMcpResult(result) {
+  if (!result.ok) {
+    return errorResult(result.errorCode ?? "TRANSPORT", result.error ?? "unknown failure", {
+      ...result.dialogs?.length ? { details: { dialogs: result.dialogs } } : {},
+      stack: result.stack,
+      logs: result.logs,
+      durationMs: result.durationMs
+    });
+  }
+  const reported = jsxReportedFailure(result.result);
+  if (reported) {
+    return errorResult("OPERATION_FAILED", reported.error, {
+      details: { result: result.result },
+      logs: result.logs,
+      durationMs: result.durationMs
+    });
+  }
+  return jsonResult({
+    result: result.result,
+    logs: result.logs,
+    durationMs: result.durationMs
+  });
+}
+
+// src/tools/render-frame.ts
+var STRIP_DEFAULT_MAX_DIMENSION = 360;
+var FRAME_PICK = 0.25;
+var NEAR_FRAME_BOUNDARY = 0.02;
+function frameWarnings(frames, near = NEAR_FRAME_BOUNDARY) {
+  const parts = [];
+  const firstAt = /* @__PURE__ */ new Map();
+  for (const [i, f] of frames.entries()) {
+    if (typeof f.frame !== "number") continue;
+    const seen = firstAt.get(f.frame);
+    if (seen === void 0) firstAt.set(f.frame, i);
+    else parts.push(`#${seen} and #${i} both render frame ${f.frame}`);
+  }
+  for (const [i, f] of frames.entries()) {
+    if (typeof f.frame !== "number" || typeof f.frameOffset !== "number") continue;
+    const below = 1 - f.frameOffset;
+    if (below > 0 && below <= near) {
+      parts.push(
+        `#${i} (${f.time} s) renders frame ${f.frame}, ${(below * 100).toFixed(1)}% of a frame below frame ${f.frame + 1}`
+      );
+    }
+  }
+  if (parts.length === 0) return void 0;
+  return `${parts.join("; ")}. A time resolves to the frame it falls in, so a rounded time just below a boundary renders the frame before and a series of rounded times can repeat frames (diff then reads stutters). Pass \`frames: [..]\` to address frames by number, or exact times.`;
+}
+var MEASUREMENT_STAGES = {
+  capture: "the PNG as saveFrameToPng wrote it, before any colour conversion: working-space values (scaled by AE's capture transfer in colour-managed projects), 8 or 16 bits. Its RGB is already laid over the comp background colour (`bgColor`): capture = colour\xB7alpha + bgColor\xB7(1 \u2212 alpha), so a half-covered pixel reads half background and an empty one reads bgColor; on a black background that is premultiplied colour. Alpha is the coverage AE wrote",
+  output: "the file as written (writtenTo), after colour conversion when colorManaged is auto, so 8-bit display values. With channels 'rgb': over the comp background as AE composited it, or over `over`. With 'rgba': the colour recovered from under the background (straight, 0 where alpha is 0), plus alpha. With 'alpha': the matte, in r = g = b. The same as the capture when colorManaged is off or the conversion failed"
+};
+var HISTOGRAM_DEFAULT_BINS = 32;
+var layerRefSchema = external_exports.union([
+  external_exports.string(),
+  external_exports.number().int().positive(),
+  external_exports.object({ id: external_exports.number().int() })
+]);
+var regionSchema = external_exports.object({
+  name: external_exports.string().min(1).describe("Label reported back with the numbers."),
+  x: external_exports.number().int().describe("Left edge (or the point), capture pixels from the left."),
+  y: external_exports.number().int().describe("Top edge (or the point), capture pixels from the top."),
+  width: external_exports.number().int().positive().optional().describe("Omit with height for a single pixel."),
+  height: external_exports.number().int().positive().optional()
+});
+var renderFrameTool = defineTool({
+  name: "ae_render_frame",
+  title: "Render frame",
+  description: "Render one or more frames to PNG. Use to visually verify edits. The agent's 'eyes' \u2014 pair with mutations for a visual feedback loop. Headless and deterministic. Pass `time` for one frame, or `times` for several in ONE call (motion checks): files land at <outPath stem>_<index>.png and are listed in `frames`. `contactSheet` tiles every frame into one labelled PNG (<stem>_sheet.png) so a motion check is one image; `analyze` measures each capture (uniform edge bands = black bars / transparent margins, content bounds, coverage) so off-frame elements and letterboxing are caught numerically. In color-managed projects (workingSpace != None) the capture applies AE's own display transform via a transient OCIO Display Transform adjustment layer, and the PNG comes back viewer-accurate and sRGB-tagged. Where that layer cannot be used \u2014 read-only mode, an AE without the OCIO effect, or a failed capture calibration \u2014 the result falls back to a pure-math ACES conversion or to raw values with an explicit colorWarning; check colorPipeline / colorWarning on the response. Seeing the matte: `channels` picks what the file holds \u2014 'rgb' (default, transparency composited over `over`: the comp background as AE composites it, a checkerboard or a colour such as '#ff00ff'), 'rgba' (alpha kept, straight colour), or 'alpha' (the matte as greyscale: white opaque, black transparent). `isolate` renders one layer or a list alone (cameras and lights stay as they are), then restores every layer switch, even when the render fails. `alphaChannel` reports whether the capture carried alpha at all. Reading colour: `sample` takes named points or rectangles and returns mean / min / max per channel and alpha coverage for each; `histogram` counts the whole frame per channel; `compare` (with `times` and `sample`) reports each region's difference between two of the rendered frames. Matte quality: `edge` reports, from the capture's alpha, the shares of opaque / partly transparent / transparent pixels, edge width (typical and worst, px), holes, specks, partly transparent patches that are not thin edges (an unkeyed screen, a remnant), the soft edge's colour with the comp background taken out and whether it leans to the screen colour (spill), and with `times` the frame-to-frame change in alpha along the edge, inside the solid area and outside it (flicker). Green screen: `screen`, on a render of the UN-KEYED source (Keylight View 'source' or the key off, the keyed layer isolated), reports green or blue, which pixels are screen and their share, a suggested screen colour (the median, and the colour just outside the subject), evenness on a grid (darkest and brightest cells, the spread as a ratio, the darker side) and grain. Watching motion: `diff` (with `times`) reports how much the picture changes between consecutive frames, where, and per `sample` region, and flags pairs that stand out (a one-frame pop, a stutter where a frame repeats, a cut); `strip: { at, frames }` renders the frames around a moment into one small contact sheet with diff on. For playback at speed, render.preview (ae_do) writes a quick movie. It reports numbers and places, never a pass or fail. Every number is labelled with its stage \u2014 'capture' (before colour conversion) or 'output' (the file as written) \u2014 described once in `measurementStages`.",
+  group: "render",
+  // Survives read-only mode: it writes a PNG, and the visual verification loop
+  // is the whole point of an audit session. Note this is NOT a
+  // never-touches-the-project tool. In a color-managed project the capture
+  // path adds a transient adjustment layer, and the calibration probe builds a
+  // scratch comp — both removed before the call returns, both leaving the
+  // project dirty and one undo step consumed. Read-only mode is exactly where
+  // that must not happen, so both are gated on !readOnlyMode() below and the
+  // call degrades to the pure-math path instead.
+  blockedInReadOnly: false,
+  effect: "write",
+  inputShape: {
+    compNameOrId: external_exports.union([external_exports.string(), external_exports.number()]).describe("Composition name or numeric item id."),
+    time: external_exports.number().nonnegative().optional().describe(
+      "Time in seconds to render. Give exactly one of `time`, `times`, `strip` or `frames`. Each rendered frame reports `frame` (the frame the time falls in: floor(time / frameDuration), worked out in After Effects) and `frameOffset` (where in it, 0..1); `frameWarning` says when two times land on one frame or a time sits within 2% of a frame below a boundary (a rounded time renders the frame before). Times are never moved."
+    ),
+    times: external_exports.array(external_exports.number().nonnegative()).min(1).max(32).optional().describe(
+      "Several times in seconds, rendered in ONE call. Files are written as <outPath stem>_<index><ext> and reported in `frames` (index-aligned)."
+    ),
+    strip: external_exports.object({
+      at: external_exports.number().nonnegative().describe("The moment, seconds (snapped to the nearest frame)."),
+      frames: external_exports.number().int().min(2).max(32).describe("How many consecutive frames, centred on `at` (one more after it when even)."),
+      step: external_exports.number().int().positive().optional().describe("Frames between rendered frames. Default 1 (every frame)."),
+      maxDimension: external_exports.number().int().min(16).max(2048).optional().describe(
+        "Longest side of each tile on the sheets, px. Default 360. The frames themselves are rendered at the comp's size."
+      )
+    }).optional().describe(
+      "'What happens around this moment' in one call: N consecutive frames around `at`, worked out from the comp's frame rate inside After Effects and rendered through the `times` path (files <stem>_<index>, listed in `frames`), tiled small into the contact sheet, with `diff` and its sheet on (pass `diff: false` to skip, or diff options to tune). The window is shifted to stay inside the comp; `strip` in the response says where it landed. Instead of `time` / `times`."
+    ),
+    frames: external_exports.array(external_exports.number().int().nonnegative()).min(1).max(32).optional().describe(
+      "Frame numbers (0 = the comp's first frame) instead of times: each is rendered a quarter of a frame inside it, so a time never lands on the frame before. Through the `times` path: files <stem>_<index>, reported in `frames` with their `frame`. Instead of `time` / `times` / `strip`."
+    ),
+    outPath: external_exports.string().describe(
+      "Absolute path to write the PNG. Parent directory is created if missing. With `times`, used as the naming stem for every frame."
+    ),
+    useDisplayStartTime: external_exports.boolean().optional().describe("If true, times are interpreted relative to comp.displayStartTime. Default false."),
+    colorManaged: external_exports.enum(["auto", "off"]).optional().describe(
+      "'auto' (default): detect the working space and return a viewer-accurate, 8-bit sRGB-tagged PNG. 'off': raw legacy output (16-bit, untagged, working-space values \u2014 dark/wrong-looking in color-managed projects)."
+    ),
+    settleTimeoutMs: external_exports.number().int().positive().max(6e5).optional().describe(
+      "How long to wait for the captures to finish writing (saveFrameToPng writes after the script returns). Default: 15 s for one frame, plus 3 s for each further 1080\xD71920 frame (scaled by size, at least 1 s each). Frames that do not finish are named in `captureSettle` and marked failed in `frames`; the others are still measured."
+    ),
+    analyze: external_exports.boolean().optional().describe(
+      "Measure each capture: uniform bands at every edge (width + transparent/color \u2014 black bars, letterboxing, empty margins), the bounding box of non-background pixels, coverage, mean RGB. Reported per frame as `analysis` (measured on the capture before color conversion)."
+    ),
+    contactSheet: external_exports.object({
+      columns: external_exports.number().int().positive().optional().describe("Tiles per row (default ceil(sqrt(n)))."),
+      thumbWidth: external_exports.number().int().min(16).max(2048).optional().describe("Tile width in px, never upscaled (default 480)."),
+      outPath: external_exports.string().optional().describe("Sheet path (default <outPath stem>_sheet.png).")
+    }).optional().describe(
+      "Tile all rendered frames into ONE labelled PNG (#index + time above each tile). Pass {} for defaults. Frames that carry alpha (channels 'rgba') are shown over a checkerboard on the sheet."
+    ),
+    channels: external_exports.enum(["rgb", "rgba", "alpha"]).optional().describe(
+      "What the written file holds. 'rgb' (default): 8-bit sRGB, transparency composited over `over`. 'rgba': 8-bit sRGB with the alpha channel kept and straight colour (AE lays its capture over the comp background; that background is taken out again). 'alpha': the matte as 8-bit greyscale, white = opaque, black = transparent. Needs colorManaged 'auto'. If the capture has no alpha channel, `alphaWarning` says so."
+    ),
+    over: external_exports.union([
+      external_exports.enum(["background", "checkerboard"]),
+      external_exports.string().regex(/^#[0-9a-fA-F]{6}$/),
+      external_exports.array(external_exports.number().min(0).max(1)).length(3)
+    ]).optional().describe(
+      "With channels 'rgb': what transparent pixels are shown against. 'background' (default): the comp's background colour (`bgColor`), as AE itself composites the capture. 'checkerboard': light and dark grey squares, so transparency is visible. A colour as '#rrggbb' or [r, g, b] in 0..1 \u2014 magenta shows holes in a key. For the last two the comp background is taken out of the capture first, so soft edges show the new backdrop only."
+    ),
+    isolate: external_exports.union([layerRefSchema, external_exports.array(layerRefSchema).min(1)]).optional().describe(
+      "Render these layers alone: a layer (index, name, or { id }) or a list. Every other layer is switched off for the capture, adjustment layers included; camera, light and audio-only layers are left as they are; named layers are switched on even if they were off (to see a matte layer); solo is cleared. Every switch is restored afterwards, even when the render fails, and `isolation` reports it. Top-level layers of this comp only. Not available in read-only mode."
+    ),
+    sample: external_exports.object({
+      regions: external_exports.array(regionSchema).min(1).max(64),
+      stage: external_exports.enum(["both", "capture", "output"]).optional().describe("Which pixels to measure (default 'both'; see measurementStages).")
+    }).optional().describe(
+      "Read colour values. Named points ({ name, x, y }) or rectangles (+ width, height) in capture pixels (comp pixels at full resolution); regions running off the frame are clipped. Per region and stage: mean / min / max of r, g, b (0..1), alpha mean / min / max and the shares of opaque, partly covered and transparent pixels; 'output' also gives meanHex. Reported as `samples` (per frame with `times`)."
+    ),
+    histogram: external_exports.union([
+      external_exports.boolean(),
+      external_exports.object({
+        bins: external_exports.number().int().min(2).max(256).optional().describe("Default 32."),
+        stage: external_exports.enum(["output", "capture"]).optional().describe("Default 'output'.")
+      })
+    ]).optional().describe(
+      "Whole-frame per-channel histogram: pixel counts for r, g, b (and a when present) in equal bins over 0..1, 1.0 in the last bin. `true` for defaults."
+    ),
+    compare: external_exports.object({
+      from: external_exports.number().int().nonnegative().optional().describe("Index into `times` (default 0)."),
+      to: external_exports.number().int().nonnegative().optional().describe("Index into `times` (default 1).")
+    }).optional().describe(
+      "With `times` and `sample`: each region's difference between two rendered frames, to \u2212 from, per stage: meanDelta (signed average shift), meanAbsDelta and maxAbsDelta per channel, and the same for alpha. Reported as `comparison`."
+    ),
+    edge: external_exports.union([
+      external_exports.boolean(),
+      external_exports.object({
+        from: external_exports.enum(["alpha", "luma"]).optional().describe(
+          "Where the matte is read: 'alpha' (default, the keyed result's coverage) or 'luma' (Rec. 709 luminance of the capture), for Keylight's Screen Matte (View 5) and Combined Matte (8) views, which write the matte in grey RGB with alpha 1 everywhere. With 'luma' spill is not read and no alpha channel is needed."
+        ),
+        transparent: external_exports.number().min(0).max(1).optional().describe(
+          "Alpha at or below counts as transparent. Default 2/255 (as `sample` counts)."
+        ),
+        opaque: external_exports.number().min(0).max(1).optional().describe("Alpha at or above counts as opaque. Default 1 \u2212 2/255."),
+        maxEdgeWidth: external_exports.number().min(1).optional().describe(
+          "Widest transition still called a thin edge, px; wider partly transparent regions are reported as patches, and it is the edge band for flicker. Default 1% of the frame's shorter side, at least 4 (11 at 1080\xD71920)."
+        ),
+        mainAreaShare: external_exports.number().min(0).max(1).optional().describe(
+          "An island of covered pixels at least this share of the largest is a main solid area, smaller ones are specks. Default 0.25."
+        ),
+        listed: external_exports.number().int().min(0).max(50).optional().describe(
+          "How many holes, specks, patches and solid areas are listed (all are counted). Default 5."
+        ),
+        screen: external_exports.enum(["green", "blue"]).optional().describe("Screen colour spill is read against. Default 'green'."),
+        spillMinAlpha: external_exports.number().min(0).max(1).optional().describe(
+          "Partly transparent pixels below this alpha are left out of the spill colour. Default 0.1."
+        ),
+        spillThreshold: external_exports.number().min(0).max(1).optional().describe(
+          "The soft edge leans to the screen when its screen channel exceeds the larger other channel by more than this, and by this much more than the solid area's own. Default 0.03."
+        ),
+        changeAbove: external_exports.number().min(0).max(1).optional().describe("Flicker: an alpha change above this counts as changed. Default 0.05."),
+        patchWindow: external_exports.number().min(1).optional().describe(
+          "Side of the square window each patch's densest part is reported in, px. Default 4 \xD7 maxEdgeWidth (44 at 1080\xD71920)."
+        )
+      })
+    ]).optional().describe(
+      "Matte quality as numbers, measured on the capture's alpha (stage 'capture'), or with `from: 'luma'` on its luminance (Keylight's matte views); `true` for the defaults. Each report says `matteFrom`. Reported as `edge` (per frame with `times`), with the thresholds used as `edgeThresholds`: shares {opaque, partial, transparent}; width {typical (median), p90, worst, worstAt, samples, unmeasured} \u2014 px the alpha takes from transparent to opaque across the 50% contour of the main solid areas (0 = hard edge; unmeasured = the alpha never reaches transparent or opaque anywhere, as when the screen is left partly opaque); solidAreas; holes {count, area, transparentArea, largest, list} \u2014 regions below opaque enclosed by the solid area (not touching the frame edge); specks {count, area, list} \u2014 islands outside the main areas; patches {count, area, list} \u2014 partly transparent regions thicker than maxEdgeWidth, each with its box, thickest {x, y, thickness} (the deepest point and the thickness there, px) and densest {x, y, width, height, pixels, share, meanAlpha} (the patchWindow square holding most of it, so a long band's box does not hide where it is); spill {mean, solidMean, excess, solidExcess, leansToScreen, reading} \u2014 the straight colour of the partly transparent pixels (comp background taken out) against the solid just inside the edge. Boxes are {x, y, width, height} in capture pixels. With two or more `times`: `edgeFlicker` {pairs, overall} \u2014 mean / max change in alpha and the changed share and bounds, for consecutive frames, split into edge, inside (a hole opening counts here) and outside (specks); real motion counts as change too."
+    ),
+    screen: external_exports.union([
+      external_exports.boolean(),
+      external_exports.object({
+        screen: external_exports.enum(["auto", "green", "blue"]).optional().describe(
+          "Which screen to look for. Default 'auto': green or blue, whichever has more pixels."
+        ),
+        minExcess: external_exports.number().min(0).max(1).optional().describe(
+          "A pixel is screen when its screen channel leads the larger other channel by at least this (capture values). Default 0.04."
+        ),
+        minDominance: external_exports.number().min(0).max(1).optional().describe("\u2026and by at least this share of its own level. Default 0.15."),
+        minScreenShare: external_exports.number().min(0).max(1).optional().describe(
+          "Fewer screen pixels than this share of the measured ones means no screen. Default 0.02."
+        ),
+        opaque: external_exports.number().min(0).max(1).optional().describe(
+          "Pixels with alpha below this are left out (masked or transparent). Default 1 \u2212 2/255."
+        ),
+        columns: external_exports.number().int().min(1).max(64).optional().describe(
+          "Evenness grid columns. Default: four cells across the shorter side, square-ish cells."
+        ),
+        rows: external_exports.number().int().min(1).max(64).optional().describe("Evenness grid rows. Default as columns."),
+        minCellShare: external_exports.number().min(0).max(1).optional().describe(
+          "A cell needs this share of screen pixels to count as darkest or brightest. Default 0.25."
+        ),
+        nearSkip: external_exports.number().min(0).optional().describe(
+          "The near-subject colour is read from screen pixels starting this many px from the subject. Default 1% of the shorter side, at least 2 (11 at 1080\xD71920)."
+        ),
+        nearBand: external_exports.number().min(1).optional().describe(
+          "\u2026in a band this many px wide. Default 5% of the shorter side, at least 4 (54 at 1080)."
+        ),
+        unevenRatio: external_exports.number().min(1).optional().describe("A brightest / darkest level ratio above this reads as uneven. Default 1.1."),
+        grainAbove: external_exports.number().min(0).max(1).optional().describe(
+          "A screen-channel grain standard deviation above this reads as grainy. Default 0.01."
+        )
+      })
+    ]).optional().describe(
+      "Measure a green or blue screen, on the capture (stage 'capture'), opaque pixels only; `true` for the defaults. Render the UN-KEYED source: set Keylight's View to 'source' (key.view) or switch the key off, and isolate the keyed layer. Reported as `screen` (per frame with `times`), with the thresholds used as `screenThresholds`: screen ('green' | 'blue' | null), chosen, measured / leftOut pixels, screenPixels, share, bounds; colour {median, mean, nearSubject {colour, pixels, band}} \u2014 the suggested Screen Colour; subject {box, area, share}; evenness {columns, rows, cells [{column, row, box, screenShare, mean, luma, level}], darkest, brightest, levelRatio, lumaRatio, uneven, extent (5th to 95th percentile of the screen pixels' positions), horizontal (right / left) and vertical (bottom / top) read across that extent, darkerSide (every side darker past unevenRatio, strongest first), reading}; grain {stdDev, level, steps8bit, samples, grainy, reading}; reading; warning; screenColourNote (capture values and what they mean for Keylight's Screen Colour)."
+    ),
+    diff: external_exports.union([
+      external_exports.boolean(),
+      external_exports.object({
+        changeAbove: external_exports.number().min(0).max(1).optional().describe(
+          "A pixel has changed when one of its channels moved by more than this (display values). Default 0.04, about ten 8-bit steps: well above frame-to-frame grain."
+        ),
+        spikeRatio: external_exports.number().optional().describe(
+          "A pair stands out as a spike when its change is at least this many times its neighbours' on each side it has. Default 3."
+        ),
+        holdRatio: external_exports.number().optional().describe(
+          "A pair is a hold (a repeated frame) when its change is at most this share of the moving neighbours' on both sides. Default 0.25."
+        ),
+        quietBelow: external_exports.number().min(0).max(1).optional().describe(
+          "Mean changes below this read as no visible change: neighbours this quiet are not moving, and a spike is measured against at least this. Default 0.002."
+        ),
+        movingShare: external_exports.number().min(0).max(1).optional().describe(
+          "Neighbours count as moving, and a spike counts, only with at least this share of pixels changed. Default 0.0005 (about 1,000 pixels at 1080\xD71920)."
+        ),
+        window: external_exports.number().int().optional().describe("Pairs on each side compared with a pair. Default 3."),
+        amplify: external_exports.number().optional().describe("Gain of the difference images on the diff sheet. Default 8."),
+        repeatBelow: external_exports.number().min(0).max(1).optional().describe(
+          "A pair changing this little is a repeated frame (identical frames read 0); repeats are never a reference for other pairs. Default 0.0001."
+        ),
+        sheet: external_exports.union([
+          external_exports.boolean(),
+          external_exports.object({
+            columns: external_exports.number().int().positive().optional(),
+            thumbWidth: external_exports.number().int().min(16).max(2048).optional(),
+            outPath: external_exports.string().optional().describe("Default <outPath stem>_diff.png.")
+          })
+        ]).optional().describe(
+          "Also write the difference images, amplified and labelled '#from>to change' ('!' on flagged pairs), tiled into one PNG beside the contact sheet. Default off; on with `strip`."
+        )
+      })
+    ]).optional().describe(
+      "Frame-to-frame change, with `times` (two or more) or `strip`; `true` for the defaults. Measured on the written file (stage 'output', display values; `diff.picture` says what exactly: with the default rgb output the capture is already over the comp background, so transparent areas do not change). Reported as `diff` {stage, picture, pairs, series} with the thresholds used as `diffThresholds`. Each consecutive pair: from, to, change (mean absolute difference over pixels and channels, 0..1), maxAbsDelta, changedPixels, changedShare (a channel moved by more than changeAbove), changedBounds, and with `sample` the same per region. series: pairs, median, mean, largest, smallest, flags [{kind 'pop' | 'stutter' | 'cut' | 'repeat', pairs, frame or between, change, reference, ratio, atSeriesEdge?, besideRepeat?, unreliablePairs?, reading}], reading. A pop is a frame that differs from both neighbours; a stutter a frame that repeats the one before while the frames around it move; a cut one pair far above its neighbours; a repeat an unchanged pair at the start or end of the series beside motion. Repeated frames are never a reference, and the pairs beside one are named unreliable. Flags are hints from numbers: look at the frames."
+    )
+  },
+  handler: async (args, transport2) => {
+    const given = [args.time, args.times, args.strip, args.frames].filter(
+      (v) => v !== void 0
+    ).length;
+    if (given !== 1) {
+      return errorResult(
+        "INVALID_ARGS",
+        "give exactly one of `time`, `times`, `strip` or `frames`",
+        {
+          hint: "`time: 1.5` renders one frame; `times: [0, 1, 2]` renders several in one call; `strip: { at: 1.5, frames: 9 }` renders the frames around a moment; `frames: [42, 43]` renders frames by number."
+        }
+      );
+    }
+    if (args.frames !== void 0 && (!Array.isArray(args.frames) || args.frames.length < 1 || args.frames.length > 32 || !args.frames.every((k) => Number.isInteger(k) && k >= 0))) {
+      return errorResult(
+        "INVALID_ARGS",
+        "`frames` must be 1 to 32 whole frame numbers, 0 or more (0 = the comp's first frame)"
+      );
+    }
+    if (args.settleTimeoutMs !== void 0 && !(Number.isInteger(args.settleTimeoutMs) && args.settleTimeoutMs > 0)) {
+      return errorResult("INVALID_ARGS", "`settleTimeoutMs` must be a positive whole number of ms");
+    }
+    let strip = null;
+    if (args.strip !== void 0) {
+      const planned = planStrip(args.strip);
+      if ("error" in planned) return planned.error;
+      strip = planned.plan;
+    }
+    const count = strip?.frames ?? args.frames?.length ?? args.times?.length ?? 1;
+    const checked = checkEyesOptions({ ...args, count }, strip !== null);
+    if ("error" in checked) return checked.error;
+    const rejection = rejectedOutputPath(args.outPath);
+    if (rejection !== null) {
+      return errorResult("IO", rejection, {
+        details: { outPath: path6.resolve(args.outPath) },
+        hint: "Render to a path outside the mailbox."
+      });
+    }
+    const abs = path6.resolve(args.outPath).replace(/\\/g, "/");
+    if (args.contactSheet?.outPath !== void 0) {
+      const sheetRejection = rejectedOutputPath(args.contactSheet.outPath);
+      if (sheetRejection !== null) {
+        return errorResult("IO", sheetRejection, {
+          details: { outPath: path6.resolve(args.contactSheet.outPath) },
+          hint: "Write the contact sheet to a path outside the mailbox."
+        });
+      }
+    }
+    return nativeFlow(args, checked.options, abs, transport2, strip);
+  }
+});
+function invalid(message, hint) {
+  return { error: errorResult("INVALID_ARGS", message, hint ? { hint } : {}) };
+}
+function parseColor(value) {
+  if (typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value)) {
+    return [1, 3, 5].map((i) => parseInt(value.slice(i, i + 2), 16) / 255);
+  }
+  if (Array.isArray(value) && value.length === 3 && value.every((v) => typeof v === "number" && v >= 0 && v <= 1)) {
+    return [value[0], value[1], value[2]];
+  }
+  return null;
+}
+function checkEyesOptions(args, isStrip = false) {
+  const channels = args.channels ?? "rgb";
+  if (args.colorManaged === "off" && (channels !== "rgb" || args.over !== void 0)) {
+    return invalid(
+      "`channels` and `over` need colorManaged 'auto'",
+      "colorManaged 'off' returns the raw capture untouched (it already keeps any alpha AE wrote)."
+    );
+  }
+  let over = "background";
+  if (args.over !== void 0) {
+    if (channels !== "rgb") {
+      return invalid(
+        `\`over\` applies only to channels 'rgb', not '${channels}'`,
+        "'rgba' keeps transparency in the file; 'alpha' is the matte itself."
+      );
+    }
+    if (args.over === "checkerboard") over = { kind: "checkerboard" };
+    else if (args.over !== "background") {
+      const color = parseColor(args.over);
+      if (color === null) {
+        return invalid(
+          "`over` must be 'background', 'checkerboard', '#rrggbb' or [r, g, b] in 0..1"
+        );
+      }
+      over = { kind: "color", color };
+    }
+  }
+  let isolate = null;
+  if (args.isolate !== void 0) {
+    isolate = Array.isArray(args.isolate) ? args.isolate : [args.isolate];
+    if (isolate.length === 0) return invalid("`isolate` needs at least one layer");
+    if (readOnlyMode()) {
+      return {
+        error: errorResult(
+          "FORBIDDEN",
+          "`isolate` switches layers off and back on, and AE_MCP_READONLY=1 is set",
+          {
+            hint: "Unset AE_MCP_READONLY, or render without isolate."
+          }
+        )
+      };
+    }
+  }
+  let sample = null;
+  if (args.sample !== void 0) {
+    const regions = args.sample.regions ?? [];
+    if (regions.length === 0) return invalid("`sample.regions` needs at least one region");
+    const names = /* @__PURE__ */ new Set();
+    for (const r of regions) {
+      if (names.has(r.name)) return invalid(`region name '${r.name}' is used twice`);
+      names.add(r.name);
+    }
+    const stage = args.sample.stage ?? "both";
+    sample = { regions, stages: stage === "both" ? ["capture", "output"] : [stage] };
+  }
+  let histogram = null;
+  if (args.histogram !== void 0 && args.histogram !== false) {
+    const h = args.histogram === true ? {} : args.histogram;
+    histogram = { bins: h.bins ?? HISTOGRAM_DEFAULT_BINS, stage: h.stage ?? "output" };
+  }
+  let compare = null;
+  if (args.compare !== void 0) {
+    const n = args.count;
+    if (n < 2) return invalid("`compare` needs `times` (or `strip`) with at least two frames");
+    if (sample === null) {
+      return invalid("`compare` needs `sample`: it reports differences for the sampled regions");
+    }
+    const from = args.compare.from ?? 0;
+    const to = args.compare.to ?? 1;
+    if (from >= n || to >= n)
+      return invalid(`\`compare\` indices must be below ${n}, the number of times`);
+    if (from === to) return invalid("`compare.from` and `compare.to` must be different frames");
+    compare = { from, to };
+  }
+  let edge = null;
+  if (args.edge !== void 0 && args.edge !== false) {
+    edge = args.edge === true ? {} : args.edge;
+    if (typeof edge !== "object" || edge === null)
+      return invalid("`edge` must be true or an object");
+    const problem = edgeArgsError(edge);
+    if (problem !== null) return invalid(problem);
+  }
+  let screen = null;
+  if (args.screen !== void 0 && args.screen !== false) {
+    screen = args.screen === true ? {} : args.screen;
+    if (typeof screen !== "object" || screen === null)
+      return invalid("`screen` must be true or an object");
+    const problem = screenArgsError(screen);
+    if (problem !== null) return invalid(problem);
+  }
+  let diff = null;
+  const diffArg = args.diff ?? (isStrip ? true : void 0);
+  if (diffArg !== void 0 && diffArg !== false) {
+    const d = diffArg === true ? {} : diffArg;
+    if (typeof d !== "object" || d === null) return invalid("`diff` must be true or an object");
+    if (args.count < 2) {
+      return invalid(
+        "`diff` needs `times` with at least two frames, or `strip`",
+        "It compares consecutive rendered frames: `times: [1, 1.04, 1.08], diff: true`."
+      );
+    }
+    const problem = diffArgsError(d);
+    if (problem !== null) return invalid(problem);
+    const { sheet: sheetArg, ...thresholds } = d;
+    const sheetOn = sheetArg ?? isStrip;
+    if (sheetOn !== false && sheetOn !== true && (typeof sheetOn !== "object" || sheetOn === null)) {
+      return invalid("`diff.sheet` must be true, false or an object");
+    }
+    diff = {
+      thresholds: resolveDiffThresholds(thresholds),
+      sheet: sheetOn === false ? null : sheetOn === true ? {} : sheetOn
+    };
+  }
+  return {
+    options: {
+      channels,
+      over,
+      overGiven: args.over !== void 0,
+      isolate,
+      sample,
+      histogram,
+      compare,
+      edge,
+      screen,
+      diff
+    }
+  };
+}
+function planStrip(strip) {
+  const fail3 = (message) => ({
+    error: errorResult("INVALID_ARGS", message, {
+      hint: "`strip: { at: 2.5, frames: 9 }` renders the nine frames around 2.5 s."
+    })
+  });
+  if (typeof strip !== "object" || strip === null) return fail3("`strip` must be an object");
+  const { at, frames } = strip;
+  const step = strip.step ?? 1;
+  const maxDimension = strip.maxDimension ?? STRIP_DEFAULT_MAX_DIMENSION;
+  if (typeof at !== "number" || !Number.isFinite(at) || at < 0)
+    return fail3("`strip.at` must be a time in seconds, 0 or more");
+  if (!Number.isInteger(frames) || frames < 2 || frames > 32)
+    return fail3("`strip.frames` must be a whole number from 2 to 32");
+  if (!Number.isInteger(step) || step < 1)
+    return fail3("`strip.step` must be a whole number, 1 or more");
+  if (!Number.isInteger(maxDimension) || maxDimension < 16 || maxDimension > 2048)
+    return fail3("`strip.maxDimension` must be a whole number of px from 16 to 2048");
+  const first = -Math.floor((frames - 1) / 2);
+  const offsets = Array.from({ length: frames }, (_, k) => (first + k) * step);
+  return { plan: { at, offsets, frames, step, maxDimension } };
+}
+function sheetPathFor(abs, explicit) {
+  if (explicit !== void 0) return path6.resolve(explicit).replace(/\\/g, "/");
+  const ext = path6.extname(abs) || ".png";
+  const stem = abs.slice(0, abs.length - (path6.extname(abs).length || 0));
+  return `${stem}_sheet${ext}`;
+}
+function framePaths(abs, count, multi) {
+  if (!multi) return [abs];
+  const ext = path6.extname(abs) || ".png";
+  const stem = abs.slice(0, abs.length - (path6.extname(abs).length || 0));
+  const out = [];
+  for (let i = 0; i < count; i++) out.push(`${stem}_${i}${ext}`);
+  return out;
+}
+var ISOLATE_FN = `
+    function _refText(ref) {
+        if (typeof ref === "string") return '"' + ref + '"';
+        if (typeof ref === "number") return "index " + ref;
+        if (ref && typeof ref.id === "number") return "id " + ref.id;
+        return String(ref);
+    }
+    function _restoreLayers(saved) {
+        var failed = [];
+        for (var i = saved.length - 1; i >= 0; i--) {
+            var s = saved[i];
+            if (!s.changed) continue;
+            try {
+                if (s.layer.locked) s.layer.locked = false;
+                if (s.layer.enabled !== s.enabled) s.layer.enabled = s.enabled;
+                if (s.hasSolo && s.layer.solo !== s.solo) s.layer.solo = s.solo;
+                if (s.locked) s.layer.locked = true;
+            } catch (eRestore) {
+                failed.push(AE.safeGet(function () { return s.layer.index + " " + s.layer.name; }, "?") + ": " + AE.errText(eRestore));
+            }
+        }
+        return failed;
+    }
+    function _isolateLayers(c, refs) {
+        var keep = {};
+        var named = [];
+        for (var ri = 0; ri < refs.length; ri++) {
+            var hit = AE.findLayerInComp(c, refs[ri]);
+            if (!hit) return { ok: false, error: "isolate: no layer matching " + _refText(refs[ri]) + " in comp " + c.name };
+            if (keep["k" + hit.index]) continue;
+            keep["k" + hit.index] = true;
+            named.push({ index: hit.index, name: hit.name });
+        }
+        var saved = [];
+        var changed = 0;
+        try {
+            for (var li = 1; li <= c.numLayers; li++) {
+                var L = c.layer(li);
+                // Audio-only layers put nothing in the picture, and their
+                // video switch may refuse to change: leave them be.
+                if (AE.safeGet(function () { return L.hasVideo; }, true) === false) continue;
+                var mn = AE.safeGet(function () { return L.matchName; }, "");
+                var view = (mn === "ADBE Camera Layer" || mn === "ADBE Light Layer");
+                var s = { layer: L, enabled: L.enabled, locked: !!L.locked, hasSolo: false, solo: false, changed: false };
+                try { s.solo = !!L.solo; s.hasSolo = true; } catch (eSolo) { }
+                saved.push(s);
+                var want = keep["k" + L.index] ? true : (view ? s.enabled : false);
+                if (want === s.enabled && !s.solo) continue;
+                s.changed = true;
+                changed++;
+                if (s.locked) L.locked = false;
+                if (s.solo) L.solo = false;
+                if (L.enabled !== want) L.enabled = want;
+            }
+        } catch (eIso) {
+            var undone = _restoreLayers(saved);
+            return { ok: false, error: "isolate: could not switch layers (" + AE.errText(eIso) + ")" + (undone.length ? "; NOT restored: " + undone.join("; ") : "; every switch restored") };
+        }
+        return { ok: true, saved: saved, layers: named, changed: changed };
+    }
+`;
+function renderJsx(args, times, paths, tryOcio, isolate, strip = null, frameNums = null) {
+  return `
+        ${RENDER_FRAME_FN}
+        ${MISSING_SOURCES_FN}
+        ${OCIO_CAPTURE_FN}
+        ${ISOLATE_FN}
+        var _arg = ${jsxVal(args.compNameOrId)};
+        var comp = AE.findCompByNameOrId(_arg);
+        if (!comp) return { ok: false, error: "no comp matching " + String(_arg) };
+        var _missingMedia = _missingSources(comp);
+        if (_missingMedia.length) return { ok: false, error: "source media missing for comp " + comp.name + "; restore or relink before rendering", missingFootage: _missingMedia };
+        var _ws = AE.safeGet(function () { return app.project.workingSpace; }, "None");
+        var _times = ${jsxVal(times)};
+        var _strip = ${jsxVal(strip === null ? null : { at: strip.at, offsets: strip.offsets })};
+        var _frameNums = ${jsxVal(frameNums)};
+        var _paths = ${jsxVal(paths)};
+        var _pick = ${jsxVal(FRAME_PICK)};
+        var _stripOut = null;
+        if (_frameNums !== null) {
+            var _lastF = Math.max(0, Math.round(comp.duration / comp.frameDuration) - 1);
+            _times = [];
+            for (var _ni = 0; _ni < _frameNums.length; _ni++) {
+                if (_frameNums[_ni] > _lastF) return { ok: false, error: "frame " + _frameNums[_ni] + " is past the comp's last frame, " + _lastF + " (comp " + comp.name + ")" };
+                _times.push((_frameNums[_ni] + _pick) * comp.frameDuration);
+            }
+        }
+        if (_strip !== null) {
+            var _fd = comp.frameDuration;
+            var _lastK = Math.max(0, Math.round(comp.duration / _fd) - 1);
+            var _k0 = Math.round(_strip.at / _fd);
+            var _offs = _strip.offsets;
+            var _shift = 0;
+            if (_k0 + _offs[_offs.length - 1] > _lastK) _shift = _lastK - (_k0 + _offs[_offs.length - 1]);
+            if (_k0 + _offs[0] + _shift < 0) _shift = -(_k0 + _offs[0]);
+            _times = [];
+            var _clamped = 0;
+            for (var _si = 0; _si < _offs.length; _si++) {
+                var _k = _k0 + _offs[_si] + _shift;
+                if (_k > _lastK) { _k = _lastK; _clamped++; }
+                _times.push((_k + _pick) * _fd);
+            }
+            _stripOut = {
+                at: Math.round(_k0 * _fd * 1e6) / 1e6,
+                frameRate: Math.round(1e3 / _fd) / 1e3,
+                firstFrame: _k0 + _offs[0] + _shift,
+                lastFrame: Math.min(_lastK, _k0 + _offs[_offs.length - 1] + _shift),
+                shiftedFrames: _shift
+            };
+            if (_clamped > 0) _stripOut.note = "the comp is shorter than the strip: the last " + _clamped + " frames repeat the comp's last frame (they read as stutters in diff)";
+        }
+        var _useDst = ${jsxVal(!!args.useDisplayStartTime)};
+        var _useOcio = ${jsxVal(tryOcio)} && _ws !== "None" && _ws !== "";
+        var _isolate = ${jsxVal(isolate)};
+        var _frames = [];
+        function _renderAll(kind) {
+            for (var _fi = 0; _fi < _times.length; _fi++) {
+                var _r = _renderFrame(comp, _times[_fi], _paths[_fi], _useDst);
+                _r.captureKind = kind;
+                if (_r.ok) {
+                    // The frame this time falls in, counted from frame 0 in the
+                    // convention of time; within a millionth of a frame of a
+                    // boundary counts as on it (k / fps in floating point).
+                    var _pos = _times[_fi] / comp.frameDuration;
+                    var _fk = Math.floor(_pos + 1e-6);
+                    _r.frame = _fk;
+                    _r.frameOffset = Math.max(0, Math.round((_pos - _fk) * 1e6) / 1e6);
+                }
+                _frames.push(_r);
+            }
+        }
+        var _iso = null;
+        if (_isolate !== null) {
+            _iso = _isolateLayers(comp, _isolate);
+            if (!_iso.ok) return { ok: false, error: _iso.error };
+        }
+        var _renderError = null;
+        try {
+            if (_useOcio) {
+                var _maxT = _times[0];
+                for (var _mi = 1; _mi < _times.length; _mi++) { if (_times[_mi] > _maxT) _maxT = _times[_mi]; }
+                if (_useDst) _maxT = _maxT + comp.displayStartTime;
+                _captureWithOcio(comp, _maxT, _renderAll);
+            }
+            if (_frames.length === 0) _renderAll("direct");
+        } catch (eRender) {
+            _renderError = eRender;
+        }
+        var _isoReport = null;
+        if (_iso) {
+            var _notRestored = _restoreLayers(_iso.saved);
+            _isoReport = { layers: _iso.layers, changed: _iso.changed, restored: _notRestored.length === 0 };
+            if (_notRestored.length) _isoReport.notRestored = _notRestored;
+        }
+        if (_renderError !== null) {
+            var _fail = { ok: false, error: "render failed: " + AE.errText(_renderError) };
+            if (_isoReport) _fail.isolation = _isoReport;
+            return _fail;
+        }
+        var _allOk = true;
+        var _firstError = null;
+        for (var _ci = 0; _ci < _frames.length; _ci++) {
+            if (!_frames[_ci].ok) { _allOk = false; if (_firstError === null) _firstError = _frames[_ci].error; }
+        }
+        var _out = { ok: _allOk, frames: _frames, captureKind: _frames.length > 0 ? _frames[0].captureKind : null };
+        if (_isoReport) _out.isolation = _isoReport;
+        if (_stripOut) _out.strip = _stripOut;
+        if (!_allOk) _out.error = _firstError;
+        if (_allOk) {
+            _out.compName = comp.name;
+            _out.workingSpace = _ws;
+            _out.bitsPerChannel = AE.safeGet(function () { return app.project.bitsPerChannel; }, 8);
+            _out.projectFile = app.project.file ? app.project.file.fsName.replace(/\\\\/g, "/") : null;
+            _out.bgColor = AE.safeGet(function () { return [comp.bgColor[0], comp.bgColor[1], comp.bgColor[2]]; }, null);
+        }
+        return _out;
+    `;
+}
+async function nativeFlow(args, opts, abs, transport2, strip = null) {
+  const startedAt = performance.now();
+  const frameNums = args.frames ?? null;
+  const multi = args.times !== void 0 || strip !== null || frameNums !== null;
+  const times = strip !== null || frameNums !== null ? null : args.times ?? [args.time];
+  const count = strip?.frames ?? frameNums?.length ?? times?.length ?? 1;
+  const paths = framePaths(abs, count, multi);
+  const contactSheet = args.contactSheet ?? (strip !== null ? {} : void 0);
+  const before = await stampFiles(paths);
+  const tryOcio = args.colorManaged !== "off" && !readOnlyMode();
+  const result = await transport2.execute({
+    code: renderJsx(args, times, paths, tryOcio, opts.isolate, strip, frameNums),
+    label: "render_frame",
+    timeoutMs: 12e4 + (count - 1) * 3e4
+  });
+  const aeCallMs = performance.now() - startedAt;
+  if (!result.ok) return toMcpResult(result);
+  const payload = result.result;
+  const frames = payload?.frames ?? [];
+  const frameSize = frames[0]?.size;
+  if (payload && strip !== null) {
+    payload.strip = {
+      at: strip.at,
+      frames: strip.frames,
+      step: strip.step,
+      maxDimension: strip.maxDimension,
+      ...payload.strip
+    };
+  }
+  if (payload && payload.ok === true) {
+    const warning = frameWarnings(frames);
+    if (warning !== void 0) payload.frameWarning = warning;
+  }
+  if (payload && payload.ok === true && !multi && frames.length === 1) {
+    payload.writtenTo = frames[0].writtenTo;
+    payload.time = frames[0].time;
+    if (frames[0].frame !== void 0) payload.frame = frames[0].frame;
+    if (frames[0].frameOffset !== void 0) payload.frameOffset = frames[0].frameOffset;
+    payload.size = frames[0].size;
+    delete payload.frames;
+  }
+  if (!payload || payload.ok !== true) {
+    return toMcpResult(result);
+  }
+  if (payload.isolation && !payload.isolation.restored) {
+    payload.isolationWarning = "some layer switches could not be restored after isolate \u2014 check these layers in the timeline: " + (payload.isolation.notRestored ?? []).join("; ");
+  }
+  const written = (multi ? frames.map((f) => f.writtenTo) : [payload.writtenTo]).filter(
+    (p) => typeof p === "string"
+  );
+  const put = (i, key, value) => {
+    if (multi) frames[i][key] = value;
+    else payload[key] = value;
+  };
+  const managed = args.colorManaged !== "off";
+  let convert = null;
+  let backdrop = null;
+  if (managed) {
+    payload.method = "native";
+    payload.channels = opts.channels;
+    convert = await colorConversion(payload, transport2);
+    if (convert === null && (opts.channels !== "rgb" || opts.overGiven)) {
+      payload.channelsWarning = "colour conversion failed (see colorWarning), so the raw capture was kept and `channels` / `over` were not applied";
+    }
+    if (convert !== null && opts.channels === "rgb") backdrop = chooseBackdrop(payload, opts);
+  }
+  const bg = validRgb(payload.bgColor);
+  const unmatting = convert !== null && (opts.channels === "rgba" || backdrop !== null);
+  const settle2 = await waitForSettled(written, {
+    timeoutMs: args.settleTimeoutMs ?? settleTimeoutFor(written.length, frameSize ? frameSize[0] * frameSize[1] : 1080 * 1920),
+    before: before.slice(0, written.length)
+  });
+  payload.captureSettle = settle2;
+  if (settle2.unsettled.length > 0) {
+    const secs3 = (settle2.timeoutMs / 1e3).toFixed(1);
+    for (const u of settle2.unsettled) {
+      if (!multi || !frames[u.index]) continue;
+      frames[u.index].ok = false;
+      frames[u.index].error = `the capture did not finish writing within ${secs3} s (${u.state}, ${u.bytes} bytes)`;
+    }
+    payload.captureWarning = `${settle2.unsettled.length} of ${written.length} captures did not finish writing within ${secs3} s (saveFrameToPng writes asynchronously): frames ${settle2.unsettled.map((u) => u.index).join(", ")}. ` + (settle2.settled.length > 0 ? "The others were measured; see captureSettle, or render the missing ones again with a longer settleTimeoutMs." : "Nothing could be measured; try again with a longer settleTimeoutMs.");
+    if (settle2.settled.length === 0) {
+      if (args.analyze) payload.analysisWarning = "analysis failed: no capture finished writing";
+      if (managed)
+        payload.colorWarning = "color post-processing failed, file left as raw capture: no capture finished writing";
+      return toMcpResult(result);
+    }
+  }
+  const finished = new Set(settle2.settled);
+  const keep = new Set(opts.compare ? [opts.compare.from, opts.compare.to] : []);
+  const kept = /* @__PURE__ */ new Map();
+  const sheetImages = [];
+  const sheetLabels = [];
+  let sheetThumb = null;
+  const diffPairs = [];
+  const diffThumbs = [];
+  let diffPrev = null;
+  let diffThumb = null;
+  const diffSkipped = [];
+  let read = 0;
+  const edgePairs = [];
+  let edgePrev = null;
+  let edgeMeasured = 0;
+  let edgeFromLuma = 0;
+  let withAlpha = 0;
+  let writing = convert !== null;
+  for (const [i, file2] of written.entries()) {
+    if (!finished.has(i)) continue;
+    let capture;
+    try {
+      capture = decodePng(await fs6.readFile(file2));
+      read++;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      payload.captureWarning = `could not read the capture: ${msg}`;
+      if (args.analyze) payload.analysisWarning = `analysis failed: ${msg}`;
+      if (managed)
+        payload.colorWarning = `color post-processing failed, file left as raw capture: ${msg}`;
+      return toMcpResult(result);
+    }
+    if (capture.alpha) withAlpha++;
+    if (opts.edge) {
+      const fromLuma = opts.edge.from === "luma";
+      if (fromLuma) edgeFromLuma++;
+      if (!capture.alpha && !fromLuma) edgePrev = null;
+      else {
+        try {
+          const t = resolveEdgeThresholds(opts.edge, capture.width, capture.height);
+          payload.edgeThresholds ??= t;
+          const { report, frame } = measureEdge(capture, bg ?? [0, 0, 0], t);
+          put(i, "edge", report);
+          edgeMeasured++;
+          if (edgePrev !== null && edgePrev.index === i - 1) {
+            edgePairs.push({
+              from: { index: i - 1, time: frames[i - 1]?.time },
+              to: { index: i, time: frames[i]?.time },
+              ...alphaChange(edgePrev.frame, frame, t)
+            });
+          }
+          edgePrev = multi ? { index: i, frame } : null;
+        } catch (err) {
+          payload.edgeWarning = `edge measurement failed: ${err instanceof Error ? err.message : String(err)}`;
+          edgePrev = null;
+        }
+      }
+    }
+    if (opts.screen) {
+      try {
+        const t = resolveScreenThresholds(opts.screen, capture.width, capture.height);
+        payload.screenThresholds ??= t;
+        put(i, "screen", measureScreen(capture, t));
+      } catch (err) {
+        payload.screenWarning = `screen measurement failed: ${err instanceof Error ? err.message : String(err)}`;
+      }
+    }
+    if (args.analyze) {
+      try {
+        put(i, "analysis", analyzeFrame(capture));
+      } catch (err) {
+        payload.analysisWarning = `analysis failed: ${err instanceof Error ? err.message : String(err)}`;
+      }
+    }
+    let output2 = capture;
+    if (writing && convert !== null) {
+      try {
+        output2 = await writeOutput(
+          file2,
+          capture,
+          convert,
+          opts.channels,
+          backdrop,
+          bg ?? [0, 0, 0]
+        );
+      } catch (err) {
+        payload.colorWarning = `color post-processing failed, file left as raw capture: ${err instanceof Error ? err.message : String(err)}`;
+        writing = false;
+      }
+    }
+    const pixels = { capture, output: output2 };
+    if (opts.sample) put(i, "samples", sampleReport(pixels, opts.sample));
+    if (opts.histogram) {
+      const { bins, stage } = opts.histogram;
+      put(i, "histogram", { stage, ...histogramOf(pixels[stage], bins) });
+    }
+    if (keep.has(i)) kept.set(i, pixels);
+    const straight = output2 !== capture && output2.alpha !== void 0;
+    if (contactSheet) {
+      sheetThumb ??= thumbSizeFor(
+        output2,
+        contactSheet.thumbWidth ?? stripThumbWidth(strip, output2)
+      );
+      sheetImages.push(
+        sheetTile(output2 === capture ? { ...capture, alpha: void 0 } : output2, sheetThumb)
+      );
+      sheetLabels.push(frameLabel(i, frames[i]?.time ?? payload.time));
+    }
+    if (opts.diff) {
+      payload.diffThresholds ??= opts.diff.thresholds;
+      const pic = pictureOf(output2, straight);
+      const { width, height } = output2;
+      if (diffPrev !== null && diffPrev.index !== i - 1) {
+        diffSkipped.push(`${diffPrev.index}>${i} (frames between are missing)`);
+      } else if (diffPrev !== null && (diffPrev.width !== width || diffPrev.height !== height)) {
+        diffSkipped.push(`${i - 1}>${i} (frame sizes differ)`);
+      } else if (diffPrev !== null) {
+        if (opts.diff.sheet) {
+          diffThumb ??= thumbSizeFor(
+            output2,
+            opts.diff.sheet.thumbWidth ?? contactSheet?.thumbWidth ?? stripThumbWidth(strip, output2)
+          );
+        }
+        try {
+          const res = pictureChange(diffPrev.pic, pic, width, height, opts.diff.thresholds, {
+            regions: opts.sample?.regions,
+            thumb: diffThumb ?? void 0
+          });
+          const pair = {
+            from: { index: i - 1, time: frames[i - 1]?.time },
+            to: { index: i, time: frames[i]?.time },
+            ...res.all
+          };
+          if (res.regions) pair.regions = res.regions;
+          if (res.thumb && diffThumb) {
+            const grey = new Float64Array(res.thumb.length * 3);
+            for (let k = 0; k < res.thumb.length; k++) grey.fill(res.thumb[k], k * 3, k * 3 + 3);
+            diffThumbs.push({
+              pair: diffPairs.length,
+              img: { width: diffThumb.width, height: diffThumb.height, rgb: grey, bitDepth: 8 }
+            });
+          }
+          diffPairs.push(pair);
+        } catch (err) {
+          payload.diffWarning = `diff failed: ${err instanceof Error ? err.message : String(err)}`;
+        }
+      }
+      payload.diff ??= {
+        stage: "output",
+        picture: diffPicture(output2 === capture, opts.channels, payload.over),
+        pairs: [],
+        series: summarizeSeries([], opts.diff.thresholds)
+      };
+      diffPrev = { index: i, pic, width, height };
+    }
+  }
+  payload.alphaChannel = withAlpha === 0 ? "absent" : withAlpha === read ? "present" : "mixed";
+  if (unmatting && withAlpha > 0 && bg === null) {
+    payload.channelsWarning = "the comp background colour (bgColor) is unknown, so the colour under it was recovered as if it were black; soft edges may carry the real background";
+  }
+  if (convert !== null && payload.alphaChannel === "absent") {
+    if (opts.channels === "alpha") {
+      payload.alphaWarning = "the capture has no alpha channel, so the matte is all white (fully opaque). If this comp should be transparent here, saveFrameToPng did not write alpha for it.";
+    } else if (opts.channels === "rgba") {
+      payload.alphaWarning = "the capture has no alpha channel, so the file's alpha is fully opaque";
+    } else if (opts.overGiven) {
+      payload.alphaWarning = "the capture has no alpha channel, so there was nothing to composite over `over`";
+    }
+  }
+  if (opts.edge) {
+    if (edgeFromLuma === 0 && withAlpha < read) {
+      payload.edgeWarning = `${read - withAlpha} of ${read} captures have no alpha channel, so their matte could not be measured (a comp with no transparency, or an AE that flattens)`;
+    } else if (edgeFromLuma === 0 && edgeMeasured > 0 && bg === null) {
+      payload.edgeWarning = "the comp background colour (bgColor) is unknown, so the soft edge's colour was recovered as if it were black; the spill reading may carry the real background";
+    }
+    if (edgePairs.length > 0) {
+      payload.edgeFlicker = { pairs: edgePairs, overall: summarizeFlicker(edgePairs) };
+    }
+  }
+  if (opts.compare && opts.sample) {
+    const { from, to } = opts.compare;
+    const a = kept.get(from);
+    const b = kept.get(to);
+    if (a && b) {
+      const report = opts.sample.regions.map((r) => ({ name: r.name }));
+      for (const stage of opts.sample.stages) {
+        compareRegions(a[stage], b[stage], opts.sample.regions).forEach((diff, j) => {
+          report[j][stage] = stageBlock(diff, stage);
+        });
+      }
+      payload.comparison = {
+        from: { index: from, time: frames[from]?.time },
+        to: { index: to, time: frames[to]?.time },
+        regions: report
+      };
+    }
+  }
+  if (opts.diff && payload.diff) {
+    payload.diff.pairs = diffPairs;
+    payload.diff.series = summarizeSeries(diffPairs, opts.diff.thresholds);
+    if (diffSkipped.length > 0) {
+      payload.diffWarning = `some consecutive pairs were not compared: ${diffSkipped.join("; ")}` + (settle2.unsettled.length > 0 ? " \u2014 captures missing, see captureSettle" : "");
+    }
+  }
+  const stages = /* @__PURE__ */ new Set([
+    ...opts.sample?.stages ?? [],
+    ...opts.histogram ? [opts.histogram.stage] : [],
+    ...opts.edge || opts.screen ? ["capture"] : [],
+    ...opts.diff ? ["output"] : []
+  ]);
+  if (stages.size > 0) {
+    payload.measurementStages = {};
+    for (const s of stages) payload.measurementStages[s] = MEASUREMENT_STAGES[s];
+  }
+  if (contactSheet && sheetImages.length > 0) {
+    await attachContactSheet(
+      payload,
+      sheetLabels,
+      sheetImages,
+      sheetPathFor(abs, contactSheet.outPath),
+      contactSheet
+    );
+  }
+  if (opts.diff?.sheet && payload.diff && diffThumbs.length > 0) {
+    await attachDiffSheet(
+      payload,
+      payload.diff,
+      diffThumbs,
+      abs,
+      opts.diff.sheet,
+      opts.diff.thresholds
+    );
+  }
+  const totalMs = performance.now() - startedAt;
+  payload.timing = {
+    aeCallMs: Math.round(aeCallMs),
+    settleMs: settle2.waitedMs,
+    nodeMs: Math.max(0, Math.round(totalMs - aeCallMs - settle2.waitedMs)),
+    totalMs: Math.round(totalMs)
+  };
+  return toMcpResult(result);
+}
+function thumbSizeFor(img, thumbWidth) {
+  const width = Math.max(16, Math.min(thumbWidth ?? 480, img.width));
+  return { width, height: Math.max(1, Math.round(img.height * width / img.width)) };
+}
+function stripThumbWidth(strip, img) {
+  if (strip === null) return void 0;
+  return Math.max(
+    1,
+    Math.round(strip.maxDimension * img.width / Math.max(img.width, img.height))
+  );
+}
+function sheetTile(img, thumb) {
+  const flat = img.alpha ? { ...img, rgb: flattenOver(img, { kind: "checkerboard" }), alpha: void 0 } : img;
+  if (flat.width <= thumb.width) return flat;
+  return {
+    ...flat,
+    width: thumb.width,
+    height: thumb.height,
+    rgb: resample(flat, thumb.width, thumb.height)
+  };
+}
+function diffPicture(raw, channels, over) {
+  if (raw) {
+    return "the capture as AE wrote it (no colour conversion: colorManaged off, or the conversion failed): its RGB already laid over the comp background (bgColor), so empty areas read the background in both frames; alpha not compared";
+  }
+  if (channels === "alpha") return "the written file: the matte (alpha as grey), white opaque";
+  if (channels === "rgba") {
+    return "the written file's straight colour weighted by its alpha (as over black), so colour under transparent pixels does not count";
+  }
+  if (over === void 0 || over === "background") {
+    return "the written file: the picture as AE composited it over the comp background (bgColor), so transparent areas read the background in both frames and do not change";
+  }
+  return "the written file: the picture laid over `over`, so transparent areas read that backdrop";
+}
+async function attachDiffSheet(payload, diff, thumbs, abs, opts, t) {
+  try {
+    const flagged = new Set(diff.series.flags.flatMap((f) => f.pairs));
+    const labels = thumbs.map(({ pair }) => {
+      const p = diff.pairs[pair];
+      return `#${p.from.index}>${p.to.index} ${p.change.toFixed(4)}${flagged.has(pair) ? " !" : ""}`;
+    });
+    const sheet = composeContactSheet(
+      thumbs.map((th) => th.img),
+      { columns: opts.columns, thumbWidth: thumbs[0].img.width, labels }
+    );
+    const sheetPath = opts.outPath !== void 0 ? path6.resolve(opts.outPath).replace(/\\/g, "/") : `${abs.slice(0, abs.length - path6.extname(abs).length)}_diff${path6.extname(abs) || ".png"}`;
+    await fs6.mkdir(path6.dirname(sheetPath), { recursive: true });
+    await fs6.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+    payload.diffSheet = {
+      writtenTo: sheetPath,
+      size: [sheet.width, sheet.height],
+      columns: sheet.columns,
+      rows: sheet.rows,
+      thumbSize: [sheet.thumbWidth, sheet.thumbHeight],
+      frames: thumbs.length,
+      amplify: t.amplify
+    };
+  } catch (err) {
+    payload.diffWarning = `diff sheet failed: ${err instanceof Error ? err.message : String(err)}`;
+  }
+}
+function stageBlock(stats, stage) {
+  const { name: _name, ...rest } = stats;
+  if (stage === "output" && Array.isArray(rest.mean)) rest.meanHex = rgbHex(rest.mean);
+  return rest;
+}
+function sampleReport(pixels, sample) {
+  const report = sample.regions.map((r) => ({ name: r.name }));
+  for (const stage of sample.stages) {
+    sampleRegions(pixels[stage], sample.regions).forEach((stats, j) => {
+      report[j][stage] = stageBlock(stats, stage);
+    });
+  }
+  return report;
+}
+function chooseBackdrop(payload, opts) {
+  if (opts.over === "background") {
+    payload.over = "background";
+    return null;
+  }
+  payload.over = opts.over.kind === "checkerboard" ? "checkerboard" : opts.over.color;
+  return opts.over;
+}
+async function attachContactSheet(payload, labels, tiles, sheetPath, opts) {
+  try {
+    const sheet = composeContactSheet(tiles, {
+      columns: opts.columns,
+      thumbWidth: opts.thumbWidth ?? tiles[0].width,
+      labels
+    });
+    await fs6.mkdir(path6.dirname(sheetPath), { recursive: true });
+    await fs6.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+    payload.contactSheet = {
+      writtenTo: sheetPath,
+      size: [sheet.width, sheet.height],
+      columns: sheet.columns,
+      rows: sheet.rows,
+      thumbSize: [sheet.thumbWidth, sheet.thumbHeight],
+      frames: tiles.length
+    };
+  } catch (err) {
+    payload.contactSheetWarning = `contact sheet failed: ${err instanceof Error ? err.message : String(err)}`;
+  }
+}
+async function writeOutput(file2, capture, convert, channels, backdrop, bg) {
+  const { width, height } = capture;
+  const opaque = () => new Float64Array(width * height).fill(1);
+  let bytes;
+  if (channels === "alpha") {
+    bytes = encodePngGray8(width, height, capture.alpha ?? opaque());
+  } else if (channels === "rgb" && backdrop === null) {
+    const rgb = Float64Array.from(capture.rgb);
+    convert(rgb);
+    bytes = encodePngSrgb8(width, height, rgb);
+  } else {
+    const rgb = unmatte(capture, bg);
+    convert(rgb);
+    bytes = channels === "rgba" ? encodePngSrgbRgba8(width, height, rgb, capture.alpha ?? opaque()) : encodePngSrgb8(width, height, flattenOver({ ...capture, rgb }, backdrop));
+  }
+  await fs6.writeFile(file2, bytes);
+  return decodePng(bytes);
+}
+
+// src/operations/keying.ts
+var KEYLIGHT_MATCH_NAME = "Keylight 906";
+var KEY_CLEANER_MATCH_NAME = "ADBE KeyCleaner";
+var SPILL_SUPPRESSOR_MATCH_NAME = "ADBE Spill2";
+var VIEW_MATCH_NAME = "Keylight 906-0002";
+var SCREEN_COLOUR_MATCH_NAME = "Keylight 906-0004";
+var KEYLIGHT_VIEWS = [
+  "source",
+  "source_alpha",
+  "corrected_source",
+  "colour_correction_edges",
+  "screen_matte",
+  "inside_mask",
+  "outside_mask",
+  "combined_matte",
+  "status",
+  "intermediate_result",
+  "final_result"
+];
+var VIEW_LIST = KEYLIGHT_VIEWS.map((v, i) => `${v} (${i + 1})`).join(", ");
+var KEYLIGHT_SETTINGS = {
+  screenColour: {
+    matchName: SCREEN_COLOUR_MATCH_NAME,
+    kind: "colour",
+    doc: "Screen Colour [r, g, b] 0..1, capture values: from ae_render_frame `screen` (colour.nearSubject or colour.median) on the un-keyed source"
+  },
+  screenGain: {
+    matchName: "Keylight 906-0005",
+    kind: "number",
+    doc: "Screen Gain, 0..5000 (default 100)"
+  },
+  screenBalance: {
+    matchName: "Keylight 906-0006",
+    kind: "number",
+    doc: "Screen Balance, 0..100 (default 50)"
+  },
+  despillBias: {
+    matchName: "Keylight 906-0007",
+    kind: "colour",
+    doc: "Despill Bias [r, g, b] 0..1 (default 0.498 grey)"
+  },
+  alphaBias: {
+    matchName: "Keylight 906-0008",
+    kind: "colour",
+    doc: "Alpha Bias [r, g, b] 0..1 (default 0.498 grey)"
+  },
+  lockBiases: {
+    matchName: "Keylight 906-0009",
+    kind: "switch",
+    doc: "Lock Biases Together (default on)"
+  },
+  screenPreBlur: {
+    matchName: "Keylight 906-0010",
+    kind: "number",
+    doc: "Screen Pre-blur, 0..5000 (default 0)"
+  },
+  clipBlack: {
+    matchName: "Keylight 906-0012",
+    kind: "number",
+    doc: "Clip Black, 0..100 (default 0)"
+  },
+  clipWhite: {
+    matchName: "Keylight 906-0013",
+    kind: "number",
+    doc: "Clip White, 0..100 (default 100)"
+  },
+  clipRollback: {
+    matchName: "Keylight 906-0014",
+    kind: "number",
+    doc: "Clip Rollback, 0..5000 (default 0)"
+  },
+  screenShrinkGrow: {
+    matchName: "Keylight 906-0015",
+    kind: "number",
+    doc: "Screen Shrink/Grow, -5000..5000 (default 0)"
+  },
+  screenSoftness: {
+    matchName: "Keylight 906-0016",
+    kind: "number",
+    doc: "Screen Softness, 0..5000 (default 0)"
+  },
+  despotBlack: {
+    matchName: "Keylight 906-0017",
+    kind: "number",
+    doc: "Screen Despot Black, 0..5000 (default 0)"
+  },
+  despotWhite: {
+    matchName: "Keylight 906-0018",
+    kind: "number",
+    doc: "Screen Despot White, 0..5000 (default 0)"
+  }
+};
+var KEY_CLEANER_SETTINGS = {
+  additionalEdgeRadius: {
+    matchName: "ADBE KeyCleaner-0006",
+    kind: "number",
+    doc: "Additional Edge Radius, 0..250 (default 10)"
+  },
+  reduceChatter: {
+    matchName: "ADBE KeyCleaner-0002",
+    kind: "switch",
+    doc: "Reduce Chatter (default off)"
+  },
+  alphaContrast: {
+    matchName: "ADBE KeyCleaner-0016",
+    kind: "number",
+    doc: "Alpha Contrast, 0..100 (default 0)"
+  },
+  strength: {
+    matchName: "ADBE KeyCleaner-0001",
+    kind: "number",
+    doc: "Strength, 0..100 (default 100)"
+  }
+};
+var SPILL_SUPPRESSOR_SETTINGS = {
+  method: { matchName: "ADBE Spill2-0001", kind: "number", doc: "Method, 1 or 2 (default 1)" },
+  suppression: {
+    matchName: "ADBE Spill2-1001",
+    kind: "number",
+    doc: "Suppression, 0..100 (default 100)"
+  },
+  keyColor: {
+    matchName: "ADBE Spill2-0003",
+    kind: "colour",
+    doc: "Key Color [r, g, b] 0..1 (default pure green), or 'keylight' for Keylight's Screen Colour"
+  },
+  tolerance: {
+    matchName: "ADBE Spill2-0004",
+    kind: "number",
+    doc: "Tolerance, 0..100 (default 50)"
+  },
+  desaturate: {
+    matchName: "ADBE Spill2-0005",
+    kind: "number",
+    doc: "Desaturate, 0..100 (default 50)"
+  },
+  spillRange: {
+    matchName: "ADBE Spill2-0006",
+    kind: "number",
+    doc: "Spill Range, 0..100 (default 50)"
+  },
+  spillColorCorrection: {
+    matchName: "ADBE Spill2-0007",
+    kind: "number",
+    doc: "Spill Color Correction, 0..100 (default 50)"
+  },
+  lumaCorrection: {
+    matchName: "ADBE Spill2-0008",
+    kind: "number",
+    doc: "Luma Correction, 0..100 (default 0)"
+  }
+};
+function readMap(settings, extra = {}) {
+  const out = { ...extra };
+  for (const [k, s] of Object.entries(settings)) out[k] = s.matchName;
+  return out;
+}
+function colourValue(name, v) {
+  const ok = Array.isArray(v) && (v.length === 3 || v.length === 4) && v.every((c2) => typeof c2 === "number" && Number.isFinite(c2) && c2 >= 0 && c2 <= 1);
+  if (!ok) {
+    return `\`${name}\` must be [r, g, b] or [r, g, b, a] with each number in 0..1 (capture values); got ${JSON.stringify(v)}`;
+  }
+  const c = v;
+  return c.length === 3 ? [...c, 1] : [...c];
+}
+function settingValue(name, s, v) {
+  if (s.kind === "colour") return colourValue(name, v);
+  if (s.kind === "switch") {
+    if (typeof v !== "boolean" && v !== 0 && v !== 1) return `\`${name}\` must be true or false`;
+    return v === true || v === 1 ? 1 : 0;
+  }
+  if (typeof v !== "number" || !Number.isFinite(v))
+    return `\`${name}\` must be a number; got ${JSON.stringify(v)}`;
+  return v;
+}
+function keylightViewNumber(v) {
+  if (typeof v === "number" && Number.isInteger(v) && v >= 1 && v <= KEYLIGHT_VIEWS.length)
+    return v;
+  if (typeof v === "string") {
+    const norm = v.trim().toLowerCase().replace(/[\s-]+/g, "_").replace(/color/g, "colour");
+    const i = KEYLIGHT_VIEWS.indexOf(norm);
+    if (i >= 0) return i + 1;
+  }
+  return `unknown Keylight view ${JSON.stringify(v)}; views: ${VIEW_LIST}`;
+}
+var keylightIndexParam = {
+  name: "effectIndex",
+  type: "number",
+  description: "1-based index of the Keylight to use when the layer has several (it must be Keylight). Default: the first Keylight in the stack.",
+  required: false
+};
+var compLayerParams = [
+  { name: "comp", type: "any", description: "Comp name or id", required: true },
+  {
+    name: "layer",
+    type: "any",
+    description: "1-based layer index, or the layer name",
+    required: true
+  }
+];
+var FX_ROOT_JSX = `
+            var _fxRoot = _layer.property("ADBE Effect Parade");
+            if (!_fxRoot) return { ok: false, error: "layer '" + _layer.name + "' cannot carry effects" };
+`;
+function keylightLookupJsx(effectIndexJsx, hint) {
+  return `
+            var _kl = AE.pickEffect(_fxRoot, ${jsxVal(KEYLIGHT_MATCH_NAME)}, "Keylight", ${effectIndexJsx});
+            if (_kl.error) return { ok: false, error: _kl.error };
+            if (_kl.index === null) return { ok: false, error: "layer '" + _layer.name + "' has no Keylight (effects: " + AE.effectListText(_fxRoot) + ")" + ${jsxVal(hint)} };
+`;
+}
+registerOp({
+  name: "key.keylight",
+  category: "key",
+  description: "Key a layer with Keylight from measured values: add Keylight (Keylight 906) if the layer has none, or update the one there, then read every setting back. Measure first: render the un-keyed source with ae_render_frame { screen: true } and pass colour.nearSubject (or colour.median) as screenColour. Every value is checked against After Effects' reported range before anything is written; a refusal writes nothing and removes a Keylight this call added. Returns effectIndex, added, keylightCount, written, values (view and every setting below, as read back) and the effect order. With no settings it only reads. Then look at the result with key.view (screen_matte, status) and ae_render_frame { edge: true }.",
+  params: [
+    ...compLayerParams,
+    keylightIndexParam,
+    ...Object.entries(KEYLIGHT_SETTINGS).map(([name, s]) => ({
+      name,
+      type: s.kind === "colour" ? "array" : s.kind === "switch" ? "boolean" : "number",
+      description: s.doc,
+      required: false
+    }))
+  ],
+  toJsx(args) {
+    const writes = [];
+    for (const [key, s] of Object.entries(KEYLIGHT_SETTINGS)) {
+      if (args[key] === void 0) continue;
+      const v = settingValue(key, s, args[key]);
+      if (typeof v === "string") return jsxFail(v);
+      writes.push({ key, matchName: s.matchName, value: v });
+    }
+    const addHint = "; adding one needs screenColour: measure it from the un-keyed source with ae_render_frame { screen: true } and pass colour.nearSubject or colour.median";
+    return `
+            ${jsxCompLayerPreamble(args)}
+            ${FX_ROOT_JSX}
+            var _pick = AE.pickEffect(_fxRoot, ${jsxVal(KEYLIGHT_MATCH_NAME)}, "Keylight", ${jsxVal(args.effectIndex ?? null)});
+            if (_pick.error) return { ok: false, error: _pick.error };
+            var _writes = ${jsxVal(writes)};
+            var _idx = _pick.index;
+            var _added = false;
+            if (_idx === null) {
+                if (!${jsxVal(args.screenColour !== void 0)}) {
+                    return { ok: false, error: "layer '" + _layer.name + "' has no Keylight (effects: " + AE.effectListText(_fxRoot) + ")" + ${jsxVal(addHint)} };
+                }
+                _idx = _fxRoot.addProperty(${jsxVal(KEYLIGHT_MATCH_NAME)}).propertyIndex;
+                _added = true;
+            }
+            var _refused = AE.checkEffectWrites(_fxRoot.property(_idx), _writes);
+            if (_refused.length > 0) {
+                if (_added) { try { _fxRoot.property(_idx).remove(); } catch (eRm) {} }
+                var _msgs = [];
+                for (var _ri = 0; _ri < _refused.length; _ri++) _msgs.push(_refused[_ri].error);
+                return { ok: false, error: "nothing written: " + _msgs.join("; "), refused: _refused, removedAddedKeylight: _added };
+            }
+            var _failed = AE.applyEffectWrites(_fxRoot.property(_idx), _writes);
+            var _written = [];
+            for (var _wi = 0; _wi < _writes.length; _wi++) {
+                var _bad = false;
+                for (var _fi = 0; _fi < _failed.length; _fi++) if (_failed[_fi].setting === _writes[_wi].key) _bad = true;
+                if (!_bad) _written.push(_writes[_wi].key);
+            }
+            var _out = {
+                ok: _failed.length === 0,
+                effectIndex: _idx,
+                added: _added,
+                keylightCount: _pick.count + (_added ? 1 : 0),
+                name: _fxRoot.property(_idx).name,
+                written: _written,
+                values: AE.readEffectValues(_fxRoot.property(_idx), ${jsxVal(readMap(KEYLIGHT_SETTINGS, { view: VIEW_MATCH_NAME }))}),
+                order: AE.effectOrder(_fxRoot)
+            };
+            if (_failed.length > 0) {
+                _out.failed = _failed;
+                _out.error = "After Effects rejected " + _failed.length + " of the checked writes; the rest were written";
+            }
+            return _out;
+        `;
+  }
+});
+registerOp({
+  name: "key.view",
+  category: "key",
+  description: "Set Keylight's View and report the previous one (pass previous.number back to restore it). Look at the key in screen_matte (the key's own matte, before the layer masks), combined_matte (with the masks), status (white solid, black clear, grey partly transparent) and intermediate_result (keyed, without Keylight's own despill). Use source to measure the screen with ae_render_frame { screen: true }. The view is not keyframable.",
+  params: [
+    ...compLayerParams,
+    {
+      name: "view",
+      type: "any",
+      description: `View by name or number: ${VIEW_LIST}. Spaces, hyphens and 'color' are accepted (Screen Matte, final-result).`,
+      required: true
+    },
+    keylightIndexParam
+  ],
+  toJsx(args) {
+    const view = keylightViewNumber(args.view);
+    if (typeof view === "string") return jsxFail(view);
+    return `
+            ${jsxCompLayerPreamble(args)}
+            ${FX_ROOT_JSX}
+            ${keylightLookupJsx(jsxVal(args.effectIndex ?? null), "; add one with key.keylight")}
+            var _names = ${jsxVal(KEYLIGHT_VIEWS)};
+            var _viewProp = _fxRoot.property(_kl.index).property(${jsxVal(VIEW_MATCH_NAME)});
+            if (!_viewProp) return { ok: false, error: "Keylight has no View property " + ${jsxVal(VIEW_MATCH_NAME)} };
+            var _prev = AE.safeGet(function () { return _viewProp.value; }, null);
+            var _want = ${jsxVal(view)};
+            var _why = AE.checkPropertyWrite(_viewProp, _want);
+            if (_why !== null) return { ok: false, error: _why };
+            _viewProp.setValue(_want);
+            var _now = AE.safeGet(function () { return _viewProp.value; }, null);
+            return {
+                ok: true,
+                effectIndex: _kl.index,
+                view: { number: _now, name: _names[_now - 1] || null },
+                previous: { number: _prev, name: _prev === null ? null : (_names[_prev - 1] || null) }
+            };
+        `;
+  }
+});
+function cleanupGroup(name, v, settings) {
+  if (v === false) return { want: false };
+  if (v === void 0 || v === true) return { want: true, writes: [], fromKeylight: false };
+  if (typeof v !== "object" || v === null || Array.isArray(v)) {
+    return `\`${name}\` must be an object of settings, true (defaults) or false (leave it out); got ${JSON.stringify(v)}`;
+  }
+  const writes = [];
+  let fromKeylight = false;
+  for (const [key, val] of Object.entries(v)) {
+    const s = settings[key];
+    if (!s)
+      return `\`${name}.${key}\` is not a setting; settings: ${Object.keys(settings).join(", ")}`;
+    if (key === "keyColor" && val === "keylight") {
+      fromKeylight = true;
+      continue;
+    }
+    const value = settingValue(`${name}.${key}`, s, val);
+    if (typeof value === "string") return value;
+    writes.push({ key, matchName: s.matchName, value });
+  }
+  return { want: true, writes, fromKeylight };
+}
+registerOp({
+  name: "key.cleanup",
+  category: "key",
+  description: "Add or update Key Cleaner (ADBE KeyCleaner) and Advanced Spill Suppressor (ADBE Spill2) after the layer's Keylight, in that order, moving existing ones into place, with their main settings (checked before writing; a refusal writes and moves nothing and removes what this call added). Adobe's intended chain is Keylight on Intermediate Result (View 10), then Key Cleaner, then Advanced Spill Suppressor: with Keylight on Final Result, Keylight has already despilled what the others receive. The caller chooses: keylightView: 'intermediate_result' sets that view; otherwise the view is left and a chainNote says so. Returns keylight {index, view}, keyCleaner and spillSuppressor {index, added, written, values} (null when left out), the effect order, and chainNote. Remove spill only after the matte is right; read edge spill on the final alpha afterwards.",
+  params: [
+    ...compLayerParams,
+    {
+      name: "keyCleaner",
+      type: "any",
+      description: `Key Cleaner settings object, true for its defaults (the default), or false to leave it out. Settings: ${Object.entries(
+        KEY_CLEANER_SETTINGS
+      ).map(([k, s]) => `${k} (${s.doc})`).join("; ")}.`,
+      required: false
+    },
+    {
+      name: "spillSuppressor",
+      type: "any",
+      description: `Advanced Spill Suppressor settings object, true for its defaults (the default), or false to leave it out. Settings: ${Object.entries(
+        SPILL_SUPPRESSOR_SETTINGS
+      ).map(([k, s]) => `${k} (${s.doc})`).join("; ")}. Which Method value is Standard and which Ultra was not confirmed live.`,
+      required: false
+    },
+    {
+      name: "keylightView",
+      type: "any",
+      description: "Also set Keylight's View (name or number, as key.view); 'intermediate_result' for Adobe's intended chain.",
+      required: false
+    },
+    { ...keylightIndexParam, name: "keylightIndex" }
+  ],
+  toJsx(args) {
+    const kc = cleanupGroup("keyCleaner", args.keyCleaner, KEY_CLEANER_SETTINGS);
+    if (typeof kc === "string") return jsxFail(kc);
+    const ss = cleanupGroup("spillSuppressor", args.spillSuppressor, SPILL_SUPPRESSOR_SETTINGS);
+    if (typeof ss === "string") return jsxFail(ss);
+    let view = null;
+    if (args.keylightView !== void 0) {
+      const v = keylightViewNumber(args.keylightView);
+      if (typeof v === "string") return jsxFail(`keylightView: ${v}`);
+      view = v;
+    }
+    const chainNote = "Adobe's intended chain is Keylight on Intermediate Result (10), then Key Cleaner, then Advanced Spill Suppressor; on any other view Keylight hands the cleanup effects its own output (on Final Result already despilled). Pass keylightView: 'intermediate_result' (or use key.view) for that chain.";
+    return `
+            ${jsxCompLayerPreamble(args)}
+            ${FX_ROOT_JSX}
+            ${keylightLookupJsx(jsxVal(args.keylightIndex ?? null), "; key the layer with key.keylight first")}
+            var _names = ${jsxVal(KEYLIGHT_VIEWS)};
+            var _wantKC = ${jsxVal(kc.want)};
+            var _wantSS = ${jsxVal(ss.want)};
+            var _kcWrites = ${jsxVal(kc.want ? kc.writes : [])};
+            var _ssWrites = ${jsxVal(ss.want ? ss.writes : [])};
+            var _view = ${jsxVal(view)};
+            var _track = { kl: _kl.index, kc: null, ss: null };
+            var _kcAnchorOnly = false;
+            var _kcFound = AE.pickEffect(_fxRoot, ${jsxVal(KEY_CLEANER_MATCH_NAME)}, "Key Cleaner", null);
+            if (_wantKC) _track.kc = _kcFound.index;
+            else if (_kcFound.index !== null && _kcFound.index > _kl.index) { _track.kc = _kcFound.index; _kcAnchorOnly = true; }
+            if (_wantSS) _track.ss = AE.pickEffect(_fxRoot, ${jsxVal(SPILL_SUPPRESSOR_MATCH_NAME)}, "Advanced Spill Suppressor", null).index;
+            if (${jsxVal(ss.want && ss.fromKeylight)}) {
+                var _sc = AE.safeGet(function () { return AE.valueToJson(_fxRoot.property(_kl.index).property(${jsxVal(SCREEN_COLOUR_MATCH_NAME)}).value); }, null);
+                if (!_sc) return { ok: false, error: "could not read Keylight's Screen Colour for keyColor 'keylight'" };
+                _ssWrites.push({ key: "keyColor", matchName: ${jsxVal(SPILL_SUPPRESSOR_SETTINGS.keyColor.matchName)}, value: _sc });
+            }
+            var _kcAdded = false;
+            var _ssAdded = false;
+            if (_wantKC && _track.kc === null) { _track.kc = _fxRoot.addProperty(${jsxVal(KEY_CLEANER_MATCH_NAME)}).propertyIndex; _kcAdded = true; }
+            if (_wantSS && _track.ss === null) { _track.ss = _fxRoot.addProperty(${jsxVal(SPILL_SUPPRESSOR_MATCH_NAME)}).propertyIndex; _ssAdded = true; }
+            var _refused = [];
+            if (_wantKC) _refused = _refused.concat(AE.checkEffectWrites(_fxRoot.property(_track.kc), _kcWrites));
+            if (_wantSS) _refused = _refused.concat(AE.checkEffectWrites(_fxRoot.property(_track.ss), _ssWrites));
+            if (_view !== null) {
+                var _vw = AE.checkPropertyWrite(_fxRoot.property(_track.kl).property(${jsxVal(VIEW_MATCH_NAME)}), _view);
+                if (_vw !== null) _refused.push({ setting: "keylightView", error: _vw });
+            }
+            if (_refused.length > 0) {
+                var _drop = [];
+                if (_kcAdded) _drop.push(_track.kc);
+                if (_ssAdded) _drop.push(_track.ss);
+                _drop.sort(function (a, b) { return b - a; });
+                for (var _di = 0; _di < _drop.length; _di++) { try { _fxRoot.property(_drop[_di]).remove(); } catch (eRm) {} }
+                var _msgs = [];
+                for (var _ri = 0; _ri < _refused.length; _ri++) _msgs.push(_refused[_ri].error);
+                return { ok: false, error: "nothing written or moved: " + _msgs.join("; "), refused: _refused };
+            }
+            if (_wantKC) AE.placeTrackedAfter(_fxRoot, _track, "kc", "kl");
+            if (_wantSS) AE.placeTrackedAfter(_fxRoot, _track, "ss", _track.kc !== null ? "kc" : "kl");
+            var _failed = [];
+            if (_wantKC) _failed = _failed.concat(AE.applyEffectWrites(_fxRoot.property(_track.kc), _kcWrites));
+            if (_wantSS) _failed = _failed.concat(AE.applyEffectWrites(_fxRoot.property(_track.ss), _ssWrites));
+            var _viewProp = _fxRoot.property(_track.kl).property(${jsxVal(VIEW_MATCH_NAME)});
+            if (_view !== null) {
+                try { _viewProp.setValue(_view); } catch (eV) { _failed.push({ setting: "keylightView", error: AE.errText(eV) }); }
+            }
+            function _keys(ws) { var o = []; for (var i = 0; i < ws.length; i++) o.push(ws[i].key); return o; }
+            var _nowView = AE.safeGet(function () { return _viewProp.value; }, null);
+            var _out = {
+                ok: _failed.length === 0,
+                keylight: { index: _track.kl, view: { number: _nowView, name: _names[_nowView - 1] || null } },
+                keyCleaner: _wantKC ? {
+                    index: _track.kc,
+                    added: _kcAdded,
+                    written: _keys(_kcWrites),
+                    values: AE.readEffectValues(_fxRoot.property(_track.kc), ${jsxVal(readMap(KEY_CLEANER_SETTINGS))})
+                } : null,
+                spillSuppressor: _wantSS ? {
+                    index: _track.ss,
+                    added: _ssAdded,
+                    written: _keys(_ssWrites),
+                    values: AE.readEffectValues(_fxRoot.property(_track.ss), ${jsxVal(readMap(SPILL_SUPPRESSOR_SETTINGS))})
+                } : null,
+                order: AE.effectOrder(_fxRoot)
+            };
+            if (_kcAnchorOnly) _out.keyCleanerLeftAsIs = _track.kc;
+            if (_nowView !== 10) _out.chainNote = ${jsxVal(chainNote)};
+            if (_failed.length > 0) {
+                _out.failed = _failed;
+                _out.error = "After Effects rejected " + _failed.length + " of the checked writes; the rest were written";
+            }
+            return _out;
+        `;
+  }
+});
+var OBJECT_MATTE_MATCH_NAME = "ADBE Samurai";
+var OBJECT_MATTE_SELECTIONS_MATCH_NAME = "ADBE Samurai Strokes Group";
+var PAINT_DURATION_MATCH_NAME = "ADBE Paint Duration";
+var PAINT_TRANSFORM_MATCH_NAME = "ADBE Paint Transform";
+var PAINT_POSITION_MATCH_NAME = "ADBE Paint Position";
+var OBJECT_MATTE_SETTINGS = {
+  version: {
+    matchName: "/propagation_method",
+    name: "Version",
+    min: 1,
+    max: 4,
+    default: 4,
+    kind: "number",
+    writable: false
+  },
+  feather: {
+    matchName: "/spatialsmoothing2",
+    name: "Feather",
+    min: 0,
+    max: 1e3,
+    default: 5,
+    kind: "number",
+    writable: true
+  },
+  contrast: {
+    matchName: "/spatialsoftness2",
+    name: "Contrast",
+    min: 0,
+    max: 100,
+    default: 80,
+    kind: "number",
+    writable: true
+  },
+  shiftEdge: {
+    matchName: "/rmshiftedges",
+    name: "Shift Edge",
+    min: -100,
+    max: 100,
+    default: 0,
+    kind: "number",
+    writable: true
+  },
+  reduceChatter: {
+    matchName: "/rmreducechatter",
+    name: "Reduce Chatter",
+    min: 0,
+    max: 100,
+    default: 0,
+    kind: "number",
+    writable: true
+  },
+  invert: {
+    matchName: "/invertforegroundbackground",
+    name: "Invert Foreground/Background",
+    min: 0,
+    max: 1,
+    default: null,
+    kind: "switch",
+    writable: true,
+    doc: "Invert Foreground/Background: true keeps everything except the selection"
+  },
+  fineTune: {
+    matchName: "/rmrefinematteenable",
+    name: "Fine-tune Object Matte",
+    min: 0,
+    max: 1,
+    default: 1,
+    kind: "switch",
+    writable: false
+  },
+  useMotionBlur: {
+    matchName: "/rmusemotionblur",
+    name: "Use Motion Blur",
+    min: null,
+    max: null,
+    default: null,
+    kind: "switch",
+    writable: false
+  },
+  decontaminateEdgeColors: {
+    matchName: "/rmcleanedgecolors",
+    name: "Decontaminate Edge Colors",
+    min: 0,
+    max: 1,
+    default: null,
+    kind: "switch",
+    writable: true,
+    doc: "Decontaminate Edge Colors: true takes the background's colour out of the edge. On green-screen footage it moved the edge's green excess from -0.0005 to -0.009; turn it on when ae_render_frame's edge report shows the edge leaning to the screen colour"
+  }
+};
+var SUBJECT_MATTE_NOTICE = "One step here needs you in After Effects: a single click on the subject, about ten seconds. Everything before and after it I do.";
+function subjectMatteSteps(opts = {}) {
+  const clip = opts.clip === void 0 ? "the clip's name" : `"${opts.clip}"`;
+  const given = opts.subject?.trim();
+  const self = given !== void 0 && /^(yourself|you)$/i.test(given);
+  const subject = self ? "yourself" : given || "the person";
+  const tint = self ? "You tint magenta." : given ? `${subject.charAt(0).toUpperCase()}${subject.slice(1)} tints magenta.` : "They tint magenta.";
+  return [
+    `After Effects is showing your clip in the Layer panel (the tab reads "Layer", then ${clip}). I opened it for you.`,
+    'In the toolbar at the top, click the Object Matte Tool: the dashed square with an arrow, just left of the pin. If that icon looks different, click and hold it and choose "Object Matte Tool" from the list.',
+    'If a tip titled "Object Matte" appears, click OK.',
+    'If a yellow bar in the Layer panel says "Draw Object Matte strokes at full resolution", choose View > Resolution > Full in the menu bar, and tell me the bar was there.',
+    `Move the pointer over ${subject} in the Layer panel. ${tint} Click once.`,
+    `Anything else that should stay in the cut-out, such as a microphone, can be several pieces: hover each piece, check that it tints magenta, and click it. A gap between things, such as between a stand and an arm, needs no click: I take care of gaps afterwards. Do not click ${subject} again.`,
+    'Tell me "done". No Spacebar and no Freeze are needed. I will then check the cut-out and show you what is in and what is out.'
+  ];
+}
+var CLOSE_CLICK_SHARE = 0.05;
+var closeClickReading = (a, b, d, limit) => `${a} and ${b} were clicked ${Math.round(d)} source pixels apart (closer than ${Math.round(limit)}): they probably selected the same thing, so a click meant for something else (a microphone) may have landed on the subject again`;
+function closeClicks(clicks, sourceSize, minDistance) {
+  const limit = minDistance ?? (sourceSize ? Math.round(CLOSE_CLICK_SHARE * Math.min(sourceSize[0], sourceSize[1]) * 100) / 100 : null);
+  if (limit === null) return [];
+  const out = [];
+  const pts = clicks.filter((c) => Array.isArray(c.point) && c.point.length >= 2);
+  for (let i = 0; i < pts.length; i++)
+    for (let j = i + 1; j < pts.length; j++) {
+      const p = pts[i].point;
+      const q = pts[j].point;
+      const d = Math.hypot(p[0] - q[0], p[1] - q[1]);
+      if (d < limit)
+        out.push({
+          a: pts[i].name,
+          b: pts[j].name,
+          distance: Math.round(d * 100) / 100,
+          limit,
+          reading: closeClickReading(pts[i].name, pts[j].name, d, limit)
+        });
+    }
+  return out;
+}
+var CHECK_NEXT = "Run subject.check next, before building anything on the cut-out: it renders the cut-out over a flat colour across the clip, finds holes, and returns a picture to show the user.";
+var VIEWER_FULL_JSX = `
+            function _viewerToFull() {
+                var _fid = app.findMenuCommandId("Full");
+                if (!_fid) throw new Error("After Effects has no menu command named 'Full' (View > Resolution > Full)");
+                app.executeCommand(_fid);
+                return _fid;
+            }
+`;
+var VIEWER_NOTE = "View > Resolution > Full sets the comp's resolutionFactor (measured in After Effects 27.0, with the comp open in the viewer); verified means the comp read [1, 1] after the command and again after the Layer panel opened. Starting from the viewer's Auto setting (it drew at Half while the comp was set to Full on 2026-11-11) is not verified, and a script cannot choose Auto. If the yellow full-resolution bar shows, step 4 has the user choose Full.";
+var COUNT_NOTE = "A selection count is not a check: it does not say what was selected. Run subject.check and look at its picture before building anything on the cut-out.";
+var NEED_CLICK = "run subject.prepare and ask the user for the click, relaying its steps word for word";
+var OBJECT_MATTE_JSX = `
+            function _omWalk(g, key, field, depth) {
+                if (depth > 4) return null;
+                var n = AE.safeGet(function () { return g.numProperties; }, 0);
+                for (var i = 1; i <= n; i++) {
+                    var c = null;
+                    try { c = g.property(i); } catch (eC) { c = null; }
+                    if (!c) continue;
+                    var cm = AE.safeGet(function () { return c.matchName; }, "");
+                    var cv = field === "matchName" ? cm : AE.safeGet(function () { return c.name; }, "");
+                    if (cv === key) return c;
+                    if (cm === ${jsxVal(OBJECT_MATTE_SELECTIONS_MATCH_NAME)}) continue;
+                    var ct = AE.safeGet(function () { return c.propertyType; }, null);
+                    if (ct !== null && ct !== PropertyType.PROPERTY) {
+                        var r = _omWalk(c, key, field, depth + 1);
+                        if (r) return r;
+                    }
+                }
+                return null;
+            }
+            function _omFind(fx, mn, nm) {
+                var p = null;
+                try { p = fx.property(mn); } catch (eP) { p = null; }
+                if (p && AE.safeGet(function () { return p.matchName; }, "") === mn) return { prop: p, foundBy: "matchName" };
+                p = _omWalk(fx, mn, "matchName", 0);
+                if (p) return { prop: p, foundBy: "walk" };
+                if (nm) { p = _omWalk(fx, nm, "name", 0); if (p) return { prop: p, foundBy: "name" }; }
+                return { prop: null, foundBy: null };
+            }
+            function _omKind(nm) {
+                if (/^Add Object \\d+$/.test(nm)) return "object";
+                if (/^Add Object Rect \\d+$/.test(nm)) return "rectangle";
+                if (/^Quick Select Foreground \\d+$/.test(nm)) return "quick-selection";
+                return "other";
+            }
+            function _omCloseClicks(list, size) {
+                var out = [];
+                if (!size) return out;
+                var lim = Math.round(${jsxVal(CLOSE_CLICK_SHARE)} * Math.min(size[0], size[1]) * 100) / 100;
+                for (var i = 0; i < list.length; i++) {
+                    for (var j = i + 1; j < list.length; j++) {
+                        var p = list[i].point, q = list[j].point;
+                        if (!p || !q) continue;
+                        var d = Math.sqrt((p[0] - q[0]) * (p[0] - q[0]) + (p[1] - q[1]) * (p[1] - q[1]));
+                        if (d < lim) out.push({ a: list[i].name, b: list[j].name, distance: Math.round(d * 100) / 100, limit: lim,
+                            reading: list[i].name + " and " + list[j].name + " were clicked " + Math.round(d) + " source pixels apart (closer than " + Math.round(lim) + "): " +
+                                "they probably selected the same thing, so a click meant for something else (a microphone) may have landed on the subject again" });
+                    }
+                }
+                return out;
+            }
+            function _omSelections(fx) {
+                var g = _omFind(fx, ${jsxVal(OBJECT_MATTE_SELECTIONS_MATCH_NAME)}, "Selections").prop;
+                var list = [];
+                if (!g) return { found: false, list: list };
+                var n = AE.safeGet(function () { return g.numProperties; }, 0);
+                for (var i = 1; i <= n; i++) {
+                    var s = null;
+                    try { s = g.property(i); } catch (eS) { s = null; }
+                    if (!s) continue;
+                    var nm = AE.safeGet(function () { return s.name; }, "");
+                    var dur = AE.safeGet(function () { return AE.valueToJson(s.property(${jsxVal(PAINT_DURATION_MATCH_NAME)}).value); }, null);
+                    var pt = AE.safeGet(function () { return AE.valueToJson(s.property(${jsxVal(PAINT_TRANSFORM_MATCH_NAME)}).property(${jsxVal(PAINT_POSITION_MATCH_NAME)}).value); }, null);
+                    var cp = (pt && typeof _layer !== "undefined") ? AE.safeGet(function () { return AE.valueToJson(_layer.sourcePointToComp([pt[0], pt[1]])); }, null) : null;
+                    list.push({ index: i, name: nm, matchName: AE.safeGet(function () { return s.matchName; }, ""), kind: _omKind(nm), duration: dur,
+                        point: pt ? [pt[0], pt[1]] : null, compPoint: cp ? [cp[0], cp[1]] : null,
+                        clickTime: (dur && dur.length) ? dur[0] : null,
+                        clickFrame: (dur && dur.length && typeof _comp !== "undefined") ? AE.safeGet(function () { return Math.round((AE.safeGet(function () { return _layer.startTime; }, 0) + dur[0]) / _comp.frameDuration); }, null) : null });
+                }
+                return { found: true, list: list };
+            }
+            function _omSettings(fx, table) {
+                var out = {};
+                for (var k in table) {
+                    if (!table.hasOwnProperty(k)) continue;
+                    var f = _omFind(fx, table[k].matchName, table[k].name);
+                    var row = { name: table[k].name, matchName: table[k].matchName, foundBy: f.foundBy, value: null };
+                    if (f.prop) {
+                        row.value = AE.safeGet(function () { return AE.valueToJson(f.prop.value); }, null);
+                        var rg = AE.propertyRange(f.prop);
+                        row.reportedRange = { min: rg.min, max: rg.max };
+                    }
+                    row.measuredRange = { min: table[k].min, max: table[k].max };
+                    row["default"] = table[k]["default"];
+                    out[k] = row;
+                }
+                return out;
+            }
+            function _omFillLayer() {
+                var want = _layer.name + " gap fill";
+                for (var i = 1; i <= _comp.numLayers; i++) {
+                    var n = AE.safeGet(function () { return _comp.layer(i).name; }, "");
+                    if (n === want) return n;
+                }
+                return null;
+            }
+            function _omAeCache() {
+                // After Effects' Disk Cache folder (Preferences > Media & Disk Cache), read only.
+                var f = null;
+                var types = [];
+                try { types = [PREFType.PREF_Type_MACHINE_SPECIFIC, PREFType.PREF_Type_MACHINE_INDEPENDENT]; } catch (eT) { types = []; }
+                for (var i = 0; i < types.length && !f; i++) {
+                    var t = types[i];
+                    f = AE.safeGet(function () { return app.preferences.havePref("Disk Cache Controls", "Folder 7", t) ? app.preferences.getPrefAsString("Disk Cache Controls", "Folder 7", t) : null; }, null);
+                }
+                return { folder: f || null, version: AE.safeGet(function () { return app.version; }, null) };
+            }
+            function _omSourceSize() {
+                var w = AE.safeGet(function () { return _layer.source.width; }, null);
+                var h = AE.safeGet(function () { return _layer.source.height; }, null);
+                return (typeof w === "number" && typeof h === "number") ? [w, h] : null;
+            }
+            function _omSpan() {
+                var fd = _comp.frameDuration;
+                var a = Math.min(_layer.inPoint, _layer.outPoint), b = Math.max(_layer.inPoint, _layer.outPoint);
+                return { inFrame: Math.round(a / fd), outFrame: Math.round(b / fd), frameRate: Math.round(1000 / fd) / 1000 };
+            }
+            function _omSummary(present, sel) {
+                if (!present) return "no Object Matte on this layer: the user has not clicked yet";
+                if (sel.length === 0) return "Object Matte is on the layer but has no selection yet: the user has not clicked (an Object Matte with no selection makes no matte)";
+                var c = { object: 0, rectangle: 0, "quick-selection": 0, other: 0 };
+                for (var i = 0; i < sel.length; i++) c[sel[i].kind]++;
+                var parts = [];
+                if (c.object > 0) parts.push(c.object + (c.object === 1 ? " object selected" : " objects selected"));
+                if (c.rectangle > 0) parts.push(c.rectangle + (c.rectangle === 1 ? " rectangle selection" : " rectangle selections"));
+                if (c["quick-selection"] > 0) parts.push(c["quick-selection"] + (c["quick-selection"] === 1 ? " quick-selection stroke" : " quick-selection strokes"));
+                if (c.other > 0) parts.push(c.other + (c.other === 1 ? " other selection" : " other selections"));
+                return parts.join(", ");
+            }
+`;
+var subjectIndexParam = {
+  name: "effectIndex",
+  type: "number",
+  description: "1-based index of the Object Matte to use when the layer has several (it must be Object Matte, ADBE Samurai). Default: the first in the stack.",
+  required: false
+};
+var REMOVE_NOTE = "To take out one wrong selection (a second click that landed on the subject, an 'Add Object Rect' from a click that dragged): subject.remove_selection { comp, layer, selection }. To start the whole selection again: remove this Object Matte with effect.remove { comp, layer, effectIndex }, run subject.prepare, and ask the user for the click again. The user can also take one thing out by Option-clicking it with the Object Matte Tool.";
+registerOp({
+  name: "subject.prepare",
+  category: "subject",
+  description: "Get a footage layer ready for the one manual step of a subject matte (After Effects 2027's Object Matte, the old Roto Brush): the user clicks the subject once with the Object Matte Tool; a script cannot make that selection. This call brings the comp forward, chooses View > Resolution > Full and reads the comp's resolution back (viewerResolution: verified only when it reads [1, 1] after the command and after the Layer panel opens; starting from the viewer's Auto setting is not verified), moves to `time` (default: the layer's in point; pick a frame where the subject is clearly visible), selects only that layer and opens it in the Layer panel. It adds no effect and does not pick the tool. Returns notice and steps (the user's instructions, with the clip's name and the subject filled in) and userMessage (both as one text): relay them to the user word for word. Also returns did (the steps done), couldNotDo (any that failed, with the error; beforeSteps then says what to tell the user first) and existing (an Object Matte already on the layer and its selections). Before any of that matters, read sourceAdvice and soundAdvice (or soundNote) when they are there. sourceAdvice: the layer's footage is at least 1.5 times the comp's size in both directions and scaled down to fit (a 2176 x 3840 take at 50% in a 1080 x 1920 comp); it gives the sizes, the disk cache a render needs at each, and the delivery-size copy to make and matte instead, before the click (replacing the footage under a matte freezes it), and relay then says not to give the steps yet. soundAdvice: the file's sound has more than two channels, or After Effects reports none while the file has some (a four-channel take with the voice on the first read as silence, with no warning); it gives the ffmpeg line that extracts the voice to a mono WAV. The file is only read (ffprobe), never changed. After the user says done, run subject.check before building anything. Verified in After Effects 27.0 on a real take, apart from the resolution step as written here; sourceAdvice and soundAdvice are worked out in Node from what After Effects reports and are tested offline.",
+  params: [
+    ...compLayerParams,
+    {
+      name: "time",
+      type: "number",
+      description: "Comp time in seconds to show for the click. Default: the layer's in point. Must be inside the layer.",
+      required: false
+    },
+    {
+      name: "subject",
+      type: "string",
+      description: "What to cut out, as the user would say it ('the presenter', 'the bottle'); goes into step 4. Default: the person.",
+      required: false
+    }
+  ],
+  toJsx(args) {
+    const mark = "CLIP";
+    const steps = subjectMatteSteps({
+      clip: mark,
+      subject: typeof args.subject === "string" ? args.subject : void 0
+    });
+    return `
+            ${jsxCompLayerPreamble(args)}
+            ${FX_ROOT_JSX}
+            ${OBJECT_MATTE_JSX}
+            var _src = AE.safeGet(function () { return _layer.source; }, null);
+            if (!_src) return { ok: false, error: "layer '" + _layer.name + "' has no footage source (a text, shape, null, camera or light layer); Object Matte cuts a subject out of footage" };
+            var _in = Math.min(_layer.inPoint, _layer.outPoint);
+            var _outP = Math.max(_layer.inPoint, _layer.outPoint);
+            var _t = ${jsxVal(args.time ?? null)};
+            if (_t === null) _t = _in;
+            if (_t < _in || _t >= _outP) return { ok: false, error: "time " + _t + " is outside layer '" + _layer.name + "' (in " + _in + ", out " + _outP + "); nothing was changed" };
+            var _did = [];
+            var _couldNot = [];
+            function _step(what, fn) {
+                try { fn(); _did.push(what); } catch (eSt) { _couldNot.push({ step: what, error: AE.errText(eSt) }); }
+            }
+            _step("brought the comp forward", function () { _comp.openInViewer(); });
+            ${VIEWER_FULL_JSX}
+            function _resNow() { return AE.safeGet(function () { return [_comp.resolutionFactor[0], _comp.resolutionFactor[1]]; }, null); }
+            function _isFull(r) { return r !== null && r[0] === 1 && r[1] === 1; }
+            function _resText(r) { return r === null ? "unknown" : "[" + r[0] + ", " + r[1] + "]"; }
+            var _viewer = { command: "Full", commandId: null, before: _resNow(), after: null, afterLayerPanel: null, verified: false, note: ${jsxVal(VIEWER_NOTE)} };
+            try {
+                _viewer.commandId = _viewerToFull();
+                _viewer.after = _resNow();
+                if (_isFull(_viewer.after)) _did.push("chose View > Resolution > Full (the comp's resolution now reads [1, 1])");
+                else _couldNot.push({ step: "chose View > Resolution > Full", error: "the comp's resolution still reads " + _resText(_viewer.after) + " after View > Resolution > Full" });
+            } catch (eFull) {
+                var _fullMsg = AE.errText(eFull);
+                try {
+                    _comp.resolutionFactor = [1, 1];
+                    _fullMsg += "; set the comp's resolutionFactor to [1, 1] instead (the viewer can still draw at another resolution while it is on Auto)";
+                } catch (eRes) { _fullMsg += "; setting the comp's resolutionFactor failed too: " + AE.errText(eRes); }
+                _viewer.after = _resNow();
+                _couldNot.push({ step: "chose View > Resolution > Full", error: _fullMsg });
+            }
+            _step("moved to " + _t + " s", function () { _comp.time = _t; });
+            _step("selected only layer '" + _layer.name + "'", function () {
+                for (var _li = 1; _li <= _comp.numLayers; _li++) { var _l = _comp.layer(_li); if (_l.selected) _l.selected = false; }
+                _layer.selected = true;
+            });
+            var _opened = false;
+            _step("opened the layer in the Layer panel", function () {
+                var _id = app.findMenuCommandId("Open Layer");
+                if (!_id) throw new Error("After Effects has no menu command named 'Open Layer'");
+                app.executeCommand(_id);
+                _opened = true;
+            });
+            _viewer.afterLayerPanel = _resNow();
+            if (_viewer.commandId !== null && _isFull(_viewer.after)) {
+                if (_isFull(_viewer.afterLayerPanel)) _viewer.verified = true;
+                else _couldNot.push({ step: "kept the resolution at Full", error: "the comp's resolution read " + _resText(_viewer.afterLayerPanel) + " after the Layer panel opened" });
+            }
+            var _pick = AE.pickEffect(_fxRoot, ${jsxVal(OBJECT_MATTE_MATCH_NAME)}, "Object Matte", null);
+            var _existing = { objectMatte: _pick.index !== null, effectIndex: _pick.index, count: _pick.count || 0, selections: [] };
+            if (_pick.index !== null) _existing.selections = _omSelections(_fxRoot.property(_pick.index)).list;
+            _existing.summary = _omSummary(_pick.index !== null, _existing.selections);
+            var _tmpl = ${jsxVal(steps)};
+            var _steps = [];
+            for (var _si = 0; _si < _tmpl.length; _si++) _steps.push(_tmpl[_si].split(${jsxVal(mark)}).join(_layer.name));
+            var _notice = ${jsxVal(SUBJECT_MATTE_NOTICE)};
+            var _lines = [_notice];
+            for (var _sj = 0; _sj < _steps.length; _sj++) _lines.push((_sj + 1) + ". " + _steps[_sj]);
+            var _spanP = _omSpan();
+            var _footage = {
+                sourceSize: _omSourceSize(),
+                compSize: [_comp.width, _comp.height],
+                scale: AE.safeGet(function () { var _sv = _layer.property("ADBE Transform Group").property("ADBE Scale").valueAtTime(_t, false); return [_sv[0], _sv[1]]; }, null),
+                frames: _spanP.outFrame - _spanP.inFrame,
+                file: AE.safeGet(function () { return _src.file ? _src.file.fsName : null; }, null),
+                hasAudio: AE.safeGet(function () { return _src.hasAudio === true; }, false)
+            };
+            var _out = {
+                ok: _couldNot.length === 0,
+                comp: _comp.name,
+                layer: _layer.name,
+                time: _t,
+                footage: _footage,
+                did: _did,
+                couldNotDo: _couldNot,
+                viewerResolution: _viewer,
+                existing: _existing,
+                notice: _notice,
+                steps: _steps,
+                userMessage: _lines.join("\\n"),
+                relay: "Give the user notice and steps word for word (userMessage holds both); do not paraphrase them. Then wait for 'done' and run subject.status.",
+                removeNote: ${jsxVal(REMOVE_NOTE)}
+            };
+            if (!_opened) _out.beforeSteps = "The Layer panel could not be opened by script. Before step 1, tell the user: double-click the layer '" + _layer.name + "' in the timeline to open it in the Layer panel.";
+            if (_couldNot.length > 0) {
+                var _msgs = [];
+                for (var _ci = 0; _ci < _couldNot.length; _ci++) _msgs.push(_couldNot[_ci].step + " (" + _couldNot[_ci].error + ")");
+                _out.error = "could not do every step: " + _msgs.join("; ") + ". The steps are still returned; see beforeSteps when the Layer panel did not open.";
+            }
+            return _out;
+        `;
+  },
+  // In Node too: a source much larger than the comp, and sound After Effects may read as silence.
+  async run(args, transport2) {
+    return runSubjectPrepare(args, {
+      execute: async (code) => {
+        const r = await transport2.execute({ code, label: "subject.prepare", timeoutMs: 6e4 });
+        return r.ok ? r.result : { ok: false, error: r.error ?? "subject.prepare failed" };
+      },
+      probeAudio: ffprobeAudio
+    });
+  }
+});
+registerOp({
+  name: "subject.status",
+  category: "subject",
+  readOnly: true,
+  description: "Read a layer's subject matte (Object Matte, ADBE Samurai) without changing anything: whether the effect is there, its selections (name; kind 'object' for a click with the Object Matte Tool, 'Add Object N', 'quick-selection' for a stroke with the old brush, 'Quick Select Foreground N', 'other' otherwise; duration), its settings (value, the range After Effects reports now, the range measured in After Effects 27.0, default, and foundBy: how the property was found, matchName, walk or name), and summary, one plain sentence ('no selection yet: the user has not clicked', '1 object selected'). Also each selection's clicked point (Transform > Position, source pixels; compPoint in comp pixels where After Effects gives it), clickTime (the selection's Duration start: seconds, measured 0.49999667 for a click at frame 15) and clickFrame (comp frames), closeClicks (two clicks closer than 5% of the source's shorter side probably selected the same thing), sourceSize, compSize and span (the layer in comp frames). A selection count is not a check: after the user says done, run subject.check. removeNote says how to take a selection out or start again. disk: the size of After Effects' disk cache (its folder read from the Disk Cache preference) and the free space on that drive; diskNote, when that drive has under 10 GB free, says to purge it (Edit > Purge > All Memory & Disk Cache). Nothing is deleted and no preference changed.",
+  params: [...compLayerParams, subjectIndexParam],
+  toJsx(args) {
+    return `
+            ${jsxCompLayerPreamble(args)}
+            ${FX_ROOT_JSX}
+            ${OBJECT_MATTE_JSX}
+            var _pick = AE.pickEffect(_fxRoot, ${jsxVal(OBJECT_MATTE_MATCH_NAME)}, "Object Matte", ${jsxVal(args.effectIndex ?? null)});
+            if (_pick.error) return { ok: false, error: _pick.error };
+            if (_pick.index === null) {
+                return { ok: true, layer: _layer.name, objectMatte: { present: false, effectIndex: null, count: 0 }, selections: [], settings: null,
+                    summary: _omSummary(false, []), next: ${jsxVal(`Nothing selected: ${NEED_CLICK}.`)}, effects: AE.effectOrder(_fxRoot), aeCache: _omAeCache(),
+                    sourceSize: _omSourceSize(), compSize: [_comp.width, _comp.height], span: _omSpan() };
+            }
+            var _fx = _fxRoot.property(_pick.index);
+            var _sel = _omSelections(_fx);
+            var _counts = { object: 0, rectangle: 0, quickSelection: 0, other: 0 };
+            for (var _i = 0; _i < _sel.list.length; _i++) {
+                var _k = _sel.list[_i].kind;
+                if (_k === "object") _counts.object++; else if (_k === "rectangle") _counts.rectangle++; else if (_k === "quick-selection") _counts.quickSelection++; else _counts.other++;
+            }
+            var _src = _omSourceSize();
+            var _out = {
+                ok: true,
+                layer: _layer.name,
+                objectMatte: { present: true, effectIndex: _pick.index, count: _pick.count, name: _fx.name, enabled: AE.safeGet(function () { return _fx.enabled; }, null), selectionsGroupFound: _sel.found },
+                selections: _sel.list,
+                counts: _counts,
+                settings: _omSettings(_fx, ${jsxVal(OBJECT_MATTE_SETTINGS)}),
+                summary: _omSummary(true, _sel.list),
+                countNote: ${jsxVal(COUNT_NOTE)},
+                closeClicks: _omCloseClicks(_sel.list, _src),
+                sourceSize: _src,
+                fillLayer: _omFillLayer(),
+                aeCache: _omAeCache(),
+                compSize: [_comp.width, _comp.height],
+                span: _omSpan(),
+                removeNote: ${jsxVal(REMOVE_NOTE)},
+                effects: AE.effectOrder(_fxRoot),
+                next: ${jsxVal(CHECK_NEXT)}
+            };
+            if (_sel.list.length === 0) _out.next = ${jsxVal(`No selection yet: ${NEED_CLICK}.`)};
+            return _out;
+        `;
+  },
+  // In Node too: the size of After Effects' disk cache and the free space on its drive (a note when low).
+  async run(args, transport2) {
+    const r = await transport2.execute({
+      code: getOp("subject.status").toJsx(args),
+      label: "subject.status",
+      undoGroup: false,
+      timeoutMs: 3e4
+    });
+    if (!r.ok) return { ok: false, error: r.error ?? "subject.status failed" };
+    const st = r.result;
+    if (!st?.ok) return st;
+    st.disk = await diskReport(st.aeCache);
+    if (st.disk?.note) st.diskNote = st.disk.note;
+    return st;
+  }
+});
+var MATTE_WRITABLE = Object.entries(OBJECT_MATTE_SETTINGS).filter(([, s]) => s.writable);
+function matteSettingValue(key, s, v) {
+  if (s.kind === "switch") {
+    if (typeof v !== "boolean" && v !== 0 && v !== 1)
+      return `\`${key}\` must be true or false; got ${JSON.stringify(v)}`;
+    return v === true || v === 1 ? 1 : 0;
+  }
+  if (typeof v !== "number" || !Number.isFinite(v))
+    return `\`${key}\` must be a number; got ${JSON.stringify(v)}`;
+  if (s.min !== null && v < s.min || s.max !== null && v > s.max) {
+    return `\`${key}\` refused ${v}: Object Matte's ${s.name} takes ${s.min} to ${s.max} (the range After Effects 27.0 reported)`;
+  }
+  return v;
+}
+registerOp({
+  name: "subject.settings",
+  category: "subject",
+  description: "Set a subject matte's edge settings on Object Matte (ADBE Samurai) after the user's click: " + MATTE_WRITABLE.map(
+    ([k, s]) => `${k} (${s.name}, ${s.min} to ${s.max}${s.default !== null ? `, default ${s.default}` : ""})`
+  ).join(", ") + ". Each value is checked against the range measured in After Effects 27.0 and then against the range After Effects reports, before anything is written; one refusal writes nothing. Refuses when the layer has no Object Matte or it has no selection (the user has not clicked: run subject.prepare and ask for the click). Returns effectIndex, written, settings (every setting read back, as subject.status gives them) and summary. Choose values from ae_render_frame's edge report on the matte.",
+  params: [
+    ...compLayerParams,
+    subjectIndexParam,
+    ...MATTE_WRITABLE.map(([name, s]) => ({
+      name,
+      type: s.kind === "switch" ? "boolean" : "number",
+      description: s.kind === "switch" ? s.doc ?? `${s.name}: true or false` : `${s.name}, ${s.min} to ${s.max}${s.default !== null ? ` (default ${s.default})` : ""}`,
+      required: false
+    }))
+  ],
+  toJsx(args) {
+    const writes = [];
+    for (const [key, s] of MATTE_WRITABLE) {
+      if (args[key] === void 0) continue;
+      const v = matteSettingValue(key, s, args[key]);
+      if (typeof v === "string") return jsxFail(`${v}; nothing written`);
+      writes.push({ key, matchName: s.matchName, name: s.name, value: v });
+    }
+    if (writes.length === 0) {
+      return jsxFail(
+        `pass at least one of ${MATTE_WRITABLE.map(([k]) => k).join(", ")}; to read the settings, use subject.status`
+      );
+    }
+    return `
+            ${jsxCompLayerPreamble(args)}
+            ${FX_ROOT_JSX}
+            ${OBJECT_MATTE_JSX}
+            var _pick = AE.pickEffect(_fxRoot, ${jsxVal(OBJECT_MATTE_MATCH_NAME)}, "Object Matte", ${jsxVal(args.effectIndex ?? null)});
+            if (_pick.error) return { ok: false, error: _pick.error };
+            if (_pick.index === null) return { ok: false, error: "layer '" + _layer.name + "' has no Object Matte, so there is no subject matte to set: " + ${jsxVal(`${NEED_CLICK}; nothing written`)} };
+            var _fx = _fxRoot.property(_pick.index);
+            var _sel = _omSelections(_fx);
+            if (_sel.list.length === 0) return { ok: false, error: "Object Matte on layer '" + _layer.name + "' has no selection yet (the user has not clicked), so it makes no matte: " + ${jsxVal(`${NEED_CLICK}; nothing written`)} };
+            var _writes = ${jsxVal(writes)};
+            var _props = [];
+            var _refused = [];
+            for (var _wi = 0; _wi < _writes.length; _wi++) {
+                var _f = _omFind(_fx, _writes[_wi].matchName, _writes[_wi].name);
+                _props.push(_f.prop);
+                if (!_f.prop) { _refused.push({ setting: _writes[_wi].key, error: "Object Matte has no property " + _writes[_wi].matchName + " (" + _writes[_wi].name + ")" }); continue; }
+                var _why = AE.checkPropertyWrite(_f.prop, _writes[_wi].value);
+                if (_why !== null) _refused.push({ setting: _writes[_wi].key, error: _why, range: AE.propertyRange(_f.prop) });
+            }
+            if (_refused.length > 0) {
+                var _msgs = [];
+                for (var _ri = 0; _ri < _refused.length; _ri++) _msgs.push(_refused[_ri].error);
+                return { ok: false, error: "nothing written: " + _msgs.join("; "), refused: _refused };
+            }
+            var _failed = [];
+            var _written = [];
+            for (var _wj = 0; _wj < _writes.length; _wj++) {
+                try { _props[_wj].setValue(_writes[_wj].value); _written.push(_writes[_wj].key); }
+                catch (eW) { _failed.push({ setting: _writes[_wj].key, error: AE.errText(eW) }); }
+            }
+            var _out = {
+                ok: _failed.length === 0,
+                layer: _layer.name,
+                effectIndex: _pick.index,
+                written: _written,
+                settings: _omSettings(_fx, ${jsxVal(OBJECT_MATTE_SETTINGS)}),
+                summary: _omSummary(true, _sel.list)
+            };
+            if (_failed.length > 0) {
+                _out.failed = _failed;
+                _out.error = "After Effects rejected " + _failed.length + " of the checked writes; the rest were written";
+            }
+            return _out;
+        `;
+  }
+});
+registerOp({
+  name: "subject.remove_selection",
+  category: "subject",
+  description: "Remove one selection from a layer's Object Matte, by its name ('Add Object 2', 'Add Object Rect 1') or its 1-based place in subject.status's list, so a wrong click does not mean starting again. remove() on a selection was confirmed in After Effects 27.0: the matte read the same afterwards when the removed selection had selected nothing. Returns removed, the selections left and summary. Run subject.check afterwards.",
+  params: [
+    ...compLayerParams,
+    {
+      name: "selection",
+      type: "any",
+      description: "The selection's name, or its 1-based place in subject.status's selections (newest first).",
+      required: true
+    },
+    subjectIndexParam
+  ],
+  toJsx(args) {
+    const sel = args.selection;
+    if (!(typeof sel === "string" && sel.trim() !== "") && !(typeof sel === "number" && Number.isInteger(sel) && sel >= 1)) {
+      return jsxFail(
+        `\`selection\` must be a selection's name or a 1-based number; got ${JSON.stringify(sel)}`
+      );
+    }
+    return `
+            ${jsxCompLayerPreamble(args)}
+            ${FX_ROOT_JSX}
+            ${OBJECT_MATTE_JSX}
+            var _pick = AE.pickEffect(_fxRoot, ${jsxVal(OBJECT_MATTE_MATCH_NAME)}, "Object Matte", ${jsxVal(args.effectIndex ?? null)});
+            if (_pick.error) return { ok: false, error: _pick.error };
+            if (_pick.index === null) return { ok: false, error: "layer '" + _layer.name + "' has no Object Matte, so there is no selection to remove" };
+            var _fx = _fxRoot.property(_pick.index);
+            var _g = _omFind(_fx, ${jsxVal(OBJECT_MATTE_SELECTIONS_MATCH_NAME)}, "Selections").prop;
+            var _before = _omSelections(_fx).list;
+            var _names = [];
+            for (var _i = 0; _i < _before.length; _i++) _names.push(_before[_i].name);
+            var _want = ${jsxVal(sel)};
+            var _at = -1;
+            if (typeof _want === "number") { if (_want >= 1 && _want <= _before.length) _at = _want; }
+            else { for (var _j = 0; _j < _before.length; _j++) if (_before[_j].name === _want) { _at = _before[_j].index; break; } }
+            if (_at < 0 || !_g) {
+                return { ok: false, error: (typeof _want === "number" ? "no selection at place " + _want : "no selection '" + _want + "'") +
+                    " on Object Matte (selections: " + (_names.length ? _names.join(", ") : "none") + ")" };
+            }
+            var _removed = AE.safeGet(function () { return _g.property(_at).name; }, String(_want));
+            _g.property(_at).remove();
+            var _after = _omSelections(_fx).list;
+            return { ok: true, layer: _layer.name, effectIndex: _pick.index, removed: _removed, selections: _after,
+                summary: _omSummary(true, _after), next: ${jsxVal(CHECK_NEXT)} };
+        `;
+  }
+});
+var CUTOUT_HOLE_LIMIT = 1e3;
+var CUTOUT_FRAMES = 8;
+var CUTOUT_OVER = "#ff00ff";
+var CUTOUT_SECONDS_PER_FRAME = 60;
+var EDGE_TRANSPARENT = EDGE_DEFAULTS.transparent;
+var SETTLE_MAX_MS = 6e5;
+var THUMB = 360;
+var PICTURE_DEFLATE = 1;
+var intersects = (a, b) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+var union2 = (a, b) => {
+  const x = Math.min(a.x, b.x);
+  const y = Math.min(a.y, b.y);
+  return {
+    x,
+    y,
+    width: Math.max(a.x + a.width, b.x + b.width) - x,
+    height: Math.max(a.y + a.height, b.y + b.height) - y
+  };
+};
+var fmt2 = (n) => Math.round(n).toLocaleString("en-US");
+var boxText = (b) => `(${b.x}, ${b.y}, ${b.width} \xD7 ${b.height})`;
+var plural2 = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+var boxArea = (b) => b.width * b.height;
+var iou = (a, b) => {
+  const w = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
+  const h = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
+  if (w <= 0 || h <= 0) return 0;
+  const inter = w * h;
+  return inter / (boxArea(a) + boxArea(b) - inter);
+};
+function alikeRegions(a, b) {
+  if (iou(a, b) >= 0.5) return true;
+  if (!intersects(a, b)) return false;
+  const big = Math.max(a.area, b.area);
+  const small = Math.min(a.area, b.area);
+  return small > 0 && big / small <= 2;
+}
+var isFrozenEntry = (e) => !("box" in e) && e.kind === "frozen";
+function frozenAccepted(run, accept) {
+  return accept.some(
+    (e) => isFrozenEntry(e) && (e.from === void 0 || e.from <= run.to) && (e.to === void 0 || e.to >= run.from)
+  );
+}
+function acceptedBy(f, accept) {
+  return accept.some((e) => {
+    if (isFrozenEntry(e)) return false;
+    const box2 = "box" in e ? e.box : e;
+    const kind = ("box" in e ? e.kind : void 0) ?? "opening";
+    return kind === f.kind && iou(f.box, box2) >= 0.5;
+  });
+}
+function cutoutFindings(frames, limit) {
+  const out = [];
+  for (const kind of ["hole", "opening"]) {
+    const groups = [];
+    for (const fr of frames) {
+      for (const h of (kind === "hole" ? fr.holes : fr.openings) ?? []) {
+        if (h.area < limit) continue;
+        const b = { x: h.x, y: h.y, width: h.width, height: h.height };
+        const g = groups.find((x) => x.members.some((m) => alikeRegions(m, h)));
+        if (g) {
+          const f = g.f;
+          g.members.push(h);
+          f.box = union2(f.box, b);
+          if (h.area > f.largestArea) {
+            f.largestArea = h.area;
+            f.largestFrame = fr.frame;
+          }
+          f.smallestArea = Math.min(f.smallestArea, h.area);
+          if (!f.frames.includes(fr.frame)) f.frames.push(fr.frame);
+          if (f.edges) {
+            for (const e of h.edges ?? []) if (!f.edges.includes(e)) f.edges.push(e);
+          }
+        } else
+          groups.push({
+            members: [h],
+            f: {
+              kind,
+              frames: [fr.frame],
+              smallestArea: h.area,
+              largestArea: h.area,
+              largestFrame: fr.frame,
+              box: b,
+              ...kind === "opening" ? { edges: [...h.edges ?? []] } : {}
+            }
+          });
+      }
+    }
+    out.push(...groups.map((g) => g.f).sort((a, b) => b.largestArea - a.largestArea));
+  }
+  return out;
+}
+async function writePng(io, file2, data) {
+  if (io.writePng) return io.writePng(file2, data);
+  await fs7.mkdir(path7.dirname(file2), { recursive: true });
+  await fs7.writeFile(file2, data);
+}
+var GB = 1e9;
+var gb = (n) => `${(n / GB).toFixed(1)} GB`;
+var OVERSIZE_FACTOR = 1.5;
+var even = (n) => Math.max(2, Math.round(n / 2) * 2);
+var stemOf = (file2) => path7.join(path7.dirname(file2), path7.basename(file2, path7.extname(file2)));
+var dims = (d) => `${d[0]} \xD7 ${d[1]}`;
+function sourceAdviceFor(f) {
+  if (!f?.sourceSize || !f.compSize || !f.scale) return null;
+  const [sw, sh] = f.sourceSize;
+  const [cw, ch] = f.compSize;
+  const [sx, sy] = f.scale.map((v) => Math.abs(v));
+  const big = sw >= OVERSIZE_FACTOR * cw && sh >= OVERSIZE_FACTOR * ch;
+  const shrunk = sx > 0 && sy > 0 && sx <= 100 / OVERSIZE_FACTOR && sy <= 100 / OVERSIZE_FACTOR;
+  if (!big || !shrunk) return null;
+  const delivery = [even(sw * sx / 100), even(sh * sy / 100)];
+  const frames = typeof f.frames === "number" && f.frames > 0 ? f.frames : null;
+  const atSource = frames ? cacheBytesFor(frames, [sw, sh]) : null;
+  const atDelivery = frames ? cacheBytesFor(frames, delivery) : null;
+  const ratio = Math.round(sw * sh / (delivery[0] * delivery[1]) * 10) / 10;
+  const copy = f.file ? `ffmpeg -i "${f.file}" -vf "scale=${delivery[0]}:${delivery[1]}:flags=lanczos" -c:v prores_ks -profile:v 3 -c:a pcm_s16le "${stemOf(f.file)}_${delivery[0]}x${delivery[1]}.mov"` : null;
+  const cache2 = atSource !== null && atDelivery !== null ? `about ${gb(atSource)} of After Effects disk cache a render of the ${frames} frames at this size (an estimate; 19 GB was measured for 320 frames of a 2176 \xD7 3840 take) against about ${gb(atDelivery)} at ${dims(delivery)}` : `about ${ratio} times the disk cache a render needs at ${dims(delivery)}`;
+  return {
+    sourceSize: [sw, sh],
+    compSize: [cw, ch],
+    scale: [sx, sy],
+    deliverySize: delivery,
+    frames,
+    cacheAtSource: atSource,
+    cacheAtDelivery: atDelivery,
+    copy,
+    reading: `This layer's footage is ${dims([sw, sh])}, shown at ${Math.round(sx)}% in a ${dims([cw, ch])} comp. Object Matte works on the footage's own pixels, ${ratio} times as many as the comp shows: ${cache2}, and a render takes about that much longer (on one take of 320 frames: 279 to 390 s at 2176 \xD7 3840 against 65 to 92 s at 1088 \xD7 1920, with the same edge; the two cut-outs overlapped at 0.991). Make a ${dims(delivery)} copy of the footage first and matte that: ` + (copy ? `with ffmpeg, \`${copy}\`; without it, render the footage alone from After Effects at that size (ProRes 422 HQ). ` : "render the footage alone from After Effects at that size (ProRes 422 HQ). ") + "Import the copy, put it in the comp in this layer's place at 100% (same position and start time), switch this layer off, and run subject.prepare on the copy's layer. Do it before the click: replacing the footage under a matte freezes the matte (the outline stops following the subject), so a copy made afterwards needs the click again."
+  };
+}
+function soundAdviceFor(f, streams) {
+  if (!f?.file) return {};
+  if (streams === null)
+    return f.hasAudio ? {
+      soundNote: "I could not count the take's sound channels (ffprobe was not found or could not read the file). Takes with more than two channels have read as silence in After Effects with no warning: measure the take's sound now, and measure the delivered file's sound before calling the piece done."
+    } : {};
+  const most = streams.reduce((m, st) => Math.max(m, st.channels || 0), 0);
+  const unheard = streams.length > 0 && !f.hasAudio;
+  if (most <= 2 && !unheard) return {};
+  const layout = streams.find((st) => st.channels === most)?.layout;
+  const extract = `ffmpeg -i "${f.file}" -map 0:a:0 -af "pan=mono|c0=c0" -c:a pcm_s16le "${stemOf(f.file)}_voice.wav"`;
+  return {
+    soundAdvice: {
+      channels: most,
+      streams,
+      afterEffectsHasAudio: f.hasAudio,
+      extract,
+      reading: (unheard ? `The take's file has sound (${plural2(most, "channel")}) that After Effects does not report for this footage. ` : `The take's sound has ${most} channels${layout ? ` (${layout})` : ""}. `) + `A take with four channels and the voice on the first read as silence in After Effects, with no warning (seen on 2026-11-12). Before the render, extract the voice to a mono WAV: \`${extract}\` (c0 is the first channel; listen to it, or measure each channel's level, to find the one with the voice, and change c0 if it is another). Import the WAV, put it in the comp over the layer's span, and switch the take's own audio off. Measure the delivered file's sound before calling the piece done.`
+    }
+  };
+}
+var FFPROBE = ["ffprobe", "/opt/homebrew/bin/ffprobe", "/usr/local/bin/ffprobe"];
+async function ffprobeAudio(file2) {
+  for (const exe of FFPROBE) {
+    const out = await new Promise((resolve12) => {
+      execFile2(
+        exe,
+        [
+          "-v",
+          "error",
+          "-select_streams",
+          "a",
+          "-show_entries",
+          "stream=channels,channel_layout",
+          "-of",
+          "json",
+          file2
+        ],
+        { timeout: 15e3 },
+        (err, stdout) => {
+          if (err)
+            resolve12({ missing: err.code === "ENOENT", stdout: null });
+          else resolve12({ missing: false, stdout: String(stdout) });
+        }
+      );
+    });
+    if (out.missing) continue;
+    if (out.stdout === null) return null;
+    try {
+      const j = JSON.parse(out.stdout);
+      return (j.streams ?? []).map((st) => ({
+        channels: Number(st.channels) || 0,
+        layout: st.channel_layout ?? null
+      }));
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+var PREPARE_HOLD = "Do not give the user the steps yet: tell the user what sourceAdvice says (the footage is much larger than the comp), make the delivery-size copy, then run subject.prepare on the copy's layer and relay its steps word for word. If the user wants to click on this footage anyway, relay notice and steps word for word (userMessage holds both).";
+async function runSubjectPrepare(args, io) {
+  const op = getOp("subject.prepare");
+  const res = await io.execute(op.toJsx(args));
+  if (!res || typeof res !== "object" || !res.footage) return res;
+  const f = res.footage;
+  const source = sourceAdviceFor(f);
+  const sound = f.file ? soundAdviceFor(f, await io.probeAudio(f.file)) : {};
+  if (source) {
+    res.sourceAdvice = source;
+    res.relay = PREPARE_HOLD;
+  }
+  if (sound.soundAdvice) res.soundAdvice = sound.soundAdvice;
+  if (sound.soundNote) res.soundNote = sound.soundNote;
+  if (sound.soundAdvice || sound.soundNote)
+    res.relay = `${res.relay} Sound: tell the user what ${sound.soundAdvice ? "soundAdvice" : "soundNote"} says, and deal with it before the render.`;
+  return res;
+}
+var RENDER_BYTES_PER_HD_FRAME = 76e4;
+var RENDER_MARGIN_BYTES = 3 * GB;
+var PICTURE_MARGIN_BYTES = 1 * GB;
+var LOW_FREE_BYTES = 10 * GB;
+function renderCutoutBytes(frames, size) {
+  return frames * RENDER_BYTES_PER_HD_FRAME * (size[0] * size[1] / (1080 * 1920));
+}
+var captureBytes = (size) => (Array.isArray(size) ? size[0] * size[1] : 1080 * 1920) * 4;
+async function statfsFree(dir) {
+  let d = path7.resolve(dir);
+  for (; ; ) {
+    try {
+      const st = await fs7.statfs(d);
+      return Number(st.bavail) * Number(st.bsize);
+    } catch {
+      const up = path7.dirname(d);
+      if (up === d) return null;
+      d = up;
+    }
+  }
+}
+async function spaceRefusal(io, dir, needed, margin, what) {
+  const free = await (io.freeBytes ?? statfsFree)(dir);
+  if (free === null || free >= needed + margin) return null;
+  return {
+    ok: false,
+    error: `only ${gb(free)} free on the drive holding ${dir}; ${what} needs about ${gb(needed)} plus a margin of ${gb(margin)} (After Effects writes its disk cache to the same drive while it renders, and a render on a nearly full drive stalls instead of failing). Free some space first, for example by purging After Effects' cache: Edit > Purge > All Memory & Disk Cache. Nothing was rendered.`,
+    space: { free, needed: Math.round(needed), margin, where: dir }
+  };
+}
+function cacheBytesFor(frames, sourceSize) {
+  const [w, h] = Array.isArray(sourceSize) && sourceSize.length >= 2 ? sourceSize : [1920, 1080];
+  return frames * w * h * 8;
+}
+async function volumeKey(dir) {
+  let d = path7.resolve(dir);
+  for (; ; ) {
+    try {
+      return (await fs7.stat(d)).dev;
+    } catch {
+      const up = path7.dirname(d);
+      if (up === d) return null;
+      d = up;
+    }
+  }
+}
+var PART_NAMES = {
+  movie: "the movie",
+  cache: "After Effects' disk cache",
+  pictures: "captures and pictures"
+};
+async function spacePlan(io, entries, margin, what) {
+  const byVol = [];
+  for (const e of entries) {
+    const key = await (io.volumeOf ?? volumeKey)(e.where);
+    const v = byVol.find((x) => x.key === key && key !== null);
+    if (v)
+      for (const [k, n] of Object.entries(e.parts))
+        v.parts[k] = (v.parts[k] ?? 0) + (n ?? 0);
+    else byVol.push({ key, where: e.where, parts: { ...e.parts } });
+  }
+  const volumes = [];
+  let refusal = null;
+  for (const v of byVol) {
+    const free = await (io.freeBytes ?? statfsFree)(v.where);
+    const needed = Object.values(v.parts).reduce((a, b) => a + (b ?? 0), 0);
+    const ok = free === null || free >= needed + margin;
+    const row = { where: v.where, free, parts: v.parts, needed: Math.round(needed), margin, ok };
+    volumes.push(row);
+    if (!ok && !refusal) {
+      const partText = Object.entries(v.parts).map(([k, n]) => `${PART_NAMES[k]} ${gb(n ?? 0)}`).join(", ");
+      refusal = {
+        ok: false,
+        error: `only ${gb(free)} free on the drive holding ${v.where}; ${what} needs about ${gb(needed)} there (${partText}) plus a margin of ${gb(margin)}. A render on a nearly full drive stalls instead of failing. Free some space first, for example by purging After Effects' cache: Edit > Purge > All Memory & Disk Cache. Nothing was rendered.`,
+        space: { ...row, volumes }
+      };
+    }
+  }
+  if (refusal) refusal.space.volumes = volumes;
+  return { volumes, refusal };
+}
+var trackedSpan = (frames) => frames.length ? Math.max(...frames) - Math.min(...frames) + 1 : 0;
+function aeCacheRoot(folder, version3) {
+  if (!folder || !version3) return null;
+  const m = /^(\d+)\.(\d+)/.exec(version3);
+  if (!m) return null;
+  return path7.join(folder, "Adobe", "After Effects", `${m[1]}.${m[2]}`);
+}
+async function folderBytes(root, budgetMs = 5e3) {
+  const t0 = performance.now();
+  let bytes = 0;
+  const stack = [root];
+  try {
+    await fs7.access(root);
+  } catch {
+    return null;
+  }
+  while (stack.length) {
+    if (performance.now() - t0 > budgetMs) return { bytes, complete: false };
+    const d = stack.pop();
+    let entries = [];
+    try {
+      entries = await fs7.readdir(d, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const e of entries) {
+      const p = path7.join(d, e.name);
+      if (e.isDirectory()) stack.push(p);
+      else if (e.isFile())
+        bytes += await fs7.stat(p).then(
+          (st) => st.size,
+          () => 0
+        );
+    }
+  }
+  return { bytes, complete: true };
+}
+async function diskReport(cache2, freeFn = statfsFree) {
+  const cacheRoot = aeCacheRoot(cache2?.folder, cache2?.version);
+  if (!cacheRoot)
+    return {
+      cacheRoot: null,
+      cacheBytes: null,
+      free: null,
+      low: null,
+      reading: "After Effects' disk cache folder could not be read from its preferences."
+    };
+  const size = await folderBytes(cacheRoot);
+  const free = await freeFn(cacheRoot);
+  const low = free !== null && free < LOW_FREE_BYTES;
+  const out = {
+    cacheRoot,
+    cacheBytes: size?.bytes ?? null,
+    complete: size?.complete ?? null,
+    free,
+    low
+  };
+  if (low)
+    out.note = `Only ${gb(free)} free on the drive After Effects caches to (${cacheRoot}); its disk cache holds ${size ? gb(size.bytes) + (size.complete ? "" : " or more") : "an unknown amount"}. Object Matte work grows it past the Disk Cache size set in the preferences (about one 16-bit frame of the source for every frame it tracks through), and a render on a nearly full drive stalls. Ask the user to purge it: Edit > Purge > All Memory & Disk Cache in After Effects. Nothing was deleted and no preference was changed.`;
+  return out;
+}
+var FROZEN_DEFAULTS = { gap: 30, limit: 2e-3, minFrames: 60 };
+var frozenOpts = (args) => ({
+  gap: typeof args.frozenGap === "number" ? args.frozenGap : FROZEN_DEFAULTS.gap,
+  limit: typeof args.frozenLimit === "number" ? args.frozenLimit : FROZEN_DEFAULTS.limit,
+  minFrames: typeof args.frozenFrames === "number" ? args.frozenFrames : FROZEN_DEFAULTS.minFrames
+});
+function frozenFinding(run, pictures) {
+  const moved = run.footageChange > 1e-3;
+  return {
+    kind: "frozen",
+    ...run,
+    pictures,
+    reading: `The cut-out's outline did not move for ${run.length} frames` + (moved ? ` while the footage did (frames ${run.from} to ${run.to}; ${(run.footageChange * 100).toFixed(1)}% of the frame changed inside the outline)` : ` (frames ${run.from} to ${run.to}), and the picture inside it barely changed either`) + `. The selection is probably not tracking: this happens when the layer's footage is replaced after the click. Click again on this footage (subject.prepare, then the steps). If the subject is genuinely motionless (a product on a table, a locked-off object) this is expected: pass accept: [{ kind: "frozen" }] to wave it through once seen.`
+  };
+}
+var QUICK_NOTE = "Quick check: the click frames and two frames either side, which After Effects renders in seconds. A missed object, an enclosed gap and a second click on the same thing show there. To look across the clip, render the cut-out once (subject.render_cutout) and check the file (subject.check_file); across: true checks the live matte across the clip instead, which takes minutes (4 to 9 for nine frames on a 2176 x 3840 take), because After Effects recomputes the matte on every capture.";
+var ACROSS_NOTE = "Across the clip on the live matte: After Effects recomputes the matte on every capture, so this takes minutes (4 to 9 for nine frames on a 2176 x 3840 take). Rendering the cut-out once (subject.render_cutout) and checking the file (subject.check_file) reads every frame in about the time of one pass.";
+function quickFrames(span, clickFrames) {
+  const a = span?.inFrame ?? 0;
+  const b = span?.outFrame ?? a + 3;
+  const set2 = /* @__PURE__ */ new Set();
+  for (const c of clickFrames) {
+    if (typeof c !== "number") continue;
+    for (let d = -2; d <= 2; d++) {
+      const f = Math.round(c) + d;
+      if (f >= a && f < b) set2.add(f);
+    }
+  }
+  if (!set2.size) for (let f = a; f < Math.min(b, a + 3); f++) set2.add(f);
+  return [...set2].sort((x, y) => x - y);
+}
+function framesAcross(span, count, extra) {
+  const a = span?.inFrame ?? 0;
+  const b = span?.outFrame ?? a + 1;
+  const set2 = /* @__PURE__ */ new Set();
+  for (let i = 0; i < count; i++) set2.add(a + Math.floor(i * (b - a) / count));
+  for (const e of extra) if (typeof e === "number" && e >= a && e < b) set2.add(Math.round(e));
+  return [...set2].sort((x, y) => x - y).slice(0, 64);
+}
+var renderTally = () => ({
+  frames: 0,
+  calls: 0,
+  ms: 0,
+  aeCallMs: 0,
+  settleMs: 0,
+  renderNodeMs: 0
+});
+var pixelTally = () => ({
+  frames: 0,
+  readMs: 0,
+  regionsMs: 0,
+  picturesMs: 0,
+  sheetMs: 0,
+  ms: 0
+});
+var since = (t) => performance.now() - t;
+var roundTally = (t) => Object.fromEntries(
+  Object.entries(t).map(([k, v]) => [k, typeof v === "number" ? Math.round(v) : v])
+);
+async function renderChunked(io, base, frames, perFrameMs, outDir, stem, tally = renderTally(), firstCall = 0) {
+  const size = Math.max(1, Math.min(32, Math.floor(SETTLE_MAX_MS / perFrameMs)));
+  const out = [];
+  for (let c = 0; c * size < frames.length; c++) {
+    const chunk2 = frames.slice(c * size, (c + 1) * size);
+    const t0 = performance.now();
+    const payload = await io.render({
+      ...base,
+      frames: chunk2,
+      outPath: path7.join(outDir, `${stem}-${firstCall + c}.png`),
+      settleTimeoutMs: Math.min(SETTLE_MAX_MS, Math.max(1, Math.round(perFrameMs * chunk2.length)))
+    });
+    tally.calls++;
+    tally.frames += chunk2.length;
+    tally.ms += since(t0);
+    tally.aeCallMs += payload?.timing?.aeCallMs ?? 0;
+    tally.settleMs += payload?.timing?.settleMs ?? payload?.captureSettle?.waitedMs ?? 0;
+    tally.renderNodeMs += payload?.timing?.nodeMs ?? 0;
+    if (!payload?.ok) {
+      for (const frame of chunk2)
+        out.push({
+          frame,
+          ok: false,
+          error: `the render call failed: ${payload?.error ?? "no result"}`
+        });
+      continue;
+    }
+    const list = payload.frames ?? (payload.writtenTo ? [{ ...payload, ok: true, frame: chunk2[0] }] : []);
+    for (const [i, frame] of chunk2.entries()) {
+      const f = list.find((x) => x.frame === frame) ?? list[i];
+      if (!f) out.push({ frame, ok: false, error: "not in the render's result" });
+      else if (f.ok === false || typeof f.writtenTo !== "string")
+        out.push({ frame, ok: false, error: f.error ?? "the frame was not written" });
+      else out.push({ frame, ok: true, file: f.writtenTo, edge: f.edge });
+    }
+  }
+  return out;
+}
+function parseHex(c) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(c.trim());
+  if (!m) return [1, 0, 1];
+  const v = parseInt(m[1], 16);
+  return [(v >> 16 & 255) / 255, (v >> 8 & 255) / 255, (v & 255) / 255];
+}
+async function measureFrames(io, rendered, limit, over, sheetPath, tally = pixelTally(), pictures = true, onImage) {
+  const started = performance.now();
+  const colour = parseHex(over);
+  const readings = [];
+  const thumbs = [];
+  const labels = [];
+  const split = (list) => ({
+    big: list.filter((r) => r.area >= limit),
+    small: {
+      count: list.filter((r) => r.area < limit).length,
+      area: list.filter((r) => r.area < limit).reduce((s, r) => s + r.area, 0)
+    }
+  });
+  for (const r of rendered) {
+    if (!r.ok || !r.file) {
+      readings.push({
+        frame: r.frame,
+        checked: false,
+        holes: null,
+        openings: null,
+        error: r.error
+      });
+      continue;
+    }
+    let img;
+    const tRead = performance.now();
+    try {
+      img = await io.readImage(r.file);
+    } catch (err) {
+      readings.push({
+        frame: r.frame,
+        checked: false,
+        holes: null,
+        openings: null,
+        error: `could not read ${r.file}: ${err instanceof Error ? err.message : String(err)}`
+      });
+      continue;
+    } finally {
+      tally.readMs += since(tRead);
+    }
+    if (!img.alpha) {
+      readings.push({
+        frame: r.frame,
+        checked: false,
+        holes: null,
+        openings: null,
+        error: `${r.file} has no alpha channel`
+      });
+      continue;
+    }
+    tally.frames++;
+    const tRegions = performance.now();
+    const regions = cutoutRegions(img.alpha, img.width, img.height);
+    let opaquePx = 0;
+    const alpha = img.alpha;
+    for (let p = 0; p < alpha.length; p++) if (alpha[p] >= EDGE_DEFAULTS.opaque) opaquePx++;
+    tally.regionsMs += since(tRegions);
+    const h = split(regions.holes);
+    const o = split(regions.openings);
+    const tPic = performance.now();
+    if (!pictures) {
+      readings.push({
+        frame: r.frame,
+        checked: true,
+        file: r.file,
+        opaqueShare: Math.round(opaquePx / img.alpha.length * 1e4) / 1e4,
+        holes: h.big,
+        openings: o.big,
+        holesUnderLimit: h.small,
+        openingsUnderLimit: o.small
+      });
+      onImage?.(readings[readings.length - 1], img);
+      continue;
+    }
+    const composite = flattenOver(img, { kind: "color", color: colour });
+    const picture2 = r.file.replace(/\.png$/i, "") + "_over.png";
+    await writePng(io, picture2, encodePngSrgb8(img.width, img.height, composite, PICTURE_DEFLATE));
+    const tw = Math.min(THUMB, img.width);
+    const th = Math.max(1, Math.round(img.height * tw / img.width));
+    thumbs.push({
+      width: tw,
+      height: th,
+      rgb: resample({ ...img, rgb: composite }, tw, th),
+      bitDepth: 8
+    });
+    labels.push(`frame ${r.frame}`);
+    tally.picturesMs += since(tPic);
+    readings.push({
+      frame: r.frame,
+      checked: true,
+      file: r.file,
+      picture: picture2,
+      opaqueShare: Math.round(opaquePx / img.alpha.length * 1e4) / 1e4,
+      holes: h.big,
+      openings: o.big,
+      holesUnderLimit: h.small,
+      openingsUnderLimit: o.small,
+      edgeWidth: r.edge?.width ? { typical: r.edge.width.typical ?? null, p90: r.edge.width.p90 ?? null } : null,
+      solidAreas: r.edge?.solidAreas?.count ?? null
+    });
+    onImage?.(readings[readings.length - 1], img);
+  }
+  let picture = null;
+  const tSheet = performance.now();
+  if (thumbs.length) {
+    const sheet = composeContactSheet(thumbs, { labels, thumbWidth: THUMB });
+    await writePng(
+      io,
+      sheetPath,
+      encodePngSrgb8(sheet.width, sheet.height, sheet.rgb, PICTURE_DEFLATE)
+    );
+    picture = sheetPath;
+  }
+  tally.sheetMs += since(tSheet);
+  tally.ms += since(started);
+  return { readings, picture };
+}
+function regionLines(findings, frames) {
+  return findings.map(
+    (f) => `${f.smallestArea === f.largestArea ? `${fmt2(f.largestArea)} px` : `${fmt2(f.smallestArea)} to ${fmt2(f.largestArea)} px (largest on frame ${f.largestFrame})`} at ${boxText(f.box)} on ${f.frames.length} of ${frames} frames (${f.frames.join(", ")})` + (f.kind === "opening" && f.edges?.length ? `, reaches the ${f.edges.join(" and ")} edge` : "")
+  );
+}
+var needSelection = (st) => {
+  if (!st?.objectMatte?.present || !Array.isArray(st.selections) || st.selections.length === 0)
+    return `${st?.summary ?? "no selection"}; ${NEED_CLICK}`;
+  return null;
+};
+var perFrameMsOf = (args) => Math.max(
+  1,
+  Math.round(
+    (typeof args.secondsPerFrame === "number" && args.secondsPerFrame > 0 ? args.secondsPerFrame : CUTOUT_SECONDS_PER_FRAME) * 1e3
+  )
+);
+var TAKES_MINUTES = "This check can take minutes: on a 2176 x 3840 take each frame took 20 to 40 s the first time (the matte is tracked from the click), well under a second once rendered; tell the user before it runs on a long or large clip.";
+function summarize(readings, limit, accept, picture = null, passText = null) {
+  const regions = cutoutFindings(readings, limit);
+  const accepted = regions.filter((f) => acceptedBy(f, accept));
+  const open2 = regions.filter((f) => !accepted.includes(f));
+  const missed = readings.filter((r) => !r.checked);
+  const checked = { frames: readings.length - missed.length, of: readings.length };
+  const notChecked = missed.length ? [
+    {
+      kind: "not-checked",
+      frames: missed.map((r) => r.frame),
+      errors: [...new Set(missed.map((r) => r.error ?? "not rendered"))]
+    }
+  ] : [];
+  const holes = open2.filter((f) => f.kind === "hole");
+  const openings = open2.filter((f) => f.kind === "opening");
+  const parts = [];
+  parts.push(
+    missed.length ? `Checked ${checked.frames} of ${checked.of} frames; ${missed.length} did not render (${missed.map((r) => r.frame).join(", ")}): ${notChecked[0].errors.join("; ")}. Those frames were not checked.` : `Checked ${checked.frames} of ${checked.of} frames.`
+  );
+  if (holes.length)
+    parts.push(
+      `${plural2(holes.length, "enclosed hole")} of ${fmt2(limit)} px or more inside the cut-out: ${regionLines(holes, readings.length).join("; ")}. A hole is something in front of the subject not selected (a cup) or a gap inside a piece that no click fills (subject.fill_gaps).`
+    );
+  if (openings.length)
+    parts.push(
+      `${plural2(openings.length, "opening")} of ${fmt2(limit)} px or more, closed off by the subject and the frame edge: ${regionLines(openings, readings.length).join("; ")}. An opening may be something in front of the subject left out (a microphone, a desk), or a real gap such as between an arm and the body; the picture decides.`
+    );
+  if (!holes.length && !openings.length)
+    parts.push(
+      missed.length ? `No hole or opening of ${fmt2(limit)} px or more on the ${checked.frames} frames checked; the other ${missed.length} were not checked.` : passText ?? `Nothing over the limit on ${checked.frames} of ${checked.of} frames; the picture is at ${picture ?? "(none)"}.`
+    );
+  if (accepted.length)
+    parts.push(
+      `Accepted earlier and not counted: ${regionLines(accepted, readings.length).join("; ")}.`
+    );
+  return { findings: [...open2, ...notChecked], accepted, checked, text: parts.join(" ") };
+}
+var RECHECK_NOTE = "Each frame with a hole or opening over the limit was rendered a second time at the end. After Effects may have served the second render from its cache, so two renders that agree do not show the frame is stable; a frame that differed between them did come out differently (on 2026-11-11 frame 0 of a take rendered once without the microphone and then with it; the cause is not known).";
+var regionsOf = (r) => [
+  ...(r.holes ?? []).map((x) => ({ ...x, kind: "hole" })),
+  ...(r.openings ?? []).map((x) => ({ ...x, kind: "opening" }))
+];
+async function overPicture(io, file2, over) {
+  try {
+    const img = await io.readImage(file2);
+    const picture = file2.replace(/\.png$/i, "") + "_over.png";
+    await writePng(
+      io,
+      picture,
+      encodePngSrgb8(
+        img.width,
+        img.height,
+        flattenOver(img, { kind: "color", color: parseHex(over) }),
+        PICTURE_DEFLATE
+      )
+    );
+    return picture;
+  } catch {
+    return null;
+  }
+}
+async function recheckFrames(io, readings, limit, over, outDir, perFrameMs, base, accept, renders, pixels) {
+  const isAccepted = (x) => acceptedBy(
+    { kind: x.kind, box: { x: x.x, y: x.y, width: x.width, height: x.height } },
+    accept
+  );
+  const withRegions = readings.filter((r) => r.checked && regionsOf(r).length > 0);
+  const first = withRegions.filter((r) => !regionsOf(r).every(isAccepted));
+  const skippedAccepted = withRegions.length - first.length;
+  const frames = first.map((r) => r.frame);
+  if (!frames.length)
+    return {
+      frames,
+      agreed: 0,
+      differed: [],
+      failed: [],
+      skippedAccepted,
+      unstable: [],
+      note: skippedAccepted ? `No frame was rendered a second time: the regions on ${plural2(skippedAccepted, "frame")} were all accepted.` : "No frame had a hole or opening over the limit, so none was rendered a second time."
+    };
+  const rendered = await renderChunked(
+    io,
+    base,
+    frames,
+    perFrameMs,
+    outDir,
+    "cutout-recheck",
+    renders
+  );
+  const { readings: again } = await measureFrames(
+    io,
+    rendered,
+    limit,
+    over,
+    path7.join(outDir, "cutout-recheck_sheet.png"),
+    pixels,
+    false
+  );
+  const unstable = [];
+  const failed = [];
+  let agreed = 0;
+  const brief = (rs) => rs.map((x) => ({
+    kind: x.kind,
+    area: x.area,
+    box: { x: x.x, y: x.y, width: x.width, height: x.height }
+  }));
+  for (const a of first) {
+    const b = again.find((x) => x.frame === a.frame);
+    if (!b || !b.checked) {
+      failed.push(a.frame);
+      continue;
+    }
+    const ra = regionsOf(a);
+    const rb = regionsOf(b);
+    const matched = (x, ys) => ys.some((y) => y.kind === x.kind && alikeRegions(x, y));
+    if (ra.every((x) => matched(x, rb)) && rb.every((y) => matched(y, ra))) {
+      agreed++;
+      continue;
+    }
+    const tPic = performance.now();
+    const secondPicture = b.file ? await overPicture(io, b.file, over) : null;
+    pixels.picturesMs += since(tPic);
+    pixels.ms += since(tPic);
+    unstable.push({
+      kind: "unstable",
+      frame: a.frame,
+      first: { regions: brief(ra), opaqueShare: a.opaqueShare ?? null, picture: a.picture },
+      second: { regions: brief(rb), opaqueShare: b.opaqueShare ?? null, picture: secondPicture },
+      reading: `Frame ${a.frame}: the cut-out differed between two renders of the same frame (opaque share ${a.opaqueShare} then ${b.opaqueShare}; ${plural2(ra.length, "region")} then ${rb.length} over the limit). Both pictures are kept.`
+    });
+  }
+  return {
+    frames,
+    agreed,
+    differed: unstable.map((u) => u.frame),
+    failed,
+    skippedAccepted,
+    unstable,
+    captures: again.map((r) => r.file).filter((f) => typeof f === "string"),
+    note: RECHECK_NOTE + (failed.length ? ` Frames ${failed.join(", ")} did not render the second time and were not compared.` : "") + (skippedAccepted ? ` ${plural2(skippedAccepted, "frame")} whose regions were all accepted ${skippedAccepted === 1 ? "was" : "were"} not rendered again.` : "")
+  };
+}
+var closeHead = (pairs) => `${plural2(pairs.length, "pair")} of clicks closer than ${Math.round(pairs[0].limit)} source pixels (${pairs.slice(0, 3).map((p) => `${p.a} and ${p.b}`).join("; ")}${pairs.length > 3 ? `; and ${pairs.length - 3} more` : ""})`;
+function closeNote(pairs) {
+  return `Clicks: ${closeHead(pairs)}. Nothing is missing, so they need not change anything; they are close together and probably redundant, and can be removed (notes gives the commands).`;
+}
+function laterClicks(pairs) {
+  const num = (n) => Number(/(\d+)\s*$/.exec(n)?.[1] ?? -1);
+  return [...new Set(pairs.map((p) => num(p.a) >= num(p.b) ? p.a : p.b))];
+}
+function closeNoteAdvice(pairs) {
+  return "To remove the redundant clicks, take the later one of each pair out: " + laterClicks(pairs).map((n) => `subject.remove_selection { selection: "${n}" }`).join(", then ") + ". Measured twice: on the take of 2026-11-11 the matte did not change when the redundant click was removed (opaque share 0.3083 before and after on frame 0); on 2026-11-12, removing five of twelve close clicks left the click frame identical and the opaque share the same on the frames near it, with only a thin band along the outline different elsewhere (After Effects tracking again after the change). Then run subject.check again. Leaving them in is also fine.";
+}
+function closeMissText(pairs) {
+  return `Clicks: ${closeHead(pairs)}. With something missing, two of them probably selected the same thing, so a click meant for something else (a microphone) may have landed on the subject again; the close-clicks finding says which to take out.`;
+}
+function closeAdvice(pairs) {
+  return "When both clicks are on the same thing, take the later one out: " + laterClicks(pairs).map((n) => `subject.remove_selection { selection: "${n}" }`).join(", then ") + ". On the take of 2026-11-11 the matte did not change when the redundant click was removed (opaque share 0.3083 before and after on frame 0). If the later click was meant for something else (a microphone), ask for that click again.";
+}
+function checkTiming(statusMs, first, second, pixels, totalMs) {
+  return {
+    statusMs: Math.round(statusMs),
+    firstRender: roundTally(first),
+    secondRender: roundTally(second),
+    pixels: roundTally(pixels),
+    totalMs: Math.round(totalMs)
+  };
+}
+var secs = (ms) => (ms / 1e3).toFixed(1);
+function timeReading(first, second, pixels, totalMs) {
+  const ae = first.aeCallMs + second.aeCallMs;
+  const settle2 = first.settleMs + second.settleMs;
+  const renderNode = first.renderNodeMs + second.renderNodeMs;
+  const frames = first.frames + second.frames;
+  const head = `This check took ${secs(totalMs)} s: ${secs(ae)} s in After Effects rendering ${plural2(frames, "frame")} (${first.frames} first, ${second.frames} again), ${secs(settle2)} s waiting for the files to finish writing, ${secs(renderNode + pixels.ms)} s in Node (${secs(pixels.ms)} s of it reading the pixels and drawing the pictures).`;
+  const share = totalMs > 0 ? (ae + settle2) / totalMs : 0;
+  return share >= 0.6 && frames > 0 ? `${head} Most of it was After Effects rendering, about ${secs((ae + settle2) / frames)} s a frame; frames it has rendered before are much quicker.` : head;
+}
+async function runSubjectCheck(args, io) {
+  const outDir = args.outDir;
+  if (typeof outDir !== "string" || !path7.isAbsolute(outDir))
+    return { ok: false, error: "`outDir` must be an absolute folder for the pictures" };
+  const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
+  const over = typeof args.over === "string" ? args.over : CUTOUT_OVER;
+  const accept = Array.isArray(args.accept) ? args.accept : [];
+  const started = performance.now();
+  const st = await io.status();
+  const statusMs = since(started);
+  if (!st?.ok) return { ok: false, error: st?.error ?? "subject.status failed", status: st };
+  const missing = needSelection(st);
+  if (missing) return { ok: false, error: missing };
+  const first = renderTally();
+  const second = renderTally();
+  const pixels = pixelTally();
+  const clicks = st.selections.map((s) => ({
+    name: s.name,
+    kind: s.kind,
+    point: s.point ?? null,
+    clickTime: s.clickTime ?? null,
+    clickFrame: s.clickFrame ?? null
+  }));
+  const across = args.across === true;
+  const clickFrames = [args.clickFrame, ...clicks.map((c) => c.clickFrame)];
+  const frames = Array.isArray(args.frames) ? args.frames.slice().sort((a, b) => a - b) : across ? framesAcross(
+    st.span,
+    typeof args.count === "number" ? args.count : CUTOUT_FRAMES,
+    clickFrames
+  ) : quickFrames(st.span, clickFrames);
+  const checkSpace = await spacePlan(
+    io,
+    [
+      { where: outDir, parts: { pictures: frames.length * 2 * 2 * captureBytes(st.compSize) } },
+      // After Effects tracks the matte through every frame from the first to the last asked for.
+      {
+        where: aeCacheRoot(st.aeCache?.folder, st.aeCache?.version) ?? outDir,
+        parts: { cache: cacheBytesFor(trackedSpan(frames), st.sourceSize ?? st.compSize) }
+      }
+    ],
+    PICTURE_MARGIN_BYTES,
+    "this check"
+  );
+  if (checkSpace.refusal) return checkSpace.refusal;
+  const fillLayer = typeof st.fillLayer === "string" ? st.fillLayer : null;
+  const isolate = fillLayer ? [args.layer, fillLayer] : args.layer;
+  const outline = outlineTracker(frozenOpts(args));
+  const rendered = await renderChunked(
+    io,
+    { compNameOrId: args.comp, isolate, channels: "rgba", edge: true },
+    frames,
+    perFrameMsOf(args),
+    outDir,
+    "cutout",
+    first
+  );
+  const { readings, picture } = await measureFrames(
+    io,
+    rendered,
+    limit,
+    over,
+    path7.join(outDir, "cutout_sheet.png"),
+    pixels,
+    true,
+    (r, img) => {
+      if (img.alpha) outline.add(r.frame, img.alpha, img.rgb, img.width, img.height);
+    }
+  );
+  const outlineResult = outline.result();
+  const sum = summarize(readings, limit, accept, picture);
+  const close = closeClicks(clicks, st.sourceSize ?? null);
+  const findings = [...sum.findings];
+  const recheck = args.recheck === false ? { skipped: true, note: "recheck: false; no frame was rendered a second time" } : await recheckFrames(
+    io,
+    readings,
+    limit,
+    over,
+    outDir,
+    perFrameMsOf(args),
+    // No edge report on the second render: only the regions are compared (edge costs about 1 s a 1080 x 1920 frame).
+    { compNameOrId: args.comp, isolate, channels: "rgba" },
+    accept,
+    second,
+    pixels
+  );
+  if ("unstable" in recheck) findings.push(...recheck.unstable);
+  const frozenAcceptedRuns = [];
+  for (const run of outlineResult.frozen) {
+    if (frozenAccepted(run, accept)) {
+      frozenAcceptedRuns.push({ kind: "frozen", ...run });
+      continue;
+    }
+    const pic = (f) => readings.find((r) => r.frame === f)?.picture ?? null;
+    findings.push(frozenFinding(run, [pic(run.from), pic(run.to)]));
+  }
+  const somethingMissing = findings.length > 0;
+  const notes = [];
+  if (close.length && somethingMissing)
+    findings.push({ kind: "close-clicks", pairs: close, advice: closeAdvice(close) });
+  else if (close.length)
+    notes.push({
+      kind: "close-clicks",
+      pairs: close,
+      reading: closeNote(close),
+      advice: closeNoteAdvice(close)
+    });
+  const rects = clicks.filter((c) => c.kind === "rectangle").map((c) => c.name);
+  const solid = readings.find((r) => typeof r.solidAreas === "number")?.solidAreas;
+  const inText = `In: ${st.summary}` + (fillLayer ? ` (with its gap fill (${fillLayer}))` : "") + (typeof solid === "number" ? `, making ${plural2(solid, "solid area")} on the first frame checked` : "") + ".";
+  const clickText = !close.length ? "" : somethingMissing ? ` ${closeMissText(close)}` : ` ${closeNote(close)}`;
+  const rectText = rects.length ? ` ${rects.join(", ")}: a click that dragged a little; it may hold nothing (subject.remove_selection).` : "";
+  const pictureText = picture ? ` Look at the picture (${picture}): it shows what no number does, such as the background kept or something the brief names left out.` : " No frame rendered, so there is no picture.";
+  const stop = findings.length > 0;
+  if (args.keepCaptures !== true) {
+    const files = [
+      ...readings.map((r) => r.file),
+      ..."captures" in recheck ? recheck.captures : []
+    ].filter((f) => typeof f === "string");
+    await Promise.all(files.map((f) => fs7.rm(f, { force: true })));
+    for (const r of readings) delete r.file;
+  }
+  return {
+    ok: true,
+    layer: st.layer,
+    fillLayer,
+    stop,
+    findings,
+    notes,
+    accepted: [...sum.accepted, ...frozenAcceptedRuns],
+    outline: outlineResult,
+    checked: sum.checked,
+    recheck: "unstable" in recheck ? {
+      frames: recheck.frames,
+      agreed: recheck.agreed,
+      differed: recheck.differed,
+      failed: recheck.failed,
+      skippedAccepted: recheck.skippedAccepted,
+      note: recheck.note
+    } : recheck,
+    inOut: `${inText} ${sum.text}${clickText}${rectText}${stop || !picture ? pictureText : ""}`,
+    picture,
+    frames: readings,
+    clicks,
+    countNote: COUNT_NOTE,
+    scope: {
+      across: across && !Array.isArray(args.frames),
+      frames,
+      note: across || Array.isArray(args.frames) ? ACROSS_NOTE : QUICK_NOTE
+    },
+    timing: checkTiming(statusMs, first, second, pixels, since(started)),
+    timeReading: timeReading(first, second, pixels, since(started)),
+    holeLimit: limit,
+    next: stop ? "Stop. In your reply, before the next call, tell the user what is out in plain words and give the picture's path; then fix it, before building anything else. " + (findings.some((f) => f.kind === "unstable") ? "A frame came out differently on two renders (kind 'unstable'): run subject.check again, and look at the first frames of the delivered video as well. " : "") + "Something left out needs another click (subject.prepare, then the steps); a wrong extra click comes out with subject.remove_selection; an enclosed gap no click fills goes to subject.fill_gaps, without `only` (every enclosed gap at once: one under the limit here can grow past it on other frames; openings are never filled). When the user says a region shown is fine (a real gap between an arm and the body), run subject.check again with accept: [that finding's box] (an opening), or accept: [{ box, kind: 'hole' }] for a hole, so it is not shown again. Two clicks on the same thing: take the later one out with subject.remove_selection. Frames not checked: run subject.check again on those frames with a larger secondsPerFrame. " + TAKES_MINUTES : "Nothing over the limit. Still look at the picture yourself and tell the user what is in and what is out before building on the cut-out. " + TAKES_MINUTES
+  };
+}
+var FILL_LIMITS = (frame) => [
+  `The still comes from one frame (frame ${frame}): it assumes a locked camera and that what is in front of the subject does not move. Anything that moves away from the still's gaps shows through the fill.`,
+  "What shows through a filled gap is whatever is behind it in the footage. That is the subject only while the subject is behind the gap.",
+  "Every enclosed gap at that frame is filled, including a real one (between an arm and the body) where the background will show, and including those under the limit, which can grow past it on other frames; pass `only` boxes only to keep a real enclosed gap unfilled. Openings (regions that reach the frame edge) are never filled."
+];
+async function runFillGaps(args, io) {
+  const captures = [];
+  const watched = {
+    ...io,
+    render: async (a) => {
+      const out = await io.render(a);
+      for (const f of out?.frames ?? [])
+        if (typeof f?.writtenTo === "string") captures.push(f.writtenTo);
+      if (typeof out?.writtenTo === "string") captures.push(out.writtenTo);
+      return out;
+    }
+  };
+  try {
+    const res = await fillGaps(args, watched);
+    if (args.keepCaptures !== true) for (const r of res?.after?.frames ?? []) delete r.file;
+    return res;
+  } finally {
+    if (args.keepCaptures !== true)
+      await Promise.all(captures.map((f) => fs7.rm(f, { force: true })));
+  }
+}
+async function fillGaps(args, io) {
+  const still = args.stillPath;
+  if (typeof still !== "string" || !path7.isAbsolute(still) || path7.extname(still).toLowerCase() !== ".png") {
+    return {
+      ok: false,
+      error: "`stillPath` must be an absolute path to a .png file, kept with the project (the comp will use it)"
+    };
+  }
+  const rejected = rejectedOutputPath(still);
+  if (rejected) return { ok: false, error: rejected };
+  const outDir = typeof args.outDir === "string" && path7.isAbsolute(args.outDir) ? args.outDir : path7.dirname(still);
+  const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
+  const over = typeof args.over === "string" ? args.over : CUTOUT_OVER;
+  const minArea = typeof args.minArea === "number" ? args.minArea : 20;
+  const grow = typeof args.grow === "number" ? args.grow : 3;
+  const perFrameMs = perFrameMsOf(args);
+  const started = performance.now();
+  const st = await io.status();
+  const statusMs = since(started);
+  const refTally = renderTally();
+  const aloneTally = renderTally();
+  const afterTally = renderTally();
+  const pixels = pixelTally();
+  let buildMs = 0;
+  if (!st?.ok) return { ok: false, error: st?.error ?? "subject.status failed", status: st };
+  const missing = needSelection(st);
+  if (missing) return { ok: false, error: missing };
+  const frame = typeof args.frame === "number" ? args.frame : st.span?.inFrame ?? 0;
+  const fillFrames = Array.isArray(args.frames) ? [frame, ...args.frames] : args.across === true ? [st.span?.inFrame ?? 0, Math.max(0, (st.span?.outFrame ?? 1) - 1), frame] : [frame - 2, frame + 2];
+  const fillSpace = await spacePlan(
+    io,
+    [
+      { where: outDir, parts: { pictures: 16 * 2 * captureBytes(st.compSize) } },
+      {
+        where: aeCacheRoot(st.aeCache?.folder, st.aeCache?.version) ?? outDir,
+        parts: { cache: cacheBytesFor(trackedSpan(fillFrames), st.sourceSize ?? st.compSize) }
+      }
+    ],
+    PICTURE_MARGIN_BYTES,
+    "filling the gaps"
+  );
+  if (fillSpace.refusal) return fillSpace.refusal;
+  const [ref] = await renderChunked(
+    io,
+    { compNameOrId: args.comp, isolate: args.layer, channels: "rgba" },
+    [frame],
+    perFrameMs,
+    outDir,
+    "fill-reference",
+    refTally
+  );
+  const refused = (why) => ({
+    ok: false,
+    error: `the reference frame ${frame} did not render (${why}). Nothing was built. Try again with a larger secondsPerFrame.`
+  });
+  if (!ref?.ok || !ref.file) return refused(ref?.error ?? "no result");
+  let img;
+  try {
+    img = await io.readImage(ref.file);
+  } catch (err) {
+    return refused(err instanceof Error ? err.message : String(err));
+  }
+  if (!img.alpha) return refused(`${ref.file} has no alpha channel`);
+  const [cw, ch] = Array.isArray(st.compSize) ? st.compSize : [img.width, img.height];
+  if (img.width !== cw || img.height !== ch) {
+    return {
+      ok: false,
+      error: `the reference render came back ${img.width} \xD7 ${img.height}, not the comp's size ${cw} \xD7 ${ch}; set the comp to Full resolution and try again. Nothing was built.`
+    };
+  }
+  const only = Array.isArray(args.only) ? args.only : null;
+  const found = enclosedHoles(img.alpha, img.width, img.height, {
+    minArea,
+    keep: only ? (h) => only.some((b) => intersects(h, b)) : void 0
+  });
+  const openings = cutoutRegions(img.alpha, img.width, img.height, { minArea }).openings;
+  const area = found.holes.reduce((s, h) => s + h.area, 0);
+  const filled = {
+    holes: found.holes.length,
+    area,
+    list: found.holes.slice(0, 20),
+    dropped: found.dropped,
+    leftOut: found.leftOut,
+    openingsNotFilled: { count: openings.length, area: openings.reduce((s, o) => s + o.area, 0) },
+    grow,
+    minArea
+  };
+  if (found.holes.length === 0) {
+    return {
+      ok: true,
+      reference: { frame, file: ref.file },
+      filled,
+      reading: `No enclosed gap of ${minArea} px or more to fill at frame ${frame}; nothing was built.` + (openings.length ? ` ${plural2(openings.length, "opening")} reaching the frame edge were left alone: an opening is never filled.` : ""),
+      limits: FILL_LIMITS(frame)
+    };
+  }
+  const grown = growMask(found.mask, img.width, img.height, grow);
+  const values = new Float64Array(grown.length);
+  let grownArea = 0;
+  for (let p = 0; p < grown.length; p++)
+    if (grown[p]) {
+      values[p] = 1;
+      grownArea++;
+    }
+  filled.grownArea = grownArea;
+  filled.still = still;
+  await writePng(io, still, encodePngGray8(img.width, img.height, values));
+  const tBuild = performance.now();
+  const built = await io.build({ comp: args.comp, layer: args.layer, stillPath: still });
+  buildMs = since(tBuild);
+  if (!built?.ok)
+    return {
+      ok: false,
+      error: `the still was written to ${still}, but the fill could not be built: ${built?.error ?? "no result"}`,
+      filled,
+      build: built
+    };
+  const layers = {
+    fill: built.fillLayer,
+    mask: built.maskLayer,
+    stillItem: built.stillItem,
+    stillItemId: built.stillItemId ?? null,
+    audioOff: built.audioOff === true,
+    audio: built.audioOff === true ? "switched off, so the footage's sound plays once" : built.hasAudio === false ? "the footage has no audio: nothing to switch off" : built.audioError ? `could not be switched off: ${built.audioError}` : "left as it was",
+    ...built.audioError ? { audioError: built.audioError } : {}
+  };
+  const [alone] = await renderChunked(
+    io,
+    { compNameOrId: args.comp, isolate: [built.fillLayer], channels: "rgba" },
+    [frame],
+    perFrameMs,
+    outDir,
+    "fill-alone",
+    aloneTally
+  );
+  let fillAlone;
+  try {
+    if (!alone?.ok || !alone.file) throw new Error(alone?.error ?? "not rendered");
+    const a = await io.readImage(alone.file);
+    let covered = 0;
+    for (const v of a.alpha ?? []) if (v > EDGE_TRANSPARENT) covered++;
+    fillAlone = { covered, mask: grownArea, ok: covered <= grownArea * 1.1 + 100 };
+  } catch (err) {
+    fillAlone = {
+      covered: null,
+      mask: grownArea,
+      ok: null,
+      error: err instanceof Error ? err.message : String(err)
+    };
+  }
+  if (fillAlone.ok === false) {
+    const undone = await io.unbuild({
+      comp: args.comp,
+      fillLayer: built.fillLayer,
+      maskLayer: built.maskLayer,
+      stillItemId: layers.stillItemId
+    });
+    return {
+      ok: false,
+      error: `the fill layer alone covers ${fmt2(fillAlone.covered)} px, more than the gap mask's ${fmt2(grownArea)} px: the track matte is not limiting it. ` + (undone?.ok ? `The build was undone (${(undone.removed ?? []).join(", ")}).` : `Undoing the build failed (${undone?.error ?? "no result"}): delete '${built.fillLayer}' and '${built.maskLayer}' by hand.`),
+      filled,
+      fillAlone,
+      layers
+    };
+  }
+  const frames = Array.isArray(args.frames) ? args.frames.slice().sort((a, b) => a - b) : args.across === true ? framesAcross(st.span, typeof args.count === "number" ? args.count : CUTOUT_FRAMES, [frame]) : quickFrames(st.span, [frame]);
+  const afterRendered = await renderChunked(
+    io,
+    {
+      compNameOrId: args.comp,
+      isolate: [args.layer, built.fillLayer],
+      channels: "rgba",
+      edge: true
+    },
+    frames,
+    perFrameMs,
+    outDir,
+    "fill-after",
+    afterTally
+  );
+  const measured = await measureFrames(
+    io,
+    afterRendered,
+    limit,
+    over,
+    path7.join(outDir, "fill-after_sheet.png"),
+    pixels
+  );
+  const sum = summarize(measured.readings, limit, []);
+  return {
+    ok: true,
+    reference: { frame, file: ref.file },
+    filled,
+    fillAlone,
+    layers,
+    after: {
+      frames: measured.readings,
+      findings: sum.findings,
+      checked: sum.checked,
+      picture: measured.picture,
+      reading: sum.text
+    },
+    limits: FILL_LIMITS(frame),
+    timing: {
+      statusMs: Math.round(statusMs),
+      referenceRender: roundTally(refTally),
+      buildMs: Math.round(buildMs),
+      fillAloneRender: roundTally(aloneTally),
+      afterRender: roundTally(afterTally),
+      pixels: roundTally(pixels),
+      totalMs: Math.round(since(started))
+    },
+    next: "Show the user the picture after the fill and say what is left. To undo the fill, delete the two layers it added." + (layers.audioOff ? " The fill copy's audio was switched off, so the footage's sound plays once." : "") + (built.audioError ? ` The fill copy's audio could not be switched off (${built.audioError}): the sound may play twice; switch it off by hand.` : "") + (fillAlone.ok === null ? " The fill layer alone could not be rendered, so whether the track matte limits it was not checked: look at it." : "")
+  };
+}
+function fillUnbuildJsx(args) {
+  return `
+            ${jsxCompPreamble(args)}
+            var _names = [${jsxVal(args.fillLayer)}, ${jsxVal(args.maskLayer)}];
+            var _removed = [];
+            for (var _ni = 0; _ni < _names.length; _ni++) {
+                for (var _li = _comp.numLayers; _li >= 1; _li--) {
+                    var _l = _comp.layer(_li);
+                    if (_l.name === _names[_ni]) { _l.remove(); _removed.push(_names[_ni]); break; }
+                }
+            }
+            var _id = ${jsxVal(args.stillItemId)};
+            if (_id !== null) {
+                var _item = AE.safeGet(function () { return app.project.itemByID(_id); }, null);
+                if (_item) { var _iname = _item.name; _item.remove(); _removed.push(_iname); }
+            }
+            return { ok: true, removed: _removed };
+        `;
+}
+function fillBuildJsx(args) {
+  return `
+            ${jsxCompLayerPreamble(args)}
+            var _fillName = _layer.name + " gap fill";
+            var _maskName = _layer.name + " gap mask";
+            for (var _li = 1; _li <= _comp.numLayers; _li++) {
+                var _ln = _comp.layer(_li).name;
+                if (_ln === _fillName || _ln === _maskName) return { ok: false, error: "comp " + _comp.name + " already has a layer '" + _ln + "'; delete the earlier fill's two layers first" };
+            }
+            var _file = new File(${jsxVal(args.stillPath)});
+            if (!_file.exists) return { ok: false, error: "no file at " + ${jsxVal(args.stillPath)} };
+            var _item = app.project.importFile(new ImportOptions(_file));
+            var _mask = _comp.layers.add(_item);
+            _mask.name = _maskName;
+            var _fill = _layer.duplicate();
+            _fill.name = _fillName;
+            var _fxs = _fill.property("ADBE Effect Parade");
+            var _removed = 0;
+            if (_fxs) {
+                for (var _fi = _fxs.numProperties; _fi >= 1; _fi--) {
+                    if (_fxs.property(_fi).matchName === ${jsxVal(OBJECT_MATTE_MATCH_NAME)}) { _fxs.property(_fi).remove(); _removed++; }
+                }
+            }
+            _fill.moveAfter(_layer);
+            _mask.moveBefore(_fill);
+            var _spanError = null;
+            try {
+                _mask.startTime = 0;
+                _mask.inPoint = Math.min(_layer.inPoint, _layer.outPoint);
+                _mask.outPoint = Math.max(_layer.inPoint, _layer.outPoint);
+            } catch (eSpan) { _spanError = AE.errText(eSpan); }
+            _fill.setTrackMatte(_mask, TrackMatteType.LUMA);
+            _mask.enabled = false;
+            var _audioOff = false;
+            var _audioError = null;
+            if (AE.safeGet(function () { return _fill.hasAudio; }, false)) {
+                try { _fill.audioEnabled = false; _audioOff = true; } catch (eAud) { _audioError = AE.errText(eAud); }
+            }
+            var _out = { ok: true, fillLayer: _fill.name, fillIndex: _fill.index, maskLayer: _mask.name, maskIndex: _mask.index, stillItem: _item.name, stillItemId: AE.safeGet(function () { return _item.id; }, null), removedFromCopy: _removed, audioOff: _audioOff, hasAudio: AE.safeGet(function () { return _fill.hasAudio; }, false) };
+            if (_audioError !== null) _out.audioError = _audioError;
+            if (_spanError !== null) _out.maskSpanError = _spanError;
+            return _out;
+        `;
+}
+function liveCutoutIO(args, transport2) {
+  return {
+    async status() {
+      const code = getOp("subject.status").toJsx({
+        comp: args.comp,
+        layer: args.layer,
+        effectIndex: args.effectIndex
+      });
+      const r = await transport2.execute({
+        code,
+        label: "subject.status",
+        undoGroup: false,
+        timeoutMs: 3e4
+      });
+      return r.ok ? r.result : { ok: false, error: r.error ?? "subject.status failed" };
+    },
+    async render(renderArgs) {
+      const out = await renderFrameTool.handler(renderArgs, transport2);
+      const sc = out.structuredContent;
+      if (out.isError)
+        return {
+          ok: false,
+          error: sc?.error?.message ?? sc?.error ?? "ae_render_frame failed",
+          details: sc
+        };
+      return sc?.result ?? { ok: false, error: "ae_render_frame returned no result" };
+    },
+    async readImage(file2) {
+      return decodePng(await fs7.readFile(file2));
+    },
+    async unbuild(a) {
+      const r = await transport2.execute({
+        code: fillUnbuildJsx(a),
+        label: "subject.fill_gaps undo",
+        undoGroup: true,
+        suppressDialogs: true,
+        timeoutMs: 6e4
+      });
+      return r.ok ? r.result : { ok: false, error: r.error ?? "undoing the build failed" };
+    },
+    async build(a) {
+      const r = await transport2.execute({
+        code: fillBuildJsx(a),
+        label: "subject.fill_gaps",
+        undoGroup: true,
+        suppressDialogs: true,
+        rollback: true,
+        timeoutMs: 6e4
+      });
+      return r.ok ? r.result : { ok: false, error: r.error ?? "the build failed", rollback: r.rollback };
+    }
+  };
+}
+var NODE_ONLY = (name) => jsxFail(
+  `${name} runs in Node (it reads pixels), so it cannot ride inside batch.run; call it through ae_do`
+);
+var frameListParam = {
+  name: "frames",
+  type: "array",
+  description: "Comp frame numbers to look at, instead of the default: `count` frames evenly spaced across the layer, plus the click frame.",
+  required: false
+};
+var secondsPerFrameParam = {
+  name: "secondsPerFrame",
+  type: "number",
+  description: `Settle time to allow each frame, s (default ${CUTOUT_SECONDS_PER_FRAME}; measured 20 to 40 s a frame the first time on a 2176 x 3840 take). Frames are split over several renders when one cannot hold them (600 s a render).`,
+  required: false
+};
+var overParam = {
+  name: "over",
+  type: "string",
+  description: `The flat colour of the picture (default '${CUTOUT_OVER}').`,
+  required: false
+};
+registerOp({
+  name: "subject.check",
+  category: "subject",
+  description: `Proof a subject matte after the user says done, before anything else is built. Renders the cut-out with its alpha (ae_render_frame isolate, channels 'rgba'; with the layer's gap fill from subject.fill_gaps when the comp has one, reported as fillLayer) at the click frames and frames across the clip, finds holes (regions below opaque the frame edge cannot reach) and openings (regions closed off only by the subject and the frame edge: the missed microphone of 2026-11-11 ran off the bottom of the frame), draws each frame over a flat colour and one contact sheet, and returns picture (the sheet), findings, accepted, checked {frames, of}, inOut (a plain statement of what is in and what is out), frames, clicks and stop. A hole or opening of holeLimit px or more (default ${CUTOUT_HOLE_LIMIT}, at the comp's size) is a finding; so are frames that did not render (kind 'not-checked': a frame that was not rendered is never counted as clean). Two clicks close together are a finding only when something is missing too (a click meant for it may have landed on the subject again); otherwise they are the pieces of something clicked one by one, listed in notes, and do not set stop. With stop true: say in your reply what is out, in plain words, and give the picture's path, before the next call. \`accept\` entries (earlier findings the user called fine, such as a real gap between an arm and the body) are not counted again. Each frame with a finding is rendered once more at the end; a frame whose cut-out differs between the two renders is a finding of kind 'unstable' (seen once on 2026-11-11, cause unknown; agreement may come from the cache and does not prove a frame stable). A selection count is not a check. It can take minutes: 20 to 40 s a frame the first time on a 2176 x 3840 take; say so to the user before it runs. \`timing\` says where the time went (status, each render's After Effects call, settle wait and Node work, the pixel work, the total) and \`timeReading\` says it in one sentence.`,
+  params: [
+    ...compLayerParams,
+    {
+      name: "outDir",
+      type: "string",
+      description: "Absolute folder for the pictures.",
+      required: true
+    },
+    {
+      name: "clickFrame",
+      type: "number",
+      description: "A comp frame to look at as well. The selections' own click frames are always looked at.",
+      required: false
+    },
+    frameListParam,
+    {
+      name: "count",
+      type: "number",
+      description: `How many frames across the layer (default ${CUTOUT_FRAMES}).`,
+      required: false
+    },
+    {
+      name: "holeLimit",
+      type: "number",
+      description: `Smallest hole or opening that is a finding, px at the comp's size (default ${CUTOUT_HOLE_LIMIT}).`,
+      required: false
+    },
+    {
+      name: "accept",
+      type: "array",
+      description: "Findings the user has seen and called fine, so a later run does not stop on them: each a box {x, y, width, height} (it accepts an opening) or { box, kind: 'hole' | 'opening' }. A finding is accepted only by an entry of its kind whose box overlaps its own by at least half their union; a hole inside an accepted opening's box is not accepted.",
+      required: false
+    },
+    {
+      name: "across",
+      type: "boolean",
+      description: "Look across the clip (count frames spread over the layer) on the live matte instead of the quick check (the click frames and two either side). Takes minutes: 4 to 9 for nine frames on a 2176 x 3840 take; prefer subject.render_cutout and subject.check_file.",
+      required: false
+    },
+    {
+      name: "recheck",
+      type: "boolean",
+      description: "Render each frame with a hole or opening over the limit once more at the end and report a frame that differs (kind 'unstable'). Default true; false skips it.",
+      required: false
+    },
+    {
+      name: "frozenLimit",
+      type: "number",
+      description: "A drift over frozenGap frames (share of the frame whose alpha changed by more than 0.1) under this counts as an unmoved outline (default 0.002; not yet calibrated live).",
+      required: false
+    },
+    {
+      name: "frozenFrames",
+      type: "number",
+      description: "Shortest run of unmoved outline that is a 'frozen' finding, frames (default 60).",
+      required: false
+    },
+    {
+      name: "frozenGap",
+      type: "number",
+      description: "Frames between the two frames compared for drift (default 30).",
+      required: false
+    },
+    {
+      name: "keepCaptures",
+      type: "boolean",
+      description: "Keep the raw captures ae_render_frame wrote (default false: each is removed once read; the pictures stay).",
+      required: false
+    },
+    secondsPerFrameParam,
+    overParam,
+    subjectIndexParam
+  ],
+  toJsx: () => NODE_ONLY("subject.check"),
+  run: (args, transport2) => runSubjectCheck(args, liveCutoutIO(args, transport2))
+});
+registerOp({
+  name: "subject.fill_gaps",
+  category: "subject",
+  description: "Fill enclosed gaps in a subject matte that no click fills (a gap in a microphone's shock mount with the shirt behind it): reads the matte at one reference frame at the comp's size, keeps the regions below opaque that the frame edge cannot reach (openings are never filled), drops those under minArea (default 20 px), grows the rest by `grow` px (default 3), writes them as a still (stillPath), and adds a copy of the same footage under the cut-out showing only through that still (luma track matte). It then renders the fill layer alone and undoes the build when that covers more than the mask, and measures holes and openings again across the clip. Refuses, building nothing, when the reference frame does not render. Limits, stated in the result: one reference frame, so it assumes a locked camera and a prop that does not move; what shows through is whatever is behind the gap. `only` boxes fill just the gaps they touch. Can take minutes, as subject.check does (180 s on the take). Verified in After Effects 27.0 on one take (2026-11-11): the layers, the luma track matte, a switched-off mask that still mattes, and the measurements after; undoing the build when the fill covers too much is not verified there. The fill copy's audio is switched off (audioOff) so the sound does not play twice.",
+  params: [
+    ...compLayerParams,
+    {
+      name: "stillPath",
+      type: "string",
+      description: "Absolute .png path for the gap mask, kept with the project (the comp uses it).",
+      required: true
+    },
+    {
+      name: "frame",
+      type: "number",
+      description: "Reference comp frame (default: the layer's first frame; use the click frame).",
+      required: false
+    },
+    {
+      name: "minArea",
+      type: "number",
+      description: "Smallest gap filled, px (default 20).",
+      required: false
+    },
+    {
+      name: "grow",
+      type: "number",
+      description: "Grow each gap by this many px (default 3).",
+      required: false
+    },
+    {
+      name: "only",
+      type: "array",
+      description: "Boxes {x, y, width, height} in comp pixels: fill only the gaps they touch (from subject.check's findings). Leave it out to fill every enclosed gap, which is the default to use: pass it only to keep a real enclosed gap (between an arm and the body) unfilled; a gap under the limit at one frame can grow past it on others.",
+      required: false
+    },
+    {
+      name: "outDir",
+      type: "string",
+      description: "Absolute folder for the measuring renders (default: the still's folder).",
+      required: false
+    },
+    frameListParam,
+    {
+      name: "count",
+      type: "number",
+      description: `How many frames to measure after the fill (default ${CUTOUT_FRAMES}).`,
+      required: false
+    },
+    {
+      name: "holeLimit",
+      type: "number",
+      description: `Smallest hole or opening reported after the fill, px (default ${CUTOUT_HOLE_LIMIT}).`,
+      required: false
+    },
+    {
+      name: "across",
+      type: "boolean",
+      description: "Measure after the fill across the clip instead of near the reference frame. Takes minutes; prefer subject.render_cutout and subject.check_file.",
+      required: false
+    },
+    {
+      name: "keepCaptures",
+      type: "boolean",
+      description: "Keep the raw captures ae_render_frame wrote (default false: each is removed once read; the pictures stay).",
+      required: false
+    },
+    secondsPerFrameParam,
+    overParam,
+    subjectIndexParam
+  ],
+  toJsx: () => NODE_ONLY("subject.fill_gaps"),
+  run: (args, transport2) => runFillGaps(args, liveCutoutIO(args, transport2))
+});
+var ALPHA_TEMPLATES = ["High Quality with Alpha", "Lossless with Alpha"];
+var isSequence = (name) => /sequence/i.test(name);
+function chooseAlphaTemplate(available, wanted) {
+  const list = available.join(", ") || "none";
+  if (wanted !== void 0) {
+    if (!available.includes(wanted))
+      return { error: `no output template named '${wanted}' (templates: ${list})` };
+    return { template: wanted, why: `the template asked for` };
+  }
+  for (const t of ALPHA_TEMPLATES)
+    if (available.includes(t))
+      return { template: t, why: `'${t}' carries alpha in its name and writes a movie` };
+  const other = available.find((t) => /alpha/i.test(t) && !isSequence(t));
+  if (other)
+    return {
+      template: other,
+      why: `'${other}' is the first template whose name says alpha and that writes a movie`
+    };
+  return {
+    error: `no output template that writes a movie with alpha (templates: ${list}). subject.check_file reads a movie; an image-sequence template is not used. Make a movie template with RGB + Alpha in After Effects' Output Module settings and pass its name as outputTemplate.`
+  };
+}
+function renderCutoutPlanJsx(args) {
+  return `
+            ${jsxCompLayerPreamble(args)}
+            var rq = app.project.renderQueue;
+            if (AE.safeGet(function () { return rq.rendering; }, false)) return { ok: false, error: "the render queue is already rendering; wait for it to finish" };
+            var _fillName = _layer.name + " gap fill";
+            var _fill = null;
+            for (var _li = 1; _li <= _comp.numLayers; _li++) if (_comp.layer(_li).name === _fillName) _fill = _fillName;
+            var _keep = [_layer.name];
+            if (_fill) _keep.push(_fill);
+            var _fd = _comp.frameDuration;
+            var _start = Math.max(0, Math.min(_layer.inPoint, _layer.outPoint));
+            var _end = Math.min(_comp.duration, Math.max(_layer.inPoint, _layer.outPoint));
+            var _tmp = null;
+            var _out = [];
+            var _rend = [];
+            try {
+                _tmp = rq.items.add(_comp);
+                try { _rend = _tmp.templates; } catch (eR) {}
+                try { _out = _tmp.outputModule(1).templates; } catch (eO) {}
+            } finally {
+                if (_tmp) { try { _tmp.remove(); } catch (eRm) {} }
+            }
+            var _src = null;
+            try { _src = [_layer.source.width, _layer.source.height]; } catch (eSrc) { _src = null; }
+            var _cacheFolder = null;
+            try {
+                var _pts = [PREFType.PREF_Type_MACHINE_SPECIFIC, PREFType.PREF_Type_MACHINE_INDEPENDENT];
+                for (var _pi = 0; _pi < _pts.length && !_cacheFolder; _pi++) {
+                    if (app.preferences.havePref("Disk Cache Controls", "Folder 7", _pts[_pi])) _cacheFolder = app.preferences.getPrefAsString("Disk Cache Controls", "Folder 7", _pts[_pi]);
+                }
+            } catch (ePref) {}
+            return { ok: true, layer: _layer.name, fillLayer: _fill, keep: _keep, compSize: [_comp.width, _comp.height], sourceSize: _src,
+                aeCache: { folder: _cacheFolder || null, version: AE.safeGet(function () { return app.version; }, null) },
+                span: { start: _start, duration: _end - _start, frames: Math.round((_end - _start) / _fd), frameRate: Math.round(1000 / _fd) / 1000 },
+                templates: { output: _out, render: _rend } };
+        `;
+}
+function renderCutoutJsx(args) {
+  return `
+            ${jsxCompPreamble(args)}
+            ${PARK_QUEUE_FN}
+            var rq = app.project.renderQueue;
+            if (AE.safeGet(function () { return rq.rendering; }, false)) return { ok: false, error: "the render queue is already rendering; wait for it to finish" };
+            var _want = ${jsxVal(args.outputPath)};
+            function _meta(_path) {
+                var _f = new File(_path);
+                if (!_f.exists) return { exists: false, bytes: 0, modifiedMs: null };
+                var _d = _f.modified;
+                return { exists: true, bytes: _f.length, modifiedMs: _d ? _d.getTime() : null };
+            }
+            if (_meta(_want).exists && !${jsxVal(args.overwrite)}) return { ok: false, error: "a file already exists at " + _want + "; pass overwrite: true to replace it, or choose another outputPath" };
+            var _keep = ${jsxVal(args.keep)};
+            function _kept(n) { for (var i = 0; i < _keep.length; i++) if (_keep[i] === n) return true; return false; }
+            var _saved = [];
+            var _switched = [];
+            var _w = [];
+            var _out = null;
+            var _rqi = null;
+            var _parked = null;
+            try {
+                for (var _li = 1; _li <= _comp.numLayers; _li++) {
+                    var L = _comp.layer(_li);
+                    if (AE.safeGet(function () { return L.hasVideo; }, true) === false) continue;
+                    var _mn = AE.safeGet(function () { return L.matchName; }, "");
+                    if (_mn === "ADBE Camera Layer" || _mn === "ADBE Light Layer") continue;
+                    var _s = { layer: L, enabled: L.enabled, solo: AE.safeGet(function () { return !!L.solo; }, false), locked: AE.safeGet(function () { return !!L.locked; }, false) };
+                    var _want2 = _kept(L.name) ? _s.enabled : false;
+                    if (_want2 === _s.enabled && !_s.solo) continue;
+                    if (_s.locked) L.locked = false;
+                    if (_s.solo) L.solo = false;
+                    if (L.enabled !== _want2) { L.enabled = _want2; _switched.push(L.name); }
+                    _saved.push(_s);
+                }
+                _parked = _parkQueue(rq);
+                _rqi = rq.items.add(_comp);
+                var _om = _rqi.outputModule(1);
+                var _wo = AE.applyTemplate(_om, ${jsxVal(args.outputTemplate)}, "outputTemplate");
+                if (_wo) throw new Error(_wo);
+                _rqi.timeSpanStart = ${jsxVal(args.start)};
+                _rqi.timeSpanDuration = ${jsxVal(args.duration)};
+                _om.file = AE.ensureParentDir(_want);
+                var _path = _om.file ? _om.file.fsName.replace(/\\\\/g, "/") : _want;
+                var _before = _meta(_path);
+                var _audio = {};
+                try {
+                    var _st = _om.getSettings(GetSettingsFormat.STRING);
+                    for (var _k in _st) if (_st.hasOwnProperty(_k) && /audio|channels/i.test(_k)) _audio[_k] = String(_st[_k]);
+                } catch (eA) { _w.push("could not read the output module's settings: " + AE.errText(eA)); }
+                var _t0 = new Date().getTime();
+                rq.render();
+                var _t1 = new Date().getTime();
+                var _after = _meta(_path);
+                var _fresh = _after.exists && _after.bytes > 0 && (!_before.exists || _after.bytes !== _before.bytes || _after.modifiedMs !== _before.modifiedMs);
+                var _fd = _comp.frameDuration;
+                _out = {
+                    ok: _rqi.status === RQItemStatus.DONE && _fresh,
+                    outputPath: _path,
+                    timeSpanStart: ${jsxVal(args.start)},
+                    durationSeconds: ${jsxVal(args.duration)},
+                    frameCount: Math.round(${jsxVal(args.duration)} / _fd),
+                    frameRate: Math.round(1000 / _fd) / 1000,
+                    renderSeconds: Math.round(_t1 - _t0) / 1000,
+                    elapsedSeconds: AE.safeGet(function () { return _rqi.elapsedSeconds; }, null),
+                    bytes: _after.bytes,
+                    audio: _audio
+                };
+                if (!_out.ok) _out.error = _rqi.status !== RQItemStatus.DONE ? "the render did not finish (status " + String(_rqi.status) + ")" : "the render left no new file at " + _path;
+            } catch (eR) {
+                _out = { ok: false, error: "the cut-out render failed: " + AE.errText(eR) };
+            } finally {
+                if (_rqi) { try { _rqi.remove(); } catch (eRm) { _w.push("could not remove the render's queue item: " + AE.errText(eRm)); } }
+                if (_parked) _unparkQueue(rq, _parked);
+                var _notBack = [];
+                for (var _ri = _saved.length - 1; _ri >= 0; _ri--) {
+                    var _sv = _saved[_ri];
+                    try {
+                        if (_sv.layer.enabled !== _sv.enabled) _sv.layer.enabled = _sv.enabled;
+                        if (_sv.solo) _sv.layer.solo = true;
+                        if (_sv.locked) _sv.layer.locked = true;
+                    } catch (eB) { _notBack.push(AE.safeGet(function () { return _sv.layer.name; }, "?") + ": " + AE.errText(eB)); }
+                }
+            }
+            _out.layersSwitched = _switched;
+            _out.restored = _notBack.length === 0;
+            if (_notBack.length) _out.notRestored = _notBack;
+            _out.warnings = _w;
+            _out.projectModified = true;
+            _out.projectNote = ${jsxVal(QUEUE_CHANGE_NOTE)};
+            return _out;
+        `;
+}
+async function runRenderCutout(args, io) {
+  const started = performance.now();
+  const outputPath = args.outputPath;
+  if (typeof outputPath !== "string" || !path7.isAbsolute(outputPath))
+    return { ok: false, error: "`outputPath` must be an absolute path for the movie" };
+  const rejected = rejectedOutputPath(outputPath);
+  if (rejected) return { ok: false, error: rejected };
+  const plan = await io.execute(renderCutoutPlanJsx({ comp: args.comp, layer: args.layer }), {
+    label: "subject.render_cutout plan",
+    timeoutMs: 6e4,
+    undoGroup: true
+  });
+  if (!plan?.ok) return { ok: false, error: plan?.error ?? "could not read the comp", plan };
+  const planMs = since(started);
+  const choice = chooseAlphaTemplate(
+    plan.templates?.output ?? [],
+    typeof args.outputTemplate === "string" ? args.outputTemplate : void 0
+  );
+  if ("error" in choice) return { ok: false, error: choice.error, templates: plan.templates };
+  const frames = plan.span?.frames ?? 0;
+  const where = path7.dirname(outputPath);
+  const cacheRoot = aeCacheRoot(plan.aeCache?.folder, plan.aeCache?.version);
+  const movieBytes = renderCutoutBytes(frames, plan.compSize ?? [1080, 1920]);
+  const cacheBytes = cacheBytesFor(frames, plan.sourceSize ?? plan.compSize);
+  const planned = await spacePlan(
+    io,
+    [
+      { where, parts: { movie: movieBytes } },
+      // An unknown cache folder is counted on the output's drive.
+      { where: cacheRoot ?? where, parts: { cache: cacheBytes } }
+    ],
+    RENDER_MARGIN_BYTES,
+    `rendering ${frames} frames`
+  );
+  if (planned.refusal) return planned.refusal;
+  const space = {
+    parts: { movie: Math.round(movieBytes), cache: cacheBytes },
+    volumes: planned.volumes,
+    cacheWhere: cacheRoot ?? "unknown (After Effects' Disk Cache folder could not be read); counted on the output's drive"
+  };
+  const t1 = performance.now();
+  const r = await io.execute(
+    renderCutoutJsx({
+      comp: args.comp,
+      keep: plan.keep,
+      outputPath,
+      outputTemplate: choice.template,
+      start: plan.span.start,
+      duration: plan.span.duration,
+      overwrite: args.overwrite === true
+    }),
+    // Measured: 390 s for 320 frames of a 2176 x 3840 take; allow 5 s a frame and two minutes over.
+    { label: "subject.render_cutout", timeoutMs: 12e4 + frames * 5e3, undoGroup: true }
+  );
+  const renderMs = since(t1);
+  let spaceAtTimeout = null;
+  if (r && r.ok === false && /timeout|timed out/i.test(String(r.error ?? ""))) {
+    const free = await (io.freeBytes ?? statfsFree)(where);
+    spaceAtTimeout = { free, where };
+    if (free !== null && free < RENDER_MARGIN_BYTES)
+      r.error = `the render timed out with only ${gb(free)} free on the drive holding ${where}: a full drive is a likely cause (a render on a nearly full drive stalls instead of failing). Ask the user to free space, for example Edit > Purge > All Memory & Disk Cache in After Effects, then render again. After Effects said: ${r.error}`;
+  }
+  const audio = r?.audio && Object.keys(r.audio).length ? r.audio : null;
+  const sound = (audio ? `The output module's sound settings read ${Object.entries(audio).map(([k, v]) => `${k}: ${v}`).join("; ")}; whether the file carries a sound track depends on them and was not checked.` : "The output module's sound settings could not be read; the file may or may not carry a sound track.") + " The original layer keeps the sound: subject.use_cutout leaves its audio as it is and switches the movie's audio off, so it plays once.";
+  const out = {
+    ...r,
+    outputTemplate: choice.template,
+    templateChoice: choice.why,
+    layers: plan.keep,
+    sound,
+    timing: {
+      planMs: Math.round(planMs),
+      renderMs: Math.round(renderMs),
+      totalMs: Math.round(since(started))
+    }
+  };
+  if (!r?.ok)
+    return {
+      ...out,
+      ok: false,
+      error: r?.error ?? "the render failed",
+      ...spaceAtTimeout ? { spaceAtTimeout } : {}
+    };
+  return {
+    ...out,
+    space,
+    cacheNote: `This render should have added about ${gb(cacheBytes)} to After Effects' disk cache (one 16-bit frame of the source per frame). Nothing was deleted and no preference was changed.`,
+    next: `Check the file before building on it: subject.check_file { path: "${r.outputPath}", outDir }. Then subject.use_cutout puts it in the comp in place of the live matte. Once the file is checked, the cache this work wrote is no longer needed: tell the user to purge it (Edit > Purge > All Memory & Disk Cache in After Effects); it should free about ${gb(cacheBytes)} or more.`
+  };
+}
+var CHECK_FILE_MAX_FRAMES = 400;
+var CHECK_FILE_JUMP_LIMIT = 0.025;
+function checkFileFrames(n, cap) {
+  if (n <= cap) return { frames: Array.from({ length: n }, (_, i) => i), step: 1 };
+  const step = Math.ceil(n / Math.max(1, Math.floor(cap / 2)));
+  const set2 = /* @__PURE__ */ new Set();
+  for (let s0 = 0; s0 < n - 1; s0 += step) {
+    set2.add(s0);
+    set2.add(s0 + 1);
+  }
+  for (const f of [0, 1, 2, n - 3, n - 2, n - 1]) if (f >= 0 && f < n) set2.add(f);
+  return { frames: [...set2].sort((a, b) => a - b), step };
+}
+function fileCompJsx(args) {
+  return `
+            var _item = null;
+            var _imported = false;
+            if (${jsxVal(args.item)} !== null) {
+                _item = AE.safeGet(function () { return app.project.itemByID(${jsxVal(args.item)}); }, null);
+                if (!_item) return { ok: false, error: "no project item with id " + ${jsxVal(args.item)} };
+            } else {
+                var _f = new File(${jsxVal(args.path)});
+                if (!_f.exists) return { ok: false, error: "no file at " + ${jsxVal(args.path)} };
+                _item = app.project.importFile(new ImportOptions(_f));
+                _imported = true;
+            }
+            if (!AE.safeGet(function () { return _item.hasVideo; }, false)) return { ok: false, error: "'" + _item.name + "' has no video" };
+            var _fr = AE.safeGet(function () { return _item.frameRate; }, 0) || 30;
+            var _dur = _item.duration;
+            var _c = app.project.items.addComp("check_file " + _item.name, _item.width, _item.height, AE.safeGet(function () { return _item.pixelAspect; }, 1) || 1, _dur, _fr);
+            _c.layers.add(_item);
+            return { ok: true, compId: _c.id, compName: _c.name, itemId: _item.id, itemName: _item.name, imported: _imported,
+                width: _item.width, height: _item.height, frames: Math.round(_dur * _fr), frameRate: _fr };
+        `;
+}
+function fileCleanupJsx(args) {
+  return `
+            var _removed = [];
+            var _c = AE.safeGet(function () { return app.project.itemByID(${jsxVal(args.compId)}); }, null);
+            if (_c) { var _cn = _c.name; _c.remove(); _removed.push(_cn); }
+            var removeItem = ${jsxVal(args.removeItem)};
+            if (removeItem && ${jsxVal(args.itemId)} !== null) {
+                var _it = AE.safeGet(function () { return app.project.itemByID(${jsxVal(args.itemId)}); }, null);
+                if (_it) { var _in = _it.name; _it.remove(); _removed.push(_in); }
+            }
+            return { ok: true, removed: _removed };
+        `;
+}
+function frameRanges(frames) {
+  const out = [];
+  for (let i = 0; i < frames.length; ) {
+    let j = i;
+    while (j + 1 < frames.length && frames[j + 1] === frames[j] + 1) j++;
+    out.push(i === j ? String(frames[i]) : `${frames[i]} to ${frames[j]}`);
+    i = j + 1;
+  }
+  return out.join(", ");
+}
+function speckAccepted(p, accept) {
+  const cx = p.x + p.width / 2;
+  const cy = p.y + p.height / 2;
+  return accept.some((e) => {
+    if (!("box" in e) || e.kind !== "speck") return false;
+    const b = e.box;
+    return cx >= b.x && cx <= b.x + b.width && cy >= b.y && cy <= b.y + b.height;
+  });
+}
+function longestSpeckRun(t) {
+  const touch = (a, b) => a.x <= b.x + b.width && b.x <= a.x + a.width && a.y <= b.y + b.height && b.y <= a.y + a.height;
+  const run = /* @__PURE__ */ new Map();
+  let best = 0;
+  const sorted = t.pieces.slice().sort((a, b) => a.frame - b.frame);
+  sorted.forEach((p, i) => {
+    let len = 1;
+    sorted.forEach((q, j) => {
+      if (q.frame === p.frame - 1 && touch(q.box, p.box))
+        len = Math.max(len, (run.get(j) ?? 1) + 1);
+    });
+    run.set(i, len);
+    best = Math.max(best, len);
+  });
+  return best;
+}
+var SPECK_JOIN_PX = 40;
+function addSpeck(tracks, frame, p) {
+  const near = (b) => p.x < b.x + b.width + SPECK_JOIN_PX && b.x < p.x + p.width + SPECK_JOIN_PX && p.y < b.y + b.height + SPECK_JOIN_PX && b.y < p.y + p.height + SPECK_JOIN_PX;
+  const t = tracks.find((x) => near(x.box));
+  const pb = { x: p.x, y: p.y, width: p.width, height: p.height };
+  if (!t) {
+    tracks.push({
+      frames: [frame],
+      box: pb,
+      largestArea: p.area,
+      largestFrame: frame,
+      smallestArea: p.area,
+      pieces: [{ frame, box: pb }]
+    });
+    return;
+  }
+  t.pieces.push({ frame, box: pb });
+  if (!t.frames.includes(frame)) t.frames.push(frame);
+  const x0 = Math.min(t.box.x, pb.x);
+  const y0 = Math.min(t.box.y, pb.y);
+  t.box = {
+    x: x0,
+    y: y0,
+    width: Math.max(t.box.x + t.box.width, pb.x + pb.width) - x0,
+    height: Math.max(t.box.y + t.box.height, pb.y + pb.height) - y0
+  };
+  if (p.area > t.largestArea) {
+    t.largestArea = p.area;
+    t.largestFrame = frame;
+  }
+  t.smallestArea = Math.min(t.smallestArea, p.area);
+}
+async function runCheckFile(args, io) {
+  const started = performance.now();
+  const file2 = typeof args.path === "string" ? args.path : null;
+  const item = typeof args.item === "number" ? args.item : null;
+  if (file2 === null === (item === null))
+    return {
+      ok: false,
+      error: "give exactly one of `path` (the movie) or `item` (a footage item's id)"
+    };
+  if (file2 !== null) {
+    if (!path7.isAbsolute(file2))
+      return { ok: false, error: "`path` must be an absolute path to the movie" };
+    const there = io.exists ? await io.exists(file2) : await fs7.access(file2).then(
+      () => true,
+      () => false
+    );
+    if (!there) return { ok: false, error: `no file at ${file2}` };
+  }
+  const outDir = args.outDir;
+  if (typeof outDir !== "string" || !path7.isAbsolute(outDir))
+    return { ok: false, error: "`outDir` must be an absolute folder for the pictures" };
+  const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
+  const jumpLimit = typeof args.jumpLimit === "number" ? args.jumpLimit : CHECK_FILE_JUMP_LIMIT;
+  const cap = typeof args.maxFrames === "number" && args.maxFrames >= 8 ? Math.floor(args.maxFrames) : CHECK_FILE_MAX_FRAMES;
+  const over = typeof args.over === "string" ? args.over : CUTOUT_OVER;
+  const accept = Array.isArray(args.accept) ? args.accept : [];
+  const perFrameMs = Math.max(
+    1,
+    Math.round(
+      (typeof args.secondsPerFrame === "number" && args.secondsPerFrame > 0 ? args.secondsPerFrame : 10) * 1e3
+    )
+  );
+  const speckLimits = {
+    minArea: typeof args.speckMinArea === "number" ? args.speckMinArea : SPECK_DEFAULTS.minArea,
+    maxArea: typeof args.speckMaxArea === "number" ? args.speckMaxArea : SPECK_DEFAULTS.maxArea
+  };
+  const speckMinRun = typeof args.speckMinFrames === "number" && args.speckMinFrames >= 1 ? Math.floor(args.speckMinFrames) : SPECK_DEFAULTS.minRun;
+  const speckTime = { ms: 0, frames: 0 };
+  const specks = [];
+  const specksAccepted = [];
+  const setup = await io.execute(fileCompJsx({ path: file2, item }), {
+    label: "subject.check_file setup",
+    timeoutMs: 12e4,
+    undoGroup: true
+  });
+  if (!setup?.ok)
+    return { ok: false, error: setup?.error ?? "could not bring the movie into a comp", setup };
+  const renders = renderTally();
+  const pixels = pixelTally();
+  const { frames, step } = checkFileFrames(setup.frames, cap);
+  const keepCaptures = args.keepCaptures === true;
+  const sheetPlan = /* @__PURE__ */ new Set();
+  for (let i = 0; i < Math.min(24, frames.length); i++)
+    sheetPlan.add(frames[Math.floor(i * frames.length / Math.min(24, frames.length))]);
+  const isAccepted = (x) => acceptedBy(
+    { kind: x.kind, box: { x: x.x, y: x.y, width: x.width, height: x.height } },
+    accept
+  );
+  const tracks = [];
+  const jumpFrames = /* @__PURE__ */ new Set();
+  const kept = /* @__PURE__ */ new Map();
+  let readings = [];
+  let prev = null;
+  let cleanup = null;
+  const needed = () => {
+    const n = /* @__PURE__ */ new Set([...jumpFrames, ...sheetPlan]);
+    for (const t of tracks) n.add(t.bestFrame);
+    for (const t of specks) if (longestSpeckRun(t) >= speckMinRun) n.add(t.largestFrame);
+    return n;
+  };
+  const release = async (frame) => {
+    const f = kept.get(frame);
+    if (!f || keepCaptures) return;
+    kept.delete(frame);
+    await fs7.rm(f, { force: true });
+  };
+  const outline = outlineTracker(frozenOpts(args));
+  let outlineResult = null;
+  const frozenFindings = [];
+  const frozenAcceptedRuns = [];
+  const size = Math.max(1, Math.min(32, Math.floor(SETTLE_MAX_MS / perFrameMs)));
+  try {
+    const roomless = await spaceRefusal(
+      io,
+      outDir,
+      (size + 30) * captureBytes([setup.width, setup.height]),
+      PICTURE_MARGIN_BYTES,
+      "this file check"
+    );
+    if (roomless) return roomless;
+    for (let b = 0; b * size < frames.length; b++) {
+      const batch = frames.slice(b * size, (b + 1) * size);
+      const rendered = await renderChunked(
+        io,
+        { compNameOrId: setup.compId, channels: "rgba" },
+        batch,
+        perFrameMs,
+        outDir,
+        "check-file",
+        renders,
+        b
+      );
+      const got = (await measureFrames(
+        io,
+        rendered,
+        limit,
+        over,
+        path7.join(outDir, "check-file_unused.png"),
+        pixels,
+        false,
+        (r, img) => {
+          if (!img.alpha) return;
+          outline.add(r.frame, img.alpha, img.rgb, img.width, img.height);
+          const tSpeck = performance.now();
+          for (const p of speckPieces(img.alpha, img.width, img.height, speckLimits))
+            addSpeck(speckAccepted(p, accept) ? specksAccepted : specks, r.frame, p);
+          speckTime.ms += performance.now() - tSpeck;
+          speckTime.frames++;
+        }
+      )).readings;
+      for (const r of got) {
+        readings.push(r);
+        if (!r.checked || !r.file) continue;
+        kept.set(r.frame, r.file);
+        for (const x of regionsOf(r)) {
+          if (x.area < limit || isAccepted(x)) continue;
+          const t = tracks.find(
+            (tr) => tr.kind === x.kind && tr.members.some((m) => alikeRegions(m, x))
+          );
+          if (t) {
+            t.members.push(x);
+            if (x.area > t.bestArea) {
+              t.bestArea = x.area;
+              t.bestFrame = r.frame;
+            }
+          } else tracks.push({ kind: x.kind, members: [x], bestArea: x.area, bestFrame: r.frame });
+        }
+        if (prev && prev.checked && r.frame === prev.frame + 1) {
+          const change = Math.abs((r.opaqueShare ?? 0) - (prev.opaqueShare ?? 0));
+          if (change > jumpLimit) {
+            jumpFrames.add(prev.frame);
+            jumpFrames.add(r.frame);
+          }
+        }
+        const need2 = needed();
+        for (const f of Array.from(kept.keys()))
+          if (f !== r.frame && !need2.has(f)) await release(f);
+        prev = r;
+      }
+    }
+    outlineResult = outline.result();
+    for (const run of outlineResult.frozen) {
+      if (frozenAccepted(run, accept)) {
+        frozenAcceptedRuns.push({ kind: "frozen", ...run });
+        continue;
+      }
+      const ends = [run.from, run.to];
+      const again = await renderChunked(
+        io,
+        { compNameOrId: setup.compId, channels: "rgba" },
+        ends,
+        perFrameMs,
+        outDir,
+        `check-file-frozen-${run.from}`,
+        renders
+      );
+      const pics = [];
+      for (const e of ends) {
+        const r = again.find((x) => x.frame === e);
+        pics.push(r?.file ? await overPicture(io, r.file, over) : null);
+        if (r?.file && !keepCaptures) await fs7.rm(r.file, { force: true });
+      }
+      frozenFindings.push(frozenFinding(run, pics));
+    }
+  } finally {
+    cleanup = await io.execute(
+      fileCleanupJsx({
+        compId: setup.compId,
+        itemId: setup.itemId,
+        removeItem: setup.imported === true && args.keepFootage !== true
+      }),
+      { label: "subject.check_file cleanup", timeoutMs: 6e4, undoGroup: true }
+    );
+  }
+  const need = needed();
+  for (const f of Array.from(kept.keys())) if (!need.has(f)) await release(f);
+  const byFrame = new Map(readings.filter((r) => r.checked).map((r) => [r.frame, r]));
+  const jumps = [];
+  let pairs = 0;
+  let largestStep = { from: -1, to: -1, change: 0 };
+  for (const r of readings) {
+    const next = byFrame.get(r.frame + 1);
+    if (!r.checked || !next) continue;
+    pairs++;
+    const change = Math.round(Math.abs((next.opaqueShare ?? 0) - (r.opaqueShare ?? 0)) * 1e4) / 1e4;
+    if (change > largestStep.change || largestStep.from < 0)
+      largestStep = { from: r.frame, to: next.frame, change };
+    if (change > jumpLimit)
+      jumps.push({
+        kind: "jump",
+        from: r.frame,
+        to: next.frame,
+        change,
+        opaque: [r.opaqueShare, next.opaqueShare]
+      });
+  }
+  const checkedReadings = readings.filter((r) => r.checked && typeof r.opaqueShare === "number");
+  const minR = checkedReadings.reduce(
+    (m, r) => !m || (r.opaqueShare ?? 1) < (m.opaqueShare ?? 1) ? r : m,
+    null
+  );
+  const maxR = checkedReadings.reduce(
+    (m, r) => !m || (r.opaqueShare ?? 0) > (m.opaqueShare ?? 0) ? r : m,
+    null
+  );
+  const opaque = {
+    min: minR?.opaqueShare ?? null,
+    minFrame: minR?.frame ?? null,
+    max: maxR?.opaqueShare ?? null,
+    maxFrame: maxR?.frame ?? null,
+    largestStep
+  };
+  const tPic = performance.now();
+  const pictureFrames = /* @__PURE__ */ new Set([
+    ...tracks.map((t) => t.bestFrame),
+    ...jumps.flatMap((j) => [j.from, j.to]),
+    ...specks.filter((t) => longestSpeckRun(t) >= speckMinRun).map((t) => t.largestFrame)
+  ]);
+  const pictureOf2 = /* @__PURE__ */ new Map();
+  let pictureBytes = 0;
+  for (const f of [...pictureFrames].sort((a, b) => a - b)) {
+    const file3 = kept.get(f);
+    const pic = file3 ? await overPicture(io, file3, over) : null;
+    pictureOf2.set(f, pic);
+    if (pic)
+      pictureBytes += await fs7.stat(pic).then(
+        (st) => st.size,
+        () => 0
+      );
+  }
+  for (const j of jumps) j.pictures = [pictureOf2.get(j.from) ?? null, pictureOf2.get(j.to) ?? null];
+  for (const r of readings)
+    if (pictureOf2.get(r.frame)) r.picture = pictureOf2.get(r.frame) ?? void 0;
+  const picMs = since(tPic);
+  pixels.picturesMs += picMs;
+  pixels.ms += picMs;
+  const tSheet = performance.now();
+  const sheetFrames = [.../* @__PURE__ */ new Set([...pictureFrames, ...sheetPlan])].filter((f) => kept.has(f)).slice(0, 24).sort((a, b) => a - b);
+  let picture = null;
+  let sheetBytes = 0;
+  const thumbs = [];
+  const labels = [];
+  for (const f of sheetFrames) {
+    try {
+      const img = await io.readImage(kept.get(f));
+      const comp = flattenOver(img, { kind: "color", color: parseHex(over) });
+      const tw = Math.min(240, img.width);
+      const th = Math.max(1, Math.round(img.height * tw / img.width));
+      thumbs.push({
+        width: tw,
+        height: th,
+        rgb: resample({ ...img, rgb: comp }, tw, th),
+        bitDepth: 8
+      });
+      labels.push(`frame ${f}${pictureFrames.has(f) ? " !" : ""}`);
+    } catch {
+    }
+  }
+  if (thumbs.length) {
+    const sheet = composeContactSheet(thumbs, { labels, thumbWidth: 240 });
+    picture = path7.join(outDir, "check-file_sheet.png");
+    const png = encodePngSrgb8(sheet.width, sheet.height, sheet.rgb, PICTURE_DEFLATE);
+    await writePng(io, picture, png);
+    sheetBytes = png.length;
+  }
+  const sheetMs = since(tSheet);
+  pixels.sheetMs += sheetMs;
+  pixels.ms += sheetMs;
+  for (const f of Array.from(kept.keys())) await release(f);
+  if (!keepCaptures) for (const r of readings) delete r.file;
+  const pictures = {
+    written: [...pictureOf2.values()].filter(Boolean).length,
+    bytes: pictureBytes,
+    sheet: picture,
+    sheetBytes,
+    capturesKept: keepCaptures
+  };
+  const compared = `${plural2(pairs, "pair")} of neighbouring frames` + (step > 1 ? ` (each frame and the next), one pair every ${step} frames, and the first and last three frames` : "") + ` compared for jumps over ${jumpLimit} in opaque share.`;
+  const passText = jumps.length || frozenFindings.length || specks.some((t) => longestSpeckRun(t) >= speckMinRun) ? `No hole or opening of ${fmt2(limit)} px or more on the ${byFrame.size} frames read.` : `Nothing over the limit on ${byFrame.size} of ${readings.length} frames read; no jump between neighbouring frames over ${jumpLimit}; the picture is at ${picture ?? "(none)"}.`;
+  const sum = summarize(readings, limit, accept, picture, passText);
+  const lasting = specks.filter((t) => longestSpeckRun(t) >= speckMinRun);
+  const brief = specks.filter((t) => longestSpeckRun(t) < speckMinRun);
+  const speckNotes = brief.map((t) => ({
+    kind: "speck",
+    frames: t.frames.slice().sort((a, b) => a - b),
+    longestRun: longestSpeckRun(t),
+    largestArea: t.largestArea,
+    box: t.box
+  }));
+  const briefText = brief.length ? ` ${plural2(brief.length, "small piece")} apart from the cut-out on single frames, never on ${speckMinRun} or more frames in a row (${brief.map((t) => `frame${t.frames.length > 1 ? "s" : ""} ${frameRanges(t.frames.slice().sort((a, b) => a - b))}, ${t.largestArea} px at (${t.box.x}, ${t.box.y})`).join("; ")}): a flash of a thirtieth of a second that nobody sees, or a wisp of hair, so not a stop; listed in notes.` : "";
+  const speckFindings = lasting.map((t) => {
+    const frames2 = t.frames.slice().sort((a, b2) => a - b2);
+    const b = t.box;
+    return {
+      kind: "speck",
+      frames: frames2,
+      longestRun: longestSpeckRun(t),
+      largestArea: t.largestArea,
+      largestFrame: t.largestFrame,
+      smallestArea: t.smallestArea,
+      box: b,
+      picture: pictureOf2.get(t.largestFrame) ?? null,
+      reading: `A small opaque piece apart from the cut-out (or joined to it by a neck a pixel or two wide) on ${plural2(frames2.length, "frame")} (${frameRanges(frames2)}): ${t.smallestArea} to ${t.largestArea} px, largest on frame ${t.largestFrame}, within (${b.x}, ${b.y}, ${b.width} \xD7 ${b.height}). Usually a sliver of the background the matte kept (a chair edge beside an arm); look at the picture. Remove it with a mask on the cut-out movie on those frames (keying.md, removing a speck), or, if it belongs to the subject, accept it: accept: [{ kind: 'speck', box }].`
+    };
+  });
+  const findings = [...sum.findings, ...jumps, ...frozenFindings, ...speckFindings];
+  const stop = findings.length > 0;
+  const frozenText = frozenFindings.map((f) => ` ${f.reading}`).join("");
+  const jumpText = jumps.length ? ` ${plural2(jumps.length, "jump")} in opaque share between neighbouring frames: ${jumps.map((j) => `${j.from} to ${j.to}, ${j.change}`).join("; ")}. A jump of about 0.05 is a dropped object (a microphone); look at both frames.` : "";
+  const opaqueText = opaque.min !== null ? ` Opaque share ${opaque.min} (frame ${opaque.minFrame}) to ${opaque.max} (frame ${opaque.maxFrame}); largest step ${largestStep.change} (frames ${largestStep.from} to ${largestStep.to}).` : "";
+  return {
+    ok: true,
+    file: file2 ?? setup.itemName,
+    frames: setup.frames,
+    frameRate: setup.frameRate,
+    size: [setup.width, setup.height],
+    step,
+    stop,
+    findings,
+    accepted: [
+      ...sum.accepted,
+      ...frozenAcceptedRuns,
+      ...specksAccepted.map((t) => ({
+        kind: "speck",
+        frames: t.frames.slice().sort((a, b) => a - b),
+        box: t.box,
+        largestArea: t.largestArea
+      }))
+    ],
+    outline: outlineResult,
+    checked: sum.checked,
+    compared,
+    notes: speckNotes,
+    speckLimits: {
+      ...speckLimits,
+      minFrames: speckMinRun,
+      opaque: SPECK_DEFAULTS.opaque,
+      neckPx: 2 * SPECK_DEFAULTS.neck
+    },
+    opaque,
+    inOut: `${sum.text}${jumpText}${frozenText}${speckFindings.map((f) => ` ${f.reading}`).join("")}${briefText}${opaqueText} ${compared}${stop && picture ? ` Look at the picture (${picture}).` : ""}`,
+    picture,
+    pictures,
+    frameReadings: readings.map((r) => ({
+      frame: r.frame,
+      checked: r.checked,
+      opaqueShare: r.opaqueShare ?? null,
+      regions: r.checked ? regionsOf(r).length : null,
+      ...r.picture ? { picture: r.picture } : {},
+      ...r.error ? { error: r.error } : {}
+    })),
+    cleanup,
+    timing: {
+      render: roundTally(renders),
+      pixels: roundTally(pixels),
+      speck: { ms: Math.round(speckTime.ms), frames: speckTime.frames },
+      totalMs: Math.round(since(started))
+    },
+    next: stop ? "Stop. In your reply, before the next call, tell the user what is wrong in plain words and give the picture's path, before building on this file. A jump or a hole on one frame means the live matte rendered that frame wrong: render the cut-out again (subject.render_cutout) and check the new file. A speck (a small piece apart from the cut-out) does not go away with a new render: mask it out of the cut-out movie on its frames (keying.md), then check again with accept for anything that belongs to the subject." : "The file is checked. Build on it: subject.use_cutout puts it in the comp in place of the live matte."
+  };
+}
+function useCutoutJsx(args) {
+  return `
+            ${jsxCompLayerPreamble(args)}
+            var _movieName = _layer.name + " cut-out";
+            var _fillName = _layer.name + " gap fill";
+            var _fill = null;
+            for (var _li = 1; _li <= _comp.numLayers; _li++) {
+                var _l = _comp.layer(_li);
+                if (_l.name === _movieName) return { ok: false, error: "comp " + _comp.name + " already has a layer '" + _movieName + "'; delete it first to use another file" };
+                if (_l.name === _fillName) _fill = _l;
+            }
+            var _item = null;
+            if (${jsxVal(args.item ?? null)} !== null) {
+                _item = AE.safeGet(function () { return app.project.itemByID(${jsxVal(args.item ?? null)}); }, null);
+                if (!_item) return { ok: false, error: "no project item with id " + ${jsxVal(args.item ?? null)} };
+            } else {
+                var _f = new File(${jsxVal(args.path ?? null)});
+                if (!_f.exists) return { ok: false, error: "no file at " + ${jsxVal(args.path ?? null)} };
+                _item = app.project.importFile(new ImportOptions(_f));
+            }
+            var _in = Math.min(_layer.inPoint, _layer.outPoint);
+            var _out = Math.max(_layer.inPoint, _layer.outPoint);
+            var _movie = _comp.layers.add(_item);
+            _movie.name = _movieName;
+            _movie.moveBefore(_layer);
+            var _start = ${jsxVal(args.startTime ?? null)};
+            _movie.startTime = _start === null ? Math.max(0, _in) : _start;
+            var _spanError = null;
+            try { _movie.inPoint = Math.max(0, _in); _movie.outPoint = _out; } catch (eSp) { _spanError = AE.errText(eSp); }
+            var _movieAudio = "none";
+            if (AE.safeGet(function () { return _movie.hasAudio; }, false)) { try { _movie.audioEnabled = false; _movieAudio = "off"; } catch (eAu) { _movieAudio = "could not be switched off: " + AE.errText(eAu); } }
+            var _off = [];
+            if (_layer.enabled) { _layer.enabled = false; _off.push(_layer.name); }
+            if (_fill && _fill.enabled) { _fill.enabled = false; _off.push(_fill.name); }
+            var _res = { ok: true, movieLayer: _movie.name, movieIndex: _movie.index, startTime: _movie.startTime, inPoint: _movie.inPoint, outPoint: _movie.outPoint,
+                switchedOff: _off, audio: { original: AE.safeGet(function () { return _layer.audioEnabled; }, null), movie: _movieAudio },
+                note: "The movie is in comp space: it already has the cut-out's transform, so it has none of its own and no parent. The cut-out layer and its selections stay in the project with the picture off, for a later re-click; switch its picture back on and remove the movie to go back to the live matte." };
+            if (_spanError !== null) _res.spanError = _spanError;
+            return _res;
+        `;
+}
+function liveFileIO(transport2) {
+  const cut = liveCutoutIO({}, transport2);
+  return {
+    render: cut.render,
+    readImage: cut.readImage,
+    async execute(code, opts) {
+      const r = await transport2.execute({
+        code,
+        label: opts.label,
+        timeoutMs: opts.timeoutMs,
+        undoGroup: opts.undoGroup ?? true,
+        suppressDialogs: true
+      });
+      return r.ok ? r.result : { ok: false, error: r.error ?? `${opts.label} failed` };
+    },
+    exists: (file2) => fs7.access(file2).then(
+      () => true,
+      () => false
+    )
+  };
+}
+registerOp({
+  name: "subject.render_cutout",
+  category: "subject",
+  description: "Render the cut-out once to a movie with alpha, so the piece is built on a file that cannot change: the layer with its gap fill when there is one, alone (every other layer's picture switched off for the render and put back afterwards, even when it fails; cameras and lights left as they are), over the layer's span, through one temporary render-queue item (other queue items are parked). Picks an output template that writes a movie with alpha ('High Quality with Alpha', 'Lossless with Alpha', or another whose name says alpha; image sequences are not used) and refuses, naming the templates, when none does. Returns outputPath, frameCount, renderSeconds, outputTemplate, templateChoice, layersSwitched, restored, sound and timing. Measured: 390 s for 320 frames of a 2176 x 3840 take, about one pass through the clip; tell the user before it runs. The movie is in comp space. The original layer keeps the sound; whether the movie carries a sound track is not promised. Before rendering it checks that each drive has room for its share, the movie and After Effects' disk cache (about one 16-bit frame of the source per frame: 19 GB measured for 320 frames of a 2176 x 3840 take), plus 3 GB; `space` and `cacheNote` give the numbers, and `next` says to purge the cache once the file is checked." + RENDER_QUEUE_UNDO_WARNING,
+  params: [
+    ...compLayerParams,
+    {
+      name: "outputPath",
+      type: "string",
+      description: "Absolute path for the movie (the template may change the extension; the path written is returned).",
+      required: true
+    },
+    {
+      name: "outputTemplate",
+      type: "string",
+      description: "An output-module template that carries alpha (default: the first found, see above).",
+      required: false
+    },
+    {
+      name: "overwrite",
+      type: "boolean",
+      description: "Replace an existing file at outputPath (default false: refuse).",
+      required: false
+    }
+  ],
+  toJsx: () => NODE_ONLY("subject.render_cutout"),
+  run: (args, transport2) => runRenderCutout(args, liveFileIO(transport2))
+});
+registerOp({
+  name: "subject.check_file",
+  category: "subject",
+  description: `Check a rendered cut-out movie (from subject.render_cutout) frame by frame: brings it into a throwaway comp, reads frames in batches of at most 32 (every frame up to maxFrames, default ${CHECK_FILE_MAX_FRAMES}; beyond it pairs of neighbouring frames in steps, always the first and last three), and reports holes and openings (as subject.check: holeLimit, accept), the opaque share of every frame, and a 'jump' finding when neighbouring frames differ by more than jumpLimit (default ${CHECK_FILE_JUMP_LIMIT}: on the take of 2026-11-11 the rendered cut-out ran 0.279 to 0.314 with no step over 0.012, and a dropped microphone is about 0.05). A speck is a small opaque piece apart from the cut-out, or joined to it by a neck a pixel or two wide, not touching the frame edge: speckMinArea to speckMaxArea px (default 20 to 2,000, chosen on the 4K fresh-session file, where a sliver of chair 1 to 5 px off the right arm read 20 to 240 px on about 40 frames and nothing else in 320 frames was caught); findings of kind 'speck' give the frames, the longest run of frames in a row, the largest area and frame, the box and a picture; a speck on at least speckMinFrames frames in a row (default 2) stops, since a new render keeps it, and a shorter one (a single-frame flash, a wisp of hair) goes to notes and one sentence of inOut. accept: [{ kind: 'speck', box }] takes one off. Checked through a real subject.check_file run on two files of one take (2026-11-12); the limits come from those two files. timing.speck is the pass's own cost (about 5.5 ms a 1080 x 1920 frame). Only true neighbours are compared, and \`compared\` says which. A frame that could not be read is 'not-checked' and stops. Pictures: the largest frame of each finding not accepted and both frames of each jump, full size, and a sheet of up to 24 frames; \`pictures\` counts them and their bytes. Each raw capture is removed once read unless keepCaptures (one run on the take had left 630 MB). The throwaway comp is removed afterwards, and the imported footage too unless keepFootage. \`outline\` says how much the outline changed between neighbouring frames and over frozenGap frames (share of the frame whose alpha changed by more than 0.1, at full size); a run where it did not move is a 'frozen' finding (the selection is probably not tracking, as after replacing the layer's footage; accept: [{ kind: "frozen" }] for a subject that really is still). The frozen limits are not yet calibrated live. Measured: about 0.55 s a frame reading the file. Returns stop, findings, accepted, checked, compared, opaque, outline, inOut, picture, frameReadings, timing.`,
+  params: [
+    {
+      name: "path",
+      type: "string",
+      description: "Absolute path of the movie. Or `item`.",
+      required: false
+    },
+    {
+      name: "item",
+      type: "number",
+      description: "Id of a footage item already in the project (it is never removed). Or `path`.",
+      required: false
+    },
+    {
+      name: "outDir",
+      type: "string",
+      description: "Absolute folder for the frames and pictures.",
+      required: true
+    },
+    {
+      name: "holeLimit",
+      type: "number",
+      description: `Smallest hole or opening that is a finding, px (default ${CUTOUT_HOLE_LIMIT}).`,
+      required: false
+    },
+    {
+      name: "accept",
+      type: "array",
+      description: "As subject.check's accept: boxes (openings) or { box, kind }.",
+      required: false
+    },
+    {
+      name: "speckMinArea",
+      type: "number",
+      description: `Smallest piece apart from the cut-out reported as a speck, px (default ${SPECK_DEFAULTS.minArea}).`,
+      required: false
+    },
+    {
+      name: "speckMinFrames",
+      type: "number",
+      description: `A speck stops the check only when the same piece is there on at least this many frames in a row (default ${SPECK_DEFAULTS.minRun}); shorter ones go to notes.`,
+      required: false
+    },
+    {
+      name: "speckMaxArea",
+      type: "number",
+      description: `Largest, px (default ${SPECK_DEFAULTS.maxArea}; bigger is another object, not a speck).`,
+      required: false
+    },
+    {
+      name: "jumpLimit",
+      type: "number",
+      description: `Largest change in opaque share between neighbouring frames that is not a finding (default ${CHECK_FILE_JUMP_LIMIT}).`,
+      required: false
+    },
+    {
+      name: "maxFrames",
+      type: "number",
+      description: `Most frames read one by one (default ${CHECK_FILE_MAX_FRAMES}).`,
+      required: false
+    },
+    {
+      name: "keepFootage",
+      type: "boolean",
+      description: "Keep the imported footage item in the project (default false; subject.use_cutout imports it again).",
+      required: false
+    },
+    {
+      name: "secondsPerFrame",
+      type: "number",
+      description: "Settle time allowed per frame, s (default 10).",
+      required: false
+    },
+    {
+      name: "frozenLimit",
+      type: "number",
+      description: "A drift over frozenGap frames (share of the frame whose alpha changed by more than 0.1) under this counts as an unmoved outline (default 0.002; not yet calibrated live).",
+      required: false
+    },
+    {
+      name: "frozenFrames",
+      type: "number",
+      description: "Shortest run of unmoved outline that is a 'frozen' finding, frames (default 60).",
+      required: false
+    },
+    {
+      name: "frozenGap",
+      type: "number",
+      description: "Frames between the two frames compared for drift (default 30).",
+      required: false
+    },
+    {
+      name: "keepCaptures",
+      type: "boolean",
+      description: "Keep the raw captures ae_render_frame wrote (default false: each is removed once read; the pictures stay).",
+      required: false
+    },
+    overParam
+  ],
+  toJsx: () => NODE_ONLY("subject.check_file"),
+  run: (args, transport2) => runCheckFile(args, liveFileIO(transport2))
+});
+registerOp({
+  name: "subject.use_cutout",
+  category: "subject",
+  description: "Build on the checked file: add the rendered cut-out movie (path, or a footage item id) to the comp directly above the cut-out layer, named '<layer> cut-out', over the cut-out's span. The movie is in comp space (subject.render_cutout renders the comp), so it has no transform or parent of its own. Switches the cut-out layer's and its gap fill's pictures off; they and the selections stay in the project for a later re-click. The original keeps its audio; the movie's audio is switched off. Returns movieLayer, switchedOff, audio and note. Refuses when the comp already has the movie.",
+  params: [
+    ...compLayerParams,
+    {
+      name: "path",
+      type: "string",
+      description: "Absolute path of the movie. Or `item`.",
+      required: false
+    },
+    {
+      name: "item",
+      type: "number",
+      description: "Id of the movie's footage item. Or `path`.",
+      required: false
+    },
+    {
+      name: "startTime",
+      type: "number",
+      description: "Where the movie starts in the comp, s (default: the cut-out's in point, where subject.render_cutout's render starts; pass its timeSpanStart).",
+      required: false
+    }
+  ],
+  toJsx(args) {
+    if (typeof args.path === "string" === (typeof args.item === "number"))
+      return jsxFail("give exactly one of `path` (the movie) or `item` (its footage item's id)");
+    return useCutoutJsx(
+      args
+    );
+  }
+});
+
+// src/operations/property.ts
+init_registry();
+registerOp({
+  name: "property.set",
+  category: "property",
+  description: "Set any layer property by path. layer can be index, name, 'selected', or 'all'.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "layer",
+      type: "any",
+      description: "Layer index, name, 'selected', or 'all'",
+      required: true
+    },
+    {
+      name: "property",
+      type: "array",
+      description: 'Property path, e.g. ["Transform","Position"]',
+      required: true
+    },
+    { name: "value", type: "any", description: "Value to set", required: true }
+  ],
+  toJsx(args) {
+    return `
+            ${jsxCompPreamble(args)}
+            var _layers = AE.resolveLayers(_comp, ${jsxVal(args.layer)});
+            if (_layers.length === 0) return { ok: false, error: "no layers matched" };
+            var _propPath = ${jsxVal(args.property)};
+            var _results = [];
+            for (var _li = 0; _li < _layers.length; _li++) {
+                var _layer = _layers[_li];
+                try {
+                    var _node = _layer;
+                    for (var _pi = 0; _pi < _propPath.length; _pi++) {
+                        _node = _node.property(_propPath[_pi]);
+                        if (!_node) throw new Error("not found: " + _propPath[_pi]);
+                    }
+                    // Separated dimensions and __kind values route through
+                    // AE.writeValue; setValue on a separated leader throws.
+                    var _wr = AE.writeValue(_node, ${jsxVal(args.value)});
+                    _results.push({ name: _layer.name, ok: true, separated: _wr.separated });
+                } catch(e) {
+                    _results.push({ name: _layer.name, ok: false, error: AE.errText(e).substring(0, 50) });
+                }
+            }
+            return { ok: true, count: _results.length, layers: _results };
+        `;
+  }
+});
+registerOp({
+  name: "property.get",
+  category: "property",
+  readOnly: true,
+  description: "Get the current value of any layer property by path.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "layer",
+      type: "any",
+      description: "1-based layer index, or the layer name",
+      required: true
+    },
+    { name: "property", type: "array", description: "Property path", required: true },
+    {
+      name: "time",
+      type: "number",
+      description: "If set, get value at this time (for animated properties)",
+      required: false
+    }
+  ],
+  toJsx(args) {
+    return `
+            ${jsxCompLayerPreamble(args)}
+            var _propPath = ${jsxVal(args.property)};
+            ${jsxPropertyLookup()}
+            var _val;
+            if (${jsxVal(args.time ?? null)} !== null) {
+                _val = _node.valueAtTime(${jsxVal(args.time)}, false);
+            } else {
+                _val = _node.value;
+            }
+            return {
+                ok: true,
+                name: _node.name,
+                matchName: _node.matchName,
+                value: AE.valueToJson(_val),
+                numKeys: _node.numKeys || 0,
+                hasExpression: _node.canSetExpression ? _node.expressionEnabled : false
+            };
+        `;
+  }
+});
+registerOp({
+  name: "property.list",
+  category: "property",
+  readOnly: true,
+  description: "List child properties/groups at a given path. Useful for discovering what's inside a property group.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "layer",
+      type: "any",
+      description: "1-based layer index, or the layer name",
+      required: true
+    },
+    {
+      name: "property",
+      type: "array",
+      description: "Property path to a group. Use [] for the layer root.",
+      required: true
+    }
+  ],
+  toJsx(args) {
+    return `
+            ${jsxCompLayerPreamble(args)}
+            var _propPath = ${jsxVal(args.property)};
+            ${jsxPropertyLookup()}
+            if (!_node.numProperties) return { ok: false, error: "not a property group (leaf property)" };
+            var children = [];
+            for (var i = 1; i <= _node.numProperties; i++) {
+                var ch = _node.property(i);
+                children.push({
+                    index: i,
+                    name: ch.name,
+                    matchName: ch.matchName,
+                    isGroup: ch.propertyType !== PropertyType.PROPERTY,
+                    numChildren: ch.numProperties || 0
+                });
+            }
+            return { ok: true, path: _propPath, children: children };
+        `;
+  }
+});
+registerOp({
+  name: "property.add",
+  category: "property",
+  description: `Add a property to an indexed group by matchName (PropertyGroup.addProperty). Unlocks text animators ('ADBE Text Animator' on ["Text","Animators"]), layer styles, shape contents, etc. Use property.list to discover group paths.`,
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "layer",
+      type: "any",
+      description: "1-based layer index, or the layer name",
+      required: true
+    },
+    {
+      name: "property",
+      type: "array",
+      description: 'Path to the group to add into, e.g. ["Text","Animators"]. Use [] for layer root.',
+      required: true
+    },
+    {
+      name: "matchName",
+      type: "string",
+      description: 'Match name (or display name) of the property to add, e.g. "ADBE Text Animator". NOTE: adding to an indexed group re-creates it, invalidating prior property references.',
+      required: true
+    },
+    { name: "name", type: "string", description: "Rename the new property", required: false }
+  ],
+  toJsx(args) {
+    const renameJsx = args.name ? `try { _added.name = ${jsxVal(args.name)}; } catch (eName) {}` : "";
+    return `
+            ${jsxCompLayerPreamble(args)}
+            var _propPath = ${jsxVal(args.property)};
+            ${jsxPropertyLookup()}
+            var _mn = ${jsxVal(args.matchName)};
+            var _canAdd = false;
+            try { _canAdd = _node.canAddProperty(_mn); } catch (eCan) {
+                return { ok: false, error: "not a property group that supports addProperty" };
+            }
+            if (!_canAdd) return { ok: false, error: "group '" + _node.matchName + "' cannot add '" + _mn + "'" };
+            var _added = _node.addProperty(_mn);
+            ${renameJsx}
+            return { ok: true, name: _added.name, matchName: _added.matchName, propertyIndex: _added.propertyIndex };
+        `;
+  }
+});
+registerOp({
+  name: "property.remove",
+  category: "property",
+  description: "Remove a property or group by path (Property.remove). Works on members of indexed groups: effects, masks, shape contents, text animators, layer styles.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "layer",
+      type: "any",
+      description: "1-based layer index, or the layer name",
+      required: true
+    },
+    {
+      name: "property",
+      type: "array",
+      description: "Path to the property to remove",
+      required: true
+    }
+  ],
+  toJsx(args) {
+    return `
+            ${jsxCompLayerPreamble(args)}
+            var _propPath = ${jsxVal(args.property)};
+            // An empty path leaves _node === _layer, and Layer.remove() would
+            // delete the whole layer. property.add accepts [] for the layer
+            // root, so a caller has every reason to try it here too.
+            if (!_propPath.length) return { ok: false, error: "property path is empty \u2014 that would remove the layer itself, not a property" };
+            ${jsxPropertyLookup()}
+            var _removedName = _node.name;
+            try { _node.remove(); } catch (eRm) {
+                return { ok: false, error: "cannot remove '" + _removedName + "': " + AE.errText(eRm) };
+            }
+            return { ok: true, removed: _removedName };
+        `;
+  }
+});
+registerOp({
+  name: "property.separate_dimensions",
+  category: "property",
+  description: "Separate (or rejoin) the dimensions of a multi-dimensional property such as Position. When separated, animate the followers (e.g. X Position) individually.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "layer",
+      type: "any",
+      description: "1-based layer index, or the layer name",
+      required: true
+    },
+    {
+      name: "property",
+      type: "array",
+      description: "Property path (e.g. Position)",
+      required: true
+    },
+    {
+      name: "separated",
+      type: "boolean",
+      description: "true=separate, false=rejoin",
+      required: true
+    }
+  ],
+  toJsx(args) {
+    return `
+            ${jsxCompLayerPreamble(args)}
+            var _propPath = ${jsxVal(args.property)};
+            ${jsxPropertyLookup()}
+            if (!_node.isSeparationLeader) return { ok: false, error: "property cannot separate dimensions" };
+            _node.dimensionsSeparated = ${jsxVal(!!args.separated)};
+            return { ok: true, dimensionsSeparated: _node.dimensionsSeparated };
+        `;
+  }
+});
+registerOp({
+  name: "property.move",
+  category: "property",
+  description: "Reorder a property within its parent INDEXED group (PropertyBase.moveTo): masks, shape contents, text animators. For effects use effect.move.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "layer",
+      type: "any",
+      description: "1-based layer index, or the layer name",
+      required: true
+    },
+    {
+      name: "property",
+      type: "array",
+      description: "Path to the property to move (a member of an indexed group)",
+      required: true
+    },
+    {
+      name: "toIndex",
+      type: "number",
+      description: "1-based target position within the parent group",
+      required: true
+    }
+  ],
+  toJsx(args) {
+    return `
+            ${jsxCompLayerPreamble(args)}
+            var _propPath = ${jsxVal(args.property)};
+            ${jsxPropertyLookup()}
+            var _parent = _node.parentProperty;
+            if (!_parent || _parent.propertyType !== PropertyType.INDEXED_GROUP) {
+                return { ok: false, error: "property is not a member of an indexed group \u2014 only those can be reordered" };
+            }
+            var _to = ${jsxVal(args.toIndex)};
+            if (_to < 1 || _to > _parent.numProperties) return { ok: false, error: "toIndex out of range (1-" + _parent.numProperties + ")" };
+            try { _node.moveTo(_to); } catch (eMv) { return { ok: false, error: "moveTo failed: " + AE.errText(eMv) }; }
+            var _order = [];
+            for (var _i = 1; _i <= _parent.numProperties; _i++) _order.push(_parent.property(_i).name);
+            return { ok: true, order: _order };
+        `;
+  }
+});
+registerOp({
+  name: "property.select",
+  category: "property",
+  description: "Select or deselect a property in the timeline (PropertyBase.selected) - stages it for UI-side actions and makes it visible with the U-shortcut workflow.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "layer",
+      type: "any",
+      description: "1-based layer index, or the layer name",
+      required: true
+    },
+    { name: "property", type: "array", description: "Property path", required: true },
+    {
+      name: "selected",
+      type: "boolean",
+      description: "true=select, false=deselect (default true)",
+      required: false,
+      default: true
+    }
+  ],
+  toJsx(args) {
+    return `
+            ${jsxCompLayerPreamble(args)}
+            var _propPath = ${jsxVal(args.property)};
+            ${jsxPropertyLookup()}
+            try { _node.selected = ${jsxVal(args.selected !== false)}; } catch (eSl) { return { ok: false, error: "selected set failed: " + AE.errText(eSl) }; }
+            return { ok: true, property: _node.name, selected: _node.selected };
+        `;
+  }
+});
+
+// src/operations/marker.ts
+init_registry();
+function jsxMarkerPreamble(args) {
+  if (args.layer !== void 0 && args.layer !== null) {
+    return `
+        ${jsxCompLayerPreamble(args)}
+        var _mp = _layer.property("Marker");
+        if (!_mp) return { ok: false, error: "layer has no Marker property" };
+    `;
+  }
+  return `
+        ${jsxCompPreamble(args)}
+        var _mp = _comp.markerProperty;
+        if (!_mp) return { ok: false, error: "comp has no marker property" };
+    `;
+}
+function jsxMarkerKeyLookup(args) {
+  return `
+        var _ki = ${jsxVal(args.keyIndex ?? null)};
+        var _t = ${jsxVal(args.time ?? null)};
+        if (_ki === null && _t === null) return { ok: false, error: "pass keyIndex or time" };
+        if (_mp.numKeys === 0) return { ok: false, error: "no markers" };
+        if (_ki === null) {
+            _ki = _mp.nearestKeyIndex(_t);
+            // nearestKeyIndex has no distance limit: with a single marker at 0s,
+            // asking for t=10 returns that marker. These lookups feed destructive
+            // ops, so require the hit to land on the requested time (within half
+            // a frame) rather than silently retargeting the only marker there is.
+            var _tol = 0.5 * (_comp.frameDuration || (1 / 30));
+            if (Math.abs(_mp.keyTime(_ki) - _t) > _tol) {
+                return { ok: false, error: "no marker at " + _t + "s (nearest is at " + _mp.keyTime(_ki) + "s) \u2014 pass keyIndex to target it explicitly" };
+            }
+        }
+        if (_ki < 1 || _ki > _mp.numKeys) return { ok: false, error: "marker index out of range (1-" + _mp.numKeys + ")" };
+    `;
+}
+function jsxMarkerFieldSets(args) {
+  const sets = [];
+  if (args.label !== void 0) sets.push(`_mv.label = ${jsxVal(args.label)};`);
+  if (args.duration !== void 0) sets.push(`_mv.duration = ${jsxVal(args.duration)};`);
+  if (args.chapter !== void 0) sets.push(`_mv.chapter = ${jsxVal(args.chapter)};`);
+  if (args.url !== void 0) sets.push(`_mv.url = ${jsxVal(args.url)};`);
+  if (args.frameTarget !== void 0) sets.push(`_mv.frameTarget = ${jsxVal(args.frameTarget)};`);
+  if (args.cuePointName !== void 0)
+    sets.push(`_mv.cuePointName = ${jsxVal(args.cuePointName)};`);
+  if (args.eventCuePoint !== void 0)
+    sets.push(`_mv.eventCuePoint = ${jsxVal(args.eventCuePoint)};`);
+  if (args.params !== void 0) {
+    sets.push(`
+            try {
+                var _prm = ${jsxVal(args.params)};
+                var _prmStr = {};
+                for (var _pk in _prm) { if (_prm.hasOwnProperty(_pk)) _prmStr[_pk] = String(_prm[_pk]); }
+                _mv.setParameters(_prmStr);
+            } catch (ePrm) { _w.push("params: " + AE.errText(ePrm)); }
+        `);
+  }
+  if (args.protectedRegion !== void 0)
+    sets.push(
+      `try { _mv.protectedRegion = ${jsxVal(args.protectedRegion)}; } catch (ePr) { _w.push("protectedRegion: " + AE.errText(ePr)); }`
+    );
+  return sets.join("\n");
+}
+var MARKER_FIELD_PARAMS = [
+  { name: "label", type: "number", description: "Label color index (0-16)", required: false },
+  { name: "duration", type: "number", description: "Marker duration in seconds", required: false },
+  { name: "chapter", type: "string", description: "Chapter link text", required: false },
+  { name: "url", type: "string", description: "Web link URL", required: false },
+  {
+    name: "frameTarget",
+    type: "string",
+    description: "Web link frame target (used with url)",
+    required: false
+  },
+  {
+    name: "cuePointName",
+    type: "string",
+    description: "Flash Video cue point name",
+    required: false
+  },
+  {
+    name: "eventCuePoint",
+    type: "boolean",
+    description: "true = event cue point, false = navigation cue point",
+    required: false
+  },
+  {
+    name: "params",
+    type: "object",
+    description: 'Cue point key/value parameters, e.g. { "speaker": "A" } (values stringified)',
+    required: false
+  },
+  {
+    name: "protectedRegion",
+    type: "boolean",
+    description: "Protected-region flag (comp markers only)",
+    required: false
+  }
+];
+registerOp({
+  name: "marker.add_comp",
+  category: "marker",
+  description: "Add a marker to a composition at a given time.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    { name: "time", type: "number", description: "Time in seconds", required: true },
+    {
+      name: "comment",
+      type: "string",
+      description: "Marker comment text",
+      required: false,
+      default: ""
+    },
+    ...MARKER_FIELD_PARAMS
+  ],
+  toJsx(args) {
+    return `
+            ${jsxCompPreamble(args)}
+            var _mv = new MarkerValue(${jsxVal(args.comment ?? "")});
+            var _w = [];
+            ${jsxMarkerFieldSets(args)}
+            _comp.markerProperty.setValueAtTime(${jsxVal(args.time)}, _mv);
+            return { ok: true, numMarkers: _comp.markerProperty.numKeys, warnings: _w };
+        `;
+  }
+});
+registerOp({
+  name: "marker.add_layer",
+  category: "marker",
+  description: "Add a marker to a layer at a given time.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "layer",
+      type: "any",
+      description: "1-based layer index, or the layer name",
+      required: true
+    },
+    { name: "time", type: "number", description: "Time in seconds", required: true },
+    {
+      name: "comment",
+      type: "string",
+      description: "Marker comment text",
+      required: false,
+      default: ""
+    },
+    ...MARKER_FIELD_PARAMS
+  ],
+  toJsx(args) {
+    return `
+            ${jsxCompLayerPreamble(args)}
+            var _mv = new MarkerValue(${jsxVal(args.comment ?? "")});
+            var _w = [];
+            ${jsxMarkerFieldSets(args)}
+            _layer.property("Marker").setValueAtTime(${jsxVal(args.time)}, _mv);
+            return { ok: true, numMarkers: _layer.property("Marker").numKeys, warnings: _w };
+        `;
+  }
+});
+registerOp({
+  name: "marker.remove",
+  category: "marker",
+  description: "Remove a marker from a comp (default) or a layer (pass layer). Target by keyIndex or nearest time.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "layer",
+      type: "any",
+      description: "Layer index or name \u2014 omit for comp markers",
+      required: false
+    },
+    { name: "keyIndex", type: "number", description: "1-based marker index", required: false },
+    {
+      name: "time",
+      type: "number",
+      description: "Remove the marker nearest to this time (used when keyIndex omitted)",
+      required: false
+    }
+  ],
+  toJsx(args) {
+    return `
+            ${jsxMarkerPreamble(args)}
+            ${jsxMarkerKeyLookup(args)}
+            var _removedTime = _mp.keyTime(_ki);
+            _mp.removeKey(_ki);
+            return { ok: true, removedTime: _removedTime, numMarkers: _mp.numKeys };
+        `;
+  }
+});
+registerOp({
+  name: "marker.update",
+  category: "marker",
+  description: "Update fields of an existing marker on a comp (default) or a layer (pass layer). Target by keyIndex or nearest time. Only the passed fields change.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "layer",
+      type: "any",
+      description: "Layer index or name \u2014 omit for comp markers",
+      required: false
+    },
+    { name: "keyIndex", type: "number", description: "1-based marker index", required: false },
+    {
+      name: "time",
+      type: "number",
+      description: "Update the marker nearest to this time (used when keyIndex omitted)",
+      required: false
+    },
+    { name: "comment", type: "string", description: "New comment", required: false },
+    ...MARKER_FIELD_PARAMS
+  ],
+  toJsx(args) {
+    const commentSet = args.comment !== void 0 ? `_mv.comment = ${jsxVal(args.comment)};` : "";
+    return `
+            ${jsxMarkerPreamble(args)}
+            ${jsxMarkerKeyLookup(args)}
+            var _mv = _mp.keyValue(_ki);
+            var _w = [];
+            ${commentSet}
+            ${jsxMarkerFieldSets(args)}
+            _mp.setValueAtKey(_ki, _mv);
+            return { ok: true, keyIndex: _ki, time: _mp.keyTime(_ki), warnings: _w };
+        `;
+  }
+});
+registerOp({
+  name: "marker.list",
+  category: "marker",
+  readOnly: true,
+  description: "List all markers on a comp (default) or a layer (pass layer).",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "layer",
+      type: "any",
+      description: "Layer index or name \u2014 omit for comp markers",
+      required: false
+    }
+  ],
+  toJsx(args) {
+    return `
+            ${jsxMarkerPreamble(args)}
+            var _markers = [];
+            for (var _mi = 1; _mi <= _mp.numKeys; _mi++) {
+                var _v = _mp.keyValue(_mi);
+                _markers.push({
+                    index: _mi,
+                    time: _mp.keyTime(_mi),
+                    comment: AE.safeGet(function () { return _v.comment; }, ""),
+                    duration: AE.safeGet(function () { return _v.duration; }, 0),
+                    label: AE.safeGet(function () { return _v.label; }, 0),
+                    chapter: AE.safeGet(function () { return _v.chapter; }, ""),
+                    url: AE.safeGet(function () { return _v.url; }, ""),
+                    frameTarget: AE.safeGet(function () { return _v.frameTarget; }, ""),
+                    cuePointName: AE.safeGet(function () { return _v.cuePointName; }, ""),
+                    eventCuePoint: AE.safeGet(function () { return _v.eventCuePoint; }, false),
+                    params: AE.safeGet(function () { return _v.getParameters(); }, {}),
+                    protectedRegion: AE.safeGet(function () { return _v.protectedRegion; }, false)
+                });
+            }
+            return { ok: true, count: _markers.length, markers: _markers };
+        `;
+  }
+});
+
+// src/opschema.ts
+function isPlainObject3(v) {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+function typeMatches(type, v) {
+  switch (type) {
+    case "string":
+      return typeof v === "string";
+    case "number":
+      return typeof v === "number" && Number.isFinite(v);
+    case "boolean":
+      return typeof v === "boolean";
+    case "array":
+      return Array.isArray(v);
+    case "object":
+      return isPlainObject3(v);
+    case "any":
+      return true;
+  }
+}
+function describeValue(v) {
+  if (v === null) return "null";
+  if (Array.isArray(v)) return "array";
+  if (typeof v === "number" && !Number.isFinite(v)) return "non-finite number";
+  return typeof v;
+}
+function levenshtein(a, b) {
+  if (a === b) return 0;
+  const prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  const curr = Array.from({ length: b.length + 1 }, () => 0);
+  for (let i = 1; i <= a.length; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      curr[j] = Math.min(curr[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
+    }
+    for (let j = 0; j <= b.length; j++) prev[j] = curr[j];
+  }
+  return prev[b.length];
+}
+function suggestName(key, candidates) {
+  const lowered = key.toLowerCase();
+  let best = null;
+  let bestDistance = Number.POSITIVE_INFINITY;
+  for (const candidate of candidates) {
+    const distance = levenshtein(lowered, candidate.toLowerCase());
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      best = candidate;
+    }
+  }
+  if (best === null) return null;
+  const budget = Math.max(1, Math.floor(Math.max(key.length, best.length) * 0.4));
+  return bestDistance <= budget ? best : null;
+}
+function summarizeParams(params) {
+  return params.map(
+    (p) => `${p.name}: ${p.type} (${p.required ? "required" : "optional"}${p.nullable ? ", nullable" : ""})`
+  );
+}
+function validateOpArgs(op, raw) {
+  if (raw === void 0 || raw === null) raw = {};
+  if (!isPlainObject3(raw)) {
+    return {
+      ok: false,
+      issues: [{ path: "args", message: `must be an object, got ${describeValue(raw)}` }]
+    };
+  }
+  const issues = [];
+  const declared = op.params;
+  const declaredNames = declared.map((p) => p.name);
+  for (const param of declared) {
+    const value = raw[param.name];
+    if (value === void 0) {
+      if (param.required) {
+        issues.push({
+          path: param.name,
+          message: `missing required parameter (${param.type}) \u2014 ${param.description}`
+        });
+      }
+      continue;
+    }
+    if (value === null) {
+      if (!param.nullable && param.type !== "any") {
+        issues.push({
+          path: param.name,
+          message: `must be ${param.type}, got null \u2014 omit the key instead of passing null`
+        });
+      }
+      continue;
+    }
+    if (!typeMatches(param.type, value)) {
+      issues.push({
+        path: param.name,
+        message: `must be ${param.type}, got ${describeValue(value)}`
+      });
+    }
+  }
+  for (const key of Object.keys(raw)) {
+    if (declaredNames.includes(key)) continue;
+    if (raw[key] === void 0) continue;
+    const suggestion = suggestName(key, declaredNames);
+    issues.push({
+      path: key,
+      message: suggestion ? `unknown parameter \u2014 did you mean '${suggestion}'?` : `unknown parameter (this operation accepts: ${declaredNames.join(", ") || "no parameters"})`
+    });
+  }
+  if (issues.length > 0) return { ok: false, issues };
+  return { ok: true, value: raw };
+}
+
+// src/operations/batch.ts
+init_registry();
+registerOp({
+  name: "batch.run",
+  category: "batch",
+  description: "Execute multiple operations in a single IPC call (~400ms total instead of 400ms \xD7 N). Operations run sequentially inside ONE undo group \u2014 a single Ctrl+Z reverts the whole batch, however many ops it contained. That group is also why undo/redo children (project.undo, command.execute id 16/2035) are rejected here: call those as their own ae_do. If one fails, subsequent ops still run unless stopOnError. With stopOnError, a failure rolls the WHOLE batch back (one undo, issued before the response, reported in details.rollback) and still returns every child's result; pass rollback: false to keep the operations that ran before the failure instead \u2014 the result's `kept` says which. Without stopOnError nothing is rolled back: the other children's changes stand. Results array matches input order; the response reports how many failed. Mix in read/verify children \u2014 comp.info, layer.info, render.frame \u2014 to mutate AND verify in the same call, e.g. [...mutations, { operation: 'render.frame', args: { \u2026 } }].",
+  params: [
+    {
+      name: "ops",
+      type: "array",
+      description: 'Array of { operation, args } objects, e.g. [{ "operation": "layer.create_solid", "args": { "comp": "Main", "color": [1,0,0] } }]',
+      required: true
+    },
+    {
+      name: "stopOnError",
+      type: "boolean",
+      description: "Stop at the first failing op (default false). The batch is then rolled back as a whole unless rollback is false.",
+      required: false
+    },
+    {
+      name: "rollback",
+      type: "boolean",
+      description: "Default true. With stopOnError, revert the whole batch when an op fails, and revert it if the batch itself throws. false keeps whatever ran before the failure (for deliberately incremental work); the result's `kept` names it.",
+      required: false
+    },
+    {
+      name: "acceptRenderQueueRisk",
+      type: "boolean",
+      description: "Default false. After a scripted render-queue change in this After Effects session, undo is refused (After Effects 2027 has gone into crash recovery on undo after such changes \u2014 observed twice; a precaution). Pass true only when the user accepts that risk, ideally after saving.",
+      required: false
+    }
+  ],
+  // The wrapper itself mutates nothing; each child is gated individually below,
+  // so a batch of read-only operations stays usable under AE_MCP_READONLY.
+  readOnly: true,
+  // The children mutate even though the wrapper is read-only, so batch.run
+  // decides its own rollback rather than taking the read-only default.
+  rollback: (args) => args.rollback !== false,
+  toJsx(args) {
+    if (!Array.isArray(args.ops)) {
+      return `
+                return { ok: false, error: "ops must be an array" };
+            `;
+    }
+    const ops = args.ops;
+    const stopOnError = !!args.stopOnError;
+    const rollback = args.rollback !== false;
+    const opBlocks = [];
+    for (let i = 0; i < ops.length; i++) {
+      const entry = ops[i];
+      const opName = entry && typeof entry === "object" && typeof entry.operation === "string" ? entry.operation : void 0;
+      const op = opName !== void 0 ? getOp(opName) : void 0;
+      if (!op) {
+        const withheld = opName !== void 0 ? denyUnregisteredOperation(opName) : null;
+        opBlocks.push(
+          rejectBlock(
+            i,
+            withheld ? denialText(withheld) : `unknown operation: ${String(opName)}`,
+            stopOnError
+          )
+        );
+        continue;
+      }
+      const denial = denyOperation(op);
+      if (denial) {
+        opBlocks.push(rejectBlock(i, denialText(denial), stopOnError));
+        continue;
+      }
+      const validated = validateOpArgs(op, entry.args);
+      if (!validated.ok) {
+        const detail = `invalid arguments for '${op.name}': ` + validated.issues.map((issue2) => `${issue2.path} \u2014 ${issue2.message}`).join("; ") + ` (expects ${summarizeParams(op.params).join(", ") || "no parameters"})`;
+        opBlocks.push(rejectBlock(i, detail, stopOnError));
+        continue;
+      }
+      const consent = denyAppConfig(op, validated.value);
+      if (consent) {
+        opBlocks.push(rejectBlock(i, consent, stopOnError));
+        continue;
+      }
+      if (!wantsUndoGroup(op, validated.value)) {
+        opBlocks.push(
+          rejectBlock(
+            i,
+            `'${op.name}' cannot run inside batch.run \u2014 the batch is one undo group and undo/redo must not run inside one. Call it as its own ae_do.`,
+            stopOnError
+          )
+        );
+        continue;
+      }
+      const prepared = prepareOp(op, validated.value);
+      if (!prepared.ok) {
+        opBlocks.push(rejectBlock(i, `'${op.name}': ${prepared.error}`, stopOnError));
+        continue;
+      }
+      const jsx = op.toJsx(prepared.args);
+      opBlocks.push(`
+                if (!_stopped) {
+                    try {
+                        var _r${i} = (function() { ${jsx} })();
+                        if (_r${i} && _r${i}.ok === false) { _failed++; ${stopOnError ? `_stopped = true; _stoppedAt = ${i};` : ""} }
+                        _results.push(_r${i});
+                    } catch(e) {
+                        _failed++;
+                        _results.push({ ok: false, error: AE.errText(e) });
+                        ${stopOnError ? `_stopped = true; _stoppedAt = ${i};` : ""}
+                    }
+                } else {
+                    _results.push({ skipped: true });
+                }
+            `);
+    }
+    return `
+            var _results = [];
+            var _failed = 0;
+            var _stopped = false;
+            var _stoppedAt = -1;
+            ${opBlocks.join("\n")}
+            var _kept = null;
+            var _rollbackRequested = false;
+            if (_stopped) {
+                if (${rollback ? "true" : "false"} && typeof __mcp !== "undefined" && __mcp && __mcp.requestRollback) {
+                    // serve.jsx reverts the whole request after this returns.
+                    __mcp.requestRollback("batch.run stopped at operation " + _stoppedAt);
+                    _rollbackRequested = true;
+                } else {
+                    if (_stoppedAt === 0) _kept = "nothing ran before it";
+                    else if (_stoppedAt === 1) _kept = "operation 0 ran and was kept";
+                    else _kept = "operations 0 to " + (_stoppedAt - 1) + " ran and were kept";
+                    _kept += "; operation " + _stoppedAt + " failed (any change it made before failing was kept too)" +
+                        "; the operations after it were skipped";
+                }
+            }
+            return {
+                ok: _failed === 0,
+                error: _failed === 0 ? null : (_failed + " of " + _results.length + " operations failed" +
+                    (_rollbackRequested ? "; the batch is being rolled back (stopOnError)" : "")),
+                results: _results,
+                count: _results.length,
+                failed: _failed,
+                stoppedAt: _stopped ? _stoppedAt : null,
+                rollbackRequested: _rollbackRequested,
+                kept: _kept
+            };
+        `;
+  }
+});
+function denialText(denial) {
+  return denial.hint ? `${denial.message} \u2014 ${denial.hint}` : denial.message;
+}
+function rejectBlock(index, message, stopOnError) {
+  return `
+                if (!_stopped) {
+                    _failed++;
+                    _results.push({ ok: false, error: ${jsxVal(message)}, index: ${index} });
+                    ${stopOnError ? `_stopped = true; _stoppedAt = ${index};` : ""}
+                } else {
+                    _results.push({ skipped: true });
+                }
+            `;
+}
+
+// src/operations/timeline.ts
+init_registry();
+registerOp({
+  name: "timeline.set_time",
+  category: "timeline",
+  description: "Set the current time indicator (CTI) in a composition.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    { name: "time", type: "number", description: "Time in seconds", required: true }
+  ],
+  toJsx(args) {
+    return `
+            ${jsxCompPreamble(args)}
+            _comp.time = ${jsxVal(args.time)};
+            return { ok: true, time: _comp.time };
+        `;
+  }
+});
+registerOp({
+  name: "timeline.set_active_comp",
+  category: "timeline",
+  description: "Set the active (visible in UI) composition. Opens it in the viewer.",
+  params: [{ name: "comp", type: "any", description: "Comp name or id", required: true }],
+  toJsx(args) {
+    return `
+            ${jsxCompPreamble(args)}
+            _comp.openInViewer();
+            return { ok: true, name: _comp.name };
+        `;
+  }
+});
+registerOp({
+  name: "timeline.select_layers",
+  category: "timeline",
+  description: "Select (or deselect) layers in a comp by index.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "indices",
+      type: "array",
+      description: "Array of 1-based layer indices to select",
+      required: true
+    },
+    {
+      name: "deselectOthers",
+      type: "boolean",
+      description: "Deselect all other layers first (default true)",
+      required: false,
+      default: true
+    }
+  ],
+  toJsx(args) {
+    return `
+            ${jsxCompPreamble(args)}
+            var _indices = ${jsxVal(args.indices)};
+            if (${jsxVal(args.deselectOthers !== false)}) {
+                for (var i = 1; i <= _comp.numLayers; i++) _comp.layer(i).selected = false;
+            }
+            for (var j = 0; j < _indices.length; j++) {
+                if (_indices[j] >= 1 && _indices[j] <= _comp.numLayers) {
+                    _comp.layer(_indices[j]).selected = true;
+                }
+            }
+            return { ok: true, selected: _indices.length };
+        `;
+  }
+});
+
+// src/operations/layer-advanced.ts
+init_registry();
+registerOp({
+  name: "layer.bounds",
+  category: "layer",
+  readOnly: true,
+  description: "Measure a layer's rendered bounds via sourceRectAtTime \u2014 essential for aligning/fitting text and shape layers. Returns layer-space rect and, when the host supports it, comp-space corners.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "layer",
+      type: "any",
+      description: "1-based layer index, or the layer name",
+      required: true
+    },
+    {
+      name: "time",
+      type: "number",
+      description: "Time in seconds (default: current comp time)",
+      required: false
+    },
+    {
+      name: "includeExtents",
+      type: "boolean",
+      description: "Include pixel extents beyond the layer edges (default false)",
+      required: false,
+      default: false
+    }
+  ],
+  toJsx(args) {
+    return `
+            ${COMP_CORNERS_FN}
+            ${jsxCompLayerPreamble(args)}
+            if (typeof _layer.sourceRectAtTime !== "function") return { ok: false, error: "layer has no sourceRectAtTime (camera/light?)" };
+            var _t = ${jsxVal(args.time ?? null)};
+            if (_t === null) _t = _comp.time;
+            var _r = _layer.sourceRectAtTime(_t, ${jsxVal(args.includeExtents ?? false)});
+            var _out = { ok: true, time: _t, layerSpace: { top: _r.top, left: _r.left, width: _r.width, height: _r.height } };
+            // Comp-space corners via sourcePointToComp (AE 13.2+; meaningful for
+            // text layers \u2014 reflects the first character at the current comp
+            // time). The function evaluates at the current time, so nudge and restore.
+            try {
+                if (typeof _layer.sourcePointToComp === "function") {
+                    var _prevT = _comp.time;
+                    // finally, not a trailing assignment: sourcePointToComp is
+                    // documented for text layers and can throw on others, and
+                    // this op is readOnly \u2014 leaving the playhead moved would be
+                    // a visible edit made by a read-only call.
+                    try {
+                        _comp.time = _t;
+                        _out.compSpace = _compCorners(_layer, _r);
+                    } finally {
+                        _comp.time = _prevT;
+                    }
+                }
+            } catch (eSp) {}
+            return _out;
+        `;
+  }
+});
+registerOp({
+  name: "layer.convert_point",
+  category: "layer",
+  readOnly: true,
+  description: "Convert a point between layer source space and comp space (sourcePointToComp / compPointToSource, AE 13.2+; designed for text layers \u2014 evaluates at the first character at the given time).",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "layer",
+      type: "any",
+      description: "1-based layer index, or the layer name",
+      required: true
+    },
+    {
+      name: "direction",
+      type: "string",
+      description: "sourceToComp|compToSource",
+      required: true
+    },
+    { name: "point", type: "array", description: "[x, y] point to convert", required: true },
+    {
+      name: "time",
+      type: "number",
+      description: "Evaluate at this time (default: current comp time)",
+      required: false
+    }
+  ],
+  toJsx(args) {
+    return `
+            ${jsxCompLayerPreamble(args)}
+            var _toComp = ${jsxVal(args.direction)} === "sourceToComp";
+            var _fn = _toComp ? _layer.sourcePointToComp : _layer.compPointToSource;
+            if (typeof _fn !== "function") return { ok: false, error: "point conversion unavailable on this layer (text layers, AE 13.2+)" };
+            var _t = ${jsxVal(args.time ?? null)};
+            var _prevT = _comp.time;
+            if (_t !== null) _comp.time = _t;
+            var _res;
+            try {
+                _res = _toComp ? _layer.sourcePointToComp(${jsxVal(args.point)}) : _layer.compPointToSource(${jsxVal(args.point)});
+            } catch (eCv) {
+                _comp.time = _prevT;
+                return { ok: false, error: "conversion failed: " + AE.errText(eCv) };
+            }
+            if (_t !== null) _comp.time = _prevT;
+            return { ok: true, point: AE.valueToJson(_res) };
+        `;
+  }
+});
+registerOp({
+  name: "layer.apply_preset",
+  category: "layer",
+  description: "Apply an animation preset (.ffx file) to a layer \u2014 applies effects/keyframes in one call.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "layer",
+      type: "any",
+      description: "1-based layer index, or the layer name",
+      required: true
+    },
+    {
+      name: "path",
+      type: "string",
+      description: "Absolute path to the .ffx preset",
+      required: true
+    }
+  ],
+  toJsx(args) {
+    return `
+            ${jsxCompLayerPreamble(args)}
+            var _f = new File(${jsxVal(args.path)});
+            if (!_f.exists) return { ok: false, error: "preset file not found: " + ${jsxVal(args.path)} };
+            // applyPreset can target the comp's selected layers (e.g. presets that
+            // create layers), so pin the selection to the target layer first \u2014
+            // then put the user's selection back. "selected" is a real
+            // addressing mode elsewhere in this registry and is reported in the
+            // ambient context, so leaving it rewritten would silently retarget
+            // later operations in the same batch. Layer references, not
+            // indices: a preset may insert layers and shift every index.
+            var _prevSel = [];
+            for (var _si = 1; _si <= _comp.numLayers; _si++) {
+                var _sl = _comp.layer(_si);
+                if (_sl.selected) _prevSel.push(_sl);
+                _sl.selected = false;
+            }
+            _layer.selected = true;
+            try {
+                _layer.applyPreset(_f);
+            } finally {
+                for (var _di = 1; _di <= _comp.numLayers; _di++) {
+                    try { _comp.layer(_di).selected = false; } catch (eDs) {}
+                }
+                for (var _ri = 0; _ri < _prevSel.length; _ri++) {
+                    try { _prevSel[_ri].selected = true; } catch (eRs) {}
+                }
+            }
+            var _fx = 0;
+            try { _fx = _layer.property("Effects").numProperties; } catch (eFx) {}
+            return { ok: true, applied: _f.displayName, numEffects: _fx };
+        `;
+  }
+});
+registerOp({
+  name: "layer.replace_source",
+  category: "layer",
+  description: "Replace a layer's source with another project item (footage or comp), keeping keyframes/effects. Set fixExpressions=false to skip expression rewriting.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "layer",
+      type: "any",
+      description: "1-based layer index, or the layer name",
+      required: true
+    },
+    {
+      name: "item",
+      type: "any",
+      description: "New source: project item id (number) or name (string)",
+      required: true
+    },
+    {
+      name: "fixExpressions",
+      type: "boolean",
+      description: "Rewrite expressions that reference the old source (default true)",
+      required: false,
+      default: true
+    }
+  ],
+  toJsx(args) {
+    return `
+            ${jsxCompLayerPreamble(args)}
+            if (!(_layer instanceof AVLayer)) return { ok: false, error: "layer has no source (not an AVLayer)" };
+            var _item = AE.findItem(${jsxVal(args.item)});
+            if (!_item) return { ok: false, error: "no project item matching " + ${jsxVal(String(args.item))} };
+            if (_item instanceof FolderItem) return { ok: false, error: "item is a folder, not footage/comp" };
+            _layer.replaceSource(_item, ${jsxVal(args.fixExpressions !== false)});
+            return { ok: true, layer: _layer.name, source: _item.name };
+        `;
+  }
+});
+registerOp({
+  name: "layer.set_track_matte",
+  category: "layer",
+  description: "Set (or remove) a track matte on a layer. Uses AVLayer.setTrackMatte (AE 23.0+): the matte can be ANY layer in the comp \u2014 it does not need to sit directly above the target.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "layer",
+      type: "any",
+      description: "1-based index (or name) of the layer to apply matte TO",
+      required: true
+    },
+    {
+      name: "matteLayer",
+      type: "any",
+      description: "Matte source layer: 1-based index or name. Ignored when matteType is 'none'.",
+      required: false
+    },
+    {
+      name: "matteType",
+      type: "string",
+      description: "alpha|alphaInverted|luma|lumaInverted|none",
+      required: true
+    }
+  ],
+  toJsx(args) {
+    return `
+            ${jsxCompLayerPreamble(args)}
+            var _matteMap = {
+                "alpha": TrackMatteType.ALPHA,
+                "alphaInverted": TrackMatteType.ALPHA_INVERTED,
+                "luma": TrackMatteType.LUMA,
+                "lumaInverted": TrackMatteType.LUMA_INVERTED,
+                "none": TrackMatteType.NO_TRACK_MATTE
+            };
+            var _type = _matteMap[${jsxVal(args.matteType)}];
+            if (!_type && ${jsxVal(args.matteType)} !== "none") return { ok: false, error: "unknown matteType" };
+            if (${jsxVal(args.matteType)} === "none") {
+                _layer.removeTrackMatte();
+                return { ok: true, layer: _layer.name, matte: null };
+            }
+            var _matteArg = ${jsxVal(args.matteLayer ?? null)};
+            if (_matteArg === null) return { ok: false, error: "matteLayer is required when matteType is not 'none'" };
+            var _matte = AE.findLayerInComp(_comp, _matteArg);
+            if (!_matte) return { ok: false, error: "no matte layer matching " + String(_matteArg) };
+            if (_matte === _layer) return { ok: false, error: "a layer cannot be its own track matte" };
+            _layer.setTrackMatte(_matte, _type);
+            return { ok: true, layer: _layer.name, matte: _matte.name };
+        `;
+  }
+});
+registerOp({
+  name: "layer.set_blend_mode",
+  category: "layer",
+  description: "Set blending mode on a layer.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "layer",
+      type: "any",
+      description: "1-based layer index, or the layer name",
+      required: true
+    },
+    {
+      name: "mode",
+      type: "string",
+      description: "normal|add|multiply|screen|overlay|softLight|hardLight|difference|exclusion|colorDodge|colorBurn|darken|lighten|stencilAlpha|stencilLuma|silhouetteAlpha|silhouetteLuma",
+      required: true
+    }
+  ],
+  toJsx(args) {
+    return `
+            ${jsxCompLayerPreamble(args)}
+            var _modeMap = {
+                "normal": BlendingMode.NORMAL, "add": BlendingMode.ADD,
+                "multiply": BlendingMode.MULTIPLY, "screen": BlendingMode.SCREEN,
+                "overlay": BlendingMode.OVERLAY, "softLight": BlendingMode.SOFT_LIGHT,
+                "hardLight": BlendingMode.HARD_LIGHT, "difference": BlendingMode.DIFFERENCE,
+                "exclusion": BlendingMode.EXCLUSION, "colorDodge": BlendingMode.COLOR_DODGE,
+                "colorBurn": BlendingMode.COLOR_BURN, "darken": BlendingMode.DARKEN,
+                "lighten": BlendingMode.LIGHTEN, "stencilAlpha": BlendingMode.STENCIL_ALPHA,
+                "stencilLuma": BlendingMode.STENCIL_LUMA,
+                "silhouetteAlpha": BlendingMode.SILHOUETTE_ALPHA,
+                "silhouetteLuma": BlendingMode.SILHOUETTE_LUMA
+            };
+            var _mode = _modeMap[${jsxVal(args.mode)}];
+            if (!_mode) return { ok: false, error: "unknown blend mode: " + ${jsxVal(args.mode)} };
+            _layer.blendingMode = _mode;
+            return { ok: true, layer: _layer.name, mode: ${jsxVal(args.mode)} };
+        `;
+  }
+});
+registerOp({
+  name: "layer.split",
+  category: "layer",
+  description: "Split a layer at a given time. Creates a new layer that starts at the split time.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "layer",
+      type: "any",
+      description: "1-based layer index, or the layer name",
+      required: true
+    },
+    { name: "time", type: "number", description: "Time in seconds to split at", required: true }
+  ],
+  toJsx(args) {
+    return `
+            ${jsxCompLayerPreamble(args)}
+            var _t = ${jsxVal(args.time)};
+            if (typeof _t !== "number") return { ok: false, error: "time must be a number" };
+            if (_t <= _layer.inPoint || _t >= _layer.outPoint) {
+                return { ok: false, error: "split time " + _t + " is outside the layer's span (" + _layer.inPoint + ", " + _layer.outPoint + ")" };
+            }
+            var _dup = _layer.duplicate();
+            _layer.outPoint = _t;
+            _dup.inPoint = _t;
+            return { ok: true, originalIndex: _layer.index, newIndex: _dup.index, splitTime: _t };
+        `;
+  }
+});
+registerOp({
+  name: "layer.copy_to_comp",
+  category: "layer",
+  description: "Copy a layer into another comp. The copy is identified by its Layer.id (never by assuming it landed on top). Options: timeOffset/startTime to place it in time, bakeAtTime to freeze every animated property at that source time and drop the keys (match-cut copies), name to rename. The copy keeps the source comp's span \u2014 use layer.set_timing outPoint:'comp' to extend it.",
+  params: [
+    { name: "comp", type: "any", description: "Source comp name or id", required: true },
+    {
+      name: "layer",
+      type: "any",
+      description: "1-based layer index, name, or { id } in the source comp",
+      required: true
+    },
+    { name: "targetComp", type: "any", description: "Target comp name or id", required: true },
+    {
+      name: "timeOffset",
+      type: "number",
+      description: "Seconds added to the copy's startTime",
+      required: false
+    },
+    {
+      name: "startTime",
+      type: "number",
+      description: "Absolute startTime for the copy (applied after timeOffset)",
+      required: false
+    },
+    {
+      name: "bakeAtTime",
+      type: "number",
+      description: "Freeze every keyframed property of the copy at this SOURCE-comp time and remove its keys",
+      required: false
+    },
+    { name: "name", type: "string", description: "Rename the copy", required: false }
+  ],
+  toJsx(args) {
+    return `
+            ${jsxCompLayerPreamble(args)}
+            var _target = AE.findCompByNameOrId(${jsxVal(args.targetComp)});
+            if (!_target) return { ok: false, error: "target comp not found" };
+            var _snap = AE.layerIdSnapshot(_target);
+            _layer.copyToComp(_target);
+            var _added = AE.layersSince(_target, _snap);
+            if (_added.length !== 1) {
+                return { ok: false, error: "copyToComp added " + _added.length + " layers to " + _target.name + " (expected 1)" };
+            }
+            var _newLayer = _added[0];
+            var _baked = 0;
+            var _bakeT = ${jsxVal(args.bakeAtTime ?? null)};
+            if (_bakeT !== null) _baked = AE.bakeKeysAtTime(_newLayer, _bakeT);
+            var _off = ${jsxVal(args.timeOffset ?? null)};
+            if (_off !== null) _newLayer.startTime = _newLayer.startTime + _off;
+            var _start = ${jsxVal(args.startTime ?? null)};
+            if (_start !== null) _newLayer.startTime = _start;
+            ${args.name ? `_newLayer.name = ${jsxVal(args.name)};` : ""}
+            return { ok: true, copied: _layer.name, targetComp: _target.name, newIndex: _newLayer.index, newName: _newLayer.name, newId: AE.safeGet(function () { return _newLayer.id; }, null), startTime: _newLayer.startTime, inPoint: _newLayer.inPoint, outPoint: _newLayer.outPoint, bakedProperties: _baked };
+        `;
+  }
+});
+registerOp({
+  name: "layer.calculate_transform",
+  category: "layer",
+  readOnly: true,
+  description: "Calculate the transform that maps a 3D layer onto three corner points (AVLayer.calculateTransformFromPoints) - corner-pin style placement in 3D space. Calculation-only: returns anchorPoint/position/x-y-zRotation/scale without touching the layer \u2014 apply them with property.set / layer.set_props.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "layer",
+      type: "any",
+      description: "1-based layer index, or the layer name (3D layer)",
+      required: true
+    },
+    {
+      name: "topLeft",
+      type: "array",
+      description: "[x,y,z] world point for the layer's top-left",
+      required: true
+    },
+    {
+      name: "topRight",
+      type: "array",
+      description: "[x,y,z] world point for the top-right",
+      required: true
+    },
+    {
+      name: "bottomLeft",
+      type: "array",
+      description: "[x,y,z] world point for the bottom-left. The scripting guide names this pointBottomRight, but the implementation expects the bottom-left (the guide's own example passes bl): a true bottom-right returns the same placement with zScale skewed by sin(corner angle) \u2014 verified on AE 26.3.",
+      required: true
+    }
+  ],
+  toJsx(args) {
+    return `
+            ${jsxCompLayerPreamble(args)}
+            if (typeof _layer.calculateTransformFromPoints !== "function") return { ok: false, error: "calculateTransformFromPoints is not available on this layer" };
+            if (!_layer.threeDLayer) return { ok: false, error: "layer must be 3D (threeDLayer: true) for calculateTransformFromPoints" };
+            var _xf = null;
+            try { _xf = _layer.calculateTransformFromPoints(${jsxVal(args.topLeft)}, ${jsxVal(args.topRight)}, ${jsxVal(args.bottomLeft)}); } catch (eCt) { return { ok: false, error: "calculateTransformFromPoints failed: " + AE.errText(eCt) }; }
+            return { ok: true, transform: AE.valueToJson(_xf) };
+        `;
+  }
+});
+
 // src/operations/inspect.ts
 init_config();
 init_registry();
-import * as path5 from "node:path";
+import * as path8 from "node:path";
 registerOp({
   name: "comp.info",
   category: "comp",
@@ -47320,7 +54278,7 @@ registerOp({
   readOnly: true,
   toJsx(args) {
     const raw = String(args.outPath);
-    if (!path5.isAbsolute(raw)) {
+    if (!path8.isAbsolute(raw)) {
       return `
             return { ok: false, error: ${jsxVal(`outPath must be absolute, got: ${raw}`)} };
         `;
@@ -47331,7 +54289,7 @@ registerOp({
             return { ok: false, error: ${jsxVal(rejection)} };
         `;
     }
-    const abs = path5.resolve(raw).replace(/\\/g, "/");
+    const abs = path8.resolve(raw).replace(/\\/g, "/");
     return `
             ${RENDER_FRAME_FN}
             ${jsxCompPreamble(args)}
@@ -49802,8 +56760,8 @@ registerOp({
 
 // src/operations/instance.ts
 import { spawn } from "node:child_process";
-import { promises as fs4 } from "node:fs";
-import * as path6 from "node:path";
+import { promises as fs8 } from "node:fs";
+import * as path9 from "node:path";
 init_config();
 init_registry();
 var INSTALL_CMD = "npx @kumoproductions/mcp-aftereffects install-agent";
@@ -49817,7 +56775,7 @@ function nodeOnly(name) {
 function fail(error62, extra = {}) {
   return { ok: false, error: error62, ...extra };
 }
-var sleep2 = (ms) => new Promise((resolve11) => setTimeout(resolve11, ms));
+var sleep3 = (ms) => new Promise((resolve12) => setTimeout(resolve12, ms));
 function summarizeInstance(i) {
   return {
     label: instanceLabel(i),
@@ -49912,10 +56870,10 @@ registerOp({
     let copiedFrom = null;
     let copyTo = null;
     if (typeof args.copyFrom === "string" && args.copyFrom) {
-      const src = path6.resolve(args.copyFrom);
+      const src = path9.resolve(args.copyFrom);
       if (!await exists(src)) return fail(`copyFrom not found: ${src}`, { errorCode: "IO" });
-      const ext = path6.extname(src) || ".aep";
-      copyTo = typeof args.copyTo === "string" && args.copyTo ? path6.resolve(args.copyTo) : path6.join(path6.dirname(src), `${path6.basename(src, ext)}__${name}${ext}`);
+      const ext = path9.extname(src) || ".aep";
+      copyTo = typeof args.copyTo === "string" && args.copyTo ? path9.resolve(args.copyTo) : path9.join(path9.dirname(src), `${path9.basename(src, ext)}__${name}${ext}`);
       if (copyTo === src)
         return fail("copyTo must differ from copyFrom", { errorCode: "INVALID_ARGS" });
       const rejected = rejectedOutputPath(copyTo);
@@ -49923,7 +56881,7 @@ registerOp({
       copiedFrom = src;
       projectToOpen = copyTo;
     } else if (typeof args.project === "string" && args.project) {
-      projectToOpen = path6.resolve(args.project);
+      projectToOpen = path9.resolve(args.project);
       if (!await exists(projectToOpen))
         return fail(`project not found: ${projectToOpen}`, { errorCode: "IO" });
     }
@@ -49950,8 +56908,8 @@ registerOp({
       return fail(err instanceof Error ? err.message : String(err), { errorCode: "AE_NOT_FOUND" });
     }
     if (copiedFrom !== null && copyTo !== null) {
-      await fs4.mkdir(path6.dirname(copyTo), { recursive: true });
-      await fs4.copyFile(copiedFrom, copyTo);
+      await fs8.mkdir(path9.dirname(copyTo), { recursive: true });
+      await fs8.copyFile(copiedFrom, copyTo);
     }
     const plan = buildInstanceLaunchPlan(exe, name);
     const aePid = process.platform === "darwin" ? null : void 0;
@@ -49982,7 +56940,7 @@ registerOp({
         registered = info;
         break;
       }
-      await sleep2(500);
+      await sleep3(500);
     }
     if (registered === null) {
       const dialogs = (await scanAeDialogs()).filter(
@@ -50126,14 +57084,14 @@ registerOp({
         gone = true;
         break;
       }
-      await sleep2(500);
+      await sleep3(500);
     }
     if (!gone) {
       return fail(
         `instance '${name}' accepted the quit but is still ticking after ${timeoutMs} ms \u2014 check it for a dialog`
       );
     }
-    await fs4.rm(dir, { recursive: true, force: true }).catch(() => {
+    await fs8.rm(dir, { recursive: true, force: true }).catch(() => {
     });
     return { ok: true, instance: name, stopped: true, saved: !!args.save, file: file2 };
   }
@@ -50207,7 +57165,7 @@ registerOp({
 });
 async function exists(p) {
   try {
-    await fs4.access(p);
+    await fs8.access(p);
     return true;
   } catch {
     return false;
@@ -50221,50 +57179,6 @@ if (evalRunEnabled()) {
 
 // src/tools/catalog.ts
 init_registry();
-
-// src/tools/define-tool.ts
-function defineTool(spec) {
-  return spec;
-}
-function jsonResult(payload) {
-  const envelope = { ok: true, ...payload };
-  return {
-    content: [{ type: "text", text: JSON.stringify(envelope, null, 2) }],
-    structuredContent: envelope,
-    isError: false
-  };
-}
-function jsxReportedFailure(result) {
-  if (result === null || typeof result !== "object" || Array.isArray(result)) return null;
-  const r = result;
-  if (r.ok !== false) return null;
-  return { error: typeof r.error === "string" ? r.error : "operation reported ok: false" };
-}
-function toMcpResult(result) {
-  if (!result.ok) {
-    return errorResult(result.errorCode ?? "TRANSPORT", result.error ?? "unknown failure", {
-      ...result.dialogs?.length ? { details: { dialogs: result.dialogs } } : {},
-      stack: result.stack,
-      logs: result.logs,
-      durationMs: result.durationMs
-    });
-  }
-  const reported = jsxReportedFailure(result.result);
-  if (reported) {
-    return errorResult("OPERATION_FAILED", reported.error, {
-      details: { result: result.result },
-      logs: result.logs,
-      durationMs: result.durationMs
-    });
-  }
-  return jsonResult({
-    result: result.result,
-    logs: result.logs,
-    durationMs: result.durationMs
-  });
-}
-
-// src/tools/catalog.ts
 function visibleOps(category) {
   return listOps(category).filter((op) => denyOperation(op) === null);
 }
@@ -50345,1037 +57259,9 @@ var catalogTool = defineTool({
 
 // src/tools/check-comp.ts
 import { randomUUID as randomUUID3 } from "node:crypto";
-import { promises as fs7 } from "node:fs";
+import { promises as fs9 } from "node:fs";
 import * as os4 from "node:os";
-import * as path9 from "node:path";
-
-// src/color/png16.ts
-import * as zlib from "node:zlib";
-var PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
-function readChunks(buf) {
-  if (!buf.subarray(0, 8).equals(PNG_SIGNATURE)) throw new Error("not a PNG file");
-  const chunks = [];
-  let pos = 8;
-  while (pos + 8 <= buf.length) {
-    const length = buf.readUInt32BE(pos);
-    const type = buf.toString("latin1", pos + 4, pos + 8);
-    chunks.push({ type, data: buf.subarray(pos + 8, pos + 8 + length) });
-    pos += 12 + length;
-    if (type === "IEND") break;
-  }
-  return chunks;
-}
-function channelsFor(colorType) {
-  switch (colorType) {
-    case 0:
-      return 1;
-    // grayscale
-    case 2:
-      return 3;
-    // RGB
-    case 4:
-      return 2;
-    // gray + alpha
-    case 6:
-      return 4;
-    // RGBA
-    default:
-      throw new Error(`unsupported PNG color type ${colorType} (palette images are out of scope)`);
-  }
-}
-function paeth(a, b, c) {
-  const p = a + b - c;
-  const pa = Math.abs(p - a);
-  const pb = Math.abs(p - b);
-  const pc = Math.abs(p - c);
-  if (pa <= pb && pa <= pc) return a;
-  return pb <= pc ? b : c;
-}
-function decodePng(buf) {
-  const chunks = readChunks(buf);
-  const ihdr = chunks.find((c) => c.type === "IHDR");
-  if (!ihdr) throw new Error("PNG missing IHDR");
-  const width = ihdr.data.readUInt32BE(0);
-  const height = ihdr.data.readUInt32BE(4);
-  const bitDepth = ihdr.data.readUInt8(8);
-  const colorType = ihdr.data.readUInt8(9);
-  const interlace = ihdr.data.readUInt8(12);
-  if (interlace !== 0) throw new Error("interlaced PNG is not supported");
-  if (bitDepth !== 8 && bitDepth !== 16) throw new Error(`unsupported PNG bit depth ${bitDepth}`);
-  const channels = channelsFor(colorType);
-  const idat = Buffer.concat(chunks.filter((c) => c.type === "IDAT").map((c) => c.data));
-  const raw = zlib.inflateSync(idat);
-  const bytesPerSample = bitDepth / 8;
-  const bytesPerPixel = channels * bytesPerSample;
-  const stride = width * bytesPerPixel;
-  if (raw.length < height * (stride + 1)) throw new Error("PNG pixel data truncated");
-  const rgb = new Float64Array(width * height * 3);
-  const hasAlpha = channels === 2 || channels === 4;
-  const alpha = hasAlpha ? new Float64Array(width * height) : void 0;
-  const maxVal = bitDepth === 16 ? 65535 : 255;
-  const prev = Buffer.alloc(stride);
-  const cur = Buffer.alloc(stride);
-  const grayish = channels <= 2;
-  for (let y = 0; y < height; y++) {
-    const rowStart = y * (stride + 1);
-    const filter = raw[rowStart];
-    raw.copy(cur, 0, rowStart + 1, rowStart + 1 + stride);
-    switch (filter) {
-      case 0:
-        break;
-      case 1:
-        for (let i = bytesPerPixel; i < stride; i++)
-          cur[i] = cur[i] + cur[i - bytesPerPixel] & 255;
-        break;
-      case 2:
-        for (let i = 0; i < stride; i++) cur[i] = cur[i] + prev[i] & 255;
-        break;
-      case 3:
-        for (let i = 0; i < stride; i++) {
-          const left = i >= bytesPerPixel ? cur[i - bytesPerPixel] : 0;
-          cur[i] = cur[i] + (left + prev[i] >> 1) & 255;
-        }
-        break;
-      case 4:
-        for (let i = 0; i < stride; i++) {
-          const left = i >= bytesPerPixel ? cur[i - bytesPerPixel] : 0;
-          const upLeft = i >= bytesPerPixel ? prev[i - bytesPerPixel] : 0;
-          cur[i] = cur[i] + paeth(left, prev[i], upLeft) & 255;
-        }
-        break;
-      default:
-        throw new Error(`unknown PNG filter ${filter} at row ${y}`);
-    }
-    for (let x = 0; x < width; x++) {
-      const px2 = x * bytesPerPixel;
-      const out = (y * width + x) * 3;
-      for (let ch = 0; ch < 3; ch++) {
-        const srcCh = grayish ? 0 : ch;
-        const off = px2 + srcCh * bytesPerSample;
-        const v = bitDepth === 16 ? cur.readUInt16BE(off) : cur[off];
-        rgb[out + ch] = v / maxVal;
-      }
-      if (alpha) {
-        const off = px2 + (channels - 1) * bytesPerSample;
-        const a = bitDepth === 16 ? cur.readUInt16BE(off) : cur[off];
-        alpha[y * width + x] = a / maxVal;
-      }
-    }
-    cur.copy(prev);
-  }
-  return alpha ? { width, height, rgb, alpha, bitDepth } : { width, height, rgb, bitDepth };
-}
-function chunk(type, data) {
-  const head = Buffer.alloc(8);
-  head.writeUInt32BE(data.length, 0);
-  head.write(type, 4, "latin1");
-  const crcBody = Buffer.concat([head.subarray(4), data]);
-  const crc = Buffer.alloc(4);
-  crc.writeUInt32BE(zlib.crc32(crcBody) >>> 0, 0);
-  return Buffer.concat([head, data, crc]);
-}
-var to8 = (v) => Math.round(Math.min(1, Math.max(0, v)) * 255);
-function encode8(width, height, colorType, srgbTags, write) {
-  const channels = colorType === 0 ? 1 : colorType === 2 ? 3 : 4;
-  const stride = width * channels;
-  const raw = Buffer.alloc(height * (stride + 1));
-  for (let y = 0; y < height; y++) {
-    const rowStart = y * (stride + 1);
-    raw[rowStart] = 0;
-    for (let x = 0; x < width; x++) write(y * width + x, raw, rowStart + 1 + x * channels);
-  }
-  const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(width, 0);
-  ihdr.writeUInt32BE(height, 4);
-  ihdr.writeUInt8(8, 8);
-  ihdr.writeUInt8(colorType, 9);
-  const gama = Buffer.alloc(4);
-  gama.writeUInt32BE(45455, 0);
-  return Buffer.concat([
-    PNG_SIGNATURE,
-    chunk("IHDR", ihdr),
-    ...srgbTags ? [chunk("sRGB", Buffer.from([0])), chunk("gAMA", gama)] : [],
-    chunk("IDAT", zlib.deflateSync(raw, { level: 6 })),
-    chunk("IEND", Buffer.alloc(0))
-  ]);
-}
-function encodePngSrgb8(width, height, rgb) {
-  return encode8(width, height, 2, true, (p, out, at) => {
-    out[at] = to8(rgb[p * 3]);
-    out[at + 1] = to8(rgb[p * 3 + 1]);
-    out[at + 2] = to8(rgb[p * 3 + 2]);
-  });
-}
-function encodePngSrgbRgba8(width, height, rgb, alpha) {
-  return encode8(width, height, 6, true, (p, out, at) => {
-    out[at] = to8(rgb[p * 3]);
-    out[at + 1] = to8(rgb[p * 3 + 1]);
-    out[at + 2] = to8(rgb[p * 3 + 2]);
-    out[at + 3] = to8(alpha[p]);
-  });
-}
-function encodePngGray8(width, height, values) {
-  return encode8(width, height, 0, false, (p, out, at) => {
-    out[at] = to8(values[p]);
-  });
-}
-
-// src/color/settled-read.ts
-import { promises as fs5 } from "node:fs";
-var SETTLE_BASE_MS = 15e3;
-var SETTLE_PER_HD_FRAME_MS = 3e3;
-var SETTLE_MIN_PER_FRAME_MS = 1e3;
-var HD_PIXELS = 1080 * 1920;
-var POLL_MS = 60;
-var IEND = Buffer.from([0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130]);
-function sleep3(ms) {
-  return new Promise((resolve11) => setTimeout(resolve11, ms));
-}
-function settleTimeoutFor(frames, pixelsPerFrame) {
-  const n = Math.max(1, Math.floor(frames));
-  const perFrame = Math.max(
-    SETTLE_MIN_PER_FRAME_MS,
-    Math.round(SETTLE_PER_HD_FRAME_MS * Math.max(0, pixelsPerFrame) / HD_PIXELS)
-  );
-  return SETTLE_BASE_MS + (n - 1) * perFrame;
-}
-async function stampFiles(paths) {
-  return Promise.all(
-    paths.map(async (p) => {
-      try {
-        const st = await fs5.stat(p, { bigint: true });
-        return { exists: true, size: Number(st.size), mtimeNs: st.mtimeNs, ino: st.ino };
-      } catch {
-        return { exists: false, size: 0, mtimeNs: 0n, ino: 0n };
-      }
-    })
-  );
-}
-async function endsWithIend(p, size) {
-  if (size < IEND.length) return false;
-  let fh = null;
-  try {
-    fh = await fs5.open(p, "r");
-    const tail = Buffer.alloc(IEND.length);
-    await fh.read(tail, 0, IEND.length, size - IEND.length);
-    return tail.equals(IEND);
-  } catch {
-    return false;
-  } finally {
-    await fh?.close();
-  }
-}
-async function waitForSettled(paths, opts) {
-  const stableMs = opts.stableMs ?? 250;
-  const start = Date.now();
-  const deadline = start + opts.timeoutMs;
-  const done = /* @__PURE__ */ new Set();
-  const state = paths.map(() => ({
-    size: -1,
-    changedAt: start,
-    status: "missing"
-  }));
-  for (; ; ) {
-    await Promise.all(
-      paths.map(async (p, i) => {
-        if (done.has(i)) return;
-        const s = state[i];
-        let st = null;
-        try {
-          st = await fs5.stat(p, { bigint: true });
-        } catch {
-        }
-        if (st === null) {
-          s.status = "missing";
-          s.size = -1;
-          return;
-        }
-        const size = Number(st.size);
-        const was = opts.before?.[i];
-        if (was?.exists && was.size === size && was.mtimeNs === st.mtimeNs && was.ino === st.ino) {
-          s.status = "unchanged";
-          s.size = size;
-          return;
-        }
-        if (size !== s.size) {
-          s.size = size;
-          s.changedAt = Date.now();
-        }
-        if (size === 0) {
-          s.status = "empty";
-          return;
-        }
-        s.status = "writing";
-        if (await endsWithIend(p, size) || Date.now() - s.changedAt >= stableMs) done.add(i);
-      })
-    );
-    if (done.size === paths.length || Date.now() > deadline) break;
-    await sleep3(POLL_MS);
-  }
-  const settled = [...done].sort((a, b) => a - b);
-  const unsettled = [];
-  for (const [i, p] of paths.entries()) {
-    if (done.has(i)) continue;
-    unsettled.push({
-      index: i,
-      path: p,
-      state: state[i].status,
-      bytes: Math.max(0, state[i].size)
-    });
-  }
-  return { settled, unsettled, waitedMs: Date.now() - start, timeoutMs: opts.timeoutMs };
-}
-async function readFileSettled(filePath, timeoutMs = SETTLE_BASE_MS, stableMs = 250) {
-  const res = await waitForSettled([filePath], { timeoutMs, stableMs });
-  if (res.settled.length === 0) {
-    throw new Error(
-      `file did not settle within ${timeoutMs}ms (saveFrameToPng writes asynchronously): ${filePath}`
-    );
-  }
-  return fs5.readFile(filePath);
-}
-
-// src/color/sheet.ts
-var TOL = 2 / 255;
-function px(img, x, y) {
-  const i = (y * img.width + x) * 3;
-  return [img.rgb[i], img.rgb[i + 1], img.rgb[i + 2]];
-}
-function same(a, b) {
-  return Math.abs(a[0] - b[0]) <= TOL && Math.abs(a[1] - b[1]) <= TOL && Math.abs(a[2] - b[2]) <= TOL;
-}
-function isBackground(img, x, y, bg) {
-  if (img.alpha) return img.alpha[y * img.width + x] <= TOL;
-  return bg !== null && same(px(img, x, y), bg);
-}
-function cornerColor(img) {
-  const corners = [
-    px(img, 0, 0),
-    px(img, img.width - 1, 0),
-    px(img, 0, img.height - 1),
-    px(img, img.width - 1, img.height - 1)
-  ];
-  let best = corners[0];
-  let bestCount = 0;
-  for (const c of corners) {
-    const count = corners.filter((o) => same(o, c)).length;
-    if (count > bestCount) {
-      best = c;
-      bestCount = count;
-    }
-  }
-  return best;
-}
-function lineUniform(img, fixed, horizontal) {
-  const n = horizontal ? img.width : img.height;
-  const first = horizontal ? px(img, 0, fixed) : px(img, fixed, 0);
-  let transparent = img.alpha !== void 0;
-  for (let i = 0; i < n; i++) {
-    const x = horizontal ? i : fixed;
-    const y = horizontal ? fixed : i;
-    if (transparent && img.alpha[y * img.width + x] > TOL) transparent = false;
-    if (!same(px(img, x, y), first)) return { uniform: false, transparent: false, color: first };
-  }
-  return { uniform: true, transparent, color: first };
-}
-function edgeBand(img, side2) {
-  const horizontal = side2 === "top" || side2 === "bottom";
-  const n = horizontal ? img.height : img.width;
-  let width = 0;
-  let color = null;
-  let transparent = true;
-  for (let i = 0; i < n; i++) {
-    const fixed = side2 === "top" || side2 === "left" ? i : n - 1 - i;
-    const line = lineUniform(img, fixed, horizontal);
-    if (!line.uniform) break;
-    if (color === null) color = line.color;
-    else if (!same(color, line.color)) break;
-    if (!line.transparent) transparent = false;
-    width++;
-  }
-  if (width === 0) return { width: 0, kind: "none", color: null };
-  return { width, kind: transparent && img.alpha ? "transparent" : "color", color };
-}
-function analyzeFrame(img) {
-  const { width, height } = img;
-  const bgColor = img.alpha ? null : cornerColor(img);
-  const sum = [0, 0, 0];
-  let minX = width;
-  let minY = height;
-  let maxX = -1;
-  let maxY = -1;
-  let content = 0;
-  const first = px(img, 0, 0);
-  let uniform = true;
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const i = (y * width + x) * 3;
-      sum[0] += img.rgb[i];
-      sum[1] += img.rgb[i + 1];
-      sum[2] += img.rgb[i + 2];
-      if (uniform && !same(px(img, x, y), first)) uniform = false;
-      if (!isBackground(img, x, y, bgColor)) {
-        content++;
-        if (x < minX) minX = x;
-        if (x > maxX) maxX = x;
-        if (y < minY) minY = y;
-        if (y > maxY) maxY = y;
-      }
-    }
-  }
-  const total = width * height;
-  return {
-    width,
-    height,
-    meanRgb: [sum[0] / total, sum[1] / total, sum[2] / total],
-    uniform,
-    background: img.alpha ? { kind: "transparent", color: null } : { kind: "color", color: bgColor },
-    contentBounds: content === 0 ? null : { left: minX, top: minY, width: maxX - minX + 1, height: maxY - minY + 1 },
-    coverage: content / total,
-    edges: {
-      top: edgeBand(img, "top"),
-      bottom: edgeBand(img, "bottom"),
-      left: edgeBand(img, "left"),
-      right: edgeBand(img, "right")
-    }
-  };
-}
-var CHECKERBOARD = {
-  size: 16,
-  light: [0.8, 0.8, 0.8],
-  dark: [0.6, 0.6, 0.6]
-};
-function unmatte(img, bg) {
-  const out = Float64Array.from(img.rgb);
-  const alpha = img.alpha;
-  if (!alpha) return out;
-  for (let p = 0; p < alpha.length; p++) {
-    const a = alpha[p];
-    if (a >= 1) continue;
-    const i = p * 3;
-    for (let c = 0; c < 3; c++) {
-      out[i + c] = a <= 0 ? 0 : Math.min(1, Math.max(0, (out[i + c] - bg[c] * (1 - a)) / a));
-    }
-  }
-  return out;
-}
-function flattenOver(img, backdrop) {
-  const out = Float64Array.from(img.rgb);
-  const alpha = img.alpha;
-  if (!alpha) return out;
-  const { width, height } = img;
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const p = y * width + x;
-      const a = alpha[p];
-      if (a >= 1) continue;
-      const bg = backdrop.kind === "color" ? backdrop.color : (Math.floor(x / CHECKERBOARD.size) + Math.floor(y / CHECKERBOARD.size)) % 2 === 0 ? CHECKERBOARD.light : CHECKERBOARD.dark;
-      const i = p * 3;
-      out[i] = out[i] * a + bg[0] * (1 - a);
-      out[i + 1] = out[i + 1] * a + bg[1] * (1 - a);
-      out[i + 2] = out[i + 2] * a + bg[2] * (1 - a);
-    }
-  }
-  return out;
-}
-var r4 = (v) => Math.round(v * 1e4) / 1e4;
-var r4rgb = (v) => [r4(v[0]), r4(v[1]), r4(v[2])];
-function clipRegion(img, region) {
-  const x0 = Math.floor(region.x);
-  const y0 = Math.floor(region.y);
-  const x1 = x0 + Math.max(1, Math.floor(region.width ?? 1));
-  const y1 = y0 + Math.max(1, Math.floor(region.height ?? 1));
-  const cx0 = Math.max(0, x0);
-  const cy0 = Math.max(0, y0);
-  const cx1 = Math.min(img.width, x1);
-  const cy1 = Math.min(img.height, y1);
-  if (cx1 <= cx0 || cy1 <= cy0) return null;
-  return {
-    rect: { x: cx0, y: cy0, width: cx1 - cx0, height: cy1 - cy0 },
-    clipped: cx0 !== x0 || cy0 !== y0 || cx1 !== x1 || cy1 !== y1
-  };
-}
-function outside(img, region) {
-  return { name: region.name, error: `region is outside the ${img.width}\xD7${img.height} frame` };
-}
-function sampleRegions(img, regions) {
-  return regions.map((region) => {
-    const clip = clipRegion(img, region);
-    if (!clip) return outside(img, region);
-    const { rect } = clip;
-    const sum = [0, 0, 0];
-    const min = [Infinity, Infinity, Infinity];
-    const max = [-Infinity, -Infinity, -Infinity];
-    let aSum = 0;
-    let aMin = Infinity;
-    let aMax = -Infinity;
-    let opaque = 0;
-    let transparent = 0;
-    for (let y = rect.y; y < rect.y + rect.height; y++) {
-      for (let x = rect.x; x < rect.x + rect.width; x++) {
-        const p = y * img.width + x;
-        for (let c = 0; c < 3; c++) {
-          const v = img.rgb[p * 3 + c];
-          sum[c] += v;
-          if (v < min[c]) min[c] = v;
-          if (v > max[c]) max[c] = v;
-        }
-        if (img.alpha) {
-          const a = img.alpha[p];
-          aSum += a;
-          if (a < aMin) aMin = a;
-          if (a > aMax) aMax = a;
-          if (a >= 1 - TOL) opaque++;
-          else if (a <= TOL) transparent++;
-        }
-      }
-    }
-    const n = rect.width * rect.height;
-    return {
-      name: region.name,
-      rect,
-      clipped: clip.clipped,
-      pixels: n,
-      mean: r4rgb([sum[0] / n, sum[1] / n, sum[2] / n]),
-      min: r4rgb(min),
-      max: r4rgb(max),
-      alpha: img.alpha ? {
-        mean: r4(aSum / n),
-        min: r4(aMin),
-        max: r4(aMax),
-        opaqueShare: r4(opaque / n),
-        partialShare: r4((n - opaque - transparent) / n),
-        transparentShare: r4(transparent / n)
-      } : null
-    };
-  });
-}
-function histogramOf(img, bins) {
-  const n = img.width * img.height;
-  const counts = [0, 1, 2].map(() => Array.from({ length: bins }, () => 0));
-  const aCounts = img.alpha ? Array.from({ length: bins }, () => 0) : void 0;
-  const bin = (v) => Math.min(bins - 1, Math.max(0, Math.floor(v * bins)));
-  for (let p = 0; p < n; p++) {
-    for (let c = 0; c < 3; c++) counts[c][bin(img.rgb[p * 3 + c])]++;
-    if (aCounts && img.alpha) aCounts[bin(img.alpha[p])]++;
-  }
-  return {
-    bins,
-    pixels: n,
-    r: counts[0],
-    g: counts[1],
-    b: counts[2],
-    ...aCounts ? { a: aCounts } : {}
-  };
-}
-function compareRegions(from, to, regions) {
-  if (from.width !== to.width || from.height !== to.height) {
-    throw new Error(
-      `cannot compare frames of different size (${from.width}\xD7${from.height} vs ${to.width}\xD7${to.height})`
-    );
-  }
-  const withAlpha = from.alpha !== void 0 && to.alpha !== void 0;
-  return regions.map((region) => {
-    const clip = clipRegion(from, region);
-    if (!clip) return outside(from, region);
-    const { rect } = clip;
-    const delta = [0, 0, 0];
-    const absSum = [0, 0, 0];
-    const absMax = [0, 0, 0];
-    let aDelta = 0;
-    let aAbs = 0;
-    let aMax = 0;
-    for (let y = rect.y; y < rect.y + rect.height; y++) {
-      for (let x = rect.x; x < rect.x + rect.width; x++) {
-        const p = y * from.width + x;
-        for (let c = 0; c < 3; c++) {
-          const d = to.rgb[p * 3 + c] - from.rgb[p * 3 + c];
-          delta[c] += d;
-          absSum[c] += Math.abs(d);
-          if (Math.abs(d) > absMax[c]) absMax[c] = Math.abs(d);
-        }
-        if (withAlpha) {
-          const d = to.alpha[p] - from.alpha[p];
-          aDelta += d;
-          aAbs += Math.abs(d);
-          if (Math.abs(d) > aMax) aMax = Math.abs(d);
-        }
-      }
-    }
-    const n = rect.width * rect.height;
-    return {
-      name: region.name,
-      rect,
-      clipped: clip.clipped,
-      pixels: n,
-      meanDelta: r4rgb([delta[0] / n, delta[1] / n, delta[2] / n]),
-      meanAbsDelta: r4rgb([absSum[0] / n, absSum[1] / n, absSum[2] / n]),
-      maxAbsDelta: r4rgb(absMax),
-      alpha: withAlpha ? { meanDelta: r4(aDelta / n), meanAbsDelta: r4(aAbs / n), maxAbsDelta: r4(aMax) } : null
-    };
-  });
-}
-function rgbHex(rgb) {
-  return `#${rgb.map(
-    (v) => Math.round(Math.min(1, Math.max(0, v)) * 255).toString(16).padStart(2, "0")
-  ).join("")}`;
-}
-function resample(img, tw, th) {
-  const out = new Float64Array(tw * th * 3);
-  const counts = new Float64Array(tw * th);
-  for (let y = 0; y < img.height; y++) {
-    const ty = Math.min(th - 1, Math.floor(y * th / img.height));
-    for (let x = 0; x < img.width; x++) {
-      const tx = Math.min(tw - 1, Math.floor(x * tw / img.width));
-      const si = (y * img.width + x) * 3;
-      const di = (ty * tw + tx) * 3;
-      out[di] += img.rgb[si];
-      out[di + 1] += img.rgb[si + 1];
-      out[di + 2] += img.rgb[si + 2];
-      counts[ty * tw + tx]++;
-    }
-  }
-  for (let i = 0; i < tw * th; i++) {
-    const c = counts[i] || 1;
-    out[i * 3] /= c;
-    out[i * 3 + 1] /= c;
-    out[i * 3 + 2] /= c;
-  }
-  return out;
-}
-var GLYPHS = {
-  "0": [".###.", "#...#", "#..##", "#.#.#", "##..#", "#...#", ".###."],
-  "1": ["..#..", ".##..", "..#..", "..#..", "..#..", "..#..", ".###."],
-  "2": [".###.", "#...#", "....#", "...#.", "..#..", ".#...", "#####"],
-  "3": ["#####", "...#.", "..#..", "...#.", "....#", "#...#", ".###."],
-  "4": ["...#.", "..##.", ".#.#.", "#..#.", "#####", "...#.", "...#."],
-  "5": ["#####", "#....", "####.", "....#", "....#", "#...#", ".###."],
-  "6": ["..##.", ".#...", "#....", "####.", "#...#", "#...#", ".###."],
-  "7": ["#####", "....#", "...#.", "..#..", ".#...", ".#...", ".#..."],
-  "8": [".###.", "#...#", "#...#", ".###.", "#...#", "#...#", ".###."],
-  "9": [".###.", "#...#", "#...#", ".####", "....#", "...#.", ".##.."],
-  ".": [".....", ".....", ".....", ".....", ".....", ".##..", ".##.."],
-  ":": [".....", ".##..", ".##..", ".....", ".##..", ".##..", "....."],
-  "-": [".....", ".....", ".....", "#####", ".....", ".....", "....."],
-  ">": [".#...", "..#..", "...#.", "....#", "...#.", "..#..", ".#..."],
-  x: [".....", ".....", "#...#", ".#.#.", "..#..", ".#.#.", "#...#"],
-  "!": ["..#..", "..#..", "..#..", "..#..", "..#..", ".....", "..#.."],
-  "#": [".#.#.", ".#.#.", "#####", ".#.#.", "#####", ".#.#.", ".#.#."],
-  s: [".....", ".....", ".####", "#....", ".###.", "....#", "####."],
-  f: ["..##.", ".#...", "###..", ".#...", ".#...", ".#...", ".#..."],
-  a: [".....", ".....", ".###.", "....#", ".####", "#...#", ".####"],
-  b: ["#....", "#....", "####.", "#...#", "#...#", "#...#", "####."],
-  c: [".....", ".....", ".###.", "#....", "#....", "#...#", ".###."],
-  d: ["....#", "....#", ".####", "#...#", "#...#", "#...#", ".####"],
-  e: [".....", ".....", ".###.", "#...#", "#####", "#....", ".###."],
-  g: [".....", ".....", ".####", "#...#", "#...#", "#...#", ".####", "....#", ".###."],
-  h: ["#....", "#....", "####.", "#...#", "#...#", "#...#", "#...#"],
-  i: ["..#..", ".....", ".##..", "..#..", "..#..", "..#..", ".###."],
-  j: ["...#.", ".....", "..##.", "...#.", "...#.", "...#.", "...#.", "#..#.", ".##.."],
-  k: ["#....", "#....", "#..#.", "#.#..", "##...", "#.#..", "#..#."],
-  l: [".##..", "..#..", "..#..", "..#..", "..#..", "..#..", ".###."],
-  m: [".....", ".....", "##.#.", "#.#.#", "#.#.#", "#...#", "#...#"],
-  n: [".....", ".....", "####.", "#...#", "#...#", "#...#", "#...#"],
-  o: [".....", ".....", ".###.", "#...#", "#...#", "#...#", ".###."],
-  p: [".....", ".....", "####.", "#...#", "#...#", "#...#", "####.", "#....", "#...."],
-  q: [".....", ".....", ".####", "#...#", "#...#", "#...#", ".####", "....#", "....#"],
-  r: [".....", ".....", "#.##.", "##..#", "#....", "#....", "#...."],
-  t: [".#...", ".#...", "###..", ".#...", ".#...", ".#..#", "..##."],
-  u: [".....", ".....", "#...#", "#...#", "#...#", "#..##", ".##.#"],
-  v: [".....", ".....", "#...#", "#...#", "#...#", ".#.#.", "..#.."],
-  w: [".....", ".....", "#...#", "#...#", "#.#.#", "#.#.#", ".#.#."],
-  y: [".....", ".....", "#...#", "#...#", "#...#", "#...#", ".####", "....#", ".###."],
-  z: [".....", ".....", "#####", "...#.", "..#..", ".#...", "#####"],
-  "+": [".....", "..#..", "..#..", "#####", "..#..", "..#..", "....."],
-  " ": [".....", ".....", ".....", ".....", ".....", ".....", "....."]
-};
-var GLYPH_W = 5;
-var GLYPH_H = 7;
-var FONT_SCALE = 2;
-var LABEL_H = GLYPH_H * FONT_SCALE + 6;
-var LABEL_CHAR_PX = (GLYPH_W + 1) * FONT_SCALE;
-function drawText(rgb, width, x0, y0, text, color) {
-  let cx = x0;
-  for (const ch of text) {
-    const glyph = GLYPHS[ch] ?? GLYPHS[" "];
-    for (let gy = 0; gy < glyph.length; gy++) {
-      for (let gx = 0; gx < GLYPH_W; gx++) {
-        if (glyph[gy][gx] !== "#") continue;
-        for (let sy = 0; sy < FONT_SCALE; sy++) {
-          for (let sx = 0; sx < FONT_SCALE; sx++) {
-            const x = cx + gx * FONT_SCALE + sx;
-            const y = y0 + gy * FONT_SCALE + sy;
-            const i = (y * width + x) * 3;
-            rgb[i] = color[0];
-            rgb[i + 1] = color[1];
-            rgb[i + 2] = color[2];
-          }
-        }
-      }
-    }
-    cx += (GLYPH_W + 1) * FONT_SCALE;
-  }
-}
-function composeContactSheet(frames, opts = {}) {
-  if (frames.length === 0) throw new Error("contact sheet needs at least one frame");
-  const gap = opts.gap ?? 8;
-  const bg = opts.background ?? [0.12, 0.12, 0.12];
-  const columns = Math.max(
-    1,
-    Math.min(frames.length, opts.columns ?? Math.ceil(Math.sqrt(frames.length)))
-  );
-  const rows = Math.ceil(frames.length / columns);
-  const srcW = Math.max(...frames.map((f) => f.width));
-  const srcH = Math.max(...frames.map((f) => f.height));
-  const thumbWidth = Math.max(16, Math.min(opts.thumbWidth ?? 480, srcW));
-  const thumbHeight = Math.max(1, Math.round(srcH * thumbWidth / srcW));
-  const cellW = thumbWidth;
-  const cellH = LABEL_H + thumbHeight;
-  const width = gap + columns * (cellW + gap);
-  const height = gap + rows * (cellH + gap);
-  const rgb = new Float64Array(width * height * 3);
-  for (let i = 0; i < width * height; i++) {
-    rgb[i * 3] = bg[0];
-    rgb[i * 3 + 1] = bg[1];
-    rgb[i * 3 + 2] = bg[2];
-  }
-  for (const [n, frame] of frames.entries()) {
-    const col = n % columns;
-    const row = Math.floor(n / columns);
-    const x0 = gap + col * (cellW + gap);
-    const y0 = gap + row * (cellH + gap);
-    const tw = Math.max(1, Math.min(thumbWidth, Math.round(frame.width * thumbWidth / srcW)));
-    const th = Math.max(1, Math.min(thumbHeight, Math.round(frame.height * tw / frame.width)));
-    const thumb = resample(frame, tw, th);
-    for (let y = 0; y < th; y++) {
-      for (let x = 0; x < tw; x++) {
-        const si = (y * tw + x) * 3;
-        const di = ((y0 + LABEL_H + y) * width + (x0 + x)) * 3;
-        rgb[di] = thumb[si];
-        rgb[di + 1] = thumb[si + 1];
-        rgb[di + 2] = thumb[si + 2];
-      }
-    }
-    const label = opts.labels?.[n] ?? `#${n}`;
-    drawText(rgb, width, x0 + 2, y0 + 2, label, [0.95, 0.95, 0.95]);
-  }
-  return { width, height, rgb, columns, rows, thumbWidth, thumbHeight };
-}
-function frameLabel(index, time3) {
-  return time3 === void 0 ? `#${index}` : `#${index} ${time3.toFixed(3)}s`;
-}
-
-// src/color/motion.ts
-var DIFF_DEFAULTS = {
-  changeAbove: 0.04,
-  spikeRatio: 3,
-  holdRatio: 0.25,
-  quietBelow: 2e-3,
-  movingShare: 5e-4,
-  window: 3,
-  amplify: 8,
-  repeatBelow: 1e-4
-};
-var LIMITS = {
-  changeAbove: { min: 0, max: 1 },
-  spikeRatio: { min: 1, max: 1e3, above: true },
-  holdRatio: { min: 0, max: 1, above: true },
-  quietBelow: { min: 0, max: 1 },
-  movingShare: { min: 0, max: 1 },
-  window: { min: 1, max: 16, int: true },
-  amplify: { min: 1, max: 1e3 },
-  repeatBelow: { min: 0, max: 1 }
-};
-function resolveDiffThresholds(args = {}) {
-  const out = { ...DIFF_DEFAULTS };
-  for (const key of Object.keys(DIFF_DEFAULTS)) {
-    const v = args[key];
-    if (typeof v === "number") out[key] = v;
-  }
-  return out;
-}
-function diffArgsError(args) {
-  for (const [key, value] of Object.entries(args)) {
-    if (key === "sheet") continue;
-    const limit = LIMITS[key];
-    if (!limit) {
-      return `\`diff.${key}\` is not an option (options: ${Object.keys(LIMITS).join(", ")}, sheet)`;
-    }
-    if (typeof value !== "number" || !Number.isFinite(value)) {
-      return `\`diff.${key}\` must be a number`;
-    }
-    const low = limit.above ? value <= limit.min : value < limit.min;
-    if (low || value > limit.max || limit.int && !Number.isInteger(value)) {
-      const range = limit.above ? `above ${limit.min} and at most ${limit.max}` : `${limit.min} to ${limit.max}`;
-      return `\`diff.${key}\` must be ${limit.int ? "a whole number " : ""}${range}, not ${value}`;
-    }
-  }
-  return null;
-}
-function pictureOf(img, straight) {
-  const n = img.width * img.height;
-  const out = new Float32Array(n * 3);
-  const a = straight ? img.alpha : void 0;
-  if (!a) {
-    out.set(img.rgb);
-    return out;
-  }
-  for (let p = 0; p < n; p++) {
-    const w = a[p];
-    const i = p * 3;
-    out[i] = img.rgb[i] * w;
-    out[i + 1] = img.rgb[i + 1] * w;
-    out[i + 2] = img.rgb[i + 2] * w;
-  }
-  return out;
-}
-var r6 = (v) => Math.round(v * 1e6) / 1e6;
-function rectStats(prev, cur, width, x0, y0, x1, y1, above, perPixel) {
-  let sum = 0;
-  let maxAbs = 0;
-  let changed = 0;
-  let bx0 = Infinity;
-  let by0 = Infinity;
-  let bx1 = -1;
-  let by1 = -1;
-  for (let y = y0; y < y1; y++) {
-    let i = (y * width + x0) * 3;
-    for (let x = x0; x < x1; x++, i += 3) {
-      const dr = Math.abs(cur[i] - prev[i]);
-      const dg = Math.abs(cur[i + 1] - prev[i + 1]);
-      const db = Math.abs(cur[i + 2] - prev[i + 2]);
-      const m = dr > dg ? dr > db ? dr : db : dg > db ? dg : db;
-      const mean = (dr + dg + db) / 3;
-      sum += mean;
-      if (m > maxAbs) maxAbs = m;
-      if (m > above) {
-        changed++;
-        if (x < bx0) bx0 = x;
-        if (x > bx1) bx1 = x;
-        if (y < by0) by0 = y;
-        if (y > by1) by1 = y;
-      }
-      if (perPixel) perPixel(x, y, mean);
-    }
-  }
-  const pixels = (x1 - x0) * (y1 - y0);
-  return {
-    pixels,
-    change: r6(pixels > 0 ? sum / pixels : 0),
-    maxAbsDelta: r6(maxAbs),
-    changedPixels: changed,
-    changedShare: r6(pixels > 0 ? changed / pixels : 0),
-    changedBounds: changed > 0 ? { x: bx0, y: by0, width: bx1 - bx0 + 1, height: by1 - by0 + 1 } : null
-  };
-}
-function pictureChange(prev, cur, width, height, t, opts = {}) {
-  let perPixel;
-  let sums = null;
-  let counts = null;
-  const tw = opts.thumb?.width ?? 0;
-  if (opts.thumb) {
-    const th = opts.thumb.height;
-    sums = new Float64Array(tw * th);
-    counts = new Float64Array(tw * th);
-    const col = new Int32Array(width);
-    for (let x = 0; x < width; x++) col[x] = Math.min(tw - 1, Math.floor(x * tw / width));
-    const row = new Int32Array(height);
-    for (let y = 0; y < height; y++) row[y] = Math.min(th - 1, Math.floor(y * th / height)) * tw;
-    const s = sums;
-    const c = counts;
-    perPixel = (x, y, mean) => {
-      const k = row[y] + col[x];
-      s[k] += mean;
-      c[k]++;
-    };
-  }
-  const all = rectStats(prev, cur, width, 0, 0, width, height, t.changeAbove, perPixel);
-  const out = { all };
-  if (opts.regions) {
-    out.regions = opts.regions.map((region) => {
-      const clip = clipRegion({ width, height }, region);
-      if (!clip)
-        return { name: region.name, error: `region is outside the ${width}\xD7${height} frame` };
-      const { x, y, width: w, height: h } = clip.rect;
-      return {
-        name: region.name,
-        ...rectStats(prev, cur, width, x, y, x + w, y + h, t.changeAbove)
-      };
-    });
-  }
-  if (sums && counts) {
-    const thumb = new Float64Array(sums.length);
-    for (let k = 0; k < sums.length; k++) {
-      thumb[k] = counts[k] > 0 ? Math.min(1, sums[k] / counts[k] * t.amplify) : 0;
-    }
-    out.thumb = thumb;
-  }
-  return out;
-}
-function lowerMedian(values) {
-  const s = [...values].sort((a, b) => a - b);
-  return s[Math.floor((s.length - 1) / 2)];
-}
-function side(pairs, p, dir, window, skip) {
-  const changes = [];
-  const shares = [];
-  for (let k = 1; k <= window; k++) {
-    const j = p + dir * k;
-    if (j < 0 || j >= pairs.length) break;
-    if (skip.has(j)) continue;
-    changes.push(pairs[j].change);
-    shares.push(pairs[j].changedShare);
-  }
-  if (changes.length === 0) return null;
-  return { change: lowerMedian(changes), share: lowerMedian(shares) };
-}
-var fmt = (v) => v.toFixed(4);
-var frameText = (f) => `#${f.index}${f.time === void 0 ? "" : ` (${r6(f.time)} s)`}`;
-function summarizeSeries(pairs, t) {
-  const n = pairs.length;
-  const changes = pairs.map((p) => p.change);
-  let largest = 0;
-  let smallest = 0;
-  for (let i = 1; i < n; i++) {
-    if (changes[i] > changes[largest]) largest = i;
-    if (changes[i] < changes[smallest]) smallest = i;
-  }
-  const summary = {
-    pairs: n,
-    median: n > 0 ? r6(lowerMedian(changes)) : 0,
-    mean: n > 0 ? r6(changes.reduce((a, b) => a + b, 0) / n) : 0,
-    largest: { pair: largest, change: n > 0 ? changes[largest] : 0 },
-    smallest: { pair: smallest, change: n > 0 ? changes[smallest] : 0 },
-    flags: [],
-    reading: ""
-  };
-  if (n < 2) {
-    summary.reading = n === 0 ? "no pair of consecutive frames to compare" : "one pair: nothing to compare it with, so nothing is flagged (render at least three frames)";
-    return summary;
-  }
-  const repeats = new Set(pairs.flatMap((p, i) => p.change <= t.repeatBelow ? [i] : []));
-  const near = (i, set2) => {
-    for (let k = 1; k <= t.window; k++) if (set2.has(i - k) || set2.has(i + k)) return true;
-    return false;
-  };
-  const standsOut = (p, i, skip) => {
-    if (repeats.has(i) || p.changedShare < t.movingShare) return null;
-    const sides = [side(pairs, i, -1, t.window, skip), side(pairs, i, 1, t.window, skip)].filter(
-      (s) => s !== null
-    );
-    if (sides.length === 0) return null;
-    const reference = Math.max(...sides.map((s) => s.change), t.quietBelow);
-    if (sides.some((s) => p.change < t.spikeRatio * Math.max(s.change, t.quietBelow))) return null;
-    return { reference, edge: i === 0 || i === n - 1, besideRepeat: near(i, repeats) };
-  };
-  const first = pairs.map((p, i) => standsOut(p, i, repeats));
-  const firstSpikes = new Set(first.flatMap((s, i) => s ? [i] : []));
-  const skipBoth = /* @__PURE__ */ new Set([...repeats, ...firstSpikes]);
-  const spike = pairs.map(
-    (p, i) => first[i] ?? (firstSpikes.size > 0 ? standsOut(p, i, skipBoth) : null)
-  );
-  const spikes = new Set(spike.flatMap((s, i) => s ? [i] : []));
-  const repeatNote = " (a repeated frame is next to it and was left out of the comparison)";
-  const flags = [];
-  for (let i = 0; i < n; i++) {
-    const s = spike[i];
-    if (!s) continue;
-    const runStart = i === 0 || !spike[i - 1];
-    if (!runStart) continue;
-    let end = i;
-    while (end + 1 < n && spike[end + 1]) end++;
-    if (end === i + 1) {
-      const reference = Math.max(s.reference, spike[end].reference);
-      const change = Math.min(pairs[i].change, pairs[end].change);
-      const frame = pairs[i].to;
-      const flag = {
-        kind: "pop",
-        pairs: [i, end],
-        frame,
-        change,
-        reference: r6(reference),
-        ratio: r6(change / reference),
-        reading: `frame ${frameText(frame)} differs from the frames before and after it by ${fmt(change)} or more, while its neighbours change about ${fmt(reference)}: a one-frame pop`
-      };
-      if (s.besideRepeat || spike[end].besideRepeat) {
-        flag.besideRepeat = true;
-        flag.reading += repeatNote;
-      }
-      flags.push(flag);
-      continue;
-    }
-    for (let j = i; j <= end; j++) {
-      const sj = spike[j];
-      const between = [pairs[j].from, pairs[j].to];
-      const flag = {
-        kind: "cut",
-        pairs: [j],
-        between,
-        change: pairs[j].change,
-        reference: r6(sj.reference),
-        ratio: r6(pairs[j].change / sj.reference),
-        reading: `${frameText(between[0])} to ${frameText(between[1])} changes ${fmt(pairs[j].change)}, ${(pairs[j].change / sj.reference).toFixed(1)}\xD7 its neighbours: a cut or a jump`
-      };
-      if (sj.edge) {
-        flag.atSeriesEdge = true;
-        flag.reading += " (first or last pair: it could also be a pop of the end frame)";
-      }
-      if (sj.besideRepeat) {
-        flag.besideRepeat = true;
-        flag.reading += repeatNote;
-      }
-      flags.push(flag);
-    }
-  }
-  const moving = (s) => s !== null && s.change >= t.quietBelow && s.share >= t.movingShare;
-  const notSpikes = /* @__PURE__ */ new Set([...spikes, ...repeats]);
-  const neighbours = (i) => [i - 1, i + 1].filter((j) => j >= 0 && j < n && !repeats.has(j));
-  for (let i = 0; i < n; i++) {
-    if (spikes.has(i)) continue;
-    const before = side(pairs, i, -1, t.window, notSpikes);
-    const after = side(pairs, i, 1, t.window, notSpikes);
-    const frame = pairs[i].to;
-    const unreliablePairs = neighbours(i);
-    const unreliable = unreliablePairs.length > 0 ? `; pair${unreliablePairs.length > 1 ? "s" : ""} ${unreliablePairs.join(" and ")} beside it ${unreliablePairs.length > 1 ? "are" : "is"} measured across the repeat, so ${unreliablePairs.length > 1 ? "their readings are" : "its reading is"} unreliable` : "";
-    if (before && after && moving(before) && moving(after)) {
-      const reference2 = Math.min(before.change, after.change);
-      if (pairs[i].change > t.holdRatio * reference2) continue;
-      flags.push({
-        kind: "stutter",
-        pairs: [i],
-        frame,
-        change: pairs[i].change,
-        reference: r6(reference2),
-        ratio: r6(pairs[i].change / reference2),
-        unreliablePairs,
-        reading: `frame ${frameText(frame)} barely changes from the one before (${fmt(pairs[i].change)}) while the frames around it move about ${fmt(reference2)}: a repeated frame, a stutter${unreliable}. Rounded times can do this: a time just below a frame boundary renders the frame before (see frameWarning)`
-      });
-      continue;
-    }
-    if (!repeats.has(i)) continue;
-    const rawBefore = side(pairs, i, -1, t.window, spikes);
-    const rawAfter = side(pairs, i, 1, t.window, spikes);
-    const atEdge = rawBefore === null || rawAfter === null;
-    if (!atEdge || !(moving(rawBefore) || moving(rawAfter))) continue;
-    const reference = (moving(rawBefore) ? rawBefore : rawAfter).change;
-    flags.push({
-      kind: "repeat",
-      pairs: [i],
-      frame,
-      change: pairs[i].change,
-      reference: r6(reference),
-      ratio: r6(pairs[i].change / reference),
-      atSeriesEdge: true,
-      unreliablePairs,
-      reading: `frame ${frameText(frame)} repeats the one before (change ${fmt(pairs[i].change)}) beside motion of about ${fmt(reference)}, at the ${rawBefore === null ? "start" : "end"} of the series, so a stutter cannot be told from a hold${unreliable}`
-    });
-  }
-  flags.sort((a, b) => a.pairs[0] - b.pairs[0]);
-  summary.flags = flags;
-  const counts = ["pop", "stutter", "cut", "repeat"].map((k) => [k, flags.filter((f) => f.kind === k).length]).filter(([, c]) => c > 0).map(([k, c]) => `${c} ${k}${c > 1 ? "s" : ""}`);
-  summary.reading = `${n} pairs, median change ${fmt(summary.median)}, largest ${fmt(summary.largest.change)} (pair ${largest}); ` + (flags.length === 0 ? "no pair stands out from its neighbours" : `${counts.join(", ")}: ${flags.map((f) => `${f.kind} at pair ${f.pairs.join("+")}`).join("; ")}`);
-  return summary;
-}
+import * as path11 from "node:path";
 
 // src/color/watch.ts
 var WATCH_DEFAULTS = {
@@ -51446,7 +57332,7 @@ function watchArgsError(args) {
 }
 var TOP_CODE = 254.5 / 255;
 var BOTTOM_CODE = 0.5 / 255;
-var r62 = (v) => Math.round(v * 1e6) / 1e6;
+var r63 = (v) => Math.round(v * 1e6) / 1e6;
 function measureFrame(pic, width, height, t) {
   let luma2 = 0;
   let dark = 0;
@@ -51508,27 +57394,27 @@ function measureFrame(pic, width, height, t) {
   const n = width * height || 1;
   const box2 = (x0, y0, x1, y1) => x1 < 0 ? null : { x: x0, y: y0, width: x1 - x0 + 1, height: y1 - y0 + 1 };
   return {
-    meanLuma: r62(luma2 / n),
-    darkShare: r62(dark / n),
-    lightShare: r62(light / n),
+    meanLuma: r63(luma2 / n),
+    darkShare: r63(dark / n),
+    lightShare: r63(light / n),
     clipHigh: {
-      r: r62(hr / n),
-      g: r62(hg / n),
-      b: r62(hb / n),
-      all: r62(ha / n),
+      r: r63(hr / n),
+      g: r63(hg / n),
+      b: r63(hb / n),
+      all: r63(ha / n),
       box: box2(hx0, hy0, hx1, hy1)
     },
     clipLow: {
-      r: r62(lr / n),
-      g: r62(lg / n),
-      b: r62(lb / n),
-      all: r62(la / n),
+      r: r63(lr / n),
+      g: r63(lg / n),
+      b: r63(lb / n),
+      all: r63(la / n),
       box: box2(lx0, ly0, lx1, ly1)
     }
   };
 }
-var fmt2 = (v) => v.toFixed(4);
-var secs = (v) => `${r62(v)} s`;
+var fmt3 = (v) => v.toFixed(4);
+var secs2 = (v) => `${r63(v)} s`;
 var PieceWatcher = class {
   t;
   o;
@@ -51570,7 +57456,7 @@ var PieceWatcher = class {
     this.measureMs += performance.now() - t0;
   }
   point(frame) {
-    return { frame, time: r62(frame * this.o.frameDuration) };
+    return { frame, time: r63(frame * this.o.frameDuration) };
   }
   ownedFrame(frame) {
     const own2 = this.o.owned;
@@ -51596,8 +57482,8 @@ var PieceWatcher = class {
       pairCount += seg.length;
       if (seg.length === 0) continue;
       const series = seg.map((p) => ({
-        from: { index: p.from, time: r62(p.from * this.o.frameDuration) },
-        to: { index: p.to, time: r62(p.to * this.o.frameDuration) },
+        from: { index: p.from, time: r63(p.from * this.o.frameDuration) },
+        to: { index: p.to, time: r63(p.to * this.o.frameDuration) },
         change: p.change,
         changedShare: p.changedShare
       }));
@@ -51699,7 +57585,7 @@ var PieceWatcher = class {
     const flag = {
       kind: sf.kind,
       frame,
-      time: r62(frame * this.o.frameDuration),
+      time: r63(frame * this.o.frameDuration),
       change: sf.change,
       reference: sf.reference,
       ratio: sf.ratio,
@@ -51747,10 +57633,10 @@ var PieceWatcher = class {
             from: this.point(from),
             to: this.point(to),
             frames,
-            seconds: r62(seconds),
+            seconds: r63(seconds),
             ...this.edges(from, to, first, last),
             largestChange: largest,
-            reading: `no visible change from ${secs(from * fd)} to ${secs(to * fd)} (frames ${from} to ${to}, ${r62(seconds)} s): at most ${fmt2(t.frozenShare * 100)}% of pixels changed by more than ${t.changeAbove} between checked frames. A held title or a still is legitimate; a stop in the middle of a move is not`
+            reading: `no visible change from ${secs2(from * fd)} to ${secs2(to * fd)} (frames ${from} to ${to}, ${r63(seconds)} s): at most ${fmt3(t.frozenShare * 100)}% of pixels changed by more than ${t.changeAbove} between checked frames. A held title or a still is legitimate; a stop in the middle of a move is not`
           });
         }
         i = j + 1;
@@ -51778,16 +57664,16 @@ var PieceWatcher = class {
         from: this.point(from),
         to: this.point(to),
         frames,
-        seconds: r62(frames * fd),
+        seconds: r63(frames * fd),
         ...this.edges(from, to, first, last),
         reading: ""
       };
-      const when = `${secs(from * fd)} to ${secs(to * fd)} (frames ${from} to ${to})`;
+      const when = `${secs2(from * fd)} to ${secs2(to * fd)} (frames ${from} to ${to})`;
       const m = worst.m;
       if (kind === "near-black" || kind === "near-white") {
         const share = kind === "near-black" ? m.darkShare : m.lightShare;
-        s.worst = { frame: worst.frame, time: r62(worst.frame * fd), share, meanLuma: m.meanLuma };
-        s.reading = `${kind} from ${when}: at worst (frame ${worst.frame}) mean luma ${fmt2(m.meanLuma)}, ${fmt2(share * 100)}% of pixels ${kind === "near-black" ? `at or below ${this.t.darkBelow}` : `at or above ${this.t.lightAbove}`} in every channel`;
+        s.worst = { frame: worst.frame, time: r63(worst.frame * fd), share, meanLuma: m.meanLuma };
+        s.reading = `${kind} from ${when}: at worst (frame ${worst.frame}) mean luma ${fmt3(m.meanLuma)}, ${fmt3(share * 100)}% of pixels ${kind === "near-black" ? `at or below ${this.t.darkBelow}` : `at or above ${this.t.lightAbove}`} in every channel`;
       } else {
         const c = kind === "clipped-high" ? m.clipHigh : m.clipLow;
         let box2 = null;
@@ -51807,12 +57693,12 @@ var PieceWatcher = class {
         s.box = this.scaleBox(box2);
         s.worst = {
           frame: worst.frame,
-          time: r62(worst.frame * fd),
+          time: r63(worst.frame * fd),
           share: c.all,
           channels: { r: c.r, g: c.g, b: c.b }
         };
         const code = kind === "clipped-high" ? "255 (the top code)" : "0 (the bottom code)";
-        s.reading = `${kind} from ${when}: at worst (frame ${worst.frame}) ${fmt2(c.all * 100)}% of pixels at ${code} in all three channels (per channel r ${fmt2(c.r * 100)}%, g ${fmt2(c.g * 100)}%, b ${fmt2(c.b * 100)}%)` + (s.box ? `, inside x ${s.box.x}..${s.box.x + s.box.width}, y ${s.box.y}..${s.box.y + s.box.height} (comp pixels)` : "");
+        s.reading = `${kind} from ${when}: at worst (frame ${worst.frame}) ${fmt3(c.all * 100)}% of pixels at ${code} in all three channels (per channel r ${fmt3(c.r * 100)}%, g ${fmt3(c.g * 100)}%, b ${fmt3(c.b * 100)}%)` + (s.box ? `, inside x ${s.box.x}..${s.box.x + s.box.width}, y ${s.box.y}..${s.box.y + s.box.height} (comp pixels)` : "");
       }
       out.push(s);
       run = [];
@@ -51830,223 +57716,6 @@ var PieceWatcher = class {
 
 // src/tools/check-comp.ts
 init_config();
-
-// src/color/calibration.ts
-init_registry();
-import { randomUUID as randomUUID2 } from "node:crypto";
-import { promises as fs6 } from "node:fs";
-import * as os3 from "node:os";
-import * as path8 from "node:path";
-var CALIB_VALUES = [0.05, 0.18, 0.5, 1];
-var PATCH = 40;
-var cache = /* @__PURE__ */ new Map();
-function calibrationKey(projectFile, workingSpace, bitsPerChannel) {
-  return `${projectFile ?? "(unsaved)"}|${workingSpace}|${bitsPerChannel}`;
-}
-function analyzeCalibrationPng(buf) {
-  const img = decodePng(buf);
-  const samples = [];
-  for (let i = 0; i < CALIB_VALUES.length; i++) {
-    const x = PATCH * i + PATCH / 2;
-    const y = Math.floor(img.height / 2);
-    samples.push({ input: CALIB_VALUES[i], output: img.rgb[(y * img.width + x) * 3] });
-  }
-  const ratios = samples.map((s) => s.output / s.input);
-  const min = Math.min(...ratios);
-  const max = Math.max(...ratios);
-  if (min > 0 && max / min < 1.03) {
-    const scale = ratios.reduce((a, b) => a + b, 0) / ratios.length;
-    if (Math.abs(scale - 1) < 0.02) return { kind: "identity", scale: 1, samples };
-    return { kind: "linear", scale, samples };
-  }
-  return { kind: "unknown", scale: 1, samples };
-}
-async function measureCaptureTransfer(transport2, key, allowRender = true) {
-  const cached2 = cache.get(key);
-  if (cached2) return cached2;
-  if (!allowRender) {
-    return {
-      error: "calibration needs a (transient, undo-grouped) render of a temporary comp, which read-only mode forbids"
-    };
-  }
-  const pngPath = path8.join(os3.tmpdir(), `mcp-ae-calib-${randomUUID2()}.png`).replace(/\\/g, "/");
-  const code = `
-        var _vals = ${jsxVal(CALIB_VALUES)};
-        var _patch = ${jsxVal(PATCH)};
-        var _w = _patch * _vals.length;
-        var _tmp = app.project.items.addComp("__mcp_calibration__", _w, _patch, 1, 1, 24);
-        var _srcs = [];
-        var _out = { ok: true };
-        try {
-            for (var _i = 0; _i < _vals.length; _i++) {
-                var _v = _vals[_i];
-                var _s = _tmp.layers.addSolid([_v, _v, _v], "c" + _i, _patch, _patch, 1);
-                if (_s.source) _srcs.push(_s.source);
-                _s.property("Transform").property("Position").setValue([_patch * _i + _patch / 2, _patch / 2]);
-            }
-            _tmp.saveFrameToPng(0, new File(${jsxVal(pngPath)}));
-            _out.saved = true;
-        } catch (eCal) { _out.ok = false; _out.error = AE.errText(eCal); }
-        try { _tmp.remove(); } catch (eRm) { /* leave for undo */ }
-        for (var _j = 0; _j < _srcs.length; _j++) { try { _srcs[_j].remove(); } catch (eRs) { } }
-        return _out;
-    `;
-  const result = await transport2.execute({ code, label: "capture_calibration", timeoutMs: 6e4 });
-  if (!result.ok) return { error: `calibration render failed: ${result.error}` };
-  const payload = result.result;
-  if (!payload || payload.ok !== true || payload.saved !== true) {
-    return { error: `calibration failed inside AE: ${payload?.error ?? "no result"}` };
-  }
-  let buf;
-  try {
-    buf = await readFileSettled(pngPath);
-  } catch (err) {
-    return {
-      error: `calibration PNG unreadable: ${err instanceof Error ? err.message : String(err)}`
-    };
-  } finally {
-    fs6.unlink(pngPath).catch(() => {
-    });
-  }
-  try {
-    const analysis = analyzeCalibrationPng(buf);
-    cache.set(key, analysis);
-    return analysis;
-  } catch (err) {
-    return {
-      error: `calibration analysis failed: ${err instanceof Error ? err.message : String(err)}`
-    };
-  }
-}
-
-// src/color/transform.ts
-var AP1_TO_REC709 = [
-  [1.70505099, -0.62179212, -0.08325887],
-  [-0.13025642, 1.1408047, -0.01054832],
-  [-0.02400336, -0.12896898, 1.15297233]
-];
-var AP0_TO_REC709 = [
-  [2.52140088, -1.13399574, -0.38756249],
-  [-0.27621892, 1.37259556, -0.09628267],
-  [-0.01538264, -0.15292998, 1.16835777]
-];
-var IDENTITY = [
-  [1, 0, 0],
-  [0, 1, 0],
-  [0, 0, 1]
-];
-var HILL_IN = [
-  [0.59719, 0.35458, 0.04823],
-  [0.076, 0.90834, 0.01566],
-  [0.0284, 0.13383, 0.83777]
-];
-var HILL_OUT = [
-  [1.60475, -0.53108, -0.07367],
-  [-0.10208, 1.10813, -605e-5],
-  [-327e-5, -0.07276, 1.07602]
-];
-function srgbEncode(x) {
-  const v = Math.min(1, Math.max(0, x));
-  return v <= 31308e-7 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055;
-}
-function apply(m, r, g, b) {
-  return [
-    m[0][0] * r + m[0][1] * g + m[0][2] * b,
-    m[1][0] * r + m[1][1] * g + m[1][2] * b,
-    m[2][0] * r + m[2][1] * g + m[2][2] * b
-  ];
-}
-function rrtOdtFit(v) {
-  return (v * (v + 0.0245786) - 90537e-9) / (v * (0.983729 * v + 0.432951) + 0.238081);
-}
-function sceneLinearToDisplaySrgb(rgb, toRec709) {
-  for (let i = 0; i < rgb.length; i += 3) {
-    let [r, g, b] = apply(toRec709, rgb[i], rgb[i + 1], rgb[i + 2]);
-    r = Math.max(0, r);
-    g = Math.max(0, g);
-    b = Math.max(0, b);
-    [r, g, b] = apply(HILL_IN, r, g, b);
-    r = rrtOdtFit(r);
-    g = rrtOdtFit(g);
-    b = rrtOdtFit(b);
-    [r, g, b] = apply(HILL_OUT, r, g, b);
-    rgb[i] = srgbEncode(r);
-    rgb[i + 1] = srgbEncode(g);
-    rgb[i + 2] = srgbEncode(b);
-  }
-}
-function profileForWorkingSpace(workingSpace) {
-  const ws = workingSpace.toLowerCase();
-  if (ws.includes("acescg")) {
-    return {
-      toRec709: AP1_TO_REC709,
-      note: "ACEScg \u2192 sRGB via ACES output transform (RRT+ODT fit)"
-    };
-  }
-  if (ws.includes("aces2065") || ws.includes("aces 2065")) {
-    return {
-      toRec709: AP0_TO_REC709,
-      note: "ACES2065-1 \u2192 sRGB via ACES output transform (RRT+ODT fit)"
-    };
-  }
-  if (ws.includes("scene-referred rec.709") || ws.includes("linear rec.709")) {
-    return {
-      toRec709: IDENTITY,
-      note: "linear Rec.709 \u2192 sRGB via ACES output transform (RRT+ODT fit)"
-    };
-  }
-  return null;
-}
-
-// src/tools/capture-shared.ts
-function validRgb(value) {
-  return Array.isArray(value) && value.length === 3 && value.every((v) => typeof v === "number" && Number.isFinite(v)) ? [value[0], value[1], value[2]] : null;
-}
-async function colorConversion(payload, transport2) {
-  const workingSpace = payload.workingSpace ?? "None";
-  try {
-    if (workingSpace === "None" || workingSpace === "") {
-      payload.colorPipeline = "untagged 16-bit \u2192 8-bit sRGB-tagged (values unchanged)";
-      return () => {
-      };
-    }
-    const calib = await measureCaptureTransfer(
-      transport2,
-      calibrationKey(payload.projectFile ?? null, workingSpace, payload.bitsPerChannel ?? 8),
-      !readOnlyMode()
-    );
-    const calibFailed = "error" in calib || calib.kind === "unknown";
-    const gain = !calibFailed && calib.kind === "linear" ? 1 / calib.scale : 1;
-    const applyGain = (rgb) => {
-      if (gain !== 1) for (let i = 0; i < rgb.length; i++) rgb[i] *= gain;
-    };
-    if (payload.captureKind === "ocio") {
-      if (calibFailed) {
-        payload.colorWarning = `AE applied its display transform, but the capture scale could not be measured (${"error" in calib ? calib.error : "non-linear transfer"}) \u2014 the file is uniformly dark by that unknown scale. Verify colors against the AE viewer manually.`;
-        return null;
-      }
-      payload.colorPipeline = "AE OCIO display transform (viewer-exact, any working space)" + (gain !== 1 ? ` + capture scale 1/${gain.toFixed(2)} restored` : "");
-      return applyGain;
-    }
-    const profile = profileForWorkingSpace(workingSpace);
-    if (profile === null) {
-      payload.colorWarning = `working space '${workingSpace}' has no built-in conversion \u2014 the file contains raw working-space values and will not match the viewer. Verify colors against the AE viewer manually if they matter here.`;
-      return null;
-    }
-    if (calibFailed) {
-      payload.colorWarning = `could not characterize this AE version's capture transfer (${"error" in calib ? calib.error : "non-linear transfer"}) \u2014 the file contains raw working-space values. Verify colors against the AE viewer manually if they matter here.`;
-      return null;
-    }
-    payload.colorPipeline = `${profile.note}` + (gain !== 1 ? ` (capture scale 1/${gain.toFixed(2)} restored)` : "");
-    return (rgb) => {
-      applyGain(rgb);
-      sceneLinearToDisplaySrgb(rgb, profile.toRec709);
-    };
-  } catch (err) {
-    payload.colorWarning = `color post-processing failed, file left as raw capture: ${err instanceof Error ? err.message : String(err)}`;
-    return null;
-  }
-}
 
 // src/tools/check-comp-jsx.ts
 init_registry();
@@ -52380,13 +58049,13 @@ function structureJsx(compNameOrId, o) {
 }
 
 // src/tools/check-comp.ts
-var frameFile = (dir, frame) => path9.join(dir, `frame-${frame}.png`).replace(/\\/g, "/");
+var frameFile = (dir, frame) => path11.join(dir, `frame-${frame}.png`).replace(/\\/g, "/");
 function aeFrameSource(transport2, comp, opts) {
   return {
     async capture(frames, dir) {
       const t0 = performance.now();
       const paths = frames.map((k) => frameFile(dir, k));
-      await fs7.mkdir(dir, { recursive: true });
+      await fs9.mkdir(dir, { recursive: true });
       const before = await stampFiles(paths);
       const result = await transport2.execute({
         code: captureJsx(comp, frames, paths, opts.factor, opts.tryOcio),
@@ -52440,7 +58109,7 @@ function aeFrameSource(transport2, comp, opts) {
   };
 }
 async function readPicture(file2, target, convert) {
-  const img = decodePng(await fs7.readFile(file2));
+  const img = decodePng(await fs9.readFile(file2));
   if (convert) convert(img.rgb);
   let rgb = img.rgb;
   let width = img.width;
@@ -52460,7 +58129,7 @@ async function readPicture(file2, target, convert) {
 }
 var LIST_CAP = 20;
 var DEFAULT_MAX_TILES = 12;
-var r63 = (v) => Math.round(v * 1e6) / 1e6;
+var r64 = (v) => Math.round(v * 1e6) / 1e6;
 var r3 = (v) => Math.round(v * 1e3) / 1e3;
 function capWorst(items, kindOf, severity, cap) {
   const byKind = /* @__PURE__ */ new Map();
@@ -52604,17 +58273,17 @@ async function checkComp(args, transport2) {
   const frames = all.slice(startIdx - before, startIdx + owned.length + after);
   const next = remaining > 0 ? {
     startFrame: ownedTo + every,
-    time: r63((ownedTo + every) * fd),
+    time: r64((ownedTo + every) * fd),
     framesLeft: remaining
   } : null;
-  const outDir = path9.resolve(
-    args.outDir ?? path9.join(
+  const outDir = path11.resolve(
+    args.outDir ?? path11.join(
       os4.tmpdir(),
       "comp-room-check",
       `${String(plan.compName).replace(/[^A-Za-z0-9_-]+/g, "-").slice(0, 40)}-${Date.now()}`
     )
   ).replace(/\\/g, "/");
-  const capDir = path9.join(outDir, `captures-${randomUUID3().slice(0, 8)}`).replace(/\\/g, "/");
+  const capDir = path11.join(outDir, `captures-${randomUUID3().slice(0, 8)}`).replace(/\\/g, "/");
   const readOnly = readOnlyMode();
   const target = {
     width: Math.max(1, Math.round(plan.width / downsample)),
@@ -52632,11 +58301,11 @@ async function checkComp(args, transport2) {
       id: plan.compId,
       size: [plan.width, plan.height],
       frameRate: r3(1 / fd),
-      duration: r63(plan.duration)
+      duration: r64(plan.duration)
     },
     range: {
-      from: { frame: first, time: r63(first * fd) },
-      to: { frame: all[all.length - 1], time: r63(all[all.length - 1] * fd) },
+      from: { frame: first, time: r64(first * fd) },
+      to: { frame: all[all.length - 1], time: r64(all[all.length - 1] * fd) },
       source: args.from !== void 0 || args.to !== void 0 ? "from/to" : "work area",
       framesToCheck: all.length
     },
@@ -52707,20 +58376,20 @@ async function checkComp(args, transport2) {
         failures.push({ frame: f.frame, error: `could not read the capture: ${err instanceof Error ? err.message : String(err)}` });
       }
       readSeconds += (performance.now() - r0) / 1e3;
-      await fs7.rm(f.path, { force: true });
+      await fs9.rm(f.path, { force: true });
     }
   }
-  await fs7.rm(capDir, { recursive: true, force: true });
+  await fs9.rm(capDir, { recursive: true, force: true });
   const findings = watcher ? watcher.finish() : null;
   const measureSeconds = watcher ? watcher.measureMs / 1e3 : 0;
   let nextOut = next;
   if (captureError !== null && captureError.atFrame <= ownedTo) {
     const at = Math.max(captureError.atFrame, ownedFrom);
-    nextOut = { startFrame: at, time: r63(at * fd), framesLeft: all.length - all.indexOf(at) };
+    nextOut = { startFrame: at, time: r64(at * fd), framesLeft: all.length - all.indexOf(at) };
   }
   report.checked = {
-    from: { frame: ownedFrom, time: r63(ownedFrom * fd) },
-    to: { frame: ownedTo, time: r63(ownedTo * fd) },
+    from: { frame: ownedFrom, time: r64(ownedFrom * fd) },
+    to: { frame: ownedTo, time: r64(ownedTo * fd) },
     frames: findings?.framesChecked ?? 0,
     contextFrames: { before, after },
     captureFailures: failures.length
@@ -52804,7 +58473,7 @@ async function checkComp(args, transport2) {
     sheetSeconds = (performance.now() - s0) / 1e3;
     report.sheet = sheet;
   }
-  await fs7.rmdir(outDir).catch(() => {
+  await fs9.rmdir(outDir).catch(() => {
   });
   const total = (performance.now() - started) / 1e3;
   report.timings = {
@@ -52855,26 +58524,26 @@ async function runStructure(args, transport2, plan, first, end, fd) {
   const offFrame = s.bounds.findings.map((f) => ({
     layer: { index: f.index, name: f.name, type: f.type },
     edge: f.edge,
-    from: { time: r63(f.from), frame: Math.floor(f.from / fd + 1e-6) },
-    to: { time: r63(f.to), frame: Math.floor(f.to / fd + 1e-6) },
+    from: { time: r64(f.from), frame: Math.floor(f.from / fd + 1e-6) },
+    to: { time: r64(f.to), frame: Math.floor(f.to / fd + 1e-6) },
     byPx: f.byPx,
     extent: f.extent,
-    worstAt: { time: r63(f.at), frame: Math.floor(f.at / fd + 1e-6) },
+    worstAt: { time: r64(f.at), frame: Math.floor(f.at / fd + 1e-6) },
     box: f.box,
-    reading: `${f.type} layer ${f.index} "${f.name}" ${f.extent === "wholly" ? "is wholly" : "is partly"} past the ${f.edge} edge of the ${margins.some((m) => m > 0) ? "safe area" : "frame"} from ${r63(f.from)} s to ${r63(f.to)} s while visible, by up to ${f.byPx} px (at ${r63(f.at)} s)`
+    reading: `${f.type} layer ${f.index} "${f.name}" ${f.extent === "wholly" ? "is wholly" : "is partly"} past the ${f.edge} edge of the ${margins.some((m) => m > 0) ? "safe area" : "frame"} from ${r64(f.from)} s to ${r64(f.to)} s while visible, by up to ${f.byPx} px (at ${r64(f.at)} s)`
   })).sort((a, b) => a.from.time - b.from.time);
   const footageInComp = s.footage.items.filter((it) => it.usedInComps.length > 0);
   return {
     checked: true,
     safeArea: {
-      margins: { left: r63(margins[0]), top: r63(margins[1]), right: r63(margins[2]), bottom: r63(margins[3]) },
+      margins: { left: r64(margins[0]), top: r64(margins[1]), right: r64(margins[2]), bottom: r64(margins[3]) },
       against: margins.some((m) => m > 0) ? "safe area" : "frame edge"
     },
     offFrame: {
       count: s.bounds.total,
       layersChecked: s.bounds.layersChecked,
       samples: s.bounds.samples,
-      sampleStep: r63(step),
+      sampleStep: r64(step),
       boundsOf: opts.boundsOf,
       findings: offFrame,
       ...s.bounds.total > offFrame.length ? { omitted: s.bounds.total - offFrame.length } : {},
@@ -52940,11 +58609,11 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
     if (!got?.path) continue;
     try {
       const pic = await readPicture(got.path, target, convert);
-      await fs7.writeFile(got.path, encodePngSrgb8(pic.width, pic.height, pic.rgb));
+      await fs9.writeFile(got.path, encodePngSrgb8(pic.width, pic.height, pic.rgb));
       images.push({ width: pic.width, height: pic.height, rgb: pic.rgb, bitDepth: 8 });
-      kept.push({ frame: c.frame, time: r63(c.frame * fd), kinds: c.kinds, ...c.why ? { why: c.why } : {}, path: got.path });
+      kept.push({ frame: c.frame, time: r64(c.frame * fd), kinds: c.kinds, ...c.why ? { why: c.why } : {}, path: got.path });
     } catch {
-      await fs7.rm(got.path, { force: true });
+      await fs9.rm(got.path, { force: true });
     }
   }
   if (images.length === 0) return { writtenTo: null, error: "none of the sheet's frames could be read" };
@@ -52956,8 +58625,8 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
     thumbWidth: tileW,
     labels
   });
-  const sheetPath = path9.join(outDir, `check-sheet-${tag}.png`).replace(/\\/g, "/");
-  await fs7.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+  const sheetPath = path11.join(outDir, `check-sheet-${tag}.png`).replace(/\\/g, "/");
+  await fs9.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
   return {
     writtenTo: sheetPath,
     size: [sheet.width, sheet.height],
@@ -53494,8 +59163,8 @@ var layerInfoTool = defineTool({
 });
 
 // src/tools/project-export.ts
-import { promises as fs8 } from "node:fs";
-import * as path10 from "node:path";
+import { promises as fs10 } from "node:fs";
+import * as path12 from "node:path";
 init_config();
 var projectExportTool = defineTool({
   name: "ae_project_export_json",
@@ -53517,7 +59186,7 @@ var projectExportTool = defineTool({
       const rejection = rejectedOutputPath(args.outPath);
       if (rejection !== null) {
         return errorResult("IO", rejection, {
-          details: { outPath: path10.resolve(args.outPath) },
+          details: { outPath: path12.resolve(args.outPath) },
           hint: "Write the document somewhere outside the mailbox, or omit outPath to receive it inline."
         });
       }
@@ -53536,10 +59205,10 @@ var projectExportTool = defineTool({
     const pretty = args.pretty ?? !!args.outPath;
     const jsonText = JSON.stringify(doc, null, pretty ? 2 : 0);
     if (args.outPath) {
-      const abs = path10.resolve(args.outPath);
+      const abs = path12.resolve(args.outPath);
       try {
-        await fs8.mkdir(path10.dirname(abs), { recursive: true });
-        await fs8.writeFile(abs, jsonText, "utf8");
+        await fs10.mkdir(path12.dirname(abs), { recursive: true });
+        await fs10.writeFile(abs, jsonText, "utf8");
       } catch (err) {
         return errorResult(
           "IO",
@@ -53570,8 +59239,8 @@ var projectExportTool = defineTool({
 });
 
 // src/tools/project-import.ts
-import { promises as fs9 } from "node:fs";
-import * as path11 from "node:path";
+import { promises as fs11 } from "node:fs";
+import * as path13 from "node:path";
 
 // src/schema.ts
 var SCHEMA_VERSION = 2;
@@ -53580,11 +59249,11 @@ var SCHEMA_VERSION = 2;
 var Validator = class {
   issues = [];
   warnings = [];
-  err(path14, message) {
-    this.issues.push({ path: path14, message });
+  err(path15, message) {
+    this.issues.push({ path: path15, message });
   }
-  warn(path14, message) {
-    this.warnings.push({ path: path14, message });
+  warn(path15, message) {
+    this.warnings.push({ path: path15, message });
   }
   isObject(v) {
     return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -53685,64 +59354,64 @@ function validateAeProjectDoc(doc) {
   }
   return { ok: v.issues.length === 0, issues: v.issues, warnings: v.warnings };
 }
-function validateLayer(v, path14, layer) {
+function validateLayer(v, path15, layer) {
   if (!v.isObject(layer)) {
-    v.err(path14, "not an object");
+    v.err(path15, "not an object");
     return;
   }
-  if (typeof layer.index !== "number") v.err(`${path14}.index`, "missing or not a number");
-  if (typeof layer.name !== "string") v.err(`${path14}.name`, "missing or not a string");
-  if (typeof layer.type !== "string") v.err(`${path14}.type`, "missing or not a string");
+  if (typeof layer.index !== "number") v.err(`${path15}.index`, "missing or not a number");
+  if (typeof layer.name !== "string") v.err(`${path15}.name`, "missing or not a string");
+  if (typeof layer.type !== "string") v.err(`${path15}.type`, "missing or not a string");
   else if (["AVLayer", "TextLayer", "ShapeLayer", "CameraLayer", "LightLayer", "Layer"].indexOf(
     layer.type
   ) === -1) {
-    v.warn(`${path14}.type`, `unknown layer type: ${layer.type}`);
+    v.warn(`${path15}.type`, `unknown layer type: ${layer.type}`);
   }
   if (layer.transformGroup)
-    validatePropertyGroup(v, `${path14}.transformGroup`, layer.transformGroup);
-  if (layer.effectsGroup) validatePropertyGroup(v, `${path14}.effectsGroup`, layer.effectsGroup);
-  if (layer.masksGroup) validatePropertyGroup(v, `${path14}.masksGroup`, layer.masksGroup);
-  if (layer.textGroup) validatePropertyGroup(v, `${path14}.textGroup`, layer.textGroup);
-  if (layer.contentsGroup) validatePropertyGroup(v, `${path14}.contentsGroup`, layer.contentsGroup);
-  if (layer.markers) validateProperty(v, `${path14}.markers`, layer.markers);
+    validatePropertyGroup(v, `${path15}.transformGroup`, layer.transformGroup);
+  if (layer.effectsGroup) validatePropertyGroup(v, `${path15}.effectsGroup`, layer.effectsGroup);
+  if (layer.masksGroup) validatePropertyGroup(v, `${path15}.masksGroup`, layer.masksGroup);
+  if (layer.textGroup) validatePropertyGroup(v, `${path15}.textGroup`, layer.textGroup);
+  if (layer.contentsGroup) validatePropertyGroup(v, `${path15}.contentsGroup`, layer.contentsGroup);
+  if (layer.markers) validateProperty(v, `${path15}.markers`, layer.markers);
   if (layer.timeRemapProperty)
-    validateProperty(v, `${path14}.timeRemapProperty`, layer.timeRemapProperty);
+    validateProperty(v, `${path15}.timeRemapProperty`, layer.timeRemapProperty);
 }
-function validatePropertyGroup(v, path14, group) {
+function validatePropertyGroup(v, path15, group) {
   if (!v.isObject(group)) {
-    v.err(path14, "not an object");
+    v.err(path15, "not an object");
     return;
   }
-  if (typeof group.matchName !== "string") v.err(`${path14}.matchName`, "missing or not a string");
+  if (typeof group.matchName !== "string") v.err(`${path15}.matchName`, "missing or not a string");
   if (Array.isArray(group.properties)) {
     for (let i = 0; i < group.properties.length; i++) {
-      validateProperty(v, `${path14}.properties[${i}]`, group.properties[i]);
+      validateProperty(v, `${path15}.properties[${i}]`, group.properties[i]);
     }
   }
   if (Array.isArray(group.groups)) {
     for (let i = 0; i < group.groups.length; i++) {
-      validatePropertyGroup(v, `${path14}.groups[${i}]`, group.groups[i]);
+      validatePropertyGroup(v, `${path15}.groups[${i}]`, group.groups[i]);
     }
   }
 }
-function validateProperty(v, path14, prop) {
+function validateProperty(v, path15, prop) {
   if (!v.isObject(prop)) {
-    v.err(path14, "not an object");
+    v.err(path15, "not an object");
     return;
   }
-  if (typeof prop.matchName !== "string") v.err(`${path14}.matchName`, "missing or not a string");
+  if (typeof prop.matchName !== "string") v.err(`${path15}.matchName`, "missing or not a string");
   if (Array.isArray(prop.keyframes)) {
     for (let i = 0; i < prop.keyframes.length; i++) {
-      validateKeyframe(v, `${path14}.keyframes[${i}]`, prop.keyframes[i]);
+      validateKeyframe(v, `${path15}.keyframes[${i}]`, prop.keyframes[i]);
     }
   }
 }
-function validateKeyframe(v, path14, kf) {
+function validateKeyframe(v, path15, kf) {
   if (!v.isObject(kf)) {
-    v.err(path14, "not an object");
+    v.err(path15, "not an object");
     return;
   }
-  if (typeof kf.time !== "number") v.err(`${path14}.time`, "missing or not a number");
+  if (typeof kf.time !== "number") v.err(`${path15}.time`, "missing or not a number");
 }
 
 // src/tools/project-import.ts
@@ -53771,9 +59440,9 @@ var projectImportTool = defineTool({
   handler: async (args, transport2) => {
     let doc;
     if (args.inPath) {
-      const abs = path11.resolve(args.inPath);
+      const abs = path13.resolve(args.inPath);
       try {
-        doc = JSON.parse(await fs9.readFile(abs, "utf8"));
+        doc = JSON.parse(await fs11.readFile(abs, "utf8"));
       } catch (err) {
         return errorResult(
           "IO",
@@ -53873,2138 +59542,6 @@ var projectInfoTool = defineTool({
     return toMcpResult(result);
   }
 });
-
-// src/tools/render-frame.ts
-import { promises as fs10 } from "node:fs";
-import * as path12 from "node:path";
-
-// src/color/matte.ts
-var EDGE_DEFAULTS = {
-  from: "alpha",
-  transparent: 2 / 255,
-  opaque: 1 - 2 / 255,
-  maxEdgeWidth: "auto",
-  mainAreaShare: 0.25,
-  listed: 5,
-  screen: "green",
-  spillMinAlpha: 0.1,
-  spillThreshold: 0.03,
-  changeAbove: 0.05,
-  patchWindow: "auto"
-};
-var CONTOUR_ALPHA = 0.5;
-function autoMaxEdgeWidth(width, height) {
-  return Math.max(4, Math.round(0.01 * Math.min(width, height)));
-}
-function resolveEdgeThresholds(args, width, height) {
-  const maxEdgeWidth = args.maxEdgeWidth ?? autoMaxEdgeWidth(width, height);
-  return {
-    from: args.from ?? EDGE_DEFAULTS.from,
-    transparent: args.transparent ?? EDGE_DEFAULTS.transparent,
-    opaque: args.opaque ?? EDGE_DEFAULTS.opaque,
-    maxEdgeWidth,
-    mainAreaShare: args.mainAreaShare ?? EDGE_DEFAULTS.mainAreaShare,
-    listed: args.listed ?? EDGE_DEFAULTS.listed,
-    screen: args.screen ?? EDGE_DEFAULTS.screen,
-    spillMinAlpha: args.spillMinAlpha ?? EDGE_DEFAULTS.spillMinAlpha,
-    spillThreshold: args.spillThreshold ?? EDGE_DEFAULTS.spillThreshold,
-    changeAbove: args.changeAbove ?? EDGE_DEFAULTS.changeAbove,
-    patchWindow: args.patchWindow ?? Math.round(4 * maxEdgeWidth)
-  };
-}
-function edgeArgsError(args) {
-  const unit = ["transparent", "opaque", "mainAreaShare", "spillMinAlpha", "changeAbove"];
-  for (const key of unit) {
-    const v = args[key];
-    if (v !== void 0 && (typeof v !== "number" || !(v >= 0 && v <= 1))) {
-      return `\`edge.${key}\` must be a number in 0..1`;
-    }
-  }
-  const t = args.transparent ?? EDGE_DEFAULTS.transparent;
-  const o = args.opaque ?? EDGE_DEFAULTS.opaque;
-  if (t >= o) return "`edge.transparent` must be below `edge.opaque`";
-  const w = args.maxEdgeWidth;
-  if (w !== void 0 && (typeof w !== "number" || !Number.isFinite(w) || w < 1)) {
-    return "`edge.maxEdgeWidth` must be at least 1 (pixels)";
-  }
-  const pw = args.patchWindow;
-  if (pw !== void 0 && (typeof pw !== "number" || !Number.isFinite(pw) || pw < 1)) {
-    return "`edge.patchWindow` must be at least 1 (pixels)";
-  }
-  const listed = args.listed;
-  if (listed !== void 0 && (!Number.isInteger(listed) || listed < 0)) {
-    return "`edge.listed` must be a whole number, 0 or more";
-  }
-  const s = args.spillThreshold;
-  if (s !== void 0 && (typeof s !== "number" || !(s >= 0 && s <= 1))) {
-    return "`edge.spillThreshold` must be a number in 0..1";
-  }
-  if (args.from !== void 0 && args.from !== "alpha" && args.from !== "luma") {
-    return "`edge.from` must be 'alpha' or 'luma'";
-  }
-  if (args.screen !== void 0 && args.screen !== "green" && args.screen !== "blue") {
-    return "`edge.screen` must be 'green' or 'blue'";
-  }
-  return null;
-}
-var OUTSIDE = 0;
-var EDGE = 1;
-var INSIDE = 2;
-var r2 = (v) => Math.round(v * 100) / 100;
-var r42 = (v) => Math.round(v * 1e4) / 1e4;
-var r4rgb2 = (v) => [r42(v[0]), r42(v[1]), r42(v[2])];
-var INF = 1e20;
-function dt1d(f, n, d, v, z2) {
-  let k = -1;
-  for (let q = 0; q < n; q++) {
-    const fq = f[q];
-    if (fq >= INF) continue;
-    if (k < 0) {
-      k = 0;
-      v[0] = q;
-      z2[0] = -Infinity;
-      z2[1] = Infinity;
-      continue;
-    }
-    let s = 0;
-    for (; ; ) {
-      const r = v[k];
-      s = (fq + q * q - (f[r] + r * r)) / (2 * q - 2 * r);
-      if (s <= z2[k]) k--;
-      else break;
-    }
-    k++;
-    v[k] = q;
-    z2[k] = s;
-    z2[k + 1] = Infinity;
-  }
-  if (k < 0) {
-    d.fill(INF, 0, n);
-    return;
-  }
-  let j = 0;
-  for (let q = 0; q < n; q++) {
-    while (z2[j + 1] < q) j++;
-    const r = v[j];
-    d[q] = (q - r) * (q - r) + f[r];
-  }
-}
-function distanceTo(alpha, width, height, isSource, scratch, out) {
-  const n = Math.max(width, height);
-  const f = new Float64Array(n);
-  const d = new Float64Array(n);
-  const v = new Int32Array(n);
-  const z2 = new Float64Array(n + 1);
-  for (let x = 0; x < width; x++) {
-    for (let y = 0; y < height; y++) f[y] = isSource(alpha[y * width + x]) ? 0 : INF;
-    dt1d(f, height, d, v, z2);
-    for (let y = 0; y < height; y++) scratch[y * width + x] = d[y];
-  }
-  for (let y = 0; y < height; y++) {
-    const row = y * width;
-    for (let x = 0; x < width; x++) f[x] = scratch[row + x];
-    dt1d(f, width, d, v, z2);
-    for (let x = 0; x < width; x++) out[row + x] = d[x] >= INF / 2 ? Infinity : Math.sqrt(d[x]);
-  }
-}
-var newRegion = () => ({
-  area: 0,
-  minX: Infinity,
-  minY: Infinity,
-  maxX: -1,
-  maxY: -1,
-  alphaSum: 0,
-  alphaMax: 0,
-  transparent: 0,
-  touchesBorder: false
-});
-function addPixel(r, x, y, a) {
-  r.area++;
-  if (x < r.minX) r.minX = x;
-  if (x > r.maxX) r.maxX = x;
-  if (y < r.minY) r.minY = y;
-  if (y > r.maxY) r.maxY = y;
-  r.alphaSum += a;
-  if (a > r.alphaMax) r.alphaMax = a;
-}
-var box = (r) => ({
-  x: r.minX,
-  y: r.minY,
-  width: r.maxX - r.minX + 1,
-  height: r.maxY - r.minY + 1
-});
-var N4X = [1, -1, 0, 0];
-var N4Y = [0, 0, 1, -1];
-var N8X = [1, -1, 0, 0, 1, 1, -1, -1];
-var N8Y = [0, 0, 1, -1, 1, -1, 1, -1];
-function labelRegions(alpha, width, height, inSet, eight, labels, queue, transparentAt) {
-  labels.fill(0);
-  const regions = [];
-  const nx = eight ? N8X : N4X;
-  const ny = eight ? N8Y : N4Y;
-  const total = width * height;
-  for (let start = 0; start < total; start++) {
-    if (labels[start] !== 0 || !inSet(start)) continue;
-    const region = newRegion();
-    regions.push(region);
-    const id = regions.length;
-    labels[start] = id;
-    let head = 0;
-    let tail = 0;
-    queue[tail++] = start;
-    while (head < tail) {
-      const p = queue[head++];
-      const x = p % width;
-      const y = (p - x) / width;
-      const a = alpha[p];
-      addPixel(region, x, y, a);
-      if (a <= transparentAt) region.transparent++;
-      if (x === 0 || y === 0 || x === width - 1 || y === height - 1) region.touchesBorder = true;
-      for (let k = 0; k < nx.length; k++) {
-        const qx = x + nx[k];
-        const qy = y + ny[k];
-        if (qx < 0 || qy < 0 || qx >= width || qy >= height) continue;
-        const q = qy * width + qx;
-        if (labels[q] !== 0 || !inSet(q)) continue;
-        labels[q] = id;
-        queue[tail++] = q;
-      }
-    }
-  }
-  return regions;
-}
-var byArea = (a, b) => b.area - a.area;
-function screenExcess(c, screen) {
-  return screen === "green" ? c[1] - Math.max(c[0], c[2]) : c[2] - Math.max(c[0], c[1]);
-}
-function lumaMatte(img) {
-  const n = img.width * img.height;
-  const out = new Float64Array(n);
-  const rgb = img.rgb;
-  for (let p = 0; p < n; p++) {
-    const r = rgb[p * 3];
-    const g = rgb[p * 3 + 1];
-    const b = rgb[p * 3 + 2];
-    const y = r === g && g === b ? r : 0.2126 * r + 0.7152 * g + 0.0722 * b;
-    out[p] = y < 0 ? 0 : y > 1 ? 1 : y;
-  }
-  return out;
-}
-function measureEdge(img, bg, t) {
-  const fromLuma = t.from === "luma";
-  const alpha = fromLuma ? lumaMatte(img) : img.alpha;
-  if (!alpha) throw new Error("the capture has no alpha channel");
-  const { width, height } = img;
-  const n = width * height;
-  const isT = (a) => a <= t.transparent;
-  const isO = (a) => a >= t.opaque;
-  let opaque = 0;
-  let transparent = 0;
-  for (let p = 0; p < n; p++) {
-    if (isO(alpha[p])) opaque++;
-    else if (isT(alpha[p])) transparent++;
-  }
-  const scratch = new Float32Array(n);
-  const dT = new Float32Array(n);
-  const dO = new Float32Array(n);
-  distanceTo(alpha, width, height, isT, scratch, dT);
-  distanceTo(alpha, width, height, isO, scratch, dO);
-  const labels = new Int32Array(n);
-  const queue = new Int32Array(n);
-  const islands = labelRegions(
-    alpha,
-    width,
-    height,
-    (p) => alpha[p] > t.transparent,
-    true,
-    labels,
-    queue,
-    t.transparent
-  );
-  const largest = islands.reduce((m2, r) => Math.max(m2, r.area), 0);
-  const isMain = islands.map((r) => r.area > 0 && r.area >= t.mainAreaShare * largest);
-  const mains = islands.filter((_, i) => isMain[i]).sort(byArea);
-  const specks = islands.filter((_, i) => !isMain[i]).sort(byArea);
-  const widths = [];
-  let unmeasured = 0;
-  let worst = -1;
-  let worstAt = null;
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const p = y * width + x;
-      if (alpha[p] < CONTOUR_ALPHA || labels[p] === 0 || !isMain[labels[p] - 1]) continue;
-      let onContour = false;
-      for (let k = 0; k < 4 && !onContour; k++) {
-        const qx = x + N4X[k];
-        const qy = y + N4Y[k];
-        if (qx < 0 || qy < 0 || qx >= width || qy >= height) continue;
-        if (alpha[qy * width + qx] < CONTOUR_ALPHA) onContour = true;
-      }
-      if (!onContour) continue;
-      const sum = dT[p] + dO[p];
-      if (!Number.isFinite(sum)) {
-        unmeasured++;
-        continue;
-      }
-      const w = Math.max(0, sum - 1);
-      widths.push(w);
-      if (w > worst) {
-        worst = w;
-        worstAt = { x, y };
-      }
-    }
-  }
-  widths.sort((a, b) => a - b);
-  const m = widths.length;
-  const median = m === 0 ? null : m % 2 ? widths[(m - 1) / 2] : (widths[m / 2 - 1] + widths[m / 2]) / 2;
-  const belowOpaque = labelRegions(
-    alpha,
-    width,
-    height,
-    (p) => alpha[p] < t.opaque,
-    false,
-    labels,
-    queue,
-    t.transparent
-  );
-  const holes = belowOpaque.filter((r) => !r.touchesBorder).sort(byArea);
-  const half = t.maxEdgeWidth / 2;
-  const isPartial = (p) => alpha[p] > t.transparent && alpha[p] < t.opaque;
-  const isCore = (p) => isPartial(p) && Math.min(dT[p], dO[p]) > half;
-  labels.fill(0);
-  let tail = 0;
-  let ids = 0;
-  for (let start = 0; start < n; start++) {
-    if (labels[start] !== 0 || !isCore(start)) continue;
-    ids++;
-    labels[start] = ids;
-    let head = tail;
-    queue[tail++] = start;
-    while (head < tail) {
-      const p = queue[head++];
-      const x = p % width;
-      const y = (p - x) / width;
-      for (let k = 0; k < 8; k++) {
-        const qx = x + N8X[k];
-        const qy = y + N8Y[k];
-        if (qx < 0 || qy < 0 || qx >= width || qy >= height) continue;
-        const q = qy * width + qx;
-        if (labels[q] !== 0 || !isCore(q)) continue;
-        labels[q] = ids;
-        queue[tail++] = q;
-      }
-    }
-  }
-  let levelStart = 0;
-  let levelEnd = tail;
-  for (let step = 0; step < Math.ceil(half) && levelStart < levelEnd; step++) {
-    for (let i = levelStart; i < levelEnd; i++) {
-      const p = queue[i];
-      const x = p % width;
-      const y = (p - x) / width;
-      for (let k = 0; k < 8; k++) {
-        const qx = x + N8X[k];
-        const qy = y + N8Y[k];
-        if (qx < 0 || qy < 0 || qx >= width || qy >= height) continue;
-        const q = qy * width + qx;
-        if (labels[q] !== 0 || !isPartial(q)) continue;
-        labels[q] = labels[p];
-        queue[tail++] = q;
-      }
-    }
-    levelStart = levelEnd;
-    levelEnd = tail;
-  }
-  const patchRegions = Array.from({ length: ids }, newRegion);
-  for (let i = 0; i < tail; i++) {
-    const p = queue[i];
-    const x = p % width;
-    addPixel(patchRegions[labels[p] - 1], x, (p - x) / width, alpha[p]);
-  }
-  const patchId = new Map(patchRegions.map((r, i) => [r, i + 1]));
-  patchRegions.sort(byArea);
-  const patchList = patchRegions.slice(0, t.listed).map((r) => patchEntry(r, patchId.get(r), labels, alpha, dT, dO, width, t.patchWindow));
-  const edgeSum = [0, 0, 0];
-  const solidSum = [0, 0, 0];
-  let edgeCount = 0;
-  let solidCount = 0;
-  const zones = new Uint8Array(n);
-  const M = t.maxEdgeWidth;
-  for (let p = 0; p < n; p++) {
-    const a = alpha[p];
-    zones[p] = dT[p] <= M && dO[p] <= M ? EDGE : a >= CONTOUR_ALPHA ? INSIDE : OUTSIDE;
-    const partial2 = a > t.transparent && a < t.opaque;
-    const solid = a >= t.opaque && dT[p] <= M;
-    if (fromLuma || !(partial2 && a >= t.spillMinAlpha) && !solid) continue;
-    const sum = solid ? solidSum : edgeSum;
-    for (let c = 0; c < 3; c++) {
-      const v = img.rgb[p * 3 + c];
-      sum[c] += a >= 1 ? v : Math.min(1, Math.max(0, (v - bg[c] * (1 - a)) / a));
-    }
-    if (solid) solidCount++;
-    else edgeCount++;
-  }
-  const meanOf = (s, k) => k === 0 ? null : [s[0] / k, s[1] / k, s[2] / k];
-  const edgeMean = meanOf(edgeSum, edgeCount);
-  const solidMean = meanOf(solidSum, solidCount);
-  const excess = edgeMean ? screenExcess(edgeMean, t.screen) : null;
-  const solidExcess = solidMean ? screenExcess(solidMean, t.screen) : null;
-  const leans = excess !== null && excess > t.spillThreshold && (solidExcess === null || excess - solidExcess > t.spillThreshold);
-  const report = {
-    stage: "capture",
-    matteFrom: t.from,
-    pixels: n,
-    shares: {
-      opaque: r42(opaque / n),
-      partial: r42((n - opaque - transparent) / n),
-      transparent: r42(transparent / n)
-    },
-    width: {
-      typical: median === null ? null : r2(median),
-      p90: m === 0 ? null : r2(widths[Math.floor(0.9 * (m - 1))]),
-      worst: m === 0 ? null : r2(worst),
-      worstAt,
-      samples: m,
-      unmeasured
-    },
-    solidAreas: {
-      count: mains.length,
-      list: mains.slice(0, t.listed).map((r) => ({ ...box(r), area: r.area }))
-    },
-    holes: {
-      count: holes.length,
-      area: holes.reduce((s, r) => s + r.area, 0),
-      transparentArea: holes.reduce((s, r) => s + r.transparent, 0),
-      largest: holes.length ? holeEntry(holes[0]) : null,
-      list: holes.slice(0, t.listed).map(holeEntry)
-    },
-    specks: {
-      count: specks.length,
-      area: specks.reduce((s, r) => s + r.area, 0),
-      list: specks.slice(0, t.listed).map((r) => ({
-        ...box(r),
-        area: r.area,
-        meanAlpha: r42(r.alphaSum / r.area),
-        maxAlpha: r42(r.alphaMax)
-      }))
-    },
-    patches: {
-      count: patchRegions.length,
-      area: patchRegions.reduce((s, r) => s + r.area, 0),
-      list: patchList
-    },
-    spill: {
-      screen: t.screen,
-      pixels: edgeCount,
-      mean: edgeMean ? r4rgb2(edgeMean) : null,
-      solidMean: solidMean ? r4rgb2(solidMean) : null,
-      excess: excess === null ? null : r42(excess),
-      solidExcess: solidExcess === null ? null : r42(solidExcess),
-      leansToScreen: leans,
-      reading: fromLuma ? "not read: the matte came from luminance (a Keylight matte view), which carries no subject colour; read spill on the keyed result with `from: 'alpha'`" : spillReading(t, edgeCount, excess, solidExcess, leans)
-    }
-  };
-  return { report, frame: { width, height, alpha: Float32Array.from(alpha), zones } };
-}
-function holeEntry(r) {
-  return { ...box(r), area: r.area, meanAlpha: r42(r.alphaSum / r.area) };
-}
-function patchEntry(r, id, labels, alpha, dT, dO, width, window) {
-  const b = box(r);
-  let depth = -1;
-  let at = { x: b.x, y: b.y };
-  let thickness = 0;
-  for (let y = b.y; y < b.y + b.height; y++) {
-    for (let x = b.x; x < b.x + b.width; x++) {
-      const p = y * width + x;
-      if (labels[p] !== id) continue;
-      const m = Math.min(dT[p], dO[p]);
-      if (m > depth) {
-        depth = m;
-        at = { x, y };
-        thickness = Number.isFinite(dT[p]) && Number.isFinite(dO[p]) ? dT[p] + dO[p] - 1 : 2 * m - 1;
-      }
-    }
-  }
-  const bw = b.width;
-  const bh = b.height;
-  const ww = Math.max(1, Math.min(Math.round(window), bw));
-  const wh = Math.max(1, Math.min(Math.round(window), bh));
-  const sc = new Float64Array((bw + 1) * (bh + 1));
-  const sa = new Float64Array((bw + 1) * (bh + 1));
-  const W = bw + 1;
-  for (let j = 0; j < bh; j++) {
-    let rowC = 0;
-    let rowA = 0;
-    for (let i = 0; i < bw; i++) {
-      const p = (b.y + j) * width + (b.x + i);
-      if (labels[p] === id) {
-        rowC++;
-        rowA += alpha[p];
-      }
-      sc[(j + 1) * W + i + 1] = sc[j * W + i + 1] + rowC;
-      sa[(j + 1) * W + i + 1] = sa[j * W + i + 1] + rowA;
-    }
-  }
-  const rect = (s, i, j) => s[(j + wh) * W + i + ww] - s[j * W + i + ww] - s[(j + wh) * W + i] + s[j * W + i];
-  let bestC = -1;
-  let bestA = 0;
-  let bi = 0;
-  let bj = 0;
-  for (let j = 0; j + wh <= bh; j++) {
-    for (let i = 0; i + ww <= bw; i++) {
-      const c = rect(sc, i, j);
-      if (c > bestC) {
-        bestC = c;
-        bestA = rect(sa, i, j);
-        bi = i;
-        bj = j;
-      }
-    }
-  }
-  return {
-    ...b,
-    area: r.area,
-    meanAlpha: r42(r.alphaSum / r.area),
-    thickest: { ...at, thickness: r2(Math.max(0, thickness)) },
-    densest: {
-      x: b.x + bi,
-      y: b.y + bj,
-      width: ww,
-      height: wh,
-      pixels: bestC,
-      share: r42(bestC / (ww * wh)),
-      meanAlpha: bestC > 0 ? r42(bestA / bestC) : 0
-    }
-  };
-}
-function spillReading(t, pixels, excess, solidExcess, leans) {
-  const other = t.screen === "green" ? "red and blue" : "red and green";
-  if (pixels === 0 || excess === null) {
-    return `no partly transparent pixels at or above alpha ${t.spillMinAlpha} to read a colour from`;
-  }
-  const lean = `its ${t.screen} exceeds the larger of ${other} by ${excess.toFixed(3)}`;
-  const versus = solidExcess === null ? "" : `; the solid area just inside the edge: ${solidExcess.toFixed(3)}`;
-  return leans ? `the soft edge leans ${t.screen} (likely spill): ${lean}${versus}` : `the soft edge does not lean ${t.screen} beyond the subject's own colour: ${lean}${versus}`;
-}
-var zoneAcc = () => ({
-  pixels: 0,
-  sum: 0,
-  max: 0,
-  changed: 0,
-  minX: Infinity,
-  minY: Infinity,
-  maxX: -1,
-  maxY: -1
-});
-function finishZone(z2) {
-  return {
-    pixels: z2.pixels,
-    meanAbsDelta: z2.pixels ? r42(z2.sum / z2.pixels) : 0,
-    maxAbsDelta: r42(z2.max),
-    changedShare: z2.pixels ? r42(z2.changed / z2.pixels) : 0,
-    changedBounds: z2.changed === 0 ? null : { x: z2.minX, y: z2.minY, width: z2.maxX - z2.minX + 1, height: z2.maxY - z2.minY + 1 }
-  };
-}
-function alphaChange(prev, cur, t) {
-  if (prev.width !== cur.width || prev.height !== cur.height) {
-    throw new Error(
-      `cannot compare frames of different size (${prev.width}\xD7${prev.height} vs ${cur.width}\xD7${cur.height})`
-    );
-  }
-  const { width } = cur;
-  const acc = [zoneAcc(), zoneAcc(), zoneAcc()];
-  const all = zoneAcc();
-  const n = width * cur.height;
-  for (let p = 0; p < n; p++) {
-    const zp = prev.zones[p];
-    const zc = cur.zones[p];
-    const zone = zp === INSIDE || zc === INSIDE ? INSIDE : zp === OUTSIDE || zc === OUTSIDE ? OUTSIDE : EDGE;
-    const d = Math.abs(cur.alpha[p] - prev.alpha[p]);
-    for (const z2 of [acc[zone], all]) {
-      z2.pixels++;
-      z2.sum += d;
-      if (d > z2.max) z2.max = d;
-      if (d > t.changeAbove) {
-        z2.changed++;
-        const x = p % width;
-        const y = (p - x) / width;
-        if (x < z2.minX) z2.minX = x;
-        if (x > z2.maxX) z2.maxX = x;
-        if (y < z2.minY) z2.minY = y;
-        if (y > z2.maxY) z2.maxY = y;
-      }
-    }
-  }
-  return {
-    edge: finishZone(acc[EDGE]),
-    inside: finishZone(acc[INSIDE]),
-    outside: finishZone(acc[OUTSIDE]),
-    all: finishZone(all)
-  };
-}
-function summarizeFlicker(pairs) {
-  const zone = (key) => {
-    let mean = 0;
-    let max = 0;
-    let share = 0;
-    let worst = null;
-    for (const pair of pairs) {
-      const z2 = pair[key];
-      mean += z2.meanAbsDelta;
-      share += z2.changedShare;
-      if (z2.maxAbsDelta > max) max = z2.maxAbsDelta;
-      if (z2.meanAbsDelta > 0 && (worst === null || z2.meanAbsDelta > worst[key].meanAbsDelta)) {
-        worst = pair;
-      }
-    }
-    const k = Math.max(1, pairs.length);
-    return {
-      meanAbsDelta: r42(mean / k),
-      maxAbsDelta: r42(max),
-      changedShare: r42(share / k),
-      worstPair: worst ? { from: worst.from.index, to: worst.to.index } : null
-    };
-  };
-  return { edge: zone("edge"), inside: zone("inside"), outside: zone("outside"), all: zone("all") };
-}
-
-// src/color/screen.ts
-var SCREEN_DEFAULTS = {
-  screen: "auto",
-  minExcess: 0.04,
-  minDominance: 0.15,
-  minScreenShare: 0.02,
-  opaque: 1 - 2 / 255,
-  columns: "auto",
-  rows: "auto",
-  minCellShare: 0.25,
-  nearSkip: "auto",
-  nearBand: "auto",
-  unevenRatio: 1.1,
-  grainAbove: 0.01
-};
-var SCREEN_COLOUR_NOTE = "Colours are capture values: the opaque pixels of the render as saveFrameToPng wrote them, so the comp background does not mix in. In a project with no working space (8 bpc, as measured live in After Effects 2027) these are the footage's own 0..1 values, the scale Keylight's Screen Colour takes, so colour.nearSubject (or colour.median) can go to key.keylight's screenColour as it is. In a colour-managed project they are working-space values scaled by After Effects' capture transfer; that has not been checked against Keylight, so confirm the key with the Screen Matte and Status views. Measure the source un-keyed (Keylight View 'source', or the key off, and isolate the layer): a keyed render has no screen left, and Keylight despills what it outputs.";
-function autoGrid(width, height) {
-  const short = Math.min(width, height);
-  const across = 4;
-  const along = Math.max(1, Math.round(across * Math.max(width, height) / short));
-  return width <= height ? { columns: across, rows: along } : { columns: along, rows: across };
-}
-function resolveScreenThresholds(args, width, height) {
-  const grid = autoGrid(width, height);
-  const short = Math.min(width, height);
-  return {
-    screen: args.screen ?? SCREEN_DEFAULTS.screen,
-    minExcess: args.minExcess ?? SCREEN_DEFAULTS.minExcess,
-    minDominance: args.minDominance ?? SCREEN_DEFAULTS.minDominance,
-    minScreenShare: args.minScreenShare ?? SCREEN_DEFAULTS.minScreenShare,
-    opaque: args.opaque ?? SCREEN_DEFAULTS.opaque,
-    columns: args.columns ?? grid.columns,
-    rows: args.rows ?? grid.rows,
-    minCellShare: args.minCellShare ?? SCREEN_DEFAULTS.minCellShare,
-    nearSkip: args.nearSkip ?? Math.max(2, Math.round(0.01 * short)),
-    nearBand: args.nearBand ?? Math.max(4, Math.round(0.05 * short)),
-    unevenRatio: args.unevenRatio ?? SCREEN_DEFAULTS.unevenRatio,
-    grainAbove: args.grainAbove ?? SCREEN_DEFAULTS.grainAbove
-  };
-}
-function screenArgsError(args) {
-  if (args.screen !== void 0 && args.screen !== "auto" && args.screen !== "green" && args.screen !== "blue") {
-    return "`screen.screen` must be 'auto', 'green' or 'blue'";
-  }
-  for (const key of [
-    "minExcess",
-    "minDominance",
-    "minScreenShare",
-    "opaque",
-    "minCellShare",
-    "grainAbove"
-  ]) {
-    const v = args[key];
-    if (v !== void 0 && (typeof v !== "number" || !(v >= 0 && v <= 1))) {
-      return `\`screen.${key}\` must be a number in 0..1`;
-    }
-  }
-  for (const key of ["columns", "rows"]) {
-    const v = args[key];
-    if (v !== void 0 && (!Number.isInteger(v) || v < 1 || v > 64)) {
-      return `\`screen.${key}\` must be a whole number from 1 to 64`;
-    }
-  }
-  const skip = args.nearSkip;
-  if (skip !== void 0 && (typeof skip !== "number" || !Number.isFinite(skip) || skip < 0)) {
-    return "`screen.nearSkip` must be 0 or more (pixels)";
-  }
-  const band = args.nearBand;
-  if (band !== void 0 && (typeof band !== "number" || !Number.isFinite(band) || band < 1)) {
-    return "`screen.nearBand` must be at least 1 (pixels)";
-  }
-  const u = args.unevenRatio;
-  if (u !== void 0 && (typeof u !== "number" || !Number.isFinite(u) || u < 1)) {
-    return "`screen.unevenRatio` must be a number of 1 or more";
-  }
-  return null;
-}
-var r43 = (v) => Math.round(v * 1e4) / 1e4;
-var r4rgb3 = (v) => [r43(v[0]), r43(v[1]), r43(v[2])];
-var luma = (c) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
-var CH = { green: 1, blue: 2 };
-function screenTest(rgb, p, ch, t) {
-  const v = rgb[p * 3 + ch];
-  const others = ch === 1 ? Math.max(rgb[p * 3], rgb[p * 3 + 2]) : Math.max(rgb[p * 3], rgb[p * 3 + 1]);
-  const lead = v - others;
-  return lead >= t.minExcess && lead >= t.minDominance * v;
-}
-var BINS = 65536;
-function histMedian(h, count) {
-  const out = [0, 0, 0];
-  const half = (count + 1) / 2;
-  for (let c = 0; c < 3; c++) {
-    let acc = 0;
-    const base = c * BINS;
-    for (let b = 0; b < BINS; b++) {
-      acc += h[base + b];
-      if (acc >= half) {
-        out[c] = b / (BINS - 1);
-        break;
-      }
-    }
-  }
-  return out;
-}
-function addToHist(h, rgb, p) {
-  for (let c = 0; c < 3; c++) {
-    const v = Math.min(1, Math.max(0, rgb[p * 3 + c]));
-    h[c * BINS + Math.round(v * (BINS - 1))]++;
-  }
-}
-function measureScreen(img, t) {
-  const { width, height, rgb } = img;
-  const alpha = img.alpha;
-  const n = width * height;
-  const measuredAt = (p) => !alpha || alpha[p] >= t.opaque;
-  let measured = 0;
-  for (let p = 0; p < n; p++) if (measuredAt(p)) measured++;
-  const leftOut = n - measured;
-  const kinds = t.screen === "auto" ? ["green", "blue"] : [t.screen];
-  let kind = kinds[0];
-  let best = -1;
-  for (const k of kinds) {
-    let count2 = 0;
-    for (let p = 0; p < n; p++) if (measuredAt(p) && screenTest(rgb, p, CH[k], t)) count2++;
-    if (count2 > best) {
-      best = count2;
-      kind = k;
-    }
-  }
-  const ch = CH[kind];
-  const found = measured > 0 && best / measured >= t.minScreenShare && best > 0;
-  const base = {
-    stage: "capture",
-    values: "capture",
-    screen: found ? kind : null,
-    chosen: t.screen === "auto" ? "detected" : "given",
-    pixels: n,
-    measured,
-    leftOut,
-    screenPixels: 0,
-    share: 0,
-    bounds: null,
-    colour: null,
-    subject: null,
-    evenness: null,
-    grain: null,
-    reading: "",
-    screenColourNote: SCREEN_COLOUR_NOTE
-  };
-  if (leftOut > n / 2) {
-    base.warning = `${Math.round(100 * leftOut / n)}% of the frame is transparent or partly transparent, as a keyed render is. Measure the source: set Keylight's View to 'source' (key.view) or switch the key off, and isolate the keyed layer so nothing else is in the render.`;
-  }
-  if (!found) {
-    const what = t.screen === "auto" ? "green or blue" : t.screen;
-    base.reading = `no ${what} screen found: fewer than ${Math.round(t.minScreenShare * 100)}% of the ${measured} measured pixels have ${what} leading the other channels by at least ${t.minExcess} and ${Math.round(t.minDominance * 100)}% of its level`;
-    return base;
-  }
-  const isScreen = new Uint8Array(n);
-  const hist = new Uint32Array(3 * BINS);
-  const sum = [0, 0, 0];
-  let count = 0;
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -1;
-  let maxY = -1;
-  for (let p = 0; p < n; p++) {
-    if (!measuredAt(p) || !screenTest(rgb, p, ch, t)) continue;
-    isScreen[p] = 1;
-    count++;
-    addToHist(hist, rgb, p);
-    for (let c = 0; c < 3; c++) sum[c] += rgb[p * 3 + c];
-    const x = p % width;
-    const y = (p - x) / width;
-    if (x < minX) minX = x;
-    if (x > maxX) maxX = x;
-    if (y < minY) minY = y;
-    if (y > maxY) maxY = y;
-  }
-  const median = histMedian(hist, count);
-  const mean = [sum[0] / count, sum[1] / count, sum[2] / count];
-  const labels = new Int32Array(n);
-  const queue = new Int32Array(n);
-  const ones = alpha ?? new Float64Array(n).fill(1);
-  const regions = labelRegions(
-    ones,
-    width,
-    height,
-    (p) => measuredAt(p) && isScreen[p] === 0,
-    true,
-    labels,
-    queue,
-    -1
-  );
-  let subjectId = 0;
-  for (let i = 0; i < regions.length; i++) {
-    if (subjectId === 0 || regions[i].area > regions[subjectId - 1].area) subjectId = i + 1;
-  }
-  let subject = null;
-  let nearSubject = null;
-  if (subjectId > 0) {
-    const s = regions[subjectId - 1];
-    subject = {
-      box: { x: s.minX, y: s.minY, width: s.maxX - s.minX + 1, height: s.maxY - s.minY + 1 },
-      area: s.area,
-      share: r43(s.area / n)
-    };
-    const mask = new Float64Array(n);
-    for (let p = 0; p < n; p++) if (labels[p] === subjectId) mask[p] = 1;
-    const scratch = new Float32Array(n);
-    const dist = new Float32Array(n);
-    distanceTo(mask, width, height, (a) => a > 0.5, scratch, dist);
-    const from = t.nearSkip;
-    const to = t.nearSkip + t.nearBand;
-    const nearHist = new Uint32Array(3 * BINS);
-    let nearCount = 0;
-    for (let p = 0; p < n; p++) {
-      if (isScreen[p] === 0 || !(dist[p] > from && dist[p] <= to)) continue;
-      addToHist(nearHist, rgb, p);
-      nearCount++;
-    }
-    if (nearCount > 0) {
-      nearSubject = {
-        colour: r4rgb3(histMedian(nearHist, nearCount)),
-        pixels: nearCount,
-        band: { from, to }
-      };
-    }
-  }
-  const evenness = measureEvenness(img, isScreen, measuredAt, ch, kind, t);
-  const grain = measureGrain(img, isScreen, ch, kind, t);
-  const near = nearSubject ? nearSubject.colour : null;
-  const fmt3 = (c) => `(${c.map((v) => v.toFixed(3)).join(", ")})`;
-  base.screenPixels = count;
-  base.share = r43(count / measured);
-  base.bounds = { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
-  base.colour = { median: r4rgb3(median), mean: r4rgb3(mean), nearSubject };
-  base.subject = subject;
-  base.evenness = evenness;
-  base.grain = grain;
-  base.reading = `${kind} screen, ${Math.round(base.share * 100)}% of the measured pixels; median ${fmt3(median)}` + (near ? `, near the subject ${fmt3(near)}` : "") + `. ${evenness.reading}. ${grain ? grain.reading : "grain not measured (no screen pixel has screen all round it)"}.`;
-  return base;
-}
-function measureEvenness(img, isScreen, measuredAt, ch, kind, t) {
-  const { width, height, rgb } = img;
-  const cols = Math.min(t.columns, width);
-  const rows = Math.min(t.rows, height);
-  const xs = Array.from({ length: cols + 1 }, (_, i) => Math.floor(i * width / cols));
-  const ys = Array.from({ length: rows + 1 }, (_, i) => Math.floor(i * height / rows));
-  const cells = [];
-  let s1 = 0;
-  let su = 0;
-  let sv = 0;
-  let suu = 0;
-  let suv = 0;
-  let svv = 0;
-  let sl = 0;
-  let sul = 0;
-  let svl = 0;
-  const du = Math.max(1, width - 1);
-  const dv = Math.max(1, height - 1);
-  const perX = new Float64Array(width);
-  const perY = new Float64Array(height);
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      let m = 0;
-      let k = 0;
-      const acc = [0, 0, 0];
-      for (let y = ys[r]; y < ys[r + 1]; y++) {
-        for (let x = xs[c]; x < xs[c + 1]; x++) {
-          const p = y * width + x;
-          if (!measuredAt(p)) continue;
-          m++;
-          if (isScreen[p] === 0) continue;
-          k++;
-          for (let q = 0; q < 3; q++) acc[q] += rgb[p * 3 + q];
-          perX[x]++;
-          perY[y]++;
-          const u = x / du;
-          const v = y / dv;
-          const l = rgb[p * 3 + ch];
-          s1++;
-          su += u;
-          sv += v;
-          suu += u * u;
-          suv += u * v;
-          svv += v * v;
-          sl += l;
-          sul += u * l;
-          svl += v * l;
-        }
-      }
-      const cellMean = k > 0 ? [acc[0] / k, acc[1] / k, acc[2] / k] : null;
-      cells.push({
-        column: c,
-        row: r,
-        box: { x: xs[c], y: ys[r], width: xs[c + 1] - xs[c], height: ys[r + 1] - ys[r] },
-        screenShare: m > 0 ? r43(k / m) : 0,
-        mean: cellMean ? r4rgb3(cellMean) : null,
-        luma: cellMean ? r43(luma(cellMean)) : null,
-        level: cellMean ? r43(cellMean[ch]) : null
-      });
-    }
-  }
-  const eligible = cells.filter(
-    (c) => c.level !== null && c.screenShare >= t.minCellShare
-  );
-  let darkest = null;
-  let brightest = null;
-  for (const c of eligible) {
-    if (darkest === null || c.level < darkest.level) darkest = c;
-    if (brightest === null || c.level > brightest.level) brightest = c;
-  }
-  const levelRatio = darkest && brightest && darkest.level > 0 ? r43(brightest.level / darkest.level) : null;
-  const lumaRatio = darkest && brightest && darkest.luma > 0 ? r43(brightest.luma / darkest.luma) : null;
-  const uneven = levelRatio !== null && levelRatio > t.unevenRatio;
-  const plane = solve3(
-    [
-      [s1, su, sv],
-      [su, suu, suv],
-      [sv, suv, svv]
-    ],
-    [sl, sul, svl]
-  );
-  const [x0, x1] = percentileRange(perX, s1);
-  const [y0, y1] = percentileRange(perY, s1);
-  const extent = { x: x0, y: y0, width: x1 - x0 + 1, height: y1 - y0 + 1 };
-  let horizontal = null;
-  let vertical = null;
-  if (plane && s1 > 0) {
-    const [a, b, c] = plane;
-    const at = (u, v) => a + b * u + c * v;
-    const ratio = (hi, lo) => lo > 0 && hi > 0 ? r43(hi / lo) : null;
-    const uc = su / s1;
-    const vc = sv / s1;
-    if (x1 > x0) horizontal = ratio(at(x1 / du, vc), at(x0 / du, vc));
-    if (y1 > y0) vertical = ratio(at(uc, y1 / dv), at(uc, y0 / dv));
-  }
-  const sides = [];
-  if (horizontal !== null) {
-    sides.push({
-      side: horizontal > 1 ? "left" : "right",
-      strength: Math.max(horizontal, 1 / horizontal)
-    });
-  }
-  if (vertical !== null) {
-    sides.push({
-      side: vertical > 1 ? "top" : "bottom",
-      strength: Math.max(vertical, 1 / vertical)
-    });
-  }
-  const darkerSide = sides.filter((d) => d.strength > t.unevenRatio).sort((p, q) => q.strength - p.strength).map((d) => d.side);
-  const where = (c) => `cell ${c.column},${c.row} at x ${c.box.x}, y ${c.box.y}`;
-  let reading;
-  if (darkest === null || brightest === null || levelRatio === null) {
-    reading = `no grid cell is at least ${Math.round(t.minCellShare * 100)}% screen, so evenness was not read`;
-  } else {
-    const spread = `the screen's ${kind} level runs from ${darkest.level.toFixed(3)} (${where(darkest)}) to ${brightest.level.toFixed(3)} (${where(brightest)}), ${levelRatio.toFixed(2)}x`;
-    reading = uneven ? `uneven: ${spread}` + (darkerSide.length ? `, darker on the ${darkerSide.join(" and the ")}` : "") + ". One Screen Colour will not fit all of it: key from the colour near the subject, then check the darker part in the Screen Matte view (Clip Black, a second key, or a garbage mask)" : `even: ${spread}`;
-  }
-  return {
-    columns: cols,
-    rows,
-    cellWidth: xs[1] - xs[0],
-    cellHeight: ys[1] - ys[0],
-    cells,
-    darkest,
-    brightest,
-    levelRatio,
-    lumaRatio,
-    uneven,
-    extent,
-    horizontal,
-    vertical,
-    darkerSide,
-    reading
-  };
-}
-function percentileRange(counts, total) {
-  if (total <= 0) return [0, counts.length - 1];
-  const lo = 0.05 * total;
-  const hi = 0.95 * total;
-  let acc = 0;
-  let first = -1;
-  let last = counts.length - 1;
-  for (let i = 0; i < counts.length; i++) {
-    acc += counts[i];
-    if (first < 0 && acc >= lo) first = i;
-    if (acc >= hi) {
-      last = i;
-      break;
-    }
-  }
-  return [Math.max(0, first), last];
-}
-function solve3(m, v) {
-  const det = (a) => a[0][0] * (a[1][1] * a[2][2] - a[1][2] * a[2][1]) - a[0][1] * (a[1][0] * a[2][2] - a[1][2] * a[2][0]) + a[0][2] * (a[1][0] * a[2][1] - a[1][1] * a[2][0]);
-  const d = det(m);
-  if (!Number.isFinite(d) || Math.abs(d) < 1e-12) return null;
-  const col = (i) => m.map((row, r) => row.map((x, c) => c === i ? v[r] : x));
-  return [det(col(0)) / d, det(col(1)) / d, det(col(2)) / d];
-}
-function measureGrain(img, isScreen, ch, kind, t) {
-  const { width, height, rgb } = img;
-  const ss = [0, 0, 0];
-  let k = 0;
-  for (let y = 1; y < height - 1; y++) {
-    for (let x = 1; x < width - 1; x++) {
-      const p = y * width + x;
-      if (isScreen[p] === 0) continue;
-      let all = true;
-      for (let dy = -1; dy <= 1 && all; dy++) {
-        for (let dx = -1; dx <= 1; dx++) {
-          if (isScreen[p + dy * width + dx] === 0) {
-            all = false;
-            break;
-          }
-        }
-      }
-      if (!all) continue;
-      for (let c = 0; c < 3; c++) {
-        let s = 0;
-        for (let dy = -1; dy <= 1; dy++) {
-          for (let dx = -1; dx <= 1; dx++) s += rgb[(p + dy * width + dx) * 3 + c];
-        }
-        const d = rgb[p * 3 + c] - s / 9;
-        ss[c] += d * d;
-      }
-      k++;
-    }
-  }
-  if (k === 0) return null;
-  const sd = [0, 1, 2].map((c) => Math.sqrt(ss[c] / k * 9 / 8));
-  const level = sd[ch];
-  const grainy = level > t.grainAbove;
-  const steps = level * 255;
-  return {
-    stdDev: r4rgb3(sd),
-    level: r43(level),
-    steps8bit: Math.round(steps * 100) / 100,
-    samples: k,
-    grainy,
-    reading: `grain: ${kind} varies by ${level.toFixed(4)} (standard deviation, about ${steps.toFixed(1)} 8-bit steps) about its local mean` + (grainy ? "; grainy enough to break a hard matte into specks and chatter, so try Keylight's Screen Pre-blur before raising Clip Black" : "; fine enough not to need pre-blur")
-  };
-}
-
-// src/tools/render-frame.ts
-init_config();
-init_registry();
-var STRIP_DEFAULT_MAX_DIMENSION = 360;
-var FRAME_PICK = 0.25;
-var NEAR_FRAME_BOUNDARY = 0.02;
-function frameWarnings(frames, near = NEAR_FRAME_BOUNDARY) {
-  const parts = [];
-  const firstAt = /* @__PURE__ */ new Map();
-  for (const [i, f] of frames.entries()) {
-    if (typeof f.frame !== "number") continue;
-    const seen = firstAt.get(f.frame);
-    if (seen === void 0) firstAt.set(f.frame, i);
-    else parts.push(`#${seen} and #${i} both render frame ${f.frame}`);
-  }
-  for (const [i, f] of frames.entries()) {
-    if (typeof f.frame !== "number" || typeof f.frameOffset !== "number") continue;
-    const below = 1 - f.frameOffset;
-    if (below > 0 && below <= near) {
-      parts.push(
-        `#${i} (${f.time} s) renders frame ${f.frame}, ${(below * 100).toFixed(1)}% of a frame below frame ${f.frame + 1}`
-      );
-    }
-  }
-  if (parts.length === 0) return void 0;
-  return `${parts.join("; ")}. A time resolves to the frame it falls in, so a rounded time just below a boundary renders the frame before and a series of rounded times can repeat frames (diff then reads stutters). Pass \`frames: [..]\` to address frames by number, or exact times.`;
-}
-var MEASUREMENT_STAGES = {
-  capture: "the PNG as saveFrameToPng wrote it, before any colour conversion: working-space values (scaled by AE's capture transfer in colour-managed projects), 8 or 16 bits. Its RGB is already laid over the comp background colour (`bgColor`): capture = colour\xB7alpha + bgColor\xB7(1 \u2212 alpha), so a half-covered pixel reads half background and an empty one reads bgColor; on a black background that is premultiplied colour. Alpha is the coverage AE wrote",
-  output: "the file as written (writtenTo), after colour conversion when colorManaged is auto, so 8-bit display values. With channels 'rgb': over the comp background as AE composited it, or over `over`. With 'rgba': the colour recovered from under the background (straight, 0 where alpha is 0), plus alpha. With 'alpha': the matte, in r = g = b. The same as the capture when colorManaged is off or the conversion failed"
-};
-var HISTOGRAM_DEFAULT_BINS = 32;
-var layerRefSchema = external_exports.union([
-  external_exports.string(),
-  external_exports.number().int().positive(),
-  external_exports.object({ id: external_exports.number().int() })
-]);
-var regionSchema = external_exports.object({
-  name: external_exports.string().min(1).describe("Label reported back with the numbers."),
-  x: external_exports.number().int().describe("Left edge (or the point), capture pixels from the left."),
-  y: external_exports.number().int().describe("Top edge (or the point), capture pixels from the top."),
-  width: external_exports.number().int().positive().optional().describe("Omit with height for a single pixel."),
-  height: external_exports.number().int().positive().optional()
-});
-var renderFrameTool = defineTool({
-  name: "ae_render_frame",
-  title: "Render frame",
-  description: "Render one or more frames to PNG. Use to visually verify edits. The agent's 'eyes' \u2014 pair with mutations for a visual feedback loop. Headless and deterministic. Pass `time` for one frame, or `times` for several in ONE call (motion checks): files land at <outPath stem>_<index>.png and are listed in `frames`. `contactSheet` tiles every frame into one labelled PNG (<stem>_sheet.png) so a motion check is one image; `analyze` measures each capture (uniform edge bands = black bars / transparent margins, content bounds, coverage) so off-frame elements and letterboxing are caught numerically. In color-managed projects (workingSpace != None) the capture applies AE's own display transform via a transient OCIO Display Transform adjustment layer, and the PNG comes back viewer-accurate and sRGB-tagged. Where that layer cannot be used \u2014 read-only mode, an AE without the OCIO effect, or a failed capture calibration \u2014 the result falls back to a pure-math ACES conversion or to raw values with an explicit colorWarning; check colorPipeline / colorWarning on the response. Seeing the matte: `channels` picks what the file holds \u2014 'rgb' (default, transparency composited over `over`: the comp background as AE composites it, a checkerboard or a colour such as '#ff00ff'), 'rgba' (alpha kept, straight colour), or 'alpha' (the matte as greyscale: white opaque, black transparent). `isolate` renders one layer or a list alone (cameras and lights stay as they are), then restores every layer switch, even when the render fails. `alphaChannel` reports whether the capture carried alpha at all. Reading colour: `sample` takes named points or rectangles and returns mean / min / max per channel and alpha coverage for each; `histogram` counts the whole frame per channel; `compare` (with `times` and `sample`) reports each region's difference between two of the rendered frames. Matte quality: `edge` reports, from the capture's alpha, the shares of opaque / partly transparent / transparent pixels, edge width (typical and worst, px), holes, specks, partly transparent patches that are not thin edges (an unkeyed screen, a remnant), the soft edge's colour with the comp background taken out and whether it leans to the screen colour (spill), and with `times` the frame-to-frame change in alpha along the edge, inside the solid area and outside it (flicker). Green screen: `screen`, on a render of the UN-KEYED source (Keylight View 'source' or the key off, the keyed layer isolated), reports green or blue, which pixels are screen and their share, a suggested screen colour (the median, and the colour just outside the subject), evenness on a grid (darkest and brightest cells, the spread as a ratio, the darker side) and grain. Watching motion: `diff` (with `times`) reports how much the picture changes between consecutive frames, where, and per `sample` region, and flags pairs that stand out (a one-frame pop, a stutter where a frame repeats, a cut); `strip: { at, frames }` renders the frames around a moment into one small contact sheet with diff on. For playback at speed, render.preview (ae_do) writes a quick movie. It reports numbers and places, never a pass or fail. Every number is labelled with its stage \u2014 'capture' (before colour conversion) or 'output' (the file as written) \u2014 described once in `measurementStages`.",
-  group: "render",
-  // Survives read-only mode: it writes a PNG, and the visual verification loop
-  // is the whole point of an audit session. Note this is NOT a
-  // never-touches-the-project tool. In a color-managed project the capture
-  // path adds a transient adjustment layer, and the calibration probe builds a
-  // scratch comp — both removed before the call returns, both leaving the
-  // project dirty and one undo step consumed. Read-only mode is exactly where
-  // that must not happen, so both are gated on !readOnlyMode() below and the
-  // call degrades to the pure-math path instead.
-  blockedInReadOnly: false,
-  effect: "write",
-  inputShape: {
-    compNameOrId: external_exports.union([external_exports.string(), external_exports.number()]).describe("Composition name or numeric item id."),
-    time: external_exports.number().nonnegative().optional().describe(
-      "Time in seconds to render. Give exactly one of `time`, `times`, `strip` or `frames`. Each rendered frame reports `frame` (the frame the time falls in: floor(time / frameDuration), worked out in After Effects) and `frameOffset` (where in it, 0..1); `frameWarning` says when two times land on one frame or a time sits within 2% of a frame below a boundary (a rounded time renders the frame before). Times are never moved."
-    ),
-    times: external_exports.array(external_exports.number().nonnegative()).min(1).max(32).optional().describe(
-      "Several times in seconds, rendered in ONE call. Files are written as <outPath stem>_<index><ext> and reported in `frames` (index-aligned)."
-    ),
-    strip: external_exports.object({
-      at: external_exports.number().nonnegative().describe("The moment, seconds (snapped to the nearest frame)."),
-      frames: external_exports.number().int().min(2).max(32).describe("How many consecutive frames, centred on `at` (one more after it when even)."),
-      step: external_exports.number().int().positive().optional().describe("Frames between rendered frames. Default 1 (every frame)."),
-      maxDimension: external_exports.number().int().min(16).max(2048).optional().describe(
-        "Longest side of each tile on the sheets, px. Default 360. The frames themselves are rendered at the comp's size."
-      )
-    }).optional().describe(
-      "'What happens around this moment' in one call: N consecutive frames around `at`, worked out from the comp's frame rate inside After Effects and rendered through the `times` path (files <stem>_<index>, listed in `frames`), tiled small into the contact sheet, with `diff` and its sheet on (pass `diff: false` to skip, or diff options to tune). The window is shifted to stay inside the comp; `strip` in the response says where it landed. Instead of `time` / `times`."
-    ),
-    frames: external_exports.array(external_exports.number().int().nonnegative()).min(1).max(32).optional().describe(
-      "Frame numbers (0 = the comp's first frame) instead of times: each is rendered a quarter of a frame inside it, so a time never lands on the frame before. Through the `times` path: files <stem>_<index>, reported in `frames` with their `frame`. Instead of `time` / `times` / `strip`."
-    ),
-    outPath: external_exports.string().describe(
-      "Absolute path to write the PNG. Parent directory is created if missing. With `times`, used as the naming stem for every frame."
-    ),
-    useDisplayStartTime: external_exports.boolean().optional().describe("If true, times are interpreted relative to comp.displayStartTime. Default false."),
-    colorManaged: external_exports.enum(["auto", "off"]).optional().describe(
-      "'auto' (default): detect the working space and return a viewer-accurate, 8-bit sRGB-tagged PNG. 'off': raw legacy output (16-bit, untagged, working-space values \u2014 dark/wrong-looking in color-managed projects)."
-    ),
-    settleTimeoutMs: external_exports.number().int().positive().max(6e5).optional().describe(
-      "How long to wait for the captures to finish writing (saveFrameToPng writes after the script returns). Default: 15 s for one frame, plus 3 s for each further 1080\xD71920 frame (scaled by size, at least 1 s each). Frames that do not finish are named in `captureSettle` and marked failed in `frames`; the others are still measured."
-    ),
-    analyze: external_exports.boolean().optional().describe(
-      "Measure each capture: uniform bands at every edge (width + transparent/color \u2014 black bars, letterboxing, empty margins), the bounding box of non-background pixels, coverage, mean RGB. Reported per frame as `analysis` (measured on the capture before color conversion)."
-    ),
-    contactSheet: external_exports.object({
-      columns: external_exports.number().int().positive().optional().describe("Tiles per row (default ceil(sqrt(n)))."),
-      thumbWidth: external_exports.number().int().min(16).max(2048).optional().describe("Tile width in px, never upscaled (default 480)."),
-      outPath: external_exports.string().optional().describe("Sheet path (default <outPath stem>_sheet.png).")
-    }).optional().describe(
-      "Tile all rendered frames into ONE labelled PNG (#index + time above each tile). Pass {} for defaults. Frames that carry alpha (channels 'rgba') are shown over a checkerboard on the sheet."
-    ),
-    channels: external_exports.enum(["rgb", "rgba", "alpha"]).optional().describe(
-      "What the written file holds. 'rgb' (default): 8-bit sRGB, transparency composited over `over`. 'rgba': 8-bit sRGB with the alpha channel kept and straight colour (AE lays its capture over the comp background; that background is taken out again). 'alpha': the matte as 8-bit greyscale, white = opaque, black = transparent. Needs colorManaged 'auto'. If the capture has no alpha channel, `alphaWarning` says so."
-    ),
-    over: external_exports.union([
-      external_exports.enum(["background", "checkerboard"]),
-      external_exports.string().regex(/^#[0-9a-fA-F]{6}$/),
-      external_exports.array(external_exports.number().min(0).max(1)).length(3)
-    ]).optional().describe(
-      "With channels 'rgb': what transparent pixels are shown against. 'background' (default): the comp's background colour (`bgColor`), as AE itself composites the capture. 'checkerboard': light and dark grey squares, so transparency is visible. A colour as '#rrggbb' or [r, g, b] in 0..1 \u2014 magenta shows holes in a key. For the last two the comp background is taken out of the capture first, so soft edges show the new backdrop only."
-    ),
-    isolate: external_exports.union([layerRefSchema, external_exports.array(layerRefSchema).min(1)]).optional().describe(
-      "Render these layers alone: a layer (index, name, or { id }) or a list. Every other layer is switched off for the capture, adjustment layers included; camera, light and audio-only layers are left as they are; named layers are switched on even if they were off (to see a matte layer); solo is cleared. Every switch is restored afterwards, even when the render fails, and `isolation` reports it. Top-level layers of this comp only. Not available in read-only mode."
-    ),
-    sample: external_exports.object({
-      regions: external_exports.array(regionSchema).min(1).max(64),
-      stage: external_exports.enum(["both", "capture", "output"]).optional().describe("Which pixels to measure (default 'both'; see measurementStages).")
-    }).optional().describe(
-      "Read colour values. Named points ({ name, x, y }) or rectangles (+ width, height) in capture pixels (comp pixels at full resolution); regions running off the frame are clipped. Per region and stage: mean / min / max of r, g, b (0..1), alpha mean / min / max and the shares of opaque, partly covered and transparent pixels; 'output' also gives meanHex. Reported as `samples` (per frame with `times`)."
-    ),
-    histogram: external_exports.union([
-      external_exports.boolean(),
-      external_exports.object({
-        bins: external_exports.number().int().min(2).max(256).optional().describe("Default 32."),
-        stage: external_exports.enum(["output", "capture"]).optional().describe("Default 'output'.")
-      })
-    ]).optional().describe(
-      "Whole-frame per-channel histogram: pixel counts for r, g, b (and a when present) in equal bins over 0..1, 1.0 in the last bin. `true` for defaults."
-    ),
-    compare: external_exports.object({
-      from: external_exports.number().int().nonnegative().optional().describe("Index into `times` (default 0)."),
-      to: external_exports.number().int().nonnegative().optional().describe("Index into `times` (default 1).")
-    }).optional().describe(
-      "With `times` and `sample`: each region's difference between two rendered frames, to \u2212 from, per stage: meanDelta (signed average shift), meanAbsDelta and maxAbsDelta per channel, and the same for alpha. Reported as `comparison`."
-    ),
-    edge: external_exports.union([
-      external_exports.boolean(),
-      external_exports.object({
-        from: external_exports.enum(["alpha", "luma"]).optional().describe(
-          "Where the matte is read: 'alpha' (default, the keyed result's coverage) or 'luma' (Rec. 709 luminance of the capture), for Keylight's Screen Matte (View 5) and Combined Matte (8) views, which write the matte in grey RGB with alpha 1 everywhere. With 'luma' spill is not read and no alpha channel is needed."
-        ),
-        transparent: external_exports.number().min(0).max(1).optional().describe(
-          "Alpha at or below counts as transparent. Default 2/255 (as `sample` counts)."
-        ),
-        opaque: external_exports.number().min(0).max(1).optional().describe("Alpha at or above counts as opaque. Default 1 \u2212 2/255."),
-        maxEdgeWidth: external_exports.number().min(1).optional().describe(
-          "Widest transition still called a thin edge, px; wider partly transparent regions are reported as patches, and it is the edge band for flicker. Default 1% of the frame's shorter side, at least 4 (11 at 1080\xD71920)."
-        ),
-        mainAreaShare: external_exports.number().min(0).max(1).optional().describe(
-          "An island of covered pixels at least this share of the largest is a main solid area, smaller ones are specks. Default 0.25."
-        ),
-        listed: external_exports.number().int().min(0).max(50).optional().describe(
-          "How many holes, specks, patches and solid areas are listed (all are counted). Default 5."
-        ),
-        screen: external_exports.enum(["green", "blue"]).optional().describe("Screen colour spill is read against. Default 'green'."),
-        spillMinAlpha: external_exports.number().min(0).max(1).optional().describe(
-          "Partly transparent pixels below this alpha are left out of the spill colour. Default 0.1."
-        ),
-        spillThreshold: external_exports.number().min(0).max(1).optional().describe(
-          "The soft edge leans to the screen when its screen channel exceeds the larger other channel by more than this, and by this much more than the solid area's own. Default 0.03."
-        ),
-        changeAbove: external_exports.number().min(0).max(1).optional().describe("Flicker: an alpha change above this counts as changed. Default 0.05."),
-        patchWindow: external_exports.number().min(1).optional().describe(
-          "Side of the square window each patch's densest part is reported in, px. Default 4 \xD7 maxEdgeWidth (44 at 1080\xD71920)."
-        )
-      })
-    ]).optional().describe(
-      "Matte quality as numbers, measured on the capture's alpha (stage 'capture'), or with `from: 'luma'` on its luminance (Keylight's matte views); `true` for the defaults. Each report says `matteFrom`. Reported as `edge` (per frame with `times`), with the thresholds used as `edgeThresholds`: shares {opaque, partial, transparent}; width {typical (median), p90, worst, worstAt, samples, unmeasured} \u2014 px the alpha takes from transparent to opaque across the 50% contour of the main solid areas (0 = hard edge; unmeasured = the alpha never reaches transparent or opaque anywhere, as when the screen is left partly opaque); solidAreas; holes {count, area, transparentArea, largest, list} \u2014 regions below opaque enclosed by the solid area (not touching the frame edge); specks {count, area, list} \u2014 islands outside the main areas; patches {count, area, list} \u2014 partly transparent regions thicker than maxEdgeWidth, each with its box, thickest {x, y, thickness} (the deepest point and the thickness there, px) and densest {x, y, width, height, pixels, share, meanAlpha} (the patchWindow square holding most of it, so a long band's box does not hide where it is); spill {mean, solidMean, excess, solidExcess, leansToScreen, reading} \u2014 the straight colour of the partly transparent pixels (comp background taken out) against the solid just inside the edge. Boxes are {x, y, width, height} in capture pixels. With two or more `times`: `edgeFlicker` {pairs, overall} \u2014 mean / max change in alpha and the changed share and bounds, for consecutive frames, split into edge, inside (a hole opening counts here) and outside (specks); real motion counts as change too."
-    ),
-    screen: external_exports.union([
-      external_exports.boolean(),
-      external_exports.object({
-        screen: external_exports.enum(["auto", "green", "blue"]).optional().describe(
-          "Which screen to look for. Default 'auto': green or blue, whichever has more pixels."
-        ),
-        minExcess: external_exports.number().min(0).max(1).optional().describe(
-          "A pixel is screen when its screen channel leads the larger other channel by at least this (capture values). Default 0.04."
-        ),
-        minDominance: external_exports.number().min(0).max(1).optional().describe("\u2026and by at least this share of its own level. Default 0.15."),
-        minScreenShare: external_exports.number().min(0).max(1).optional().describe(
-          "Fewer screen pixels than this share of the measured ones means no screen. Default 0.02."
-        ),
-        opaque: external_exports.number().min(0).max(1).optional().describe(
-          "Pixels with alpha below this are left out (masked or transparent). Default 1 \u2212 2/255."
-        ),
-        columns: external_exports.number().int().min(1).max(64).optional().describe(
-          "Evenness grid columns. Default: four cells across the shorter side, square-ish cells."
-        ),
-        rows: external_exports.number().int().min(1).max(64).optional().describe("Evenness grid rows. Default as columns."),
-        minCellShare: external_exports.number().min(0).max(1).optional().describe(
-          "A cell needs this share of screen pixels to count as darkest or brightest. Default 0.25."
-        ),
-        nearSkip: external_exports.number().min(0).optional().describe(
-          "The near-subject colour is read from screen pixels starting this many px from the subject. Default 1% of the shorter side, at least 2 (11 at 1080\xD71920)."
-        ),
-        nearBand: external_exports.number().min(1).optional().describe(
-          "\u2026in a band this many px wide. Default 5% of the shorter side, at least 4 (54 at 1080)."
-        ),
-        unevenRatio: external_exports.number().min(1).optional().describe("A brightest / darkest level ratio above this reads as uneven. Default 1.1."),
-        grainAbove: external_exports.number().min(0).max(1).optional().describe(
-          "A screen-channel grain standard deviation above this reads as grainy. Default 0.01."
-        )
-      })
-    ]).optional().describe(
-      "Measure a green or blue screen, on the capture (stage 'capture'), opaque pixels only; `true` for the defaults. Render the UN-KEYED source: set Keylight's View to 'source' (key.view) or switch the key off, and isolate the keyed layer. Reported as `screen` (per frame with `times`), with the thresholds used as `screenThresholds`: screen ('green' | 'blue' | null), chosen, measured / leftOut pixels, screenPixels, share, bounds; colour {median, mean, nearSubject {colour, pixels, band}} \u2014 the suggested Screen Colour; subject {box, area, share}; evenness {columns, rows, cells [{column, row, box, screenShare, mean, luma, level}], darkest, brightest, levelRatio, lumaRatio, uneven, extent (5th to 95th percentile of the screen pixels' positions), horizontal (right / left) and vertical (bottom / top) read across that extent, darkerSide (every side darker past unevenRatio, strongest first), reading}; grain {stdDev, level, steps8bit, samples, grainy, reading}; reading; warning; screenColourNote (capture values and what they mean for Keylight's Screen Colour)."
-    ),
-    diff: external_exports.union([
-      external_exports.boolean(),
-      external_exports.object({
-        changeAbove: external_exports.number().min(0).max(1).optional().describe(
-          "A pixel has changed when one of its channels moved by more than this (display values). Default 0.04, about ten 8-bit steps: well above frame-to-frame grain."
-        ),
-        spikeRatio: external_exports.number().optional().describe(
-          "A pair stands out as a spike when its change is at least this many times its neighbours' on each side it has. Default 3."
-        ),
-        holdRatio: external_exports.number().optional().describe(
-          "A pair is a hold (a repeated frame) when its change is at most this share of the moving neighbours' on both sides. Default 0.25."
-        ),
-        quietBelow: external_exports.number().min(0).max(1).optional().describe(
-          "Mean changes below this read as no visible change: neighbours this quiet are not moving, and a spike is measured against at least this. Default 0.002."
-        ),
-        movingShare: external_exports.number().min(0).max(1).optional().describe(
-          "Neighbours count as moving, and a spike counts, only with at least this share of pixels changed. Default 0.0005 (about 1,000 pixels at 1080\xD71920)."
-        ),
-        window: external_exports.number().int().optional().describe("Pairs on each side compared with a pair. Default 3."),
-        amplify: external_exports.number().optional().describe("Gain of the difference images on the diff sheet. Default 8."),
-        repeatBelow: external_exports.number().min(0).max(1).optional().describe(
-          "A pair changing this little is a repeated frame (identical frames read 0); repeats are never a reference for other pairs. Default 0.0001."
-        ),
-        sheet: external_exports.union([
-          external_exports.boolean(),
-          external_exports.object({
-            columns: external_exports.number().int().positive().optional(),
-            thumbWidth: external_exports.number().int().min(16).max(2048).optional(),
-            outPath: external_exports.string().optional().describe("Default <outPath stem>_diff.png.")
-          })
-        ]).optional().describe(
-          "Also write the difference images, amplified and labelled '#from>to change' ('!' on flagged pairs), tiled into one PNG beside the contact sheet. Default off; on with `strip`."
-        )
-      })
-    ]).optional().describe(
-      "Frame-to-frame change, with `times` (two or more) or `strip`; `true` for the defaults. Measured on the written file (stage 'output', display values; `diff.picture` says what exactly: with the default rgb output the capture is already over the comp background, so transparent areas do not change). Reported as `diff` {stage, picture, pairs, series} with the thresholds used as `diffThresholds`. Each consecutive pair: from, to, change (mean absolute difference over pixels and channels, 0..1), maxAbsDelta, changedPixels, changedShare (a channel moved by more than changeAbove), changedBounds, and with `sample` the same per region. series: pairs, median, mean, largest, smallest, flags [{kind 'pop' | 'stutter' | 'cut' | 'repeat', pairs, frame or between, change, reference, ratio, atSeriesEdge?, besideRepeat?, unreliablePairs?, reading}], reading. A pop is a frame that differs from both neighbours; a stutter a frame that repeats the one before while the frames around it move; a cut one pair far above its neighbours; a repeat an unchanged pair at the start or end of the series beside motion. Repeated frames are never a reference, and the pairs beside one are named unreliable. Flags are hints from numbers: look at the frames."
-    )
-  },
-  handler: async (args, transport2) => {
-    const given = [args.time, args.times, args.strip, args.frames].filter(
-      (v) => v !== void 0
-    ).length;
-    if (given !== 1) {
-      return errorResult(
-        "INVALID_ARGS",
-        "give exactly one of `time`, `times`, `strip` or `frames`",
-        {
-          hint: "`time: 1.5` renders one frame; `times: [0, 1, 2]` renders several in one call; `strip: { at: 1.5, frames: 9 }` renders the frames around a moment; `frames: [42, 43]` renders frames by number."
-        }
-      );
-    }
-    if (args.frames !== void 0 && (!Array.isArray(args.frames) || args.frames.length < 1 || args.frames.length > 32 || !args.frames.every((k) => Number.isInteger(k) && k >= 0))) {
-      return errorResult(
-        "INVALID_ARGS",
-        "`frames` must be 1 to 32 whole frame numbers, 0 or more (0 = the comp's first frame)"
-      );
-    }
-    if (args.settleTimeoutMs !== void 0 && !(Number.isInteger(args.settleTimeoutMs) && args.settleTimeoutMs > 0)) {
-      return errorResult("INVALID_ARGS", "`settleTimeoutMs` must be a positive whole number of ms");
-    }
-    let strip = null;
-    if (args.strip !== void 0) {
-      const planned = planStrip(args.strip);
-      if ("error" in planned) return planned.error;
-      strip = planned.plan;
-    }
-    const count = strip?.frames ?? args.frames?.length ?? args.times?.length ?? 1;
-    const checked = checkEyesOptions({ ...args, count }, strip !== null);
-    if ("error" in checked) return checked.error;
-    const rejection = rejectedOutputPath(args.outPath);
-    if (rejection !== null) {
-      return errorResult("IO", rejection, {
-        details: { outPath: path12.resolve(args.outPath) },
-        hint: "Render to a path outside the mailbox."
-      });
-    }
-    const abs = path12.resolve(args.outPath).replace(/\\/g, "/");
-    if (args.contactSheet?.outPath !== void 0) {
-      const sheetRejection = rejectedOutputPath(args.contactSheet.outPath);
-      if (sheetRejection !== null) {
-        return errorResult("IO", sheetRejection, {
-          details: { outPath: path12.resolve(args.contactSheet.outPath) },
-          hint: "Write the contact sheet to a path outside the mailbox."
-        });
-      }
-    }
-    return nativeFlow(args, checked.options, abs, transport2, strip);
-  }
-});
-function invalid(message, hint) {
-  return { error: errorResult("INVALID_ARGS", message, hint ? { hint } : {}) };
-}
-function parseColor(value) {
-  if (typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value)) {
-    return [1, 3, 5].map((i) => parseInt(value.slice(i, i + 2), 16) / 255);
-  }
-  if (Array.isArray(value) && value.length === 3 && value.every((v) => typeof v === "number" && v >= 0 && v <= 1)) {
-    return [value[0], value[1], value[2]];
-  }
-  return null;
-}
-function checkEyesOptions(args, isStrip = false) {
-  const channels = args.channels ?? "rgb";
-  if (args.colorManaged === "off" && (channels !== "rgb" || args.over !== void 0)) {
-    return invalid(
-      "`channels` and `over` need colorManaged 'auto'",
-      "colorManaged 'off' returns the raw capture untouched (it already keeps any alpha AE wrote)."
-    );
-  }
-  let over = "background";
-  if (args.over !== void 0) {
-    if (channels !== "rgb") {
-      return invalid(
-        `\`over\` applies only to channels 'rgb', not '${channels}'`,
-        "'rgba' keeps transparency in the file; 'alpha' is the matte itself."
-      );
-    }
-    if (args.over === "checkerboard") over = { kind: "checkerboard" };
-    else if (args.over !== "background") {
-      const color = parseColor(args.over);
-      if (color === null) {
-        return invalid(
-          "`over` must be 'background', 'checkerboard', '#rrggbb' or [r, g, b] in 0..1"
-        );
-      }
-      over = { kind: "color", color };
-    }
-  }
-  let isolate = null;
-  if (args.isolate !== void 0) {
-    isolate = Array.isArray(args.isolate) ? args.isolate : [args.isolate];
-    if (isolate.length === 0) return invalid("`isolate` needs at least one layer");
-    if (readOnlyMode()) {
-      return {
-        error: errorResult(
-          "FORBIDDEN",
-          "`isolate` switches layers off and back on, and AE_MCP_READONLY=1 is set",
-          {
-            hint: "Unset AE_MCP_READONLY, or render without isolate."
-          }
-        )
-      };
-    }
-  }
-  let sample = null;
-  if (args.sample !== void 0) {
-    const regions = args.sample.regions ?? [];
-    if (regions.length === 0) return invalid("`sample.regions` needs at least one region");
-    const names = /* @__PURE__ */ new Set();
-    for (const r of regions) {
-      if (names.has(r.name)) return invalid(`region name '${r.name}' is used twice`);
-      names.add(r.name);
-    }
-    const stage = args.sample.stage ?? "both";
-    sample = { regions, stages: stage === "both" ? ["capture", "output"] : [stage] };
-  }
-  let histogram = null;
-  if (args.histogram !== void 0 && args.histogram !== false) {
-    const h = args.histogram === true ? {} : args.histogram;
-    histogram = { bins: h.bins ?? HISTOGRAM_DEFAULT_BINS, stage: h.stage ?? "output" };
-  }
-  let compare = null;
-  if (args.compare !== void 0) {
-    const n = args.count;
-    if (n < 2) return invalid("`compare` needs `times` (or `strip`) with at least two frames");
-    if (sample === null) {
-      return invalid("`compare` needs `sample`: it reports differences for the sampled regions");
-    }
-    const from = args.compare.from ?? 0;
-    const to = args.compare.to ?? 1;
-    if (from >= n || to >= n)
-      return invalid(`\`compare\` indices must be below ${n}, the number of times`);
-    if (from === to) return invalid("`compare.from` and `compare.to` must be different frames");
-    compare = { from, to };
-  }
-  let edge = null;
-  if (args.edge !== void 0 && args.edge !== false) {
-    edge = args.edge === true ? {} : args.edge;
-    if (typeof edge !== "object" || edge === null)
-      return invalid("`edge` must be true or an object");
-    const problem = edgeArgsError(edge);
-    if (problem !== null) return invalid(problem);
-  }
-  let screen = null;
-  if (args.screen !== void 0 && args.screen !== false) {
-    screen = args.screen === true ? {} : args.screen;
-    if (typeof screen !== "object" || screen === null)
-      return invalid("`screen` must be true or an object");
-    const problem = screenArgsError(screen);
-    if (problem !== null) return invalid(problem);
-  }
-  let diff = null;
-  const diffArg = args.diff ?? (isStrip ? true : void 0);
-  if (diffArg !== void 0 && diffArg !== false) {
-    const d = diffArg === true ? {} : diffArg;
-    if (typeof d !== "object" || d === null) return invalid("`diff` must be true or an object");
-    if (args.count < 2) {
-      return invalid(
-        "`diff` needs `times` with at least two frames, or `strip`",
-        "It compares consecutive rendered frames: `times: [1, 1.04, 1.08], diff: true`."
-      );
-    }
-    const problem = diffArgsError(d);
-    if (problem !== null) return invalid(problem);
-    const { sheet: sheetArg, ...thresholds } = d;
-    const sheetOn = sheetArg ?? isStrip;
-    if (sheetOn !== false && sheetOn !== true && (typeof sheetOn !== "object" || sheetOn === null)) {
-      return invalid("`diff.sheet` must be true, false or an object");
-    }
-    diff = {
-      thresholds: resolveDiffThresholds(thresholds),
-      sheet: sheetOn === false ? null : sheetOn === true ? {} : sheetOn
-    };
-  }
-  return {
-    options: {
-      channels,
-      over,
-      overGiven: args.over !== void 0,
-      isolate,
-      sample,
-      histogram,
-      compare,
-      edge,
-      screen,
-      diff
-    }
-  };
-}
-function planStrip(strip) {
-  const fail3 = (message) => ({
-    error: errorResult("INVALID_ARGS", message, {
-      hint: "`strip: { at: 2.5, frames: 9 }` renders the nine frames around 2.5 s."
-    })
-  });
-  if (typeof strip !== "object" || strip === null) return fail3("`strip` must be an object");
-  const { at, frames } = strip;
-  const step = strip.step ?? 1;
-  const maxDimension = strip.maxDimension ?? STRIP_DEFAULT_MAX_DIMENSION;
-  if (typeof at !== "number" || !Number.isFinite(at) || at < 0)
-    return fail3("`strip.at` must be a time in seconds, 0 or more");
-  if (!Number.isInteger(frames) || frames < 2 || frames > 32)
-    return fail3("`strip.frames` must be a whole number from 2 to 32");
-  if (!Number.isInteger(step) || step < 1)
-    return fail3("`strip.step` must be a whole number, 1 or more");
-  if (!Number.isInteger(maxDimension) || maxDimension < 16 || maxDimension > 2048)
-    return fail3("`strip.maxDimension` must be a whole number of px from 16 to 2048");
-  const first = -Math.floor((frames - 1) / 2);
-  const offsets = Array.from({ length: frames }, (_, k) => (first + k) * step);
-  return { plan: { at, offsets, frames, step, maxDimension } };
-}
-function sheetPathFor(abs, explicit) {
-  if (explicit !== void 0) return path12.resolve(explicit).replace(/\\/g, "/");
-  const ext = path12.extname(abs) || ".png";
-  const stem = abs.slice(0, abs.length - (path12.extname(abs).length || 0));
-  return `${stem}_sheet${ext}`;
-}
-function framePaths(abs, count, multi) {
-  if (!multi) return [abs];
-  const ext = path12.extname(abs) || ".png";
-  const stem = abs.slice(0, abs.length - (path12.extname(abs).length || 0));
-  const out = [];
-  for (let i = 0; i < count; i++) out.push(`${stem}_${i}${ext}`);
-  return out;
-}
-var ISOLATE_FN = `
-    function _refText(ref) {
-        if (typeof ref === "string") return '"' + ref + '"';
-        if (typeof ref === "number") return "index " + ref;
-        if (ref && typeof ref.id === "number") return "id " + ref.id;
-        return String(ref);
-    }
-    function _restoreLayers(saved) {
-        var failed = [];
-        for (var i = saved.length - 1; i >= 0; i--) {
-            var s = saved[i];
-            if (!s.changed) continue;
-            try {
-                if (s.layer.locked) s.layer.locked = false;
-                if (s.layer.enabled !== s.enabled) s.layer.enabled = s.enabled;
-                if (s.hasSolo && s.layer.solo !== s.solo) s.layer.solo = s.solo;
-                if (s.locked) s.layer.locked = true;
-            } catch (eRestore) {
-                failed.push(AE.safeGet(function () { return s.layer.index + " " + s.layer.name; }, "?") + ": " + AE.errText(eRestore));
-            }
-        }
-        return failed;
-    }
-    function _isolateLayers(c, refs) {
-        var keep = {};
-        var named = [];
-        for (var ri = 0; ri < refs.length; ri++) {
-            var hit = AE.findLayerInComp(c, refs[ri]);
-            if (!hit) return { ok: false, error: "isolate: no layer matching " + _refText(refs[ri]) + " in comp " + c.name };
-            if (keep["k" + hit.index]) continue;
-            keep["k" + hit.index] = true;
-            named.push({ index: hit.index, name: hit.name });
-        }
-        var saved = [];
-        var changed = 0;
-        try {
-            for (var li = 1; li <= c.numLayers; li++) {
-                var L = c.layer(li);
-                // Audio-only layers put nothing in the picture, and their
-                // video switch may refuse to change: leave them be.
-                if (AE.safeGet(function () { return L.hasVideo; }, true) === false) continue;
-                var mn = AE.safeGet(function () { return L.matchName; }, "");
-                var view = (mn === "ADBE Camera Layer" || mn === "ADBE Light Layer");
-                var s = { layer: L, enabled: L.enabled, locked: !!L.locked, hasSolo: false, solo: false, changed: false };
-                try { s.solo = !!L.solo; s.hasSolo = true; } catch (eSolo) { }
-                saved.push(s);
-                var want = keep["k" + L.index] ? true : (view ? s.enabled : false);
-                if (want === s.enabled && !s.solo) continue;
-                s.changed = true;
-                changed++;
-                if (s.locked) L.locked = false;
-                if (s.solo) L.solo = false;
-                if (L.enabled !== want) L.enabled = want;
-            }
-        } catch (eIso) {
-            var undone = _restoreLayers(saved);
-            return { ok: false, error: "isolate: could not switch layers (" + AE.errText(eIso) + ")" + (undone.length ? "; NOT restored: " + undone.join("; ") : "; every switch restored") };
-        }
-        return { ok: true, saved: saved, layers: named, changed: changed };
-    }
-`;
-function renderJsx(args, times, paths, tryOcio, isolate, strip = null, frameNums = null) {
-  return `
-        ${RENDER_FRAME_FN}
-        ${MISSING_SOURCES_FN}
-        ${OCIO_CAPTURE_FN}
-        ${ISOLATE_FN}
-        var _arg = ${jsxVal(args.compNameOrId)};
-        var comp = AE.findCompByNameOrId(_arg);
-        if (!comp) return { ok: false, error: "no comp matching " + String(_arg) };
-        var _missingMedia = _missingSources(comp);
-        if (_missingMedia.length) return { ok: false, error: "source media missing for comp " + comp.name + "; restore or relink before rendering", missingFootage: _missingMedia };
-        var _ws = AE.safeGet(function () { return app.project.workingSpace; }, "None");
-        var _times = ${jsxVal(times)};
-        var _strip = ${jsxVal(strip === null ? null : { at: strip.at, offsets: strip.offsets })};
-        var _frameNums = ${jsxVal(frameNums)};
-        var _paths = ${jsxVal(paths)};
-        var _pick = ${jsxVal(FRAME_PICK)};
-        var _stripOut = null;
-        if (_frameNums !== null) {
-            var _lastF = Math.max(0, Math.round(comp.duration / comp.frameDuration) - 1);
-            _times = [];
-            for (var _ni = 0; _ni < _frameNums.length; _ni++) {
-                if (_frameNums[_ni] > _lastF) return { ok: false, error: "frame " + _frameNums[_ni] + " is past the comp's last frame, " + _lastF + " (comp " + comp.name + ")" };
-                _times.push((_frameNums[_ni] + _pick) * comp.frameDuration);
-            }
-        }
-        if (_strip !== null) {
-            var _fd = comp.frameDuration;
-            var _lastK = Math.max(0, Math.round(comp.duration / _fd) - 1);
-            var _k0 = Math.round(_strip.at / _fd);
-            var _offs = _strip.offsets;
-            var _shift = 0;
-            if (_k0 + _offs[_offs.length - 1] > _lastK) _shift = _lastK - (_k0 + _offs[_offs.length - 1]);
-            if (_k0 + _offs[0] + _shift < 0) _shift = -(_k0 + _offs[0]);
-            _times = [];
-            var _clamped = 0;
-            for (var _si = 0; _si < _offs.length; _si++) {
-                var _k = _k0 + _offs[_si] + _shift;
-                if (_k > _lastK) { _k = _lastK; _clamped++; }
-                _times.push((_k + _pick) * _fd);
-            }
-            _stripOut = {
-                at: Math.round(_k0 * _fd * 1e6) / 1e6,
-                frameRate: Math.round(1e3 / _fd) / 1e3,
-                firstFrame: _k0 + _offs[0] + _shift,
-                lastFrame: Math.min(_lastK, _k0 + _offs[_offs.length - 1] + _shift),
-                shiftedFrames: _shift
-            };
-            if (_clamped > 0) _stripOut.note = "the comp is shorter than the strip: the last " + _clamped + " frames repeat the comp's last frame (they read as stutters in diff)";
-        }
-        var _useDst = ${jsxVal(!!args.useDisplayStartTime)};
-        var _useOcio = ${jsxVal(tryOcio)} && _ws !== "None" && _ws !== "";
-        var _isolate = ${jsxVal(isolate)};
-        var _frames = [];
-        function _renderAll(kind) {
-            for (var _fi = 0; _fi < _times.length; _fi++) {
-                var _r = _renderFrame(comp, _times[_fi], _paths[_fi], _useDst);
-                _r.captureKind = kind;
-                if (_r.ok) {
-                    // The frame this time falls in, counted from frame 0 in the
-                    // convention of time; within a millionth of a frame of a
-                    // boundary counts as on it (k / fps in floating point).
-                    var _pos = _times[_fi] / comp.frameDuration;
-                    var _fk = Math.floor(_pos + 1e-6);
-                    _r.frame = _fk;
-                    _r.frameOffset = Math.max(0, Math.round((_pos - _fk) * 1e6) / 1e6);
-                }
-                _frames.push(_r);
-            }
-        }
-        var _iso = null;
-        if (_isolate !== null) {
-            _iso = _isolateLayers(comp, _isolate);
-            if (!_iso.ok) return { ok: false, error: _iso.error };
-        }
-        var _renderError = null;
-        try {
-            if (_useOcio) {
-                var _maxT = _times[0];
-                for (var _mi = 1; _mi < _times.length; _mi++) { if (_times[_mi] > _maxT) _maxT = _times[_mi]; }
-                if (_useDst) _maxT = _maxT + comp.displayStartTime;
-                _captureWithOcio(comp, _maxT, _renderAll);
-            }
-            if (_frames.length === 0) _renderAll("direct");
-        } catch (eRender) {
-            _renderError = eRender;
-        }
-        var _isoReport = null;
-        if (_iso) {
-            var _notRestored = _restoreLayers(_iso.saved);
-            _isoReport = { layers: _iso.layers, changed: _iso.changed, restored: _notRestored.length === 0 };
-            if (_notRestored.length) _isoReport.notRestored = _notRestored;
-        }
-        if (_renderError !== null) {
-            var _fail = { ok: false, error: "render failed: " + AE.errText(_renderError) };
-            if (_isoReport) _fail.isolation = _isoReport;
-            return _fail;
-        }
-        var _allOk = true;
-        var _firstError = null;
-        for (var _ci = 0; _ci < _frames.length; _ci++) {
-            if (!_frames[_ci].ok) { _allOk = false; if (_firstError === null) _firstError = _frames[_ci].error; }
-        }
-        var _out = { ok: _allOk, frames: _frames, captureKind: _frames.length > 0 ? _frames[0].captureKind : null };
-        if (_isoReport) _out.isolation = _isoReport;
-        if (_stripOut) _out.strip = _stripOut;
-        if (!_allOk) _out.error = _firstError;
-        if (_allOk) {
-            _out.compName = comp.name;
-            _out.workingSpace = _ws;
-            _out.bitsPerChannel = AE.safeGet(function () { return app.project.bitsPerChannel; }, 8);
-            _out.projectFile = app.project.file ? app.project.file.fsName.replace(/\\\\/g, "/") : null;
-            _out.bgColor = AE.safeGet(function () { return [comp.bgColor[0], comp.bgColor[1], comp.bgColor[2]]; }, null);
-        }
-        return _out;
-    `;
-}
-async function nativeFlow(args, opts, abs, transport2, strip = null) {
-  const frameNums = args.frames ?? null;
-  const multi = args.times !== void 0 || strip !== null || frameNums !== null;
-  const times = strip !== null || frameNums !== null ? null : args.times ?? [args.time];
-  const count = strip?.frames ?? frameNums?.length ?? times?.length ?? 1;
-  const paths = framePaths(abs, count, multi);
-  const contactSheet = args.contactSheet ?? (strip !== null ? {} : void 0);
-  const before = await stampFiles(paths);
-  const tryOcio = args.colorManaged !== "off" && !readOnlyMode();
-  const result = await transport2.execute({
-    code: renderJsx(args, times, paths, tryOcio, opts.isolate, strip, frameNums),
-    label: "render_frame",
-    timeoutMs: 12e4 + (count - 1) * 3e4
-  });
-  if (!result.ok) return toMcpResult(result);
-  const payload = result.result;
-  const frames = payload?.frames ?? [];
-  const frameSize = frames[0]?.size;
-  if (payload && strip !== null) {
-    payload.strip = {
-      at: strip.at,
-      frames: strip.frames,
-      step: strip.step,
-      maxDimension: strip.maxDimension,
-      ...payload.strip
-    };
-  }
-  if (payload && payload.ok === true) {
-    const warning = frameWarnings(frames);
-    if (warning !== void 0) payload.frameWarning = warning;
-  }
-  if (payload && payload.ok === true && !multi && frames.length === 1) {
-    payload.writtenTo = frames[0].writtenTo;
-    payload.time = frames[0].time;
-    if (frames[0].frame !== void 0) payload.frame = frames[0].frame;
-    if (frames[0].frameOffset !== void 0) payload.frameOffset = frames[0].frameOffset;
-    payload.size = frames[0].size;
-    delete payload.frames;
-  }
-  if (!payload || payload.ok !== true) {
-    return toMcpResult(result);
-  }
-  if (payload.isolation && !payload.isolation.restored) {
-    payload.isolationWarning = "some layer switches could not be restored after isolate \u2014 check these layers in the timeline: " + (payload.isolation.notRestored ?? []).join("; ");
-  }
-  const written = (multi ? frames.map((f) => f.writtenTo) : [payload.writtenTo]).filter(
-    (p) => typeof p === "string"
-  );
-  const put = (i, key, value) => {
-    if (multi) frames[i][key] = value;
-    else payload[key] = value;
-  };
-  const managed = args.colorManaged !== "off";
-  let convert = null;
-  let backdrop = null;
-  if (managed) {
-    payload.method = "native";
-    payload.channels = opts.channels;
-    convert = await colorConversion(payload, transport2);
-    if (convert === null && (opts.channels !== "rgb" || opts.overGiven)) {
-      payload.channelsWarning = "colour conversion failed (see colorWarning), so the raw capture was kept and `channels` / `over` were not applied";
-    }
-    if (convert !== null && opts.channels === "rgb") backdrop = chooseBackdrop(payload, opts);
-  }
-  const bg = validRgb(payload.bgColor);
-  const unmatting = convert !== null && (opts.channels === "rgba" || backdrop !== null);
-  const settle2 = await waitForSettled(written, {
-    timeoutMs: args.settleTimeoutMs ?? settleTimeoutFor(written.length, frameSize ? frameSize[0] * frameSize[1] : 1080 * 1920),
-    before: before.slice(0, written.length)
-  });
-  payload.captureSettle = settle2;
-  if (settle2.unsettled.length > 0) {
-    const secs2 = (settle2.timeoutMs / 1e3).toFixed(1);
-    for (const u of settle2.unsettled) {
-      if (!multi || !frames[u.index]) continue;
-      frames[u.index].ok = false;
-      frames[u.index].error = `the capture did not finish writing within ${secs2} s (${u.state}, ${u.bytes} bytes)`;
-    }
-    payload.captureWarning = `${settle2.unsettled.length} of ${written.length} captures did not finish writing within ${secs2} s (saveFrameToPng writes asynchronously): frames ${settle2.unsettled.map((u) => u.index).join(", ")}. ` + (settle2.settled.length > 0 ? "The others were measured; see captureSettle, or render the missing ones again with a longer settleTimeoutMs." : "Nothing could be measured; try again with a longer settleTimeoutMs.");
-    if (settle2.settled.length === 0) {
-      if (args.analyze) payload.analysisWarning = "analysis failed: no capture finished writing";
-      if (managed)
-        payload.colorWarning = "color post-processing failed, file left as raw capture: no capture finished writing";
-      return toMcpResult(result);
-    }
-  }
-  const finished = new Set(settle2.settled);
-  const keep = new Set(opts.compare ? [opts.compare.from, opts.compare.to] : []);
-  const kept = /* @__PURE__ */ new Map();
-  const sheetImages = [];
-  const sheetLabels = [];
-  let sheetThumb = null;
-  const diffPairs = [];
-  const diffThumbs = [];
-  let diffPrev = null;
-  let diffThumb = null;
-  const diffSkipped = [];
-  let read = 0;
-  const edgePairs = [];
-  let edgePrev = null;
-  let edgeMeasured = 0;
-  let edgeFromLuma = 0;
-  let withAlpha = 0;
-  let writing = convert !== null;
-  for (const [i, file2] of written.entries()) {
-    if (!finished.has(i)) continue;
-    let capture;
-    try {
-      capture = decodePng(await fs10.readFile(file2));
-      read++;
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      payload.captureWarning = `could not read the capture: ${msg}`;
-      if (args.analyze) payload.analysisWarning = `analysis failed: ${msg}`;
-      if (managed)
-        payload.colorWarning = `color post-processing failed, file left as raw capture: ${msg}`;
-      return toMcpResult(result);
-    }
-    if (capture.alpha) withAlpha++;
-    if (opts.edge) {
-      const fromLuma = opts.edge.from === "luma";
-      if (fromLuma) edgeFromLuma++;
-      if (!capture.alpha && !fromLuma) edgePrev = null;
-      else {
-        try {
-          const t = resolveEdgeThresholds(opts.edge, capture.width, capture.height);
-          payload.edgeThresholds ??= t;
-          const { report, frame } = measureEdge(capture, bg ?? [0, 0, 0], t);
-          put(i, "edge", report);
-          edgeMeasured++;
-          if (edgePrev !== null && edgePrev.index === i - 1) {
-            edgePairs.push({
-              from: { index: i - 1, time: frames[i - 1]?.time },
-              to: { index: i, time: frames[i]?.time },
-              ...alphaChange(edgePrev.frame, frame, t)
-            });
-          }
-          edgePrev = multi ? { index: i, frame } : null;
-        } catch (err) {
-          payload.edgeWarning = `edge measurement failed: ${err instanceof Error ? err.message : String(err)}`;
-          edgePrev = null;
-        }
-      }
-    }
-    if (opts.screen) {
-      try {
-        const t = resolveScreenThresholds(opts.screen, capture.width, capture.height);
-        payload.screenThresholds ??= t;
-        put(i, "screen", measureScreen(capture, t));
-      } catch (err) {
-        payload.screenWarning = `screen measurement failed: ${err instanceof Error ? err.message : String(err)}`;
-      }
-    }
-    if (args.analyze) {
-      try {
-        put(i, "analysis", analyzeFrame(capture));
-      } catch (err) {
-        payload.analysisWarning = `analysis failed: ${err instanceof Error ? err.message : String(err)}`;
-      }
-    }
-    let output2 = capture;
-    if (writing && convert !== null) {
-      try {
-        output2 = await writeOutput(
-          file2,
-          capture,
-          convert,
-          opts.channels,
-          backdrop,
-          bg ?? [0, 0, 0]
-        );
-      } catch (err) {
-        payload.colorWarning = `color post-processing failed, file left as raw capture: ${err instanceof Error ? err.message : String(err)}`;
-        writing = false;
-      }
-    }
-    const pixels = { capture, output: output2 };
-    if (opts.sample) put(i, "samples", sampleReport(pixels, opts.sample));
-    if (opts.histogram) {
-      const { bins, stage } = opts.histogram;
-      put(i, "histogram", { stage, ...histogramOf(pixels[stage], bins) });
-    }
-    if (keep.has(i)) kept.set(i, pixels);
-    const straight = output2 !== capture && output2.alpha !== void 0;
-    if (contactSheet) {
-      sheetThumb ??= thumbSizeFor(
-        output2,
-        contactSheet.thumbWidth ?? stripThumbWidth(strip, output2)
-      );
-      sheetImages.push(
-        sheetTile(output2 === capture ? { ...capture, alpha: void 0 } : output2, sheetThumb)
-      );
-      sheetLabels.push(frameLabel(i, frames[i]?.time ?? payload.time));
-    }
-    if (opts.diff) {
-      payload.diffThresholds ??= opts.diff.thresholds;
-      const pic = pictureOf(output2, straight);
-      const { width, height } = output2;
-      if (diffPrev !== null && diffPrev.index !== i - 1) {
-        diffSkipped.push(`${diffPrev.index}>${i} (frames between are missing)`);
-      } else if (diffPrev !== null && (diffPrev.width !== width || diffPrev.height !== height)) {
-        diffSkipped.push(`${i - 1}>${i} (frame sizes differ)`);
-      } else if (diffPrev !== null) {
-        if (opts.diff.sheet) {
-          diffThumb ??= thumbSizeFor(
-            output2,
-            opts.diff.sheet.thumbWidth ?? contactSheet?.thumbWidth ?? stripThumbWidth(strip, output2)
-          );
-        }
-        try {
-          const res = pictureChange(diffPrev.pic, pic, width, height, opts.diff.thresholds, {
-            regions: opts.sample?.regions,
-            thumb: diffThumb ?? void 0
-          });
-          const pair = {
-            from: { index: i - 1, time: frames[i - 1]?.time },
-            to: { index: i, time: frames[i]?.time },
-            ...res.all
-          };
-          if (res.regions) pair.regions = res.regions;
-          if (res.thumb && diffThumb) {
-            const grey = new Float64Array(res.thumb.length * 3);
-            for (let k = 0; k < res.thumb.length; k++) grey.fill(res.thumb[k], k * 3, k * 3 + 3);
-            diffThumbs.push({
-              pair: diffPairs.length,
-              img: { width: diffThumb.width, height: diffThumb.height, rgb: grey, bitDepth: 8 }
-            });
-          }
-          diffPairs.push(pair);
-        } catch (err) {
-          payload.diffWarning = `diff failed: ${err instanceof Error ? err.message : String(err)}`;
-        }
-      }
-      payload.diff ??= {
-        stage: "output",
-        picture: diffPicture(output2 === capture, opts.channels, payload.over),
-        pairs: [],
-        series: summarizeSeries([], opts.diff.thresholds)
-      };
-      diffPrev = { index: i, pic, width, height };
-    }
-  }
-  payload.alphaChannel = withAlpha === 0 ? "absent" : withAlpha === read ? "present" : "mixed";
-  if (unmatting && withAlpha > 0 && bg === null) {
-    payload.channelsWarning = "the comp background colour (bgColor) is unknown, so the colour under it was recovered as if it were black; soft edges may carry the real background";
-  }
-  if (convert !== null && payload.alphaChannel === "absent") {
-    if (opts.channels === "alpha") {
-      payload.alphaWarning = "the capture has no alpha channel, so the matte is all white (fully opaque). If this comp should be transparent here, saveFrameToPng did not write alpha for it.";
-    } else if (opts.channels === "rgba") {
-      payload.alphaWarning = "the capture has no alpha channel, so the file's alpha is fully opaque";
-    } else if (opts.overGiven) {
-      payload.alphaWarning = "the capture has no alpha channel, so there was nothing to composite over `over`";
-    }
-  }
-  if (opts.edge) {
-    if (edgeFromLuma === 0 && withAlpha < read) {
-      payload.edgeWarning = `${read - withAlpha} of ${read} captures have no alpha channel, so their matte could not be measured (a comp with no transparency, or an AE that flattens)`;
-    } else if (edgeFromLuma === 0 && edgeMeasured > 0 && bg === null) {
-      payload.edgeWarning = "the comp background colour (bgColor) is unknown, so the soft edge's colour was recovered as if it were black; the spill reading may carry the real background";
-    }
-    if (edgePairs.length > 0) {
-      payload.edgeFlicker = { pairs: edgePairs, overall: summarizeFlicker(edgePairs) };
-    }
-  }
-  if (opts.compare && opts.sample) {
-    const { from, to } = opts.compare;
-    const a = kept.get(from);
-    const b = kept.get(to);
-    if (a && b) {
-      const report = opts.sample.regions.map((r) => ({ name: r.name }));
-      for (const stage of opts.sample.stages) {
-        compareRegions(a[stage], b[stage], opts.sample.regions).forEach((diff, j) => {
-          report[j][stage] = stageBlock(diff, stage);
-        });
-      }
-      payload.comparison = {
-        from: { index: from, time: frames[from]?.time },
-        to: { index: to, time: frames[to]?.time },
-        regions: report
-      };
-    }
-  }
-  if (opts.diff && payload.diff) {
-    payload.diff.pairs = diffPairs;
-    payload.diff.series = summarizeSeries(diffPairs, opts.diff.thresholds);
-    if (diffSkipped.length > 0) {
-      payload.diffWarning = `some consecutive pairs were not compared: ${diffSkipped.join("; ")}` + (settle2.unsettled.length > 0 ? " \u2014 captures missing, see captureSettle" : "");
-    }
-  }
-  const stages = /* @__PURE__ */ new Set([
-    ...opts.sample?.stages ?? [],
-    ...opts.histogram ? [opts.histogram.stage] : [],
-    ...opts.edge || opts.screen ? ["capture"] : [],
-    ...opts.diff ? ["output"] : []
-  ]);
-  if (stages.size > 0) {
-    payload.measurementStages = {};
-    for (const s of stages) payload.measurementStages[s] = MEASUREMENT_STAGES[s];
-  }
-  if (contactSheet && sheetImages.length > 0) {
-    await attachContactSheet(
-      payload,
-      sheetLabels,
-      sheetImages,
-      sheetPathFor(abs, contactSheet.outPath),
-      contactSheet
-    );
-  }
-  if (opts.diff?.sheet && payload.diff && diffThumbs.length > 0) {
-    await attachDiffSheet(
-      payload,
-      payload.diff,
-      diffThumbs,
-      abs,
-      opts.diff.sheet,
-      opts.diff.thresholds
-    );
-  }
-  return toMcpResult(result);
-}
-function thumbSizeFor(img, thumbWidth) {
-  const width = Math.max(16, Math.min(thumbWidth ?? 480, img.width));
-  return { width, height: Math.max(1, Math.round(img.height * width / img.width)) };
-}
-function stripThumbWidth(strip, img) {
-  if (strip === null) return void 0;
-  return Math.max(
-    1,
-    Math.round(strip.maxDimension * img.width / Math.max(img.width, img.height))
-  );
-}
-function sheetTile(img, thumb) {
-  const flat = img.alpha ? { ...img, rgb: flattenOver(img, { kind: "checkerboard" }), alpha: void 0 } : img;
-  if (flat.width <= thumb.width) return flat;
-  return {
-    ...flat,
-    width: thumb.width,
-    height: thumb.height,
-    rgb: resample(flat, thumb.width, thumb.height)
-  };
-}
-function diffPicture(raw, channels, over) {
-  if (raw) {
-    return "the capture as AE wrote it (no colour conversion: colorManaged off, or the conversion failed): its RGB already laid over the comp background (bgColor), so empty areas read the background in both frames; alpha not compared";
-  }
-  if (channels === "alpha") return "the written file: the matte (alpha as grey), white opaque";
-  if (channels === "rgba") {
-    return "the written file's straight colour weighted by its alpha (as over black), so colour under transparent pixels does not count";
-  }
-  if (over === void 0 || over === "background") {
-    return "the written file: the picture as AE composited it over the comp background (bgColor), so transparent areas read the background in both frames and do not change";
-  }
-  return "the written file: the picture laid over `over`, so transparent areas read that backdrop";
-}
-async function attachDiffSheet(payload, diff, thumbs, abs, opts, t) {
-  try {
-    const flagged = new Set(diff.series.flags.flatMap((f) => f.pairs));
-    const labels = thumbs.map(({ pair }) => {
-      const p = diff.pairs[pair];
-      return `#${p.from.index}>${p.to.index} ${p.change.toFixed(4)}${flagged.has(pair) ? " !" : ""}`;
-    });
-    const sheet = composeContactSheet(
-      thumbs.map((th) => th.img),
-      { columns: opts.columns, thumbWidth: thumbs[0].img.width, labels }
-    );
-    const sheetPath = opts.outPath !== void 0 ? path12.resolve(opts.outPath).replace(/\\/g, "/") : `${abs.slice(0, abs.length - path12.extname(abs).length)}_diff${path12.extname(abs) || ".png"}`;
-    await fs10.mkdir(path12.dirname(sheetPath), { recursive: true });
-    await fs10.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
-    payload.diffSheet = {
-      writtenTo: sheetPath,
-      size: [sheet.width, sheet.height],
-      columns: sheet.columns,
-      rows: sheet.rows,
-      thumbSize: [sheet.thumbWidth, sheet.thumbHeight],
-      frames: thumbs.length,
-      amplify: t.amplify
-    };
-  } catch (err) {
-    payload.diffWarning = `diff sheet failed: ${err instanceof Error ? err.message : String(err)}`;
-  }
-}
-function stageBlock(stats, stage) {
-  const { name: _name, ...rest } = stats;
-  if (stage === "output" && Array.isArray(rest.mean)) rest.meanHex = rgbHex(rest.mean);
-  return rest;
-}
-function sampleReport(pixels, sample) {
-  const report = sample.regions.map((r) => ({ name: r.name }));
-  for (const stage of sample.stages) {
-    sampleRegions(pixels[stage], sample.regions).forEach((stats, j) => {
-      report[j][stage] = stageBlock(stats, stage);
-    });
-  }
-  return report;
-}
-function chooseBackdrop(payload, opts) {
-  if (opts.over === "background") {
-    payload.over = "background";
-    return null;
-  }
-  payload.over = opts.over.kind === "checkerboard" ? "checkerboard" : opts.over.color;
-  return opts.over;
-}
-async function attachContactSheet(payload, labels, tiles, sheetPath, opts) {
-  try {
-    const sheet = composeContactSheet(tiles, {
-      columns: opts.columns,
-      thumbWidth: opts.thumbWidth ?? tiles[0].width,
-      labels
-    });
-    await fs10.mkdir(path12.dirname(sheetPath), { recursive: true });
-    await fs10.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
-    payload.contactSheet = {
-      writtenTo: sheetPath,
-      size: [sheet.width, sheet.height],
-      columns: sheet.columns,
-      rows: sheet.rows,
-      thumbSize: [sheet.thumbWidth, sheet.thumbHeight],
-      frames: tiles.length
-    };
-  } catch (err) {
-    payload.contactSheetWarning = `contact sheet failed: ${err instanceof Error ? err.message : String(err)}`;
-  }
-}
-async function writeOutput(file2, capture, convert, channels, backdrop, bg) {
-  const { width, height } = capture;
-  const opaque = () => new Float64Array(width * height).fill(1);
-  let bytes;
-  if (channels === "alpha") {
-    bytes = encodePngGray8(width, height, capture.alpha ?? opaque());
-  } else if (channels === "rgb" && backdrop === null) {
-    const rgb = Float64Array.from(capture.rgb);
-    convert(rgb);
-    bytes = encodePngSrgb8(width, height, rgb);
-  } else {
-    const rgb = unmatte(capture, bg);
-    convert(rgb);
-    bytes = channels === "rgba" ? encodePngSrgbRgba8(width, height, rgb, capture.alpha ?? opaque()) : encodePngSrgb8(width, height, flattenOver({ ...capture, rgb }, backdrop));
-  }
-  await fs10.writeFile(file2, bytes);
-  return decodePng(bytes);
-}
 
 // src/tools/save-project.ts
 init_registry();
@@ -56151,7 +59688,7 @@ var ALL_TOOLS = [
 
 // src/tools/library.ts
 import { readFileSync as readFileSync2, realpathSync as realpathSync2 } from "node:fs";
-import path13 from "node:path";
+import path14 from "node:path";
 import { createHash } from "node:crypto";
 init_config();
 
@@ -56241,17 +59778,17 @@ function findModules(catalog, query) {
 
 // src/tools/library.ts
 function boundedFile(base, relative3) {
-  const candidate = path13.resolve(base, relative3);
+  const candidate = path14.resolve(base, relative3);
   const inside = (file3) => {
-    const rel = path13.relative(base, file3);
-    if (!rel || rel === ".." || rel.startsWith(".." + path13.sep) || path13.isAbsolute(rel)) throw new Error("Library path escapes bundle");
+    const rel = path14.relative(base, file3);
+    if (!rel || rel === ".." || rel.startsWith(".." + path14.sep) || path14.isAbsolute(rel)) throw new Error("Library path escapes bundle");
   };
   inside(candidate);
   const file2 = realpathSync2(candidate);
   inside(file2);
   return file2;
 }
-function readLibrary(document, query, root = path13.resolve(PACKAGE_ROOT, "../library")) {
+function readLibrary(document, query, root = path14.resolve(PACKAGE_ROOT, "../library")) {
   const base = realpathSync2(root);
   const manifest = JSON.parse(readFileSync2(boundedFile(base, "manifest.json"), "utf8"));
   const entries = manifest.documents;

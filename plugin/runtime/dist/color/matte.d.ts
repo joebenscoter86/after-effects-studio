@@ -269,4 +269,153 @@ export interface FlickerSummary {
 }
 /** Over every pair: mean of the per-pair means, the largest single change, the worst pair. */
 export declare function summarizeFlicker(pairs: FlickerPair[]): Record<"edge" | "inside" | "outside" | "all", FlickerSummary>;
+export interface EnclosedHole extends Box {
+    area: number;
+    meanAlpha: number;
+}
+/**
+ * The holes `edge` reports (4-connected regions below `below`, default edge's
+ * opaque threshold, that do not reach the frame edge), as a list and as a
+ * mask: 1 for every pixel of a kept hole. Holes smaller than `minArea` pixels
+ * are left out of both and counted in `dropped`; holes `keep` refuses are left
+ * out and counted in `leftOut`.
+ */
+export declare function enclosedHoles(alpha: ArrayLike<number>, width: number, height: number, opts?: {
+    below?: number;
+    minArea?: number;
+    keep?: (hole: EnclosedHole) => boolean;
+}): {
+    holes: EnclosedHole[];
+    mask: Uint8Array;
+    dropped: {
+        count: number;
+        area: number;
+    };
+    leftOut: {
+        count: number;
+        area: number;
+    };
+};
+/** `mask` grown by `radius` px: every pixel within that Euclidean distance of a set pixel is set. */
+export declare function growMask(mask: Uint8Array, width: number, height: number, radius: number): Uint8Array;
+export type FrameEdge = "top" | "bottom" | "left" | "right";
+export interface Opening extends EnclosedHole {
+    /** The frame edges it reaches between two of the subject's contacts. */
+    edges: FrameEdge[];
+}
+/**
+ * Holes and openings in a cut-out's matte. A hole is a region below `below`
+ * (default edge's opaque threshold) that cannot reach the frame edge, as
+ * `edge` reports it. An opening reaches the frame edge only between two
+ * places where the subject touches that edge: on each of the four edges, the
+ * pixels between the first and the last opaque pixel on it are treated as
+ * solid (an edge with fewer than two opaque pixels is left open), and a
+ * region enclosed only because of that sealing is an opening. On a take with
+ * no green screen (2026-11-11) a microphone left out of the matte ran off the
+ * bottom of the frame: an opening of about 115,000 px, not a hole. An opening
+ * can also be a real gap, such as between an arm and the body. The sealed edge
+ * pixels that were below opaque count in the opening they close. Regions
+ * smaller than `minArea` are left out and counted in `dropped`.
+ */
+export declare function cutoutRegions(alpha: ArrayLike<number>, width: number, height: number, opts?: {
+    below?: number;
+    minArea?: number;
+}): {
+    holes: EnclosedHole[];
+    openings: Opening[];
+    dropped: {
+        count: number;
+        area: number;
+    };
+};
+export interface OutlineOptions {
+    /** Frames between the two frames of a drift comparison (default 30). */
+    gap?: number;
+    /** A drift (share of the frame whose alpha changed by more than `step`) under this counts as unmoved (default 0.002). */
+    limit?: number;
+    /** A frozen run must cover at least this many frames and two comparisons (default 60). */
+    minFrames?: number;
+    /** The alpha change that counts as a change (default 0.1). */
+    step?: number;
+}
+export interface FrozenRun {
+    from: number;
+    to: number;
+    length: number;
+    /** The largest drift in the run, share of the frame. */
+    drift: number;
+    /** Median share of the frame, opaque in both frames, whose brightness changed by more than 0.05. */
+    footageChange: number;
+}
+/**
+ * Feed frames in order (any spacing) with their alpha and straight RGB; the
+ * result says how much the outline changed between neighbouring frames and
+ * over `gap` frames, and where it did not move. Frames are kept as 8-bit alpha
+ * and luma, only as far back as a comparison can still need them. Measured at
+ * full size.
+ */
+export declare function outlineTracker(opts?: OutlineOptions): {
+    add(frame: number, alpha: ArrayLike<number>, rgb: ArrayLike<number> | null, width: number, height: number): void;
+    result(): {
+        at: string;
+        neighbours: {
+            pairs: number;
+            min: number | null;
+            median: number | null;
+            max: number | null;
+        };
+        drift: {
+            windows: number;
+            min: number | null;
+            median: number | null;
+            max: number | null;
+            gap: number;
+        };
+        limits: {
+            gap: number;
+            limit: number;
+            minFrames: number;
+            step: number;
+        };
+        frozen: FrozenRun[];
+    };
+};
+/**
+ * Chosen on the delivered cut-out of the 4K fresh-session test (320 frames,
+ * 1080 x 1920): a thin dark sliver of chair 1 to 5 px off the right arm, on
+ * frames 227 to 260, read 20 to 238 px; nothing else in the file was a piece
+ * of 20 px or more apart from the body except a fingertip running off the
+ * bottom edge (frame 49), which a piece touching the frame edge is not
+ * counted as. Under 20 px are single specks of noise (3 px on frame 249);
+ * over 2,000 px is another object, not a speck. `neck`: a piece joined to the
+ * cut-out by a neck up to 2 px wide counts as apart (an opening of 1 px).
+ * `minRun`: a speck stops a check only when the same piece is there on at
+ * least this many frames in a row. On that file and on the cut-out matted at
+ * 2176 x 3840 (cutout-12c), every piece of chair that lasted was on 2 or more
+ * frames in a row (15, 2, 5 and 3), while bits on single frames (chair by the
+ * left arm, a wisp of hair on frame 105) were each there for a thirtieth of a
+ * second. Two files of one take: the limits and minRun come from them alone.
+ */
+export declare const SPECK_DEFAULTS: {
+    opaque: number;
+    minArea: number;
+    maxArea: number;
+    neck: number;
+    minRun: number;
+};
+export interface SpeckPiece {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    area: number;
+}
+/**
+ * Small opaque pieces apart from the main cut-out, or joined to it only by a
+ * neck up to 2 px wide: opaque at `opaque` alpha or more, `minArea` to
+ * `maxArea` px, not touching the frame edge. Largest first. Works inside the
+ * box around the opaque pixels and grows labels back only over the pixels
+ * the erosion took (about 5.5 ms a 1080 x 1920 frame, 1.8 s for 320).
+ */
+export declare function speckPieces(alpha: Float64Array, width: number, height: number, opts?: Partial<typeof SPECK_DEFAULTS>): SpeckPiece[];
 //# sourceMappingURL=matte.d.ts.map

@@ -1011,6 +1011,7 @@ function renderJsx(args, times, paths, tryOcio, isolate, strip = null, frameNums
     `;
 }
 async function nativeFlow(args, opts, abs, transport, strip = null) {
+    const startedAt = performance.now();
     const frameNums = args.frames ?? null;
     const multi = args.times !== undefined || strip !== null || frameNums !== null;
     // A strip and frame numbers go down the `times` path; their times are worked out in AE.
@@ -1037,6 +1038,7 @@ async function nativeFlow(args, opts, abs, transport, strip = null) {
         label: "render_frame",
         timeoutMs: 120_000 + (count - 1) * 30_000,
     });
+    const aeCallMs = performance.now() - startedAt;
     if (!result.ok)
         return toMcpResult(result);
     const payload = result.result;
@@ -1387,6 +1389,15 @@ async function nativeFlow(args, opts, abs, transport, strip = null) {
     if (opts.diff?.sheet && payload.diff && diffThumbs.length > 0) {
         await attachDiffSheet(payload, payload.diff, diffThumbs, abs, opts.diff.sheet, opts.diff.thresholds);
     }
+    // Where the time went: the After Effects call (the render itself), waiting
+    // for saveFrameToPng's files to finish writing, and everything done in Node.
+    const totalMs = performance.now() - startedAt;
+    payload.timing = {
+        aeCallMs: Math.round(aeCallMs),
+        settleMs: settle.waitedMs,
+        nodeMs: Math.max(0, Math.round(totalMs - aeCallMs - settle.waitedMs)),
+        totalMs: Math.round(totalMs),
+    };
     return toMcpResult(result);
 }
 /** Tile size for a sheet: `thumbWidth` (never above the frame's width, at least 16), the frame's aspect. */

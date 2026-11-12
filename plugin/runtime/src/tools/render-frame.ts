@@ -121,6 +121,8 @@ interface ContactSheetReport {
 
 interface RenderFramePayload {
   ok: boolean;
+  /** Milliseconds: the After Effects call, the settle wait, the work in Node, and the whole call. */
+  timing?: { aeCallMs: number; settleMs: number; nodeMs: number; totalMs: number };
   error?: string;
   frames?: RenderedFrame[];
   writtenTo?: string;
@@ -1420,6 +1422,7 @@ async function nativeFlow(
   transport: AeTransport,
   strip: StripPlan | null = null,
 ) {
+  const startedAt = performance.now();
   const frameNums = args.frames ?? null;
   const multi = args.times !== undefined || strip !== null || frameNums !== null;
   // A strip and frame numbers go down the `times` path; their times are worked out in AE.
@@ -1446,6 +1449,7 @@ async function nativeFlow(
     label: "render_frame",
     timeoutMs: 120_000 + (count - 1) * 30_000,
   });
+  const aeCallMs = performance.now() - startedAt;
   if (!result.ok) return toMcpResult(result);
   const payload = result.result as RenderFramePayload;
   const frames = payload?.frames ?? [];
@@ -1816,6 +1820,15 @@ async function nativeFlow(
       opts.diff.thresholds,
     );
   }
+  // Where the time went: the After Effects call (the render itself), waiting
+  // for saveFrameToPng's files to finish writing, and everything done in Node.
+  const totalMs = performance.now() - startedAt;
+  payload.timing = {
+    aeCallMs: Math.round(aeCallMs),
+    settleMs: settle.waitedMs,
+    nodeMs: Math.max(0, Math.round(totalMs - aeCallMs - settle.waitedMs)),
+    totalMs: Math.round(totalMs),
+  };
   return toMcpResult(result);
 }
 

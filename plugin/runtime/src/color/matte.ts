@@ -980,3 +980,672 @@ export function summarizeFlicker(
   };
   return { edge: zone("edge"), inside: zone("inside"), outside: zone("outside"), all: zone("all") };
 }
+
+// ---------------------------------------------------------------------------
+// Enclosed holes as a mask (stage 12b: proofing a one-click cut-out)
+// ---------------------------------------------------------------------------
+
+export interface EnclosedHole extends Box {
+  area: number;
+  meanAlpha: number;
+}
+
+/**
+ * The holes `edge` reports (4-connected regions below `below`, default edge's
+ * opaque threshold, that do not reach the frame edge), as a list and as a
+ * mask: 1 for every pixel of a kept hole. Holes smaller than `minArea` pixels
+ * are left out of both and counted in `dropped`; holes `keep` refuses are left
+ * out and counted in `leftOut`.
+ */
+export function enclosedHoles(
+  alpha: ArrayLike<number>,
+  width: number,
+  height: number,
+  opts: { below?: number; minArea?: number; keep?: (hole: EnclosedHole) => boolean } = {},
+): {
+  holes: EnclosedHole[];
+  mask: Uint8Array;
+  dropped: { count: number; area: number };
+  leftOut: { count: number; area: number };
+} {
+  const below = opts.below ?? EDGE_DEFAULTS.opaque;
+  const minArea = opts.minArea ?? 1;
+  const n = width * height;
+  const a = alpha instanceof Float64Array ? alpha : Float64Array.from(alpha as ArrayLike<number>);
+  const labels = new Int32Array(n);
+  const queue = new Int32Array(n);
+  const regions = labelRegions(
+    a,
+    width,
+    height,
+    (p) => a[p] < below,
+    false,
+    labels,
+    queue,
+    EDGE_DEFAULTS.transparent,
+  );
+  const keep = new Uint8Array(regions.length + 1);
+  const holes: Array<{ r: Region; id: number }> = [];
+  const dropped = { count: 0, area: 0 };
+  const leftOut = { count: 0, area: 0 };
+  const entry = (r: Region): EnclosedHole => ({
+    ...box(r),
+    area: r.area,
+    meanAlpha: Math.round((r.alphaSum / r.area) * 1000) / 1000,
+  });
+  regions.forEach((r, i) => {
+    if (r.touchesBorder) return;
+    if (r.area < minArea) {
+      dropped.count++;
+      dropped.area += r.area;
+      return;
+    }
+    if (opts.keep && !opts.keep(entry(r))) {
+      leftOut.count++;
+      leftOut.area += r.area;
+      return;
+    }
+    keep[i + 1] = 1;
+    holes.push({ r, id: i + 1 });
+  });
+  const mask = new Uint8Array(n);
+  for (let p = 0; p < n; p++) if (keep[labels[p]]) mask[p] = 1;
+  holes.sort((x, y) => y.r.area - x.r.area);
+  return { holes: holes.map(({ r }) => entry(r)), mask, dropped, leftOut };
+}
+
+/** `mask` grown by `radius` px: every pixel within that Euclidean distance of a set pixel is set. */
+export function growMask(
+  mask: Uint8Array,
+  width: number,
+  height: number,
+  radius: number,
+): Uint8Array {
+  if (radius <= 0) return Uint8Array.from(mask);
+  const src = Float64Array.from(mask);
+  const scratch = new Float32Array(width * height);
+  const dist = new Float32Array(width * height);
+  distanceTo(src, width, height, (v) => v > 0, scratch, dist);
+  const out = new Uint8Array(width * height);
+  for (let p = 0; p < out.length; p++) if (dist[p] <= radius + 1e-9) out[p] = 1;
+  return out;
+}
+
+export type FrameEdge = "top" | "bottom" | "left" | "right";
+export interface Opening extends EnclosedHole {
+  /** The frame edges it reaches between two of the subject's contacts. */
+  edges: FrameEdge[];
+}
+
+/**
+ * Holes and openings in a cut-out's matte. A hole is a region below `below`
+ * (default edge's opaque threshold) that cannot reach the frame edge, as
+ * `edge` reports it. An opening reaches the frame edge only between two
+ * places where the subject touches that edge: on each of the four edges, the
+ * pixels between the first and the last opaque pixel on it are treated as
+ * solid (an edge with fewer than two opaque pixels is left open), and a
+ * region enclosed only because of that sealing is an opening. On a take with
+ * no green screen (2026-11-11) a microphone left out of the matte ran off the
+ * bottom of the frame: an opening of about 115,000 px, not a hole. An opening
+ * can also be a real gap, such as between an arm and the body. The sealed edge
+ * pixels that were below opaque count in the opening they close. Regions
+ * smaller than `minArea` are left out and counted in `dropped`.
+ */
+export function cutoutRegions(
+  alpha: ArrayLike<number>,
+  width: number,
+  height: number,
+  opts: { below?: number; minArea?: number } = {},
+): { holes: EnclosedHole[]; openings: Opening[]; dropped: { count: number; area: number } } {
+  const below = opts.below ?? EDGE_DEFAULTS.opaque;
+  const minArea = opts.minArea ?? 1;
+  const n = width * height;
+  // One copy, sealed below; the given alpha is read as it is.
+  const a = Float64Array.from(alpha as ArrayLike<number>);
+  const original = alpha;
+  // Seal each edge between its first and last opaque pixel. `sealedEdge`
+  // records, per sealed pixel that was below opaque, which edge sealed it.
+  const sealedEdge = new Int8Array(n).fill(-1);
+  const EDGES: FrameEdge[] = ["top", "bottom", "left", "right"];
+  const edgePixels = (e: number): number[] => {
+    const out: number[] = [];
+    if (e < 2) {
+      const y = e === 0 ? 0 : height - 1;
+      for (let x = 0; x < width; x++) out.push(y * width + x);
+    } else {
+      const x = e === 2 ? 0 : width - 1;
+      for (let y = 0; y < height; y++) out.push(y * width + x);
+    }
+    return out;
+  };
+  for (let e = 0; e < 4; e++) {
+    const px = edgePixels(e);
+    let first = -1;
+    let last = -1;
+    let count = 0;
+    for (let i = 0; i < px.length; i++)
+      if (original[px[i]] >= below) {
+        if (first < 0) first = i;
+        last = i;
+        count++;
+      }
+    if (count < 2) continue;
+    for (let i = first; i <= last; i++) {
+      const p = px[i];
+      if (original[p] < below) {
+        if (sealedEdge[p] < 0) sealedEdge[p] = e;
+        a[p] = 1;
+      }
+    }
+  }
+  const labels = new Int32Array(n);
+  const queue = new Int32Array(n);
+  const regions = labelRegions(
+    a,
+    width,
+    height,
+    (p) => a[p] < below,
+    false,
+    labels,
+    queue,
+    EDGE_DEFAULTS.transparent,
+  );
+  // Each sealed pixel joins the enclosed region next to it (one step inward).
+  const extra = regions.map(() => ({
+    area: 0,
+    sum: 0,
+    minX: Infinity,
+    minY: Infinity,
+    maxX: -1,
+    maxY: -1,
+    edges: new Set<FrameEdge>(),
+  }));
+  for (let p = 0; p < n; p++) {
+    const e = sealedEdge[p];
+    if (e < 0) continue;
+    const x = p % width;
+    const y = (p - x) / width;
+    const q = e === 0 ? p + width : e === 1 ? p - width : e === 2 ? p + 1 : p - 1;
+    const qx = q % width;
+    const qy = (q - qx) / width;
+    if (q < 0 || q >= n || (e >= 2 && Math.abs(qy - y) !== 0)) continue;
+    const id = labels[q];
+    if (!id || regions[id - 1].touchesBorder) continue;
+    const r = extra[id - 1];
+    r.area++;
+    r.sum += original[p];
+    r.minX = Math.min(r.minX, x);
+    r.maxX = Math.max(r.maxX, x);
+    r.minY = Math.min(r.minY, y);
+    r.maxY = Math.max(r.maxY, y);
+    r.edges.add(EDGES[e]);
+  }
+  const holes: EnclosedHole[] = [];
+  const openings: Opening[] = [];
+  const dropped = { count: 0, area: 0 };
+  regions.forEach((r, i) => {
+    if (r.touchesBorder) return;
+    const x = extra[i];
+    const area = r.area + x.area;
+    if (area < minArea) {
+      dropped.count++;
+      dropped.area += area;
+      return;
+    }
+    const minX = Math.min(r.minX, x.minX);
+    const minY = Math.min(r.minY, x.minY);
+    const entry: EnclosedHole = {
+      x: minX,
+      y: minY,
+      width: Math.max(r.maxX, x.maxX) - minX + 1,
+      height: Math.max(r.maxY, x.maxY) - minY + 1,
+      area,
+      meanAlpha: Math.round(((r.alphaSum + x.sum) / area) * 1000) / 1000,
+    };
+    if (x.edges.size > 0) openings.push({ ...entry, edges: EDGES.filter((e) => x.edges.has(e)) });
+    else holes.push(entry);
+  });
+  holes.sort((p, q) => q.area - p.area);
+  openings.sort((p, q) => q.area - p.area);
+  return { holes, openings, dropped };
+}
+
+// ---------------------------------------------------------------------------
+// Whether a cut-out's outline moves (stage 12c): a matte that stops tracking
+// keeps the click frame's outline on every frame. Measured on a take whose
+// footage was replaced under its matte: opaque share 0.3131 to 0.3150 over
+// 320 frames, largest step between neighbours 0.0017, while a real cut-out of
+// the same take ran 0.279 to 0.314. Neighbouring frames of a frozen matte
+// still differ a little (the edge refines against the picture), so the outline
+// is also compared with the frame `gap` frames earlier: a moving subject
+// drifts over a second, a frozen outline does not.
+// ---------------------------------------------------------------------------
+
+export interface OutlineOptions {
+  /** Frames between the two frames of a drift comparison (default 30). */
+  gap?: number;
+  /** A drift (share of the frame whose alpha changed by more than `step`) under this counts as unmoved (default 0.002). */
+  limit?: number;
+  /** A frozen run must cover at least this many frames and two comparisons (default 60). */
+  minFrames?: number;
+  /** The alpha change that counts as a change (default 0.1). */
+  step?: number;
+}
+
+export interface FrozenRun {
+  from: number;
+  to: number;
+  length: number;
+  /** The largest drift in the run, share of the frame. */
+  drift: number;
+  /** Median share of the frame, opaque in both frames, whose brightness changed by more than 0.05. */
+  footageChange: number;
+}
+
+const median = (xs: number[]) => {
+  if (!xs.length) return null;
+  const s = [...xs].sort((a, b) => a - b);
+  const m = s.length;
+  return m % 2 ? s[(m - 1) / 2] : (s[m / 2 - 1] + s[m / 2]) / 2;
+};
+const r6 = (n: number) => Math.round(n * 1e6) / 1e6;
+
+/**
+ * Feed frames in order (any spacing) with their alpha and straight RGB; the
+ * result says how much the outline changed between neighbouring frames and
+ * over `gap` frames, and where it did not move. Frames are kept as 8-bit alpha
+ * and luma, only as far back as a comparison can still need them. Measured at
+ * full size.
+ */
+export function outlineTracker(opts: OutlineOptions = {}) {
+  const gap = opts.gap ?? 30;
+  const limit = opts.limit ?? 0.002;
+  const minFrames = opts.minFrames ?? 60;
+  const step = Math.round((opts.step ?? 0.1) * 255);
+  const lumaStep = Math.round(0.05 * 255);
+  const ring: Array<{ frame: number; a: Uint8Array; l: Uint8Array }> = [];
+  const neighbours: number[] = [];
+  const windows: Array<{ a: number; b: number; drift: number; footage: number }> = [];
+  const changed = (x: Uint8Array, y: Uint8Array) => {
+    let n = 0;
+    for (let p = 0; p < x.length; p++) if (Math.abs(x[p] - y[p]) > step) n++;
+    return n / x.length;
+  };
+  const footage = (p: { a: Uint8Array; l: Uint8Array }, c: { a: Uint8Array; l: Uint8Array }) => {
+    let n = 0;
+    for (let i = 0; i < p.a.length; i++)
+      if (p.a[i] >= 250 && c.a[i] >= 250 && Math.abs(p.l[i] - c.l[i]) > lumaStep) n++;
+    return n / p.a.length;
+  };
+  return {
+    add(
+      frame: number,
+      alpha: ArrayLike<number>,
+      rgb: ArrayLike<number> | null,
+      width: number,
+      height: number,
+    ) {
+      const n = width * height;
+      const a = new Uint8Array(n);
+      const l = new Uint8Array(n);
+      for (let p = 0; p < n; p++) {
+        a[p] = Math.round(Math.min(1, Math.max(0, alpha[p])) * 255);
+        if (rgb)
+          l[p] = Math.round(
+            Math.min(
+              1,
+              Math.max(0, 0.2126 * rgb[p * 3] + 0.7152 * rgb[p * 3 + 1] + 0.0722 * rgb[p * 3 + 2]),
+            ) * 255,
+          );
+      }
+      const cur = { frame, a, l };
+      const prev = ring[ring.length - 1];
+      if (prev && prev.frame === frame - 1) neighbours.push(changed(prev.a, a));
+      let partner: (typeof ring)[number] | undefined;
+      for (const e of ring) if (e.frame <= frame - gap) partner = e;
+      if (partner)
+        windows.push({
+          a: partner.frame,
+          b: frame,
+          drift: changed(partner.a, a),
+          footage: footage(partner, cur),
+        });
+      ring.push(cur);
+      // A later frame's partner is the latest frame at least `gap` before it: anything older than that can go.
+      let keepFrom = 0;
+      for (let i = 0; i < ring.length; i++) if (ring[i].frame <= frame + 1 - gap) keepFrom = i;
+      ring.splice(0, keepFrom);
+    },
+    result() {
+      const frozen: FrozenRun[] = [];
+      let run: typeof windows = [];
+      const close = () => {
+        if (run.length >= 2) {
+          const from = run[0].a;
+          const to = run[run.length - 1].b;
+          if (to - from + 1 >= minFrames)
+            frozen.push({
+              from,
+              to,
+              length: to - from + 1,
+              drift: r6(Math.max(...run.map((w) => w.drift))),
+              footageChange: r6(median(run.map((w) => w.footage)) ?? 0),
+            });
+        }
+        run = [];
+      };
+      for (const w of windows) {
+        if (w.drift < limit) run.push(w);
+        else close();
+      }
+      close();
+      const stats = (xs: number[]) => ({
+        min: xs.length ? r6(Math.min(...xs)) : null,
+        median: xs.length ? r6(median(xs) as number) : null,
+        max: xs.length ? r6(Math.max(...xs)) : null,
+      });
+      return {
+        at:
+          "full size: the share of the frame whose alpha changed by more than " +
+          (opts.step ?? 0.1),
+        neighbours: { ...stats(neighbours), pairs: neighbours.length },
+        drift: { gap, ...stats(windows.map((w) => w.drift)), windows: windows.length },
+        limits: { gap, limit, minFrames, step: opts.step ?? 0.1 },
+        frozen,
+      };
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Specks: small opaque pieces apart from the main cut-out
+// ---------------------------------------------------------------------------
+
+/**
+ * Chosen on the delivered cut-out of the 4K fresh-session test (320 frames,
+ * 1080 x 1920): a thin dark sliver of chair 1 to 5 px off the right arm, on
+ * frames 227 to 260, read 20 to 238 px; nothing else in the file was a piece
+ * of 20 px or more apart from the body except a fingertip running off the
+ * bottom edge (frame 49), which a piece touching the frame edge is not
+ * counted as. Under 20 px are single specks of noise (3 px on frame 249);
+ * over 2,000 px is another object, not a speck. `neck`: a piece joined to the
+ * cut-out by a neck up to 2 px wide counts as apart (an opening of 1 px).
+ * `minRun`: a speck stops a check only when the same piece is there on at
+ * least this many frames in a row. On that file and on the cut-out matted at
+ * 2176 x 3840 (cutout-12c), every piece of chair that lasted was on 2 or more
+ * frames in a row (15, 2, 5 and 3), while bits on single frames (chair by the
+ * left arm, a wisp of hair on frame 105) were each there for a thirtieth of a
+ * second. Two files of one take: the limits and minRun come from them alone.
+ */
+export const SPECK_DEFAULTS = { opaque: 0.5, minArea: 20, maxArea: 2000, neck: 1, minRun: 2 };
+
+export interface SpeckPiece {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  area: number;
+}
+
+/** Per-label area, box and whether the label touches the frame edge (ids index the arrays). */
+interface LabelStats {
+  area: number[];
+  minX: number[];
+  minY: number[];
+  maxX: number[];
+  maxY: number[];
+  edge: boolean[];
+}
+
+function statAdd(st: LabelStats, id: number, x: number, y: number, onEdge: boolean): void {
+  if (st.area[id] === undefined) {
+    st.area[id] = 0;
+    st.minX[id] = x;
+    st.minY[id] = y;
+    st.maxX[id] = x;
+    st.maxY[id] = y;
+    st.edge[id] = false;
+  }
+  st.area[id]++;
+  if (x < st.minX[id]) st.minX[id] = x;
+  if (x > st.maxX[id]) st.maxX[id] = x;
+  if (y < st.minY[id]) st.minY[id] = y;
+  if (y > st.maxY[id]) st.maxY[id] = y;
+  if (onEdge) st.edge[id] = true;
+}
+
+/**
+ * Small opaque pieces apart from the main cut-out, or joined to it only by a
+ * neck up to 2 px wide: opaque at `opaque` alpha or more, `minArea` to
+ * `maxArea` px, not touching the frame edge. Largest first. Works inside the
+ * box around the opaque pixels and grows labels back only over the pixels
+ * the erosion took (about 5.5 ms a 1080 x 1920 frame, 1.8 s for 320).
+ */
+export function speckPieces(
+  alpha: Float64Array,
+  width: number,
+  height: number,
+  opts: Partial<typeof SPECK_DEFAULTS> = {},
+): SpeckPiece[] {
+  const o = { ...SPECK_DEFAULTS, ...opts };
+  // The box around the opaque pixels, one pixel larger where the frame allows.
+  let bx0 = width;
+  let by0 = height;
+  let bx1 = -1;
+  let by1 = -1;
+  for (let y = 0; y < height; y++) {
+    const row = y * width;
+    let first = -1;
+    let last = -1;
+    for (let x = 0; x < width; x++)
+      if (alpha[row + x] >= o.opaque) {
+        if (first < 0) first = x;
+        last = x;
+      }
+    if (first < 0) continue;
+    if (first < bx0) bx0 = first;
+    if (last > bx1) bx1 = last;
+    if (y < by0) by0 = y;
+    by1 = y;
+  }
+  if (bx1 < 0) return [];
+  bx0 = Math.max(0, bx0 - 1);
+  by0 = Math.max(0, by0 - 1);
+  bx1 = Math.min(width - 1, bx1 + 1);
+  by1 = Math.min(height - 1, by1 + 1);
+  const w = bx1 - bx0 + 1;
+  const h = by1 - by0 + 1;
+  const n = w * h;
+  const m = new Uint8Array(n);
+  for (let y = 0; y < h; y++) {
+    const src = (y + by0) * width + bx0;
+    for (let x = 0; x < w; x++) m[y * w + x] = alpha[src + x] >= o.opaque ? 1 : 0;
+  }
+  const onEdge = (x: number, y: number) =>
+    x + bx0 === 0 || y + by0 === 0 || x + bx0 === width - 1 || y + by0 === height - 1;
+  // Erode by the neck (a 3 x 3 cross); `ring` holds the opaque pixels the erosion took.
+  let er = m;
+  for (let t = 0; t < o.neck; t++) {
+    const next = new Uint8Array(n);
+    for (let y = 1; y < h - 1; y++)
+      for (let x = 1; x < w - 1; x++) {
+        const p = y * w + x;
+        next[p] = er[p] & er[p - 1] & er[p + 1] & er[p - w] & er[p + w];
+      }
+    er = next;
+  }
+  let ring: number[] = [];
+  for (let p = 0; p < n; p++) if (m[p] && !er[p]) ring.push(p);
+  // Label what is left (8-connected), with each label's area and box gathered as it fills.
+  const labels = new Int32Array(n);
+  const queue = new Int32Array(n);
+  const st: LabelStats = { area: [], minX: [], minY: [], maxX: [], maxY: [], edge: [] };
+  /** Fill one 8-connected piece of `mask` from `start` as label `id`; record its stats. */
+  const fill = (mask: Uint8Array, start: number, id: number) => {
+    labels[start] = id;
+    let head = 0;
+    let tail = 0;
+    queue[tail++] = start;
+    let x0 = w;
+    let y0 = h;
+    let x1 = -1;
+    let y1 = -1;
+    while (head < tail) {
+      const p = queue[head++];
+      const x = p % w;
+      const y = (p - x) / w;
+      if (x < x0) x0 = x;
+      if (x > x1) x1 = x;
+      if (y < y0) y0 = y;
+      if (y > y1) y1 = y;
+      const ya = y > 0 ? -1 : 0;
+      const yb = y < h - 1 ? 1 : 0;
+      const xa = x > 0 ? -1 : 0;
+      const xb = x < w - 1 ? 1 : 0;
+      for (let dy = ya; dy <= yb; dy++)
+        for (let dx = xa; dx <= xb; dx++) {
+          const q = p + dy * w + dx;
+          if (mask[q] && !labels[q]) {
+            labels[q] = id;
+            queue[tail++] = q;
+          }
+        }
+    }
+    st.area[id] = tail;
+    st.minX[id] = x0;
+    st.minY[id] = y0;
+    st.maxX[id] = x1;
+    st.maxY[id] = y1;
+    st.edge[id] = onEdge(x0, y0) || onEdge(x1, y1);
+  };
+  // The eroded mask is labelled by row runs joined with union-find (8-connected): runs, not pixels.
+  const rs: number[] = [];
+  const reEnd: number[] = [];
+  const ry: number[] = [];
+  const parent: number[] = [];
+  const find = (i: number): number => {
+    while (parent[i] !== i) {
+      parent[i] = parent[parent[i]];
+      i = parent[i];
+    }
+    return i;
+  };
+  let prevFrom = 0;
+  let prevTo = 0;
+  for (let y = 0; y < h; y++) {
+    const rowFrom = rs.length;
+    const row = y * w;
+    let x = 0;
+    while (x < w) {
+      if (!er[row + x]) {
+        x++;
+        continue;
+      }
+      const x0 = x;
+      while (x < w && er[row + x]) x++;
+      const r = rs.length;
+      rs.push(x0);
+      reEnd.push(x);
+      ry.push(y);
+      parent.push(r);
+      // Runs in the row above touching [x0 - 1, x] (8-connected).
+      for (let k = prevFrom; k < prevTo; k++) {
+        if (reEnd[k] < x0 || rs[k] > x) continue;
+        const a = find(k);
+        const b2 = find(r);
+        if (a !== b2) parent[Math.max(a, b2)] = Math.min(a, b2);
+      }
+    }
+    prevFrom = rowFrom;
+    prevTo = rs.length;
+  }
+  const idOf = new Map<number, number>();
+  let grownEnd = 1;
+  for (let k = 0; k < rs.length; k++) {
+    const root = find(k);
+    let id = idOf.get(root);
+    if (id === undefined) {
+      id = grownEnd++;
+      idOf.set(root, id);
+      st.area[id] = 0;
+      st.minX[id] = rs[k];
+      st.minY[id] = ry[k];
+      st.maxX[id] = reEnd[k] - 1;
+      st.maxY[id] = ry[k];
+      st.edge[id] = false;
+    }
+    const len = reEnd[k] - rs[k];
+    st.area[id] += len;
+    if (rs[k] < st.minX[id]) st.minX[id] = rs[k];
+    if (reEnd[k] - 1 > st.maxX[id]) st.maxX[id] = reEnd[k] - 1;
+    if (ry[k] < st.minY[id]) st.minY[id] = ry[k];
+    if (ry[k] > st.maxY[id]) st.maxY[id] = ry[k];
+    if (onEdge(rs[k], ry[k]) || onEdge(reEnd[k] - 1, ry[k])) st.edge[id] = true;
+    labels.fill(id, ry[k] * w + rs[k], ry[k] * w + reEnd[k]);
+  }
+  // Grow the labels back over the ring: a piece joined only by a neck up to 2 px wide comes back as its own label.
+  for (let t = 0; t < o.neck + 1 && ring.length; t++) {
+    const take: Array<[number, number]> = [];
+    const left: number[] = [];
+    for (const p of ring) {
+      const x = p % w;
+      const v =
+        (x > 0 && labels[p - 1]) ||
+        (x < w - 1 && labels[p + 1]) ||
+        (p >= w && labels[p - w]) ||
+        (p + w < n && labels[p + w]) ||
+        0;
+      if (v) take.push([p, v]);
+      else left.push(p);
+    }
+    for (const [p, v] of take) {
+      labels[p] = v;
+      const x = p % w;
+      const y = (p - x) / w;
+      statAdd(st, v, x, y, onEdge(x, y));
+    }
+    ring = left;
+    if (!take.length) break;
+  }
+  // Ring pixels no grown label reached (pieces thinner than the neck) get labels of their own.
+  const rest = new Uint8Array(n);
+  for (const p of ring) rest[p] = 1;
+  let end = grownEnd;
+  for (const p of ring) if (!labels[p]) fill(rest, p, end++);
+  // A thin label touching a grown one is part of it (a hair, a cable).
+  const touchesGrown = new Uint8Array(end);
+  for (const p of ring) {
+    const id = labels[p];
+    if (touchesGrown[id]) continue;
+    const x = p % w;
+    const y = (p - x) / w;
+    for (let dy = -1; dy <= 1 && !touchesGrown[id]; dy++)
+      for (let dx = -1; dx <= 1; dx++) {
+        const xx = x + dx;
+        const yy = y + dy;
+        if (xx < 0 || yy < 0 || xx >= w || yy >= h) continue;
+        const q = labels[yy * w + xx];
+        if (q && q < grownEnd) {
+          touchesGrown[id] = 1;
+          break;
+        }
+      }
+  }
+  // The main cut-out is the largest piece.
+  let main = 1;
+  for (let id = 1; id < end; id++) if ((st.area[id] ?? 0) > (st.area[main] ?? 0)) main = id;
+  const pieces: SpeckPiece[] = [];
+  for (let id = 1; id < end; id++) {
+    const a = st.area[id] ?? 0;
+    if (id === main || st.edge[id] || a < o.minArea || a > o.maxArea) continue;
+    if (id >= grownEnd && touchesGrown[id]) continue;
+    pieces.push({
+      x: st.minX[id] + bx0,
+      y: st.minY[id] + by0,
+      width: st.maxX[id] - st.minX[id] + 1,
+      height: st.maxY[id] - st.minY[id] + 1,
+      area: a,
+    });
+  }
+  return pieces.sort((p, q) => q.area - p.area);
+}
