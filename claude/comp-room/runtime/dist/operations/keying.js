@@ -1191,7 +1191,7 @@ const since = (t) => performance.now() - t;
 const roundTally = (t) => Object.fromEntries(
   Object.entries(t).map(([k, v]) => [k, typeof v === "number" ? Math.round(v) : v])
 );
-async function renderChunked(io, base, frames, perFrameMs, outDir, stem, tally = renderTally()) {
+async function renderChunked(io, base, frames, perFrameMs, outDir, stem, tally = renderTally(), firstCall = 0) {
   const size = Math.max(1, Math.min(32, Math.floor(SETTLE_MAX_MS / perFrameMs)));
   const out = [];
   for (let c = 0; c * size < frames.length; c++) {
@@ -1200,7 +1200,7 @@ async function renderChunked(io, base, frames, perFrameMs, outDir, stem, tally =
     const payload = await io.render({
       ...base,
       frames: chunk,
-      outPath: path.join(outDir, `${stem}-${c}.png`),
+      outPath: path.join(outDir, `${stem}-${firstCall + c}.png`),
       settleTimeoutMs: Math.min(SETTLE_MAX_MS, Math.max(1, Math.round(perFrameMs * chunk.length)))
     });
     tally.calls++;
@@ -1489,6 +1489,7 @@ async function recheckFrames(io, readings, limit, over, outDir, perFrameMs, base
     const tPic = performance.now();
     const secondPicture = b.file ? await overPicture(io, b.file, over) : null;
     pixels.picturesMs += since(tPic);
+    pixels.ms += since(tPic);
     unstable.push({
       kind: "unstable",
       frame: a.frame,
@@ -1504,6 +1505,7 @@ async function recheckFrames(io, readings, limit, over, outDir, perFrameMs, base
     failed,
     skippedAccepted,
     unstable,
+    captures: again.map((r) => r.file).filter((f) => typeof f === "string"),
     note: RECHECK_NOTE + (failed.length ? ` Frames ${failed.join(", ")} did not render the second time and were not compared.` : "") + (skippedAccepted ? ` ${plural(skippedAccepted, "frame")} whose regions were all accepted ${skippedAccepted === 1 ? "was" : "were"} not rendered again.` : "")
   };
 }
@@ -1606,6 +1608,14 @@ async function runSubjectCheck(args, io) {
   const rectText = rects.length ? ` ${rects.join(", ")}: a click that dragged a little; it may hold nothing (subject.remove_selection).` : "";
   const pictureText = picture ? ` Look at the picture (${picture}): it shows what no number does, such as the background kept or something the brief names left out.` : " No frame rendered, so there is no picture.";
   const stop = findings.length > 0;
+  if (args.keepCaptures !== true) {
+    const files = [
+      ...readings.map((r) => r.file),
+      ..."captures" in recheck ? recheck.captures : []
+    ].filter((f) => typeof f === "string");
+    await Promise.all(files.map((f) => fs.rm(f, { force: true })));
+    for (const r of readings) delete r.file;
+  }
   return {
     ok: true,
     layer: st.layer,
@@ -1644,6 +1654,27 @@ const FILL_LIMITS = (frame) => [
   "Every enclosed gap at that frame is filled, including a real one (between an arm and the body) where the background will show; pass `only` boxes to fill just the gaps you mean. Openings (regions that reach the frame edge) are never filled."
 ];
 async function runFillGaps(args, io) {
+  const captures = [];
+  const watched = {
+    ...io,
+    render: async (a) => {
+      const out = await io.render(a);
+      for (const f of out?.frames ?? [])
+        if (typeof f?.writtenTo === "string") captures.push(f.writtenTo);
+      if (typeof out?.writtenTo === "string") captures.push(out.writtenTo);
+      return out;
+    }
+  };
+  try {
+    const res = await fillGaps(args, watched);
+    if (args.keepCaptures !== true) for (const r of res?.after?.frames ?? []) delete r.file;
+    return res;
+  } finally {
+    if (args.keepCaptures !== true)
+      await Promise.all(captures.map((f) => fs.rm(f, { force: true })));
+  }
+}
+async function fillGaps(args, io) {
   const still = args.stillPath;
   if (typeof still !== "string" || !path.isAbsolute(still) || path.extname(still).toLowerCase() !== ".png") {
     return {
@@ -2029,6 +2060,12 @@ registerOp({
       description: "Render each frame with a hole or opening over the limit once more at the end and report a frame that differs (kind 'unstable'). Default true; false skips it.",
       required: false
     },
+    {
+      name: "keepCaptures",
+      type: "boolean",
+      description: "Keep the raw captures ae_render_frame wrote (default false: each is removed once read; the pictures stay).",
+      required: false
+    },
     secondsPerFrameParam,
     overParam,
     subjectIndexParam
@@ -2095,6 +2132,12 @@ registerOp({
       name: "across",
       type: "boolean",
       description: "Measure after the fill across the clip instead of near the reference frame. Takes minutes; prefer subject.render_cutout and subject.check_file.",
+      required: false
+    },
+    {
+      name: "keepCaptures",
+      type: "boolean",
+      description: "Keep the raw captures ae_render_frame wrote (default false: each is removed once read; the pictures stay).",
       required: false
     },
     secondsPerFrameParam,
@@ -2393,27 +2436,83 @@ async function runCheckFile(args, io) {
   const renders = renderTally();
   const pixels = pixelTally();
   const { frames, step } = checkFileFrames(setup.frames, cap);
+  const keepCaptures = args.keepCaptures === true;
+  const sheetPlan = /* @__PURE__ */ new Set();
+  for (let i = 0; i < Math.min(24, frames.length); i++)
+    sheetPlan.add(frames[Math.floor(i * frames.length / Math.min(24, frames.length))]);
+  const isAccepted = (x) => acceptedBy(
+    { kind: x.kind, box: { x: x.x, y: x.y, width: x.width, height: x.height } },
+    accept
+  );
+  const tracks = [];
+  const jumpFrames = /* @__PURE__ */ new Set();
+  const kept = /* @__PURE__ */ new Map();
   let readings = [];
+  let prev = null;
   let cleanup = null;
+  const needed = () => {
+    const n = /* @__PURE__ */ new Set([...jumpFrames, ...sheetPlan]);
+    for (const t of tracks) n.add(t.bestFrame);
+    return n;
+  };
+  const release = async (frame) => {
+    const f = kept.get(frame);
+    if (!f || keepCaptures) return;
+    kept.delete(frame);
+    await fs.rm(f, { force: true });
+  };
+  const size = Math.max(1, Math.min(32, Math.floor(SETTLE_MAX_MS / perFrameMs)));
   try {
-    const rendered = await renderChunked(
-      io,
-      { compNameOrId: setup.compId, channels: "rgba" },
-      frames,
-      perFrameMs,
-      outDir,
-      "check-file",
-      renders
-    );
-    readings = (await measureFrames(
-      io,
-      rendered,
-      limit,
-      over,
-      path.join(outDir, "check-file_unused.png"),
-      pixels,
-      false
-    )).readings;
+    for (let b = 0; b * size < frames.length; b++) {
+      const batch = frames.slice(b * size, (b + 1) * size);
+      const rendered = await renderChunked(
+        io,
+        { compNameOrId: setup.compId, channels: "rgba" },
+        batch,
+        perFrameMs,
+        outDir,
+        "check-file",
+        renders,
+        b
+      );
+      const got = (await measureFrames(
+        io,
+        rendered,
+        limit,
+        over,
+        path.join(outDir, "check-file_unused.png"),
+        pixels,
+        false
+      )).readings;
+      for (const r of got) {
+        readings.push(r);
+        if (!r.checked || !r.file) continue;
+        kept.set(r.frame, r.file);
+        for (const x of regionsOf(r)) {
+          if (x.area < limit || isAccepted(x)) continue;
+          const t = tracks.find(
+            (tr) => tr.kind === x.kind && tr.members.some((m) => alikeRegions(m, x))
+          );
+          if (t) {
+            t.members.push(x);
+            if (x.area > t.bestArea) {
+              t.bestArea = x.area;
+              t.bestFrame = r.frame;
+            }
+          } else tracks.push({ kind: x.kind, members: [x], bestArea: x.area, bestFrame: r.frame });
+        }
+        if (prev && prev.checked && r.frame === prev.frame + 1) {
+          const change = Math.abs((r.opaqueShare ?? 0) - (prev.opaqueShare ?? 0));
+          if (change > jumpLimit) {
+            jumpFrames.add(prev.frame);
+            jumpFrames.add(r.frame);
+          }
+        }
+        const need2 = needed();
+        for (const f of Array.from(kept.keys())) if (f !== r.frame && !need2.has(f)) await release(f);
+        prev = r;
+      }
+    }
   } finally {
     cleanup = await io.execute(
       fileCleanupJsx({
@@ -2421,13 +2520,11 @@ async function runCheckFile(args, io) {
         itemId: setup.itemId,
         removeItem: setup.imported === true && args.keepFootage !== true
       }),
-      {
-        label: "subject.check_file cleanup",
-        timeoutMs: 6e4,
-        undoGroup: true
-      }
+      { label: "subject.check_file cleanup", timeoutMs: 6e4, undoGroup: true }
     );
   }
+  const need = needed();
+  for (const f of Array.from(kept.keys())) if (!need.has(f)) await release(f);
   const byFrame = new Map(readings.filter((r) => r.checked).map((r) => [r.frame, r]));
   const jumps = [];
   let pairs = 0;
@@ -2465,37 +2562,37 @@ async function runCheckFile(args, io) {
     largestStep
   };
   const tPic = performance.now();
-  const findingFrames = /* @__PURE__ */ new Set();
-  for (const r of readings) if (r.checked && regionsOf(r).length) findingFrames.add(r.frame);
-  for (const j of jumps) {
-    findingFrames.add(j.from);
-    findingFrames.add(j.to);
-  }
+  const pictureFrames = /* @__PURE__ */ new Set([
+    ...tracks.map((t) => t.bestFrame),
+    ...jumps.flatMap((j) => [j.from, j.to])
+  ]);
   const pictureOf = /* @__PURE__ */ new Map();
-  for (const f of findingFrames) {
-    const r = byFrame.get(f);
-    if (r?.file) pictureOf.set(f, await overPicture(io, r.file, over));
+  let pictureBytes = 0;
+  for (const f of [...pictureFrames].sort((a, b) => a - b)) {
+    const file2 = kept.get(f);
+    const pic = file2 ? await overPicture(io, file2, over) : null;
+    pictureOf.set(f, pic);
+    if (pic)
+      pictureBytes += await fs.stat(pic).then(
+        (st) => st.size,
+        () => 0
+      );
   }
   for (const j of jumps) j.pictures = [pictureOf.get(j.from) ?? null, pictureOf.get(j.to) ?? null];
   for (const r of readings)
-    if (pictureOf.has(r.frame)) r.picture = pictureOf.get(r.frame) ?? void 0;
-  const sheetFrames = [...findingFrames].slice(0, 24);
-  const rest = checkedReadings.map((r) => r.frame).filter((f) => !findingFrames.has(f));
-  for (let i = 0; sheetFrames.length < 24 && i < rest.length; i++) {
-    const k = Math.floor(
-      i * rest.length / Math.max(1, Math.min(24 - findingFrames.size, rest.length))
-    );
-    if (k < rest.length && !sheetFrames.includes(rest[k])) sheetFrames.push(rest[k]);
-  }
-  sheetFrames.sort((a, b) => a - b);
+    if (pictureOf.get(r.frame)) r.picture = pictureOf.get(r.frame) ?? void 0;
+  const picMs = since(tPic);
+  pixels.picturesMs += picMs;
+  pixels.ms += picMs;
+  const tSheet = performance.now();
+  const sheetFrames = [.../* @__PURE__ */ new Set([...pictureFrames, ...sheetPlan])].filter((f) => kept.has(f)).slice(0, 24).sort((a, b) => a - b);
   let picture = null;
+  let sheetBytes = 0;
   const thumbs = [];
   const labels = [];
   for (const f of sheetFrames) {
-    const r = byFrame.get(f);
-    if (!r?.file) continue;
     try {
-      const img = await io.readImage(r.file);
+      const img = await io.readImage(kept.get(f));
       const comp = flattenOver(img, { kind: "color", color: parseHex(over) });
       const tw = Math.min(240, img.width);
       const th = Math.max(1, Math.round(img.height * tw / img.width));
@@ -2505,20 +2602,29 @@ async function runCheckFile(args, io) {
         rgb: resample({ ...img, rgb: comp }, tw, th),
         bitDepth: 8
       });
-      labels.push(`frame ${f}${findingFrames.has(f) ? " !" : ""}`);
+      labels.push(`frame ${f}${pictureFrames.has(f) ? " !" : ""}`);
     } catch {
     }
   }
   if (thumbs.length) {
     const sheet = composeContactSheet(thumbs, { labels, thumbWidth: 240 });
     picture = path.join(outDir, "check-file_sheet.png");
-    await writePng(
-      io,
-      picture,
-      encodePngSrgb8(sheet.width, sheet.height, sheet.rgb, PICTURE_DEFLATE)
-    );
+    const png = encodePngSrgb8(sheet.width, sheet.height, sheet.rgb, PICTURE_DEFLATE);
+    await writePng(io, picture, png);
+    sheetBytes = png.length;
   }
-  pixels.picturesMs += since(tPic);
+  const sheetMs = since(tSheet);
+  pixels.sheetMs += sheetMs;
+  pixels.ms += sheetMs;
+  for (const f of Array.from(kept.keys())) await release(f);
+  if (!keepCaptures) for (const r of readings) delete r.file;
+  const pictures = {
+    written: [...pictureOf.values()].filter(Boolean).length,
+    bytes: pictureBytes,
+    sheet: picture,
+    sheetBytes,
+    capturesKept: keepCaptures
+  };
   const compared = `${plural(pairs, "pair")} of neighbouring frames` + (step > 1 ? ` (each frame and the next), one pair every ${step} frames, and the first and last three frames` : "") + ` compared for jumps over ${jumpLimit} in opaque share.`;
   const passText = jumps.length ? `No hole or opening of ${fmt(limit)} px or more on the ${byFrame.size} frames read.` : `Nothing over the limit on ${byFrame.size} of ${readings.length} frames read; no jump between neighbouring frames over ${jumpLimit}; the picture is at ${picture ?? "(none)"}.`;
   const sum = summarize(readings, limit, accept, picture, passText);
@@ -2541,6 +2647,7 @@ async function runCheckFile(args, io) {
     opaque,
     inOut: `${sum.text}${jumpText}${opaqueText} ${compared}${stop && picture ? ` Look at the picture (${picture}).` : ""}`,
     picture,
+    pictures,
     frameReadings: readings.map((r) => ({
       frame: r.frame,
       checked: r.checked,
@@ -2651,7 +2758,7 @@ registerOp({
 registerOp({
   name: "subject.check_file",
   category: "subject",
-  description: `Check a rendered cut-out movie (from subject.render_cutout) frame by frame: brings it into a throwaway comp, reads frames in batches of at most 32 (every frame up to maxFrames, default ${CHECK_FILE_MAX_FRAMES}; beyond it pairs of neighbouring frames in steps, always the first and last three), and reports holes and openings (as subject.check: holeLimit, accept), the opaque share of every frame, and a 'jump' finding when neighbouring frames differ by more than jumpLimit (default ${CHECK_FILE_JUMP_LIMIT}: on the take of 2026-11-11 the rendered cut-out ran 0.279 to 0.314 with no step over 0.012, and a dropped microphone is about 0.05). Only true neighbours are compared, and \`compared\` says which. A frame that could not be read is 'not-checked' and stops. Pictures: every frame with a finding, and a sheet of up to 24 frames. The throwaway comp is removed afterwards, and the imported footage too unless keepFootage. Measured: about 0.55 s a frame reading the file. Returns stop, findings, accepted, checked, compared, opaque, inOut, picture, frameReadings, timing.`,
+  description: `Check a rendered cut-out movie (from subject.render_cutout) frame by frame: brings it into a throwaway comp, reads frames in batches of at most 32 (every frame up to maxFrames, default ${CHECK_FILE_MAX_FRAMES}; beyond it pairs of neighbouring frames in steps, always the first and last three), and reports holes and openings (as subject.check: holeLimit, accept), the opaque share of every frame, and a 'jump' finding when neighbouring frames differ by more than jumpLimit (default ${CHECK_FILE_JUMP_LIMIT}: on the take of 2026-11-11 the rendered cut-out ran 0.279 to 0.314 with no step over 0.012, and a dropped microphone is about 0.05). Only true neighbours are compared, and \`compared\` says which. A frame that could not be read is 'not-checked' and stops. Pictures: the largest frame of each finding not accepted and both frames of each jump, full size, and a sheet of up to 24 frames; \`pictures\` counts them and their bytes. Each raw capture is removed once read unless keepCaptures (one run on the take had left 630 MB). The throwaway comp is removed afterwards, and the imported footage too unless keepFootage. Measured: about 0.55 s a frame reading the file. Returns stop, findings, accepted, checked, compared, opaque, inOut, picture, frameReadings, timing.`,
   params: [
     {
       name: "path",
@@ -2705,6 +2812,12 @@ registerOp({
       name: "secondsPerFrame",
       type: "number",
       description: "Settle time allowed per frame, s (default 10).",
+      required: false
+    },
+    {
+      name: "keepCaptures",
+      type: "boolean",
+      description: "Keep the raw captures ae_render_frame wrote (default false: each is removed once read; the pictures stay).",
       required: false
     },
     overParam
