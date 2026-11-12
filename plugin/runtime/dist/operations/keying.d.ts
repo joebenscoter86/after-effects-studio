@@ -144,6 +144,8 @@ export interface CutoutIO {
     }): Promise<Json>;
     writePng?(file: string, data: Buffer): Promise<void>;
 }
+/** What the pixel helpers need from After Effects: a render, and the files it wrote. */
+type PixelIO = Pick<CutoutIO, "render" | "readImage" | "writePng">;
 /** Time spent in the renders a call made, summed over its ae_render_frame calls (ms). */
 export interface RenderTally {
     frames: number;
@@ -182,6 +184,76 @@ export declare function fillBuildJsx(args: {
     comp: unknown;
     layer: unknown;
     stillPath: string;
+}): string;
+/** What subject.render_cutout and subject.check_file need from After Effects. */
+export interface FileIO extends PixelIO {
+    /** Run ExtendScript; its result, or { ok: false, error }. */
+    execute(code: string, opts: {
+        label: string;
+        timeoutMs: number;
+        undoGroup?: boolean;
+    }): Promise<Json>;
+    /** Whether a file exists on this machine (default: fs.access). */
+    exists?(file: string): Promise<boolean>;
+}
+/** The output template to use: the caller's (when it exists), else one that writes a movie with alpha; or a refusal. */
+export declare function chooseAlphaTemplate(available: string[], wanted?: string): {
+    template: string;
+    why: string;
+} | {
+    error: string;
+};
+/** JSX: what render_cutout will render (the layer, its gap fill, the span) and the output templates on this machine. */
+export declare function renderCutoutPlanJsx(args: {
+    comp: unknown;
+    layer: unknown;
+}): string;
+/**
+ * JSX: render the comp with only `keep` switched on (cameras, lights and
+ * audio-only layers left as they are; solo cleared), through one temporary
+ * render-queue item; other queue items are parked. Every switch is put back
+ * and the item removed, even when the render fails.
+ */
+export declare function renderCutoutJsx(args: {
+    comp: unknown;
+    keep: string[];
+    outputPath: string;
+    outputTemplate: string;
+    start: number;
+    duration: number;
+    overwrite: boolean;
+}): string;
+export declare function runRenderCutout(args: Record<string, unknown>, io: FileIO): Promise<Json>;
+/** Default most frames subject.check_file reads one by one; beyond it, it reads pairs in steps. About 0.55 s a frame measured. */
+export declare const CHECK_FILE_MAX_FRAMES = 400;
+/**
+ * A change in opaque share between neighbouring frames above this is a
+ * jump. On the take of 2026-11-11 the rendered cut-out ran from 0.279 to
+ * 0.314 with no step over 0.012 at full frame rate; a dropped microphone is
+ * about 0.05. Half way, rounded down.
+ */
+export declare const CHECK_FILE_JUMP_LIMIT = 0.025;
+/** Which frames of an n-frame file to read: all up to `cap`; beyond it, pairs (k, k + 1) every step, and the first and last three. */
+export declare function checkFileFrames(n: number, cap: number): {
+    frames: number[];
+    step: number;
+};
+export declare function runCheckFile(args: Record<string, unknown>, io: FileIO): Promise<Json>;
+/**
+ * JSX: put the rendered cut-out in the comp in place of the live matte. The
+ * movie is in comp space (render_cutout renders the comp with only the
+ * cut-out and its fill on), so it goes in untransformed at the comp's centre,
+ * directly above the cut-out layer, over the cut-out's span. The cut-out's
+ * and the fill's pictures are switched off; they stay in the project, with
+ * the selections, for a later re-click. The original keeps its audio; the
+ * movie's audio is switched off.
+ */
+export declare function useCutoutJsx(args: {
+    comp: unknown;
+    layer: unknown;
+    path?: string;
+    item?: number;
+    startTime?: number;
 }): string;
 export {};
 //# sourceMappingURL=keying.d.ts.map

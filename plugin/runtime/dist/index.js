@@ -45691,6 +45691,958 @@ function frameLabel(index, time3) {
 init_config();
 init_registry();
 
+// src/operations/render.ts
+init_registry();
+var RENDER_QUEUE_UNDO_WARNING = " After this, undo and rollback are refused for the rest of the After Effects session unless acceptRenderQueueRisk: true: After Effects 2027 has gone into crash recovery on undo after scripted render-queue changes (observed twice on 2026-11-10; a precaution, not a proven cause). Save the project before undoing anything afterwards; project.open / project.new clear the block.";
+var READ_TEMPLATES_FN = `
+    function _readTemplates(_item) {
+        var _render = [];
+        var _output = [];
+        try { _render = _item.templates; } catch (eR) {}
+        try { _output = _item.outputModule(1).templates; } catch (eO) {}
+        return { renderTemplates: _render, outputTemplates: _output };
+    }
+`;
+var QUEUE_CHANGE_NOTE = "the project is left modified (unsaved): a render-queue item was added and removed. Nothing in the comps changed; save or revert as you normally would";
+var PARK_QUEUE_FN = `
+    function _parkQueue(rq) {
+        var _parked = [];
+        for (var _pi = 1; _pi <= rq.numItems; _pi++) {
+            var _ex = rq.item(_pi);
+            var _was = false;
+            try { _was = _ex.render; } catch (eR) {}
+            _parked.push(_was);
+            if (_was) { try { _ex.render = false; } catch (eP) {} }
+        }
+        return _parked;
+    }
+    function _unparkQueue(rq, _parked) {
+        for (var _ui = 0; _ui < _parked.length && _ui < rq.numItems; _ui++) {
+            if (_parked[_ui]) { try { rq.item(_ui + 1).render = true; } catch (eU) {} }
+        }
+    }
+`;
+registerOp({
+  name: "render.add_to_queue",
+  category: "render",
+  description: "Add a composition to the render queue. Optionally set output path." + RENDER_QUEUE_UNDO_WARNING,
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "outputPath",
+      type: "string",
+      description: "Output file path (optional, sets on the first output module)",
+      required: false
+    }
+  ],
+  toJsx(args) {
+    const outputPathJsx = args.outputPath ? `
+                try {
+                    _rqi.outputModules[1].file = AE.ensureParentDir(${jsxVal(args.outputPath)});
+                    _result.outputPath = ${jsxVal(args.outputPath)};
+                } catch(e) { _result.outputWarning = "could not set output path: " + AE.errText(e); }
+            ` : "";
+    return `
+            ${jsxCompPreamble(args)}
+            var _rqi = app.project.renderQueue.items.add(_comp);
+            var _result = { ok: true, queueIndex: app.project.renderQueue.numItems, compName: _comp.name };
+            ${outputPathJsx}
+            return _result;
+        `;
+  }
+});
+registerOp({
+  name: "render.start",
+  category: "render",
+  description: "Render queued items and verify each output file was newly written. Blocks until complete. Missing output directories are created first. Completed items are not counted as new renders." + RENDER_QUEUE_UNDO_WARNING,
+  params: [],
+  toJsx() {
+    return `
+            var rq = app.project.renderQueue;
+            if (rq.numItems === 0) return { ok: false, error: "render queue is empty" };
+            var _before = [];
+            function _fileMeta(_path) {
+                if (!_path) return { exists: false, bytes: 0, modifiedMs: null };
+                var _file = new File(_path);
+                if (!_file.exists) return { exists: false, bytes: 0, modifiedMs: null };
+                var _date = _file.modified;
+                return { exists: true, bytes: _file.length, modifiedMs: _date ? _date.getTime() : null };
+            }
+            // A completed item can retain a true render flag. Only QUEUED
+            // items are candidates for this invocation's output evidence.
+            for (var _ri = 1; _ri <= rq.numItems; _ri++) {
+                var _it = rq.item(_ri);
+                if (!_it.render || _it.status !== RQItemStatus.QUEUED) continue;
+                var _outputs = [];
+                for (var _oi = 1; _oi <= _it.numOutputModules; _oi++) {
+                    var _target = _it.outputModule(_oi).file;
+                    if (_target) AE.ensureParentDir(_target);
+                    var _path = _target ? _target.fsName : null;
+                    if (!_path) return { ok: false, rendered: 0,
+                        error: "queued item " + _ri + " output module " + _oi + " has no output path" };
+                    _outputs.push({ path: _path, before: _fileMeta(_path) });
+                }
+                _before.push({ index: _ri, outputs: _outputs });
+            }
+            if (_before.length === 0) return { ok: false, rendered: 0, error: "no queued render items; add a fresh queue item or requeue an eligible item" };
+            rq.render();
+            var _items = [];
+            var _rendered = 0;
+            for (var _bi = 0; _bi < _before.length; _bi++) {
+                var _entry = _before[_bi];
+                var _afterItem = rq.item(_entry.index);
+                var _verified = _afterItem.status === RQItemStatus.DONE && _entry.outputs.length > 0;
+                var _checked = [];
+                for (var _ci = 0; _ci < _entry.outputs.length; _ci++) {
+                    var _out = _entry.outputs[_ci];
+                    var _meta = _fileMeta(_out.path);
+                    var _fresh = _meta.exists && _meta.bytes > 0 &&
+                        (!_out.before.exists || _meta.bytes !== _out.before.bytes ||
+                         (_meta.modifiedMs !== null && _meta.modifiedMs !== _out.before.modifiedMs));
+                    if (!_fresh) _verified = false;
+                    _checked.push({ path: _out.path, exists: _meta.exists, bytes: _meta.bytes,
+                        modifiedMs: _meta.modifiedMs, newlyWritten: _fresh });
+                }
+                if (_verified) _rendered++;
+                _items.push({ index: _entry.index, done: _afterItem.status === RQItemStatus.DONE,
+                    verified: _verified, outputs: _checked });
+            }
+            return { ok: _rendered === _before.length, rendered: _rendered,
+                error: _rendered === _before.length ? null : "one or more queued items did not produce a verifiably new nonempty output file",
+                items: _items };
+        `;
+  }
+});
+registerOp({
+  name: "render.clear_queue",
+  category: "render",
+  description: "Remove all items from the render queue.",
+  params: [],
+  toJsx() {
+    return `
+            var rq = app.project.renderQueue;
+            var removed = 0;
+            while (rq.numItems > 0) {
+                rq.item(1).remove();
+                removed++;
+            }
+            return { ok: true, removed: removed };
+        `;
+  }
+});
+function jsxRqItemPreamble(args) {
+  return `
+        var rq = app.project.renderQueue;
+        if (rq.numItems === 0) return { ok: false, error: "render queue is empty" };
+        var _qi = ${jsxVal(args.queueIndex ?? null)};
+        if (_qi === null) _qi = rq.numItems;
+        if (_qi < 1 || _qi > rq.numItems) return { ok: false, error: "queue index out of range (1-" + rq.numItems + ")" };
+        var _rqi = rq.item(_qi);
+    `;
+}
+registerOp({
+  name: "render.set_output",
+  category: "render",
+  description: "Configure a render-queue item: render/output templates, output path, time span, render flag, skipFrames, logType, postRenderAction. Discover template names with render.list_templates; raw settings via render.get_settings / render.set_settings.",
+  params: [
+    {
+      name: "queueIndex",
+      type: "number",
+      description: "1-based queue item index (default: last item)",
+      required: false
+    },
+    {
+      name: "renderTemplate",
+      type: "string",
+      description: 'Render settings template name (e.g. "Best Settings", "Draft Settings")',
+      required: false
+    },
+    {
+      name: "outputTemplate",
+      type: "string",
+      description: 'Output module template name (e.g. "Lossless", "High Quality")',
+      required: false
+    },
+    { name: "outputPath", type: "string", description: "Output file path", required: false },
+    {
+      name: "timeSpanStart",
+      type: "number",
+      description: "Render span start in seconds (comp time)",
+      required: false
+    },
+    {
+      name: "timeSpanDuration",
+      type: "number",
+      description: "Render span duration in seconds",
+      required: false
+    },
+    {
+      name: "outputModuleIndex",
+      type: "number",
+      description: "1-based output module index (default 1)",
+      required: false,
+      default: 1
+    },
+    {
+      name: "render",
+      type: "boolean",
+      description: "Whether this item renders when the queue starts (the Render checkbox)",
+      required: false
+    },
+    {
+      name: "skipFrames",
+      type: "number",
+      description: "Render every Nth frame (0 = every frame)",
+      required: false
+    },
+    {
+      name: "logType",
+      type: "string",
+      description: "errorsOnly|errorsAndSettings|errorsAndPerFrameInfo",
+      required: false
+    },
+    {
+      name: "postRenderAction",
+      type: "string",
+      description: "none|import|importAndReplaceUsage|setProxy (on the output module)",
+      required: false
+    },
+    {
+      name: "includeSourceXMP",
+      type: "boolean",
+      description: "Embed source-footage XMP metadata in the output",
+      required: false
+    },
+    {
+      name: "queueItemNotify",
+      type: "boolean",
+      description: "Per-item Notify checkbox (AE 22.0+)",
+      required: false
+    },
+    {
+      name: "queueNotify",
+      type: "boolean",
+      description: "QUEUE-WIDE Notify checkbox (RenderQueue.queueNotify, AE 22.0+)",
+      required: false
+    }
+  ],
+  toJsx(args) {
+    const rqiSets = [];
+    if (args.queueNotify !== void 0)
+      rqiSets.push(
+        `try { rq.queueNotify = ${jsxVal(args.queueNotify)}; } catch (eQq) { _w.push("queueNotify (AE 22.0+): " + AE.errText(eQq)); }`
+      );
+    if (args.renderTemplate !== void 0)
+      rqiSets.push(`_applyTpl(_rqi, ${jsxVal(args.renderTemplate)}, "renderTemplate");`);
+    if (args.timeSpanStart !== void 0)
+      rqiSets.push(
+        `try { _rqi.timeSpanStart = ${jsxVal(args.timeSpanStart)}; } catch (eTs) { _w.push("timeSpanStart: " + AE.errText(eTs)); }`
+      );
+    if (args.timeSpanDuration !== void 0)
+      rqiSets.push(
+        `try { _rqi.timeSpanDuration = ${jsxVal(args.timeSpanDuration)}; } catch (eTd) { _w.push("timeSpanDuration: " + AE.errText(eTd)); }`
+      );
+    if (args.render !== void 0)
+      rqiSets.push(
+        `try { _rqi.render = ${jsxVal(args.render)}; } catch (eRf) { _w.push("render: " + AE.errText(eRf)); }`
+      );
+    if (args.skipFrames !== void 0)
+      rqiSets.push(
+        `try { _rqi.skipFrames = ${jsxVal(args.skipFrames)}; } catch (eSk) { _w.push("skipFrames: " + AE.errText(eSk)); }`
+      );
+    if (args.logType !== void 0)
+      rqiSets.push(`
+                try {
+                    var _ltMap = { "errorsOnly": LogType.ERRORS_ONLY, "errorsAndSettings": LogType.ERRORS_AND_SETTINGS, "errorsAndPerFrameInfo": LogType.ERRORS_AND_PER_FRAME_INFO };
+                    if (_ltMap.hasOwnProperty(${jsxVal(args.logType)})) {
+                        _rqi.logType = _ltMap[${jsxVal(args.logType)}];
+                    } else { _w.push("logType: unknown value " + ${jsxVal(args.logType)}); }
+                } catch (eLt) { _w.push("logType: " + AE.errText(eLt)); }
+            `);
+    if (args.queueItemNotify !== void 0)
+      rqiSets.push(
+        `try { _rqi.queueItemNotify = ${jsxVal(args.queueItemNotify)}; } catch (eQn) { _w.push("queueItemNotify (AE 22.0+): " + AE.errText(eQn)); }`
+      );
+    const omSets = [];
+    if (args.outputTemplate !== void 0)
+      omSets.push(`_applyTpl(_om, ${jsxVal(args.outputTemplate)}, "outputTemplate");`);
+    if (args.outputPath !== void 0)
+      omSets.push(
+        `try { _om.file = AE.ensureParentDir(${jsxVal(args.outputPath)}); } catch (eOp) { _w.push("outputPath: " + AE.errText(eOp)); }`
+      );
+    if (args.postRenderAction !== void 0)
+      omSets.push(`
+                try {
+                    var _praMap = { "none": PostRenderAction.NONE, "import": PostRenderAction.IMPORT, "importAndReplaceUsage": PostRenderAction.IMPORT_AND_REPLACE_USAGE, "setProxy": PostRenderAction.SET_PROXY };
+                    if (_praMap.hasOwnProperty(${jsxVal(args.postRenderAction)})) {
+                        _om.postRenderAction = _praMap[${jsxVal(args.postRenderAction)}];
+                    } else { _w.push("postRenderAction: unknown value " + ${jsxVal(args.postRenderAction)}); }
+                } catch (ePa) { _w.push("postRenderAction: " + AE.errText(ePa)); }
+            `);
+    if (args.includeSourceXMP !== void 0)
+      omSets.push(
+        `try { _om.includeSourceXMP = ${jsxVal(args.includeSourceXMP)}; } catch (eXm) { _w.push("includeSourceXMP: " + AE.errText(eXm)); }`
+      );
+    return `
+            ${jsxRqItemPreamble(args)}
+            var _w = [];
+            // Template names are LOCALIZED ("Lossless" does not exist on a
+            // Japanese AE). Exact name first, then a case-insensitive scan of
+            // the target's own template list; when nothing matches, the
+            // warning carries that list so the caller can self-correct
+            // without a separate render.list_templates round trip.
+            function _applyTpl(target, name, label) {
+                try { target.applyTemplate(name); return; } catch (eT1) {}
+                var _avail = [];
+                try { _avail = target.templates; } catch (eT2) {}
+                var _want = String(name).toLowerCase();
+                for (var _ti = 0; _ti < _avail.length; _ti++) {
+                    if (String(_avail[_ti]).toLowerCase() === _want) {
+                        try { target.applyTemplate(_avail[_ti]); return; } catch (eT3) {}
+                    }
+                }
+                _w.push(label + ": no template named '" + name + "' \u2014 available: " + _avail.join(" | "));
+            }
+            ${rqiSets.join("\n")}
+            var _om = null;
+            try { _om = _rqi.outputModule(${jsxVal(args.outputModuleIndex ?? 1)}); } catch (eOm) {}
+            if (!_om) return { ok: false, error: "no output module at index " + ${jsxVal(args.outputModuleIndex ?? 1)} };
+            ${omSets.join("\n")}
+            return {
+                ok: true,
+                queueIndex: _qi,
+                comp: _rqi.comp.name,
+                timeSpanStart: _rqi.timeSpanStart,
+                timeSpanDuration: _rqi.timeSpanDuration,
+                outputPath: _om.file ? _om.file.fsName.replace(/\\\\/g, "/") : null,
+                warnings: _w
+            };
+        `;
+  }
+});
+registerOp({
+  name: "render.get_settings",
+  category: "render",
+  readOnly: true,
+  description: "Read the raw render settings of a queue item and the settings of each of its output modules (getSettings, AE 13.0+). format 'settable' returns only keys accepted by render.set_settings / render.set_om_settings.",
+  params: [
+    {
+      name: "queueIndex",
+      type: "number",
+      description: "1-based queue item index (default: last item)",
+      required: false
+    },
+    {
+      name: "format",
+      type: "string",
+      description: "settable|all (default settable)",
+      required: false,
+      default: "settable"
+    }
+  ],
+  toJsx(args) {
+    return `
+            ${jsxRqItemPreamble(args)}
+            if (typeof _rqi.getSettings !== "function") return { ok: false, error: "getSettings needs AE 13.0+" };
+            var _fmt = ${jsxVal(args.format ?? "settable")} === "all" ? GetSettingsFormat.STRING : GetSettingsFormat.STRING_SETTABLE;
+            var _rs = null;
+            try { _rs = _rqi.getSettings(_fmt); } catch (eRs) { return { ok: false, error: "getSettings failed: " + AE.errText(eRs) }; }
+            var _oms = [];
+            for (var _o = 1; _o <= _rqi.numOutputModules; _o++) {
+                var _om = _rqi.outputModule(_o);
+                var _os = null;
+                try { _os = _om.getSettings(_fmt); } catch (eOs) {}
+                _oms.push({ index: _o, name: AE.safeGet(function () { return _om.name; }, null), settings: _os });
+            }
+            return { ok: true, queueIndex: _qi, comp: _rqi.comp ? _rqi.comp.name : null, renderSettings: _rs, outputModules: _oms };
+        `;
+  }
+});
+registerOp({
+  name: "render.set_settings",
+  category: "render",
+  description: 'Set raw render settings on a queue item (RenderQueueItem.setSettings, AE 13.0+), e.g. { "Quality": "Best", "Resolution": "Half" }. Discover valid keys/values with render.get_settings.',
+  params: [
+    {
+      name: "queueIndex",
+      type: "number",
+      description: "1-based queue item index (default: last item)",
+      required: false
+    },
+    {
+      name: "settings",
+      type: "object",
+      description: "Key/value map from render.get_settings format 'settable'",
+      required: true
+    }
+  ],
+  toJsx(args) {
+    return `
+            ${jsxRqItemPreamble(args)}
+            if (typeof _rqi.setSettings !== "function") return { ok: false, error: "setSettings needs AE 13.0+" };
+            try { _rqi.setSettings(${jsxVal(args.settings)}); } catch (eSs) { return { ok: false, error: "setSettings failed: " + AE.errText(eSs) }; }
+            var _after = null;
+            try { _after = _rqi.getSettings(GetSettingsFormat.STRING_SETTABLE); } catch (eAf) {}
+            return { ok: true, queueIndex: _qi, renderSettings: _after };
+        `;
+  }
+});
+registerOp({
+  name: "render.set_om_settings",
+  category: "render",
+  description: 'Set raw output-module settings on a queue item (OutputModule.setSettings, AE 13.0+), e.g. { "Format": "QuickTime", "Channels": "RGB + Alpha" }. Discover valid keys/values with render.get_settings.',
+  params: [
+    {
+      name: "queueIndex",
+      type: "number",
+      description: "1-based queue item index (default: last item)",
+      required: false
+    },
+    {
+      name: "outputModuleIndex",
+      type: "number",
+      description: "1-based output module index (default 1)",
+      required: false,
+      default: 1
+    },
+    {
+      name: "settings",
+      type: "object",
+      description: "Key/value map from render.get_settings format 'settable'",
+      required: true
+    }
+  ],
+  toJsx(args) {
+    return `
+            ${jsxRqItemPreamble(args)}
+            var _om = null;
+            try { _om = _rqi.outputModule(${jsxVal(args.outputModuleIndex ?? 1)}); } catch (eOm) {}
+            if (!_om) return { ok: false, error: "no output module at index " + ${jsxVal(args.outputModuleIndex ?? 1)} };
+            if (typeof _om.setSettings !== "function") return { ok: false, error: "setSettings needs AE 13.0+" };
+            try { _om.setSettings(${jsxVal(args.settings)}); } catch (eSs) { return { ok: false, error: "setSettings failed: " + AE.errText(eSs) }; }
+            var _after = null;
+            try { _after = _om.getSettings(GetSettingsFormat.STRING_SETTABLE); } catch (eAf) {}
+            return { ok: true, queueIndex: _qi, outputModuleIndex: ${jsxVal(args.outputModuleIndex ?? 1)}, settings: _after };
+        `;
+  }
+});
+registerOp({
+  name: "render.remove_item",
+  category: "render",
+  description: "Remove ONE item from the render queue by its 1-based index (render.clear_queue removes all)." + RENDER_QUEUE_UNDO_WARNING,
+  params: [
+    {
+      name: "queueIndex",
+      type: "number",
+      description: "1-based queue item index (explicit \u2014 no default for a destructive op)",
+      required: true
+    }
+  ],
+  toJsx(args) {
+    return `
+            ${jsxRqItemPreamble(args)}
+            var _compName = _rqi.comp ? _rqi.comp.name : null;
+            try { _rqi.remove(); } catch (eRm) { return { ok: false, error: "remove failed: " + AE.errText(eRm) }; }
+            return { ok: true, removed: _compName, remaining: rq.numItems };
+        `;
+  }
+});
+registerOp({
+  name: "render.duplicate_item",
+  category: "render",
+  description: "Duplicate a render-queue item (RenderQueueItem.duplicate) \u2014 e.g. to render the same comp with a second settings/output combination.",
+  params: [
+    {
+      name: "queueIndex",
+      type: "number",
+      description: "1-based queue item index (default: last item)",
+      required: false
+    }
+  ],
+  toJsx(args) {
+    return `
+            ${jsxRqItemPreamble(args)}
+            var _dup = null;
+            try { _dup = _rqi.duplicate(); } catch (eDp) { return { ok: false, error: "duplicate failed: " + AE.errText(eDp) }; }
+            return { ok: true, comp: _dup.comp ? _dup.comp.name : null, numItems: rq.numItems };
+        `;
+  }
+});
+registerOp({
+  name: "render.list_templates",
+  category: "render",
+  readOnly: true,
+  description: "List available render-settings templates and output-module templates. They are read from a queue item: the first one, or, when the queue is empty and `comp` is given, a temporary item for that comp that is removed again (the project is then left modified by the queue change; render.preview with listTemplates does the same). A temporary item counts as a render-queue change:" + RENDER_QUEUE_UNDO_WARNING,
+  params: [
+    {
+      name: "comp",
+      type: "any",
+      description: "Comp name or id for a temporary queue item, used only when the queue is empty",
+      required: false
+    }
+  ],
+  toJsx(args) {
+    return `
+            ${READ_TEMPLATES_FN}
+            var rq = app.project.renderQueue;
+            if (rq.numItems > 0) {
+                var _first = _readTemplates(rq.item(1));
+                return { ok: true, renderTemplates: _first.renderTemplates, outputTemplates: _first.outputTemplates };
+            }
+            var _compArg = ${jsxVal(args.comp ?? null)};
+            if (${jsxVal(readOnlyMode())}) return { ok: false, error: "the render queue is empty, and AE_MCP_READONLY=1 forbids the temporary queue item that would modify the project" };
+            if (_compArg === null) return { ok: false, error: "the render queue is empty: pass comp (a temporary item is added, read and removed), or use render.preview with listTemplates" };
+            var _comp = AE.findCompByNameOrId(_compArg);
+            if (!_comp) return { ok: false, error: "no comp matching " + String(_compArg) };
+            var _tmp = null;
+            try {
+                _tmp = rq.items.add(_comp);
+                var _read = _readTemplates(_tmp);
+                return { ok: true, renderTemplates: _read.renderTemplates, outputTemplates: _read.outputTemplates, temporaryItem: true, projectModified: true, projectNote: ${jsxVal(QUEUE_CHANGE_NOTE)} };
+            } catch (eT) {
+                return { ok: false, error: "could not read templates: " + AE.errText(eT) };
+            } finally {
+                if (_tmp) { try { _tmp.remove(); } catch (eRm) {} }
+            }
+        `;
+  }
+});
+registerOp({
+  name: "render.status",
+  category: "render",
+  readOnly: true,
+  description: "Report the render queue state: per-item status, time spans, and output paths.",
+  params: [],
+  toJsx() {
+    return `
+            var rq = app.project.renderQueue;
+            var _statusNames = {};
+            try {
+                _statusNames[RQItemStatus.WILL_CONTINUE] = "WILL_CONTINUE";
+                _statusNames[RQItemStatus.NEEDS_OUTPUT] = "NEEDS_OUTPUT";
+                _statusNames[RQItemStatus.UNQUEUED] = "UNQUEUED";
+                _statusNames[RQItemStatus.QUEUED] = "QUEUED";
+                _statusNames[RQItemStatus.RENDERING] = "RENDERING";
+                _statusNames[RQItemStatus.USER_STOPPED] = "USER_STOPPED";
+                _statusNames[RQItemStatus.ERR_STOPPED] = "ERR_STOPPED";
+                _statusNames[RQItemStatus.DONE] = "DONE";
+            } catch (eSn) {}
+            var _items = [];
+            for (var _i = 1; _i <= rq.numItems; _i++) {
+                var _rqi = rq.item(_i);
+                var _outputs = [];
+                try {
+                    for (var _o = 1; _o <= _rqi.numOutputModules; _o++) {
+                        var _f = _rqi.outputModule(_o).file;
+                        _outputs.push(_f ? _f.fsName.replace(/\\\\/g, "/") : null);
+                    }
+                } catch (eOut) {}
+                _items.push({
+                    index: _i,
+                    comp: _rqi.comp ? _rqi.comp.name : null,
+                    status: _statusNames[_rqi.status] || String(_rqi.status),
+                    render: _rqi.render,
+                    timeSpanStart: _rqi.timeSpanStart,
+                    timeSpanDuration: _rqi.timeSpanDuration,
+                    elapsedSeconds: AE.safeGet(function () { return _rqi.elapsedSeconds; }, null),
+                    outputs: _outputs
+                });
+            }
+            return { ok: true, rendering: rq.rendering, numItems: rq.numItems, canQueueInAME: AE.safeGet(function () { return rq.canQueueInAME; }, false), items: _items };
+        `;
+  }
+});
+registerOp({
+  name: "render.queue_in_ame",
+  category: "render",
+  description: "Send the render queue to Adobe Media Encoder (for H.264/HEVC etc.). Requires AME installed. renderImmediately=true starts the AME queue.",
+  params: [
+    {
+      name: "renderImmediately",
+      type: "boolean",
+      description: "Start rendering in AME right away (default false)",
+      required: false,
+      default: false
+    }
+  ],
+  toJsx(args) {
+    return `
+            var rq = app.project.renderQueue;
+            if (rq.numItems === 0) return { ok: false, error: "render queue is empty" };
+            if (typeof rq.queueInAME !== "function") return { ok: false, error: "queueInAME not available (needs AE 14.0 / CC 2017+)" };
+            var _can = false;
+            try { _can = rq.canQueueInAME; } catch (eC) {}
+            if (!_can) return { ok: false, error: "cannot queue in AME \u2014 is Adobe Media Encoder installed and at least one item queued?" };
+            rq.queueInAME(${jsxVal(!!args.renderImmediately)});
+            return { ok: true, sent: rq.numItems, renderImmediately: ${jsxVal(!!args.renderImmediately)} };
+        `;
+  }
+});
+registerOp({
+  name: "render.variants",
+  category: "render",
+  description: "Render the same comp several times with different property values \u2014 a slider that switches a state, a text that changes per version \u2014 in ONE call. Each variant sets its values (static properties only; keyed ones are refused), renders through a temporary queue item to outputPath with {name}/{index} substituted, then the original values are restored. Other queue items are not rendered. Blocks until done: raise timeoutMs.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "variants",
+      type: "array",
+      description: '[{ name, sets: [{ layer, property, value }, \u2026] }, \u2026] \u2014 e.g. [{ name: "A", sets: [{ layer: "Ctrl", property: ["Effects","Slider Control","Slider"], value: 1 }] }]',
+      required: true
+    },
+    {
+      name: "outputPath",
+      type: "string",
+      description: "Output file path template; {name} and {index} are replaced per variant",
+      required: true
+    },
+    {
+      name: "renderTemplate",
+      type: "string",
+      description: "Render settings template name",
+      required: false
+    },
+    {
+      name: "outputTemplate",
+      type: "string",
+      description: "Output module template name",
+      required: false
+    },
+    {
+      name: "timeSpanStart",
+      type: "number",
+      description: "Render span start in seconds",
+      required: false
+    },
+    {
+      name: "timeSpanDuration",
+      type: "number",
+      description: "Render span duration in seconds",
+      required: false
+    }
+  ],
+  toJsx(args) {
+    const variants = Array.isArray(args.variants) ? args.variants : [];
+    if (variants.length === 0) {
+      return jsxFail("variants must be a non-empty array");
+    }
+    for (const [i, v] of variants.entries()) {
+      const variant = v;
+      if (!variant || typeof variant !== "object" || typeof variant.name !== "string") {
+        return jsxFail(`variants[${i}] needs a string name`);
+      }
+      if (!Array.isArray(variant.sets)) {
+        return jsxFail(`variants[${i}].sets must be an array of { layer, property, value }`);
+      }
+      for (const [j, s] of variant.sets.entries()) {
+        const set2 = s;
+        if (!set2 || typeof set2 !== "object" || set2.layer === void 0 || !Array.isArray(set2.property) || set2.value === void 0) {
+          return jsxFail(`variants[${i}].sets[${j}] must be { layer, property: [path], value }`);
+        }
+      }
+    }
+    const template = String(args.outputPath);
+    if (variants.length > 1 && !template.includes("{name}") && !template.includes("{index}")) {
+      return jsxFail(
+        "outputPath must contain {name} or {index} when rendering more than one variant, or every render overwrites the last"
+      );
+    }
+    return `
+            ${jsxCompPreamble(args)}
+            var _variants = ${jsxVal(variants)};
+            var _tpl = ${jsxVal(template)};
+            var rq = app.project.renderQueue;
+            ${PARK_QUEUE_FN}
+            // Only the temporary item may render: park every existing item.
+            var _parked = _parkQueue(rq);
+            var _results = [];
+            var _failed = 0;
+            try {
+                for (var _vi = 0; _vi < _variants.length; _vi++) {
+                    var _v = _variants[_vi];
+                    var _entry = { name: _v.name, ok: true, warnings: [] };
+                    var _restore = [];
+                    var _rqi = null;
+                    try {
+                        for (var _si = 0; _si < _v.sets.length; _si++) {
+                            var _s = _v.sets[_si];
+                            var _layer = AE.findLayerInComp(_comp, _s.layer);
+                            if (!_layer) throw new Error("no layer matching " + String(_s.layer));
+                            var _prop = AE.propertyAtPath(_layer, _s.property);
+                            if (!_prop || _prop.propertyType !== PropertyType.PROPERTY) throw new Error("property " + _s.property.join("/") + " not found on '" + _layer.name + "'");
+                            if (AE.hasKeys(_prop)) throw new Error("property " + _s.property.join("/") + " on '" + _layer.name + "' has keyframes \u2014 variants switch static values only");
+                            _restore.push({ prop: _prop, value: AE.readValue(_prop) });
+                            AE.writeValue(_prop, _s.value);
+                        }
+                        var _safe = String(_v.name).replace(/[\\\\\\/:*?"<>|]/g, "_");
+                        var _path = _tpl.replace(/\\{name\\}/g, _safe).replace(/\\{index\\}/g, String(_vi));
+                        _rqi = rq.items.add(_comp);
+                        ${args.renderTemplate !== void 0 ? `var _wr = AE.applyTemplate(_rqi, ${jsxVal(args.renderTemplate)}, "renderTemplate"); if (_wr) _entry.warnings.push(_wr);` : ""}
+                        var _om = _rqi.outputModule(1);
+                        ${args.outputTemplate !== void 0 ? `var _wo = AE.applyTemplate(_om, ${jsxVal(args.outputTemplate)}, "outputTemplate"); if (_wo) _entry.warnings.push(_wo);` : ""}
+                        _om.file = AE.ensureParentDir(_path);
+                        ${args.timeSpanStart !== void 0 ? `_rqi.timeSpanStart = ${jsxVal(args.timeSpanStart)};` : ""}
+                        ${args.timeSpanDuration !== void 0 ? `_rqi.timeSpanDuration = ${jsxVal(args.timeSpanDuration)};` : ""}
+                        rq.render();
+                        _entry.status = String(_rqi.status);
+                        _entry.outputPath = _om.file ? _om.file.fsName.replace(/\\\\/g, "/") : _path;
+                        if (_rqi.status === RQItemStatus.ERR_STOPPED || _rqi.status === RQItemStatus.USER_STOPPED) { _entry.ok = false; _entry.error = "render stopped (" + _entry.status + ")"; }
+                    } catch (eV) {
+                        _entry.ok = false;
+                        _entry.error = AE.errText(eV);
+                    } finally {
+                        if (_rqi) { try { _rqi.remove(); } catch (eRm) {} }
+                        for (var _ri = _restore.length - 1; _ri >= 0; _ri--) {
+                            try { AE.writeValue(_restore[_ri].prop, _restore[_ri].value); } catch (eRs) { _entry.warnings.push("restore failed: " + AE.errText(eRs)); }
+                        }
+                    }
+                    if (!_entry.ok) _failed++;
+                    _results.push(_entry);
+                }
+            } finally {
+                _unparkQueue(rq, _parked);
+            }
+            return { ok: _failed === 0, error: _failed === 0 ? null : (_failed + " of " + _results.length + " variants failed"), rendered: _results.length - _failed, variants: _results };
+        `;
+  }
+});
+registerOp({
+  name: "render.save_template",
+  category: "render",
+  appConfig: true,
+  description: "Save a queue item's current render settings, or an output module's current settings, as a named template (saveAsTemplate) for reuse via render.set_output.",
+  params: [
+    {
+      name: "type",
+      type: "string",
+      description: "render (RenderQueueItem settings) | output (OutputModule settings)",
+      required: true
+    },
+    { name: "name", type: "string", description: "Template name to save under", required: true },
+    {
+      name: "queueIndex",
+      type: "number",
+      description: "1-based queue item index (default: last item)",
+      required: false
+    },
+    {
+      name: "outputModuleIndex",
+      type: "number",
+      description: "1-based output module index (type=output only, default 1)",
+      required: false,
+      default: 1
+    }
+  ],
+  toJsx(args) {
+    return `
+            ${jsxRqItemPreamble(args)}
+            var _type = ${jsxVal(args.type)};
+            if (_type === "render") {
+                try { _rqi.saveAsTemplate(${jsxVal(args.name)}); } catch (eSt) { return { ok: false, error: "saveAsTemplate failed: " + AE.errText(eSt) }; }
+                return { ok: true, type: "render", name: ${jsxVal(args.name)} };
+            }
+            if (_type === "output") {
+                var _om = null;
+                try { _om = _rqi.outputModule(${jsxVal(args.outputModuleIndex ?? 1)}); } catch (eOm) {}
+                if (!_om) return { ok: false, error: "no output module at index " + ${jsxVal(args.outputModuleIndex ?? 1)} };
+                try { _om.saveAsTemplate(${jsxVal(args.name)}); } catch (eSo) { return { ok: false, error: "saveAsTemplate failed: " + AE.errText(eSo) }; }
+                return { ok: true, type: "output", name: ${jsxVal(args.name)} };
+            }
+            return { ok: false, error: "type must be render|output" };
+        `;
+  }
+});
+var PREVIEW_RESOLUTIONS = {
+  full: "Full",
+  half: "Half",
+  third: "Third",
+  quarter: "Quarter"
+};
+registerOp({
+  name: "render.preview",
+  category: "render",
+  description: "Render a quick preview movie of a comp's work area (or the whole comp, or a span) through the render queue, so it can be watched at speed. Adds ONE temporary queue item, renders only that item (others are parked and their Render checkboxes restored), then removes it: the queue is left as it was found. Never overwrites an existing file unless overwrite is true; creates the output folder. Returns outputPath, timeSpanStart, durationSeconds, frameCount, frameRate, renderSeconds (wall clock of the render), elapsedSeconds (AE's own count), bytes, outputTemplate, resolution (+ resolutionReadBack) and warnings. It changes the render queue:" + RENDER_QUEUE_UNDO_WARNING + " Blocks until done: raise ae_do timeoutMs for long comps (235 frames at 1080\xD71920 with 'High Quality' took about 20 s). Defaults are what is known to work: output template 'High Quality' (a ProRes .mov) at full resolution; resolution 'half' was measured live (540\xD7960 from 1080\xD71920, about a third of the time). listTemplates: true renders nothing and returns the render-settings and output-module template names, read from a temporary queue item that is removed again. Every answer carries projectModified: true and projectNote: adding and removing a queue item leaves the project unsaved.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    {
+      name: "outputPath",
+      type: "string",
+      description: "Movie file path (the output template may change the extension; the path AE actually wrote is returned). Required unless listTemplates",
+      required: false
+    },
+    {
+      name: "listTemplates",
+      type: "boolean",
+      description: "Render nothing: return renderTemplates and outputTemplates, read from a temporary queue item for comp that is removed again",
+      required: false,
+      default: false
+    },
+    {
+      name: "span",
+      type: "string",
+      description: "workArea (default) | comp \u2014 what to render when no explicit time span is given",
+      required: false,
+      default: "workArea"
+    },
+    {
+      name: "timeSpanStart",
+      type: "number",
+      description: "Explicit span start in seconds (comp time); overrides span",
+      required: false
+    },
+    {
+      name: "timeSpanDuration",
+      type: "number",
+      description: "Explicit span duration in seconds; overrides span",
+      required: false
+    },
+    {
+      name: "outputTemplate",
+      type: "string",
+      description: "Output module template (default 'High Quality'); refused, with the available names, when it does not exist",
+      required: false,
+      default: "High Quality"
+    },
+    {
+      name: "renderTemplate",
+      type: "string",
+      description: "Render settings template (default: the queue item's own default)",
+      required: false
+    },
+    {
+      name: "resolution",
+      type: "string",
+      description: "full (default, untouched) | half | third | quarter. Set through setSettings({ Resolution }) and read back; resolutionReadBack and a warning say whether it took",
+      required: false,
+      default: "full"
+    },
+    {
+      name: "renderSettings",
+      type: "object",
+      description: "Raw render settings applied to the temporary item (RenderQueueItem.setSettings, keys from render.get_settings), after renderTemplate and resolution",
+      required: false
+    },
+    {
+      name: "overwrite",
+      type: "boolean",
+      description: "Replace an existing file at the output path (default false: refuse)",
+      required: false,
+      default: false
+    }
+  ],
+  toJsx(args) {
+    if (args.listTemplates === true) {
+      return `
+            ${jsxCompPreamble(args)}
+            ${READ_TEMPLATES_FN}
+            var rq = app.project.renderQueue;
+            if (AE.safeGet(function () { return rq.rendering; }, false)) return { ok: false, error: "the render queue is already rendering; wait for it to finish" };
+            var _tmp = null;
+            try {
+                _tmp = rq.items.add(_comp);
+                var _read = _readTemplates(_tmp);
+                return { ok: true, renderTemplates: _read.renderTemplates, outputTemplates: _read.outputTemplates, projectModified: true, projectNote: ${jsxVal(QUEUE_CHANGE_NOTE)} };
+            } catch (eT) {
+                return { ok: false, error: "could not read templates: " + AE.errText(eT), projectModified: true, projectNote: ${jsxVal(QUEUE_CHANGE_NOTE)} };
+            } finally {
+                if (_tmp) { try { _tmp.remove(); } catch (eRm) {} }
+            }
+        `;
+    }
+    if (typeof args.outputPath !== "string" || args.outputPath === "")
+      return jsxFail("outputPath is required (unless listTemplates is true)");
+    const span = args.span ?? "workArea";
+    if (span !== "workArea" && span !== "comp") return jsxFail("span must be workArea or comp");
+    const resolution = String(args.resolution ?? "full").toLowerCase();
+    if (!(resolution in PREVIEW_RESOLUTIONS))
+      return jsxFail("resolution must be full, half, third or quarter");
+    if (args.timeSpanStart === void 0 !== (args.timeSpanDuration === void 0))
+      return jsxFail("give both timeSpanStart and timeSpanDuration, or neither");
+    if (args.timeSpanDuration !== void 0 && !(Number(args.timeSpanDuration) > 0))
+      return jsxFail("timeSpanDuration must be above 0");
+    return `
+            ${jsxCompPreamble(args)}
+            ${PARK_QUEUE_FN}
+            var rq = app.project.renderQueue;
+            if (AE.safeGet(function () { return rq.rendering; }, false)) return { ok: false, error: "the render queue is already rendering; wait for it to finish" };
+            var _overwrite = ${jsxVal(!!args.overwrite)};
+            var _want = ${jsxVal(String(args.outputPath))};
+            function _meta(_path) {
+                var _f = new File(_path);
+                if (!_f.exists) return { exists: false, bytes: 0, modifiedMs: null };
+                var _d = _f.modified;
+                return { exists: true, bytes: _f.length, modifiedMs: _d ? _d.getTime() : null };
+            }
+            var _existing = _meta(_want);
+            if (_existing.exists && !_overwrite) return { ok: false, error: "a file already exists at " + _want + "; pass overwrite: true to replace it, or choose another outputPath", existing: _want };
+            var _w = [];
+            var _out = null;
+            var _rqi = null;
+            var _numBefore = rq.numItems;
+            var _parked = _parkQueue(rq);
+            try {
+                _rqi = rq.items.add(_comp);
+                ${args.renderTemplate !== void 0 ? `var _wr = AE.applyTemplate(_rqi, ${jsxVal(args.renderTemplate)}, "renderTemplate"); if (_wr) throw new Error(_wr);` : ""}
+                var _om = _rqi.outputModule(1);
+                var _wo = AE.applyTemplate(_om, ${jsxVal(args.outputTemplate ?? "High Quality")}, "outputTemplate");
+                if (_wo) throw new Error(_wo);
+                var _start = ${args.timeSpanStart !== void 0 ? jsxVal(args.timeSpanStart) : span === "comp" ? "0" : "_comp.workAreaStart"};
+                var _dur = ${args.timeSpanDuration !== void 0 ? jsxVal(args.timeSpanDuration) : span === "comp" ? "_comp.duration" : "_comp.workAreaDuration"};
+                _rqi.timeSpanStart = _start;
+                _rqi.timeSpanDuration = _dur;
+                var _res = ${jsxVal(resolution)};
+                var _resBack = null;
+                if (_res !== "full") {
+                    var _resName = ${jsxVal(PREVIEW_RESOLUTIONS[resolution])};
+                    try { _rqi.setSettings({ "Resolution": _resName }); } catch (eRs) { _w.push("resolution: setSettings failed: " + AE.errText(eRs)); }
+                    try { _resBack = _rqi.getSettings(GetSettingsFormat.STRING_SETTABLE)["Resolution"]; } catch (eRb) { _w.push("resolution: could not read it back: " + AE.errText(eRb)); }
+                    if (_resBack !== null && String(_resBack) !== _resName) _w.push("resolution: asked for " + _resName + " but the item reads " + String(_resBack) + " \u2014 the preview may be full size");
+                }
+                ${args.renderSettings !== void 0 ? `try { _rqi.setSettings(${jsxVal(args.renderSettings)}); } catch (eSs) { _w.push("renderSettings: " + AE.errText(eSs)); }` : ""}
+                _om.file = AE.ensureParentDir(_want);
+                var _path = _om.file ? _om.file.fsName.replace(/\\\\/g, "/") : _want;
+                var _before = _meta(_path);
+                if (_path !== _want && _before.exists && !_overwrite) throw new Error("the output template writes " + _path + ", which already exists; pass overwrite: true to replace it");
+                var _t0 = new Date().getTime();
+                rq.render();
+                var _t1 = new Date().getTime();
+                var _after = _meta(_path);
+                var _fresh = _after.exists && _after.bytes > 0 &&
+                    (!_before.exists || _after.bytes !== _before.bytes || (_after.modifiedMs !== null && _after.modifiedMs !== _before.modifiedMs));
+                var _status = _rqi.status;
+                var _fd = _comp.frameDuration;
+                _out = {
+                    ok: _status === RQItemStatus.DONE && _fresh,
+                    outputPath: _path,
+                    span: ${args.timeSpanStart !== void 0 ? '"custom"' : jsxVal(span)},
+                    timeSpanStart: _start,
+                    durationSeconds: _dur,
+                    frameCount: Math.round(_dur / _fd),
+                    frameRate: Math.round(1e3 / _fd) / 1e3,
+                    renderSeconds: Math.round(_t1 - _t0) / 1000,
+                    elapsedSeconds: AE.safeGet(function () { return _rqi.elapsedSeconds; }, null),
+                    bytes: _after.bytes,
+                    outputTemplate: ${jsxVal(args.outputTemplate ?? "High Quality")},
+                    resolution: _res,
+                    overwritten: _before.exists,
+                    warnings: _w
+                };
+                if (_res !== "full") _out.resolutionReadBack = _resBack;
+                if (!_out.ok) _out.error = _status !== RQItemStatus.DONE ? "the render did not finish (status " + String(_status) + ")" : "the render left no new file at " + _path;
+            } catch (eP) {
+                _out = { ok: false, error: "preview render failed: " + AE.errText(eP), warnings: _w };
+            } finally {
+                if (_rqi) { try { _rqi.remove(); } catch (eRm) { _w.push("could not remove the preview's queue item: " + AE.errText(eRm)); } }
+                _unparkQueue(rq, _parked);
+            }
+            if (rq.numItems !== _numBefore) _w.push("the render queue has " + rq.numItems + " items, it had " + _numBefore);
+            _out.projectModified = true;
+            _out.projectNote = ${jsxVal(QUEUE_CHANGE_NOTE)};
+            return _out;
+        `;
+  }
+});
+
 // src/tools/render-frame.ts
 import { promises as fs6 } from "node:fs";
 import * as path6 from "node:path";
@@ -49205,6 +50157,22 @@ async function writePng(io, file2, data) {
   await fs7.mkdir(path7.dirname(file2), { recursive: true });
   await fs7.writeFile(file2, data);
 }
+var QUICK_NOTE = "Quick check: the click frames and two frames either side, which After Effects renders in seconds. A missed object, an enclosed gap and a second click on the same thing show there. To look across the clip, render the cut-out once (subject.render_cutout) and check the file (subject.check_file); across: true checks the live matte across the clip instead, which takes minutes (4 to 9 for nine frames on a 2176 x 3840 take), because After Effects recomputes the matte on every capture.";
+var ACROSS_NOTE = "Across the clip on the live matte: After Effects recomputes the matte on every capture, so this takes minutes (4 to 9 for nine frames on a 2176 x 3840 take). Rendering the cut-out once (subject.render_cutout) and checking the file (subject.check_file) reads every frame in about the time of one pass.";
+function quickFrames(span, clickFrames) {
+  const a = span?.inFrame ?? 0;
+  const b = span?.outFrame ?? a + 3;
+  const set2 = /* @__PURE__ */ new Set();
+  for (const c of clickFrames) {
+    if (typeof c !== "number") continue;
+    for (let d = -2; d <= 2; d++) {
+      const f = Math.round(c) + d;
+      if (f >= a && f < b) set2.add(f);
+    }
+  }
+  if (!set2.size) for (let f = a; f < Math.min(b, a + 3); f++) set2.add(f);
+  return [...set2].sort((x, y) => x - y);
+}
 function framesAcross(span, count, extra) {
   const a = span?.inFrame ?? 0;
   const b = span?.outFrame ?? a + 1;
@@ -49234,7 +50202,7 @@ var roundTally = (t) => Object.fromEntries(
   Object.entries(t).map(([k, v]) => [k, typeof v === "number" ? Math.round(v) : v])
 );
 async function renderChunked(io, base, frames, perFrameMs, outDir, stem, tally = renderTally()) {
-  const size = Math.max(1, Math.floor(SETTLE_MAX_MS / perFrameMs));
+  const size = Math.max(1, Math.min(32, Math.floor(SETTLE_MAX_MS / perFrameMs)));
   const out = [];
   for (let c = 0; c * size < frames.length; c++) {
     const chunk2 = frames.slice(c * size, (c + 1) * size);
@@ -49409,7 +50377,7 @@ var perFrameMsOf = (args) => Math.max(
   )
 );
 var TAKES_MINUTES = "This check can take minutes: on a 2176 x 3840 take each frame took 20 to 40 s the first time (the matte is tracked from the click), well under a second once rendered; tell the user before it runs on a long or large clip.";
-function summarize(readings, limit, accept, picture = null) {
+function summarize(readings, limit, accept, picture = null, passText = null) {
   const regions = cutoutFindings(readings, limit);
   const accepted = regions.filter((f) => acceptedBy(f, accept));
   const open2 = regions.filter((f) => !accepted.includes(f));
@@ -49438,7 +50406,7 @@ function summarize(readings, limit, accept, picture = null) {
     );
   if (!holes.length && !openings.length)
     parts.push(
-      missed.length ? `No hole or opening of ${fmt2(limit)} px or more on the ${checked.frames} frames checked; the other ${missed.length} were not checked.` : `Nothing over the limit on ${checked.frames} of ${checked.of} frames; the picture is at ${picture ?? "(none)"}.`
+      missed.length ? `No hole or opening of ${fmt2(limit)} px or more on the ${checked.frames} frames checked; the other ${missed.length} were not checked.` : passText ?? `Nothing over the limit on ${checked.frames} of ${checked.of} frames; the picture is at ${picture ?? "(none)"}.`
     );
   if (accepted.length)
     parts.push(
@@ -49596,10 +50564,13 @@ async function runSubjectCheck(args, io) {
     clickTime: s.clickTime ?? null,
     clickFrame: s.clickFrame ?? null
   }));
-  const frames = Array.isArray(args.frames) ? args.frames.slice().sort((a, b) => a - b) : framesAcross(st.span, typeof args.count === "number" ? args.count : CUTOUT_FRAMES, [
-    args.clickFrame,
-    ...clicks.map((c) => c.clickFrame)
-  ]);
+  const across = args.across === true;
+  const clickFrames = [args.clickFrame, ...clicks.map((c) => c.clickFrame)];
+  const frames = Array.isArray(args.frames) ? args.frames.slice().sort((a, b) => a - b) : across ? framesAcross(
+    st.span,
+    typeof args.count === "number" ? args.count : CUTOUT_FRAMES,
+    clickFrames
+  ) : quickFrames(st.span, clickFrames);
   const fillLayer = typeof st.fillLayer === "string" ? st.fillLayer : null;
   const isolate = fillLayer ? [args.layer, fillLayer] : args.layer;
   const rendered = await renderChunked(
@@ -49666,6 +50637,11 @@ async function runSubjectCheck(args, io) {
     frames: readings,
     clicks,
     countNote: COUNT_NOTE,
+    scope: {
+      across: across && !Array.isArray(args.frames),
+      frames,
+      note: across || Array.isArray(args.frames) ? ACROSS_NOTE : QUICK_NOTE
+    },
     timing: checkTiming(statusMs, first, second, pixels, since(started)),
     timeReading: timeReading(first, second, pixels, since(started)),
     holeLimit: limit,
@@ -49827,7 +50803,7 @@ async function runFillGaps(args, io) {
       layers
     };
   }
-  const frames = Array.isArray(args.frames) ? args.frames.slice().sort((a, b) => a - b) : framesAcross(st.span, typeof args.count === "number" ? args.count : CUTOUT_FRAMES, [frame]);
+  const frames = Array.isArray(args.frames) ? args.frames.slice().sort((a, b) => a - b) : args.across === true ? framesAcross(st.span, typeof args.count === "number" ? args.count : CUTOUT_FRAMES, [frame]) : quickFrames(st.span, [frame]);
   const afterRendered = await renderChunked(
     io,
     {
@@ -50052,6 +51028,12 @@ registerOp({
       required: false
     },
     {
+      name: "across",
+      type: "boolean",
+      description: "Look across the clip (count frames spread over the layer) on the live matte instead of the quick check (the click frames and two either side). Takes minutes: 4 to 9 for nine frames on a 2176 x 3840 take; prefer subject.render_cutout and subject.check_file.",
+      required: false
+    },
+    {
       name: "recheck",
       type: "boolean",
       description: "Render each frame with a hole or opening over the limit once more at the end and report a frame that differs (kind 'unstable'). Default true; false skips it.",
@@ -50119,12 +51101,659 @@ registerOp({
       description: `Smallest hole or opening reported after the fill, px (default ${CUTOUT_HOLE_LIMIT}).`,
       required: false
     },
+    {
+      name: "across",
+      type: "boolean",
+      description: "Measure after the fill across the clip instead of near the reference frame. Takes minutes; prefer subject.render_cutout and subject.check_file.",
+      required: false
+    },
     secondsPerFrameParam,
     overParam,
     subjectIndexParam
   ],
   toJsx: () => NODE_ONLY("subject.fill_gaps"),
   run: (args, transport2) => runFillGaps(args, liveCutoutIO(args, transport2))
+});
+var ALPHA_TEMPLATES = ["High Quality with Alpha", "Lossless with Alpha"];
+var isSequence = (name) => /sequence/i.test(name);
+function chooseAlphaTemplate(available, wanted) {
+  const list = available.join(", ") || "none";
+  if (wanted !== void 0) {
+    if (!available.includes(wanted))
+      return { error: `no output template named '${wanted}' (templates: ${list})` };
+    return { template: wanted, why: `the template asked for` };
+  }
+  for (const t of ALPHA_TEMPLATES)
+    if (available.includes(t))
+      return { template: t, why: `'${t}' carries alpha in its name and writes a movie` };
+  const other = available.find((t) => /alpha/i.test(t) && !isSequence(t));
+  if (other)
+    return {
+      template: other,
+      why: `'${other}' is the first template whose name says alpha and that writes a movie`
+    };
+  return {
+    error: `no output template that writes a movie with alpha (templates: ${list}). subject.check_file reads a movie; an image-sequence template is not used. Make a movie template with RGB + Alpha in After Effects' Output Module settings and pass its name as outputTemplate.`
+  };
+}
+function renderCutoutPlanJsx(args) {
+  return `
+            ${jsxCompLayerPreamble(args)}
+            var rq = app.project.renderQueue;
+            if (AE.safeGet(function () { return rq.rendering; }, false)) return { ok: false, error: "the render queue is already rendering; wait for it to finish" };
+            var _fillName = _layer.name + " gap fill";
+            var _fill = null;
+            for (var _li = 1; _li <= _comp.numLayers; _li++) if (_comp.layer(_li).name === _fillName) _fill = _fillName;
+            var _keep = [_layer.name];
+            if (_fill) _keep.push(_fill);
+            var _fd = _comp.frameDuration;
+            var _start = Math.max(0, Math.min(_layer.inPoint, _layer.outPoint));
+            var _end = Math.min(_comp.duration, Math.max(_layer.inPoint, _layer.outPoint));
+            var _tmp = null;
+            var _out = [];
+            var _rend = [];
+            try {
+                _tmp = rq.items.add(_comp);
+                try { _rend = _tmp.templates; } catch (eR) {}
+                try { _out = _tmp.outputModule(1).templates; } catch (eO) {}
+            } finally {
+                if (_tmp) { try { _tmp.remove(); } catch (eRm) {} }
+            }
+            return { ok: true, layer: _layer.name, fillLayer: _fill, keep: _keep, compSize: [_comp.width, _comp.height],
+                span: { start: _start, duration: _end - _start, frames: Math.round((_end - _start) / _fd), frameRate: Math.round(1000 / _fd) / 1000 },
+                templates: { output: _out, render: _rend } };
+        `;
+}
+function renderCutoutJsx(args) {
+  return `
+            ${jsxCompPreamble(args)}
+            ${PARK_QUEUE_FN}
+            var rq = app.project.renderQueue;
+            if (AE.safeGet(function () { return rq.rendering; }, false)) return { ok: false, error: "the render queue is already rendering; wait for it to finish" };
+            var _want = ${jsxVal(args.outputPath)};
+            function _meta(_path) {
+                var _f = new File(_path);
+                if (!_f.exists) return { exists: false, bytes: 0, modifiedMs: null };
+                var _d = _f.modified;
+                return { exists: true, bytes: _f.length, modifiedMs: _d ? _d.getTime() : null };
+            }
+            if (_meta(_want).exists && !${jsxVal(args.overwrite)}) return { ok: false, error: "a file already exists at " + _want + "; pass overwrite: true to replace it, or choose another outputPath" };
+            var _keep = ${jsxVal(args.keep)};
+            function _kept(n) { for (var i = 0; i < _keep.length; i++) if (_keep[i] === n) return true; return false; }
+            var _saved = [];
+            var _switched = [];
+            var _w = [];
+            var _out = null;
+            var _rqi = null;
+            var _parked = null;
+            try {
+                for (var _li = 1; _li <= _comp.numLayers; _li++) {
+                    var L = _comp.layer(_li);
+                    if (AE.safeGet(function () { return L.hasVideo; }, true) === false) continue;
+                    var _mn = AE.safeGet(function () { return L.matchName; }, "");
+                    if (_mn === "ADBE Camera Layer" || _mn === "ADBE Light Layer") continue;
+                    var _s = { layer: L, enabled: L.enabled, solo: AE.safeGet(function () { return !!L.solo; }, false), locked: AE.safeGet(function () { return !!L.locked; }, false) };
+                    var _want2 = _kept(L.name) ? _s.enabled : false;
+                    if (_want2 === _s.enabled && !_s.solo) continue;
+                    if (_s.locked) L.locked = false;
+                    if (_s.solo) L.solo = false;
+                    if (L.enabled !== _want2) { L.enabled = _want2; _switched.push(L.name); }
+                    _saved.push(_s);
+                }
+                _parked = _parkQueue(rq);
+                _rqi = rq.items.add(_comp);
+                var _om = _rqi.outputModule(1);
+                var _wo = AE.applyTemplate(_om, ${jsxVal(args.outputTemplate)}, "outputTemplate");
+                if (_wo) throw new Error(_wo);
+                _rqi.timeSpanStart = ${jsxVal(args.start)};
+                _rqi.timeSpanDuration = ${jsxVal(args.duration)};
+                _om.file = AE.ensureParentDir(_want);
+                var _path = _om.file ? _om.file.fsName.replace(/\\\\/g, "/") : _want;
+                var _before = _meta(_path);
+                var _audio = {};
+                try {
+                    var _st = _om.getSettings(GetSettingsFormat.STRING);
+                    for (var _k in _st) if (_st.hasOwnProperty(_k) && /audio|channels/i.test(_k)) _audio[_k] = String(_st[_k]);
+                } catch (eA) { _w.push("could not read the output module's settings: " + AE.errText(eA)); }
+                var _t0 = new Date().getTime();
+                rq.render();
+                var _t1 = new Date().getTime();
+                var _after = _meta(_path);
+                var _fresh = _after.exists && _after.bytes > 0 && (!_before.exists || _after.bytes !== _before.bytes || _after.modifiedMs !== _before.modifiedMs);
+                var _fd = _comp.frameDuration;
+                _out = {
+                    ok: _rqi.status === RQItemStatus.DONE && _fresh,
+                    outputPath: _path,
+                    timeSpanStart: ${jsxVal(args.start)},
+                    durationSeconds: ${jsxVal(args.duration)},
+                    frameCount: Math.round(${jsxVal(args.duration)} / _fd),
+                    frameRate: Math.round(1000 / _fd) / 1000,
+                    renderSeconds: Math.round(_t1 - _t0) / 1000,
+                    elapsedSeconds: AE.safeGet(function () { return _rqi.elapsedSeconds; }, null),
+                    bytes: _after.bytes,
+                    audio: _audio
+                };
+                if (!_out.ok) _out.error = _rqi.status !== RQItemStatus.DONE ? "the render did not finish (status " + String(_rqi.status) + ")" : "the render left no new file at " + _path;
+            } catch (eR) {
+                _out = { ok: false, error: "the cut-out render failed: " + AE.errText(eR) };
+            } finally {
+                if (_rqi) { try { _rqi.remove(); } catch (eRm) { _w.push("could not remove the render's queue item: " + AE.errText(eRm)); } }
+                if (_parked) _unparkQueue(rq, _parked);
+                var _notBack = [];
+                for (var _ri = _saved.length - 1; _ri >= 0; _ri--) {
+                    var _sv = _saved[_ri];
+                    try {
+                        if (_sv.layer.enabled !== _sv.enabled) _sv.layer.enabled = _sv.enabled;
+                        if (_sv.solo) _sv.layer.solo = true;
+                        if (_sv.locked) _sv.layer.locked = true;
+                    } catch (eB) { _notBack.push(AE.safeGet(function () { return _sv.layer.name; }, "?") + ": " + AE.errText(eB)); }
+                }
+            }
+            _out.layersSwitched = _switched;
+            _out.restored = _notBack.length === 0;
+            if (_notBack.length) _out.notRestored = _notBack;
+            _out.warnings = _w;
+            _out.projectModified = true;
+            _out.projectNote = ${jsxVal(QUEUE_CHANGE_NOTE)};
+            return _out;
+        `;
+}
+async function runRenderCutout(args, io) {
+  const started = performance.now();
+  const outputPath = args.outputPath;
+  if (typeof outputPath !== "string" || !path7.isAbsolute(outputPath))
+    return { ok: false, error: "`outputPath` must be an absolute path for the movie" };
+  const rejected = rejectedOutputPath(outputPath);
+  if (rejected) return { ok: false, error: rejected };
+  const plan = await io.execute(renderCutoutPlanJsx({ comp: args.comp, layer: args.layer }), {
+    label: "subject.render_cutout plan",
+    timeoutMs: 6e4,
+    undoGroup: true
+  });
+  if (!plan?.ok) return { ok: false, error: plan?.error ?? "could not read the comp", plan };
+  const planMs = since(started);
+  const choice = chooseAlphaTemplate(
+    plan.templates?.output ?? [],
+    typeof args.outputTemplate === "string" ? args.outputTemplate : void 0
+  );
+  if ("error" in choice) return { ok: false, error: choice.error, templates: plan.templates };
+  const frames = plan.span?.frames ?? 0;
+  const t1 = performance.now();
+  const r = await io.execute(
+    renderCutoutJsx({
+      comp: args.comp,
+      keep: plan.keep,
+      outputPath,
+      outputTemplate: choice.template,
+      start: plan.span.start,
+      duration: plan.span.duration,
+      overwrite: args.overwrite === true
+    }),
+    // Measured: 390 s for 320 frames of a 2176 x 3840 take; allow 5 s a frame and two minutes over.
+    { label: "subject.render_cutout", timeoutMs: 12e4 + frames * 5e3, undoGroup: true }
+  );
+  const renderMs = since(t1);
+  const audio = r?.audio && Object.keys(r.audio).length ? r.audio : null;
+  const sound = (audio ? `The output module's sound settings read ${Object.entries(audio).map(([k, v]) => `${k}: ${v}`).join("; ")}; whether the file carries a sound track depends on them and was not checked.` : "The output module's sound settings could not be read; the file may or may not carry a sound track.") + " The original layer keeps the sound: subject.use_cutout leaves its audio as it is and switches the movie's audio off, so it plays once.";
+  const out = {
+    ...r,
+    outputTemplate: choice.template,
+    templateChoice: choice.why,
+    layers: plan.keep,
+    sound,
+    timing: {
+      planMs: Math.round(planMs),
+      renderMs: Math.round(renderMs),
+      totalMs: Math.round(since(started))
+    }
+  };
+  if (!r?.ok) return { ...out, ok: false, error: r?.error ?? "the render failed" };
+  return {
+    ...out,
+    next: `Check the file before building on it: subject.check_file { path: "${r.outputPath}", outDir }. Then subject.use_cutout puts it in the comp in place of the live matte.`
+  };
+}
+var CHECK_FILE_MAX_FRAMES = 400;
+var CHECK_FILE_JUMP_LIMIT = 0.025;
+function checkFileFrames(n, cap) {
+  if (n <= cap) return { frames: Array.from({ length: n }, (_, i) => i), step: 1 };
+  const step = Math.ceil(n / Math.max(1, Math.floor(cap / 2)));
+  const set2 = /* @__PURE__ */ new Set();
+  for (let s0 = 0; s0 < n - 1; s0 += step) {
+    set2.add(s0);
+    set2.add(s0 + 1);
+  }
+  for (const f of [0, 1, 2, n - 3, n - 2, n - 1]) if (f >= 0 && f < n) set2.add(f);
+  return { frames: [...set2].sort((a, b) => a - b), step };
+}
+function fileCompJsx(args) {
+  return `
+            var _item = null;
+            var _imported = false;
+            if (${jsxVal(args.item)} !== null) {
+                _item = AE.safeGet(function () { return app.project.itemByID(${jsxVal(args.item)}); }, null);
+                if (!_item) return { ok: false, error: "no project item with id " + ${jsxVal(args.item)} };
+            } else {
+                var _f = new File(${jsxVal(args.path)});
+                if (!_f.exists) return { ok: false, error: "no file at " + ${jsxVal(args.path)} };
+                _item = app.project.importFile(new ImportOptions(_f));
+                _imported = true;
+            }
+            if (!AE.safeGet(function () { return _item.hasVideo; }, false)) return { ok: false, error: "'" + _item.name + "' has no video" };
+            var _fr = AE.safeGet(function () { return _item.frameRate; }, 0) || 30;
+            var _dur = _item.duration;
+            var _c = app.project.items.addComp("check_file " + _item.name, _item.width, _item.height, AE.safeGet(function () { return _item.pixelAspect; }, 1) || 1, _dur, _fr);
+            _c.layers.add(_item);
+            return { ok: true, compId: _c.id, compName: _c.name, itemId: _item.id, itemName: _item.name, imported: _imported,
+                width: _item.width, height: _item.height, frames: Math.round(_dur * _fr), frameRate: _fr };
+        `;
+}
+function fileCleanupJsx(args) {
+  return `
+            var _removed = [];
+            var _c = AE.safeGet(function () { return app.project.itemByID(${jsxVal(args.compId)}); }, null);
+            if (_c) { var _cn = _c.name; _c.remove(); _removed.push(_cn); }
+            var removeItem = ${jsxVal(args.removeItem)};
+            if (removeItem && ${jsxVal(args.itemId)} !== null) {
+                var _it = AE.safeGet(function () { return app.project.itemByID(${jsxVal(args.itemId)}); }, null);
+                if (_it) { var _in = _it.name; _it.remove(); _removed.push(_in); }
+            }
+            return { ok: true, removed: _removed };
+        `;
+}
+async function runCheckFile(args, io) {
+  const started = performance.now();
+  const file2 = typeof args.path === "string" ? args.path : null;
+  const item = typeof args.item === "number" ? args.item : null;
+  if (file2 === null === (item === null))
+    return {
+      ok: false,
+      error: "give exactly one of `path` (the movie) or `item` (a footage item's id)"
+    };
+  if (file2 !== null) {
+    if (!path7.isAbsolute(file2))
+      return { ok: false, error: "`path` must be an absolute path to the movie" };
+    const there = io.exists ? await io.exists(file2) : await fs7.access(file2).then(
+      () => true,
+      () => false
+    );
+    if (!there) return { ok: false, error: `no file at ${file2}` };
+  }
+  const outDir = args.outDir;
+  if (typeof outDir !== "string" || !path7.isAbsolute(outDir))
+    return { ok: false, error: "`outDir` must be an absolute folder for the pictures" };
+  const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
+  const jumpLimit = typeof args.jumpLimit === "number" ? args.jumpLimit : CHECK_FILE_JUMP_LIMIT;
+  const cap = typeof args.maxFrames === "number" && args.maxFrames >= 8 ? Math.floor(args.maxFrames) : CHECK_FILE_MAX_FRAMES;
+  const over = typeof args.over === "string" ? args.over : CUTOUT_OVER;
+  const accept = Array.isArray(args.accept) ? args.accept : [];
+  const perFrameMs = Math.max(
+    1,
+    Math.round(
+      (typeof args.secondsPerFrame === "number" && args.secondsPerFrame > 0 ? args.secondsPerFrame : 10) * 1e3
+    )
+  );
+  const setup = await io.execute(fileCompJsx({ path: file2, item }), {
+    label: "subject.check_file setup",
+    timeoutMs: 12e4,
+    undoGroup: true
+  });
+  if (!setup?.ok)
+    return { ok: false, error: setup?.error ?? "could not bring the movie into a comp", setup };
+  const renders = renderTally();
+  const pixels = pixelTally();
+  const { frames, step } = checkFileFrames(setup.frames, cap);
+  let readings = [];
+  let cleanup = null;
+  try {
+    const rendered = await renderChunked(
+      io,
+      { compNameOrId: setup.compId, channels: "rgba" },
+      frames,
+      perFrameMs,
+      outDir,
+      "check-file",
+      renders
+    );
+    readings = (await measureFrames(
+      io,
+      rendered,
+      limit,
+      over,
+      path7.join(outDir, "check-file_unused.png"),
+      pixels,
+      false
+    )).readings;
+  } finally {
+    cleanup = await io.execute(
+      fileCleanupJsx({
+        compId: setup.compId,
+        itemId: setup.itemId,
+        removeItem: setup.imported === true && args.keepFootage !== true
+      }),
+      {
+        label: "subject.check_file cleanup",
+        timeoutMs: 6e4,
+        undoGroup: true
+      }
+    );
+  }
+  const byFrame = new Map(readings.filter((r) => r.checked).map((r) => [r.frame, r]));
+  const jumps = [];
+  let pairs = 0;
+  let largestStep = { from: -1, to: -1, change: 0 };
+  for (const r of readings) {
+    const next = byFrame.get(r.frame + 1);
+    if (!r.checked || !next) continue;
+    pairs++;
+    const change = Math.round(Math.abs((next.opaqueShare ?? 0) - (r.opaqueShare ?? 0)) * 1e4) / 1e4;
+    if (change > largestStep.change || largestStep.from < 0)
+      largestStep = { from: r.frame, to: next.frame, change };
+    if (change > jumpLimit)
+      jumps.push({
+        kind: "jump",
+        from: r.frame,
+        to: next.frame,
+        change,
+        opaque: [r.opaqueShare, next.opaqueShare]
+      });
+  }
+  const checkedReadings = readings.filter((r) => r.checked && typeof r.opaqueShare === "number");
+  const minR = checkedReadings.reduce(
+    (m, r) => !m || (r.opaqueShare ?? 1) < (m.opaqueShare ?? 1) ? r : m,
+    null
+  );
+  const maxR = checkedReadings.reduce(
+    (m, r) => !m || (r.opaqueShare ?? 0) > (m.opaqueShare ?? 0) ? r : m,
+    null
+  );
+  const opaque = {
+    min: minR?.opaqueShare ?? null,
+    minFrame: minR?.frame ?? null,
+    max: maxR?.opaqueShare ?? null,
+    maxFrame: maxR?.frame ?? null,
+    largestStep
+  };
+  const tPic = performance.now();
+  const findingFrames = /* @__PURE__ */ new Set();
+  for (const r of readings) if (r.checked && regionsOf(r).length) findingFrames.add(r.frame);
+  for (const j of jumps) {
+    findingFrames.add(j.from);
+    findingFrames.add(j.to);
+  }
+  const pictureOf2 = /* @__PURE__ */ new Map();
+  for (const f of findingFrames) {
+    const r = byFrame.get(f);
+    if (r?.file) pictureOf2.set(f, await overPicture(io, r.file, over));
+  }
+  for (const j of jumps) j.pictures = [pictureOf2.get(j.from) ?? null, pictureOf2.get(j.to) ?? null];
+  for (const r of readings)
+    if (pictureOf2.has(r.frame)) r.picture = pictureOf2.get(r.frame) ?? void 0;
+  const sheetFrames = [...findingFrames].slice(0, 24);
+  const rest = checkedReadings.map((r) => r.frame).filter((f) => !findingFrames.has(f));
+  for (let i = 0; sheetFrames.length < 24 && i < rest.length; i++) {
+    const k = Math.floor(
+      i * rest.length / Math.max(1, Math.min(24 - findingFrames.size, rest.length))
+    );
+    if (k < rest.length && !sheetFrames.includes(rest[k])) sheetFrames.push(rest[k]);
+  }
+  sheetFrames.sort((a, b) => a - b);
+  let picture = null;
+  const thumbs = [];
+  const labels = [];
+  for (const f of sheetFrames) {
+    const r = byFrame.get(f);
+    if (!r?.file) continue;
+    try {
+      const img = await io.readImage(r.file);
+      const comp = flattenOver(img, { kind: "color", color: parseHex(over) });
+      const tw = Math.min(240, img.width);
+      const th = Math.max(1, Math.round(img.height * tw / img.width));
+      thumbs.push({
+        width: tw,
+        height: th,
+        rgb: resample({ ...img, rgb: comp }, tw, th),
+        bitDepth: 8
+      });
+      labels.push(`frame ${f}${findingFrames.has(f) ? " !" : ""}`);
+    } catch {
+    }
+  }
+  if (thumbs.length) {
+    const sheet = composeContactSheet(thumbs, { labels, thumbWidth: 240 });
+    picture = path7.join(outDir, "check-file_sheet.png");
+    await writePng(
+      io,
+      picture,
+      encodePngSrgb8(sheet.width, sheet.height, sheet.rgb, PICTURE_DEFLATE)
+    );
+  }
+  pixels.picturesMs += since(tPic);
+  const compared = `${plural2(pairs, "pair")} of neighbouring frames` + (step > 1 ? ` (each frame and the next), one pair every ${step} frames, and the first and last three frames` : "") + ` compared for jumps over ${jumpLimit} in opaque share.`;
+  const passText = jumps.length ? `No hole or opening of ${fmt2(limit)} px or more on the ${byFrame.size} frames read.` : `Nothing over the limit on ${byFrame.size} of ${readings.length} frames read; no jump between neighbouring frames over ${jumpLimit}; the picture is at ${picture ?? "(none)"}.`;
+  const sum = summarize(readings, limit, accept, picture, passText);
+  const findings = [...sum.findings, ...jumps];
+  const stop = findings.length > 0;
+  const jumpText = jumps.length ? ` ${plural2(jumps.length, "jump")} in opaque share between neighbouring frames: ${jumps.map((j) => `${j.from} to ${j.to}, ${j.change}`).join("; ")}. A jump of about 0.05 is a dropped object (a microphone); look at both frames.` : "";
+  const opaqueText = opaque.min !== null ? ` Opaque share ${opaque.min} (frame ${opaque.minFrame}) to ${opaque.max} (frame ${opaque.maxFrame}); largest step ${largestStep.change} (frames ${largestStep.from} to ${largestStep.to}).` : "";
+  return {
+    ok: true,
+    file: file2 ?? setup.itemName,
+    frames: setup.frames,
+    frameRate: setup.frameRate,
+    size: [setup.width, setup.height],
+    step,
+    stop,
+    findings,
+    accepted: sum.accepted,
+    checked: sum.checked,
+    compared,
+    opaque,
+    inOut: `${sum.text}${jumpText}${opaqueText} ${compared}${stop && picture ? ` Look at the picture (${picture}).` : ""}`,
+    picture,
+    frameReadings: readings.map((r) => ({
+      frame: r.frame,
+      checked: r.checked,
+      opaqueShare: r.opaqueShare ?? null,
+      regions: r.checked ? regionsOf(r).length : null,
+      ...r.picture ? { picture: r.picture } : {},
+      ...r.error ? { error: r.error } : {}
+    })),
+    cleanup,
+    timing: {
+      render: roundTally(renders),
+      pixels: roundTally(pixels),
+      totalMs: Math.round(since(started))
+    },
+    next: stop ? "Stop: show the user the picture and say what is wrong before building on this file. A jump or a hole on one frame means the live matte rendered that frame wrong: render the cut-out again (subject.render_cutout) and check the new file." : "The file is checked. Build on it: subject.use_cutout puts it in the comp in place of the live matte."
+  };
+}
+function useCutoutJsx(args) {
+  return `
+            ${jsxCompLayerPreamble(args)}
+            var _movieName = _layer.name + " cut-out";
+            var _fillName = _layer.name + " gap fill";
+            var _fill = null;
+            for (var _li = 1; _li <= _comp.numLayers; _li++) {
+                var _l = _comp.layer(_li);
+                if (_l.name === _movieName) return { ok: false, error: "comp " + _comp.name + " already has a layer '" + _movieName + "'; delete it first to use another file" };
+                if (_l.name === _fillName) _fill = _l;
+            }
+            var _item = null;
+            if (${jsxVal(args.item ?? null)} !== null) {
+                _item = AE.safeGet(function () { return app.project.itemByID(${jsxVal(args.item ?? null)}); }, null);
+                if (!_item) return { ok: false, error: "no project item with id " + ${jsxVal(args.item ?? null)} };
+            } else {
+                var _f = new File(${jsxVal(args.path ?? null)});
+                if (!_f.exists) return { ok: false, error: "no file at " + ${jsxVal(args.path ?? null)} };
+                _item = app.project.importFile(new ImportOptions(_f));
+            }
+            var _in = Math.min(_layer.inPoint, _layer.outPoint);
+            var _out = Math.max(_layer.inPoint, _layer.outPoint);
+            var _movie = _comp.layers.add(_item);
+            _movie.name = _movieName;
+            _movie.moveBefore(_layer);
+            var _start = ${jsxVal(args.startTime ?? null)};
+            _movie.startTime = _start === null ? Math.max(0, _in) : _start;
+            var _spanError = null;
+            try { _movie.inPoint = Math.max(0, _in); _movie.outPoint = _out; } catch (eSp) { _spanError = AE.errText(eSp); }
+            var _movieAudio = "none";
+            if (AE.safeGet(function () { return _movie.hasAudio; }, false)) { try { _movie.audioEnabled = false; _movieAudio = "off"; } catch (eAu) { _movieAudio = "could not be switched off: " + AE.errText(eAu); } }
+            var _off = [];
+            if (_layer.enabled) { _layer.enabled = false; _off.push(_layer.name); }
+            if (_fill && _fill.enabled) { _fill.enabled = false; _off.push(_fill.name); }
+            var _res = { ok: true, movieLayer: _movie.name, movieIndex: _movie.index, startTime: _movie.startTime, inPoint: _movie.inPoint, outPoint: _movie.outPoint,
+                switchedOff: _off, audio: { original: AE.safeGet(function () { return _layer.audioEnabled; }, null), movie: _movieAudio },
+                note: "The movie is in comp space: it already has the cut-out's transform, so it has none of its own and no parent. The cut-out layer and its selections stay in the project with the picture off, for a later re-click; switch its picture back on and remove the movie to go back to the live matte." };
+            if (_spanError !== null) _res.spanError = _spanError;
+            return _res;
+        `;
+}
+function liveFileIO(transport2) {
+  const cut = liveCutoutIO({}, transport2);
+  return {
+    render: cut.render,
+    readImage: cut.readImage,
+    async execute(code, opts) {
+      const r = await transport2.execute({
+        code,
+        label: opts.label,
+        timeoutMs: opts.timeoutMs,
+        undoGroup: opts.undoGroup ?? true,
+        suppressDialogs: true
+      });
+      return r.ok ? r.result : { ok: false, error: r.error ?? `${opts.label} failed` };
+    },
+    exists: (file2) => fs7.access(file2).then(
+      () => true,
+      () => false
+    )
+  };
+}
+registerOp({
+  name: "subject.render_cutout",
+  category: "subject",
+  description: "Render the cut-out once to a movie with alpha, so the piece is built on a file that cannot change: the layer with its gap fill when there is one, alone (every other layer's picture switched off for the render and put back afterwards, even when it fails; cameras and lights left as they are), over the layer's span, through one temporary render-queue item (other queue items are parked). Picks an output template that writes a movie with alpha ('High Quality with Alpha', 'Lossless with Alpha', or another whose name says alpha; image sequences are not used) and refuses, naming the templates, when none does. Returns outputPath, frameCount, renderSeconds, outputTemplate, templateChoice, layersSwitched, restored, sound and timing. Measured: 390 s for 320 frames of a 2176 x 3840 take, about one pass through the clip; tell the user before it runs. The movie is in comp space. The original layer keeps the sound; whether the movie carries a sound track is not promised." + RENDER_QUEUE_UNDO_WARNING,
+  params: [
+    ...compLayerParams,
+    {
+      name: "outputPath",
+      type: "string",
+      description: "Absolute path for the movie (the template may change the extension; the path written is returned).",
+      required: true
+    },
+    {
+      name: "outputTemplate",
+      type: "string",
+      description: "An output-module template that carries alpha (default: the first found, see above).",
+      required: false
+    },
+    {
+      name: "overwrite",
+      type: "boolean",
+      description: "Replace an existing file at outputPath (default false: refuse).",
+      required: false
+    }
+  ],
+  toJsx: () => NODE_ONLY("subject.render_cutout"),
+  run: (args, transport2) => runRenderCutout(args, liveFileIO(transport2))
+});
+registerOp({
+  name: "subject.check_file",
+  category: "subject",
+  description: `Check a rendered cut-out movie (from subject.render_cutout) frame by frame: brings it into a throwaway comp, reads frames in batches of at most 32 (every frame up to maxFrames, default ${CHECK_FILE_MAX_FRAMES}; beyond it pairs of neighbouring frames in steps, always the first and last three), and reports holes and openings (as subject.check: holeLimit, accept), the opaque share of every frame, and a 'jump' finding when neighbouring frames differ by more than jumpLimit (default ${CHECK_FILE_JUMP_LIMIT}: on the take of 2026-11-11 the rendered cut-out ran 0.279 to 0.314 with no step over 0.012, and a dropped microphone is about 0.05). Only true neighbours are compared, and \`compared\` says which. A frame that could not be read is 'not-checked' and stops. Pictures: every frame with a finding, and a sheet of up to 24 frames. The throwaway comp is removed afterwards, and the imported footage too unless keepFootage. Measured: about 0.55 s a frame reading the file. Returns stop, findings, accepted, checked, compared, opaque, inOut, picture, frameReadings, timing.`,
+  params: [
+    {
+      name: "path",
+      type: "string",
+      description: "Absolute path of the movie. Or `item`.",
+      required: false
+    },
+    {
+      name: "item",
+      type: "number",
+      description: "Id of a footage item already in the project (it is never removed). Or `path`.",
+      required: false
+    },
+    {
+      name: "outDir",
+      type: "string",
+      description: "Absolute folder for the frames and pictures.",
+      required: true
+    },
+    {
+      name: "holeLimit",
+      type: "number",
+      description: `Smallest hole or opening that is a finding, px (default ${CUTOUT_HOLE_LIMIT}).`,
+      required: false
+    },
+    {
+      name: "accept",
+      type: "array",
+      description: "As subject.check's accept: boxes (openings) or { box, kind }.",
+      required: false
+    },
+    {
+      name: "jumpLimit",
+      type: "number",
+      description: `Largest change in opaque share between neighbouring frames that is not a finding (default ${CHECK_FILE_JUMP_LIMIT}).`,
+      required: false
+    },
+    {
+      name: "maxFrames",
+      type: "number",
+      description: `Most frames read one by one (default ${CHECK_FILE_MAX_FRAMES}).`,
+      required: false
+    },
+    {
+      name: "keepFootage",
+      type: "boolean",
+      description: "Keep the imported footage item in the project (default false; subject.use_cutout imports it again).",
+      required: false
+    },
+    {
+      name: "secondsPerFrame",
+      type: "number",
+      description: "Settle time allowed per frame, s (default 10).",
+      required: false
+    },
+    overParam
+  ],
+  toJsx: () => NODE_ONLY("subject.check_file"),
+  run: (args, transport2) => runCheckFile(args, liveFileIO(transport2))
+});
+registerOp({
+  name: "subject.use_cutout",
+  category: "subject",
+  description: "Build on the checked file: add the rendered cut-out movie (path, or a footage item id) to the comp directly above the cut-out layer, named '<layer> cut-out', over the cut-out's span. The movie is in comp space (subject.render_cutout renders the comp), so it has no transform or parent of its own. Switches the cut-out layer's and its gap fill's pictures off; they and the selections stay in the project for a later re-click. The original keeps its audio; the movie's audio is switched off. Returns movieLayer, switchedOff, audio and note. Refuses when the comp already has the movie.",
+  params: [
+    ...compLayerParams,
+    {
+      name: "path",
+      type: "string",
+      description: "Absolute path of the movie. Or `item`.",
+      required: false
+    },
+    {
+      name: "item",
+      type: "number",
+      description: "Id of the movie's footage item. Or `path`.",
+      required: false
+    },
+    {
+      name: "startTime",
+      type: "number",
+      description: "Where the movie starts in the comp, s (default: the cut-out's in point, where subject.render_cutout's render starts; pass its timeSpanStart).",
+      required: false
+    }
+  ],
+  toJsx(args) {
+    if (typeof args.path === "string" === (typeof args.item === "number"))
+      return jsxFail("give exactly one of `path` (the movie) or `item` (its footage item's id)");
+    return useCutoutJsx(
+      args
+    );
+  }
 });
 
 // src/operations/property.ts
@@ -51474,958 +53103,6 @@ registerOp({
             var _xf = null;
             try { _xf = _layer.calculateTransformFromPoints(${jsxVal(args.topLeft)}, ${jsxVal(args.topRight)}, ${jsxVal(args.bottomLeft)}); } catch (eCt) { return { ok: false, error: "calculateTransformFromPoints failed: " + AE.errText(eCt) }; }
             return { ok: true, transform: AE.valueToJson(_xf) };
-        `;
-  }
-});
-
-// src/operations/render.ts
-init_registry();
-var RENDER_QUEUE_UNDO_WARNING = " After this, undo and rollback are refused for the rest of the After Effects session unless acceptRenderQueueRisk: true: After Effects 2027 has gone into crash recovery on undo after scripted render-queue changes (observed twice on 2026-11-10; a precaution, not a proven cause). Save the project before undoing anything afterwards; project.open / project.new clear the block.";
-var READ_TEMPLATES_FN = `
-    function _readTemplates(_item) {
-        var _render = [];
-        var _output = [];
-        try { _render = _item.templates; } catch (eR) {}
-        try { _output = _item.outputModule(1).templates; } catch (eO) {}
-        return { renderTemplates: _render, outputTemplates: _output };
-    }
-`;
-var QUEUE_CHANGE_NOTE = "the project is left modified (unsaved): a render-queue item was added and removed. Nothing in the comps changed; save or revert as you normally would";
-var PARK_QUEUE_FN = `
-    function _parkQueue(rq) {
-        var _parked = [];
-        for (var _pi = 1; _pi <= rq.numItems; _pi++) {
-            var _ex = rq.item(_pi);
-            var _was = false;
-            try { _was = _ex.render; } catch (eR) {}
-            _parked.push(_was);
-            if (_was) { try { _ex.render = false; } catch (eP) {} }
-        }
-        return _parked;
-    }
-    function _unparkQueue(rq, _parked) {
-        for (var _ui = 0; _ui < _parked.length && _ui < rq.numItems; _ui++) {
-            if (_parked[_ui]) { try { rq.item(_ui + 1).render = true; } catch (eU) {} }
-        }
-    }
-`;
-registerOp({
-  name: "render.add_to_queue",
-  category: "render",
-  description: "Add a composition to the render queue. Optionally set output path." + RENDER_QUEUE_UNDO_WARNING,
-  params: [
-    { name: "comp", type: "any", description: "Comp name or id", required: true },
-    {
-      name: "outputPath",
-      type: "string",
-      description: "Output file path (optional, sets on the first output module)",
-      required: false
-    }
-  ],
-  toJsx(args) {
-    const outputPathJsx = args.outputPath ? `
-                try {
-                    _rqi.outputModules[1].file = AE.ensureParentDir(${jsxVal(args.outputPath)});
-                    _result.outputPath = ${jsxVal(args.outputPath)};
-                } catch(e) { _result.outputWarning = "could not set output path: " + AE.errText(e); }
-            ` : "";
-    return `
-            ${jsxCompPreamble(args)}
-            var _rqi = app.project.renderQueue.items.add(_comp);
-            var _result = { ok: true, queueIndex: app.project.renderQueue.numItems, compName: _comp.name };
-            ${outputPathJsx}
-            return _result;
-        `;
-  }
-});
-registerOp({
-  name: "render.start",
-  category: "render",
-  description: "Render queued items and verify each output file was newly written. Blocks until complete. Missing output directories are created first. Completed items are not counted as new renders." + RENDER_QUEUE_UNDO_WARNING,
-  params: [],
-  toJsx() {
-    return `
-            var rq = app.project.renderQueue;
-            if (rq.numItems === 0) return { ok: false, error: "render queue is empty" };
-            var _before = [];
-            function _fileMeta(_path) {
-                if (!_path) return { exists: false, bytes: 0, modifiedMs: null };
-                var _file = new File(_path);
-                if (!_file.exists) return { exists: false, bytes: 0, modifiedMs: null };
-                var _date = _file.modified;
-                return { exists: true, bytes: _file.length, modifiedMs: _date ? _date.getTime() : null };
-            }
-            // A completed item can retain a true render flag. Only QUEUED
-            // items are candidates for this invocation's output evidence.
-            for (var _ri = 1; _ri <= rq.numItems; _ri++) {
-                var _it = rq.item(_ri);
-                if (!_it.render || _it.status !== RQItemStatus.QUEUED) continue;
-                var _outputs = [];
-                for (var _oi = 1; _oi <= _it.numOutputModules; _oi++) {
-                    var _target = _it.outputModule(_oi).file;
-                    if (_target) AE.ensureParentDir(_target);
-                    var _path = _target ? _target.fsName : null;
-                    if (!_path) return { ok: false, rendered: 0,
-                        error: "queued item " + _ri + " output module " + _oi + " has no output path" };
-                    _outputs.push({ path: _path, before: _fileMeta(_path) });
-                }
-                _before.push({ index: _ri, outputs: _outputs });
-            }
-            if (_before.length === 0) return { ok: false, rendered: 0, error: "no queued render items; add a fresh queue item or requeue an eligible item" };
-            rq.render();
-            var _items = [];
-            var _rendered = 0;
-            for (var _bi = 0; _bi < _before.length; _bi++) {
-                var _entry = _before[_bi];
-                var _afterItem = rq.item(_entry.index);
-                var _verified = _afterItem.status === RQItemStatus.DONE && _entry.outputs.length > 0;
-                var _checked = [];
-                for (var _ci = 0; _ci < _entry.outputs.length; _ci++) {
-                    var _out = _entry.outputs[_ci];
-                    var _meta = _fileMeta(_out.path);
-                    var _fresh = _meta.exists && _meta.bytes > 0 &&
-                        (!_out.before.exists || _meta.bytes !== _out.before.bytes ||
-                         (_meta.modifiedMs !== null && _meta.modifiedMs !== _out.before.modifiedMs));
-                    if (!_fresh) _verified = false;
-                    _checked.push({ path: _out.path, exists: _meta.exists, bytes: _meta.bytes,
-                        modifiedMs: _meta.modifiedMs, newlyWritten: _fresh });
-                }
-                if (_verified) _rendered++;
-                _items.push({ index: _entry.index, done: _afterItem.status === RQItemStatus.DONE,
-                    verified: _verified, outputs: _checked });
-            }
-            return { ok: _rendered === _before.length, rendered: _rendered,
-                error: _rendered === _before.length ? null : "one or more queued items did not produce a verifiably new nonempty output file",
-                items: _items };
-        `;
-  }
-});
-registerOp({
-  name: "render.clear_queue",
-  category: "render",
-  description: "Remove all items from the render queue.",
-  params: [],
-  toJsx() {
-    return `
-            var rq = app.project.renderQueue;
-            var removed = 0;
-            while (rq.numItems > 0) {
-                rq.item(1).remove();
-                removed++;
-            }
-            return { ok: true, removed: removed };
-        `;
-  }
-});
-function jsxRqItemPreamble(args) {
-  return `
-        var rq = app.project.renderQueue;
-        if (rq.numItems === 0) return { ok: false, error: "render queue is empty" };
-        var _qi = ${jsxVal(args.queueIndex ?? null)};
-        if (_qi === null) _qi = rq.numItems;
-        if (_qi < 1 || _qi > rq.numItems) return { ok: false, error: "queue index out of range (1-" + rq.numItems + ")" };
-        var _rqi = rq.item(_qi);
-    `;
-}
-registerOp({
-  name: "render.set_output",
-  category: "render",
-  description: "Configure a render-queue item: render/output templates, output path, time span, render flag, skipFrames, logType, postRenderAction. Discover template names with render.list_templates; raw settings via render.get_settings / render.set_settings.",
-  params: [
-    {
-      name: "queueIndex",
-      type: "number",
-      description: "1-based queue item index (default: last item)",
-      required: false
-    },
-    {
-      name: "renderTemplate",
-      type: "string",
-      description: 'Render settings template name (e.g. "Best Settings", "Draft Settings")',
-      required: false
-    },
-    {
-      name: "outputTemplate",
-      type: "string",
-      description: 'Output module template name (e.g. "Lossless", "High Quality")',
-      required: false
-    },
-    { name: "outputPath", type: "string", description: "Output file path", required: false },
-    {
-      name: "timeSpanStart",
-      type: "number",
-      description: "Render span start in seconds (comp time)",
-      required: false
-    },
-    {
-      name: "timeSpanDuration",
-      type: "number",
-      description: "Render span duration in seconds",
-      required: false
-    },
-    {
-      name: "outputModuleIndex",
-      type: "number",
-      description: "1-based output module index (default 1)",
-      required: false,
-      default: 1
-    },
-    {
-      name: "render",
-      type: "boolean",
-      description: "Whether this item renders when the queue starts (the Render checkbox)",
-      required: false
-    },
-    {
-      name: "skipFrames",
-      type: "number",
-      description: "Render every Nth frame (0 = every frame)",
-      required: false
-    },
-    {
-      name: "logType",
-      type: "string",
-      description: "errorsOnly|errorsAndSettings|errorsAndPerFrameInfo",
-      required: false
-    },
-    {
-      name: "postRenderAction",
-      type: "string",
-      description: "none|import|importAndReplaceUsage|setProxy (on the output module)",
-      required: false
-    },
-    {
-      name: "includeSourceXMP",
-      type: "boolean",
-      description: "Embed source-footage XMP metadata in the output",
-      required: false
-    },
-    {
-      name: "queueItemNotify",
-      type: "boolean",
-      description: "Per-item Notify checkbox (AE 22.0+)",
-      required: false
-    },
-    {
-      name: "queueNotify",
-      type: "boolean",
-      description: "QUEUE-WIDE Notify checkbox (RenderQueue.queueNotify, AE 22.0+)",
-      required: false
-    }
-  ],
-  toJsx(args) {
-    const rqiSets = [];
-    if (args.queueNotify !== void 0)
-      rqiSets.push(
-        `try { rq.queueNotify = ${jsxVal(args.queueNotify)}; } catch (eQq) { _w.push("queueNotify (AE 22.0+): " + AE.errText(eQq)); }`
-      );
-    if (args.renderTemplate !== void 0)
-      rqiSets.push(`_applyTpl(_rqi, ${jsxVal(args.renderTemplate)}, "renderTemplate");`);
-    if (args.timeSpanStart !== void 0)
-      rqiSets.push(
-        `try { _rqi.timeSpanStart = ${jsxVal(args.timeSpanStart)}; } catch (eTs) { _w.push("timeSpanStart: " + AE.errText(eTs)); }`
-      );
-    if (args.timeSpanDuration !== void 0)
-      rqiSets.push(
-        `try { _rqi.timeSpanDuration = ${jsxVal(args.timeSpanDuration)}; } catch (eTd) { _w.push("timeSpanDuration: " + AE.errText(eTd)); }`
-      );
-    if (args.render !== void 0)
-      rqiSets.push(
-        `try { _rqi.render = ${jsxVal(args.render)}; } catch (eRf) { _w.push("render: " + AE.errText(eRf)); }`
-      );
-    if (args.skipFrames !== void 0)
-      rqiSets.push(
-        `try { _rqi.skipFrames = ${jsxVal(args.skipFrames)}; } catch (eSk) { _w.push("skipFrames: " + AE.errText(eSk)); }`
-      );
-    if (args.logType !== void 0)
-      rqiSets.push(`
-                try {
-                    var _ltMap = { "errorsOnly": LogType.ERRORS_ONLY, "errorsAndSettings": LogType.ERRORS_AND_SETTINGS, "errorsAndPerFrameInfo": LogType.ERRORS_AND_PER_FRAME_INFO };
-                    if (_ltMap.hasOwnProperty(${jsxVal(args.logType)})) {
-                        _rqi.logType = _ltMap[${jsxVal(args.logType)}];
-                    } else { _w.push("logType: unknown value " + ${jsxVal(args.logType)}); }
-                } catch (eLt) { _w.push("logType: " + AE.errText(eLt)); }
-            `);
-    if (args.queueItemNotify !== void 0)
-      rqiSets.push(
-        `try { _rqi.queueItemNotify = ${jsxVal(args.queueItemNotify)}; } catch (eQn) { _w.push("queueItemNotify (AE 22.0+): " + AE.errText(eQn)); }`
-      );
-    const omSets = [];
-    if (args.outputTemplate !== void 0)
-      omSets.push(`_applyTpl(_om, ${jsxVal(args.outputTemplate)}, "outputTemplate");`);
-    if (args.outputPath !== void 0)
-      omSets.push(
-        `try { _om.file = AE.ensureParentDir(${jsxVal(args.outputPath)}); } catch (eOp) { _w.push("outputPath: " + AE.errText(eOp)); }`
-      );
-    if (args.postRenderAction !== void 0)
-      omSets.push(`
-                try {
-                    var _praMap = { "none": PostRenderAction.NONE, "import": PostRenderAction.IMPORT, "importAndReplaceUsage": PostRenderAction.IMPORT_AND_REPLACE_USAGE, "setProxy": PostRenderAction.SET_PROXY };
-                    if (_praMap.hasOwnProperty(${jsxVal(args.postRenderAction)})) {
-                        _om.postRenderAction = _praMap[${jsxVal(args.postRenderAction)}];
-                    } else { _w.push("postRenderAction: unknown value " + ${jsxVal(args.postRenderAction)}); }
-                } catch (ePa) { _w.push("postRenderAction: " + AE.errText(ePa)); }
-            `);
-    if (args.includeSourceXMP !== void 0)
-      omSets.push(
-        `try { _om.includeSourceXMP = ${jsxVal(args.includeSourceXMP)}; } catch (eXm) { _w.push("includeSourceXMP: " + AE.errText(eXm)); }`
-      );
-    return `
-            ${jsxRqItemPreamble(args)}
-            var _w = [];
-            // Template names are LOCALIZED ("Lossless" does not exist on a
-            // Japanese AE). Exact name first, then a case-insensitive scan of
-            // the target's own template list; when nothing matches, the
-            // warning carries that list so the caller can self-correct
-            // without a separate render.list_templates round trip.
-            function _applyTpl(target, name, label) {
-                try { target.applyTemplate(name); return; } catch (eT1) {}
-                var _avail = [];
-                try { _avail = target.templates; } catch (eT2) {}
-                var _want = String(name).toLowerCase();
-                for (var _ti = 0; _ti < _avail.length; _ti++) {
-                    if (String(_avail[_ti]).toLowerCase() === _want) {
-                        try { target.applyTemplate(_avail[_ti]); return; } catch (eT3) {}
-                    }
-                }
-                _w.push(label + ": no template named '" + name + "' \u2014 available: " + _avail.join(" | "));
-            }
-            ${rqiSets.join("\n")}
-            var _om = null;
-            try { _om = _rqi.outputModule(${jsxVal(args.outputModuleIndex ?? 1)}); } catch (eOm) {}
-            if (!_om) return { ok: false, error: "no output module at index " + ${jsxVal(args.outputModuleIndex ?? 1)} };
-            ${omSets.join("\n")}
-            return {
-                ok: true,
-                queueIndex: _qi,
-                comp: _rqi.comp.name,
-                timeSpanStart: _rqi.timeSpanStart,
-                timeSpanDuration: _rqi.timeSpanDuration,
-                outputPath: _om.file ? _om.file.fsName.replace(/\\\\/g, "/") : null,
-                warnings: _w
-            };
-        `;
-  }
-});
-registerOp({
-  name: "render.get_settings",
-  category: "render",
-  readOnly: true,
-  description: "Read the raw render settings of a queue item and the settings of each of its output modules (getSettings, AE 13.0+). format 'settable' returns only keys accepted by render.set_settings / render.set_om_settings.",
-  params: [
-    {
-      name: "queueIndex",
-      type: "number",
-      description: "1-based queue item index (default: last item)",
-      required: false
-    },
-    {
-      name: "format",
-      type: "string",
-      description: "settable|all (default settable)",
-      required: false,
-      default: "settable"
-    }
-  ],
-  toJsx(args) {
-    return `
-            ${jsxRqItemPreamble(args)}
-            if (typeof _rqi.getSettings !== "function") return { ok: false, error: "getSettings needs AE 13.0+" };
-            var _fmt = ${jsxVal(args.format ?? "settable")} === "all" ? GetSettingsFormat.STRING : GetSettingsFormat.STRING_SETTABLE;
-            var _rs = null;
-            try { _rs = _rqi.getSettings(_fmt); } catch (eRs) { return { ok: false, error: "getSettings failed: " + AE.errText(eRs) }; }
-            var _oms = [];
-            for (var _o = 1; _o <= _rqi.numOutputModules; _o++) {
-                var _om = _rqi.outputModule(_o);
-                var _os = null;
-                try { _os = _om.getSettings(_fmt); } catch (eOs) {}
-                _oms.push({ index: _o, name: AE.safeGet(function () { return _om.name; }, null), settings: _os });
-            }
-            return { ok: true, queueIndex: _qi, comp: _rqi.comp ? _rqi.comp.name : null, renderSettings: _rs, outputModules: _oms };
-        `;
-  }
-});
-registerOp({
-  name: "render.set_settings",
-  category: "render",
-  description: 'Set raw render settings on a queue item (RenderQueueItem.setSettings, AE 13.0+), e.g. { "Quality": "Best", "Resolution": "Half" }. Discover valid keys/values with render.get_settings.',
-  params: [
-    {
-      name: "queueIndex",
-      type: "number",
-      description: "1-based queue item index (default: last item)",
-      required: false
-    },
-    {
-      name: "settings",
-      type: "object",
-      description: "Key/value map from render.get_settings format 'settable'",
-      required: true
-    }
-  ],
-  toJsx(args) {
-    return `
-            ${jsxRqItemPreamble(args)}
-            if (typeof _rqi.setSettings !== "function") return { ok: false, error: "setSettings needs AE 13.0+" };
-            try { _rqi.setSettings(${jsxVal(args.settings)}); } catch (eSs) { return { ok: false, error: "setSettings failed: " + AE.errText(eSs) }; }
-            var _after = null;
-            try { _after = _rqi.getSettings(GetSettingsFormat.STRING_SETTABLE); } catch (eAf) {}
-            return { ok: true, queueIndex: _qi, renderSettings: _after };
-        `;
-  }
-});
-registerOp({
-  name: "render.set_om_settings",
-  category: "render",
-  description: 'Set raw output-module settings on a queue item (OutputModule.setSettings, AE 13.0+), e.g. { "Format": "QuickTime", "Channels": "RGB + Alpha" }. Discover valid keys/values with render.get_settings.',
-  params: [
-    {
-      name: "queueIndex",
-      type: "number",
-      description: "1-based queue item index (default: last item)",
-      required: false
-    },
-    {
-      name: "outputModuleIndex",
-      type: "number",
-      description: "1-based output module index (default 1)",
-      required: false,
-      default: 1
-    },
-    {
-      name: "settings",
-      type: "object",
-      description: "Key/value map from render.get_settings format 'settable'",
-      required: true
-    }
-  ],
-  toJsx(args) {
-    return `
-            ${jsxRqItemPreamble(args)}
-            var _om = null;
-            try { _om = _rqi.outputModule(${jsxVal(args.outputModuleIndex ?? 1)}); } catch (eOm) {}
-            if (!_om) return { ok: false, error: "no output module at index " + ${jsxVal(args.outputModuleIndex ?? 1)} };
-            if (typeof _om.setSettings !== "function") return { ok: false, error: "setSettings needs AE 13.0+" };
-            try { _om.setSettings(${jsxVal(args.settings)}); } catch (eSs) { return { ok: false, error: "setSettings failed: " + AE.errText(eSs) }; }
-            var _after = null;
-            try { _after = _om.getSettings(GetSettingsFormat.STRING_SETTABLE); } catch (eAf) {}
-            return { ok: true, queueIndex: _qi, outputModuleIndex: ${jsxVal(args.outputModuleIndex ?? 1)}, settings: _after };
-        `;
-  }
-});
-registerOp({
-  name: "render.remove_item",
-  category: "render",
-  description: "Remove ONE item from the render queue by its 1-based index (render.clear_queue removes all)." + RENDER_QUEUE_UNDO_WARNING,
-  params: [
-    {
-      name: "queueIndex",
-      type: "number",
-      description: "1-based queue item index (explicit \u2014 no default for a destructive op)",
-      required: true
-    }
-  ],
-  toJsx(args) {
-    return `
-            ${jsxRqItemPreamble(args)}
-            var _compName = _rqi.comp ? _rqi.comp.name : null;
-            try { _rqi.remove(); } catch (eRm) { return { ok: false, error: "remove failed: " + AE.errText(eRm) }; }
-            return { ok: true, removed: _compName, remaining: rq.numItems };
-        `;
-  }
-});
-registerOp({
-  name: "render.duplicate_item",
-  category: "render",
-  description: "Duplicate a render-queue item (RenderQueueItem.duplicate) \u2014 e.g. to render the same comp with a second settings/output combination.",
-  params: [
-    {
-      name: "queueIndex",
-      type: "number",
-      description: "1-based queue item index (default: last item)",
-      required: false
-    }
-  ],
-  toJsx(args) {
-    return `
-            ${jsxRqItemPreamble(args)}
-            var _dup = null;
-            try { _dup = _rqi.duplicate(); } catch (eDp) { return { ok: false, error: "duplicate failed: " + AE.errText(eDp) }; }
-            return { ok: true, comp: _dup.comp ? _dup.comp.name : null, numItems: rq.numItems };
-        `;
-  }
-});
-registerOp({
-  name: "render.list_templates",
-  category: "render",
-  readOnly: true,
-  description: "List available render-settings templates and output-module templates. They are read from a queue item: the first one, or, when the queue is empty and `comp` is given, a temporary item for that comp that is removed again (the project is then left modified by the queue change; render.preview with listTemplates does the same). A temporary item counts as a render-queue change:" + RENDER_QUEUE_UNDO_WARNING,
-  params: [
-    {
-      name: "comp",
-      type: "any",
-      description: "Comp name or id for a temporary queue item, used only when the queue is empty",
-      required: false
-    }
-  ],
-  toJsx(args) {
-    return `
-            ${READ_TEMPLATES_FN}
-            var rq = app.project.renderQueue;
-            if (rq.numItems > 0) {
-                var _first = _readTemplates(rq.item(1));
-                return { ok: true, renderTemplates: _first.renderTemplates, outputTemplates: _first.outputTemplates };
-            }
-            var _compArg = ${jsxVal(args.comp ?? null)};
-            if (${jsxVal(readOnlyMode())}) return { ok: false, error: "the render queue is empty, and AE_MCP_READONLY=1 forbids the temporary queue item that would modify the project" };
-            if (_compArg === null) return { ok: false, error: "the render queue is empty: pass comp (a temporary item is added, read and removed), or use render.preview with listTemplates" };
-            var _comp = AE.findCompByNameOrId(_compArg);
-            if (!_comp) return { ok: false, error: "no comp matching " + String(_compArg) };
-            var _tmp = null;
-            try {
-                _tmp = rq.items.add(_comp);
-                var _read = _readTemplates(_tmp);
-                return { ok: true, renderTemplates: _read.renderTemplates, outputTemplates: _read.outputTemplates, temporaryItem: true, projectModified: true, projectNote: ${jsxVal(QUEUE_CHANGE_NOTE)} };
-            } catch (eT) {
-                return { ok: false, error: "could not read templates: " + AE.errText(eT) };
-            } finally {
-                if (_tmp) { try { _tmp.remove(); } catch (eRm) {} }
-            }
-        `;
-  }
-});
-registerOp({
-  name: "render.status",
-  category: "render",
-  readOnly: true,
-  description: "Report the render queue state: per-item status, time spans, and output paths.",
-  params: [],
-  toJsx() {
-    return `
-            var rq = app.project.renderQueue;
-            var _statusNames = {};
-            try {
-                _statusNames[RQItemStatus.WILL_CONTINUE] = "WILL_CONTINUE";
-                _statusNames[RQItemStatus.NEEDS_OUTPUT] = "NEEDS_OUTPUT";
-                _statusNames[RQItemStatus.UNQUEUED] = "UNQUEUED";
-                _statusNames[RQItemStatus.QUEUED] = "QUEUED";
-                _statusNames[RQItemStatus.RENDERING] = "RENDERING";
-                _statusNames[RQItemStatus.USER_STOPPED] = "USER_STOPPED";
-                _statusNames[RQItemStatus.ERR_STOPPED] = "ERR_STOPPED";
-                _statusNames[RQItemStatus.DONE] = "DONE";
-            } catch (eSn) {}
-            var _items = [];
-            for (var _i = 1; _i <= rq.numItems; _i++) {
-                var _rqi = rq.item(_i);
-                var _outputs = [];
-                try {
-                    for (var _o = 1; _o <= _rqi.numOutputModules; _o++) {
-                        var _f = _rqi.outputModule(_o).file;
-                        _outputs.push(_f ? _f.fsName.replace(/\\\\/g, "/") : null);
-                    }
-                } catch (eOut) {}
-                _items.push({
-                    index: _i,
-                    comp: _rqi.comp ? _rqi.comp.name : null,
-                    status: _statusNames[_rqi.status] || String(_rqi.status),
-                    render: _rqi.render,
-                    timeSpanStart: _rqi.timeSpanStart,
-                    timeSpanDuration: _rqi.timeSpanDuration,
-                    elapsedSeconds: AE.safeGet(function () { return _rqi.elapsedSeconds; }, null),
-                    outputs: _outputs
-                });
-            }
-            return { ok: true, rendering: rq.rendering, numItems: rq.numItems, canQueueInAME: AE.safeGet(function () { return rq.canQueueInAME; }, false), items: _items };
-        `;
-  }
-});
-registerOp({
-  name: "render.queue_in_ame",
-  category: "render",
-  description: "Send the render queue to Adobe Media Encoder (for H.264/HEVC etc.). Requires AME installed. renderImmediately=true starts the AME queue.",
-  params: [
-    {
-      name: "renderImmediately",
-      type: "boolean",
-      description: "Start rendering in AME right away (default false)",
-      required: false,
-      default: false
-    }
-  ],
-  toJsx(args) {
-    return `
-            var rq = app.project.renderQueue;
-            if (rq.numItems === 0) return { ok: false, error: "render queue is empty" };
-            if (typeof rq.queueInAME !== "function") return { ok: false, error: "queueInAME not available (needs AE 14.0 / CC 2017+)" };
-            var _can = false;
-            try { _can = rq.canQueueInAME; } catch (eC) {}
-            if (!_can) return { ok: false, error: "cannot queue in AME \u2014 is Adobe Media Encoder installed and at least one item queued?" };
-            rq.queueInAME(${jsxVal(!!args.renderImmediately)});
-            return { ok: true, sent: rq.numItems, renderImmediately: ${jsxVal(!!args.renderImmediately)} };
-        `;
-  }
-});
-registerOp({
-  name: "render.variants",
-  category: "render",
-  description: "Render the same comp several times with different property values \u2014 a slider that switches a state, a text that changes per version \u2014 in ONE call. Each variant sets its values (static properties only; keyed ones are refused), renders through a temporary queue item to outputPath with {name}/{index} substituted, then the original values are restored. Other queue items are not rendered. Blocks until done: raise timeoutMs.",
-  params: [
-    { name: "comp", type: "any", description: "Comp name or id", required: true },
-    {
-      name: "variants",
-      type: "array",
-      description: '[{ name, sets: [{ layer, property, value }, \u2026] }, \u2026] \u2014 e.g. [{ name: "A", sets: [{ layer: "Ctrl", property: ["Effects","Slider Control","Slider"], value: 1 }] }]',
-      required: true
-    },
-    {
-      name: "outputPath",
-      type: "string",
-      description: "Output file path template; {name} and {index} are replaced per variant",
-      required: true
-    },
-    {
-      name: "renderTemplate",
-      type: "string",
-      description: "Render settings template name",
-      required: false
-    },
-    {
-      name: "outputTemplate",
-      type: "string",
-      description: "Output module template name",
-      required: false
-    },
-    {
-      name: "timeSpanStart",
-      type: "number",
-      description: "Render span start in seconds",
-      required: false
-    },
-    {
-      name: "timeSpanDuration",
-      type: "number",
-      description: "Render span duration in seconds",
-      required: false
-    }
-  ],
-  toJsx(args) {
-    const variants = Array.isArray(args.variants) ? args.variants : [];
-    if (variants.length === 0) {
-      return jsxFail("variants must be a non-empty array");
-    }
-    for (const [i, v] of variants.entries()) {
-      const variant = v;
-      if (!variant || typeof variant !== "object" || typeof variant.name !== "string") {
-        return jsxFail(`variants[${i}] needs a string name`);
-      }
-      if (!Array.isArray(variant.sets)) {
-        return jsxFail(`variants[${i}].sets must be an array of { layer, property, value }`);
-      }
-      for (const [j, s] of variant.sets.entries()) {
-        const set2 = s;
-        if (!set2 || typeof set2 !== "object" || set2.layer === void 0 || !Array.isArray(set2.property) || set2.value === void 0) {
-          return jsxFail(`variants[${i}].sets[${j}] must be { layer, property: [path], value }`);
-        }
-      }
-    }
-    const template = String(args.outputPath);
-    if (variants.length > 1 && !template.includes("{name}") && !template.includes("{index}")) {
-      return jsxFail(
-        "outputPath must contain {name} or {index} when rendering more than one variant, or every render overwrites the last"
-      );
-    }
-    return `
-            ${jsxCompPreamble(args)}
-            var _variants = ${jsxVal(variants)};
-            var _tpl = ${jsxVal(template)};
-            var rq = app.project.renderQueue;
-            ${PARK_QUEUE_FN}
-            // Only the temporary item may render: park every existing item.
-            var _parked = _parkQueue(rq);
-            var _results = [];
-            var _failed = 0;
-            try {
-                for (var _vi = 0; _vi < _variants.length; _vi++) {
-                    var _v = _variants[_vi];
-                    var _entry = { name: _v.name, ok: true, warnings: [] };
-                    var _restore = [];
-                    var _rqi = null;
-                    try {
-                        for (var _si = 0; _si < _v.sets.length; _si++) {
-                            var _s = _v.sets[_si];
-                            var _layer = AE.findLayerInComp(_comp, _s.layer);
-                            if (!_layer) throw new Error("no layer matching " + String(_s.layer));
-                            var _prop = AE.propertyAtPath(_layer, _s.property);
-                            if (!_prop || _prop.propertyType !== PropertyType.PROPERTY) throw new Error("property " + _s.property.join("/") + " not found on '" + _layer.name + "'");
-                            if (AE.hasKeys(_prop)) throw new Error("property " + _s.property.join("/") + " on '" + _layer.name + "' has keyframes \u2014 variants switch static values only");
-                            _restore.push({ prop: _prop, value: AE.readValue(_prop) });
-                            AE.writeValue(_prop, _s.value);
-                        }
-                        var _safe = String(_v.name).replace(/[\\\\\\/:*?"<>|]/g, "_");
-                        var _path = _tpl.replace(/\\{name\\}/g, _safe).replace(/\\{index\\}/g, String(_vi));
-                        _rqi = rq.items.add(_comp);
-                        ${args.renderTemplate !== void 0 ? `var _wr = AE.applyTemplate(_rqi, ${jsxVal(args.renderTemplate)}, "renderTemplate"); if (_wr) _entry.warnings.push(_wr);` : ""}
-                        var _om = _rqi.outputModule(1);
-                        ${args.outputTemplate !== void 0 ? `var _wo = AE.applyTemplate(_om, ${jsxVal(args.outputTemplate)}, "outputTemplate"); if (_wo) _entry.warnings.push(_wo);` : ""}
-                        _om.file = AE.ensureParentDir(_path);
-                        ${args.timeSpanStart !== void 0 ? `_rqi.timeSpanStart = ${jsxVal(args.timeSpanStart)};` : ""}
-                        ${args.timeSpanDuration !== void 0 ? `_rqi.timeSpanDuration = ${jsxVal(args.timeSpanDuration)};` : ""}
-                        rq.render();
-                        _entry.status = String(_rqi.status);
-                        _entry.outputPath = _om.file ? _om.file.fsName.replace(/\\\\/g, "/") : _path;
-                        if (_rqi.status === RQItemStatus.ERR_STOPPED || _rqi.status === RQItemStatus.USER_STOPPED) { _entry.ok = false; _entry.error = "render stopped (" + _entry.status + ")"; }
-                    } catch (eV) {
-                        _entry.ok = false;
-                        _entry.error = AE.errText(eV);
-                    } finally {
-                        if (_rqi) { try { _rqi.remove(); } catch (eRm) {} }
-                        for (var _ri = _restore.length - 1; _ri >= 0; _ri--) {
-                            try { AE.writeValue(_restore[_ri].prop, _restore[_ri].value); } catch (eRs) { _entry.warnings.push("restore failed: " + AE.errText(eRs)); }
-                        }
-                    }
-                    if (!_entry.ok) _failed++;
-                    _results.push(_entry);
-                }
-            } finally {
-                _unparkQueue(rq, _parked);
-            }
-            return { ok: _failed === 0, error: _failed === 0 ? null : (_failed + " of " + _results.length + " variants failed"), rendered: _results.length - _failed, variants: _results };
-        `;
-  }
-});
-registerOp({
-  name: "render.save_template",
-  category: "render",
-  appConfig: true,
-  description: "Save a queue item's current render settings, or an output module's current settings, as a named template (saveAsTemplate) for reuse via render.set_output.",
-  params: [
-    {
-      name: "type",
-      type: "string",
-      description: "render (RenderQueueItem settings) | output (OutputModule settings)",
-      required: true
-    },
-    { name: "name", type: "string", description: "Template name to save under", required: true },
-    {
-      name: "queueIndex",
-      type: "number",
-      description: "1-based queue item index (default: last item)",
-      required: false
-    },
-    {
-      name: "outputModuleIndex",
-      type: "number",
-      description: "1-based output module index (type=output only, default 1)",
-      required: false,
-      default: 1
-    }
-  ],
-  toJsx(args) {
-    return `
-            ${jsxRqItemPreamble(args)}
-            var _type = ${jsxVal(args.type)};
-            if (_type === "render") {
-                try { _rqi.saveAsTemplate(${jsxVal(args.name)}); } catch (eSt) { return { ok: false, error: "saveAsTemplate failed: " + AE.errText(eSt) }; }
-                return { ok: true, type: "render", name: ${jsxVal(args.name)} };
-            }
-            if (_type === "output") {
-                var _om = null;
-                try { _om = _rqi.outputModule(${jsxVal(args.outputModuleIndex ?? 1)}); } catch (eOm) {}
-                if (!_om) return { ok: false, error: "no output module at index " + ${jsxVal(args.outputModuleIndex ?? 1)} };
-                try { _om.saveAsTemplate(${jsxVal(args.name)}); } catch (eSo) { return { ok: false, error: "saveAsTemplate failed: " + AE.errText(eSo) }; }
-                return { ok: true, type: "output", name: ${jsxVal(args.name)} };
-            }
-            return { ok: false, error: "type must be render|output" };
-        `;
-  }
-});
-var PREVIEW_RESOLUTIONS = {
-  full: "Full",
-  half: "Half",
-  third: "Third",
-  quarter: "Quarter"
-};
-registerOp({
-  name: "render.preview",
-  category: "render",
-  description: "Render a quick preview movie of a comp's work area (or the whole comp, or a span) through the render queue, so it can be watched at speed. Adds ONE temporary queue item, renders only that item (others are parked and their Render checkboxes restored), then removes it: the queue is left as it was found. Never overwrites an existing file unless overwrite is true; creates the output folder. Returns outputPath, timeSpanStart, durationSeconds, frameCount, frameRate, renderSeconds (wall clock of the render), elapsedSeconds (AE's own count), bytes, outputTemplate, resolution (+ resolutionReadBack) and warnings. It changes the render queue:" + RENDER_QUEUE_UNDO_WARNING + " Blocks until done: raise ae_do timeoutMs for long comps (235 frames at 1080\xD71920 with 'High Quality' took about 20 s). Defaults are what is known to work: output template 'High Quality' (a ProRes .mov) at full resolution; resolution 'half' was measured live (540\xD7960 from 1080\xD71920, about a third of the time). listTemplates: true renders nothing and returns the render-settings and output-module template names, read from a temporary queue item that is removed again. Every answer carries projectModified: true and projectNote: adding and removing a queue item leaves the project unsaved.",
-  params: [
-    { name: "comp", type: "any", description: "Comp name or id", required: true },
-    {
-      name: "outputPath",
-      type: "string",
-      description: "Movie file path (the output template may change the extension; the path AE actually wrote is returned). Required unless listTemplates",
-      required: false
-    },
-    {
-      name: "listTemplates",
-      type: "boolean",
-      description: "Render nothing: return renderTemplates and outputTemplates, read from a temporary queue item for comp that is removed again",
-      required: false,
-      default: false
-    },
-    {
-      name: "span",
-      type: "string",
-      description: "workArea (default) | comp \u2014 what to render when no explicit time span is given",
-      required: false,
-      default: "workArea"
-    },
-    {
-      name: "timeSpanStart",
-      type: "number",
-      description: "Explicit span start in seconds (comp time); overrides span",
-      required: false
-    },
-    {
-      name: "timeSpanDuration",
-      type: "number",
-      description: "Explicit span duration in seconds; overrides span",
-      required: false
-    },
-    {
-      name: "outputTemplate",
-      type: "string",
-      description: "Output module template (default 'High Quality'); refused, with the available names, when it does not exist",
-      required: false,
-      default: "High Quality"
-    },
-    {
-      name: "renderTemplate",
-      type: "string",
-      description: "Render settings template (default: the queue item's own default)",
-      required: false
-    },
-    {
-      name: "resolution",
-      type: "string",
-      description: "full (default, untouched) | half | third | quarter. Set through setSettings({ Resolution }) and read back; resolutionReadBack and a warning say whether it took",
-      required: false,
-      default: "full"
-    },
-    {
-      name: "renderSettings",
-      type: "object",
-      description: "Raw render settings applied to the temporary item (RenderQueueItem.setSettings, keys from render.get_settings), after renderTemplate and resolution",
-      required: false
-    },
-    {
-      name: "overwrite",
-      type: "boolean",
-      description: "Replace an existing file at the output path (default false: refuse)",
-      required: false,
-      default: false
-    }
-  ],
-  toJsx(args) {
-    if (args.listTemplates === true) {
-      return `
-            ${jsxCompPreamble(args)}
-            ${READ_TEMPLATES_FN}
-            var rq = app.project.renderQueue;
-            if (AE.safeGet(function () { return rq.rendering; }, false)) return { ok: false, error: "the render queue is already rendering; wait for it to finish" };
-            var _tmp = null;
-            try {
-                _tmp = rq.items.add(_comp);
-                var _read = _readTemplates(_tmp);
-                return { ok: true, renderTemplates: _read.renderTemplates, outputTemplates: _read.outputTemplates, projectModified: true, projectNote: ${jsxVal(QUEUE_CHANGE_NOTE)} };
-            } catch (eT) {
-                return { ok: false, error: "could not read templates: " + AE.errText(eT), projectModified: true, projectNote: ${jsxVal(QUEUE_CHANGE_NOTE)} };
-            } finally {
-                if (_tmp) { try { _tmp.remove(); } catch (eRm) {} }
-            }
-        `;
-    }
-    if (typeof args.outputPath !== "string" || args.outputPath === "")
-      return jsxFail("outputPath is required (unless listTemplates is true)");
-    const span = args.span ?? "workArea";
-    if (span !== "workArea" && span !== "comp") return jsxFail("span must be workArea or comp");
-    const resolution = String(args.resolution ?? "full").toLowerCase();
-    if (!(resolution in PREVIEW_RESOLUTIONS))
-      return jsxFail("resolution must be full, half, third or quarter");
-    if (args.timeSpanStart === void 0 !== (args.timeSpanDuration === void 0))
-      return jsxFail("give both timeSpanStart and timeSpanDuration, or neither");
-    if (args.timeSpanDuration !== void 0 && !(Number(args.timeSpanDuration) > 0))
-      return jsxFail("timeSpanDuration must be above 0");
-    return `
-            ${jsxCompPreamble(args)}
-            ${PARK_QUEUE_FN}
-            var rq = app.project.renderQueue;
-            if (AE.safeGet(function () { return rq.rendering; }, false)) return { ok: false, error: "the render queue is already rendering; wait for it to finish" };
-            var _overwrite = ${jsxVal(!!args.overwrite)};
-            var _want = ${jsxVal(String(args.outputPath))};
-            function _meta(_path) {
-                var _f = new File(_path);
-                if (!_f.exists) return { exists: false, bytes: 0, modifiedMs: null };
-                var _d = _f.modified;
-                return { exists: true, bytes: _f.length, modifiedMs: _d ? _d.getTime() : null };
-            }
-            var _existing = _meta(_want);
-            if (_existing.exists && !_overwrite) return { ok: false, error: "a file already exists at " + _want + "; pass overwrite: true to replace it, or choose another outputPath", existing: _want };
-            var _w = [];
-            var _out = null;
-            var _rqi = null;
-            var _numBefore = rq.numItems;
-            var _parked = _parkQueue(rq);
-            try {
-                _rqi = rq.items.add(_comp);
-                ${args.renderTemplate !== void 0 ? `var _wr = AE.applyTemplate(_rqi, ${jsxVal(args.renderTemplate)}, "renderTemplate"); if (_wr) throw new Error(_wr);` : ""}
-                var _om = _rqi.outputModule(1);
-                var _wo = AE.applyTemplate(_om, ${jsxVal(args.outputTemplate ?? "High Quality")}, "outputTemplate");
-                if (_wo) throw new Error(_wo);
-                var _start = ${args.timeSpanStart !== void 0 ? jsxVal(args.timeSpanStart) : span === "comp" ? "0" : "_comp.workAreaStart"};
-                var _dur = ${args.timeSpanDuration !== void 0 ? jsxVal(args.timeSpanDuration) : span === "comp" ? "_comp.duration" : "_comp.workAreaDuration"};
-                _rqi.timeSpanStart = _start;
-                _rqi.timeSpanDuration = _dur;
-                var _res = ${jsxVal(resolution)};
-                var _resBack = null;
-                if (_res !== "full") {
-                    var _resName = ${jsxVal(PREVIEW_RESOLUTIONS[resolution])};
-                    try { _rqi.setSettings({ "Resolution": _resName }); } catch (eRs) { _w.push("resolution: setSettings failed: " + AE.errText(eRs)); }
-                    try { _resBack = _rqi.getSettings(GetSettingsFormat.STRING_SETTABLE)["Resolution"]; } catch (eRb) { _w.push("resolution: could not read it back: " + AE.errText(eRb)); }
-                    if (_resBack !== null && String(_resBack) !== _resName) _w.push("resolution: asked for " + _resName + " but the item reads " + String(_resBack) + " \u2014 the preview may be full size");
-                }
-                ${args.renderSettings !== void 0 ? `try { _rqi.setSettings(${jsxVal(args.renderSettings)}); } catch (eSs) { _w.push("renderSettings: " + AE.errText(eSs)); }` : ""}
-                _om.file = AE.ensureParentDir(_want);
-                var _path = _om.file ? _om.file.fsName.replace(/\\\\/g, "/") : _want;
-                var _before = _meta(_path);
-                if (_path !== _want && _before.exists && !_overwrite) throw new Error("the output template writes " + _path + ", which already exists; pass overwrite: true to replace it");
-                var _t0 = new Date().getTime();
-                rq.render();
-                var _t1 = new Date().getTime();
-                var _after = _meta(_path);
-                var _fresh = _after.exists && _after.bytes > 0 &&
-                    (!_before.exists || _after.bytes !== _before.bytes || (_after.modifiedMs !== null && _after.modifiedMs !== _before.modifiedMs));
-                var _status = _rqi.status;
-                var _fd = _comp.frameDuration;
-                _out = {
-                    ok: _status === RQItemStatus.DONE && _fresh,
-                    outputPath: _path,
-                    span: ${args.timeSpanStart !== void 0 ? '"custom"' : jsxVal(span)},
-                    timeSpanStart: _start,
-                    durationSeconds: _dur,
-                    frameCount: Math.round(_dur / _fd),
-                    frameRate: Math.round(1e3 / _fd) / 1e3,
-                    renderSeconds: Math.round(_t1 - _t0) / 1000,
-                    elapsedSeconds: AE.safeGet(function () { return _rqi.elapsedSeconds; }, null),
-                    bytes: _after.bytes,
-                    outputTemplate: ${jsxVal(args.outputTemplate ?? "High Quality")},
-                    resolution: _res,
-                    overwritten: _before.exists,
-                    warnings: _w
-                };
-                if (_res !== "full") _out.resolutionReadBack = _resBack;
-                if (!_out.ok) _out.error = _status !== RQItemStatus.DONE ? "the render did not finish (status " + String(_status) + ")" : "the render left no new file at " + _path;
-            } catch (eP) {
-                _out = { ok: false, error: "preview render failed: " + AE.errText(eP), warnings: _w };
-            } finally {
-                if (_rqi) { try { _rqi.remove(); } catch (eRm) { _w.push("could not remove the preview's queue item: " + AE.errText(eRm)); } }
-                _unparkQueue(rq, _parked);
-            }
-            if (rq.numItems !== _numBefore) _w.push("the render queue has " + rq.numItems + " items, it had " + _numBefore);
-            _out.projectModified = true;
-            _out.projectNote = ${jsxVal(QUEUE_CHANGE_NOTE)};
-            return _out;
         `;
   }
 });
