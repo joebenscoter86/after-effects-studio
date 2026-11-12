@@ -145,9 +145,11 @@ export interface CutoutIO {
     writePng?(file: string, data: Buffer): Promise<void>;
     /** Free bytes on the volume holding `dir` (default: fs.statfs), or null when unknown. */
     freeBytes?(dir: string): Promise<number | null>;
+    /** Which volume holds `dir` (default: the device of its nearest existing folder). */
+    volumeOf?(dir: string): Promise<string | number | null>;
 }
 /** What the pixel helpers need from After Effects: a render, and the files it wrote. */
-type PixelIO = Pick<CutoutIO, "render" | "readImage" | "writePng" | "freeBytes">;
+type PixelIO = Pick<CutoutIO, "render" | "readImage" | "writePng" | "freeBytes" | "volumeOf">;
 /**
  * Free space required on top of the movie: After Effects writes its disk cache
  * to the same drive while it renders, by an amount nobody measured for one
@@ -158,6 +160,13 @@ export declare const RENDER_MARGIN_BYTES: number;
 export declare function renderCutoutBytes(frames: number, size: [number, number] | number[]): number;
 /** Free bytes on the volume holding `dir`, read on its nearest existing folder; null when it cannot be read. */
 export declare function statfsFree(dir: string): Promise<number | null>;
+/**
+ * After Effects' disk cache written while it tracks Object Matte through
+ * `frames` frames of a source this size: one 16-bit RGBA frame of the source
+ * per frame (8 bytes a pixel). Measured: one render of 320 frames of a 2176 x
+ * 3840 take added about 19 GB (estimate 21.4 GB).
+ */
+export declare function cacheBytesFor(frames: number, sourceSize: [number, number] | number[] | null | undefined): number;
 /** Where After Effects keeps its disk cache: <Disk Cache folder>/Adobe/After Effects/<major.minor>. */
 export declare function aeCacheRoot(folder: string | null | undefined, version: string | null | undefined): string | null;
 /**

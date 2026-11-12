@@ -1206,6 +1206,58 @@ async function spaceRefusal(io, dir, needed, margin, what) {
     space: { free, needed: Math.round(needed), margin, where: dir }
   };
 }
+function cacheBytesFor(frames, sourceSize) {
+  const [w, h] = Array.isArray(sourceSize) && sourceSize.length >= 2 ? sourceSize : [1920, 1080];
+  return frames * w * h * 8;
+}
+async function volumeKey(dir) {
+  let d = path.resolve(dir);
+  for (; ; ) {
+    try {
+      return (await fs.stat(d)).dev;
+    } catch {
+      const up = path.dirname(d);
+      if (up === d) return null;
+      d = up;
+    }
+  }
+}
+const PART_NAMES = {
+  movie: "the movie",
+  cache: "After Effects' disk cache",
+  pictures: "captures and pictures"
+};
+async function spacePlan(io, entries, margin, what) {
+  const byVol = [];
+  for (const e of entries) {
+    const key = await (io.volumeOf ?? volumeKey)(e.where);
+    const v = byVol.find((x) => x.key === key && key !== null);
+    if (v)
+      for (const [k, n] of Object.entries(e.parts))
+        v.parts[k] = (v.parts[k] ?? 0) + (n ?? 0);
+    else byVol.push({ key, where: e.where, parts: { ...e.parts } });
+  }
+  const volumes = [];
+  let refusal = null;
+  for (const v of byVol) {
+    const free = await (io.freeBytes ?? statfsFree)(v.where);
+    const needed = Object.values(v.parts).reduce((a, b) => a + (b ?? 0), 0);
+    const ok = free === null || free >= needed + margin;
+    const row = { where: v.where, free, parts: v.parts, needed: Math.round(needed), margin, ok };
+    volumes.push(row);
+    if (!ok && !refusal) {
+      const partText = Object.entries(v.parts).map(([k, n]) => `${PART_NAMES[k]} ${gb(n ?? 0)}`).join(", ");
+      refusal = {
+        ok: false,
+        error: `only ${gb(free)} free on the drive holding ${v.where}; ${what} needs about ${gb(needed)} there (${partText}) plus a margin of ${gb(margin)}. A render on a nearly full drive stalls instead of failing. Free some space first, for example by purging After Effects' cache: Edit > Purge > All Memory & Disk Cache. Nothing was rendered.`,
+        space: { ...row, volumes }
+      };
+    }
+  }
+  if (refusal) refusal.space.volumes = volumes;
+  return { volumes, refusal };
+}
+const trackedSpan = (frames) => frames.length ? Math.max(...frames) - Math.min(...frames) + 1 : 0;
 function aeCacheRoot(folder, version) {
   if (!folder || !version) return null;
   const m = /^(\d+)\.(\d+)/.exec(version);
@@ -1263,7 +1315,7 @@ async function diskReport(cache, freeFn = statfsFree) {
     low
   };
   if (low)
-    out.note = `Only ${gb(free)} free on the drive After Effects caches to (${cacheRoot}); its disk cache holds ${size ? gb(size.bytes) + (size.complete ? "" : " or more") : "an unknown amount"}. Object Matte work grows it past the Disk Cache size set in the preferences (42.1 GB in one evening against 10 GB on 2026-11-12), and a render on a nearly full drive stalls. Ask the user to purge it: Edit > Purge > All Memory & Disk Cache in After Effects. Nothing was deleted and no preference was changed.`;
+    out.note = `Only ${gb(free)} free on the drive After Effects caches to (${cacheRoot}); its disk cache holds ${size ? gb(size.bytes) + (size.complete ? "" : " or more") : "an unknown amount"}. Object Matte work grows it past the Disk Cache size set in the preferences (about one 16-bit frame of the source for every frame it tracks through), and a render on a nearly full drive stalls. Ask the user to purge it: Edit > Purge > All Memory & Disk Cache in After Effects. Nothing was deleted and no preference was changed.`;
   return out;
 }
 const QUICK_NOTE = "Quick check: the click frames and two frames either side, which After Effects renders in seconds. A missed object, an enclosed gap and a second click on the same thing show there. To look across the clip, render the cut-out once (subject.render_cutout) and check the file (subject.check_file); across: true checks the live matte across the clip instead, which takes minutes (4 to 9 for nine frames on a 2176 x 3840 take), because After Effects recomputes the matte on every capture.";
@@ -1682,14 +1734,20 @@ async function runSubjectCheck(args, io) {
     typeof args.count === "number" ? args.count : CUTOUT_FRAMES,
     clickFrames
   ) : quickFrames(st.span, clickFrames);
-  const roomless = await spaceRefusal(
+  const checkSpace = await spacePlan(
     io,
-    outDir,
-    frames.length * 2 * 2 * captureBytes(st.compSize),
+    [
+      { where: outDir, parts: { pictures: frames.length * 2 * 2 * captureBytes(st.compSize) } },
+      // After Effects tracks the matte through every frame from the first to the last asked for.
+      {
+        where: aeCacheRoot(st.aeCache?.folder, st.aeCache?.version) ?? outDir,
+        parts: { cache: cacheBytesFor(trackedSpan(frames), st.sourceSize ?? st.compSize) }
+      }
+    ],
     PICTURE_MARGIN_BYTES,
     "this check"
   );
-  if (roomless) return roomless;
+  if (checkSpace.refusal) return checkSpace.refusal;
   const fillLayer = typeof st.fillLayer === "string" ? st.fillLayer : null;
   const isolate = fillLayer ? [args.layer, fillLayer] : args.layer;
   const rendered = await renderChunked(
@@ -1829,14 +1887,20 @@ async function fillGaps(args, io) {
   const missing = needSelection(st);
   if (missing) return { ok: false, error: missing };
   const frame = typeof args.frame === "number" ? args.frame : st.span?.inFrame ?? 0;
-  const roomless = await spaceRefusal(
+  const fillFrames = Array.isArray(args.frames) ? [frame, ...args.frames] : args.across === true ? [st.span?.inFrame ?? 0, Math.max(0, (st.span?.outFrame ?? 1) - 1), frame] : [frame - 2, frame + 2];
+  const fillSpace = await spacePlan(
     io,
-    outDir,
-    16 * 2 * captureBytes(st.compSize),
+    [
+      { where: outDir, parts: { pictures: 16 * 2 * captureBytes(st.compSize) } },
+      {
+        where: aeCacheRoot(st.aeCache?.folder, st.aeCache?.version) ?? outDir,
+        parts: { cache: cacheBytesFor(trackedSpan(fillFrames), st.sourceSize ?? st.compSize) }
+      }
+    ],
     PICTURE_MARGIN_BYTES,
     "filling the gaps"
   );
-  if (roomless) return roomless;
+  if (fillSpace.refusal) return fillSpace.refusal;
   const [ref] = await renderChunked(
     io,
     { compNameOrId: args.comp, isolate: args.layer, channels: "rgba" },
@@ -2327,7 +2391,17 @@ function renderCutoutPlanJsx(args) {
             } finally {
                 if (_tmp) { try { _tmp.remove(); } catch (eRm) {} }
             }
-            return { ok: true, layer: _layer.name, fillLayer: _fill, keep: _keep, compSize: [_comp.width, _comp.height],
+            var _src = null;
+            try { _src = [_layer.source.width, _layer.source.height]; } catch (eSrc) { _src = null; }
+            var _cacheFolder = null;
+            try {
+                var _pts = [PREFType.PREF_Type_MACHINE_SPECIFIC, PREFType.PREF_Type_MACHINE_INDEPENDENT];
+                for (var _pi = 0; _pi < _pts.length && !_cacheFolder; _pi++) {
+                    if (app.preferences.havePref("Disk Cache Controls", "Folder 7", _pts[_pi])) _cacheFolder = app.preferences.getPrefAsString("Disk Cache Controls", "Folder 7", _pts[_pi]);
+                }
+            } catch (ePref) {}
+            return { ok: true, layer: _layer.name, fillLayer: _fill, keep: _keep, compSize: [_comp.width, _comp.height], sourceSize: _src,
+                aeCache: { folder: _cacheFolder || null, version: AE.safeGet(function () { return app.version; }, null) },
                 span: { start: _start, duration: _end - _start, frames: Math.round((_end - _start) / _fd), frameRate: Math.round(1000 / _fd) / 1000 },
                 templates: { output: _out, render: _rend } };
         `;
@@ -2447,14 +2521,25 @@ async function runRenderCutout(args, io) {
   if ("error" in choice) return { ok: false, error: choice.error, templates: plan.templates };
   const frames = plan.span?.frames ?? 0;
   const where = path.dirname(outputPath);
-  const roomless = await spaceRefusal(
+  const cacheRoot = aeCacheRoot(plan.aeCache?.folder, plan.aeCache?.version);
+  const movieBytes = renderCutoutBytes(frames, plan.compSize ?? [1080, 1920]);
+  const cacheBytes = cacheBytesFor(frames, plan.sourceSize ?? plan.compSize);
+  const planned = await spacePlan(
     io,
-    where,
-    renderCutoutBytes(frames, plan.compSize ?? [1080, 1920]),
+    [
+      { where, parts: { movie: movieBytes } },
+      // An unknown cache folder is counted on the output's drive.
+      { where: cacheRoot ?? where, parts: { cache: cacheBytes } }
+    ],
     RENDER_MARGIN_BYTES,
     `rendering ${frames} frames`
   );
-  if (roomless) return roomless;
+  if (planned.refusal) return planned.refusal;
+  const space = {
+    parts: { movie: Math.round(movieBytes), cache: cacheBytes },
+    volumes: planned.volumes,
+    cacheWhere: cacheRoot ?? "unknown (After Effects' Disk Cache folder could not be read); counted on the output's drive"
+  };
   const t1 = performance.now();
   const r = await io.execute(
     renderCutoutJsx({
@@ -2475,7 +2560,7 @@ async function runRenderCutout(args, io) {
     const free = await (io.freeBytes ?? statfsFree)(where);
     spaceAtTimeout = { free, where };
     if (free !== null && free < RENDER_MARGIN_BYTES)
-      r.error = `the render timed out with only ${gb(free)} free on the drive holding ${where}: a full drive is a likely cause (on 2026-11-12 a render on a drive with 498 MB free stalled for 28 minutes instead of failing). Ask the user to free space, for example Edit > Purge > All Memory & Disk Cache in After Effects, then render again. After Effects said: ${r.error}`;
+      r.error = `the render timed out with only ${gb(free)} free on the drive holding ${where}: a full drive is a likely cause (a render on a nearly full drive stalls instead of failing). Ask the user to free space, for example Edit > Purge > All Memory & Disk Cache in After Effects, then render again. After Effects said: ${r.error}`;
   }
   const audio = r?.audio && Object.keys(r.audio).length ? r.audio : null;
   const sound = (audio ? `The output module's sound settings read ${Object.entries(audio).map(([k, v]) => `${k}: ${v}`).join("; ")}; whether the file carries a sound track depends on them and was not checked.` : "The output module's sound settings could not be read; the file may or may not carry a sound track.") + " The original layer keeps the sound: subject.use_cutout leaves its audio as it is and switches the movie's audio off, so it plays once.";
@@ -2500,7 +2585,9 @@ async function runRenderCutout(args, io) {
     };
   return {
     ...out,
-    next: `Check the file before building on it: subject.check_file { path: "${r.outputPath}", outDir }. Then subject.use_cutout puts it in the comp in place of the live matte.`
+    space,
+    cacheNote: `This render should have added about ${gb(cacheBytes)} to After Effects' disk cache (one 16-bit frame of the source per frame). Nothing was deleted and no preference was changed.`,
+    next: `Check the file before building on it: subject.check_file { path: "${r.outputPath}", outDir }. Then subject.use_cutout puts it in the comp in place of the live matte. Once the file is checked, the cache this work wrote is no longer needed: tell the user to purge it (Edit > Purge > All Memory & Disk Cache in After Effects); it should free about ${gb(cacheBytes)} or more.`
   };
 }
 const CHECK_FILE_MAX_FRAMES = 400;
@@ -2896,7 +2983,7 @@ function liveFileIO(transport) {
 registerOp({
   name: "subject.render_cutout",
   category: "subject",
-  description: "Render the cut-out once to a movie with alpha, so the piece is built on a file that cannot change: the layer with its gap fill when there is one, alone (every other layer's picture switched off for the render and put back afterwards, even when it fails; cameras and lights left as they are), over the layer's span, through one temporary render-queue item (other queue items are parked). Picks an output template that writes a movie with alpha ('High Quality with Alpha', 'Lossless with Alpha', or another whose name says alpha; image sequences are not used) and refuses, naming the templates, when none does. Returns outputPath, frameCount, renderSeconds, outputTemplate, templateChoice, layersSwitched, restored, sound and timing. Measured: 390 s for 320 frames of a 2176 x 3840 take, about one pass through the clip; tell the user before it runs. The movie is in comp space. The original layer keeps the sound; whether the movie carries a sound track is not promised." + RENDER_QUEUE_UNDO_WARNING,
+  description: "Render the cut-out once to a movie with alpha, so the piece is built on a file that cannot change: the layer with its gap fill when there is one, alone (every other layer's picture switched off for the render and put back afterwards, even when it fails; cameras and lights left as they are), over the layer's span, through one temporary render-queue item (other queue items are parked). Picks an output template that writes a movie with alpha ('High Quality with Alpha', 'Lossless with Alpha', or another whose name says alpha; image sequences are not used) and refuses, naming the templates, when none does. Returns outputPath, frameCount, renderSeconds, outputTemplate, templateChoice, layersSwitched, restored, sound and timing. Measured: 390 s for 320 frames of a 2176 x 3840 take, about one pass through the clip; tell the user before it runs. The movie is in comp space. The original layer keeps the sound; whether the movie carries a sound track is not promised. Before rendering it checks that each drive has room for its share, the movie and After Effects' disk cache (about one 16-bit frame of the source per frame: 19 GB measured for 320 frames of a 2176 x 3840 take), plus 3 GB; `space` and `cacheNote` give the numbers, and `next` says to purge the cache once the file is checked." + RENDER_QUEUE_UNDO_WARNING,
   params: [
     ...compLayerParams,
     {
@@ -3045,6 +3132,7 @@ export {
   acceptedBy,
   aeCacheRoot,
   alikeRegions,
+  cacheBytesFor,
   checkFileFrames,
   chooseAlphaTemplate,
   closeClicks,
