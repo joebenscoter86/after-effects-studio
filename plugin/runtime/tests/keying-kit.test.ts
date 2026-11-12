@@ -1708,6 +1708,7 @@ describe("fillBuildJsx", () => {
     expect(fill.audioEnabled).toBe(false); // the comp would play the sound twice
     expect(w.cut.audioEnabled).toBe(true);
     expect(res.audioOff).toBe(true);
+    expect(res.hasAudio).toBe(true);
     expect(w.layers[1].enabled).toBe(false);
     expect(w.cut.effects.list).toHaveLength(1);
   });

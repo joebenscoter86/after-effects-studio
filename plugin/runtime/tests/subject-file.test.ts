@@ -420,7 +420,7 @@ describe("checkFileFrames", () => {
 describe("subject.check_file", () => {
   it("reads every frame of the file in batches of at most 32, in a throwaway comp it removes afterwards", async () => {
     const io = fileIO();
-    const res = await runCheckFile({ path: "/x/cut.mov", outDir: dir }, io);
+    const res = await runCheckFile({ path: "/x/cut.mov", outDir: dir, frozenFrames: 1e9 }, io);
     expect(res.ok).toBe(true);
     const rs = renders(io);
     expect(rs.flatMap((r: Any) => r.frames)).toEqual(Array.from({ length: 120 }, (_, i) => i));
@@ -444,7 +444,7 @@ describe("subject.check_file", () => {
 
   it("finds a frame that lost a large region: a jump in the opaque share, and the opening on that frame", async () => {
     const io = fileIO({ dropped: new Set([100]) });
-    const res = await runCheckFile({ path: "/x/cut.mov", outDir: dir }, io);
+    const res = await runCheckFile({ path: "/x/cut.mov", outDir: dir, frozenFrames: 1e9 }, io);
     expect(res.stop).toBe(true);
     const jumps = res.findings.filter((f: Any) => f.kind === "jump");
     expect(jumps.map((j: Any) => [j.from, j.to])).toEqual([
@@ -474,7 +474,10 @@ describe("subject.check_file", () => {
 
   it("compares only true neighbours when it reads in steps, so motion between samples is no jump", async () => {
     const io = fileIO({ frames: 1000 });
-    const res = await runCheckFile({ path: "/x/cut.mov", outDir: dir, maxFrames: 100 }, io);
+    const res = await runCheckFile(
+      { path: "/x/cut.mov", outDir: dir, frozenFrames: 1e9, maxFrames: 100 },
+      io,
+    );
     expect(res.step).toBe(20);
     expect(res.compared).toMatch(
       /pairs of neighbouring frames \(each frame and the next\), one pair every 20 frames/,
@@ -483,7 +486,10 @@ describe("subject.check_file", () => {
 
   it("keeps the footage item when asked, and never removes an item it was given", async () => {
     const io = fileIO();
-    await runCheckFile({ path: "/x/cut.mov", outDir: dir, keepFootage: true }, io);
+    await runCheckFile(
+      { path: "/x/cut.mov", outDir: dir, frozenFrames: 1e9, keepFootage: true },
+      io,
+    );
     expect(io.calls.find((c: Any) => /cleanup/.test(c.label)).code).toMatch(/removeItem[^;]*false/);
   });
 
@@ -658,7 +664,10 @@ const pngs = async () => (await fs.readdir(dir)).filter((f) => f.endsWith(".png"
 describe("subject.check_file: what it leaves in outDir", () => {
   it("deletes each raw capture once read, and writes no picture for regions the user accepted", async () => {
     const io = standIO();
-    const res = await runCheckFile({ path: "/x/cut.mov", outDir: dir, accept: [STAND_BOX] }, io);
+    const res = await runCheckFile(
+      { path: "/x/cut.mov", outDir: dir, frozenFrames: 1e9, accept: [STAND_BOX] },
+      io,
+    );
     expect(res.stop).toBe(false);
     expect(res.accepted).toHaveLength(1);
     expect(await pngs()).toEqual(["check-file_sheet.png"]);
@@ -673,7 +682,7 @@ describe("subject.check_file: what it leaves in outDir", () => {
 
   it("writes full-size pictures only for the largest frame of each finding and both frames of each jump", async () => {
     const io = standIO({ dropped: new Set([100]) });
-    const res = await runCheckFile({ path: "/x/cut.mov", outDir: dir }, io);
+    const res = await runCheckFile({ path: "/x/cut.mov", outDir: dir, frozenFrames: 1e9 }, io);
     expect(res.stop).toBe(true);
     const stand = res.findings.find((f: Any) => f.kind === "opening" && f.frames.length > 1);
     const over = (await pngs()).filter((f) => f.endsWith("_over.png"));
@@ -791,7 +800,7 @@ describe("free space before a file check", () => {
   it("refuses before reading frames, and still removes the throwaway comp", async () => {
     const io = fileIO();
     io.freeBytes = async () => 0.1 * GB;
-    const res = await runCheckFile({ path: "/x/cut.mov", outDir: dir }, io);
+    const res = await runCheckFile({ path: "/x/cut.mov", outDir: dir, frozenFrames: 1e9 }, io);
     expect(res.ok).toBe(false);
     expect(res.error).toMatch(/free on/);
     expect(res.space.where).toBe(dir);
@@ -903,5 +912,108 @@ describe("the cache a render writes", () => {
     expect(res.next).toMatch(/Edit > Purge > All Memory & Disk Cache/);
     expect(res.next).toMatch(/about 21\.4 GB/);
     expect(res.cacheNote).toMatch(/nothing was deleted/i);
+  });
+});
+
+// ------------------------------------------ a cut-out whose outline never moves
+
+import { outlineTracker } from "../src/color/matte.js";
+
+/** A body whose left edge sits at x0, with grey footage whose brightness changes with `shade`. */
+function bodyAt(x0: number): Float64Array {
+  const a = new Float64Array(W * H);
+  for (let y = 60; y < H; y++)
+    for (let x = x0; x < x0 + 120; x++) if (x >= 0 && x < W) a[y * W + x] = 1;
+  return a;
+}
+const wobble = (f: number) => [0, 3, -2, 4, -3, 1, -4, 2][f % 8] + Math.floor(f / 4); // a few px a frame, drifting
+const grey = (v: number) => new Float64Array(W * H * 3).fill(v);
+
+describe("outlineTracker", () => {
+  it("finds a run where the outline did not move, with the footage changing inside it", () => {
+    const t = outlineTracker({ gap: 30, limit: 0.002, minFrames: 60 });
+    for (let f = 0; f < 90; f++) t.add(f, bodyAt(40), grey(0.3 + 0.004 * f), W, H);
+    const r = t.result();
+    expect(r.frozen).toEqual([expect.objectContaining({ from: 0, to: 89, length: 90 })]);
+    expect(r.frozen[0].footageChange).toBeGreaterThan(0);
+    expect(r.neighbours).toMatchObject({ min: 0, median: 0, max: 0, pairs: 89 });
+    expect(r.drift).toMatchObject({ gap: 30, min: 0, max: 0, windows: 60 });
+    expect(r.at).toMatch(/full size/);
+  });
+
+  it("finds nothing when the edge wobbles a few pixels a frame", () => {
+    const t = outlineTracker({ gap: 30, limit: 0.002, minFrames: 60 });
+    for (let f = 0; f < 90; f++) t.add(f, bodyAt(40 + wobble(f)), grey(0.3), W, H);
+    const r = t.result();
+    expect(r.frozen).toEqual([]);
+    expect(r.neighbours.median).toBeGreaterThan(0.002);
+  });
+
+  it("compares sparse frames with the latest frame at least a gap earlier (a check across the clip)", () => {
+    const t = outlineTracker({ gap: 30, limit: 0.002, minFrames: 60 });
+    for (const f of [0, 40, 80, 120, 160]) t.add(f, bodyAt(40), grey(0.3 + 0.001 * f), W, H);
+    expect(t.result().frozen).toEqual([expect.objectContaining({ from: 0, to: 160 })]);
+    expect(t.result().neighbours.pairs).toBe(0);
+  });
+});
+
+describe("subject.check_file: a frozen outline", () => {
+  function frozenIO(moving: boolean) {
+    const io = fileIO({ frames: 90 });
+    const base = io.render;
+    io.render = async (args: Any) => {
+      const out = await base(args);
+      const stem = args.outPath.replace(/\.png$/, "");
+      for (const [i, frame] of (args.frames as number[]).entries())
+        await fs.writeFile(
+          `${stem}_${i}.png`,
+          encodePngSrgbRgba8(
+            W,
+            H,
+            grey(0.3 + 0.004 * frame),
+            bodyAt(moving ? 40 + wobble(frame) : 40),
+          ),
+        );
+      return out;
+    };
+    return io;
+  }
+
+  it("reports the outline not moving while the footage did, with two pictures far apart, and stops", async () => {
+    const res = await runCheckFile({ path: "/x/cut.mov", outDir: dir }, frozenIO(false));
+    expect(res.stop).toBe(true);
+    const f = res.findings.find((x: Any) => x.kind === "frozen");
+    expect(f).toMatchObject({ from: 0, to: 89, length: 90 });
+    expect(f.reading).toMatch(/did not move for 90 frames while the footage did/);
+    expect(f.reading).toMatch(/replaced after the click/);
+    expect(f.reading).toMatch(/genuinely motionless/);
+    expect(f.pictures).toHaveLength(2);
+    for (const p of f.pictures) await fs.access(p);
+    expect(res.outline).toMatchObject({
+      neighbours: expect.any(Object),
+      drift: expect.any(Object),
+    });
+  });
+
+  it("does not report a cut-out whose edge moves", async () => {
+    const res = await runCheckFile({ path: "/x/cut.mov", outDir: dir }, frozenIO(true));
+    expect(res.findings.filter((x: Any) => x.kind === "frozen")).toEqual([]);
+  });
+
+  it("takes an accept of kind frozen for a subject that is really still", async () => {
+    const res = await runCheckFile(
+      { path: "/x/cut.mov", outDir: dir, accept: [{ kind: "frozen" }] },
+      frozenIO(false),
+    );
+    expect(res.findings.filter((x: Any) => x.kind === "frozen")).toEqual([]);
+    expect(res.accepted).toContainEqual(expect.objectContaining({ kind: "frozen" }));
+  });
+
+  it("takes the limits as arguments", async () => {
+    const res = await runCheckFile(
+      { path: "/x/cut.mov", outDir: dir, frozenFrames: 200 },
+      frozenIO(false),
+    );
+    expect(res.findings.filter((x: Any) => x.kind === "frozen")).toEqual([]);
   });
 });

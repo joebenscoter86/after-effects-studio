@@ -422,7 +422,10 @@ describe("subject.check", () => {
 
   it("renders the cut-out with its alpha at the click frames and across the clip, early frames first, with a settle time per frame", async () => {
     const io = fakeIO(() => matte());
-    const res = await runSubjectCheck({ comp: "Main", layer: 1, outDir: dir, across: true }, io);
+    const res = await runSubjectCheck(
+      { comp: "Main", layer: 1, outDir: dir, across: true, frozenFrames: 1e9 },
+      io,
+    );
     const [r] = renders(io);
     expect(r).toMatchObject({ compNameOrId: "Main", isolate: 1, channels: "rgba", edge: true });
     expect(r.frames).toEqual([0, 15, 40, 80, 120, 160, 200, 240, 280]); // the click frame (15) from the selections
@@ -441,7 +444,14 @@ describe("subject.check", () => {
   it("splits the frames into calls that each fit ae_render_frame's settle limit", async () => {
     const io = fakeIO(() => matte());
     await runSubjectCheck(
-      { comp: "Main", layer: 1, outDir: dir, across: true, secondsPerFrame: 100 },
+      {
+        comp: "Main",
+        layer: 1,
+        outDir: dir,
+        across: true,
+        frozenFrames: 1e9,
+        secondsPerFrame: 100,
+      },
       io,
     );
     const rs = renders(io);
@@ -452,7 +462,7 @@ describe("subject.check", () => {
 
   it("stops on an enclosed hole over the limit and says where it is", async () => {
     const res = await runSubjectCheck(
-      { comp: "Main", layer: 1, outDir: dir, across: true, holeLimit: 1000 },
+      { comp: "Main", layer: 1, outDir: dir, across: true, frozenFrames: 1e9, holeLimit: 1000 },
       fakeIO(() => matte([MIC, GAP]), { status: async () => APART as Any }),
     );
     expect(res.stop).toBe(true);
@@ -471,7 +481,7 @@ describe("subject.check", () => {
 
   it("stops on an opening that runs off the frame edge, the missed microphone of 2026-11-11", async () => {
     const res = await runSubjectCheck(
-      { comp: "Main", layer: 1, outDir: dir, across: true },
+      { comp: "Main", layer: 1, outDir: dir, across: true, frozenFrames: 1e9 },
       fakeIO(() => rects([BODY, MIC_OFF]), { status: async () => APART as Any }),
     );
     expect(res.stop).toBe(true);
@@ -489,7 +499,7 @@ describe("subject.check", () => {
 
   it("counts a frame that did not render as not checked, never as clean", async () => {
     const res = await runSubjectCheck(
-      { comp: "Main", layer: 1, outDir: dir, across: true },
+      { comp: "Main", layer: 1, outDir: dir, across: true, frozenFrames: 1e9 },
       fakeIO(() => matte(), { fail: new Set([0, 40]), status: async () => APART as Any }),
     );
     expect(res.stop).toBe(true);
@@ -507,7 +517,7 @@ describe("subject.check", () => {
   it("stops when no frame rendered", async () => {
     const all = new Set([0, 15, 40, 80, 120, 160, 200, 240, 280]);
     const res = await runSubjectCheck(
-      { comp: "Main", layer: 1, outDir: dir, across: true },
+      { comp: "Main", layer: 1, outDir: dir, across: true, frozenFrames: 1e9 },
       fakeIO(() => matte(), { fail: all, status: async () => APART as Any }),
     );
     expect(res.stop).toBe(true);
@@ -518,7 +528,7 @@ describe("subject.check", () => {
 
   it("reports the close clicks as a finding, and never takes the count as confirmation", async () => {
     const res = await runSubjectCheck(
-      { comp: "Main", layer: 1, outDir: dir, across: true },
+      { comp: "Main", layer: 1, outDir: dir, across: true, frozenFrames: 1e9 },
       fakeIO(() => matte()),
     );
     expect(res.findings).toEqual([expect.objectContaining({ kind: "close-clicks" })]);
@@ -550,14 +560,14 @@ describe("subject.check", () => {
         [140, 140, 41, 160, 1],
       ]);
     const first = await runSubjectCheck(
-      { comp: "Main", layer: 1, outDir: dir, across: true },
+      { comp: "Main", layer: 1, outDir: dir, across: true, frozenFrames: 1e9 },
       fakeIO(arch, { status: async () => APART as Any }),
     );
     expect(first.stop).toBe(true);
     expect(first.next).toMatch(/accept/);
     const box = first.findings[0].box;
     const second = await runSubjectCheck(
-      { comp: "Main", layer: 1, outDir: dir, across: true, accept: [box] },
+      { comp: "Main", layer: 1, outDir: dir, across: true, frozenFrames: 1e9, accept: [box] },
       fakeIO(arch, { status: async () => APART as Any }),
     );
     expect(second.stop).toBe(false);
@@ -567,7 +577,7 @@ describe("subject.check", () => {
 
   it("does not stop when there is nothing over the limit and the clicks are apart", async () => {
     const res = await runSubjectCheck(
-      { comp: "Main", layer: 1, outDir: dir, across: true },
+      { comp: "Main", layer: 1, outDir: dir, across: true, frozenFrames: 1e9 },
       fakeIO(() => matte([PIN]), { status: async () => APART as Any }),
     );
     expect(res.stop).toBe(false);
@@ -589,7 +599,10 @@ describe("subject.check", () => {
           summary: "no Object Matte on this layer: the user has not clicked yet",
         }) as Any,
     });
-    const res = await runSubjectCheck({ comp: "Main", layer: 1, outDir: dir, across: true }, io);
+    const res = await runSubjectCheck(
+      { comp: "Main", layer: 1, outDir: dir, across: true, frozenFrames: 1e9 },
+      io,
+    );
     expect(res.ok).toBe(false);
     expect(res.error).toMatch(/has not clicked/);
     expect(io.calls).toEqual([]);
@@ -659,6 +672,7 @@ describe("subject.fill_gaps", () => {
         minArea: 20,
         outDir: dir,
         across: true,
+        frozenFrames: 1e9,
       },
       io,
     );
@@ -701,7 +715,15 @@ describe("subject.fill_gaps", () => {
     const still = path.join(dir, "gap-mask.png");
     const io = fillIO(still, matte([GAP]), { fillShows: "all" });
     const res = await runFillGaps(
-      { comp: "Main", layer: 1, frame: 15, stillPath: still, outDir: dir, across: true },
+      {
+        comp: "Main",
+        layer: 1,
+        frame: 15,
+        stillPath: still,
+        outDir: dir,
+        across: true,
+        frozenFrames: 1e9,
+      },
       io,
     );
     expect(res.ok).toBe(false);
@@ -724,6 +746,7 @@ describe("subject.fill_gaps", () => {
         stillPath: path.join(dir, "m.png"),
         outDir: dir,
         across: true,
+        frozenFrames: 1e9,
       },
       io,
     );
@@ -751,6 +774,7 @@ describe("subject.fill_gaps", () => {
         stillPath: path.join(dir, "m.png"),
         outDir: dir,
         across: true,
+        frozenFrames: 1e9,
       },
       io,
     );
@@ -768,6 +792,7 @@ describe("subject.fill_gaps", () => {
         stillPath: path.join(dir, "m.png"),
         outDir: dir,
         across: true,
+        frozenFrames: 1e9,
       },
       io,
     );
@@ -788,6 +813,7 @@ describe("subject.fill_gaps", () => {
         stillPath: still,
         outDir: dir,
         across: true,
+        frozenFrames: 1e9,
         only: [{ x: 125, y: 155, width: 20, height: 25 }],
       },
       io,
@@ -815,6 +841,7 @@ describe("subject.fill_gaps", () => {
         stillPath: path.join(dir, "m.png"),
         outDir: dir,
         across: true,
+        frozenFrames: 1e9,
       },
       io,
     );
@@ -825,7 +852,14 @@ describe("subject.fill_gaps", () => {
 
   it("refuses a still path that is not an absolute .png", async () => {
     const res = await runFillGaps(
-      { comp: "Main", layer: 1, stillPath: "gap.png", outDir: dir, across: true },
+      {
+        comp: "Main",
+        layer: 1,
+        stillPath: "gap.png",
+        outDir: dir,
+        across: true,
+        frozenFrames: 1e9,
+      },
       fakeIO(() => matte([GAP])),
     );
     expect(res.ok).toBe(false);
@@ -875,7 +909,10 @@ describe("subject.check: a frame that does not repeat", () => {
 
   it("renders each frame with a finding once more at the end, and reports a frame that differs as unstable", async () => {
     const io = fakeIO(flaky, { status: async () => APART as Any });
-    const res = await runSubjectCheck({ comp: "Main", layer: 1, outDir: dir, across: true }, io);
+    const res = await runSubjectCheck(
+      { comp: "Main", layer: 1, outDir: dir, across: true, frozenFrames: 1e9 },
+      io,
+    );
     const rs = renders(io);
     expect(rs.at(-1)).toMatchObject({ frames: [0], channels: "rgba" });
     expect(rs.at(-1).outPath).toMatch(/recheck/);
@@ -895,7 +932,10 @@ describe("subject.check: a frame that does not repeat", () => {
 
   it("says a second render that agrees may come from the cache, not that the frame is stable", async () => {
     const io = fakeIO(() => rects([BODY, MIC_OFF]), { status: async () => APART as Any });
-    const res = await runSubjectCheck({ comp: "Main", layer: 1, outDir: dir, across: true }, io);
+    const res = await runSubjectCheck(
+      { comp: "Main", layer: 1, outDir: dir, across: true, frozenFrames: 1e9 },
+      io,
+    );
     expect(res.findings.some((f: Any) => f.kind === "unstable")).toBe(false);
     expect(res.recheck).toMatchObject({
       frames: [0, 15, 40, 80, 120, 160, 200, 240, 280],
@@ -907,12 +947,15 @@ describe("subject.check: a frame that does not repeat", () => {
 
   it("renders nothing again when nothing was over the limit, or when recheck is false", async () => {
     const io = fakeIO(() => matte(), { status: async () => APART as Any });
-    const res = await runSubjectCheck({ comp: "Main", layer: 1, outDir: dir, across: true }, io);
+    const res = await runSubjectCheck(
+      { comp: "Main", layer: 1, outDir: dir, across: true, frozenFrames: 1e9 },
+      io,
+    );
     expect(renders(io)).toHaveLength(1);
     expect(res.recheck).toMatchObject({ frames: [] });
     const io2 = fakeIO(() => rects([BODY, MIC_OFF]), { status: async () => APART as Any });
     const res2 = await runSubjectCheck(
-      { comp: "Main", layer: 1, outDir: dir, across: true, recheck: false },
+      { comp: "Main", layer: 1, outDir: dir, across: true, frozenFrames: 1e9, recheck: false },
       io2,
     );
     expect(renders(io2)).toHaveLength(1);
@@ -923,7 +966,7 @@ describe("subject.check: a frame that does not repeat", () => {
 describe("subject.check: what to do about close clicks", () => {
   it("says to take the later click out, and that the matte did not change on the take", async () => {
     const res = await runSubjectCheck(
-      { comp: "Main", layer: 1, outDir: dir, across: true },
+      { comp: "Main", layer: 1, outDir: dir, across: true, frozenFrames: 1e9 },
       fakeIO(() => matte()),
     );
     const f = res.findings.find((x: Any) => x.kind === "close-clicks");
@@ -945,7 +988,15 @@ describe("subject.fill_gaps: sound", () => {
           : orig(args)
     )(io.render);
     const res = await runFillGaps(
-      { comp: "Main", layer: 1, frame: 15, stillPath: still, outDir: dir, across: true },
+      {
+        comp: "Main",
+        layer: 1,
+        frame: 15,
+        stillPath: still,
+        outDir: dir,
+        across: true,
+        frozenFrames: 1e9,
+      },
       io,
     );
     expect(res.ok).toBe(true);
@@ -976,7 +1027,10 @@ describe("subject.check after a fill", () => {
     const io = fakeIO(() => matte(), {
       status: async () => ({ ...APART, fillLayer: "raw_nogreen.mp4 gap fill" }) as Any,
     });
-    const res = await runSubjectCheck({ comp: "Main", layer: 1, outDir: dir, across: true }, io);
+    const res = await runSubjectCheck(
+      { comp: "Main", layer: 1, outDir: dir, across: true, frozenFrames: 1e9 },
+      io,
+    );
     expect(renders(io)[0].isolate).toEqual([1, "raw_nogreen.mp4 gap fill"]);
     expect(res.fillLayer).toBe("raw_nogreen.mp4 gap fill");
     expect(res.inOut).toMatch(/with its gap fill \(raw_nogreen\.mp4 gap fill\)/);
@@ -991,7 +1045,10 @@ describe("timing and the second render", () => {
       ...(await render(args)),
       timing: { aeCallMs: 50, settleMs: 20, nodeMs: 10, totalMs: 80 },
     });
-    const res = await runSubjectCheck({ comp: "Main", layer: 1, outDir: dir, across: true }, io);
+    const res = await runSubjectCheck(
+      { comp: "Main", layer: 1, outDir: dir, across: true, frozenFrames: 1e9 },
+      io,
+    );
     const t = res.timing;
     expect(t).toMatchObject({
       statusMs: expect.any(Number),
@@ -1028,7 +1085,7 @@ describe("timing and the second render", () => {
     const box = { x: 61, y: 140, width: 79, height: 160 };
     const io = fakeIO(arch, { status: async () => APART as Any });
     const res = await runSubjectCheck(
-      { comp: "Main", layer: 1, outDir: dir, across: true, accept: [box] },
+      { comp: "Main", layer: 1, outDir: dir, across: true, frozenFrames: 1e9, accept: [box] },
       io,
     );
     expect(res.stop).toBe(false);
@@ -1046,7 +1103,15 @@ describe("timing and the second render", () => {
           : orig(args)
     )(io.render);
     const res = await runFillGaps(
-      { comp: "Main", layer: 1, frame: 15, stillPath: still, outDir: dir, across: true },
+      {
+        comp: "Main",
+        layer: 1,
+        frame: 15,
+        stillPath: still,
+        outDir: dir,
+        across: true,
+        frozenFrames: 1e9,
+      },
       io,
     );
     expect(res.timing).toMatchObject({
@@ -1106,14 +1171,14 @@ describe("subject.check: raw captures", () => {
     const raw = async () =>
       (await fs.readdir(dir)).filter((f) => /^cutout(-recheck)?-\d+_\d+\.png$/.test(f));
     const res = await runSubjectCheck(
-      { comp: "Main", layer: 1, outDir: dir, across: true },
+      { comp: "Main", layer: 1, outDir: dir, across: true, frozenFrames: 1e9 },
       fakeIO(() => rects([BODY, MIC_OFF]), { status: async () => APART as Any }),
     );
     expect(await raw()).toEqual([]);
     await fs.access(res.frames[0].picture);
     expect(res.frames[0].file).toBeUndefined();
     const kept = await runSubjectCheck(
-      { comp: "Main", layer: 1, outDir: dir, across: true, keepCaptures: true },
+      { comp: "Main", layer: 1, outDir: dir, across: true, frozenFrames: 1e9, keepCaptures: true },
       fakeIO(() => rects([BODY, MIC_OFF]), { status: async () => APART as Any }),
     );
     expect((await raw()).length).toBe(18);
@@ -1153,7 +1218,7 @@ describe("the cache a check across the clip writes", () => {
       freeBytes: async () => 5e9,
     });
     const across = await runSubjectCheck(
-      { comp: "Main", layer: 1, outDir: dir, across: true },
+      { comp: "Main", layer: 1, outDir: dir, across: true, frozenFrames: 1e9 },
       low,
     );
     expect(across.ok).toBe(false);
@@ -1164,5 +1229,41 @@ describe("the cache a check across the clip writes", () => {
       fakeIO(() => matte(), { status: async () => APART as Any, freeBytes: async () => 5e9 }),
     );
     expect(quick.ok).toBe(true); // frames 13 to 17: about 0.3 GB of cache
+  });
+});
+
+describe("subject.check across the clip: a frozen outline", () => {
+  it("reports a frozen outline between samples, and not on the quick check", async () => {
+    const io = fakeIO(() => matte(), { status: async () => APART as Any });
+    const res = await runSubjectCheck({ comp: "Main", layer: 1, outDir: dir, across: true }, io);
+    expect(res.findings).toContainEqual(
+      expect.objectContaining({ kind: "frozen", from: 0, to: 280 }),
+    );
+    const quick = await runSubjectCheck(
+      { comp: "Main", layer: 1, outDir: dir },
+      fakeIO(() => matte(), { status: async () => APART as Any }),
+    );
+    expect(quick.findings.some((f: Any) => f.kind === "frozen")).toBe(false);
+  });
+});
+
+describe("subject.fill_gaps: footage with no sound", () => {
+  it("says there was nothing to switch off rather than reading as a failure", async () => {
+    const still = path.join(dir, "gap-mask.png");
+    const io: Any = fakeIO(() => matte([GAP]));
+    const base = io.build;
+    io.build = async (a: Any) => ({ ...(await base(a)), audioOff: false, hasAudio: false });
+    io.render = (
+      (orig) => async (args: Any) =>
+        Array.isArray(args.isolate) && args.isolate.length === 1
+          ? fakeIO(() => Float64Array.from({ length: W * H }, () => 0)).render(args)
+          : orig(args)
+    )(io.render);
+    const res = await runFillGaps(
+      { comp: "Main", layer: 1, frame: 15, stillPath: still, outDir: dir },
+      io,
+    );
+    expect(res.layers.audio).toMatch(/no audio: nothing to switch off/);
+    expect(res.next).not.toMatch(/could not be switched off/);
   });
 });
