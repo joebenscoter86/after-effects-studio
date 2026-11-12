@@ -1316,18 +1316,16 @@ type RegionBox = Box & { area: number; edges?: FrameEdge[] };
 export interface RegionFinding {
   kind: "hole" | "opening";
   frames: number[];
+  smallestArea: number;
   largestArea: number;
+  /** The frame where it was largest. */
+  largestFrame: number;
   box: Box;
   edges?: FrameEdge[];
 }
 
 const intersects = (a: Box, b: Box) =>
   a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
-const overlapShare = (a: Box, b: Box) => {
-  const w = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
-  const h = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
-  return w > 0 && h > 0 ? (w * h) / (a.width * a.height) : 0;
-};
 const union = (a: Box, b: Box): Box => {
   const x = Math.min(a.x, b.x);
   const y = Math.min(a.y, b.y);
@@ -1342,36 +1340,87 @@ const fmt = (n: number) => Math.round(n).toLocaleString("en-US");
 const boxText = (b: Box) => `(${b.x}, ${b.y}, ${b.width} × ${b.height})`;
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
-/** Holes and openings at least `limit` px, each kind grouped across frames where their boxes overlap. */
+const boxArea = (b: Box) => b.width * b.height;
+const iou = (a: Box, b: Box) => {
+  const w = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
+  const h = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
+  if (w <= 0 || h <= 0) return 0;
+  const inter = w * h;
+  return inter / (boxArea(a) + boxArea(b) - inter);
+};
+
+/**
+ * Two regions are alike (the same thing on two frames, or on two renders of
+ * one frame) when their boxes overlap by at least half their union, or when
+ * they overlap and their areas are within a factor of two. A small opening
+ * under a microphone stand inside the box of a missed microphone is not
+ * alike to it (2026-11-11: 1,862 px against 114,769 px).
+ */
+export function alikeRegions(a: Box & { area: number }, b: Box & { area: number }): boolean {
+  if (iou(a, b) >= 0.5) return true;
+  if (!intersects(a, b)) return false;
+  const big = Math.max(a.area, b.area);
+  const small = Math.min(a.area, b.area);
+  return small > 0 && big / small <= 2;
+}
+
+/** An `accept` entry: a plain box (it accepts openings) or { box, kind }. */
+export type AcceptEntry = Box | { box: Box; kind?: "hole" | "opening" };
+
+/**
+ * Whether a finding is one the user accepted: an entry of the same kind
+ * (openings unless the entry says "hole") whose box overlaps the finding's by
+ * at least half their union. A hole is never accepted through an opening's
+ * box, and a box does not accept what merely lies inside it.
+ */
+export function acceptedBy(f: RegionFinding, accept: AcceptEntry[]): boolean {
+  return accept.some((e) => {
+    const box = "box" in e ? e.box : e;
+    const kind = ("box" in e ? e.kind : undefined) ?? "opening";
+    return kind === f.kind && iou(f.box, box) >= 0.5;
+  });
+}
+
+/** Holes and openings at least `limit` px, each kind grouped across frames where they are alike. */
 export function cutoutFindings(
   frames: Array<{ frame: number; holes?: RegionBox[] | null; openings?: RegionBox[] | null }>,
   limit: number,
 ): RegionFinding[] {
   const out: RegionFinding[] = [];
   for (const kind of ["hole", "opening"] as const) {
-    const mine: RegionFinding[] = [];
-    for (const f of frames) {
-      for (const h of (kind === "hole" ? f.holes : f.openings) ?? []) {
+    const groups: Array<{ f: RegionFinding; members: RegionBox[] }> = [];
+    for (const fr of frames) {
+      for (const h of (kind === "hole" ? fr.holes : fr.openings) ?? []) {
         if (h.area < limit) continue;
         const b = { x: h.x, y: h.y, width: h.width, height: h.height };
-        const hit = mine.find((o) => intersects(o.box, b));
-        if (hit) {
-          hit.box = union(hit.box, b);
-          hit.largestArea = Math.max(hit.largestArea, h.area);
-          if (!hit.frames.includes(f.frame)) hit.frames.push(f.frame);
-          if (hit.edges)
-            for (const e of h.edges ?? []) if (!hit.edges.includes(e)) hit.edges.push(e);
+        const g = groups.find((x) => x.members.some((m) => alikeRegions(m, h)));
+        if (g) {
+          const f = g.f;
+          g.members.push(h);
+          f.box = union(f.box, b);
+          if (h.area > f.largestArea) {
+            f.largestArea = h.area;
+            f.largestFrame = fr.frame;
+          }
+          f.smallestArea = Math.min(f.smallestArea, h.area);
+          if (!f.frames.includes(fr.frame)) f.frames.push(fr.frame);
+          if (f.edges) for (const e of h.edges ?? []) if (!f.edges.includes(e)) f.edges.push(e);
         } else
-          mine.push({
-            kind,
-            frames: [f.frame],
-            largestArea: h.area,
-            box: b,
-            ...(kind === "opening" ? { edges: [...(h.edges ?? [])] } : {}),
+          groups.push({
+            members: [h],
+            f: {
+              kind,
+              frames: [fr.frame],
+              smallestArea: h.area,
+              largestArea: h.area,
+              largestFrame: fr.frame,
+              box: b,
+              ...(kind === "opening" ? { edges: [...(h.edges ?? [])] } : {}),
+            },
           });
       }
     }
-    out.push(...mine.sort((a, b) => b.largestArea - a.largestArea));
+    out.push(...groups.map((g) => g.f).sort((a, b) => b.largestArea - a.largestArea));
   }
   return out;
 }
@@ -1487,6 +1536,7 @@ interface FrameReading {
   picture?: string;
   holes: RegionBox[] | null;
   openings: RegionBox[] | null;
+  opaqueShare?: number;
   holesUnderLimit?: { count: number; area: number };
   openingsUnderLimit?: { count: number; area: number };
   edgeWidth?: { typical: number | null; p90: number | null } | null;
@@ -1548,6 +1598,8 @@ async function measureFrames(
       continue;
     }
     const regions = cutoutRegions(img.alpha, img.width, img.height);
+    let opaquePx = 0;
+    for (const v of img.alpha) if (v >= EDGE_DEFAULTS.opaque) opaquePx++;
     const h = split(regions.holes);
     const o = split(regions.openings);
     const composite = flattenOver(img, { kind: "color", color: colour });
@@ -1567,6 +1619,7 @@ async function measureFrames(
       checked: true,
       file: r.file,
       picture,
+      opaqueShare: Math.round((opaquePx / img.alpha.length) * 10000) / 10000,
       holes: h.big,
       openings: o.big,
       holesUnderLimit: h.small,
@@ -1589,7 +1642,7 @@ async function measureFrames(
 function regionLines(findings: RegionFinding[], frames: number) {
   return findings.map(
     (f) =>
-      `${fmt(f.largestArea)} px at ${boxText(f.box)} on ${f.frames.length} of ${frames} frames (${f.frames.join(", ")})` +
+      `${f.smallestArea === f.largestArea ? `${fmt(f.largestArea)} px` : `${fmt(f.smallestArea)} to ${fmt(f.largestArea)} px (largest on frame ${f.largestFrame})`} at ${boxText(f.box)} on ${f.frames.length} of ${frames} frames (${f.frames.join(", ")})` +
       (f.kind === "opening" && f.edges?.length
         ? `, reaches the ${f.edges.join(" and ")} edge`
         : ""),
@@ -1616,9 +1669,14 @@ const TAKES_MINUTES =
   "This check can take minutes: on a 2176 x 3840 take each frame took 20 to 40 s the first time (the matte is tracked from the click), well under a second once rendered; tell the user before it runs on a long or large clip.";
 
 /** The findings over the limit, the not-checked frames, and a plain statement, for a set of readings. */
-function summarize(readings: FrameReading[], limit: number, accept: Box[]) {
+function summarize(
+  readings: FrameReading[],
+  limit: number,
+  accept: AcceptEntry[],
+  picture: string | null = null,
+) {
   const regions = cutoutFindings(readings, limit);
-  const accepted = regions.filter((f) => accept.some((b) => overlapShare(f.box, b) >= 0.5));
+  const accepted = regions.filter((f) => acceptedBy(f, accept));
   const open = regions.filter((f) => !accepted.includes(f));
   const missed = readings.filter((r) => !r.checked);
   const checked = { frames: readings.length - missed.length, of: readings.length };
@@ -1651,7 +1709,7 @@ function summarize(readings: FrameReading[], limit: number, accept: Box[]) {
     parts.push(
       missed.length
         ? `No hole or opening of ${fmt(limit)} px or more on the ${checked.frames} frames checked; the other ${missed.length} were not checked.`
-        : `Out: no hole or opening of ${fmt(limit)} px or more on the ${checked.frames} frames checked.`,
+        : `Nothing over the limit on ${checked.frames} of ${checked.of} frames; the picture is at ${picture ?? "(none)"}.`,
     );
   if (accepted.length)
     parts.push(
@@ -1660,13 +1718,112 @@ function summarize(readings: FrameReading[], limit: number, accept: Box[]) {
   return { findings: [...open, ...notChecked] as Json[], accepted, checked, text: parts.join(" ") };
 }
 
+const RECHECK_NOTE =
+  "Each frame with a hole or opening over the limit was rendered a second time at the end. After Effects may have served the second render from its cache, so two renders that agree do not show the frame is stable; " +
+  "a frame that differed between them did come out differently (on 2026-11-11 frame 0 of a take rendered once without the microphone and then with it; the cause is not known).";
+
+type KindRegion = RegionBox & { kind: "hole" | "opening" };
+const regionsOf = (r: FrameReading): KindRegion[] => [
+  ...(r.holes ?? []).map((x) => ({ ...x, kind: "hole" as const })),
+  ...(r.openings ?? []).map((x) => ({ ...x, kind: "opening" as const })),
+];
+
+/** Render once more each frame with a region over the limit, and report the frames whose regions differ. */
+async function recheckFrames(
+  io: CutoutIO,
+  readings: FrameReading[],
+  limit: number,
+  over: string,
+  outDir: string,
+  perFrameMs: number,
+  base: Record<string, unknown>,
+) {
+  const first = readings.filter((r) => r.checked && regionsOf(r).length > 0);
+  const frames = first.map((r) => r.frame);
+  if (!frames.length)
+    return {
+      frames,
+      agreed: 0,
+      differed: [] as number[],
+      failed: [] as number[],
+      unstable: [] as Json[],
+      note: "No frame had a hole or opening over the limit, so none was rendered a second time.",
+    };
+  const rendered = await renderChunked(io, base, frames, perFrameMs, outDir, "cutout-recheck");
+  const { readings: again } = await measureFrames(
+    io,
+    rendered,
+    limit,
+    over,
+    path.join(outDir, "cutout-recheck_sheet.png"),
+  );
+  const unstable: Json[] = [];
+  const failed: number[] = [];
+  let agreed = 0;
+  const brief = (rs: KindRegion[]) =>
+    rs.map((x) => ({
+      kind: x.kind,
+      area: x.area,
+      box: { x: x.x, y: x.y, width: x.width, height: x.height },
+    }));
+  for (const a of first) {
+    const b = again.find((x) => x.frame === a.frame);
+    if (!b || !b.checked) {
+      failed.push(a.frame);
+      continue;
+    }
+    const ra = regionsOf(a);
+    const rb = regionsOf(b);
+    const matched = (x: KindRegion, ys: KindRegion[]) =>
+      ys.some((y) => y.kind === x.kind && alikeRegions(x, y));
+    if (ra.every((x) => matched(x, rb)) && rb.every((y) => matched(y, ra))) {
+      agreed++;
+      continue;
+    }
+    unstable.push({
+      kind: "unstable",
+      frame: a.frame,
+      first: { regions: brief(ra), opaqueShare: a.opaqueShare ?? null, picture: a.picture },
+      second: { regions: brief(rb), opaqueShare: b.opaqueShare ?? null, picture: b.picture },
+      reading:
+        `Frame ${a.frame}: the cut-out differed between two renders of the same frame ` +
+        `(opaque share ${a.opaqueShare} then ${b.opaqueShare}; ${plural(ra.length, "region")} then ${rb.length} over the limit). Both pictures are kept.`,
+    });
+  }
+  return {
+    frames,
+    agreed,
+    differed: unstable.map((u) => u.frame),
+    failed,
+    unstable,
+    note:
+      RECHECK_NOTE +
+      (failed.length
+        ? ` Frames ${failed.join(", ")} did not render the second time and were not compared.`
+        : ""),
+  };
+}
+
+/** What to do about two clicks on the same thing: take the later one out. */
+function closeAdvice(pairs: CloseClick[]): string {
+  const num = (n: string) => Number(/(\d+)\s*$/.exec(n)?.[1] ?? -1);
+  const later = pairs.map((p) => (num(p.a) >= num(p.b) ? p.a : p.b));
+  return (
+    "When both clicks are on the same thing, take the later one out: " +
+    [...new Set(later)]
+      .map((n) => `subject.remove_selection { selection: "${n}" }`)
+      .join(", then ") +
+    ". On the take of 2026-11-11 the matte did not change when the redundant click was removed (opaque share 0.3083 before and after on frame 0). If the later click was meant for something else (a microphone), ask for that click again."
+  );
+}
+
 export async function runSubjectCheck(args: Record<string, unknown>, io: CutoutIO): Promise<Json> {
   const outDir = args.outDir;
   if (typeof outDir !== "string" || !path.isAbsolute(outDir))
     return { ok: false, error: "`outDir` must be an absolute folder for the pictures" };
   const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
   const over = typeof args.over === "string" ? args.over : CUTOUT_OVER;
-  const accept = Array.isArray(args.accept) ? (args.accept as Box[]) : [];
+  const accept = Array.isArray(args.accept) ? (args.accept as AcceptEntry[]) : [];
   const st = await io.status();
   if (!st?.ok) return { ok: false, error: st?.error ?? "subject.status failed", status: st };
   const missing = needSelection(st);
@@ -1699,10 +1856,21 @@ export async function runSubjectCheck(args: Record<string, unknown>, io: CutoutI
     over,
     path.join(outDir, "cutout_sheet.png"),
   );
-  const sum = summarize(readings, limit, accept);
+  const sum = summarize(readings, limit, accept, picture);
   const close = closeClicks(clicks, st.sourceSize ?? null);
   const findings: Json[] = [...sum.findings];
-  if (close.length) findings.push({ kind: "close-clicks", pairs: close });
+  const recheck =
+    args.recheck === false
+      ? { skipped: true, note: "recheck: false; no frame was rendered a second time" }
+      : await recheckFrames(io, readings, limit, over, outDir, perFrameMsOf(args), {
+          compNameOrId: args.comp,
+          isolate: args.layer,
+          channels: "rgba",
+          edge: true,
+        });
+  if ("unstable" in recheck) findings.push(...recheck.unstable);
+  if (close.length)
+    findings.push({ kind: "close-clicks", pairs: close, advice: closeAdvice(close) });
   const rects = clicks.filter((c) => c.kind === "rectangle").map((c) => c.name);
   const solid = readings.find((r) => typeof r.solidAreas === "number")?.solidAreas;
   const inText =
@@ -1726,7 +1894,17 @@ export async function runSubjectCheck(args: Record<string, unknown>, io: CutoutI
     findings,
     accepted: sum.accepted,
     checked: sum.checked,
-    inOut: `${inText} ${sum.text}${clickText}${rectText}${pictureText}`,
+    recheck:
+      "unstable" in recheck
+        ? {
+            frames: recheck.frames,
+            agreed: recheck.agreed,
+            differed: recheck.differed,
+            failed: recheck.failed,
+            note: recheck.note,
+          }
+        : recheck,
+    inOut: `${inText} ${sum.text}${clickText}${rectText}${stop || !picture ? pictureText : ""}`,
     picture,
     frames: readings,
     clicks,
@@ -1734,8 +1912,11 @@ export async function runSubjectCheck(args: Record<string, unknown>, io: CutoutI
     holeLimit: limit,
     next: stop
       ? "Stop: show the user the picture and say what is out, before building anything else. " +
+        (findings.some((f) => f.kind === "unstable")
+          ? "A frame came out differently on two renders (kind 'unstable'): run subject.check again, and look at the first frames of the delivered video as well. "
+          : "") +
         "Something left out needs another click (subject.prepare, then the steps); a wrong extra click comes out with subject.remove_selection; an enclosed gap no click fills goes to subject.fill_gaps. " +
-        "When the user says a region shown is fine (a real gap between an arm and the body), run subject.check again with accept: [that finding's box] so it is not shown again. " +
+        "When the user says a region shown is fine (a real gap between an arm and the body), run subject.check again with accept: [that finding's box] (an opening), or accept: [{ box, kind: 'hole' }] for a hole, so it is not shown again. Two clicks on the same thing: take the later one out with subject.remove_selection. " +
         "Frames not checked: run subject.check again on those frames with a larger secondsPerFrame. " +
         TAKES_MINUTES
       : "Nothing over the limit. Still look at the picture yourself and tell the user what is in and what is out before building on the cut-out. " +
@@ -1860,6 +2041,8 @@ export async function runFillGaps(args: Record<string, unknown>, io: CutoutIO): 
     mask: built.maskLayer,
     stillItem: built.stillItem,
     stillItemId: built.stillItemId ?? null,
+    audioOff: built.audioOff === true,
+    ...(built.audioError ? { audioError: built.audioError } : {}),
   };
 
   // The fill layer alone must show no more than the still lets through.
@@ -1946,6 +2129,12 @@ export async function runFillGaps(args: Record<string, unknown>, io: CutoutIO): 
     limits: FILL_LIMITS(frame),
     next:
       "Show the user the picture after the fill and say what is left. To undo the fill, delete the two layers it added." +
+      (layers.audioOff
+        ? " The fill copy's audio was switched off, so the footage's sound plays once."
+        : "") +
+      (built.audioError
+        ? ` The fill copy's audio could not be switched off (${built.audioError}): the sound may play twice; switch it off by hand.`
+        : "") +
       (fillAlone.ok === null
         ? " The fill layer alone could not be rendered, so whether the track matte limits it was not checked: look at it."
         : ""),
@@ -2018,7 +2207,13 @@ export function fillBuildJsx(args: { comp: unknown; layer: unknown; stillPath: s
             } catch (eSpan) { _spanError = AE.errText(eSpan); }
             _fill.setTrackMatte(_mask, TrackMatteType.LUMA);
             _mask.enabled = false;
-            var _out = { ok: true, fillLayer: _fill.name, fillIndex: _fill.index, maskLayer: _mask.name, maskIndex: _mask.index, stillItem: _item.name, stillItemId: AE.safeGet(function () { return _item.id; }, null), removedFromCopy: _removed };
+            var _audioOff = false;
+            var _audioError = null;
+            if (AE.safeGet(function () { return _fill.hasAudio; }, false)) {
+                try { _fill.audioEnabled = false; _audioOff = true; } catch (eAud) { _audioError = AE.errText(eAud); }
+            }
+            var _out = { ok: true, fillLayer: _fill.name, fillIndex: _fill.index, maskLayer: _mask.name, maskIndex: _mask.index, stillItem: _item.name, stillItemId: AE.safeGet(function () { return _item.id; }, null), removedFromCopy: _removed, audioOff: _audioOff };
+            if (_audioError !== null) _out.audioError = _audioError;
             if (_spanError !== null) _out.maskSpanError = _spanError;
             return _out;
         `;
@@ -2114,7 +2309,8 @@ registerOp({
     "finds holes (regions below opaque the frame edge cannot reach) and openings (regions closed off only by the subject and the frame edge: the missed microphone of 2026-11-11 ran off the bottom of the frame), draws each frame over a flat colour and one contact sheet, and returns " +
     "picture (the sheet), findings, accepted, checked {frames, of}, inOut (a plain statement of what is in and what is out), frames, clicks and stop. " +
     `A hole or opening of holeLimit px or more (default ${CUTOUT_HOLE_LIMIT}, at the comp's size) is a finding; so are frames that did not render (kind 'not-checked': a frame that was not rendered is never counted as clean) and two clicks close together. ` +
-    "With stop true: show the user the picture and say what is out before doing anything else. `accept` boxes (from earlier findings the user called fine, such as a real gap between an arm and the body) are not counted again. " +
+    "With stop true: show the user the picture and say what is out before doing anything else. `accept` entries (earlier findings the user called fine, such as a real gap between an arm and the body) are not counted again. " +
+    "Each frame with a finding is rendered once more at the end; a frame whose cut-out differs between the two renders is a finding of kind 'unstable' (seen once on 2026-11-11, cause unknown; agreement may come from the cache and does not prove a frame stable). " +
     "A selection count is not a check. It can take minutes: 20 to 40 s a frame the first time on a 2176 x 3840 take; say so to the user before it runs.",
   params: [
     ...compLayerParams,
@@ -2148,7 +2344,14 @@ registerOp({
       name: "accept",
       type: "array",
       description:
-        "Boxes {x, y, width, height} of findings the user has seen and called fine: a hole or opening at least half inside one is listed in `accepted`, not in findings.",
+        "Findings the user has seen and called fine, so a later run does not stop on them: each a box {x, y, width, height} (it accepts an opening) or { box, kind: 'hole' | 'opening' }. A finding is accepted only by an entry of its kind whose box overlaps its own by at least half their union; a hole inside an accepted opening's box is not accepted.",
+      required: false,
+    },
+    {
+      name: "recheck",
+      type: "boolean",
+      description:
+        "Render each frame with a hole or opening over the limit once more at the end and report a frame that differs (kind 'unstable'). Default true; false skips it.",
       required: false,
     },
     secondsPerFrameParam,
@@ -2166,7 +2369,7 @@ registerOp({
     "Fill enclosed gaps in a subject matte that no click fills (a gap in a microphone's shock mount with the shirt behind it): reads the matte at one reference frame at the comp's size, keeps the regions below opaque that the frame edge cannot reach (openings are never filled), drops those under minArea (default 20 px), grows the rest by `grow` px (default 3), " +
     "writes them as a still (stillPath), and adds a copy of the same footage under the cut-out showing only through that still (luma track matte). It then renders the fill layer alone and undoes the build when that covers more than the mask, and measures holes and openings again across the clip. " +
     "Refuses, building nothing, when the reference frame does not render. Limits, stated in the result: one reference frame, so it assumes a locked camera and a prop that does not move; what shows through is whatever is behind the gap. `only` boxes fill just the gaps they touch. " +
-    "Can take minutes, as subject.check does. Probed by hand in After Effects 27.0; this operation is not verified there yet.",
+    "Can take minutes, as subject.check does (180 s on the take). Verified in After Effects 27.0 on one take (2026-11-11): the layers, the luma track matte, a switched-off mask that still mattes, and the measurements after; undoing the build when the fill covers too much is not verified there. The fill copy's audio is switched off (audioOff) so the sound does not play twice.",
   params: [
     ...compLayerParams,
     {

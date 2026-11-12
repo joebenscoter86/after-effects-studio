@@ -1588,6 +1588,8 @@ describe("fillBuildJsx", () => {
         effects: fxs,
         duplicate() {
           const copy = mk(l.name + " 2", new Parade());
+          copy.hasAudio = l.hasAudio;
+          copy.audioEnabled = l.audioEnabled;
           for (const fx of fxs.list)
             copy.effects.list.push({
               ...fx,
@@ -1616,6 +1618,8 @@ describe("fillBuildJsx", () => {
       return l;
     }
     const cut = mk("raw_nogreen.mp4", new Parade());
+    cut.hasAudio = true;
+    cut.audioEnabled = true;
     const om = objectMatte(["Add Object 1"]);
     cut.effects.list.push(om);
     layers.push(cut, mk(taken || "BG", null));
@@ -1688,6 +1692,9 @@ describe("fillBuildJsx", () => {
     const fill = w.layers[2];
     expect(fill.trackMatte).toEqual({ layer: "raw_nogreen.mp4 gap mask", type: 3 });
     expect(fill.effects.list).toEqual([]);
+    expect(fill.audioEnabled).toBe(false); // the comp would play the sound twice
+    expect(w.cut.audioEnabled).toBe(true);
+    expect(res.audioOff).toBe(true);
     expect(w.layers[1].enabled).toBe(false);
     expect(w.cut.effects.list).toHaveLength(1);
   });

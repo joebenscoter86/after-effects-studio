@@ -17,6 +17,8 @@ import { cutoutRegions, enclosedHoles, growMask } from "../src/color/matte.js";
 import { decodePng, encodePngSrgbRgba8 } from "../src/color/png16.js";
 import {
   CUTOUT_HOLE_LIMIT,
+  acceptedBy,
+  alikeRegions,
   closeClicks,
   cutoutFindings,
   runFillGaps,
@@ -24,6 +26,7 @@ import {
   type CutoutIO,
 } from "../src/operations/keying.js";
 import { getOp } from "../src/registry.js";
+import { validateOpArgs } from "../src/opschema.js";
 import "../src/operations/index.js";
 
 type Any = any; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -155,13 +158,71 @@ describe("cutoutFindings", () => {
       {
         kind: "hole",
         frames: [0, 40],
+        smallestArea: 2380,
         largestArea: 2400,
+        largestFrame: 0,
         box: { x: 80, y: 150, width: 42, height: 61 },
       },
     ]);
     expect(
       cutoutFindings([{ frame: 0, holes: [{ x: 0, y: 0, width: 3, height: 2, area: 6 }] }], 1000),
     ).toEqual([]);
+  });
+
+  it("does not merge unlike regions across frames: the missed mic on one frame and the opening under the stand on the others", () => {
+    const stand = (frame: number, area: number) => ({
+      frame,
+      openings: [{ x: 625, y: 1884, width: 91, height: 35, area, edges: ["bottom" as const] }],
+    });
+    const f = cutoutFindings(
+      [
+        {
+          frame: 0,
+          openings: [
+            { x: 489, y: 1459, width: 368, height: 461, area: 114769, edges: ["bottom" as const] },
+          ],
+        },
+        stand(15, 1862),
+        stand(40, 2090),
+      ],
+      1000,
+    );
+    expect(f).toEqual([
+      expect.objectContaining({
+        kind: "opening",
+        frames: [0],
+        smallestArea: 114769,
+        largestArea: 114769,
+        largestFrame: 0,
+      }),
+      expect.objectContaining({
+        kind: "opening",
+        frames: [15, 40],
+        smallestArea: 1862,
+        largestArea: 2090,
+        largestFrame: 40,
+      }),
+    ]);
+  });
+
+  it("groups a region that drifts a little between frames", () => {
+    const f = cutoutFindings(
+      [
+        { frame: 0, holes: [{ x: 100, y: 100, width: 50, height: 50, area: 2500 }] },
+        { frame: 40, holes: [{ x: 115, y: 100, width: 50, height: 50, area: 1400 }] },
+      ],
+      1000,
+    );
+    expect(f).toHaveLength(1);
+    expect(f[0]).toMatchObject({ frames: [0, 40], smallestArea: 1400, largestArea: 2500 });
+  });
+
+  it("calls two regions alike when their boxes overlap by half the union, or overlap with areas within a factor of two", () => {
+    const a = { x: 0, y: 0, width: 100, height: 100, area: 5000 };
+    expect(alikeRegions(a, { x: 10, y: 0, width: 100, height: 100, area: 5000 })).toBe(true);
+    expect(alikeRegions(a, { x: 60, y: 0, width: 100, height: 100, area: 6000 })).toBe(true); // little overlap, similar size
+    expect(alikeRegions(a, { x: 10, y: 10, width: 20, height: 20, area: 300 })).toBe(false); // inside it, far smaller
+    expect(alikeRegions(a, { x: 200, y: 0, width: 100, height: 100, area: 5000 })).toBe(false); // apart
   });
 
   it("uses a default limit chosen from the build record", () => {
@@ -507,8 +568,11 @@ describe("subject.check", () => {
     );
     expect(res.stop).toBe(false);
     expect(res.findings).toEqual([]);
-    expect(res.inOut).toMatch(/no hole or opening of 1,000 px or more on the 9 frames checked/);
+    expect(res.inOut).toMatch(
+      /Nothing over the limit on 9 of 9 frames; the picture is at .*cutout_sheet\.png/,
+    );
     expect(res.next).toMatch(/still look at the picture/i);
+    expect(res.frames[0].opaqueShare).toBeCloseTo((120 * 240 - 6) / (W * H), 4);
   });
 
   it("refuses before rendering when nobody has clicked", async () => {
@@ -725,5 +789,143 @@ describe("subject.fill_gaps", () => {
     );
     expect(res.ok).toBe(false);
     expect(res.error).toMatch(/absolute path to a \.png/);
+  });
+});
+
+// ------------------------------------------------ stage 12b, second fixes
+
+describe("accept", () => {
+  const opening = {
+    kind: "opening" as const,
+    frames: [0],
+    smallestArea: 114769,
+    largestArea: 114769,
+    largestFrame: 0,
+    box: { x: 489, y: 1459, width: 368, height: 461 },
+  };
+  const hole = {
+    kind: "hole" as const,
+    frames: [15],
+    smallestArea: 4623,
+    largestArea: 4623,
+    largestFrame: 15,
+    box: { x: 538, y: 1619, width: 46, height: 132 },
+  };
+
+  it("matches a plain box to an opening of similar place and size, never to a hole inside it", () => {
+    expect(acceptedBy(opening, [opening.box])).toBe(true);
+    expect(acceptedBy(hole, [opening.box])).toBe(false);
+    expect(acceptedBy(hole, [hole.box])).toBe(false); // a plain box means an opening
+  });
+
+  it("takes { box, kind } to accept a hole, and still needs a similar place", () => {
+    expect(acceptedBy(hole, [{ box: hole.box, kind: "hole" }])).toBe(true);
+    expect(acceptedBy(hole, [{ box: opening.box, kind: "hole" }])).toBe(false);
+    expect(acceptedBy(opening, [{ box: { x: 489, y: 1459, width: 100, height: 100 } }])).toBe(
+      false,
+    );
+  });
+});
+
+describe("subject.check: a frame that does not repeat", () => {
+  /** Frame 0 renders without the mic the first time only (seen once on the take). */
+  const flaky = (frame: number, args: Any) =>
+    frame === 0 && !String(args.outPath).includes("recheck") ? rects([BODY, MIC_OFF]) : matte();
+
+  it("renders each frame with a finding once more at the end, and reports a frame that differs as unstable", async () => {
+    const io = fakeIO(flaky, { status: async () => APART as Any });
+    const res = await runSubjectCheck({ comp: "Main", layer: 1, outDir: dir }, io);
+    const rs = renders(io);
+    expect(rs.at(-1)).toMatchObject({ frames: [0], channels: "rgba" });
+    expect(rs.at(-1).outPath).toMatch(/recheck/);
+    expect(res.stop).toBe(true);
+    const u = res.findings.find((f: Any) => f.kind === "unstable");
+    expect(u).toMatchObject({ frame: 0 });
+    expect(u.first.regions).toEqual([expect.objectContaining({ kind: "opening", area: 4000 })]);
+    expect(u.second.regions).toEqual([]);
+    expect(u.first.opaqueShare).toBeLessThan(u.second.opaqueShare);
+    await fs.access(u.first.picture);
+    await fs.access(u.second.picture);
+    expect(u.first.picture).not.toBe(u.second.picture);
+    expect(u.reading).toMatch(/differed between two renders of the same frame/);
+    expect(res.next).toMatch(/run subject\.check again/);
+    expect(res.next).toMatch(/first frames of the delivered video/);
+  });
+
+  it("says a second render that agrees may come from the cache, not that the frame is stable", async () => {
+    const io = fakeIO(() => rects([BODY, MIC_OFF]), { status: async () => APART as Any });
+    const res = await runSubjectCheck({ comp: "Main", layer: 1, outDir: dir }, io);
+    expect(res.findings.some((f: Any) => f.kind === "unstable")).toBe(false);
+    expect(res.recheck).toMatchObject({
+      frames: [0, 15, 40, 80, 120, 160, 200, 240, 280],
+      agreed: 9,
+      differed: [],
+    });
+    expect(res.recheck.note).toMatch(/cache/);
+  });
+
+  it("renders nothing again when nothing was over the limit, or when recheck is false", async () => {
+    const io = fakeIO(() => matte(), { status: async () => APART as Any });
+    const res = await runSubjectCheck({ comp: "Main", layer: 1, outDir: dir }, io);
+    expect(renders(io)).toHaveLength(1);
+    expect(res.recheck).toMatchObject({ frames: [] });
+    const io2 = fakeIO(() => rects([BODY, MIC_OFF]), { status: async () => APART as Any });
+    const res2 = await runSubjectCheck(
+      { comp: "Main", layer: 1, outDir: dir, recheck: false },
+      io2,
+    );
+    expect(renders(io2)).toHaveLength(1);
+    expect(res2.recheck).toMatchObject({ skipped: true });
+  });
+});
+
+describe("subject.check: what to do about close clicks", () => {
+  it("says to take the later click out, and that the matte did not change on the take", async () => {
+    const res = await runSubjectCheck(
+      { comp: "Main", layer: 1, outDir: dir },
+      fakeIO(() => matte()),
+    );
+    const f = res.findings.find((x: Any) => x.kind === "close-clicks");
+    expect(f.advice).toMatch(/subject\.remove_selection \{ selection: "Add Object 2" \}/);
+    expect(f.advice).toMatch(/did not change/);
+  });
+});
+
+describe("subject.fill_gaps: sound", () => {
+  it("reports that the fill copy's audio was switched off", async () => {
+    const still = path.join(dir, "gap-mask.png");
+    const io: Any = fakeIO(() => matte([GAP]));
+    const base = io.build;
+    io.build = async (a: Any) => ({ ...(await base(a)), audioOff: true });
+    io.render = (
+      (orig) => async (args: Any) =>
+        Array.isArray(args.isolate) && args.isolate.length === 1
+          ? fakeIO(() => Float64Array.from({ length: W * H }, () => 0)).render(args)
+          : orig(args)
+    )(io.render);
+    const res = await runFillGaps(
+      { comp: "Main", layer: 1, frame: 15, stillPath: still, outDir: dir },
+      io,
+    );
+    expect(res.ok).toBe(true);
+    expect(res.layers.audioOff).toBe(true);
+    expect(res.next).toMatch(/audio.*switched off/);
+  });
+});
+
+describe("subject.check's arguments", () => {
+  it("takes recheck and accept entries with a kind through ae_do's schema", () => {
+    const v = validateOpArgs(getOp("subject.check")!, {
+      comp: "Main",
+      layer: 1,
+      outDir: "/tmp/x",
+      recheck: false,
+      accept: [
+        { x: 0, y: 0, width: 10, height: 10 },
+        { box: { x: 0, y: 0, width: 5, height: 5 }, kind: "hole" },
+      ],
+      secondsPerFrame: 90,
+    });
+    expect(v.ok).toBe(true);
   });
 });
