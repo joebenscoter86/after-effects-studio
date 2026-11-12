@@ -3271,8 +3271,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path14) {
-      let input2 = path14;
+    function removeDotSegments(path15) {
+      let input2 = path15;
       const output2 = [];
       let nextSlash = -1;
       let len = 0;
@@ -3346,11 +3346,11 @@ var require_utils = __commonJS({
       }
       return output2.join("");
     }
-    function removeDotSegmentsRelative(path14) {
-      if (path14 === "" || path14[0] === "/") {
-        return removeDotSegments(path14);
+    function removeDotSegmentsRelative(path15) {
+      if (path15 === "" || path15[0] === "/") {
+        return removeDotSegments(path15);
       }
-      const segments = path14.split("/");
+      const segments = path15.split("/");
       const last = segments.length - 1;
       const output2 = [];
       let trailingDirectory = false;
@@ -3713,8 +3713,8 @@ var require_schemes = __commonJS({
       }
       if (wsComponent.resourceName) {
         const queryIndex = wsComponent.resourceName.indexOf("?");
-        const path14 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
-        wsComponent.path = path14 && path14 !== "/" ? path14 : void 0;
+        const path15 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
+        wsComponent.path = path15 && path15 !== "/" ? path15 : void 0;
         wsComponent.query = queryIndex === -1 ? void 0 : wsComponent.resourceName.slice(queryIndex + 1);
         wsComponent.resourceName = void 0;
       }
@@ -6524,11 +6524,11 @@ var require_format = __commonJS({
           }
           function getFormat(fmtDef) {
             const code = fmtDef instanceof RegExp ? (0, codegen_1.regexpCode)(fmtDef) : opts.code.formats ? (0, codegen_1._)`${opts.code.formats}${(0, codegen_1.getProperty)(schema)}` : void 0;
-            const fmt3 = gen.scopeValue("formats", { key: schema, ref: fmtDef, code });
+            const fmt4 = gen.scopeValue("formats", { key: schema, ref: fmtDef, code });
             if (typeof fmtDef == "object" && !(fmtDef instanceof RegExp)) {
-              return [fmtDef.type || "string", fmtDef.validate, (0, codegen_1._)`${fmt3}.validate`];
+              return [fmtDef.type || "string", fmtDef.validate, (0, codegen_1._)`${fmt4}.validate`];
             }
-            return ["string", fmtDef, fmt3];
+            return ["string", fmtDef, fmt4];
           }
           function validCondition() {
             if (typeof formatDef == "object" && !(formatDef instanceof RegExp) && formatDef.async) {
@@ -7190,8 +7190,8 @@ var require_limit = __commonJS({
             ref: self.formats,
             code: opts.code.formats
           });
-          const fmt3 = gen.const("fmt", (0, codegen_1._)`${fmts}[${fCxt.schemaCode}]`);
-          cxt.fail$data((0, codegen_1.or)((0, codegen_1._)`typeof ${fmt3} != "object"`, (0, codegen_1._)`${fmt3} instanceof RegExp`, (0, codegen_1._)`typeof ${fmt3}.compare != "function"`, compareCode(fmt3)));
+          const fmt4 = gen.const("fmt", (0, codegen_1._)`${fmts}[${fCxt.schemaCode}]`);
+          cxt.fail$data((0, codegen_1.or)((0, codegen_1._)`typeof ${fmt4} != "object"`, (0, codegen_1._)`${fmt4} instanceof RegExp`, (0, codegen_1._)`typeof ${fmt4}.compare != "function"`, compareCode(fmt4)));
         }
         function validateFormat() {
           const format = fCxt.schema;
@@ -7201,15 +7201,15 @@ var require_limit = __commonJS({
           if (typeof fmtDef != "object" || fmtDef instanceof RegExp || typeof fmtDef.compare != "function") {
             throw new Error(`"${keyword}": format "${format}" does not define "compare" function`);
           }
-          const fmt3 = gen.scopeValue("formats", {
+          const fmt4 = gen.scopeValue("formats", {
             key: format,
             ref: fmtDef,
             code: opts.code.formats ? (0, codegen_1._)`${opts.code.formats}${(0, codegen_1.getProperty)(format)}` : void 0
           });
-          cxt.fail$data(compareCode(fmt3));
+          cxt.fail$data(compareCode(fmt4));
         }
-        function compareCode(fmt3) {
-          return (0, codegen_1._)`${fmt3}.compare(${data}, ${schemaCode}) ${KWDs[keyword].fail} 0`;
+        function compareCode(fmt4) {
+          return (0, codegen_1._)`${fmt4}.compare(${data}, ${schemaCode}) ${KWDs[keyword].fail} 0`;
         }
       },
       dependencies: ["format"]
@@ -7251,12 +7251,12 @@ var require_dist = __commonJS({
         throw new Error(`Unknown format "${name}"`);
       return f;
     };
-    function addFormats(ajv, list, fs11, exportName) {
+    function addFormats(ajv, list, fs12, exportName) {
       var _a3;
       var _b;
       (_a3 = (_b = ajv.opts.code).formats) !== null && _a3 !== void 0 ? _a3 : _b.formats = (0, codegen_1._)`require("ajv-formats/dist/formats").${exportName}`;
       for (const f of list)
-        ajv.addFormat(f, fs11[f]);
+        ajv.addFormat(f, fs12[f]);
     }
     module.exports = exports = formatsPlugin;
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -7555,23 +7555,23 @@ __export(eval_exports, {
   readScriptFile: () => readScriptFile
 });
 import { readFileSync, realpathSync, statSync as statSync2 } from "node:fs";
-import * as path7 from "node:path";
+import * as path10 from "node:path";
 function realOrResolved(p) {
   try {
     return realpathSync(p);
   } catch {
-    return path7.resolve(p);
+    return path10.resolve(p);
   }
 }
 function isInside(p, root) {
-  const rel = path7.relative(root, p);
-  return rel === "" || !rel.startsWith("..") && !path7.isAbsolute(rel);
+  const rel = path10.relative(root, p);
+  return rel === "" || !rel.startsWith("..") && !path10.isAbsolute(rel);
 }
 function refuse(error62, hint) {
   return hint ? { ok: false, error: error62, hint } : { ok: false, error: error62 };
 }
 function readScriptFile(file2) {
-  if (!path7.isAbsolute(file2)) {
+  if (!path10.isAbsolute(file2)) {
     return {
       ok: false,
       error: `file must be an absolute path (got '${file2}'): the server's working directory is not yours`
@@ -8063,8 +8063,8 @@ function getErrorMap() {
 
 // node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path14, errorMaps, issueData } = params;
-  const fullPath = [...path14, ...issueData.path || []];
+  const { data, path: path15, errorMaps, issueData } = params;
+  const fullPath = [...path15, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -8179,11 +8179,11 @@ var errorUtil;
 
 // node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path14, key) {
+  constructor(parent, value, path15, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path14;
+    this._path = path15;
     this._key = key;
   }
   get path() {
@@ -12138,10 +12138,10 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path14) {
-  if (!path14)
+function getElementAtPath(obj, path15) {
+  if (!path15)
     return obj;
-  return path14.reduce((acc, key) => acc?.[key], obj);
+  return path15.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -12481,11 +12481,11 @@ function explicitlyAborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path14, issues) {
+function prefixIssues(path15, issues) {
   return issues.map((iss) => {
     var _a3;
     (_a3 = iss).path ?? (_a3.path = []);
-    iss.path.unshift(path14);
+    iss.path.unshift(path15);
     return iss;
   });
 }
@@ -12947,16 +12947,16 @@ function flattenError(error62, mapper = (issue2) => issue2.message) {
 }
 function formatError(error62, mapper = (issue2) => issue2.message) {
   const fieldErrors = { _errors: [] };
-  const processError = (error63, path14 = []) => {
+  const processError = (error63, path15 = []) => {
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path14, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path15, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path14, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path15, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path14, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path15, ...issue2.path]);
       } else {
-        const fullpath = [...path14, ...issue2.path];
+        const fullpath = [...path15, ...issue2.path];
         if (fullpath.length === 0) {
           fieldErrors._errors.push(mapper(issue2));
         } else {
@@ -12995,17 +12995,17 @@ function formatError(error62, mapper = (issue2) => issue2.message) {
 }
 function treeifyError(error62, mapper = (issue2) => issue2.message) {
   const result = { errors: [] };
-  const processError = (error63, path14 = []) => {
+  const processError = (error63, path15 = []) => {
     var _a3;
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path14, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path15, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path14, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path15, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path14, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path15, ...issue2.path]);
       } else {
-        const fullpath = [...path14, ...issue2.path];
+        const fullpath = [...path15, ...issue2.path];
         if (fullpath.length === 0) {
           result.errors.push(mapper(issue2));
           continue;
@@ -13044,8 +13044,8 @@ function treeifyError(error62, mapper = (issue2) => issue2.message) {
 }
 function toDotPath(_path) {
   const segs = [];
-  const path14 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
-  for (const seg of path14) {
+  const path15 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
+  for (const seg of path15) {
     if (typeof seg === "number")
       segs.push(`[${seg}]`);
     else if (typeof seg === "symbol")
@@ -15179,8 +15179,8 @@ var $ZodXor = /* @__PURE__ */ $constructor("$ZodXor", (inst, def) => {
     });
   };
 });
-function getDiscriminatedOption(union2, value) {
-  const internals = union2._zod;
+function getDiscriminatedOption(union3, value) {
+  const internals = union3._zod;
   let map2 = internals.bag.optionsMap;
   if (!map2) {
     map2 = discriminatorMap(internals.def);
@@ -24725,45 +24725,45 @@ var PATTERN_IS_COMPLETE = /* @__PURE__ */ new Set([
   "xid"
 ]);
 function generateStringFormatCheck(doc, ctx, def, accessor, needsValue = true) {
-  const fmt3 = def.format;
-  if (fmt3 === "base64") {
+  const fmt4 = def.format;
+  if (fmt4 === "base64") {
     const validator = addConstant(ctx, isValidBase64);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (fmt3 === "base64url") {
+  if (fmt4 === "base64url") {
     const validator = addConstant(ctx, isValidBase64URL);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (fmt3 === "jwt") {
+  if (fmt4 === "jwt") {
     const validator = addConstant(ctx, isValidJWT2);
     const alg = addConstant(ctx, def.alg ?? null);
     doc.write(`if (!${validator}(${accessor}, ${alg})) return INVALID;`);
     return accessor;
   }
-  if (fmt3 === "ipv6") {
+  if (fmt4 === "ipv6") {
     const validator = addConstant(ctx, isValidIPv6);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (fmt3 === "cidrv6") {
+  if (fmt4 === "cidrv6") {
     const validator = addConstant(ctx, isValidCIDRv6);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (fmt3 === "credit_card") {
+  if (fmt4 === "credit_card") {
     const validator = addConstant(ctx, isValidCreditCard);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (fmt3 === "iban") {
+  if (fmt4 === "iban") {
     const validator = addConstant(ctx, isValidIBAN);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
   const formatDef = def;
-  if (fmt3 === "url" || fmt3 === "httpurl" || formatDef.normalize || formatDef.hostname !== void 0 || formatDef.protocol !== void 0) {
+  if (fmt4 === "url" || fmt4 === "httpurl" || formatDef.normalize || formatDef.hostname !== void 0 || formatDef.protocol !== void 0) {
     const parseConst = addConstant(ctx, validateURL);
     const defConst = addConstant(ctx, def);
     const trimVar = newVar(ctx);
@@ -24789,12 +24789,12 @@ function generateStringFormatCheck(doc, ctx, def, accessor, needsValue = true) {
   const customFn = def.fn;
   if (customFn) {
     if (isAsyncFunction(customFn))
-      throw new ZodCompileUnsupportedError(`async string format ${fmt3}`);
+      throw new ZodCompileUnsupportedError(`async string format ${fmt4}`);
     const fnConst = addConstant(ctx, customFn);
     doc.write(`if (!${fnConst}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (PATTERN_IS_COMPLETE.has(fmt3) && def.pattern) {
+  if (PATTERN_IS_COMPLETE.has(fmt4) && def.pattern) {
     const patternConst = addConstant(ctx, def.pattern);
     doc.write(`${patternConst}.lastIndex = 0;`);
     doc.write(`if (!${patternConst}.test(${accessor})) return INVALID;`);
@@ -27222,12 +27222,12 @@ function foldIntersection(json2) {
   if (!unions.length) {
     folded = foldObjects(allOf);
   } else {
-    const union2 = unions[0];
-    const keyword = UNION_KEYS.find((k) => Array.isArray(union2[k]));
-    if (Object.keys(union2).length !== 1)
+    const union3 = unions[0];
+    const keyword = UNION_KEYS.find((k) => Array.isArray(union3[k]));
+    if (Object.keys(union3).length !== 1)
       return;
-    const rest = allOf.filter((m) => m !== union2);
-    const branches = union2[keyword].map((branch) => foldObjects([...rest, branch]));
+    const rest = allOf.filter((m) => m !== union3);
+    const branches = union3[keyword].map((branch) => foldObjects([...rest, branch]));
     if (branches.some((b) => !b))
       return;
     folded = { [keyword]: branches };
@@ -28596,11 +28596,11 @@ function normalizeObjectSchema(schema) {
   }
   return void 0;
 }
-function getDotPath(path14) {
-  if (path14.length === 0) {
+function getDotPath(path15) {
+  if (path15.length === 0) {
     return "object root";
   }
-  return path14.reduce((acc, seg, index) => {
+  return path15.reduce((acc, seg, index) => {
     if (index === 0) {
       return String(seg);
     }
@@ -30827,13 +30827,13 @@ function resolveRef(ref, ctx) {
   if (!ref.startsWith("#")) {
     throw new Error("External $ref is not supported, only local refs (#/...) are allowed");
   }
-  const path14 = ref.slice(1).split("/").filter(Boolean);
-  if (path14.length === 0) {
+  const path15 = ref.slice(1).split("/").filter(Boolean);
+  if (path15.length === 0) {
     return ctx.rootSchema;
   }
   const defsKey = ctx.version === "draft-2020-12" ? "$defs" : "definitions";
-  if (path14[0] === defsKey) {
-    const key = path14[1] === void 0 ? void 0 : decodeJSONPointerSegment(path14[1]);
+  if (path15[0] === defsKey) {
+    const key = path15[1] === void 0 ? void 0 : decodeJSONPointerSegment(path15[1]);
     if (!key || !ctx.defs[key]) {
       throw new Error(`Reference not found: ${ref}`);
     }
@@ -44320,7 +44320,3644 @@ registerOp({
 });
 
 // src/operations/keying.ts
+import { promises as fs7 } from "node:fs";
+import * as path7 from "node:path";
+
+// src/color/matte.ts
+var EDGE_DEFAULTS = {
+  from: "alpha",
+  transparent: 2 / 255,
+  opaque: 1 - 2 / 255,
+  maxEdgeWidth: "auto",
+  mainAreaShare: 0.25,
+  listed: 5,
+  screen: "green",
+  spillMinAlpha: 0.1,
+  spillThreshold: 0.03,
+  changeAbove: 0.05,
+  patchWindow: "auto"
+};
+var CONTOUR_ALPHA = 0.5;
+function autoMaxEdgeWidth(width, height) {
+  return Math.max(4, Math.round(0.01 * Math.min(width, height)));
+}
+function resolveEdgeThresholds(args, width, height) {
+  const maxEdgeWidth = args.maxEdgeWidth ?? autoMaxEdgeWidth(width, height);
+  return {
+    from: args.from ?? EDGE_DEFAULTS.from,
+    transparent: args.transparent ?? EDGE_DEFAULTS.transparent,
+    opaque: args.opaque ?? EDGE_DEFAULTS.opaque,
+    maxEdgeWidth,
+    mainAreaShare: args.mainAreaShare ?? EDGE_DEFAULTS.mainAreaShare,
+    listed: args.listed ?? EDGE_DEFAULTS.listed,
+    screen: args.screen ?? EDGE_DEFAULTS.screen,
+    spillMinAlpha: args.spillMinAlpha ?? EDGE_DEFAULTS.spillMinAlpha,
+    spillThreshold: args.spillThreshold ?? EDGE_DEFAULTS.spillThreshold,
+    changeAbove: args.changeAbove ?? EDGE_DEFAULTS.changeAbove,
+    patchWindow: args.patchWindow ?? Math.round(4 * maxEdgeWidth)
+  };
+}
+function edgeArgsError(args) {
+  const unit = ["transparent", "opaque", "mainAreaShare", "spillMinAlpha", "changeAbove"];
+  for (const key of unit) {
+    const v = args[key];
+    if (v !== void 0 && (typeof v !== "number" || !(v >= 0 && v <= 1))) {
+      return `\`edge.${key}\` must be a number in 0..1`;
+    }
+  }
+  const t = args.transparent ?? EDGE_DEFAULTS.transparent;
+  const o = args.opaque ?? EDGE_DEFAULTS.opaque;
+  if (t >= o) return "`edge.transparent` must be below `edge.opaque`";
+  const w = args.maxEdgeWidth;
+  if (w !== void 0 && (typeof w !== "number" || !Number.isFinite(w) || w < 1)) {
+    return "`edge.maxEdgeWidth` must be at least 1 (pixels)";
+  }
+  const pw = args.patchWindow;
+  if (pw !== void 0 && (typeof pw !== "number" || !Number.isFinite(pw) || pw < 1)) {
+    return "`edge.patchWindow` must be at least 1 (pixels)";
+  }
+  const listed = args.listed;
+  if (listed !== void 0 && (!Number.isInteger(listed) || listed < 0)) {
+    return "`edge.listed` must be a whole number, 0 or more";
+  }
+  const s = args.spillThreshold;
+  if (s !== void 0 && (typeof s !== "number" || !(s >= 0 && s <= 1))) {
+    return "`edge.spillThreshold` must be a number in 0..1";
+  }
+  if (args.from !== void 0 && args.from !== "alpha" && args.from !== "luma") {
+    return "`edge.from` must be 'alpha' or 'luma'";
+  }
+  if (args.screen !== void 0 && args.screen !== "green" && args.screen !== "blue") {
+    return "`edge.screen` must be 'green' or 'blue'";
+  }
+  return null;
+}
+var OUTSIDE = 0;
+var EDGE = 1;
+var INSIDE = 2;
+var r2 = (v) => Math.round(v * 100) / 100;
+var r4 = (v) => Math.round(v * 1e4) / 1e4;
+var r4rgb = (v) => [r4(v[0]), r4(v[1]), r4(v[2])];
+var INF = 1e20;
+function dt1d(f, n, d, v, z2) {
+  let k = -1;
+  for (let q = 0; q < n; q++) {
+    const fq = f[q];
+    if (fq >= INF) continue;
+    if (k < 0) {
+      k = 0;
+      v[0] = q;
+      z2[0] = -Infinity;
+      z2[1] = Infinity;
+      continue;
+    }
+    let s = 0;
+    for (; ; ) {
+      const r = v[k];
+      s = (fq + q * q - (f[r] + r * r)) / (2 * q - 2 * r);
+      if (s <= z2[k]) k--;
+      else break;
+    }
+    k++;
+    v[k] = q;
+    z2[k] = s;
+    z2[k + 1] = Infinity;
+  }
+  if (k < 0) {
+    d.fill(INF, 0, n);
+    return;
+  }
+  let j = 0;
+  for (let q = 0; q < n; q++) {
+    while (z2[j + 1] < q) j++;
+    const r = v[j];
+    d[q] = (q - r) * (q - r) + f[r];
+  }
+}
+function distanceTo(alpha, width, height, isSource, scratch, out) {
+  const n = Math.max(width, height);
+  const f = new Float64Array(n);
+  const d = new Float64Array(n);
+  const v = new Int32Array(n);
+  const z2 = new Float64Array(n + 1);
+  for (let x = 0; x < width; x++) {
+    for (let y = 0; y < height; y++) f[y] = isSource(alpha[y * width + x]) ? 0 : INF;
+    dt1d(f, height, d, v, z2);
+    for (let y = 0; y < height; y++) scratch[y * width + x] = d[y];
+  }
+  for (let y = 0; y < height; y++) {
+    const row = y * width;
+    for (let x = 0; x < width; x++) f[x] = scratch[row + x];
+    dt1d(f, width, d, v, z2);
+    for (let x = 0; x < width; x++) out[row + x] = d[x] >= INF / 2 ? Infinity : Math.sqrt(d[x]);
+  }
+}
+var newRegion = () => ({
+  area: 0,
+  minX: Infinity,
+  minY: Infinity,
+  maxX: -1,
+  maxY: -1,
+  alphaSum: 0,
+  alphaMax: 0,
+  transparent: 0,
+  touchesBorder: false
+});
+function addPixel(r, x, y, a) {
+  r.area++;
+  if (x < r.minX) r.minX = x;
+  if (x > r.maxX) r.maxX = x;
+  if (y < r.minY) r.minY = y;
+  if (y > r.maxY) r.maxY = y;
+  r.alphaSum += a;
+  if (a > r.alphaMax) r.alphaMax = a;
+}
+var box = (r) => ({
+  x: r.minX,
+  y: r.minY,
+  width: r.maxX - r.minX + 1,
+  height: r.maxY - r.minY + 1
+});
+var N4X = [1, -1, 0, 0];
+var N4Y = [0, 0, 1, -1];
+var N8X = [1, -1, 0, 0, 1, 1, -1, -1];
+var N8Y = [0, 0, 1, -1, 1, -1, 1, -1];
+function labelRegions(alpha, width, height, inSet, eight, labels, queue, transparentAt) {
+  labels.fill(0);
+  const regions = [];
+  const nx = eight ? N8X : N4X;
+  const ny = eight ? N8Y : N4Y;
+  const total = width * height;
+  for (let start = 0; start < total; start++) {
+    if (labels[start] !== 0 || !inSet(start)) continue;
+    const region = newRegion();
+    regions.push(region);
+    const id = regions.length;
+    labels[start] = id;
+    let head = 0;
+    let tail = 0;
+    queue[tail++] = start;
+    while (head < tail) {
+      const p = queue[head++];
+      const x = p % width;
+      const y = (p - x) / width;
+      const a = alpha[p];
+      addPixel(region, x, y, a);
+      if (a <= transparentAt) region.transparent++;
+      if (x === 0 || y === 0 || x === width - 1 || y === height - 1) region.touchesBorder = true;
+      for (let k = 0; k < nx.length; k++) {
+        const qx = x + nx[k];
+        const qy = y + ny[k];
+        if (qx < 0 || qy < 0 || qx >= width || qy >= height) continue;
+        const q = qy * width + qx;
+        if (labels[q] !== 0 || !inSet(q)) continue;
+        labels[q] = id;
+        queue[tail++] = q;
+      }
+    }
+  }
+  return regions;
+}
+var byArea = (a, b) => b.area - a.area;
+function screenExcess(c, screen) {
+  return screen === "green" ? c[1] - Math.max(c[0], c[2]) : c[2] - Math.max(c[0], c[1]);
+}
+function lumaMatte(img) {
+  const n = img.width * img.height;
+  const out = new Float64Array(n);
+  const rgb = img.rgb;
+  for (let p = 0; p < n; p++) {
+    const r = rgb[p * 3];
+    const g = rgb[p * 3 + 1];
+    const b = rgb[p * 3 + 2];
+    const y = r === g && g === b ? r : 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    out[p] = y < 0 ? 0 : y > 1 ? 1 : y;
+  }
+  return out;
+}
+function measureEdge(img, bg, t) {
+  const fromLuma = t.from === "luma";
+  const alpha = fromLuma ? lumaMatte(img) : img.alpha;
+  if (!alpha) throw new Error("the capture has no alpha channel");
+  const { width, height } = img;
+  const n = width * height;
+  const isT = (a) => a <= t.transparent;
+  const isO = (a) => a >= t.opaque;
+  let opaque = 0;
+  let transparent = 0;
+  for (let p = 0; p < n; p++) {
+    if (isO(alpha[p])) opaque++;
+    else if (isT(alpha[p])) transparent++;
+  }
+  const scratch = new Float32Array(n);
+  const dT = new Float32Array(n);
+  const dO = new Float32Array(n);
+  distanceTo(alpha, width, height, isT, scratch, dT);
+  distanceTo(alpha, width, height, isO, scratch, dO);
+  const labels = new Int32Array(n);
+  const queue = new Int32Array(n);
+  const islands = labelRegions(
+    alpha,
+    width,
+    height,
+    (p) => alpha[p] > t.transparent,
+    true,
+    labels,
+    queue,
+    t.transparent
+  );
+  const largest = islands.reduce((m2, r) => Math.max(m2, r.area), 0);
+  const isMain = islands.map((r) => r.area > 0 && r.area >= t.mainAreaShare * largest);
+  const mains = islands.filter((_, i) => isMain[i]).sort(byArea);
+  const specks = islands.filter((_, i) => !isMain[i]).sort(byArea);
+  const widths = [];
+  let unmeasured = 0;
+  let worst = -1;
+  let worstAt = null;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const p = y * width + x;
+      if (alpha[p] < CONTOUR_ALPHA || labels[p] === 0 || !isMain[labels[p] - 1]) continue;
+      let onContour = false;
+      for (let k = 0; k < 4 && !onContour; k++) {
+        const qx = x + N4X[k];
+        const qy = y + N4Y[k];
+        if (qx < 0 || qy < 0 || qx >= width || qy >= height) continue;
+        if (alpha[qy * width + qx] < CONTOUR_ALPHA) onContour = true;
+      }
+      if (!onContour) continue;
+      const sum = dT[p] + dO[p];
+      if (!Number.isFinite(sum)) {
+        unmeasured++;
+        continue;
+      }
+      const w = Math.max(0, sum - 1);
+      widths.push(w);
+      if (w > worst) {
+        worst = w;
+        worstAt = { x, y };
+      }
+    }
+  }
+  widths.sort((a, b) => a - b);
+  const m = widths.length;
+  const median = m === 0 ? null : m % 2 ? widths[(m - 1) / 2] : (widths[m / 2 - 1] + widths[m / 2]) / 2;
+  const belowOpaque = labelRegions(
+    alpha,
+    width,
+    height,
+    (p) => alpha[p] < t.opaque,
+    false,
+    labels,
+    queue,
+    t.transparent
+  );
+  const holes = belowOpaque.filter((r) => !r.touchesBorder).sort(byArea);
+  const half = t.maxEdgeWidth / 2;
+  const isPartial = (p) => alpha[p] > t.transparent && alpha[p] < t.opaque;
+  const isCore = (p) => isPartial(p) && Math.min(dT[p], dO[p]) > half;
+  labels.fill(0);
+  let tail = 0;
+  let ids = 0;
+  for (let start = 0; start < n; start++) {
+    if (labels[start] !== 0 || !isCore(start)) continue;
+    ids++;
+    labels[start] = ids;
+    let head = tail;
+    queue[tail++] = start;
+    while (head < tail) {
+      const p = queue[head++];
+      const x = p % width;
+      const y = (p - x) / width;
+      for (let k = 0; k < 8; k++) {
+        const qx = x + N8X[k];
+        const qy = y + N8Y[k];
+        if (qx < 0 || qy < 0 || qx >= width || qy >= height) continue;
+        const q = qy * width + qx;
+        if (labels[q] !== 0 || !isCore(q)) continue;
+        labels[q] = ids;
+        queue[tail++] = q;
+      }
+    }
+  }
+  let levelStart = 0;
+  let levelEnd = tail;
+  for (let step = 0; step < Math.ceil(half) && levelStart < levelEnd; step++) {
+    for (let i = levelStart; i < levelEnd; i++) {
+      const p = queue[i];
+      const x = p % width;
+      const y = (p - x) / width;
+      for (let k = 0; k < 8; k++) {
+        const qx = x + N8X[k];
+        const qy = y + N8Y[k];
+        if (qx < 0 || qy < 0 || qx >= width || qy >= height) continue;
+        const q = qy * width + qx;
+        if (labels[q] !== 0 || !isPartial(q)) continue;
+        labels[q] = labels[p];
+        queue[tail++] = q;
+      }
+    }
+    levelStart = levelEnd;
+    levelEnd = tail;
+  }
+  const patchRegions = Array.from({ length: ids }, newRegion);
+  for (let i = 0; i < tail; i++) {
+    const p = queue[i];
+    const x = p % width;
+    addPixel(patchRegions[labels[p] - 1], x, (p - x) / width, alpha[p]);
+  }
+  const patchId = new Map(patchRegions.map((r, i) => [r, i + 1]));
+  patchRegions.sort(byArea);
+  const patchList = patchRegions.slice(0, t.listed).map((r) => patchEntry(r, patchId.get(r), labels, alpha, dT, dO, width, t.patchWindow));
+  const edgeSum = [0, 0, 0];
+  const solidSum = [0, 0, 0];
+  let edgeCount = 0;
+  let solidCount = 0;
+  const zones = new Uint8Array(n);
+  const M = t.maxEdgeWidth;
+  for (let p = 0; p < n; p++) {
+    const a = alpha[p];
+    zones[p] = dT[p] <= M && dO[p] <= M ? EDGE : a >= CONTOUR_ALPHA ? INSIDE : OUTSIDE;
+    const partial2 = a > t.transparent && a < t.opaque;
+    const solid = a >= t.opaque && dT[p] <= M;
+    if (fromLuma || !(partial2 && a >= t.spillMinAlpha) && !solid) continue;
+    const sum = solid ? solidSum : edgeSum;
+    for (let c = 0; c < 3; c++) {
+      const v = img.rgb[p * 3 + c];
+      sum[c] += a >= 1 ? v : Math.min(1, Math.max(0, (v - bg[c] * (1 - a)) / a));
+    }
+    if (solid) solidCount++;
+    else edgeCount++;
+  }
+  const meanOf = (s, k) => k === 0 ? null : [s[0] / k, s[1] / k, s[2] / k];
+  const edgeMean = meanOf(edgeSum, edgeCount);
+  const solidMean = meanOf(solidSum, solidCount);
+  const excess = edgeMean ? screenExcess(edgeMean, t.screen) : null;
+  const solidExcess = solidMean ? screenExcess(solidMean, t.screen) : null;
+  const leans = excess !== null && excess > t.spillThreshold && (solidExcess === null || excess - solidExcess > t.spillThreshold);
+  const report = {
+    stage: "capture",
+    matteFrom: t.from,
+    pixels: n,
+    shares: {
+      opaque: r4(opaque / n),
+      partial: r4((n - opaque - transparent) / n),
+      transparent: r4(transparent / n)
+    },
+    width: {
+      typical: median === null ? null : r2(median),
+      p90: m === 0 ? null : r2(widths[Math.floor(0.9 * (m - 1))]),
+      worst: m === 0 ? null : r2(worst),
+      worstAt,
+      samples: m,
+      unmeasured
+    },
+    solidAreas: {
+      count: mains.length,
+      list: mains.slice(0, t.listed).map((r) => ({ ...box(r), area: r.area }))
+    },
+    holes: {
+      count: holes.length,
+      area: holes.reduce((s, r) => s + r.area, 0),
+      transparentArea: holes.reduce((s, r) => s + r.transparent, 0),
+      largest: holes.length ? holeEntry(holes[0]) : null,
+      list: holes.slice(0, t.listed).map(holeEntry)
+    },
+    specks: {
+      count: specks.length,
+      area: specks.reduce((s, r) => s + r.area, 0),
+      list: specks.slice(0, t.listed).map((r) => ({
+        ...box(r),
+        area: r.area,
+        meanAlpha: r4(r.alphaSum / r.area),
+        maxAlpha: r4(r.alphaMax)
+      }))
+    },
+    patches: {
+      count: patchRegions.length,
+      area: patchRegions.reduce((s, r) => s + r.area, 0),
+      list: patchList
+    },
+    spill: {
+      screen: t.screen,
+      pixels: edgeCount,
+      mean: edgeMean ? r4rgb(edgeMean) : null,
+      solidMean: solidMean ? r4rgb(solidMean) : null,
+      excess: excess === null ? null : r4(excess),
+      solidExcess: solidExcess === null ? null : r4(solidExcess),
+      leansToScreen: leans,
+      reading: fromLuma ? "not read: the matte came from luminance (a Keylight matte view), which carries no subject colour; read spill on the keyed result with `from: 'alpha'`" : spillReading(t, edgeCount, excess, solidExcess, leans)
+    }
+  };
+  return { report, frame: { width, height, alpha: Float32Array.from(alpha), zones } };
+}
+function holeEntry(r) {
+  return { ...box(r), area: r.area, meanAlpha: r4(r.alphaSum / r.area) };
+}
+function patchEntry(r, id, labels, alpha, dT, dO, width, window) {
+  const b = box(r);
+  let depth = -1;
+  let at = { x: b.x, y: b.y };
+  let thickness = 0;
+  for (let y = b.y; y < b.y + b.height; y++) {
+    for (let x = b.x; x < b.x + b.width; x++) {
+      const p = y * width + x;
+      if (labels[p] !== id) continue;
+      const m = Math.min(dT[p], dO[p]);
+      if (m > depth) {
+        depth = m;
+        at = { x, y };
+        thickness = Number.isFinite(dT[p]) && Number.isFinite(dO[p]) ? dT[p] + dO[p] - 1 : 2 * m - 1;
+      }
+    }
+  }
+  const bw = b.width;
+  const bh = b.height;
+  const ww = Math.max(1, Math.min(Math.round(window), bw));
+  const wh = Math.max(1, Math.min(Math.round(window), bh));
+  const sc = new Float64Array((bw + 1) * (bh + 1));
+  const sa = new Float64Array((bw + 1) * (bh + 1));
+  const W = bw + 1;
+  for (let j = 0; j < bh; j++) {
+    let rowC = 0;
+    let rowA = 0;
+    for (let i = 0; i < bw; i++) {
+      const p = (b.y + j) * width + (b.x + i);
+      if (labels[p] === id) {
+        rowC++;
+        rowA += alpha[p];
+      }
+      sc[(j + 1) * W + i + 1] = sc[j * W + i + 1] + rowC;
+      sa[(j + 1) * W + i + 1] = sa[j * W + i + 1] + rowA;
+    }
+  }
+  const rect = (s, i, j) => s[(j + wh) * W + i + ww] - s[j * W + i + ww] - s[(j + wh) * W + i] + s[j * W + i];
+  let bestC = -1;
+  let bestA = 0;
+  let bi = 0;
+  let bj = 0;
+  for (let j = 0; j + wh <= bh; j++) {
+    for (let i = 0; i + ww <= bw; i++) {
+      const c = rect(sc, i, j);
+      if (c > bestC) {
+        bestC = c;
+        bestA = rect(sa, i, j);
+        bi = i;
+        bj = j;
+      }
+    }
+  }
+  return {
+    ...b,
+    area: r.area,
+    meanAlpha: r4(r.alphaSum / r.area),
+    thickest: { ...at, thickness: r2(Math.max(0, thickness)) },
+    densest: {
+      x: b.x + bi,
+      y: b.y + bj,
+      width: ww,
+      height: wh,
+      pixels: bestC,
+      share: r4(bestC / (ww * wh)),
+      meanAlpha: bestC > 0 ? r4(bestA / bestC) : 0
+    }
+  };
+}
+function spillReading(t, pixels, excess, solidExcess, leans) {
+  const other = t.screen === "green" ? "red and blue" : "red and green";
+  if (pixels === 0 || excess === null) {
+    return `no partly transparent pixels at or above alpha ${t.spillMinAlpha} to read a colour from`;
+  }
+  const lean = `its ${t.screen} exceeds the larger of ${other} by ${excess.toFixed(3)}`;
+  const versus = solidExcess === null ? "" : `; the solid area just inside the edge: ${solidExcess.toFixed(3)}`;
+  return leans ? `the soft edge leans ${t.screen} (likely spill): ${lean}${versus}` : `the soft edge does not lean ${t.screen} beyond the subject's own colour: ${lean}${versus}`;
+}
+var zoneAcc = () => ({
+  pixels: 0,
+  sum: 0,
+  max: 0,
+  changed: 0,
+  minX: Infinity,
+  minY: Infinity,
+  maxX: -1,
+  maxY: -1
+});
+function finishZone(z2) {
+  return {
+    pixels: z2.pixels,
+    meanAbsDelta: z2.pixels ? r4(z2.sum / z2.pixels) : 0,
+    maxAbsDelta: r4(z2.max),
+    changedShare: z2.pixels ? r4(z2.changed / z2.pixels) : 0,
+    changedBounds: z2.changed === 0 ? null : { x: z2.minX, y: z2.minY, width: z2.maxX - z2.minX + 1, height: z2.maxY - z2.minY + 1 }
+  };
+}
+function alphaChange(prev, cur, t) {
+  if (prev.width !== cur.width || prev.height !== cur.height) {
+    throw new Error(
+      `cannot compare frames of different size (${prev.width}\xD7${prev.height} vs ${cur.width}\xD7${cur.height})`
+    );
+  }
+  const { width } = cur;
+  const acc = [zoneAcc(), zoneAcc(), zoneAcc()];
+  const all = zoneAcc();
+  const n = width * cur.height;
+  for (let p = 0; p < n; p++) {
+    const zp = prev.zones[p];
+    const zc = cur.zones[p];
+    const zone = zp === INSIDE || zc === INSIDE ? INSIDE : zp === OUTSIDE || zc === OUTSIDE ? OUTSIDE : EDGE;
+    const d = Math.abs(cur.alpha[p] - prev.alpha[p]);
+    for (const z2 of [acc[zone], all]) {
+      z2.pixels++;
+      z2.sum += d;
+      if (d > z2.max) z2.max = d;
+      if (d > t.changeAbove) {
+        z2.changed++;
+        const x = p % width;
+        const y = (p - x) / width;
+        if (x < z2.minX) z2.minX = x;
+        if (x > z2.maxX) z2.maxX = x;
+        if (y < z2.minY) z2.minY = y;
+        if (y > z2.maxY) z2.maxY = y;
+      }
+    }
+  }
+  return {
+    edge: finishZone(acc[EDGE]),
+    inside: finishZone(acc[INSIDE]),
+    outside: finishZone(acc[OUTSIDE]),
+    all: finishZone(all)
+  };
+}
+function summarizeFlicker(pairs) {
+  const zone = (key) => {
+    let mean = 0;
+    let max = 0;
+    let share = 0;
+    let worst = null;
+    for (const pair of pairs) {
+      const z2 = pair[key];
+      mean += z2.meanAbsDelta;
+      share += z2.changedShare;
+      if (z2.maxAbsDelta > max) max = z2.maxAbsDelta;
+      if (z2.meanAbsDelta > 0 && (worst === null || z2.meanAbsDelta > worst[key].meanAbsDelta)) {
+        worst = pair;
+      }
+    }
+    const k = Math.max(1, pairs.length);
+    return {
+      meanAbsDelta: r4(mean / k),
+      maxAbsDelta: r4(max),
+      changedShare: r4(share / k),
+      worstPair: worst ? { from: worst.from.index, to: worst.to.index } : null
+    };
+  };
+  return { edge: zone("edge"), inside: zone("inside"), outside: zone("outside"), all: zone("all") };
+}
+function enclosedHoles(alpha, width, height, opts = {}) {
+  const below = opts.below ?? EDGE_DEFAULTS.opaque;
+  const minArea = opts.minArea ?? 1;
+  const n = width * height;
+  const a = alpha instanceof Float64Array ? alpha : Float64Array.from(alpha);
+  const labels = new Int32Array(n);
+  const queue = new Int32Array(n);
+  const regions = labelRegions(
+    a,
+    width,
+    height,
+    (p) => a[p] < below,
+    false,
+    labels,
+    queue,
+    EDGE_DEFAULTS.transparent
+  );
+  const keep = new Uint8Array(regions.length + 1);
+  const holes = [];
+  const dropped = { count: 0, area: 0 };
+  const leftOut = { count: 0, area: 0 };
+  const entry = (r) => ({
+    ...box(r),
+    area: r.area,
+    meanAlpha: Math.round(r.alphaSum / r.area * 1e3) / 1e3
+  });
+  regions.forEach((r, i) => {
+    if (r.touchesBorder) return;
+    if (r.area < minArea) {
+      dropped.count++;
+      dropped.area += r.area;
+      return;
+    }
+    if (opts.keep && !opts.keep(entry(r))) {
+      leftOut.count++;
+      leftOut.area += r.area;
+      return;
+    }
+    keep[i + 1] = 1;
+    holes.push({ r, id: i + 1 });
+  });
+  const mask = new Uint8Array(n);
+  for (let p = 0; p < n; p++) if (keep[labels[p]]) mask[p] = 1;
+  holes.sort((x, y) => y.r.area - x.r.area);
+  return { holes: holes.map(({ r }) => entry(r)), mask, dropped, leftOut };
+}
+function growMask(mask, width, height, radius) {
+  if (radius <= 0) return Uint8Array.from(mask);
+  const src = Float64Array.from(mask);
+  const scratch = new Float32Array(width * height);
+  const dist = new Float32Array(width * height);
+  distanceTo(src, width, height, (v) => v > 0, scratch, dist);
+  const out = new Uint8Array(width * height);
+  for (let p = 0; p < out.length; p++) if (dist[p] <= radius + 1e-9) out[p] = 1;
+  return out;
+}
+
+// src/color/png16.ts
+import * as zlib from "node:zlib";
+var PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+function readChunks(buf) {
+  if (!buf.subarray(0, 8).equals(PNG_SIGNATURE)) throw new Error("not a PNG file");
+  const chunks = [];
+  let pos = 8;
+  while (pos + 8 <= buf.length) {
+    const length = buf.readUInt32BE(pos);
+    const type = buf.toString("latin1", pos + 4, pos + 8);
+    chunks.push({ type, data: buf.subarray(pos + 8, pos + 8 + length) });
+    pos += 12 + length;
+    if (type === "IEND") break;
+  }
+  return chunks;
+}
+function channelsFor(colorType) {
+  switch (colorType) {
+    case 0:
+      return 1;
+    // grayscale
+    case 2:
+      return 3;
+    // RGB
+    case 4:
+      return 2;
+    // gray + alpha
+    case 6:
+      return 4;
+    // RGBA
+    default:
+      throw new Error(`unsupported PNG color type ${colorType} (palette images are out of scope)`);
+  }
+}
+function paeth(a, b, c) {
+  const p = a + b - c;
+  const pa = Math.abs(p - a);
+  const pb = Math.abs(p - b);
+  const pc = Math.abs(p - c);
+  if (pa <= pb && pa <= pc) return a;
+  return pb <= pc ? b : c;
+}
+function decodePng(buf) {
+  const chunks = readChunks(buf);
+  const ihdr = chunks.find((c) => c.type === "IHDR");
+  if (!ihdr) throw new Error("PNG missing IHDR");
+  const width = ihdr.data.readUInt32BE(0);
+  const height = ihdr.data.readUInt32BE(4);
+  const bitDepth = ihdr.data.readUInt8(8);
+  const colorType = ihdr.data.readUInt8(9);
+  const interlace = ihdr.data.readUInt8(12);
+  if (interlace !== 0) throw new Error("interlaced PNG is not supported");
+  if (bitDepth !== 8 && bitDepth !== 16) throw new Error(`unsupported PNG bit depth ${bitDepth}`);
+  const channels = channelsFor(colorType);
+  const idat = Buffer.concat(chunks.filter((c) => c.type === "IDAT").map((c) => c.data));
+  const raw = zlib.inflateSync(idat);
+  const bytesPerSample = bitDepth / 8;
+  const bytesPerPixel = channels * bytesPerSample;
+  const stride = width * bytesPerPixel;
+  if (raw.length < height * (stride + 1)) throw new Error("PNG pixel data truncated");
+  const rgb = new Float64Array(width * height * 3);
+  const hasAlpha = channels === 2 || channels === 4;
+  const alpha = hasAlpha ? new Float64Array(width * height) : void 0;
+  const maxVal = bitDepth === 16 ? 65535 : 255;
+  const prev = Buffer.alloc(stride);
+  const cur = Buffer.alloc(stride);
+  const grayish = channels <= 2;
+  for (let y = 0; y < height; y++) {
+    const rowStart = y * (stride + 1);
+    const filter = raw[rowStart];
+    raw.copy(cur, 0, rowStart + 1, rowStart + 1 + stride);
+    switch (filter) {
+      case 0:
+        break;
+      case 1:
+        for (let i = bytesPerPixel; i < stride; i++)
+          cur[i] = cur[i] + cur[i - bytesPerPixel] & 255;
+        break;
+      case 2:
+        for (let i = 0; i < stride; i++) cur[i] = cur[i] + prev[i] & 255;
+        break;
+      case 3:
+        for (let i = 0; i < stride; i++) {
+          const left = i >= bytesPerPixel ? cur[i - bytesPerPixel] : 0;
+          cur[i] = cur[i] + (left + prev[i] >> 1) & 255;
+        }
+        break;
+      case 4:
+        for (let i = 0; i < stride; i++) {
+          const left = i >= bytesPerPixel ? cur[i - bytesPerPixel] : 0;
+          const upLeft = i >= bytesPerPixel ? prev[i - bytesPerPixel] : 0;
+          cur[i] = cur[i] + paeth(left, prev[i], upLeft) & 255;
+        }
+        break;
+      default:
+        throw new Error(`unknown PNG filter ${filter} at row ${y}`);
+    }
+    for (let x = 0; x < width; x++) {
+      const px2 = x * bytesPerPixel;
+      const out = (y * width + x) * 3;
+      for (let ch = 0; ch < 3; ch++) {
+        const srcCh = grayish ? 0 : ch;
+        const off = px2 + srcCh * bytesPerSample;
+        const v = bitDepth === 16 ? cur.readUInt16BE(off) : cur[off];
+        rgb[out + ch] = v / maxVal;
+      }
+      if (alpha) {
+        const off = px2 + (channels - 1) * bytesPerSample;
+        const a = bitDepth === 16 ? cur.readUInt16BE(off) : cur[off];
+        alpha[y * width + x] = a / maxVal;
+      }
+    }
+    cur.copy(prev);
+  }
+  return alpha ? { width, height, rgb, alpha, bitDepth } : { width, height, rgb, bitDepth };
+}
+function chunk(type, data) {
+  const head = Buffer.alloc(8);
+  head.writeUInt32BE(data.length, 0);
+  head.write(type, 4, "latin1");
+  const crcBody = Buffer.concat([head.subarray(4), data]);
+  const crc = Buffer.alloc(4);
+  crc.writeUInt32BE(zlib.crc32(crcBody) >>> 0, 0);
+  return Buffer.concat([head, data, crc]);
+}
+var to8 = (v) => Math.round(Math.min(1, Math.max(0, v)) * 255);
+function encode8(width, height, colorType, srgbTags, write) {
+  const channels = colorType === 0 ? 1 : colorType === 2 ? 3 : 4;
+  const stride = width * channels;
+  const raw = Buffer.alloc(height * (stride + 1));
+  for (let y = 0; y < height; y++) {
+    const rowStart = y * (stride + 1);
+    raw[rowStart] = 0;
+    for (let x = 0; x < width; x++) write(y * width + x, raw, rowStart + 1 + x * channels);
+  }
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(width, 0);
+  ihdr.writeUInt32BE(height, 4);
+  ihdr.writeUInt8(8, 8);
+  ihdr.writeUInt8(colorType, 9);
+  const gama = Buffer.alloc(4);
+  gama.writeUInt32BE(45455, 0);
+  return Buffer.concat([
+    PNG_SIGNATURE,
+    chunk("IHDR", ihdr),
+    ...srgbTags ? [chunk("sRGB", Buffer.from([0])), chunk("gAMA", gama)] : [],
+    chunk("IDAT", zlib.deflateSync(raw, { level: 6 })),
+    chunk("IEND", Buffer.alloc(0))
+  ]);
+}
+function encodePngSrgb8(width, height, rgb) {
+  return encode8(width, height, 2, true, (p, out, at) => {
+    out[at] = to8(rgb[p * 3]);
+    out[at + 1] = to8(rgb[p * 3 + 1]);
+    out[at + 2] = to8(rgb[p * 3 + 2]);
+  });
+}
+function encodePngSrgbRgba8(width, height, rgb, alpha) {
+  return encode8(width, height, 6, true, (p, out, at) => {
+    out[at] = to8(rgb[p * 3]);
+    out[at + 1] = to8(rgb[p * 3 + 1]);
+    out[at + 2] = to8(rgb[p * 3 + 2]);
+    out[at + 3] = to8(alpha[p]);
+  });
+}
+function encodePngGray8(width, height, values) {
+  return encode8(width, height, 0, false, (p, out, at) => {
+    out[at] = to8(values[p]);
+  });
+}
+
+// src/operations/keying.ts
+init_config();
 init_registry();
+
+// src/tools/render-frame.ts
+import { promises as fs6 } from "node:fs";
+import * as path6 from "node:path";
+
+// src/color/screen.ts
+var SCREEN_DEFAULTS = {
+  screen: "auto",
+  minExcess: 0.04,
+  minDominance: 0.15,
+  minScreenShare: 0.02,
+  opaque: 1 - 2 / 255,
+  columns: "auto",
+  rows: "auto",
+  minCellShare: 0.25,
+  nearSkip: "auto",
+  nearBand: "auto",
+  unevenRatio: 1.1,
+  grainAbove: 0.01
+};
+var SCREEN_COLOUR_NOTE = "Colours are capture values: the opaque pixels of the render as saveFrameToPng wrote them, so the comp background does not mix in. In a project with no working space (8 bpc, as measured live in After Effects 2027) these are the footage's own 0..1 values, the scale Keylight's Screen Colour takes, so colour.nearSubject (or colour.median) can go to key.keylight's screenColour as it is. In a colour-managed project they are working-space values scaled by After Effects' capture transfer; that has not been checked against Keylight, so confirm the key with the Screen Matte and Status views. Measure the source un-keyed (Keylight View 'source', or the key off, and isolate the layer): a keyed render has no screen left, and Keylight despills what it outputs.";
+function autoGrid(width, height) {
+  const short = Math.min(width, height);
+  const across = 4;
+  const along = Math.max(1, Math.round(across * Math.max(width, height) / short));
+  return width <= height ? { columns: across, rows: along } : { columns: along, rows: across };
+}
+function resolveScreenThresholds(args, width, height) {
+  const grid = autoGrid(width, height);
+  const short = Math.min(width, height);
+  return {
+    screen: args.screen ?? SCREEN_DEFAULTS.screen,
+    minExcess: args.minExcess ?? SCREEN_DEFAULTS.minExcess,
+    minDominance: args.minDominance ?? SCREEN_DEFAULTS.minDominance,
+    minScreenShare: args.minScreenShare ?? SCREEN_DEFAULTS.minScreenShare,
+    opaque: args.opaque ?? SCREEN_DEFAULTS.opaque,
+    columns: args.columns ?? grid.columns,
+    rows: args.rows ?? grid.rows,
+    minCellShare: args.minCellShare ?? SCREEN_DEFAULTS.minCellShare,
+    nearSkip: args.nearSkip ?? Math.max(2, Math.round(0.01 * short)),
+    nearBand: args.nearBand ?? Math.max(4, Math.round(0.05 * short)),
+    unevenRatio: args.unevenRatio ?? SCREEN_DEFAULTS.unevenRatio,
+    grainAbove: args.grainAbove ?? SCREEN_DEFAULTS.grainAbove
+  };
+}
+function screenArgsError(args) {
+  if (args.screen !== void 0 && args.screen !== "auto" && args.screen !== "green" && args.screen !== "blue") {
+    return "`screen.screen` must be 'auto', 'green' or 'blue'";
+  }
+  for (const key of [
+    "minExcess",
+    "minDominance",
+    "minScreenShare",
+    "opaque",
+    "minCellShare",
+    "grainAbove"
+  ]) {
+    const v = args[key];
+    if (v !== void 0 && (typeof v !== "number" || !(v >= 0 && v <= 1))) {
+      return `\`screen.${key}\` must be a number in 0..1`;
+    }
+  }
+  for (const key of ["columns", "rows"]) {
+    const v = args[key];
+    if (v !== void 0 && (!Number.isInteger(v) || v < 1 || v > 64)) {
+      return `\`screen.${key}\` must be a whole number from 1 to 64`;
+    }
+  }
+  const skip = args.nearSkip;
+  if (skip !== void 0 && (typeof skip !== "number" || !Number.isFinite(skip) || skip < 0)) {
+    return "`screen.nearSkip` must be 0 or more (pixels)";
+  }
+  const band = args.nearBand;
+  if (band !== void 0 && (typeof band !== "number" || !Number.isFinite(band) || band < 1)) {
+    return "`screen.nearBand` must be at least 1 (pixels)";
+  }
+  const u = args.unevenRatio;
+  if (u !== void 0 && (typeof u !== "number" || !Number.isFinite(u) || u < 1)) {
+    return "`screen.unevenRatio` must be a number of 1 or more";
+  }
+  return null;
+}
+var r42 = (v) => Math.round(v * 1e4) / 1e4;
+var r4rgb2 = (v) => [r42(v[0]), r42(v[1]), r42(v[2])];
+var luma = (c) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+var CH = { green: 1, blue: 2 };
+function screenTest(rgb, p, ch, t) {
+  const v = rgb[p * 3 + ch];
+  const others = ch === 1 ? Math.max(rgb[p * 3], rgb[p * 3 + 2]) : Math.max(rgb[p * 3], rgb[p * 3 + 1]);
+  const lead = v - others;
+  return lead >= t.minExcess && lead >= t.minDominance * v;
+}
+var BINS = 65536;
+function histMedian(h, count) {
+  const out = [0, 0, 0];
+  const half = (count + 1) / 2;
+  for (let c = 0; c < 3; c++) {
+    let acc = 0;
+    const base = c * BINS;
+    for (let b = 0; b < BINS; b++) {
+      acc += h[base + b];
+      if (acc >= half) {
+        out[c] = b / (BINS - 1);
+        break;
+      }
+    }
+  }
+  return out;
+}
+function addToHist(h, rgb, p) {
+  for (let c = 0; c < 3; c++) {
+    const v = Math.min(1, Math.max(0, rgb[p * 3 + c]));
+    h[c * BINS + Math.round(v * (BINS - 1))]++;
+  }
+}
+function measureScreen(img, t) {
+  const { width, height, rgb } = img;
+  const alpha = img.alpha;
+  const n = width * height;
+  const measuredAt = (p) => !alpha || alpha[p] >= t.opaque;
+  let measured = 0;
+  for (let p = 0; p < n; p++) if (measuredAt(p)) measured++;
+  const leftOut = n - measured;
+  const kinds = t.screen === "auto" ? ["green", "blue"] : [t.screen];
+  let kind = kinds[0];
+  let best = -1;
+  for (const k of kinds) {
+    let count2 = 0;
+    for (let p = 0; p < n; p++) if (measuredAt(p) && screenTest(rgb, p, CH[k], t)) count2++;
+    if (count2 > best) {
+      best = count2;
+      kind = k;
+    }
+  }
+  const ch = CH[kind];
+  const found = measured > 0 && best / measured >= t.minScreenShare && best > 0;
+  const base = {
+    stage: "capture",
+    values: "capture",
+    screen: found ? kind : null,
+    chosen: t.screen === "auto" ? "detected" : "given",
+    pixels: n,
+    measured,
+    leftOut,
+    screenPixels: 0,
+    share: 0,
+    bounds: null,
+    colour: null,
+    subject: null,
+    evenness: null,
+    grain: null,
+    reading: "",
+    screenColourNote: SCREEN_COLOUR_NOTE
+  };
+  if (leftOut > n / 2) {
+    base.warning = `${Math.round(100 * leftOut / n)}% of the frame is transparent or partly transparent, as a keyed render is. Measure the source: set Keylight's View to 'source' (key.view) or switch the key off, and isolate the keyed layer so nothing else is in the render.`;
+  }
+  if (!found) {
+    const what = t.screen === "auto" ? "green or blue" : t.screen;
+    base.reading = `no ${what} screen found: fewer than ${Math.round(t.minScreenShare * 100)}% of the ${measured} measured pixels have ${what} leading the other channels by at least ${t.minExcess} and ${Math.round(t.minDominance * 100)}% of its level`;
+    return base;
+  }
+  const isScreen = new Uint8Array(n);
+  const hist = new Uint32Array(3 * BINS);
+  const sum = [0, 0, 0];
+  let count = 0;
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -1;
+  let maxY = -1;
+  for (let p = 0; p < n; p++) {
+    if (!measuredAt(p) || !screenTest(rgb, p, ch, t)) continue;
+    isScreen[p] = 1;
+    count++;
+    addToHist(hist, rgb, p);
+    for (let c = 0; c < 3; c++) sum[c] += rgb[p * 3 + c];
+    const x = p % width;
+    const y = (p - x) / width;
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  }
+  const median = histMedian(hist, count);
+  const mean = [sum[0] / count, sum[1] / count, sum[2] / count];
+  const labels = new Int32Array(n);
+  const queue = new Int32Array(n);
+  const ones = alpha ?? new Float64Array(n).fill(1);
+  const regions = labelRegions(
+    ones,
+    width,
+    height,
+    (p) => measuredAt(p) && isScreen[p] === 0,
+    true,
+    labels,
+    queue,
+    -1
+  );
+  let subjectId = 0;
+  for (let i = 0; i < regions.length; i++) {
+    if (subjectId === 0 || regions[i].area > regions[subjectId - 1].area) subjectId = i + 1;
+  }
+  let subject = null;
+  let nearSubject = null;
+  if (subjectId > 0) {
+    const s = regions[subjectId - 1];
+    subject = {
+      box: { x: s.minX, y: s.minY, width: s.maxX - s.minX + 1, height: s.maxY - s.minY + 1 },
+      area: s.area,
+      share: r42(s.area / n)
+    };
+    const mask = new Float64Array(n);
+    for (let p = 0; p < n; p++) if (labels[p] === subjectId) mask[p] = 1;
+    const scratch = new Float32Array(n);
+    const dist = new Float32Array(n);
+    distanceTo(mask, width, height, (a) => a > 0.5, scratch, dist);
+    const from = t.nearSkip;
+    const to = t.nearSkip + t.nearBand;
+    const nearHist = new Uint32Array(3 * BINS);
+    let nearCount = 0;
+    for (let p = 0; p < n; p++) {
+      if (isScreen[p] === 0 || !(dist[p] > from && dist[p] <= to)) continue;
+      addToHist(nearHist, rgb, p);
+      nearCount++;
+    }
+    if (nearCount > 0) {
+      nearSubject = {
+        colour: r4rgb2(histMedian(nearHist, nearCount)),
+        pixels: nearCount,
+        band: { from, to }
+      };
+    }
+  }
+  const evenness = measureEvenness(img, isScreen, measuredAt, ch, kind, t);
+  const grain = measureGrain(img, isScreen, ch, kind, t);
+  const near = nearSubject ? nearSubject.colour : null;
+  const fmt4 = (c) => `(${c.map((v) => v.toFixed(3)).join(", ")})`;
+  base.screenPixels = count;
+  base.share = r42(count / measured);
+  base.bounds = { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
+  base.colour = { median: r4rgb2(median), mean: r4rgb2(mean), nearSubject };
+  base.subject = subject;
+  base.evenness = evenness;
+  base.grain = grain;
+  base.reading = `${kind} screen, ${Math.round(base.share * 100)}% of the measured pixels; median ${fmt4(median)}` + (near ? `, near the subject ${fmt4(near)}` : "") + `. ${evenness.reading}. ${grain ? grain.reading : "grain not measured (no screen pixel has screen all round it)"}.`;
+  return base;
+}
+function measureEvenness(img, isScreen, measuredAt, ch, kind, t) {
+  const { width, height, rgb } = img;
+  const cols = Math.min(t.columns, width);
+  const rows = Math.min(t.rows, height);
+  const xs = Array.from({ length: cols + 1 }, (_, i) => Math.floor(i * width / cols));
+  const ys = Array.from({ length: rows + 1 }, (_, i) => Math.floor(i * height / rows));
+  const cells = [];
+  let s1 = 0;
+  let su = 0;
+  let sv = 0;
+  let suu = 0;
+  let suv = 0;
+  let svv = 0;
+  let sl = 0;
+  let sul = 0;
+  let svl = 0;
+  const du = Math.max(1, width - 1);
+  const dv = Math.max(1, height - 1);
+  const perX = new Float64Array(width);
+  const perY = new Float64Array(height);
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      let m = 0;
+      let k = 0;
+      const acc = [0, 0, 0];
+      for (let y = ys[r]; y < ys[r + 1]; y++) {
+        for (let x = xs[c]; x < xs[c + 1]; x++) {
+          const p = y * width + x;
+          if (!measuredAt(p)) continue;
+          m++;
+          if (isScreen[p] === 0) continue;
+          k++;
+          for (let q = 0; q < 3; q++) acc[q] += rgb[p * 3 + q];
+          perX[x]++;
+          perY[y]++;
+          const u = x / du;
+          const v = y / dv;
+          const l = rgb[p * 3 + ch];
+          s1++;
+          su += u;
+          sv += v;
+          suu += u * u;
+          suv += u * v;
+          svv += v * v;
+          sl += l;
+          sul += u * l;
+          svl += v * l;
+        }
+      }
+      const cellMean = k > 0 ? [acc[0] / k, acc[1] / k, acc[2] / k] : null;
+      cells.push({
+        column: c,
+        row: r,
+        box: { x: xs[c], y: ys[r], width: xs[c + 1] - xs[c], height: ys[r + 1] - ys[r] },
+        screenShare: m > 0 ? r42(k / m) : 0,
+        mean: cellMean ? r4rgb2(cellMean) : null,
+        luma: cellMean ? r42(luma(cellMean)) : null,
+        level: cellMean ? r42(cellMean[ch]) : null
+      });
+    }
+  }
+  const eligible = cells.filter(
+    (c) => c.level !== null && c.screenShare >= t.minCellShare
+  );
+  let darkest = null;
+  let brightest = null;
+  for (const c of eligible) {
+    if (darkest === null || c.level < darkest.level) darkest = c;
+    if (brightest === null || c.level > brightest.level) brightest = c;
+  }
+  const levelRatio = darkest && brightest && darkest.level > 0 ? r42(brightest.level / darkest.level) : null;
+  const lumaRatio = darkest && brightest && darkest.luma > 0 ? r42(brightest.luma / darkest.luma) : null;
+  const uneven = levelRatio !== null && levelRatio > t.unevenRatio;
+  const plane = solve3(
+    [
+      [s1, su, sv],
+      [su, suu, suv],
+      [sv, suv, svv]
+    ],
+    [sl, sul, svl]
+  );
+  const [x0, x1] = percentileRange(perX, s1);
+  const [y0, y1] = percentileRange(perY, s1);
+  const extent = { x: x0, y: y0, width: x1 - x0 + 1, height: y1 - y0 + 1 };
+  let horizontal = null;
+  let vertical = null;
+  if (plane && s1 > 0) {
+    const [a, b, c] = plane;
+    const at = (u, v) => a + b * u + c * v;
+    const ratio = (hi, lo) => lo > 0 && hi > 0 ? r42(hi / lo) : null;
+    const uc = su / s1;
+    const vc = sv / s1;
+    if (x1 > x0) horizontal = ratio(at(x1 / du, vc), at(x0 / du, vc));
+    if (y1 > y0) vertical = ratio(at(uc, y1 / dv), at(uc, y0 / dv));
+  }
+  const sides = [];
+  if (horizontal !== null) {
+    sides.push({
+      side: horizontal > 1 ? "left" : "right",
+      strength: Math.max(horizontal, 1 / horizontal)
+    });
+  }
+  if (vertical !== null) {
+    sides.push({
+      side: vertical > 1 ? "top" : "bottom",
+      strength: Math.max(vertical, 1 / vertical)
+    });
+  }
+  const darkerSide = sides.filter((d) => d.strength > t.unevenRatio).sort((p, q) => q.strength - p.strength).map((d) => d.side);
+  const where = (c) => `cell ${c.column},${c.row} at x ${c.box.x}, y ${c.box.y}`;
+  let reading;
+  if (darkest === null || brightest === null || levelRatio === null) {
+    reading = `no grid cell is at least ${Math.round(t.minCellShare * 100)}% screen, so evenness was not read`;
+  } else {
+    const spread = `the screen's ${kind} level runs from ${darkest.level.toFixed(3)} (${where(darkest)}) to ${brightest.level.toFixed(3)} (${where(brightest)}), ${levelRatio.toFixed(2)}x`;
+    reading = uneven ? `uneven: ${spread}` + (darkerSide.length ? `, darker on the ${darkerSide.join(" and the ")}` : "") + ". One Screen Colour will not fit all of it: key from the colour near the subject, then check the darker part in the Screen Matte view (Clip Black, a second key, or a garbage mask)" : `even: ${spread}`;
+  }
+  return {
+    columns: cols,
+    rows,
+    cellWidth: xs[1] - xs[0],
+    cellHeight: ys[1] - ys[0],
+    cells,
+    darkest,
+    brightest,
+    levelRatio,
+    lumaRatio,
+    uneven,
+    extent,
+    horizontal,
+    vertical,
+    darkerSide,
+    reading
+  };
+}
+function percentileRange(counts, total) {
+  if (total <= 0) return [0, counts.length - 1];
+  const lo = 0.05 * total;
+  const hi = 0.95 * total;
+  let acc = 0;
+  let first = -1;
+  let last = counts.length - 1;
+  for (let i = 0; i < counts.length; i++) {
+    acc += counts[i];
+    if (first < 0 && acc >= lo) first = i;
+    if (acc >= hi) {
+      last = i;
+      break;
+    }
+  }
+  return [Math.max(0, first), last];
+}
+function solve3(m, v) {
+  const det = (a) => a[0][0] * (a[1][1] * a[2][2] - a[1][2] * a[2][1]) - a[0][1] * (a[1][0] * a[2][2] - a[1][2] * a[2][0]) + a[0][2] * (a[1][0] * a[2][1] - a[1][1] * a[2][0]);
+  const d = det(m);
+  if (!Number.isFinite(d) || Math.abs(d) < 1e-12) return null;
+  const col = (i) => m.map((row, r) => row.map((x, c) => c === i ? v[r] : x));
+  return [det(col(0)) / d, det(col(1)) / d, det(col(2)) / d];
+}
+function measureGrain(img, isScreen, ch, kind, t) {
+  const { width, height, rgb } = img;
+  const ss = [0, 0, 0];
+  let k = 0;
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      const p = y * width + x;
+      if (isScreen[p] === 0) continue;
+      let all = true;
+      for (let dy = -1; dy <= 1 && all; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          if (isScreen[p + dy * width + dx] === 0) {
+            all = false;
+            break;
+          }
+        }
+      }
+      if (!all) continue;
+      for (let c = 0; c < 3; c++) {
+        let s = 0;
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) s += rgb[(p + dy * width + dx) * 3 + c];
+        }
+        const d = rgb[p * 3 + c] - s / 9;
+        ss[c] += d * d;
+      }
+      k++;
+    }
+  }
+  if (k === 0) return null;
+  const sd = [0, 1, 2].map((c) => Math.sqrt(ss[c] / k * 9 / 8));
+  const level = sd[ch];
+  const grainy = level > t.grainAbove;
+  const steps = level * 255;
+  return {
+    stdDev: r4rgb2(sd),
+    level: r42(level),
+    steps8bit: Math.round(steps * 100) / 100,
+    samples: k,
+    grainy,
+    reading: `grain: ${kind} varies by ${level.toFixed(4)} (standard deviation, about ${steps.toFixed(1)} 8-bit steps) about its local mean` + (grainy ? "; grainy enough to break a hard matte into specks and chatter, so try Keylight's Screen Pre-blur before raising Clip Black" : "; fine enough not to need pre-blur")
+  };
+}
+
+// src/color/sheet.ts
+var TOL = 2 / 255;
+function px(img, x, y) {
+  const i = (y * img.width + x) * 3;
+  return [img.rgb[i], img.rgb[i + 1], img.rgb[i + 2]];
+}
+function same(a, b) {
+  return Math.abs(a[0] - b[0]) <= TOL && Math.abs(a[1] - b[1]) <= TOL && Math.abs(a[2] - b[2]) <= TOL;
+}
+function isBackground(img, x, y, bg) {
+  if (img.alpha) return img.alpha[y * img.width + x] <= TOL;
+  return bg !== null && same(px(img, x, y), bg);
+}
+function cornerColor(img) {
+  const corners = [
+    px(img, 0, 0),
+    px(img, img.width - 1, 0),
+    px(img, 0, img.height - 1),
+    px(img, img.width - 1, img.height - 1)
+  ];
+  let best = corners[0];
+  let bestCount = 0;
+  for (const c of corners) {
+    const count = corners.filter((o) => same(o, c)).length;
+    if (count > bestCount) {
+      best = c;
+      bestCount = count;
+    }
+  }
+  return best;
+}
+function lineUniform(img, fixed, horizontal) {
+  const n = horizontal ? img.width : img.height;
+  const first = horizontal ? px(img, 0, fixed) : px(img, fixed, 0);
+  let transparent = img.alpha !== void 0;
+  for (let i = 0; i < n; i++) {
+    const x = horizontal ? i : fixed;
+    const y = horizontal ? fixed : i;
+    if (transparent && img.alpha[y * img.width + x] > TOL) transparent = false;
+    if (!same(px(img, x, y), first)) return { uniform: false, transparent: false, color: first };
+  }
+  return { uniform: true, transparent, color: first };
+}
+function edgeBand(img, side2) {
+  const horizontal = side2 === "top" || side2 === "bottom";
+  const n = horizontal ? img.height : img.width;
+  let width = 0;
+  let color = null;
+  let transparent = true;
+  for (let i = 0; i < n; i++) {
+    const fixed = side2 === "top" || side2 === "left" ? i : n - 1 - i;
+    const line = lineUniform(img, fixed, horizontal);
+    if (!line.uniform) break;
+    if (color === null) color = line.color;
+    else if (!same(color, line.color)) break;
+    if (!line.transparent) transparent = false;
+    width++;
+  }
+  if (width === 0) return { width: 0, kind: "none", color: null };
+  return { width, kind: transparent && img.alpha ? "transparent" : "color", color };
+}
+function analyzeFrame(img) {
+  const { width, height } = img;
+  const bgColor = img.alpha ? null : cornerColor(img);
+  const sum = [0, 0, 0];
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+  let content = 0;
+  const first = px(img, 0, 0);
+  let uniform = true;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 3;
+      sum[0] += img.rgb[i];
+      sum[1] += img.rgb[i + 1];
+      sum[2] += img.rgb[i + 2];
+      if (uniform && !same(px(img, x, y), first)) uniform = false;
+      if (!isBackground(img, x, y, bgColor)) {
+        content++;
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  const total = width * height;
+  return {
+    width,
+    height,
+    meanRgb: [sum[0] / total, sum[1] / total, sum[2] / total],
+    uniform,
+    background: img.alpha ? { kind: "transparent", color: null } : { kind: "color", color: bgColor },
+    contentBounds: content === 0 ? null : { left: minX, top: minY, width: maxX - minX + 1, height: maxY - minY + 1 },
+    coverage: content / total,
+    edges: {
+      top: edgeBand(img, "top"),
+      bottom: edgeBand(img, "bottom"),
+      left: edgeBand(img, "left"),
+      right: edgeBand(img, "right")
+    }
+  };
+}
+var CHECKERBOARD = {
+  size: 16,
+  light: [0.8, 0.8, 0.8],
+  dark: [0.6, 0.6, 0.6]
+};
+function unmatte(img, bg) {
+  const out = Float64Array.from(img.rgb);
+  const alpha = img.alpha;
+  if (!alpha) return out;
+  for (let p = 0; p < alpha.length; p++) {
+    const a = alpha[p];
+    if (a >= 1) continue;
+    const i = p * 3;
+    for (let c = 0; c < 3; c++) {
+      out[i + c] = a <= 0 ? 0 : Math.min(1, Math.max(0, (out[i + c] - bg[c] * (1 - a)) / a));
+    }
+  }
+  return out;
+}
+function flattenOver(img, backdrop) {
+  const out = Float64Array.from(img.rgb);
+  const alpha = img.alpha;
+  if (!alpha) return out;
+  const { width, height } = img;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const p = y * width + x;
+      const a = alpha[p];
+      if (a >= 1) continue;
+      const bg = backdrop.kind === "color" ? backdrop.color : (Math.floor(x / CHECKERBOARD.size) + Math.floor(y / CHECKERBOARD.size)) % 2 === 0 ? CHECKERBOARD.light : CHECKERBOARD.dark;
+      const i = p * 3;
+      out[i] = out[i] * a + bg[0] * (1 - a);
+      out[i + 1] = out[i + 1] * a + bg[1] * (1 - a);
+      out[i + 2] = out[i + 2] * a + bg[2] * (1 - a);
+    }
+  }
+  return out;
+}
+var r43 = (v) => Math.round(v * 1e4) / 1e4;
+var r4rgb3 = (v) => [r43(v[0]), r43(v[1]), r43(v[2])];
+function clipRegion(img, region) {
+  const x0 = Math.floor(region.x);
+  const y0 = Math.floor(region.y);
+  const x1 = x0 + Math.max(1, Math.floor(region.width ?? 1));
+  const y1 = y0 + Math.max(1, Math.floor(region.height ?? 1));
+  const cx0 = Math.max(0, x0);
+  const cy0 = Math.max(0, y0);
+  const cx1 = Math.min(img.width, x1);
+  const cy1 = Math.min(img.height, y1);
+  if (cx1 <= cx0 || cy1 <= cy0) return null;
+  return {
+    rect: { x: cx0, y: cy0, width: cx1 - cx0, height: cy1 - cy0 },
+    clipped: cx0 !== x0 || cy0 !== y0 || cx1 !== x1 || cy1 !== y1
+  };
+}
+function outside(img, region) {
+  return { name: region.name, error: `region is outside the ${img.width}\xD7${img.height} frame` };
+}
+function sampleRegions(img, regions) {
+  return regions.map((region) => {
+    const clip = clipRegion(img, region);
+    if (!clip) return outside(img, region);
+    const { rect } = clip;
+    const sum = [0, 0, 0];
+    const min = [Infinity, Infinity, Infinity];
+    const max = [-Infinity, -Infinity, -Infinity];
+    let aSum = 0;
+    let aMin = Infinity;
+    let aMax = -Infinity;
+    let opaque = 0;
+    let transparent = 0;
+    for (let y = rect.y; y < rect.y + rect.height; y++) {
+      for (let x = rect.x; x < rect.x + rect.width; x++) {
+        const p = y * img.width + x;
+        for (let c = 0; c < 3; c++) {
+          const v = img.rgb[p * 3 + c];
+          sum[c] += v;
+          if (v < min[c]) min[c] = v;
+          if (v > max[c]) max[c] = v;
+        }
+        if (img.alpha) {
+          const a = img.alpha[p];
+          aSum += a;
+          if (a < aMin) aMin = a;
+          if (a > aMax) aMax = a;
+          if (a >= 1 - TOL) opaque++;
+          else if (a <= TOL) transparent++;
+        }
+      }
+    }
+    const n = rect.width * rect.height;
+    return {
+      name: region.name,
+      rect,
+      clipped: clip.clipped,
+      pixels: n,
+      mean: r4rgb3([sum[0] / n, sum[1] / n, sum[2] / n]),
+      min: r4rgb3(min),
+      max: r4rgb3(max),
+      alpha: img.alpha ? {
+        mean: r43(aSum / n),
+        min: r43(aMin),
+        max: r43(aMax),
+        opaqueShare: r43(opaque / n),
+        partialShare: r43((n - opaque - transparent) / n),
+        transparentShare: r43(transparent / n)
+      } : null
+    };
+  });
+}
+function histogramOf(img, bins) {
+  const n = img.width * img.height;
+  const counts = [0, 1, 2].map(() => Array.from({ length: bins }, () => 0));
+  const aCounts = img.alpha ? Array.from({ length: bins }, () => 0) : void 0;
+  const bin = (v) => Math.min(bins - 1, Math.max(0, Math.floor(v * bins)));
+  for (let p = 0; p < n; p++) {
+    for (let c = 0; c < 3; c++) counts[c][bin(img.rgb[p * 3 + c])]++;
+    if (aCounts && img.alpha) aCounts[bin(img.alpha[p])]++;
+  }
+  return {
+    bins,
+    pixels: n,
+    r: counts[0],
+    g: counts[1],
+    b: counts[2],
+    ...aCounts ? { a: aCounts } : {}
+  };
+}
+function compareRegions(from, to, regions) {
+  if (from.width !== to.width || from.height !== to.height) {
+    throw new Error(
+      `cannot compare frames of different size (${from.width}\xD7${from.height} vs ${to.width}\xD7${to.height})`
+    );
+  }
+  const withAlpha = from.alpha !== void 0 && to.alpha !== void 0;
+  return regions.map((region) => {
+    const clip = clipRegion(from, region);
+    if (!clip) return outside(from, region);
+    const { rect } = clip;
+    const delta = [0, 0, 0];
+    const absSum = [0, 0, 0];
+    const absMax = [0, 0, 0];
+    let aDelta = 0;
+    let aAbs = 0;
+    let aMax = 0;
+    for (let y = rect.y; y < rect.y + rect.height; y++) {
+      for (let x = rect.x; x < rect.x + rect.width; x++) {
+        const p = y * from.width + x;
+        for (let c = 0; c < 3; c++) {
+          const d = to.rgb[p * 3 + c] - from.rgb[p * 3 + c];
+          delta[c] += d;
+          absSum[c] += Math.abs(d);
+          if (Math.abs(d) > absMax[c]) absMax[c] = Math.abs(d);
+        }
+        if (withAlpha) {
+          const d = to.alpha[p] - from.alpha[p];
+          aDelta += d;
+          aAbs += Math.abs(d);
+          if (Math.abs(d) > aMax) aMax = Math.abs(d);
+        }
+      }
+    }
+    const n = rect.width * rect.height;
+    return {
+      name: region.name,
+      rect,
+      clipped: clip.clipped,
+      pixels: n,
+      meanDelta: r4rgb3([delta[0] / n, delta[1] / n, delta[2] / n]),
+      meanAbsDelta: r4rgb3([absSum[0] / n, absSum[1] / n, absSum[2] / n]),
+      maxAbsDelta: r4rgb3(absMax),
+      alpha: withAlpha ? { meanDelta: r43(aDelta / n), meanAbsDelta: r43(aAbs / n), maxAbsDelta: r43(aMax) } : null
+    };
+  });
+}
+function rgbHex(rgb) {
+  return `#${rgb.map(
+    (v) => Math.round(Math.min(1, Math.max(0, v)) * 255).toString(16).padStart(2, "0")
+  ).join("")}`;
+}
+function resample(img, tw, th) {
+  const out = new Float64Array(tw * th * 3);
+  const counts = new Float64Array(tw * th);
+  for (let y = 0; y < img.height; y++) {
+    const ty = Math.min(th - 1, Math.floor(y * th / img.height));
+    for (let x = 0; x < img.width; x++) {
+      const tx = Math.min(tw - 1, Math.floor(x * tw / img.width));
+      const si = (y * img.width + x) * 3;
+      const di = (ty * tw + tx) * 3;
+      out[di] += img.rgb[si];
+      out[di + 1] += img.rgb[si + 1];
+      out[di + 2] += img.rgb[si + 2];
+      counts[ty * tw + tx]++;
+    }
+  }
+  for (let i = 0; i < tw * th; i++) {
+    const c = counts[i] || 1;
+    out[i * 3] /= c;
+    out[i * 3 + 1] /= c;
+    out[i * 3 + 2] /= c;
+  }
+  return out;
+}
+var GLYPHS = {
+  "0": [".###.", "#...#", "#..##", "#.#.#", "##..#", "#...#", ".###."],
+  "1": ["..#..", ".##..", "..#..", "..#..", "..#..", "..#..", ".###."],
+  "2": [".###.", "#...#", "....#", "...#.", "..#..", ".#...", "#####"],
+  "3": ["#####", "...#.", "..#..", "...#.", "....#", "#...#", ".###."],
+  "4": ["...#.", "..##.", ".#.#.", "#..#.", "#####", "...#.", "...#."],
+  "5": ["#####", "#....", "####.", "....#", "....#", "#...#", ".###."],
+  "6": ["..##.", ".#...", "#....", "####.", "#...#", "#...#", ".###."],
+  "7": ["#####", "....#", "...#.", "..#..", ".#...", ".#...", ".#..."],
+  "8": [".###.", "#...#", "#...#", ".###.", "#...#", "#...#", ".###."],
+  "9": [".###.", "#...#", "#...#", ".####", "....#", "...#.", ".##.."],
+  ".": [".....", ".....", ".....", ".....", ".....", ".##..", ".##.."],
+  ":": [".....", ".##..", ".##..", ".....", ".##..", ".##..", "....."],
+  "-": [".....", ".....", ".....", "#####", ".....", ".....", "....."],
+  ">": [".#...", "..#..", "...#.", "....#", "...#.", "..#..", ".#..."],
+  x: [".....", ".....", "#...#", ".#.#.", "..#..", ".#.#.", "#...#"],
+  "!": ["..#..", "..#..", "..#..", "..#..", "..#..", ".....", "..#.."],
+  "#": [".#.#.", ".#.#.", "#####", ".#.#.", "#####", ".#.#.", ".#.#."],
+  s: [".....", ".....", ".####", "#....", ".###.", "....#", "####."],
+  f: ["..##.", ".#...", "###..", ".#...", ".#...", ".#...", ".#..."],
+  a: [".....", ".....", ".###.", "....#", ".####", "#...#", ".####"],
+  b: ["#....", "#....", "####.", "#...#", "#...#", "#...#", "####."],
+  c: [".....", ".....", ".###.", "#....", "#....", "#...#", ".###."],
+  d: ["....#", "....#", ".####", "#...#", "#...#", "#...#", ".####"],
+  e: [".....", ".....", ".###.", "#...#", "#####", "#....", ".###."],
+  g: [".....", ".....", ".####", "#...#", "#...#", "#...#", ".####", "....#", ".###."],
+  h: ["#....", "#....", "####.", "#...#", "#...#", "#...#", "#...#"],
+  i: ["..#..", ".....", ".##..", "..#..", "..#..", "..#..", ".###."],
+  j: ["...#.", ".....", "..##.", "...#.", "...#.", "...#.", "...#.", "#..#.", ".##.."],
+  k: ["#....", "#....", "#..#.", "#.#..", "##...", "#.#..", "#..#."],
+  l: [".##..", "..#..", "..#..", "..#..", "..#..", "..#..", ".###."],
+  m: [".....", ".....", "##.#.", "#.#.#", "#.#.#", "#...#", "#...#"],
+  n: [".....", ".....", "####.", "#...#", "#...#", "#...#", "#...#"],
+  o: [".....", ".....", ".###.", "#...#", "#...#", "#...#", ".###."],
+  p: [".....", ".....", "####.", "#...#", "#...#", "#...#", "####.", "#....", "#...."],
+  q: [".....", ".....", ".####", "#...#", "#...#", "#...#", ".####", "....#", "....#"],
+  r: [".....", ".....", "#.##.", "##..#", "#....", "#....", "#...."],
+  t: [".#...", ".#...", "###..", ".#...", ".#...", ".#..#", "..##."],
+  u: [".....", ".....", "#...#", "#...#", "#...#", "#..##", ".##.#"],
+  v: [".....", ".....", "#...#", "#...#", "#...#", ".#.#.", "..#.."],
+  w: [".....", ".....", "#...#", "#...#", "#.#.#", "#.#.#", ".#.#."],
+  y: [".....", ".....", "#...#", "#...#", "#...#", "#...#", ".####", "....#", ".###."],
+  z: [".....", ".....", "#####", "...#.", "..#..", ".#...", "#####"],
+  "+": [".....", "..#..", "..#..", "#####", "..#..", "..#..", "....."],
+  " ": [".....", ".....", ".....", ".....", ".....", ".....", "....."]
+};
+var GLYPH_W = 5;
+var GLYPH_H = 7;
+var FONT_SCALE = 2;
+var LABEL_H = GLYPH_H * FONT_SCALE + 6;
+var LABEL_CHAR_PX = (GLYPH_W + 1) * FONT_SCALE;
+function drawText(rgb, width, x0, y0, text, color) {
+  let cx = x0;
+  for (const ch of text) {
+    const glyph = GLYPHS[ch] ?? GLYPHS[" "];
+    for (let gy = 0; gy < glyph.length; gy++) {
+      for (let gx = 0; gx < GLYPH_W; gx++) {
+        if (glyph[gy][gx] !== "#") continue;
+        for (let sy = 0; sy < FONT_SCALE; sy++) {
+          for (let sx = 0; sx < FONT_SCALE; sx++) {
+            const x = cx + gx * FONT_SCALE + sx;
+            const y = y0 + gy * FONT_SCALE + sy;
+            const i = (y * width + x) * 3;
+            rgb[i] = color[0];
+            rgb[i + 1] = color[1];
+            rgb[i + 2] = color[2];
+          }
+        }
+      }
+    }
+    cx += (GLYPH_W + 1) * FONT_SCALE;
+  }
+}
+function composeContactSheet(frames, opts = {}) {
+  if (frames.length === 0) throw new Error("contact sheet needs at least one frame");
+  const gap = opts.gap ?? 8;
+  const bg = opts.background ?? [0.12, 0.12, 0.12];
+  const columns = Math.max(
+    1,
+    Math.min(frames.length, opts.columns ?? Math.ceil(Math.sqrt(frames.length)))
+  );
+  const rows = Math.ceil(frames.length / columns);
+  const srcW = Math.max(...frames.map((f) => f.width));
+  const srcH = Math.max(...frames.map((f) => f.height));
+  const thumbWidth = Math.max(16, Math.min(opts.thumbWidth ?? 480, srcW));
+  const thumbHeight = Math.max(1, Math.round(srcH * thumbWidth / srcW));
+  const cellW = thumbWidth;
+  const cellH = LABEL_H + thumbHeight;
+  const width = gap + columns * (cellW + gap);
+  const height = gap + rows * (cellH + gap);
+  const rgb = new Float64Array(width * height * 3);
+  for (let i = 0; i < width * height; i++) {
+    rgb[i * 3] = bg[0];
+    rgb[i * 3 + 1] = bg[1];
+    rgb[i * 3 + 2] = bg[2];
+  }
+  for (const [n, frame] of frames.entries()) {
+    const col = n % columns;
+    const row = Math.floor(n / columns);
+    const x0 = gap + col * (cellW + gap);
+    const y0 = gap + row * (cellH + gap);
+    const tw = Math.max(1, Math.min(thumbWidth, Math.round(frame.width * thumbWidth / srcW)));
+    const th = Math.max(1, Math.min(thumbHeight, Math.round(frame.height * tw / frame.width)));
+    const thumb = resample(frame, tw, th);
+    for (let y = 0; y < th; y++) {
+      for (let x = 0; x < tw; x++) {
+        const si = (y * tw + x) * 3;
+        const di = ((y0 + LABEL_H + y) * width + (x0 + x)) * 3;
+        rgb[di] = thumb[si];
+        rgb[di + 1] = thumb[si + 1];
+        rgb[di + 2] = thumb[si + 2];
+      }
+    }
+    const label = opts.labels?.[n] ?? `#${n}`;
+    drawText(rgb, width, x0 + 2, y0 + 2, label, [0.95, 0.95, 0.95]);
+  }
+  return { width, height, rgb, columns, rows, thumbWidth, thumbHeight };
+}
+function frameLabel(index, time3) {
+  return time3 === void 0 ? `#${index}` : `#${index} ${time3.toFixed(3)}s`;
+}
+
+// src/color/motion.ts
+var DIFF_DEFAULTS = {
+  changeAbove: 0.04,
+  spikeRatio: 3,
+  holdRatio: 0.25,
+  quietBelow: 2e-3,
+  movingShare: 5e-4,
+  window: 3,
+  amplify: 8,
+  repeatBelow: 1e-4
+};
+var LIMITS = {
+  changeAbove: { min: 0, max: 1 },
+  spikeRatio: { min: 1, max: 1e3, above: true },
+  holdRatio: { min: 0, max: 1, above: true },
+  quietBelow: { min: 0, max: 1 },
+  movingShare: { min: 0, max: 1 },
+  window: { min: 1, max: 16, int: true },
+  amplify: { min: 1, max: 1e3 },
+  repeatBelow: { min: 0, max: 1 }
+};
+function resolveDiffThresholds(args = {}) {
+  const out = { ...DIFF_DEFAULTS };
+  for (const key of Object.keys(DIFF_DEFAULTS)) {
+    const v = args[key];
+    if (typeof v === "number") out[key] = v;
+  }
+  return out;
+}
+function diffArgsError(args) {
+  for (const [key, value] of Object.entries(args)) {
+    if (key === "sheet") continue;
+    const limit = LIMITS[key];
+    if (!limit) {
+      return `\`diff.${key}\` is not an option (options: ${Object.keys(LIMITS).join(", ")}, sheet)`;
+    }
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+      return `\`diff.${key}\` must be a number`;
+    }
+    const low = limit.above ? value <= limit.min : value < limit.min;
+    if (low || value > limit.max || limit.int && !Number.isInteger(value)) {
+      const range = limit.above ? `above ${limit.min} and at most ${limit.max}` : `${limit.min} to ${limit.max}`;
+      return `\`diff.${key}\` must be ${limit.int ? "a whole number " : ""}${range}, not ${value}`;
+    }
+  }
+  return null;
+}
+function pictureOf(img, straight) {
+  const n = img.width * img.height;
+  const out = new Float32Array(n * 3);
+  const a = straight ? img.alpha : void 0;
+  if (!a) {
+    out.set(img.rgb);
+    return out;
+  }
+  for (let p = 0; p < n; p++) {
+    const w = a[p];
+    const i = p * 3;
+    out[i] = img.rgb[i] * w;
+    out[i + 1] = img.rgb[i + 1] * w;
+    out[i + 2] = img.rgb[i + 2] * w;
+  }
+  return out;
+}
+var r6 = (v) => Math.round(v * 1e6) / 1e6;
+function rectStats(prev, cur, width, x0, y0, x1, y1, above, perPixel) {
+  let sum = 0;
+  let maxAbs = 0;
+  let changed = 0;
+  let bx0 = Infinity;
+  let by0 = Infinity;
+  let bx1 = -1;
+  let by1 = -1;
+  for (let y = y0; y < y1; y++) {
+    let i = (y * width + x0) * 3;
+    for (let x = x0; x < x1; x++, i += 3) {
+      const dr = Math.abs(cur[i] - prev[i]);
+      const dg = Math.abs(cur[i + 1] - prev[i + 1]);
+      const db = Math.abs(cur[i + 2] - prev[i + 2]);
+      const m = dr > dg ? dr > db ? dr : db : dg > db ? dg : db;
+      const mean = (dr + dg + db) / 3;
+      sum += mean;
+      if (m > maxAbs) maxAbs = m;
+      if (m > above) {
+        changed++;
+        if (x < bx0) bx0 = x;
+        if (x > bx1) bx1 = x;
+        if (y < by0) by0 = y;
+        if (y > by1) by1 = y;
+      }
+      if (perPixel) perPixel(x, y, mean);
+    }
+  }
+  const pixels = (x1 - x0) * (y1 - y0);
+  return {
+    pixels,
+    change: r6(pixels > 0 ? sum / pixels : 0),
+    maxAbsDelta: r6(maxAbs),
+    changedPixels: changed,
+    changedShare: r6(pixels > 0 ? changed / pixels : 0),
+    changedBounds: changed > 0 ? { x: bx0, y: by0, width: bx1 - bx0 + 1, height: by1 - by0 + 1 } : null
+  };
+}
+function pictureChange(prev, cur, width, height, t, opts = {}) {
+  let perPixel;
+  let sums = null;
+  let counts = null;
+  const tw = opts.thumb?.width ?? 0;
+  if (opts.thumb) {
+    const th = opts.thumb.height;
+    sums = new Float64Array(tw * th);
+    counts = new Float64Array(tw * th);
+    const col = new Int32Array(width);
+    for (let x = 0; x < width; x++) col[x] = Math.min(tw - 1, Math.floor(x * tw / width));
+    const row = new Int32Array(height);
+    for (let y = 0; y < height; y++) row[y] = Math.min(th - 1, Math.floor(y * th / height)) * tw;
+    const s = sums;
+    const c = counts;
+    perPixel = (x, y, mean) => {
+      const k = row[y] + col[x];
+      s[k] += mean;
+      c[k]++;
+    };
+  }
+  const all = rectStats(prev, cur, width, 0, 0, width, height, t.changeAbove, perPixel);
+  const out = { all };
+  if (opts.regions) {
+    out.regions = opts.regions.map((region) => {
+      const clip = clipRegion({ width, height }, region);
+      if (!clip)
+        return { name: region.name, error: `region is outside the ${width}\xD7${height} frame` };
+      const { x, y, width: w, height: h } = clip.rect;
+      return {
+        name: region.name,
+        ...rectStats(prev, cur, width, x, y, x + w, y + h, t.changeAbove)
+      };
+    });
+  }
+  if (sums && counts) {
+    const thumb = new Float64Array(sums.length);
+    for (let k = 0; k < sums.length; k++) {
+      thumb[k] = counts[k] > 0 ? Math.min(1, sums[k] / counts[k] * t.amplify) : 0;
+    }
+    out.thumb = thumb;
+  }
+  return out;
+}
+function lowerMedian(values) {
+  const s = [...values].sort((a, b) => a - b);
+  return s[Math.floor((s.length - 1) / 2)];
+}
+function side(pairs, p, dir, window, skip) {
+  const changes = [];
+  const shares = [];
+  for (let k = 1; k <= window; k++) {
+    const j = p + dir * k;
+    if (j < 0 || j >= pairs.length) break;
+    if (skip.has(j)) continue;
+    changes.push(pairs[j].change);
+    shares.push(pairs[j].changedShare);
+  }
+  if (changes.length === 0) return null;
+  return { change: lowerMedian(changes), share: lowerMedian(shares) };
+}
+var fmt = (v) => v.toFixed(4);
+var frameText = (f) => `#${f.index}${f.time === void 0 ? "" : ` (${r6(f.time)} s)`}`;
+function summarizeSeries(pairs, t) {
+  const n = pairs.length;
+  const changes = pairs.map((p) => p.change);
+  let largest = 0;
+  let smallest = 0;
+  for (let i = 1; i < n; i++) {
+    if (changes[i] > changes[largest]) largest = i;
+    if (changes[i] < changes[smallest]) smallest = i;
+  }
+  const summary = {
+    pairs: n,
+    median: n > 0 ? r6(lowerMedian(changes)) : 0,
+    mean: n > 0 ? r6(changes.reduce((a, b) => a + b, 0) / n) : 0,
+    largest: { pair: largest, change: n > 0 ? changes[largest] : 0 },
+    smallest: { pair: smallest, change: n > 0 ? changes[smallest] : 0 },
+    flags: [],
+    reading: ""
+  };
+  if (n < 2) {
+    summary.reading = n === 0 ? "no pair of consecutive frames to compare" : "one pair: nothing to compare it with, so nothing is flagged (render at least three frames)";
+    return summary;
+  }
+  const repeats = new Set(pairs.flatMap((p, i) => p.change <= t.repeatBelow ? [i] : []));
+  const near = (i, set2) => {
+    for (let k = 1; k <= t.window; k++) if (set2.has(i - k) || set2.has(i + k)) return true;
+    return false;
+  };
+  const standsOut = (p, i, skip) => {
+    if (repeats.has(i) || p.changedShare < t.movingShare) return null;
+    const sides = [side(pairs, i, -1, t.window, skip), side(pairs, i, 1, t.window, skip)].filter(
+      (s) => s !== null
+    );
+    if (sides.length === 0) return null;
+    const reference = Math.max(...sides.map((s) => s.change), t.quietBelow);
+    if (sides.some((s) => p.change < t.spikeRatio * Math.max(s.change, t.quietBelow))) return null;
+    return { reference, edge: i === 0 || i === n - 1, besideRepeat: near(i, repeats) };
+  };
+  const first = pairs.map((p, i) => standsOut(p, i, repeats));
+  const firstSpikes = new Set(first.flatMap((s, i) => s ? [i] : []));
+  const skipBoth = /* @__PURE__ */ new Set([...repeats, ...firstSpikes]);
+  const spike = pairs.map(
+    (p, i) => first[i] ?? (firstSpikes.size > 0 ? standsOut(p, i, skipBoth) : null)
+  );
+  const spikes = new Set(spike.flatMap((s, i) => s ? [i] : []));
+  const repeatNote = " (a repeated frame is next to it and was left out of the comparison)";
+  const flags = [];
+  for (let i = 0; i < n; i++) {
+    const s = spike[i];
+    if (!s) continue;
+    const runStart = i === 0 || !spike[i - 1];
+    if (!runStart) continue;
+    let end = i;
+    while (end + 1 < n && spike[end + 1]) end++;
+    if (end === i + 1) {
+      const reference = Math.max(s.reference, spike[end].reference);
+      const change = Math.min(pairs[i].change, pairs[end].change);
+      const frame = pairs[i].to;
+      const flag = {
+        kind: "pop",
+        pairs: [i, end],
+        frame,
+        change,
+        reference: r6(reference),
+        ratio: r6(change / reference),
+        reading: `frame ${frameText(frame)} differs from the frames before and after it by ${fmt(change)} or more, while its neighbours change about ${fmt(reference)}: a one-frame pop`
+      };
+      if (s.besideRepeat || spike[end].besideRepeat) {
+        flag.besideRepeat = true;
+        flag.reading += repeatNote;
+      }
+      flags.push(flag);
+      continue;
+    }
+    for (let j = i; j <= end; j++) {
+      const sj = spike[j];
+      const between = [pairs[j].from, pairs[j].to];
+      const flag = {
+        kind: "cut",
+        pairs: [j],
+        between,
+        change: pairs[j].change,
+        reference: r6(sj.reference),
+        ratio: r6(pairs[j].change / sj.reference),
+        reading: `${frameText(between[0])} to ${frameText(between[1])} changes ${fmt(pairs[j].change)}, ${(pairs[j].change / sj.reference).toFixed(1)}\xD7 its neighbours: a cut or a jump`
+      };
+      if (sj.edge) {
+        flag.atSeriesEdge = true;
+        flag.reading += " (first or last pair: it could also be a pop of the end frame)";
+      }
+      if (sj.besideRepeat) {
+        flag.besideRepeat = true;
+        flag.reading += repeatNote;
+      }
+      flags.push(flag);
+    }
+  }
+  const moving = (s) => s !== null && s.change >= t.quietBelow && s.share >= t.movingShare;
+  const notSpikes = /* @__PURE__ */ new Set([...spikes, ...repeats]);
+  const neighbours = (i) => [i - 1, i + 1].filter((j) => j >= 0 && j < n && !repeats.has(j));
+  for (let i = 0; i < n; i++) {
+    if (spikes.has(i)) continue;
+    const before = side(pairs, i, -1, t.window, notSpikes);
+    const after = side(pairs, i, 1, t.window, notSpikes);
+    const frame = pairs[i].to;
+    const unreliablePairs = neighbours(i);
+    const unreliable = unreliablePairs.length > 0 ? `; pair${unreliablePairs.length > 1 ? "s" : ""} ${unreliablePairs.join(" and ")} beside it ${unreliablePairs.length > 1 ? "are" : "is"} measured across the repeat, so ${unreliablePairs.length > 1 ? "their readings are" : "its reading is"} unreliable` : "";
+    if (before && after && moving(before) && moving(after)) {
+      const reference2 = Math.min(before.change, after.change);
+      if (pairs[i].change > t.holdRatio * reference2) continue;
+      flags.push({
+        kind: "stutter",
+        pairs: [i],
+        frame,
+        change: pairs[i].change,
+        reference: r6(reference2),
+        ratio: r6(pairs[i].change / reference2),
+        unreliablePairs,
+        reading: `frame ${frameText(frame)} barely changes from the one before (${fmt(pairs[i].change)}) while the frames around it move about ${fmt(reference2)}: a repeated frame, a stutter${unreliable}. Rounded times can do this: a time just below a frame boundary renders the frame before (see frameWarning)`
+      });
+      continue;
+    }
+    if (!repeats.has(i)) continue;
+    const rawBefore = side(pairs, i, -1, t.window, spikes);
+    const rawAfter = side(pairs, i, 1, t.window, spikes);
+    const atEdge = rawBefore === null || rawAfter === null;
+    if (!atEdge || !(moving(rawBefore) || moving(rawAfter))) continue;
+    const reference = (moving(rawBefore) ? rawBefore : rawAfter).change;
+    flags.push({
+      kind: "repeat",
+      pairs: [i],
+      frame,
+      change: pairs[i].change,
+      reference: r6(reference),
+      ratio: r6(pairs[i].change / reference),
+      atSeriesEdge: true,
+      unreliablePairs,
+      reading: `frame ${frameText(frame)} repeats the one before (change ${fmt(pairs[i].change)}) beside motion of about ${fmt(reference)}, at the ${rawBefore === null ? "start" : "end"} of the series, so a stutter cannot be told from a hold${unreliable}`
+    });
+  }
+  flags.sort((a, b) => a.pairs[0] - b.pairs[0]);
+  summary.flags = flags;
+  const counts = ["pop", "stutter", "cut", "repeat"].map((k) => [k, flags.filter((f) => f.kind === k).length]).filter(([, c]) => c > 0).map(([k, c]) => `${c} ${k}${c > 1 ? "s" : ""}`);
+  summary.reading = `${n} pairs, median change ${fmt(summary.median)}, largest ${fmt(summary.largest.change)} (pair ${largest}); ` + (flags.length === 0 ? "no pair stands out from its neighbours" : `${counts.join(", ")}: ${flags.map((f) => `${f.kind} at pair ${f.pairs.join("+")}`).join("; ")}`);
+  return summary;
+}
+
+// src/color/settled-read.ts
+import { promises as fs4 } from "node:fs";
+var SETTLE_BASE_MS = 15e3;
+var SETTLE_PER_HD_FRAME_MS = 3e3;
+var SETTLE_MIN_PER_FRAME_MS = 1e3;
+var HD_PIXELS = 1080 * 1920;
+var POLL_MS = 60;
+var IEND = Buffer.from([0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130]);
+function sleep2(ms) {
+  return new Promise((resolve11) => setTimeout(resolve11, ms));
+}
+function settleTimeoutFor(frames, pixelsPerFrame) {
+  const n = Math.max(1, Math.floor(frames));
+  const perFrame = Math.max(
+    SETTLE_MIN_PER_FRAME_MS,
+    Math.round(SETTLE_PER_HD_FRAME_MS * Math.max(0, pixelsPerFrame) / HD_PIXELS)
+  );
+  return SETTLE_BASE_MS + (n - 1) * perFrame;
+}
+async function stampFiles(paths) {
+  return Promise.all(
+    paths.map(async (p) => {
+      try {
+        const st = await fs4.stat(p, { bigint: true });
+        return { exists: true, size: Number(st.size), mtimeNs: st.mtimeNs, ino: st.ino };
+      } catch {
+        return { exists: false, size: 0, mtimeNs: 0n, ino: 0n };
+      }
+    })
+  );
+}
+async function endsWithIend(p, size) {
+  if (size < IEND.length) return false;
+  let fh = null;
+  try {
+    fh = await fs4.open(p, "r");
+    const tail = Buffer.alloc(IEND.length);
+    await fh.read(tail, 0, IEND.length, size - IEND.length);
+    return tail.equals(IEND);
+  } catch {
+    return false;
+  } finally {
+    await fh?.close();
+  }
+}
+async function waitForSettled(paths, opts) {
+  const stableMs = opts.stableMs ?? 250;
+  const start = Date.now();
+  const deadline = start + opts.timeoutMs;
+  const done = /* @__PURE__ */ new Set();
+  const state = paths.map(() => ({
+    size: -1,
+    changedAt: start,
+    status: "missing"
+  }));
+  for (; ; ) {
+    await Promise.all(
+      paths.map(async (p, i) => {
+        if (done.has(i)) return;
+        const s = state[i];
+        let st = null;
+        try {
+          st = await fs4.stat(p, { bigint: true });
+        } catch {
+        }
+        if (st === null) {
+          s.status = "missing";
+          s.size = -1;
+          return;
+        }
+        const size = Number(st.size);
+        const was = opts.before?.[i];
+        if (was?.exists && was.size === size && was.mtimeNs === st.mtimeNs && was.ino === st.ino) {
+          s.status = "unchanged";
+          s.size = size;
+          return;
+        }
+        if (size !== s.size) {
+          s.size = size;
+          s.changedAt = Date.now();
+        }
+        if (size === 0) {
+          s.status = "empty";
+          return;
+        }
+        s.status = "writing";
+        if (await endsWithIend(p, size) || Date.now() - s.changedAt >= stableMs) done.add(i);
+      })
+    );
+    if (done.size === paths.length || Date.now() > deadline) break;
+    await sleep2(POLL_MS);
+  }
+  const settled = [...done].sort((a, b) => a - b);
+  const unsettled = [];
+  for (const [i, p] of paths.entries()) {
+    if (done.has(i)) continue;
+    unsettled.push({
+      index: i,
+      path: p,
+      state: state[i].status,
+      bytes: Math.max(0, state[i].size)
+    });
+  }
+  return { settled, unsettled, waitedMs: Date.now() - start, timeoutMs: opts.timeoutMs };
+}
+async function readFileSettled(filePath, timeoutMs = SETTLE_BASE_MS, stableMs = 250) {
+  const res = await waitForSettled([filePath], { timeoutMs, stableMs });
+  if (res.settled.length === 0) {
+    throw new Error(
+      `file did not settle within ${timeoutMs}ms (saveFrameToPng writes asynchronously): ${filePath}`
+    );
+  }
+  return fs4.readFile(filePath);
+}
+
+// src/tools/render-frame.ts
+init_config();
+
+// src/operations/snippets.ts
+var COMP_INFO_FN = `
+    function _compInfo(c) {
+        var _ciLayers = [];
+        for (var _ci = 1; _ci <= c.numLayers; _ci++) {
+            _ciLayers.push(AE.serializeLayerSummary(c.layer(_ci)));
+        }
+        var _ciOut = AE.serializeItemSummary(c);
+        _ciOut.ok = true;
+        _ciOut.found = true;
+        _ciOut.workAreaStart = c.workAreaStart;
+        _ciOut.workAreaDuration = c.workAreaDuration;
+        _ciOut.pixelAspect = c.pixelAspect;
+        _ciOut.shutterAngle = c.shutterAngle;
+        _ciOut.shutterPhase = c.shutterPhase;
+        _ciOut.motionBlur = c.motionBlur;
+        // Comp markers (time, comment, duration per key), or null when there are none.
+        _ciOut.markers = AE.serializeCompMarkers(c);
+        _ciOut.layers = _ciLayers;
+        return _ciOut;
+    }
+`;
+var LAYER_FULL_FN = `
+    function _layerFull(l, incl, detail) {
+        var _lfOut = AE.serializeLayerFull(l, { includeProperties: incl, detail: detail });
+        _lfOut.ok = true;
+        _lfOut.found = true;
+        return _lfOut;
+    }
+`;
+var RENDER_FRAME_FN = `
+    function _renderFrame(c, t0, outAbs, useDst) {
+        var _rfT = t0;
+        if (useDst) _rfT = _rfT + c.displayStartTime;
+        var _rfFile = AE.ensureParentDir(outAbs);
+        try {
+            c.saveFrameToPng(_rfT, _rfFile);
+            return {
+                ok: true,
+                writtenTo: _rfFile.fsName.replace(/\\\\/g, "/"),
+                time: _rfT,
+                compName: c.name,
+                size: [c.width, c.height]
+            };
+        } catch (eRf) {
+            return { ok: false, error: "saveFrameToPng failed: " + AE.errText(eRf) };
+        }
+    }
+`;
+var MISSING_SOURCES_FN = `
+    function _missingSources(_msRoot) {
+        var _msOut = [];
+        var _msComps = {};
+        var _msFootage = {};
+        function _msWalk(_comp) {
+            if (_msComps[_comp.id]) return;
+            _msComps[_comp.id] = true;
+            for (var _li = 1; _li <= _comp.numLayers; _li++) {
+                var _source = AE.safeGet(function () { return _comp.layer(_li).source; }, null);
+                if (!_source) continue;
+                if (_source instanceof CompItem) { _msWalk(_source); continue; }
+                if (!(_source instanceof FootageItem) || _msFootage[_source.id]) continue;
+                _msFootage[_source.id] = true;
+                var _file = AE.safeGet(function () { return _source.file; }, null);
+                var _missing = AE.safeGet(function () { return _source.footageMissing; }, false);
+                if (!_missing && (!_file || _file.exists)) continue;
+                var _missingPath = AE.safeGet(function () { return _source.mainSource.missingFootagePath; }, null);
+                if (!_missingPath && _file) _missingPath = _file.fsName;
+                _msOut.push({ id: _source.id, name: _source.name, path: _missingPath });
+            }
+        }
+        _msWalk(_msRoot);
+        return _msOut;
+    }
+`;
+var OCIO_CAPTURE_FN = `
+    function _captureWithOcio(c, maxT, renderAll) {
+        var _adj = null;
+        var _adjSrc = null;
+        var _ran = false;
+        try {
+            _adj = c.layers.addSolid([1, 1, 1], "__mcp_ocio__", c.width, c.height, c.pixelAspect);
+            _adjSrc = _adj.source;
+            _adj.adjustmentLayer = true;
+            try {
+                if (_adj.outPoint < maxT + c.frameDuration) _adj.outPoint = maxT + c.frameDuration;
+            } catch (eOp) { }
+            var _fxOk = false;
+            try {
+                _adj.property("Effects").addProperty("ADBE OCIO Display Transform");
+                _fxOk = true;
+            } catch (eFx) { /* pre-OCIO AE or ICC color engine */ }
+            if (_fxOk) { _ran = true; renderAll("ocio"); }
+        } catch (eTmp) { /* fall through to direct capture */ }
+        if (_adj) { try { _adj.remove(); } catch (eRm) { } }
+        if (_adjSrc) { try { _adjSrc.remove(); } catch (eRs) { } }
+        return _ran;
+    }
+`;
+var LIST_MISSING_FONTS_FN = `
+    function _listMissingFonts() {
+        if (!app.fonts) return { ok: false, error: "app.fonts needs AE 24.0+" };
+        var _missing = [];
+        try {
+            var _list = app.fonts.missingOrSubstitutedFonts;
+            for (var _i = 0; _i < _list.length; _i++) {
+                var _font = _list[_i];
+                _missing.push({
+                    postScriptName: AE.safeGet(function () { return _font.postScriptName; }, null),
+                    familyName: AE.safeGet(function () { return _font.familyName; }, null),
+                    styleName: AE.safeGet(function () { return _font.styleName; }, null)
+                });
+            }
+        } catch (eM) { return { ok: false, error: "missingOrSubstitutedFonts failed: " + AE.errText(eM) }; }
+        return { ok: true, count: _missing.length, fonts: _missing };
+    }
+`;
+var LIST_MISSING_FOOTAGE_FN = `
+    function _listMissingFootage() {
+        var _missing = [];
+        for (var _i = 1; _i <= app.project.numItems; _i++) {
+            var _it = app.project.item(_i);
+            if (!(_it instanceof FootageItem)) continue;
+            var _isMissing = AE.safeGet(function () { return _it.footageMissing; }, false);
+            if (!_isMissing) continue;
+            _missing.push({
+                id: _it.id,
+                name: _it.name,
+                missingPath: AE.safeGet(function () { return _it.mainSource.missingFootagePath; }, null),
+                usedInComps: AE.safeGet(function () {
+                    var _u = [];
+                    var _comps = _it.usedIn;
+                    for (var _ci = 0; _ci < _comps.length; _ci++) _u.push(_comps[_ci].name);
+                    return _u;
+                }, [])
+            });
+        }
+        return { ok: true, count: _missing.length, items: _missing };
+    }
+`;
+var COMP_CORNERS_FN = `
+    function _compCorners(layer, r) {
+        return {
+            topLeft: AE.valueToJson(layer.sourcePointToComp([r.left, r.top])),
+            topRight: AE.valueToJson(layer.sourcePointToComp([r.left + r.width, r.top])),
+            bottomLeft: AE.valueToJson(layer.sourcePointToComp([r.left, r.top + r.height])),
+            bottomRight: AE.valueToJson(layer.sourcePointToComp([r.left + r.width, r.top + r.height]))
+        };
+    }
+`;
+
+// src/tools/render-frame.ts
+init_registry();
+
+// src/color/calibration.ts
+init_registry();
+import { randomUUID as randomUUID2 } from "node:crypto";
+import { promises as fs5 } from "node:fs";
+import * as os3 from "node:os";
+import * as path5 from "node:path";
+var CALIB_VALUES = [0.05, 0.18, 0.5, 1];
+var PATCH = 40;
+var cache = /* @__PURE__ */ new Map();
+function calibrationKey(projectFile, workingSpace, bitsPerChannel) {
+  return `${projectFile ?? "(unsaved)"}|${workingSpace}|${bitsPerChannel}`;
+}
+function analyzeCalibrationPng(buf) {
+  const img = decodePng(buf);
+  const samples = [];
+  for (let i = 0; i < CALIB_VALUES.length; i++) {
+    const x = PATCH * i + PATCH / 2;
+    const y = Math.floor(img.height / 2);
+    samples.push({ input: CALIB_VALUES[i], output: img.rgb[(y * img.width + x) * 3] });
+  }
+  const ratios = samples.map((s) => s.output / s.input);
+  const min = Math.min(...ratios);
+  const max = Math.max(...ratios);
+  if (min > 0 && max / min < 1.03) {
+    const scale = ratios.reduce((a, b) => a + b, 0) / ratios.length;
+    if (Math.abs(scale - 1) < 0.02) return { kind: "identity", scale: 1, samples };
+    return { kind: "linear", scale, samples };
+  }
+  return { kind: "unknown", scale: 1, samples };
+}
+async function measureCaptureTransfer(transport2, key, allowRender = true) {
+  const cached2 = cache.get(key);
+  if (cached2) return cached2;
+  if (!allowRender) {
+    return {
+      error: "calibration needs a (transient, undo-grouped) render of a temporary comp, which read-only mode forbids"
+    };
+  }
+  const pngPath = path5.join(os3.tmpdir(), `mcp-ae-calib-${randomUUID2()}.png`).replace(/\\/g, "/");
+  const code = `
+        var _vals = ${jsxVal(CALIB_VALUES)};
+        var _patch = ${jsxVal(PATCH)};
+        var _w = _patch * _vals.length;
+        var _tmp = app.project.items.addComp("__mcp_calibration__", _w, _patch, 1, 1, 24);
+        var _srcs = [];
+        var _out = { ok: true };
+        try {
+            for (var _i = 0; _i < _vals.length; _i++) {
+                var _v = _vals[_i];
+                var _s = _tmp.layers.addSolid([_v, _v, _v], "c" + _i, _patch, _patch, 1);
+                if (_s.source) _srcs.push(_s.source);
+                _s.property("Transform").property("Position").setValue([_patch * _i + _patch / 2, _patch / 2]);
+            }
+            _tmp.saveFrameToPng(0, new File(${jsxVal(pngPath)}));
+            _out.saved = true;
+        } catch (eCal) { _out.ok = false; _out.error = AE.errText(eCal); }
+        try { _tmp.remove(); } catch (eRm) { /* leave for undo */ }
+        for (var _j = 0; _j < _srcs.length; _j++) { try { _srcs[_j].remove(); } catch (eRs) { } }
+        return _out;
+    `;
+  const result = await transport2.execute({ code, label: "capture_calibration", timeoutMs: 6e4 });
+  if (!result.ok) return { error: `calibration render failed: ${result.error}` };
+  const payload = result.result;
+  if (!payload || payload.ok !== true || payload.saved !== true) {
+    return { error: `calibration failed inside AE: ${payload?.error ?? "no result"}` };
+  }
+  let buf;
+  try {
+    buf = await readFileSettled(pngPath);
+  } catch (err) {
+    return {
+      error: `calibration PNG unreadable: ${err instanceof Error ? err.message : String(err)}`
+    };
+  } finally {
+    fs5.unlink(pngPath).catch(() => {
+    });
+  }
+  try {
+    const analysis = analyzeCalibrationPng(buf);
+    cache.set(key, analysis);
+    return analysis;
+  } catch (err) {
+    return {
+      error: `calibration analysis failed: ${err instanceof Error ? err.message : String(err)}`
+    };
+  }
+}
+
+// src/color/transform.ts
+var AP1_TO_REC709 = [
+  [1.70505099, -0.62179212, -0.08325887],
+  [-0.13025642, 1.1408047, -0.01054832],
+  [-0.02400336, -0.12896898, 1.15297233]
+];
+var AP0_TO_REC709 = [
+  [2.52140088, -1.13399574, -0.38756249],
+  [-0.27621892, 1.37259556, -0.09628267],
+  [-0.01538264, -0.15292998, 1.16835777]
+];
+var IDENTITY = [
+  [1, 0, 0],
+  [0, 1, 0],
+  [0, 0, 1]
+];
+var HILL_IN = [
+  [0.59719, 0.35458, 0.04823],
+  [0.076, 0.90834, 0.01566],
+  [0.0284, 0.13383, 0.83777]
+];
+var HILL_OUT = [
+  [1.60475, -0.53108, -0.07367],
+  [-0.10208, 1.10813, -605e-5],
+  [-327e-5, -0.07276, 1.07602]
+];
+function srgbEncode(x) {
+  const v = Math.min(1, Math.max(0, x));
+  return v <= 31308e-7 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055;
+}
+function apply(m, r, g, b) {
+  return [
+    m[0][0] * r + m[0][1] * g + m[0][2] * b,
+    m[1][0] * r + m[1][1] * g + m[1][2] * b,
+    m[2][0] * r + m[2][1] * g + m[2][2] * b
+  ];
+}
+function rrtOdtFit(v) {
+  return (v * (v + 0.0245786) - 90537e-9) / (v * (0.983729 * v + 0.432951) + 0.238081);
+}
+function sceneLinearToDisplaySrgb(rgb, toRec709) {
+  for (let i = 0; i < rgb.length; i += 3) {
+    let [r, g, b] = apply(toRec709, rgb[i], rgb[i + 1], rgb[i + 2]);
+    r = Math.max(0, r);
+    g = Math.max(0, g);
+    b = Math.max(0, b);
+    [r, g, b] = apply(HILL_IN, r, g, b);
+    r = rrtOdtFit(r);
+    g = rrtOdtFit(g);
+    b = rrtOdtFit(b);
+    [r, g, b] = apply(HILL_OUT, r, g, b);
+    rgb[i] = srgbEncode(r);
+    rgb[i + 1] = srgbEncode(g);
+    rgb[i + 2] = srgbEncode(b);
+  }
+}
+function profileForWorkingSpace(workingSpace) {
+  const ws = workingSpace.toLowerCase();
+  if (ws.includes("acescg")) {
+    return {
+      toRec709: AP1_TO_REC709,
+      note: "ACEScg \u2192 sRGB via ACES output transform (RRT+ODT fit)"
+    };
+  }
+  if (ws.includes("aces2065") || ws.includes("aces 2065")) {
+    return {
+      toRec709: AP0_TO_REC709,
+      note: "ACES2065-1 \u2192 sRGB via ACES output transform (RRT+ODT fit)"
+    };
+  }
+  if (ws.includes("scene-referred rec.709") || ws.includes("linear rec.709")) {
+    return {
+      toRec709: IDENTITY,
+      note: "linear Rec.709 \u2192 sRGB via ACES output transform (RRT+ODT fit)"
+    };
+  }
+  return null;
+}
+
+// src/tools/capture-shared.ts
+function validRgb(value) {
+  return Array.isArray(value) && value.length === 3 && value.every((v) => typeof v === "number" && Number.isFinite(v)) ? [value[0], value[1], value[2]] : null;
+}
+async function colorConversion(payload, transport2) {
+  const workingSpace = payload.workingSpace ?? "None";
+  try {
+    if (workingSpace === "None" || workingSpace === "") {
+      payload.colorPipeline = "untagged 16-bit \u2192 8-bit sRGB-tagged (values unchanged)";
+      return () => {
+      };
+    }
+    const calib = await measureCaptureTransfer(
+      transport2,
+      calibrationKey(payload.projectFile ?? null, workingSpace, payload.bitsPerChannel ?? 8),
+      !readOnlyMode()
+    );
+    const calibFailed = "error" in calib || calib.kind === "unknown";
+    const gain = !calibFailed && calib.kind === "linear" ? 1 / calib.scale : 1;
+    const applyGain = (rgb) => {
+      if (gain !== 1) for (let i = 0; i < rgb.length; i++) rgb[i] *= gain;
+    };
+    if (payload.captureKind === "ocio") {
+      if (calibFailed) {
+        payload.colorWarning = `AE applied its display transform, but the capture scale could not be measured (${"error" in calib ? calib.error : "non-linear transfer"}) \u2014 the file is uniformly dark by that unknown scale. Verify colors against the AE viewer manually.`;
+        return null;
+      }
+      payload.colorPipeline = "AE OCIO display transform (viewer-exact, any working space)" + (gain !== 1 ? ` + capture scale 1/${gain.toFixed(2)} restored` : "");
+      return applyGain;
+    }
+    const profile = profileForWorkingSpace(workingSpace);
+    if (profile === null) {
+      payload.colorWarning = `working space '${workingSpace}' has no built-in conversion \u2014 the file contains raw working-space values and will not match the viewer. Verify colors against the AE viewer manually if they matter here.`;
+      return null;
+    }
+    if (calibFailed) {
+      payload.colorWarning = `could not characterize this AE version's capture transfer (${"error" in calib ? calib.error : "non-linear transfer"}) \u2014 the file contains raw working-space values. Verify colors against the AE viewer manually if they matter here.`;
+      return null;
+    }
+    payload.colorPipeline = `${profile.note}` + (gain !== 1 ? ` (capture scale 1/${gain.toFixed(2)} restored)` : "");
+    return (rgb) => {
+      applyGain(rgb);
+      sceneLinearToDisplaySrgb(rgb, profile.toRec709);
+    };
+  } catch (err) {
+    payload.colorWarning = `color post-processing failed, file left as raw capture: ${err instanceof Error ? err.message : String(err)}`;
+    return null;
+  }
+}
+
+// src/tools/define-tool.ts
+function defineTool(spec) {
+  return spec;
+}
+function jsonResult(payload) {
+  const envelope = { ok: true, ...payload };
+  return {
+    content: [{ type: "text", text: JSON.stringify(envelope, null, 2) }],
+    structuredContent: envelope,
+    isError: false
+  };
+}
+function jsxReportedFailure(result) {
+  if (result === null || typeof result !== "object" || Array.isArray(result)) return null;
+  const r = result;
+  if (r.ok !== false) return null;
+  return { error: typeof r.error === "string" ? r.error : "operation reported ok: false" };
+}
+function toMcpResult(result) {
+  if (!result.ok) {
+    return errorResult(result.errorCode ?? "TRANSPORT", result.error ?? "unknown failure", {
+      ...result.dialogs?.length ? { details: { dialogs: result.dialogs } } : {},
+      stack: result.stack,
+      logs: result.logs,
+      durationMs: result.durationMs
+    });
+  }
+  const reported = jsxReportedFailure(result.result);
+  if (reported) {
+    return errorResult("OPERATION_FAILED", reported.error, {
+      details: { result: result.result },
+      logs: result.logs,
+      durationMs: result.durationMs
+    });
+  }
+  return jsonResult({
+    result: result.result,
+    logs: result.logs,
+    durationMs: result.durationMs
+  });
+}
+
+// src/tools/render-frame.ts
+var STRIP_DEFAULT_MAX_DIMENSION = 360;
+var FRAME_PICK = 0.25;
+var NEAR_FRAME_BOUNDARY = 0.02;
+function frameWarnings(frames, near = NEAR_FRAME_BOUNDARY) {
+  const parts = [];
+  const firstAt = /* @__PURE__ */ new Map();
+  for (const [i, f] of frames.entries()) {
+    if (typeof f.frame !== "number") continue;
+    const seen = firstAt.get(f.frame);
+    if (seen === void 0) firstAt.set(f.frame, i);
+    else parts.push(`#${seen} and #${i} both render frame ${f.frame}`);
+  }
+  for (const [i, f] of frames.entries()) {
+    if (typeof f.frame !== "number" || typeof f.frameOffset !== "number") continue;
+    const below = 1 - f.frameOffset;
+    if (below > 0 && below <= near) {
+      parts.push(
+        `#${i} (${f.time} s) renders frame ${f.frame}, ${(below * 100).toFixed(1)}% of a frame below frame ${f.frame + 1}`
+      );
+    }
+  }
+  if (parts.length === 0) return void 0;
+  return `${parts.join("; ")}. A time resolves to the frame it falls in, so a rounded time just below a boundary renders the frame before and a series of rounded times can repeat frames (diff then reads stutters). Pass \`frames: [..]\` to address frames by number, or exact times.`;
+}
+var MEASUREMENT_STAGES = {
+  capture: "the PNG as saveFrameToPng wrote it, before any colour conversion: working-space values (scaled by AE's capture transfer in colour-managed projects), 8 or 16 bits. Its RGB is already laid over the comp background colour (`bgColor`): capture = colour\xB7alpha + bgColor\xB7(1 \u2212 alpha), so a half-covered pixel reads half background and an empty one reads bgColor; on a black background that is premultiplied colour. Alpha is the coverage AE wrote",
+  output: "the file as written (writtenTo), after colour conversion when colorManaged is auto, so 8-bit display values. With channels 'rgb': over the comp background as AE composited it, or over `over`. With 'rgba': the colour recovered from under the background (straight, 0 where alpha is 0), plus alpha. With 'alpha': the matte, in r = g = b. The same as the capture when colorManaged is off or the conversion failed"
+};
+var HISTOGRAM_DEFAULT_BINS = 32;
+var layerRefSchema = external_exports.union([
+  external_exports.string(),
+  external_exports.number().int().positive(),
+  external_exports.object({ id: external_exports.number().int() })
+]);
+var regionSchema = external_exports.object({
+  name: external_exports.string().min(1).describe("Label reported back with the numbers."),
+  x: external_exports.number().int().describe("Left edge (or the point), capture pixels from the left."),
+  y: external_exports.number().int().describe("Top edge (or the point), capture pixels from the top."),
+  width: external_exports.number().int().positive().optional().describe("Omit with height for a single pixel."),
+  height: external_exports.number().int().positive().optional()
+});
+var renderFrameTool = defineTool({
+  name: "ae_render_frame",
+  title: "Render frame",
+  description: "Render one or more frames to PNG. Use to visually verify edits. The agent's 'eyes' \u2014 pair with mutations for a visual feedback loop. Headless and deterministic. Pass `time` for one frame, or `times` for several in ONE call (motion checks): files land at <outPath stem>_<index>.png and are listed in `frames`. `contactSheet` tiles every frame into one labelled PNG (<stem>_sheet.png) so a motion check is one image; `analyze` measures each capture (uniform edge bands = black bars / transparent margins, content bounds, coverage) so off-frame elements and letterboxing are caught numerically. In color-managed projects (workingSpace != None) the capture applies AE's own display transform via a transient OCIO Display Transform adjustment layer, and the PNG comes back viewer-accurate and sRGB-tagged. Where that layer cannot be used \u2014 read-only mode, an AE without the OCIO effect, or a failed capture calibration \u2014 the result falls back to a pure-math ACES conversion or to raw values with an explicit colorWarning; check colorPipeline / colorWarning on the response. Seeing the matte: `channels` picks what the file holds \u2014 'rgb' (default, transparency composited over `over`: the comp background as AE composites it, a checkerboard or a colour such as '#ff00ff'), 'rgba' (alpha kept, straight colour), or 'alpha' (the matte as greyscale: white opaque, black transparent). `isolate` renders one layer or a list alone (cameras and lights stay as they are), then restores every layer switch, even when the render fails. `alphaChannel` reports whether the capture carried alpha at all. Reading colour: `sample` takes named points or rectangles and returns mean / min / max per channel and alpha coverage for each; `histogram` counts the whole frame per channel; `compare` (with `times` and `sample`) reports each region's difference between two of the rendered frames. Matte quality: `edge` reports, from the capture's alpha, the shares of opaque / partly transparent / transparent pixels, edge width (typical and worst, px), holes, specks, partly transparent patches that are not thin edges (an unkeyed screen, a remnant), the soft edge's colour with the comp background taken out and whether it leans to the screen colour (spill), and with `times` the frame-to-frame change in alpha along the edge, inside the solid area and outside it (flicker). Green screen: `screen`, on a render of the UN-KEYED source (Keylight View 'source' or the key off, the keyed layer isolated), reports green or blue, which pixels are screen and their share, a suggested screen colour (the median, and the colour just outside the subject), evenness on a grid (darkest and brightest cells, the spread as a ratio, the darker side) and grain. Watching motion: `diff` (with `times`) reports how much the picture changes between consecutive frames, where, and per `sample` region, and flags pairs that stand out (a one-frame pop, a stutter where a frame repeats, a cut); `strip: { at, frames }` renders the frames around a moment into one small contact sheet with diff on. For playback at speed, render.preview (ae_do) writes a quick movie. It reports numbers and places, never a pass or fail. Every number is labelled with its stage \u2014 'capture' (before colour conversion) or 'output' (the file as written) \u2014 described once in `measurementStages`.",
+  group: "render",
+  // Survives read-only mode: it writes a PNG, and the visual verification loop
+  // is the whole point of an audit session. Note this is NOT a
+  // never-touches-the-project tool. In a color-managed project the capture
+  // path adds a transient adjustment layer, and the calibration probe builds a
+  // scratch comp — both removed before the call returns, both leaving the
+  // project dirty and one undo step consumed. Read-only mode is exactly where
+  // that must not happen, so both are gated on !readOnlyMode() below and the
+  // call degrades to the pure-math path instead.
+  blockedInReadOnly: false,
+  effect: "write",
+  inputShape: {
+    compNameOrId: external_exports.union([external_exports.string(), external_exports.number()]).describe("Composition name or numeric item id."),
+    time: external_exports.number().nonnegative().optional().describe(
+      "Time in seconds to render. Give exactly one of `time`, `times`, `strip` or `frames`. Each rendered frame reports `frame` (the frame the time falls in: floor(time / frameDuration), worked out in After Effects) and `frameOffset` (where in it, 0..1); `frameWarning` says when two times land on one frame or a time sits within 2% of a frame below a boundary (a rounded time renders the frame before). Times are never moved."
+    ),
+    times: external_exports.array(external_exports.number().nonnegative()).min(1).max(32).optional().describe(
+      "Several times in seconds, rendered in ONE call. Files are written as <outPath stem>_<index><ext> and reported in `frames` (index-aligned)."
+    ),
+    strip: external_exports.object({
+      at: external_exports.number().nonnegative().describe("The moment, seconds (snapped to the nearest frame)."),
+      frames: external_exports.number().int().min(2).max(32).describe("How many consecutive frames, centred on `at` (one more after it when even)."),
+      step: external_exports.number().int().positive().optional().describe("Frames between rendered frames. Default 1 (every frame)."),
+      maxDimension: external_exports.number().int().min(16).max(2048).optional().describe(
+        "Longest side of each tile on the sheets, px. Default 360. The frames themselves are rendered at the comp's size."
+      )
+    }).optional().describe(
+      "'What happens around this moment' in one call: N consecutive frames around `at`, worked out from the comp's frame rate inside After Effects and rendered through the `times` path (files <stem>_<index>, listed in `frames`), tiled small into the contact sheet, with `diff` and its sheet on (pass `diff: false` to skip, or diff options to tune). The window is shifted to stay inside the comp; `strip` in the response says where it landed. Instead of `time` / `times`."
+    ),
+    frames: external_exports.array(external_exports.number().int().nonnegative()).min(1).max(32).optional().describe(
+      "Frame numbers (0 = the comp's first frame) instead of times: each is rendered a quarter of a frame inside it, so a time never lands on the frame before. Through the `times` path: files <stem>_<index>, reported in `frames` with their `frame`. Instead of `time` / `times` / `strip`."
+    ),
+    outPath: external_exports.string().describe(
+      "Absolute path to write the PNG. Parent directory is created if missing. With `times`, used as the naming stem for every frame."
+    ),
+    useDisplayStartTime: external_exports.boolean().optional().describe("If true, times are interpreted relative to comp.displayStartTime. Default false."),
+    colorManaged: external_exports.enum(["auto", "off"]).optional().describe(
+      "'auto' (default): detect the working space and return a viewer-accurate, 8-bit sRGB-tagged PNG. 'off': raw legacy output (16-bit, untagged, working-space values \u2014 dark/wrong-looking in color-managed projects)."
+    ),
+    settleTimeoutMs: external_exports.number().int().positive().max(6e5).optional().describe(
+      "How long to wait for the captures to finish writing (saveFrameToPng writes after the script returns). Default: 15 s for one frame, plus 3 s for each further 1080\xD71920 frame (scaled by size, at least 1 s each). Frames that do not finish are named in `captureSettle` and marked failed in `frames`; the others are still measured."
+    ),
+    analyze: external_exports.boolean().optional().describe(
+      "Measure each capture: uniform bands at every edge (width + transparent/color \u2014 black bars, letterboxing, empty margins), the bounding box of non-background pixels, coverage, mean RGB. Reported per frame as `analysis` (measured on the capture before color conversion)."
+    ),
+    contactSheet: external_exports.object({
+      columns: external_exports.number().int().positive().optional().describe("Tiles per row (default ceil(sqrt(n)))."),
+      thumbWidth: external_exports.number().int().min(16).max(2048).optional().describe("Tile width in px, never upscaled (default 480)."),
+      outPath: external_exports.string().optional().describe("Sheet path (default <outPath stem>_sheet.png).")
+    }).optional().describe(
+      "Tile all rendered frames into ONE labelled PNG (#index + time above each tile). Pass {} for defaults. Frames that carry alpha (channels 'rgba') are shown over a checkerboard on the sheet."
+    ),
+    channels: external_exports.enum(["rgb", "rgba", "alpha"]).optional().describe(
+      "What the written file holds. 'rgb' (default): 8-bit sRGB, transparency composited over `over`. 'rgba': 8-bit sRGB with the alpha channel kept and straight colour (AE lays its capture over the comp background; that background is taken out again). 'alpha': the matte as 8-bit greyscale, white = opaque, black = transparent. Needs colorManaged 'auto'. If the capture has no alpha channel, `alphaWarning` says so."
+    ),
+    over: external_exports.union([
+      external_exports.enum(["background", "checkerboard"]),
+      external_exports.string().regex(/^#[0-9a-fA-F]{6}$/),
+      external_exports.array(external_exports.number().min(0).max(1)).length(3)
+    ]).optional().describe(
+      "With channels 'rgb': what transparent pixels are shown against. 'background' (default): the comp's background colour (`bgColor`), as AE itself composites the capture. 'checkerboard': light and dark grey squares, so transparency is visible. A colour as '#rrggbb' or [r, g, b] in 0..1 \u2014 magenta shows holes in a key. For the last two the comp background is taken out of the capture first, so soft edges show the new backdrop only."
+    ),
+    isolate: external_exports.union([layerRefSchema, external_exports.array(layerRefSchema).min(1)]).optional().describe(
+      "Render these layers alone: a layer (index, name, or { id }) or a list. Every other layer is switched off for the capture, adjustment layers included; camera, light and audio-only layers are left as they are; named layers are switched on even if they were off (to see a matte layer); solo is cleared. Every switch is restored afterwards, even when the render fails, and `isolation` reports it. Top-level layers of this comp only. Not available in read-only mode."
+    ),
+    sample: external_exports.object({
+      regions: external_exports.array(regionSchema).min(1).max(64),
+      stage: external_exports.enum(["both", "capture", "output"]).optional().describe("Which pixels to measure (default 'both'; see measurementStages).")
+    }).optional().describe(
+      "Read colour values. Named points ({ name, x, y }) or rectangles (+ width, height) in capture pixels (comp pixels at full resolution); regions running off the frame are clipped. Per region and stage: mean / min / max of r, g, b (0..1), alpha mean / min / max and the shares of opaque, partly covered and transparent pixels; 'output' also gives meanHex. Reported as `samples` (per frame with `times`)."
+    ),
+    histogram: external_exports.union([
+      external_exports.boolean(),
+      external_exports.object({
+        bins: external_exports.number().int().min(2).max(256).optional().describe("Default 32."),
+        stage: external_exports.enum(["output", "capture"]).optional().describe("Default 'output'.")
+      })
+    ]).optional().describe(
+      "Whole-frame per-channel histogram: pixel counts for r, g, b (and a when present) in equal bins over 0..1, 1.0 in the last bin. `true` for defaults."
+    ),
+    compare: external_exports.object({
+      from: external_exports.number().int().nonnegative().optional().describe("Index into `times` (default 0)."),
+      to: external_exports.number().int().nonnegative().optional().describe("Index into `times` (default 1).")
+    }).optional().describe(
+      "With `times` and `sample`: each region's difference between two rendered frames, to \u2212 from, per stage: meanDelta (signed average shift), meanAbsDelta and maxAbsDelta per channel, and the same for alpha. Reported as `comparison`."
+    ),
+    edge: external_exports.union([
+      external_exports.boolean(),
+      external_exports.object({
+        from: external_exports.enum(["alpha", "luma"]).optional().describe(
+          "Where the matte is read: 'alpha' (default, the keyed result's coverage) or 'luma' (Rec. 709 luminance of the capture), for Keylight's Screen Matte (View 5) and Combined Matte (8) views, which write the matte in grey RGB with alpha 1 everywhere. With 'luma' spill is not read and no alpha channel is needed."
+        ),
+        transparent: external_exports.number().min(0).max(1).optional().describe(
+          "Alpha at or below counts as transparent. Default 2/255 (as `sample` counts)."
+        ),
+        opaque: external_exports.number().min(0).max(1).optional().describe("Alpha at or above counts as opaque. Default 1 \u2212 2/255."),
+        maxEdgeWidth: external_exports.number().min(1).optional().describe(
+          "Widest transition still called a thin edge, px; wider partly transparent regions are reported as patches, and it is the edge band for flicker. Default 1% of the frame's shorter side, at least 4 (11 at 1080\xD71920)."
+        ),
+        mainAreaShare: external_exports.number().min(0).max(1).optional().describe(
+          "An island of covered pixels at least this share of the largest is a main solid area, smaller ones are specks. Default 0.25."
+        ),
+        listed: external_exports.number().int().min(0).max(50).optional().describe(
+          "How many holes, specks, patches and solid areas are listed (all are counted). Default 5."
+        ),
+        screen: external_exports.enum(["green", "blue"]).optional().describe("Screen colour spill is read against. Default 'green'."),
+        spillMinAlpha: external_exports.number().min(0).max(1).optional().describe(
+          "Partly transparent pixels below this alpha are left out of the spill colour. Default 0.1."
+        ),
+        spillThreshold: external_exports.number().min(0).max(1).optional().describe(
+          "The soft edge leans to the screen when its screen channel exceeds the larger other channel by more than this, and by this much more than the solid area's own. Default 0.03."
+        ),
+        changeAbove: external_exports.number().min(0).max(1).optional().describe("Flicker: an alpha change above this counts as changed. Default 0.05."),
+        patchWindow: external_exports.number().min(1).optional().describe(
+          "Side of the square window each patch's densest part is reported in, px. Default 4 \xD7 maxEdgeWidth (44 at 1080\xD71920)."
+        )
+      })
+    ]).optional().describe(
+      "Matte quality as numbers, measured on the capture's alpha (stage 'capture'), or with `from: 'luma'` on its luminance (Keylight's matte views); `true` for the defaults. Each report says `matteFrom`. Reported as `edge` (per frame with `times`), with the thresholds used as `edgeThresholds`: shares {opaque, partial, transparent}; width {typical (median), p90, worst, worstAt, samples, unmeasured} \u2014 px the alpha takes from transparent to opaque across the 50% contour of the main solid areas (0 = hard edge; unmeasured = the alpha never reaches transparent or opaque anywhere, as when the screen is left partly opaque); solidAreas; holes {count, area, transparentArea, largest, list} \u2014 regions below opaque enclosed by the solid area (not touching the frame edge); specks {count, area, list} \u2014 islands outside the main areas; patches {count, area, list} \u2014 partly transparent regions thicker than maxEdgeWidth, each with its box, thickest {x, y, thickness} (the deepest point and the thickness there, px) and densest {x, y, width, height, pixels, share, meanAlpha} (the patchWindow square holding most of it, so a long band's box does not hide where it is); spill {mean, solidMean, excess, solidExcess, leansToScreen, reading} \u2014 the straight colour of the partly transparent pixels (comp background taken out) against the solid just inside the edge. Boxes are {x, y, width, height} in capture pixels. With two or more `times`: `edgeFlicker` {pairs, overall} \u2014 mean / max change in alpha and the changed share and bounds, for consecutive frames, split into edge, inside (a hole opening counts here) and outside (specks); real motion counts as change too."
+    ),
+    screen: external_exports.union([
+      external_exports.boolean(),
+      external_exports.object({
+        screen: external_exports.enum(["auto", "green", "blue"]).optional().describe(
+          "Which screen to look for. Default 'auto': green or blue, whichever has more pixels."
+        ),
+        minExcess: external_exports.number().min(0).max(1).optional().describe(
+          "A pixel is screen when its screen channel leads the larger other channel by at least this (capture values). Default 0.04."
+        ),
+        minDominance: external_exports.number().min(0).max(1).optional().describe("\u2026and by at least this share of its own level. Default 0.15."),
+        minScreenShare: external_exports.number().min(0).max(1).optional().describe(
+          "Fewer screen pixels than this share of the measured ones means no screen. Default 0.02."
+        ),
+        opaque: external_exports.number().min(0).max(1).optional().describe(
+          "Pixels with alpha below this are left out (masked or transparent). Default 1 \u2212 2/255."
+        ),
+        columns: external_exports.number().int().min(1).max(64).optional().describe(
+          "Evenness grid columns. Default: four cells across the shorter side, square-ish cells."
+        ),
+        rows: external_exports.number().int().min(1).max(64).optional().describe("Evenness grid rows. Default as columns."),
+        minCellShare: external_exports.number().min(0).max(1).optional().describe(
+          "A cell needs this share of screen pixels to count as darkest or brightest. Default 0.25."
+        ),
+        nearSkip: external_exports.number().min(0).optional().describe(
+          "The near-subject colour is read from screen pixels starting this many px from the subject. Default 1% of the shorter side, at least 2 (11 at 1080\xD71920)."
+        ),
+        nearBand: external_exports.number().min(1).optional().describe(
+          "\u2026in a band this many px wide. Default 5% of the shorter side, at least 4 (54 at 1080)."
+        ),
+        unevenRatio: external_exports.number().min(1).optional().describe("A brightest / darkest level ratio above this reads as uneven. Default 1.1."),
+        grainAbove: external_exports.number().min(0).max(1).optional().describe(
+          "A screen-channel grain standard deviation above this reads as grainy. Default 0.01."
+        )
+      })
+    ]).optional().describe(
+      "Measure a green or blue screen, on the capture (stage 'capture'), opaque pixels only; `true` for the defaults. Render the UN-KEYED source: set Keylight's View to 'source' (key.view) or switch the key off, and isolate the keyed layer. Reported as `screen` (per frame with `times`), with the thresholds used as `screenThresholds`: screen ('green' | 'blue' | null), chosen, measured / leftOut pixels, screenPixels, share, bounds; colour {median, mean, nearSubject {colour, pixels, band}} \u2014 the suggested Screen Colour; subject {box, area, share}; evenness {columns, rows, cells [{column, row, box, screenShare, mean, luma, level}], darkest, brightest, levelRatio, lumaRatio, uneven, extent (5th to 95th percentile of the screen pixels' positions), horizontal (right / left) and vertical (bottom / top) read across that extent, darkerSide (every side darker past unevenRatio, strongest first), reading}; grain {stdDev, level, steps8bit, samples, grainy, reading}; reading; warning; screenColourNote (capture values and what they mean for Keylight's Screen Colour)."
+    ),
+    diff: external_exports.union([
+      external_exports.boolean(),
+      external_exports.object({
+        changeAbove: external_exports.number().min(0).max(1).optional().describe(
+          "A pixel has changed when one of its channels moved by more than this (display values). Default 0.04, about ten 8-bit steps: well above frame-to-frame grain."
+        ),
+        spikeRatio: external_exports.number().optional().describe(
+          "A pair stands out as a spike when its change is at least this many times its neighbours' on each side it has. Default 3."
+        ),
+        holdRatio: external_exports.number().optional().describe(
+          "A pair is a hold (a repeated frame) when its change is at most this share of the moving neighbours' on both sides. Default 0.25."
+        ),
+        quietBelow: external_exports.number().min(0).max(1).optional().describe(
+          "Mean changes below this read as no visible change: neighbours this quiet are not moving, and a spike is measured against at least this. Default 0.002."
+        ),
+        movingShare: external_exports.number().min(0).max(1).optional().describe(
+          "Neighbours count as moving, and a spike counts, only with at least this share of pixels changed. Default 0.0005 (about 1,000 pixels at 1080\xD71920)."
+        ),
+        window: external_exports.number().int().optional().describe("Pairs on each side compared with a pair. Default 3."),
+        amplify: external_exports.number().optional().describe("Gain of the difference images on the diff sheet. Default 8."),
+        repeatBelow: external_exports.number().min(0).max(1).optional().describe(
+          "A pair changing this little is a repeated frame (identical frames read 0); repeats are never a reference for other pairs. Default 0.0001."
+        ),
+        sheet: external_exports.union([
+          external_exports.boolean(),
+          external_exports.object({
+            columns: external_exports.number().int().positive().optional(),
+            thumbWidth: external_exports.number().int().min(16).max(2048).optional(),
+            outPath: external_exports.string().optional().describe("Default <outPath stem>_diff.png.")
+          })
+        ]).optional().describe(
+          "Also write the difference images, amplified and labelled '#from>to change' ('!' on flagged pairs), tiled into one PNG beside the contact sheet. Default off; on with `strip`."
+        )
+      })
+    ]).optional().describe(
+      "Frame-to-frame change, with `times` (two or more) or `strip`; `true` for the defaults. Measured on the written file (stage 'output', display values; `diff.picture` says what exactly: with the default rgb output the capture is already over the comp background, so transparent areas do not change). Reported as `diff` {stage, picture, pairs, series} with the thresholds used as `diffThresholds`. Each consecutive pair: from, to, change (mean absolute difference over pixels and channels, 0..1), maxAbsDelta, changedPixels, changedShare (a channel moved by more than changeAbove), changedBounds, and with `sample` the same per region. series: pairs, median, mean, largest, smallest, flags [{kind 'pop' | 'stutter' | 'cut' | 'repeat', pairs, frame or between, change, reference, ratio, atSeriesEdge?, besideRepeat?, unreliablePairs?, reading}], reading. A pop is a frame that differs from both neighbours; a stutter a frame that repeats the one before while the frames around it move; a cut one pair far above its neighbours; a repeat an unchanged pair at the start or end of the series beside motion. Repeated frames are never a reference, and the pairs beside one are named unreliable. Flags are hints from numbers: look at the frames."
+    )
+  },
+  handler: async (args, transport2) => {
+    const given = [args.time, args.times, args.strip, args.frames].filter(
+      (v) => v !== void 0
+    ).length;
+    if (given !== 1) {
+      return errorResult(
+        "INVALID_ARGS",
+        "give exactly one of `time`, `times`, `strip` or `frames`",
+        {
+          hint: "`time: 1.5` renders one frame; `times: [0, 1, 2]` renders several in one call; `strip: { at: 1.5, frames: 9 }` renders the frames around a moment; `frames: [42, 43]` renders frames by number."
+        }
+      );
+    }
+    if (args.frames !== void 0 && (!Array.isArray(args.frames) || args.frames.length < 1 || args.frames.length > 32 || !args.frames.every((k) => Number.isInteger(k) && k >= 0))) {
+      return errorResult(
+        "INVALID_ARGS",
+        "`frames` must be 1 to 32 whole frame numbers, 0 or more (0 = the comp's first frame)"
+      );
+    }
+    if (args.settleTimeoutMs !== void 0 && !(Number.isInteger(args.settleTimeoutMs) && args.settleTimeoutMs > 0)) {
+      return errorResult("INVALID_ARGS", "`settleTimeoutMs` must be a positive whole number of ms");
+    }
+    let strip = null;
+    if (args.strip !== void 0) {
+      const planned = planStrip(args.strip);
+      if ("error" in planned) return planned.error;
+      strip = planned.plan;
+    }
+    const count = strip?.frames ?? args.frames?.length ?? args.times?.length ?? 1;
+    const checked = checkEyesOptions({ ...args, count }, strip !== null);
+    if ("error" in checked) return checked.error;
+    const rejection = rejectedOutputPath(args.outPath);
+    if (rejection !== null) {
+      return errorResult("IO", rejection, {
+        details: { outPath: path6.resolve(args.outPath) },
+        hint: "Render to a path outside the mailbox."
+      });
+    }
+    const abs = path6.resolve(args.outPath).replace(/\\/g, "/");
+    if (args.contactSheet?.outPath !== void 0) {
+      const sheetRejection = rejectedOutputPath(args.contactSheet.outPath);
+      if (sheetRejection !== null) {
+        return errorResult("IO", sheetRejection, {
+          details: { outPath: path6.resolve(args.contactSheet.outPath) },
+          hint: "Write the contact sheet to a path outside the mailbox."
+        });
+      }
+    }
+    return nativeFlow(args, checked.options, abs, transport2, strip);
+  }
+});
+function invalid(message, hint) {
+  return { error: errorResult("INVALID_ARGS", message, hint ? { hint } : {}) };
+}
+function parseColor(value) {
+  if (typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value)) {
+    return [1, 3, 5].map((i) => parseInt(value.slice(i, i + 2), 16) / 255);
+  }
+  if (Array.isArray(value) && value.length === 3 && value.every((v) => typeof v === "number" && v >= 0 && v <= 1)) {
+    return [value[0], value[1], value[2]];
+  }
+  return null;
+}
+function checkEyesOptions(args, isStrip = false) {
+  const channels = args.channels ?? "rgb";
+  if (args.colorManaged === "off" && (channels !== "rgb" || args.over !== void 0)) {
+    return invalid(
+      "`channels` and `over` need colorManaged 'auto'",
+      "colorManaged 'off' returns the raw capture untouched (it already keeps any alpha AE wrote)."
+    );
+  }
+  let over = "background";
+  if (args.over !== void 0) {
+    if (channels !== "rgb") {
+      return invalid(
+        `\`over\` applies only to channels 'rgb', not '${channels}'`,
+        "'rgba' keeps transparency in the file; 'alpha' is the matte itself."
+      );
+    }
+    if (args.over === "checkerboard") over = { kind: "checkerboard" };
+    else if (args.over !== "background") {
+      const color = parseColor(args.over);
+      if (color === null) {
+        return invalid(
+          "`over` must be 'background', 'checkerboard', '#rrggbb' or [r, g, b] in 0..1"
+        );
+      }
+      over = { kind: "color", color };
+    }
+  }
+  let isolate = null;
+  if (args.isolate !== void 0) {
+    isolate = Array.isArray(args.isolate) ? args.isolate : [args.isolate];
+    if (isolate.length === 0) return invalid("`isolate` needs at least one layer");
+    if (readOnlyMode()) {
+      return {
+        error: errorResult(
+          "FORBIDDEN",
+          "`isolate` switches layers off and back on, and AE_MCP_READONLY=1 is set",
+          {
+            hint: "Unset AE_MCP_READONLY, or render without isolate."
+          }
+        )
+      };
+    }
+  }
+  let sample = null;
+  if (args.sample !== void 0) {
+    const regions = args.sample.regions ?? [];
+    if (regions.length === 0) return invalid("`sample.regions` needs at least one region");
+    const names = /* @__PURE__ */ new Set();
+    for (const r of regions) {
+      if (names.has(r.name)) return invalid(`region name '${r.name}' is used twice`);
+      names.add(r.name);
+    }
+    const stage = args.sample.stage ?? "both";
+    sample = { regions, stages: stage === "both" ? ["capture", "output"] : [stage] };
+  }
+  let histogram = null;
+  if (args.histogram !== void 0 && args.histogram !== false) {
+    const h = args.histogram === true ? {} : args.histogram;
+    histogram = { bins: h.bins ?? HISTOGRAM_DEFAULT_BINS, stage: h.stage ?? "output" };
+  }
+  let compare = null;
+  if (args.compare !== void 0) {
+    const n = args.count;
+    if (n < 2) return invalid("`compare` needs `times` (or `strip`) with at least two frames");
+    if (sample === null) {
+      return invalid("`compare` needs `sample`: it reports differences for the sampled regions");
+    }
+    const from = args.compare.from ?? 0;
+    const to = args.compare.to ?? 1;
+    if (from >= n || to >= n)
+      return invalid(`\`compare\` indices must be below ${n}, the number of times`);
+    if (from === to) return invalid("`compare.from` and `compare.to` must be different frames");
+    compare = { from, to };
+  }
+  let edge = null;
+  if (args.edge !== void 0 && args.edge !== false) {
+    edge = args.edge === true ? {} : args.edge;
+    if (typeof edge !== "object" || edge === null)
+      return invalid("`edge` must be true or an object");
+    const problem = edgeArgsError(edge);
+    if (problem !== null) return invalid(problem);
+  }
+  let screen = null;
+  if (args.screen !== void 0 && args.screen !== false) {
+    screen = args.screen === true ? {} : args.screen;
+    if (typeof screen !== "object" || screen === null)
+      return invalid("`screen` must be true or an object");
+    const problem = screenArgsError(screen);
+    if (problem !== null) return invalid(problem);
+  }
+  let diff = null;
+  const diffArg = args.diff ?? (isStrip ? true : void 0);
+  if (diffArg !== void 0 && diffArg !== false) {
+    const d = diffArg === true ? {} : diffArg;
+    if (typeof d !== "object" || d === null) return invalid("`diff` must be true or an object");
+    if (args.count < 2) {
+      return invalid(
+        "`diff` needs `times` with at least two frames, or `strip`",
+        "It compares consecutive rendered frames: `times: [1, 1.04, 1.08], diff: true`."
+      );
+    }
+    const problem = diffArgsError(d);
+    if (problem !== null) return invalid(problem);
+    const { sheet: sheetArg, ...thresholds } = d;
+    const sheetOn = sheetArg ?? isStrip;
+    if (sheetOn !== false && sheetOn !== true && (typeof sheetOn !== "object" || sheetOn === null)) {
+      return invalid("`diff.sheet` must be true, false or an object");
+    }
+    diff = {
+      thresholds: resolveDiffThresholds(thresholds),
+      sheet: sheetOn === false ? null : sheetOn === true ? {} : sheetOn
+    };
+  }
+  return {
+    options: {
+      channels,
+      over,
+      overGiven: args.over !== void 0,
+      isolate,
+      sample,
+      histogram,
+      compare,
+      edge,
+      screen,
+      diff
+    }
+  };
+}
+function planStrip(strip) {
+  const fail3 = (message) => ({
+    error: errorResult("INVALID_ARGS", message, {
+      hint: "`strip: { at: 2.5, frames: 9 }` renders the nine frames around 2.5 s."
+    })
+  });
+  if (typeof strip !== "object" || strip === null) return fail3("`strip` must be an object");
+  const { at, frames } = strip;
+  const step = strip.step ?? 1;
+  const maxDimension = strip.maxDimension ?? STRIP_DEFAULT_MAX_DIMENSION;
+  if (typeof at !== "number" || !Number.isFinite(at) || at < 0)
+    return fail3("`strip.at` must be a time in seconds, 0 or more");
+  if (!Number.isInteger(frames) || frames < 2 || frames > 32)
+    return fail3("`strip.frames` must be a whole number from 2 to 32");
+  if (!Number.isInteger(step) || step < 1)
+    return fail3("`strip.step` must be a whole number, 1 or more");
+  if (!Number.isInteger(maxDimension) || maxDimension < 16 || maxDimension > 2048)
+    return fail3("`strip.maxDimension` must be a whole number of px from 16 to 2048");
+  const first = -Math.floor((frames - 1) / 2);
+  const offsets = Array.from({ length: frames }, (_, k) => (first + k) * step);
+  return { plan: { at, offsets, frames, step, maxDimension } };
+}
+function sheetPathFor(abs, explicit) {
+  if (explicit !== void 0) return path6.resolve(explicit).replace(/\\/g, "/");
+  const ext = path6.extname(abs) || ".png";
+  const stem = abs.slice(0, abs.length - (path6.extname(abs).length || 0));
+  return `${stem}_sheet${ext}`;
+}
+function framePaths(abs, count, multi) {
+  if (!multi) return [abs];
+  const ext = path6.extname(abs) || ".png";
+  const stem = abs.slice(0, abs.length - (path6.extname(abs).length || 0));
+  const out = [];
+  for (let i = 0; i < count; i++) out.push(`${stem}_${i}${ext}`);
+  return out;
+}
+var ISOLATE_FN = `
+    function _refText(ref) {
+        if (typeof ref === "string") return '"' + ref + '"';
+        if (typeof ref === "number") return "index " + ref;
+        if (ref && typeof ref.id === "number") return "id " + ref.id;
+        return String(ref);
+    }
+    function _restoreLayers(saved) {
+        var failed = [];
+        for (var i = saved.length - 1; i >= 0; i--) {
+            var s = saved[i];
+            if (!s.changed) continue;
+            try {
+                if (s.layer.locked) s.layer.locked = false;
+                if (s.layer.enabled !== s.enabled) s.layer.enabled = s.enabled;
+                if (s.hasSolo && s.layer.solo !== s.solo) s.layer.solo = s.solo;
+                if (s.locked) s.layer.locked = true;
+            } catch (eRestore) {
+                failed.push(AE.safeGet(function () { return s.layer.index + " " + s.layer.name; }, "?") + ": " + AE.errText(eRestore));
+            }
+        }
+        return failed;
+    }
+    function _isolateLayers(c, refs) {
+        var keep = {};
+        var named = [];
+        for (var ri = 0; ri < refs.length; ri++) {
+            var hit = AE.findLayerInComp(c, refs[ri]);
+            if (!hit) return { ok: false, error: "isolate: no layer matching " + _refText(refs[ri]) + " in comp " + c.name };
+            if (keep["k" + hit.index]) continue;
+            keep["k" + hit.index] = true;
+            named.push({ index: hit.index, name: hit.name });
+        }
+        var saved = [];
+        var changed = 0;
+        try {
+            for (var li = 1; li <= c.numLayers; li++) {
+                var L = c.layer(li);
+                // Audio-only layers put nothing in the picture, and their
+                // video switch may refuse to change: leave them be.
+                if (AE.safeGet(function () { return L.hasVideo; }, true) === false) continue;
+                var mn = AE.safeGet(function () { return L.matchName; }, "");
+                var view = (mn === "ADBE Camera Layer" || mn === "ADBE Light Layer");
+                var s = { layer: L, enabled: L.enabled, locked: !!L.locked, hasSolo: false, solo: false, changed: false };
+                try { s.solo = !!L.solo; s.hasSolo = true; } catch (eSolo) { }
+                saved.push(s);
+                var want = keep["k" + L.index] ? true : (view ? s.enabled : false);
+                if (want === s.enabled && !s.solo) continue;
+                s.changed = true;
+                changed++;
+                if (s.locked) L.locked = false;
+                if (s.solo) L.solo = false;
+                if (L.enabled !== want) L.enabled = want;
+            }
+        } catch (eIso) {
+            var undone = _restoreLayers(saved);
+            return { ok: false, error: "isolate: could not switch layers (" + AE.errText(eIso) + ")" + (undone.length ? "; NOT restored: " + undone.join("; ") : "; every switch restored") };
+        }
+        return { ok: true, saved: saved, layers: named, changed: changed };
+    }
+`;
+function renderJsx(args, times, paths, tryOcio, isolate, strip = null, frameNums = null) {
+  return `
+        ${RENDER_FRAME_FN}
+        ${MISSING_SOURCES_FN}
+        ${OCIO_CAPTURE_FN}
+        ${ISOLATE_FN}
+        var _arg = ${jsxVal(args.compNameOrId)};
+        var comp = AE.findCompByNameOrId(_arg);
+        if (!comp) return { ok: false, error: "no comp matching " + String(_arg) };
+        var _missingMedia = _missingSources(comp);
+        if (_missingMedia.length) return { ok: false, error: "source media missing for comp " + comp.name + "; restore or relink before rendering", missingFootage: _missingMedia };
+        var _ws = AE.safeGet(function () { return app.project.workingSpace; }, "None");
+        var _times = ${jsxVal(times)};
+        var _strip = ${jsxVal(strip === null ? null : { at: strip.at, offsets: strip.offsets })};
+        var _frameNums = ${jsxVal(frameNums)};
+        var _paths = ${jsxVal(paths)};
+        var _pick = ${jsxVal(FRAME_PICK)};
+        var _stripOut = null;
+        if (_frameNums !== null) {
+            var _lastF = Math.max(0, Math.round(comp.duration / comp.frameDuration) - 1);
+            _times = [];
+            for (var _ni = 0; _ni < _frameNums.length; _ni++) {
+                if (_frameNums[_ni] > _lastF) return { ok: false, error: "frame " + _frameNums[_ni] + " is past the comp's last frame, " + _lastF + " (comp " + comp.name + ")" };
+                _times.push((_frameNums[_ni] + _pick) * comp.frameDuration);
+            }
+        }
+        if (_strip !== null) {
+            var _fd = comp.frameDuration;
+            var _lastK = Math.max(0, Math.round(comp.duration / _fd) - 1);
+            var _k0 = Math.round(_strip.at / _fd);
+            var _offs = _strip.offsets;
+            var _shift = 0;
+            if (_k0 + _offs[_offs.length - 1] > _lastK) _shift = _lastK - (_k0 + _offs[_offs.length - 1]);
+            if (_k0 + _offs[0] + _shift < 0) _shift = -(_k0 + _offs[0]);
+            _times = [];
+            var _clamped = 0;
+            for (var _si = 0; _si < _offs.length; _si++) {
+                var _k = _k0 + _offs[_si] + _shift;
+                if (_k > _lastK) { _k = _lastK; _clamped++; }
+                _times.push((_k + _pick) * _fd);
+            }
+            _stripOut = {
+                at: Math.round(_k0 * _fd * 1e6) / 1e6,
+                frameRate: Math.round(1e3 / _fd) / 1e3,
+                firstFrame: _k0 + _offs[0] + _shift,
+                lastFrame: Math.min(_lastK, _k0 + _offs[_offs.length - 1] + _shift),
+                shiftedFrames: _shift
+            };
+            if (_clamped > 0) _stripOut.note = "the comp is shorter than the strip: the last " + _clamped + " frames repeat the comp's last frame (they read as stutters in diff)";
+        }
+        var _useDst = ${jsxVal(!!args.useDisplayStartTime)};
+        var _useOcio = ${jsxVal(tryOcio)} && _ws !== "None" && _ws !== "";
+        var _isolate = ${jsxVal(isolate)};
+        var _frames = [];
+        function _renderAll(kind) {
+            for (var _fi = 0; _fi < _times.length; _fi++) {
+                var _r = _renderFrame(comp, _times[_fi], _paths[_fi], _useDst);
+                _r.captureKind = kind;
+                if (_r.ok) {
+                    // The frame this time falls in, counted from frame 0 in the
+                    // convention of time; within a millionth of a frame of a
+                    // boundary counts as on it (k / fps in floating point).
+                    var _pos = _times[_fi] / comp.frameDuration;
+                    var _fk = Math.floor(_pos + 1e-6);
+                    _r.frame = _fk;
+                    _r.frameOffset = Math.max(0, Math.round((_pos - _fk) * 1e6) / 1e6);
+                }
+                _frames.push(_r);
+            }
+        }
+        var _iso = null;
+        if (_isolate !== null) {
+            _iso = _isolateLayers(comp, _isolate);
+            if (!_iso.ok) return { ok: false, error: _iso.error };
+        }
+        var _renderError = null;
+        try {
+            if (_useOcio) {
+                var _maxT = _times[0];
+                for (var _mi = 1; _mi < _times.length; _mi++) { if (_times[_mi] > _maxT) _maxT = _times[_mi]; }
+                if (_useDst) _maxT = _maxT + comp.displayStartTime;
+                _captureWithOcio(comp, _maxT, _renderAll);
+            }
+            if (_frames.length === 0) _renderAll("direct");
+        } catch (eRender) {
+            _renderError = eRender;
+        }
+        var _isoReport = null;
+        if (_iso) {
+            var _notRestored = _restoreLayers(_iso.saved);
+            _isoReport = { layers: _iso.layers, changed: _iso.changed, restored: _notRestored.length === 0 };
+            if (_notRestored.length) _isoReport.notRestored = _notRestored;
+        }
+        if (_renderError !== null) {
+            var _fail = { ok: false, error: "render failed: " + AE.errText(_renderError) };
+            if (_isoReport) _fail.isolation = _isoReport;
+            return _fail;
+        }
+        var _allOk = true;
+        var _firstError = null;
+        for (var _ci = 0; _ci < _frames.length; _ci++) {
+            if (!_frames[_ci].ok) { _allOk = false; if (_firstError === null) _firstError = _frames[_ci].error; }
+        }
+        var _out = { ok: _allOk, frames: _frames, captureKind: _frames.length > 0 ? _frames[0].captureKind : null };
+        if (_isoReport) _out.isolation = _isoReport;
+        if (_stripOut) _out.strip = _stripOut;
+        if (!_allOk) _out.error = _firstError;
+        if (_allOk) {
+            _out.compName = comp.name;
+            _out.workingSpace = _ws;
+            _out.bitsPerChannel = AE.safeGet(function () { return app.project.bitsPerChannel; }, 8);
+            _out.projectFile = app.project.file ? app.project.file.fsName.replace(/\\\\/g, "/") : null;
+            _out.bgColor = AE.safeGet(function () { return [comp.bgColor[0], comp.bgColor[1], comp.bgColor[2]]; }, null);
+        }
+        return _out;
+    `;
+}
+async function nativeFlow(args, opts, abs, transport2, strip = null) {
+  const frameNums = args.frames ?? null;
+  const multi = args.times !== void 0 || strip !== null || frameNums !== null;
+  const times = strip !== null || frameNums !== null ? null : args.times ?? [args.time];
+  const count = strip?.frames ?? frameNums?.length ?? times?.length ?? 1;
+  const paths = framePaths(abs, count, multi);
+  const contactSheet = args.contactSheet ?? (strip !== null ? {} : void 0);
+  const before = await stampFiles(paths);
+  const tryOcio = args.colorManaged !== "off" && !readOnlyMode();
+  const result = await transport2.execute({
+    code: renderJsx(args, times, paths, tryOcio, opts.isolate, strip, frameNums),
+    label: "render_frame",
+    timeoutMs: 12e4 + (count - 1) * 3e4
+  });
+  if (!result.ok) return toMcpResult(result);
+  const payload = result.result;
+  const frames = payload?.frames ?? [];
+  const frameSize = frames[0]?.size;
+  if (payload && strip !== null) {
+    payload.strip = {
+      at: strip.at,
+      frames: strip.frames,
+      step: strip.step,
+      maxDimension: strip.maxDimension,
+      ...payload.strip
+    };
+  }
+  if (payload && payload.ok === true) {
+    const warning = frameWarnings(frames);
+    if (warning !== void 0) payload.frameWarning = warning;
+  }
+  if (payload && payload.ok === true && !multi && frames.length === 1) {
+    payload.writtenTo = frames[0].writtenTo;
+    payload.time = frames[0].time;
+    if (frames[0].frame !== void 0) payload.frame = frames[0].frame;
+    if (frames[0].frameOffset !== void 0) payload.frameOffset = frames[0].frameOffset;
+    payload.size = frames[0].size;
+    delete payload.frames;
+  }
+  if (!payload || payload.ok !== true) {
+    return toMcpResult(result);
+  }
+  if (payload.isolation && !payload.isolation.restored) {
+    payload.isolationWarning = "some layer switches could not be restored after isolate \u2014 check these layers in the timeline: " + (payload.isolation.notRestored ?? []).join("; ");
+  }
+  const written = (multi ? frames.map((f) => f.writtenTo) : [payload.writtenTo]).filter(
+    (p) => typeof p === "string"
+  );
+  const put = (i, key, value) => {
+    if (multi) frames[i][key] = value;
+    else payload[key] = value;
+  };
+  const managed = args.colorManaged !== "off";
+  let convert = null;
+  let backdrop = null;
+  if (managed) {
+    payload.method = "native";
+    payload.channels = opts.channels;
+    convert = await colorConversion(payload, transport2);
+    if (convert === null && (opts.channels !== "rgb" || opts.overGiven)) {
+      payload.channelsWarning = "colour conversion failed (see colorWarning), so the raw capture was kept and `channels` / `over` were not applied";
+    }
+    if (convert !== null && opts.channels === "rgb") backdrop = chooseBackdrop(payload, opts);
+  }
+  const bg = validRgb(payload.bgColor);
+  const unmatting = convert !== null && (opts.channels === "rgba" || backdrop !== null);
+  const settle2 = await waitForSettled(written, {
+    timeoutMs: args.settleTimeoutMs ?? settleTimeoutFor(written.length, frameSize ? frameSize[0] * frameSize[1] : 1080 * 1920),
+    before: before.slice(0, written.length)
+  });
+  payload.captureSettle = settle2;
+  if (settle2.unsettled.length > 0) {
+    const secs2 = (settle2.timeoutMs / 1e3).toFixed(1);
+    for (const u of settle2.unsettled) {
+      if (!multi || !frames[u.index]) continue;
+      frames[u.index].ok = false;
+      frames[u.index].error = `the capture did not finish writing within ${secs2} s (${u.state}, ${u.bytes} bytes)`;
+    }
+    payload.captureWarning = `${settle2.unsettled.length} of ${written.length} captures did not finish writing within ${secs2} s (saveFrameToPng writes asynchronously): frames ${settle2.unsettled.map((u) => u.index).join(", ")}. ` + (settle2.settled.length > 0 ? "The others were measured; see captureSettle, or render the missing ones again with a longer settleTimeoutMs." : "Nothing could be measured; try again with a longer settleTimeoutMs.");
+    if (settle2.settled.length === 0) {
+      if (args.analyze) payload.analysisWarning = "analysis failed: no capture finished writing";
+      if (managed)
+        payload.colorWarning = "color post-processing failed, file left as raw capture: no capture finished writing";
+      return toMcpResult(result);
+    }
+  }
+  const finished = new Set(settle2.settled);
+  const keep = new Set(opts.compare ? [opts.compare.from, opts.compare.to] : []);
+  const kept = /* @__PURE__ */ new Map();
+  const sheetImages = [];
+  const sheetLabels = [];
+  let sheetThumb = null;
+  const diffPairs = [];
+  const diffThumbs = [];
+  let diffPrev = null;
+  let diffThumb = null;
+  const diffSkipped = [];
+  let read = 0;
+  const edgePairs = [];
+  let edgePrev = null;
+  let edgeMeasured = 0;
+  let edgeFromLuma = 0;
+  let withAlpha = 0;
+  let writing = convert !== null;
+  for (const [i, file2] of written.entries()) {
+    if (!finished.has(i)) continue;
+    let capture;
+    try {
+      capture = decodePng(await fs6.readFile(file2));
+      read++;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      payload.captureWarning = `could not read the capture: ${msg}`;
+      if (args.analyze) payload.analysisWarning = `analysis failed: ${msg}`;
+      if (managed)
+        payload.colorWarning = `color post-processing failed, file left as raw capture: ${msg}`;
+      return toMcpResult(result);
+    }
+    if (capture.alpha) withAlpha++;
+    if (opts.edge) {
+      const fromLuma = opts.edge.from === "luma";
+      if (fromLuma) edgeFromLuma++;
+      if (!capture.alpha && !fromLuma) edgePrev = null;
+      else {
+        try {
+          const t = resolveEdgeThresholds(opts.edge, capture.width, capture.height);
+          payload.edgeThresholds ??= t;
+          const { report, frame } = measureEdge(capture, bg ?? [0, 0, 0], t);
+          put(i, "edge", report);
+          edgeMeasured++;
+          if (edgePrev !== null && edgePrev.index === i - 1) {
+            edgePairs.push({
+              from: { index: i - 1, time: frames[i - 1]?.time },
+              to: { index: i, time: frames[i]?.time },
+              ...alphaChange(edgePrev.frame, frame, t)
+            });
+          }
+          edgePrev = multi ? { index: i, frame } : null;
+        } catch (err) {
+          payload.edgeWarning = `edge measurement failed: ${err instanceof Error ? err.message : String(err)}`;
+          edgePrev = null;
+        }
+      }
+    }
+    if (opts.screen) {
+      try {
+        const t = resolveScreenThresholds(opts.screen, capture.width, capture.height);
+        payload.screenThresholds ??= t;
+        put(i, "screen", measureScreen(capture, t));
+      } catch (err) {
+        payload.screenWarning = `screen measurement failed: ${err instanceof Error ? err.message : String(err)}`;
+      }
+    }
+    if (args.analyze) {
+      try {
+        put(i, "analysis", analyzeFrame(capture));
+      } catch (err) {
+        payload.analysisWarning = `analysis failed: ${err instanceof Error ? err.message : String(err)}`;
+      }
+    }
+    let output2 = capture;
+    if (writing && convert !== null) {
+      try {
+        output2 = await writeOutput(
+          file2,
+          capture,
+          convert,
+          opts.channels,
+          backdrop,
+          bg ?? [0, 0, 0]
+        );
+      } catch (err) {
+        payload.colorWarning = `color post-processing failed, file left as raw capture: ${err instanceof Error ? err.message : String(err)}`;
+        writing = false;
+      }
+    }
+    const pixels = { capture, output: output2 };
+    if (opts.sample) put(i, "samples", sampleReport(pixels, opts.sample));
+    if (opts.histogram) {
+      const { bins, stage } = opts.histogram;
+      put(i, "histogram", { stage, ...histogramOf(pixels[stage], bins) });
+    }
+    if (keep.has(i)) kept.set(i, pixels);
+    const straight = output2 !== capture && output2.alpha !== void 0;
+    if (contactSheet) {
+      sheetThumb ??= thumbSizeFor(
+        output2,
+        contactSheet.thumbWidth ?? stripThumbWidth(strip, output2)
+      );
+      sheetImages.push(
+        sheetTile(output2 === capture ? { ...capture, alpha: void 0 } : output2, sheetThumb)
+      );
+      sheetLabels.push(frameLabel(i, frames[i]?.time ?? payload.time));
+    }
+    if (opts.diff) {
+      payload.diffThresholds ??= opts.diff.thresholds;
+      const pic = pictureOf(output2, straight);
+      const { width, height } = output2;
+      if (diffPrev !== null && diffPrev.index !== i - 1) {
+        diffSkipped.push(`${diffPrev.index}>${i} (frames between are missing)`);
+      } else if (diffPrev !== null && (diffPrev.width !== width || diffPrev.height !== height)) {
+        diffSkipped.push(`${i - 1}>${i} (frame sizes differ)`);
+      } else if (diffPrev !== null) {
+        if (opts.diff.sheet) {
+          diffThumb ??= thumbSizeFor(
+            output2,
+            opts.diff.sheet.thumbWidth ?? contactSheet?.thumbWidth ?? stripThumbWidth(strip, output2)
+          );
+        }
+        try {
+          const res = pictureChange(diffPrev.pic, pic, width, height, opts.diff.thresholds, {
+            regions: opts.sample?.regions,
+            thumb: diffThumb ?? void 0
+          });
+          const pair = {
+            from: { index: i - 1, time: frames[i - 1]?.time },
+            to: { index: i, time: frames[i]?.time },
+            ...res.all
+          };
+          if (res.regions) pair.regions = res.regions;
+          if (res.thumb && diffThumb) {
+            const grey = new Float64Array(res.thumb.length * 3);
+            for (let k = 0; k < res.thumb.length; k++) grey.fill(res.thumb[k], k * 3, k * 3 + 3);
+            diffThumbs.push({
+              pair: diffPairs.length,
+              img: { width: diffThumb.width, height: diffThumb.height, rgb: grey, bitDepth: 8 }
+            });
+          }
+          diffPairs.push(pair);
+        } catch (err) {
+          payload.diffWarning = `diff failed: ${err instanceof Error ? err.message : String(err)}`;
+        }
+      }
+      payload.diff ??= {
+        stage: "output",
+        picture: diffPicture(output2 === capture, opts.channels, payload.over),
+        pairs: [],
+        series: summarizeSeries([], opts.diff.thresholds)
+      };
+      diffPrev = { index: i, pic, width, height };
+    }
+  }
+  payload.alphaChannel = withAlpha === 0 ? "absent" : withAlpha === read ? "present" : "mixed";
+  if (unmatting && withAlpha > 0 && bg === null) {
+    payload.channelsWarning = "the comp background colour (bgColor) is unknown, so the colour under it was recovered as if it were black; soft edges may carry the real background";
+  }
+  if (convert !== null && payload.alphaChannel === "absent") {
+    if (opts.channels === "alpha") {
+      payload.alphaWarning = "the capture has no alpha channel, so the matte is all white (fully opaque). If this comp should be transparent here, saveFrameToPng did not write alpha for it.";
+    } else if (opts.channels === "rgba") {
+      payload.alphaWarning = "the capture has no alpha channel, so the file's alpha is fully opaque";
+    } else if (opts.overGiven) {
+      payload.alphaWarning = "the capture has no alpha channel, so there was nothing to composite over `over`";
+    }
+  }
+  if (opts.edge) {
+    if (edgeFromLuma === 0 && withAlpha < read) {
+      payload.edgeWarning = `${read - withAlpha} of ${read} captures have no alpha channel, so their matte could not be measured (a comp with no transparency, or an AE that flattens)`;
+    } else if (edgeFromLuma === 0 && edgeMeasured > 0 && bg === null) {
+      payload.edgeWarning = "the comp background colour (bgColor) is unknown, so the soft edge's colour was recovered as if it were black; the spill reading may carry the real background";
+    }
+    if (edgePairs.length > 0) {
+      payload.edgeFlicker = { pairs: edgePairs, overall: summarizeFlicker(edgePairs) };
+    }
+  }
+  if (opts.compare && opts.sample) {
+    const { from, to } = opts.compare;
+    const a = kept.get(from);
+    const b = kept.get(to);
+    if (a && b) {
+      const report = opts.sample.regions.map((r) => ({ name: r.name }));
+      for (const stage of opts.sample.stages) {
+        compareRegions(a[stage], b[stage], opts.sample.regions).forEach((diff, j) => {
+          report[j][stage] = stageBlock(diff, stage);
+        });
+      }
+      payload.comparison = {
+        from: { index: from, time: frames[from]?.time },
+        to: { index: to, time: frames[to]?.time },
+        regions: report
+      };
+    }
+  }
+  if (opts.diff && payload.diff) {
+    payload.diff.pairs = diffPairs;
+    payload.diff.series = summarizeSeries(diffPairs, opts.diff.thresholds);
+    if (diffSkipped.length > 0) {
+      payload.diffWarning = `some consecutive pairs were not compared: ${diffSkipped.join("; ")}` + (settle2.unsettled.length > 0 ? " \u2014 captures missing, see captureSettle" : "");
+    }
+  }
+  const stages = /* @__PURE__ */ new Set([
+    ...opts.sample?.stages ?? [],
+    ...opts.histogram ? [opts.histogram.stage] : [],
+    ...opts.edge || opts.screen ? ["capture"] : [],
+    ...opts.diff ? ["output"] : []
+  ]);
+  if (stages.size > 0) {
+    payload.measurementStages = {};
+    for (const s of stages) payload.measurementStages[s] = MEASUREMENT_STAGES[s];
+  }
+  if (contactSheet && sheetImages.length > 0) {
+    await attachContactSheet(
+      payload,
+      sheetLabels,
+      sheetImages,
+      sheetPathFor(abs, contactSheet.outPath),
+      contactSheet
+    );
+  }
+  if (opts.diff?.sheet && payload.diff && diffThumbs.length > 0) {
+    await attachDiffSheet(
+      payload,
+      payload.diff,
+      diffThumbs,
+      abs,
+      opts.diff.sheet,
+      opts.diff.thresholds
+    );
+  }
+  return toMcpResult(result);
+}
+function thumbSizeFor(img, thumbWidth) {
+  const width = Math.max(16, Math.min(thumbWidth ?? 480, img.width));
+  return { width, height: Math.max(1, Math.round(img.height * width / img.width)) };
+}
+function stripThumbWidth(strip, img) {
+  if (strip === null) return void 0;
+  return Math.max(
+    1,
+    Math.round(strip.maxDimension * img.width / Math.max(img.width, img.height))
+  );
+}
+function sheetTile(img, thumb) {
+  const flat = img.alpha ? { ...img, rgb: flattenOver(img, { kind: "checkerboard" }), alpha: void 0 } : img;
+  if (flat.width <= thumb.width) return flat;
+  return {
+    ...flat,
+    width: thumb.width,
+    height: thumb.height,
+    rgb: resample(flat, thumb.width, thumb.height)
+  };
+}
+function diffPicture(raw, channels, over) {
+  if (raw) {
+    return "the capture as AE wrote it (no colour conversion: colorManaged off, or the conversion failed): its RGB already laid over the comp background (bgColor), so empty areas read the background in both frames; alpha not compared";
+  }
+  if (channels === "alpha") return "the written file: the matte (alpha as grey), white opaque";
+  if (channels === "rgba") {
+    return "the written file's straight colour weighted by its alpha (as over black), so colour under transparent pixels does not count";
+  }
+  if (over === void 0 || over === "background") {
+    return "the written file: the picture as AE composited it over the comp background (bgColor), so transparent areas read the background in both frames and do not change";
+  }
+  return "the written file: the picture laid over `over`, so transparent areas read that backdrop";
+}
+async function attachDiffSheet(payload, diff, thumbs, abs, opts, t) {
+  try {
+    const flagged = new Set(diff.series.flags.flatMap((f) => f.pairs));
+    const labels = thumbs.map(({ pair }) => {
+      const p = diff.pairs[pair];
+      return `#${p.from.index}>${p.to.index} ${p.change.toFixed(4)}${flagged.has(pair) ? " !" : ""}`;
+    });
+    const sheet = composeContactSheet(
+      thumbs.map((th) => th.img),
+      { columns: opts.columns, thumbWidth: thumbs[0].img.width, labels }
+    );
+    const sheetPath = opts.outPath !== void 0 ? path6.resolve(opts.outPath).replace(/\\/g, "/") : `${abs.slice(0, abs.length - path6.extname(abs).length)}_diff${path6.extname(abs) || ".png"}`;
+    await fs6.mkdir(path6.dirname(sheetPath), { recursive: true });
+    await fs6.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+    payload.diffSheet = {
+      writtenTo: sheetPath,
+      size: [sheet.width, sheet.height],
+      columns: sheet.columns,
+      rows: sheet.rows,
+      thumbSize: [sheet.thumbWidth, sheet.thumbHeight],
+      frames: thumbs.length,
+      amplify: t.amplify
+    };
+  } catch (err) {
+    payload.diffWarning = `diff sheet failed: ${err instanceof Error ? err.message : String(err)}`;
+  }
+}
+function stageBlock(stats, stage) {
+  const { name: _name, ...rest } = stats;
+  if (stage === "output" && Array.isArray(rest.mean)) rest.meanHex = rgbHex(rest.mean);
+  return rest;
+}
+function sampleReport(pixels, sample) {
+  const report = sample.regions.map((r) => ({ name: r.name }));
+  for (const stage of sample.stages) {
+    sampleRegions(pixels[stage], sample.regions).forEach((stats, j) => {
+      report[j][stage] = stageBlock(stats, stage);
+    });
+  }
+  return report;
+}
+function chooseBackdrop(payload, opts) {
+  if (opts.over === "background") {
+    payload.over = "background";
+    return null;
+  }
+  payload.over = opts.over.kind === "checkerboard" ? "checkerboard" : opts.over.color;
+  return opts.over;
+}
+async function attachContactSheet(payload, labels, tiles, sheetPath, opts) {
+  try {
+    const sheet = composeContactSheet(tiles, {
+      columns: opts.columns,
+      thumbWidth: opts.thumbWidth ?? tiles[0].width,
+      labels
+    });
+    await fs6.mkdir(path6.dirname(sheetPath), { recursive: true });
+    await fs6.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+    payload.contactSheet = {
+      writtenTo: sheetPath,
+      size: [sheet.width, sheet.height],
+      columns: sheet.columns,
+      rows: sheet.rows,
+      thumbSize: [sheet.thumbWidth, sheet.thumbHeight],
+      frames: tiles.length
+    };
+  } catch (err) {
+    payload.contactSheetWarning = `contact sheet failed: ${err instanceof Error ? err.message : String(err)}`;
+  }
+}
+async function writeOutput(file2, capture, convert, channels, backdrop, bg) {
+  const { width, height } = capture;
+  const opaque = () => new Float64Array(width * height).fill(1);
+  let bytes;
+  if (channels === "alpha") {
+    bytes = encodePngGray8(width, height, capture.alpha ?? opaque());
+  } else if (channels === "rgb" && backdrop === null) {
+    const rgb = Float64Array.from(capture.rgb);
+    convert(rgb);
+    bytes = encodePngSrgb8(width, height, rgb);
+  } else {
+    const rgb = unmatte(capture, bg);
+    convert(rgb);
+    bytes = channels === "rgba" ? encodePngSrgbRgba8(width, height, rgb, capture.alpha ?? opaque()) : encodePngSrgb8(width, height, flattenOver({ ...capture, rgb }, backdrop));
+  }
+  await fs6.writeFile(file2, bytes);
+  return decodePng(bytes);
+}
+
+// src/operations/keying.ts
 var KEYLIGHT_MATCH_NAME = "Keylight 906";
 var KEY_CLEANER_MATCH_NAME = "ADBE KeyCleaner";
 var SPILL_SUPPRESSOR_MATCH_NAME = "ADBE Spill2";
@@ -44787,6 +48424,8 @@ registerOp({
 var OBJECT_MATTE_MATCH_NAME = "ADBE Samurai";
 var OBJECT_MATTE_SELECTIONS_MATCH_NAME = "ADBE Samurai Strokes Group";
 var PAINT_DURATION_MATCH_NAME = "ADBE Paint Duration";
+var PAINT_TRANSFORM_MATCH_NAME = "ADBE Paint Transform";
+var PAINT_POSITION_MATCH_NAME = "ADBE Paint Position";
 var OBJECT_MATTE_SETTINGS = {
   version: {
     matchName: "/propagation_method",
@@ -44875,17 +48514,53 @@ var OBJECT_MATTE_SETTINGS = {
 var SUBJECT_MATTE_NOTICE = "One step here needs you in After Effects: a single click on the subject, about ten seconds. Everything before and after it I do.";
 function subjectMatteSteps(opts = {}) {
   const clip = opts.clip === void 0 ? "the clip's name" : `"${opts.clip}"`;
-  const subject = opts.subject?.trim();
-  const step4 = subject ? `Move the pointer over ${subject} in the Layer panel. ${subject.charAt(0).toUpperCase()}${subject.slice(1)} tints magenta. Click once.` : "Move the pointer over the person in the Layer panel. They tint magenta. Click once.";
+  const given = opts.subject?.trim();
+  const self = given !== void 0 && /^(yourself|you)$/i.test(given);
+  const subject = self ? "yourself" : given || "the person";
+  const tint = self ? "You tint magenta." : given ? `${subject.charAt(0).toUpperCase()}${subject.slice(1)} tints magenta.` : "They tint magenta.";
   return [
     `After Effects is showing your clip in the Layer panel (the tab reads "Layer", then ${clip}). I opened it for you.`,
     'In the toolbar at the top, click the Object Matte Tool: the dashed square with an arrow, just left of the pin. If that icon looks different, click and hold it and choose "Object Matte Tool" from the list.',
     'If a tip titled "Object Matte" appears, click OK.',
-    step4,
-    "Anything else that should stay with them, such as a microphone: hover it and click it too.",
-    'Tell me "done". No Spacebar and no Freeze are needed.'
+    'If a yellow bar in the Layer panel says "Draw Object Matte strokes at full resolution", choose View > Resolution > Full in the menu bar, and tell me the bar was there.',
+    `Move the pointer over ${subject} in the Layer panel. ${tint} Click once.`,
+    `Anything else that should stay in the cut-out, such as a microphone, can be several pieces: hover each piece, check that it tints magenta, and click it. Do not click ${subject} again.`,
+    'Tell me "done". No Spacebar and no Freeze are needed. I will then check the cut-out and show you what is in and what is out.'
   ];
 }
+var CLOSE_CLICK_SHARE = 0.05;
+var closeClickReading = (a, b, d, limit) => `${a} and ${b} were clicked ${Math.round(d)} source pixels apart (closer than ${Math.round(limit)}): they probably selected the same thing, so a click meant for something else (a microphone) may have landed on the subject again`;
+function closeClicks(clicks, sourceSize, minDistance) {
+  const limit = minDistance ?? (sourceSize ? Math.round(CLOSE_CLICK_SHARE * Math.min(sourceSize[0], sourceSize[1]) * 100) / 100 : null);
+  if (limit === null) return [];
+  const out = [];
+  const pts = clicks.filter((c) => Array.isArray(c.point) && c.point.length >= 2);
+  for (let i = 0; i < pts.length; i++)
+    for (let j = i + 1; j < pts.length; j++) {
+      const p = pts[i].point;
+      const q = pts[j].point;
+      const d = Math.hypot(p[0] - q[0], p[1] - q[1]);
+      if (d < limit)
+        out.push({
+          a: pts[i].name,
+          b: pts[j].name,
+          distance: Math.round(d * 100) / 100,
+          limit,
+          reading: closeClickReading(pts[i].name, pts[j].name, d, limit)
+        });
+    }
+  return out;
+}
+var CHECK_NEXT = "Run subject.check next, before building anything on the cut-out: it renders the cut-out over a flat colour across the clip, finds holes, and returns a picture to show the user.";
+var VIEWER_FULL_JSX = `
+            function _viewerToFull() {
+                var _fid = app.findMenuCommandId("Full");
+                if (!_fid) throw new Error("After Effects has no menu command named 'Full' (View > Resolution > Full)");
+                app.executeCommand(_fid);
+                return _fid;
+            }
+`;
+var COUNT_NOTE = "A selection count is not a check: it does not say what was selected. Run subject.check and look at its picture before building anything on the cut-out.";
 var NEED_CLICK = "run subject.prepare and ask the user for the click, relaying its steps word for word";
 var OBJECT_MATTE_JSX = `
             function _omWalk(g, key, field, depth) {
@@ -44918,8 +48593,25 @@ var OBJECT_MATTE_JSX = `
             }
             function _omKind(nm) {
                 if (/^Add Object \\d+$/.test(nm)) return "object";
+                if (/^Add Object Rect \\d+$/.test(nm)) return "rectangle";
                 if (/^Quick Select Foreground \\d+$/.test(nm)) return "quick-selection";
                 return "other";
+            }
+            function _omCloseClicks(list, size) {
+                var out = [];
+                if (!size) return out;
+                var lim = Math.round(${jsxVal(CLOSE_CLICK_SHARE)} * Math.min(size[0], size[1]) * 100) / 100;
+                for (var i = 0; i < list.length; i++) {
+                    for (var j = i + 1; j < list.length; j++) {
+                        var p = list[i].point, q = list[j].point;
+                        if (!p || !q) continue;
+                        var d = Math.sqrt((p[0] - q[0]) * (p[0] - q[0]) + (p[1] - q[1]) * (p[1] - q[1]));
+                        if (d < lim) out.push({ a: list[i].name, b: list[j].name, distance: Math.round(d * 100) / 100, limit: lim,
+                            reading: list[i].name + " and " + list[j].name + " were clicked " + Math.round(d) + " source pixels apart (closer than " + Math.round(lim) + "): " +
+                                "they probably selected the same thing, so a click meant for something else (a microphone) may have landed on the subject again" });
+                    }
+                }
+                return out;
             }
             function _omSelections(fx) {
                 var g = _omFind(fx, ${jsxVal(OBJECT_MATTE_SELECTIONS_MATCH_NAME)}, "Selections").prop;
@@ -44932,7 +48624,10 @@ var OBJECT_MATTE_JSX = `
                     if (!s) continue;
                     var nm = AE.safeGet(function () { return s.name; }, "");
                     var dur = AE.safeGet(function () { return AE.valueToJson(s.property(${jsxVal(PAINT_DURATION_MATCH_NAME)}).value); }, null);
-                    list.push({ index: i, name: nm, matchName: AE.safeGet(function () { return s.matchName; }, ""), kind: _omKind(nm), duration: dur });
+                    var pt = AE.safeGet(function () { return AE.valueToJson(s.property(${jsxVal(PAINT_TRANSFORM_MATCH_NAME)}).property(${jsxVal(PAINT_POSITION_MATCH_NAME)}).value); }, null);
+                    var cp = (pt && typeof _layer !== "undefined") ? AE.safeGet(function () { return AE.valueToJson(_layer.sourcePointToComp([pt[0], pt[1]])); }, null) : null;
+                    list.push({ index: i, name: nm, matchName: AE.safeGet(function () { return s.matchName; }, ""), kind: _omKind(nm), duration: dur,
+                        point: pt ? [pt[0], pt[1]] : null, compPoint: cp ? [cp[0], cp[1]] : null, durationStart: (dur && dur.length) ? dur[0] : null });
                 }
                 return { found: true, list: list };
             }
@@ -44953,13 +48648,24 @@ var OBJECT_MATTE_JSX = `
                 }
                 return out;
             }
+            function _omSourceSize() {
+                var w = AE.safeGet(function () { return _layer.source.width; }, null);
+                var h = AE.safeGet(function () { return _layer.source.height; }, null);
+                return (typeof w === "number" && typeof h === "number") ? [w, h] : null;
+            }
+            function _omSpan() {
+                var fd = _comp.frameDuration;
+                var a = Math.min(_layer.inPoint, _layer.outPoint), b = Math.max(_layer.inPoint, _layer.outPoint);
+                return { inFrame: Math.round(a / fd), outFrame: Math.round(b / fd), frameRate: Math.round(1000 / fd) / 1000 };
+            }
             function _omSummary(present, sel) {
                 if (!present) return "no Object Matte on this layer: the user has not clicked yet";
                 if (sel.length === 0) return "Object Matte is on the layer but has no selection yet: the user has not clicked (an Object Matte with no selection makes no matte)";
-                var c = { object: 0, "quick-selection": 0, other: 0 };
+                var c = { object: 0, rectangle: 0, "quick-selection": 0, other: 0 };
                 for (var i = 0; i < sel.length; i++) c[sel[i].kind]++;
                 var parts = [];
                 if (c.object > 0) parts.push(c.object + (c.object === 1 ? " object selected" : " objects selected"));
+                if (c.rectangle > 0) parts.push(c.rectangle + (c.rectangle === 1 ? " rectangle selection" : " rectangle selections"));
                 if (c["quick-selection"] > 0) parts.push(c["quick-selection"] + (c["quick-selection"] === 1 ? " quick-selection stroke" : " quick-selection strokes"));
                 if (c.other > 0) parts.push(c.other + (c.other === 1 ? " other selection" : " other selections"));
                 return parts.join(", ");
@@ -44971,11 +48677,11 @@ var subjectIndexParam = {
   description: "1-based index of the Object Matte to use when the layer has several (it must be Object Matte, ADBE Samurai). Default: the first in the stack.",
   required: false
 };
-var REMOVE_NOTE = "To start the selection again: remove this Object Matte with effect.remove { comp, layer, effectIndex }, run subject.prepare, and ask the user for the click again. The user can also take one thing out by Option-clicking it with the Object Matte Tool.";
+var REMOVE_NOTE = "To take out one wrong selection (a second click that landed on the subject, an 'Add Object Rect' from a click that dragged): subject.remove_selection { comp, layer, selection }. To start the whole selection again: remove this Object Matte with effect.remove { comp, layer, effectIndex }, run subject.prepare, and ask the user for the click again. The user can also take one thing out by Option-clicking it with the Object Matte Tool.";
 registerOp({
   name: "subject.prepare",
   category: "subject",
-  description: "Get a footage layer ready for the one manual step of a subject matte (After Effects 2027's Object Matte, the old Roto Brush): the user clicks the subject once with the Object Matte Tool; a script cannot make that selection. This call brings the comp forward, sets it to full resolution, moves to `time` (default: the layer's in point; pick a frame where the subject is clearly visible), selects only that layer and opens it in the Layer panel. It adds no effect and does not pick the tool. Returns notice and steps (the user's instructions, with the clip's name and the subject filled in) and userMessage (both as one text): relay them to the user word for word. Also returns did (the steps done), couldNotDo (any that failed, with the error; beforeSteps then says what to tell the user first) and existing (an Object Matte already on the layer and its selections). After the user says done, check with subject.status. Only verified in After Effects 27.0 as separate scripting steps; this call as a whole is not verified there yet.",
+  description: "Get a footage layer ready for the one manual step of a subject matte (After Effects 2027's Object Matte, the old Roto Brush): the user clicks the subject once with the Object Matte Tool; a script cannot make that selection. This call brings the comp forward, sets the comp's resolution to Full, moves to `time` (default: the layer's in point; pick a frame where the subject is clearly visible), selects only that layer, opens it in the Layer panel and chooses View > Resolution > Full there (viewerResolution: the menu command is looked up by its name 'Full', and a script cannot read whether the viewer then draws at Full; not verified). It adds no effect and does not pick the tool. Returns notice and steps (the user's instructions, with the clip's name and the subject filled in) and userMessage (both as one text): relay them to the user word for word. Also returns did (the steps done), couldNotDo (any that failed, with the error; beforeSteps then says what to tell the user first) and existing (an Object Matte already on the layer and its selections). After the user says done, run subject.check before building anything. Verified in After Effects 27.0 on a real take, apart from the View > Resolution > Full step.",
   params: [
     ...compLayerParams,
     {
@@ -45014,7 +48720,7 @@ registerOp({
                 try { fn(); _did.push(what); } catch (eSt) { _couldNot.push({ step: what, error: AE.errText(eSt) }); }
             }
             _step("brought the comp forward", function () { _comp.openInViewer(); });
-            _step("set the comp to full resolution", function () { _comp.resolutionFactor = [1, 1]; });
+            _step("set the comp's resolution to Full (the viewer can still draw at another resolution while it is on Auto)", function () { _comp.resolutionFactor = [1, 1]; });
             _step("moved to " + _t + " s", function () { _comp.time = _t; });
             _step("selected only layer '" + _layer.name + "'", function () {
                 for (var _li = 1; _li <= _comp.numLayers; _li++) { var _l = _comp.layer(_li); if (_l.selected) _l.selected = false; }
@@ -45027,6 +48733,14 @@ registerOp({
                 app.executeCommand(_id);
                 _opened = true;
             });
+            ${VIEWER_FULL_JSX}
+            var _viewer = { command: "Full", commandId: null, verified: false,
+                note: "chose View > Resolution > Full for the Layer panel; a script cannot read the viewer's resolution, so whether it now draws at Full is not known. If After Effects' yellow bar asks for full resolution, step 4 has the user choose it" };
+            if (_opened) {
+                _step("chose View > Resolution > Full", function () { _viewer.commandId = _viewerToFull(); });
+            } else {
+                _couldNot.push({ step: "chose View > Resolution > Full", error: "skipped: the Layer panel did not open, and the command acts on the active viewer" });
+            }
             var _pick = AE.pickEffect(_fxRoot, ${jsxVal(OBJECT_MATTE_MATCH_NAME)}, "Object Matte", null);
             var _existing = { objectMatte: _pick.index !== null, effectIndex: _pick.index, count: _pick.count || 0, selections: [] };
             if (_pick.index !== null) _existing.selections = _omSelections(_fxRoot.property(_pick.index)).list;
@@ -45044,6 +48758,7 @@ registerOp({
                 time: _t,
                 did: _did,
                 couldNotDo: _couldNot,
+                viewerResolution: _viewer,
                 existing: _existing,
                 notice: _notice,
                 steps: _steps,
@@ -45065,7 +48780,7 @@ registerOp({
   name: "subject.status",
   category: "subject",
   readOnly: true,
-  description: "Read a layer's subject matte (Object Matte, ADBE Samurai) without changing anything: whether the effect is there, its selections (name; kind 'object' for a click with the Object Matte Tool, 'Add Object N', 'quick-selection' for a stroke with the old brush, 'Quick Select Foreground N', 'other' otherwise; duration), its settings (value, the range After Effects reports now, the range measured in After Effects 27.0, default, and foundBy: how the property was found, matchName, walk or name), and summary, one plain sentence ('no selection yet: the user has not clicked', '1 object selected'). Run it after the user says done; then render the subject over a flat colour (ae_render_frame over) and the matte (channels 'alpha', edge true). removeNote says how to start the selection again.",
+  description: "Read a layer's subject matte (Object Matte, ADBE Samurai) without changing anything: whether the effect is there, its selections (name; kind 'object' for a click with the Object Matte Tool, 'Add Object N', 'quick-selection' for a stroke with the old brush, 'Quick Select Foreground N', 'other' otherwise; duration), its settings (value, the range After Effects reports now, the range measured in After Effects 27.0, default, and foundBy: how the property was found, matchName, walk or name), and summary, one plain sentence ('no selection yet: the user has not clicked', '1 object selected'). Also each selection's clicked point (Transform > Position, source pixels; compPoint in comp pixels where After Effects gives it) and Duration start, closeClicks (two clicks closer than 5% of the source's shorter side probably selected the same thing), sourceSize, compSize and span (the layer in comp frames). A selection count is not a check: after the user says done, run subject.check. removeNote says how to take a selection out or start again.",
   params: [...compLayerParams, subjectIndexParam],
   toJsx(args) {
     return `
@@ -45076,15 +48791,17 @@ registerOp({
             if (_pick.error) return { ok: false, error: _pick.error };
             if (_pick.index === null) {
                 return { ok: true, layer: _layer.name, objectMatte: { present: false, effectIndex: null, count: 0 }, selections: [], settings: null,
-                    summary: _omSummary(false, []), next: ${jsxVal(`Nothing selected: ${NEED_CLICK}.`)}, effects: AE.effectOrder(_fxRoot) };
+                    summary: _omSummary(false, []), next: ${jsxVal(`Nothing selected: ${NEED_CLICK}.`)}, effects: AE.effectOrder(_fxRoot),
+                    sourceSize: _omSourceSize(), compSize: [_comp.width, _comp.height], span: _omSpan() };
             }
             var _fx = _fxRoot.property(_pick.index);
             var _sel = _omSelections(_fx);
-            var _counts = { object: 0, quickSelection: 0, other: 0 };
+            var _counts = { object: 0, rectangle: 0, quickSelection: 0, other: 0 };
             for (var _i = 0; _i < _sel.list.length; _i++) {
                 var _k = _sel.list[_i].kind;
-                if (_k === "object") _counts.object++; else if (_k === "quick-selection") _counts.quickSelection++; else _counts.other++;
+                if (_k === "object") _counts.object++; else if (_k === "rectangle") _counts.rectangle++; else if (_k === "quick-selection") _counts.quickSelection++; else _counts.other++;
             }
+            var _src = _omSourceSize();
             var _out = {
                 ok: true,
                 layer: _layer.name,
@@ -45093,8 +48810,14 @@ registerOp({
                 counts: _counts,
                 settings: _omSettings(_fx, ${jsxVal(OBJECT_MATTE_SETTINGS)}),
                 summary: _omSummary(true, _sel.list),
+                countNote: ${jsxVal(COUNT_NOTE)},
+                closeClicks: _omCloseClicks(_sel.list, _src),
+                sourceSize: _src,
+                compSize: [_comp.width, _comp.height],
+                span: _omSpan(),
                 removeNote: ${jsxVal(REMOVE_NOTE)},
-                effects: AE.effectOrder(_fxRoot)
+                effects: AE.effectOrder(_fxRoot),
+                next: ${jsxVal(CHECK_NEXT)}
             };
             if (_sel.list.length === 0) _out.next = ${jsxVal(`No selection yet: ${NEED_CLICK}.`)};
             return _out;
@@ -45190,6 +48913,515 @@ registerOp({
             return _out;
         `;
   }
+});
+registerOp({
+  name: "subject.remove_selection",
+  category: "subject",
+  description: "Remove one selection from a layer's Object Matte, by its name ('Add Object 2', 'Add Object Rect 1') or its 1-based place in subject.status's list, so a wrong click does not mean starting again. remove() on a selection was confirmed in After Effects 27.0: the matte read the same afterwards when the removed selection had selected nothing. Returns removed, the selections left and summary. Run subject.check afterwards.",
+  params: [
+    ...compLayerParams,
+    {
+      name: "selection",
+      type: "any",
+      description: "The selection's name, or its 1-based place in subject.status's selections (newest first).",
+      required: true
+    },
+    subjectIndexParam
+  ],
+  toJsx(args) {
+    const sel = args.selection;
+    if (!(typeof sel === "string" && sel.trim() !== "") && !(typeof sel === "number" && Number.isInteger(sel) && sel >= 1)) {
+      return jsxFail(
+        `\`selection\` must be a selection's name or a 1-based number; got ${JSON.stringify(sel)}`
+      );
+    }
+    return `
+            ${jsxCompLayerPreamble(args)}
+            ${FX_ROOT_JSX}
+            ${OBJECT_MATTE_JSX}
+            var _pick = AE.pickEffect(_fxRoot, ${jsxVal(OBJECT_MATTE_MATCH_NAME)}, "Object Matte", ${jsxVal(args.effectIndex ?? null)});
+            if (_pick.error) return { ok: false, error: _pick.error };
+            if (_pick.index === null) return { ok: false, error: "layer '" + _layer.name + "' has no Object Matte, so there is no selection to remove" };
+            var _fx = _fxRoot.property(_pick.index);
+            var _g = _omFind(_fx, ${jsxVal(OBJECT_MATTE_SELECTIONS_MATCH_NAME)}, "Selections").prop;
+            var _before = _omSelections(_fx).list;
+            var _names = [];
+            for (var _i = 0; _i < _before.length; _i++) _names.push(_before[_i].name);
+            var _want = ${jsxVal(sel)};
+            var _at = -1;
+            if (typeof _want === "number") { if (_want >= 1 && _want <= _before.length) _at = _want; }
+            else { for (var _j = 0; _j < _before.length; _j++) if (_before[_j].name === _want) { _at = _before[_j].index; break; } }
+            if (_at < 0 || !_g) {
+                return { ok: false, error: (typeof _want === "number" ? "no selection at place " + _want : "no selection '" + _want + "'") +
+                    " on Object Matte (selections: " + (_names.length ? _names.join(", ") : "none") + ")" };
+            }
+            var _removed = AE.safeGet(function () { return _g.property(_at).name; }, String(_want));
+            _g.property(_at).remove();
+            var _after = _omSelections(_fx).list;
+            return { ok: true, layer: _layer.name, effectIndex: _pick.index, removed: _removed, selections: _after,
+                summary: _omSummary(true, _after), next: ${jsxVal(CHECK_NEXT)} };
+        `;
+  }
+});
+var CUTOUT_HOLE_LIMIT = 1e3;
+var CUTOUT_FRAMES = 8;
+var CUTOUT_OVER = "#ff00ff";
+var CUTOUT_LISTED = 50;
+var intersects = (a, b) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+var union2 = (a, b) => {
+  const x = Math.min(a.x, b.x);
+  const y = Math.min(a.y, b.y);
+  return {
+    x,
+    y,
+    width: Math.max(a.x + a.width, b.x + b.width) - x,
+    height: Math.max(a.y + a.height, b.y + b.height) - y
+  };
+};
+var fmt2 = (n) => Math.round(n).toLocaleString("en-US");
+var boxText = (b) => `(${b.x}, ${b.y}, ${b.width} \xD7 ${b.height})`;
+function cutoutFindings(frames, limit) {
+  const out = [];
+  for (const f of frames) {
+    for (const h of f.holes) {
+      if (h.area < limit) continue;
+      const b = { x: h.x, y: h.y, width: h.width, height: h.height };
+      const hit = out.find((o) => intersects(o.box, b));
+      if (hit) {
+        hit.box = union2(hit.box, b);
+        hit.largestArea = Math.max(hit.largestArea, h.area);
+        if (!hit.frames.includes(f.frame)) hit.frames.push(f.frame);
+      } else out.push({ kind: "hole", frames: [f.frame], largestArea: h.area, box: b });
+    }
+  }
+  return out.sort((a, b) => b.largestArea - a.largestArea);
+}
+function framesAcross(span, count, extra) {
+  const a = span?.inFrame ?? 0;
+  const b = span?.outFrame ?? a + 1;
+  const set2 = /* @__PURE__ */ new Set();
+  for (let i = 0; i < count; i++) set2.add(a + Math.floor(i * (b - a) / count));
+  for (const e of extra) if (typeof e === "number" && e >= a && e < b) set2.add(Math.round(e));
+  return [...set2].sort((x, y) => x - y).slice(0, 32);
+}
+function frameReadings(payload, limit) {
+  const list = payload.frames ?? (payload.writtenTo ? [payload] : []);
+  return list.map((f) => {
+    const holes = (f.edge?.holes?.list ?? []).map((h) => ({
+      x: h.x,
+      y: h.y,
+      width: h.width,
+      height: h.height,
+      area: h.area
+    }));
+    const big = holes.filter((h) => h.area >= limit);
+    const small = holes.filter((h) => h.area < limit);
+    return {
+      frame: f.frame,
+      picture: f.writtenTo,
+      holes: big,
+      holesUnderLimit: { count: small.length, area: small.reduce((s, h) => s + h.area, 0) },
+      holeCount: f.edge?.holes?.count ?? holes.length,
+      solidAreas: f.edge?.solidAreas?.count ?? null,
+      specks: f.edge?.specks?.count ?? null,
+      edgeWidth: f.edge?.width ? { typical: f.edge.width.typical, p90: f.edge.width.p90 } : null,
+      ...f.error ? { error: f.error } : {}
+    };
+  });
+}
+function holeLines(findings, frames) {
+  return findings.map(
+    (h) => `${fmt2(h.largestArea)} px at ${boxText(h.box)} on ${h.frames.length} of ${frames} frames (${h.frames.join(", ")})`
+  );
+}
+var needSelection = (st) => {
+  if (!st?.objectMatte?.present || !Array.isArray(st.selections) || st.selections.length === 0)
+    return `${st?.summary ?? "no selection"}; ${NEED_CLICK}`;
+  return null;
+};
+async function runSubjectCheck(args, io) {
+  const outDir = args.outDir;
+  if (typeof outDir !== "string" || !path7.isAbsolute(outDir))
+    return { ok: false, error: "`outDir` must be an absolute folder for the pictures" };
+  const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
+  const st = await io.status();
+  if (!st?.ok) return { ok: false, error: st?.error ?? "subject.status failed", status: st };
+  const missing = needSelection(st);
+  if (missing) return { ok: false, error: missing };
+  const frames = Array.isArray(args.frames) ? args.frames.slice().sort((a, b) => a - b) : framesAcross(st.span, typeof args.count === "number" ? args.count : CUTOUT_FRAMES, [
+    args.clickFrame
+  ]);
+  const payload = await io.render({
+    compNameOrId: args.comp,
+    frames,
+    outPath: path7.join(outDir, "cutout.png"),
+    isolate: args.layer,
+    over: typeof args.over === "string" ? args.over : CUTOUT_OVER,
+    edge: { listed: CUTOUT_LISTED },
+    contactSheet: {}
+  });
+  if (!payload?.ok)
+    return {
+      ok: false,
+      error: `the cut-out render failed: ${payload?.error ?? "no result"}`,
+      render: payload
+    };
+  const readings = frameReadings(payload, limit);
+  const holes = cutoutFindings(readings, limit);
+  const clicks = st.selections.map((s) => ({
+    name: s.name,
+    kind: s.kind,
+    point: s.point ?? null,
+    durationStart: s.durationStart ?? null
+  }));
+  const close = closeClicks(clicks, st.sourceSize ?? null);
+  const findings = [...holes];
+  if (close.length) findings.push({ kind: "close-clicks", pairs: close });
+  const rects = clicks.filter((c) => c.kind === "rectangle").map((c) => c.name);
+  const picture = payload.contactSheet?.writtenTo ?? readings[0]?.picture ?? null;
+  const solid = readings.find((r) => r.solidAreas !== null)?.solidAreas;
+  const inText = `In: ${st.summary}` + (typeof solid === "number" ? `, making ${solid} solid area${solid === 1 ? "" : "s"} on the first frame` : "") + ".";
+  const outText = holes.length ? `Out: ${holes.length} enclosed hole${holes.length === 1 ? "" : "s"} of ${fmt2(limit)} px or more inside the cut-out: ${holeLines(holes, readings.length).join("; ")}. A hole in the subject is something not selected (a microphone, a cup) or a gap in it that no click fills (subject.fill_gaps).` : `Out: no enclosed hole over ${fmt2(limit)} px on the ${readings.length} frames looked at.`;
+  const clickText = close.length ? ` Clicks: ${close.map((c) => c.reading).join("; ")}.` : "";
+  const rectText = rects.length ? ` ${rects.join(", ")}: a click that dragged a little; it may hold nothing (subject.remove_selection).` : "";
+  return {
+    ok: true,
+    layer: st.layer,
+    stop: findings.length > 0,
+    findings,
+    inOut: `${inText} ${outText}${clickText}${rectText} Look at the picture (${picture}): it shows what no number does, such as the background kept or something the brief names left out without a hole.`,
+    picture,
+    frames: readings,
+    clicks,
+    countNote: COUNT_NOTE,
+    holeLimit: limit,
+    next: findings.length ? "Stop: show the user the picture and say what is out, before building anything else. A missed object needs another click (subject.prepare, then the steps); a wrong extra click comes out with subject.remove_selection; an enclosed gap no click fills goes to subject.fill_gaps. Then run subject.check again." : "Nothing over the limit. Still look at the picture yourself and tell the user what is in and what is out before building on the cut-out."
+  };
+}
+var FILL_LIMITS = (frame) => [
+  `The still comes from one frame (frame ${frame}): it assumes a locked camera and that what is in front of the subject does not move. Anything that moves away from the still's gaps shows through the fill.`,
+  "What shows through a filled gap is whatever is behind it in the footage. That is the subject only while the subject is behind the gap.",
+  "Every enclosed gap at that frame is filled, including a real one (between an arm and the body) where the background will show; pass `only` boxes to fill just the gaps you mean."
+];
+async function runFillGaps(args, io) {
+  const still = args.stillPath;
+  if (typeof still !== "string" || !path7.isAbsolute(still) || path7.extname(still).toLowerCase() !== ".png") {
+    return {
+      ok: false,
+      error: "`stillPath` must be an absolute path to a .png file, kept with the project (the comp will use it)"
+    };
+  }
+  const rejected = rejectedOutputPath(still);
+  if (rejected) return { ok: false, error: rejected };
+  const outDir = typeof args.outDir === "string" && path7.isAbsolute(args.outDir) ? args.outDir : path7.dirname(still);
+  const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
+  const minArea = typeof args.minArea === "number" ? args.minArea : 20;
+  const grow = typeof args.grow === "number" ? args.grow : 3;
+  const st = await io.status();
+  if (!st?.ok) return { ok: false, error: st?.error ?? "subject.status failed", status: st };
+  const missing = needSelection(st);
+  if (missing) return { ok: false, error: missing };
+  const frame = typeof args.frame === "number" ? args.frame : st.span?.inFrame ?? 0;
+  const ref = await io.render({
+    compNameOrId: args.comp,
+    frames: [frame],
+    outPath: path7.join(outDir, "fill-reference.png"),
+    isolate: args.layer,
+    channels: "rgba"
+  });
+  if (!ref?.ok)
+    return {
+      ok: false,
+      error: `the reference render failed: ${ref?.error ?? "no result"}`,
+      render: ref
+    };
+  const refFile = ref.frames?.[0]?.writtenTo ?? ref.writtenTo;
+  if (!refFile) return { ok: false, error: "the reference render wrote no file", render: ref };
+  const img = await io.readAlpha(refFile);
+  const [cw, ch] = Array.isArray(st.compSize) ? st.compSize : [img.width, img.height];
+  if (img.width !== cw || img.height !== ch) {
+    return {
+      ok: false,
+      error: `the reference render came back ${img.width} \xD7 ${img.height}, not the comp's size ${cw} \xD7 ${ch}; set the comp to Full resolution and try again. Nothing was built.`
+    };
+  }
+  const only = Array.isArray(args.only) ? args.only : null;
+  const found = enclosedHoles(img.alpha, img.width, img.height, {
+    minArea,
+    keep: only ? (h) => only.some((b) => intersects(h, b)) : void 0
+  });
+  const area = found.holes.reduce((s, h) => s + h.area, 0);
+  const filled = {
+    holes: found.holes.length,
+    area,
+    list: found.holes.slice(0, 20),
+    dropped: found.dropped,
+    leftOut: found.leftOut,
+    grow,
+    minArea
+  };
+  if (found.holes.length === 0) {
+    return {
+      ok: true,
+      reference: { frame, picture: refFile },
+      filled,
+      reading: `No enclosed gap of ${minArea} px or more to fill at frame ${frame}; nothing was built.`,
+      limits: FILL_LIMITS(frame)
+    };
+  }
+  const grown = growMask(found.mask, img.width, img.height, grow);
+  const values = new Float64Array(grown.length);
+  let grownArea = 0;
+  for (let p = 0; p < grown.length; p++)
+    if (grown[p]) {
+      values[p] = 1;
+      grownArea++;
+    }
+  filled.grownArea = grownArea;
+  filled.still = still;
+  const png = encodePngGray8(img.width, img.height, values);
+  if (io.writePng) await io.writePng(still, png);
+  else {
+    await fs7.mkdir(path7.dirname(still), { recursive: true });
+    await fs7.writeFile(still, png);
+  }
+  const built = await io.build({ comp: args.comp, layer: args.layer, stillPath: still });
+  if (!built?.ok)
+    return {
+      ok: false,
+      error: `the still was written to ${still}, but the fill could not be built: ${built?.error ?? "no result"}`,
+      filled,
+      build: built
+    };
+  const frames = Array.isArray(args.frames) ? args.frames.slice().sort((a, b) => a - b) : framesAcross(st.span, typeof args.count === "number" ? args.count : CUTOUT_FRAMES, [frame]);
+  const after = await io.render({
+    compNameOrId: args.comp,
+    frames,
+    outPath: path7.join(outDir, "fill-after.png"),
+    isolate: [args.layer, built.fillLayer],
+    over: typeof args.over === "string" ? args.over : CUTOUT_OVER,
+    edge: { listed: CUTOUT_LISTED },
+    contactSheet: {}
+  });
+  const afterOut = after?.ok ? (() => {
+    const readings = frameReadings(after, limit);
+    const findings = cutoutFindings(readings, limit);
+    return {
+      frames: readings,
+      findings,
+      picture: after.contactSheet?.writtenTo ?? null,
+      reading: findings.length ? `Still over ${fmt2(limit)} px after the fill: ${holeLines(findings, readings.length).join("; ")}.` : `No enclosed hole over ${fmt2(limit)} px on the ${readings.length} frames looked at after the fill.`
+    };
+  })() : { error: `the render after the fill failed: ${after?.error ?? "no result"}` };
+  return {
+    ok: true,
+    reference: { frame, picture: refFile },
+    filled,
+    layers: { fill: built.fillLayer, mask: built.maskLayer, stillItem: built.stillItem },
+    after: afterOut,
+    limits: FILL_LIMITS(frame),
+    next: "Show the user the picture after the fill and say what is left. To undo the fill, delete the two layers it added."
+  };
+}
+function fillBuildJsx(args) {
+  return `
+            ${jsxCompLayerPreamble(args)}
+            var _fillName = _layer.name + " gap fill";
+            var _maskName = _layer.name + " gap mask";
+            for (var _li = 1; _li <= _comp.numLayers; _li++) {
+                var _ln = _comp.layer(_li).name;
+                if (_ln === _fillName || _ln === _maskName) return { ok: false, error: "comp " + _comp.name + " already has a layer '" + _ln + "'; delete the earlier fill's two layers first" };
+            }
+            var _file = new File(${jsxVal(args.stillPath)});
+            if (!_file.exists) return { ok: false, error: "no file at " + ${jsxVal(args.stillPath)} };
+            var _item = app.project.importFile(new ImportOptions(_file));
+            var _mask = _comp.layers.add(_item);
+            _mask.name = _maskName;
+            var _fill = _layer.duplicate();
+            _fill.name = _fillName;
+            var _fxs = _fill.property("ADBE Effect Parade");
+            var _removed = 0;
+            if (_fxs) {
+                for (var _fi = _fxs.numProperties; _fi >= 1; _fi--) {
+                    if (_fxs.property(_fi).matchName === ${jsxVal(OBJECT_MATTE_MATCH_NAME)}) { _fxs.property(_fi).remove(); _removed++; }
+                }
+            }
+            _fill.moveAfter(_layer);
+            _mask.moveBefore(_fill);
+            var _spanError = null;
+            try {
+                _mask.startTime = 0;
+                _mask.inPoint = Math.min(_layer.inPoint, _layer.outPoint);
+                _mask.outPoint = Math.max(_layer.inPoint, _layer.outPoint);
+            } catch (eSpan) { _spanError = AE.errText(eSpan); }
+            _fill.setTrackMatte(_mask, TrackMatteType.LUMA);
+            _mask.enabled = false;
+            var _out = { ok: true, fillLayer: _fill.name, fillIndex: _fill.index, maskLayer: _mask.name, maskIndex: _mask.index, stillItem: _item.name, removedFromCopy: _removed };
+            if (_spanError !== null) _out.maskSpanError = _spanError;
+            return _out;
+        `;
+}
+function liveCutoutIO(args, transport2) {
+  return {
+    async status() {
+      const code = getOp("subject.status").toJsx({
+        comp: args.comp,
+        layer: args.layer,
+        effectIndex: args.effectIndex
+      });
+      const r = await transport2.execute({
+        code,
+        label: "subject.status",
+        undoGroup: false,
+        timeoutMs: 3e4
+      });
+      return r.ok ? r.result : { ok: false, error: r.error ?? "subject.status failed" };
+    },
+    async render(renderArgs) {
+      const out = await renderFrameTool.handler(renderArgs, transport2);
+      const sc = out.structuredContent;
+      if (out.isError)
+        return {
+          ok: false,
+          error: sc?.error?.message ?? sc?.error ?? "ae_render_frame failed",
+          details: sc
+        };
+      return sc?.result ?? { ok: false, error: "ae_render_frame returned no result" };
+    },
+    async readAlpha(file2) {
+      const img = decodePng(await fs7.readFile(file2));
+      if (!img.alpha) throw new Error(`${file2} has no alpha channel`);
+      return { width: img.width, height: img.height, alpha: img.alpha };
+    },
+    async build(a) {
+      const r = await transport2.execute({
+        code: fillBuildJsx(a),
+        label: "subject.fill_gaps",
+        undoGroup: true,
+        suppressDialogs: true,
+        rollback: true,
+        timeoutMs: 6e4
+      });
+      return r.ok ? r.result : { ok: false, error: r.error ?? "the build failed", rollback: r.rollback };
+    }
+  };
+}
+var NODE_ONLY = (name) => jsxFail(
+  `${name} runs in Node (it reads pixels), so it cannot ride inside batch.run; call it through ae_do`
+);
+var frameListParam = {
+  name: "frames",
+  type: "array",
+  description: "Comp frame numbers to look at, instead of the default: `count` frames evenly spaced across the layer, plus the click frame.",
+  required: false
+};
+registerOp({
+  name: "subject.check",
+  category: "subject",
+  description: `Proof a subject matte after the user says done, before anything else is built: renders the cut-out over a flat colour (default magenta) at the click frame and at frames across the clip (ae_render_frame isolate, edge, a contact sheet), finds enclosed holes with edge's code, and returns picture (the sheet), findings, inOut (a plain statement of what is in and what is out) and stop. A hole of holeLimit px or more (default ${CUTOUT_HOLE_LIMIT}, at the comp's size) is a finding, and so are two clicks close together (they probably selected the same thing). With stop true: show the user the picture and say what is out before doing anything else. A selection count is not a check. Renders track the matte from the click: about 0.13 s a frame the first time (measured).`,
+  params: [
+    ...compLayerParams,
+    {
+      name: "outDir",
+      type: "string",
+      description: "Absolute folder for the pictures.",
+      required: true
+    },
+    {
+      name: "clickFrame",
+      type: "number",
+      description: "The comp frame the user clicked at (subject.prepare's time in frames). Looked at as well.",
+      required: false
+    },
+    frameListParam,
+    {
+      name: "count",
+      type: "number",
+      description: `How many frames across the layer (default ${CUTOUT_FRAMES}).`,
+      required: false
+    },
+    {
+      name: "holeLimit",
+      type: "number",
+      description: `Smallest hole that is a finding, px at the comp's size (default ${CUTOUT_HOLE_LIMIT}).`,
+      required: false
+    },
+    {
+      name: "over",
+      type: "string",
+      description: `The flat colour (default '${CUTOUT_OVER}').`,
+      required: false
+    },
+    subjectIndexParam
+  ],
+  toJsx: () => NODE_ONLY("subject.check"),
+  run: (args, transport2) => runSubjectCheck(args, liveCutoutIO(args, transport2))
+});
+registerOp({
+  name: "subject.fill_gaps",
+  category: "subject",
+  description: "Fill enclosed gaps in a subject matte that no click fills (a gap in a microphone's shock mount with the shirt behind it): reads the matte at one reference frame at the comp's size, keeps the transparent regions the frame edge cannot reach, drops those under minArea (default 20 px), grows the rest by `grow` px (default 3), writes them as a still (stillPath), and adds a copy of the same footage under the cut-out showing only through that still (luma track matte); then measures holes again across the clip and reports what is left. Limits, stated in the result: one reference frame, so it assumes a locked camera and a prop that does not move; what shows through is whatever is behind the gap. `only` boxes fill just the gaps they touch. Probed by hand in After Effects 27.0; this operation is not verified there yet.",
+  params: [
+    ...compLayerParams,
+    {
+      name: "stillPath",
+      type: "string",
+      description: "Absolute .png path for the gap mask, kept with the project (the comp uses it).",
+      required: true
+    },
+    {
+      name: "frame",
+      type: "number",
+      description: "Reference comp frame (default: the layer's first frame; use the click frame).",
+      required: false
+    },
+    {
+      name: "minArea",
+      type: "number",
+      description: "Smallest gap filled, px (default 20).",
+      required: false
+    },
+    {
+      name: "grow",
+      type: "number",
+      description: "Grow each gap by this many px (default 3).",
+      required: false
+    },
+    {
+      name: "only",
+      type: "array",
+      description: "Boxes {x, y, width, height} in comp pixels: fill only the gaps they touch (from subject.check's findings).",
+      required: false
+    },
+    {
+      name: "outDir",
+      type: "string",
+      description: "Absolute folder for the measuring renders (default: the still's folder).",
+      required: false
+    },
+    frameListParam,
+    {
+      name: "count",
+      type: "number",
+      description: `How many frames to measure after the fill (default ${CUTOUT_FRAMES}).`,
+      required: false
+    },
+    {
+      name: "holeLimit",
+      type: "number",
+      description: `Smallest hole reported after the fill, px (default ${CUTOUT_HOLE_LIMIT}).`,
+      required: false
+    },
+    {
+      name: "over",
+      type: "string",
+      description: `The flat colour (default '${CUTOUT_OVER}').`,
+      required: false
+    },
+    subjectIndexParam
+  ],
+  toJsx: () => NODE_ONLY("subject.fill_gaps"),
+  run: (args, transport2) => runFillGaps(args, liveCutoutIO(args, transport2))
 });
 
 // src/operations/property.ts
@@ -46123,159 +50355,6 @@ registerOp({
 
 // src/operations/layer-advanced.ts
 init_registry();
-
-// src/operations/snippets.ts
-var COMP_INFO_FN = `
-    function _compInfo(c) {
-        var _ciLayers = [];
-        for (var _ci = 1; _ci <= c.numLayers; _ci++) {
-            _ciLayers.push(AE.serializeLayerSummary(c.layer(_ci)));
-        }
-        var _ciOut = AE.serializeItemSummary(c);
-        _ciOut.ok = true;
-        _ciOut.found = true;
-        _ciOut.workAreaStart = c.workAreaStart;
-        _ciOut.workAreaDuration = c.workAreaDuration;
-        _ciOut.pixelAspect = c.pixelAspect;
-        _ciOut.shutterAngle = c.shutterAngle;
-        _ciOut.shutterPhase = c.shutterPhase;
-        _ciOut.motionBlur = c.motionBlur;
-        // Comp markers (time, comment, duration per key), or null when there are none.
-        _ciOut.markers = AE.serializeCompMarkers(c);
-        _ciOut.layers = _ciLayers;
-        return _ciOut;
-    }
-`;
-var LAYER_FULL_FN = `
-    function _layerFull(l, incl, detail) {
-        var _lfOut = AE.serializeLayerFull(l, { includeProperties: incl, detail: detail });
-        _lfOut.ok = true;
-        _lfOut.found = true;
-        return _lfOut;
-    }
-`;
-var RENDER_FRAME_FN = `
-    function _renderFrame(c, t0, outAbs, useDst) {
-        var _rfT = t0;
-        if (useDst) _rfT = _rfT + c.displayStartTime;
-        var _rfFile = AE.ensureParentDir(outAbs);
-        try {
-            c.saveFrameToPng(_rfT, _rfFile);
-            return {
-                ok: true,
-                writtenTo: _rfFile.fsName.replace(/\\\\/g, "/"),
-                time: _rfT,
-                compName: c.name,
-                size: [c.width, c.height]
-            };
-        } catch (eRf) {
-            return { ok: false, error: "saveFrameToPng failed: " + AE.errText(eRf) };
-        }
-    }
-`;
-var MISSING_SOURCES_FN = `
-    function _missingSources(_msRoot) {
-        var _msOut = [];
-        var _msComps = {};
-        var _msFootage = {};
-        function _msWalk(_comp) {
-            if (_msComps[_comp.id]) return;
-            _msComps[_comp.id] = true;
-            for (var _li = 1; _li <= _comp.numLayers; _li++) {
-                var _source = AE.safeGet(function () { return _comp.layer(_li).source; }, null);
-                if (!_source) continue;
-                if (_source instanceof CompItem) { _msWalk(_source); continue; }
-                if (!(_source instanceof FootageItem) || _msFootage[_source.id]) continue;
-                _msFootage[_source.id] = true;
-                var _file = AE.safeGet(function () { return _source.file; }, null);
-                var _missing = AE.safeGet(function () { return _source.footageMissing; }, false);
-                if (!_missing && (!_file || _file.exists)) continue;
-                var _missingPath = AE.safeGet(function () { return _source.mainSource.missingFootagePath; }, null);
-                if (!_missingPath && _file) _missingPath = _file.fsName;
-                _msOut.push({ id: _source.id, name: _source.name, path: _missingPath });
-            }
-        }
-        _msWalk(_msRoot);
-        return _msOut;
-    }
-`;
-var OCIO_CAPTURE_FN = `
-    function _captureWithOcio(c, maxT, renderAll) {
-        var _adj = null;
-        var _adjSrc = null;
-        var _ran = false;
-        try {
-            _adj = c.layers.addSolid([1, 1, 1], "__mcp_ocio__", c.width, c.height, c.pixelAspect);
-            _adjSrc = _adj.source;
-            _adj.adjustmentLayer = true;
-            try {
-                if (_adj.outPoint < maxT + c.frameDuration) _adj.outPoint = maxT + c.frameDuration;
-            } catch (eOp) { }
-            var _fxOk = false;
-            try {
-                _adj.property("Effects").addProperty("ADBE OCIO Display Transform");
-                _fxOk = true;
-            } catch (eFx) { /* pre-OCIO AE or ICC color engine */ }
-            if (_fxOk) { _ran = true; renderAll("ocio"); }
-        } catch (eTmp) { /* fall through to direct capture */ }
-        if (_adj) { try { _adj.remove(); } catch (eRm) { } }
-        if (_adjSrc) { try { _adjSrc.remove(); } catch (eRs) { } }
-        return _ran;
-    }
-`;
-var LIST_MISSING_FONTS_FN = `
-    function _listMissingFonts() {
-        if (!app.fonts) return { ok: false, error: "app.fonts needs AE 24.0+" };
-        var _missing = [];
-        try {
-            var _list = app.fonts.missingOrSubstitutedFonts;
-            for (var _i = 0; _i < _list.length; _i++) {
-                var _font = _list[_i];
-                _missing.push({
-                    postScriptName: AE.safeGet(function () { return _font.postScriptName; }, null),
-                    familyName: AE.safeGet(function () { return _font.familyName; }, null),
-                    styleName: AE.safeGet(function () { return _font.styleName; }, null)
-                });
-            }
-        } catch (eM) { return { ok: false, error: "missingOrSubstitutedFonts failed: " + AE.errText(eM) }; }
-        return { ok: true, count: _missing.length, fonts: _missing };
-    }
-`;
-var LIST_MISSING_FOOTAGE_FN = `
-    function _listMissingFootage() {
-        var _missing = [];
-        for (var _i = 1; _i <= app.project.numItems; _i++) {
-            var _it = app.project.item(_i);
-            if (!(_it instanceof FootageItem)) continue;
-            var _isMissing = AE.safeGet(function () { return _it.footageMissing; }, false);
-            if (!_isMissing) continue;
-            _missing.push({
-                id: _it.id,
-                name: _it.name,
-                missingPath: AE.safeGet(function () { return _it.mainSource.missingFootagePath; }, null),
-                usedInComps: AE.safeGet(function () {
-                    var _u = [];
-                    var _comps = _it.usedIn;
-                    for (var _ci = 0; _ci < _comps.length; _ci++) _u.push(_comps[_ci].name);
-                    return _u;
-                }, [])
-            });
-        }
-        return { ok: true, count: _missing.length, items: _missing };
-    }
-`;
-var COMP_CORNERS_FN = `
-    function _compCorners(layer, r) {
-        return {
-            topLeft: AE.valueToJson(layer.sourcePointToComp([r.left, r.top])),
-            topRight: AE.valueToJson(layer.sourcePointToComp([r.left + r.width, r.top])),
-            bottomLeft: AE.valueToJson(layer.sourcePointToComp([r.left, r.top + r.height])),
-            bottomRight: AE.valueToJson(layer.sourcePointToComp([r.left + r.width, r.top + r.height]))
-        };
-    }
-`;
-
-// src/operations/layer-advanced.ts
 registerOp({
   name: "layer.bounds",
   category: "layer",
@@ -47651,7 +51730,7 @@ registerOp({
 // src/operations/inspect.ts
 init_config();
 init_registry();
-import * as path5 from "node:path";
+import * as path8 from "node:path";
 registerOp({
   name: "comp.info",
   category: "comp",
@@ -47727,7 +51806,7 @@ registerOp({
   readOnly: true,
   toJsx(args) {
     const raw = String(args.outPath);
-    if (!path5.isAbsolute(raw)) {
+    if (!path8.isAbsolute(raw)) {
       return `
             return { ok: false, error: ${jsxVal(`outPath must be absolute, got: ${raw}`)} };
         `;
@@ -47738,7 +51817,7 @@ registerOp({
             return { ok: false, error: ${jsxVal(rejection)} };
         `;
     }
-    const abs = path5.resolve(raw).replace(/\\/g, "/");
+    const abs = path8.resolve(raw).replace(/\\/g, "/");
     return `
             ${RENDER_FRAME_FN}
             ${jsxCompPreamble(args)}
@@ -50209,8 +54288,8 @@ registerOp({
 
 // src/operations/instance.ts
 import { spawn } from "node:child_process";
-import { promises as fs4 } from "node:fs";
-import * as path6 from "node:path";
+import { promises as fs8 } from "node:fs";
+import * as path9 from "node:path";
 init_config();
 init_registry();
 var INSTALL_CMD = "npx @kumoproductions/mcp-aftereffects install-agent";
@@ -50224,7 +54303,7 @@ function nodeOnly(name) {
 function fail(error62, extra = {}) {
   return { ok: false, error: error62, ...extra };
 }
-var sleep2 = (ms) => new Promise((resolve11) => setTimeout(resolve11, ms));
+var sleep3 = (ms) => new Promise((resolve11) => setTimeout(resolve11, ms));
 function summarizeInstance(i) {
   return {
     label: instanceLabel(i),
@@ -50319,10 +54398,10 @@ registerOp({
     let copiedFrom = null;
     let copyTo = null;
     if (typeof args.copyFrom === "string" && args.copyFrom) {
-      const src = path6.resolve(args.copyFrom);
+      const src = path9.resolve(args.copyFrom);
       if (!await exists(src)) return fail(`copyFrom not found: ${src}`, { errorCode: "IO" });
-      const ext = path6.extname(src) || ".aep";
-      copyTo = typeof args.copyTo === "string" && args.copyTo ? path6.resolve(args.copyTo) : path6.join(path6.dirname(src), `${path6.basename(src, ext)}__${name}${ext}`);
+      const ext = path9.extname(src) || ".aep";
+      copyTo = typeof args.copyTo === "string" && args.copyTo ? path9.resolve(args.copyTo) : path9.join(path9.dirname(src), `${path9.basename(src, ext)}__${name}${ext}`);
       if (copyTo === src)
         return fail("copyTo must differ from copyFrom", { errorCode: "INVALID_ARGS" });
       const rejected = rejectedOutputPath(copyTo);
@@ -50330,7 +54409,7 @@ registerOp({
       copiedFrom = src;
       projectToOpen = copyTo;
     } else if (typeof args.project === "string" && args.project) {
-      projectToOpen = path6.resolve(args.project);
+      projectToOpen = path9.resolve(args.project);
       if (!await exists(projectToOpen))
         return fail(`project not found: ${projectToOpen}`, { errorCode: "IO" });
     }
@@ -50357,8 +54436,8 @@ registerOp({
       return fail(err instanceof Error ? err.message : String(err), { errorCode: "AE_NOT_FOUND" });
     }
     if (copiedFrom !== null && copyTo !== null) {
-      await fs4.mkdir(path6.dirname(copyTo), { recursive: true });
-      await fs4.copyFile(copiedFrom, copyTo);
+      await fs8.mkdir(path9.dirname(copyTo), { recursive: true });
+      await fs8.copyFile(copiedFrom, copyTo);
     }
     const plan = buildInstanceLaunchPlan(exe, name);
     const aePid = process.platform === "darwin" ? null : void 0;
@@ -50389,7 +54468,7 @@ registerOp({
         registered = info;
         break;
       }
-      await sleep2(500);
+      await sleep3(500);
     }
     if (registered === null) {
       const dialogs = (await scanAeDialogs()).filter(
@@ -50533,14 +54612,14 @@ registerOp({
         gone = true;
         break;
       }
-      await sleep2(500);
+      await sleep3(500);
     }
     if (!gone) {
       return fail(
         `instance '${name}' accepted the quit but is still ticking after ${timeoutMs} ms \u2014 check it for a dialog`
       );
     }
-    await fs4.rm(dir, { recursive: true, force: true }).catch(() => {
+    await fs8.rm(dir, { recursive: true, force: true }).catch(() => {
     });
     return { ok: true, instance: name, stopped: true, saved: !!args.save, file: file2 };
   }
@@ -50614,7 +54693,7 @@ registerOp({
 });
 async function exists(p) {
   try {
-    await fs4.access(p);
+    await fs8.access(p);
     return true;
   } catch {
     return false;
@@ -50628,50 +54707,6 @@ if (evalRunEnabled()) {
 
 // src/tools/catalog.ts
 init_registry();
-
-// src/tools/define-tool.ts
-function defineTool(spec) {
-  return spec;
-}
-function jsonResult(payload) {
-  const envelope = { ok: true, ...payload };
-  return {
-    content: [{ type: "text", text: JSON.stringify(envelope, null, 2) }],
-    structuredContent: envelope,
-    isError: false
-  };
-}
-function jsxReportedFailure(result) {
-  if (result === null || typeof result !== "object" || Array.isArray(result)) return null;
-  const r = result;
-  if (r.ok !== false) return null;
-  return { error: typeof r.error === "string" ? r.error : "operation reported ok: false" };
-}
-function toMcpResult(result) {
-  if (!result.ok) {
-    return errorResult(result.errorCode ?? "TRANSPORT", result.error ?? "unknown failure", {
-      ...result.dialogs?.length ? { details: { dialogs: result.dialogs } } : {},
-      stack: result.stack,
-      logs: result.logs,
-      durationMs: result.durationMs
-    });
-  }
-  const reported = jsxReportedFailure(result.result);
-  if (reported) {
-    return errorResult("OPERATION_FAILED", reported.error, {
-      details: { result: result.result },
-      logs: result.logs,
-      durationMs: result.durationMs
-    });
-  }
-  return jsonResult({
-    result: result.result,
-    logs: result.logs,
-    durationMs: result.durationMs
-  });
-}
-
-// src/tools/catalog.ts
 function visibleOps(category) {
   return listOps(category).filter((op) => denyOperation(op) === null);
 }
@@ -50752,1037 +54787,9 @@ var catalogTool = defineTool({
 
 // src/tools/check-comp.ts
 import { randomUUID as randomUUID3 } from "node:crypto";
-import { promises as fs7 } from "node:fs";
+import { promises as fs9 } from "node:fs";
 import * as os4 from "node:os";
-import * as path9 from "node:path";
-
-// src/color/png16.ts
-import * as zlib from "node:zlib";
-var PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
-function readChunks(buf) {
-  if (!buf.subarray(0, 8).equals(PNG_SIGNATURE)) throw new Error("not a PNG file");
-  const chunks = [];
-  let pos = 8;
-  while (pos + 8 <= buf.length) {
-    const length = buf.readUInt32BE(pos);
-    const type = buf.toString("latin1", pos + 4, pos + 8);
-    chunks.push({ type, data: buf.subarray(pos + 8, pos + 8 + length) });
-    pos += 12 + length;
-    if (type === "IEND") break;
-  }
-  return chunks;
-}
-function channelsFor(colorType) {
-  switch (colorType) {
-    case 0:
-      return 1;
-    // grayscale
-    case 2:
-      return 3;
-    // RGB
-    case 4:
-      return 2;
-    // gray + alpha
-    case 6:
-      return 4;
-    // RGBA
-    default:
-      throw new Error(`unsupported PNG color type ${colorType} (palette images are out of scope)`);
-  }
-}
-function paeth(a, b, c) {
-  const p = a + b - c;
-  const pa = Math.abs(p - a);
-  const pb = Math.abs(p - b);
-  const pc = Math.abs(p - c);
-  if (pa <= pb && pa <= pc) return a;
-  return pb <= pc ? b : c;
-}
-function decodePng(buf) {
-  const chunks = readChunks(buf);
-  const ihdr = chunks.find((c) => c.type === "IHDR");
-  if (!ihdr) throw new Error("PNG missing IHDR");
-  const width = ihdr.data.readUInt32BE(0);
-  const height = ihdr.data.readUInt32BE(4);
-  const bitDepth = ihdr.data.readUInt8(8);
-  const colorType = ihdr.data.readUInt8(9);
-  const interlace = ihdr.data.readUInt8(12);
-  if (interlace !== 0) throw new Error("interlaced PNG is not supported");
-  if (bitDepth !== 8 && bitDepth !== 16) throw new Error(`unsupported PNG bit depth ${bitDepth}`);
-  const channels = channelsFor(colorType);
-  const idat = Buffer.concat(chunks.filter((c) => c.type === "IDAT").map((c) => c.data));
-  const raw = zlib.inflateSync(idat);
-  const bytesPerSample = bitDepth / 8;
-  const bytesPerPixel = channels * bytesPerSample;
-  const stride = width * bytesPerPixel;
-  if (raw.length < height * (stride + 1)) throw new Error("PNG pixel data truncated");
-  const rgb = new Float64Array(width * height * 3);
-  const hasAlpha = channels === 2 || channels === 4;
-  const alpha = hasAlpha ? new Float64Array(width * height) : void 0;
-  const maxVal = bitDepth === 16 ? 65535 : 255;
-  const prev = Buffer.alloc(stride);
-  const cur = Buffer.alloc(stride);
-  const grayish = channels <= 2;
-  for (let y = 0; y < height; y++) {
-    const rowStart = y * (stride + 1);
-    const filter = raw[rowStart];
-    raw.copy(cur, 0, rowStart + 1, rowStart + 1 + stride);
-    switch (filter) {
-      case 0:
-        break;
-      case 1:
-        for (let i = bytesPerPixel; i < stride; i++)
-          cur[i] = cur[i] + cur[i - bytesPerPixel] & 255;
-        break;
-      case 2:
-        for (let i = 0; i < stride; i++) cur[i] = cur[i] + prev[i] & 255;
-        break;
-      case 3:
-        for (let i = 0; i < stride; i++) {
-          const left = i >= bytesPerPixel ? cur[i - bytesPerPixel] : 0;
-          cur[i] = cur[i] + (left + prev[i] >> 1) & 255;
-        }
-        break;
-      case 4:
-        for (let i = 0; i < stride; i++) {
-          const left = i >= bytesPerPixel ? cur[i - bytesPerPixel] : 0;
-          const upLeft = i >= bytesPerPixel ? prev[i - bytesPerPixel] : 0;
-          cur[i] = cur[i] + paeth(left, prev[i], upLeft) & 255;
-        }
-        break;
-      default:
-        throw new Error(`unknown PNG filter ${filter} at row ${y}`);
-    }
-    for (let x = 0; x < width; x++) {
-      const px2 = x * bytesPerPixel;
-      const out = (y * width + x) * 3;
-      for (let ch = 0; ch < 3; ch++) {
-        const srcCh = grayish ? 0 : ch;
-        const off = px2 + srcCh * bytesPerSample;
-        const v = bitDepth === 16 ? cur.readUInt16BE(off) : cur[off];
-        rgb[out + ch] = v / maxVal;
-      }
-      if (alpha) {
-        const off = px2 + (channels - 1) * bytesPerSample;
-        const a = bitDepth === 16 ? cur.readUInt16BE(off) : cur[off];
-        alpha[y * width + x] = a / maxVal;
-      }
-    }
-    cur.copy(prev);
-  }
-  return alpha ? { width, height, rgb, alpha, bitDepth } : { width, height, rgb, bitDepth };
-}
-function chunk(type, data) {
-  const head = Buffer.alloc(8);
-  head.writeUInt32BE(data.length, 0);
-  head.write(type, 4, "latin1");
-  const crcBody = Buffer.concat([head.subarray(4), data]);
-  const crc = Buffer.alloc(4);
-  crc.writeUInt32BE(zlib.crc32(crcBody) >>> 0, 0);
-  return Buffer.concat([head, data, crc]);
-}
-var to8 = (v) => Math.round(Math.min(1, Math.max(0, v)) * 255);
-function encode8(width, height, colorType, srgbTags, write) {
-  const channels = colorType === 0 ? 1 : colorType === 2 ? 3 : 4;
-  const stride = width * channels;
-  const raw = Buffer.alloc(height * (stride + 1));
-  for (let y = 0; y < height; y++) {
-    const rowStart = y * (stride + 1);
-    raw[rowStart] = 0;
-    for (let x = 0; x < width; x++) write(y * width + x, raw, rowStart + 1 + x * channels);
-  }
-  const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(width, 0);
-  ihdr.writeUInt32BE(height, 4);
-  ihdr.writeUInt8(8, 8);
-  ihdr.writeUInt8(colorType, 9);
-  const gama = Buffer.alloc(4);
-  gama.writeUInt32BE(45455, 0);
-  return Buffer.concat([
-    PNG_SIGNATURE,
-    chunk("IHDR", ihdr),
-    ...srgbTags ? [chunk("sRGB", Buffer.from([0])), chunk("gAMA", gama)] : [],
-    chunk("IDAT", zlib.deflateSync(raw, { level: 6 })),
-    chunk("IEND", Buffer.alloc(0))
-  ]);
-}
-function encodePngSrgb8(width, height, rgb) {
-  return encode8(width, height, 2, true, (p, out, at) => {
-    out[at] = to8(rgb[p * 3]);
-    out[at + 1] = to8(rgb[p * 3 + 1]);
-    out[at + 2] = to8(rgb[p * 3 + 2]);
-  });
-}
-function encodePngSrgbRgba8(width, height, rgb, alpha) {
-  return encode8(width, height, 6, true, (p, out, at) => {
-    out[at] = to8(rgb[p * 3]);
-    out[at + 1] = to8(rgb[p * 3 + 1]);
-    out[at + 2] = to8(rgb[p * 3 + 2]);
-    out[at + 3] = to8(alpha[p]);
-  });
-}
-function encodePngGray8(width, height, values) {
-  return encode8(width, height, 0, false, (p, out, at) => {
-    out[at] = to8(values[p]);
-  });
-}
-
-// src/color/settled-read.ts
-import { promises as fs5 } from "node:fs";
-var SETTLE_BASE_MS = 15e3;
-var SETTLE_PER_HD_FRAME_MS = 3e3;
-var SETTLE_MIN_PER_FRAME_MS = 1e3;
-var HD_PIXELS = 1080 * 1920;
-var POLL_MS = 60;
-var IEND = Buffer.from([0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130]);
-function sleep3(ms) {
-  return new Promise((resolve11) => setTimeout(resolve11, ms));
-}
-function settleTimeoutFor(frames, pixelsPerFrame) {
-  const n = Math.max(1, Math.floor(frames));
-  const perFrame = Math.max(
-    SETTLE_MIN_PER_FRAME_MS,
-    Math.round(SETTLE_PER_HD_FRAME_MS * Math.max(0, pixelsPerFrame) / HD_PIXELS)
-  );
-  return SETTLE_BASE_MS + (n - 1) * perFrame;
-}
-async function stampFiles(paths) {
-  return Promise.all(
-    paths.map(async (p) => {
-      try {
-        const st = await fs5.stat(p, { bigint: true });
-        return { exists: true, size: Number(st.size), mtimeNs: st.mtimeNs, ino: st.ino };
-      } catch {
-        return { exists: false, size: 0, mtimeNs: 0n, ino: 0n };
-      }
-    })
-  );
-}
-async function endsWithIend(p, size) {
-  if (size < IEND.length) return false;
-  let fh = null;
-  try {
-    fh = await fs5.open(p, "r");
-    const tail = Buffer.alloc(IEND.length);
-    await fh.read(tail, 0, IEND.length, size - IEND.length);
-    return tail.equals(IEND);
-  } catch {
-    return false;
-  } finally {
-    await fh?.close();
-  }
-}
-async function waitForSettled(paths, opts) {
-  const stableMs = opts.stableMs ?? 250;
-  const start = Date.now();
-  const deadline = start + opts.timeoutMs;
-  const done = /* @__PURE__ */ new Set();
-  const state = paths.map(() => ({
-    size: -1,
-    changedAt: start,
-    status: "missing"
-  }));
-  for (; ; ) {
-    await Promise.all(
-      paths.map(async (p, i) => {
-        if (done.has(i)) return;
-        const s = state[i];
-        let st = null;
-        try {
-          st = await fs5.stat(p, { bigint: true });
-        } catch {
-        }
-        if (st === null) {
-          s.status = "missing";
-          s.size = -1;
-          return;
-        }
-        const size = Number(st.size);
-        const was = opts.before?.[i];
-        if (was?.exists && was.size === size && was.mtimeNs === st.mtimeNs && was.ino === st.ino) {
-          s.status = "unchanged";
-          s.size = size;
-          return;
-        }
-        if (size !== s.size) {
-          s.size = size;
-          s.changedAt = Date.now();
-        }
-        if (size === 0) {
-          s.status = "empty";
-          return;
-        }
-        s.status = "writing";
-        if (await endsWithIend(p, size) || Date.now() - s.changedAt >= stableMs) done.add(i);
-      })
-    );
-    if (done.size === paths.length || Date.now() > deadline) break;
-    await sleep3(POLL_MS);
-  }
-  const settled = [...done].sort((a, b) => a - b);
-  const unsettled = [];
-  for (const [i, p] of paths.entries()) {
-    if (done.has(i)) continue;
-    unsettled.push({
-      index: i,
-      path: p,
-      state: state[i].status,
-      bytes: Math.max(0, state[i].size)
-    });
-  }
-  return { settled, unsettled, waitedMs: Date.now() - start, timeoutMs: opts.timeoutMs };
-}
-async function readFileSettled(filePath, timeoutMs = SETTLE_BASE_MS, stableMs = 250) {
-  const res = await waitForSettled([filePath], { timeoutMs, stableMs });
-  if (res.settled.length === 0) {
-    throw new Error(
-      `file did not settle within ${timeoutMs}ms (saveFrameToPng writes asynchronously): ${filePath}`
-    );
-  }
-  return fs5.readFile(filePath);
-}
-
-// src/color/sheet.ts
-var TOL = 2 / 255;
-function px(img, x, y) {
-  const i = (y * img.width + x) * 3;
-  return [img.rgb[i], img.rgb[i + 1], img.rgb[i + 2]];
-}
-function same(a, b) {
-  return Math.abs(a[0] - b[0]) <= TOL && Math.abs(a[1] - b[1]) <= TOL && Math.abs(a[2] - b[2]) <= TOL;
-}
-function isBackground(img, x, y, bg) {
-  if (img.alpha) return img.alpha[y * img.width + x] <= TOL;
-  return bg !== null && same(px(img, x, y), bg);
-}
-function cornerColor(img) {
-  const corners = [
-    px(img, 0, 0),
-    px(img, img.width - 1, 0),
-    px(img, 0, img.height - 1),
-    px(img, img.width - 1, img.height - 1)
-  ];
-  let best = corners[0];
-  let bestCount = 0;
-  for (const c of corners) {
-    const count = corners.filter((o) => same(o, c)).length;
-    if (count > bestCount) {
-      best = c;
-      bestCount = count;
-    }
-  }
-  return best;
-}
-function lineUniform(img, fixed, horizontal) {
-  const n = horizontal ? img.width : img.height;
-  const first = horizontal ? px(img, 0, fixed) : px(img, fixed, 0);
-  let transparent = img.alpha !== void 0;
-  for (let i = 0; i < n; i++) {
-    const x = horizontal ? i : fixed;
-    const y = horizontal ? fixed : i;
-    if (transparent && img.alpha[y * img.width + x] > TOL) transparent = false;
-    if (!same(px(img, x, y), first)) return { uniform: false, transparent: false, color: first };
-  }
-  return { uniform: true, transparent, color: first };
-}
-function edgeBand(img, side2) {
-  const horizontal = side2 === "top" || side2 === "bottom";
-  const n = horizontal ? img.height : img.width;
-  let width = 0;
-  let color = null;
-  let transparent = true;
-  for (let i = 0; i < n; i++) {
-    const fixed = side2 === "top" || side2 === "left" ? i : n - 1 - i;
-    const line = lineUniform(img, fixed, horizontal);
-    if (!line.uniform) break;
-    if (color === null) color = line.color;
-    else if (!same(color, line.color)) break;
-    if (!line.transparent) transparent = false;
-    width++;
-  }
-  if (width === 0) return { width: 0, kind: "none", color: null };
-  return { width, kind: transparent && img.alpha ? "transparent" : "color", color };
-}
-function analyzeFrame(img) {
-  const { width, height } = img;
-  const bgColor = img.alpha ? null : cornerColor(img);
-  const sum = [0, 0, 0];
-  let minX = width;
-  let minY = height;
-  let maxX = -1;
-  let maxY = -1;
-  let content = 0;
-  const first = px(img, 0, 0);
-  let uniform = true;
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const i = (y * width + x) * 3;
-      sum[0] += img.rgb[i];
-      sum[1] += img.rgb[i + 1];
-      sum[2] += img.rgb[i + 2];
-      if (uniform && !same(px(img, x, y), first)) uniform = false;
-      if (!isBackground(img, x, y, bgColor)) {
-        content++;
-        if (x < minX) minX = x;
-        if (x > maxX) maxX = x;
-        if (y < minY) minY = y;
-        if (y > maxY) maxY = y;
-      }
-    }
-  }
-  const total = width * height;
-  return {
-    width,
-    height,
-    meanRgb: [sum[0] / total, sum[1] / total, sum[2] / total],
-    uniform,
-    background: img.alpha ? { kind: "transparent", color: null } : { kind: "color", color: bgColor },
-    contentBounds: content === 0 ? null : { left: minX, top: minY, width: maxX - minX + 1, height: maxY - minY + 1 },
-    coverage: content / total,
-    edges: {
-      top: edgeBand(img, "top"),
-      bottom: edgeBand(img, "bottom"),
-      left: edgeBand(img, "left"),
-      right: edgeBand(img, "right")
-    }
-  };
-}
-var CHECKERBOARD = {
-  size: 16,
-  light: [0.8, 0.8, 0.8],
-  dark: [0.6, 0.6, 0.6]
-};
-function unmatte(img, bg) {
-  const out = Float64Array.from(img.rgb);
-  const alpha = img.alpha;
-  if (!alpha) return out;
-  for (let p = 0; p < alpha.length; p++) {
-    const a = alpha[p];
-    if (a >= 1) continue;
-    const i = p * 3;
-    for (let c = 0; c < 3; c++) {
-      out[i + c] = a <= 0 ? 0 : Math.min(1, Math.max(0, (out[i + c] - bg[c] * (1 - a)) / a));
-    }
-  }
-  return out;
-}
-function flattenOver(img, backdrop) {
-  const out = Float64Array.from(img.rgb);
-  const alpha = img.alpha;
-  if (!alpha) return out;
-  const { width, height } = img;
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const p = y * width + x;
-      const a = alpha[p];
-      if (a >= 1) continue;
-      const bg = backdrop.kind === "color" ? backdrop.color : (Math.floor(x / CHECKERBOARD.size) + Math.floor(y / CHECKERBOARD.size)) % 2 === 0 ? CHECKERBOARD.light : CHECKERBOARD.dark;
-      const i = p * 3;
-      out[i] = out[i] * a + bg[0] * (1 - a);
-      out[i + 1] = out[i + 1] * a + bg[1] * (1 - a);
-      out[i + 2] = out[i + 2] * a + bg[2] * (1 - a);
-    }
-  }
-  return out;
-}
-var r4 = (v) => Math.round(v * 1e4) / 1e4;
-var r4rgb = (v) => [r4(v[0]), r4(v[1]), r4(v[2])];
-function clipRegion(img, region) {
-  const x0 = Math.floor(region.x);
-  const y0 = Math.floor(region.y);
-  const x1 = x0 + Math.max(1, Math.floor(region.width ?? 1));
-  const y1 = y0 + Math.max(1, Math.floor(region.height ?? 1));
-  const cx0 = Math.max(0, x0);
-  const cy0 = Math.max(0, y0);
-  const cx1 = Math.min(img.width, x1);
-  const cy1 = Math.min(img.height, y1);
-  if (cx1 <= cx0 || cy1 <= cy0) return null;
-  return {
-    rect: { x: cx0, y: cy0, width: cx1 - cx0, height: cy1 - cy0 },
-    clipped: cx0 !== x0 || cy0 !== y0 || cx1 !== x1 || cy1 !== y1
-  };
-}
-function outside(img, region) {
-  return { name: region.name, error: `region is outside the ${img.width}\xD7${img.height} frame` };
-}
-function sampleRegions(img, regions) {
-  return regions.map((region) => {
-    const clip = clipRegion(img, region);
-    if (!clip) return outside(img, region);
-    const { rect } = clip;
-    const sum = [0, 0, 0];
-    const min = [Infinity, Infinity, Infinity];
-    const max = [-Infinity, -Infinity, -Infinity];
-    let aSum = 0;
-    let aMin = Infinity;
-    let aMax = -Infinity;
-    let opaque = 0;
-    let transparent = 0;
-    for (let y = rect.y; y < rect.y + rect.height; y++) {
-      for (let x = rect.x; x < rect.x + rect.width; x++) {
-        const p = y * img.width + x;
-        for (let c = 0; c < 3; c++) {
-          const v = img.rgb[p * 3 + c];
-          sum[c] += v;
-          if (v < min[c]) min[c] = v;
-          if (v > max[c]) max[c] = v;
-        }
-        if (img.alpha) {
-          const a = img.alpha[p];
-          aSum += a;
-          if (a < aMin) aMin = a;
-          if (a > aMax) aMax = a;
-          if (a >= 1 - TOL) opaque++;
-          else if (a <= TOL) transparent++;
-        }
-      }
-    }
-    const n = rect.width * rect.height;
-    return {
-      name: region.name,
-      rect,
-      clipped: clip.clipped,
-      pixels: n,
-      mean: r4rgb([sum[0] / n, sum[1] / n, sum[2] / n]),
-      min: r4rgb(min),
-      max: r4rgb(max),
-      alpha: img.alpha ? {
-        mean: r4(aSum / n),
-        min: r4(aMin),
-        max: r4(aMax),
-        opaqueShare: r4(opaque / n),
-        partialShare: r4((n - opaque - transparent) / n),
-        transparentShare: r4(transparent / n)
-      } : null
-    };
-  });
-}
-function histogramOf(img, bins) {
-  const n = img.width * img.height;
-  const counts = [0, 1, 2].map(() => Array.from({ length: bins }, () => 0));
-  const aCounts = img.alpha ? Array.from({ length: bins }, () => 0) : void 0;
-  const bin = (v) => Math.min(bins - 1, Math.max(0, Math.floor(v * bins)));
-  for (let p = 0; p < n; p++) {
-    for (let c = 0; c < 3; c++) counts[c][bin(img.rgb[p * 3 + c])]++;
-    if (aCounts && img.alpha) aCounts[bin(img.alpha[p])]++;
-  }
-  return {
-    bins,
-    pixels: n,
-    r: counts[0],
-    g: counts[1],
-    b: counts[2],
-    ...aCounts ? { a: aCounts } : {}
-  };
-}
-function compareRegions(from, to, regions) {
-  if (from.width !== to.width || from.height !== to.height) {
-    throw new Error(
-      `cannot compare frames of different size (${from.width}\xD7${from.height} vs ${to.width}\xD7${to.height})`
-    );
-  }
-  const withAlpha = from.alpha !== void 0 && to.alpha !== void 0;
-  return regions.map((region) => {
-    const clip = clipRegion(from, region);
-    if (!clip) return outside(from, region);
-    const { rect } = clip;
-    const delta = [0, 0, 0];
-    const absSum = [0, 0, 0];
-    const absMax = [0, 0, 0];
-    let aDelta = 0;
-    let aAbs = 0;
-    let aMax = 0;
-    for (let y = rect.y; y < rect.y + rect.height; y++) {
-      for (let x = rect.x; x < rect.x + rect.width; x++) {
-        const p = y * from.width + x;
-        for (let c = 0; c < 3; c++) {
-          const d = to.rgb[p * 3 + c] - from.rgb[p * 3 + c];
-          delta[c] += d;
-          absSum[c] += Math.abs(d);
-          if (Math.abs(d) > absMax[c]) absMax[c] = Math.abs(d);
-        }
-        if (withAlpha) {
-          const d = to.alpha[p] - from.alpha[p];
-          aDelta += d;
-          aAbs += Math.abs(d);
-          if (Math.abs(d) > aMax) aMax = Math.abs(d);
-        }
-      }
-    }
-    const n = rect.width * rect.height;
-    return {
-      name: region.name,
-      rect,
-      clipped: clip.clipped,
-      pixels: n,
-      meanDelta: r4rgb([delta[0] / n, delta[1] / n, delta[2] / n]),
-      meanAbsDelta: r4rgb([absSum[0] / n, absSum[1] / n, absSum[2] / n]),
-      maxAbsDelta: r4rgb(absMax),
-      alpha: withAlpha ? { meanDelta: r4(aDelta / n), meanAbsDelta: r4(aAbs / n), maxAbsDelta: r4(aMax) } : null
-    };
-  });
-}
-function rgbHex(rgb) {
-  return `#${rgb.map(
-    (v) => Math.round(Math.min(1, Math.max(0, v)) * 255).toString(16).padStart(2, "0")
-  ).join("")}`;
-}
-function resample(img, tw, th) {
-  const out = new Float64Array(tw * th * 3);
-  const counts = new Float64Array(tw * th);
-  for (let y = 0; y < img.height; y++) {
-    const ty = Math.min(th - 1, Math.floor(y * th / img.height));
-    for (let x = 0; x < img.width; x++) {
-      const tx = Math.min(tw - 1, Math.floor(x * tw / img.width));
-      const si = (y * img.width + x) * 3;
-      const di = (ty * tw + tx) * 3;
-      out[di] += img.rgb[si];
-      out[di + 1] += img.rgb[si + 1];
-      out[di + 2] += img.rgb[si + 2];
-      counts[ty * tw + tx]++;
-    }
-  }
-  for (let i = 0; i < tw * th; i++) {
-    const c = counts[i] || 1;
-    out[i * 3] /= c;
-    out[i * 3 + 1] /= c;
-    out[i * 3 + 2] /= c;
-  }
-  return out;
-}
-var GLYPHS = {
-  "0": [".###.", "#...#", "#..##", "#.#.#", "##..#", "#...#", ".###."],
-  "1": ["..#..", ".##..", "..#..", "..#..", "..#..", "..#..", ".###."],
-  "2": [".###.", "#...#", "....#", "...#.", "..#..", ".#...", "#####"],
-  "3": ["#####", "...#.", "..#..", "...#.", "....#", "#...#", ".###."],
-  "4": ["...#.", "..##.", ".#.#.", "#..#.", "#####", "...#.", "...#."],
-  "5": ["#####", "#....", "####.", "....#", "....#", "#...#", ".###."],
-  "6": ["..##.", ".#...", "#....", "####.", "#...#", "#...#", ".###."],
-  "7": ["#####", "....#", "...#.", "..#..", ".#...", ".#...", ".#..."],
-  "8": [".###.", "#...#", "#...#", ".###.", "#...#", "#...#", ".###."],
-  "9": [".###.", "#...#", "#...#", ".####", "....#", "...#.", ".##.."],
-  ".": [".....", ".....", ".....", ".....", ".....", ".##..", ".##.."],
-  ":": [".....", ".##..", ".##..", ".....", ".##..", ".##..", "....."],
-  "-": [".....", ".....", ".....", "#####", ".....", ".....", "....."],
-  ">": [".#...", "..#..", "...#.", "....#", "...#.", "..#..", ".#..."],
-  x: [".....", ".....", "#...#", ".#.#.", "..#..", ".#.#.", "#...#"],
-  "!": ["..#..", "..#..", "..#..", "..#..", "..#..", ".....", "..#.."],
-  "#": [".#.#.", ".#.#.", "#####", ".#.#.", "#####", ".#.#.", ".#.#."],
-  s: [".....", ".....", ".####", "#....", ".###.", "....#", "####."],
-  f: ["..##.", ".#...", "###..", ".#...", ".#...", ".#...", ".#..."],
-  a: [".....", ".....", ".###.", "....#", ".####", "#...#", ".####"],
-  b: ["#....", "#....", "####.", "#...#", "#...#", "#...#", "####."],
-  c: [".....", ".....", ".###.", "#....", "#....", "#...#", ".###."],
-  d: ["....#", "....#", ".####", "#...#", "#...#", "#...#", ".####"],
-  e: [".....", ".....", ".###.", "#...#", "#####", "#....", ".###."],
-  g: [".....", ".....", ".####", "#...#", "#...#", "#...#", ".####", "....#", ".###."],
-  h: ["#....", "#....", "####.", "#...#", "#...#", "#...#", "#...#"],
-  i: ["..#..", ".....", ".##..", "..#..", "..#..", "..#..", ".###."],
-  j: ["...#.", ".....", "..##.", "...#.", "...#.", "...#.", "...#.", "#..#.", ".##.."],
-  k: ["#....", "#....", "#..#.", "#.#..", "##...", "#.#..", "#..#."],
-  l: [".##..", "..#..", "..#..", "..#..", "..#..", "..#..", ".###."],
-  m: [".....", ".....", "##.#.", "#.#.#", "#.#.#", "#...#", "#...#"],
-  n: [".....", ".....", "####.", "#...#", "#...#", "#...#", "#...#"],
-  o: [".....", ".....", ".###.", "#...#", "#...#", "#...#", ".###."],
-  p: [".....", ".....", "####.", "#...#", "#...#", "#...#", "####.", "#....", "#...."],
-  q: [".....", ".....", ".####", "#...#", "#...#", "#...#", ".####", "....#", "....#"],
-  r: [".....", ".....", "#.##.", "##..#", "#....", "#....", "#...."],
-  t: [".#...", ".#...", "###..", ".#...", ".#...", ".#..#", "..##."],
-  u: [".....", ".....", "#...#", "#...#", "#...#", "#..##", ".##.#"],
-  v: [".....", ".....", "#...#", "#...#", "#...#", ".#.#.", "..#.."],
-  w: [".....", ".....", "#...#", "#...#", "#.#.#", "#.#.#", ".#.#."],
-  y: [".....", ".....", "#...#", "#...#", "#...#", "#...#", ".####", "....#", ".###."],
-  z: [".....", ".....", "#####", "...#.", "..#..", ".#...", "#####"],
-  "+": [".....", "..#..", "..#..", "#####", "..#..", "..#..", "....."],
-  " ": [".....", ".....", ".....", ".....", ".....", ".....", "....."]
-};
-var GLYPH_W = 5;
-var GLYPH_H = 7;
-var FONT_SCALE = 2;
-var LABEL_H = GLYPH_H * FONT_SCALE + 6;
-var LABEL_CHAR_PX = (GLYPH_W + 1) * FONT_SCALE;
-function drawText(rgb, width, x0, y0, text, color) {
-  let cx = x0;
-  for (const ch of text) {
-    const glyph = GLYPHS[ch] ?? GLYPHS[" "];
-    for (let gy = 0; gy < glyph.length; gy++) {
-      for (let gx = 0; gx < GLYPH_W; gx++) {
-        if (glyph[gy][gx] !== "#") continue;
-        for (let sy = 0; sy < FONT_SCALE; sy++) {
-          for (let sx = 0; sx < FONT_SCALE; sx++) {
-            const x = cx + gx * FONT_SCALE + sx;
-            const y = y0 + gy * FONT_SCALE + sy;
-            const i = (y * width + x) * 3;
-            rgb[i] = color[0];
-            rgb[i + 1] = color[1];
-            rgb[i + 2] = color[2];
-          }
-        }
-      }
-    }
-    cx += (GLYPH_W + 1) * FONT_SCALE;
-  }
-}
-function composeContactSheet(frames, opts = {}) {
-  if (frames.length === 0) throw new Error("contact sheet needs at least one frame");
-  const gap = opts.gap ?? 8;
-  const bg = opts.background ?? [0.12, 0.12, 0.12];
-  const columns = Math.max(
-    1,
-    Math.min(frames.length, opts.columns ?? Math.ceil(Math.sqrt(frames.length)))
-  );
-  const rows = Math.ceil(frames.length / columns);
-  const srcW = Math.max(...frames.map((f) => f.width));
-  const srcH = Math.max(...frames.map((f) => f.height));
-  const thumbWidth = Math.max(16, Math.min(opts.thumbWidth ?? 480, srcW));
-  const thumbHeight = Math.max(1, Math.round(srcH * thumbWidth / srcW));
-  const cellW = thumbWidth;
-  const cellH = LABEL_H + thumbHeight;
-  const width = gap + columns * (cellW + gap);
-  const height = gap + rows * (cellH + gap);
-  const rgb = new Float64Array(width * height * 3);
-  for (let i = 0; i < width * height; i++) {
-    rgb[i * 3] = bg[0];
-    rgb[i * 3 + 1] = bg[1];
-    rgb[i * 3 + 2] = bg[2];
-  }
-  for (const [n, frame] of frames.entries()) {
-    const col = n % columns;
-    const row = Math.floor(n / columns);
-    const x0 = gap + col * (cellW + gap);
-    const y0 = gap + row * (cellH + gap);
-    const tw = Math.max(1, Math.min(thumbWidth, Math.round(frame.width * thumbWidth / srcW)));
-    const th = Math.max(1, Math.min(thumbHeight, Math.round(frame.height * tw / frame.width)));
-    const thumb = resample(frame, tw, th);
-    for (let y = 0; y < th; y++) {
-      for (let x = 0; x < tw; x++) {
-        const si = (y * tw + x) * 3;
-        const di = ((y0 + LABEL_H + y) * width + (x0 + x)) * 3;
-        rgb[di] = thumb[si];
-        rgb[di + 1] = thumb[si + 1];
-        rgb[di + 2] = thumb[si + 2];
-      }
-    }
-    const label = opts.labels?.[n] ?? `#${n}`;
-    drawText(rgb, width, x0 + 2, y0 + 2, label, [0.95, 0.95, 0.95]);
-  }
-  return { width, height, rgb, columns, rows, thumbWidth, thumbHeight };
-}
-function frameLabel(index, time3) {
-  return time3 === void 0 ? `#${index}` : `#${index} ${time3.toFixed(3)}s`;
-}
-
-// src/color/motion.ts
-var DIFF_DEFAULTS = {
-  changeAbove: 0.04,
-  spikeRatio: 3,
-  holdRatio: 0.25,
-  quietBelow: 2e-3,
-  movingShare: 5e-4,
-  window: 3,
-  amplify: 8,
-  repeatBelow: 1e-4
-};
-var LIMITS = {
-  changeAbove: { min: 0, max: 1 },
-  spikeRatio: { min: 1, max: 1e3, above: true },
-  holdRatio: { min: 0, max: 1, above: true },
-  quietBelow: { min: 0, max: 1 },
-  movingShare: { min: 0, max: 1 },
-  window: { min: 1, max: 16, int: true },
-  amplify: { min: 1, max: 1e3 },
-  repeatBelow: { min: 0, max: 1 }
-};
-function resolveDiffThresholds(args = {}) {
-  const out = { ...DIFF_DEFAULTS };
-  for (const key of Object.keys(DIFF_DEFAULTS)) {
-    const v = args[key];
-    if (typeof v === "number") out[key] = v;
-  }
-  return out;
-}
-function diffArgsError(args) {
-  for (const [key, value] of Object.entries(args)) {
-    if (key === "sheet") continue;
-    const limit = LIMITS[key];
-    if (!limit) {
-      return `\`diff.${key}\` is not an option (options: ${Object.keys(LIMITS).join(", ")}, sheet)`;
-    }
-    if (typeof value !== "number" || !Number.isFinite(value)) {
-      return `\`diff.${key}\` must be a number`;
-    }
-    const low = limit.above ? value <= limit.min : value < limit.min;
-    if (low || value > limit.max || limit.int && !Number.isInteger(value)) {
-      const range = limit.above ? `above ${limit.min} and at most ${limit.max}` : `${limit.min} to ${limit.max}`;
-      return `\`diff.${key}\` must be ${limit.int ? "a whole number " : ""}${range}, not ${value}`;
-    }
-  }
-  return null;
-}
-function pictureOf(img, straight) {
-  const n = img.width * img.height;
-  const out = new Float32Array(n * 3);
-  const a = straight ? img.alpha : void 0;
-  if (!a) {
-    out.set(img.rgb);
-    return out;
-  }
-  for (let p = 0; p < n; p++) {
-    const w = a[p];
-    const i = p * 3;
-    out[i] = img.rgb[i] * w;
-    out[i + 1] = img.rgb[i + 1] * w;
-    out[i + 2] = img.rgb[i + 2] * w;
-  }
-  return out;
-}
-var r6 = (v) => Math.round(v * 1e6) / 1e6;
-function rectStats(prev, cur, width, x0, y0, x1, y1, above, perPixel) {
-  let sum = 0;
-  let maxAbs = 0;
-  let changed = 0;
-  let bx0 = Infinity;
-  let by0 = Infinity;
-  let bx1 = -1;
-  let by1 = -1;
-  for (let y = y0; y < y1; y++) {
-    let i = (y * width + x0) * 3;
-    for (let x = x0; x < x1; x++, i += 3) {
-      const dr = Math.abs(cur[i] - prev[i]);
-      const dg = Math.abs(cur[i + 1] - prev[i + 1]);
-      const db = Math.abs(cur[i + 2] - prev[i + 2]);
-      const m = dr > dg ? dr > db ? dr : db : dg > db ? dg : db;
-      const mean = (dr + dg + db) / 3;
-      sum += mean;
-      if (m > maxAbs) maxAbs = m;
-      if (m > above) {
-        changed++;
-        if (x < bx0) bx0 = x;
-        if (x > bx1) bx1 = x;
-        if (y < by0) by0 = y;
-        if (y > by1) by1 = y;
-      }
-      if (perPixel) perPixel(x, y, mean);
-    }
-  }
-  const pixels = (x1 - x0) * (y1 - y0);
-  return {
-    pixels,
-    change: r6(pixels > 0 ? sum / pixels : 0),
-    maxAbsDelta: r6(maxAbs),
-    changedPixels: changed,
-    changedShare: r6(pixels > 0 ? changed / pixels : 0),
-    changedBounds: changed > 0 ? { x: bx0, y: by0, width: bx1 - bx0 + 1, height: by1 - by0 + 1 } : null
-  };
-}
-function pictureChange(prev, cur, width, height, t, opts = {}) {
-  let perPixel;
-  let sums = null;
-  let counts = null;
-  const tw = opts.thumb?.width ?? 0;
-  if (opts.thumb) {
-    const th = opts.thumb.height;
-    sums = new Float64Array(tw * th);
-    counts = new Float64Array(tw * th);
-    const col = new Int32Array(width);
-    for (let x = 0; x < width; x++) col[x] = Math.min(tw - 1, Math.floor(x * tw / width));
-    const row = new Int32Array(height);
-    for (let y = 0; y < height; y++) row[y] = Math.min(th - 1, Math.floor(y * th / height)) * tw;
-    const s = sums;
-    const c = counts;
-    perPixel = (x, y, mean) => {
-      const k = row[y] + col[x];
-      s[k] += mean;
-      c[k]++;
-    };
-  }
-  const all = rectStats(prev, cur, width, 0, 0, width, height, t.changeAbove, perPixel);
-  const out = { all };
-  if (opts.regions) {
-    out.regions = opts.regions.map((region) => {
-      const clip = clipRegion({ width, height }, region);
-      if (!clip)
-        return { name: region.name, error: `region is outside the ${width}\xD7${height} frame` };
-      const { x, y, width: w, height: h } = clip.rect;
-      return {
-        name: region.name,
-        ...rectStats(prev, cur, width, x, y, x + w, y + h, t.changeAbove)
-      };
-    });
-  }
-  if (sums && counts) {
-    const thumb = new Float64Array(sums.length);
-    for (let k = 0; k < sums.length; k++) {
-      thumb[k] = counts[k] > 0 ? Math.min(1, sums[k] / counts[k] * t.amplify) : 0;
-    }
-    out.thumb = thumb;
-  }
-  return out;
-}
-function lowerMedian(values) {
-  const s = [...values].sort((a, b) => a - b);
-  return s[Math.floor((s.length - 1) / 2)];
-}
-function side(pairs, p, dir, window, skip) {
-  const changes = [];
-  const shares = [];
-  for (let k = 1; k <= window; k++) {
-    const j = p + dir * k;
-    if (j < 0 || j >= pairs.length) break;
-    if (skip.has(j)) continue;
-    changes.push(pairs[j].change);
-    shares.push(pairs[j].changedShare);
-  }
-  if (changes.length === 0) return null;
-  return { change: lowerMedian(changes), share: lowerMedian(shares) };
-}
-var fmt = (v) => v.toFixed(4);
-var frameText = (f) => `#${f.index}${f.time === void 0 ? "" : ` (${r6(f.time)} s)`}`;
-function summarizeSeries(pairs, t) {
-  const n = pairs.length;
-  const changes = pairs.map((p) => p.change);
-  let largest = 0;
-  let smallest = 0;
-  for (let i = 1; i < n; i++) {
-    if (changes[i] > changes[largest]) largest = i;
-    if (changes[i] < changes[smallest]) smallest = i;
-  }
-  const summary = {
-    pairs: n,
-    median: n > 0 ? r6(lowerMedian(changes)) : 0,
-    mean: n > 0 ? r6(changes.reduce((a, b) => a + b, 0) / n) : 0,
-    largest: { pair: largest, change: n > 0 ? changes[largest] : 0 },
-    smallest: { pair: smallest, change: n > 0 ? changes[smallest] : 0 },
-    flags: [],
-    reading: ""
-  };
-  if (n < 2) {
-    summary.reading = n === 0 ? "no pair of consecutive frames to compare" : "one pair: nothing to compare it with, so nothing is flagged (render at least three frames)";
-    return summary;
-  }
-  const repeats = new Set(pairs.flatMap((p, i) => p.change <= t.repeatBelow ? [i] : []));
-  const near = (i, set2) => {
-    for (let k = 1; k <= t.window; k++) if (set2.has(i - k) || set2.has(i + k)) return true;
-    return false;
-  };
-  const standsOut = (p, i, skip) => {
-    if (repeats.has(i) || p.changedShare < t.movingShare) return null;
-    const sides = [side(pairs, i, -1, t.window, skip), side(pairs, i, 1, t.window, skip)].filter(
-      (s) => s !== null
-    );
-    if (sides.length === 0) return null;
-    const reference = Math.max(...sides.map((s) => s.change), t.quietBelow);
-    if (sides.some((s) => p.change < t.spikeRatio * Math.max(s.change, t.quietBelow))) return null;
-    return { reference, edge: i === 0 || i === n - 1, besideRepeat: near(i, repeats) };
-  };
-  const first = pairs.map((p, i) => standsOut(p, i, repeats));
-  const firstSpikes = new Set(first.flatMap((s, i) => s ? [i] : []));
-  const skipBoth = /* @__PURE__ */ new Set([...repeats, ...firstSpikes]);
-  const spike = pairs.map(
-    (p, i) => first[i] ?? (firstSpikes.size > 0 ? standsOut(p, i, skipBoth) : null)
-  );
-  const spikes = new Set(spike.flatMap((s, i) => s ? [i] : []));
-  const repeatNote = " (a repeated frame is next to it and was left out of the comparison)";
-  const flags = [];
-  for (let i = 0; i < n; i++) {
-    const s = spike[i];
-    if (!s) continue;
-    const runStart = i === 0 || !spike[i - 1];
-    if (!runStart) continue;
-    let end = i;
-    while (end + 1 < n && spike[end + 1]) end++;
-    if (end === i + 1) {
-      const reference = Math.max(s.reference, spike[end].reference);
-      const change = Math.min(pairs[i].change, pairs[end].change);
-      const frame = pairs[i].to;
-      const flag = {
-        kind: "pop",
-        pairs: [i, end],
-        frame,
-        change,
-        reference: r6(reference),
-        ratio: r6(change / reference),
-        reading: `frame ${frameText(frame)} differs from the frames before and after it by ${fmt(change)} or more, while its neighbours change about ${fmt(reference)}: a one-frame pop`
-      };
-      if (s.besideRepeat || spike[end].besideRepeat) {
-        flag.besideRepeat = true;
-        flag.reading += repeatNote;
-      }
-      flags.push(flag);
-      continue;
-    }
-    for (let j = i; j <= end; j++) {
-      const sj = spike[j];
-      const between = [pairs[j].from, pairs[j].to];
-      const flag = {
-        kind: "cut",
-        pairs: [j],
-        between,
-        change: pairs[j].change,
-        reference: r6(sj.reference),
-        ratio: r6(pairs[j].change / sj.reference),
-        reading: `${frameText(between[0])} to ${frameText(between[1])} changes ${fmt(pairs[j].change)}, ${(pairs[j].change / sj.reference).toFixed(1)}\xD7 its neighbours: a cut or a jump`
-      };
-      if (sj.edge) {
-        flag.atSeriesEdge = true;
-        flag.reading += " (first or last pair: it could also be a pop of the end frame)";
-      }
-      if (sj.besideRepeat) {
-        flag.besideRepeat = true;
-        flag.reading += repeatNote;
-      }
-      flags.push(flag);
-    }
-  }
-  const moving = (s) => s !== null && s.change >= t.quietBelow && s.share >= t.movingShare;
-  const notSpikes = /* @__PURE__ */ new Set([...spikes, ...repeats]);
-  const neighbours = (i) => [i - 1, i + 1].filter((j) => j >= 0 && j < n && !repeats.has(j));
-  for (let i = 0; i < n; i++) {
-    if (spikes.has(i)) continue;
-    const before = side(pairs, i, -1, t.window, notSpikes);
-    const after = side(pairs, i, 1, t.window, notSpikes);
-    const frame = pairs[i].to;
-    const unreliablePairs = neighbours(i);
-    const unreliable = unreliablePairs.length > 0 ? `; pair${unreliablePairs.length > 1 ? "s" : ""} ${unreliablePairs.join(" and ")} beside it ${unreliablePairs.length > 1 ? "are" : "is"} measured across the repeat, so ${unreliablePairs.length > 1 ? "their readings are" : "its reading is"} unreliable` : "";
-    if (before && after && moving(before) && moving(after)) {
-      const reference2 = Math.min(before.change, after.change);
-      if (pairs[i].change > t.holdRatio * reference2) continue;
-      flags.push({
-        kind: "stutter",
-        pairs: [i],
-        frame,
-        change: pairs[i].change,
-        reference: r6(reference2),
-        ratio: r6(pairs[i].change / reference2),
-        unreliablePairs,
-        reading: `frame ${frameText(frame)} barely changes from the one before (${fmt(pairs[i].change)}) while the frames around it move about ${fmt(reference2)}: a repeated frame, a stutter${unreliable}. Rounded times can do this: a time just below a frame boundary renders the frame before (see frameWarning)`
-      });
-      continue;
-    }
-    if (!repeats.has(i)) continue;
-    const rawBefore = side(pairs, i, -1, t.window, spikes);
-    const rawAfter = side(pairs, i, 1, t.window, spikes);
-    const atEdge = rawBefore === null || rawAfter === null;
-    if (!atEdge || !(moving(rawBefore) || moving(rawAfter))) continue;
-    const reference = (moving(rawBefore) ? rawBefore : rawAfter).change;
-    flags.push({
-      kind: "repeat",
-      pairs: [i],
-      frame,
-      change: pairs[i].change,
-      reference: r6(reference),
-      ratio: r6(pairs[i].change / reference),
-      atSeriesEdge: true,
-      unreliablePairs,
-      reading: `frame ${frameText(frame)} repeats the one before (change ${fmt(pairs[i].change)}) beside motion of about ${fmt(reference)}, at the ${rawBefore === null ? "start" : "end"} of the series, so a stutter cannot be told from a hold${unreliable}`
-    });
-  }
-  flags.sort((a, b) => a.pairs[0] - b.pairs[0]);
-  summary.flags = flags;
-  const counts = ["pop", "stutter", "cut", "repeat"].map((k) => [k, flags.filter((f) => f.kind === k).length]).filter(([, c]) => c > 0).map(([k, c]) => `${c} ${k}${c > 1 ? "s" : ""}`);
-  summary.reading = `${n} pairs, median change ${fmt(summary.median)}, largest ${fmt(summary.largest.change)} (pair ${largest}); ` + (flags.length === 0 ? "no pair stands out from its neighbours" : `${counts.join(", ")}: ${flags.map((f) => `${f.kind} at pair ${f.pairs.join("+")}`).join("; ")}`);
-  return summary;
-}
+import * as path11 from "node:path";
 
 // src/color/watch.ts
 var WATCH_DEFAULTS = {
@@ -51934,7 +54941,7 @@ function measureFrame(pic, width, height, t) {
     }
   };
 }
-var fmt2 = (v) => v.toFixed(4);
+var fmt3 = (v) => v.toFixed(4);
 var secs = (v) => `${r62(v)} s`;
 var PieceWatcher = class {
   t;
@@ -52157,7 +55164,7 @@ var PieceWatcher = class {
             seconds: r62(seconds),
             ...this.edges(from, to, first, last),
             largestChange: largest,
-            reading: `no visible change from ${secs(from * fd)} to ${secs(to * fd)} (frames ${from} to ${to}, ${r62(seconds)} s): at most ${fmt2(t.frozenShare * 100)}% of pixels changed by more than ${t.changeAbove} between checked frames. A held title or a still is legitimate; a stop in the middle of a move is not`
+            reading: `no visible change from ${secs(from * fd)} to ${secs(to * fd)} (frames ${from} to ${to}, ${r62(seconds)} s): at most ${fmt3(t.frozenShare * 100)}% of pixels changed by more than ${t.changeAbove} between checked frames. A held title or a still is legitimate; a stop in the middle of a move is not`
           });
         }
         i = j + 1;
@@ -52194,7 +55201,7 @@ var PieceWatcher = class {
       if (kind === "near-black" || kind === "near-white") {
         const share = kind === "near-black" ? m.darkShare : m.lightShare;
         s.worst = { frame: worst.frame, time: r62(worst.frame * fd), share, meanLuma: m.meanLuma };
-        s.reading = `${kind} from ${when}: at worst (frame ${worst.frame}) mean luma ${fmt2(m.meanLuma)}, ${fmt2(share * 100)}% of pixels ${kind === "near-black" ? `at or below ${this.t.darkBelow}` : `at or above ${this.t.lightAbove}`} in every channel`;
+        s.reading = `${kind} from ${when}: at worst (frame ${worst.frame}) mean luma ${fmt3(m.meanLuma)}, ${fmt3(share * 100)}% of pixels ${kind === "near-black" ? `at or below ${this.t.darkBelow}` : `at or above ${this.t.lightAbove}`} in every channel`;
       } else {
         const c = kind === "clipped-high" ? m.clipHigh : m.clipLow;
         let box2 = null;
@@ -52219,7 +55226,7 @@ var PieceWatcher = class {
           channels: { r: c.r, g: c.g, b: c.b }
         };
         const code = kind === "clipped-high" ? "255 (the top code)" : "0 (the bottom code)";
-        s.reading = `${kind} from ${when}: at worst (frame ${worst.frame}) ${fmt2(c.all * 100)}% of pixels at ${code} in all three channels (per channel r ${fmt2(c.r * 100)}%, g ${fmt2(c.g * 100)}%, b ${fmt2(c.b * 100)}%)` + (s.box ? `, inside x ${s.box.x}..${s.box.x + s.box.width}, y ${s.box.y}..${s.box.y + s.box.height} (comp pixels)` : "");
+        s.reading = `${kind} from ${when}: at worst (frame ${worst.frame}) ${fmt3(c.all * 100)}% of pixels at ${code} in all three channels (per channel r ${fmt3(c.r * 100)}%, g ${fmt3(c.g * 100)}%, b ${fmt3(c.b * 100)}%)` + (s.box ? `, inside x ${s.box.x}..${s.box.x + s.box.width}, y ${s.box.y}..${s.box.y + s.box.height} (comp pixels)` : "");
       }
       out.push(s);
       run = [];
@@ -52237,223 +55244,6 @@ var PieceWatcher = class {
 
 // src/tools/check-comp.ts
 init_config();
-
-// src/color/calibration.ts
-init_registry();
-import { randomUUID as randomUUID2 } from "node:crypto";
-import { promises as fs6 } from "node:fs";
-import * as os3 from "node:os";
-import * as path8 from "node:path";
-var CALIB_VALUES = [0.05, 0.18, 0.5, 1];
-var PATCH = 40;
-var cache = /* @__PURE__ */ new Map();
-function calibrationKey(projectFile, workingSpace, bitsPerChannel) {
-  return `${projectFile ?? "(unsaved)"}|${workingSpace}|${bitsPerChannel}`;
-}
-function analyzeCalibrationPng(buf) {
-  const img = decodePng(buf);
-  const samples = [];
-  for (let i = 0; i < CALIB_VALUES.length; i++) {
-    const x = PATCH * i + PATCH / 2;
-    const y = Math.floor(img.height / 2);
-    samples.push({ input: CALIB_VALUES[i], output: img.rgb[(y * img.width + x) * 3] });
-  }
-  const ratios = samples.map((s) => s.output / s.input);
-  const min = Math.min(...ratios);
-  const max = Math.max(...ratios);
-  if (min > 0 && max / min < 1.03) {
-    const scale = ratios.reduce((a, b) => a + b, 0) / ratios.length;
-    if (Math.abs(scale - 1) < 0.02) return { kind: "identity", scale: 1, samples };
-    return { kind: "linear", scale, samples };
-  }
-  return { kind: "unknown", scale: 1, samples };
-}
-async function measureCaptureTransfer(transport2, key, allowRender = true) {
-  const cached2 = cache.get(key);
-  if (cached2) return cached2;
-  if (!allowRender) {
-    return {
-      error: "calibration needs a (transient, undo-grouped) render of a temporary comp, which read-only mode forbids"
-    };
-  }
-  const pngPath = path8.join(os3.tmpdir(), `mcp-ae-calib-${randomUUID2()}.png`).replace(/\\/g, "/");
-  const code = `
-        var _vals = ${jsxVal(CALIB_VALUES)};
-        var _patch = ${jsxVal(PATCH)};
-        var _w = _patch * _vals.length;
-        var _tmp = app.project.items.addComp("__mcp_calibration__", _w, _patch, 1, 1, 24);
-        var _srcs = [];
-        var _out = { ok: true };
-        try {
-            for (var _i = 0; _i < _vals.length; _i++) {
-                var _v = _vals[_i];
-                var _s = _tmp.layers.addSolid([_v, _v, _v], "c" + _i, _patch, _patch, 1);
-                if (_s.source) _srcs.push(_s.source);
-                _s.property("Transform").property("Position").setValue([_patch * _i + _patch / 2, _patch / 2]);
-            }
-            _tmp.saveFrameToPng(0, new File(${jsxVal(pngPath)}));
-            _out.saved = true;
-        } catch (eCal) { _out.ok = false; _out.error = AE.errText(eCal); }
-        try { _tmp.remove(); } catch (eRm) { /* leave for undo */ }
-        for (var _j = 0; _j < _srcs.length; _j++) { try { _srcs[_j].remove(); } catch (eRs) { } }
-        return _out;
-    `;
-  const result = await transport2.execute({ code, label: "capture_calibration", timeoutMs: 6e4 });
-  if (!result.ok) return { error: `calibration render failed: ${result.error}` };
-  const payload = result.result;
-  if (!payload || payload.ok !== true || payload.saved !== true) {
-    return { error: `calibration failed inside AE: ${payload?.error ?? "no result"}` };
-  }
-  let buf;
-  try {
-    buf = await readFileSettled(pngPath);
-  } catch (err) {
-    return {
-      error: `calibration PNG unreadable: ${err instanceof Error ? err.message : String(err)}`
-    };
-  } finally {
-    fs6.unlink(pngPath).catch(() => {
-    });
-  }
-  try {
-    const analysis = analyzeCalibrationPng(buf);
-    cache.set(key, analysis);
-    return analysis;
-  } catch (err) {
-    return {
-      error: `calibration analysis failed: ${err instanceof Error ? err.message : String(err)}`
-    };
-  }
-}
-
-// src/color/transform.ts
-var AP1_TO_REC709 = [
-  [1.70505099, -0.62179212, -0.08325887],
-  [-0.13025642, 1.1408047, -0.01054832],
-  [-0.02400336, -0.12896898, 1.15297233]
-];
-var AP0_TO_REC709 = [
-  [2.52140088, -1.13399574, -0.38756249],
-  [-0.27621892, 1.37259556, -0.09628267],
-  [-0.01538264, -0.15292998, 1.16835777]
-];
-var IDENTITY = [
-  [1, 0, 0],
-  [0, 1, 0],
-  [0, 0, 1]
-];
-var HILL_IN = [
-  [0.59719, 0.35458, 0.04823],
-  [0.076, 0.90834, 0.01566],
-  [0.0284, 0.13383, 0.83777]
-];
-var HILL_OUT = [
-  [1.60475, -0.53108, -0.07367],
-  [-0.10208, 1.10813, -605e-5],
-  [-327e-5, -0.07276, 1.07602]
-];
-function srgbEncode(x) {
-  const v = Math.min(1, Math.max(0, x));
-  return v <= 31308e-7 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055;
-}
-function apply(m, r, g, b) {
-  return [
-    m[0][0] * r + m[0][1] * g + m[0][2] * b,
-    m[1][0] * r + m[1][1] * g + m[1][2] * b,
-    m[2][0] * r + m[2][1] * g + m[2][2] * b
-  ];
-}
-function rrtOdtFit(v) {
-  return (v * (v + 0.0245786) - 90537e-9) / (v * (0.983729 * v + 0.432951) + 0.238081);
-}
-function sceneLinearToDisplaySrgb(rgb, toRec709) {
-  for (let i = 0; i < rgb.length; i += 3) {
-    let [r, g, b] = apply(toRec709, rgb[i], rgb[i + 1], rgb[i + 2]);
-    r = Math.max(0, r);
-    g = Math.max(0, g);
-    b = Math.max(0, b);
-    [r, g, b] = apply(HILL_IN, r, g, b);
-    r = rrtOdtFit(r);
-    g = rrtOdtFit(g);
-    b = rrtOdtFit(b);
-    [r, g, b] = apply(HILL_OUT, r, g, b);
-    rgb[i] = srgbEncode(r);
-    rgb[i + 1] = srgbEncode(g);
-    rgb[i + 2] = srgbEncode(b);
-  }
-}
-function profileForWorkingSpace(workingSpace) {
-  const ws = workingSpace.toLowerCase();
-  if (ws.includes("acescg")) {
-    return {
-      toRec709: AP1_TO_REC709,
-      note: "ACEScg \u2192 sRGB via ACES output transform (RRT+ODT fit)"
-    };
-  }
-  if (ws.includes("aces2065") || ws.includes("aces 2065")) {
-    return {
-      toRec709: AP0_TO_REC709,
-      note: "ACES2065-1 \u2192 sRGB via ACES output transform (RRT+ODT fit)"
-    };
-  }
-  if (ws.includes("scene-referred rec.709") || ws.includes("linear rec.709")) {
-    return {
-      toRec709: IDENTITY,
-      note: "linear Rec.709 \u2192 sRGB via ACES output transform (RRT+ODT fit)"
-    };
-  }
-  return null;
-}
-
-// src/tools/capture-shared.ts
-function validRgb(value) {
-  return Array.isArray(value) && value.length === 3 && value.every((v) => typeof v === "number" && Number.isFinite(v)) ? [value[0], value[1], value[2]] : null;
-}
-async function colorConversion(payload, transport2) {
-  const workingSpace = payload.workingSpace ?? "None";
-  try {
-    if (workingSpace === "None" || workingSpace === "") {
-      payload.colorPipeline = "untagged 16-bit \u2192 8-bit sRGB-tagged (values unchanged)";
-      return () => {
-      };
-    }
-    const calib = await measureCaptureTransfer(
-      transport2,
-      calibrationKey(payload.projectFile ?? null, workingSpace, payload.bitsPerChannel ?? 8),
-      !readOnlyMode()
-    );
-    const calibFailed = "error" in calib || calib.kind === "unknown";
-    const gain = !calibFailed && calib.kind === "linear" ? 1 / calib.scale : 1;
-    const applyGain = (rgb) => {
-      if (gain !== 1) for (let i = 0; i < rgb.length; i++) rgb[i] *= gain;
-    };
-    if (payload.captureKind === "ocio") {
-      if (calibFailed) {
-        payload.colorWarning = `AE applied its display transform, but the capture scale could not be measured (${"error" in calib ? calib.error : "non-linear transfer"}) \u2014 the file is uniformly dark by that unknown scale. Verify colors against the AE viewer manually.`;
-        return null;
-      }
-      payload.colorPipeline = "AE OCIO display transform (viewer-exact, any working space)" + (gain !== 1 ? ` + capture scale 1/${gain.toFixed(2)} restored` : "");
-      return applyGain;
-    }
-    const profile = profileForWorkingSpace(workingSpace);
-    if (profile === null) {
-      payload.colorWarning = `working space '${workingSpace}' has no built-in conversion \u2014 the file contains raw working-space values and will not match the viewer. Verify colors against the AE viewer manually if they matter here.`;
-      return null;
-    }
-    if (calibFailed) {
-      payload.colorWarning = `could not characterize this AE version's capture transfer (${"error" in calib ? calib.error : "non-linear transfer"}) \u2014 the file contains raw working-space values. Verify colors against the AE viewer manually if they matter here.`;
-      return null;
-    }
-    payload.colorPipeline = `${profile.note}` + (gain !== 1 ? ` (capture scale 1/${gain.toFixed(2)} restored)` : "");
-    return (rgb) => {
-      applyGain(rgb);
-      sceneLinearToDisplaySrgb(rgb, profile.toRec709);
-    };
-  } catch (err) {
-    payload.colorWarning = `color post-processing failed, file left as raw capture: ${err instanceof Error ? err.message : String(err)}`;
-    return null;
-  }
-}
 
 // src/tools/check-comp-jsx.ts
 init_registry();
@@ -52787,13 +55577,13 @@ function structureJsx(compNameOrId, o) {
 }
 
 // src/tools/check-comp.ts
-var frameFile = (dir, frame) => path9.join(dir, `frame-${frame}.png`).replace(/\\/g, "/");
+var frameFile = (dir, frame) => path11.join(dir, `frame-${frame}.png`).replace(/\\/g, "/");
 function aeFrameSource(transport2, comp, opts) {
   return {
     async capture(frames, dir) {
       const t0 = performance.now();
       const paths = frames.map((k) => frameFile(dir, k));
-      await fs7.mkdir(dir, { recursive: true });
+      await fs9.mkdir(dir, { recursive: true });
       const before = await stampFiles(paths);
       const result = await transport2.execute({
         code: captureJsx(comp, frames, paths, opts.factor, opts.tryOcio),
@@ -52847,7 +55637,7 @@ function aeFrameSource(transport2, comp, opts) {
   };
 }
 async function readPicture(file2, target, convert) {
-  const img = decodePng(await fs7.readFile(file2));
+  const img = decodePng(await fs9.readFile(file2));
   if (convert) convert(img.rgb);
   let rgb = img.rgb;
   let width = img.width;
@@ -53014,14 +55804,14 @@ async function checkComp(args, transport2) {
     time: r63((ownedTo + every) * fd),
     framesLeft: remaining
   } : null;
-  const outDir = path9.resolve(
-    args.outDir ?? path9.join(
+  const outDir = path11.resolve(
+    args.outDir ?? path11.join(
       os4.tmpdir(),
       "comp-room-check",
       `${String(plan.compName).replace(/[^A-Za-z0-9_-]+/g, "-").slice(0, 40)}-${Date.now()}`
     )
   ).replace(/\\/g, "/");
-  const capDir = path9.join(outDir, `captures-${randomUUID3().slice(0, 8)}`).replace(/\\/g, "/");
+  const capDir = path11.join(outDir, `captures-${randomUUID3().slice(0, 8)}`).replace(/\\/g, "/");
   const readOnly = readOnlyMode();
   const target = {
     width: Math.max(1, Math.round(plan.width / downsample)),
@@ -53114,10 +55904,10 @@ async function checkComp(args, transport2) {
         failures.push({ frame: f.frame, error: `could not read the capture: ${err instanceof Error ? err.message : String(err)}` });
       }
       readSeconds += (performance.now() - r0) / 1e3;
-      await fs7.rm(f.path, { force: true });
+      await fs9.rm(f.path, { force: true });
     }
   }
-  await fs7.rm(capDir, { recursive: true, force: true });
+  await fs9.rm(capDir, { recursive: true, force: true });
   const findings = watcher ? watcher.finish() : null;
   const measureSeconds = watcher ? watcher.measureMs / 1e3 : 0;
   let nextOut = next;
@@ -53211,7 +56001,7 @@ async function checkComp(args, transport2) {
     sheetSeconds = (performance.now() - s0) / 1e3;
     report.sheet = sheet;
   }
-  await fs7.rmdir(outDir).catch(() => {
+  await fs9.rmdir(outDir).catch(() => {
   });
   const total = (performance.now() - started) / 1e3;
   report.timings = {
@@ -53347,11 +56137,11 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
     if (!got?.path) continue;
     try {
       const pic = await readPicture(got.path, target, convert);
-      await fs7.writeFile(got.path, encodePngSrgb8(pic.width, pic.height, pic.rgb));
+      await fs9.writeFile(got.path, encodePngSrgb8(pic.width, pic.height, pic.rgb));
       images.push({ width: pic.width, height: pic.height, rgb: pic.rgb, bitDepth: 8 });
       kept.push({ frame: c.frame, time: r63(c.frame * fd), kinds: c.kinds, ...c.why ? { why: c.why } : {}, path: got.path });
     } catch {
-      await fs7.rm(got.path, { force: true });
+      await fs9.rm(got.path, { force: true });
     }
   }
   if (images.length === 0) return { writtenTo: null, error: "none of the sheet's frames could be read" };
@@ -53363,8 +56153,8 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
     thumbWidth: tileW,
     labels
   });
-  const sheetPath = path9.join(outDir, `check-sheet-${tag}.png`).replace(/\\/g, "/");
-  await fs7.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+  const sheetPath = path11.join(outDir, `check-sheet-${tag}.png`).replace(/\\/g, "/");
+  await fs9.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
   return {
     writtenTo: sheetPath,
     size: [sheet.width, sheet.height],
@@ -53901,8 +56691,8 @@ var layerInfoTool = defineTool({
 });
 
 // src/tools/project-export.ts
-import { promises as fs8 } from "node:fs";
-import * as path10 from "node:path";
+import { promises as fs10 } from "node:fs";
+import * as path12 from "node:path";
 init_config();
 var projectExportTool = defineTool({
   name: "ae_project_export_json",
@@ -53924,7 +56714,7 @@ var projectExportTool = defineTool({
       const rejection = rejectedOutputPath(args.outPath);
       if (rejection !== null) {
         return errorResult("IO", rejection, {
-          details: { outPath: path10.resolve(args.outPath) },
+          details: { outPath: path12.resolve(args.outPath) },
           hint: "Write the document somewhere outside the mailbox, or omit outPath to receive it inline."
         });
       }
@@ -53943,10 +56733,10 @@ var projectExportTool = defineTool({
     const pretty = args.pretty ?? !!args.outPath;
     const jsonText = JSON.stringify(doc, null, pretty ? 2 : 0);
     if (args.outPath) {
-      const abs = path10.resolve(args.outPath);
+      const abs = path12.resolve(args.outPath);
       try {
-        await fs8.mkdir(path10.dirname(abs), { recursive: true });
-        await fs8.writeFile(abs, jsonText, "utf8");
+        await fs10.mkdir(path12.dirname(abs), { recursive: true });
+        await fs10.writeFile(abs, jsonText, "utf8");
       } catch (err) {
         return errorResult(
           "IO",
@@ -53977,8 +56767,8 @@ var projectExportTool = defineTool({
 });
 
 // src/tools/project-import.ts
-import { promises as fs9 } from "node:fs";
-import * as path11 from "node:path";
+import { promises as fs11 } from "node:fs";
+import * as path13 from "node:path";
 
 // src/schema.ts
 var SCHEMA_VERSION = 2;
@@ -53987,11 +56777,11 @@ var SCHEMA_VERSION = 2;
 var Validator = class {
   issues = [];
   warnings = [];
-  err(path14, message) {
-    this.issues.push({ path: path14, message });
+  err(path15, message) {
+    this.issues.push({ path: path15, message });
   }
-  warn(path14, message) {
-    this.warnings.push({ path: path14, message });
+  warn(path15, message) {
+    this.warnings.push({ path: path15, message });
   }
   isObject(v) {
     return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -54092,64 +56882,64 @@ function validateAeProjectDoc(doc) {
   }
   return { ok: v.issues.length === 0, issues: v.issues, warnings: v.warnings };
 }
-function validateLayer(v, path14, layer) {
+function validateLayer(v, path15, layer) {
   if (!v.isObject(layer)) {
-    v.err(path14, "not an object");
+    v.err(path15, "not an object");
     return;
   }
-  if (typeof layer.index !== "number") v.err(`${path14}.index`, "missing or not a number");
-  if (typeof layer.name !== "string") v.err(`${path14}.name`, "missing or not a string");
-  if (typeof layer.type !== "string") v.err(`${path14}.type`, "missing or not a string");
+  if (typeof layer.index !== "number") v.err(`${path15}.index`, "missing or not a number");
+  if (typeof layer.name !== "string") v.err(`${path15}.name`, "missing or not a string");
+  if (typeof layer.type !== "string") v.err(`${path15}.type`, "missing or not a string");
   else if (["AVLayer", "TextLayer", "ShapeLayer", "CameraLayer", "LightLayer", "Layer"].indexOf(
     layer.type
   ) === -1) {
-    v.warn(`${path14}.type`, `unknown layer type: ${layer.type}`);
+    v.warn(`${path15}.type`, `unknown layer type: ${layer.type}`);
   }
   if (layer.transformGroup)
-    validatePropertyGroup(v, `${path14}.transformGroup`, layer.transformGroup);
-  if (layer.effectsGroup) validatePropertyGroup(v, `${path14}.effectsGroup`, layer.effectsGroup);
-  if (layer.masksGroup) validatePropertyGroup(v, `${path14}.masksGroup`, layer.masksGroup);
-  if (layer.textGroup) validatePropertyGroup(v, `${path14}.textGroup`, layer.textGroup);
-  if (layer.contentsGroup) validatePropertyGroup(v, `${path14}.contentsGroup`, layer.contentsGroup);
-  if (layer.markers) validateProperty(v, `${path14}.markers`, layer.markers);
+    validatePropertyGroup(v, `${path15}.transformGroup`, layer.transformGroup);
+  if (layer.effectsGroup) validatePropertyGroup(v, `${path15}.effectsGroup`, layer.effectsGroup);
+  if (layer.masksGroup) validatePropertyGroup(v, `${path15}.masksGroup`, layer.masksGroup);
+  if (layer.textGroup) validatePropertyGroup(v, `${path15}.textGroup`, layer.textGroup);
+  if (layer.contentsGroup) validatePropertyGroup(v, `${path15}.contentsGroup`, layer.contentsGroup);
+  if (layer.markers) validateProperty(v, `${path15}.markers`, layer.markers);
   if (layer.timeRemapProperty)
-    validateProperty(v, `${path14}.timeRemapProperty`, layer.timeRemapProperty);
+    validateProperty(v, `${path15}.timeRemapProperty`, layer.timeRemapProperty);
 }
-function validatePropertyGroup(v, path14, group) {
+function validatePropertyGroup(v, path15, group) {
   if (!v.isObject(group)) {
-    v.err(path14, "not an object");
+    v.err(path15, "not an object");
     return;
   }
-  if (typeof group.matchName !== "string") v.err(`${path14}.matchName`, "missing or not a string");
+  if (typeof group.matchName !== "string") v.err(`${path15}.matchName`, "missing or not a string");
   if (Array.isArray(group.properties)) {
     for (let i = 0; i < group.properties.length; i++) {
-      validateProperty(v, `${path14}.properties[${i}]`, group.properties[i]);
+      validateProperty(v, `${path15}.properties[${i}]`, group.properties[i]);
     }
   }
   if (Array.isArray(group.groups)) {
     for (let i = 0; i < group.groups.length; i++) {
-      validatePropertyGroup(v, `${path14}.groups[${i}]`, group.groups[i]);
+      validatePropertyGroup(v, `${path15}.groups[${i}]`, group.groups[i]);
     }
   }
 }
-function validateProperty(v, path14, prop) {
+function validateProperty(v, path15, prop) {
   if (!v.isObject(prop)) {
-    v.err(path14, "not an object");
+    v.err(path15, "not an object");
     return;
   }
-  if (typeof prop.matchName !== "string") v.err(`${path14}.matchName`, "missing or not a string");
+  if (typeof prop.matchName !== "string") v.err(`${path15}.matchName`, "missing or not a string");
   if (Array.isArray(prop.keyframes)) {
     for (let i = 0; i < prop.keyframes.length; i++) {
-      validateKeyframe(v, `${path14}.keyframes[${i}]`, prop.keyframes[i]);
+      validateKeyframe(v, `${path15}.keyframes[${i}]`, prop.keyframes[i]);
     }
   }
 }
-function validateKeyframe(v, path14, kf) {
+function validateKeyframe(v, path15, kf) {
   if (!v.isObject(kf)) {
-    v.err(path14, "not an object");
+    v.err(path15, "not an object");
     return;
   }
-  if (typeof kf.time !== "number") v.err(`${path14}.time`, "missing or not a number");
+  if (typeof kf.time !== "number") v.err(`${path15}.time`, "missing or not a number");
 }
 
 // src/tools/project-import.ts
@@ -54178,9 +56968,9 @@ var projectImportTool = defineTool({
   handler: async (args, transport2) => {
     let doc;
     if (args.inPath) {
-      const abs = path11.resolve(args.inPath);
+      const abs = path13.resolve(args.inPath);
       try {
-        doc = JSON.parse(await fs9.readFile(abs, "utf8"));
+        doc = JSON.parse(await fs11.readFile(abs, "utf8"));
       } catch (err) {
         return errorResult(
           "IO",
@@ -54280,2138 +57070,6 @@ var projectInfoTool = defineTool({
     return toMcpResult(result);
   }
 });
-
-// src/tools/render-frame.ts
-import { promises as fs10 } from "node:fs";
-import * as path12 from "node:path";
-
-// src/color/matte.ts
-var EDGE_DEFAULTS = {
-  from: "alpha",
-  transparent: 2 / 255,
-  opaque: 1 - 2 / 255,
-  maxEdgeWidth: "auto",
-  mainAreaShare: 0.25,
-  listed: 5,
-  screen: "green",
-  spillMinAlpha: 0.1,
-  spillThreshold: 0.03,
-  changeAbove: 0.05,
-  patchWindow: "auto"
-};
-var CONTOUR_ALPHA = 0.5;
-function autoMaxEdgeWidth(width, height) {
-  return Math.max(4, Math.round(0.01 * Math.min(width, height)));
-}
-function resolveEdgeThresholds(args, width, height) {
-  const maxEdgeWidth = args.maxEdgeWidth ?? autoMaxEdgeWidth(width, height);
-  return {
-    from: args.from ?? EDGE_DEFAULTS.from,
-    transparent: args.transparent ?? EDGE_DEFAULTS.transparent,
-    opaque: args.opaque ?? EDGE_DEFAULTS.opaque,
-    maxEdgeWidth,
-    mainAreaShare: args.mainAreaShare ?? EDGE_DEFAULTS.mainAreaShare,
-    listed: args.listed ?? EDGE_DEFAULTS.listed,
-    screen: args.screen ?? EDGE_DEFAULTS.screen,
-    spillMinAlpha: args.spillMinAlpha ?? EDGE_DEFAULTS.spillMinAlpha,
-    spillThreshold: args.spillThreshold ?? EDGE_DEFAULTS.spillThreshold,
-    changeAbove: args.changeAbove ?? EDGE_DEFAULTS.changeAbove,
-    patchWindow: args.patchWindow ?? Math.round(4 * maxEdgeWidth)
-  };
-}
-function edgeArgsError(args) {
-  const unit = ["transparent", "opaque", "mainAreaShare", "spillMinAlpha", "changeAbove"];
-  for (const key of unit) {
-    const v = args[key];
-    if (v !== void 0 && (typeof v !== "number" || !(v >= 0 && v <= 1))) {
-      return `\`edge.${key}\` must be a number in 0..1`;
-    }
-  }
-  const t = args.transparent ?? EDGE_DEFAULTS.transparent;
-  const o = args.opaque ?? EDGE_DEFAULTS.opaque;
-  if (t >= o) return "`edge.transparent` must be below `edge.opaque`";
-  const w = args.maxEdgeWidth;
-  if (w !== void 0 && (typeof w !== "number" || !Number.isFinite(w) || w < 1)) {
-    return "`edge.maxEdgeWidth` must be at least 1 (pixels)";
-  }
-  const pw = args.patchWindow;
-  if (pw !== void 0 && (typeof pw !== "number" || !Number.isFinite(pw) || pw < 1)) {
-    return "`edge.patchWindow` must be at least 1 (pixels)";
-  }
-  const listed = args.listed;
-  if (listed !== void 0 && (!Number.isInteger(listed) || listed < 0)) {
-    return "`edge.listed` must be a whole number, 0 or more";
-  }
-  const s = args.spillThreshold;
-  if (s !== void 0 && (typeof s !== "number" || !(s >= 0 && s <= 1))) {
-    return "`edge.spillThreshold` must be a number in 0..1";
-  }
-  if (args.from !== void 0 && args.from !== "alpha" && args.from !== "luma") {
-    return "`edge.from` must be 'alpha' or 'luma'";
-  }
-  if (args.screen !== void 0 && args.screen !== "green" && args.screen !== "blue") {
-    return "`edge.screen` must be 'green' or 'blue'";
-  }
-  return null;
-}
-var OUTSIDE = 0;
-var EDGE = 1;
-var INSIDE = 2;
-var r2 = (v) => Math.round(v * 100) / 100;
-var r42 = (v) => Math.round(v * 1e4) / 1e4;
-var r4rgb2 = (v) => [r42(v[0]), r42(v[1]), r42(v[2])];
-var INF = 1e20;
-function dt1d(f, n, d, v, z2) {
-  let k = -1;
-  for (let q = 0; q < n; q++) {
-    const fq = f[q];
-    if (fq >= INF) continue;
-    if (k < 0) {
-      k = 0;
-      v[0] = q;
-      z2[0] = -Infinity;
-      z2[1] = Infinity;
-      continue;
-    }
-    let s = 0;
-    for (; ; ) {
-      const r = v[k];
-      s = (fq + q * q - (f[r] + r * r)) / (2 * q - 2 * r);
-      if (s <= z2[k]) k--;
-      else break;
-    }
-    k++;
-    v[k] = q;
-    z2[k] = s;
-    z2[k + 1] = Infinity;
-  }
-  if (k < 0) {
-    d.fill(INF, 0, n);
-    return;
-  }
-  let j = 0;
-  for (let q = 0; q < n; q++) {
-    while (z2[j + 1] < q) j++;
-    const r = v[j];
-    d[q] = (q - r) * (q - r) + f[r];
-  }
-}
-function distanceTo(alpha, width, height, isSource, scratch, out) {
-  const n = Math.max(width, height);
-  const f = new Float64Array(n);
-  const d = new Float64Array(n);
-  const v = new Int32Array(n);
-  const z2 = new Float64Array(n + 1);
-  for (let x = 0; x < width; x++) {
-    for (let y = 0; y < height; y++) f[y] = isSource(alpha[y * width + x]) ? 0 : INF;
-    dt1d(f, height, d, v, z2);
-    for (let y = 0; y < height; y++) scratch[y * width + x] = d[y];
-  }
-  for (let y = 0; y < height; y++) {
-    const row = y * width;
-    for (let x = 0; x < width; x++) f[x] = scratch[row + x];
-    dt1d(f, width, d, v, z2);
-    for (let x = 0; x < width; x++) out[row + x] = d[x] >= INF / 2 ? Infinity : Math.sqrt(d[x]);
-  }
-}
-var newRegion = () => ({
-  area: 0,
-  minX: Infinity,
-  minY: Infinity,
-  maxX: -1,
-  maxY: -1,
-  alphaSum: 0,
-  alphaMax: 0,
-  transparent: 0,
-  touchesBorder: false
-});
-function addPixel(r, x, y, a) {
-  r.area++;
-  if (x < r.minX) r.minX = x;
-  if (x > r.maxX) r.maxX = x;
-  if (y < r.minY) r.minY = y;
-  if (y > r.maxY) r.maxY = y;
-  r.alphaSum += a;
-  if (a > r.alphaMax) r.alphaMax = a;
-}
-var box = (r) => ({
-  x: r.minX,
-  y: r.minY,
-  width: r.maxX - r.minX + 1,
-  height: r.maxY - r.minY + 1
-});
-var N4X = [1, -1, 0, 0];
-var N4Y = [0, 0, 1, -1];
-var N8X = [1, -1, 0, 0, 1, 1, -1, -1];
-var N8Y = [0, 0, 1, -1, 1, -1, 1, -1];
-function labelRegions(alpha, width, height, inSet, eight, labels, queue, transparentAt) {
-  labels.fill(0);
-  const regions = [];
-  const nx = eight ? N8X : N4X;
-  const ny = eight ? N8Y : N4Y;
-  const total = width * height;
-  for (let start = 0; start < total; start++) {
-    if (labels[start] !== 0 || !inSet(start)) continue;
-    const region = newRegion();
-    regions.push(region);
-    const id = regions.length;
-    labels[start] = id;
-    let head = 0;
-    let tail = 0;
-    queue[tail++] = start;
-    while (head < tail) {
-      const p = queue[head++];
-      const x = p % width;
-      const y = (p - x) / width;
-      const a = alpha[p];
-      addPixel(region, x, y, a);
-      if (a <= transparentAt) region.transparent++;
-      if (x === 0 || y === 0 || x === width - 1 || y === height - 1) region.touchesBorder = true;
-      for (let k = 0; k < nx.length; k++) {
-        const qx = x + nx[k];
-        const qy = y + ny[k];
-        if (qx < 0 || qy < 0 || qx >= width || qy >= height) continue;
-        const q = qy * width + qx;
-        if (labels[q] !== 0 || !inSet(q)) continue;
-        labels[q] = id;
-        queue[tail++] = q;
-      }
-    }
-  }
-  return regions;
-}
-var byArea = (a, b) => b.area - a.area;
-function screenExcess(c, screen) {
-  return screen === "green" ? c[1] - Math.max(c[0], c[2]) : c[2] - Math.max(c[0], c[1]);
-}
-function lumaMatte(img) {
-  const n = img.width * img.height;
-  const out = new Float64Array(n);
-  const rgb = img.rgb;
-  for (let p = 0; p < n; p++) {
-    const r = rgb[p * 3];
-    const g = rgb[p * 3 + 1];
-    const b = rgb[p * 3 + 2];
-    const y = r === g && g === b ? r : 0.2126 * r + 0.7152 * g + 0.0722 * b;
-    out[p] = y < 0 ? 0 : y > 1 ? 1 : y;
-  }
-  return out;
-}
-function measureEdge(img, bg, t) {
-  const fromLuma = t.from === "luma";
-  const alpha = fromLuma ? lumaMatte(img) : img.alpha;
-  if (!alpha) throw new Error("the capture has no alpha channel");
-  const { width, height } = img;
-  const n = width * height;
-  const isT = (a) => a <= t.transparent;
-  const isO = (a) => a >= t.opaque;
-  let opaque = 0;
-  let transparent = 0;
-  for (let p = 0; p < n; p++) {
-    if (isO(alpha[p])) opaque++;
-    else if (isT(alpha[p])) transparent++;
-  }
-  const scratch = new Float32Array(n);
-  const dT = new Float32Array(n);
-  const dO = new Float32Array(n);
-  distanceTo(alpha, width, height, isT, scratch, dT);
-  distanceTo(alpha, width, height, isO, scratch, dO);
-  const labels = new Int32Array(n);
-  const queue = new Int32Array(n);
-  const islands = labelRegions(
-    alpha,
-    width,
-    height,
-    (p) => alpha[p] > t.transparent,
-    true,
-    labels,
-    queue,
-    t.transparent
-  );
-  const largest = islands.reduce((m2, r) => Math.max(m2, r.area), 0);
-  const isMain = islands.map((r) => r.area > 0 && r.area >= t.mainAreaShare * largest);
-  const mains = islands.filter((_, i) => isMain[i]).sort(byArea);
-  const specks = islands.filter((_, i) => !isMain[i]).sort(byArea);
-  const widths = [];
-  let unmeasured = 0;
-  let worst = -1;
-  let worstAt = null;
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const p = y * width + x;
-      if (alpha[p] < CONTOUR_ALPHA || labels[p] === 0 || !isMain[labels[p] - 1]) continue;
-      let onContour = false;
-      for (let k = 0; k < 4 && !onContour; k++) {
-        const qx = x + N4X[k];
-        const qy = y + N4Y[k];
-        if (qx < 0 || qy < 0 || qx >= width || qy >= height) continue;
-        if (alpha[qy * width + qx] < CONTOUR_ALPHA) onContour = true;
-      }
-      if (!onContour) continue;
-      const sum = dT[p] + dO[p];
-      if (!Number.isFinite(sum)) {
-        unmeasured++;
-        continue;
-      }
-      const w = Math.max(0, sum - 1);
-      widths.push(w);
-      if (w > worst) {
-        worst = w;
-        worstAt = { x, y };
-      }
-    }
-  }
-  widths.sort((a, b) => a - b);
-  const m = widths.length;
-  const median = m === 0 ? null : m % 2 ? widths[(m - 1) / 2] : (widths[m / 2 - 1] + widths[m / 2]) / 2;
-  const belowOpaque = labelRegions(
-    alpha,
-    width,
-    height,
-    (p) => alpha[p] < t.opaque,
-    false,
-    labels,
-    queue,
-    t.transparent
-  );
-  const holes = belowOpaque.filter((r) => !r.touchesBorder).sort(byArea);
-  const half = t.maxEdgeWidth / 2;
-  const isPartial = (p) => alpha[p] > t.transparent && alpha[p] < t.opaque;
-  const isCore = (p) => isPartial(p) && Math.min(dT[p], dO[p]) > half;
-  labels.fill(0);
-  let tail = 0;
-  let ids = 0;
-  for (let start = 0; start < n; start++) {
-    if (labels[start] !== 0 || !isCore(start)) continue;
-    ids++;
-    labels[start] = ids;
-    let head = tail;
-    queue[tail++] = start;
-    while (head < tail) {
-      const p = queue[head++];
-      const x = p % width;
-      const y = (p - x) / width;
-      for (let k = 0; k < 8; k++) {
-        const qx = x + N8X[k];
-        const qy = y + N8Y[k];
-        if (qx < 0 || qy < 0 || qx >= width || qy >= height) continue;
-        const q = qy * width + qx;
-        if (labels[q] !== 0 || !isCore(q)) continue;
-        labels[q] = ids;
-        queue[tail++] = q;
-      }
-    }
-  }
-  let levelStart = 0;
-  let levelEnd = tail;
-  for (let step = 0; step < Math.ceil(half) && levelStart < levelEnd; step++) {
-    for (let i = levelStart; i < levelEnd; i++) {
-      const p = queue[i];
-      const x = p % width;
-      const y = (p - x) / width;
-      for (let k = 0; k < 8; k++) {
-        const qx = x + N8X[k];
-        const qy = y + N8Y[k];
-        if (qx < 0 || qy < 0 || qx >= width || qy >= height) continue;
-        const q = qy * width + qx;
-        if (labels[q] !== 0 || !isPartial(q)) continue;
-        labels[q] = labels[p];
-        queue[tail++] = q;
-      }
-    }
-    levelStart = levelEnd;
-    levelEnd = tail;
-  }
-  const patchRegions = Array.from({ length: ids }, newRegion);
-  for (let i = 0; i < tail; i++) {
-    const p = queue[i];
-    const x = p % width;
-    addPixel(patchRegions[labels[p] - 1], x, (p - x) / width, alpha[p]);
-  }
-  const patchId = new Map(patchRegions.map((r, i) => [r, i + 1]));
-  patchRegions.sort(byArea);
-  const patchList = patchRegions.slice(0, t.listed).map((r) => patchEntry(r, patchId.get(r), labels, alpha, dT, dO, width, t.patchWindow));
-  const edgeSum = [0, 0, 0];
-  const solidSum = [0, 0, 0];
-  let edgeCount = 0;
-  let solidCount = 0;
-  const zones = new Uint8Array(n);
-  const M = t.maxEdgeWidth;
-  for (let p = 0; p < n; p++) {
-    const a = alpha[p];
-    zones[p] = dT[p] <= M && dO[p] <= M ? EDGE : a >= CONTOUR_ALPHA ? INSIDE : OUTSIDE;
-    const partial2 = a > t.transparent && a < t.opaque;
-    const solid = a >= t.opaque && dT[p] <= M;
-    if (fromLuma || !(partial2 && a >= t.spillMinAlpha) && !solid) continue;
-    const sum = solid ? solidSum : edgeSum;
-    for (let c = 0; c < 3; c++) {
-      const v = img.rgb[p * 3 + c];
-      sum[c] += a >= 1 ? v : Math.min(1, Math.max(0, (v - bg[c] * (1 - a)) / a));
-    }
-    if (solid) solidCount++;
-    else edgeCount++;
-  }
-  const meanOf = (s, k) => k === 0 ? null : [s[0] / k, s[1] / k, s[2] / k];
-  const edgeMean = meanOf(edgeSum, edgeCount);
-  const solidMean = meanOf(solidSum, solidCount);
-  const excess = edgeMean ? screenExcess(edgeMean, t.screen) : null;
-  const solidExcess = solidMean ? screenExcess(solidMean, t.screen) : null;
-  const leans = excess !== null && excess > t.spillThreshold && (solidExcess === null || excess - solidExcess > t.spillThreshold);
-  const report = {
-    stage: "capture",
-    matteFrom: t.from,
-    pixels: n,
-    shares: {
-      opaque: r42(opaque / n),
-      partial: r42((n - opaque - transparent) / n),
-      transparent: r42(transparent / n)
-    },
-    width: {
-      typical: median === null ? null : r2(median),
-      p90: m === 0 ? null : r2(widths[Math.floor(0.9 * (m - 1))]),
-      worst: m === 0 ? null : r2(worst),
-      worstAt,
-      samples: m,
-      unmeasured
-    },
-    solidAreas: {
-      count: mains.length,
-      list: mains.slice(0, t.listed).map((r) => ({ ...box(r), area: r.area }))
-    },
-    holes: {
-      count: holes.length,
-      area: holes.reduce((s, r) => s + r.area, 0),
-      transparentArea: holes.reduce((s, r) => s + r.transparent, 0),
-      largest: holes.length ? holeEntry(holes[0]) : null,
-      list: holes.slice(0, t.listed).map(holeEntry)
-    },
-    specks: {
-      count: specks.length,
-      area: specks.reduce((s, r) => s + r.area, 0),
-      list: specks.slice(0, t.listed).map((r) => ({
-        ...box(r),
-        area: r.area,
-        meanAlpha: r42(r.alphaSum / r.area),
-        maxAlpha: r42(r.alphaMax)
-      }))
-    },
-    patches: {
-      count: patchRegions.length,
-      area: patchRegions.reduce((s, r) => s + r.area, 0),
-      list: patchList
-    },
-    spill: {
-      screen: t.screen,
-      pixels: edgeCount,
-      mean: edgeMean ? r4rgb2(edgeMean) : null,
-      solidMean: solidMean ? r4rgb2(solidMean) : null,
-      excess: excess === null ? null : r42(excess),
-      solidExcess: solidExcess === null ? null : r42(solidExcess),
-      leansToScreen: leans,
-      reading: fromLuma ? "not read: the matte came from luminance (a Keylight matte view), which carries no subject colour; read spill on the keyed result with `from: 'alpha'`" : spillReading(t, edgeCount, excess, solidExcess, leans)
-    }
-  };
-  return { report, frame: { width, height, alpha: Float32Array.from(alpha), zones } };
-}
-function holeEntry(r) {
-  return { ...box(r), area: r.area, meanAlpha: r42(r.alphaSum / r.area) };
-}
-function patchEntry(r, id, labels, alpha, dT, dO, width, window) {
-  const b = box(r);
-  let depth = -1;
-  let at = { x: b.x, y: b.y };
-  let thickness = 0;
-  for (let y = b.y; y < b.y + b.height; y++) {
-    for (let x = b.x; x < b.x + b.width; x++) {
-      const p = y * width + x;
-      if (labels[p] !== id) continue;
-      const m = Math.min(dT[p], dO[p]);
-      if (m > depth) {
-        depth = m;
-        at = { x, y };
-        thickness = Number.isFinite(dT[p]) && Number.isFinite(dO[p]) ? dT[p] + dO[p] - 1 : 2 * m - 1;
-      }
-    }
-  }
-  const bw = b.width;
-  const bh = b.height;
-  const ww = Math.max(1, Math.min(Math.round(window), bw));
-  const wh = Math.max(1, Math.min(Math.round(window), bh));
-  const sc = new Float64Array((bw + 1) * (bh + 1));
-  const sa = new Float64Array((bw + 1) * (bh + 1));
-  const W = bw + 1;
-  for (let j = 0; j < bh; j++) {
-    let rowC = 0;
-    let rowA = 0;
-    for (let i = 0; i < bw; i++) {
-      const p = (b.y + j) * width + (b.x + i);
-      if (labels[p] === id) {
-        rowC++;
-        rowA += alpha[p];
-      }
-      sc[(j + 1) * W + i + 1] = sc[j * W + i + 1] + rowC;
-      sa[(j + 1) * W + i + 1] = sa[j * W + i + 1] + rowA;
-    }
-  }
-  const rect = (s, i, j) => s[(j + wh) * W + i + ww] - s[j * W + i + ww] - s[(j + wh) * W + i] + s[j * W + i];
-  let bestC = -1;
-  let bestA = 0;
-  let bi = 0;
-  let bj = 0;
-  for (let j = 0; j + wh <= bh; j++) {
-    for (let i = 0; i + ww <= bw; i++) {
-      const c = rect(sc, i, j);
-      if (c > bestC) {
-        bestC = c;
-        bestA = rect(sa, i, j);
-        bi = i;
-        bj = j;
-      }
-    }
-  }
-  return {
-    ...b,
-    area: r.area,
-    meanAlpha: r42(r.alphaSum / r.area),
-    thickest: { ...at, thickness: r2(Math.max(0, thickness)) },
-    densest: {
-      x: b.x + bi,
-      y: b.y + bj,
-      width: ww,
-      height: wh,
-      pixels: bestC,
-      share: r42(bestC / (ww * wh)),
-      meanAlpha: bestC > 0 ? r42(bestA / bestC) : 0
-    }
-  };
-}
-function spillReading(t, pixels, excess, solidExcess, leans) {
-  const other = t.screen === "green" ? "red and blue" : "red and green";
-  if (pixels === 0 || excess === null) {
-    return `no partly transparent pixels at or above alpha ${t.spillMinAlpha} to read a colour from`;
-  }
-  const lean = `its ${t.screen} exceeds the larger of ${other} by ${excess.toFixed(3)}`;
-  const versus = solidExcess === null ? "" : `; the solid area just inside the edge: ${solidExcess.toFixed(3)}`;
-  return leans ? `the soft edge leans ${t.screen} (likely spill): ${lean}${versus}` : `the soft edge does not lean ${t.screen} beyond the subject's own colour: ${lean}${versus}`;
-}
-var zoneAcc = () => ({
-  pixels: 0,
-  sum: 0,
-  max: 0,
-  changed: 0,
-  minX: Infinity,
-  minY: Infinity,
-  maxX: -1,
-  maxY: -1
-});
-function finishZone(z2) {
-  return {
-    pixels: z2.pixels,
-    meanAbsDelta: z2.pixels ? r42(z2.sum / z2.pixels) : 0,
-    maxAbsDelta: r42(z2.max),
-    changedShare: z2.pixels ? r42(z2.changed / z2.pixels) : 0,
-    changedBounds: z2.changed === 0 ? null : { x: z2.minX, y: z2.minY, width: z2.maxX - z2.minX + 1, height: z2.maxY - z2.minY + 1 }
-  };
-}
-function alphaChange(prev, cur, t) {
-  if (prev.width !== cur.width || prev.height !== cur.height) {
-    throw new Error(
-      `cannot compare frames of different size (${prev.width}\xD7${prev.height} vs ${cur.width}\xD7${cur.height})`
-    );
-  }
-  const { width } = cur;
-  const acc = [zoneAcc(), zoneAcc(), zoneAcc()];
-  const all = zoneAcc();
-  const n = width * cur.height;
-  for (let p = 0; p < n; p++) {
-    const zp = prev.zones[p];
-    const zc = cur.zones[p];
-    const zone = zp === INSIDE || zc === INSIDE ? INSIDE : zp === OUTSIDE || zc === OUTSIDE ? OUTSIDE : EDGE;
-    const d = Math.abs(cur.alpha[p] - prev.alpha[p]);
-    for (const z2 of [acc[zone], all]) {
-      z2.pixels++;
-      z2.sum += d;
-      if (d > z2.max) z2.max = d;
-      if (d > t.changeAbove) {
-        z2.changed++;
-        const x = p % width;
-        const y = (p - x) / width;
-        if (x < z2.minX) z2.minX = x;
-        if (x > z2.maxX) z2.maxX = x;
-        if (y < z2.minY) z2.minY = y;
-        if (y > z2.maxY) z2.maxY = y;
-      }
-    }
-  }
-  return {
-    edge: finishZone(acc[EDGE]),
-    inside: finishZone(acc[INSIDE]),
-    outside: finishZone(acc[OUTSIDE]),
-    all: finishZone(all)
-  };
-}
-function summarizeFlicker(pairs) {
-  const zone = (key) => {
-    let mean = 0;
-    let max = 0;
-    let share = 0;
-    let worst = null;
-    for (const pair of pairs) {
-      const z2 = pair[key];
-      mean += z2.meanAbsDelta;
-      share += z2.changedShare;
-      if (z2.maxAbsDelta > max) max = z2.maxAbsDelta;
-      if (z2.meanAbsDelta > 0 && (worst === null || z2.meanAbsDelta > worst[key].meanAbsDelta)) {
-        worst = pair;
-      }
-    }
-    const k = Math.max(1, pairs.length);
-    return {
-      meanAbsDelta: r42(mean / k),
-      maxAbsDelta: r42(max),
-      changedShare: r42(share / k),
-      worstPair: worst ? { from: worst.from.index, to: worst.to.index } : null
-    };
-  };
-  return { edge: zone("edge"), inside: zone("inside"), outside: zone("outside"), all: zone("all") };
-}
-
-// src/color/screen.ts
-var SCREEN_DEFAULTS = {
-  screen: "auto",
-  minExcess: 0.04,
-  minDominance: 0.15,
-  minScreenShare: 0.02,
-  opaque: 1 - 2 / 255,
-  columns: "auto",
-  rows: "auto",
-  minCellShare: 0.25,
-  nearSkip: "auto",
-  nearBand: "auto",
-  unevenRatio: 1.1,
-  grainAbove: 0.01
-};
-var SCREEN_COLOUR_NOTE = "Colours are capture values: the opaque pixels of the render as saveFrameToPng wrote them, so the comp background does not mix in. In a project with no working space (8 bpc, as measured live in After Effects 2027) these are the footage's own 0..1 values, the scale Keylight's Screen Colour takes, so colour.nearSubject (or colour.median) can go to key.keylight's screenColour as it is. In a colour-managed project they are working-space values scaled by After Effects' capture transfer; that has not been checked against Keylight, so confirm the key with the Screen Matte and Status views. Measure the source un-keyed (Keylight View 'source', or the key off, and isolate the layer): a keyed render has no screen left, and Keylight despills what it outputs.";
-function autoGrid(width, height) {
-  const short = Math.min(width, height);
-  const across = 4;
-  const along = Math.max(1, Math.round(across * Math.max(width, height) / short));
-  return width <= height ? { columns: across, rows: along } : { columns: along, rows: across };
-}
-function resolveScreenThresholds(args, width, height) {
-  const grid = autoGrid(width, height);
-  const short = Math.min(width, height);
-  return {
-    screen: args.screen ?? SCREEN_DEFAULTS.screen,
-    minExcess: args.minExcess ?? SCREEN_DEFAULTS.minExcess,
-    minDominance: args.minDominance ?? SCREEN_DEFAULTS.minDominance,
-    minScreenShare: args.minScreenShare ?? SCREEN_DEFAULTS.minScreenShare,
-    opaque: args.opaque ?? SCREEN_DEFAULTS.opaque,
-    columns: args.columns ?? grid.columns,
-    rows: args.rows ?? grid.rows,
-    minCellShare: args.minCellShare ?? SCREEN_DEFAULTS.minCellShare,
-    nearSkip: args.nearSkip ?? Math.max(2, Math.round(0.01 * short)),
-    nearBand: args.nearBand ?? Math.max(4, Math.round(0.05 * short)),
-    unevenRatio: args.unevenRatio ?? SCREEN_DEFAULTS.unevenRatio,
-    grainAbove: args.grainAbove ?? SCREEN_DEFAULTS.grainAbove
-  };
-}
-function screenArgsError(args) {
-  if (args.screen !== void 0 && args.screen !== "auto" && args.screen !== "green" && args.screen !== "blue") {
-    return "`screen.screen` must be 'auto', 'green' or 'blue'";
-  }
-  for (const key of [
-    "minExcess",
-    "minDominance",
-    "minScreenShare",
-    "opaque",
-    "minCellShare",
-    "grainAbove"
-  ]) {
-    const v = args[key];
-    if (v !== void 0 && (typeof v !== "number" || !(v >= 0 && v <= 1))) {
-      return `\`screen.${key}\` must be a number in 0..1`;
-    }
-  }
-  for (const key of ["columns", "rows"]) {
-    const v = args[key];
-    if (v !== void 0 && (!Number.isInteger(v) || v < 1 || v > 64)) {
-      return `\`screen.${key}\` must be a whole number from 1 to 64`;
-    }
-  }
-  const skip = args.nearSkip;
-  if (skip !== void 0 && (typeof skip !== "number" || !Number.isFinite(skip) || skip < 0)) {
-    return "`screen.nearSkip` must be 0 or more (pixels)";
-  }
-  const band = args.nearBand;
-  if (band !== void 0 && (typeof band !== "number" || !Number.isFinite(band) || band < 1)) {
-    return "`screen.nearBand` must be at least 1 (pixels)";
-  }
-  const u = args.unevenRatio;
-  if (u !== void 0 && (typeof u !== "number" || !Number.isFinite(u) || u < 1)) {
-    return "`screen.unevenRatio` must be a number of 1 or more";
-  }
-  return null;
-}
-var r43 = (v) => Math.round(v * 1e4) / 1e4;
-var r4rgb3 = (v) => [r43(v[0]), r43(v[1]), r43(v[2])];
-var luma = (c) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
-var CH = { green: 1, blue: 2 };
-function screenTest(rgb, p, ch, t) {
-  const v = rgb[p * 3 + ch];
-  const others = ch === 1 ? Math.max(rgb[p * 3], rgb[p * 3 + 2]) : Math.max(rgb[p * 3], rgb[p * 3 + 1]);
-  const lead = v - others;
-  return lead >= t.minExcess && lead >= t.minDominance * v;
-}
-var BINS = 65536;
-function histMedian(h, count) {
-  const out = [0, 0, 0];
-  const half = (count + 1) / 2;
-  for (let c = 0; c < 3; c++) {
-    let acc = 0;
-    const base = c * BINS;
-    for (let b = 0; b < BINS; b++) {
-      acc += h[base + b];
-      if (acc >= half) {
-        out[c] = b / (BINS - 1);
-        break;
-      }
-    }
-  }
-  return out;
-}
-function addToHist(h, rgb, p) {
-  for (let c = 0; c < 3; c++) {
-    const v = Math.min(1, Math.max(0, rgb[p * 3 + c]));
-    h[c * BINS + Math.round(v * (BINS - 1))]++;
-  }
-}
-function measureScreen(img, t) {
-  const { width, height, rgb } = img;
-  const alpha = img.alpha;
-  const n = width * height;
-  const measuredAt = (p) => !alpha || alpha[p] >= t.opaque;
-  let measured = 0;
-  for (let p = 0; p < n; p++) if (measuredAt(p)) measured++;
-  const leftOut = n - measured;
-  const kinds = t.screen === "auto" ? ["green", "blue"] : [t.screen];
-  let kind = kinds[0];
-  let best = -1;
-  for (const k of kinds) {
-    let count2 = 0;
-    for (let p = 0; p < n; p++) if (measuredAt(p) && screenTest(rgb, p, CH[k], t)) count2++;
-    if (count2 > best) {
-      best = count2;
-      kind = k;
-    }
-  }
-  const ch = CH[kind];
-  const found = measured > 0 && best / measured >= t.minScreenShare && best > 0;
-  const base = {
-    stage: "capture",
-    values: "capture",
-    screen: found ? kind : null,
-    chosen: t.screen === "auto" ? "detected" : "given",
-    pixels: n,
-    measured,
-    leftOut,
-    screenPixels: 0,
-    share: 0,
-    bounds: null,
-    colour: null,
-    subject: null,
-    evenness: null,
-    grain: null,
-    reading: "",
-    screenColourNote: SCREEN_COLOUR_NOTE
-  };
-  if (leftOut > n / 2) {
-    base.warning = `${Math.round(100 * leftOut / n)}% of the frame is transparent or partly transparent, as a keyed render is. Measure the source: set Keylight's View to 'source' (key.view) or switch the key off, and isolate the keyed layer so nothing else is in the render.`;
-  }
-  if (!found) {
-    const what = t.screen === "auto" ? "green or blue" : t.screen;
-    base.reading = `no ${what} screen found: fewer than ${Math.round(t.minScreenShare * 100)}% of the ${measured} measured pixels have ${what} leading the other channels by at least ${t.minExcess} and ${Math.round(t.minDominance * 100)}% of its level`;
-    return base;
-  }
-  const isScreen = new Uint8Array(n);
-  const hist = new Uint32Array(3 * BINS);
-  const sum = [0, 0, 0];
-  let count = 0;
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -1;
-  let maxY = -1;
-  for (let p = 0; p < n; p++) {
-    if (!measuredAt(p) || !screenTest(rgb, p, ch, t)) continue;
-    isScreen[p] = 1;
-    count++;
-    addToHist(hist, rgb, p);
-    for (let c = 0; c < 3; c++) sum[c] += rgb[p * 3 + c];
-    const x = p % width;
-    const y = (p - x) / width;
-    if (x < minX) minX = x;
-    if (x > maxX) maxX = x;
-    if (y < minY) minY = y;
-    if (y > maxY) maxY = y;
-  }
-  const median = histMedian(hist, count);
-  const mean = [sum[0] / count, sum[1] / count, sum[2] / count];
-  const labels = new Int32Array(n);
-  const queue = new Int32Array(n);
-  const ones = alpha ?? new Float64Array(n).fill(1);
-  const regions = labelRegions(
-    ones,
-    width,
-    height,
-    (p) => measuredAt(p) && isScreen[p] === 0,
-    true,
-    labels,
-    queue,
-    -1
-  );
-  let subjectId = 0;
-  for (let i = 0; i < regions.length; i++) {
-    if (subjectId === 0 || regions[i].area > regions[subjectId - 1].area) subjectId = i + 1;
-  }
-  let subject = null;
-  let nearSubject = null;
-  if (subjectId > 0) {
-    const s = regions[subjectId - 1];
-    subject = {
-      box: { x: s.minX, y: s.minY, width: s.maxX - s.minX + 1, height: s.maxY - s.minY + 1 },
-      area: s.area,
-      share: r43(s.area / n)
-    };
-    const mask = new Float64Array(n);
-    for (let p = 0; p < n; p++) if (labels[p] === subjectId) mask[p] = 1;
-    const scratch = new Float32Array(n);
-    const dist = new Float32Array(n);
-    distanceTo(mask, width, height, (a) => a > 0.5, scratch, dist);
-    const from = t.nearSkip;
-    const to = t.nearSkip + t.nearBand;
-    const nearHist = new Uint32Array(3 * BINS);
-    let nearCount = 0;
-    for (let p = 0; p < n; p++) {
-      if (isScreen[p] === 0 || !(dist[p] > from && dist[p] <= to)) continue;
-      addToHist(nearHist, rgb, p);
-      nearCount++;
-    }
-    if (nearCount > 0) {
-      nearSubject = {
-        colour: r4rgb3(histMedian(nearHist, nearCount)),
-        pixels: nearCount,
-        band: { from, to }
-      };
-    }
-  }
-  const evenness = measureEvenness(img, isScreen, measuredAt, ch, kind, t);
-  const grain = measureGrain(img, isScreen, ch, kind, t);
-  const near = nearSubject ? nearSubject.colour : null;
-  const fmt3 = (c) => `(${c.map((v) => v.toFixed(3)).join(", ")})`;
-  base.screenPixels = count;
-  base.share = r43(count / measured);
-  base.bounds = { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
-  base.colour = { median: r4rgb3(median), mean: r4rgb3(mean), nearSubject };
-  base.subject = subject;
-  base.evenness = evenness;
-  base.grain = grain;
-  base.reading = `${kind} screen, ${Math.round(base.share * 100)}% of the measured pixels; median ${fmt3(median)}` + (near ? `, near the subject ${fmt3(near)}` : "") + `. ${evenness.reading}. ${grain ? grain.reading : "grain not measured (no screen pixel has screen all round it)"}.`;
-  return base;
-}
-function measureEvenness(img, isScreen, measuredAt, ch, kind, t) {
-  const { width, height, rgb } = img;
-  const cols = Math.min(t.columns, width);
-  const rows = Math.min(t.rows, height);
-  const xs = Array.from({ length: cols + 1 }, (_, i) => Math.floor(i * width / cols));
-  const ys = Array.from({ length: rows + 1 }, (_, i) => Math.floor(i * height / rows));
-  const cells = [];
-  let s1 = 0;
-  let su = 0;
-  let sv = 0;
-  let suu = 0;
-  let suv = 0;
-  let svv = 0;
-  let sl = 0;
-  let sul = 0;
-  let svl = 0;
-  const du = Math.max(1, width - 1);
-  const dv = Math.max(1, height - 1);
-  const perX = new Float64Array(width);
-  const perY = new Float64Array(height);
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      let m = 0;
-      let k = 0;
-      const acc = [0, 0, 0];
-      for (let y = ys[r]; y < ys[r + 1]; y++) {
-        for (let x = xs[c]; x < xs[c + 1]; x++) {
-          const p = y * width + x;
-          if (!measuredAt(p)) continue;
-          m++;
-          if (isScreen[p] === 0) continue;
-          k++;
-          for (let q = 0; q < 3; q++) acc[q] += rgb[p * 3 + q];
-          perX[x]++;
-          perY[y]++;
-          const u = x / du;
-          const v = y / dv;
-          const l = rgb[p * 3 + ch];
-          s1++;
-          su += u;
-          sv += v;
-          suu += u * u;
-          suv += u * v;
-          svv += v * v;
-          sl += l;
-          sul += u * l;
-          svl += v * l;
-        }
-      }
-      const cellMean = k > 0 ? [acc[0] / k, acc[1] / k, acc[2] / k] : null;
-      cells.push({
-        column: c,
-        row: r,
-        box: { x: xs[c], y: ys[r], width: xs[c + 1] - xs[c], height: ys[r + 1] - ys[r] },
-        screenShare: m > 0 ? r43(k / m) : 0,
-        mean: cellMean ? r4rgb3(cellMean) : null,
-        luma: cellMean ? r43(luma(cellMean)) : null,
-        level: cellMean ? r43(cellMean[ch]) : null
-      });
-    }
-  }
-  const eligible = cells.filter(
-    (c) => c.level !== null && c.screenShare >= t.minCellShare
-  );
-  let darkest = null;
-  let brightest = null;
-  for (const c of eligible) {
-    if (darkest === null || c.level < darkest.level) darkest = c;
-    if (brightest === null || c.level > brightest.level) brightest = c;
-  }
-  const levelRatio = darkest && brightest && darkest.level > 0 ? r43(brightest.level / darkest.level) : null;
-  const lumaRatio = darkest && brightest && darkest.luma > 0 ? r43(brightest.luma / darkest.luma) : null;
-  const uneven = levelRatio !== null && levelRatio > t.unevenRatio;
-  const plane = solve3(
-    [
-      [s1, su, sv],
-      [su, suu, suv],
-      [sv, suv, svv]
-    ],
-    [sl, sul, svl]
-  );
-  const [x0, x1] = percentileRange(perX, s1);
-  const [y0, y1] = percentileRange(perY, s1);
-  const extent = { x: x0, y: y0, width: x1 - x0 + 1, height: y1 - y0 + 1 };
-  let horizontal = null;
-  let vertical = null;
-  if (plane && s1 > 0) {
-    const [a, b, c] = plane;
-    const at = (u, v) => a + b * u + c * v;
-    const ratio = (hi, lo) => lo > 0 && hi > 0 ? r43(hi / lo) : null;
-    const uc = su / s1;
-    const vc = sv / s1;
-    if (x1 > x0) horizontal = ratio(at(x1 / du, vc), at(x0 / du, vc));
-    if (y1 > y0) vertical = ratio(at(uc, y1 / dv), at(uc, y0 / dv));
-  }
-  const sides = [];
-  if (horizontal !== null) {
-    sides.push({
-      side: horizontal > 1 ? "left" : "right",
-      strength: Math.max(horizontal, 1 / horizontal)
-    });
-  }
-  if (vertical !== null) {
-    sides.push({
-      side: vertical > 1 ? "top" : "bottom",
-      strength: Math.max(vertical, 1 / vertical)
-    });
-  }
-  const darkerSide = sides.filter((d) => d.strength > t.unevenRatio).sort((p, q) => q.strength - p.strength).map((d) => d.side);
-  const where = (c) => `cell ${c.column},${c.row} at x ${c.box.x}, y ${c.box.y}`;
-  let reading;
-  if (darkest === null || brightest === null || levelRatio === null) {
-    reading = `no grid cell is at least ${Math.round(t.minCellShare * 100)}% screen, so evenness was not read`;
-  } else {
-    const spread = `the screen's ${kind} level runs from ${darkest.level.toFixed(3)} (${where(darkest)}) to ${brightest.level.toFixed(3)} (${where(brightest)}), ${levelRatio.toFixed(2)}x`;
-    reading = uneven ? `uneven: ${spread}` + (darkerSide.length ? `, darker on the ${darkerSide.join(" and the ")}` : "") + ". One Screen Colour will not fit all of it: key from the colour near the subject, then check the darker part in the Screen Matte view (Clip Black, a second key, or a garbage mask)" : `even: ${spread}`;
-  }
-  return {
-    columns: cols,
-    rows,
-    cellWidth: xs[1] - xs[0],
-    cellHeight: ys[1] - ys[0],
-    cells,
-    darkest,
-    brightest,
-    levelRatio,
-    lumaRatio,
-    uneven,
-    extent,
-    horizontal,
-    vertical,
-    darkerSide,
-    reading
-  };
-}
-function percentileRange(counts, total) {
-  if (total <= 0) return [0, counts.length - 1];
-  const lo = 0.05 * total;
-  const hi = 0.95 * total;
-  let acc = 0;
-  let first = -1;
-  let last = counts.length - 1;
-  for (let i = 0; i < counts.length; i++) {
-    acc += counts[i];
-    if (first < 0 && acc >= lo) first = i;
-    if (acc >= hi) {
-      last = i;
-      break;
-    }
-  }
-  return [Math.max(0, first), last];
-}
-function solve3(m, v) {
-  const det = (a) => a[0][0] * (a[1][1] * a[2][2] - a[1][2] * a[2][1]) - a[0][1] * (a[1][0] * a[2][2] - a[1][2] * a[2][0]) + a[0][2] * (a[1][0] * a[2][1] - a[1][1] * a[2][0]);
-  const d = det(m);
-  if (!Number.isFinite(d) || Math.abs(d) < 1e-12) return null;
-  const col = (i) => m.map((row, r) => row.map((x, c) => c === i ? v[r] : x));
-  return [det(col(0)) / d, det(col(1)) / d, det(col(2)) / d];
-}
-function measureGrain(img, isScreen, ch, kind, t) {
-  const { width, height, rgb } = img;
-  const ss = [0, 0, 0];
-  let k = 0;
-  for (let y = 1; y < height - 1; y++) {
-    for (let x = 1; x < width - 1; x++) {
-      const p = y * width + x;
-      if (isScreen[p] === 0) continue;
-      let all = true;
-      for (let dy = -1; dy <= 1 && all; dy++) {
-        for (let dx = -1; dx <= 1; dx++) {
-          if (isScreen[p + dy * width + dx] === 0) {
-            all = false;
-            break;
-          }
-        }
-      }
-      if (!all) continue;
-      for (let c = 0; c < 3; c++) {
-        let s = 0;
-        for (let dy = -1; dy <= 1; dy++) {
-          for (let dx = -1; dx <= 1; dx++) s += rgb[(p + dy * width + dx) * 3 + c];
-        }
-        const d = rgb[p * 3 + c] - s / 9;
-        ss[c] += d * d;
-      }
-      k++;
-    }
-  }
-  if (k === 0) return null;
-  const sd = [0, 1, 2].map((c) => Math.sqrt(ss[c] / k * 9 / 8));
-  const level = sd[ch];
-  const grainy = level > t.grainAbove;
-  const steps = level * 255;
-  return {
-    stdDev: r4rgb3(sd),
-    level: r43(level),
-    steps8bit: Math.round(steps * 100) / 100,
-    samples: k,
-    grainy,
-    reading: `grain: ${kind} varies by ${level.toFixed(4)} (standard deviation, about ${steps.toFixed(1)} 8-bit steps) about its local mean` + (grainy ? "; grainy enough to break a hard matte into specks and chatter, so try Keylight's Screen Pre-blur before raising Clip Black" : "; fine enough not to need pre-blur")
-  };
-}
-
-// src/tools/render-frame.ts
-init_config();
-init_registry();
-var STRIP_DEFAULT_MAX_DIMENSION = 360;
-var FRAME_PICK = 0.25;
-var NEAR_FRAME_BOUNDARY = 0.02;
-function frameWarnings(frames, near = NEAR_FRAME_BOUNDARY) {
-  const parts = [];
-  const firstAt = /* @__PURE__ */ new Map();
-  for (const [i, f] of frames.entries()) {
-    if (typeof f.frame !== "number") continue;
-    const seen = firstAt.get(f.frame);
-    if (seen === void 0) firstAt.set(f.frame, i);
-    else parts.push(`#${seen} and #${i} both render frame ${f.frame}`);
-  }
-  for (const [i, f] of frames.entries()) {
-    if (typeof f.frame !== "number" || typeof f.frameOffset !== "number") continue;
-    const below = 1 - f.frameOffset;
-    if (below > 0 && below <= near) {
-      parts.push(
-        `#${i} (${f.time} s) renders frame ${f.frame}, ${(below * 100).toFixed(1)}% of a frame below frame ${f.frame + 1}`
-      );
-    }
-  }
-  if (parts.length === 0) return void 0;
-  return `${parts.join("; ")}. A time resolves to the frame it falls in, so a rounded time just below a boundary renders the frame before and a series of rounded times can repeat frames (diff then reads stutters). Pass \`frames: [..]\` to address frames by number, or exact times.`;
-}
-var MEASUREMENT_STAGES = {
-  capture: "the PNG as saveFrameToPng wrote it, before any colour conversion: working-space values (scaled by AE's capture transfer in colour-managed projects), 8 or 16 bits. Its RGB is already laid over the comp background colour (`bgColor`): capture = colour\xB7alpha + bgColor\xB7(1 \u2212 alpha), so a half-covered pixel reads half background and an empty one reads bgColor; on a black background that is premultiplied colour. Alpha is the coverage AE wrote",
-  output: "the file as written (writtenTo), after colour conversion when colorManaged is auto, so 8-bit display values. With channels 'rgb': over the comp background as AE composited it, or over `over`. With 'rgba': the colour recovered from under the background (straight, 0 where alpha is 0), plus alpha. With 'alpha': the matte, in r = g = b. The same as the capture when colorManaged is off or the conversion failed"
-};
-var HISTOGRAM_DEFAULT_BINS = 32;
-var layerRefSchema = external_exports.union([
-  external_exports.string(),
-  external_exports.number().int().positive(),
-  external_exports.object({ id: external_exports.number().int() })
-]);
-var regionSchema = external_exports.object({
-  name: external_exports.string().min(1).describe("Label reported back with the numbers."),
-  x: external_exports.number().int().describe("Left edge (or the point), capture pixels from the left."),
-  y: external_exports.number().int().describe("Top edge (or the point), capture pixels from the top."),
-  width: external_exports.number().int().positive().optional().describe("Omit with height for a single pixel."),
-  height: external_exports.number().int().positive().optional()
-});
-var renderFrameTool = defineTool({
-  name: "ae_render_frame",
-  title: "Render frame",
-  description: "Render one or more frames to PNG. Use to visually verify edits. The agent's 'eyes' \u2014 pair with mutations for a visual feedback loop. Headless and deterministic. Pass `time` for one frame, or `times` for several in ONE call (motion checks): files land at <outPath stem>_<index>.png and are listed in `frames`. `contactSheet` tiles every frame into one labelled PNG (<stem>_sheet.png) so a motion check is one image; `analyze` measures each capture (uniform edge bands = black bars / transparent margins, content bounds, coverage) so off-frame elements and letterboxing are caught numerically. In color-managed projects (workingSpace != None) the capture applies AE's own display transform via a transient OCIO Display Transform adjustment layer, and the PNG comes back viewer-accurate and sRGB-tagged. Where that layer cannot be used \u2014 read-only mode, an AE without the OCIO effect, or a failed capture calibration \u2014 the result falls back to a pure-math ACES conversion or to raw values with an explicit colorWarning; check colorPipeline / colorWarning on the response. Seeing the matte: `channels` picks what the file holds \u2014 'rgb' (default, transparency composited over `over`: the comp background as AE composites it, a checkerboard or a colour such as '#ff00ff'), 'rgba' (alpha kept, straight colour), or 'alpha' (the matte as greyscale: white opaque, black transparent). `isolate` renders one layer or a list alone (cameras and lights stay as they are), then restores every layer switch, even when the render fails. `alphaChannel` reports whether the capture carried alpha at all. Reading colour: `sample` takes named points or rectangles and returns mean / min / max per channel and alpha coverage for each; `histogram` counts the whole frame per channel; `compare` (with `times` and `sample`) reports each region's difference between two of the rendered frames. Matte quality: `edge` reports, from the capture's alpha, the shares of opaque / partly transparent / transparent pixels, edge width (typical and worst, px), holes, specks, partly transparent patches that are not thin edges (an unkeyed screen, a remnant), the soft edge's colour with the comp background taken out and whether it leans to the screen colour (spill), and with `times` the frame-to-frame change in alpha along the edge, inside the solid area and outside it (flicker). Green screen: `screen`, on a render of the UN-KEYED source (Keylight View 'source' or the key off, the keyed layer isolated), reports green or blue, which pixels are screen and their share, a suggested screen colour (the median, and the colour just outside the subject), evenness on a grid (darkest and brightest cells, the spread as a ratio, the darker side) and grain. Watching motion: `diff` (with `times`) reports how much the picture changes between consecutive frames, where, and per `sample` region, and flags pairs that stand out (a one-frame pop, a stutter where a frame repeats, a cut); `strip: { at, frames }` renders the frames around a moment into one small contact sheet with diff on. For playback at speed, render.preview (ae_do) writes a quick movie. It reports numbers and places, never a pass or fail. Every number is labelled with its stage \u2014 'capture' (before colour conversion) or 'output' (the file as written) \u2014 described once in `measurementStages`.",
-  group: "render",
-  // Survives read-only mode: it writes a PNG, and the visual verification loop
-  // is the whole point of an audit session. Note this is NOT a
-  // never-touches-the-project tool. In a color-managed project the capture
-  // path adds a transient adjustment layer, and the calibration probe builds a
-  // scratch comp — both removed before the call returns, both leaving the
-  // project dirty and one undo step consumed. Read-only mode is exactly where
-  // that must not happen, so both are gated on !readOnlyMode() below and the
-  // call degrades to the pure-math path instead.
-  blockedInReadOnly: false,
-  effect: "write",
-  inputShape: {
-    compNameOrId: external_exports.union([external_exports.string(), external_exports.number()]).describe("Composition name or numeric item id."),
-    time: external_exports.number().nonnegative().optional().describe(
-      "Time in seconds to render. Give exactly one of `time`, `times`, `strip` or `frames`. Each rendered frame reports `frame` (the frame the time falls in: floor(time / frameDuration), worked out in After Effects) and `frameOffset` (where in it, 0..1); `frameWarning` says when two times land on one frame or a time sits within 2% of a frame below a boundary (a rounded time renders the frame before). Times are never moved."
-    ),
-    times: external_exports.array(external_exports.number().nonnegative()).min(1).max(32).optional().describe(
-      "Several times in seconds, rendered in ONE call. Files are written as <outPath stem>_<index><ext> and reported in `frames` (index-aligned)."
-    ),
-    strip: external_exports.object({
-      at: external_exports.number().nonnegative().describe("The moment, seconds (snapped to the nearest frame)."),
-      frames: external_exports.number().int().min(2).max(32).describe("How many consecutive frames, centred on `at` (one more after it when even)."),
-      step: external_exports.number().int().positive().optional().describe("Frames between rendered frames. Default 1 (every frame)."),
-      maxDimension: external_exports.number().int().min(16).max(2048).optional().describe(
-        "Longest side of each tile on the sheets, px. Default 360. The frames themselves are rendered at the comp's size."
-      )
-    }).optional().describe(
-      "'What happens around this moment' in one call: N consecutive frames around `at`, worked out from the comp's frame rate inside After Effects and rendered through the `times` path (files <stem>_<index>, listed in `frames`), tiled small into the contact sheet, with `diff` and its sheet on (pass `diff: false` to skip, or diff options to tune). The window is shifted to stay inside the comp; `strip` in the response says where it landed. Instead of `time` / `times`."
-    ),
-    frames: external_exports.array(external_exports.number().int().nonnegative()).min(1).max(32).optional().describe(
-      "Frame numbers (0 = the comp's first frame) instead of times: each is rendered a quarter of a frame inside it, so a time never lands on the frame before. Through the `times` path: files <stem>_<index>, reported in `frames` with their `frame`. Instead of `time` / `times` / `strip`."
-    ),
-    outPath: external_exports.string().describe(
-      "Absolute path to write the PNG. Parent directory is created if missing. With `times`, used as the naming stem for every frame."
-    ),
-    useDisplayStartTime: external_exports.boolean().optional().describe("If true, times are interpreted relative to comp.displayStartTime. Default false."),
-    colorManaged: external_exports.enum(["auto", "off"]).optional().describe(
-      "'auto' (default): detect the working space and return a viewer-accurate, 8-bit sRGB-tagged PNG. 'off': raw legacy output (16-bit, untagged, working-space values \u2014 dark/wrong-looking in color-managed projects)."
-    ),
-    settleTimeoutMs: external_exports.number().int().positive().max(6e5).optional().describe(
-      "How long to wait for the captures to finish writing (saveFrameToPng writes after the script returns). Default: 15 s for one frame, plus 3 s for each further 1080\xD71920 frame (scaled by size, at least 1 s each). Frames that do not finish are named in `captureSettle` and marked failed in `frames`; the others are still measured."
-    ),
-    analyze: external_exports.boolean().optional().describe(
-      "Measure each capture: uniform bands at every edge (width + transparent/color \u2014 black bars, letterboxing, empty margins), the bounding box of non-background pixels, coverage, mean RGB. Reported per frame as `analysis` (measured on the capture before color conversion)."
-    ),
-    contactSheet: external_exports.object({
-      columns: external_exports.number().int().positive().optional().describe("Tiles per row (default ceil(sqrt(n)))."),
-      thumbWidth: external_exports.number().int().min(16).max(2048).optional().describe("Tile width in px, never upscaled (default 480)."),
-      outPath: external_exports.string().optional().describe("Sheet path (default <outPath stem>_sheet.png).")
-    }).optional().describe(
-      "Tile all rendered frames into ONE labelled PNG (#index + time above each tile). Pass {} for defaults. Frames that carry alpha (channels 'rgba') are shown over a checkerboard on the sheet."
-    ),
-    channels: external_exports.enum(["rgb", "rgba", "alpha"]).optional().describe(
-      "What the written file holds. 'rgb' (default): 8-bit sRGB, transparency composited over `over`. 'rgba': 8-bit sRGB with the alpha channel kept and straight colour (AE lays its capture over the comp background; that background is taken out again). 'alpha': the matte as 8-bit greyscale, white = opaque, black = transparent. Needs colorManaged 'auto'. If the capture has no alpha channel, `alphaWarning` says so."
-    ),
-    over: external_exports.union([
-      external_exports.enum(["background", "checkerboard"]),
-      external_exports.string().regex(/^#[0-9a-fA-F]{6}$/),
-      external_exports.array(external_exports.number().min(0).max(1)).length(3)
-    ]).optional().describe(
-      "With channels 'rgb': what transparent pixels are shown against. 'background' (default): the comp's background colour (`bgColor`), as AE itself composites the capture. 'checkerboard': light and dark grey squares, so transparency is visible. A colour as '#rrggbb' or [r, g, b] in 0..1 \u2014 magenta shows holes in a key. For the last two the comp background is taken out of the capture first, so soft edges show the new backdrop only."
-    ),
-    isolate: external_exports.union([layerRefSchema, external_exports.array(layerRefSchema).min(1)]).optional().describe(
-      "Render these layers alone: a layer (index, name, or { id }) or a list. Every other layer is switched off for the capture, adjustment layers included; camera, light and audio-only layers are left as they are; named layers are switched on even if they were off (to see a matte layer); solo is cleared. Every switch is restored afterwards, even when the render fails, and `isolation` reports it. Top-level layers of this comp only. Not available in read-only mode."
-    ),
-    sample: external_exports.object({
-      regions: external_exports.array(regionSchema).min(1).max(64),
-      stage: external_exports.enum(["both", "capture", "output"]).optional().describe("Which pixels to measure (default 'both'; see measurementStages).")
-    }).optional().describe(
-      "Read colour values. Named points ({ name, x, y }) or rectangles (+ width, height) in capture pixels (comp pixels at full resolution); regions running off the frame are clipped. Per region and stage: mean / min / max of r, g, b (0..1), alpha mean / min / max and the shares of opaque, partly covered and transparent pixels; 'output' also gives meanHex. Reported as `samples` (per frame with `times`)."
-    ),
-    histogram: external_exports.union([
-      external_exports.boolean(),
-      external_exports.object({
-        bins: external_exports.number().int().min(2).max(256).optional().describe("Default 32."),
-        stage: external_exports.enum(["output", "capture"]).optional().describe("Default 'output'.")
-      })
-    ]).optional().describe(
-      "Whole-frame per-channel histogram: pixel counts for r, g, b (and a when present) in equal bins over 0..1, 1.0 in the last bin. `true` for defaults."
-    ),
-    compare: external_exports.object({
-      from: external_exports.number().int().nonnegative().optional().describe("Index into `times` (default 0)."),
-      to: external_exports.number().int().nonnegative().optional().describe("Index into `times` (default 1).")
-    }).optional().describe(
-      "With `times` and `sample`: each region's difference between two rendered frames, to \u2212 from, per stage: meanDelta (signed average shift), meanAbsDelta and maxAbsDelta per channel, and the same for alpha. Reported as `comparison`."
-    ),
-    edge: external_exports.union([
-      external_exports.boolean(),
-      external_exports.object({
-        from: external_exports.enum(["alpha", "luma"]).optional().describe(
-          "Where the matte is read: 'alpha' (default, the keyed result's coverage) or 'luma' (Rec. 709 luminance of the capture), for Keylight's Screen Matte (View 5) and Combined Matte (8) views, which write the matte in grey RGB with alpha 1 everywhere. With 'luma' spill is not read and no alpha channel is needed."
-        ),
-        transparent: external_exports.number().min(0).max(1).optional().describe(
-          "Alpha at or below counts as transparent. Default 2/255 (as `sample` counts)."
-        ),
-        opaque: external_exports.number().min(0).max(1).optional().describe("Alpha at or above counts as opaque. Default 1 \u2212 2/255."),
-        maxEdgeWidth: external_exports.number().min(1).optional().describe(
-          "Widest transition still called a thin edge, px; wider partly transparent regions are reported as patches, and it is the edge band for flicker. Default 1% of the frame's shorter side, at least 4 (11 at 1080\xD71920)."
-        ),
-        mainAreaShare: external_exports.number().min(0).max(1).optional().describe(
-          "An island of covered pixels at least this share of the largest is a main solid area, smaller ones are specks. Default 0.25."
-        ),
-        listed: external_exports.number().int().min(0).max(50).optional().describe(
-          "How many holes, specks, patches and solid areas are listed (all are counted). Default 5."
-        ),
-        screen: external_exports.enum(["green", "blue"]).optional().describe("Screen colour spill is read against. Default 'green'."),
-        spillMinAlpha: external_exports.number().min(0).max(1).optional().describe(
-          "Partly transparent pixels below this alpha are left out of the spill colour. Default 0.1."
-        ),
-        spillThreshold: external_exports.number().min(0).max(1).optional().describe(
-          "The soft edge leans to the screen when its screen channel exceeds the larger other channel by more than this, and by this much more than the solid area's own. Default 0.03."
-        ),
-        changeAbove: external_exports.number().min(0).max(1).optional().describe("Flicker: an alpha change above this counts as changed. Default 0.05."),
-        patchWindow: external_exports.number().min(1).optional().describe(
-          "Side of the square window each patch's densest part is reported in, px. Default 4 \xD7 maxEdgeWidth (44 at 1080\xD71920)."
-        )
-      })
-    ]).optional().describe(
-      "Matte quality as numbers, measured on the capture's alpha (stage 'capture'), or with `from: 'luma'` on its luminance (Keylight's matte views); `true` for the defaults. Each report says `matteFrom`. Reported as `edge` (per frame with `times`), with the thresholds used as `edgeThresholds`: shares {opaque, partial, transparent}; width {typical (median), p90, worst, worstAt, samples, unmeasured} \u2014 px the alpha takes from transparent to opaque across the 50% contour of the main solid areas (0 = hard edge; unmeasured = the alpha never reaches transparent or opaque anywhere, as when the screen is left partly opaque); solidAreas; holes {count, area, transparentArea, largest, list} \u2014 regions below opaque enclosed by the solid area (not touching the frame edge); specks {count, area, list} \u2014 islands outside the main areas; patches {count, area, list} \u2014 partly transparent regions thicker than maxEdgeWidth, each with its box, thickest {x, y, thickness} (the deepest point and the thickness there, px) and densest {x, y, width, height, pixels, share, meanAlpha} (the patchWindow square holding most of it, so a long band's box does not hide where it is); spill {mean, solidMean, excess, solidExcess, leansToScreen, reading} \u2014 the straight colour of the partly transparent pixels (comp background taken out) against the solid just inside the edge. Boxes are {x, y, width, height} in capture pixels. With two or more `times`: `edgeFlicker` {pairs, overall} \u2014 mean / max change in alpha and the changed share and bounds, for consecutive frames, split into edge, inside (a hole opening counts here) and outside (specks); real motion counts as change too."
-    ),
-    screen: external_exports.union([
-      external_exports.boolean(),
-      external_exports.object({
-        screen: external_exports.enum(["auto", "green", "blue"]).optional().describe(
-          "Which screen to look for. Default 'auto': green or blue, whichever has more pixels."
-        ),
-        minExcess: external_exports.number().min(0).max(1).optional().describe(
-          "A pixel is screen when its screen channel leads the larger other channel by at least this (capture values). Default 0.04."
-        ),
-        minDominance: external_exports.number().min(0).max(1).optional().describe("\u2026and by at least this share of its own level. Default 0.15."),
-        minScreenShare: external_exports.number().min(0).max(1).optional().describe(
-          "Fewer screen pixels than this share of the measured ones means no screen. Default 0.02."
-        ),
-        opaque: external_exports.number().min(0).max(1).optional().describe(
-          "Pixels with alpha below this are left out (masked or transparent). Default 1 \u2212 2/255."
-        ),
-        columns: external_exports.number().int().min(1).max(64).optional().describe(
-          "Evenness grid columns. Default: four cells across the shorter side, square-ish cells."
-        ),
-        rows: external_exports.number().int().min(1).max(64).optional().describe("Evenness grid rows. Default as columns."),
-        minCellShare: external_exports.number().min(0).max(1).optional().describe(
-          "A cell needs this share of screen pixels to count as darkest or brightest. Default 0.25."
-        ),
-        nearSkip: external_exports.number().min(0).optional().describe(
-          "The near-subject colour is read from screen pixels starting this many px from the subject. Default 1% of the shorter side, at least 2 (11 at 1080\xD71920)."
-        ),
-        nearBand: external_exports.number().min(1).optional().describe(
-          "\u2026in a band this many px wide. Default 5% of the shorter side, at least 4 (54 at 1080)."
-        ),
-        unevenRatio: external_exports.number().min(1).optional().describe("A brightest / darkest level ratio above this reads as uneven. Default 1.1."),
-        grainAbove: external_exports.number().min(0).max(1).optional().describe(
-          "A screen-channel grain standard deviation above this reads as grainy. Default 0.01."
-        )
-      })
-    ]).optional().describe(
-      "Measure a green or blue screen, on the capture (stage 'capture'), opaque pixels only; `true` for the defaults. Render the UN-KEYED source: set Keylight's View to 'source' (key.view) or switch the key off, and isolate the keyed layer. Reported as `screen` (per frame with `times`), with the thresholds used as `screenThresholds`: screen ('green' | 'blue' | null), chosen, measured / leftOut pixels, screenPixels, share, bounds; colour {median, mean, nearSubject {colour, pixels, band}} \u2014 the suggested Screen Colour; subject {box, area, share}; evenness {columns, rows, cells [{column, row, box, screenShare, mean, luma, level}], darkest, brightest, levelRatio, lumaRatio, uneven, extent (5th to 95th percentile of the screen pixels' positions), horizontal (right / left) and vertical (bottom / top) read across that extent, darkerSide (every side darker past unevenRatio, strongest first), reading}; grain {stdDev, level, steps8bit, samples, grainy, reading}; reading; warning; screenColourNote (capture values and what they mean for Keylight's Screen Colour)."
-    ),
-    diff: external_exports.union([
-      external_exports.boolean(),
-      external_exports.object({
-        changeAbove: external_exports.number().min(0).max(1).optional().describe(
-          "A pixel has changed when one of its channels moved by more than this (display values). Default 0.04, about ten 8-bit steps: well above frame-to-frame grain."
-        ),
-        spikeRatio: external_exports.number().optional().describe(
-          "A pair stands out as a spike when its change is at least this many times its neighbours' on each side it has. Default 3."
-        ),
-        holdRatio: external_exports.number().optional().describe(
-          "A pair is a hold (a repeated frame) when its change is at most this share of the moving neighbours' on both sides. Default 0.25."
-        ),
-        quietBelow: external_exports.number().min(0).max(1).optional().describe(
-          "Mean changes below this read as no visible change: neighbours this quiet are not moving, and a spike is measured against at least this. Default 0.002."
-        ),
-        movingShare: external_exports.number().min(0).max(1).optional().describe(
-          "Neighbours count as moving, and a spike counts, only with at least this share of pixels changed. Default 0.0005 (about 1,000 pixels at 1080\xD71920)."
-        ),
-        window: external_exports.number().int().optional().describe("Pairs on each side compared with a pair. Default 3."),
-        amplify: external_exports.number().optional().describe("Gain of the difference images on the diff sheet. Default 8."),
-        repeatBelow: external_exports.number().min(0).max(1).optional().describe(
-          "A pair changing this little is a repeated frame (identical frames read 0); repeats are never a reference for other pairs. Default 0.0001."
-        ),
-        sheet: external_exports.union([
-          external_exports.boolean(),
-          external_exports.object({
-            columns: external_exports.number().int().positive().optional(),
-            thumbWidth: external_exports.number().int().min(16).max(2048).optional(),
-            outPath: external_exports.string().optional().describe("Default <outPath stem>_diff.png.")
-          })
-        ]).optional().describe(
-          "Also write the difference images, amplified and labelled '#from>to change' ('!' on flagged pairs), tiled into one PNG beside the contact sheet. Default off; on with `strip`."
-        )
-      })
-    ]).optional().describe(
-      "Frame-to-frame change, with `times` (two or more) or `strip`; `true` for the defaults. Measured on the written file (stage 'output', display values; `diff.picture` says what exactly: with the default rgb output the capture is already over the comp background, so transparent areas do not change). Reported as `diff` {stage, picture, pairs, series} with the thresholds used as `diffThresholds`. Each consecutive pair: from, to, change (mean absolute difference over pixels and channels, 0..1), maxAbsDelta, changedPixels, changedShare (a channel moved by more than changeAbove), changedBounds, and with `sample` the same per region. series: pairs, median, mean, largest, smallest, flags [{kind 'pop' | 'stutter' | 'cut' | 'repeat', pairs, frame or between, change, reference, ratio, atSeriesEdge?, besideRepeat?, unreliablePairs?, reading}], reading. A pop is a frame that differs from both neighbours; a stutter a frame that repeats the one before while the frames around it move; a cut one pair far above its neighbours; a repeat an unchanged pair at the start or end of the series beside motion. Repeated frames are never a reference, and the pairs beside one are named unreliable. Flags are hints from numbers: look at the frames."
-    )
-  },
-  handler: async (args, transport2) => {
-    const given = [args.time, args.times, args.strip, args.frames].filter(
-      (v) => v !== void 0
-    ).length;
-    if (given !== 1) {
-      return errorResult(
-        "INVALID_ARGS",
-        "give exactly one of `time`, `times`, `strip` or `frames`",
-        {
-          hint: "`time: 1.5` renders one frame; `times: [0, 1, 2]` renders several in one call; `strip: { at: 1.5, frames: 9 }` renders the frames around a moment; `frames: [42, 43]` renders frames by number."
-        }
-      );
-    }
-    if (args.frames !== void 0 && (!Array.isArray(args.frames) || args.frames.length < 1 || args.frames.length > 32 || !args.frames.every((k) => Number.isInteger(k) && k >= 0))) {
-      return errorResult(
-        "INVALID_ARGS",
-        "`frames` must be 1 to 32 whole frame numbers, 0 or more (0 = the comp's first frame)"
-      );
-    }
-    if (args.settleTimeoutMs !== void 0 && !(Number.isInteger(args.settleTimeoutMs) && args.settleTimeoutMs > 0)) {
-      return errorResult("INVALID_ARGS", "`settleTimeoutMs` must be a positive whole number of ms");
-    }
-    let strip = null;
-    if (args.strip !== void 0) {
-      const planned = planStrip(args.strip);
-      if ("error" in planned) return planned.error;
-      strip = planned.plan;
-    }
-    const count = strip?.frames ?? args.frames?.length ?? args.times?.length ?? 1;
-    const checked = checkEyesOptions({ ...args, count }, strip !== null);
-    if ("error" in checked) return checked.error;
-    const rejection = rejectedOutputPath(args.outPath);
-    if (rejection !== null) {
-      return errorResult("IO", rejection, {
-        details: { outPath: path12.resolve(args.outPath) },
-        hint: "Render to a path outside the mailbox."
-      });
-    }
-    const abs = path12.resolve(args.outPath).replace(/\\/g, "/");
-    if (args.contactSheet?.outPath !== void 0) {
-      const sheetRejection = rejectedOutputPath(args.contactSheet.outPath);
-      if (sheetRejection !== null) {
-        return errorResult("IO", sheetRejection, {
-          details: { outPath: path12.resolve(args.contactSheet.outPath) },
-          hint: "Write the contact sheet to a path outside the mailbox."
-        });
-      }
-    }
-    return nativeFlow(args, checked.options, abs, transport2, strip);
-  }
-});
-function invalid(message, hint) {
-  return { error: errorResult("INVALID_ARGS", message, hint ? { hint } : {}) };
-}
-function parseColor(value) {
-  if (typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value)) {
-    return [1, 3, 5].map((i) => parseInt(value.slice(i, i + 2), 16) / 255);
-  }
-  if (Array.isArray(value) && value.length === 3 && value.every((v) => typeof v === "number" && v >= 0 && v <= 1)) {
-    return [value[0], value[1], value[2]];
-  }
-  return null;
-}
-function checkEyesOptions(args, isStrip = false) {
-  const channels = args.channels ?? "rgb";
-  if (args.colorManaged === "off" && (channels !== "rgb" || args.over !== void 0)) {
-    return invalid(
-      "`channels` and `over` need colorManaged 'auto'",
-      "colorManaged 'off' returns the raw capture untouched (it already keeps any alpha AE wrote)."
-    );
-  }
-  let over = "background";
-  if (args.over !== void 0) {
-    if (channels !== "rgb") {
-      return invalid(
-        `\`over\` applies only to channels 'rgb', not '${channels}'`,
-        "'rgba' keeps transparency in the file; 'alpha' is the matte itself."
-      );
-    }
-    if (args.over === "checkerboard") over = { kind: "checkerboard" };
-    else if (args.over !== "background") {
-      const color = parseColor(args.over);
-      if (color === null) {
-        return invalid(
-          "`over` must be 'background', 'checkerboard', '#rrggbb' or [r, g, b] in 0..1"
-        );
-      }
-      over = { kind: "color", color };
-    }
-  }
-  let isolate = null;
-  if (args.isolate !== void 0) {
-    isolate = Array.isArray(args.isolate) ? args.isolate : [args.isolate];
-    if (isolate.length === 0) return invalid("`isolate` needs at least one layer");
-    if (readOnlyMode()) {
-      return {
-        error: errorResult(
-          "FORBIDDEN",
-          "`isolate` switches layers off and back on, and AE_MCP_READONLY=1 is set",
-          {
-            hint: "Unset AE_MCP_READONLY, or render without isolate."
-          }
-        )
-      };
-    }
-  }
-  let sample = null;
-  if (args.sample !== void 0) {
-    const regions = args.sample.regions ?? [];
-    if (regions.length === 0) return invalid("`sample.regions` needs at least one region");
-    const names = /* @__PURE__ */ new Set();
-    for (const r of regions) {
-      if (names.has(r.name)) return invalid(`region name '${r.name}' is used twice`);
-      names.add(r.name);
-    }
-    const stage = args.sample.stage ?? "both";
-    sample = { regions, stages: stage === "both" ? ["capture", "output"] : [stage] };
-  }
-  let histogram = null;
-  if (args.histogram !== void 0 && args.histogram !== false) {
-    const h = args.histogram === true ? {} : args.histogram;
-    histogram = { bins: h.bins ?? HISTOGRAM_DEFAULT_BINS, stage: h.stage ?? "output" };
-  }
-  let compare = null;
-  if (args.compare !== void 0) {
-    const n = args.count;
-    if (n < 2) return invalid("`compare` needs `times` (or `strip`) with at least two frames");
-    if (sample === null) {
-      return invalid("`compare` needs `sample`: it reports differences for the sampled regions");
-    }
-    const from = args.compare.from ?? 0;
-    const to = args.compare.to ?? 1;
-    if (from >= n || to >= n)
-      return invalid(`\`compare\` indices must be below ${n}, the number of times`);
-    if (from === to) return invalid("`compare.from` and `compare.to` must be different frames");
-    compare = { from, to };
-  }
-  let edge = null;
-  if (args.edge !== void 0 && args.edge !== false) {
-    edge = args.edge === true ? {} : args.edge;
-    if (typeof edge !== "object" || edge === null)
-      return invalid("`edge` must be true or an object");
-    const problem = edgeArgsError(edge);
-    if (problem !== null) return invalid(problem);
-  }
-  let screen = null;
-  if (args.screen !== void 0 && args.screen !== false) {
-    screen = args.screen === true ? {} : args.screen;
-    if (typeof screen !== "object" || screen === null)
-      return invalid("`screen` must be true or an object");
-    const problem = screenArgsError(screen);
-    if (problem !== null) return invalid(problem);
-  }
-  let diff = null;
-  const diffArg = args.diff ?? (isStrip ? true : void 0);
-  if (diffArg !== void 0 && diffArg !== false) {
-    const d = diffArg === true ? {} : diffArg;
-    if (typeof d !== "object" || d === null) return invalid("`diff` must be true or an object");
-    if (args.count < 2) {
-      return invalid(
-        "`diff` needs `times` with at least two frames, or `strip`",
-        "It compares consecutive rendered frames: `times: [1, 1.04, 1.08], diff: true`."
-      );
-    }
-    const problem = diffArgsError(d);
-    if (problem !== null) return invalid(problem);
-    const { sheet: sheetArg, ...thresholds } = d;
-    const sheetOn = sheetArg ?? isStrip;
-    if (sheetOn !== false && sheetOn !== true && (typeof sheetOn !== "object" || sheetOn === null)) {
-      return invalid("`diff.sheet` must be true, false or an object");
-    }
-    diff = {
-      thresholds: resolveDiffThresholds(thresholds),
-      sheet: sheetOn === false ? null : sheetOn === true ? {} : sheetOn
-    };
-  }
-  return {
-    options: {
-      channels,
-      over,
-      overGiven: args.over !== void 0,
-      isolate,
-      sample,
-      histogram,
-      compare,
-      edge,
-      screen,
-      diff
-    }
-  };
-}
-function planStrip(strip) {
-  const fail3 = (message) => ({
-    error: errorResult("INVALID_ARGS", message, {
-      hint: "`strip: { at: 2.5, frames: 9 }` renders the nine frames around 2.5 s."
-    })
-  });
-  if (typeof strip !== "object" || strip === null) return fail3("`strip` must be an object");
-  const { at, frames } = strip;
-  const step = strip.step ?? 1;
-  const maxDimension = strip.maxDimension ?? STRIP_DEFAULT_MAX_DIMENSION;
-  if (typeof at !== "number" || !Number.isFinite(at) || at < 0)
-    return fail3("`strip.at` must be a time in seconds, 0 or more");
-  if (!Number.isInteger(frames) || frames < 2 || frames > 32)
-    return fail3("`strip.frames` must be a whole number from 2 to 32");
-  if (!Number.isInteger(step) || step < 1)
-    return fail3("`strip.step` must be a whole number, 1 or more");
-  if (!Number.isInteger(maxDimension) || maxDimension < 16 || maxDimension > 2048)
-    return fail3("`strip.maxDimension` must be a whole number of px from 16 to 2048");
-  const first = -Math.floor((frames - 1) / 2);
-  const offsets = Array.from({ length: frames }, (_, k) => (first + k) * step);
-  return { plan: { at, offsets, frames, step, maxDimension } };
-}
-function sheetPathFor(abs, explicit) {
-  if (explicit !== void 0) return path12.resolve(explicit).replace(/\\/g, "/");
-  const ext = path12.extname(abs) || ".png";
-  const stem = abs.slice(0, abs.length - (path12.extname(abs).length || 0));
-  return `${stem}_sheet${ext}`;
-}
-function framePaths(abs, count, multi) {
-  if (!multi) return [abs];
-  const ext = path12.extname(abs) || ".png";
-  const stem = abs.slice(0, abs.length - (path12.extname(abs).length || 0));
-  const out = [];
-  for (let i = 0; i < count; i++) out.push(`${stem}_${i}${ext}`);
-  return out;
-}
-var ISOLATE_FN = `
-    function _refText(ref) {
-        if (typeof ref === "string") return '"' + ref + '"';
-        if (typeof ref === "number") return "index " + ref;
-        if (ref && typeof ref.id === "number") return "id " + ref.id;
-        return String(ref);
-    }
-    function _restoreLayers(saved) {
-        var failed = [];
-        for (var i = saved.length - 1; i >= 0; i--) {
-            var s = saved[i];
-            if (!s.changed) continue;
-            try {
-                if (s.layer.locked) s.layer.locked = false;
-                if (s.layer.enabled !== s.enabled) s.layer.enabled = s.enabled;
-                if (s.hasSolo && s.layer.solo !== s.solo) s.layer.solo = s.solo;
-                if (s.locked) s.layer.locked = true;
-            } catch (eRestore) {
-                failed.push(AE.safeGet(function () { return s.layer.index + " " + s.layer.name; }, "?") + ": " + AE.errText(eRestore));
-            }
-        }
-        return failed;
-    }
-    function _isolateLayers(c, refs) {
-        var keep = {};
-        var named = [];
-        for (var ri = 0; ri < refs.length; ri++) {
-            var hit = AE.findLayerInComp(c, refs[ri]);
-            if (!hit) return { ok: false, error: "isolate: no layer matching " + _refText(refs[ri]) + " in comp " + c.name };
-            if (keep["k" + hit.index]) continue;
-            keep["k" + hit.index] = true;
-            named.push({ index: hit.index, name: hit.name });
-        }
-        var saved = [];
-        var changed = 0;
-        try {
-            for (var li = 1; li <= c.numLayers; li++) {
-                var L = c.layer(li);
-                // Audio-only layers put nothing in the picture, and their
-                // video switch may refuse to change: leave them be.
-                if (AE.safeGet(function () { return L.hasVideo; }, true) === false) continue;
-                var mn = AE.safeGet(function () { return L.matchName; }, "");
-                var view = (mn === "ADBE Camera Layer" || mn === "ADBE Light Layer");
-                var s = { layer: L, enabled: L.enabled, locked: !!L.locked, hasSolo: false, solo: false, changed: false };
-                try { s.solo = !!L.solo; s.hasSolo = true; } catch (eSolo) { }
-                saved.push(s);
-                var want = keep["k" + L.index] ? true : (view ? s.enabled : false);
-                if (want === s.enabled && !s.solo) continue;
-                s.changed = true;
-                changed++;
-                if (s.locked) L.locked = false;
-                if (s.solo) L.solo = false;
-                if (L.enabled !== want) L.enabled = want;
-            }
-        } catch (eIso) {
-            var undone = _restoreLayers(saved);
-            return { ok: false, error: "isolate: could not switch layers (" + AE.errText(eIso) + ")" + (undone.length ? "; NOT restored: " + undone.join("; ") : "; every switch restored") };
-        }
-        return { ok: true, saved: saved, layers: named, changed: changed };
-    }
-`;
-function renderJsx(args, times, paths, tryOcio, isolate, strip = null, frameNums = null) {
-  return `
-        ${RENDER_FRAME_FN}
-        ${MISSING_SOURCES_FN}
-        ${OCIO_CAPTURE_FN}
-        ${ISOLATE_FN}
-        var _arg = ${jsxVal(args.compNameOrId)};
-        var comp = AE.findCompByNameOrId(_arg);
-        if (!comp) return { ok: false, error: "no comp matching " + String(_arg) };
-        var _missingMedia = _missingSources(comp);
-        if (_missingMedia.length) return { ok: false, error: "source media missing for comp " + comp.name + "; restore or relink before rendering", missingFootage: _missingMedia };
-        var _ws = AE.safeGet(function () { return app.project.workingSpace; }, "None");
-        var _times = ${jsxVal(times)};
-        var _strip = ${jsxVal(strip === null ? null : { at: strip.at, offsets: strip.offsets })};
-        var _frameNums = ${jsxVal(frameNums)};
-        var _paths = ${jsxVal(paths)};
-        var _pick = ${jsxVal(FRAME_PICK)};
-        var _stripOut = null;
-        if (_frameNums !== null) {
-            var _lastF = Math.max(0, Math.round(comp.duration / comp.frameDuration) - 1);
-            _times = [];
-            for (var _ni = 0; _ni < _frameNums.length; _ni++) {
-                if (_frameNums[_ni] > _lastF) return { ok: false, error: "frame " + _frameNums[_ni] + " is past the comp's last frame, " + _lastF + " (comp " + comp.name + ")" };
-                _times.push((_frameNums[_ni] + _pick) * comp.frameDuration);
-            }
-        }
-        if (_strip !== null) {
-            var _fd = comp.frameDuration;
-            var _lastK = Math.max(0, Math.round(comp.duration / _fd) - 1);
-            var _k0 = Math.round(_strip.at / _fd);
-            var _offs = _strip.offsets;
-            var _shift = 0;
-            if (_k0 + _offs[_offs.length - 1] > _lastK) _shift = _lastK - (_k0 + _offs[_offs.length - 1]);
-            if (_k0 + _offs[0] + _shift < 0) _shift = -(_k0 + _offs[0]);
-            _times = [];
-            var _clamped = 0;
-            for (var _si = 0; _si < _offs.length; _si++) {
-                var _k = _k0 + _offs[_si] + _shift;
-                if (_k > _lastK) { _k = _lastK; _clamped++; }
-                _times.push((_k + _pick) * _fd);
-            }
-            _stripOut = {
-                at: Math.round(_k0 * _fd * 1e6) / 1e6,
-                frameRate: Math.round(1e3 / _fd) / 1e3,
-                firstFrame: _k0 + _offs[0] + _shift,
-                lastFrame: Math.min(_lastK, _k0 + _offs[_offs.length - 1] + _shift),
-                shiftedFrames: _shift
-            };
-            if (_clamped > 0) _stripOut.note = "the comp is shorter than the strip: the last " + _clamped + " frames repeat the comp's last frame (they read as stutters in diff)";
-        }
-        var _useDst = ${jsxVal(!!args.useDisplayStartTime)};
-        var _useOcio = ${jsxVal(tryOcio)} && _ws !== "None" && _ws !== "";
-        var _isolate = ${jsxVal(isolate)};
-        var _frames = [];
-        function _renderAll(kind) {
-            for (var _fi = 0; _fi < _times.length; _fi++) {
-                var _r = _renderFrame(comp, _times[_fi], _paths[_fi], _useDst);
-                _r.captureKind = kind;
-                if (_r.ok) {
-                    // The frame this time falls in, counted from frame 0 in the
-                    // convention of time; within a millionth of a frame of a
-                    // boundary counts as on it (k / fps in floating point).
-                    var _pos = _times[_fi] / comp.frameDuration;
-                    var _fk = Math.floor(_pos + 1e-6);
-                    _r.frame = _fk;
-                    _r.frameOffset = Math.max(0, Math.round((_pos - _fk) * 1e6) / 1e6);
-                }
-                _frames.push(_r);
-            }
-        }
-        var _iso = null;
-        if (_isolate !== null) {
-            _iso = _isolateLayers(comp, _isolate);
-            if (!_iso.ok) return { ok: false, error: _iso.error };
-        }
-        var _renderError = null;
-        try {
-            if (_useOcio) {
-                var _maxT = _times[0];
-                for (var _mi = 1; _mi < _times.length; _mi++) { if (_times[_mi] > _maxT) _maxT = _times[_mi]; }
-                if (_useDst) _maxT = _maxT + comp.displayStartTime;
-                _captureWithOcio(comp, _maxT, _renderAll);
-            }
-            if (_frames.length === 0) _renderAll("direct");
-        } catch (eRender) {
-            _renderError = eRender;
-        }
-        var _isoReport = null;
-        if (_iso) {
-            var _notRestored = _restoreLayers(_iso.saved);
-            _isoReport = { layers: _iso.layers, changed: _iso.changed, restored: _notRestored.length === 0 };
-            if (_notRestored.length) _isoReport.notRestored = _notRestored;
-        }
-        if (_renderError !== null) {
-            var _fail = { ok: false, error: "render failed: " + AE.errText(_renderError) };
-            if (_isoReport) _fail.isolation = _isoReport;
-            return _fail;
-        }
-        var _allOk = true;
-        var _firstError = null;
-        for (var _ci = 0; _ci < _frames.length; _ci++) {
-            if (!_frames[_ci].ok) { _allOk = false; if (_firstError === null) _firstError = _frames[_ci].error; }
-        }
-        var _out = { ok: _allOk, frames: _frames, captureKind: _frames.length > 0 ? _frames[0].captureKind : null };
-        if (_isoReport) _out.isolation = _isoReport;
-        if (_stripOut) _out.strip = _stripOut;
-        if (!_allOk) _out.error = _firstError;
-        if (_allOk) {
-            _out.compName = comp.name;
-            _out.workingSpace = _ws;
-            _out.bitsPerChannel = AE.safeGet(function () { return app.project.bitsPerChannel; }, 8);
-            _out.projectFile = app.project.file ? app.project.file.fsName.replace(/\\\\/g, "/") : null;
-            _out.bgColor = AE.safeGet(function () { return [comp.bgColor[0], comp.bgColor[1], comp.bgColor[2]]; }, null);
-        }
-        return _out;
-    `;
-}
-async function nativeFlow(args, opts, abs, transport2, strip = null) {
-  const frameNums = args.frames ?? null;
-  const multi = args.times !== void 0 || strip !== null || frameNums !== null;
-  const times = strip !== null || frameNums !== null ? null : args.times ?? [args.time];
-  const count = strip?.frames ?? frameNums?.length ?? times?.length ?? 1;
-  const paths = framePaths(abs, count, multi);
-  const contactSheet = args.contactSheet ?? (strip !== null ? {} : void 0);
-  const before = await stampFiles(paths);
-  const tryOcio = args.colorManaged !== "off" && !readOnlyMode();
-  const result = await transport2.execute({
-    code: renderJsx(args, times, paths, tryOcio, opts.isolate, strip, frameNums),
-    label: "render_frame",
-    timeoutMs: 12e4 + (count - 1) * 3e4
-  });
-  if (!result.ok) return toMcpResult(result);
-  const payload = result.result;
-  const frames = payload?.frames ?? [];
-  const frameSize = frames[0]?.size;
-  if (payload && strip !== null) {
-    payload.strip = {
-      at: strip.at,
-      frames: strip.frames,
-      step: strip.step,
-      maxDimension: strip.maxDimension,
-      ...payload.strip
-    };
-  }
-  if (payload && payload.ok === true) {
-    const warning = frameWarnings(frames);
-    if (warning !== void 0) payload.frameWarning = warning;
-  }
-  if (payload && payload.ok === true && !multi && frames.length === 1) {
-    payload.writtenTo = frames[0].writtenTo;
-    payload.time = frames[0].time;
-    if (frames[0].frame !== void 0) payload.frame = frames[0].frame;
-    if (frames[0].frameOffset !== void 0) payload.frameOffset = frames[0].frameOffset;
-    payload.size = frames[0].size;
-    delete payload.frames;
-  }
-  if (!payload || payload.ok !== true) {
-    return toMcpResult(result);
-  }
-  if (payload.isolation && !payload.isolation.restored) {
-    payload.isolationWarning = "some layer switches could not be restored after isolate \u2014 check these layers in the timeline: " + (payload.isolation.notRestored ?? []).join("; ");
-  }
-  const written = (multi ? frames.map((f) => f.writtenTo) : [payload.writtenTo]).filter(
-    (p) => typeof p === "string"
-  );
-  const put = (i, key, value) => {
-    if (multi) frames[i][key] = value;
-    else payload[key] = value;
-  };
-  const managed = args.colorManaged !== "off";
-  let convert = null;
-  let backdrop = null;
-  if (managed) {
-    payload.method = "native";
-    payload.channels = opts.channels;
-    convert = await colorConversion(payload, transport2);
-    if (convert === null && (opts.channels !== "rgb" || opts.overGiven)) {
-      payload.channelsWarning = "colour conversion failed (see colorWarning), so the raw capture was kept and `channels` / `over` were not applied";
-    }
-    if (convert !== null && opts.channels === "rgb") backdrop = chooseBackdrop(payload, opts);
-  }
-  const bg = validRgb(payload.bgColor);
-  const unmatting = convert !== null && (opts.channels === "rgba" || backdrop !== null);
-  const settle2 = await waitForSettled(written, {
-    timeoutMs: args.settleTimeoutMs ?? settleTimeoutFor(written.length, frameSize ? frameSize[0] * frameSize[1] : 1080 * 1920),
-    before: before.slice(0, written.length)
-  });
-  payload.captureSettle = settle2;
-  if (settle2.unsettled.length > 0) {
-    const secs2 = (settle2.timeoutMs / 1e3).toFixed(1);
-    for (const u of settle2.unsettled) {
-      if (!multi || !frames[u.index]) continue;
-      frames[u.index].ok = false;
-      frames[u.index].error = `the capture did not finish writing within ${secs2} s (${u.state}, ${u.bytes} bytes)`;
-    }
-    payload.captureWarning = `${settle2.unsettled.length} of ${written.length} captures did not finish writing within ${secs2} s (saveFrameToPng writes asynchronously): frames ${settle2.unsettled.map((u) => u.index).join(", ")}. ` + (settle2.settled.length > 0 ? "The others were measured; see captureSettle, or render the missing ones again with a longer settleTimeoutMs." : "Nothing could be measured; try again with a longer settleTimeoutMs.");
-    if (settle2.settled.length === 0) {
-      if (args.analyze) payload.analysisWarning = "analysis failed: no capture finished writing";
-      if (managed)
-        payload.colorWarning = "color post-processing failed, file left as raw capture: no capture finished writing";
-      return toMcpResult(result);
-    }
-  }
-  const finished = new Set(settle2.settled);
-  const keep = new Set(opts.compare ? [opts.compare.from, opts.compare.to] : []);
-  const kept = /* @__PURE__ */ new Map();
-  const sheetImages = [];
-  const sheetLabels = [];
-  let sheetThumb = null;
-  const diffPairs = [];
-  const diffThumbs = [];
-  let diffPrev = null;
-  let diffThumb = null;
-  const diffSkipped = [];
-  let read = 0;
-  const edgePairs = [];
-  let edgePrev = null;
-  let edgeMeasured = 0;
-  let edgeFromLuma = 0;
-  let withAlpha = 0;
-  let writing = convert !== null;
-  for (const [i, file2] of written.entries()) {
-    if (!finished.has(i)) continue;
-    let capture;
-    try {
-      capture = decodePng(await fs10.readFile(file2));
-      read++;
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      payload.captureWarning = `could not read the capture: ${msg}`;
-      if (args.analyze) payload.analysisWarning = `analysis failed: ${msg}`;
-      if (managed)
-        payload.colorWarning = `color post-processing failed, file left as raw capture: ${msg}`;
-      return toMcpResult(result);
-    }
-    if (capture.alpha) withAlpha++;
-    if (opts.edge) {
-      const fromLuma = opts.edge.from === "luma";
-      if (fromLuma) edgeFromLuma++;
-      if (!capture.alpha && !fromLuma) edgePrev = null;
-      else {
-        try {
-          const t = resolveEdgeThresholds(opts.edge, capture.width, capture.height);
-          payload.edgeThresholds ??= t;
-          const { report, frame } = measureEdge(capture, bg ?? [0, 0, 0], t);
-          put(i, "edge", report);
-          edgeMeasured++;
-          if (edgePrev !== null && edgePrev.index === i - 1) {
-            edgePairs.push({
-              from: { index: i - 1, time: frames[i - 1]?.time },
-              to: { index: i, time: frames[i]?.time },
-              ...alphaChange(edgePrev.frame, frame, t)
-            });
-          }
-          edgePrev = multi ? { index: i, frame } : null;
-        } catch (err) {
-          payload.edgeWarning = `edge measurement failed: ${err instanceof Error ? err.message : String(err)}`;
-          edgePrev = null;
-        }
-      }
-    }
-    if (opts.screen) {
-      try {
-        const t = resolveScreenThresholds(opts.screen, capture.width, capture.height);
-        payload.screenThresholds ??= t;
-        put(i, "screen", measureScreen(capture, t));
-      } catch (err) {
-        payload.screenWarning = `screen measurement failed: ${err instanceof Error ? err.message : String(err)}`;
-      }
-    }
-    if (args.analyze) {
-      try {
-        put(i, "analysis", analyzeFrame(capture));
-      } catch (err) {
-        payload.analysisWarning = `analysis failed: ${err instanceof Error ? err.message : String(err)}`;
-      }
-    }
-    let output2 = capture;
-    if (writing && convert !== null) {
-      try {
-        output2 = await writeOutput(
-          file2,
-          capture,
-          convert,
-          opts.channels,
-          backdrop,
-          bg ?? [0, 0, 0]
-        );
-      } catch (err) {
-        payload.colorWarning = `color post-processing failed, file left as raw capture: ${err instanceof Error ? err.message : String(err)}`;
-        writing = false;
-      }
-    }
-    const pixels = { capture, output: output2 };
-    if (opts.sample) put(i, "samples", sampleReport(pixels, opts.sample));
-    if (opts.histogram) {
-      const { bins, stage } = opts.histogram;
-      put(i, "histogram", { stage, ...histogramOf(pixels[stage], bins) });
-    }
-    if (keep.has(i)) kept.set(i, pixels);
-    const straight = output2 !== capture && output2.alpha !== void 0;
-    if (contactSheet) {
-      sheetThumb ??= thumbSizeFor(
-        output2,
-        contactSheet.thumbWidth ?? stripThumbWidth(strip, output2)
-      );
-      sheetImages.push(
-        sheetTile(output2 === capture ? { ...capture, alpha: void 0 } : output2, sheetThumb)
-      );
-      sheetLabels.push(frameLabel(i, frames[i]?.time ?? payload.time));
-    }
-    if (opts.diff) {
-      payload.diffThresholds ??= opts.diff.thresholds;
-      const pic = pictureOf(output2, straight);
-      const { width, height } = output2;
-      if (diffPrev !== null && diffPrev.index !== i - 1) {
-        diffSkipped.push(`${diffPrev.index}>${i} (frames between are missing)`);
-      } else if (diffPrev !== null && (diffPrev.width !== width || diffPrev.height !== height)) {
-        diffSkipped.push(`${i - 1}>${i} (frame sizes differ)`);
-      } else if (diffPrev !== null) {
-        if (opts.diff.sheet) {
-          diffThumb ??= thumbSizeFor(
-            output2,
-            opts.diff.sheet.thumbWidth ?? contactSheet?.thumbWidth ?? stripThumbWidth(strip, output2)
-          );
-        }
-        try {
-          const res = pictureChange(diffPrev.pic, pic, width, height, opts.diff.thresholds, {
-            regions: opts.sample?.regions,
-            thumb: diffThumb ?? void 0
-          });
-          const pair = {
-            from: { index: i - 1, time: frames[i - 1]?.time },
-            to: { index: i, time: frames[i]?.time },
-            ...res.all
-          };
-          if (res.regions) pair.regions = res.regions;
-          if (res.thumb && diffThumb) {
-            const grey = new Float64Array(res.thumb.length * 3);
-            for (let k = 0; k < res.thumb.length; k++) grey.fill(res.thumb[k], k * 3, k * 3 + 3);
-            diffThumbs.push({
-              pair: diffPairs.length,
-              img: { width: diffThumb.width, height: diffThumb.height, rgb: grey, bitDepth: 8 }
-            });
-          }
-          diffPairs.push(pair);
-        } catch (err) {
-          payload.diffWarning = `diff failed: ${err instanceof Error ? err.message : String(err)}`;
-        }
-      }
-      payload.diff ??= {
-        stage: "output",
-        picture: diffPicture(output2 === capture, opts.channels, payload.over),
-        pairs: [],
-        series: summarizeSeries([], opts.diff.thresholds)
-      };
-      diffPrev = { index: i, pic, width, height };
-    }
-  }
-  payload.alphaChannel = withAlpha === 0 ? "absent" : withAlpha === read ? "present" : "mixed";
-  if (unmatting && withAlpha > 0 && bg === null) {
-    payload.channelsWarning = "the comp background colour (bgColor) is unknown, so the colour under it was recovered as if it were black; soft edges may carry the real background";
-  }
-  if (convert !== null && payload.alphaChannel === "absent") {
-    if (opts.channels === "alpha") {
-      payload.alphaWarning = "the capture has no alpha channel, so the matte is all white (fully opaque). If this comp should be transparent here, saveFrameToPng did not write alpha for it.";
-    } else if (opts.channels === "rgba") {
-      payload.alphaWarning = "the capture has no alpha channel, so the file's alpha is fully opaque";
-    } else if (opts.overGiven) {
-      payload.alphaWarning = "the capture has no alpha channel, so there was nothing to composite over `over`";
-    }
-  }
-  if (opts.edge) {
-    if (edgeFromLuma === 0 && withAlpha < read) {
-      payload.edgeWarning = `${read - withAlpha} of ${read} captures have no alpha channel, so their matte could not be measured (a comp with no transparency, or an AE that flattens)`;
-    } else if (edgeFromLuma === 0 && edgeMeasured > 0 && bg === null) {
-      payload.edgeWarning = "the comp background colour (bgColor) is unknown, so the soft edge's colour was recovered as if it were black; the spill reading may carry the real background";
-    }
-    if (edgePairs.length > 0) {
-      payload.edgeFlicker = { pairs: edgePairs, overall: summarizeFlicker(edgePairs) };
-    }
-  }
-  if (opts.compare && opts.sample) {
-    const { from, to } = opts.compare;
-    const a = kept.get(from);
-    const b = kept.get(to);
-    if (a && b) {
-      const report = opts.sample.regions.map((r) => ({ name: r.name }));
-      for (const stage of opts.sample.stages) {
-        compareRegions(a[stage], b[stage], opts.sample.regions).forEach((diff, j) => {
-          report[j][stage] = stageBlock(diff, stage);
-        });
-      }
-      payload.comparison = {
-        from: { index: from, time: frames[from]?.time },
-        to: { index: to, time: frames[to]?.time },
-        regions: report
-      };
-    }
-  }
-  if (opts.diff && payload.diff) {
-    payload.diff.pairs = diffPairs;
-    payload.diff.series = summarizeSeries(diffPairs, opts.diff.thresholds);
-    if (diffSkipped.length > 0) {
-      payload.diffWarning = `some consecutive pairs were not compared: ${diffSkipped.join("; ")}` + (settle2.unsettled.length > 0 ? " \u2014 captures missing, see captureSettle" : "");
-    }
-  }
-  const stages = /* @__PURE__ */ new Set([
-    ...opts.sample?.stages ?? [],
-    ...opts.histogram ? [opts.histogram.stage] : [],
-    ...opts.edge || opts.screen ? ["capture"] : [],
-    ...opts.diff ? ["output"] : []
-  ]);
-  if (stages.size > 0) {
-    payload.measurementStages = {};
-    for (const s of stages) payload.measurementStages[s] = MEASUREMENT_STAGES[s];
-  }
-  if (contactSheet && sheetImages.length > 0) {
-    await attachContactSheet(
-      payload,
-      sheetLabels,
-      sheetImages,
-      sheetPathFor(abs, contactSheet.outPath),
-      contactSheet
-    );
-  }
-  if (opts.diff?.sheet && payload.diff && diffThumbs.length > 0) {
-    await attachDiffSheet(
-      payload,
-      payload.diff,
-      diffThumbs,
-      abs,
-      opts.diff.sheet,
-      opts.diff.thresholds
-    );
-  }
-  return toMcpResult(result);
-}
-function thumbSizeFor(img, thumbWidth) {
-  const width = Math.max(16, Math.min(thumbWidth ?? 480, img.width));
-  return { width, height: Math.max(1, Math.round(img.height * width / img.width)) };
-}
-function stripThumbWidth(strip, img) {
-  if (strip === null) return void 0;
-  return Math.max(
-    1,
-    Math.round(strip.maxDimension * img.width / Math.max(img.width, img.height))
-  );
-}
-function sheetTile(img, thumb) {
-  const flat = img.alpha ? { ...img, rgb: flattenOver(img, { kind: "checkerboard" }), alpha: void 0 } : img;
-  if (flat.width <= thumb.width) return flat;
-  return {
-    ...flat,
-    width: thumb.width,
-    height: thumb.height,
-    rgb: resample(flat, thumb.width, thumb.height)
-  };
-}
-function diffPicture(raw, channels, over) {
-  if (raw) {
-    return "the capture as AE wrote it (no colour conversion: colorManaged off, or the conversion failed): its RGB already laid over the comp background (bgColor), so empty areas read the background in both frames; alpha not compared";
-  }
-  if (channels === "alpha") return "the written file: the matte (alpha as grey), white opaque";
-  if (channels === "rgba") {
-    return "the written file's straight colour weighted by its alpha (as over black), so colour under transparent pixels does not count";
-  }
-  if (over === void 0 || over === "background") {
-    return "the written file: the picture as AE composited it over the comp background (bgColor), so transparent areas read the background in both frames and do not change";
-  }
-  return "the written file: the picture laid over `over`, so transparent areas read that backdrop";
-}
-async function attachDiffSheet(payload, diff, thumbs, abs, opts, t) {
-  try {
-    const flagged = new Set(diff.series.flags.flatMap((f) => f.pairs));
-    const labels = thumbs.map(({ pair }) => {
-      const p = diff.pairs[pair];
-      return `#${p.from.index}>${p.to.index} ${p.change.toFixed(4)}${flagged.has(pair) ? " !" : ""}`;
-    });
-    const sheet = composeContactSheet(
-      thumbs.map((th) => th.img),
-      { columns: opts.columns, thumbWidth: thumbs[0].img.width, labels }
-    );
-    const sheetPath = opts.outPath !== void 0 ? path12.resolve(opts.outPath).replace(/\\/g, "/") : `${abs.slice(0, abs.length - path12.extname(abs).length)}_diff${path12.extname(abs) || ".png"}`;
-    await fs10.mkdir(path12.dirname(sheetPath), { recursive: true });
-    await fs10.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
-    payload.diffSheet = {
-      writtenTo: sheetPath,
-      size: [sheet.width, sheet.height],
-      columns: sheet.columns,
-      rows: sheet.rows,
-      thumbSize: [sheet.thumbWidth, sheet.thumbHeight],
-      frames: thumbs.length,
-      amplify: t.amplify
-    };
-  } catch (err) {
-    payload.diffWarning = `diff sheet failed: ${err instanceof Error ? err.message : String(err)}`;
-  }
-}
-function stageBlock(stats, stage) {
-  const { name: _name, ...rest } = stats;
-  if (stage === "output" && Array.isArray(rest.mean)) rest.meanHex = rgbHex(rest.mean);
-  return rest;
-}
-function sampleReport(pixels, sample) {
-  const report = sample.regions.map((r) => ({ name: r.name }));
-  for (const stage of sample.stages) {
-    sampleRegions(pixels[stage], sample.regions).forEach((stats, j) => {
-      report[j][stage] = stageBlock(stats, stage);
-    });
-  }
-  return report;
-}
-function chooseBackdrop(payload, opts) {
-  if (opts.over === "background") {
-    payload.over = "background";
-    return null;
-  }
-  payload.over = opts.over.kind === "checkerboard" ? "checkerboard" : opts.over.color;
-  return opts.over;
-}
-async function attachContactSheet(payload, labels, tiles, sheetPath, opts) {
-  try {
-    const sheet = composeContactSheet(tiles, {
-      columns: opts.columns,
-      thumbWidth: opts.thumbWidth ?? tiles[0].width,
-      labels
-    });
-    await fs10.mkdir(path12.dirname(sheetPath), { recursive: true });
-    await fs10.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
-    payload.contactSheet = {
-      writtenTo: sheetPath,
-      size: [sheet.width, sheet.height],
-      columns: sheet.columns,
-      rows: sheet.rows,
-      thumbSize: [sheet.thumbWidth, sheet.thumbHeight],
-      frames: tiles.length
-    };
-  } catch (err) {
-    payload.contactSheetWarning = `contact sheet failed: ${err instanceof Error ? err.message : String(err)}`;
-  }
-}
-async function writeOutput(file2, capture, convert, channels, backdrop, bg) {
-  const { width, height } = capture;
-  const opaque = () => new Float64Array(width * height).fill(1);
-  let bytes;
-  if (channels === "alpha") {
-    bytes = encodePngGray8(width, height, capture.alpha ?? opaque());
-  } else if (channels === "rgb" && backdrop === null) {
-    const rgb = Float64Array.from(capture.rgb);
-    convert(rgb);
-    bytes = encodePngSrgb8(width, height, rgb);
-  } else {
-    const rgb = unmatte(capture, bg);
-    convert(rgb);
-    bytes = channels === "rgba" ? encodePngSrgbRgba8(width, height, rgb, capture.alpha ?? opaque()) : encodePngSrgb8(width, height, flattenOver({ ...capture, rgb }, backdrop));
-  }
-  await fs10.writeFile(file2, bytes);
-  return decodePng(bytes);
-}
 
 // src/tools/save-project.ts
 init_registry();
@@ -56558,7 +57216,7 @@ var ALL_TOOLS = [
 
 // src/tools/library.ts
 import { readFileSync as readFileSync2, realpathSync as realpathSync2 } from "node:fs";
-import path13 from "node:path";
+import path14 from "node:path";
 import { createHash } from "node:crypto";
 init_config();
 
@@ -56648,17 +57306,17 @@ function findModules(catalog, query) {
 
 // src/tools/library.ts
 function boundedFile(base, relative3) {
-  const candidate = path13.resolve(base, relative3);
+  const candidate = path14.resolve(base, relative3);
   const inside = (file3) => {
-    const rel = path13.relative(base, file3);
-    if (!rel || rel === ".." || rel.startsWith(".." + path13.sep) || path13.isAbsolute(rel)) throw new Error("Library path escapes bundle");
+    const rel = path14.relative(base, file3);
+    if (!rel || rel === ".." || rel.startsWith(".." + path14.sep) || path14.isAbsolute(rel)) throw new Error("Library path escapes bundle");
   };
   inside(candidate);
   const file2 = realpathSync2(candidate);
   inside(file2);
   return file2;
 }
-function readLibrary(document, query, root = path13.resolve(PACKAGE_ROOT, "../library")) {
+function readLibrary(document, query, root = path14.resolve(PACKAGE_ROOT, "../library")) {
   const base = realpathSync2(root);
   const manifest = JSON.parse(readFileSync2(boundedFile(base, "manifest.json"), "utf8"));
   const entries = manifest.documents;

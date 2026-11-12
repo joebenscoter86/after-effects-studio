@@ -269,4 +269,33 @@ export interface FlickerSummary {
 }
 /** Over every pair: mean of the per-pair means, the largest single change, the worst pair. */
 export declare function summarizeFlicker(pairs: FlickerPair[]): Record<"edge" | "inside" | "outside" | "all", FlickerSummary>;
+export interface EnclosedHole extends Box {
+    area: number;
+    meanAlpha: number;
+}
+/**
+ * The holes `edge` reports (4-connected regions below `below`, default edge's
+ * opaque threshold, that do not reach the frame edge), as a list and as a
+ * mask: 1 for every pixel of a kept hole. Holes smaller than `minArea` pixels
+ * are left out of both and counted in `dropped`; holes `keep` refuses are left
+ * out and counted in `leftOut`.
+ */
+export declare function enclosedHoles(alpha: ArrayLike<number>, width: number, height: number, opts?: {
+    below?: number;
+    minArea?: number;
+    keep?: (hole: EnclosedHole) => boolean;
+}): {
+    holes: EnclosedHole[];
+    mask: Uint8Array;
+    dropped: {
+        count: number;
+        area: number;
+    };
+    leftOut: {
+        count: number;
+        area: number;
+    };
+};
+/** `mask` grown by `radius` px: every pixel within that Euclidean distance of a set pixel is set. */
+export declare function growMask(mask: Uint8Array, width: number, height: number, radius: number): Uint8Array;
 //# sourceMappingURL=matte.d.ts.map

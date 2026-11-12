@@ -1,3 +1,4 @@
+import { type Box } from "../color/matte.js";
 export declare const KEYLIGHT_MATCH_NAME = "Keylight 906";
 export declare const KEY_CLEANER_MATCH_NAME = "ADBE KeyCleaner";
 export declare const SPILL_SUPPRESSOR_MATCH_NAME = "ADBE Spill2";
@@ -43,7 +44,83 @@ export declare function subjectMatteSteps(opts?: {
     clip?: string;
     subject?: string;
 }): string[];
-/** A selection's kind from its name: a click with the Object Matte Tool, a stroke with the old brush, or other. */
-export declare function selectionKind(name: string): "object" | "quick-selection" | "other";
+export type SelectionKind = "object" | "rectangle" | "quick-selection" | "other";
+/**
+ * A selection's kind from its name: a click with the Object Matte Tool
+ * ("Add Object N"), a click that dragged a little and became a rectangle
+ * ("Add Object Rect N", which may select nothing), a stroke with the old
+ * brush ("Quick Select Foreground N"), or other.
+ */
+export declare function selectionKind(name: string): SelectionKind;
+/** Two clicks closer than this share of the source's shorter side probably selected the same thing. */
+export declare const CLOSE_CLICK_SHARE = 0.05;
+export interface CloseClick {
+    a: string;
+    b: string;
+    distance: number;
+    limit: number;
+    reading: string;
+}
+/**
+ * Pairs of selections whose clicked points (source pixels) are closer than
+ * `minDistance`, default CLOSE_CLICK_SHARE of the source's shorter side. The
+ * two mistaken clicks of 2026-11-11 were 57 px apart on a 2176 x 3840 source;
+ * the click on the microphone was about 820 px from them.
+ */
+export declare function closeClicks(clicks: Array<{
+    name: string;
+    point: [number, number] | number[] | null;
+}>, sourceSize: [number, number] | number[] | null, minDistance?: number): CloseClick[];
+/** A hole at least this big (px at the comp's size) is a finding the agent stops on and shows. */
+export declare const CUTOUT_HOLE_LIMIT = 1000;
+type HoleBox = Box & {
+    area: number;
+};
+export interface HoleFinding {
+    kind: "hole";
+    frames: number[];
+    largestArea: number;
+    box: Box;
+}
+/** Holes at least `limit` px, grouped across frames where their boxes overlap. */
+export declare function cutoutFindings(frames: Array<{
+    frame: number;
+    holes: HoleBox[];
+}>, limit: number): HoleFinding[];
+type Json = any;
+/** Every After Effects call subject.check and subject.fill_gaps make. */
+export interface CutoutIO {
+    /** subject.status for the layer. */
+    status(): Promise<Json>;
+    /** ae_render_frame with these arguments; its result payload, or { ok: false, error }. */
+    render(args: Record<string, unknown>): Promise<Json>;
+    /** A written PNG's alpha. */
+    readAlpha(file: string): Promise<{
+        width: number;
+        height: number;
+        alpha: ArrayLike<number>;
+    }>;
+    /** The fill's build in After Effects (fillBuildJsx). */
+    build(args: {
+        comp: unknown;
+        layer: unknown;
+        stillPath: string;
+    }): Promise<Json>;
+    writePng?(file: string, data: Buffer): Promise<void>;
+}
+export declare function runSubjectCheck(args: Record<string, unknown>, io: CutoutIO): Promise<Json>;
+export declare function runFillGaps(args: Record<string, unknown>, io: CutoutIO): Promise<Json>;
+/**
+ * JSX for subject.fill_gaps' build: import the still, add it as a hidden
+ * layer, duplicate the footage layer directly under the cut-out with its
+ * Object Matte removed, and give the copy the still as its luma track matte
+ * (setTrackMatte; its ALPHA form was confirmed in After Effects 27.0, LUMA was
+ * not). Refuses when a fill is already there.
+ */
+export declare function fillBuildJsx(args: {
+    comp: unknown;
+    layer: unknown;
+    stillPath: string;
+}): string;
 export {};
 //# sourceMappingURL=keying.d.ts.map

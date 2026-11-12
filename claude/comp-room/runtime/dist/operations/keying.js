@@ -1,4 +1,10 @@
-import { registerOp, jsxFail, jsxVal, jsxCompLayerPreamble } from "../registry.js";
+import { promises as fs } from "node:fs";
+import * as path from "node:path";
+import { enclosedHoles, growMask } from "../color/matte.js";
+import { decodePng, encodePngGray8 } from "../color/png16.js";
+import { rejectedOutputPath } from "../config.js";
+import { registerOp, jsxFail, jsxVal, jsxCompLayerPreamble, getOp } from "../registry.js";
+import { renderFrameTool } from "../tools/render-frame.js";
 const KEYLIGHT_MATCH_NAME = "Keylight 906";
 const KEY_CLEANER_MATCH_NAME = "ADBE KeyCleaner";
 const SPILL_SUPPRESSOR_MATCH_NAME = "ADBE Spill2";
@@ -465,6 +471,8 @@ registerOp({
 const OBJECT_MATTE_MATCH_NAME = "ADBE Samurai";
 const OBJECT_MATTE_SELECTIONS_MATCH_NAME = "ADBE Samurai Strokes Group";
 const PAINT_DURATION_MATCH_NAME = "ADBE Paint Duration";
+const PAINT_TRANSFORM_MATCH_NAME = "ADBE Paint Transform";
+const PAINT_POSITION_MATCH_NAME = "ADBE Paint Position";
 const OBJECT_MATTE_SETTINGS = {
   version: {
     matchName: "/propagation_method",
@@ -553,22 +561,59 @@ const OBJECT_MATTE_SETTINGS = {
 const SUBJECT_MATTE_NOTICE = "One step here needs you in After Effects: a single click on the subject, about ten seconds. Everything before and after it I do.";
 function subjectMatteSteps(opts = {}) {
   const clip = opts.clip === void 0 ? "the clip's name" : `"${opts.clip}"`;
-  const subject = opts.subject?.trim();
-  const step4 = subject ? `Move the pointer over ${subject} in the Layer panel. ${subject.charAt(0).toUpperCase()}${subject.slice(1)} tints magenta. Click once.` : "Move the pointer over the person in the Layer panel. They tint magenta. Click once.";
+  const given = opts.subject?.trim();
+  const self = given !== void 0 && /^(yourself|you)$/i.test(given);
+  const subject = self ? "yourself" : given || "the person";
+  const tint = self ? "You tint magenta." : given ? `${subject.charAt(0).toUpperCase()}${subject.slice(1)} tints magenta.` : "They tint magenta.";
   return [
     `After Effects is showing your clip in the Layer panel (the tab reads "Layer", then ${clip}). I opened it for you.`,
     'In the toolbar at the top, click the Object Matte Tool: the dashed square with an arrow, just left of the pin. If that icon looks different, click and hold it and choose "Object Matte Tool" from the list.',
     'If a tip titled "Object Matte" appears, click OK.',
-    step4,
-    "Anything else that should stay with them, such as a microphone: hover it and click it too.",
-    'Tell me "done". No Spacebar and no Freeze are needed.'
+    'If a yellow bar in the Layer panel says "Draw Object Matte strokes at full resolution", choose View > Resolution > Full in the menu bar, and tell me the bar was there.',
+    `Move the pointer over ${subject} in the Layer panel. ${tint} Click once.`,
+    `Anything else that should stay in the cut-out, such as a microphone, can be several pieces: hover each piece, check that it tints magenta, and click it. Do not click ${subject} again.`,
+    'Tell me "done". No Spacebar and no Freeze are needed. I will then check the cut-out and show you what is in and what is out.'
   ];
 }
 function selectionKind(name) {
   if (/^Add Object \d+$/.test(name)) return "object";
+  if (/^Add Object Rect \d+$/.test(name)) return "rectangle";
   if (/^Quick Select Foreground \d+$/.test(name)) return "quick-selection";
   return "other";
 }
+const CLOSE_CLICK_SHARE = 0.05;
+const closeClickReading = (a, b, d, limit) => `${a} and ${b} were clicked ${Math.round(d)} source pixels apart (closer than ${Math.round(limit)}): they probably selected the same thing, so a click meant for something else (a microphone) may have landed on the subject again`;
+function closeClicks(clicks, sourceSize, minDistance) {
+  const limit = minDistance ?? (sourceSize ? Math.round(CLOSE_CLICK_SHARE * Math.min(sourceSize[0], sourceSize[1]) * 100) / 100 : null);
+  if (limit === null) return [];
+  const out = [];
+  const pts = clicks.filter((c) => Array.isArray(c.point) && c.point.length >= 2);
+  for (let i = 0; i < pts.length; i++)
+    for (let j = i + 1; j < pts.length; j++) {
+      const p = pts[i].point;
+      const q = pts[j].point;
+      const d = Math.hypot(p[0] - q[0], p[1] - q[1]);
+      if (d < limit)
+        out.push({
+          a: pts[i].name,
+          b: pts[j].name,
+          distance: Math.round(d * 100) / 100,
+          limit,
+          reading: closeClickReading(pts[i].name, pts[j].name, d, limit)
+        });
+    }
+  return out;
+}
+const CHECK_NEXT = "Run subject.check next, before building anything on the cut-out: it renders the cut-out over a flat colour across the clip, finds holes, and returns a picture to show the user.";
+const VIEWER_FULL_JSX = `
+            function _viewerToFull() {
+                var _fid = app.findMenuCommandId("Full");
+                if (!_fid) throw new Error("After Effects has no menu command named 'Full' (View > Resolution > Full)");
+                app.executeCommand(_fid);
+                return _fid;
+            }
+`;
+const COUNT_NOTE = "A selection count is not a check: it does not say what was selected. Run subject.check and look at its picture before building anything on the cut-out.";
 const NEED_CLICK = "run subject.prepare and ask the user for the click, relaying its steps word for word";
 const OBJECT_MATTE_JSX = `
             function _omWalk(g, key, field, depth) {
@@ -601,8 +646,25 @@ const OBJECT_MATTE_JSX = `
             }
             function _omKind(nm) {
                 if (/^Add Object \\d+$/.test(nm)) return "object";
+                if (/^Add Object Rect \\d+$/.test(nm)) return "rectangle";
                 if (/^Quick Select Foreground \\d+$/.test(nm)) return "quick-selection";
                 return "other";
+            }
+            function _omCloseClicks(list, size) {
+                var out = [];
+                if (!size) return out;
+                var lim = Math.round(${jsxVal(CLOSE_CLICK_SHARE)} * Math.min(size[0], size[1]) * 100) / 100;
+                for (var i = 0; i < list.length; i++) {
+                    for (var j = i + 1; j < list.length; j++) {
+                        var p = list[i].point, q = list[j].point;
+                        if (!p || !q) continue;
+                        var d = Math.sqrt((p[0] - q[0]) * (p[0] - q[0]) + (p[1] - q[1]) * (p[1] - q[1]));
+                        if (d < lim) out.push({ a: list[i].name, b: list[j].name, distance: Math.round(d * 100) / 100, limit: lim,
+                            reading: list[i].name + " and " + list[j].name + " were clicked " + Math.round(d) + " source pixels apart (closer than " + Math.round(lim) + "): " +
+                                "they probably selected the same thing, so a click meant for something else (a microphone) may have landed on the subject again" });
+                    }
+                }
+                return out;
             }
             function _omSelections(fx) {
                 var g = _omFind(fx, ${jsxVal(OBJECT_MATTE_SELECTIONS_MATCH_NAME)}, "Selections").prop;
@@ -615,7 +677,10 @@ const OBJECT_MATTE_JSX = `
                     if (!s) continue;
                     var nm = AE.safeGet(function () { return s.name; }, "");
                     var dur = AE.safeGet(function () { return AE.valueToJson(s.property(${jsxVal(PAINT_DURATION_MATCH_NAME)}).value); }, null);
-                    list.push({ index: i, name: nm, matchName: AE.safeGet(function () { return s.matchName; }, ""), kind: _omKind(nm), duration: dur });
+                    var pt = AE.safeGet(function () { return AE.valueToJson(s.property(${jsxVal(PAINT_TRANSFORM_MATCH_NAME)}).property(${jsxVal(PAINT_POSITION_MATCH_NAME)}).value); }, null);
+                    var cp = (pt && typeof _layer !== "undefined") ? AE.safeGet(function () { return AE.valueToJson(_layer.sourcePointToComp([pt[0], pt[1]])); }, null) : null;
+                    list.push({ index: i, name: nm, matchName: AE.safeGet(function () { return s.matchName; }, ""), kind: _omKind(nm), duration: dur,
+                        point: pt ? [pt[0], pt[1]] : null, compPoint: cp ? [cp[0], cp[1]] : null, durationStart: (dur && dur.length) ? dur[0] : null });
                 }
                 return { found: true, list: list };
             }
@@ -636,13 +701,24 @@ const OBJECT_MATTE_JSX = `
                 }
                 return out;
             }
+            function _omSourceSize() {
+                var w = AE.safeGet(function () { return _layer.source.width; }, null);
+                var h = AE.safeGet(function () { return _layer.source.height; }, null);
+                return (typeof w === "number" && typeof h === "number") ? [w, h] : null;
+            }
+            function _omSpan() {
+                var fd = _comp.frameDuration;
+                var a = Math.min(_layer.inPoint, _layer.outPoint), b = Math.max(_layer.inPoint, _layer.outPoint);
+                return { inFrame: Math.round(a / fd), outFrame: Math.round(b / fd), frameRate: Math.round(1000 / fd) / 1000 };
+            }
             function _omSummary(present, sel) {
                 if (!present) return "no Object Matte on this layer: the user has not clicked yet";
                 if (sel.length === 0) return "Object Matte is on the layer but has no selection yet: the user has not clicked (an Object Matte with no selection makes no matte)";
-                var c = { object: 0, "quick-selection": 0, other: 0 };
+                var c = { object: 0, rectangle: 0, "quick-selection": 0, other: 0 };
                 for (var i = 0; i < sel.length; i++) c[sel[i].kind]++;
                 var parts = [];
                 if (c.object > 0) parts.push(c.object + (c.object === 1 ? " object selected" : " objects selected"));
+                if (c.rectangle > 0) parts.push(c.rectangle + (c.rectangle === 1 ? " rectangle selection" : " rectangle selections"));
                 if (c["quick-selection"] > 0) parts.push(c["quick-selection"] + (c["quick-selection"] === 1 ? " quick-selection stroke" : " quick-selection strokes"));
                 if (c.other > 0) parts.push(c.other + (c.other === 1 ? " other selection" : " other selections"));
                 return parts.join(", ");
@@ -654,11 +730,11 @@ const subjectIndexParam = {
   description: "1-based index of the Object Matte to use when the layer has several (it must be Object Matte, ADBE Samurai). Default: the first in the stack.",
   required: false
 };
-const REMOVE_NOTE = "To start the selection again: remove this Object Matte with effect.remove { comp, layer, effectIndex }, run subject.prepare, and ask the user for the click again. The user can also take one thing out by Option-clicking it with the Object Matte Tool.";
+const REMOVE_NOTE = "To take out one wrong selection (a second click that landed on the subject, an 'Add Object Rect' from a click that dragged): subject.remove_selection { comp, layer, selection }. To start the whole selection again: remove this Object Matte with effect.remove { comp, layer, effectIndex }, run subject.prepare, and ask the user for the click again. The user can also take one thing out by Option-clicking it with the Object Matte Tool.";
 registerOp({
   name: "subject.prepare",
   category: "subject",
-  description: "Get a footage layer ready for the one manual step of a subject matte (After Effects 2027's Object Matte, the old Roto Brush): the user clicks the subject once with the Object Matte Tool; a script cannot make that selection. This call brings the comp forward, sets it to full resolution, moves to `time` (default: the layer's in point; pick a frame where the subject is clearly visible), selects only that layer and opens it in the Layer panel. It adds no effect and does not pick the tool. Returns notice and steps (the user's instructions, with the clip's name and the subject filled in) and userMessage (both as one text): relay them to the user word for word. Also returns did (the steps done), couldNotDo (any that failed, with the error; beforeSteps then says what to tell the user first) and existing (an Object Matte already on the layer and its selections). After the user says done, check with subject.status. Only verified in After Effects 27.0 as separate scripting steps; this call as a whole is not verified there yet.",
+  description: "Get a footage layer ready for the one manual step of a subject matte (After Effects 2027's Object Matte, the old Roto Brush): the user clicks the subject once with the Object Matte Tool; a script cannot make that selection. This call brings the comp forward, sets the comp's resolution to Full, moves to `time` (default: the layer's in point; pick a frame where the subject is clearly visible), selects only that layer, opens it in the Layer panel and chooses View > Resolution > Full there (viewerResolution: the menu command is looked up by its name 'Full', and a script cannot read whether the viewer then draws at Full; not verified). It adds no effect and does not pick the tool. Returns notice and steps (the user's instructions, with the clip's name and the subject filled in) and userMessage (both as one text): relay them to the user word for word. Also returns did (the steps done), couldNotDo (any that failed, with the error; beforeSteps then says what to tell the user first) and existing (an Object Matte already on the layer and its selections). After the user says done, run subject.check before building anything. Verified in After Effects 27.0 on a real take, apart from the View > Resolution > Full step.",
   params: [
     ...compLayerParams,
     {
@@ -697,7 +773,7 @@ registerOp({
                 try { fn(); _did.push(what); } catch (eSt) { _couldNot.push({ step: what, error: AE.errText(eSt) }); }
             }
             _step("brought the comp forward", function () { _comp.openInViewer(); });
-            _step("set the comp to full resolution", function () { _comp.resolutionFactor = [1, 1]; });
+            _step("set the comp's resolution to Full (the viewer can still draw at another resolution while it is on Auto)", function () { _comp.resolutionFactor = [1, 1]; });
             _step("moved to " + _t + " s", function () { _comp.time = _t; });
             _step("selected only layer '" + _layer.name + "'", function () {
                 for (var _li = 1; _li <= _comp.numLayers; _li++) { var _l = _comp.layer(_li); if (_l.selected) _l.selected = false; }
@@ -710,6 +786,14 @@ registerOp({
                 app.executeCommand(_id);
                 _opened = true;
             });
+            ${VIEWER_FULL_JSX}
+            var _viewer = { command: "Full", commandId: null, verified: false,
+                note: "chose View > Resolution > Full for the Layer panel; a script cannot read the viewer's resolution, so whether it now draws at Full is not known. If After Effects' yellow bar asks for full resolution, step 4 has the user choose it" };
+            if (_opened) {
+                _step("chose View > Resolution > Full", function () { _viewer.commandId = _viewerToFull(); });
+            } else {
+                _couldNot.push({ step: "chose View > Resolution > Full", error: "skipped: the Layer panel did not open, and the command acts on the active viewer" });
+            }
             var _pick = AE.pickEffect(_fxRoot, ${jsxVal(OBJECT_MATTE_MATCH_NAME)}, "Object Matte", null);
             var _existing = { objectMatte: _pick.index !== null, effectIndex: _pick.index, count: _pick.count || 0, selections: [] };
             if (_pick.index !== null) _existing.selections = _omSelections(_fxRoot.property(_pick.index)).list;
@@ -727,6 +811,7 @@ registerOp({
                 time: _t,
                 did: _did,
                 couldNotDo: _couldNot,
+                viewerResolution: _viewer,
                 existing: _existing,
                 notice: _notice,
                 steps: _steps,
@@ -748,7 +833,7 @@ registerOp({
   name: "subject.status",
   category: "subject",
   readOnly: true,
-  description: "Read a layer's subject matte (Object Matte, ADBE Samurai) without changing anything: whether the effect is there, its selections (name; kind 'object' for a click with the Object Matte Tool, 'Add Object N', 'quick-selection' for a stroke with the old brush, 'Quick Select Foreground N', 'other' otherwise; duration), its settings (value, the range After Effects reports now, the range measured in After Effects 27.0, default, and foundBy: how the property was found, matchName, walk or name), and summary, one plain sentence ('no selection yet: the user has not clicked', '1 object selected'). Run it after the user says done; then render the subject over a flat colour (ae_render_frame over) and the matte (channels 'alpha', edge true). removeNote says how to start the selection again.",
+  description: "Read a layer's subject matte (Object Matte, ADBE Samurai) without changing anything: whether the effect is there, its selections (name; kind 'object' for a click with the Object Matte Tool, 'Add Object N', 'quick-selection' for a stroke with the old brush, 'Quick Select Foreground N', 'other' otherwise; duration), its settings (value, the range After Effects reports now, the range measured in After Effects 27.0, default, and foundBy: how the property was found, matchName, walk or name), and summary, one plain sentence ('no selection yet: the user has not clicked', '1 object selected'). Also each selection's clicked point (Transform > Position, source pixels; compPoint in comp pixels where After Effects gives it) and Duration start, closeClicks (two clicks closer than 5% of the source's shorter side probably selected the same thing), sourceSize, compSize and span (the layer in comp frames). A selection count is not a check: after the user says done, run subject.check. removeNote says how to take a selection out or start again.",
   params: [...compLayerParams, subjectIndexParam],
   toJsx(args) {
     return `
@@ -759,15 +844,17 @@ registerOp({
             if (_pick.error) return { ok: false, error: _pick.error };
             if (_pick.index === null) {
                 return { ok: true, layer: _layer.name, objectMatte: { present: false, effectIndex: null, count: 0 }, selections: [], settings: null,
-                    summary: _omSummary(false, []), next: ${jsxVal(`Nothing selected: ${NEED_CLICK}.`)}, effects: AE.effectOrder(_fxRoot) };
+                    summary: _omSummary(false, []), next: ${jsxVal(`Nothing selected: ${NEED_CLICK}.`)}, effects: AE.effectOrder(_fxRoot),
+                    sourceSize: _omSourceSize(), compSize: [_comp.width, _comp.height], span: _omSpan() };
             }
             var _fx = _fxRoot.property(_pick.index);
             var _sel = _omSelections(_fx);
-            var _counts = { object: 0, quickSelection: 0, other: 0 };
+            var _counts = { object: 0, rectangle: 0, quickSelection: 0, other: 0 };
             for (var _i = 0; _i < _sel.list.length; _i++) {
                 var _k = _sel.list[_i].kind;
-                if (_k === "object") _counts.object++; else if (_k === "quick-selection") _counts.quickSelection++; else _counts.other++;
+                if (_k === "object") _counts.object++; else if (_k === "rectangle") _counts.rectangle++; else if (_k === "quick-selection") _counts.quickSelection++; else _counts.other++;
             }
+            var _src = _omSourceSize();
             var _out = {
                 ok: true,
                 layer: _layer.name,
@@ -776,8 +863,14 @@ registerOp({
                 counts: _counts,
                 settings: _omSettings(_fx, ${jsxVal(OBJECT_MATTE_SETTINGS)}),
                 summary: _omSummary(true, _sel.list),
+                countNote: ${jsxVal(COUNT_NOTE)},
+                closeClicks: _omCloseClicks(_sel.list, _src),
+                sourceSize: _src,
+                compSize: [_comp.width, _comp.height],
+                span: _omSpan(),
                 removeNote: ${jsxVal(REMOVE_NOTE)},
-                effects: AE.effectOrder(_fxRoot)
+                effects: AE.effectOrder(_fxRoot),
+                next: ${jsxVal(CHECK_NEXT)}
             };
             if (_sel.list.length === 0) _out.next = ${jsxVal(`No selection yet: ${NEED_CLICK}.`)};
             return _out;
@@ -874,7 +967,518 @@ registerOp({
         `;
   }
 });
+registerOp({
+  name: "subject.remove_selection",
+  category: "subject",
+  description: "Remove one selection from a layer's Object Matte, by its name ('Add Object 2', 'Add Object Rect 1') or its 1-based place in subject.status's list, so a wrong click does not mean starting again. remove() on a selection was confirmed in After Effects 27.0: the matte read the same afterwards when the removed selection had selected nothing. Returns removed, the selections left and summary. Run subject.check afterwards.",
+  params: [
+    ...compLayerParams,
+    {
+      name: "selection",
+      type: "any",
+      description: "The selection's name, or its 1-based place in subject.status's selections (newest first).",
+      required: true
+    },
+    subjectIndexParam
+  ],
+  toJsx(args) {
+    const sel = args.selection;
+    if (!(typeof sel === "string" && sel.trim() !== "") && !(typeof sel === "number" && Number.isInteger(sel) && sel >= 1)) {
+      return jsxFail(
+        `\`selection\` must be a selection's name or a 1-based number; got ${JSON.stringify(sel)}`
+      );
+    }
+    return `
+            ${jsxCompLayerPreamble(args)}
+            ${FX_ROOT_JSX}
+            ${OBJECT_MATTE_JSX}
+            var _pick = AE.pickEffect(_fxRoot, ${jsxVal(OBJECT_MATTE_MATCH_NAME)}, "Object Matte", ${jsxVal(args.effectIndex ?? null)});
+            if (_pick.error) return { ok: false, error: _pick.error };
+            if (_pick.index === null) return { ok: false, error: "layer '" + _layer.name + "' has no Object Matte, so there is no selection to remove" };
+            var _fx = _fxRoot.property(_pick.index);
+            var _g = _omFind(_fx, ${jsxVal(OBJECT_MATTE_SELECTIONS_MATCH_NAME)}, "Selections").prop;
+            var _before = _omSelections(_fx).list;
+            var _names = [];
+            for (var _i = 0; _i < _before.length; _i++) _names.push(_before[_i].name);
+            var _want = ${jsxVal(sel)};
+            var _at = -1;
+            if (typeof _want === "number") { if (_want >= 1 && _want <= _before.length) _at = _want; }
+            else { for (var _j = 0; _j < _before.length; _j++) if (_before[_j].name === _want) { _at = _before[_j].index; break; } }
+            if (_at < 0 || !_g) {
+                return { ok: false, error: (typeof _want === "number" ? "no selection at place " + _want : "no selection '" + _want + "'") +
+                    " on Object Matte (selections: " + (_names.length ? _names.join(", ") : "none") + ")" };
+            }
+            var _removed = AE.safeGet(function () { return _g.property(_at).name; }, String(_want));
+            _g.property(_at).remove();
+            var _after = _omSelections(_fx).list;
+            return { ok: true, layer: _layer.name, effectIndex: _pick.index, removed: _removed, selections: _after,
+                summary: _omSummary(true, _after), next: ${jsxVal(CHECK_NEXT)} };
+        `;
+  }
+});
+const CUTOUT_HOLE_LIMIT = 1e3;
+const CUTOUT_FRAMES = 8;
+const CUTOUT_OVER = "#ff00ff";
+const CUTOUT_LISTED = 50;
+const intersects = (a, b) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+const union = (a, b) => {
+  const x = Math.min(a.x, b.x);
+  const y = Math.min(a.y, b.y);
+  return {
+    x,
+    y,
+    width: Math.max(a.x + a.width, b.x + b.width) - x,
+    height: Math.max(a.y + a.height, b.y + b.height) - y
+  };
+};
+const fmt = (n) => Math.round(n).toLocaleString("en-US");
+const boxText = (b) => `(${b.x}, ${b.y}, ${b.width} \xD7 ${b.height})`;
+function cutoutFindings(frames, limit) {
+  const out = [];
+  for (const f of frames) {
+    for (const h of f.holes) {
+      if (h.area < limit) continue;
+      const b = { x: h.x, y: h.y, width: h.width, height: h.height };
+      const hit = out.find((o) => intersects(o.box, b));
+      if (hit) {
+        hit.box = union(hit.box, b);
+        hit.largestArea = Math.max(hit.largestArea, h.area);
+        if (!hit.frames.includes(f.frame)) hit.frames.push(f.frame);
+      } else out.push({ kind: "hole", frames: [f.frame], largestArea: h.area, box: b });
+    }
+  }
+  return out.sort((a, b) => b.largestArea - a.largestArea);
+}
+function framesAcross(span, count, extra) {
+  const a = span?.inFrame ?? 0;
+  const b = span?.outFrame ?? a + 1;
+  const set = /* @__PURE__ */ new Set();
+  for (let i = 0; i < count; i++) set.add(a + Math.floor(i * (b - a) / count));
+  for (const e of extra) if (typeof e === "number" && e >= a && e < b) set.add(Math.round(e));
+  return [...set].sort((x, y) => x - y).slice(0, 32);
+}
+function frameReadings(payload, limit) {
+  const list = payload.frames ?? (payload.writtenTo ? [payload] : []);
+  return list.map((f) => {
+    const holes = (f.edge?.holes?.list ?? []).map((h) => ({
+      x: h.x,
+      y: h.y,
+      width: h.width,
+      height: h.height,
+      area: h.area
+    }));
+    const big = holes.filter((h) => h.area >= limit);
+    const small = holes.filter((h) => h.area < limit);
+    return {
+      frame: f.frame,
+      picture: f.writtenTo,
+      holes: big,
+      holesUnderLimit: { count: small.length, area: small.reduce((s, h) => s + h.area, 0) },
+      holeCount: f.edge?.holes?.count ?? holes.length,
+      solidAreas: f.edge?.solidAreas?.count ?? null,
+      specks: f.edge?.specks?.count ?? null,
+      edgeWidth: f.edge?.width ? { typical: f.edge.width.typical, p90: f.edge.width.p90 } : null,
+      ...f.error ? { error: f.error } : {}
+    };
+  });
+}
+function holeLines(findings, frames) {
+  return findings.map(
+    (h) => `${fmt(h.largestArea)} px at ${boxText(h.box)} on ${h.frames.length} of ${frames} frames (${h.frames.join(", ")})`
+  );
+}
+const needSelection = (st) => {
+  if (!st?.objectMatte?.present || !Array.isArray(st.selections) || st.selections.length === 0)
+    return `${st?.summary ?? "no selection"}; ${NEED_CLICK}`;
+  return null;
+};
+async function runSubjectCheck(args, io) {
+  const outDir = args.outDir;
+  if (typeof outDir !== "string" || !path.isAbsolute(outDir))
+    return { ok: false, error: "`outDir` must be an absolute folder for the pictures" };
+  const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
+  const st = await io.status();
+  if (!st?.ok) return { ok: false, error: st?.error ?? "subject.status failed", status: st };
+  const missing = needSelection(st);
+  if (missing) return { ok: false, error: missing };
+  const frames = Array.isArray(args.frames) ? args.frames.slice().sort((a, b) => a - b) : framesAcross(st.span, typeof args.count === "number" ? args.count : CUTOUT_FRAMES, [
+    args.clickFrame
+  ]);
+  const payload = await io.render({
+    compNameOrId: args.comp,
+    frames,
+    outPath: path.join(outDir, "cutout.png"),
+    isolate: args.layer,
+    over: typeof args.over === "string" ? args.over : CUTOUT_OVER,
+    edge: { listed: CUTOUT_LISTED },
+    contactSheet: {}
+  });
+  if (!payload?.ok)
+    return {
+      ok: false,
+      error: `the cut-out render failed: ${payload?.error ?? "no result"}`,
+      render: payload
+    };
+  const readings = frameReadings(payload, limit);
+  const holes = cutoutFindings(readings, limit);
+  const clicks = st.selections.map((s) => ({
+    name: s.name,
+    kind: s.kind,
+    point: s.point ?? null,
+    durationStart: s.durationStart ?? null
+  }));
+  const close = closeClicks(clicks, st.sourceSize ?? null);
+  const findings = [...holes];
+  if (close.length) findings.push({ kind: "close-clicks", pairs: close });
+  const rects = clicks.filter((c) => c.kind === "rectangle").map((c) => c.name);
+  const picture = payload.contactSheet?.writtenTo ?? readings[0]?.picture ?? null;
+  const solid = readings.find((r) => r.solidAreas !== null)?.solidAreas;
+  const inText = `In: ${st.summary}` + (typeof solid === "number" ? `, making ${solid} solid area${solid === 1 ? "" : "s"} on the first frame` : "") + ".";
+  const outText = holes.length ? `Out: ${holes.length} enclosed hole${holes.length === 1 ? "" : "s"} of ${fmt(limit)} px or more inside the cut-out: ${holeLines(holes, readings.length).join("; ")}. A hole in the subject is something not selected (a microphone, a cup) or a gap in it that no click fills (subject.fill_gaps).` : `Out: no enclosed hole over ${fmt(limit)} px on the ${readings.length} frames looked at.`;
+  const clickText = close.length ? ` Clicks: ${close.map((c) => c.reading).join("; ")}.` : "";
+  const rectText = rects.length ? ` ${rects.join(", ")}: a click that dragged a little; it may hold nothing (subject.remove_selection).` : "";
+  return {
+    ok: true,
+    layer: st.layer,
+    stop: findings.length > 0,
+    findings,
+    inOut: `${inText} ${outText}${clickText}${rectText} Look at the picture (${picture}): it shows what no number does, such as the background kept or something the brief names left out without a hole.`,
+    picture,
+    frames: readings,
+    clicks,
+    countNote: COUNT_NOTE,
+    holeLimit: limit,
+    next: findings.length ? "Stop: show the user the picture and say what is out, before building anything else. A missed object needs another click (subject.prepare, then the steps); a wrong extra click comes out with subject.remove_selection; an enclosed gap no click fills goes to subject.fill_gaps. Then run subject.check again." : "Nothing over the limit. Still look at the picture yourself and tell the user what is in and what is out before building on the cut-out."
+  };
+}
+const FILL_LIMITS = (frame) => [
+  `The still comes from one frame (frame ${frame}): it assumes a locked camera and that what is in front of the subject does not move. Anything that moves away from the still's gaps shows through the fill.`,
+  "What shows through a filled gap is whatever is behind it in the footage. That is the subject only while the subject is behind the gap.",
+  "Every enclosed gap at that frame is filled, including a real one (between an arm and the body) where the background will show; pass `only` boxes to fill just the gaps you mean."
+];
+async function runFillGaps(args, io) {
+  const still = args.stillPath;
+  if (typeof still !== "string" || !path.isAbsolute(still) || path.extname(still).toLowerCase() !== ".png") {
+    return {
+      ok: false,
+      error: "`stillPath` must be an absolute path to a .png file, kept with the project (the comp will use it)"
+    };
+  }
+  const rejected = rejectedOutputPath(still);
+  if (rejected) return { ok: false, error: rejected };
+  const outDir = typeof args.outDir === "string" && path.isAbsolute(args.outDir) ? args.outDir : path.dirname(still);
+  const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
+  const minArea = typeof args.minArea === "number" ? args.minArea : 20;
+  const grow = typeof args.grow === "number" ? args.grow : 3;
+  const st = await io.status();
+  if (!st?.ok) return { ok: false, error: st?.error ?? "subject.status failed", status: st };
+  const missing = needSelection(st);
+  if (missing) return { ok: false, error: missing };
+  const frame = typeof args.frame === "number" ? args.frame : st.span?.inFrame ?? 0;
+  const ref = await io.render({
+    compNameOrId: args.comp,
+    frames: [frame],
+    outPath: path.join(outDir, "fill-reference.png"),
+    isolate: args.layer,
+    channels: "rgba"
+  });
+  if (!ref?.ok)
+    return {
+      ok: false,
+      error: `the reference render failed: ${ref?.error ?? "no result"}`,
+      render: ref
+    };
+  const refFile = ref.frames?.[0]?.writtenTo ?? ref.writtenTo;
+  if (!refFile) return { ok: false, error: "the reference render wrote no file", render: ref };
+  const img = await io.readAlpha(refFile);
+  const [cw, ch] = Array.isArray(st.compSize) ? st.compSize : [img.width, img.height];
+  if (img.width !== cw || img.height !== ch) {
+    return {
+      ok: false,
+      error: `the reference render came back ${img.width} \xD7 ${img.height}, not the comp's size ${cw} \xD7 ${ch}; set the comp to Full resolution and try again. Nothing was built.`
+    };
+  }
+  const only = Array.isArray(args.only) ? args.only : null;
+  const found = enclosedHoles(img.alpha, img.width, img.height, {
+    minArea,
+    keep: only ? (h) => only.some((b) => intersects(h, b)) : void 0
+  });
+  const area = found.holes.reduce((s, h) => s + h.area, 0);
+  const filled = {
+    holes: found.holes.length,
+    area,
+    list: found.holes.slice(0, 20),
+    dropped: found.dropped,
+    leftOut: found.leftOut,
+    grow,
+    minArea
+  };
+  if (found.holes.length === 0) {
+    return {
+      ok: true,
+      reference: { frame, picture: refFile },
+      filled,
+      reading: `No enclosed gap of ${minArea} px or more to fill at frame ${frame}; nothing was built.`,
+      limits: FILL_LIMITS(frame)
+    };
+  }
+  const grown = growMask(found.mask, img.width, img.height, grow);
+  const values = new Float64Array(grown.length);
+  let grownArea = 0;
+  for (let p = 0; p < grown.length; p++)
+    if (grown[p]) {
+      values[p] = 1;
+      grownArea++;
+    }
+  filled.grownArea = grownArea;
+  filled.still = still;
+  const png = encodePngGray8(img.width, img.height, values);
+  if (io.writePng) await io.writePng(still, png);
+  else {
+    await fs.mkdir(path.dirname(still), { recursive: true });
+    await fs.writeFile(still, png);
+  }
+  const built = await io.build({ comp: args.comp, layer: args.layer, stillPath: still });
+  if (!built?.ok)
+    return {
+      ok: false,
+      error: `the still was written to ${still}, but the fill could not be built: ${built?.error ?? "no result"}`,
+      filled,
+      build: built
+    };
+  const frames = Array.isArray(args.frames) ? args.frames.slice().sort((a, b) => a - b) : framesAcross(st.span, typeof args.count === "number" ? args.count : CUTOUT_FRAMES, [frame]);
+  const after = await io.render({
+    compNameOrId: args.comp,
+    frames,
+    outPath: path.join(outDir, "fill-after.png"),
+    isolate: [args.layer, built.fillLayer],
+    over: typeof args.over === "string" ? args.over : CUTOUT_OVER,
+    edge: { listed: CUTOUT_LISTED },
+    contactSheet: {}
+  });
+  const afterOut = after?.ok ? (() => {
+    const readings = frameReadings(after, limit);
+    const findings = cutoutFindings(readings, limit);
+    return {
+      frames: readings,
+      findings,
+      picture: after.contactSheet?.writtenTo ?? null,
+      reading: findings.length ? `Still over ${fmt(limit)} px after the fill: ${holeLines(findings, readings.length).join("; ")}.` : `No enclosed hole over ${fmt(limit)} px on the ${readings.length} frames looked at after the fill.`
+    };
+  })() : { error: `the render after the fill failed: ${after?.error ?? "no result"}` };
+  return {
+    ok: true,
+    reference: { frame, picture: refFile },
+    filled,
+    layers: { fill: built.fillLayer, mask: built.maskLayer, stillItem: built.stillItem },
+    after: afterOut,
+    limits: FILL_LIMITS(frame),
+    next: "Show the user the picture after the fill and say what is left. To undo the fill, delete the two layers it added."
+  };
+}
+function fillBuildJsx(args) {
+  return `
+            ${jsxCompLayerPreamble(args)}
+            var _fillName = _layer.name + " gap fill";
+            var _maskName = _layer.name + " gap mask";
+            for (var _li = 1; _li <= _comp.numLayers; _li++) {
+                var _ln = _comp.layer(_li).name;
+                if (_ln === _fillName || _ln === _maskName) return { ok: false, error: "comp " + _comp.name + " already has a layer '" + _ln + "'; delete the earlier fill's two layers first" };
+            }
+            var _file = new File(${jsxVal(args.stillPath)});
+            if (!_file.exists) return { ok: false, error: "no file at " + ${jsxVal(args.stillPath)} };
+            var _item = app.project.importFile(new ImportOptions(_file));
+            var _mask = _comp.layers.add(_item);
+            _mask.name = _maskName;
+            var _fill = _layer.duplicate();
+            _fill.name = _fillName;
+            var _fxs = _fill.property("ADBE Effect Parade");
+            var _removed = 0;
+            if (_fxs) {
+                for (var _fi = _fxs.numProperties; _fi >= 1; _fi--) {
+                    if (_fxs.property(_fi).matchName === ${jsxVal(OBJECT_MATTE_MATCH_NAME)}) { _fxs.property(_fi).remove(); _removed++; }
+                }
+            }
+            _fill.moveAfter(_layer);
+            _mask.moveBefore(_fill);
+            var _spanError = null;
+            try {
+                _mask.startTime = 0;
+                _mask.inPoint = Math.min(_layer.inPoint, _layer.outPoint);
+                _mask.outPoint = Math.max(_layer.inPoint, _layer.outPoint);
+            } catch (eSpan) { _spanError = AE.errText(eSpan); }
+            _fill.setTrackMatte(_mask, TrackMatteType.LUMA);
+            _mask.enabled = false;
+            var _out = { ok: true, fillLayer: _fill.name, fillIndex: _fill.index, maskLayer: _mask.name, maskIndex: _mask.index, stillItem: _item.name, removedFromCopy: _removed };
+            if (_spanError !== null) _out.maskSpanError = _spanError;
+            return _out;
+        `;
+}
+function liveCutoutIO(args, transport) {
+  return {
+    async status() {
+      const code = getOp("subject.status").toJsx({
+        comp: args.comp,
+        layer: args.layer,
+        effectIndex: args.effectIndex
+      });
+      const r = await transport.execute({
+        code,
+        label: "subject.status",
+        undoGroup: false,
+        timeoutMs: 3e4
+      });
+      return r.ok ? r.result : { ok: false, error: r.error ?? "subject.status failed" };
+    },
+    async render(renderArgs) {
+      const out = await renderFrameTool.handler(renderArgs, transport);
+      const sc = out.structuredContent;
+      if (out.isError)
+        return {
+          ok: false,
+          error: sc?.error?.message ?? sc?.error ?? "ae_render_frame failed",
+          details: sc
+        };
+      return sc?.result ?? { ok: false, error: "ae_render_frame returned no result" };
+    },
+    async readAlpha(file) {
+      const img = decodePng(await fs.readFile(file));
+      if (!img.alpha) throw new Error(`${file} has no alpha channel`);
+      return { width: img.width, height: img.height, alpha: img.alpha };
+    },
+    async build(a) {
+      const r = await transport.execute({
+        code: fillBuildJsx(a),
+        label: "subject.fill_gaps",
+        undoGroup: true,
+        suppressDialogs: true,
+        rollback: true,
+        timeoutMs: 6e4
+      });
+      return r.ok ? r.result : { ok: false, error: r.error ?? "the build failed", rollback: r.rollback };
+    }
+  };
+}
+const NODE_ONLY = (name) => jsxFail(
+  `${name} runs in Node (it reads pixels), so it cannot ride inside batch.run; call it through ae_do`
+);
+const frameListParam = {
+  name: "frames",
+  type: "array",
+  description: "Comp frame numbers to look at, instead of the default: `count` frames evenly spaced across the layer, plus the click frame.",
+  required: false
+};
+registerOp({
+  name: "subject.check",
+  category: "subject",
+  description: `Proof a subject matte after the user says done, before anything else is built: renders the cut-out over a flat colour (default magenta) at the click frame and at frames across the clip (ae_render_frame isolate, edge, a contact sheet), finds enclosed holes with edge's code, and returns picture (the sheet), findings, inOut (a plain statement of what is in and what is out) and stop. A hole of holeLimit px or more (default ${CUTOUT_HOLE_LIMIT}, at the comp's size) is a finding, and so are two clicks close together (they probably selected the same thing). With stop true: show the user the picture and say what is out before doing anything else. A selection count is not a check. Renders track the matte from the click: about 0.13 s a frame the first time (measured).`,
+  params: [
+    ...compLayerParams,
+    {
+      name: "outDir",
+      type: "string",
+      description: "Absolute folder for the pictures.",
+      required: true
+    },
+    {
+      name: "clickFrame",
+      type: "number",
+      description: "The comp frame the user clicked at (subject.prepare's time in frames). Looked at as well.",
+      required: false
+    },
+    frameListParam,
+    {
+      name: "count",
+      type: "number",
+      description: `How many frames across the layer (default ${CUTOUT_FRAMES}).`,
+      required: false
+    },
+    {
+      name: "holeLimit",
+      type: "number",
+      description: `Smallest hole that is a finding, px at the comp's size (default ${CUTOUT_HOLE_LIMIT}).`,
+      required: false
+    },
+    {
+      name: "over",
+      type: "string",
+      description: `The flat colour (default '${CUTOUT_OVER}').`,
+      required: false
+    },
+    subjectIndexParam
+  ],
+  toJsx: () => NODE_ONLY("subject.check"),
+  run: (args, transport) => runSubjectCheck(args, liveCutoutIO(args, transport))
+});
+registerOp({
+  name: "subject.fill_gaps",
+  category: "subject",
+  description: "Fill enclosed gaps in a subject matte that no click fills (a gap in a microphone's shock mount with the shirt behind it): reads the matte at one reference frame at the comp's size, keeps the transparent regions the frame edge cannot reach, drops those under minArea (default 20 px), grows the rest by `grow` px (default 3), writes them as a still (stillPath), and adds a copy of the same footage under the cut-out showing only through that still (luma track matte); then measures holes again across the clip and reports what is left. Limits, stated in the result: one reference frame, so it assumes a locked camera and a prop that does not move; what shows through is whatever is behind the gap. `only` boxes fill just the gaps they touch. Probed by hand in After Effects 27.0; this operation is not verified there yet.",
+  params: [
+    ...compLayerParams,
+    {
+      name: "stillPath",
+      type: "string",
+      description: "Absolute .png path for the gap mask, kept with the project (the comp uses it).",
+      required: true
+    },
+    {
+      name: "frame",
+      type: "number",
+      description: "Reference comp frame (default: the layer's first frame; use the click frame).",
+      required: false
+    },
+    {
+      name: "minArea",
+      type: "number",
+      description: "Smallest gap filled, px (default 20).",
+      required: false
+    },
+    {
+      name: "grow",
+      type: "number",
+      description: "Grow each gap by this many px (default 3).",
+      required: false
+    },
+    {
+      name: "only",
+      type: "array",
+      description: "Boxes {x, y, width, height} in comp pixels: fill only the gaps they touch (from subject.check's findings).",
+      required: false
+    },
+    {
+      name: "outDir",
+      type: "string",
+      description: "Absolute folder for the measuring renders (default: the still's folder).",
+      required: false
+    },
+    frameListParam,
+    {
+      name: "count",
+      type: "number",
+      description: `How many frames to measure after the fill (default ${CUTOUT_FRAMES}).`,
+      required: false
+    },
+    {
+      name: "holeLimit",
+      type: "number",
+      description: `Smallest hole reported after the fill, px (default ${CUTOUT_HOLE_LIMIT}).`,
+      required: false
+    },
+    {
+      name: "over",
+      type: "string",
+      description: `The flat colour (default '${CUTOUT_OVER}').`,
+      required: false
+    },
+    subjectIndexParam
+  ],
+  toJsx: () => NODE_ONLY("subject.fill_gaps"),
+  run: (args, transport) => runFillGaps(args, liveCutoutIO(args, transport))
+});
 export {
+  CLOSE_CLICK_SHARE,
+  CUTOUT_HOLE_LIMIT,
   KEYLIGHT_MATCH_NAME,
   KEYLIGHT_SETTINGS,
   KEYLIGHT_VIEWS,
@@ -886,7 +1490,12 @@ export {
   SPILL_SUPPRESSOR_MATCH_NAME,
   SPILL_SUPPRESSOR_SETTINGS,
   SUBJECT_MATTE_NOTICE,
+  closeClicks,
+  cutoutFindings,
+  fillBuildJsx,
   keylightViewNumber,
+  runFillGaps,
+  runSubjectCheck,
   selectionKind,
   subjectMatteSteps
 };

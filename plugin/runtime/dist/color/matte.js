@@ -728,4 +728,65 @@ export function summarizeFlicker(pairs) {
     };
     return { edge: zone("edge"), inside: zone("inside"), outside: zone("outside"), all: zone("all") };
 }
+/**
+ * The holes `edge` reports (4-connected regions below `below`, default edge's
+ * opaque threshold, that do not reach the frame edge), as a list and as a
+ * mask: 1 for every pixel of a kept hole. Holes smaller than `minArea` pixels
+ * are left out of both and counted in `dropped`; holes `keep` refuses are left
+ * out and counted in `leftOut`.
+ */
+export function enclosedHoles(alpha, width, height, opts = {}) {
+    const below = opts.below ?? EDGE_DEFAULTS.opaque;
+    const minArea = opts.minArea ?? 1;
+    const n = width * height;
+    const a = alpha instanceof Float64Array ? alpha : Float64Array.from(alpha);
+    const labels = new Int32Array(n);
+    const queue = new Int32Array(n);
+    const regions = labelRegions(a, width, height, (p) => a[p] < below, false, labels, queue, EDGE_DEFAULTS.transparent);
+    const keep = new Uint8Array(regions.length + 1);
+    const holes = [];
+    const dropped = { count: 0, area: 0 };
+    const leftOut = { count: 0, area: 0 };
+    const entry = (r) => ({
+        ...box(r),
+        area: r.area,
+        meanAlpha: Math.round((r.alphaSum / r.area) * 1000) / 1000,
+    });
+    regions.forEach((r, i) => {
+        if (r.touchesBorder)
+            return;
+        if (r.area < minArea) {
+            dropped.count++;
+            dropped.area += r.area;
+            return;
+        }
+        if (opts.keep && !opts.keep(entry(r))) {
+            leftOut.count++;
+            leftOut.area += r.area;
+            return;
+        }
+        keep[i + 1] = 1;
+        holes.push({ r, id: i + 1 });
+    });
+    const mask = new Uint8Array(n);
+    for (let p = 0; p < n; p++)
+        if (keep[labels[p]])
+            mask[p] = 1;
+    holes.sort((x, y) => y.r.area - x.r.area);
+    return { holes: holes.map(({ r }) => entry(r)), mask, dropped, leftOut };
+}
+/** `mask` grown by `radius` px: every pixel within that Euclidean distance of a set pixel is set. */
+export function growMask(mask, width, height, radius) {
+    if (radius <= 0)
+        return Uint8Array.from(mask);
+    const src = Float64Array.from(mask);
+    const scratch = new Float32Array(width * height);
+    const dist = new Float32Array(width * height);
+    distanceTo(src, width, height, (v) => v > 0, scratch, dist);
+    const out = new Uint8Array(width * height);
+    for (let p = 0; p < out.length; p++)
+        if (dist[p] <= radius + 1e-9)
+            out[p] = 1;
+    return out;
+}
 //# sourceMappingURL=matte.js.map
