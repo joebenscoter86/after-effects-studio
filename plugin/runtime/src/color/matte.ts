@@ -1649,3 +1649,119 @@ export function speckPieces(
   }
   return pieces.sort((p, q) => q.area - p.area);
 }
+
+// ---------------------------------------------------------------------------
+// A softened edge against the matte as clicked (subject.soften_edge)
+// ---------------------------------------------------------------------------
+
+/** The top row of the subject (alpha 0.5 or more), or -1 when there is none. */
+export function subjectTop(alpha: Float64Array, width: number, height: number): number {
+  for (let y = 0; y < height; y++) {
+    const row = y * width;
+    for (let x = 0; x < width; x++) if (alpha[row + x] >= 0.5) return y;
+  }
+  return -1;
+}
+
+/** Overlap (intersection over union) of two mattes cut at alpha 0.5. */
+function overlapOf(a: Float64Array, b: Float64Array): number {
+  let inter = 0;
+  let uni = 0;
+  for (let p = 0; p < a.length; p++) {
+    const x = a[p] >= 0.5;
+    const y = b[p] >= 0.5;
+    if (x && y) inter++;
+    if (x || y) uni++;
+  }
+  return uni ? inter / uni : 1;
+}
+
+/** The frame whose matte overlaps the reference (the click frame) least: where the subject has moved furthest. */
+export function furthestFrame(
+  ref: Float64Array,
+  others: Array<{ frame: number; alpha: Float64Array }>,
+  width: number,
+  height: number,
+): { frame: number; overlap: number } {
+  void width;
+  void height;
+  let best = { frame: others[0]?.frame ?? -1, overlap: 1 };
+  for (const o of others) {
+    const ov = Math.round(overlapOf(ref, o.alpha) * 10000) / 10000;
+    if (ov < best.overlap) best = { frame: o.frame, overlap: ov };
+  }
+  return best;
+}
+
+export interface CoverageReport {
+  /** Pixels solid in the matte as clicked, more than `deep` px inside its edge, that are under 0.99 in the result. */
+  seenThrough: number;
+  /** The lowest alpha of the result over those deep pixels (1 when nothing is seen through). */
+  minAlpha: number;
+  /** The rows the seen-through pixels span, or null. */
+  band: { from: number; to: number } | null;
+  /** Result pixels at `spreadAlpha` or more lying more than `outside` px outside the outline as clicked: a smear. */
+  outside: { px: number; box: { x: number; y: number; width: number; height: number } | null };
+  deep: number;
+  outsideDistance: number;
+}
+
+/**
+ * The closing check of subject.soften_edge, on one frame: nothing that was
+ * solid well inside the subject may become see-through (a seam, keying.md
+ * fact 38), and nothing may spread far outside the outline (a smear, fact 39).
+ */
+export function matteCoverage(
+  asClicked: Float64Array,
+  result: Float64Array,
+  width: number,
+  height: number,
+  opts: { deep?: number; outside?: number; spreadAlpha?: number } = {},
+): CoverageReport {
+  const deep = opts.deep ?? 30;
+  const outside = opts.outside ?? 10;
+  const spreadAlpha = opts.spreadAlpha ?? 0.2;
+  const n = width * height;
+  const scratch = new Float32Array(n);
+  const dIn = new Float32Array(n);
+  const dOut = new Float32Array(n);
+  distanceTo(asClicked, width, height, (a) => a < 0.99, scratch, dIn);
+  distanceTo(asClicked, width, height, (a) => a >= 0.5, scratch, dOut);
+  let seen = 0;
+  let minAlpha = 1;
+  let from = -1;
+  let to = -1;
+  let px = 0;
+  let x0 = width;
+  let y0 = height;
+  let x1 = -1;
+  let y1 = -1;
+  for (let p = 0; p < n; p++) {
+    const y = (p / width) | 0;
+    if (asClicked[p] >= 0.99 && dIn[p] > deep) {
+      const r = result[p];
+      if (r < minAlpha) minAlpha = r;
+      if (r < 0.99) {
+        seen++;
+        if (from < 0 || y < from) from = y;
+        if (y > to) to = y;
+      }
+    }
+    if (result[p] >= spreadAlpha && dOut[p] > outside) {
+      px++;
+      const x = p - y * width;
+      if (x < x0) x0 = x;
+      if (x > x1) x1 = x;
+      if (y < y0) y0 = y;
+      if (y > y1) y1 = y;
+    }
+  }
+  return {
+    seenThrough: seen,
+    minAlpha: Math.round(minAlpha * 10000) / 10000,
+    band: seen ? { from, to } : null,
+    outside: { px, box: px ? { x: x0, y: y0, width: x1 - x0 + 1, height: y1 - y0 + 1 } : null },
+    deep,
+    outsideDistance: outside,
+  };
+}

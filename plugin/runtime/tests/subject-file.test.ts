@@ -20,6 +20,7 @@ import {
   diskReport,
   renderCutoutBytes,
   renderCutoutJsx,
+  renderCutoutPlanJsx,
   runCheckFile,
   runRenderCutout,
   useCutoutJsx,
@@ -111,6 +112,29 @@ function renderIO(plan: Any = PLAN): FileIO & { calls: Any[] } {
     freeBytes: async () => 500e9,
   };
 }
+
+describe("subject.render_cutout on a softened edge", () => {
+  it("counts the disk cache of both matte passes, and keeps the soft-edge layer the plan names", async () => {
+    const io = renderIO({
+      ...PLAN,
+      keep: ["raw_nogreen.mp4 soft edge", "raw_nogreen.mp4 gap fill"],
+      matteCopies: 2,
+    });
+    const res = await runRenderCutout(
+      { comp: "Main", layer: 1, outputPath: path.join(dir, "cut.mov") },
+      io,
+    );
+    expect(res.space.parts.cache).toBe(2 * cacheBytesFor(320, [2176, 3840]));
+    expect(res.layers).toEqual(["raw_nogreen.mp4 soft edge", "raw_nogreen.mp4 gap fill"]);
+    expect(res.space.cacheNote ?? res.cacheNote ?? "").toMatch(/two/);
+  });
+
+  it("plans to keep the soft-edge layer in place of the matted one", () => {
+    const j = renderCutoutPlanJsx({ comp: "Main", layer: 1 });
+    expect(j).toContain('" soft edge"');
+    expect(j).toContain("matteCopies");
+  });
+});
 
 describe("subject.render_cutout", () => {
   it("renders the layer with its gap fill through a template that carries alpha, with time to finish", async () => {
@@ -510,7 +534,7 @@ describe("subject.check_file", () => {
 
 // ------------------------------------------------------- use_cutout
 
-function useWorld({ taken = false } = {}) {
+function useWorld({ taken = false, soft = false } = {}) {
   const layers: Any[] = [];
   const mk = (name: string, extra: Any = {}) => {
     const l: Any = {
@@ -541,6 +565,17 @@ function useWorld({ taken = false } = {}) {
     mk("BG"),
   );
   if (taken) layers.push(mk("raw_nogreen.mp4 cut-out"));
+  if (soft) {
+    cut.enabled = false;
+    layers.splice(
+      1,
+      0,
+      mk("raw_nogreen.mp4 soft edge", {
+        comment: '{"compRoom":"soft-edge","layer":"raw_nogreen.mp4"}',
+        hasAudio: false,
+      }),
+    );
+  }
   const comp: Any = {
     name: "Main",
     width: 1080,
@@ -612,6 +647,20 @@ describe("subject.use_cutout", () => {
     expect(res.switchedOff).toEqual(["raw_nogreen.mp4", "raw_nogreen.mp4 gap fill"]);
     expect(res.movieLayer).toBe("raw_nogreen.mp4 cut-out");
     expect(res.note).toMatch(/selections/);
+  });
+
+  it("with a softened edge, puts the movie above the soft-edge layer and switches it off too", () => {
+    const w = useWorld({ soft: true });
+    const res = runUse(w);
+    expect(res.ok).toBe(true);
+    expect(w.layers.map((l: Any) => l.name).slice(0, 4)).toEqual([
+      "Title",
+      "raw_nogreen.mp4 cut-out",
+      "raw_nogreen.mp4 soft edge",
+      "raw_nogreen.mp4",
+    ]);
+    expect(w.layers[2].enabled).toBe(false);
+    expect(res.switchedOff).toContain("raw_nogreen.mp4 soft edge");
   });
 
   it("starts the movie where the render started when told", () => {
