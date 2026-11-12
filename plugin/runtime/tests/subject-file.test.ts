@@ -1073,7 +1073,13 @@ describe("speckPieces", () => {
   it("uses the limits it is given", () => {
     const a = sliverFrame(new Set([0]))(0);
     expect(speckPieces(a, W, H, { minArea: 100 })).toEqual([]);
-    expect(SPECK_DEFAULTS).toMatchObject({ minArea: 20, maxArea: 2000, neck: 1, opaque: 0.5 });
+    expect(SPECK_DEFAULTS).toMatchObject({
+      minArea: 20,
+      maxArea: 2000,
+      neck: 1,
+      opaque: 0.5,
+      minRun: 2,
+    });
   });
 });
 
@@ -1087,6 +1093,7 @@ describe("subject.check_file: specks", () => {
     const f = res.findings.find((x: Any) => x.kind === "speck");
     expect(f).toBeDefined();
     expect(f.frames).toEqual([50, 51, 52, 53, 54, 55]);
+    expect(f.longestRun).toBe(6);
     expect(f.largestArea).toBe(90);
     expect(f.box).toEqual({ x: 162, y: 120, width: 3, height: 30 });
     await fs.access(f.picture);
@@ -1094,6 +1101,48 @@ describe("subject.check_file: specks", () => {
     expect(res.inOut).toMatch(/small opaque piece/);
     expect(res.inOut).not.toMatch(/Nothing over the limit/);
     expect(res.next).toMatch(/speck/);
+  });
+
+  it("a speck on one frame, or on single frames apart, is a note that does not stop", async () => {
+    for (const on of [new Set([50]), new Set([50, 52, 54])]) {
+      const res = await runCheckFile(
+        { path: "/x/cut.mov", outDir: dir, frozenFrames: 1e9 },
+        fileIO({ matteAt: sliverFrame(on) }),
+      );
+      expect(res.findings.filter((x: Any) => x.kind === "speck")).toEqual([]);
+      expect(res.stop).toBe(false);
+      expect(res.notes).toEqual([
+        expect.objectContaining({
+          kind: "speck",
+          frames: [...on],
+          longestRun: 1,
+          box: { x: 162, y: 120, width: 3, height: 30 },
+        }),
+      ]);
+      expect(res.inOut.match(/never on 2 or more frames in a row/g)).toHaveLength(1);
+    }
+  });
+
+  it("two frames in a row are enough to stop", async () => {
+    const res = await runCheckFile(
+      { path: "/x/cut.mov", outDir: dir, frozenFrames: 1e9 },
+      fileIO({ matteAt: sliverFrame(new Set([50, 51])) }),
+    );
+    expect(res.findings.find((x: Any) => x.kind === "speck")).toMatchObject({
+      frames: [50, 51],
+      longestRun: 2,
+    });
+    expect(res.stop).toBe(true);
+    expect(res.notes).toEqual([]);
+  });
+
+  it("says what the speck pass cost", async () => {
+    const res = await runCheckFile(
+      { path: "/x/cut.mov", outDir: dir, frozenFrames: 1e9 },
+      fileIO(),
+    );
+    expect(res.timing.speck).toMatchObject({ frames: 120 });
+    expect(res.timing.speck.ms).toBeTypeOf("number");
   });
 
   it("finds nothing on a clean file", async () => {
