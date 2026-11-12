@@ -5,6 +5,7 @@
 // (2026-11-10, an 8 bpc project with no working space). Every write goes
 // through AE.checkPropertyWrite (stage 5) for all values first, so a refused
 // value means nothing was written.
+import { execFile } from "node:child_process";
 import { promises as fs } from "node:fs";
 import * as path from "node:path";
 import { cutoutRegions, outlineTracker, EDGE_DEFAULTS, enclosedHoles, growMask, } from "../color/matte.js";
@@ -876,7 +877,9 @@ registerOp({
         "This call brings the comp forward, chooses View > Resolution > Full and reads the comp's resolution back (viewerResolution: verified only when it reads [1, 1] after the command and after the Layer panel opens; starting from the viewer's Auto setting is not verified), moves to `time` (default: the layer's in point; pick a frame where the subject is clearly visible), selects only that layer and opens it in the Layer panel. It adds no effect and does not pick the tool. " +
         "Returns notice and steps (the user's instructions, with the clip's name and the subject filled in) and userMessage (both as one text): relay them to the user word for word. " +
         "Also returns did (the steps done), couldNotDo (any that failed, with the error; beforeSteps then says what to tell the user first) and existing (an Object Matte already on the layer and its selections). " +
-        "After the user says done, run subject.check before building anything. Verified in After Effects 27.0 on a real take, apart from the resolution step as written here.",
+        "Before any of that matters, read sourceAdvice and soundAdvice (or soundNote) when they are there. sourceAdvice: the layer's footage is at least 1.5 times the comp's size in both directions and scaled down to fit (a 2176 x 3840 take at 50% in a 1080 x 1920 comp); it gives the sizes, the disk cache a render needs at each, and the delivery-size copy to make and matte instead, before the click (replacing the footage under a matte freezes it), and relay then says not to give the steps yet. " +
+        "soundAdvice: the file's sound has more than two channels, or After Effects reports none while the file has some (a four-channel take with the voice on the first read as silence, with no warning); it gives the ffmpeg line that extracts the voice to a mono WAV. The file is only read (ffprobe), never changed. " +
+        "After the user says done, run subject.check before building anything. Verified in After Effects 27.0 on a real take, apart from the resolution step as written here; sourceAdvice and soundAdvice are worked out in Node from what After Effects reports and are tested offline.",
     params: [
         ...compLayerParams,
         {
@@ -961,11 +964,21 @@ registerOp({
             var _notice = ${jsxVal(SUBJECT_MATTE_NOTICE)};
             var _lines = [_notice];
             for (var _sj = 0; _sj < _steps.length; _sj++) _lines.push((_sj + 1) + ". " + _steps[_sj]);
+            var _spanP = _omSpan();
+            var _footage = {
+                sourceSize: _omSourceSize(),
+                compSize: [_comp.width, _comp.height],
+                scale: AE.safeGet(function () { var _sv = _layer.property("ADBE Transform Group").property("ADBE Scale").valueAtTime(_t, false); return [_sv[0], _sv[1]]; }, null),
+                frames: _spanP.outFrame - _spanP.inFrame,
+                file: AE.safeGet(function () { return _src.file ? _src.file.fsName : null; }, null),
+                hasAudio: AE.safeGet(function () { return _src.hasAudio === true; }, false)
+            };
             var _out = {
                 ok: _couldNot.length === 0,
                 comp: _comp.name,
                 layer: _layer.name,
                 time: _t,
+                footage: _footage,
                 did: _did,
                 couldNotDo: _couldNot,
                 viewerResolution: _viewer,
@@ -984,6 +997,18 @@ registerOp({
             }
             return _out;
         `;
+    },
+    // In Node too: a source much larger than the comp, and sound After Effects may read as silence.
+    async run(args, transport) {
+        return runSubjectPrepare(args, {
+            execute: async (code) => {
+                const r = await transport.execute({ code, label: "subject.prepare", timeoutMs: 60_000 });
+                return r.ok
+                    ? r.result
+                    : { ok: false, error: r.error ?? "subject.prepare failed" };
+            },
+            probeAudio: ffprobeAudio,
+        });
     },
 });
 registerOp({
@@ -1346,6 +1371,145 @@ async function writePng(io, file, data) {
 // GB in one evening of Object Matte work, against a Disk Cache setting of 10 GB.
 const GB = 1e9;
 const gb = (n) => `${(n / GB).toFixed(1)} GB`;
+/** Footage this many times the comp's size in both directions, scaled down at least as much, is matted at the delivery size instead. */
+export const OVERSIZE_FACTOR = 1.5;
+const even = (n) => Math.max(2, Math.round(n / 2) * 2);
+const stemOf = (file) => path.join(path.dirname(file), path.basename(file, path.extname(file)));
+const dims = (d) => `${d[0]} × ${d[1]}`;
+/** When the layer's source is well over the comp's size and scaled down to fit: the numbers, and the copy to make before the click. */
+export function sourceAdviceFor(f) {
+    if (!f?.sourceSize || !f.compSize || !f.scale)
+        return null;
+    const [sw, sh] = f.sourceSize;
+    const [cw, ch] = f.compSize;
+    const [sx, sy] = f.scale.map((v) => Math.abs(v));
+    const big = sw >= OVERSIZE_FACTOR * cw && sh >= OVERSIZE_FACTOR * ch;
+    const shrunk = sx > 0 && sy > 0 && sx <= 100 / OVERSIZE_FACTOR && sy <= 100 / OVERSIZE_FACTOR;
+    if (!big || !shrunk)
+        return null;
+    const delivery = [even((sw * sx) / 100), even((sh * sy) / 100)];
+    const frames = typeof f.frames === "number" && f.frames > 0 ? f.frames : null;
+    const atSource = frames ? cacheBytesFor(frames, [sw, sh]) : null;
+    const atDelivery = frames ? cacheBytesFor(frames, delivery) : null;
+    const ratio = Math.round(((sw * sh) / (delivery[0] * delivery[1])) * 10) / 10;
+    const copy = f.file
+        ? `ffmpeg -i "${f.file}" -vf "scale=${delivery[0]}:${delivery[1]}:flags=lanczos" -c:v prores_ks -profile:v 3 -c:a pcm_s16le "${stemOf(f.file)}_${delivery[0]}x${delivery[1]}.mov"`
+        : null;
+    const cache = atSource !== null && atDelivery !== null
+        ? `about ${gb(atSource)} of After Effects disk cache a render of the ${frames} frames at this size (an estimate; 19 GB was measured for 320 frames of a 2176 × 3840 take) against about ${gb(atDelivery)} at ${dims(delivery)}`
+        : `about ${ratio} times the disk cache a render needs at ${dims(delivery)}`;
+    return {
+        sourceSize: [sw, sh],
+        compSize: [cw, ch],
+        scale: [sx, sy],
+        deliverySize: delivery,
+        frames,
+        cacheAtSource: atSource,
+        cacheAtDelivery: atDelivery,
+        copy,
+        reading: `This layer's footage is ${dims([sw, sh])}, shown at ${Math.round(sx)}% in a ${dims([cw, ch])} comp. ` +
+            `Object Matte works on the footage's own pixels, ${ratio} times as many as the comp shows: ${cache}, and a render takes about that much longer ` +
+            "(on one take of 320 frames: 279 to 390 s at 2176 × 3840 against 65 to 92 s at 1088 × 1920, with the same edge; the two cut-outs overlapped at 0.991). " +
+            `Make a ${dims(delivery)} copy of the footage first and matte that: ` +
+            (copy
+                ? `with ffmpeg, \`${copy}\`; without it, render the footage alone from After Effects at that size (ProRes 422 HQ). `
+                : "render the footage alone from After Effects at that size (ProRes 422 HQ). ") +
+            "Import the copy, put it in the comp in this layer's place at 100% (same position and start time), switch this layer off, and run subject.prepare on the copy's layer. " +
+            "Do it before the click: replacing the footage under a matte freezes the matte (the outline stops following the subject), so a copy made afterwards needs the click again.",
+    };
+}
+/** Sound After Effects may read as silence: more than two channels, or audio in the file that After Effects does not report. */
+export function soundAdviceFor(f, streams) {
+    if (!f?.file)
+        return {};
+    if (streams === null)
+        return f.hasAudio
+            ? {
+                soundNote: "I could not count the take's sound channels (ffprobe was not found or could not read the file). Takes with more than two channels have read as silence in After Effects with no warning: measure the take's sound now, and measure the delivered file's sound before calling the piece done.",
+            }
+            : {};
+    const most = streams.reduce((m, st) => Math.max(m, st.channels || 0), 0);
+    const unheard = streams.length > 0 && !f.hasAudio;
+    if (most <= 2 && !unheard)
+        return {};
+    const layout = streams.find((st) => st.channels === most)?.layout;
+    const extract = `ffmpeg -i "${f.file}" -map 0:a:0 -af "pan=mono|c0=c0" -c:a pcm_s16le "${stemOf(f.file)}_voice.wav"`;
+    return {
+        soundAdvice: {
+            channels: most,
+            streams,
+            afterEffectsHasAudio: f.hasAudio,
+            extract,
+            reading: (unheard
+                ? `The take's file has sound (${plural(most, "channel")}) that After Effects does not report for this footage. `
+                : `The take's sound has ${most} channels${layout ? ` (${layout})` : ""}. `) +
+                "A take with four channels and the voice on the first read as silence in After Effects, with no warning (seen on 2026-11-12). " +
+                `Before the render, extract the voice to a mono WAV: \`${extract}\` (c0 is the first channel; listen to it, or measure each channel's level, to find the one with the voice, and change c0 if it is another). ` +
+                "Import the WAV, put it in the comp over the layer's span, and switch the take's own audio off. Measure the delivered file's sound before calling the piece done.",
+        },
+    };
+}
+const FFPROBE = ["ffprobe", "/opt/homebrew/bin/ffprobe", "/usr/local/bin/ffprobe"];
+/** The file's audio streams from ffprobe (only read), or null when ffprobe is missing or fails. */
+async function ffprobeAudio(file) {
+    for (const exe of FFPROBE) {
+        const out = await new Promise((resolve) => {
+            execFile(exe, [
+                "-v",
+                "error",
+                "-select_streams",
+                "a",
+                "-show_entries",
+                "stream=channels,channel_layout",
+                "-of",
+                "json",
+                file,
+            ], { timeout: 15_000 }, (err, stdout) => {
+                if (err)
+                    resolve({ missing: err.code === "ENOENT", stdout: null });
+                else
+                    resolve({ missing: false, stdout: String(stdout) });
+            });
+        });
+        if (out.missing)
+            continue;
+        if (out.stdout === null)
+            return null;
+        try {
+            const j = JSON.parse(out.stdout);
+            return (j.streams ?? []).map((st) => ({
+                channels: Number(st.channels) || 0,
+                layout: st.channel_layout ?? null,
+            }));
+        }
+        catch {
+            return null;
+        }
+    }
+    return null;
+}
+const PREPARE_HOLD = "Do not give the user the steps yet: tell the user what sourceAdvice says (the footage is much larger than the comp), make the delivery-size copy, then run subject.prepare on the copy's layer and relay its steps word for word. If the user wants to click on this footage anyway, relay notice and steps word for word (userMessage holds both).";
+/** subject.prepare: the JSX that opens the layer for the click, then the footage and sound checks in Node. */
+export async function runSubjectPrepare(args, io) {
+    const op = getOp("subject.prepare");
+    const res = await io.execute(op.toJsx(args));
+    if (!res || typeof res !== "object" || !res.footage)
+        return res;
+    const f = res.footage;
+    const source = sourceAdviceFor(f);
+    const sound = f.file ? soundAdviceFor(f, await io.probeAudio(f.file)) : {};
+    if (source) {
+        res.sourceAdvice = source;
+        res.relay = PREPARE_HOLD;
+    }
+    if (sound.soundAdvice)
+        res.soundAdvice = sound.soundAdvice;
+    if (sound.soundNote)
+        res.soundNote = sound.soundNote;
+    if (sound.soundAdvice || sound.soundNote)
+        res.relay = `${res.relay} Sound: tell the user what ${sound.soundAdvice ? "soundAdvice" : "soundNote"} says, and deal with it before the render.`;
+    return res;
+}
 /** Measured: 243 MB for 320 frames of 1080 x 1920 ProRes 4444 with alpha ('High Quality with Alpha'). */
 const RENDER_BYTES_PER_HD_FRAME = 0.76e6;
 /**
@@ -1928,6 +2092,19 @@ async function recheckFrames(io, readings, limit, over, outDir, perFrameMs, base
                 : ""),
     };
 }
+const closeHead = (pairs) => `${plural(pairs.length, "pair")} of clicks closer than ${Math.round(pairs[0].limit)} source pixels ` +
+    `(${pairs
+        .slice(0, 3)
+        .map((p) => `${p.a} and ${p.b}`)
+        .join("; ")}${pairs.length > 3 ? `; and ${pairs.length - 3} more` : ""})`;
+/** Close clicks on a matte with nothing missing: said once, and no stop. */
+function closeNote(pairs) {
+    return `Clicks: ${closeHead(pairs)}. Since nothing is missing, these are the small pieces of something clicked one by one, as the steps ask: nothing needs changing.`;
+}
+/** Close clicks alongside something missing: the click meant for it may have landed on the subject again. */
+function closeMissText(pairs) {
+    return `Clicks: ${closeHead(pairs)}. With something missing, two of them probably selected the same thing, so a click meant for something else (a microphone) may have landed on the subject again; the close-clicks finding says which to take out.`;
+}
 /** What to do about two clicks on the same thing: take the later one out. */
 function closeAdvice(pairs) {
     const num = (n) => Number(/(\d+)\s*$/.exec(n)?.[1] ?? -1);
@@ -2033,8 +2210,14 @@ export async function runSubjectCheck(args, io) {
         const pic = (f) => readings.find((r) => r.frame === f)?.picture ?? null;
         findings.push(frozenFinding(run, [pic(run.from), pic(run.to)]));
     }
-    if (close.length)
+    // Close clicks explain a miss (a click meant for the microphone that landed on the chest); on a
+    // matte with nothing missing they are the pieces of something clicked one by one, as the steps ask.
+    const somethingMissing = findings.length > 0;
+    const notes = [];
+    if (close.length && somethingMissing)
         findings.push({ kind: "close-clicks", pairs: close, advice: closeAdvice(close) });
+    else if (close.length)
+        notes.push({ kind: "close-clicks", pairs: close, reading: closeNote(close) });
     const rects = clicks.filter((c) => c.kind === "rectangle").map((c) => c.name);
     const solid = readings.find((r) => typeof r.solidAreas === "number")?.solidAreas;
     const inText = `In: ${st.summary}` +
@@ -2043,7 +2226,11 @@ export async function runSubjectCheck(args, io) {
             ? `, making ${plural(solid, "solid area")} on the first frame checked`
             : "") +
         ".";
-    const clickText = close.length ? ` Clicks: ${close.map((c) => c.reading).join("; ")}.` : "";
+    const clickText = !close.length
+        ? ""
+        : somethingMissing
+            ? ` ${closeMissText(close)}`
+            : ` ${closeNote(close)}`;
     const rectText = rects.length
         ? ` ${rects.join(", ")}: a click that dragged a little; it may hold nothing (subject.remove_selection).`
         : "";
@@ -2067,6 +2254,7 @@ export async function runSubjectCheck(args, io) {
         fillLayer,
         stop,
         findings,
+        notes,
         accepted: [...sum.accepted, ...frozenAcceptedRuns],
         outline: outlineResult,
         checked: sum.checked,
@@ -2094,11 +2282,11 @@ export async function runSubjectCheck(args, io) {
         timeReading: timeReading(first, second, pixels, since(started)),
         holeLimit: limit,
         next: stop
-            ? "Stop: show the user the picture and say what is out, before building anything else. " +
+            ? "Stop. In your reply, before the next call, tell the user what is out in plain words and give the picture's path; then fix it, before building anything else. " +
                 (findings.some((f) => f.kind === "unstable")
                     ? "A frame came out differently on two renders (kind 'unstable'): run subject.check again, and look at the first frames of the delivered video as well. "
                     : "") +
-                "Something left out needs another click (subject.prepare, then the steps); a wrong extra click comes out with subject.remove_selection; an enclosed gap no click fills goes to subject.fill_gaps. " +
+                "Something left out needs another click (subject.prepare, then the steps); a wrong extra click comes out with subject.remove_selection; an enclosed gap no click fills goes to subject.fill_gaps, without `only` (every enclosed gap at once: one under the limit here can grow past it on other frames; openings are never filled). " +
                 "When the user says a region shown is fine (a real gap between an arm and the body), run subject.check again with accept: [that finding's box] (an opening), or accept: [{ box, kind: 'hole' }] for a hole, so it is not shown again. Two clicks on the same thing: take the later one out with subject.remove_selection. " +
                 "Frames not checked: run subject.check again on those frames with a larger secondsPerFrame. " +
                 TAKES_MINUTES
@@ -2109,7 +2297,7 @@ export async function runSubjectCheck(args, io) {
 const FILL_LIMITS = (frame) => [
     `The still comes from one frame (frame ${frame}): it assumes a locked camera and that what is in front of the subject does not move. Anything that moves away from the still's gaps shows through the fill.`,
     "What shows through a filled gap is whatever is behind it in the footage. That is the subject only while the subject is behind the gap.",
-    "Every enclosed gap at that frame is filled, including a real one (between an arm and the body) where the background will show; pass `only` boxes to fill just the gaps you mean. Openings (regions that reach the frame edge) are never filled.",
+    "Every enclosed gap at that frame is filled, including a real one (between an arm and the body) where the background will show, and including those under the limit, which can grow past it on other frames; pass `only` boxes only to keep a real enclosed gap unfilled. Openings (regions that reach the frame edge) are never filled.",
 ];
 export async function runFillGaps(args, io) {
     // Every raw capture the fill renders is read and then removed, unless the caller keeps them.
@@ -2514,8 +2702,8 @@ registerOp({
     description: "Proof a subject matte after the user says done, before anything else is built. Renders the cut-out with its alpha (ae_render_frame isolate, channels 'rgba'; with the layer's gap fill from subject.fill_gaps when the comp has one, reported as fillLayer) at the click frames and frames across the clip, " +
         "finds holes (regions below opaque the frame edge cannot reach) and openings (regions closed off only by the subject and the frame edge: the missed microphone of 2026-11-11 ran off the bottom of the frame), draws each frame over a flat colour and one contact sheet, and returns " +
         "picture (the sheet), findings, accepted, checked {frames, of}, inOut (a plain statement of what is in and what is out), frames, clicks and stop. " +
-        `A hole or opening of holeLimit px or more (default ${CUTOUT_HOLE_LIMIT}, at the comp's size) is a finding; so are frames that did not render (kind 'not-checked': a frame that was not rendered is never counted as clean) and two clicks close together. ` +
-        "With stop true: show the user the picture and say what is out before doing anything else. `accept` entries (earlier findings the user called fine, such as a real gap between an arm and the body) are not counted again. " +
+        `A hole or opening of holeLimit px or more (default ${CUTOUT_HOLE_LIMIT}, at the comp's size) is a finding; so are frames that did not render (kind 'not-checked': a frame that was not rendered is never counted as clean). Two clicks close together are a finding only when something is missing too (a click meant for it may have landed on the subject again); otherwise they are the pieces of something clicked one by one, listed in notes, and do not set stop. ` +
+        "With stop true: say in your reply what is out, in plain words, and give the picture's path, before the next call. `accept` entries (earlier findings the user called fine, such as a real gap between an arm and the body) are not counted again. " +
         "Each frame with a finding is rendered once more at the end; a frame whose cut-out differs between the two renders is a finding of kind 'unstable' (seen once on 2026-11-11, cause unknown; agreement may come from the cache and does not prove a frame stable). " +
         "A selection count is not a check. It can take minutes: 20 to 40 s a frame the first time on a 2176 x 3840 take; say so to the user before it runs. " +
         "`timing` says where the time went (status, each render's After Effects call, settle wait and Node work, the pixel work, the total) and `timeReading` says it in one sentence.",
@@ -2631,7 +2819,7 @@ registerOp({
         {
             name: "only",
             type: "array",
-            description: "Boxes {x, y, width, height} in comp pixels: fill only the gaps they touch (from subject.check's findings).",
+            description: "Boxes {x, y, width, height} in comp pixels: fill only the gaps they touch (from subject.check's findings). Leave it out to fill every enclosed gap, which is the default to use: pass it only to keep a real enclosed gap (between an arm and the body) unfilled; a gap under the limit at one frame can grow past it on others.",
             required: false,
         },
         {
@@ -3296,7 +3484,7 @@ export async function runCheckFile(args, io) {
             totalMs: Math.round(since(started)),
         },
         next: stop
-            ? "Stop: show the user the picture and say what is wrong before building on this file. A jump or a hole on one frame means the live matte rendered that frame wrong: render the cut-out again (subject.render_cutout) and check the new file."
+            ? "Stop. In your reply, before the next call, tell the user what is wrong in plain words and give the picture's path, before building on this file. A jump or a hole on one frame means the live matte rendered that frame wrong: render the cut-out again (subject.render_cutout) and check the new file."
             : "The file is checked. Build on it: subject.use_cutout puts it in the comp in place of the live matte.",
     };
 }

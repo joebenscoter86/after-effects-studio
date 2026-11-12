@@ -156,6 +156,35 @@ export interface CutoutIO {
 }
 /** What the pixel helpers need from After Effects: a render, and the files it wrote. */
 type PixelIO = Pick<CutoutIO, "render" | "readImage" | "writePng" | "freeBytes" | "volumeOf">;
+/** Footage this many times the comp's size in both directions, scaled down at least as much, is matted at the delivery size instead. */
+export declare const OVERSIZE_FACTOR = 1.5;
+export interface PrepareFootage {
+    sourceSize: number[] | null;
+    compSize: number[] | null;
+    scale: number[] | null;
+    frames: number | null;
+    file: string | null;
+    hasAudio: boolean;
+}
+export interface AudioStream {
+    channels: number;
+    layout: string | null;
+}
+export interface PrepareIO {
+    /** Runs subject.prepare's JSX and returns its result. */
+    execute(code: string): Promise<Json>;
+    /** The file's audio streams (ffprobe), or null when they could not be read. */
+    probeAudio(file: string): Promise<AudioStream[] | null>;
+}
+/** When the layer's source is well over the comp's size and scaled down to fit: the numbers, and the copy to make before the click. */
+export declare function sourceAdviceFor(f: PrepareFootage | null | undefined): Json | null;
+/** Sound After Effects may read as silence: more than two channels, or audio in the file that After Effects does not report. */
+export declare function soundAdviceFor(f: PrepareFootage | null | undefined, streams: AudioStream[] | null): {
+    soundAdvice?: Json;
+    soundNote?: string;
+};
+/** subject.prepare: the JSX that opens the layer for the click, then the footage and sound checks in Node. */
+export declare function runSubjectPrepare(args: Record<string, unknown>, io: PrepareIO): Promise<Json>;
 /**
  * Free space required on top of the movie: After Effects writes its disk cache
  * to the same drive while it renders, by an amount nobody measured for one
