@@ -895,12 +895,18 @@ function matteEdge(c, minContrast) {
     const widths = edgeWidths({ ...c, rgb: grey, use: new Uint8Array(a.length).fill(1) }, minContrast);
     let soft = 0;
     let outline = 0;
+    let opaque = 0;
+    let minAlpha = 1;
     const w = c.width;
     for (let y = 0; y < c.height; y++)
         for (let x = 0; x < w; x++) {
             const v = a[y * w + x];
             if (v > 0.02 && v < 0.98)
                 soft++;
+            if (v >= 0.99)
+                opaque++;
+            if (v < minAlpha)
+                minAlpha = v;
             if (v < 0.5)
                 continue;
             const p = y * w + x;
@@ -910,7 +916,12 @@ function matteEdge(c, minContrast) {
                 (y < c.height - 1 && a[p + w] < 0.5))
                 outline++;
         }
-    return { ...widths, softBand: outline ? Math.round((soft / outline) * 100) / 100 : null };
+    return {
+        ...widths,
+        softBand: outline ? Math.round((soft / outline) * 100) / 100 : null,
+        opaqueShare: Math.round((opaque / a.length) * 10000) / 10000,
+        minAlpha: Math.round(minAlpha * 10000) / 10000,
+    };
 }
 /**
  * The soft band's colour (pixels at alpha 0.2 to 0.98, straight colour) against the colour well

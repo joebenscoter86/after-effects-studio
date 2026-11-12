@@ -290,6 +290,9 @@ export interface LookRegionReport {
         p90: number | null;
         edges: number;
         softBand: number | null;
+        /** Share of the region's pixels at alpha 0.99 or more, and the lowest alpha: a region inside the subject reads 1 and 1. */
+        opaqueShare: number;
+        minAlpha: number;
     };
     /** With alpha: the soft band's colour (straight) against the colour well inside, and against `background`. */
     edgeColour?: {

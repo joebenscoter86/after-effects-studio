@@ -740,17 +740,26 @@ function matteEdge(c, minContrast) {
   );
   let soft = 0;
   let outline = 0;
+  let opaque = 0;
+  let minAlpha = 1;
   const w = c.width;
   for (let y = 0; y < c.height; y++)
     for (let x = 0; x < w; x++) {
       const v = a[y * w + x];
       if (v > 0.02 && v < 0.98) soft++;
+      if (v >= 0.99) opaque++;
+      if (v < minAlpha) minAlpha = v;
       if (v < 0.5) continue;
       const p = y * w + x;
       if (x > 0 && a[p - 1] < 0.5 || x < w - 1 && a[p + 1] < 0.5 || y > 0 && a[p - w] < 0.5 || y < c.height - 1 && a[p + w] < 0.5)
         outline++;
     }
-  return { ...widths, softBand: outline ? Math.round(soft / outline * 100) / 100 : null };
+  return {
+    ...widths,
+    softBand: outline ? Math.round(soft / outline * 100) / 100 : null,
+    opaqueShare: Math.round(opaque / a.length * 1e4) / 1e4,
+    minAlpha: Math.round(minAlpha * 1e4) / 1e4
+  };
 }
 function edgeColourOf(c, background) {
   const a = c.alpha;

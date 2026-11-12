@@ -46322,17 +46322,26 @@ function matteEdge(c, minContrast) {
   );
   let soft = 0;
   let outline = 0;
+  let opaque = 0;
+  let minAlpha = 1;
   const w = c.width;
   for (let y = 0; y < c.height; y++)
     for (let x = 0; x < w; x++) {
       const v = a[y * w + x];
       if (v > 0.02 && v < 0.98) soft++;
+      if (v >= 0.99) opaque++;
+      if (v < minAlpha) minAlpha = v;
       if (v < 0.5) continue;
       const p = y * w + x;
       if (x > 0 && a[p - 1] < 0.5 || x < w - 1 && a[p + 1] < 0.5 || y > 0 && a[p - w] < 0.5 || y < c.height - 1 && a[p + w] < 0.5)
         outline++;
     }
-  return { ...widths, softBand: outline ? Math.round(soft / outline * 100) / 100 : null };
+  return {
+    ...widths,
+    softBand: outline ? Math.round(soft / outline * 100) / 100 : null,
+    opaqueShare: Math.round(opaque / a.length * 1e4) / 1e4,
+    minAlpha: Math.round(minAlpha * 1e4) / 1e4
+  };
 }
 function edgeColourOf(c, background) {
   const a = c.alpha;
@@ -48987,7 +48996,7 @@ var renderFrameTool = defineTool({
       ),
       sharpnessTolerance: external_exports.number().gt(0).max(1).optional().describe("Default 0.25: within a quarter of the plate's edge width matches.")
     }).optional().describe(
-      "Does it sit in the scene: for each named region, on the file as written (stage 'output'; with channels 'rgba' only the opaque pixels, straight colour), levels {black, white, mean per channel, lumaBlack, lumaWhite, lumaMean} (0.5th and 99.5th percentiles, 0..1), grain {spatial: per channel in 8-bit steps, the robust spread of each pixel against its 3 x 3 neighbourhood}, sharpness {edgeWidth: median 10 to 90% rise across edges with a luma step of at least minContrast, px (a hard step about 0.8, a Gaussian blur of sigma s about 2.56 s), p90 (the widest tenth), edges}, with alpha (channels 'rgba'): matte {edgeWidth, p90, edges, softBand: soft pixels (alpha 0.02 to 0.98) per pixel of outline} read on the alpha, and edgeColour {band, inside, difference, towardBackground, reading}: the soft edge's straight colour against the colour well inside, and with `background` how far it leans toward the background (wall colour ringing the subject); lookSeries adds matteChange (mean change in alpha over the region, frame to frame). colour (CIELAB L, a, b, chroma, hue of the mean). role 'neutral' adds cast {a, b, amount, toward, gains, channelMixer} and a reading; role 'skin' a hue reading. pairs add, per element and plate, grain, sharpness and levels compared, with readings (add grain, soften, seat the blacks). With `times` on consecutive frames, lookSeries adds frame-to-frame grain per region (a still element reads 0). Reported as `look` (per frame with `times`)."
+      "Does it sit in the scene: for each named region, on the file as written (stage 'output'; with channels 'rgba' only the opaque pixels, straight colour), levels {black, white, mean per channel, lumaBlack, lumaWhite, lumaMean} (0.5th and 99.5th percentiles, 0..1), grain {spatial: per channel in 8-bit steps, the robust spread of each pixel against its 3 x 3 neighbourhood}, sharpness {edgeWidth: median 10 to 90% rise across edges with a luma step of at least minContrast, px (a hard step about 0.8, a Gaussian blur of sigma s about 2.56 s), p90 (the widest tenth), edges}, with alpha (channels 'rgba'): matte {edgeWidth, p90, edges, softBand: soft pixels (alpha 0.02 to 0.98) per pixel of outline, opaqueShare (alpha 0.99 or more) and minAlpha: a region inside the subject reads 1 and 1, so a see-through band shows} read on the alpha, and edgeColour {band, inside, difference, towardBackground, reading}: the soft edge's straight colour against the colour well inside, and with `background` how far it leans toward the background (wall colour ringing the subject); lookSeries adds matteChange (mean change in alpha over the region, frame to frame). colour (CIELAB L, a, b, chroma, hue of the mean). role 'neutral' adds cast {a, b, amount, toward, gains, channelMixer} and a reading; role 'skin' a hue reading. pairs add, per element and plate, grain, sharpness and levels compared, with readings (add grain, soften, seat the blacks). With `times` on consecutive frames, lookSeries adds frame-to-frame grain per region (a still element reads 0). Reported as `look` (per frame with `times`)."
     ),
     diff: external_exports.union([
       external_exports.boolean(),
@@ -50469,7 +50478,7 @@ var OBJECT_MATTE_SETTINGS = {
     default: null,
     kind: "switch",
     writable: true,
-    doc: "Decontaminate Edge Colors: true takes the background's colour out of the edge. On green-screen footage it moved the edge's green excess from -0.0005 to -0.009; turn it on when ae_render_frame's edge report shows the edge leaning to the screen colour"
+    doc: "Decontaminate Edge Colors: true takes the background's colour out of the edge. On green-screen footage it moved the edge's green excess from -0.0005 to -0.009; turn it on when ae_render_frame's edge report shows the edge leaning to the screen colour. With no green screen, on the half-size take, it took the wall's colour in the hair's edge from 56% to 38% at the top and 23% at the side (look edgeColour against the wall), with no change to the alpha: the default for an Object Matte cut-out (keying.md Recipe 3)"
   }
 };
 var SUBJECT_MATTE_NOTICE = "One step here needs you in After Effects: a single click on the subject, about ten seconds. Everything before and after it I do.";
