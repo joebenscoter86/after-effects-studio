@@ -1073,7 +1073,7 @@ describe("subject matte: registration and the user's steps", () => {
       'If a tip titled "Object Matte" appears, click OK.',
       'If a yellow bar in the Layer panel says "Draw Object Matte strokes at full resolution", choose View > Resolution > Full in the menu bar, and tell me the bar was there.',
       "Move the pointer over the person in the Layer panel. They tint magenta. Click once.",
-      "Anything else that should stay in the cut-out, such as a microphone, can be several pieces: hover each piece, check that it tints magenta, and click it. Do not click the person again.",
+      "Anything else that should stay in the cut-out, such as a microphone, can be several pieces: hover each piece, check that it tints magenta, and click it. A gap between things, such as between a stand and an arm, needs no click: I take care of gaps afterwards. Do not click the person again.",
       'Tell me "done". No Spacebar and no Freeze are needed. I will then check the cut-out and show you what is in and what is out.',
     ]);
   });

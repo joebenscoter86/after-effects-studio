@@ -477,7 +477,9 @@ describe("subject.check", () => {
     expect(res.findings[0].frames.length).toBe(9);
     expect(res.inOut).toMatch(/hole.*2,400 px.*\(80, 150, 40 × 60\)/);
     expect(res.frames[0].holesUnderLimit).toEqual({ count: 1, area: 120 });
-    expect(res.next).toMatch(/In your reply, before the next call, tell the user what is out.*picture.s path/);
+    expect(res.next).toMatch(
+      /In your reply, before the next call, tell the user what is out.*picture.s path/,
+    );
   });
 
   it("stops on an opening that runs off the frame edge, the missed microphone of 2026-11-11", async () => {
@@ -541,8 +543,12 @@ describe("subject.check", () => {
       }),
     ]);
     expect(res.inOut).toMatch(/1 pair of clicks closer than 109 source pixels/);
-    expect(res.inOut).toMatch(/nothing is missing/);
-    expect(res.inOut).not.toMatch(/probably selected the same thing/);
+    expect(res.inOut).toMatch(/close together and probably redundant/);
+    expect(res.inOut).toMatch(/can be removed/);
+    expect(res.inOut).not.toMatch(/probably selected the same thing|microphone|pieces/);
+    expect(res.notes[0].advice).toMatch(
+      /subject\.remove_selection \{ selection: "Add Object 2" \}/,
+    );
     expect(res.next).not.toMatch(/^Stop/);
     expect(res.clicks).toEqual([
       {
@@ -991,7 +997,7 @@ describe("subject.check: what to do about close clicks", () => {
     );
   });
 
-  it("twelve clicks on the pieces of a microphone: one sentence, no stop, when nothing is missing", async () => {
+  it("twelve clicks close together (clicks into gaps, 2026-11-12): one sentence, no stop, when nothing is missing", async () => {
     const pieces = Array.from({ length: 12 }, (_, i) => ({
       index: i + 1,
       name: `Add Object ${i + 1}`,
@@ -1008,7 +1014,9 @@ describe("subject.check: what to do about close clicks", () => {
     expect(res.findings).toEqual([]);
     expect(res.notes[0].pairs.length).toBeGreaterThan(10);
     expect(res.inOut.match(/closer than/g)).toHaveLength(1);
-    expect(res.inOut).not.toMatch(/remove_selection/);
+    expect(res.inOut.match(/probably redundant/g)).toHaveLength(1);
+    expect(res.inOut).not.toMatch(/remove_selection/); // the commands are in notes[0].advice
+    expect(res.notes[0].advice).toMatch(/remove_selection/);
   });
 
   it("a frame not checked counts as something missing", async () => {
