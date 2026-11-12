@@ -36,7 +36,17 @@ When the user gives a reference to match (a still, frames, or a movie), measure 
 
 With the grid alone the same three came first, in the order cast, subject, sharpness. After them: lightness in five regions, less grain in nine (the blur took the grain out too), and a cut at frame 1 in the build only, which is its first frame. Both builds read the cuts at frames 123 and 125, the stray source frames before the cut. Reading 235 frames took about 2 minutes a build offline, most of it decoding the PNGs.
 
-The live path was checked only for exact frames. A movie imported as footage rendered the right frame through `ae_render_frame` `frames` on all 32 tried at 30, 29.97 and 24 fps. With `times`, the 29.97 fps movie also rendered the right frames, but every time from frame 26 on sat on a frame boundary (`frameWarning`), so the report addresses frames by number. Not checked live: the whole report on a comp or a movie in After Effects.
+**Checked live** (After Effects 27.0, on a copy of the round-two project):
+
+- **Exact frames:** a movie imported as footage rendered the right frame through `ae_render_frame` `frames` on all 32 tried at 30, 29.97 and 24 fps. With `times`, the 29.97 fps movie also rendered the right frames, but every time from frame 26 on sat on a frame boundary (`frameWarning`), so the report addresses frames by number.
+- **The whole report:** on the code build's delivered movie (235 frames, 314 s) and on the After Effects build's comp `H3_MAIN` (235 frames, 317 s), with `against`. Nothing was added to the disk cache; free space dipped while After Effects swapped memory to disk and came back afterwards.
+- **The order:**
+  - grain first: the build smoother in eleven regions, top 0.22 against 0.93;
+  - then the soft room: the wall on the right 16.9 px against 4.7;
+  - the magenta cast: 10 of 11 regions, a* +3.9;
+  - the subject at 80% (correlation 0.94).
+- **Why grain came first live:** the comp renders without the H.264 noise of the delivered reference, so its grain reads lower than the file's. Compare a comp with a rendered file of the reference, or a movie with a movie, where grain matters.
+- **Cuts:** the comp reads a cut at frame 18, the slam flash; the delivered file read one at frame 1 instead.
 
 ## Rebuild a bounded study
 
