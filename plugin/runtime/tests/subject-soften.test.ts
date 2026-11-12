@@ -274,6 +274,9 @@ describe("subject.soften_edge", () => {
     expect(res.pictures.length).toBe(2);
     await fs.access(res.pictures[0]);
     expect(res.cost).toMatch(/twice/);
+    // The measured render on the half-size take: time and cache against one matte.
+    expect(res.cost).toMatch(/342 s/);
+    expect(res.cost).toMatch(/9\.0 GB/);
   });
 
   it("undoes the build and says so when anything is seen through", async () => {
@@ -298,6 +301,16 @@ describe("subject.soften_edge", () => {
     const res = await runSoftenEdge({ ...ARGS, outDir: dir, outsideLimit: 50 }, fakeIO(smear));
     expect(res.ok).toBe(false);
     expect(res.error).toMatch(/outside the outline/);
+  });
+
+  it("samples only the frames it is given, with the click frame", async () => {
+    const io = fakeIO((f) => person(f >= 30 ? 20 : 0, true));
+    const res = await runSoftenEdge({ ...ARGS, outDir: dir, sampleFrames: [10, 30] }, io);
+    expect(res.ok).toBe(true);
+    expect(res.region.tops.map((t: Any) => t.frame)).toEqual([0, 10, 30]);
+    expect(res.check.furthest.frame).toBe(30);
+    const first = io.calls.find((c: Any) => c.render)!.render;
+    expect(Math.max(...first.frames)).toBe(30);
   });
 
   it("takes the region's line from the caller", async () => {
