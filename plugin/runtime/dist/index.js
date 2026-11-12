@@ -50950,7 +50950,7 @@ function laterClicks(pairs) {
   return [...new Set(pairs.map((p) => num(p.a) >= num(p.b) ? p.a : p.b))];
 }
 function closeNoteAdvice(pairs) {
-  return "To remove the redundant clicks, take the later one of each pair out: " + laterClicks(pairs).map((n) => `subject.remove_selection { selection: "${n}" }`).join(", then ") + ". On the take of 2026-11-11 the matte did not change when the redundant click was removed (opaque share 0.3083 before and after on frame 0). Then run subject.check again. Leaving them in is also fine.";
+  return "To remove the redundant clicks, take the later one of each pair out: " + laterClicks(pairs).map((n) => `subject.remove_selection { selection: "${n}" }`).join(", then ") + ". Measured twice: on the take of 2026-11-11 the matte did not change when the redundant click was removed (opaque share 0.3083 before and after on frame 0); on 2026-11-12, removing five of twelve close clicks left the click frame identical and the opaque share the same on the frames near it, with only a thin band along the outline different elsewhere (After Effects tracking again after the change). Then run subject.check again. Leaving them in is also fine.";
 }
 function closeMissText(pairs) {
   return `Clicks: ${closeHead(pairs)}. With something missing, two of them probably selected the same thing, so a click meant for something else (a microphone) may have landed on the subject again; the close-clicks finding says which to take out.`;
