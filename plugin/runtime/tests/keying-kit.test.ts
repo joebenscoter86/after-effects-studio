@@ -1245,13 +1245,21 @@ describe("subject.settings", () => {
       const fx = objectMatte(["Add Object 1"], { lookup });
       const res = runIn(
         "subject.settings",
-        { feather: 12, contrast: 60, shiftEdge: -20, reduceChatter: 30, invert: false },
+        {
+          feather: 12,
+          contrast: 60,
+          shiftEdge: -20,
+          reduceChatter: 50,
+          invert: false,
+          decontaminateEdgeColors: true,
+        },
         world({ effects: [fx] }),
       );
 
       expect(res.ok).toBe(true);
       expect(res.written.sort()).toEqual([
         "contrast",
+        "decontaminateEdgeColors",
         "feather",
         "invert",
         "reduceChatter",
@@ -1259,6 +1267,8 @@ describe("subject.settings", () => {
       ]);
       expect(fx.setting("/rmshiftedges").writes).toEqual([-20]);
       expect(fx.setting("/invertforegroundbackground").writes).toEqual([0]);
+      expect(fx.setting("/rmcleanedgecolors").writes).toEqual([1]);
+      expect(res.settings.reduceChatter.value).toBe(50);
       expect(res.settings.feather.value).toBe(12);
       expect(res.settings.shiftEdge.value).toBe(-20);
       expect(res.summary).toBe("1 object selected");
@@ -1319,7 +1329,9 @@ describe("subject.settings", () => {
   });
 
   it("does not take Version or the read-only switches", () => {
-    const v = validateOpArgs(getOp("subject.settings")!, { comp: "Main", layer: 1, version: 2 });
-    expect(v.ok).toBe(false);
+    for (const extra of [{ version: 2 }, { fineTune: false }, { useMotionBlur: true }]) {
+      const v = validateOpArgs(getOp("subject.settings")!, { comp: "Main", layer: 1, ...extra });
+      expect(v.ok).toBe(false);
+    }
   });
 });
