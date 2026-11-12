@@ -380,4 +380,33 @@ export declare function outlineTracker(opts?: OutlineOptions): {
         frozen: FrozenRun[];
     };
 };
+/**
+ * Chosen on the delivered cut-out of the 4K fresh-session test (320 frames,
+ * 1080 x 1920): a thin dark sliver of chair 1 to 5 px off the right arm, on
+ * frames 227 to 260, read 20 to 238 px; nothing else in the file was a piece
+ * of 20 px or more apart from the body except a fingertip running off the
+ * bottom edge (frame 49), which a piece touching the frame edge is not
+ * counted as. Under 20 px are single specks of noise (3 px on frame 249);
+ * over 2,000 px is another object, not a speck. `neck`: a piece joined to the
+ * cut-out by a neck up to 2 px wide counts as apart (an opening of 1 px).
+ */
+export declare const SPECK_DEFAULTS: {
+    opaque: number;
+    minArea: number;
+    maxArea: number;
+    neck: number;
+};
+export interface SpeckPiece {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    area: number;
+}
+/**
+ * Small opaque pieces apart from the main cut-out, or joined to it only by a
+ * neck up to 2 px wide: opaque at `opaque` alpha or more, `minArea` to
+ * `maxArea` px, not touching the frame edge. Largest first.
+ */
+export declare function speckPieces(alpha: Float64Array, width: number, height: number, opts?: Partial<typeof SPECK_DEFAULTS>): SpeckPiece[];
 //# sourceMappingURL=matte.d.ts.map

@@ -849,9 +849,105 @@ function outlineTracker(opts = {}) {
     }
   };
 }
+const SPECK_DEFAULTS = { opaque: 0.5, minArea: 20, maxArea: 2e3, neck: 1 };
+function erodeCross(m, w, h, times) {
+  let cur = m;
+  for (let t = 0; t < times; t++) {
+    const next = new Uint8Array(cur.length);
+    for (let y = 1; y < h - 1; y++)
+      for (let x = 1; x < w - 1; x++) {
+        const p = y * w + x;
+        next[p] = cur[p] & cur[p - 1] & cur[p + 1] & cur[p - w] & cur[p + w];
+      }
+    cur = next;
+  }
+  return cur;
+}
+function labelMask(m, w, h) {
+  const a = new Float64Array(m.length);
+  for (let i = 0; i < m.length; i++) a[i] = m[i];
+  const labels = new Int32Array(m.length);
+  const regions = labelRegions(
+    a,
+    w,
+    h,
+    (p) => m[p] === 1,
+    true,
+    labels,
+    new Int32Array(m.length),
+    -1
+  );
+  return { labels, regions };
+}
+function speckPieces(alpha, width, height, opts = {}) {
+  const o = { ...SPECK_DEFAULTS, ...opts };
+  const w = width;
+  const m = new Uint8Array(w * height);
+  for (let i = 0; i < m.length; i++) m[i] = alpha[i] >= o.opaque ? 1 : 0;
+  const { labels } = labelMask(erodeCross(m, w, height, o.neck), w, height);
+  for (let t = 0; t < o.neck + 1; t++) {
+    const grown = labels.slice();
+    for (let y = 0; y < height; y++)
+      for (let x = 0; x < w; x++) {
+        const p = y * w + x;
+        if (!m[p] || labels[p]) continue;
+        const n = x > 0 && labels[p - 1] || x < w - 1 && labels[p + 1] || y > 0 && labels[p - w] || y < height - 1 && labels[p + w] || 0;
+        if (n) grown[p] = n;
+      }
+    labels.set(grown);
+  }
+  const rest = new Uint8Array(m.length);
+  for (let i = 0; i < m.length; i++) rest[i] = m[i] && !labels[i] ? 1 : 0;
+  const thin = labelMask(rest, w, height);
+  const stats = /* @__PURE__ */ new Map();
+  const add = (key, x, y) => {
+    let s = stats.get(key);
+    if (!s) stats.set(key, s = { minX: x, minY: y, maxX: x, maxY: y, area: 0, edge: false });
+    s.area++;
+    if (x < s.minX) s.minX = x;
+    if (x > s.maxX) s.maxX = x;
+    if (y < s.minY) s.minY = y;
+    if (y > s.maxY) s.maxY = y;
+    if (x === 0 || y === 0 || x === w - 1 || y === height - 1) s.edge = true;
+  };
+  for (let y = 0; y < height; y++)
+    for (let x = 0; x < w; x++) {
+      const p = y * w + x;
+      if (labels[p]) add(`g${labels[p]}`, x, y);
+      else if (thin.labels[p]) add(`t${thin.labels[p]}`, x, y);
+    }
+  const list = [...stats.values()].sort((a, b) => b.area - a.area);
+  const main = list[0];
+  if (!main) return [];
+  const pieces = [];
+  for (const [key, s] of stats) {
+    if (s === main || s.edge || s.area < o.minArea || s.area > o.maxArea) continue;
+    if (key.startsWith("t")) {
+      let touches = false;
+      const id = Number(key.slice(1));
+      for (let y = s.minY; y <= s.maxY && !touches; y++)
+        for (let x = s.minX; x <= s.maxX && !touches; x++) {
+          const p = y * w + x;
+          if (thin.labels[p] !== id) continue;
+          for (const q of [p - 1, p + 1, p - w, p + w, p - w - 1, p - w + 1, p + w - 1, p + w + 1])
+            if (q >= 0 && q < m.length && labels[q]) touches = true;
+        }
+      if (touches) continue;
+    }
+    pieces.push({
+      x: s.minX,
+      y: s.minY,
+      width: s.maxX - s.minX + 1,
+      height: s.maxY - s.minY + 1,
+      area: s.area
+    });
+  }
+  return pieces.sort((p, q) => q.area - p.area);
+}
 export {
   CONTOUR_ALPHA,
   EDGE_DEFAULTS,
+  SPECK_DEFAULTS,
   addPixel,
   alphaChange,
   autoMaxEdgeWidth,
@@ -867,5 +963,6 @@ export {
   newRegion,
   outlineTracker,
   resolveEdgeThresholds,
+  speckPieces,
   summarizeFlicker
 };

@@ -2,8 +2,10 @@ import { execFile } from "node:child_process";
 import { promises as fs } from "node:fs";
 import * as path from "node:path";
 import {
+  SPECK_DEFAULTS,
   cutoutRegions,
   outlineTracker,
+  speckPieces,
   EDGE_DEFAULTS,
   enclosedHoles,
   growMask
@@ -2850,6 +2852,55 @@ function fileCleanupJsx(args) {
             return { ok: true, removed: _removed };
         `;
 }
+function frameRanges(frames) {
+  const out = [];
+  for (let i = 0; i < frames.length; ) {
+    let j = i;
+    while (j + 1 < frames.length && frames[j + 1] === frames[j] + 1) j++;
+    out.push(i === j ? String(frames[i]) : `${frames[i]} to ${frames[j]}`);
+    i = j + 1;
+  }
+  return out.join(", ");
+}
+function speckAccepted(p, accept) {
+  const cx = p.x + p.width / 2;
+  const cy = p.y + p.height / 2;
+  return accept.some((e) => {
+    if (!("box" in e) || e.kind !== "speck") return false;
+    const b = e.box;
+    return cx >= b.x && cx <= b.x + b.width && cy >= b.y && cy <= b.y + b.height;
+  });
+}
+const SPECK_JOIN_PX = 40;
+function addSpeck(tracks, frame, p) {
+  const near = (b) => p.x < b.x + b.width + SPECK_JOIN_PX && b.x < p.x + p.width + SPECK_JOIN_PX && p.y < b.y + b.height + SPECK_JOIN_PX && b.y < p.y + p.height + SPECK_JOIN_PX;
+  const t = tracks.find((x) => near(x.box));
+  const pb = { x: p.x, y: p.y, width: p.width, height: p.height };
+  if (!t) {
+    tracks.push({
+      frames: [frame],
+      box: pb,
+      largestArea: p.area,
+      largestFrame: frame,
+      smallestArea: p.area
+    });
+    return;
+  }
+  if (!t.frames.includes(frame)) t.frames.push(frame);
+  const x0 = Math.min(t.box.x, pb.x);
+  const y0 = Math.min(t.box.y, pb.y);
+  t.box = {
+    x: x0,
+    y: y0,
+    width: Math.max(t.box.x + t.box.width, pb.x + pb.width) - x0,
+    height: Math.max(t.box.y + t.box.height, pb.y + pb.height) - y0
+  };
+  if (p.area > t.largestArea) {
+    t.largestArea = p.area;
+    t.largestFrame = frame;
+  }
+  t.smallestArea = Math.min(t.smallestArea, p.area);
+}
 async function runCheckFile(args, io) {
   const started = performance.now();
   const file = typeof args.path === "string" ? args.path : null;
@@ -2882,6 +2933,12 @@ async function runCheckFile(args, io) {
       (typeof args.secondsPerFrame === "number" && args.secondsPerFrame > 0 ? args.secondsPerFrame : 10) * 1e3
     )
   );
+  const speckLimits = {
+    minArea: typeof args.speckMinArea === "number" ? args.speckMinArea : SPECK_DEFAULTS.minArea,
+    maxArea: typeof args.speckMaxArea === "number" ? args.speckMaxArea : SPECK_DEFAULTS.maxArea
+  };
+  const specks = [];
+  const specksAccepted = [];
   const setup = await io.execute(fileCompJsx({ path: file, item }), {
     label: "subject.check_file setup",
     timeoutMs: 12e4,
@@ -2909,6 +2966,7 @@ async function runCheckFile(args, io) {
   const needed = () => {
     const n = /* @__PURE__ */ new Set([...jumpFrames, ...sheetPlan]);
     for (const t of tracks) n.add(t.bestFrame);
+    for (const t of specks) n.add(t.largestFrame);
     return n;
   };
   const release = async (frame) => {
@@ -2952,7 +3010,10 @@ async function runCheckFile(args, io) {
         pixels,
         false,
         (r, img) => {
-          if (img.alpha) outline.add(r.frame, img.alpha, img.rgb, img.width, img.height);
+          if (!img.alpha) return;
+          outline.add(r.frame, img.alpha, img.rgb, img.width, img.height);
+          for (const p of speckPieces(img.alpha, img.width, img.height, speckLimits))
+            addSpeck(speckAccepted(p, accept) ? specksAccepted : specks, r.frame, p);
         }
       )).readings;
       for (const r of got) {
@@ -3060,7 +3121,8 @@ async function runCheckFile(args, io) {
   const tPic = performance.now();
   const pictureFrames = /* @__PURE__ */ new Set([
     ...tracks.map((t) => t.bestFrame),
-    ...jumps.flatMap((j) => [j.from, j.to])
+    ...jumps.flatMap((j) => [j.from, j.to]),
+    ...specks.map((t) => t.largestFrame)
   ]);
   const pictureOf = /* @__PURE__ */ new Map();
   let pictureBytes = 0;
@@ -3122,9 +3184,23 @@ async function runCheckFile(args, io) {
     capturesKept: keepCaptures
   };
   const compared = `${plural(pairs, "pair")} of neighbouring frames` + (step > 1 ? ` (each frame and the next), one pair every ${step} frames, and the first and last three frames` : "") + ` compared for jumps over ${jumpLimit} in opaque share.`;
-  const passText = jumps.length || frozenFindings.length ? `No hole or opening of ${fmt(limit)} px or more on the ${byFrame.size} frames read.` : `Nothing over the limit on ${byFrame.size} of ${readings.length} frames read; no jump between neighbouring frames over ${jumpLimit}; the picture is at ${picture ?? "(none)"}.`;
+  const passText = jumps.length || frozenFindings.length || specks.length ? `No hole or opening of ${fmt(limit)} px or more on the ${byFrame.size} frames read.` : `Nothing over the limit on ${byFrame.size} of ${readings.length} frames read; no jump between neighbouring frames over ${jumpLimit}; the picture is at ${picture ?? "(none)"}.`;
   const sum = summarize(readings, limit, accept, picture, passText);
-  const findings = [...sum.findings, ...jumps, ...frozenFindings];
+  const speckFindings = specks.map((t) => {
+    const frames2 = t.frames.slice().sort((a, b2) => a - b2);
+    const b = t.box;
+    return {
+      kind: "speck",
+      frames: frames2,
+      largestArea: t.largestArea,
+      largestFrame: t.largestFrame,
+      smallestArea: t.smallestArea,
+      box: b,
+      picture: pictureOf.get(t.largestFrame) ?? null,
+      reading: `A small opaque piece apart from the cut-out (or joined to it by a neck a pixel or two wide) on ${plural(frames2.length, "frame")} (${frameRanges(frames2)}): ${t.smallestArea} to ${t.largestArea} px, largest on frame ${t.largestFrame}, within (${b.x}, ${b.y}, ${b.width} \xD7 ${b.height}). Usually a sliver of the background the matte kept (a chair edge beside an arm); look at the picture. Remove it with a mask on the cut-out movie on those frames (keying.md, removing a speck), or, if it belongs to the subject, accept it: accept: [{ kind: 'speck', box }].`
+    };
+  });
+  const findings = [...sum.findings, ...jumps, ...frozenFindings, ...speckFindings];
   const stop = findings.length > 0;
   const frozenText = frozenFindings.map((f) => ` ${f.reading}`).join("");
   const jumpText = jumps.length ? ` ${plural(jumps.length, "jump")} in opaque share between neighbouring frames: ${jumps.map((j) => `${j.from} to ${j.to}, ${j.change}`).join("; ")}. A jump of about 0.05 is a dropped object (a microphone); look at both frames.` : "";
@@ -3138,12 +3214,22 @@ async function runCheckFile(args, io) {
     step,
     stop,
     findings,
-    accepted: [...sum.accepted, ...frozenAcceptedRuns],
+    accepted: [
+      ...sum.accepted,
+      ...frozenAcceptedRuns,
+      ...specksAccepted.map((t) => ({
+        kind: "speck",
+        frames: t.frames.slice().sort((a, b) => a - b),
+        box: t.box,
+        largestArea: t.largestArea
+      }))
+    ],
     outline: outlineResult,
     checked: sum.checked,
     compared,
+    speckLimits: { ...speckLimits, opaque: SPECK_DEFAULTS.opaque, neckPx: 2 * SPECK_DEFAULTS.neck },
     opaque,
-    inOut: `${sum.text}${jumpText}${frozenText}${opaqueText} ${compared}${stop && picture ? ` Look at the picture (${picture}).` : ""}`,
+    inOut: `${sum.text}${jumpText}${frozenText}${speckFindings.map((f) => ` ${f.reading}`).join("")}${opaqueText} ${compared}${stop && picture ? ` Look at the picture (${picture}).` : ""}`,
     picture,
     pictures,
     frameReadings: readings.map((r) => ({
@@ -3160,7 +3246,7 @@ async function runCheckFile(args, io) {
       pixels: roundTally(pixels),
       totalMs: Math.round(since(started))
     },
-    next: stop ? "Stop. In your reply, before the next call, tell the user what is wrong in plain words and give the picture's path, before building on this file. A jump or a hole on one frame means the live matte rendered that frame wrong: render the cut-out again (subject.render_cutout) and check the new file." : "The file is checked. Build on it: subject.use_cutout puts it in the comp in place of the live matte."
+    next: stop ? "Stop. In your reply, before the next call, tell the user what is wrong in plain words and give the picture's path, before building on this file. A jump or a hole on one frame means the live matte rendered that frame wrong: render the cut-out again (subject.render_cutout) and check the new file. A speck (a small piece apart from the cut-out) does not go away with a new render: mask it out of the cut-out movie on its frames (keying.md), then check again with accept for anything that belongs to the subject." : "The file is checked. Build on it: subject.use_cutout puts it in the comp in place of the live matte."
   };
 }
 function useCutoutJsx(args) {
@@ -3256,7 +3342,7 @@ registerOp({
 registerOp({
   name: "subject.check_file",
   category: "subject",
-  description: `Check a rendered cut-out movie (from subject.render_cutout) frame by frame: brings it into a throwaway comp, reads frames in batches of at most 32 (every frame up to maxFrames, default ${CHECK_FILE_MAX_FRAMES}; beyond it pairs of neighbouring frames in steps, always the first and last three), and reports holes and openings (as subject.check: holeLimit, accept), the opaque share of every frame, and a 'jump' finding when neighbouring frames differ by more than jumpLimit (default ${CHECK_FILE_JUMP_LIMIT}: on the take of 2026-11-11 the rendered cut-out ran 0.279 to 0.314 with no step over 0.012, and a dropped microphone is about 0.05). Only true neighbours are compared, and \`compared\` says which. A frame that could not be read is 'not-checked' and stops. Pictures: the largest frame of each finding not accepted and both frames of each jump, full size, and a sheet of up to 24 frames; \`pictures\` counts them and their bytes. Each raw capture is removed once read unless keepCaptures (one run on the take had left 630 MB). The throwaway comp is removed afterwards, and the imported footage too unless keepFootage. \`outline\` says how much the outline changed between neighbouring frames and over frozenGap frames (share of the frame whose alpha changed by more than 0.1, at full size); a run where it did not move is a 'frozen' finding (the selection is probably not tracking, as after replacing the layer's footage; accept: [{ kind: "frozen" }] for a subject that really is still). The frozen limits are not yet calibrated live. Measured: about 0.55 s a frame reading the file. Returns stop, findings, accepted, checked, compared, opaque, outline, inOut, picture, frameReadings, timing.`,
+  description: `Check a rendered cut-out movie (from subject.render_cutout) frame by frame: brings it into a throwaway comp, reads frames in batches of at most 32 (every frame up to maxFrames, default ${CHECK_FILE_MAX_FRAMES}; beyond it pairs of neighbouring frames in steps, always the first and last three), and reports holes and openings (as subject.check: holeLimit, accept), the opaque share of every frame, and a 'jump' finding when neighbouring frames differ by more than jumpLimit (default ${CHECK_FILE_JUMP_LIMIT}: on the take of 2026-11-11 the rendered cut-out ran 0.279 to 0.314 with no step over 0.012, and a dropped microphone is about 0.05). A speck is a small opaque piece apart from the cut-out, or joined to it by a neck a pixel or two wide, not touching the frame edge: speckMinArea to speckMaxArea px (default 20 to 2,000, chosen on the 4K fresh-session file, where a sliver of chair 1 to 5 px off the right arm read 20 to 240 px on about 40 frames and nothing else in 320 frames was caught); findings of kind 'speck' give the frames, the largest area and frame, the box and a picture; they stop, since a new render keeps them, and accept: [{ kind: 'speck', box }] takes one off. Only true neighbours are compared, and \`compared\` says which. A frame that could not be read is 'not-checked' and stops. Pictures: the largest frame of each finding not accepted and both frames of each jump, full size, and a sheet of up to 24 frames; \`pictures\` counts them and their bytes. Each raw capture is removed once read unless keepCaptures (one run on the take had left 630 MB). The throwaway comp is removed afterwards, and the imported footage too unless keepFootage. \`outline\` says how much the outline changed between neighbouring frames and over frozenGap frames (share of the frame whose alpha changed by more than 0.1, at full size); a run where it did not move is a 'frozen' finding (the selection is probably not tracking, as after replacing the layer's footage; accept: [{ kind: "frozen" }] for a subject that really is still). The frozen limits are not yet calibrated live. Measured: about 0.55 s a frame reading the file. Returns stop, findings, accepted, checked, compared, opaque, outline, inOut, picture, frameReadings, timing.`,
   params: [
     {
       name: "path",
@@ -3286,6 +3372,18 @@ registerOp({
       name: "accept",
       type: "array",
       description: "As subject.check's accept: boxes (openings) or { box, kind }.",
+      required: false
+    },
+    {
+      name: "speckMinArea",
+      type: "number",
+      description: `Smallest piece apart from the cut-out reported as a speck, px (default ${SPECK_DEFAULTS.minArea}).`,
+      required: false
+    },
+    {
+      name: "speckMaxArea",
+      type: "number",
+      description: `Largest, px (default ${SPECK_DEFAULTS.maxArea}; bigger is another object, not a speck).`,
       required: false
     },
     {
