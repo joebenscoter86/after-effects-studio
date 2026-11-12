@@ -1356,3 +1356,149 @@ export function outlineTracker(opts: OutlineOptions = {}) {
     },
   };
 }
+
+// ---------------------------------------------------------------------------
+// Specks: small opaque pieces apart from the main cut-out
+// ---------------------------------------------------------------------------
+
+/**
+ * Chosen on the delivered cut-out of the 4K fresh-session test (320 frames,
+ * 1080 x 1920): a thin dark sliver of chair 1 to 5 px off the right arm, on
+ * frames 227 to 260, read 20 to 238 px; nothing else in the file was a piece
+ * of 20 px or more apart from the body except a fingertip running off the
+ * bottom edge (frame 49), which a piece touching the frame edge is not
+ * counted as. Under 20 px are single specks of noise (3 px on frame 249);
+ * over 2,000 px is another object, not a speck. `neck`: a piece joined to the
+ * cut-out by a neck up to 2 px wide counts as apart (an opening of 1 px).
+ */
+export const SPECK_DEFAULTS = { opaque: 0.5, minArea: 20, maxArea: 2000, neck: 1 };
+
+export interface SpeckPiece {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  area: number;
+}
+
+/** Erode a 0/1 mask with a 3 x 3 cross, `times` times. */
+function erodeCross(m: Uint8Array, w: number, h: number, times: number): Uint8Array {
+  let cur = m;
+  for (let t = 0; t < times; t++) {
+    const next = new Uint8Array(cur.length);
+    for (let y = 1; y < h - 1; y++)
+      for (let x = 1; x < w - 1; x++) {
+        const p = y * w + x;
+        next[p] = cur[p] & cur[p - 1] & cur[p + 1] & cur[p - w] & cur[p + w];
+      }
+    cur = next;
+  }
+  return cur;
+}
+
+/** 8-connected pieces of a 0/1 mask: labels (1-based) and the regions. */
+function labelMask(m: Uint8Array, w: number, h: number) {
+  const a = new Float64Array(m.length);
+  for (let i = 0; i < m.length; i++) a[i] = m[i];
+  const labels = new Int32Array(m.length);
+  const regions = labelRegions(
+    a,
+    w,
+    h,
+    (p) => m[p] === 1,
+    true,
+    labels,
+    new Int32Array(m.length),
+    -1,
+  );
+  return { labels, regions };
+}
+
+/**
+ * Small opaque pieces apart from the main cut-out, or joined to it only by a
+ * neck up to 2 px wide: opaque at `opaque` alpha or more, `minArea` to
+ * `maxArea` px, not touching the frame edge. Largest first.
+ */
+export function speckPieces(
+  alpha: Float64Array,
+  width: number,
+  height: number,
+  opts: Partial<typeof SPECK_DEFAULTS> = {},
+): SpeckPiece[] {
+  const o = { ...SPECK_DEFAULTS, ...opts };
+  const w = width;
+  const m = new Uint8Array(w * height);
+  for (let i = 0; i < m.length; i++) m[i] = alpha[i] >= o.opaque ? 1 : 0;
+  // Erode by the neck, label what is left, then grow the labels back over the opaque pixels:
+  // a piece joined only by a neck up to 2 px wide comes back as its own label.
+  const { labels } = labelMask(erodeCross(m, w, height, o.neck), w, height);
+  for (let t = 0; t < o.neck + 1; t++) {
+    const grown = labels.slice();
+    for (let y = 0; y < height; y++)
+      for (let x = 0; x < w; x++) {
+        const p = y * w + x;
+        if (!m[p] || labels[p]) continue;
+        const n =
+          (x > 0 && labels[p - 1]) ||
+          (x < w - 1 && labels[p + 1]) ||
+          (y > 0 && labels[p - w]) ||
+          (y < height - 1 && labels[p + w]) ||
+          0;
+        if (n) grown[p] = n;
+      }
+    labels.set(grown);
+  }
+  // Opaque pixels no grown label reached (pieces thinner than the neck) are labelled as they stand.
+  const rest = new Uint8Array(m.length);
+  for (let i = 0; i < m.length; i++) rest[i] = m[i] && !labels[i] ? 1 : 0;
+  const thin = labelMask(rest, w, height);
+  const stats = new Map<
+    string,
+    { minX: number; minY: number; maxX: number; maxY: number; area: number; edge: boolean }
+  >();
+  const add = (key: string, x: number, y: number) => {
+    let s = stats.get(key);
+    if (!s) stats.set(key, (s = { minX: x, minY: y, maxX: x, maxY: y, area: 0, edge: false }));
+    s.area++;
+    if (x < s.minX) s.minX = x;
+    if (x > s.maxX) s.maxX = x;
+    if (y < s.minY) s.minY = y;
+    if (y > s.maxY) s.maxY = y;
+    if (x === 0 || y === 0 || x === w - 1 || y === height - 1) s.edge = true;
+  };
+  for (let y = 0; y < height; y++)
+    for (let x = 0; x < w; x++) {
+      const p = y * w + x;
+      if (labels[p]) add(`g${labels[p]}`, x, y);
+      else if (thin.labels[p]) add(`t${thin.labels[p]}`, x, y);
+    }
+  // The main cut-out is the largest piece; a thin piece touching it is part of it (a hair, a mic cable).
+  const list = [...stats.values()].sort((a, b) => b.area - a.area);
+  const main = list[0];
+  if (!main) return [];
+  const pieces: SpeckPiece[] = [];
+  for (const [key, s] of stats) {
+    if (s === main || s.edge || s.area < o.minArea || s.area > o.maxArea) continue;
+    if (key.startsWith("t")) {
+      // A thin piece is a speck only when no grown piece touches it.
+      let touches = false;
+      const id = Number(key.slice(1));
+      for (let y = s.minY; y <= s.maxY && !touches; y++)
+        for (let x = s.minX; x <= s.maxX && !touches; x++) {
+          const p = y * w + x;
+          if (thin.labels[p] !== id) continue;
+          for (const q of [p - 1, p + 1, p - w, p + w, p - w - 1, p - w + 1, p + w - 1, p + w + 1])
+            if (q >= 0 && q < m.length && labels[q]) touches = true;
+        }
+      if (touches) continue;
+    }
+    pieces.push({
+      x: s.minX,
+      y: s.minY,
+      width: s.maxX - s.minX + 1,
+      height: s.maxY - s.minY + 1,
+      area: s.area,
+    });
+  }
+  return pieces.sort((p, q) => q.area - p.area);
+}

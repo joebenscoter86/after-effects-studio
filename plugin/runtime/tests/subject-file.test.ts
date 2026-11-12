@@ -25,6 +25,7 @@ import {
   useCutoutJsx,
   type FileIO,
 } from "../src/operations/keying.js";
+import { SPECK_DEFAULTS, speckPieces } from "../src/color/matte.js";
 import { getOp } from "../src/registry.js";
 import "../src/operations/index.js";
 
@@ -345,6 +346,7 @@ function fileIO({
   frames = 120,
   dropped = new Set<number>(),
   fail = new Set<number>(),
+  matteAt = null as ((frame: number) => Float64Array) | null,
 } = {}): FileIO & { calls: Any[] } {
   const calls: Any[] = [];
   return {
@@ -385,7 +387,7 @@ function fileIO({
             W,
             H,
             new Float64Array(W * H * 3).fill(0.5),
-            fileFrame(frame, dropped),
+            matteAt ? matteAt(frame) : fileFrame(frame, dropped),
           ),
         );
         out.push({ ok: true, frame, writtenTo: f });
@@ -1015,5 +1017,108 @@ describe("subject.check_file: a frozen outline", () => {
       frozenIO(false),
     );
     expect(res.findings.filter((x: Any) => x.kind === "frozen")).toEqual([]);
+  });
+});
+
+// ------------------------------------------------------- specks
+
+/** The body of fileFrame with a thin dark sliver 2 px off its right side (x 162..164, y 120..149, 90 px) on `on` frames. */
+function sliverFrame(on: Set<number>, neck = false) {
+  return (frame: number) => {
+    const a = fileFrame(frame, new Set());
+    if (on.has(frame)) {
+      for (let y = 120; y < 150; y++) for (let x = 162; x < 165; x++) a[y * W + x] = 1;
+      // A neck one pixel high, two wide, joining it to the body: nearly separate.
+      if (neck) for (let x = 160; x < 162; x++) a[130 * W + x] = 1;
+    }
+    return a;
+  };
+}
+
+describe("speckPieces", () => {
+  const body = () => fileFrame(0, new Set());
+  it("finds a small opaque piece apart from the main cut-out", () => {
+    const a = sliverFrame(new Set([0]))(0);
+    expect(speckPieces(a, W, H)).toEqual([{ x: 162, y: 120, width: 3, height: 30, area: 90 }]);
+  });
+
+  it("finds one joined to the cut-out only by a neck a pixel or two wide", () => {
+    const a = sliverFrame(new Set([0]), true)(0);
+    const p = speckPieces(a, W, H);
+    expect(p).toHaveLength(1);
+    // The neck's pixels go to one side or the other.
+    expect(p[0].x).toBeGreaterThanOrEqual(160);
+    expect(p[0].x + p[0].width).toBe(165);
+    expect(p[0].area).toBeGreaterThanOrEqual(90);
+    expect(p[0].area).toBeLessThanOrEqual(92);
+  });
+
+  it("leaves out the clean cut-out, pieces under 20 px or over 2,000 px, and pieces on the frame edge", () => {
+    expect(speckPieces(body(), W, H)).toEqual([]);
+    const dot = body();
+    for (let y = 20; y < 22; y++) for (let x = 20; x < 22; x++) dot[y * W + x] = 1;
+    expect(speckPieces(dot, W, H)).toEqual([]);
+    const big = body();
+    for (let y = 0 + 5; y < 50; y++) for (let x = 165; x < 195; x++) big[y * W + x] = 1; // 1,350 px: still a speck
+    expect(speckPieces(big, W, H)).toHaveLength(1);
+    const bigger = new Float64Array(400 * 300);
+    for (let y = 60; y < 300; y++) for (let x = 40; x < 160; x++) bigger[y * 400 + x] = 1;
+    for (let y = 10; y < 60; y++) for (let x = 250; x < 300; x++) bigger[y * 400 + x] = 1; // 2,500 px: another object
+    expect(speckPieces(bigger, 400, 300)).toEqual([]);
+    const edge = body();
+    for (let y = 0; y < 10; y++) for (let x = 170; x < 175; x++) edge[y * W + x] = 1;
+    expect(speckPieces(edge, W, H)).toEqual([]);
+  });
+
+  it("uses the limits it is given", () => {
+    const a = sliverFrame(new Set([0]))(0);
+    expect(speckPieces(a, W, H, { minArea: 100 })).toEqual([]);
+    expect(SPECK_DEFAULTS).toMatchObject({ minArea: 20, maxArea: 2000, neck: 1, opaque: 0.5 });
+  });
+});
+
+describe("subject.check_file: specks", () => {
+  it("reports a sliver on the frames it is on, with the largest area, the box and a picture, and stops", async () => {
+    const on = new Set([50, 51, 52, 53, 54, 55]);
+    const res = await runCheckFile(
+      { path: "/x/cut.mov", outDir: dir, frozenFrames: 1e9 },
+      fileIO({ matteAt: sliverFrame(on) }),
+    );
+    const f = res.findings.find((x: Any) => x.kind === "speck");
+    expect(f).toBeDefined();
+    expect(f.frames).toEqual([50, 51, 52, 53, 54, 55]);
+    expect(f.largestArea).toBe(90);
+    expect(f.box).toEqual({ x: 162, y: 120, width: 3, height: 30 });
+    await fs.access(f.picture);
+    expect(res.stop).toBe(true);
+    expect(res.inOut).toMatch(/small opaque piece/);
+    expect(res.inOut).not.toMatch(/Nothing over the limit/);
+    expect(res.next).toMatch(/speck/);
+  });
+
+  it("finds nothing on a clean file", async () => {
+    const res = await runCheckFile(
+      { path: "/x/cut.mov", outDir: dir, frozenFrames: 1e9 },
+      fileIO(),
+    );
+    expect(res.findings.filter((x: Any) => x.kind === "speck")).toEqual([]);
+  });
+
+  it("takes an accepted speck off the findings", async () => {
+    const on = new Set([50, 51, 52]);
+    const res = await runCheckFile(
+      {
+        path: "/x/cut.mov",
+        outDir: dir,
+        frozenFrames: 1e9,
+        accept: [{ kind: "speck", box: { x: 158, y: 116, width: 12, height: 40 } }],
+      },
+      fileIO({ matteAt: sliverFrame(on) }),
+    );
+    expect(res.findings.filter((x: Any) => x.kind === "speck")).toEqual([]);
+    expect(res.accepted).toEqual(
+      expect.arrayContaining([expect.objectContaining({ kind: "speck" })]),
+    );
+    expect(res.stop).toBe(false);
   });
 });
