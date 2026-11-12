@@ -34,6 +34,14 @@ describe("the test harness's build", () => {
   }, 60_000);
 
   it("runs the committed bundle when it is newer than the source", () => {
-    expect(ensureBuilt()).toBe(BUNDLE);
+    const st = statSync(BUNDLE);
+    // Newer than any source file, whatever state the tree is in.
+    const later = new Date(Date.now() + 60_000);
+    utimesSync(BUNDLE, later, later);
+    try {
+      expect(ensureBuilt()).toBe(BUNDLE);
+    } finally {
+      utimesSync(BUNDLE, st.atime, st.mtime);
+    }
   });
 });
