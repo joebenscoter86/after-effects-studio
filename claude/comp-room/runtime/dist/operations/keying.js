@@ -462,13 +462,429 @@ registerOp({
         `;
   }
 });
+const OBJECT_MATTE_MATCH_NAME = "ADBE Samurai";
+const OBJECT_MATTE_SELECTIONS_MATCH_NAME = "ADBE Samurai Strokes Group";
+const PAINT_DURATION_MATCH_NAME = "ADBE Paint Duration";
+const OBJECT_MATTE_SETTINGS = {
+  version: {
+    matchName: "/propagation_method",
+    name: "Version",
+    min: 1,
+    max: 4,
+    default: 4,
+    kind: "number",
+    writable: false
+  },
+  feather: {
+    matchName: "/spatialsmoothing2",
+    name: "Feather",
+    min: 0,
+    max: 1e3,
+    default: 5,
+    kind: "number",
+    writable: true
+  },
+  contrast: {
+    matchName: "/spatialsoftness2",
+    name: "Contrast",
+    min: 0,
+    max: 100,
+    default: 80,
+    kind: "number",
+    writable: true
+  },
+  shiftEdge: {
+    matchName: "/rmshiftedges",
+    name: "Shift Edge",
+    min: -100,
+    max: 100,
+    default: 0,
+    kind: "number",
+    writable: true
+  },
+  reduceChatter: {
+    matchName: "/rmreducechatter",
+    name: "Reduce Chatter",
+    min: 0,
+    max: 100,
+    default: 0,
+    kind: "number",
+    writable: true
+  },
+  invert: {
+    matchName: "/invertforegroundbackground",
+    name: "Invert Foreground/Background",
+    min: 0,
+    max: 1,
+    default: null,
+    kind: "switch",
+    writable: true
+  },
+  fineTune: {
+    matchName: "/rmrefinematteenable",
+    name: "Fine-tune Object Matte",
+    min: 0,
+    max: 1,
+    default: 1,
+    kind: "switch",
+    writable: false
+  },
+  useMotionBlur: {
+    matchName: "/rmusemotionblur",
+    name: "Use Motion Blur",
+    min: null,
+    max: null,
+    default: null,
+    kind: "switch",
+    writable: false
+  },
+  decontaminateEdgeColors: {
+    matchName: "/rmcleanedgecolors",
+    name: "Decontaminate Edge Colors",
+    min: null,
+    max: null,
+    default: null,
+    kind: "switch",
+    writable: false
+  }
+};
+const SUBJECT_MATTE_NOTICE = "One step here needs you in After Effects: a single click on the subject, about ten seconds. Everything before and after it I do.";
+function subjectMatteSteps(opts = {}) {
+  const clip = opts.clip === void 0 ? "the clip's name" : `"${opts.clip}"`;
+  const subject = opts.subject?.trim();
+  const step4 = subject ? `Move the pointer over ${subject} in the Layer panel. ${subject.charAt(0).toUpperCase()}${subject.slice(1)} tints magenta. Click once.` : "Move the pointer over the person in the Layer panel. They tint magenta. Click once.";
+  return [
+    `After Effects is showing your clip in the Layer panel (the tab reads "Layer", then ${clip}). I opened it for you.`,
+    'In the toolbar at the top, click the Object Matte Tool: the dashed square with an arrow, just left of the pin. If that icon looks different, click and hold it and choose "Object Matte Tool" from the list.',
+    'If a tip titled "Object Matte" appears, click OK.',
+    step4,
+    "Anything else that should stay with them, such as a microphone: hover it and click it too.",
+    'Tell me "done". No Spacebar and no Freeze are needed.'
+  ];
+}
+function selectionKind(name) {
+  if (/^Add Object \d+$/.test(name)) return "object";
+  if (/^Quick Select Foreground \d+$/.test(name)) return "quick-selection";
+  return "other";
+}
+const NEED_CLICK = "run subject.prepare and ask the user for the click, relaying its steps word for word";
+const OBJECT_MATTE_JSX = `
+            function _omWalk(g, key, field, depth) {
+                if (depth > 4) return null;
+                var n = AE.safeGet(function () { return g.numProperties; }, 0);
+                for (var i = 1; i <= n; i++) {
+                    var c = null;
+                    try { c = g.property(i); } catch (eC) { c = null; }
+                    if (!c) continue;
+                    var cm = AE.safeGet(function () { return c.matchName; }, "");
+                    var cv = field === "matchName" ? cm : AE.safeGet(function () { return c.name; }, "");
+                    if (cv === key) return c;
+                    if (cm === ${jsxVal(OBJECT_MATTE_SELECTIONS_MATCH_NAME)}) continue;
+                    var ct = AE.safeGet(function () { return c.propertyType; }, null);
+                    if (ct !== null && ct !== PropertyType.PROPERTY) {
+                        var r = _omWalk(c, key, field, depth + 1);
+                        if (r) return r;
+                    }
+                }
+                return null;
+            }
+            function _omFind(fx, mn, nm) {
+                var p = null;
+                try { p = fx.property(mn); } catch (eP) { p = null; }
+                if (p && AE.safeGet(function () { return p.matchName; }, "") === mn) return { prop: p, foundBy: "matchName" };
+                p = _omWalk(fx, mn, "matchName", 0);
+                if (p) return { prop: p, foundBy: "walk" };
+                if (nm) { p = _omWalk(fx, nm, "name", 0); if (p) return { prop: p, foundBy: "name" }; }
+                return { prop: null, foundBy: null };
+            }
+            function _omKind(nm) {
+                if (/^Add Object \\d+$/.test(nm)) return "object";
+                if (/^Quick Select Foreground \\d+$/.test(nm)) return "quick-selection";
+                return "other";
+            }
+            function _omSelections(fx) {
+                var g = _omFind(fx, ${jsxVal(OBJECT_MATTE_SELECTIONS_MATCH_NAME)}, "Selections").prop;
+                var list = [];
+                if (!g) return { found: false, list: list };
+                var n = AE.safeGet(function () { return g.numProperties; }, 0);
+                for (var i = 1; i <= n; i++) {
+                    var s = null;
+                    try { s = g.property(i); } catch (eS) { s = null; }
+                    if (!s) continue;
+                    var nm = AE.safeGet(function () { return s.name; }, "");
+                    var dur = AE.safeGet(function () { return AE.valueToJson(s.property(${jsxVal(PAINT_DURATION_MATCH_NAME)}).value); }, null);
+                    list.push({ index: i, name: nm, matchName: AE.safeGet(function () { return s.matchName; }, ""), kind: _omKind(nm), duration: dur });
+                }
+                return { found: true, list: list };
+            }
+            function _omSettings(fx, table) {
+                var out = {};
+                for (var k in table) {
+                    if (!table.hasOwnProperty(k)) continue;
+                    var f = _omFind(fx, table[k].matchName, table[k].name);
+                    var row = { name: table[k].name, matchName: table[k].matchName, foundBy: f.foundBy, value: null };
+                    if (f.prop) {
+                        row.value = AE.safeGet(function () { return AE.valueToJson(f.prop.value); }, null);
+                        var rg = AE.propertyRange(f.prop);
+                        row.reportedRange = { min: rg.min, max: rg.max };
+                    }
+                    row.measuredRange = { min: table[k].min, max: table[k].max };
+                    row["default"] = table[k]["default"];
+                    out[k] = row;
+                }
+                return out;
+            }
+            function _omSummary(present, sel) {
+                if (!present) return "no Object Matte on this layer: the user has not clicked yet";
+                if (sel.length === 0) return "Object Matte is on the layer but has no selection yet: the user has not clicked (an Object Matte with no selection makes no matte)";
+                var c = { object: 0, "quick-selection": 0, other: 0 };
+                for (var i = 0; i < sel.length; i++) c[sel[i].kind]++;
+                var parts = [];
+                if (c.object > 0) parts.push(c.object + (c.object === 1 ? " object selected" : " objects selected"));
+                if (c["quick-selection"] > 0) parts.push(c["quick-selection"] + (c["quick-selection"] === 1 ? " quick-selection stroke" : " quick-selection strokes"));
+                if (c.other > 0) parts.push(c.other + (c.other === 1 ? " other selection" : " other selections"));
+                return parts.join(", ");
+            }
+`;
+const subjectIndexParam = {
+  name: "effectIndex",
+  type: "number",
+  description: "1-based index of the Object Matte to use when the layer has several (it must be Object Matte, ADBE Samurai). Default: the first in the stack.",
+  required: false
+};
+const REMOVE_NOTE = "To start the selection again: remove this Object Matte with effect.remove { comp, layer, effectIndex }, run subject.prepare, and ask the user for the click again. The user can also take one thing out by Option-clicking it with the Object Matte Tool.";
+registerOp({
+  name: "subject.prepare",
+  category: "subject",
+  description: "Get a footage layer ready for the one manual step of a subject matte (After Effects 2027's Object Matte, the old Roto Brush): the user clicks the subject once with the Object Matte Tool; a script cannot make that selection. This call brings the comp forward, sets it to full resolution, moves to `time` (default: the layer's in point; pick a frame where the subject is clearly visible), selects only that layer and opens it in the Layer panel. It adds no effect and does not pick the tool. Returns notice and steps (the user's instructions, with the clip's name and the subject filled in) and userMessage (both as one text): relay them to the user word for word. Also returns did (the steps done), couldNotDo (any that failed, with the error; beforeSteps then says what to tell the user first) and existing (an Object Matte already on the layer and its selections). After the user says done, check with subject.status. Only verified in After Effects 27.0 as separate scripting steps; this call as a whole is not verified there yet.",
+  params: [
+    ...compLayerParams,
+    {
+      name: "time",
+      type: "number",
+      description: "Comp time in seconds to show for the click. Default: the layer's in point. Must be inside the layer.",
+      required: false
+    },
+    {
+      name: "subject",
+      type: "string",
+      description: "What to cut out, as the user would say it ('the presenter', 'the bottle'); goes into step 4. Default: the person.",
+      required: false
+    }
+  ],
+  toJsx(args) {
+    const mark = "CLIP";
+    const steps = subjectMatteSteps({
+      clip: mark,
+      subject: typeof args.subject === "string" ? args.subject : void 0
+    });
+    return `
+            ${jsxCompLayerPreamble(args)}
+            ${FX_ROOT_JSX}
+            ${OBJECT_MATTE_JSX}
+            var _src = AE.safeGet(function () { return _layer.source; }, null);
+            if (!_src) return { ok: false, error: "layer '" + _layer.name + "' has no footage source (a text, shape, null, camera or light layer); Object Matte cuts a subject out of footage" };
+            var _in = Math.min(_layer.inPoint, _layer.outPoint);
+            var _outP = Math.max(_layer.inPoint, _layer.outPoint);
+            var _t = ${jsxVal(args.time ?? null)};
+            if (_t === null) _t = _in;
+            if (_t < _in || _t >= _outP) return { ok: false, error: "time " + _t + " is outside layer '" + _layer.name + "' (in " + _in + ", out " + _outP + "); nothing was changed" };
+            var _did = [];
+            var _couldNot = [];
+            function _step(what, fn) {
+                try { fn(); _did.push(what); } catch (eSt) { _couldNot.push({ step: what, error: AE.errText(eSt) }); }
+            }
+            _step("brought the comp forward", function () { _comp.openInViewer(); });
+            _step("set the comp to full resolution", function () { _comp.resolutionFactor = [1, 1]; });
+            _step("moved to " + _t + " s", function () { _comp.time = _t; });
+            _step("selected only layer '" + _layer.name + "'", function () {
+                for (var _li = 1; _li <= _comp.numLayers; _li++) { var _l = _comp.layer(_li); if (_l.selected) _l.selected = false; }
+                _layer.selected = true;
+            });
+            var _opened = false;
+            _step("opened the layer in the Layer panel", function () {
+                var _id = app.findMenuCommandId("Open Layer");
+                if (!_id) throw new Error("After Effects has no menu command named 'Open Layer'");
+                app.executeCommand(_id);
+                _opened = true;
+            });
+            var _pick = AE.pickEffect(_fxRoot, ${jsxVal(OBJECT_MATTE_MATCH_NAME)}, "Object Matte", null);
+            var _existing = { objectMatte: _pick.index !== null, effectIndex: _pick.index, count: _pick.count || 0, selections: [] };
+            if (_pick.index !== null) _existing.selections = _omSelections(_fxRoot.property(_pick.index)).list;
+            _existing.summary = _omSummary(_pick.index !== null, _existing.selections);
+            var _tmpl = ${jsxVal(steps)};
+            var _steps = [];
+            for (var _si = 0; _si < _tmpl.length; _si++) _steps.push(_tmpl[_si].split(${jsxVal(mark)}).join(_layer.name));
+            var _notice = ${jsxVal(SUBJECT_MATTE_NOTICE)};
+            var _lines = [_notice];
+            for (var _sj = 0; _sj < _steps.length; _sj++) _lines.push((_sj + 1) + ". " + _steps[_sj]);
+            var _out = {
+                ok: _couldNot.length === 0,
+                comp: _comp.name,
+                layer: _layer.name,
+                time: _t,
+                did: _did,
+                couldNotDo: _couldNot,
+                existing: _existing,
+                notice: _notice,
+                steps: _steps,
+                userMessage: _lines.join("\\n"),
+                relay: "Give the user notice and steps word for word (userMessage holds both); do not paraphrase them. Then wait for 'done' and run subject.status.",
+                removeNote: ${jsxVal(REMOVE_NOTE)}
+            };
+            if (!_opened) _out.beforeSteps = "The Layer panel could not be opened by script. Before step 1, tell the user: double-click the layer '" + _layer.name + "' in the timeline to open it in the Layer panel.";
+            if (_couldNot.length > 0) {
+                var _msgs = [];
+                for (var _ci = 0; _ci < _couldNot.length; _ci++) _msgs.push(_couldNot[_ci].step + " (" + _couldNot[_ci].error + ")");
+                _out.error = "could not do every step: " + _msgs.join("; ") + ". The steps are still returned; see beforeSteps when the Layer panel did not open.";
+            }
+            return _out;
+        `;
+  }
+});
+registerOp({
+  name: "subject.status",
+  category: "subject",
+  readOnly: true,
+  description: "Read a layer's subject matte (Object Matte, ADBE Samurai) without changing anything: whether the effect is there, its selections (name; kind 'object' for a click with the Object Matte Tool, 'Add Object N', 'quick-selection' for a stroke with the old brush, 'Quick Select Foreground N', 'other' otherwise; duration), its settings (value, the range After Effects reports now, the range measured in After Effects 27.0, default, and foundBy: how the property was found, matchName, walk or name), and summary, one plain sentence ('no selection yet: the user has not clicked', '1 object selected'). Run it after the user says done; then render the subject over a flat colour (ae_render_frame over) and the matte (channels 'alpha', edge true). removeNote says how to start the selection again.",
+  params: [...compLayerParams, subjectIndexParam],
+  toJsx(args) {
+    return `
+            ${jsxCompLayerPreamble(args)}
+            ${FX_ROOT_JSX}
+            ${OBJECT_MATTE_JSX}
+            var _pick = AE.pickEffect(_fxRoot, ${jsxVal(OBJECT_MATTE_MATCH_NAME)}, "Object Matte", ${jsxVal(args.effectIndex ?? null)});
+            if (_pick.error) return { ok: false, error: _pick.error };
+            if (_pick.index === null) {
+                return { ok: true, layer: _layer.name, objectMatte: { present: false, effectIndex: null, count: 0 }, selections: [], settings: null,
+                    summary: _omSummary(false, []), next: ${jsxVal(`Nothing selected: ${NEED_CLICK}.`)}, effects: AE.effectOrder(_fxRoot) };
+            }
+            var _fx = _fxRoot.property(_pick.index);
+            var _sel = _omSelections(_fx);
+            var _counts = { object: 0, quickSelection: 0, other: 0 };
+            for (var _i = 0; _i < _sel.list.length; _i++) {
+                var _k = _sel.list[_i].kind;
+                if (_k === "object") _counts.object++; else if (_k === "quick-selection") _counts.quickSelection++; else _counts.other++;
+            }
+            var _out = {
+                ok: true,
+                layer: _layer.name,
+                objectMatte: { present: true, effectIndex: _pick.index, count: _pick.count, name: _fx.name, enabled: AE.safeGet(function () { return _fx.enabled; }, null), selectionsGroupFound: _sel.found },
+                selections: _sel.list,
+                counts: _counts,
+                settings: _omSettings(_fx, ${jsxVal(OBJECT_MATTE_SETTINGS)}),
+                summary: _omSummary(true, _sel.list),
+                removeNote: ${jsxVal(REMOVE_NOTE)},
+                effects: AE.effectOrder(_fxRoot)
+            };
+            if (_sel.list.length === 0) _out.next = ${jsxVal(`No selection yet: ${NEED_CLICK}.`)};
+            return _out;
+        `;
+  }
+});
+const MATTE_WRITABLE = Object.entries(OBJECT_MATTE_SETTINGS).filter(([, s]) => s.writable);
+function matteSettingValue(key, s, v) {
+  if (s.kind === "switch") {
+    if (typeof v !== "boolean" && v !== 0 && v !== 1)
+      return `\`${key}\` must be true or false; got ${JSON.stringify(v)}`;
+    return v === true || v === 1 ? 1 : 0;
+  }
+  if (typeof v !== "number" || !Number.isFinite(v))
+    return `\`${key}\` must be a number; got ${JSON.stringify(v)}`;
+  if (s.min !== null && v < s.min || s.max !== null && v > s.max) {
+    return `\`${key}\` refused ${v}: Object Matte's ${s.name} takes ${s.min} to ${s.max} (the range After Effects 27.0 reported)`;
+  }
+  return v;
+}
+registerOp({
+  name: "subject.settings",
+  category: "subject",
+  description: "Set a subject matte's edge settings on Object Matte (ADBE Samurai) after the user's click: " + MATTE_WRITABLE.map(
+    ([k, s]) => `${k} (${s.name}, ${s.min} to ${s.max}${s.default !== null ? `, default ${s.default}` : ""})`
+  ).join(", ") + ". Each value is checked against the range measured in After Effects 27.0 and then against the range After Effects reports, before anything is written; one refusal writes nothing. Refuses when the layer has no Object Matte or it has no selection (the user has not clicked: run subject.prepare and ask for the click). Returns effectIndex, written, settings (every setting read back, as subject.status gives them) and summary. Choose values from ae_render_frame's edge report on the matte.",
+  params: [
+    ...compLayerParams,
+    subjectIndexParam,
+    ...MATTE_WRITABLE.map(([name, s]) => ({
+      name,
+      type: s.kind === "switch" ? "boolean" : "number",
+      description: s.kind === "switch" ? `${s.name}: true keeps everything except the selection` : `${s.name}, ${s.min} to ${s.max}${s.default !== null ? ` (default ${s.default})` : ""}`,
+      required: false
+    }))
+  ],
+  toJsx(args) {
+    const writes = [];
+    for (const [key, s] of MATTE_WRITABLE) {
+      if (args[key] === void 0) continue;
+      const v = matteSettingValue(key, s, args[key]);
+      if (typeof v === "string") return jsxFail(`${v}; nothing written`);
+      writes.push({ key, matchName: s.matchName, name: s.name, value: v });
+    }
+    if (writes.length === 0) {
+      return jsxFail(
+        `pass at least one of ${MATTE_WRITABLE.map(([k]) => k).join(", ")}; to read the settings, use subject.status`
+      );
+    }
+    return `
+            ${jsxCompLayerPreamble(args)}
+            ${FX_ROOT_JSX}
+            ${OBJECT_MATTE_JSX}
+            var _pick = AE.pickEffect(_fxRoot, ${jsxVal(OBJECT_MATTE_MATCH_NAME)}, "Object Matte", ${jsxVal(args.effectIndex ?? null)});
+            if (_pick.error) return { ok: false, error: _pick.error };
+            if (_pick.index === null) return { ok: false, error: "layer '" + _layer.name + "' has no Object Matte, so there is no subject matte to set: " + ${jsxVal(`${NEED_CLICK}; nothing written`)} };
+            var _fx = _fxRoot.property(_pick.index);
+            var _sel = _omSelections(_fx);
+            if (_sel.list.length === 0) return { ok: false, error: "Object Matte on layer '" + _layer.name + "' has no selection yet (the user has not clicked), so it makes no matte: " + ${jsxVal(`${NEED_CLICK}; nothing written`)} };
+            var _writes = ${jsxVal(writes)};
+            var _props = [];
+            var _refused = [];
+            for (var _wi = 0; _wi < _writes.length; _wi++) {
+                var _f = _omFind(_fx, _writes[_wi].matchName, _writes[_wi].name);
+                _props.push(_f.prop);
+                if (!_f.prop) { _refused.push({ setting: _writes[_wi].key, error: "Object Matte has no property " + _writes[_wi].matchName + " (" + _writes[_wi].name + ")" }); continue; }
+                var _why = AE.checkPropertyWrite(_f.prop, _writes[_wi].value);
+                if (_why !== null) _refused.push({ setting: _writes[_wi].key, error: _why, range: AE.propertyRange(_f.prop) });
+            }
+            if (_refused.length > 0) {
+                var _msgs = [];
+                for (var _ri = 0; _ri < _refused.length; _ri++) _msgs.push(_refused[_ri].error);
+                return { ok: false, error: "nothing written: " + _msgs.join("; "), refused: _refused };
+            }
+            var _failed = [];
+            var _written = [];
+            for (var _wj = 0; _wj < _writes.length; _wj++) {
+                try { _props[_wj].setValue(_writes[_wj].value); _written.push(_writes[_wj].key); }
+                catch (eW) { _failed.push({ setting: _writes[_wj].key, error: AE.errText(eW) }); }
+            }
+            var _out = {
+                ok: _failed.length === 0,
+                layer: _layer.name,
+                effectIndex: _pick.index,
+                written: _written,
+                settings: _omSettings(_fx, ${jsxVal(OBJECT_MATTE_SETTINGS)}),
+                summary: _omSummary(true, _sel.list)
+            };
+            if (_failed.length > 0) {
+                _out.failed = _failed;
+                _out.error = "After Effects rejected " + _failed.length + " of the checked writes; the rest were written";
+            }
+            return _out;
+        `;
+  }
+});
 export {
   KEYLIGHT_MATCH_NAME,
   KEYLIGHT_SETTINGS,
   KEYLIGHT_VIEWS,
   KEY_CLEANER_MATCH_NAME,
   KEY_CLEANER_SETTINGS,
+  OBJECT_MATTE_MATCH_NAME,
+  OBJECT_MATTE_SELECTIONS_MATCH_NAME,
+  OBJECT_MATTE_SETTINGS,
   SPILL_SUPPRESSOR_MATCH_NAME,
   SPILL_SUPPRESSOR_SETTINGS,
-  keylightViewNumber
+  SUBJECT_MATTE_NOTICE,
+  keylightViewNumber,
+  selectionKind,
+  subjectMatteSteps
 };
