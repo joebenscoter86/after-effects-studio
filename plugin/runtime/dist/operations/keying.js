@@ -10,7 +10,7 @@ import { promises as fs } from "node:fs";
 import * as path from "node:path";
 import { SPECK_DEFAULTS, distanceTo, furthestFrame, matteCoverage, subjectTop, cutoutRegions, outlineTracker, speckPieces, SEEN_THROUGH_DEFAULTS, seenThroughInside, EDGE_DEFAULTS, enclosedHoles, growMask, } from "../color/matte.js";
 import { decodePng, encodePngGray8, encodePngSrgb8 } from "../color/png16.js";
-import { composeContactSheet, flattenOver, labOf, lookCrops, measureLook, resample, summarizeLookSeries, } from "../color/sheet.js";
+import { composeContactSheet, flattenOver, labOf, lookCrops, measureLook, resample, summarizeLookSeries, compareReferences, referenceReader, } from "../color/sheet.js";
 import { rejectedOutputPath } from "../config.js";
 import { registerOp, jsxFail, jsxVal, jsxCompLayerPreamble, jsxCompPreamble, getOp, } from "../registry.js";
 import { PARK_QUEUE_FN, QUEUE_CHANGE_NOTE, RENDER_QUEUE_UNDO_WARNING } from "./render.js";
@@ -4649,5 +4649,216 @@ registerOp({
             },
         });
     },
+});
+// ---------------------------------------------------------------------------
+// Working to a reference (professional-finish plan, stage 3)
+// ---------------------------------------------------------------------------
+const MOVIE_EXT = /\.(mov|mp4|m4v|mxf|avi|webm|mkv|mpe?g)$/i;
+const naturalOrder = (a, b) => a.localeCompare(b, undefined, { numeric: true });
+/** The report without its motion map (the map is in the saved file, for the compare). */
+function reportForReply(r) {
+    const { map: _map, ...motion } = r.motion;
+    return { ...r, motion };
+}
+/** JSX: a comp's size, length and rate. */
+function referenceCompJsx(args) {
+    return `
+            ${jsxCompPreamble(args)}
+            return { ok: true, name: _comp.name, id: _comp.id, width: _comp.width, height: _comp.height,
+                frames: Math.round(_comp.duration * _comp.frameRate), frameRate: _comp.frameRate };
+        `;
+}
+export async function runReferenceReport(args, io) {
+    const started = performance.now();
+    const outPath = args.outPath;
+    if (typeof outPath !== "string" || !path.isAbsolute(outPath) || !/\.json$/i.test(outPath))
+        return { ok: false, error: "`outPath` must be an absolute path for the report (.json)" };
+    const sources = ["path", "item", "comp"].filter((k) => args[k] !== undefined && args[k] !== null);
+    if (sources.length !== 1)
+        return {
+            ok: false,
+            error: "give exactly one of `path` (a still, a folder of frames or a movie), `item` (a footage item's id) or `comp` (a build)",
+        };
+    const regions = Array.isArray(args.regions) ? args.regions : undefined;
+    const cap = typeof args.maxFrames === "number" && args.maxFrames >= 1 ? Math.floor(args.maxFrames) : CHECK_FILE_MAX_FRAMES;
+    const outDir = path.dirname(outPath);
+    await fs.mkdir(outDir, { recursive: true });
+    const keepCaptures = args.keepCaptures === true;
+    const perFrameMs = Math.max(1, Math.round((typeof args.secondsPerFrame === "number" && args.secondsPerFrame > 0 ? args.secondsPerFrame : 10) * 1000));
+    // Which frames: all up to `cap`, else spread evenly (then cuts and motion are not read).
+    const pick = (n) => {
+        if (n <= cap)
+            return Array.from({ length: n }, (_, i) => i);
+        const out = new Set();
+        for (let i = 0; i < cap; i++)
+            out.add(Math.floor((i * n) / cap));
+        return [...out].sort((a, b) => a - b);
+    };
+    let source;
+    let report;
+    const renders = renderTally();
+    const p = typeof args.path === "string" ? args.path : null;
+    if (p !== null && !path.isAbsolute(p))
+        return { ok: false, error: "`path` must be absolute" };
+    const stat = p !== null ? await fs.stat(p).catch(() => null) : null;
+    if (p !== null && !MOVIE_EXT.test(p)) {
+        // A still or a folder of frames: read in Node, no After Effects.
+        if (!stat)
+            return { ok: false, error: `nothing at ${p}` };
+        const files = stat.isDirectory()
+            ? (await fs.readdir(p))
+                .filter((f) => /\.png$/i.test(f))
+                .sort(naturalOrder)
+                .map((f) => path.join(p, f))
+            : [p];
+        if (!files.length)
+            return { ok: false, error: `no PNG frames in ${p}` };
+        if (!files.every((f) => /\.png$/i.test(f)))
+            return { ok: false, error: "a still must be a PNG (render other formats to PNG first)" };
+        const idx = pick(files.length);
+        const frameRate = typeof args.frameRate === "number" ? args.frameRate : undefined;
+        const reader = referenceReader({ total: idx.length, regions, frameRate });
+        for (const i of idx)
+            reader.add({
+                img: await io.readImage(files[i]),
+                frame: i,
+                time: frameRate ? i / frameRate : undefined,
+            });
+        report = reader.finish();
+        source = {
+            kind: stat.isDirectory() ? "frames" : "still",
+            path: p,
+            files: files.length,
+            read: idx.length,
+            frameRate: frameRate ?? null,
+        };
+    }
+    else {
+        // A movie or footage item (into a throwaway comp), or a comp: rendered through After Effects by frame number.
+        const fromComp = args.comp !== undefined;
+        const setup = fromComp
+            ? await io.execute(referenceCompJsx({ comp: args.comp }), { label: "reference.report comp", timeoutMs: 60_000, undoGroup: false })
+            : await io.execute(fileCompJsx({ path: p, item: typeof args.item === "number" ? args.item : null }), {
+                label: "reference.report setup",
+                timeoutMs: 120_000,
+                undoGroup: true,
+            });
+        if (!setup?.ok)
+            return { ok: false, error: setup?.error ?? "could not read the source in After Effects", setup };
+        const compRef = fromComp ? args.comp : setup.compId;
+        let cleanup = null;
+        try {
+            const roomless = await spaceRefusal(io, outDir, 40 * captureBytes([setup.width, setup.height]), PICTURE_MARGIN_BYTES, "this reference report");
+            if (roomless)
+                return roomless;
+            const idx = pick(setup.frames);
+            const reader = referenceReader({ total: idx.length, regions, frameRate: setup.frameRate });
+            // A chunk at a time: render, read, remove.
+            const size = Math.max(1, Math.min(32, Math.floor(SETTLE_MAX_MS / perFrameMs)));
+            for (let b = 0; b * size < idx.length; b++) {
+                const chunk = idx.slice(b * size, (b + 1) * size);
+                const got = await renderChunked(io, { compNameOrId: compRef }, chunk, perFrameMs, outDir, "reference", renders, b);
+                for (const r of got) {
+                    if (!r.ok || !r.file)
+                        return { ok: false, error: `frame ${r.frame} did not render: ${r.error ?? "no file"}` };
+                    reader.add({ img: await io.readImage(r.file), frame: r.frame, time: r.frame / setup.frameRate });
+                    if (!keepCaptures)
+                        await fs.rm(r.file, { force: true });
+                }
+            }
+            report = reader.finish();
+        }
+        finally {
+            if (!fromComp)
+                cleanup = await io.execute(fileCleanupJsx({ compId: setup.compId, itemId: setup.itemId, removeItem: setup.imported === true }), { label: "reference.report cleanup", timeoutMs: 60_000, undoGroup: true });
+        }
+        source = fromComp
+            ? { kind: "comp", name: setup.name, frames: setup.frames, frameRate: setup.frameRate }
+            : { kind: p !== null ? "movie" : "item", path: p, item: setup.itemName, frames: setup.frames, frameRate: setup.frameRate, cleanup };
+    }
+    await fs.writeFile(outPath, JSON.stringify(report));
+    let compare;
+    if (typeof args.against === "string") {
+        try {
+            compare = compareReferences(JSON.parse(await fs.readFile(args.against, "utf8")), report);
+        }
+        catch (e) {
+            compare = { error: `could not compare with ${args.against}: ${e instanceof Error ? e.message : String(e)}` };
+        }
+    }
+    const reply = reportForReply(report);
+    return {
+        ok: true,
+        source,
+        frames: report.frames,
+        report: reply,
+        savedTo: outPath,
+        ...(compare ? { compare } : {}),
+        notes: report.motion.consecutive
+            ? []
+            : report.frames > 1
+                ? [`Only ${report.frames} frames spread over the source were read (maxFrames ${cap}), so cuts and motion were not.`]
+                : [],
+        timing: { render: roundTally(renders), totalMs: Math.round(since(started)) },
+        next: compare
+            ? "Read the differences largest first and decide which to fix; measure again after each fix."
+            : "Run the same report on the build (comp) with against: this file's path, or reference.compare with two saved reports.",
+    };
+}
+export async function runReferenceCompare(args) {
+    const read = async (k) => {
+        const v = args[k];
+        if (typeof v !== "string" || !path.isAbsolute(v))
+            throw new Error(`\`${k}\` must be the absolute path of a saved report`);
+        return JSON.parse(await fs.readFile(v, "utf8"));
+    };
+    try {
+        const ref = await read("reference");
+        const build = await read("build");
+        return { ok: true, ...compareReferences(ref, build) };
+    }
+    catch (e) {
+        return { ok: false, error: e instanceof Error ? e.message : String(e) };
+    }
+}
+const REFERENCE_REGIONS_PARAM = {
+    name: "regions",
+    type: "array",
+    description: "Named regions in frame pixels, read beside the grid's nine ({ name, x, y, width, height, role? }); name the parts you mean (a wall, the subject's face, a neutral headrest) so the differences say them.",
+    required: false,
+};
+registerOp({
+    name: "reference.report",
+    category: "look",
+    description: "Measure a reference, or a build, for working to it. Give exactly one source: `path` (a PNG still, a folder of PNG frames in name order, or a movie), `item` (a footage item's id) or `comp` (the build). Stills and folders are read in Node; a movie or item is brought into a throwaway comp and, like a comp, rendered through ae_render_frame by frame numbers (a quarter of a frame inside each frame, so no time lands on the frame before; checked live at 30, 29.97 and 24 fps), read and removed a chunk at a time. " +
+        "Reports the main colours and their shares (k-means in CIELAB), black and white points and mean, CIELAB colour, edge width (sharpness) and grain at the grid's nine regions (top left to bottom right) and any named `regions`, where the weight of the frame sits (centres of brightness and of detail), and on consecutive frames the cuts, the mean change between frames and where the picture moves (a motion map; its centre is the moving subject in a talking-head shot). Colour and texture are read on 24 frames spread over the source, motion on every pair. " +
+        "Saves the whole report as JSON at `outPath` (the reply leaves the motion map out). With `against` (a saved report of the reference) it adds `compare`: the differences largest first, each over a step (a CIELAB a* or b* of 2 is a cast, a quarter in edge width or grain, 5% in the subject's size, 3% of the frame in a place), in words. The subject's size and place are compared by lining up the two motion maps, only when they match as the same footage. " +
+        "Measured live (After Effects 27.0): 235 frames of a 1080 x 1920 H.264 movie in 314 s, and of a comp in 317 s, nothing added to the disk cache. A comp renders without the compression noise of a delivered movie, so against a movie reference its grain reads lower: compare like with like where grain matters.",
+    params: [
+        { name: "path", type: "string", description: "Absolute path of a PNG still, a folder of PNG frames, or a movie.", required: false },
+        { name: "item", type: "number", description: "A footage item's id, instead of path.", required: false },
+        { name: "comp", type: "string", description: "A comp (the build), by name or id, instead of path.", required: false },
+        { name: "outPath", type: "string", description: "Absolute path for the report (.json). Captures are written beside it and removed once read.", required: true },
+        REFERENCE_REGIONS_PARAM,
+        { name: "against", type: "string", description: "A saved report (the reference) to compare this one with.", required: false },
+        { name: "frameRate", type: "number", description: "Frames per second of a folder of frames (for times).", required: false },
+        { name: "maxFrames", type: "number", description: `Most frames read (default ${CHECK_FILE_MAX_FRAMES}); beyond it frames are spread and cuts and motion are not read.`, required: false },
+        { name: "secondsPerFrame", type: "number", description: "Render time allowed a frame (default 10).", required: false },
+        { name: "keepCaptures", type: "boolean", description: "Keep the rendered frames (default false).", required: false },
+    ],
+    toJsx: () => NODE_ONLY("reference.report"),
+    run: (args, transport) => runReferenceReport(args, liveFileIO(transport)),
+});
+registerOp({
+    name: "reference.compare",
+    category: "look",
+    readOnly: true,
+    description: "Compare two saved reference reports (reference.report's outPath): every difference over its step, largest first, in words (cast, lightness, sharpness, grain, levels, the moving subject's size and place, where the weight sits, main colours missing, cuts, motion). Node only; no After Effects.",
+    params: [
+        { name: "reference", type: "string", description: "Absolute path of the reference's saved report.", required: true },
+        { name: "build", type: "string", description: "Absolute path of the build's saved report.", required: true },
+    ],
+    toJsx: () => NODE_ONLY("reference.compare"),
+    run: (args) => runReferenceCompare(args),
 });
 //# sourceMappingURL=keying.js.map

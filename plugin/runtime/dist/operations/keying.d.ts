@@ -390,5 +390,7 @@ export interface SoftenIO {
     freeBytes?: (dir: string) => Promise<number | null>;
 }
 export declare function runSoftenEdge(args: Record<string, unknown>, io: SoftenIO): Promise<Json>;
+export declare function runReferenceReport(args: Record<string, unknown>, io: FileIO): Promise<Json>;
+export declare function runReferenceCompare(args: Record<string, unknown>): Promise<Json>;
 export {};
 //# sourceMappingURL=keying.d.ts.map
