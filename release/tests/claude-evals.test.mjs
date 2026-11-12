@@ -204,16 +204,17 @@ const STEPS = await subjectSteps();
 const NOTICE = 'One step here needs you in After Effects: a single click on you in the clip, about ten seconds, once the footage is in its comp and before the background goes behind you.';
 const PLAN_BODY = Array.from({ length: 12 }, (_, i) => `Beat ${i + 1}, frames ${i * 75} to ${i * 75 + 74}: the title and the background move as described, with holds and eases chosen from the motion language.`).join('\n');
 const list = (steps) => steps.map((t, i) => `${i + 1}. ${t}`).join('\n');
-const answer = ({ notice = NOTICE, steps = STEPS, noticeLast = false, check = CHECK } = {}) =>
-  noticeLast ? `Story proposal.\n\n${PLAN_BODY}\n\n${list(steps)}\n\n${check}\n\n${notice}` : `${notice}\n\nStory proposal.\n\nThe click:\n\n${list(steps)}\n\n${check}\n\n${PLAN_BODY}\n`;
-const ALL_PASS = { 'subject-notice-first': true, 'subject-steps': true, 'subject-check-first': true };
+const FILE = 'Then I render the cut-out once with subject.render_cutout, check every frame of the file with subject.check_file, and build the piece on it with subject.use_cutout.';
+const answer = ({ notice = NOTICE, steps = STEPS, noticeLast = false, check = CHECK, file = FILE } = {}) =>
+  noticeLast ? `Story proposal.\n\n${PLAN_BODY}\n\n${list(steps)}\n\n${check}\n\n${file}\n\n${notice}` : `${notice}\n\nStory proposal.\n\nThe click:\n\n${list(steps)}\n\n${check}\n\n${file}\n\n${PLAN_BODY}\n`;
+const ALL_PASS = { 'subject-notice-first': true, 'subject-steps': true, 'subject-check-first': true, 'subject-file-first': true };
 const verdict = async (text) => Object.fromEntries((await checkAnswer(SUBJECT, text)).map((r) => [r.id, r.pass]));
 
 test('the subject-matte case: a footage brief with no green screen, graded by both answer checks', () => {
   assert.ok(SUBJECT, 'a planning case with answer checks');
   assert.match(SUBJECT.prompt, /no green screen/);
   assert.match(SUBJECT.prompt, /stop before After Effects/);
-  assert.deepEqual(SUBJECT.answer_checks, ['subject-notice-first', 'subject-steps', 'subject-check-first']);
+  assert.deepEqual(SUBJECT.answer_checks, ['subject-notice-first', 'subject-steps', 'subject-check-first', 'subject-file-first']);
   assert.equal(STEPS.length, 7);
   for (const id of SUBJECT.answer_checks) assert.ok(ANSWER_CHECKS[id]);
   assert.match(SUBJECT.assertions.join(' '), /ten seconds/);
@@ -253,6 +254,15 @@ test('the subject-matte case fails without subject.check, with it not before bui
   assert.equal((await verdict(answer({ check: 'Before anything else is built I run subject.check; an opening it finds, such as a missed microphone, I show you in its picture.' })))['subject-check-first'], true);
   // A selection count instead of the check: the run of 2026-11-11.
   assert.equal((await verdict(answer({ check: 'subject.status says 2 objects selected, so the cut-out is done before anything else is built.' })))['subject-check-first'], false);
+});
+
+test('the subject-matte case fails without the render and the file check, or with them out of order', async () => {
+  const v = async (file) => (await verdict(answer({ file })))['subject-file-first'];
+  assert.equal(await v('Then I build the piece on the live matte.'), false);
+  assert.equal(await v('Then I render it with subject.render_cutout and build on it.'), false);
+  assert.equal(await v('First subject.check_file, then subject.render_cutout.'), false);
+  assert.equal(await v('I render with subject.render_cutout, put it in with subject.use_cutout, then run subject.check_file.'), false);
+  assert.equal(await v(FILE), true);
 });
 
 test('answer checks refuse a name they do not know', async () => {

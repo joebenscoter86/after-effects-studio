@@ -1027,11 +1027,14 @@ describe("subject matte: registration and the user's steps", () => {
         .sort(),
     ).toEqual([
       "subject.check",
+      "subject.check_file",
       "subject.fill_gaps",
       "subject.prepare",
       "subject.remove_selection",
+      "subject.render_cutout",
       "subject.settings",
       "subject.status",
+      "subject.use_cutout",
     ]);
     expect(getOp("subject.status")!.readOnly).toBe(true);
     for (const n of [

@@ -29,6 +29,7 @@ import {
   getOp,
 } from "../registry.js";
 import type { AeTransport } from "../transport/AeTransport.js";
+import { PARK_QUEUE_FN, QUEUE_CHANGE_NOTE, RENDER_QUEUE_UNDO_WARNING } from "./render.js";
 import { renderFrameTool } from "../tools/render-frame.js";
 
 export const KEYLIGHT_MATCH_NAME = "Keylight 906";
@@ -1459,10 +1460,35 @@ export interface CutoutIO {
   writePng?(file: string, data: Buffer): Promise<void>;
 }
 
-async function writePng(io: CutoutIO, file: string, data: Buffer) {
+/** What the pixel helpers need from After Effects: a render, and the files it wrote. */
+type PixelIO = Pick<CutoutIO, "render" | "readImage" | "writePng">;
+
+async function writePng(io: PixelIO, file: string, data: Buffer) {
   if (io.writePng) return io.writePng(file, data);
   await fs.mkdir(path.dirname(file), { recursive: true });
   await fs.writeFile(file, data);
+}
+
+const QUICK_NOTE =
+  "Quick check: the click frames and two frames either side, which After Effects renders in seconds. A missed object, an enclosed gap and a second click on the same thing show there. " +
+  "To look across the clip, render the cut-out once (subject.render_cutout) and check the file (subject.check_file); across: true checks the live matte across the clip instead, which takes minutes (4 to 9 for nine frames on a 2176 x 3840 take), because After Effects recomputes the matte on every capture.";
+const ACROSS_NOTE =
+  "Across the clip on the live matte: After Effects recomputes the matte on every capture, so this takes minutes (4 to 9 for nine frames on a 2176 x 3840 take). Rendering the cut-out once (subject.render_cutout) and checking the file (subject.check_file) reads every frame in about the time of one pass.";
+
+/** The quick check's frames: each click frame and two either side, inside the layer; the layer's first three frames when no click frame is known. */
+function quickFrames(span: Json, clickFrames: Array<number | null | undefined>): number[] {
+  const a = span?.inFrame ?? 0;
+  const b = span?.outFrame ?? a + 3;
+  const set = new Set<number>();
+  for (const c of clickFrames) {
+    if (typeof c !== "number") continue;
+    for (let d = -2; d <= 2; d++) {
+      const f = Math.round(c) + d;
+      if (f >= a && f < b) set.add(f);
+    }
+  }
+  if (!set.size) for (let f = a; f < Math.min(b, a + 3); f++) set.add(f);
+  return [...set].sort((x, y) => x - y);
 }
 
 /** Frames to look at: `count` evenly spaced across the layer, plus `extra`, inside the layer, sorted. */
@@ -1534,7 +1560,7 @@ interface RenderedFrame {
  * ae_render_frame's error.
  */
 async function renderChunked(
-  io: CutoutIO,
+  io: PixelIO,
   base: Record<string, unknown>,
   frames: number[],
   perFrameMs: number,
@@ -1542,7 +1568,8 @@ async function renderChunked(
   stem: string,
   tally: RenderTally = renderTally(),
 ): Promise<RenderedFrame[]> {
-  const size = Math.max(1, Math.floor(SETTLE_MAX_MS / perFrameMs));
+  // ae_render_frame takes at most 32 frames a call, and its settle wait at most 600 s.
+  const size = Math.max(1, Math.min(32, Math.floor(SETTLE_MAX_MS / perFrameMs)));
   const out: RenderedFrame[] = [];
   for (let c = 0; c * size < frames.length; c++) {
     const chunk = frames.slice(c * size, (c + 1) * size);
@@ -1605,7 +1632,7 @@ interface FrameReading {
 
 /** Read each rendered frame's alpha: holes and openings, a picture over `over`, and one contact sheet. */
 async function measureFrames(
-  io: CutoutIO,
+  io: PixelIO,
   rendered: RenderedFrame[],
   limit: number,
   over: string,
@@ -1765,6 +1792,7 @@ function summarize(
   limit: number,
   accept: AcceptEntry[],
   picture: string | null = null,
+  passText: string | null = null,
 ) {
   const regions = cutoutFindings(readings, limit);
   const accepted = regions.filter((f) => acceptedBy(f, accept));
@@ -1800,7 +1828,8 @@ function summarize(
     parts.push(
       missed.length
         ? `No hole or opening of ${fmt(limit)} px or more on the ${checked.frames} frames checked; the other ${missed.length} were not checked.`
-        : `Nothing over the limit on ${checked.frames} of ${checked.of} frames; the picture is at ${picture ?? "(none)"}.`,
+        : (passText ??
+            `Nothing over the limit on ${checked.frames} of ${checked.of} frames; the picture is at ${picture ?? "(none)"}.`),
     );
   if (accepted.length)
     parts.push(
@@ -1820,7 +1849,7 @@ const regionsOf = (r: FrameReading): KindRegion[] => [
 ];
 
 /** A rendered frame drawn over the flat colour, written next to it as <file>_over.png. */
-async function overPicture(io: CutoutIO, file: string, over: string): Promise<string | null> {
+async function overPicture(io: PixelIO, file: string, over: string): Promise<string | null> {
   try {
     const img = await io.readImage(file);
     const picture = file.replace(/\.png$/i, "") + "_over.png";
@@ -2023,12 +2052,17 @@ export async function runSubjectCheck(args: Record<string, unknown>, io: CutoutI
     clickTime: s.clickTime ?? null,
     clickFrame: s.clickFrame ?? null,
   }));
+  const across = args.across === true;
+  const clickFrames = [args.clickFrame as number | undefined, ...clicks.map((c) => c.clickFrame)];
   const frames = Array.isArray(args.frames)
     ? (args.frames as number[]).slice().sort((a, b) => a - b)
-    : framesAcross(st.span, typeof args.count === "number" ? args.count : CUTOUT_FRAMES, [
-        args.clickFrame as number | undefined,
-        ...clicks.map((c) => c.clickFrame),
-      ]);
+    : across
+      ? framesAcross(
+          st.span,
+          typeof args.count === "number" ? args.count : CUTOUT_FRAMES,
+          clickFrames,
+        )
+      : quickFrames(st.span, clickFrames);
   // After subject.fill_gaps the delivered cut-out is the layer and its gap fill together.
   const fillLayer: string | null = typeof st.fillLayer === "string" ? st.fillLayer : null;
   const isolate = fillLayer ? [args.layer, fillLayer] : args.layer;
@@ -2112,6 +2146,11 @@ export async function runSubjectCheck(args: Record<string, unknown>, io: CutoutI
     frames: readings,
     clicks,
     countNote: COUNT_NOTE,
+    scope: {
+      across: across && !Array.isArray(args.frames),
+      frames,
+      note: across || Array.isArray(args.frames) ? ACROSS_NOTE : QUICK_NOTE,
+    },
     timing: checkTiming(statusMs, first, second, pixels, since(started)),
     timeReading: timeReading(first, second, pixels, since(started)),
     holeLimit: limit,
@@ -2307,7 +2346,9 @@ export async function runFillGaps(args: Record<string, unknown>, io: CutoutIO): 
 
   const frames = Array.isArray(args.frames)
     ? (args.frames as number[]).slice().sort((a, b) => a - b)
-    : framesAcross(st.span, typeof args.count === "number" ? args.count : CUTOUT_FRAMES, [frame]);
+    : args.across === true
+      ? framesAcross(st.span, typeof args.count === "number" ? args.count : CUTOUT_FRAMES, [frame])
+      : quickFrames(st.span, [frame]);
   const afterRendered = await renderChunked(
     io,
     {
@@ -2576,6 +2617,13 @@ registerOp({
       required: false,
     },
     {
+      name: "across",
+      type: "boolean",
+      description:
+        "Look across the clip (count frames spread over the layer) on the live matte instead of the quick check (the click frames and two either side). Takes minutes: 4 to 9 for nine frames on a 2176 x 3840 take; prefer subject.render_cutout and subject.check_file.",
+      required: false,
+    },
+    {
       name: "recheck",
       type: "boolean",
       description:
@@ -2650,10 +2698,798 @@ registerOp({
       description: `Smallest hole or opening reported after the fill, px (default ${CUTOUT_HOLE_LIMIT}).`,
       required: false,
     },
+    {
+      name: "across",
+      type: "boolean",
+      description:
+        "Measure after the fill across the clip instead of near the reference frame. Takes minutes; prefer subject.render_cutout and subject.check_file.",
+      required: false,
+    },
     secondsPerFrameParam,
     overParam,
     subjectIndexParam,
   ],
   toJsx: () => NODE_ONLY("subject.fill_gaps"),
   run: (args, transport) => runFillGaps(args, liveCutoutIO(args, transport)),
+});
+
+// ------------------------------------------------------------------------
+// Stage 12c: render the cut-out once, check the file, build on the file.
+// After Effects recomputes Object Matte on every capture (nine frames across
+// a 320-frame take cost 236 to 287 s on each of five identical renders), and
+// a script cannot freeze it. Rendered once to a movie with alpha (390 s for
+// all 320 frames), the cut-out reads back at about 0.55 s a frame and cannot
+// change afterwards. These three operations do that.
+
+/** What subject.render_cutout and subject.check_file need from After Effects. */
+export interface FileIO extends PixelIO {
+  /** Run ExtendScript; its result, or { ok: false, error }. */
+  execute(
+    code: string,
+    opts: { label: string; timeoutMs: number; undoGroup?: boolean },
+  ): Promise<Json>;
+  /** Whether a file exists on this machine (default: fs.access). */
+  exists?(file: string): Promise<boolean>;
+}
+
+/** Output templates tried first, in order; then any other movie template whose name says alpha. */
+const ALPHA_TEMPLATES = ["High Quality with Alpha", "Lossless with Alpha"];
+const isSequence = (name: string) => /sequence/i.test(name);
+
+/** The output template to use: the caller's (when it exists), else one that writes a movie with alpha; or a refusal. */
+export function chooseAlphaTemplate(
+  available: string[],
+  wanted?: string,
+): { template: string; why: string } | { error: string } {
+  const list = available.join(", ") || "none";
+  if (wanted !== undefined) {
+    if (!available.includes(wanted))
+      return { error: `no output template named '${wanted}' (templates: ${list})` };
+    return { template: wanted, why: `the template asked for` };
+  }
+  for (const t of ALPHA_TEMPLATES)
+    if (available.includes(t))
+      return { template: t, why: `'${t}' carries alpha in its name and writes a movie` };
+  const other = available.find((t) => /alpha/i.test(t) && !isSequence(t));
+  if (other)
+    return {
+      template: other,
+      why: `'${other}' is the first template whose name says alpha and that writes a movie`,
+    };
+  return {
+    error:
+      `no output template that writes a movie with alpha (templates: ${list}). ` +
+      "subject.check_file reads a movie; an image-sequence template is not used. Make a movie template with RGB + Alpha in After Effects' Output Module settings and pass its name as outputTemplate.",
+  };
+}
+
+/** JSX: what render_cutout will render (the layer, its gap fill, the span) and the output templates on this machine. */
+export function renderCutoutPlanJsx(args: { comp: unknown; layer: unknown }): string {
+  return `
+            ${jsxCompLayerPreamble(args as Record<string, unknown>)}
+            var rq = app.project.renderQueue;
+            if (AE.safeGet(function () { return rq.rendering; }, false)) return { ok: false, error: "the render queue is already rendering; wait for it to finish" };
+            var _fillName = _layer.name + " gap fill";
+            var _fill = null;
+            for (var _li = 1; _li <= _comp.numLayers; _li++) if (_comp.layer(_li).name === _fillName) _fill = _fillName;
+            var _keep = [_layer.name];
+            if (_fill) _keep.push(_fill);
+            var _fd = _comp.frameDuration;
+            var _start = Math.max(0, Math.min(_layer.inPoint, _layer.outPoint));
+            var _end = Math.min(_comp.duration, Math.max(_layer.inPoint, _layer.outPoint));
+            var _tmp = null;
+            var _out = [];
+            var _rend = [];
+            try {
+                _tmp = rq.items.add(_comp);
+                try { _rend = _tmp.templates; } catch (eR) {}
+                try { _out = _tmp.outputModule(1).templates; } catch (eO) {}
+            } finally {
+                if (_tmp) { try { _tmp.remove(); } catch (eRm) {} }
+            }
+            return { ok: true, layer: _layer.name, fillLayer: _fill, keep: _keep, compSize: [_comp.width, _comp.height],
+                span: { start: _start, duration: _end - _start, frames: Math.round((_end - _start) / _fd), frameRate: Math.round(1000 / _fd) / 1000 },
+                templates: { output: _out, render: _rend } };
+        `;
+}
+
+/**
+ * JSX: render the comp with only `keep` switched on (cameras, lights and
+ * audio-only layers left as they are; solo cleared), through one temporary
+ * render-queue item; other queue items are parked. Every switch is put back
+ * and the item removed, even when the render fails.
+ */
+export function renderCutoutJsx(args: {
+  comp: unknown;
+  keep: string[];
+  outputPath: string;
+  outputTemplate: string;
+  start: number;
+  duration: number;
+  overwrite: boolean;
+}): string {
+  return `
+            ${jsxCompPreamble(args as Record<string, unknown>)}
+            ${PARK_QUEUE_FN}
+            var rq = app.project.renderQueue;
+            if (AE.safeGet(function () { return rq.rendering; }, false)) return { ok: false, error: "the render queue is already rendering; wait for it to finish" };
+            var _want = ${jsxVal(args.outputPath)};
+            function _meta(_path) {
+                var _f = new File(_path);
+                if (!_f.exists) return { exists: false, bytes: 0, modifiedMs: null };
+                var _d = _f.modified;
+                return { exists: true, bytes: _f.length, modifiedMs: _d ? _d.getTime() : null };
+            }
+            if (_meta(_want).exists && !${jsxVal(args.overwrite)}) return { ok: false, error: "a file already exists at " + _want + "; pass overwrite: true to replace it, or choose another outputPath" };
+            var _keep = ${jsxVal(args.keep)};
+            function _kept(n) { for (var i = 0; i < _keep.length; i++) if (_keep[i] === n) return true; return false; }
+            var _saved = [];
+            var _switched = [];
+            var _w = [];
+            var _out = null;
+            var _rqi = null;
+            var _parked = null;
+            try {
+                for (var _li = 1; _li <= _comp.numLayers; _li++) {
+                    var L = _comp.layer(_li);
+                    if (AE.safeGet(function () { return L.hasVideo; }, true) === false) continue;
+                    var _mn = AE.safeGet(function () { return L.matchName; }, "");
+                    if (_mn === "ADBE Camera Layer" || _mn === "ADBE Light Layer") continue;
+                    var _s = { layer: L, enabled: L.enabled, solo: AE.safeGet(function () { return !!L.solo; }, false), locked: AE.safeGet(function () { return !!L.locked; }, false) };
+                    var _want2 = _kept(L.name) ? _s.enabled : false;
+                    if (_want2 === _s.enabled && !_s.solo) continue;
+                    if (_s.locked) L.locked = false;
+                    if (_s.solo) L.solo = false;
+                    if (L.enabled !== _want2) { L.enabled = _want2; _switched.push(L.name); }
+                    _saved.push(_s);
+                }
+                _parked = _parkQueue(rq);
+                _rqi = rq.items.add(_comp);
+                var _om = _rqi.outputModule(1);
+                var _wo = AE.applyTemplate(_om, ${jsxVal(args.outputTemplate)}, "outputTemplate");
+                if (_wo) throw new Error(_wo);
+                _rqi.timeSpanStart = ${jsxVal(args.start)};
+                _rqi.timeSpanDuration = ${jsxVal(args.duration)};
+                _om.file = AE.ensureParentDir(_want);
+                var _path = _om.file ? _om.file.fsName.replace(/\\\\/g, "/") : _want;
+                var _before = _meta(_path);
+                var _audio = {};
+                try {
+                    var _st = _om.getSettings(GetSettingsFormat.STRING);
+                    for (var _k in _st) if (_st.hasOwnProperty(_k) && /audio|channels/i.test(_k)) _audio[_k] = String(_st[_k]);
+                } catch (eA) { _w.push("could not read the output module's settings: " + AE.errText(eA)); }
+                var _t0 = new Date().getTime();
+                rq.render();
+                var _t1 = new Date().getTime();
+                var _after = _meta(_path);
+                var _fresh = _after.exists && _after.bytes > 0 && (!_before.exists || _after.bytes !== _before.bytes || _after.modifiedMs !== _before.modifiedMs);
+                var _fd = _comp.frameDuration;
+                _out = {
+                    ok: _rqi.status === RQItemStatus.DONE && _fresh,
+                    outputPath: _path,
+                    timeSpanStart: ${jsxVal(args.start)},
+                    durationSeconds: ${jsxVal(args.duration)},
+                    frameCount: Math.round(${jsxVal(args.duration)} / _fd),
+                    frameRate: Math.round(1000 / _fd) / 1000,
+                    renderSeconds: Math.round(_t1 - _t0) / 1000,
+                    elapsedSeconds: AE.safeGet(function () { return _rqi.elapsedSeconds; }, null),
+                    bytes: _after.bytes,
+                    audio: _audio
+                };
+                if (!_out.ok) _out.error = _rqi.status !== RQItemStatus.DONE ? "the render did not finish (status " + String(_rqi.status) + ")" : "the render left no new file at " + _path;
+            } catch (eR) {
+                _out = { ok: false, error: "the cut-out render failed: " + AE.errText(eR) };
+            } finally {
+                if (_rqi) { try { _rqi.remove(); } catch (eRm) { _w.push("could not remove the render's queue item: " + AE.errText(eRm)); } }
+                if (_parked) _unparkQueue(rq, _parked);
+                var _notBack = [];
+                for (var _ri = _saved.length - 1; _ri >= 0; _ri--) {
+                    var _sv = _saved[_ri];
+                    try {
+                        if (_sv.layer.enabled !== _sv.enabled) _sv.layer.enabled = _sv.enabled;
+                        if (_sv.solo) _sv.layer.solo = true;
+                        if (_sv.locked) _sv.layer.locked = true;
+                    } catch (eB) { _notBack.push(AE.safeGet(function () { return _sv.layer.name; }, "?") + ": " + AE.errText(eB)); }
+                }
+            }
+            _out.layersSwitched = _switched;
+            _out.restored = _notBack.length === 0;
+            if (_notBack.length) _out.notRestored = _notBack;
+            _out.warnings = _w;
+            _out.projectModified = true;
+            _out.projectNote = ${jsxVal(QUEUE_CHANGE_NOTE)};
+            return _out;
+        `;
+}
+
+export async function runRenderCutout(args: Record<string, unknown>, io: FileIO): Promise<Json> {
+  const started = performance.now();
+  const outputPath = args.outputPath;
+  if (typeof outputPath !== "string" || !path.isAbsolute(outputPath))
+    return { ok: false, error: "`outputPath` must be an absolute path for the movie" };
+  const rejected = rejectedOutputPath(outputPath);
+  if (rejected) return { ok: false, error: rejected };
+  const plan = await io.execute(renderCutoutPlanJsx({ comp: args.comp, layer: args.layer }), {
+    label: "subject.render_cutout plan",
+    timeoutMs: 60_000,
+    undoGroup: true,
+  });
+  if (!plan?.ok) return { ok: false, error: plan?.error ?? "could not read the comp", plan };
+  const planMs = since(started);
+  const choice = chooseAlphaTemplate(
+    plan.templates?.output ?? [],
+    typeof args.outputTemplate === "string" ? args.outputTemplate : undefined,
+  );
+  if ("error" in choice) return { ok: false, error: choice.error, templates: plan.templates };
+  const frames = plan.span?.frames ?? 0;
+  const t1 = performance.now();
+  const r = await io.execute(
+    renderCutoutJsx({
+      comp: args.comp,
+      keep: plan.keep,
+      outputPath,
+      outputTemplate: choice.template,
+      start: plan.span.start,
+      duration: plan.span.duration,
+      overwrite: args.overwrite === true,
+    }),
+    // Measured: 390 s for 320 frames of a 2176 x 3840 take; allow 5 s a frame and two minutes over.
+    { label: "subject.render_cutout", timeoutMs: 120_000 + frames * 5_000, undoGroup: true },
+  );
+  const renderMs = since(t1);
+  const audio = r?.audio && Object.keys(r.audio).length ? r.audio : null;
+  const sound =
+    (audio
+      ? `The output module's sound settings read ${Object.entries(audio)
+          .map(([k, v]) => `${k}: ${v}`)
+          .join("; ")}; whether the file carries a sound track depends on them and was not checked.`
+      : "The output module's sound settings could not be read; the file may or may not carry a sound track.") +
+    " The original layer keeps the sound: subject.use_cutout leaves its audio as it is and switches the movie's audio off, so it plays once.";
+  const out = {
+    ...r,
+    outputTemplate: choice.template,
+    templateChoice: choice.why,
+    layers: plan.keep,
+    sound,
+    timing: {
+      planMs: Math.round(planMs),
+      renderMs: Math.round(renderMs),
+      totalMs: Math.round(since(started)),
+    },
+  };
+  if (!r?.ok) return { ...out, ok: false, error: r?.error ?? "the render failed" };
+  return {
+    ...out,
+    next: `Check the file before building on it: subject.check_file { path: "${r.outputPath}", outDir }. Then subject.use_cutout puts it in the comp in place of the live matte.`,
+  };
+}
+
+/** Default most frames subject.check_file reads one by one; beyond it, it reads pairs in steps. About 0.55 s a frame measured. */
+export const CHECK_FILE_MAX_FRAMES = 400;
+/**
+ * A change in opaque share between neighbouring frames above this is a
+ * jump. On the take of 2026-11-11 the rendered cut-out ran from 0.279 to
+ * 0.314 with no step over 0.012 at full frame rate; a dropped microphone is
+ * about 0.05. Half way, rounded down.
+ */
+export const CHECK_FILE_JUMP_LIMIT = 0.025;
+
+/** Which frames of an n-frame file to read: all up to `cap`; beyond it, pairs (k, k + 1) every step, and the first and last three. */
+export function checkFileFrames(n: number, cap: number): { frames: number[]; step: number } {
+  if (n <= cap) return { frames: Array.from({ length: n }, (_, i) => i), step: 1 };
+  const step = Math.ceil(n / Math.max(1, Math.floor(cap / 2)));
+  const set = new Set<number>();
+  for (let s0 = 0; s0 < n - 1; s0 += step) {
+    set.add(s0);
+    set.add(s0 + 1);
+  }
+  for (const f of [0, 1, 2, n - 3, n - 2, n - 1]) if (f >= 0 && f < n) set.add(f);
+  return { frames: [...set].sort((a, b) => a - b), step };
+}
+
+/** JSX: the movie (a file, or a footage item by id) in a throwaway comp of its own size. */
+function fileCompJsx(args: { path: string | null; item: number | null }): string {
+  return `
+            var _item = null;
+            var _imported = false;
+            if (${jsxVal(args.item)} !== null) {
+                _item = AE.safeGet(function () { return app.project.itemByID(${jsxVal(args.item)}); }, null);
+                if (!_item) return { ok: false, error: "no project item with id " + ${jsxVal(args.item)} };
+            } else {
+                var _f = new File(${jsxVal(args.path)});
+                if (!_f.exists) return { ok: false, error: "no file at " + ${jsxVal(args.path)} };
+                _item = app.project.importFile(new ImportOptions(_f));
+                _imported = true;
+            }
+            if (!AE.safeGet(function () { return _item.hasVideo; }, false)) return { ok: false, error: "'" + _item.name + "' has no video" };
+            var _fr = AE.safeGet(function () { return _item.frameRate; }, 0) || 30;
+            var _dur = _item.duration;
+            var _c = app.project.items.addComp("check_file " + _item.name, _item.width, _item.height, AE.safeGet(function () { return _item.pixelAspect; }, 1) || 1, _dur, _fr);
+            _c.layers.add(_item);
+            return { ok: true, compId: _c.id, compName: _c.name, itemId: _item.id, itemName: _item.name, imported: _imported,
+                width: _item.width, height: _item.height, frames: Math.round(_dur * _fr), frameRate: _fr };
+        `;
+}
+
+/** JSX: remove the throwaway comp, and the imported footage item when asked. */
+function fileCleanupJsx(args: {
+  compId: number;
+  itemId: number | null;
+  removeItem: boolean;
+}): string {
+  return `
+            var _removed = [];
+            var _c = AE.safeGet(function () { return app.project.itemByID(${jsxVal(args.compId)}); }, null);
+            if (_c) { var _cn = _c.name; _c.remove(); _removed.push(_cn); }
+            var removeItem = ${jsxVal(args.removeItem)};
+            if (removeItem && ${jsxVal(args.itemId)} !== null) {
+                var _it = AE.safeGet(function () { return app.project.itemByID(${jsxVal(args.itemId)}); }, null);
+                if (_it) { var _in = _it.name; _it.remove(); _removed.push(_in); }
+            }
+            return { ok: true, removed: _removed };
+        `;
+}
+
+export async function runCheckFile(args: Record<string, unknown>, io: FileIO): Promise<Json> {
+  const started = performance.now();
+  const file = typeof args.path === "string" ? args.path : null;
+  const item = typeof args.item === "number" ? args.item : null;
+  if ((file === null) === (item === null))
+    return {
+      ok: false,
+      error: "give exactly one of `path` (the movie) or `item` (a footage item's id)",
+    };
+  if (file !== null) {
+    if (!path.isAbsolute(file))
+      return { ok: false, error: "`path` must be an absolute path to the movie" };
+    const there = io.exists
+      ? await io.exists(file)
+      : await fs.access(file).then(
+          () => true,
+          () => false,
+        );
+    if (!there) return { ok: false, error: `no file at ${file}` };
+  }
+  const outDir = args.outDir;
+  if (typeof outDir !== "string" || !path.isAbsolute(outDir))
+    return { ok: false, error: "`outDir` must be an absolute folder for the pictures" };
+  const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
+  const jumpLimit = typeof args.jumpLimit === "number" ? args.jumpLimit : CHECK_FILE_JUMP_LIMIT;
+  const cap =
+    typeof args.maxFrames === "number" && args.maxFrames >= 8
+      ? Math.floor(args.maxFrames)
+      : CHECK_FILE_MAX_FRAMES;
+  const over = typeof args.over === "string" ? args.over : CUTOUT_OVER;
+  const accept = Array.isArray(args.accept) ? (args.accept as AcceptEntry[]) : [];
+  const perFrameMs = Math.max(
+    1,
+    Math.round(
+      (typeof args.secondsPerFrame === "number" && args.secondsPerFrame > 0
+        ? args.secondsPerFrame
+        : 10) * 1000,
+    ),
+  );
+
+  const setup = await io.execute(fileCompJsx({ path: file, item }), {
+    label: "subject.check_file setup",
+    timeoutMs: 120_000,
+    undoGroup: true,
+  });
+  if (!setup?.ok)
+    return { ok: false, error: setup?.error ?? "could not bring the movie into a comp", setup };
+  const renders = renderTally();
+  const pixels = pixelTally();
+  const { frames, step } = checkFileFrames(setup.frames, cap);
+  let readings: FrameReading[] = [];
+  let cleanup: Json = null;
+  try {
+    const rendered = await renderChunked(
+      io,
+      { compNameOrId: setup.compId, channels: "rgba" },
+      frames,
+      perFrameMs,
+      outDir,
+      "check-file",
+      renders,
+    );
+    readings = (
+      await measureFrames(
+        io,
+        rendered,
+        limit,
+        over,
+        path.join(outDir, "check-file_unused.png"),
+        pixels,
+        false,
+      )
+    ).readings;
+  } finally {
+    cleanup = await io.execute(
+      fileCleanupJsx({
+        compId: setup.compId,
+        itemId: setup.itemId,
+        removeItem: setup.imported === true && args.keepFootage !== true,
+      }),
+      {
+        label: "subject.check_file cleanup",
+        timeoutMs: 60_000,
+        undoGroup: true,
+      },
+    );
+  }
+
+  // Opaque share across the file, and jumps between true neighbours only.
+  const byFrame = new Map(readings.filter((r) => r.checked).map((r) => [r.frame, r]));
+  const jumps: Json[] = [];
+  let pairs = 0;
+  let largestStep = { from: -1, to: -1, change: 0 };
+  for (const r of readings) {
+    const next = byFrame.get(r.frame + 1);
+    if (!r.checked || !next) continue;
+    pairs++;
+    const change =
+      Math.round(Math.abs((next.opaqueShare ?? 0) - (r.opaqueShare ?? 0)) * 10000) / 10000;
+    if (change > largestStep.change || largestStep.from < 0)
+      largestStep = { from: r.frame, to: next.frame, change };
+    if (change > jumpLimit)
+      jumps.push({
+        kind: "jump",
+        from: r.frame,
+        to: next.frame,
+        change,
+        opaque: [r.opaqueShare, next.opaqueShare],
+      });
+  }
+  const checkedReadings = readings.filter((r) => r.checked && typeof r.opaqueShare === "number");
+  const minR = checkedReadings.reduce<FrameReading | null>(
+    (m, r) => (!m || (r.opaqueShare ?? 1) < (m.opaqueShare ?? 1) ? r : m),
+    null,
+  );
+  const maxR = checkedReadings.reduce<FrameReading | null>(
+    (m, r) => (!m || (r.opaqueShare ?? 0) > (m.opaqueShare ?? 0) ? r : m),
+    null,
+  );
+  const opaque = {
+    min: minR?.opaqueShare ?? null,
+    minFrame: minR?.frame ?? null,
+    max: maxR?.opaqueShare ?? null,
+    maxFrame: maxR?.frame ?? null,
+    largestStep,
+  };
+
+  // Pictures: every frame with a finding, and a sheet of at most 24 frames (those first, then spread over the file).
+  const tPic = performance.now();
+  const findingFrames = new Set<number>();
+  for (const r of readings) if (r.checked && regionsOf(r).length) findingFrames.add(r.frame);
+  for (const j of jumps) {
+    findingFrames.add(j.from);
+    findingFrames.add(j.to);
+  }
+  const pictureOf = new Map<number, string | null>();
+  for (const f of findingFrames) {
+    const r = byFrame.get(f);
+    if (r?.file) pictureOf.set(f, await overPicture(io, r.file, over));
+  }
+  for (const j of jumps) j.pictures = [pictureOf.get(j.from) ?? null, pictureOf.get(j.to) ?? null];
+  for (const r of readings)
+    if (pictureOf.has(r.frame)) r.picture = pictureOf.get(r.frame) ?? undefined;
+  const sheetFrames = [...findingFrames].slice(0, 24);
+  const rest = checkedReadings.map((r) => r.frame).filter((f) => !findingFrames.has(f));
+  for (let i = 0; sheetFrames.length < 24 && i < rest.length; i++) {
+    const k = Math.floor(
+      (i * rest.length) / Math.max(1, Math.min(24 - findingFrames.size, rest.length)),
+    );
+    if (k < rest.length && !sheetFrames.includes(rest[k])) sheetFrames.push(rest[k]);
+  }
+  sheetFrames.sort((a, b) => a - b);
+  let picture: string | null = null;
+  const thumbs: DecodedPng[] = [];
+  const labels: string[] = [];
+  for (const f of sheetFrames) {
+    const r = byFrame.get(f);
+    if (!r?.file) continue;
+    try {
+      const img = await io.readImage(r.file);
+      const comp = flattenOver(img, { kind: "color", color: parseHex(over) });
+      const tw = Math.min(240, img.width);
+      const th = Math.max(1, Math.round((img.height * tw) / img.width));
+      thumbs.push({
+        width: tw,
+        height: th,
+        rgb: resample({ ...img, rgb: comp }, tw, th),
+        bitDepth: 8,
+      });
+      labels.push(`frame ${f}${findingFrames.has(f) ? " !" : ""}`);
+    } catch {
+      /* a frame that cannot be read again is left off the sheet */
+    }
+  }
+  if (thumbs.length) {
+    const sheet = composeContactSheet(thumbs, { labels, thumbWidth: 240 });
+    picture = path.join(outDir, "check-file_sheet.png");
+    await writePng(
+      io,
+      picture,
+      encodePngSrgb8(sheet.width, sheet.height, sheet.rgb, PICTURE_DEFLATE),
+    );
+  }
+  pixels.picturesMs += since(tPic);
+
+  const compared =
+    `${plural(pairs, "pair")} of neighbouring frames` +
+    (step > 1
+      ? ` (each frame and the next), one pair every ${step} frames, and the first and last three frames`
+      : "") +
+    ` compared for jumps over ${jumpLimit} in opaque share.`;
+  const passText = jumps.length
+    ? `No hole or opening of ${fmt(limit)} px or more on the ${byFrame.size} frames read.`
+    : `Nothing over the limit on ${byFrame.size} of ${readings.length} frames read; no jump between neighbouring frames over ${jumpLimit}; the picture is at ${picture ?? "(none)"}.`;
+  const sum = summarize(readings, limit, accept, picture, passText);
+  const findings: Json[] = [...sum.findings, ...jumps];
+  const stop = findings.length > 0;
+  const jumpText = jumps.length
+    ? ` ${plural(jumps.length, "jump")} in opaque share between neighbouring frames: ${jumps.map((j) => `${j.from} to ${j.to}, ${j.change}`).join("; ")}. A jump of about 0.05 is a dropped object (a microphone); look at both frames.`
+    : "";
+  const opaqueText =
+    opaque.min !== null
+      ? ` Opaque share ${opaque.min} (frame ${opaque.minFrame}) to ${opaque.max} (frame ${opaque.maxFrame}); largest step ${largestStep.change} (frames ${largestStep.from} to ${largestStep.to}).`
+      : "";
+  return {
+    ok: true,
+    file: file ?? setup.itemName,
+    frames: setup.frames,
+    frameRate: setup.frameRate,
+    size: [setup.width, setup.height],
+    step,
+    stop,
+    findings,
+    accepted: sum.accepted,
+    checked: sum.checked,
+    compared,
+    opaque,
+    inOut: `${sum.text}${jumpText}${opaqueText} ${compared}${stop && picture ? ` Look at the picture (${picture}).` : ""}`,
+    picture,
+    frameReadings: readings.map((r) => ({
+      frame: r.frame,
+      checked: r.checked,
+      opaqueShare: r.opaqueShare ?? null,
+      regions: r.checked ? regionsOf(r).length : null,
+      ...(r.picture ? { picture: r.picture } : {}),
+      ...(r.error ? { error: r.error } : {}),
+    })),
+    cleanup,
+    timing: {
+      render: roundTally(renders),
+      pixels: roundTally(pixels),
+      totalMs: Math.round(since(started)),
+    },
+    next: stop
+      ? "Stop: show the user the picture and say what is wrong before building on this file. A jump or a hole on one frame means the live matte rendered that frame wrong: render the cut-out again (subject.render_cutout) and check the new file."
+      : "The file is checked. Build on it: subject.use_cutout puts it in the comp in place of the live matte.",
+  };
+}
+
+/**
+ * JSX: put the rendered cut-out in the comp in place of the live matte. The
+ * movie is in comp space (render_cutout renders the comp with only the
+ * cut-out and its fill on), so it goes in untransformed at the comp's centre,
+ * directly above the cut-out layer, over the cut-out's span. The cut-out's
+ * and the fill's pictures are switched off; they stay in the project, with
+ * the selections, for a later re-click. The original keeps its audio; the
+ * movie's audio is switched off.
+ */
+export function useCutoutJsx(args: {
+  comp: unknown;
+  layer: unknown;
+  path?: string;
+  item?: number;
+  startTime?: number;
+}): string {
+  return `
+            ${jsxCompLayerPreamble(args as Record<string, unknown>)}
+            var _movieName = _layer.name + " cut-out";
+            var _fillName = _layer.name + " gap fill";
+            var _fill = null;
+            for (var _li = 1; _li <= _comp.numLayers; _li++) {
+                var _l = _comp.layer(_li);
+                if (_l.name === _movieName) return { ok: false, error: "comp " + _comp.name + " already has a layer '" + _movieName + "'; delete it first to use another file" };
+                if (_l.name === _fillName) _fill = _l;
+            }
+            var _item = null;
+            if (${jsxVal(args.item ?? null)} !== null) {
+                _item = AE.safeGet(function () { return app.project.itemByID(${jsxVal(args.item ?? null)}); }, null);
+                if (!_item) return { ok: false, error: "no project item with id " + ${jsxVal(args.item ?? null)} };
+            } else {
+                var _f = new File(${jsxVal(args.path ?? null)});
+                if (!_f.exists) return { ok: false, error: "no file at " + ${jsxVal(args.path ?? null)} };
+                _item = app.project.importFile(new ImportOptions(_f));
+            }
+            var _in = Math.min(_layer.inPoint, _layer.outPoint);
+            var _out = Math.max(_layer.inPoint, _layer.outPoint);
+            var _movie = _comp.layers.add(_item);
+            _movie.name = _movieName;
+            _movie.moveBefore(_layer);
+            var _start = ${jsxVal(args.startTime ?? null)};
+            _movie.startTime = _start === null ? Math.max(0, _in) : _start;
+            var _spanError = null;
+            try { _movie.inPoint = Math.max(0, _in); _movie.outPoint = _out; } catch (eSp) { _spanError = AE.errText(eSp); }
+            var _movieAudio = "none";
+            if (AE.safeGet(function () { return _movie.hasAudio; }, false)) { try { _movie.audioEnabled = false; _movieAudio = "off"; } catch (eAu) { _movieAudio = "could not be switched off: " + AE.errText(eAu); } }
+            var _off = [];
+            if (_layer.enabled) { _layer.enabled = false; _off.push(_layer.name); }
+            if (_fill && _fill.enabled) { _fill.enabled = false; _off.push(_fill.name); }
+            var _res = { ok: true, movieLayer: _movie.name, movieIndex: _movie.index, startTime: _movie.startTime, inPoint: _movie.inPoint, outPoint: _movie.outPoint,
+                switchedOff: _off, audio: { original: AE.safeGet(function () { return _layer.audioEnabled; }, null), movie: _movieAudio },
+                note: "The movie is in comp space: it already has the cut-out's transform, so it has none of its own and no parent. The cut-out layer and its selections stay in the project with the picture off, for a later re-click; switch its picture back on and remove the movie to go back to the live matte." };
+            if (_spanError !== null) _res.spanError = _spanError;
+            return _res;
+        `;
+}
+
+/** The FileIO a live call uses. */
+function liveFileIO(transport: AeTransport): FileIO {
+  const cut = liveCutoutIO({}, transport);
+  return {
+    render: cut.render,
+    readImage: cut.readImage,
+    async execute(code, opts) {
+      const r = await transport.execute({
+        code,
+        label: opts.label,
+        timeoutMs: opts.timeoutMs,
+        undoGroup: opts.undoGroup ?? true,
+        suppressDialogs: true,
+      });
+      return r.ok ? r.result : { ok: false, error: r.error ?? `${opts.label} failed` };
+    },
+    exists: (file) =>
+      fs.access(file).then(
+        () => true,
+        () => false,
+      ),
+  };
+}
+
+registerOp({
+  name: "subject.render_cutout",
+  category: "subject",
+  description:
+    "Render the cut-out once to a movie with alpha, so the piece is built on a file that cannot change: the layer with its gap fill when there is one, alone (every other layer's picture switched off for the render and put back afterwards, even when it fails; cameras and lights left as they are), over the layer's span, through one temporary render-queue item (other queue items are parked). " +
+    "Picks an output template that writes a movie with alpha ('High Quality with Alpha', 'Lossless with Alpha', or another whose name says alpha; image sequences are not used) and refuses, naming the templates, when none does. " +
+    "Returns outputPath, frameCount, renderSeconds, outputTemplate, templateChoice, layersSwitched, restored, sound and timing. Measured: 390 s for 320 frames of a 2176 x 3840 take, about one pass through the clip; tell the user before it runs. " +
+    "The movie is in comp space. The original layer keeps the sound; whether the movie carries a sound track is not promised." +
+    RENDER_QUEUE_UNDO_WARNING,
+  params: [
+    ...compLayerParams,
+    {
+      name: "outputPath",
+      type: "string",
+      description:
+        "Absolute path for the movie (the template may change the extension; the path written is returned).",
+      required: true,
+    },
+    {
+      name: "outputTemplate",
+      type: "string",
+      description:
+        "An output-module template that carries alpha (default: the first found, see above).",
+      required: false,
+    },
+    {
+      name: "overwrite",
+      type: "boolean",
+      description: "Replace an existing file at outputPath (default false: refuse).",
+      required: false,
+    },
+  ],
+  toJsx: () => NODE_ONLY("subject.render_cutout"),
+  run: (args, transport) => runRenderCutout(args, liveFileIO(transport)),
+});
+
+registerOp({
+  name: "subject.check_file",
+  category: "subject",
+  description:
+    "Check a rendered cut-out movie (from subject.render_cutout) frame by frame: brings it into a throwaway comp, reads frames in batches of at most 32 (every frame up to maxFrames, default " +
+    `${CHECK_FILE_MAX_FRAMES}; beyond it pairs of neighbouring frames in steps, always the first and last three), and reports holes and openings (as subject.check: holeLimit, accept), the opaque share of every frame, and a 'jump' finding when neighbouring frames differ by more than jumpLimit (default ${CHECK_FILE_JUMP_LIMIT}: on the take of 2026-11-11 the rendered cut-out ran 0.279 to 0.314 with no step over 0.012, and a dropped microphone is about 0.05). ` +
+    "Only true neighbours are compared, and `compared` says which. A frame that could not be read is 'not-checked' and stops. Pictures: every frame with a finding, and a sheet of up to 24 frames. The throwaway comp is removed afterwards, and the imported footage too unless keepFootage. " +
+    "Measured: about 0.55 s a frame reading the file. Returns stop, findings, accepted, checked, compared, opaque, inOut, picture, frameReadings, timing.",
+  params: [
+    {
+      name: "path",
+      type: "string",
+      description: "Absolute path of the movie. Or `item`.",
+      required: false,
+    },
+    {
+      name: "item",
+      type: "number",
+      description: "Id of a footage item already in the project (it is never removed). Or `path`.",
+      required: false,
+    },
+    {
+      name: "outDir",
+      type: "string",
+      description: "Absolute folder for the frames and pictures.",
+      required: true,
+    },
+    {
+      name: "holeLimit",
+      type: "number",
+      description: `Smallest hole or opening that is a finding, px (default ${CUTOUT_HOLE_LIMIT}).`,
+      required: false,
+    },
+    {
+      name: "accept",
+      type: "array",
+      description: "As subject.check's accept: boxes (openings) or { box, kind }.",
+      required: false,
+    },
+    {
+      name: "jumpLimit",
+      type: "number",
+      description: `Largest change in opaque share between neighbouring frames that is not a finding (default ${CHECK_FILE_JUMP_LIMIT}).`,
+      required: false,
+    },
+    {
+      name: "maxFrames",
+      type: "number",
+      description: `Most frames read one by one (default ${CHECK_FILE_MAX_FRAMES}).`,
+      required: false,
+    },
+    {
+      name: "keepFootage",
+      type: "boolean",
+      description:
+        "Keep the imported footage item in the project (default false; subject.use_cutout imports it again).",
+      required: false,
+    },
+    {
+      name: "secondsPerFrame",
+      type: "number",
+      description: "Settle time allowed per frame, s (default 10).",
+      required: false,
+    },
+    overParam,
+  ],
+  toJsx: () => NODE_ONLY("subject.check_file"),
+  run: (args, transport) => runCheckFile(args, liveFileIO(transport)),
+});
+
+registerOp({
+  name: "subject.use_cutout",
+  category: "subject",
+  description:
+    "Build on the checked file: add the rendered cut-out movie (path, or a footage item id) to the comp directly above the cut-out layer, named '<layer> cut-out', over the cut-out's span. " +
+    "The movie is in comp space (subject.render_cutout renders the comp), so it has no transform or parent of its own. Switches the cut-out layer's and its gap fill's pictures off; they and the selections stay in the project for a later re-click. " +
+    "The original keeps its audio; the movie's audio is switched off. Returns movieLayer, switchedOff, audio and note. Refuses when the comp already has the movie.",
+  params: [
+    ...compLayerParams,
+    {
+      name: "path",
+      type: "string",
+      description: "Absolute path of the movie. Or `item`.",
+      required: false,
+    },
+    {
+      name: "item",
+      type: "number",
+      description: "Id of the movie's footage item. Or `path`.",
+      required: false,
+    },
+    {
+      name: "startTime",
+      type: "number",
+      description:
+        "Where the movie starts in the comp, s (default: the cut-out's in point, where subject.render_cutout's render starts; pass its timeSpanStart).",
+      required: false,
+    },
+  ],
+  toJsx(args) {
+    if ((typeof args.path === "string") === (typeof args.item === "number"))
+      return jsxFail("give exactly one of `path` (the movie) or `item` (its footage item's id)");
+    return useCutoutJsx(
+      args as { comp: unknown; layer: unknown; path?: string; item?: number; startTime?: number },
+    );
+  },
 });

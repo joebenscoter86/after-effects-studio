@@ -147,6 +147,20 @@ export const ANSWER_CHECKS = {
       return { pass: true, why: `subject.check at character ${at[0]}, before further building, with the hole shown` };
     },
   },
+  'subject-file-first': {
+    what: 'the answer renders the cut-out once (subject.render_cutout) and checks the file (subject.check_file) before building on it',
+    async check(answer) {
+      const text = plain(answer);
+      const render = text.search(/subject\.render_cutout/);
+      const file = text.search(/subject\.check_file/);
+      if (render < 0) return { pass: false, why: 'subject.render_cutout is not in the plan' };
+      if (file < 0) return { pass: false, why: 'subject.check_file is not in the plan' };
+      if (file < render) return { pass: false, why: 'the file is checked before it is rendered' };
+      const use = text.search(/subject\.use_cutout/);
+      if (use >= 0 && use < file) return { pass: false, why: 'the file is built on before it is checked' };
+      return { pass: true, why: 'render, then check the file, then build on it' };
+    },
+  },
 };
 
 /** Run a case's answer checks on an answer: [{ id, pass, why }]. */

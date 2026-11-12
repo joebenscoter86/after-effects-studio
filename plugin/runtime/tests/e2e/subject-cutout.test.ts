@@ -143,7 +143,7 @@ describe("e2e subject cut-out on the no-green-screen take", () => {
   });
 
   it(
-    "after a person clicks: subject.check renders the cut-out across the clip and reports holes; subject.fill_gaps fills the gaps",
+    "after a person clicks: the quick check, the fill, one render of the cut-out, a check of the file, and building on it",
     async (ctx) => {
       if (!ready || !transport || !(WAIT_S > 0)) return ctx.skip();
       const until = Date.now() + WAIT_S * 1000;
@@ -182,7 +182,7 @@ describe("e2e subject cut-out on the no-green-screen take", () => {
         ),
       );
       expect(check.ok).toBe(true);
-      expect(check.frames.length).toBeGreaterThanOrEqual(8);
+      expect(check.frames.length).toBeGreaterThanOrEqual(3); // the quick check: click frames and their neighbours
       await fs.access(check.picture);
       if (check.findings.some((f: Any) => f.kind === "hole")) {
         const fill = await op(transport, "subject.fill_gaps", {
@@ -207,8 +207,62 @@ describe("e2e subject cut-out on the no-green-screen take", () => {
         );
         expect(fill.ok).toBe(true);
       }
+      // Stage 12c: render once, check the file, build on it.
+      const movie = path.join(OUT, `cutout-${Date.now()}.mov`);
+      const rendered = await op(transport, "subject.render_cutout", {
+        comp: "cutout_e2e",
+        layer: 1,
+        outputPath: movie,
+      });
+      console.log(
+        "subject.render_cutout:",
+        JSON.stringify(
+          {
+            ok: rendered.ok,
+            outputPath: rendered.outputPath,
+            frameCount: rendered.frameCount,
+            renderSeconds: rendered.renderSeconds,
+            outputTemplate: rendered.outputTemplate,
+            sound: rendered.sound,
+            timing: rendered.timing,
+          },
+          null,
+          2,
+        ),
+      );
+      expect(rendered.ok).toBe(true);
+      const file = await op(transport, "subject.check_file", {
+        path: rendered.outputPath,
+        outDir: OUT,
+      });
+      console.log(
+        "subject.check_file:",
+        JSON.stringify(
+          {
+            stop: file.stop,
+            findings: file.findings,
+            checked: file.checked,
+            compared: file.compared,
+            opaque: file.opaque,
+            inOut: file.inOut,
+            timing: file.timing,
+          },
+          null,
+          2,
+        ),
+      );
+      expect(file.ok).toBe(true);
+      expect(file.checked.frames).toBe(file.frames);
+      const used = await op(transport, "subject.use_cutout", {
+        comp: "cutout_e2e",
+        layer: 1,
+        path: rendered.outputPath,
+        startTime: rendered.timeSpanStart,
+      });
+      console.log("subject.use_cutout:", JSON.stringify(used, null, 2));
+      expect(used.ok).toBe(true);
     },
-    Math.max(60, WAIT_S + 600) * 1000,
+    Math.max(60, WAIT_S + 2400) * 1000,
   );
   it("a frame that does not finish rendering is not checked, and the check stops", async (ctx) => {
     // Runs after the click test, which waits for the person's click.
