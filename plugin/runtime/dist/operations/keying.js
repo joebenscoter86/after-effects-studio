@@ -518,9 +518,10 @@ registerOp({
 // cannot make its selection: the user clicks the subject once with the Object
 // Matte Tool, and these operations do everything around that click. The match
 // names, names, ranges and defaults below are the ones After Effects 27.0
-// reported live (macOS, 2026-11-11). Reading the settings by their slash match
-// names was not confirmed, so every lookup falls back to walking the effect's
-// properties and comparing matchName, then display name.
+// reported live (macOS, 2026-11-11). The slash match names resolve there
+// (fx.property("/rmreducechatter")), and so do the display names; every lookup
+// still falls back to walking the effect's properties and comparing matchName,
+// then display name, in case another version differs.
 export const OBJECT_MATTE_MATCH_NAME = "ADBE Samurai";
 export const OBJECT_MATTE_SELECTIONS_MATCH_NAME = "ADBE Samurai Strokes Group";
 const PAINT_DURATION_MATCH_NAME = "ADBE Paint Duration";
@@ -579,6 +580,7 @@ export const OBJECT_MATTE_SETTINGS = {
         default: null,
         kind: "switch",
         writable: true,
+        doc: "Invert Foreground/Background: true keeps everything except the selection",
     },
     fineTune: {
         matchName: "/rmrefinematteenable",
@@ -601,11 +603,12 @@ export const OBJECT_MATTE_SETTINGS = {
     decontaminateEdgeColors: {
         matchName: "/rmcleanedgecolors",
         name: "Decontaminate Edge Colors",
-        min: null,
-        max: null,
+        min: 0,
+        max: 1,
         default: null,
         kind: "switch",
-        writable: false,
+        writable: true,
+        doc: "Decontaminate Edge Colors: true takes the background's colour out of the edge. On green-screen footage it moved the edge's green excess from -0.0005 to -0.009; turn it on when ae_render_frame's edge report shows the edge leaning to the screen colour",
     },
 };
 /** Said to the user before the steps, and in the skill before building starts. */
@@ -897,7 +900,7 @@ registerOp({
             name,
             type: (s.kind === "switch" ? "boolean" : "number"),
             description: s.kind === "switch"
-                ? `${s.name}: true keeps everything except the selection`
+                ? (s.doc ?? `${s.name}: true or false`)
                 : `${s.name}, ${s.min} to ${s.max}${s.default !== null ? ` (default ${s.default})` : ""}`,
             required: false,
         })),

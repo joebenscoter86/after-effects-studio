@@ -222,14 +222,14 @@ After Effects 2027's own AI matte, Object Matte (the old Roto Brush), cuts a per
 
 ### Facts measured in After Effects 27.0
 
-Measured on macOS on 2026-11-11, on a 1080 × 1920 clip of a seated presenter.
+Measured on macOS on 2026-11-11, on 1080 × 1920 clips of a seated presenter, one of them in front of an unevenly lit green screen.
 
 1. **The effect.** The user's click adds it. It is "Object Matte & Refine Edge" in the effect list (match name `ADBE Samurai`, category `_Obsolete`, so not in the Effect menu) and shows on the layer as "Object Matte". A script can add it too, but an Object Matte with no selection makes no matte.
 2. **A script cannot make the selection.** Each click or stroke is one child of the effect's Selections group (`ADBE Samurai Strokes Group`): a click with the Object Matte Tool is named "Add Object 1", "Add Object 2" and so on, newest first; a stroke with the old brush is "Quick Select Foreground 1". A script can read them. It can add an empty one, but cannot set its path ("This propertyValueType CUSTOM_VALUE has not been implemented"). It cannot pick the Object Matte Tool either (setting `app.project.toolType` to 161 fails), and no menu command selects a subject or freezes the matte.
 3. **After one click the matte is there at every frame.** With one click on the subject at frame 0, `ae_render_frame` with `channels: "alpha"` returned the matte at any frame, across a cut in the footage, with no Spacebar and no Freeze. The first frame after the click took 7.8 s; after that, about 0.13 s for each frame After Effects has to track through, so a frame 10 seconds in costs about 40 s the first time. Render early frames first, and give long calls a longer timeout. The selection survives saving and reopening the project.
 4. **What it gave.** A smooth, hard edge about 1 px wide (`edge`: partial share 0.0016, typical width 1). Things not clicked were left out: a microphone and a pale headrest. A black chair back touching the presenter's black shirt was kept. A second click on the microphone added its head, not its stand. Edge flicker between consecutive frames was 0.029 on a hold and 0.054 on fast hands with Reduce Chatter at 0, the same range as a Keylight key (fact 5 above).
 5. **What the user sees.** The first time, a tip titled "Object Matte" with an OK button. A warning ("Use the paint and Object Matte tools in a Layer panel...") if the click lands in the Composition panel, which is why `subject.prepare` opens the Layer panel. A yellow banner in the Layer panel saying to draw at full resolution, which is why it sets the comp to full resolution. Hovering tints the object magenta before the click. Option-click (or Option-drag) takes something out of the selection.
-6. **Its settings**, as After Effects reports them (`subject.status` reads them all; `subject.settings` writes the five edge settings, each checked against its range first):
+6. **Its settings**, as After Effects reports them (`subject.status` reads them all; `subject.settings` writes feather, contrast, shift edge, reduce chatter, invert and decontaminate edge colours, each checked against its range first):
 
    | setting | name | range | default |
    |---|---|---|---|
@@ -241,10 +241,16 @@ Measured on macOS on 2026-11-11, on a 1080 × 1920 clip of a seated presenter.
    | `invert` | Invert Foreground/Background | off or on | |
    | `fineTune` | Fine-tune Object Matte | off or on | on |
    | `useMotionBlur` | Use Motion Blur | not measured | |
-   | `decontaminateEdgeColors` | Decontaminate Edge Colors | not measured | |
+   | `decontaminateEdgeColors` | Decontaminate Edge Colors | off or on | |
 
-   Reading these by their match names (`/rmshiftedges` and the others) was not confirmed; the operations fall back to walking the effect's properties, and each setting's `foundBy` says which way it was found.
+   The match names (`/rmshiftedges` and the others) and the display names both resolve in a script. The operations still fall back to walking the effect's properties, and each setting's `foundBy` says which way it was found.
 7. **Computer use.** Background control did not work on After Effects (a background click registered as a zero-length stroke in the wrong place). Full-screen control did.
+8. **Reduce Chatter 50 is the setting.** Edge flicker over six consecutive frames of a hold: 0.034 at Reduce Chatter 0, 0.0235 at 50, 0.024 at 100. 100 buys nothing more than 50.
+9. **Feather and Contrast set the edge's width.** The defaults (Feather 5, Contrast 80) give an edge about 1 px wide. Feather 15 with Contrast 50 gave a typical width of 7 px (p90 8 px) and flicker 0.0325, with 23 % of the edge's pixels changing from frame to frame.
+10. **Shift Edge is not a choke in pixels.** At −50 and at +50 the opaque share differed by 0.004 of the frame, well under a pixel of edge either way. To pull the matte in or push it out by pixels, add Simple Choker after Object Matte (`effect.add { matchName: "ADBE Simple Choker" }`) and set its Choke Matte (`ADBE Simple Choker-0002`, with `effect.set_property`): positive pulls in, negative pushes out, in pixels.
+11. **Decontaminate Edge Colors takes the screen out of the edge.** On green-screen footage the edge's green excess went from −0.0005 to −0.009 with it on (the area just inside the edge read −0.036). The edge report did not flag a lean either way.
+12. **Copies keep the selection.** Duplicating the layer copies Object Matte with its selections, and each copy renders its own matte. A copy can be another layer's alpha track matte (`layer.set_track_matte`).
+13. **The whole-piece check is quick on it.** `ae_check_comp` (quarter size) took 79 ms a frame with Object Matte on.
 
 ### Tell the user first
 
@@ -261,6 +267,10 @@ One step here needs you in After Effects: a single click on the subject, about t
 
 `subject.prepare` fills in the clip's name in step 1 and, when you pass `subject` ("the presenter", "the bottle"), puts it in step 4 ("Move the pointer over the presenter in the Layer panel. The presenter tints magenta. Click once."). Give the user its `userMessage` word for word; do not paraphrase the steps. In a plan made before After Effects is open, quote the steps above as they are.
 
+### What the click does not include
+
+Only what the user clicks is in the matte. Things the subject holds or sits against (a microphone, a cup, a chair, a headrest) are left out unless they get their own click, and a second click can take only part of an object (the microphone's head, not its stand). Dark furniture touching dark clothing comes along with the subject (a black chair back against a black shirt). Look for both on every cut-out (step 6).
+
 ### The procedure
 
 1. **Pick the frame.** Choose a time where the subject is clearly visible, whole and still (not mid-gesture or behind something). Look at it first: `ae_render_frame` at that time.
@@ -273,29 +283,49 @@ One step here needs you in After Effects: a single click on the subject, about t
    ae_render_frame { compNameOrId, time, outPath, isolate: "<layer>", channels: "alpha", edge: true }
    ```
 6. **Tell the user what is in and what is out.** Name what the matte kept and what it left out, especially what the subject holds or sits against (a microphone, a chair, a cup). Ask for another click only when something the brief names is missing ("the microphone is not in the cut-out; hover it and click it too"). When the selection is wrong (the wrong person, the background), start again: remove the Object Matte with `effect.remove { comp, layer, effectIndex }` (`subject.status` gives `effectIndex`), run `subject.prepare` and ask for the click again. One wrong extra can also be taken out by the user Option-clicking it.
-7. **Set the edge** with `subject.settings` from the `edge` numbers (below), one setting at a time, measuring again after each.
+7. **Set the edge** with `subject.settings` from the `edge` numbers (recipe 1 below), one setting at a time, measuring again after each.
 8. **Check flicker** across consecutive held frames and fast motion, as in step 10 above.
 
-### Recipe: no green screen (not verified in After Effects)
+### Recipe 1: Object Matte alone (the default, with or without a green screen)
 
-The subject matte alone. Start from the defaults; they gave the hard, clean edge in fact 4.
+Verified on one clip: a 1080 × 1920 seated presenter in front of an unevenly lit green screen, frame 127.
+
+```
+subject.settings { comp, layer, reduceChatter: 50 }
+```
+
+Then choose the edge from the `edge` numbers on the matte (`channels: "alpha"`, `edge: true`) and from the subject over a flat colour:
 
 | what `edge` and the picture show | try |
 |---|---|
-| `width.typical` about 1 and the edge looks cut out against the new background (hair, motion blur) | raise `feather` from 5 in small steps, or lower `contrast` from 80 |
-| a light or dark ring of the old background round the subject | a small negative `shiftEdge` |
-| background kept at the edge, or the edge chewed into the subject | `shiftEdge` negative or positive by a few units |
-| `edgeFlicker` high on a held shot | raise `reduceChatter` |
-| something the subject holds is missing | another click on it (step 6), not a setting |
+| `width.typical` about 1 and the edge looks cut out against the new background (hair, motion blur) | raise `feather` from 5 and lower `contrast` from 80, together, in steps; Feather 15 with Contrast 50 gave 7 px (fact 9) |
+| `edgeFlicker` high on a held shot | `reduceChatter: 50` (fact 8); more does not help |
+| the edge leans to the screen colour (`edge.spill`, or `sample` on the edge with `channels: "rgba"`) | `decontaminateEdgeColors: true` (fact 11), or the spill suppressor from step 6 above |
+| a ring of the old background round the subject, or the edge chewed into it | Simple Choker after Object Matte, a pixel or two either way (fact 10); not Shift Edge |
+| something the subject holds is missing, or the wrong thing is in | a click, not a setting (procedure step 6) |
 
-Expect it to leave out what was not clicked and to keep dark things touching the subject's dark clothes (fact 4). The values to use are not measured yet.
+What it gave, against the other two builds on the same frame:
 
-### Recipe: green screen (not verified in After Effects)
+| build | edge width typical / p90 | patches, holes, specks | flicker on a hold |
+|---|---|---|---|
+| Object Matte alone, Reduce Chatter 50 | 1 / 1.41 px | 0, 0, 0 | 0.0235 |
+| Object Matte body + Keylight edge (recipe 2: core choked 6 px, cover spread 8 px, Keylight between) | 1.41 / 4 px | 0, up to 1, 0 | 0.036 |
+| Keylight alone, no garbage masks | 5 / 17 px | 17, 5, 4 | 0.041 |
 
-Object Matte for the body, and as the cover for badly lit parts of the screen and the frame's corners; Keylight for the fine edge (hair) where the screen is good. Proposed build, on three copies of the footage layer (`layer.duplicate`):
+Expect it to leave out what was not clicked and to keep dark things touching dark clothes (above).
 
-1. **The core.** The bottom copy keeps Object Matte with `shiftEdge` pulled in (negative), so it is solid inside the subject and never reaches the soft edge.
-2. **The fine edge.** The copy above the core is keyed with Keylight as in the procedure above (`key.keylight` from the measured screen colour, then `key.cleanup` where it helps). Its track matte is the third copy.
-3. **The moving garbage matte.** The third copy carries Object Matte with `shiftEdge` pushed out (positive), so it covers the subject and its hair with a margin; as the fine-edge copy's alpha track matte (`layer.set_track_matte`), it removes everything Keylight left outside that margin, including uneven screen and the corners.
+### Recipe 2: Object Matte body with a Keylight edge (an option, not shown to help)
 
-Choose both `shiftEdge` values from `edge` reports: the core's from its typical width against Keylight's (pull it in until the core sits inside Keylight's soft band), the garbage matte's from Keylight's `width.p90` and the hair's reach (push it out until the hair is inside the margin). Measure the result as one layer with `edge` on the comp of the three (precompose them with `comp.precompose`, or render a comp holding only those layers). The values to use come from live tests that have not been done yet.
+Only for fine, wispy edges (long loose hair) on a well and evenly lit green screen. On the one clip it was tried on, a badly lit screen and short hair, it was worse than recipe 1: inside the band it brought back Keylight's stair-stepped edge at the shadowed shoulder, and it kept a sliver of the pale headrest beside the face. It has not been shown to help anywhere yet. Build it only to compare it with recipe 1, with the same `edge` calls on the same frames and by looking at those frames, and keep it only if it is better on both.
+
+Three copies of the footage layer (`layer.duplicate`; each keeps the selection, fact 12):
+
+1. **The core.** One copy keeps Object Matte, with Simple Choker after it pulling the matte in (Choke Matte positive; 6 px on the measured clip), so it is solid inside the subject and stops short of the edge.
+2. **The fine edge.** One copy has Object Matte removed (`effect.remove`) and is keyed with Keylight as in the procedure at the top (`key.keylight` from the measured screen colour, then `key.cleanup` where it helps). Its alpha track matte is the third copy (`layer.set_track_matte`).
+3. **The cover.** The third copy keeps Object Matte with Simple Choker pushing the matte out (Choke Matte negative; −8 px on the measured clip), a moving garbage matte that removes everything Keylight left outside the subject, including uneven screen and the frame's corners.
+
+Choose the two Choke Matte values from `edge` reports: the core's from Keylight's typical width (pull in until the core sits inside Keylight's soft band), the cover's from Keylight's `width.p90` and how far the hair reaches (push out until the hair is inside). Shift Edge does not do this (fact 10): a first build using Shift Edge −50 and +50 rendered the same as recipe 1. Measure the result as one layer: precompose the three (`comp.precompose`) and run `edge` on the precomp.
+
+### Keylight alone
+
+The procedure at the top of this document stays the route when the user will not make the click, or for footage where Object Matte fails.

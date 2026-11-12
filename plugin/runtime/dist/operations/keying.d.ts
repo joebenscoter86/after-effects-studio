@@ -27,6 +27,8 @@ interface MatteSetting {
     kind: "number" | "switch";
     /** subject.settings writes it. */
     writable: boolean;
+    /** What a switch does, for its parameter's description. */
+    doc?: string;
 }
 /** Object Matte's settings, as After Effects 27.0 reported them (2026-11-11). */
 export declare const OBJECT_MATTE_SETTINGS: Record<string, MatteSetting>;

@@ -44840,7 +44840,8 @@ var OBJECT_MATTE_SETTINGS = {
     max: 1,
     default: null,
     kind: "switch",
-    writable: true
+    writable: true,
+    doc: "Invert Foreground/Background: true keeps everything except the selection"
   },
   fineTune: {
     matchName: "/rmrefinematteenable",
@@ -44863,11 +44864,12 @@ var OBJECT_MATTE_SETTINGS = {
   decontaminateEdgeColors: {
     matchName: "/rmcleanedgecolors",
     name: "Decontaminate Edge Colors",
-    min: null,
-    max: null,
+    min: 0,
+    max: 1,
     default: null,
     kind: "switch",
-    writable: false
+    writable: true,
+    doc: "Decontaminate Edge Colors: true takes the background's colour out of the edge. On green-screen footage it moved the edge's green excess from -0.0005 to -0.009; turn it on when ae_render_frame's edge report shows the edge leaning to the screen colour"
   }
 };
 var SUBJECT_MATTE_NOTICE = "One step here needs you in After Effects: a single click on the subject, about ten seconds. Everything before and after it I do.";
@@ -45125,7 +45127,7 @@ registerOp({
     ...MATTE_WRITABLE.map(([name, s]) => ({
       name,
       type: s.kind === "switch" ? "boolean" : "number",
-      description: s.kind === "switch" ? `${s.name}: true keeps everything except the selection` : `${s.name}, ${s.min} to ${s.max}${s.default !== null ? ` (default ${s.default})` : ""}`,
+      description: s.kind === "switch" ? s.doc ?? `${s.name}: true or false` : `${s.name}, ${s.min} to ${s.max}${s.default !== null ? ` (default ${s.default})` : ""}`,
       required: false
     }))
   ],
