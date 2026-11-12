@@ -347,7 +347,7 @@ export declare const SOFT_EDGE_DEFAULTS: {
     /** Face colour against the matte as clicked, CIELAB difference allowed. */
     colourLimit: number;
 };
-export declare const SOFT_EDGE_COST = "The soft edge is two copies of the matte, so After Effects computes Object Matte twice for every frame: a render takes about twice as long and writes about twice the disk cache (subject.render_cutout counts both).";
+export declare const SOFT_EDGE_COST = "The soft edge is two copies of the matte, so After Effects computes Object Matte twice for every frame: a render writes about twice the disk cache and takes several times as long (on the half-size take, 320 frames at 1088 \u00D7 1920: 342 s and 9.0 GB of cache, against 65 to 92 s and about 5 GB with one matte; subject.render_cutout counts both copies).";
 /** The region's lower line: given, or `regionDepth` of the comp's height under the lowest top of the subject. */
 export declare function softRegionBottom(tops: number[], compHeight: number, given?: number): number;
 /**

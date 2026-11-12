@@ -3954,7 +3954,7 @@ export const SOFT_EDGE_DEFAULTS = {
     /** Face colour against the matte as clicked, CIELAB difference allowed. */
     colourLimit: 1,
 };
-export const SOFT_EDGE_COST = "The soft edge is two copies of the matte, so After Effects computes Object Matte twice for every frame: a render takes about twice as long and writes about twice the disk cache (subject.render_cutout counts both).";
+export const SOFT_EDGE_COST = "The soft edge is two copies of the matte, so After Effects computes Object Matte twice for every frame: a render writes about twice the disk cache and takes several times as long (on the half-size take, 320 frames at 1088 × 1920: 342 s and 9.0 GB of cache, against 65 to 92 s and about 5 GB with one matte; subject.render_cutout counts both copies).";
 /** The region's lower line: given, or `regionDepth` of the comp's height under the lowest top of the subject. */
 export function softRegionBottom(tops, compHeight, given) {
     if (typeof given === "number" && Number.isFinite(given))
@@ -4127,7 +4127,17 @@ export async function runSoftenEdge(args, io) {
         .map((s) => s.clickFrame)
         .filter((f) => typeof f === "number");
     const click = clicks.length ? Math.min(...clicks) : span.inFrame;
-    const samples = framesAcross(span, Math.max(2, Math.floor(num("samples", D.samples))), [click]);
+    // Frames to sample: those given (each inside the layer), or `samples` spread across the clip; the click frame always.
+    const samples = Array.isArray(args.sampleFrames)
+        ? [
+            ...new Set([
+                click,
+                ...args.sampleFrames
+                    .filter((f) => typeof f === "number" && f >= span.inFrame && f < span.outFrame)
+                    .map((f) => Math.round(f)),
+            ]),
+        ].sort((a, b) => a - b)
+        : framesAcross(span, Math.max(2, Math.floor(num("samples", D.samples))), [click]);
     const held = [];
     for (let f = click; f < Math.min(span.outFrame, click + 5); f++)
         held.push(f);
@@ -4378,7 +4388,7 @@ registerOp({
         "Defaults: look C, the user's choice on the half-size take (radius 8, Smooth 0, Chatter Reduction 2, Decontaminate on, feather 60). The region is everything above a line: `regionBottom` (comp pixels), or by default 12% of the comp's height under the lowest top of the subject on the frames sampled across the clip. " +
         "Then it runs the closing check on the click frame and the frame furthest from it (the least overlap of the outline with the click frame's, from `samples` frames across the clip): no pixel solid in the matte as clicked and more than 30 px inside its edge may drop under 0.99, the colour inside the subject must match the matte as clicked within 1 (CIELAB), and no more than `outsideLimit` px may spread over 10 px outside the outline. On any failure it undoes the build and says so; the fallback is Decontaminate Edge Colors alone (subject.settings). " +
         "Reports look before and after on the region's top and sides and on the outline below it (edge width and widest tenth on the alpha, soft band, the share of `background`'s colour in the edge when given, the change from frame to frame over five held frames), the region and how it was chosen, and the whole frames after as pictures. " +
-        "After it, subject.check, subject.fill_gaps, subject.render_cutout and subject.use_cutout use the soft-edge layer. Two copies of the matte mean Object Matte is computed twice for every frame: a render takes about twice as long and writes about twice the disk cache. The check itself renders the matte across the clip, which takes minutes. undo: true takes the comp back to the single matted layer. Verified on the half-size take in After Effects 27.0 as a hand-built construction; the operation's own run is checked offline.",
+        "After it, subject.check, subject.fill_gaps, subject.render_cutout and subject.use_cutout use the soft-edge layer. Two copies of the matte mean Object Matte is computed twice for every frame: a render writes about twice the disk cache and takes several times as long (on the half-size take, 342 s and 9.0 GB against 65 to 92 s and about 5 GB with one matte). The check renders the matte out to the sampled frames, which takes minutes across the clip; `sampleFrames` near the click is cheaper. undo: true takes the comp back to the single matted layer. Ran once in After Effects 27.0 on the half-size take with `sampleFrames` from the first 60 frames; the default sampling across the clip has not run there.",
     params: [
         ...compLayerParams,
         {
@@ -4433,6 +4443,12 @@ registerOp({
             name: "samples",
             type: "number",
             description: `Frames sampled across the clip to find the furthest from the click frame and the subject's top (default ${SOFT_EDGE_DEFAULTS.samples}).`,
+            required: false,
+        },
+        {
+            name: "sampleFrames",
+            type: "array",
+            description: "Frames to sample in place of `samples` spread across the clip (the click frame is always added). Reading the matte out to a far frame makes After Effects track every frame up to it (keying.md fact 3), so sampling near the click is cheaper (frames 0 to 50 on the half-size take: 4 s, nothing added to the disk cache) but can miss the frame furthest from the click and a higher top of the subject later in the clip.",
             required: false,
         },
         {
