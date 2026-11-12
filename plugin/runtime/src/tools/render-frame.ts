@@ -55,23 +55,27 @@ import {
   resample,
   frameLabel,
   histogramOf,
+  lookArgsError,
+  lookCrops,
+  measureLook,
   rgbHex,
   sampleRegions,
+  summarizeLookSeries,
   unmatte,
   type Backdrop,
   type FrameAnalysis,
   type FrameHistogram,
+  type LookArgs,
+  type LookCrop,
+  type LookFrame,
+  type LookSeries,
   type RegionSpec,
   type Rgb,
 } from "../color/sheet.js";
 import { rejectedOutputPath } from "../config.js";
 import { errorResult } from "../errors.js";
 import { readOnlyMode } from "../policy.js";
-import {
-  MISSING_SOURCES_FN,
-  OCIO_CAPTURE_FN,
-  RENDER_FRAME_FN,
-} from "../operations/snippets.js";
+import { MISSING_SOURCES_FN, OCIO_CAPTURE_FN, RENDER_FRAME_FN } from "../operations/snippets.js";
 import { jsxVal } from "../registry.js";
 import type { AeTransport } from "../transport/AeTransport.js";
 import { colorConversion, validRgb, type Convert } from "./capture-shared.js";
@@ -101,6 +105,7 @@ interface RenderedFrame {
   histogram?: StagedHistogram;
   edge?: EdgeReport;
   screen?: ScreenReport;
+  look?: LookFrame;
 }
 
 interface IsolationReport {
@@ -168,6 +173,9 @@ interface RenderFramePayload {
   screen?: ScreenReport;
   screenThresholds?: ScreenThresholds;
   screenWarning?: string;
+  look?: LookFrame;
+  lookSeries?: LookSeries;
+  lookWarning?: string;
   captureWarning?: string;
   /** Which captures finished writing (saveFrameToPng writes asynchronously). */
   captureSettle?: {
@@ -299,6 +307,7 @@ interface EyesOptions {
   compare: { from: number; to: number } | null;
   edge: EdgeThresholdArgs | null;
   screen: ScreenArgs | null;
+  look: LookArgs | null;
   diff: { thresholds: DiffThresholds; sheet: ContactSheetArgs | null } | null;
 }
 
@@ -368,6 +377,7 @@ export const renderFrameTool = defineTool({
     "off, the keyed layer isolated), reports green or blue, which pixels are screen and their share, " +
     "a suggested screen colour (the median, and the colour just outside the subject), evenness on a " +
     "grid (darkest and brightest cells, the spread as a ratio, the darker side) and grain. " +
+    "Sitting in the scene: `look` reads grain, edge width, black and white points and CIELAB colour of named regions, names the cast on a neutral (with the gains that remove it) and skin's hue, and compares an element with its plate (add grain, soften, seat the blacks); with `times` on consecutive frames, the grain from frame to frame. " +
     "Watching motion: `diff` (with `times`) reports how much the picture changes between consecutive " +
     "frames, where, and per `sample` region, and flags pairs that stand out (a one-frame pop, a stutter " +
     "where a frame repeats, a cut); `strip: { at, frames }` renders the frames around a moment into one " +
@@ -815,6 +825,56 @@ export const renderFrameTool = defineTool({
           "grain {stdDev, level, steps8bit, samples, grainy, reading}; reading; warning; " +
           "screenColourNote (capture values and what they mean for Keylight's Screen Colour).",
       ),
+    look: z
+      .object({
+        regions: z
+          .array(
+            regionSchema.extend({
+              role: z
+                .enum(["neutral", "skin", "plate", "element"])
+                .optional()
+                .describe(
+                  "neutral: a surface that should read grey or white (a wall, a card, a metal grille) — its cast is named and the gains that remove it given; skin: its hue angle is read against the usual range; plate / element: for `pairs`.",
+                ),
+            }),
+          )
+          .min(1)
+          .max(64),
+        pairs: z
+          .array(z.object({ element: z.string(), plate: z.string() }))
+          .optional()
+          .describe(
+            "Element regions read against plate regions, by name: grain, edge width, black and white points, with what to do.",
+          ),
+        minContrast: z
+          .number()
+          .gt(0)
+          .max(1)
+          .optional()
+          .describe("Smallest luma step (0..1) read as an edge. Default 0.1."),
+        grainTolerance: z
+          .number()
+          .gt(0)
+          .max(1)
+          .optional()
+          .describe("Default 0.25: within a quarter of the plate's grain matches."),
+        sharpnessTolerance: z
+          .number()
+          .gt(0)
+          .max(1)
+          .optional()
+          .describe("Default 0.25: within a quarter of the plate's edge width matches."),
+      })
+      .optional()
+      .describe(
+        "Does it sit in the scene: for each named region, on the file as written (stage 'output'; with channels 'rgba' only the opaque pixels, straight colour), " +
+          "levels {black, white, mean per channel, lumaBlack, lumaWhite, lumaMean} (0.5th and 99.5th percentiles, 0..1), " +
+          "grain {spatial: per channel in 8-bit steps, the robust spread of each pixel against its 3 x 3 neighbourhood}, " +
+          "sharpness {edgeWidth: median 10 to 90% rise across edges with a luma step of at least minContrast, px (a hard step about 0.8, a Gaussian blur of sigma s about 2.56 s), edges}, " +
+          "colour (CIELAB L, a, b, chroma, hue of the mean). role 'neutral' adds cast {a, b, amount, toward, gains, channelMixer} and a reading; role 'skin' a hue reading. " +
+          "pairs add, per element and plate, grain, sharpness and levels compared, with readings (add grain, soften, seat the blacks). " +
+          "With `times` on consecutive frames, lookSeries adds frame-to-frame grain per region (a still element reads 0). Reported as `look` (per frame with `times`).",
+      ),
     diff: z
       .union([
         z.boolean(),
@@ -1014,6 +1074,7 @@ function checkEyesOptions(
     compare?: { from?: number; to?: number };
     edge?: boolean | EdgeThresholdArgs;
     screen?: boolean | ScreenArgs;
+    look?: LookArgs;
     diff?: boolean | DiffArgs;
     contactSheet?: ContactSheetArgs;
   },
@@ -1115,6 +1176,13 @@ function checkEyesOptions(
     if (problem !== null) return invalid(problem);
   }
 
+  let look: EyesOptions["look"] = null;
+  if (args.look !== undefined) {
+    const problem = lookArgsError(args.look as unknown as Record<string, unknown>);
+    if (problem !== null) return invalid(problem);
+    look = args.look;
+  }
+
   let diff: EyesOptions["diff"] = null;
   const diffArg = args.diff ?? (isStrip ? true : undefined);
   if (diffArg !== undefined && diffArg !== false) {
@@ -1154,6 +1222,7 @@ function checkEyesOptions(
       compare,
       edge,
       screen,
+      look,
       diff,
     },
   };
@@ -1490,7 +1559,7 @@ async function nativeFlow(
     (p): p is string => typeof p === "string",
   );
   /** Attach a per-frame result where this response shape keeps it. */
-  const put = <K extends "analysis" | "samples" | "histogram" | "edge" | "screen">(
+  const put = <K extends "analysis" | "samples" | "histogram" | "edge" | "screen" | "look">(
     i: number,
     key: K,
     value: RenderedFrame[K],
@@ -1573,6 +1642,12 @@ async function nativeFlow(
   let edgeMeasured = 0;
   let edgeFromLuma = 0;
   let withAlpha = 0;
+  // Frame-to-frame grain: only the regions' crops are kept.
+  const lookFrames: Array<{
+    index: number;
+    frame: number | undefined;
+    crops: Map<string, LookCrop>;
+  }> = [];
   let writing = convert !== null;
   for (const [i, file] of written.entries()) {
     if (!finished.has(i)) continue;
@@ -1655,6 +1730,19 @@ async function nativeFlow(
 
     const pixels: Record<Stage, DecodedPng> = { capture, output };
     if (opts.sample) put(i, "samples", sampleReport(pixels, opts.sample));
+    if (opts.look) {
+      try {
+        put(i, "look", measureLook(output, opts.look));
+        if (multi)
+          lookFrames.push({
+            index: i,
+            frame: frames[i]?.frame,
+            crops: lookCrops(output, opts.look),
+          });
+      } catch (err) {
+        payload.lookWarning = `look measurement failed: ${err instanceof Error ? err.message : String(err)}`;
+      }
+    }
     if (opts.histogram) {
       const { bins, stage } = opts.histogram;
       put(i, "histogram", { stage, ...histogramOf(pixels[stage], bins) });
@@ -1758,6 +1846,24 @@ async function nativeFlow(
     if (edgePairs.length > 0) {
       payload.edgeFlicker = { pairs: edgePairs, overall: summarizeFlicker(edgePairs) };
     }
+  }
+
+  if (opts.look && lookFrames.length >= 2) {
+    const consecutive = lookFrames.every(
+      (f, k) =>
+        k === 0 ||
+        (typeof f.frame === "number" &&
+          typeof lookFrames[k - 1].frame === "number" &&
+          f.frame - (lookFrames[k - 1].frame as number) === 1),
+    );
+    if (consecutive)
+      payload.lookSeries = summarizeLookSeries(
+        lookFrames.map((f) => f.crops),
+        opts.look,
+      );
+    else
+      payload.lookWarning =
+        "frame-to-frame grain needs consecutive frames (one frame apart, in order); these were not, so lookSeries was left out";
   }
 
   if (opts.compare && opts.sample) {

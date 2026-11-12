@@ -1,6 +1,6 @@
-# Keying and compositing a green screen
+# Keying, compositing and sitting an element in its scene
 
-How to key green-screen footage in After Effects through Comp Room, and how to tell from numbers whether the key is good. For cutting a person or object out of footage with or without a green screen, see [Cutting a subject out with Object Matte](#cutting-a-subject-out-with-object-matte) at the end: it needs one click from the user. The method is: measure, change one thing, measure again. Every step below names the call that does it.
+How to key green-screen footage in After Effects through Comp Room, how to tell from numbers whether the key is good, and how to make an element sit in its scene (grain, softness, black level, the room's light) in [Sitting an element in its scene](#sitting-an-element-in-its-scene). For cutting a person or object out of footage with or without a green screen, see [Cutting a subject out with Object Matte](#cutting-a-subject-out-with-object-matte) at the end: it needs one click from the user. The method is: measure, change one thing, measure again. Every step below names the call that does it.
 
 The tools:
 
@@ -13,6 +13,7 @@ The tools:
 - `key.cleanup` adds Key Cleaner and Advanced Spill Suppressor after Keylight.
 - `mask.get` reads masks back; `mask.add`, `mask.set_path` and `mask.set_props` change them.
 - `effect.describe` lists any effect's properties with their ranges before you write them.
+- `ae_render_frame` with `look` measures grain, edge width, black and white points and CIELAB colour of named regions, names a neutral's cast and skin's hue, and compares an element with its plate.
 - `subject.prepare`, `subject.status` and `subject.settings` cut a subject out with After Effects' Object Matte, around one click by the user (last section).
 
 ## Facts that are easy to get wrong
@@ -215,6 +216,49 @@ Stop when the numbers stop improving: two or three changes in a row that do not 
 - what would need a different technique: a clean plate or difference key, rotoscoping, or a reshoot. This kit does not include those.
 
 Say what you checked by looking and what you checked by numbers. A good number is not a good picture, and a picture that looks right at one frame can chatter at the next.
+
+## Sitting an element in its scene
+
+A keyed or cut-out element can be clean and graded and still look pasted on: sharper than its plate, cleaner (no grain), with blacks that do not sit with the plate's, or carrying the light of the room it was shot in. `ae_render_frame` with `look` measures each of these on named regions; the recipes below change one thing and measure again.
+
+### What `look` measures
+
+Give it regions in capture pixels, each with an optional role, on a render of the comp as it composites (or the element alone with `channels: "rgba"`, where only opaque pixels count):
+
+```
+ae_render_frame { compNameOrId, frames: [k, k + 1], outPath, look: {
+  regions: [ { name: "plate", x, y, width, height, role: "plate" },
+             { name: "element", x, y, width, height, role: "element" } ],
+  pairs: [ { element: "element", plate: "plate" } ] } }
+```
+
+- **Grain**, in 8-bit steps (one step is 1/255): `grain.spatial` per frame, the spread of each pixel against its 3 × 3 neighbourhood; and with two or more consecutive frames, `lookSeries` gives `temporal`, the spread of the change from one frame to the next. Temporal is the grain a viewer sees moving; a still element reads 0 however much texture it has. Grain coarser than a pixel reads lower in `spatial` than in `temporal` (fact I3).
+- **Sharpness**, `sharpness.edgeWidth` in px: the median distance from 10% to 90% across every edge with a luma step of at least 0.1. A hard edge reads about 0.8 px; a Gaussian blur of sigma s about 2.56 s. A region needs an edge in it; a flat region reads null.
+- **Levels**: black and white points (0.5th and 99.5th percentiles) per channel and in luma, and the mean.
+- **Colour**: CIELAB of the region's mean (L, a*, b*, chroma, hue angle). Role `neutral` adds `cast` (which way and how far from grey, and the per-channel gains that remove it, as Channel Mixer values); role `skin` reads the hue angle against the usual range.
+- **Pairs**: an element against its plate, with readings that say what to do (add grain, soften, seat the blacks). Black and white points compare only when both regions hold the darkest or brightest part of their picture; the reading says so.
+
+Tolerances (starting points, not measured judgments): grain and edge width match within a quarter; black and white points within 0.02; a cast under 2 in a* or b* is hard to see.
+
+### Facts measured in After Effects 27.0 (2026-11-12, 8 bpc, no working space)
+
+I1. **The effects a stock install has, by match name.** Noise & Grain: Add Grain `VISINF Grain Implant`, Match Grain `VISINF Grain Duplication`, Remove Grain `VISINF Grain Removal`, Noise `ADBE Noise2` (Amount of Noise 0 to 100), Noise HLS `ADBE Noise HLS2`, Noise HLS Auto `ADBE Noise HLS Auto2`, Median `ADBE PS Median`. Blur & Sharpen: Gaussian Blur `ADBE Gaussian Blur 2` (Blurriness 0 to 30000, Repeat Edge Pixels), Fast Box Blur `ADBE Box Blur2`, Camera Lens Blur `ADBE Camera Lens Blur`, Sharpen `ADBE Sharpen`, Unsharp Mask `ADBE Unsharp Mask2`. Colour: Channel Mixer `ADBE CHANNEL MIXER` (Red-Red and the rest, -200 to 200), Levels `ADBE Easy Levels2`, Levels (Individual Controls) `ADBE Pro Levels2`, Curves `ADBE CurvesCustom`, Color Balance `ADBE Color Balance 2`, Gamma/Pedestal/Gain `ADBE Gamma/Pedestal/Gain2`, Photo Filter `ADBE PhotoFilterPS`, CC Color Neutralizer `CS Color Neutralizer`, Lumetri Color `ADBE Lumetri`. Matte: Simple Choker, Matte Choker, Set Matte `ADBE Set Matte3`. There is no light-wrap effect. `effect.describe` reads every property and range; the menus' item names are not exposed for these, only their numbers.
+I2. **Add Grain shows nothing until its Viewing Mode is set.** Viewing Mode 1 (the default) is Preview: grain only inside a 200 × 200 preview box, a region elsewhere reads none. Mode 2 renders black (the blending matte). Mode 3 is Final Output. Set `Viewing Mode` to 3.
+I3. **How much grain each effect gives** (a flat 0.2 grey, frames 0 and 1): Noise at Amount of Noise 2, 5, 10 % read 1.8, 4.4, 8.9 steps in a frame and 1.1, 4.2, 7.3 between frames; it changes every frame. Add Grain (mode 3) at Intensity 0.5, 1, 2 read 0.9, 1.6, 3.1 steps in a frame and 2.1, 4.2, 8.4 between frames: its grain is coarser than a pixel, so the in-frame number understates it. Size 2 at Intensity 1 read 1.0 in a frame and 8.4 between frames.
+I4. **How wide Gaussian Blur makes an edge**: Blurriness 2, 5, 10, 20 gave edge widths of 1.6, 3.8, 7.8 and 14.3 px, about 0.75 × Blurriness (a hard edge reads 0.8). So for a target width w, start at Blurriness 1.3 w and measure.
+I5. **The picture eval's plate** (Gaussian Blur 6, then Noise 6 %) measured an edge width of 4.7 px and grain of 5.42 steps in a frame and 4.19 between frames. The same two effects on the clean element gave 4.74 px and 4.19: matched. Add Grain at Intensity 1.2 in their place gave 2.1 between frames, half the plate's; matching Noise with Add Grain needs about twice the intensity, then measure.
+I6. **The room's light on a cut-out** (the fresh-session take, a person under lavender office light, cut out and put over navy): three white surfaces in the take before the cut read a* +11.8 to +15.0 and b* -8.4 to -11.3 (wall, chair back, poster mat), and the microphone's metal grille, inside the cut-out, a* +9.6, b* -2.0: a magenta-blue cast. The forehead read a hue angle of 11° and the cheek 8°, against about 40 to 65° for skin of many tones under neutral light: pink. Channel Mixer at Red-Red 90, Green-Green 105, Blue-Blue 88 (the mean of the three surfaces' gains, two frames each) on the cut-out alone took the wall to a* -0.2, b* -1.5 and the poster mat to about 0, 0 (checked on the take with the same effect), the forehead to 39°, the cheek to 24° and the grille to a* +1.9, b* +3.5. One take, one correction; whether it looks right is the user's call.
+
+### Recipes
+
+Each starts by measuring both sides and ends by measuring again with the same regions and frames. Change the element, never the plate.
+
+1. **Match softness.** Read both edge widths. If the element's is under three quarters of the plate's, add Gaussian Blur to the element (Repeat Edge Pixels on for a full-frame element), Blurriness about 1.3 × (plate width - element width) to start (fact I4), and measure; adjust until within a quarter. Blur before grain: grain on a soft plate is not soft.
+2. **Match grain.** With two consecutive frames, read both `temporal` values. Add Noise (Amount of Noise about 1.2 × the plate's temporal steps, fact I3) or Add Grain (Viewing Mode 3, fact I2; Intensity about plate steps / 4.2) to the element, after the blur, and measure again over two consecutive frames. Grain that does not change between frames reads 0 between frames and looks like dirt on the lens. Compare `spatial` too: when the element's in-frame grain is far below the plate's at the same temporal grain, its grain is coarser; lower Add Grain's Size.
+3. **Seat the blacks.** Read the black point of the element's darkest part and of the plate's darkest part at the same depth (a shadow against a shadow, not a dark shirt against a lit wall). If the element's is lifted, lower it with Levels (Input Black) or Curves on the element; if deeper, raise Output Black. Then the white point the same way. Measure again; a crushed black reads 0 over a growing share (check `histogram`).
+4. **Take a room's light off a cut-out going over a designed background.** There is no plate to match, so match neutral. Measure, on the take before the cut, two or three surfaces that should be white or grey and are lit by the same light as the subject (a painted wall, a white chair back, a print's white border), with role `neutral`: their casts should agree; if one disagrees, it is not neutral, leave it out. A neutral inside the cut-out (a metal grille, a white shirt) is a check from the subject's side. Average their `cast.channelMixer` values, add Channel Mixer to the cut-out layer alone with those values, and measure again: the surfaces (with the same effect on a plain comp of the take) should read within about 2 of 0, 0, and skin (role `skin`) should move toward the usual range. Keep a before and an after frame for the user: a fully neutral result can look cold against a warm design, and how far to go is their call. Fact I6 is the measured case. Why these references are fair: they were lit by the same light as the subject and are meant to be neutral; skin's usual hue range alone is not enough, because skin varies, so it is a second check, not the reference.
+5. **Light wrap** (not verified in After Effects): the background's light bleeding over the element's edge. Duplicate the background layer above the element, blur it heavily (Gaussian Blur 30 to 60), and show it only in a thin band just inside the element's edge: a track matte from a precomp of the element whose alpha is the element's alpha minus a choked copy of it (Simple Choker, positive Choke Matte, on the copy). Blend with Screen or Add at low opacity. Measure the element's edge band with `sample` before and after: its colour should lean toward the background's, a few steps, not a halo; check with `edge` that the edge width did not grow.
+6. **Contact shadows**: step 8 above.
 
 ## Cutting a subject out with Object Matte
 

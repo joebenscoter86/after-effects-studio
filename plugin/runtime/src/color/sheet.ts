@@ -672,3 +672,623 @@ export function composeContactSheet(frames: DecodedPng[], opts: SheetOptions = {
 export function frameLabel(index: number, time: number | undefined): string {
   return time === undefined ? `#${index}` : `#${index} ${time.toFixed(3)}s`;
 }
+
+// ---------------------------------------------------------------------------
+// Sitting in the scene: grain, edge sharpness, black and white points and
+// colour of named regions (the `look` option of ae_render_frame)
+// ---------------------------------------------------------------------------
+
+/** What a region is, for the readings: a neutral surface, skin, the plate, or the element laid over it. */
+export type LookRole = "neutral" | "skin" | "plate" | "element";
+export const LOOK_ROLES: LookRole[] = ["neutral", "skin", "plate", "element"];
+
+export interface LookRegionSpec extends RegionSpec {
+  role?: LookRole;
+}
+
+export interface LookArgs {
+  regions: LookRegionSpec[];
+  /** Element regions measured against plate regions, by name. */
+  pairs?: Array<{ element: string; plate: string }>;
+  /** Smallest luma step (0..1) counted as an edge. Default 0.1. */
+  minContrast?: number;
+  /** An element whose grain or edge width is within this share of the plate's matches it. Default 0.25. */
+  grainTolerance?: number;
+  sharpnessTolerance?: number;
+}
+
+/**
+ * Starting points, not measured judgments: a quarter either way for grain and
+ * edge width; 0.02 (about five 8-bit steps) for black and white points; a
+ * CIELAB a* or b* of 2 as the smallest cast called a cast (a colour
+ * difference of about 2 is near the threshold of seeing one side by side).
+ */
+export const LOOK_DEFAULTS = {
+  minContrast: 0.1,
+  grainTolerance: 0.25,
+  sharpnessTolerance: 0.25,
+  levelTolerance: 0.02,
+  castAbove: 2,
+  /** Pixels at or above this alpha count as the element when the frame has alpha. */
+  opaque: 0.98,
+  /** Half-length of the profile read across an edge, px: edges up to about 10 px wide (sigma 4). */
+  edgeReach: 12,
+  /** Profiles are the mean of this many neighbouring lines. */
+  edgeLines: 5,
+  /** Skin hue angle (CIELAB h, degrees) commonly reported for skin of many tones under neutral light. */
+  skinHue: [40, 65] as [number, number],
+};
+
+export interface Lab {
+  L: number;
+  a: number;
+  b: number;
+  chroma: number;
+  /** CIELAB hue angle h, degrees 0..360 (0 red-magenta, 90 yellow, 180 green, 270 blue). */
+  hue: number;
+}
+
+const srgbToLinear = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+const labF = (t: number) => (t > (6 / 29) ** 3 ? Math.cbrt(t) : t / (3 * (6 / 29) ** 2) + 4 / 29);
+
+/** CIELAB (D65) of an sRGB colour given as display values 0..1. */
+export function labOf(rgb: Rgb): Lab {
+  const [r, g, b] = rgb.map((v) => srgbToLinear(Math.min(1, Math.max(0, v))));
+  const x = (0.4124564 * r + 0.3575761 * g + 0.1804375 * b) / 0.95047;
+  const y = 0.2126729 * r + 0.7151522 * g + 0.072175 * b;
+  const z = (0.0193339 * r + 0.119192 * g + 0.9503041 * b) / 1.08883;
+  const fx = labF(x);
+  const fy = labF(y);
+  const fz = labF(z);
+  const L = 116 * fy - 16;
+  const A = 500 * (fx - fy);
+  const B = 200 * (fy - fz);
+  const hue = ((Math.atan2(B, A) * 180) / Math.PI + 360) % 360;
+  const r2 = (v: number) => Math.round(v * 100) / 100;
+  return {
+    L: r2(L),
+    a: r2(A),
+    b: r2(B),
+    chroma: r2(Math.hypot(A, B)),
+    hue: Math.round(hue * 10) / 10,
+  };
+}
+
+const luma = (c: Rgb | number[]) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+
+/**
+ * Per-channel gains on the display values that make `rgb` neutral at its
+ * own luma: equal values read a* = b* = 0 whatever the encoding.
+ */
+export function neutralGains(rgb: Rgb): Rgb {
+  const k = luma(rgb);
+  return rgb.map((v) => (v > 0 ? k / v : 1)) as Rgb;
+}
+
+/** The region's pixels, straight colour, element pixels only when the frame has alpha. */
+export interface LookCrop {
+  rect: PixelRect;
+  width: number;
+  height: number;
+  rgb: Float64Array;
+  /** 1 where the pixel counts (opaque enough, or no alpha), else 0. */
+  use: Uint8Array;
+}
+
+function cropOf(img: DecodedPng, rect: PixelRect, opaque: number): LookCrop {
+  const { x, y, width, height } = rect;
+  const rgb = new Float64Array(width * height * 3);
+  const use = new Uint8Array(width * height);
+  for (let j = 0; j < height; j++)
+    for (let i = 0; i < width; i++) {
+      const p = (y + j) * img.width + (x + i);
+      const q = j * width + i;
+      for (let c = 0; c < 3; c++) rgb[q * 3 + c] = img.rgb[p * 3 + c];
+      use[q] = !img.alpha || img.alpha[p] >= opaque ? 1 : 0;
+    }
+  return { rect, width, height, rgb, use };
+}
+
+/** Every region's crop, for the frame-to-frame grain (and kept small: regions only). */
+export function lookCrops(img: DecodedPng, args: LookArgs): Map<string, LookCrop> {
+  const out = new Map<string, LookCrop>();
+  for (const r of args.regions) {
+    const clip = clipRegion(img, r);
+    if (clip) out.set(r.name, cropOf(img, clip.rect, LOOK_DEFAULTS.opaque));
+  }
+  return out;
+}
+
+const MAD_TO_SD = 1.4826;
+
+function median(v: number[]): number {
+  if (!v.length) return NaN;
+  const s = v.slice().sort((a, b) => a - b);
+  const m = s.length >> 1;
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+
+function percentile(v: number[], p: number): number {
+  if (!v.length) return NaN;
+  const s = v.slice().sort((a, b) => a - b);
+  return s[Math.min(s.length - 1, Math.max(0, Math.round((p / 100) * (s.length - 1))))];
+}
+
+/**
+ * Standard deviation of `v` with outliers left out: values further from the
+ * median than four robust spreads (1.4826 x the median absolute deviation),
+ * or three 8-bit steps when that is wider, do not count. The plain median
+ * absolute deviation is too coarse on 8-bit values at one or two steps of
+ * grain; trimming keeps an edge through the region from counting as grain.
+ */
+const robustSd = (v: number[]) => {
+  const m = median(v);
+  const band = Math.max(4 * MAD_TO_SD * median(v.map((x) => Math.abs(x - m))), 3 / 255);
+  let n = 0;
+  let sum = 0;
+  let sq = 0;
+  for (const x of v)
+    if (Math.abs(x - m) <= band) {
+      n++;
+      sum += x;
+      sq += x * x;
+    }
+  if (n < 2) return 0;
+  const mean = sum / n;
+  return Math.sqrt(Math.max(0, sq / n - mean * mean));
+};
+
+const steps = (v: number) => Math.round(v * 255 * 100) / 100;
+
+/**
+ * Grain in one frame, per channel, in 8-bit steps: the robust spread of each
+ * pixel minus the mean of its 3 x 3 neighbourhood, scaled so white grain of
+ * standard deviation s reads s. The median absolute deviation keeps an edge
+ * through the region from counting as grain.
+ */
+function spatialGrain(c: LookCrop): Rgb {
+  const out: number[] = [];
+  const scale = 1 / Math.sqrt(8 / 9);
+  for (let ch = 0; ch < 3; ch++) {
+    const res: number[] = [];
+    for (let y = 1; y < c.height - 1; y += 1)
+      for (let x = 1; x < c.width - 1; x += 1) {
+        let ok = true;
+        let sum = 0;
+        for (let dy = -1; dy <= 1 && ok; dy++)
+          for (let dx = -1; dx <= 1; dx++) {
+            const q = (y + dy) * c.width + (x + dx);
+            if (!c.use[q]) {
+              ok = false;
+              break;
+            }
+            sum += c.rgb[q * 3 + ch];
+          }
+        if (!ok) continue;
+        res.push(c.rgb[(y * c.width + x) * 3 + ch] - sum / 9);
+      }
+    out.push(res.length ? steps(robustSd(res) * scale) : NaN);
+  }
+  return out as Rgb;
+}
+
+/**
+ * Grain between two frames of the same region, per channel, in 8-bit steps:
+ * the robust spread of the frame difference over the square root of two. A
+ * still element reads 0; grain that changes every frame reads its size.
+ */
+export function temporalGrain(a: LookCrop, b: LookCrop): Rgb | null {
+  if (a.width !== b.width || a.height !== b.height) return null;
+  const out: number[] = [];
+  for (let ch = 0; ch < 3; ch++) {
+    const d: number[] = [];
+    for (let q = 0; q < a.use.length; q++)
+      if (a.use[q] && b.use[q]) d.push(b.rgb[q * 3 + ch] - a.rgb[q * 3 + ch]);
+    if (!d.length) return null;
+    out.push(steps(robustSd(d) / Math.SQRT2));
+  }
+  return out as Rgb;
+}
+
+/**
+ * Edge width: across each edge with a luma step of at least `minContrast`,
+ * the distance from 10% to 90% of the step, read on the mean of `edgeLines`
+ * neighbouring lines, horizontally and vertically. A hard step reads about
+ * 0.8 px; a Gaussian blur of sigma s about 2.56 s. Median over the edges.
+ */
+function edgeWidths(c: LookCrop, minContrast: number): { edgeWidth: number | null; edges: number } {
+  const R = LOOK_DEFAULTS.edgeReach;
+  const half = LOOK_DEFAULTS.edgeLines >> 1;
+  const Y = new Float64Array(c.width * c.height);
+  for (let q = 0; q < Y.length; q++)
+    Y[q] = c.use[q] ? luma([c.rgb[q * 3], c.rgb[q * 3 + 1], c.rgb[q * 3 + 2]]) : NaN;
+  const widths: number[] = [];
+  const scan = (along: number, across: number, at: (u: number, v: number) => number) => {
+    // `u` runs along the profile, `v` across the lines averaged.
+    for (let v = half; v < across - half; v += 2) {
+      const prof = (u: number) => {
+        let s = 0;
+        for (let k = -half; k <= half; k++) s += at(u, v + k);
+        return s / (2 * half + 1);
+      };
+      let u = R;
+      while (u < along - R - 1) {
+        const d = Math.abs(prof(u + 1) - prof(u));
+        const span = prof(u + R + 1) - prof(u - R);
+        if (!Number.isFinite(d) || !Number.isFinite(span) || Math.abs(span) < minContrast) {
+          u++;
+          continue;
+        }
+        // The steepest step within reach is the edge's centre.
+        let best = u;
+        let bestD = d;
+        for (let w = Math.max(R, u - R); w <= Math.min(along - R - 2, u + R); w++) {
+          const dw = Math.abs(prof(w + 1) - prof(w));
+          if (dw > bestD) {
+            best = w;
+            bestD = dw;
+          }
+        }
+        if (best !== u) {
+          u = best > u ? best : u + 1;
+          continue;
+        }
+        const p: number[] = [];
+        for (let k = -R; k <= R + 1; k++) p.push(prof(u + k));
+        const lo = (p[0] + p[1]) / 2;
+        const hi = (p[p.length - 1] + p[p.length - 2]) / 2;
+        if (Math.abs(hi - lo) >= minContrast * 0.8) {
+          const q = p.map((x) => (x - lo) / (hi - lo));
+          const cross = (t: number) => {
+            for (let k = 1; k < q.length; k++)
+              if (q[k] >= t) return k - 1 + (t - q[k - 1]) / (q[k] - q[k - 1] || 1);
+            return NaN;
+          };
+          const wdt = cross(0.9) - cross(0.1);
+          if (Number.isFinite(wdt) && wdt > 0) widths.push(wdt);
+        }
+        u += R;
+      }
+    }
+  };
+  scan(c.width, c.height, (u, v) => Y[v * c.width + u]);
+  scan(c.height, c.width, (u, v) => Y[u * c.width + v]);
+  if (widths.length < 3) return { edgeWidth: null, edges: widths.length };
+  return { edgeWidth: Math.round(median(widths) * 100) / 100, edges: widths.length };
+}
+
+export interface LookLevels {
+  /** 0.5th and 99.5th percentiles per channel, 0..1. */
+  black: Rgb;
+  white: Rgb;
+  mean: Rgb;
+  lumaBlack: number;
+  lumaWhite: number;
+  lumaMean: number;
+}
+
+function levelsOf(c: LookCrop): LookLevels {
+  const ch: number[][] = [[], [], []];
+  const Ys: number[] = [];
+  for (let q = 0; q < c.use.length; q++) {
+    if (!c.use[q]) continue;
+    const px: Rgb = [c.rgb[q * 3], c.rgb[q * 3 + 1], c.rgb[q * 3 + 2]];
+    for (let k = 0; k < 3; k++) ch[k].push(px[k]);
+    Ys.push(luma(px));
+  }
+  const mean = ch.map((v) => v.reduce((s, x) => s + x, 0) / (v.length || 1)) as Rgb;
+  return {
+    black: r4rgb(ch.map((v) => percentile(v, 0.5)) as Rgb),
+    white: r4rgb(ch.map((v) => percentile(v, 99.5)) as Rgb),
+    mean: r4rgb(mean),
+    lumaBlack: r4(percentile(Ys, 0.5)),
+    lumaWhite: r4(percentile(Ys, 99.5)),
+    lumaMean: r4(luma(mean)),
+  };
+}
+
+export interface LookRegionReport {
+  name: string;
+  role: LookRole | null;
+  rect: PixelRect;
+  clipped: boolean;
+  /** Pixels measured: opaque ones only when the frame has alpha. */
+  pixels: number;
+  levels: LookLevels;
+  /** Per channel, in 8-bit steps (one step is 1/255). */
+  grain: { spatial: Rgb };
+  sharpness: { edgeWidth: number | null; edges: number };
+  /** CIELAB of the region's mean colour. */
+  colour: Lab;
+  cast?: {
+    a: number;
+    b: number;
+    amount: number;
+    toward: string | null;
+    gains: Rgb;
+    channelMixer: { "Red-Red": number; "Green-Green": number; "Blue-Blue": number };
+  };
+  reading?: string;
+}
+
+const signed = (v: number) => `${v >= 0 ? "+" : ""}${v.toFixed(1)}`;
+
+/** The direction of a cast from CIELAB a* and b*, larger first; null under `castAbove`. */
+function castWords(a: number, b: number): string | null {
+  const parts: Array<[number, string]> = [];
+  if (Math.abs(a) >= LOOK_DEFAULTS.castAbove)
+    parts.push([Math.abs(a), a > 0 ? "magenta" : "green"]);
+  if (Math.abs(b) >= LOOK_DEFAULTS.castAbove) parts.push([Math.abs(b), b > 0 ? "yellow" : "blue"]);
+  if (!parts.length) return null;
+  return parts
+    .sort((x, y) => y[0] - x[0])
+    .map((p) => p[1])
+    .join(" and ");
+}
+
+function roleReading(
+  name: string,
+  role: LookRole | null,
+  lab: Lab,
+  levels: LookLevels,
+  rep: LookRegionReport,
+) {
+  if (role === "neutral") {
+    const toward = castWords(lab.a, lab.b);
+    const gains = neutralGains(levels.mean);
+    const mix = (g: number) => Math.round(g * 100);
+    rep.cast = {
+      a: lab.a,
+      b: lab.b,
+      amount: lab.chroma,
+      toward,
+      gains: [r4(gains[0]), r4(gains[1]), r4(gains[2])],
+      channelMixer: {
+        "Red-Red": mix(gains[0]),
+        "Green-Green": mix(gains[1]),
+        "Blue-Blue": mix(gains[2]),
+      },
+    };
+    rep.reading = toward
+      ? `${name} reads a* ${signed(lab.a)}, b* ${signed(lab.b)} (CIELAB): a cast toward ${toward} of ${lab.chroma.toFixed(1)}, if the surface is really neutral; a neutral reads 0, 0, and under about 2 is hard to see. ` +
+        `Gains on the display values that make it neutral at its own brightness: red ${rep.cast.gains[0]}, green ${rep.cast.gains[1]}, blue ${rep.cast.gains[2]} (Channel Mixer Red-Red ${rep.cast.channelMixer["Red-Red"]}, Green-Green ${rep.cast.channelMixer["Green-Green"]}, Blue-Blue ${rep.cast.channelMixer["Blue-Blue"]}).`
+      : `${name} reads neutral: a* ${signed(lab.a)}, b* ${signed(lab.b)} (CIELAB; under about 2 is hard to see).`;
+  } else if (role === "skin") {
+    const [lo, hi] = LOOK_DEFAULTS.skinHue;
+    const h = lab.hue > 270 ? lab.hue - 360 : lab.hue;
+    const where =
+      h < lo
+        ? `below the usual range, so it leans to magenta (pink); ${(lo - h).toFixed(0)}° short of ${lo}°`
+        : h > hi
+          ? `above the usual range, so it leans to yellow; ${(h - hi).toFixed(0)}° past ${hi}°`
+          : "inside the usual range";
+    rep.reading = `${name} (skin) has a hue angle of ${h.toFixed(0)}° and chroma ${lab.chroma.toFixed(1)} (CIELAB): ${where}. Skin of many tones commonly reads about ${lo} to ${hi}° under neutral light; that range is a general reference, not measured on this footage, so judge it against a neutral in the same light as well.`;
+  }
+}
+
+export interface LookPairReport {
+  element: string;
+  plate: string;
+  grain: { element: number; plate: number; ratio: number | null; matches: boolean | null };
+  sharpness: {
+    element: number | null;
+    plate: number | null;
+    ratio: number | null;
+    matches: boolean | null;
+  };
+  levels: { blackDifference: number; whiteDifference: number };
+  readings: string[];
+}
+
+const meanOf = (v: number[]) => v.reduce((s, x) => s + x, 0) / v.length;
+
+/** An element region against its plate: grain, edge width, black and white points, with what to do. */
+export function compareLook(
+  element: Pick<LookRegionReport, "name" | "grain" | "sharpness" | "levels">,
+  plate: Pick<LookRegionReport, "name" | "grain" | "sharpness" | "levels">,
+  tol: { grain?: number; sharpness?: number } = {},
+): LookPairReport {
+  const gt = tol.grain ?? LOOK_DEFAULTS.grainTolerance;
+  const st = tol.sharpness ?? LOOK_DEFAULTS.sharpnessTolerance;
+  const eg = meanOf(element.grain.spatial);
+  const pg = meanOf(plate.grain.spatial);
+  const gRatio = pg > 0 ? Math.round((eg / pg) * 100) / 100 : null;
+  const gMatch = gRatio === null ? null : Math.abs(gRatio - 1) <= gt;
+  const ew = element.sharpness.edgeWidth;
+  const pw = plate.sharpness.edgeWidth;
+  const sRatio = ew !== null && pw !== null && pw > 0 ? Math.round((ew / pw) * 100) / 100 : null;
+  const sMatch = sRatio === null ? null : Math.abs(sRatio - 1) <= st;
+  const bd = r4(element.levels.lumaBlack - plate.levels.lumaBlack);
+  const wd = r4(element.levels.lumaWhite - plate.levels.lumaWhite);
+  const readings: string[] = [];
+  const e = element.name;
+  if (gRatio !== null && !gMatch)
+    readings.push(
+      gRatio < 1
+        ? `${e} is cleaner than the plate: add grain (grain ${eg.toFixed(2)} against ${pg.toFixed(2)} 8-bit steps).`
+        : `${e} is grainier than the plate: take grain out or add less (${eg.toFixed(2)} against ${pg.toFixed(2)} 8-bit steps).`,
+    );
+  if (sRatio !== null && !sMatch)
+    readings.push(
+      sRatio < 1
+        ? `${e} is sharper than the plate: soften it (edges ${ew} px against ${pw} px wide, 10 to 90%).`
+        : `${e} is softer than the plate: sharpen it, or soften the plate's match less (edges ${ew} px against ${pw} px).`,
+    );
+  // Black and white points compare only when both regions hold the darkest (or brightest) part of their picture.
+  const deepest = "if both regions hold the deepest shadow of their picture";
+  const brightest = "if both regions hold the brightest highlight of their picture";
+  if (Math.abs(bd) > LOOK_DEFAULTS.levelTolerance)
+    readings.push(
+      bd > 0
+        ? `${e}'s blacks are lifted against the plate's (${element.levels.lumaBlack} against ${plate.levels.lumaBlack}): ${deepest}, seat them lower.`
+        : `${e}'s blacks are deeper than the plate's (${element.levels.lumaBlack} against ${plate.levels.lumaBlack}): ${deepest}, lift them.`,
+    );
+  if (Math.abs(wd) > LOOK_DEFAULTS.levelTolerance)
+    readings.push(
+      wd > 0
+        ? `${e}'s whites are brighter than the plate's (${element.levels.lumaWhite} against ${plate.levels.lumaWhite}): ${brightest}, bring them down.`
+        : `${e}'s whites are duller than the plate's (${element.levels.lumaWhite} against ${plate.levels.lumaWhite}): ${brightest}, bring them up.`,
+    );
+  if (pw === null || ew === null)
+    readings.push(
+      "Edge width was not compared: one side has no edge strong enough to read; pick regions that each hold an edge.",
+    );
+  if (!readings.length)
+    readings.push(
+      `${e} matches the plate in grain, edge width and black and white points, within the tolerances.`,
+    );
+  return {
+    element: element.name,
+    plate: plate.name,
+    grain: {
+      element: Math.round(eg * 100) / 100,
+      plate: Math.round(pg * 100) / 100,
+      ratio: gRatio,
+      matches: gMatch,
+    },
+    sharpness: { element: ew, plate: pw, ratio: sRatio, matches: sMatch },
+    levels: { blackDifference: bd, whiteDifference: wd },
+    readings,
+  };
+}
+
+export interface LookFrame {
+  regions: Array<LookRegionReport | RegionError>;
+  pairs?: Array<LookPairReport | { element: string; plate: string; error: string }>;
+}
+
+/** Grain, edge width, black and white points and colour of each region, and each element against its plate. */
+export function measureLook(img: DecodedPng, args: LookArgs): LookFrame {
+  const minContrast = args.minContrast ?? LOOK_DEFAULTS.minContrast;
+  const regions = args.regions.map((r): LookRegionReport | RegionError => {
+    const clip = clipRegion(img, r);
+    if (!clip) return outside(img, r);
+    const c = cropOf(img, clip.rect, LOOK_DEFAULTS.opaque);
+    let pixels = 0;
+    for (const u of c.use) pixels += u;
+    if (!pixels) return { name: r.name, error: "no opaque pixels in the region" };
+    const levels = levelsOf(c);
+    const colour = labOf(levels.mean);
+    const rep: LookRegionReport = {
+      name: r.name,
+      role: r.role ?? null,
+      rect: clip.rect,
+      clipped: clip.clipped,
+      pixels,
+      levels,
+      grain: { spatial: spatialGrain(c) },
+      sharpness: edgeWidths(c, minContrast),
+      colour,
+    };
+    roleReading(r.name, r.role ?? null, colour, levels, rep);
+    return rep;
+  });
+  const out: LookFrame = { regions };
+  if (args.pairs?.length) {
+    const byName = new Map(regions.map((r) => [r.name, r]));
+    out.pairs = args.pairs.map((p) => {
+      const e = byName.get(p.element);
+      const pl = byName.get(p.plate);
+      if (!e || "error" in e || !pl || "error" in pl)
+        return {
+          element: p.element,
+          plate: p.plate,
+          error: "one side of the pair could not be measured",
+        };
+      return compareLook(e, pl, { grain: args.grainTolerance, sharpness: args.sharpnessTolerance });
+    });
+  }
+  return out;
+}
+
+export interface LookSeries {
+  regions: Array<{ name: string; temporal: Rgb | null; pairs: number }>;
+  pairs?: Array<{
+    element: string;
+    plate: string;
+    element_temporal: number | null;
+    plate_temporal: number | null;
+    readings: string[];
+  }>;
+}
+
+/** Frame-to-frame grain of each region over consecutive frames (crops from lookCrops, in order). */
+export function summarizeLookSeries(
+  frames: Array<Map<string, LookCrop>>,
+  args: LookArgs,
+): LookSeries {
+  const regions = args.regions.map((r) => {
+    const per: Rgb[] = [];
+    for (let i = 1; i < frames.length; i++) {
+      const a = frames[i - 1].get(r.name);
+      const b = frames[i].get(r.name);
+      const t = a && b ? temporalGrain(a, b) : null;
+      if (t) per.push(t);
+    }
+    const temporal = per.length
+      ? ([0, 1, 2].map((k) => Math.round(median(per.map((p) => p[k])) * 100) / 100) as Rgb)
+      : null;
+    return { name: r.name, temporal, pairs: per.length };
+  });
+  const out: LookSeries = { regions };
+  if (args.pairs?.length) {
+    const by = new Map(regions.map((r) => [r.name, r]));
+    out.pairs = args.pairs.map((p) => {
+      const et = by.get(p.element)?.temporal;
+      const pt = by.get(p.plate)?.temporal;
+      const e = et ? Math.round(meanOf(et) * 100) / 100 : null;
+      const pl = pt ? Math.round(meanOf(pt) * 100) / 100 : null;
+      const readings: string[] = [];
+      if (e !== null && pl !== null && pl > 0.3) {
+        if (e < pl * 0.25)
+          readings.push(
+            `${p.element}'s grain does not change from frame to frame and the plate's does (${e} against ${pl} 8-bit steps): animate the grain.`,
+          );
+        else if (Math.abs(e / pl - 1) > (args.grainTolerance ?? LOOK_DEFAULTS.grainTolerance))
+          readings.push(
+            `${p.element}'s frame-to-frame grain is ${e} against the plate's ${pl} 8-bit steps.`,
+          );
+      }
+      return {
+        element: p.element,
+        plate: p.plate,
+        element_temporal: e,
+        plate_temporal: pl,
+        readings,
+      };
+    });
+  }
+  return out;
+}
+
+/** A message naming the field, or null when `look` is usable. */
+export function lookArgsError(args: Record<string, unknown>): string | null {
+  const regions = args.regions;
+  if (!Array.isArray(regions) || regions.length === 0 || regions.length > 64)
+    return "`look.regions` must list 1 to 64 regions";
+  const names = new Set<string>();
+  for (const r of regions as Array<Record<string, unknown>>) {
+    if (typeof r?.name !== "string" || !r.name) return "every `look.regions` entry needs a name";
+    if (names.has(r.name)) return `\`look.regions\` names '${r.name}' twice`;
+    names.add(r.name);
+    if (typeof r.x !== "number" || typeof r.y !== "number")
+      return `\`look.regions\` '${r.name}' needs x and y`;
+    if (r.role !== undefined && !LOOK_ROLES.includes(r.role as LookRole))
+      return `\`look.regions\` '${r.name}' has role '${String(r.role)}'; use ${LOOK_ROLES.join(", ")}`;
+  }
+  if (args.pairs !== undefined) {
+    if (!Array.isArray(args.pairs)) return "`look.pairs` must be a list of { element, plate }";
+    for (const p of args.pairs as Array<Record<string, unknown>>) {
+      if (!names.has(String(p?.element)))
+        return `\`look.pairs\` names element '${String(p?.element)}', which is not a region`;
+      if (!names.has(String(p?.plate)))
+        return `\`look.pairs\` names plate '${String(p?.plate)}', which is not a region`;
+    }
+  }
+  for (const k of ["minContrast", "grainTolerance", "sharpnessTolerance"]) {
+    const v = args[k];
+    if (v !== undefined && (typeof v !== "number" || !(v > 0) || v > 1))
+      return `\`look.${k}\` must be a number above 0 and at most 1`;
+  }
+  return null;
+}

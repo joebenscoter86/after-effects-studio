@@ -28,7 +28,7 @@ const docs = [
  ['scripting','Native AE scripting and build pitfalls','references/scripting.md','guidance'],
  ['quality','Visual review and delivery checks','references/quality.md','guidance'],
  ['review','Review by someone who did not build the piece','references/review.md','guidance'],
- ['keying','Green-screen keying and compositing procedure','references/keying.md','guidance'],
+ ['keying','Keying, compositing and sitting an element in its scene','references/keying.md','guidance'],
  ['scene-recipes','Seven explanatory scene recipes','recipes/recipes.md','recipes'],
  ['joeb-preset','Optional JoeB paper navy vermilion preset','presets/joeb.md','preset'],
  ['motion-jsx','Portable brand-neutral motion helpers','scripts/motion.jsx','code'],

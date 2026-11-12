@@ -31,7 +31,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { FINISH, GRADE, KEYING, OVER, REVIEW, SCENES } from './scenes.mjs';
+import { FINISH, GRADE, KEYING, OVER, REVIEW, SCENES, SEAT } from './scenes.mjs';
 
 export const THRESHOLDS = {
   keying: [
@@ -100,6 +100,16 @@ export const THRESHOLDS = {
     { id: 'stray', max: 2, unit: 'findings', what: 'findings that match no planted defect',
       why: 'the comp has nothing else wrong that the setup put there; two extras allow a reviewer to name a real nit the setup did not plan, more means listing everything, which a review must not pass by', source: 'the scene as built (scenes.mjs REVIEW); the stage 2 brief', guess: true },
   ],
+  seat: [
+    { id: 'grain-match', min: 0.75, max: 1.25, unit: 'x plate', what: 'element frame-to-frame grain over the plate\'s (look, mean of channels, frames 0 and 1)',
+      why: 'grain that changes every frame is what a viewer sees; within a quarter is the look option\'s own default tolerance. A clean element reads 0; Noise at the plate\'s amount reads 1.0 (After Effects 27.0, 2026-11-12)', source: 'SEAT.expected; keying.md, integration facts', guess: true },
+    { id: 'softness-match', min: 0.75, max: 1.25, unit: 'x plate', what: 'element edge width over the plate\'s (look sharpness, 10 to 90% rise, frame 0)',
+      why: 'the element\'s stripe edges against the plate\'s panel edge; within a quarter is the look option\'s default tolerance. The sharp element reads 0.17; Gaussian Blur at the plate\'s Blurriness reads 1.01 (After Effects 27.0)', source: 'SEAT.expected; keying.md, integration facts', guess: true },
+    { id: 'plate-untouched', max: 0.2, unit: 'share', what: 'larger relative change of the plate\'s edge width and frame-to-frame grain from what the built plate measured',
+      why: 'the task changes the element, not the plate; a fifth allows render-to-render variation in grain', source: 'SEAT.expected (measured on the built scene)', guess: true },
+    { id: 'element-kept', max: 0.04, unit: 'luma', what: 'change of the element region\'s mean luma from the built element',
+      why: 'grain and blur leave the mean where it was (+0.004 measured); hiding, fading or recolouring the element moves it', source: 'SEAT.expected', guess: true },
+  ],
 };
 
 /** The scored check ids of an eval, in verdict order ("<eval>.<check>"). */
@@ -112,6 +122,7 @@ export const EVALS = {
   over: { scene: OVER, setup: 'over-still.jsx', renders: ['glow-still.png', 'over-reference_0.png'] },
   finish: { scene: FINISH, setup: 'finish-check.jsx', renders: [], findings: 'findings.json' },
   review: { scene: REVIEW, setup: 'review-plate.jsx', renders: [], findings: 'findings.json', encoded: true },
+  seat: { scene: SEAT, setup: 'seat-plate.jsx', renders: SEAT.gradeFrames.map((_, i) => `seat_${i}.png`) },
 };
 
 /** Import the plugin's measuring modules from a runtime dist folder. */
@@ -268,6 +279,46 @@ export function gradeGrade(images, rt) {
   const share = (bin) => Math.max(...['r', 'g', 'b'].map((c) => h[c][bin] / h.pixels));
   checks.push(result('grade', T['no-crush'], share(0)));
   checks.push(result('grade', T['no-clip'], share(31)));
+  return { setup: [], checks };
+}
+
+// ---------------------------------------------------------------------------
+// Sit an element in its plate
+// ---------------------------------------------------------------------------
+
+/** images.frames: the seat comp at gradeFrames (two consecutive frames), rendered as it composites (channels 'rgb'). */
+export function gradeSeat(images, rt) {
+  const T = table('seat');
+  const scene = SEAT;
+  const frames = images.frames ?? [];
+  for (const [i, f] of scene.gradeFrames.entries()) {
+    const e = sizeError(frames[i], scene, `seat_${i}`);
+    if (e) return allFailed('seat', e);
+  }
+  const look = {
+    regions: [
+      { name: 'plate', ...scene.regions.plate, role: 'plate' },
+      { name: 'element', ...scene.regions.element, role: 'element' },
+    ],
+  };
+  const first = rt.sheet.measureLook(frames[0], look);
+  const series = rt.sheet.summarizeLookSeries(frames.map((f) => rt.sheet.lookCrops(f, look)), look);
+  const by = (list, n) => list.find((r) => r.name === n);
+  const mean3 = (v) => (v ? (v[0] + v[1] + v[2]) / 3 : NaN);
+  const pt = mean3(by(series.regions, 'plate').temporal);
+  const et = mean3(by(series.regions, 'element').temporal);
+  const pr = by(first.regions, 'plate');
+  const er = by(first.regions, 'element');
+  const pw = pr.sharpness?.edgeWidth ?? NaN;
+  const ew = er.sharpness?.edgeWidth ?? NaN;
+  const x = scene.expected;
+  const checks = [
+    result('seat', T['grain-match'], pt > 0 ? et / pt : NaN, `element ${fmt(et)} vs plate ${fmt(pt)} 8-bit steps`),
+    result('seat', T['softness-match'], pw > 0 ? ew / pw : NaN, `element ${fmt(ew)} px vs plate ${fmt(pw)} px`),
+    result('seat', T['plate-untouched'], Math.max(Math.abs(pw / x.plate.edgeWidth - 1), Math.abs(pt / x.plate.temporalGrain - 1)),
+      `plate edge ${fmt(pw)} px (built ${x.plate.edgeWidth}), grain ${fmt(pt)} (built ${x.plate.temporalGrain})`),
+    result('seat', T['element-kept'], Math.abs((er.levels?.lumaMean ?? NaN) - x.element.lumaMean), `element mean luma ${fmt(er.levels?.lumaMean)} (built ${x.element.lumaMean})`),
+  ];
   return { setup: [], checks };
 }
 
@@ -485,6 +536,8 @@ export function renderPlan(name, dir) {
     ];
   } else if (name === 'grade') {
     calls = [`ae_render_frame { compNameOrId: <gradeComp id>, frames: [${GRADE.gradeFrame}], outPath: ${f('grade.png')} }`];
+  } else if (name === 'seat') {
+    calls = [`ae_render_frame { compNameOrId: <seatComp id>, frames: [${SEAT.gradeFrames.join(', ')}], outPath: ${f('seat.png')} }`];
   } else {
     calls = [
       `(your reusable still of the glow, written by you to ${f('glow-still.png')})`,
@@ -532,6 +585,7 @@ export async function gradeDir(name, dir, rt) {
     return gradeKeying({ source, keyed }, rt);
   }
   if (name === 'grade') return gradeGrade({ frame: await read(EVALS.grade.renders[0]) }, rt);
+  if (name === 'seat') return gradeSeat({ frames: await Promise.all(EVALS.seat.renders.map(read)) }, rt);
   if (name === 'finish') {
     let findings = null;
     try { findings = JSON.parse(await fs.readFile(path.join(dir, EVALS.finish.findings), 'utf8')); } catch { findings = null; }
