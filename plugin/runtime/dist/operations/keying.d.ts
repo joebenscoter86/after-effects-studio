@@ -322,5 +322,69 @@ export declare function useCutoutJsx(args: {
     item?: number;
     startTime?: number;
 }): string;
+/**
+ * Look C of keying.md fact 39, the user's choice for a person: Base Refine
+ * Edge Radius 8, Smooth 0, Chatter Reduction 2, Decontaminate Edge Colors on
+ * both copies. The region is everything above a line; by default that line
+ * sits `regionDepth` of the comp's height under the lowest top of the subject
+ * on the frames sampled (on the half-size take: tops 776 to 792, line 1022,
+ * where the hair ends at the temples). Feather 60 px, as measured.
+ */
+export declare const SOFT_EDGE_DEFAULTS: {
+    radius: number;
+    smooth: number;
+    chatterReduction: number;
+    decontaminate: boolean;
+    feather: number;
+    regionDepth: number;
+    samples: number;
+    /** The closing check: a pixel solid in the matte as clicked and more than this far inside its edge must stay solid. */
+    deep: number;
+    /** Matte more than this far outside the outline as clicked counts as spread (a smear). */
+    outside: number;
+    /** Spread pixels allowed before the build is undone (look C left 0 to 12 px on the take; look D's smear was 156). */
+    outsideLimit: number;
+    /** Face colour against the matte as clicked, CIELAB difference allowed. */
+    colourLimit: number;
+};
+export declare const SOFT_EDGE_COST = "The soft edge is two copies of the matte, so After Effects computes Object Matte twice for every frame: a render takes about twice as long and writes about twice the disk cache (subject.render_cutout counts both).";
+/** The region's lower line: given, or `regionDepth` of the comp's height under the lowest top of the subject. */
+export declare function softRegionBottom(tops: number[], compHeight: number, given?: number): number;
+/**
+ * JSX: build the soft edge of fact 38. Two duplicates of the matted layer
+ * (both keep the selections): the upper with Refine Edge, the lower as
+ * clicked, each with Decontaminate Edge Colors when asked and its sound off;
+ * one solid with a feathered mask over the region, the upper copy's Alpha
+ * matte and the lower's Alpha Inverted matte (applied after the effects, so
+ * the two add up to one); the upper copy in Alpha Add; the three precomposed
+ * into "<layer> soft edge", placed above the matted layer, which is switched
+ * off and otherwise untouched (it keeps the sound).
+ */
+export declare function softenBuildJsx(args: {
+    comp: unknown;
+    layer: unknown;
+    radius: number;
+    smooth: number;
+    chatterReduction: number;
+    decontaminate: boolean;
+    regionBottom: number;
+    feather: number;
+}): string;
+/** JSX: remove what softenBuildJsx made and switch the matted layer back as it was. */
+export declare function softenUndoJsx(args: {
+    comp: unknown;
+    layer: unknown;
+}): string;
+export interface SoftenIO {
+    status(): Promise<Json>;
+    render(args: Record<string, unknown>): Promise<Json>;
+    readImage(file: string): Promise<DecodedPng>;
+    execute(code: string, opts: {
+        label: string;
+        timeoutMs?: number;
+    }): Promise<Json>;
+    freeBytes?: (dir: string) => Promise<number | null>;
+}
+export declare function runSoftenEdge(args: Record<string, unknown>, io: SoftenIO): Promise<Json>;
 export {};
 //# sourceMappingURL=keying.d.ts.map

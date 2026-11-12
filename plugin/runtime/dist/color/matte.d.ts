@@ -418,4 +418,47 @@ export interface SpeckPiece {
  * the erosion took (about 5.5 ms a 1080 x 1920 frame, 1.8 s for 320).
  */
 export declare function speckPieces(alpha: Float64Array, width: number, height: number, opts?: Partial<typeof SPECK_DEFAULTS>): SpeckPiece[];
+/** The top row of the subject (alpha 0.5 or more), or -1 when there is none. */
+export declare function subjectTop(alpha: Float64Array, width: number, height: number): number;
+/** The frame whose matte overlaps the reference (the click frame) least: where the subject has moved furthest. */
+export declare function furthestFrame(ref: Float64Array, others: Array<{
+    frame: number;
+    alpha: Float64Array;
+}>, width: number, height: number): {
+    frame: number;
+    overlap: number;
+};
+export interface CoverageReport {
+    /** Pixels solid in the matte as clicked, more than `deep` px inside its edge, that are under 0.99 in the result. */
+    seenThrough: number;
+    /** The lowest alpha of the result over those deep pixels (1 when nothing is seen through). */
+    minAlpha: number;
+    /** The rows the seen-through pixels span, or null. */
+    band: {
+        from: number;
+        to: number;
+    } | null;
+    /** Result pixels at `spreadAlpha` or more lying more than `outside` px outside the outline as clicked: a smear. */
+    outside: {
+        px: number;
+        box: {
+            x: number;
+            y: number;
+            width: number;
+            height: number;
+        } | null;
+    };
+    deep: number;
+    outsideDistance: number;
+}
+/**
+ * The closing check of subject.soften_edge, on one frame: nothing that was
+ * solid well inside the subject may become see-through (a seam, keying.md
+ * fact 38), and nothing may spread far outside the outline (a smear, fact 39).
+ */
+export declare function matteCoverage(asClicked: Float64Array, result: Float64Array, width: number, height: number, opts?: {
+    deep?: number;
+    outside?: number;
+    spreadAlpha?: number;
+}): CoverageReport;
 //# sourceMappingURL=matte.d.ts.map
