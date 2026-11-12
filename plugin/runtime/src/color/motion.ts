@@ -558,3 +558,161 @@ export function summarizeSeries(pairs: SeriesPair[], t: DiffThresholds): SeriesS
       : `${counts.join(", ")}: ${flags.map((f) => `${f.kind} at pair ${f.pairs.join("+")}`).join("; ")}`);
   return summary;
 }
+
+// ---------------------------------------------------------------------------
+// Where the picture moves: a map of mean change per cell, and lining two up
+// ---------------------------------------------------------------------------
+
+/** Mean absolute change of luma per cell over the pairs counted, row-major. */
+export interface MotionMap {
+  width: number;
+  height: number;
+  /** The cell's size in frame pixels. */
+  cell: number;
+  values: number[];
+}
+
+/** Luma averaged over cells of `cell` px: the picture a motion map is built from. */
+export function cellLuma(img: DecodedPng, cell: number): Float32Array {
+  const w = Math.ceil(img.width / cell);
+  const h = Math.ceil(img.height / cell);
+  const out = new Float32Array(w * h);
+  const n = new Float32Array(w * h);
+  for (let y = 0; y < img.height; y++) {
+    const row = Math.floor(y / cell) * w;
+    for (let x = 0; x < img.width; x++) {
+      const p = (y * img.width + x) * 3;
+      const k = row + Math.floor(x / cell);
+      out[k] += 0.2126 * img.rgb[p] + 0.7152 * img.rgb[p + 1] + 0.0722 * img.rgb[p + 2];
+      n[k]++;
+    }
+  }
+  for (let k = 0; k < out.length; k++) out[k] /= n[k] || 1;
+  return out;
+}
+
+/** The map with its floor (the median cell) taken off: what moves more than the frame at large. */
+function aboveFloor(m: MotionMap): Float64Array {
+  const s = m.values.slice().sort((a, b) => a - b);
+  const floor = s[Math.floor(s.length / 2)] ?? 0;
+  return Float64Array.from(m.values, (v) => Math.max(0, v - floor));
+}
+
+/** Centre and spread of what moves, as shares of the frame's width and height; null when nothing does. */
+export function motionCentre(
+  m: MotionMap,
+): { x: number; y: number; spreadX: number; spreadY: number } | null {
+  const a = aboveFloor(m);
+  let s = 0;
+  let sx = 0;
+  let sy = 0;
+  for (let y = 0; y < m.height; y++)
+    for (let x = 0; x < m.width; x++) {
+      const v = a[y * m.width + x];
+      s += v;
+      sx += v * (x + 0.5);
+      sy += v * (y + 0.5);
+    }
+  if (s <= 0) return null;
+  const cx = sx / s;
+  const cy = sy / s;
+  let vx = 0;
+  let vy = 0;
+  for (let y = 0; y < m.height; y++)
+    for (let x = 0; x < m.width; x++) {
+      const v = a[y * m.width + x];
+      vx += v * (x + 0.5 - cx) ** 2;
+      vy += v * (y + 0.5 - cy) ** 2;
+    }
+  const r3 = (v: number) => Math.round(v * 1000) / 1000;
+  return {
+    x: r3(cx / m.width),
+    y: r3(cy / m.height),
+    spreadX: r3(Math.sqrt(vx / s) / m.width),
+    spreadY: r3(Math.sqrt(vy / s) / m.height),
+  };
+}
+
+export interface MotionRegistration {
+  /** The build's moving parts are this many times their size in the reference. */
+  scale: number;
+  /** Where the reference's centre of motion lands in the build, as shares of the frame. */
+  from: { x: number; y: number };
+  to: { x: number; y: number };
+  /** Correlation of the two maps once lined up (1 is the same pattern). */
+  correlation: number;
+}
+
+/**
+ * Line the build's motion map up with the reference's: the scale (0.5 to 1.6)
+ * and shift that best match the two patterns of change, searched round their
+ * centres of motion. Two cuts of the same take move the same way, so the
+ * scale is how much bigger or smaller the moving subject is; on different
+ * footage the correlation stays low.
+ */
+export function registerMotionMaps(ref: MotionMap, build: MotionMap): MotionRegistration | null {
+  const ra = aboveFloor(ref);
+  const ba = aboveFloor(build);
+  const rc = motionCentre(ref);
+  const bc = motionCentre(build);
+  if (!rc || !bc) return null;
+  const W = ref.width;
+  const H = ref.height;
+  // Reference cell (x, y) -> build cell, both in shares of the frame.
+  const crx = rc.x * W;
+  const cry = rc.y * H;
+  const cbx = bc.x * build.width;
+  const cby = bc.y * build.height;
+  const kx = build.width / W;
+  const ky = build.height / H;
+  const corr = (s: number, dx: number, dy: number) => {
+    let sab = 0;
+    let saa = 0;
+    let sbb = 0;
+    let sa = 0;
+    let sb = 0;
+    let n = 0;
+    for (let y = 0; y < H; y++) {
+      const by = Math.floor((s * (y + 0.5 - cry)) * ky + cby + dy);
+      if (by < 0 || by >= build.height) continue;
+      for (let x = 0; x < W; x++) {
+        const bx = Math.floor((s * (x + 0.5 - crx)) * kx + cbx + dx);
+        if (bx < 0 || bx >= build.width) continue;
+        const va = ra[y * W + x];
+        const vb = ba[by * build.width + bx];
+        sab += va * vb;
+        saa += va * va;
+        sbb += vb * vb;
+        sa += va;
+        sb += vb;
+        n++;
+      }
+    }
+    if (n < 4) return -1;
+    const d = (saa - (sa * sa) / n) * (sbb - (sb * sb) / n);
+    return d > 0 ? (sab - (sa * sb) / n) / Math.sqrt(d) : -1;
+  };
+  const rx = Math.max(2, Math.ceil(0.12 * build.width));
+  const ry = Math.max(2, Math.ceil(0.12 * build.height));
+  let best = { c: -2, s: 1, dx: 0, dy: 0 };
+  for (let s = 0.5; s <= 1.6001; s += 0.02)
+    for (let dy = -ry; dy <= ry; dy++)
+      for (let dx = -rx; dx <= rx; dx++) {
+        const c = corr(s, dx, dy);
+        if (c > best.c) best = { c, s, dx, dy };
+      }
+  const coarse = best;
+  for (let s = coarse.s - 0.02; s <= coarse.s + 0.02001; s += 0.005)
+    for (let dy = coarse.dy - 1; dy <= coarse.dy + 1; dy++)
+      for (let dx = coarse.dx - 1; dx <= coarse.dx + 1; dx++) {
+        const c = corr(s, dx, dy);
+        if (c > best.c) best = { c, s, dx, dy };
+      }
+  const r3 = (v: number) => Math.round(v * 1000) / 1000;
+  return {
+    scale: r3(best.s),
+    from: { x: rc.x, y: rc.y },
+    to: { x: r3((cbx + best.dx) / build.width), y: r3((cby + best.dy) / build.height) },
+    correlation: r3(best.c),
+  };
+}

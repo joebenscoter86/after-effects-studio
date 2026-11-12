@@ -7,6 +7,18 @@
 // only text ever drawn is a frame index and a time, which a 5×7 bitmap
 // font covers.
 
+import {
+  cellLuma,
+  DIFF_DEFAULTS,
+  motionCentre,
+  pictureChange,
+  pictureOf,
+  registerMotionMaps,
+  summarizeSeries,
+  type MotionMap,
+  type MotionRegistration,
+  type SeriesPair,
+} from "./motion.js";
 import type { DecodedPng } from "./png16.js";
 
 export type Rgb = [number, number, number];
@@ -1460,4 +1472,611 @@ export function lookArgsError(args: Record<string, unknown>): string | null {
       return `\`look.${k}\` must be a number above 0 and at most 1`;
   }
   return null;
+}
+
+// ---------------------------------------------------------------------------
+// Working to a reference: one report on a still, frames or a movie, the same
+// report on a build, and the differences between the two, largest first.
+// ---------------------------------------------------------------------------
+
+/**
+ * Starting points, not measured judgments, for what counts as a difference:
+ * a CIELAB a* or b* of 2 (as `look` calls a cast), 3 in L*, 0.02 in a black,
+ * white or mean level, a quarter in edge width or grain, 5% in the subject's
+ * size, 3% of the frame in a position. Two motion maps line up as the same
+ * footage at a correlation of 0.6 or more (0.94 measured between two builds
+ * of one take; see reference-study.md).
+ */
+export const REFERENCE_DEFAULTS = {
+  grid: 3,
+  paletteColours: 6,
+  /** Every this many pixels across and down go into the main colours. */
+  paletteStep: 6,
+  /** Frames spread over the input that colour, levels, sharpness and grain are read on. */
+  lookFrames: 24,
+  /** Cell of the motion map, px. */
+  motionCell: 16,
+  castStep: 2,
+  lightnessStep: 3,
+  levelStep: 0.02,
+  ratioStep: 1.25,
+  sizeStep: 0.05,
+  placeStep: 0.03,
+  sameFootage: 0.6,
+  shareStep: 0.05,
+  /** A colour of the reference with no colour of the build within this (CIELAB) is missing. */
+  colourMatch: 10,
+};
+
+const GRID_NAMES = [
+  ["top left", "top", "top right"],
+  ["left", "middle", "right"],
+  ["bottom left", "bottom", "bottom right"],
+];
+
+/** The frame cut into thirds each way, named as a person would point at them. */
+export function gridRegions(width: number, height: number): RegionSpec[] {
+  const out: RegionSpec[] = [];
+  for (let r = 0; r < 3; r++)
+    for (let c = 0; c < 3; c++) {
+      const x0 = Math.round((c * width) / 3);
+      const y0 = Math.round((r * height) / 3);
+      out.push({
+        name: GRID_NAMES[r][c],
+        x: x0,
+        y: y0,
+        width: Math.round(((c + 1) * width) / 3) - x0,
+        height: Math.round(((r + 1) * height) / 3) - y0,
+      });
+    }
+  return out;
+}
+
+export interface ReferenceRegion {
+  name: string;
+  role: LookRole | null;
+  /** CIELAB of the region's mean colour over the frames read. */
+  colour: Lab;
+  mean: Rgb;
+  /** Median over the frames of the region's edge width and widest tenth, px. */
+  sharpness: { edgeWidth: number | null; p90: number | null };
+  /** Spatial grain, mean of the three channels, 8-bit steps. */
+  grain: number;
+}
+
+export interface ReferenceReport {
+  frames: number;
+  size: [number, number];
+  frameRate: number | null;
+  /** Main colours over the frames read, largest share first. */
+  palette: Array<{ hex: string; colour: Lab; share: number }>;
+  levels: { lumaBlack: number; lumaWhite: number; lumaMean: number; black: Rgb; white: Rgb };
+  regions: ReferenceRegion[];
+  /** Centres of brightness and of detail, as shares of the frame's width and height. */
+  weight: { brightness: { x: number; y: number }; detail: { x: number; y: number } };
+  sharpness: { edgeWidth: number | null };
+  grain: number;
+  motion: {
+    /** The frames were consecutive, so cuts and motion were read. */
+    consecutive: boolean;
+    pairs: number;
+    cuts: Array<{ frame: number; time: number | null }>;
+    /** Mean change between neighbouring frames, cuts left out (display values 0..1). */
+    meanChange: number | null;
+    /** Where the picture moves, cuts left out. */
+    map: MotionMap;
+    /** The centre and spread of what moves (the subject, in a talking-head shot); null with no motion. */
+    subject: { x: number; y: number; spreadX: number; spreadY: number } | null;
+  };
+}
+
+export interface ReferenceInputFrame {
+  img: DecodedPng;
+  /** The frame's number in its source; consecutive numbers make pairs. */
+  frame: number;
+  time?: number;
+}
+
+/** Luma and per-channel 0.5th and 99.5th percentiles and means, from histograms on every other pixel. */
+function frameLevels(img: DecodedPng) {
+  const BINS = 1024;
+  const hist = [new Uint32Array(BINS), new Uint32Array(BINS), new Uint32Array(BINS), new Uint32Array(BINS)];
+  const sum = [0, 0, 0];
+  let n = 0;
+  for (let y = 0; y < img.height; y += 2)
+    for (let x = 0; x < img.width; x += 2) {
+      const p = (y * img.width + x) * 3;
+      const px = [img.rgb[p], img.rgb[p + 1], img.rgb[p + 2]];
+      for (let c = 0; c < 3; c++) {
+        hist[c][Math.min(BINS - 1, Math.max(0, Math.floor(px[c] * BINS)))]++;
+        sum[c] += px[c];
+      }
+      hist[3][Math.min(BINS - 1, Math.max(0, Math.floor(luma(px) * BINS)))]++;
+      n++;
+    }
+  const pct = (h: Uint32Array, q: number) => {
+    const want = q * n;
+    let acc = 0;
+    for (let b = 0; b < BINS; b++) {
+      acc += h[b];
+      if (acc >= want) return (b + 0.5) / BINS;
+    }
+    return 1;
+  };
+  const mean = sum.map((v) => v / (n || 1)) as Rgb;
+  return {
+    lumaBlack: pct(hist[3], 0.005),
+    lumaWhite: pct(hist[3], 0.995),
+    lumaMean: luma(mean),
+    black: [0, 1, 2].map((c) => pct(hist[c], 0.005)) as Rgb,
+    white: [0, 1, 2].map((c) => pct(hist[c], 0.995)) as Rgb,
+  };
+}
+
+/** Centres of brightness (luma) and of detail (luma gradient), on every fourth pixel. */
+function frameWeight(img: DecodedPng) {
+  const s = 4;
+  let lw = 0;
+  let lx = 0;
+  let ly = 0;
+  let dw = 0;
+  let dx = 0;
+  let dy = 0;
+  const Y = (x: number, y: number) => {
+    const p = (y * img.width + x) * 3;
+    return luma([img.rgb[p], img.rgb[p + 1], img.rgb[p + 2]]);
+  };
+  for (let y = 0; y + s < img.height; y += s)
+    for (let x = 0; x + s < img.width; x += s) {
+      const v = Y(x, y);
+      lw += v;
+      lx += v * x;
+      ly += v * y;
+      const g = Math.abs(Y(x + s, y) - v) + Math.abs(Y(x, y + s) - v);
+      dw += g;
+      dx += g * x;
+      dy += g * y;
+    }
+  const r3 = (v: number) => Math.round(v * 1000) / 1000;
+  return {
+    brightness: lw > 0 ? { x: r3(lx / lw / img.width), y: r3(ly / lw / img.height) } : { x: 0.5, y: 0.5 },
+    detail: dw > 0 ? { x: r3(dx / dw / img.width), y: r3(dy / dw / img.height) } : { x: 0.5, y: 0.5 },
+  };
+}
+
+/** Main colours: k-means in CIELAB, started from the points furthest apart, ten rounds. */
+function paletteOf(samples: Array<{ lab: [number, number, number]; rgb: Rgb }>, k: number) {
+  if (!samples.length) return [];
+  const pts = samples.map((s) => s.lab);
+  const d2 = (a: number[], b: number[]) => (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2;
+  const centres: number[][] = [];
+  const mean = [0, 1, 2].map((c) => pts.reduce((s, p) => s + p[c], 0) / pts.length);
+  let far = 0;
+  for (let i = 1; i < pts.length; i++) if (d2(pts[i], mean) > d2(pts[far], mean)) far = i;
+  centres.push(pts[far].slice());
+  const near = pts.map((p) => d2(p, centres[0]));
+  while (centres.length < k) {
+    let f = 0;
+    for (let i = 1; i < pts.length; i++) if (near[i] > near[f]) f = i;
+    if (near[f] <= 1) break;
+    centres.push(pts[f].slice());
+    for (let i = 0; i < pts.length; i++) near[i] = Math.min(near[i], d2(pts[i], pts[f]));
+  }
+  const of = new Int32Array(pts.length);
+  for (let round = 0; round < 10; round++) {
+    for (let i = 0; i < pts.length; i++) {
+      let best = 0;
+      for (let c = 1; c < centres.length; c++) if (d2(pts[i], centres[c]) < d2(pts[i], centres[best])) best = c;
+      of[i] = best;
+    }
+    const acc = centres.map(() => [0, 0, 0, 0]);
+    for (let i = 0; i < pts.length; i++) {
+      const a = acc[of[i]];
+      for (let c = 0; c < 3; c++) a[c] += pts[i][c];
+      a[3]++;
+    }
+    acc.forEach((a, c) => {
+      if (a[3]) centres[c] = [a[0] / a[3], a[1] / a[3], a[2] / a[3]];
+    });
+  }
+  const rgbAcc = centres.map(() => [0, 0, 0, 0]);
+  for (let i = 0; i < pts.length; i++) {
+    const a = rgbAcc[of[i]];
+    for (let c = 0; c < 3; c++) a[c] += samples[i].rgb[c];
+    a[3]++;
+  }
+  return rgbAcc
+    .filter((a) => a[3] > 0)
+    .map((a) => {
+      const rgb = [a[0] / a[3], a[1] / a[3], a[2] / a[3]] as Rgb;
+      return { hex: rgbHex(rgb), colour: labOf(rgb), share: Math.round((a[3] / pts.length) * 1000) / 1000 };
+    })
+    .sort((x, y) => y.share - x.share);
+}
+
+const medianOf = (v: number[]) => (v.length ? median(v) : null);
+
+export interface ReferenceOptions {
+  /** How many frames will be added: the look frames are spread over them. */
+  total: number;
+  regions?: LookRegionSpec[];
+  frameRate?: number;
+  motionCell?: number;
+  lookFrames?: number;
+}
+
+/**
+ * The reference report, read one frame at a time so a movie never sits in
+ * memory: main colours and their shares, black and white points and mean,
+ * colour, sharpness and grain at the grid's regions and any named ones, where
+ * the weight of the frame sits, and, when the frames are consecutive, cuts
+ * and how much and where the picture moves. Colour and texture are read on
+ * up to `lookFrames` frames spread over the `total`; motion on every
+ * neighbouring pair (one previous picture kept).
+ */
+export function referenceReader(opts: ReferenceOptions) {
+  const D = REFERENCE_DEFAULTS;
+  const nLook = Math.max(1, Math.min(opts.total, opts.lookFrames ?? D.lookFrames));
+  const lookIdx = new Set<number>();
+  for (let i = 0; i < nLook; i++) lookIdx.add(Math.floor((i * opts.total) / nLook));
+  const cell = opts.motionCell ?? D.motionCell;
+  let size: [number, number] | null = null;
+  let regions: LookRegionSpec[] = [];
+  let added = 0;
+  const perRegion = new Map<string, { mean: Rgb[]; ew: number[]; p90: number[]; grain: number[]; role: LookRole | null }>();
+  const levels: ReturnType<typeof frameLevels>[] = [];
+  const weights: ReturnType<typeof frameWeight>[] = [];
+  const samples: Array<{ lab: [number, number, number]; rgb: Rgb }> = [];
+  const pairs: SeriesPair[] = [];
+  const pairMaps: Float32Array[] = [];
+  let prev: { pic: Float32Array; cells: Float32Array; frame: number; time?: number } | null = null;
+
+  function add(f: ReferenceInputFrame): void {
+    const img = f.img;
+    if (!size) {
+      size = [img.width, img.height];
+      regions = [...gridRegions(img.width, img.height), ...(opts.regions ?? [])];
+    } else if (img.width !== size[0] || img.height !== size[1])
+      throw new Error(`frame ${f.frame} is ${img.width}×${img.height}, not ${size[0]}×${size[1]} like the first`);
+    if (lookIdx.has(added)) {
+      const look = measureLook(img, { regions });
+      for (const r of look.regions) {
+        if ("error" in r) continue;
+        const e = perRegion.get(r.name) ?? { mean: [], ew: [], p90: [], grain: [], role: r.role };
+        e.mean.push(r.levels.mean);
+        if (r.sharpness.edgeWidth !== null) e.ew.push(r.sharpness.edgeWidth);
+        if (r.sharpness.p90 !== null) e.p90.push(r.sharpness.p90);
+        e.grain.push((r.grain.spatial[0] + r.grain.spatial[1] + r.grain.spatial[2]) / 3);
+        perRegion.set(r.name, e);
+      }
+      levels.push(frameLevels(img));
+      weights.push(frameWeight(img));
+      for (let y = 0; y < img.height; y += D.paletteStep)
+        for (let x = 0; x < img.width; x += D.paletteStep) {
+          const p = (y * img.width + x) * 3;
+          const rgb: Rgb = [img.rgb[p], img.rgb[p + 1], img.rgb[p + 2]];
+          const l = labOf(rgb);
+          samples.push({ lab: [l.L, l.a, l.b], rgb });
+        }
+    }
+    const pic = pictureOf(img, false);
+    const cells = cellLuma(img, cell);
+    if (prev && f.frame === prev.frame + 1) {
+      const ch = pictureChange(prev.pic, pic, img.width, img.height, DIFF_DEFAULTS);
+      pairs.push({
+        from: { index: prev.frame, time: prev.time },
+        to: { index: f.frame, time: f.time },
+        change: ch.all.change,
+        changedShare: ch.all.changedShare,
+      });
+      const m = new Float32Array(cells.length);
+      for (let k = 0; k < m.length; k++) m[k] = Math.abs(cells[k] - prev.cells[k]);
+      pairMaps.push(m);
+    }
+    prev = { pic, cells, frame: f.frame, time: f.time };
+    added++;
+  }
+
+  function finish(): ReferenceReport {
+    if (!size) throw new Error("no frames to read");
+    const [width, height] = size;
+    const avg = (v: number[]) => v.reduce((s, x) => s + x, 0) / (v.length || 1);
+    const r3 = (v: number) => Math.round(v * 1000) / 1000;
+    const r2 = (v: number) => Math.round(v * 100) / 100;
+    const regionReports: ReferenceRegion[] = [];
+    for (const r of regions) {
+      const e = perRegion.get(r.name);
+      if (!e || !e.mean.length) continue;
+      const mean = [0, 1, 2].map((c) => r4(avg(e.mean.map((m) => m[c])))) as Rgb;
+      const ew = medianOf(e.ew);
+      const p90 = medianOf(e.p90);
+      regionReports.push({
+        name: r.name,
+        role: e.role,
+        colour: labOf(mean),
+        mean,
+        sharpness: { edgeWidth: ew === null ? null : r2(ew), p90: p90 === null ? null : r2(p90) },
+        grain: r2(avg(e.grain)),
+      });
+    }
+    const gridEw = regionReports
+      .slice(0, 9)
+      .flatMap((r) => (r.sharpness.edgeWidth === null ? [] : [r.sharpness.edgeWidth]));
+    const summary = pairs.length >= 2 ? summarizeSeries(pairs, DIFF_DEFAULTS) : null;
+    const cutPairs = new Set(
+      (summary?.flags ?? []).filter((fl) => fl.kind === "cut").flatMap((fl) => fl.pairs),
+    );
+    const mw = Math.ceil(width / cell);
+    const mh = Math.ceil(height / cell);
+    const acc = new Float64Array(mw * mh);
+    let counted = 0;
+    let changeSum = 0;
+    pairMaps.forEach((m, i) => {
+      if (cutPairs.has(i)) return;
+      for (let k = 0; k < acc.length; k++) acc[k] += m[k];
+      changeSum += pairs[i].change;
+      counted++;
+    });
+    const map: MotionMap = {
+      width: mw,
+      height: mh,
+      cell,
+      values: Array.from(acc, (v) => Math.round((counted ? v / counted : 0) * 1e5) / 1e5),
+    };
+    return {
+      frames: added,
+      size: [width, height],
+      frameRate: opts.frameRate ?? null,
+      palette: paletteOf(samples, D.paletteColours),
+      levels: {
+        lumaBlack: r4(avg(levels.map((l) => l.lumaBlack))),
+        lumaWhite: r4(avg(levels.map((l) => l.lumaWhite))),
+        lumaMean: r4(avg(levels.map((l) => l.lumaMean))),
+        black: [0, 1, 2].map((c) => r4(avg(levels.map((l) => l.black[c])))) as Rgb,
+        white: [0, 1, 2].map((c) => r4(avg(levels.map((l) => l.white[c])))) as Rgb,
+      },
+      regions: regionReports,
+      weight: {
+        brightness: {
+          x: r3(avg(weights.map((w) => w.brightness.x))),
+          y: r3(avg(weights.map((w) => w.brightness.y))),
+        },
+        detail: { x: r3(avg(weights.map((w) => w.detail.x))), y: r3(avg(weights.map((w) => w.detail.y))) },
+      },
+      sharpness: { edgeWidth: gridEw.length ? r2(median(gridEw)) : null },
+      grain: r2(avg(regionReports.slice(0, 9).map((r) => r.grain))),
+      motion: {
+        consecutive: pairs.length > 0 && pairs.length === added - 1,
+        pairs: pairs.length,
+        cuts: [...cutPairs]
+          .sort((a, b) => a - b)
+          .map((i) => ({ frame: pairs[i].to.index, time: pairs[i].to.time ?? null })),
+        meanChange: counted ? Math.round((changeSum / counted) * 1e6) / 1e6 : null,
+        map,
+        subject: counted ? motionCentre(map) : null,
+      },
+    };
+  }
+  return { add, finish };
+}
+
+/** The reference report on frames already in memory (a still, or a few frames). */
+export function referenceReport(
+  frames: ReferenceInputFrame[],
+  opts: Omit<ReferenceOptions, "total"> = {},
+): ReferenceReport {
+  const r = referenceReader({ ...opts, total: frames.length });
+  for (const f of frames) r.add(f);
+  return r.finish();
+}
+
+export interface ReferenceDifference {
+  measure: string;
+  /** How many times the smallest difference this measure calls a difference: the list's order. */
+  size: number;
+  reading: string;
+  reference?: unknown;
+  build?: unknown;
+}
+
+export interface ReferenceComparison {
+  differences: ReferenceDifference[];
+  /** The moving subject lined up between the two, when both have motion. */
+  subject: (MotionRegistration & { compared: boolean }) | null;
+  notes: string[];
+  reading: string;
+}
+
+/** The build against the reference: every difference over its step, largest first, in words. */
+export function compareReferences(ref: ReferenceReport, build: ReferenceReport): ReferenceComparison {
+  const D = REFERENCE_DEFAULTS;
+  const out: ReferenceDifference[] = [];
+  const notes: string[] = [];
+  const f1 = (v: number) => v.toFixed(1);
+  const pctOf = (v: number) => `${Math.round(v * 100)}%`;
+  const list = (items: string[], max = 4) =>
+    items.length <= max ? items.join("; ") : `${items.slice(0, max).join("; ")}; and ${items.length - max} more`;
+  const byName = new Map(build.regions.map((r) => [r.name, r]));
+  const pairsOf = ref.regions.flatMap((r) => (byName.has(r.name) ? [[r, byName.get(r.name)!] as const] : []));
+  // Cast: a* and b* moved together.
+  const cast = pairsOf
+    .map(([r, b]) => ({ name: r.name, da: b.colour.a - r.colour.a, db: b.colour.b - r.colour.b, r, b }))
+    .map((c) => ({ ...c, d: Math.hypot(c.da, c.db) }))
+    .filter((c) => c.d >= D.castStep)
+    .sort((x, y) => y.d - x.d);
+  if (cast.length) {
+    const da = cast.reduce((s, c) => s + c.da, 0) / cast.length;
+    const db = cast.reduce((s, c) => s + c.db, 0) / cast.length;
+    const words = castWords(da, db) ?? "a different colour";
+    out.push({
+      measure: "cast",
+      size: Math.round((cast[0].d / D.castStep) * 10) / 10,
+      reading:
+        `The build leans ${words} against the reference in ${cast.length} of ${pairsOf.length} regions (a* ${signed(da)}, b* ${signed(db)} on average, CIELAB): ` +
+        list(cast.map((c) => `${c.name} a* ${f1(c.b.colour.a)} b* ${f1(c.b.colour.b)} against ${f1(c.r.colour.a)} ${f1(c.r.colour.b)}`)) +
+        ".",
+      reference: Object.fromEntries(cast.map((c) => [c.name, { a: c.r.colour.a, b: c.r.colour.b }])),
+      build: Object.fromEntries(cast.map((c) => [c.name, { a: c.b.colour.a, b: c.b.colour.b }])),
+    });
+  }
+  // Lightness.
+  const light = pairsOf
+    .map(([r, b]) => ({ name: r.name, d: b.colour.L - r.colour.L, r, b }))
+    .filter((c) => Math.abs(c.d) >= D.lightnessStep)
+    .sort((x, y) => Math.abs(y.d) - Math.abs(x.d));
+  if (light.length)
+    out.push({
+      measure: "lightness",
+      size: Math.round((Math.abs(light[0].d) / D.lightnessStep) * 10) / 10,
+      reading:
+        `Lightness differs in ${light.length} of ${pairsOf.length} regions: ` +
+        list(light.map((c) => `${c.name} ${c.d < 0 ? "darker" : "lighter"} (L* ${f1(c.b.colour.L)} against ${f1(c.r.colour.L)})`)) +
+        ".",
+    });
+  // Sharpness and grain: ratios.
+  const ratioItem = (
+    measure: string,
+    get: (r: ReferenceRegion) => number | null,
+    more: string,
+    less: string,
+    unit: string,
+  ) => {
+    const rows = pairsOf
+      .map(([r, b]) => ({ name: r.name, rv: get(r), bv: get(b) }))
+      .filter((c): c is { name: string; rv: number; bv: number } => c.rv !== null && c.bv !== null && c.rv > 0 && c.bv > 0)
+      .map((c) => ({ ...c, k: Math.log(c.bv / c.rv) / Math.log(D.ratioStep) }))
+      .filter((c) => Math.abs(c.k) >= 1)
+      .sort((x, y) => Math.abs(y.k) - Math.abs(x.k));
+    if (!rows.length) return;
+    const up = rows.filter((c) => c.k > 0);
+    const down = rows.filter((c) => c.k < 0);
+    const part = (rs: typeof rows, word: string) =>
+      rs.length ? `${word} in ${list(rs.map((c) => `${c.name} (${c.bv}${unit} against ${c.rv}${unit})`))}` : "";
+    out.push({
+      measure,
+      size: Math.round(Math.abs(rows[0].k) * 10) / 10,
+      reading: `The build is ${[part(up, more), part(down, less)].filter(Boolean).join("; and ")}.`,
+    });
+  };
+  ratioItem("sharpness", (r) => r.sharpness.edgeWidth, "softer", "sharper", " px");
+  ratioItem("grain", (r) => r.grain, "grainier", "smoother (less grain)", "");
+  // Levels.
+  const lv: string[] = [];
+  let lvMax = 0;
+  for (const [k, word] of [
+    ["lumaBlack", "black point"],
+    ["lumaWhite", "white point"],
+    ["lumaMean", "mean level"],
+  ] as const) {
+    const d = build.levels[k] - ref.levels[k];
+    if (Math.abs(d) < D.levelStep) continue;
+    lvMax = Math.max(lvMax, Math.abs(d) / D.levelStep);
+    lv.push(`${word} ${d > 0 ? "higher" : "lower"} (${build.levels[k].toFixed(3)} against ${ref.levels[k].toFixed(3)})`);
+  }
+  if (lv.length) out.push({ measure: "levels", size: Math.round(lvMax * 10) / 10, reading: `Levels: ${lv.join("; ")}.` });
+  // The subject: the two motion maps lined up.
+  let subject: ReferenceComparison["subject"] = null;
+  if (ref.motion.subject && build.motion.subject) {
+    const reg = registerMotionMaps(ref.motion.map, build.motion.map);
+    if (reg) {
+      const compared = reg.correlation >= D.sameFootage;
+      subject = { ...reg, compared };
+      if (!compared)
+        notes.push(
+          `The moving parts of the two do not line up (correlation ${reg.correlation}): not the same footage, or not framed alike, so the subject's size and place are not compared.`,
+        );
+      else {
+        const k = Math.log(reg.scale) / Math.log(1 + D.sizeStep);
+        if (Math.abs(k) >= 1)
+          out.push({
+            measure: "subject size",
+            size: Math.round(Math.abs(k) * 10) / 10,
+            reading: `The moving subject is ${pctOf(reg.scale)} of its size in the reference: ${reg.scale < 1 ? "smaller" : "larger"} in frame (the two lined up at correlation ${reg.correlation}).`,
+            reference: 1,
+            build: reg.scale,
+          });
+        const dx = reg.to.x - reg.from.x;
+        const dy = reg.to.y - reg.from.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist >= D.placeStep)
+          out.push({
+            measure: "subject place",
+            size: Math.round((dist / D.placeStep) * 10) / 10,
+            reading: `The moving subject sits ${[Math.abs(dy) >= D.placeStep / 2 ? `${pctOf(Math.abs(dy))} of the height ${dy > 0 ? "lower" : "higher"}` : "", Math.abs(dx) >= D.placeStep / 2 ? `${pctOf(Math.abs(dx))} of the width ${dx > 0 ? "right" : "left"}` : ""].filter(Boolean).join(" and ")} than in the reference.`,
+          });
+      }
+    }
+  } else if (ref.motion.subject || build.motion.subject)
+    notes.push("Only one of the two has motion to read, so the subject is not compared.");
+  // Where the weight sits.
+  for (const [k, word] of [
+    ["brightness", "brightness"],
+    ["detail", "detail"],
+  ] as const) {
+    const dx = build.weight[k].x - ref.weight[k].x;
+    const dy = build.weight[k].y - ref.weight[k].y;
+    const dist = Math.hypot(dx, dy);
+    if (dist >= D.placeStep)
+      out.push({
+        measure: `weight of ${word}`,
+        size: Math.round((dist / D.placeStep) * 10) / 10,
+        reading: `The centre of ${word} sits at ${pctOf(build.weight[k].x)} across, ${pctOf(build.weight[k].y)} down, against ${pctOf(ref.weight[k].x)}, ${pctOf(ref.weight[k].y)} in the reference.`,
+      });
+  }
+  // Main colours the build lacks.
+  const missing = ref.palette
+    .filter((c) => c.share >= D.shareStep)
+    .map((c) => {
+      let best = Infinity;
+      for (const b of build.palette)
+        best = Math.min(best, Math.hypot(b.colour.L - c.colour.L, b.colour.a - c.colour.a, b.colour.b - c.colour.b));
+      return { c, best };
+    })
+    .filter((m) => m.best >= D.colourMatch);
+  if (missing.length)
+    out.push({
+      measure: "main colours",
+      size: Math.round((Math.max(...missing.map((m) => m.best)) / D.colourMatch) * 10) / 10,
+      reading: `Main colours of the reference with nothing within ${D.colourMatch} (CIELAB) among the build's: ${list(missing.map((m) => `${m.c.hex} (${pctOf(m.c.share)} of the reference, nearest ${f1(m.best)} away)`))}.`,
+    });
+  // Cuts and motion.
+  if (ref.motion.consecutive && build.motion.consecutive) {
+    const has = (cuts: ReferenceReport["motion"]["cuts"], f: number) => cuts.some((c) => Math.abs(c.frame - f) <= 1);
+    const lost = ref.motion.cuts.filter((c) => !has(build.motion.cuts, c.frame));
+    const extra = build.motion.cuts.filter((c) => !has(ref.motion.cuts, c.frame));
+    if (lost.length || extra.length)
+      out.push({
+        measure: "cuts",
+        size: 3 * (lost.length + extra.length),
+        reading: [
+          lost.length ? `The reference cuts at ${lost.map((c) => `frame ${c.frame}`).join(", ")}; the build does not.` : "",
+          extra.length ? `The build cuts at ${extra.map((c) => `frame ${c.frame}`).join(", ")}; the reference does not.` : "",
+        ]
+          .filter(Boolean)
+          .join(" "),
+      });
+    const rm = ref.motion.meanChange;
+    const bm = build.motion.meanChange;
+    if (rm && bm) {
+      const k = Math.log(bm / rm) / Math.log(D.ratioStep);
+      if (Math.abs(k) >= 1)
+        out.push({
+          measure: "motion",
+          size: Math.round(Math.abs(k) * 10) / 10,
+          reading: `The build's picture moves ${k > 0 ? "more" : "less"} between frames: mean change ${bm.toFixed(4)} against ${rm.toFixed(4)}.`,
+        });
+    }
+  } else notes.push("Cuts and motion need consecutive frames on both sides; not compared.");
+  out.sort((a, b) => b.size - a.size);
+  return {
+    differences: out,
+    subject,
+    notes,
+    reading: out.length
+      ? `${out.length} difference${out.length > 1 ? "s" : ""}, largest first. ${out
+          .slice(0, 3)
+          .map((d) => d.reading)
+          .join(" ")}`
+      : "No difference over its step between the build and the reference.",
+  };
 }
