@@ -1,9 +1,22 @@
 import { promises as fs } from "node:fs";
 import * as path from "node:path";
-import { enclosedHoles, growMask } from "../color/matte.js";
-import { decodePng, encodePngGray8 } from "../color/png16.js";
+import {
+  cutoutRegions,
+  EDGE_DEFAULTS,
+  enclosedHoles,
+  growMask
+} from "../color/matte.js";
+import { decodePng, encodePngGray8, encodePngSrgb8 } from "../color/png16.js";
+import { composeContactSheet, flattenOver, resample } from "../color/sheet.js";
 import { rejectedOutputPath } from "../config.js";
-import { registerOp, jsxFail, jsxVal, jsxCompLayerPreamble, getOp } from "../registry.js";
+import {
+  registerOp,
+  jsxFail,
+  jsxVal,
+  jsxCompLayerPreamble,
+  jsxCompPreamble,
+  getOp
+} from "../registry.js";
 import { renderFrameTool } from "../tools/render-frame.js";
 const KEYLIGHT_MATCH_NAME = "Keylight 906";
 const KEY_CLEANER_MATCH_NAME = "ADBE KeyCleaner";
@@ -681,7 +694,9 @@ const OBJECT_MATTE_JSX = `
                     var pt = AE.safeGet(function () { return AE.valueToJson(s.property(${jsxVal(PAINT_TRANSFORM_MATCH_NAME)}).property(${jsxVal(PAINT_POSITION_MATCH_NAME)}).value); }, null);
                     var cp = (pt && typeof _layer !== "undefined") ? AE.safeGet(function () { return AE.valueToJson(_layer.sourcePointToComp([pt[0], pt[1]])); }, null) : null;
                     list.push({ index: i, name: nm, matchName: AE.safeGet(function () { return s.matchName; }, ""), kind: _omKind(nm), duration: dur,
-                        point: pt ? [pt[0], pt[1]] : null, compPoint: cp ? [cp[0], cp[1]] : null, durationStart: (dur && dur.length) ? dur[0] : null });
+                        point: pt ? [pt[0], pt[1]] : null, compPoint: cp ? [cp[0], cp[1]] : null,
+                        clickTime: (dur && dur.length) ? dur[0] : null,
+                        clickFrame: (dur && dur.length && typeof _comp !== "undefined") ? AE.safeGet(function () { return Math.round((AE.safeGet(function () { return _layer.startTime; }, 0) + dur[0]) / _comp.frameDuration); }, null) : null });
                 }
                 return { found: true, list: list };
             }
@@ -849,7 +864,7 @@ registerOp({
   name: "subject.status",
   category: "subject",
   readOnly: true,
-  description: "Read a layer's subject matte (Object Matte, ADBE Samurai) without changing anything: whether the effect is there, its selections (name; kind 'object' for a click with the Object Matte Tool, 'Add Object N', 'quick-selection' for a stroke with the old brush, 'Quick Select Foreground N', 'other' otherwise; duration), its settings (value, the range After Effects reports now, the range measured in After Effects 27.0, default, and foundBy: how the property was found, matchName, walk or name), and summary, one plain sentence ('no selection yet: the user has not clicked', '1 object selected'). Also each selection's clicked point (Transform > Position, source pixels; compPoint in comp pixels where After Effects gives it) and Duration start, closeClicks (two clicks closer than 5% of the source's shorter side probably selected the same thing), sourceSize, compSize and span (the layer in comp frames). A selection count is not a check: after the user says done, run subject.check. removeNote says how to take a selection out or start again.",
+  description: "Read a layer's subject matte (Object Matte, ADBE Samurai) without changing anything: whether the effect is there, its selections (name; kind 'object' for a click with the Object Matte Tool, 'Add Object N', 'quick-selection' for a stroke with the old brush, 'Quick Select Foreground N', 'other' otherwise; duration), its settings (value, the range After Effects reports now, the range measured in After Effects 27.0, default, and foundBy: how the property was found, matchName, walk or name), and summary, one plain sentence ('no selection yet: the user has not clicked', '1 object selected'). Also each selection's clicked point (Transform > Position, source pixels; compPoint in comp pixels where After Effects gives it), clickTime (the selection's Duration start: seconds, measured 0.49999667 for a click at frame 15) and clickFrame (comp frames), closeClicks (two clicks closer than 5% of the source's shorter side probably selected the same thing), sourceSize, compSize and span (the layer in comp frames). A selection count is not a check: after the user says done, run subject.check. removeNote says how to take a selection out or start again.",
   params: [...compLayerParams, subjectIndexParam],
   toJsx(args) {
     return `
@@ -1035,8 +1050,16 @@ registerOp({
 const CUTOUT_HOLE_LIMIT = 1e3;
 const CUTOUT_FRAMES = 8;
 const CUTOUT_OVER = "#ff00ff";
-const CUTOUT_LISTED = 50;
+const CUTOUT_SECONDS_PER_FRAME = 60;
+const EDGE_TRANSPARENT = EDGE_DEFAULTS.transparent;
+const SETTLE_MAX_MS = 6e5;
+const THUMB = 360;
 const intersects = (a, b) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+const overlapShare = (a, b) => {
+  const w = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
+  const h = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
+  return w > 0 && h > 0 ? w * h / (a.width * a.height) : 0;
+};
 const union = (a, b) => {
   const x = Math.min(a.x, b.x);
   const y = Math.min(a.y, b.y);
@@ -1049,21 +1072,41 @@ const union = (a, b) => {
 };
 const fmt = (n) => Math.round(n).toLocaleString("en-US");
 const boxText = (b) => `(${b.x}, ${b.y}, ${b.width} \xD7 ${b.height})`;
+const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 function cutoutFindings(frames, limit) {
   const out = [];
-  for (const f of frames) {
-    for (const h of f.holes) {
-      if (h.area < limit) continue;
-      const b = { x: h.x, y: h.y, width: h.width, height: h.height };
-      const hit = out.find((o) => intersects(o.box, b));
-      if (hit) {
-        hit.box = union(hit.box, b);
-        hit.largestArea = Math.max(hit.largestArea, h.area);
-        if (!hit.frames.includes(f.frame)) hit.frames.push(f.frame);
-      } else out.push({ kind: "hole", frames: [f.frame], largestArea: h.area, box: b });
+  for (const kind of ["hole", "opening"]) {
+    const mine = [];
+    for (const f of frames) {
+      for (const h of (kind === "hole" ? f.holes : f.openings) ?? []) {
+        if (h.area < limit) continue;
+        const b = { x: h.x, y: h.y, width: h.width, height: h.height };
+        const hit = mine.find((o) => intersects(o.box, b));
+        if (hit) {
+          hit.box = union(hit.box, b);
+          hit.largestArea = Math.max(hit.largestArea, h.area);
+          if (!hit.frames.includes(f.frame)) hit.frames.push(f.frame);
+          if (hit.edges) {
+            for (const e of h.edges ?? []) if (!hit.edges.includes(e)) hit.edges.push(e);
+          }
+        } else
+          mine.push({
+            kind,
+            frames: [f.frame],
+            largestArea: h.area,
+            box: b,
+            ...kind === "opening" ? { edges: [...h.edges ?? []] } : {}
+          });
+      }
     }
+    out.push(...mine.sort((a, b) => b.largestArea - a.largestArea));
   }
-  return out.sort((a, b) => b.largestArea - a.largestArea);
+  return out;
+}
+async function writePng(io, file, data) {
+  if (io.writePng) return io.writePng(file, data);
+  await fs.mkdir(path.dirname(file), { recursive: true });
+  await fs.writeFile(file, data);
 }
 function framesAcross(span, count, extra) {
   const a = span?.inFrame ?? 0;
@@ -1071,36 +1114,130 @@ function framesAcross(span, count, extra) {
   const set = /* @__PURE__ */ new Set();
   for (let i = 0; i < count; i++) set.add(a + Math.floor(i * (b - a) / count));
   for (const e of extra) if (typeof e === "number" && e >= a && e < b) set.add(Math.round(e));
-  return [...set].sort((x, y) => x - y).slice(0, 32);
+  return [...set].sort((x, y) => x - y).slice(0, 64);
 }
-function frameReadings(payload, limit) {
-  const list = payload.frames ?? (payload.writtenTo ? [payload] : []);
-  return list.map((f) => {
-    const holes = (f.edge?.holes?.list ?? []).map((h) => ({
-      x: h.x,
-      y: h.y,
-      width: h.width,
-      height: h.height,
-      area: h.area
-    }));
-    const big = holes.filter((h) => h.area >= limit);
-    const small = holes.filter((h) => h.area < limit);
-    return {
-      frame: f.frame,
-      picture: f.writtenTo,
-      holes: big,
-      holesUnderLimit: { count: small.length, area: small.reduce((s, h) => s + h.area, 0) },
-      holeCount: f.edge?.holes?.count ?? holes.length,
-      solidAreas: f.edge?.solidAreas?.count ?? null,
-      specks: f.edge?.specks?.count ?? null,
-      edgeWidth: f.edge?.width ? { typical: f.edge.width.typical, p90: f.edge.width.p90 } : null,
-      ...f.error ? { error: f.error } : {}
-    };
+async function renderChunked(io, base, frames, perFrameMs, outDir, stem) {
+  const size = Math.max(1, Math.floor(SETTLE_MAX_MS / perFrameMs));
+  const out = [];
+  for (let c = 0; c * size < frames.length; c++) {
+    const chunk = frames.slice(c * size, (c + 1) * size);
+    const payload = await io.render({
+      ...base,
+      frames: chunk,
+      outPath: path.join(outDir, `${stem}-${c}.png`),
+      settleTimeoutMs: Math.min(SETTLE_MAX_MS, Math.max(1, Math.round(perFrameMs * chunk.length)))
+    });
+    if (!payload?.ok) {
+      for (const frame of chunk)
+        out.push({
+          frame,
+          ok: false,
+          error: `the render call failed: ${payload?.error ?? "no result"}`
+        });
+      continue;
+    }
+    const list = payload.frames ?? (payload.writtenTo ? [{ ...payload, ok: true, frame: chunk[0] }] : []);
+    for (const [i, frame] of chunk.entries()) {
+      const f = list.find((x) => x.frame === frame) ?? list[i];
+      if (!f) out.push({ frame, ok: false, error: "not in the render's result" });
+      else if (f.ok === false || typeof f.writtenTo !== "string")
+        out.push({ frame, ok: false, error: f.error ?? "the frame was not written" });
+      else out.push({ frame, ok: true, file: f.writtenTo, edge: f.edge });
+    }
+  }
+  return out;
+}
+function parseHex(c) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(c.trim());
+  if (!m) return [1, 0, 1];
+  const v = parseInt(m[1], 16);
+  return [(v >> 16 & 255) / 255, (v >> 8 & 255) / 255, (v & 255) / 255];
+}
+async function measureFrames(io, rendered, limit, over, sheetPath) {
+  const colour = parseHex(over);
+  const readings = [];
+  const thumbs = [];
+  const labels = [];
+  const split = (list) => ({
+    big: list.filter((r) => r.area >= limit),
+    small: {
+      count: list.filter((r) => r.area < limit).length,
+      area: list.filter((r) => r.area < limit).reduce((s, r) => s + r.area, 0)
+    }
   });
+  for (const r of rendered) {
+    if (!r.ok || !r.file) {
+      readings.push({
+        frame: r.frame,
+        checked: false,
+        holes: null,
+        openings: null,
+        error: r.error
+      });
+      continue;
+    }
+    let img;
+    try {
+      img = await io.readImage(r.file);
+    } catch (err) {
+      readings.push({
+        frame: r.frame,
+        checked: false,
+        holes: null,
+        openings: null,
+        error: `could not read ${r.file}: ${err instanceof Error ? err.message : String(err)}`
+      });
+      continue;
+    }
+    if (!img.alpha) {
+      readings.push({
+        frame: r.frame,
+        checked: false,
+        holes: null,
+        openings: null,
+        error: `${r.file} has no alpha channel`
+      });
+      continue;
+    }
+    const regions = cutoutRegions(img.alpha, img.width, img.height);
+    const h = split(regions.holes);
+    const o = split(regions.openings);
+    const composite = flattenOver(img, { kind: "color", color: colour });
+    const picture2 = r.file.replace(/\.png$/i, "") + "_over.png";
+    await writePng(io, picture2, encodePngSrgb8(img.width, img.height, composite));
+    const tw = Math.min(THUMB, img.width);
+    const th = Math.max(1, Math.round(img.height * tw / img.width));
+    thumbs.push({
+      width: tw,
+      height: th,
+      rgb: resample({ ...img, rgb: composite }, tw, th),
+      bitDepth: 8
+    });
+    labels.push(`frame ${r.frame}`);
+    readings.push({
+      frame: r.frame,
+      checked: true,
+      file: r.file,
+      picture: picture2,
+      holes: h.big,
+      openings: o.big,
+      holesUnderLimit: h.small,
+      openingsUnderLimit: o.small,
+      edgeWidth: r.edge?.width ? { typical: r.edge.width.typical ?? null, p90: r.edge.width.p90 ?? null } : null,
+      solidAreas: r.edge?.solidAreas?.count ?? null
+    });
+  }
+  let picture = null;
+  if (thumbs.length) {
+    const sheet = composeContactSheet(thumbs, { labels, thumbWidth: THUMB });
+    await writePng(io, sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+    picture = sheetPath;
+  }
+  return { readings, picture };
 }
-function holeLines(findings, frames) {
+function regionLines(findings, frames) {
   return findings.map(
-    (h) => `${fmt(h.largestArea)} px at ${boxText(h.box)} on ${h.frames.length} of ${frames} frames (${h.frames.join(", ")})`
+    (f) => `${fmt(f.largestArea)} px at ${boxText(f.box)} on ${f.frames.length} of ${frames} frames (${f.frames.join(", ")})` + (f.kind === "opening" && f.edges?.length ? `, reaches the ${f.edges.join(" and ")} edge` : "")
   );
 }
 const needSelection = (st) => {
@@ -1108,69 +1245,118 @@ const needSelection = (st) => {
     return `${st?.summary ?? "no selection"}; ${NEED_CLICK}`;
   return null;
 };
+const perFrameMsOf = (args) => Math.max(
+  1,
+  Math.round(
+    (typeof args.secondsPerFrame === "number" && args.secondsPerFrame > 0 ? args.secondsPerFrame : CUTOUT_SECONDS_PER_FRAME) * 1e3
+  )
+);
+const TAKES_MINUTES = "This check can take minutes: on a 2176 x 3840 take each frame took 20 to 40 s the first time (the matte is tracked from the click), well under a second once rendered; tell the user before it runs on a long or large clip.";
+function summarize(readings, limit, accept) {
+  const regions = cutoutFindings(readings, limit);
+  const accepted = regions.filter((f) => accept.some((b) => overlapShare(f.box, b) >= 0.5));
+  const open = regions.filter((f) => !accepted.includes(f));
+  const missed = readings.filter((r) => !r.checked);
+  const checked = { frames: readings.length - missed.length, of: readings.length };
+  const notChecked = missed.length ? [
+    {
+      kind: "not-checked",
+      frames: missed.map((r) => r.frame),
+      errors: [...new Set(missed.map((r) => r.error ?? "not rendered"))]
+    }
+  ] : [];
+  const holes = open.filter((f) => f.kind === "hole");
+  const openings = open.filter((f) => f.kind === "opening");
+  const parts = [];
+  parts.push(
+    missed.length ? `Checked ${checked.frames} of ${checked.of} frames; ${missed.length} did not render (${missed.map((r) => r.frame).join(", ")}): ${notChecked[0].errors.join("; ")}. Those frames were not checked.` : `Checked ${checked.frames} of ${checked.of} frames.`
+  );
+  if (holes.length)
+    parts.push(
+      `${plural(holes.length, "enclosed hole")} of ${fmt(limit)} px or more inside the cut-out: ${regionLines(holes, readings.length).join("; ")}. A hole is something in front of the subject not selected (a cup) or a gap inside a piece that no click fills (subject.fill_gaps).`
+    );
+  if (openings.length)
+    parts.push(
+      `${plural(openings.length, "opening")} of ${fmt(limit)} px or more, closed off by the subject and the frame edge: ${regionLines(openings, readings.length).join("; ")}. An opening may be something in front of the subject left out (a microphone, a desk), or a real gap such as between an arm and the body; the picture decides.`
+    );
+  if (!holes.length && !openings.length)
+    parts.push(
+      missed.length ? `No hole or opening of ${fmt(limit)} px or more on the ${checked.frames} frames checked; the other ${missed.length} were not checked.` : `Out: no hole or opening of ${fmt(limit)} px or more on the ${checked.frames} frames checked.`
+    );
+  if (accepted.length)
+    parts.push(
+      `Accepted earlier and not counted: ${regionLines(accepted, readings.length).join("; ")}.`
+    );
+  return { findings: [...open, ...notChecked], accepted, checked, text: parts.join(" ") };
+}
 async function runSubjectCheck(args, io) {
   const outDir = args.outDir;
   if (typeof outDir !== "string" || !path.isAbsolute(outDir))
     return { ok: false, error: "`outDir` must be an absolute folder for the pictures" };
   const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
+  const over = typeof args.over === "string" ? args.over : CUTOUT_OVER;
+  const accept = Array.isArray(args.accept) ? args.accept : [];
   const st = await io.status();
   if (!st?.ok) return { ok: false, error: st?.error ?? "subject.status failed", status: st };
   const missing = needSelection(st);
   if (missing) return { ok: false, error: missing };
-  const frames = Array.isArray(args.frames) ? args.frames.slice().sort((a, b) => a - b) : framesAcross(st.span, typeof args.count === "number" ? args.count : CUTOUT_FRAMES, [
-    args.clickFrame
-  ]);
-  const payload = await io.render({
-    compNameOrId: args.comp,
-    frames,
-    outPath: path.join(outDir, "cutout.png"),
-    isolate: args.layer,
-    over: typeof args.over === "string" ? args.over : CUTOUT_OVER,
-    edge: { listed: CUTOUT_LISTED },
-    contactSheet: {}
-  });
-  if (!payload?.ok)
-    return {
-      ok: false,
-      error: `the cut-out render failed: ${payload?.error ?? "no result"}`,
-      render: payload
-    };
-  const readings = frameReadings(payload, limit);
-  const holes = cutoutFindings(readings, limit);
   const clicks = st.selections.map((s) => ({
     name: s.name,
     kind: s.kind,
     point: s.point ?? null,
-    durationStart: s.durationStart ?? null
+    clickTime: s.clickTime ?? null,
+    clickFrame: s.clickFrame ?? null
   }));
+  const frames = Array.isArray(args.frames) ? args.frames.slice().sort((a, b) => a - b) : framesAcross(st.span, typeof args.count === "number" ? args.count : CUTOUT_FRAMES, [
+    args.clickFrame,
+    ...clicks.map((c) => c.clickFrame)
+  ]);
+  const rendered = await renderChunked(
+    io,
+    { compNameOrId: args.comp, isolate: args.layer, channels: "rgba", edge: true },
+    frames,
+    perFrameMsOf(args),
+    outDir,
+    "cutout"
+  );
+  const { readings, picture } = await measureFrames(
+    io,
+    rendered,
+    limit,
+    over,
+    path.join(outDir, "cutout_sheet.png")
+  );
+  const sum = summarize(readings, limit, accept);
   const close = closeClicks(clicks, st.sourceSize ?? null);
-  const findings = [...holes];
+  const findings = [...sum.findings];
   if (close.length) findings.push({ kind: "close-clicks", pairs: close });
   const rects = clicks.filter((c) => c.kind === "rectangle").map((c) => c.name);
-  const picture = payload.contactSheet?.writtenTo ?? readings[0]?.picture ?? null;
-  const solid = readings.find((r) => r.solidAreas !== null)?.solidAreas;
-  const inText = `In: ${st.summary}` + (typeof solid === "number" ? `, making ${solid} solid area${solid === 1 ? "" : "s"} on the first frame` : "") + ".";
-  const outText = holes.length ? `Out: ${holes.length} enclosed hole${holes.length === 1 ? "" : "s"} of ${fmt(limit)} px or more inside the cut-out: ${holeLines(holes, readings.length).join("; ")}. A hole in the subject is something not selected (a microphone, a cup) or a gap in it that no click fills (subject.fill_gaps).` : `Out: no enclosed hole over ${fmt(limit)} px on the ${readings.length} frames looked at.`;
+  const solid = readings.find((r) => typeof r.solidAreas === "number")?.solidAreas;
+  const inText = `In: ${st.summary}` + (typeof solid === "number" ? `, making ${plural(solid, "solid area")} on the first frame checked` : "") + ".";
   const clickText = close.length ? ` Clicks: ${close.map((c) => c.reading).join("; ")}.` : "";
   const rectText = rects.length ? ` ${rects.join(", ")}: a click that dragged a little; it may hold nothing (subject.remove_selection).` : "";
+  const pictureText = picture ? ` Look at the picture (${picture}): it shows what no number does, such as the background kept or something the brief names left out.` : " No frame rendered, so there is no picture.";
+  const stop = findings.length > 0;
   return {
     ok: true,
     layer: st.layer,
-    stop: findings.length > 0,
+    stop,
     findings,
-    inOut: `${inText} ${outText}${clickText}${rectText} Look at the picture (${picture}): it shows what no number does, such as the background kept or something the brief names left out without a hole.`,
+    accepted: sum.accepted,
+    checked: sum.checked,
+    inOut: `${inText} ${sum.text}${clickText}${rectText}${pictureText}`,
     picture,
     frames: readings,
     clicks,
     countNote: COUNT_NOTE,
     holeLimit: limit,
-    next: findings.length ? "Stop: show the user the picture and say what is out, before building anything else. A missed object needs another click (subject.prepare, then the steps); a wrong extra click comes out with subject.remove_selection; an enclosed gap no click fills goes to subject.fill_gaps. Then run subject.check again." : "Nothing over the limit. Still look at the picture yourself and tell the user what is in and what is out before building on the cut-out."
+    next: stop ? "Stop: show the user the picture and say what is out, before building anything else. Something left out needs another click (subject.prepare, then the steps); a wrong extra click comes out with subject.remove_selection; an enclosed gap no click fills goes to subject.fill_gaps. When the user says a region shown is fine (a real gap between an arm and the body), run subject.check again with accept: [that finding's box] so it is not shown again. Frames not checked: run subject.check again on those frames with a larger secondsPerFrame. " + TAKES_MINUTES : "Nothing over the limit. Still look at the picture yourself and tell the user what is in and what is out before building on the cut-out. " + TAKES_MINUTES
   };
 }
 const FILL_LIMITS = (frame) => [
   `The still comes from one frame (frame ${frame}): it assumes a locked camera and that what is in front of the subject does not move. Anything that moves away from the still's gaps shows through the fill.`,
   "What shows through a filled gap is whatever is behind it in the footage. That is the subject only while the subject is behind the gap.",
-  "Every enclosed gap at that frame is filled, including a real one (between an arm and the body) where the background will show; pass `only` boxes to fill just the gaps you mean."
+  "Every enclosed gap at that frame is filled, including a real one (between an arm and the body) where the background will show; pass `only` boxes to fill just the gaps you mean. Openings (regions that reach the frame edge) are never filled."
 ];
 async function runFillGaps(args, io) {
   const still = args.stillPath;
@@ -1184,29 +1370,35 @@ async function runFillGaps(args, io) {
   if (rejected) return { ok: false, error: rejected };
   const outDir = typeof args.outDir === "string" && path.isAbsolute(args.outDir) ? args.outDir : path.dirname(still);
   const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
+  const over = typeof args.over === "string" ? args.over : CUTOUT_OVER;
   const minArea = typeof args.minArea === "number" ? args.minArea : 20;
   const grow = typeof args.grow === "number" ? args.grow : 3;
+  const perFrameMs = perFrameMsOf(args);
   const st = await io.status();
   if (!st?.ok) return { ok: false, error: st?.error ?? "subject.status failed", status: st };
   const missing = needSelection(st);
   if (missing) return { ok: false, error: missing };
   const frame = typeof args.frame === "number" ? args.frame : st.span?.inFrame ?? 0;
-  const ref = await io.render({
-    compNameOrId: args.comp,
-    frames: [frame],
-    outPath: path.join(outDir, "fill-reference.png"),
-    isolate: args.layer,
-    channels: "rgba"
+  const [ref] = await renderChunked(
+    io,
+    { compNameOrId: args.comp, isolate: args.layer, channels: "rgba" },
+    [frame],
+    perFrameMs,
+    outDir,
+    "fill-reference"
+  );
+  const refused = (why) => ({
+    ok: false,
+    error: `the reference frame ${frame} did not render (${why}). Nothing was built. Try again with a larger secondsPerFrame.`
   });
-  if (!ref?.ok)
-    return {
-      ok: false,
-      error: `the reference render failed: ${ref?.error ?? "no result"}`,
-      render: ref
-    };
-  const refFile = ref.frames?.[0]?.writtenTo ?? ref.writtenTo;
-  if (!refFile) return { ok: false, error: "the reference render wrote no file", render: ref };
-  const img = await io.readAlpha(refFile);
+  if (!ref?.ok || !ref.file) return refused(ref?.error ?? "no result");
+  let img;
+  try {
+    img = await io.readImage(ref.file);
+  } catch (err) {
+    return refused(err instanceof Error ? err.message : String(err));
+  }
+  if (!img.alpha) return refused(`${ref.file} has no alpha channel`);
   const [cw, ch] = Array.isArray(st.compSize) ? st.compSize : [img.width, img.height];
   if (img.width !== cw || img.height !== ch) {
     return {
@@ -1219,6 +1411,7 @@ async function runFillGaps(args, io) {
     minArea,
     keep: only ? (h) => only.some((b) => intersects(h, b)) : void 0
   });
+  const openings = cutoutRegions(img.alpha, img.width, img.height, { minArea }).openings;
   const area = found.holes.reduce((s, h) => s + h.area, 0);
   const filled = {
     holes: found.holes.length,
@@ -1226,15 +1419,16 @@ async function runFillGaps(args, io) {
     list: found.holes.slice(0, 20),
     dropped: found.dropped,
     leftOut: found.leftOut,
+    openingsNotFilled: { count: openings.length, area: openings.reduce((s, o) => s + o.area, 0) },
     grow,
     minArea
   };
   if (found.holes.length === 0) {
     return {
       ok: true,
-      reference: { frame, picture: refFile },
+      reference: { frame, file: ref.file },
       filled,
-      reading: `No enclosed gap of ${minArea} px or more to fill at frame ${frame}; nothing was built.`,
+      reading: `No enclosed gap of ${minArea} px or more to fill at frame ${frame}; nothing was built.` + (openings.length ? ` ${plural(openings.length, "opening")} reaching the frame edge were left alone: an opening is never filled.` : ""),
       limits: FILL_LIMITS(frame)
     };
   }
@@ -1248,12 +1442,7 @@ async function runFillGaps(args, io) {
     }
   filled.grownArea = grownArea;
   filled.still = still;
-  const png = encodePngGray8(img.width, img.height, values);
-  if (io.writePng) await io.writePng(still, png);
-  else {
-    await fs.mkdir(path.dirname(still), { recursive: true });
-    await fs.writeFile(still, png);
-  }
+  await writePng(io, still, encodePngGray8(img.width, img.height, values));
   const built = await io.build({ comp: args.comp, layer: args.layer, stillPath: still });
   if (!built?.ok)
     return {
@@ -1262,35 +1451,107 @@ async function runFillGaps(args, io) {
       filled,
       build: built
     };
-  const frames = Array.isArray(args.frames) ? args.frames.slice().sort((a, b) => a - b) : framesAcross(st.span, typeof args.count === "number" ? args.count : CUTOUT_FRAMES, [frame]);
-  const after = await io.render({
-    compNameOrId: args.comp,
-    frames,
-    outPath: path.join(outDir, "fill-after.png"),
-    isolate: [args.layer, built.fillLayer],
-    over: typeof args.over === "string" ? args.over : CUTOUT_OVER,
-    edge: { listed: CUTOUT_LISTED },
-    contactSheet: {}
-  });
-  const afterOut = after?.ok ? (() => {
-    const readings = frameReadings(after, limit);
-    const findings = cutoutFindings(readings, limit);
-    return {
-      frames: readings,
-      findings,
-      picture: after.contactSheet?.writtenTo ?? null,
-      reading: findings.length ? `Still over ${fmt(limit)} px after the fill: ${holeLines(findings, readings.length).join("; ")}.` : `No enclosed hole over ${fmt(limit)} px on the ${readings.length} frames looked at after the fill.`
+  const layers = {
+    fill: built.fillLayer,
+    mask: built.maskLayer,
+    stillItem: built.stillItem,
+    stillItemId: built.stillItemId ?? null
+  };
+  const [alone] = await renderChunked(
+    io,
+    { compNameOrId: args.comp, isolate: [built.fillLayer], channels: "rgba" },
+    [frame],
+    perFrameMs,
+    outDir,
+    "fill-alone"
+  );
+  let fillAlone;
+  try {
+    if (!alone?.ok || !alone.file) throw new Error(alone?.error ?? "not rendered");
+    const a = await io.readImage(alone.file);
+    let covered = 0;
+    for (const v of a.alpha ?? []) if (v > EDGE_TRANSPARENT) covered++;
+    fillAlone = { covered, mask: grownArea, ok: covered <= grownArea * 1.1 + 100 };
+  } catch (err) {
+    fillAlone = {
+      covered: null,
+      mask: grownArea,
+      ok: null,
+      error: err instanceof Error ? err.message : String(err)
     };
-  })() : { error: `the render after the fill failed: ${after?.error ?? "no result"}` };
+  }
+  if (fillAlone.ok === false) {
+    const undone = await io.unbuild({
+      comp: args.comp,
+      fillLayer: built.fillLayer,
+      maskLayer: built.maskLayer,
+      stillItemId: layers.stillItemId
+    });
+    return {
+      ok: false,
+      error: `the fill layer alone covers ${fmt(fillAlone.covered)} px, more than the gap mask's ${fmt(grownArea)} px: the track matte is not limiting it. ` + (undone?.ok ? `The build was undone (${(undone.removed ?? []).join(", ")}).` : `Undoing the build failed (${undone?.error ?? "no result"}): delete '${built.fillLayer}' and '${built.maskLayer}' by hand.`),
+      filled,
+      fillAlone,
+      layers
+    };
+  }
+  const frames = Array.isArray(args.frames) ? args.frames.slice().sort((a, b) => a - b) : framesAcross(st.span, typeof args.count === "number" ? args.count : CUTOUT_FRAMES, [frame]);
+  const afterRendered = await renderChunked(
+    io,
+    {
+      compNameOrId: args.comp,
+      isolate: [args.layer, built.fillLayer],
+      channels: "rgba",
+      edge: true
+    },
+    frames,
+    perFrameMs,
+    outDir,
+    "fill-after"
+  );
+  const measured = await measureFrames(
+    io,
+    afterRendered,
+    limit,
+    over,
+    path.join(outDir, "fill-after_sheet.png")
+  );
+  const sum = summarize(measured.readings, limit, []);
   return {
     ok: true,
-    reference: { frame, picture: refFile },
+    reference: { frame, file: ref.file },
     filled,
-    layers: { fill: built.fillLayer, mask: built.maskLayer, stillItem: built.stillItem },
-    after: afterOut,
+    fillAlone,
+    layers,
+    after: {
+      frames: measured.readings,
+      findings: sum.findings,
+      checked: sum.checked,
+      picture: measured.picture,
+      reading: sum.text
+    },
     limits: FILL_LIMITS(frame),
-    next: "Show the user the picture after the fill and say what is left. To undo the fill, delete the two layers it added."
+    next: "Show the user the picture after the fill and say what is left. To undo the fill, delete the two layers it added." + (fillAlone.ok === null ? " The fill layer alone could not be rendered, so whether the track matte limits it was not checked: look at it." : "")
   };
+}
+function fillUnbuildJsx(args) {
+  return `
+            ${jsxCompPreamble(args)}
+            var _names = [${jsxVal(args.fillLayer)}, ${jsxVal(args.maskLayer)}];
+            var _removed = [];
+            for (var _ni = 0; _ni < _names.length; _ni++) {
+                for (var _li = _comp.numLayers; _li >= 1; _li--) {
+                    var _l = _comp.layer(_li);
+                    if (_l.name === _names[_ni]) { _l.remove(); _removed.push(_names[_ni]); break; }
+                }
+            }
+            var _id = ${jsxVal(args.stillItemId)};
+            if (_id !== null) {
+                var _item = AE.safeGet(function () { return app.project.itemByID(_id); }, null);
+                if (_item) { var _iname = _item.name; _item.remove(); _removed.push(_iname); }
+            }
+            return { ok: true, removed: _removed };
+        `;
 }
 function fillBuildJsx(args) {
   return `
@@ -1325,7 +1586,7 @@ function fillBuildJsx(args) {
             } catch (eSpan) { _spanError = AE.errText(eSpan); }
             _fill.setTrackMatte(_mask, TrackMatteType.LUMA);
             _mask.enabled = false;
-            var _out = { ok: true, fillLayer: _fill.name, fillIndex: _fill.index, maskLayer: _mask.name, maskIndex: _mask.index, stillItem: _item.name, removedFromCopy: _removed };
+            var _out = { ok: true, fillLayer: _fill.name, fillIndex: _fill.index, maskLayer: _mask.name, maskIndex: _mask.index, stillItem: _item.name, stillItemId: AE.safeGet(function () { return _item.id; }, null), removedFromCopy: _removed };
             if (_spanError !== null) _out.maskSpanError = _spanError;
             return _out;
         `;
@@ -1357,10 +1618,18 @@ function liveCutoutIO(args, transport) {
         };
       return sc?.result ?? { ok: false, error: "ae_render_frame returned no result" };
     },
-    async readAlpha(file) {
-      const img = decodePng(await fs.readFile(file));
-      if (!img.alpha) throw new Error(`${file} has no alpha channel`);
-      return { width: img.width, height: img.height, alpha: img.alpha };
+    async readImage(file) {
+      return decodePng(await fs.readFile(file));
+    },
+    async unbuild(a) {
+      const r = await transport.execute({
+        code: fillUnbuildJsx(a),
+        label: "subject.fill_gaps undo",
+        undoGroup: true,
+        suppressDialogs: true,
+        timeoutMs: 6e4
+      });
+      return r.ok ? r.result : { ok: false, error: r.error ?? "undoing the build failed" };
     },
     async build(a) {
       const r = await transport.execute({
@@ -1384,10 +1653,22 @@ const frameListParam = {
   description: "Comp frame numbers to look at, instead of the default: `count` frames evenly spaced across the layer, plus the click frame.",
   required: false
 };
+const secondsPerFrameParam = {
+  name: "secondsPerFrame",
+  type: "number",
+  description: `Settle time to allow each frame, s (default ${CUTOUT_SECONDS_PER_FRAME}; measured 20 to 40 s a frame the first time on a 2176 x 3840 take). Frames are split over several renders when one cannot hold them (600 s a render).`,
+  required: false
+};
+const overParam = {
+  name: "over",
+  type: "string",
+  description: `The flat colour of the picture (default '${CUTOUT_OVER}').`,
+  required: false
+};
 registerOp({
   name: "subject.check",
   category: "subject",
-  description: `Proof a subject matte after the user says done, before anything else is built: renders the cut-out over a flat colour (default magenta) at the click frame and at frames across the clip (ae_render_frame isolate, edge, a contact sheet), finds enclosed holes with edge's code, and returns picture (the sheet), findings, inOut (a plain statement of what is in and what is out) and stop. A hole of holeLimit px or more (default ${CUTOUT_HOLE_LIMIT}, at the comp's size) is a finding, and so are two clicks close together (they probably selected the same thing). With stop true: show the user the picture and say what is out before doing anything else. A selection count is not a check. Renders track the matte from the click: about 0.13 s a frame the first time (measured).`,
+  description: `Proof a subject matte after the user says done, before anything else is built. Renders the cut-out with its alpha (ae_render_frame isolate, channels 'rgba') at the click frames and frames across the clip, finds holes (regions below opaque the frame edge cannot reach) and openings (regions closed off only by the subject and the frame edge: the missed microphone of 2026-11-11 ran off the bottom of the frame), draws each frame over a flat colour and one contact sheet, and returns picture (the sheet), findings, accepted, checked {frames, of}, inOut (a plain statement of what is in and what is out), frames, clicks and stop. A hole or opening of holeLimit px or more (default ${CUTOUT_HOLE_LIMIT}, at the comp's size) is a finding; so are frames that did not render (kind 'not-checked': a frame that was not rendered is never counted as clean) and two clicks close together. With stop true: show the user the picture and say what is out before doing anything else. \`accept\` boxes (from earlier findings the user called fine, such as a real gap between an arm and the body) are not counted again. A selection count is not a check. It can take minutes: 20 to 40 s a frame the first time on a 2176 x 3840 take; say so to the user before it runs.`,
   params: [
     ...compLayerParams,
     {
@@ -1399,7 +1680,7 @@ registerOp({
     {
       name: "clickFrame",
       type: "number",
-      description: "The comp frame the user clicked at (subject.prepare's time in frames). Looked at as well.",
+      description: "A comp frame to look at as well. The selections' own click frames are always looked at.",
       required: false
     },
     frameListParam,
@@ -1412,15 +1693,17 @@ registerOp({
     {
       name: "holeLimit",
       type: "number",
-      description: `Smallest hole that is a finding, px at the comp's size (default ${CUTOUT_HOLE_LIMIT}).`,
+      description: `Smallest hole or opening that is a finding, px at the comp's size (default ${CUTOUT_HOLE_LIMIT}).`,
       required: false
     },
     {
-      name: "over",
-      type: "string",
-      description: `The flat colour (default '${CUTOUT_OVER}').`,
+      name: "accept",
+      type: "array",
+      description: "Boxes {x, y, width, height} of findings the user has seen and called fine: a hole or opening at least half inside one is listed in `accepted`, not in findings.",
       required: false
     },
+    secondsPerFrameParam,
+    overParam,
     subjectIndexParam
   ],
   toJsx: () => NODE_ONLY("subject.check"),
@@ -1429,7 +1712,7 @@ registerOp({
 registerOp({
   name: "subject.fill_gaps",
   category: "subject",
-  description: "Fill enclosed gaps in a subject matte that no click fills (a gap in a microphone's shock mount with the shirt behind it): reads the matte at one reference frame at the comp's size, keeps the transparent regions the frame edge cannot reach, drops those under minArea (default 20 px), grows the rest by `grow` px (default 3), writes them as a still (stillPath), and adds a copy of the same footage under the cut-out showing only through that still (luma track matte); then measures holes again across the clip and reports what is left. Limits, stated in the result: one reference frame, so it assumes a locked camera and a prop that does not move; what shows through is whatever is behind the gap. `only` boxes fill just the gaps they touch. Probed by hand in After Effects 27.0; this operation is not verified there yet.",
+  description: "Fill enclosed gaps in a subject matte that no click fills (a gap in a microphone's shock mount with the shirt behind it): reads the matte at one reference frame at the comp's size, keeps the regions below opaque that the frame edge cannot reach (openings are never filled), drops those under minArea (default 20 px), grows the rest by `grow` px (default 3), writes them as a still (stillPath), and adds a copy of the same footage under the cut-out showing only through that still (luma track matte). It then renders the fill layer alone and undoes the build when that covers more than the mask, and measures holes and openings again across the clip. Refuses, building nothing, when the reference frame does not render. Limits, stated in the result: one reference frame, so it assumes a locked camera and a prop that does not move; what shows through is whatever is behind the gap. `only` boxes fill just the gaps they touch. Can take minutes, as subject.check does. Probed by hand in After Effects 27.0; this operation is not verified there yet.",
   params: [
     ...compLayerParams,
     {
@@ -1478,15 +1761,11 @@ registerOp({
     {
       name: "holeLimit",
       type: "number",
-      description: `Smallest hole reported after the fill, px (default ${CUTOUT_HOLE_LIMIT}).`,
+      description: `Smallest hole or opening reported after the fill, px (default ${CUTOUT_HOLE_LIMIT}).`,
       required: false
     },
-    {
-      name: "over",
-      type: "string",
-      description: `The flat colour (default '${CUTOUT_OVER}').`,
-      required: false
-    },
+    secondsPerFrameParam,
+    overParam,
     subjectIndexParam
   ],
   toJsx: () => NODE_ONLY("subject.fill_gaps"),
@@ -1495,6 +1774,7 @@ registerOp({
 export {
   CLOSE_CLICK_SHARE,
   CUTOUT_HOLE_LIMIT,
+  CUTOUT_SECONDS_PER_FRAME,
   KEYLIGHT_MATCH_NAME,
   KEYLIGHT_SETTINGS,
   KEYLIGHT_VIEWS,
@@ -1509,6 +1789,7 @@ export {
   closeClicks,
   cutoutFindings,
   fillBuildJsx,
+  fillUnbuildJsx,
   keylightViewNumber,
   runFillGaps,
   runSubjectCheck,

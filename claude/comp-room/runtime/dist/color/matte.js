@@ -643,6 +643,115 @@ function growMask(mask, width, height, radius) {
   for (let p = 0; p < out.length; p++) if (dist[p] <= radius + 1e-9) out[p] = 1;
   return out;
 }
+function cutoutRegions(alpha, width, height, opts = {}) {
+  const below = opts.below ?? EDGE_DEFAULTS.opaque;
+  const minArea = opts.minArea ?? 1;
+  const n = width * height;
+  const a = Float64Array.from(alpha);
+  const sealedEdge = new Int8Array(n).fill(-1);
+  const EDGES = ["top", "bottom", "left", "right"];
+  const edgePixels = (e) => {
+    const out = [];
+    if (e < 2) {
+      const y = e === 0 ? 0 : height - 1;
+      for (let x = 0; x < width; x++) out.push(y * width + x);
+    } else {
+      const x = e === 2 ? 0 : width - 1;
+      for (let y = 0; y < height; y++) out.push(y * width + x);
+    }
+    return out;
+  };
+  const original = Float64Array.from(a);
+  for (let e = 0; e < 4; e++) {
+    const px = edgePixels(e);
+    let first = -1;
+    let last = -1;
+    let count = 0;
+    for (let i = 0; i < px.length; i++)
+      if (original[px[i]] >= below) {
+        if (first < 0) first = i;
+        last = i;
+        count++;
+      }
+    if (count < 2) continue;
+    for (let i = first; i <= last; i++) {
+      const p = px[i];
+      if (original[p] < below) {
+        if (sealedEdge[p] < 0) sealedEdge[p] = e;
+        a[p] = 1;
+      }
+    }
+  }
+  const labels = new Int32Array(n);
+  const queue = new Int32Array(n);
+  const regions = labelRegions(
+    a,
+    width,
+    height,
+    (p) => a[p] < below,
+    false,
+    labels,
+    queue,
+    EDGE_DEFAULTS.transparent
+  );
+  const extra = regions.map(() => ({
+    area: 0,
+    sum: 0,
+    minX: Infinity,
+    minY: Infinity,
+    maxX: -1,
+    maxY: -1,
+    edges: /* @__PURE__ */ new Set()
+  }));
+  for (let p = 0; p < n; p++) {
+    const e = sealedEdge[p];
+    if (e < 0) continue;
+    const x = p % width;
+    const y = (p - x) / width;
+    const q = e === 0 ? p + width : e === 1 ? p - width : e === 2 ? p + 1 : p - 1;
+    const qx = q % width;
+    const qy = (q - qx) / width;
+    if (q < 0 || q >= n || e >= 2 && Math.abs(qy - y) !== 0) continue;
+    const id = labels[q];
+    if (!id || regions[id - 1].touchesBorder) continue;
+    const r = extra[id - 1];
+    r.area++;
+    r.sum += original[p];
+    r.minX = Math.min(r.minX, x);
+    r.maxX = Math.max(r.maxX, x);
+    r.minY = Math.min(r.minY, y);
+    r.maxY = Math.max(r.maxY, y);
+    r.edges.add(EDGES[e]);
+  }
+  const holes = [];
+  const openings = [];
+  const dropped = { count: 0, area: 0 };
+  regions.forEach((r, i) => {
+    if (r.touchesBorder) return;
+    const x = extra[i];
+    const area = r.area + x.area;
+    if (area < minArea) {
+      dropped.count++;
+      dropped.area += area;
+      return;
+    }
+    const minX = Math.min(r.minX, x.minX);
+    const minY = Math.min(r.minY, x.minY);
+    const entry = {
+      x: minX,
+      y: minY,
+      width: Math.max(r.maxX, x.maxX) - minX + 1,
+      height: Math.max(r.maxY, x.maxY) - minY + 1,
+      area,
+      meanAlpha: Math.round((r.alphaSum + x.sum) / area * 1e3) / 1e3
+    };
+    if (x.edges.size > 0) openings.push({ ...entry, edges: EDGES.filter((e) => x.edges.has(e)) });
+    else holes.push(entry);
+  });
+  holes.sort((p, q) => q.area - p.area);
+  openings.sort((p, q) => q.area - p.area);
+  return { holes, openings, dropped };
+}
 export {
   CONTOUR_ALPHA,
   EDGE_DEFAULTS,
@@ -650,6 +759,7 @@ export {
   alphaChange,
   autoMaxEdgeWidth,
   box,
+  cutoutRegions,
   distanceTo,
   edgeArgsError,
   enclosedHoles,

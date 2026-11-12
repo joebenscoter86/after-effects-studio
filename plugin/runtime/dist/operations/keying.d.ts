@@ -1,4 +1,5 @@
-import { type Box } from "../color/matte.js";
+import { type Box, type FrameEdge } from "../color/matte.js";
+import { type DecodedPng } from "../color/png16.js";
 export declare const KEYLIGHT_MATCH_NAME = "Keylight 906";
 export declare const KEY_CLEANER_MATCH_NAME = "ADBE KeyCleaner";
 export declare const SPILL_SUPPRESSOR_MATCH_NAME = "ADBE Spill2";
@@ -71,22 +72,27 @@ export declare function closeClicks(clicks: Array<{
     name: string;
     point: [number, number] | number[] | null;
 }>, sourceSize: [number, number] | number[] | null, minDistance?: number): CloseClick[];
-/** A hole at least this big (px at the comp's size) is a finding the agent stops on and shows. */
+/** A hole or opening at least this big (px at the comp's size) is a finding the agent stops on and shows. */
 export declare const CUTOUT_HOLE_LIMIT = 1000;
-type HoleBox = Box & {
+/** Settle time asked of ae_render_frame per frame. Measured: 20 to 40 s a frame the first time on a 2176 x 3840 take. */
+export declare const CUTOUT_SECONDS_PER_FRAME = 60;
+type RegionBox = Box & {
     area: number;
+    edges?: FrameEdge[];
 };
-export interface HoleFinding {
-    kind: "hole";
+export interface RegionFinding {
+    kind: "hole" | "opening";
     frames: number[];
     largestArea: number;
     box: Box;
+    edges?: FrameEdge[];
 }
-/** Holes at least `limit` px, grouped across frames where their boxes overlap. */
+/** Holes and openings at least `limit` px, each kind grouped across frames where their boxes overlap. */
 export declare function cutoutFindings(frames: Array<{
     frame: number;
-    holes: HoleBox[];
-}>, limit: number): HoleFinding[];
+    holes?: RegionBox[] | null;
+    openings?: RegionBox[] | null;
+}>, limit: number): RegionFinding[];
 type Json = any;
 /** Every After Effects call subject.check and subject.fill_gaps make. */
 export interface CutoutIO {
@@ -94,22 +100,32 @@ export interface CutoutIO {
     status(): Promise<Json>;
     /** ae_render_frame with these arguments; its result payload, or { ok: false, error }. */
     render(args: Record<string, unknown>): Promise<Json>;
-    /** A written PNG's alpha. */
-    readAlpha(file: string): Promise<{
-        width: number;
-        height: number;
-        alpha: ArrayLike<number>;
-    }>;
+    /** A written PNG, decoded. */
+    readImage(file: string): Promise<DecodedPng>;
     /** The fill's build in After Effects (fillBuildJsx). */
     build(args: {
         comp: unknown;
         layer: unknown;
         stillPath: string;
     }): Promise<Json>;
+    /** Undo the fill's build (fillUnbuildJsx). */
+    unbuild(args: {
+        comp: unknown;
+        fillLayer: string;
+        maskLayer: string;
+        stillItemId: number | null;
+    }): Promise<Json>;
     writePng?(file: string, data: Buffer): Promise<void>;
 }
 export declare function runSubjectCheck(args: Record<string, unknown>, io: CutoutIO): Promise<Json>;
 export declare function runFillGaps(args: Record<string, unknown>, io: CutoutIO): Promise<Json>;
+/** JSX: remove subject.fill_gaps' two layers and its imported still. */
+export declare function fillUnbuildJsx(args: {
+    comp: unknown;
+    fillLayer: string;
+    maskLayer: string;
+    stillItemId: number | null;
+}): string;
 /**
  * JSX for subject.fill_gaps' build: import the still, add it as a hidden
  * layer, duplicate the footage layer directly under the cut-out with its

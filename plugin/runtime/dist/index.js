@@ -22032,8 +22032,8 @@ var error43 = () => {
       case "not_multiple_of":
         return `N\xFAmero inv\xE1lido: deve ser m\xFAltiplo de ${issue2.divisor}`;
       case "unrecognized_keys": {
-        const plural2 = issue2.keys.length > 1 ? "s" : "";
-        return `Chave${plural2} inv\xE1lida${plural2}: ${joinValues(issue2.keys, ", ")}`;
+        const plural3 = issue2.keys.length > 1 ? "s" : "";
+        return `Chave${plural3} inv\xE1lida${plural3}: ${joinValues(issue2.keys, ", ")}`;
       }
       case "invalid_key":
         return `Entrada inv\xE1lida n${translateOriginWithArticle(issue2.origin, "definite")}`;
@@ -22177,8 +22177,8 @@ var error44 = () => {
       case "not_multiple_of":
         return `N\xFAmero inv\xE1lido: deve ser m\xFAltiplo de ${issue2.divisor}`;
       case "unrecognized_keys": {
-        const plural2 = issue2.keys.length > 1 ? "s" : "";
-        return `Chave${plural2} inv\xE1lida${plural2}: ${joinValues(issue2.keys, ", ")}`;
+        const plural3 = issue2.keys.length > 1 ? "s" : "";
+        return `Chave${plural3} inv\xE1lida${plural3}: ${joinValues(issue2.keys, ", ")}`;
       }
       case "invalid_key":
         return `Entrada inv\xE1lida n${translateOriginWithArticle(issue2.origin, "definite")}`;
@@ -44969,6 +44969,115 @@ function growMask(mask, width, height, radius) {
   for (let p = 0; p < out.length; p++) if (dist[p] <= radius + 1e-9) out[p] = 1;
   return out;
 }
+function cutoutRegions(alpha, width, height, opts = {}) {
+  const below = opts.below ?? EDGE_DEFAULTS.opaque;
+  const minArea = opts.minArea ?? 1;
+  const n = width * height;
+  const a = Float64Array.from(alpha);
+  const sealedEdge = new Int8Array(n).fill(-1);
+  const EDGES = ["top", "bottom", "left", "right"];
+  const edgePixels = (e) => {
+    const out = [];
+    if (e < 2) {
+      const y = e === 0 ? 0 : height - 1;
+      for (let x = 0; x < width; x++) out.push(y * width + x);
+    } else {
+      const x = e === 2 ? 0 : width - 1;
+      for (let y = 0; y < height; y++) out.push(y * width + x);
+    }
+    return out;
+  };
+  const original = Float64Array.from(a);
+  for (let e = 0; e < 4; e++) {
+    const px2 = edgePixels(e);
+    let first = -1;
+    let last = -1;
+    let count = 0;
+    for (let i = 0; i < px2.length; i++)
+      if (original[px2[i]] >= below) {
+        if (first < 0) first = i;
+        last = i;
+        count++;
+      }
+    if (count < 2) continue;
+    for (let i = first; i <= last; i++) {
+      const p = px2[i];
+      if (original[p] < below) {
+        if (sealedEdge[p] < 0) sealedEdge[p] = e;
+        a[p] = 1;
+      }
+    }
+  }
+  const labels = new Int32Array(n);
+  const queue = new Int32Array(n);
+  const regions = labelRegions(
+    a,
+    width,
+    height,
+    (p) => a[p] < below,
+    false,
+    labels,
+    queue,
+    EDGE_DEFAULTS.transparent
+  );
+  const extra = regions.map(() => ({
+    area: 0,
+    sum: 0,
+    minX: Infinity,
+    minY: Infinity,
+    maxX: -1,
+    maxY: -1,
+    edges: /* @__PURE__ */ new Set()
+  }));
+  for (let p = 0; p < n; p++) {
+    const e = sealedEdge[p];
+    if (e < 0) continue;
+    const x = p % width;
+    const y = (p - x) / width;
+    const q = e === 0 ? p + width : e === 1 ? p - width : e === 2 ? p + 1 : p - 1;
+    const qx = q % width;
+    const qy = (q - qx) / width;
+    if (q < 0 || q >= n || e >= 2 && Math.abs(qy - y) !== 0) continue;
+    const id = labels[q];
+    if (!id || regions[id - 1].touchesBorder) continue;
+    const r = extra[id - 1];
+    r.area++;
+    r.sum += original[p];
+    r.minX = Math.min(r.minX, x);
+    r.maxX = Math.max(r.maxX, x);
+    r.minY = Math.min(r.minY, y);
+    r.maxY = Math.max(r.maxY, y);
+    r.edges.add(EDGES[e]);
+  }
+  const holes = [];
+  const openings = [];
+  const dropped = { count: 0, area: 0 };
+  regions.forEach((r, i) => {
+    if (r.touchesBorder) return;
+    const x = extra[i];
+    const area = r.area + x.area;
+    if (area < minArea) {
+      dropped.count++;
+      dropped.area += area;
+      return;
+    }
+    const minX = Math.min(r.minX, x.minX);
+    const minY = Math.min(r.minY, x.minY);
+    const entry = {
+      x: minX,
+      y: minY,
+      width: Math.max(r.maxX, x.maxX) - minX + 1,
+      height: Math.max(r.maxY, x.maxY) - minY + 1,
+      area,
+      meanAlpha: Math.round((r.alphaSum + x.sum) / area * 1e3) / 1e3
+    };
+    if (x.edges.size > 0) openings.push({ ...entry, edges: EDGES.filter((e) => x.edges.has(e)) });
+    else holes.push(entry);
+  });
+  holes.sort((p, q) => q.area - p.area);
+  openings.sort((p, q) => q.area - p.area);
+  return { holes, openings, dropped };
+}
 
 // src/color/png16.ts
 import * as zlib from "node:zlib";
@@ -45141,459 +45250,6 @@ function encodePngGray8(width, height, values) {
   });
 }
 
-// src/operations/keying.ts
-init_config();
-init_registry();
-
-// src/tools/render-frame.ts
-import { promises as fs6 } from "node:fs";
-import * as path6 from "node:path";
-
-// src/color/screen.ts
-var SCREEN_DEFAULTS = {
-  screen: "auto",
-  minExcess: 0.04,
-  minDominance: 0.15,
-  minScreenShare: 0.02,
-  opaque: 1 - 2 / 255,
-  columns: "auto",
-  rows: "auto",
-  minCellShare: 0.25,
-  nearSkip: "auto",
-  nearBand: "auto",
-  unevenRatio: 1.1,
-  grainAbove: 0.01
-};
-var SCREEN_COLOUR_NOTE = "Colours are capture values: the opaque pixels of the render as saveFrameToPng wrote them, so the comp background does not mix in. In a project with no working space (8 bpc, as measured live in After Effects 2027) these are the footage's own 0..1 values, the scale Keylight's Screen Colour takes, so colour.nearSubject (or colour.median) can go to key.keylight's screenColour as it is. In a colour-managed project they are working-space values scaled by After Effects' capture transfer; that has not been checked against Keylight, so confirm the key with the Screen Matte and Status views. Measure the source un-keyed (Keylight View 'source', or the key off, and isolate the layer): a keyed render has no screen left, and Keylight despills what it outputs.";
-function autoGrid(width, height) {
-  const short = Math.min(width, height);
-  const across = 4;
-  const along = Math.max(1, Math.round(across * Math.max(width, height) / short));
-  return width <= height ? { columns: across, rows: along } : { columns: along, rows: across };
-}
-function resolveScreenThresholds(args, width, height) {
-  const grid = autoGrid(width, height);
-  const short = Math.min(width, height);
-  return {
-    screen: args.screen ?? SCREEN_DEFAULTS.screen,
-    minExcess: args.minExcess ?? SCREEN_DEFAULTS.minExcess,
-    minDominance: args.minDominance ?? SCREEN_DEFAULTS.minDominance,
-    minScreenShare: args.minScreenShare ?? SCREEN_DEFAULTS.minScreenShare,
-    opaque: args.opaque ?? SCREEN_DEFAULTS.opaque,
-    columns: args.columns ?? grid.columns,
-    rows: args.rows ?? grid.rows,
-    minCellShare: args.minCellShare ?? SCREEN_DEFAULTS.minCellShare,
-    nearSkip: args.nearSkip ?? Math.max(2, Math.round(0.01 * short)),
-    nearBand: args.nearBand ?? Math.max(4, Math.round(0.05 * short)),
-    unevenRatio: args.unevenRatio ?? SCREEN_DEFAULTS.unevenRatio,
-    grainAbove: args.grainAbove ?? SCREEN_DEFAULTS.grainAbove
-  };
-}
-function screenArgsError(args) {
-  if (args.screen !== void 0 && args.screen !== "auto" && args.screen !== "green" && args.screen !== "blue") {
-    return "`screen.screen` must be 'auto', 'green' or 'blue'";
-  }
-  for (const key of [
-    "minExcess",
-    "minDominance",
-    "minScreenShare",
-    "opaque",
-    "minCellShare",
-    "grainAbove"
-  ]) {
-    const v = args[key];
-    if (v !== void 0 && (typeof v !== "number" || !(v >= 0 && v <= 1))) {
-      return `\`screen.${key}\` must be a number in 0..1`;
-    }
-  }
-  for (const key of ["columns", "rows"]) {
-    const v = args[key];
-    if (v !== void 0 && (!Number.isInteger(v) || v < 1 || v > 64)) {
-      return `\`screen.${key}\` must be a whole number from 1 to 64`;
-    }
-  }
-  const skip = args.nearSkip;
-  if (skip !== void 0 && (typeof skip !== "number" || !Number.isFinite(skip) || skip < 0)) {
-    return "`screen.nearSkip` must be 0 or more (pixels)";
-  }
-  const band = args.nearBand;
-  if (band !== void 0 && (typeof band !== "number" || !Number.isFinite(band) || band < 1)) {
-    return "`screen.nearBand` must be at least 1 (pixels)";
-  }
-  const u = args.unevenRatio;
-  if (u !== void 0 && (typeof u !== "number" || !Number.isFinite(u) || u < 1)) {
-    return "`screen.unevenRatio` must be a number of 1 or more";
-  }
-  return null;
-}
-var r42 = (v) => Math.round(v * 1e4) / 1e4;
-var r4rgb2 = (v) => [r42(v[0]), r42(v[1]), r42(v[2])];
-var luma = (c) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
-var CH = { green: 1, blue: 2 };
-function screenTest(rgb, p, ch, t) {
-  const v = rgb[p * 3 + ch];
-  const others = ch === 1 ? Math.max(rgb[p * 3], rgb[p * 3 + 2]) : Math.max(rgb[p * 3], rgb[p * 3 + 1]);
-  const lead = v - others;
-  return lead >= t.minExcess && lead >= t.minDominance * v;
-}
-var BINS = 65536;
-function histMedian(h, count) {
-  const out = [0, 0, 0];
-  const half = (count + 1) / 2;
-  for (let c = 0; c < 3; c++) {
-    let acc = 0;
-    const base = c * BINS;
-    for (let b = 0; b < BINS; b++) {
-      acc += h[base + b];
-      if (acc >= half) {
-        out[c] = b / (BINS - 1);
-        break;
-      }
-    }
-  }
-  return out;
-}
-function addToHist(h, rgb, p) {
-  for (let c = 0; c < 3; c++) {
-    const v = Math.min(1, Math.max(0, rgb[p * 3 + c]));
-    h[c * BINS + Math.round(v * (BINS - 1))]++;
-  }
-}
-function measureScreen(img, t) {
-  const { width, height, rgb } = img;
-  const alpha = img.alpha;
-  const n = width * height;
-  const measuredAt = (p) => !alpha || alpha[p] >= t.opaque;
-  let measured = 0;
-  for (let p = 0; p < n; p++) if (measuredAt(p)) measured++;
-  const leftOut = n - measured;
-  const kinds = t.screen === "auto" ? ["green", "blue"] : [t.screen];
-  let kind = kinds[0];
-  let best = -1;
-  for (const k of kinds) {
-    let count2 = 0;
-    for (let p = 0; p < n; p++) if (measuredAt(p) && screenTest(rgb, p, CH[k], t)) count2++;
-    if (count2 > best) {
-      best = count2;
-      kind = k;
-    }
-  }
-  const ch = CH[kind];
-  const found = measured > 0 && best / measured >= t.minScreenShare && best > 0;
-  const base = {
-    stage: "capture",
-    values: "capture",
-    screen: found ? kind : null,
-    chosen: t.screen === "auto" ? "detected" : "given",
-    pixels: n,
-    measured,
-    leftOut,
-    screenPixels: 0,
-    share: 0,
-    bounds: null,
-    colour: null,
-    subject: null,
-    evenness: null,
-    grain: null,
-    reading: "",
-    screenColourNote: SCREEN_COLOUR_NOTE
-  };
-  if (leftOut > n / 2) {
-    base.warning = `${Math.round(100 * leftOut / n)}% of the frame is transparent or partly transparent, as a keyed render is. Measure the source: set Keylight's View to 'source' (key.view) or switch the key off, and isolate the keyed layer so nothing else is in the render.`;
-  }
-  if (!found) {
-    const what = t.screen === "auto" ? "green or blue" : t.screen;
-    base.reading = `no ${what} screen found: fewer than ${Math.round(t.minScreenShare * 100)}% of the ${measured} measured pixels have ${what} leading the other channels by at least ${t.minExcess} and ${Math.round(t.minDominance * 100)}% of its level`;
-    return base;
-  }
-  const isScreen = new Uint8Array(n);
-  const hist = new Uint32Array(3 * BINS);
-  const sum = [0, 0, 0];
-  let count = 0;
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -1;
-  let maxY = -1;
-  for (let p = 0; p < n; p++) {
-    if (!measuredAt(p) || !screenTest(rgb, p, ch, t)) continue;
-    isScreen[p] = 1;
-    count++;
-    addToHist(hist, rgb, p);
-    for (let c = 0; c < 3; c++) sum[c] += rgb[p * 3 + c];
-    const x = p % width;
-    const y = (p - x) / width;
-    if (x < minX) minX = x;
-    if (x > maxX) maxX = x;
-    if (y < minY) minY = y;
-    if (y > maxY) maxY = y;
-  }
-  const median = histMedian(hist, count);
-  const mean = [sum[0] / count, sum[1] / count, sum[2] / count];
-  const labels = new Int32Array(n);
-  const queue = new Int32Array(n);
-  const ones = alpha ?? new Float64Array(n).fill(1);
-  const regions = labelRegions(
-    ones,
-    width,
-    height,
-    (p) => measuredAt(p) && isScreen[p] === 0,
-    true,
-    labels,
-    queue,
-    -1
-  );
-  let subjectId = 0;
-  for (let i = 0; i < regions.length; i++) {
-    if (subjectId === 0 || regions[i].area > regions[subjectId - 1].area) subjectId = i + 1;
-  }
-  let subject = null;
-  let nearSubject = null;
-  if (subjectId > 0) {
-    const s = regions[subjectId - 1];
-    subject = {
-      box: { x: s.minX, y: s.minY, width: s.maxX - s.minX + 1, height: s.maxY - s.minY + 1 },
-      area: s.area,
-      share: r42(s.area / n)
-    };
-    const mask = new Float64Array(n);
-    for (let p = 0; p < n; p++) if (labels[p] === subjectId) mask[p] = 1;
-    const scratch = new Float32Array(n);
-    const dist = new Float32Array(n);
-    distanceTo(mask, width, height, (a) => a > 0.5, scratch, dist);
-    const from = t.nearSkip;
-    const to = t.nearSkip + t.nearBand;
-    const nearHist = new Uint32Array(3 * BINS);
-    let nearCount = 0;
-    for (let p = 0; p < n; p++) {
-      if (isScreen[p] === 0 || !(dist[p] > from && dist[p] <= to)) continue;
-      addToHist(nearHist, rgb, p);
-      nearCount++;
-    }
-    if (nearCount > 0) {
-      nearSubject = {
-        colour: r4rgb2(histMedian(nearHist, nearCount)),
-        pixels: nearCount,
-        band: { from, to }
-      };
-    }
-  }
-  const evenness = measureEvenness(img, isScreen, measuredAt, ch, kind, t);
-  const grain = measureGrain(img, isScreen, ch, kind, t);
-  const near = nearSubject ? nearSubject.colour : null;
-  const fmt4 = (c) => `(${c.map((v) => v.toFixed(3)).join(", ")})`;
-  base.screenPixels = count;
-  base.share = r42(count / measured);
-  base.bounds = { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
-  base.colour = { median: r4rgb2(median), mean: r4rgb2(mean), nearSubject };
-  base.subject = subject;
-  base.evenness = evenness;
-  base.grain = grain;
-  base.reading = `${kind} screen, ${Math.round(base.share * 100)}% of the measured pixels; median ${fmt4(median)}` + (near ? `, near the subject ${fmt4(near)}` : "") + `. ${evenness.reading}. ${grain ? grain.reading : "grain not measured (no screen pixel has screen all round it)"}.`;
-  return base;
-}
-function measureEvenness(img, isScreen, measuredAt, ch, kind, t) {
-  const { width, height, rgb } = img;
-  const cols = Math.min(t.columns, width);
-  const rows = Math.min(t.rows, height);
-  const xs = Array.from({ length: cols + 1 }, (_, i) => Math.floor(i * width / cols));
-  const ys = Array.from({ length: rows + 1 }, (_, i) => Math.floor(i * height / rows));
-  const cells = [];
-  let s1 = 0;
-  let su = 0;
-  let sv = 0;
-  let suu = 0;
-  let suv = 0;
-  let svv = 0;
-  let sl = 0;
-  let sul = 0;
-  let svl = 0;
-  const du = Math.max(1, width - 1);
-  const dv = Math.max(1, height - 1);
-  const perX = new Float64Array(width);
-  const perY = new Float64Array(height);
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      let m = 0;
-      let k = 0;
-      const acc = [0, 0, 0];
-      for (let y = ys[r]; y < ys[r + 1]; y++) {
-        for (let x = xs[c]; x < xs[c + 1]; x++) {
-          const p = y * width + x;
-          if (!measuredAt(p)) continue;
-          m++;
-          if (isScreen[p] === 0) continue;
-          k++;
-          for (let q = 0; q < 3; q++) acc[q] += rgb[p * 3 + q];
-          perX[x]++;
-          perY[y]++;
-          const u = x / du;
-          const v = y / dv;
-          const l = rgb[p * 3 + ch];
-          s1++;
-          su += u;
-          sv += v;
-          suu += u * u;
-          suv += u * v;
-          svv += v * v;
-          sl += l;
-          sul += u * l;
-          svl += v * l;
-        }
-      }
-      const cellMean = k > 0 ? [acc[0] / k, acc[1] / k, acc[2] / k] : null;
-      cells.push({
-        column: c,
-        row: r,
-        box: { x: xs[c], y: ys[r], width: xs[c + 1] - xs[c], height: ys[r + 1] - ys[r] },
-        screenShare: m > 0 ? r42(k / m) : 0,
-        mean: cellMean ? r4rgb2(cellMean) : null,
-        luma: cellMean ? r42(luma(cellMean)) : null,
-        level: cellMean ? r42(cellMean[ch]) : null
-      });
-    }
-  }
-  const eligible = cells.filter(
-    (c) => c.level !== null && c.screenShare >= t.minCellShare
-  );
-  let darkest = null;
-  let brightest = null;
-  for (const c of eligible) {
-    if (darkest === null || c.level < darkest.level) darkest = c;
-    if (brightest === null || c.level > brightest.level) brightest = c;
-  }
-  const levelRatio = darkest && brightest && darkest.level > 0 ? r42(brightest.level / darkest.level) : null;
-  const lumaRatio = darkest && brightest && darkest.luma > 0 ? r42(brightest.luma / darkest.luma) : null;
-  const uneven = levelRatio !== null && levelRatio > t.unevenRatio;
-  const plane = solve3(
-    [
-      [s1, su, sv],
-      [su, suu, suv],
-      [sv, suv, svv]
-    ],
-    [sl, sul, svl]
-  );
-  const [x0, x1] = percentileRange(perX, s1);
-  const [y0, y1] = percentileRange(perY, s1);
-  const extent = { x: x0, y: y0, width: x1 - x0 + 1, height: y1 - y0 + 1 };
-  let horizontal = null;
-  let vertical = null;
-  if (plane && s1 > 0) {
-    const [a, b, c] = plane;
-    const at = (u, v) => a + b * u + c * v;
-    const ratio = (hi, lo) => lo > 0 && hi > 0 ? r42(hi / lo) : null;
-    const uc = su / s1;
-    const vc = sv / s1;
-    if (x1 > x0) horizontal = ratio(at(x1 / du, vc), at(x0 / du, vc));
-    if (y1 > y0) vertical = ratio(at(uc, y1 / dv), at(uc, y0 / dv));
-  }
-  const sides = [];
-  if (horizontal !== null) {
-    sides.push({
-      side: horizontal > 1 ? "left" : "right",
-      strength: Math.max(horizontal, 1 / horizontal)
-    });
-  }
-  if (vertical !== null) {
-    sides.push({
-      side: vertical > 1 ? "top" : "bottom",
-      strength: Math.max(vertical, 1 / vertical)
-    });
-  }
-  const darkerSide = sides.filter((d) => d.strength > t.unevenRatio).sort((p, q) => q.strength - p.strength).map((d) => d.side);
-  const where = (c) => `cell ${c.column},${c.row} at x ${c.box.x}, y ${c.box.y}`;
-  let reading;
-  if (darkest === null || brightest === null || levelRatio === null) {
-    reading = `no grid cell is at least ${Math.round(t.minCellShare * 100)}% screen, so evenness was not read`;
-  } else {
-    const spread = `the screen's ${kind} level runs from ${darkest.level.toFixed(3)} (${where(darkest)}) to ${brightest.level.toFixed(3)} (${where(brightest)}), ${levelRatio.toFixed(2)}x`;
-    reading = uneven ? `uneven: ${spread}` + (darkerSide.length ? `, darker on the ${darkerSide.join(" and the ")}` : "") + ". One Screen Colour will not fit all of it: key from the colour near the subject, then check the darker part in the Screen Matte view (Clip Black, a second key, or a garbage mask)" : `even: ${spread}`;
-  }
-  return {
-    columns: cols,
-    rows,
-    cellWidth: xs[1] - xs[0],
-    cellHeight: ys[1] - ys[0],
-    cells,
-    darkest,
-    brightest,
-    levelRatio,
-    lumaRatio,
-    uneven,
-    extent,
-    horizontal,
-    vertical,
-    darkerSide,
-    reading
-  };
-}
-function percentileRange(counts, total) {
-  if (total <= 0) return [0, counts.length - 1];
-  const lo = 0.05 * total;
-  const hi = 0.95 * total;
-  let acc = 0;
-  let first = -1;
-  let last = counts.length - 1;
-  for (let i = 0; i < counts.length; i++) {
-    acc += counts[i];
-    if (first < 0 && acc >= lo) first = i;
-    if (acc >= hi) {
-      last = i;
-      break;
-    }
-  }
-  return [Math.max(0, first), last];
-}
-function solve3(m, v) {
-  const det = (a) => a[0][0] * (a[1][1] * a[2][2] - a[1][2] * a[2][1]) - a[0][1] * (a[1][0] * a[2][2] - a[1][2] * a[2][0]) + a[0][2] * (a[1][0] * a[2][1] - a[1][1] * a[2][0]);
-  const d = det(m);
-  if (!Number.isFinite(d) || Math.abs(d) < 1e-12) return null;
-  const col = (i) => m.map((row, r) => row.map((x, c) => c === i ? v[r] : x));
-  return [det(col(0)) / d, det(col(1)) / d, det(col(2)) / d];
-}
-function measureGrain(img, isScreen, ch, kind, t) {
-  const { width, height, rgb } = img;
-  const ss = [0, 0, 0];
-  let k = 0;
-  for (let y = 1; y < height - 1; y++) {
-    for (let x = 1; x < width - 1; x++) {
-      const p = y * width + x;
-      if (isScreen[p] === 0) continue;
-      let all = true;
-      for (let dy = -1; dy <= 1 && all; dy++) {
-        for (let dx = -1; dx <= 1; dx++) {
-          if (isScreen[p + dy * width + dx] === 0) {
-            all = false;
-            break;
-          }
-        }
-      }
-      if (!all) continue;
-      for (let c = 0; c < 3; c++) {
-        let s = 0;
-        for (let dy = -1; dy <= 1; dy++) {
-          for (let dx = -1; dx <= 1; dx++) s += rgb[(p + dy * width + dx) * 3 + c];
-        }
-        const d = rgb[p * 3 + c] - s / 9;
-        ss[c] += d * d;
-      }
-      k++;
-    }
-  }
-  if (k === 0) return null;
-  const sd = [0, 1, 2].map((c) => Math.sqrt(ss[c] / k * 9 / 8));
-  const level = sd[ch];
-  const grainy = level > t.grainAbove;
-  const steps = level * 255;
-  return {
-    stdDev: r4rgb2(sd),
-    level: r42(level),
-    steps8bit: Math.round(steps * 100) / 100,
-    samples: k,
-    grainy,
-    reading: `grain: ${kind} varies by ${level.toFixed(4)} (standard deviation, about ${steps.toFixed(1)} 8-bit steps) about its local mean` + (grainy ? "; grainy enough to break a hard matte into specks and chatter, so try Keylight's Screen Pre-blur before raising Clip Black" : "; fine enough not to need pre-blur")
-  };
-}
-
 // src/color/sheet.ts
 var TOL = 2 / 255;
 function px(img, x, y) {
@@ -45737,8 +45393,8 @@ function flattenOver(img, backdrop) {
   }
   return out;
 }
-var r43 = (v) => Math.round(v * 1e4) / 1e4;
-var r4rgb3 = (v) => [r43(v[0]), r43(v[1]), r43(v[2])];
+var r42 = (v) => Math.round(v * 1e4) / 1e4;
+var r4rgb2 = (v) => [r42(v[0]), r42(v[1]), r42(v[2])];
 function clipRegion(img, region) {
   const x0 = Math.floor(region.x);
   const y0 = Math.floor(region.y);
@@ -45795,16 +45451,16 @@ function sampleRegions(img, regions) {
       rect,
       clipped: clip.clipped,
       pixels: n,
-      mean: r4rgb3([sum[0] / n, sum[1] / n, sum[2] / n]),
-      min: r4rgb3(min),
-      max: r4rgb3(max),
+      mean: r4rgb2([sum[0] / n, sum[1] / n, sum[2] / n]),
+      min: r4rgb2(min),
+      max: r4rgb2(max),
       alpha: img.alpha ? {
-        mean: r43(aSum / n),
-        min: r43(aMin),
-        max: r43(aMax),
-        opaqueShare: r43(opaque / n),
-        partialShare: r43((n - opaque - transparent) / n),
-        transparentShare: r43(transparent / n)
+        mean: r42(aSum / n),
+        min: r42(aMin),
+        max: r42(aMax),
+        opaqueShare: r42(opaque / n),
+        partialShare: r42((n - opaque - transparent) / n),
+        transparentShare: r42(transparent / n)
       } : null
     };
   });
@@ -45867,10 +45523,10 @@ function compareRegions(from, to, regions) {
       rect,
       clipped: clip.clipped,
       pixels: n,
-      meanDelta: r4rgb3([delta[0] / n, delta[1] / n, delta[2] / n]),
-      meanAbsDelta: r4rgb3([absSum[0] / n, absSum[1] / n, absSum[2] / n]),
-      maxAbsDelta: r4rgb3(absMax),
-      alpha: withAlpha ? { meanDelta: r43(aDelta / n), meanAbsDelta: r43(aAbs / n), maxAbsDelta: r43(aMax) } : null
+      meanDelta: r4rgb2([delta[0] / n, delta[1] / n, delta[2] / n]),
+      meanAbsDelta: r4rgb2([absSum[0] / n, absSum[1] / n, absSum[2] / n]),
+      maxAbsDelta: r4rgb2(absMax),
+      alpha: withAlpha ? { meanDelta: r42(aDelta / n), meanAbsDelta: r42(aAbs / n), maxAbsDelta: r42(aMax) } : null
     };
   });
 }
@@ -46022,6 +45678,459 @@ function composeContactSheet(frames, opts = {}) {
 }
 function frameLabel(index, time3) {
   return time3 === void 0 ? `#${index}` : `#${index} ${time3.toFixed(3)}s`;
+}
+
+// src/operations/keying.ts
+init_config();
+init_registry();
+
+// src/tools/render-frame.ts
+import { promises as fs6 } from "node:fs";
+import * as path6 from "node:path";
+
+// src/color/screen.ts
+var SCREEN_DEFAULTS = {
+  screen: "auto",
+  minExcess: 0.04,
+  minDominance: 0.15,
+  minScreenShare: 0.02,
+  opaque: 1 - 2 / 255,
+  columns: "auto",
+  rows: "auto",
+  minCellShare: 0.25,
+  nearSkip: "auto",
+  nearBand: "auto",
+  unevenRatio: 1.1,
+  grainAbove: 0.01
+};
+var SCREEN_COLOUR_NOTE = "Colours are capture values: the opaque pixels of the render as saveFrameToPng wrote them, so the comp background does not mix in. In a project with no working space (8 bpc, as measured live in After Effects 2027) these are the footage's own 0..1 values, the scale Keylight's Screen Colour takes, so colour.nearSubject (or colour.median) can go to key.keylight's screenColour as it is. In a colour-managed project they are working-space values scaled by After Effects' capture transfer; that has not been checked against Keylight, so confirm the key with the Screen Matte and Status views. Measure the source un-keyed (Keylight View 'source', or the key off, and isolate the layer): a keyed render has no screen left, and Keylight despills what it outputs.";
+function autoGrid(width, height) {
+  const short = Math.min(width, height);
+  const across = 4;
+  const along = Math.max(1, Math.round(across * Math.max(width, height) / short));
+  return width <= height ? { columns: across, rows: along } : { columns: along, rows: across };
+}
+function resolveScreenThresholds(args, width, height) {
+  const grid = autoGrid(width, height);
+  const short = Math.min(width, height);
+  return {
+    screen: args.screen ?? SCREEN_DEFAULTS.screen,
+    minExcess: args.minExcess ?? SCREEN_DEFAULTS.minExcess,
+    minDominance: args.minDominance ?? SCREEN_DEFAULTS.minDominance,
+    minScreenShare: args.minScreenShare ?? SCREEN_DEFAULTS.minScreenShare,
+    opaque: args.opaque ?? SCREEN_DEFAULTS.opaque,
+    columns: args.columns ?? grid.columns,
+    rows: args.rows ?? grid.rows,
+    minCellShare: args.minCellShare ?? SCREEN_DEFAULTS.minCellShare,
+    nearSkip: args.nearSkip ?? Math.max(2, Math.round(0.01 * short)),
+    nearBand: args.nearBand ?? Math.max(4, Math.round(0.05 * short)),
+    unevenRatio: args.unevenRatio ?? SCREEN_DEFAULTS.unevenRatio,
+    grainAbove: args.grainAbove ?? SCREEN_DEFAULTS.grainAbove
+  };
+}
+function screenArgsError(args) {
+  if (args.screen !== void 0 && args.screen !== "auto" && args.screen !== "green" && args.screen !== "blue") {
+    return "`screen.screen` must be 'auto', 'green' or 'blue'";
+  }
+  for (const key of [
+    "minExcess",
+    "minDominance",
+    "minScreenShare",
+    "opaque",
+    "minCellShare",
+    "grainAbove"
+  ]) {
+    const v = args[key];
+    if (v !== void 0 && (typeof v !== "number" || !(v >= 0 && v <= 1))) {
+      return `\`screen.${key}\` must be a number in 0..1`;
+    }
+  }
+  for (const key of ["columns", "rows"]) {
+    const v = args[key];
+    if (v !== void 0 && (!Number.isInteger(v) || v < 1 || v > 64)) {
+      return `\`screen.${key}\` must be a whole number from 1 to 64`;
+    }
+  }
+  const skip = args.nearSkip;
+  if (skip !== void 0 && (typeof skip !== "number" || !Number.isFinite(skip) || skip < 0)) {
+    return "`screen.nearSkip` must be 0 or more (pixels)";
+  }
+  const band = args.nearBand;
+  if (band !== void 0 && (typeof band !== "number" || !Number.isFinite(band) || band < 1)) {
+    return "`screen.nearBand` must be at least 1 (pixels)";
+  }
+  const u = args.unevenRatio;
+  if (u !== void 0 && (typeof u !== "number" || !Number.isFinite(u) || u < 1)) {
+    return "`screen.unevenRatio` must be a number of 1 or more";
+  }
+  return null;
+}
+var r43 = (v) => Math.round(v * 1e4) / 1e4;
+var r4rgb3 = (v) => [r43(v[0]), r43(v[1]), r43(v[2])];
+var luma = (c) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+var CH = { green: 1, blue: 2 };
+function screenTest(rgb, p, ch, t) {
+  const v = rgb[p * 3 + ch];
+  const others = ch === 1 ? Math.max(rgb[p * 3], rgb[p * 3 + 2]) : Math.max(rgb[p * 3], rgb[p * 3 + 1]);
+  const lead = v - others;
+  return lead >= t.minExcess && lead >= t.minDominance * v;
+}
+var BINS = 65536;
+function histMedian(h, count) {
+  const out = [0, 0, 0];
+  const half = (count + 1) / 2;
+  for (let c = 0; c < 3; c++) {
+    let acc = 0;
+    const base = c * BINS;
+    for (let b = 0; b < BINS; b++) {
+      acc += h[base + b];
+      if (acc >= half) {
+        out[c] = b / (BINS - 1);
+        break;
+      }
+    }
+  }
+  return out;
+}
+function addToHist(h, rgb, p) {
+  for (let c = 0; c < 3; c++) {
+    const v = Math.min(1, Math.max(0, rgb[p * 3 + c]));
+    h[c * BINS + Math.round(v * (BINS - 1))]++;
+  }
+}
+function measureScreen(img, t) {
+  const { width, height, rgb } = img;
+  const alpha = img.alpha;
+  const n = width * height;
+  const measuredAt = (p) => !alpha || alpha[p] >= t.opaque;
+  let measured = 0;
+  for (let p = 0; p < n; p++) if (measuredAt(p)) measured++;
+  const leftOut = n - measured;
+  const kinds = t.screen === "auto" ? ["green", "blue"] : [t.screen];
+  let kind = kinds[0];
+  let best = -1;
+  for (const k of kinds) {
+    let count2 = 0;
+    for (let p = 0; p < n; p++) if (measuredAt(p) && screenTest(rgb, p, CH[k], t)) count2++;
+    if (count2 > best) {
+      best = count2;
+      kind = k;
+    }
+  }
+  const ch = CH[kind];
+  const found = measured > 0 && best / measured >= t.minScreenShare && best > 0;
+  const base = {
+    stage: "capture",
+    values: "capture",
+    screen: found ? kind : null,
+    chosen: t.screen === "auto" ? "detected" : "given",
+    pixels: n,
+    measured,
+    leftOut,
+    screenPixels: 0,
+    share: 0,
+    bounds: null,
+    colour: null,
+    subject: null,
+    evenness: null,
+    grain: null,
+    reading: "",
+    screenColourNote: SCREEN_COLOUR_NOTE
+  };
+  if (leftOut > n / 2) {
+    base.warning = `${Math.round(100 * leftOut / n)}% of the frame is transparent or partly transparent, as a keyed render is. Measure the source: set Keylight's View to 'source' (key.view) or switch the key off, and isolate the keyed layer so nothing else is in the render.`;
+  }
+  if (!found) {
+    const what = t.screen === "auto" ? "green or blue" : t.screen;
+    base.reading = `no ${what} screen found: fewer than ${Math.round(t.minScreenShare * 100)}% of the ${measured} measured pixels have ${what} leading the other channels by at least ${t.minExcess} and ${Math.round(t.minDominance * 100)}% of its level`;
+    return base;
+  }
+  const isScreen = new Uint8Array(n);
+  const hist = new Uint32Array(3 * BINS);
+  const sum = [0, 0, 0];
+  let count = 0;
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -1;
+  let maxY = -1;
+  for (let p = 0; p < n; p++) {
+    if (!measuredAt(p) || !screenTest(rgb, p, ch, t)) continue;
+    isScreen[p] = 1;
+    count++;
+    addToHist(hist, rgb, p);
+    for (let c = 0; c < 3; c++) sum[c] += rgb[p * 3 + c];
+    const x = p % width;
+    const y = (p - x) / width;
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  }
+  const median = histMedian(hist, count);
+  const mean = [sum[0] / count, sum[1] / count, sum[2] / count];
+  const labels = new Int32Array(n);
+  const queue = new Int32Array(n);
+  const ones = alpha ?? new Float64Array(n).fill(1);
+  const regions = labelRegions(
+    ones,
+    width,
+    height,
+    (p) => measuredAt(p) && isScreen[p] === 0,
+    true,
+    labels,
+    queue,
+    -1
+  );
+  let subjectId = 0;
+  for (let i = 0; i < regions.length; i++) {
+    if (subjectId === 0 || regions[i].area > regions[subjectId - 1].area) subjectId = i + 1;
+  }
+  let subject = null;
+  let nearSubject = null;
+  if (subjectId > 0) {
+    const s = regions[subjectId - 1];
+    subject = {
+      box: { x: s.minX, y: s.minY, width: s.maxX - s.minX + 1, height: s.maxY - s.minY + 1 },
+      area: s.area,
+      share: r43(s.area / n)
+    };
+    const mask = new Float64Array(n);
+    for (let p = 0; p < n; p++) if (labels[p] === subjectId) mask[p] = 1;
+    const scratch = new Float32Array(n);
+    const dist = new Float32Array(n);
+    distanceTo(mask, width, height, (a) => a > 0.5, scratch, dist);
+    const from = t.nearSkip;
+    const to = t.nearSkip + t.nearBand;
+    const nearHist = new Uint32Array(3 * BINS);
+    let nearCount = 0;
+    for (let p = 0; p < n; p++) {
+      if (isScreen[p] === 0 || !(dist[p] > from && dist[p] <= to)) continue;
+      addToHist(nearHist, rgb, p);
+      nearCount++;
+    }
+    if (nearCount > 0) {
+      nearSubject = {
+        colour: r4rgb3(histMedian(nearHist, nearCount)),
+        pixels: nearCount,
+        band: { from, to }
+      };
+    }
+  }
+  const evenness = measureEvenness(img, isScreen, measuredAt, ch, kind, t);
+  const grain = measureGrain(img, isScreen, ch, kind, t);
+  const near = nearSubject ? nearSubject.colour : null;
+  const fmt4 = (c) => `(${c.map((v) => v.toFixed(3)).join(", ")})`;
+  base.screenPixels = count;
+  base.share = r43(count / measured);
+  base.bounds = { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
+  base.colour = { median: r4rgb3(median), mean: r4rgb3(mean), nearSubject };
+  base.subject = subject;
+  base.evenness = evenness;
+  base.grain = grain;
+  base.reading = `${kind} screen, ${Math.round(base.share * 100)}% of the measured pixels; median ${fmt4(median)}` + (near ? `, near the subject ${fmt4(near)}` : "") + `. ${evenness.reading}. ${grain ? grain.reading : "grain not measured (no screen pixel has screen all round it)"}.`;
+  return base;
+}
+function measureEvenness(img, isScreen, measuredAt, ch, kind, t) {
+  const { width, height, rgb } = img;
+  const cols = Math.min(t.columns, width);
+  const rows = Math.min(t.rows, height);
+  const xs = Array.from({ length: cols + 1 }, (_, i) => Math.floor(i * width / cols));
+  const ys = Array.from({ length: rows + 1 }, (_, i) => Math.floor(i * height / rows));
+  const cells = [];
+  let s1 = 0;
+  let su = 0;
+  let sv = 0;
+  let suu = 0;
+  let suv = 0;
+  let svv = 0;
+  let sl = 0;
+  let sul = 0;
+  let svl = 0;
+  const du = Math.max(1, width - 1);
+  const dv = Math.max(1, height - 1);
+  const perX = new Float64Array(width);
+  const perY = new Float64Array(height);
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      let m = 0;
+      let k = 0;
+      const acc = [0, 0, 0];
+      for (let y = ys[r]; y < ys[r + 1]; y++) {
+        for (let x = xs[c]; x < xs[c + 1]; x++) {
+          const p = y * width + x;
+          if (!measuredAt(p)) continue;
+          m++;
+          if (isScreen[p] === 0) continue;
+          k++;
+          for (let q = 0; q < 3; q++) acc[q] += rgb[p * 3 + q];
+          perX[x]++;
+          perY[y]++;
+          const u = x / du;
+          const v = y / dv;
+          const l = rgb[p * 3 + ch];
+          s1++;
+          su += u;
+          sv += v;
+          suu += u * u;
+          suv += u * v;
+          svv += v * v;
+          sl += l;
+          sul += u * l;
+          svl += v * l;
+        }
+      }
+      const cellMean = k > 0 ? [acc[0] / k, acc[1] / k, acc[2] / k] : null;
+      cells.push({
+        column: c,
+        row: r,
+        box: { x: xs[c], y: ys[r], width: xs[c + 1] - xs[c], height: ys[r + 1] - ys[r] },
+        screenShare: m > 0 ? r43(k / m) : 0,
+        mean: cellMean ? r4rgb3(cellMean) : null,
+        luma: cellMean ? r43(luma(cellMean)) : null,
+        level: cellMean ? r43(cellMean[ch]) : null
+      });
+    }
+  }
+  const eligible = cells.filter(
+    (c) => c.level !== null && c.screenShare >= t.minCellShare
+  );
+  let darkest = null;
+  let brightest = null;
+  for (const c of eligible) {
+    if (darkest === null || c.level < darkest.level) darkest = c;
+    if (brightest === null || c.level > brightest.level) brightest = c;
+  }
+  const levelRatio = darkest && brightest && darkest.level > 0 ? r43(brightest.level / darkest.level) : null;
+  const lumaRatio = darkest && brightest && darkest.luma > 0 ? r43(brightest.luma / darkest.luma) : null;
+  const uneven = levelRatio !== null && levelRatio > t.unevenRatio;
+  const plane = solve3(
+    [
+      [s1, su, sv],
+      [su, suu, suv],
+      [sv, suv, svv]
+    ],
+    [sl, sul, svl]
+  );
+  const [x0, x1] = percentileRange(perX, s1);
+  const [y0, y1] = percentileRange(perY, s1);
+  const extent = { x: x0, y: y0, width: x1 - x0 + 1, height: y1 - y0 + 1 };
+  let horizontal = null;
+  let vertical = null;
+  if (plane && s1 > 0) {
+    const [a, b, c] = plane;
+    const at = (u, v) => a + b * u + c * v;
+    const ratio = (hi, lo) => lo > 0 && hi > 0 ? r43(hi / lo) : null;
+    const uc = su / s1;
+    const vc = sv / s1;
+    if (x1 > x0) horizontal = ratio(at(x1 / du, vc), at(x0 / du, vc));
+    if (y1 > y0) vertical = ratio(at(uc, y1 / dv), at(uc, y0 / dv));
+  }
+  const sides = [];
+  if (horizontal !== null) {
+    sides.push({
+      side: horizontal > 1 ? "left" : "right",
+      strength: Math.max(horizontal, 1 / horizontal)
+    });
+  }
+  if (vertical !== null) {
+    sides.push({
+      side: vertical > 1 ? "top" : "bottom",
+      strength: Math.max(vertical, 1 / vertical)
+    });
+  }
+  const darkerSide = sides.filter((d) => d.strength > t.unevenRatio).sort((p, q) => q.strength - p.strength).map((d) => d.side);
+  const where = (c) => `cell ${c.column},${c.row} at x ${c.box.x}, y ${c.box.y}`;
+  let reading;
+  if (darkest === null || brightest === null || levelRatio === null) {
+    reading = `no grid cell is at least ${Math.round(t.minCellShare * 100)}% screen, so evenness was not read`;
+  } else {
+    const spread = `the screen's ${kind} level runs from ${darkest.level.toFixed(3)} (${where(darkest)}) to ${brightest.level.toFixed(3)} (${where(brightest)}), ${levelRatio.toFixed(2)}x`;
+    reading = uneven ? `uneven: ${spread}` + (darkerSide.length ? `, darker on the ${darkerSide.join(" and the ")}` : "") + ". One Screen Colour will not fit all of it: key from the colour near the subject, then check the darker part in the Screen Matte view (Clip Black, a second key, or a garbage mask)" : `even: ${spread}`;
+  }
+  return {
+    columns: cols,
+    rows,
+    cellWidth: xs[1] - xs[0],
+    cellHeight: ys[1] - ys[0],
+    cells,
+    darkest,
+    brightest,
+    levelRatio,
+    lumaRatio,
+    uneven,
+    extent,
+    horizontal,
+    vertical,
+    darkerSide,
+    reading
+  };
+}
+function percentileRange(counts, total) {
+  if (total <= 0) return [0, counts.length - 1];
+  const lo = 0.05 * total;
+  const hi = 0.95 * total;
+  let acc = 0;
+  let first = -1;
+  let last = counts.length - 1;
+  for (let i = 0; i < counts.length; i++) {
+    acc += counts[i];
+    if (first < 0 && acc >= lo) first = i;
+    if (acc >= hi) {
+      last = i;
+      break;
+    }
+  }
+  return [Math.max(0, first), last];
+}
+function solve3(m, v) {
+  const det = (a) => a[0][0] * (a[1][1] * a[2][2] - a[1][2] * a[2][1]) - a[0][1] * (a[1][0] * a[2][2] - a[1][2] * a[2][0]) + a[0][2] * (a[1][0] * a[2][1] - a[1][1] * a[2][0]);
+  const d = det(m);
+  if (!Number.isFinite(d) || Math.abs(d) < 1e-12) return null;
+  const col = (i) => m.map((row, r) => row.map((x, c) => c === i ? v[r] : x));
+  return [det(col(0)) / d, det(col(1)) / d, det(col(2)) / d];
+}
+function measureGrain(img, isScreen, ch, kind, t) {
+  const { width, height, rgb } = img;
+  const ss = [0, 0, 0];
+  let k = 0;
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      const p = y * width + x;
+      if (isScreen[p] === 0) continue;
+      let all = true;
+      for (let dy = -1; dy <= 1 && all; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          if (isScreen[p + dy * width + dx] === 0) {
+            all = false;
+            break;
+          }
+        }
+      }
+      if (!all) continue;
+      for (let c = 0; c < 3; c++) {
+        let s = 0;
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) s += rgb[(p + dy * width + dx) * 3 + c];
+        }
+        const d = rgb[p * 3 + c] - s / 9;
+        ss[c] += d * d;
+      }
+      k++;
+    }
+  }
+  if (k === 0) return null;
+  const sd = [0, 1, 2].map((c) => Math.sqrt(ss[c] / k * 9 / 8));
+  const level = sd[ch];
+  const grainy = level > t.grainAbove;
+  const steps = level * 255;
+  return {
+    stdDev: r4rgb3(sd),
+    level: r43(level),
+    steps8bit: Math.round(steps * 100) / 100,
+    samples: k,
+    grainy,
+    reading: `grain: ${kind} varies by ${level.toFixed(4)} (standard deviation, about ${steps.toFixed(1)} 8-bit steps) about its local mean` + (grainy ? "; grainy enough to break a hard matte into specks and chatter, so try Keylight's Screen Pre-blur before raising Clip Black" : "; fine enough not to need pre-blur")
+  };
 }
 
 // src/color/motion.ts
@@ -48628,7 +48737,9 @@ var OBJECT_MATTE_JSX = `
                     var pt = AE.safeGet(function () { return AE.valueToJson(s.property(${jsxVal(PAINT_TRANSFORM_MATCH_NAME)}).property(${jsxVal(PAINT_POSITION_MATCH_NAME)}).value); }, null);
                     var cp = (pt && typeof _layer !== "undefined") ? AE.safeGet(function () { return AE.valueToJson(_layer.sourcePointToComp([pt[0], pt[1]])); }, null) : null;
                     list.push({ index: i, name: nm, matchName: AE.safeGet(function () { return s.matchName; }, ""), kind: _omKind(nm), duration: dur,
-                        point: pt ? [pt[0], pt[1]] : null, compPoint: cp ? [cp[0], cp[1]] : null, durationStart: (dur && dur.length) ? dur[0] : null });
+                        point: pt ? [pt[0], pt[1]] : null, compPoint: cp ? [cp[0], cp[1]] : null,
+                        clickTime: (dur && dur.length) ? dur[0] : null,
+                        clickFrame: (dur && dur.length && typeof _comp !== "undefined") ? AE.safeGet(function () { return Math.round((AE.safeGet(function () { return _layer.startTime; }, 0) + dur[0]) / _comp.frameDuration); }, null) : null });
                 }
                 return { found: true, list: list };
             }
@@ -48796,7 +48907,7 @@ registerOp({
   name: "subject.status",
   category: "subject",
   readOnly: true,
-  description: "Read a layer's subject matte (Object Matte, ADBE Samurai) without changing anything: whether the effect is there, its selections (name; kind 'object' for a click with the Object Matte Tool, 'Add Object N', 'quick-selection' for a stroke with the old brush, 'Quick Select Foreground N', 'other' otherwise; duration), its settings (value, the range After Effects reports now, the range measured in After Effects 27.0, default, and foundBy: how the property was found, matchName, walk or name), and summary, one plain sentence ('no selection yet: the user has not clicked', '1 object selected'). Also each selection's clicked point (Transform > Position, source pixels; compPoint in comp pixels where After Effects gives it) and Duration start, closeClicks (two clicks closer than 5% of the source's shorter side probably selected the same thing), sourceSize, compSize and span (the layer in comp frames). A selection count is not a check: after the user says done, run subject.check. removeNote says how to take a selection out or start again.",
+  description: "Read a layer's subject matte (Object Matte, ADBE Samurai) without changing anything: whether the effect is there, its selections (name; kind 'object' for a click with the Object Matte Tool, 'Add Object N', 'quick-selection' for a stroke with the old brush, 'Quick Select Foreground N', 'other' otherwise; duration), its settings (value, the range After Effects reports now, the range measured in After Effects 27.0, default, and foundBy: how the property was found, matchName, walk or name), and summary, one plain sentence ('no selection yet: the user has not clicked', '1 object selected'). Also each selection's clicked point (Transform > Position, source pixels; compPoint in comp pixels where After Effects gives it), clickTime (the selection's Duration start: seconds, measured 0.49999667 for a click at frame 15) and clickFrame (comp frames), closeClicks (two clicks closer than 5% of the source's shorter side probably selected the same thing), sourceSize, compSize and span (the layer in comp frames). A selection count is not a check: after the user says done, run subject.check. removeNote says how to take a selection out or start again.",
   params: [...compLayerParams, subjectIndexParam],
   toJsx(args) {
     return `
@@ -48982,8 +49093,16 @@ registerOp({
 var CUTOUT_HOLE_LIMIT = 1e3;
 var CUTOUT_FRAMES = 8;
 var CUTOUT_OVER = "#ff00ff";
-var CUTOUT_LISTED = 50;
+var CUTOUT_SECONDS_PER_FRAME = 60;
+var EDGE_TRANSPARENT = EDGE_DEFAULTS.transparent;
+var SETTLE_MAX_MS = 6e5;
+var THUMB = 360;
 var intersects = (a, b) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+var overlapShare = (a, b) => {
+  const w = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
+  const h = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
+  return w > 0 && h > 0 ? w * h / (a.width * a.height) : 0;
+};
 var union2 = (a, b) => {
   const x = Math.min(a.x, b.x);
   const y = Math.min(a.y, b.y);
@@ -48996,21 +49115,41 @@ var union2 = (a, b) => {
 };
 var fmt2 = (n) => Math.round(n).toLocaleString("en-US");
 var boxText = (b) => `(${b.x}, ${b.y}, ${b.width} \xD7 ${b.height})`;
+var plural2 = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 function cutoutFindings(frames, limit) {
   const out = [];
-  for (const f of frames) {
-    for (const h of f.holes) {
-      if (h.area < limit) continue;
-      const b = { x: h.x, y: h.y, width: h.width, height: h.height };
-      const hit = out.find((o) => intersects(o.box, b));
-      if (hit) {
-        hit.box = union2(hit.box, b);
-        hit.largestArea = Math.max(hit.largestArea, h.area);
-        if (!hit.frames.includes(f.frame)) hit.frames.push(f.frame);
-      } else out.push({ kind: "hole", frames: [f.frame], largestArea: h.area, box: b });
+  for (const kind of ["hole", "opening"]) {
+    const mine = [];
+    for (const f of frames) {
+      for (const h of (kind === "hole" ? f.holes : f.openings) ?? []) {
+        if (h.area < limit) continue;
+        const b = { x: h.x, y: h.y, width: h.width, height: h.height };
+        const hit = mine.find((o) => intersects(o.box, b));
+        if (hit) {
+          hit.box = union2(hit.box, b);
+          hit.largestArea = Math.max(hit.largestArea, h.area);
+          if (!hit.frames.includes(f.frame)) hit.frames.push(f.frame);
+          if (hit.edges) {
+            for (const e of h.edges ?? []) if (!hit.edges.includes(e)) hit.edges.push(e);
+          }
+        } else
+          mine.push({
+            kind,
+            frames: [f.frame],
+            largestArea: h.area,
+            box: b,
+            ...kind === "opening" ? { edges: [...h.edges ?? []] } : {}
+          });
+      }
     }
+    out.push(...mine.sort((a, b) => b.largestArea - a.largestArea));
   }
-  return out.sort((a, b) => b.largestArea - a.largestArea);
+  return out;
+}
+async function writePng(io, file2, data) {
+  if (io.writePng) return io.writePng(file2, data);
+  await fs7.mkdir(path7.dirname(file2), { recursive: true });
+  await fs7.writeFile(file2, data);
 }
 function framesAcross(span, count, extra) {
   const a = span?.inFrame ?? 0;
@@ -49018,36 +49157,130 @@ function framesAcross(span, count, extra) {
   const set2 = /* @__PURE__ */ new Set();
   for (let i = 0; i < count; i++) set2.add(a + Math.floor(i * (b - a) / count));
   for (const e of extra) if (typeof e === "number" && e >= a && e < b) set2.add(Math.round(e));
-  return [...set2].sort((x, y) => x - y).slice(0, 32);
+  return [...set2].sort((x, y) => x - y).slice(0, 64);
 }
-function frameReadings(payload, limit) {
-  const list = payload.frames ?? (payload.writtenTo ? [payload] : []);
-  return list.map((f) => {
-    const holes = (f.edge?.holes?.list ?? []).map((h) => ({
-      x: h.x,
-      y: h.y,
-      width: h.width,
-      height: h.height,
-      area: h.area
-    }));
-    const big = holes.filter((h) => h.area >= limit);
-    const small = holes.filter((h) => h.area < limit);
-    return {
-      frame: f.frame,
-      picture: f.writtenTo,
-      holes: big,
-      holesUnderLimit: { count: small.length, area: small.reduce((s, h) => s + h.area, 0) },
-      holeCount: f.edge?.holes?.count ?? holes.length,
-      solidAreas: f.edge?.solidAreas?.count ?? null,
-      specks: f.edge?.specks?.count ?? null,
-      edgeWidth: f.edge?.width ? { typical: f.edge.width.typical, p90: f.edge.width.p90 } : null,
-      ...f.error ? { error: f.error } : {}
-    };
+async function renderChunked(io, base, frames, perFrameMs, outDir, stem) {
+  const size = Math.max(1, Math.floor(SETTLE_MAX_MS / perFrameMs));
+  const out = [];
+  for (let c = 0; c * size < frames.length; c++) {
+    const chunk2 = frames.slice(c * size, (c + 1) * size);
+    const payload = await io.render({
+      ...base,
+      frames: chunk2,
+      outPath: path7.join(outDir, `${stem}-${c}.png`),
+      settleTimeoutMs: Math.min(SETTLE_MAX_MS, Math.max(1, Math.round(perFrameMs * chunk2.length)))
+    });
+    if (!payload?.ok) {
+      for (const frame of chunk2)
+        out.push({
+          frame,
+          ok: false,
+          error: `the render call failed: ${payload?.error ?? "no result"}`
+        });
+      continue;
+    }
+    const list = payload.frames ?? (payload.writtenTo ? [{ ...payload, ok: true, frame: chunk2[0] }] : []);
+    for (const [i, frame] of chunk2.entries()) {
+      const f = list.find((x) => x.frame === frame) ?? list[i];
+      if (!f) out.push({ frame, ok: false, error: "not in the render's result" });
+      else if (f.ok === false || typeof f.writtenTo !== "string")
+        out.push({ frame, ok: false, error: f.error ?? "the frame was not written" });
+      else out.push({ frame, ok: true, file: f.writtenTo, edge: f.edge });
+    }
+  }
+  return out;
+}
+function parseHex(c) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(c.trim());
+  if (!m) return [1, 0, 1];
+  const v = parseInt(m[1], 16);
+  return [(v >> 16 & 255) / 255, (v >> 8 & 255) / 255, (v & 255) / 255];
+}
+async function measureFrames(io, rendered, limit, over, sheetPath) {
+  const colour = parseHex(over);
+  const readings = [];
+  const thumbs = [];
+  const labels = [];
+  const split = (list) => ({
+    big: list.filter((r) => r.area >= limit),
+    small: {
+      count: list.filter((r) => r.area < limit).length,
+      area: list.filter((r) => r.area < limit).reduce((s, r) => s + r.area, 0)
+    }
   });
+  for (const r of rendered) {
+    if (!r.ok || !r.file) {
+      readings.push({
+        frame: r.frame,
+        checked: false,
+        holes: null,
+        openings: null,
+        error: r.error
+      });
+      continue;
+    }
+    let img;
+    try {
+      img = await io.readImage(r.file);
+    } catch (err) {
+      readings.push({
+        frame: r.frame,
+        checked: false,
+        holes: null,
+        openings: null,
+        error: `could not read ${r.file}: ${err instanceof Error ? err.message : String(err)}`
+      });
+      continue;
+    }
+    if (!img.alpha) {
+      readings.push({
+        frame: r.frame,
+        checked: false,
+        holes: null,
+        openings: null,
+        error: `${r.file} has no alpha channel`
+      });
+      continue;
+    }
+    const regions = cutoutRegions(img.alpha, img.width, img.height);
+    const h = split(regions.holes);
+    const o = split(regions.openings);
+    const composite = flattenOver(img, { kind: "color", color: colour });
+    const picture2 = r.file.replace(/\.png$/i, "") + "_over.png";
+    await writePng(io, picture2, encodePngSrgb8(img.width, img.height, composite));
+    const tw = Math.min(THUMB, img.width);
+    const th = Math.max(1, Math.round(img.height * tw / img.width));
+    thumbs.push({
+      width: tw,
+      height: th,
+      rgb: resample({ ...img, rgb: composite }, tw, th),
+      bitDepth: 8
+    });
+    labels.push(`frame ${r.frame}`);
+    readings.push({
+      frame: r.frame,
+      checked: true,
+      file: r.file,
+      picture: picture2,
+      holes: h.big,
+      openings: o.big,
+      holesUnderLimit: h.small,
+      openingsUnderLimit: o.small,
+      edgeWidth: r.edge?.width ? { typical: r.edge.width.typical ?? null, p90: r.edge.width.p90 ?? null } : null,
+      solidAreas: r.edge?.solidAreas?.count ?? null
+    });
+  }
+  let picture = null;
+  if (thumbs.length) {
+    const sheet = composeContactSheet(thumbs, { labels, thumbWidth: THUMB });
+    await writePng(io, sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+    picture = sheetPath;
+  }
+  return { readings, picture };
 }
-function holeLines(findings, frames) {
+function regionLines(findings, frames) {
   return findings.map(
-    (h) => `${fmt2(h.largestArea)} px at ${boxText(h.box)} on ${h.frames.length} of ${frames} frames (${h.frames.join(", ")})`
+    (f) => `${fmt2(f.largestArea)} px at ${boxText(f.box)} on ${f.frames.length} of ${frames} frames (${f.frames.join(", ")})` + (f.kind === "opening" && f.edges?.length ? `, reaches the ${f.edges.join(" and ")} edge` : "")
   );
 }
 var needSelection = (st) => {
@@ -49055,69 +49288,118 @@ var needSelection = (st) => {
     return `${st?.summary ?? "no selection"}; ${NEED_CLICK}`;
   return null;
 };
+var perFrameMsOf = (args) => Math.max(
+  1,
+  Math.round(
+    (typeof args.secondsPerFrame === "number" && args.secondsPerFrame > 0 ? args.secondsPerFrame : CUTOUT_SECONDS_PER_FRAME) * 1e3
+  )
+);
+var TAKES_MINUTES = "This check can take minutes: on a 2176 x 3840 take each frame took 20 to 40 s the first time (the matte is tracked from the click), well under a second once rendered; tell the user before it runs on a long or large clip.";
+function summarize(readings, limit, accept) {
+  const regions = cutoutFindings(readings, limit);
+  const accepted = regions.filter((f) => accept.some((b) => overlapShare(f.box, b) >= 0.5));
+  const open2 = regions.filter((f) => !accepted.includes(f));
+  const missed = readings.filter((r) => !r.checked);
+  const checked = { frames: readings.length - missed.length, of: readings.length };
+  const notChecked = missed.length ? [
+    {
+      kind: "not-checked",
+      frames: missed.map((r) => r.frame),
+      errors: [...new Set(missed.map((r) => r.error ?? "not rendered"))]
+    }
+  ] : [];
+  const holes = open2.filter((f) => f.kind === "hole");
+  const openings = open2.filter((f) => f.kind === "opening");
+  const parts = [];
+  parts.push(
+    missed.length ? `Checked ${checked.frames} of ${checked.of} frames; ${missed.length} did not render (${missed.map((r) => r.frame).join(", ")}): ${notChecked[0].errors.join("; ")}. Those frames were not checked.` : `Checked ${checked.frames} of ${checked.of} frames.`
+  );
+  if (holes.length)
+    parts.push(
+      `${plural2(holes.length, "enclosed hole")} of ${fmt2(limit)} px or more inside the cut-out: ${regionLines(holes, readings.length).join("; ")}. A hole is something in front of the subject not selected (a cup) or a gap inside a piece that no click fills (subject.fill_gaps).`
+    );
+  if (openings.length)
+    parts.push(
+      `${plural2(openings.length, "opening")} of ${fmt2(limit)} px or more, closed off by the subject and the frame edge: ${regionLines(openings, readings.length).join("; ")}. An opening may be something in front of the subject left out (a microphone, a desk), or a real gap such as between an arm and the body; the picture decides.`
+    );
+  if (!holes.length && !openings.length)
+    parts.push(
+      missed.length ? `No hole or opening of ${fmt2(limit)} px or more on the ${checked.frames} frames checked; the other ${missed.length} were not checked.` : `Out: no hole or opening of ${fmt2(limit)} px or more on the ${checked.frames} frames checked.`
+    );
+  if (accepted.length)
+    parts.push(
+      `Accepted earlier and not counted: ${regionLines(accepted, readings.length).join("; ")}.`
+    );
+  return { findings: [...open2, ...notChecked], accepted, checked, text: parts.join(" ") };
+}
 async function runSubjectCheck(args, io) {
   const outDir = args.outDir;
   if (typeof outDir !== "string" || !path7.isAbsolute(outDir))
     return { ok: false, error: "`outDir` must be an absolute folder for the pictures" };
   const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
+  const over = typeof args.over === "string" ? args.over : CUTOUT_OVER;
+  const accept = Array.isArray(args.accept) ? args.accept : [];
   const st = await io.status();
   if (!st?.ok) return { ok: false, error: st?.error ?? "subject.status failed", status: st };
   const missing = needSelection(st);
   if (missing) return { ok: false, error: missing };
-  const frames = Array.isArray(args.frames) ? args.frames.slice().sort((a, b) => a - b) : framesAcross(st.span, typeof args.count === "number" ? args.count : CUTOUT_FRAMES, [
-    args.clickFrame
-  ]);
-  const payload = await io.render({
-    compNameOrId: args.comp,
-    frames,
-    outPath: path7.join(outDir, "cutout.png"),
-    isolate: args.layer,
-    over: typeof args.over === "string" ? args.over : CUTOUT_OVER,
-    edge: { listed: CUTOUT_LISTED },
-    contactSheet: {}
-  });
-  if (!payload?.ok)
-    return {
-      ok: false,
-      error: `the cut-out render failed: ${payload?.error ?? "no result"}`,
-      render: payload
-    };
-  const readings = frameReadings(payload, limit);
-  const holes = cutoutFindings(readings, limit);
   const clicks = st.selections.map((s) => ({
     name: s.name,
     kind: s.kind,
     point: s.point ?? null,
-    durationStart: s.durationStart ?? null
+    clickTime: s.clickTime ?? null,
+    clickFrame: s.clickFrame ?? null
   }));
+  const frames = Array.isArray(args.frames) ? args.frames.slice().sort((a, b) => a - b) : framesAcross(st.span, typeof args.count === "number" ? args.count : CUTOUT_FRAMES, [
+    args.clickFrame,
+    ...clicks.map((c) => c.clickFrame)
+  ]);
+  const rendered = await renderChunked(
+    io,
+    { compNameOrId: args.comp, isolate: args.layer, channels: "rgba", edge: true },
+    frames,
+    perFrameMsOf(args),
+    outDir,
+    "cutout"
+  );
+  const { readings, picture } = await measureFrames(
+    io,
+    rendered,
+    limit,
+    over,
+    path7.join(outDir, "cutout_sheet.png")
+  );
+  const sum = summarize(readings, limit, accept);
   const close = closeClicks(clicks, st.sourceSize ?? null);
-  const findings = [...holes];
+  const findings = [...sum.findings];
   if (close.length) findings.push({ kind: "close-clicks", pairs: close });
   const rects = clicks.filter((c) => c.kind === "rectangle").map((c) => c.name);
-  const picture = payload.contactSheet?.writtenTo ?? readings[0]?.picture ?? null;
-  const solid = readings.find((r) => r.solidAreas !== null)?.solidAreas;
-  const inText = `In: ${st.summary}` + (typeof solid === "number" ? `, making ${solid} solid area${solid === 1 ? "" : "s"} on the first frame` : "") + ".";
-  const outText = holes.length ? `Out: ${holes.length} enclosed hole${holes.length === 1 ? "" : "s"} of ${fmt2(limit)} px or more inside the cut-out: ${holeLines(holes, readings.length).join("; ")}. A hole in the subject is something not selected (a microphone, a cup) or a gap in it that no click fills (subject.fill_gaps).` : `Out: no enclosed hole over ${fmt2(limit)} px on the ${readings.length} frames looked at.`;
+  const solid = readings.find((r) => typeof r.solidAreas === "number")?.solidAreas;
+  const inText = `In: ${st.summary}` + (typeof solid === "number" ? `, making ${plural2(solid, "solid area")} on the first frame checked` : "") + ".";
   const clickText = close.length ? ` Clicks: ${close.map((c) => c.reading).join("; ")}.` : "";
   const rectText = rects.length ? ` ${rects.join(", ")}: a click that dragged a little; it may hold nothing (subject.remove_selection).` : "";
+  const pictureText = picture ? ` Look at the picture (${picture}): it shows what no number does, such as the background kept or something the brief names left out.` : " No frame rendered, so there is no picture.";
+  const stop = findings.length > 0;
   return {
     ok: true,
     layer: st.layer,
-    stop: findings.length > 0,
+    stop,
     findings,
-    inOut: `${inText} ${outText}${clickText}${rectText} Look at the picture (${picture}): it shows what no number does, such as the background kept or something the brief names left out without a hole.`,
+    accepted: sum.accepted,
+    checked: sum.checked,
+    inOut: `${inText} ${sum.text}${clickText}${rectText}${pictureText}`,
     picture,
     frames: readings,
     clicks,
     countNote: COUNT_NOTE,
     holeLimit: limit,
-    next: findings.length ? "Stop: show the user the picture and say what is out, before building anything else. A missed object needs another click (subject.prepare, then the steps); a wrong extra click comes out with subject.remove_selection; an enclosed gap no click fills goes to subject.fill_gaps. Then run subject.check again." : "Nothing over the limit. Still look at the picture yourself and tell the user what is in and what is out before building on the cut-out."
+    next: stop ? "Stop: show the user the picture and say what is out, before building anything else. Something left out needs another click (subject.prepare, then the steps); a wrong extra click comes out with subject.remove_selection; an enclosed gap no click fills goes to subject.fill_gaps. When the user says a region shown is fine (a real gap between an arm and the body), run subject.check again with accept: [that finding's box] so it is not shown again. Frames not checked: run subject.check again on those frames with a larger secondsPerFrame. " + TAKES_MINUTES : "Nothing over the limit. Still look at the picture yourself and tell the user what is in and what is out before building on the cut-out. " + TAKES_MINUTES
   };
 }
 var FILL_LIMITS = (frame) => [
   `The still comes from one frame (frame ${frame}): it assumes a locked camera and that what is in front of the subject does not move. Anything that moves away from the still's gaps shows through the fill.`,
   "What shows through a filled gap is whatever is behind it in the footage. That is the subject only while the subject is behind the gap.",
-  "Every enclosed gap at that frame is filled, including a real one (between an arm and the body) where the background will show; pass `only` boxes to fill just the gaps you mean."
+  "Every enclosed gap at that frame is filled, including a real one (between an arm and the body) where the background will show; pass `only` boxes to fill just the gaps you mean. Openings (regions that reach the frame edge) are never filled."
 ];
 async function runFillGaps(args, io) {
   const still = args.stillPath;
@@ -49131,29 +49413,35 @@ async function runFillGaps(args, io) {
   if (rejected) return { ok: false, error: rejected };
   const outDir = typeof args.outDir === "string" && path7.isAbsolute(args.outDir) ? args.outDir : path7.dirname(still);
   const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
+  const over = typeof args.over === "string" ? args.over : CUTOUT_OVER;
   const minArea = typeof args.minArea === "number" ? args.minArea : 20;
   const grow = typeof args.grow === "number" ? args.grow : 3;
+  const perFrameMs = perFrameMsOf(args);
   const st = await io.status();
   if (!st?.ok) return { ok: false, error: st?.error ?? "subject.status failed", status: st };
   const missing = needSelection(st);
   if (missing) return { ok: false, error: missing };
   const frame = typeof args.frame === "number" ? args.frame : st.span?.inFrame ?? 0;
-  const ref = await io.render({
-    compNameOrId: args.comp,
-    frames: [frame],
-    outPath: path7.join(outDir, "fill-reference.png"),
-    isolate: args.layer,
-    channels: "rgba"
+  const [ref] = await renderChunked(
+    io,
+    { compNameOrId: args.comp, isolate: args.layer, channels: "rgba" },
+    [frame],
+    perFrameMs,
+    outDir,
+    "fill-reference"
+  );
+  const refused = (why) => ({
+    ok: false,
+    error: `the reference frame ${frame} did not render (${why}). Nothing was built. Try again with a larger secondsPerFrame.`
   });
-  if (!ref?.ok)
-    return {
-      ok: false,
-      error: `the reference render failed: ${ref?.error ?? "no result"}`,
-      render: ref
-    };
-  const refFile = ref.frames?.[0]?.writtenTo ?? ref.writtenTo;
-  if (!refFile) return { ok: false, error: "the reference render wrote no file", render: ref };
-  const img = await io.readAlpha(refFile);
+  if (!ref?.ok || !ref.file) return refused(ref?.error ?? "no result");
+  let img;
+  try {
+    img = await io.readImage(ref.file);
+  } catch (err) {
+    return refused(err instanceof Error ? err.message : String(err));
+  }
+  if (!img.alpha) return refused(`${ref.file} has no alpha channel`);
   const [cw, ch] = Array.isArray(st.compSize) ? st.compSize : [img.width, img.height];
   if (img.width !== cw || img.height !== ch) {
     return {
@@ -49166,6 +49454,7 @@ async function runFillGaps(args, io) {
     minArea,
     keep: only ? (h) => only.some((b) => intersects(h, b)) : void 0
   });
+  const openings = cutoutRegions(img.alpha, img.width, img.height, { minArea }).openings;
   const area = found.holes.reduce((s, h) => s + h.area, 0);
   const filled = {
     holes: found.holes.length,
@@ -49173,15 +49462,16 @@ async function runFillGaps(args, io) {
     list: found.holes.slice(0, 20),
     dropped: found.dropped,
     leftOut: found.leftOut,
+    openingsNotFilled: { count: openings.length, area: openings.reduce((s, o) => s + o.area, 0) },
     grow,
     minArea
   };
   if (found.holes.length === 0) {
     return {
       ok: true,
-      reference: { frame, picture: refFile },
+      reference: { frame, file: ref.file },
       filled,
-      reading: `No enclosed gap of ${minArea} px or more to fill at frame ${frame}; nothing was built.`,
+      reading: `No enclosed gap of ${minArea} px or more to fill at frame ${frame}; nothing was built.` + (openings.length ? ` ${plural2(openings.length, "opening")} reaching the frame edge were left alone: an opening is never filled.` : ""),
       limits: FILL_LIMITS(frame)
     };
   }
@@ -49195,12 +49485,7 @@ async function runFillGaps(args, io) {
     }
   filled.grownArea = grownArea;
   filled.still = still;
-  const png = encodePngGray8(img.width, img.height, values);
-  if (io.writePng) await io.writePng(still, png);
-  else {
-    await fs7.mkdir(path7.dirname(still), { recursive: true });
-    await fs7.writeFile(still, png);
-  }
+  await writePng(io, still, encodePngGray8(img.width, img.height, values));
   const built = await io.build({ comp: args.comp, layer: args.layer, stillPath: still });
   if (!built?.ok)
     return {
@@ -49209,35 +49494,107 @@ async function runFillGaps(args, io) {
       filled,
       build: built
     };
-  const frames = Array.isArray(args.frames) ? args.frames.slice().sort((a, b) => a - b) : framesAcross(st.span, typeof args.count === "number" ? args.count : CUTOUT_FRAMES, [frame]);
-  const after = await io.render({
-    compNameOrId: args.comp,
-    frames,
-    outPath: path7.join(outDir, "fill-after.png"),
-    isolate: [args.layer, built.fillLayer],
-    over: typeof args.over === "string" ? args.over : CUTOUT_OVER,
-    edge: { listed: CUTOUT_LISTED },
-    contactSheet: {}
-  });
-  const afterOut = after?.ok ? (() => {
-    const readings = frameReadings(after, limit);
-    const findings = cutoutFindings(readings, limit);
-    return {
-      frames: readings,
-      findings,
-      picture: after.contactSheet?.writtenTo ?? null,
-      reading: findings.length ? `Still over ${fmt2(limit)} px after the fill: ${holeLines(findings, readings.length).join("; ")}.` : `No enclosed hole over ${fmt2(limit)} px on the ${readings.length} frames looked at after the fill.`
+  const layers = {
+    fill: built.fillLayer,
+    mask: built.maskLayer,
+    stillItem: built.stillItem,
+    stillItemId: built.stillItemId ?? null
+  };
+  const [alone] = await renderChunked(
+    io,
+    { compNameOrId: args.comp, isolate: [built.fillLayer], channels: "rgba" },
+    [frame],
+    perFrameMs,
+    outDir,
+    "fill-alone"
+  );
+  let fillAlone;
+  try {
+    if (!alone?.ok || !alone.file) throw new Error(alone?.error ?? "not rendered");
+    const a = await io.readImage(alone.file);
+    let covered = 0;
+    for (const v of a.alpha ?? []) if (v > EDGE_TRANSPARENT) covered++;
+    fillAlone = { covered, mask: grownArea, ok: covered <= grownArea * 1.1 + 100 };
+  } catch (err) {
+    fillAlone = {
+      covered: null,
+      mask: grownArea,
+      ok: null,
+      error: err instanceof Error ? err.message : String(err)
     };
-  })() : { error: `the render after the fill failed: ${after?.error ?? "no result"}` };
+  }
+  if (fillAlone.ok === false) {
+    const undone = await io.unbuild({
+      comp: args.comp,
+      fillLayer: built.fillLayer,
+      maskLayer: built.maskLayer,
+      stillItemId: layers.stillItemId
+    });
+    return {
+      ok: false,
+      error: `the fill layer alone covers ${fmt2(fillAlone.covered)} px, more than the gap mask's ${fmt2(grownArea)} px: the track matte is not limiting it. ` + (undone?.ok ? `The build was undone (${(undone.removed ?? []).join(", ")}).` : `Undoing the build failed (${undone?.error ?? "no result"}): delete '${built.fillLayer}' and '${built.maskLayer}' by hand.`),
+      filled,
+      fillAlone,
+      layers
+    };
+  }
+  const frames = Array.isArray(args.frames) ? args.frames.slice().sort((a, b) => a - b) : framesAcross(st.span, typeof args.count === "number" ? args.count : CUTOUT_FRAMES, [frame]);
+  const afterRendered = await renderChunked(
+    io,
+    {
+      compNameOrId: args.comp,
+      isolate: [args.layer, built.fillLayer],
+      channels: "rgba",
+      edge: true
+    },
+    frames,
+    perFrameMs,
+    outDir,
+    "fill-after"
+  );
+  const measured = await measureFrames(
+    io,
+    afterRendered,
+    limit,
+    over,
+    path7.join(outDir, "fill-after_sheet.png")
+  );
+  const sum = summarize(measured.readings, limit, []);
   return {
     ok: true,
-    reference: { frame, picture: refFile },
+    reference: { frame, file: ref.file },
     filled,
-    layers: { fill: built.fillLayer, mask: built.maskLayer, stillItem: built.stillItem },
-    after: afterOut,
+    fillAlone,
+    layers,
+    after: {
+      frames: measured.readings,
+      findings: sum.findings,
+      checked: sum.checked,
+      picture: measured.picture,
+      reading: sum.text
+    },
     limits: FILL_LIMITS(frame),
-    next: "Show the user the picture after the fill and say what is left. To undo the fill, delete the two layers it added."
+    next: "Show the user the picture after the fill and say what is left. To undo the fill, delete the two layers it added." + (fillAlone.ok === null ? " The fill layer alone could not be rendered, so whether the track matte limits it was not checked: look at it." : "")
   };
+}
+function fillUnbuildJsx(args) {
+  return `
+            ${jsxCompPreamble(args)}
+            var _names = [${jsxVal(args.fillLayer)}, ${jsxVal(args.maskLayer)}];
+            var _removed = [];
+            for (var _ni = 0; _ni < _names.length; _ni++) {
+                for (var _li = _comp.numLayers; _li >= 1; _li--) {
+                    var _l = _comp.layer(_li);
+                    if (_l.name === _names[_ni]) { _l.remove(); _removed.push(_names[_ni]); break; }
+                }
+            }
+            var _id = ${jsxVal(args.stillItemId)};
+            if (_id !== null) {
+                var _item = AE.safeGet(function () { return app.project.itemByID(_id); }, null);
+                if (_item) { var _iname = _item.name; _item.remove(); _removed.push(_iname); }
+            }
+            return { ok: true, removed: _removed };
+        `;
 }
 function fillBuildJsx(args) {
   return `
@@ -49272,7 +49629,7 @@ function fillBuildJsx(args) {
             } catch (eSpan) { _spanError = AE.errText(eSpan); }
             _fill.setTrackMatte(_mask, TrackMatteType.LUMA);
             _mask.enabled = false;
-            var _out = { ok: true, fillLayer: _fill.name, fillIndex: _fill.index, maskLayer: _mask.name, maskIndex: _mask.index, stillItem: _item.name, removedFromCopy: _removed };
+            var _out = { ok: true, fillLayer: _fill.name, fillIndex: _fill.index, maskLayer: _mask.name, maskIndex: _mask.index, stillItem: _item.name, stillItemId: AE.safeGet(function () { return _item.id; }, null), removedFromCopy: _removed };
             if (_spanError !== null) _out.maskSpanError = _spanError;
             return _out;
         `;
@@ -49304,10 +49661,18 @@ function liveCutoutIO(args, transport2) {
         };
       return sc?.result ?? { ok: false, error: "ae_render_frame returned no result" };
     },
-    async readAlpha(file2) {
-      const img = decodePng(await fs7.readFile(file2));
-      if (!img.alpha) throw new Error(`${file2} has no alpha channel`);
-      return { width: img.width, height: img.height, alpha: img.alpha };
+    async readImage(file2) {
+      return decodePng(await fs7.readFile(file2));
+    },
+    async unbuild(a) {
+      const r = await transport2.execute({
+        code: fillUnbuildJsx(a),
+        label: "subject.fill_gaps undo",
+        undoGroup: true,
+        suppressDialogs: true,
+        timeoutMs: 6e4
+      });
+      return r.ok ? r.result : { ok: false, error: r.error ?? "undoing the build failed" };
     },
     async build(a) {
       const r = await transport2.execute({
@@ -49331,10 +49696,22 @@ var frameListParam = {
   description: "Comp frame numbers to look at, instead of the default: `count` frames evenly spaced across the layer, plus the click frame.",
   required: false
 };
+var secondsPerFrameParam = {
+  name: "secondsPerFrame",
+  type: "number",
+  description: `Settle time to allow each frame, s (default ${CUTOUT_SECONDS_PER_FRAME}; measured 20 to 40 s a frame the first time on a 2176 x 3840 take). Frames are split over several renders when one cannot hold them (600 s a render).`,
+  required: false
+};
+var overParam = {
+  name: "over",
+  type: "string",
+  description: `The flat colour of the picture (default '${CUTOUT_OVER}').`,
+  required: false
+};
 registerOp({
   name: "subject.check",
   category: "subject",
-  description: `Proof a subject matte after the user says done, before anything else is built: renders the cut-out over a flat colour (default magenta) at the click frame and at frames across the clip (ae_render_frame isolate, edge, a contact sheet), finds enclosed holes with edge's code, and returns picture (the sheet), findings, inOut (a plain statement of what is in and what is out) and stop. A hole of holeLimit px or more (default ${CUTOUT_HOLE_LIMIT}, at the comp's size) is a finding, and so are two clicks close together (they probably selected the same thing). With stop true: show the user the picture and say what is out before doing anything else. A selection count is not a check. Renders track the matte from the click: about 0.13 s a frame the first time (measured).`,
+  description: `Proof a subject matte after the user says done, before anything else is built. Renders the cut-out with its alpha (ae_render_frame isolate, channels 'rgba') at the click frames and frames across the clip, finds holes (regions below opaque the frame edge cannot reach) and openings (regions closed off only by the subject and the frame edge: the missed microphone of 2026-11-11 ran off the bottom of the frame), draws each frame over a flat colour and one contact sheet, and returns picture (the sheet), findings, accepted, checked {frames, of}, inOut (a plain statement of what is in and what is out), frames, clicks and stop. A hole or opening of holeLimit px or more (default ${CUTOUT_HOLE_LIMIT}, at the comp's size) is a finding; so are frames that did not render (kind 'not-checked': a frame that was not rendered is never counted as clean) and two clicks close together. With stop true: show the user the picture and say what is out before doing anything else. \`accept\` boxes (from earlier findings the user called fine, such as a real gap between an arm and the body) are not counted again. A selection count is not a check. It can take minutes: 20 to 40 s a frame the first time on a 2176 x 3840 take; say so to the user before it runs.`,
   params: [
     ...compLayerParams,
     {
@@ -49346,7 +49723,7 @@ registerOp({
     {
       name: "clickFrame",
       type: "number",
-      description: "The comp frame the user clicked at (subject.prepare's time in frames). Looked at as well.",
+      description: "A comp frame to look at as well. The selections' own click frames are always looked at.",
       required: false
     },
     frameListParam,
@@ -49359,15 +49736,17 @@ registerOp({
     {
       name: "holeLimit",
       type: "number",
-      description: `Smallest hole that is a finding, px at the comp's size (default ${CUTOUT_HOLE_LIMIT}).`,
+      description: `Smallest hole or opening that is a finding, px at the comp's size (default ${CUTOUT_HOLE_LIMIT}).`,
       required: false
     },
     {
-      name: "over",
-      type: "string",
-      description: `The flat colour (default '${CUTOUT_OVER}').`,
+      name: "accept",
+      type: "array",
+      description: "Boxes {x, y, width, height} of findings the user has seen and called fine: a hole or opening at least half inside one is listed in `accepted`, not in findings.",
       required: false
     },
+    secondsPerFrameParam,
+    overParam,
     subjectIndexParam
   ],
   toJsx: () => NODE_ONLY("subject.check"),
@@ -49376,7 +49755,7 @@ registerOp({
 registerOp({
   name: "subject.fill_gaps",
   category: "subject",
-  description: "Fill enclosed gaps in a subject matte that no click fills (a gap in a microphone's shock mount with the shirt behind it): reads the matte at one reference frame at the comp's size, keeps the transparent regions the frame edge cannot reach, drops those under minArea (default 20 px), grows the rest by `grow` px (default 3), writes them as a still (stillPath), and adds a copy of the same footage under the cut-out showing only through that still (luma track matte); then measures holes again across the clip and reports what is left. Limits, stated in the result: one reference frame, so it assumes a locked camera and a prop that does not move; what shows through is whatever is behind the gap. `only` boxes fill just the gaps they touch. Probed by hand in After Effects 27.0; this operation is not verified there yet.",
+  description: "Fill enclosed gaps in a subject matte that no click fills (a gap in a microphone's shock mount with the shirt behind it): reads the matte at one reference frame at the comp's size, keeps the regions below opaque that the frame edge cannot reach (openings are never filled), drops those under minArea (default 20 px), grows the rest by `grow` px (default 3), writes them as a still (stillPath), and adds a copy of the same footage under the cut-out showing only through that still (luma track matte). It then renders the fill layer alone and undoes the build when that covers more than the mask, and measures holes and openings again across the clip. Refuses, building nothing, when the reference frame does not render. Limits, stated in the result: one reference frame, so it assumes a locked camera and a prop that does not move; what shows through is whatever is behind the gap. `only` boxes fill just the gaps they touch. Can take minutes, as subject.check does. Probed by hand in After Effects 27.0; this operation is not verified there yet.",
   params: [
     ...compLayerParams,
     {
@@ -49425,15 +49804,11 @@ registerOp({
     {
       name: "holeLimit",
       type: "number",
-      description: `Smallest hole reported after the fill, px (default ${CUTOUT_HOLE_LIMIT}).`,
+      description: `Smallest hole or opening reported after the fill, px (default ${CUTOUT_HOLE_LIMIT}).`,
       required: false
     },
-    {
-      name: "over",
-      type: "string",
-      description: `The flat colour (default '${CUTOUT_OVER}').`,
-      required: false
-    },
+    secondsPerFrameParam,
+    overParam,
     subjectIndexParam
   ],
   toJsx: () => NODE_ONLY("subject.fill_gaps"),

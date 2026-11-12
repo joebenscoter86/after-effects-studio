@@ -60,7 +60,7 @@ When a brief involves cutting a person or object out of footage, with or without
 
 At that point run `subject.prepare` and give the user its `userMessage` word for word: the notice and seven numbered steps, with the clip's name filled in. Do not paraphrase or shorten them. In a plan written before After Effects, quote the seven steps from `keying` ("Tell the user first") as they are.
 
-After "done", and before building anything else, run `subject.check`. A selection count is not a check. When it returns `stop: true` (a hole of 1,000 px or more, or two clicks close together), stop: show the user its picture, say what is out, and fix it as `keying` says (another click, `subject.remove_selection`, or `subject.fill_gaps` for a gap no click fills), then check again. When the user asks you to make the click and you have full-screen control, hover each piece, confirm from a screenshot that the magenta tint is on the piece you mean, click, and then run `subject.check`.
+After "done", and before building anything else, run `subject.check`, telling the user first that it can take a few minutes. A selection count is not a check. When it returns `stop: true` (a hole or opening of 1,000 px or more, a frame it could not check, or two clicks close together), stop: show the user its picture, say what is out, and fix it as `keying` says (another click, `subject.remove_selection`, `subject.fill_gaps` for a hole no click fills, or `accept` for a real gap the user calls fine), then check again. When the user asks you to make the click and you have full-screen control, hover each piece, confirm from a screenshot that the magenta tint is on the piece you mean, click, and then run `subject.check`.
 
 ## Execute, inspect and deliver
 

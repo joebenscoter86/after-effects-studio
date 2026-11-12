@@ -298,4 +298,34 @@ export declare function enclosedHoles(alpha: ArrayLike<number>, width: number, h
 };
 /** `mask` grown by `radius` px: every pixel within that Euclidean distance of a set pixel is set. */
 export declare function growMask(mask: Uint8Array, width: number, height: number, radius: number): Uint8Array;
+export type FrameEdge = "top" | "bottom" | "left" | "right";
+export interface Opening extends EnclosedHole {
+    /** The frame edges it reaches between two of the subject's contacts. */
+    edges: FrameEdge[];
+}
+/**
+ * Holes and openings in a cut-out's matte. A hole is a region below `below`
+ * (default edge's opaque threshold) that cannot reach the frame edge, as
+ * `edge` reports it. An opening reaches the frame edge only between two
+ * places where the subject touches that edge: on each of the four edges, the
+ * pixels between the first and the last opaque pixel on it are treated as
+ * solid (an edge with fewer than two opaque pixels is left open), and a
+ * region enclosed only because of that sealing is an opening. On a take with
+ * no green screen (2026-11-11) a microphone left out of the matte ran off the
+ * bottom of the frame: an opening of about 115,000 px, not a hole. An opening
+ * can also be a real gap, such as between an arm and the body. The sealed edge
+ * pixels that were below opaque count in the opening they close. Regions
+ * smaller than `minArea` are left out and counted in `dropped`.
+ */
+export declare function cutoutRegions(alpha: ArrayLike<number>, width: number, height: number, opts?: {
+    below?: number;
+    minArea?: number;
+}): {
+    holes: EnclosedHole[];
+    openings: Opening[];
+    dropped: {
+        count: number;
+        area: number;
+    };
+};
 //# sourceMappingURL=matte.d.ts.map
