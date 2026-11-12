@@ -165,6 +165,93 @@ describe("reference.report", () => {
   });
 });
 
+describe("reference.report: how far apart a folder's frames are", () => {
+  const write = async (sub: string, frames: number[], name: (f: number, i: number) => string) => {
+    const d = path.join(dir, sub);
+    await fs.mkdir(d);
+    for (const [i, f] of frames.entries()) await fs.writeFile(path.join(d, name(f, i)), png(f));
+    return d;
+  };
+  const spread = Array.from({ length: 6 }, (_, i) => i * 20);
+
+  it("reads the step from numbered file names, and reads no cut between frames that are not neighbours", async () => {
+    const d = await write("spread", spread, (f) => `frame_${String(f).padStart(4, "0")}.png`);
+    const res = await runReferenceReport({ path: d, outPath: path.join(dir, "s.json") }, noAE);
+    expect(res.ok).toBe(true);
+    expect(res.report.motion.consecutive).toBe(false);
+    expect(res.report.motion.cuts).toEqual([]);
+    expect(res.report.motion.meanChange).toBeNull();
+    expect(res.report.motion.spacing).toMatchObject({ how: "file names", step: 20 });
+    expect(res.notes.join(" ")).toMatch(/20 frames apart.*file names/);
+  });
+
+  it("takes the step from the caller", async () => {
+    const d = await write("given", spread, (_f, i) => `still-${"abcdef"[i]}.png`);
+    const res = await runReferenceReport({ path: d, outPath: path.join(dir, "g.json"), frameStep: 20 }, noAE);
+    expect(res.report.motion.consecutive).toBe(false);
+    expect(res.report.motion.cuts).toEqual([]);
+    expect(res.report.motion.spacing).toMatchObject({ how: "given", step: 20 });
+  });
+
+  it("says when it assumed the frames are neighbours, and then reads cuts", async () => {
+    const d = await write("plain", Array.from({ length: 16 }, (_, i) => i), (_f, i) => `still-${String.fromCharCode(97 + i)}.png`);
+    const res = await runReferenceReport({ path: d, outPath: path.join(dir, "p.json") }, noAE);
+    expect(res.report.motion.consecutive).toBe(true);
+    expect(res.report.motion.spacing.how).toBe("assumed");
+    expect(res.report.motion.cuts).toEqual([{ frame: CUT, time: null }]);
+    expect(res.notes.join(" ")).toMatch(/assumed.*neighbours.*frameStep/);
+  });
+
+  it("does not trust file names counting by one when every pair changes like a cut", async () => {
+    const d = path.join(dir, "pulled");
+    await fs.mkdir(d);
+    for (let i = 0; i < 6; i++) {
+      const rgb = new Float64Array(W * H * 3);
+      let v = i + 11;
+      for (let k = 0; k < rgb.length; k += 3) {
+        v = (v * 1103515245 + 12345) % 2147483648;
+        rgb[k] = rgb[k + 1] = rgb[k + 2] = v / 2147483648;
+      }
+      await fs.writeFile(path.join(d, `f_${String(i).padStart(3, "0")}.png`), encodePngSrgb8(W, H, rgb));
+    }
+    const res = await runReferenceReport({ path: d, outPath: path.join(dir, "u.json") }, noAE);
+    expect(res.report.motion.consecutive).toBe(false);
+    expect(res.report.motion.cuts).toEqual([]);
+    expect(res.notes.join(" ")).toMatch(/file names count up by one, but/);
+  });
+
+  it("guesses frames are not neighbours when every pair changes like a cut, and says it was a guess", async () => {
+    const noisy = (seed: number) => {
+      const rgb = new Float64Array(W * H * 3);
+      let v = seed;
+      for (let k = 0; k < rgb.length; k += 3) {
+        v = (v * 1103515245 + 12345) % 2147483648;
+        rgb[k] = rgb[k + 1] = rgb[k + 2] = v / 2147483648;
+      }
+      return encodePngSrgb8(W, H, rgb);
+    };
+    const d = path.join(dir, "jumpy");
+    await fs.mkdir(d);
+    for (let i = 0; i < 6; i++) await fs.writeFile(path.join(d, `still-${"abcdef"[i]}.png`), noisy(i + 1));
+    const res = await runReferenceReport({ path: d, outPath: path.join(dir, "j.json") }, noAE);
+    expect(res.report.motion.consecutive).toBe(false);
+    expect(res.report.motion.cuts).toEqual([]);
+    expect(res.report.motion.spacing.how).toBe("guessed from change");
+    expect(res.notes.join(" ")).toMatch(/guess/);
+  });
+
+  it("compares no cuts or movement when either side's frames are spread, and says the subject rests on spread frames", async () => {
+    const a = await write("a", spread, (f) => `f_${String(f).padStart(3, "0")}.png`);
+    const b = await write("b", Array.from({ length: 16 }, (_, i) => i), (f) => `f_${String(f).padStart(3, "0")}.png`);
+    await runReferenceReport({ path: a, outPath: path.join(dir, "a.json") }, noAE);
+    await runReferenceReport({ path: b, outPath: path.join(dir, "b.json") }, noAE);
+    const res = await runReferenceCompare({ reference: path.join(dir, "a.json"), build: path.join(dir, "b.json") });
+    expect(res.differences.find((x: Any) => x.measure === "cuts" || x.measure === "motion")).toBeUndefined();
+    expect(res.notes.join(" ")).toMatch(/not read/);
+    if (res.subject) expect(res.notes.join(" ")).toMatch(/spread frames/);
+  });
+});
+
 describe("reference.compare", () => {
   it("compares two saved reports, largest difference first, without After Effects", async () => {
     const frames = path.join(dir, "frames");

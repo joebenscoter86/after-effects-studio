@@ -5468,13 +5468,33 @@ export async function runReferenceReport(args: Record<string, unknown>, io: File
       return { ok: false, error: "a still must be a PNG (render other formats to PNG first)" };
     const idx = pick(files.length);
     const frameRate = typeof args.frameRate === "number" ? args.frameRate : undefined;
-    const reader = referenceReader({ total: idx.length, regions, frameRate });
-    for (const i of idx)
+    // How far apart the files are: given, else the numbers in their names, else assumed neighbours (and checked against the change).
+    const given =
+      typeof args.frameStep === "number" && args.frameStep >= 1 ? Math.round(args.frameStep) : null;
+    const nums = files.map((f) => {
+      const m = /(\d+)(?!.*\d)/.exec(path.basename(f, path.extname(f)));
+      return m ? Number(m[1]) : null;
+    });
+    const named =
+      nums.every((n): n is number => n !== null) && nums.every((n, i) => i === 0 || n > (nums[i - 1] as number));
+    const numberOf = (i: number) => (given !== null ? i * given : named ? (nums[i] as number) : i);
+    const steps = idx.slice(1).map((i, k) => numberOf(i) - numberOf(idx[k]));
+    const even = steps.length > 0 && steps.every((d) => d === steps[0]) ? steps[0] : null;
+    const spacing =
+      given !== null
+        ? { how: "given" as const, step: idx.length < files.length ? null : given }
+        : named
+          ? { how: "file names" as const, step: even }
+          : { how: "assumed" as const, step: even };
+    const reader = referenceReader({ total: idx.length, regions, frameRate, spacing });
+    for (const i of idx) {
+      const n = numberOf(i);
       reader.add({
         img: await io.readImage(files[i]),
-        frame: i,
-        time: frameRate ? i / frameRate : undefined,
+        frame: n,
+        time: frameRate ? n / frameRate : undefined,
       });
+    }
     report = reader.finish();
     source = {
       kind: stat.isDirectory() ? "frames" : "still",
@@ -5547,11 +5567,12 @@ export async function runReferenceReport(args: Record<string, unknown>, io: File
     report: reply,
     savedTo: outPath,
     ...(compare ? { compare } : {}),
-    notes: report.motion.consecutive
-      ? []
-      : report.frames > 1
+    notes: [
+      ...report.notes,
+      ...(source.kind !== "frames" && source.kind !== "still" && !report.motion.consecutive && report.frames > 1
         ? [`Only ${report.frames} frames spread over the source were read (maxFrames ${cap}), so cuts and motion were not.`]
-        : [],
+        : []),
+    ],
     timing: { render: roundTally(renders), totalMs: Math.round(since(started)) },
     next: compare
       ? "Read the differences largest first and decide which to fix; measure again after each fix."
@@ -5598,6 +5619,13 @@ registerOp({
     REFERENCE_REGIONS_PARAM,
     { name: "against", type: "string", description: "A saved report (the reference) to compare this one with.", required: false },
     { name: "frameRate", type: "number", description: "Frames per second of a folder of frames (for times).", required: false },
+    {
+      name: "frameStep",
+      type: "number",
+      description:
+        "How many frames apart a folder's files are (1: neighbours). Without it the step is read from numbers in the file names; with none, the files are taken as neighbours unless neighbouring files change by a median of 0.02 or more, as frames far apart do (a guess, said in notes). Cuts and movement are read only on neighbours.",
+      required: false,
+    },
     { name: "maxFrames", type: "number", description: `Most frames read (default ${CHECK_FILE_MAX_FRAMES}); beyond it frames are spread and cuts and motion are not read.`, required: false },
     { name: "secondsPerFrame", type: "number", description: "Render time allowed a frame (default 10).", required: false },
     { name: "keepCaptures", type: "boolean", description: "Keep the rendered frames (default false).", required: false },
