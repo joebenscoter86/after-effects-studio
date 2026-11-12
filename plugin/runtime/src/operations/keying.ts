@@ -19,6 +19,8 @@ import {
   cutoutRegions,
   outlineTracker,
   speckPieces,
+  SEEN_THROUGH_DEFAULTS,
+  seenThroughInside,
   type SpeckPiece,
   type FrozenRun,
   EDGE_DEFAULTS,
@@ -3494,7 +3496,8 @@ export function renderCutoutPlanJsx(args: { comp: unknown; layer: unknown }): st
             if (AE.safeGet(function () { return rq.rendering; }, false)) return { ok: false, error: "the render queue is already rendering; wait for it to finish" };
             var _fillName = _layer.name + " gap fill";
             var _fill = null;
-            for (var _li = 1; _li <= _comp.numLayers; _li++) if (_comp.layer(_li).name === _fillName) _fill = _fillName;
+            var _fillEnabled = null;
+            for (var _li = 1; _li <= _comp.numLayers; _li++) if (_comp.layer(_li).name === _fillName) { _fill = _fillName; _fillEnabled = !!_comp.layer(_li).enabled; }
             // After subject.soften_edge the cut-out is its precomp layer (two copies of the matte inside), not the matted layer.
             var _softName = _layer.name + " soft edge";
             var _soft = null;
@@ -3526,7 +3529,7 @@ export function renderCutoutPlanJsx(args: { comp: unknown; layer: unknown }): st
                     if (app.preferences.havePref("Disk Cache Controls", "Folder 7", _pts[_pi])) _cacheFolder = app.preferences.getPrefAsString("Disk Cache Controls", "Folder 7", _pts[_pi]);
                 }
             } catch (ePref) {}
-            return { ok: true, layer: _layer.name, fillLayer: _fill, softEdge: _soft, matteCopies: _soft ? 2 : 1, keep: _keep, compSize: [_comp.width, _comp.height], sourceSize: _src,
+            return { ok: true, layer: _layer.name, fillLayer: _fill, fillEnabled: _fillEnabled, softEdge: _soft, matteCopies: _soft ? 2 : 1, keep: _keep, compSize: [_comp.width, _comp.height], sourceSize: _src,
                 aeCache: { folder: _cacheFolder || null, version: AE.safeGet(function () { return app.version; }, null) },
                 span: { start: _start, duration: _end - _start, frames: Math.round((_end - _start) / _fd), frameRate: Math.round(1000 / _fd) / 1000 },
                 templates: { output: _out, render: _rend } };
@@ -3656,6 +3659,17 @@ export async function runRenderCutout(args: Record<string, unknown>, io: FileIO)
   });
   if (!plan?.ok) return { ok: false, error: plan?.error ?? "could not read the comp", plan };
   const planMs = since(started);
+  // The render keeps each kept layer switched as it is, so a gap fill switched off leaves the gaps open in the file.
+  const fillOff = typeof plan.fillLayer === "string" && plan.fillEnabled === false;
+  const fillOffText = fillOff
+    ? `The gap fill layer '${plan.fillLayer}' is switched off, so the cut-out would render with its gaps open (the holes subject.fill_gaps filled show the background through), and subject.check_file would stop on them.`
+    : "";
+  if (fillOff && args.withoutFill !== true)
+    return {
+      ok: false,
+      error: `${fillOffText} Nothing was rendered. Switch the fill layer on and render again, or pass withoutFill: true if the gaps are meant to be open.`,
+      fillLayer: plan.fillLayer,
+    };
   const choice = chooseAlphaTemplate(
     plan.templates?.output ?? [],
     typeof args.outputTemplate === "string" ? args.outputTemplate : undefined,
@@ -3742,10 +3756,14 @@ export async function runRenderCutout(args: Record<string, unknown>, io: FileIO)
   return {
     ...out,
     space,
+    ...(fillOff ? { fillWarning: `${fillOffText} Rendered anyway (withoutFill: true).` } : {}),
     cacheNote:
       `This render should have added about ${gb(cacheBytes)} to After Effects' disk cache (one 16-bit frame of the source per frame${matteCopies > 1 ? `, for each of the ${matteCopies === 2 ? "two" : matteCopies} copies of the matte subject.soften_edge built` : ""}). ` +
       "Nothing was deleted and no preference was changed.",
     next:
+      (fillOff
+        ? "The gap fill was off, so the file has its gaps open; tell the user before building on it. "
+        : "") +
       `Check the file before building on it: subject.check_file { path: "${r.outputPath}", outDir }. Then subject.use_cutout puts it in the comp in place of the live matte. ` +
       `Once the file is checked, the cache this work wrote is no longer needed: tell the user to purge it (Edit > Purge > All Memory & Disk Cache in After Effects); it should free about ${gb(cacheBytes)} or more.`,
   };
@@ -3953,6 +3971,15 @@ export async function runCheckFile(args: Record<string, unknown>, io: FileIO): P
       ? Math.floor(args.speckMinFrames)
       : SPECK_DEFAULTS.minRun;
   const speckTime = { ms: 0, frames: 0 };
+  // Partial transparency deep inside the body (a seam), frame by frame.
+  const seenLimits = { ...SEEN_THROUGH_DEFAULTS };
+  for (const k of ["deep", "minArea"] as const) {
+    const v = args[k === "deep" ? "seenThroughDepth" : "seenThroughMinArea"];
+    if (typeof v === "number" && v > 0) seenLimits[k] = v;
+  }
+  const seenTime = { ms: 0, frames: 0 };
+  const seen = new Map<number, { px: number; box: Box }>();
+  let seenLargest = -1;
   const specks: SpeckTrack[] = [];
   const specksAccepted: SpeckTrack[] = [];
 
@@ -3993,6 +4020,7 @@ export async function runCheckFile(args: Record<string, unknown>, io: FileIO): P
     const n = new Set<number>([...jumpFrames, ...sheetPlan]);
     for (const t of tracks) n.add(t.bestFrame);
     for (const t of specks) if (longestSpeckRun(t) >= speckMinRun) n.add(t.largestFrame);
+    if (seenLargest >= 0) n.add(seenLargest);
     return n;
   };
   const release = async (frame: number) => {
@@ -4044,6 +4072,14 @@ export async function runCheckFile(args: Record<string, unknown>, io: FileIO): P
               addSpeck(speckAccepted(p, accept) ? specksAccepted : specks, r.frame, p);
             speckTime.ms += performance.now() - tSpeck;
             speckTime.frames++;
+            const tSeen = performance.now();
+            const st = seenThroughInside(img.alpha, img.width, img.height, seenLimits);
+            if (st.box && st.px >= seenLimits.minArea) {
+              seen.set(r.frame, { px: st.px, box: st.box });
+              if (seenLargest < 0 || st.px > (seen.get(seenLargest)?.px ?? 0)) seenLargest = r.frame;
+            }
+            seenTime.ms += performance.now() - tSeen;
+            seenTime.frames++;
           },
         )
       ).readings;
@@ -4155,12 +4191,39 @@ export async function runCheckFile(args: Record<string, unknown>, io: FileIO): P
     largestStep,
   };
 
+  // Seen through inside: the frames over the limit, and the longest run of them among the frames read in a row.
+  const seenFrames = [...seen.keys()].sort((a, b) => a - b);
+  let seenRun = 0;
+  {
+    let run = 0;
+    let last = -1;
+    for (const f of frames) {
+      run = seen.has(f) ? (last >= 0 && seen.has(last) ? run + 1 : 1) : 0;
+      seenRun = Math.max(seenRun, run);
+      last = f;
+    }
+  }
+  const seenLasting = seenFrames.length > 0 && seenRun >= seenLimits.minRun;
+  let seenBox: Box | null = null;
+  for (const f of seenFrames) {
+    const b = seen.get(f)!.box;
+    seenBox = !seenBox
+      ? { ...b }
+      : {
+          x: Math.min(seenBox.x, b.x),
+          y: Math.min(seenBox.y, b.y),
+          width: Math.max(seenBox.x + seenBox.width, b.x + b.width) - Math.min(seenBox.x, b.x),
+          height: Math.max(seenBox.y + seenBox.height, b.y + b.height) - Math.min(seenBox.y, b.y),
+        };
+  }
+
   // Full-size pictures: the largest frame of each finding not accepted, and both frames of each jump.
   const tPic = performance.now();
   const pictureFrames = new Set<number>([
     ...tracks.map((t) => t.bestFrame),
     ...jumps.flatMap((j) => [j.from, j.to]),
     ...specks.filter((t) => longestSpeckRun(t) >= speckMinRun).map((t) => t.largestFrame),
+    ...(seenLasting ? [seenLargest] : []),
   ]);
   const pictureOf = new Map<number, string | null>();
   let pictureBytes = 0;
@@ -4236,7 +4299,10 @@ export async function runCheckFile(args: Record<string, unknown>, io: FileIO): P
       : "") +
     ` compared for jumps over ${jumpLimit} in opaque share.`;
   const passText =
-    jumps.length || frozenFindings.length || specks.some((t) => longestSpeckRun(t) >= speckMinRun)
+    jumps.length ||
+    frozenFindings.length ||
+    seenLasting ||
+    specks.some((t) => longestSpeckRun(t) >= speckMinRun)
       ? `No hole or opening of ${fmt(limit)} px or more on the ${byFrame.size} frames read.`
       : `Nothing over the limit on ${byFrame.size} of ${readings.length} frames read; no jump between neighbouring frames over ${jumpLimit}; the picture is at ${picture ?? "(none)"}.`;
   const sum = summarize(readings, limit, accept, picture, passText);
@@ -4270,7 +4336,40 @@ export async function runCheckFile(args: Record<string, unknown>, io: FileIO): P
         "Usually a sliver of the background the matte kept (a chair edge beside an arm); look at the picture. Remove it with a mask on the cut-out movie on those frames (keying.md, removing a speck), or, if it belongs to the subject, accept it: accept: [{ kind: 'speck', box }].",
     };
   });
-  const findings: Json[] = [...sum.findings, ...jumps, ...frozenFindings, ...speckFindings];
+  const seenSummary =
+    seenFrames.length && seenBox
+      ? {
+          kind: "seen-through",
+          frames: seenFrames,
+          longestRun: seenRun,
+          largestArea: seen.get(seenLargest)!.px,
+          largestFrame: seenLargest,
+          box: seenBox,
+        }
+      : null;
+  const seenFindings: Json[] =
+    seenSummary && seenLasting
+      ? [
+          {
+            ...seenSummary,
+            picture: pictureOf.get(seenLargest) ?? null,
+            reading:
+              `Partly see-through inside the cut-out on ${plural(seenFrames.length, "frame")} (${frameRanges(seenFrames)}): up to ${seenSummary.largestArea} px under ${seenLimits.below} alpha more than ${seenLimits.deep} px inside the body (frame ${seenLargest}), within (${seenBox!.x}, ${seenBox!.y}, ${seenBox!.width} × ${seenBox!.height}). ` +
+              "The background shows through the subject there: a seam where two copies of the matte meet (subject.soften_edge) or a matte gone soft inside. Look at the picture.",
+          },
+        ]
+      : [];
+  const seenNotes: Json[] = seenSummary && !seenLasting ? [seenSummary] : [];
+  const seenText = seenNotes.length
+    ? ` Partly see-through inside the cut-out on single frames only (${frameRanges(seenFrames)}, up to ${seenSummary!.largestArea} px), never on ${seenLimits.minRun} or more frames read in a row: not a stop; listed in notes.`
+    : "";
+  const findings: Json[] = [
+    ...sum.findings,
+    ...jumps,
+    ...frozenFindings,
+    ...speckFindings,
+    ...seenFindings,
+  ];
   const stop = findings.length > 0;
   const frozenText = frozenFindings.map((f) => ` ${f.reading}`).join("");
   const jumpText = jumps.length
@@ -4302,15 +4401,16 @@ export async function runCheckFile(args: Record<string, unknown>, io: FileIO): P
     outline: outlineResult,
     checked: sum.checked,
     compared,
-    notes: speckNotes,
+    notes: [...speckNotes, ...seenNotes],
     speckLimits: {
       ...speckLimits,
       minFrames: speckMinRun,
       opaque: SPECK_DEFAULTS.opaque,
       neckPx: 2 * SPECK_DEFAULTS.neck,
     },
+    seenThroughLimits: { ...seenLimits },
     opaque,
-    inOut: `${sum.text}${jumpText}${frozenText}${speckFindings.map((f) => ` ${f.reading}`).join("")}${briefText}${opaqueText} ${compared}${stop && picture ? ` Look at the picture (${picture}).` : ""}`,
+    inOut: `${sum.text}${jumpText}${frozenText}${speckFindings.map((f) => ` ${f.reading}`).join("")}${briefText}${seenFindings.map((f) => ` ${f.reading}`).join("")}${seenText}${opaqueText} ${compared}${stop && picture ? ` Look at the picture (${picture}).` : ""}`,
     picture,
     pictures,
     frameReadings: readings.map((r) => ({
@@ -4326,11 +4426,15 @@ export async function runCheckFile(args: Record<string, unknown>, io: FileIO): P
       render: roundTally(renders),
       pixels: roundTally(pixels),
       speck: { ms: Math.round(speckTime.ms), frames: speckTime.frames },
+      seenThrough: { ms: Math.round(seenTime.ms), frames: seenTime.frames },
       totalMs: Math.round(since(started)),
     },
     next: stop
       ? "Stop. In your reply, before the next call, tell the user what is wrong in plain words and give the picture's path, before building on this file. A jump or a hole on one frame means the live matte rendered that frame wrong: render the cut-out again (subject.render_cutout) and check the new file. " +
-        "A speck (a small piece apart from the cut-out) does not go away with a new render: mask it out of the cut-out movie on its frames (keying.md), then check again with accept for anything that belongs to the subject."
+        "A speck (a small piece apart from the cut-out) does not go away with a new render: mask it out of the cut-out movie on its frames (keying.md), then check again with accept for anything that belongs to the subject." +
+        (seenFindings.length
+          ? " Seen through inside the cut-out, on a soft edge: undo it (subject.soften_edge { comp, layer, undo: true }), switch Decontaminate Edge Colors on instead (subject.settings { comp, layer, decontaminateEdgeColors: true }), render again and check the new file."
+          : "")
       : "The file is checked. Build on it: subject.use_cutout puts it in the comp in place of the live matte.",
   };
 }
@@ -4428,6 +4532,7 @@ registerOp({
     "Picks an output template that writes a movie with alpha ('High Quality with Alpha', 'Lossless with Alpha', or another whose name says alpha; image sequences are not used) and refuses, naming the templates, when none does. " +
     "Returns outputPath, frameCount, renderSeconds, outputTemplate, templateChoice, layersSwitched, restored, sound and timing. Measured: 390 s for 320 frames of a 2176 x 3840 take, about one pass through the clip; tell the user before it runs. " +
     "The movie is in comp space. The original layer keeps the sound; whether the movie carries a sound track is not promised. " +
+    "The kept layers render switched as they are: when the gap fill layer exists and is switched off, it refuses before rendering and says so (the file would come out with the gaps open), unless withoutFill: true, and then the result's fillWarning says the gaps are open (not checked live). " +
     "Before rendering it checks that each drive has room for its share, the movie and After Effects' disk cache (about one 16-bit frame of the source per frame: 19 GB measured for 320 frames of a 2176 x 3840 take), plus 3 GB; `space` and `cacheNote` give the numbers, and `next` says to purge the cache once the file is checked." +
     RENDER_QUEUE_UNDO_WARNING,
   params: [
@@ -4452,6 +4557,13 @@ registerOp({
       description: "Replace an existing file at outputPath (default false: refuse).",
       required: false,
     },
+    {
+      name: "withoutFill",
+      type: "boolean",
+      description:
+        "Render even though the gap fill layer is switched off, leaving its gaps open in the file (default false: refuse).",
+      required: false,
+    },
   ],
   toJsx: () => NODE_ONLY("subject.render_cutout"),
   run: (args, transport) => runRenderCutout(args, liveFileIO(transport)),
@@ -4464,6 +4576,7 @@ registerOp({
     "Check a rendered cut-out movie (from subject.render_cutout) frame by frame: brings it into a throwaway comp, reads frames in batches of at most 32 (every frame up to maxFrames, default " +
     `${CHECK_FILE_MAX_FRAMES}; beyond it pairs of neighbouring frames in steps, always the first and last three), and reports holes and openings (as subject.check: holeLimit, accept), the opaque share of every frame, and a 'jump' finding when neighbouring frames differ by more than jumpLimit (default ${CHECK_FILE_JUMP_LIMIT}: on the take of 2026-11-11 the rendered cut-out ran 0.279 to 0.314 with no step over 0.012, and a dropped microphone is about 0.05). ` +
     "A speck is a small opaque piece apart from the cut-out, or joined to it by a neck a pixel or two wide, not touching the frame edge: speckMinArea to speckMaxArea px (default 20 to 2,000, chosen on the 4K fresh-session file, where a sliver of chair 1 to 5 px off the right arm read 20 to 240 px on about 40 frames and nothing else in 320 frames was caught); findings of kind 'speck' give the frames, the longest run of frames in a row, the largest area and frame, the box and a picture; a speck on at least speckMinFrames frames in a row (default 2) stops, since a new render keeps it, and a shorter one (a single-frame flash, a wisp of hair) goes to notes and one sentence of inOut. accept: [{ kind: 'speck', box }] takes one off. Checked through a real subject.check_file run on two files of one take (2026-11-12); the limits come from those two files. timing.speck is the pass's own cost (about 5.5 ms a 1080 x 1920 frame). " +
+    "Seen through: pixels partly see-through (alpha 0.5 to 0.95) more than seenThroughDepth px (default 30) inside the cut-out's body and from the frame's edge, as where two copies of a matte meet in a seam; seenThroughMinArea px or more on a frame (default 400) on at least 2 frames read in a row is a finding of kind 'seen-through' that stops, with the frames, the largest area and frame, the box and a picture; single frames go to notes. Limits chosen on two files of the half-size take, as clicked and with subject.soften_edge (at most 82 and 41 px on every fourth frame), and a band of the soft-edge file's alpha multiplied by 0.75 (about 3,900 px a frame); not checked live: it has not run in After Effects on a file with a real seam. timing.seenThrough is its cost. " +
     "Only true neighbours are compared, and `compared` says which. A frame that could not be read is 'not-checked' and stops. Pictures: the largest frame of each finding not accepted and both frames of each jump, full size, and a sheet of up to 24 frames; `pictures` counts them and their bytes. Each raw capture is removed once read unless keepCaptures (one run on the take had left 630 MB). The throwaway comp is removed afterwards, and the imported footage too unless keepFootage. " +
     "`outline` says how much the outline changed between neighbouring frames and over frozenGap frames (share of the frame whose alpha changed by more than 0.1, at full size); a run where it did not move is a 'frozen' finding (the selection is probably not tracking, as after replacing the layer's footage; accept: [{ kind: \"frozen\" }] for a subject that really is still). The frozen limits are not yet calibrated live. " +
     "Measured: about 0.55 s a frame reading the file. Returns stop, findings, accepted, checked, compared, opaque, outline, inOut, picture, frameReadings, timing.",
@@ -4508,6 +4621,18 @@ registerOp({
       name: "speckMinFrames",
       type: "number",
       description: `A speck stops the check only when the same piece is there on at least this many frames in a row (default ${SPECK_DEFAULTS.minRun}); shorter ones go to notes.`,
+      required: false,
+    },
+    {
+      name: "seenThroughDepth",
+      type: "number",
+      description: `How far inside the cut-out's body (and from the frame's edge) partial transparency counts as seen through, px (default ${SEEN_THROUGH_DEFAULTS.deep}).`,
+      required: false,
+    },
+    {
+      name: "seenThroughMinArea",
+      type: "number",
+      description: `Seen-through pixels on one frame that count (default ${SEEN_THROUGH_DEFAULTS.minArea}).`,
       required: false,
     },
     {
@@ -4631,7 +4756,11 @@ export const SOFT_EDGE_DEFAULTS = {
   decontaminate: true,
   feather: 60,
   regionDepth: 0.12,
+  /** With `across: true`: frames spread across the clip. */
   samples: 5,
+  /** By default the check samples the click frame and every `nearStep`th frame after it, up to `near` frames on. */
+  near: 60,
+  nearStep: 10,
   /** The closing check: a pixel solid in the matte as clicked and more than this far inside its edge must stay solid. */
   deep: 30,
   /** Matte more than this far outside the outline as clicked counts as spread (a smear). */
@@ -4836,7 +4965,15 @@ export async function runSoftenEdge(args: Record<string, unknown>, io: SoftenIO)
     .map((s) => s.clickFrame)
     .filter((f) => typeof f === "number");
   const click = clicks.length ? Math.min(...clicks) : span.inFrame;
-  // Frames to sample: those given (each inside the layer), or `samples` spread across the clip; the click frame always.
+  // Frames to sample: those given (each inside the layer); with `across`, `samples` spread across the clip;
+  // by default every `nearStep`th frame in the `near` frames from the click. The click frame always.
+  const sampling = Array.isArray(args.sampleFrames)
+    ? "given"
+    : args.across === true
+      ? "across the clip"
+      : "near the click";
+  const nearFrames: number[] = [];
+  for (let f = click; f < Math.min(span.outFrame, click + D.near); f += D.nearStep) nearFrames.push(f);
   const samples = Array.isArray(args.sampleFrames)
     ? [
         ...new Set([
@@ -4846,7 +4983,9 @@ export async function runSoftenEdge(args: Record<string, unknown>, io: SoftenIO)
             .map((f) => Math.round(f)),
         ]),
       ].sort((a, b) => a - b)
-    : framesAcross(span, Math.max(2, Math.floor(num("samples", D.samples))), [click]);
+    : args.across === true
+      ? framesAcross(span, Math.max(2, Math.floor(num("samples", D.samples))), [click])
+      : nearFrames;
   const held: number[] = [];
   for (let f = click; f < Math.min(span.outFrame, click + 5); f++) held.push(f);
   const perFrame = perFrameMsOf(args);
@@ -5067,6 +5206,15 @@ export async function runSoftenEdge(args: Record<string, unknown>, io: SoftenIO)
         ? `${Math.round(D.regionDepth * 100)}% of the comp's height under the lowest top of the subject on the sampled frames`
         : "regionBottom as given",
   };
+  const last = samples[samples.length - 1];
+  const sampled = {
+    how: sampling,
+    frames: samples,
+    leavesOut:
+      sampling === "across the clip"
+        ? `Frames between the ${samples.length} sampled were not read; subject.check_file reads every frame of the rendered file for see-through inside the cut-out.`
+        : `Only frames ${click} to ${last} were read: a later frame where the subject has moved further from the click, or where its top is higher (which would move the region's line), is not checked here. subject.check_file reads every frame of the rendered file for see-through inside the cut-out; across: true samples the whole clip before the render instead, which takes minutes.`,
+  };
   const timing = { totalMs: Math.round(since(started)) };
   if (!check.passed) {
     const undo = await io.execute(softenUndoJsx({ comp: args.comp, layer: args.layer }), {
@@ -5078,6 +5226,7 @@ export async function runSoftenEdge(args: Record<string, unknown>, io: SoftenIO)
       error: `the soft edge failed its closing check and was undone (${undo?.ok ? "the comp is back to the single matted layer" : `the undo failed: ${undo?.error}; run subject.soften_edge { undo: true }`}): ${failures.join("; ")}`,
       check,
       region,
+      sampling: sampled,
       settings,
       undone: undo,
       pictures,
@@ -5091,13 +5240,14 @@ export async function runSoftenEdge(args: Record<string, unknown>, io: SoftenIO)
     precomp: built.precomp,
     inside: built.inside,
     region,
+    sampling: sampled,
     settings,
     check,
     look: { before: lookBefore, after: lookOf(after) },
     pictures,
     cost: SOFT_EDGE_COST,
     undo: "subject.soften_edge { comp, layer, undo: true } takes the comp back to the single matted layer (it removes the precomp and switches the matted layer back on).",
-    next: "Look at the pictures (whole frames over the background) and show the user the region at twice size before and after. Then render the cut-out: subject.render_cutout keeps this layer and counts both copies' cache.",
+    next: "Look at the pictures (whole frames over the background) and show the user the region at twice size before and after. Then render the cut-out (subject.render_cutout keeps this layer and counts both copies' cache) and check the file (subject.check_file): a seen-through finding there means undo the soft edge and render again with the fallback, Decontaminate Edge Colors alone.",
     timing,
   };
 }
@@ -5118,10 +5268,10 @@ registerOp({
   category: "subject",
   description:
     "Soften a subject matte's edge inside a region (usually the hair) and prove it: builds keying.md fact 38's construction from the matted layer (Object Matte, ADBE Samurai): two copies of it in a precomp '<layer> soft edge', the upper with Refine Edge (Base Refine Edge Radius, the refine group's Smooth and Chatter Reduction), the lower as clicked, both with Decontaminate Edge Colors, split by one feathered matte over the region (the upper copy's Alpha track matte, the lower's Alpha Inverted, the upper in Alpha Add). The matted layer is switched off and otherwise untouched; it keeps the sound. " +
-    "Defaults: look C, the user's choice on the half-size take (radius 8, Smooth 0, Chatter Reduction 2, Decontaminate on, feather 60). The region is everything above a line: `regionBottom` (comp pixels), or by default 12% of the comp's height under the lowest top of the subject on the frames sampled across the clip. " +
-    "Then it runs the closing check on the click frame and the frame furthest from it (the least overlap of the outline with the click frame's, from `samples` frames across the clip): no pixel solid in the matte as clicked and more than 30 px inside its edge may drop under 0.99, the colour inside the subject must match the matte as clicked within 1 (CIELAB), and no more than `outsideLimit` px may spread over 10 px outside the outline. On any failure it undoes the build and says so; the fallback is Decontaminate Edge Colors alone (subject.settings). " +
+    "Defaults: look C, the user's choice on the half-size take (radius 8, Smooth 0, Chatter Reduction 2, Decontaminate on, feather 60). The region is everything above a line: `regionBottom` (comp pixels), or by default 12% of the comp's height under the lowest top of the subject on the sampled frames. " +
+    "Then it runs the closing check on the click frame and the frame furthest from it (the least overlap of the outline with the click frame's, from the sampled frames: by default the click frame and every 10th frame of the 60 after it; `across: true` spreads `samples` frames over the clip instead): no pixel solid in the matte as clicked and more than 30 px inside its edge may drop under 0.99, the colour inside the subject must match the matte as clicked within 1 (CIELAB), and no more than `outsideLimit` px may spread over 10 px outside the outline. On any failure it undoes the build and says so; the fallback is Decontaminate Edge Colors alone (subject.settings). " +
     "Reports look before and after on the region's top and sides and on the outline below it (edge width and widest tenth on the alpha, soft band, the share of `background`'s colour in the edge when given, the change from frame to frame over five held frames), the region and how it was chosen, and the whole frames after as pictures. " +
-    "After it, subject.check, subject.fill_gaps, subject.render_cutout and subject.use_cutout use the soft-edge layer. Two copies of the matte mean Object Matte is computed twice for every frame: a render writes about twice the disk cache and takes several times as long (on the half-size take, 342 s and 9.0 GB against 65 to 92 s and about 5 GB with one matte). The check renders the matte out to the sampled frames, which takes minutes across the clip; `sampleFrames` near the click is cheaper. undo: true takes the comp back to the single matted layer. Ran once in After Effects 27.0 on the half-size take with `sampleFrames` from the first 60 frames; the default sampling across the clip has not run there.",
+    "After it, subject.check, subject.fill_gaps, subject.render_cutout and subject.use_cutout use the soft-edge layer. Two copies of the matte mean Object Matte is computed twice for every frame: a render writes about twice the disk cache and takes several times as long (on the half-size take, 342 s and 9.0 GB against 65 to 92 s and about 5 GB with one matte). The result's `sampling` says which frames were read and what that leaves out; subject.check_file reads every frame of the render and reports see-through inside the cut-out, which means undo the soft edge and render again with the fallback. undo: true takes the comp back to the single matted layer. Ran once in After Effects 27.0 on the half-size take sampling frames 0 to 50 (given as sampleFrames, the same frames the default now picks); across: true has not run there.",
   params: [
     ...compLayerParams,
     {
@@ -5175,16 +5325,22 @@ registerOp({
       required: false,
     },
     {
+      name: "across",
+      type: "boolean",
+      description: `Sample \`samples\` frames spread across the whole clip instead of near the click: finds a frame far into the clip where the subject has moved further, and a higher top, but makes After Effects track the matte out to each (keying.md fact 3), which takes minutes and was not measured on the disk cache. Default false: the click frame and every ${SOFT_EDGE_DEFAULTS.nearStep}th frame of the ${SOFT_EDGE_DEFAULTS.near} after it (frames 0 to 50 on the half-size take: 4 s, nothing added to the disk cache); subject.check_file then reads every frame of the render for see-through.`,
+      required: false,
+    },
+    {
       name: "samples",
       type: "number",
-      description: `Frames sampled across the clip to find the furthest from the click frame and the subject's top (default ${SOFT_EDGE_DEFAULTS.samples}).`,
+      description: `With across: true, how many frames are spread across the clip (default ${SOFT_EDGE_DEFAULTS.samples}).`,
       required: false,
     },
     {
       name: "sampleFrames",
       type: "array",
       description:
-        "Frames to sample in place of `samples` spread across the clip (the click frame is always added). Reading the matte out to a far frame makes After Effects track every frame up to it (keying.md fact 3), so sampling near the click is cheaper (frames 0 to 50 on the half-size take: 4 s, nothing added to the disk cache) but can miss the frame furthest from the click and a higher top of the subject later in the clip.",
+        "Frames to sample in place of the default or `across` (the click frame is always added).",
       required: false,
     },
     {

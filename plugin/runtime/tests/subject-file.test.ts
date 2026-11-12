@@ -26,7 +26,12 @@ import {
   useCutoutJsx,
   type FileIO,
 } from "../src/operations/keying.js";
-import { SPECK_DEFAULTS, speckPieces } from "../src/color/matte.js";
+import {
+  SEEN_THROUGH_DEFAULTS,
+  SPECK_DEFAULTS,
+  seenThroughInside,
+  speckPieces,
+} from "../src/color/matte.js";
 import { getOp } from "../src/registry.js";
 import "../src/operations/index.js";
 
@@ -112,6 +117,43 @@ function renderIO(plan: Any = PLAN): FileIO & { calls: Any[] } {
     freeBytes: async () => 500e9,
   };
 }
+
+describe("subject.render_cutout with the gap fill switched off", () => {
+  it("refuses before rendering, in plain words, when the fill layer exists and is off", async () => {
+    const io = renderIO({ ...PLAN, fillEnabled: false });
+    const res = await runRenderCutout(
+      { comp: "Main", layer: 1, outputPath: path.join(dir, "cut.mov") },
+      io,
+    );
+    expect(res.ok).toBe(false);
+    expect(res.error).toMatch(/'raw_nogreen\.mp4 gap fill' is switched off/);
+    expect(res.error).toMatch(/gaps open/);
+    expect(res.error).toMatch(/withoutFill: true/);
+    expect(io.calls).toHaveLength(1);
+  });
+
+  it("renders with withoutFill: true and says in the result that the gaps are open", async () => {
+    const io = renderIO({ ...PLAN, fillEnabled: false });
+    const res = await runRenderCutout(
+      { comp: "Main", layer: 1, outputPath: path.join(dir, "cut.mov"), withoutFill: true },
+      io,
+    );
+    expect(res.ok).toBe(true);
+    expect(res.fillWarning).toMatch(/switched off/);
+    expect(res.fillWarning).toMatch(/gaps open/);
+    expect(res.next).toMatch(/gaps open/);
+  });
+
+  it("says nothing when the fill is on, and the plan reads the fill's switch", async () => {
+    const res = await runRenderCutout(
+      { comp: "Main", layer: 1, outputPath: path.join(dir, "cut.mov") },
+      renderIO({ ...PLAN, fillEnabled: true }),
+    );
+    expect(res.ok).toBe(true);
+    expect(res.fillWarning).toBeUndefined();
+    expect(renderCutoutPlanJsx({ comp: "Main", layer: 1 })).toContain("fillEnabled");
+  });
+});
 
 describe("subject.render_cutout on a softened edge", () => {
   it("counts the disk cache of both matte passes, and keeps the soft-edge layer the plan names", async () => {
@@ -1218,5 +1260,90 @@ describe("subject.check_file: specks", () => {
       expect.arrayContaining([expect.objectContaining({ kind: "speck" })]),
     );
     expect(res.stop).toBe(false);
+  });
+});
+
+// ------------------------------------------------------- seen through inside
+
+/** The body of fileFrame with a band of rows y0..y1 at `alpha` right across it, on `on` frames (all when null). */
+function seamFrame(on: Set<number> | null, alpha = 0.75, y0 = 150, y1 = 160) {
+  return (frame: number) => {
+    const a = fileFrame(frame, new Set());
+    if (!on || on.has(frame))
+      for (let y = y0; y < y1; y++) for (let x = 40; x < 160; x++) a[y * W + x] = alpha;
+    return a;
+  };
+}
+
+describe("seenThroughInside", () => {
+  it("counts partly see-through pixels more than 30 px inside the cut-out body", () => {
+    const r = seenThroughInside(seamFrame(null)(0), W, H);
+    // The body is x 40..159: 30 px in from each side leaves x 70..129, 60 px, over 10 rows.
+    expect(r.px).toBe(600);
+    expect(r.box).toEqual({ x: 70, y: 150, width: 60, height: 10 });
+  });
+
+  it("leaves out a clean body, the soft edge near the outline, nearly solid pixels and the frame edge", () => {
+    expect(seenThroughInside(fileFrame(0, new Set()), W, H).px).toBe(0);
+    const soft = fileFrame(0, new Set());
+    for (let y = 60; y < H; y++)
+      for (let x = 40; x < 60; x++) soft[y * W + x] = Math.min(1, (x - 39) / 20);
+    expect(seenThroughInside(soft, W, H).px).toBe(0);
+    expect(seenThroughInside(seamFrame(null, 0.97)(0), W, H).px).toBe(0);
+    // A band in the last 30 rows, where the body runs off the frame, is not counted.
+    expect(seenThroughInside(seamFrame(null, 0.75, 280, 290)(0), W, H).px).toBe(0);
+  });
+
+  it("has the limits chosen on the two files of the half-size take", () => {
+    expect(SEEN_THROUGH_DEFAULTS).toEqual({ solid: 0.5, below: 0.95, deep: 30, minArea: 400, minRun: 2 });
+  });
+});
+
+describe("subject.check_file: seen through inside the cut-out", () => {
+  it("finds a seam across the body on the frames it is on, with a picture, and stops", async () => {
+    const on = new Set(Array.from({ length: 20 }, (_, i) => 40 + i));
+    const res = await runCheckFile(
+      { path: "/x/cut.mov", outDir: dir, frozenFrames: 1e9 },
+      fileIO({ matteAt: seamFrame(on) }),
+    );
+    const f = res.findings.find((x: Any) => x.kind === "seen-through");
+    expect(f).toBeDefined();
+    expect(f.frames).toEqual([...on]);
+    expect(f.longestRun).toBe(20);
+    expect(f.largestArea).toBe(600);
+    expect(f.box).toEqual({ x: 70, y: 150, width: 60, height: 10 });
+    await fs.access(f.picture);
+    expect(f.reading).toMatch(/soften_edge/);
+    expect(res.stop).toBe(true);
+    expect(res.next).toMatch(/undo: true/);
+    expect(res.next).toMatch(/Decontaminate/);
+    expect(res.seenThroughLimits).toMatchObject({ deep: 30, below: 0.95, minArea: 400 });
+    expect(res.timing.seenThrough.frames).toBe(120);
+  });
+
+  it("does not count a seam that is too small, and keeps one on single frames to the notes", async () => {
+    const thin = await runCheckFile(
+      { path: "/x/cut.mov", outDir: dir, frozenFrames: 1e9 },
+      fileIO({ matteAt: seamFrame(null, 0.75, 150, 155) }), // 300 px: under 400
+    );
+    expect(thin.findings.filter((x: Any) => x.kind === "seen-through")).toEqual([]);
+    const flash = await runCheckFile(
+      { path: "/x/cut.mov", outDir: dir, frozenFrames: 1e9 },
+      fileIO({ matteAt: seamFrame(new Set([50, 70])) }),
+    );
+    expect(flash.findings.filter((x: Any) => x.kind === "seen-through")).toEqual([]);
+    expect(flash.stop).toBe(false);
+    expect(flash.notes).toContainEqual(
+      expect.objectContaining({ kind: "seen-through", frames: [50, 70], longestRun: 1 }),
+    );
+  });
+
+  it("finds nothing on a clean file", async () => {
+    const res = await runCheckFile(
+      { path: "/x/cut.mov", outDir: dir, frozenFrames: 1e9 },
+      fileIO(),
+    );
+    expect(res.findings.filter((x: Any) => x.kind === "seen-through")).toEqual([]);
+    expect(res.notes.filter((x: Any) => x.kind === "seen-through")).toEqual([]);
   });
 });

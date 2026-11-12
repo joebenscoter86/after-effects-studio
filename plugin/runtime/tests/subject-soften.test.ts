@@ -248,9 +248,33 @@ function fakeIO(
 const ARGS = { comp: "Main", layer: "take", feather: 10 };
 
 describe("subject.soften_edge", () => {
+  it("by default samples near the click only, and says what that leaves out", async () => {
+    const io = fakeIO((f) => person(f >= 30 ? 20 : 0, true), {
+      status: { span: { inFrame: 0, outFrame: 320, frameRate: 30 } },
+    });
+    const res = await runSoftenEdge({ ...ARGS, outDir: dir }, io);
+    expect(res.ok).toBe(true);
+    expect(res.sampling.how).toBe("near the click");
+    expect(res.region.tops.map((t: Any) => t.frame)).toEqual([0, 10, 20, 30, 40, 50]);
+    const first = io.calls.find((c: Any) => c.render)!.render;
+    expect(Math.max(...first.frames)).toBeLessThan(60);
+    expect(res.check.furthest.frame).toBe(30);
+    expect(res.sampling.leavesOut).toMatch(/across: true/);
+    expect(res.sampling.leavesOut).toMatch(/check_file/);
+  });
+
+  it("samples across the clip with across: true", async () => {
+    const io = fakeIO((f) => person(f >= 30 ? 20 : 0, true), {
+      status: { span: { inFrame: 0, outFrame: 320, frameRate: 30 } },
+    });
+    const res = await runSoftenEdge({ ...ARGS, outDir: dir, across: true }, io);
+    expect(res.sampling.how).toBe("across the clip");
+    expect(res.region.tops.map((t: Any) => t.frame)).toEqual([0, 64, 128, 192, 256]);
+  });
+
   it("builds, checks the click frame and the furthest frame, and keeps a build that passes", async () => {
     const io = fakeIO((f) => person(f >= 30 ? 20 : 0, true));
-    const res = await runSoftenEdge({ ...ARGS, outDir: dir }, io);
+    const res = await runSoftenEdge({ ...ARGS, outDir: dir, across: true }, io);
     expect(res.ok).toBe(true);
     expect(io.state.built).toBe(true);
     expect(io.state.undone).toBe(0);
@@ -307,6 +331,7 @@ describe("subject.soften_edge", () => {
     const io = fakeIO((f) => person(f >= 30 ? 20 : 0, true));
     const res = await runSoftenEdge({ ...ARGS, outDir: dir, sampleFrames: [10, 30] }, io);
     expect(res.ok).toBe(true);
+    expect(res.sampling.how).toBe("given");
     expect(res.region.tops.map((t: Any) => t.frame)).toEqual([0, 10, 30]);
     expect(res.check.furthest.frame).toBe(30);
     const first = io.calls.find((c: Any) => c.render)!.render;
