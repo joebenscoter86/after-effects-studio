@@ -647,7 +647,7 @@ export function subjectMatteSteps(opts = {}) {
         'If a tip titled "Object Matte" appears, click OK.',
         'If a yellow bar in the Layer panel says "Draw Object Matte strokes at full resolution", choose View > Resolution > Full in the menu bar, and tell me the bar was there.',
         `Move the pointer over ${subject} in the Layer panel. ${tint} Click once.`,
-        `Anything else that should stay in the cut-out, such as a microphone, can be several pieces: hover each piece, check that it tints magenta, and click it. Do not click ${subject} again.`,
+        `Anything else that should stay in the cut-out, such as a microphone, can be several pieces: hover each piece, check that it tints magenta, and click it. A gap between things, such as between a stand and an arm, needs no click: I take care of gaps afterwards. Do not click ${subject} again.`,
         'Tell me "done". No Spacebar and no Freeze are needed. I will then check the cut-out and show you what is in and what is out.',
     ];
 }
@@ -2099,7 +2099,20 @@ const closeHead = (pairs) => `${plural(pairs.length, "pair")} of clicks closer t
         .join("; ")}${pairs.length > 3 ? `; and ${pairs.length - 3} more` : ""})`;
 /** Close clicks on a matte with nothing missing: said once, and no stop. */
 function closeNote(pairs) {
-    return `Clicks: ${closeHead(pairs)}. Since nothing is missing, these are the small pieces of something clicked one by one, as the steps ask: nothing needs changing.`;
+    return `Clicks: ${closeHead(pairs)}. Nothing is missing, so they need not change anything; they are close together and probably redundant, and can be removed (notes gives the commands).`;
+}
+/** The later click of each close pair. */
+function laterClicks(pairs) {
+    const num = (n) => Number(/(\d+)\s*$/.exec(n)?.[1] ?? -1);
+    return [...new Set(pairs.map((p) => (num(p.a) >= num(p.b) ? p.a : p.b)))];
+}
+/** Optional on a clean matte: removing the redundant clicks. */
+function closeNoteAdvice(pairs) {
+    return ("To remove the redundant clicks, take the later one of each pair out: " +
+        laterClicks(pairs)
+            .map((n) => `subject.remove_selection { selection: "${n}" }`)
+            .join(", then ") +
+        ". On the take of 2026-11-11 the matte did not change when the redundant click was removed (opaque share 0.3083 before and after on frame 0). Then run subject.check again. Leaving them in is also fine.");
 }
 /** Close clicks alongside something missing: the click meant for it may have landed on the subject again. */
 function closeMissText(pairs) {
@@ -2107,10 +2120,8 @@ function closeMissText(pairs) {
 }
 /** What to do about two clicks on the same thing: take the later one out. */
 function closeAdvice(pairs) {
-    const num = (n) => Number(/(\d+)\s*$/.exec(n)?.[1] ?? -1);
-    const later = pairs.map((p) => (num(p.a) >= num(p.b) ? p.a : p.b));
     return ("When both clicks are on the same thing, take the later one out: " +
-        [...new Set(later)]
+        laterClicks(pairs)
             .map((n) => `subject.remove_selection { selection: "${n}" }`)
             .join(", then ") +
         ". On the take of 2026-11-11 the matte did not change when the redundant click was removed (opaque share 0.3083 before and after on frame 0). If the later click was meant for something else (a microphone), ask for that click again.");
@@ -2217,7 +2228,12 @@ export async function runSubjectCheck(args, io) {
     if (close.length && somethingMissing)
         findings.push({ kind: "close-clicks", pairs: close, advice: closeAdvice(close) });
     else if (close.length)
-        notes.push({ kind: "close-clicks", pairs: close, reading: closeNote(close) });
+        notes.push({
+            kind: "close-clicks",
+            pairs: close,
+            reading: closeNote(close),
+            advice: closeNoteAdvice(close),
+        });
     const rects = clicks.filter((c) => c.kind === "rectangle").map((c) => c.name);
     const solid = readings.find((r) => typeof r.solidAreas === "number")?.solidAreas;
     const inText = `In: ${st.summary}` +

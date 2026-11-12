@@ -587,7 +587,7 @@ function subjectMatteSteps(opts = {}) {
     'If a tip titled "Object Matte" appears, click OK.',
     'If a yellow bar in the Layer panel says "Draw Object Matte strokes at full resolution", choose View > Resolution > Full in the menu bar, and tell me the bar was there.',
     `Move the pointer over ${subject} in the Layer panel. ${tint} Click once.`,
-    `Anything else that should stay in the cut-out, such as a microphone, can be several pieces: hover each piece, check that it tints magenta, and click it. Do not click ${subject} again.`,
+    `Anything else that should stay in the cut-out, such as a microphone, can be several pieces: hover each piece, check that it tints magenta, and click it. A gap between things, such as between a stand and an arm, needs no click: I take care of gaps afterwards. Do not click ${subject} again.`,
     'Tell me "done". No Spacebar and no Freeze are needed. I will then check the cut-out and show you what is in and what is out.'
   ];
 }
@@ -1837,15 +1837,20 @@ async function recheckFrames(io, readings, limit, over, outDir, perFrameMs, base
 }
 const closeHead = (pairs) => `${plural(pairs.length, "pair")} of clicks closer than ${Math.round(pairs[0].limit)} source pixels (${pairs.slice(0, 3).map((p) => `${p.a} and ${p.b}`).join("; ")}${pairs.length > 3 ? `; and ${pairs.length - 3} more` : ""})`;
 function closeNote(pairs) {
-  return `Clicks: ${closeHead(pairs)}. Since nothing is missing, these are the small pieces of something clicked one by one, as the steps ask: nothing needs changing.`;
+  return `Clicks: ${closeHead(pairs)}. Nothing is missing, so they need not change anything; they are close together and probably redundant, and can be removed (notes gives the commands).`;
+}
+function laterClicks(pairs) {
+  const num = (n) => Number(/(\d+)\s*$/.exec(n)?.[1] ?? -1);
+  return [...new Set(pairs.map((p) => num(p.a) >= num(p.b) ? p.a : p.b))];
+}
+function closeNoteAdvice(pairs) {
+  return "To remove the redundant clicks, take the later one of each pair out: " + laterClicks(pairs).map((n) => `subject.remove_selection { selection: "${n}" }`).join(", then ") + ". On the take of 2026-11-11 the matte did not change when the redundant click was removed (opaque share 0.3083 before and after on frame 0). Then run subject.check again. Leaving them in is also fine.";
 }
 function closeMissText(pairs) {
   return `Clicks: ${closeHead(pairs)}. With something missing, two of them probably selected the same thing, so a click meant for something else (a microphone) may have landed on the subject again; the close-clicks finding says which to take out.`;
 }
 function closeAdvice(pairs) {
-  const num = (n) => Number(/(\d+)\s*$/.exec(n)?.[1] ?? -1);
-  const later = pairs.map((p) => num(p.a) >= num(p.b) ? p.a : p.b);
-  return "When both clicks are on the same thing, take the later one out: " + [...new Set(later)].map((n) => `subject.remove_selection { selection: "${n}" }`).join(", then ") + ". On the take of 2026-11-11 the matte did not change when the redundant click was removed (opaque share 0.3083 before and after on frame 0). If the later click was meant for something else (a microphone), ask for that click again.";
+  return "When both clicks are on the same thing, take the later one out: " + laterClicks(pairs).map((n) => `subject.remove_selection { selection: "${n}" }`).join(", then ") + ". On the take of 2026-11-11 the matte did not change when the redundant click was removed (opaque share 0.3083 before and after on frame 0). If the later click was meant for something else (a microphone), ask for that click again.";
 }
 function checkTiming(statusMs, first, second, pixels, totalMs) {
   return {
@@ -1966,7 +1971,12 @@ async function runSubjectCheck(args, io) {
   if (close.length && somethingMissing)
     findings.push({ kind: "close-clicks", pairs: close, advice: closeAdvice(close) });
   else if (close.length)
-    notes.push({ kind: "close-clicks", pairs: close, reading: closeNote(close) });
+    notes.push({
+      kind: "close-clicks",
+      pairs: close,
+      reading: closeNote(close),
+      advice: closeNoteAdvice(close)
+    });
   const rects = clicks.filter((c) => c.kind === "rectangle").map((c) => c.name);
   const solid = readings.find((r) => typeof r.solidAreas === "number")?.solidAreas;
   const inText = `In: ${st.summary}` + (fillLayer ? ` (with its gap fill (${fillLayer}))` : "") + (typeof solid === "number" ? `, making ${plural(solid, "solid area")} on the first frame checked` : "") + ".";
