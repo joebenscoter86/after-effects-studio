@@ -58,7 +58,9 @@ For a new look, test a bounded hard transition and an ordinary explanatory beat.
 
 When a brief involves cutting a person or object out of footage, with or without a green screen, tell the user before building starts, in the first answer: one manual step in After Effects will be needed, a single click on the subject with After Effects' Object Matte Tool; it comes once the footage is in its comp, before anything is laid over or behind the subject; it takes about ten seconds. A script cannot make that click.
 
-At that point run `subject.prepare` and give the user its `userMessage` word for word: the notice and six numbered steps, with the clip's name filled in. Do not paraphrase or shorten them. In a plan written before After Effects, quote the six steps from `keying` ("Tell the user first") as they are. After "done", follow `keying`'s procedure: `subject.status`, the subject over a flat colour and the matte with `edge`, then say what is in and what is out.
+At that point run `subject.prepare` and give the user its `userMessage` word for word: the notice and seven numbered steps, with the clip's name filled in. Do not paraphrase or shorten them. In a plan written before After Effects, quote the seven steps from `keying` ("Tell the user first") as they are.
+
+After "done", and before building anything else, run `subject.check`. A selection count is not a check. When it returns `stop: true` (a hole of 1,000 px or more, or two clicks close together), stop: show the user its picture, say what is out, and fix it as `keying` says (another click, `subject.remove_selection`, or `subject.fill_gaps` for a gap no click fills), then check again. When the user asks you to make the click and you have full-screen control, hover each piece, confirm from a screenshot that the magenta tint is on the piece you mean, click, and then run `subject.check`.
 
 ## Execute, inspect and deliver
 

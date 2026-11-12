@@ -81,13 +81,13 @@ async function findRuntimeDist(outDir) {
 // with its LLM assertions. The click steps are read from keying.md, where subject.prepare's text is quoted.
 const KEYING_MD = path.join(ROOT, 'plugin', 'library', 'references', 'keying.md');
 
-/** The notice and the six steps as keying.md quotes them ("Tell the user first"). */
+/** The click steps as keying.md quotes them ("Tell the user first"), in order. */
 export async function subjectSteps() {
   const md = await fs.readFile(KEYING_MD, 'utf8');
   const sec = md.split('\n### Tell the user first\n')[1]?.split('\n### ')[0];
   if (!sec) throw new Error('keying.md has no "Tell the user first" section');
-  const steps = [...sec.matchAll(/^([1-6])\. (.+)$/gm)].map((m) => m[2]);
-  if (steps.length !== 6) throw new Error(`keying.md quotes ${steps.length} click steps, not 6`);
+  const steps = [...sec.matchAll(/^(\d+)\. (.+)$/gm)].map((m) => m[2]);
+  if (steps.length < 6) throw new Error(`keying.md quotes ${steps.length} click steps; expected at least 6`);
   return steps;
 }
 
@@ -100,6 +100,7 @@ function stepPattern(step) {
   re = re.replace(escapeRe("the clip's name"), `(?:the clip's name|"[^"]{1,80}"|[^)]{1,80})`);
   re = re.replace(escapeRe('over the person in the Layer panel. They tint magenta.'),
     '(?:over the person in the Layer panel\\. They tint magenta\\.|over [^.]{1,60} in the Layer panel\\. [^.]{1,60} tints? magenta\\.)');
+  re = re.replace(escapeRe('Do not click the person again.'), 'Do not click [^.]{1,60} again\\.');
   return new RegExp(re);
 }
 
@@ -119,8 +120,8 @@ export const ANSWER_CHECKS = {
       return { pass: true, why: `notice at character ${m.index}` };
     },
   },
-  'subject-six-steps': {
-    what: "the answer gives the six click steps from keying.md word for word and in order (the clip's name and the subject may be filled in)",
+  'subject-steps': {
+    what: "the answer gives the click steps from keying.md word for word and in order (the clip's name and the subject may be filled in)",
     async check(answer) {
       const text = plain(answer);
       let from = 0;
@@ -129,7 +130,21 @@ export const ANSWER_CHECKS = {
         if (!m) return { pass: false, why: `step ${i + 1} is missing, changed or out of order: ${step}` };
         from += m.index + m[0].length;
       }
-      return { pass: true, why: 'all six steps, in order' };
+      return { pass: true, why: 'every step, in order' };
+    },
+  },
+  'subject-check-first': {
+    what: 'the answer runs subject.check after the click and before anything else is built, and says a hole it finds is shown to the user',
+    async check(answer) {
+      const text = plain(answer);
+      const at = [...text.matchAll(/subject\.check/g)].map((m) => m.index);
+      if (!at.length) return { pass: false, why: 'subject.check is not in the plan' };
+      const before = /before (?:any|anything|further|more|other|the rest)\b[^.]{0,60}?\b(?:build|built|building|compositing|composite|else|work)/i;
+      if (!at.some((i) => before.test(text.slice(Math.max(0, i - 300), i + 300))))
+        return { pass: false, why: 'subject.check is not said to come before anything else is built' };
+      if (!/\b(?:show|picture)[^.]{0,150}\bhole|\bhole[^.]{0,150}\b(?:show|picture)/i.test(text))
+        return { pass: false, why: 'the answer does not say a hole is shown to the user' };
+      return { pass: true, why: `subject.check at character ${at[0]}, before further building, with the hole shown` };
     },
   },
 };

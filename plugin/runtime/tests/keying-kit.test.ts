@@ -863,12 +863,29 @@ function group(name: string, matchName: string, children: Any[], lookup: Lookup)
   };
 }
 
+type Sel = string | { name: string; point: [number, number] };
+
 function objectMatte(
-  selections: string[],
+  selections: Sel[],
   { lookup = "matchName" as Lookup, rows = MATTE_ROWS, nested = false } = {},
 ): Any {
-  const atoms = selections.map((name, i) =>
-    group(
+  const atoms = selections.map((sel, i) => {
+    const name = typeof sel === "string" ? sel : sel.name;
+    const point = typeof sel === "string" ? [1000 + 300 * i, 2000 + 400 * i] : sel.point;
+    const transform = group(
+      "Transform",
+      "ADBE Paint Transform",
+      [
+        prop({
+          name: "Position",
+          matchName: "ADBE Paint Position",
+          type: "TwoD_SPATIAL",
+          value: point,
+        }),
+      ],
+      "matchName",
+    );
+    const atom = group(
       name,
       "ADBE Paint Atom",
       [
@@ -876,12 +893,18 @@ function objectMatte(
           name: "Duration",
           matchName: "ADBE Paint Duration",
           type: "TwoD",
-          value: [0, 10 + i],
+          value: [15, 10 + i],
         }),
+        transform,
       ],
       "matchName",
-    ),
-  );
+    );
+    atom.remove = () => {
+      atom.removed = true;
+      atoms.splice(atoms.indexOf(atom), 1);
+    };
+    return atom;
+  });
   // Selections stays reachable by matchName (confirmed live), whatever `lookup` is.
   const strokes = group("Selections", "ADBE Samurai Strokes Group", atoms, "matchName");
   const settings = rows.map(([name, mn, type, value, min, max]) =>
@@ -916,6 +939,7 @@ function world({
   effects = [] as Any[],
   source = true,
   openLayerId = 3784,
+  fullId = 5001,
   inPoint = 0,
   outPoint = 10,
 } = {}): World {
@@ -923,14 +947,19 @@ function world({
   const parade = new Parade();
   for (const fx of effects) {
     parade.list.push(fx);
-    Object.defineProperty(fx, "propertyIndex", { get: () => parade.list.indexOf(fx) + 1 });
+    Object.defineProperty(fx, "propertyIndex", {
+      get: () => parade.list.indexOf(fx) + 1,
+      configurable: true,
+    });
   }
   const layer: Any = {
     name: "presenter.mov",
-    source: source ? { name: "presenter.mov" } : null,
+    source: source ? { name: "presenter.mov", width: 2176, height: 3840 } : null,
     inPoint,
     outPoint,
+    startTime: 0,
     selected: false,
+    sourcePointToComp: (p: number[]) => [p[0] / 2, p[1] / 2],
     property(k: string) {
       return k === "ADBE Effect Parade" || k === "Effects" ? parade : null;
     },
@@ -940,6 +969,9 @@ function world({
     name: "Main",
     numLayers: 2,
     time: 0,
+    width: 1080,
+    height: 1920,
+    frameDuration: 1 / 30,
     resolutionFactor: [2, 2],
     layer: (i: number) => (i === 1 ? layer : other),
     openInViewer() {
@@ -949,7 +981,7 @@ function world({
   const app = {
     findMenuCommandId(name: string) {
       calls.push(`find:${name}`);
-      return name === "Open Layer" ? openLayerId : 0;
+      return name === "Open Layer" ? openLayerId : name === "Full" ? fullId : 0;
     },
     executeCommand(id: number) {
       calls.push(`exec:${id}`);
@@ -985,38 +1017,67 @@ const KEYING_MD = readFileSync(
 );
 
 describe("subject matte: registration and the user's steps", () => {
-  it("registers subject.prepare, subject.status and subject.settings; only status is read-only", () => {
+  it("registers the subject operations; only status is read-only, and check and fill_gaps run in Node", () => {
     expect(
       listOps("subject")
         .map((o) => o.name)
         .sort(),
-    ).toEqual(["subject.prepare", "subject.settings", "subject.status"]);
+    ).toEqual([
+      "subject.check",
+      "subject.fill_gaps",
+      "subject.prepare",
+      "subject.remove_selection",
+      "subject.settings",
+      "subject.status",
+    ]);
     expect(getOp("subject.status")!.readOnly).toBe(true);
-    expect(getOp("subject.prepare")!.readOnly).toBeFalsy();
-    expect(getOp("subject.settings")!.readOnly).toBeFalsy();
+    for (const n of [
+      "subject.prepare",
+      "subject.settings",
+      "subject.remove_selection",
+      "subject.fill_gaps",
+    ])
+      expect(getOp(n)!.readOnly).toBeFalsy();
+    for (const n of ["subject.check", "subject.fill_gaps"]) {
+      expect(getOp(n)!.run).toBeTypeOf("function");
+      expect(getOp(n)!.toJsx({})).toMatch(/runs in Node/);
+    }
   });
 
-  it("writes the six steps as the owner wrote them", () => {
+  it("writes the seven steps: the tool, the tip, the resolution bar, the click, each piece, done", () => {
     expect(subjectMatteSteps()).toEqual([
       'After Effects is showing your clip in the Layer panel (the tab reads "Layer", then the clip\'s name). I opened it for you.',
       'In the toolbar at the top, click the Object Matte Tool: the dashed square with an arrow, just left of the pin. If that icon looks different, click and hold it and choose "Object Matte Tool" from the list.',
       'If a tip titled "Object Matte" appears, click OK.',
+      'If a yellow bar in the Layer panel says "Draw Object Matte strokes at full resolution", choose View > Resolution > Full in the menu bar, and tell me the bar was there.',
       "Move the pointer over the person in the Layer panel. They tint magenta. Click once.",
-      "Anything else that should stay with them, such as a microphone: hover it and click it too.",
-      'Tell me "done". No Spacebar and no Freeze are needed.',
+      "Anything else that should stay in the cut-out, such as a microphone, can be several pieces: hover each piece, check that it tints magenta, and click it. Do not click the person again.",
+      'Tell me "done". No Spacebar and no Freeze are needed. I will then check the cut-out and show you what is in and what is out.',
     ]);
   });
 
   it("fills in the clip's name and the subject", () => {
     const steps = subjectMatteSteps({ clip: "presenter.mov", subject: "the presenter" });
     expect(steps[0]).toContain('(the tab reads "Layer", then "presenter.mov")');
-    expect(steps[3]).toBe(
+    expect(steps[4]).toBe(
       "Move the pointer over the presenter in the Layer panel. The presenter tints magenta. Click once.",
     );
-    expect(steps.filter((s, i) => s !== subjectMatteSteps()[i]).length).toBe(2);
+    expect(steps[5]).toMatch(/Do not click the presenter again\.$/);
+    expect(steps.filter((s, i) => s !== subjectMatteSteps()[i]).length).toBe(3);
   });
 
-  it("keying.md quotes the notice and the same six steps, in order", () => {
+  it("reads correctly when the subject is the user", () => {
+    for (const subject of ["yourself", "you", "Yourself"]) {
+      const steps = subjectMatteSteps({ subject });
+      expect(steps[4]).toBe(
+        "Move the pointer over yourself in the Layer panel. You tint magenta. Click once.",
+      );
+      expect(steps[5]).toMatch(/Do not click yourself again\.$/);
+      expect(steps.join(" ")).not.toMatch(/Yourself tints|stay with them/);
+    }
+  });
+
+  it("keying.md quotes the notice and the same seven steps, in order", () => {
     expect(KEYING_MD).toContain(SUBJECT_MATTE_NOTICE);
     const lines = subjectMatteSteps().map((s, i) => `${i + 1}. ${s}`);
     let at = -1;
@@ -1032,6 +1093,7 @@ describe("subject matte: registration and the user's steps", () => {
     expect(selectionKind("Add Object 12")).toBe("object");
     expect(selectionKind("Quick Select Foreground 1")).toBe("quick-selection");
     expect(selectionKind("Paint 1")).toBe("other");
+    expect(selectionKind("Add Object Rect 1")).toBe("rectangle");
     expect(selectionKind("Add Object")).toBe("other");
   });
 
@@ -1060,13 +1122,26 @@ describe("subject.prepare", () => {
     const res = runIn("subject.prepare", {}, w);
 
     expect(res.ok).toBe(true);
-    expect(w.calls).toEqual(["openInViewer", "find:Open Layer", "exec:3784"]);
+    expect(w.calls).toEqual([
+      "openInViewer",
+      "find:Open Layer",
+      "exec:3784",
+      "find:Full",
+      "exec:5001",
+    ]);
     expect(w.comp.resolutionFactor).toEqual([1, 1]);
     expect(w.comp.time).toBe(1.5);
     expect(res.time).toBe(1.5);
     expect(w.layer.selected).toBe(true);
     expect(w.other.selected).toBe(false);
-    expect(res.did).toHaveLength(5);
+    expect(res.did).toHaveLength(6);
+    expect(res.viewerResolution).toEqual({
+      command: "Full",
+      commandId: 5001,
+      verified: false,
+      note: expect.stringMatching(/cannot read the viewer's resolution/),
+    });
+    expect(res.did.join(" ")).not.toMatch(/set the comp to full resolution/);
     expect(res.couldNotDo).toEqual([]);
     expect(res.beforeSteps).toBeUndefined();
     expect(res.steps).toEqual(subjectMatteSteps({ clip: "presenter.mov" }));
@@ -1086,7 +1161,7 @@ describe("subject.prepare", () => {
 
     expect(res.ok).toBe(true);
     expect(w.comp.time).toBe(4.25);
-    expect(res.steps[3]).toBe(
+    expect(res.steps[4]).toBe(
       "Move the pointer over the bottle in the Layer panel. The bottle tints magenta. Click once.",
     );
   });
@@ -1117,8 +1192,13 @@ describe("subject.prepare", () => {
     expect(res.ok).toBe(false);
     expect(res.couldNotDo).toEqual([
       { step: "opened the layer in the Layer panel", error: expect.stringMatching(/Open Layer/) },
+      {
+        step: "chose View > Resolution > Full",
+        error: expect.stringMatching(/skipped: the Layer panel did not open/),
+      },
     ]);
     expect(res.did).toHaveLength(4);
+    expect(w.calls).not.toContain("find:Full");
     expect(res.steps).toEqual(subjectMatteSteps({ clip: "presenter.mov" }));
     expect(res.beforeSteps).toMatch(/double-click the layer 'presenter.mov'/);
     expect(res.error).toMatch(/could not do every step/);
@@ -1140,7 +1220,10 @@ describe("subject.prepare", () => {
         name: "Add Object 1",
         matchName: "ADBE Paint Atom",
         kind: "object",
-        duration: [0, 10],
+        duration: [15, 10],
+        point: [1000, 2000],
+        compPoint: [500, 1000],
+        durationStart: 15,
       },
     ]);
   });
@@ -1184,10 +1267,10 @@ describe("subject.status", () => {
       ["Add Object 1", "object"],
       ["Paint 1", "other"],
     ]);
-    expect(res.selections[1].duration).toEqual([0, 11]);
-    expect(res.counts).toEqual({ object: 2, quickSelection: 1, other: 1 });
+    expect(res.selections[1].duration).toEqual([15, 11]);
+    expect(res.counts).toEqual({ object: 2, rectangle: 0, quickSelection: 1, other: 1 });
     expect(res.summary).toBe("2 objects selected, 1 quick-selection stroke, 1 other selection");
-    expect(res.next).toBeUndefined();
+    expect(res.next).toMatch(/subject\.check/);
     expect(res.removeNote).toMatch(/effect\.remove/);
   });
 
@@ -1333,5 +1416,232 @@ describe("subject.settings", () => {
       const v = validateOpArgs(getOp("subject.settings")!, { comp: "Main", layer: 1, ...extra });
       expect(v.ok).toBe(false);
     }
+  });
+});
+
+// ------------------------------------------------------- stage 12b (JSX side)
+
+describe("subject.prepare: the viewer's resolution", () => {
+  it("reports a missing View > Resolution > Full command and does not claim Full", () => {
+    const w = world({ fullId: 0 });
+    const res = runIn("subject.prepare", {}, w);
+    expect(res.couldNotDo).toEqual([
+      {
+        step: "chose View > Resolution > Full",
+        error: expect.stringMatching(/no menu command named 'Full'/),
+      },
+    ]);
+    expect(res.viewerResolution).toMatchObject({ commandId: null, verified: false });
+    expect(res.beforeSteps).toBeUndefined();
+  });
+});
+
+describe("subject.status: where each click landed", () => {
+  it("returns each selection's point in source pixels, in comp pixels where it can, and its Duration start", () => {
+    const fx = objectMatte([
+      { name: "Add Object 2", point: [1081, 2403] },
+      { name: "Add Object 1", point: [1138, 2400] },
+    ]);
+    const res = runIn("subject.status", {}, world({ effects: [fx] }));
+    expect(res.selections[0]).toMatchObject({
+      name: "Add Object 2",
+      point: [1081, 2403],
+      compPoint: [540.5, 1201.5],
+      durationStart: 15,
+    });
+    expect(res.sourceSize).toEqual([2176, 3840]);
+    expect(res.compSize).toEqual([1080, 1920]);
+    expect(res.span).toEqual({ inFrame: 0, outFrame: 300, frameRate: 30 });
+    expect(res.closeClicks).toHaveLength(1);
+    expect(res.closeClicks[0].reading).toMatch(/57 source pixels apart/);
+    expect(res.next).toMatch(/subject\.check/);
+    expect(res.countNote).toMatch(/not a check/);
+  });
+
+  it("names a rectangle selection and says it may hold nothing", () => {
+    const res = runIn(
+      "subject.status",
+      {},
+      world({ effects: [objectMatte(["Add Object 1", "Add Object Rect 1"])] }),
+    );
+    expect(res.selections[1]).toMatchObject({ name: "Add Object Rect 1", kind: "rectangle" });
+    expect(res.summary).toBe("1 object selected, 1 rectangle selection");
+  });
+});
+
+describe("subject.remove_selection", () => {
+  it("removes one selection by name and reports what is left", () => {
+    const fx = objectMatte(["Add Object Rect 1", "Add Object 2", "Add Object 1"]);
+    const res = runIn(
+      "subject.remove_selection",
+      { selection: "Add Object Rect 1" },
+      world({ effects: [fx] }),
+    );
+    expect(res.ok).toBe(true);
+    expect(res.removed).toBe("Add Object Rect 1");
+    expect(res.selections.map((s: Any) => s.name)).toEqual(["Add Object 2", "Add Object 1"]);
+    expect(res.summary).toBe("2 objects selected");
+    expect(res.next).toMatch(/subject\.check/);
+  });
+
+  it("removes one by its 1-based place in the list", () => {
+    const fx = objectMatte(["Add Object 2", "Add Object 1"]);
+    const res = runIn("subject.remove_selection", { selection: 1 }, world({ effects: [fx] }));
+    expect(res.removed).toBe("Add Object 2");
+  });
+
+  it("refuses a selection that is not there, naming the ones that are", () => {
+    const fx = objectMatte(["Add Object 1"]);
+    const res = runIn(
+      "subject.remove_selection",
+      { selection: "Add Object 9" },
+      world({ effects: [fx] }),
+    );
+    expect(res.ok).toBe(false);
+    expect(res.error).toMatch(/no selection 'Add Object 9'.*Add Object 1/);
+    expect(runIn("subject.remove_selection", { selection: 3 }, world({ effects: [fx] })).ok).toBe(
+      false,
+    );
+  });
+
+  it("refuses when there is no Object Matte", () => {
+    const res = runIn("subject.remove_selection", { selection: 1 }, world());
+    expect(res.error).toMatch(/no Object Matte/);
+  });
+});
+
+// The fill's build in After Effects: a still imported as the mask, the footage
+// layer duplicated under the cut-out without Object Matte, the mask as its
+// luma track matte.
+describe("fillBuildJsx", () => {
+  function fillWorld({ stillExists = true, taken = "" } = {}) {
+    const log: string[] = [];
+    const layers: Any[] = [];
+    const comp: Any = {
+      name: "Main",
+      width: 1080,
+      height: 1920,
+      get numLayers() {
+        return layers.length;
+      },
+      layer: (i: number) => layers[i - 1],
+      layers: {
+        add(item: Any) {
+          const l = mk(item.name, null);
+          layers.unshift(l);
+          log.push(`add:${item.name}`);
+          return l;
+        },
+      },
+    };
+    function mk(name: string, effects: Parade | null): Any {
+      const fxs = effects ?? new Parade();
+      const l: Any = {
+        name,
+        enabled: true,
+        get index() {
+          return layers.indexOf(l) + 1;
+        },
+        property: (k: string) => (k === "ADBE Effect Parade" ? fxs : null),
+        effects: fxs,
+        duplicate() {
+          const copy = mk(l.name + " 2", new Parade());
+          for (const fx of fxs.list)
+            copy.effects.list.push({
+              ...fx,
+              remove() {
+                copy.effects.list.splice(copy.effects.list.indexOf(this), 1);
+              },
+            });
+          layers.splice(layers.indexOf(l), 0, copy);
+          return copy;
+        },
+        moveAfter(o: Any) {
+          layers.splice(layers.indexOf(l), 1);
+          layers.splice(layers.indexOf(o) + 1, 0, l);
+        },
+        moveBefore(o: Any) {
+          layers.splice(layers.indexOf(l), 1);
+          layers.splice(layers.indexOf(o), 0, l);
+        },
+        setTrackMatte(m: Any, t: number) {
+          l.trackMatte = { layer: m.name, type: t };
+        },
+      };
+      return l;
+    }
+    const cut = mk("raw_nogreen.mp4", new Parade());
+    const om = objectMatte(["Add Object 1"]);
+    cut.effects.list.push(om);
+    layers.push(cut, mk(taken || "BG", null));
+    const app = {
+      project: {
+        importFile(io: Any) {
+          log.push(`import:${io.file.path}`);
+          return { name: "gap-mask.png" };
+        },
+      },
+    };
+    function File(this: Any, p: string) {
+      this.path = p;
+      this.exists = stillExists;
+    }
+    function ImportOptions(this: Any, f: Any) {
+      this.file = f;
+    }
+    return { comp, layers, cut, app, File, ImportOptions, log };
+  }
+
+  async function runBuild(w: Any, args: Record<string, unknown> = {}) {
+    const { fillBuildJsx } = await import("../src/operations/keying.js");
+    const AE = loadAE();
+    AE.findCompByNameOrId = () => w.comp;
+    AE.findLayerInComp = () => w.cut;
+    const body = fillBuildJsx({
+      comp: "Main",
+      layer: 1,
+      stillPath: "/tmp/x/gap-mask.png",
+      ...args,
+    });
+    return new Function(
+      "AE",
+      "app",
+      "File",
+      "ImportOptions",
+      "TrackMatteType",
+      "PropertyValueType",
+      "PropertyType",
+      body,
+    )(AE, w.app, w.File, w.ImportOptions, { ALPHA: 1, LUMA: 3 }, PVT, PT);
+  }
+
+  it("imports the still, puts a copy of the footage without Object Matte under the cut-out, matted by the still", async () => {
+    const w = fillWorld();
+    const res = await runBuild(w);
+    expect(res).toMatchObject({
+      ok: true,
+      fillLayer: "raw_nogreen.mp4 gap fill",
+      maskLayer: "raw_nogreen.mp4 gap mask",
+      stillItem: "gap-mask.png",
+      removedFromCopy: 1,
+    });
+    expect(w.layers.map((l: Any) => l.name)).toEqual([
+      "raw_nogreen.mp4",
+      "raw_nogreen.mp4 gap mask",
+      "raw_nogreen.mp4 gap fill",
+      "BG",
+    ]);
+    const fill = w.layers[2];
+    expect(fill.trackMatte).toEqual({ layer: "raw_nogreen.mp4 gap mask", type: 3 });
+    expect(fill.effects.list).toEqual([]);
+    expect(w.layers[1].enabled).toBe(false);
+    expect(w.cut.effects.list).toHaveLength(1);
+  });
+
+  it("refuses when the still is missing or a fill is already there", async () => {
+    expect((await runBuild(fillWorld({ stillExists: false }))).error).toMatch(/no file at/);
+    const res = await runBuild(fillWorld({ taken: "raw_nogreen.mp4 gap fill" }));
+    expect(res.ok).toBe(false);
+    expect(res.error).toMatch(/already has a layer 'raw_nogreen.mp4 gap fill'/);
   });
 });
