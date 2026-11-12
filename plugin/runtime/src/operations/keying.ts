@@ -1320,6 +1320,8 @@ const EDGE_TRANSPARENT = EDGE_DEFAULTS.transparent;
 /** ae_render_frame's largest settleTimeoutMs. */
 const SETTLE_MAX_MS = 600_000;
 const THUMB = 360;
+/** zlib level for the check's own pictures: 3.5 times faster than the default 6 on a synthetic 1080 x 1920 frame with noise, for files about 3% larger. */
+const PICTURE_DEFLATE = 1;
 
 type RegionBox = Box & { area: number; edges?: FrameEdge[] };
 export interface RegionFinding {
@@ -1477,6 +1479,46 @@ function framesAcross(
   return [...set].sort((x, y) => x - y).slice(0, 64);
 }
 
+/** Time spent in the renders a call made, summed over its ae_render_frame calls (ms). */
+export interface RenderTally {
+  frames: number;
+  calls: number;
+  ms: number;
+  aeCallMs: number;
+  settleMs: number;
+  renderNodeMs: number;
+}
+/** Time spent on the pixels in Node (ms): reading the files, finding regions, writing the pictures and the sheet. */
+export interface PixelTally {
+  frames: number;
+  readMs: number;
+  regionsMs: number;
+  picturesMs: number;
+  sheetMs: number;
+  ms: number;
+}
+const renderTally = (): RenderTally => ({
+  frames: 0,
+  calls: 0,
+  ms: 0,
+  aeCallMs: 0,
+  settleMs: 0,
+  renderNodeMs: 0,
+});
+const pixelTally = (): PixelTally => ({
+  frames: 0,
+  readMs: 0,
+  regionsMs: 0,
+  picturesMs: 0,
+  sheetMs: 0,
+  ms: 0,
+});
+const since = (t: number) => performance.now() - t;
+const roundTally = <T extends object>(t: T): T =>
+  Object.fromEntries(
+    Object.entries(t).map(([k, v]) => [k, typeof v === "number" ? Math.round(v) : v]),
+  ) as T;
+
 interface RenderedFrame {
   frame: number;
   ok: boolean;
@@ -1498,17 +1540,25 @@ async function renderChunked(
   perFrameMs: number,
   outDir: string,
   stem: string,
+  tally: RenderTally = renderTally(),
 ): Promise<RenderedFrame[]> {
   const size = Math.max(1, Math.floor(SETTLE_MAX_MS / perFrameMs));
   const out: RenderedFrame[] = [];
   for (let c = 0; c * size < frames.length; c++) {
     const chunk = frames.slice(c * size, (c + 1) * size);
+    const t0 = performance.now();
     const payload = await io.render({
       ...base,
       frames: chunk,
       outPath: path.join(outDir, `${stem}-${c}.png`),
       settleTimeoutMs: Math.min(SETTLE_MAX_MS, Math.max(1, Math.round(perFrameMs * chunk.length))),
     });
+    tally.calls++;
+    tally.frames += chunk.length;
+    tally.ms += since(t0);
+    tally.aeCallMs += payload?.timing?.aeCallMs ?? 0;
+    tally.settleMs += payload?.timing?.settleMs ?? payload?.captureSettle?.waitedMs ?? 0;
+    tally.renderNodeMs += payload?.timing?.nodeMs ?? 0;
     if (!payload?.ok) {
       for (const frame of chunk)
         out.push({
@@ -1560,7 +1610,10 @@ async function measureFrames(
   limit: number,
   over: string,
   sheetPath: string,
+  tally: PixelTally = pixelTally(),
+  pictures = true,
 ): Promise<{ readings: FrameReading[]; picture: string | null }> {
+  const started = performance.now();
   const colour = parseHex(over);
   const readings: FrameReading[] = [];
   const thumbs: DecodedPng[] = [];
@@ -1584,6 +1637,7 @@ async function measureFrames(
       continue;
     }
     let img: DecodedPng;
+    const tRead = performance.now();
     try {
       img = await io.readImage(r.file);
     } catch (err) {
@@ -1595,6 +1649,8 @@ async function measureFrames(
         error: `could not read ${r.file}: ${err instanceof Error ? err.message : String(err)}`,
       });
       continue;
+    } finally {
+      tally.readMs += since(tRead);
     }
     if (!img.alpha) {
       readings.push({
@@ -1606,14 +1662,32 @@ async function measureFrames(
       });
       continue;
     }
+    tally.frames++;
+    const tRegions = performance.now();
     const regions = cutoutRegions(img.alpha, img.width, img.height);
     let opaquePx = 0;
-    for (const v of img.alpha) if (v >= EDGE_DEFAULTS.opaque) opaquePx++;
+    const alpha = img.alpha;
+    for (let p = 0; p < alpha.length; p++) if (alpha[p] >= EDGE_DEFAULTS.opaque) opaquePx++;
+    tally.regionsMs += since(tRegions);
     const h = split(regions.holes);
     const o = split(regions.openings);
+    const tPic = performance.now();
+    if (!pictures) {
+      readings.push({
+        frame: r.frame,
+        checked: true,
+        file: r.file,
+        opaqueShare: Math.round((opaquePx / img.alpha.length) * 10000) / 10000,
+        holes: h.big,
+        openings: o.big,
+        holesUnderLimit: h.small,
+        openingsUnderLimit: o.small,
+      });
+      continue;
+    }
     const composite = flattenOver(img, { kind: "color", color: colour });
     const picture = r.file.replace(/\.png$/i, "") + "_over.png";
-    await writePng(io, picture, encodePngSrgb8(img.width, img.height, composite));
+    await writePng(io, picture, encodePngSrgb8(img.width, img.height, composite, PICTURE_DEFLATE));
     const tw = Math.min(THUMB, img.width);
     const th = Math.max(1, Math.round((img.height * tw) / img.width));
     thumbs.push({
@@ -1623,6 +1697,7 @@ async function measureFrames(
       bitDepth: 8,
     });
     labels.push(`frame ${r.frame}`);
+    tally.picturesMs += since(tPic);
     readings.push({
       frame: r.frame,
       checked: true,
@@ -1640,11 +1715,18 @@ async function measureFrames(
     });
   }
   let picture: string | null = null;
+  const tSheet = performance.now();
   if (thumbs.length) {
     const sheet = composeContactSheet(thumbs, { labels, thumbWidth: THUMB });
-    await writePng(io, sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+    await writePng(
+      io,
+      sheetPath,
+      encodePngSrgb8(sheet.width, sheet.height, sheet.rgb, PICTURE_DEFLATE),
+    );
     picture = sheetPath;
   }
+  tally.sheetMs += since(tSheet);
+  tally.ms += since(started);
   return { readings, picture };
 }
 
@@ -1737,6 +1819,27 @@ const regionsOf = (r: FrameReading): KindRegion[] => [
   ...(r.openings ?? []).map((x) => ({ ...x, kind: "opening" as const })),
 ];
 
+/** A rendered frame drawn over the flat colour, written next to it as <file>_over.png. */
+async function overPicture(io: CutoutIO, file: string, over: string): Promise<string | null> {
+  try {
+    const img = await io.readImage(file);
+    const picture = file.replace(/\.png$/i, "") + "_over.png";
+    await writePng(
+      io,
+      picture,
+      encodePngSrgb8(
+        img.width,
+        img.height,
+        flattenOver(img, { kind: "color", color: parseHex(over) }),
+        PICTURE_DEFLATE,
+      ),
+    );
+    return picture;
+  } catch {
+    return null;
+  }
+}
+
 /** Render once more each frame with a region over the limit, and report the frames whose regions differ. */
 async function recheckFrames(
   io: CutoutIO,
@@ -1746,8 +1849,19 @@ async function recheckFrames(
   outDir: string,
   perFrameMs: number,
   base: Record<string, unknown>,
+  accept: AcceptEntry[],
+  renders: RenderTally,
+  pixels: PixelTally,
 ) {
-  const first = readings.filter((r) => r.checked && regionsOf(r).length > 0);
+  // A region the user accepted needs no second look; a frame whose regions are all accepted is not rendered again.
+  const isAccepted = (x: KindRegion) =>
+    acceptedBy(
+      { kind: x.kind, box: { x: x.x, y: x.y, width: x.width, height: x.height } } as RegionFinding,
+      accept,
+    );
+  const withRegions = readings.filter((r) => r.checked && regionsOf(r).length > 0);
+  const first = withRegions.filter((r) => !regionsOf(r).every(isAccepted));
+  const skippedAccepted = withRegions.length - first.length;
   const frames = first.map((r) => r.frame);
   if (!frames.length)
     return {
@@ -1755,16 +1869,30 @@ async function recheckFrames(
       agreed: 0,
       differed: [] as number[],
       failed: [] as number[],
+      skippedAccepted,
       unstable: [] as Json[],
-      note: "No frame had a hole or opening over the limit, so none was rendered a second time.",
+      note: skippedAccepted
+        ? `No frame was rendered a second time: the regions on ${plural(skippedAccepted, "frame")} were all accepted.`
+        : "No frame had a hole or opening over the limit, so none was rendered a second time.",
     };
-  const rendered = await renderChunked(io, base, frames, perFrameMs, outDir, "cutout-recheck");
+  const rendered = await renderChunked(
+    io,
+    base,
+    frames,
+    perFrameMs,
+    outDir,
+    "cutout-recheck",
+    renders,
+  );
+  // Regions only: a picture is drawn afterwards for a frame that differs, not for the ones that agree.
   const { readings: again } = await measureFrames(
     io,
     rendered,
     limit,
     over,
     path.join(outDir, "cutout-recheck_sheet.png"),
+    pixels,
+    false,
   );
   const unstable: Json[] = [];
   const failed: number[] = [];
@@ -1789,11 +1917,14 @@ async function recheckFrames(
       agreed++;
       continue;
     }
+    const tPic = performance.now();
+    const secondPicture = b.file ? await overPicture(io, b.file, over) : null;
+    pixels.picturesMs += since(tPic);
     unstable.push({
       kind: "unstable",
       frame: a.frame,
       first: { regions: brief(ra), opaqueShare: a.opaqueShare ?? null, picture: a.picture },
-      second: { regions: brief(rb), opaqueShare: b.opaqueShare ?? null, picture: b.picture },
+      second: { regions: brief(rb), opaqueShare: b.opaqueShare ?? null, picture: secondPicture },
       reading:
         `Frame ${a.frame}: the cut-out differed between two renders of the same frame ` +
         `(opaque share ${a.opaqueShare} then ${b.opaqueShare}; ${plural(ra.length, "region")} then ${rb.length} over the limit). Both pictures are kept.`,
@@ -1804,11 +1935,15 @@ async function recheckFrames(
     agreed,
     differed: unstable.map((u) => u.frame),
     failed,
+    skippedAccepted,
     unstable,
     note:
       RECHECK_NOTE +
       (failed.length
         ? ` Frames ${failed.join(", ")} did not render the second time and were not compared.`
+        : "") +
+      (skippedAccepted
+        ? ` ${plural(skippedAccepted, "frame")} whose regions were all accepted ${skippedAccepted === 1 ? "was" : "were"} not rendered again.`
         : ""),
   };
 }
@@ -1826,6 +1961,45 @@ function closeAdvice(pairs: CloseClick[]): string {
   );
 }
 
+function checkTiming(
+  statusMs: number,
+  first: RenderTally,
+  second: RenderTally,
+  pixels: PixelTally,
+  totalMs: number,
+) {
+  return {
+    statusMs: Math.round(statusMs),
+    firstRender: roundTally(first),
+    secondRender: roundTally(second),
+    pixels: roundTally(pixels),
+    totalMs: Math.round(totalMs),
+  };
+}
+
+const secs = (ms: number) => (ms / 1000).toFixed(1);
+
+/** One sentence on where the time went, for the skill to tell the user how long a check takes. */
+function timeReading(
+  first: RenderTally,
+  second: RenderTally,
+  pixels: PixelTally,
+  totalMs: number,
+): string {
+  const ae = first.aeCallMs + second.aeCallMs;
+  const settle = first.settleMs + second.settleMs;
+  const renderNode = first.renderNodeMs + second.renderNodeMs;
+  const frames = first.frames + second.frames;
+  const head =
+    `This check took ${secs(totalMs)} s: ${secs(ae)} s in After Effects rendering ${plural(frames, "frame")} ` +
+    `(${first.frames} first, ${second.frames} again), ${secs(settle)} s waiting for the files to finish writing, ` +
+    `${secs(renderNode + pixels.ms)} s in Node (${secs(pixels.ms)} s of it reading the pixels and drawing the pictures).`;
+  const share = totalMs > 0 ? (ae + settle) / totalMs : 0;
+  return share >= 0.6 && frames > 0
+    ? `${head} Most of it was After Effects rendering, about ${secs((ae + settle) / frames)} s a frame; frames it has rendered before are much quicker.`
+    : head;
+}
+
 export async function runSubjectCheck(args: Record<string, unknown>, io: CutoutIO): Promise<Json> {
   const outDir = args.outDir;
   if (typeof outDir !== "string" || !path.isAbsolute(outDir))
@@ -1833,10 +2007,15 @@ export async function runSubjectCheck(args: Record<string, unknown>, io: CutoutI
   const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
   const over = typeof args.over === "string" ? args.over : CUTOUT_OVER;
   const accept = Array.isArray(args.accept) ? (args.accept as AcceptEntry[]) : [];
+  const started = performance.now();
   const st = await io.status();
+  const statusMs = since(started);
   if (!st?.ok) return { ok: false, error: st?.error ?? "subject.status failed", status: st };
   const missing = needSelection(st);
   if (missing) return { ok: false, error: missing };
+  const first = renderTally();
+  const second = renderTally();
+  const pixels = pixelTally();
   const clicks = (st.selections as Json[]).map((s) => ({
     name: s.name,
     kind: s.kind,
@@ -1860,6 +2039,7 @@ export async function runSubjectCheck(args: Record<string, unknown>, io: CutoutI
     perFrameMsOf(args),
     outDir,
     "cutout",
+    first,
   );
   const { readings, picture } = await measureFrames(
     io,
@@ -1867,6 +2047,7 @@ export async function runSubjectCheck(args: Record<string, unknown>, io: CutoutI
     limit,
     over,
     path.join(outDir, "cutout_sheet.png"),
+    pixels,
   );
   const sum = summarize(readings, limit, accept, picture);
   const close = closeClicks(clicks, st.sourceSize ?? null);
@@ -1874,12 +2055,19 @@ export async function runSubjectCheck(args: Record<string, unknown>, io: CutoutI
   const recheck =
     args.recheck === false
       ? { skipped: true, note: "recheck: false; no frame was rendered a second time" }
-      : await recheckFrames(io, readings, limit, over, outDir, perFrameMsOf(args), {
-          compNameOrId: args.comp,
-          isolate,
-          channels: "rgba",
-          edge: true,
-        });
+      : await recheckFrames(
+          io,
+          readings,
+          limit,
+          over,
+          outDir,
+          perFrameMsOf(args),
+          // No edge report on the second render: only the regions are compared (edge costs about 1 s a 1080 x 1920 frame).
+          { compNameOrId: args.comp, isolate, channels: "rgba" },
+          accept,
+          second,
+          pixels,
+        );
   if ("unstable" in recheck) findings.push(...recheck.unstable);
   if (close.length)
     findings.push({ kind: "close-clicks", pairs: close, advice: closeAdvice(close) });
@@ -1915,6 +2103,7 @@ export async function runSubjectCheck(args: Record<string, unknown>, io: CutoutI
             agreed: recheck.agreed,
             differed: recheck.differed,
             failed: recheck.failed,
+            skippedAccepted: recheck.skippedAccepted,
             note: recheck.note,
           }
         : recheck,
@@ -1923,6 +2112,8 @@ export async function runSubjectCheck(args: Record<string, unknown>, io: CutoutI
     frames: readings,
     clicks,
     countNote: COUNT_NOTE,
+    timing: checkTiming(statusMs, first, second, pixels, since(started)),
+    timeReading: timeReading(first, second, pixels, since(started)),
     holeLimit: limit,
     next: stop
       ? "Stop: show the user the picture and say what is out, before building anything else. " +
@@ -1968,7 +2159,14 @@ export async function runFillGaps(args: Record<string, unknown>, io: CutoutIO): 
   const minArea = typeof args.minArea === "number" ? args.minArea : 20;
   const grow = typeof args.grow === "number" ? args.grow : 3;
   const perFrameMs = perFrameMsOf(args);
+  const started = performance.now();
   const st = await io.status();
+  const statusMs = since(started);
+  const refTally = renderTally();
+  const aloneTally = renderTally();
+  const afterTally = renderTally();
+  const pixels = pixelTally();
+  let buildMs = 0;
   if (!st?.ok) return { ok: false, error: st?.error ?? "subject.status failed", status: st };
   const missing = needSelection(st);
   if (missing) return { ok: false, error: missing };
@@ -1981,6 +2179,7 @@ export async function runFillGaps(args: Record<string, unknown>, io: CutoutIO): 
     perFrameMs,
     outDir,
     "fill-reference",
+    refTally,
   );
   const refused = (why: string) => ({
     ok: false,
@@ -2042,7 +2241,9 @@ export async function runFillGaps(args: Record<string, unknown>, io: CutoutIO): 
   filled.grownArea = grownArea;
   filled.still = still;
   await writePng(io, still, encodePngGray8(img.width, img.height, values));
+  const tBuild = performance.now();
   const built = await io.build({ comp: args.comp, layer: args.layer, stillPath: still });
+  buildMs = since(tBuild);
   if (!built?.ok)
     return {
       ok: false,
@@ -2067,6 +2268,7 @@ export async function runFillGaps(args: Record<string, unknown>, io: CutoutIO): 
     perFrameMs,
     outDir,
     "fill-alone",
+    aloneTally,
   );
   let fillAlone: Json;
   try {
@@ -2118,6 +2320,7 @@ export async function runFillGaps(args: Record<string, unknown>, io: CutoutIO): 
     perFrameMs,
     outDir,
     "fill-after",
+    afterTally,
   );
   const measured = await measureFrames(
     io,
@@ -2125,6 +2328,7 @@ export async function runFillGaps(args: Record<string, unknown>, io: CutoutIO): 
     limit,
     over,
     path.join(outDir, "fill-after_sheet.png"),
+    pixels,
   );
   const sum = summarize(measured.readings, limit, []);
   return {
@@ -2141,6 +2345,15 @@ export async function runFillGaps(args: Record<string, unknown>, io: CutoutIO): 
       reading: sum.text,
     },
     limits: FILL_LIMITS(frame),
+    timing: {
+      statusMs: Math.round(statusMs),
+      referenceRender: roundTally(refTally),
+      buildMs: Math.round(buildMs),
+      fillAloneRender: roundTally(aloneTally),
+      afterRender: roundTally(afterTally),
+      pixels: roundTally(pixels),
+      totalMs: Math.round(since(started)),
+    },
     next:
       "Show the user the picture after the fill and say what is left. To undo the fill, delete the two layers it added." +
       (layers.audioOff
@@ -2325,7 +2538,8 @@ registerOp({
     `A hole or opening of holeLimit px or more (default ${CUTOUT_HOLE_LIMIT}, at the comp's size) is a finding; so are frames that did not render (kind 'not-checked': a frame that was not rendered is never counted as clean) and two clicks close together. ` +
     "With stop true: show the user the picture and say what is out before doing anything else. `accept` entries (earlier findings the user called fine, such as a real gap between an arm and the body) are not counted again. " +
     "Each frame with a finding is rendered once more at the end; a frame whose cut-out differs between the two renders is a finding of kind 'unstable' (seen once on 2026-11-11, cause unknown; agreement may come from the cache and does not prove a frame stable). " +
-    "A selection count is not a check. It can take minutes: 20 to 40 s a frame the first time on a 2176 x 3840 take; say so to the user before it runs.",
+    "A selection count is not a check. It can take minutes: 20 to 40 s a frame the first time on a 2176 x 3840 take; say so to the user before it runs. " +
+    "`timing` says where the time went (status, each render's After Effects call, settle wait and Node work, the pixel work, the total) and `timeReading` says it in one sentence.",
   params: [
     ...compLayerParams,
     {

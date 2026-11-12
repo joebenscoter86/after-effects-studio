@@ -941,3 +941,78 @@ describe("subject.check after a fill", () => {
     expect(res.inOut).toMatch(/with its gap fill \(raw_nogreen\.mp4 gap fill\)/);
   });
 });
+
+describe("timing and the second render", () => {
+  it("reports where the time went: status, each render (After Effects, settle, its Node work), the pixel work, the total", async () => {
+    const io: Any = fakeIO(() => rects([BODY, MIC_OFF]), { status: async () => APART as Any });
+    const render = io.render;
+    io.render = async (args: Any) => ({
+      ...(await render(args)),
+      timing: { aeCallMs: 50, settleMs: 20, nodeMs: 10, totalMs: 80 },
+    });
+    const res = await runSubjectCheck({ comp: "Main", layer: 1, outDir: dir }, io);
+    const t = res.timing;
+    expect(t).toMatchObject({
+      statusMs: expect.any(Number),
+      firstRender: {
+        frames: 9,
+        calls: 1,
+        ms: expect.any(Number),
+        aeCallMs: 50,
+        settleMs: 20,
+        renderNodeMs: 10,
+      },
+      secondRender: { frames: 9, calls: 1, aeCallMs: 50 },
+      pixels: {
+        frames: 18,
+        readMs: expect.any(Number),
+        regionsMs: expect.any(Number),
+        picturesMs: expect.any(Number),
+        sheetMs: expect.any(Number),
+        ms: expect.any(Number),
+      },
+      totalMs: expect.any(Number),
+    });
+    expect(t.totalMs).toBeGreaterThanOrEqual(t.firstRender.ms + t.secondRender.ms);
+    expect(res.timeReading).toMatch(/took .* s:/);
+  });
+
+  it("does not render again a frame whose regions are all accepted, and says how many were skipped", async () => {
+    const arch = () =>
+      rects([
+        [20, 100, 161, 40, 1],
+        [20, 140, 41, 160, 1],
+        [140, 140, 41, 160, 1],
+      ]);
+    const box = { x: 61, y: 140, width: 79, height: 160 };
+    const io = fakeIO(arch, { status: async () => APART as Any });
+    const res = await runSubjectCheck({ comp: "Main", layer: 1, outDir: dir, accept: [box] }, io);
+    expect(res.stop).toBe(false);
+    expect(renders(io)).toHaveLength(1);
+    expect(res.recheck).toMatchObject({ frames: [], skippedAccepted: 9 });
+  });
+
+  it("subject.fill_gaps reports its timing too", async () => {
+    const still = path.join(dir, "gap-mask.png");
+    const io: Any = fakeIO(() => matte([GAP]));
+    io.render = (
+      (orig) => async (args: Any) =>
+        Array.isArray(args.isolate) && args.isolate.length === 1
+          ? fakeIO(() => Float64Array.from({ length: W * H }, () => 0)).render(args)
+          : orig(args)
+    )(io.render);
+    const res = await runFillGaps(
+      { comp: "Main", layer: 1, frame: 15, stillPath: still, outDir: dir },
+      io,
+    );
+    expect(res.timing).toMatchObject({
+      statusMs: expect.any(Number),
+      referenceRender: { frames: 1, ms: expect.any(Number) },
+      buildMs: expect.any(Number),
+      fillAloneRender: { frames: 1 },
+      afterRender: { frames: 9 },
+      pixels: { ms: expect.any(Number) },
+      totalMs: expect.any(Number),
+    });
+  });
+});

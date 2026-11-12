@@ -1100,7 +1100,9 @@ export function cutoutRegions(
   const below = opts.below ?? EDGE_DEFAULTS.opaque;
   const minArea = opts.minArea ?? 1;
   const n = width * height;
+  // One copy, sealed below; the given alpha is read as it is.
   const a = Float64Array.from(alpha as ArrayLike<number>);
+  const original = alpha;
   // Seal each edge between its first and last opaque pixel. `sealedEdge`
   // records, per sealed pixel that was below opaque, which edge sealed it.
   const sealedEdge = new Int8Array(n).fill(-1);
@@ -1116,7 +1118,6 @@ export function cutoutRegions(
     }
     return out;
   };
-  const original = Float64Array.from(a);
   for (let e = 0; e < 4; e++) {
     const px = edgePixels(e);
     let first = -1;

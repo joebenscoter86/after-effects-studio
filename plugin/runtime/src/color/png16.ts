@@ -174,6 +174,7 @@ function encode8(
   colorType: 0 | 2 | 6,
   srgbTags: boolean,
   write: (pixel: number, out: Buffer, at: number) => void,
+  level = 6,
 ): Buffer {
   const channels = colorType === 0 ? 1 : colorType === 2 ? 3 : 4;
   const stride = width * channels;
@@ -200,7 +201,7 @@ function encode8(
     ...(srgbTags
       ? [chunk("sRGB", Buffer.from([0])) /* perceptual intent */, chunk("gAMA", gama)]
       : []),
-    chunk("IDAT", zlib.deflateSync(raw, { level: 6 })),
+    chunk("IDAT", zlib.deflateSync(raw, { level })),
     chunk("IEND", Buffer.alloc(0)),
   ]);
 }
@@ -211,12 +212,29 @@ function encode8(
  * output of saveFrameToPng was one of the two sources of "wrong color"
  * reports.
  */
-export function encodePngSrgb8(width: number, height: number, rgb: Float64Array): Buffer {
-  return encode8(width, height, 2, true, (p, out, at) => {
-    out[at] = to8(rgb[p * 3]);
-    out[at + 1] = to8(rgb[p * 3 + 1]);
-    out[at + 2] = to8(rgb[p * 3 + 2]);
-  });
+/**
+ * `level` is zlib's compression level (default 6). subject.check writes its
+ * pictures at 1: on a synthetic 1080 x 1920 frame with noise that took 82 ms against
+ * 285 ms at 6, for a file about 3% larger.
+ */
+export function encodePngSrgb8(
+  width: number,
+  height: number,
+  rgb: Float64Array,
+  level = 6,
+): Buffer {
+  return encode8(
+    width,
+    height,
+    2,
+    true,
+    (p, out, at) => {
+      out[at] = to8(rgb[p * 3]);
+      out[at + 1] = to8(rgb[p * 3 + 1]);
+      out[at + 2] = to8(rgb[p * 3 + 2]);
+    },
+    level,
+  );
 }
 
 /**
