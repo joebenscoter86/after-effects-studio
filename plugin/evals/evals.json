@@ -319,6 +319,27 @@
         "The plan renders the cut-out once to a movie with alpha (subject.render_cutout), checks every frame of that file (subject.check_file) before anything is built on it, and builds the piece on the file (subject.use_cutout) rather than on the live matte.",
         "The cut-out is planned with Object Matte (subject.prepare, then subject.check), not a colour key on footage with no green screen, and no AE operation, render or install happens in this planning-only test."
       ]
+    },
+    {
+      "id": 24,
+      "prompt": "Make an element sit in its plate in the open After Effects project, using only the plugin's tools. First run this eval's setup script `seat-plate.jsx` once, unchanged, as the code of the eval.run operation; it builds a synthetic plate and element (no footage) and returns `seatComp` and the regions. Then run `node grade.mjs seat --plan`: it prints the final render and every check's limit. The plate (layer `plate`) is soft and has grain that changes every frame; the element (layer `element`, a card with a stripe) is clean and sharp, so it looks pasted on. Change the layer `element` itself (effects on that layer) so that its grain and softness match the plate's, using these regions in comp pixels (x, y, width, height): plate (40, 200, 180, 350), element (800, 250, 280, 240). Measure with ae_render_frame `look` on two consecutive frames before and after each change (role 'plate' and 'element', and a pair), and read the effects' properties before setting them. Leave the plate as it is and keep the element's colours. When your work is finished, and not before, make exactly the final ae_render_frame call `node grade.mjs seat --plan` printed, then run `node grade.mjs seat` once. The grade runs once and is final. Work only on the items the setup made; do not save, close, clear or switch the project, and do not use the render queue or undo. Report the grain and edge width of both regions before and after.",
+      "expected_output": "look on both regions over two consecutive frames before any change (the element clean and sharp, the plate soft and grainy), effects on the element layer found and range-checked through the plugin (a blur such as Gaussian Blur, then grain that changes every frame such as Noise or Add Grain with its Viewing Mode on Final Output), look again after each change until the element's frame-to-frame grain and edge width are within a quarter of the plate's, the plate and the element's colours untouched, the planned render and one grade run. The expected plate numbers were measured on the built scene in After Effects 27.0; the no-plugin baseline has no After Effects tools, so it scores 0 on every picture check by construction.",
+      "files": [
+        "picture/seat-plate.jsx",
+        "picture/grade.mjs",
+        "picture/checks.mjs",
+        "picture/scenes.mjs"
+      ],
+      "picture": {
+        "check": "seat",
+        "setup": "seat-plate.jsx"
+      },
+      "assertions": [
+        "Trace shows the setup script run once through eval.run and ae_render_frame `look` on the plate and element regions, over two consecutive frames, before the first change.",
+        "Trace shows the change made as effects on the element layer through plugin operations, with no operation on the plate layer or inside either precomp.",
+        "Trace shows look measured again after the changes, and the final ae_render_frame call made exactly as the grader's plan printed it, followed by a single grade run.",
+        "The report gives both regions' grain and edge width before and after, without claiming a match the numbers do not show."
+      ]
     }
   ]
 }

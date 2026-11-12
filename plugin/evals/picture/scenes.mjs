@@ -334,4 +334,54 @@ export function reviewBuild(scene = REVIEW) {
 export const encodeBuild = (build) => Buffer.from(JSON.stringify(build), "utf8").toString("base64");
 export const decodeBuild = (text) => JSON.parse(Buffer.from(text, "base64").toString("utf8"));
 
-export const SCENES = { keying: KEYING, grade: GRADE, over: OVER, finish: FINISH, review: REVIEW };
+/**
+ * Sit an element in its plate (stage 4 of the professional-finish plan): a
+ * landscape plate (precomp layer "plate") of a wall and a dark panel, softened
+ * by Gaussian Blur and grained by Noise on an adjustment layer inside the
+ * plate comp, and a clean, sharp element (precomp layer "element": a light
+ * card with a dark stripe) laid over it. The task is to give the element the
+ * plate's grain and softness with effects on the element layer only.
+ * `expected` holds what the plate measured in After Effects 27.0 (look, on
+ * frames 0 and 1): the grader checks the plate is still that.
+ */
+export const SEAT = {
+  id: "seat-plate",
+  version: 1,
+  width: 1280,
+  height: 720,
+  fps: 24,
+  frames: 24,
+  bg: [0, 0, 0],
+  layer: "element",
+  plateLayer: "plate",
+  plate: {
+    wall: [0.45, 0.43, 0.4],
+    panel: { colour: [0.12, 0.12, 0.13], box: { x: 120, y: 150, width: 400, height: 450 } },
+    /** Gaussian Blur Blurriness, then Noise Amount of Noise (%), on an adjustment layer. */
+    blur: 6,
+    noise: 6,
+  },
+  element: {
+    card: { colour: [0.78, 0.76, 0.72], box: { x: 760, y: 160, width: 360, height: 400 } },
+    stripe: { colour: [0.15, 0.15, 0.16], box: { x: 760, y: 330, width: 360, height: 80 } },
+  },
+  /** Two consecutive frames: grain is read between them. */
+  gradeFrames: [0, 1],
+  /** The plate region holds the panel's left edge; the element region the stripe's two edges, inside the card. */
+  regions: {
+    plate: { x: 40, y: 200, width: 180, height: 350 },
+    element: { x: 800, y: 250, width: 280, height: 240 },
+  },
+  /**
+   * Measured in After Effects 27.0 with look on frames 0 and 1 of the built
+   * scene (2026-11-12). The scene built three times read the same; over the
+   * frame pairs 0-1, 6-7 and 12-13 the plate read 4.41 to 4.43 steps of grain
+   * and 4.64 to 4.70 px of edge, a spread of at most 1.3%.
+   */
+  expected: {
+    plate: { temporalGrain: 4.42, spatialGrain: 4.43, edgeWidth: 4.7, lumaMean: 0.2616 },
+    element: { temporalGrain: 0, spatialGrain: 0, edgeWidth: 0.8, lumaMean: 0.558 },
+  },
+};
+
+export const SCENES = { keying: KEYING, grade: GRADE, over: OVER, finish: FINISH, review: REVIEW, seat: SEAT };

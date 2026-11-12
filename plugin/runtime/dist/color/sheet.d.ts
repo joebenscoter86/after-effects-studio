@@ -176,4 +176,171 @@ export declare const LABEL_CHAR_PX: number;
 export declare function composeContactSheet(frames: DecodedPng[], opts?: SheetOptions): SheetImage;
 /** Label text for a frame: "#3 1.500s" — only characters the font has. */
 export declare function frameLabel(index: number, time: number | undefined): string;
+/** What a region is, for the readings: a neutral surface, skin, the plate, or the element laid over it. */
+export type LookRole = "neutral" | "skin" | "plate" | "element";
+export declare const LOOK_ROLES: LookRole[];
+export interface LookRegionSpec extends RegionSpec {
+    role?: LookRole;
+}
+export interface LookArgs {
+    regions: LookRegionSpec[];
+    /** Element regions measured against plate regions, by name. */
+    pairs?: Array<{
+        element: string;
+        plate: string;
+    }>;
+    /** Smallest luma step (0..1) counted as an edge. Default 0.1. */
+    minContrast?: number;
+    /** An element whose grain or edge width is within this share of the plate's matches it. Default 0.25. */
+    grainTolerance?: number;
+    sharpnessTolerance?: number;
+}
+/**
+ * Starting points, not measured judgments: a quarter either way for grain and
+ * edge width; 0.02 (about five 8-bit steps) for black and white points; a
+ * CIELAB a* or b* of 2 as the smallest cast called a cast (a colour
+ * difference of about 2 is near the threshold of seeing one side by side).
+ */
+export declare const LOOK_DEFAULTS: {
+    minContrast: number;
+    grainTolerance: number;
+    sharpnessTolerance: number;
+    levelTolerance: number;
+    castAbove: number;
+    /** Pixels at or above this alpha count as the element when the frame has alpha. */
+    opaque: number;
+    /** Half-length of the profile read across an edge, px: edges up to about 10 px wide (sigma 4). */
+    edgeReach: number;
+    /** Profiles are the mean of this many neighbouring lines. */
+    edgeLines: number;
+    /** Skin hue angle (CIELAB h, degrees) commonly reported for skin of many tones under neutral light. */
+    skinHue: [number, number];
+};
+export interface Lab {
+    L: number;
+    a: number;
+    b: number;
+    chroma: number;
+    /** CIELAB hue angle h, degrees 0..360 (0 red-magenta, 90 yellow, 180 green, 270 blue). */
+    hue: number;
+}
+/** CIELAB (D65) of an sRGB colour given as display values 0..1. */
+export declare function labOf(rgb: Rgb): Lab;
+/**
+ * Per-channel gains on the display values that make `rgb` neutral at its
+ * own luma: equal values read a* = b* = 0 whatever the encoding.
+ */
+export declare function neutralGains(rgb: Rgb): Rgb;
+/** The region's pixels, straight colour, element pixels only when the frame has alpha. */
+export interface LookCrop {
+    rect: PixelRect;
+    width: number;
+    height: number;
+    rgb: Float64Array;
+    /** 1 where the pixel counts (opaque enough, or no alpha), else 0. */
+    use: Uint8Array;
+}
+/** Every region's crop, for the frame-to-frame grain (and kept small: regions only). */
+export declare function lookCrops(img: DecodedPng, args: LookArgs): Map<string, LookCrop>;
+/**
+ * Grain between two frames of the same region, per channel, in 8-bit steps:
+ * the robust spread of the frame difference over the square root of two. A
+ * still element reads 0; grain that changes every frame reads its size.
+ */
+export declare function temporalGrain(a: LookCrop, b: LookCrop): Rgb | null;
+export interface LookLevels {
+    /** 0.5th and 99.5th percentiles per channel, 0..1. */
+    black: Rgb;
+    white: Rgb;
+    mean: Rgb;
+    lumaBlack: number;
+    lumaWhite: number;
+    lumaMean: number;
+}
+export interface LookRegionReport {
+    name: string;
+    role: LookRole | null;
+    rect: PixelRect;
+    clipped: boolean;
+    /** Pixels measured: opaque ones only when the frame has alpha. */
+    pixels: number;
+    levels: LookLevels;
+    /** Per channel, in 8-bit steps (one step is 1/255). */
+    grain: {
+        spatial: Rgb;
+    };
+    sharpness: {
+        edgeWidth: number | null;
+        edges: number;
+    };
+    /** CIELAB of the region's mean colour. */
+    colour: Lab;
+    cast?: {
+        a: number;
+        b: number;
+        amount: number;
+        toward: string | null;
+        gains: Rgb;
+        channelMixer: {
+            "Red-Red": number;
+            "Green-Green": number;
+            "Blue-Blue": number;
+        };
+    };
+    reading?: string;
+}
+export interface LookPairReport {
+    element: string;
+    plate: string;
+    grain: {
+        element: number;
+        plate: number;
+        ratio: number | null;
+        matches: boolean | null;
+    };
+    sharpness: {
+        element: number | null;
+        plate: number | null;
+        ratio: number | null;
+        matches: boolean | null;
+    };
+    levels: {
+        blackDifference: number;
+        whiteDifference: number;
+    };
+    readings: string[];
+}
+/** An element region against its plate: grain, edge width, black and white points, with what to do. */
+export declare function compareLook(element: Pick<LookRegionReport, "name" | "grain" | "sharpness" | "levels">, plate: Pick<LookRegionReport, "name" | "grain" | "sharpness" | "levels">, tol?: {
+    grain?: number;
+    sharpness?: number;
+}): LookPairReport;
+export interface LookFrame {
+    regions: Array<LookRegionReport | RegionError>;
+    pairs?: Array<LookPairReport | {
+        element: string;
+        plate: string;
+        error: string;
+    }>;
+}
+/** Grain, edge width, black and white points and colour of each region, and each element against its plate. */
+export declare function measureLook(img: DecodedPng, args: LookArgs): LookFrame;
+export interface LookSeries {
+    regions: Array<{
+        name: string;
+        temporal: Rgb | null;
+        pairs: number;
+    }>;
+    pairs?: Array<{
+        element: string;
+        plate: string;
+        element_temporal: number | null;
+        plate_temporal: number | null;
+        readings: string[];
+    }>;
+}
+/** Frame-to-frame grain of each region over consecutive frames (crops from lookCrops, in order). */
+export declare function summarizeLookSeries(frames: Array<Map<string, LookCrop>>, args: LookArgs): LookSeries;
+/** A message naming the field, or null when `look` is usable. */
+export declare function lookArgsError(args: Record<string, unknown>): string | null;
 //# sourceMappingURL=sheet.d.ts.map

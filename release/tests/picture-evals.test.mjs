@@ -13,11 +13,11 @@ import { promisify } from 'node:util';
 import vm from 'node:vm';
 
 import {
-  THRESHOLDS, checkIds, formatVerdict, gradeFinish, gradeGrade, gradeKeying, gradeOver, gradeReview, loadRuntime, renderPlan, EVALS,
+  THRESHOLDS, checkIds, formatVerdict, gradeFinish, gradeGrade, gradeKeying, gradeOver, gradeReview, gradeSeat, loadRuntime, renderPlan, EVALS,
   REVIEW_TRUTH, REVIEW_KINDS, SEVERITIES,
 } from '../../plugin/evals/picture/checks.mjs';
 import { SCENES, GRADE, decodeBuild, reviewBuild } from '../../plugin/evals/picture/scenes.mjs';
-import { gradeFrame, keyedFrame, keyingSource, overFile, undoGradeError, writePng } from './picture-model.mjs';
+import { gradeFrame, keyedFrame, keyingSource, overFile, seatFrame, undoGradeError, writePng } from './picture-model.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const PICTURE = path.join(ROOT, 'plugin', 'evals', 'picture');
@@ -140,6 +140,42 @@ test('over: a straight-colour still matches over; a raw capture with the backgro
   assert.deepEqual(failing(good.checks), []);
   assert.deepEqual(failing(gradeOver({ still: overFile('raw'), reference }, rt).checks), ['matches-over']);
   assert.deepEqual(failing(gradeOver({ still: overFile('rgb'), reference }, rt).checks), ['matches-over', 'still-has-alpha']);
+});
+
+const seatPair = (opts) => SCENES.seat.gradeFrames.map((f) => seatFrame(f, opts));
+const MATCHED = { element: { sigma: SCENES.seat.expected.plate.edgeWidth / 2.56, grain: SCENES.seat.expected.plate.temporalGrain } };
+
+test('seat: an element given the plate\'s grain and softness passes every check', () => {
+  const r = gradeSeat({ frames: seatPair(MATCHED) }, rt);
+  assert.deepEqual(failing(r.checks), [], JSON.stringify(r.checks.map((c) => [c.id, c.value])));
+});
+
+test('seat: the clean, sharp element as built fails on grain and softness, so the eval can fail', () => {
+  const r = gradeSeat({ frames: seatPair() }, rt);
+  assert.deepEqual(failing(r.checks), ['grain-match', 'softness-match']);
+});
+
+test('seat: grain alone fails softness; softness alone fails grain; too much of either fails', () => {
+  const p = SCENES.seat.expected.plate;
+  assert.deepEqual(failing(gradeSeat({ frames: seatPair({ element: { grain: p.temporalGrain } }) }, rt).checks), ['softness-match']);
+  assert.deepEqual(failing(gradeSeat({ frames: seatPair({ element: { sigma: p.edgeWidth / 2.56 } }) }, rt).checks), ['grain-match']);
+  assert.deepEqual(failing(gradeSeat({ frames: seatPair({ element: { sigma: 2 * p.edgeWidth / 2.56, grain: 2 * p.temporalGrain } }) }, rt).checks), ['grain-match', 'softness-match']);
+});
+
+test('seat: softening or cleaning the plate instead fails plate-untouched', () => {
+  const r = gradeSeat({ frames: seatPair({ ...MATCHED, plate: { sigma: 3, grain: 1 } }) }, rt);
+  assert.ok(failing(r.checks).includes('plate-untouched'), JSON.stringify(failing(r.checks)));
+});
+
+test('seat: grain that does not change from frame to frame does not count', () => {
+  // The same frame twice: the element has grain in each frame but none between them.
+  const one = seatFrame(0, MATCHED);
+  assert.ok(failing(gradeSeat({ frames: [one, one] }, rt).checks).includes('grain-match'));
+});
+
+test('seat: a missing or wrong-size render fails every check with the reason', () => {
+  const r = gradeSeat({ frames: [seatFrame(0, MATCHED), null] }, rt);
+  assert.ok(r.checks.every((c) => !c.pass && /missing/.test(c.value)));
 });
 
 test('the verdict has one line per check: what was measured, the value, the limit, pass or fail', () => {

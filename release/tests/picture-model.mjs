@@ -11,7 +11,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { GRADE, KEYING, OVER } from '../../plugin/evals/picture/scenes.mjs';
+import { GRADE, KEYING, OVER, SEAT } from '../../plugin/evals/picture/scenes.mjs';
 
 /** Signed distance from (px, py) to a polygon, positive inside. */
 function sdPoly(px, py, pts) {
@@ -206,4 +206,60 @@ export async function writePng(runtime, file, img) {
     ? runtime.png16.encodePngSrgbRgba8(img.width, img.height, img.rgb, img.alpha)
     : runtime.png16.encodePngSrgb8(img.width, img.height, img.rgb);
   await fs.writeFile(file, buf);
+}
+
+// ---------------------------------------------------------------------------
+// Sit an element in its plate
+// ---------------------------------------------------------------------------
+
+const erf = (x) => {
+  const t = 1 / (1 + 0.3275911 * Math.abs(x));
+  const y = 1 - ((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x);
+  return x >= 0 ? y : -y;
+};
+/** Coverage of a box at pixel (x, y), its edges blurred by a Gaussian of sigma (0: hard). */
+function boxCover(x, y, b, sigma) {
+  const axis = (p, lo, hi) => {
+    if (!(sigma > 0)) return p >= lo && p < hi ? 1 : 0;
+    const s = sigma * Math.SQRT2;
+    return 0.5 * (erf((p + 0.5 - lo) / s) - erf((p + 0.5 - hi) / s));
+  };
+  return axis(x, b.x, b.x + b.width) * axis(y, b.y, b.y + b.height);
+}
+const gauss = (r) => Math.sqrt(-2 * Math.log(Math.max(r(), 1e-12))) * Math.cos(2 * Math.PI * r());
+
+/**
+ * One frame of the seat comp as ae_render_frame writes it (rgb, 8-bit): the
+ * plate (wall and panel) blurred by sigma `plate.sigma` px with grain of
+ * `plate.grain` 8-bit steps, and the element (card and stripe) with its own
+ * `element.sigma` and `element.grain`. Grain is new on every frame (seeded by
+ * the frame). The plate's numbers default to what After Effects measured
+ * (edge 4.7 px = 2.56 sigma; grain 4.19 steps).
+ */
+export function seatFrame(frame, { element = {}, plate = {} } = {}) {
+  const W = SEAT.width, H = SEAT.height;
+  const ps = plate.sigma ?? SEAT.expected.plate.edgeWidth / 2.56;
+  const pg = plate.grain ?? SEAT.expected.plate.temporalGrain;
+  const es = element.sigma ?? 0;
+  const eg = element.grain ?? 0;
+  const unit = (seed) => { const r = rng(seed); return () => (r(1) + 1) / 2; };
+  const rp = unit(1000 + frame), re = unit(2000 + frame);
+  const rgb = new Float64Array(W * H * 3);
+  const { wall, panel } = SEAT.plate;
+  const { card, stripe } = SEAT.element;
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const pc = boxCover(x, y, panel.box, ps);
+      const ca = boxCover(x, y, card.box, es);
+      const sc = boxCover(x, y, stripe.box, es);
+      const p = y * W + x;
+      for (let i = 0; i < 3; i++) {
+        const pv = wall[i] + (panel.colour[i] - wall[i]) * pc + (pg / 255) * gauss(rp);
+        const ev = card.colour[i] + (stripe.colour[i] - card.colour[i]) * Math.min(1, sc / Math.max(ca, 1e-9));
+        const eNoise = (eg / 255) * gauss(re);
+        rgb[p * 3 + i] = q8(pv * (1 - ca) + (ev + eNoise) * ca);
+      }
+    }
+  }
+  return { width: W, height: H, rgb, bitDepth: 8 };
 }
