@@ -1495,6 +1495,7 @@ describe("subject.status: where each click landed", () => {
     expect(res.compSize).toEqual([1080, 1920]);
     expect(res.span).toEqual({ inFrame: 0, outFrame: 300, frameRate: 30 });
     expect(res.closeClicks).toHaveLength(1);
+    expect(res.fillLayer).toBeNull();
     expect(res.closeClicks[0].reading).toMatch(/57 source pixels apart/);
     expect(res.next).toMatch(/subject\.check/);
     expect(res.countNote).toMatch(/not a check/);
@@ -1508,6 +1509,15 @@ describe("subject.status: where each click landed", () => {
     );
     expect(res.selections[1]).toMatchObject({ name: "Add Object Rect 1", kind: "rectangle" });
     expect(res.summary).toBe("1 object selected, 1 rectangle selection");
+  });
+});
+
+describe("subject.status: the gap fill", () => {
+  it("names the gap fill layer when the comp has one", () => {
+    const w = world({ effects: [objectMatte(["Add Object 1"])] });
+    w.other.name = "presenter.mov gap fill";
+    const res = runIn("subject.status", {}, w);
+    expect(res.fillLayer).toBe("presenter.mov gap fill");
   });
 });
 

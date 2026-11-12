@@ -917,6 +917,14 @@ const OBJECT_MATTE_JSX = `
                 }
                 return out;
             }
+            function _omFillLayer() {
+                var want = _layer.name + " gap fill";
+                for (var i = 1; i <= _comp.numLayers; i++) {
+                    var n = AE.safeGet(function () { return _comp.layer(i).name; }, "");
+                    if (n === want) return n;
+                }
+                return null;
+            }
             function _omSourceSize() {
                 var w = AE.safeGet(function () { return _layer.source.width; }, null);
                 var h = AE.safeGet(function () { return _layer.source.height; }, null);
@@ -1116,6 +1124,7 @@ registerOp({
                 countNote: ${jsxVal(COUNT_NOTE)},
                 closeClicks: _omCloseClicks(_sel.list, _src),
                 sourceSize: _src,
+                fillLayer: _omFillLayer(),
                 compSize: [_comp.width, _comp.height],
                 span: _omSpan(),
                 removeNote: ${jsxVal(REMOVE_NOTE)},
@@ -1841,9 +1850,12 @@ export async function runSubjectCheck(args: Record<string, unknown>, io: CutoutI
         args.clickFrame as number | undefined,
         ...clicks.map((c) => c.clickFrame),
       ]);
+  // After subject.fill_gaps the delivered cut-out is the layer and its gap fill together.
+  const fillLayer: string | null = typeof st.fillLayer === "string" ? st.fillLayer : null;
+  const isolate = fillLayer ? [args.layer, fillLayer] : args.layer;
   const rendered = await renderChunked(
     io,
-    { compNameOrId: args.comp, isolate: args.layer, channels: "rgba", edge: true },
+    { compNameOrId: args.comp, isolate, channels: "rgba", edge: true },
     frames,
     perFrameMsOf(args),
     outDir,
@@ -1864,7 +1876,7 @@ export async function runSubjectCheck(args: Record<string, unknown>, io: CutoutI
       ? { skipped: true, note: "recheck: false; no frame was rendered a second time" }
       : await recheckFrames(io, readings, limit, over, outDir, perFrameMsOf(args), {
           compNameOrId: args.comp,
-          isolate: args.layer,
+          isolate,
           channels: "rgba",
           edge: true,
         });
@@ -1875,6 +1887,7 @@ export async function runSubjectCheck(args: Record<string, unknown>, io: CutoutI
   const solid = readings.find((r) => typeof r.solidAreas === "number")?.solidAreas;
   const inText =
     `In: ${st.summary}` +
+    (fillLayer ? ` (with its gap fill (${fillLayer}))` : "") +
     (typeof solid === "number"
       ? `, making ${plural(solid, "solid area")} on the first frame checked`
       : "") +
@@ -1890,6 +1903,7 @@ export async function runSubjectCheck(args: Record<string, unknown>, io: CutoutI
   return {
     ok: true,
     layer: st.layer,
+    fillLayer,
     stop,
     findings,
     accepted: sum.accepted,
@@ -2305,7 +2319,7 @@ registerOp({
   name: "subject.check",
   category: "subject",
   description:
-    "Proof a subject matte after the user says done, before anything else is built. Renders the cut-out with its alpha (ae_render_frame isolate, channels 'rgba') at the click frames and frames across the clip, " +
+    "Proof a subject matte after the user says done, before anything else is built. Renders the cut-out with its alpha (ae_render_frame isolate, channels 'rgba'; with the layer's gap fill from subject.fill_gaps when the comp has one, reported as fillLayer) at the click frames and frames across the clip, " +
     "finds holes (regions below opaque the frame edge cannot reach) and openings (regions closed off only by the subject and the frame edge: the missed microphone of 2026-11-11 ran off the bottom of the frame), draws each frame over a flat colour and one contact sheet, and returns " +
     "picture (the sheet), findings, accepted, checked {frames, of}, inOut (a plain statement of what is in and what is out), frames, clicks and stop. " +
     `A hole or opening of holeLimit px or more (default ${CUTOUT_HOLE_LIMIT}, at the comp's size) is a finding; so are frames that did not render (kind 'not-checked': a frame that was not rendered is never counted as clean) and two clicks close together. ` +

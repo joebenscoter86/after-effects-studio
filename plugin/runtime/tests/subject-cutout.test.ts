@@ -929,3 +929,15 @@ describe("subject.check's arguments", () => {
     expect(v.ok).toBe(true);
   });
 });
+
+describe("subject.check after a fill", () => {
+  it("renders the gap fill layer with the cut-out when subject.status reports one", async () => {
+    const io = fakeIO(() => matte(), {
+      status: async () => ({ ...APART, fillLayer: "raw_nogreen.mp4 gap fill" }) as Any,
+    });
+    const res = await runSubjectCheck({ comp: "Main", layer: 1, outDir: dir }, io);
+    expect(renders(io)[0].isolate).toEqual([1, "raw_nogreen.mp4 gap fill"]);
+    expect(res.fillLayer).toBe("raw_nogreen.mp4 gap fill");
+    expect(res.inOut).toMatch(/with its gap fill \(raw_nogreen\.mp4 gap fill\)/);
+  });
+});
