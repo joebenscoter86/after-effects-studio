@@ -919,4 +919,116 @@ export function cutoutRegions(alpha, width, height, opts = {}) {
     openings.sort((p, q) => q.area - p.area);
     return { holes, openings, dropped };
 }
+const median = (xs) => {
+    if (!xs.length)
+        return null;
+    const s = [...xs].sort((a, b) => a - b);
+    const m = s.length;
+    return m % 2 ? s[(m - 1) / 2] : (s[m / 2 - 1] + s[m / 2]) / 2;
+};
+const r6 = (n) => Math.round(n * 1e6) / 1e6;
+/**
+ * Feed frames in order (any spacing) with their alpha and straight RGB; the
+ * result says how much the outline changed between neighbouring frames and
+ * over `gap` frames, and where it did not move. Frames are kept as 8-bit alpha
+ * and luma, only as far back as a comparison can still need them. Measured at
+ * full size.
+ */
+export function outlineTracker(opts = {}) {
+    const gap = opts.gap ?? 30;
+    const limit = opts.limit ?? 0.002;
+    const minFrames = opts.minFrames ?? 60;
+    const step = Math.round((opts.step ?? 0.1) * 255);
+    const lumaStep = Math.round(0.05 * 255);
+    const ring = [];
+    const neighbours = [];
+    const windows = [];
+    const changed = (x, y) => {
+        let n = 0;
+        for (let p = 0; p < x.length; p++)
+            if (Math.abs(x[p] - y[p]) > step)
+                n++;
+        return n / x.length;
+    };
+    const footage = (p, c) => {
+        let n = 0;
+        for (let i = 0; i < p.a.length; i++)
+            if (p.a[i] >= 250 && c.a[i] >= 250 && Math.abs(p.l[i] - c.l[i]) > lumaStep)
+                n++;
+        return n / p.a.length;
+    };
+    return {
+        add(frame, alpha, rgb, width, height) {
+            const n = width * height;
+            const a = new Uint8Array(n);
+            const l = new Uint8Array(n);
+            for (let p = 0; p < n; p++) {
+                a[p] = Math.round(Math.min(1, Math.max(0, alpha[p])) * 255);
+                if (rgb)
+                    l[p] = Math.round(Math.min(1, Math.max(0, 0.2126 * rgb[p * 3] + 0.7152 * rgb[p * 3 + 1] + 0.0722 * rgb[p * 3 + 2])) * 255);
+            }
+            const cur = { frame, a, l };
+            const prev = ring[ring.length - 1];
+            if (prev && prev.frame === frame - 1)
+                neighbours.push(changed(prev.a, a));
+            let partner;
+            for (const e of ring)
+                if (e.frame <= frame - gap)
+                    partner = e;
+            if (partner)
+                windows.push({
+                    a: partner.frame,
+                    b: frame,
+                    drift: changed(partner.a, a),
+                    footage: footage(partner, cur),
+                });
+            ring.push(cur);
+            // A later frame's partner is the latest frame at least `gap` before it: anything older than that can go.
+            let keepFrom = 0;
+            for (let i = 0; i < ring.length; i++)
+                if (ring[i].frame <= frame + 1 - gap)
+                    keepFrom = i;
+            ring.splice(0, keepFrom);
+        },
+        result() {
+            const frozen = [];
+            let run = [];
+            const close = () => {
+                if (run.length >= 2) {
+                    const from = run[0].a;
+                    const to = run[run.length - 1].b;
+                    if (to - from + 1 >= minFrames)
+                        frozen.push({
+                            from,
+                            to,
+                            length: to - from + 1,
+                            drift: r6(Math.max(...run.map((w) => w.drift))),
+                            footageChange: r6(median(run.map((w) => w.footage)) ?? 0),
+                        });
+                }
+                run = [];
+            };
+            for (const w of windows) {
+                if (w.drift < limit)
+                    run.push(w);
+                else
+                    close();
+            }
+            close();
+            const stats = (xs) => ({
+                min: xs.length ? r6(Math.min(...xs)) : null,
+                median: xs.length ? r6(median(xs)) : null,
+                max: xs.length ? r6(Math.max(...xs)) : null,
+            });
+            return {
+                at: "full size: the share of the frame whose alpha changed by more than " +
+                    (opts.step ?? 0.1),
+                neighbours: { ...stats(neighbours), pairs: neighbours.length },
+                drift: { gap, ...stats(windows.map((w) => w.drift)), windows: windows.length },
+                limits: { gap, limit, minFrames, step: opts.step ?? 0.1 },
+                frozen,
+            };
+        },
+    };
+}
 //# sourceMappingURL=matte.js.map

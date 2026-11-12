@@ -2,6 +2,7 @@ import { promises as fs } from "node:fs";
 import * as path from "node:path";
 import {
   cutoutRegions,
+  outlineTracker,
   EDGE_DEFAULTS,
   enclosedHoles,
   growMask
@@ -1121,8 +1122,15 @@ function alikeRegions(a, b) {
   const small = Math.min(a.area, b.area);
   return small > 0 && big / small <= 2;
 }
+const isFrozenEntry = (e) => !("box" in e) && e.kind === "frozen";
+function frozenAccepted(run, accept) {
+  return accept.some(
+    (e) => isFrozenEntry(e) && (e.from === void 0 || e.from <= run.to) && (e.to === void 0 || e.to >= run.from)
+  );
+}
 function acceptedBy(f, accept) {
   return accept.some((e) => {
+    if (isFrozenEntry(e)) return false;
     const box = "box" in e ? e.box : e;
     const kind = ("box" in e ? e.kind : void 0) ?? "opening";
     return kind === f.kind && iou(f.box, box) >= 0.5;
@@ -1318,6 +1326,21 @@ async function diskReport(cache, freeFn = statfsFree) {
     out.note = `Only ${gb(free)} free on the drive After Effects caches to (${cacheRoot}); its disk cache holds ${size ? gb(size.bytes) + (size.complete ? "" : " or more") : "an unknown amount"}. Object Matte work grows it past the Disk Cache size set in the preferences (about one 16-bit frame of the source for every frame it tracks through), and a render on a nearly full drive stalls. Ask the user to purge it: Edit > Purge > All Memory & Disk Cache in After Effects. Nothing was deleted and no preference was changed.`;
   return out;
 }
+const FROZEN_DEFAULTS = { gap: 30, limit: 2e-3, minFrames: 60 };
+const frozenOpts = (args) => ({
+  gap: typeof args.frozenGap === "number" ? args.frozenGap : FROZEN_DEFAULTS.gap,
+  limit: typeof args.frozenLimit === "number" ? args.frozenLimit : FROZEN_DEFAULTS.limit,
+  minFrames: typeof args.frozenFrames === "number" ? args.frozenFrames : FROZEN_DEFAULTS.minFrames
+});
+function frozenFinding(run, pictures) {
+  const moved = run.footageChange > 1e-3;
+  return {
+    kind: "frozen",
+    ...run,
+    pictures,
+    reading: `The cut-out's outline did not move for ${run.length} frames` + (moved ? ` while the footage did (frames ${run.from} to ${run.to}; ${(run.footageChange * 100).toFixed(1)}% of the frame changed inside the outline)` : ` (frames ${run.from} to ${run.to}), and the picture inside it barely changed either`) + `. The selection is probably not tracking: this happens when the layer's footage is replaced after the click. Click again on this footage (subject.prepare, then the steps). If the subject is genuinely motionless (a product on a table, a locked-off object) this is expected: pass accept: [{ kind: "frozen" }] to wave it through once seen.`
+  };
+}
 const QUICK_NOTE = "Quick check: the click frames and two frames either side, which After Effects renders in seconds. A missed object, an enclosed gap and a second click on the same thing show there. To look across the clip, render the cut-out once (subject.render_cutout) and check the file (subject.check_file); across: true checks the live matte across the clip instead, which takes minutes (4 to 9 for nine frames on a 2176 x 3840 take), because After Effects recomputes the matte on every capture.";
 const ACROSS_NOTE = "Across the clip on the live matte: After Effects recomputes the matte on every capture, so this takes minutes (4 to 9 for nine frames on a 2176 x 3840 take). Rendering the cut-out once (subject.render_cutout) and checking the file (subject.check_file) reads every frame in about the time of one pass.";
 function quickFrames(span, clickFrames) {
@@ -1406,7 +1429,7 @@ function parseHex(c) {
   const v = parseInt(m[1], 16);
   return [(v >> 16 & 255) / 255, (v >> 8 & 255) / 255, (v & 255) / 255];
 }
-async function measureFrames(io, rendered, limit, over, sheetPath, tally = pixelTally(), pictures = true) {
+async function measureFrames(io, rendered, limit, over, sheetPath, tally = pixelTally(), pictures = true, onImage) {
   const started = performance.now();
   const colour = parseHex(over);
   const readings = [];
@@ -1477,6 +1500,7 @@ async function measureFrames(io, rendered, limit, over, sheetPath, tally = pixel
         holesUnderLimit: h.small,
         openingsUnderLimit: o.small
       });
+      onImage?.(readings[readings.length - 1], img);
       continue;
     }
     const composite = flattenOver(img, { kind: "color", color: colour });
@@ -1505,6 +1529,7 @@ async function measureFrames(io, rendered, limit, over, sheetPath, tally = pixel
       edgeWidth: r.edge?.width ? { typical: r.edge.width.typical ?? null, p90: r.edge.width.p90 ?? null } : null,
       solidAreas: r.edge?.solidAreas?.count ?? null
     });
+    onImage?.(readings[readings.length - 1], img);
   }
   let picture = null;
   const tSheet = performance.now();
@@ -1750,6 +1775,7 @@ async function runSubjectCheck(args, io) {
   if (checkSpace.refusal) return checkSpace.refusal;
   const fillLayer = typeof st.fillLayer === "string" ? st.fillLayer : null;
   const isolate = fillLayer ? [args.layer, fillLayer] : args.layer;
+  const outline = outlineTracker(frozenOpts(args));
   const rendered = await renderChunked(
     io,
     { compNameOrId: args.comp, isolate, channels: "rgba", edge: true },
@@ -1765,8 +1791,13 @@ async function runSubjectCheck(args, io) {
     limit,
     over,
     path.join(outDir, "cutout_sheet.png"),
-    pixels
+    pixels,
+    true,
+    (r, img) => {
+      if (img.alpha) outline.add(r.frame, img.alpha, img.rgb, img.width, img.height);
+    }
   );
+  const outlineResult = outline.result();
   const sum = summarize(readings, limit, accept, picture);
   const close = closeClicks(clicks, st.sourceSize ?? null);
   const findings = [...sum.findings];
@@ -1784,6 +1815,15 @@ async function runSubjectCheck(args, io) {
     pixels
   );
   if ("unstable" in recheck) findings.push(...recheck.unstable);
+  const frozenAcceptedRuns = [];
+  for (const run of outlineResult.frozen) {
+    if (frozenAccepted(run, accept)) {
+      frozenAcceptedRuns.push({ kind: "frozen", ...run });
+      continue;
+    }
+    const pic = (f) => readings.find((r) => r.frame === f)?.picture ?? null;
+    findings.push(frozenFinding(run, [pic(run.from), pic(run.to)]));
+  }
   if (close.length)
     findings.push({ kind: "close-clicks", pairs: close, advice: closeAdvice(close) });
   const rects = clicks.filter((c) => c.kind === "rectangle").map((c) => c.name);
@@ -1807,7 +1847,8 @@ async function runSubjectCheck(args, io) {
     fillLayer,
     stop,
     findings,
-    accepted: sum.accepted,
+    accepted: [...sum.accepted, ...frozenAcceptedRuns],
+    outline: outlineResult,
     checked: sum.checked,
     recheck: "unstable" in recheck ? {
       frames: recheck.frames,
@@ -1982,6 +2023,7 @@ async function fillGaps(args, io) {
     stillItem: built.stillItem,
     stillItemId: built.stillItemId ?? null,
     audioOff: built.audioOff === true,
+    audio: built.audioOff === true ? "switched off, so the footage's sound plays once" : built.hasAudio === false ? "the footage has no audio: nothing to switch off" : built.audioError ? `could not be switched off: ${built.audioError}` : "left as it was",
     ...built.audioError ? { audioError: built.audioError } : {}
   };
   const [alone] = await renderChunked(
@@ -2130,7 +2172,7 @@ function fillBuildJsx(args) {
             if (AE.safeGet(function () { return _fill.hasAudio; }, false)) {
                 try { _fill.audioEnabled = false; _audioOff = true; } catch (eAud) { _audioError = AE.errText(eAud); }
             }
-            var _out = { ok: true, fillLayer: _fill.name, fillIndex: _fill.index, maskLayer: _mask.name, maskIndex: _mask.index, stillItem: _item.name, stillItemId: AE.safeGet(function () { return _item.id; }, null), removedFromCopy: _removed, audioOff: _audioOff };
+            var _out = { ok: true, fillLayer: _fill.name, fillIndex: _fill.index, maskLayer: _mask.name, maskIndex: _mask.index, stillItem: _item.name, stillItemId: AE.safeGet(function () { return _item.id; }, null), removedFromCopy: _removed, audioOff: _audioOff, hasAudio: AE.safeGet(function () { return _fill.hasAudio; }, false) };
             if (_audioError !== null) _out.audioError = _audioError;
             if (_spanError !== null) _out.maskSpanError = _spanError;
             return _out;
@@ -2257,6 +2299,24 @@ registerOp({
       name: "recheck",
       type: "boolean",
       description: "Render each frame with a hole or opening over the limit once more at the end and report a frame that differs (kind 'unstable'). Default true; false skips it.",
+      required: false
+    },
+    {
+      name: "frozenLimit",
+      type: "number",
+      description: "A drift over frozenGap frames (share of the frame whose alpha changed by more than 0.1) under this counts as an unmoved outline (default 0.002; not yet calibrated live).",
+      required: false
+    },
+    {
+      name: "frozenFrames",
+      type: "number",
+      description: "Shortest run of unmoved outline that is a 'frozen' finding, frames (default 60).",
+      required: false
+    },
+    {
+      name: "frozenGap",
+      type: "number",
+      description: "Frames between the two frames compared for drift (default 30).",
       required: false
     },
     {
@@ -2705,6 +2765,10 @@ async function runCheckFile(args, io) {
     kept.delete(frame);
     await fs.rm(f, { force: true });
   };
+  const outline = outlineTracker(frozenOpts(args));
+  let outlineResult = null;
+  const frozenFindings = [];
+  const frozenAcceptedRuns = [];
   const size = Math.max(1, Math.min(32, Math.floor(SETTLE_MAX_MS / perFrameMs)));
   try {
     const roomless = await spaceRefusal(
@@ -2734,7 +2798,10 @@ async function runCheckFile(args, io) {
         over,
         path.join(outDir, "check-file_unused.png"),
         pixels,
-        false
+        false,
+        (r, img) => {
+          if (img.alpha) outline.add(r.frame, img.alpha, img.rgb, img.width, img.height);
+        }
       )).readings;
       for (const r of got) {
         readings.push(r);
@@ -2765,6 +2832,30 @@ async function runCheckFile(args, io) {
           if (f !== r.frame && !need2.has(f)) await release(f);
         prev = r;
       }
+    }
+    outlineResult = outline.result();
+    for (const run of outlineResult.frozen) {
+      if (frozenAccepted(run, accept)) {
+        frozenAcceptedRuns.push({ kind: "frozen", ...run });
+        continue;
+      }
+      const ends = [run.from, run.to];
+      const again = await renderChunked(
+        io,
+        { compNameOrId: setup.compId, channels: "rgba" },
+        ends,
+        perFrameMs,
+        outDir,
+        `check-file-frozen-${run.from}`,
+        renders
+      );
+      const pics = [];
+      for (const e of ends) {
+        const r = again.find((x) => x.frame === e);
+        pics.push(r?.file ? await overPicture(io, r.file, over) : null);
+        if (r?.file && !keepCaptures) await fs.rm(r.file, { force: true });
+      }
+      frozenFindings.push(frozenFinding(run, pics));
     }
   } finally {
     cleanup = await io.execute(
@@ -2879,10 +2970,11 @@ async function runCheckFile(args, io) {
     capturesKept: keepCaptures
   };
   const compared = `${plural(pairs, "pair")} of neighbouring frames` + (step > 1 ? ` (each frame and the next), one pair every ${step} frames, and the first and last three frames` : "") + ` compared for jumps over ${jumpLimit} in opaque share.`;
-  const passText = jumps.length ? `No hole or opening of ${fmt(limit)} px or more on the ${byFrame.size} frames read.` : `Nothing over the limit on ${byFrame.size} of ${readings.length} frames read; no jump between neighbouring frames over ${jumpLimit}; the picture is at ${picture ?? "(none)"}.`;
+  const passText = jumps.length || frozenFindings.length ? `No hole or opening of ${fmt(limit)} px or more on the ${byFrame.size} frames read.` : `Nothing over the limit on ${byFrame.size} of ${readings.length} frames read; no jump between neighbouring frames over ${jumpLimit}; the picture is at ${picture ?? "(none)"}.`;
   const sum = summarize(readings, limit, accept, picture, passText);
-  const findings = [...sum.findings, ...jumps];
+  const findings = [...sum.findings, ...jumps, ...frozenFindings];
   const stop = findings.length > 0;
+  const frozenText = frozenFindings.map((f) => ` ${f.reading}`).join("");
   const jumpText = jumps.length ? ` ${plural(jumps.length, "jump")} in opaque share between neighbouring frames: ${jumps.map((j) => `${j.from} to ${j.to}, ${j.change}`).join("; ")}. A jump of about 0.05 is a dropped object (a microphone); look at both frames.` : "";
   const opaqueText = opaque.min !== null ? ` Opaque share ${opaque.min} (frame ${opaque.minFrame}) to ${opaque.max} (frame ${opaque.maxFrame}); largest step ${largestStep.change} (frames ${largestStep.from} to ${largestStep.to}).` : "";
   return {
@@ -2894,11 +2986,12 @@ async function runCheckFile(args, io) {
     step,
     stop,
     findings,
-    accepted: sum.accepted,
+    accepted: [...sum.accepted, ...frozenAcceptedRuns],
+    outline: outlineResult,
     checked: sum.checked,
     compared,
     opaque,
-    inOut: `${sum.text}${jumpText}${opaqueText} ${compared}${stop && picture ? ` Look at the picture (${picture}).` : ""}`,
+    inOut: `${sum.text}${jumpText}${frozenText}${opaqueText} ${compared}${stop && picture ? ` Look at the picture (${picture}).` : ""}`,
     picture,
     pictures,
     frameReadings: readings.map((r) => ({
@@ -3011,7 +3104,7 @@ registerOp({
 registerOp({
   name: "subject.check_file",
   category: "subject",
-  description: `Check a rendered cut-out movie (from subject.render_cutout) frame by frame: brings it into a throwaway comp, reads frames in batches of at most 32 (every frame up to maxFrames, default ${CHECK_FILE_MAX_FRAMES}; beyond it pairs of neighbouring frames in steps, always the first and last three), and reports holes and openings (as subject.check: holeLimit, accept), the opaque share of every frame, and a 'jump' finding when neighbouring frames differ by more than jumpLimit (default ${CHECK_FILE_JUMP_LIMIT}: on the take of 2026-11-11 the rendered cut-out ran 0.279 to 0.314 with no step over 0.012, and a dropped microphone is about 0.05). Only true neighbours are compared, and \`compared\` says which. A frame that could not be read is 'not-checked' and stops. Pictures: the largest frame of each finding not accepted and both frames of each jump, full size, and a sheet of up to 24 frames; \`pictures\` counts them and their bytes. Each raw capture is removed once read unless keepCaptures (one run on the take had left 630 MB). The throwaway comp is removed afterwards, and the imported footage too unless keepFootage. Measured: about 0.55 s a frame reading the file. Returns stop, findings, accepted, checked, compared, opaque, inOut, picture, frameReadings, timing.`,
+  description: `Check a rendered cut-out movie (from subject.render_cutout) frame by frame: brings it into a throwaway comp, reads frames in batches of at most 32 (every frame up to maxFrames, default ${CHECK_FILE_MAX_FRAMES}; beyond it pairs of neighbouring frames in steps, always the first and last three), and reports holes and openings (as subject.check: holeLimit, accept), the opaque share of every frame, and a 'jump' finding when neighbouring frames differ by more than jumpLimit (default ${CHECK_FILE_JUMP_LIMIT}: on the take of 2026-11-11 the rendered cut-out ran 0.279 to 0.314 with no step over 0.012, and a dropped microphone is about 0.05). Only true neighbours are compared, and \`compared\` says which. A frame that could not be read is 'not-checked' and stops. Pictures: the largest frame of each finding not accepted and both frames of each jump, full size, and a sheet of up to 24 frames; \`pictures\` counts them and their bytes. Each raw capture is removed once read unless keepCaptures (one run on the take had left 630 MB). The throwaway comp is removed afterwards, and the imported footage too unless keepFootage. \`outline\` says how much the outline changed between neighbouring frames and over frozenGap frames (share of the frame whose alpha changed by more than 0.1, at full size); a run where it did not move is a 'frozen' finding (the selection is probably not tracking, as after replacing the layer's footage; accept: [{ kind: "frozen" }] for a subject that really is still). The frozen limits are not yet calibrated live. Measured: about 0.55 s a frame reading the file. Returns stop, findings, accepted, checked, compared, opaque, outline, inOut, picture, frameReadings, timing.`,
   params: [
     {
       name: "path",
@@ -3065,6 +3158,24 @@ registerOp({
       name: "secondsPerFrame",
       type: "number",
       description: "Settle time allowed per frame, s (default 10).",
+      required: false
+    },
+    {
+      name: "frozenLimit",
+      type: "number",
+      description: "A drift over frozenGap frames (share of the frame whose alpha changed by more than 0.1) under this counts as an unmoved outline (default 0.002; not yet calibrated live).",
+      required: false
+    },
+    {
+      name: "frozenFrames",
+      type: "number",
+      description: "Shortest run of unmoved outline that is a 'frozen' finding, frames (default 60).",
+      required: false
+    },
+    {
+      name: "frozenGap",
+      type: "number",
+      description: "Frames between the two frames compared for drift (default 30).",
       required: false
     },
     {

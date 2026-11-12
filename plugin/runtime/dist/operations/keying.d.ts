@@ -106,6 +106,12 @@ export declare function alikeRegions(a: Box & {
 export type AcceptEntry = Box | {
     box: Box;
     kind?: "hole" | "opening";
+}
+/** A frozen outline seen and accepted (a subject that really is still), optionally only over these frames. */
+ | {
+    kind: "frozen";
+    from?: number;
+    to?: number;
 };
 /**
  * Whether a finding is one the user accepted: an entry of the same kind

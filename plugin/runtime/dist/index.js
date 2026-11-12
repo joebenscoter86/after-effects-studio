@@ -44601,7 +44601,7 @@ function measureEdge(img, bg, t) {
   }
   widths.sort((a, b) => a - b);
   const m = widths.length;
-  const median = m === 0 ? null : m % 2 ? widths[(m - 1) / 2] : (widths[m / 2 - 1] + widths[m / 2]) / 2;
+  const median2 = m === 0 ? null : m % 2 ? widths[(m - 1) / 2] : (widths[m / 2 - 1] + widths[m / 2]) / 2;
   const belowOpaque = labelRegions(
     alpha,
     width,
@@ -44705,7 +44705,7 @@ function measureEdge(img, bg, t) {
       transparent: r4(transparent / n)
     },
     width: {
-      typical: median === null ? null : r2(median),
+      typical: median2 === null ? null : r2(median2),
       p90: m === 0 ? null : r2(widths[Math.floor(0.9 * (m - 1))]),
       worst: m === 0 ? null : r2(worst),
       worstAt,
@@ -45077,6 +45077,103 @@ function cutoutRegions(alpha, width, height, opts = {}) {
   holes.sort((p, q) => q.area - p.area);
   openings.sort((p, q) => q.area - p.area);
   return { holes, openings, dropped };
+}
+var median = (xs) => {
+  if (!xs.length) return null;
+  const s = [...xs].sort((a, b) => a - b);
+  const m = s.length;
+  return m % 2 ? s[(m - 1) / 2] : (s[m / 2 - 1] + s[m / 2]) / 2;
+};
+var r6 = (n) => Math.round(n * 1e6) / 1e6;
+function outlineTracker(opts = {}) {
+  const gap = opts.gap ?? 30;
+  const limit = opts.limit ?? 2e-3;
+  const minFrames = opts.minFrames ?? 60;
+  const step = Math.round((opts.step ?? 0.1) * 255);
+  const lumaStep = Math.round(0.05 * 255);
+  const ring = [];
+  const neighbours = [];
+  const windows = [];
+  const changed = (x, y) => {
+    let n = 0;
+    for (let p = 0; p < x.length; p++) if (Math.abs(x[p] - y[p]) > step) n++;
+    return n / x.length;
+  };
+  const footage = (p, c) => {
+    let n = 0;
+    for (let i = 0; i < p.a.length; i++)
+      if (p.a[i] >= 250 && c.a[i] >= 250 && Math.abs(p.l[i] - c.l[i]) > lumaStep) n++;
+    return n / p.a.length;
+  };
+  return {
+    add(frame, alpha, rgb, width, height) {
+      const n = width * height;
+      const a = new Uint8Array(n);
+      const l = new Uint8Array(n);
+      for (let p = 0; p < n; p++) {
+        a[p] = Math.round(Math.min(1, Math.max(0, alpha[p])) * 255);
+        if (rgb)
+          l[p] = Math.round(
+            Math.min(
+              1,
+              Math.max(0, 0.2126 * rgb[p * 3] + 0.7152 * rgb[p * 3 + 1] + 0.0722 * rgb[p * 3 + 2])
+            ) * 255
+          );
+      }
+      const cur = { frame, a, l };
+      const prev = ring[ring.length - 1];
+      if (prev && prev.frame === frame - 1) neighbours.push(changed(prev.a, a));
+      let partner;
+      for (const e of ring) if (e.frame <= frame - gap) partner = e;
+      if (partner)
+        windows.push({
+          a: partner.frame,
+          b: frame,
+          drift: changed(partner.a, a),
+          footage: footage(partner, cur)
+        });
+      ring.push(cur);
+      let keepFrom = 0;
+      for (let i = 0; i < ring.length; i++) if (ring[i].frame <= frame + 1 - gap) keepFrom = i;
+      ring.splice(0, keepFrom);
+    },
+    result() {
+      const frozen = [];
+      let run = [];
+      const close = () => {
+        if (run.length >= 2) {
+          const from = run[0].a;
+          const to = run[run.length - 1].b;
+          if (to - from + 1 >= minFrames)
+            frozen.push({
+              from,
+              to,
+              length: to - from + 1,
+              drift: r6(Math.max(...run.map((w) => w.drift))),
+              footageChange: r6(median(run.map((w) => w.footage)) ?? 0)
+            });
+        }
+        run = [];
+      };
+      for (const w of windows) {
+        if (w.drift < limit) run.push(w);
+        else close();
+      }
+      close();
+      const stats = (xs) => ({
+        min: xs.length ? r6(Math.min(...xs)) : null,
+        median: xs.length ? r6(median(xs)) : null,
+        max: xs.length ? r6(Math.max(...xs)) : null
+      });
+      return {
+        at: "full size: the share of the frame whose alpha changed by more than " + (opts.step ?? 0.1),
+        neighbours: { ...stats(neighbours), pairs: neighbours.length },
+        drift: { gap, ...stats(windows.map((w) => w.drift)), windows: windows.length },
+        limits: { gap, limit, minFrames, step: opts.step ?? 0.1 },
+        frozen
+      };
+    }
+  };
 }
 
 // src/color/png16.ts
@@ -46825,7 +46922,7 @@ function measureScreen(img, t) {
     if (y < minY) minY = y;
     if (y > maxY) maxY = y;
   }
-  const median = histMedian(hist, count);
+  const median2 = histMedian(hist, count);
   const mean = [sum[0] / count, sum[1] / count, sum[2] / count];
   const labels = new Int32Array(n);
   const queue = new Int32Array(n);
@@ -46882,11 +46979,11 @@ function measureScreen(img, t) {
   base.screenPixels = count;
   base.share = r43(count / measured);
   base.bounds = { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
-  base.colour = { median: r4rgb3(median), mean: r4rgb3(mean), nearSubject };
+  base.colour = { median: r4rgb3(median2), mean: r4rgb3(mean), nearSubject };
   base.subject = subject;
   base.evenness = evenness;
   base.grain = grain;
-  base.reading = `${kind} screen, ${Math.round(base.share * 100)}% of the measured pixels; median ${fmt4(median)}` + (near ? `, near the subject ${fmt4(near)}` : "") + `. ${evenness.reading}. ${grain ? grain.reading : "grain not measured (no screen pixel has screen all round it)"}.`;
+  base.reading = `${kind} screen, ${Math.round(base.share * 100)}% of the measured pixels; median ${fmt4(median2)}` + (near ? `, near the subject ${fmt4(near)}` : "") + `. ${evenness.reading}. ${grain ? grain.reading : "grain not measured (no screen pixel has screen all round it)"}.`;
   return base;
 }
 function measureEvenness(img, isScreen, measuredAt, ch, kind, t) {
@@ -47156,7 +47253,7 @@ function pictureOf(img, straight) {
   }
   return out;
 }
-var r6 = (v) => Math.round(v * 1e6) / 1e6;
+var r62 = (v) => Math.round(v * 1e6) / 1e6;
 function rectStats(prev, cur, width, x0, y0, x1, y1, above, perPixel) {
   let sum = 0;
   let maxAbs = 0;
@@ -47188,10 +47285,10 @@ function rectStats(prev, cur, width, x0, y0, x1, y1, above, perPixel) {
   const pixels = (x1 - x0) * (y1 - y0);
   return {
     pixels,
-    change: r6(pixels > 0 ? sum / pixels : 0),
-    maxAbsDelta: r6(maxAbs),
+    change: r62(pixels > 0 ? sum / pixels : 0),
+    maxAbsDelta: r62(maxAbs),
     changedPixels: changed,
-    changedShare: r6(pixels > 0 ? changed / pixels : 0),
+    changedShare: r62(pixels > 0 ? changed / pixels : 0),
     changedBounds: changed > 0 ? { x: bx0, y: by0, width: bx1 - bx0 + 1, height: by1 - by0 + 1 } : null
   };
 }
@@ -47257,7 +47354,7 @@ function side(pairs, p, dir, window, skip) {
   return { change: lowerMedian(changes), share: lowerMedian(shares) };
 }
 var fmt = (v) => v.toFixed(4);
-var frameText = (f) => `#${f.index}${f.time === void 0 ? "" : ` (${r6(f.time)} s)`}`;
+var frameText = (f) => `#${f.index}${f.time === void 0 ? "" : ` (${r62(f.time)} s)`}`;
 function summarizeSeries(pairs, t) {
   const n = pairs.length;
   const changes = pairs.map((p) => p.change);
@@ -47269,8 +47366,8 @@ function summarizeSeries(pairs, t) {
   }
   const summary = {
     pairs: n,
-    median: n > 0 ? r6(lowerMedian(changes)) : 0,
-    mean: n > 0 ? r6(changes.reduce((a, b) => a + b, 0) / n) : 0,
+    median: n > 0 ? r62(lowerMedian(changes)) : 0,
+    mean: n > 0 ? r62(changes.reduce((a, b) => a + b, 0) / n) : 0,
     largest: { pair: largest, change: n > 0 ? changes[largest] : 0 },
     smallest: { pair: smallest, change: n > 0 ? changes[smallest] : 0 },
     flags: [],
@@ -47320,8 +47417,8 @@ function summarizeSeries(pairs, t) {
         pairs: [i, end],
         frame,
         change,
-        reference: r6(reference),
-        ratio: r6(change / reference),
+        reference: r62(reference),
+        ratio: r62(change / reference),
         reading: `frame ${frameText(frame)} differs from the frames before and after it by ${fmt(change)} or more, while its neighbours change about ${fmt(reference)}: a one-frame pop`
       };
       if (s.besideRepeat || spike[end].besideRepeat) {
@@ -47339,8 +47436,8 @@ function summarizeSeries(pairs, t) {
         pairs: [j],
         between,
         change: pairs[j].change,
-        reference: r6(sj.reference),
-        ratio: r6(pairs[j].change / sj.reference),
+        reference: r62(sj.reference),
+        ratio: r62(pairs[j].change / sj.reference),
         reading: `${frameText(between[0])} to ${frameText(between[1])} changes ${fmt(pairs[j].change)}, ${(pairs[j].change / sj.reference).toFixed(1)}\xD7 its neighbours: a cut or a jump`
       };
       if (sj.edge) {
@@ -47372,8 +47469,8 @@ function summarizeSeries(pairs, t) {
         pairs: [i],
         frame,
         change: pairs[i].change,
-        reference: r6(reference2),
-        ratio: r6(pairs[i].change / reference2),
+        reference: r62(reference2),
+        ratio: r62(pairs[i].change / reference2),
         unreliablePairs,
         reading: `frame ${frameText(frame)} barely changes from the one before (${fmt(pairs[i].change)}) while the frames around it move about ${fmt(reference2)}: a repeated frame, a stutter${unreliable}. Rounded times can do this: a time just below a frame boundary renders the frame before (see frameWarning)`
       });
@@ -47390,8 +47487,8 @@ function summarizeSeries(pairs, t) {
       pairs: [i],
       frame,
       change: pairs[i].change,
-      reference: r6(reference),
-      ratio: r6(pairs[i].change / reference),
+      reference: r62(reference),
+      ratio: r62(pairs[i].change / reference),
       atSeriesEdge: true,
       unreliablePairs,
       reading: `frame ${frameText(frame)} repeats the one before (change ${fmt(pairs[i].change)}) beside motion of about ${fmt(reference)}, at the ${rawBefore === null ? "start" : "end"} of the series, so a stutter cannot be told from a hold${unreliable}`
@@ -50131,8 +50228,15 @@ function alikeRegions(a, b) {
   const small = Math.min(a.area, b.area);
   return small > 0 && big / small <= 2;
 }
+var isFrozenEntry = (e) => !("box" in e) && e.kind === "frozen";
+function frozenAccepted(run, accept) {
+  return accept.some(
+    (e) => isFrozenEntry(e) && (e.from === void 0 || e.from <= run.to) && (e.to === void 0 || e.to >= run.from)
+  );
+}
 function acceptedBy(f, accept) {
   return accept.some((e) => {
+    if (isFrozenEntry(e)) return false;
     const box2 = "box" in e ? e.box : e;
     const kind = ("box" in e ? e.kind : void 0) ?? "opening";
     return kind === f.kind && iou(f.box, box2) >= 0.5;
@@ -50328,6 +50432,21 @@ async function diskReport(cache2, freeFn = statfsFree) {
     out.note = `Only ${gb(free)} free on the drive After Effects caches to (${cacheRoot}); its disk cache holds ${size ? gb(size.bytes) + (size.complete ? "" : " or more") : "an unknown amount"}. Object Matte work grows it past the Disk Cache size set in the preferences (about one 16-bit frame of the source for every frame it tracks through), and a render on a nearly full drive stalls. Ask the user to purge it: Edit > Purge > All Memory & Disk Cache in After Effects. Nothing was deleted and no preference was changed.`;
   return out;
 }
+var FROZEN_DEFAULTS = { gap: 30, limit: 2e-3, minFrames: 60 };
+var frozenOpts = (args) => ({
+  gap: typeof args.frozenGap === "number" ? args.frozenGap : FROZEN_DEFAULTS.gap,
+  limit: typeof args.frozenLimit === "number" ? args.frozenLimit : FROZEN_DEFAULTS.limit,
+  minFrames: typeof args.frozenFrames === "number" ? args.frozenFrames : FROZEN_DEFAULTS.minFrames
+});
+function frozenFinding(run, pictures) {
+  const moved = run.footageChange > 1e-3;
+  return {
+    kind: "frozen",
+    ...run,
+    pictures,
+    reading: `The cut-out's outline did not move for ${run.length} frames` + (moved ? ` while the footage did (frames ${run.from} to ${run.to}; ${(run.footageChange * 100).toFixed(1)}% of the frame changed inside the outline)` : ` (frames ${run.from} to ${run.to}), and the picture inside it barely changed either`) + `. The selection is probably not tracking: this happens when the layer's footage is replaced after the click. Click again on this footage (subject.prepare, then the steps). If the subject is genuinely motionless (a product on a table, a locked-off object) this is expected: pass accept: [{ kind: "frozen" }] to wave it through once seen.`
+  };
+}
 var QUICK_NOTE = "Quick check: the click frames and two frames either side, which After Effects renders in seconds. A missed object, an enclosed gap and a second click on the same thing show there. To look across the clip, render the cut-out once (subject.render_cutout) and check the file (subject.check_file); across: true checks the live matte across the clip instead, which takes minutes (4 to 9 for nine frames on a 2176 x 3840 take), because After Effects recomputes the matte on every capture.";
 var ACROSS_NOTE = "Across the clip on the live matte: After Effects recomputes the matte on every capture, so this takes minutes (4 to 9 for nine frames on a 2176 x 3840 take). Rendering the cut-out once (subject.render_cutout) and checking the file (subject.check_file) reads every frame in about the time of one pass.";
 function quickFrames(span, clickFrames) {
@@ -50416,7 +50535,7 @@ function parseHex(c) {
   const v = parseInt(m[1], 16);
   return [(v >> 16 & 255) / 255, (v >> 8 & 255) / 255, (v & 255) / 255];
 }
-async function measureFrames(io, rendered, limit, over, sheetPath, tally = pixelTally(), pictures = true) {
+async function measureFrames(io, rendered, limit, over, sheetPath, tally = pixelTally(), pictures = true, onImage) {
   const started = performance.now();
   const colour = parseHex(over);
   const readings = [];
@@ -50487,6 +50606,7 @@ async function measureFrames(io, rendered, limit, over, sheetPath, tally = pixel
         holesUnderLimit: h.small,
         openingsUnderLimit: o.small
       });
+      onImage?.(readings[readings.length - 1], img);
       continue;
     }
     const composite = flattenOver(img, { kind: "color", color: colour });
@@ -50515,6 +50635,7 @@ async function measureFrames(io, rendered, limit, over, sheetPath, tally = pixel
       edgeWidth: r.edge?.width ? { typical: r.edge.width.typical ?? null, p90: r.edge.width.p90 ?? null } : null,
       solidAreas: r.edge?.solidAreas?.count ?? null
     });
+    onImage?.(readings[readings.length - 1], img);
   }
   let picture = null;
   const tSheet = performance.now();
@@ -50760,6 +50881,7 @@ async function runSubjectCheck(args, io) {
   if (checkSpace.refusal) return checkSpace.refusal;
   const fillLayer = typeof st.fillLayer === "string" ? st.fillLayer : null;
   const isolate = fillLayer ? [args.layer, fillLayer] : args.layer;
+  const outline = outlineTracker(frozenOpts(args));
   const rendered = await renderChunked(
     io,
     { compNameOrId: args.comp, isolate, channels: "rgba", edge: true },
@@ -50775,8 +50897,13 @@ async function runSubjectCheck(args, io) {
     limit,
     over,
     path7.join(outDir, "cutout_sheet.png"),
-    pixels
+    pixels,
+    true,
+    (r, img) => {
+      if (img.alpha) outline.add(r.frame, img.alpha, img.rgb, img.width, img.height);
+    }
   );
+  const outlineResult = outline.result();
   const sum = summarize(readings, limit, accept, picture);
   const close = closeClicks(clicks, st.sourceSize ?? null);
   const findings = [...sum.findings];
@@ -50794,6 +50921,15 @@ async function runSubjectCheck(args, io) {
     pixels
   );
   if ("unstable" in recheck) findings.push(...recheck.unstable);
+  const frozenAcceptedRuns = [];
+  for (const run of outlineResult.frozen) {
+    if (frozenAccepted(run, accept)) {
+      frozenAcceptedRuns.push({ kind: "frozen", ...run });
+      continue;
+    }
+    const pic = (f) => readings.find((r) => r.frame === f)?.picture ?? null;
+    findings.push(frozenFinding(run, [pic(run.from), pic(run.to)]));
+  }
   if (close.length)
     findings.push({ kind: "close-clicks", pairs: close, advice: closeAdvice(close) });
   const rects = clicks.filter((c) => c.kind === "rectangle").map((c) => c.name);
@@ -50817,7 +50953,8 @@ async function runSubjectCheck(args, io) {
     fillLayer,
     stop,
     findings,
-    accepted: sum.accepted,
+    accepted: [...sum.accepted, ...frozenAcceptedRuns],
+    outline: outlineResult,
     checked: sum.checked,
     recheck: "unstable" in recheck ? {
       frames: recheck.frames,
@@ -50992,6 +51129,7 @@ async function fillGaps(args, io) {
     stillItem: built.stillItem,
     stillItemId: built.stillItemId ?? null,
     audioOff: built.audioOff === true,
+    audio: built.audioOff === true ? "switched off, so the footage's sound plays once" : built.hasAudio === false ? "the footage has no audio: nothing to switch off" : built.audioError ? `could not be switched off: ${built.audioError}` : "left as it was",
     ...built.audioError ? { audioError: built.audioError } : {}
   };
   const [alone] = await renderChunked(
@@ -51140,7 +51278,7 @@ function fillBuildJsx(args) {
             if (AE.safeGet(function () { return _fill.hasAudio; }, false)) {
                 try { _fill.audioEnabled = false; _audioOff = true; } catch (eAud) { _audioError = AE.errText(eAud); }
             }
-            var _out = { ok: true, fillLayer: _fill.name, fillIndex: _fill.index, maskLayer: _mask.name, maskIndex: _mask.index, stillItem: _item.name, stillItemId: AE.safeGet(function () { return _item.id; }, null), removedFromCopy: _removed, audioOff: _audioOff };
+            var _out = { ok: true, fillLayer: _fill.name, fillIndex: _fill.index, maskLayer: _mask.name, maskIndex: _mask.index, stillItem: _item.name, stillItemId: AE.safeGet(function () { return _item.id; }, null), removedFromCopy: _removed, audioOff: _audioOff, hasAudio: AE.safeGet(function () { return _fill.hasAudio; }, false) };
             if (_audioError !== null) _out.audioError = _audioError;
             if (_spanError !== null) _out.maskSpanError = _spanError;
             return _out;
@@ -51267,6 +51405,24 @@ registerOp({
       name: "recheck",
       type: "boolean",
       description: "Render each frame with a hole or opening over the limit once more at the end and report a frame that differs (kind 'unstable'). Default true; false skips it.",
+      required: false
+    },
+    {
+      name: "frozenLimit",
+      type: "number",
+      description: "A drift over frozenGap frames (share of the frame whose alpha changed by more than 0.1) under this counts as an unmoved outline (default 0.002; not yet calibrated live).",
+      required: false
+    },
+    {
+      name: "frozenFrames",
+      type: "number",
+      description: "Shortest run of unmoved outline that is a 'frozen' finding, frames (default 60).",
+      required: false
+    },
+    {
+      name: "frozenGap",
+      type: "number",
+      description: "Frames between the two frames compared for drift (default 30).",
       required: false
     },
     {
@@ -51715,6 +51871,10 @@ async function runCheckFile(args, io) {
     kept.delete(frame);
     await fs7.rm(f, { force: true });
   };
+  const outline = outlineTracker(frozenOpts(args));
+  let outlineResult = null;
+  const frozenFindings = [];
+  const frozenAcceptedRuns = [];
   const size = Math.max(1, Math.min(32, Math.floor(SETTLE_MAX_MS / perFrameMs)));
   try {
     const roomless = await spaceRefusal(
@@ -51744,7 +51904,10 @@ async function runCheckFile(args, io) {
         over,
         path7.join(outDir, "check-file_unused.png"),
         pixels,
-        false
+        false,
+        (r, img) => {
+          if (img.alpha) outline.add(r.frame, img.alpha, img.rgb, img.width, img.height);
+        }
       )).readings;
       for (const r of got) {
         readings.push(r);
@@ -51775,6 +51938,30 @@ async function runCheckFile(args, io) {
           if (f !== r.frame && !need2.has(f)) await release(f);
         prev = r;
       }
+    }
+    outlineResult = outline.result();
+    for (const run of outlineResult.frozen) {
+      if (frozenAccepted(run, accept)) {
+        frozenAcceptedRuns.push({ kind: "frozen", ...run });
+        continue;
+      }
+      const ends = [run.from, run.to];
+      const again = await renderChunked(
+        io,
+        { compNameOrId: setup.compId, channels: "rgba" },
+        ends,
+        perFrameMs,
+        outDir,
+        `check-file-frozen-${run.from}`,
+        renders
+      );
+      const pics = [];
+      for (const e of ends) {
+        const r = again.find((x) => x.frame === e);
+        pics.push(r?.file ? await overPicture(io, r.file, over) : null);
+        if (r?.file && !keepCaptures) await fs7.rm(r.file, { force: true });
+      }
+      frozenFindings.push(frozenFinding(run, pics));
     }
   } finally {
     cleanup = await io.execute(
@@ -51889,10 +52076,11 @@ async function runCheckFile(args, io) {
     capturesKept: keepCaptures
   };
   const compared = `${plural2(pairs, "pair")} of neighbouring frames` + (step > 1 ? ` (each frame and the next), one pair every ${step} frames, and the first and last three frames` : "") + ` compared for jumps over ${jumpLimit} in opaque share.`;
-  const passText = jumps.length ? `No hole or opening of ${fmt2(limit)} px or more on the ${byFrame.size} frames read.` : `Nothing over the limit on ${byFrame.size} of ${readings.length} frames read; no jump between neighbouring frames over ${jumpLimit}; the picture is at ${picture ?? "(none)"}.`;
+  const passText = jumps.length || frozenFindings.length ? `No hole or opening of ${fmt2(limit)} px or more on the ${byFrame.size} frames read.` : `Nothing over the limit on ${byFrame.size} of ${readings.length} frames read; no jump between neighbouring frames over ${jumpLimit}; the picture is at ${picture ?? "(none)"}.`;
   const sum = summarize(readings, limit, accept, picture, passText);
-  const findings = [...sum.findings, ...jumps];
+  const findings = [...sum.findings, ...jumps, ...frozenFindings];
   const stop = findings.length > 0;
+  const frozenText = frozenFindings.map((f) => ` ${f.reading}`).join("");
   const jumpText = jumps.length ? ` ${plural2(jumps.length, "jump")} in opaque share between neighbouring frames: ${jumps.map((j) => `${j.from} to ${j.to}, ${j.change}`).join("; ")}. A jump of about 0.05 is a dropped object (a microphone); look at both frames.` : "";
   const opaqueText = opaque.min !== null ? ` Opaque share ${opaque.min} (frame ${opaque.minFrame}) to ${opaque.max} (frame ${opaque.maxFrame}); largest step ${largestStep.change} (frames ${largestStep.from} to ${largestStep.to}).` : "";
   return {
@@ -51904,11 +52092,12 @@ async function runCheckFile(args, io) {
     step,
     stop,
     findings,
-    accepted: sum.accepted,
+    accepted: [...sum.accepted, ...frozenAcceptedRuns],
+    outline: outlineResult,
     checked: sum.checked,
     compared,
     opaque,
-    inOut: `${sum.text}${jumpText}${opaqueText} ${compared}${stop && picture ? ` Look at the picture (${picture}).` : ""}`,
+    inOut: `${sum.text}${jumpText}${frozenText}${opaqueText} ${compared}${stop && picture ? ` Look at the picture (${picture}).` : ""}`,
     picture,
     pictures,
     frameReadings: readings.map((r) => ({
@@ -52021,7 +52210,7 @@ registerOp({
 registerOp({
   name: "subject.check_file",
   category: "subject",
-  description: `Check a rendered cut-out movie (from subject.render_cutout) frame by frame: brings it into a throwaway comp, reads frames in batches of at most 32 (every frame up to maxFrames, default ${CHECK_FILE_MAX_FRAMES}; beyond it pairs of neighbouring frames in steps, always the first and last three), and reports holes and openings (as subject.check: holeLimit, accept), the opaque share of every frame, and a 'jump' finding when neighbouring frames differ by more than jumpLimit (default ${CHECK_FILE_JUMP_LIMIT}: on the take of 2026-11-11 the rendered cut-out ran 0.279 to 0.314 with no step over 0.012, and a dropped microphone is about 0.05). Only true neighbours are compared, and \`compared\` says which. A frame that could not be read is 'not-checked' and stops. Pictures: the largest frame of each finding not accepted and both frames of each jump, full size, and a sheet of up to 24 frames; \`pictures\` counts them and their bytes. Each raw capture is removed once read unless keepCaptures (one run on the take had left 630 MB). The throwaway comp is removed afterwards, and the imported footage too unless keepFootage. Measured: about 0.55 s a frame reading the file. Returns stop, findings, accepted, checked, compared, opaque, inOut, picture, frameReadings, timing.`,
+  description: `Check a rendered cut-out movie (from subject.render_cutout) frame by frame: brings it into a throwaway comp, reads frames in batches of at most 32 (every frame up to maxFrames, default ${CHECK_FILE_MAX_FRAMES}; beyond it pairs of neighbouring frames in steps, always the first and last three), and reports holes and openings (as subject.check: holeLimit, accept), the opaque share of every frame, and a 'jump' finding when neighbouring frames differ by more than jumpLimit (default ${CHECK_FILE_JUMP_LIMIT}: on the take of 2026-11-11 the rendered cut-out ran 0.279 to 0.314 with no step over 0.012, and a dropped microphone is about 0.05). Only true neighbours are compared, and \`compared\` says which. A frame that could not be read is 'not-checked' and stops. Pictures: the largest frame of each finding not accepted and both frames of each jump, full size, and a sheet of up to 24 frames; \`pictures\` counts them and their bytes. Each raw capture is removed once read unless keepCaptures (one run on the take had left 630 MB). The throwaway comp is removed afterwards, and the imported footage too unless keepFootage. \`outline\` says how much the outline changed between neighbouring frames and over frozenGap frames (share of the frame whose alpha changed by more than 0.1, at full size); a run where it did not move is a 'frozen' finding (the selection is probably not tracking, as after replacing the layer's footage; accept: [{ kind: "frozen" }] for a subject that really is still). The frozen limits are not yet calibrated live. Measured: about 0.55 s a frame reading the file. Returns stop, findings, accepted, checked, compared, opaque, outline, inOut, picture, frameReadings, timing.`,
   params: [
     {
       name: "path",
@@ -52075,6 +52264,24 @@ registerOp({
       name: "secondsPerFrame",
       type: "number",
       description: "Settle time allowed per frame, s (default 10).",
+      required: false
+    },
+    {
+      name: "frozenLimit",
+      type: "number",
+      description: "A drift over frozenGap frames (share of the frame whose alpha changed by more than 0.1) under this counts as an unmoved outline (default 0.002; not yet calibrated live).",
+      required: false
+    },
+    {
+      name: "frozenFrames",
+      type: "number",
+      description: "Shortest run of unmoved outline that is a 'frozen' finding, frames (default 60).",
+      required: false
+    },
+    {
+      name: "frozenGap",
+      type: "number",
+      description: "Frames between the two frames compared for drift (default 30).",
       required: false
     },
     {
@@ -56606,7 +56813,7 @@ function watchArgsError(args) {
 }
 var TOP_CODE = 254.5 / 255;
 var BOTTOM_CODE = 0.5 / 255;
-var r62 = (v) => Math.round(v * 1e6) / 1e6;
+var r63 = (v) => Math.round(v * 1e6) / 1e6;
 function measureFrame(pic, width, height, t) {
   let luma2 = 0;
   let dark = 0;
@@ -56668,27 +56875,27 @@ function measureFrame(pic, width, height, t) {
   const n = width * height || 1;
   const box2 = (x0, y0, x1, y1) => x1 < 0 ? null : { x: x0, y: y0, width: x1 - x0 + 1, height: y1 - y0 + 1 };
   return {
-    meanLuma: r62(luma2 / n),
-    darkShare: r62(dark / n),
-    lightShare: r62(light / n),
+    meanLuma: r63(luma2 / n),
+    darkShare: r63(dark / n),
+    lightShare: r63(light / n),
     clipHigh: {
-      r: r62(hr / n),
-      g: r62(hg / n),
-      b: r62(hb / n),
-      all: r62(ha / n),
+      r: r63(hr / n),
+      g: r63(hg / n),
+      b: r63(hb / n),
+      all: r63(ha / n),
       box: box2(hx0, hy0, hx1, hy1)
     },
     clipLow: {
-      r: r62(lr / n),
-      g: r62(lg / n),
-      b: r62(lb / n),
-      all: r62(la / n),
+      r: r63(lr / n),
+      g: r63(lg / n),
+      b: r63(lb / n),
+      all: r63(la / n),
       box: box2(lx0, ly0, lx1, ly1)
     }
   };
 }
 var fmt3 = (v) => v.toFixed(4);
-var secs2 = (v) => `${r62(v)} s`;
+var secs2 = (v) => `${r63(v)} s`;
 var PieceWatcher = class {
   t;
   o;
@@ -56730,7 +56937,7 @@ var PieceWatcher = class {
     this.measureMs += performance.now() - t0;
   }
   point(frame) {
-    return { frame, time: r62(frame * this.o.frameDuration) };
+    return { frame, time: r63(frame * this.o.frameDuration) };
   }
   ownedFrame(frame) {
     const own2 = this.o.owned;
@@ -56756,8 +56963,8 @@ var PieceWatcher = class {
       pairCount += seg.length;
       if (seg.length === 0) continue;
       const series = seg.map((p) => ({
-        from: { index: p.from, time: r62(p.from * this.o.frameDuration) },
-        to: { index: p.to, time: r62(p.to * this.o.frameDuration) },
+        from: { index: p.from, time: r63(p.from * this.o.frameDuration) },
+        to: { index: p.to, time: r63(p.to * this.o.frameDuration) },
         change: p.change,
         changedShare: p.changedShare
       }));
@@ -56859,7 +57066,7 @@ var PieceWatcher = class {
     const flag = {
       kind: sf.kind,
       frame,
-      time: r62(frame * this.o.frameDuration),
+      time: r63(frame * this.o.frameDuration),
       change: sf.change,
       reference: sf.reference,
       ratio: sf.ratio,
@@ -56907,10 +57114,10 @@ var PieceWatcher = class {
             from: this.point(from),
             to: this.point(to),
             frames,
-            seconds: r62(seconds),
+            seconds: r63(seconds),
             ...this.edges(from, to, first, last),
             largestChange: largest,
-            reading: `no visible change from ${secs2(from * fd)} to ${secs2(to * fd)} (frames ${from} to ${to}, ${r62(seconds)} s): at most ${fmt3(t.frozenShare * 100)}% of pixels changed by more than ${t.changeAbove} between checked frames. A held title or a still is legitimate; a stop in the middle of a move is not`
+            reading: `no visible change from ${secs2(from * fd)} to ${secs2(to * fd)} (frames ${from} to ${to}, ${r63(seconds)} s): at most ${fmt3(t.frozenShare * 100)}% of pixels changed by more than ${t.changeAbove} between checked frames. A held title or a still is legitimate; a stop in the middle of a move is not`
           });
         }
         i = j + 1;
@@ -56938,7 +57145,7 @@ var PieceWatcher = class {
         from: this.point(from),
         to: this.point(to),
         frames,
-        seconds: r62(frames * fd),
+        seconds: r63(frames * fd),
         ...this.edges(from, to, first, last),
         reading: ""
       };
@@ -56946,7 +57153,7 @@ var PieceWatcher = class {
       const m = worst.m;
       if (kind === "near-black" || kind === "near-white") {
         const share = kind === "near-black" ? m.darkShare : m.lightShare;
-        s.worst = { frame: worst.frame, time: r62(worst.frame * fd), share, meanLuma: m.meanLuma };
+        s.worst = { frame: worst.frame, time: r63(worst.frame * fd), share, meanLuma: m.meanLuma };
         s.reading = `${kind} from ${when}: at worst (frame ${worst.frame}) mean luma ${fmt3(m.meanLuma)}, ${fmt3(share * 100)}% of pixels ${kind === "near-black" ? `at or below ${this.t.darkBelow}` : `at or above ${this.t.lightAbove}`} in every channel`;
       } else {
         const c = kind === "clipped-high" ? m.clipHigh : m.clipLow;
@@ -56967,7 +57174,7 @@ var PieceWatcher = class {
         s.box = this.scaleBox(box2);
         s.worst = {
           frame: worst.frame,
-          time: r62(worst.frame * fd),
+          time: r63(worst.frame * fd),
           share: c.all,
           channels: { r: c.r, g: c.g, b: c.b }
         };
@@ -57403,7 +57610,7 @@ async function readPicture(file2, target, convert) {
 }
 var LIST_CAP = 20;
 var DEFAULT_MAX_TILES = 12;
-var r63 = (v) => Math.round(v * 1e6) / 1e6;
+var r64 = (v) => Math.round(v * 1e6) / 1e6;
 var r3 = (v) => Math.round(v * 1e3) / 1e3;
 function capWorst(items, kindOf, severity, cap) {
   const byKind = /* @__PURE__ */ new Map();
@@ -57547,7 +57754,7 @@ async function checkComp(args, transport2) {
   const frames = all.slice(startIdx - before, startIdx + owned.length + after);
   const next = remaining > 0 ? {
     startFrame: ownedTo + every,
-    time: r63((ownedTo + every) * fd),
+    time: r64((ownedTo + every) * fd),
     framesLeft: remaining
   } : null;
   const outDir = path11.resolve(
@@ -57575,11 +57782,11 @@ async function checkComp(args, transport2) {
       id: plan.compId,
       size: [plan.width, plan.height],
       frameRate: r3(1 / fd),
-      duration: r63(plan.duration)
+      duration: r64(plan.duration)
     },
     range: {
-      from: { frame: first, time: r63(first * fd) },
-      to: { frame: all[all.length - 1], time: r63(all[all.length - 1] * fd) },
+      from: { frame: first, time: r64(first * fd) },
+      to: { frame: all[all.length - 1], time: r64(all[all.length - 1] * fd) },
       source: args.from !== void 0 || args.to !== void 0 ? "from/to" : "work area",
       framesToCheck: all.length
     },
@@ -57659,11 +57866,11 @@ async function checkComp(args, transport2) {
   let nextOut = next;
   if (captureError !== null && captureError.atFrame <= ownedTo) {
     const at = Math.max(captureError.atFrame, ownedFrom);
-    nextOut = { startFrame: at, time: r63(at * fd), framesLeft: all.length - all.indexOf(at) };
+    nextOut = { startFrame: at, time: r64(at * fd), framesLeft: all.length - all.indexOf(at) };
   }
   report.checked = {
-    from: { frame: ownedFrom, time: r63(ownedFrom * fd) },
-    to: { frame: ownedTo, time: r63(ownedTo * fd) },
+    from: { frame: ownedFrom, time: r64(ownedFrom * fd) },
+    to: { frame: ownedTo, time: r64(ownedTo * fd) },
     frames: findings?.framesChecked ?? 0,
     contextFrames: { before, after },
     captureFailures: failures.length
@@ -57798,26 +58005,26 @@ async function runStructure(args, transport2, plan, first, end, fd) {
   const offFrame = s.bounds.findings.map((f) => ({
     layer: { index: f.index, name: f.name, type: f.type },
     edge: f.edge,
-    from: { time: r63(f.from), frame: Math.floor(f.from / fd + 1e-6) },
-    to: { time: r63(f.to), frame: Math.floor(f.to / fd + 1e-6) },
+    from: { time: r64(f.from), frame: Math.floor(f.from / fd + 1e-6) },
+    to: { time: r64(f.to), frame: Math.floor(f.to / fd + 1e-6) },
     byPx: f.byPx,
     extent: f.extent,
-    worstAt: { time: r63(f.at), frame: Math.floor(f.at / fd + 1e-6) },
+    worstAt: { time: r64(f.at), frame: Math.floor(f.at / fd + 1e-6) },
     box: f.box,
-    reading: `${f.type} layer ${f.index} "${f.name}" ${f.extent === "wholly" ? "is wholly" : "is partly"} past the ${f.edge} edge of the ${margins.some((m) => m > 0) ? "safe area" : "frame"} from ${r63(f.from)} s to ${r63(f.to)} s while visible, by up to ${f.byPx} px (at ${r63(f.at)} s)`
+    reading: `${f.type} layer ${f.index} "${f.name}" ${f.extent === "wholly" ? "is wholly" : "is partly"} past the ${f.edge} edge of the ${margins.some((m) => m > 0) ? "safe area" : "frame"} from ${r64(f.from)} s to ${r64(f.to)} s while visible, by up to ${f.byPx} px (at ${r64(f.at)} s)`
   })).sort((a, b) => a.from.time - b.from.time);
   const footageInComp = s.footage.items.filter((it) => it.usedInComps.length > 0);
   return {
     checked: true,
     safeArea: {
-      margins: { left: r63(margins[0]), top: r63(margins[1]), right: r63(margins[2]), bottom: r63(margins[3]) },
+      margins: { left: r64(margins[0]), top: r64(margins[1]), right: r64(margins[2]), bottom: r64(margins[3]) },
       against: margins.some((m) => m > 0) ? "safe area" : "frame edge"
     },
     offFrame: {
       count: s.bounds.total,
       layersChecked: s.bounds.layersChecked,
       samples: s.bounds.samples,
-      sampleStep: r63(step),
+      sampleStep: r64(step),
       boundsOf: opts.boundsOf,
       findings: offFrame,
       ...s.bounds.total > offFrame.length ? { omitted: s.bounds.total - offFrame.length } : {},
@@ -57885,7 +58092,7 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
       const pic = await readPicture(got.path, target, convert);
       await fs9.writeFile(got.path, encodePngSrgb8(pic.width, pic.height, pic.rgb));
       images.push({ width: pic.width, height: pic.height, rgb: pic.rgb, bitDepth: 8 });
-      kept.push({ frame: c.frame, time: r63(c.frame * fd), kinds: c.kinds, ...c.why ? { why: c.why } : {}, path: got.path });
+      kept.push({ frame: c.frame, time: r64(c.frame * fd), kinds: c.kinds, ...c.why ? { why: c.why } : {}, path: got.path });
     } catch {
       await fs9.rm(got.path, { force: true });
     }

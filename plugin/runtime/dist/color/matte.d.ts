@@ -328,4 +328,56 @@ export declare function cutoutRegions(alpha: ArrayLike<number>, width: number, h
         area: number;
     };
 };
+export interface OutlineOptions {
+    /** Frames between the two frames of a drift comparison (default 30). */
+    gap?: number;
+    /** A drift (share of the frame whose alpha changed by more than `step`) under this counts as unmoved (default 0.002). */
+    limit?: number;
+    /** A frozen run must cover at least this many frames and two comparisons (default 60). */
+    minFrames?: number;
+    /** The alpha change that counts as a change (default 0.1). */
+    step?: number;
+}
+export interface FrozenRun {
+    from: number;
+    to: number;
+    length: number;
+    /** The largest drift in the run, share of the frame. */
+    drift: number;
+    /** Median share of the frame, opaque in both frames, whose brightness changed by more than 0.05. */
+    footageChange: number;
+}
+/**
+ * Feed frames in order (any spacing) with their alpha and straight RGB; the
+ * result says how much the outline changed between neighbouring frames and
+ * over `gap` frames, and where it did not move. Frames are kept as 8-bit alpha
+ * and luma, only as far back as a comparison can still need them. Measured at
+ * full size.
+ */
+export declare function outlineTracker(opts?: OutlineOptions): {
+    add(frame: number, alpha: ArrayLike<number>, rgb: ArrayLike<number> | null, width: number, height: number): void;
+    result(): {
+        at: string;
+        neighbours: {
+            pairs: number;
+            min: number | null;
+            median: number | null;
+            max: number | null;
+        };
+        drift: {
+            windows: number;
+            min: number | null;
+            median: number | null;
+            max: number | null;
+            gap: number;
+        };
+        limits: {
+            gap: number;
+            limit: number;
+            minFrames: number;
+            step: number;
+        };
+        frozen: FrozenRun[];
+    };
+};
 //# sourceMappingURL=matte.d.ts.map
