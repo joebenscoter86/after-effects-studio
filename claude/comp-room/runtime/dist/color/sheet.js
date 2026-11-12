@@ -971,7 +971,14 @@ const REFERENCE_DEFAULTS = {
   sameFootage: 0.6,
   shareStep: 0.05,
   /** A colour of the reference with no colour of the build within this (CIELAB) is missing. */
-  colourMatch: 10
+  colourMatch: 10,
+  /**
+   * With nothing saying how far apart a folder's frames are: a median change
+   * between neighbouring files of this or more reads as frames far apart. On
+   * the round-two movies, every twentieth frame read medians of 0.026 and
+   * 0.029; every frame 0.007 (largest pair 0.029, a cut 0.088).
+   */
+  spreadGuess: 0.02
 };
 const GRID_NAMES = [
   ["top left", "top", "top right"],
@@ -1149,7 +1156,7 @@ function referenceReader(opts) {
     }
     const pic = pictureOf(img, false);
     const cells = cellLuma(img, cell);
-    if (prev && f.frame === prev.frame + 1) {
+    if (prev) {
       const ch = pictureChange(prev.pic, pic, img.width, img.height, DIFF_DEFAULTS);
       pairs.push({
         from: { index: prev.frame, time: prev.time },
@@ -1187,7 +1194,34 @@ function referenceReader(opts) {
       });
     }
     const gridEw = regionReports.slice(0, 9).flatMap((r) => r.sharpness.edgeWidth === null ? [] : [r.sharpness.edgeWidth]);
-    const summary = pairs.length >= 2 ? summarizeSeries(pairs, DIFF_DEFAULTS) : null;
+    const notes = [];
+    const neighbours = pairs.length > 0 && pairs.every((q) => q.to.index === q.from.index + 1);
+    let spacing = opts.spacing ?? { how: "rendered", step: neighbours ? 1 : null };
+    let consecutive = neighbours;
+    const medianChange = pairs.length ? median(pairs.map((q) => q.change)) : 0;
+    const mc = medianChange.toFixed(4);
+    const unsure = spacing.how === "assumed" || spacing.how === "file names" && spacing.step === 1;
+    if (consecutive && unsure) {
+      const said = spacing.how === "file names" ? "The file names count up by one" : "Nothing said how far apart the frames are";
+      if (medianChange >= D.spreadGuess) {
+        consecutive = false;
+        spacing = { how: "guessed from change", step: null };
+        notes.push(
+          `${said}, but neighbouring files change by a median of ${mc}, as frames far apart do (${D.spreadGuess} or more), so this guess reads them as spread: cuts and movement are not read. Pass frameStep: 1 if they are neighbours.`
+        );
+      } else if (spacing.how === "file names")
+        notes.push(`The frames are neighbours, read from their file names (neighbouring files change by a median of ${mc}).`);
+      else
+        notes.push(
+          `Nothing said how far apart the frames are; they were assumed to be neighbours (neighbouring files change by a median of ${mc}, under the ${D.spreadGuess} that spread frames read), so cuts and movement were read. Pass frameStep if they are not.`
+        );
+    } else if (pairs.length && !consecutive) {
+      const apart = spacing.step ? `${spacing.step} frames apart` : "unevenly spaced";
+      notes.push(
+        `The frames are ${apart}, ${spacing.how === "given" ? "as given" : spacing.how === "file names" ? "read from their file names" : "as rendered"}: cuts and movement are not read, and the motion map shows what differs between the frames read, not motion.`
+      );
+    }
+    const summary = consecutive && pairs.length >= 2 ? summarizeSeries(pairs, DIFF_DEFAULTS) : null;
     const cutPairs = new Set(
       (summary?.flags ?? []).filter((fl) => fl.kind === "cut").flatMap((fl) => fl.pairs)
     );
@@ -1202,6 +1236,7 @@ function referenceReader(opts) {
       changeSum += pairs[i].change;
       counted++;
     });
+    const meanChange = consecutive && counted ? Math.round(changeSum / counted * 1e6) / 1e6 : null;
     const map = {
       width: mw,
       height: mh,
@@ -1210,6 +1245,7 @@ function referenceReader(opts) {
     };
     return {
       frames: added,
+      notes,
       size: [width, height],
       frameRate: opts.frameRate ?? null,
       palette: paletteOf(samples, D.paletteColours),
@@ -1231,10 +1267,12 @@ function referenceReader(opts) {
       sharpness: { edgeWidth: gridEw.length ? r2(median(gridEw)) : null },
       grain: r2(avg(regionReports.slice(0, 9).map((r) => r.grain))),
       motion: {
-        consecutive: pairs.length > 0 && pairs.length === added - 1,
+        consecutive,
+        spacing,
+        spread: !consecutive,
         pairs: pairs.length,
         cuts: [...cutPairs].sort((a, b) => a - b).map((i) => ({ frame: pairs[i].to.index, time: pairs[i].to.time ?? null })),
-        meanChange: counted ? Math.round(changeSum / counted * 1e6) / 1e6 : null,
+        meanChange,
         map,
         subject: counted ? motionCentre(map) : null
       }
@@ -1309,6 +1347,11 @@ function compareReferences(ref, build) {
     if (reg) {
       const compared = reg.correlation >= D.sameFootage;
       subject = { ...reg, compared };
+      const spreadSides = [ref, build].filter((r) => r.motion.spread);
+      if (compared && spreadSides.length)
+        notes.push(
+          `The subject's size and place rest on spread frames (what differs between frames ${[...new Set(spreadSides.map((r) => r.motion.spacing.step ? `${r.motion.spacing.step} apart` : "spaced unknown or unevenly"))].join(" and ")}${spreadSides.length === 2 ? " on both sides" : ` on the ${spreadSides[0] === ref ? "reference's" : "build's"} side`}, not motion), lined up at correlation ${reg.correlation}. Trusted from ${D.sameFootage}: on the round-two pair, every frame read 0.93 and 80 to 81%, every twentieth 0.68 to 0.71 and 81 to 82%.`
+        );
       if (!compared)
         notes.push(
           `The moving parts of the two do not line up (correlation ${reg.correlation}): not the same footage, or not framed alike, so the subject's size and place are not compared.`
@@ -1386,7 +1429,10 @@ function compareReferences(ref, build) {
           reading: `The build's picture moves ${k > 0 ? "more" : "less"} between frames: mean change ${bm.toFixed(4)} against ${rm.toFixed(4)}.`
         });
     }
-  } else notes.push("Cuts and motion need consecutive frames on both sides; not compared.");
+  } else
+    notes.push(
+      `Cuts and movement are not read on frames that are not neighbours (${[!ref.motion.consecutive ? "the reference's" : "", !build.motion.consecutive ? "the build's" : ""].filter(Boolean).join(" and ")}), so they are not compared.`
+    );
   out.sort((a, b) => b.size - a.size);
   return {
     differences: out,

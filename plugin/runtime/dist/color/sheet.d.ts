@@ -399,7 +399,20 @@ export declare const REFERENCE_DEFAULTS: {
     shareStep: number;
     /** A colour of the reference with no colour of the build within this (CIELAB) is missing. */
     colourMatch: number;
+    /**
+     * With nothing saying how far apart a folder's frames are: a median change
+     * between neighbouring files of this or more reads as frames far apart. On
+     * the round-two movies, every twentieth frame read medians of 0.026 and
+     * 0.029; every frame 0.007 (largest pair 0.029, a cut 0.088).
+     */
+    spreadGuess: number;
 };
+export interface ReferenceSpacing {
+    /** given: the caller's frameStep; file names: numbers in them; rendered: frame numbers asked of After Effects; assumed: nothing said, read as neighbours; guessed from change: nothing said, read as spread. */
+    how: "given" | "file names" | "rendered" | "assumed" | "guessed from change";
+    /** Frames between neighbouring inputs, or null when uneven or unknown. */
+    step: number | null;
+}
 /** The frame cut into thirds each way, named as a person would point at them. */
 export declare function gridRegions(width: number, height: number): RegionSpec[];
 export interface ReferenceRegion {
@@ -418,6 +431,8 @@ export interface ReferenceRegion {
 }
 export interface ReferenceReport {
     frames: number;
+    /** What the report assumed, in words. */
+    notes: string[];
     size: [number, number];
     frameRate: number | null;
     /** Main colours over the frames read, largest share first. */
@@ -453,6 +468,10 @@ export interface ReferenceReport {
         /** The frames were consecutive, so cuts and motion were read. */
         consecutive: boolean;
         pairs: number;
+        /** How far apart the frames are, and how that was known. */
+        spacing: ReferenceSpacing;
+        /** The map was built from frames that are not neighbours: it shows what differs across the clip, not motion. */
+        spread: boolean;
         cuts: Array<{
             frame: number;
             time: number | null;
@@ -483,6 +502,8 @@ export interface ReferenceOptions {
     frameRate?: number;
     motionCell?: number;
     lookFrames?: number;
+    /** How far apart the frames are (default: rendered when every pair is a neighbour). With how "assumed" the change between pairs may overrule it. */
+    spacing?: ReferenceSpacing;
 }
 /**
  * The reference report, read one frame at a time so a movie never sits in
