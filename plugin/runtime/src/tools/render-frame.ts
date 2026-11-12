@@ -858,6 +858,13 @@ export const renderFrameTool = defineTool({
           .max(1)
           .optional()
           .describe("Default 0.25: within a quarter of the plate's grain matches."),
+        background: z
+          .array(z.number().min(0).max(1))
+          .length(3)
+          .optional()
+          .describe(
+            "The background the subject was cut from (the wall's mean colour, [r, g, b] 0..1, read with `sample` on the take): each region's edgeColour then says how far the soft edge's colour leans toward it.",
+          ),
         sharpnessTolerance: z
           .number()
           .gt(0)
@@ -870,7 +877,8 @@ export const renderFrameTool = defineTool({
         "Does it sit in the scene: for each named region, on the file as written (stage 'output'; with channels 'rgba' only the opaque pixels, straight colour), " +
           "levels {black, white, mean per channel, lumaBlack, lumaWhite, lumaMean} (0.5th and 99.5th percentiles, 0..1), " +
           "grain {spatial: per channel in 8-bit steps, the robust spread of each pixel against its 3 x 3 neighbourhood}, " +
-          "sharpness {edgeWidth: median 10 to 90% rise across edges with a luma step of at least minContrast, px (a hard step about 0.8, a Gaussian blur of sigma s about 2.56 s), edges}, " +
+          "sharpness {edgeWidth: median 10 to 90% rise across edges with a luma step of at least minContrast, px (a hard step about 0.8, a Gaussian blur of sigma s about 2.56 s), p90 (the widest tenth), edges}, " +
+          "with alpha (channels 'rgba'): matte {edgeWidth, p90, edges, softBand: soft pixels (alpha 0.02 to 0.98) per pixel of outline} read on the alpha, and edgeColour {band, inside, difference, towardBackground, reading}: the soft edge's straight colour against the colour well inside, and with `background` how far it leans toward the background (wall colour ringing the subject); lookSeries adds matteChange (mean change in alpha over the region, frame to frame). " +
           "colour (CIELAB L, a, b, chroma, hue of the mean). role 'neutral' adds cast {a, b, amount, toward, gains, channelMixer} and a reading; role 'skin' a hue reading. " +
           "pairs add, per element and plate, grain, sharpness and levels compared, with readings (add grain, soften, seat the blacks). " +
           "With `times` on consecutive frames, lookSeries adds frame-to-frame grain per region (a still element reads 0). Reported as `look` (per frame with `times`).",
@@ -2073,7 +2081,6 @@ function chooseBackdrop(payload: RenderFramePayload, opts: EyesOptions): Backdro
   payload.over = opts.over.kind === "checkerboard" ? "checkerboard" : opts.over.color;
   return opts.over;
 }
-
 
 /** Tile the final images into one labelled sheet. */
 async function attachContactSheet(

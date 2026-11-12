@@ -488,3 +488,103 @@ describe("ae_render_frame look", () => {
     expect(called).toBe(false);
   });
 });
+
+// ---------------------------------------------------------------------------
+// The matte's own edge (professional-finish plan, stage 5)
+// ---------------------------------------------------------------------------
+
+/** A frame whose alpha is a vertical step at x = 80, blurred by sigma (0: hard); straight colour from `colour(alpha)`. */
+function matteFrame(
+  sigma: number,
+  colour: (a: number) => Rgb = () => [0.1, 0.07, 0.06],
+  shift = 0,
+): DecodedPng {
+  const w = 160;
+  const h = 120;
+  const rgb = new Float64Array(w * h * 3);
+  const alpha = new Float64Array(w * h);
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const a =
+        sigma > 0
+          ? 0.5 * (1 - erf((x + 0.5 - 80 - shift) / (sigma * Math.SQRT2)))
+          : x < 80 + shift
+            ? 1
+            : 0;
+      const p = y * w + x;
+      alpha[p] = a;
+      const c = colour(a);
+      for (let k = 0; k < 3; k++) rgb[p * 3 + k] = c[k];
+    }
+  return { width: w, height: h, bitDepth: 16, rgb, alpha } as DecodedPng;
+}
+const HAIR: Rgb = [0.1, 0.07, 0.06];
+const WALL: Rgb = [0.525, 0.447, 0.557];
+
+describe("look on a matte", () => {
+  it("gives the widest tenth of the edge widths beside the median", () => {
+    const s = (measureLook(frame({ sigma: 2 }), { regions: [WHOLE] }).regions[0] as any).sharpness;
+    expect(s.p90).toBeGreaterThanOrEqual(s.edgeWidth);
+    expect(s.p90).toBeLessThan(s.edgeWidth * 1.3);
+  });
+
+  it("reads the alpha's own edge width, widest tenth and soft band where the frame has alpha", () => {
+    const hard = (measureLook(matteFrame(0), { regions: [WHOLE] }).regions[0] as any).matte;
+    expect(hard.edgeWidth).toBeLessThan(1.2);
+    expect(hard.softBand).toBeLessThan(0.1);
+    const soft = (measureLook(matteFrame(3), { regions: [WHOLE] }).regions[0] as any).matte;
+    expect(soft.edgeWidth).toBeGreaterThan(2.56 * 3 * 0.85);
+    expect(soft.edgeWidth).toBeLessThan(2.56 * 3 * 1.15);
+    expect(soft.p90).toBeGreaterThanOrEqual(soft.edgeWidth);
+    // Soft pixels (alpha 0.02 to 0.98) per pixel of outline: about 2 x 2.05 sigma for a Gaussian edge.
+    expect(soft.softBand).toBeGreaterThan(10);
+    expect(soft.softBand).toBeLessThan(14);
+    expect(measureLook(frame({}), { regions: [WHOLE] }).regions[0]).not.toHaveProperty("matte");
+  });
+
+  it("says how far the soft band's colour leans toward the background colour", () => {
+    // Contaminated: the soft pixels carry the wall in proportion to their transparency.
+    const dirty = matteFrame(3, (a) => HAIR.map((h, k) => h * a + WALL[k] * (1 - a)) as Rgb);
+    const clean = matteFrame(3, () => HAIR);
+    const args = { regions: [WHOLE], background: WALL };
+    const d = (measureLook(dirty, args).regions[0] as any).edgeColour;
+    const c = (measureLook(clean, args).regions[0] as any).edgeColour;
+    expect(d.towardBackground).toBeGreaterThan(0.3);
+    expect(c.towardBackground).toBeLessThan(0.05);
+    expect(d.difference).toBeGreaterThan(c.difference);
+    expect(d.reading).toMatch(/toward the background/);
+    // Without a background colour, the band is still compared with the inside.
+    const n = (measureLook(dirty, { regions: [WHOLE] }).regions[0] as any).edgeColour;
+    expect(n.towardBackground).toBeNull();
+    expect(n.difference).toBeGreaterThan(5);
+  });
+
+  it("adds the matte's change from frame to frame to the series", () => {
+    const args = { regions: [WHOLE] };
+    const same = summarizeLookSeries(
+      [lookCrops(matteFrame(3), args), lookCrops(matteFrame(3), args)],
+      args,
+    ) as any;
+    expect(same.regions[0].matteChange).toBe(0);
+    const moved = summarizeLookSeries(
+      [lookCrops(matteFrame(3), args), lookCrops(matteFrame(3, undefined, 1), args)],
+      args,
+    ) as any;
+    expect(moved.regions[0].matteChange).toBeGreaterThan(0.001);
+  });
+
+  it("refuses a background that is not a colour", () => {
+    expect(
+      lookArgsError({
+        regions: [{ name: "a", x: 0, y: 0, width: 4, height: 4 }],
+        background: [2, 0, 0],
+      }),
+    ).toMatch(/background/);
+    expect(
+      lookArgsError({
+        regions: [{ name: "a", x: 0, y: 0, width: 4, height: 4 }],
+        background: [0.5, 0.4, 0.5],
+      }),
+    ).toBeNull();
+  });
+});
