@@ -1073,9 +1073,132 @@ function speckPieces(alpha, width, height, opts = {}) {
   }
   return pieces.sort((p, q) => q.area - p.area);
 }
+function subjectTop(alpha, width, height) {
+  for (let y = 0; y < height; y++) {
+    const row = y * width;
+    for (let x = 0; x < width; x++) if (alpha[row + x] >= 0.5) return y;
+  }
+  return -1;
+}
+function overlapOf(a, b) {
+  let inter = 0;
+  let uni = 0;
+  for (let p = 0; p < a.length; p++) {
+    const x = a[p] >= 0.5;
+    const y = b[p] >= 0.5;
+    if (x && y) inter++;
+    if (x || y) uni++;
+  }
+  return uni ? inter / uni : 1;
+}
+function furthestFrame(ref, others, width, height) {
+  void width;
+  void height;
+  let best = { frame: others[0]?.frame ?? -1, overlap: 1 };
+  for (const o of others) {
+    const ov = Math.round(overlapOf(ref, o.alpha) * 1e4) / 1e4;
+    if (ov < best.overlap) best = { frame: o.frame, overlap: ov };
+  }
+  return best;
+}
+function matteCoverage(asClicked, result, width, height, opts = {}) {
+  const deep = opts.deep ?? 30;
+  const outside = opts.outside ?? 10;
+  const spreadAlpha = opts.spreadAlpha ?? 0.2;
+  const n = width * height;
+  const scratch = new Float32Array(n);
+  const dIn = new Float32Array(n);
+  const dOut = new Float32Array(n);
+  distanceTo(asClicked, width, height, (a) => a < 0.99, scratch, dIn);
+  distanceTo(asClicked, width, height, (a) => a >= 0.5, scratch, dOut);
+  let seen = 0;
+  let minAlpha = 1;
+  let from = -1;
+  let to = -1;
+  let px = 0;
+  let x0 = width;
+  let y0 = height;
+  let x1 = -1;
+  let y1 = -1;
+  for (let p = 0; p < n; p++) {
+    const y = p / width | 0;
+    if (asClicked[p] >= 0.99 && dIn[p] > deep) {
+      const r = result[p];
+      if (r < minAlpha) minAlpha = r;
+      if (r < 0.99) {
+        seen++;
+        if (from < 0 || y < from) from = y;
+        if (y > to) to = y;
+      }
+    }
+    if (result[p] >= spreadAlpha && dOut[p] > outside) {
+      px++;
+      const x = p - y * width;
+      if (x < x0) x0 = x;
+      if (x > x1) x1 = x;
+      if (y < y0) y0 = y;
+      if (y > y1) y1 = y;
+    }
+  }
+  return {
+    seenThrough: seen,
+    minAlpha: Math.round(minAlpha * 1e4) / 1e4,
+    band: seen ? { from, to } : null,
+    outside: { px, box: px ? { x: x0, y: y0, width: x1 - x0 + 1, height: y1 - y0 + 1 } : null },
+    deep,
+    outsideDistance: outside
+  };
+}
+const SEEN_THROUGH_DEFAULTS = { solid: 0.5, below: 0.95, deep: 30, minArea: 400, minRun: 2 };
+function seenThroughInside(alpha, width, height, opts = {}) {
+  const { solid, below, deep } = { ...SEEN_THROUGH_DEFAULTS, ...opts };
+  let x0 = width, y0 = height, x1 = -1, y1 = -1;
+  for (let y = 0; y < height; y++)
+    for (let x = 0; x < width; x++)
+      if (alpha[y * width + x] >= solid) {
+        if (x < x0) x0 = x;
+        if (x > x1) x1 = x;
+        if (y < y0) y0 = y;
+        if (y > y1) y1 = y;
+      }
+  if (x1 < 0) return { px: 0, box: null };
+  x0 = Math.max(0, x0 - 1);
+  y0 = Math.max(0, y0 - 1);
+  x1 = Math.min(width - 1, x1 + 1);
+  y1 = Math.min(height - 1, y1 + 1);
+  const w = x1 - x0 + 1;
+  const h = y1 - y0 + 1;
+  const crop = new Float64Array(w * h);
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) crop[y * w + x] = alpha[(y + y0) * width + x + x0];
+  const dist = new Float32Array(w * h);
+  distanceTo(crop, w, h, (a) => a < solid, new Float32Array(w * h), dist);
+  let px = 0;
+  let bx0 = width, by0 = height, bx1 = -1, by1 = -1;
+  for (let y = 0; y < h; y++) {
+    const fy = y + y0;
+    if (fy < deep || fy >= height - deep) continue;
+    for (let x = 0; x < w; x++) {
+      const fx = x + x0;
+      if (fx < deep || fx >= width - deep) continue;
+      const a = crop[y * w + x];
+      if (a < solid || a >= below || !(dist[y * w + x] > deep)) continue;
+      px++;
+      if (fx < bx0) bx0 = fx;
+      if (fx > bx1) bx1 = fx;
+      if (fy < by0) by0 = fy;
+      if (fy > by1) by1 = fy;
+    }
+  }
+  return {
+    px,
+    box: px ? { x: bx0, y: by0, width: bx1 - bx0 + 1, height: by1 - by0 + 1 } : null
+  };
+}
 export {
   CONTOUR_ALPHA,
   EDGE_DEFAULTS,
+  SEEN_THROUGH_DEFAULTS,
   SPECK_DEFAULTS,
   addPixel,
   alphaChange,
@@ -1085,13 +1208,17 @@ export {
   distanceTo,
   edgeArgsError,
   enclosedHoles,
+  furthestFrame,
   growMask,
   labelRegions,
   lumaMatte,
+  matteCoverage,
   measureEdge,
   newRegion,
   outlineTracker,
   resolveEdgeThresholds,
+  seenThroughInside,
   speckPieces,
+  subjectTop,
   summarizeFlicker
 };

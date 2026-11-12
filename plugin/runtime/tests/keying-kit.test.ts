@@ -946,6 +946,7 @@ function world({
   scale = null as number[] | null,
   file = null as string | null,
   hasAudio = false,
+  softEdge = false,
 } = {}): World {
   const calls: string[] = [];
   const parade = new Parade();
@@ -981,7 +982,15 @@ function world({
       return k === "ADBE Effect Parade" || k === "Effects" ? parade : null;
     },
   };
-  const other: Any = { name: "BG", selected: true };
+  const other: Any = softEdge
+    ? {
+        name: "presenter.mov soft edge",
+        selected: true,
+        enabled: true,
+        comment:
+          '{"compRoom":"soft-edge","layer":"presenter.mov","radius":8,"smooth":0,"regionBottom":1022,"feather":60}',
+      }
+    : { name: "BG", selected: true };
   const comp: Any = {
     name: "Main",
     numLayers: 2,
@@ -1049,6 +1058,7 @@ describe("subject matte: registration and the user's steps", () => {
       "subject.remove_selection",
       "subject.render_cutout",
       "subject.settings",
+      "subject.soften_edge",
       "subject.status",
       "subject.use_cutout",
     ]);
@@ -1270,6 +1280,24 @@ describe("subject.prepare: the footage", () => {
   it("reads null where the layer has no scale or the source no file", () => {
     const res = runIn("subject.prepare", {}, world());
     expect(res.footage).toMatchObject({ scale: null, file: null, hasAudio: false });
+  });
+});
+
+describe("subject.status: a softened edge", () => {
+  it("reports the soft-edge layer subject.soften_edge built, with its settings and two matte passes", () => {
+    const w = world({ effects: [objectMatte(["Add Object 1"])], softEdge: true });
+    const res = runIn("subject.status", {}, w);
+    expect(res.softEdge).toMatchObject({
+      layer: "presenter.mov soft edge",
+      enabled: true,
+      matteCopies: 2,
+      settings: { radius: 8, regionBottom: 1022 },
+    });
+  });
+
+  it("reports none on a plain comp", () => {
+    const res = runIn("subject.status", {}, world({ effects: [objectMatte(["Add Object 1"])] }));
+    expect(res.softEdge).toBeNull();
   });
 });
 

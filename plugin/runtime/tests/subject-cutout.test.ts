@@ -1459,3 +1459,17 @@ describe("subject.prepare: the take's sound", () => {
     expect(res.soundNote).toMatch(/measure the delivered file's sound/i);
   });
 });
+
+describe("subject.check on a softened edge", () => {
+  it("renders the soft-edge layer in place of the matted layer", async () => {
+    const io = fakeIO(() => matte(), {
+      status: async () =>
+        ({
+          ...APART,
+          softEdge: { layer: "raw_nogreen.mp4 soft edge", enabled: true, matteCopies: 2 },
+        }) as Any,
+    });
+    await runSubjectCheck({ comp: "Main", layer: 1, outDir: dir, frozenFrames: 1e9 }, io);
+    expect(renders(io)[0].isolate).toBe("raw_nogreen.mp4 soft edge");
+  });
+});

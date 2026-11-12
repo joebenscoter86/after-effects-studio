@@ -695,6 +695,8 @@ export interface LookArgs {
   /** An element whose grain or edge width is within this share of the plate's matches it. Default 0.25. */
   grainTolerance?: number;
   sharpnessTolerance?: number;
+  /** The background the subject was cut from (a wall's mean colour, 0..1): the soft edge's colour is read against it. */
+  background?: Rgb | number[];
 }
 
 /**
@@ -773,20 +775,24 @@ export interface LookCrop {
   rgb: Float64Array;
   /** 1 where the pixel counts (opaque enough, or no alpha), else 0. */
   use: Uint8Array;
+  /** The region's alpha, when the frame has one. */
+  alpha?: Float64Array;
 }
 
 function cropOf(img: DecodedPng, rect: PixelRect, opaque: number): LookCrop {
   const { x, y, width, height } = rect;
   const rgb = new Float64Array(width * height * 3);
   const use = new Uint8Array(width * height);
+  const alpha = img.alpha ? new Float64Array(width * height) : undefined;
   for (let j = 0; j < height; j++)
     for (let i = 0; i < width; i++) {
       const p = (y + j) * img.width + (x + i);
       const q = j * width + i;
       for (let c = 0; c < 3; c++) rgb[q * 3 + c] = img.rgb[p * 3 + c];
       use[q] = !img.alpha || img.alpha[p] >= opaque ? 1 : 0;
+      if (alpha && img.alpha) alpha[q] = img.alpha[p];
     }
-  return { rect, width, height, rgb, use };
+  return alpha ? { rect, width, height, rgb, use, alpha } : { rect, width, height, rgb, use };
 }
 
 /** Every region's crop, for the frame-to-frame grain (and kept small: regions only). */
@@ -896,7 +902,10 @@ export function temporalGrain(a: LookCrop, b: LookCrop): Rgb | null {
  * neighbouring lines, horizontally and vertically. A hard step reads about
  * 0.8 px; a Gaussian blur of sigma s about 2.56 s. Median over the edges.
  */
-function edgeWidths(c: LookCrop, minContrast: number): { edgeWidth: number | null; edges: number } {
+function edgeWidths(
+  c: LookCrop,
+  minContrast: number,
+): { edgeWidth: number | null; p90: number | null; edges: number } {
   const R = LOOK_DEFAULTS.edgeReach;
   const half = LOOK_DEFAULTS.edgeLines >> 1;
   const Y = new Float64Array(c.width * c.height);
@@ -953,8 +962,12 @@ function edgeWidths(c: LookCrop, minContrast: number): { edgeWidth: number | nul
   };
   scan(c.width, c.height, (u, v) => Y[v * c.width + u]);
   scan(c.height, c.width, (u, v) => Y[u * c.width + v]);
-  if (widths.length < 3) return { edgeWidth: null, edges: widths.length };
-  return { edgeWidth: Math.round(median(widths) * 100) / 100, edges: widths.length };
+  if (widths.length < 3) return { edgeWidth: null, p90: null, edges: widths.length };
+  return {
+    edgeWidth: Math.round(median(widths) * 100) / 100,
+    p90: Math.round(percentile(widths, 90) * 100) / 100,
+    edges: widths.length,
+  };
 }
 
 export interface LookLevels {
@@ -997,9 +1010,31 @@ export interface LookRegionReport {
   levels: LookLevels;
   /** Per channel, in 8-bit steps (one step is 1/255). */
   grain: { spatial: Rgb };
-  sharpness: { edgeWidth: number | null; edges: number };
+  /** Median and widest tenth (90th percentile) of the 10 to 90% widths, px. */
+  sharpness: { edgeWidth: number | null; p90: number | null; edges: number };
   /** CIELAB of the region's mean colour. */
   colour: Lab;
+  /**
+   * With alpha: the matte's own edge, read on the alpha (10 to 90% widths, median and widest
+   * tenth, px) and the soft band, soft pixels (alpha 0.02 to 0.98) per pixel of outline.
+   */
+  matte?: {
+    edgeWidth: number | null;
+    p90: number | null;
+    edges: number;
+    softBand: number | null;
+    /** Share of the region's pixels at alpha 0.99 or more, and the lowest alpha: a region inside the subject reads 1 and 1. */
+    opaqueShare: number;
+    minAlpha: number;
+  };
+  /** With alpha: the soft band's colour (straight) against the colour well inside, and against `background`. */
+  edgeColour?: {
+    band: Lab | null;
+    inside: Lab | null;
+    difference: number | null;
+    towardBackground: number | null;
+    reading: string;
+  };
   cast?: {
     a: number;
     b: number;
@@ -1157,6 +1192,118 @@ export interface LookFrame {
   pairs?: Array<LookPairReport | { element: string; plate: string; error: string }>;
 }
 
+/** The matte's edge in a crop with alpha: widths on the alpha, and soft pixels per pixel of outline. */
+function matteEdge(c: LookCrop, minContrast: number): NonNullable<LookRegionReport["matte"]> {
+  const a = c.alpha as Float64Array;
+  const grey = new Float64Array(a.length * 3);
+  for (let q = 0; q < a.length; q++) grey[q * 3] = grey[q * 3 + 1] = grey[q * 3 + 2] = a[q];
+  const widths = edgeWidths(
+    { ...c, rgb: grey, use: new Uint8Array(a.length).fill(1) },
+    minContrast,
+  );
+  let soft = 0;
+  let outline = 0;
+  let opaque = 0;
+  let minAlpha = 1;
+  const w = c.width;
+  for (let y = 0; y < c.height; y++)
+    for (let x = 0; x < w; x++) {
+      const v = a[y * w + x];
+      if (v > 0.02 && v < 0.98) soft++;
+      if (v >= 0.99) opaque++;
+      if (v < minAlpha) minAlpha = v;
+      if (v < 0.5) continue;
+      const p = y * w + x;
+      if (
+        (x > 0 && a[p - 1] < 0.5) ||
+        (x < w - 1 && a[p + 1] < 0.5) ||
+        (y > 0 && a[p - w] < 0.5) ||
+        (y < c.height - 1 && a[p + w] < 0.5)
+      )
+        outline++;
+    }
+  return {
+    ...widths,
+    softBand: outline ? Math.round((soft / outline) * 100) / 100 : null,
+    opaqueShare: Math.round((opaque / a.length) * 10000) / 10000,
+    minAlpha: Math.round(minAlpha * 10000) / 10000,
+  };
+}
+
+/**
+ * The soft band's colour (pixels at alpha 0.2 to 0.98, straight colour) against the colour well
+ * inside (opaque, with nothing under 0.98 within 6 px), and how far it leans toward `background`:
+ * 0 is the inside's colour, 1 the background's. Wall colour left in the soft pixels rings the
+ * subject; a share under about 0.15 did not show on the take measured (keying.md).
+ */
+function edgeColourOf(
+  c: LookCrop,
+  background: Rgb | undefined,
+): NonNullable<LookRegionReport["edgeColour"]> {
+  const a = c.alpha as Float64Array;
+  const w = c.width;
+  const band = [0, 0, 0];
+  const inside = [0, 0, 0];
+  let nb = 0;
+  let ni = 0;
+  for (let y = 0; y < c.height; y++)
+    for (let x = 0; x < w; x++) {
+      const p = y * w + x;
+      const v = a[p];
+      if (v > 0.2 && v < 0.98) {
+        for (let k = 0; k < 3; k++) band[k] += c.rgb[p * 3 + k];
+        nb++;
+      } else if (v >= 0.98) {
+        let deep = true;
+        for (let dy = -6; dy <= 6 && deep; dy += 2)
+          for (let dx = -6; dx <= 6; dx += 2) {
+            const yy = y + dy;
+            const xx = x + dx;
+            if (yy < 0 || xx < 0 || yy >= c.height || xx >= w || a[yy * w + xx] < 0.98) {
+              deep = false;
+              break;
+            }
+          }
+        if (deep) {
+          for (let k = 0; k < 3; k++) inside[k] += c.rgb[p * 3 + k];
+          ni++;
+        }
+      }
+    }
+  if (!nb || !ni)
+    return {
+      band: nb ? labOf(band.map((v) => v / nb) as Rgb) : null,
+      inside: ni ? labOf(inside.map((v) => v / ni) as Rgb) : null,
+      difference: null,
+      towardBackground: null,
+      reading: !nb
+        ? "no soft edge in the region"
+        : "nothing far enough inside the edge to compare with",
+    };
+  const lb = labOf(band.map((v) => v / nb) as Rgb);
+  const li = labOf(inside.map((v) => v / ni) as Rgb);
+  const difference = Math.round(Math.hypot(lb.L - li.L, lb.a - li.a, lb.b - li.b) * 10) / 10;
+  let toward: number | null = null;
+  if (background) {
+    const lw = labOf(background);
+    const dir = [lw.L - li.L, lw.a - li.a, lw.b - li.b];
+    const d = [lb.L - li.L, lb.a - li.a, lb.b - li.b];
+    const n2 = dir[0] ** 2 + dir[1] ** 2 + dir[2] ** 2;
+    toward =
+      n2 > 0
+        ? Math.round(((d[0] * dir[0] + d[1] * dir[1] + d[2] * dir[2]) / n2) * 100) / 100
+        : null;
+  }
+  const reading =
+    toward === null
+      ? `The soft edge differs from the colour well inside by ${difference} (CIELAB); give \`background\` (the wall's colour) to read how much of it is the background.`
+      : `The soft edge's colour sits ${Math.round(toward * 100)}% of the way from the colour well inside toward the background (${difference} apart, CIELAB)` +
+        (toward > 0.25
+          ? ": background colour left in the edge, which rings the subject over a new background; Decontaminate Edge Colors takes it out."
+          : ".");
+  return { band: lb, inside: li, difference, towardBackground: toward, reading };
+}
+
 /** Grain, edge width, black and white points and colour of each region, and each element against its plate. */
 export function measureLook(img: DecodedPng, args: LookArgs): LookFrame {
   const minContrast = args.minContrast ?? LOOK_DEFAULTS.minContrast;
@@ -1180,6 +1327,10 @@ export function measureLook(img: DecodedPng, args: LookArgs): LookFrame {
       sharpness: edgeWidths(c, minContrast),
       colour,
     };
+    if (c.alpha) {
+      rep.matte = matteEdge(c, minContrast);
+      rep.edgeColour = edgeColourOf(c, args.background as Rgb | undefined);
+    }
     roleReading(r.name, r.role ?? null, colour, levels, rep);
     return rep;
   });
@@ -1202,7 +1353,7 @@ export function measureLook(img: DecodedPng, args: LookArgs): LookFrame {
 }
 
 export interface LookSeries {
-  regions: Array<{ name: string; temporal: Rgb | null; pairs: number }>;
+  regions: Array<{ name: string; temporal: Rgb | null; pairs: number; matteChange: number | null }>;
   pairs?: Array<{
     element: string;
     plate: string;
@@ -1228,7 +1379,18 @@ export function summarizeLookSeries(
     const temporal = per.length
       ? ([0, 1, 2].map((k) => Math.round(median(per.map((p) => p[k])) * 100) / 100) as Rgb)
       : null;
-    return { name: r.name, temporal, pairs: per.length };
+    // The matte's change from frame to frame: mean |change in alpha| over the region, median over the pairs.
+    const changes: number[] = [];
+    for (let i = 1; i < frames.length; i++) {
+      const a = frames[i - 1].get(r.name)?.alpha;
+      const b = frames[i].get(r.name)?.alpha;
+      if (!a || !b || a.length !== b.length) continue;
+      let sum = 0;
+      for (let q = 0; q < a.length; q++) sum += Math.abs(b[q] - a[q]);
+      changes.push(sum / a.length);
+    }
+    const matteChange = changes.length ? Math.round(median(changes) * 10000) / 10000 : null;
+    return { name: r.name, temporal, pairs: per.length, matteChange };
   });
   const out: LookSeries = { regions };
   if (args.pairs?.length) {
@@ -1285,6 +1447,13 @@ export function lookArgsError(args: Record<string, unknown>): string | null {
         return `\`look.pairs\` names plate '${String(p?.plate)}', which is not a region`;
     }
   }
+  if (
+    args.background !== undefined &&
+    (!Array.isArray(args.background) ||
+      args.background.length !== 3 ||
+      !args.background.every((v) => typeof v === "number" && v >= 0 && v <= 1))
+  )
+    return "`look.background` must be [r, g, b], each 0..1";
   for (const k of ["minContrast", "grainTolerance", "sharpnessTolerance"]) {
     const v = args[k];
     if (v !== undefined && (typeof v !== "number" || !(v > 0) || v > 1))
