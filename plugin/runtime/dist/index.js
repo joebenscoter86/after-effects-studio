@@ -44602,7 +44602,7 @@ function measureEdge(img, bg, t) {
   }
   widths.sort((a, b) => a - b);
   const m = widths.length;
-  const median2 = m === 0 ? null : m % 2 ? widths[(m - 1) / 2] : (widths[m / 2 - 1] + widths[m / 2]) / 2;
+  const median3 = m === 0 ? null : m % 2 ? widths[(m - 1) / 2] : (widths[m / 2 - 1] + widths[m / 2]) / 2;
   const belowOpaque = labelRegions(
     alpha,
     width,
@@ -44690,9 +44690,9 @@ function measureEdge(img, bg, t) {
     if (solid) solidCount++;
     else edgeCount++;
   }
-  const meanOf = (s, k) => k === 0 ? null : [s[0] / k, s[1] / k, s[2] / k];
-  const edgeMean = meanOf(edgeSum, edgeCount);
-  const solidMean = meanOf(solidSum, solidCount);
+  const meanOf2 = (s, k) => k === 0 ? null : [s[0] / k, s[1] / k, s[2] / k];
+  const edgeMean = meanOf2(edgeSum, edgeCount);
+  const solidMean = meanOf2(solidSum, solidCount);
   const excess = edgeMean ? screenExcess(edgeMean, t.screen) : null;
   const solidExcess = solidMean ? screenExcess(solidMean, t.screen) : null;
   const leans = excess !== null && excess > t.spillThreshold && (solidExcess === null || excess - solidExcess > t.spillThreshold);
@@ -44706,7 +44706,7 @@ function measureEdge(img, bg, t) {
       transparent: r4(transparent / n)
     },
     width: {
-      typical: median2 === null ? null : r2(median2),
+      typical: median3 === null ? null : r2(median3),
       p90: m === 0 ? null : r2(widths[Math.floor(0.9 * (m - 1))]),
       worst: m === 0 ? null : r2(worst),
       worstAt,
@@ -46008,6 +46008,418 @@ function composeContactSheet(frames, opts = {}) {
 function frameLabel(index, time3) {
   return time3 === void 0 ? `#${index}` : `#${index} ${time3.toFixed(3)}s`;
 }
+var LOOK_ROLES = ["neutral", "skin", "plate", "element"];
+var LOOK_DEFAULTS = {
+  minContrast: 0.1,
+  grainTolerance: 0.25,
+  sharpnessTolerance: 0.25,
+  levelTolerance: 0.02,
+  castAbove: 2,
+  /** Pixels at or above this alpha count as the element when the frame has alpha. */
+  opaque: 0.98,
+  /** Half-length of the profile read across an edge, px: edges up to about 10 px wide (sigma 4). */
+  edgeReach: 12,
+  /** Profiles are the mean of this many neighbouring lines. */
+  edgeLines: 5,
+  /** Skin hue angle (CIELAB h, degrees) commonly reported for skin of many tones under neutral light. */
+  skinHue: [40, 65]
+};
+var srgbToLinear = (c) => c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+var labF = (t) => t > (6 / 29) ** 3 ? Math.cbrt(t) : t / (3 * (6 / 29) ** 2) + 4 / 29;
+function labOf(rgb) {
+  const [r, g, b] = rgb.map((v) => srgbToLinear(Math.min(1, Math.max(0, v))));
+  const x = (0.4124564 * r + 0.3575761 * g + 0.1804375 * b) / 0.95047;
+  const y = 0.2126729 * r + 0.7151522 * g + 0.072175 * b;
+  const z2 = (0.0193339 * r + 0.119192 * g + 0.9503041 * b) / 1.08883;
+  const fx = labF(x);
+  const fy = labF(y);
+  const fz = labF(z2);
+  const L = 116 * fy - 16;
+  const A = 500 * (fx - fy);
+  const B = 200 * (fy - fz);
+  const hue = (Math.atan2(B, A) * 180 / Math.PI + 360) % 360;
+  const r22 = (v) => Math.round(v * 100) / 100;
+  return {
+    L: r22(L),
+    a: r22(A),
+    b: r22(B),
+    chroma: r22(Math.hypot(A, B)),
+    hue: Math.round(hue * 10) / 10
+  };
+}
+var luma = (c) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+function neutralGains(rgb) {
+  const k = luma(rgb);
+  return rgb.map((v) => v > 0 ? k / v : 1);
+}
+function cropOf(img, rect, opaque) {
+  const { x, y, width, height } = rect;
+  const rgb = new Float64Array(width * height * 3);
+  const use = new Uint8Array(width * height);
+  for (let j = 0; j < height; j++)
+    for (let i = 0; i < width; i++) {
+      const p = (y + j) * img.width + (x + i);
+      const q = j * width + i;
+      for (let c = 0; c < 3; c++) rgb[q * 3 + c] = img.rgb[p * 3 + c];
+      use[q] = !img.alpha || img.alpha[p] >= opaque ? 1 : 0;
+    }
+  return { rect, width, height, rgb, use };
+}
+function lookCrops(img, args) {
+  const out = /* @__PURE__ */ new Map();
+  for (const r of args.regions) {
+    const clip = clipRegion(img, r);
+    if (clip) out.set(r.name, cropOf(img, clip.rect, LOOK_DEFAULTS.opaque));
+  }
+  return out;
+}
+var MAD_TO_SD = 1.4826;
+function median2(v) {
+  if (!v.length) return NaN;
+  const s = v.slice().sort((a, b) => a - b);
+  const m = s.length >> 1;
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+function percentile(v, p) {
+  if (!v.length) return NaN;
+  const s = v.slice().sort((a, b) => a - b);
+  return s[Math.min(s.length - 1, Math.max(0, Math.round(p / 100 * (s.length - 1))))];
+}
+var robustSd = (v) => {
+  const m = median2(v);
+  const band = Math.max(4 * MAD_TO_SD * median2(v.map((x) => Math.abs(x - m))), 3 / 255);
+  let n = 0;
+  let sum = 0;
+  let sq = 0;
+  for (const x of v)
+    if (Math.abs(x - m) <= band) {
+      n++;
+      sum += x;
+      sq += x * x;
+    }
+  if (n < 2) return 0;
+  const mean = sum / n;
+  return Math.sqrt(Math.max(0, sq / n - mean * mean));
+};
+var steps = (v) => Math.round(v * 255 * 100) / 100;
+function spatialGrain(c) {
+  const out = [];
+  const scale = 1 / Math.sqrt(8 / 9);
+  for (let ch = 0; ch < 3; ch++) {
+    const res = [];
+    for (let y = 1; y < c.height - 1; y += 1)
+      for (let x = 1; x < c.width - 1; x += 1) {
+        let ok = true;
+        let sum = 0;
+        for (let dy = -1; dy <= 1 && ok; dy++)
+          for (let dx = -1; dx <= 1; dx++) {
+            const q = (y + dy) * c.width + (x + dx);
+            if (!c.use[q]) {
+              ok = false;
+              break;
+            }
+            sum += c.rgb[q * 3 + ch];
+          }
+        if (!ok) continue;
+        res.push(c.rgb[(y * c.width + x) * 3 + ch] - sum / 9);
+      }
+    out.push(res.length ? steps(robustSd(res) * scale) : NaN);
+  }
+  return out;
+}
+function temporalGrain(a, b) {
+  if (a.width !== b.width || a.height !== b.height) return null;
+  const out = [];
+  for (let ch = 0; ch < 3; ch++) {
+    const d = [];
+    for (let q = 0; q < a.use.length; q++)
+      if (a.use[q] && b.use[q]) d.push(b.rgb[q * 3 + ch] - a.rgb[q * 3 + ch]);
+    if (!d.length) return null;
+    out.push(steps(robustSd(d) / Math.SQRT2));
+  }
+  return out;
+}
+function edgeWidths(c, minContrast) {
+  const R = LOOK_DEFAULTS.edgeReach;
+  const half = LOOK_DEFAULTS.edgeLines >> 1;
+  const Y = new Float64Array(c.width * c.height);
+  for (let q = 0; q < Y.length; q++)
+    Y[q] = c.use[q] ? luma([c.rgb[q * 3], c.rgb[q * 3 + 1], c.rgb[q * 3 + 2]]) : NaN;
+  const widths = [];
+  const scan = (along, across, at) => {
+    for (let v = half; v < across - half; v += 2) {
+      const prof = (u2) => {
+        let s = 0;
+        for (let k = -half; k <= half; k++) s += at(u2, v + k);
+        return s / (2 * half + 1);
+      };
+      let u = R;
+      while (u < along - R - 1) {
+        const d = Math.abs(prof(u + 1) - prof(u));
+        const span = prof(u + R + 1) - prof(u - R);
+        if (!Number.isFinite(d) || !Number.isFinite(span) || Math.abs(span) < minContrast) {
+          u++;
+          continue;
+        }
+        let best = u;
+        let bestD = d;
+        for (let w = Math.max(R, u - R); w <= Math.min(along - R - 2, u + R); w++) {
+          const dw = Math.abs(prof(w + 1) - prof(w));
+          if (dw > bestD) {
+            best = w;
+            bestD = dw;
+          }
+        }
+        if (best !== u) {
+          u = best > u ? best : u + 1;
+          continue;
+        }
+        const p = [];
+        for (let k = -R; k <= R + 1; k++) p.push(prof(u + k));
+        const lo = (p[0] + p[1]) / 2;
+        const hi = (p[p.length - 1] + p[p.length - 2]) / 2;
+        if (Math.abs(hi - lo) >= minContrast * 0.8) {
+          const q = p.map((x) => (x - lo) / (hi - lo));
+          const cross = (t) => {
+            for (let k = 1; k < q.length; k++)
+              if (q[k] >= t) return k - 1 + (t - q[k - 1]) / (q[k] - q[k - 1] || 1);
+            return NaN;
+          };
+          const wdt = cross(0.9) - cross(0.1);
+          if (Number.isFinite(wdt) && wdt > 0) widths.push(wdt);
+        }
+        u += R;
+      }
+    }
+  };
+  scan(c.width, c.height, (u, v) => Y[v * c.width + u]);
+  scan(c.height, c.width, (u, v) => Y[u * c.width + v]);
+  if (widths.length < 3) return { edgeWidth: null, edges: widths.length };
+  return { edgeWidth: Math.round(median2(widths) * 100) / 100, edges: widths.length };
+}
+function levelsOf(c) {
+  const ch = [[], [], []];
+  const Ys = [];
+  for (let q = 0; q < c.use.length; q++) {
+    if (!c.use[q]) continue;
+    const px2 = [c.rgb[q * 3], c.rgb[q * 3 + 1], c.rgb[q * 3 + 2]];
+    for (let k = 0; k < 3; k++) ch[k].push(px2[k]);
+    Ys.push(luma(px2));
+  }
+  const mean = ch.map((v) => v.reduce((s, x) => s + x, 0) / (v.length || 1));
+  return {
+    black: r4rgb2(ch.map((v) => percentile(v, 0.5))),
+    white: r4rgb2(ch.map((v) => percentile(v, 99.5))),
+    mean: r4rgb2(mean),
+    lumaBlack: r42(percentile(Ys, 0.5)),
+    lumaWhite: r42(percentile(Ys, 99.5)),
+    lumaMean: r42(luma(mean))
+  };
+}
+var signed = (v) => `${v >= 0 ? "+" : ""}${v.toFixed(1)}`;
+function castWords(a, b) {
+  const parts = [];
+  if (Math.abs(a) >= LOOK_DEFAULTS.castAbove)
+    parts.push([Math.abs(a), a > 0 ? "magenta" : "green"]);
+  if (Math.abs(b) >= LOOK_DEFAULTS.castAbove) parts.push([Math.abs(b), b > 0 ? "yellow" : "blue"]);
+  if (!parts.length) return null;
+  return parts.sort((x, y) => y[0] - x[0]).map((p) => p[1]).join(" and ");
+}
+function roleReading(name, role, lab, levels, rep) {
+  if (role === "neutral") {
+    const toward = castWords(lab.a, lab.b);
+    const gains = neutralGains(levels.mean);
+    const mix = (g) => Math.round(g * 100);
+    rep.cast = {
+      a: lab.a,
+      b: lab.b,
+      amount: lab.chroma,
+      toward,
+      gains: [r42(gains[0]), r42(gains[1]), r42(gains[2])],
+      channelMixer: {
+        "Red-Red": mix(gains[0]),
+        "Green-Green": mix(gains[1]),
+        "Blue-Blue": mix(gains[2])
+      }
+    };
+    rep.reading = toward ? `${name} reads a* ${signed(lab.a)}, b* ${signed(lab.b)} (CIELAB): a cast toward ${toward} of ${lab.chroma.toFixed(1)}, if the surface is really neutral; a neutral reads 0, 0, and under about 2 is hard to see. Gains on the display values that make it neutral at its own brightness: red ${rep.cast.gains[0]}, green ${rep.cast.gains[1]}, blue ${rep.cast.gains[2]} (Channel Mixer Red-Red ${rep.cast.channelMixer["Red-Red"]}, Green-Green ${rep.cast.channelMixer["Green-Green"]}, Blue-Blue ${rep.cast.channelMixer["Blue-Blue"]}).` : `${name} reads neutral: a* ${signed(lab.a)}, b* ${signed(lab.b)} (CIELAB; under about 2 is hard to see).`;
+  } else if (role === "skin") {
+    const [lo, hi] = LOOK_DEFAULTS.skinHue;
+    const h = lab.hue > 270 ? lab.hue - 360 : lab.hue;
+    const where = h < lo ? `below the usual range, so it leans to magenta (pink); ${(lo - h).toFixed(0)}\xB0 short of ${lo}\xB0` : h > hi ? `above the usual range, so it leans to yellow; ${(h - hi).toFixed(0)}\xB0 past ${hi}\xB0` : "inside the usual range";
+    rep.reading = `${name} (skin) has a hue angle of ${h.toFixed(0)}\xB0 and chroma ${lab.chroma.toFixed(1)} (CIELAB): ${where}. Skin of many tones commonly reads about ${lo} to ${hi}\xB0 under neutral light; that range is a general reference, not measured on this footage, so judge it against a neutral in the same light as well.`;
+  }
+}
+var meanOf = (v) => v.reduce((s, x) => s + x, 0) / v.length;
+function compareLook(element, plate, tol = {}) {
+  const gt = tol.grain ?? LOOK_DEFAULTS.grainTolerance;
+  const st = tol.sharpness ?? LOOK_DEFAULTS.sharpnessTolerance;
+  const eg = meanOf(element.grain.spatial);
+  const pg = meanOf(plate.grain.spatial);
+  const gRatio = pg > 0 ? Math.round(eg / pg * 100) / 100 : null;
+  const gMatch = gRatio === null ? null : Math.abs(gRatio - 1) <= gt;
+  const ew = element.sharpness.edgeWidth;
+  const pw = plate.sharpness.edgeWidth;
+  const sRatio = ew !== null && pw !== null && pw > 0 ? Math.round(ew / pw * 100) / 100 : null;
+  const sMatch = sRatio === null ? null : Math.abs(sRatio - 1) <= st;
+  const bd = r42(element.levels.lumaBlack - plate.levels.lumaBlack);
+  const wd = r42(element.levels.lumaWhite - plate.levels.lumaWhite);
+  const readings = [];
+  const e = element.name;
+  if (gRatio !== null && !gMatch)
+    readings.push(
+      gRatio < 1 ? `${e} is cleaner than the plate: add grain (grain ${eg.toFixed(2)} against ${pg.toFixed(2)} 8-bit steps).` : `${e} is grainier than the plate: take grain out or add less (${eg.toFixed(2)} against ${pg.toFixed(2)} 8-bit steps).`
+    );
+  if (sRatio !== null && !sMatch)
+    readings.push(
+      sRatio < 1 ? `${e} is sharper than the plate: soften it (edges ${ew} px against ${pw} px wide, 10 to 90%).` : `${e} is softer than the plate: sharpen it, or soften the plate's match less (edges ${ew} px against ${pw} px).`
+    );
+  const deepest = "if both regions hold the deepest shadow of their picture";
+  const brightest = "if both regions hold the brightest highlight of their picture";
+  if (Math.abs(bd) > LOOK_DEFAULTS.levelTolerance)
+    readings.push(
+      bd > 0 ? `${e}'s blacks are lifted against the plate's (${element.levels.lumaBlack} against ${plate.levels.lumaBlack}): ${deepest}, seat them lower.` : `${e}'s blacks are deeper than the plate's (${element.levels.lumaBlack} against ${plate.levels.lumaBlack}): ${deepest}, lift them.`
+    );
+  if (Math.abs(wd) > LOOK_DEFAULTS.levelTolerance)
+    readings.push(
+      wd > 0 ? `${e}'s whites are brighter than the plate's (${element.levels.lumaWhite} against ${plate.levels.lumaWhite}): ${brightest}, bring them down.` : `${e}'s whites are duller than the plate's (${element.levels.lumaWhite} against ${plate.levels.lumaWhite}): ${brightest}, bring them up.`
+    );
+  if (pw === null || ew === null)
+    readings.push(
+      "Edge width was not compared: one side has no edge strong enough to read; pick regions that each hold an edge."
+    );
+  if (!readings.length)
+    readings.push(
+      `${e} matches the plate in grain, edge width and black and white points, within the tolerances.`
+    );
+  return {
+    element: element.name,
+    plate: plate.name,
+    grain: {
+      element: Math.round(eg * 100) / 100,
+      plate: Math.round(pg * 100) / 100,
+      ratio: gRatio,
+      matches: gMatch
+    },
+    sharpness: { element: ew, plate: pw, ratio: sRatio, matches: sMatch },
+    levels: { blackDifference: bd, whiteDifference: wd },
+    readings
+  };
+}
+function measureLook(img, args) {
+  const minContrast = args.minContrast ?? LOOK_DEFAULTS.minContrast;
+  const regions = args.regions.map((r) => {
+    const clip = clipRegion(img, r);
+    if (!clip) return outside(img, r);
+    const c = cropOf(img, clip.rect, LOOK_DEFAULTS.opaque);
+    let pixels = 0;
+    for (const u of c.use) pixels += u;
+    if (!pixels) return { name: r.name, error: "no opaque pixels in the region" };
+    const levels = levelsOf(c);
+    const colour = labOf(levels.mean);
+    const rep = {
+      name: r.name,
+      role: r.role ?? null,
+      rect: clip.rect,
+      clipped: clip.clipped,
+      pixels,
+      levels,
+      grain: { spatial: spatialGrain(c) },
+      sharpness: edgeWidths(c, minContrast),
+      colour
+    };
+    roleReading(r.name, r.role ?? null, colour, levels, rep);
+    return rep;
+  });
+  const out = { regions };
+  if (args.pairs?.length) {
+    const byName = new Map(regions.map((r) => [r.name, r]));
+    out.pairs = args.pairs.map((p) => {
+      const e = byName.get(p.element);
+      const pl = byName.get(p.plate);
+      if (!e || "error" in e || !pl || "error" in pl)
+        return {
+          element: p.element,
+          plate: p.plate,
+          error: "one side of the pair could not be measured"
+        };
+      return compareLook(e, pl, { grain: args.grainTolerance, sharpness: args.sharpnessTolerance });
+    });
+  }
+  return out;
+}
+function summarizeLookSeries(frames, args) {
+  const regions = args.regions.map((r) => {
+    const per = [];
+    for (let i = 1; i < frames.length; i++) {
+      const a = frames[i - 1].get(r.name);
+      const b = frames[i].get(r.name);
+      const t = a && b ? temporalGrain(a, b) : null;
+      if (t) per.push(t);
+    }
+    const temporal = per.length ? [0, 1, 2].map((k) => Math.round(median2(per.map((p) => p[k])) * 100) / 100) : null;
+    return { name: r.name, temporal, pairs: per.length };
+  });
+  const out = { regions };
+  if (args.pairs?.length) {
+    const by = new Map(regions.map((r) => [r.name, r]));
+    out.pairs = args.pairs.map((p) => {
+      const et = by.get(p.element)?.temporal;
+      const pt = by.get(p.plate)?.temporal;
+      const e = et ? Math.round(meanOf(et) * 100) / 100 : null;
+      const pl = pt ? Math.round(meanOf(pt) * 100) / 100 : null;
+      const readings = [];
+      if (e !== null && pl !== null && pl > 0.3) {
+        if (e < pl * 0.25)
+          readings.push(
+            `${p.element}'s grain does not change from frame to frame and the plate's does (${e} against ${pl} 8-bit steps): animate the grain.`
+          );
+        else if (Math.abs(e / pl - 1) > (args.grainTolerance ?? LOOK_DEFAULTS.grainTolerance))
+          readings.push(
+            `${p.element}'s frame-to-frame grain is ${e} against the plate's ${pl} 8-bit steps.`
+          );
+      }
+      return {
+        element: p.element,
+        plate: p.plate,
+        element_temporal: e,
+        plate_temporal: pl,
+        readings
+      };
+    });
+  }
+  return out;
+}
+function lookArgsError(args) {
+  const regions = args.regions;
+  if (!Array.isArray(regions) || regions.length === 0 || regions.length > 64)
+    return "`look.regions` must list 1 to 64 regions";
+  const names = /* @__PURE__ */ new Set();
+  for (const r of regions) {
+    if (typeof r?.name !== "string" || !r.name) return "every `look.regions` entry needs a name";
+    if (names.has(r.name)) return `\`look.regions\` names '${r.name}' twice`;
+    names.add(r.name);
+    if (typeof r.x !== "number" || typeof r.y !== "number")
+      return `\`look.regions\` '${r.name}' needs x and y`;
+    if (r.role !== void 0 && !LOOK_ROLES.includes(r.role))
+      return `\`look.regions\` '${r.name}' has role '${String(r.role)}'; use ${LOOK_ROLES.join(", ")}`;
+  }
+  if (args.pairs !== void 0) {
+    if (!Array.isArray(args.pairs)) return "`look.pairs` must be a list of { element, plate }";
+    for (const p of args.pairs) {
+      if (!names.has(String(p?.element)))
+        return `\`look.pairs\` names element '${String(p?.element)}', which is not a region`;
+      if (!names.has(String(p?.plate)))
+        return `\`look.pairs\` names plate '${String(p?.plate)}', which is not a region`;
+    }
+  }
+  for (const k of ["minContrast", "grainTolerance", "sharpnessTolerance"]) {
+    const v = args[k];
+    if (v !== void 0 && (typeof v !== "number" || !(v > 0) || v > 1))
+      return `\`look.${k}\` must be a number above 0 and at most 1`;
+  }
+  return null;
+}
 
 // src/operations/keying.ts
 init_config();
@@ -47048,7 +47460,7 @@ function screenArgsError(args) {
 }
 var r43 = (v) => Math.round(v * 1e4) / 1e4;
 var r4rgb3 = (v) => [r43(v[0]), r43(v[1]), r43(v[2])];
-var luma = (c) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+var luma2 = (c) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
 var CH = { green: 1, blue: 2 };
 function screenTest(rgb, p, ch, t) {
   const v = rgb[p * 3 + ch];
@@ -47147,7 +47559,7 @@ function measureScreen(img, t) {
     if (y < minY) minY = y;
     if (y > maxY) maxY = y;
   }
-  const median2 = histMedian(hist, count);
+  const median3 = histMedian(hist, count);
   const mean = [sum[0] / count, sum[1] / count, sum[2] / count];
   const labels = new Int32Array(n);
   const queue = new Int32Array(n);
@@ -47204,11 +47616,11 @@ function measureScreen(img, t) {
   base.screenPixels = count;
   base.share = r43(count / measured);
   base.bounds = { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
-  base.colour = { median: r4rgb3(median2), mean: r4rgb3(mean), nearSubject };
+  base.colour = { median: r4rgb3(median3), mean: r4rgb3(mean), nearSubject };
   base.subject = subject;
   base.evenness = evenness;
   base.grain = grain;
-  base.reading = `${kind} screen, ${Math.round(base.share * 100)}% of the measured pixels; median ${fmt4(median2)}` + (near ? `, near the subject ${fmt4(near)}` : "") + `. ${evenness.reading}. ${grain ? grain.reading : "grain not measured (no screen pixel has screen all round it)"}.`;
+  base.reading = `${kind} screen, ${Math.round(base.share * 100)}% of the measured pixels; median ${fmt4(median3)}` + (near ? `, near the subject ${fmt4(near)}` : "") + `. ${evenness.reading}. ${grain ? grain.reading : "grain not measured (no screen pixel has screen all round it)"}.`;
   return base;
 }
 function measureEvenness(img, isScreen, measuredAt, ch, kind, t) {
@@ -47267,7 +47679,7 @@ function measureEvenness(img, isScreen, measuredAt, ch, kind, t) {
         box: { x: xs[c], y: ys[r], width: xs[c + 1] - xs[c], height: ys[r + 1] - ys[r] },
         screenShare: m > 0 ? r43(k / m) : 0,
         mean: cellMean ? r4rgb3(cellMean) : null,
-        luma: cellMean ? r43(luma(cellMean)) : null,
+        luma: cellMean ? r43(luma2(cellMean)) : null,
         level: cellMean ? r43(cellMean[ch]) : null
       });
     }
@@ -47403,14 +47815,14 @@ function measureGrain(img, isScreen, ch, kind, t) {
   const sd = [0, 1, 2].map((c) => Math.sqrt(ss[c] / k * 9 / 8));
   const level = sd[ch];
   const grainy = level > t.grainAbove;
-  const steps = level * 255;
+  const steps2 = level * 255;
   return {
     stdDev: r4rgb3(sd),
     level: r43(level),
-    steps8bit: Math.round(steps * 100) / 100,
+    steps8bit: Math.round(steps2 * 100) / 100,
     samples: k,
     grainy,
-    reading: `grain: ${kind} varies by ${level.toFixed(4)} (standard deviation, about ${steps.toFixed(1)} 8-bit steps) about its local mean` + (grainy ? "; grainy enough to break a hard matte into specks and chatter, so try Keylight's Screen Pre-blur before raising Clip Black" : "; fine enough not to need pre-blur")
+    reading: `grain: ${kind} varies by ${level.toFixed(4)} (standard deviation, about ${steps2.toFixed(1)} 8-bit steps) about its local mean` + (grainy ? "; grainy enough to break a hard matte into specks and chatter, so try Keylight's Screen Pre-blur before raising Clip Black" : "; fine enough not to need pre-blur")
   };
 }
 
@@ -48302,7 +48714,7 @@ var regionSchema = external_exports.object({
 var renderFrameTool = defineTool({
   name: "ae_render_frame",
   title: "Render frame",
-  description: "Render one or more frames to PNG. Use to visually verify edits. The agent's 'eyes' \u2014 pair with mutations for a visual feedback loop. Headless and deterministic. Pass `time` for one frame, or `times` for several in ONE call (motion checks): files land at <outPath stem>_<index>.png and are listed in `frames`. `contactSheet` tiles every frame into one labelled PNG (<stem>_sheet.png) so a motion check is one image; `analyze` measures each capture (uniform edge bands = black bars / transparent margins, content bounds, coverage) so off-frame elements and letterboxing are caught numerically. In color-managed projects (workingSpace != None) the capture applies AE's own display transform via a transient OCIO Display Transform adjustment layer, and the PNG comes back viewer-accurate and sRGB-tagged. Where that layer cannot be used \u2014 read-only mode, an AE without the OCIO effect, or a failed capture calibration \u2014 the result falls back to a pure-math ACES conversion or to raw values with an explicit colorWarning; check colorPipeline / colorWarning on the response. Seeing the matte: `channels` picks what the file holds \u2014 'rgb' (default, transparency composited over `over`: the comp background as AE composites it, a checkerboard or a colour such as '#ff00ff'), 'rgba' (alpha kept, straight colour), or 'alpha' (the matte as greyscale: white opaque, black transparent). `isolate` renders one layer or a list alone (cameras and lights stay as they are), then restores every layer switch, even when the render fails. `alphaChannel` reports whether the capture carried alpha at all. Reading colour: `sample` takes named points or rectangles and returns mean / min / max per channel and alpha coverage for each; `histogram` counts the whole frame per channel; `compare` (with `times` and `sample`) reports each region's difference between two of the rendered frames. Matte quality: `edge` reports, from the capture's alpha, the shares of opaque / partly transparent / transparent pixels, edge width (typical and worst, px), holes, specks, partly transparent patches that are not thin edges (an unkeyed screen, a remnant), the soft edge's colour with the comp background taken out and whether it leans to the screen colour (spill), and with `times` the frame-to-frame change in alpha along the edge, inside the solid area and outside it (flicker). Green screen: `screen`, on a render of the UN-KEYED source (Keylight View 'source' or the key off, the keyed layer isolated), reports green or blue, which pixels are screen and their share, a suggested screen colour (the median, and the colour just outside the subject), evenness on a grid (darkest and brightest cells, the spread as a ratio, the darker side) and grain. Watching motion: `diff` (with `times`) reports how much the picture changes between consecutive frames, where, and per `sample` region, and flags pairs that stand out (a one-frame pop, a stutter where a frame repeats, a cut); `strip: { at, frames }` renders the frames around a moment into one small contact sheet with diff on. For playback at speed, render.preview (ae_do) writes a quick movie. It reports numbers and places, never a pass or fail. Every number is labelled with its stage \u2014 'capture' (before colour conversion) or 'output' (the file as written) \u2014 described once in `measurementStages`.",
+  description: "Render one or more frames to PNG. Use to visually verify edits. The agent's 'eyes' \u2014 pair with mutations for a visual feedback loop. Headless and deterministic. Pass `time` for one frame, or `times` for several in ONE call (motion checks): files land at <outPath stem>_<index>.png and are listed in `frames`. `contactSheet` tiles every frame into one labelled PNG (<stem>_sheet.png) so a motion check is one image; `analyze` measures each capture (uniform edge bands = black bars / transparent margins, content bounds, coverage) so off-frame elements and letterboxing are caught numerically. In color-managed projects (workingSpace != None) the capture applies AE's own display transform via a transient OCIO Display Transform adjustment layer, and the PNG comes back viewer-accurate and sRGB-tagged. Where that layer cannot be used \u2014 read-only mode, an AE without the OCIO effect, or a failed capture calibration \u2014 the result falls back to a pure-math ACES conversion or to raw values with an explicit colorWarning; check colorPipeline / colorWarning on the response. Seeing the matte: `channels` picks what the file holds \u2014 'rgb' (default, transparency composited over `over`: the comp background as AE composites it, a checkerboard or a colour such as '#ff00ff'), 'rgba' (alpha kept, straight colour), or 'alpha' (the matte as greyscale: white opaque, black transparent). `isolate` renders one layer or a list alone (cameras and lights stay as they are), then restores every layer switch, even when the render fails. `alphaChannel` reports whether the capture carried alpha at all. Reading colour: `sample` takes named points or rectangles and returns mean / min / max per channel and alpha coverage for each; `histogram` counts the whole frame per channel; `compare` (with `times` and `sample`) reports each region's difference between two of the rendered frames. Matte quality: `edge` reports, from the capture's alpha, the shares of opaque / partly transparent / transparent pixels, edge width (typical and worst, px), holes, specks, partly transparent patches that are not thin edges (an unkeyed screen, a remnant), the soft edge's colour with the comp background taken out and whether it leans to the screen colour (spill), and with `times` the frame-to-frame change in alpha along the edge, inside the solid area and outside it (flicker). Green screen: `screen`, on a render of the UN-KEYED source (Keylight View 'source' or the key off, the keyed layer isolated), reports green or blue, which pixels are screen and their share, a suggested screen colour (the median, and the colour just outside the subject), evenness on a grid (darkest and brightest cells, the spread as a ratio, the darker side) and grain. Sitting in the scene: `look` reads grain, edge width, black and white points and CIELAB colour of named regions, names the cast on a neutral (with the gains that remove it) and skin's hue, and compares an element with its plate (add grain, soften, seat the blacks); with `times` on consecutive frames, the grain from frame to frame. Watching motion: `diff` (with `times`) reports how much the picture changes between consecutive frames, where, and per `sample` region, and flags pairs that stand out (a one-frame pop, a stutter where a frame repeats, a cut); `strip: { at, frames }` renders the frames around a moment into one small contact sheet with diff on. For playback at speed, render.preview (ae_do) writes a quick movie. It reports numbers and places, never a pass or fail. Every number is labelled with its stage \u2014 'capture' (before colour conversion) or 'output' (the file as written) \u2014 described once in `measurementStages`.",
   group: "render",
   // Survives read-only mode: it writes a PNG, and the visual verification loop
   // is the whole point of an audit session. Note this is NOT a
@@ -48459,6 +48871,23 @@ var renderFrameTool = defineTool({
       })
     ]).optional().describe(
       "Measure a green or blue screen, on the capture (stage 'capture'), opaque pixels only; `true` for the defaults. Render the UN-KEYED source: set Keylight's View to 'source' (key.view) or switch the key off, and isolate the keyed layer. Reported as `screen` (per frame with `times`), with the thresholds used as `screenThresholds`: screen ('green' | 'blue' | null), chosen, measured / leftOut pixels, screenPixels, share, bounds; colour {median, mean, nearSubject {colour, pixels, band}} \u2014 the suggested Screen Colour; subject {box, area, share}; evenness {columns, rows, cells [{column, row, box, screenShare, mean, luma, level}], darkest, brightest, levelRatio, lumaRatio, uneven, extent (5th to 95th percentile of the screen pixels' positions), horizontal (right / left) and vertical (bottom / top) read across that extent, darkerSide (every side darker past unevenRatio, strongest first), reading}; grain {stdDev, level, steps8bit, samples, grainy, reading}; reading; warning; screenColourNote (capture values and what they mean for Keylight's Screen Colour)."
+    ),
+    look: external_exports.object({
+      regions: external_exports.array(
+        regionSchema.extend({
+          role: external_exports.enum(["neutral", "skin", "plate", "element"]).optional().describe(
+            "neutral: a surface that should read grey or white (a wall, a card, a metal grille) \u2014 its cast is named and the gains that remove it given; skin: its hue angle is read against the usual range; plate / element: for `pairs`."
+          )
+        })
+      ).min(1).max(64),
+      pairs: external_exports.array(external_exports.object({ element: external_exports.string(), plate: external_exports.string() })).optional().describe(
+        "Element regions read against plate regions, by name: grain, edge width, black and white points, with what to do."
+      ),
+      minContrast: external_exports.number().gt(0).max(1).optional().describe("Smallest luma step (0..1) read as an edge. Default 0.1."),
+      grainTolerance: external_exports.number().gt(0).max(1).optional().describe("Default 0.25: within a quarter of the plate's grain matches."),
+      sharpnessTolerance: external_exports.number().gt(0).max(1).optional().describe("Default 0.25: within a quarter of the plate's edge width matches.")
+    }).optional().describe(
+      "Does it sit in the scene: for each named region, on the file as written (stage 'output'; with channels 'rgba' only the opaque pixels, straight colour), levels {black, white, mean per channel, lumaBlack, lumaWhite, lumaMean} (0.5th and 99.5th percentiles, 0..1), grain {spatial: per channel in 8-bit steps, the robust spread of each pixel against its 3 x 3 neighbourhood}, sharpness {edgeWidth: median 10 to 90% rise across edges with a luma step of at least minContrast, px (a hard step about 0.8, a Gaussian blur of sigma s about 2.56 s), edges}, colour (CIELAB L, a, b, chroma, hue of the mean). role 'neutral' adds cast {a, b, amount, toward, gains, channelMixer} and a reading; role 'skin' a hue reading. pairs add, per element and plate, grain, sharpness and levels compared, with readings (add grain, soften, seat the blacks). With `times` on consecutive frames, lookSeries adds frame-to-frame grain per region (a still element reads 0). Reported as `look` (per frame with `times`)."
     ),
     diff: external_exports.union([
       external_exports.boolean(),
@@ -48651,6 +49080,12 @@ function checkEyesOptions(args, isStrip = false) {
     const problem = screenArgsError(screen);
     if (problem !== null) return invalid(problem);
   }
+  let look = null;
+  if (args.look !== void 0) {
+    const problem = lookArgsError(args.look);
+    if (problem !== null) return invalid(problem);
+    look = args.look;
+  }
   let diff = null;
   const diffArg = args.diff ?? (isStrip ? true : void 0);
   if (diffArg !== void 0 && diffArg !== false) {
@@ -48685,6 +49120,7 @@ function checkEyesOptions(args, isStrip = false) {
       compare,
       edge,
       screen,
+      look,
       diff
     }
   };
@@ -49008,6 +49444,7 @@ async function nativeFlow(args, opts, abs, transport2, strip = null) {
   let edgeMeasured = 0;
   let edgeFromLuma = 0;
   let withAlpha = 0;
+  const lookFrames = [];
   let writing = convert !== null;
   for (const [i, file2] of written.entries()) {
     if (!finished.has(i)) continue;
@@ -49083,6 +49520,19 @@ async function nativeFlow(args, opts, abs, transport2, strip = null) {
     }
     const pixels = { capture, output: output2 };
     if (opts.sample) put(i, "samples", sampleReport(pixels, opts.sample));
+    if (opts.look) {
+      try {
+        put(i, "look", measureLook(output2, opts.look));
+        if (multi)
+          lookFrames.push({
+            index: i,
+            frame: frames[i]?.frame,
+            crops: lookCrops(output2, opts.look)
+          });
+      } catch (err) {
+        payload.lookWarning = `look measurement failed: ${err instanceof Error ? err.message : String(err)}`;
+      }
+    }
     if (opts.histogram) {
       const { bins, stage } = opts.histogram;
       put(i, "histogram", { stage, ...histogramOf(pixels[stage], bins) });
@@ -49169,6 +49619,18 @@ async function nativeFlow(args, opts, abs, transport2, strip = null) {
     if (edgePairs.length > 0) {
       payload.edgeFlicker = { pairs: edgePairs, overall: summarizeFlicker(edgePairs) };
     }
+  }
+  if (opts.look && lookFrames.length >= 2) {
+    const consecutive = lookFrames.every(
+      (f, k) => k === 0 || typeof f.frame === "number" && typeof lookFrames[k - 1].frame === "number" && f.frame - lookFrames[k - 1].frame === 1
+    );
+    if (consecutive)
+      payload.lookSeries = summarizeLookSeries(
+        lookFrames.map((f) => f.crops),
+        opts.look
+      );
+    else
+      payload.lookWarning = "frame-to-frame grain needs consecutive frames (one frame apart, in order); these were not, so lookSeries was left out";
   }
   if (opts.compare && opts.sample) {
     const { from, to } = opts.compare;
@@ -50120,7 +50582,7 @@ registerOp({
   ],
   toJsx(args) {
     const mark = "CLIP";
-    const steps = subjectMatteSteps({
+    const steps2 = subjectMatteSteps({
       clip: mark,
       subject: typeof args.subject === "string" ? args.subject : void 0
     });
@@ -50181,7 +50643,7 @@ registerOp({
             var _existing = { objectMatte: _pick.index !== null, effectIndex: _pick.index, count: _pick.count || 0, selections: [] };
             if (_pick.index !== null) _existing.selections = _omSelections(_fxRoot.property(_pick.index)).list;
             _existing.summary = _omSummary(_pick.index !== null, _existing.selections);
-            var _tmpl = ${jsxVal(steps)};
+            var _tmpl = ${jsxVal(steps2)};
             var _steps = [];
             for (var _si = 0; _si < _tmpl.length; _si++) _steps.push(_tmpl[_si].split(${jsxVal(mark)}).join(_layer.name));
             var _notice = ${jsxVal(SUBJECT_MATTE_NOTICE)};
@@ -57334,7 +57796,7 @@ var TOP_CODE = 254.5 / 255;
 var BOTTOM_CODE = 0.5 / 255;
 var r63 = (v) => Math.round(v * 1e6) / 1e6;
 function measureFrame(pic, width, height, t) {
-  let luma2 = 0;
+  let luma3 = 0;
   let dark = 0;
   let light = 0;
   let hr = 0;
@@ -57360,7 +57822,7 @@ function measureFrame(pic, width, height, t) {
       const r = pic[i];
       const g = pic[i + 1];
       const b = pic[i + 2];
-      luma2 += 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      luma3 += 0.2126 * r + 0.7152 * g + 0.0722 * b;
       const max = r > g ? r > b ? r : b : g > b ? g : b;
       const min = r < g ? r < b ? r : b : g < b ? g : b;
       if (max <= darkBelow) dark++;
@@ -57394,7 +57856,7 @@ function measureFrame(pic, width, height, t) {
   const n = width * height || 1;
   const box2 = (x0, y0, x1, y1) => x1 < 0 ? null : { x: x0, y: y0, width: x1 - x0 + 1, height: y1 - y0 + 1 };
   return {
-    meanLuma: r63(luma2 / n),
+    meanLuma: r63(luma3 / n),
     darkShare: r63(dark / n),
     lightShare: r63(light / n),
     clipHigh: {

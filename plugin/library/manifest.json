@@ -178,10 +178,10 @@
     },
     {
       "id": "keying",
-      "title": "Green-screen keying and compositing procedure",
+      "title": "Keying, compositing and sitting an element in its scene",
       "path": "references/keying.md",
       "kind": "guidance",
-      "sha256": "16773b0eb4070d5ad27b2e0f269021d08b471c5f7ff4e92112bf2e07b7e1bcb9"
+      "sha256": "e4a565edd24582a943d39b2fcf2d0db441fd2d41d715a6f5aa26af2aff8d3320"
     },
     {
       "id": "scene-recipes",

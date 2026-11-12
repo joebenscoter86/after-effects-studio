@@ -124,6 +124,28 @@ export declare const renderFrameTool: import("./define-tool.js").ToolSpec<{
         unevenRatio: z.ZodOptional<z.ZodNumber>;
         grainAbove: z.ZodOptional<z.ZodNumber>;
     }, z.core.$strip>]>>;
+    look: z.ZodOptional<z.ZodObject<{
+        regions: z.ZodArray<z.ZodObject<{
+            name: z.ZodString;
+            x: z.ZodNumber;
+            y: z.ZodNumber;
+            width: z.ZodOptional<z.ZodNumber>;
+            height: z.ZodOptional<z.ZodNumber>;
+            role: z.ZodOptional<z.ZodEnum<{
+                neutral: "neutral";
+                skin: "skin";
+                plate: "plate";
+                element: "element";
+            }>>;
+        }, z.core.$strip>>;
+        pairs: z.ZodOptional<z.ZodArray<z.ZodObject<{
+            element: z.ZodString;
+            plate: z.ZodString;
+        }, z.core.$strip>>>;
+        minContrast: z.ZodOptional<z.ZodNumber>;
+        grainTolerance: z.ZodOptional<z.ZodNumber>;
+        sharpnessTolerance: z.ZodOptional<z.ZodNumber>;
+    }, z.core.$strip>>;
     diff: z.ZodOptional<z.ZodUnion<readonly [z.ZodBoolean, z.ZodObject<{
         changeAbove: z.ZodOptional<z.ZodNumber>;
         spikeRatio: z.ZodOptional<z.ZodNumber>;
