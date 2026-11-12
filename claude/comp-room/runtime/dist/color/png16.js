@@ -123,7 +123,7 @@ function chunk(type, data) {
   return Buffer.concat([head, data, crc]);
 }
 const to8 = (v) => Math.round(Math.min(1, Math.max(0, v)) * 255);
-function encode8(width, height, colorType, srgbTags, write) {
+function encode8(width, height, colorType, srgbTags, write, level = 6) {
   const channels = colorType === 0 ? 1 : colorType === 2 ? 3 : 4;
   const stride = width * channels;
   const raw = Buffer.alloc(height * (stride + 1));
@@ -143,16 +143,23 @@ function encode8(width, height, colorType, srgbTags, write) {
     PNG_SIGNATURE,
     chunk("IHDR", ihdr),
     ...srgbTags ? [chunk("sRGB", Buffer.from([0])), chunk("gAMA", gama)] : [],
-    chunk("IDAT", zlib.deflateSync(raw, { level: 6 })),
+    chunk("IDAT", zlib.deflateSync(raw, { level })),
     chunk("IEND", Buffer.alloc(0))
   ]);
 }
-function encodePngSrgb8(width, height, rgb) {
-  return encode8(width, height, 2, true, (p, out, at) => {
-    out[at] = to8(rgb[p * 3]);
-    out[at + 1] = to8(rgb[p * 3 + 1]);
-    out[at + 2] = to8(rgb[p * 3 + 2]);
-  });
+function encodePngSrgb8(width, height, rgb, level = 6) {
+  return encode8(
+    width,
+    height,
+    2,
+    true,
+    (p, out, at) => {
+      out[at] = to8(rgb[p * 3]);
+      out[at + 1] = to8(rgb[p * 3 + 1]);
+      out[at + 2] = to8(rgb[p * 3 + 2]);
+    },
+    level
+  );
 }
 function encodePngSrgbRgba8(width, height, rgb, alpha) {
   return encode8(width, height, 6, true, (p, out, at) => {

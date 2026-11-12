@@ -181,7 +181,7 @@
       "title": "Green-screen keying and compositing procedure",
       "path": "references/keying.md",
       "kind": "guidance",
-      "sha256": "9549389f83d5f461e556fbe041fbc1dd9075f0d4b89e11dc7ead290eac65e31d"
+      "sha256": "cce5af354a8a2a4672297e3b59b8298fa516b34725d205f83993d27fdbe81a11"
     },
     {
       "id": "scene-recipes",

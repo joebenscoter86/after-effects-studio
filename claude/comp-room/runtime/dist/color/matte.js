@@ -648,6 +648,7 @@ function cutoutRegions(alpha, width, height, opts = {}) {
   const minArea = opts.minArea ?? 1;
   const n = width * height;
   const a = Float64Array.from(alpha);
+  const original = alpha;
   const sealedEdge = new Int8Array(n).fill(-1);
   const EDGES = ["top", "bottom", "left", "right"];
   const edgePixels = (e) => {
@@ -661,7 +662,6 @@ function cutoutRegions(alpha, width, height, opts = {}) {
     }
     return out;
   };
-  const original = Float64Array.from(a);
   for (let e = 0; e < 4; e++) {
     const px = edgePixels(e);
     let first = -1;

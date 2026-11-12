@@ -144,6 +144,24 @@ export interface CutoutIO {
     }): Promise<Json>;
     writePng?(file: string, data: Buffer): Promise<void>;
 }
+/** Time spent in the renders a call made, summed over its ae_render_frame calls (ms). */
+export interface RenderTally {
+    frames: number;
+    calls: number;
+    ms: number;
+    aeCallMs: number;
+    settleMs: number;
+    renderNodeMs: number;
+}
+/** Time spent on the pixels in Node (ms): reading the files, finding regions, writing the pictures and the sheet. */
+export interface PixelTally {
+    frames: number;
+    readMs: number;
+    regionsMs: number;
+    picturesMs: number;
+    sheetMs: number;
+    ms: number;
+}
 export declare function runSubjectCheck(args: Record<string, unknown>, io: CutoutIO): Promise<Json>;
 export declare function runFillGaps(args: Record<string, unknown>, io: CutoutIO): Promise<Json>;
 /** JSX: remove subject.fill_gaps' two layers and its imported still. */

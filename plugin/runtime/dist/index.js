@@ -44974,6 +44974,7 @@ function cutoutRegions(alpha, width, height, opts = {}) {
   const minArea = opts.minArea ?? 1;
   const n = width * height;
   const a = Float64Array.from(alpha);
+  const original = alpha;
   const sealedEdge = new Int8Array(n).fill(-1);
   const EDGES = ["top", "bottom", "left", "right"];
   const edgePixels = (e) => {
@@ -44987,7 +44988,6 @@ function cutoutRegions(alpha, width, height, opts = {}) {
     }
     return out;
   };
-  const original = Float64Array.from(a);
   for (let e = 0; e < 4; e++) {
     const px2 = edgePixels(e);
     let first = -1;
@@ -45205,7 +45205,7 @@ function chunk(type, data) {
   return Buffer.concat([head, data, crc]);
 }
 var to8 = (v) => Math.round(Math.min(1, Math.max(0, v)) * 255);
-function encode8(width, height, colorType, srgbTags, write) {
+function encode8(width, height, colorType, srgbTags, write, level = 6) {
   const channels = colorType === 0 ? 1 : colorType === 2 ? 3 : 4;
   const stride = width * channels;
   const raw = Buffer.alloc(height * (stride + 1));
@@ -45225,16 +45225,23 @@ function encode8(width, height, colorType, srgbTags, write) {
     PNG_SIGNATURE,
     chunk("IHDR", ihdr),
     ...srgbTags ? [chunk("sRGB", Buffer.from([0])), chunk("gAMA", gama)] : [],
-    chunk("IDAT", zlib.deflateSync(raw, { level: 6 })),
+    chunk("IDAT", zlib.deflateSync(raw, { level })),
     chunk("IEND", Buffer.alloc(0))
   ]);
 }
-function encodePngSrgb8(width, height, rgb) {
-  return encode8(width, height, 2, true, (p, out, at) => {
-    out[at] = to8(rgb[p * 3]);
-    out[at + 1] = to8(rgb[p * 3 + 1]);
-    out[at + 2] = to8(rgb[p * 3 + 2]);
-  });
+function encodePngSrgb8(width, height, rgb, level = 6) {
+  return encode8(
+    width,
+    height,
+    2,
+    true,
+    (p, out, at) => {
+      out[at] = to8(rgb[p * 3]);
+      out[at + 1] = to8(rgb[p * 3 + 1]);
+      out[at + 2] = to8(rgb[p * 3 + 2]);
+    },
+    level
+  );
 }
 function encodePngSrgbRgba8(width, height, rgb, alpha) {
   return encode8(width, height, 6, true, (p, out, at) => {
@@ -47623,6 +47630,7 @@ function renderJsx(args, times, paths, tryOcio, isolate, strip = null, frameNums
     `;
 }
 async function nativeFlow(args, opts, abs, transport2, strip = null) {
+  const startedAt = performance.now();
   const frameNums = args.frames ?? null;
   const multi = args.times !== void 0 || strip !== null || frameNums !== null;
   const times = strip !== null || frameNums !== null ? null : args.times ?? [args.time];
@@ -47636,6 +47644,7 @@ async function nativeFlow(args, opts, abs, transport2, strip = null) {
     label: "render_frame",
     timeoutMs: 12e4 + (count - 1) * 3e4
   });
+  const aeCallMs = performance.now() - startedAt;
   if (!result.ok) return toMcpResult(result);
   const payload = result.result;
   const frames = payload?.frames ?? [];
@@ -47694,13 +47703,13 @@ async function nativeFlow(args, opts, abs, transport2, strip = null) {
   });
   payload.captureSettle = settle2;
   if (settle2.unsettled.length > 0) {
-    const secs2 = (settle2.timeoutMs / 1e3).toFixed(1);
+    const secs3 = (settle2.timeoutMs / 1e3).toFixed(1);
     for (const u of settle2.unsettled) {
       if (!multi || !frames[u.index]) continue;
       frames[u.index].ok = false;
-      frames[u.index].error = `the capture did not finish writing within ${secs2} s (${u.state}, ${u.bytes} bytes)`;
+      frames[u.index].error = `the capture did not finish writing within ${secs3} s (${u.state}, ${u.bytes} bytes)`;
     }
-    payload.captureWarning = `${settle2.unsettled.length} of ${written.length} captures did not finish writing within ${secs2} s (saveFrameToPng writes asynchronously): frames ${settle2.unsettled.map((u) => u.index).join(", ")}. ` + (settle2.settled.length > 0 ? "The others were measured; see captureSettle, or render the missing ones again with a longer settleTimeoutMs." : "Nothing could be measured; try again with a longer settleTimeoutMs.");
+    payload.captureWarning = `${settle2.unsettled.length} of ${written.length} captures did not finish writing within ${secs3} s (saveFrameToPng writes asynchronously): frames ${settle2.unsettled.map((u) => u.index).join(", ")}. ` + (settle2.settled.length > 0 ? "The others were measured; see captureSettle, or render the missing ones again with a longer settleTimeoutMs." : "Nothing could be measured; try again with a longer settleTimeoutMs.");
     if (settle2.settled.length === 0) {
       if (args.analyze) payload.analysisWarning = "analysis failed: no capture finished writing";
       if (managed)
@@ -47941,6 +47950,13 @@ async function nativeFlow(args, opts, abs, transport2, strip = null) {
       opts.diff.thresholds
     );
   }
+  const totalMs = performance.now() - startedAt;
+  payload.timing = {
+    aeCallMs: Math.round(aeCallMs),
+    settleMs: settle2.waitedMs,
+    nodeMs: Math.max(0, Math.round(totalMs - aeCallMs - settle2.waitedMs)),
+    totalMs: Math.round(totalMs)
+  };
   return toMcpResult(result);
 }
 function thumbSizeFor(img, thumbWidth) {
@@ -49106,6 +49122,7 @@ var CUTOUT_SECONDS_PER_FRAME = 60;
 var EDGE_TRANSPARENT = EDGE_DEFAULTS.transparent;
 var SETTLE_MAX_MS = 6e5;
 var THUMB = 360;
+var PICTURE_DEFLATE = 1;
 var intersects = (a, b) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
 var union2 = (a, b) => {
   const x = Math.min(a.x, b.x);
@@ -49196,17 +49213,44 @@ function framesAcross(span, count, extra) {
   for (const e of extra) if (typeof e === "number" && e >= a && e < b) set2.add(Math.round(e));
   return [...set2].sort((x, y) => x - y).slice(0, 64);
 }
-async function renderChunked(io, base, frames, perFrameMs, outDir, stem) {
+var renderTally = () => ({
+  frames: 0,
+  calls: 0,
+  ms: 0,
+  aeCallMs: 0,
+  settleMs: 0,
+  renderNodeMs: 0
+});
+var pixelTally = () => ({
+  frames: 0,
+  readMs: 0,
+  regionsMs: 0,
+  picturesMs: 0,
+  sheetMs: 0,
+  ms: 0
+});
+var since = (t) => performance.now() - t;
+var roundTally = (t) => Object.fromEntries(
+  Object.entries(t).map(([k, v]) => [k, typeof v === "number" ? Math.round(v) : v])
+);
+async function renderChunked(io, base, frames, perFrameMs, outDir, stem, tally = renderTally()) {
   const size = Math.max(1, Math.floor(SETTLE_MAX_MS / perFrameMs));
   const out = [];
   for (let c = 0; c * size < frames.length; c++) {
     const chunk2 = frames.slice(c * size, (c + 1) * size);
+    const t0 = performance.now();
     const payload = await io.render({
       ...base,
       frames: chunk2,
       outPath: path7.join(outDir, `${stem}-${c}.png`),
       settleTimeoutMs: Math.min(SETTLE_MAX_MS, Math.max(1, Math.round(perFrameMs * chunk2.length)))
     });
+    tally.calls++;
+    tally.frames += chunk2.length;
+    tally.ms += since(t0);
+    tally.aeCallMs += payload?.timing?.aeCallMs ?? 0;
+    tally.settleMs += payload?.timing?.settleMs ?? payload?.captureSettle?.waitedMs ?? 0;
+    tally.renderNodeMs += payload?.timing?.nodeMs ?? 0;
     if (!payload?.ok) {
       for (const frame of chunk2)
         out.push({
@@ -49233,7 +49277,8 @@ function parseHex(c) {
   const v = parseInt(m[1], 16);
   return [(v >> 16 & 255) / 255, (v >> 8 & 255) / 255, (v & 255) / 255];
 }
-async function measureFrames(io, rendered, limit, over, sheetPath) {
+async function measureFrames(io, rendered, limit, over, sheetPath, tally = pixelTally(), pictures = true) {
+  const started = performance.now();
   const colour = parseHex(over);
   const readings = [];
   const thumbs = [];
@@ -49257,6 +49302,7 @@ async function measureFrames(io, rendered, limit, over, sheetPath) {
       continue;
     }
     let img;
+    const tRead = performance.now();
     try {
       img = await io.readImage(r.file);
     } catch (err) {
@@ -49268,6 +49314,8 @@ async function measureFrames(io, rendered, limit, over, sheetPath) {
         error: `could not read ${r.file}: ${err instanceof Error ? err.message : String(err)}`
       });
       continue;
+    } finally {
+      tally.readMs += since(tRead);
     }
     if (!img.alpha) {
       readings.push({
@@ -49279,14 +49327,32 @@ async function measureFrames(io, rendered, limit, over, sheetPath) {
       });
       continue;
     }
+    tally.frames++;
+    const tRegions = performance.now();
     const regions = cutoutRegions(img.alpha, img.width, img.height);
     let opaquePx = 0;
-    for (const v of img.alpha) if (v >= EDGE_DEFAULTS.opaque) opaquePx++;
+    const alpha = img.alpha;
+    for (let p = 0; p < alpha.length; p++) if (alpha[p] >= EDGE_DEFAULTS.opaque) opaquePx++;
+    tally.regionsMs += since(tRegions);
     const h = split(regions.holes);
     const o = split(regions.openings);
+    const tPic = performance.now();
+    if (!pictures) {
+      readings.push({
+        frame: r.frame,
+        checked: true,
+        file: r.file,
+        opaqueShare: Math.round(opaquePx / img.alpha.length * 1e4) / 1e4,
+        holes: h.big,
+        openings: o.big,
+        holesUnderLimit: h.small,
+        openingsUnderLimit: o.small
+      });
+      continue;
+    }
     const composite = flattenOver(img, { kind: "color", color: colour });
     const picture2 = r.file.replace(/\.png$/i, "") + "_over.png";
-    await writePng(io, picture2, encodePngSrgb8(img.width, img.height, composite));
+    await writePng(io, picture2, encodePngSrgb8(img.width, img.height, composite, PICTURE_DEFLATE));
     const tw = Math.min(THUMB, img.width);
     const th = Math.max(1, Math.round(img.height * tw / img.width));
     thumbs.push({
@@ -49296,6 +49362,7 @@ async function measureFrames(io, rendered, limit, over, sheetPath) {
       bitDepth: 8
     });
     labels.push(`frame ${r.frame}`);
+    tally.picturesMs += since(tPic);
     readings.push({
       frame: r.frame,
       checked: true,
@@ -49311,11 +49378,18 @@ async function measureFrames(io, rendered, limit, over, sheetPath) {
     });
   }
   let picture = null;
+  const tSheet = performance.now();
   if (thumbs.length) {
     const sheet = composeContactSheet(thumbs, { labels, thumbWidth: THUMB });
-    await writePng(io, sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+    await writePng(
+      io,
+      sheetPath,
+      encodePngSrgb8(sheet.width, sheet.height, sheet.rgb, PICTURE_DEFLATE)
+    );
     picture = sheetPath;
   }
+  tally.sheetMs += since(tSheet);
+  tally.ms += since(started);
   return { readings, picture };
 }
 function regionLines(findings, frames) {
@@ -49377,8 +49451,33 @@ var regionsOf = (r) => [
   ...(r.holes ?? []).map((x) => ({ ...x, kind: "hole" })),
   ...(r.openings ?? []).map((x) => ({ ...x, kind: "opening" }))
 ];
-async function recheckFrames(io, readings, limit, over, outDir, perFrameMs, base) {
-  const first = readings.filter((r) => r.checked && regionsOf(r).length > 0);
+async function overPicture(io, file2, over) {
+  try {
+    const img = await io.readImage(file2);
+    const picture = file2.replace(/\.png$/i, "") + "_over.png";
+    await writePng(
+      io,
+      picture,
+      encodePngSrgb8(
+        img.width,
+        img.height,
+        flattenOver(img, { kind: "color", color: parseHex(over) }),
+        PICTURE_DEFLATE
+      )
+    );
+    return picture;
+  } catch {
+    return null;
+  }
+}
+async function recheckFrames(io, readings, limit, over, outDir, perFrameMs, base, accept, renders, pixels) {
+  const isAccepted = (x) => acceptedBy(
+    { kind: x.kind, box: { x: x.x, y: x.y, width: x.width, height: x.height } },
+    accept
+  );
+  const withRegions = readings.filter((r) => r.checked && regionsOf(r).length > 0);
+  const first = withRegions.filter((r) => !regionsOf(r).every(isAccepted));
+  const skippedAccepted = withRegions.length - first.length;
   const frames = first.map((r) => r.frame);
   if (!frames.length)
     return {
@@ -49386,16 +49485,27 @@ async function recheckFrames(io, readings, limit, over, outDir, perFrameMs, base
       agreed: 0,
       differed: [],
       failed: [],
+      skippedAccepted,
       unstable: [],
-      note: "No frame had a hole or opening over the limit, so none was rendered a second time."
+      note: skippedAccepted ? `No frame was rendered a second time: the regions on ${plural2(skippedAccepted, "frame")} were all accepted.` : "No frame had a hole or opening over the limit, so none was rendered a second time."
     };
-  const rendered = await renderChunked(io, base, frames, perFrameMs, outDir, "cutout-recheck");
+  const rendered = await renderChunked(
+    io,
+    base,
+    frames,
+    perFrameMs,
+    outDir,
+    "cutout-recheck",
+    renders
+  );
   const { readings: again } = await measureFrames(
     io,
     rendered,
     limit,
     over,
-    path7.join(outDir, "cutout-recheck_sheet.png")
+    path7.join(outDir, "cutout-recheck_sheet.png"),
+    pixels,
+    false
   );
   const unstable = [];
   const failed = [];
@@ -49418,11 +49528,14 @@ async function recheckFrames(io, readings, limit, over, outDir, perFrameMs, base
       agreed++;
       continue;
     }
+    const tPic = performance.now();
+    const secondPicture = b.file ? await overPicture(io, b.file, over) : null;
+    pixels.picturesMs += since(tPic);
     unstable.push({
       kind: "unstable",
       frame: a.frame,
       first: { regions: brief(ra), opaqueShare: a.opaqueShare ?? null, picture: a.picture },
-      second: { regions: brief(rb), opaqueShare: b.opaqueShare ?? null, picture: b.picture },
+      second: { regions: brief(rb), opaqueShare: b.opaqueShare ?? null, picture: secondPicture },
       reading: `Frame ${a.frame}: the cut-out differed between two renders of the same frame (opaque share ${a.opaqueShare} then ${b.opaqueShare}; ${plural2(ra.length, "region")} then ${rb.length} over the limit). Both pictures are kept.`
     });
   }
@@ -49431,14 +49544,34 @@ async function recheckFrames(io, readings, limit, over, outDir, perFrameMs, base
     agreed,
     differed: unstable.map((u) => u.frame),
     failed,
+    skippedAccepted,
     unstable,
-    note: RECHECK_NOTE + (failed.length ? ` Frames ${failed.join(", ")} did not render the second time and were not compared.` : "")
+    note: RECHECK_NOTE + (failed.length ? ` Frames ${failed.join(", ")} did not render the second time and were not compared.` : "") + (skippedAccepted ? ` ${plural2(skippedAccepted, "frame")} whose regions were all accepted ${skippedAccepted === 1 ? "was" : "were"} not rendered again.` : "")
   };
 }
 function closeAdvice(pairs) {
   const num = (n) => Number(/(\d+)\s*$/.exec(n)?.[1] ?? -1);
   const later = pairs.map((p) => num(p.a) >= num(p.b) ? p.a : p.b);
   return "When both clicks are on the same thing, take the later one out: " + [...new Set(later)].map((n) => `subject.remove_selection { selection: "${n}" }`).join(", then ") + ". On the take of 2026-11-11 the matte did not change when the redundant click was removed (opaque share 0.3083 before and after on frame 0). If the later click was meant for something else (a microphone), ask for that click again.";
+}
+function checkTiming(statusMs, first, second, pixels, totalMs) {
+  return {
+    statusMs: Math.round(statusMs),
+    firstRender: roundTally(first),
+    secondRender: roundTally(second),
+    pixels: roundTally(pixels),
+    totalMs: Math.round(totalMs)
+  };
+}
+var secs = (ms) => (ms / 1e3).toFixed(1);
+function timeReading(first, second, pixels, totalMs) {
+  const ae = first.aeCallMs + second.aeCallMs;
+  const settle2 = first.settleMs + second.settleMs;
+  const renderNode = first.renderNodeMs + second.renderNodeMs;
+  const frames = first.frames + second.frames;
+  const head = `This check took ${secs(totalMs)} s: ${secs(ae)} s in After Effects rendering ${plural2(frames, "frame")} (${first.frames} first, ${second.frames} again), ${secs(settle2)} s waiting for the files to finish writing, ${secs(renderNode + pixels.ms)} s in Node (${secs(pixels.ms)} s of it reading the pixels and drawing the pictures).`;
+  const share = totalMs > 0 ? (ae + settle2) / totalMs : 0;
+  return share >= 0.6 && frames > 0 ? `${head} Most of it was After Effects rendering, about ${secs((ae + settle2) / frames)} s a frame; frames it has rendered before are much quicker.` : head;
 }
 async function runSubjectCheck(args, io) {
   const outDir = args.outDir;
@@ -49447,10 +49580,15 @@ async function runSubjectCheck(args, io) {
   const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
   const over = typeof args.over === "string" ? args.over : CUTOUT_OVER;
   const accept = Array.isArray(args.accept) ? args.accept : [];
+  const started = performance.now();
   const st = await io.status();
+  const statusMs = since(started);
   if (!st?.ok) return { ok: false, error: st?.error ?? "subject.status failed", status: st };
   const missing = needSelection(st);
   if (missing) return { ok: false, error: missing };
+  const first = renderTally();
+  const second = renderTally();
+  const pixels = pixelTally();
   const clicks = st.selections.map((s) => ({
     name: s.name,
     kind: s.kind,
@@ -49470,24 +49608,33 @@ async function runSubjectCheck(args, io) {
     frames,
     perFrameMsOf(args),
     outDir,
-    "cutout"
+    "cutout",
+    first
   );
   const { readings, picture } = await measureFrames(
     io,
     rendered,
     limit,
     over,
-    path7.join(outDir, "cutout_sheet.png")
+    path7.join(outDir, "cutout_sheet.png"),
+    pixels
   );
   const sum = summarize(readings, limit, accept, picture);
   const close = closeClicks(clicks, st.sourceSize ?? null);
   const findings = [...sum.findings];
-  const recheck = args.recheck === false ? { skipped: true, note: "recheck: false; no frame was rendered a second time" } : await recheckFrames(io, readings, limit, over, outDir, perFrameMsOf(args), {
-    compNameOrId: args.comp,
-    isolate,
-    channels: "rgba",
-    edge: true
-  });
+  const recheck = args.recheck === false ? { skipped: true, note: "recheck: false; no frame was rendered a second time" } : await recheckFrames(
+    io,
+    readings,
+    limit,
+    over,
+    outDir,
+    perFrameMsOf(args),
+    // No edge report on the second render: only the regions are compared (edge costs about 1 s a 1080 x 1920 frame).
+    { compNameOrId: args.comp, isolate, channels: "rgba" },
+    accept,
+    second,
+    pixels
+  );
   if ("unstable" in recheck) findings.push(...recheck.unstable);
   if (close.length)
     findings.push({ kind: "close-clicks", pairs: close, advice: closeAdvice(close) });
@@ -49511,6 +49658,7 @@ async function runSubjectCheck(args, io) {
       agreed: recheck.agreed,
       differed: recheck.differed,
       failed: recheck.failed,
+      skippedAccepted: recheck.skippedAccepted,
       note: recheck.note
     } : recheck,
     inOut: `${inText} ${sum.text}${clickText}${rectText}${stop || !picture ? pictureText : ""}`,
@@ -49518,6 +49666,8 @@ async function runSubjectCheck(args, io) {
     frames: readings,
     clicks,
     countNote: COUNT_NOTE,
+    timing: checkTiming(statusMs, first, second, pixels, since(started)),
+    timeReading: timeReading(first, second, pixels, since(started)),
     holeLimit: limit,
     next: stop ? "Stop: show the user the picture and say what is out, before building anything else. " + (findings.some((f) => f.kind === "unstable") ? "A frame came out differently on two renders (kind 'unstable'): run subject.check again, and look at the first frames of the delivered video as well. " : "") + "Something left out needs another click (subject.prepare, then the steps); a wrong extra click comes out with subject.remove_selection; an enclosed gap no click fills goes to subject.fill_gaps. When the user says a region shown is fine (a real gap between an arm and the body), run subject.check again with accept: [that finding's box] (an opening), or accept: [{ box, kind: 'hole' }] for a hole, so it is not shown again. Two clicks on the same thing: take the later one out with subject.remove_selection. Frames not checked: run subject.check again on those frames with a larger secondsPerFrame. " + TAKES_MINUTES : "Nothing over the limit. Still look at the picture yourself and tell the user what is in and what is out before building on the cut-out. " + TAKES_MINUTES
   };
@@ -49543,7 +49693,14 @@ async function runFillGaps(args, io) {
   const minArea = typeof args.minArea === "number" ? args.minArea : 20;
   const grow = typeof args.grow === "number" ? args.grow : 3;
   const perFrameMs = perFrameMsOf(args);
+  const started = performance.now();
   const st = await io.status();
+  const statusMs = since(started);
+  const refTally = renderTally();
+  const aloneTally = renderTally();
+  const afterTally = renderTally();
+  const pixels = pixelTally();
+  let buildMs = 0;
   if (!st?.ok) return { ok: false, error: st?.error ?? "subject.status failed", status: st };
   const missing = needSelection(st);
   if (missing) return { ok: false, error: missing };
@@ -49554,7 +49711,8 @@ async function runFillGaps(args, io) {
     [frame],
     perFrameMs,
     outDir,
-    "fill-reference"
+    "fill-reference",
+    refTally
   );
   const refused = (why) => ({
     ok: false,
@@ -49612,7 +49770,9 @@ async function runFillGaps(args, io) {
   filled.grownArea = grownArea;
   filled.still = still;
   await writePng(io, still, encodePngGray8(img.width, img.height, values));
+  const tBuild = performance.now();
   const built = await io.build({ comp: args.comp, layer: args.layer, stillPath: still });
+  buildMs = since(tBuild);
   if (!built?.ok)
     return {
       ok: false,
@@ -49634,7 +49794,8 @@ async function runFillGaps(args, io) {
     [frame],
     perFrameMs,
     outDir,
-    "fill-alone"
+    "fill-alone",
+    aloneTally
   );
   let fillAlone;
   try {
@@ -49678,14 +49839,16 @@ async function runFillGaps(args, io) {
     frames,
     perFrameMs,
     outDir,
-    "fill-after"
+    "fill-after",
+    afterTally
   );
   const measured = await measureFrames(
     io,
     afterRendered,
     limit,
     over,
-    path7.join(outDir, "fill-after_sheet.png")
+    path7.join(outDir, "fill-after_sheet.png"),
+    pixels
   );
   const sum = summarize(measured.readings, limit, []);
   return {
@@ -49702,6 +49865,15 @@ async function runFillGaps(args, io) {
       reading: sum.text
     },
     limits: FILL_LIMITS(frame),
+    timing: {
+      statusMs: Math.round(statusMs),
+      referenceRender: roundTally(refTally),
+      buildMs: Math.round(buildMs),
+      fillAloneRender: roundTally(aloneTally),
+      afterRender: roundTally(afterTally),
+      pixels: roundTally(pixels),
+      totalMs: Math.round(since(started))
+    },
     next: "Show the user the picture after the fill and say what is left. To undo the fill, delete the two layers it added." + (layers.audioOff ? " The fill copy's audio was switched off, so the footage's sound plays once." : "") + (built.audioError ? ` The fill copy's audio could not be switched off (${built.audioError}): the sound may play twice; switch it off by hand.` : "") + (fillAlone.ok === null ? " The fill layer alone could not be rendered, so whether the track matte limits it was not checked: look at it." : "")
   };
 }
@@ -49845,7 +50017,7 @@ var overParam = {
 registerOp({
   name: "subject.check",
   category: "subject",
-  description: `Proof a subject matte after the user says done, before anything else is built. Renders the cut-out with its alpha (ae_render_frame isolate, channels 'rgba'; with the layer's gap fill from subject.fill_gaps when the comp has one, reported as fillLayer) at the click frames and frames across the clip, finds holes (regions below opaque the frame edge cannot reach) and openings (regions closed off only by the subject and the frame edge: the missed microphone of 2026-11-11 ran off the bottom of the frame), draws each frame over a flat colour and one contact sheet, and returns picture (the sheet), findings, accepted, checked {frames, of}, inOut (a plain statement of what is in and what is out), frames, clicks and stop. A hole or opening of holeLimit px or more (default ${CUTOUT_HOLE_LIMIT}, at the comp's size) is a finding; so are frames that did not render (kind 'not-checked': a frame that was not rendered is never counted as clean) and two clicks close together. With stop true: show the user the picture and say what is out before doing anything else. \`accept\` entries (earlier findings the user called fine, such as a real gap between an arm and the body) are not counted again. Each frame with a finding is rendered once more at the end; a frame whose cut-out differs between the two renders is a finding of kind 'unstable' (seen once on 2026-11-11, cause unknown; agreement may come from the cache and does not prove a frame stable). A selection count is not a check. It can take minutes: 20 to 40 s a frame the first time on a 2176 x 3840 take; say so to the user before it runs.`,
+  description: `Proof a subject matte after the user says done, before anything else is built. Renders the cut-out with its alpha (ae_render_frame isolate, channels 'rgba'; with the layer's gap fill from subject.fill_gaps when the comp has one, reported as fillLayer) at the click frames and frames across the clip, finds holes (regions below opaque the frame edge cannot reach) and openings (regions closed off only by the subject and the frame edge: the missed microphone of 2026-11-11 ran off the bottom of the frame), draws each frame over a flat colour and one contact sheet, and returns picture (the sheet), findings, accepted, checked {frames, of}, inOut (a plain statement of what is in and what is out), frames, clicks and stop. A hole or opening of holeLimit px or more (default ${CUTOUT_HOLE_LIMIT}, at the comp's size) is a finding; so are frames that did not render (kind 'not-checked': a frame that was not rendered is never counted as clean) and two clicks close together. With stop true: show the user the picture and say what is out before doing anything else. \`accept\` entries (earlier findings the user called fine, such as a real gap between an arm and the body) are not counted again. Each frame with a finding is rendered once more at the end; a frame whose cut-out differs between the two renders is a finding of kind 'unstable' (seen once on 2026-11-11, cause unknown; agreement may come from the cache and does not prove a frame stable). A selection count is not a check. It can take minutes: 20 to 40 s a frame the first time on a 2176 x 3840 take; say so to the user before it runs. \`timing\` says where the time went (status, each render's After Effects call, settle wait and Node work, the pixel work, the total) and \`timeReading\` says it in one sentence.`,
   params: [
     ...compLayerParams,
     {
@@ -55473,7 +55645,7 @@ function measureFrame(pic, width, height, t) {
   };
 }
 var fmt3 = (v) => v.toFixed(4);
-var secs = (v) => `${r62(v)} s`;
+var secs2 = (v) => `${r62(v)} s`;
 var PieceWatcher = class {
   t;
   o;
@@ -55695,7 +55867,7 @@ var PieceWatcher = class {
             seconds: r62(seconds),
             ...this.edges(from, to, first, last),
             largestChange: largest,
-            reading: `no visible change from ${secs(from * fd)} to ${secs(to * fd)} (frames ${from} to ${to}, ${r62(seconds)} s): at most ${fmt3(t.frozenShare * 100)}% of pixels changed by more than ${t.changeAbove} between checked frames. A held title or a still is legitimate; a stop in the middle of a move is not`
+            reading: `no visible change from ${secs2(from * fd)} to ${secs2(to * fd)} (frames ${from} to ${to}, ${r62(seconds)} s): at most ${fmt3(t.frozenShare * 100)}% of pixels changed by more than ${t.changeAbove} between checked frames. A held title or a still is legitimate; a stop in the middle of a move is not`
           });
         }
         i = j + 1;
@@ -55727,7 +55899,7 @@ var PieceWatcher = class {
         ...this.edges(from, to, first, last),
         reading: ""
       };
-      const when = `${secs(from * fd)} to ${secs(to * fd)} (frames ${from} to ${to})`;
+      const when = `${secs2(from * fd)} to ${secs2(to * fd)} (frames ${from} to ${to})`;
       const m = worst.m;
       if (kind === "near-black" || kind === "near-white") {
         const share = kind === "near-black" ? m.darkShare : m.lightShare;
