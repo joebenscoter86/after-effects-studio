@@ -559,6 +559,19 @@ describe("look on a matte", () => {
     expect(n.difference).toBeGreaterThan(5);
   });
 
+  it("says how much of a region is fully opaque and the lowest alpha in it, to catch a see-through band", () => {
+    const solid = matteFrame(0);
+    const inside = { name: "inside", x: 10, y: 10, width: 50, height: 100 };
+    const m = (measureLook(solid, { regions: [inside] }).regions[0] as any).matte;
+    expect(m.opaqueShare).toBe(1);
+    expect(m.minAlpha).toBe(1);
+    // A band at alpha 0.75 across the region, as two feathered masks that do not add up to one leave.
+    for (let y = 50; y < 60; y++) for (let x = 0; x < 80; x++) solid.alpha![y * 160 + x] = 0.75;
+    const b = (measureLook(solid, { regions: [inside] }).regions[0] as any).matte;
+    expect(b.opaqueShare).toBeCloseTo(0.9, 2);
+    expect(b.minAlpha).toBe(0.75);
+  });
+
   it("adds the matte's change from frame to frame to the series", () => {
     const args = { regions: [WHOLE] };
     const same = summarizeLookSeries(

@@ -1018,7 +1018,15 @@ export interface LookRegionReport {
    * With alpha: the matte's own edge, read on the alpha (10 to 90% widths, median and widest
    * tenth, px) and the soft band, soft pixels (alpha 0.02 to 0.98) per pixel of outline.
    */
-  matte?: { edgeWidth: number | null; p90: number | null; edges: number; softBand: number | null };
+  matte?: {
+    edgeWidth: number | null;
+    p90: number | null;
+    edges: number;
+    softBand: number | null;
+    /** Share of the region's pixels at alpha 0.99 or more, and the lowest alpha: a region inside the subject reads 1 and 1. */
+    opaqueShare: number;
+    minAlpha: number;
+  };
   /** With alpha: the soft band's colour (straight) against the colour well inside, and against `background`. */
   edgeColour?: {
     band: Lab | null;
@@ -1195,11 +1203,15 @@ function matteEdge(c: LookCrop, minContrast: number): NonNullable<LookRegionRepo
   );
   let soft = 0;
   let outline = 0;
+  let opaque = 0;
+  let minAlpha = 1;
   const w = c.width;
   for (let y = 0; y < c.height; y++)
     for (let x = 0; x < w; x++) {
       const v = a[y * w + x];
       if (v > 0.02 && v < 0.98) soft++;
+      if (v >= 0.99) opaque++;
+      if (v < minAlpha) minAlpha = v;
       if (v < 0.5) continue;
       const p = y * w + x;
       if (
@@ -1210,7 +1222,12 @@ function matteEdge(c: LookCrop, minContrast: number): NonNullable<LookRegionRepo
       )
         outline++;
     }
-  return { ...widths, softBand: outline ? Math.round((soft / outline) * 100) / 100 : null };
+  return {
+    ...widths,
+    softBand: outline ? Math.round((soft / outline) * 100) / 100 : null,
+    opaqueShare: Math.round((opaque / a.length) * 10000) / 10000,
+    minAlpha: Math.round(minAlpha * 10000) / 10000,
+  };
 }
 
 /**
