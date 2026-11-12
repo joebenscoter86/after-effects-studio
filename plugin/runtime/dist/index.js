@@ -48760,6 +48760,14 @@ var OBJECT_MATTE_JSX = `
                 }
                 return out;
             }
+            function _omFillLayer() {
+                var want = _layer.name + " gap fill";
+                for (var i = 1; i <= _comp.numLayers; i++) {
+                    var n = AE.safeGet(function () { return _comp.layer(i).name; }, "");
+                    if (n === want) return n;
+                }
+                return null;
+            }
             function _omSourceSize() {
                 var w = AE.safeGet(function () { return _layer.source.width; }, null);
                 var h = AE.safeGet(function () { return _layer.source.height; }, null);
@@ -48940,6 +48948,7 @@ registerOp({
                 countNote: ${jsxVal(COUNT_NOTE)},
                 closeClicks: _omCloseClicks(_sel.list, _src),
                 sourceSize: _src,
+                fillLayer: _omFillLayer(),
                 compSize: [_comp.width, _comp.height],
                 span: _omSpan(),
                 removeNote: ${jsxVal(REMOVE_NOTE)},
@@ -49453,9 +49462,11 @@ async function runSubjectCheck(args, io) {
     args.clickFrame,
     ...clicks.map((c) => c.clickFrame)
   ]);
+  const fillLayer = typeof st.fillLayer === "string" ? st.fillLayer : null;
+  const isolate = fillLayer ? [args.layer, fillLayer] : args.layer;
   const rendered = await renderChunked(
     io,
-    { compNameOrId: args.comp, isolate: args.layer, channels: "rgba", edge: true },
+    { compNameOrId: args.comp, isolate, channels: "rgba", edge: true },
     frames,
     perFrameMsOf(args),
     outDir,
@@ -49473,7 +49484,7 @@ async function runSubjectCheck(args, io) {
   const findings = [...sum.findings];
   const recheck = args.recheck === false ? { skipped: true, note: "recheck: false; no frame was rendered a second time" } : await recheckFrames(io, readings, limit, over, outDir, perFrameMsOf(args), {
     compNameOrId: args.comp,
-    isolate: args.layer,
+    isolate,
     channels: "rgba",
     edge: true
   });
@@ -49482,7 +49493,7 @@ async function runSubjectCheck(args, io) {
     findings.push({ kind: "close-clicks", pairs: close, advice: closeAdvice(close) });
   const rects = clicks.filter((c) => c.kind === "rectangle").map((c) => c.name);
   const solid = readings.find((r) => typeof r.solidAreas === "number")?.solidAreas;
-  const inText = `In: ${st.summary}` + (typeof solid === "number" ? `, making ${plural2(solid, "solid area")} on the first frame checked` : "") + ".";
+  const inText = `In: ${st.summary}` + (fillLayer ? ` (with its gap fill (${fillLayer}))` : "") + (typeof solid === "number" ? `, making ${plural2(solid, "solid area")} on the first frame checked` : "") + ".";
   const clickText = close.length ? ` Clicks: ${close.map((c) => c.reading).join("; ")}.` : "";
   const rectText = rects.length ? ` ${rects.join(", ")}: a click that dragged a little; it may hold nothing (subject.remove_selection).` : "";
   const pictureText = picture ? ` Look at the picture (${picture}): it shows what no number does, such as the background kept or something the brief names left out.` : " No frame rendered, so there is no picture.";
@@ -49490,6 +49501,7 @@ async function runSubjectCheck(args, io) {
   return {
     ok: true,
     layer: st.layer,
+    fillLayer,
     stop,
     findings,
     accepted: sum.accepted,
@@ -49833,7 +49845,7 @@ var overParam = {
 registerOp({
   name: "subject.check",
   category: "subject",
-  description: `Proof a subject matte after the user says done, before anything else is built. Renders the cut-out with its alpha (ae_render_frame isolate, channels 'rgba') at the click frames and frames across the clip, finds holes (regions below opaque the frame edge cannot reach) and openings (regions closed off only by the subject and the frame edge: the missed microphone of 2026-11-11 ran off the bottom of the frame), draws each frame over a flat colour and one contact sheet, and returns picture (the sheet), findings, accepted, checked {frames, of}, inOut (a plain statement of what is in and what is out), frames, clicks and stop. A hole or opening of holeLimit px or more (default ${CUTOUT_HOLE_LIMIT}, at the comp's size) is a finding; so are frames that did not render (kind 'not-checked': a frame that was not rendered is never counted as clean) and two clicks close together. With stop true: show the user the picture and say what is out before doing anything else. \`accept\` entries (earlier findings the user called fine, such as a real gap between an arm and the body) are not counted again. Each frame with a finding is rendered once more at the end; a frame whose cut-out differs between the two renders is a finding of kind 'unstable' (seen once on 2026-11-11, cause unknown; agreement may come from the cache and does not prove a frame stable). A selection count is not a check. It can take minutes: 20 to 40 s a frame the first time on a 2176 x 3840 take; say so to the user before it runs.`,
+  description: `Proof a subject matte after the user says done, before anything else is built. Renders the cut-out with its alpha (ae_render_frame isolate, channels 'rgba'; with the layer's gap fill from subject.fill_gaps when the comp has one, reported as fillLayer) at the click frames and frames across the clip, finds holes (regions below opaque the frame edge cannot reach) and openings (regions closed off only by the subject and the frame edge: the missed microphone of 2026-11-11 ran off the bottom of the frame), draws each frame over a flat colour and one contact sheet, and returns picture (the sheet), findings, accepted, checked {frames, of}, inOut (a plain statement of what is in and what is out), frames, clicks and stop. A hole or opening of holeLimit px or more (default ${CUTOUT_HOLE_LIMIT}, at the comp's size) is a finding; so are frames that did not render (kind 'not-checked': a frame that was not rendered is never counted as clean) and two clicks close together. With stop true: show the user the picture and say what is out before doing anything else. \`accept\` entries (earlier findings the user called fine, such as a real gap between an arm and the body) are not counted again. Each frame with a finding is rendered once more at the end; a frame whose cut-out differs between the two renders is a finding of kind 'unstable' (seen once on 2026-11-11, cause unknown; agreement may come from the cache and does not prove a frame stable). A selection count is not a check. It can take minutes: 20 to 40 s a frame the first time on a 2176 x 3840 take; say so to the user before it runs.`,
   params: [
     ...compLayerParams,
     {
