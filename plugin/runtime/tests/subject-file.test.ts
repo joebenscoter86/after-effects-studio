@@ -13,7 +13,11 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { decodePng, encodePngSrgbRgba8 } from "../src/color/png16.js";
 import {
   CHECK_FILE_JUMP_LIMIT,
+  RENDER_MARGIN_BYTES,
+  aeCacheRoot,
   checkFileFrames,
+  diskReport,
+  renderCutoutBytes,
   renderCutoutJsx,
   runCheckFile,
   runRenderCutout,
@@ -99,6 +103,7 @@ function renderIO(plan: Any = PLAN): FileIO & { calls: Any[] } {
     readImage: async () => {
       throw new Error("not used");
     },
+    freeBytes: async () => 500e9,
   };
 }
 
@@ -389,6 +394,7 @@ function fileIO({
     },
     readImage: async (f: string) => decodePng(await fs.readFile(f)),
     exists: async (p: string) => p === "/x/cut.mov",
+    freeBytes: async () => 500e9,
   };
 }
 const renders = (io: Any) => io.calls.filter((c: Any) => c.render).map((c: Any) => c.render);
@@ -692,5 +698,146 @@ describe("subject.check_file: what it leaves in outDir", () => {
     );
     const p = res.timing.pixels;
     expect(p.readMs + p.regionsMs + p.picturesMs + p.sheetMs).toBeLessThanOrEqual(p.ms + 5);
+  });
+});
+
+// ------------------------------------------------- free space (a full drive stalled a render)
+
+const GB = 1e9;
+describe("free space before a render", () => {
+  it("estimates the movie from the comp's size and frame count: 0.76 MB a 1080 x 1920 frame, scaled by pixels", () => {
+    expect(renderCutoutBytes(320, [1080, 1920])).toBeCloseTo(243.2e6, -5);
+    expect(renderCutoutBytes(320, [2160, 3840])).toBeCloseTo(4 * 243.2e6, -5);
+    expect(RENDER_MARGIN_BYTES).toBeGreaterThanOrEqual(2 * GB);
+  });
+
+  it("refuses before rendering when the drive has less than the movie plus the margin, and says the numbers", async () => {
+    const io = renderIO();
+    io.freeBytes = async () => 1 * GB;
+    const res = await runRenderCutout(
+      { comp: "Main", layer: 1, outputPath: path.join(dir, "cut.mov") },
+      io,
+    );
+    expect(res.ok).toBe(false);
+    expect(res.error).toMatch(/1\.0 GB free/);
+    expect(res.error).toMatch(/Edit > Purge > All Memory & Disk Cache/);
+    expect(res.space).toMatchObject({
+      free: 1 * GB,
+      where: dir,
+      needed: expect.any(Number),
+      margin: RENDER_MARGIN_BYTES,
+    });
+    expect(io.calls.filter((c: Any) => c.label === "subject.render_cutout")).toEqual([]);
+  });
+
+  it("renders when there is room", async () => {
+    const io = renderIO();
+    io.freeBytes = async () => 20 * GB;
+    expect(
+      (await runRenderCutout({ comp: "Main", layer: 1, outputPath: path.join(dir, "cut.mov") }, io))
+        .ok,
+    ).toBe(true);
+  });
+
+  it("on a timeout, adds the free space and names a full drive as the likely cause when it is low", async () => {
+    const io = renderIO();
+    let calls = 0;
+    io.freeBytes = async () => (++calls === 1 ? 20 * GB : 0.4 * GB);
+    const exec = io.execute;
+    io.execute = async (code: string, opts: Any) =>
+      opts.label === "subject.render_cutout"
+        ? {
+            ok: false,
+            error:
+              "timeout after 1720000ms waiting for After Effects to respond (a modal dialog may be open)",
+          }
+        : exec(code, opts);
+    const res = await runRenderCutout(
+      { comp: "Main", layer: 1, outputPath: path.join(dir, "cut.mov") },
+      io,
+    );
+    expect(res.ok).toBe(false);
+    expect(res.error).toMatch(/0\.4 GB free.*full drive is a likely cause/);
+    expect(res.spaceAtTimeout).toMatchObject({ free: 0.4 * GB, where: dir });
+  });
+
+  it("on a timeout with room on the drive, keeps the modal-dialog text and does not blame the drive", async () => {
+    const io = renderIO();
+    const exec = io.execute;
+    io.execute = async (code: string, opts: Any) =>
+      opts.label === "subject.render_cutout"
+        ? {
+            ok: false,
+            error:
+              "timeout after 1720000ms waiting for After Effects to respond (a modal dialog may be open)",
+          }
+        : exec(code, opts);
+    const res = await runRenderCutout(
+      { comp: "Main", layer: 1, outputPath: path.join(dir, "cut.mov") },
+      io,
+    );
+    expect(res.error).toMatch(/modal dialog/);
+    expect(res.error).not.toMatch(/full drive/);
+    expect(res.spaceAtTimeout.free).toBe(500e9);
+  });
+});
+
+describe("free space before a file check", () => {
+  it("refuses before reading frames, and still removes the throwaway comp", async () => {
+    const io = fileIO();
+    io.freeBytes = async () => 0.1 * GB;
+    const res = await runCheckFile({ path: "/x/cut.mov", outDir: dir }, io);
+    expect(res.ok).toBe(false);
+    expect(res.error).toMatch(/free on/);
+    expect(res.space.where).toBe(dir);
+    expect(io.calls.filter((c: Any) => c.render)).toEqual([]);
+    expect(io.calls.some((c: Any) => /cleanup/.test(c.label))).toBe(true);
+  });
+});
+
+describe("After Effects' disk cache", () => {
+  it("finds the cache under <folder>/Adobe/After Effects/<major.minor>", () => {
+    expect(aeCacheRoot("/Volumes/Work/Library/Caches", "27.0x52")).toBe(
+      "/Volumes/Work/Library/Caches/Adobe/After Effects/27.0",
+    );
+    expect(aeCacheRoot("", "27.0")).toBeNull();
+    expect(aeCacheRoot("/c", "")).toBeNull();
+  });
+
+  it("reports the cache's size and the free space on its drive, with the remedy when it is low", async () => {
+    const root = path.join(dir, "Adobe", "After Effects", "27.0");
+    await fs.mkdir(path.join(root, "Disk Cache - x.noindex", "a"), { recursive: true });
+    await fs.writeFile(path.join(root, "Disk Cache - x.noindex", "a", "1.bin"), Buffer.alloc(3000));
+    await fs.writeFile(path.join(root, "Disk Cache - x.noindex", "2.bin"), Buffer.alloc(2000));
+    const low = await diskReport({ folder: dir, version: "27.0x1" }, async () => 0.5 * GB);
+    expect(low).toMatchObject({
+      cacheRoot: root,
+      cacheBytes: 5000,
+      complete: true,
+      free: 0.5 * GB,
+      low: true,
+    });
+    expect(low.note).toMatch(/Edit > Purge > All Memory & Disk Cache/);
+    expect(low.note).toMatch(/nothing was deleted/i);
+    const fine = await diskReport({ folder: dir, version: "27.0x1" }, async () => 200 * GB);
+    expect(fine.low).toBe(false);
+    expect(fine.note).toBeUndefined();
+  });
+
+  it("says when the cache folder could not be read", async () => {
+    const r = await diskReport({ folder: null, version: "27.0" }, async () => 1 * GB);
+    expect(r).toMatchObject({ cacheRoot: null, cacheBytes: null });
+  });
+});
+
+describe("subject.status reads the disk cache folder", () => {
+  it("runs in Node so it can measure the cache, and its JSX still works inside batch.run", () => {
+    const op = getOp("subject.status")!;
+    expect(op.run).toBeTypeOf("function");
+    expect(op.readOnly).toBe(true);
+    const body = op.toJsx({ comp: "Main", layer: 1 });
+    expect(body).toContain("Disk Cache Controls");
+    expect(body).toContain("Folder 7");
+    expect(body).not.toMatch(/setPref|savePrefAsString|purge/i);
   });
 });

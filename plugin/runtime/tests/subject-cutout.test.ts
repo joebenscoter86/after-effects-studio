@@ -405,6 +405,7 @@ function fakeIO(
       calls.push({ unbuild: a });
       return { ok: true, removed: [a.fillLayer, a.maskLayer, a.stillItemId] };
     },
+    freeBytes: async () => 500e9,
     ...extra,
   };
 }
@@ -1117,5 +1118,30 @@ describe("subject.check: raw captures", () => {
     );
     expect((await raw()).length).toBe(18);
     expect(kept.frames[0].file).toMatch(/\.png$/);
+  });
+});
+
+describe("free space before writing pictures", () => {
+  it("subject.check refuses before rendering when the drive is nearly full", async () => {
+    const io = fakeIO(() => matte(), {
+      status: async () => APART as Any,
+      freeBytes: async () => 0.05e9,
+    });
+    const res = await runSubjectCheck({ comp: "Main", layer: 1, outDir: dir }, io);
+    expect(res.ok).toBe(false);
+    expect(res.error).toMatch(/GB free on/);
+    expect(res.space).toMatchObject({ where: dir });
+    expect(renders(io)).toEqual([]);
+  });
+
+  it("subject.fill_gaps refuses before rendering when the drive is nearly full", async () => {
+    const io = fakeIO(() => matte([GAP]), { freeBytes: async () => 0.05e9 });
+    const res = await runFillGaps(
+      { comp: "Main", layer: 1, frame: 15, stillPath: path.join(dir, "m.png"), outDir: dir },
+      io,
+    );
+    expect(res.ok).toBe(false);
+    expect(res.error).toMatch(/GB free on/);
+    expect(renders(io)).toEqual([]);
   });
 });
