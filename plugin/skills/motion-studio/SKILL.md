@@ -23,7 +23,7 @@ Inspect `ae_version_info` and `ae_context`, or run the plugin's doctor if no con
 | Camera, depth, traversal or continuous transition | camera-continuity |
 | Product art, illustrated objects, compositing, material polish | assets-depth |
 | Animated text and kinetic typography | typography-technique, typography-recipes, typography-examples; sibling typography/SKILL.md |
-| Green-screen keying, spill, grading a keyed subject to a plate | keying |
+| Green-screen keying, spill, grading a keyed subject to a plate; cutting a person or object out of footage, with or without a green screen | keying |
 | Paper collage, cutouts or tactile cardstock | paper-collage-style, paper-collage-recipes, paper-collage-examples; sibling paper-collage/SKILL.md |
 | Voiceover, captions, UI, factual evidence | type-evidence |
 | Supplied reference or a look that isn't landing | reference-study, failure-atlas |
@@ -53,6 +53,12 @@ Before native execution, the plan settles comp format and viewing rationale, exa
 Use measured values as concrete starting points; adapt with reasons. Do not reduce the language to “add easing” or default to finished cards that pop in and sit. A premium physical object needs suitable artwork; an intentional geometric diagram can be native. Resolve essential missing assets or label a blockout—don't substitute a crude icon and call the result finished.
 
 For a new look, test a bounded hard transition and an ordinary explanatory beat. Preserve approved material. If full execution is authorized, self-review and continue; request creative input when necessary or requested, without imposing extra approval stages.
+
+## Cutting a subject out of footage: one click by the user
+
+When a brief involves cutting a person or object out of footage, with or without a green screen, tell the user before building starts, in the first answer: one manual step in After Effects will be needed, a single click on the subject with After Effects' Object Matte Tool; it comes once the footage is in its comp, before anything is laid over or behind the subject; it takes about ten seconds. A script cannot make that click.
+
+At that point run `subject.prepare` and give the user its `userMessage` word for word: the notice and six numbered steps, with the clip's name filled in. Do not paraphrase or shorten them. In a plan written before After Effects, quote the six steps from `keying` ("Tell the user first") as they are. After "done", follow `keying`'s procedure: `subject.status`, the subject over a flat colour and the matte with `edge`, then say what is in and what is out.
 
 ## Execute, inspect and deliver
 

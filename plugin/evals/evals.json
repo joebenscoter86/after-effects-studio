@@ -299,6 +299,22 @@
         "Trace shows no change to the review comp: no write operation on the setup's items after the setup ran, and no attempt to decode the setup's data.",
         "The answer gives the findings ranked by what a viewer would notice, each with a time, where in the frame, its evidence and a severity, says which flags it judged intended and why, and states what it could not judge, with no score or pass or fail verdict."
       ]
+    },
+    {
+      "id": 23,
+      "prompt": "I have a 30-second vertical clip of me talking to camera at my desk, filmed against a plain office wall: no green screen. I want myself cut out of the footage and placed over an animated brand background, with a title above my head for the first five seconds. Plan it for my approval, then stop before After Effects.",
+      "expected_output": "Before the build plan, the answer tells the user that one manual step in After Effects will be needed: a single click on them with the Object Matte Tool, when it comes (once the footage is in its comp, before the background goes behind), and that it takes about ten seconds. The plan cuts the subject out with Object Matte (subject.prepare, then subject.status and a look at the matte over a flat colour), not a colour key, and gives the six click steps from the keying document word for word and in order: the Layer panel opened for the user; the Object Matte Tool, the dashed square with an arrow just left of the pin, or click and hold to choose it; OK on the \"Object Matte\" tip; hover the person, magenta tint, click once; click anything else that should stay, such as a microphone; tell me \"done\", no Spacebar and no Freeze. Two answer checks (subject-notice-first, subject-six-steps) test the notice's place and the steps' text without a model.",
+      "files": [],
+      "answer_checks": [
+        "subject-notice-first",
+        "subject-six-steps"
+      ],
+      "assertions": [
+        "Trace shows the keying library document read, through ae_library or its file, before the answer.",
+        "Before the build plan or any beat timing, the answer tells the user that one manual click in After Effects will be needed, roughly when it comes, and that it takes about ten seconds.",
+        "The answer gives all six click steps from the keying document in order and word for word, with at most the clip's name or the subject filled in: the Layer panel opened for the user; the Object Matte Tool, the dashed square with an arrow just left of the pin, or click and hold to choose it; OK on the \"Object Matte\" tip; hover the person, magenta tint, click once; click anything else that should stay, such as a microphone; tell me \"done\", no Spacebar and no Freeze.",
+        "The cut-out is planned with Object Matte (subject.prepare, then subject.status and a look at the matte), not a colour key on footage with no green screen, and no AE operation, render or install happens in this planning-only test."
+      ]
     }
   ]
 }

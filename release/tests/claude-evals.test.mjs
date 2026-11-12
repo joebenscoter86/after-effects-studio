@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 
-import { writeEvalSuite, claudePrompt, pictureCommand } from '../claude-evals.mjs';
+import { writeEvalSuite, claudePrompt, pictureCommand, checkAnswer, subjectSteps, ANSWER_CHECKS } from '../claude-evals.mjs';
 import { THRESHOLDS } from '../../plugin/evals/picture/checks.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -32,7 +32,7 @@ test('writes one case per canonical prompt, in order', async () => {
   const dirs = (await fs.readdir(out)).sort();
   assert.equal(dirs.length, PLAN.evals.length);
   assert.match(dirs[0], /^01-/);
-  assert.match(dirs.at(-1), new RegExp(`^${String(PLAN.evals.length).padStart(2, '0')}-`));
+  assert.match(dirs.at(-1), new RegExp(`^${String(PLAN.evals.at(-1).id).padStart(2, '0')}-`));
 });
 
 test('the prompt body is the canonical prompt, with Codex skill syntax made Claude syntax', async () => {
@@ -108,8 +108,8 @@ test('refuses to write into a folder that already holds files', async () => {
   await assert.rejects(writeEvalSuite(CANON, out), /not empty/);
 });
 
-test('the canonical evals: 17 planning cases and the picture cases, ids in order', () => {
-  assert.equal(PLAN.evals.length, 17);
+test('the canonical evals: 18 planning cases and the picture cases, ids in order', () => {
+  assert.equal(PLAN.evals.length, 18);
   assert.deepEqual(CANON.evals.map((c) => c.id), CANON.evals.map((_, i) => i + 1));
   assert.deepEqual(PICTURES.map((c) => c.picture.check), ['keying', 'grade', 'over', 'finish', 'review']);
   for (const c of PICTURES) {
@@ -193,4 +193,52 @@ test('a picture case\'s copied grader runs from the case folder with its config'
 test('the picture set refuses to guess where the runtime is', async () => {
   const out = path.join(await tmp('evals-'), 'evals');
   await assert.rejects(writeEvalSuite(CANON, out, { set: 'picture' }), /no runtime\/dist/);
+});
+
+// The subject-matte planning case (stage 12): it passes only when the answer gives the manual-click notice up front
+// and all six click steps from keying.md, word for word and in order.
+const SUBJECT = PLAN.evals.find((c) => c.answer_checks?.includes('subject-six-steps'));
+const STEPS = await subjectSteps();
+const NOTICE = 'One step here needs you in After Effects: a single click on you in the clip, about ten seconds, once the footage is in its comp and before the background goes behind you.';
+const PLAN_BODY = Array.from({ length: 12 }, (_, i) => `Beat ${i + 1}, frames ${i * 75} to ${i * 75 + 74}: the title and the background move as described, with holds and eases chosen from the motion language.`).join('\n');
+const list = (steps) => steps.map((t, i) => `${i + 1}. ${t}`).join('\n');
+const answer = ({ notice = NOTICE, steps = STEPS, noticeLast = false } = {}) =>
+  noticeLast ? `Story proposal.\n\n${PLAN_BODY}\n\n${list(steps)}\n\n${notice}` : `${notice}\n\nStory proposal.\n\n${PLAN_BODY}\n\nThe click:\n\n${list(steps)}\n`;
+const verdict = async (text) => Object.fromEntries((await checkAnswer(SUBJECT, text)).map((r) => [r.id, r.pass]));
+
+test('the subject-matte case: a footage brief with no green screen, graded by both answer checks', () => {
+  assert.ok(SUBJECT, 'a planning case with answer checks');
+  assert.match(SUBJECT.prompt, /no green screen/);
+  assert.match(SUBJECT.prompt, /stop before After Effects/);
+  assert.deepEqual(SUBJECT.answer_checks, ['subject-notice-first', 'subject-six-steps']);
+  for (const id of SUBJECT.answer_checks) assert.ok(ANSWER_CHECKS[id]);
+  assert.match(SUBJECT.assertions.join(' '), /ten seconds/);
+  assert.match(SUBJECT.assertions.join(' '), /six click steps/);
+  for (const c of CANON.evals.filter((x) => x !== SUBJECT)) assert.equal(c.answer_checks, undefined, `case ${c.id}`);
+});
+
+test('the subject-matte case passes an answer with the notice first and the six steps', async () => {
+  assert.deepEqual(await verdict(answer()), { 'subject-notice-first': true, 'subject-six-steps': true });
+  // The clip's name and the subject filled in, markdown emphasis and curly quotes still pass.
+  const filled = STEPS.map((t, i) => i === 0 ? t.replace("the clip's name", '"desk-talk.mov"')
+    : i === 3 ? 'Move the pointer over **yourself** in the Layer panel. You tint magenta. Click once.'
+    : t.replace(/"([^"]*)"/g, '“$1”'));
+  assert.deepEqual(await verdict(answer({ steps: filled })), { 'subject-notice-first': true, 'subject-six-steps': true });
+});
+
+test('the subject-matte case fails without the notice, with it last, or with a step changed, dropped or moved', async () => {
+  const noNotice = await verdict(answer({ notice: 'Here is the plan.' }));
+  assert.equal(noNotice['subject-notice-first'], false);
+  assert.equal((await verdict(answer({ notice: 'One manual click in After Effects will be needed.' })))['subject-notice-first'], false); // no time given
+  assert.equal((await verdict(answer({ noticeLast: true })))['subject-notice-first'], false);
+  const paraphrased = STEPS.map((t, i) => i === 1 ? 'Pick the Object Matte Tool in the toolbar.' : t);
+  assert.equal((await verdict(answer({ steps: paraphrased })))['subject-six-steps'], false);
+  assert.equal((await verdict(answer({ steps: STEPS.slice(0, 5) })))['subject-six-steps'], false);
+  const swapped = [STEPS[0], STEPS[2], STEPS[1], ...STEPS.slice(3)];
+  assert.equal((await verdict(answer({ steps: swapped })))['subject-six-steps'], false);
+  assert.equal((await verdict(answer({ steps: STEPS.map((t) => t.replace('No Spacebar and no Freeze are needed.', 'Then press Spacebar.')) })))['subject-six-steps'], false);
+});
+
+test('answer checks refuse a name they do not know', async () => {
+  await assert.rejects(checkAnswer({ id: 99, answer_checks: ['nope'] }, 'x'), /unknown answer check nope/);
 });

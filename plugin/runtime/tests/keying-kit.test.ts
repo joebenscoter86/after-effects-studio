@@ -14,6 +14,12 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { getOp, listOps } from "../src/registry.js";
+import {
+  OBJECT_MATTE_SETTINGS,
+  SUBJECT_MATTE_NOTICE,
+  selectionKind,
+  subjectMatteSteps,
+} from "../src/operations/keying.js";
 import { validateOpArgs } from "../src/opschema.js";
 // Importing the operation registry for its registration side effects.
 import "../src/operations/index.js";
@@ -813,5 +819,507 @@ describe("mask.get", () => {
       "Subtract",
     );
     expect(getOp("mask.get")!.description).toMatch(/mask\.set_props|mask\.set_path/);
+  });
+});
+
+// ------------------------------------------------------------ subject matte
+//
+// Stage 12: Object Matte (ADBE Samurai). The fake effect is shaped like the one
+// After Effects 27.0 showed live (2026-11-11): a Selections group (ADBE Samurai
+// Strokes Group) holding one ADBE Paint Atom per click, each with ADBE Paint
+// Duration, and the settings by their slash match names. `lookup` decides how
+// the settings can be reached: "matchName" (fx.property("/rmshiftedges")
+// resolves) or "index-only" (only fx.property(i) works, as was confirmed live;
+// the operations must then walk the properties).
+
+const MATTE_ROWS: Row[] = [
+  ["Version", "/propagation_method", "OneD", 4, 1, 4],
+  ["Feather", "/spatialsmoothing2", "OneD", 5, 0, 1000],
+  ["Contrast", "/spatialsoftness2", "OneD", 80, 0, 100],
+  ["Shift Edge", "/rmshiftedges", "OneD", 0, -100, 100],
+  ["Reduce Chatter", "/rmreducechatter", "OneD", 0, 0, 100],
+  ["Invert Foreground/Background", "/invertforegroundbackground", "OneD", 0, 0, 1],
+  ["Fine-tune Object Matte", "/rmrefinematteenable", "OneD", 1, 0, 1],
+  ["Use Motion Blur", "/rmusemotionblur", "OneD", 0, 0, 1],
+  ["Decontaminate Edge Colors", "/rmcleanedgecolors", "OneD", 0, 0, 1],
+];
+
+type Lookup = "matchName" | "index-only";
+
+function group(name: string, matchName: string, children: Any[], lookup: Lookup): Any {
+  return {
+    name,
+    matchName,
+    propertyType: PT.NAMED_GROUP,
+    propertyValueType: PVT.NO_VALUE,
+    get numProperties() {
+      return children.length;
+    },
+    property(k: number | string) {
+      if (typeof k === "number") return children[k - 1] ?? null;
+      if (lookup === "index-only") return null;
+      return children.find((c) => c.name === k || c.matchName === k) ?? null;
+    },
+  };
+}
+
+function objectMatte(
+  selections: string[],
+  { lookup = "matchName" as Lookup, rows = MATTE_ROWS, nested = false } = {},
+): Any {
+  const atoms = selections.map((name, i) =>
+    group(
+      name,
+      "ADBE Paint Atom",
+      [
+        prop({
+          name: "Duration",
+          matchName: "ADBE Paint Duration",
+          type: "TwoD",
+          value: [0, 10 + i],
+        }),
+      ],
+      "matchName",
+    ),
+  );
+  // Selections stays reachable by matchName (confirmed live), whatever `lookup` is.
+  const strokes = group("Selections", "ADBE Samurai Strokes Group", atoms, "matchName");
+  const settings = rows.map(([name, mn, type, value, min, max]) =>
+    prop({ name, matchName: mn, type, value, min, max }),
+  );
+  const children = nested
+    ? [strokes, group("Matte", "ADBE Samurai Matte Group", settings, lookup)]
+    : [...settings, strokes];
+  const fx = group("Object Matte", "ADBE Samurai", children, "matchName");
+  const byIndexOnly = group("x", "x", children, lookup);
+  fx.property = (k: number | string) => {
+    if (k === "ADBE Samurai Strokes Group") return strokes;
+    return byIndexOnly.property(k);
+  };
+  fx.propertyType = PT.INDEXED_GROUP;
+  fx.enabled = true;
+  fx.strokes = strokes;
+  fx.setting = (mn: string) => settings.find((p) => p.matchName === mn);
+  return fx;
+}
+
+interface World {
+  parade: Parade;
+  layer: Any;
+  other: Any;
+  comp: Any;
+  app: Any;
+  calls: string[];
+}
+
+function world({
+  effects = [] as Any[],
+  source = true,
+  openLayerId = 3784,
+  inPoint = 0,
+  outPoint = 10,
+} = {}): World {
+  const calls: string[] = [];
+  const parade = new Parade();
+  for (const fx of effects) {
+    parade.list.push(fx);
+    Object.defineProperty(fx, "propertyIndex", { get: () => parade.list.indexOf(fx) + 1 });
+  }
+  const layer: Any = {
+    name: "presenter.mov",
+    source: source ? { name: "presenter.mov" } : null,
+    inPoint,
+    outPoint,
+    selected: false,
+    property(k: string) {
+      return k === "ADBE Effect Parade" || k === "Effects" ? parade : null;
+    },
+  };
+  const other: Any = { name: "BG", selected: true };
+  const comp: Any = {
+    name: "Main",
+    numLayers: 2,
+    time: 0,
+    resolutionFactor: [2, 2],
+    layer: (i: number) => (i === 1 ? layer : other),
+    openInViewer() {
+      calls.push("openInViewer");
+    },
+  };
+  const app = {
+    findMenuCommandId(name: string) {
+      calls.push(`find:${name}`);
+      return name === "Open Layer" ? openLayerId : 0;
+    },
+    executeCommand(id: number) {
+      calls.push(`exec:${id}`);
+    },
+  };
+  return { parade, layer, other, comp, app, calls };
+}
+
+function runIn(name: string, args: Record<string, unknown>, w: World): Any {
+  const op = getOp(name);
+  if (!op) throw new Error(`no op ${name}`);
+  const v = validateOpArgs(op, { comp: "Main", layer: 1, ...args });
+  if (!v.ok) return { ok: false, validation: v };
+  const AE = loadAE();
+  AE.findCompByNameOrId = () => w.comp;
+  AE.findLayerInComp = () => w.layer;
+  const body = op.toJsx(v.value);
+  return new Function(
+    "AE",
+    "app",
+    "PropertyValueType",
+    "PropertyType",
+    "KeyframeInterpolationType",
+    "MaskMode",
+    "MaskFeatherFalloff",
+    body,
+  )(AE, w.app, PVT, PT, KIT, MASK_MODE, FALLOFF);
+}
+
+const KEYING_MD = readFileSync(
+  fileURLToPath(new URL("../../library/references/keying.md", import.meta.url)),
+  "utf8",
+);
+
+describe("subject matte: registration and the user's steps", () => {
+  it("registers subject.prepare, subject.status and subject.settings; only status is read-only", () => {
+    expect(
+      listOps("subject")
+        .map((o) => o.name)
+        .sort(),
+    ).toEqual(["subject.prepare", "subject.settings", "subject.status"]);
+    expect(getOp("subject.status")!.readOnly).toBe(true);
+    expect(getOp("subject.prepare")!.readOnly).toBeFalsy();
+    expect(getOp("subject.settings")!.readOnly).toBeFalsy();
+  });
+
+  it("writes the six steps as the owner wrote them", () => {
+    expect(subjectMatteSteps()).toEqual([
+      'After Effects is showing your clip in the Layer panel (the tab reads "Layer", then the clip\'s name). I opened it for you.',
+      'In the toolbar at the top, click the Object Matte Tool: the dashed square with an arrow, just left of the pin. If that icon looks different, click and hold it and choose "Object Matte Tool" from the list.',
+      'If a tip titled "Object Matte" appears, click OK.',
+      "Move the pointer over the person in the Layer panel. They tint magenta. Click once.",
+      "Anything else that should stay with them, such as a microphone: hover it and click it too.",
+      'Tell me "done". No Spacebar and no Freeze are needed.',
+    ]);
+  });
+
+  it("fills in the clip's name and the subject", () => {
+    const steps = subjectMatteSteps({ clip: "presenter.mov", subject: "the presenter" });
+    expect(steps[0]).toContain('(the tab reads "Layer", then "presenter.mov")');
+    expect(steps[3]).toBe(
+      "Move the pointer over the presenter in the Layer panel. The presenter tints magenta. Click once.",
+    );
+    expect(steps.filter((s, i) => s !== subjectMatteSteps()[i]).length).toBe(2);
+  });
+
+  it("keying.md quotes the notice and the same six steps, in order", () => {
+    expect(KEYING_MD).toContain(SUBJECT_MATTE_NOTICE);
+    const lines = subjectMatteSteps().map((s, i) => `${i + 1}. ${s}`);
+    let at = -1;
+    for (const line of lines) {
+      const i = KEYING_MD.indexOf(`\n${line}\n`);
+      expect(i, line).toBeGreaterThan(at);
+      at = i;
+    }
+  });
+
+  it("names a selection's kind from its name", () => {
+    expect(selectionKind("Add Object 1")).toBe("object");
+    expect(selectionKind("Add Object 12")).toBe("object");
+    expect(selectionKind("Quick Select Foreground 1")).toBe("quick-selection");
+    expect(selectionKind("Paint 1")).toBe("other");
+    expect(selectionKind("Add Object")).toBe("other");
+  });
+
+  it("keeps the settings table to the measured match names and ranges", () => {
+    expect(OBJECT_MATTE_SETTINGS.shiftEdge).toMatchObject({
+      matchName: "/rmshiftedges",
+      min: -100,
+      max: 100,
+    });
+    expect(OBJECT_MATTE_SETTINGS.feather).toMatchObject({
+      matchName: "/spatialsmoothing2",
+      min: 0,
+      max: 1000,
+      default: 5,
+    });
+    expect(OBJECT_MATTE_SETTINGS.version).toMatchObject({
+      matchName: "/propagation_method",
+      writable: false,
+    });
+  });
+});
+
+describe("subject.prepare", () => {
+  it("brings the comp forward at full resolution, selects only the layer, opens it, and returns the steps", () => {
+    const w = world({ inPoint: 1.5 });
+    const res = runIn("subject.prepare", {}, w);
+
+    expect(res.ok).toBe(true);
+    expect(w.calls).toEqual(["openInViewer", "find:Open Layer", "exec:3784"]);
+    expect(w.comp.resolutionFactor).toEqual([1, 1]);
+    expect(w.comp.time).toBe(1.5);
+    expect(res.time).toBe(1.5);
+    expect(w.layer.selected).toBe(true);
+    expect(w.other.selected).toBe(false);
+    expect(res.did).toHaveLength(5);
+    expect(res.couldNotDo).toEqual([]);
+    expect(res.beforeSteps).toBeUndefined();
+    expect(res.steps).toEqual(subjectMatteSteps({ clip: "presenter.mov" }));
+    expect(res.notice).toBe(SUBJECT_MATTE_NOTICE);
+    expect(res.userMessage.split("\n")).toEqual([
+      SUBJECT_MATTE_NOTICE,
+      ...subjectMatteSteps({ clip: "presenter.mov" }).map((s, i) => `${i + 1}. ${s}`),
+    ]);
+    expect(res.relay).toMatch(/word for word/);
+    expect(res.existing).toMatchObject({ objectMatte: false, selections: [] });
+    expect(w.parade.list).toEqual([]); // adds no effect
+  });
+
+  it("takes a time and the subject's description", () => {
+    const w = world();
+    const res = runIn("subject.prepare", { time: 4.25, subject: "the bottle" }, w);
+
+    expect(res.ok).toBe(true);
+    expect(w.comp.time).toBe(4.25);
+    expect(res.steps[3]).toBe(
+      "Move the pointer over the bottle in the Layer panel. The bottle tints magenta. Click once.",
+    );
+  });
+
+  it("refuses a time outside the layer and changes nothing", () => {
+    const w = world({ inPoint: 2, outPoint: 6 });
+    const res = runIn("subject.prepare", { time: 7 }, w);
+
+    expect(res.ok).toBe(false);
+    expect(res.error).toMatch(/outside layer 'presenter.mov' \(in 2, out 6\)/);
+    expect(w.calls).toEqual([]);
+    expect(w.comp.resolutionFactor).toEqual([2, 2]);
+  });
+
+  it("refuses a layer that is not footage", () => {
+    const w = world({ source: false });
+    const res = runIn("subject.prepare", {}, w);
+
+    expect(res.ok).toBe(false);
+    expect(res.error).toMatch(/no footage source/);
+    expect(w.calls).toEqual([]);
+  });
+
+  it("reports a step it could not do, still returns the steps, and says what to tell the user first", () => {
+    const w = world({ openLayerId: 0 });
+    const res = runIn("subject.prepare", {}, w);
+
+    expect(res.ok).toBe(false);
+    expect(res.couldNotDo).toEqual([
+      { step: "opened the layer in the Layer panel", error: expect.stringMatching(/Open Layer/) },
+    ]);
+    expect(res.did).toHaveLength(4);
+    expect(res.steps).toEqual(subjectMatteSteps({ clip: "presenter.mov" }));
+    expect(res.beforeSteps).toMatch(/double-click the layer 'presenter.mov'/);
+    expect(res.error).toMatch(/could not do every step/);
+  });
+
+  it("reports an Object Matte already on the layer and its selections", () => {
+    const w = world({ effects: [objectMatte(["Add Object 1"])] });
+    const res = runIn("subject.prepare", {}, w);
+
+    expect(res.existing).toMatchObject({
+      objectMatte: true,
+      effectIndex: 1,
+      count: 1,
+      summary: "1 object selected",
+    });
+    expect(res.existing.selections).toEqual([
+      {
+        index: 1,
+        name: "Add Object 1",
+        matchName: "ADBE Paint Atom",
+        kind: "object",
+        duration: [0, 10],
+      },
+    ]);
+  });
+});
+
+describe("subject.status", () => {
+  it("says the user has not clicked when there is no Object Matte", () => {
+    const res = runIn("subject.status", {}, world());
+
+    expect(res.ok).toBe(true);
+    expect(res.objectMatte.present).toBe(false);
+    expect(res.selections).toEqual([]);
+    expect(res.summary).toMatch(/has not clicked/);
+    expect(res.next).toMatch(/subject\.prepare/);
+  });
+
+  it("says there is no selection yet when the effect was added but nobody clicked", () => {
+    const res = runIn("subject.status", {}, world({ effects: [objectMatte([])] }));
+
+    expect(res.objectMatte).toMatchObject({
+      present: true,
+      effectIndex: 1,
+      selectionsGroupFound: true,
+    });
+    expect(res.summary).toMatch(/no selection yet: the user has not clicked/);
+    expect(res.next).toMatch(/subject\.prepare/);
+  });
+
+  it("lists the selections newest first with their kind and duration", () => {
+    const fx = objectMatte([
+      "Add Object 2",
+      "Quick Select Foreground 1",
+      "Add Object 1",
+      "Paint 1",
+    ]);
+    const res = runIn("subject.status", {}, world({ effects: [fx] }));
+
+    expect(res.selections.map((s: Any) => [s.name, s.kind])).toEqual([
+      ["Add Object 2", "object"],
+      ["Quick Select Foreground 1", "quick-selection"],
+      ["Add Object 1", "object"],
+      ["Paint 1", "other"],
+    ]);
+    expect(res.selections[1].duration).toEqual([0, 11]);
+    expect(res.counts).toEqual({ object: 2, quickSelection: 1, other: 1 });
+    expect(res.summary).toBe("2 objects selected, 1 quick-selection stroke, 1 other selection");
+    expect(res.next).toBeUndefined();
+    expect(res.removeNote).toMatch(/effect\.remove/);
+  });
+
+  for (const lookup of ["matchName", "index-only"] as const) {
+    it(`reads every setting with its ranges when the slash match names ${lookup === "matchName" ? "resolve" : "do not resolve"}`, () => {
+      const res = runIn(
+        "subject.status",
+        {},
+        world({ effects: [objectMatte(["Add Object 1"], { lookup })] }),
+      );
+      const foundBy = lookup === "matchName" ? "matchName" : "walk";
+
+      expect(Object.keys(res.settings).sort()).toEqual(Object.keys(OBJECT_MATTE_SETTINGS).sort());
+      for (const row of Object.values(res.settings) as Any[]) expect(row.foundBy).toBe(foundBy);
+      expect(res.settings.feather).toMatchObject({
+        name: "Feather",
+        value: 5,
+        reportedRange: { min: 0, max: 1000 },
+        measuredRange: { min: 0, max: 1000 },
+        default: 5,
+      });
+      expect(res.settings.version.value).toBe(4);
+      expect(res.settings.contrast.value).toBe(80);
+    });
+  }
+
+  it("finds settings nested in a group, and by display name when the match names differ", () => {
+    const nested = runIn(
+      "subject.status",
+      {},
+      world({ effects: [objectMatte(["Add Object 1"], { lookup: "index-only", nested: true })] }),
+    );
+    expect(nested.settings.shiftEdge).toMatchObject({ foundBy: "walk", value: 0 });
+
+    const renamed = MATTE_ROWS.map((r): Row => [
+      r[0],
+      `ADBE Samurai-${r[0]}`,
+      r[2],
+      r[3],
+      r[4],
+      r[5],
+    ]);
+    const byName = runIn(
+      "subject.status",
+      {},
+      world({ effects: [objectMatte(["Add Object 1"], { rows: renamed })] }),
+    );
+    expect(byName.settings.shiftEdge).toMatchObject({ foundBy: "name", value: 0 });
+  });
+});
+
+describe("subject.settings", () => {
+  for (const lookup of ["matchName", "index-only"] as const) {
+    it(`writes checked edge settings and reads them back (${lookup})`, () => {
+      const fx = objectMatte(["Add Object 1"], { lookup });
+      const res = runIn(
+        "subject.settings",
+        { feather: 12, contrast: 60, shiftEdge: -20, reduceChatter: 30, invert: false },
+        world({ effects: [fx] }),
+      );
+
+      expect(res.ok).toBe(true);
+      expect(res.written.sort()).toEqual([
+        "contrast",
+        "feather",
+        "invert",
+        "reduceChatter",
+        "shiftEdge",
+      ]);
+      expect(fx.setting("/rmshiftedges").writes).toEqual([-20]);
+      expect(fx.setting("/invertforegroundbackground").writes).toEqual([0]);
+      expect(res.settings.feather.value).toBe(12);
+      expect(res.settings.shiftEdge.value).toBe(-20);
+      expect(res.summary).toBe("1 object selected");
+    });
+  }
+
+  it("refuses a value outside the measured range with the valid range, and writes nothing", () => {
+    const fx = objectMatte(["Add Object 1"]);
+    const res = runIn(
+      "subject.settings",
+      { feather: 12, shiftEdge: -150 },
+      world({ effects: [fx] }),
+    );
+
+    expect(res.ok).toBe(false);
+    expect(res.error).toMatch(/shiftEdge.*-150.*Shift Edge takes -100 to 100/);
+    expect(res.error).toMatch(/nothing written/);
+    expect(fx.setting("/spatialsmoothing2").writes).toEqual([]);
+  });
+
+  it("refuses a value outside the range After Effects reports, and writes nothing", () => {
+    const rows = MATTE_ROWS.map((r): Row =>
+      r[1] === "/spatialsoftness2" ? [r[0], r[1], r[2], r[3], r[4], 50] : r,
+    );
+    const fx = objectMatte(["Add Object 1"], { rows });
+    const res = runIn("subject.settings", { feather: 12, contrast: 80 }, world({ effects: [fx] }));
+
+    expect(res.ok).toBe(false);
+    expect(res.error).toMatch(/nothing written/);
+    expect(res.error).toMatch(/Contrast.*0 to 50/);
+    expect(res.refused[0]).toMatchObject({ setting: "contrast" });
+    expect(fx.setting("/spatialsmoothing2").writes).toEqual([]);
+  });
+
+  it("refuses when the layer has no Object Matte, and says to prepare and ask for the click", () => {
+    const res = runIn("subject.settings", { feather: 10 }, world());
+
+    expect(res.ok).toBe(false);
+    expect(res.error).toMatch(/no Object Matte/);
+    expect(res.error).toMatch(/run subject\.prepare and ask the user for the click/);
+  });
+
+  it("refuses when Object Matte has no selection yet", () => {
+    const fx = objectMatte([]);
+    const res = runIn("subject.settings", { feather: 10 }, world({ effects: [fx] }));
+
+    expect(res.ok).toBe(false);
+    expect(res.error).toMatch(/no selection yet \(the user has not clicked\)/);
+    expect(res.error).toMatch(/run subject\.prepare and ask the user for the click/);
+    expect(fx.setting("/spatialsmoothing2").writes).toEqual([]);
+  });
+
+  it("refuses with no settings, and a switch that is not true or false", () => {
+    const w = world({ effects: [objectMatte(["Add Object 1"])] });
+    expect(runIn("subject.settings", {}, w).error).toMatch(/pass at least one of feather/);
+    const bad = runIn("subject.settings", { invert: "yes" }, w);
+    expect(bad.ok).toBe(false);
+  });
+
+  it("does not take Version or the read-only switches", () => {
+    const v = validateOpArgs(getOp("subject.settings")!, { comp: "Main", layer: 1, version: 2 });
+    expect(v.ok).toBe(false);
   });
 });
