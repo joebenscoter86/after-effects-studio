@@ -940,6 +940,7 @@ function world({
   source = true,
   openLayerId = 3784,
   fullId = 5001,
+  fullWorks = true,
   inPoint = 0,
   outPoint = 10,
 } = {}): World {
@@ -985,6 +986,8 @@ function world({
     },
     executeCommand(id: number) {
       calls.push(`exec:${id}`);
+      // As measured in After Effects 27.0: View > Resolution > Full sets the comp's resolutionFactor to [1, 1].
+      if (id === fullId && fullWorks) comp.resolutionFactor = [1, 1];
     },
   };
   return { parade, layer, other, comp, app, calls };
@@ -1124,22 +1127,28 @@ describe("subject.prepare", () => {
     expect(res.ok).toBe(true);
     expect(w.calls).toEqual([
       "openInViewer",
-      "find:Open Layer",
-      "exec:3784",
       "find:Full",
       "exec:5001",
+      "find:Open Layer",
+      "exec:3784",
     ]);
     expect(w.comp.resolutionFactor).toEqual([1, 1]);
     expect(w.comp.time).toBe(1.5);
     expect(res.time).toBe(1.5);
     expect(w.layer.selected).toBe(true);
     expect(w.other.selected).toBe(false);
-    expect(res.did).toHaveLength(6);
+    expect(res.did).toHaveLength(5);
+    expect(res.did[1]).toBe(
+      "chose View > Resolution > Full (the comp's resolution now reads [1, 1])",
+    );
     expect(res.viewerResolution).toEqual({
       command: "Full",
       commandId: 5001,
-      verified: false,
-      note: expect.stringMatching(/cannot read the viewer's resolution/),
+      before: [2, 2],
+      after: [1, 1],
+      afterLayerPanel: [1, 1],
+      verified: true,
+      note: expect.stringMatching(/Auto.*not verified/),
     });
     expect(res.did.join(" ")).not.toMatch(/set the comp to full resolution/);
     expect(res.couldNotDo).toEqual([]);
@@ -1192,13 +1201,8 @@ describe("subject.prepare", () => {
     expect(res.ok).toBe(false);
     expect(res.couldNotDo).toEqual([
       { step: "opened the layer in the Layer panel", error: expect.stringMatching(/Open Layer/) },
-      {
-        step: "chose View > Resolution > Full",
-        error: expect.stringMatching(/skipped: the Layer panel did not open/),
-      },
     ]);
     expect(res.did).toHaveLength(4);
-    expect(w.calls).not.toContain("find:Full");
     expect(res.steps).toEqual(subjectMatteSteps({ clip: "presenter.mov" }));
     expect(res.beforeSteps).toMatch(/double-click the layer 'presenter.mov'/);
     expect(res.error).toMatch(/could not do every step/);
@@ -1422,17 +1426,53 @@ describe("subject.settings", () => {
 // ------------------------------------------------------- stage 12b (JSX side)
 
 describe("subject.prepare: the viewer's resolution", () => {
-  it("reports a missing View > Resolution > Full command and does not claim Full", () => {
+  it("without the Full command, sets resolutionFactor directly and does not claim Full", () => {
     const w = world({ fullId: 0 });
     const res = runIn("subject.prepare", {}, w);
     expect(res.couldNotDo).toEqual([
       {
         step: "chose View > Resolution > Full",
-        error: expect.stringMatching(/no menu command named 'Full'/),
+        error: expect.stringMatching(
+          /no menu command named 'Full'.*set the comp's resolutionFactor to \[1, 1\] instead/,
+        ),
       },
     ]);
+    expect(w.comp.resolutionFactor).toEqual([1, 1]);
     expect(res.viewerResolution).toMatchObject({ commandId: null, verified: false });
     expect(res.beforeSteps).toBeUndefined();
+  });
+
+  it("does not claim Full when the comp does not read [1, 1] after the command", () => {
+    const w = world({ fullWorks: false });
+    const res = runIn("subject.prepare", {}, w);
+    expect(res.viewerResolution).toMatchObject({ commandId: 5001, after: [2, 2], verified: false });
+    expect(res.couldNotDo).toEqual([
+      {
+        step: "chose View > Resolution > Full",
+        error: expect.stringMatching(/still reads \[2, 2\]/),
+      },
+    ]);
+    expect(res.did.join(" ")).not.toMatch(/Full/);
+  });
+
+  it("re-reads the resolution after the Layer panel opens and says when it changed", () => {
+    const w = world();
+    w.app.executeCommand = ((orig) => (id: number) => {
+      orig(id);
+      if (id === 3784) w.comp.resolutionFactor = [2, 2];
+    })(w.app.executeCommand);
+    const res = runIn("subject.prepare", {}, w);
+    expect(res.viewerResolution).toMatchObject({
+      after: [1, 1],
+      afterLayerPanel: [2, 2],
+      verified: false,
+    });
+    expect(res.couldNotDo).toEqual([
+      {
+        step: "kept the resolution at Full",
+        error: expect.stringMatching(/\[2, 2\] after the Layer panel opened/),
+      },
+    ]);
   });
 });
 
