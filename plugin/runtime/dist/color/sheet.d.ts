@@ -194,6 +194,8 @@ export interface LookArgs {
     /** An element whose grain or edge width is within this share of the plate's matches it. Default 0.25. */
     grainTolerance?: number;
     sharpnessTolerance?: number;
+    /** The background the subject was cut from (a wall's mean colour, 0..1): the soft edge's colour is read against it. */
+    background?: Rgb | number[];
 }
 /**
  * Starting points, not measured judgments: a quarter either way for grain and
@@ -239,6 +241,8 @@ export interface LookCrop {
     rgb: Float64Array;
     /** 1 where the pixel counts (opaque enough, or no alpha), else 0. */
     use: Uint8Array;
+    /** The region's alpha, when the frame has one. */
+    alpha?: Float64Array;
 }
 /** Every region's crop, for the frame-to-frame grain (and kept small: regions only). */
 export declare function lookCrops(img: DecodedPng, args: LookArgs): Map<string, LookCrop>;
@@ -269,12 +273,32 @@ export interface LookRegionReport {
     grain: {
         spatial: Rgb;
     };
+    /** Median and widest tenth (90th percentile) of the 10 to 90% widths, px. */
     sharpness: {
         edgeWidth: number | null;
+        p90: number | null;
         edges: number;
     };
     /** CIELAB of the region's mean colour. */
     colour: Lab;
+    /**
+     * With alpha: the matte's own edge, read on the alpha (10 to 90% widths, median and widest
+     * tenth, px) and the soft band, soft pixels (alpha 0.02 to 0.98) per pixel of outline.
+     */
+    matte?: {
+        edgeWidth: number | null;
+        p90: number | null;
+        edges: number;
+        softBand: number | null;
+    };
+    /** With alpha: the soft band's colour (straight) against the colour well inside, and against `background`. */
+    edgeColour?: {
+        band: Lab | null;
+        inside: Lab | null;
+        difference: number | null;
+        towardBackground: number | null;
+        reading: string;
+    };
     cast?: {
         a: number;
         b: number;
@@ -330,6 +354,7 @@ export interface LookSeries {
         name: string;
         temporal: Rgb | null;
         pairs: number;
+        matteChange: number | null;
     }>;
     pairs?: Array<{
         element: string;

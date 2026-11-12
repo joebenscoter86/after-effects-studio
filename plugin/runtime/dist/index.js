@@ -46056,14 +46056,16 @@ function cropOf(img, rect, opaque) {
   const { x, y, width, height } = rect;
   const rgb = new Float64Array(width * height * 3);
   const use = new Uint8Array(width * height);
+  const alpha = img.alpha ? new Float64Array(width * height) : void 0;
   for (let j = 0; j < height; j++)
     for (let i = 0; i < width; i++) {
       const p = (y + j) * img.width + (x + i);
       const q = j * width + i;
       for (let c = 0; c < 3; c++) rgb[q * 3 + c] = img.rgb[p * 3 + c];
       use[q] = !img.alpha || img.alpha[p] >= opaque ? 1 : 0;
+      if (alpha && img.alpha) alpha[q] = img.alpha[p];
     }
-  return { rect, width, height, rgb, use };
+  return alpha ? { rect, width, height, rgb, use, alpha } : { rect, width, height, rgb, use };
 }
 function lookCrops(img, args) {
   const out = /* @__PURE__ */ new Map();
@@ -46194,8 +46196,12 @@ function edgeWidths(c, minContrast) {
   };
   scan(c.width, c.height, (u, v) => Y[v * c.width + u]);
   scan(c.height, c.width, (u, v) => Y[u * c.width + v]);
-  if (widths.length < 3) return { edgeWidth: null, edges: widths.length };
-  return { edgeWidth: Math.round(median2(widths) * 100) / 100, edges: widths.length };
+  if (widths.length < 3) return { edgeWidth: null, p90: null, edges: widths.length };
+  return {
+    edgeWidth: Math.round(median2(widths) * 100) / 100,
+    p90: Math.round(percentile(widths, 90) * 100) / 100,
+    edges: widths.length
+  };
 }
 function levelsOf(c) {
   const ch = [[], [], []];
@@ -46306,6 +46312,81 @@ function compareLook(element, plate, tol = {}) {
     readings
   };
 }
+function matteEdge(c, minContrast) {
+  const a = c.alpha;
+  const grey = new Float64Array(a.length * 3);
+  for (let q = 0; q < a.length; q++) grey[q * 3] = grey[q * 3 + 1] = grey[q * 3 + 2] = a[q];
+  const widths = edgeWidths(
+    { ...c, rgb: grey, use: new Uint8Array(a.length).fill(1) },
+    minContrast
+  );
+  let soft = 0;
+  let outline = 0;
+  const w = c.width;
+  for (let y = 0; y < c.height; y++)
+    for (let x = 0; x < w; x++) {
+      const v = a[y * w + x];
+      if (v > 0.02 && v < 0.98) soft++;
+      if (v < 0.5) continue;
+      const p = y * w + x;
+      if (x > 0 && a[p - 1] < 0.5 || x < w - 1 && a[p + 1] < 0.5 || y > 0 && a[p - w] < 0.5 || y < c.height - 1 && a[p + w] < 0.5)
+        outline++;
+    }
+  return { ...widths, softBand: outline ? Math.round(soft / outline * 100) / 100 : null };
+}
+function edgeColourOf(c, background) {
+  const a = c.alpha;
+  const w = c.width;
+  const band = [0, 0, 0];
+  const inside = [0, 0, 0];
+  let nb = 0;
+  let ni = 0;
+  for (let y = 0; y < c.height; y++)
+    for (let x = 0; x < w; x++) {
+      const p = y * w + x;
+      const v = a[p];
+      if (v > 0.2 && v < 0.98) {
+        for (let k = 0; k < 3; k++) band[k] += c.rgb[p * 3 + k];
+        nb++;
+      } else if (v >= 0.98) {
+        let deep = true;
+        for (let dy = -6; dy <= 6 && deep; dy += 2)
+          for (let dx = -6; dx <= 6; dx += 2) {
+            const yy = y + dy;
+            const xx = x + dx;
+            if (yy < 0 || xx < 0 || yy >= c.height || xx >= w || a[yy * w + xx] < 0.98) {
+              deep = false;
+              break;
+            }
+          }
+        if (deep) {
+          for (let k = 0; k < 3; k++) inside[k] += c.rgb[p * 3 + k];
+          ni++;
+        }
+      }
+    }
+  if (!nb || !ni)
+    return {
+      band: nb ? labOf(band.map((v) => v / nb)) : null,
+      inside: ni ? labOf(inside.map((v) => v / ni)) : null,
+      difference: null,
+      towardBackground: null,
+      reading: !nb ? "no soft edge in the region" : "nothing far enough inside the edge to compare with"
+    };
+  const lb = labOf(band.map((v) => v / nb));
+  const li = labOf(inside.map((v) => v / ni));
+  const difference = Math.round(Math.hypot(lb.L - li.L, lb.a - li.a, lb.b - li.b) * 10) / 10;
+  let toward = null;
+  if (background) {
+    const lw = labOf(background);
+    const dir = [lw.L - li.L, lw.a - li.a, lw.b - li.b];
+    const d = [lb.L - li.L, lb.a - li.a, lb.b - li.b];
+    const n2 = dir[0] ** 2 + dir[1] ** 2 + dir[2] ** 2;
+    toward = n2 > 0 ? Math.round((d[0] * dir[0] + d[1] * dir[1] + d[2] * dir[2]) / n2 * 100) / 100 : null;
+  }
+  const reading = toward === null ? `The soft edge differs from the colour well inside by ${difference} (CIELAB); give \`background\` (the wall's colour) to read how much of it is the background.` : `The soft edge's colour sits ${Math.round(toward * 100)}% of the way from the colour well inside toward the background (${difference} apart, CIELAB)` + (toward > 0.25 ? ": background colour left in the edge, which rings the subject over a new background; Decontaminate Edge Colors takes it out." : ".");
+  return { band: lb, inside: li, difference, towardBackground: toward, reading };
+}
 function measureLook(img, args) {
   const minContrast = args.minContrast ?? LOOK_DEFAULTS.minContrast;
   const regions = args.regions.map((r) => {
@@ -46328,6 +46409,10 @@ function measureLook(img, args) {
       sharpness: edgeWidths(c, minContrast),
       colour
     };
+    if (c.alpha) {
+      rep.matte = matteEdge(c, minContrast);
+      rep.edgeColour = edgeColourOf(c, args.background);
+    }
     roleReading(r.name, r.role ?? null, colour, levels, rep);
     return rep;
   });
@@ -46358,7 +46443,17 @@ function summarizeLookSeries(frames, args) {
       if (t) per.push(t);
     }
     const temporal = per.length ? [0, 1, 2].map((k) => Math.round(median2(per.map((p) => p[k])) * 100) / 100) : null;
-    return { name: r.name, temporal, pairs: per.length };
+    const changes = [];
+    for (let i = 1; i < frames.length; i++) {
+      const a = frames[i - 1].get(r.name)?.alpha;
+      const b = frames[i].get(r.name)?.alpha;
+      if (!a || !b || a.length !== b.length) continue;
+      let sum = 0;
+      for (let q = 0; q < a.length; q++) sum += Math.abs(b[q] - a[q]);
+      changes.push(sum / a.length);
+    }
+    const matteChange = changes.length ? Math.round(median2(changes) * 1e4) / 1e4 : null;
+    return { name: r.name, temporal, pairs: per.length, matteChange };
   });
   const out = { regions };
   if (args.pairs?.length) {
@@ -46413,6 +46508,8 @@ function lookArgsError(args) {
         return `\`look.pairs\` names plate '${String(p?.plate)}', which is not a region`;
     }
   }
+  if (args.background !== void 0 && (!Array.isArray(args.background) || args.background.length !== 3 || !args.background.every((v) => typeof v === "number" && v >= 0 && v <= 1)))
+    return "`look.background` must be [r, g, b], each 0..1";
   for (const k of ["minContrast", "grainTolerance", "sharpnessTolerance"]) {
     const v = args[k];
     if (v !== void 0 && (typeof v !== "number" || !(v > 0) || v > 1))
@@ -48885,9 +48982,12 @@ var renderFrameTool = defineTool({
       ),
       minContrast: external_exports.number().gt(0).max(1).optional().describe("Smallest luma step (0..1) read as an edge. Default 0.1."),
       grainTolerance: external_exports.number().gt(0).max(1).optional().describe("Default 0.25: within a quarter of the plate's grain matches."),
+      background: external_exports.array(external_exports.number().min(0).max(1)).length(3).optional().describe(
+        "The background the subject was cut from (the wall's mean colour, [r, g, b] 0..1, read with `sample` on the take): each region's edgeColour then says how far the soft edge's colour leans toward it."
+      ),
       sharpnessTolerance: external_exports.number().gt(0).max(1).optional().describe("Default 0.25: within a quarter of the plate's edge width matches.")
     }).optional().describe(
-      "Does it sit in the scene: for each named region, on the file as written (stage 'output'; with channels 'rgba' only the opaque pixels, straight colour), levels {black, white, mean per channel, lumaBlack, lumaWhite, lumaMean} (0.5th and 99.5th percentiles, 0..1), grain {spatial: per channel in 8-bit steps, the robust spread of each pixel against its 3 x 3 neighbourhood}, sharpness {edgeWidth: median 10 to 90% rise across edges with a luma step of at least minContrast, px (a hard step about 0.8, a Gaussian blur of sigma s about 2.56 s), edges}, colour (CIELAB L, a, b, chroma, hue of the mean). role 'neutral' adds cast {a, b, amount, toward, gains, channelMixer} and a reading; role 'skin' a hue reading. pairs add, per element and plate, grain, sharpness and levels compared, with readings (add grain, soften, seat the blacks). With `times` on consecutive frames, lookSeries adds frame-to-frame grain per region (a still element reads 0). Reported as `look` (per frame with `times`)."
+      "Does it sit in the scene: for each named region, on the file as written (stage 'output'; with channels 'rgba' only the opaque pixels, straight colour), levels {black, white, mean per channel, lumaBlack, lumaWhite, lumaMean} (0.5th and 99.5th percentiles, 0..1), grain {spatial: per channel in 8-bit steps, the robust spread of each pixel against its 3 x 3 neighbourhood}, sharpness {edgeWidth: median 10 to 90% rise across edges with a luma step of at least minContrast, px (a hard step about 0.8, a Gaussian blur of sigma s about 2.56 s), p90 (the widest tenth), edges}, with alpha (channels 'rgba'): matte {edgeWidth, p90, edges, softBand: soft pixels (alpha 0.02 to 0.98) per pixel of outline} read on the alpha, and edgeColour {band, inside, difference, towardBackground, reading}: the soft edge's straight colour against the colour well inside, and with `background` how far it leans toward the background (wall colour ringing the subject); lookSeries adds matteChange (mean change in alpha over the region, frame to frame). colour (CIELAB L, a, b, chroma, hue of the mean). role 'neutral' adds cast {a, b, amount, toward, gains, channelMixer} and a reading; role 'skin' a hue reading. pairs add, per element and plate, grain, sharpness and levels compared, with readings (add grain, soften, seat the blacks). With `times` on consecutive frames, lookSeries adds frame-to-frame grain per region (a still element reads 0). Reported as `look` (per frame with `times`)."
     ),
     diff: external_exports.union([
       external_exports.boolean(),

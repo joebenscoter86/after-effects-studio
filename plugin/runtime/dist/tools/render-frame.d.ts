@@ -144,6 +144,7 @@ export declare const renderFrameTool: import("./define-tool.js").ToolSpec<{
         }, z.core.$strip>>>;
         minContrast: z.ZodOptional<z.ZodNumber>;
         grainTolerance: z.ZodOptional<z.ZodNumber>;
+        background: z.ZodOptional<z.ZodArray<z.ZodNumber>>;
         sharpnessTolerance: z.ZodOptional<z.ZodNumber>;
     }, z.core.$strip>>;
     diff: z.ZodOptional<z.ZodUnion<readonly [z.ZodBoolean, z.ZodObject<{
