@@ -1432,4 +1432,74 @@ export function matteCoverage(asClicked, result, width, height, opts = {}) {
         outsideDistance: outside,
     };
 }
+/**
+ * Partial transparency deep inside a cut-out, read on the file alone: pixels at
+ * `solid` or more (inside the body) and under `below`, more than `deep` px from
+ * the nearest pixel under `solid` and from the frame's edge. A seam where two
+ * copies of a matte meet reads like this; the soft edge of hair, near the
+ * outline, does not. Chosen on the two files of the half-size take (the cut-out
+ * as clicked and the soft edge, look C): every fourth frame read at most 82 and
+ * 41 px; a band of the soft edge's alpha 20 rows high at 0.75 read 3,900 to
+ * 4,400 px, and one 4 rows high at 0.9 read 760 to 890.
+ */
+export const SEEN_THROUGH_DEFAULTS = { solid: 0.5, below: 0.95, deep: 30, minArea: 400, minRun: 2 };
+export function seenThroughInside(alpha, width, height, opts = {}) {
+    const { solid, below, deep } = { ...SEEN_THROUGH_DEFAULTS, ...opts };
+    // Work on the body's box, one pixel larger, so the distance sees the outside round it.
+    let x0 = width, y0 = height, x1 = -1, y1 = -1;
+    for (let y = 0; y < height; y++)
+        for (let x = 0; x < width; x++)
+            if (alpha[y * width + x] >= solid) {
+                if (x < x0)
+                    x0 = x;
+                if (x > x1)
+                    x1 = x;
+                if (y < y0)
+                    y0 = y;
+                if (y > y1)
+                    y1 = y;
+            }
+    if (x1 < 0)
+        return { px: 0, box: null };
+    x0 = Math.max(0, x0 - 1);
+    y0 = Math.max(0, y0 - 1);
+    x1 = Math.min(width - 1, x1 + 1);
+    y1 = Math.min(height - 1, y1 + 1);
+    const w = x1 - x0 + 1;
+    const h = y1 - y0 + 1;
+    const crop = new Float64Array(w * h);
+    for (let y = 0; y < h; y++)
+        for (let x = 0; x < w; x++)
+            crop[y * w + x] = alpha[(y + y0) * width + x + x0];
+    const dist = new Float32Array(w * h);
+    distanceTo(crop, w, h, (a) => a < solid, new Float32Array(w * h), dist);
+    let px = 0;
+    let bx0 = width, by0 = height, bx1 = -1, by1 = -1;
+    for (let y = 0; y < h; y++) {
+        const fy = y + y0;
+        if (fy < deep || fy >= height - deep)
+            continue;
+        for (let x = 0; x < w; x++) {
+            const fx = x + x0;
+            if (fx < deep || fx >= width - deep)
+                continue;
+            const a = crop[y * w + x];
+            if (a < solid || a >= below || !(dist[y * w + x] > deep))
+                continue;
+            px++;
+            if (fx < bx0)
+                bx0 = fx;
+            if (fx > bx1)
+                bx1 = fx;
+            if (fy < by0)
+                by0 = fy;
+            if (fy > by1)
+                by1 = fy;
+        }
+    }
+    return {
+        px,
+        box: px ? { x: bx0, y: by0, width: bx1 - bx0 + 1, height: by1 - by0 + 1 } : null,
+    };
+}
 //# sourceMappingURL=matte.js.map

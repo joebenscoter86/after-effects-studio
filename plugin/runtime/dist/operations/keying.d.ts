@@ -337,7 +337,11 @@ export declare const SOFT_EDGE_DEFAULTS: {
     decontaminate: boolean;
     feather: number;
     regionDepth: number;
+    /** With `across: true`: frames spread across the clip. */
     samples: number;
+    /** By default the check samples the click frame and every `nearStep`th frame after it, up to `near` frames on. */
+    near: number;
+    nearStep: number;
     /** The closing check: a pixel solid in the matte as clicked and more than this far inside its edge must stay solid. */
     deep: number;
     /** Matte more than this far outside the outline as clicked counts as spread (a smear). */

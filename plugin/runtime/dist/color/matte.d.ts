@@ -461,4 +461,28 @@ export declare function matteCoverage(asClicked: Float64Array, result: Float64Ar
     outside?: number;
     spreadAlpha?: number;
 }): CoverageReport;
+/**
+ * Partial transparency deep inside a cut-out, read on the file alone: pixels at
+ * `solid` or more (inside the body) and under `below`, more than `deep` px from
+ * the nearest pixel under `solid` and from the frame's edge. A seam where two
+ * copies of a matte meet reads like this; the soft edge of hair, near the
+ * outline, does not. Chosen on the two files of the half-size take (the cut-out
+ * as clicked and the soft edge, look C): every fourth frame read at most 82 and
+ * 41 px; a band of the soft edge's alpha 20 rows high at 0.75 read 3,900 to
+ * 4,400 px, and one 4 rows high at 0.9 read 760 to 890.
+ */
+export declare const SEEN_THROUGH_DEFAULTS: {
+    solid: number;
+    below: number;
+    deep: number;
+    minArea: number;
+    minRun: number;
+};
+export interface SeenThroughReading {
+    /** Pixels partly see-through deep inside the body. */
+    px: number;
+    /** The box round them, or null. */
+    box: Box | null;
+}
+export declare function seenThroughInside(alpha: Float64Array, width: number, height: number, opts?: Partial<typeof SEEN_THROUGH_DEFAULTS>): SeenThroughReading;
 //# sourceMappingURL=matte.d.ts.map
