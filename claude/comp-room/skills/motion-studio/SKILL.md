@@ -26,6 +26,7 @@ Inspect `ae_version_info` and `ae_context`, or run the plugin's doctor if no con
 | Green-screen keying, spill, grading a keyed subject to a plate; making an element sit in its scene (grain, softness, black level, light wrap, a room's colour cast on a cut-out); cutting a person or object out of footage, with or without a green screen | keying |
 | Paper collage, cutouts or tactile cardstock | paper-collage-style, paper-collage-recipes, paper-collage-examples; sibling paper-collage/SKILL.md |
 | Voiceover, captions, UI, factual evidence | type-evidence |
+| Easing, hits on the beat, word timing (check curves with `motion.curve`, mark words or beats with `sound.markers`, measure with `sound.sync`) | timing |
 | Supplied reference or a look that isn't landing (measure both with `reference.report`, fix the differences largest first) | reference-study, failure-atlas |
 | Native implementation | scripting, motion-jsx; sibling ae-control/SKILL.md |
 | Every review/delivery | review, quality, failure-atlas |

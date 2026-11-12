@@ -427,14 +427,249 @@ function registerMotionMaps(ref, build) {
     correlation: r3(best.c)
   };
 }
+const CURVE_DEFAULTS = {
+  restBelow: 0.02,
+  noEaseAbove: 0.6,
+  jumpRatio: 2.5,
+  jumpShare: 0.25,
+  settleWithin: 0.01,
+  joinGap: 2
+};
+const median = (v) => {
+  if (!v.length) return 0;
+  const s = v.slice().sort((a, b) => a - b);
+  const m = s.length >> 1;
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+};
+const norm = (v) => Math.sqrt(v.reduce((s, x) => s + x * x, 0));
+const sub = (a, b) => a.map((x, i) => x - (b[i] ?? 0));
+const rnd = (v, k = 1e3) => Math.round(v * k) / k;
+function analyzeCurve(samples, fps, opts = {}) {
+  const o = { ...CURVE_DEFAULTS };
+  for (const [k, v] of Object.entries(opts)) if (typeof v === "number") o[k] = v;
+  const frames = samples.map((s, i) => ({
+    ...s,
+    speed: i === 0 ? 0 : rnd(norm(sub(s.value, samples[i - 1].value)) * fps)
+  }));
+  const peak = Math.max(0, ...frames.map((f) => f.speed));
+  const flags = [];
+  if (peak <= 1e-9)
+    return { frames, moves: [], flags, reading: "The property does not move over the frames read." };
+  const moving = frames.map((f) => f.speed > o.restBelow * peak);
+  const runs = [];
+  for (let i = 0; i < frames.length; i++) {
+    if (!moving[i]) continue;
+    let j = i;
+    while (j + 1 < frames.length && moving[j + 1]) j++;
+    const last = runs[runs.length - 1];
+    if (last && i - last[1] - 1 <= o.joinGap) last[1] = j;
+    else runs.push([i, j]);
+    i = j;
+  }
+  const moves = runs.map(([i0, i1]) => {
+    const from = Math.max(0, i0 - 1);
+    const to = i1;
+    const sp = frames.slice(i0, i1 + 1).map((f) => f.speed);
+    const mid = median(sp);
+    let pk = i0;
+    for (let i = i0; i <= i1; i++) if (frames[i].speed > frames[pk].speed) pk = i;
+    const start = frames[from].value;
+    const end = frames[to].value;
+    const way = sub(end, start);
+    const distance = norm(way);
+    const unit = distance > 0 ? way.map((x) => x / distance) : way;
+    let over = 0;
+    let overFrame = -1;
+    let crossed = -1;
+    for (let i = i0; i <= to; i++) {
+      const p = sub(frames[i].value, end).reduce((s, x, k) => s + x * unit[k], 0);
+      if (p > over) {
+        over = p;
+        overFrame = frames[i].frame;
+      }
+      if (crossed < 0 && p >= -o.settleWithin * distance) crossed = i;
+    }
+    const overshoot = distance > 0 && over / distance >= o.settleWithin ? { amount: rnd(over), share: rnd(over / distance), frame: overFrame } : null;
+    let settle = null;
+    if (overshoot && crossed >= 0) {
+      let at = to;
+      while (at - 1 > crossed && norm(sub(frames[at - 1].value, end)) <= o.settleWithin * distance) at--;
+      settle = { frames: frames[at].frame - frames[crossed].frame, from: frames[crossed].frame, at: frames[at].frame };
+    }
+    return {
+      from: frames[from].frame,
+      to: frames[to].frame,
+      distance: rnd(distance),
+      peakSpeed: rnd(frames[pk].speed),
+      peakFrame: frames[pk].frame,
+      startEase: mid > 0 && frames[i0].speed >= o.noEaseAbove * mid ? "none" : "eased",
+      endEase: mid > 0 && frames[i1].speed >= o.noEaseAbove * mid ? "none" : "eased",
+      overshoot,
+      settle
+    };
+  });
+  for (const [k, m] of moves.entries()) {
+    const [i0, i1] = runs[k];
+    const span = `The move from frame ${m.from} to ${m.to}`;
+    const mid = median(frames.slice(i0, i1 + 1).map((f) => f.speed));
+    const pc = (v) => `${Math.round(v / (mid || 1) * 100)}%`;
+    if (m.startEase === "none" || m.endEase === "none") {
+      const both = m.startEase === "none" && m.endEase === "none";
+      flags.push({
+        kind: "no ease",
+        frames: both ? [m.from, m.to] : m.startEase === "none" ? [m.from] : [m.to],
+        reading: `${span} ${both ? "starts and stops at full speed" : m.startEase === "none" ? "starts at full speed" : "stops at full speed"} (no ease): its ${both ? `first and last moving frames run at ${pc(frames[i0].speed)} and ${pc(frames[i1].speed)}` : m.startEase === "none" ? `first moving frame runs at ${pc(frames[i0].speed)}` : `last moving frame runs at ${pc(frames[i1].speed)}`} of its middle speed. Ease it, unless a mechanical, constant move is meant.`
+      });
+    }
+    const movePeak = m.peakSpeed;
+    for (let j = i0 + 2; j <= i1 - 1; j++) {
+      const a = frames[j - 1].speed;
+      const b = frames[j].speed;
+      const lo = Math.min(a, b);
+      if (Math.abs(b - a) >= o.jumpShare * movePeak && (lo <= 0 || Math.max(a, b) / lo >= o.jumpRatio))
+        flags.push({
+          kind: "speed jump",
+          frames: [frames[j - 1].frame, frames[j].frame],
+          reading: `${span} jumps in speed between frames ${frames[j - 1].frame} and ${frames[j].frame}: ${rnd(a, 10)} to ${rnd(b, 10)} units a second (top ${rnd(movePeak, 10)}). Look at the keys there.`
+        });
+    }
+    if (m.overshoot)
+      flags.push({
+        kind: "overshoot",
+        frames: [m.overshoot.frame],
+        reading: `${span} overshoots by ${Math.round(m.overshoot.share * 100)}% of its distance (${rnd(m.overshoot.amount, 10)} units, at frame ${m.overshoot.frame})${m.settle ? ` and takes ${m.settle.frames} frames to settle within ${o.settleWithin * 100}% (frames ${m.settle.from} to ${m.settle.at})` : ""}. Whether that is the bounce you want is a judgment.`
+      });
+  }
+  const problems = flags.filter((f) => f.kind !== "overshoot");
+  return {
+    frames,
+    moves,
+    flags,
+    reading: `${moves.length} move${moves.length === 1 ? "" : "s"} over frames ${frames[0].frame} to ${frames[frames.length - 1].frame}; ` + (problems.length ? problems.map((f) => f.reading).join(" ") : "every move eases in and out, with no jump in speed.") + flags.filter((f) => f.kind === "overshoot").map((f) => ` ${f.reading}`).join("")
+  };
+}
+function curveGraph(r, size = { width: 480, height: 160 }) {
+  const { width: W, height: H } = size;
+  const rgb = new Float64Array(W * H * 3);
+  const put = (x, y, c) => {
+    if (x < 0 || y < 0 || x >= W || y >= H) return;
+    const p = (Math.round(y) * W + Math.round(x)) * 3;
+    rgb[p] = c[0];
+    rgb[p + 1] = c[1];
+    rgb[p + 2] = c[2];
+  };
+  for (let i = 0; i < W * H; i++) rgb.set([0.08, 0.08, 0.1], i * 3);
+  const n = r.frames.length;
+  if (!n) return { width: W, height: H, rgb };
+  const pad = 6;
+  const X = (i) => pad + (W - 2 * pad) * i / Math.max(1, n - 1);
+  const Y = (u) => H - pad - (H - 2 * pad) * u;
+  const first = r.frames[0].frame;
+  for (const m of r.moves)
+    for (let x = Math.floor(X(m.from - first)); x <= Math.ceil(X(m.to - first)); x++)
+      for (let y = pad; y < H - pad; y++) put(x, y, [0.14, 0.14, 0.18]);
+  const line = (vals, c) => {
+    const lo = Math.min(...vals);
+    const hi = Math.max(...vals);
+    const s = hi - lo > 1e-12 ? hi - lo : 1;
+    for (let i = 1; i < n; i++) {
+      const x0 = X(i - 1);
+      const x1 = X(i);
+      const y0 = Y((vals[i - 1] - lo) / s);
+      const y1 = Y((vals[i] - lo) / s);
+      const steps = Math.max(1, Math.ceil(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0))));
+      for (let k = 0; k <= steps; k++) put(x0 + (x1 - x0) * k / steps, y0 + (y1 - y0) * k / steps, c);
+    }
+  };
+  const dims = r.frames[0].value.length;
+  for (let d = 0; d < dims; d++) line(r.frames.map((f) => f.value[d] ?? 0), [0.85 - 0.2 * d, 0.85, 0.9]);
+  line(r.frames.map((f) => f.speed), [1, 0.55, 0.15]);
+  for (const f of r.flags.filter((x) => x.kind !== "overshoot"))
+    for (const fr of f.frames) for (let y = pad; y < pad + 10; y++) put(X(fr - first), y, [0.95, 0.2, 0.2]);
+  return { width: W, height: H, rgb };
+}
+function soundOnsets(values, fps, opts = {}) {
+  const share = opts.share ?? 0.3;
+  const gap = opts.gap ?? 3;
+  const top = Math.max(0, ...values);
+  if (top <= 1e-6) return [];
+  const floor = median(values);
+  const thr = floor + share * (top - floor);
+  const out = [];
+  let last = -Infinity;
+  for (let f = 0; f < values.length; f++) {
+    if (values[f] >= thr && (f === 0 || values[f - 1] < thr) && f - last >= gap) {
+      out.push({ frame: f, time: f / fps, level: rnd(values[f]) });
+      last = f;
+    }
+  }
+  return out;
+}
+function parseTiming(text, fps) {
+  const t = text.trim();
+  if (t.startsWith("[") || t.startsWith("{")) {
+    const j = JSON.parse(t);
+    const list = Array.isArray(j) ? j : j.words ?? j.markers ?? j.beats ?? [];
+    return list.map((e, i) => {
+      const x = typeof e === "number" ? { time: e } : e;
+      const label = String(x.word ?? x.w ?? x.text ?? x.label ?? x.name ?? "");
+      const sec = [x.start, x.time, x.t].find((v) => typeof v === "number");
+      const time = sec ?? (typeof x.frame === "number" ? x.frame / fps : void 0);
+      if (time === void 0) throw new Error(`entry ${i + 1} of the timing file has no time (start, time or t in seconds, or frame)`);
+      return { time, label };
+    });
+  }
+  const out = [];
+  for (const line of t.split(/\r?\n/)) {
+    const [a, ...rest] = line.split(",");
+    const time = Number(a);
+    if (!line.trim() || !Number.isFinite(time)) continue;
+    out.push({ time, label: rest.join(",").trim() });
+  }
+  if (!out.length) throw new Error("no time,label lines in the timing file");
+  return out;
+}
+const SYNC_DEFAULTS = { lateFrames: 2, earlyFrames: 4 };
+function syncReport(events, markers, fps, opts = {}) {
+  const o = {
+    lateFrames: opts.lateFrames ?? SYNC_DEFAULTS.lateFrames,
+    earlyFrames: opts.earlyFrames ?? SYNC_DEFAULTS.earlyFrames
+  };
+  if (!markers.length)
+    return { events: [], flags: [], reading: "No markers to compare with: add word or beat markers first (sound.markers)." };
+  const out = events.map((e) => {
+    let best = markers[0];
+    for (const m of markers) if (Math.abs(m.time - e.time) < Math.abs(best.time - e.time)) best = m;
+    return { name: e.name, time: rnd(e.time, 1e4), frames: Math.round((e.time - best.time) * fps), marker: best };
+  });
+  const flags = out.filter((e) => e.frames >= o.lateFrames || e.frames <= -o.earlyFrames).map((e) => {
+    const n = Math.abs(e.frames);
+    return {
+      ...e,
+      reading: `${e.name} is ${n} frame${n === 1 ? "" : "s"} ${e.frames > 0 ? "after" : "before"} the nearest marker (${e.marker?.label ? `'${e.marker.label}' ` : ""}at ${rnd(e.marker.time, 1e3)} s): ${e.frames > 0 ? "late" : "early"} (flagged from ${e.frames > 0 ? o.lateFrames : o.earlyFrames} frames ${e.frames > 0 ? "after" : "before"}).`
+    };
+  });
+  return {
+    events: out,
+    flags,
+    reading: flags.length ? flags.map((f) => f.reading).join(" ") : `All ${out.length} events are within ${o.lateFrames - 1} frame${o.lateFrames - 1 === 1 ? "" : "s"} after and ${o.earlyFrames - 1} before their nearest marker.`
+  };
+}
 export {
+  CURVE_DEFAULTS,
   DIFF_DEFAULTS,
+  SYNC_DEFAULTS,
+  analyzeCurve,
   cellLuma,
+  curveGraph,
   diffArgsError,
   motionCentre,
+  parseTiming,
   pictureChange,
   pictureOf,
   registerMotionMaps,
   resolveDiffThresholds,
-  summarizeSeries
+  soundOnsets,
+  summarizeSeries,
+  syncReport
 };
