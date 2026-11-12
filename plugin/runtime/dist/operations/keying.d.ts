@@ -83,11 +83,38 @@ type RegionBox = Box & {
 export interface RegionFinding {
     kind: "hole" | "opening";
     frames: number[];
+    smallestArea: number;
     largestArea: number;
+    /** The frame where it was largest. */
+    largestFrame: number;
     box: Box;
     edges?: FrameEdge[];
 }
-/** Holes and openings at least `limit` px, each kind grouped across frames where their boxes overlap. */
+/**
+ * Two regions are alike (the same thing on two frames, or on two renders of
+ * one frame) when their boxes overlap by at least half their union, or when
+ * they overlap and their areas are within a factor of two. A small opening
+ * under a microphone stand inside the box of a missed microphone is not
+ * alike to it (2026-11-11: 1,862 px against 114,769 px).
+ */
+export declare function alikeRegions(a: Box & {
+    area: number;
+}, b: Box & {
+    area: number;
+}): boolean;
+/** An `accept` entry: a plain box (it accepts openings) or { box, kind }. */
+export type AcceptEntry = Box | {
+    box: Box;
+    kind?: "hole" | "opening";
+};
+/**
+ * Whether a finding is one the user accepted: an entry of the same kind
+ * (openings unless the entry says "hole") whose box overlaps the finding's by
+ * at least half their union. A hole is never accepted through an opening's
+ * box, and a box does not accept what merely lies inside it.
+ */
+export declare function acceptedBy(f: RegionFinding, accept: AcceptEntry[]): boolean;
+/** Holes and openings at least `limit` px, each kind grouped across frames where they are alike. */
 export declare function cutoutFindings(frames: Array<{
     frame: number;
     holes?: RegionBox[] | null;
