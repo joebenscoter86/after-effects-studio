@@ -162,7 +162,12 @@ function curveReadJsx(args: { comp: unknown; layer: unknown; path: string[]; sta
                 var _v = AE.valueToJson(AE.readValue(_p, _f * _fd));
                 _vals.push(_v);
             }
-            var _interp = function (v) { return v === KeyframeInterpolationType.LINEAR ? "linear" : v === KeyframeInterpolationType.BEZIER ? "bezier" : v === KeyframeInterpolationType.HOLD ? "hold" : String(v); };
+            var _interp = function (v) {
+                if (v === KeyframeInterpolationType.LINEAR) return "linear";
+                if (v === KeyframeInterpolationType.BEZIER) return "bezier";
+                if (v === KeyframeInterpolationType.HOLD) return "hold";
+                return "other";
+            };
             var _keys = [];
             for (var _k = 1; _k <= _p.numKeys; _k++) {
                 var _kt = _p.keyTime(_k);
