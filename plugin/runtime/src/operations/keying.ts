@@ -1567,6 +1567,7 @@ async function renderChunked(
   outDir: string,
   stem: string,
   tally: RenderTally = renderTally(),
+  firstCall = 0,
 ): Promise<RenderedFrame[]> {
   // ae_render_frame takes at most 32 frames a call, and its settle wait at most 600 s.
   const size = Math.max(1, Math.min(32, Math.floor(SETTLE_MAX_MS / perFrameMs)));
@@ -1577,7 +1578,7 @@ async function renderChunked(
     const payload = await io.render({
       ...base,
       frames: chunk,
-      outPath: path.join(outDir, `${stem}-${c}.png`),
+      outPath: path.join(outDir, `${stem}-${firstCall + c}.png`),
       settleTimeoutMs: Math.min(SETTLE_MAX_MS, Math.max(1, Math.round(perFrameMs * chunk.length))),
     });
     tally.calls++;
@@ -1949,6 +1950,7 @@ async function recheckFrames(
     const tPic = performance.now();
     const secondPicture = b.file ? await overPicture(io, b.file, over) : null;
     pixels.picturesMs += since(tPic);
+    pixels.ms += since(tPic);
     unstable.push({
       kind: "unstable",
       frame: a.frame,
@@ -1966,6 +1968,7 @@ async function recheckFrames(
     failed,
     skippedAccepted,
     unstable,
+    captures: again.map((r) => r.file).filter((f): f is string => typeof f === "string"),
     note:
       RECHECK_NOTE +
       (failed.length
@@ -2122,6 +2125,15 @@ export async function runSubjectCheck(args: Record<string, unknown>, io: CutoutI
     ? ` Look at the picture (${picture}): it shows what no number does, such as the background kept or something the brief names left out.`
     : " No frame rendered, so there is no picture.";
   const stop = findings.length > 0;
+  // The raw captures have been read (and drawn over the flat colour); they go now unless the caller keeps them.
+  if (args.keepCaptures !== true) {
+    const files = [
+      ...readings.map((r) => r.file),
+      ...("captures" in recheck ? (recheck.captures as string[]) : []),
+    ].filter((f): f is string => typeof f === "string");
+    await Promise.all(files.map((f) => fs.rm(f, { force: true })));
+    for (const r of readings) delete r.file;
+  }
   return {
     ok: true,
     layer: st.layer,
@@ -2175,6 +2187,29 @@ const FILL_LIMITS = (frame: number) => [
 ];
 
 export async function runFillGaps(args: Record<string, unknown>, io: CutoutIO): Promise<Json> {
+  // Every raw capture the fill renders is read and then removed, unless the caller keeps them.
+  const captures: string[] = [];
+  const watched: CutoutIO = {
+    ...io,
+    render: async (a) => {
+      const out = await io.render(a);
+      for (const f of out?.frames ?? [])
+        if (typeof f?.writtenTo === "string") captures.push(f.writtenTo);
+      if (typeof out?.writtenTo === "string") captures.push(out.writtenTo);
+      return out;
+    },
+  };
+  try {
+    const res = await fillGaps(args, watched);
+    if (args.keepCaptures !== true) for (const r of res?.after?.frames ?? []) delete r.file;
+    return res;
+  } finally {
+    if (args.keepCaptures !== true)
+      await Promise.all(captures.map((f) => fs.rm(f, { force: true })));
+  }
+}
+
+async function fillGaps(args: Record<string, unknown>, io: CutoutIO): Promise<Json> {
   const still = args.stillPath;
   if (
     typeof still !== "string" ||
@@ -2630,6 +2665,13 @@ registerOp({
         "Render each frame with a hole or opening over the limit once more at the end and report a frame that differs (kind 'unstable'). Default true; false skips it.",
       required: false,
     },
+    {
+      name: "keepCaptures",
+      type: "boolean",
+      description:
+        "Keep the raw captures ae_render_frame wrote (default false: each is removed once read; the pictures stay).",
+      required: false,
+    },
     secondsPerFrameParam,
     overParam,
     subjectIndexParam,
@@ -2703,6 +2745,13 @@ registerOp({
       type: "boolean",
       description:
         "Measure after the fill across the clip instead of near the reference frame. Takes minutes; prefer subject.render_cutout and subject.check_file.",
+      required: false,
+    },
+    {
+      name: "keepCaptures",
+      type: "boolean",
+      description:
+        "Keep the raw captures ae_render_frame wrote (default false: each is removed once read; the pictures stay).",
       required: false,
     },
     secondsPerFrameParam,
@@ -3080,29 +3129,95 @@ export async function runCheckFile(args: Record<string, unknown>, io: FileIO): P
   const renders = renderTally();
   const pixels = pixelTally();
   const { frames, step } = checkFileFrames(setup.frames, cap);
-  let readings: FrameReading[] = [];
-  let cleanup: Json = null;
-  try {
-    const rendered = await renderChunked(
-      io,
-      { compNameOrId: setup.compId, channels: "rgba" },
-      frames,
-      perFrameMs,
-      outDir,
-      "check-file",
-      renders,
+  const keepCaptures = args.keepCaptures === true;
+  // Up to 24 frames spread over the file go on the sheet, chosen now so their captures can be kept as they are read.
+  const sheetPlan = new Set<number>();
+  for (let i = 0; i < Math.min(24, frames.length); i++)
+    sheetPlan.add(frames[Math.floor((i * frames.length) / Math.min(24, frames.length))]);
+  const isAccepted = (x: KindRegion) =>
+    acceptedBy(
+      { kind: x.kind, box: { x: x.x, y: x.y, width: x.width, height: x.height } } as RegionFinding,
+      accept,
     );
-    readings = (
-      await measureFrames(
+  // Regions not accepted, grouped as cutoutFindings groups them (frames in order, alike to a member): each track's
+  // largest frame is the one that gets a picture, so only that capture has to be kept.
+  const tracks: Array<{
+    kind: "hole" | "opening";
+    members: KindRegion[];
+    bestArea: number;
+    bestFrame: number;
+  }> = [];
+  const jumpFrames = new Set<number>();
+  const kept = new Map<number, string>();
+  let readings: FrameReading[] = [];
+  let prev: FrameReading | null = null;
+  let cleanup: Json = null;
+  const needed = () => {
+    const n = new Set<number>([...jumpFrames, ...sheetPlan]);
+    for (const t of tracks) n.add(t.bestFrame);
+    return n;
+  };
+  const release = async (frame: number) => {
+    const f = kept.get(frame);
+    if (!f || keepCaptures) return;
+    kept.delete(frame);
+    await fs.rm(f, { force: true });
+  };
+  const size = Math.max(1, Math.min(32, Math.floor(SETTLE_MAX_MS / perFrameMs)));
+  try {
+    for (let b = 0; b * size < frames.length; b++) {
+      const batch = frames.slice(b * size, (b + 1) * size);
+      const rendered = await renderChunked(
         io,
-        rendered,
-        limit,
-        over,
-        path.join(outDir, "check-file_unused.png"),
-        pixels,
-        false,
-      )
-    ).readings;
+        { compNameOrId: setup.compId, channels: "rgba" },
+        batch,
+        perFrameMs,
+        outDir,
+        "check-file",
+        renders,
+        b,
+      );
+      const got = (
+        await measureFrames(
+          io,
+          rendered,
+          limit,
+          over,
+          path.join(outDir, "check-file_unused.png"),
+          pixels,
+          false,
+        )
+      ).readings;
+      for (const r of got) {
+        readings.push(r);
+        if (!r.checked || !r.file) continue;
+        kept.set(r.frame, r.file);
+        for (const x of regionsOf(r)) {
+          if (x.area < limit || isAccepted(x)) continue;
+          const t = tracks.find(
+            (tr) => tr.kind === x.kind && tr.members.some((m) => alikeRegions(m, x)),
+          );
+          if (t) {
+            t.members.push(x);
+            if (x.area > t.bestArea) {
+              t.bestArea = x.area;
+              t.bestFrame = r.frame;
+            }
+          } else tracks.push({ kind: x.kind, members: [x], bestArea: x.area, bestFrame: r.frame });
+        }
+        if (prev && prev.checked && r.frame === prev.frame + 1) {
+          const change = Math.abs((r.opaqueShare ?? 0) - (prev.opaqueShare ?? 0));
+          if (change > jumpLimit) {
+            jumpFrames.add(prev.frame);
+            jumpFrames.add(r.frame);
+          }
+        }
+        // Every kept capture except this one (it may still start a jump) is released once nothing needs it.
+        const need = needed();
+        for (const f of Array.from(kept.keys())) if (f !== r.frame && !need.has(f)) await release(f);
+        prev = r;
+      }
+    }
   } finally {
     cleanup = await io.execute(
       fileCleanupJsx({
@@ -3110,13 +3225,11 @@ export async function runCheckFile(args: Record<string, unknown>, io: FileIO): P
         itemId: setup.itemId,
         removeItem: setup.imported === true && args.keepFootage !== true,
       }),
-      {
-        label: "subject.check_file cleanup",
-        timeoutMs: 60_000,
-        undoGroup: true,
-      },
+      { label: "subject.check_file cleanup", timeoutMs: 60_000, undoGroup: true },
     );
   }
+  const need = needed();
+  for (const f of Array.from(kept.keys())) if (!need.has(f)) await release(f);
 
   // Opaque share across the file, and jumps between true neighbours only.
   const byFrame = new Map(readings.filter((r) => r.checked).map((r) => [r.frame, r]));
@@ -3157,39 +3270,44 @@ export async function runCheckFile(args: Record<string, unknown>, io: FileIO): P
     largestStep,
   };
 
-  // Pictures: every frame with a finding, and a sheet of at most 24 frames (those first, then spread over the file).
+  // Full-size pictures: the largest frame of each finding not accepted, and both frames of each jump.
   const tPic = performance.now();
-  const findingFrames = new Set<number>();
-  for (const r of readings) if (r.checked && regionsOf(r).length) findingFrames.add(r.frame);
-  for (const j of jumps) {
-    findingFrames.add(j.from);
-    findingFrames.add(j.to);
-  }
+  const pictureFrames = new Set<number>([
+    ...tracks.map((t) => t.bestFrame),
+    ...jumps.flatMap((j) => [j.from, j.to]),
+  ]);
   const pictureOf = new Map<number, string | null>();
-  for (const f of findingFrames) {
-    const r = byFrame.get(f);
-    if (r?.file) pictureOf.set(f, await overPicture(io, r.file, over));
+  let pictureBytes = 0;
+  for (const f of [...pictureFrames].sort((a, b) => a - b)) {
+    const file = kept.get(f);
+    const pic = file ? await overPicture(io, file, over) : null;
+    pictureOf.set(f, pic);
+    if (pic)
+      pictureBytes += await fs.stat(pic).then(
+        (st) => st.size,
+        () => 0,
+      );
   }
   for (const j of jumps) j.pictures = [pictureOf.get(j.from) ?? null, pictureOf.get(j.to) ?? null];
   for (const r of readings)
-    if (pictureOf.has(r.frame)) r.picture = pictureOf.get(r.frame) ?? undefined;
-  const sheetFrames = [...findingFrames].slice(0, 24);
-  const rest = checkedReadings.map((r) => r.frame).filter((f) => !findingFrames.has(f));
-  for (let i = 0; sheetFrames.length < 24 && i < rest.length; i++) {
-    const k = Math.floor(
-      (i * rest.length) / Math.max(1, Math.min(24 - findingFrames.size, rest.length)),
-    );
-    if (k < rest.length && !sheetFrames.includes(rest[k])) sheetFrames.push(rest[k]);
-  }
-  sheetFrames.sort((a, b) => a - b);
+    if (pictureOf.get(r.frame)) r.picture = pictureOf.get(r.frame) ?? undefined;
+  const picMs = since(tPic);
+  pixels.picturesMs += picMs;
+  pixels.ms += picMs;
+
+  // The sheet: the picture frames first, then the planned frames spread over the file, at most 24.
+  const tSheet = performance.now();
+  const sheetFrames = [...new Set([...pictureFrames, ...sheetPlan])]
+    .filter((f) => kept.has(f))
+    .slice(0, 24)
+    .sort((a, b) => a - b);
   let picture: string | null = null;
+  let sheetBytes = 0;
   const thumbs: DecodedPng[] = [];
   const labels: string[] = [];
   for (const f of sheetFrames) {
-    const r = byFrame.get(f);
-    if (!r?.file) continue;
     try {
-      const img = await io.readImage(r.file);
+      const img = await io.readImage(kept.get(f) as string);
       const comp = flattenOver(img, { kind: "color", color: parseHex(over) });
       const tw = Math.min(240, img.width);
       const th = Math.max(1, Math.round((img.height * tw) / img.width));
@@ -3199,7 +3317,7 @@ export async function runCheckFile(args: Record<string, unknown>, io: FileIO): P
         rgb: resample({ ...img, rgb: comp }, tw, th),
         bitDepth: 8,
       });
-      labels.push(`frame ${f}${findingFrames.has(f) ? " !" : ""}`);
+      labels.push(`frame ${f}${pictureFrames.has(f) ? " !" : ""}`);
     } catch {
       /* a frame that cannot be read again is left off the sheet */
     }
@@ -3207,13 +3325,23 @@ export async function runCheckFile(args: Record<string, unknown>, io: FileIO): P
   if (thumbs.length) {
     const sheet = composeContactSheet(thumbs, { labels, thumbWidth: 240 });
     picture = path.join(outDir, "check-file_sheet.png");
-    await writePng(
-      io,
-      picture,
-      encodePngSrgb8(sheet.width, sheet.height, sheet.rgb, PICTURE_DEFLATE),
-    );
+    const png = encodePngSrgb8(sheet.width, sheet.height, sheet.rgb, PICTURE_DEFLATE);
+    await writePng(io, picture, png);
+    sheetBytes = png.length;
   }
-  pixels.picturesMs += since(tPic);
+  const sheetMs = since(tSheet);
+  pixels.sheetMs += sheetMs;
+  pixels.ms += sheetMs;
+  // The rest of the raw captures go now, unless the caller keeps them.
+  for (const f of Array.from(kept.keys())) await release(f);
+  if (!keepCaptures) for (const r of readings) delete r.file;
+  const pictures = {
+    written: [...pictureOf.values()].filter(Boolean).length,
+    bytes: pictureBytes,
+    sheet: picture,
+    sheetBytes,
+    capturesKept: keepCaptures,
+  };
 
   const compared =
     `${plural(pairs, "pair")} of neighbouring frames` +
@@ -3249,6 +3377,7 @@ export async function runCheckFile(args: Record<string, unknown>, io: FileIO): P
     opaque,
     inOut: `${sum.text}${jumpText}${opaqueText} ${compared}${stop && picture ? ` Look at the picture (${picture}).` : ""}`,
     picture,
+    pictures,
     frameReadings: readings.map((r) => ({
       frame: r.frame,
       checked: r.checked,
@@ -3392,7 +3521,7 @@ registerOp({
   description:
     "Check a rendered cut-out movie (from subject.render_cutout) frame by frame: brings it into a throwaway comp, reads frames in batches of at most 32 (every frame up to maxFrames, default " +
     `${CHECK_FILE_MAX_FRAMES}; beyond it pairs of neighbouring frames in steps, always the first and last three), and reports holes and openings (as subject.check: holeLimit, accept), the opaque share of every frame, and a 'jump' finding when neighbouring frames differ by more than jumpLimit (default ${CHECK_FILE_JUMP_LIMIT}: on the take of 2026-11-11 the rendered cut-out ran 0.279 to 0.314 with no step over 0.012, and a dropped microphone is about 0.05). ` +
-    "Only true neighbours are compared, and `compared` says which. A frame that could not be read is 'not-checked' and stops. Pictures: every frame with a finding, and a sheet of up to 24 frames. The throwaway comp is removed afterwards, and the imported footage too unless keepFootage. " +
+    "Only true neighbours are compared, and `compared` says which. A frame that could not be read is 'not-checked' and stops. Pictures: the largest frame of each finding not accepted and both frames of each jump, full size, and a sheet of up to 24 frames; `pictures` counts them and their bytes. Each raw capture is removed once read unless keepCaptures (one run on the take had left 630 MB). The throwaway comp is removed afterwards, and the imported footage too unless keepFootage. " +
     "Measured: about 0.55 s a frame reading the file. Returns stop, findings, accepted, checked, compared, opaque, inOut, picture, frameReadings, timing.",
   params: [
     {
@@ -3448,6 +3577,13 @@ registerOp({
       name: "secondsPerFrame",
       type: "number",
       description: "Settle time allowed per frame, s (default 10).",
+      required: false,
+    },
+    {
+      name: "keepCaptures",
+      type: "boolean",
+      description:
+        "Keep the raw captures ae_render_frame wrote (default false: each is removed once read; the pictures stay).",
       required: false,
     },
     overParam,

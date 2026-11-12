@@ -608,3 +608,89 @@ describe("subject.use_cutout", () => {
     expect(res.error).toMatch(/already has a layer 'raw_nogreen.mp4 cut-out'/);
   });
 });
+
+// ------------------------------------------- what a file check leaves behind
+
+/** Frames 0..n-1 all carry a small opening under the "stand" (as on the take); `dropped` frames lose the mic too. */
+function standFrame(frame: number, dropped: Set<number>): Float64Array {
+  const a = fileFrame(frame, dropped);
+  for (let y = 280; y < H; y++) for (let x = 130; x < 150; x++) a[y * W + x] = 0; // 400 px opening off the bottom
+  for (let y = 240; y < H; y++) for (let x = 130; x < 150; x++) a[y * W + x] = 0; // grow it to 1,200 px
+  return a;
+}
+const STAND_BOX = { x: 130, y: 240, width: 20, height: 60 };
+
+function standIO(opts: { frames?: number; dropped?: Set<number> } = {}) {
+  const io = fileIO(opts);
+  const seen: number[] = [];
+  const base = io.render;
+  io.render = async (args: Any) => {
+    // How many raw captures are on disk when each batch starts.
+    seen.push((await fs.readdir(dir)).filter((f) => /^check-file-\d+_\d+\.png$/.test(f)).length);
+    const stem = args.outPath.replace(/\.png$/, "");
+    const out = await base(args);
+    for (const [i, frame] of (args.frames as number[]).entries())
+      await fs.writeFile(
+        `${stem}_${i}.png`,
+        encodePngSrgbRgba8(
+          W,
+          H,
+          new Float64Array(W * H * 3).fill(0.5),
+          standFrame(frame, opts.dropped ?? new Set()),
+        ),
+      );
+    return out;
+  };
+  return Object.assign(io, { seen });
+}
+const pngs = async () => (await fs.readdir(dir)).filter((f) => f.endsWith(".png"));
+
+describe("subject.check_file: what it leaves in outDir", () => {
+  it("deletes each raw capture once read, and writes no picture for regions the user accepted", async () => {
+    const io = standIO();
+    const res = await runCheckFile({ path: "/x/cut.mov", outDir: dir, accept: [STAND_BOX] }, io);
+    expect(res.stop).toBe(false);
+    expect(res.accepted).toHaveLength(1);
+    expect(await pngs()).toEqual(["check-file_sheet.png"]);
+    expect(res.pictures).toMatchObject({
+      written: 0,
+      bytes: 0,
+      sheet: path.join(dir, "check-file_sheet.png"),
+      capturesKept: false,
+    });
+    expect(Math.max(...io.seen)).toBeLessThanOrEqual(34); // a batch at a time, not the whole file
+  });
+
+  it("writes full-size pictures only for the largest frame of each finding and both frames of each jump", async () => {
+    const io = standIO({ dropped: new Set([100]) });
+    const res = await runCheckFile({ path: "/x/cut.mov", outDir: dir }, io);
+    expect(res.stop).toBe(true);
+    const stand = res.findings.find((f: Any) => f.kind === "opening" && f.frames.length > 1);
+    const over = (await pngs()).filter((f) => f.endsWith("_over.png"));
+    // The stand opening's largest frame, and frames 99, 100, 101 (the jumps and the mic opening on 100).
+    expect(over.length).toBe(new Set([stand.largestFrame, 99, 100, 101]).size);
+    expect(res.pictures.written).toBe(over.length);
+    expect(res.pictures.bytes).toBeGreaterThan(0);
+    expect((await pngs()).filter((f) => /^check-file-\d+_\d+\.png$/.test(f))).toEqual([]);
+    const jump = res.findings.find((f: Any) => f.kind === "jump");
+    for (const p of jump.pictures) await fs.access(p);
+  });
+
+  it("keeps the raw captures when asked", async () => {
+    const res = await runCheckFile(
+      { path: "/x/cut.mov", outDir: dir, keepCaptures: true },
+      standIO(),
+    );
+    expect((await pngs()).filter((f) => /^check-file-\d+_\d+\.png$/.test(f))).toHaveLength(120);
+    expect(res.pictures.capturesKept).toBe(true);
+  });
+
+  it("adds up its pixel timing: the parts are no more than the whole", async () => {
+    const res = await runCheckFile(
+      { path: "/x/cut.mov", outDir: dir },
+      standIO({ dropped: new Set([100]) }),
+    );
+    const p = res.timing.pixels;
+    expect(p.readMs + p.regionsMs + p.picturesMs + p.sheetMs).toBeLessThanOrEqual(p.ms + 5);
+  });
+});

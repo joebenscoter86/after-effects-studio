@@ -1099,3 +1099,23 @@ describe("subject.check: quick by default", () => {
     expect(res.after.checked).toEqual({ frames: 5, of: 5 });
   });
 });
+
+describe("subject.check: raw captures", () => {
+  it("deletes the raw captures after reading them and keeps the pictures, unless keepCaptures", async () => {
+    const raw = async () =>
+      (await fs.readdir(dir)).filter((f) => /^cutout(-recheck)?-\d+_\d+\.png$/.test(f));
+    const res = await runSubjectCheck(
+      { comp: "Main", layer: 1, outDir: dir, across: true },
+      fakeIO(() => rects([BODY, MIC_OFF]), { status: async () => APART as Any }),
+    );
+    expect(await raw()).toEqual([]);
+    await fs.access(res.frames[0].picture);
+    expect(res.frames[0].file).toBeUndefined();
+    const kept = await runSubjectCheck(
+      { comp: "Main", layer: 1, outDir: dir, across: true, keepCaptures: true },
+      fakeIO(() => rects([BODY, MIC_OFF]), { status: async () => APART as Any }),
+    );
+    expect((await raw()).length).toBe(18);
+    expect(kept.frames[0].file).toMatch(/\.png$/);
+  });
+});
