@@ -893,7 +893,7 @@ function objectMatte(
           name: "Duration",
           matchName: "ADBE Paint Duration",
           type: "TwoD",
-          value: [15, 10 + i],
+          value: [0.49999667, 10 + i], // Duration start is in seconds (measured live)
         }),
         transform,
       ],
@@ -1224,10 +1224,11 @@ describe("subject.prepare", () => {
         name: "Add Object 1",
         matchName: "ADBE Paint Atom",
         kind: "object",
-        duration: [15, 10],
+        duration: [0.49999667, 10],
         point: [1000, 2000],
         compPoint: [500, 1000],
-        durationStart: 15,
+        clickTime: 0.49999667,
+        clickFrame: 15,
       },
     ]);
   });
@@ -1271,7 +1272,7 @@ describe("subject.status", () => {
       ["Add Object 1", "object"],
       ["Paint 1", "other"],
     ]);
-    expect(res.selections[1].duration).toEqual([15, 11]);
+    expect(res.selections[1].duration).toEqual([0.49999667, 11]);
     expect(res.counts).toEqual({ object: 2, rectangle: 0, quickSelection: 1, other: 1 });
     expect(res.summary).toBe("2 objects selected, 1 quick-selection stroke, 1 other selection");
     expect(res.next).toMatch(/subject\.check/);
@@ -1487,7 +1488,8 @@ describe("subject.status: where each click landed", () => {
       name: "Add Object 2",
       point: [1081, 2403],
       compPoint: [540.5, 1201.5],
-      durationStart: 15,
+      clickTime: 0.49999667,
+      clickFrame: 15,
     });
     expect(res.sourceSize).toEqual([2176, 3840]);
     expect(res.compSize).toEqual([1080, 1920]);
@@ -1607,6 +1609,9 @@ describe("fillBuildJsx", () => {
         setTrackMatte(m: Any, t: number) {
           l.trackMatte = { layer: m.name, type: t };
         },
+        remove() {
+          layers.splice(layers.indexOf(l), 1);
+        },
       };
       return l;
     }
@@ -1614,12 +1619,20 @@ describe("fillBuildJsx", () => {
     const om = objectMatte(["Add Object 1"]);
     cut.effects.list.push(om);
     layers.push(cut, mk(taken || "BG", null));
+    const items: Any[] = [];
     const app = {
       project: {
         importFile(io: Any) {
           log.push(`import:${io.file.path}`);
-          return { name: "gap-mask.png" };
+          const item: Any = {
+            name: "gap-mask.png",
+            id: 77,
+            remove: () => items.splice(items.indexOf(item), 1),
+          };
+          items.push(item);
+          return item;
         },
+        itemByID: (id: number) => items.find((i) => i.id === id) ?? null,
       },
     };
     function File(this: Any, p: string) {
@@ -1629,7 +1642,7 @@ describe("fillBuildJsx", () => {
     function ImportOptions(this: Any, f: Any) {
       this.file = f;
     }
-    return { comp, layers, cut, app, File, ImportOptions, log };
+    return { comp, layers, cut, app, File, ImportOptions, log, items };
   }
 
   async function runBuild(w: Any, args: Record<string, unknown> = {}) {
@@ -1663,6 +1676,7 @@ describe("fillBuildJsx", () => {
       fillLayer: "raw_nogreen.mp4 gap fill",
       maskLayer: "raw_nogreen.mp4 gap mask",
       stillItem: "gap-mask.png",
+      stillItemId: 77,
       removedFromCopy: 1,
     });
     expect(w.layers.map((l: Any) => l.name)).toEqual([
@@ -1676,6 +1690,27 @@ describe("fillBuildJsx", () => {
     expect(fill.effects.list).toEqual([]);
     expect(w.layers[1].enabled).toBe(false);
     expect(w.cut.effects.list).toHaveLength(1);
+  });
+
+  it("undoes the build: removes the two layers and the imported still", async () => {
+    const { fillUnbuildJsx } = await import("../src/operations/keying.js");
+    const w = fillWorld();
+    const built = await runBuild(w);
+    const AE = loadAE();
+    AE.findCompByNameOrId = () => w.comp;
+    const body = fillUnbuildJsx({
+      comp: "Main",
+      fillLayer: built.fillLayer,
+      maskLayer: built.maskLayer,
+      stillItemId: built.stillItemId,
+    });
+    const res = new Function("AE", "app", body)(AE, w.app);
+    expect(res).toMatchObject({
+      ok: true,
+      removed: ["raw_nogreen.mp4 gap fill", "raw_nogreen.mp4 gap mask", "gap-mask.png"],
+    });
+    expect(w.layers.map((l: Any) => l.name)).toEqual(["raw_nogreen.mp4", "BG"]);
+    expect(w.items).toEqual([]);
   });
 
   it("refuses when the still is missing or a fill is already there", async () => {

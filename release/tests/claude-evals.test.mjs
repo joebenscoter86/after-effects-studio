@@ -249,6 +249,8 @@ test('the subject-matte case fails without subject.check, with it not before bui
   assert.equal((await verdict(answer({ check: 'After you say done I look at the cut-out.' })))['subject-check-first'], false);
   assert.equal((await verdict(answer({ check: 'Then I run subject.check and show you the picture of any hole.' })))['subject-check-first'], false);
   assert.equal((await verdict(answer({ check: 'Before anything else is built I run subject.check on the cut-out.' })))['subject-check-first'], false);
+  // An opening counts as well as a hole: the missed microphone ran off the frame edge.
+  assert.equal((await verdict(answer({ check: 'Before anything else is built I run subject.check; an opening it finds, such as a missed microphone, I show you in its picture.' })))['subject-check-first'], true);
   // A selection count instead of the check: the run of 2026-11-11.
   assert.equal((await verdict(answer({ check: 'subject.status says 2 objects selected, so the cut-out is done before anything else is built.' })))['subject-check-first'], false);
 });

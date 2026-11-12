@@ -15,7 +15,9 @@
 // subject.check refusing before the click. The click itself needs a person:
 // with AE_MCP_SUBJECT_CLICK_WAIT_S set (seconds), the suite waits that long
 // for a selection, then runs subject.check and, when it finds a hole,
-// subject.fill_gaps, and prints both results.
+// subject.fill_gaps, and prints both results; and checks that a frame given
+// no time to settle comes back not checked, with stop true. The order of the
+// tests matters: the click test runs last.
 
 import { promises as fs } from "node:fs";
 import * as os from "node:os";
@@ -208,4 +210,25 @@ describe("e2e subject cut-out on the no-green-screen take", () => {
     },
     Math.max(60, WAIT_S + 600) * 1000,
   );
+  it("a frame that does not finish rendering is not checked, and the check stops", async (ctx) => {
+    // Runs after the click test, which waits for the person's click.
+    if (!ready || !transport || !(WAIT_S > 0)) return ctx.skip();
+    const st = await op(transport, "subject.status", { comp: "cutout_e2e", layer: 1 });
+    if (!st?.selections?.length) return ctx.skip();
+    // A frame far from the click, not rendered yet, with 1 ms to settle: it cannot finish in time.
+    const res = await op(transport, "subject.check", {
+      comp: "cutout_e2e",
+      layer: 1,
+      outDir: OUT,
+      frames: [st.span.outFrame - 1],
+      secondsPerFrame: 0.001,
+    });
+    console.log(
+      "subject.check with no time to settle:",
+      JSON.stringify({ stop: res.stop, checked: res.checked, findings: res.findings }, null, 2),
+    );
+    expect(res.stop).toBe(true);
+    expect(res.checked.frames).toBe(0);
+    expect(res.findings.some((f: Any) => f.kind === "not-checked")).toBe(true);
+  });
 });

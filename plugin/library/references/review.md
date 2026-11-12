@@ -41,7 +41,7 @@ Every `ae_check_comp` flag ends as one of two things: fixed, or named in the han
 - two stray frames of another take just before a cut in the supplied footage, so the picture jumped two frames ahead of the cut the title and caption were on: on stills it looked like one cut, and it was found because the check flagged two jumps two frames apart (when the report shows two jumps close together, render every frame between them);
 - two stray frames of the next take at the end of the piece, after the last moment anyone had rendered.
 
-A subject cut out with Object Matte (`keying`, last section): check what was left out, above all things the subject holds or sits against (a microphone, a chair, a cup), any hole inside the cut-out (a gap where the shirt should show), and the hard edge, about 1 px wide, against the new background.
+A subject cut out with Object Matte (`keying`, last section): check what was left out, above all things the subject holds or sits against (a microphone, a chair, a cup), any hole or opening in the cut-out (a gap where the shirt should show; a missed object that runs off the frame edge), and the hard edge, about 1 px wide, against the new background.
 
 Some defects raise no flag: a colour cast, a soft background, a fringe and a beat hit late are steady states or timing against the brief. Only looking at frames against the brief finds them, so the frames are not optional when the report is clean.
 

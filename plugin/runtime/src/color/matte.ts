@@ -1070,3 +1070,141 @@ export function growMask(
   for (let p = 0; p < out.length; p++) if (dist[p] <= radius + 1e-9) out[p] = 1;
   return out;
 }
+
+export type FrameEdge = "top" | "bottom" | "left" | "right";
+export interface Opening extends EnclosedHole {
+  /** The frame edges it reaches between two of the subject's contacts. */
+  edges: FrameEdge[];
+}
+
+/**
+ * Holes and openings in a cut-out's matte. A hole is a region below `below`
+ * (default edge's opaque threshold) that cannot reach the frame edge, as
+ * `edge` reports it. An opening reaches the frame edge only between two
+ * places where the subject touches that edge: on each of the four edges, the
+ * pixels between the first and the last opaque pixel on it are treated as
+ * solid (an edge with fewer than two opaque pixels is left open), and a
+ * region enclosed only because of that sealing is an opening. On a take with
+ * no green screen (2026-11-11) a microphone left out of the matte ran off the
+ * bottom of the frame: an opening of about 115,000 px, not a hole. An opening
+ * can also be a real gap, such as between an arm and the body. The sealed edge
+ * pixels that were below opaque count in the opening they close. Regions
+ * smaller than `minArea` are left out and counted in `dropped`.
+ */
+export function cutoutRegions(
+  alpha: ArrayLike<number>,
+  width: number,
+  height: number,
+  opts: { below?: number; minArea?: number } = {},
+): { holes: EnclosedHole[]; openings: Opening[]; dropped: { count: number; area: number } } {
+  const below = opts.below ?? EDGE_DEFAULTS.opaque;
+  const minArea = opts.minArea ?? 1;
+  const n = width * height;
+  const a = Float64Array.from(alpha as ArrayLike<number>);
+  // Seal each edge between its first and last opaque pixel. `sealedEdge`
+  // records, per sealed pixel that was below opaque, which edge sealed it.
+  const sealedEdge = new Int8Array(n).fill(-1);
+  const EDGES: FrameEdge[] = ["top", "bottom", "left", "right"];
+  const edgePixels = (e: number): number[] => {
+    const out: number[] = [];
+    if (e < 2) {
+      const y = e === 0 ? 0 : height - 1;
+      for (let x = 0; x < width; x++) out.push(y * width + x);
+    } else {
+      const x = e === 2 ? 0 : width - 1;
+      for (let y = 0; y < height; y++) out.push(y * width + x);
+    }
+    return out;
+  };
+  const original = Float64Array.from(a);
+  for (let e = 0; e < 4; e++) {
+    const px = edgePixels(e);
+    let first = -1;
+    let last = -1;
+    let count = 0;
+    for (let i = 0; i < px.length; i++)
+      if (original[px[i]] >= below) {
+        if (first < 0) first = i;
+        last = i;
+        count++;
+      }
+    if (count < 2) continue;
+    for (let i = first; i <= last; i++) {
+      const p = px[i];
+      if (original[p] < below) {
+        if (sealedEdge[p] < 0) sealedEdge[p] = e;
+        a[p] = 1;
+      }
+    }
+  }
+  const labels = new Int32Array(n);
+  const queue = new Int32Array(n);
+  const regions = labelRegions(
+    a,
+    width,
+    height,
+    (p) => a[p] < below,
+    false,
+    labels,
+    queue,
+    EDGE_DEFAULTS.transparent,
+  );
+  // Each sealed pixel joins the enclosed region next to it (one step inward).
+  const extra = regions.map(() => ({
+    area: 0,
+    sum: 0,
+    minX: Infinity,
+    minY: Infinity,
+    maxX: -1,
+    maxY: -1,
+    edges: new Set<FrameEdge>(),
+  }));
+  for (let p = 0; p < n; p++) {
+    const e = sealedEdge[p];
+    if (e < 0) continue;
+    const x = p % width;
+    const y = (p - x) / width;
+    const q = e === 0 ? p + width : e === 1 ? p - width : e === 2 ? p + 1 : p - 1;
+    const qx = q % width;
+    const qy = (q - qx) / width;
+    if (q < 0 || q >= n || (e >= 2 && Math.abs(qy - y) !== 0)) continue;
+    const id = labels[q];
+    if (!id || regions[id - 1].touchesBorder) continue;
+    const r = extra[id - 1];
+    r.area++;
+    r.sum += original[p];
+    r.minX = Math.min(r.minX, x);
+    r.maxX = Math.max(r.maxX, x);
+    r.minY = Math.min(r.minY, y);
+    r.maxY = Math.max(r.maxY, y);
+    r.edges.add(EDGES[e]);
+  }
+  const holes: EnclosedHole[] = [];
+  const openings: Opening[] = [];
+  const dropped = { count: 0, area: 0 };
+  regions.forEach((r, i) => {
+    if (r.touchesBorder) return;
+    const x = extra[i];
+    const area = r.area + x.area;
+    if (area < minArea) {
+      dropped.count++;
+      dropped.area += area;
+      return;
+    }
+    const minX = Math.min(r.minX, x.minX);
+    const minY = Math.min(r.minY, x.minY);
+    const entry: EnclosedHole = {
+      x: minX,
+      y: minY,
+      width: Math.max(r.maxX, x.maxX) - minX + 1,
+      height: Math.max(r.maxY, x.maxY) - minY + 1,
+      area,
+      meanAlpha: Math.round(((r.alphaSum + x.sum) / area) * 1000) / 1000,
+    };
+    if (x.edges.size > 0) openings.push({ ...entry, edges: EDGES.filter((e) => x.edges.has(e)) });
+    else holes.push(entry);
+  });
+  holes.sort((p, q) => q.area - p.area);
+  openings.sort((p, q) => q.area - p.area);
+  return { holes, openings, dropped };
+}

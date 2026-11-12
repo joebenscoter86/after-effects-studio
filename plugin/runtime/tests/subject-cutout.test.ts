@@ -13,8 +13,8 @@ import path from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { enclosedHoles, growMask } from "../src/color/matte.js";
-import { decodePng } from "../src/color/png16.js";
+import { cutoutRegions, enclosedHoles, growMask } from "../src/color/matte.js";
+import { decodePng, encodePngSrgbRgba8 } from "../src/color/png16.js";
 import {
   CUTOUT_HOLE_LIMIT,
   closeClicks,
@@ -169,6 +169,80 @@ describe("cutoutFindings", () => {
   });
 });
 
+// ------------------------------------------------- openings (stage 12b fix)
+//
+// A region below opaque that reaches the frame edge only between two places
+// where the subject touches that edge is an opening: on the take, the missed
+// microphone ran off the bottom of the frame, so it was no hole.
+
+/** A matte from rectangles [x, y, w, h] set to `a` (later ones win). */
+function rects(list: Array<[number, number, number, number, number]>): Float64Array {
+  const m = new Float64Array(W * H);
+  for (const [x0, y0, w, h, a] of list)
+    for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) m[y * W + x] = a;
+  return m;
+}
+const BODY: [number, number, number, number, number] = [40, 60, 120, 240, 1]; // x 40..159, y 60..299: on the bottom edge
+const MIC_OFF: [number, number, number, number, number] = [80, 200, 40, 100, 0]; // runs off the bottom
+
+describe("cutoutRegions", () => {
+  it("calls a notch that runs off the bottom edge, between two contacts, an opening", () => {
+    const { holes, openings } = cutoutRegions(rects([BODY, MIC_OFF]), W, H);
+    expect(holes).toEqual([]);
+    expect(openings).toEqual([
+      { x: 80, y: 200, width: 40, height: 100, area: 4000, meanAlpha: 0, edges: ["bottom"] },
+    ]);
+  });
+
+  it("calls the same notch closed at the bottom a hole", () => {
+    const { holes, openings } = cutoutRegions(rects([BODY, [80, 200, 40, 90, 0]]), W, H);
+    expect(openings).toEqual([]);
+    expect(holes).toEqual([
+      expect.objectContaining({ x: 80, y: 200, width: 40, height: 90, area: 3600 }),
+    ]);
+  });
+
+  it("seals nothing where the subject touches an edge at one point only", () => {
+    const m = rects([
+      [40, 60, 120, 231, 1],
+      [100, 291, 1, 9, 1],
+    ]);
+    expect(cutoutRegions(m, W, H)).toMatchObject({ holes: [], openings: [] });
+  });
+
+  it("finds nothing between two separate subjects on one edge when the gap reaches another edge", () => {
+    const m = rects([
+      [20, 100, 41, 200, 1],
+      [140, 100, 41, 200, 1],
+    ]);
+    expect(cutoutRegions(m, W, H)).toMatchObject({ holes: [], openings: [] });
+  });
+
+  it("finds the opening between two legs joined above (an arm against the body)", () => {
+    const m = rects([
+      [20, 100, 161, 40, 1],
+      [20, 140, 41, 160, 1],
+      [140, 140, 41, 160, 1],
+    ]);
+    const { openings } = cutoutRegions(m, W, H);
+    expect(openings).toEqual([
+      expect.objectContaining({ x: 61, y: 140, width: 79, height: 160, edges: ["bottom"] }),
+    ]);
+    expect(openings[0].area).toBe(79 * 160);
+  });
+
+  it("seals the side edges too, and drops small regions", () => {
+    const m = rects([
+      [100, 50, 100, 200, 1],
+      [150, 120, 50, 30, 0],
+    ]);
+    expect(cutoutRegions(m, W, H).openings).toEqual([
+      expect.objectContaining({ edges: ["right"], area: 1500 }),
+    ]);
+    expect(cutoutRegions(m, W, H, { minArea: 2000 }).openings).toEqual([]);
+  });
+});
+
 // ------------------------------------------------------- runs with fake AE
 
 let dir: string;
@@ -184,8 +258,22 @@ const STATUS_OK = {
   layer: "raw_nogreen.mp4",
   objectMatte: { present: true, effectIndex: 1, count: 1 },
   selections: [
-    { index: 1, name: "Add Object 2", kind: "object", point: [1081, 2403], durationStart: 15 },
-    { index: 2, name: "Add Object 1", kind: "object", point: [1138, 2400], durationStart: 15 },
+    {
+      index: 1,
+      name: "Add Object 2",
+      kind: "object",
+      point: [1081, 2403],
+      clickTime: 0.49999667,
+      clickFrame: 15,
+    },
+    {
+      index: 2,
+      name: "Add Object 1",
+      kind: "object",
+      point: [1138, 2400],
+      clickTime: 0.49999667,
+      clickFrame: 15,
+    },
   ],
   counts: { object: 2, quickSelection: 0, other: 0 },
   summary: "2 objects selected",
@@ -193,11 +281,21 @@ const STATUS_OK = {
   compSize: [W, H],
   span: { inFrame: 0, outFrame: 320, frameRate: 30 },
 };
+const APART = {
+  ...STATUS_OK,
+  selections: [STATUS_OK.selections[1], { ...STATUS_OK.selections[0], point: [1330, 3190] }],
+};
 
-/** A fake render: every frame's matte is `matteAt(frame)`; edge holes measured from it. */
+const opaque = (n: number) => new Float64Array(n).fill(1);
+
+/**
+ * A fake ae_render_frame: writes each frame's matte as an RGBA file (grey
+ * subject), as the real one does with channels 'rgba'; `fail` frames come
+ * back as captures that did not finish writing.
+ */
 function fakeIO(
-  matteAt: (frame: number) => Float64Array,
-  extra: Partial<CutoutIO> = {},
+  matteAt: (frame: number, args: Any) => Float64Array,
+  { fail = new Set<number>(), ...extra }: Partial<CutoutIO> & { fail?: Set<number> } = {},
 ): CutoutIO & { calls: Any[] } {
   const calls: Any[] = [];
   return {
@@ -205,28 +303,33 @@ function fakeIO(
     status: async () => STATUS_OK as Any,
     render: async (args: Any) => {
       calls.push({ render: args });
-      const frames = (args.frames as number[]).map((frame, i) => {
-        const { holes } = enclosedHoles(matteAt(frame), W, H);
-        return {
+      const stem = args.outPath.replace(/\.png$/, "");
+      const frames = [];
+      for (const [i, frame] of (args.frames as number[]).entries()) {
+        const writtenTo = `${stem}_${i}.png`;
+        if (fail.has(frame)) {
+          frames.push({
+            ok: false,
+            frame,
+            error: "the capture did not finish writing within 39.0 s (missing, 0 bytes)",
+          });
+          continue;
+        }
+        const a = matteAt(frame, args);
+        await fs.writeFile(
+          writtenTo,
+          encodePngSrgbRgba8(W, H, new Float64Array(W * H * 3).fill(0.5), a),
+        );
+        frames.push({
           ok: true,
           frame,
-          writtenTo: `${args.outPath.replace(/\.png$/, "")}_${i}.png`,
-          edge: {
-            holes: {
-              count: holes.length,
-              area: holes.reduce((s, h) => s + h.area, 0),
-              list: holes,
-            },
-          },
-        };
-      });
-      return {
-        ok: true,
-        frames,
-        contactSheet: { writtenTo: `${args.outPath.replace(/\.png$/, "")}_sheet.png` },
-      };
+          writtenTo,
+          edge: { width: { typical: 1, p90: 1.41 }, solidAreas: { count: 1 } },
+        });
+      }
+      return { ok: true, frames };
     },
-    readAlpha: async () => ({ width: W, height: H, alpha: matteAt(15) }),
+    readImage: async (file: string) => decodePng(await fs.readFile(file)),
     build: async (a: Any) => {
       calls.push({ build: a });
       return {
@@ -234,44 +337,58 @@ function fakeIO(
         fillLayer: "raw_nogreen.mp4 gap fill",
         maskLayer: "raw_nogreen.mp4 gap mask",
         stillItem: "gap.png",
+        stillItemId: 77,
       };
+    },
+    unbuild: async (a: Any) => {
+      calls.push({ unbuild: a });
+      return { ok: true, removed: [a.fillLayer, a.maskLayer, a.stillItemId] };
     },
     ...extra,
   };
 }
 
+const renders = (io: Any) => io.calls.filter((c: Any) => c.render).map((c: Any) => c.render);
+
 describe("subject.check", () => {
-  it("is registered as an operation that runs in Node", () => {
+  it("is registered as an operation that runs in Node, and says it can take minutes", () => {
     const op = getOp("subject.check")!;
     expect(op.run).toBeTypeOf("function");
     expect(op.category).toBe("subject");
+    expect(op.description).toMatch(/minutes/);
   });
 
-  it("renders the cut-out over a flat colour at the click frame and across the clip, early frames first", async () => {
+  it("renders the cut-out with its alpha at the click frames and across the clip, early frames first, with a settle time per frame", async () => {
     const io = fakeIO(() => matte());
-    const res = await runSubjectCheck({ comp: "Main", layer: 1, outDir: dir, clickFrame: 15 }, io);
-    const r = io.calls[0].render;
-    expect(r).toMatchObject({
-      compNameOrId: "Main",
-      isolate: 1,
-      over: "#ff00ff",
-      contactSheet: {},
-    });
-    expect(r.edge).toMatchObject({ listed: expect.any(Number) });
-    expect(r.frames).toEqual([...r.frames].sort((a: number, b: number) => a - b));
-    expect(r.frames).toContain(15);
-    expect(r.frames).toContain(0);
-    expect(r.frames.length).toBe(9);
-    expect(Math.max(...r.frames)).toBeLessThan(320);
+    const res = await runSubjectCheck({ comp: "Main", layer: 1, outDir: dir }, io);
+    const [r] = renders(io);
+    expect(r).toMatchObject({ compNameOrId: "Main", isolate: 1, channels: "rgba", edge: true });
+    expect(r.frames).toEqual([0, 15, 40, 80, 120, 160, 200, 240, 280]); // the click frame (15) from the selections
+    expect(r.settleTimeoutMs).toBe(9 * 60_000);
     expect(res.ok).toBe(true);
-    expect(res.picture).toMatch(/_sheet\.png$/);
-    expect(res.frames[0].picture).toMatch(/\.png$/);
+    expect(res.checked).toEqual({ frames: 9, of: 9 });
+    await fs.access(res.picture);
+    expect(res.picture).toMatch(/cutout_sheet\.png$/);
+    await fs.access(res.frames[0].picture);
+    const over = decodePng(await fs.readFile(res.frames[0].picture));
+    expect(over.rgb[0]).toBeCloseTo(1, 2); // magenta where the matte is clear
+    expect(over.rgb[2]).toBeCloseTo(1, 2);
+    expect(res.next).toMatch(/minutes/);
   });
 
-  it("stops on a hole over the limit and says where it is, with the picture", async () => {
+  it("splits the frames into calls that each fit ae_render_frame's settle limit", async () => {
+    const io = fakeIO(() => matte());
+    await runSubjectCheck({ comp: "Main", layer: 1, outDir: dir, secondsPerFrame: 100 }, io);
+    const rs = renders(io);
+    expect(rs.map((r: Any) => r.frames.length)).toEqual([6, 3]);
+    expect(rs.map((r: Any) => r.settleTimeoutMs)).toEqual([600_000, 300_000]);
+    expect(new Set(rs.map((r: Any) => r.outPath)).size).toBe(2);
+  });
+
+  it("stops on an enclosed hole over the limit and says where it is", async () => {
     const res = await runSubjectCheck(
       { comp: "Main", layer: 1, outDir: dir, holeLimit: 1000 },
-      fakeIO(() => matte([MIC, GAP])),
+      fakeIO(() => matte([MIC, GAP]), { status: async () => APART as Any }),
     );
     expect(res.stop).toBe(true);
     expect(res.findings).toEqual([
@@ -280,16 +397,61 @@ describe("subject.check", () => {
         largestArea: 2400,
         box: { x: 80, y: 150, width: 40, height: 60 },
       }),
-      expect.objectContaining({ kind: "close-clicks" }), // STATUS_OK's two clicks are 57 px apart
     ]);
-    expect(res.findings[0].frames.length).toBe(8); // 8 frames across the clip; no click frame given
-    expect(res.inOut).toMatch(/Out: .*hole.*2,400 px.*\(80, 150, 40 × 60\)/);
-    expect(res.inOut).toMatch(/Look at the picture/);
-    expect(res.next).toMatch(/show the user the picture/i);
+    expect(res.findings[0].frames.length).toBe(9);
+    expect(res.inOut).toMatch(/hole.*2,400 px.*\(80, 150, 40 × 60\)/);
     expect(res.frames[0].holesUnderLimit).toEqual({ count: 1, area: 120 });
+    expect(res.next).toMatch(/show the user the picture/i);
   });
 
-  it("reports the close clicks as a finding to stop on, and never takes the count as confirmation", async () => {
+  it("stops on an opening that runs off the frame edge, the missed microphone of 2026-11-11", async () => {
+    const res = await runSubjectCheck(
+      { comp: "Main", layer: 1, outDir: dir },
+      fakeIO(() => rects([BODY, MIC_OFF]), { status: async () => APART as Any }),
+    );
+    expect(res.stop).toBe(true);
+    expect(res.findings).toEqual([
+      expect.objectContaining({
+        kind: "opening",
+        edges: ["bottom"],
+        largestArea: 4000,
+        box: { x: 80, y: 200, width: 40, height: 100 },
+      }),
+    ]);
+    expect(res.inOut).toMatch(/opening.*4,000 px.*reaches the bottom edge/);
+    expect(res.inOut).toMatch(/something in front of the subject left out.*or a real gap/);
+  });
+
+  it("counts a frame that did not render as not checked, never as clean", async () => {
+    const res = await runSubjectCheck(
+      { comp: "Main", layer: 1, outDir: dir },
+      fakeIO(() => matte(), { fail: new Set([0, 40]), status: async () => APART as Any }),
+    );
+    expect(res.stop).toBe(true);
+    expect(res.checked).toEqual({ frames: 7, of: 9 });
+    expect(res.findings).toEqual([
+      expect.objectContaining({ kind: "not-checked", frames: [0, 40] }),
+    ]);
+    expect(res.findings[0].errors[0]).toMatch(/did not finish writing/);
+    const f0 = res.frames.find((f: Any) => f.frame === 0);
+    expect(f0).toMatchObject({ checked: false, holes: null, openings: null });
+    expect(res.inOut).toMatch(/Checked 7 of 9 frames; 2 did not render \(0, 40\)/);
+    expect(res.inOut).not.toMatch(/no enclosed hole/);
+  });
+
+  it("stops when no frame rendered", async () => {
+    const all = new Set([0, 15, 40, 80, 120, 160, 200, 240, 280]);
+    const res = await runSubjectCheck(
+      { comp: "Main", layer: 1, outDir: dir },
+      fakeIO(() => matte(), { fail: all, status: async () => APART as Any }),
+    );
+    expect(res.stop).toBe(true);
+    expect(res.checked).toEqual({ frames: 0, of: 9 });
+    expect(res.picture).toBeNull();
+    expect(res.inOut).toMatch(/Checked 0 of 9 frames/);
+  });
+
+  it("reports the close clicks as a finding, and never takes the count as confirmation", async () => {
     const res = await runSubjectCheck(
       { comp: "Main", layer: 1, outDir: dir },
       fakeIO(() => matte()),
@@ -297,24 +459,55 @@ describe("subject.check", () => {
     expect(res.findings).toEqual([expect.objectContaining({ kind: "close-clicks" })]);
     expect(res.stop).toBe(true);
     expect(res.clicks).toEqual([
-      { name: "Add Object 2", kind: "object", point: [1081, 2403], durationStart: 15 },
-      { name: "Add Object 1", kind: "object", point: [1138, 2400], durationStart: 15 },
+      {
+        name: "Add Object 2",
+        kind: "object",
+        point: [1081, 2403],
+        clickTime: 0.49999667,
+        clickFrame: 15,
+      },
+      {
+        name: "Add Object 1",
+        kind: "object",
+        point: [1138, 2400],
+        clickTime: 0.49999667,
+        clickFrame: 15,
+      },
     ]);
     expect(res.countNote).toMatch(/not a check/);
   });
 
+  it("does not stop on regions the user accepted, and lists them", async () => {
+    const arch = () =>
+      rects([
+        [20, 100, 161, 40, 1],
+        [20, 140, 41, 160, 1],
+        [140, 140, 41, 160, 1],
+      ]);
+    const first = await runSubjectCheck(
+      { comp: "Main", layer: 1, outDir: dir },
+      fakeIO(arch, { status: async () => APART as Any }),
+    );
+    expect(first.stop).toBe(true);
+    expect(first.next).toMatch(/accept/);
+    const box = first.findings[0].box;
+    const second = await runSubjectCheck(
+      { comp: "Main", layer: 1, outDir: dir, accept: [box] },
+      fakeIO(arch, { status: async () => APART as Any }),
+    );
+    expect(second.stop).toBe(false);
+    expect(second.findings).toEqual([]);
+    expect(second.accepted).toEqual([expect.objectContaining({ kind: "opening", box })]);
+  });
+
   it("does not stop when there is nothing over the limit and the clicks are apart", async () => {
-    const status = {
-      ...STATUS_OK,
-      selections: [STATUS_OK.selections[1], { ...STATUS_OK.selections[0], point: [1330, 3190] }],
-    };
     const res = await runSubjectCheck(
       { comp: "Main", layer: 1, outDir: dir },
-      fakeIO(() => matte([PIN]), { status: async () => status as Any }),
+      fakeIO(() => matte([PIN]), { status: async () => APART as Any }),
     );
     expect(res.stop).toBe(false);
     expect(res.findings).toEqual([]);
-    expect(res.inOut).toMatch(/no enclosed hole over 1,000 px/);
+    expect(res.inOut).toMatch(/no hole or opening of 1,000 px or more on the 9 frames checked/);
     expect(res.next).toMatch(/still look at the picture/i);
   });
 
@@ -342,24 +535,53 @@ describe("subject.fill_gaps", () => {
     expect(op.readOnly).toBeFalsy();
   });
 
-  it("fills the enclosed gaps at the reference frame, grown by 3 px, builds the fill and measures again", async () => {
-    const still = path.join(dir, "gap-mask.png");
+  /** After the build: the cut-out and fill render with no holes, except `left` at frame 240; the fill alone shows the still. */
+  function fillIO(
+    still: string,
+    before: Float64Array,
+    { left = false, fillShows = "mask" as "mask" | "all", ...extra }: Any = {},
+  ) {
     let built = false;
-    const io = fakeIO(
-      (f) => (built ? matte(f === 240 ? [[90, 240, 40, 40]] : []) : matte([GAP, PIN])),
-      {
-        build: async (a: Any) => {
-          built = true;
-          io.calls.push({ build: a });
-          return {
-            ok: true,
-            fillLayer: "raw_nogreen.mp4 gap fill",
-            maskLayer: "raw_nogreen.mp4 gap mask",
-            stillItem: "gap-mask.png",
-          };
-        },
+    const io: Any = fakeIO(() => before, {
+      build: async (a: Any) => {
+        built = true;
+        io.calls.push({ build: a });
+        return {
+          ok: true,
+          fillLayer: "raw_nogreen.mp4 gap fill",
+          maskLayer: "raw_nogreen.mp4 gap mask",
+          stillItem: "gap-mask.png",
+          stillItemId: 77,
+        };
       },
-    );
+      ...extra,
+    });
+    const render = io.render;
+    io.render = async (args: Any) => {
+      if (!built) return render(args);
+      if (Array.isArray(args.isolate) && args.isolate.length === 1) {
+        // The fill layer alone: what shows through the still.
+        const img = decodePng(await fs.readFile(still));
+        const a =
+          fillShows === "all"
+            ? opaque(W * H)
+            : Float64Array.from({ length: W * H }, (_, p) => img.rgb[p * 3]);
+        const out = await fakeIO(() => a).render(args);
+        io.calls.push({ render: args });
+        return out;
+      }
+      const out = await fakeIO((f) => matte(left && f === 240 ? [[90, 240, 40, 40]] : [])).render(
+        args,
+      );
+      io.calls.push({ render: args });
+      return out;
+    };
+    return io;
+  }
+
+  it("fills the enclosed gaps at the reference frame, grown by 3 px, checks the fill alone, then measures again", async () => {
+    const still = path.join(dir, "gap-mask.png");
+    const io = fillIO(still, matte([GAP, PIN]), { left: true });
     const res = await runFillGaps(
       { comp: "Main", layer: 1, frame: 15, stillPath: still, minArea: 20, outDir: dir },
       io,
@@ -370,24 +592,97 @@ describe("subject.fill_gaps", () => {
     expect(res.filled.grownArea).toBeGreaterThan(120);
     const img = decodePng(await fs.readFile(still));
     expect([img.width, img.height]).toEqual([W, H]);
-    expect(img.rgb[(165 * W + 134) * 3]).toBeCloseTo(1, 2); // inside the gap
-    expect(img.rgb[(165 * W + 140) * 3]).toBeCloseTo(1, 2); // 3 px outside it
-    expect(img.rgb[(100 * W + 60) * 3]).toBeCloseTo(0, 2); // the dropped pinhole
-    const build = io.calls.find((c) => c.build).build;
-    expect(build).toMatchObject({ comp: "Main", layer: 1, stillPath: still });
-    const after = io.calls.filter((c) => c.render).at(-1).render;
-    expect(after.isolate).toEqual([1, "raw_nogreen.mp4 gap fill"]);
+    expect(img.rgb[(165 * W + 134) * 3]).toBeCloseTo(1, 2);
+    expect(img.rgb[(165 * W + 140) * 3]).toBeCloseTo(1, 2);
+    expect(img.rgb[(100 * W + 60) * 3]).toBeCloseTo(0, 2);
+    expect(io.calls.find((c: Any) => c.build).build).toMatchObject({
+      comp: "Main",
+      layer: 1,
+      stillPath: still,
+    });
+    const rs = renders(io);
+    expect(rs[0]).toMatchObject({ frames: [15], channels: "rgba", settleTimeoutMs: 60_000 });
+    expect(rs[1]).toMatchObject({
+      frames: [15],
+      isolate: ["raw_nogreen.mp4 gap fill"],
+      channels: "rgba",
+    });
+    expect(res.fillAlone).toMatchObject({
+      covered: res.filled.grownArea,
+      mask: res.filled.grownArea,
+      ok: true,
+    });
+    expect(rs.at(-1).isolate).toEqual([1, "raw_nogreen.mp4 gap fill"]);
     expect(res.after.findings).toEqual([
       expect.objectContaining({ kind: "hole", frames: [240], largestArea: 1600 }),
     ]);
-    expect(res.limits.join(" ")).toMatch(/one frame/);
-    expect(res.limits.join(" ")).toMatch(/locked camera/);
+    expect(res.after.checked).toEqual({ frames: 9, of: 9 });
+    expect(res.limits.join(" ")).toMatch(/one frame.*locked camera/);
     expect(res.limits.join(" ")).toMatch(/whatever is behind/);
+  });
+
+  it("undoes the build and refuses when the fill layer alone covers more than the mask", async () => {
+    const still = path.join(dir, "gap-mask.png");
+    const io = fillIO(still, matte([GAP]), { fillShows: "all" });
+    const res = await runFillGaps(
+      { comp: "Main", layer: 1, frame: 15, stillPath: still, outDir: dir },
+      io,
+    );
+    expect(res.ok).toBe(false);
+    expect(res.error).toMatch(/fill layer alone covers 60,000 px.*mask.*undone/);
+    expect(io.calls.find((c: Any) => c.unbuild).unbuild).toMatchObject({
+      comp: "Main",
+      fillLayer: "raw_nogreen.mp4 gap fill",
+      maskLayer: "raw_nogreen.mp4 gap mask",
+      stillItemId: 77,
+    });
+  });
+
+  it("refuses plainly, building nothing, when the reference frame does not render", async () => {
+    const io = fakeIO(() => matte([GAP]), { fail: new Set([15]) });
+    const res = await runFillGaps(
+      { comp: "Main", layer: 1, frame: 15, stillPath: path.join(dir, "m.png"), outDir: dir },
+      io,
+    );
+    expect(res.ok).toBe(false);
+    expect(res.error).toMatch(
+      /reference frame 15 did not render.*did not finish writing.*Nothing was built/,
+    );
+    expect(io.calls.some((c: Any) => c.build)).toBe(false);
+  });
+
+  it("refuses plainly when the reference file cannot be read", async () => {
+    const io = fakeIO(() => matte([GAP]), {
+      readImage: async () => {
+        throw Object.assign(
+          new Error("ENOENT: no such file or directory, open 'fill-reference_0.png'"),
+          { code: "ENOENT" },
+        );
+      },
+    });
+    const res = await runFillGaps(
+      { comp: "Main", layer: 1, frame: 15, stillPath: path.join(dir, "m.png"), outDir: dir },
+      io,
+    );
+    expect(res.ok).toBe(false);
+    expect(res.error).toMatch(/reference frame 15 did not render.*ENOENT.*Nothing was built/);
+  });
+
+  it("leaves openings alone and says so", async () => {
+    const io = fakeIO(() => rects([BODY, MIC_OFF]));
+    const res = await runFillGaps(
+      { comp: "Main", layer: 1, frame: 15, stillPath: path.join(dir, "m.png"), outDir: dir },
+      io,
+    );
+    expect(res.ok).toBe(true);
+    expect(res.filled.holes).toBe(0);
+    expect(res.filled.openingsNotFilled).toEqual({ count: 1, area: 4000 });
+    expect(io.calls.some((c: Any) => c.build)).toBe(false);
   });
 
   it("fills only the holes inside `only` boxes", async () => {
     const still = path.join(dir, "gap-mask.png");
-    const io = fakeIO(() => matte([MIC, GAP]));
+    const io = fillIO(still, matte([MIC, GAP]));
     const res = await runFillGaps(
       {
         comp: "Main",
@@ -403,25 +698,16 @@ describe("subject.fill_gaps", () => {
     expect(res.filled.leftOut).toEqual({ count: 1, area: 2400 });
   });
 
-  it("builds nothing when there is no enclosed gap", async () => {
-    const io = fakeIO(() => matte());
-    const res = await runFillGaps(
-      { comp: "Main", layer: 1, frame: 15, stillPath: path.join(dir, "m.png"), outDir: dir },
-      io,
-    );
-    expect(res.ok).toBe(true);
-    expect(res.filled.holes).toBe(0);
-    expect(io.calls.some((c) => c.build)).toBe(false);
-    await expect(fs.access(path.join(dir, "m.png"))).rejects.toThrow();
-  });
-
   it("refuses when the reference render is not at the comp's size", async () => {
     const io = fakeIO(() => matte([GAP]), {
-      readAlpha: async () => ({
-        width: W / 2,
-        height: H / 2,
-        alpha: new Float64Array((W * H) / 4),
-      }),
+      readImage: async () =>
+        ({
+          width: W / 2,
+          height: H / 2,
+          rgb: new Float64Array(0),
+          alpha: new Float64Array((W * H) / 4),
+          bitDepth: 8,
+        }) as Any,
     });
     const res = await runFillGaps(
       { comp: "Main", layer: 1, frame: 15, stillPath: path.join(dir, "m.png"), outDir: dir },
@@ -429,7 +715,7 @@ describe("subject.fill_gaps", () => {
     );
     expect(res.ok).toBe(false);
     expect(res.error).toMatch(/100 × 150.*comp's size 200 × 300/);
-    expect(io.calls.some((c) => c.build)).toBe(false);
+    expect(io.calls.some((c: Any) => c.build)).toBe(false);
   });
 
   it("refuses a still path that is not an absolute .png", async () => {

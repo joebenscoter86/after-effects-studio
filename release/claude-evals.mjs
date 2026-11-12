@@ -134,7 +134,7 @@ export const ANSWER_CHECKS = {
     },
   },
   'subject-check-first': {
-    what: 'the answer runs subject.check after the click and before anything else is built, and says a hole it finds is shown to the user',
+    what: 'the answer runs subject.check after the click and before anything else is built, and says a hole or opening it finds is shown to the user',
     async check(answer) {
       const text = plain(answer);
       const at = [...text.matchAll(/subject\.check/g)].map((m) => m.index);
@@ -142,8 +142,8 @@ export const ANSWER_CHECKS = {
       const before = /before (?:any|anything|further|more|other|the rest)\b[^.]{0,60}?\b(?:build|built|building|compositing|composite|else|work)/i;
       if (!at.some((i) => before.test(text.slice(Math.max(0, i - 300), i + 300))))
         return { pass: false, why: 'subject.check is not said to come before anything else is built' };
-      if (!/\b(?:show|picture)[^.]{0,150}\bhole|\bhole[^.]{0,150}\b(?:show|picture)/i.test(text))
-        return { pass: false, why: 'the answer does not say a hole is shown to the user' };
+      if (!/\b(?:show|picture)[^.]{0,150}\b(?:hole|opening)|\b(?:hole|opening)[^.]{0,150}\b(?:show|picture)/i.test(text))
+        return { pass: false, why: 'the answer does not say a hole or opening is shown to the user' };
       return { pass: true, why: `subject.check at character ${at[0]}, before further building, with the hole shown` };
     },
   },
