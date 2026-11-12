@@ -143,9 +143,32 @@ export interface CutoutIO {
         stillItemId: number | null;
     }): Promise<Json>;
     writePng?(file: string, data: Buffer): Promise<void>;
+    /** Free bytes on the volume holding `dir` (default: fs.statfs), or null when unknown. */
+    freeBytes?(dir: string): Promise<number | null>;
 }
 /** What the pixel helpers need from After Effects: a render, and the files it wrote. */
-type PixelIO = Pick<CutoutIO, "render" | "readImage" | "writePng">;
+type PixelIO = Pick<CutoutIO, "render" | "readImage" | "writePng" | "freeBytes">;
+/**
+ * Free space required on top of the movie: After Effects writes its disk cache
+ * to the same drive while it renders, by an amount nobody measured for one
+ * render (42.1 GB over an evening). 3 GB: the 2 GB asked for, and one more.
+ */
+export declare const RENDER_MARGIN_BYTES: number;
+/** The movie subject.render_cutout will write, estimated from the comp's frame size and frame count. */
+export declare function renderCutoutBytes(frames: number, size: [number, number] | number[]): number;
+/** Free bytes on the volume holding `dir`, read on its nearest existing folder; null when it cannot be read. */
+export declare function statfsFree(dir: string): Promise<number | null>;
+/** Where After Effects keeps its disk cache: <Disk Cache folder>/Adobe/After Effects/<major.minor>. */
+export declare function aeCacheRoot(folder: string | null | undefined, version: string | null | undefined): string | null;
+/**
+ * The size of After Effects' disk cache and the free space on its drive, and
+ * a note for the user when that drive is low. Reads only: nothing is deleted
+ * and no preference is changed.
+ */
+export declare function diskReport(cache: {
+    folder: string | null;
+    version: string | null;
+} | null | undefined, freeFn?: (dir: string) => Promise<number | null>): Promise<Json>;
 /** Time spent in the renders a call made, summed over its ae_render_frame calls (ms). */
 export interface RenderTally {
     frames: number;

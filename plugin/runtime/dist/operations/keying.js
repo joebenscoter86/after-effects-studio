@@ -826,6 +826,17 @@ const OBJECT_MATTE_JSX = `
                 }
                 return null;
             }
+            function _omAeCache() {
+                // After Effects' Disk Cache folder (Preferences > Media & Disk Cache), read only.
+                var f = null;
+                var types = [];
+                try { types = [PREFType.PREF_Type_MACHINE_SPECIFIC, PREFType.PREF_Type_MACHINE_INDEPENDENT]; } catch (eT) { types = []; }
+                for (var i = 0; i < types.length && !f; i++) {
+                    var t = types[i];
+                    f = AE.safeGet(function () { return app.preferences.havePref("Disk Cache Controls", "Folder 7", t) ? app.preferences.getPrefAsString("Disk Cache Controls", "Folder 7", t) : null; }, null);
+                }
+                return { folder: f || null, version: AE.safeGet(function () { return app.version; }, null) };
+            }
             function _omSourceSize() {
                 var w = AE.safeGet(function () { return _layer.source.width; }, null);
                 var h = AE.safeGet(function () { return _layer.source.height; }, null);
@@ -982,7 +993,8 @@ registerOp({
     description: "Read a layer's subject matte (Object Matte, ADBE Samurai) without changing anything: whether the effect is there, its selections (name; kind 'object' for a click with the Object Matte Tool, 'Add Object N', 'quick-selection' for a stroke with the old brush, 'Quick Select Foreground N', 'other' otherwise; duration), " +
         "its settings (value, the range After Effects reports now, the range measured in After Effects 27.0, default, and foundBy: how the property was found, matchName, walk or name), and summary, one plain sentence ('no selection yet: the user has not clicked', '1 object selected'). " +
         "Also each selection's clicked point (Transform > Position, source pixels; compPoint in comp pixels where After Effects gives it), clickTime (the selection's Duration start: seconds, measured 0.49999667 for a click at frame 15) and clickFrame (comp frames), closeClicks (two clicks closer than 5% of the source's shorter side probably selected the same thing), sourceSize, compSize and span (the layer in comp frames). " +
-        "A selection count is not a check: after the user says done, run subject.check. removeNote says how to take a selection out or start again.",
+        "A selection count is not a check: after the user says done, run subject.check. removeNote says how to take a selection out or start again. " +
+        "disk: the size of After Effects' disk cache (its folder read from the Disk Cache preference) and the free space on that drive; diskNote, when that drive has under 10 GB free, says to purge it (Edit > Purge > All Memory & Disk Cache). Nothing is deleted and no preference changed.",
     params: [...compLayerParams, subjectIndexParam],
     toJsx(args) {
         return `
@@ -993,7 +1005,7 @@ registerOp({
             if (_pick.error) return { ok: false, error: _pick.error };
             if (_pick.index === null) {
                 return { ok: true, layer: _layer.name, objectMatte: { present: false, effectIndex: null, count: 0 }, selections: [], settings: null,
-                    summary: _omSummary(false, []), next: ${jsxVal(`Nothing selected: ${NEED_CLICK}.`)}, effects: AE.effectOrder(_fxRoot),
+                    summary: _omSummary(false, []), next: ${jsxVal(`Nothing selected: ${NEED_CLICK}.`)}, effects: AE.effectOrder(_fxRoot), aeCache: _omAeCache(),
                     sourceSize: _omSourceSize(), compSize: [_comp.width, _comp.height], span: _omSpan() };
             }
             var _fx = _fxRoot.property(_pick.index);
@@ -1016,6 +1028,7 @@ registerOp({
                 closeClicks: _omCloseClicks(_sel.list, _src),
                 sourceSize: _src,
                 fillLayer: _omFillLayer(),
+                aeCache: _omAeCache(),
                 compSize: [_comp.width, _comp.height],
                 span: _omSpan(),
                 removeNote: ${jsxVal(REMOVE_NOTE)},
@@ -1025,6 +1038,24 @@ registerOp({
             if (_sel.list.length === 0) _out.next = ${jsxVal(`No selection yet: ${NEED_CLICK}.`)};
             return _out;
         `;
+    },
+    // In Node too: the size of After Effects' disk cache and the free space on its drive (a note when low).
+    async run(args, transport) {
+        const r = await transport.execute({
+            code: getOp("subject.status").toJsx(args),
+            label: "subject.status",
+            undoGroup: false,
+            timeoutMs: 30_000,
+        });
+        if (!r.ok)
+            return { ok: false, error: r.error ?? "subject.status failed" };
+        const st = r.result;
+        if (!st?.ok)
+            return st;
+        st.disk = await diskReport(st.aeCache);
+        if (st.disk?.note)
+            st.diskNote = st.disk.note;
+        return st;
     },
 });
 const MATTE_WRITABLE = Object.entries(OBJECT_MATTE_SETTINGS).filter(([, s]) => s.writable);
@@ -1299,6 +1330,132 @@ async function writePng(io, file, data) {
         return io.writePng(file, data);
     await fs.mkdir(path.dirname(file), { recursive: true });
     await fs.writeFile(file, data);
+}
+// ------------------------------------------------------------------ free space
+// On 2026-11-12 a render of the cut-out stalled for 28 minutes on a drive with
+// 498 MB free instead of failing; After Effects' disk cache had grown to 42.1
+// GB in one evening of Object Matte work, against a Disk Cache setting of 10 GB.
+const GB = 1e9;
+const gb = (n) => `${(n / GB).toFixed(1)} GB`;
+/** Measured: 243 MB for 320 frames of 1080 x 1920 ProRes 4444 with alpha ('High Quality with Alpha'). */
+const RENDER_BYTES_PER_HD_FRAME = 0.76e6;
+/**
+ * Free space required on top of the movie: After Effects writes its disk cache
+ * to the same drive while it renders, by an amount nobody measured for one
+ * render (42.1 GB over an evening). 3 GB: the 2 GB asked for, and one more.
+ */
+export const RENDER_MARGIN_BYTES = 3 * GB;
+/** On top of what a check writes (captures, pictures): 1 GB. */
+const PICTURE_MARGIN_BYTES = 1 * GB;
+/** Below this on the drive After Effects caches to, subject.status says so: 10 GB. */
+const LOW_FREE_BYTES = 10 * GB;
+/** The movie subject.render_cutout will write, estimated from the comp's frame size and frame count. */
+export function renderCutoutBytes(frames, size) {
+    return frames * RENDER_BYTES_PER_HD_FRAME * ((size[0] * size[1]) / (1080 * 1920));
+}
+/** One raw RGBA capture at most (uncompressed 8 bit): the upper bound used for a check's files. */
+const captureBytes = (size) => (Array.isArray(size) ? size[0] * size[1] : 1080 * 1920) * 4;
+/** Free bytes on the volume holding `dir`, read on its nearest existing folder; null when it cannot be read. */
+export async function statfsFree(dir) {
+    let d = path.resolve(dir);
+    for (;;) {
+        try {
+            const st = await fs.statfs(d);
+            return Number(st.bavail) * Number(st.bsize);
+        }
+        catch {
+            const up = path.dirname(d);
+            if (up === d)
+                return null;
+            d = up;
+        }
+    }
+}
+/** null when `dir` has room for `needed` plus `margin`; otherwise a refusal that says the numbers. */
+async function spaceRefusal(io, dir, needed, margin, what) {
+    const free = await (io.freeBytes ?? statfsFree)(dir);
+    if (free === null || free >= needed + margin)
+        return null;
+    return {
+        ok: false,
+        error: `only ${gb(free)} free on the drive holding ${dir}; ${what} needs about ${gb(needed)} plus a margin of ${gb(margin)} ` +
+            "(After Effects writes its disk cache to the same drive while it renders, and a render on a nearly full drive stalls instead of failing). " +
+            "Free some space first, for example by purging After Effects' cache: Edit > Purge > All Memory & Disk Cache. Nothing was rendered.",
+        space: { free, needed: Math.round(needed), margin, where: dir },
+    };
+}
+/** Where After Effects keeps its disk cache: <Disk Cache folder>/Adobe/After Effects/<major.minor>. */
+export function aeCacheRoot(folder, version) {
+    if (!folder || !version)
+        return null;
+    const m = /^(\d+)\.(\d+)/.exec(version);
+    if (!m)
+        return null;
+    return path.join(folder, "Adobe", "After Effects", `${m[1]}.${m[2]}`);
+}
+/** Total bytes under `root`, stopping after `budgetMs` (complete false then: at least that much). */
+async function folderBytes(root, budgetMs = 5000) {
+    const t0 = performance.now();
+    let bytes = 0;
+    const stack = [root];
+    try {
+        await fs.access(root);
+    }
+    catch {
+        return null;
+    }
+    while (stack.length) {
+        if (performance.now() - t0 > budgetMs)
+            return { bytes, complete: false };
+        const d = stack.pop();
+        let entries = [];
+        try {
+            entries = await fs.readdir(d, { withFileTypes: true });
+        }
+        catch {
+            continue;
+        }
+        for (const e of entries) {
+            const p = path.join(d, e.name);
+            if (e.isDirectory())
+                stack.push(p);
+            else if (e.isFile())
+                bytes += await fs.stat(p).then((st) => st.size, () => 0);
+        }
+    }
+    return { bytes, complete: true };
+}
+/**
+ * The size of After Effects' disk cache and the free space on its drive, and
+ * a note for the user when that drive is low. Reads only: nothing is deleted
+ * and no preference is changed.
+ */
+export async function diskReport(cache, freeFn = statfsFree) {
+    const cacheRoot = aeCacheRoot(cache?.folder, cache?.version);
+    if (!cacheRoot)
+        return {
+            cacheRoot: null,
+            cacheBytes: null,
+            free: null,
+            low: null,
+            reading: "After Effects' disk cache folder could not be read from its preferences.",
+        };
+    const size = await folderBytes(cacheRoot);
+    const free = await freeFn(cacheRoot);
+    const low = free !== null && free < LOW_FREE_BYTES;
+    const out = {
+        cacheRoot,
+        cacheBytes: size?.bytes ?? null,
+        complete: size?.complete ?? null,
+        free,
+        low,
+    };
+    if (low)
+        out.note =
+            `Only ${gb(free)} free on the drive After Effects caches to (${cacheRoot}); its disk cache holds ${size ? gb(size.bytes) + (size.complete ? "" : " or more") : "an unknown amount"}. ` +
+                "Object Matte work grows it past the Disk Cache size set in the preferences (42.1 GB in one evening against 10 GB on 2026-11-12), and a render on a nearly full drive stalls. " +
+                "Ask the user to purge it: Edit > Purge > All Memory & Disk Cache in After Effects. Nothing was deleted and no preference was changed.";
+    return out;
 }
 const QUICK_NOTE = "Quick check: the click frames and two frames either side, which After Effects renders in seconds. A missed object, an enclosed gap and a second click on the same thing show there. " +
     "To look across the clip, render the cut-out once (subject.render_cutout) and check the file (subject.check_file); across: true checks the live matte across the clip instead, which takes minutes (4 to 9 for nine frames on a 2176 x 3840 take), because After Effects recomputes the matte on every capture.";
@@ -1732,6 +1889,9 @@ export async function runSubjectCheck(args, io) {
         : across
             ? framesAcross(st.span, typeof args.count === "number" ? args.count : CUTOUT_FRAMES, clickFrames)
             : quickFrames(st.span, clickFrames);
+    const roomless = await spaceRefusal(io, outDir, frames.length * 2 * 2 * captureBytes(st.compSize), PICTURE_MARGIN_BYTES, "this check");
+    if (roomless)
+        return roomless;
     // After subject.fill_gaps the delivered cut-out is the layer and its gap fill together.
     const fillLayer = typeof st.fillLayer === "string" ? st.fillLayer : null;
     const isolate = fillLayer ? [args.layer, fillLayer] : args.layer;
@@ -1886,6 +2046,9 @@ async function fillGaps(args, io) {
     if (missing)
         return { ok: false, error: missing };
     const frame = typeof args.frame === "number" ? args.frame : (st.span?.inFrame ?? 0);
+    const roomless = await spaceRefusal(io, outDir, 16 * 2 * captureBytes(st.compSize), PICTURE_MARGIN_BYTES, "filling the gaps");
+    if (roomless)
+        return roomless;
     const [ref] = await renderChunked(io, { compNameOrId: args.comp, isolate: args.layer, channels: "rgba" }, [frame], perFrameMs, outDir, "fill-reference", refTally);
     const refused = (why) => ({
         ok: false,
@@ -2520,6 +2683,10 @@ export async function runRenderCutout(args, io) {
     if ("error" in choice)
         return { ok: false, error: choice.error, templates: plan.templates };
     const frames = plan.span?.frames ?? 0;
+    const where = path.dirname(outputPath);
+    const roomless = await spaceRefusal(io, where, renderCutoutBytes(frames, plan.compSize ?? [1080, 1920]), RENDER_MARGIN_BYTES, `rendering ${frames} frames`);
+    if (roomless)
+        return roomless;
     const t1 = performance.now();
     const r = await io.execute(renderCutoutJsx({
         comp: args.comp,
@@ -2533,6 +2700,16 @@ export async function runRenderCutout(args, io) {
     // Measured: 390 s for 320 frames of a 2176 x 3840 take; allow 5 s a frame and two minutes over.
     { label: "subject.render_cutout", timeoutMs: 120_000 + frames * 5_000, undoGroup: true });
     const renderMs = since(t1);
+    let spaceAtTimeout = null;
+    if (r && r.ok === false && /timeout|timed out/i.test(String(r.error ?? ""))) {
+        const free = await (io.freeBytes ?? statfsFree)(where);
+        spaceAtTimeout = { free, where };
+        if (free !== null && free < RENDER_MARGIN_BYTES)
+            r.error =
+                `the render timed out with only ${gb(free)} free on the drive holding ${where}: a full drive is a likely cause ` +
+                    "(on 2026-11-12 a render on a drive with 498 MB free stalled for 28 minutes instead of failing). Ask the user to free space, for example Edit > Purge > All Memory & Disk Cache in After Effects, then render again. " +
+                    `After Effects said: ${r.error}`;
+    }
     const audio = r?.audio && Object.keys(r.audio).length ? r.audio : null;
     const sound = (audio
         ? `The output module's sound settings read ${Object.entries(audio)
@@ -2553,7 +2730,12 @@ export async function runRenderCutout(args, io) {
         },
     };
     if (!r?.ok)
-        return { ...out, ok: false, error: r?.error ?? "the render failed" };
+        return {
+            ...out,
+            ok: false,
+            error: r?.error ?? "the render failed",
+            ...(spaceAtTimeout ? { spaceAtTimeout } : {}),
+        };
     return {
         ...out,
         next: `Check the file before building on it: subject.check_file { path: "${r.outputPath}", outDir }. Then subject.use_cutout puts it in the comp in place of the live matte.`,
@@ -2690,6 +2872,9 @@ export async function runCheckFile(args, io) {
     };
     const size = Math.max(1, Math.min(32, Math.floor(SETTLE_MAX_MS / perFrameMs)));
     try {
+        const roomless = await spaceRefusal(io, outDir, (size + 30) * captureBytes([setup.width, setup.height]), PICTURE_MARGIN_BYTES, "this file check");
+        if (roomless)
+            return roomless;
         for (let b = 0; b * size < frames.length; b++) {
             const batch = frames.slice(b * size, (b + 1) * size);
             const rendered = await renderChunked(io, { compNameOrId: setup.compId, channels: "rgba" }, batch, perFrameMs, outDir, "check-file", renders, b);
