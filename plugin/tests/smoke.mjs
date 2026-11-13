@@ -55,11 +55,12 @@ try{
  assert.equal(init.serverInfo.name,serverName);
  child.stdin.write(JSON.stringify({jsonrpc:'2.0',method:'notifications/initialized'})+'\n');
  const ts=await rpc('tools/list');assert(ts.tools.some(t=>t.name==='ae_library'));report.tools=ts.tools.map(t=>t.name);
- const lib=await tool('ae_library');assert.equal(lib.documents.length,93);assert.deepEqual(lib.startHere,["motion-language","production-workflow","brief-template"]);
+ const libCount=JSON.parse(readFileSync(new URL('library/manifest.json',root),'utf8')).documents.length;   // the shipped manifest's count, so the check follows the library
+ const lib=await tool('ae_library');assert.equal(lib.documents.length,libCount);assert.deepEqual(lib.startHere,["motion-language","production-workflow","brief-template"]);
  assert.deepEqual(lib.modules.map(m=>m.id),['foundation','typography','paper-collage','visual-styles']);
  for(const d of lib.documents){const doc=await tool('ae_library',{document:d.id});assert(doc.content.length>100);}
  const bad=await rpc('tools/call',{name:'ae_library',arguments:{document:'../../package.json'}});assert.equal(bad.isError,true);
- report.checks.push('MCP handshake, tool discovery, all 93 hashed library documents, four module routes, default craft routing and traversal rejection');
+ report.checks.push(`MCP handshake, tool discovery, all ${libCount} hashed library documents, four module routes, default craft routing and traversal rejection`);
  const cat=await tool('ae_catalog');report.catalog=cat;report.checks.push('Offline policy-filtered operation catalog');
  if(live){
    const before=await tool('ae_context');
