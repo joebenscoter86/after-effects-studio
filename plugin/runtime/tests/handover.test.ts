@@ -219,6 +219,19 @@ describe("project.lint", () => {
     expect(r.kept[0].why).toMatch(/re-click/);
   });
 
+  it("lists a video layer used for its sound alone (picture off, sound on) as kept, and one with its sound off too as a finding", () => {
+    const AE = loadAE();
+    const forSound = layer({ name: "take.mp4", index: 1, enabled: false, hasVideo: true, hasAudio: true, audioEnabled: true });
+    const silentToo = layer({ name: "take", index: 2, enabled: false, hasVideo: true, hasAudio: true, audioEnabled: false });
+    const layers = [forSound, silentToo];
+    const root = Object.assign(new FolderItem(), { name: "Root" });
+    const comp = Object.assign(new CompItem(), { name: "Main", id: 1, parentFolder: root, usedIn: [], numLayers: 2, layer: (i: number) => layers[i - 1] });
+    const r = AE.lintProject({ rootFolder: root, numItems: 1, item: () => comp }, {});
+    expect(r.findings.map((f: Any) => f.layer)).toEqual(["take"]);
+    expect(r.findings[0].detail).toMatch(/sound is off too/);
+    expect(r.kept).toEqual([expect.objectContaining({ layer: "take.mp4", why: expect.stringMatching(/for its sound/) })]);
+  });
+
   it("is a read-only operation, and takes names to leave alone", () => {
     const op = getOp("project.lint")!;
     expect(op.readOnly).toBe(true);
