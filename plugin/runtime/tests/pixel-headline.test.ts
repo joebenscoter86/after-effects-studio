@@ -39,13 +39,14 @@ class Prop {
   keyTime(i: number) { return this.keys[i - 1].t; }
   valueAtTime(t: number) { if (!this.keys.length) return this.value; let v = this.keys[0].v; for (const k of this.keys) if (k.t <= t + 1e-9) v = k.v; return v; }
   keyValue(i: number) { return this.keys[i - 1].v; }
+  removeKey(i: number) { const k = this.keys.splice(i - 1, 1)[0]; if (k) { delete this.eases[k.t]; delete this.interp[k.t]; } }
   setInterpolationTypeAtKey(i: number, a: number, b: number) { this.interp[this.keys[i - 1].t] = [a, b]; }
   setTemporalEaseAtKey(i: number, a: any[], b: any[]) { this.eases[this.keys[i - 1].t] = { inE: a, outE: b }; }
   keyInTemporalEase(i: number) { return this.eases[this.keys[i - 1].t]?.inE; }
   keyOutTemporalEase(i: number) { return this.eases[this.keys[i - 1].t]?.outE; }
 }
 
-function makeAE(opts: { deepGlow: boolean }) {
+function makeAE(opts: { deepGlow: boolean; workingSpace?: string }) {
   const comps: any[] = [];
   let layerId = 0;
   function makeLayer(comp: any, kind: string, name: string): any {
@@ -66,8 +67,13 @@ function makeAE(opts: { deepGlow: boolean }) {
       moveAfter(o: any) { const a = comp._layers; a.splice(a.indexOf(L), 1); a.splice(a.indexOf(o) + 1, 0, L); },
       moveBefore(o: any) { const a = comp._layers; a.splice(a.indexOf(L), 1); a.splice(a.indexOf(o), 0, L); },
       setTrackMatte(m: any, t: any) { L.matte = m; L.matteType = t; },
-      get timeRemapEnabled() { return false; },
+      timeRemapEnabled: false, blendingMode: 0, collapseTransformation: false, containingComp: comp,
+      remove() { const a = comp._layers; a.splice(a.indexOf(L), 1); L.removed = true; },
+      moveToBeginning() { const a = comp._layers; a.splice(a.indexOf(L), 1); a.unshift(L); },
     };
+    // parenting is recorded with the parent's scale at that moment (After Effects bakes the parent's transform into the child)
+    let parent: any = null;
+    Object.defineProperty(L, "parent", { get: () => parent, set: (v: any) => { if (parent && !v) L.unparentedAt = { scale: parent.scale.value, keys: parent.scale.keys.length, expr: parent.position.expression }; parent = v; } });
     L.scale.value = [100, 100, 100]; L.scale.propertyValueType = 6414;
     root.property("ADBE Text Properties").property("ADBE Text Document").value = { text: "", fontSize: 10 };
     root.kids.find((k) => k.matchName === "ADBE Text Properties")!.addProperty("ADBE Text Animators");
@@ -95,7 +101,7 @@ function makeAE(opts: { deepGlow: boolean }) {
   const app = {
     effects: opts.deepGlow ? [{ matchName: "ADBE Glo2" }, { matchName: "PEDG2" }] : [{ matchName: "ADBE Glo2" }],
     fonts: { getFontsByFamilyNameAndStyleName: (f: string, s: string) => (f === "Inter" && s === "Bold" ? [{ postScriptName: "Inter-Bold" }] : []) },
-    project: { items: { addComp: (n: string, w: number, h: number, _p: number, d: number, f: number) => makeComp(n, w, h, d, f) } },
+    project: { workingSpace: opts.workingSpace ?? "", bitsPerChannel: 8, items: { addComp: (n: string, w: number, h: number, _p: number, d: number, f: number) => makeComp(n, w, h, d, f) } },
   };
   function KeyframeEase(this: any, speed: number, influence: number) { this.speed = speed; this.influence = influence; }
   function Shape(this: any) { this.vertices = []; this.inTangents = []; this.outTangents = []; this.closed = true; }
@@ -104,6 +110,7 @@ function makeAE(opts: { deepGlow: boolean }) {
     KeyframeInterpolationType: { LINEAR: 6612, BEZIER: 6613, HOLD: 6614 },
     PropertyValueType: { TwoD_SPATIAL: 6413, ThreeD_SPATIAL: 6412, TwoD: 6416, ThreeD: 6414, OneD: 6417 },
     TrackMatteType: { ALPHA: 1, ALPHA_INVERTED: 2, LUMA: 3 },
+    BlendingMode: { NORMAL: 1, ADD: 2, COLOR: 3, SOFT_LIGHT: 4, STENCIL_ALPHA: 5, SILHOUETTE_ALPHA: 6 },
     ParagraphJustification: { LEFT_JUSTIFY: 1, CENTER_JUSTIFY: 2, RIGHT_JUSTIFY: 3 },
   });
   vm.runInContext(LIB, ctx);
@@ -114,7 +121,7 @@ function makeAE(opts: { deepGlow: boolean }) {
 
 const F = (n: number) => n / 30;
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps;
-const footage = (name: string) => ({ name, width: 1080, height: 1920, isComp: false });
+const footage = (name: string, width = 1080, height = 1920, duration = 20) => ({ name, width, height, duration, isComp: false });
 const words = (w: number) => [["How", w - F(30)], ["to", w - F(26)], ["make", w - F(21)], ["the", w - F(16)], ["best", w - F(12)], ["shots", w], ["in", w + F(20.75)], ["thirty", w + F(27.2)], ["seconds", w + F(33.6)]]
   .map(([text, t]) => ({ text, t }));
 function referenceBrief(clipsN = 3, extra: any = {}) {
@@ -478,5 +485,225 @@ describe("pixel-headline module", () => {
     expect(ref.source.layer("Clip").scale.value[0]).toBeCloseTo(104 * 790 / 1080, 6);
     expect(C.collapseTransformation).toBe(true);   // the rim frosts what is behind the card only when it collapses into the main comp
 
+  });
+
+  // ---- what the first full piece taught (STYLE.md: the director's sections)
+  const fx = (L: any, mn: string) => L.property("ADBE Effect Parade").kids.find((k: any) => k.matchName === mn || k.name === mn);
+  const val = (L: any, mn: string, prop: string) => fx(L, mn).property(prop).value;
+
+  it("the clean ground: light is the reference's radial ramp; dark is a ramp top to bottom with a soft added lift, both with noise", () => {
+    const { PH, comp } = makeAE({ deepGlow: true });
+    const g = PH.ground(comp, {});
+    expect(g.tone).toBe("light"); expect(g.lift).toBe(null);
+    expect(val(g.layer, "ADBE Ramp", "Start Color").map((x: number) => +x.toFixed(6))).toEqual([0.84, 0.84, 0.85]);
+    expect(val(g.layer, "ADBE Ramp", "Ramp Shape")).toBe(2);
+    const { PH: P2, comp: c2 } = makeAE({ deepGlow: true });
+    const n = [0.08, 0.13, 0.24], d = P2.ground(c2, { tone: "dark", colour: n });
+    expect(val(d.layer, "ADBE Ramp", "Start Color").map((x: number) => +x.toFixed(4))).toEqual([0.064, 0.104, 0.192]);
+    expect(val(d.layer, "ADBE Ramp", "End Color").map((x: number) => +x.toFixed(4))).toEqual([0.0336, 0.0546, 0.1008]);
+    expect(val(d.layer, "ADBE Ramp", "Ramp Shape")).toBe(1);
+    expect(val(d.layer, "ADBE Noise2", "Amount of Noise")).toBe(1.3);
+    expect(d.lift.blendingMode).toBe(5 - 3);   // ADD
+    expect(val(d.lift, "ADBE Ramp", "Start of Ramp")).toEqual([540, 1920 * 0.6]);
+    expect(c2._layers.indexOf(d.lift)).toBeLessThan(c2._layers.indexOf(d.layer));   // the lift sits above the ground
+  });
+
+  it("stage reports the project's working space, and labels the footage as the ground a fallback", () => {
+    const { PH, comp } = makeAE({ deepGlow: true, workingSpace: "ACEScg" });
+    const st = PH.stage(comp, { take: footage("take"), footageGround: true });
+    expect(st.workingSpace).toBe("ACEScg");
+    expect(st.warnings.join(" ")).toMatch(/working colour space is ACEScg/);
+    expect(st.warnings.join(" ")).toMatch(/fallback/);
+    const { PH: P2, comp: c2 } = makeAE({ deepGlow: true });
+    expect(P2.stage(c2, { take: footage("take") }).warnings).toEqual([]);
+  });
+
+  it("the speaker from a rendered cut-out: stencilled by its alpha, remnants out by brightness and colour, standing on the bottom edge", () => {
+    const { PH, comp } = makeAE({ deepGlow: true });
+    expect(() => PH.speaker(comp, {})).toThrow(/cannot be made unattended/);
+    const sp = PH.speaker(comp, { cutout: footage("cutout", 1088, 1920), take: footage("take", 1088, 1920),
+      remnants: [{ box: [244, 1165, 349, 1265], frames: [[0, 870], [900, 1305]] }] });
+    const C = sp.comp, names = C._layers.map((l: any) => l.name);
+    expect(names).toEqual(["Remnant 1", "Cut-out alpha", "Base"]);
+    expect(C.layer("Cut-out alpha").blendingMode).toBe(5);   // STENCIL_ALPHA
+    expect(C.layer("Base").source.name).toBe("take");
+    const h = C.layer("Remnant 1");
+    expect(h.blendingMode).toBe(6);   // SILHOUETTE_ALPHA
+    expect(val(h, "ADBE Color Range", "Min (a, U, G)")).toBe(128 + 15);   // anything redder than a* 15 is skin, kept
+    expect(val(h, "ADBE Extract", "Black Point")).toBe(35);
+    expect(h.opacity.keys.map((q: Key) => [Math.round(q.t * 30), q.v])).toEqual([[0, 100], [870, 0], [900, 100], [1305, 0]]);
+    const L = sp.layer;
+    expect(L.anchorPoint.value).toEqual([544, 1920]); expect(L.position.value).toEqual([540, 1920]);
+    expect(L.scale.value).toEqual([100, 100]);
+    expect(L.source).toBe(C);
+  });
+
+  it("the speaker's look: balance on every copy, the skin evened inside a choked skin matte, amounts on sliders", () => {
+    const { PH, comp } = makeAE({ deepGlow: true });
+    const sp = PH.speaker(comp, { cutout: footage("cutout", 1088, 1920), look: { mixer: [98, 107, 84], gamma: 1.02, contrast: 0.03, average: [0.66, 0.46, 0.39] }, prefix: "PH J " });
+    const C = sp.comp, ctl = comp.layer("PH J Skin controls");
+    expect(sp.controls).toBe(ctl);
+    expect(ctl.property("ADBE Effect Parade").kids.map((k: any) => [k.name, k.property(1).value])).toEqual([
+      ["Colour even", 70], ["Average pull", 30], ["Light even", 30], ["Colour blur", 0.046 * 1088], ["Light blur", 0.132 * 1088], ["Skin choke", -3]]);
+    for (const nm of ["Base", "Light even", "Colour even"]) expect(val(C.layer(nm), "ADBE CHANNEL MIXER", "Red-Red")).toBe(98);
+    for (const nm of ["Light even", "Colour even", "Average pull"]) { expect(C.layer(nm).matte).toBe(C.layer("Skin key")); expect(C.layer(nm).matteType).toBe(2); }
+    expect(C.layer("Colour even").blendingMode).toBe(3); expect(C.layer("Light even").blendingMode).toBe(4);
+    expect(C.layer("Colour even").opacity.expression).toContain('comp("Beat").layer("PH J Skin controls").effect("Colour even")');
+    expect(C.layer("Skin key").enabled).toBe(false);
+    expect(C._layers[0].name).toBe("Cut-out alpha");   // the stencil is on top of the look
+  });
+
+  it("on a dark ground: the glow's exposure and radius, the cards' entrance and rim, the blocks' density", () => {
+    const { PH, comp } = makeAE({ deepGlow: true });
+    PH.setPiece({ tone: "dark", accent: [0.886, 0.278, 0.169] });
+    const hw = PH.heroWord(comp, { text: "today", at: 2 });
+    const dg = hw.layer.property("ADBE Effect Parade").kids.find((k: any) => k.matchName === "PEDG2");
+    expect(dg.property(25).keys.map((q: Key) => q.v)).toEqual([0, 0.14, 0]);
+    expect(dg.property("Radius").value).toBe(250);
+    expect(hw.layer.property("Source Text").value.fillColor).toEqual([0.886, 0.278, 0.169]);   // the piece's accent
+    const C = PH.card(comp, { clip: footage("c"), at: 2, pos: [300, 900], scale: 30, name: "PH D Card 1" });
+    const clip = C.source.layer("Clip"), rim = C.source.layer("Rim");
+    expect(val(rim, "ADBE Exposure2", "Exposure")).toBe(1);
+    expect(fx(clip, "ADBE Exposure2").property("Exposure").keys.map((q: Key) => q.v)).toEqual([0.5, 0.5, 0]);
+    const B = PH.uiCard(comp, { kind: "bubble", text: "YES", at: 2, pos: [540, 1300], width: 380, name: "PH D Card 2" });
+    expect(fx(B.source.layer("Clip"), "ADBE Exposure2").property("Exposure").keys.map((q: Key) => q.v)).toEqual([0.3, 0.3, 0]);
+    const light = makeAE({ deepGlow: true }), L2 = light.PH.card(light.comp, { clip: footage("c"), at: 2, pos: [300, 900], scale: 30, name: "PH L Card 1" });
+    expect(val(L2.source.layer("Rim"), "ADBE Exposure2", "Exposure")).toBe(0.15);
+    expect(fx(L2.source.layer("Clip"), "ADBE Exposure2").property("Exposure").keys.map((q: Key) => q.v)).toEqual([2, 2, 0]);
+  });
+
+  it("blocks keep out of the word's box at its peak on a dark ground and for a two-word word; a frame-wide word sends them up and down", () => {
+    const { PH, comp } = makeAE({ deepGlow: true });
+    const hw = PH.heroWord(comp, { text: "make it big", at: 2, widthShare: 0.92 });
+    const px = PH.pixelBlocks(comp, { word: hw, at: 2, seed: 3 });
+    const cb = px.clearBox;
+    expect(cb).not.toBe(null);
+    expect(cb.x0).toBeLessThan(hw.box.x0); expect(cb.y1).toBeGreaterThan(hw.box.y1);
+    const hits = px.blocks.filter((q: any) => q.x + q.w > cb.x0 && q.x < cb.x1 && q.y + q.h > cb.y0 && q.y < cb.y1);
+    expect(hits).toEqual([]);
+    expect(px.blocks.length).toBeGreaterThan(0);
+    const cy = (hw.box.y0 + hw.box.y1) / 2;
+    expect(px.blocks.every((q: any) => q.y + q.h <= cb.y0 + 1e-9 || q.y >= cb.y1 - 1e-9)).toBe(true);   // above or below only
+    expect(cy).toBeGreaterThan(0);
+    // a single word on a light ground keeps the calibrated schedule (blocks may fall behind its letters)
+    const one = PH.heroWord(comp, { text: "shots", at: 2, prefix: "PH O " }), p1 = PH.pixelBlocks(comp, { word: one, at: 2, seed: 7, prefix: "PH O " });
+    expect(p1.clearBox).toBe(null);
+  });
+
+  it("the tail: one size for the piece; up to three words slide the measured 154 px (scaled by size), longer tails a third of an em", () => {
+    const { PH, comp } = makeAE({ deepGlow: true });
+    const slide = (L: any) => L.property("ADBE Text Properties").property("ADBE Text Animators").property("PH Reveal").property("ADBE Text Animator Properties").property("ADBE Text Position 3D").value[0];
+    const a = PH.tail(comp, { text: "in thirty seconds", at: 2, prefix: "PH A " });
+    expect(slide(a)).toBeCloseTo(-154, 9);
+    PH.setPiece({ tailSize: 70 });
+    const b = PH.tail(comp, { text: "right?", at: 2, prefix: "PH B " });
+    expect(b.property("Source Text").value.fontSize).toBe(70);
+    expect(slide(b)).toBeCloseTo(-154 * 70 / 86, 9);
+    const c = PH.tail(comp, { text: "and I will send you", at: 2, prefix: "PH C " });
+    expect(slide(c)).toBeCloseTo(-0.34 * 70, 9);
+  });
+
+  it("a giant word tucked behind the speaker: baseline below the top of the hair, 92 % of the frame wide, under the speaker", () => {
+    const { PH, comp } = makeAE({ deepGlow: true });
+    const sp = PH.speaker(comp, { cutout: footage("cutout", 1088, 1920) });
+    const hw = PH.heroWord(comp, { text: "focus", at: 2, tuck: { hairY: 790 }, behind: sp.layer });
+    expect(hw.layer.position.value[1]).toBe(790 + 55 - 18);
+    expect(hw.box.x1 - hw.box.x0).toBeCloseTo(0.92 * 1080, 6);
+    expect(comp._layers.indexOf(hw.layer)).toBe(comp._layers.indexOf(sp.layer) + 1);
+    const px = PH.pixelBlocks(comp, { word: hw, at: 2 });
+    expect(comp._layers.indexOf(px.layer)).toBe(comp._layers.indexOf(hw.layer) + 1);
+  });
+
+  it("zoomOut: the target taken with the camera at rest, sampleAt, an ease in and out; a falling value leaves its key falling", () => {
+    const { PH, comp } = makeAE({ deepGlow: true });
+    const st = PH.stage(comp, { take: footage("take", 2160, 3840), scale: 50 });
+    const cam = PH.push(comp, { at: 0, layers: [st.speaker] }).layer;   // 171.5 % at 0, 100 % from frame 42
+    cam.anchorPoint.value = [0, 0];
+    const z = PH.zoomOut(comp, { speaker: st.speaker, scale: 40, position: [540, 1152], ground: "sample", sampleAt: [0.5, 0.14], prefix: "PH Z " });
+    expect(z.target).toEqual([0, 192]);   // at 100 %, not the 171.5 % of time 0 (which would give 112)
+    expect(comp.layer("PH Z Inset ground").property("ADBE Effect Parade").kids[0].property("Color").expression).toContain("L.width * 0.5, L.height * 0.14");
+    const { PH: P2, comp: c2 } = makeAE({ deepGlow: true });
+    const s2 = P2.stage(c2, { take: footage("take", 2160, 3840), scale: 50 });
+    P2.zoomOut(c2, { speaker: s2.speaker, scale: 40, position: [540, 1500], at: 2, ease: "inOut", cutout: true });
+    const sk = s2.speaker.scale;
+    expect(sk.keys.map((q: Key) => [+(q.t * 30).toFixed(6), q.v[0]])).toEqual([[60, 50], [86, 40]]);
+    expect(sk.eases[sk.keys[0].t].outE[0].influence).toBe(82);
+    expect(c2.layer("PH Inset ground")).toBe(undefined);   // a cut-out on a clean ground needs no inset ground or mask
+    const P3 = makeAE({ deepGlow: true }), s3 = P3.PH.stage(P3.comp, { take: footage("take", 2160, 3840), scale: 50 });
+    P3.PH.zoomOut(P3.comp, { speaker: s3.speaker, scale: 40, position: [540, 1500], at: 2, cutout: true });
+    const out = s3.speaker.scale.eases[s3.speaker.scale.keys[0].t].outE;
+    expect(out[0].speed).toBeLessThan(0); expect(out[1].speed).toBeLessThan(0);   // 50 -> 40 falls
+  });
+
+  it("clearing a beat unparents what stays with the camera at rest, so a rebuild does not zoom twice", () => {
+    const { PH, comp } = makeAE({ deepGlow: true });
+    const st = PH.stage(comp, { take: footage("take"), prefix: "PH S " });
+    const cam = PH.push(comp, { at: 0, layers: [st.speaker], prefix: "PH X " }).layer;
+    cam.scale.value = [171.5, 171.5, 171.5];
+    const card1 = PH.card(comp, { clip: footage("c"), at: 1, pos: [300, 900], scale: 30, name: "PH X Card 1" });
+    const r = PH.clear(comp, { prefix: "PH X " });
+    expect(r.layers).toBe(2);
+    expect(cam.removed).toBe(true); expect(card1.removed).toBe(true);
+    expect(st.speaker.parent).toBe(null);
+    expect(st.speaker.unparentedAt).toEqual({ scale: [100, 100, 100], keys: 0, expr: "" });
+    expect(st.speaker.removed).toBeUndefined();
+  });
+
+  it("the proof: a large card per item behind the speaker, its name above; earlier cards step back; the set restarts each clip", () => {
+    const { PH, makeComp } = makeAE({ deepGlow: true }), comp = makeComp("Piece", 1080, 1920, 20, 30);
+    const sp = PH.speaker(comp, { cutout: footage("cutout", 1088, 1920) });
+    const items = [0, 1, 2].map((i) => ({ clip: footage("site" + i, 1280, 800, 30), at: 2 + i * 3 + F(8), text: "Name " + (i + 1), W: 2 + i * 3 }));
+    const r = PH.proof(comp, { items, nameBaseline: 470, behind: sp.layer, back: { scale: 22, pos: [[205, 1085], [875, 1085]] },
+      set: { at: 11, pos: [[362, 439], [540, 650], [718, 861]], scale: 45 }, prefix: "PH P " });
+    expect(r.cards.map((c: any) => c.name)).toEqual(["PH P Card 1", "PH P Card 2", "PH P Card 3"]);
+    expect(r.names.map((n: any) => n.prefix)).toEqual(["PH P A ", "PH P B ", "PH P C "]);
+    expect(r.names[0].word.layer.position.value[1]).toBe(470 - 18);
+    for (const c of r.cards) expect(comp._layers.indexOf(c)).toBeGreaterThan(comp._layers.indexOf(sp.layer));
+    const c1 = r.cards[0];
+    expect(c1.scale.keys.some((q: Key) => near(q.t, 5) && q.v[0] !== 22)).toBe(true);   // the step-back starts at the next name's W
+    expect(c1.scale.keys.some((q: Key) => near(q.t, 5.3) && q.v[0] === 22)).toBe(true);
+    expect(r.cards[2].scale.keys.some((q: Key) => near(q.t, 11 + F(8) + 0.6) && q.v[0] === 45)).toBe(true);   // staggered 4 frames
+    const TR = r.cards[1].source.layer("Clip").property("ADBE Time Remapping");
+    const j = 11 + F(4);
+    const len = 20 - j, r6 = (x: number) => +x.toFixed(6);
+    expect(TR.keys.map((q: Key) => [r6(q.t), r6(q.v)])).toEqual([[r6(5 + F(8)), 0], [r6(j - F(1)), r6(j - F(1) - 5 - F(8))], [r6(j), 0], [r6(j + len), r6(len)]]);
+    expect(TR.interp[TR.keys[1].t]).toEqual([6612, 6614]);   // holds until the restart
+  });
+
+  it("interface cards and the strike: a prompt bar in the accent, a bubble with its comment, a stroke drawn on in 6 frames and left on", () => {
+    const { PH, comp } = makeAE({ deepGlow: true });
+    PH.setPiece({ accent: [0.9, 0.3, 0.2] });
+    const bar = PH.uiCard(comp, { kind: "bar", at: 2, pos: [540, 1300], width: 880, name: "PH X5 Card 1" });
+    const piece = bar.source.layer("Clip").source;
+    expect(piece.layer("Send").property("ADBE Root Vectors Group").property(1).property("ADBE Vectors Group").kids.find((k: any) => k.matchName === "ADBE Vector Graphic - Fill").property("ADBE Vector Fill Color").value).toEqual([0.9, 0.3, 0.2]);
+    expect(piece.layer("Caret").opacity.expression).toContain("Math.floor(time * 2)");
+    const roundness = (L: any) => L.property("ADBE Root Vectors Group").property(1).property("ADBE Vectors Group").property(1).property("ADBE Vector Rect Roundness").value;
+    expect(roundness(bar.source.layer("Inner"))).toBe(90);
+    const bub = PH.uiCard(comp, { kind: "bubble", text: "HELLO", at: 2, pos: [860, 860], width: 340, name: "PH X3 Card 1" });
+    expect(bub.source.layer("Clip").source.layer("Comment").property("Source Text").value.text).toBe("HELLO");
+    const L = PH.strike(comp, { from: [40, 1500], to: [340, 800], at: 3, prefix: "PH X6 " });
+    expect(L.name).toBe("PH X6 Line");
+    const tr = L.property("ADBE Root Vectors Group").property(1).property("ADBE Vectors Group").property("ADBE Vector Filter - Trim");
+    expect(tr.property("ADBE Vector Trim End").keys.map((q: Key) => [q.t, q.v])).toEqual([[3, 0], [3 + F(6), 100]]);
+    expect(tr.property("ADBE Vector Trim Start").keys).toEqual([]);
+  });
+
+  it("how long a line takes, and the whole beat's warnings: no time to land, a short hold, long lines, the margins, a giant phrase", () => {
+    const { PH } = makeAE({ deepGlow: true });
+    expect(PH.lineTime(9, "lead") * 30).toBeCloseTo(8 * 4.75 + 26.119, 9);
+    expect(PH.lineTime(5, "tail") * 30).toBeCloseTo(4 * 6.4 + 26.078, 9);
+    const clean = makeAE({ deepGlow: true });
+    expect(clean.PH.beat(clean.comp, referenceBrief(3, { exitAt: 4.4 })).warnings).toEqual([]);
+    const late = makeAE({ deepGlow: true });
+    expect(late.PH.beat(late.comp, referenceBrief(3, { exitAt: 2.2 })).warnings.join(" | ")).toMatch(/cannot land in its window/);
+    const short = makeAE({ deepGlow: true });
+    expect(short.PH.beat(short.comp, referenceBrief(3, { exitAt: 3.8 })).warnings.join(" | ")).toMatch(/the hold is \d+(\.\d)? frames/);
+    const ws = ["Here", "is", "a", "line", "with", "far", "too", "many", "words", "BIG", "today"].map((text, i) => ({ text, t: 0.5 + i * 0.15 }));
+    const long = makeAE({ deepGlow: true });
+    const w = long.PH.beat(long.comp, { ...referenceBrief(0), clips: [], words: ws, stressed: 9, maxChars: 60, leadBaseline: 150 }).warnings.join(" | ");
+    expect(w).toMatch(/lead-in line 1 has 9 words/);
+    expect(w).toMatch(/the lead-in enters the top margin/);
+    const ph = makeAE({ deepGlow: true });
+    expect(ph.PH.heroWord(ph.comp, { text: "one big idea", at: 2 }).warnings.join(" ")).toMatch(/choose one stressed word/);
   });
 });

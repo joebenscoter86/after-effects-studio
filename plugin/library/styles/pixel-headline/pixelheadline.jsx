@@ -15,9 +15,9 @@ var AESPixelHeadline = (function () {
     leadStrength: [[-1.865, 100, .33, .01, 0, -2.322], [26.119, 0, .823, .33, 0, 0]],
     tailStrength: [[-.376, 100, .33, .066, 0, -2.182], [26.078, 0, .842, .33, 0, 0]],
     leadDelay: 4.75, tailDelay: 6.4, leadDrop: 136, tailSlide: 154, tailBlur: 10,
-    // Exposure 0.64 on a light ground (calibrated); 0.2 on a dark one (set from test renders on a dark wall: at 0.64 the
-    // Screen haze washes the word's own letters toward white, at 0.2 they keep the accent and the haze still shows)
-    deepGlow: { keys: [[-2, 0], [0, .64], [24.26, 0]], eases: [[33, 33], [30.7, 83.3], [5, 33]], darkGround: .2 },
+    // Exposure 0.64 on a light ground (calibrated); 0.14 on a dark one with a radius of 250 (the first full piece, on navy: at
+    // 0.64 the Screen haze washes the word's own letters toward white and floods the top third)
+    deepGlow: { keys: [[-2, 0], [0, .64], [24.26, 0]], eases: [[33, 33], [30.7, 83.3], [5, 33]], darkGround: .14 },
     // stock fallback: a copy of the word with two Glows, its opacity keyed per frame from W - 1 (linear)
     stockGlow: { glows: [[30, 110, 1.803], [30, 420, .35]], from: -1,
       opacity: [0, 55.3, 69, 69.9, 69.9, 69.8, 69.8, 69.8, 67.3, 61.6, 53.9, 53.8, 45.6, 45.6, 47.5, 51, 51, 49.7, 46.1, 42.3, 39.6, 35.2, 27.5, 16.4, 0] },
@@ -40,8 +40,26 @@ var AESPixelHeadline = (function () {
     pushLead: 18,
     // exits (extended: the reference never shows one): each element leaves the way it came, about twice as fast, with no
     // overshoot; text by word from the last word, cards from the last card; everything gone within 10 frames
-    exit: { textFrames: 6, wordDelay: 1, wordFrames: 7, cardFrames: 6, cardStagger: 2, easeOut: .75, easeIn: .1, within: 10 }
+    exit: { textFrames: 6, wordDelay: 1, wordFrames: 7, cardFrames: 6, cardStagger: 2, easeOut: .75, easeIn: .1, within: 10 },
+    // a dark ground (proven on the first full piece, a navy ground): the glow's peak and radius, the blocks' density and the
+    // distance they keep from the word, the cards' over-bright entrance (video, and white interface pieces) and the rim
+    dark: { glowExposure: .14, glowRadius: 250, blockScale: .25, blockMinDist: 1.2, entranceExposure: .5, uiEntranceExposure: .3, rimExposure: 1 },
+    // what a vertical reel must keep clear (px at 1080 x 1920; scaled to the comp): the app's header, its caption and
+    // buttons, the sides. A hold of at least `hold` frames before anything leaves; a line of at most `lineWords` words
+    margins: { top: 190, bottom: 420, side: 60 }, hold: 10, lineWords: 5, lateStart: 8,
+    // a tail of more than `words` words slides `slideEm` of its font size (its words otherwise ride over each other mid-slide)
+    tailLong: { words: 3, slideEm: .34 },
+    // a word tucked behind the speaker: its baseline `depth` px below the top of the hair, `widthShare` of the frame wide
+    tuck: { depth: 55, widthShare: .92 },
+    // the zoom that only makes room: an ease in and out over `frames`
+    zoomInOut: { frames: 26 }
   };
+  // one set of choices for the whole piece (setPiece): tone ("light"|"dark"), accent, tailSize. Builders read it when a call
+  // does not say otherwise, so forty seconds stay in one accent, one tail size and one ground's settings.
+  var PIECE = { tone: "light", accent: null, tailSize: null };
+  function setPiece(o) { for (var q in o) if (o.hasOwnProperty(q)) PIECE[q] = o[q]; return PIECE; }
+  function isDark(o) { if (o && o.darkGround !== undefined) return !!o.darkGround; if (o && o.tone) return o.tone === "dark"; return PIECE.tone === "dark"; }
+  function accentOf(o, fb) { return (o && (o.colour || o.accent)) || PIECE.accent || fb; }
   function k(comp) { return comp.width / REF.w; }
   function sec(frames) { return frames / REF.fps; }
   function isArr(x) { return Object.prototype.toString.call(x) === "[object Array]"; }   // true for arrays from any realm
@@ -81,13 +99,35 @@ var AESPixelHeadline = (function () {
   // ---- stage: the ground and the graded speaker. o = { take (FootageItem), takeStart (s into the take at the comp's 0),
   //      scale (%), x, ground [r,g,b], grade { mixer [r,g,b], inBlack, inWhite, gamma, saturation }, prefix,
   //      footageGround (true: the take is used as it is, filling the frame, with no cut-out and no ground solid) }
+  // ---- the clean ground: the style's ground behind a cut-out speaker. It fills the frame and does not move with the push.
+  //      o = { tone ("light"|"dark"), colour [r,g,b], top, bottom (dark: the ramp's ends), lift { colour, centre [x, y], radius }
+  //      (dark: a soft round light behind the speaker, added), noise (%), prefix }. Light (the reference): a radial ramp from
+  //      colour + .04 at 46.9 % of the height to colour - .06 past the bottom. Dark: a ramp from top to bottom (default colour
+  //      x .8 and x .42) and the lift (default colour x 1, centred at 60 % of the height, radius 47 % of it), both as on the
+  //      first piece. Noise 1.3 % either way, so it does not band.
+  function ground(comp, o) { o = o || {}; var W = comp.width, H = comp.height, P = pfx(o), dk = isDark(o);
+    var g = o.colour || o.ground || (dk ? [.078, .129, .239] : [.8, .8, .81]);
+    function mul(c, m) { return [c[0] * m, c[1] * m, c[2] * m]; }
+    var G = comp.layers.addSolid(g, P + "Ground", W, H, 1, comp.duration), r = effect(G, "ADBE Ramp"), Lf = null;
+    if (!dk) { r.property("Start of Ramp").setValue([W / 2, H * .469]); r.property("Start Color").setValue([g[0] + .04, g[1] + .04, g[2] + .04]);
+      r.property("End of Ramp").setValue([W / 2, H * 1.198]); r.property("End Color").setValue([g[0] - .06, g[1] - .06, g[2] - .06]); r.property("Ramp Shape").setValue(2); }
+    else { r.property("Start of Ramp").setValue([W / 2, 0]); r.property("Start Color").setValue(o.top || mul(g, .8));
+      r.property("End of Ramp").setValue([W / 2, H]); r.property("End Color").setValue(o.bottom || mul(g, .42)); r.property("Ramp Shape").setValue(1); }
+    effect(G, "ADBE Noise2").property("Amount of Noise").setValue(o.noise === undefined ? 1.3 : o.noise);
+    if (dk && o.lift !== false) { var lf = o.lift || {}, c = lf.centre || [W / 2, H * .6], rad = lf.radius || H * .47;
+      Lf = comp.layers.addSolid([0, 0, 0], P + "Ground lift", W, H, 1, comp.duration); var r2 = effect(Lf, "ADBE Ramp");
+      r2.property("Start of Ramp").setValue(c); r2.property("Start Color").setValue(lf.colour || g); r2.property("End of Ramp").setValue([c[0], c[1] + rad]);
+      r2.property("End Color").setValue([0, 0, 0]); r2.property("Ramp Shape").setValue(2); Lf.blendingMode = BlendingMode.ADD; Lf.moveBefore(G); }
+    return { layer: G, lift: Lf, tone: dk ? "dark" : "light", colour: g }; }
+  // the project's colour settings, which carry over from the last project opened: a working space other than None changes
+  // how the take renders (an ACEScg space rendered one take at a gamma of about 1.8)
+  function projectSpace() { var ws = "", bpc = 8; try { ws = app.project.workingSpace; } catch (e) {} try { bpc = app.project.bitsPerChannel; } catch (e2) {}
+    var warn = []; if (ws && ws !== "None") warn.push("the project's working colour space is " + ws + ", carried over from an earlier project; set it to None before building, or the take renders with the wrong gamma");
+    return { workingSpace: ws === undefined ? null : ws, bitsPerChannel: bpc, warnings: warn }; }
   function stage(comp, o) {
-    var W = comp.width, H = comp.height, g = o.ground || [.8, .8, .81], P = pfx(o), G = null, S = null;
-    if (!o.footageGround) { G = comp.layers.addSolid(g, P + "Ground", W, H, 1, comp.duration);
-      var r = effect(G, "ADBE Ramp");
-      r.property("Start of Ramp").setValue([W / 2, H * .469]); r.property("Start Color").setValue([g[0] + .04, g[1] + .04, g[2] + .04]);
-      r.property("End of Ramp").setValue([W / 2, H * 1.198]); r.property("End Color").setValue([g[0] - .06, g[1] - .06, g[2] - .06]); r.property("Ramp Shape").setValue(2);
-      effect(G, "ADBE Noise2").property("Amount of Noise").setValue(1.3); }
+    var W = comp.width, H = comp.height, P = pfx(o), G = null, S = null, Gr = null, sp = projectSpace(), warn = sp.warnings.slice(0);
+    if (o.footageGround) warn.push("the footage as the ground is a fallback: the style is the speaker cut out on a clean ground (speaker() with a rendered cut-out)");
+    if (!o.footageGround) { Gr = ground(comp, { tone: o.tone, darkGround: o.darkGround, colour: o.ground, top: o.groundTop, bottom: o.groundBottom, lift: o.lift, prefix: P }); G = Gr.layer; }
     if (o.take) { S = comp.layers.add(o.take); S.name = P + "Speaker"; if (S.hasAudio) S.audioEnabled = false;
       if (o.takeStart) S.startTime = -o.takeStart;
       if (o.footageGround) { var cover = 100 * Math.max(W / o.take.width, H / o.take.height);
@@ -107,37 +147,51 @@ var AESPixelHeadline = (function () {
       var sm = new Shape(); sm.vertices = [[-fh, -2 * fh], [W + fh, -2 * fh], [W + fh, ts.share * H + fh / 2], [-fh, ts.share * H + fh / 2]]; sm.closed = true;
       Sh.property("ADBE Mask Parade").property("Shade").property("ADBE Mask Shape").setValue(sm);
       Sh.property("ADBE Mask Parade").property("Shade").property("ADBE Mask Feather").setValue([0, fh]); }
-    return { ground: G, speaker: S, shade: Sh, footageGround: !!o.footageGround }; }
+    return { ground: G, lift: Gr ? Gr.lift : null, speaker: S, shade: Sh, footageGround: !!o.footageGround, workingSpace: sp.workingSpace, bitsPerChannel: sp.bitsPerChannel, warnings: warn }; }
 
   // ---- the zoom-out inset: the footage scaled down inside the frame, its edges feathered by a mask, over a ground solid of
   //      the footage's own colour, so the speaker sits small and leaves room above. o = { speaker (layer), scale (%),
   //      position [x, y] (the inset's centre), feather (px on screen), ground [r,g,b] or "sample" (read from the footage's top
   //      edge by expression), trimTop (share of the footage's height left off its top), at (s: when given, it moves there on
   //      the push's curve over 42 frames), prefix }
-  function zoomOut(comp, o) { var S = o.speaker, P = pfx(o), src = S.source, sc = o.scale, fe = o.feather === undefined ? 60 : o.feather;
-    var G = comp.layers.addSolid(o.ground && o.ground.length ? o.ground : [0, 0, 0], P + "Inset ground", comp.width, comp.height, 1, comp.duration); G.moveAfter(S);
-    if (o.ground === "sample") { var f = effect(G, "ADBE Fill");
-      f.property("Color").expression = 'var L = thisComp.layer("' + S.name + '");\nvar c = L.sampleImage([L.width / 2, L.height * .03], [L.width * .45, L.height * .02], true, time);\n[c[0], c[1], c[2], 1];'; }
-    var mk = S.property("ADBE Mask Parade").addProperty("ADBE Mask Atom"); mk.name = "Inset edge";
-    // trimTop: a share of the footage's height left off its top (e.g. a ceiling the top shade hid at full frame)
-    var y0 = (o.trimTop || 0) * src.height, shp = new Shape(); shp.vertices = [[0, y0], [src.width, y0], [src.width, src.height], [0, src.height]]; shp.closed = true;
-    S.property("ADBE Mask Parade").property("Inset edge").property("ADBE Mask Shape").setValue(shp);
-    var lf = fe * 100 / sc; S.property("ADBE Mask Parade").property("Inset edge").property("ADBE Mask Feather").setValue([lf, lf]);
-    S.property("ADBE Mask Parade").property("Inset edge").property("ADBE Mask Offset").setValue(-lf / 2);
-    if (S.anchorPoint.value[1] !== src.height / 2) S.anchorPoint.setValue([src.width / 2, src.height / 2]);
-    if (o.at !== undefined) { var from = S.scale.valueAtTime(o.at, false), fp = S.position.valueAtTime(o.at, false);
-      pushEase(S.scale, o.at, from, [sc, sc, 100].slice(0, from.length)); pushEase(S.position, o.at, fp, toParent(S, o.position, o.at)); }
-    else { S.scale.setValue([sc, sc]); S.position.setValue(toParent(S, o.position, 0)); }
-    return { ground: G, speaker: S }; }
+  //      sampleAt [x, y] (shares of the footage: where "sample" reads; default the centre line just below the trimmed band),
+  //      ease ("push" | "inOut": an ease in and out, for a zoom that only makes room; the push's curve smears a face on its
+  //      first frame), dur (frames), cutout (false when the speaker is a cut-out on a clean ground: no mask, no inset ground) }
+  //      The target is converted into the parent's space with the parent at rest (its last key), never mid-push.
+  function zoomOut(comp, o) { var S = o.speaker, P = pfx(o), src = S.source, sc = o.scale, fe = o.feather === undefined ? 60 : o.feather, G = null, cut = o.cutout === true;
+    if (!cut) { G = comp.layers.addSolid(o.ground && o.ground.length ? o.ground : [0, 0, 0], P + "Inset ground", comp.width, comp.height, 1, comp.duration); G.moveAfter(S); }
+    if (!cut && o.ground === "sample") { var f = effect(G, "ADBE Fill"), sa = o.sampleAt || [.5, (o.trimTop || 0) + .03];
+      f.property("Color").expression = 'var L = thisComp.layer("' + S.name + '");\nvar c = L.sampleImage([L.width * ' + sa[0] + ', L.height * ' + sa[1] + '], [L.width * .45, L.height * .02], true, time);\n[c[0], c[1], c[2], 1];'; }
+    if (!cut) { var mk = S.property("ADBE Mask Parade").addProperty("ADBE Mask Atom"); mk.name = "Inset edge";
+      // trimTop: a share of the footage's height left off its top (e.g. a ceiling the top shade hid at full frame)
+      var y0 = (o.trimTop || 0) * src.height, shp = new Shape(); shp.vertices = [[0, y0], [src.width, y0], [src.width, src.height], [0, src.height]]; shp.closed = true;
+      S.property("ADBE Mask Parade").property("Inset edge").property("ADBE Mask Shape").setValue(shp);
+      var lf = fe * 100 / sc; S.property("ADBE Mask Parade").property("Inset edge").property("ADBE Mask Feather").setValue([lf, lf]);
+      S.property("ADBE Mask Parade").property("Inset edge").property("ADBE Mask Offset").setValue(-lf / 2);
+      if (S.anchorPoint.value[1] !== src.height / 2) S.anchorPoint.setValue([src.width / 2, src.height / 2]); }
+    var tr = o.at !== undefined ? Math.max(o.at, restTime(S)) : restTime(S), tgt = toParent(S, o.position, tr);
+    if (o.at !== undefined) { var from = S.scale.valueAtTime(o.at, false), fp = S.position.valueAtTime(o.at, false), tv = [];
+      for (var i = 0; i < from.length; i++) tv.push(i < 2 ? sc : from[i]);
+      move(S.scale, o.at, from, tv, o.ease, o.dur); move(S.position, o.at, fp, tgt, o.ease, o.dur); }
+    else { S.scale.setValue([sc, sc]); S.position.setValue(tgt); }
+    return { ground: G, speaker: S, target: tgt }; }
+  // when a layer's parent (the push camera) has settled: its last scale or position key (0 if it has none)
+  function restTime(L) { var P = L.parent, t = 0; if (!P) return 0;
+    if (P.scale.numKeys) t = Math.max(t, P.scale.keyTime(P.scale.numKeys)); if (P.position.numKeys) t = Math.max(t, P.position.keyTime(P.position.numKeys)); return t; }
+  // a move on the push's curve (default) or an ease in and out ("inOut", over SIG.zoomInOut.frames unless dur is given)
+  function move(prop, at, a, b, ease, dur) { if (ease === "inOut") { var fr = dur || SIG.zoomInOut.frames; return AESLib.ease(prop, [at, at + sec(fr)], [a, b], "travel"); }
+    return pushEase(prop, at, a, b, dur); }
   // a comp-space point in a layer's parent space at time t (parent unrotated), so a parented layer can be sent to a place on screen
   function toParent(L, p, t) { var P = L.parent; if (!P) return p;
     var pp = P.position.valueAtTime(t, false), pa = P.anchorPoint.valueAtTime(t, false), ps = P.scale.valueAtTime(t, false);
     return [pa[0] + (p[0] - pp[0]) * 100 / ps[0], pa[1] + (p[1] - pp[1]) * 100 / ps[1]]; }
-  // back to the full frame on the same ease. o = { speaker, at, cover (%) }
+  // back to the full frame on the same ease. o = { speaker, at, cover (%), position (where it rests; default the frame's
+  //      centre), ease, dur }
   function exitInset(comp, o) { var S = o.speaker, src = S.source, cv = o.cover || 100 * Math.max(comp.width / src.width, comp.height / src.height);
-    var from = S.scale.valueAtTime(o.at, false), fp = S.position.valueAtTime(o.at, false);
-    pushEase(S.scale, o.at, from, [cv, cv, 100].slice(0, from.length)); pushEase(S.position, o.at, fp, toParent(S, [comp.width / 2, comp.height / 2], o.at));
-    return o.at + sec(SIG.push[1][0]); }
+    var from = S.scale.valueAtTime(o.at, false), fp = S.position.valueAtTime(o.at, false), tv = [];
+    for (var i = 0; i < from.length; i++) tv.push(i < 2 ? cv : from[i]);
+    move(S.scale, o.at, from, tv, o.ease, o.dur); move(S.position, o.at, fp, toParent(S, o.position || [comp.width / 2, comp.height / 2], Math.max(o.at, restTime(S))), o.ease, o.dur);
+    return o.at + sec(o.dur || (o.ease === "inOut" ? SIG.zoomInOut.frames : SIG.push[1][0])); }
   // a move from a to b (numbers or arrays) on the push's curve: fast out of the first frame, a long ease in, over 42 frames
   // (or `frames`: the same curve compressed or stretched in time)
   function pushEase(prop, at, a, b, frames) { var K = SIG.push, fr = frames || K[1][0], t1 = at + sec(fr), d = [], i, n = isArr(a) ? a.length : 1;
@@ -146,7 +200,11 @@ var AESPixelHeadline = (function () {
     var spd = K[0][5] / (K[0][1] - K[1][1]) * REF.fps * K[1][0] / fr;   // the push's out speed as a share of its travel, per second
     var span = 0; for (i = 0; i < n; i++) span = Math.max(span, Math.abs((n > 1 ? b[i] - a[i] : b - a)));
     var dm = dims(prop), B = KeyframeInterpolationType.BEZIER, ea = [], eb = [], ec = [], ed = [];
-    for (i = 0; i < dm; i++) { ea.push(new KeyframeEase(0, 33)); eb.push(new KeyframeEase(-spd * span, K[0][3] * 100)); ec.push(new KeyframeEase(0, K[1][2] * 100)); ed.push(new KeyframeEase(0, 33)); }
+    var spatial = prop.propertyValueType === PropertyValueType.TwoD_SPATIAL || prop.propertyValueType === PropertyValueType.ThreeD_SPATIAL;
+    // a spatial property's speed is along its path (never negative); any other dimension's speed carries the sign of its own
+    // travel, so a value that falls (a card shrinking, a speaker scaling down) leaves its first key falling
+    for (i = 0; i < dm; i++) { var tv = spatial ? span : (dm > 1 ? b[i] - a[i] : (n > 1 ? b[0] - a[0] : b - a));
+      ea.push(new KeyframeEase(0, 33)); eb.push(new KeyframeEase(-spd * tv, K[0][3] * 100)); ec.push(new KeyframeEase(0, K[1][2] * 100)); ed.push(new KeyframeEase(0, 33)); }
     var k0 = prop.nearestKeyIndex(at), k1 = prop.nearestKeyIndex(t1);
     prop.setInterpolationTypeAtKey(k0, B, B); prop.setTemporalEaseAtKey(k0, ea, eb);
     prop.setInterpolationTypeAtKey(k1, B, B); prop.setTemporalEaseAtKey(k1, ec, ed);
@@ -200,7 +258,14 @@ var AESPixelHeadline = (function () {
     if (r.width > T.lineMax * comp.width) { size *= T.lineMax * comp.width / r.width; var td = L.property("Source Text").value; td.fontSize = size; td.leading = size * T.leading; L.property("Source Text").setValue(td); }
     var at = isArr(o.at) ? o.at[0] : o.at, line2 = null;
     if (lines.length > 1 && isArr(o.at) && o.at.length > 1) { var n1 = lines[0].split(" ").length; line2 = { n1: n1, extra: o.at[1] - at - n1 * delay / 30 }; }
-    return { layer: L, lines: lines, size: size, at: at, line2: line2 }; }
+    var nW = lines.join(" ").split(" ").length;
+    return { layer: L, lines: lines, size: size, at: at, line2: line2, words: nW }; }
+  // how long a line takes: the time (s) after its start at which its last word has landed. kind "lead" | "tail".
+  //      A lead-in of n words lands (n - 1) x 4.75 + 26 frames after it starts, a tail (n - 1) x 6.4 + 26.
+  function lineTime(n, kind) { var tl = kind === "tail", K = tl ? SIG.tailStrength : SIG.leadStrength;
+    return sec((Math.max(1, n) - 1) * (tl ? SIG.tailDelay : SIG.leadDelay) + K[K.length - 1][0]); }
+  // the comp time at which a built line has landed (its line-2 start included)
+  function lineSettle(t, kind) { return t.at + lineTime(t.words, kind) + (t.line2 ? Math.max(0, t.line2.extra) : 0); }
   // ---- lead-in line. o = { text, at (s, or one per line), colour, prefix, maxChars, lines }. Two lines when the text runs
   //      past maxChars (24): they stack upward from the lead-in's baseline, so the giant word's place does not move.
   function leadIn(comp, o) { var s = k(comp), T = SIG.type, t = textLine(comp, o, pfx(o) + "Lead-in", T.leadSize * s, SIG.leadDelay), L = t.layer;
@@ -210,30 +275,46 @@ var AESPixelHeadline = (function () {
   // ---- tail line. o = { text, at (s, or one per line), colour, under (the giant word's layer, to clear its descenders),
   //      baseline (comp px; default 31.8 % of the height, below any descender), prefix, maxChars, lines }. Two lines stack
   //      downward from the tail's baseline.
+  //      size (px; default the piece's tail size, setPiece({ tailSize }), else the calibrated 86 x the comp's scale). The slide
+  //      is the measured 154 px (scaled with the size) for up to three words; a longer tail slides SIG.tailLong.slideEm of
+  //      its size, or its words ride over each other mid-slide and read as one run-on word.
   function tail(comp, o) { var s = k(comp), T = SIG.type, y = comp.height * T.tailBaseline, at0 = isArr(o.at) ? o.at[0] : o.at;
     if (o.baseline !== undefined) y = o.baseline;
     else if (o.under) { var r = o.under.sourceRectAtTime(at0, false), sz = o.under.property("Source Text").value.fontSize, below = r.top + r.height;
       var wb = o.under.position.value[1] + o.under.anchorPoint.value[1] * -1 + 0;   // the word's baseline
       if (below > .05 * sz) y = Math.max(y, wb + below + .03 * comp.height); }
-    var t = textLine(comp, o, pfx(o) + "Tail", T.tailSize * s, SIG.tailDelay), L = t.layer;
+    var size0 = o.size || PIECE.tailSize || T.tailSize * s, t = textLine(comp, o, pfx(o) + "Tail", size0, SIG.tailDelay), L = t.layer;
     L.position.setValue([comp.width / 2, y]);
-    reveal(L, t.at, SIG.tailStrength, SIG.tailDelay, [-SIG.tailSlide * s, 0], SIG.tailBlur * s, t.line2);
+    reveal(L, t.at, SIG.tailStrength, SIG.tailDelay, [-tailSlide(t.words, t.size, s), 0], SIG.tailBlur * s * t.size / (T.tailSize * s), t.line2);
     return L; }
+  function tailSlide(n, size, s) { var T = SIG.type; return n > SIG.tailLong.words ? SIG.tailLong.slideEm * size : SIG.tailSlide * s * size / (T.tailSize * s); }
 
   // ---- giant word and its glow. o = { text, at (s: W, the stressed word's spoken start), colour, glow ("auto"|"deep"|"stock"),
-  //      exposure (Deep Glow's peak; default the light-ground signature, SIG.deepGlow.darkGround on a dark ground), prefix }
-  //      Returns { layer, glow, box (settled, comp px) }
-  function heroWord(comp, o) { var s = k(comp), T = SIG.type, W = comp.width, base = comp.height * T.wordBaseline, size = T.wordSize * W, P = pfx(o);
-    var L = AESLib.text(comp, P + "Word", o.text, { family: FAM, style: FACE, size: size, color: o.colour || [1, 0, 0], just: "center", pos: [W / 2, base] });
-    var r = L.sourceRectAtTime(o.at + 1, false), top0 = base + r.top;
-    if (r.width > T.wordMax * W) { size *= T.wordMax * W / r.width; var td = L.property("Source Text").value; td.fontSize = size; L.property("Source Text").setValue(td); r = L.sourceRectAtTime(o.at + 1, false);
-      base = top0 - r.top; }   // a shrunk word keeps its tallest letters where they were: just under the lead-in's baseline
+  //      exposure (Deep Glow's peak; default the light-ground signature, SIG.dark.glowExposure on a dark ground), radius
+  //      (Deep Glow's; default its own, SIG.dark.glowRadius on a dark ground), tone / darkGround, baseline (comp px),
+  //      widthShare (the word's width as a share of the frame; it may pass the 85 % cap), fontShare (a fixed font size as a
+  //      share of the width), tuck { hairY (comp px: the top of the speaker's hair on the settled frame), depth } (the word
+  //      sits behind the speaker's head: baseline hairY + depth, width SIG.tuck.widthShare unless given), behind (a layer: the
+  //      word goes just under it, e.g. the speaker), prefix }
+  //      Returns { layer, glow, box (settled, comp px), size, text, warnings }
+  function heroWord(comp, o) { var s = k(comp), T = SIG.type, W = comp.width, base = comp.height * T.wordBaseline, size = T.wordSize * W, P = pfx(o), warn = [];
+    var tk = o.tuck, ws = o.widthShare || (tk ? SIG.tuck.widthShare : 0);
+    if (o.fontShare) size = o.fontShare * W;
+    var L = AESLib.text(comp, P + "Word", o.text, { family: FAM, style: FACE, size: size, color: accentOf(o, [1, 0, 0]), just: "center", pos: [W / 2, base] });
+    var r = L.sourceRectAtTime(o.at + 1, false), top0 = base + r.top, cap = ws || (o.fontShare ? .95 : T.wordMax);
+    if (ws || r.width > cap * W) { size *= cap * W / r.width; var td = L.property("Source Text").value; td.fontSize = size; L.property("Source Text").setValue(td); r = L.sourceRectAtTime(o.at + 1, false);
+      if (!ws) base = top0 - r.top; }   // a shrunk word keeps its tallest letters where they were: just under the lead-in's baseline
+    if (tk) base = tk.hairY + (tk.depth === undefined ? SIG.tuck.depth : tk.depth);
     if (o.baseline !== undefined) base = o.baseline;
+    if (String(o.text).indexOf(" ") >= 0 && size < .6 * T.wordSize * W) warn.push("the giant word \"" + o.text + "\" is a phrase and shrank to " + Math.round(100 * size / (T.wordSize * W)) + " % of the giant size; choose one stressed word");
+    if (o.behind) L.moveAfter(o.behind);
     L.anchorPoint.setValue([0, -T.wordPivotUp * s]); L.position.setValue([W / 2, base - T.wordPivotUp * s]);
     sigKeys(L.scale, o.at, SIG.word, 100, dims(L.scale));
     L.inPoint = o.at;
     var mode = o.glow || "auto", used = mode === "auto" ? (hasEffect("PEDG2") ? "deep" : "stock") : mode;
-    if (used === "deep") { var e = effect(L, "PEDG2"), x = e.property(25), D = SIG.deepGlow, pk = o.exposure || (o.darkGround && D.darkGround ? D.darkGround : D.keys[1][1]), t = [], v = [];
+    var dk = isDark(o);
+    if (used === "deep") { var e = effect(L, "PEDG2"), x = e.property(25), D = SIG.deepGlow, pk = o.exposure || (dk ? SIG.dark.glowExposure : D.keys[1][1]), t = [], v = [];
+      var rad = o.radius || (dk ? SIG.dark.glowRadius : 0); if (rad) e.property("Radius").setValue(rad);
       for (var i = 0; i < D.keys.length; i++) { t.push(o.at + sec(D.keys[i][0])); v.push(D.keys[i][1] ? pk : 0); }
       x.setValuesAtTimes(t, v); var B = KeyframeInterpolationType.BEZIER;
       for (i = 0; i < t.length; i++) { var ki = x.nearestKeyIndex(t[i]); x.setInterpolationTypeAtKey(ki, B, B);
@@ -245,7 +326,7 @@ var AESPixelHeadline = (function () {
       linearKeys(C.opacity, tt, vv); }
     // the settled box in comp px (anchor offset folded in)
     var box = { x0: W / 2 + r.left, x1: W / 2 + r.left + r.width, y0: base + r.top, y1: base + r.top + r.height };
-    return { layer: L, glowLayer: C, glow: used, box: box, size: size }; }
+    return { layer: L, glowLayer: C, glow: used, box: box, size: size, text: String(o.text), pivot: [W / 2, base - T.wordPivotUp * s], dark: dk, warnings: warn }; }
 
   // ---- pixel blocks. A pure schedule (no AE), then one shape layer of grid squares with Hold opacity keys.
   function rng(seed) { var s = (Math.abs(Math.floor(seed || 7)) % 2147483646) + 1; return function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
@@ -254,9 +335,11 @@ var AESPixelHeadline = (function () {
   function blockSchedule(o) {
     var B = SIG.blocks, R = rng(o.seed), c = o.cell || B.cell, bx = o.box, cx = (bx.x0 + bx.x1) / 2, cy = (bx.y0 + bx.y1) / 2, hw = (bx.x1 - bx.x0) / 2, hh = (bx.y1 - bx.y0) / 2;
     var cells = [], sides = ["above", "below", "left", "right"], i, j;
-    for (i = 0; i * c < o.width; i++) for (j = 1; j * c < o.height * .45; j++) {
+    var cb = o.clearBox;   // no block may touch this rectangle (the word's box at its peak scale, with a margin)
+    for (i = 0; i * c < o.width; i++) for (j = 1; j * c < o.height; j++) {
       var x = i * c + c / 2, y = j * c + c / 2, nx = (x - cx) / hw, ny = (y - cy) / hh, d = Math.max(Math.abs(nx), Math.abs(ny));
       if (d > B.reach) continue;
+      if (cb && i * c + c > cb.x0 && i * c < cb.x1 && j * c + c > cb.y0 && j * c < cb.y1) continue;
       var dir = [-ny, ny, -nx, nx], best = 0; for (var q = 1; q < 4; q++) if (dir[q] > dir[best]) best = q;
       cells.push({ i: i, j: j, x: i * c, y: j * c, d: d, side: sides[best], line: o.lineBand ? (y + c / 2 > o.lineBand[0] && y - c / 2 < o.lineBand[1]) : false }); }
     var out = [];
@@ -273,7 +356,7 @@ var AESPixelHeadline = (function () {
         var guard = 0;
         while (act.length < n && guard++ < 400) {
           var tot = taken.above + taken.below + taken.left + taken.right + 1, side = "above", gap = -9;
-          for (var s in B.sides) { var g = B.sides[s] - taken[s] / tot; if (g > gap) { gap = g; side = s; } }
+          for (var s in sidesW) { var g = sidesW[s] - taken[s] / tot; if (g > gap) { gap = g; side = s; } }
           var pool = [];
           for (var p = 0; p < cells.length; p++) { var cc = cells[p];
             if (cc.side !== side || used[cc.i + "," + cc.j] || (cc.line && f < B.lineFree)) continue;
@@ -289,26 +372,44 @@ var AESPixelHeadline = (function () {
             var blk = { i: cl.i, j: cl.j, x: cl.x, y: cl.y, w: c, h: c, d: cl.d, on: f, off: null, opacity: lo[0] + R() * (lo[1] - lo[0]) };
             used[cl.i + "," + cl.j] = 1; act.push(blk); out.push(blk); } } }
       for (var a = 0; a < act.length; a++) act[a].off = counts.length; }
+    var sidesW = o.sides || B.sides;
     var strongC = [], weakC = [], area = (o.width * o.height) / (REF.w * REF.h) * (o.scale === undefined ? 1 : o.scale), count = o.count || B.count, dist = o.dist || B.dist;
+    if (o.minDist) { var dd2 = []; for (i = 0; i < dist.length; i++) dd2.push(Math.max(dist[i], o.minDist)); dist = dd2; }
     for (i = 0; i < count.length; i++) { strongC.push(Math.round(count[i] * area)); weakC.push(Math.round(count[i] * area * B.weakRatio)); }
     run(strongC, true); run(weakC, false);
     return out; }
-  // o = { word (heroWord's result), at (W), colour, seed, lineBand }
-  function pixelBlocks(comp, o) { var blocks = blockSchedule({ box: o.word.box, width: comp.width, height: comp.height, seed: o.seed || 7, cell: SIG.blocks.cell * k(comp), lineBand: o.lineBand, count: o.count, dist: o.dist, scale: o.blockScale });
+  // o = { word (heroWord's result), at (W), colour, seed, lineBand, blockScale, clear (true: no block touches the word's box
+  //      at its peak scale; default on a dark ground, where the glow and the ground let blocks show through the letters, and
+  //      for a word of two or more words, whose gap would otherwise read as a hyphen) }
+  //      A word wider than 75 % of the frame sends its blocks above and below only (its sides are off the frame).
+  function pixelBlocks(comp, o) { var wd = o.word, bx = wd.box, dk = isDark(o) || !!wd.dark, multi = wd.text ? wd.text.indexOf(" ") >= 0 : false;
+    var clear = o.clear !== undefined ? o.clear : (dk || multi), cb = null, sides = null, pk = SIG.word[1][1], m = 6 * k(comp);
+    if (clear) { var pv = wd.pivot || [comp.width / 2, (bx.y0 + bx.y1) / 2];
+      cb = { x0: pv[0] + (bx.x0 - pv[0]) * pk - m, x1: pv[0] + (bx.x1 - pv[0]) * pk + m, y0: pv[1] + (bx.y0 - pv[1]) * pk - m, y1: pv[1] + (bx.y1 - pv[1]) * pk + m }; }
+    if (bx.x1 - bx.x0 > .75 * comp.width) sides = { above: .5, below: .5, left: 0, right: 0 };
+    var bs = o.blockScale !== undefined ? o.blockScale : (dk ? SIG.dark.blockScale : undefined);
+    var blocks = blockSchedule({ box: bx, width: comp.width, height: comp.height, seed: o.seed || 7, cell: SIG.blocks.cell * k(comp), lineBand: o.lineBand, count: o.count, dist: o.dist, scale: bs,
+      clearBox: cb, sides: sides, minDist: clear ? SIG.dark.blockMinDist : 0 });
     var L = comp.layers.addShape(); L.name = pfx(o) + "Pixels"; var root = L.property("ADBE Root Vectors Group");
     for (var b = 0; b < blocks.length; b++) { var q = blocks[b], g = root.addProperty("ADBE Vector Group"); g.name = "B" + (b + 1);
       var rr = root.property(b + 1).property("ADBE Vectors Group").addProperty("ADBE Vector Shape - Rect");
       rr.property("ADBE Vector Rect Size").setValue([q.w, q.h]); rr.property("ADBE Vector Rect Position").setValue([q.x + q.w / 2 - comp.width / 2, q.y + q.h / 2 - comp.height / 2]);
-      root.property(b + 1).property("ADBE Vectors Group").addProperty("ADBE Vector Graphic - Fill").property("ADBE Vector Fill Color").setValue(o.colour || [1, 0, 0]);
+      root.property(b + 1).property("ADBE Vectors Group").addProperty("ADBE Vector Graphic - Fill").property("ADBE Vector Fill Color").setValue(accentOf(o, [1, 0, 0]));
       holdKeys(root.property(b + 1).property("ADBE Vector Transform Group").property("ADBE Vector Group Opacity"), [0, o.at + sec(q.on), o.at + sec(q.off)], [0, q.opacity, 0]); }
-    return { layer: L, blocks: blocks }; }
+    L.moveAfter(wd.glowLayer || wd.layer);   // under the word and its glow
+    return { layer: L, blocks: blocks, clearBox: cb }; }
 
   // ---- one card. o = { clip (FootageItem), clipStart (s in the clip at the card's first frame), at (s: F), pos [x, y], scale (S, %),
   //      name, size [w, h] (the card's inner rectangle in its own comp; default the upright 790 x 1100), width (px on screen,
   //      rim included; sets S when given) }. The upright default keeps the calibrated 106 % rim; any other shape scales the rim
   //      and the corners by its shorter side: rim 3 % of it on each edge, corner radius 7.6 % of it, rim blur 3.2 % of it.
-  function card(comp, o) { var R = o.size || SIG.cardRect, nm = o.name || (pfx(o) + "Card"), up = !o.size, mn = Math.min(R[0], R[1]);
-    var t = up ? 0 : SIG.cardRimShare * mn, outerR = up ? R : [R[0] + 2 * t, R[1] + 2 * t], round = up ? SIG.cardRound : SIG.cardRoundShare * mn;
+  //      radius (px: the inner corner radius, for a small interface card such as a bubble), entrance (the clip's over-bright
+  //      Exposure while it is blurred; default 2 on a light ground, SIG.dark.entranceExposure on a dark one; ui: true uses
+  //      SIG.dark.uiEntranceExposure there, for white interface pieces), rim (the rim's Exposure; default .15 light, 1 dark),
+  //      freezeEnd (true: the clip holds its last frame if the card outlasts it), tone / darkGround, behind (a layer: the card
+  //      goes just under it, e.g. the speaker) }
+  function card(comp, o) { var R = o.size || SIG.cardRect, nm = o.name || (pfx(o) + "Card"), up = !o.size, mn = Math.min(R[0], R[1]), dk = isDark(o);
+    var t = up ? 0 : SIG.cardRimShare * mn, outerR = up ? R : [R[0] + 2 * t, R[1] + 2 * t], round = o.radius !== undefined ? o.radius : (up ? SIG.cardRound : SIG.cardRoundShare * mn);
     var cw = up ? REF.w : Math.ceil(outerR[0] + .2 * mn), ch = up ? REF.h : Math.ceil(outerR[1] + .2 * mn);
     var C = app.project.items.addComp(nm, cw, ch, 1, comp.duration, comp.frameRate);
     function rect(name, size, sc, rnd) { var L = C.layers.addShape(); L.name = name; var g = L.property("ADBE Root Vectors Group").addProperty("ADBE Vector Group");
@@ -319,7 +420,7 @@ var AESPixelHeadline = (function () {
     var outer = up ? rect("Outer", R, SIG.rimScale, round) : rect("Outer", outerR, 100, round + t);
     var rim = C.layers.addSolid([1, 1, 1], "Rim", cw, ch, 1, comp.duration); rim.adjustmentLayer = true;
     var rb = effect(rim, "ADBE Gaussian Blur 2"); rb.property("Blurriness").setValue(up ? SIG.rimBlur : SIG.rimBlurShare * mn); rb.property("Repeat Edge Pixels").setValue(1);
-    effect(rim, "ADBE Exposure2").property("Exposure").setValue(SIG.rimExposure);
+    effect(rim, "ADBE Exposure2").property("Exposure").setValue(o.rim !== undefined ? o.rim : (dk ? SIG.dark.rimExposure : SIG.rimExposure));
     var inner = rect("Inner", R, 100, round);
     var clip = C.layers.add(o.clip); clip.name = "Clip"; if (clip.hasAudio) clip.audioEnabled = false;
     var cs = 104 * Math.max(R[0] / o.clip.width, R[1] / o.clip.height);   // the clip covers the card (76 % for a 1080 x 1920 clip upright)
@@ -328,11 +429,15 @@ var AESPixelHeadline = (function () {
     var bl = effect(clip, "ADBE Gaussian Blur 2"); bl.property("Repeat Edge Pixels").setValue(1);
     var t3 = [o.at - sec(2), o.at + sec(SIG.cardHold), o.at + sec(SIG.cardClear)];
     AESLib.ease(bl.property("Blurriness"), t3, [SIG.cardBlur * (up ? 1 : mn / SIG.cardRect[0]), SIG.cardBlur * (up ? 1 : mn / SIG.cardRect[0]), 0], "travel");
-    AESLib.ease(effect(clip, "ADBE Exposure2").property("Exposure"), t3, [SIG.cardExposure, SIG.cardExposure, 0], "travel");
+    var ent = o.entrance !== undefined ? o.entrance : (dk ? (o.ui ? SIG.dark.uiEntranceExposure : SIG.dark.entranceExposure) : SIG.cardExposure);
+    AESLib.ease(effect(clip, "ADBE Exposure2").property("Exposure"), t3, [ent, ent, 0], "travel");
+    if (o.freezeEnd) { clip.timeRemapEnabled = true; clip.outPoint = C.duration; }
     var L = comp.layers.add(C); L.name = nm; if (L.hasAudio) L.audioEnabled = false; L.position.setValue(o.pos);
     L.collapseTransformation = true;   // the Rim adjustment layer frosts the main comp behind the card only through a collapsed layer
     var S = o.width ? 100 * o.width / (up ? R[0] * SIG.rimScale / 100 : outerR[0]) : o.scale;
     sigKeys(L.scale, o.at, SIG.card, S, dims(L.scale));
+    if (o.behind) L.moveAfter(o.behind);
+    L.motionBlur = true;
     return L; }
   // card size and positions for n cards. o = { n, side ("left"|"right"), comp size, face {x0,y0,x1,y1} }
   // returns { scale (%), w, h, pos: [[x, y]...], warnings: [] }
@@ -386,6 +491,182 @@ var AESPixelHeadline = (function () {
       pushEase(L.scale, o.at, sv, tv, fr); }
     return o.at + sec(fr); }
 
+  // ---- the speaker from a rendered cut-out: the style's speaker, lifted off the room onto the clean ground. o = { cutout
+  //      (FootageItem with alpha: the cut-out operation's render, which needs the user's click: get it before they leave),
+  //      take (optional FootageItem: the delivery-size take the cut-out was rendered from, frame for frame; its pixels are used
+  //      under the cut-out's alpha), takeStart (s), scale (%; default fills the frame's height), x, grade { mixer, inBlack,
+  //      inWhite, gamma, saturation } (on the speaker layer), look (the skin look: see look()), remnants (pieces of the room
+  //      left inside the matte, each taken out by brightness and colour together: [{ box [x0, y0, x1, y1] (px in the cut-out),
+  //      skinA (Lab a*: anything redder is skin and kept; default 15), lighterThan (0-255: only what is lighter goes; default
+  //      35), feather (px, 3), frames [[f0, f1], ...] (comp frames when it is on; default always) }]), prefix }
+  //      Inside "<prefix>Speaker comp", bottom to top: the base, the look's layers, the cut-out as Stencil Alpha (everything
+  //      below keeps only the speaker), each remnant as Silhouette Alpha. Returns { layer, comp, controls, remnants }.
+  function speaker(comp, o) { if (!o.cutout) throw new Error("speaker() needs a rendered cut-out (the cut-out operation's movie with alpha); its click cannot be made unattended, so get it before the user leaves");
+    var P = pfx(o), cu = o.cutout, src = o.take || cu, W = comp.width, H = comp.height, i;
+    var C = app.project.items.addComp(P + "Speaker comp", cu.width, cu.height, 1, comp.duration, comp.frameRate);
+    function add(item, nm) { var L = C.layers.add(item); L.name = nm; if (L.hasAudio) L.audioEnabled = false; if (o.takeStart) L.startTime = -o.takeStart; return L; }
+    var base = add(src, "Base"), lk = o.look ? look(comp, C, base, src, o.look, P, add) : null;
+    var st = add(cu, "Cut-out alpha"); st.blendingMode = BlendingMode.STENCIL_ALPHA; st.moveToBeginning();
+    var holes = [], R = o.remnants || [];
+    for (i = 0; i < R.length; i++) { var q = R[i], h = add(cu, "Remnant " + (i + 1)), b = q.box;
+      var mk = h.property("ADBE Mask Parade").addProperty("ADBE Mask Atom"), sh = new Shape(); sh.vertices = [[b[0], b[1]], [b[2], b[1]], [b[2], b[3]], [b[0], b[3]]]; sh.closed = true;
+      mk.property("ADBE Mask Shape").setValue(sh); mk.property("ADBE Mask Feather").setValue([q.feather === undefined ? 3 : q.feather, q.feather === undefined ? 3 : q.feather]);
+      // Color Range keys out what is redder than skinA (skin), so a hand passing through the box never joins the hole;
+      // Extract then keeps only what is lighter than lighterThan (the pale remnant against a dark shirt)
+      var cr = effect(h, "ADBE Color Range"), lim = { "Fuzziness": 5, "Color Space": 1, "Min (L, Y, R)": 0, "Max (L, Y, R)": 255, "Min (a, U, G)": 128 + (q.skinA === undefined ? 15 : q.skinA), "Max (a, U, G)": 255, "Min (b, V, B)": 0, "Max (b, V, B)": 255 };
+      for (var nm in lim) cr.property(nm).setValue(lim[nm]);
+      var ex = effect(h, "ADBE Extract"); ex.property("Black Point").setValue(q.lighterThan === undefined ? 35 : q.lighterThan); ex.property("Black Softness").setValue(6);
+      if (q.frames && q.frames.length) { var ht = [0], hv = [0]; for (var f = 0; f < q.frames.length; f++) { ht.push(sec(q.frames[f][0]), sec(q.frames[f][1])); hv.push(100, 0); } holdKeys(h.opacity, ht, hv); }
+      h.blendingMode = BlendingMode.SILHOUETTE_ALPHA; h.moveToBeginning(); holes.push(h); }
+    var L = comp.layers.add(C); L.name = P + "Speaker"; if (L.hasAudio) L.audioEnabled = false;
+    L.anchorPoint.setValue([cu.width / 2, cu.height]); L.position.setValue([o.x === undefined ? W / 2 : o.x, H]);
+    var sc = o.scale || 100 * H / cu.height; L.scale.setValue([sc, sc]);
+    var g = o.grade; if (g && !o.look) { var m = effect(L, "ADBE CHANNEL MIXER"); m.property("Red-Red").setValue(g.mixer[0]); m.property("Green-Green").setValue(g.mixer[1]); m.property("Blue-Blue").setValue(g.mixer[2]);
+      var lv = effect(L, "ADBE Easy Levels2"); lv.property("Input Black").setValue(g.inBlack); lv.property("Input White").setValue(g.inWhite); lv.property("Gamma").setValue(g.gamma);
+      if (g.saturation !== undefined) effect(L, "ADBE HUE SATURATION").property("Master Saturation").setValue(g.saturation); }
+    L.motionBlur = true;
+    return { layer: L, comp: C, controls: lk ? lk.controls : null, remnants: holes }; }
+  // ---- the speaker's look: balance and skin, as layers with their amounts on sliders. lk = { mixer [r, g, b] (Channel Mixer
+  //      %: balance solved for a skin hue, not from a "white" object in the room), gamma (Levels), contrast (a share taken off
+  //      both ends; keep it small: a contrast curve over the face's own range deepens every socket and crease), colourEven
+  //      (%, 70: a blurred copy in Color mode inside the skin matte evens the skin's colour, not its detail), averagePull
+  //      (%, 30, toward `average` [r, g, b], the face's mean colour), lightEven (%, 30: an inverted, heavily blurred lightness in
+  //      Soft Light takes out a third of the large-scale light and dark), colourBlur, lightBlur (px at the source's size;
+  //      default 4.6 % and 13.2 % of its width), choke (Simple Choker on the skin matte, -3), skinRange (Color Range settings
+  //      that pick the skin; default Lab, L 70-245, a 143-200) }. Sliders on "<prefix>Skin controls" in the main comp.
+  function look(comp, C, base, src, lk, P, add) {
+    var CTL = comp.layers.addNull(comp.duration); CTL.name = P + "Skin controls"; CTL.enabled = false;
+    var names = ["Colour even", "Average pull", "Light even", "Colour blur", "Light blur", "Skin choke"], i;
+    var vals = [lk.colourEven === undefined ? 70 : lk.colourEven, lk.average ? (lk.averagePull === undefined ? 30 : lk.averagePull) : 0, lk.lightEven === undefined ? 30 : lk.lightEven,
+      lk.colourBlur || .046 * src.width, lk.lightBlur || .132 * src.width, lk.choke === undefined ? -3 : lk.choke];
+    for (i = 0; i < names.length; i++) effect(CTL, "ADBE Slider Control", names[i]).property(1).setValue(vals[i]);
+    var CR = 'comp("' + comp.name + '").layer("' + CTL.name + '").effect("';
+    function grade(L) { if (lk.mixer) { var m = effect(L, "ADBE CHANNEL MIXER"); m.property("Red-Red").setValue(lk.mixer[0]); m.property("Green-Green").setValue(lk.mixer[1]); m.property("Blue-Blue").setValue(lk.mixer[2]); }
+      if (lk.gamma) effect(L, "ADBE Easy Levels2").property("Gamma").setValue(lk.gamma);
+      if (lk.contrast) { var c = effect(L, "ADBE Easy Levels2"); c.property("Input Black").setValue(lk.contrast); c.property("Input White").setValue(1 - lk.contrast); }
+      return L; }
+    grade(base);
+    var SK = add(src, "Skin key"), sr = lk.skinRange || { "Fuzziness": 8, "Color Space": 1, "Min (L, Y, R)": 70, "Max (L, Y, R)": 245, "Min (a, U, G)": 143, "Max (a, U, G)": 200, "Min (b, V, B)": 0, "Max (b, V, B)": 255 };
+    var cr = effect(SK, "ADBE Color Range"); for (var nm in sr) cr.property(nm).setValue(sr[nm]);
+    effect(SK, "ADBE Simple Choker").property("Choke Matte").expression = CR + 'Skin choke")("Slider");';
+    var lite = grade(add(src, "Light even")), lb = effect(lite, "ADBE Gaussian Blur 2"); lb.property("Repeat Edge Pixels").setValue(1); lb.property("Blurriness").expression = CR + 'Light blur")("Slider");';
+    effect(lite, "ADBE Tint"); effect(lite, "ADBE Invert"); lite.blendingMode = BlendingMode.SOFT_LIGHT; lite.opacity.expression = 'Math.min(100, 2 * ' + CR + 'Light even")("Slider"));';
+    var col = grade(add(src, "Colour even")), cb = effect(col, "ADBE Gaussian Blur 2"); cb.property("Repeat Edge Pixels").setValue(1); cb.property("Blurriness").expression = CR + 'Colour blur")("Slider");';
+    col.blendingMode = BlendingMode.COLOR; col.opacity.expression = CR + 'Colour even")("Slider");';
+    var held = [lite, col];
+    if (lk.average) { var avg = C.layers.addSolid(lk.average, "Average pull", src.width, src.height, 1, comp.duration); avg.blendingMode = BlendingMode.COLOR;
+      avg.opacity.expression = CR + 'Average pull")("Slider");'; held.push(avg); }
+    SK.moveToBeginning();
+    for (i = 0; i < held.length; i++) held[i].setTrackMatte(SK, TrackMatteType.ALPHA_INVERTED);
+    SK.enabled = false;
+    return { controls: CTL, skinKey: SK }; }
+
+  // ---- small interface pieces, built as comps of native shapes and text and passed to card() as its clip (so their pop,
+  //      rim and entrance are the style's). They show an action, never real content: no names, handles or addresses.
+  function shapeIn(C, name, kind, size, pos, col, round) { var L = C.layers.addShape(); L.name = name; L.property("ADBE Root Vectors Group").addProperty("ADBE Vector Group");
+    var gs = L.property("ADBE Root Vectors Group").property(1).property("ADBE Vectors Group");
+    if (kind === "ellipse") gs.addProperty("ADBE Vector Shape - Ellipse").property("ADBE Vector Ellipse Size").setValue(size);
+    else { var r = gs.addProperty("ADBE Vector Shape - Rect"); r.property("ADBE Vector Rect Size").setValue(size); r.property("ADBE Vector Rect Roundness").setValue(round || 0); }
+    gs.addProperty("ADBE Vector Graphic - Fill").property("ADBE Vector Fill Color").setValue(col); L.position.setValue(pos); return L; }
+  // a comment bubble: white, a grey avatar, a grey name bar, the comment in near-black Inter Bold. o = { text, size [w, h]
+  //      (600 x 240), font (118), name }
+  function bubble(comp, o) { var Z = o.size || [600, 240], pad = .077 * Z[0], av = .067 * Z[0], rowY = .233 * Z[1];
+    var C = app.project.items.addComp(o.name || (pfx(o) + "Bubble"), Z[0], Z[1], 1, comp.duration, comp.frameRate);
+    C.layers.addSolid([1, 1, 1], "Paper", Z[0], Z[1], 1, comp.duration);
+    shapeIn(C, "Avatar", "ellipse", [av, av], [pad + av / 2, rowY], [.72, .72, .74]);
+    shapeIn(C, "Name", "rect", [.25 * Z[0], .075 * Z[1]], [pad + av + .03 * Z[0] + .125 * Z[0], rowY], [.8, .8, .82], .0375 * Z[1]);
+    AESLib.text(C, "Comment", o.text, { family: FAM, style: FACE, size: o.font || .49 * Z[1], color: [.09, .09, .11], just: "left", pos: [pad, .858 * Z[1]] });
+    return C; }
+  // a prompt bar: a dark field, pale bars where the words would be (the prompt itself is never shown), a blinking caret and a
+  //      round send button in the accent. o = { size [w, h] (880 x 180), field [r, g, b], bars [px...], accent, name }
+  function promptBar(comp, o) { var Z = o.size || [880, 180], pad = .3 * Z[1], bars = o.bars || [.318 * Z[0], .205 * Z[0], .127 * Z[0]], bh = .156 * Z[1], gap = .156 * Z[1], cy = Z[1] / 2, x = pad, i;
+    var C = app.project.items.addComp(o.name || (pfx(o) + "Prompt bar"), Z[0], Z[1], 1, comp.duration, comp.frameRate);
+    C.layers.addSolid(o.field || [.09, .11, .16], "Field", Z[0], Z[1], 1, comp.duration);
+    for (i = 0; i < bars.length; i++) { shapeIn(C, "Word " + (i + 1), "rect", [bars[i], bh], [x + bars[i] / 2, cy], [.82, .84, .88], bh / 2); x += bars[i] + gap; }
+    var car = shapeIn(C, "Caret", "rect", [.04 * Z[1], .44 * Z[1]], [x + 4, cy], [.95, .95, .97], 0); car.opacity.expression = 'Math.floor(time * 2) % 2 == 0 ? 100 : 0;';
+    var sd = .644 * Z[1], sx = Z[0] - pad - sd / 2; shapeIn(C, "Send", "ellipse", [sd, sd], [sx, cy], accentOf(o, [1, 0, 0]));
+    var ar = C.layers.addShape(); ar.name = "Send arrow"; ar.property("ADBE Root Vectors Group").addProperty("ADBE Vector Group");
+    var st = ar.property("ADBE Root Vectors Group").property(1).property("ADBE Vectors Group").addProperty("ADBE Vector Shape - Star");
+    st.property("ADBE Vector Star Type").setValue(2); st.property("ADBE Vector Star Points").setValue(3); st.property("ADBE Vector Star Outer Radius").setValue(sd * .22);
+    ar.property("ADBE Root Vectors Group").property(1).property("ADBE Vectors Group").addProperty("ADBE Vector Graphic - Fill").property("ADBE Vector Fill Color").setValue([1, 1, 1]);
+    ar.position.setValue([sx, cy + sd * .03]); return C; }
+  // an interface card: a bubble or a prompt bar popped in as a card. o = { kind ("bubble"|"bar"), text, at, pos, width,
+  //      size, radius (default half the height for a bar, 29 % of it for a bubble), name, behind, tone } Things the speaker
+  //      "holds" sit on the chest, in front; the card's entrance uses the lower white-piece exposure on a dark ground.
+  function uiCard(comp, o) { var bar = o.kind === "bar", Z = o.size || (bar ? [880, 180] : [600, 240]), nm = o.name || (pfx(o) + "Card 1");
+    var C = bar ? promptBar(comp, { size: Z, accent: o.accent, name: nm + " piece" }) : bubble(comp, { text: o.text, size: Z, name: nm + " piece" });
+    return card(comp, { clip: C, clipStart: 0, at: o.at, pos: o.pos, size: Z, width: o.width, radius: o.radius !== undefined ? o.radius : (bar ? Z[1] / 2 : .29 * Z[1]), ui: true, name: nm, behind: o.behind, tone: o.tone, darkGround: o.darkGround }); }
+  // ---- a strike-through: one straight stroke in the accent, drawn on and left on. o = { from [x, y], to [x, y], at (s),
+  //      frames (6), width (px, 26 at 1080 wide), colour, prefix }. Named "<prefix>Line", so exitBeat clears it with its beat.
+  function strike(comp, o) { var L = comp.layers.addShape(); L.name = pfx(o) + "Line"; L.property("ADBE Root Vectors Group").addProperty("ADBE Vector Group");
+    var gs = L.property("ADBE Root Vectors Group").property(1).property("ADBE Vectors Group"), sh = new Shape();
+    sh.vertices = [[o.from[0] - comp.width / 2, o.from[1] - comp.height / 2], [o.to[0] - comp.width / 2, o.to[1] - comp.height / 2]]; sh.inTangents = [[0, 0], [0, 0]]; sh.outTangents = [[0, 0], [0, 0]]; sh.closed = false;
+    gs.addProperty("ADBE Vector Shape - Group").property("ADBE Vector Shape").setValue(sh);
+    var stk = gs.addProperty("ADBE Vector Graphic - Stroke"); stk.property("ADBE Vector Stroke Color").setValue(accentOf(o, [1, 0, 0])); stk.property("ADBE Vector Stroke Width").setValue(o.width || 26 * k(comp));
+    gs.addProperty("ADBE Vector Filter - Trim"); var tr = L.property("ADBE Root Vectors Group").property(1).property("ADBE Vectors Group").property("ADBE Vector Filter - Trim");
+    linearKeys(tr.property("ADBE Vector Trim End"), [o.at, o.at + sec(o.frames || 6)], [0, 100]);
+    L.position.setValue([comp.width / 2, comp.height / 2]); L.motionBlur = true; return L; }
+
+  // ---- the proof: one large card per item behind the speaker, its name as the giant word above it; as the next item lands,
+  //      the earlier card steps back; then all together, each clip restarted from its opening as it joins the set.
+  //      o = { items: [{ clip, at (s: the card's first frame), text (the name), W (s: the name's spoken start), seed }],
+  //      card { pos, size, width } (default centred at 42 % of the height, 1280 x 800, 96 % of the frame wide),
+  //      nameBaseline (comp px), back { scale (%), pos: [[x, y], ...] (card i's place once item i + 1 has landed), scaleDur
+  //      (s, .3), posDur (s, .8) }, set { at (s), pos: [[x, y], ...], scale (%), stagger (frames, 4), dur (s, .6), restart
+  //      (true) }, behind (the speaker layer: cards and names go under it), colour, tone, prefix }
+  //      Cards are "<prefix>Card i", leaving with exitBeat({ prefix }); name i is its own beat, prefix "<prefix>A " and on.
+  //      Returns { cards, names: [{ prefix, word, blocks }], end }.
+  function proof(comp, o) { var P = pfx(o), it = o.items, cd = o.card || {}, sz = cd.size || [1280, 800], cards = [], names = [], i, end = 0;
+    for (i = 0; i < it.length; i++) {
+      var C = card(comp, { clip: it[i].clip, clipStart: it[i].clipStart || 0, at: it[i].at, pos: cd.pos || [comp.width / 2, .42 * comp.height], size: sz, width: cd.width || .96 * comp.width,
+        name: P + "Card " + (i + 1), behind: o.behind, tone: o.tone, darkGround: o.darkGround });
+      cards.push(C);
+      if (it[i].text) { var NP = P + String.fromCharCode(65 + i) + " ";
+        var hw = heroWord(comp, { text: it[i].text, at: it[i].W, colour: o.colour, baseline: o.nameBaseline, behind: o.behind, tone: o.tone, darkGround: o.darkGround, prefix: NP });
+        var px = pixelBlocks(comp, { word: hw, at: it[i].W, colour: o.colour, seed: it[i].seed || (11 + i), tone: o.tone, darkGround: o.darkGround, prefix: NP });
+        names.push({ prefix: NP, word: hw, blocks: px }); } }
+    var bk = o.back;
+    if (bk) for (i = 0; i + 1 < it.length; i++) { var t0 = it[i + 1].text ? it[i + 1].W : it[i + 1].at;
+      if (bk.scale !== undefined) end = Math.max(end, moveCard(comp, { layer: cards[i], at: t0, scale: bk.scale, dur: bk.scaleDur || .3 }));
+      if (bk.pos && bk.pos[i]) end = Math.max(end, moveCard(comp, { layer: cards[i], at: t0, pos: bk.pos[i], dur: bk.posDur || .8 })); }
+    var st = o.set;
+    if (st) for (i = 0; i < cards.length; i++) { var tj = st.at + sec(i * (st.stagger === undefined ? 4 : st.stagger));
+      end = Math.max(end, moveCard(comp, { layer: cards[i], at: tj, scale: st.scale, pos: st.pos ? st.pos[i] : undefined, dur: st.dur || .6 }));
+      if (st.restart !== false) restartClip(cards[i], tj); }
+    return { cards: cards, names: names, end: end }; }
+  // a card's clip starts again from its opening at t (time remapping: plays to t, then from 0), and runs to the comp's end
+  function restartClip(cardLayer, t) { var RC = cardLayer.source.layer("Clip"), F0 = Math.max(RC.inPoint, RC.startTime), cs = RC.startTime, f1 = sec(1), len = comp0(cardLayer).duration - t, src = RC.source;
+    if (src && src.duration) len = Math.min(len, src.duration);
+    RC.timeRemapEnabled = true; var TR = RC.property("ADBE Time Remapping"); while (TR.numKeys) TR.removeKey(1);
+    var TT = [F0, t - f1, t, t + len]; TR.setValuesAtTimes(TT, [F0 - cs, t - f1 - cs, 0, len]);
+    for (var j = 1; j <= TR.numKeys; j++) TR.setInterpolationTypeAtKey(j, KeyframeInterpolationType.LINEAR, KeyframeInterpolationType.LINEAR);
+    TR.setInterpolationTypeAtKey(TR.nearestKeyIndex(t - f1), KeyframeInterpolationType.LINEAR, KeyframeInterpolationType.HOLD);
+    RC.outPoint = comp0(cardLayer).duration; return TR; }
+  function comp0(L) { return L.containingComp || L.comp || { duration: L.source.duration }; }
+
+  // ---- clear what a build owns, safely, so it can be rebuilt. o = { prefix }. A layer parented to one that is about to go
+  //      (the push camera) is first unparented with that parent at rest (keys and expressions gone, no rotation, scale 100,
+  //      its position on its anchor), so it keeps its own values instead of having the camera's zoom baked into it; then the
+  //      owned layers go, then the project's comps named with the prefix (cards, interface pieces, the speaker and look).
+  function clear(comp, o) { var P = pfx(o), n = AESLib.clearOwned(comp, P), items = 0;
+    try { for (var i = app.project.numItems; i >= 1; i--) { var it = app.project.item(i); if (it instanceof CompItem && it.name.indexOf(P) === 0 && it !== comp) { it.remove(); items++; } } } catch (e) {}
+    return { layers: n, comps: items }; }
+
+  // ---- what a beat must not do: a line that cannot land before the beat leaves, a hold under SIG.hold frames, a line of more
+  //      than SIG.lineWords words, text inside a reel's margins. o = { exitAt (s), settles: [{ what, at (s) }], lines:
+  //      [{ what, words }], rects: [{ what, x0, y0, x1, y1 }] }. Returns warnings (strings).
+  function beatWarnings(comp, o) { var w = [], i, M = SIG.margins, kx = comp.width / REF.w, ky = comp.height / REF.h, last = 0, lastWhat = "";
+    for (i = 0; i < (o.lines || []).length; i++) if (o.lines[i].words > SIG.lineWords) w.push(o.lines[i].what + " has " + o.lines[i].words + " words; keep a line to " + SIG.lineWords + " or fewer, or it will not land while the words are spoken");
+    for (i = 0; i < (o.settles || []).length; i++) if (o.settles[i].at > last) { last = o.settles[i].at; lastWhat = o.settles[i].what; }
+    if (o.exitAt !== undefined && o.settles && o.settles.length) { var hold = Math.round((o.exitAt - last) * REF.fps * 10) / 10;
+      if (hold < 0) w.push(lastWhat + " cannot land in its window: it lands " + (-hold) + " frames after the beat starts to leave");
+      else if (hold < SIG.hold) w.push("the hold is " + hold + " frames (" + lastWhat + " lands last); aim for at least " + SIG.hold); }
+    for (i = 0; i < (o.rects || []).length; i++) { var r = o.rects[i], m = [];
+      if (r.y0 < M.top * ky) m.push("top"); if (r.y1 > comp.height - M.bottom * ky) m.push("bottom"); if (r.x0 < M.side * kx || r.x1 > comp.width - M.side * kx) m.push("side");
+      if (m.length) w.push(r.what + " enters the " + m.join(" and ") + " margin"); }
+    return w; }
+  function textRect(L, t, what) { var r = L.sourceRectAtTime(t, false), p = L.position.value; return { what: what, x0: p[0] + r.left, y0: p[1] + r.top, x1: p[0] + r.left + r.width, y1: p[1] + r.top + r.height }; }
+
   // ---- push. o = { at (s: P), pivotY (the face's height in the settled frame), layers, sway [{ f, r }] (the speaker's own head
   //      size over the push, frames from P, as a ratio to P + 40; divided out when it moves by more than 3 %), camera (an existing
   //      null from an earlier beat: the keys are added to it, held at full frame until P), prefix }
@@ -408,13 +689,23 @@ var AESPixelHeadline = (function () {
 
   // ---- a whole beat. brief = { type ("opener"|"punch"), take, takeStart, speakerScale, speakerX, face {x0,y0,x1,y1}, pivotY, sway,
   //      words: [{ text, t (s, spoken start) }], stressed (index in words), split: [leadEnd, tailStart] (default around the
-  //      stressed word), clips: [{ item, start }], side, accent [r,g,b], ground [r,g,b], grade, push (bool), glow, seed, pushAt }
-  function beat(comp, brief) { fontOK(); var rep = { warnings: [] }, b = brief, words = b.words, si = b.stressed, i;
+  //      stressed word), clips: [{ item, start }], side, accent [r,g,b], ground [r,g,b], grade, push (bool), glow, seed, pushAt,
+  //      cutout (FootageItem: the speaker is built from it on a clean ground; the style's default), take (with cutout: the
+  //      delivery-size take beside it), look, remnants, tone ("light"|"dark"), tuck { hairY, depth } (the word goes behind the
+  //      speaker), tailSize, exitAt (s: when the beat starts to leave; checked for a hold), wordBaseline, tailBaseline, leadBaseline }
+  //      The report's warnings name a line that cannot land before exitAt, a hold under 10 frames, a line of more than five
+  //      words, text in a reel's margins, a giant phrase, and the stage's own (working space, footage as the ground).
+  function beat(comp, brief) { fontOK(); var rep = { warnings: [] }, b = brief, words = b.words, si = b.stressed, i, settles = [], lines = [], rects = [];
     var W = words[si].t, lead = [], tl = [], lEnd = b.split ? b.split[0] : si, tStart = b.split ? b.split[1] : si + 1;
     for (i = 0; i < lEnd; i++) lead.push(words[i].text); for (i = tStart; i < words.length; i++) tl.push(words[i].text);
     var type = b.type || "opener", P = pfx(b);
     // an earlier beat's speaker (and ground) can be passed in; otherwise the stage is built here
-    var st = b.speaker ? { speaker: b.speaker, ground: b.groundLayer || null } : stage(comp, { take: b.take, takeStart: b.takeStart, scale: b.speakerScale, x: b.speakerX, ground: b.ground, grade: b.grade, footageGround: b.footageGround, topShade: b.topShade, prefix: P });
+    var st;
+    if (b.speaker) st = { speaker: b.speaker, ground: b.groundLayer || null };
+    else if (b.cutout) { var gr = ground(comp, { tone: b.tone, colour: b.ground, prefix: P }), spk = speaker(comp, { cutout: b.cutout, take: b.take, takeStart: b.takeStart, scale: b.speakerScale, x: b.speakerX, grade: b.grade, look: b.look, remnants: b.remnants, prefix: P });
+      var sp0 = projectSpace(); st = { speaker: spk.layer, ground: gr.layer, warnings: sp0.warnings }; }
+    else st = stage(comp, { take: b.take, takeStart: b.takeStart, scale: b.speakerScale, x: b.speakerX, ground: b.ground, tone: b.tone, grade: b.grade, footageGround: b.footageGround, topShade: b.topShade, prefix: P });
+    if (st.warnings) rep.warnings = rep.warnings.concat(st.warnings);
     var scene = [st.speaker], stack = null, line = null, L = null, T = null;
     if (st.shade) scene.push(st.shade); if (b.shadeLayer) scene.push(b.shadeLayer);
     if (b.footageGround || b.insetGround) scene.push(b.insetGround || null);
@@ -422,12 +713,21 @@ var AESPixelHeadline = (function () {
       for (i = 0; i < stack.layers.length; i++) scene.push(stack.layers[i]); rep.cards = stack.first; rep.warnings = rep.warnings.concat(stack.layout.warnings); }
     if (stack) { line = drawnLine(comp, { at: W, path: stack.path, colour: b.accent, cards: b.clips.length, prefix: P }); scene.push(line); }
     if (type === "opener" && lead.length) { var ll = wrap(lead.join(" "), b.maxChars), lat = ll.length > 1 ? [words[0].t, words[ll[0].split(" ").length].t] : words[0].t;
-      L = leadIn(comp, { text: lead.join(" "), at: lat, prefix: P, maxChars: b.maxChars }); scene.push(L); rep.leadAt = words[0].t; }
-    var hw = heroWord(comp, { text: words[si].text, at: W, colour: b.accent, glow: b.glow, exposure: b.exposure, darkGround: b.darkGround, baseline: b.wordBaseline, prefix: P });
-    var px = pixelBlocks(comp, { word: hw, at: W, colour: b.accent, seed: b.seed, prefix: P, blockScale: b.blockScale, count: b.blockCount, dist: b.blockDist, lineBand: L ? [comp.height * SIG.type.leadBaseline - 50 * k(comp), comp.height * SIG.type.leadBaseline + 8 * k(comp)] : null });
+      L = leadIn(comp, { text: lead.join(" "), at: lat, prefix: P, maxChars: b.maxChars, baseline: b.leadBaseline }); scene.push(L); rep.leadAt = words[0].t;
+      var n2 = ll.length > 1 ? ll[1].split(" ").length : 0; settles.push({ what: "the lead-in", at: ll.length > 1 ? lat[1] + lineTime(n2, "lead") : lat + lineTime(lead.length, "lead") });
+      for (i = 0; i < ll.length; i++) lines.push({ what: "lead-in line " + (i + 1), words: ll[i].split(" ").length }); }
+    var hw = heroWord(comp, { text: words[si].text, at: W, colour: b.accent, glow: b.glow, exposure: b.exposure, darkGround: b.darkGround, tone: b.tone, baseline: b.wordBaseline, tuck: b.tuck, behind: b.tuck ? st.speaker : null, prefix: P });
+    rep.warnings = rep.warnings.concat(hw.warnings); settles.push({ what: "the giant word", at: W + sec(SIG.word[SIG.word.length - 1][0]) });
+    var px = pixelBlocks(comp, { word: hw, at: W, colour: b.accent, seed: b.seed, prefix: P, blockScale: b.blockScale, count: b.blockCount, dist: b.blockDist, tone: b.tone, darkGround: b.darkGround,
+      lineBand: L ? [(b.leadBaseline === undefined ? comp.height * SIG.type.leadBaseline : b.leadBaseline) - 50 * k(comp), (b.leadBaseline === undefined ? comp.height * SIG.type.leadBaseline : b.leadBaseline) + 8 * k(comp)] : null });
     px.layer.moveAfter(hw.glowLayer || hw.layer); scene.push(px.layer, hw.layer); if (hw.glowLayer) scene.push(hw.glowLayer);   // blocks under the word and its glow
     if (type === "opener" && tl.length) { var tw = wrap(tl.join(" "), b.maxChars), tat = tw.length > 1 ? [words[tStart].t, words[tStart + tw[0].split(" ").length].t] : words[tStart].t;
-      T = tail(comp, { text: tl.join(" "), at: tat, under: hw.layer, baseline: b.tailBaseline, prefix: P, maxChars: b.maxChars }); scene.push(T); rep.tailAt = words[tStart].t; }
+      T = tail(comp, { text: tl.join(" "), at: tat, under: hw.layer, baseline: b.tailBaseline, size: b.tailSize, prefix: P, maxChars: b.maxChars }); scene.push(T); rep.tailAt = words[tStart].t;
+      var m2 = tw.length > 1 ? tw[1].split(" ").length : 0; settles.push({ what: "the tail", at: tw.length > 1 ? tat[1] + lineTime(m2, "tail") : tat + lineTime(tl.length, "tail") });
+      for (i = 0; i < tw.length; i++) lines.push({ what: "tail line " + (i + 1), words: tw[i].split(" ").length }); }
+    if (stack) settles.push({ what: "the last card", at: stack.first[stack.first.length - 1] + sec(SIG.card[SIG.card.length - 1][0]) });
+    if (L) rects.push(textRect(L, W + 2, "the lead-in")); rects.push({ what: "the giant word", x0: hw.box.x0, y0: hw.box.y0, x1: hw.box.x1, y1: hw.box.y1 }); if (T) rects.push(textRect(T, W + 3, "the tail"));
+    rep.warnings = rep.warnings.concat(beatWarnings(comp, { exitAt: b.exitAt, settles: settles, lines: lines, rects: rects })); rep.settles = settles;
     var pu = null; if (b.push !== false && type === "opener") { pu = push(comp, { at: b.pushAt !== undefined ? b.pushAt : (L ? words[0].t - sec(SIG.pushLead) : W - sec(48)), pivotY: b.pivotY, layers: scene, sway: b.sway, camera: b.camera, prefix: P }); rep.pushAt = b.camera ? (b.pushAt !== undefined ? b.pushAt : (L ? words[0].t - sec(SIG.pushLead) : W - sec(48))) : pu.layer.scale.keyTime(1); rep.swayDivided = pu.divided; rep.camera = pu.layer; }
     else if (b.camera) { for (i = 0; i < scene.length; i++) if (scene[i] && scene[i].parent !== b.camera) scene[i].parent = b.camera; }
     motionBlur(comp, scene.concat([st.ground]));
@@ -456,5 +756,7 @@ var AESPixelHeadline = (function () {
 
   return { SIG: SIG, fontOK: fontOK, hasEffect: hasEffect, stage: stage, zoomOut: zoomOut, exitInset: exitInset, push: push, leadIn: leadIn, heroWord: heroWord,
     blockSchedule: blockSchedule, pixelBlocks: pixelBlocks, card: card, stackLayout: stackLayout, cardStack: cardStack, linePath: linePath, drawnLine: drawnLine,
-    tail: tail, motionBlur: motionBlur, beat: beat, moveCard: moveCard, textLine: textLine, exitBeat: exitBeat, exitText: exitText, reveal: reveal, wrap: wrap };
+    tail: tail, motionBlur: motionBlur, beat: beat, moveCard: moveCard, textLine: textLine, exitBeat: exitBeat, exitText: exitText, reveal: reveal, wrap: wrap,
+    setPiece: setPiece, piece: function () { return PIECE; }, ground: ground, speaker: speaker, look: look, projectSpace: projectSpace, lineTime: lineTime,
+    bubble: bubble, promptBar: promptBar, uiCard: uiCard, strike: strike, proof: proof, restartClip: restartClip, clear: clear, beatWarnings: beatWarnings, tailSlide: tailSlide };
 })();
