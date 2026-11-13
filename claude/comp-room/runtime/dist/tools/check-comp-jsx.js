@@ -27,6 +27,7 @@ function planJsx(compNameOrId) {
             displayStartTime: AE.safeGet(function () { return comp.displayStartTime; }, 0),
             resolutionFactor: AE.safeGet(function () { return [comp.resolutionFactor[0], comp.resolutionFactor[1]]; }, null),
             workingSpace: AE.safeGet(function () { return app.project.workingSpace; }, "None"),
+            colorManagementSystem: AE.safeGet(function () { return Number(app.project.colorManagementSystem); }, null),
             bitsPerChannel: AE.safeGet(function () { return app.project.bitsPerChannel; }, 8),
             missingFootage: _missingSources(comp)
         };
@@ -44,7 +45,9 @@ function captureJsx(compNameOrId, frames, paths, factor, tryOcio) {
         var _factor = ${jsxVal(factor)};
         var _pick = ${jsxVal(CHECK_FRAME_PICK)};
         var _ws = AE.safeGet(function () { return app.project.workingSpace; }, "None");
-        var _useOcio = ${jsxVal(tryOcio)} && _ws !== "None" && _ws !== "";
+        var _cms = AE.safeGet(function () { return Number(app.project.colorManagementSystem); }, null);
+        // The OCIO Display Transform only under OCIO (not right under Adobe's ICC engine, measured 2026-11-12).
+        var _useOcio = ${jsxVal(tryOcio)} && _ws !== "None" && _ws !== "" && _cms === 1;
         var _frames = [];
         function _renderAll(kind) {
             for (var _fi = 0; _fi < _frameNums.length; _fi++) {

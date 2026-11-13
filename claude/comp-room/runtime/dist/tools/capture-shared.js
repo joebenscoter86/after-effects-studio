@@ -49,7 +49,11 @@ async function colorConversion(payload, transport) {
     return null;
   }
 }
+function iccManagedReason(workingSpace, bitsPerChannel) {
+  return `The project is colour-managed (working space '${workingSpace}'${bitsPerChannel ? `, ${bitsPerChannel} bpc` : ""}, After Effects' own colour engine): colour readings here do not match the viewer (measured: an 8-bit grey of 128 read as 67, a neutral read L* 28 for 54, and spill turned its verdict), so they are refused. Alpha-based readings (edge widths, coverage, holes, specks, the file check) read the same as in a project with no working space and are given. For colour, measure in a copy of the project set to no working space at 8 or 16 bpc, or pass colorManaged: 'off' for the raw working-space values.`;
+}
 export {
   colorConversion,
+  iccManagedReason,
   validRgb
 };

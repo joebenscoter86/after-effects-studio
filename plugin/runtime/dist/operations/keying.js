@@ -15,6 +15,7 @@ import { rejectedOutputPath } from "../config.js";
 import { registerOp, jsxFail, jsxVal, jsxCompLayerPreamble, jsxCompPreamble, getOp, } from "../registry.js";
 import { PARK_QUEUE_FN, QUEUE_CHANGE_NOTE, RENDER_QUEUE_UNDO_WARNING } from "./render.js";
 import { renderFrameTool } from "../tools/render-frame.js";
+import { iccManagedReason } from "../tools/capture-shared.js";
 export const KEYLIGHT_MATCH_NAME = "Keylight 906";
 export const KEY_CLEANER_MATCH_NAME = "ADBE KeyCleaner";
 export const SPILL_SUPPRESSOR_MATCH_NAME = "ADBE Spill2";
@@ -4821,6 +4822,13 @@ export async function runReferenceReport(args, io) {
     }
     else {
         // A movie or footage item (into a throwaway comp), or a comp: rendered through After Effects by frame number.
+        // Under Adobe's own colour management the captures do not match the viewer (stage 7): refuse first.
+        const cm = await io.execute("return { ok: true, workingSpace: String(AE.safeGet(function () { return app.project.workingSpace; }, 'None')), colorManagementSystem: AE.safeGet(function () { return Number(app.project.colorManagementSystem); }, null), bitsPerChannel: app.project.bitsPerChannel };", { label: "reference.report colour", timeoutMs: 30_000, undoGroup: false });
+        if (cm?.ok && cm.workingSpace && cm.workingSpace !== "None" && cm.workingSpace !== "" && cm.colorManagementSystem !== 1)
+            return {
+                ok: false,
+                error: `${iccManagedReason(cm.workingSpace, cm.bitsPerChannel)} reference.report reads colour, levels, grain and sharpness from rendered frames, so it does not run here. A PNG still or a folder of frames is read without After Effects and still works.`,
+            };
         const fromComp = args.comp !== undefined;
         const setup = fromComp
             ? await io.execute(referenceCompJsx({ comp: args.comp }), { label: "reference.report comp", timeoutMs: 60_000, undoGroup: false })

@@ -25,7 +25,7 @@ import { PieceWatcher, resolveWatchThresholds, watchArgsError, } from "../color/
 import { rejectedOutputPath } from "../config.js";
 import { errorResult } from "../errors.js";
 import { readOnlyMode } from "../policy.js";
-import { colorConversion } from "./capture-shared.js";
+import { colorConversion, iccManagedReason } from "./capture-shared.js";
 import { captureJsx, planJsx, structureJsx } from "./check-comp-jsx.js";
 import { defineTool, jsonResult, toMcpResult } from "./define-tool.js";
 const frameFile = (dir, frame) => path.join(dir, `frame-${frame}.png`).replace(/\\/g, "/");
@@ -413,6 +413,21 @@ async function checkComp(args, transport) {
             reason: `source media missing for comp ${plan.compName}; restore or relink it, then check again`,
         };
         report.missingFootage = plan.missingFootage;
+        report.structure = await runStructure(args, transport, plan, first, end, fd);
+        report.next = null;
+        report.timings = { totalSeconds: r3((performance.now() - started) / 1000) };
+        return jsonResult({ result: report });
+    }
+    // Under Adobe's own colour management the picture would be measured on values
+    // that do not match the viewer (stage 7): refuse the picture checks plainly.
+    if (args.colorManaged !== "off" &&
+        plan.workingSpace !== "None" &&
+        plan.workingSpace !== "" &&
+        plan.colorManagementSystem !== 1) {
+        report.picture = {
+            checked: false,
+            reason: `${iccManagedReason(plan.workingSpace, plan.bitsPerChannel)} The whole-piece check's picture checks (blank frames, black bars, pops, stutters, cuts, clipping, elements off frame) are tuned on display values, so they are not run.`,
+        };
         report.structure = await runStructure(args, transport, plan, first, end, fd);
         report.next = null;
         report.timings = { totalSeconds: r3((performance.now() - started) / 1000) };

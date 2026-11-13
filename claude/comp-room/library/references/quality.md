@@ -47,6 +47,39 @@ Measured live (After Effects 27.0, 2026-11-12, a 2-second 1080 × 1920 comp with
 - the reel and the alpha master each matched the comp, sound at a mean of −26.5 dB, about 2 s each;
 - the same comp with its sound from the four-channel take was flagged silent, at max −84.3 dB through ffmpeg and amplitude 0.002 through After Effects alone (a beat track reads 21.2).
 
+## Colour-managed and 32 bpc projects
+
+Measured live on 2026-11-12, After Effects 27.0. The same scene was built from sRGB image files in two projects: one at 8 bpc with no working space, and one at 32 bpc with the working space "ACEScg ACES Working Space AMPAS S-2014-004" under After Effects' own colour engine. The scene had a grey, a skin patch, a noisy patch, white and black, a red half at 50%, and a feathered subject with a green fringe.
+
+Under that engine the captures are working-space values at a tenth of their scale. The conversion to the viewer's picture was wrong:
+- an 8-bit grey of 128 read 67;
+- `look` put the neutral at L* 28 for 54;
+- un-matting gave the working-space red, not red;
+- spill turned its verdict;
+- the reference report found a cast of 8.8 steps between two identical scenes.
+
+None of it warned. So those readings now refuse in plain words (`colorRefused`, `picture.reason`), and the alpha-based readings go on. The tolerance for "the same" is one 8-bit step; the alpha readings matched exactly.
+
+| Tool | 32 bpc ACEScg, After Effects' engine |
+|---|---|
+| `ae_render_frame` `sample` | output stage refused; the raw `capture` stage is given, labelled |
+| `look` | refused |
+| `edge` | widths, coverage, holes, specks: the same (difference 0); spill refused |
+| `screen`, `histogram`, `analyze`, `diff` | refused |
+| `channels: "rgba"`, `over` (un-matting) | refused; the file written is the raw capture |
+| `ae_check_comp` (whole-piece check) | picture checks refused; structure checks run |
+| `reference.report` on a comp, movie or footage item | refused before rendering; a PNG still or a folder of frames still works (read without After Effects) |
+| `subject.check_file` | the same: holes, openings, specks, seen-through and opaque share all read alike (opaque 0.283 to 0.308, largest step 0.0067, in both) |
+| Picture evals (seat, review, over, keying, grade, finish) | refuse outside 8 bpc with no working space, as before |
+
+Not checked:
+- **OCIO:** no working space could be set by script under OCIO (every name read back "None"), so the OCIO path is left as it was and is unverified.
+- **16 bpc with a working space.**
+
+`colorManaged: "off"` still gives the raw working-space values on request. For colour readings, measure in a copy of the project set to no working space.
+
+A script that changes a project's bit depth or colour engine also changes After Effects' default for new projects: put them back.
+
 ## Handoff
 
 **Lint the project before handing it over.** `ae_do { operation: "project.lint" }` is read only and asks whether another person could open the project and work in it. It finds:
