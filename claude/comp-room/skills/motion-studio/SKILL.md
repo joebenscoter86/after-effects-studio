@@ -85,7 +85,7 @@ Do not say a build is done, finished or ready until this step is complete. Read 
 4. Fix what the review found, re-run `ae_check_comp`, re-render the changed moments and review again with that fresh evidence. Stop after two review passes, or sooner when nothing is left at `first-watch` or `careful-watch`.
 5. Hand over as `review` describes: what was found, what was fixed, what was left and why (each `ae_check_comp` flag fixed or named as intended, with its reason), and what nobody could check.
 
-Deliver editable project/assets and the requested verified export. Separate technical validation, visual judgment and user approval. Record accepted recipes in the user's project with timings and evidence.
+Before handing over, run `project.lint` and fix or name what it finds; deliver with `render.deliver` and a preset (`vertical-reel`, `master-alpha`, `master`), and say what its check found, the sound included (`quality`). Deliver editable project/assets and the requested verified export. Separate technical validation, visual judgment and user approval. Record accepted recipes in the user's project with timings and evidence.
 
 ## Optional style and legacy integrations
 

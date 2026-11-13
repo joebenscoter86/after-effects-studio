@@ -1174,6 +1174,15 @@ AE.serializeLayerFull = function (layer, opts) {
                 }
             } catch (eTr) { /* ignore */ }
         }
+        // Compositing the property walk does not see (blend mode, track matte, mask modes, switches, light type)
+        try { out.compositing = AE.layerCompositing(layer); } catch (eCo) { out.compositing = null; }
+        // Camera and light options
+        if (layer instanceof CameraLayer) {
+            try { out.cameraOptionsGroup = AE.serializePropertyGroup(layer.property("ADBE Camera Options Group"), 0, 3, walkOpts); } catch (eCam) { out.cameraOptionsGroup = null; }
+        }
+        if (layer instanceof LightLayer) {
+            try { out.lightOptionsGroup = AE.serializePropertyGroup(layer.property("ADBE Light Options Group"), 0, 3, walkOpts); } catch (eLt) { out.lightOptionsGroup = null; }
+        }
         // Layer markers — layer.marker is a NamedGroup with keyframed MarkerValues
         try {
             var marker = layer.property("Marker");
@@ -1381,4 +1390,206 @@ AE.serializeCompMarkers = function (comp) {
         if (!mp || mp.numKeys === 0) return null;
         return AE.serializeProperty(mp);
     } catch (e) { return null; }
+};
+
+// ---------- Compositing a layer: what the export kept out (defect 19) ----------
+
+/** The key of an ExtendScript enum object whose value is `value`, or null. */
+AE.enumName = function (enumObj, value) {
+    if (value === null || value === undefined || !enumObj) return null;
+    for (var k in enumObj) {
+        try { if (enumObj[k] === value) return k; } catch (e) {}
+    }
+    return null;
+};
+
+/** The MaskMode value for a name mask.add takes ("Subtract"), or null. */
+AE.maskModeByName = function (name) {
+    var names = { Add: "ADD", Subtract: "SUBTRACT", Intersect: "INTERSECT", Lighten: "LIGHTEN", Darken: "DARKEN", Difference: "DIFFERENCE", None: "NONE" };
+    var k = names[name];
+    if (!k) return null;
+    try { return MaskMode[k]; } catch (e) { return null; }
+};
+
+/**
+ * Blend mode, track matte (type and the layer it uses), the switches that
+ * change how the layer composites, each mask's mode and invert, and a light's
+ * type: the things a script sets but the property walk does not see.
+ */
+AE.layerCompositing = function (layer) {
+    var out = {};
+    if (layer instanceof AVLayer) {
+        out.blendingMode = AE.safeGet(function () { return AE.enumName(BlendingMode, layer.blendingMode); }, null);
+        var tm = AE.safeGet(function () { return layer.trackMatteType; }, null);
+        var tmName = AE.safeGet(function () { return AE.enumName(TrackMatteType, tm); }, null);
+        if (tmName && tmName !== "NO_TRACK_MATTE") {
+            var ml = AE.safeGet(function () { return layer.trackMatteLayer; }, null);
+            out.trackMatte = { type: tmName, layer: ml ? { index: ml.index, name: ml.name } : null };
+        } else {
+            out.trackMatte = null;
+        }
+        out.adjustmentLayer = AE.safeGet(function () { return layer.adjustmentLayer; }, null);
+        out.guideLayer = AE.safeGet(function () { return layer.guideLayer; }, null);
+        out.preserveTransparency = AE.safeGet(function () { return layer.preserveTransparency; }, null);
+        out.isTrackMatte = AE.safeGet(function () { return layer.isTrackMatte; }, null);
+        var masks = AE.safeGet(function () { return layer.property("ADBE Mask Parade"); }, null);
+        if (masks && masks.numProperties > 0) {
+            out.masks = [];
+            for (var i = 1; i <= masks.numProperties; i++) {
+                var m = masks.property(i);
+                out.masks.push({
+                    mode: AE.maskModeName(AE.safeGet(function () { return m.maskMode; }, null)),
+                    inverted: AE.safeGet(function () { return m.inverted; }, null)
+                });
+            }
+        }
+    }
+    if (layer instanceof LightLayer) {
+        out.lightType = AE.safeGet(function () { return AE.enumName(LightType, layer.lightType); }, null);
+    }
+    return out;
+};
+
+/** Put compositing read by layerCompositing back on a layer (the track matte comes later, with applyTrackMatte). */
+AE.applyLayerCompositing = function (layer, spec, warn) {
+    if (!spec) return;
+    function set(field, value) {
+        try { layer[field] = value; } catch (e) { warn("could not set " + field + " on '" + layer.name + "': " + AE.errText(e)); }
+    }
+    if (spec.lightType && layer instanceof LightLayer) {
+        var lt = AE.safeGet(function () { return LightType[spec.lightType]; }, null);
+        if (lt !== null && lt !== undefined) set("lightType", lt);
+    }
+    if (!(layer instanceof AVLayer)) return;
+    if (spec.blendingMode) {
+        var bm = AE.safeGet(function () { return BlendingMode[spec.blendingMode]; }, null);
+        if (bm !== null && bm !== undefined) set("blendingMode", bm);
+        else warn("unknown blend mode " + spec.blendingMode + " on '" + layer.name + "'");
+    }
+    if (spec.adjustmentLayer === true) set("adjustmentLayer", true);
+    if (spec.guideLayer === true) set("guideLayer", true);
+    if (spec.preserveTransparency === true) set("preserveTransparency", true);
+    if (spec.masks && spec.masks.length) {
+        var masks = AE.safeGet(function () { return layer.property("ADBE Mask Parade"); }, null);
+        for (var i = 0; i < spec.masks.length && masks && i < masks.numProperties; i++) {
+            var m = masks.property(i + 1);
+            var mode = AE.maskModeByName(spec.masks[i].mode);
+            try {
+                if (mode !== null && mode !== undefined) m.maskMode = mode;
+                if (spec.masks[i].inverted === true || spec.masks[i].inverted === false) m.inverted = spec.masks[i].inverted;
+            } catch (eM) { warn("could not set mask " + (i + 1) + " mode on '" + layer.name + "': " + AE.errText(eM)); }
+        }
+    }
+};
+
+/** Set a layer's track matte to the comp's layer at spec.layer.index (After Effects 23+), or by type to the layer above (older). */
+AE.applyTrackMatte = function (layer, comp, spec, warn) {
+    if (!spec || !spec.type) return;
+    var t = AE.safeGet(function () { return TrackMatteType[spec.type]; }, null);
+    if (t === null || t === undefined) { warn("unknown track matte " + spec.type + " on '" + layer.name + "'"); return; }
+    try {
+        if (typeof layer.setTrackMatte === "function" && spec.layer && spec.layer.index) layer.setTrackMatte(comp.layer(spec.layer.index), t);
+        else layer.trackMatteType = t;
+    } catch (e) { warn("could not set the track matte on '" + layer.name + "': " + AE.errText(e)); }
+};
+
+// ---------- project.lint: could another person open this and work in it? ----------
+
+/** Fonts After Effects reports missing or substituted (After Effects 24+), by PostScript name; null when it cannot say. */
+AE.missingFontNames = function () {
+    try {
+        if (!app.fonts || !app.fonts.missingOrSubstitutedFonts) return null;
+        var list = app.fonts.missingOrSubstitutedFonts;
+        var out = [];
+        for (var i = 0; i < list.length; i++) out.push(String(list[i].postScriptName || list[i].familyName));
+        return out;
+    } catch (e) { return null; }
+};
+
+AE.DEFAULT_LAYER_NAME = /^((Black|White|Gray|Grey|Dark Gray|Light Gray|Medium Gray|Red|Green|Blue|Cyan|Magenta|Yellow|Orange|Purple|Pink|Brown|Dark Red|Dark Green|Dark Blue|Light Blue|Light Green|Light Red|Medium Blue|Medium Red|Medium Green) Solid|Shape Layer|Null|Adjustment Layer|Camera|Light|Solid|Text) \d+$/;
+AE.DEFAULT_COMP_NAME = /^(Comp|Pre-comp|Precomp) \d+$/;
+
+/**
+ * Hand-over problems, read only: default layer and comp names, items outside
+ * folders (not folders, not top-level comps), unused footage, missing footage
+ * and fonts, expressions in error, and layers switched off with no role (not a
+ * track matte, not sound only, not a guide). opts.missingFonts: PostScript
+ * names (AE.missingFontNames()); opts.ignore: layer or item names to leave out.
+ */
+AE.lintProject = function (proj, opts) {
+    opts = opts || {};
+    var ignore = {};
+    var ig = opts.ignore || [];
+    for (var g = 0; g < ig.length; g++) ignore[String(ig[g])] = true;
+    var missingFonts = {};
+    var mf = opts.missingFonts || [];
+    for (var f = 0; f < mf.length; f++) missingFonts[String(mf[f])] = true;
+    var findings = [];
+    var kept = [];
+    function add(kind, item, layerName, detail) {
+        if (ignore[item] || (layerName && ignore[layerName])) return;
+        var row = { kind: kind, item: item };
+        if (layerName) row.layer = layerName;
+        if (detail) row.detail = detail;
+        findings.push(row);
+    }
+    function walk(group, path, out) {
+        var n = AE.safeGet(function () { return group.numProperties; }, 0);
+        for (var i = 1; i <= n; i++) {
+            var p = AE.safeGet(function () { return group.property(i); }, null);
+            if (!p) continue;
+            if (p.propertyType === PropertyType.PROPERTY) {
+                var msg = AE.safeGet(function () { return p.canSetExpression && p.expressionEnabled ? String(p.expressionError) : ""; }, "");
+                if (msg) out.push(path.concat([p.name]).join(" > ") + ": " + msg);
+            } else {
+                walk(p, path.concat([p.name]), out);
+            }
+        }
+    }
+    var root = proj.rootFolder;
+    for (var i = 1; i <= proj.numItems; i++) {
+        var it = proj.item(i);
+        var isFolder = it instanceof FolderItem;
+        var isComp = it instanceof CompItem;
+        var isFootage = it instanceof FootageItem;
+        var used = AE.safeGet(function () { return it.usedIn.length; }, 0);
+        if (!isFolder && it.parentFolder === root && !(isComp && used === 0)) add("outside folders", it.name, null, isComp ? "a precomp at the project's top level" : "footage at the project's top level");
+        if (isComp && AE.DEFAULT_COMP_NAME.test(it.name)) add("default name", it.name, null, "comp");
+        if (isFootage) {
+            var solid = it.mainSource instanceof SolidSource;
+            if (it.footageMissing) add("missing footage", it.name, null, AE.safeGet(function () { return it.missingFootagePath; }, null));
+            else if (used === 0) add("unused footage", it.name, null, solid ? "solid" : "file");
+        }
+        if (!isComp) continue;
+        for (var li = 1; li <= it.numLayers; li++) {
+            var L = it.layer(li);
+            if (AE.DEFAULT_LAYER_NAME.test(L.name)) add("default name", it.name, L.name, "layer");
+            var hasVideo = AE.safeGet(function () { return L.hasVideo; }, true);
+            if (L.enabled === false && hasVideo !== false && !AE.safeGet(function () { return L.isTrackMatte; }, false) && !AE.safeGet(function () { return L.guideLayer; }, false)) {
+                if (AE.lintKeptForReclick(L)) kept.push({ item: it.name, layer: L.name, why: "kept switched off for a re-click: the matted layer, its gap fill or soft edge, which subject.use_cutout switches off when the rendered cut-out replaces them" });
+                else add("switched off", it.name, L.name, "switched off and not a track matte, a guide or sound only");
+            }
+            if (L instanceof TextLayer) {
+                var font = AE.safeGet(function () { return L.property("ADBE Text Properties").property("ADBE Text Document").value.font; }, null);
+                if (font && missingFonts[font]) add("missing font", it.name, L.name, font);
+            }
+            var errs = [];
+            walk(L, [], errs);
+            if (errs.length) add("expression error", it.name, L.name, errs.join("; "));
+        }
+    }
+    var counts = {};
+    for (var c = 0; c < findings.length; c++) counts[findings[c].kind] = (counts[findings[c].kind] || 0) + 1;
+    return { findings: findings, counts: counts, kept: kept };
+};
+
+/** A layer the cut-out path keeps switched off on purpose: one with Object Matte on it, or its gap fill or soft edge. */
+AE.lintKeptForReclick = function (L) {
+    if (/ (gap fill|soft edge)$/.test(L.name)) return true;
+    var fx = AE.safeGet(function () { return L.property("ADBE Effect Parade"); }, null);
+    var n = fx ? AE.safeGet(function () { return fx.numProperties; }, 0) : 0;
+    for (var i = 1; i <= n; i++) {
+        if (AE.safeGet(function () { return fx.property(i).matchName; }, "") === "ADBE Samurai") return true;
+    }
+    return false;
 };

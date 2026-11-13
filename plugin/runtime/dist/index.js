@@ -3271,8 +3271,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path16) {
-      let input2 = path16;
+    function removeDotSegments(path17) {
+      let input2 = path17;
       const output2 = [];
       let nextSlash = -1;
       let len = 0;
@@ -3346,11 +3346,11 @@ var require_utils = __commonJS({
       }
       return output2.join("");
     }
-    function removeDotSegmentsRelative(path16) {
-      if (path16 === "" || path16[0] === "/") {
-        return removeDotSegments(path16);
+    function removeDotSegmentsRelative(path17) {
+      if (path17 === "" || path17[0] === "/") {
+        return removeDotSegments(path17);
       }
-      const segments = path16.split("/");
+      const segments = path17.split("/");
       const last = segments.length - 1;
       const output2 = [];
       let trailingDirectory = false;
@@ -3713,8 +3713,8 @@ var require_schemes = __commonJS({
       }
       if (wsComponent.resourceName) {
         const queryIndex = wsComponent.resourceName.indexOf("?");
-        const path16 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
-        wsComponent.path = path16 && path16 !== "/" ? path16 : void 0;
+        const path17 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
+        wsComponent.path = path17 && path17 !== "/" ? path17 : void 0;
         wsComponent.query = queryIndex === -1 ? void 0 : wsComponent.resourceName.slice(queryIndex + 1);
         wsComponent.resourceName = void 0;
       }
@@ -7251,12 +7251,12 @@ var require_dist = __commonJS({
         throw new Error(`Unknown format "${name}"`);
       return f;
     };
-    function addFormats(ajv, list, fs13, exportName) {
+    function addFormats(ajv, list, fs14, exportName) {
       var _a3;
       var _b;
       (_a3 = (_b = ajv.opts.code).formats) !== null && _a3 !== void 0 ? _a3 : _b.formats = (0, codegen_1._)`require("ajv-formats/dist/formats").${exportName}`;
       for (const f of list)
-        ajv.addFormat(f, fs13[f]);
+        ajv.addFormat(f, fs14[f]);
     }
     module.exports = exports = formatsPlugin;
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -7555,23 +7555,23 @@ __export(eval_exports, {
   readScriptFile: () => readScriptFile
 });
 import { readFileSync, realpathSync, statSync as statSync2 } from "node:fs";
-import * as path11 from "node:path";
+import * as path12 from "node:path";
 function realOrResolved(p) {
   try {
     return realpathSync(p);
   } catch {
-    return path11.resolve(p);
+    return path12.resolve(p);
   }
 }
 function isInside(p, root) {
-  const rel = path11.relative(root, p);
-  return rel === "" || !rel.startsWith("..") && !path11.isAbsolute(rel);
+  const rel = path12.relative(root, p);
+  return rel === "" || !rel.startsWith("..") && !path12.isAbsolute(rel);
 }
 function refuse(error62, hint) {
   return hint ? { ok: false, error: error62, hint } : { ok: false, error: error62 };
 }
 function readScriptFile(file2) {
-  if (!path11.isAbsolute(file2)) {
+  if (!path12.isAbsolute(file2)) {
     return {
       ok: false,
       error: `file must be an absolute path (got '${file2}'): the server's working directory is not yours`
@@ -8063,8 +8063,8 @@ function getErrorMap() {
 
 // node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path16, errorMaps, issueData } = params;
-  const fullPath = [...path16, ...issueData.path || []];
+  const { data, path: path17, errorMaps, issueData } = params;
+  const fullPath = [...path17, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -8179,11 +8179,11 @@ var errorUtil;
 
 // node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path16, key) {
+  constructor(parent, value, path17, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path16;
+    this._path = path17;
     this._key = key;
   }
   get path() {
@@ -12138,10 +12138,10 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path16) {
-  if (!path16)
+function getElementAtPath(obj, path17) {
+  if (!path17)
     return obj;
-  return path16.reduce((acc, key) => acc?.[key], obj);
+  return path17.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -12481,11 +12481,11 @@ function explicitlyAborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path16, issues) {
+function prefixIssues(path17, issues) {
   return issues.map((iss) => {
     var _a3;
     (_a3 = iss).path ?? (_a3.path = []);
-    iss.path.unshift(path16);
+    iss.path.unshift(path17);
     return iss;
   });
 }
@@ -12947,16 +12947,16 @@ function flattenError(error62, mapper = (issue2) => issue2.message) {
 }
 function formatError(error62, mapper = (issue2) => issue2.message) {
   const fieldErrors = { _errors: [] };
-  const processError = (error63, path16 = []) => {
+  const processError = (error63, path17 = []) => {
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path16, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path17, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path16, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path17, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path16, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path17, ...issue2.path]);
       } else {
-        const fullpath = [...path16, ...issue2.path];
+        const fullpath = [...path17, ...issue2.path];
         if (fullpath.length === 0) {
           fieldErrors._errors.push(mapper(issue2));
         } else {
@@ -12995,17 +12995,17 @@ function formatError(error62, mapper = (issue2) => issue2.message) {
 }
 function treeifyError(error62, mapper = (issue2) => issue2.message) {
   const result = { errors: [] };
-  const processError = (error63, path16 = []) => {
+  const processError = (error63, path17 = []) => {
     var _a3;
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path16, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path17, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path16, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path17, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path16, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path17, ...issue2.path]);
       } else {
-        const fullpath = [...path16, ...issue2.path];
+        const fullpath = [...path17, ...issue2.path];
         if (fullpath.length === 0) {
           result.errors.push(mapper(issue2));
           continue;
@@ -13044,8 +13044,8 @@ function treeifyError(error62, mapper = (issue2) => issue2.message) {
 }
 function toDotPath(_path) {
   const segs = [];
-  const path16 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
-  for (const seg of path16) {
+  const path17 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
+  for (const seg of path17) {
     if (typeof seg === "number")
       segs.push(`[${seg}]`);
     else if (typeof seg === "symbol")
@@ -28365,7 +28365,7 @@ function visit(schema, fnOrHandlers) {
     return h ? h(node2, rewritten) : node2;
   };
   const cache2 = /* @__PURE__ */ new Map();
-  function run(s) {
+  function run2(s) {
     const cached2 = cache2.get(s);
     if (cached2 === RESOLVING) {
       return new $ZodLazy({
@@ -28391,21 +28391,21 @@ function visit(schema, fnOrHandlers) {
         let changed = false;
         const newShape = {};
         for (const k of keys) {
-          const mapped = run(oldShape[k]);
+          const mapped = run2(oldShape[k]);
           if (mapped !== oldShape[k])
             changed = true;
           newShape[k] = mapped;
         }
         let newCatchall = def.catchall;
         if (def.catchall) {
-          newCatchall = run(def.catchall);
+          newCatchall = run2(def.catchall);
           if (newCatchall !== def.catchall)
             changed = true;
         }
         return changed ? clone(s, { ...def, shape: newShape, catchall: newCatchall }) : s;
       }
       case "array": {
-        const mapped = run(def.element);
+        const mapped = run2(def.element);
         return mapped === def.element ? s : clone(s, { ...def, element: mapped });
       }
       case "tuple": {
@@ -28413,14 +28413,14 @@ function visit(schema, fnOrHandlers) {
         let changed = false;
         const newItems = [];
         for (const item of oldItems) {
-          const mapped = run(item);
+          const mapped = run2(item);
           if (mapped !== item)
             changed = true;
           newItems.push(mapped);
         }
         let newRest = def.rest;
         if (def.rest) {
-          newRest = run(def.rest);
+          newRest = run2(def.rest);
           if (newRest !== def.rest)
             changed = true;
         }
@@ -28428,12 +28428,12 @@ function visit(schema, fnOrHandlers) {
       }
       case "record":
       case "map": {
-        const newKey = run(def.keyType);
-        const newVal = run(def.valueType);
+        const newKey = run2(def.keyType);
+        const newVal = run2(def.valueType);
         return newKey === def.keyType && newVal === def.valueType ? s : clone(s, { ...def, keyType: newKey, valueType: newVal });
       }
       case "set": {
-        const newVal = run(def.valueType);
+        const newVal = run2(def.valueType);
         return newVal === def.valueType ? s : clone(s, { ...def, valueType: newVal });
       }
       case "union": {
@@ -28441,7 +28441,7 @@ function visit(schema, fnOrHandlers) {
         let changed = false;
         const newOptions = [];
         for (const opt of oldOptions) {
-          const mapped = run(opt);
+          const mapped = run2(opt);
           if (mapped !== opt)
             changed = true;
           newOptions.push(mapped);
@@ -28449,8 +28449,8 @@ function visit(schema, fnOrHandlers) {
         return changed ? clone(s, { ...def, options: newOptions }) : s;
       }
       case "intersection": {
-        const newLeft = run(def.left);
-        const newRight = run(def.right);
+        const newLeft = run2(def.left);
+        const newRight = run2(def.right);
         return newLeft === def.left && newRight === def.right ? s : clone(s, { ...def, left: newLeft, right: newRight });
       }
       case "optional":
@@ -28462,23 +28462,23 @@ function visit(schema, fnOrHandlers) {
       case "nonoptional":
       case "promise":
       case "success": {
-        const newInner = run(def.innerType);
+        const newInner = run2(def.innerType);
         return newInner === def.innerType ? s : clone(s, { ...def, innerType: newInner });
       }
       case "pipe": {
-        const newIn = run(def.in);
-        const newOut = run(def.out);
+        const newIn = run2(def.in);
+        const newOut = run2(def.out);
         return newIn === def.in && newOut === def.out ? s : clone(s, { ...def, in: newIn, out: newOut });
       }
       case "function": {
-        const newInput = run(def.input);
-        const newOutput = run(def.output);
+        const newInput = run2(def.input);
+        const newOutput = run2(def.output);
         return newInput === def.input && newOutput === def.output ? s : clone(s, { ...def, input: newInput, output: newOutput });
       }
       case "lazy": {
         const original = def.getter;
         const { _cachedInner, ...rest } = def;
-        return clone(s, { ...rest, getter: () => run(original()) });
+        return clone(s, { ...rest, getter: () => run2(original()) });
       }
       // A leaf by choice: `parts` are regex fragments, not data positions.
       case "template_literal":
@@ -28509,7 +28509,7 @@ function visit(schema, fnOrHandlers) {
       }
     }
   }
-  return run(schema);
+  return run2(schema);
 }
 
 // node_modules/@modelcontextprotocol/sdk/dist/esm/server/zod-compat.js
@@ -28596,11 +28596,11 @@ function normalizeObjectSchema(schema) {
   }
   return void 0;
 }
-function getDotPath(path16) {
-  if (path16.length === 0) {
+function getDotPath(path17) {
+  if (path17.length === 0) {
     return "object root";
   }
-  return path16.reduce((acc, seg, index) => {
+  return path17.reduce((acc, seg, index) => {
     if (index === 0) {
       return String(seg);
     }
@@ -30827,13 +30827,13 @@ function resolveRef(ref, ctx) {
   if (!ref.startsWith("#")) {
     throw new Error("External $ref is not supported, only local refs (#/...) are allowed");
   }
-  const path16 = ref.slice(1).split("/").filter(Boolean);
-  if (path16.length === 0) {
+  const path17 = ref.slice(1).split("/").filter(Boolean);
+  if (path17.length === 0) {
     return ctx.rootSchema;
   }
   const defsKey = ctx.version === "draft-2020-12" ? "$defs" : "definitions";
-  if (path16[0] === defsKey) {
-    const key = path16[1] === void 0 ? void 0 : decodeJSONPointerSegment(path16[1]);
+  if (path17[0] === defsKey) {
+    const key = path17[1] === void 0 ? void 0 : decodeJSONPointerSegment(path17[1]);
     if (!key || !ctx.defs[key]) {
       throw new Error(`Reference not found: ${ref}`);
     }
@@ -42835,6 +42835,28 @@ registerOp({
         `;
   }
 });
+registerOp({
+  name: "project.lint",
+  category: "project",
+  readOnly: true,
+  description: "Could another person open this project and work in it? Read only. Finds: default layer and comp names ('Shape Layer 3', 'Black Solid 1', 'Comp 2'); items outside folders (footage, solids and precomps at the top level; top-level comps nothing uses are left there, as deliverables); unused footage (solids too); missing footage; missing fonts (After Effects 24+; `fontsChecked` false when it cannot say); expressions in error (every property of every layer); and layers switched off with no role (not a track matte, not sound only, not a guide); layers the cut-out path keeps switched off for a re-click (with Object Matte on them, or their gap fill or soft edge) are listed under `kept`, not as findings. Each finding names the item, the layer and what is wrong. `ignore` takes layer or item names kept on purpose (a matted layer kept for a re-click).",
+  params: [
+    {
+      name: "ignore",
+      type: "array",
+      description: "Layer or item names to leave out (kept on purpose)",
+      required: false
+    }
+  ],
+  toJsx(args) {
+    return `
+            var _missing = AE.missingFontNames();
+            var _r = AE.lintProject(app.project, { missingFonts: _missing || [], ignore: ${jsxVal(Array.isArray(args.ignore) ? args.ignore : [])} });
+            return { ok: true, file: app.project.file ? app.project.file.fsName : null, numItems: app.project.numItems,
+                findings: _r.findings, counts: _r.counts, total: _r.findings.length, kept: _r.kept, fontsChecked: _missing !== null };
+        `;
+  }
+});
 
 // src/operations/text.ts
 init_registry();
@@ -44320,9 +44342,9 @@ registerOp({
 });
 
 // src/operations/keying.ts
-import { execFile as execFile2 } from "node:child_process";
-import { promises as fs7 } from "node:fs";
-import * as path7 from "node:path";
+import { execFile as execFile3 } from "node:child_process";
+import { promises as fs8 } from "node:fs";
+import * as path8 from "node:path";
 
 // src/color/matte.ts
 var EDGE_DEFAULTS = {
@@ -45140,24 +45162,24 @@ function outlineTracker(opts = {}) {
     },
     result() {
       const frozen = [];
-      let run = [];
+      let run2 = [];
       const close = () => {
-        if (run.length >= 2) {
-          const from = run[0].a;
-          const to = run[run.length - 1].b;
+        if (run2.length >= 2) {
+          const from = run2[0].a;
+          const to = run2[run2.length - 1].b;
           if (to - from + 1 >= minFrames)
             frozen.push({
               from,
               to,
               length: to - from + 1,
-              drift: r6(Math.max(...run.map((w) => w.drift))),
-              footageChange: r6(median(run.map((w) => w.footage)) ?? 0)
+              drift: r6(Math.max(...run2.map((w) => w.drift))),
+              footageChange: r6(median(run2.map((w) => w.footage)) ?? 0)
             });
         }
-        run = [];
+        run2 = [];
       };
       for (const w of windows) {
-        if (w.drift < limit) run.push(w);
+        if (w.drift < limit) run2.push(w);
         else close();
       }
       close();
@@ -47795,6 +47817,10 @@ init_config();
 init_registry();
 
 // src/operations/render.ts
+init_config();
+import { execFile as execFile2 } from "node:child_process";
+import { promises as fs4 } from "node:fs";
+import * as path5 from "node:path";
 init_registry();
 var RENDER_QUEUE_UNDO_WARNING = " After this, undo and rollback are refused for the rest of the After Effects session unless acceptRenderQueueRisk: true: After Effects 2027 has gone into crash recovery on undo after scripted render-queue changes (observed twice on 2026-11-10; a precaution, not a proven cause). Save the project before undoing anything afterwards; project.open / project.new clear the block.";
 var READ_TEMPLATES_FN = `
@@ -48745,10 +48771,311 @@ registerOp({
         `;
   }
 });
+var DELIVERY_PRESETS = {
+  "vertical-reel": {
+    what: "a vertical reel for upload: H.264 at the comp's size and rate",
+    first: "H.264 - Match Render Settings - 15 Mbps",
+    then: [/^H\.264/i],
+    fallback: ["High Quality", "Lossless"],
+    fallbackWhy: "no H.264 template on this install, so ProRes 422 instead: a larger file that most upload sites take, or transcode it",
+    alpha: false,
+    aspect: 9 / 16
+  },
+  "master-alpha": {
+    what: "a master with alpha for compositing elsewhere: ProRes 4444",
+    first: "High Quality with Alpha",
+    then: ["Lossless with Alpha"],
+    fallback: [/alpha/i],
+    fallbackWhy: "neither High Quality with Alpha nor Lossless with Alpha is on this install, so another movie template whose name says alpha",
+    alpha: true
+  },
+  master: {
+    what: "a master without alpha: ProRes 422",
+    first: "High Quality",
+    then: ["Lossless"],
+    fallback: [/^H\.264/i],
+    fallbackWhy: "neither High Quality nor Lossless is on this install, so H.264, which is not a master",
+    alpha: false
+  }
+};
+var isSequenceTemplate = (n) => /sequence|photoshop|aiff|alpha only|^_hidden/i.test(n);
+function chooseDeliveryTemplate(preset, templates) {
+  const p = DELIVERY_PRESETS[preset];
+  if (!p) return { error: `no preset '${preset}'; presets: ${Object.keys(DELIVERY_PRESETS).join(", ")}` };
+  const movies = templates.filter((t) => !isSequenceTemplate(t));
+  const find = (rules) => {
+    for (const r of rules) {
+      const hit = movies.find((t) => typeof r === "string" ? t === r : r.test(t));
+      if (hit) return hit;
+    }
+    return null;
+  };
+  if (movies.includes(p.first)) return { template: p.first, fallback: false, why: `${p.first}: ${p.what}` };
+  const near = find(p.then);
+  if (near) return { template: near, fallback: false, why: `${near} (${p.first} is not on this install): ${p.what}` };
+  const fb = find(p.fallback);
+  if (fb) return { template: fb, fallback: true, why: `${fb}: ${p.fallbackWhy}` };
+  return {
+    error: p.alpha ? `no movie template with alpha on this install (templates: ${templates.join(", ")}); make one in Edit > Templates > Output Module (QuickTime, Apple ProRes 4444, RGB + Alpha)` : `none of the templates this preset uses is on this install (templates: ${templates.join(", ")})`
+  };
+}
+var DELIVERY_SILENCE_TOP = 0.1;
+var DELIVERY_SILENCE_DB = -60;
+function checkDelivered(comp, file2) {
+  const findings = [];
+  if (comp.width !== file2.width || comp.height !== file2.height)
+    findings.push({ kind: "size", reading: `The file is ${file2.width} \xD7 ${file2.height}; the comp is ${comp.width} \xD7 ${comp.height}.` });
+  if (Math.abs(comp.frameRate - file2.frameRate) > 0.01)
+    findings.push({ kind: "frame rate", reading: `The file runs at ${file2.frameRate} fps; the comp at ${comp.frameRate}.` });
+  if (Math.abs(comp.duration - file2.duration) > 0.5 / (comp.frameRate || 30))
+    findings.push({ kind: "duration", reading: `The file is ${file2.duration.toFixed(3)} s; the comp is ${comp.duration.toFixed(3)} s.` });
+  let sound;
+  const lv = file2.level;
+  if (comp.hasSound) {
+    const who = comp.soundLayers.length ? ` (${comp.soundLayers.slice(0, 3).join(", ")})` : "";
+    if (!file2.hasAudio) {
+      findings.push({
+        kind: "sound missing",
+        reading: `The comp has sound${who} but the file has no sound track: check the output module's audio setting.`
+      });
+      sound = "no sound track";
+    } else if (lv && (lv.source === "ffmpeg" && lv.maxDb <= DELIVERY_SILENCE_DB || lv.source === "After Effects" && lv.top < DELIVERY_SILENCE_TOP)) {
+      const measured = lv.source === "ffmpeg" ? "max " + lv.maxDb + " dB" : "amplitude " + lv.top;
+      findings.push({
+        kind: "sound silent",
+        reading: `The comp has sound${who} but the file's sound reads as silence (${measured}). A four-channel take has read as silence in After Effects with no warning: extract the voice to a mono WAV, use it in the comp, and deliver again.`
+      });
+      sound = "silent";
+    } else if (lv && lv.source === "ffmpeg") sound = "sound at a mean of " + lv.meanDb + " dB (max " + lv.maxDb + " dB, ffmpeg)";
+    else if (lv && lv.source === "After Effects") sound = "sound present (amplitude up to " + lv.top + ", After Effects)";
+    else sound = "a sound track, whose level was not read (no ffmpeg, and After Effects could not read it)";
+  } else sound = file2.hasAudio ? "a sound track, though the comp has no sound on" : "no sound, as in the comp";
+  const passed = findings.length === 0;
+  return {
+    passed,
+    findings,
+    comp,
+    file: file2,
+    reading: passed ? `The file matches the comp: ${file2.width} \xD7 ${file2.height}, ${file2.frameRate} fps, ${file2.duration.toFixed(3)} s; ${sound}.` : findings.map((f) => f.reading).join(" ")
+  };
+}
+function deliverPlanJsx(args) {
+  return `
+            ${jsxCompPreamble(args)}
+            var rq = app.project.renderQueue;
+            if (AE.safeGet(function () { return rq.rendering; }, false)) return { ok: false, error: "the render queue is already rendering" };
+            var _sound = [];
+            for (var _i = 1; _i <= _comp.numLayers; _i++) {
+                var _l = _comp.layer(_i);
+                if (AE.safeGet(function () { return _l.hasAudio && _l.audioEnabled; }, false)) _sound.push(_l.name);
+            }
+            var _tmp = null;
+            var _out = [];
+            try { _tmp = rq.items.add(_comp); _out = _tmp.outputModule(1).templates; } finally { if (_tmp) { try { _tmp.remove(); } catch (eRm) {} } }
+            return { ok: true, comp: _comp.name, width: _comp.width, height: _comp.height, frameRate: _comp.frameRate, duration: _comp.duration,
+                hasSound: _sound.length > 0, soundLayers: _sound, templates: _out };
+        `;
+}
+function deliverRenderJsx(args) {
+  return `
+            ${jsxCompPreamble(args)}
+            ${PARK_QUEUE_FN}
+            var rq = app.project.renderQueue;
+            var _want = ${jsxVal(args.outputPath)};
+            if (new File(_want).exists && !${jsxVal(args.overwrite)}) return { ok: false, error: "a file already exists at " + _want + "; pass overwrite: true to replace it" };
+            var _parked = _parkQueue(rq);
+            var _rqi = null;
+            var _out = null;
+            try {
+                _rqi = rq.items.add(_comp);
+                var _om = _rqi.outputModule(1);
+                var _w = AE.applyTemplate(_om, ${jsxVal(args.template)}, "outputTemplate");
+                if (_w) throw new Error(_w);
+                _om.file = AE.ensureParentDir(_want);
+                var _path = _om.file.fsName.replace(/\\\\/g, "/");
+                var _audio = {};
+                try { var _st = _om.getSettings(GetSettingsFormat.STRING); for (var _k in _st) if (_st.hasOwnProperty(_k) && /audio|channels/i.test(_k)) _audio[_k] = String(_st[_k]); } catch (eA) {}
+                var _t0 = new Date().getTime();
+                rq.render();
+                var _f = new File(_path);
+                _out = { ok: _rqi.status === RQItemStatus.DONE && _f.exists && _f.length > 0, outputPath: _path, bytes: _f.exists ? _f.length : 0,
+                    renderSeconds: Math.round(new Date().getTime() - _t0) / 1000, audio: _audio };
+                if (!_out.ok) _out.error = "the render did not finish (status " + String(_rqi.status) + ")";
+            } catch (eR) {
+                _out = { ok: false, error: "the delivery render failed: " + AE.errText(eR) };
+            } finally {
+                if (_rqi) { try { _rqi.remove(); } catch (eRm) {} }
+                _unparkQueue(rq, _parked);
+            }
+            return _out;
+        `;
+}
+function deliverReadBackJsx(args) {
+  return `
+            var _f = new File(${jsxVal(args.path)});
+            if (!_f.exists) return { ok: false, error: "no file at " + ${jsxVal(args.path)} };
+            var _item = app.project.importFile(new ImportOptions(_f));
+            var _res = { ok: true, width: _item.width, height: _item.height, frameRate: _item.frameRate, duration: _item.duration, hasAudio: !!_item.hasAudio, amplitudeTop: null };
+            var _c = null;
+            try {
+                if (${jsxVal(args.readLevel)} && _item.hasAudio) {
+                    _c = app.project.items.addComp("delivery sound check", 16, 16, 1, _item.duration, _item.frameRate || 30);
+                    var _l = _c.layers.add(_item);
+                    _c.openInViewer();
+                    for (var _i = 1; _i <= _c.numLayers; _i++) _c.layer(_i).selected = false;
+                    _l.selected = true;
+                    var _id = app.findMenuCommandId("Convert Audio to Keyframes");
+                    if (_id) {
+                        app.executeCommand(_id);
+                        var _top = 0;
+                        for (var _j = 1; _j <= _c.numLayers; _j++) {
+                            var _a = _c.layer(_j);
+                            if (_a === _l || _a.name.indexOf("Audio Amplitude") !== 0) continue;
+                            var _fx = _a.property("ADBE Effect Parade");
+                            for (var _k = 1; _k <= 2 && _k <= _fx.numProperties; _k++) {
+                                var _p = _fx.property(_k).property(1);
+                                for (var _fr = 0; _fr < _c.duration * _c.frameRate; _fr++) _top = Math.max(_top, _p.valueAtTime(_fr / _c.frameRate, false));
+                            }
+                        }
+                        _res.amplitudeTop = Math.round(_top * 1000) / 1000;
+                    }
+                }
+            } finally {
+                if (_c) { try { _c.remove(); } catch (eC) {} }
+                try { _item.remove(); } catch (eI) {}
+            }
+            return _res;
+        `;
+}
+async function runDeliver(args, io) {
+  const started = Date.now();
+  const outputPath = args.outputPath;
+  if (typeof outputPath !== "string" || !path5.isAbsolute(outputPath)) return { ok: false, error: "`outputPath` must be an absolute path" };
+  const rejected = rejectedOutputPath(outputPath);
+  if (rejected) return { ok: false, error: rejected };
+  const preset = typeof args.preset === "string" ? args.preset : "";
+  const plan = await io.execute(deliverPlanJsx({ comp: args.comp }), { label: "render.deliver plan", timeoutMs: 6e4, undoGroup: true });
+  if (!plan?.ok) return { ok: false, error: plan?.error ?? "could not read the comp" };
+  const pick2 = chooseDeliveryTemplate(preset, plan.templates ?? []);
+  if ("error" in pick2) return { ok: false, error: pick2.error };
+  const notes = [];
+  const p = DELIVERY_PRESETS[preset];
+  if (p.aspect && Math.abs(plan.width / plan.height - p.aspect) > 0.01)
+    notes.push(`The comp is ${plan.width} \xD7 ${plan.height}, not 9:16: the reel will be delivered at the comp's size.`);
+  const frames = Math.round(plan.duration * plan.frameRate);
+  const estimate = frames * plan.width * plan.height * (p.alpha ? 4 : 3) * 0.6;
+  const free = io.freeBytes ? await io.freeBytes(path5.dirname(outputPath)) : null;
+  if (free !== null && free < estimate + 3e9)
+    return { ok: false, error: `not enough room: about ${(estimate / 1e9).toFixed(1)} GB for the file plus 3 GB, ${(free / 1e9).toFixed(1)} GB free` };
+  const r = await io.execute(
+    deliverRenderJsx({ comp: args.comp, template: pick2.template, outputPath, overwrite: args.overwrite === true }),
+    { label: "render.deliver render", timeoutMs: 12e4 + frames * 5e3, undoGroup: true }
+  );
+  if (!r?.ok) return { ok: false, error: r?.error ?? "the render failed", template: pick2.template };
+  const written = r.outputPath ?? outputPath;
+  const probe = io.probe ? await io.probe(written).catch(() => null) : null;
+  const back = await io.execute(deliverReadBackJsx({ path: written, readLevel: !(probe && probe.maxDb !== null) }), {
+    label: "render.deliver read back",
+    timeoutMs: 3e5,
+    undoGroup: true
+  });
+  if (!back?.ok) return { ok: false, error: back?.error ?? "could not bring the file back", outputPath: written };
+  const level = probe && probe.maxDb !== null && probe.meanDb !== null ? { source: "ffmpeg", meanDb: probe.meanDb, maxDb: probe.maxDb } : typeof back.amplitudeTop === "number" ? { source: "After Effects", top: back.amplitudeTop } : null;
+  const check2 = checkDelivered(
+    { width: plan.width, height: plan.height, frameRate: plan.frameRate, duration: plan.duration, hasSound: plan.hasSound, soundLayers: plan.soundLayers ?? [] },
+    { width: back.width, height: back.height, frameRate: back.frameRate, duration: back.duration, hasAudio: back.hasAudio, level }
+  );
+  return {
+    ok: true,
+    preset,
+    template: pick2.template,
+    templateWhy: pick2.why,
+    fallback: pick2.fallback,
+    outputPath: written,
+    bytes: r.bytes,
+    renderSeconds: r.renderSeconds,
+    audioSettings: r.audio,
+    check: check2,
+    notes,
+    timing: { totalMs: Date.now() - started },
+    next: check2.passed ? "Delivered and checked. Watch it once at speed before calling it done." : "Stop: tell the user what the check found, in plain words, before calling it delivered."
+  };
+}
+var FFPROBE = ["ffprobe", "/opt/homebrew/bin/ffprobe", "/usr/local/bin/ffprobe"];
+var FFMPEG = ["ffmpeg", "/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg"];
+function run(cands, argv) {
+  return new Promise((resolve12) => {
+    const tryAt = (i) => {
+      if (i >= cands.length) return resolve12(null);
+      execFile2(cands[i], argv, { timeout: 12e4, maxBuffer: 16 * 1024 * 1024 }, (err, stdout, stderr) => {
+        if (err && err.code === "ENOENT") return tryAt(i + 1);
+        resolve12({ stdout: String(stdout), stderr: String(stderr) });
+      });
+    };
+    tryAt(0);
+  });
+}
+async function probeDelivered(file2) {
+  const pr = await run(FFPROBE, ["-v", "error", "-show_entries", "stream=codec_type,width,height,r_frame_rate:format=duration", "-of", "json", file2]);
+  if (!pr) return null;
+  let j;
+  try {
+    j = JSON.parse(pr.stdout);
+  } catch {
+    return null;
+  }
+  const v = (j.streams ?? []).find((s) => s.codec_type === "video");
+  const hasAudio = (j.streams ?? []).some((s) => s.codec_type === "audio");
+  if (!v) return null;
+  const [a, b] = String(v.r_frame_rate ?? "0/1").split("/").map(Number);
+  let meanDb = null;
+  let maxDb = null;
+  if (hasAudio) {
+    const vd = await run(FFMPEG, ["-hide_banner", "-nostats", "-i", file2, "-map", "0:a:0", "-af", "volumedetect", "-f", "null", "-"]);
+    const m = vd ? /mean_volume:\s*(-?[\d.]+|-inf) dB/.exec(vd.stderr) : null;
+    const x = vd ? /max_volume:\s*(-?[\d.]+|-inf) dB/.exec(vd.stderr) : null;
+    if (m && x) {
+      meanDb = m[1] === "-inf" ? -Infinity : Number(m[1]);
+      maxDb = x[1] === "-inf" ? -Infinity : Number(x[1]);
+    }
+  }
+  return { width: v.width, height: v.height, frameRate: b ? Math.round(a / b * 1e3) / 1e3 : 0, duration: Number(j.format?.duration ?? 0), hasAudio, meanDb, maxDb };
+}
+function liveDeliverIO(transport2) {
+  return {
+    async execute(code, opts) {
+      const r = await transport2.execute({ code, label: opts.label, timeoutMs: opts.timeoutMs, undoGroup: opts.undoGroup ?? true, suppressDialogs: true });
+      return r.ok ? r.result : { ok: false, error: r.error ?? `${opts.label} failed` };
+    },
+    exists: (f) => fs4.access(f).then(() => true, () => false),
+    freeBytes: async (dir) => {
+      try {
+        const st = await fs4.statfs(dir);
+        return st.bavail * st.bsize;
+      } catch {
+        return null;
+      }
+    },
+    probe: probeDelivered
+  };
+}
+registerOp({
+  name: "render.deliver",
+  category: "render",
+  description: "Deliver a comp with a named preset and check the file that was written. Presets: 'vertical-reel' (H.264 - Match Render Settings - 15 Mbps, else another H.264 template, else High Quality (ProRes 422) and says so), 'master-alpha' (High Quality with Alpha (ProRes 4444), else Lossless with Alpha, else another movie template whose name says alpha; refuses when there is none), 'master' (High Quality, else Lossless). High Quality, High Quality with Alpha and the three H.264 templates are what Adobe documents for a stock install; a template can be deleted, so the result says which was used and why. Renders the whole comp through one temporary queue item (other items parked), then brings the file back and compares size, frame rate and duration (within half a frame) with the comp, and the sound: when the comp has sound on, a file with no sound track, or one that reads as silence, is flagged (a four-channel take read as silence in After Effects with no warning). The level comes from ffmpeg (mean and max dB) when it is installed, else from After Effects' Convert Audio to Keyframes on the file. Returns `check` { passed, findings, reading }." + RENDER_QUEUE_UNDO_WARNING,
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    { name: "preset", type: "string", description: "'vertical-reel', 'master-alpha' or 'master'", required: true },
+    { name: "outputPath", type: "string", description: "Absolute path for the file (the template may change the extension; the path written is returned)", required: true },
+    { name: "overwrite", type: "boolean", description: "Replace an existing file (default false)", required: false }
+  ],
+  toJsx: () => jsxFail("render.deliver runs in Node; call it through ae_do"),
+  run: (args, transport2) => runDeliver(args, liveDeliverIO(transport2))
+});
 
 // src/tools/render-frame.ts
-import { promises as fs6 } from "node:fs";
-import * as path6 from "node:path";
+import { promises as fs7 } from "node:fs";
+import * as path7 from "node:path";
 
 // src/color/screen.ts
 var SCREEN_DEFAULTS = {
@@ -49196,7 +49523,7 @@ function measureGrain(img, isScreen, ch, kind, t) {
 }
 
 // src/color/settled-read.ts
-import { promises as fs4 } from "node:fs";
+import { promises as fs5 } from "node:fs";
 var SETTLE_BASE_MS = 15e3;
 var SETTLE_PER_HD_FRAME_MS = 3e3;
 var SETTLE_MIN_PER_FRAME_MS = 1e3;
@@ -49218,7 +49545,7 @@ async function stampFiles(paths) {
   return Promise.all(
     paths.map(async (p) => {
       try {
-        const st = await fs4.stat(p, { bigint: true });
+        const st = await fs5.stat(p, { bigint: true });
         return { exists: true, size: Number(st.size), mtimeNs: st.mtimeNs, ino: st.ino };
       } catch {
         return { exists: false, size: 0, mtimeNs: 0n, ino: 0n };
@@ -49230,7 +49557,7 @@ async function endsWithIend(p, size) {
   if (size < IEND.length) return false;
   let fh = null;
   try {
-    fh = await fs4.open(p, "r");
+    fh = await fs5.open(p, "r");
     const tail = Buffer.alloc(IEND.length);
     await fh.read(tail, 0, IEND.length, size - IEND.length);
     return tail.equals(IEND);
@@ -49257,7 +49584,7 @@ async function waitForSettled(paths, opts) {
         const s = state[i];
         let st = null;
         try {
-          st = await fs4.stat(p, { bigint: true });
+          st = await fs5.stat(p, { bigint: true });
         } catch {
         }
         if (st === null) {
@@ -49307,7 +49634,7 @@ async function readFileSettled(filePath, timeoutMs = SETTLE_BASE_MS, stableMs = 
       `file did not settle within ${timeoutMs}ms (saveFrameToPng writes asynchronously): ${filePath}`
     );
   }
-  return fs4.readFile(filePath);
+  return fs5.readFile(filePath);
 }
 
 // src/tools/render-frame.ts
@@ -49470,9 +49797,9 @@ init_registry();
 // src/color/calibration.ts
 init_registry();
 import { randomUUID as randomUUID2 } from "node:crypto";
-import { promises as fs5 } from "node:fs";
+import { promises as fs6 } from "node:fs";
 import * as os3 from "node:os";
-import * as path5 from "node:path";
+import * as path6 from "node:path";
 var CALIB_VALUES = [0.05, 0.18, 0.5, 1];
 var PATCH = 40;
 var cache = /* @__PURE__ */ new Map();
@@ -49505,7 +49832,7 @@ async function measureCaptureTransfer(transport2, key, allowRender = true) {
       error: "calibration needs a (transient, undo-grouped) render of a temporary comp, which read-only mode forbids"
     };
   }
-  const pngPath = path5.join(os3.tmpdir(), `mcp-ae-calib-${randomUUID2()}.png`).replace(/\\/g, "/");
+  const pngPath = path6.join(os3.tmpdir(), `mcp-ae-calib-${randomUUID2()}.png`).replace(/\\/g, "/");
   const code = `
         var _vals = ${jsxVal(CALIB_VALUES)};
         var _patch = ${jsxVal(PATCH)};
@@ -49541,7 +49868,7 @@ async function measureCaptureTransfer(transport2, key, allowRender = true) {
       error: `calibration PNG unreadable: ${err instanceof Error ? err.message : String(err)}`
     };
   } finally {
-    fs5.unlink(pngPath).catch(() => {
+    fs6.unlink(pngPath).catch(() => {
     });
   }
   try {
@@ -50021,16 +50348,16 @@ var renderFrameTool = defineTool({
     const rejection = rejectedOutputPath(args.outPath);
     if (rejection !== null) {
       return errorResult("IO", rejection, {
-        details: { outPath: path6.resolve(args.outPath) },
+        details: { outPath: path7.resolve(args.outPath) },
         hint: "Render to a path outside the mailbox."
       });
     }
-    const abs = path6.resolve(args.outPath).replace(/\\/g, "/");
+    const abs = path7.resolve(args.outPath).replace(/\\/g, "/");
     if (args.contactSheet?.outPath !== void 0) {
       const sheetRejection = rejectedOutputPath(args.contactSheet.outPath);
       if (sheetRejection !== null) {
         return errorResult("IO", sheetRejection, {
-          details: { outPath: path6.resolve(args.contactSheet.outPath) },
+          details: { outPath: path7.resolve(args.contactSheet.outPath) },
           hint: "Write the contact sheet to a path outside the mailbox."
         });
       }
@@ -50208,15 +50535,15 @@ function planStrip(strip) {
   return { plan: { at, offsets, frames, step, maxDimension } };
 }
 function sheetPathFor(abs, explicit) {
-  if (explicit !== void 0) return path6.resolve(explicit).replace(/\\/g, "/");
-  const ext = path6.extname(abs) || ".png";
-  const stem = abs.slice(0, abs.length - (path6.extname(abs).length || 0));
+  if (explicit !== void 0) return path7.resolve(explicit).replace(/\\/g, "/");
+  const ext = path7.extname(abs) || ".png";
+  const stem = abs.slice(0, abs.length - (path7.extname(abs).length || 0));
   return `${stem}_sheet${ext}`;
 }
 function framePaths(abs, count, multi) {
   if (!multi) return [abs];
-  const ext = path6.extname(abs) || ".png";
-  const stem = abs.slice(0, abs.length - (path6.extname(abs).length || 0));
+  const ext = path7.extname(abs) || ".png";
+  const stem = abs.slice(0, abs.length - (path7.extname(abs).length || 0));
   const out = [];
   for (let i = 0; i < count; i++) out.push(`${stem}_${i}${ext}`);
   return out;
@@ -50510,7 +50837,7 @@ async function nativeFlow(args, opts, abs, transport2, strip = null) {
     if (!finished.has(i)) continue;
     let capture;
     try {
-      capture = decodePng(await fs6.readFile(file2));
+      capture = decodePng(await fs7.readFile(file2));
       read++;
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -50800,9 +51127,9 @@ async function attachDiffSheet(payload, diff, thumbs, abs, opts, t) {
       thumbs.map((th) => th.img),
       { columns: opts.columns, thumbWidth: thumbs[0].img.width, labels }
     );
-    const sheetPath = opts.outPath !== void 0 ? path6.resolve(opts.outPath).replace(/\\/g, "/") : `${abs.slice(0, abs.length - path6.extname(abs).length)}_diff${path6.extname(abs) || ".png"}`;
-    await fs6.mkdir(path6.dirname(sheetPath), { recursive: true });
-    await fs6.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+    const sheetPath = opts.outPath !== void 0 ? path7.resolve(opts.outPath).replace(/\\/g, "/") : `${abs.slice(0, abs.length - path7.extname(abs).length)}_diff${path7.extname(abs) || ".png"}`;
+    await fs7.mkdir(path7.dirname(sheetPath), { recursive: true });
+    await fs7.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
     payload.diffSheet = {
       writtenTo: sheetPath,
       size: [sheet.width, sheet.height],
@@ -50845,8 +51172,8 @@ async function attachContactSheet(payload, labels, tiles, sheetPath, opts) {
       thumbWidth: opts.thumbWidth ?? tiles[0].width,
       labels
     });
-    await fs6.mkdir(path6.dirname(sheetPath), { recursive: true });
-    await fs6.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+    await fs7.mkdir(path7.dirname(sheetPath), { recursive: true });
+    await fs7.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
     payload.contactSheet = {
       writtenTo: sheetPath,
       size: [sheet.width, sheet.height],
@@ -50874,7 +51201,7 @@ async function writeOutput(file2, capture, convert, channels, backdrop, bg) {
     convert(rgb);
     bytes = channels === "rgba" ? encodePngSrgbRgba8(width, height, rgb, capture.alpha ?? opaque()) : encodePngSrgb8(width, height, flattenOver({ ...capture, rgb }, backdrop));
   }
-  await fs6.writeFile(file2, bytes);
+  await fs7.writeFile(file2, bytes);
   return decodePng(bytes);
 }
 
@@ -52011,9 +52338,9 @@ function alikeRegions(a, b) {
   return small > 0 && big / small <= 2;
 }
 var isFrozenEntry = (e) => !("box" in e) && e.kind === "frozen";
-function frozenAccepted(run, accept) {
+function frozenAccepted(run2, accept) {
   return accept.some(
-    (e) => isFrozenEntry(e) && (e.from === void 0 || e.from <= run.to) && (e.to === void 0 || e.to >= run.from)
+    (e) => isFrozenEntry(e) && (e.from === void 0 || e.from <= run2.to) && (e.to === void 0 || e.to >= run2.from)
   );
 }
 function acceptedBy(f, accept) {
@@ -52067,14 +52394,14 @@ function cutoutFindings(frames, limit) {
 }
 async function writePng(io, file2, data) {
   if (io.writePng) return io.writePng(file2, data);
-  await fs7.mkdir(path7.dirname(file2), { recursive: true });
-  await fs7.writeFile(file2, data);
+  await fs8.mkdir(path8.dirname(file2), { recursive: true });
+  await fs8.writeFile(file2, data);
 }
 var GB = 1e9;
 var gb = (n) => `${(n / GB).toFixed(1)} GB`;
 var OVERSIZE_FACTOR = 1.5;
 var even = (n) => Math.max(2, Math.round(n / 2) * 2);
-var stemOf = (file2) => path7.join(path7.dirname(file2), path7.basename(file2, path7.extname(file2)));
+var stemOf = (file2) => path8.join(path8.dirname(file2), path8.basename(file2, path8.extname(file2)));
 var dims = (d) => `${d[0]} \xD7 ${d[1]}`;
 function sourceAdviceFor(f) {
   if (!f?.sourceSize || !f.compSize || !f.scale) return null;
@@ -52124,11 +52451,11 @@ function soundAdviceFor(f, streams) {
     }
   };
 }
-var FFPROBE = ["ffprobe", "/opt/homebrew/bin/ffprobe", "/usr/local/bin/ffprobe"];
+var FFPROBE2 = ["ffprobe", "/opt/homebrew/bin/ffprobe", "/usr/local/bin/ffprobe"];
 async function ffprobeAudio(file2) {
-  for (const exe of FFPROBE) {
+  for (const exe of FFPROBE2) {
     const out = await new Promise((resolve12) => {
-      execFile2(
+      execFile3(
         exe,
         [
           "-v",
@@ -52190,13 +52517,13 @@ function renderCutoutBytes(frames, size) {
 }
 var captureBytes = (size) => (Array.isArray(size) ? size[0] * size[1] : 1080 * 1920) * 4;
 async function statfsFree(dir) {
-  let d = path7.resolve(dir);
+  let d = path8.resolve(dir);
   for (; ; ) {
     try {
-      const st = await fs7.statfs(d);
+      const st = await fs8.statfs(d);
       return Number(st.bavail) * Number(st.bsize);
     } catch {
-      const up = path7.dirname(d);
+      const up = path8.dirname(d);
       if (up === d) return null;
       d = up;
     }
@@ -52216,12 +52543,12 @@ function cacheBytesFor(frames, sourceSize) {
   return frames * w * h * 8;
 }
 async function volumeKey(dir) {
-  let d = path7.resolve(dir);
+  let d = path8.resolve(dir);
   for (; ; ) {
     try {
-      return (await fs7.stat(d)).dev;
+      return (await fs8.stat(d)).dev;
     } catch {
-      const up = path7.dirname(d);
+      const up = path8.dirname(d);
       if (up === d) return null;
       d = up;
     }
@@ -52267,14 +52594,14 @@ function aeCacheRoot(folder, version3) {
   if (!folder || !version3) return null;
   const m = /^(\d+)\.(\d+)/.exec(version3);
   if (!m) return null;
-  return path7.join(folder, "Adobe", "After Effects", `${m[1]}.${m[2]}`);
+  return path8.join(folder, "Adobe", "After Effects", `${m[1]}.${m[2]}`);
 }
 async function folderBytes(root, budgetMs = 5e3) {
   const t0 = performance.now();
   let bytes = 0;
   const stack = [root];
   try {
-    await fs7.access(root);
+    await fs8.access(root);
   } catch {
     return null;
   }
@@ -52283,15 +52610,15 @@ async function folderBytes(root, budgetMs = 5e3) {
     const d = stack.pop();
     let entries = [];
     try {
-      entries = await fs7.readdir(d, { withFileTypes: true });
+      entries = await fs8.readdir(d, { withFileTypes: true });
     } catch {
       continue;
     }
     for (const e of entries) {
-      const p = path7.join(d, e.name);
+      const p = path8.join(d, e.name);
       if (e.isDirectory()) stack.push(p);
       else if (e.isFile())
-        bytes += await fs7.stat(p).then(
+        bytes += await fs8.stat(p).then(
           (st) => st.size,
           () => 0
         );
@@ -52329,13 +52656,13 @@ var frozenOpts = (args) => ({
   limit: typeof args.frozenLimit === "number" ? args.frozenLimit : FROZEN_DEFAULTS.limit,
   minFrames: typeof args.frozenFrames === "number" ? args.frozenFrames : FROZEN_DEFAULTS.minFrames
 });
-function frozenFinding(run, pictures) {
-  const moved = run.footageChange > 1e-3;
+function frozenFinding(run2, pictures) {
+  const moved = run2.footageChange > 1e-3;
   return {
     kind: "frozen",
-    ...run,
+    ...run2,
     pictures,
-    reading: `The cut-out's outline did not move for ${run.length} frames` + (moved ? ` while the footage did (frames ${run.from} to ${run.to}; ${(run.footageChange * 100).toFixed(1)}% of the frame changed inside the outline)` : ` (frames ${run.from} to ${run.to}), and the picture inside it barely changed either`) + `. The selection is probably not tracking: this happens when the layer's footage is replaced after the click. Click again on this footage (subject.prepare, then the steps). If the subject is genuinely motionless (a product on a table, a locked-off object) this is expected: pass accept: [{ kind: "frozen" }] to wave it through once seen.`
+    reading: `The cut-out's outline did not move for ${run2.length} frames` + (moved ? ` while the footage did (frames ${run2.from} to ${run2.to}; ${(run2.footageChange * 100).toFixed(1)}% of the frame changed inside the outline)` : ` (frames ${run2.from} to ${run2.to}), and the picture inside it barely changed either`) + `. The selection is probably not tracking: this happens when the layer's footage is replaced after the click. Click again on this footage (subject.prepare, then the steps). If the subject is genuinely motionless (a product on a table, a locked-off object) this is expected: pass accept: [{ kind: "frozen" }] to wave it through once seen.`
   };
 }
 var QUICK_NOTE = "Quick check: the click frames and two frames either side, which After Effects renders in seconds. A missed object, an enclosed gap and a second click on the same thing show there. To look across the clip, render the cut-out once (subject.render_cutout) and check the file (subject.check_file); across: true checks the live matte across the clip instead, which takes minutes (4 to 9 for nine frames on a 2176 x 3840 take), because After Effects recomputes the matte on every capture.";
@@ -52391,7 +52718,7 @@ async function renderChunked(io, base, frames, perFrameMs, outDir, stem, tally =
     const payload = await io.render({
       ...base,
       frames: chunk2,
-      outPath: path7.join(outDir, `${stem}-${firstCall + c}.png`),
+      outPath: path8.join(outDir, `${stem}-${firstCall + c}.png`),
       settleTimeoutMs: Math.min(SETTLE_MAX_MS, Math.max(1, Math.round(perFrameMs * chunk2.length)))
     });
     tally.calls++;
@@ -52654,7 +52981,7 @@ async function recheckFrames(io, readings, limit, over, outDir, perFrameMs, base
     rendered,
     limit,
     over,
-    path7.join(outDir, "cutout-recheck_sheet.png"),
+    path8.join(outDir, "cutout-recheck_sheet.png"),
     pixels,
     false
   );
@@ -52740,7 +53067,7 @@ function timeReading(first, second, pixels, totalMs) {
 }
 async function runSubjectCheck(args, io) {
   const outDir = args.outDir;
-  if (typeof outDir !== "string" || !path7.isAbsolute(outDir))
+  if (typeof outDir !== "string" || !path8.isAbsolute(outDir))
     return { ok: false, error: "`outDir` must be an absolute folder for the pictures" };
   const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
   const over = typeof args.over === "string" ? args.over : CUTOUT_OVER;
@@ -52800,7 +53127,7 @@ async function runSubjectCheck(args, io) {
     rendered,
     limit,
     over,
-    path7.join(outDir, "cutout_sheet.png"),
+    path8.join(outDir, "cutout_sheet.png"),
     pixels,
     true,
     (r, img) => {
@@ -52826,13 +53153,13 @@ async function runSubjectCheck(args, io) {
   );
   if ("unstable" in recheck) findings.push(...recheck.unstable);
   const frozenAcceptedRuns = [];
-  for (const run of outlineResult.frozen) {
-    if (frozenAccepted(run, accept)) {
-      frozenAcceptedRuns.push({ kind: "frozen", ...run });
+  for (const run2 of outlineResult.frozen) {
+    if (frozenAccepted(run2, accept)) {
+      frozenAcceptedRuns.push({ kind: "frozen", ...run2 });
       continue;
     }
     const pic = (f) => readings.find((r) => r.frame === f)?.picture ?? null;
-    findings.push(frozenFinding(run, [pic(run.from), pic(run.to)]));
+    findings.push(frozenFinding(run2, [pic(run2.from), pic(run2.to)]));
   }
   const somethingMissing = findings.length > 0;
   const notes = [];
@@ -52857,7 +53184,7 @@ async function runSubjectCheck(args, io) {
       ...readings.map((r) => r.file),
       ..."captures" in recheck ? recheck.captures : []
     ].filter((f) => typeof f === "string");
-    await Promise.all(files.map((f) => fs7.rm(f, { force: true })));
+    await Promise.all(files.map((f) => fs8.rm(f, { force: true })));
     for (const r of readings) delete r.file;
   }
   return {
@@ -52917,12 +53244,12 @@ async function runFillGaps(args, io) {
     return res;
   } finally {
     if (args.keepCaptures !== true)
-      await Promise.all(captures.map((f) => fs7.rm(f, { force: true })));
+      await Promise.all(captures.map((f) => fs8.rm(f, { force: true })));
   }
 }
 async function fillGaps(args, io) {
   const still = args.stillPath;
-  if (typeof still !== "string" || !path7.isAbsolute(still) || path7.extname(still).toLowerCase() !== ".png") {
+  if (typeof still !== "string" || !path8.isAbsolute(still) || path8.extname(still).toLowerCase() !== ".png") {
     return {
       ok: false,
       error: "`stillPath` must be an absolute path to a .png file, kept with the project (the comp will use it)"
@@ -52930,7 +53257,7 @@ async function fillGaps(args, io) {
   }
   const rejected = rejectedOutputPath(still);
   if (rejected) return { ok: false, error: rejected };
-  const outDir = typeof args.outDir === "string" && path7.isAbsolute(args.outDir) ? args.outDir : path7.dirname(still);
+  const outDir = typeof args.outDir === "string" && path8.isAbsolute(args.outDir) ? args.outDir : path8.dirname(still);
   const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
   const over = typeof args.over === "string" ? args.over : CUTOUT_OVER;
   const minArea = typeof args.minArea === "number" ? args.minArea : 20;
@@ -53108,7 +53435,7 @@ async function fillGaps(args, io) {
     afterRendered,
     limit,
     over,
-    path7.join(outDir, "fill-after_sheet.png"),
+    path8.join(outDir, "fill-after_sheet.png"),
     pixels
   );
   const sum = summarize(measured.readings, limit, []);
@@ -53229,7 +53556,7 @@ function liveCutoutIO(args, transport2) {
       return sc?.result ?? { ok: false, error: "ae_render_frame returned no result" };
     },
     async readImage(file2) {
-      return decodePng(await fs7.readFile(file2));
+      return decodePng(await fs8.readFile(file2));
     },
     async unbuild(a) {
       const r = await transport2.execute({
@@ -53594,7 +53921,7 @@ function renderCutoutJsx(args) {
 async function runRenderCutout(args, io) {
   const started = performance.now();
   const outputPath = args.outputPath;
-  if (typeof outputPath !== "string" || !path7.isAbsolute(outputPath))
+  if (typeof outputPath !== "string" || !path8.isAbsolute(outputPath))
     return { ok: false, error: "`outputPath` must be an absolute path for the movie" };
   const rejected = rejectedOutputPath(outputPath);
   if (rejected) return { ok: false, error: rejected };
@@ -53619,7 +53946,7 @@ async function runRenderCutout(args, io) {
   );
   if ("error" in choice) return { ok: false, error: choice.error, templates: plan.templates };
   const frames = plan.span?.frames ?? 0;
-  const where = path7.dirname(outputPath);
+  const where = path8.dirname(outputPath);
   const cacheRoot = aeCacheRoot(plan.aeCache?.folder, plan.aeCache?.version);
   const movieBytes = renderCutoutBytes(frames, plan.compSize ?? [1080, 1920]);
   const matteCopies = typeof plan.matteCopies === "number" && plan.matteCopies > 1 ? plan.matteCopies : 1;
@@ -53760,16 +54087,16 @@ function speckAccepted(p, accept) {
 }
 function longestSpeckRun(t) {
   const touch = (a, b) => a.x <= b.x + b.width && b.x <= a.x + a.width && a.y <= b.y + b.height && b.y <= a.y + a.height;
-  const run = /* @__PURE__ */ new Map();
+  const run2 = /* @__PURE__ */ new Map();
   let best = 0;
   const sorted = t.pieces.slice().sort((a, b) => a.frame - b.frame);
   sorted.forEach((p, i) => {
     let len = 1;
     sorted.forEach((q, j) => {
       if (q.frame === p.frame - 1 && touch(q.box, p.box))
-        len = Math.max(len, (run.get(j) ?? 1) + 1);
+        len = Math.max(len, (run2.get(j) ?? 1) + 1);
     });
-    run.set(i, len);
+    run2.set(i, len);
     best = Math.max(best, len);
   });
   return best;
@@ -53816,16 +54143,16 @@ async function runCheckFile(args, io) {
       error: "give exactly one of `path` (the movie) or `item` (a footage item's id)"
     };
   if (file2 !== null) {
-    if (!path7.isAbsolute(file2))
+    if (!path8.isAbsolute(file2))
       return { ok: false, error: "`path` must be an absolute path to the movie" };
-    const there = io.exists ? await io.exists(file2) : await fs7.access(file2).then(
+    const there = io.exists ? await io.exists(file2) : await fs8.access(file2).then(
       () => true,
       () => false
     );
     if (!there) return { ok: false, error: `no file at ${file2}` };
   }
   const outDir = args.outDir;
-  if (typeof outDir !== "string" || !path7.isAbsolute(outDir))
+  if (typeof outDir !== "string" || !path8.isAbsolute(outDir))
     return { ok: false, error: "`outDir` must be an absolute folder for the pictures" };
   const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
   const jumpLimit = typeof args.jumpLimit === "number" ? args.jumpLimit : CHECK_FILE_JUMP_LIMIT;
@@ -53889,7 +54216,7 @@ async function runCheckFile(args, io) {
     const f = kept.get(frame);
     if (!f || keepCaptures) return;
     kept.delete(frame);
-    await fs7.rm(f, { force: true });
+    await fs8.rm(f, { force: true });
   };
   const outline = outlineTracker(frozenOpts(args));
   let outlineResult = null;
@@ -53922,7 +54249,7 @@ async function runCheckFile(args, io) {
         rendered,
         limit,
         over,
-        path7.join(outDir, "check-file_unused.png"),
+        path8.join(outDir, "check-file_unused.png"),
         pixels,
         false,
         (r, img) => {
@@ -53974,28 +54301,28 @@ async function runCheckFile(args, io) {
       }
     }
     outlineResult = outline.result();
-    for (const run of outlineResult.frozen) {
-      if (frozenAccepted(run, accept)) {
-        frozenAcceptedRuns.push({ kind: "frozen", ...run });
+    for (const run2 of outlineResult.frozen) {
+      if (frozenAccepted(run2, accept)) {
+        frozenAcceptedRuns.push({ kind: "frozen", ...run2 });
         continue;
       }
-      const ends = [run.from, run.to];
+      const ends = [run2.from, run2.to];
       const again = await renderChunked(
         io,
         { compNameOrId: setup.compId, channels: "rgba" },
         ends,
         perFrameMs,
         outDir,
-        `check-file-frozen-${run.from}`,
+        `check-file-frozen-${run2.from}`,
         renders
       );
       const pics = [];
       for (const e of ends) {
         const r = again.find((x) => x.frame === e);
         pics.push(r?.file ? await overPicture(io, r.file, over) : null);
-        if (r?.file && !keepCaptures) await fs7.rm(r.file, { force: true });
+        if (r?.file && !keepCaptures) await fs8.rm(r.file, { force: true });
       }
-      frozenFindings.push(frozenFinding(run, pics));
+      frozenFindings.push(frozenFinding(run2, pics));
     }
   } finally {
     cleanup = await io.execute(
@@ -54048,11 +54375,11 @@ async function runCheckFile(args, io) {
   const seenFrames = [...seen.keys()].sort((a, b) => a - b);
   let seenRun = 0;
   {
-    let run = 0;
+    let run2 = 0;
     let last = -1;
     for (const f of frames) {
-      run = seen.has(f) ? last >= 0 && seen.has(last) ? run + 1 : 1 : 0;
-      seenRun = Math.max(seenRun, run);
+      run2 = seen.has(f) ? last >= 0 && seen.has(last) ? run2 + 1 : 1 : 0;
+      seenRun = Math.max(seenRun, run2);
       last = f;
     }
   }
@@ -54081,7 +54408,7 @@ async function runCheckFile(args, io) {
     const pic = file3 ? await overPicture(io, file3, over) : null;
     pictureOf2.set(f, pic);
     if (pic)
-      pictureBytes += await fs7.stat(pic).then(
+      pictureBytes += await fs8.stat(pic).then(
         (st) => st.size,
         () => 0
       );
@@ -54116,7 +54443,7 @@ async function runCheckFile(args, io) {
   }
   if (thumbs.length) {
     const sheet = composeContactSheet(thumbs, { labels, thumbWidth: 240 });
-    picture = path7.join(outDir, "check-file_sheet.png");
+    picture = path8.join(outDir, "check-file_sheet.png");
     const png = encodePngSrgb8(sheet.width, sheet.height, sheet.rgb, PICTURE_DEFLATE);
     await writePng(io, picture, png);
     sheetBytes = png.length;
@@ -54302,7 +54629,7 @@ function liveFileIO(transport2) {
       });
       return r.ok ? r.result : { ok: false, error: r.error ?? `${opts.label} failed` };
     },
-    exists: (file2) => fs7.access(file2).then(
+    exists: (file2) => fs8.access(file2).then(
       () => true,
       () => false
     )
@@ -54641,7 +54968,7 @@ async function runSoftenEdge(args, io) {
     return u?.ok ? { ...u, note: "The comp is back to the single matted layer." } : { ok: false, error: u?.error ?? "the undo failed" };
   }
   const outDir = args.outDir;
-  if (typeof outDir !== "string" || !path7.isAbsolute(outDir))
+  if (typeof outDir !== "string" || !path8.isAbsolute(outDir))
     return { ok: false, error: "`outDir` must be an absolute folder for the pictures" };
   const num = (k, d) => typeof args[k] === "number" && Number.isFinite(args[k]) ? args[k] : d;
   const D = SOFT_EDGE_DEFAULTS;
@@ -54699,7 +55026,7 @@ async function runSoftenEdge(args, io) {
     const r = await io.render({
       compNameOrId: args.comp,
       frames,
-      outPath: path7.join(outDir, `${name}.png`),
+      outPath: path8.join(outDir, `${name}.png`),
       settleTimeoutMs: Math.min(SETTLE_MAX_MS, frames.length * perFrame + 3e4),
       ...extra
     });
@@ -54859,7 +55186,7 @@ async function runSoftenEdge(args, io) {
   const pictures = checkFrames.map((f) => wholeAfter.get(f)?.file).filter((f) => typeof f === "string");
   if (args.keepCaptures !== true)
     await Promise.all(
-      captures.filter((c) => !pictures.includes(c)).map((c) => fs7.rm(c, { force: true }))
+      captures.filter((c) => !pictures.includes(c)).map((c) => fs8.rm(c, { force: true }))
     );
   const region = {
     bottom,
@@ -55048,7 +55375,7 @@ function referenceCompJsx(args) {
 async function runReferenceReport(args, io) {
   const started = performance.now();
   const outPath = args.outPath;
-  if (typeof outPath !== "string" || !path7.isAbsolute(outPath) || !/\.json$/i.test(outPath))
+  if (typeof outPath !== "string" || !path8.isAbsolute(outPath) || !/\.json$/i.test(outPath))
     return { ok: false, error: "`outPath` must be an absolute path for the report (.json)" };
   const sources = ["path", "item", "comp"].filter((k) => args[k] !== void 0 && args[k] !== null);
   if (sources.length !== 1)
@@ -55058,8 +55385,8 @@ async function runReferenceReport(args, io) {
     };
   const regions = Array.isArray(args.regions) ? args.regions : void 0;
   const cap = typeof args.maxFrames === "number" && args.maxFrames >= 1 ? Math.floor(args.maxFrames) : CHECK_FILE_MAX_FRAMES;
-  const outDir = path7.dirname(outPath);
-  await fs7.mkdir(outDir, { recursive: true });
+  const outDir = path8.dirname(outPath);
+  await fs8.mkdir(outDir, { recursive: true });
   const keepCaptures = args.keepCaptures === true;
   const perFrameMs = Math.max(
     1,
@@ -55077,11 +55404,11 @@ async function runReferenceReport(args, io) {
   let report;
   const renders = renderTally();
   const p = typeof args.path === "string" ? args.path : null;
-  if (p !== null && !path7.isAbsolute(p)) return { ok: false, error: "`path` must be absolute" };
-  const stat = p !== null ? await fs7.stat(p).catch(() => null) : null;
+  if (p !== null && !path8.isAbsolute(p)) return { ok: false, error: "`path` must be absolute" };
+  const stat = p !== null ? await fs8.stat(p).catch(() => null) : null;
   if (p !== null && !MOVIE_EXT.test(p)) {
     if (!stat) return { ok: false, error: `nothing at ${p}` };
-    const files = stat.isDirectory() ? (await fs7.readdir(p)).filter((f) => /\.png$/i.test(f)).sort(naturalOrder).map((f) => path7.join(p, f)) : [p];
+    const files = stat.isDirectory() ? (await fs8.readdir(p)).filter((f) => /\.png$/i.test(f)).sort(naturalOrder).map((f) => path8.join(p, f)) : [p];
     if (!files.length) return { ok: false, error: `no PNG frames in ${p}` };
     if (!files.every((f) => /\.png$/i.test(f)))
       return { ok: false, error: "a still must be a PNG (render other formats to PNG first)" };
@@ -55089,7 +55416,7 @@ async function runReferenceReport(args, io) {
     const frameRate = typeof args.frameRate === "number" ? args.frameRate : void 0;
     const given = typeof args.frameStep === "number" && args.frameStep >= 1 ? Math.round(args.frameStep) : null;
     const nums = files.map((f) => {
-      const m = /(\d+)(?!.*\d)/.exec(path7.basename(f, path7.extname(f)));
+      const m = /(\d+)(?!.*\d)/.exec(path8.basename(f, path8.extname(f)));
       return m ? Number(m[1]) : null;
     });
     const named = nums.every((n) => n !== null) && nums.every((n, i) => i === 0 || n > nums[i - 1]);
@@ -55142,7 +55469,7 @@ async function runReferenceReport(args, io) {
         for (const r of got) {
           if (!r.ok || !r.file) return { ok: false, error: `frame ${r.frame} did not render: ${r.error ?? "no file"}` };
           reader.add({ img: await io.readImage(r.file), frame: r.frame, time: r.frame / setup.frameRate });
-          if (!keepCaptures) await fs7.rm(r.file, { force: true });
+          if (!keepCaptures) await fs8.rm(r.file, { force: true });
         }
       }
       report = reader.finish();
@@ -55155,11 +55482,11 @@ async function runReferenceReport(args, io) {
     }
     source = fromComp ? { kind: "comp", name: setup.name, frames: setup.frames, frameRate: setup.frameRate } : { kind: p !== null ? "movie" : "item", path: p, item: setup.itemName, frames: setup.frames, frameRate: setup.frameRate, cleanup };
   }
-  await fs7.writeFile(outPath, JSON.stringify(report));
+  await fs8.writeFile(outPath, JSON.stringify(report));
   let compare;
   if (typeof args.against === "string") {
     try {
-      compare = compareReferences(JSON.parse(await fs7.readFile(args.against, "utf8")), report);
+      compare = compareReferences(JSON.parse(await fs8.readFile(args.against, "utf8")), report);
     } catch (e) {
       compare = { error: `could not compare with ${args.against}: ${e instanceof Error ? e.message : String(e)}` };
     }
@@ -55183,8 +55510,8 @@ async function runReferenceReport(args, io) {
 async function runReferenceCompare(args) {
   const read = async (k) => {
     const v = args[k];
-    if (typeof v !== "string" || !path7.isAbsolute(v)) throw new Error(`\`${k}\` must be the absolute path of a saved report`);
-    return JSON.parse(await fs7.readFile(v, "utf8"));
+    if (typeof v !== "string" || !path8.isAbsolute(v)) throw new Error(`\`${k}\` must be the absolute path of a saved report`);
+    return JSON.parse(await fs8.readFile(v, "utf8"));
   };
   try {
     const ref = await read("reference");
@@ -56592,7 +56919,7 @@ registerOp({
 // src/operations/inspect.ts
 init_config();
 init_registry();
-import * as path8 from "node:path";
+import * as path9 from "node:path";
 registerOp({
   name: "comp.info",
   category: "comp",
@@ -56668,7 +56995,7 @@ registerOp({
   readOnly: true,
   toJsx(args) {
     const raw = String(args.outPath);
-    if (!path8.isAbsolute(raw)) {
+    if (!path9.isAbsolute(raw)) {
       return `
             return { ok: false, error: ${jsxVal(`outPath must be absolute, got: ${raw}`)} };
         `;
@@ -56679,7 +57006,7 @@ registerOp({
             return { ok: false, error: ${jsxVal(rejection)} };
         `;
     }
-    const abs = path8.resolve(raw).replace(/\\/g, "/");
+    const abs = path9.resolve(raw).replace(/\\/g, "/");
     return `
             ${RENDER_FRAME_FN}
             ${jsxCompPreamble(args)}
@@ -59060,8 +59387,8 @@ registerOp({
 });
 
 // src/operations/sample.ts
-import { promises as fs8 } from "node:fs";
-import * as path9 from "node:path";
+import { promises as fs9 } from "node:fs";
+import * as path10 from "node:path";
 init_registry();
 var DEFAULT_PROPERTIES = [
   ["Transform", "Anchor Point"],
@@ -59220,10 +59547,10 @@ async function runCurve(args, io) {
   const report = analyzeCurve(samples, r.fps);
   let graph = null;
   if (typeof args.outPath === "string") {
-    if (!path9.isAbsolute(args.outPath)) return { ok: false, error: "`outPath` must be absolute (.png)" };
+    if (!path10.isAbsolute(args.outPath)) return { ok: false, error: "`outPath` must be absolute (.png)" };
     const g = curveGraph(report, { width: 480, height: 160 });
-    await fs8.mkdir(path9.dirname(args.outPath), { recursive: true });
-    await fs8.writeFile(args.outPath, encodePngSrgb8(g.width, g.height, g.rgb));
+    await fs9.mkdir(path10.dirname(args.outPath), { recursive: true });
+    await fs9.writeFile(args.outPath, encodePngSrgb8(g.width, g.height, g.rgb));
     graph = args.outPath;
   }
   return {
@@ -59295,12 +59622,12 @@ async function runSoundMarkers(args, io) {
   let source;
   if (hasTiming) {
     const f = args.timing;
-    if (!path9.isAbsolute(f)) return { ok: false, error: "`timing` must be an absolute path" };
+    if (!path10.isAbsolute(f)) return { ok: false, error: "`timing` must be an absolute path" };
     const r = await io.execute(fpsJsx({ comp: args.comp }), { label: "sound.markers fps", timeoutMs: 3e4 });
     if (!r?.ok) return { ok: false, error: r?.error ?? "could not read the comp" };
     fps = r.fps;
     try {
-      found = parseTiming(await fs8.readFile(f, "utf8"), fps).map((m) => ({ ...m, frame: Math.round(m.time * fps) }));
+      found = parseTiming(await fs9.readFile(f, "utf8"), fps).map((m) => ({ ...m, frame: Math.round(m.time * fps) }));
     } catch (e) {
       return { ok: false, error: e instanceof Error ? e.message : String(e) };
     }
@@ -59440,8 +59767,8 @@ registerOp({
 
 // src/operations/instance.ts
 import { spawn } from "node:child_process";
-import { promises as fs9 } from "node:fs";
-import * as path10 from "node:path";
+import { promises as fs10 } from "node:fs";
+import * as path11 from "node:path";
 init_config();
 init_registry();
 var INSTALL_CMD = "npx @kumoproductions/mcp-aftereffects install-agent";
@@ -59550,10 +59877,10 @@ registerOp({
     let copiedFrom = null;
     let copyTo = null;
     if (typeof args.copyFrom === "string" && args.copyFrom) {
-      const src = path10.resolve(args.copyFrom);
+      const src = path11.resolve(args.copyFrom);
       if (!await exists(src)) return fail(`copyFrom not found: ${src}`, { errorCode: "IO" });
-      const ext = path10.extname(src) || ".aep";
-      copyTo = typeof args.copyTo === "string" && args.copyTo ? path10.resolve(args.copyTo) : path10.join(path10.dirname(src), `${path10.basename(src, ext)}__${name}${ext}`);
+      const ext = path11.extname(src) || ".aep";
+      copyTo = typeof args.copyTo === "string" && args.copyTo ? path11.resolve(args.copyTo) : path11.join(path11.dirname(src), `${path11.basename(src, ext)}__${name}${ext}`);
       if (copyTo === src)
         return fail("copyTo must differ from copyFrom", { errorCode: "INVALID_ARGS" });
       const rejected = rejectedOutputPath(copyTo);
@@ -59561,7 +59888,7 @@ registerOp({
       copiedFrom = src;
       projectToOpen = copyTo;
     } else if (typeof args.project === "string" && args.project) {
-      projectToOpen = path10.resolve(args.project);
+      projectToOpen = path11.resolve(args.project);
       if (!await exists(projectToOpen))
         return fail(`project not found: ${projectToOpen}`, { errorCode: "IO" });
     }
@@ -59588,8 +59915,8 @@ registerOp({
       return fail(err instanceof Error ? err.message : String(err), { errorCode: "AE_NOT_FOUND" });
     }
     if (copiedFrom !== null && copyTo !== null) {
-      await fs9.mkdir(path10.dirname(copyTo), { recursive: true });
-      await fs9.copyFile(copiedFrom, copyTo);
+      await fs10.mkdir(path11.dirname(copyTo), { recursive: true });
+      await fs10.copyFile(copiedFrom, copyTo);
     }
     const plan = buildInstanceLaunchPlan(exe, name);
     const aePid = process.platform === "darwin" ? null : void 0;
@@ -59771,7 +60098,7 @@ registerOp({
         `instance '${name}' accepted the quit but is still ticking after ${timeoutMs} ms \u2014 check it for a dialog`
       );
     }
-    await fs9.rm(dir, { recursive: true, force: true }).catch(() => {
+    await fs10.rm(dir, { recursive: true, force: true }).catch(() => {
     });
     return { ok: true, instance: name, stopped: true, saved: !!args.save, file: file2 };
   }
@@ -59845,7 +60172,7 @@ registerOp({
 });
 async function exists(p) {
   try {
-    await fs9.access(p);
+    await fs10.access(p);
     return true;
   } catch {
     return false;
@@ -59939,9 +60266,9 @@ var catalogTool = defineTool({
 
 // src/tools/check-comp.ts
 import { randomUUID as randomUUID3 } from "node:crypto";
-import { promises as fs10 } from "node:fs";
+import { promises as fs11 } from "node:fs";
 import * as os4 from "node:os";
-import * as path12 from "node:path";
+import * as path13 from "node:path";
 
 // src/color/watch.ts
 var WATCH_DEFAULTS = {
@@ -60331,13 +60658,13 @@ var PieceWatcher = class {
     const out = [];
     const first = this.frames[0]?.frame;
     const last = this.frames[this.frames.length - 1]?.frame;
-    let run = [];
+    let run2 = [];
     const close = () => {
-      if (run.length === 0) return;
-      const from = run[0].frame;
-      const to = run[run.length - 1].frame;
-      let worst = run[0];
-      for (const f of run) if (score(f.m) > score(worst.m)) worst = f;
+      if (run2.length === 0) return;
+      const from = run2[0].frame;
+      const to = run2[run2.length - 1].frame;
+      let worst = run2[0];
+      for (const f of run2) if (score(f.m) > score(worst.m)) worst = f;
       const frames = to - from + 1;
       const s = {
         kind,
@@ -60357,7 +60684,7 @@ var PieceWatcher = class {
       } else {
         const c = kind === "clipped-high" ? m.clipHigh : m.clipLow;
         let box2 = null;
-        for (const f of run) {
+        for (const f of run2) {
           const b = (kind === "clipped-high" ? f.m.clipHigh : f.m.clipLow).box;
           if (b === null) continue;
           if (box2 === null) box2 = { ...b };
@@ -60381,13 +60708,13 @@ var PieceWatcher = class {
         s.reading = `${kind} from ${when}: at worst (frame ${worst.frame}) ${fmt3(c.all * 100)}% of pixels at ${code} in all three channels (per channel r ${fmt3(c.r * 100)}%, g ${fmt3(c.g * 100)}%, b ${fmt3(c.b * 100)}%)` + (s.box ? `, inside x ${s.box.x}..${s.box.x + s.box.width}, y ${s.box.y}..${s.box.y + s.box.height} (comp pixels)` : "");
       }
       out.push(s);
-      run = [];
+      run2 = [];
     };
     for (const f of this.frames) {
-      const prev = run[run.length - 1];
+      const prev = run2[run2.length - 1];
       if (prev !== void 0 && f.frame !== prev.frame + every) close();
       if (score(f.m) === null) close();
-      else run.push(f);
+      else run2.push(f);
     }
     close();
     return out;
@@ -60729,13 +61056,13 @@ function structureJsx(compNameOrId, o) {
 }
 
 // src/tools/check-comp.ts
-var frameFile = (dir, frame) => path12.join(dir, `frame-${frame}.png`).replace(/\\/g, "/");
+var frameFile = (dir, frame) => path13.join(dir, `frame-${frame}.png`).replace(/\\/g, "/");
 function aeFrameSource(transport2, comp, opts) {
   return {
     async capture(frames, dir) {
       const t0 = performance.now();
       const paths = frames.map((k) => frameFile(dir, k));
-      await fs10.mkdir(dir, { recursive: true });
+      await fs11.mkdir(dir, { recursive: true });
       const before = await stampFiles(paths);
       const result = await transport2.execute({
         code: captureJsx(comp, frames, paths, opts.factor, opts.tryOcio),
@@ -60789,7 +61116,7 @@ function aeFrameSource(transport2, comp, opts) {
   };
 }
 async function readPicture(file2, target, convert) {
-  const img = decodePng(await fs10.readFile(file2));
+  const img = decodePng(await fs11.readFile(file2));
   if (convert) convert(img.rgb);
   let rgb = img.rgb;
   let width = img.width;
@@ -60956,14 +61283,14 @@ async function checkComp(args, transport2) {
     time: r64((ownedTo + every) * fd),
     framesLeft: remaining
   } : null;
-  const outDir = path12.resolve(
-    args.outDir ?? path12.join(
+  const outDir = path13.resolve(
+    args.outDir ?? path13.join(
       os4.tmpdir(),
       "comp-room-check",
       `${String(plan.compName).replace(/[^A-Za-z0-9_-]+/g, "-").slice(0, 40)}-${Date.now()}`
     )
   ).replace(/\\/g, "/");
-  const capDir = path12.join(outDir, `captures-${randomUUID3().slice(0, 8)}`).replace(/\\/g, "/");
+  const capDir = path13.join(outDir, `captures-${randomUUID3().slice(0, 8)}`).replace(/\\/g, "/");
   const readOnly = readOnlyMode();
   const target = {
     width: Math.max(1, Math.round(plan.width / downsample)),
@@ -61056,10 +61383,10 @@ async function checkComp(args, transport2) {
         failures.push({ frame: f.frame, error: `could not read the capture: ${err instanceof Error ? err.message : String(err)}` });
       }
       readSeconds += (performance.now() - r0) / 1e3;
-      await fs10.rm(f.path, { force: true });
+      await fs11.rm(f.path, { force: true });
     }
   }
-  await fs10.rm(capDir, { recursive: true, force: true });
+  await fs11.rm(capDir, { recursive: true, force: true });
   const findings = watcher ? watcher.finish() : null;
   const measureSeconds = watcher ? watcher.measureMs / 1e3 : 0;
   let nextOut = next;
@@ -61153,7 +61480,7 @@ async function checkComp(args, transport2) {
     sheetSeconds = (performance.now() - s0) / 1e3;
     report.sheet = sheet;
   }
-  await fs10.rmdir(outDir).catch(() => {
+  await fs11.rmdir(outDir).catch(() => {
   });
   const total = (performance.now() - started) / 1e3;
   report.timings = {
@@ -61289,11 +61616,11 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
     if (!got?.path) continue;
     try {
       const pic = await readPicture(got.path, target, convert);
-      await fs10.writeFile(got.path, encodePngSrgb8(pic.width, pic.height, pic.rgb));
+      await fs11.writeFile(got.path, encodePngSrgb8(pic.width, pic.height, pic.rgb));
       images.push({ width: pic.width, height: pic.height, rgb: pic.rgb, bitDepth: 8 });
       kept.push({ frame: c.frame, time: r64(c.frame * fd), kinds: c.kinds, ...c.why ? { why: c.why } : {}, path: got.path });
     } catch {
-      await fs10.rm(got.path, { force: true });
+      await fs11.rm(got.path, { force: true });
     }
   }
   if (images.length === 0) return { writtenTo: null, error: "none of the sheet's frames could be read" };
@@ -61305,8 +61632,8 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
     thumbWidth: tileW,
     labels
   });
-  const sheetPath = path12.join(outDir, `check-sheet-${tag}.png`).replace(/\\/g, "/");
-  await fs10.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+  const sheetPath = path13.join(outDir, `check-sheet-${tag}.png`).replace(/\\/g, "/");
+  await fs11.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
   return {
     writtenTo: sheetPath,
     size: [sheet.width, sheet.height],
@@ -61843,8 +62170,8 @@ var layerInfoTool = defineTool({
 });
 
 // src/tools/project-export.ts
-import { promises as fs11 } from "node:fs";
-import * as path13 from "node:path";
+import { promises as fs12 } from "node:fs";
+import * as path14 from "node:path";
 init_config();
 var projectExportTool = defineTool({
   name: "ae_project_export_json",
@@ -61866,7 +62193,7 @@ var projectExportTool = defineTool({
       const rejection = rejectedOutputPath(args.outPath);
       if (rejection !== null) {
         return errorResult("IO", rejection, {
-          details: { outPath: path13.resolve(args.outPath) },
+          details: { outPath: path14.resolve(args.outPath) },
           hint: "Write the document somewhere outside the mailbox, or omit outPath to receive it inline."
         });
       }
@@ -61885,10 +62212,10 @@ var projectExportTool = defineTool({
     const pretty = args.pretty ?? !!args.outPath;
     const jsonText = JSON.stringify(doc, null, pretty ? 2 : 0);
     if (args.outPath) {
-      const abs = path13.resolve(args.outPath);
+      const abs = path14.resolve(args.outPath);
       try {
-        await fs11.mkdir(path13.dirname(abs), { recursive: true });
-        await fs11.writeFile(abs, jsonText, "utf8");
+        await fs12.mkdir(path14.dirname(abs), { recursive: true });
+        await fs12.writeFile(abs, jsonText, "utf8");
       } catch (err) {
         return errorResult(
           "IO",
@@ -61919,21 +62246,21 @@ var projectExportTool = defineTool({
 });
 
 // src/tools/project-import.ts
-import { promises as fs12 } from "node:fs";
-import * as path14 from "node:path";
+import { promises as fs13 } from "node:fs";
+import * as path15 from "node:path";
 
 // src/schema.ts
-var SCHEMA_VERSION = 2;
+var SCHEMA_VERSION = 3;
 
 // src/validate.ts
 var Validator = class {
   issues = [];
   warnings = [];
-  err(path16, message) {
-    this.issues.push({ path: path16, message });
+  err(path17, message) {
+    this.issues.push({ path: path17, message });
   }
-  warn(path16, message) {
-    this.warnings.push({ path: path16, message });
+  warn(path17, message) {
+    this.warnings.push({ path: path17, message });
   }
   isObject(v) {
     return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -62034,64 +62361,64 @@ function validateAeProjectDoc(doc) {
   }
   return { ok: v.issues.length === 0, issues: v.issues, warnings: v.warnings };
 }
-function validateLayer(v, path16, layer) {
+function validateLayer(v, path17, layer) {
   if (!v.isObject(layer)) {
-    v.err(path16, "not an object");
+    v.err(path17, "not an object");
     return;
   }
-  if (typeof layer.index !== "number") v.err(`${path16}.index`, "missing or not a number");
-  if (typeof layer.name !== "string") v.err(`${path16}.name`, "missing or not a string");
-  if (typeof layer.type !== "string") v.err(`${path16}.type`, "missing or not a string");
+  if (typeof layer.index !== "number") v.err(`${path17}.index`, "missing or not a number");
+  if (typeof layer.name !== "string") v.err(`${path17}.name`, "missing or not a string");
+  if (typeof layer.type !== "string") v.err(`${path17}.type`, "missing or not a string");
   else if (["AVLayer", "TextLayer", "ShapeLayer", "CameraLayer", "LightLayer", "Layer"].indexOf(
     layer.type
   ) === -1) {
-    v.warn(`${path16}.type`, `unknown layer type: ${layer.type}`);
+    v.warn(`${path17}.type`, `unknown layer type: ${layer.type}`);
   }
   if (layer.transformGroup)
-    validatePropertyGroup(v, `${path16}.transformGroup`, layer.transformGroup);
-  if (layer.effectsGroup) validatePropertyGroup(v, `${path16}.effectsGroup`, layer.effectsGroup);
-  if (layer.masksGroup) validatePropertyGroup(v, `${path16}.masksGroup`, layer.masksGroup);
-  if (layer.textGroup) validatePropertyGroup(v, `${path16}.textGroup`, layer.textGroup);
-  if (layer.contentsGroup) validatePropertyGroup(v, `${path16}.contentsGroup`, layer.contentsGroup);
-  if (layer.markers) validateProperty(v, `${path16}.markers`, layer.markers);
+    validatePropertyGroup(v, `${path17}.transformGroup`, layer.transformGroup);
+  if (layer.effectsGroup) validatePropertyGroup(v, `${path17}.effectsGroup`, layer.effectsGroup);
+  if (layer.masksGroup) validatePropertyGroup(v, `${path17}.masksGroup`, layer.masksGroup);
+  if (layer.textGroup) validatePropertyGroup(v, `${path17}.textGroup`, layer.textGroup);
+  if (layer.contentsGroup) validatePropertyGroup(v, `${path17}.contentsGroup`, layer.contentsGroup);
+  if (layer.markers) validateProperty(v, `${path17}.markers`, layer.markers);
   if (layer.timeRemapProperty)
-    validateProperty(v, `${path16}.timeRemapProperty`, layer.timeRemapProperty);
+    validateProperty(v, `${path17}.timeRemapProperty`, layer.timeRemapProperty);
 }
-function validatePropertyGroup(v, path16, group) {
+function validatePropertyGroup(v, path17, group) {
   if (!v.isObject(group)) {
-    v.err(path16, "not an object");
+    v.err(path17, "not an object");
     return;
   }
-  if (typeof group.matchName !== "string") v.err(`${path16}.matchName`, "missing or not a string");
+  if (typeof group.matchName !== "string") v.err(`${path17}.matchName`, "missing or not a string");
   if (Array.isArray(group.properties)) {
     for (let i = 0; i < group.properties.length; i++) {
-      validateProperty(v, `${path16}.properties[${i}]`, group.properties[i]);
+      validateProperty(v, `${path17}.properties[${i}]`, group.properties[i]);
     }
   }
   if (Array.isArray(group.groups)) {
     for (let i = 0; i < group.groups.length; i++) {
-      validatePropertyGroup(v, `${path16}.groups[${i}]`, group.groups[i]);
+      validatePropertyGroup(v, `${path17}.groups[${i}]`, group.groups[i]);
     }
   }
 }
-function validateProperty(v, path16, prop) {
+function validateProperty(v, path17, prop) {
   if (!v.isObject(prop)) {
-    v.err(path16, "not an object");
+    v.err(path17, "not an object");
     return;
   }
-  if (typeof prop.matchName !== "string") v.err(`${path16}.matchName`, "missing or not a string");
+  if (typeof prop.matchName !== "string") v.err(`${path17}.matchName`, "missing or not a string");
   if (Array.isArray(prop.keyframes)) {
     for (let i = 0; i < prop.keyframes.length; i++) {
-      validateKeyframe(v, `${path16}.keyframes[${i}]`, prop.keyframes[i]);
+      validateKeyframe(v, `${path17}.keyframes[${i}]`, prop.keyframes[i]);
     }
   }
 }
-function validateKeyframe(v, path16, kf) {
+function validateKeyframe(v, path17, kf) {
   if (!v.isObject(kf)) {
-    v.err(path16, "not an object");
+    v.err(path17, "not an object");
     return;
   }
-  if (typeof kf.time !== "number") v.err(`${path16}.time`, "missing or not a number");
+  if (typeof kf.time !== "number") v.err(`${path17}.time`, "missing or not a number");
 }
 
 // src/tools/project-import.ts
@@ -62120,9 +62447,9 @@ var projectImportTool = defineTool({
   handler: async (args, transport2) => {
     let doc;
     if (args.inPath) {
-      const abs = path14.resolve(args.inPath);
+      const abs = path15.resolve(args.inPath);
       try {
-        doc = JSON.parse(await fs12.readFile(abs, "utf8"));
+        doc = JSON.parse(await fs13.readFile(abs, "utf8"));
       } catch (err) {
         return errorResult(
           "IO",
@@ -62192,33 +62519,52 @@ function summarizePlan(doc) {
 }
 
 // src/tools/project-info.ts
-var CODE2 = `
+init_registry();
+var PROJECT_INFO_DEFAULT_LIMIT = 100;
+function projectInfoCode(args) {
+  const limit = Math.max(1, Math.min(1e3, Math.floor(args.limit ?? PROJECT_INFO_DEFAULT_LIMIT)));
+  const offset = Math.max(0, Math.floor(args.offset ?? 0));
+  return `
     var proj = app.project;
+    var _limit = ${jsxVal(limit)};
+    var _offset = ${jsxVal(offset)};
+    var counts = {};
     var items = [];
     for (var i = 1; i <= proj.numItems; i++) {
-        items.push(AE.serializeItemSummary(proj.item(i)));
+        var it = proj.item(i);
+        var tn = AE.itemTypeName(it);
+        counts[tn] = (counts[tn] || 0) + 1;
+        if (i > _offset && items.length < _limit) items.push(AE.serializeItemSummary(it));
     }
     var active = proj.activeItem;
+    var shownTo = Math.min(proj.numItems, _offset + items.length);
     return {
         file: proj.file ? proj.file.fsName.replace(/\\\\/g, "/") : null,
         dirty: app.project.dirty,
         numItems: proj.numItems,
+        counts: counts,
         bitsPerChannel: proj.bitsPerChannel,
         timeDisplayType: String(proj.timeDisplayType),
         activeItem: active ? { id: active.id, name: active.name, typeName: AE.itemTypeName(active) } : null,
-        items: items
+        items: items,
+        shown: { from: items.length ? _offset + 1 : 0, to: shownTo, of: proj.numItems },
+        more: shownTo < proj.numItems ? "Items " + (shownTo + 1) + " to " + proj.numItems + " not listed: call again with offset " + shownTo + " (limit up to 1000), or use project.find_layers or comp info for what you need." : null
     };
 `;
+}
 var projectInfoTool = defineTool({
   name: "ae_project_info",
   title: "Project info",
-  description: "Project-level info: file path, dirty flag, all items with type/summary, active item. Start here.",
+  description: `Project-level info: file path, dirty flag, counts of items by type, active item, and the items with type/summary, ${PROJECT_INFO_DEFAULT_LIMIT} at a time (offset and limit for the rest; \`more\` says what was left out). Start here.`,
   group: "inspect",
   blockedInReadOnly: false,
   effect: "read",
-  inputShape: {},
-  handler: async (_args, transport2) => {
-    const result = await transport2.execute({ code: CODE2, label: "project_info" });
+  inputShape: {
+    limit: external_exports.number().int().min(1).max(1e3).optional().describe(`Items to list (default ${PROJECT_INFO_DEFAULT_LIMIT}; about 400 characters each).`),
+    offset: external_exports.number().int().min(0).optional().describe("Items to skip before listing (default 0).")
+  },
+  handler: async (args, transport2) => {
+    const result = await transport2.execute({ code: projectInfoCode(args), label: "project_info" });
     return toMcpResult(result);
   }
 });
@@ -62263,7 +62609,7 @@ var saveProjectTool = defineTool({
 });
 
 // src/tools/version-info.ts
-var CODE3 = `
+var CODE2 = `
     return {
         app: {
             version: app.version,
@@ -62322,7 +62668,7 @@ var versionInfoTool = defineTool({
   effect: "read",
   inputShape: {},
   handler: async (_args, transport2) => {
-    const result = await transport2.execute({ code: CODE3, label: "version_info" });
+    const result = await transport2.execute({ code: CODE2, label: "version_info" });
     return toMcpResult(result);
   }
 });
@@ -62368,7 +62714,7 @@ var ALL_TOOLS = [
 
 // src/tools/library.ts
 import { readFileSync as readFileSync2, realpathSync as realpathSync2 } from "node:fs";
-import path15 from "node:path";
+import path16 from "node:path";
 import { createHash } from "node:crypto";
 init_config();
 
@@ -62458,17 +62804,17 @@ function findModules(catalog, query) {
 
 // src/tools/library.ts
 function boundedFile(base, relative3) {
-  const candidate = path15.resolve(base, relative3);
+  const candidate = path16.resolve(base, relative3);
   const inside = (file3) => {
-    const rel = path15.relative(base, file3);
-    if (!rel || rel === ".." || rel.startsWith(".." + path15.sep) || path15.isAbsolute(rel)) throw new Error("Library path escapes bundle");
+    const rel = path16.relative(base, file3);
+    if (!rel || rel === ".." || rel.startsWith(".." + path16.sep) || path16.isAbsolute(rel)) throw new Error("Library path escapes bundle");
   };
   inside(candidate);
   const file2 = realpathSync2(candidate);
   inside(file2);
   return file2;
 }
-function readLibrary(document, query, root = path15.resolve(PACKAGE_ROOT, "../library")) {
+function readLibrary(document, query, root = path16.resolve(PACKAGE_ROOT, "../library")) {
   const base = realpathSync2(root);
   const manifest = JSON.parse(readFileSync2(boundedFile(base, "manifest.json"), "utf8"));
   const entries = manifest.documents;
