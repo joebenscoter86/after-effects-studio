@@ -158,4 +158,44 @@ export interface SeriesSummary {
  * and repeats name the pairs beside them as unreliable.
  */
 export declare function summarizeSeries(pairs: SeriesPair[], t: DiffThresholds): SeriesSummary;
+/** Mean absolute change of luma per cell over the pairs counted, row-major. */
+export interface MotionMap {
+    width: number;
+    height: number;
+    /** The cell's size in frame pixels. */
+    cell: number;
+    values: number[];
+}
+/** Luma averaged over cells of `cell` px: the picture a motion map is built from. */
+export declare function cellLuma(img: DecodedPng, cell: number): Float32Array;
+/** Centre and spread of what moves, as shares of the frame's width and height; null when nothing does. */
+export declare function motionCentre(m: MotionMap): {
+    x: number;
+    y: number;
+    spreadX: number;
+    spreadY: number;
+} | null;
+export interface MotionRegistration {
+    /** The build's moving parts are this many times their size in the reference. */
+    scale: number;
+    /** Where the reference's centre of motion lands in the build, as shares of the frame. */
+    from: {
+        x: number;
+        y: number;
+    };
+    to: {
+        x: number;
+        y: number;
+    };
+    /** Correlation of the two maps once lined up (1 is the same pattern). */
+    correlation: number;
+}
+/**
+ * Line the build's motion map up with the reference's: the scale (0.5 to 1.6)
+ * and shift that best match the two patterns of change, searched round their
+ * centres of motion. Two cuts of the same take move the same way, so the
+ * scale is how much bigger or smaller the moving subject is; on different
+ * footage the correlation stays low.
+ */
+export declare function registerMotionMaps(ref: MotionMap, build: MotionMap): MotionRegistration | null;
 //# sourceMappingURL=motion.d.ts.map

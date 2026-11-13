@@ -1,3 +1,4 @@
+import { type MotionMap, type MotionRegistration } from "./motion.js";
 import type { DecodedPng } from "./png16.js";
 export type Rgb = [number, number, number];
 export interface EdgeBand {
@@ -371,4 +372,171 @@ export interface LookSeries {
 export declare function summarizeLookSeries(frames: Array<Map<string, LookCrop>>, args: LookArgs): LookSeries;
 /** A message naming the field, or null when `look` is usable. */
 export declare function lookArgsError(args: Record<string, unknown>): string | null;
+/**
+ * Starting points, not measured judgments, for what counts as a difference:
+ * a CIELAB a* or b* of 2 (as `look` calls a cast), 3 in L*, 0.02 in a black,
+ * white or mean level, a quarter in edge width or grain, 5% in the subject's
+ * size, 3% of the frame in a position. Two motion maps line up as the same
+ * footage at a correlation of 0.6 or more (0.94 measured between two builds
+ * of one take; see reference-study.md).
+ */
+export declare const REFERENCE_DEFAULTS: {
+    grid: number;
+    paletteColours: number;
+    /** Every this many pixels across and down go into the main colours. */
+    paletteStep: number;
+    /** Frames spread over the input that colour, levels, sharpness and grain are read on. */
+    lookFrames: number;
+    /** Cell of the motion map, px. */
+    motionCell: number;
+    castStep: number;
+    lightnessStep: number;
+    levelStep: number;
+    ratioStep: number;
+    sizeStep: number;
+    placeStep: number;
+    sameFootage: number;
+    shareStep: number;
+    /** A colour of the reference with no colour of the build within this (CIELAB) is missing. */
+    colourMatch: number;
+    /**
+     * With nothing saying how far apart a folder's frames are: a median change
+     * between neighbouring files of this or more reads as frames far apart. On
+     * the round-two movies, every twentieth frame read medians of 0.026 and
+     * 0.029; every frame 0.007 (largest pair 0.029, a cut 0.088).
+     */
+    spreadGuess: number;
+};
+export interface ReferenceSpacing {
+    /** given: the caller's frameStep; file names: numbers in them; rendered: frame numbers asked of After Effects; assumed: nothing said, read as neighbours; guessed from change: nothing said, read as spread. */
+    how: "given" | "file names" | "rendered" | "assumed" | "guessed from change";
+    /** Frames between neighbouring inputs, or null when uneven or unknown. */
+    step: number | null;
+}
+/** The frame cut into thirds each way, named as a person would point at them. */
+export declare function gridRegions(width: number, height: number): RegionSpec[];
+export interface ReferenceRegion {
+    name: string;
+    role: LookRole | null;
+    /** CIELAB of the region's mean colour over the frames read. */
+    colour: Lab;
+    mean: Rgb;
+    /** Median over the frames of the region's edge width and widest tenth, px. */
+    sharpness: {
+        edgeWidth: number | null;
+        p90: number | null;
+    };
+    /** Spatial grain, mean of the three channels, 8-bit steps. */
+    grain: number;
+}
+export interface ReferenceReport {
+    frames: number;
+    /** What the report assumed, in words. */
+    notes: string[];
+    size: [number, number];
+    frameRate: number | null;
+    /** Main colours over the frames read, largest share first. */
+    palette: Array<{
+        hex: string;
+        colour: Lab;
+        share: number;
+    }>;
+    levels: {
+        lumaBlack: number;
+        lumaWhite: number;
+        lumaMean: number;
+        black: Rgb;
+        white: Rgb;
+    };
+    regions: ReferenceRegion[];
+    /** Centres of brightness and of detail, as shares of the frame's width and height. */
+    weight: {
+        brightness: {
+            x: number;
+            y: number;
+        };
+        detail: {
+            x: number;
+            y: number;
+        };
+    };
+    sharpness: {
+        edgeWidth: number | null;
+    };
+    grain: number;
+    motion: {
+        /** The frames were consecutive, so cuts and motion were read. */
+        consecutive: boolean;
+        pairs: number;
+        /** How far apart the frames are, and how that was known. */
+        spacing: ReferenceSpacing;
+        /** The map was built from frames that are not neighbours: it shows what differs across the clip, not motion. */
+        spread: boolean;
+        cuts: Array<{
+            frame: number;
+            time: number | null;
+        }>;
+        /** Mean change between neighbouring frames, cuts left out (display values 0..1). */
+        meanChange: number | null;
+        /** Where the picture moves, cuts left out. */
+        map: MotionMap;
+        /** The centre and spread of what moves (the subject, in a talking-head shot); null with no motion. */
+        subject: {
+            x: number;
+            y: number;
+            spreadX: number;
+            spreadY: number;
+        } | null;
+    };
+}
+export interface ReferenceInputFrame {
+    img: DecodedPng;
+    /** The frame's number in its source; consecutive numbers make pairs. */
+    frame: number;
+    time?: number;
+}
+export interface ReferenceOptions {
+    /** How many frames will be added: the look frames are spread over them. */
+    total: number;
+    regions?: LookRegionSpec[];
+    frameRate?: number;
+    motionCell?: number;
+    lookFrames?: number;
+    /** How far apart the frames are (default: rendered when every pair is a neighbour). With how "assumed" the change between pairs may overrule it. */
+    spacing?: ReferenceSpacing;
+}
+/**
+ * The reference report, read one frame at a time so a movie never sits in
+ * memory: main colours and their shares, black and white points and mean,
+ * colour, sharpness and grain at the grid's regions and any named ones, where
+ * the weight of the frame sits, and, when the frames are consecutive, cuts
+ * and how much and where the picture moves. Colour and texture are read on
+ * up to `lookFrames` frames spread over the `total`; motion on every
+ * neighbouring pair (one previous picture kept).
+ */
+export declare function referenceReader(opts: ReferenceOptions): {
+    add: (f: ReferenceInputFrame) => void;
+    finish: () => ReferenceReport;
+};
+/** The reference report on frames already in memory (a still, or a few frames). */
+export declare function referenceReport(frames: ReferenceInputFrame[], opts?: Omit<ReferenceOptions, "total">): ReferenceReport;
+export interface ReferenceDifference {
+    measure: string;
+    /** How many times the smallest difference this measure calls a difference: the list's order. */
+    size: number;
+    reading: string;
+    reference?: unknown;
+    build?: unknown;
+}
+export interface ReferenceComparison {
+    differences: ReferenceDifference[];
+    /** The moving subject lined up between the two, when both have motion. */
+    subject: (MotionRegistration & {
+        compared: boolean;
+    }) | null;
+    notes: string[];
+    reading: string;
+}
+/** The build against the reference: every difference over its step, largest first, in words. */
+export declare function compareReferences(ref: ReferenceReport, build: ReferenceReport): ReferenceComparison;
 //# sourceMappingURL=sheet.d.ts.map
