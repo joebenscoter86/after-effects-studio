@@ -30,6 +30,15 @@ beforeAll(async () => {
 afterAll(async () => { await fs.rm(dir, { recursive: true, force: true }); });
 
 describe("video.moves", () => {
+  it("a transcript puts the words in each scene and names the word spoken as each event starts", async (ctx) => {
+    if (!tracks["slide-ease"]) return ctx.skip();
+    const tp = path.join(dir, "transcript.json");
+    await fs.writeFile(tp, JSON.stringify([{ text: " Here", startMs: 100, endMs: 300 }, { text: " it", startMs: 320, endMs: 400 }, { text: " goes", startMs: 420, endMs: 700 }]));
+    const r: any = await runMoves({ outDir: path.join(dir, "moves-words"), tracks: [{ path: tracks["slide-ease"], label: "slide" }], transcript: tp });
+    const sheet = await fs.readFile(r.files.beatSheet, "utf8");
+    expect(sheet).toMatch(/- Words: "Here it goes"/);
+    expect(sheet).toMatch(/\(on "it"\): slide/);   // the slide starts at 0.333 s, after "it" began at 0.32 s
+  }, 60_000);
   it("the table, marked measured / inferred / untested, and a beat sheet with the events", async (ctx) => {
     if (!tracks["slide-ease"]) return ctx.skip();
     const r: any = await runMoves({ outDir: path.join(dir, "moves"), tracks: [{ path: tracks["slide-ease"], label: "slide" }], shots,

@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { probeVideo } from "../src/video/decode.js";
 import { runTrack } from "../src/video/run-track.js";
-import { clips, writeClip } from "./helpers/video-clips.js";
+import { aeEase, clips, writeClip } from "./helpers/video-clips.js";
 
 let dir: string;
 const files: Record<string, string> = {};
@@ -24,6 +24,9 @@ async function track(name: string, region: number[], extra: Record<string, unkno
   return runTrack({ file: files[name], outDir: path.join(dir, name), region, ...extra });
 }
 const moveOf = (r: any, channel: string) => r.moves.find((m: any) => m.channel === channel);
+// the slide-ease clip's visible span as a hand study counts it: from its last frame at rest (10) to the first frame
+// within 2 % of its end
+const visibleTruth = (() => { for (let f = 10; f <= 34; f++) if (aeEase((f - 10) / 24, 0.33, 0.8) >= 0.98) return f - 10; return 24; })();
 
 describe("video.track", () => {
   it("an eased slide: duration, distance, influences, and keys to apply", async (ctx) => {
@@ -108,5 +111,50 @@ describe("video.track", () => {
     const m = moveOf(await track("slide-over-moving-ground", [296, 84, 48, 48]), "position");
     expect(Math.abs(m.distance - 260) / 260).toBeLessThan(0.02);
     expect(Math.abs((m.fits.ease.end - m.fits.ease.start) * fps - 24)).toBeLessThanOrEqual(1);
+  }, 60_000);
+  it("two durations named for what they are: the fit's keys and the visible span; and the witness's span", async (ctx) => {
+    if (!files["slide-ease"]) return ctx.skip();
+    const r: any = await track("slide-ease", [296, 84, 48, 48]);
+    const m = moveOf(r, "position");
+    expect(Math.abs(m.duration.keys.at - 24)).toBeLessThanOrEqual(1);
+    expect(Math.abs(m.duration.visible.at - visibleTruth)).toBeLessThanOrEqual(1);
+    expect(visibleTruth).toBeLessThan(24);   // a slow ease in: the visible span ends before the last key
+    expect(m.duration.seconds).toBe(m.duration.visible.seconds);
+    expect(Math.abs(m.witness.at - 24)).toBeLessThanOrEqual(1);
+    expect(m.seen).toMatchObject({ start: true, end: true });
+    expect(m.status).toBe("measured");
+  }, 60_000);
+  it("a slide that enters from outside the frame is partial: its start was not seen, and nothing of it is fitted as whole", async (ctx) => {
+    if (!files["slide-enters"]) return ctx.skip();
+    const r: any = await track("slide-enters", [176, 84, 48, 48]);
+    expect(r.moves.length).toBeGreaterThan(0);
+    for (const m of r.moves) expect(m.status).toMatch(/^(partial|uncertain)/);
+    const m = moveOf(r, "position");
+    expect(m.status).toMatch(/^partial: the start was not seen/);
+    expect(m.distance).toBeNull(); expect(m.duration.seconds).toBeNull(); expect(m.apply).toBeNull();
+    expect(m.notMeasured).toEqual(["duration", "distance", "ease out"]);
+    // the ink measure, by difference from the empty first frame, sees it enter at the frame's edge: partial too
+    const ri: any = await track("slide-enters", [176, 84, 48, 48], { ink: { box: [0, 0, 384, 216], mask: { empty: 0 }, curves: ["x1"] } });
+    const mi = moveOf(ri, "ink.x1");
+    expect(mi.status).toMatch(/^partial/);
+  }, 60_000);
+  it("a move blurred through its first half is partial or uncertain, never a clean fit", async (ctx) => {
+    if (!files["blur-first-half"]) return ctx.skip();
+    const r: any = await track("blur-first-half", [296, 84, 48, 48]);
+    expect(r.moves.length).toBeGreaterThan(0);
+    for (const m of r.moves) expect(m.status).toMatch(/^(partial|uncertain)/);
+  }, 60_000);
+  it("the ink measure: a colour mask's centroid agrees with the match, and a fade's level", async (ctx) => {
+    if (!files["slide-ease"] || !files["fade"]) return ctx.skip();
+    const r: any = await track("slide-ease", [296, 84, 48, 48], { ink: { box: [0, 60, 384, 96], mask: { hue: [0, 60], minSat: 0.2 }, curves: ["centroid"] } });
+    const mi = moveOf(r, "ink.centroid"), mm = moveOf(r, "position");
+    expect(Math.abs(mi.distance - 260) / 260).toBeLessThan(0.02);
+    expect(Math.abs(mi.duration.visible.at - visibleTruth)).toBeLessThanOrEqual(1);
+    expect(mm.agreement.within).toBe(true);
+    expect(mm.status).toMatch(/^measured: match and ink/);
+    const f: any = await track("fade", [168, 84, 48, 48], { ink: { mask: {}, curves: ["level"] } });
+    const ml = moveOf(f, "ink.level");
+    expect(Math.abs(ml.duration.visible.at - 12)).toBeLessThanOrEqual(1);
+    expect(ml.best).toBe("linear");
   }, 60_000);
 });

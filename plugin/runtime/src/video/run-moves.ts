@@ -3,8 +3,8 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
-import { analyzeCurve, type CurveMove, type CurveSample } from "../color/motion.js";
-import { fitEaseSeen, fitMove, type Sample } from "./fit.js";
+import { type CurveSample } from "../color/motion.js";
+import { movesOfChannel } from "./measure-move.js";
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -19,8 +19,9 @@ function row(label: string, m: Json, atFps: number): Json {
   const best = m.fits[m.best], at = (s: number) => r2(s * atFps);
   const tail = m.fits.springTail;
   return {
-    move: label, channel: m.channel, unit: m.unit,
-    start: { seconds: r2(m.from.time * 1000) / 1000, at: at(m.from.time) }, duration: { seconds: m.duration.seconds, at: at(m.duration.seconds) },
+    move: label, measure: m.measure ?? "match", channel: m.channel, unit: m.unit,
+    start: { seconds: r2(m.from.time * 1000) / 1000, at: at(m.from.time) },
+    duration: m.duration.seconds === null ? { seconds: null, at: null, keys: m.duration.keys } : { seconds: m.duration.seconds, at: at(m.duration.seconds), keys: m.duration.keys },
     distance: m.distance, from: m.start, to: m.end,
     ease: m.best === "ease" ? `${best.outInfluence} / ${best.inInfluence}` : m.best,
     spring: tail ? { A: tail.A, f: tail.f, d: tail.d } : null,
@@ -44,6 +45,20 @@ export async function runMoves(args: Json): Promise<Json> {
   // moves carried by hand (the reader names why), and moves named but not tracked
   for (const m of (args.inferred as Json[]) ?? []) rows.push({ move: m.label ?? "inferred", channel: m.channel ?? null, status: "inferred", reason: m.reason ?? "no reason given", ...m });
   for (const m of (args.untested as Json[]) ?? []) rows.push({ move: m.label ?? "untested", status: "untested", reason: m.reason ?? "not tracked" });
+  // the words: a transcript as word or segment tokens ({ text, start, end } in seconds, { text, startMs, endMs }, or
+  // whisper's { transcription: [{ text, offsets: { from, to } }] })
+  let words: Array<{ text: string; start: number; end: number }> = [];
+  if (args.transcript !== undefined) {
+    const tj = await readJson(args.transcript, "transcript");
+    if ("error" in tj) return { ok: false, error: tj.error };
+    const list: Json[] = Array.isArray(tj) ? tj : Array.isArray(tj.transcription) ? tj.transcription : Array.isArray(tj.words) ? tj.words : Array.isArray(tj.segments) ? tj.segments : [];
+    words = list.map((w) => ({ text: String(w.text ?? w.word ?? ""),
+      start: typeof w.start === "number" ? w.start : typeof w.startMs === "number" ? w.startMs / 1000 : w.offsets ? w.offsets.from / 1000 : NaN,
+      end: typeof w.end === "number" ? w.end : typeof w.endMs === "number" ? w.endMs / 1000 : w.offsets ? w.offsets.to / 1000 : NaN }))
+      .filter((w) => w.text.trim() && Number.isFinite(w.start));
+  }
+  const spoken = (a: number, b: number) => words.filter((w) => w.start >= a - 1e-6 && w.start < b).map((w) => w.text).join("").replace(/\s+/g, " ").trim();
+  const wordAt = (t: number) => { let best: { text: string; start: number } | null = null; for (const w of words) if (w.start <= t + 0.05 && (!best || w.start > best.start)) best = w; return best ? best.text.trim() : null; };
   const shots = args.shots ? await readJson(args.shots, "shots") : null, census = args.census ? await readJson(args.census, "census") : null;
   if (shots && "error" in shots) return { ok: false, error: shots.error };
   if (census && "error" in census) return { ok: false, error: census.error };
@@ -54,8 +69,9 @@ export async function runMoves(args: Json): Promise<Json> {
     const inShot = rows.filter((r) => r.start && r.start.seconds >= s.start - 1e-6 && r.start.seconds <= s.end + 1e-6);
     const travel = census ? (census.steps as Json[] | undefined)?.filter((st) => st.time >= s.start && st.time <= s.end && st.label === "T").length ?? 0 : null;
     lines.push(`## Scene ${i + 1} — ${r2(s.start * atFps)} to ${Number.isFinite(s.end) ? r2(s.end * atFps) : "end"}`, "");
+    if (words.length) lines.push(`- Words: "${spoken(s.start, Number.isFinite(s.end) ? s.end : Infinity) || "(none spoken)"}"`);
     lines.push("- One visual argument; operation (before → action → resolution): (not measured: read the picture)");
-    lines.push(`- Events: ${inShot.length ? inShot.map((r) => `${r.start.at}: ${r.move} (${r.channel}) ${r.distance}${r.unit ?? ""} over ${r.duration.at} frames, ${r.best === "ease" ? `ease ${r.ease}` : r.best}${r.spring ? `, spring A ${r.spring.A} f ${r.spring.f} d ${r.spring.d}` : ""}`).join("; ") : "none measured"}`);
+    lines.push(`- Events: ${inShot.length ? inShot.map((r) => `${r.start.at}${words.length && wordAt(r.start.seconds) ? ` (on "${wordAt(r.start.seconds)}")` : ""}: ${r.move} (${r.channel}${String(r.status).startsWith("measured") ? "" : `, ${String(r.status).split(":")[0]}`}) ${r.distance ?? "?"}${r.unit ?? ""} over ${r.duration?.at ?? "?"} frames, ${r.best === "ease" ? `ease ${r.ease}` : r.best}${r.spring ? `, spring A ${r.spring.A} f ${r.spring.f} d ${r.spring.d}` : ""}`).join("; ") : "none measured"}`);
     lines.push(`- Camera: ${travel === null ? "(no census given)" : travel ? `whole-stage travel in ${travel} census steps` : "no whole-stage travel in the census"}`);
     lines.push(`- Continuity: ${i + 1 < scenes.length ? "a cut to the next shot" : "the last shot"}`);
     lines.push("- Type roles, exact strings, material, depth, data sources: (not measured)", "");
@@ -73,20 +89,9 @@ export async function runMoves(args: Json): Promise<Json> {
 export interface Tolerance { frames: number; distanceShare: number; easePoints: number }
 export const TIGHT: Tolerance = { frames: 1, distanceShare: 0.02, easePoints: 10 };
 
-/** Moves of a sampled property, fitted as video.track fits them (so a built curve and a measured move compare like for like). */
+/** Moves of a sampled property, measured as video.track measures them (so a built curve and a measured move compare like for like). */
 export function movesOfSamples(samples: CurveSample[], fps: number, channel: string): Json[] {
-  const report = analyzeCurve(samples, fps, { joinGap: 6 }), out: Json[] = [];
-  for (const mv of report.moves as CurveMove[]) {
-    const i0 = samples.findIndex((s) => s.frame === mv.from), i1 = samples.findIndex((s) => s.frame === mv.to);
-    if (i0 < 0 || i1 <= i0) continue;
-    const startV = samples[i0].value, endV = samples[Math.min(samples.length - 1, i1)].value, way = endV.map((e, d) => e - startV[d]), len2 = way.reduce((s, x) => s + x * x, 0);
-    if (len2 <= 0) continue;
-    const prog: Sample[] = samples.slice(Math.max(0, i0 - 3), Math.min(samples.length, i1 + 7)).map((s) => ({ time: s.time, y: s.value.reduce((a, v, d) => a + (v - startV[d]) * way[d], 0) / len2 }));
-    const fits = fitMove(prog, { start: samples[i0].time, end: samples[i1].time }), best: Json = fits[fits.best], seen = fitEaseSeen(prog);
-    out.push({ channel, from: { frame: mv.from, time: samples[i0].time }, distance: Math.sqrt(len2), best: fits.best, fits: { ...fits, easeSeen: seen }, curve: mv,
-      duration: { seconds: seen ? seen.end - seen.start : fits.best === "spring" ? best.settle : best.end - best.start } });
-  }
-  return out;
+  return movesOfChannel(samples, { fps, atFps: fps, minMove: channel === "position" ? 1 : 0.5, epsAbs: 0.01 }).map((m) => ({ channel, ...m }));
 }
 
 /** One comparison line per quantity. */
@@ -94,8 +99,12 @@ function compare(label: string, measured: Json, built: Json, tol: Tolerance, atF
   const d = (a: number) => r2(a * atFps), checks: Json[] = [];
   const add = (what: string, mv: number, bv: number, unit: string, within: boolean) => checks.push({ what, measured: r2(mv), built: r2(bv), unit, within,
     reading: `${label}: ${what} ${r2(bv)}${unit} against ${r2(mv)}${unit}, ${within ? "within" : "outside"} tolerance` });
-  add("duration", d(measured.duration.seconds), d(built.duration.seconds), " frames", Math.abs(measured.duration.seconds - built.duration.seconds) * atFps <= tol.frames + 1e-9);
-  add("distance", measured.distance, built.distance, "", Math.abs(built.distance - measured.distance) <= tol.distanceShare * Math.abs(measured.distance) + 1e-9);
+  // the visible span on both sides (the last frame at rest to the first frame settled); a partial move has none
+  const md = measured.duration.seconds ?? null, bd = built.duration.seconds ?? null;
+  if (md === null || bd === null) checks.push({ what: "duration", within: false, reading: `${label}: duration not measured on ${md === null ? "the reference" : "the build"} (${md === null ? measured.status : built.status})` });
+  else add("duration", d(md), d(bd), " frames", Math.abs(md - bd) * atFps <= tol.frames + 1e-9);
+  if (measured.distance === null || built.distance === null) checks.push({ what: "distance", within: false, reading: `${label}: distance not measured on ${measured.distance === null ? "the reference" : "the build"}` });
+  else add("distance", measured.distance, built.distance, "", Math.abs(built.distance - measured.distance) <= tol.distanceShare * Math.abs(measured.distance) + 1e-9);
   // influences in the same convention on both sides: as seen (keys at 1.5 % and 98.5 % of the travel) when both have it
   const me = measured.fits.easeSeen && built.fits.easeSeen ? measured.fits.easeSeen : measured.fits.ease, be = measured.fits.easeSeen && built.fits.easeSeen ? built.fits.easeSeen : built.fits.ease;
   if (measured.best === "ease" || built.best === "ease") {

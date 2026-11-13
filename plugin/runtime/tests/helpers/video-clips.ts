@@ -161,6 +161,21 @@ export function clips(): Clip[] {
       truth: { path, move: { from: 10, to: 34, kind: "ease", params: { outInfluence: 40, inInfluence: 60, startSeconds: a, endSeconds: b } }, cuts: [], swaps: [], base: BASE } }); }
   // an eased slide over a background that scrolls 3 px a frame: the tracker must follow the patch, not the ground
   out.push(moveClip("slide-over-moving-ground", 60, 10, 24, [60, 108], [320, 108], (t) => aeEase(t, 0.5, 0.5), "ease", { outInfluence: 50, inInfluence: 50 }, "texture"));
+  // a slide that enters from outside the frame (beyond any search's reach): its start cannot be seen
+  out.push(moveClip("slide-enters", 50, 10, 24, [-60, 108], [200, 108], (t) => aeEase(t, 0.33, 0.8), "ease", { outInfluence: 33, inInfluence: 80 }));
+  // an eased slide with heavy motion blur in its first half: each frame averages the patch over its travel through a
+  // frame and a half, while the move is in its first half
+  { const patch = patchTexture(BASE, 7), back = background("flat", 11), n = 60, a = 10, dur = 24, path: Truth["path"] = [];
+    const xAt = (f: number) => { const t = f <= a ? 0 : f >= a + dur ? 1 : (f - a) / dur; return 60 + 260 * aeEase(t, 0.5, 0.5); };
+    for (let f = 0; f < n; f++) path.push({ x: xAt(f), y: 108, scale: 1, opacity: 1 });
+    out.push({ name: "blur-first-half", frames: n,
+      draw: (f) => {
+        if (f <= a || f > a + dur / 2) { const fr = Uint8Array.from(back(f)); place(fr, patch, BASE, xAt(f), 108, 1, 1); return fr; }
+        const acc = new Float64Array(W * H * 3), steps = 16;
+        for (let s = 0; s < steps; s++) { const fr = Uint8Array.from(back(f)); place(fr, patch, BASE, xAt(f - 1.5 + (1.5 * s) / (steps - 1)) , 108, 1, 1); for (let i = 0; i < acc.length; i++) acc[i] += fr[i] / steps; }
+        return Uint8Array.from(acc, (v) => Math.round(v));
+      },
+      truth: { path, move: { from: a, to: a + dur, kind: "ease", params: { outInfluence: 50, inInfluence: 50 } }, cuts: [], swaps: [], base: BASE } }); }
   return out;
 }
 
