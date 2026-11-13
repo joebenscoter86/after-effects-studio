@@ -1566,8 +1566,11 @@ AE.lintProject = function (proj, opts) {
             if (AE.DEFAULT_LAYER_NAME.test(L.name)) add("default name", it.name, L.name, "layer");
             var hasVideo = AE.safeGet(function () { return L.hasVideo; }, true);
             if (L.enabled === false && hasVideo !== false && !AE.safeGet(function () { return L.isTrackMatte; }, false) && !AE.safeGet(function () { return L.guideLayer; }, false)) {
+                var hasSound = AE.safeGet(function () { return L.hasAudio; }, false);
+                var soundOn = hasSound && AE.safeGet(function () { return L.audioEnabled; }, false);
                 if (AE.lintKeptForReclick(L)) kept.push({ item: it.name, layer: L.name, why: "kept switched off for a re-click: the matted layer, its gap fill or soft edge, which subject.use_cutout switches off when the rendered cut-out replaces them" });
-                else add("switched off", it.name, L.name, "switched off and not a track matte, a guide or sound only");
+                else if (soundOn) kept.push({ item: it.name, layer: L.name, why: "used for its sound: the picture is off and the sound is on" });
+                else add("switched off", it.name, L.name, hasSound ? "picture switched off and its sound is off too, and not a track matte or a guide" : "switched off and not a track matte, a guide or sound only");
             }
             if (L instanceof TextLayer) {
                 var font = AE.safeGet(function () { return L.property("ADBE Text Properties").property("ADBE Text Document").value.font; }, null);
