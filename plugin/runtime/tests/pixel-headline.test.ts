@@ -122,7 +122,7 @@ function makeAE(opts: { deepGlow: boolean; workingSpace?: string }) {
 const F = (n: number) => n / 30;
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps;
 const footage = (name: string, width = 1080, height = 1920, duration = 20) => ({ name, width, height, duration, isComp: false });
-const words = (w: number) => [["How", w - F(30)], ["to", w - F(26)], ["make", w - F(21)], ["the", w - F(16)], ["best", w - F(12)], ["shots", w], ["in", w + F(20.75)], ["thirty", w + F(27.2)], ["seconds", w + F(33.6)]]
+const words = (w: number): Array<{ text: string; t: number }> => ([["How", w - F(30)], ["to", w - F(26)], ["make", w - F(21)], ["the", w - F(16)], ["best", w - F(12)], ["shots", w], ["in", w + F(20.75)], ["thirty", w + F(27.2)], ["seconds", w + F(33.6)]] as Array<[string, number]>)
   .map(([text, t]) => ({ text, t }));
 function referenceBrief(clipsN = 3, extra: any = {}) {
   return { type: "opener", take: footage("take"), takeStart: 5.1, speakerScale: 90, face: { x0: 391, y0: 871, x1: 689, y1: 1272 }, pivotY: 1070,
@@ -239,7 +239,7 @@ describe("pixel-headline module", () => {
     expect(root.numProperties).toBe(r.blocks.length);
     const g = root.property(1), op = g.property("ADBE Vector Transform Group").property("ADBE Vector Group Opacity");
     expect(op.keys.map((k: Key) => k.t)).toEqual([0, 1.6 + F(r.blocks[0].on), 1.6 + F(r.blocks[0].off)]);
-    expect(Object.values(op.interp).every(([a, b]) => a === 6614 && b === 6614)).toBe(true);
+    expect((Object.values(op.interp) as Array<[number, number]>).every(([a, b]) => a === 6614 && b === 6614)).toBe(true);
   });
 
   it("cards: three in the reference's size, the card pop from each first frame, 4 frames apart from W + 8", () => {
@@ -286,7 +286,7 @@ describe("pixel-headline module", () => {
     const trim = L.property("ADBE Root Vectors Group").property(1).property("ADBE Vectors Group").property("ADBE Vector Filter - Trim");
     expect(trim.property("ADBE Vector Trim End").keys.map((k: Key) => k.t)).toEqual([1.6 + F(7.5), 1.6 + F(18)]);
     expect(trim.property("ADBE Vector Trim Start").keys.map((k: Key) => k.t)).toEqual([1.6 + F(15), 1.6 + F(22)]);
-    expect(Object.values(trim.property("ADBE Vector Trim End").interp).every(([a]) => a === 6612)).toBe(true);
+    expect((Object.values(trim.property("ADBE Vector Trim End").interp) as Array<[number, number]>).every(([a]) => a === 6612)).toBe(true);
     const L4 = PH.drawnLine(comp, { at: 1.6, path: PH.linePath(comp, lay, "left"), cards: 4 });
     const t4 = L4.property("ADBE Root Vectors Group").property(1).property("ADBE Vectors Group").property("ADBE Vector Filter - Trim");
     expect(t4.property("ADBE Vector Trim End").keys[1].t).toBeCloseTo(1.6 + F(22), 9);

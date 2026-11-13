@@ -124,7 +124,7 @@ var AESPixelHeadline = (function () {
   // the project's colour settings, which carry over from the last project opened: a working space other than None changes
   // how the take renders (an ACEScg space rendered one take at a gamma of about 1.8)
   function projectSpace() { var ws = "", bpc = 8; try { ws = app.project.workingSpace; } catch (e) {} try { bpc = app.project.bitsPerChannel; } catch (e2) {}
-    var warn = []; if (ws && ws !== "None") warn.push("the project's working colour space is " + ws + ", carried over from an earlier project; set it to None before building, or the take renders with the wrong gamma");
+    var warn = []; if (ws && ws !== "None") warn.push("the project's working colour space is " + ws + ", carried over from an earlier project: set it to None before building, or the take renders with the wrong gamma; the plugin's colour readings refuse such a project too (library quality, 'Colour-managed and 32 bpc projects')");
     return { workingSpace: ws === undefined ? null : ws, bitsPerChannel: bpc, warnings: warn }; }
   function stage(comp, o) {
     var W = comp.width, H = comp.height, P = pfx(o), G = null, S = null, Gr = null, sp = projectSpace(), warn = sp.warnings.slice(0);
