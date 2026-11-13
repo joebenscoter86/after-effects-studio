@@ -129,7 +129,8 @@ A cut-out speaker. Inter Bold (OFL, from Google Fonts; `fontOK()` stops the buil
 
 - **Calibrated on one reference shot.** Every element of one opener beat was measured on the reference's finished frames and matched through these builders alone, with no hand corrections, using the reference's own words-to-frames as inputs and a different speaker. Within a frame: the word's peak, low and settle; each card's peak, low and settle; the push's four marks on a pass with the speaker frozen; the lead-in's words (first frame and fall); the pixel blocks' first, peak and last frames, their peak amount (within 20 %), their spread round the word and their outward run from W+4 to W+13.
 - **Tolerances left:** one lead-in word's last fade step 2 frames late; the tail's last word first visible 2 frames late; the drawn line's end up to 2 frames early; the push reads still 3 frames late on the delivered picture when the speaker sways about 1 % (under the 3 % at which the builder divides the sway out); the pixel blocks' first three frames and W+14 to W+15, where only one to three blocks show, read 0.3 to 0.9 half-widths further out than the reference's (its few early and late blocks sit in the gaps between its word's letters, which differ from word to word).
-- **Not yet:** a whole piece, the punch, evidence and rest beats calibrated on their own, and any card layout other than a column.
+- **Tried through the builders, inputs only:** four cards on the other side with another word and a blue accent: the word and all four cards passed their pops within a frame and 3 %, and the face stayed clear on every frame (the stack fell back to a straight column to keep off it); the blue glow read heavier than the red. A punch beat (word, glow and blocks alone) with a four-letter word: the word passed its pop exactly and the face stayed clear, but the blocks overcrowded the shorter word (see 9.5).
+- **Not yet:** a whole piece, the evidence and rest beats, any card layout other than a column, and the blocks for words much shorter or longer than five letters.
 
 ## 9. Recipe, element by element
 
@@ -239,7 +240,7 @@ Frames are at 30 fps (a time in seconds is frames / 30). Sizes are at 1080 × 19
 | Size | scaled | By letter height (font size 28.4 % of the width); the width is whatever the word gives (five-letter words run 66 % to 95 %); shrink only past 85 %. |
 | Position | scaled | By the frame, not the head. |
 | Glow cut at W + 23 | signature | It ends as the word settles; it does not fade. |
-| Exposure 0.64 | scaled | For a word at this letter height on a light ground. A smaller word needs more, not less. Set it from one test render. |
+| Exposure 0.64 | scaled | For a red word at this letter height on a light ground. A smaller word needs more, not less, and the accent changes it too: a blue accent at 0.64 reads as a much heavier haze. Set it from one test render per accent. |
 | The colour, the word | free | |
 
 **Why.** The glow is not keyed down after its peak; most of its measured fall is the word shrinking inside its own haze. Deep Glow's haze does not rise in step with Exposure (2.5 times the Exposure gave 1.5 times the haze at the peak), so set it from a render. With motion blur on, a pop reads about a third of a frame ahead of its keys, so pops are fitted on a render, never on keys alone. A word whose tall letters reach above the lead-in's baseline covers the lead-in's last words as it grows; check the lead-in still reads.
@@ -268,6 +269,8 @@ Frames are at 30 fps (a time in seconds is frames / 30). Sizes are at 1080 × 19
 | Which cells | free | A seed. |
 
 **For any layout:** the blocks belong to the giant word and follow it, placed round its settled box on its timing. A beat without a giant word has none.
+
+**Open: other word lengths.** The schedule was fitted on a five-letter word about 76 % of the width wide. Its counts include the blocks that hide behind those letters, so a shorter word shows far more of them: with a four-letter word the visible blocks ran 4 to 6 times the reference's on the jump and peak frames and crowded the letters enough to change how one read. The counts need a rule tied to the word's box (or to the visible coverage) before the builder is used with words much shorter or longer than five letters; until then, check the blocks by eye.
 
 **Why.** Blocks built by drawing a few strokes round the word and breaking them with Turbulent Displace and Mosaic came out as one clump on one side, three frames late, at 2.5 times the amount, and could not be steered. Scheduled grid squares give the look and can be fitted frame by frame. Measure strong red (R > 170, G < 90, B < 90) in the top 45 %, outside the word's shape fitted per frame and grown 10 px; measure the distance on blocks alone (after an opening with a 13 px square), or the drawn line's top, which runs through the same region, reads as blocks.
 
@@ -301,7 +304,7 @@ Frames are at 30 fps (a time in seconds is frames / 30). Sizes are at 1080 × 19
 | Size | scaled | 27.8 % of the width for three; smaller with more, as above. |
 | Count, side, positions, clips | free | |
 
-**For any count or layout:** each card pops on the card curve; consecutive cards start 4 frames apart; the first starts at W + 8; no card covers the face on any frame, peak scale included; every card clears the giant word's letters by its settled frame; the rim and the entrance as above. The last card is still at W + 8 + 4 (n − 1) + 23; hold no earlier. For a ring or both sides, place each card with `card` and keep the same timing; cards passing behind the head go under the speaker's layer.
+**For any count or layout:** each card pops on the card curve; consecutive cards start 4 frames apart; the first starts at W + 8; no card covers the face on any frame, peak scale included; a card may tuck under the giant word's lower edge, as the reference's top card does, but the word stays above it in the layer order and must still read; the rim and the entrance as above. The last card is still at W + 8 + 4 (n − 1) + 23; hold no earlier. For a ring or both sides, place each card with `card` and keep the same timing; cards passing behind the head go under the speaker's layer.
 
 **Why.** The reference's narration values (blur 25, exposure 2) were set on its own clips; on bold, dark clips blur 25 left them readable and exposure 2 flashed. The entrance is measured as how unreadable the card is. Measure the pop on a pass with plain white cards (clip and rim off), from each card's left edge against its settled width.
 
