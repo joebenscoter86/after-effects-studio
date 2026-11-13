@@ -734,7 +734,49 @@ export const SUBJECT_ATTENDED_NOTE =
 export const SUBJECT_WHOLE_PIECE_NOTE =
   "For a whole piece, scale the take to delivery size first (a delivery-size copy of the footage, before the click: sourceAdvice), then render the cut-out in halves, emptying After Effects' disk cache between them: " +
   "two halves of a 43.5 s piece at 1088 x 1920 took about 4.3 minutes and 12 GB of cache each. Check free disk space before each half. " +
-  "subject.render_cutout renders the layer's whole span in one call; it has no range of its own yet.";
+  "subject.render_cutout takes from and to (comp seconds) for each half; join the halves with a stream copy (HALVES_JOIN_NOTE).";
+
+/** How two halves of a cut-out are joined, with what the first piece measured across the join (2026-11-12). */
+export const HALVES_JOIN_NOTE =
+  "Two halves are joined by a stream copy, nothing re-encoded: list them in order in a text file (file 'first.mov' then file 'second.mov', one per line) and run " +
+  "ffmpeg -f concat -safe 0 -i halves.txt -c copy whole.mov. Empty After Effects' disk cache between the halves (it holds about a half's worth). " +
+  "On the first piece the halves were frames 600 to 1304, then 0 to 599, and the outline's step across the join was 0.002 of the frame, no different from any other pair of neighbouring frames. " +
+  "Check the joined file with subject.check_file, and give subject.use_cutout the first half's start.";
+
+/**
+ * The span subject.render_cutout renders: the layer's whole span, or
+ * `from`..`to` (comp seconds) clipped to it and snapped to frame boundaries.
+ */
+export function cutoutSpan(
+  layerSpan: { start: number; duration: number; frameRate: number },
+  from: unknown,
+  to: unknown,
+): { start: number; duration: number; frames: number; firstFrame: number; lastFrame: number; clipped: boolean; whole: boolean } | { error: string } {
+  const rate = layerSpan.frameRate || 30;
+  const snap = (t: number) => Math.round(t * rate) / rate;
+  const s0 = layerSpan.start;
+  const s1 = layerSpan.start + layerSpan.duration;
+  for (const [name, v] of [["from", from], ["to", to]] as const)
+    if (v !== undefined && (typeof v !== "number" || !Number.isFinite(v))) return { error: `\`${name}\` must be a number of comp seconds` };
+  const a = typeof from === "number" ? from : s0;
+  const b = typeof to === "number" ? to : s1;
+  if (b <= a) return { error: `\`to\` (${b}) must be after \`from\` (${a})` };
+  const start = snap(Math.max(s0, a));
+  const end = snap(Math.min(s1, b));
+  if (end <= start)
+    return { error: `the span ${a} to ${b} s is outside the layer, which runs ${Math.round(s0 * 1e4) / 1e4} to ${Math.round(s1 * 1e4) / 1e4} s` };
+  const frames = Math.round((end - start) * rate);
+  const firstFrame = Math.round(start * rate);
+  return {
+    start,
+    duration: end - start,
+    frames,
+    firstFrame,
+    lastFrame: firstFrame + frames - 1,
+    clipped: a < s0 - 1e-9 || b > s1 + 1e-9,
+    whole: Math.abs(start - snap(s0)) < 1e-9 && Math.abs(end - snap(s1)) < 1e-9,
+  };
+}
 
 /** Said to the user before the steps, and in the skill before building starts. */
 export const SUBJECT_MATTE_NOTICE =
@@ -3702,7 +3744,10 @@ export async function runRenderCutout(args: Record<string, unknown>, io: FileIO)
     typeof args.outputTemplate === "string" ? args.outputTemplate : undefined,
   );
   if ("error" in choice) return { ok: false, error: choice.error, templates: plan.templates };
-  const frames = plan.span?.frames ?? 0;
+  const ranged = args.from !== undefined || args.to !== undefined;
+  const span = ranged && plan.span ? cutoutSpan(plan.span, args.from, args.to) : null;
+  if (span && "error" in span) return { ok: false, error: span.error, layerSpan: plan.span };
+  const frames = span ? span.frames : (plan.span?.frames ?? 0);
   const where = path.dirname(outputPath);
   const cacheRoot = aeCacheRoot(plan.aeCache?.folder, plan.aeCache?.version);
   const movieBytes = renderCutoutBytes(frames, plan.compSize ?? [1080, 1920]);
@@ -3735,8 +3780,8 @@ export async function runRenderCutout(args: Record<string, unknown>, io: FileIO)
       keep: plan.keep,
       outputPath,
       outputTemplate: choice.template,
-      start: plan.span.start,
-      duration: plan.span.duration,
+      start: span ? span.start : plan.span.start,
+      duration: span ? span.duration : plan.span.duration,
       overwrite: args.overwrite === true,
     }),
     // Measured: 390 s for 320 frames of a 2176 x 3840 take; allow 5 s a frame and two minutes over.
@@ -3804,7 +3849,7 @@ export async function runRenderCutout(args: Record<string, unknown>, io: FileIO)
     await fs.writeFile(
       sidecar,
       JSON.stringify(
-        { kind: "comp-room cut-out", comp: args.comp, layer: plan.layer, compSize: plan.compSize, fillLayer: plan.fillLayer ?? null, softEdge: soft, renderedAt: new Date().toISOString() },
+        { kind: "comp-room cut-out", comp: args.comp, layer: plan.layer, compSize: plan.compSize, fillLayer: plan.fillLayer ?? null, softEdge: soft, ...(span ? { span } : {}), renderedAt: new Date().toISOString() },
         null,
         1,
       ),
@@ -3828,6 +3873,18 @@ export async function runRenderCutout(args: Record<string, unknown>, io: FileIO)
       `Check the file before building on it: subject.check_file { path: "${r.outputPath}", outDir }. Then subject.use_cutout puts it in the comp in place of the live matte. ` +
       `Once the file is checked, the cache this work wrote is no longer needed: tell the user to purge it (Edit > Purge > All Memory & Disk Cache in After Effects); it should free about ${gb(cacheBytes)} or more.`,
     wholePiece: SUBJECT_WHOLE_PIECE_NOTE,
+    ...(span
+      ? {
+          span: {
+            ...span,
+            reading: span.whole
+              ? "from and to cover the layer's whole span"
+              : `frames ${span.firstFrame} to ${span.lastFrame} (${Math.round(span.start * 1e4) / 1e4} to ${Math.round((span.start + span.duration) * 1e4) / 1e4} s) of the layer's ${plan.span.frames}` +
+                (span.clipped ? "; from/to reached past the layer and were clipped to it" : ""),
+          },
+          halves: HALVES_JOIN_NOTE,
+        }
+      : {}),
   };
 }
 
@@ -3928,6 +3985,34 @@ interface SpeckTrack {
   largestFrame: number;
   smallestArea: number;
   pieces: Array<{ frame: number; box: Box }>;
+  /** Sums for the mean colour over every frame's piece (Lab, weighted by pixels). */
+  colourSum?: { L: number; a: number; b: number; pixels: number };
+}
+
+/** A speck's mean colour (L*, a*, b*), from its pieces on every frame. */
+function speckColour(t: SpeckTrack): { L: number; a: number; b: number; pixels: number } | null {
+  const c = t.colourSum;
+  if (!c || c.pixels === 0) return null;
+  const r1 = (v: number) => Math.round(v * 10) / 10;
+  return { L: r1(c.L / c.pixels), a: r1(c.a / c.pixels), b: r1(c.b / c.pixels), pixels: c.pixels };
+}
+
+/** a* at or above this reads as skin-like warm colour; at or below SPECK_PALE_A as pale grey or white (the first piece: chair +7, skin +30). */
+export const SPECK_SKIN_A = 20;
+export const SPECK_PALE_A = 12;
+
+/** One sentence on a speck's colour, or "". */
+function speckColourText(t: SpeckTrack): string {
+  const c = speckColour(t);
+  if (!c) return "";
+  const sign = (v: number) => (v > 0 ? `+${v}` : `${v}`);
+  const reads =
+    c.a <= SPECK_PALE_A
+      ? "near neutral, as a pale grey or white remnant reads (the chair on the first piece read about +7)"
+      : c.a >= SPECK_SKIN_A
+        ? "warm, as skin reads (about +30 on the first piece): it may be the subject"
+        : "between a pale remnant (about +7) and skin (about +30)";
+  return ` Its colour: L* ${c.L}, a* ${sign(c.a)}, b* ${sign(c.b)} (mean over ${c.pixels} px, CIELAB D65 from sRGB), ${reads}.`;
 }
 
 /** The most frames in a row on which the same piece is there (its boxes overlap or touch from one frame to the next). */
@@ -3950,6 +4035,14 @@ function longestSpeckRun(t: SpeckTrack): number {
 }
 const SPECK_JOIN_PX = 40;
 function addSpeck(tracks: SpeckTrack[], frame: number, p: SpeckPiece): void {
+  const addColour = (t: SpeckTrack) => {
+    if (!p.colour) return;
+    const c = (t.colourSum ??= { L: 0, a: 0, b: 0, pixels: 0 });
+    c.L += p.colour.L * p.colour.pixels;
+    c.a += p.colour.a * p.colour.pixels;
+    c.b += p.colour.b * p.colour.pixels;
+    c.pixels += p.colour.pixels;
+  };
   const near = (b: Box) =>
     p.x < b.x + b.width + SPECK_JOIN_PX &&
     b.x < p.x + p.width + SPECK_JOIN_PX &&
@@ -3966,9 +4059,11 @@ function addSpeck(tracks: SpeckTrack[], frame: number, p: SpeckPiece): void {
       smallestArea: p.area,
       pieces: [{ frame, box: pb }],
     });
+    addColour(tracks[tracks.length - 1]);
     return;
   }
   t.pieces.push({ frame, box: pb });
+  addColour(t);
   if (!t.frames.includes(frame)) t.frames.push(frame);
   const x0 = Math.min(t.box.x, pb.x);
   const y0 = Math.min(t.box.y, pb.y);
@@ -4147,7 +4242,7 @@ export async function runCheckFile(args: Record<string, unknown>, io: FileIO): P
             if (!img.alpha) return;
             outline.add(r.frame, img.alpha, img.rgb, img.width, img.height);
             const tSpeck = performance.now();
-            for (const p of speckPieces(img.alpha, img.width, img.height, speckLimits))
+            for (const p of speckPieces(img.alpha, img.width, img.height, speckLimits, img.rgb))
               addSpeck(speckAccepted(p, accept) ? specksAccepted : specks, r.frame, p);
             speckTime.ms += performance.now() - tSpeck;
             speckTime.frames++;
@@ -4394,6 +4489,7 @@ export async function runCheckFile(args: Record<string, unknown>, io: FileIO): P
     longestRun: longestSpeckRun(t),
     largestArea: t.largestArea,
     box: t.box,
+    colour: speckColour(t),
   }));
   const briefText = brief.length
     ? ` ${plural(brief.length, "small piece")} apart from the cut-out on single frames, never on ${speckMinRun} or more frames in a row (${brief.map((t) => `frame${t.frames.length > 1 ? "s" : ""} ${frameRanges(t.frames.slice().sort((a, b) => a - b))}, ${t.largestArea} px at (${t.box.x}, ${t.box.y})`).join("; ")}): a flash of a thirtieth of a second that nobody sees, or a wisp of hair, so not a stop; listed in notes.`
@@ -4409,10 +4505,13 @@ export async function runCheckFile(args: Record<string, unknown>, io: FileIO): P
       largestFrame: t.largestFrame,
       smallestArea: t.smallestArea,
       box: b,
+      colour: speckColour(t),
       picture: pictureOf.get(t.largestFrame) ?? null,
       reading:
         `A small opaque piece apart from the cut-out (or joined to it by a neck a pixel or two wide) on ${plural(frames.length, "frame")} (${frameRanges(frames)}): ` +
-        `${t.smallestArea} to ${t.largestArea} px, largest on frame ${t.largestFrame}, within (${b.x}, ${b.y}, ${b.width} × ${b.height}). ` +
+        `${t.smallestArea} to ${t.largestArea} px, largest on frame ${t.largestFrame}, within (${b.x}, ${b.y}, ${b.width} × ${b.height}).` +
+        speckColourText(t) +
+        " " +
         "Usually a sliver of the background the matte kept (a chair edge beside an arm); look at the picture. Remove it with a mask on the cut-out movie on those frames (keying.md, removing a speck), or, if it belongs to the subject, accept it: accept: [{ kind: 'speck', box }].",
     };
   });
@@ -4637,6 +4736,8 @@ registerOp({
     "Picks an output template that writes a movie with alpha ('High Quality with Alpha', 'Lossless with Alpha', or another whose name says alpha; image sequences are not used) and refuses, naming the templates, when none does. " +
     "Returns outputPath, frameCount, renderSeconds, outputTemplate, templateChoice, layersSwitched, restored, sound and timing. Measured: 390 s for 320 frames of a 2176 x 3840 take, about one pass through the clip; tell the user before it runs. " +
     SUBJECT_WHOLE_PIECE_NOTE +
+    " With from and to it renders only that span (clipped to the layer) and returns span (frames, times) and halves: " +
+    HALVES_JOIN_NOTE +
     " It renders the matte the user clicked; it cannot make the click (" +
     "subject.prepare): get that before an unattended render. " +
     "The movie is in comp space. The original layer keeps the sound; whether the movie carries a sound track is not promised. " +
@@ -4672,6 +4773,20 @@ registerOp({
         "Render even though the gap fill layer is switched off, leaving its gaps open in the file (default false: refuse).",
       required: false,
     },
+    {
+      name: "from",
+      type: "number",
+      description:
+        "Start of the span to render, comp seconds (default: the layer's in point). Clipped to the layer and snapped to a frame; with `to`, one half of a whole piece.",
+      required: false,
+    },
+    {
+      name: "to",
+      type: "number",
+      description:
+        "End of the span (exclusive), comp seconds (default: the layer's out point). Clipped to the layer and snapped to a frame.",
+      required: false,
+    },
   ],
   toJsx: () => NODE_ONLY("subject.render_cutout"),
   run: (args, transport) => runRenderCutout(args, liveFileIO(transport)),
@@ -4683,7 +4798,7 @@ registerOp({
   description:
     "Check a rendered cut-out movie (from subject.render_cutout) frame by frame: brings it into a throwaway comp, reads frames in batches of at most 32 (every frame up to maxFrames, default " +
     `${CHECK_FILE_MAX_FRAMES}; beyond it pairs of neighbouring frames in steps, always the first and last three), and reports holes and openings (as subject.check: holeLimit, accept), the opaque share of every frame, and a 'jump' finding when neighbouring frames differ by more than jumpLimit (default ${CHECK_FILE_JUMP_LIMIT}: on the take of 2026-11-11 the rendered cut-out ran 0.279 to 0.314 with no step over 0.012, and a dropped microphone is about 0.05). ` +
-    "A speck is a small opaque piece apart from the cut-out, or joined to it by a neck a pixel or two wide, not touching the frame edge: speckMinArea to speckMaxArea px (default 20 to 2,000, chosen on the 4K fresh-session file, where a sliver of chair 1 to 5 px off the right arm read 20 to 240 px on about 40 frames and nothing else in 320 frames was caught); findings of kind 'speck' give the frames, the longest run of frames in a row, the largest area and frame, the box and a picture; a speck on at least speckMinFrames frames in a row (default 2) stops, since a new render keeps it, and a shorter one (a single-frame flash, a wisp of hair) goes to notes and one sentence of inOut. accept: [{ kind: 'speck', box }] takes one off. Checked through a real subject.check_file run on two files of one take (2026-11-12); the limits come from those two files. timing.speck is the pass's own cost (about 5.5 ms a 1080 x 1920 frame). " +
+    "A speck is a small opaque piece apart from the cut-out, or joined to it by a neck a pixel or two wide, not touching the frame edge: speckMinArea to speckMaxArea px (default 20 to 2,000, chosen on the 4K fresh-session file, where a sliver of chair 1 to 5 px off the right arm read 20 to 240 px on about 40 frames and nothing else in 320 frames was caught); findings of kind 'speck' give the frames, the longest run of frames in a row, the largest area and frame, the box, the piece's mean colour (`colour`: L*, a*, b*, CIELAB D65 from sRGB, over its opaque pixels on every frame; a pale grey remnant such as the first piece's chair read a* about +7, skin about +30) and a picture; a speck on at least speckMinFrames frames in a row (default 2) stops, since a new render keeps it, and a shorter one (a single-frame flash, a wisp of hair) goes to notes and one sentence of inOut. accept: [{ kind: 'speck', box }] takes one off. Checked through a real subject.check_file run on two files of one take (2026-11-12); the limits come from those two files. timing.speck is the pass's own cost (about 5.5 ms a 1080 x 1920 frame). " +
     "Seen through: pixels partly see-through (alpha 0.5 to 0.95) more than seenThroughDepth px (default 30) inside the cut-out's body and from the frame's edge, as where two copies of a matte meet in a seam; seenThroughMinArea px or more on a frame (default 400) on at least 2 frames read in a row is a finding of kind 'seen-through' that stops, with the frames, the largest area and frame, the box and a picture; single frames go to notes. Limits chosen on two files of the half-size take, as clicked and with subject.soften_edge (at most 82 and 41 px on every fourth frame), and a band of the soft-edge file's alpha multiplied by 0.75 (about 3,900 px a frame); not checked live: it has not run in After Effects on a file with a real seam. timing.seenThrough is its cost. " +
     "Region line: for a file from a soft-edge build, `region` gives the subject's highest and lowest top across the file against the soft edge's region line (from <movie>.comp-room.json, which subject.render_cutout writes, or `regionLine`), and a note, not a stop, names the frames where the top sits lower than the line less 12% of the height, so the lower hair crosses the line and keeps the hard edge. " +
     "Only true neighbours are compared, and `compared` says which. A frame that could not be read is 'not-checked' and stops. Pictures: the largest frame of each finding not accepted and both frames of each jump, full size, and a sheet of up to 24 frames; `pictures` counts them and their bytes. Each raw capture is removed once read unless keepCaptures (one run on the take had left 630 MB). The throwaway comp is removed afterwards, and the imported footage too unless keepFootage. " +

@@ -31,7 +31,7 @@
 // next frame's flicker. No decoded frame is held.
 
 import type { DecodedPng } from "./png16.js";
-import type { Rgb } from "./sheet.js";
+import { labOf, type Rgb } from "./sheet.js";
 
 export type Screen = "green" | "blue";
 
@@ -1385,6 +1385,12 @@ export interface SpeckPiece {
   width: number;
   height: number;
   area: number;
+  /**
+   * Mean CIELAB (D65, from the display sRGB values) over the piece's opaque
+   * pixels, when the picture's RGB was given: tells a pale grey remnant (a
+   * chair, a* about +7 on the first piece) from skin (a* about +30).
+   */
+  colour?: { L: number; a: number; b: number; pixels: number };
 }
 
 /** Per-label area, box and whether the label touches the frame edge (ids index the arrays). */
@@ -1426,6 +1432,7 @@ export function speckPieces(
   width: number,
   height: number,
   opts: Partial<typeof SPECK_DEFAULTS> = {},
+  rgb?: Float64Array,
 ): SpeckPiece[] {
   const o = { ...SPECK_DEFAULTS, ...opts };
   // The box around the opaque pixels, one pixel larger where the frame allows.
@@ -1639,13 +1646,35 @@ export function speckPieces(
     const a = st.area[id] ?? 0;
     if (id === main || st.edge[id] || a < o.minArea || a > o.maxArea) continue;
     if (id >= grownEnd && touchesGrown[id]) continue;
-    pieces.push({
+    const piece: SpeckPiece = {
       x: st.minX[id] + bx0,
       y: st.minY[id] + by0,
       width: st.maxX[id] - st.minX[id] + 1,
       height: st.maxY[id] - st.minY[id] + 1,
       area: a,
-    });
+    };
+    if (rgb && rgb.length >= width * height * 3) {
+      let sl = 0;
+      let sa = 0;
+      let sb = 0;
+      let k = 0;
+      for (let y = st.minY[id]; y <= st.maxY[id]; y++)
+        for (let x = st.minX[id]; x <= st.maxX[id]; x++) {
+          const p = y * w + x;
+          if (labels[p] !== id || !m[p]) continue;
+          const i = ((y + by0) * width + x + bx0) * 3;
+          const lab = labOf([rgb[i], rgb[i + 1], rgb[i + 2]]);
+          sl += lab.L;
+          sa += lab.a;
+          sb += lab.b;
+          k++;
+        }
+      if (k > 0) {
+        const r1 = (v: number) => Math.round(v * 10) / 10;
+        piece.colour = { L: r1(sl / k), a: r1(sa / k), b: r1(sb / k), pixels: k };
+      }
+    }
+    pieces.push(piece);
   }
   return pieces.sort((p, q) => q.area - p.area);
 }

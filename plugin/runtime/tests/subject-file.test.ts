@@ -413,6 +413,7 @@ function fileIO({
   dropped = new Set<number>(),
   fail = new Set<number>(),
   matteAt = null as ((frame: number) => Float64Array) | null,
+  rgbAt = null as ((frame: number) => Float64Array) | null,
 } = {}): FileIO & { calls: Any[] } {
   const calls: Any[] = [];
   return {
@@ -452,7 +453,7 @@ function fileIO({
           encodePngSrgbRgba8(
             W,
             H,
-            new Float64Array(W * H * 3).fill(0.5),
+            rgbAt ? rgbAt(frame) : new Float64Array(W * H * 3).fill(0.5),
             matteAt ? matteAt(frame) : fileFrame(frame, dropped),
           ),
         );
@@ -1171,6 +1172,54 @@ describe("speckPieces", () => {
       opaque: 0.5,
       minRun: 2,
     });
+  });
+});
+
+// A chair-like pale remnant (a* about +7.6) beside a skin-coloured body (a* about +31.5), as on the first piece (+7 and +30).
+const CHAIR: [number, number, number] = [0.87, 0.78, 0.77];
+const SKIN: [number, number, number] = [0.8, 0.47, 0.42];
+/** The body in `body` colour, the sliver's pixels (x 160..164, y 120..149) in `sliver` colour. */
+function colouredFrame(body: [number, number, number], sliver: [number, number, number]) {
+  const rgb = new Float64Array(W * H * 3);
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++) {
+      const c = x >= 160 && x < 165 && y >= 120 && y < 150 ? sliver : body;
+      rgb.set(c, (y * W + x) * 3);
+    }
+  return rgb;
+}
+
+describe("speck colour (L*, a*): a pale remnant told from skin", () => {
+  it("speckPieces gives each piece's mean Lab over its own pixels, not the body's", () => {
+    const a = sliverFrame(new Set([0]))(0);
+    const [chair] = speckPieces(a, W, H, {}, colouredFrame(SKIN, CHAIR));
+    expect(chair.colour).toMatchObject({ pixels: 90 });
+    expect(chair.colour!.a).toBeCloseTo(7.6, 0);
+    expect(chair.colour!.L).toBeCloseTo(82, 0);
+    const [skin] = speckPieces(a, W, H, {}, colouredFrame(CHAIR, SKIN));
+    expect(skin.colour!.a).toBeCloseTo(31.5, 0);
+    expect(speckPieces(a, W, H)[0].colour).toBeUndefined();
+  });
+
+  it("subject.check_file reports the speck's colour and reads a* near +7 as a pale remnant, about +30 as skin", async () => {
+    const on = new Set([50, 51, 52, 53, 54, 55]);
+    const chair = await runCheckFile(
+      { path: "/x/cut.mov", outDir: dir, frozenFrames: 1e9 },
+      fileIO({ matteAt: sliverFrame(on), rgbAt: () => colouredFrame(SKIN, CHAIR) }),
+    );
+    const f = chair.findings.find((x: Any) => x.kind === "speck");
+    expect(f.colour.pixels).toBe(6 * 90);
+    // Through an 8-bit PNG: within a unit of the colour's own a*.
+    expect(Math.abs(f.colour.a - 7.6)).toBeLessThan(1);
+    expect(f.reading).toMatch(/L\* 8\d(\.\d)?, a\* \+[78](\.\d)?, b\* \+\d/);
+    expect(f.reading).toMatch(/pale grey or white remnant/);
+    const skin = await runCheckFile(
+      { path: "/x/cut.mov", outDir: dir, frozenFrames: 1e9 },
+      fileIO({ matteAt: sliverFrame(on), rgbAt: () => colouredFrame(CHAIR, SKIN) }),
+    );
+    const g = skin.findings.find((x: Any) => x.kind === "speck");
+    expect(Math.abs(g.colour.a - 31.5)).toBeLessThan(1);
+    expect(g.reading).toMatch(/as skin reads .*it may be the subject/);
   });
 });
 
