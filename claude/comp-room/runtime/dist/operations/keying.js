@@ -2629,9 +2629,10 @@ function renderCutoutPlanJsx(args) {
             // After subject.soften_edge the cut-out is its precomp layer (two copies of the matte inside), not the matted layer.
             var _softName = _layer.name + " soft edge";
             var _soft = null;
+            var _softComment = null;
             for (var _si = 1; _si <= _comp.numLayers; _si++) {
                 var _sl = _comp.layer(_si);
-                if (_sl.name === _softName && String(AE.safeGet(function () { return _sl.comment; }, "")).indexOf("soft-edge") >= 0) _soft = _softName;
+                if (_sl.name === _softName && String(AE.safeGet(function () { return _sl.comment; }, "")).indexOf("soft-edge") >= 0) { _soft = _softName; _softComment = String(_sl.comment); }
             }
             var _keep = [_soft ? _soft : _layer.name];
             if (_fill) _keep.push(_fill);
@@ -2657,7 +2658,7 @@ function renderCutoutPlanJsx(args) {
                     if (app.preferences.havePref("Disk Cache Controls", "Folder 7", _pts[_pi])) _cacheFolder = app.preferences.getPrefAsString("Disk Cache Controls", "Folder 7", _pts[_pi]);
                 }
             } catch (ePref) {}
-            return { ok: true, layer: _layer.name, fillLayer: _fill, fillEnabled: _fillEnabled, softEdge: _soft, matteCopies: _soft ? 2 : 1, keep: _keep, compSize: [_comp.width, _comp.height], sourceSize: _src,
+            return { ok: true, layer: _layer.name, fillLayer: _fill, fillEnabled: _fillEnabled, softEdge: _soft, softEdgeComment: _softComment, matteCopies: _soft ? 2 : 1, keep: _keep, compSize: [_comp.width, _comp.height], sourceSize: _src,
                 aeCache: { folder: _cacheFolder || null, version: AE.safeGet(function () { return app.version; }, null) },
                 span: { start: _start, duration: _end - _start, frames: Math.round((_end - _start) / _fd), frameRate: Math.round(1000 / _fd) / 1000 },
                 templates: { output: _out, render: _rend } };
@@ -2849,9 +2850,42 @@ async function runRenderCutout(args, io) {
       error: r?.error ?? "the render failed",
       ...spaceAtTimeout ? { spaceAtTimeout } : {}
     };
+  let soft = null;
+  if (typeof plan.softEdgeComment === "string") {
+    try {
+      const m = JSON.parse(plan.softEdgeComment);
+      soft = {
+        regionBottom: m.regionBottom,
+        regionDepth: SOFT_EDGE_DEFAULTS.regionDepth,
+        feather: m.feather,
+        radius: m.radius,
+        smooth: m.smooth,
+        chatterReduction: m.chatterReduction,
+        decontaminate: m.decontaminate
+      };
+    } catch {
+      soft = null;
+    }
+  }
+  const sidecar = `${r.outputPath}.comp-room.json`;
+  let sidecarWritten = null;
+  try {
+    await fs.writeFile(
+      sidecar,
+      JSON.stringify(
+        { kind: "comp-room cut-out", comp: args.comp, layer: plan.layer, compSize: plan.compSize, fillLayer: plan.fillLayer ?? null, softEdge: soft, renderedAt: (/* @__PURE__ */ new Date()).toISOString() },
+        null,
+        1
+      )
+    );
+    sidecarWritten = sidecar;
+  } catch {
+    sidecarWritten = null;
+  }
   return {
     ...out,
     space,
+    sidecar: sidecarWritten,
     ...fillOff ? { fillWarning: `${fillOffText} Rendered anyway (withoutFill: true).` } : {},
     cacheNote: `This render should have added about ${gb(cacheBytes)} to After Effects' disk cache (one 16-bit frame of the source per frame${matteCopies > 1 ? `, for each of the ${matteCopies === 2 ? "two" : matteCopies} copies of the matte subject.soften_edge built` : ""}). Nothing was deleted and no preference was changed.`,
     next: (fillOff ? "The gap fill was off, so the file has its gaps open; tell the user before building on it. " : "") + `Check the file before building on it: subject.check_file { path: "${r.outputPath}", outDir }. Then subject.use_cutout puts it in the comp in place of the live matte. Once the file is checked, the cache this work wrote is no longer needed: tell the user to purge it (Edit > Purge > All Memory & Disk Cache in After Effects); it should free about ${gb(cacheBytes)} or more.`
@@ -3017,6 +3051,21 @@ async function runCheckFile(args, io) {
   }
   const seenTime = { ms: 0, frames: 0 };
   const seen = /* @__PURE__ */ new Map();
+  let regionLine = typeof args.regionLine === "number" ? args.regionLine : null;
+  let regionDepth = SOFT_EDGE_DEFAULTS.regionDepth;
+  let regionSource = regionLine !== null ? "given" : null;
+  if (regionLine === null && file !== null) {
+    try {
+      const side = JSON.parse(await fs.readFile(`${file}.comp-room.json`, "utf8"));
+      if (typeof side?.softEdge?.regionBottom === "number") {
+        regionLine = side.softEdge.regionBottom;
+        if (typeof side.softEdge.regionDepth === "number") regionDepth = side.softEdge.regionDepth;
+        regionSource = "sidecar";
+      }
+    } catch {
+    }
+  }
+  const tops = /* @__PURE__ */ new Map();
   let seenLargest = -1;
   const specks = [];
   const specksAccepted = [];
@@ -3099,6 +3148,7 @@ async function runCheckFile(args, io) {
             addSpeck(speckAccepted(p, accept) ? specksAccepted : specks, r.frame, p);
           speckTime.ms += performance.now() - tSpeck;
           speckTime.frames++;
+          if (regionLine !== null) tops.set(r.frame, subjectTop(img.alpha, img.width, img.height));
           const tSeen = performance.now();
           const st = seenThroughInside(img.alpha, img.width, img.height, seenLimits);
           if (st.box && st.px >= seenLimits.minArea) {
@@ -3343,6 +3393,24 @@ async function runCheckFile(args, io) {
     }
   ] : [];
   const seenNotes = seenSummary && !seenLasting ? [seenSummary] : [];
+  let region = null;
+  const regionNotes = [];
+  if (regionLine !== null && tops.size) {
+    const H = setup.height;
+    const reach = regionLine - Math.round(regionDepth * H);
+    let hi = { top: Infinity, frame: -1 };
+    let lo = { top: -Infinity, frame: -1 };
+    const lowFrames = [];
+    for (const [f, t] of [...tops.entries()].sort((a, b) => a[0] - b[0])) {
+      if (t < 0) continue;
+      if (t < hi.top) hi = { top: t, frame: f };
+      if (t > lo.top) lo = { top: t, frame: f };
+      if (t > reach) lowFrames.push(f);
+    }
+    const reading = `The soft edge's region line at y ${regionLine} (${regionSource}) covers hair down to ${Math.round(regionDepth * 100)}% of the frame's height under the subject's top, so a top lower than y ${reach} puts the lower hair under the line, where it keeps the hard edge. The top ran from y ${hi.top} (frame ${hi.frame}) to y ${lo.top} (frame ${lo.frame}); ` + (lowFrames.length ? `it sat lower than y ${reach} on ${plural(lowFrames.length, "frame")} (${frameRanges(lowFrames)}): look at the hair there; a lower regionBottom covers it.` : "it never sat lower than that.");
+    region = { line: regionLine, source: regionSource, reach, regionDepth, highest: hi, lowest: lo, lowFrames, reading };
+    if (lowFrames.length) regionNotes.push({ kind: "region line", frames: lowFrames, line: regionLine, reach, lowest: lo });
+  }
   const seenText = seenNotes.length ? ` Partly see-through inside the cut-out on single frames only (${frameRanges(seenFrames)}, up to ${seenSummary.largestArea} px), never on ${seenLimits.minRun} or more frames read in a row: not a stop; listed in notes.` : "";
   const findings = [
     ...sum.findings,
@@ -3377,7 +3445,7 @@ async function runCheckFile(args, io) {
     outline: outlineResult,
     checked: sum.checked,
     compared,
-    notes: [...speckNotes, ...seenNotes],
+    notes: [...speckNotes, ...seenNotes, ...regionNotes],
     speckLimits: {
       ...speckLimits,
       minFrames: speckMinRun,
@@ -3385,8 +3453,9 @@ async function runCheckFile(args, io) {
       neckPx: 2 * SPECK_DEFAULTS.neck
     },
     seenThroughLimits: { ...seenLimits },
+    region,
     opaque,
-    inOut: `${sum.text}${jumpText}${frozenText}${speckFindings.map((f) => ` ${f.reading}`).join("")}${briefText}${seenFindings.map((f) => ` ${f.reading}`).join("")}${seenText}${opaqueText} ${compared}${stop && picture ? ` Look at the picture (${picture}).` : ""}`,
+    inOut: `${sum.text}${jumpText}${frozenText}${speckFindings.map((f) => ` ${f.reading}`).join("")}${briefText}${seenFindings.map((f) => ` ${f.reading}`).join("")}${seenText}${region ? ` ${region.reading}` : ""}${opaqueText} ${compared}${stop && picture ? ` Look at the picture (${picture}).` : ""}`,
     picture,
     pictures,
     frameReadings: readings.map((r) => ({
@@ -3511,7 +3580,7 @@ registerOp({
 registerOp({
   name: "subject.check_file",
   category: "subject",
-  description: `Check a rendered cut-out movie (from subject.render_cutout) frame by frame: brings it into a throwaway comp, reads frames in batches of at most 32 (every frame up to maxFrames, default ${CHECK_FILE_MAX_FRAMES}; beyond it pairs of neighbouring frames in steps, always the first and last three), and reports holes and openings (as subject.check: holeLimit, accept), the opaque share of every frame, and a 'jump' finding when neighbouring frames differ by more than jumpLimit (default ${CHECK_FILE_JUMP_LIMIT}: on the take of 2026-11-11 the rendered cut-out ran 0.279 to 0.314 with no step over 0.012, and a dropped microphone is about 0.05). A speck is a small opaque piece apart from the cut-out, or joined to it by a neck a pixel or two wide, not touching the frame edge: speckMinArea to speckMaxArea px (default 20 to 2,000, chosen on the 4K fresh-session file, where a sliver of chair 1 to 5 px off the right arm read 20 to 240 px on about 40 frames and nothing else in 320 frames was caught); findings of kind 'speck' give the frames, the longest run of frames in a row, the largest area and frame, the box and a picture; a speck on at least speckMinFrames frames in a row (default 2) stops, since a new render keeps it, and a shorter one (a single-frame flash, a wisp of hair) goes to notes and one sentence of inOut. accept: [{ kind: 'speck', box }] takes one off. Checked through a real subject.check_file run on two files of one take (2026-11-12); the limits come from those two files. timing.speck is the pass's own cost (about 5.5 ms a 1080 x 1920 frame). Seen through: pixels partly see-through (alpha 0.5 to 0.95) more than seenThroughDepth px (default 30) inside the cut-out's body and from the frame's edge, as where two copies of a matte meet in a seam; seenThroughMinArea px or more on a frame (default 400) on at least 2 frames read in a row is a finding of kind 'seen-through' that stops, with the frames, the largest area and frame, the box and a picture; single frames go to notes. Limits chosen on two files of the half-size take, as clicked and with subject.soften_edge (at most 82 and 41 px on every fourth frame), and a band of the soft-edge file's alpha multiplied by 0.75 (about 3,900 px a frame); not checked live: it has not run in After Effects on a file with a real seam. timing.seenThrough is its cost. Only true neighbours are compared, and \`compared\` says which. A frame that could not be read is 'not-checked' and stops. Pictures: the largest frame of each finding not accepted and both frames of each jump, full size, and a sheet of up to 24 frames; \`pictures\` counts them and their bytes. Each raw capture is removed once read unless keepCaptures (one run on the take had left 630 MB). The throwaway comp is removed afterwards, and the imported footage too unless keepFootage. \`outline\` says how much the outline changed between neighbouring frames and over frozenGap frames (share of the frame whose alpha changed by more than 0.1, at full size); a run where it did not move is a 'frozen' finding (the selection is probably not tracking, as after replacing the layer's footage; accept: [{ kind: "frozen" }] for a subject that really is still). The frozen limits are not yet calibrated live. Measured: about 0.55 s a frame reading the file. Returns stop, findings, accepted, checked, compared, opaque, outline, inOut, picture, frameReadings, timing.`,
+  description: `Check a rendered cut-out movie (from subject.render_cutout) frame by frame: brings it into a throwaway comp, reads frames in batches of at most 32 (every frame up to maxFrames, default ${CHECK_FILE_MAX_FRAMES}; beyond it pairs of neighbouring frames in steps, always the first and last three), and reports holes and openings (as subject.check: holeLimit, accept), the opaque share of every frame, and a 'jump' finding when neighbouring frames differ by more than jumpLimit (default ${CHECK_FILE_JUMP_LIMIT}: on the take of 2026-11-11 the rendered cut-out ran 0.279 to 0.314 with no step over 0.012, and a dropped microphone is about 0.05). A speck is a small opaque piece apart from the cut-out, or joined to it by a neck a pixel or two wide, not touching the frame edge: speckMinArea to speckMaxArea px (default 20 to 2,000, chosen on the 4K fresh-session file, where a sliver of chair 1 to 5 px off the right arm read 20 to 240 px on about 40 frames and nothing else in 320 frames was caught); findings of kind 'speck' give the frames, the longest run of frames in a row, the largest area and frame, the box and a picture; a speck on at least speckMinFrames frames in a row (default 2) stops, since a new render keeps it, and a shorter one (a single-frame flash, a wisp of hair) goes to notes and one sentence of inOut. accept: [{ kind: 'speck', box }] takes one off. Checked through a real subject.check_file run on two files of one take (2026-11-12); the limits come from those two files. timing.speck is the pass's own cost (about 5.5 ms a 1080 x 1920 frame). Seen through: pixels partly see-through (alpha 0.5 to 0.95) more than seenThroughDepth px (default 30) inside the cut-out's body and from the frame's edge, as where two copies of a matte meet in a seam; seenThroughMinArea px or more on a frame (default 400) on at least 2 frames read in a row is a finding of kind 'seen-through' that stops, with the frames, the largest area and frame, the box and a picture; single frames go to notes. Limits chosen on two files of the half-size take, as clicked and with subject.soften_edge (at most 82 and 41 px on every fourth frame), and a band of the soft-edge file's alpha multiplied by 0.75 (about 3,900 px a frame); not checked live: it has not run in After Effects on a file with a real seam. timing.seenThrough is its cost. Region line: for a file from a soft-edge build, \`region\` gives the subject's highest and lowest top across the file against the soft edge's region line (from <movie>.comp-room.json, which subject.render_cutout writes, or \`regionLine\`), and a note, not a stop, names the frames where the top sits lower than the line less 12% of the height, so the lower hair crosses the line and keeps the hard edge. Only true neighbours are compared, and \`compared\` says which. A frame that could not be read is 'not-checked' and stops. Pictures: the largest frame of each finding not accepted and both frames of each jump, full size, and a sheet of up to 24 frames; \`pictures\` counts them and their bytes. Each raw capture is removed once read unless keepCaptures (one run on the take had left 630 MB). The throwaway comp is removed afterwards, and the imported footage too unless keepFootage. \`outline\` says how much the outline changed between neighbouring frames and over frozenGap frames (share of the frame whose alpha changed by more than 0.1, at full size); a run where it did not move is a 'frozen' finding (the selection is probably not tracking, as after replacing the layer's footage; accept: [{ kind: "frozen" }] for a subject that really is still). The frozen limits are not yet calibrated live. Measured: about 0.55 s a frame reading the file. Returns stop, findings, accepted, checked, compared, opaque, outline, inOut, picture, frameReadings, timing.`,
   params: [
     {
       name: "path",
@@ -3553,6 +3622,12 @@ registerOp({
       name: "speckMinFrames",
       type: "number",
       description: `A speck stops the check only when the same piece is there on at least this many frames in a row (default ${SPECK_DEFAULTS.minRun}); shorter ones go to notes.`,
+      required: false
+    },
+    {
+      name: "regionLine",
+      type: "number",
+      description: "The soft edge's region line (comp pixels), for a file rendered before subject.render_cutout wrote it beside the file (<movie>.comp-room.json). With it, `region` gives the subject's highest and lowest top across the file and the frames where the top sits low enough for the hair to cross the line (a note, not a stop).",
       required: false
     },
     {
@@ -3666,8 +3741,6 @@ const SOFT_EDGE_DEFAULTS = {
   decontaminate: true,
   feather: 60,
   regionDepth: 0.12,
-  /** With `across: true`: frames spread across the clip. */
-  samples: 5,
   /** By default the check samples the click frame and every `nearStep`th frame after it, up to `near` frames on. */
   near: 60,
   nearStep: 10,
@@ -3806,6 +3879,11 @@ async function runSoftenEdge(args, io) {
     });
     return u?.ok ? { ...u, note: "The comp is back to the single matted layer." } : { ok: false, error: u?.error ?? "the undo failed" };
   }
+  if (args.across !== void 0)
+    return {
+      ok: false,
+      error: "`across` was removed: sampling the whole clip before the render cost more disk cache than the render (12.9 GB estimated against 9.5 GB on the half-size take). subject.check_file reads every frame of the rendered file instead: it stops on see-through inside the cut-out and notes the frames where the hair crosses the region's line. Leave `across` out, or give sampleFrames."
+    };
   const outDir = args.outDir;
   if (typeof outDir !== "string" || !path.isAbsolute(outDir))
     return { ok: false, error: "`outDir` must be an absolute folder for the pictures" };
@@ -3832,7 +3910,7 @@ async function runSoftenEdge(args, io) {
   const span = st.span ?? { inFrame: 0, outFrame: 1 };
   const clicks = (st.selections ?? []).map((s) => s.clickFrame).filter((f) => typeof f === "number");
   const click = clicks.length ? Math.min(...clicks) : span.inFrame;
-  const sampling = Array.isArray(args.sampleFrames) ? "given" : args.across === true ? "across the clip" : "near the click";
+  const sampling = Array.isArray(args.sampleFrames) ? "given" : "near the click";
   const nearFrames = [];
   for (let f = click; f < Math.min(span.outFrame, click + D.near); f += D.nearStep) nearFrames.push(f);
   const samples = Array.isArray(args.sampleFrames) ? [
@@ -3840,7 +3918,7 @@ async function runSoftenEdge(args, io) {
       click,
       ...args.sampleFrames.filter((f) => typeof f === "number" && f >= span.inFrame && f < span.outFrame).map((f) => Math.round(f))
     ])
-  ].sort((a, b) => a - b) : args.across === true ? framesAcross(span, Math.max(2, Math.floor(num("samples", D.samples))), [click]) : nearFrames;
+  ].sort((a, b) => a - b) : nearFrames;
   const held = [];
   for (let f = click; f < Math.min(span.outFrame, click + 5); f++) held.push(f);
   const perFrame = perFrameMsOf(args);
@@ -4038,7 +4116,7 @@ async function runSoftenEdge(args, io) {
   const sampled = {
     how: sampling,
     frames: samples,
-    leavesOut: sampling === "across the clip" ? `Frames between the ${samples.length} sampled were not read; subject.check_file reads every frame of the rendered file for see-through inside the cut-out.` : `Only frames ${click} to ${last} were read: a later frame where the subject has moved further from the click, or where its top is higher (which would move the region's line), is not checked here. subject.check_file reads every frame of the rendered file for see-through inside the cut-out; across: true samples the whole clip before the render instead, which takes minutes.`
+    leavesOut: `Only frames ${click} to ${last} were read: a later frame where the subject has moved further from the click, or sits lower (its hair then reaches below the region's line and keeps the hard edge there), is not checked here. subject.check_file reads every frame of the rendered file: it stops on see-through inside the cut-out, and notes the frames where the subject's top sits low enough for the hair to cross the region's line (render_cutout writes the line beside the file).`
   };
   const timing = { totalMs: Math.round(since(started)) };
   if (!check.passed) {
@@ -4082,7 +4160,7 @@ function distanceToSolid(alpha, w, h, scratch, out) {
 registerOp({
   name: "subject.soften_edge",
   category: "subject",
-  description: "Soften a subject matte's edge inside a region (usually the hair) and prove it: builds keying.md fact 38's construction from the matted layer (Object Matte, ADBE Samurai): two copies of it in a precomp '<layer> soft edge', the upper with Refine Edge (Base Refine Edge Radius, the refine group's Smooth and Chatter Reduction), the lower as clicked, both with Decontaminate Edge Colors, split by one feathered matte over the region (the upper copy's Alpha track matte, the lower's Alpha Inverted, the upper in Alpha Add). The matted layer is switched off and otherwise untouched; it keeps the sound. Defaults: look C, the user's choice on the half-size take (radius 8, Smooth 0, Chatter Reduction 2, Decontaminate on, feather 60). The region is everything above a line: `regionBottom` (comp pixels), or by default 12% of the comp's height under the lowest top of the subject on the sampled frames. Then it runs the closing check on the click frame and the frame furthest from it (the least overlap of the outline with the click frame's, from the sampled frames: by default the click frame and every 10th frame of the 60 after it; `across: true` spreads `samples` frames over the clip instead): no pixel solid in the matte as clicked and more than 30 px inside its edge may drop under 0.99, the colour inside the subject must match the matte as clicked within 1 (CIELAB), and no more than `outsideLimit` px may spread over 10 px outside the outline. On any failure it undoes the build and says so; the fallback is Decontaminate Edge Colors alone (subject.settings). Reports look before and after on the region's top and sides and on the outline below it (edge width and widest tenth on the alpha, soft band, the share of `background`'s colour in the edge when given, the change from frame to frame over five held frames), the region and how it was chosen, and the whole frames after as pictures. After it, subject.check, subject.fill_gaps, subject.render_cutout and subject.use_cutout use the soft-edge layer. Two copies of the matte mean Object Matte is computed twice for every frame: a render writes about twice the disk cache and takes several times as long (on the half-size take, 342 s and 9.0 GB against 65 to 92 s and about 5 GB with one matte). The result's `sampling` says which frames were read and what that leaves out; subject.check_file reads every frame of the render and reports see-through inside the cut-out, which means undo the soft edge and render again with the fallback. undo: true takes the comp back to the single matted layer. Ran once in After Effects 27.0 on the half-size take sampling frames 0 to 50 (given as sampleFrames, the same frames the default now picks); across: true has not run there.",
+  description: "Soften a subject matte's edge inside a region (usually the hair) and prove it: builds keying.md fact 38's construction from the matted layer (Object Matte, ADBE Samurai): two copies of it in a precomp '<layer> soft edge', the upper with Refine Edge (Base Refine Edge Radius, the refine group's Smooth and Chatter Reduction), the lower as clicked, both with Decontaminate Edge Colors, split by one feathered matte over the region (the upper copy's Alpha track matte, the lower's Alpha Inverted, the upper in Alpha Add). The matted layer is switched off and otherwise untouched; it keeps the sound. Defaults: look C, the user's choice on the half-size take (radius 8, Smooth 0, Chatter Reduction 2, Decontaminate on, feather 60). The region is everything above a line: `regionBottom` (comp pixels), or by default 12% of the comp's height under the lowest top of the subject on the sampled frames. Then it runs the closing check on the click frame and the frame furthest from it (the least overlap of the outline with the click frame's, from the sampled frames: by default the click frame and every 10th frame of the 60 after it): no pixel solid in the matte as clicked and more than 30 px inside its edge may drop under 0.99, the colour inside the subject must match the matte as clicked within 1 (CIELAB), and no more than `outsideLimit` px may spread over 10 px outside the outline. On any failure it undoes the build and says so; the fallback is Decontaminate Edge Colors alone (subject.settings). Reports look before and after on the region's top and sides and on the outline below it (edge width and widest tenth on the alpha, soft band, the share of `background`'s colour in the edge when given, the change from frame to frame over five held frames), the region and how it was chosen, and the whole frames after as pictures. After it, subject.check, subject.fill_gaps, subject.render_cutout and subject.use_cutout use the soft-edge layer. Two copies of the matte mean Object Matte is computed twice for every frame: a render writes about twice the disk cache and takes several times as long (on the half-size take, 342 s and 9.0 GB against 65 to 92 s and about 5 GB with one matte). The result's `sampling` says which frames were read and what that leaves out; subject.check_file reads every frame of the render: it reports see-through inside the cut-out, which means undo the soft edge and render again with the fallback, and notes the frames where the subject sits low enough for its hair to cross the region's line (subject.render_cutout writes the line beside the file). undo: true takes the comp back to the single matted layer. Ran in After Effects 27.0 on the half-size take with the default sampling (frames 0 to 50): 34 s, 1.6 GB of disk cache.",
   params: [
     ...compLayerParams,
     {
@@ -4134,21 +4212,9 @@ registerOp({
       required: false
     },
     {
-      name: "across",
-      type: "boolean",
-      description: `Sample \`samples\` frames spread across the whole clip instead of near the click: finds a frame far into the clip where the subject has moved further, and a higher top, but makes After Effects track the matte out to each (keying.md fact 3), which takes minutes and was not measured on the disk cache. Default false: the click frame and every ${SOFT_EDGE_DEFAULTS.nearStep}th frame of the ${SOFT_EDGE_DEFAULTS.near} after it (frames 0 to 50 on the half-size take: 4 s, nothing added to the disk cache); subject.check_file then reads every frame of the render for see-through.`,
-      required: false
-    },
-    {
-      name: "samples",
-      type: "number",
-      description: `With across: true, how many frames are spread across the clip (default ${SOFT_EDGE_DEFAULTS.samples}).`,
-      required: false
-    },
-    {
       name: "sampleFrames",
       type: "array",
-      description: "Frames to sample in place of the default or `across` (the click frame is always added).",
+      description: `Frames to sample in place of the default, the click frame and every ${SOFT_EDGE_DEFAULTS.nearStep}th frame of the ${SOFT_EDGE_DEFAULTS.near} after it (frames 0 to 50 on the half-size take: 4 s, nothing added to the disk cache). The click frame is always added. Sampling far into the clip makes After Effects track the matte out to each frame; the whole clip is covered after the render by subject.check_file instead.`,
       required: false
     },
     {
