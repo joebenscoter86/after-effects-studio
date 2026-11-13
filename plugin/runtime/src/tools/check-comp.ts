@@ -36,7 +36,7 @@ import { rejectedOutputPath } from "../config.js";
 import { errorResult } from "../errors.js";
 import { readOnlyMode } from "../policy.js";
 import type { AeTransport } from "../transport/AeTransport.js";
-import { colorConversion, type ColorPayload, type Convert } from "./capture-shared.js";
+import { colorConversion, iccManagedReason, type ColorPayload, type Convert } from "./capture-shared.js";
 import { captureJsx, planJsx, structureJsx, type StructureOptions } from "./check-comp-jsx.js";
 import { defineTool, jsonResult, toMcpResult, type ArgsOf } from "./define-tool.js";
 
@@ -213,6 +213,7 @@ interface PlanPayload {
   displayStartTime: number;
   resolutionFactor: [number, number] | null;
   workingSpace: string;
+  colorManagementSystem?: number | null;
   bitsPerChannel: number;
   missingFootage: Array<{ id: number; name: string; path: string | null }>;
 }
@@ -580,6 +581,24 @@ async function checkComp(args: Args, transport: AeTransport) {
       reason: `source media missing for comp ${plan.compName}; restore or relink it, then check again`,
     };
     report.missingFootage = plan.missingFootage;
+    report.structure = await runStructure(args, transport, plan, first, end, fd);
+    report.next = null;
+    report.timings = { totalSeconds: r3((performance.now() - started) / 1000) };
+    return jsonResult({ result: report });
+  }
+
+  // Under Adobe's own colour management the picture would be measured on values
+  // that do not match the viewer (stage 7): refuse the picture checks plainly.
+  if (
+    args.colorManaged !== "off" &&
+    plan.workingSpace !== "None" &&
+    plan.workingSpace !== "" &&
+    plan.colorManagementSystem !== 1
+  ) {
+    report.picture = {
+      checked: false,
+      reason: `${iccManagedReason(plan.workingSpace, plan.bitsPerChannel)} The whole-piece check's picture checks (blank frames, black bars, pops, stutters, cuts, clipping, elements off frame) are tuned on display values, so they are not run.`,
+    };
     report.structure = await runStructure(args, transport, plan, first, end, fd);
     report.next = null;
     report.timings = { totalSeconds: r3((performance.now() - started) / 1000) };

@@ -274,3 +274,23 @@ describe("reference.compare", () => {
     expect(res.reading).toBeTypeOf("string");
   });
 });
+
+describe("reference.report in a project under Adobe's colour management (stage 7)", () => {
+  it("refuses a movie or comp before rendering, in plain words; a folder is still read", async () => {
+    const io = aeIO(16);
+    const exec = io.execute;
+    io.execute = async (code: string, opts: Any) =>
+      /colour/.test(opts.label)
+        ? /ok: true/.test(code) && { ok: true, workingSpace: "ACEScg ACES Working Space AMPAS S-2014-004", colorManagementSystem: 0, bitsPerChannel: 32 }
+        : exec(code, opts);
+    const res = await runReferenceReport({ comp: "Main", outPath: path.join(dir, "m.json") }, io);
+    expect(res.ok).toBe(false);
+    expect(res.error).toMatch(/colour-managed/);
+    expect(io.calls.filter((c) => c.render)).toEqual([]);
+    const frames = path.join(dir, "frames");
+    await fs.mkdir(frames);
+    for (let f = 0; f < 4; f++) await fs.writeFile(path.join(frames, `f_${f}.png`), png(f));
+    const still = await runReferenceReport({ path: frames, outPath: path.join(dir, "s.json") }, io);
+    expect(still.ok).toBe(true);
+  });
+});

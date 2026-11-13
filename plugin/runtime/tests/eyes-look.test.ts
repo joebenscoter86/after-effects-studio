@@ -9,8 +9,8 @@ import * as path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { encodePngSrgb8, type DecodedPng } from "../src/color/png16.js";
-import { renderFrameTool } from "../src/tools/render-frame.js";
+import { encodePngSrgb8, encodePngSrgbRgba8, type DecodedPng } from "../src/color/png16.js";
+import { renderFrameTool, renderJsx } from "../src/tools/render-frame.js";
 import type { AeTransport, EvalRequest, EvalResult } from "../src/transport/AeTransport.js";
 import {
   LOOK_DEFAULTS,
@@ -599,5 +599,94 @@ describe("look on a matte", () => {
         background: [0.5, 0.4, 0.5],
       }),
     ).toBeNull();
+  });
+});
+
+// ------------------------------------------------------- colour-managed projects (stage 7)
+
+describe("ae_render_frame in a project under Adobe's colour management (ICC, ACEScg, 32 bpc)", () => {
+  /** A capture payload as After Effects 27.0 reports it there; the RGBA file is written raw. */
+  function managedAe(img: DecodedPng, cms: number | null, calls: string[]): AeTransport {
+    return {
+      async execute(req: EvalRequest): Promise<EvalResult> {
+        calls.push(req.label ?? "");
+        const paths = JSON.parse(/var _paths = (.*);/.exec(req.code)![1]) as string[];
+        await fs.mkdir(path.dirname(paths[0]), { recursive: true });
+        const alpha = new Float64Array(img.width * img.height).map((_, p) => ((p % img.width) < img.width / 2 ? 1 : 0));
+        await fs.writeFile(paths[0], encodePngSrgbRgba8(img.width, img.height, img.rgb, alpha));
+        return {
+          ok: true,
+          result: {
+            ok: true,
+            frames: [{ ok: true, writtenTo: paths[0], time: 0, frame: 0, frameOffset: 0, size: [img.width, img.height], captureKind: "direct" }],
+            captureKind: "direct",
+            compName: "Main",
+            workingSpace: "ACEScg ACES Working Space AMPAS S-2014-004",
+            colorManagementSystem: cms,
+            bitsPerChannel: 32,
+            projectFile: null,
+            bgColor: [0, 0, 0],
+          },
+          error: null,
+          errorCode: null,
+          stack: null,
+          logs: [],
+          durationMs: 0,
+        };
+      },
+    };
+  }
+  const REGION = { name: "patch", x: 0, y: 0, width: 40, height: 40 };
+
+  it("refuses the colour readings in plain words, keeps the raw capture and the alpha measures, and never calibrates", async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "managed-"));
+    const calls: string[] = [];
+    const out = await renderFrameTool.handler(
+      {
+        compNameOrId: "Main",
+        outPath: path.join(dir, "f.png"),
+        time: 0,
+        sample: { regions: [REGION] },
+        look: { regions: [{ ...REGION, role: "neutral" }] },
+        edge: { screen: "green" },
+        histogram: true,
+        analyze: true,
+        channels: "rgba",
+      } as never,
+      managedAe(frame({ grain: 3 }), 0, calls),
+    );
+    const res = (out.structuredContent as any).result;
+    expect(out.isError).toBeFalsy();
+    expect(calls).toEqual(["render_frame"]);
+    expect(res.colorRefused.reason).toMatch(/colour-managed/);
+    expect(res.colorRefused.reason).toMatch(/ACEScg/);
+    expect(res.colorRefused.refused).toEqual(expect.arrayContaining(["sample (output)", "look", "histogram", "analyze", "edge spill", "channels rgba"]));
+    expect(res.look).toBeUndefined();
+    expect(res.histogram).toBeUndefined();
+    expect(res.analysis).toBeUndefined();
+    expect(res.samples[0].output).toBeUndefined();
+    expect(res.samples[0].capture.mean).toBeDefined();
+    expect(res.edge.width).toBeDefined();
+    expect(res.edge.spill).toMatchObject({ refused: expect.stringMatching(/colour-managed/) });
+    expect(res.colorWarning).toMatch(/raw/);
+    await fs.rm(dir, { recursive: true, force: true });
+  });
+
+  it("gives the raw working-space values without refusing when colorManaged is off", async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "managed-"));
+    const out = await renderFrameTool.handler(
+      { compNameOrId: "Main", outPath: path.join(dir, "f.png"), time: 0, sample: { regions: [REGION] }, colorManaged: "off" } as never,
+      managedAe(frame({ grain: 3 }), 0, []),
+    );
+    const res = (out.structuredContent as any).result;
+    expect(res.colorRefused).toBeUndefined();
+    expect(res.samples[0].output.mean).toBeDefined();
+    await fs.rm(dir, { recursive: true, force: true });
+  });
+
+  it("asks the capture script for the colour engine, and adds the OCIO layer only under OCIO", () => {
+    const code = renderJsx({ compNameOrId: "Main" } as never, [0], ["/tmp/x.png"], true, null, null, null);
+    expect(code).toMatch(/colorManagementSystem/);
+    expect(code).toMatch(/_useOcio = [^;]*_cms === 1/);
   });
 });
