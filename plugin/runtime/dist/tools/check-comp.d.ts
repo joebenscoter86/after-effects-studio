@@ -25,19 +25,47 @@ export interface CaptureChunk {
     info: CaptureInfo;
     /** Wall time of the capture, settle wait included. */
     seconds: number;
+    /**
+     * Captures asked of After Effects that had not finished writing when the
+     * wait ended (no capture finished for the stall limit): After Effects may
+     * still write them, so their folder must not be deleted and no more
+     * captures may be queued behind them.
+     */
+    outstanding: string[];
+}
+export interface CaptureFailure {
+    error: string;
+    details?: unknown;
+    /** As CaptureChunk.outstanding: captures the failed script may already have queued. */
+    outstanding: string[];
 }
 /** Frame numbers in, file paths out. */
 export interface FrameSource {
-    capture(frames: number[], dir: string): Promise<CaptureChunk | {
-        error: string;
-        details?: unknown;
-    }>;
+    capture(frames: number[], dir: string): Promise<CaptureChunk | CaptureFailure>;
 }
-/** saveFrameToPng, a chunk at a time, waiting for the asynchronously written files. */
+/**
+ * How long the wait for a chunk goes on after the last capture finished
+ * before After Effects is taken to have stopped writing (60 s: a quarter-size
+ * capture of a heavy comp takes a few seconds, not a minute).
+ */
+export declare const CAPTURE_STALL_MS = 60000;
+/** The frame number a capture path names (frame-<k>.png), or null. */
+export declare function frameOfCapture(file: string): number | null;
+/**
+ * saveFrameToPng, a chunk at a time, waiting for the asynchronously written
+ * files. The wait follows After Effects' pace: it goes on while captures keep
+ * finishing and ends when none has finished for `stallMs`, so a long or heavy
+ * comp is not cut off by a budget fixed in advance. Whatever is not finished
+ * then is returned as `outstanding`; a script that failed part way, or a call
+ * that timed out after After Effects took it, is waited on the same way
+ * before the failure is returned, since the frames it queued are still
+ * written.
+ */
 export declare function aeFrameSource(transport: AeTransport, comp: string | number, opts: {
     factor: number | null;
     tryOcio: boolean;
     settleTimeoutMs?: number;
+    stallMs?: number;
     pixels: number;
 }): FrameSource;
 /** Items listed at most per list (counts are always complete). */
@@ -67,6 +95,7 @@ export declare const checkCompTool: import("./define-tool.js").ToolSpec<{
         off: "off";
     }>>;
     settleTimeoutMs: z.ZodOptional<z.ZodNumber>;
+    stallTimeoutMs: z.ZodOptional<z.ZodNumber>;
     outDir: z.ZodOptional<z.ZodString>;
     sheet: z.ZodOptional<z.ZodUnion<readonly [z.ZodBoolean, z.ZodObject<{
         maxTiles: z.ZodOptional<z.ZodNumber>;

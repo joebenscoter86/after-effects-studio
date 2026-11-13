@@ -1,10 +1,10 @@
 // Render queue operations.
-import { execFile } from "node:child_process";
 import { promises as fs } from "node:fs";
 import * as path from "node:path";
 import { rejectedOutputPath } from "../config.js";
 import { readOnlyMode } from "../policy.js";
 import { registerOp, jsxFail, jsxVal, jsxCompPreamble } from "../registry.js";
+import { AE_AAC_PRIMING_SAMPLES, alignSound, FFMPEG, FFPROBE, parseEbur128Summary, parseVolumedetect, readSoundSync, runTool, } from "./delivery-sound.js";
 /**
  * Said by every operation that changes the render queue (stage 7). serve.jsx
  * enforces it; this tells the caller before they find out by a refusal.
@@ -1034,6 +1034,8 @@ export function chooseDeliveryTemplate(preset, templates) {
             : `none of the templates this preset uses is on this install (templates: ${templates.join(", ")})`,
     };
 }
+/** True peak above this is reported: a platform's own lossy encode can clip it. */
+export const DELIVERY_TRUE_PEAK_NOTE_DBTP = -1;
 /** Convert Audio to Keyframes' amplitude under this on every frame is silence (stage 6: a 0.3 tone reads 21.2, a four-channel take 0.002). */
 export const DELIVERY_SILENCE_TOP = 0.1;
 /** ffmpeg's max_volume at or under this is silence. */
@@ -1072,6 +1074,26 @@ export function checkDelivered(comp, file) {
             sound = "sound present (amplitude up to " + lv.top + ", After Effects)";
         else
             sound = "a sound track, whose level was not read (no ffmpeg, and After Effects could not read it)";
+        const sync = file.sync;
+        if (file.hasAudio && sync && sync.lateBySamples > 1) {
+            const fr = comp.frameRate ? Math.round((sync.lateBySamples / sync.sampleRate) * comp.frameRate * 100) / 100 : null;
+            findings.push({
+                kind: "sound late",
+                reading: `The sound plays ${sync.lateBySamples} samples (${sync.lateMs} ms${fr !== null ? `, ${fr} of a frame` : ""}) late against the picture: ${sync.reading.replace(/^the sound plays [^:]*: ?/, "") || "the edit list delays it"}. ` +
+                    `It could not be fixed (${file.alignment?.how ?? "not attempted"}). Install ffmpeg and deliver again, or remux the file: ffmpeg -i in.mp4 -itsoffset -${(sync.lateBySamples / sync.sampleRate).toFixed(6)} -i in.mp4 -map 0 -map -0:a -map 1:a -c copy out.mp4`,
+            });
+        }
+        else if (file.hasAudio && sync) {
+            sound += file.alignment?.aligned && file.alignment.before && file.alignment.before.lateBySamples > 0
+                ? `; on its frame (it was ${file.alignment.before.lateBySamples} samples late: ${file.alignment.how})`
+                : `; ${sync.reading.replace(/^the sound is /, "")}`;
+        }
+        if (file.hasAudio && file.loudness) {
+            const l = file.loudness;
+            sound += `; ${l.integratedLufs} LUFS integrated, true peak ${l.truePeakDbtp} dBTP${l.loudnessRangeLu !== null ? `, range ${l.loudnessRangeLu} LU` : ""} (ffmpeg ebur128)`;
+            if (l.truePeakDbtp > DELIVERY_TRUE_PEAK_NOTE_DBTP)
+                sound += ` — the true peak is above ${DELIVERY_TRUE_PEAK_NOTE_DBTP} dBTP, which a platform's own encode can clip`;
+        }
     }
     else
         sound = file.hasAudio ? "a sound track, though the comp has no sound on" : "no sound, as in the comp";
@@ -1205,6 +1227,16 @@ export async function runDeliver(args, io) {
     if (!r?.ok)
         return { ok: false, error: r?.error ?? "the render failed", template: pick.template };
     const written = r.outputPath ?? outputPath;
+    // The sound on its frame: After Effects' AAC priming is not skipped by an edit list, so fix it before reading the file.
+    let sync = io.soundSync ? await io.soundSync(written).catch(() => null) : null;
+    let alignment = null;
+    if (sync && sync.lateBySamples > 1) {
+        alignment = io.alignSound
+            ? await io.alignSound(written, sync).catch((e) => ({ aligned: false, how: `the remux failed: ${e instanceof Error ? e.message : String(e)}`, before: sync }))
+            : { aligned: false, how: "no way to remux the file here", before: sync };
+        if (alignment.aligned && io.soundSync)
+            sync = (await io.soundSync(written).catch(() => null)) ?? sync;
+    }
     const probe = io.probe ? await io.probe(written).catch(() => null) : null;
     const back = await io.execute(deliverReadBackJsx({ path: written, readLevel: !(probe && probe.maxDb !== null) }), {
         label: "render.deliver read back",
@@ -1218,7 +1250,16 @@ export async function runDeliver(args, io) {
         : typeof back.amplitudeTop === "number"
             ? { source: "After Effects", top: back.amplitudeTop }
             : null;
-    const check = checkDelivered({ width: plan.width, height: plan.height, frameRate: plan.frameRate, duration: plan.duration, hasSound: plan.hasSound, soundLayers: plan.soundLayers ?? [] }, { width: back.width, height: back.height, frameRate: back.frameRate, duration: back.duration, hasAudio: back.hasAudio, level });
+    const check = checkDelivered({ width: plan.width, height: plan.height, frameRate: plan.frameRate, duration: plan.duration, hasSound: plan.hasSound, soundLayers: plan.soundLayers ?? [] }, {
+        width: back.width,
+        height: back.height,
+        frameRate: back.frameRate,
+        duration: back.duration,
+        hasAudio: back.hasAudio,
+        level,
+        ...(io.probe ? { loudness: probe?.loudness ?? null } : {}),
+        ...(io.soundSync ? { sync, alignment } : {}),
+    });
     return {
         ok: true,
         preset,
@@ -1237,25 +1278,9 @@ export async function runDeliver(args, io) {
             : "Stop: tell the user what the check found, in plain words, before calling it delivered.",
     };
 }
-const FFPROBE = ["ffprobe", "/opt/homebrew/bin/ffprobe", "/usr/local/bin/ffprobe"];
-const FFMPEG = ["ffmpeg", "/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg"];
-function run(cands, argv) {
-    return new Promise((resolve) => {
-        const tryAt = (i) => {
-            if (i >= cands.length)
-                return resolve(null);
-            execFile(cands[i], argv, { timeout: 120_000, maxBuffer: 16 * 1024 * 1024 }, (err, stdout, stderr) => {
-                if (err && err.code === "ENOENT")
-                    return tryAt(i + 1);
-                resolve({ stdout: String(stdout), stderr: String(stderr) });
-            });
-        };
-        tryAt(0);
-    });
-}
-/** ffprobe's streams and ffmpeg's volumedetect, when both are installed; only reads the file. */
-export async function probeDelivered(file) {
-    const pr = await run(FFPROBE, ["-v", "error", "-show_entries", "stream=codec_type,width,height,r_frame_rate:format=duration", "-of", "json", file]);
+/** ffprobe's streams and ffmpeg's volumedetect and ebur128 (loudness, true peak), when both are installed; only reads the file. */
+export async function probeDelivered(file, tools = { ffmpeg: FFMPEG, ffprobe: FFPROBE }) {
+    const pr = await runTool(tools.ffprobe, ["-v", "error", "-show_entries", "stream=codec_type,width,height,r_frame_rate:format=duration", "-of", "json", file]);
     if (!pr)
         return null;
     let j;
@@ -1272,16 +1297,15 @@ export async function probeDelivered(file) {
     const [a, b] = String(v.r_frame_rate ?? "0/1").split("/").map(Number);
     let meanDb = null;
     let maxDb = null;
+    let loudness = null;
     if (hasAudio) {
-        const vd = await run(FFMPEG, ["-hide_banner", "-nostats", "-i", file, "-map", "0:a:0", "-af", "volumedetect", "-f", "null", "-"]);
-        const m = vd ? /mean_volume:\s*(-?[\d.]+|-inf) dB/.exec(vd.stderr) : null;
-        const x = vd ? /max_volume:\s*(-?[\d.]+|-inf) dB/.exec(vd.stderr) : null;
-        if (m && x) {
-            meanDb = m[1] === "-inf" ? -Infinity : Number(m[1]);
-            maxDb = x[1] === "-inf" ? -Infinity : Number(x[1]);
+        const vd = await runTool(tools.ffmpeg, ["-hide_banner", "-nostats", "-i", file, "-map", "0:a:0", "-af", "volumedetect,ebur128=peak=true", "-f", "null", "-"], 600_000);
+        if (vd) {
+            ({ meanDb, maxDb } = parseVolumedetect(vd.stderr));
+            loudness = parseEbur128Summary(vd.stderr);
         }
     }
-    return { width: v.width, height: v.height, frameRate: b ? Math.round((a / b) * 1000) / 1000 : 0, duration: Number(j.format?.duration ?? 0), hasAudio, meanDb, maxDb };
+    return { width: v.width, height: v.height, frameRate: b ? Math.round((a / b) * 1000) / 1000 : 0, duration: Number(j.format?.duration ?? 0), hasAudio, meanDb, maxDb, loudness };
 }
 function liveDeliverIO(transport) {
     return {
@@ -1300,13 +1324,17 @@ function liveDeliverIO(transport) {
             }
         },
         probe: probeDelivered,
+        soundSync: readSoundSync,
+        alignSound,
     };
 }
 registerOp({
     name: "render.deliver",
     category: "render",
     description: "Deliver a comp with a named preset and check the file that was written. Presets: 'vertical-reel' (H.264 - Match Render Settings - 15 Mbps, else another H.264 template, else High Quality (ProRes 422) and says so), 'master-alpha' (High Quality with Alpha (ProRes 4444), else Lossless with Alpha, else another movie template whose name says alpha; refuses when there is none), 'master' (High Quality, else Lossless). High Quality, High Quality with Alpha and the three H.264 templates are what Adobe documents for a stock install; a template can be deleted, so the result says which was used and why. " +
-        "Renders the whole comp through one temporary queue item (other items parked), then brings the file back and compares size, frame rate and duration (within half a frame) with the comp, and the sound: when the comp has sound on, a file with no sound track, or one that reads as silence, is flagged (a four-channel take read as silence in After Effects with no warning). The level comes from ffmpeg (mean and max dB) when it is installed, else from After Effects' Convert Audio to Keyframes on the file. Returns `check` { passed, findings, reading }." +
+        "Renders the whole comp through one temporary queue item (other items parked), then brings the file back and compares size, frame rate and duration (within half a frame) with the comp, and the sound: when the comp has sound on, a file with no sound track, or one that reads as silence, is flagged (a four-channel take read as silence in After Effects with no warning). The level comes from ffmpeg (mean and max dB) when it is installed, else from After Effects' Convert Audio to Keyframes on the file. " +
+        `The sound is put on its frame: After Effects' AAC encoder starts the sound with ${AE_AAC_PRIMING_SAMPLES} samples of priming and writes no edit list, so in players the voice ran ${AE_AAC_PRIMING_SAMPLES} samples (0.64 of a frame at 30 fps, 48 kHz) late; the file's edit list is read from its own boxes, and when the priming is not skipped the file is remuxed with ffmpeg (-c copy, nothing re-encoded) so an edit list skips it, read back, and replaces the file only when it does (check.file.sync, check.file.alignment). Without ffmpeg that is a 'sound late' finding with the command that fixes it. ` +
+        "With ffmpeg the check also reports the delivered file's integrated loudness (LUFS), loudness range (LU) and true peak (dBTP) from ebur128 (check.file.loudness), and says when the true peak is above -1 dBTP; it sets no loudness target. Returns `check` { passed, findings, reading }." +
         RENDER_QUEUE_UNDO_WARNING,
     params: [
         { name: "comp", type: "any", description: "Comp name or id", required: true },
@@ -1316,5 +1344,200 @@ registerOp({
     ],
     toJsx: () => jsxFail("render.deliver runs in Node; call it through ae_do"),
     run: (args, transport) => runDeliver(args, liveDeliverIO(transport)),
+});
+// ---------------------------------------------------------------------------
+// render.mux_audio: a mix made outside After Effects, joined to the picture
+// ---------------------------------------------------------------------------
+/** What ffprobe says of a file's first video and first audio stream. */
+async function probeStreams(file, ffprobe) {
+    const pr = await runTool(ffprobe, [
+        "-v",
+        "error",
+        "-show_entries",
+        "stream=codec_type,codec_name,width,height,r_frame_rate,sample_rate,channels,duration:format=duration",
+        "-of",
+        "json",
+        file,
+    ]);
+    if (!pr || pr.failed)
+        return null;
+    let j;
+    try {
+        j = JSON.parse(pr.stdout);
+    }
+    catch {
+        return null;
+    }
+    const streams = j.streams ?? [];
+    const v = streams.find((x) => x.codec_type === "video") ?? null;
+    const a = streams.find((x) => x.codec_type === "audio") ?? null;
+    const fmtDur = Number(j.format?.duration ?? NaN);
+    const dur = (x) => (x && Number.isFinite(Number(x.duration)) ? Number(x.duration) : Number.isFinite(fmtDur) ? fmtDur : null);
+    let video = null;
+    if (v) {
+        const [n, d] = String(v.r_frame_rate ?? "0/1").split("/").map(Number);
+        video = { codec: v.codec_name, width: v.width, height: v.height, frameRate: d ? Math.round((n / d) * 1000) / 1000 : 0, duration: dur(v) };
+    }
+    const audio = a
+        ? { codec: a.codec_name, sampleRate: Number(a.sample_rate), channels: Number(a.channels), duration: dur(a) }
+        : null;
+    return { video, audio };
+}
+/**
+ * Join a rendered picture with a mix made outside After Effects: the picture
+ * copied as it is (-c:v copy), the WAV encoded to AAC at 48 kHz by ffmpeg,
+ * which writes its own edit list over its priming. offsetSeconds moves the
+ * mix: positive pads silence before it, negative trims its start, both
+ * sample-exact (adelay / atrim). Then the same file check as render.deliver,
+ * and a finding when the mix's length differs from the picture's by more
+ * than a frame.
+ */
+export async function runMuxAudio(args, tools = { ffmpeg: FFMPEG, ffprobe: FFPROBE }) {
+    const started = Date.now();
+    const video = args.video;
+    const audio = args.audio;
+    if (typeof video !== "string" || !path.isAbsolute(video))
+        return { ok: false, error: "`video` must be an absolute path to the rendered picture" };
+    if (typeof audio !== "string" || !path.isAbsolute(audio))
+        return { ok: false, error: "`audio` must be an absolute path to the mix (a WAV)" };
+    const offset = typeof args.offsetSeconds === "number" ? args.offsetSeconds : 0;
+    if (!Number.isFinite(offset))
+        return { ok: false, error: "`offsetSeconds` must be a number of seconds" };
+    const bitrate = typeof args.bitrate === "string" ? args.bitrate : "320k";
+    if (!/^\d+(\.\d+)?k$/.test(bitrate))
+        return { ok: false, error: "`bitrate` is a number of kilobits a second followed by k, such as '320k'" };
+    const ext = path.extname(video) || ".mp4";
+    const output = typeof args.output === "string" ? args.output : path.join(path.dirname(video), `${path.basename(video, path.extname(video))}-mix${ext}`);
+    if (!path.isAbsolute(output))
+        return { ok: false, error: "`output` must be an absolute path" };
+    const rejected = rejectedOutputPath(output);
+    if (rejected)
+        return { ok: false, error: rejected };
+    if (path.resolve(output) === path.resolve(video) || path.resolve(output) === path.resolve(audio))
+        return { ok: false, error: "`output` must be a new file, not the picture or the mix it is made from" };
+    for (const [name, f] of [["video", video], ["audio", audio]])
+        if (!(await fs.access(f).then(() => true, () => false)))
+            return { ok: false, error: `no file at ${f} (\`${name}\`)` };
+    const outputExists = await fs.access(output).then(() => true, () => false);
+    if (outputExists && args.overwrite !== true)
+        return { ok: false, error: `a file already exists at ${output}; pass overwrite: true to replace it` };
+    const version = await runTool(tools.ffmpeg, ["-hide_banner", "-version"]);
+    const probeOk = await runTool(tools.ffprobe, ["-hide_banner", "-version"]);
+    if (version === null || probeOk === null)
+        return {
+            ok: false,
+            error: "render.mux_audio needs ffmpeg and ffprobe, and " +
+                (version === null ? "ffmpeg" : "ffprobe") +
+                " is not installed (looked for it on the PATH, in /opt/homebrew/bin and /usr/local/bin). Install it (on a Mac: brew install ffmpeg) and call again. Nothing was written.",
+        };
+    const vIn = await probeStreams(video, tools.ffprobe);
+    if (!vIn?.video)
+        return { ok: false, error: `ffprobe found no picture in ${video}` };
+    const aIn = await probeStreams(audio, tools.ffprobe);
+    if (!aIn?.audio)
+        return { ok: false, error: `ffprobe found no sound in ${audio}` };
+    const fps = vIn.video.frameRate || 30;
+    const frame = 1 / fps;
+    // The mix moved by the offset, sample-exact, and resampled to 48 kHz.
+    const rate = aIn.audio.sampleRate || 48_000;
+    const shift = Math.round(Math.abs(offset) * rate);
+    const filters = [];
+    if (offset > 0)
+        filters.push(`adelay=delays=${shift}S:all=1`);
+    if (offset < 0)
+        filters.push(`atrim=start_sample=${shift}`, "asetpts=PTS-STARTPTS");
+    const tmp = path.join(path.dirname(output), `.${path.basename(output, path.extname(output))}.mux${path.extname(output) || ext}`);
+    const argv = [
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-y",
+        "-i",
+        video,
+        "-i",
+        audio,
+        "-map",
+        "0:v:0",
+        "-map",
+        "1:a:0",
+        "-c:v",
+        "copy",
+        ...(filters.length ? ["-af", filters.join(",")] : []),
+        "-c:a",
+        "aac",
+        "-b:a",
+        bitrate,
+        "-ar",
+        "48000",
+        tmp,
+    ];
+    const r = await runTool(tools.ffmpeg, argv, 1_800_000);
+    if (r === null || r.failed) {
+        await fs.rm(tmp, { force: true });
+        return { ok: false, error: `ffmpeg could not join the picture and the mix: ${(r?.stderr ?? "ffmpeg is not installed").trim().slice(0, 400)}`, command: ["ffmpeg", ...argv].join(" ") };
+    }
+    await fs.rename(tmp, output);
+    // The file check, as render.deliver's, against the picture it was made from.
+    const probe = await probeDelivered(output, tools);
+    const sync = await readSoundSync(output).catch(() => null);
+    const out = await probeStreams(output, tools.ffprobe);
+    const mixSeconds = aIn.audio.duration !== null ? aIn.audio.duration + offset : null;
+    const pictureSeconds = vIn.video.duration;
+    const check = checkDelivered({ width: vIn.video.width, height: vIn.video.height, frameRate: fps, duration: pictureSeconds ?? 0, hasSound: true, soundLayers: [path.basename(audio)] }, {
+        width: probe?.width ?? out?.video?.width ?? 0,
+        height: probe?.height ?? out?.video?.height ?? 0,
+        frameRate: probe?.frameRate ?? out?.video?.frameRate ?? 0,
+        duration: probe?.duration ?? 0,
+        hasAudio: probe?.hasAudio ?? !!out?.audio,
+        level: probe && probe.meanDb !== null && probe.maxDb !== null ? { source: "ffmpeg", meanDb: probe.meanDb, maxDb: probe.maxDb } : null,
+        loudness: probe?.loudness ?? null,
+        sync,
+        alignment: null,
+    });
+    const r3 = (v) => Math.round(v * 1000) / 1000;
+    if (mixSeconds !== null && pictureSeconds !== null && Math.abs(mixSeconds - pictureSeconds) > frame + 1e-6) {
+        const diff = mixSeconds - pictureSeconds;
+        check.findings.push({
+            kind: "mix length",
+            reading: `The mix ${offset !== 0 ? `(moved ${offset} s) ` : ""}runs ${r3(mixSeconds)} s and the picture ${r3(pictureSeconds)} s: ` +
+                `${r3(Math.abs(diff))} s (${Math.round((Math.abs(diff) / frame) * 10) / 10} frames) ${diff > 0 ? "longer" : "shorter"}, more than a frame. ` +
+                (diff > 0 ? "The file runs on past the picture's last frame with sound over a held or missing picture." : "The end of the picture is silent.") +
+                " Check that the mix is the one for this cut.",
+        });
+        check.passed = false;
+        check.reading = check.findings.map((f) => f.reading).join(" ");
+    }
+    return {
+        ok: true,
+        output,
+        video: { path: video, ...vIn.video },
+        audio: { path: audio, ...aIn.audio, offsetSeconds: offset, encodedAs: `AAC ${bitrate} at 48 kHz` },
+        mixLength: mixSeconds !== null && pictureSeconds !== null ? { mixSeconds: r3(mixSeconds), pictureSeconds: r3(pictureSeconds), differenceFrames: Math.round(((mixSeconds - pictureSeconds) / frame) * 10) / 10 } : null,
+        check,
+        timing: { totalMs: Date.now() - started },
+        next: check.passed
+            ? "Joined and checked. Watch it once at speed before calling it done."
+            : "Stop: tell the user what the check found, in plain words, before calling it delivered.",
+    };
+}
+registerOp({
+    name: "render.mux_audio",
+    category: "render",
+    description: "Join a rendered picture with a mix made outside After Effects (a WAV): the recipe is render.deliver for the picture, then this, then look at its check. " +
+        "The picture is copied as it is (-c:v copy, nothing re-encoded); the mix is encoded to AAC at 48 kHz by ffmpeg, which writes its own edit list over the encoder's priming, so the sound sits on its frame. " +
+        "offsetSeconds moves the mix, sample-exact: positive pads silence before it, negative trims its start. " +
+        "Then the same file check as render.deliver on the new file: size, frame rate and duration against the picture, the sound's edit list read back (check.file.sync), its level, and its loudness (integrated LUFS, loudness range and true peak from ebur128, check.file.loudness); and a 'mix length' finding when the mix runs more than one frame longer or shorter than the picture. " +
+        "Needs ffmpeg and ffprobe: without them it says so and writes nothing. Does not touch the After Effects project.",
+    readOnly: true,
+    params: [
+        { name: "video", type: "string", description: "Absolute path of the rendered picture (from render.deliver).", required: true },
+        { name: "audio", type: "string", description: "Absolute path of the mix, a WAV made outside After Effects.", required: true },
+        { name: "output", type: "string", description: "Absolute path for the joined file (default: <video name>-mix beside the picture, same extension).", required: false },
+        { name: "overwrite", type: "boolean", description: "Replace an existing file at output (default false: refuse).", required: false },
+        { name: "offsetSeconds", type: "number", description: "Move the mix against the picture, seconds: positive starts it later (silence before), negative trims its start (default 0).", required: false },
+        { name: "bitrate", type: "string", description: "AAC bitrate, such as '320k' (default '320k').", required: false },
+    ],
+    toJsx: () => jsxFail("render.mux_audio runs in Node; call it through ae_do"),
+    run: (args) => runMuxAudio(args),
 });
 //# sourceMappingURL=render.js.map

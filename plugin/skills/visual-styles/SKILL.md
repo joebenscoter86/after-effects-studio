@@ -1,11 +1,11 @@
 ---
 name: visual-styles
-description: Build After Effects motion graphics in a named visual style from the bundled style library: Art Deco, Liminal found footage, Blueprint, CRT terminal, Dark keynote, Data storytelling, Copperplate engraving, Game Show, Glass product, Halftone dossier, Hologram HUD, Isometric infographic, Living screencast, Low-poly island, Microgame frenzy, Mid-century cartoon, One-line drawing, Paper-cut lightbox, Pictogram motion, Risograph print, Rubber hose cartoon, Silent film, Silkscreen poster, Spy titles, Stained glass, Swiss motion, Tilt-shift miniature, Ukiyo-e woodblock print, Whiteboard explainer or Woodcut print. Use when the user names one of these looks, asks which styles are available, or wants help choosing a style; ordinary motion work without a named look does not need it.
+description: Build After Effects motion graphics in a named visual style from the bundled style library: Art Deco, Liminal found footage, Blueprint, CRT terminal, Dark keynote, Data storytelling, Copperplate engraving, Game Show, Glass product, Halftone dossier, Hologram HUD, Isometric infographic, Living screencast, Low-poly island, Microgame frenzy, Mid-century cartoon, One-line drawing, Paper-cut lightbox, Pictogram motion, Pixel headline, Risograph print, Rubber hose cartoon, Silent film, Silkscreen poster, Spy titles, Stained glass, Swiss motion, Tilt-shift miniature, Ukiyo-e woodblock print, Whiteboard explainer or Woodcut print. Use when the user names one of these looks, asks which styles are available, or wants help choosing a style; ordinary motion work without a named look does not need it.
 ---
 
 # Visual styles
 
-30 visual styles, each with a written grammar (type, colour, motion, camera), an After Effects recipe and an ES3 module. Also available: **Paper collage** (`paper-collage`), which has its own skill and library module.
+31 visual styles, each with a written grammar (type, colour, motion, camera), an After Effects recipe and an ES3 module. Also available: **Paper collage** (`paper-collage`), which has its own skill and library module.
 
 Read through `ae_library`: **motion-language**, **production-workflow** and **brief-template** first (the foundation for every style), then the chosen style's **style-<id>**. The table below already holds what `style-index` lists; read the index only for a style's tools or its proof status. If the library tool is unavailable, the same files are at `../../library/styles/<id>/STYLE.md` and `../../library/styles/index.json` relative to this skill's folder.
 
@@ -16,7 +16,9 @@ Read through `ae_library`: **motion-language**, **production-workflow** and **br
 5. Build natively with `ae_do` and `eval.run`. Each `eval.run` call runs in its own function scope, so load the shared helpers and the style's module in the same call as the code that uses them, for example `$.evalFile(File(LIB + "/styles/aes-lib.jsx")); $.evalFile(File(LIB + "/styles/<id>/<module>"));` followed by your build code, where `LIB` is the absolute path of the `library` folder two levels above this skill's folder. Follow the AE recipe (STYLE.md section 6). The module's `buildScene(comp, scene, opts)` builds the library's seven-beat test scene; read it as a worked example of the technique, not as a builder for the user's scene. Its captions and labels are the test scene's own lines, written into the module, and its timings assume about ten seconds for the seven beats; if you call it with the user's `scene.json` (the 3D plates need that format), replace those lines and give each beat at least a second.
 6. Render frames and check them against STYLE.md before showing the user.
 
-The styles are adaptations of Lemo-Opuscar (MIT, LemoLab). In `style-index`, `contentStatus` and `contentProof` record that a style was proven in the author's own proof setup before import; `pluginProof` stays null until the style has been built and checked through this plugin. Say which applies when you present a style.
+The styles are adaptations of Lemo-Opuscar (MIT, LemoLab), except Pixel headline: it is the plugin's own, written from its own measurements (`origin` is `plugin` in `style-index`, and `proofNote` says how far it is tested). In `style-index`, `contentStatus` and `contentProof` record that a style was proven in the author's own proof setup before import; `pluginProof` stays null until the style has been built and checked through this plugin. Say which applies when you present a style.
+
+Pixel headline is the plugin's own style; read its STYLE.md for what was measured and how far it is tested.
 
 | Style | id | Tier | Good for | Fonts | Needs |
 |---|---|---|---|---|---|
@@ -39,6 +41,7 @@ The styles are adaptations of Lemo-Opuscar (MIT, LemoLab). In `style-index`, `co
 | One-line drawing | `one-line` | native | One idea that connects everything; elegant and minimal | Caveat | ffmpeg, node |
 | Paper-cut lightbox | `paper-lantern` | print | A warm, story-like moment told in layers of light | Cormorant Garamond | none |
 | Pictogram motion | `pictogram-motion` | native | A fast list of facts or steps on a strong beat | Inter Tight, Space Mono | ffmpeg, node |
+| Pixel headline | `pixel-headline` | native | A whole talking-head reel, built by a director agent from a script and a take, where one stressed word per sentence should hit hard and forty seconds must stay in one style | Inter | none |
 | Risograph print | `risograph` | print | A zine-feeling explainer with indie, creative energy | Archivo Black, Josefin Sans | ffmpeg, node |
 | Rubber hose cartoon | `rubber-hose` | painterly | A comedic bit where an object comes alive | Shrikhand, Limelight, IM FELL English SC | ffmpeg, node |
 | Silent film | `silent-film` | native | An old-way-versus-new-way contrast, played for laughs | Playfair Display SC, Old Standard TT | ffmpeg, node |

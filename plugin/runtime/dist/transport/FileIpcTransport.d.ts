@@ -49,6 +49,8 @@ export interface FileIpcTransportOptions {
      * progress (default 10 s; serve.jsx writes a whole response in one call).
      */
     emptyTmpGraceMs?: number;
+    /** The dispatcher script the push path launches (default: the package's jsx/dispatcher.jsx). Injectable for tests. */
+    dispatcherJsx?: string;
 }
 /** A temp request/response file older than this is an orphan (see sweepStaleFiles). */
 export declare const ORPHAN_TMP_SWEEP_MS: number;
@@ -134,6 +136,7 @@ export declare class FileIpcTransport implements AeTransport {
     private readonly setupError;
     private readonly instanceOption;
     private readonly spawnFn;
+    private readonly dispatcherJsx;
     private readonly scanDialogs;
     private readonly reapIntervalMs;
     private readonly emptyTmpGraceMs;

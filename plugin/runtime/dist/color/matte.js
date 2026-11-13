@@ -29,6 +29,7 @@
 // queue, a Uint8 mark map: about 34 bytes a pixel, ~70 MB at 1080×1920), and
 // only `frame` (Float32 alpha + Uint8 zones, 5 bytes a pixel) is kept for the
 // next frame's flicker. No decoded frame is held.
+import { labOf } from "./sheet.js";
 /**
  * The defaults and why:
  * - transparent / opaque: two 8-bit steps from 0 and 1, the same cut `sample`
@@ -1079,7 +1080,7 @@ function statAdd(st, id, x, y, onEdge) {
  * box around the opaque pixels and grows labels back only over the pixels
  * the erosion took (about 5.5 ms a 1080 x 1920 frame, 1.8 s for 320).
  */
-export function speckPieces(alpha, width, height, opts = {}) {
+export function speckPieces(alpha, width, height, opts = {}, rgb) {
     const o = { ...SPECK_DEFAULTS, ...opts };
     // The box around the opaque pixels, one pixel larger where the frame allows.
     let bx0 = width;
@@ -1323,13 +1324,36 @@ export function speckPieces(alpha, width, height, opts = {}) {
             continue;
         if (id >= grownEnd && touchesGrown[id])
             continue;
-        pieces.push({
+        const piece = {
             x: st.minX[id] + bx0,
             y: st.minY[id] + by0,
             width: st.maxX[id] - st.minX[id] + 1,
             height: st.maxY[id] - st.minY[id] + 1,
             area: a,
-        });
+        };
+        if (rgb && rgb.length >= width * height * 3) {
+            let sl = 0;
+            let sa = 0;
+            let sb = 0;
+            let k = 0;
+            for (let y = st.minY[id]; y <= st.maxY[id]; y++)
+                for (let x = st.minX[id]; x <= st.maxX[id]; x++) {
+                    const p = y * w + x;
+                    if (labels[p] !== id || !m[p])
+                        continue;
+                    const i = ((y + by0) * width + x + bx0) * 3;
+                    const lab = labOf([rgb[i], rgb[i + 1], rgb[i + 2]]);
+                    sl += lab.L;
+                    sa += lab.a;
+                    sb += lab.b;
+                    k++;
+                }
+            if (k > 0) {
+                const r1 = (v) => Math.round(v * 10) / 10;
+                piece.colour = { L: r1(sl / k), a: r1(sa / k), b: r1(sb / k), pixels: k };
+            }
+        }
+        pieces.push(piece);
     }
     return pieces.sort((p, q) => q.area - p.area);
 }

@@ -189,7 +189,16 @@ test('runtime is readable and within limits', async () => {
   }
   const entry = await fs.readFile(path.join(outDir, 'runtime/dist/index.js'), 'utf8');
   assert.match(entry, /registerTool/);
-  assert.ok(runtimeFiles.includes('dist/tools/do.js'), 'own modules are emitted file by file');
+  // The own code is packed into a handful of readable chunks (the 512-file limit): real export names, no local paths.
+  const chunks = runtimeFiles.filter((f) => f.startsWith('dist/chunks/'));
+  assert.ok(chunks.length >= 5 && chunks.length <= 20, `own code in ${chunks.length} chunks: ${chunks.join(', ')}`);
+  assert.ok(!runtimeFiles.some((f) => f.startsWith('dist/') && !f.startsWith('dist/chunks/') && f !== 'dist/index.js'), 'own code lives in dist/index.js and dist/chunks/');
+  for (const rel of ['dist/index.js', ...chunks]) {
+    const text = await fs.readFile(path.join(outDir, 'runtime', rel), 'utf8');
+    assert.ok(!/\bimport \{[^}]*\b[A-Za-z]{1,2} as \w/.test(text), `${rel} imports by minified names`);
+    assert.ok(!text.includes(os.homedir()) && !/\/(private\/)?tmp\//.test(text), `${rel} names a local folder`);
+    if (text.length > 5000) assert.ok(text.split('\n').length > 10, `${rel} is one line: minified`);
+  }
 });
 
 test('every path is one the Claude app accepts in an uploaded plugin', async () => {
@@ -422,7 +431,7 @@ test('README discloses style tool dependencies and the six skills', async () => 
 test('the package ships the style library without fonts', async () => {
   const { outDir, files } = await sharedBuild();
   const index = JSON.parse(await fs.readFile(path.join(outDir, 'library/styles/index.json'), 'utf8'));
-  assert.equal(index.styles.length, 30);
+  assert.equal(index.styles.length, 31);   // the 30 imported styles and the plugin's own pixel-headline
   assert.deepEqual(files.filter((f) => f.startsWith('library/styles/') && /\.(ttf|otf|woff2?)$/i.test(f)), []);
   await fs.access(path.join(outDir, 'skills/visual-styles/SKILL.md'));
 });

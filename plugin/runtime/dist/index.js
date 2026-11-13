@@ -2993,7 +2993,7 @@ var require_compile = __commonJS({
       const schOrFunc = root.refs[ref];
       if (schOrFunc)
         return schOrFunc;
-      let _sch = resolve12.call(this, root, ref);
+      let _sch = resolve13.call(this, root, ref);
       if (_sch === void 0) {
         const schema = (_a3 = root.localRefs) === null || _a3 === void 0 ? void 0 : _a3[ref];
         const { schemaId } = this.opts;
@@ -3020,7 +3020,7 @@ var require_compile = __commonJS({
     function sameSchemaEnv(s1, s2) {
       return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
     }
-    function resolve12(root, ref) {
+    function resolve13(root, ref) {
       let sch;
       while (typeof (sch = this.refs[ref]) == "string")
         ref = sch;
@@ -3271,8 +3271,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path18) {
-      let input2 = path18;
+    function removeDotSegments(path19) {
+      let input2 = path19;
       const output2 = [];
       let nextSlash = -1;
       let len = 0;
@@ -3346,11 +3346,11 @@ var require_utils = __commonJS({
       }
       return output2.join("");
     }
-    function removeDotSegmentsRelative(path18) {
-      if (path18 === "" || path18[0] === "/") {
-        return removeDotSegments(path18);
+    function removeDotSegmentsRelative(path19) {
+      if (path19 === "" || path19[0] === "/") {
+        return removeDotSegments(path19);
       }
-      const segments = path18.split("/");
+      const segments = path19.split("/");
       const last = segments.length - 1;
       const output2 = [];
       let trailingDirectory = false;
@@ -3713,8 +3713,8 @@ var require_schemes = __commonJS({
       }
       if (wsComponent.resourceName) {
         const queryIndex = wsComponent.resourceName.indexOf("?");
-        const path18 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
-        wsComponent.path = path18 && path18 !== "/" ? path18 : void 0;
+        const path19 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
+        wsComponent.path = path19 && path19 !== "/" ? path19 : void 0;
         wsComponent.query = queryIndex === -1 ? void 0 : wsComponent.resourceName.slice(queryIndex + 1);
         wsComponent.resourceName = void 0;
       }
@@ -3884,7 +3884,7 @@ var require_fast_uri = __commonJS({
       }
       return uri;
     }
-    function resolve12(baseURI, relativeURI, options) {
+    function resolve13(baseURI, relativeURI, options) {
       const schemelessOptions = options ? Object.assign({ scheme: "null" }, options) : { scheme: "null" };
       const {
         parsed: baseParsed,
@@ -4275,7 +4275,7 @@ var require_fast_uri = __commonJS({
     var fastUri = {
       SCHEMES,
       normalize,
-      resolve: resolve12,
+      resolve: resolve13,
       resolveComponent,
       equal,
       serialize,
@@ -7251,12 +7251,12 @@ var require_dist = __commonJS({
         throw new Error(`Unknown format "${name}"`);
       return f;
     };
-    function addFormats(ajv, list, fs15, exportName) {
+    function addFormats(ajv, list, fs16, exportName) {
       var _a3;
       var _b;
       (_a3 = (_b = ajv.opts.code).formats) !== null && _a3 !== void 0 ? _a3 : _b.formats = (0, codegen_1._)`require("ajv-formats/dist/formats").${exportName}`;
       for (const f of list)
-        ajv.addFormat(f, fs15[f]);
+        ajv.addFormat(f, fs16[f]);
     }
     module.exports = exports = formatsPlugin;
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -7555,23 +7555,23 @@ __export(eval_exports, {
   readScriptFile: () => readScriptFile
 });
 import { readFileSync, realpathSync, statSync as statSync2 } from "node:fs";
-import * as path13 from "node:path";
+import * as path14 from "node:path";
 function realOrResolved(p) {
   try {
     return realpathSync(p);
   } catch {
-    return path13.resolve(p);
+    return path14.resolve(p);
   }
 }
 function isInside(p, root) {
-  const rel = path13.relative(root, p);
-  return rel === "" || !rel.startsWith("..") && !path13.isAbsolute(rel);
+  const rel = path14.relative(root, p);
+  return rel === "" || !rel.startsWith("..") && !path14.isAbsolute(rel);
 }
 function refuse(error62, hint) {
   return hint ? { ok: false, error: error62, hint } : { ok: false, error: error62 };
 }
 function readScriptFile(file2) {
-  if (!path13.isAbsolute(file2)) {
+  if (!path14.isAbsolute(file2)) {
     return {
       ok: false,
       error: `file must be an absolute path (got '${file2}'): the server's working directory is not yours`
@@ -8063,8 +8063,8 @@ function getErrorMap() {
 
 // node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path18, errorMaps, issueData } = params;
-  const fullPath = [...path18, ...issueData.path || []];
+  const { data, path: path19, errorMaps, issueData } = params;
+  const fullPath = [...path19, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -8179,11 +8179,11 @@ var errorUtil;
 
 // node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path18, key) {
+  constructor(parent, value, path19, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path18;
+    this._path = path19;
     this._key = key;
   }
   get path() {
@@ -12138,10 +12138,10 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path18) {
-  if (!path18)
+function getElementAtPath(obj, path19) {
+  if (!path19)
     return obj;
-  return path18.reduce((acc, key) => acc?.[key], obj);
+  return path19.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -12481,11 +12481,11 @@ function explicitlyAborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path18, issues) {
+function prefixIssues(path19, issues) {
   return issues.map((iss) => {
     var _a3;
     (_a3 = iss).path ?? (_a3.path = []);
-    iss.path.unshift(path18);
+    iss.path.unshift(path19);
     return iss;
   });
 }
@@ -12947,16 +12947,16 @@ function flattenError(error62, mapper = (issue2) => issue2.message) {
 }
 function formatError(error62, mapper = (issue2) => issue2.message) {
   const fieldErrors = { _errors: [] };
-  const processError = (error63, path18 = []) => {
+  const processError = (error63, path19 = []) => {
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path18, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path19, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path18, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path19, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path18, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path19, ...issue2.path]);
       } else {
-        const fullpath = [...path18, ...issue2.path];
+        const fullpath = [...path19, ...issue2.path];
         if (fullpath.length === 0) {
           fieldErrors._errors.push(mapper(issue2));
         } else {
@@ -12995,17 +12995,17 @@ function formatError(error62, mapper = (issue2) => issue2.message) {
 }
 function treeifyError(error62, mapper = (issue2) => issue2.message) {
   const result = { errors: [] };
-  const processError = (error63, path18 = []) => {
+  const processError = (error63, path19 = []) => {
     var _a3;
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path18, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path19, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path18, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path19, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path18, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path19, ...issue2.path]);
       } else {
-        const fullpath = [...path18, ...issue2.path];
+        const fullpath = [...path19, ...issue2.path];
         if (fullpath.length === 0) {
           result.errors.push(mapper(issue2));
           continue;
@@ -13044,8 +13044,8 @@ function treeifyError(error62, mapper = (issue2) => issue2.message) {
 }
 function toDotPath(_path) {
   const segs = [];
-  const path18 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
-  for (const seg of path18) {
+  const path19 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
+  for (const seg of path19) {
     if (typeof seg === "number")
       segs.push(`[${seg}]`);
     else if (typeof seg === "symbol")
@@ -16388,7 +16388,7 @@ var recursive = /* @__PURE__ */ new WeakMap();
 var NONE = 0;
 var ASSUMED = 1;
 var PROVEN = 2;
-function isRecursive(inst, stack, resolve12) {
+function isRecursive(inst, stack, resolve13) {
   const cached2 = recursive.get(inst);
   if (cached2 !== void 0)
     return cached2 ? PROVEN : NONE;
@@ -16396,9 +16396,9 @@ function isRecursive(inst, stack, resolve12) {
     return PROVEN;
   stack.add(inst);
   let result = NONE;
-  const check2 = (child) => {
-    if (result !== PROVEN && child?._zod) {
-      const answer = isRecursive(child, stack, resolve12);
+  const check2 = (child2) => {
+    if (result !== PROVEN && child2?._zod) {
+      const answer = isRecursive(child2, stack, resolve13);
       if (answer > result)
         result = answer;
     }
@@ -16409,9 +16409,9 @@ function isRecursive(inst, stack, resolve12) {
       const desc = Object.getOwnPropertyDescriptor(sh, key);
       if (spread && !desc.enumerable)
         continue;
-      const child = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve12) : NONE;
-      if (child > answer)
-        answer = child;
+      const child2 = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve13) : NONE;
+      if (child2 > answer)
+        answer = child2;
     }
     return answer;
   };
@@ -16473,7 +16473,7 @@ function isRecursive(inst, stack, resolve12) {
       break;
     // `$ZodLazy` caches its inner on the def, so a resolved edge is followed exactly
     case "lazy": {
-      const inner = def._cachedInner ?? (resolve12 ? inst._zod.innerType : void 0);
+      const inner = def._cachedInner ?? (resolve13 ? inst._zod.innerType : void 0);
       merge2(inner ? isRecursive(inner, stack, false) : ASSUMED);
       break;
     }
@@ -28365,7 +28365,7 @@ function visit(schema, fnOrHandlers) {
     return h ? h(node2, rewritten) : node2;
   };
   const cache2 = /* @__PURE__ */ new Map();
-  function run2(s) {
+  function run(s) {
     const cached2 = cache2.get(s);
     if (cached2 === RESOLVING) {
       return new $ZodLazy({
@@ -28391,21 +28391,21 @@ function visit(schema, fnOrHandlers) {
         let changed = false;
         const newShape = {};
         for (const k of keys) {
-          const mapped = run2(oldShape[k]);
+          const mapped = run(oldShape[k]);
           if (mapped !== oldShape[k])
             changed = true;
           newShape[k] = mapped;
         }
         let newCatchall = def.catchall;
         if (def.catchall) {
-          newCatchall = run2(def.catchall);
+          newCatchall = run(def.catchall);
           if (newCatchall !== def.catchall)
             changed = true;
         }
         return changed ? clone(s, { ...def, shape: newShape, catchall: newCatchall }) : s;
       }
       case "array": {
-        const mapped = run2(def.element);
+        const mapped = run(def.element);
         return mapped === def.element ? s : clone(s, { ...def, element: mapped });
       }
       case "tuple": {
@@ -28413,14 +28413,14 @@ function visit(schema, fnOrHandlers) {
         let changed = false;
         const newItems = [];
         for (const item of oldItems) {
-          const mapped = run2(item);
+          const mapped = run(item);
           if (mapped !== item)
             changed = true;
           newItems.push(mapped);
         }
         let newRest = def.rest;
         if (def.rest) {
-          newRest = run2(def.rest);
+          newRest = run(def.rest);
           if (newRest !== def.rest)
             changed = true;
         }
@@ -28428,12 +28428,12 @@ function visit(schema, fnOrHandlers) {
       }
       case "record":
       case "map": {
-        const newKey = run2(def.keyType);
-        const newVal = run2(def.valueType);
+        const newKey = run(def.keyType);
+        const newVal = run(def.valueType);
         return newKey === def.keyType && newVal === def.valueType ? s : clone(s, { ...def, keyType: newKey, valueType: newVal });
       }
       case "set": {
-        const newVal = run2(def.valueType);
+        const newVal = run(def.valueType);
         return newVal === def.valueType ? s : clone(s, { ...def, valueType: newVal });
       }
       case "union": {
@@ -28441,7 +28441,7 @@ function visit(schema, fnOrHandlers) {
         let changed = false;
         const newOptions = [];
         for (const opt of oldOptions) {
-          const mapped = run2(opt);
+          const mapped = run(opt);
           if (mapped !== opt)
             changed = true;
           newOptions.push(mapped);
@@ -28449,8 +28449,8 @@ function visit(schema, fnOrHandlers) {
         return changed ? clone(s, { ...def, options: newOptions }) : s;
       }
       case "intersection": {
-        const newLeft = run2(def.left);
-        const newRight = run2(def.right);
+        const newLeft = run(def.left);
+        const newRight = run(def.right);
         return newLeft === def.left && newRight === def.right ? s : clone(s, { ...def, left: newLeft, right: newRight });
       }
       case "optional":
@@ -28462,23 +28462,23 @@ function visit(schema, fnOrHandlers) {
       case "nonoptional":
       case "promise":
       case "success": {
-        const newInner = run2(def.innerType);
+        const newInner = run(def.innerType);
         return newInner === def.innerType ? s : clone(s, { ...def, innerType: newInner });
       }
       case "pipe": {
-        const newIn = run2(def.in);
-        const newOut = run2(def.out);
+        const newIn = run(def.in);
+        const newOut = run(def.out);
         return newIn === def.in && newOut === def.out ? s : clone(s, { ...def, in: newIn, out: newOut });
       }
       case "function": {
-        const newInput = run2(def.input);
-        const newOutput = run2(def.output);
+        const newInput = run(def.input);
+        const newOutput = run(def.output);
         return newInput === def.input && newOutput === def.output ? s : clone(s, { ...def, input: newInput, output: newOutput });
       }
       case "lazy": {
         const original = def.getter;
         const { _cachedInner, ...rest } = def;
-        return clone(s, { ...rest, getter: () => run2(original()) });
+        return clone(s, { ...rest, getter: () => run(original()) });
       }
       // A leaf by choice: `parts` are regex fragments, not data positions.
       case "template_literal":
@@ -28509,7 +28509,7 @@ function visit(schema, fnOrHandlers) {
       }
     }
   }
-  return run2(schema);
+  return run(schema);
 }
 
 // node_modules/@modelcontextprotocol/sdk/dist/esm/server/zod-compat.js
@@ -28596,11 +28596,11 @@ function normalizeObjectSchema(schema) {
   }
   return void 0;
 }
-function getDotPath(path18) {
-  if (path18.length === 0) {
+function getDotPath(path19) {
+  if (path19.length === 0) {
     return "object root";
   }
-  return path18.reduce((acc, seg, index) => {
+  return path19.reduce((acc, seg, index) => {
     if (index === 0) {
       return String(seg);
     }
@@ -30827,13 +30827,13 @@ function resolveRef(ref, ctx) {
   if (!ref.startsWith("#")) {
     throw new Error("External $ref is not supported, only local refs (#/...) are allowed");
   }
-  const path18 = ref.slice(1).split("/").filter(Boolean);
-  if (path18.length === 0) {
+  const path19 = ref.slice(1).split("/").filter(Boolean);
+  if (path19.length === 0) {
     return ctx.rootSchema;
   }
   const defsKey = ctx.version === "draft-2020-12" ? "$defs" : "definitions";
-  if (path18[0] === defsKey) {
-    const key = path18[1] === void 0 ? void 0 : decodeJSONPointerSegment(path18[1]);
+  if (path19[0] === defsKey) {
+    const key = path19[1] === void 0 ? void 0 : decodeJSONPointerSegment(path19[1]);
     if (!key || !ctx.defs[key]) {
       throw new Error(`Reference not found: ${ref}`);
     }
@@ -34911,7 +34911,7 @@ var Protocol = class {
           return;
         }
         const pollInterval = task2.pollInterval ?? this._options?.defaultTaskPollInterval ?? 1e3;
-        await new Promise((resolve12) => setTimeout(resolve12, pollInterval));
+        await new Promise((resolve13) => setTimeout(resolve13, pollInterval));
         options?.signal?.throwIfAborted();
       }
     } catch (error62) {
@@ -34928,7 +34928,7 @@ var Protocol = class {
    */
   request(request, resultSchema, options) {
     const { relatedRequestId, resumptionToken, onresumptiontoken, task, relatedTask } = options ?? {};
-    return new Promise((resolve12, reject) => {
+    return new Promise((resolve13, reject) => {
       const earlyReject = (error62) => {
         reject(error62);
       };
@@ -35006,7 +35006,7 @@ var Protocol = class {
           if (!parseResult.success) {
             reject(parseResult.error);
           } else {
-            resolve12(parseResult.data);
+            resolve13(parseResult.data);
           }
         } catch (error62) {
           reject(error62);
@@ -35268,12 +35268,12 @@ var Protocol = class {
       }
     } catch {
     }
-    return new Promise((resolve12, reject) => {
+    return new Promise((resolve13, reject) => {
       if (signal.aborted) {
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
         return;
       }
-      const timeoutId = setTimeout(resolve12, interval);
+      const timeoutId = setTimeout(resolve13, interval);
       signal.addEventListener("abort", () => {
         clearTimeout(timeoutId);
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
@@ -36149,11 +36149,11 @@ function toolInputElementCount(value, max) {
     if (node2 === null || typeof node2 !== "object")
       continue;
     if (Array.isArray(node2)) {
-      for (const child of node2) {
+      for (const child2 of node2) {
         if (++count > max)
           return count;
-        if (child !== null && typeof child === "object")
-          stack.push(child);
+        if (child2 !== null && typeof child2 === "object")
+          stack.push(child2);
       }
     } else {
       for (const key in node2) {
@@ -36161,9 +36161,9 @@ function toolInputElementCount(value, max) {
           continue;
         if (++count > max)
           return count;
-        const child = node2[key];
-        if (child !== null && typeof child === "object")
-          stack.push(child);
+        const child2 = node2[key];
+        if (child2 !== null && typeof child2 === "object")
+          stack.push(child2);
       }
     }
   }
@@ -36404,7 +36404,7 @@ var McpServer = class {
     let task = createTaskResult.task;
     const pollInterval = task.pollInterval ?? 5e3;
     while (task.status !== "completed" && task.status !== "failed" && task.status !== "cancelled") {
-      await new Promise((resolve12) => setTimeout(resolve12, pollInterval));
+      await new Promise((resolve13) => setTimeout(resolve13, pollInterval));
       const updatedTask = await extra.taskStore.getTask(taskId);
       if (!updatedTask) {
         throw new McpError(ErrorCode.InternalError, `Task ${taskId} not found during polling`);
@@ -37068,12 +37068,12 @@ var StdioServerTransport = class {
     this.onclose?.();
   }
   send(message) {
-    return new Promise((resolve12) => {
+    return new Promise((resolve13) => {
       const json2 = serializeMessage(message);
       if (this._stdout.write(json2)) {
-        resolve12();
+        resolve13();
       } else {
-        this._stdout.once("drain", resolve12);
+        this._stdout.once("drain", resolve13);
       }
     });
   }
@@ -37112,7 +37112,8 @@ function buildInstanceLaunchPlan(aePath, instanceId, platform = process.platform
 }
 function buildLaunchPlan(aePath, platform = process.platform, runtimeDir = RUNTIME_DIR, dispatcherJsx = DISPATCHER_JSX) {
   if (platform === "darwin") {
-    const bootstrap = `$.global.AE_MCP_RUNTIME_DIR_OVERRIDE = ${jsxPath(runtimeDir)}; $.evalFile(${jsxPath(dispatcherJsx)});`;
+    const dispatcher = jsxPath(dispatcherJsx);
+    const bootstrap = `$.global.AE_MCP_RUNTIME_DIR_OVERRIDE = ${jsxPath(runtimeDir)}; try { if (new File(${dispatcher}).exists) $.evalFile(${dispatcher}); } catch (eBoot) { try { var _bootLog = new File(${jsxPath(runtimeDir)} + '/dispatcher.log'); if (_bootLog.open('a')) { _bootLog.writeln('[' + new Date().toString() + '] bootstrap: ' + eBoot); _bootLog.close(); } } catch (eLog) {} }`;
     return {
       command: "/usr/bin/osascript",
       args: [
@@ -37829,7 +37830,7 @@ if (mode === 'dismiss') {
 function encodeScript(script) {
   return Buffer.from(script, "utf16le").toString("base64");
 }
-var defaultRunner = (script, env) => new Promise((resolve12, reject) => {
+var defaultRunner = (script, env) => new Promise((resolve13, reject) => {
   execFile(
     "powershell.exe",
     [
@@ -37847,10 +37848,10 @@ var defaultRunner = (script, env) => new Promise((resolve12, reject) => {
       encoding: "utf8",
       maxBuffer: 1024 * 1024
     },
-    (err, stdout) => err ? reject(err) : resolve12(stdout)
+    (err, stdout) => err ? reject(err) : resolve13(stdout)
   );
 });
-var defaultOsascriptRunner = (script, env) => new Promise((resolve12, reject) => {
+var defaultOsascriptRunner = (script, env) => new Promise((resolve13, reject) => {
   execFile(
     "/usr/bin/osascript",
     ["-l", "JavaScript", "-e", script],
@@ -37860,7 +37861,7 @@ var defaultOsascriptRunner = (script, env) => new Promise((resolve12, reject) =>
       encoding: "utf8",
       maxBuffer: 1024 * 1024
     },
-    (err, stdout) => err ? reject(err) : resolve12(stdout)
+    (err, stdout) => err ? reject(err) : resolve13(stdout)
   );
 });
 var runner = defaultRunner;
@@ -38000,6 +38001,7 @@ var FileIpcTransport = class {
   setupError = null;
   instanceOption;
   spawnFn;
+  dispatcherJsx;
   scanDialogs;
   reapIntervalMs;
   emptyTmpGraceMs;
@@ -38010,6 +38012,7 @@ var FileIpcTransport = class {
     this.reapIntervalMs = options.reapIntervalMs ?? REAP_INTERVAL_MS;
     this.emptyTmpGraceMs = options.emptyTmpGraceMs ?? EMPTY_TMP_GRACE_MS;
     this.spawnFn = options.spawn ?? ((command, args, opts) => nodeSpawn(command, args, opts));
+    this.dispatcherJsx = options.dispatcherJsx ?? DISPATCHER_JSX;
     this.scanDialogs = options.scanDialogs ?? (() => scanAeWindows());
     try {
       mkdirSync(RUNTIME_DIR, { recursive: true, mode: RUNTIME_DIR_MODE });
@@ -38213,6 +38216,16 @@ var FileIpcTransport = class {
         });
       }
     }
+    if (!await this.fileExists(this.dispatcherJsx)) {
+      return failure2(
+        "TRANSPORT",
+        `the dispatcher script ${this.dispatcherJsx} is not there (the plugin was updated, moved or removed while this server ran); nothing was sent to After Effects`,
+        {
+          durationMs: Date.now() - started,
+          hint: "Restart the MCP server (or the agent host) so it runs from the plugin's current folder."
+        }
+      );
+    }
     const id = request.id;
     const requestPath = requestPathFor(id);
     const responsePath = responsePathFor(id);
@@ -38338,28 +38351,28 @@ var FileIpcTransport = class {
    * how a denied macOS Automation permission (-1743) surfaces in seconds.
    */
   launchDispatcher(state) {
-    const launch = buildLaunchPlan(this.afterFxPath);
+    const launch = buildLaunchPlan(this.afterFxPath, process.platform, RUNTIME_DIR, this.dispatcherJsx);
     state.child = null;
     state.exited = false;
     try {
-      const child = this.spawnFn(launch.command, launch.args, {
+      const child2 = this.spawnFn(launch.command, launch.args, {
         stdio: launch.diagnoseExit ? ["ignore", "ignore", "pipe"] : "ignore",
         windowsHide: true,
         detached: false
       });
-      state.child = child;
-      child.unref?.();
-      child.on("error", (err) => {
+      state.child = child2;
+      child2.unref?.();
+      child2.on("error", (err) => {
         state.error = err;
       });
       let stderr = "";
       if (launch.diagnoseExit) {
-        child.stderr?.setEncoding("utf8");
-        child.stderr?.on("data", (chunk2) => {
+        child2.stderr?.setEncoding("utf8");
+        child2.stderr?.on("data", (chunk2) => {
           if (stderr.length < 4096) stderr += chunk2;
         });
       }
-      child.on("exit", (code) => {
+      child2.on("exit", (code) => {
         state.exited = true;
         if (launch.diagnoseExit && code !== null && code !== 0 && state.error === null) {
           const detail = stderr.trim();
@@ -38713,7 +38726,7 @@ function isAutomationDenial(message) {
   return /(?:-1743\b|not (?:authorized|permitted) to send apple events)/i.test(message);
 }
 function sleep(ms) {
-  return new Promise((resolve12) => setTimeout(resolve12, ms));
+  return new Promise((resolve13) => setTimeout(resolve13, ms));
 }
 function serializeRequest(request) {
   return JSON.stringify(request).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
@@ -44488,8 +44501,2097 @@ registerOp({
 
 // src/operations/keying.ts
 import { execFile as execFile3 } from "node:child_process";
-import { promises as fs9 } from "node:fs";
-import * as path9 from "node:path";
+import { promises as fs10 } from "node:fs";
+import * as path10 from "node:path";
+
+// src/color/motion.ts
+var DIFF_DEFAULTS = {
+  changeAbove: 0.04,
+  spikeRatio: 3,
+  holdRatio: 0.25,
+  quietBelow: 2e-3,
+  movingShare: 5e-4,
+  window: 3,
+  amplify: 8,
+  repeatBelow: 1e-4
+};
+var LIMITS = {
+  changeAbove: { min: 0, max: 1 },
+  spikeRatio: { min: 1, max: 1e3, above: true },
+  holdRatio: { min: 0, max: 1, above: true },
+  quietBelow: { min: 0, max: 1 },
+  movingShare: { min: 0, max: 1 },
+  window: { min: 1, max: 16, int: true },
+  amplify: { min: 1, max: 1e3 },
+  repeatBelow: { min: 0, max: 1 }
+};
+function resolveDiffThresholds(args = {}) {
+  const out = { ...DIFF_DEFAULTS };
+  for (const key of Object.keys(DIFF_DEFAULTS)) {
+    const v = args[key];
+    if (typeof v === "number") out[key] = v;
+  }
+  return out;
+}
+function diffArgsError(args) {
+  for (const [key, value] of Object.entries(args)) {
+    if (key === "sheet") continue;
+    const limit = LIMITS[key];
+    if (!limit) {
+      return `\`diff.${key}\` is not an option (options: ${Object.keys(LIMITS).join(", ")}, sheet)`;
+    }
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+      return `\`diff.${key}\` must be a number`;
+    }
+    const low = limit.above ? value <= limit.min : value < limit.min;
+    if (low || value > limit.max || limit.int && !Number.isInteger(value)) {
+      const range = limit.above ? `above ${limit.min} and at most ${limit.max}` : `${limit.min} to ${limit.max}`;
+      return `\`diff.${key}\` must be ${limit.int ? "a whole number " : ""}${range}, not ${value}`;
+    }
+  }
+  return null;
+}
+function pictureOf(img, straight) {
+  const n = img.width * img.height;
+  const out = new Float32Array(n * 3);
+  const a = straight ? img.alpha : void 0;
+  if (!a) {
+    out.set(img.rgb);
+    return out;
+  }
+  for (let p = 0; p < n; p++) {
+    const w = a[p];
+    const i = p * 3;
+    out[i] = img.rgb[i] * w;
+    out[i + 1] = img.rgb[i + 1] * w;
+    out[i + 2] = img.rgb[i + 2] * w;
+  }
+  return out;
+}
+var r6 = (v) => Math.round(v * 1e6) / 1e6;
+function rectStats(prev, cur, width, x0, y0, x1, y1, above, perPixel) {
+  let sum = 0;
+  let maxAbs = 0;
+  let changed = 0;
+  let bx0 = Infinity;
+  let by0 = Infinity;
+  let bx1 = -1;
+  let by1 = -1;
+  for (let y = y0; y < y1; y++) {
+    let i = (y * width + x0) * 3;
+    for (let x = x0; x < x1; x++, i += 3) {
+      const dr = Math.abs(cur[i] - prev[i]);
+      const dg = Math.abs(cur[i + 1] - prev[i + 1]);
+      const db = Math.abs(cur[i + 2] - prev[i + 2]);
+      const m = dr > dg ? dr > db ? dr : db : dg > db ? dg : db;
+      const mean = (dr + dg + db) / 3;
+      sum += mean;
+      if (m > maxAbs) maxAbs = m;
+      if (m > above) {
+        changed++;
+        if (x < bx0) bx0 = x;
+        if (x > bx1) bx1 = x;
+        if (y < by0) by0 = y;
+        if (y > by1) by1 = y;
+      }
+      if (perPixel) perPixel(x, y, mean);
+    }
+  }
+  const pixels = (x1 - x0) * (y1 - y0);
+  return {
+    pixels,
+    change: r6(pixels > 0 ? sum / pixels : 0),
+    maxAbsDelta: r6(maxAbs),
+    changedPixels: changed,
+    changedShare: r6(pixels > 0 ? changed / pixels : 0),
+    changedBounds: changed > 0 ? { x: bx0, y: by0, width: bx1 - bx0 + 1, height: by1 - by0 + 1 } : null
+  };
+}
+function pictureChange(prev, cur, width, height, t, opts = {}) {
+  let perPixel;
+  let sums = null;
+  let counts = null;
+  const tw = opts.thumb?.width ?? 0;
+  if (opts.thumb) {
+    const th = opts.thumb.height;
+    sums = new Float64Array(tw * th);
+    counts = new Float64Array(tw * th);
+    const col = new Int32Array(width);
+    for (let x = 0; x < width; x++) col[x] = Math.min(tw - 1, Math.floor(x * tw / width));
+    const row = new Int32Array(height);
+    for (let y = 0; y < height; y++) row[y] = Math.min(th - 1, Math.floor(y * th / height)) * tw;
+    const s = sums;
+    const c = counts;
+    perPixel = (x, y, mean) => {
+      const k = row[y] + col[x];
+      s[k] += mean;
+      c[k]++;
+    };
+  }
+  const all = rectStats(prev, cur, width, 0, 0, width, height, t.changeAbove, perPixel);
+  const out = { all };
+  if (opts.regions) {
+    out.regions = opts.regions.map((region) => {
+      const clip = clipRegion({ width, height }, region);
+      if (!clip)
+        return { name: region.name, error: `region is outside the ${width}\xD7${height} frame` };
+      const { x, y, width: w, height: h } = clip.rect;
+      return {
+        name: region.name,
+        ...rectStats(prev, cur, width, x, y, x + w, y + h, t.changeAbove)
+      };
+    });
+  }
+  if (sums && counts) {
+    const thumb = new Float64Array(sums.length);
+    for (let k = 0; k < sums.length; k++) {
+      thumb[k] = counts[k] > 0 ? Math.min(1, sums[k] / counts[k] * t.amplify) : 0;
+    }
+    out.thumb = thumb;
+  }
+  return out;
+}
+function lowerMedian(values) {
+  const s = [...values].sort((a, b) => a - b);
+  return s[Math.floor((s.length - 1) / 2)];
+}
+function side(pairs, p, dir, window, skip) {
+  const changes = [];
+  const shares = [];
+  for (let k = 1; k <= window; k++) {
+    const j = p + dir * k;
+    if (j < 0 || j >= pairs.length) break;
+    if (skip.has(j)) continue;
+    changes.push(pairs[j].change);
+    shares.push(pairs[j].changedShare);
+  }
+  if (changes.length === 0) return null;
+  return { change: lowerMedian(changes), share: lowerMedian(shares) };
+}
+var fmt = (v) => v.toFixed(4);
+var frameText = (f) => `#${f.index}${f.time === void 0 ? "" : ` (${r6(f.time)} s)`}`;
+function summarizeSeries(pairs, t) {
+  const n = pairs.length;
+  const changes = pairs.map((p) => p.change);
+  let largest = 0;
+  let smallest = 0;
+  for (let i = 1; i < n; i++) {
+    if (changes[i] > changes[largest]) largest = i;
+    if (changes[i] < changes[smallest]) smallest = i;
+  }
+  const summary = {
+    pairs: n,
+    median: n > 0 ? r6(lowerMedian(changes)) : 0,
+    mean: n > 0 ? r6(changes.reduce((a, b) => a + b, 0) / n) : 0,
+    largest: { pair: largest, change: n > 0 ? changes[largest] : 0 },
+    smallest: { pair: smallest, change: n > 0 ? changes[smallest] : 0 },
+    flags: [],
+    reading: ""
+  };
+  if (n < 2) {
+    summary.reading = n === 0 ? "no pair of consecutive frames to compare" : "one pair: nothing to compare it with, so nothing is flagged (render at least three frames)";
+    return summary;
+  }
+  const repeats = new Set(pairs.flatMap((p, i) => p.change <= t.repeatBelow ? [i] : []));
+  const near = (i, set2) => {
+    for (let k = 1; k <= t.window; k++) if (set2.has(i - k) || set2.has(i + k)) return true;
+    return false;
+  };
+  const standsOut = (p, i, skip) => {
+    if (repeats.has(i) || p.changedShare < t.movingShare) return null;
+    const sides = [side(pairs, i, -1, t.window, skip), side(pairs, i, 1, t.window, skip)].filter(
+      (s) => s !== null
+    );
+    if (sides.length === 0) return null;
+    const reference = Math.max(...sides.map((s) => s.change), t.quietBelow);
+    if (sides.some((s) => p.change < t.spikeRatio * Math.max(s.change, t.quietBelow))) return null;
+    return { reference, edge: i === 0 || i === n - 1, besideRepeat: near(i, repeats) };
+  };
+  const first = pairs.map((p, i) => standsOut(p, i, repeats));
+  const firstSpikes = new Set(first.flatMap((s, i) => s ? [i] : []));
+  const skipBoth = /* @__PURE__ */ new Set([...repeats, ...firstSpikes]);
+  const spike = pairs.map(
+    (p, i) => first[i] ?? (firstSpikes.size > 0 ? standsOut(p, i, skipBoth) : null)
+  );
+  const spikes = new Set(spike.flatMap((s, i) => s ? [i] : []));
+  const repeatNote = " (a repeated frame is next to it and was left out of the comparison)";
+  const flags = [];
+  for (let i = 0; i < n; i++) {
+    const s = spike[i];
+    if (!s) continue;
+    const runStart = i === 0 || !spike[i - 1];
+    if (!runStart) continue;
+    let end = i;
+    while (end + 1 < n && spike[end + 1]) end++;
+    if (end === i + 1) {
+      const reference = Math.max(s.reference, spike[end].reference);
+      const change = Math.min(pairs[i].change, pairs[end].change);
+      const frame = pairs[i].to;
+      const flag = {
+        kind: "pop",
+        pairs: [i, end],
+        frame,
+        change,
+        reference: r6(reference),
+        ratio: r6(change / reference),
+        reading: `frame ${frameText(frame)} differs from the frames before and after it by ${fmt(change)} or more, while its neighbours change about ${fmt(reference)}: a one-frame pop`
+      };
+      if (s.besideRepeat || spike[end].besideRepeat) {
+        flag.besideRepeat = true;
+        flag.reading += repeatNote;
+      }
+      flags.push(flag);
+      continue;
+    }
+    for (let j = i; j <= end; j++) {
+      const sj = spike[j];
+      const between = [pairs[j].from, pairs[j].to];
+      const flag = {
+        kind: "cut",
+        pairs: [j],
+        between,
+        change: pairs[j].change,
+        reference: r6(sj.reference),
+        ratio: r6(pairs[j].change / sj.reference),
+        reading: `${frameText(between[0])} to ${frameText(between[1])} changes ${fmt(pairs[j].change)}, ${(pairs[j].change / sj.reference).toFixed(1)}\xD7 its neighbours: a cut or a jump`
+      };
+      if (sj.edge) {
+        flag.atSeriesEdge = true;
+        flag.reading += " (first or last pair: it could also be a pop of the end frame)";
+      }
+      if (sj.besideRepeat) {
+        flag.besideRepeat = true;
+        flag.reading += repeatNote;
+      }
+      flags.push(flag);
+    }
+  }
+  const moving = (s) => s !== null && s.change >= t.quietBelow && s.share >= t.movingShare;
+  const notSpikes = /* @__PURE__ */ new Set([...spikes, ...repeats]);
+  const neighbours = (i) => [i - 1, i + 1].filter((j) => j >= 0 && j < n && !repeats.has(j));
+  for (let i = 0; i < n; i++) {
+    if (spikes.has(i)) continue;
+    const before = side(pairs, i, -1, t.window, notSpikes);
+    const after = side(pairs, i, 1, t.window, notSpikes);
+    const frame = pairs[i].to;
+    const unreliablePairs = neighbours(i);
+    const unreliable = unreliablePairs.length > 0 ? `; pair${unreliablePairs.length > 1 ? "s" : ""} ${unreliablePairs.join(" and ")} beside it ${unreliablePairs.length > 1 ? "are" : "is"} measured across the repeat, so ${unreliablePairs.length > 1 ? "their readings are" : "its reading is"} unreliable` : "";
+    if (before && after && moving(before) && moving(after)) {
+      const reference2 = Math.min(before.change, after.change);
+      if (pairs[i].change > t.holdRatio * reference2) continue;
+      flags.push({
+        kind: "stutter",
+        pairs: [i],
+        frame,
+        change: pairs[i].change,
+        reference: r6(reference2),
+        ratio: r6(pairs[i].change / reference2),
+        unreliablePairs,
+        reading: `frame ${frameText(frame)} barely changes from the one before (${fmt(pairs[i].change)}) while the frames around it move about ${fmt(reference2)}: a repeated frame, a stutter${unreliable}. Rounded times can do this: a time just below a frame boundary renders the frame before (see frameWarning)`
+      });
+      continue;
+    }
+    if (!repeats.has(i)) continue;
+    const rawBefore = side(pairs, i, -1, t.window, spikes);
+    const rawAfter = side(pairs, i, 1, t.window, spikes);
+    const atEdge = rawBefore === null || rawAfter === null;
+    if (!atEdge || !(moving(rawBefore) || moving(rawAfter))) continue;
+    const reference = (moving(rawBefore) ? rawBefore : rawAfter).change;
+    flags.push({
+      kind: "repeat",
+      pairs: [i],
+      frame,
+      change: pairs[i].change,
+      reference: r6(reference),
+      ratio: r6(pairs[i].change / reference),
+      atSeriesEdge: true,
+      unreliablePairs,
+      reading: `frame ${frameText(frame)} repeats the one before (change ${fmt(pairs[i].change)}) beside motion of about ${fmt(reference)}, at the ${rawBefore === null ? "start" : "end"} of the series, so a stutter cannot be told from a hold${unreliable}`
+    });
+  }
+  flags.sort((a, b) => a.pairs[0] - b.pairs[0]);
+  summary.flags = flags;
+  const counts = ["pop", "stutter", "cut", "repeat"].map((k) => [k, flags.filter((f) => f.kind === k).length]).filter(([, c]) => c > 0).map(([k, c]) => `${c} ${k}${c > 1 ? "s" : ""}`);
+  summary.reading = `${n} pairs, median change ${fmt(summary.median)}, largest ${fmt(summary.largest.change)} (pair ${largest}); ` + (flags.length === 0 ? "no pair stands out from its neighbours" : `${counts.join(", ")}: ${flags.map((f) => `${f.kind} at pair ${f.pairs.join("+")}`).join("; ")}`);
+  return summary;
+}
+function cellLuma(img, cell) {
+  const w = Math.ceil(img.width / cell);
+  const h = Math.ceil(img.height / cell);
+  const out = new Float32Array(w * h);
+  const n = new Float32Array(w * h);
+  for (let y = 0; y < img.height; y++) {
+    const row = Math.floor(y / cell) * w;
+    for (let x = 0; x < img.width; x++) {
+      const p = (y * img.width + x) * 3;
+      const k = row + Math.floor(x / cell);
+      out[k] += 0.2126 * img.rgb[p] + 0.7152 * img.rgb[p + 1] + 0.0722 * img.rgb[p + 2];
+      n[k]++;
+    }
+  }
+  for (let k = 0; k < out.length; k++) out[k] /= n[k] || 1;
+  return out;
+}
+function aboveFloor(m) {
+  const s = m.values.slice().sort((a, b) => a - b);
+  const floor = s[Math.floor(s.length / 2)] ?? 0;
+  return Float64Array.from(m.values, (v) => Math.max(0, v - floor));
+}
+function motionCentre(m) {
+  const a = aboveFloor(m);
+  let s = 0;
+  let sx = 0;
+  let sy = 0;
+  for (let y = 0; y < m.height; y++)
+    for (let x = 0; x < m.width; x++) {
+      const v = a[y * m.width + x];
+      s += v;
+      sx += v * (x + 0.5);
+      sy += v * (y + 0.5);
+    }
+  if (s <= 0) return null;
+  const cx = sx / s;
+  const cy = sy / s;
+  let vx = 0;
+  let vy = 0;
+  for (let y = 0; y < m.height; y++)
+    for (let x = 0; x < m.width; x++) {
+      const v = a[y * m.width + x];
+      vx += v * (x + 0.5 - cx) ** 2;
+      vy += v * (y + 0.5 - cy) ** 2;
+    }
+  const r32 = (v) => Math.round(v * 1e3) / 1e3;
+  return {
+    x: r32(cx / m.width),
+    y: r32(cy / m.height),
+    spreadX: r32(Math.sqrt(vx / s) / m.width),
+    spreadY: r32(Math.sqrt(vy / s) / m.height)
+  };
+}
+function registerMotionMaps(ref, build) {
+  const ra = aboveFloor(ref);
+  const ba = aboveFloor(build);
+  const rc = motionCentre(ref);
+  const bc = motionCentre(build);
+  if (!rc || !bc) return null;
+  const W = ref.width;
+  const H = ref.height;
+  const crx = rc.x * W;
+  const cry = rc.y * H;
+  const cbx = bc.x * build.width;
+  const cby = bc.y * build.height;
+  const kx = build.width / W;
+  const ky = build.height / H;
+  const corr = (s, dx, dy) => {
+    let sab = 0;
+    let saa = 0;
+    let sbb = 0;
+    let sa = 0;
+    let sb = 0;
+    let n = 0;
+    for (let y = 0; y < H; y++) {
+      const by = Math.floor(s * (y + 0.5 - cry) * ky + cby + dy);
+      if (by < 0 || by >= build.height) continue;
+      for (let x = 0; x < W; x++) {
+        const bx = Math.floor(s * (x + 0.5 - crx) * kx + cbx + dx);
+        if (bx < 0 || bx >= build.width) continue;
+        const va = ra[y * W + x];
+        const vb = ba[by * build.width + bx];
+        sab += va * vb;
+        saa += va * va;
+        sbb += vb * vb;
+        sa += va;
+        sb += vb;
+        n++;
+      }
+    }
+    if (n < 4) return -1;
+    const d = (saa - sa * sa / n) * (sbb - sb * sb / n);
+    return d > 0 ? (sab - sa * sb / n) / Math.sqrt(d) : -1;
+  };
+  const rx = Math.max(2, Math.ceil(0.12 * build.width));
+  const ry = Math.max(2, Math.ceil(0.12 * build.height));
+  let best = { c: -2, s: 1, dx: 0, dy: 0 };
+  for (let s = 0.5; s <= 1.6001; s += 0.02)
+    for (let dy = -ry; dy <= ry; dy++)
+      for (let dx = -rx; dx <= rx; dx++) {
+        const c = corr(s, dx, dy);
+        if (c > best.c) best = { c, s, dx, dy };
+      }
+  const coarse = best;
+  for (let s = coarse.s - 0.02; s <= coarse.s + 0.02001; s += 5e-3)
+    for (let dy = coarse.dy - 1; dy <= coarse.dy + 1; dy++)
+      for (let dx = coarse.dx - 1; dx <= coarse.dx + 1; dx++) {
+        const c = corr(s, dx, dy);
+        if (c > best.c) best = { c, s, dx, dy };
+      }
+  const r32 = (v) => Math.round(v * 1e3) / 1e3;
+  return {
+    scale: r32(best.s),
+    from: { x: rc.x, y: rc.y },
+    to: { x: r32((cbx + best.dx) / build.width), y: r32((cby + best.dy) / build.height) },
+    correlation: r32(best.c)
+  };
+}
+var CURVE_DEFAULTS = {
+  restBelow: 0.02,
+  noEaseAbove: 0.6,
+  jumpRatio: 2.5,
+  jumpShare: 0.25,
+  settleWithin: 0.01,
+  joinGap: 2
+};
+var median = (v) => {
+  if (!v.length) return 0;
+  const s = v.slice().sort((a, b) => a - b);
+  const m = s.length >> 1;
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+};
+var norm = (v) => Math.sqrt(v.reduce((s, x) => s + x * x, 0));
+var sub = (a, b) => a.map((x, i) => x - (b[i] ?? 0));
+var rnd = (v, k = 1e3) => Math.round(v * k) / k;
+function analyzeCurve(samples, fps, opts = {}) {
+  const o = { ...CURVE_DEFAULTS };
+  for (const [k, v] of Object.entries(opts)) if (typeof v === "number") o[k] = v;
+  const frames = samples.map((s, i) => ({
+    ...s,
+    speed: i === 0 ? 0 : rnd(norm(sub(s.value, samples[i - 1].value)) * fps)
+  }));
+  const peak = Math.max(0, ...frames.map((f) => f.speed));
+  const flags = [];
+  if (peak <= 1e-9)
+    return { frames, moves: [], flags, reading: "The property does not move over the frames read." };
+  const moving = frames.map((f) => f.speed > o.restBelow * peak);
+  const runs = [];
+  for (let i = 0; i < frames.length; i++) {
+    if (!moving[i]) continue;
+    let j = i;
+    while (j + 1 < frames.length && moving[j + 1]) j++;
+    const last = runs[runs.length - 1];
+    if (last && i - last[1] - 1 <= o.joinGap) last[1] = j;
+    else runs.push([i, j]);
+    i = j;
+  }
+  const moves = runs.map(([i0, i1]) => {
+    const from = Math.max(0, i0 - 1);
+    const to = i1;
+    const sp = frames.slice(i0, i1 + 1).map((f) => f.speed);
+    const mid = median(sp);
+    let pk = i0;
+    for (let i = i0; i <= i1; i++) if (frames[i].speed > frames[pk].speed) pk = i;
+    const start = frames[from].value;
+    const end = frames[to].value;
+    const way = sub(end, start);
+    const distance = norm(way);
+    const unit = distance > 0 ? way.map((x) => x / distance) : way;
+    let over = 0;
+    let overFrame = -1;
+    let crossed = -1;
+    for (let i = i0; i <= to; i++) {
+      const p = sub(frames[i].value, end).reduce((s, x, k) => s + x * unit[k], 0);
+      if (p > over) {
+        over = p;
+        overFrame = frames[i].frame;
+      }
+      if (crossed < 0 && p >= -o.settleWithin * distance) crossed = i;
+    }
+    const overshoot = distance > 0 && over / distance >= o.settleWithin ? { amount: rnd(over), share: rnd(over / distance), frame: overFrame } : null;
+    let settle2 = null;
+    if (overshoot && crossed >= 0) {
+      let at = to;
+      while (at - 1 > crossed && norm(sub(frames[at - 1].value, end)) <= o.settleWithin * distance) at--;
+      settle2 = { frames: frames[at].frame - frames[crossed].frame, from: frames[crossed].frame, at: frames[at].frame };
+    }
+    return {
+      from: frames[from].frame,
+      to: frames[to].frame,
+      distance: rnd(distance),
+      peakSpeed: rnd(frames[pk].speed),
+      peakFrame: frames[pk].frame,
+      startEase: mid > 0 && frames[i0].speed >= o.noEaseAbove * mid ? "none" : "eased",
+      endEase: mid > 0 && frames[i1].speed >= o.noEaseAbove * mid ? "none" : "eased",
+      overshoot,
+      settle: settle2
+    };
+  });
+  for (const [k, m] of moves.entries()) {
+    const [i0, i1] = runs[k];
+    const span = `The move from frame ${m.from} to ${m.to}`;
+    const mid = median(frames.slice(i0, i1 + 1).map((f) => f.speed));
+    const pc = (v) => `${Math.round(v / (mid || 1) * 100)}%`;
+    if (m.startEase === "none" || m.endEase === "none") {
+      const both = m.startEase === "none" && m.endEase === "none";
+      flags.push({
+        kind: "no ease",
+        frames: both ? [m.from, m.to] : m.startEase === "none" ? [m.from] : [m.to],
+        reading: `${span} ${both ? "starts and stops at full speed" : m.startEase === "none" ? "starts at full speed" : "stops at full speed"} (no ease): its ${both ? `first and last moving frames run at ${pc(frames[i0].speed)} and ${pc(frames[i1].speed)}` : m.startEase === "none" ? `first moving frame runs at ${pc(frames[i0].speed)}` : `last moving frame runs at ${pc(frames[i1].speed)}`} of its middle speed. Ease it, unless a mechanical, constant move is meant.`
+      });
+    }
+    const movePeak = m.peakSpeed;
+    for (let j = i0 + 2; j <= i1 - 1; j++) {
+      const a = frames[j - 1].speed;
+      const b = frames[j].speed;
+      const lo = Math.min(a, b);
+      if (Math.abs(b - a) >= o.jumpShare * movePeak && (lo <= 0 || Math.max(a, b) / lo >= o.jumpRatio))
+        flags.push({
+          kind: "speed jump",
+          frames: [frames[j - 1].frame, frames[j].frame],
+          reading: `${span} jumps in speed between frames ${frames[j - 1].frame} and ${frames[j].frame}: ${rnd(a, 10)} to ${rnd(b, 10)} units a second (top ${rnd(movePeak, 10)}). Look at the keys there.`
+        });
+    }
+    if (m.overshoot)
+      flags.push({
+        kind: "overshoot",
+        frames: [m.overshoot.frame],
+        reading: `${span} overshoots by ${Math.round(m.overshoot.share * 100)}% of its distance (${rnd(m.overshoot.amount, 10)} units, at frame ${m.overshoot.frame})${m.settle ? ` and takes ${m.settle.frames} frames to settle within ${o.settleWithin * 100}% (frames ${m.settle.from} to ${m.settle.at})` : ""}. Whether that is the bounce you want is a judgment.`
+      });
+  }
+  const problems = flags.filter((f) => f.kind !== "overshoot");
+  return {
+    frames,
+    moves,
+    flags,
+    reading: `${moves.length} move${moves.length === 1 ? "" : "s"} over frames ${frames[0].frame} to ${frames[frames.length - 1].frame}; ` + (problems.length ? problems.map((f) => f.reading).join(" ") : "every move eases in and out, with no jump in speed.") + flags.filter((f) => f.kind === "overshoot").map((f) => ` ${f.reading}`).join("")
+  };
+}
+function curveGraph(r, size = { width: 480, height: 160 }) {
+  const { width: W, height: H } = size;
+  const rgb = new Float64Array(W * H * 3);
+  const put = (x, y, c) => {
+    if (x < 0 || y < 0 || x >= W || y >= H) return;
+    const p = (Math.round(y) * W + Math.round(x)) * 3;
+    rgb[p] = c[0];
+    rgb[p + 1] = c[1];
+    rgb[p + 2] = c[2];
+  };
+  for (let i = 0; i < W * H; i++) rgb.set([0.08, 0.08, 0.1], i * 3);
+  const n = r.frames.length;
+  if (!n) return { width: W, height: H, rgb };
+  const pad = 6;
+  const X = (i) => pad + (W - 2 * pad) * i / Math.max(1, n - 1);
+  const Y = (u) => H - pad - (H - 2 * pad) * u;
+  const first = r.frames[0].frame;
+  for (const m of r.moves)
+    for (let x = Math.floor(X(m.from - first)); x <= Math.ceil(X(m.to - first)); x++)
+      for (let y = pad; y < H - pad; y++) put(x, y, [0.14, 0.14, 0.18]);
+  const line = (vals, c) => {
+    const lo = Math.min(...vals);
+    const hi = Math.max(...vals);
+    const s = hi - lo > 1e-12 ? hi - lo : 1;
+    for (let i = 1; i < n; i++) {
+      const x0 = X(i - 1);
+      const x1 = X(i);
+      const y0 = Y((vals[i - 1] - lo) / s);
+      const y1 = Y((vals[i] - lo) / s);
+      const steps2 = Math.max(1, Math.ceil(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0))));
+      for (let k = 0; k <= steps2; k++) put(x0 + (x1 - x0) * k / steps2, y0 + (y1 - y0) * k / steps2, c);
+    }
+  };
+  const dims2 = r.frames[0].value.length;
+  for (let d = 0; d < dims2; d++) line(r.frames.map((f) => f.value[d] ?? 0), [0.85 - 0.2 * d, 0.85, 0.9]);
+  line(r.frames.map((f) => f.speed), [1, 0.55, 0.15]);
+  for (const f of r.flags.filter((x) => x.kind !== "overshoot"))
+    for (const fr of f.frames) for (let y = pad; y < pad + 10; y++) put(X(fr - first), y, [0.95, 0.2, 0.2]);
+  return { width: W, height: H, rgb };
+}
+function soundOnsets(values, fps, opts = {}) {
+  const share = opts.share ?? 0.3;
+  const gap = opts.gap ?? 3;
+  const top = Math.max(0, ...values);
+  if (top <= 1e-6) return [];
+  const floor = median(values);
+  const thr = floor + share * (top - floor);
+  const out = [];
+  let last = -Infinity;
+  for (let f = 0; f < values.length; f++) {
+    if (values[f] >= thr && (f === 0 || values[f - 1] < thr) && f - last >= gap) {
+      out.push({ frame: f, time: f / fps, level: rnd(values[f]) });
+      last = f;
+    }
+  }
+  return out;
+}
+function parseTiming(text, fps) {
+  const t = text.trim();
+  if (t.startsWith("[") || t.startsWith("{")) {
+    const j = JSON.parse(t);
+    const list = Array.isArray(j) ? j : j.words ?? j.markers ?? j.beats ?? [];
+    return list.map((e, i) => {
+      const x = typeof e === "number" ? { time: e } : e;
+      const label = String(x.word ?? x.w ?? x.text ?? x.label ?? x.name ?? "");
+      const sec = [x.start, x.time, x.t].find((v) => typeof v === "number");
+      const time3 = sec ?? (typeof x.frame === "number" ? x.frame / fps : void 0);
+      if (time3 === void 0) throw new Error(`entry ${i + 1} of the timing file has no time (start, time or t in seconds, or frame)`);
+      return { time: time3, label };
+    });
+  }
+  const out = [];
+  for (const line of t.split(/\r?\n/)) {
+    const [a, ...rest] = line.split(",");
+    const time3 = Number(a);
+    if (!line.trim() || !Number.isFinite(time3)) continue;
+    out.push({ time: time3, label: rest.join(",").trim() });
+  }
+  if (!out.length) throw new Error("no time,label lines in the timing file");
+  return out;
+}
+var SYNC_DEFAULTS = { lateFrames: 2, earlyFrames: 4 };
+function syncReport(events, markers, fps, opts = {}) {
+  const o = {
+    lateFrames: opts.lateFrames ?? SYNC_DEFAULTS.lateFrames,
+    earlyFrames: opts.earlyFrames ?? SYNC_DEFAULTS.earlyFrames
+  };
+  if (!markers.length)
+    return { events: [], flags: [], reading: "No markers to compare with: add word or beat markers first (sound.markers)." };
+  const out = events.map((e) => {
+    let best = markers[0];
+    for (const m of markers) if (Math.abs(m.time - e.time) < Math.abs(best.time - e.time)) best = m;
+    return { name: e.name, time: rnd(e.time, 1e4), frames: Math.round((e.time - best.time) * fps), marker: best };
+  });
+  const flags = out.filter((e) => e.frames >= o.lateFrames || e.frames <= -o.earlyFrames).map((e) => {
+    const n = Math.abs(e.frames);
+    return {
+      ...e,
+      reading: `${e.name} is ${n} frame${n === 1 ? "" : "s"} ${e.frames > 0 ? "after" : "before"} the nearest marker (${e.marker?.label ? `'${e.marker.label}' ` : ""}at ${rnd(e.marker.time, 1e3)} s): ${e.frames > 0 ? "late" : "early"} (flagged from ${e.frames > 0 ? o.lateFrames : o.earlyFrames} frames ${e.frames > 0 ? "after" : "before"}).`
+    };
+  });
+  return {
+    events: out,
+    flags,
+    reading: flags.length ? flags.map((f) => f.reading).join(" ") : `All ${out.length} events are within ${o.lateFrames - 1} frame${o.lateFrames - 1 === 1 ? "" : "s"} after and ${o.earlyFrames - 1} before their nearest marker.`
+  };
+}
+
+// src/color/sheet.ts
+var TOL = 2 / 255;
+function px(img, x, y) {
+  const i = (y * img.width + x) * 3;
+  return [img.rgb[i], img.rgb[i + 1], img.rgb[i + 2]];
+}
+function same(a, b) {
+  return Math.abs(a[0] - b[0]) <= TOL && Math.abs(a[1] - b[1]) <= TOL && Math.abs(a[2] - b[2]) <= TOL;
+}
+function isBackground(img, x, y, bg) {
+  if (img.alpha) return img.alpha[y * img.width + x] <= TOL;
+  return bg !== null && same(px(img, x, y), bg);
+}
+function cornerColor(img) {
+  const corners = [
+    px(img, 0, 0),
+    px(img, img.width - 1, 0),
+    px(img, 0, img.height - 1),
+    px(img, img.width - 1, img.height - 1)
+  ];
+  let best = corners[0];
+  let bestCount = 0;
+  for (const c of corners) {
+    const count = corners.filter((o) => same(o, c)).length;
+    if (count > bestCount) {
+      best = c;
+      bestCount = count;
+    }
+  }
+  return best;
+}
+function lineUniform(img, fixed, horizontal) {
+  const n = horizontal ? img.width : img.height;
+  const first = horizontal ? px(img, 0, fixed) : px(img, fixed, 0);
+  let transparent = img.alpha !== void 0;
+  for (let i = 0; i < n; i++) {
+    const x = horizontal ? i : fixed;
+    const y = horizontal ? fixed : i;
+    if (transparent && img.alpha[y * img.width + x] > TOL) transparent = false;
+    if (!same(px(img, x, y), first)) return { uniform: false, transparent: false, color: first };
+  }
+  return { uniform: true, transparent, color: first };
+}
+function edgeBand(img, side2) {
+  const horizontal = side2 === "top" || side2 === "bottom";
+  const n = horizontal ? img.height : img.width;
+  let width = 0;
+  let color = null;
+  let transparent = true;
+  for (let i = 0; i < n; i++) {
+    const fixed = side2 === "top" || side2 === "left" ? i : n - 1 - i;
+    const line = lineUniform(img, fixed, horizontal);
+    if (!line.uniform) break;
+    if (color === null) color = line.color;
+    else if (!same(color, line.color)) break;
+    if (!line.transparent) transparent = false;
+    width++;
+  }
+  if (width === 0) return { width: 0, kind: "none", color: null };
+  return { width, kind: transparent && img.alpha ? "transparent" : "color", color };
+}
+function analyzeFrame(img) {
+  const { width, height } = img;
+  const bgColor = img.alpha ? null : cornerColor(img);
+  const sum = [0, 0, 0];
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+  let content = 0;
+  const first = px(img, 0, 0);
+  let uniform = true;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 3;
+      sum[0] += img.rgb[i];
+      sum[1] += img.rgb[i + 1];
+      sum[2] += img.rgb[i + 2];
+      if (uniform && !same(px(img, x, y), first)) uniform = false;
+      if (!isBackground(img, x, y, bgColor)) {
+        content++;
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  const total = width * height;
+  return {
+    width,
+    height,
+    meanRgb: [sum[0] / total, sum[1] / total, sum[2] / total],
+    uniform,
+    background: img.alpha ? { kind: "transparent", color: null } : { kind: "color", color: bgColor },
+    contentBounds: content === 0 ? null : { left: minX, top: minY, width: maxX - minX + 1, height: maxY - minY + 1 },
+    coverage: content / total,
+    edges: {
+      top: edgeBand(img, "top"),
+      bottom: edgeBand(img, "bottom"),
+      left: edgeBand(img, "left"),
+      right: edgeBand(img, "right")
+    }
+  };
+}
+var CHECKERBOARD = {
+  size: 16,
+  light: [0.8, 0.8, 0.8],
+  dark: [0.6, 0.6, 0.6]
+};
+function unmatte(img, bg) {
+  const out = Float64Array.from(img.rgb);
+  const alpha = img.alpha;
+  if (!alpha) return out;
+  for (let p = 0; p < alpha.length; p++) {
+    const a = alpha[p];
+    if (a >= 1) continue;
+    const i = p * 3;
+    for (let c = 0; c < 3; c++) {
+      out[i + c] = a <= 0 ? 0 : Math.min(1, Math.max(0, (out[i + c] - bg[c] * (1 - a)) / a));
+    }
+  }
+  return out;
+}
+function flattenOver(img, backdrop) {
+  const out = Float64Array.from(img.rgb);
+  const alpha = img.alpha;
+  if (!alpha) return out;
+  const { width, height } = img;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const p = y * width + x;
+      const a = alpha[p];
+      if (a >= 1) continue;
+      const bg = backdrop.kind === "color" ? backdrop.color : (Math.floor(x / CHECKERBOARD.size) + Math.floor(y / CHECKERBOARD.size)) % 2 === 0 ? CHECKERBOARD.light : CHECKERBOARD.dark;
+      const i = p * 3;
+      out[i] = out[i] * a + bg[0] * (1 - a);
+      out[i + 1] = out[i + 1] * a + bg[1] * (1 - a);
+      out[i + 2] = out[i + 2] * a + bg[2] * (1 - a);
+    }
+  }
+  return out;
+}
+var r4 = (v) => Math.round(v * 1e4) / 1e4;
+var r4rgb = (v) => [r4(v[0]), r4(v[1]), r4(v[2])];
+function clipRegion(img, region) {
+  const x0 = Math.floor(region.x);
+  const y0 = Math.floor(region.y);
+  const x1 = x0 + Math.max(1, Math.floor(region.width ?? 1));
+  const y1 = y0 + Math.max(1, Math.floor(region.height ?? 1));
+  const cx0 = Math.max(0, x0);
+  const cy0 = Math.max(0, y0);
+  const cx1 = Math.min(img.width, x1);
+  const cy1 = Math.min(img.height, y1);
+  if (cx1 <= cx0 || cy1 <= cy0) return null;
+  return {
+    rect: { x: cx0, y: cy0, width: cx1 - cx0, height: cy1 - cy0 },
+    clipped: cx0 !== x0 || cy0 !== y0 || cx1 !== x1 || cy1 !== y1
+  };
+}
+function outside(img, region) {
+  return { name: region.name, error: `region is outside the ${img.width}\xD7${img.height} frame` };
+}
+function sampleRegions(img, regions) {
+  return regions.map((region) => {
+    const clip = clipRegion(img, region);
+    if (!clip) return outside(img, region);
+    const { rect } = clip;
+    const sum = [0, 0, 0];
+    const min = [Infinity, Infinity, Infinity];
+    const max = [-Infinity, -Infinity, -Infinity];
+    let aSum = 0;
+    let aMin = Infinity;
+    let aMax = -Infinity;
+    let opaque = 0;
+    let transparent = 0;
+    for (let y = rect.y; y < rect.y + rect.height; y++) {
+      for (let x = rect.x; x < rect.x + rect.width; x++) {
+        const p = y * img.width + x;
+        for (let c = 0; c < 3; c++) {
+          const v = img.rgb[p * 3 + c];
+          sum[c] += v;
+          if (v < min[c]) min[c] = v;
+          if (v > max[c]) max[c] = v;
+        }
+        if (img.alpha) {
+          const a = img.alpha[p];
+          aSum += a;
+          if (a < aMin) aMin = a;
+          if (a > aMax) aMax = a;
+          if (a >= 1 - TOL) opaque++;
+          else if (a <= TOL) transparent++;
+        }
+      }
+    }
+    const n = rect.width * rect.height;
+    return {
+      name: region.name,
+      rect,
+      clipped: clip.clipped,
+      pixels: n,
+      mean: r4rgb([sum[0] / n, sum[1] / n, sum[2] / n]),
+      min: r4rgb(min),
+      max: r4rgb(max),
+      alpha: img.alpha ? {
+        mean: r4(aSum / n),
+        min: r4(aMin),
+        max: r4(aMax),
+        opaqueShare: r4(opaque / n),
+        partialShare: r4((n - opaque - transparent) / n),
+        transparentShare: r4(transparent / n)
+      } : null
+    };
+  });
+}
+function histogramOf(img, bins) {
+  const n = img.width * img.height;
+  const counts = [0, 1, 2].map(() => Array.from({ length: bins }, () => 0));
+  const aCounts = img.alpha ? Array.from({ length: bins }, () => 0) : void 0;
+  const bin = (v) => Math.min(bins - 1, Math.max(0, Math.floor(v * bins)));
+  for (let p = 0; p < n; p++) {
+    for (let c = 0; c < 3; c++) counts[c][bin(img.rgb[p * 3 + c])]++;
+    if (aCounts && img.alpha) aCounts[bin(img.alpha[p])]++;
+  }
+  return {
+    bins,
+    pixels: n,
+    r: counts[0],
+    g: counts[1],
+    b: counts[2],
+    ...aCounts ? { a: aCounts } : {}
+  };
+}
+function compareRegions(from, to, regions) {
+  if (from.width !== to.width || from.height !== to.height) {
+    throw new Error(
+      `cannot compare frames of different size (${from.width}\xD7${from.height} vs ${to.width}\xD7${to.height})`
+    );
+  }
+  const withAlpha = from.alpha !== void 0 && to.alpha !== void 0;
+  return regions.map((region) => {
+    const clip = clipRegion(from, region);
+    if (!clip) return outside(from, region);
+    const { rect } = clip;
+    const delta = [0, 0, 0];
+    const absSum = [0, 0, 0];
+    const absMax = [0, 0, 0];
+    let aDelta = 0;
+    let aAbs = 0;
+    let aMax = 0;
+    for (let y = rect.y; y < rect.y + rect.height; y++) {
+      for (let x = rect.x; x < rect.x + rect.width; x++) {
+        const p = y * from.width + x;
+        for (let c = 0; c < 3; c++) {
+          const d = to.rgb[p * 3 + c] - from.rgb[p * 3 + c];
+          delta[c] += d;
+          absSum[c] += Math.abs(d);
+          if (Math.abs(d) > absMax[c]) absMax[c] = Math.abs(d);
+        }
+        if (withAlpha) {
+          const d = to.alpha[p] - from.alpha[p];
+          aDelta += d;
+          aAbs += Math.abs(d);
+          if (Math.abs(d) > aMax) aMax = Math.abs(d);
+        }
+      }
+    }
+    const n = rect.width * rect.height;
+    return {
+      name: region.name,
+      rect,
+      clipped: clip.clipped,
+      pixels: n,
+      meanDelta: r4rgb([delta[0] / n, delta[1] / n, delta[2] / n]),
+      meanAbsDelta: r4rgb([absSum[0] / n, absSum[1] / n, absSum[2] / n]),
+      maxAbsDelta: r4rgb(absMax),
+      alpha: withAlpha ? { meanDelta: r4(aDelta / n), meanAbsDelta: r4(aAbs / n), maxAbsDelta: r4(aMax) } : null
+    };
+  });
+}
+function rgbHex(rgb) {
+  return `#${rgb.map(
+    (v) => Math.round(Math.min(1, Math.max(0, v)) * 255).toString(16).padStart(2, "0")
+  ).join("")}`;
+}
+function resample(img, tw, th) {
+  const out = new Float64Array(tw * th * 3);
+  const counts = new Float64Array(tw * th);
+  for (let y = 0; y < img.height; y++) {
+    const ty = Math.min(th - 1, Math.floor(y * th / img.height));
+    for (let x = 0; x < img.width; x++) {
+      const tx = Math.min(tw - 1, Math.floor(x * tw / img.width));
+      const si = (y * img.width + x) * 3;
+      const di = (ty * tw + tx) * 3;
+      out[di] += img.rgb[si];
+      out[di + 1] += img.rgb[si + 1];
+      out[di + 2] += img.rgb[si + 2];
+      counts[ty * tw + tx]++;
+    }
+  }
+  for (let i = 0; i < tw * th; i++) {
+    const c = counts[i] || 1;
+    out[i * 3] /= c;
+    out[i * 3 + 1] /= c;
+    out[i * 3 + 2] /= c;
+  }
+  return out;
+}
+var GLYPHS = {
+  "0": [".###.", "#...#", "#..##", "#.#.#", "##..#", "#...#", ".###."],
+  "1": ["..#..", ".##..", "..#..", "..#..", "..#..", "..#..", ".###."],
+  "2": [".###.", "#...#", "....#", "...#.", "..#..", ".#...", "#####"],
+  "3": ["#####", "...#.", "..#..", "...#.", "....#", "#...#", ".###."],
+  "4": ["...#.", "..##.", ".#.#.", "#..#.", "#####", "...#.", "...#."],
+  "5": ["#####", "#....", "####.", "....#", "....#", "#...#", ".###."],
+  "6": ["..##.", ".#...", "#....", "####.", "#...#", "#...#", ".###."],
+  "7": ["#####", "....#", "...#.", "..#..", ".#...", ".#...", ".#..."],
+  "8": [".###.", "#...#", "#...#", ".###.", "#...#", "#...#", ".###."],
+  "9": [".###.", "#...#", "#...#", ".####", "....#", "...#.", ".##.."],
+  ".": [".....", ".....", ".....", ".....", ".....", ".##..", ".##.."],
+  ":": [".....", ".##..", ".##..", ".....", ".##..", ".##..", "....."],
+  "-": [".....", ".....", ".....", "#####", ".....", ".....", "....."],
+  ">": [".#...", "..#..", "...#.", "....#", "...#.", "..#..", ".#..."],
+  x: [".....", ".....", "#...#", ".#.#.", "..#..", ".#.#.", "#...#"],
+  "!": ["..#..", "..#..", "..#..", "..#..", "..#..", ".....", "..#.."],
+  "#": [".#.#.", ".#.#.", "#####", ".#.#.", "#####", ".#.#.", ".#.#."],
+  s: [".....", ".....", ".####", "#....", ".###.", "....#", "####."],
+  f: ["..##.", ".#...", "###..", ".#...", ".#...", ".#...", ".#..."],
+  a: [".....", ".....", ".###.", "....#", ".####", "#...#", ".####"],
+  b: ["#....", "#....", "####.", "#...#", "#...#", "#...#", "####."],
+  c: [".....", ".....", ".###.", "#....", "#....", "#...#", ".###."],
+  d: ["....#", "....#", ".####", "#...#", "#...#", "#...#", ".####"],
+  e: [".....", ".....", ".###.", "#...#", "#####", "#....", ".###."],
+  g: [".....", ".....", ".####", "#...#", "#...#", "#...#", ".####", "....#", ".###."],
+  h: ["#....", "#....", "####.", "#...#", "#...#", "#...#", "#...#"],
+  i: ["..#..", ".....", ".##..", "..#..", "..#..", "..#..", ".###."],
+  j: ["...#.", ".....", "..##.", "...#.", "...#.", "...#.", "...#.", "#..#.", ".##.."],
+  k: ["#....", "#....", "#..#.", "#.#..", "##...", "#.#..", "#..#."],
+  l: [".##..", "..#..", "..#..", "..#..", "..#..", "..#..", ".###."],
+  m: [".....", ".....", "##.#.", "#.#.#", "#.#.#", "#...#", "#...#"],
+  n: [".....", ".....", "####.", "#...#", "#...#", "#...#", "#...#"],
+  o: [".....", ".....", ".###.", "#...#", "#...#", "#...#", ".###."],
+  p: [".....", ".....", "####.", "#...#", "#...#", "#...#", "####.", "#....", "#...."],
+  q: [".....", ".....", ".####", "#...#", "#...#", "#...#", ".####", "....#", "....#"],
+  r: [".....", ".....", "#.##.", "##..#", "#....", "#....", "#...."],
+  t: [".#...", ".#...", "###..", ".#...", ".#...", ".#..#", "..##."],
+  u: [".....", ".....", "#...#", "#...#", "#...#", "#..##", ".##.#"],
+  v: [".....", ".....", "#...#", "#...#", "#...#", ".#.#.", "..#.."],
+  w: [".....", ".....", "#...#", "#...#", "#.#.#", "#.#.#", ".#.#."],
+  y: [".....", ".....", "#...#", "#...#", "#...#", "#...#", ".####", "....#", ".###."],
+  z: [".....", ".....", "#####", "...#.", "..#..", ".#...", "#####"],
+  "+": [".....", "..#..", "..#..", "#####", "..#..", "..#..", "....."],
+  " ": [".....", ".....", ".....", ".....", ".....", ".....", "....."]
+};
+var GLYPH_W = 5;
+var GLYPH_H = 7;
+var FONT_SCALE = 2;
+var LABEL_H = GLYPH_H * FONT_SCALE + 6;
+var LABEL_CHAR_PX = (GLYPH_W + 1) * FONT_SCALE;
+function drawText(rgb, width, x0, y0, text, color) {
+  let cx = x0;
+  for (const ch of text) {
+    const glyph = GLYPHS[ch] ?? GLYPHS[" "];
+    for (let gy = 0; gy < glyph.length; gy++) {
+      for (let gx = 0; gx < GLYPH_W; gx++) {
+        if (glyph[gy][gx] !== "#") continue;
+        for (let sy = 0; sy < FONT_SCALE; sy++) {
+          for (let sx = 0; sx < FONT_SCALE; sx++) {
+            const x = cx + gx * FONT_SCALE + sx;
+            const y = y0 + gy * FONT_SCALE + sy;
+            const i = (y * width + x) * 3;
+            rgb[i] = color[0];
+            rgb[i + 1] = color[1];
+            rgb[i + 2] = color[2];
+          }
+        }
+      }
+    }
+    cx += (GLYPH_W + 1) * FONT_SCALE;
+  }
+}
+function composeContactSheet(frames, opts = {}) {
+  if (frames.length === 0) throw new Error("contact sheet needs at least one frame");
+  const gap = opts.gap ?? 8;
+  const bg = opts.background ?? [0.12, 0.12, 0.12];
+  const columns = Math.max(
+    1,
+    Math.min(frames.length, opts.columns ?? Math.ceil(Math.sqrt(frames.length)))
+  );
+  const rows = Math.ceil(frames.length / columns);
+  const srcW = Math.max(...frames.map((f) => f.width));
+  const srcH = Math.max(...frames.map((f) => f.height));
+  const thumbWidth = Math.max(16, Math.min(opts.thumbWidth ?? 480, srcW));
+  const thumbHeight = Math.max(1, Math.round(srcH * thumbWidth / srcW));
+  const cellW = thumbWidth;
+  const cellH = LABEL_H + thumbHeight;
+  const width = gap + columns * (cellW + gap);
+  const height = gap + rows * (cellH + gap);
+  const rgb = new Float64Array(width * height * 3);
+  for (let i = 0; i < width * height; i++) {
+    rgb[i * 3] = bg[0];
+    rgb[i * 3 + 1] = bg[1];
+    rgb[i * 3 + 2] = bg[2];
+  }
+  for (const [n, frame] of frames.entries()) {
+    const col = n % columns;
+    const row = Math.floor(n / columns);
+    const x0 = gap + col * (cellW + gap);
+    const y0 = gap + row * (cellH + gap);
+    const tw = Math.max(1, Math.min(thumbWidth, Math.round(frame.width * thumbWidth / srcW)));
+    const th = Math.max(1, Math.min(thumbHeight, Math.round(frame.height * tw / frame.width)));
+    const thumb = resample(frame, tw, th);
+    for (let y = 0; y < th; y++) {
+      for (let x = 0; x < tw; x++) {
+        const si = (y * tw + x) * 3;
+        const di = ((y0 + LABEL_H + y) * width + (x0 + x)) * 3;
+        rgb[di] = thumb[si];
+        rgb[di + 1] = thumb[si + 1];
+        rgb[di + 2] = thumb[si + 2];
+      }
+    }
+    const label = opts.labels?.[n] ?? `#${n}`;
+    drawText(rgb, width, x0 + 2, y0 + 2, label, [0.95, 0.95, 0.95]);
+  }
+  return { width, height, rgb, columns, rows, thumbWidth, thumbHeight };
+}
+function frameLabel(index, time3) {
+  return time3 === void 0 ? `#${index}` : `#${index} ${time3.toFixed(3)}s`;
+}
+var LOOK_ROLES = ["neutral", "skin", "plate", "element"];
+var LOOK_DEFAULTS = {
+  minContrast: 0.1,
+  grainTolerance: 0.25,
+  sharpnessTolerance: 0.25,
+  levelTolerance: 0.02,
+  castAbove: 2,
+  /** Pixels at or above this alpha count as the element when the frame has alpha. */
+  opaque: 0.98,
+  /** Half-length of the profile read across an edge, px: edges up to about 10 px wide (sigma 4). */
+  edgeReach: 12,
+  /** Profiles are the mean of this many neighbouring lines. */
+  edgeLines: 5,
+  /** Skin hue angle (CIELAB h, degrees) commonly reported for skin of many tones under neutral light. */
+  skinHue: [40, 65]
+};
+var srgbToLinear = (c) => c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+var labF = (t) => t > (6 / 29) ** 3 ? Math.cbrt(t) : t / (3 * (6 / 29) ** 2) + 4 / 29;
+function labOf(rgb) {
+  const [r, g, b] = rgb.map((v) => srgbToLinear(Math.min(1, Math.max(0, v))));
+  const x = (0.4124564 * r + 0.3575761 * g + 0.1804375 * b) / 0.95047;
+  const y = 0.2126729 * r + 0.7151522 * g + 0.072175 * b;
+  const z2 = (0.0193339 * r + 0.119192 * g + 0.9503041 * b) / 1.08883;
+  const fx = labF(x);
+  const fy = labF(y);
+  const fz = labF(z2);
+  const L = 116 * fy - 16;
+  const A = 500 * (fx - fy);
+  const B = 200 * (fy - fz);
+  const hue = (Math.atan2(B, A) * 180 / Math.PI + 360) % 360;
+  const r22 = (v) => Math.round(v * 100) / 100;
+  return {
+    L: r22(L),
+    a: r22(A),
+    b: r22(B),
+    chroma: r22(Math.hypot(A, B)),
+    hue: Math.round(hue * 10) / 10
+  };
+}
+var luma = (c) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+function neutralGains(rgb) {
+  const k = luma(rgb);
+  return rgb.map((v) => v > 0 ? k / v : 1);
+}
+function cropOf(img, rect, opaque) {
+  const { x, y, width, height } = rect;
+  const rgb = new Float64Array(width * height * 3);
+  const use = new Uint8Array(width * height);
+  const alpha = img.alpha ? new Float64Array(width * height) : void 0;
+  for (let j = 0; j < height; j++)
+    for (let i = 0; i < width; i++) {
+      const p = (y + j) * img.width + (x + i);
+      const q = j * width + i;
+      for (let c = 0; c < 3; c++) rgb[q * 3 + c] = img.rgb[p * 3 + c];
+      use[q] = !img.alpha || img.alpha[p] >= opaque ? 1 : 0;
+      if (alpha && img.alpha) alpha[q] = img.alpha[p];
+    }
+  return alpha ? { rect, width, height, rgb, use, alpha } : { rect, width, height, rgb, use };
+}
+function lookCrops(img, args) {
+  const out = /* @__PURE__ */ new Map();
+  for (const r of args.regions) {
+    const clip = clipRegion(img, r);
+    if (clip) out.set(r.name, cropOf(img, clip.rect, LOOK_DEFAULTS.opaque));
+  }
+  return out;
+}
+var MAD_TO_SD = 1.4826;
+function median2(v) {
+  if (!v.length) return NaN;
+  const s = v.slice().sort((a, b) => a - b);
+  const m = s.length >> 1;
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+function percentile(v, p) {
+  if (!v.length) return NaN;
+  const s = v.slice().sort((a, b) => a - b);
+  return s[Math.min(s.length - 1, Math.max(0, Math.round(p / 100 * (s.length - 1))))];
+}
+var robustSd = (v) => {
+  const m = median2(v);
+  const band = Math.max(4 * MAD_TO_SD * median2(v.map((x) => Math.abs(x - m))), 3 / 255);
+  let n = 0;
+  let sum = 0;
+  let sq = 0;
+  for (const x of v)
+    if (Math.abs(x - m) <= band) {
+      n++;
+      sum += x;
+      sq += x * x;
+    }
+  if (n < 2) return 0;
+  const mean = sum / n;
+  return Math.sqrt(Math.max(0, sq / n - mean * mean));
+};
+var steps = (v) => Math.round(v * 255 * 100) / 100;
+function spatialGrain(c) {
+  const out = [];
+  const scale = 1 / Math.sqrt(8 / 9);
+  for (let ch = 0; ch < 3; ch++) {
+    const res = [];
+    for (let y = 1; y < c.height - 1; y += 1)
+      for (let x = 1; x < c.width - 1; x += 1) {
+        let ok = true;
+        let sum = 0;
+        for (let dy = -1; dy <= 1 && ok; dy++)
+          for (let dx = -1; dx <= 1; dx++) {
+            const q = (y + dy) * c.width + (x + dx);
+            if (!c.use[q]) {
+              ok = false;
+              break;
+            }
+            sum += c.rgb[q * 3 + ch];
+          }
+        if (!ok) continue;
+        res.push(c.rgb[(y * c.width + x) * 3 + ch] - sum / 9);
+      }
+    out.push(res.length ? steps(robustSd(res) * scale) : NaN);
+  }
+  return out;
+}
+function temporalGrain(a, b) {
+  if (a.width !== b.width || a.height !== b.height) return null;
+  const out = [];
+  for (let ch = 0; ch < 3; ch++) {
+    const d = [];
+    for (let q = 0; q < a.use.length; q++)
+      if (a.use[q] && b.use[q]) d.push(b.rgb[q * 3 + ch] - a.rgb[q * 3 + ch]);
+    if (!d.length) return null;
+    out.push(steps(robustSd(d) / Math.SQRT2));
+  }
+  return out;
+}
+function edgeWidths(c, minContrast) {
+  const R = LOOK_DEFAULTS.edgeReach;
+  const half = LOOK_DEFAULTS.edgeLines >> 1;
+  const Y = new Float64Array(c.width * c.height);
+  for (let q = 0; q < Y.length; q++)
+    Y[q] = c.use[q] ? luma([c.rgb[q * 3], c.rgb[q * 3 + 1], c.rgb[q * 3 + 2]]) : NaN;
+  const widths = [];
+  const scan = (along, across, at) => {
+    for (let v = half; v < across - half; v += 2) {
+      const prof = (u2) => {
+        let s = 0;
+        for (let k = -half; k <= half; k++) s += at(u2, v + k);
+        return s / (2 * half + 1);
+      };
+      let u = R;
+      while (u < along - R - 1) {
+        const d = Math.abs(prof(u + 1) - prof(u));
+        const span = prof(u + R + 1) - prof(u - R);
+        if (!Number.isFinite(d) || !Number.isFinite(span) || Math.abs(span) < minContrast) {
+          u++;
+          continue;
+        }
+        let best = u;
+        let bestD = d;
+        for (let w = Math.max(R, u - R); w <= Math.min(along - R - 2, u + R); w++) {
+          const dw = Math.abs(prof(w + 1) - prof(w));
+          if (dw > bestD) {
+            best = w;
+            bestD = dw;
+          }
+        }
+        if (best !== u) {
+          u = best > u ? best : u + 1;
+          continue;
+        }
+        const p = [];
+        for (let k = -R; k <= R + 1; k++) p.push(prof(u + k));
+        const lo = (p[0] + p[1]) / 2;
+        const hi = (p[p.length - 1] + p[p.length - 2]) / 2;
+        if (Math.abs(hi - lo) >= minContrast * 0.8) {
+          const q = p.map((x) => (x - lo) / (hi - lo));
+          const cross = (t) => {
+            for (let k = 1; k < q.length; k++)
+              if (q[k] >= t) return k - 1 + (t - q[k - 1]) / (q[k] - q[k - 1] || 1);
+            return NaN;
+          };
+          const wdt = cross(0.9) - cross(0.1);
+          if (Number.isFinite(wdt) && wdt > 0) widths.push(wdt);
+        }
+        u += R;
+      }
+    }
+  };
+  scan(c.width, c.height, (u, v) => Y[v * c.width + u]);
+  scan(c.height, c.width, (u, v) => Y[u * c.width + v]);
+  if (widths.length < 3) return { edgeWidth: null, p90: null, edges: widths.length };
+  return {
+    edgeWidth: Math.round(median2(widths) * 100) / 100,
+    p90: Math.round(percentile(widths, 90) * 100) / 100,
+    edges: widths.length
+  };
+}
+function levelsOf(c) {
+  const ch = [[], [], []];
+  const Ys = [];
+  for (let q = 0; q < c.use.length; q++) {
+    if (!c.use[q]) continue;
+    const px2 = [c.rgb[q * 3], c.rgb[q * 3 + 1], c.rgb[q * 3 + 2]];
+    for (let k = 0; k < 3; k++) ch[k].push(px2[k]);
+    Ys.push(luma(px2));
+  }
+  const mean = ch.map((v) => v.reduce((s, x) => s + x, 0) / (v.length || 1));
+  return {
+    black: r4rgb(ch.map((v) => percentile(v, 0.5))),
+    white: r4rgb(ch.map((v) => percentile(v, 99.5))),
+    mean: r4rgb(mean),
+    lumaBlack: r4(percentile(Ys, 0.5)),
+    lumaWhite: r4(percentile(Ys, 99.5)),
+    lumaMean: r4(luma(mean))
+  };
+}
+var signed = (v) => `${v >= 0 ? "+" : ""}${v.toFixed(1)}`;
+function castWords(a, b) {
+  const parts = [];
+  if (Math.abs(a) >= LOOK_DEFAULTS.castAbove)
+    parts.push([Math.abs(a), a > 0 ? "magenta" : "green"]);
+  if (Math.abs(b) >= LOOK_DEFAULTS.castAbove) parts.push([Math.abs(b), b > 0 ? "yellow" : "blue"]);
+  if (!parts.length) return null;
+  return parts.sort((x, y) => y[0] - x[0]).map((p) => p[1]).join(" and ");
+}
+function roleReading(name, role, lab, levels, rep) {
+  if (role === "neutral") {
+    const toward = castWords(lab.a, lab.b);
+    const gains = neutralGains(levels.mean);
+    const mix = (g) => Math.round(g * 100);
+    rep.cast = {
+      a: lab.a,
+      b: lab.b,
+      amount: lab.chroma,
+      toward,
+      gains: [r4(gains[0]), r4(gains[1]), r4(gains[2])],
+      channelMixer: {
+        "Red-Red": mix(gains[0]),
+        "Green-Green": mix(gains[1]),
+        "Blue-Blue": mix(gains[2])
+      }
+    };
+    rep.reading = toward ? `${name} reads a* ${signed(lab.a)}, b* ${signed(lab.b)} (CIELAB): a cast toward ${toward} of ${lab.chroma.toFixed(1)}, if the surface is really neutral; a neutral reads 0, 0, and under about 2 is hard to see. Gains on the display values that make it neutral at its own brightness: red ${rep.cast.gains[0]}, green ${rep.cast.gains[1]}, blue ${rep.cast.gains[2]} (Channel Mixer Red-Red ${rep.cast.channelMixer["Red-Red"]}, Green-Green ${rep.cast.channelMixer["Green-Green"]}, Blue-Blue ${rep.cast.channelMixer["Blue-Blue"]}).` : `${name} reads neutral: a* ${signed(lab.a)}, b* ${signed(lab.b)} (CIELAB; under about 2 is hard to see).`;
+  } else if (role === "skin") {
+    const [lo, hi] = LOOK_DEFAULTS.skinHue;
+    const h = lab.hue > 270 ? lab.hue - 360 : lab.hue;
+    const where = h < lo ? `below the usual range, so it leans to magenta (pink); ${(lo - h).toFixed(0)}\xB0 short of ${lo}\xB0` : h > hi ? `above the usual range, so it leans to yellow; ${(h - hi).toFixed(0)}\xB0 past ${hi}\xB0` : "inside the usual range";
+    rep.reading = `${name} (skin) has a hue angle of ${h.toFixed(0)}\xB0 and chroma ${lab.chroma.toFixed(1)} (CIELAB): ${where}. Skin of many tones commonly reads about ${lo} to ${hi}\xB0 under neutral light; that range is a general reference, not measured on this footage, so judge it against a neutral in the same light as well.`;
+  }
+}
+var meanOf = (v) => v.reduce((s, x) => s + x, 0) / v.length;
+function compareLook(element, plate, tol = {}) {
+  const gt = tol.grain ?? LOOK_DEFAULTS.grainTolerance;
+  const st = tol.sharpness ?? LOOK_DEFAULTS.sharpnessTolerance;
+  const eg = meanOf(element.grain.spatial);
+  const pg = meanOf(plate.grain.spatial);
+  const gRatio = pg > 0 ? Math.round(eg / pg * 100) / 100 : null;
+  const gMatch = gRatio === null ? null : Math.abs(gRatio - 1) <= gt;
+  const ew = element.sharpness.edgeWidth;
+  const pw = plate.sharpness.edgeWidth;
+  const sRatio = ew !== null && pw !== null && pw > 0 ? Math.round(ew / pw * 100) / 100 : null;
+  const sMatch = sRatio === null ? null : Math.abs(sRatio - 1) <= st;
+  const bd = r4(element.levels.lumaBlack - plate.levels.lumaBlack);
+  const wd = r4(element.levels.lumaWhite - plate.levels.lumaWhite);
+  const readings = [];
+  const e = element.name;
+  if (gRatio !== null && !gMatch)
+    readings.push(
+      gRatio < 1 ? `${e} is cleaner than the plate: add grain (grain ${eg.toFixed(2)} against ${pg.toFixed(2)} 8-bit steps).` : `${e} is grainier than the plate: take grain out or add less (${eg.toFixed(2)} against ${pg.toFixed(2)} 8-bit steps).`
+    );
+  if (sRatio !== null && !sMatch)
+    readings.push(
+      sRatio < 1 ? `${e} is sharper than the plate: soften it (edges ${ew} px against ${pw} px wide, 10 to 90%).` : `${e} is softer than the plate: sharpen it, or soften the plate's match less (edges ${ew} px against ${pw} px).`
+    );
+  const deepest = "if both regions hold the deepest shadow of their picture";
+  const brightest = "if both regions hold the brightest highlight of their picture";
+  if (Math.abs(bd) > LOOK_DEFAULTS.levelTolerance)
+    readings.push(
+      bd > 0 ? `${e}'s blacks are lifted against the plate's (${element.levels.lumaBlack} against ${plate.levels.lumaBlack}): ${deepest}, seat them lower.` : `${e}'s blacks are deeper than the plate's (${element.levels.lumaBlack} against ${plate.levels.lumaBlack}): ${deepest}, lift them.`
+    );
+  if (Math.abs(wd) > LOOK_DEFAULTS.levelTolerance)
+    readings.push(
+      wd > 0 ? `${e}'s whites are brighter than the plate's (${element.levels.lumaWhite} against ${plate.levels.lumaWhite}): ${brightest}, bring them down.` : `${e}'s whites are duller than the plate's (${element.levels.lumaWhite} against ${plate.levels.lumaWhite}): ${brightest}, bring them up.`
+    );
+  if (pw === null || ew === null)
+    readings.push(
+      "Edge width was not compared: one side has no edge strong enough to read; pick regions that each hold an edge."
+    );
+  if (!readings.length)
+    readings.push(
+      `${e} matches the plate in grain, edge width and black and white points, within the tolerances.`
+    );
+  return {
+    element: element.name,
+    plate: plate.name,
+    grain: {
+      element: Math.round(eg * 100) / 100,
+      plate: Math.round(pg * 100) / 100,
+      ratio: gRatio,
+      matches: gMatch
+    },
+    sharpness: { element: ew, plate: pw, ratio: sRatio, matches: sMatch },
+    levels: { blackDifference: bd, whiteDifference: wd },
+    readings
+  };
+}
+function matteEdge(c, minContrast) {
+  const a = c.alpha;
+  const grey = new Float64Array(a.length * 3);
+  for (let q = 0; q < a.length; q++) grey[q * 3] = grey[q * 3 + 1] = grey[q * 3 + 2] = a[q];
+  const widths = edgeWidths(
+    { ...c, rgb: grey, use: new Uint8Array(a.length).fill(1) },
+    minContrast
+  );
+  let soft = 0;
+  let outline = 0;
+  let opaque = 0;
+  let minAlpha = 1;
+  const w = c.width;
+  for (let y = 0; y < c.height; y++)
+    for (let x = 0; x < w; x++) {
+      const v = a[y * w + x];
+      if (v > 0.02 && v < 0.98) soft++;
+      if (v >= 0.99) opaque++;
+      if (v < minAlpha) minAlpha = v;
+      if (v < 0.5) continue;
+      const p = y * w + x;
+      if (x > 0 && a[p - 1] < 0.5 || x < w - 1 && a[p + 1] < 0.5 || y > 0 && a[p - w] < 0.5 || y < c.height - 1 && a[p + w] < 0.5)
+        outline++;
+    }
+  return {
+    ...widths,
+    softBand: outline ? Math.round(soft / outline * 100) / 100 : null,
+    opaqueShare: Math.round(opaque / a.length * 1e4) / 1e4,
+    minAlpha: Math.round(minAlpha * 1e4) / 1e4
+  };
+}
+function edgeColourOf(c, background) {
+  const a = c.alpha;
+  const w = c.width;
+  const band = [0, 0, 0];
+  const inside = [0, 0, 0];
+  let nb = 0;
+  let ni = 0;
+  for (let y = 0; y < c.height; y++)
+    for (let x = 0; x < w; x++) {
+      const p = y * w + x;
+      const v = a[p];
+      if (v > 0.2 && v < 0.98) {
+        for (let k = 0; k < 3; k++) band[k] += c.rgb[p * 3 + k];
+        nb++;
+      } else if (v >= 0.98) {
+        let deep = true;
+        for (let dy = -6; dy <= 6 && deep; dy += 2)
+          for (let dx = -6; dx <= 6; dx += 2) {
+            const yy = y + dy;
+            const xx = x + dx;
+            if (yy < 0 || xx < 0 || yy >= c.height || xx >= w || a[yy * w + xx] < 0.98) {
+              deep = false;
+              break;
+            }
+          }
+        if (deep) {
+          for (let k = 0; k < 3; k++) inside[k] += c.rgb[p * 3 + k];
+          ni++;
+        }
+      }
+    }
+  if (!nb || !ni)
+    return {
+      band: nb ? labOf(band.map((v) => v / nb)) : null,
+      inside: ni ? labOf(inside.map((v) => v / ni)) : null,
+      difference: null,
+      towardBackground: null,
+      reading: !nb ? "no soft edge in the region" : "nothing far enough inside the edge to compare with"
+    };
+  const lb = labOf(band.map((v) => v / nb));
+  const li = labOf(inside.map((v) => v / ni));
+  const difference = Math.round(Math.hypot(lb.L - li.L, lb.a - li.a, lb.b - li.b) * 10) / 10;
+  let toward = null;
+  if (background) {
+    const lw = labOf(background);
+    const dir = [lw.L - li.L, lw.a - li.a, lw.b - li.b];
+    const d = [lb.L - li.L, lb.a - li.a, lb.b - li.b];
+    const n2 = dir[0] ** 2 + dir[1] ** 2 + dir[2] ** 2;
+    toward = n2 > 0 ? Math.round((d[0] * dir[0] + d[1] * dir[1] + d[2] * dir[2]) / n2 * 100) / 100 : null;
+  }
+  const reading = toward === null ? `The soft edge differs from the colour well inside by ${difference} (CIELAB); give \`background\` (the wall's colour) to read how much of it is the background.` : `The soft edge's colour sits ${Math.round(toward * 100)}% of the way from the colour well inside toward the background (${difference} apart, CIELAB)` + (toward > 0.25 ? ": background colour left in the edge, which rings the subject over a new background; Decontaminate Edge Colors takes it out." : ".");
+  return { band: lb, inside: li, difference, towardBackground: toward, reading };
+}
+function measureLook(img, args) {
+  const minContrast = args.minContrast ?? LOOK_DEFAULTS.minContrast;
+  const regions = args.regions.map((r) => {
+    const clip = clipRegion(img, r);
+    if (!clip) return outside(img, r);
+    const c = cropOf(img, clip.rect, LOOK_DEFAULTS.opaque);
+    let pixels = 0;
+    for (const u of c.use) pixels += u;
+    if (!pixels) return { name: r.name, error: "no opaque pixels in the region" };
+    const levels = levelsOf(c);
+    const colour = labOf(levels.mean);
+    const rep = {
+      name: r.name,
+      role: r.role ?? null,
+      rect: clip.rect,
+      clipped: clip.clipped,
+      pixels,
+      levels,
+      grain: { spatial: spatialGrain(c) },
+      sharpness: edgeWidths(c, minContrast),
+      colour
+    };
+    if (c.alpha) {
+      rep.matte = matteEdge(c, minContrast);
+      rep.edgeColour = edgeColourOf(c, args.background);
+    }
+    roleReading(r.name, r.role ?? null, colour, levels, rep);
+    return rep;
+  });
+  const out = { regions };
+  if (args.pairs?.length) {
+    const byName = new Map(regions.map((r) => [r.name, r]));
+    out.pairs = args.pairs.map((p) => {
+      const e = byName.get(p.element);
+      const pl = byName.get(p.plate);
+      if (!e || "error" in e || !pl || "error" in pl)
+        return {
+          element: p.element,
+          plate: p.plate,
+          error: "one side of the pair could not be measured"
+        };
+      return compareLook(e, pl, { grain: args.grainTolerance, sharpness: args.sharpnessTolerance });
+    });
+  }
+  return out;
+}
+function summarizeLookSeries(frames, args) {
+  const regions = args.regions.map((r) => {
+    const per = [];
+    for (let i = 1; i < frames.length; i++) {
+      const a = frames[i - 1].get(r.name);
+      const b = frames[i].get(r.name);
+      const t = a && b ? temporalGrain(a, b) : null;
+      if (t) per.push(t);
+    }
+    const temporal = per.length ? [0, 1, 2].map((k) => Math.round(median2(per.map((p) => p[k])) * 100) / 100) : null;
+    const changes = [];
+    for (let i = 1; i < frames.length; i++) {
+      const a = frames[i - 1].get(r.name)?.alpha;
+      const b = frames[i].get(r.name)?.alpha;
+      if (!a || !b || a.length !== b.length) continue;
+      let sum = 0;
+      for (let q = 0; q < a.length; q++) sum += Math.abs(b[q] - a[q]);
+      changes.push(sum / a.length);
+    }
+    const matteChange = changes.length ? Math.round(median2(changes) * 1e4) / 1e4 : null;
+    return { name: r.name, temporal, pairs: per.length, matteChange };
+  });
+  const out = { regions };
+  if (args.pairs?.length) {
+    const by = new Map(regions.map((r) => [r.name, r]));
+    out.pairs = args.pairs.map((p) => {
+      const et = by.get(p.element)?.temporal;
+      const pt = by.get(p.plate)?.temporal;
+      const e = et ? Math.round(meanOf(et) * 100) / 100 : null;
+      const pl = pt ? Math.round(meanOf(pt) * 100) / 100 : null;
+      const readings = [];
+      if (e !== null && pl !== null && pl > 0.3) {
+        if (e < pl * 0.25)
+          readings.push(
+            `${p.element}'s grain does not change from frame to frame and the plate's does (${e} against ${pl} 8-bit steps): animate the grain.`
+          );
+        else if (Math.abs(e / pl - 1) > (args.grainTolerance ?? LOOK_DEFAULTS.grainTolerance))
+          readings.push(
+            `${p.element}'s frame-to-frame grain is ${e} against the plate's ${pl} 8-bit steps.`
+          );
+      }
+      return {
+        element: p.element,
+        plate: p.plate,
+        element_temporal: e,
+        plate_temporal: pl,
+        readings
+      };
+    });
+  }
+  return out;
+}
+function lookArgsError(args) {
+  const regions = args.regions;
+  if (!Array.isArray(regions) || regions.length === 0 || regions.length > 64)
+    return "`look.regions` must list 1 to 64 regions";
+  const names = /* @__PURE__ */ new Set();
+  for (const r of regions) {
+    if (typeof r?.name !== "string" || !r.name) return "every `look.regions` entry needs a name";
+    if (names.has(r.name)) return `\`look.regions\` names '${r.name}' twice`;
+    names.add(r.name);
+    if (typeof r.x !== "number" || typeof r.y !== "number")
+      return `\`look.regions\` '${r.name}' needs x and y`;
+    if (r.role !== void 0 && !LOOK_ROLES.includes(r.role))
+      return `\`look.regions\` '${r.name}' has role '${String(r.role)}'; use ${LOOK_ROLES.join(", ")}`;
+  }
+  if (args.pairs !== void 0) {
+    if (!Array.isArray(args.pairs)) return "`look.pairs` must be a list of { element, plate }";
+    for (const p of args.pairs) {
+      if (!names.has(String(p?.element)))
+        return `\`look.pairs\` names element '${String(p?.element)}', which is not a region`;
+      if (!names.has(String(p?.plate)))
+        return `\`look.pairs\` names plate '${String(p?.plate)}', which is not a region`;
+    }
+  }
+  if (args.background !== void 0 && (!Array.isArray(args.background) || args.background.length !== 3 || !args.background.every((v) => typeof v === "number" && v >= 0 && v <= 1)))
+    return "`look.background` must be [r, g, b], each 0..1";
+  for (const k of ["minContrast", "grainTolerance", "sharpnessTolerance"]) {
+    const v = args[k];
+    if (v !== void 0 && (typeof v !== "number" || !(v > 0) || v > 1))
+      return `\`look.${k}\` must be a number above 0 and at most 1`;
+  }
+  return null;
+}
+var REFERENCE_DEFAULTS = {
+  grid: 3,
+  paletteColours: 6,
+  /** Every this many pixels across and down go into the main colours. */
+  paletteStep: 6,
+  /** Frames spread over the input that colour, levels, sharpness and grain are read on. */
+  lookFrames: 24,
+  /** Cell of the motion map, px. */
+  motionCell: 16,
+  castStep: 2,
+  lightnessStep: 3,
+  levelStep: 0.02,
+  ratioStep: 1.25,
+  sizeStep: 0.05,
+  placeStep: 0.03,
+  sameFootage: 0.6,
+  shareStep: 0.05,
+  /** A colour of the reference with no colour of the build within this (CIELAB) is missing. */
+  colourMatch: 10,
+  /**
+   * With nothing saying how far apart a folder's frames are: a median change
+   * between neighbouring files of this or more reads as frames far apart. On
+   * the round-two movies, every twentieth frame read medians of 0.026 and
+   * 0.029; every frame 0.007 (largest pair 0.029, a cut 0.088).
+   */
+  spreadGuess: 0.02
+};
+var GRID_NAMES = [
+  ["top left", "top", "top right"],
+  ["left", "middle", "right"],
+  ["bottom left", "bottom", "bottom right"]
+];
+function gridRegions(width, height) {
+  const out = [];
+  for (let r = 0; r < 3; r++)
+    for (let c = 0; c < 3; c++) {
+      const x0 = Math.round(c * width / 3);
+      const y0 = Math.round(r * height / 3);
+      out.push({
+        name: GRID_NAMES[r][c],
+        x: x0,
+        y: y0,
+        width: Math.round((c + 1) * width / 3) - x0,
+        height: Math.round((r + 1) * height / 3) - y0
+      });
+    }
+  return out;
+}
+function frameLevels(img) {
+  const BINS2 = 1024;
+  const hist = [new Uint32Array(BINS2), new Uint32Array(BINS2), new Uint32Array(BINS2), new Uint32Array(BINS2)];
+  const sum = [0, 0, 0];
+  let n = 0;
+  for (let y = 0; y < img.height; y += 2)
+    for (let x = 0; x < img.width; x += 2) {
+      const p = (y * img.width + x) * 3;
+      const px2 = [img.rgb[p], img.rgb[p + 1], img.rgb[p + 2]];
+      for (let c = 0; c < 3; c++) {
+        hist[c][Math.min(BINS2 - 1, Math.max(0, Math.floor(px2[c] * BINS2)))]++;
+        sum[c] += px2[c];
+      }
+      hist[3][Math.min(BINS2 - 1, Math.max(0, Math.floor(luma(px2) * BINS2)))]++;
+      n++;
+    }
+  const pct = (h, q) => {
+    const want = q * n;
+    let acc = 0;
+    for (let b = 0; b < BINS2; b++) {
+      acc += h[b];
+      if (acc >= want) return (b + 0.5) / BINS2;
+    }
+    return 1;
+  };
+  const mean = sum.map((v) => v / (n || 1));
+  return {
+    lumaBlack: pct(hist[3], 5e-3),
+    lumaWhite: pct(hist[3], 0.995),
+    lumaMean: luma(mean),
+    black: [0, 1, 2].map((c) => pct(hist[c], 5e-3)),
+    white: [0, 1, 2].map((c) => pct(hist[c], 0.995))
+  };
+}
+function frameWeight(img) {
+  const s = 4;
+  let lw = 0;
+  let lx = 0;
+  let ly = 0;
+  let dw = 0;
+  let dx = 0;
+  let dy = 0;
+  const Y = (x, y) => {
+    const p = (y * img.width + x) * 3;
+    return luma([img.rgb[p], img.rgb[p + 1], img.rgb[p + 2]]);
+  };
+  for (let y = 0; y + s < img.height; y += s)
+    for (let x = 0; x + s < img.width; x += s) {
+      const v = Y(x, y);
+      lw += v;
+      lx += v * x;
+      ly += v * y;
+      const g = Math.abs(Y(x + s, y) - v) + Math.abs(Y(x, y + s) - v);
+      dw += g;
+      dx += g * x;
+      dy += g * y;
+    }
+  const r32 = (v) => Math.round(v * 1e3) / 1e3;
+  return {
+    brightness: lw > 0 ? { x: r32(lx / lw / img.width), y: r32(ly / lw / img.height) } : { x: 0.5, y: 0.5 },
+    detail: dw > 0 ? { x: r32(dx / dw / img.width), y: r32(dy / dw / img.height) } : { x: 0.5, y: 0.5 }
+  };
+}
+function paletteOf(samples, k) {
+  if (!samples.length) return [];
+  const pts = samples.map((s) => s.lab);
+  const d2 = (a, b) => (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2;
+  const centres = [];
+  const mean = [0, 1, 2].map((c) => pts.reduce((s, p) => s + p[c], 0) / pts.length);
+  let far = 0;
+  for (let i = 1; i < pts.length; i++) if (d2(pts[i], mean) > d2(pts[far], mean)) far = i;
+  centres.push(pts[far].slice());
+  const near = pts.map((p) => d2(p, centres[0]));
+  while (centres.length < k) {
+    let f = 0;
+    for (let i = 1; i < pts.length; i++) if (near[i] > near[f]) f = i;
+    if (near[f] <= 1) break;
+    centres.push(pts[f].slice());
+    for (let i = 0; i < pts.length; i++) near[i] = Math.min(near[i], d2(pts[i], pts[f]));
+  }
+  const of = new Int32Array(pts.length);
+  for (let round = 0; round < 10; round++) {
+    for (let i = 0; i < pts.length; i++) {
+      let best = 0;
+      for (let c = 1; c < centres.length; c++) if (d2(pts[i], centres[c]) < d2(pts[i], centres[best])) best = c;
+      of[i] = best;
+    }
+    const acc = centres.map(() => [0, 0, 0, 0]);
+    for (let i = 0; i < pts.length; i++) {
+      const a = acc[of[i]];
+      for (let c = 0; c < 3; c++) a[c] += pts[i][c];
+      a[3]++;
+    }
+    acc.forEach((a, c) => {
+      if (a[3]) centres[c] = [a[0] / a[3], a[1] / a[3], a[2] / a[3]];
+    });
+  }
+  const rgbAcc = centres.map(() => [0, 0, 0, 0]);
+  for (let i = 0; i < pts.length; i++) {
+    const a = rgbAcc[of[i]];
+    for (let c = 0; c < 3; c++) a[c] += samples[i].rgb[c];
+    a[3]++;
+  }
+  return rgbAcc.filter((a) => a[3] > 0).map((a) => {
+    const rgb = [a[0] / a[3], a[1] / a[3], a[2] / a[3]];
+    return { hex: rgbHex(rgb), colour: labOf(rgb), share: Math.round(a[3] / pts.length * 1e3) / 1e3 };
+  }).sort((x, y) => y.share - x.share);
+}
+var medianOf = (v) => v.length ? median2(v) : null;
+function referenceReader(opts) {
+  const D = REFERENCE_DEFAULTS;
+  const nLook = Math.max(1, Math.min(opts.total, opts.lookFrames ?? D.lookFrames));
+  const lookIdx = /* @__PURE__ */ new Set();
+  for (let i = 0; i < nLook; i++) lookIdx.add(Math.floor(i * opts.total / nLook));
+  const cell = opts.motionCell ?? D.motionCell;
+  let size = null;
+  let regions = [];
+  let added = 0;
+  const perRegion = /* @__PURE__ */ new Map();
+  const levels = [];
+  const weights = [];
+  const samples = [];
+  const pairs = [];
+  const pairMaps = [];
+  let prev = null;
+  function add(f) {
+    const img = f.img;
+    if (!size) {
+      size = [img.width, img.height];
+      regions = [...gridRegions(img.width, img.height), ...opts.regions ?? []];
+    } else if (img.width !== size[0] || img.height !== size[1])
+      throw new Error(`frame ${f.frame} is ${img.width}\xD7${img.height}, not ${size[0]}\xD7${size[1]} like the first`);
+    if (lookIdx.has(added)) {
+      const look = measureLook(img, { regions });
+      for (const r of look.regions) {
+        if ("error" in r) continue;
+        const e = perRegion.get(r.name) ?? { mean: [], ew: [], p90: [], grain: [], role: r.role };
+        e.mean.push(r.levels.mean);
+        if (r.sharpness.edgeWidth !== null) e.ew.push(r.sharpness.edgeWidth);
+        if (r.sharpness.p90 !== null) e.p90.push(r.sharpness.p90);
+        e.grain.push((r.grain.spatial[0] + r.grain.spatial[1] + r.grain.spatial[2]) / 3);
+        perRegion.set(r.name, e);
+      }
+      levels.push(frameLevels(img));
+      weights.push(frameWeight(img));
+      for (let y = 0; y < img.height; y += D.paletteStep)
+        for (let x = 0; x < img.width; x += D.paletteStep) {
+          const p = (y * img.width + x) * 3;
+          const rgb = [img.rgb[p], img.rgb[p + 1], img.rgb[p + 2]];
+          const l = labOf(rgb);
+          samples.push({ lab: [l.L, l.a, l.b], rgb });
+        }
+    }
+    const pic = pictureOf(img, false);
+    const cells = cellLuma(img, cell);
+    if (prev) {
+      const ch = pictureChange(prev.pic, pic, img.width, img.height, DIFF_DEFAULTS);
+      pairs.push({
+        from: { index: prev.frame, time: prev.time },
+        to: { index: f.frame, time: f.time },
+        change: ch.all.change,
+        changedShare: ch.all.changedShare
+      });
+      const m = new Float32Array(cells.length);
+      for (let k = 0; k < m.length; k++) m[k] = Math.abs(cells[k] - prev.cells[k]);
+      pairMaps.push(m);
+    }
+    prev = { pic, cells, frame: f.frame, time: f.time };
+    added++;
+  }
+  function finish() {
+    if (!size) throw new Error("no frames to read");
+    const [width, height] = size;
+    const avg = (v) => v.reduce((s, x) => s + x, 0) / (v.length || 1);
+    const r32 = (v) => Math.round(v * 1e3) / 1e3;
+    const r22 = (v) => Math.round(v * 100) / 100;
+    const regionReports = [];
+    for (const r of regions) {
+      const e = perRegion.get(r.name);
+      if (!e || !e.mean.length) continue;
+      const mean = [0, 1, 2].map((c) => r4(avg(e.mean.map((m) => m[c]))));
+      const ew = medianOf(e.ew);
+      const p90 = medianOf(e.p90);
+      regionReports.push({
+        name: r.name,
+        role: e.role,
+        colour: labOf(mean),
+        mean,
+        sharpness: { edgeWidth: ew === null ? null : r22(ew), p90: p90 === null ? null : r22(p90) },
+        grain: r22(avg(e.grain))
+      });
+    }
+    const gridEw = regionReports.slice(0, 9).flatMap((r) => r.sharpness.edgeWidth === null ? [] : [r.sharpness.edgeWidth]);
+    const notes = [];
+    const neighbours = pairs.length > 0 && pairs.every((q) => q.to.index === q.from.index + 1);
+    let spacing = opts.spacing ?? { how: "rendered", step: neighbours ? 1 : null };
+    let consecutive = neighbours;
+    const medianChange = pairs.length ? median2(pairs.map((q) => q.change)) : 0;
+    const mc = medianChange.toFixed(4);
+    const unsure = spacing.how === "assumed" || spacing.how === "file names" && spacing.step === 1;
+    if (consecutive && unsure) {
+      const said = spacing.how === "file names" ? "The file names count up by one" : "Nothing said how far apart the frames are";
+      if (medianChange >= D.spreadGuess) {
+        consecutive = false;
+        spacing = { how: "guessed from change", step: null };
+        notes.push(
+          `${said}, but neighbouring files change by a median of ${mc}, as frames far apart do (${D.spreadGuess} or more), so this guess reads them as spread: cuts and movement are not read. Pass frameStep: 1 if they are neighbours.`
+        );
+      } else if (spacing.how === "file names")
+        notes.push(`The frames are neighbours, read from their file names (neighbouring files change by a median of ${mc}).`);
+      else
+        notes.push(
+          `Nothing said how far apart the frames are; they were assumed to be neighbours (neighbouring files change by a median of ${mc}, under the ${D.spreadGuess} that spread frames read), so cuts and movement were read. Pass frameStep if they are not.`
+        );
+    } else if (pairs.length && !consecutive) {
+      const apart = spacing.step ? `${spacing.step} frames apart` : "unevenly spaced";
+      notes.push(
+        `The frames are ${apart}, ${spacing.how === "given" ? "as given" : spacing.how === "file names" ? "read from their file names" : "as rendered"}: cuts and movement are not read, and the motion map shows what differs between the frames read, not motion.`
+      );
+    }
+    const summary = consecutive && pairs.length >= 2 ? summarizeSeries(pairs, DIFF_DEFAULTS) : null;
+    const cutPairs = new Set(
+      (summary?.flags ?? []).filter((fl) => fl.kind === "cut").flatMap((fl) => fl.pairs)
+    );
+    const mw = Math.ceil(width / cell);
+    const mh = Math.ceil(height / cell);
+    const acc = new Float64Array(mw * mh);
+    let counted = 0;
+    let changeSum = 0;
+    pairMaps.forEach((m, i) => {
+      if (cutPairs.has(i)) return;
+      for (let k = 0; k < acc.length; k++) acc[k] += m[k];
+      changeSum += pairs[i].change;
+      counted++;
+    });
+    const meanChange = consecutive && counted ? Math.round(changeSum / counted * 1e6) / 1e6 : null;
+    const map2 = {
+      width: mw,
+      height: mh,
+      cell,
+      values: Array.from(acc, (v) => Math.round((counted ? v / counted : 0) * 1e5) / 1e5)
+    };
+    return {
+      frames: added,
+      notes,
+      size: [width, height],
+      frameRate: opts.frameRate ?? null,
+      palette: paletteOf(samples, D.paletteColours),
+      levels: {
+        lumaBlack: r4(avg(levels.map((l) => l.lumaBlack))),
+        lumaWhite: r4(avg(levels.map((l) => l.lumaWhite))),
+        lumaMean: r4(avg(levels.map((l) => l.lumaMean))),
+        black: [0, 1, 2].map((c) => r4(avg(levels.map((l) => l.black[c])))),
+        white: [0, 1, 2].map((c) => r4(avg(levels.map((l) => l.white[c]))))
+      },
+      regions: regionReports,
+      weight: {
+        brightness: {
+          x: r32(avg(weights.map((w) => w.brightness.x))),
+          y: r32(avg(weights.map((w) => w.brightness.y)))
+        },
+        detail: { x: r32(avg(weights.map((w) => w.detail.x))), y: r32(avg(weights.map((w) => w.detail.y))) }
+      },
+      sharpness: { edgeWidth: gridEw.length ? r22(median2(gridEw)) : null },
+      grain: r22(avg(regionReports.slice(0, 9).map((r) => r.grain))),
+      motion: {
+        consecutive,
+        spacing,
+        spread: !consecutive,
+        pairs: pairs.length,
+        cuts: [...cutPairs].sort((a, b) => a - b).map((i) => ({ frame: pairs[i].to.index, time: pairs[i].to.time ?? null })),
+        meanChange,
+        map: map2,
+        subject: counted ? motionCentre(map2) : null
+      }
+    };
+  }
+  return { add, finish };
+}
+function compareReferences(ref, build) {
+  const D = REFERENCE_DEFAULTS;
+  const out = [];
+  const notes = [];
+  const f1 = (v) => v.toFixed(1);
+  const pctOf = (v) => `${Math.round(v * 100)}%`;
+  const list = (items, max = 4) => items.length <= max ? items.join("; ") : `${items.slice(0, max).join("; ")}; and ${items.length - max} more`;
+  const byName = new Map(build.regions.map((r) => [r.name, r]));
+  const pairsOf = ref.regions.flatMap((r) => byName.has(r.name) ? [[r, byName.get(r.name)]] : []);
+  const cast = pairsOf.map(([r, b]) => ({ name: r.name, da: b.colour.a - r.colour.a, db: b.colour.b - r.colour.b, r, b })).map((c) => ({ ...c, d: Math.hypot(c.da, c.db) })).filter((c) => c.d >= D.castStep).sort((x, y) => y.d - x.d);
+  if (cast.length) {
+    const da = cast.reduce((s, c) => s + c.da, 0) / cast.length;
+    const db = cast.reduce((s, c) => s + c.db, 0) / cast.length;
+    const words = castWords(da, db) ?? "a different colour";
+    out.push({
+      measure: "cast",
+      size: Math.round(cast[0].d / D.castStep * 10) / 10,
+      reading: `The build leans ${words} against the reference in ${cast.length} of ${pairsOf.length} regions (a* ${signed(da)}, b* ${signed(db)} on average, CIELAB): ` + list(cast.map((c) => `${c.name} a* ${f1(c.b.colour.a)} b* ${f1(c.b.colour.b)} against ${f1(c.r.colour.a)} ${f1(c.r.colour.b)}`)) + ".",
+      reference: Object.fromEntries(cast.map((c) => [c.name, { a: c.r.colour.a, b: c.r.colour.b }])),
+      build: Object.fromEntries(cast.map((c) => [c.name, { a: c.b.colour.a, b: c.b.colour.b }]))
+    });
+  }
+  const light = pairsOf.map(([r, b]) => ({ name: r.name, d: b.colour.L - r.colour.L, r, b })).filter((c) => Math.abs(c.d) >= D.lightnessStep).sort((x, y) => Math.abs(y.d) - Math.abs(x.d));
+  if (light.length)
+    out.push({
+      measure: "lightness",
+      size: Math.round(Math.abs(light[0].d) / D.lightnessStep * 10) / 10,
+      reading: `Lightness differs in ${light.length} of ${pairsOf.length} regions: ` + list(light.map((c) => `${c.name} ${c.d < 0 ? "darker" : "lighter"} (L* ${f1(c.b.colour.L)} against ${f1(c.r.colour.L)})`)) + "."
+    });
+  const ratioItem = (measure, get, more, less, unit) => {
+    const rows = pairsOf.map(([r, b]) => ({ name: r.name, rv: get(r), bv: get(b) })).filter((c) => c.rv !== null && c.bv !== null && c.rv > 0 && c.bv > 0).map((c) => ({ ...c, k: Math.log(c.bv / c.rv) / Math.log(D.ratioStep) })).filter((c) => Math.abs(c.k) >= 1).sort((x, y) => Math.abs(y.k) - Math.abs(x.k));
+    if (!rows.length) return;
+    const up = rows.filter((c) => c.k > 0);
+    const down = rows.filter((c) => c.k < 0);
+    const part = (rs, word) => rs.length ? `${word} in ${list(rs.map((c) => `${c.name} (${c.bv}${unit} against ${c.rv}${unit})`))}` : "";
+    out.push({
+      measure,
+      size: Math.round(Math.abs(rows[0].k) * 10) / 10,
+      reading: `The build is ${[part(up, more), part(down, less)].filter(Boolean).join("; and ")}.`
+    });
+  };
+  ratioItem("sharpness", (r) => r.sharpness.edgeWidth, "softer", "sharper", " px");
+  ratioItem("grain", (r) => r.grain, "grainier", "smoother (less grain)", "");
+  const lv = [];
+  let lvMax = 0;
+  for (const [k, word] of [
+    ["lumaBlack", "black point"],
+    ["lumaWhite", "white point"],
+    ["lumaMean", "mean level"]
+  ]) {
+    const d = build.levels[k] - ref.levels[k];
+    if (Math.abs(d) < D.levelStep) continue;
+    lvMax = Math.max(lvMax, Math.abs(d) / D.levelStep);
+    lv.push(`${word} ${d > 0 ? "higher" : "lower"} (${build.levels[k].toFixed(3)} against ${ref.levels[k].toFixed(3)})`);
+  }
+  if (lv.length) out.push({ measure: "levels", size: Math.round(lvMax * 10) / 10, reading: `Levels: ${lv.join("; ")}.` });
+  let subject = null;
+  if (ref.motion.subject && build.motion.subject) {
+    const reg = registerMotionMaps(ref.motion.map, build.motion.map);
+    if (reg) {
+      const compared = reg.correlation >= D.sameFootage;
+      subject = { ...reg, compared };
+      const spreadSides = [ref, build].filter((r) => r.motion.spread);
+      if (compared && spreadSides.length)
+        notes.push(
+          `The subject's size and place rest on spread frames (what differs between frames ${[...new Set(spreadSides.map((r) => r.motion.spacing.step ? `${r.motion.spacing.step} apart` : "spaced unknown or unevenly"))].join(" and ")}${spreadSides.length === 2 ? " on both sides" : ` on the ${spreadSides[0] === ref ? "reference's" : "build's"} side`}, not motion), lined up at correlation ${reg.correlation}. Trusted from ${D.sameFootage}: on the round-two pair, every frame read 0.93 and 80 to 81%, every twentieth 0.68 to 0.71 and 81 to 82%.`
+        );
+      if (!compared)
+        notes.push(
+          `The moving parts of the two do not line up (correlation ${reg.correlation}): not the same footage, or not framed alike, so the subject's size and place are not compared.`
+        );
+      else {
+        const k = Math.log(reg.scale) / Math.log(1 + D.sizeStep);
+        if (Math.abs(k) >= 1)
+          out.push({
+            measure: "subject size",
+            size: Math.round(Math.abs(k) * 10) / 10,
+            reading: `The moving subject is ${pctOf(reg.scale)} of its size in the reference: ${reg.scale < 1 ? "smaller" : "larger"} in frame (the two lined up at correlation ${reg.correlation}).`,
+            reference: 1,
+            build: reg.scale
+          });
+        const dx = reg.to.x - reg.from.x;
+        const dy = reg.to.y - reg.from.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist >= D.placeStep)
+          out.push({
+            measure: "subject place",
+            size: Math.round(dist / D.placeStep * 10) / 10,
+            reading: `The moving subject sits ${[Math.abs(dy) >= D.placeStep / 2 ? `${pctOf(Math.abs(dy))} of the height ${dy > 0 ? "lower" : "higher"}` : "", Math.abs(dx) >= D.placeStep / 2 ? `${pctOf(Math.abs(dx))} of the width ${dx > 0 ? "right" : "left"}` : ""].filter(Boolean).join(" and ")} than in the reference.`
+          });
+      }
+    }
+  } else if (ref.motion.subject || build.motion.subject)
+    notes.push("Only one of the two has motion to read, so the subject is not compared.");
+  for (const [k, word] of [
+    ["brightness", "brightness"],
+    ["detail", "detail"]
+  ]) {
+    const dx = build.weight[k].x - ref.weight[k].x;
+    const dy = build.weight[k].y - ref.weight[k].y;
+    const dist = Math.hypot(dx, dy);
+    if (dist >= D.placeStep)
+      out.push({
+        measure: `weight of ${word}`,
+        size: Math.round(dist / D.placeStep * 10) / 10,
+        reading: `The centre of ${word} sits at ${pctOf(build.weight[k].x)} across, ${pctOf(build.weight[k].y)} down, against ${pctOf(ref.weight[k].x)}, ${pctOf(ref.weight[k].y)} in the reference.`
+      });
+  }
+  const missing = ref.palette.filter((c) => c.share >= D.shareStep).map((c) => {
+    let best = Infinity;
+    for (const b of build.palette)
+      best = Math.min(best, Math.hypot(b.colour.L - c.colour.L, b.colour.a - c.colour.a, b.colour.b - c.colour.b));
+    return { c, best };
+  }).filter((m) => m.best >= D.colourMatch);
+  if (missing.length)
+    out.push({
+      measure: "main colours",
+      size: Math.round(Math.max(...missing.map((m) => m.best)) / D.colourMatch * 10) / 10,
+      reading: `Main colours of the reference with nothing within ${D.colourMatch} (CIELAB) among the build's: ${list(missing.map((m) => `${m.c.hex} (${pctOf(m.c.share)} of the reference, nearest ${f1(m.best)} away)`))}.`
+    });
+  if (ref.motion.consecutive && build.motion.consecutive) {
+    const has = (cuts, f) => cuts.some((c) => Math.abs(c.frame - f) <= 1);
+    const lost = ref.motion.cuts.filter((c) => !has(build.motion.cuts, c.frame));
+    const extra = build.motion.cuts.filter((c) => !has(ref.motion.cuts, c.frame));
+    if (lost.length || extra.length)
+      out.push({
+        measure: "cuts",
+        size: 3 * (lost.length + extra.length),
+        reading: [
+          lost.length ? `The reference cuts at ${lost.map((c) => `frame ${c.frame}`).join(", ")}; the build does not.` : "",
+          extra.length ? `The build cuts at ${extra.map((c) => `frame ${c.frame}`).join(", ")}; the reference does not.` : ""
+        ].filter(Boolean).join(" ")
+      });
+    const rm = ref.motion.meanChange;
+    const bm = build.motion.meanChange;
+    if (rm && bm) {
+      const k = Math.log(bm / rm) / Math.log(D.ratioStep);
+      if (Math.abs(k) >= 1)
+        out.push({
+          measure: "motion",
+          size: Math.round(Math.abs(k) * 10) / 10,
+          reading: `The build's picture moves ${k > 0 ? "more" : "less"} between frames: mean change ${bm.toFixed(4)} against ${rm.toFixed(4)}.`
+        });
+    }
+  } else
+    notes.push(
+      `Cuts and movement are not read on frames that are not neighbours (${[!ref.motion.consecutive ? "the reference's" : "", !build.motion.consecutive ? "the build's" : ""].filter(Boolean).join(" and ")}), so they are not compared.`
+    );
+  out.sort((a, b) => b.size - a.size);
+  return {
+    differences: out,
+    subject,
+    notes,
+    reading: out.length ? `${out.length} difference${out.length > 1 ? "s" : ""}, largest first. ${out.slice(0, 3).map((d) => d.reading).join(" ")}` : "No difference over its step between the build and the reference."
+  };
+}
 
 // src/color/matte.ts
 var EDGE_DEFAULTS = {
@@ -44564,8 +46666,8 @@ var OUTSIDE = 0;
 var EDGE = 1;
 var INSIDE = 2;
 var r2 = (v) => Math.round(v * 100) / 100;
-var r4 = (v) => Math.round(v * 1e4) / 1e4;
-var r4rgb = (v) => [r4(v[0]), r4(v[1]), r4(v[2])];
+var r42 = (v) => Math.round(v * 1e4) / 1e4;
+var r4rgb2 = (v) => [r42(v[0]), r42(v[1]), r42(v[2])];
 var INF = 1e20;
 function dt1d(f, n, d, v, z2) {
   let k = -1;
@@ -44868,9 +46970,9 @@ function measureEdge(img, bg, t) {
     matteFrom: t.from,
     pixels: n,
     shares: {
-      opaque: r4(opaque / n),
-      partial: r4((n - opaque - transparent) / n),
-      transparent: r4(transparent / n)
+      opaque: r42(opaque / n),
+      partial: r42((n - opaque - transparent) / n),
+      transparent: r42(transparent / n)
     },
     width: {
       typical: median4 === null ? null : r2(median4),
@@ -44897,8 +46999,8 @@ function measureEdge(img, bg, t) {
       list: specks.slice(0, t.listed).map((r) => ({
         ...box(r),
         area: r.area,
-        meanAlpha: r4(r.alphaSum / r.area),
-        maxAlpha: r4(r.alphaMax)
+        meanAlpha: r42(r.alphaSum / r.area),
+        maxAlpha: r42(r.alphaMax)
       }))
     },
     patches: {
@@ -44909,10 +47011,10 @@ function measureEdge(img, bg, t) {
     spill: {
       screen: t.screen,
       pixels: edgeCount,
-      mean: edgeMean ? r4rgb(edgeMean) : null,
-      solidMean: solidMean ? r4rgb(solidMean) : null,
-      excess: excess === null ? null : r4(excess),
-      solidExcess: solidExcess === null ? null : r4(solidExcess),
+      mean: edgeMean ? r4rgb2(edgeMean) : null,
+      solidMean: solidMean ? r4rgb2(solidMean) : null,
+      excess: excess === null ? null : r42(excess),
+      solidExcess: solidExcess === null ? null : r42(solidExcess),
       leansToScreen: leans,
       reading: fromLuma ? "not read: the matte came from luminance (a Keylight matte view), which carries no subject colour; read spill on the keyed result with `from: 'alpha'`" : spillReading(t, edgeCount, excess, solidExcess, leans)
     }
@@ -44920,7 +47022,7 @@ function measureEdge(img, bg, t) {
   return { report, frame: { width, height, alpha: Float32Array.from(alpha), zones } };
 }
 function holeEntry(r) {
-  return { ...box(r), area: r.area, meanAlpha: r4(r.alphaSum / r.area) };
+  return { ...box(r), area: r.area, meanAlpha: r42(r.alphaSum / r.area) };
 }
 function patchEntry(r, id, labels, alpha, dT, dO, width, window) {
   const b = box(r);
@@ -44978,7 +47080,7 @@ function patchEntry(r, id, labels, alpha, dT, dO, width, window) {
   return {
     ...b,
     area: r.area,
-    meanAlpha: r4(r.alphaSum / r.area),
+    meanAlpha: r42(r.alphaSum / r.area),
     thickest: { ...at, thickness: r2(Math.max(0, thickness)) },
     densest: {
       x: b.x + bi,
@@ -44986,8 +47088,8 @@ function patchEntry(r, id, labels, alpha, dT, dO, width, window) {
       width: ww,
       height: wh,
       pixels: bestC,
-      share: r4(bestC / (ww * wh)),
-      meanAlpha: bestC > 0 ? r4(bestA / bestC) : 0
+      share: r42(bestC / (ww * wh)),
+      meanAlpha: bestC > 0 ? r42(bestA / bestC) : 0
     }
   };
 }
@@ -45013,9 +47115,9 @@ var zoneAcc = () => ({
 function finishZone(z2) {
   return {
     pixels: z2.pixels,
-    meanAbsDelta: z2.pixels ? r4(z2.sum / z2.pixels) : 0,
-    maxAbsDelta: r4(z2.max),
-    changedShare: z2.pixels ? r4(z2.changed / z2.pixels) : 0,
+    meanAbsDelta: z2.pixels ? r42(z2.sum / z2.pixels) : 0,
+    maxAbsDelta: r42(z2.max),
+    changedShare: z2.pixels ? r42(z2.changed / z2.pixels) : 0,
     changedBounds: z2.changed === 0 ? null : { x: z2.minX, y: z2.minY, width: z2.maxX - z2.minX + 1, height: z2.maxY - z2.minY + 1 }
   };
 }
@@ -45073,9 +47175,9 @@ function summarizeFlicker(pairs) {
     }
     const k = Math.max(1, pairs.length);
     return {
-      meanAbsDelta: r4(mean / k),
-      maxAbsDelta: r4(max),
-      changedShare: r4(share / k),
+      meanAbsDelta: r42(mean / k),
+      maxAbsDelta: r42(max),
+      changedShare: r42(share / k),
       worstPair: worst ? { from: worst.from.index, to: worst.to.index } : null
     };
   };
@@ -45246,13 +47348,13 @@ function cutoutRegions(alpha, width, height, opts = {}) {
   openings.sort((p, q) => q.area - p.area);
   return { holes, openings, dropped };
 }
-var median = (xs) => {
+var median3 = (xs) => {
   if (!xs.length) return null;
   const s = [...xs].sort((a, b) => a - b);
   const m = s.length;
   return m % 2 ? s[(m - 1) / 2] : (s[m / 2 - 1] + s[m / 2]) / 2;
 };
-var r6 = (n) => Math.round(n * 1e6) / 1e6;
+var r62 = (n) => Math.round(n * 1e6) / 1e6;
 function outlineTracker(opts = {}) {
   const gap = opts.gap ?? 30;
   const limit = opts.limit ?? 2e-3;
@@ -45307,31 +47409,31 @@ function outlineTracker(opts = {}) {
     },
     result() {
       const frozen = [];
-      let run2 = [];
+      let run = [];
       const close = () => {
-        if (run2.length >= 2) {
-          const from = run2[0].a;
-          const to = run2[run2.length - 1].b;
+        if (run.length >= 2) {
+          const from = run[0].a;
+          const to = run[run.length - 1].b;
           if (to - from + 1 >= minFrames)
             frozen.push({
               from,
               to,
               length: to - from + 1,
-              drift: r6(Math.max(...run2.map((w) => w.drift))),
-              footageChange: r6(median(run2.map((w) => w.footage)) ?? 0)
+              drift: r62(Math.max(...run.map((w) => w.drift))),
+              footageChange: r62(median3(run.map((w) => w.footage)) ?? 0)
             });
         }
-        run2 = [];
+        run = [];
       };
       for (const w of windows) {
-        if (w.drift < limit) run2.push(w);
+        if (w.drift < limit) run.push(w);
         else close();
       }
       close();
       const stats = (xs) => ({
-        min: xs.length ? r6(Math.min(...xs)) : null,
-        median: xs.length ? r6(median(xs)) : null,
-        max: xs.length ? r6(Math.max(...xs)) : null
+        min: xs.length ? r62(Math.min(...xs)) : null,
+        median: xs.length ? r62(median3(xs)) : null,
+        max: xs.length ? r62(Math.max(...xs)) : null
       });
       return {
         at: "full size: the share of the frame whose alpha changed by more than " + (opts.step ?? 0.1),
@@ -45360,7 +47462,7 @@ function statAdd(st, id, x, y, onEdge) {
   if (y > st.maxY[id]) st.maxY[id] = y;
   if (onEdge) st.edge[id] = true;
 }
-function speckPieces(alpha, width, height, opts = {}) {
+function speckPieces(alpha, width, height, opts = {}, rgb) {
   const o = { ...SPECK_DEFAULTS, ...opts };
   let bx0 = width;
   let by0 = height;
@@ -45557,13 +47659,35 @@ function speckPieces(alpha, width, height, opts = {}) {
     const a = st.area[id] ?? 0;
     if (id === main2 || st.edge[id] || a < o.minArea || a > o.maxArea) continue;
     if (id >= grownEnd && touchesGrown[id]) continue;
-    pieces.push({
+    const piece = {
       x: st.minX[id] + bx0,
       y: st.minY[id] + by0,
       width: st.maxX[id] - st.minX[id] + 1,
       height: st.maxY[id] - st.minY[id] + 1,
       area: a
-    });
+    };
+    if (rgb && rgb.length >= width * height * 3) {
+      let sl = 0;
+      let sa = 0;
+      let sb = 0;
+      let k = 0;
+      for (let y = st.minY[id]; y <= st.maxY[id]; y++)
+        for (let x = st.minX[id]; x <= st.maxX[id]; x++) {
+          const p = y * w + x;
+          if (labels[p] !== id || !m[p]) continue;
+          const i = ((y + by0) * width + x + bx0) * 3;
+          const lab = labOf([rgb[i], rgb[i + 1], rgb[i + 2]]);
+          sl += lab.L;
+          sa += lab.a;
+          sb += lab.b;
+          k++;
+        }
+      if (k > 0) {
+        const r1 = (v) => Math.round(v * 10) / 10;
+        piece.colour = { L: r1(sl / k), a: r1(sa / k), b: r1(sb / k), pixels: k };
+      }
+    }
+    pieces.push(piece);
   }
   return pieces.sort((p, q) => q.area - p.area);
 }
@@ -45868,2105 +47992,242 @@ function encodePngGray8(width, height, values) {
   });
 }
 
-// src/color/motion.ts
-var DIFF_DEFAULTS = {
-  changeAbove: 0.04,
-  spikeRatio: 3,
-  holdRatio: 0.25,
-  quietBelow: 2e-3,
-  movingShare: 5e-4,
-  window: 3,
-  amplify: 8,
-  repeatBelow: 1e-4
-};
-var LIMITS = {
-  changeAbove: { min: 0, max: 1 },
-  spikeRatio: { min: 1, max: 1e3, above: true },
-  holdRatio: { min: 0, max: 1, above: true },
-  quietBelow: { min: 0, max: 1 },
-  movingShare: { min: 0, max: 1 },
-  window: { min: 1, max: 16, int: true },
-  amplify: { min: 1, max: 1e3 },
-  repeatBelow: { min: 0, max: 1 }
-};
-function resolveDiffThresholds(args = {}) {
-  const out = { ...DIFF_DEFAULTS };
-  for (const key of Object.keys(DIFF_DEFAULTS)) {
-    const v = args[key];
-    if (typeof v === "number") out[key] = v;
-  }
-  return out;
-}
-function diffArgsError(args) {
-  for (const [key, value] of Object.entries(args)) {
-    if (key === "sheet") continue;
-    const limit = LIMITS[key];
-    if (!limit) {
-      return `\`diff.${key}\` is not an option (options: ${Object.keys(LIMITS).join(", ")}, sheet)`;
-    }
-    if (typeof value !== "number" || !Number.isFinite(value)) {
-      return `\`diff.${key}\` must be a number`;
-    }
-    const low = limit.above ? value <= limit.min : value < limit.min;
-    if (low || value > limit.max || limit.int && !Number.isInteger(value)) {
-      const range = limit.above ? `above ${limit.min} and at most ${limit.max}` : `${limit.min} to ${limit.max}`;
-      return `\`diff.${key}\` must be ${limit.int ? "a whole number " : ""}${range}, not ${value}`;
-    }
-  }
-  return null;
-}
-function pictureOf(img, straight) {
-  const n = img.width * img.height;
-  const out = new Float32Array(n * 3);
-  const a = straight ? img.alpha : void 0;
-  if (!a) {
-    out.set(img.rgb);
-    return out;
-  }
-  for (let p = 0; p < n; p++) {
-    const w = a[p];
-    const i = p * 3;
-    out[i] = img.rgb[i] * w;
-    out[i + 1] = img.rgb[i + 1] * w;
-    out[i + 2] = img.rgb[i + 2] * w;
-  }
-  return out;
-}
-var r62 = (v) => Math.round(v * 1e6) / 1e6;
-function rectStats(prev, cur, width, x0, y0, x1, y1, above, perPixel) {
-  let sum = 0;
-  let maxAbs = 0;
-  let changed = 0;
-  let bx0 = Infinity;
-  let by0 = Infinity;
-  let bx1 = -1;
-  let by1 = -1;
-  for (let y = y0; y < y1; y++) {
-    let i = (y * width + x0) * 3;
-    for (let x = x0; x < x1; x++, i += 3) {
-      const dr = Math.abs(cur[i] - prev[i]);
-      const dg = Math.abs(cur[i + 1] - prev[i + 1]);
-      const db = Math.abs(cur[i + 2] - prev[i + 2]);
-      const m = dr > dg ? dr > db ? dr : db : dg > db ? dg : db;
-      const mean = (dr + dg + db) / 3;
-      sum += mean;
-      if (m > maxAbs) maxAbs = m;
-      if (m > above) {
-        changed++;
-        if (x < bx0) bx0 = x;
-        if (x > bx1) bx1 = x;
-        if (y < by0) by0 = y;
-        if (y > by1) by1 = y;
-      }
-      if (perPixel) perPixel(x, y, mean);
-    }
-  }
-  const pixels = (x1 - x0) * (y1 - y0);
-  return {
-    pixels,
-    change: r62(pixels > 0 ? sum / pixels : 0),
-    maxAbsDelta: r62(maxAbs),
-    changedPixels: changed,
-    changedShare: r62(pixels > 0 ? changed / pixels : 0),
-    changedBounds: changed > 0 ? { x: bx0, y: by0, width: bx1 - bx0 + 1, height: by1 - by0 + 1 } : null
-  };
-}
-function pictureChange(prev, cur, width, height, t, opts = {}) {
-  let perPixel;
-  let sums = null;
-  let counts = null;
-  const tw = opts.thumb?.width ?? 0;
-  if (opts.thumb) {
-    const th = opts.thumb.height;
-    sums = new Float64Array(tw * th);
-    counts = new Float64Array(tw * th);
-    const col = new Int32Array(width);
-    for (let x = 0; x < width; x++) col[x] = Math.min(tw - 1, Math.floor(x * tw / width));
-    const row = new Int32Array(height);
-    for (let y = 0; y < height; y++) row[y] = Math.min(th - 1, Math.floor(y * th / height)) * tw;
-    const s = sums;
-    const c = counts;
-    perPixel = (x, y, mean) => {
-      const k = row[y] + col[x];
-      s[k] += mean;
-      c[k]++;
-    };
-  }
-  const all = rectStats(prev, cur, width, 0, 0, width, height, t.changeAbove, perPixel);
-  const out = { all };
-  if (opts.regions) {
-    out.regions = opts.regions.map((region) => {
-      const clip = clipRegion({ width, height }, region);
-      if (!clip)
-        return { name: region.name, error: `region is outside the ${width}\xD7${height} frame` };
-      const { x, y, width: w, height: h } = clip.rect;
-      return {
-        name: region.name,
-        ...rectStats(prev, cur, width, x, y, x + w, y + h, t.changeAbove)
-      };
-    });
-  }
-  if (sums && counts) {
-    const thumb = new Float64Array(sums.length);
-    for (let k = 0; k < sums.length; k++) {
-      thumb[k] = counts[k] > 0 ? Math.min(1, sums[k] / counts[k] * t.amplify) : 0;
-    }
-    out.thumb = thumb;
-  }
-  return out;
-}
-function lowerMedian(values) {
-  const s = [...values].sort((a, b) => a - b);
-  return s[Math.floor((s.length - 1) / 2)];
-}
-function side(pairs, p, dir, window, skip) {
-  const changes = [];
-  const shares = [];
-  for (let k = 1; k <= window; k++) {
-    const j = p + dir * k;
-    if (j < 0 || j >= pairs.length) break;
-    if (skip.has(j)) continue;
-    changes.push(pairs[j].change);
-    shares.push(pairs[j].changedShare);
-  }
-  if (changes.length === 0) return null;
-  return { change: lowerMedian(changes), share: lowerMedian(shares) };
-}
-var fmt = (v) => v.toFixed(4);
-var frameText = (f) => `#${f.index}${f.time === void 0 ? "" : ` (${r62(f.time)} s)`}`;
-function summarizeSeries(pairs, t) {
-  const n = pairs.length;
-  const changes = pairs.map((p) => p.change);
-  let largest = 0;
-  let smallest = 0;
-  for (let i = 1; i < n; i++) {
-    if (changes[i] > changes[largest]) largest = i;
-    if (changes[i] < changes[smallest]) smallest = i;
-  }
-  const summary = {
-    pairs: n,
-    median: n > 0 ? r62(lowerMedian(changes)) : 0,
-    mean: n > 0 ? r62(changes.reduce((a, b) => a + b, 0) / n) : 0,
-    largest: { pair: largest, change: n > 0 ? changes[largest] : 0 },
-    smallest: { pair: smallest, change: n > 0 ? changes[smallest] : 0 },
-    flags: [],
-    reading: ""
-  };
-  if (n < 2) {
-    summary.reading = n === 0 ? "no pair of consecutive frames to compare" : "one pair: nothing to compare it with, so nothing is flagged (render at least three frames)";
-    return summary;
-  }
-  const repeats = new Set(pairs.flatMap((p, i) => p.change <= t.repeatBelow ? [i] : []));
-  const near = (i, set2) => {
-    for (let k = 1; k <= t.window; k++) if (set2.has(i - k) || set2.has(i + k)) return true;
-    return false;
-  };
-  const standsOut = (p, i, skip) => {
-    if (repeats.has(i) || p.changedShare < t.movingShare) return null;
-    const sides = [side(pairs, i, -1, t.window, skip), side(pairs, i, 1, t.window, skip)].filter(
-      (s) => s !== null
-    );
-    if (sides.length === 0) return null;
-    const reference = Math.max(...sides.map((s) => s.change), t.quietBelow);
-    if (sides.some((s) => p.change < t.spikeRatio * Math.max(s.change, t.quietBelow))) return null;
-    return { reference, edge: i === 0 || i === n - 1, besideRepeat: near(i, repeats) };
-  };
-  const first = pairs.map((p, i) => standsOut(p, i, repeats));
-  const firstSpikes = new Set(first.flatMap((s, i) => s ? [i] : []));
-  const skipBoth = /* @__PURE__ */ new Set([...repeats, ...firstSpikes]);
-  const spike = pairs.map(
-    (p, i) => first[i] ?? (firstSpikes.size > 0 ? standsOut(p, i, skipBoth) : null)
-  );
-  const spikes = new Set(spike.flatMap((s, i) => s ? [i] : []));
-  const repeatNote = " (a repeated frame is next to it and was left out of the comparison)";
-  const flags = [];
-  for (let i = 0; i < n; i++) {
-    const s = spike[i];
-    if (!s) continue;
-    const runStart = i === 0 || !spike[i - 1];
-    if (!runStart) continue;
-    let end = i;
-    while (end + 1 < n && spike[end + 1]) end++;
-    if (end === i + 1) {
-      const reference = Math.max(s.reference, spike[end].reference);
-      const change = Math.min(pairs[i].change, pairs[end].change);
-      const frame = pairs[i].to;
-      const flag = {
-        kind: "pop",
-        pairs: [i, end],
-        frame,
-        change,
-        reference: r62(reference),
-        ratio: r62(change / reference),
-        reading: `frame ${frameText(frame)} differs from the frames before and after it by ${fmt(change)} or more, while its neighbours change about ${fmt(reference)}: a one-frame pop`
-      };
-      if (s.besideRepeat || spike[end].besideRepeat) {
-        flag.besideRepeat = true;
-        flag.reading += repeatNote;
-      }
-      flags.push(flag);
-      continue;
-    }
-    for (let j = i; j <= end; j++) {
-      const sj = spike[j];
-      const between = [pairs[j].from, pairs[j].to];
-      const flag = {
-        kind: "cut",
-        pairs: [j],
-        between,
-        change: pairs[j].change,
-        reference: r62(sj.reference),
-        ratio: r62(pairs[j].change / sj.reference),
-        reading: `${frameText(between[0])} to ${frameText(between[1])} changes ${fmt(pairs[j].change)}, ${(pairs[j].change / sj.reference).toFixed(1)}\xD7 its neighbours: a cut or a jump`
-      };
-      if (sj.edge) {
-        flag.atSeriesEdge = true;
-        flag.reading += " (first or last pair: it could also be a pop of the end frame)";
-      }
-      if (sj.besideRepeat) {
-        flag.besideRepeat = true;
-        flag.reading += repeatNote;
-      }
-      flags.push(flag);
-    }
-  }
-  const moving = (s) => s !== null && s.change >= t.quietBelow && s.share >= t.movingShare;
-  const notSpikes = /* @__PURE__ */ new Set([...spikes, ...repeats]);
-  const neighbours = (i) => [i - 1, i + 1].filter((j) => j >= 0 && j < n && !repeats.has(j));
-  for (let i = 0; i < n; i++) {
-    if (spikes.has(i)) continue;
-    const before = side(pairs, i, -1, t.window, notSpikes);
-    const after = side(pairs, i, 1, t.window, notSpikes);
-    const frame = pairs[i].to;
-    const unreliablePairs = neighbours(i);
-    const unreliable = unreliablePairs.length > 0 ? `; pair${unreliablePairs.length > 1 ? "s" : ""} ${unreliablePairs.join(" and ")} beside it ${unreliablePairs.length > 1 ? "are" : "is"} measured across the repeat, so ${unreliablePairs.length > 1 ? "their readings are" : "its reading is"} unreliable` : "";
-    if (before && after && moving(before) && moving(after)) {
-      const reference2 = Math.min(before.change, after.change);
-      if (pairs[i].change > t.holdRatio * reference2) continue;
-      flags.push({
-        kind: "stutter",
-        pairs: [i],
-        frame,
-        change: pairs[i].change,
-        reference: r62(reference2),
-        ratio: r62(pairs[i].change / reference2),
-        unreliablePairs,
-        reading: `frame ${frameText(frame)} barely changes from the one before (${fmt(pairs[i].change)}) while the frames around it move about ${fmt(reference2)}: a repeated frame, a stutter${unreliable}. Rounded times can do this: a time just below a frame boundary renders the frame before (see frameWarning)`
-      });
-      continue;
-    }
-    if (!repeats.has(i)) continue;
-    const rawBefore = side(pairs, i, -1, t.window, spikes);
-    const rawAfter = side(pairs, i, 1, t.window, spikes);
-    const atEdge = rawBefore === null || rawAfter === null;
-    if (!atEdge || !(moving(rawBefore) || moving(rawAfter))) continue;
-    const reference = (moving(rawBefore) ? rawBefore : rawAfter).change;
-    flags.push({
-      kind: "repeat",
-      pairs: [i],
-      frame,
-      change: pairs[i].change,
-      reference: r62(reference),
-      ratio: r62(pairs[i].change / reference),
-      atSeriesEdge: true,
-      unreliablePairs,
-      reading: `frame ${frameText(frame)} repeats the one before (change ${fmt(pairs[i].change)}) beside motion of about ${fmt(reference)}, at the ${rawBefore === null ? "start" : "end"} of the series, so a stutter cannot be told from a hold${unreliable}`
-    });
-  }
-  flags.sort((a, b) => a.pairs[0] - b.pairs[0]);
-  summary.flags = flags;
-  const counts = ["pop", "stutter", "cut", "repeat"].map((k) => [k, flags.filter((f) => f.kind === k).length]).filter(([, c]) => c > 0).map(([k, c]) => `${c} ${k}${c > 1 ? "s" : ""}`);
-  summary.reading = `${n} pairs, median change ${fmt(summary.median)}, largest ${fmt(summary.largest.change)} (pair ${largest}); ` + (flags.length === 0 ? "no pair stands out from its neighbours" : `${counts.join(", ")}: ${flags.map((f) => `${f.kind} at pair ${f.pairs.join("+")}`).join("; ")}`);
-  return summary;
-}
-function cellLuma(img, cell) {
-  const w = Math.ceil(img.width / cell);
-  const h = Math.ceil(img.height / cell);
-  const out = new Float32Array(w * h);
-  const n = new Float32Array(w * h);
-  for (let y = 0; y < img.height; y++) {
-    const row = Math.floor(y / cell) * w;
-    for (let x = 0; x < img.width; x++) {
-      const p = (y * img.width + x) * 3;
-      const k = row + Math.floor(x / cell);
-      out[k] += 0.2126 * img.rgb[p] + 0.7152 * img.rgb[p + 1] + 0.0722 * img.rgb[p + 2];
-      n[k]++;
-    }
-  }
-  for (let k = 0; k < out.length; k++) out[k] /= n[k] || 1;
-  return out;
-}
-function aboveFloor(m) {
-  const s = m.values.slice().sort((a, b) => a - b);
-  const floor = s[Math.floor(s.length / 2)] ?? 0;
-  return Float64Array.from(m.values, (v) => Math.max(0, v - floor));
-}
-function motionCentre(m) {
-  const a = aboveFloor(m);
-  let s = 0;
-  let sx = 0;
-  let sy = 0;
-  for (let y = 0; y < m.height; y++)
-    for (let x = 0; x < m.width; x++) {
-      const v = a[y * m.width + x];
-      s += v;
-      sx += v * (x + 0.5);
-      sy += v * (y + 0.5);
-    }
-  if (s <= 0) return null;
-  const cx = sx / s;
-  const cy = sy / s;
-  let vx = 0;
-  let vy = 0;
-  for (let y = 0; y < m.height; y++)
-    for (let x = 0; x < m.width; x++) {
-      const v = a[y * m.width + x];
-      vx += v * (x + 0.5 - cx) ** 2;
-      vy += v * (y + 0.5 - cy) ** 2;
-    }
-  const r32 = (v) => Math.round(v * 1e3) / 1e3;
-  return {
-    x: r32(cx / m.width),
-    y: r32(cy / m.height),
-    spreadX: r32(Math.sqrt(vx / s) / m.width),
-    spreadY: r32(Math.sqrt(vy / s) / m.height)
-  };
-}
-function registerMotionMaps(ref, build) {
-  const ra = aboveFloor(ref);
-  const ba = aboveFloor(build);
-  const rc = motionCentre(ref);
-  const bc = motionCentre(build);
-  if (!rc || !bc) return null;
-  const W = ref.width;
-  const H = ref.height;
-  const crx = rc.x * W;
-  const cry = rc.y * H;
-  const cbx = bc.x * build.width;
-  const cby = bc.y * build.height;
-  const kx = build.width / W;
-  const ky = build.height / H;
-  const corr = (s, dx, dy) => {
-    let sab = 0;
-    let saa = 0;
-    let sbb = 0;
-    let sa = 0;
-    let sb = 0;
-    let n = 0;
-    for (let y = 0; y < H; y++) {
-      const by = Math.floor(s * (y + 0.5 - cry) * ky + cby + dy);
-      if (by < 0 || by >= build.height) continue;
-      for (let x = 0; x < W; x++) {
-        const bx = Math.floor(s * (x + 0.5 - crx) * kx + cbx + dx);
-        if (bx < 0 || bx >= build.width) continue;
-        const va = ra[y * W + x];
-        const vb = ba[by * build.width + bx];
-        sab += va * vb;
-        saa += va * va;
-        sbb += vb * vb;
-        sa += va;
-        sb += vb;
-        n++;
-      }
-    }
-    if (n < 4) return -1;
-    const d = (saa - sa * sa / n) * (sbb - sb * sb / n);
-    return d > 0 ? (sab - sa * sb / n) / Math.sqrt(d) : -1;
-  };
-  const rx = Math.max(2, Math.ceil(0.12 * build.width));
-  const ry = Math.max(2, Math.ceil(0.12 * build.height));
-  let best = { c: -2, s: 1, dx: 0, dy: 0 };
-  for (let s = 0.5; s <= 1.6001; s += 0.02)
-    for (let dy = -ry; dy <= ry; dy++)
-      for (let dx = -rx; dx <= rx; dx++) {
-        const c = corr(s, dx, dy);
-        if (c > best.c) best = { c, s, dx, dy };
-      }
-  const coarse = best;
-  for (let s = coarse.s - 0.02; s <= coarse.s + 0.02001; s += 5e-3)
-    for (let dy = coarse.dy - 1; dy <= coarse.dy + 1; dy++)
-      for (let dx = coarse.dx - 1; dx <= coarse.dx + 1; dx++) {
-        const c = corr(s, dx, dy);
-        if (c > best.c) best = { c, s, dx, dy };
-      }
-  const r32 = (v) => Math.round(v * 1e3) / 1e3;
-  return {
-    scale: r32(best.s),
-    from: { x: rc.x, y: rc.y },
-    to: { x: r32((cbx + best.dx) / build.width), y: r32((cby + best.dy) / build.height) },
-    correlation: r32(best.c)
-  };
-}
-var CURVE_DEFAULTS = {
-  restBelow: 0.02,
-  noEaseAbove: 0.6,
-  jumpRatio: 2.5,
-  jumpShare: 0.25,
-  settleWithin: 0.01,
-  joinGap: 2
-};
-var median2 = (v) => {
-  if (!v.length) return 0;
-  const s = v.slice().sort((a, b) => a - b);
-  const m = s.length >> 1;
-  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
-};
-var norm = (v) => Math.sqrt(v.reduce((s, x) => s + x * x, 0));
-var sub = (a, b) => a.map((x, i) => x - (b[i] ?? 0));
-var rnd = (v, k = 1e3) => Math.round(v * k) / k;
-function analyzeCurve(samples, fps, opts = {}) {
-  const o = { ...CURVE_DEFAULTS };
-  for (const [k, v] of Object.entries(opts)) if (typeof v === "number") o[k] = v;
-  const frames = samples.map((s, i) => ({
-    ...s,
-    speed: i === 0 ? 0 : rnd(norm(sub(s.value, samples[i - 1].value)) * fps)
-  }));
-  const peak = Math.max(0, ...frames.map((f) => f.speed));
-  const flags = [];
-  if (peak <= 1e-9)
-    return { frames, moves: [], flags, reading: "The property does not move over the frames read." };
-  const moving = frames.map((f) => f.speed > o.restBelow * peak);
-  const runs = [];
-  for (let i = 0; i < frames.length; i++) {
-    if (!moving[i]) continue;
-    let j = i;
-    while (j + 1 < frames.length && moving[j + 1]) j++;
-    const last = runs[runs.length - 1];
-    if (last && i - last[1] - 1 <= o.joinGap) last[1] = j;
-    else runs.push([i, j]);
-    i = j;
-  }
-  const moves = runs.map(([i0, i1]) => {
-    const from = Math.max(0, i0 - 1);
-    const to = i1;
-    const sp = frames.slice(i0, i1 + 1).map((f) => f.speed);
-    const mid = median2(sp);
-    let pk = i0;
-    for (let i = i0; i <= i1; i++) if (frames[i].speed > frames[pk].speed) pk = i;
-    const start = frames[from].value;
-    const end = frames[to].value;
-    const way = sub(end, start);
-    const distance = norm(way);
-    const unit = distance > 0 ? way.map((x) => x / distance) : way;
-    let over = 0;
-    let overFrame = -1;
-    let crossed = -1;
-    for (let i = i0; i <= to; i++) {
-      const p = sub(frames[i].value, end).reduce((s, x, k) => s + x * unit[k], 0);
-      if (p > over) {
-        over = p;
-        overFrame = frames[i].frame;
-      }
-      if (crossed < 0 && p >= -o.settleWithin * distance) crossed = i;
-    }
-    const overshoot = distance > 0 && over / distance >= o.settleWithin ? { amount: rnd(over), share: rnd(over / distance), frame: overFrame } : null;
-    let settle2 = null;
-    if (overshoot && crossed >= 0) {
-      let at = to;
-      while (at - 1 > crossed && norm(sub(frames[at - 1].value, end)) <= o.settleWithin * distance) at--;
-      settle2 = { frames: frames[at].frame - frames[crossed].frame, from: frames[crossed].frame, at: frames[at].frame };
-    }
-    return {
-      from: frames[from].frame,
-      to: frames[to].frame,
-      distance: rnd(distance),
-      peakSpeed: rnd(frames[pk].speed),
-      peakFrame: frames[pk].frame,
-      startEase: mid > 0 && frames[i0].speed >= o.noEaseAbove * mid ? "none" : "eased",
-      endEase: mid > 0 && frames[i1].speed >= o.noEaseAbove * mid ? "none" : "eased",
-      overshoot,
-      settle: settle2
-    };
-  });
-  for (const [k, m] of moves.entries()) {
-    const [i0, i1] = runs[k];
-    const span = `The move from frame ${m.from} to ${m.to}`;
-    const mid = median2(frames.slice(i0, i1 + 1).map((f) => f.speed));
-    const pc = (v) => `${Math.round(v / (mid || 1) * 100)}%`;
-    if (m.startEase === "none" || m.endEase === "none") {
-      const both = m.startEase === "none" && m.endEase === "none";
-      flags.push({
-        kind: "no ease",
-        frames: both ? [m.from, m.to] : m.startEase === "none" ? [m.from] : [m.to],
-        reading: `${span} ${both ? "starts and stops at full speed" : m.startEase === "none" ? "starts at full speed" : "stops at full speed"} (no ease): its ${both ? `first and last moving frames run at ${pc(frames[i0].speed)} and ${pc(frames[i1].speed)}` : m.startEase === "none" ? `first moving frame runs at ${pc(frames[i0].speed)}` : `last moving frame runs at ${pc(frames[i1].speed)}`} of its middle speed. Ease it, unless a mechanical, constant move is meant.`
-      });
-    }
-    const movePeak = m.peakSpeed;
-    for (let j = i0 + 2; j <= i1 - 1; j++) {
-      const a = frames[j - 1].speed;
-      const b = frames[j].speed;
-      const lo = Math.min(a, b);
-      if (Math.abs(b - a) >= o.jumpShare * movePeak && (lo <= 0 || Math.max(a, b) / lo >= o.jumpRatio))
-        flags.push({
-          kind: "speed jump",
-          frames: [frames[j - 1].frame, frames[j].frame],
-          reading: `${span} jumps in speed between frames ${frames[j - 1].frame} and ${frames[j].frame}: ${rnd(a, 10)} to ${rnd(b, 10)} units a second (top ${rnd(movePeak, 10)}). Look at the keys there.`
-        });
-    }
-    if (m.overshoot)
-      flags.push({
-        kind: "overshoot",
-        frames: [m.overshoot.frame],
-        reading: `${span} overshoots by ${Math.round(m.overshoot.share * 100)}% of its distance (${rnd(m.overshoot.amount, 10)} units, at frame ${m.overshoot.frame})${m.settle ? ` and takes ${m.settle.frames} frames to settle within ${o.settleWithin * 100}% (frames ${m.settle.from} to ${m.settle.at})` : ""}. Whether that is the bounce you want is a judgment.`
-      });
-  }
-  const problems = flags.filter((f) => f.kind !== "overshoot");
-  return {
-    frames,
-    moves,
-    flags,
-    reading: `${moves.length} move${moves.length === 1 ? "" : "s"} over frames ${frames[0].frame} to ${frames[frames.length - 1].frame}; ` + (problems.length ? problems.map((f) => f.reading).join(" ") : "every move eases in and out, with no jump in speed.") + flags.filter((f) => f.kind === "overshoot").map((f) => ` ${f.reading}`).join("")
-  };
-}
-function curveGraph(r, size = { width: 480, height: 160 }) {
-  const { width: W, height: H } = size;
-  const rgb = new Float64Array(W * H * 3);
-  const put = (x, y, c) => {
-    if (x < 0 || y < 0 || x >= W || y >= H) return;
-    const p = (Math.round(y) * W + Math.round(x)) * 3;
-    rgb[p] = c[0];
-    rgb[p + 1] = c[1];
-    rgb[p + 2] = c[2];
-  };
-  for (let i = 0; i < W * H; i++) rgb.set([0.08, 0.08, 0.1], i * 3);
-  const n = r.frames.length;
-  if (!n) return { width: W, height: H, rgb };
-  const pad = 6;
-  const X = (i) => pad + (W - 2 * pad) * i / Math.max(1, n - 1);
-  const Y = (u) => H - pad - (H - 2 * pad) * u;
-  const first = r.frames[0].frame;
-  for (const m of r.moves)
-    for (let x = Math.floor(X(m.from - first)); x <= Math.ceil(X(m.to - first)); x++)
-      for (let y = pad; y < H - pad; y++) put(x, y, [0.14, 0.14, 0.18]);
-  const line = (vals, c) => {
-    const lo = Math.min(...vals);
-    const hi = Math.max(...vals);
-    const s = hi - lo > 1e-12 ? hi - lo : 1;
-    for (let i = 1; i < n; i++) {
-      const x0 = X(i - 1);
-      const x1 = X(i);
-      const y0 = Y((vals[i - 1] - lo) / s);
-      const y1 = Y((vals[i] - lo) / s);
-      const steps2 = Math.max(1, Math.ceil(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0))));
-      for (let k = 0; k <= steps2; k++) put(x0 + (x1 - x0) * k / steps2, y0 + (y1 - y0) * k / steps2, c);
-    }
-  };
-  const dims2 = r.frames[0].value.length;
-  for (let d = 0; d < dims2; d++) line(r.frames.map((f) => f.value[d] ?? 0), [0.85 - 0.2 * d, 0.85, 0.9]);
-  line(r.frames.map((f) => f.speed), [1, 0.55, 0.15]);
-  for (const f of r.flags.filter((x) => x.kind !== "overshoot"))
-    for (const fr of f.frames) for (let y = pad; y < pad + 10; y++) put(X(fr - first), y, [0.95, 0.2, 0.2]);
-  return { width: W, height: H, rgb };
-}
-function soundOnsets(values, fps, opts = {}) {
-  const share = opts.share ?? 0.3;
-  const gap = opts.gap ?? 3;
-  const top = Math.max(0, ...values);
-  if (top <= 1e-6) return [];
-  const floor = median2(values);
-  const thr = floor + share * (top - floor);
-  const out = [];
-  let last = -Infinity;
-  for (let f = 0; f < values.length; f++) {
-    if (values[f] >= thr && (f === 0 || values[f - 1] < thr) && f - last >= gap) {
-      out.push({ frame: f, time: f / fps, level: rnd(values[f]) });
-      last = f;
-    }
-  }
-  return out;
-}
-function parseTiming(text, fps) {
-  const t = text.trim();
-  if (t.startsWith("[") || t.startsWith("{")) {
-    const j = JSON.parse(t);
-    const list = Array.isArray(j) ? j : j.words ?? j.markers ?? j.beats ?? [];
-    return list.map((e, i) => {
-      const x = typeof e === "number" ? { time: e } : e;
-      const label = String(x.word ?? x.w ?? x.text ?? x.label ?? x.name ?? "");
-      const sec = [x.start, x.time, x.t].find((v) => typeof v === "number");
-      const time3 = sec ?? (typeof x.frame === "number" ? x.frame / fps : void 0);
-      if (time3 === void 0) throw new Error(`entry ${i + 1} of the timing file has no time (start, time or t in seconds, or frame)`);
-      return { time: time3, label };
-    });
-  }
-  const out = [];
-  for (const line of t.split(/\r?\n/)) {
-    const [a, ...rest] = line.split(",");
-    const time3 = Number(a);
-    if (!line.trim() || !Number.isFinite(time3)) continue;
-    out.push({ time: time3, label: rest.join(",").trim() });
-  }
-  if (!out.length) throw new Error("no time,label lines in the timing file");
-  return out;
-}
-var SYNC_DEFAULTS = { lateFrames: 2, earlyFrames: 4 };
-function syncReport(events, markers, fps, opts = {}) {
-  const o = {
-    lateFrames: opts.lateFrames ?? SYNC_DEFAULTS.lateFrames,
-    earlyFrames: opts.earlyFrames ?? SYNC_DEFAULTS.earlyFrames
-  };
-  if (!markers.length)
-    return { events: [], flags: [], reading: "No markers to compare with: add word or beat markers first (sound.markers)." };
-  const out = events.map((e) => {
-    let best = markers[0];
-    for (const m of markers) if (Math.abs(m.time - e.time) < Math.abs(best.time - e.time)) best = m;
-    return { name: e.name, time: rnd(e.time, 1e4), frames: Math.round((e.time - best.time) * fps), marker: best };
-  });
-  const flags = out.filter((e) => e.frames >= o.lateFrames || e.frames <= -o.earlyFrames).map((e) => {
-    const n = Math.abs(e.frames);
-    return {
-      ...e,
-      reading: `${e.name} is ${n} frame${n === 1 ? "" : "s"} ${e.frames > 0 ? "after" : "before"} the nearest marker (${e.marker?.label ? `'${e.marker.label}' ` : ""}at ${rnd(e.marker.time, 1e3)} s): ${e.frames > 0 ? "late" : "early"} (flagged from ${e.frames > 0 ? o.lateFrames : o.earlyFrames} frames ${e.frames > 0 ? "after" : "before"}).`
-    };
-  });
-  return {
-    events: out,
-    flags,
-    reading: flags.length ? flags.map((f) => f.reading).join(" ") : `All ${out.length} events are within ${o.lateFrames - 1} frame${o.lateFrames - 1 === 1 ? "" : "s"} after and ${o.earlyFrames - 1} before their nearest marker.`
-  };
-}
-
-// src/color/sheet.ts
-var TOL = 2 / 255;
-function px(img, x, y) {
-  const i = (y * img.width + x) * 3;
-  return [img.rgb[i], img.rgb[i + 1], img.rgb[i + 2]];
-}
-function same(a, b) {
-  return Math.abs(a[0] - b[0]) <= TOL && Math.abs(a[1] - b[1]) <= TOL && Math.abs(a[2] - b[2]) <= TOL;
-}
-function isBackground(img, x, y, bg) {
-  if (img.alpha) return img.alpha[y * img.width + x] <= TOL;
-  return bg !== null && same(px(img, x, y), bg);
-}
-function cornerColor(img) {
-  const corners = [
-    px(img, 0, 0),
-    px(img, img.width - 1, 0),
-    px(img, 0, img.height - 1),
-    px(img, img.width - 1, img.height - 1)
-  ];
-  let best = corners[0];
-  let bestCount = 0;
-  for (const c of corners) {
-    const count = corners.filter((o) => same(o, c)).length;
-    if (count > bestCount) {
-      best = c;
-      bestCount = count;
-    }
-  }
-  return best;
-}
-function lineUniform(img, fixed, horizontal) {
-  const n = horizontal ? img.width : img.height;
-  const first = horizontal ? px(img, 0, fixed) : px(img, fixed, 0);
-  let transparent = img.alpha !== void 0;
-  for (let i = 0; i < n; i++) {
-    const x = horizontal ? i : fixed;
-    const y = horizontal ? fixed : i;
-    if (transparent && img.alpha[y * img.width + x] > TOL) transparent = false;
-    if (!same(px(img, x, y), first)) return { uniform: false, transparent: false, color: first };
-  }
-  return { uniform: true, transparent, color: first };
-}
-function edgeBand(img, side2) {
-  const horizontal = side2 === "top" || side2 === "bottom";
-  const n = horizontal ? img.height : img.width;
-  let width = 0;
-  let color = null;
-  let transparent = true;
-  for (let i = 0; i < n; i++) {
-    const fixed = side2 === "top" || side2 === "left" ? i : n - 1 - i;
-    const line = lineUniform(img, fixed, horizontal);
-    if (!line.uniform) break;
-    if (color === null) color = line.color;
-    else if (!same(color, line.color)) break;
-    if (!line.transparent) transparent = false;
-    width++;
-  }
-  if (width === 0) return { width: 0, kind: "none", color: null };
-  return { width, kind: transparent && img.alpha ? "transparent" : "color", color };
-}
-function analyzeFrame(img) {
-  const { width, height } = img;
-  const bgColor = img.alpha ? null : cornerColor(img);
-  const sum = [0, 0, 0];
-  let minX = width;
-  let minY = height;
-  let maxX = -1;
-  let maxY = -1;
-  let content = 0;
-  const first = px(img, 0, 0);
-  let uniform = true;
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const i = (y * width + x) * 3;
-      sum[0] += img.rgb[i];
-      sum[1] += img.rgb[i + 1];
-      sum[2] += img.rgb[i + 2];
-      if (uniform && !same(px(img, x, y), first)) uniform = false;
-      if (!isBackground(img, x, y, bgColor)) {
-        content++;
-        if (x < minX) minX = x;
-        if (x > maxX) maxX = x;
-        if (y < minY) minY = y;
-        if (y > maxY) maxY = y;
-      }
-    }
-  }
-  const total = width * height;
-  return {
-    width,
-    height,
-    meanRgb: [sum[0] / total, sum[1] / total, sum[2] / total],
-    uniform,
-    background: img.alpha ? { kind: "transparent", color: null } : { kind: "color", color: bgColor },
-    contentBounds: content === 0 ? null : { left: minX, top: minY, width: maxX - minX + 1, height: maxY - minY + 1 },
-    coverage: content / total,
-    edges: {
-      top: edgeBand(img, "top"),
-      bottom: edgeBand(img, "bottom"),
-      left: edgeBand(img, "left"),
-      right: edgeBand(img, "right")
-    }
-  };
-}
-var CHECKERBOARD = {
-  size: 16,
-  light: [0.8, 0.8, 0.8],
-  dark: [0.6, 0.6, 0.6]
-};
-function unmatte(img, bg) {
-  const out = Float64Array.from(img.rgb);
-  const alpha = img.alpha;
-  if (!alpha) return out;
-  for (let p = 0; p < alpha.length; p++) {
-    const a = alpha[p];
-    if (a >= 1) continue;
-    const i = p * 3;
-    for (let c = 0; c < 3; c++) {
-      out[i + c] = a <= 0 ? 0 : Math.min(1, Math.max(0, (out[i + c] - bg[c] * (1 - a)) / a));
-    }
-  }
-  return out;
-}
-function flattenOver(img, backdrop) {
-  const out = Float64Array.from(img.rgb);
-  const alpha = img.alpha;
-  if (!alpha) return out;
-  const { width, height } = img;
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const p = y * width + x;
-      const a = alpha[p];
-      if (a >= 1) continue;
-      const bg = backdrop.kind === "color" ? backdrop.color : (Math.floor(x / CHECKERBOARD.size) + Math.floor(y / CHECKERBOARD.size)) % 2 === 0 ? CHECKERBOARD.light : CHECKERBOARD.dark;
-      const i = p * 3;
-      out[i] = out[i] * a + bg[0] * (1 - a);
-      out[i + 1] = out[i + 1] * a + bg[1] * (1 - a);
-      out[i + 2] = out[i + 2] * a + bg[2] * (1 - a);
-    }
-  }
-  return out;
-}
-var r42 = (v) => Math.round(v * 1e4) / 1e4;
-var r4rgb2 = (v) => [r42(v[0]), r42(v[1]), r42(v[2])];
-function clipRegion(img, region) {
-  const x0 = Math.floor(region.x);
-  const y0 = Math.floor(region.y);
-  const x1 = x0 + Math.max(1, Math.floor(region.width ?? 1));
-  const y1 = y0 + Math.max(1, Math.floor(region.height ?? 1));
-  const cx0 = Math.max(0, x0);
-  const cy0 = Math.max(0, y0);
-  const cx1 = Math.min(img.width, x1);
-  const cy1 = Math.min(img.height, y1);
-  if (cx1 <= cx0 || cy1 <= cy0) return null;
-  return {
-    rect: { x: cx0, y: cy0, width: cx1 - cx0, height: cy1 - cy0 },
-    clipped: cx0 !== x0 || cy0 !== y0 || cx1 !== x1 || cy1 !== y1
-  };
-}
-function outside(img, region) {
-  return { name: region.name, error: `region is outside the ${img.width}\xD7${img.height} frame` };
-}
-function sampleRegions(img, regions) {
-  return regions.map((region) => {
-    const clip = clipRegion(img, region);
-    if (!clip) return outside(img, region);
-    const { rect } = clip;
-    const sum = [0, 0, 0];
-    const min = [Infinity, Infinity, Infinity];
-    const max = [-Infinity, -Infinity, -Infinity];
-    let aSum = 0;
-    let aMin = Infinity;
-    let aMax = -Infinity;
-    let opaque = 0;
-    let transparent = 0;
-    for (let y = rect.y; y < rect.y + rect.height; y++) {
-      for (let x = rect.x; x < rect.x + rect.width; x++) {
-        const p = y * img.width + x;
-        for (let c = 0; c < 3; c++) {
-          const v = img.rgb[p * 3 + c];
-          sum[c] += v;
-          if (v < min[c]) min[c] = v;
-          if (v > max[c]) max[c] = v;
-        }
-        if (img.alpha) {
-          const a = img.alpha[p];
-          aSum += a;
-          if (a < aMin) aMin = a;
-          if (a > aMax) aMax = a;
-          if (a >= 1 - TOL) opaque++;
-          else if (a <= TOL) transparent++;
-        }
-      }
-    }
-    const n = rect.width * rect.height;
-    return {
-      name: region.name,
-      rect,
-      clipped: clip.clipped,
-      pixels: n,
-      mean: r4rgb2([sum[0] / n, sum[1] / n, sum[2] / n]),
-      min: r4rgb2(min),
-      max: r4rgb2(max),
-      alpha: img.alpha ? {
-        mean: r42(aSum / n),
-        min: r42(aMin),
-        max: r42(aMax),
-        opaqueShare: r42(opaque / n),
-        partialShare: r42((n - opaque - transparent) / n),
-        transparentShare: r42(transparent / n)
-      } : null
-    };
-  });
-}
-function histogramOf(img, bins) {
-  const n = img.width * img.height;
-  const counts = [0, 1, 2].map(() => Array.from({ length: bins }, () => 0));
-  const aCounts = img.alpha ? Array.from({ length: bins }, () => 0) : void 0;
-  const bin = (v) => Math.min(bins - 1, Math.max(0, Math.floor(v * bins)));
-  for (let p = 0; p < n; p++) {
-    for (let c = 0; c < 3; c++) counts[c][bin(img.rgb[p * 3 + c])]++;
-    if (aCounts && img.alpha) aCounts[bin(img.alpha[p])]++;
-  }
-  return {
-    bins,
-    pixels: n,
-    r: counts[0],
-    g: counts[1],
-    b: counts[2],
-    ...aCounts ? { a: aCounts } : {}
-  };
-}
-function compareRegions(from, to, regions) {
-  if (from.width !== to.width || from.height !== to.height) {
-    throw new Error(
-      `cannot compare frames of different size (${from.width}\xD7${from.height} vs ${to.width}\xD7${to.height})`
-    );
-  }
-  const withAlpha = from.alpha !== void 0 && to.alpha !== void 0;
-  return regions.map((region) => {
-    const clip = clipRegion(from, region);
-    if (!clip) return outside(from, region);
-    const { rect } = clip;
-    const delta = [0, 0, 0];
-    const absSum = [0, 0, 0];
-    const absMax = [0, 0, 0];
-    let aDelta = 0;
-    let aAbs = 0;
-    let aMax = 0;
-    for (let y = rect.y; y < rect.y + rect.height; y++) {
-      for (let x = rect.x; x < rect.x + rect.width; x++) {
-        const p = y * from.width + x;
-        for (let c = 0; c < 3; c++) {
-          const d = to.rgb[p * 3 + c] - from.rgb[p * 3 + c];
-          delta[c] += d;
-          absSum[c] += Math.abs(d);
-          if (Math.abs(d) > absMax[c]) absMax[c] = Math.abs(d);
-        }
-        if (withAlpha) {
-          const d = to.alpha[p] - from.alpha[p];
-          aDelta += d;
-          aAbs += Math.abs(d);
-          if (Math.abs(d) > aMax) aMax = Math.abs(d);
-        }
-      }
-    }
-    const n = rect.width * rect.height;
-    return {
-      name: region.name,
-      rect,
-      clipped: clip.clipped,
-      pixels: n,
-      meanDelta: r4rgb2([delta[0] / n, delta[1] / n, delta[2] / n]),
-      meanAbsDelta: r4rgb2([absSum[0] / n, absSum[1] / n, absSum[2] / n]),
-      maxAbsDelta: r4rgb2(absMax),
-      alpha: withAlpha ? { meanDelta: r42(aDelta / n), meanAbsDelta: r42(aAbs / n), maxAbsDelta: r42(aMax) } : null
-    };
-  });
-}
-function rgbHex(rgb) {
-  return `#${rgb.map(
-    (v) => Math.round(Math.min(1, Math.max(0, v)) * 255).toString(16).padStart(2, "0")
-  ).join("")}`;
-}
-function resample(img, tw, th) {
-  const out = new Float64Array(tw * th * 3);
-  const counts = new Float64Array(tw * th);
-  for (let y = 0; y < img.height; y++) {
-    const ty = Math.min(th - 1, Math.floor(y * th / img.height));
-    for (let x = 0; x < img.width; x++) {
-      const tx = Math.min(tw - 1, Math.floor(x * tw / img.width));
-      const si = (y * img.width + x) * 3;
-      const di = (ty * tw + tx) * 3;
-      out[di] += img.rgb[si];
-      out[di + 1] += img.rgb[si + 1];
-      out[di + 2] += img.rgb[si + 2];
-      counts[ty * tw + tx]++;
-    }
-  }
-  for (let i = 0; i < tw * th; i++) {
-    const c = counts[i] || 1;
-    out[i * 3] /= c;
-    out[i * 3 + 1] /= c;
-    out[i * 3 + 2] /= c;
-  }
-  return out;
-}
-var GLYPHS = {
-  "0": [".###.", "#...#", "#..##", "#.#.#", "##..#", "#...#", ".###."],
-  "1": ["..#..", ".##..", "..#..", "..#..", "..#..", "..#..", ".###."],
-  "2": [".###.", "#...#", "....#", "...#.", "..#..", ".#...", "#####"],
-  "3": ["#####", "...#.", "..#..", "...#.", "....#", "#...#", ".###."],
-  "4": ["...#.", "..##.", ".#.#.", "#..#.", "#####", "...#.", "...#."],
-  "5": ["#####", "#....", "####.", "....#", "....#", "#...#", ".###."],
-  "6": ["..##.", ".#...", "#....", "####.", "#...#", "#...#", ".###."],
-  "7": ["#####", "....#", "...#.", "..#..", ".#...", ".#...", ".#..."],
-  "8": [".###.", "#...#", "#...#", ".###.", "#...#", "#...#", ".###."],
-  "9": [".###.", "#...#", "#...#", ".####", "....#", "...#.", ".##.."],
-  ".": [".....", ".....", ".....", ".....", ".....", ".##..", ".##.."],
-  ":": [".....", ".##..", ".##..", ".....", ".##..", ".##..", "....."],
-  "-": [".....", ".....", ".....", "#####", ".....", ".....", "....."],
-  ">": [".#...", "..#..", "...#.", "....#", "...#.", "..#..", ".#..."],
-  x: [".....", ".....", "#...#", ".#.#.", "..#..", ".#.#.", "#...#"],
-  "!": ["..#..", "..#..", "..#..", "..#..", "..#..", ".....", "..#.."],
-  "#": [".#.#.", ".#.#.", "#####", ".#.#.", "#####", ".#.#.", ".#.#."],
-  s: [".....", ".....", ".####", "#....", ".###.", "....#", "####."],
-  f: ["..##.", ".#...", "###..", ".#...", ".#...", ".#...", ".#..."],
-  a: [".....", ".....", ".###.", "....#", ".####", "#...#", ".####"],
-  b: ["#....", "#....", "####.", "#...#", "#...#", "#...#", "####."],
-  c: [".....", ".....", ".###.", "#....", "#....", "#...#", ".###."],
-  d: ["....#", "....#", ".####", "#...#", "#...#", "#...#", ".####"],
-  e: [".....", ".....", ".###.", "#...#", "#####", "#....", ".###."],
-  g: [".....", ".....", ".####", "#...#", "#...#", "#...#", ".####", "....#", ".###."],
-  h: ["#....", "#....", "####.", "#...#", "#...#", "#...#", "#...#"],
-  i: ["..#..", ".....", ".##..", "..#..", "..#..", "..#..", ".###."],
-  j: ["...#.", ".....", "..##.", "...#.", "...#.", "...#.", "...#.", "#..#.", ".##.."],
-  k: ["#....", "#....", "#..#.", "#.#..", "##...", "#.#..", "#..#."],
-  l: [".##..", "..#..", "..#..", "..#..", "..#..", "..#..", ".###."],
-  m: [".....", ".....", "##.#.", "#.#.#", "#.#.#", "#...#", "#...#"],
-  n: [".....", ".....", "####.", "#...#", "#...#", "#...#", "#...#"],
-  o: [".....", ".....", ".###.", "#...#", "#...#", "#...#", ".###."],
-  p: [".....", ".....", "####.", "#...#", "#...#", "#...#", "####.", "#....", "#...."],
-  q: [".....", ".....", ".####", "#...#", "#...#", "#...#", ".####", "....#", "....#"],
-  r: [".....", ".....", "#.##.", "##..#", "#....", "#....", "#...."],
-  t: [".#...", ".#...", "###..", ".#...", ".#...", ".#..#", "..##."],
-  u: [".....", ".....", "#...#", "#...#", "#...#", "#..##", ".##.#"],
-  v: [".....", ".....", "#...#", "#...#", "#...#", ".#.#.", "..#.."],
-  w: [".....", ".....", "#...#", "#...#", "#.#.#", "#.#.#", ".#.#."],
-  y: [".....", ".....", "#...#", "#...#", "#...#", "#...#", ".####", "....#", ".###."],
-  z: [".....", ".....", "#####", "...#.", "..#..", ".#...", "#####"],
-  "+": [".....", "..#..", "..#..", "#####", "..#..", "..#..", "....."],
-  " ": [".....", ".....", ".....", ".....", ".....", ".....", "....."]
-};
-var GLYPH_W = 5;
-var GLYPH_H = 7;
-var FONT_SCALE = 2;
-var LABEL_H = GLYPH_H * FONT_SCALE + 6;
-var LABEL_CHAR_PX = (GLYPH_W + 1) * FONT_SCALE;
-function drawText(rgb, width, x0, y0, text, color) {
-  let cx = x0;
-  for (const ch of text) {
-    const glyph = GLYPHS[ch] ?? GLYPHS[" "];
-    for (let gy = 0; gy < glyph.length; gy++) {
-      for (let gx = 0; gx < GLYPH_W; gx++) {
-        if (glyph[gy][gx] !== "#") continue;
-        for (let sy = 0; sy < FONT_SCALE; sy++) {
-          for (let sx = 0; sx < FONT_SCALE; sx++) {
-            const x = cx + gx * FONT_SCALE + sx;
-            const y = y0 + gy * FONT_SCALE + sy;
-            const i = (y * width + x) * 3;
-            rgb[i] = color[0];
-            rgb[i + 1] = color[1];
-            rgb[i + 2] = color[2];
-          }
-        }
-      }
-    }
-    cx += (GLYPH_W + 1) * FONT_SCALE;
-  }
-}
-function composeContactSheet(frames, opts = {}) {
-  if (frames.length === 0) throw new Error("contact sheet needs at least one frame");
-  const gap = opts.gap ?? 8;
-  const bg = opts.background ?? [0.12, 0.12, 0.12];
-  const columns = Math.max(
-    1,
-    Math.min(frames.length, opts.columns ?? Math.ceil(Math.sqrt(frames.length)))
-  );
-  const rows = Math.ceil(frames.length / columns);
-  const srcW = Math.max(...frames.map((f) => f.width));
-  const srcH = Math.max(...frames.map((f) => f.height));
-  const thumbWidth = Math.max(16, Math.min(opts.thumbWidth ?? 480, srcW));
-  const thumbHeight = Math.max(1, Math.round(srcH * thumbWidth / srcW));
-  const cellW = thumbWidth;
-  const cellH = LABEL_H + thumbHeight;
-  const width = gap + columns * (cellW + gap);
-  const height = gap + rows * (cellH + gap);
-  const rgb = new Float64Array(width * height * 3);
-  for (let i = 0; i < width * height; i++) {
-    rgb[i * 3] = bg[0];
-    rgb[i * 3 + 1] = bg[1];
-    rgb[i * 3 + 2] = bg[2];
-  }
-  for (const [n, frame] of frames.entries()) {
-    const col = n % columns;
-    const row = Math.floor(n / columns);
-    const x0 = gap + col * (cellW + gap);
-    const y0 = gap + row * (cellH + gap);
-    const tw = Math.max(1, Math.min(thumbWidth, Math.round(frame.width * thumbWidth / srcW)));
-    const th = Math.max(1, Math.min(thumbHeight, Math.round(frame.height * tw / frame.width)));
-    const thumb = resample(frame, tw, th);
-    for (let y = 0; y < th; y++) {
-      for (let x = 0; x < tw; x++) {
-        const si = (y * tw + x) * 3;
-        const di = ((y0 + LABEL_H + y) * width + (x0 + x)) * 3;
-        rgb[di] = thumb[si];
-        rgb[di + 1] = thumb[si + 1];
-        rgb[di + 2] = thumb[si + 2];
-      }
-    }
-    const label = opts.labels?.[n] ?? `#${n}`;
-    drawText(rgb, width, x0 + 2, y0 + 2, label, [0.95, 0.95, 0.95]);
-  }
-  return { width, height, rgb, columns, rows, thumbWidth, thumbHeight };
-}
-function frameLabel(index, time3) {
-  return time3 === void 0 ? `#${index}` : `#${index} ${time3.toFixed(3)}s`;
-}
-var LOOK_ROLES = ["neutral", "skin", "plate", "element"];
-var LOOK_DEFAULTS = {
-  minContrast: 0.1,
-  grainTolerance: 0.25,
-  sharpnessTolerance: 0.25,
-  levelTolerance: 0.02,
-  castAbove: 2,
-  /** Pixels at or above this alpha count as the element when the frame has alpha. */
-  opaque: 0.98,
-  /** Half-length of the profile read across an edge, px: edges up to about 10 px wide (sigma 4). */
-  edgeReach: 12,
-  /** Profiles are the mean of this many neighbouring lines. */
-  edgeLines: 5,
-  /** Skin hue angle (CIELAB h, degrees) commonly reported for skin of many tones under neutral light. */
-  skinHue: [40, 65]
-};
-var srgbToLinear = (c) => c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-var labF = (t) => t > (6 / 29) ** 3 ? Math.cbrt(t) : t / (3 * (6 / 29) ** 2) + 4 / 29;
-function labOf(rgb) {
-  const [r, g, b] = rgb.map((v) => srgbToLinear(Math.min(1, Math.max(0, v))));
-  const x = (0.4124564 * r + 0.3575761 * g + 0.1804375 * b) / 0.95047;
-  const y = 0.2126729 * r + 0.7151522 * g + 0.072175 * b;
-  const z2 = (0.0193339 * r + 0.119192 * g + 0.9503041 * b) / 1.08883;
-  const fx = labF(x);
-  const fy = labF(y);
-  const fz = labF(z2);
-  const L = 116 * fy - 16;
-  const A = 500 * (fx - fy);
-  const B = 200 * (fy - fz);
-  const hue = (Math.atan2(B, A) * 180 / Math.PI + 360) % 360;
-  const r22 = (v) => Math.round(v * 100) / 100;
-  return {
-    L: r22(L),
-    a: r22(A),
-    b: r22(B),
-    chroma: r22(Math.hypot(A, B)),
-    hue: Math.round(hue * 10) / 10
-  };
-}
-var luma = (c) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
-function neutralGains(rgb) {
-  const k = luma(rgb);
-  return rgb.map((v) => v > 0 ? k / v : 1);
-}
-function cropOf(img, rect, opaque) {
-  const { x, y, width, height } = rect;
-  const rgb = new Float64Array(width * height * 3);
-  const use = new Uint8Array(width * height);
-  const alpha = img.alpha ? new Float64Array(width * height) : void 0;
-  for (let j = 0; j < height; j++)
-    for (let i = 0; i < width; i++) {
-      const p = (y + j) * img.width + (x + i);
-      const q = j * width + i;
-      for (let c = 0; c < 3; c++) rgb[q * 3 + c] = img.rgb[p * 3 + c];
-      use[q] = !img.alpha || img.alpha[p] >= opaque ? 1 : 0;
-      if (alpha && img.alpha) alpha[q] = img.alpha[p];
-    }
-  return alpha ? { rect, width, height, rgb, use, alpha } : { rect, width, height, rgb, use };
-}
-function lookCrops(img, args) {
-  const out = /* @__PURE__ */ new Map();
-  for (const r of args.regions) {
-    const clip = clipRegion(img, r);
-    if (clip) out.set(r.name, cropOf(img, clip.rect, LOOK_DEFAULTS.opaque));
-  }
-  return out;
-}
-var MAD_TO_SD = 1.4826;
-function median3(v) {
-  if (!v.length) return NaN;
-  const s = v.slice().sort((a, b) => a - b);
-  const m = s.length >> 1;
-  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
-}
-function percentile(v, p) {
-  if (!v.length) return NaN;
-  const s = v.slice().sort((a, b) => a - b);
-  return s[Math.min(s.length - 1, Math.max(0, Math.round(p / 100 * (s.length - 1))))];
-}
-var robustSd = (v) => {
-  const m = median3(v);
-  const band = Math.max(4 * MAD_TO_SD * median3(v.map((x) => Math.abs(x - m))), 3 / 255);
-  let n = 0;
-  let sum = 0;
-  let sq = 0;
-  for (const x of v)
-    if (Math.abs(x - m) <= band) {
-      n++;
-      sum += x;
-      sq += x * x;
-    }
-  if (n < 2) return 0;
-  const mean = sum / n;
-  return Math.sqrt(Math.max(0, sq / n - mean * mean));
-};
-var steps = (v) => Math.round(v * 255 * 100) / 100;
-function spatialGrain(c) {
-  const out = [];
-  const scale = 1 / Math.sqrt(8 / 9);
-  for (let ch = 0; ch < 3; ch++) {
-    const res = [];
-    for (let y = 1; y < c.height - 1; y += 1)
-      for (let x = 1; x < c.width - 1; x += 1) {
-        let ok = true;
-        let sum = 0;
-        for (let dy = -1; dy <= 1 && ok; dy++)
-          for (let dx = -1; dx <= 1; dx++) {
-            const q = (y + dy) * c.width + (x + dx);
-            if (!c.use[q]) {
-              ok = false;
-              break;
-            }
-            sum += c.rgb[q * 3 + ch];
-          }
-        if (!ok) continue;
-        res.push(c.rgb[(y * c.width + x) * 3 + ch] - sum / 9);
-      }
-    out.push(res.length ? steps(robustSd(res) * scale) : NaN);
-  }
-  return out;
-}
-function temporalGrain(a, b) {
-  if (a.width !== b.width || a.height !== b.height) return null;
-  const out = [];
-  for (let ch = 0; ch < 3; ch++) {
-    const d = [];
-    for (let q = 0; q < a.use.length; q++)
-      if (a.use[q] && b.use[q]) d.push(b.rgb[q * 3 + ch] - a.rgb[q * 3 + ch]);
-    if (!d.length) return null;
-    out.push(steps(robustSd(d) / Math.SQRT2));
-  }
-  return out;
-}
-function edgeWidths(c, minContrast) {
-  const R = LOOK_DEFAULTS.edgeReach;
-  const half = LOOK_DEFAULTS.edgeLines >> 1;
-  const Y = new Float64Array(c.width * c.height);
-  for (let q = 0; q < Y.length; q++)
-    Y[q] = c.use[q] ? luma([c.rgb[q * 3], c.rgb[q * 3 + 1], c.rgb[q * 3 + 2]]) : NaN;
-  const widths = [];
-  const scan = (along, across, at) => {
-    for (let v = half; v < across - half; v += 2) {
-      const prof = (u2) => {
-        let s = 0;
-        for (let k = -half; k <= half; k++) s += at(u2, v + k);
-        return s / (2 * half + 1);
-      };
-      let u = R;
-      while (u < along - R - 1) {
-        const d = Math.abs(prof(u + 1) - prof(u));
-        const span = prof(u + R + 1) - prof(u - R);
-        if (!Number.isFinite(d) || !Number.isFinite(span) || Math.abs(span) < minContrast) {
-          u++;
-          continue;
-        }
-        let best = u;
-        let bestD = d;
-        for (let w = Math.max(R, u - R); w <= Math.min(along - R - 2, u + R); w++) {
-          const dw = Math.abs(prof(w + 1) - prof(w));
-          if (dw > bestD) {
-            best = w;
-            bestD = dw;
-          }
-        }
-        if (best !== u) {
-          u = best > u ? best : u + 1;
-          continue;
-        }
-        const p = [];
-        for (let k = -R; k <= R + 1; k++) p.push(prof(u + k));
-        const lo = (p[0] + p[1]) / 2;
-        const hi = (p[p.length - 1] + p[p.length - 2]) / 2;
-        if (Math.abs(hi - lo) >= minContrast * 0.8) {
-          const q = p.map((x) => (x - lo) / (hi - lo));
-          const cross = (t) => {
-            for (let k = 1; k < q.length; k++)
-              if (q[k] >= t) return k - 1 + (t - q[k - 1]) / (q[k] - q[k - 1] || 1);
-            return NaN;
-          };
-          const wdt = cross(0.9) - cross(0.1);
-          if (Number.isFinite(wdt) && wdt > 0) widths.push(wdt);
-        }
-        u += R;
-      }
-    }
-  };
-  scan(c.width, c.height, (u, v) => Y[v * c.width + u]);
-  scan(c.height, c.width, (u, v) => Y[u * c.width + v]);
-  if (widths.length < 3) return { edgeWidth: null, p90: null, edges: widths.length };
-  return {
-    edgeWidth: Math.round(median3(widths) * 100) / 100,
-    p90: Math.round(percentile(widths, 90) * 100) / 100,
-    edges: widths.length
-  };
-}
-function levelsOf(c) {
-  const ch = [[], [], []];
-  const Ys = [];
-  for (let q = 0; q < c.use.length; q++) {
-    if (!c.use[q]) continue;
-    const px2 = [c.rgb[q * 3], c.rgb[q * 3 + 1], c.rgb[q * 3 + 2]];
-    for (let k = 0; k < 3; k++) ch[k].push(px2[k]);
-    Ys.push(luma(px2));
-  }
-  const mean = ch.map((v) => v.reduce((s, x) => s + x, 0) / (v.length || 1));
-  return {
-    black: r4rgb2(ch.map((v) => percentile(v, 0.5))),
-    white: r4rgb2(ch.map((v) => percentile(v, 99.5))),
-    mean: r4rgb2(mean),
-    lumaBlack: r42(percentile(Ys, 0.5)),
-    lumaWhite: r42(percentile(Ys, 99.5)),
-    lumaMean: r42(luma(mean))
-  };
-}
-var signed = (v) => `${v >= 0 ? "+" : ""}${v.toFixed(1)}`;
-function castWords(a, b) {
-  const parts = [];
-  if (Math.abs(a) >= LOOK_DEFAULTS.castAbove)
-    parts.push([Math.abs(a), a > 0 ? "magenta" : "green"]);
-  if (Math.abs(b) >= LOOK_DEFAULTS.castAbove) parts.push([Math.abs(b), b > 0 ? "yellow" : "blue"]);
-  if (!parts.length) return null;
-  return parts.sort((x, y) => y[0] - x[0]).map((p) => p[1]).join(" and ");
-}
-function roleReading(name, role, lab, levels, rep) {
-  if (role === "neutral") {
-    const toward = castWords(lab.a, lab.b);
-    const gains = neutralGains(levels.mean);
-    const mix = (g) => Math.round(g * 100);
-    rep.cast = {
-      a: lab.a,
-      b: lab.b,
-      amount: lab.chroma,
-      toward,
-      gains: [r42(gains[0]), r42(gains[1]), r42(gains[2])],
-      channelMixer: {
-        "Red-Red": mix(gains[0]),
-        "Green-Green": mix(gains[1]),
-        "Blue-Blue": mix(gains[2])
-      }
-    };
-    rep.reading = toward ? `${name} reads a* ${signed(lab.a)}, b* ${signed(lab.b)} (CIELAB): a cast toward ${toward} of ${lab.chroma.toFixed(1)}, if the surface is really neutral; a neutral reads 0, 0, and under about 2 is hard to see. Gains on the display values that make it neutral at its own brightness: red ${rep.cast.gains[0]}, green ${rep.cast.gains[1]}, blue ${rep.cast.gains[2]} (Channel Mixer Red-Red ${rep.cast.channelMixer["Red-Red"]}, Green-Green ${rep.cast.channelMixer["Green-Green"]}, Blue-Blue ${rep.cast.channelMixer["Blue-Blue"]}).` : `${name} reads neutral: a* ${signed(lab.a)}, b* ${signed(lab.b)} (CIELAB; under about 2 is hard to see).`;
-  } else if (role === "skin") {
-    const [lo, hi] = LOOK_DEFAULTS.skinHue;
-    const h = lab.hue > 270 ? lab.hue - 360 : lab.hue;
-    const where = h < lo ? `below the usual range, so it leans to magenta (pink); ${(lo - h).toFixed(0)}\xB0 short of ${lo}\xB0` : h > hi ? `above the usual range, so it leans to yellow; ${(h - hi).toFixed(0)}\xB0 past ${hi}\xB0` : "inside the usual range";
-    rep.reading = `${name} (skin) has a hue angle of ${h.toFixed(0)}\xB0 and chroma ${lab.chroma.toFixed(1)} (CIELAB): ${where}. Skin of many tones commonly reads about ${lo} to ${hi}\xB0 under neutral light; that range is a general reference, not measured on this footage, so judge it against a neutral in the same light as well.`;
-  }
-}
-var meanOf = (v) => v.reduce((s, x) => s + x, 0) / v.length;
-function compareLook(element, plate, tol = {}) {
-  const gt = tol.grain ?? LOOK_DEFAULTS.grainTolerance;
-  const st = tol.sharpness ?? LOOK_DEFAULTS.sharpnessTolerance;
-  const eg = meanOf(element.grain.spatial);
-  const pg = meanOf(plate.grain.spatial);
-  const gRatio = pg > 0 ? Math.round(eg / pg * 100) / 100 : null;
-  const gMatch = gRatio === null ? null : Math.abs(gRatio - 1) <= gt;
-  const ew = element.sharpness.edgeWidth;
-  const pw = plate.sharpness.edgeWidth;
-  const sRatio = ew !== null && pw !== null && pw > 0 ? Math.round(ew / pw * 100) / 100 : null;
-  const sMatch = sRatio === null ? null : Math.abs(sRatio - 1) <= st;
-  const bd = r42(element.levels.lumaBlack - plate.levels.lumaBlack);
-  const wd = r42(element.levels.lumaWhite - plate.levels.lumaWhite);
-  const readings = [];
-  const e = element.name;
-  if (gRatio !== null && !gMatch)
-    readings.push(
-      gRatio < 1 ? `${e} is cleaner than the plate: add grain (grain ${eg.toFixed(2)} against ${pg.toFixed(2)} 8-bit steps).` : `${e} is grainier than the plate: take grain out or add less (${eg.toFixed(2)} against ${pg.toFixed(2)} 8-bit steps).`
-    );
-  if (sRatio !== null && !sMatch)
-    readings.push(
-      sRatio < 1 ? `${e} is sharper than the plate: soften it (edges ${ew} px against ${pw} px wide, 10 to 90%).` : `${e} is softer than the plate: sharpen it, or soften the plate's match less (edges ${ew} px against ${pw} px).`
-    );
-  const deepest = "if both regions hold the deepest shadow of their picture";
-  const brightest = "if both regions hold the brightest highlight of their picture";
-  if (Math.abs(bd) > LOOK_DEFAULTS.levelTolerance)
-    readings.push(
-      bd > 0 ? `${e}'s blacks are lifted against the plate's (${element.levels.lumaBlack} against ${plate.levels.lumaBlack}): ${deepest}, seat them lower.` : `${e}'s blacks are deeper than the plate's (${element.levels.lumaBlack} against ${plate.levels.lumaBlack}): ${deepest}, lift them.`
-    );
-  if (Math.abs(wd) > LOOK_DEFAULTS.levelTolerance)
-    readings.push(
-      wd > 0 ? `${e}'s whites are brighter than the plate's (${element.levels.lumaWhite} against ${plate.levels.lumaWhite}): ${brightest}, bring them down.` : `${e}'s whites are duller than the plate's (${element.levels.lumaWhite} against ${plate.levels.lumaWhite}): ${brightest}, bring them up.`
-    );
-  if (pw === null || ew === null)
-    readings.push(
-      "Edge width was not compared: one side has no edge strong enough to read; pick regions that each hold an edge."
-    );
-  if (!readings.length)
-    readings.push(
-      `${e} matches the plate in grain, edge width and black and white points, within the tolerances.`
-    );
-  return {
-    element: element.name,
-    plate: plate.name,
-    grain: {
-      element: Math.round(eg * 100) / 100,
-      plate: Math.round(pg * 100) / 100,
-      ratio: gRatio,
-      matches: gMatch
-    },
-    sharpness: { element: ew, plate: pw, ratio: sRatio, matches: sMatch },
-    levels: { blackDifference: bd, whiteDifference: wd },
-    readings
-  };
-}
-function matteEdge(c, minContrast) {
-  const a = c.alpha;
-  const grey = new Float64Array(a.length * 3);
-  for (let q = 0; q < a.length; q++) grey[q * 3] = grey[q * 3 + 1] = grey[q * 3 + 2] = a[q];
-  const widths = edgeWidths(
-    { ...c, rgb: grey, use: new Uint8Array(a.length).fill(1) },
-    minContrast
-  );
-  let soft = 0;
-  let outline = 0;
-  let opaque = 0;
-  let minAlpha = 1;
-  const w = c.width;
-  for (let y = 0; y < c.height; y++)
-    for (let x = 0; x < w; x++) {
-      const v = a[y * w + x];
-      if (v > 0.02 && v < 0.98) soft++;
-      if (v >= 0.99) opaque++;
-      if (v < minAlpha) minAlpha = v;
-      if (v < 0.5) continue;
-      const p = y * w + x;
-      if (x > 0 && a[p - 1] < 0.5 || x < w - 1 && a[p + 1] < 0.5 || y > 0 && a[p - w] < 0.5 || y < c.height - 1 && a[p + w] < 0.5)
-        outline++;
-    }
-  return {
-    ...widths,
-    softBand: outline ? Math.round(soft / outline * 100) / 100 : null,
-    opaqueShare: Math.round(opaque / a.length * 1e4) / 1e4,
-    minAlpha: Math.round(minAlpha * 1e4) / 1e4
-  };
-}
-function edgeColourOf(c, background) {
-  const a = c.alpha;
-  const w = c.width;
-  const band = [0, 0, 0];
-  const inside = [0, 0, 0];
-  let nb = 0;
-  let ni = 0;
-  for (let y = 0; y < c.height; y++)
-    for (let x = 0; x < w; x++) {
-      const p = y * w + x;
-      const v = a[p];
-      if (v > 0.2 && v < 0.98) {
-        for (let k = 0; k < 3; k++) band[k] += c.rgb[p * 3 + k];
-        nb++;
-      } else if (v >= 0.98) {
-        let deep = true;
-        for (let dy = -6; dy <= 6 && deep; dy += 2)
-          for (let dx = -6; dx <= 6; dx += 2) {
-            const yy = y + dy;
-            const xx = x + dx;
-            if (yy < 0 || xx < 0 || yy >= c.height || xx >= w || a[yy * w + xx] < 0.98) {
-              deep = false;
-              break;
-            }
-          }
-        if (deep) {
-          for (let k = 0; k < 3; k++) inside[k] += c.rgb[p * 3 + k];
-          ni++;
-        }
-      }
-    }
-  if (!nb || !ni)
-    return {
-      band: nb ? labOf(band.map((v) => v / nb)) : null,
-      inside: ni ? labOf(inside.map((v) => v / ni)) : null,
-      difference: null,
-      towardBackground: null,
-      reading: !nb ? "no soft edge in the region" : "nothing far enough inside the edge to compare with"
-    };
-  const lb = labOf(band.map((v) => v / nb));
-  const li = labOf(inside.map((v) => v / ni));
-  const difference = Math.round(Math.hypot(lb.L - li.L, lb.a - li.a, lb.b - li.b) * 10) / 10;
-  let toward = null;
-  if (background) {
-    const lw = labOf(background);
-    const dir = [lw.L - li.L, lw.a - li.a, lw.b - li.b];
-    const d = [lb.L - li.L, lb.a - li.a, lb.b - li.b];
-    const n2 = dir[0] ** 2 + dir[1] ** 2 + dir[2] ** 2;
-    toward = n2 > 0 ? Math.round((d[0] * dir[0] + d[1] * dir[1] + d[2] * dir[2]) / n2 * 100) / 100 : null;
-  }
-  const reading = toward === null ? `The soft edge differs from the colour well inside by ${difference} (CIELAB); give \`background\` (the wall's colour) to read how much of it is the background.` : `The soft edge's colour sits ${Math.round(toward * 100)}% of the way from the colour well inside toward the background (${difference} apart, CIELAB)` + (toward > 0.25 ? ": background colour left in the edge, which rings the subject over a new background; Decontaminate Edge Colors takes it out." : ".");
-  return { band: lb, inside: li, difference, towardBackground: toward, reading };
-}
-function measureLook(img, args) {
-  const minContrast = args.minContrast ?? LOOK_DEFAULTS.minContrast;
-  const regions = args.regions.map((r) => {
-    const clip = clipRegion(img, r);
-    if (!clip) return outside(img, r);
-    const c = cropOf(img, clip.rect, LOOK_DEFAULTS.opaque);
-    let pixels = 0;
-    for (const u of c.use) pixels += u;
-    if (!pixels) return { name: r.name, error: "no opaque pixels in the region" };
-    const levels = levelsOf(c);
-    const colour = labOf(levels.mean);
-    const rep = {
-      name: r.name,
-      role: r.role ?? null,
-      rect: clip.rect,
-      clipped: clip.clipped,
-      pixels,
-      levels,
-      grain: { spatial: spatialGrain(c) },
-      sharpness: edgeWidths(c, minContrast),
-      colour
-    };
-    if (c.alpha) {
-      rep.matte = matteEdge(c, minContrast);
-      rep.edgeColour = edgeColourOf(c, args.background);
-    }
-    roleReading(r.name, r.role ?? null, colour, levels, rep);
-    return rep;
-  });
-  const out = { regions };
-  if (args.pairs?.length) {
-    const byName = new Map(regions.map((r) => [r.name, r]));
-    out.pairs = args.pairs.map((p) => {
-      const e = byName.get(p.element);
-      const pl = byName.get(p.plate);
-      if (!e || "error" in e || !pl || "error" in pl)
-        return {
-          element: p.element,
-          plate: p.plate,
-          error: "one side of the pair could not be measured"
-        };
-      return compareLook(e, pl, { grain: args.grainTolerance, sharpness: args.sharpnessTolerance });
-    });
-  }
-  return out;
-}
-function summarizeLookSeries(frames, args) {
-  const regions = args.regions.map((r) => {
-    const per = [];
-    for (let i = 1; i < frames.length; i++) {
-      const a = frames[i - 1].get(r.name);
-      const b = frames[i].get(r.name);
-      const t = a && b ? temporalGrain(a, b) : null;
-      if (t) per.push(t);
-    }
-    const temporal = per.length ? [0, 1, 2].map((k) => Math.round(median3(per.map((p) => p[k])) * 100) / 100) : null;
-    const changes = [];
-    for (let i = 1; i < frames.length; i++) {
-      const a = frames[i - 1].get(r.name)?.alpha;
-      const b = frames[i].get(r.name)?.alpha;
-      if (!a || !b || a.length !== b.length) continue;
-      let sum = 0;
-      for (let q = 0; q < a.length; q++) sum += Math.abs(b[q] - a[q]);
-      changes.push(sum / a.length);
-    }
-    const matteChange = changes.length ? Math.round(median3(changes) * 1e4) / 1e4 : null;
-    return { name: r.name, temporal, pairs: per.length, matteChange };
-  });
-  const out = { regions };
-  if (args.pairs?.length) {
-    const by = new Map(regions.map((r) => [r.name, r]));
-    out.pairs = args.pairs.map((p) => {
-      const et = by.get(p.element)?.temporal;
-      const pt = by.get(p.plate)?.temporal;
-      const e = et ? Math.round(meanOf(et) * 100) / 100 : null;
-      const pl = pt ? Math.round(meanOf(pt) * 100) / 100 : null;
-      const readings = [];
-      if (e !== null && pl !== null && pl > 0.3) {
-        if (e < pl * 0.25)
-          readings.push(
-            `${p.element}'s grain does not change from frame to frame and the plate's does (${e} against ${pl} 8-bit steps): animate the grain.`
-          );
-        else if (Math.abs(e / pl - 1) > (args.grainTolerance ?? LOOK_DEFAULTS.grainTolerance))
-          readings.push(
-            `${p.element}'s frame-to-frame grain is ${e} against the plate's ${pl} 8-bit steps.`
-          );
-      }
-      return {
-        element: p.element,
-        plate: p.plate,
-        element_temporal: e,
-        plate_temporal: pl,
-        readings
-      };
-    });
-  }
-  return out;
-}
-function lookArgsError(args) {
-  const regions = args.regions;
-  if (!Array.isArray(regions) || regions.length === 0 || regions.length > 64)
-    return "`look.regions` must list 1 to 64 regions";
-  const names = /* @__PURE__ */ new Set();
-  for (const r of regions) {
-    if (typeof r?.name !== "string" || !r.name) return "every `look.regions` entry needs a name";
-    if (names.has(r.name)) return `\`look.regions\` names '${r.name}' twice`;
-    names.add(r.name);
-    if (typeof r.x !== "number" || typeof r.y !== "number")
-      return `\`look.regions\` '${r.name}' needs x and y`;
-    if (r.role !== void 0 && !LOOK_ROLES.includes(r.role))
-      return `\`look.regions\` '${r.name}' has role '${String(r.role)}'; use ${LOOK_ROLES.join(", ")}`;
-  }
-  if (args.pairs !== void 0) {
-    if (!Array.isArray(args.pairs)) return "`look.pairs` must be a list of { element, plate }";
-    for (const p of args.pairs) {
-      if (!names.has(String(p?.element)))
-        return `\`look.pairs\` names element '${String(p?.element)}', which is not a region`;
-      if (!names.has(String(p?.plate)))
-        return `\`look.pairs\` names plate '${String(p?.plate)}', which is not a region`;
-    }
-  }
-  if (args.background !== void 0 && (!Array.isArray(args.background) || args.background.length !== 3 || !args.background.every((v) => typeof v === "number" && v >= 0 && v <= 1)))
-    return "`look.background` must be [r, g, b], each 0..1";
-  for (const k of ["minContrast", "grainTolerance", "sharpnessTolerance"]) {
-    const v = args[k];
-    if (v !== void 0 && (typeof v !== "number" || !(v > 0) || v > 1))
-      return `\`look.${k}\` must be a number above 0 and at most 1`;
-  }
-  return null;
-}
-var REFERENCE_DEFAULTS = {
-  grid: 3,
-  paletteColours: 6,
-  /** Every this many pixels across and down go into the main colours. */
-  paletteStep: 6,
-  /** Frames spread over the input that colour, levels, sharpness and grain are read on. */
-  lookFrames: 24,
-  /** Cell of the motion map, px. */
-  motionCell: 16,
-  castStep: 2,
-  lightnessStep: 3,
-  levelStep: 0.02,
-  ratioStep: 1.25,
-  sizeStep: 0.05,
-  placeStep: 0.03,
-  sameFootage: 0.6,
-  shareStep: 0.05,
-  /** A colour of the reference with no colour of the build within this (CIELAB) is missing. */
-  colourMatch: 10,
-  /**
-   * With nothing saying how far apart a folder's frames are: a median change
-   * between neighbouring files of this or more reads as frames far apart. On
-   * the round-two movies, every twentieth frame read medians of 0.026 and
-   * 0.029; every frame 0.007 (largest pair 0.029, a cut 0.088).
-   */
-  spreadGuess: 0.02
-};
-var GRID_NAMES = [
-  ["top left", "top", "top right"],
-  ["left", "middle", "right"],
-  ["bottom left", "bottom", "bottom right"]
-];
-function gridRegions(width, height) {
-  const out = [];
-  for (let r = 0; r < 3; r++)
-    for (let c = 0; c < 3; c++) {
-      const x0 = Math.round(c * width / 3);
-      const y0 = Math.round(r * height / 3);
-      out.push({
-        name: GRID_NAMES[r][c],
-        x: x0,
-        y: y0,
-        width: Math.round((c + 1) * width / 3) - x0,
-        height: Math.round((r + 1) * height / 3) - y0
-      });
-    }
-  return out;
-}
-function frameLevels(img) {
-  const BINS2 = 1024;
-  const hist = [new Uint32Array(BINS2), new Uint32Array(BINS2), new Uint32Array(BINS2), new Uint32Array(BINS2)];
-  const sum = [0, 0, 0];
-  let n = 0;
-  for (let y = 0; y < img.height; y += 2)
-    for (let x = 0; x < img.width; x += 2) {
-      const p = (y * img.width + x) * 3;
-      const px2 = [img.rgb[p], img.rgb[p + 1], img.rgb[p + 2]];
-      for (let c = 0; c < 3; c++) {
-        hist[c][Math.min(BINS2 - 1, Math.max(0, Math.floor(px2[c] * BINS2)))]++;
-        sum[c] += px2[c];
-      }
-      hist[3][Math.min(BINS2 - 1, Math.max(0, Math.floor(luma(px2) * BINS2)))]++;
-      n++;
-    }
-  const pct = (h, q) => {
-    const want = q * n;
-    let acc = 0;
-    for (let b = 0; b < BINS2; b++) {
-      acc += h[b];
-      if (acc >= want) return (b + 0.5) / BINS2;
-    }
-    return 1;
-  };
-  const mean = sum.map((v) => v / (n || 1));
-  return {
-    lumaBlack: pct(hist[3], 5e-3),
-    lumaWhite: pct(hist[3], 0.995),
-    lumaMean: luma(mean),
-    black: [0, 1, 2].map((c) => pct(hist[c], 5e-3)),
-    white: [0, 1, 2].map((c) => pct(hist[c], 0.995))
-  };
-}
-function frameWeight(img) {
-  const s = 4;
-  let lw = 0;
-  let lx = 0;
-  let ly = 0;
-  let dw = 0;
-  let dx = 0;
-  let dy = 0;
-  const Y = (x, y) => {
-    const p = (y * img.width + x) * 3;
-    return luma([img.rgb[p], img.rgb[p + 1], img.rgb[p + 2]]);
-  };
-  for (let y = 0; y + s < img.height; y += s)
-    for (let x = 0; x + s < img.width; x += s) {
-      const v = Y(x, y);
-      lw += v;
-      lx += v * x;
-      ly += v * y;
-      const g = Math.abs(Y(x + s, y) - v) + Math.abs(Y(x, y + s) - v);
-      dw += g;
-      dx += g * x;
-      dy += g * y;
-    }
-  const r32 = (v) => Math.round(v * 1e3) / 1e3;
-  return {
-    brightness: lw > 0 ? { x: r32(lx / lw / img.width), y: r32(ly / lw / img.height) } : { x: 0.5, y: 0.5 },
-    detail: dw > 0 ? { x: r32(dx / dw / img.width), y: r32(dy / dw / img.height) } : { x: 0.5, y: 0.5 }
-  };
-}
-function paletteOf(samples, k) {
-  if (!samples.length) return [];
-  const pts = samples.map((s) => s.lab);
-  const d2 = (a, b) => (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2;
-  const centres = [];
-  const mean = [0, 1, 2].map((c) => pts.reduce((s, p) => s + p[c], 0) / pts.length);
-  let far = 0;
-  for (let i = 1; i < pts.length; i++) if (d2(pts[i], mean) > d2(pts[far], mean)) far = i;
-  centres.push(pts[far].slice());
-  const near = pts.map((p) => d2(p, centres[0]));
-  while (centres.length < k) {
-    let f = 0;
-    for (let i = 1; i < pts.length; i++) if (near[i] > near[f]) f = i;
-    if (near[f] <= 1) break;
-    centres.push(pts[f].slice());
-    for (let i = 0; i < pts.length; i++) near[i] = Math.min(near[i], d2(pts[i], pts[f]));
-  }
-  const of = new Int32Array(pts.length);
-  for (let round = 0; round < 10; round++) {
-    for (let i = 0; i < pts.length; i++) {
-      let best = 0;
-      for (let c = 1; c < centres.length; c++) if (d2(pts[i], centres[c]) < d2(pts[i], centres[best])) best = c;
-      of[i] = best;
-    }
-    const acc = centres.map(() => [0, 0, 0, 0]);
-    for (let i = 0; i < pts.length; i++) {
-      const a = acc[of[i]];
-      for (let c = 0; c < 3; c++) a[c] += pts[i][c];
-      a[3]++;
-    }
-    acc.forEach((a, c) => {
-      if (a[3]) centres[c] = [a[0] / a[3], a[1] / a[3], a[2] / a[3]];
-    });
-  }
-  const rgbAcc = centres.map(() => [0, 0, 0, 0]);
-  for (let i = 0; i < pts.length; i++) {
-    const a = rgbAcc[of[i]];
-    for (let c = 0; c < 3; c++) a[c] += samples[i].rgb[c];
-    a[3]++;
-  }
-  return rgbAcc.filter((a) => a[3] > 0).map((a) => {
-    const rgb = [a[0] / a[3], a[1] / a[3], a[2] / a[3]];
-    return { hex: rgbHex(rgb), colour: labOf(rgb), share: Math.round(a[3] / pts.length * 1e3) / 1e3 };
-  }).sort((x, y) => y.share - x.share);
-}
-var medianOf = (v) => v.length ? median3(v) : null;
-function referenceReader(opts) {
-  const D = REFERENCE_DEFAULTS;
-  const nLook = Math.max(1, Math.min(opts.total, opts.lookFrames ?? D.lookFrames));
-  const lookIdx = /* @__PURE__ */ new Set();
-  for (let i = 0; i < nLook; i++) lookIdx.add(Math.floor(i * opts.total / nLook));
-  const cell = opts.motionCell ?? D.motionCell;
-  let size = null;
-  let regions = [];
-  let added = 0;
-  const perRegion = /* @__PURE__ */ new Map();
-  const levels = [];
-  const weights = [];
-  const samples = [];
-  const pairs = [];
-  const pairMaps = [];
-  let prev = null;
-  function add(f) {
-    const img = f.img;
-    if (!size) {
-      size = [img.width, img.height];
-      regions = [...gridRegions(img.width, img.height), ...opts.regions ?? []];
-    } else if (img.width !== size[0] || img.height !== size[1])
-      throw new Error(`frame ${f.frame} is ${img.width}\xD7${img.height}, not ${size[0]}\xD7${size[1]} like the first`);
-    if (lookIdx.has(added)) {
-      const look = measureLook(img, { regions });
-      for (const r of look.regions) {
-        if ("error" in r) continue;
-        const e = perRegion.get(r.name) ?? { mean: [], ew: [], p90: [], grain: [], role: r.role };
-        e.mean.push(r.levels.mean);
-        if (r.sharpness.edgeWidth !== null) e.ew.push(r.sharpness.edgeWidth);
-        if (r.sharpness.p90 !== null) e.p90.push(r.sharpness.p90);
-        e.grain.push((r.grain.spatial[0] + r.grain.spatial[1] + r.grain.spatial[2]) / 3);
-        perRegion.set(r.name, e);
-      }
-      levels.push(frameLevels(img));
-      weights.push(frameWeight(img));
-      for (let y = 0; y < img.height; y += D.paletteStep)
-        for (let x = 0; x < img.width; x += D.paletteStep) {
-          const p = (y * img.width + x) * 3;
-          const rgb = [img.rgb[p], img.rgb[p + 1], img.rgb[p + 2]];
-          const l = labOf(rgb);
-          samples.push({ lab: [l.L, l.a, l.b], rgb });
-        }
-    }
-    const pic = pictureOf(img, false);
-    const cells = cellLuma(img, cell);
-    if (prev) {
-      const ch = pictureChange(prev.pic, pic, img.width, img.height, DIFF_DEFAULTS);
-      pairs.push({
-        from: { index: prev.frame, time: prev.time },
-        to: { index: f.frame, time: f.time },
-        change: ch.all.change,
-        changedShare: ch.all.changedShare
-      });
-      const m = new Float32Array(cells.length);
-      for (let k = 0; k < m.length; k++) m[k] = Math.abs(cells[k] - prev.cells[k]);
-      pairMaps.push(m);
-    }
-    prev = { pic, cells, frame: f.frame, time: f.time };
-    added++;
-  }
-  function finish() {
-    if (!size) throw new Error("no frames to read");
-    const [width, height] = size;
-    const avg = (v) => v.reduce((s, x) => s + x, 0) / (v.length || 1);
-    const r32 = (v) => Math.round(v * 1e3) / 1e3;
-    const r22 = (v) => Math.round(v * 100) / 100;
-    const regionReports = [];
-    for (const r of regions) {
-      const e = perRegion.get(r.name);
-      if (!e || !e.mean.length) continue;
-      const mean = [0, 1, 2].map((c) => r42(avg(e.mean.map((m) => m[c]))));
-      const ew = medianOf(e.ew);
-      const p90 = medianOf(e.p90);
-      regionReports.push({
-        name: r.name,
-        role: e.role,
-        colour: labOf(mean),
-        mean,
-        sharpness: { edgeWidth: ew === null ? null : r22(ew), p90: p90 === null ? null : r22(p90) },
-        grain: r22(avg(e.grain))
-      });
-    }
-    const gridEw = regionReports.slice(0, 9).flatMap((r) => r.sharpness.edgeWidth === null ? [] : [r.sharpness.edgeWidth]);
-    const notes = [];
-    const neighbours = pairs.length > 0 && pairs.every((q) => q.to.index === q.from.index + 1);
-    let spacing = opts.spacing ?? { how: "rendered", step: neighbours ? 1 : null };
-    let consecutive = neighbours;
-    const medianChange = pairs.length ? median3(pairs.map((q) => q.change)) : 0;
-    const mc = medianChange.toFixed(4);
-    const unsure = spacing.how === "assumed" || spacing.how === "file names" && spacing.step === 1;
-    if (consecutive && unsure) {
-      const said = spacing.how === "file names" ? "The file names count up by one" : "Nothing said how far apart the frames are";
-      if (medianChange >= D.spreadGuess) {
-        consecutive = false;
-        spacing = { how: "guessed from change", step: null };
-        notes.push(
-          `${said}, but neighbouring files change by a median of ${mc}, as frames far apart do (${D.spreadGuess} or more), so this guess reads them as spread: cuts and movement are not read. Pass frameStep: 1 if they are neighbours.`
-        );
-      } else if (spacing.how === "file names")
-        notes.push(`The frames are neighbours, read from their file names (neighbouring files change by a median of ${mc}).`);
-      else
-        notes.push(
-          `Nothing said how far apart the frames are; they were assumed to be neighbours (neighbouring files change by a median of ${mc}, under the ${D.spreadGuess} that spread frames read), so cuts and movement were read. Pass frameStep if they are not.`
-        );
-    } else if (pairs.length && !consecutive) {
-      const apart = spacing.step ? `${spacing.step} frames apart` : "unevenly spaced";
-      notes.push(
-        `The frames are ${apart}, ${spacing.how === "given" ? "as given" : spacing.how === "file names" ? "read from their file names" : "as rendered"}: cuts and movement are not read, and the motion map shows what differs between the frames read, not motion.`
-      );
-    }
-    const summary = consecutive && pairs.length >= 2 ? summarizeSeries(pairs, DIFF_DEFAULTS) : null;
-    const cutPairs = new Set(
-      (summary?.flags ?? []).filter((fl) => fl.kind === "cut").flatMap((fl) => fl.pairs)
-    );
-    const mw = Math.ceil(width / cell);
-    const mh = Math.ceil(height / cell);
-    const acc = new Float64Array(mw * mh);
-    let counted = 0;
-    let changeSum = 0;
-    pairMaps.forEach((m, i) => {
-      if (cutPairs.has(i)) return;
-      for (let k = 0; k < acc.length; k++) acc[k] += m[k];
-      changeSum += pairs[i].change;
-      counted++;
-    });
-    const meanChange = consecutive && counted ? Math.round(changeSum / counted * 1e6) / 1e6 : null;
-    const map2 = {
-      width: mw,
-      height: mh,
-      cell,
-      values: Array.from(acc, (v) => Math.round((counted ? v / counted : 0) * 1e5) / 1e5)
-    };
-    return {
-      frames: added,
-      notes,
-      size: [width, height],
-      frameRate: opts.frameRate ?? null,
-      palette: paletteOf(samples, D.paletteColours),
-      levels: {
-        lumaBlack: r42(avg(levels.map((l) => l.lumaBlack))),
-        lumaWhite: r42(avg(levels.map((l) => l.lumaWhite))),
-        lumaMean: r42(avg(levels.map((l) => l.lumaMean))),
-        black: [0, 1, 2].map((c) => r42(avg(levels.map((l) => l.black[c])))),
-        white: [0, 1, 2].map((c) => r42(avg(levels.map((l) => l.white[c]))))
-      },
-      regions: regionReports,
-      weight: {
-        brightness: {
-          x: r32(avg(weights.map((w) => w.brightness.x))),
-          y: r32(avg(weights.map((w) => w.brightness.y)))
-        },
-        detail: { x: r32(avg(weights.map((w) => w.detail.x))), y: r32(avg(weights.map((w) => w.detail.y))) }
-      },
-      sharpness: { edgeWidth: gridEw.length ? r22(median3(gridEw)) : null },
-      grain: r22(avg(regionReports.slice(0, 9).map((r) => r.grain))),
-      motion: {
-        consecutive,
-        spacing,
-        spread: !consecutive,
-        pairs: pairs.length,
-        cuts: [...cutPairs].sort((a, b) => a - b).map((i) => ({ frame: pairs[i].to.index, time: pairs[i].to.time ?? null })),
-        meanChange,
-        map: map2,
-        subject: counted ? motionCentre(map2) : null
-      }
-    };
-  }
-  return { add, finish };
-}
-function compareReferences(ref, build) {
-  const D = REFERENCE_DEFAULTS;
-  const out = [];
-  const notes = [];
-  const f1 = (v) => v.toFixed(1);
-  const pctOf = (v) => `${Math.round(v * 100)}%`;
-  const list = (items, max = 4) => items.length <= max ? items.join("; ") : `${items.slice(0, max).join("; ")}; and ${items.length - max} more`;
-  const byName = new Map(build.regions.map((r) => [r.name, r]));
-  const pairsOf = ref.regions.flatMap((r) => byName.has(r.name) ? [[r, byName.get(r.name)]] : []);
-  const cast = pairsOf.map(([r, b]) => ({ name: r.name, da: b.colour.a - r.colour.a, db: b.colour.b - r.colour.b, r, b })).map((c) => ({ ...c, d: Math.hypot(c.da, c.db) })).filter((c) => c.d >= D.castStep).sort((x, y) => y.d - x.d);
-  if (cast.length) {
-    const da = cast.reduce((s, c) => s + c.da, 0) / cast.length;
-    const db = cast.reduce((s, c) => s + c.db, 0) / cast.length;
-    const words = castWords(da, db) ?? "a different colour";
-    out.push({
-      measure: "cast",
-      size: Math.round(cast[0].d / D.castStep * 10) / 10,
-      reading: `The build leans ${words} against the reference in ${cast.length} of ${pairsOf.length} regions (a* ${signed(da)}, b* ${signed(db)} on average, CIELAB): ` + list(cast.map((c) => `${c.name} a* ${f1(c.b.colour.a)} b* ${f1(c.b.colour.b)} against ${f1(c.r.colour.a)} ${f1(c.r.colour.b)}`)) + ".",
-      reference: Object.fromEntries(cast.map((c) => [c.name, { a: c.r.colour.a, b: c.r.colour.b }])),
-      build: Object.fromEntries(cast.map((c) => [c.name, { a: c.b.colour.a, b: c.b.colour.b }]))
-    });
-  }
-  const light = pairsOf.map(([r, b]) => ({ name: r.name, d: b.colour.L - r.colour.L, r, b })).filter((c) => Math.abs(c.d) >= D.lightnessStep).sort((x, y) => Math.abs(y.d) - Math.abs(x.d));
-  if (light.length)
-    out.push({
-      measure: "lightness",
-      size: Math.round(Math.abs(light[0].d) / D.lightnessStep * 10) / 10,
-      reading: `Lightness differs in ${light.length} of ${pairsOf.length} regions: ` + list(light.map((c) => `${c.name} ${c.d < 0 ? "darker" : "lighter"} (L* ${f1(c.b.colour.L)} against ${f1(c.r.colour.L)})`)) + "."
-    });
-  const ratioItem = (measure, get, more, less, unit) => {
-    const rows = pairsOf.map(([r, b]) => ({ name: r.name, rv: get(r), bv: get(b) })).filter((c) => c.rv !== null && c.bv !== null && c.rv > 0 && c.bv > 0).map((c) => ({ ...c, k: Math.log(c.bv / c.rv) / Math.log(D.ratioStep) })).filter((c) => Math.abs(c.k) >= 1).sort((x, y) => Math.abs(y.k) - Math.abs(x.k));
-    if (!rows.length) return;
-    const up = rows.filter((c) => c.k > 0);
-    const down = rows.filter((c) => c.k < 0);
-    const part = (rs, word) => rs.length ? `${word} in ${list(rs.map((c) => `${c.name} (${c.bv}${unit} against ${c.rv}${unit})`))}` : "";
-    out.push({
-      measure,
-      size: Math.round(Math.abs(rows[0].k) * 10) / 10,
-      reading: `The build is ${[part(up, more), part(down, less)].filter(Boolean).join("; and ")}.`
-    });
-  };
-  ratioItem("sharpness", (r) => r.sharpness.edgeWidth, "softer", "sharper", " px");
-  ratioItem("grain", (r) => r.grain, "grainier", "smoother (less grain)", "");
-  const lv = [];
-  let lvMax = 0;
-  for (const [k, word] of [
-    ["lumaBlack", "black point"],
-    ["lumaWhite", "white point"],
-    ["lumaMean", "mean level"]
-  ]) {
-    const d = build.levels[k] - ref.levels[k];
-    if (Math.abs(d) < D.levelStep) continue;
-    lvMax = Math.max(lvMax, Math.abs(d) / D.levelStep);
-    lv.push(`${word} ${d > 0 ? "higher" : "lower"} (${build.levels[k].toFixed(3)} against ${ref.levels[k].toFixed(3)})`);
-  }
-  if (lv.length) out.push({ measure: "levels", size: Math.round(lvMax * 10) / 10, reading: `Levels: ${lv.join("; ")}.` });
-  let subject = null;
-  if (ref.motion.subject && build.motion.subject) {
-    const reg = registerMotionMaps(ref.motion.map, build.motion.map);
-    if (reg) {
-      const compared = reg.correlation >= D.sameFootage;
-      subject = { ...reg, compared };
-      const spreadSides = [ref, build].filter((r) => r.motion.spread);
-      if (compared && spreadSides.length)
-        notes.push(
-          `The subject's size and place rest on spread frames (what differs between frames ${[...new Set(spreadSides.map((r) => r.motion.spacing.step ? `${r.motion.spacing.step} apart` : "spaced unknown or unevenly"))].join(" and ")}${spreadSides.length === 2 ? " on both sides" : ` on the ${spreadSides[0] === ref ? "reference's" : "build's"} side`}, not motion), lined up at correlation ${reg.correlation}. Trusted from ${D.sameFootage}: on the round-two pair, every frame read 0.93 and 80 to 81%, every twentieth 0.68 to 0.71 and 81 to 82%.`
-        );
-      if (!compared)
-        notes.push(
-          `The moving parts of the two do not line up (correlation ${reg.correlation}): not the same footage, or not framed alike, so the subject's size and place are not compared.`
-        );
-      else {
-        const k = Math.log(reg.scale) / Math.log(1 + D.sizeStep);
-        if (Math.abs(k) >= 1)
-          out.push({
-            measure: "subject size",
-            size: Math.round(Math.abs(k) * 10) / 10,
-            reading: `The moving subject is ${pctOf(reg.scale)} of its size in the reference: ${reg.scale < 1 ? "smaller" : "larger"} in frame (the two lined up at correlation ${reg.correlation}).`,
-            reference: 1,
-            build: reg.scale
-          });
-        const dx = reg.to.x - reg.from.x;
-        const dy = reg.to.y - reg.from.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist >= D.placeStep)
-          out.push({
-            measure: "subject place",
-            size: Math.round(dist / D.placeStep * 10) / 10,
-            reading: `The moving subject sits ${[Math.abs(dy) >= D.placeStep / 2 ? `${pctOf(Math.abs(dy))} of the height ${dy > 0 ? "lower" : "higher"}` : "", Math.abs(dx) >= D.placeStep / 2 ? `${pctOf(Math.abs(dx))} of the width ${dx > 0 ? "right" : "left"}` : ""].filter(Boolean).join(" and ")} than in the reference.`
-          });
-      }
-    }
-  } else if (ref.motion.subject || build.motion.subject)
-    notes.push("Only one of the two has motion to read, so the subject is not compared.");
-  for (const [k, word] of [
-    ["brightness", "brightness"],
-    ["detail", "detail"]
-  ]) {
-    const dx = build.weight[k].x - ref.weight[k].x;
-    const dy = build.weight[k].y - ref.weight[k].y;
-    const dist = Math.hypot(dx, dy);
-    if (dist >= D.placeStep)
-      out.push({
-        measure: `weight of ${word}`,
-        size: Math.round(dist / D.placeStep * 10) / 10,
-        reading: `The centre of ${word} sits at ${pctOf(build.weight[k].x)} across, ${pctOf(build.weight[k].y)} down, against ${pctOf(ref.weight[k].x)}, ${pctOf(ref.weight[k].y)} in the reference.`
-      });
-  }
-  const missing = ref.palette.filter((c) => c.share >= D.shareStep).map((c) => {
-    let best = Infinity;
-    for (const b of build.palette)
-      best = Math.min(best, Math.hypot(b.colour.L - c.colour.L, b.colour.a - c.colour.a, b.colour.b - c.colour.b));
-    return { c, best };
-  }).filter((m) => m.best >= D.colourMatch);
-  if (missing.length)
-    out.push({
-      measure: "main colours",
-      size: Math.round(Math.max(...missing.map((m) => m.best)) / D.colourMatch * 10) / 10,
-      reading: `Main colours of the reference with nothing within ${D.colourMatch} (CIELAB) among the build's: ${list(missing.map((m) => `${m.c.hex} (${pctOf(m.c.share)} of the reference, nearest ${f1(m.best)} away)`))}.`
-    });
-  if (ref.motion.consecutive && build.motion.consecutive) {
-    const has = (cuts, f) => cuts.some((c) => Math.abs(c.frame - f) <= 1);
-    const lost = ref.motion.cuts.filter((c) => !has(build.motion.cuts, c.frame));
-    const extra = build.motion.cuts.filter((c) => !has(ref.motion.cuts, c.frame));
-    if (lost.length || extra.length)
-      out.push({
-        measure: "cuts",
-        size: 3 * (lost.length + extra.length),
-        reading: [
-          lost.length ? `The reference cuts at ${lost.map((c) => `frame ${c.frame}`).join(", ")}; the build does not.` : "",
-          extra.length ? `The build cuts at ${extra.map((c) => `frame ${c.frame}`).join(", ")}; the reference does not.` : ""
-        ].filter(Boolean).join(" ")
-      });
-    const rm = ref.motion.meanChange;
-    const bm = build.motion.meanChange;
-    if (rm && bm) {
-      const k = Math.log(bm / rm) / Math.log(D.ratioStep);
-      if (Math.abs(k) >= 1)
-        out.push({
-          measure: "motion",
-          size: Math.round(Math.abs(k) * 10) / 10,
-          reading: `The build's picture moves ${k > 0 ? "more" : "less"} between frames: mean change ${bm.toFixed(4)} against ${rm.toFixed(4)}.`
-        });
-    }
-  } else
-    notes.push(
-      `Cuts and movement are not read on frames that are not neighbours (${[!ref.motion.consecutive ? "the reference's" : "", !build.motion.consecutive ? "the build's" : ""].filter(Boolean).join(" and ")}), so they are not compared.`
-    );
-  out.sort((a, b) => b.size - a.size);
-  return {
-    differences: out,
-    subject,
-    notes,
-    reading: out.length ? `${out.length} difference${out.length > 1 ? "s" : ""}, largest first. ${out.slice(0, 3).map((d) => d.reading).join(" ")}` : "No difference over its step between the build and the reference."
-  };
-}
-
 // src/operations/keying.ts
 init_config();
 init_registry();
 
 // src/operations/render.ts
 init_config();
+import { promises as fs6 } from "node:fs";
+import * as path7 from "node:path";
+init_registry();
+
+// src/operations/delivery-sound.ts
 import { execFile as execFile2 } from "node:child_process";
 import { promises as fs5 } from "node:fs";
 import * as path6 from "node:path";
-init_registry();
+var AE_AAC_PRIMING_SAMPLES = 1024;
+var FFPROBE = ["ffprobe", "/opt/homebrew/bin/ffprobe", "/usr/local/bin/ffprobe"];
+var FFMPEG = ["ffmpeg", "/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg"];
+function runTool(cands, argv, timeoutMs = 12e4) {
+  return new Promise((resolve13) => {
+    const tryAt = (i) => {
+      if (i >= cands.length) return resolve13(null);
+      execFile2(
+        cands[i],
+        argv,
+        { timeout: timeoutMs, maxBuffer: 16 * 1024 * 1024 },
+        (err, stdout, stderr) => {
+          if (err && err.code === "ENOENT") return tryAt(i + 1);
+          resolve13({ stdout: String(stdout), stderr: String(stderr), failed: err !== null });
+        }
+      );
+    };
+    tryAt(0);
+  });
+}
+function* boxes(buf, start, end) {
+  let o = start;
+  while (o + 8 <= end) {
+    let size = buf.readUInt32BE(o);
+    const type = buf.toString("latin1", o + 4, o + 8);
+    let header = 8;
+    if (size === 1) {
+      if (o + 16 > end) return;
+      size = Number(buf.readBigUInt64BE(o + 8));
+      header = 16;
+    } else if (size === 0) size = end - o;
+    if (size < header || o + size > end) return;
+    yield { type, start: o + header, end: o + size };
+    o += size;
+  }
+}
+var child = (buf, parent, type) => {
+  for (const b of boxes(buf, parent.start, parent.end)) if (b.type === type) return b;
+  return null;
+};
+function soundTrackFromMoov(moov) {
+  const root = { type: "moov", start: 0, end: moov.length };
+  const mvhd = child(moov, root, "mvhd");
+  const movieTimescale = mvhd ? moov.readUInt32BE(mvhd.start + (moov[mvhd.start] === 1 ? 20 : 12)) : 0;
+  for (const trak of boxes(moov, 0, moov.length)) {
+    if (trak.type !== "trak") continue;
+    const mdia = child(moov, trak, "mdia");
+    if (!mdia) continue;
+    const hdlr = child(moov, mdia, "hdlr");
+    if (!hdlr || moov.toString("latin1", hdlr.start + 8, hdlr.start + 12) !== "soun") continue;
+    const mdhd = child(moov, mdia, "mdhd");
+    const mediaTimescale = mdhd ? moov.readUInt32BE(mdhd.start + (moov[mdhd.start] === 1 ? 20 : 12)) : 0;
+    const minf = child(moov, mdia, "minf");
+    const stbl = minf ? child(moov, minf, "stbl") : null;
+    const stsd = stbl ? child(moov, stbl, "stsd") : null;
+    let codec2 = "";
+    let sampleRate = 0;
+    if (stsd && stsd.start + 16 <= stsd.end) {
+      const entry = stsd.start + 8;
+      codec2 = moov.toString("latin1", entry + 4, entry + 8);
+      if (entry + 36 <= stsd.end) sampleRate = moov.readUInt32BE(entry + 32) >>> 16;
+    }
+    let edits = null;
+    const edts = child(moov, trak, "edts");
+    const elst = edts ? child(moov, edts, "elst") : null;
+    if (elst) {
+      const v1 = moov[elst.start] === 1;
+      const count = moov.readUInt32BE(elst.start + 4);
+      edits = [];
+      let o = elst.start + 8;
+      for (let i = 0; i < count && o + (v1 ? 20 : 12) <= elst.end; i++) {
+        const segmentDuration = v1 ? Number(moov.readBigUInt64BE(o)) : moov.readUInt32BE(o);
+        const mediaTime = v1 ? Number(moov.readBigInt64BE(o + 8)) : moov.readInt32BE(o + 4);
+        edits.push({ segmentDuration, mediaTime });
+        o += v1 ? 20 : 12;
+      }
+    }
+    return {
+      codec: codec2,
+      sampleRate: sampleRate >= 8e3 ? sampleRate : mediaTimescale,
+      mediaTimescale,
+      movieTimescale,
+      edits
+    };
+  }
+  return null;
+}
+async function readMoov(file2) {
+  const fh = await fs5.open(file2, "r");
+  try {
+    const { size } = await fh.stat();
+    const head = Buffer.alloc(16);
+    let o = 0;
+    while (o + 8 <= size) {
+      await fh.read(head, 0, 16, o);
+      let boxSize = head.readUInt32BE(0);
+      const type = head.toString("latin1", 4, 8);
+      let header = 8;
+      if (boxSize === 1) {
+        boxSize = Number(head.readBigUInt64BE(8));
+        header = 16;
+      } else if (boxSize === 0) boxSize = size - o;
+      if (boxSize < header) return null;
+      if (type === "moov") {
+        const body = Buffer.alloc(boxSize - header);
+        await fh.read(body, 0, body.length, o + header);
+        return body;
+      }
+      o += boxSize;
+    }
+    return null;
+  } finally {
+    await fh.close();
+  }
+}
+function soundSyncOf(t) {
+  const rate = t.sampleRate || t.mediaTimescale || 48e3;
+  let delaySeconds = 0;
+  let skipped2 = 0;
+  for (const e of t.edits ?? []) {
+    if (e.mediaTime === -1) {
+      delaySeconds += t.movieTimescale ? e.segmentDuration / t.movieTimescale : 0;
+      continue;
+    }
+    skipped2 = t.mediaTimescale ? Math.round(e.mediaTime * rate / t.mediaTimescale) : e.mediaTime;
+    break;
+  }
+  const aac = t.codec === "mp4a";
+  const priming = aac ? skipped2 > 0 ? skipped2 : AE_AAC_PRIMING_SAMPLES : 0;
+  const late2 = Math.max(0, priming - skipped2) + Math.round(delaySeconds * rate);
+  const lateMs = Math.round(late2 / rate * 1e5) / 100;
+  return {
+    codec: t.codec,
+    sampleRate: rate,
+    primingSamples: priming,
+    skippedSamples: skipped2,
+    lateBySamples: late2,
+    lateMs,
+    reading: late2 === 0 ? aac ? `the sound is on its frame: the edit list skips the AAC encoder's ${priming} samples of priming` : `the sound is on its frame (${t.codec || "uncompressed"} sound, no priming)` : `the sound plays ${late2} samples (${lateMs} ms) late` + (aac && skipped2 === 0 ? `: the AAC encoder's ${priming} samples of priming are not skipped (no edit list)` : "")
+  };
+}
+async function readSoundSync(file2) {
+  const moov = await readMoov(file2).catch(() => null);
+  if (!moov) return null;
+  const t = soundTrackFromMoov(moov);
+  return t ? soundSyncOf(t) : null;
+}
+async function alignSound(file2, sync) {
+  if (sync.lateBySamples <= 0)
+    return { aligned: true, how: "already on its frame", before: sync, after: sync };
+  const ext = path6.extname(file2);
+  const tmp = path6.join(path6.dirname(file2), `.${path6.basename(file2, ext)}.sound-aligned${ext}`);
+  const offset = (sync.lateBySamples / sync.sampleRate).toFixed(9);
+  const r = await runTool(FFMPEG, [
+    "-hide_banner",
+    "-loglevel",
+    "error",
+    "-y",
+    "-i",
+    file2,
+    "-itsoffset",
+    `-${offset}`,
+    "-i",
+    file2,
+    "-map",
+    "0",
+    "-map",
+    "-0:a",
+    "-map",
+    "1:a",
+    "-c",
+    "copy",
+    tmp
+  ]);
+  if (r === null)
+    return {
+      aligned: false,
+      how: "ffmpeg is not installed, so the file could not be remuxed",
+      before: sync
+    };
+  const giveUp = async (how) => {
+    await fs5.rm(tmp, { force: true });
+    return { aligned: false, how, before: sync };
+  };
+  if (r.failed) return giveUp(`ffmpeg could not remux the file: ${r.stderr.trim().slice(0, 300)}`);
+  const after = await readSoundSync(tmp).catch(() => null);
+  const wanted = sync.skippedSamples + sync.lateBySamples;
+  if (!after || Math.abs(after.skippedSamples - wanted) > 1 || after.lateBySamples > 1) {
+    return giveUp(
+      `the remuxed file's edit list does not skip the ${wanted} samples (${after ? `it skips ${after.skippedSamples}` : "it has no sound track that could be read"}); the delivered file was left as it was`
+    );
+  }
+  await fs5.rename(tmp, file2);
+  return {
+    aligned: true,
+    how: `remuxed with ffmpeg (-c copy, nothing re-encoded): an edit list on the sound track now skips the ${wanted} samples of priming`,
+    before: sync,
+    after
+  };
+}
+var num = (s) => s === "-inf" ? -Infinity : Number(s);
+function parseEbur128Summary(stderr) {
+  const at = stderr.lastIndexOf("Summary:");
+  if (at < 0) return null;
+  const s = stderr.slice(at);
+  const i = /Integrated loudness:\s*I:\s*(-?[\d.]+|-inf)\s*LUFS/.exec(s);
+  const lra = /Loudness range:\s*LRA:\s*(-?[\d.]+)\s*LU/.exec(s);
+  const tp = /True peak:\s*Peak:\s*(-?[\d.]+|-inf)\s*dBFS/.exec(s);
+  if (!i || !tp) return null;
+  return {
+    integratedLufs: num(i[1]),
+    loudnessRangeLu: lra ? Number(lra[1]) : null,
+    truePeakDbtp: num(tp[1])
+  };
+}
+function parseVolumedetect(stderr) {
+  const m = /mean_volume:\s*(-?[\d.]+|-inf) dB/.exec(stderr);
+  const x = /max_volume:\s*(-?[\d.]+|-inf) dB/.exec(stderr);
+  return m && x ? { meanDb: num(m[1]), maxDb: num(x[1]) } : { meanDb: null, maxDb: null };
+}
+
+// src/operations/render.ts
 var RENDER_QUEUE_UNDO_WARNING = " After this, undo and rollback are refused for the rest of the After Effects session unless acceptRenderQueueRisk: true: After Effects 2027 has gone into crash recovery on undo after scripted render-queue changes (observed twice on 2026-11-10; a precaution, not a proven cause). Save the project before undoing anything afterwards; project.open / project.new clear the block.";
 var READ_TEMPLATES_FN = `
     function _readTemplates(_item) {
@@ -48964,6 +49225,7 @@ function chooseDeliveryTemplate(preset, templates) {
     error: p.alpha ? `no movie template with alpha on this install (templates: ${templates.join(", ")}); make one in Edit > Templates > Output Module (QuickTime, Apple ProRes 4444, RGB + Alpha)` : `none of the templates this preset uses is on this install (templates: ${templates.join(", ")})`
   };
 }
+var DELIVERY_TRUE_PEAK_NOTE_DBTP = -1;
 var DELIVERY_SILENCE_TOP = 0.1;
 var DELIVERY_SILENCE_DB = -60;
 function checkDelivered(comp, file2) {
@@ -48994,6 +49256,21 @@ function checkDelivered(comp, file2) {
     } else if (lv && lv.source === "ffmpeg") sound = "sound at a mean of " + lv.meanDb + " dB (max " + lv.maxDb + " dB, ffmpeg)";
     else if (lv && lv.source === "After Effects") sound = "sound present (amplitude up to " + lv.top + ", After Effects)";
     else sound = "a sound track, whose level was not read (no ffmpeg, and After Effects could not read it)";
+    const sync = file2.sync;
+    if (file2.hasAudio && sync && sync.lateBySamples > 1) {
+      const fr = comp.frameRate ? Math.round(sync.lateBySamples / sync.sampleRate * comp.frameRate * 100) / 100 : null;
+      findings.push({
+        kind: "sound late",
+        reading: `The sound plays ${sync.lateBySamples} samples (${sync.lateMs} ms${fr !== null ? `, ${fr} of a frame` : ""}) late against the picture: ${sync.reading.replace(/^the sound plays [^:]*: ?/, "") || "the edit list delays it"}. It could not be fixed (${file2.alignment?.how ?? "not attempted"}). Install ffmpeg and deliver again, or remux the file: ffmpeg -i in.mp4 -itsoffset -${(sync.lateBySamples / sync.sampleRate).toFixed(6)} -i in.mp4 -map 0 -map -0:a -map 1:a -c copy out.mp4`
+      });
+    } else if (file2.hasAudio && sync) {
+      sound += file2.alignment?.aligned && file2.alignment.before && file2.alignment.before.lateBySamples > 0 ? `; on its frame (it was ${file2.alignment.before.lateBySamples} samples late: ${file2.alignment.how})` : `; ${sync.reading.replace(/^the sound is /, "")}`;
+    }
+    if (file2.hasAudio && file2.loudness) {
+      const l = file2.loudness;
+      sound += `; ${l.integratedLufs} LUFS integrated, true peak ${l.truePeakDbtp} dBTP${l.loudnessRangeLu !== null ? `, range ${l.loudnessRangeLu} LU` : ""} (ffmpeg ebur128)`;
+      if (l.truePeakDbtp > DELIVERY_TRUE_PEAK_NOTE_DBTP) sound += ` \u2014 the true peak is above ${DELIVERY_TRUE_PEAK_NOTE_DBTP} dBTP, which a platform's own encode can clip`;
+    }
   } else sound = file2.hasAudio ? "a sound track, though the comp has no sound on" : "no sound, as in the comp";
   const passed = findings.length === 0;
   return {
@@ -49095,7 +49372,7 @@ function deliverReadBackJsx(args) {
 async function runDeliver(args, io) {
   const started = Date.now();
   const outputPath = args.outputPath;
-  if (typeof outputPath !== "string" || !path6.isAbsolute(outputPath)) return { ok: false, error: "`outputPath` must be an absolute path" };
+  if (typeof outputPath !== "string" || !path7.isAbsolute(outputPath)) return { ok: false, error: "`outputPath` must be an absolute path" };
   const rejected = rejectedOutputPath(outputPath);
   if (rejected) return { ok: false, error: rejected };
   const preset = typeof args.preset === "string" ? args.preset : "";
@@ -49109,7 +49386,7 @@ async function runDeliver(args, io) {
     notes.push(`The comp is ${plan.width} \xD7 ${plan.height}, not 9:16: the reel will be delivered at the comp's size.`);
   const frames = Math.round(plan.duration * plan.frameRate);
   const estimate = frames * plan.width * plan.height * (p.alpha ? 4 : 3) * 0.6;
-  const free = io.freeBytes ? await io.freeBytes(path6.dirname(outputPath)) : null;
+  const free = io.freeBytes ? await io.freeBytes(path7.dirname(outputPath)) : null;
   if (free !== null && free < estimate + 3e9)
     return { ok: false, error: `not enough room: about ${(estimate / 1e9).toFixed(1)} GB for the file plus 3 GB, ${(free / 1e9).toFixed(1)} GB free` };
   const r = await io.execute(
@@ -49118,6 +49395,12 @@ async function runDeliver(args, io) {
   );
   if (!r?.ok) return { ok: false, error: r?.error ?? "the render failed", template: pick2.template };
   const written = r.outputPath ?? outputPath;
+  let sync = io.soundSync ? await io.soundSync(written).catch(() => null) : null;
+  let alignment = null;
+  if (sync && sync.lateBySamples > 1) {
+    alignment = io.alignSound ? await io.alignSound(written, sync).catch((e) => ({ aligned: false, how: `the remux failed: ${e instanceof Error ? e.message : String(e)}`, before: sync })) : { aligned: false, how: "no way to remux the file here", before: sync };
+    if (alignment.aligned && io.soundSync) sync = await io.soundSync(written).catch(() => null) ?? sync;
+  }
   const probe = io.probe ? await io.probe(written).catch(() => null) : null;
   const back = await io.execute(deliverReadBackJsx({ path: written, readLevel: !(probe && probe.maxDb !== null) }), {
     label: "render.deliver read back",
@@ -49128,7 +49411,16 @@ async function runDeliver(args, io) {
   const level = probe && probe.maxDb !== null && probe.meanDb !== null ? { source: "ffmpeg", meanDb: probe.meanDb, maxDb: probe.maxDb } : typeof back.amplitudeTop === "number" ? { source: "After Effects", top: back.amplitudeTop } : null;
   const check2 = checkDelivered(
     { width: plan.width, height: plan.height, frameRate: plan.frameRate, duration: plan.duration, hasSound: plan.hasSound, soundLayers: plan.soundLayers ?? [] },
-    { width: back.width, height: back.height, frameRate: back.frameRate, duration: back.duration, hasAudio: back.hasAudio, level }
+    {
+      width: back.width,
+      height: back.height,
+      frameRate: back.frameRate,
+      duration: back.duration,
+      hasAudio: back.hasAudio,
+      level,
+      ...io.probe ? { loudness: probe?.loudness ?? null } : {},
+      ...io.soundSync ? { sync, alignment } : {}
+    }
   );
   return {
     ok: true,
@@ -49146,22 +49438,8 @@ async function runDeliver(args, io) {
     next: check2.passed ? "Delivered and checked. Watch it once at speed before calling it done." : "Stop: tell the user what the check found, in plain words, before calling it delivered."
   };
 }
-var FFPROBE = ["ffprobe", "/opt/homebrew/bin/ffprobe", "/usr/local/bin/ffprobe"];
-var FFMPEG = ["ffmpeg", "/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg"];
-function run(cands, argv) {
-  return new Promise((resolve12) => {
-    const tryAt = (i) => {
-      if (i >= cands.length) return resolve12(null);
-      execFile2(cands[i], argv, { timeout: 12e4, maxBuffer: 16 * 1024 * 1024 }, (err, stdout, stderr) => {
-        if (err && err.code === "ENOENT") return tryAt(i + 1);
-        resolve12({ stdout: String(stdout), stderr: String(stderr) });
-      });
-    };
-    tryAt(0);
-  });
-}
-async function probeDelivered(file2) {
-  const pr = await run(FFPROBE, ["-v", "error", "-show_entries", "stream=codec_type,width,height,r_frame_rate:format=duration", "-of", "json", file2]);
+async function probeDelivered(file2, tools = { ffmpeg: FFMPEG, ffprobe: FFPROBE }) {
+  const pr = await runTool(tools.ffprobe, ["-v", "error", "-show_entries", "stream=codec_type,width,height,r_frame_rate:format=duration", "-of", "json", file2]);
   if (!pr) return null;
   let j;
   try {
@@ -49175,16 +49453,15 @@ async function probeDelivered(file2) {
   const [a, b] = String(v.r_frame_rate ?? "0/1").split("/").map(Number);
   let meanDb = null;
   let maxDb = null;
+  let loudness = null;
   if (hasAudio) {
-    const vd = await run(FFMPEG, ["-hide_banner", "-nostats", "-i", file2, "-map", "0:a:0", "-af", "volumedetect", "-f", "null", "-"]);
-    const m = vd ? /mean_volume:\s*(-?[\d.]+|-inf) dB/.exec(vd.stderr) : null;
-    const x = vd ? /max_volume:\s*(-?[\d.]+|-inf) dB/.exec(vd.stderr) : null;
-    if (m && x) {
-      meanDb = m[1] === "-inf" ? -Infinity : Number(m[1]);
-      maxDb = x[1] === "-inf" ? -Infinity : Number(x[1]);
+    const vd = await runTool(tools.ffmpeg, ["-hide_banner", "-nostats", "-i", file2, "-map", "0:a:0", "-af", "volumedetect,ebur128=peak=true", "-f", "null", "-"], 6e5);
+    if (vd) {
+      ({ meanDb, maxDb } = parseVolumedetect(vd.stderr));
+      loudness = parseEbur128Summary(vd.stderr);
     }
   }
-  return { width: v.width, height: v.height, frameRate: b ? Math.round(a / b * 1e3) / 1e3 : 0, duration: Number(j.format?.duration ?? 0), hasAudio, meanDb, maxDb };
+  return { width: v.width, height: v.height, frameRate: b ? Math.round(a / b * 1e3) / 1e3 : 0, duration: Number(j.format?.duration ?? 0), hasAudio, meanDb, maxDb, loudness };
 }
 function liveDeliverIO(transport2) {
   return {
@@ -49192,22 +49469,24 @@ function liveDeliverIO(transport2) {
       const r = await transport2.execute({ code, label: opts.label, timeoutMs: opts.timeoutMs, undoGroup: opts.undoGroup ?? true, suppressDialogs: true });
       return r.ok ? r.result : { ok: false, error: r.error ?? `${opts.label} failed` };
     },
-    exists: (f) => fs5.access(f).then(() => true, () => false),
+    exists: (f) => fs6.access(f).then(() => true, () => false),
     freeBytes: async (dir) => {
       try {
-        const st = await fs5.statfs(dir);
+        const st = await fs6.statfs(dir);
         return st.bavail * st.bsize;
       } catch {
         return null;
       }
     },
-    probe: probeDelivered
+    probe: probeDelivered,
+    soundSync: readSoundSync,
+    alignSound
   };
 }
 registerOp({
   name: "render.deliver",
   category: "render",
-  description: "Deliver a comp with a named preset and check the file that was written. Presets: 'vertical-reel' (H.264 - Match Render Settings - 15 Mbps, else another H.264 template, else High Quality (ProRes 422) and says so), 'master-alpha' (High Quality with Alpha (ProRes 4444), else Lossless with Alpha, else another movie template whose name says alpha; refuses when there is none), 'master' (High Quality, else Lossless). High Quality, High Quality with Alpha and the three H.264 templates are what Adobe documents for a stock install; a template can be deleted, so the result says which was used and why. Renders the whole comp through one temporary queue item (other items parked), then brings the file back and compares size, frame rate and duration (within half a frame) with the comp, and the sound: when the comp has sound on, a file with no sound track, or one that reads as silence, is flagged (a four-channel take read as silence in After Effects with no warning). The level comes from ffmpeg (mean and max dB) when it is installed, else from After Effects' Convert Audio to Keyframes on the file. Returns `check` { passed, findings, reading }." + RENDER_QUEUE_UNDO_WARNING,
+  description: `Deliver a comp with a named preset and check the file that was written. Presets: 'vertical-reel' (H.264 - Match Render Settings - 15 Mbps, else another H.264 template, else High Quality (ProRes 422) and says so), 'master-alpha' (High Quality with Alpha (ProRes 4444), else Lossless with Alpha, else another movie template whose name says alpha; refuses when there is none), 'master' (High Quality, else Lossless). High Quality, High Quality with Alpha and the three H.264 templates are what Adobe documents for a stock install; a template can be deleted, so the result says which was used and why. Renders the whole comp through one temporary queue item (other items parked), then brings the file back and compares size, frame rate and duration (within half a frame) with the comp, and the sound: when the comp has sound on, a file with no sound track, or one that reads as silence, is flagged (a four-channel take read as silence in After Effects with no warning). The level comes from ffmpeg (mean and max dB) when it is installed, else from After Effects' Convert Audio to Keyframes on the file. The sound is put on its frame: After Effects' AAC encoder starts the sound with ${AE_AAC_PRIMING_SAMPLES} samples of priming and writes no edit list, so in players the voice ran ${AE_AAC_PRIMING_SAMPLES} samples (0.64 of a frame at 30 fps, 48 kHz) late; the file's edit list is read from its own boxes, and when the priming is not skipped the file is remuxed with ffmpeg (-c copy, nothing re-encoded) so an edit list skips it, read back, and replaces the file only when it does (check.file.sync, check.file.alignment). Without ffmpeg that is a 'sound late' finding with the command that fixes it. With ffmpeg the check also reports the delivered file's integrated loudness (LUFS), loudness range (LU) and true peak (dBTP) from ebur128 (check.file.loudness), and says when the true peak is above -1 dBTP; it sets no loudness target. Returns \`check\` { passed, findings, reading }.` + RENDER_QUEUE_UNDO_WARNING,
   params: [
     { name: "comp", type: "any", description: "Comp name or id", required: true },
     { name: "preset", type: "string", description: "'vertical-reel', 'master-alpha' or 'master'", required: true },
@@ -49217,10 +49496,168 @@ registerOp({
   toJsx: () => jsxFail("render.deliver runs in Node; call it through ae_do"),
   run: (args, transport2) => runDeliver(args, liveDeliverIO(transport2))
 });
+async function probeStreams(file2, ffprobe) {
+  const pr = await runTool(ffprobe, [
+    "-v",
+    "error",
+    "-show_entries",
+    "stream=codec_type,codec_name,width,height,r_frame_rate,sample_rate,channels,duration:format=duration",
+    "-of",
+    "json",
+    file2
+  ]);
+  if (!pr || pr.failed) return null;
+  let j;
+  try {
+    j = JSON.parse(pr.stdout);
+  } catch {
+    return null;
+  }
+  const streams = j.streams ?? [];
+  const v = streams.find((x) => x.codec_type === "video") ?? null;
+  const a = streams.find((x) => x.codec_type === "audio") ?? null;
+  const fmtDur = Number(j.format?.duration ?? NaN);
+  const dur = (x) => x && Number.isFinite(Number(x.duration)) ? Number(x.duration) : Number.isFinite(fmtDur) ? fmtDur : null;
+  let video = null;
+  if (v) {
+    const [n, d] = String(v.r_frame_rate ?? "0/1").split("/").map(Number);
+    video = { codec: v.codec_name, width: v.width, height: v.height, frameRate: d ? Math.round(n / d * 1e3) / 1e3 : 0, duration: dur(v) };
+  }
+  const audio = a ? { codec: a.codec_name, sampleRate: Number(a.sample_rate), channels: Number(a.channels), duration: dur(a) } : null;
+  return { video, audio };
+}
+async function runMuxAudio(args, tools = { ffmpeg: FFMPEG, ffprobe: FFPROBE }) {
+  const started = Date.now();
+  const video = args.video;
+  const audio = args.audio;
+  if (typeof video !== "string" || !path7.isAbsolute(video)) return { ok: false, error: "`video` must be an absolute path to the rendered picture" };
+  if (typeof audio !== "string" || !path7.isAbsolute(audio)) return { ok: false, error: "`audio` must be an absolute path to the mix (a WAV)" };
+  const offset = typeof args.offsetSeconds === "number" ? args.offsetSeconds : 0;
+  if (!Number.isFinite(offset)) return { ok: false, error: "`offsetSeconds` must be a number of seconds" };
+  const bitrate = typeof args.bitrate === "string" ? args.bitrate : "320k";
+  if (!/^\d+(\.\d+)?k$/.test(bitrate)) return { ok: false, error: "`bitrate` is a number of kilobits a second followed by k, such as '320k'" };
+  const ext = path7.extname(video) || ".mp4";
+  const output2 = typeof args.output === "string" ? args.output : path7.join(path7.dirname(video), `${path7.basename(video, path7.extname(video))}-mix${ext}`);
+  if (!path7.isAbsolute(output2)) return { ok: false, error: "`output` must be an absolute path" };
+  const rejected = rejectedOutputPath(output2);
+  if (rejected) return { ok: false, error: rejected };
+  if (path7.resolve(output2) === path7.resolve(video) || path7.resolve(output2) === path7.resolve(audio))
+    return { ok: false, error: "`output` must be a new file, not the picture or the mix it is made from" };
+  for (const [name, f] of [["video", video], ["audio", audio]])
+    if (!await fs6.access(f).then(() => true, () => false)) return { ok: false, error: `no file at ${f} (\`${name}\`)` };
+  const outputExists = await fs6.access(output2).then(() => true, () => false);
+  if (outputExists && args.overwrite !== true)
+    return { ok: false, error: `a file already exists at ${output2}; pass overwrite: true to replace it` };
+  const version3 = await runTool(tools.ffmpeg, ["-hide_banner", "-version"]);
+  const probeOk = await runTool(tools.ffprobe, ["-hide_banner", "-version"]);
+  if (version3 === null || probeOk === null)
+    return {
+      ok: false,
+      error: "render.mux_audio needs ffmpeg and ffprobe, and " + (version3 === null ? "ffmpeg" : "ffprobe") + " is not installed (looked for it on the PATH, in /opt/homebrew/bin and /usr/local/bin). Install it (on a Mac: brew install ffmpeg) and call again. Nothing was written."
+    };
+  const vIn = await probeStreams(video, tools.ffprobe);
+  if (!vIn?.video) return { ok: false, error: `ffprobe found no picture in ${video}` };
+  const aIn = await probeStreams(audio, tools.ffprobe);
+  if (!aIn?.audio) return { ok: false, error: `ffprobe found no sound in ${audio}` };
+  const fps = vIn.video.frameRate || 30;
+  const frame = 1 / fps;
+  const rate = aIn.audio.sampleRate || 48e3;
+  const shift = Math.round(Math.abs(offset) * rate);
+  const filters = [];
+  if (offset > 0) filters.push(`adelay=delays=${shift}S:all=1`);
+  if (offset < 0) filters.push(`atrim=start_sample=${shift}`, "asetpts=PTS-STARTPTS");
+  const tmp = path7.join(path7.dirname(output2), `.${path7.basename(output2, path7.extname(output2))}.mux${path7.extname(output2) || ext}`);
+  const argv = [
+    "-hide_banner",
+    "-loglevel",
+    "error",
+    "-y",
+    "-i",
+    video,
+    "-i",
+    audio,
+    "-map",
+    "0:v:0",
+    "-map",
+    "1:a:0",
+    "-c:v",
+    "copy",
+    ...filters.length ? ["-af", filters.join(",")] : [],
+    "-c:a",
+    "aac",
+    "-b:a",
+    bitrate,
+    "-ar",
+    "48000",
+    tmp
+  ];
+  const r = await runTool(tools.ffmpeg, argv, 18e5);
+  if (r === null || r.failed) {
+    await fs6.rm(tmp, { force: true });
+    return { ok: false, error: `ffmpeg could not join the picture and the mix: ${(r?.stderr ?? "ffmpeg is not installed").trim().slice(0, 400)}`, command: ["ffmpeg", ...argv].join(" ") };
+  }
+  await fs6.rename(tmp, output2);
+  const probe = await probeDelivered(output2, tools);
+  const sync = await readSoundSync(output2).catch(() => null);
+  const out = await probeStreams(output2, tools.ffprobe);
+  const mixSeconds = aIn.audio.duration !== null ? aIn.audio.duration + offset : null;
+  const pictureSeconds = vIn.video.duration;
+  const check2 = checkDelivered(
+    { width: vIn.video.width, height: vIn.video.height, frameRate: fps, duration: pictureSeconds ?? 0, hasSound: true, soundLayers: [path7.basename(audio)] },
+    {
+      width: probe?.width ?? out?.video?.width ?? 0,
+      height: probe?.height ?? out?.video?.height ?? 0,
+      frameRate: probe?.frameRate ?? out?.video?.frameRate ?? 0,
+      duration: probe?.duration ?? 0,
+      hasAudio: probe?.hasAudio ?? !!out?.audio,
+      level: probe && probe.meanDb !== null && probe.maxDb !== null ? { source: "ffmpeg", meanDb: probe.meanDb, maxDb: probe.maxDb } : null,
+      loudness: probe?.loudness ?? null,
+      sync,
+      alignment: null
+    }
+  );
+  const r32 = (v) => Math.round(v * 1e3) / 1e3;
+  if (mixSeconds !== null && pictureSeconds !== null && Math.abs(mixSeconds - pictureSeconds) > frame + 1e-6) {
+    const diff = mixSeconds - pictureSeconds;
+    check2.findings.push({
+      kind: "mix length",
+      reading: `The mix ${offset !== 0 ? `(moved ${offset} s) ` : ""}runs ${r32(mixSeconds)} s and the picture ${r32(pictureSeconds)} s: ${r32(Math.abs(diff))} s (${Math.round(Math.abs(diff) / frame * 10) / 10} frames) ${diff > 0 ? "longer" : "shorter"}, more than a frame. ` + (diff > 0 ? "The file runs on past the picture's last frame with sound over a held or missing picture." : "The end of the picture is silent.") + " Check that the mix is the one for this cut."
+    });
+    check2.passed = false;
+    check2.reading = check2.findings.map((f) => f.reading).join(" ");
+  }
+  return {
+    ok: true,
+    output: output2,
+    video: { path: video, ...vIn.video },
+    audio: { path: audio, ...aIn.audio, offsetSeconds: offset, encodedAs: `AAC ${bitrate} at 48 kHz` },
+    mixLength: mixSeconds !== null && pictureSeconds !== null ? { mixSeconds: r32(mixSeconds), pictureSeconds: r32(pictureSeconds), differenceFrames: Math.round((mixSeconds - pictureSeconds) / frame * 10) / 10 } : null,
+    check: check2,
+    timing: { totalMs: Date.now() - started },
+    next: check2.passed ? "Joined and checked. Watch it once at speed before calling it done." : "Stop: tell the user what the check found, in plain words, before calling it delivered."
+  };
+}
+registerOp({
+  name: "render.mux_audio",
+  category: "render",
+  description: "Join a rendered picture with a mix made outside After Effects (a WAV): the recipe is render.deliver for the picture, then this, then look at its check. The picture is copied as it is (-c:v copy, nothing re-encoded); the mix is encoded to AAC at 48 kHz by ffmpeg, which writes its own edit list over the encoder's priming, so the sound sits on its frame. offsetSeconds moves the mix, sample-exact: positive pads silence before it, negative trims its start. Then the same file check as render.deliver on the new file: size, frame rate and duration against the picture, the sound's edit list read back (check.file.sync), its level, and its loudness (integrated LUFS, loudness range and true peak from ebur128, check.file.loudness); and a 'mix length' finding when the mix runs more than one frame longer or shorter than the picture. Needs ffmpeg and ffprobe: without them it says so and writes nothing. Does not touch the After Effects project.",
+  readOnly: true,
+  params: [
+    { name: "video", type: "string", description: "Absolute path of the rendered picture (from render.deliver).", required: true },
+    { name: "audio", type: "string", description: "Absolute path of the mix, a WAV made outside After Effects.", required: true },
+    { name: "output", type: "string", description: "Absolute path for the joined file (default: <video name>-mix beside the picture, same extension).", required: false },
+    { name: "overwrite", type: "boolean", description: "Replace an existing file at output (default false: refuse).", required: false },
+    { name: "offsetSeconds", type: "number", description: "Move the mix against the picture, seconds: positive starts it later (silence before), negative trims its start (default 0).", required: false },
+    { name: "bitrate", type: "string", description: "AAC bitrate, such as '320k' (default '320k').", required: false }
+  ],
+  toJsx: () => jsxFail("render.mux_audio runs in Node; call it through ae_do"),
+  run: (args) => runMuxAudio(args)
+});
 
 // src/tools/render-frame.ts
-import { promises as fs8 } from "node:fs";
-import * as path8 from "node:path";
+import { randomUUID as randomUUID3 } from "node:crypto";
+import { promises as fs9 } from "node:fs";
+import * as path9 from "node:path";
 
 // src/color/screen.ts
 var SCREEN_DEFAULTS = {
@@ -49668,7 +50105,7 @@ function measureGrain(img, isScreen, ch, kind, t) {
 }
 
 // src/color/settled-read.ts
-import { promises as fs6 } from "node:fs";
+import { promises as fs7 } from "node:fs";
 var SETTLE_BASE_MS = 15e3;
 var SETTLE_PER_HD_FRAME_MS = 3e3;
 var SETTLE_MIN_PER_FRAME_MS = 1e3;
@@ -49676,7 +50113,7 @@ var HD_PIXELS = 1080 * 1920;
 var POLL_MS = 60;
 var IEND = Buffer.from([0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130]);
 function sleep2(ms) {
-  return new Promise((resolve12) => setTimeout(resolve12, ms));
+  return new Promise((resolve13) => setTimeout(resolve13, ms));
 }
 function settleTimeoutFor(frames, pixelsPerFrame) {
   const n = Math.max(1, Math.floor(frames));
@@ -49690,7 +50127,7 @@ async function stampFiles(paths) {
   return Promise.all(
     paths.map(async (p) => {
       try {
-        const st = await fs6.stat(p, { bigint: true });
+        const st = await fs7.stat(p, { bigint: true });
         return { exists: true, size: Number(st.size), mtimeNs: st.mtimeNs, ino: st.ino };
       } catch {
         return { exists: false, size: 0, mtimeNs: 0n, ino: 0n };
@@ -49702,7 +50139,7 @@ async function endsWithIend(p, size) {
   if (size < IEND.length) return false;
   let fh = null;
   try {
-    fh = await fs6.open(p, "r");
+    fh = await fs7.open(p, "r");
     const tail = Buffer.alloc(IEND.length);
     await fh.read(tail, 0, IEND.length, size - IEND.length);
     return tail.equals(IEND);
@@ -49715,7 +50152,7 @@ async function endsWithIend(p, size) {
 async function waitForSettled(paths, opts) {
   const stableMs = opts.stableMs ?? 250;
   const start = Date.now();
-  const deadline = start + opts.timeoutMs;
+  let deadline = start + opts.timeoutMs;
   const done = /* @__PURE__ */ new Set();
   const state = paths.map(() => ({
     size: -1,
@@ -49723,13 +50160,14 @@ async function waitForSettled(paths, opts) {
     status: "missing"
   }));
   for (; ; ) {
+    const before = done.size;
     await Promise.all(
       paths.map(async (p, i) => {
         if (done.has(i)) return;
         const s = state[i];
         let st = null;
         try {
-          st = await fs6.stat(p, { bigint: true });
+          st = await fs7.stat(p, { bigint: true });
         } catch {
         }
         if (st === null) {
@@ -49756,6 +50194,8 @@ async function waitForSettled(paths, opts) {
         if (await endsWithIend(p, size) || Date.now() - s.changedAt >= stableMs) done.add(i);
       })
     );
+    if (opts.stallMs !== void 0 && done.size > before)
+      deadline = Math.max(deadline, Date.now() + opts.stallMs);
     if (done.size === paths.length || Date.now() > deadline) break;
     await sleep2(POLL_MS);
   }
@@ -49770,7 +50210,13 @@ async function waitForSettled(paths, opts) {
       bytes: Math.max(0, state[i].size)
     });
   }
-  return { settled, unsettled, waitedMs: Date.now() - start, timeoutMs: opts.timeoutMs };
+  return {
+    settled,
+    unsettled,
+    waitedMs: Date.now() - start,
+    timeoutMs: opts.timeoutMs,
+    ...opts.stallMs !== void 0 ? { stallMs: opts.stallMs } : {}
+  };
 }
 async function readFileSettled(filePath, timeoutMs = SETTLE_BASE_MS, stableMs = 250) {
   const res = await waitForSettled([filePath], { timeoutMs, stableMs });
@@ -49779,7 +50225,7 @@ async function readFileSettled(filePath, timeoutMs = SETTLE_BASE_MS, stableMs = 
       `file did not settle within ${timeoutMs}ms (saveFrameToPng writes asynchronously): ${filePath}`
     );
   }
-  return fs6.readFile(filePath);
+  return fs7.readFile(filePath);
 }
 
 // src/tools/render-frame.ts
@@ -49942,9 +50388,9 @@ init_registry();
 // src/color/calibration.ts
 init_registry();
 import { randomUUID as randomUUID2 } from "node:crypto";
-import { promises as fs7 } from "node:fs";
+import { promises as fs8 } from "node:fs";
 import * as os3 from "node:os";
-import * as path7 from "node:path";
+import * as path8 from "node:path";
 var CALIB_VALUES = [0.05, 0.18, 0.5, 1];
 var PATCH = 40;
 var cache = /* @__PURE__ */ new Map();
@@ -49977,7 +50423,7 @@ async function measureCaptureTransfer(transport2, key, allowRender = true) {
       error: "calibration needs a (transient, undo-grouped) render of a temporary comp, which read-only mode forbids"
     };
   }
-  const pngPath = path7.join(os3.tmpdir(), `mcp-ae-calib-${randomUUID2()}.png`).replace(/\\/g, "/");
+  const pngPath = path8.join(os3.tmpdir(), `mcp-ae-calib-${randomUUID2()}.png`).replace(/\\/g, "/");
   const code = `
         var _vals = ${jsxVal(CALIB_VALUES)};
         var _patch = ${jsxVal(PATCH)};
@@ -50013,7 +50459,7 @@ async function measureCaptureTransfer(transport2, key, allowRender = true) {
       error: `calibration PNG unreadable: ${err instanceof Error ? err.message : String(err)}`
     };
   } finally {
-    fs7.unlink(pngPath).catch(() => {
+    fs8.unlink(pngPath).catch(() => {
     });
   }
   try {
@@ -50246,7 +50692,7 @@ var regionSchema = external_exports.object({
 var renderFrameTool = defineTool({
   name: "ae_render_frame",
   title: "Render frame",
-  description: "Render one or more frames to PNG. Use to visually verify edits. The agent's 'eyes' \u2014 pair with mutations for a visual feedback loop. Headless and deterministic. Pass `time` for one frame, or `times` for several in ONE call (motion checks): files land at <outPath stem>_<index>.png and are listed in `frames`. `contactSheet` tiles every frame into one labelled PNG (<stem>_sheet.png) so a motion check is one image; `analyze` measures each capture (uniform edge bands = black bars / transparent margins, content bounds, coverage) so off-frame elements and letterboxing are caught numerically. In color-managed projects (workingSpace != None) the capture applies AE's own display transform via a transient OCIO Display Transform adjustment layer, and the PNG comes back viewer-accurate and sRGB-tagged. Where that layer cannot be used \u2014 read-only mode, an AE without the OCIO effect, or a failed capture calibration \u2014 the result falls back to a pure-math ACES conversion or to raw values with an explicit colorWarning; check colorPipeline / colorWarning on the response. Seeing the matte: `channels` picks what the file holds \u2014 'rgb' (default, transparency composited over `over`: the comp background as AE composites it, a checkerboard or a colour such as '#ff00ff'), 'rgba' (alpha kept, straight colour), or 'alpha' (the matte as greyscale: white opaque, black transparent). `isolate` renders one layer or a list alone (cameras and lights stay as they are), then restores every layer switch, even when the render fails. `alphaChannel` reports whether the capture carried alpha at all. Reading colour: `sample` takes named points or rectangles and returns mean / min / max per channel and alpha coverage for each; `histogram` counts the whole frame per channel; `compare` (with `times` and `sample`) reports each region's difference between two of the rendered frames. Matte quality: `edge` reports, from the capture's alpha, the shares of opaque / partly transparent / transparent pixels, edge width (typical and worst, px), holes, specks, partly transparent patches that are not thin edges (an unkeyed screen, a remnant), the soft edge's colour with the comp background taken out and whether it leans to the screen colour (spill), and with `times` the frame-to-frame change in alpha along the edge, inside the solid area and outside it (flicker). Green screen: `screen`, on a render of the UN-KEYED source (Keylight View 'source' or the key off, the keyed layer isolated), reports green or blue, which pixels are screen and their share, a suggested screen colour (the median, and the colour just outside the subject), evenness on a grid (darkest and brightest cells, the spread as a ratio, the darker side) and grain. Sitting in the scene: `look` reads grain, edge width, black and white points and CIELAB colour of named regions, names the cast on a neutral (with the gains that remove it) and skin's hue, and compares an element with its plate (add grain, soften, seat the blacks); with `times` on consecutive frames, the grain from frame to frame. Watching motion: `diff` (with `times`) reports how much the picture changes between consecutive frames, where, and per `sample` region, and flags pairs that stand out (a one-frame pop, a stutter where a frame repeats, a cut); `strip: { at, frames }` renders the frames around a moment into one small contact sheet with diff on. For playback at speed, render.preview (ae_do) writes a quick movie. It reports numbers and places, never a pass or fail. Every number is labelled with its stage \u2014 'capture' (before colour conversion) or 'output' (the file as written) \u2014 described once in `measurementStages`.",
+  description: "Render one or more frames to PNG. Use to visually verify edits. The agent's 'eyes' \u2014 pair with mutations for a visual feedback loop. Headless and deterministic. Pass `time` for one frame, or `times` for several in ONE call (motion checks): files land at <outPath stem>_<call id>_<index>.png, a new call id every call, so a late write left by an earlier call can never be taken for this one's frame; `frames` lists them and `batch.files` says which frame each file holds. `contactSheet` tiles every frame into one labelled PNG (<stem>_sheet.png) so a motion check is one image; `analyze` measures each capture (uniform edge bands = black bars / transparent margins, content bounds, coverage) so off-frame elements and letterboxing are caught numerically. In color-managed projects (workingSpace != None) the capture applies AE's own display transform via a transient OCIO Display Transform adjustment layer, and the PNG comes back viewer-accurate and sRGB-tagged. Where that layer cannot be used \u2014 read-only mode, an AE without the OCIO effect, or a failed capture calibration \u2014 the result falls back to a pure-math ACES conversion or to raw values with an explicit colorWarning; check colorPipeline / colorWarning on the response. Seeing the matte: `channels` picks what the file holds \u2014 'rgb' (default, transparency composited over `over`: the comp background as AE composites it, a checkerboard or a colour such as '#ff00ff'), 'rgba' (alpha kept, straight colour), or 'alpha' (the matte as greyscale: white opaque, black transparent). `isolate` renders one layer or a list alone (cameras and lights stay as they are), then restores every layer switch, even when the render fails. `alphaChannel` reports whether the capture carried alpha at all. Reading colour: `sample` takes named points or rectangles and returns mean / min / max per channel and alpha coverage for each; `histogram` counts the whole frame per channel; `compare` (with `times` and `sample`) reports each region's difference between two of the rendered frames. Matte quality: `edge` reports, from the capture's alpha, the shares of opaque / partly transparent / transparent pixels, edge width (typical and worst, px), holes, specks, partly transparent patches that are not thin edges (an unkeyed screen, a remnant), the soft edge's colour with the comp background taken out and whether it leans to the screen colour (spill), and with `times` the frame-to-frame change in alpha along the edge, inside the solid area and outside it (flicker). Green screen: `screen`, on a render of the UN-KEYED source (Keylight View 'source' or the key off, the keyed layer isolated), reports green or blue, which pixels are screen and their share, a suggested screen colour (the median, and the colour just outside the subject), evenness on a grid (darkest and brightest cells, the spread as a ratio, the darker side) and grain. Sitting in the scene: `look` reads grain, edge width, black and white points and CIELAB colour of named regions, names the cast on a neutral (with the gains that remove it) and skin's hue, and compares an element with its plate (add grain, soften, seat the blacks); with `times` on consecutive frames, the grain from frame to frame. Watching motion: `diff` (with `times`) reports how much the picture changes between consecutive frames, where, and per `sample` region, and flags pairs that stand out (a one-frame pop, a stutter where a frame repeats, a cut); `strip: { at, frames }` renders the frames around a moment into one small contact sheet with diff on. For playback at speed, render.preview (ae_do) writes a quick movie. It reports numbers and places, never a pass or fail. Every number is labelled with its stage \u2014 'capture' (before colour conversion) or 'output' (the file as written) \u2014 described once in `measurementStages`.",
   group: "render",
   // Survives read-only mode: it writes a PNG, and the visual verification loop
   // is the whole point of an audit session. Note this is NOT a
@@ -50264,7 +50710,7 @@ var renderFrameTool = defineTool({
       "Time in seconds to render. Give exactly one of `time`, `times`, `strip` or `frames`. Each rendered frame reports `frame` (the frame the time falls in: floor(time / frameDuration), worked out in After Effects) and `frameOffset` (where in it, 0..1); `frameWarning` says when two times land on one frame or a time sits within 2% of a frame below a boundary (a rounded time renders the frame before). Times are never moved."
     ),
     times: external_exports.array(external_exports.number().nonnegative()).min(1).max(32).optional().describe(
-      "Several times in seconds, rendered in ONE call. Files are written as <outPath stem>_<index><ext> and reported in `frames` (index-aligned)."
+      "Several times in seconds, rendered in ONE call. Files are written as <outPath stem>_<call id>_<index><ext> (a new id every call) and reported in `frames` (index-aligned) and `batch.files` (path, frame, time)."
     ),
     strip: external_exports.object({
       at: external_exports.number().nonnegative().describe("The moment, seconds (snapped to the nearest frame)."),
@@ -50277,10 +50723,10 @@ var renderFrameTool = defineTool({
       "'What happens around this moment' in one call: N consecutive frames around `at`, worked out from the comp's frame rate inside After Effects and rendered through the `times` path (files <stem>_<index>, listed in `frames`), tiled small into the contact sheet, with `diff` and its sheet on (pass `diff: false` to skip, or diff options to tune). The window is shifted to stay inside the comp; `strip` in the response says where it landed. Instead of `time` / `times`."
     ),
     frames: external_exports.array(external_exports.number().int().nonnegative()).min(1).max(32).optional().describe(
-      "Frame numbers (0 = the comp's first frame) instead of times: each is rendered a quarter of a frame inside it, so a time never lands on the frame before. Through the `times` path: files <stem>_<index>, reported in `frames` with their `frame`. Instead of `time` / `times` / `strip`."
+      "Frame numbers (0 = the comp's first frame) instead of times: each is rendered a quarter of a frame inside it, so a time never lands on the frame before. Through the `times` path: files <stem>_<call id>_<index>, reported in `frames` and `batch.files` with their `frame`. Instead of `time` / `times` / `strip`."
     ),
     outPath: external_exports.string().describe(
-      "Absolute path to write the PNG. Parent directory is created if missing. With `times`, used as the naming stem for every frame."
+      "Absolute path to write the PNG. Parent directory is created if missing. With `times`, used as the naming stem for every frame (plus a call id, new every call)."
     ),
     useDisplayStartTime: external_exports.boolean().optional().describe("If true, times are interpreted relative to comp.displayStartTime. Default false."),
     colorManaged: external_exports.enum(["auto", "off"]).optional().describe(
@@ -50496,16 +50942,16 @@ var renderFrameTool = defineTool({
     const rejection = rejectedOutputPath(args.outPath);
     if (rejection !== null) {
       return errorResult("IO", rejection, {
-        details: { outPath: path8.resolve(args.outPath) },
+        details: { outPath: path9.resolve(args.outPath) },
         hint: "Render to a path outside the mailbox."
       });
     }
-    const abs = path8.resolve(args.outPath).replace(/\\/g, "/");
+    const abs = path9.resolve(args.outPath).replace(/\\/g, "/");
     if (args.contactSheet?.outPath !== void 0) {
       const sheetRejection = rejectedOutputPath(args.contactSheet.outPath);
       if (sheetRejection !== null) {
         return errorResult("IO", sheetRejection, {
-          details: { outPath: path8.resolve(args.contactSheet.outPath) },
+          details: { outPath: path9.resolve(args.contactSheet.outPath) },
           hint: "Write the contact sheet to a path outside the mailbox."
         });
       }
@@ -50683,19 +51129,20 @@ function planStrip(strip) {
   return { plan: { at, offsets, frames, step, maxDimension } };
 }
 function sheetPathFor(abs, explicit) {
-  if (explicit !== void 0) return path8.resolve(explicit).replace(/\\/g, "/");
-  const ext = path8.extname(abs) || ".png";
-  const stem = abs.slice(0, abs.length - (path8.extname(abs).length || 0));
+  if (explicit !== void 0) return path9.resolve(explicit).replace(/\\/g, "/");
+  const ext = path9.extname(abs) || ".png";
+  const stem = abs.slice(0, abs.length - (path9.extname(abs).length || 0));
   return `${stem}_sheet${ext}`;
 }
-function framePaths(abs, count, multi) {
+function framePaths(abs, count, multi, call = newCallId()) {
   if (!multi) return [abs];
-  const ext = path8.extname(abs) || ".png";
-  const stem = abs.slice(0, abs.length - (path8.extname(abs).length || 0));
+  const ext = path9.extname(abs) || ".png";
+  const stem = abs.slice(0, abs.length - (path9.extname(abs).length || 0));
   const out = [];
-  for (let i = 0; i < count; i++) out.push(`${stem}_${i}${ext}`);
+  for (let i = 0; i < count; i++) out.push(`${stem}_${call}_${i}${ext}`);
   return out;
 }
+var newCallId = () => randomUUID3().slice(0, 8);
 var ISOLATE_FN = `
     function _refText(ref) {
         if (typeof ref === "string") return '"' + ref + '"';
@@ -50884,7 +51331,8 @@ async function nativeFlow(args, opts, abs, transport2, strip = null) {
   const multi = args.times !== void 0 || strip !== null || frameNums !== null;
   const times = strip !== null || frameNums !== null ? null : args.times ?? [args.time];
   const count = strip?.frames ?? frameNums?.length ?? times?.length ?? 1;
-  const paths = framePaths(abs, count, multi);
+  const callId = newCallId();
+  const paths = framePaths(abs, count, multi, callId);
   const contactSheet = args.contactSheet ?? (strip !== null ? {} : void 0);
   const before = await stampFiles(paths);
   const tryOcio = args.colorManaged !== "off" && !readOnlyMode();
@@ -50978,6 +51426,20 @@ async function nativeFlow(args, opts, abs, transport2, strip = null) {
     before: before.slice(0, written.length)
   });
   payload.captureSettle = settle2;
+  const listBatch = () => {
+    if (!multi) return;
+    payload.batch = {
+      id: callId,
+      files: frames.map((f, i) => ({
+        index: i,
+        path: f.writtenTo ?? paths[i],
+        frame: f.frame ?? null,
+        time: f.time ?? null,
+        ok: f.ok === true,
+        ...f.ok === true ? {} : { error: f.error ?? "not captured" }
+      }))
+    };
+  };
   if (settle2.unsettled.length > 0) {
     const secs3 = (settle2.timeoutMs / 1e3).toFixed(1);
     for (const u of settle2.unsettled) {
@@ -50987,12 +51449,14 @@ async function nativeFlow(args, opts, abs, transport2, strip = null) {
     }
     payload.captureWarning = `${settle2.unsettled.length} of ${written.length} captures did not finish writing within ${secs3} s (saveFrameToPng writes asynchronously): frames ${settle2.unsettled.map((u) => u.index).join(", ")}. ` + (settle2.settled.length > 0 ? "The others were measured; see captureSettle, or render the missing ones again with a longer settleTimeoutMs." : "Nothing could be measured; try again with a longer settleTimeoutMs.");
     if (settle2.settled.length === 0) {
+      listBatch();
       if (args.analyze) payload.analysisWarning = "analysis failed: no capture finished writing";
       if (managed)
         payload.colorWarning = "color post-processing failed, file left as raw capture: no capture finished writing";
       return toMcpResult(result);
     }
   }
+  listBatch();
   const finished = new Set(settle2.settled);
   const keep = new Set(opts.compare ? [opts.compare.from, opts.compare.to] : []);
   const kept = /* @__PURE__ */ new Map();
@@ -51016,7 +51480,7 @@ async function nativeFlow(args, opts, abs, transport2, strip = null) {
     if (!finished.has(i)) continue;
     let capture;
     try {
-      capture = decodePng(await fs8.readFile(file2));
+      capture = decodePng(await fs9.readFile(file2));
       read++;
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -51307,9 +51771,9 @@ async function attachDiffSheet(payload, diff, thumbs, abs, opts, t) {
       thumbs.map((th) => th.img),
       { columns: opts.columns, thumbWidth: thumbs[0].img.width, labels }
     );
-    const sheetPath = opts.outPath !== void 0 ? path8.resolve(opts.outPath).replace(/\\/g, "/") : `${abs.slice(0, abs.length - path8.extname(abs).length)}_diff${path8.extname(abs) || ".png"}`;
-    await fs8.mkdir(path8.dirname(sheetPath), { recursive: true });
-    await fs8.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+    const sheetPath = opts.outPath !== void 0 ? path9.resolve(opts.outPath).replace(/\\/g, "/") : `${abs.slice(0, abs.length - path9.extname(abs).length)}_diff${path9.extname(abs) || ".png"}`;
+    await fs9.mkdir(path9.dirname(sheetPath), { recursive: true });
+    await fs9.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
     payload.diffSheet = {
       writtenTo: sheetPath,
       size: [sheet.width, sheet.height],
@@ -51352,8 +51816,8 @@ async function attachContactSheet(payload, labels, tiles, sheetPath, opts) {
       thumbWidth: opts.thumbWidth ?? tiles[0].width,
       labels
     });
-    await fs8.mkdir(path8.dirname(sheetPath), { recursive: true });
-    await fs8.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+    await fs9.mkdir(path9.dirname(sheetPath), { recursive: true });
+    await fs9.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
     payload.contactSheet = {
       writtenTo: sheetPath,
       size: [sheet.width, sheet.height],
@@ -51381,7 +51845,7 @@ async function writeOutput(file2, capture, convert, channels, backdrop, bg) {
     convert(rgb);
     bytes = channels === "rgba" ? encodePngSrgbRgba8(width, height, rgb, capture.alpha ?? opaque()) : encodePngSrgb8(width, height, flattenOver({ ...capture, rgb }, backdrop));
   }
-  await fs8.writeFile(file2, bytes);
+  await fs9.writeFile(file2, bytes);
   return decodePng(bytes);
 }
 
@@ -51939,6 +52403,35 @@ var OBJECT_MATTE_SETTINGS = {
     doc: "Decontaminate Edge Colors: true takes the background's colour out of the edge. On green-screen footage it moved the edge's green excess from -0.0005 to -0.009; turn it on when ae_render_frame's edge report shows the edge leaning to the screen colour. With no green screen, on the half-size take, it took the wall's colour in the hair's edge from 56% to 38% at the top and 23% at the side (look edgeColour against the wall), with no change to the alpha: the default for an Object Matte cut-out (keying.md Recipe 3)"
   }
 };
+var SUBJECT_ATTENDED_NOTE = "The cut-out needs the user's own click in After Effects (the Object Matte Tool); no script can make it, so it cannot be done unattended. Get the click, and check it with subject.check, before the user leaves: an overnight or unattended run cannot start a cut-out, only carry on from one the user has clicked.";
+var SUBJECT_WHOLE_PIECE_NOTE = "For a whole piece, scale the take to delivery size first (a delivery-size copy of the footage, before the click: sourceAdvice), then render the cut-out in halves, emptying After Effects' disk cache between them: two halves of a 43.5 s piece at 1088 x 1920 took about 4.3 minutes and 12 GB of cache each. Check free disk space before each half. subject.render_cutout takes from and to (comp seconds) for each half; join the halves with a stream copy (HALVES_JOIN_NOTE).";
+var HALVES_JOIN_NOTE = "Two halves are joined by a stream copy, nothing re-encoded: list them in order in a text file (file 'first.mov' then file 'second.mov', one per line) and run ffmpeg -f concat -safe 0 -i halves.txt -c copy whole.mov. Empty After Effects' disk cache between the halves (it holds about a half's worth). On the first piece the halves were frames 600 to 1304, then 0 to 599, and the outline's step across the join was 0.002 of the frame, no different from any other pair of neighbouring frames. Check the joined file with subject.check_file, and give subject.use_cutout the first half's start.";
+function cutoutSpan(layerSpan, from, to) {
+  const rate = layerSpan.frameRate || 30;
+  const snap = (t) => Math.round(t * rate) / rate;
+  const s0 = layerSpan.start;
+  const s1 = layerSpan.start + layerSpan.duration;
+  for (const [name, v] of [["from", from], ["to", to]])
+    if (v !== void 0 && (typeof v !== "number" || !Number.isFinite(v))) return { error: `\`${name}\` must be a number of comp seconds` };
+  const a = typeof from === "number" ? from : s0;
+  const b = typeof to === "number" ? to : s1;
+  if (b <= a) return { error: `\`to\` (${b}) must be after \`from\` (${a})` };
+  const start = snap(Math.max(s0, a));
+  const end = snap(Math.min(s1, b));
+  if (end <= start)
+    return { error: `the span ${a} to ${b} s is outside the layer, which runs ${Math.round(s0 * 1e4) / 1e4} to ${Math.round(s1 * 1e4) / 1e4} s` };
+  const frames = Math.round((end - start) * rate);
+  const firstFrame = Math.round(start * rate);
+  return {
+    start,
+    duration: end - start,
+    frames,
+    firstFrame,
+    lastFrame: firstFrame + frames - 1,
+    clipped: a < s0 - 1e-9 || b > s1 + 1e-9,
+    whole: Math.abs(start - snap(s0)) < 1e-9 && Math.abs(end - snap(s1)) < 1e-9
+  };
+}
 var SUBJECT_MATTE_NOTICE = "One step here needs you in After Effects: a single click on the subject, about ten seconds. Everything before and after it I do.";
 function subjectMatteSteps(opts = {}) {
   const clip = opts.clip === void 0 ? "the clip's name" : `"${opts.clip}"`;
@@ -52145,7 +52638,7 @@ var REMOVE_NOTE = "To take out one wrong selection (a second click that landed o
 registerOp({
   name: "subject.prepare",
   category: "subject",
-  description: "Get a footage layer ready for the one manual step of a subject matte (After Effects 2027's Object Matte, the old Roto Brush): the user clicks the subject once with the Object Matte Tool; a script cannot make that selection. This call brings the comp forward, chooses View > Resolution > Full and reads the comp's resolution back (viewerResolution: verified only when it reads [1, 1] after the command and after the Layer panel opens; starting from the viewer's Auto setting is not verified), moves to `time` (default: the layer's in point; pick a frame where the subject is clearly visible), selects only that layer and opens it in the Layer panel. It adds no effect and does not pick the tool. Returns notice and steps (the user's instructions, with the clip's name and the subject filled in) and userMessage (both as one text): relay them to the user word for word. Also returns did (the steps done), couldNotDo (any that failed, with the error; beforeSteps then says what to tell the user first) and existing (an Object Matte already on the layer and its selections). Before any of that matters, read sourceAdvice and soundAdvice (or soundNote) when they are there. sourceAdvice: the layer's footage is at least 1.5 times the comp's size in both directions and scaled down to fit (a 2176 x 3840 take at 50% in a 1080 x 1920 comp); it gives the sizes, the disk cache a render needs at each, and the delivery-size copy to make and matte instead, before the click (replacing the footage under a matte freezes it), and relay then says not to give the steps yet. soundAdvice: the file's sound has more than two channels, or After Effects reports none while the file has some (a four-channel take with the voice on the first read as silence, with no warning); it gives the ffmpeg line that extracts the voice to a mono WAV. The file is only read (ffprobe), never changed. After the user says done, run subject.check before building anything. Verified in After Effects 27.0 on a real take, apart from the resolution step as written here; sourceAdvice and soundAdvice are worked out in Node from what After Effects reports and are tested offline.",
+  description: "Get a footage layer ready for the one manual step of a subject matte (After Effects 2027's Object Matte, the old Roto Brush): the user clicks the subject once with the Object Matte Tool; a script cannot make that selection. " + SUBJECT_ATTENDED_NOTE + " " + SUBJECT_WHOLE_PIECE_NOTE + " This call brings the comp forward, chooses View > Resolution > Full and reads the comp's resolution back (viewerResolution: verified only when it reads [1, 1] after the command and after the Layer panel opens; starting from the viewer's Auto setting is not verified), moves to `time` (default: the layer's in point; pick a frame where the subject is clearly visible), selects only that layer and opens it in the Layer panel. It adds no effect and does not pick the tool. Returns notice and steps (the user's instructions, with the clip's name and the subject filled in) and userMessage (both as one text): relay them to the user word for word. Also returns did (the steps done), couldNotDo (any that failed, with the error; beforeSteps then says what to tell the user first) and existing (an Object Matte already on the layer and its selections). Before any of that matters, read sourceAdvice and soundAdvice (or soundNote) when they are there. sourceAdvice: the layer's footage is at least 1.5 times the comp's size in both directions and scaled down to fit (a 2176 x 3840 take at 50% in a 1080 x 1920 comp); it gives the sizes, the disk cache a render needs at each, and the delivery-size copy to make and matte instead, before the click (replacing the footage under a matte freezes it), and relay then says not to give the steps yet. soundAdvice: the file's sound has more than two channels, or After Effects reports none while the file has some (a four-channel take with the voice on the first read as silence, with no warning); it gives the ffmpeg line that extracts the voice to a mono WAV. The file is only read (ffprobe), never changed. After the user says done, run subject.check before building anything. Verified in After Effects 27.0 on a real take, apart from the resolution step as written here; sourceAdvice and soundAdvice are worked out in Node from what After Effects reports and are tested offline.",
   params: [
     ...compLayerParams,
     {
@@ -52518,9 +53011,9 @@ function alikeRegions(a, b) {
   return small > 0 && big / small <= 2;
 }
 var isFrozenEntry = (e) => !("box" in e) && e.kind === "frozen";
-function frozenAccepted(run2, accept) {
+function frozenAccepted(run, accept) {
   return accept.some(
-    (e) => isFrozenEntry(e) && (e.from === void 0 || e.from <= run2.to) && (e.to === void 0 || e.to >= run2.from)
+    (e) => isFrozenEntry(e) && (e.from === void 0 || e.from <= run.to) && (e.to === void 0 || e.to >= run.from)
   );
 }
 function acceptedBy(f, accept) {
@@ -52574,14 +53067,14 @@ function cutoutFindings(frames, limit) {
 }
 async function writePng(io, file2, data) {
   if (io.writePng) return io.writePng(file2, data);
-  await fs9.mkdir(path9.dirname(file2), { recursive: true });
-  await fs9.writeFile(file2, data);
+  await fs10.mkdir(path10.dirname(file2), { recursive: true });
+  await fs10.writeFile(file2, data);
 }
 var GB = 1e9;
 var gb = (n) => `${(n / GB).toFixed(1)} GB`;
 var OVERSIZE_FACTOR = 1.5;
 var even = (n) => Math.max(2, Math.round(n / 2) * 2);
-var stemOf = (file2) => path9.join(path9.dirname(file2), path9.basename(file2, path9.extname(file2)));
+var stemOf = (file2) => path10.join(path10.dirname(file2), path10.basename(file2, path10.extname(file2)));
 var dims = (d) => `${d[0]} \xD7 ${d[1]}`;
 function sourceAdviceFor(f) {
   if (!f?.sourceSize || !f.compSize || !f.scale) return null;
@@ -52634,7 +53127,7 @@ function soundAdviceFor(f, streams) {
 var FFPROBE2 = ["ffprobe", "/opt/homebrew/bin/ffprobe", "/usr/local/bin/ffprobe"];
 async function ffprobeAudio(file2) {
   for (const exe of FFPROBE2) {
-    const out = await new Promise((resolve12) => {
+    const out = await new Promise((resolve13) => {
       execFile3(
         exe,
         [
@@ -52651,8 +53144,8 @@ async function ffprobeAudio(file2) {
         { timeout: 15e3 },
         (err, stdout) => {
           if (err)
-            resolve12({ missing: err.code === "ENOENT", stdout: null });
-          else resolve12({ missing: false, stdout: String(stdout) });
+            resolve13({ missing: err.code === "ENOENT", stdout: null });
+          else resolve13({ missing: false, stdout: String(stdout) });
         }
       );
     });
@@ -52686,6 +53179,8 @@ async function runSubjectPrepare(args, io) {
   if (sound.soundNote) res.soundNote = sound.soundNote;
   if (sound.soundAdvice || sound.soundNote)
     res.relay = `${res.relay} Sound: tell the user what ${sound.soundAdvice ? "soundAdvice" : "soundNote"} says, and deal with it before the render.`;
+  res.attended = SUBJECT_ATTENDED_NOTE;
+  res.wholePiece = SUBJECT_WHOLE_PIECE_NOTE;
   return res;
 }
 var RENDER_BYTES_PER_HD_FRAME = 76e4;
@@ -52697,13 +53192,13 @@ function renderCutoutBytes(frames, size) {
 }
 var captureBytes = (size) => (Array.isArray(size) ? size[0] * size[1] : 1080 * 1920) * 4;
 async function statfsFree(dir) {
-  let d = path9.resolve(dir);
+  let d = path10.resolve(dir);
   for (; ; ) {
     try {
-      const st = await fs9.statfs(d);
+      const st = await fs10.statfs(d);
       return Number(st.bavail) * Number(st.bsize);
     } catch {
-      const up = path9.dirname(d);
+      const up = path10.dirname(d);
       if (up === d) return null;
       d = up;
     }
@@ -52723,12 +53218,12 @@ function cacheBytesFor(frames, sourceSize) {
   return frames * w * h * 8;
 }
 async function volumeKey(dir) {
-  let d = path9.resolve(dir);
+  let d = path10.resolve(dir);
   for (; ; ) {
     try {
-      return (await fs9.stat(d)).dev;
+      return (await fs10.stat(d)).dev;
     } catch {
-      const up = path9.dirname(d);
+      const up = path10.dirname(d);
       if (up === d) return null;
       d = up;
     }
@@ -52774,14 +53269,14 @@ function aeCacheRoot(folder, version3) {
   if (!folder || !version3) return null;
   const m = /^(\d+)\.(\d+)/.exec(version3);
   if (!m) return null;
-  return path9.join(folder, "Adobe", "After Effects", `${m[1]}.${m[2]}`);
+  return path10.join(folder, "Adobe", "After Effects", `${m[1]}.${m[2]}`);
 }
 async function folderBytes(root, budgetMs = 5e3) {
   const t0 = performance.now();
   let bytes = 0;
   const stack = [root];
   try {
-    await fs9.access(root);
+    await fs10.access(root);
   } catch {
     return null;
   }
@@ -52790,15 +53285,15 @@ async function folderBytes(root, budgetMs = 5e3) {
     const d = stack.pop();
     let entries = [];
     try {
-      entries = await fs9.readdir(d, { withFileTypes: true });
+      entries = await fs10.readdir(d, { withFileTypes: true });
     } catch {
       continue;
     }
     for (const e of entries) {
-      const p = path9.join(d, e.name);
+      const p = path10.join(d, e.name);
       if (e.isDirectory()) stack.push(p);
       else if (e.isFile())
-        bytes += await fs9.stat(p).then(
+        bytes += await fs10.stat(p).then(
           (st) => st.size,
           () => 0
         );
@@ -52836,13 +53331,13 @@ var frozenOpts = (args) => ({
   limit: typeof args.frozenLimit === "number" ? args.frozenLimit : FROZEN_DEFAULTS.limit,
   minFrames: typeof args.frozenFrames === "number" ? args.frozenFrames : FROZEN_DEFAULTS.minFrames
 });
-function frozenFinding(run2, pictures) {
-  const moved = run2.footageChange > 1e-3;
+function frozenFinding(run, pictures) {
+  const moved = run.footageChange > 1e-3;
   return {
     kind: "frozen",
-    ...run2,
+    ...run,
     pictures,
-    reading: `The cut-out's outline did not move for ${run2.length} frames` + (moved ? ` while the footage did (frames ${run2.from} to ${run2.to}; ${(run2.footageChange * 100).toFixed(1)}% of the frame changed inside the outline)` : ` (frames ${run2.from} to ${run2.to}), and the picture inside it barely changed either`) + `. The selection is probably not tracking: this happens when the layer's footage is replaced after the click. Click again on this footage (subject.prepare, then the steps). If the subject is genuinely motionless (a product on a table, a locked-off object) this is expected: pass accept: [{ kind: "frozen" }] to wave it through once seen.`
+    reading: `The cut-out's outline did not move for ${run.length} frames` + (moved ? ` while the footage did (frames ${run.from} to ${run.to}; ${(run.footageChange * 100).toFixed(1)}% of the frame changed inside the outline)` : ` (frames ${run.from} to ${run.to}), and the picture inside it barely changed either`) + `. The selection is probably not tracking: this happens when the layer's footage is replaced after the click. Click again on this footage (subject.prepare, then the steps). If the subject is genuinely motionless (a product on a table, a locked-off object) this is expected: pass accept: [{ kind: "frozen" }] to wave it through once seen.`
   };
 }
 var QUICK_NOTE = "Quick check: the click frames and two frames either side, which After Effects renders in seconds. A missed object, an enclosed gap and a second click on the same thing show there. To look across the clip, render the cut-out once (subject.render_cutout) and check the file (subject.check_file); across: true checks the live matte across the clip instead, which takes minutes (4 to 9 for nine frames on a 2176 x 3840 take), because After Effects recomputes the matte on every capture.";
@@ -52898,7 +53393,7 @@ async function renderChunked(io, base, frames, perFrameMs, outDir, stem, tally =
     const payload = await io.render({
       ...base,
       frames: chunk2,
-      outPath: path9.join(outDir, `${stem}-${firstCall + c}.png`),
+      outPath: path10.join(outDir, `${stem}-${firstCall + c}.png`),
       settleTimeoutMs: Math.min(SETTLE_MAX_MS, Math.max(1, Math.round(perFrameMs * chunk2.length)))
     });
     tally.calls++;
@@ -53161,7 +53656,7 @@ async function recheckFrames(io, readings, limit, over, outDir, perFrameMs, base
     rendered,
     limit,
     over,
-    path9.join(outDir, "cutout-recheck_sheet.png"),
+    path10.join(outDir, "cutout-recheck_sheet.png"),
     pixels,
     false
   );
@@ -53214,8 +53709,8 @@ function closeNote(pairs) {
   return `Clicks: ${closeHead(pairs)}. Nothing is missing, so they need not change anything; they are close together and probably redundant, and can be removed (notes gives the commands).`;
 }
 function laterClicks(pairs) {
-  const num = (n) => Number(/(\d+)\s*$/.exec(n)?.[1] ?? -1);
-  return [...new Set(pairs.map((p) => num(p.a) >= num(p.b) ? p.a : p.b))];
+  const num2 = (n) => Number(/(\d+)\s*$/.exec(n)?.[1] ?? -1);
+  return [...new Set(pairs.map((p) => num2(p.a) >= num2(p.b) ? p.a : p.b))];
 }
 function closeNoteAdvice(pairs) {
   return "To remove the redundant clicks, take the later one of each pair out: " + laterClicks(pairs).map((n) => `subject.remove_selection { selection: "${n}" }`).join(", then ") + ". Measured twice: on the take of 2026-11-11 the matte did not change when the redundant click was removed (opaque share 0.3083 before and after on frame 0); on 2026-11-12, removing five of twelve close clicks left the click frame identical and the opaque share the same on the frames near it, with only a thin band along the outline different elsewhere (After Effects tracking again after the change). Then run subject.check again. Leaving them in is also fine.";
@@ -53247,7 +53742,7 @@ function timeReading(first, second, pixels, totalMs) {
 }
 async function runSubjectCheck(args, io) {
   const outDir = args.outDir;
-  if (typeof outDir !== "string" || !path9.isAbsolute(outDir))
+  if (typeof outDir !== "string" || !path10.isAbsolute(outDir))
     return { ok: false, error: "`outDir` must be an absolute folder for the pictures" };
   const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
   const over = typeof args.over === "string" ? args.over : CUTOUT_OVER;
@@ -53307,7 +53802,7 @@ async function runSubjectCheck(args, io) {
     rendered,
     limit,
     over,
-    path9.join(outDir, "cutout_sheet.png"),
+    path10.join(outDir, "cutout_sheet.png"),
     pixels,
     true,
     (r, img) => {
@@ -53333,13 +53828,13 @@ async function runSubjectCheck(args, io) {
   );
   if ("unstable" in recheck) findings.push(...recheck.unstable);
   const frozenAcceptedRuns = [];
-  for (const run2 of outlineResult.frozen) {
-    if (frozenAccepted(run2, accept)) {
-      frozenAcceptedRuns.push({ kind: "frozen", ...run2 });
+  for (const run of outlineResult.frozen) {
+    if (frozenAccepted(run, accept)) {
+      frozenAcceptedRuns.push({ kind: "frozen", ...run });
       continue;
     }
     const pic = (f) => readings.find((r) => r.frame === f)?.picture ?? null;
-    findings.push(frozenFinding(run2, [pic(run2.from), pic(run2.to)]));
+    findings.push(frozenFinding(run, [pic(run.from), pic(run.to)]));
   }
   const somethingMissing = findings.length > 0;
   const notes = [];
@@ -53364,7 +53859,7 @@ async function runSubjectCheck(args, io) {
       ...readings.map((r) => r.file),
       ..."captures" in recheck ? recheck.captures : []
     ].filter((f) => typeof f === "string");
-    await Promise.all(files.map((f) => fs9.rm(f, { force: true })));
+    await Promise.all(files.map((f) => fs10.rm(f, { force: true })));
     for (const r of readings) delete r.file;
   }
   return {
@@ -53424,12 +53919,12 @@ async function runFillGaps(args, io) {
     return res;
   } finally {
     if (args.keepCaptures !== true)
-      await Promise.all(captures.map((f) => fs9.rm(f, { force: true })));
+      await Promise.all(captures.map((f) => fs10.rm(f, { force: true })));
   }
 }
 async function fillGaps(args, io) {
   const still = args.stillPath;
-  if (typeof still !== "string" || !path9.isAbsolute(still) || path9.extname(still).toLowerCase() !== ".png") {
+  if (typeof still !== "string" || !path10.isAbsolute(still) || path10.extname(still).toLowerCase() !== ".png") {
     return {
       ok: false,
       error: "`stillPath` must be an absolute path to a .png file, kept with the project (the comp will use it)"
@@ -53437,7 +53932,7 @@ async function fillGaps(args, io) {
   }
   const rejected = rejectedOutputPath(still);
   if (rejected) return { ok: false, error: rejected };
-  const outDir = typeof args.outDir === "string" && path9.isAbsolute(args.outDir) ? args.outDir : path9.dirname(still);
+  const outDir = typeof args.outDir === "string" && path10.isAbsolute(args.outDir) ? args.outDir : path10.dirname(still);
   const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
   const over = typeof args.over === "string" ? args.over : CUTOUT_OVER;
   const minArea = typeof args.minArea === "number" ? args.minArea : 20;
@@ -53615,7 +54110,7 @@ async function fillGaps(args, io) {
     afterRendered,
     limit,
     over,
-    path9.join(outDir, "fill-after_sheet.png"),
+    path10.join(outDir, "fill-after_sheet.png"),
     pixels
   );
   const sum = summarize(measured.readings, limit, []);
@@ -53736,7 +54231,7 @@ function liveCutoutIO(args, transport2) {
       return sc?.result ?? { ok: false, error: "ae_render_frame returned no result" };
     },
     async readImage(file2) {
-      return decodePng(await fs9.readFile(file2));
+      return decodePng(await fs10.readFile(file2));
     },
     async unbuild(a) {
       const r = await transport2.execute({
@@ -53785,7 +54280,7 @@ var overParam = {
 registerOp({
   name: "subject.check",
   category: "subject",
-  description: `Proof a subject matte after the user says done, before anything else is built. Renders the cut-out with its alpha (ae_render_frame isolate, channels 'rgba'; with the layer's gap fill from subject.fill_gaps when the comp has one, reported as fillLayer) at the click frames and frames across the clip, finds holes (regions below opaque the frame edge cannot reach) and openings (regions closed off only by the subject and the frame edge: the missed microphone of 2026-11-11 ran off the bottom of the frame), draws each frame over a flat colour and one contact sheet, and returns picture (the sheet), findings, accepted, checked {frames, of}, inOut (a plain statement of what is in and what is out), frames, clicks and stop. A hole or opening of holeLimit px or more (default ${CUTOUT_HOLE_LIMIT}, at the comp's size) is a finding; so are frames that did not render (kind 'not-checked': a frame that was not rendered is never counted as clean). Two clicks close together are a finding only when something is missing too (a click meant for it may have landed on the subject again); otherwise they are the pieces of something clicked one by one, listed in notes, and do not set stop. With stop true: say in your reply what is out, in plain words, and give the picture's path, before the next call. \`accept\` entries (earlier findings the user called fine, such as a real gap between an arm and the body) are not counted again. Each frame with a finding is rendered once more at the end; a frame whose cut-out differs between the two renders is a finding of kind 'unstable' (seen once on 2026-11-11, cause unknown; agreement may come from the cache and does not prove a frame stable). A selection count is not a check. It can take minutes: 20 to 40 s a frame the first time on a 2176 x 3840 take; say so to the user before it runs. \`timing\` says where the time went (status, each render's After Effects call, settle wait and Node work, the pixel work, the total) and \`timeReading\` says it in one sentence.`,
+  description: `Proof a subject matte after the user says done, before anything else is built. Run it while the user is still there: what it finds can need another click, and a click cannot be made unattended. Renders the cut-out with its alpha (ae_render_frame isolate, channels 'rgba'; with the layer's gap fill from subject.fill_gaps when the comp has one, reported as fillLayer) at the click frames and frames across the clip, finds holes (regions below opaque the frame edge cannot reach) and openings (regions closed off only by the subject and the frame edge: the missed microphone of 2026-11-11 ran off the bottom of the frame), draws each frame over a flat colour and one contact sheet, and returns picture (the sheet), findings, accepted, checked {frames, of}, inOut (a plain statement of what is in and what is out), frames, clicks and stop. A hole or opening of holeLimit px or more (default ${CUTOUT_HOLE_LIMIT}, at the comp's size) is a finding; so are frames that did not render (kind 'not-checked': a frame that was not rendered is never counted as clean). Two clicks close together are a finding only when something is missing too (a click meant for it may have landed on the subject again); otherwise they are the pieces of something clicked one by one, listed in notes, and do not set stop. With stop true: say in your reply what is out, in plain words, and give the picture's path, before the next call. \`accept\` entries (earlier findings the user called fine, such as a real gap between an arm and the body) are not counted again. Each frame with a finding is rendered once more at the end; a frame whose cut-out differs between the two renders is a finding of kind 'unstable' (seen once on 2026-11-11, cause unknown; agreement may come from the cache and does not prove a frame stable). A selection count is not a check. It can take minutes: 20 to 40 s a frame the first time on a 2176 x 3840 take; say so to the user before it runs. \`timing\` says where the time went (status, each render's After Effects call, settle wait and Node work, the pixel work, the total) and \`timeReading\` says it in one sentence.`,
   params: [
     ...compLayerParams,
     {
@@ -54008,6 +54503,7 @@ function renderCutoutPlanJsx(args) {
 function renderCutoutJsx(args) {
   return `
             ${jsxCompPreamble(args)}
+            var _subject = ${jsxVal(args.subject ?? "")};
             ${PARK_QUEUE_FN}
             var rq = app.project.renderQueue;
             if (AE.safeGet(function () { return rq.rendering; }, false)) return { ok: false, error: "the render queue is already rendering; wait for it to finish" };
@@ -54034,7 +54530,9 @@ function renderCutoutJsx(args) {
                     var _mn = AE.safeGet(function () { return L.matchName; }, "");
                     if (_mn === "ADBE Camera Layer" || _mn === "ADBE Light Layer") continue;
                     var _s = { layer: L, enabled: L.enabled, solo: AE.safeGet(function () { return !!L.solo; }, false), locked: AE.safeGet(function () { return !!L.locked; }, false) };
-                    var _want2 = _kept(L.name) ? _s.enabled : false;
+                    // the subject renders even when it is switched off for display (subject.use_cutout leaves it off); the
+                    // other kept layers (the gap fill, the soft edge) render as they are switched
+                    var _want2 = _kept(L.name) ? (L.name === _subject ? true : _s.enabled) : false;
                     if (_want2 === _s.enabled && !_s.solo) continue;
                     if (_s.locked) L.locked = false;
                     if (_s.solo) L.solo = false;
@@ -54102,7 +54600,7 @@ function renderCutoutJsx(args) {
 async function runRenderCutout(args, io) {
   const started = performance.now();
   const outputPath = args.outputPath;
-  if (typeof outputPath !== "string" || !path9.isAbsolute(outputPath))
+  if (typeof outputPath !== "string" || !path10.isAbsolute(outputPath))
     return { ok: false, error: "`outputPath` must be an absolute path for the movie" };
   const rejected = rejectedOutputPath(outputPath);
   if (rejected) return { ok: false, error: rejected };
@@ -54126,8 +54624,11 @@ async function runRenderCutout(args, io) {
     typeof args.outputTemplate === "string" ? args.outputTemplate : void 0
   );
   if ("error" in choice) return { ok: false, error: choice.error, templates: plan.templates };
-  const frames = plan.span?.frames ?? 0;
-  const where = path9.dirname(outputPath);
+  const ranged = args.from !== void 0 || args.to !== void 0;
+  const span = ranged && plan.span ? cutoutSpan(plan.span, args.from, args.to) : null;
+  if (span && "error" in span) return { ok: false, error: span.error, layerSpan: plan.span };
+  const frames = span ? span.frames : plan.span?.frames ?? 0;
+  const where = path10.dirname(outputPath);
   const cacheRoot = aeCacheRoot(plan.aeCache?.folder, plan.aeCache?.version);
   const movieBytes = renderCutoutBytes(frames, plan.compSize ?? [1080, 1920]);
   const matteCopies = typeof plan.matteCopies === "number" && plan.matteCopies > 1 ? plan.matteCopies : 1;
@@ -54153,10 +54654,11 @@ async function runRenderCutout(args, io) {
     renderCutoutJsx({
       comp: args.comp,
       keep: plan.keep,
+      subject: plan.layer,
       outputPath,
       outputTemplate: choice.template,
-      start: plan.span.start,
-      duration: plan.span.duration,
+      start: span ? span.start : plan.span.start,
+      duration: span ? span.duration : plan.span.duration,
       overwrite: args.overwrite === true
     }),
     // Measured: 390 s for 320 frames of a 2176 x 3840 take; allow 5 s a frame and two minutes over.
@@ -54211,10 +54713,10 @@ async function runRenderCutout(args, io) {
   const sidecar = `${r.outputPath}.comp-room.json`;
   let sidecarWritten = null;
   try {
-    await fs9.writeFile(
+    await fs10.writeFile(
       sidecar,
       JSON.stringify(
-        { kind: "comp-room cut-out", comp: args.comp, layer: plan.layer, compSize: plan.compSize, fillLayer: plan.fillLayer ?? null, softEdge: soft, renderedAt: (/* @__PURE__ */ new Date()).toISOString() },
+        { kind: "comp-room cut-out", comp: args.comp, layer: plan.layer, compSize: plan.compSize, fillLayer: plan.fillLayer ?? null, softEdge: soft, ...span ? { span } : {}, renderedAt: (/* @__PURE__ */ new Date()).toISOString() },
         null,
         1
       )
@@ -54229,7 +54731,15 @@ async function runRenderCutout(args, io) {
     sidecar: sidecarWritten,
     ...fillOff ? { fillWarning: `${fillOffText} Rendered anyway (withoutFill: true).` } : {},
     cacheNote: `This render should have added about ${gb(cacheBytes)} to After Effects' disk cache (one 16-bit frame of the source per frame${matteCopies > 1 ? `, for each of the ${matteCopies === 2 ? "two" : matteCopies} copies of the matte subject.soften_edge built` : ""}). Nothing was deleted and no preference was changed.`,
-    next: (fillOff ? "The gap fill was off, so the file has its gaps open; tell the user before building on it. " : "") + `Check the file before building on it: subject.check_file { path: "${r.outputPath}", outDir }. Then subject.use_cutout puts it in the comp in place of the live matte. Once the file is checked, the cache this work wrote is no longer needed: tell the user to purge it (Edit > Purge > All Memory & Disk Cache in After Effects); it should free about ${gb(cacheBytes)} or more.`
+    next: (fillOff ? "The gap fill was off, so the file has its gaps open; tell the user before building on it. " : "") + `Check the file before building on it: subject.check_file { path: "${r.outputPath}", outDir }. Then subject.use_cutout puts it in the comp in place of the live matte. Once the file is checked, the cache this work wrote is no longer needed: tell the user to purge it (Edit > Purge > All Memory & Disk Cache in After Effects); it should free about ${gb(cacheBytes)} or more.`,
+    wholePiece: SUBJECT_WHOLE_PIECE_NOTE,
+    ...span ? {
+      span: {
+        ...span,
+        reading: span.whole ? "from and to cover the layer's whole span" : `frames ${span.firstFrame} to ${span.lastFrame} (${Math.round(span.start * 1e4) / 1e4} to ${Math.round((span.start + span.duration) * 1e4) / 1e4} s) of the layer's ${plan.span.frames}` + (span.clipped ? "; from/to reached past the layer and were clipped to it" : "")
+      },
+      halves: HALVES_JOIN_NOTE
+    } : {}
   };
 }
 var CHECK_FILE_MAX_FRAMES = 400;
@@ -54299,24 +54809,47 @@ function speckAccepted(p, accept) {
     return cx >= b.x && cx <= b.x + b.width && cy >= b.y && cy <= b.y + b.height;
   });
 }
+function speckColour(t) {
+  const c = t.colourSum;
+  if (!c || c.pixels === 0) return null;
+  const r1 = (v) => Math.round(v * 10) / 10;
+  return { L: r1(c.L / c.pixels), a: r1(c.a / c.pixels), b: r1(c.b / c.pixels), pixels: c.pixels };
+}
+var SPECK_SKIN_A = 20;
+var SPECK_PALE_A = 12;
+function speckColourText(t) {
+  const c = speckColour(t);
+  if (!c) return "";
+  const sign = (v) => v > 0 ? `+${v}` : `${v}`;
+  const reads = c.a <= SPECK_PALE_A ? "near neutral, as a pale grey or white remnant reads (the chair on the first piece read about +7)" : c.a >= SPECK_SKIN_A ? "warm, as skin reads (about +30 on the first piece): it may be the subject" : "between a pale remnant (about +7) and skin (about +30)";
+  return ` Its colour: L* ${c.L}, a* ${sign(c.a)}, b* ${sign(c.b)} (mean over ${c.pixels} px, CIELAB D65 from sRGB), ${reads}.`;
+}
 function longestSpeckRun(t) {
   const touch = (a, b) => a.x <= b.x + b.width && b.x <= a.x + a.width && a.y <= b.y + b.height && b.y <= a.y + a.height;
-  const run2 = /* @__PURE__ */ new Map();
+  const run = /* @__PURE__ */ new Map();
   let best = 0;
   const sorted = t.pieces.slice().sort((a, b) => a.frame - b.frame);
   sorted.forEach((p, i) => {
     let len = 1;
     sorted.forEach((q, j) => {
       if (q.frame === p.frame - 1 && touch(q.box, p.box))
-        len = Math.max(len, (run2.get(j) ?? 1) + 1);
+        len = Math.max(len, (run.get(j) ?? 1) + 1);
     });
-    run2.set(i, len);
+    run.set(i, len);
     best = Math.max(best, len);
   });
   return best;
 }
 var SPECK_JOIN_PX = 40;
 function addSpeck(tracks, frame, p) {
+  const addColour = (t2) => {
+    if (!p.colour) return;
+    const c = t2.colourSum ??= { L: 0, a: 0, b: 0, pixels: 0 };
+    c.L += p.colour.L * p.colour.pixels;
+    c.a += p.colour.a * p.colour.pixels;
+    c.b += p.colour.b * p.colour.pixels;
+    c.pixels += p.colour.pixels;
+  };
   const near = (b) => p.x < b.x + b.width + SPECK_JOIN_PX && b.x < p.x + p.width + SPECK_JOIN_PX && p.y < b.y + b.height + SPECK_JOIN_PX && b.y < p.y + p.height + SPECK_JOIN_PX;
   const t = tracks.find((x) => near(x.box));
   const pb = { x: p.x, y: p.y, width: p.width, height: p.height };
@@ -54329,9 +54862,11 @@ function addSpeck(tracks, frame, p) {
       smallestArea: p.area,
       pieces: [{ frame, box: pb }]
     });
+    addColour(tracks[tracks.length - 1]);
     return;
   }
   t.pieces.push({ frame, box: pb });
+  addColour(t);
   if (!t.frames.includes(frame)) t.frames.push(frame);
   const x0 = Math.min(t.box.x, pb.x);
   const y0 = Math.min(t.box.y, pb.y);
@@ -54357,16 +54892,16 @@ async function runCheckFile(args, io) {
       error: "give exactly one of `path` (the movie) or `item` (a footage item's id)"
     };
   if (file2 !== null) {
-    if (!path9.isAbsolute(file2))
+    if (!path10.isAbsolute(file2))
       return { ok: false, error: "`path` must be an absolute path to the movie" };
-    const there = io.exists ? await io.exists(file2) : await fs9.access(file2).then(
+    const there = io.exists ? await io.exists(file2) : await fs10.access(file2).then(
       () => true,
       () => false
     );
     if (!there) return { ok: false, error: `no file at ${file2}` };
   }
   const outDir = args.outDir;
-  if (typeof outDir !== "string" || !path9.isAbsolute(outDir))
+  if (typeof outDir !== "string" || !path10.isAbsolute(outDir))
     return { ok: false, error: "`outDir` must be an absolute folder for the pictures" };
   const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
   const jumpLimit = typeof args.jumpLimit === "number" ? args.jumpLimit : CHECK_FILE_JUMP_LIMIT;
@@ -54397,7 +54932,7 @@ async function runCheckFile(args, io) {
   let regionSource = regionLine !== null ? "given" : null;
   if (regionLine === null && file2 !== null) {
     try {
-      const side2 = JSON.parse(await fs9.readFile(`${file2}.comp-room.json`, "utf8"));
+      const side2 = JSON.parse(await fs10.readFile(`${file2}.comp-room.json`, "utf8"));
       if (typeof side2?.softEdge?.regionBottom === "number") {
         regionLine = side2.softEdge.regionBottom;
         if (typeof side2.softEdge.regionDepth === "number") regionDepth = side2.softEdge.regionDepth;
@@ -54445,7 +54980,7 @@ async function runCheckFile(args, io) {
     const f = kept.get(frame);
     if (!f || keepCaptures) return;
     kept.delete(frame);
-    await fs9.rm(f, { force: true });
+    await fs10.rm(f, { force: true });
   };
   const outline = outlineTracker(frozenOpts(args));
   let outlineResult = null;
@@ -54478,14 +55013,14 @@ async function runCheckFile(args, io) {
         rendered,
         limit,
         over,
-        path9.join(outDir, "check-file_unused.png"),
+        path10.join(outDir, "check-file_unused.png"),
         pixels,
         false,
         (r, img) => {
           if (!img.alpha) return;
           outline.add(r.frame, img.alpha, img.rgb, img.width, img.height);
           const tSpeck = performance.now();
-          for (const p of speckPieces(img.alpha, img.width, img.height, speckLimits))
+          for (const p of speckPieces(img.alpha, img.width, img.height, speckLimits, img.rgb))
             addSpeck(speckAccepted(p, accept) ? specksAccepted : specks, r.frame, p);
           speckTime.ms += performance.now() - tSpeck;
           speckTime.frames++;
@@ -54531,28 +55066,28 @@ async function runCheckFile(args, io) {
       }
     }
     outlineResult = outline.result();
-    for (const run2 of outlineResult.frozen) {
-      if (frozenAccepted(run2, accept)) {
-        frozenAcceptedRuns.push({ kind: "frozen", ...run2 });
+    for (const run of outlineResult.frozen) {
+      if (frozenAccepted(run, accept)) {
+        frozenAcceptedRuns.push({ kind: "frozen", ...run });
         continue;
       }
-      const ends = [run2.from, run2.to];
+      const ends = [run.from, run.to];
       const again = await renderChunked(
         io,
         { compNameOrId: setup.compId, channels: "rgba" },
         ends,
         perFrameMs,
         outDir,
-        `check-file-frozen-${run2.from}`,
+        `check-file-frozen-${run.from}`,
         renders
       );
       const pics = [];
       for (const e of ends) {
         const r = again.find((x) => x.frame === e);
         pics.push(r?.file ? await overPicture(io, r.file, over) : null);
-        if (r?.file && !keepCaptures) await fs9.rm(r.file, { force: true });
+        if (r?.file && !keepCaptures) await fs10.rm(r.file, { force: true });
       }
-      frozenFindings.push(frozenFinding(run2, pics));
+      frozenFindings.push(frozenFinding(run, pics));
     }
   } finally {
     cleanup = await io.execute(
@@ -54605,11 +55140,11 @@ async function runCheckFile(args, io) {
   const seenFrames = [...seen.keys()].sort((a, b) => a - b);
   let seenRun = 0;
   {
-    let run2 = 0;
+    let run = 0;
     let last = -1;
     for (const f of frames) {
-      run2 = seen.has(f) ? last >= 0 && seen.has(last) ? run2 + 1 : 1 : 0;
-      seenRun = Math.max(seenRun, run2);
+      run = seen.has(f) ? last >= 0 && seen.has(last) ? run + 1 : 1 : 0;
+      seenRun = Math.max(seenRun, run);
       last = f;
     }
   }
@@ -54638,7 +55173,7 @@ async function runCheckFile(args, io) {
     const pic = file3 ? await overPicture(io, file3, over) : null;
     pictureOf2.set(f, pic);
     if (pic)
-      pictureBytes += await fs9.stat(pic).then(
+      pictureBytes += await fs10.stat(pic).then(
         (st) => st.size,
         () => 0
       );
@@ -54673,7 +55208,7 @@ async function runCheckFile(args, io) {
   }
   if (thumbs.length) {
     const sheet = composeContactSheet(thumbs, { labels, thumbWidth: 240 });
-    picture = path9.join(outDir, "check-file_sheet.png");
+    picture = path10.join(outDir, "check-file_sheet.png");
     const png = encodePngSrgb8(sheet.width, sheet.height, sheet.rgb, PICTURE_DEFLATE);
     await writePng(io, picture, png);
     sheetBytes = png.length;
@@ -54700,7 +55235,8 @@ async function runCheckFile(args, io) {
     frames: t.frames.slice().sort((a, b) => a - b),
     longestRun: longestSpeckRun(t),
     largestArea: t.largestArea,
-    box: t.box
+    box: t.box,
+    colour: speckColour(t)
   }));
   const briefText = brief.length ? ` ${plural2(brief.length, "small piece")} apart from the cut-out on single frames, never on ${speckMinRun} or more frames in a row (${brief.map((t) => `frame${t.frames.length > 1 ? "s" : ""} ${frameRanges(t.frames.slice().sort((a, b) => a - b))}, ${t.largestArea} px at (${t.box.x}, ${t.box.y})`).join("; ")}): a flash of a thirtieth of a second that nobody sees, or a wisp of hair, so not a stop; listed in notes.` : "";
   const speckFindings = lasting.map((t) => {
@@ -54714,8 +55250,9 @@ async function runCheckFile(args, io) {
       largestFrame: t.largestFrame,
       smallestArea: t.smallestArea,
       box: b,
+      colour: speckColour(t),
       picture: pictureOf2.get(t.largestFrame) ?? null,
-      reading: `A small opaque piece apart from the cut-out (or joined to it by a neck a pixel or two wide) on ${plural2(frames2.length, "frame")} (${frameRanges(frames2)}): ${t.smallestArea} to ${t.largestArea} px, largest on frame ${t.largestFrame}, within (${b.x}, ${b.y}, ${b.width} \xD7 ${b.height}). Usually a sliver of the background the matte kept (a chair edge beside an arm); look at the picture. Remove it with a mask on the cut-out movie on those frames (keying.md, removing a speck), or, if it belongs to the subject, accept it: accept: [{ kind: 'speck', box }].`
+      reading: `A small opaque piece apart from the cut-out (or joined to it by a neck a pixel or two wide) on ${plural2(frames2.length, "frame")} (${frameRanges(frames2)}): ${t.smallestArea} to ${t.largestArea} px, largest on frame ${t.largestFrame}, within (${b.x}, ${b.y}, ${b.width} \xD7 ${b.height}).` + speckColourText(t) + " Usually a sliver of the background the matte kept (a chair edge beside an arm); look at the picture. Remove it with a mask on the cut-out movie on those frames (keying.md, removing a speck), or, if it belongs to the subject, accept it: accept: [{ kind: 'speck', box }]."
     };
   });
   const seenSummary = seenFrames.length && seenBox ? {
@@ -54878,7 +55415,7 @@ function liveFileIO(transport2) {
       });
       return r.ok ? r.result : { ok: false, error: r.error ?? `${opts.label} failed` };
     },
-    exists: (file2) => fs9.access(file2).then(
+    exists: (file2) => fs10.access(file2).then(
       () => true,
       () => false
     )
@@ -54887,7 +55424,7 @@ function liveFileIO(transport2) {
 registerOp({
   name: "subject.render_cutout",
   category: "subject",
-  description: "Render the cut-out once to a movie with alpha, so the piece is built on a file that cannot change: the layer with its gap fill when there is one, alone (every other layer's picture switched off for the render and put back afterwards, even when it fails; cameras and lights left as they are), over the layer's span, through one temporary render-queue item (other queue items are parked). Picks an output template that writes a movie with alpha ('High Quality with Alpha', 'Lossless with Alpha', or another whose name says alpha; image sequences are not used) and refuses, naming the templates, when none does. Returns outputPath, frameCount, renderSeconds, outputTemplate, templateChoice, layersSwitched, restored, sound and timing. Measured: 390 s for 320 frames of a 2176 x 3840 take, about one pass through the clip; tell the user before it runs. The movie is in comp space. The original layer keeps the sound; whether the movie carries a sound track is not promised. The kept layers render switched as they are: when the gap fill layer exists and is switched off, it refuses before rendering and says so (the file would come out with the gaps open), unless withoutFill: true, and then the result's fillWarning says the gaps are open (not checked live). Before rendering it checks that each drive has room for its share, the movie and After Effects' disk cache (about one 16-bit frame of the source per frame: 19 GB measured for 320 frames of a 2176 x 3840 take), plus 3 GB; `space` and `cacheNote` give the numbers, and `next` says to purge the cache once the file is checked." + RENDER_QUEUE_UNDO_WARNING,
+  description: "Render the cut-out once to a movie with alpha, so the piece is built on a file that cannot change: the layer with its gap fill when there is one, alone (every other layer's picture switched off for the render and put back afterwards, even when it fails; cameras and lights left as they are), over the layer's span, through one temporary render-queue item (other queue items are parked). Picks an output template that writes a movie with alpha ('High Quality with Alpha', 'Lossless with Alpha', or another whose name says alpha; image sequences are not used) and refuses, naming the templates, when none does. Returns outputPath, frameCount, renderSeconds, outputTemplate, templateChoice, layersSwitched, restored, sound and timing. Measured: 390 s for 320 frames of a 2176 x 3840 take, about one pass through the clip; tell the user before it runs. " + SUBJECT_WHOLE_PIECE_NOTE + " With from and to it renders only that span (clipped to the layer) and returns span (frames, times) and halves: " + HALVES_JOIN_NOTE + " It renders the matte the user clicked; it cannot make the click (subject.prepare): get that before an unattended render. The movie is in comp space. The original layer keeps the sound; whether the movie carries a sound track is not promised. The subject layer is switched on for the render even when it is off for display (subject.use_cutout leaves it off), and back afterwards. The other kept layers render switched as they are: when the gap fill layer exists and is switched off, it refuses before rendering and says so (the file would come out with the gaps open), unless withoutFill: true, and then the result's fillWarning says the gaps are open (not checked live). Before rendering it checks that each drive has room for its share, the movie and After Effects' disk cache (about one 16-bit frame of the source per frame: 19 GB measured for 320 frames of a 2176 x 3840 take), plus 3 GB; `space` and `cacheNote` give the numbers, and `next` says to purge the cache once the file is checked." + RENDER_QUEUE_UNDO_WARNING,
   params: [
     ...compLayerParams,
     {
@@ -54913,6 +55450,18 @@ registerOp({
       type: "boolean",
       description: "Render even though the gap fill layer is switched off, leaving its gaps open in the file (default false: refuse).",
       required: false
+    },
+    {
+      name: "from",
+      type: "number",
+      description: "Start of the span to render, comp seconds (default: the layer's in point). Clipped to the layer and snapped to a frame; with `to`, one half of a whole piece.",
+      required: false
+    },
+    {
+      name: "to",
+      type: "number",
+      description: "End of the span (exclusive), comp seconds (default: the layer's out point). Clipped to the layer and snapped to a frame.",
+      required: false
     }
   ],
   toJsx: () => NODE_ONLY("subject.render_cutout"),
@@ -54921,7 +55470,7 @@ registerOp({
 registerOp({
   name: "subject.check_file",
   category: "subject",
-  description: `Check a rendered cut-out movie (from subject.render_cutout) frame by frame: brings it into a throwaway comp, reads frames in batches of at most 32 (every frame up to maxFrames, default ${CHECK_FILE_MAX_FRAMES}; beyond it pairs of neighbouring frames in steps, always the first and last three), and reports holes and openings (as subject.check: holeLimit, accept), the opaque share of every frame, and a 'jump' finding when neighbouring frames differ by more than jumpLimit (default ${CHECK_FILE_JUMP_LIMIT}: on the take of 2026-11-11 the rendered cut-out ran 0.279 to 0.314 with no step over 0.012, and a dropped microphone is about 0.05). A speck is a small opaque piece apart from the cut-out, or joined to it by a neck a pixel or two wide, not touching the frame edge: speckMinArea to speckMaxArea px (default 20 to 2,000, chosen on the 4K fresh-session file, where a sliver of chair 1 to 5 px off the right arm read 20 to 240 px on about 40 frames and nothing else in 320 frames was caught); findings of kind 'speck' give the frames, the longest run of frames in a row, the largest area and frame, the box and a picture; a speck on at least speckMinFrames frames in a row (default 2) stops, since a new render keeps it, and a shorter one (a single-frame flash, a wisp of hair) goes to notes and one sentence of inOut. accept: [{ kind: 'speck', box }] takes one off. Checked through a real subject.check_file run on two files of one take (2026-11-12); the limits come from those two files. timing.speck is the pass's own cost (about 5.5 ms a 1080 x 1920 frame). Seen through: pixels partly see-through (alpha 0.5 to 0.95) more than seenThroughDepth px (default 30) inside the cut-out's body and from the frame's edge, as where two copies of a matte meet in a seam; seenThroughMinArea px or more on a frame (default 400) on at least 2 frames read in a row is a finding of kind 'seen-through' that stops, with the frames, the largest area and frame, the box and a picture; single frames go to notes. Limits chosen on two files of the half-size take, as clicked and with subject.soften_edge (at most 82 and 41 px on every fourth frame), and a band of the soft-edge file's alpha multiplied by 0.75 (about 3,900 px a frame); not checked live: it has not run in After Effects on a file with a real seam. timing.seenThrough is its cost. Region line: for a file from a soft-edge build, \`region\` gives the subject's highest and lowest top across the file against the soft edge's region line (from <movie>.comp-room.json, which subject.render_cutout writes, or \`regionLine\`), and a note, not a stop, names the frames where the top sits lower than the line less 12% of the height, so the lower hair crosses the line and keeps the hard edge. Only true neighbours are compared, and \`compared\` says which. A frame that could not be read is 'not-checked' and stops. Pictures: the largest frame of each finding not accepted and both frames of each jump, full size, and a sheet of up to 24 frames; \`pictures\` counts them and their bytes. Each raw capture is removed once read unless keepCaptures (one run on the take had left 630 MB). The throwaway comp is removed afterwards, and the imported footage too unless keepFootage. \`outline\` says how much the outline changed between neighbouring frames and over frozenGap frames (share of the frame whose alpha changed by more than 0.1, at full size); a run where it did not move is a 'frozen' finding (the selection is probably not tracking, as after replacing the layer's footage; accept: [{ kind: "frozen" }] for a subject that really is still). The frozen limits are not yet calibrated live. Measured: about 0.55 s a frame reading the file. Returns stop, findings, accepted, checked, compared, opaque, outline, inOut, picture, frameReadings, timing.`,
+  description: `Check a rendered cut-out movie (from subject.render_cutout) frame by frame: brings it into a throwaway comp, reads frames in batches of at most 32 (every frame up to maxFrames, default ${CHECK_FILE_MAX_FRAMES}; beyond it pairs of neighbouring frames in steps, always the first and last three), and reports holes and openings (as subject.check: holeLimit, accept), the opaque share of every frame, and a 'jump' finding when neighbouring frames differ by more than jumpLimit (default ${CHECK_FILE_JUMP_LIMIT}: on the take of 2026-11-11 the rendered cut-out ran 0.279 to 0.314 with no step over 0.012, and a dropped microphone is about 0.05). A speck is a small opaque piece apart from the cut-out, or joined to it by a neck a pixel or two wide, not touching the frame edge: speckMinArea to speckMaxArea px (default 20 to 2,000, chosen on the 4K fresh-session file, where a sliver of chair 1 to 5 px off the right arm read 20 to 240 px on about 40 frames and nothing else in 320 frames was caught); findings of kind 'speck' give the frames, the longest run of frames in a row, the largest area and frame, the box, the piece's mean colour (\`colour\`: L*, a*, b*, CIELAB D65 from sRGB, over its opaque pixels on every frame; a pale grey remnant such as the first piece's chair read a* about +7, skin about +30) and a picture; a speck on at least speckMinFrames frames in a row (default 2) stops, since a new render keeps it, and a shorter one (a single-frame flash, a wisp of hair) goes to notes and one sentence of inOut. accept: [{ kind: 'speck', box }] takes one off. Checked through a real subject.check_file run on two files of one take (2026-11-12); the limits come from those two files. timing.speck is the pass's own cost (about 5.5 ms a 1080 x 1920 frame). Seen through: pixels partly see-through (alpha 0.5 to 0.95) more than seenThroughDepth px (default 30) inside the cut-out's body and from the frame's edge, as where two copies of a matte meet in a seam; seenThroughMinArea px or more on a frame (default 400) on at least 2 frames read in a row is a finding of kind 'seen-through' that stops, with the frames, the largest area and frame, the box and a picture; single frames go to notes. Limits chosen on two files of the half-size take, as clicked and with subject.soften_edge (at most 82 and 41 px on every fourth frame), and a band of the soft-edge file's alpha multiplied by 0.75 (about 3,900 px a frame); not checked live: it has not run in After Effects on a file with a real seam. timing.seenThrough is its cost. Region line: for a file from a soft-edge build, \`region\` gives the subject's highest and lowest top across the file against the soft edge's region line (from <movie>.comp-room.json, which subject.render_cutout writes, or \`regionLine\`), and a note, not a stop, names the frames where the top sits lower than the line less 12% of the height, so the lower hair crosses the line and keeps the hard edge. Only true neighbours are compared, and \`compared\` says which. A frame that could not be read is 'not-checked' and stops. Pictures: the largest frame of each finding not accepted and both frames of each jump, full size, and a sheet of up to 24 frames; \`pictures\` counts them and their bytes. Each raw capture is removed once read unless keepCaptures (one run on the take had left 630 MB). The throwaway comp is removed afterwards, and the imported footage too unless keepFootage. \`outline\` says how much the outline changed between neighbouring frames and over frozenGap frames (share of the frame whose alpha changed by more than 0.1, at full size); a run where it did not move is a 'frozen' finding (the selection is probably not tracking, as after replacing the layer's footage; accept: [{ kind: "frozen" }] for a subject that really is still). The frozen limits are not yet calibrated live. Measured: about 0.55 s a frame reading the file. Returns stop, findings, accepted, checked, compared, opaque, outline, inOut, picture, frameReadings, timing.`,
   params: [
     {
       name: "path",
@@ -55226,18 +55775,18 @@ async function runSoftenEdge(args, io) {
       error: "`across` was removed: sampling the whole clip before the render cost more disk cache than the render (12.9 GB estimated against 9.5 GB on the half-size take). subject.check_file reads every frame of the rendered file instead: it stops on see-through inside the cut-out and notes the frames where the hair crosses the region's line. Leave `across` out, or give sampleFrames."
     };
   const outDir = args.outDir;
-  if (typeof outDir !== "string" || !path9.isAbsolute(outDir))
+  if (typeof outDir !== "string" || !path10.isAbsolute(outDir))
     return { ok: false, error: "`outDir` must be an absolute folder for the pictures" };
-  const num = (k, d) => typeof args[k] === "number" && Number.isFinite(args[k]) ? args[k] : d;
+  const num2 = (k, d) => typeof args[k] === "number" && Number.isFinite(args[k]) ? args[k] : d;
   const D = SOFT_EDGE_DEFAULTS;
   const settings = {
-    radius: num("radius", D.radius),
-    smooth: num("smooth", D.smooth),
-    chatterReduction: num("chatterReduction", D.chatterReduction),
+    radius: num2("radius", D.radius),
+    smooth: num2("smooth", D.smooth),
+    chatterReduction: num2("chatterReduction", D.chatterReduction),
     decontaminate: typeof args.decontaminate === "boolean" ? args.decontaminate : D.decontaminate,
-    feather: num("feather", D.feather)
+    feather: num2("feather", D.feather)
   };
-  const outsideLimit = num("outsideLimit", D.outsideLimit);
+  const outsideLimit = num2("outsideLimit", D.outsideLimit);
   const background = Array.isArray(args.background) ? args.background : void 0;
   const st = await io.status();
   if (!st?.ok) return { ok: false, error: st?.error ?? "subject.status failed", status: st };
@@ -55284,7 +55833,7 @@ async function runSoftenEdge(args, io) {
     const r = await io.render({
       compNameOrId: args.comp,
       frames,
-      outPath: path9.join(outDir, `${name}.png`),
+      outPath: path10.join(outDir, `${name}.png`),
       settleTimeoutMs: Math.min(SETTLE_MAX_MS, frames.length * perFrame + 3e4),
       ...extra
     });
@@ -55444,7 +55993,7 @@ async function runSoftenEdge(args, io) {
   const pictures = checkFrames.map((f) => wholeAfter.get(f)?.file).filter((f) => typeof f === "string");
   if (args.keepCaptures !== true)
     await Promise.all(
-      captures.filter((c) => !pictures.includes(c)).map((c) => fs9.rm(c, { force: true }))
+      captures.filter((c) => !pictures.includes(c)).map((c) => fs10.rm(c, { force: true }))
     );
   const region = {
     bottom,
@@ -55621,7 +56170,7 @@ function referenceCompJsx(args) {
 async function runReferenceReport(args, io) {
   const started = performance.now();
   const outPath = args.outPath;
-  if (typeof outPath !== "string" || !path9.isAbsolute(outPath) || !/\.json$/i.test(outPath))
+  if (typeof outPath !== "string" || !path10.isAbsolute(outPath) || !/\.json$/i.test(outPath))
     return { ok: false, error: "`outPath` must be an absolute path for the report (.json)" };
   const sources = ["path", "item", "comp"].filter((k) => args[k] !== void 0 && args[k] !== null);
   if (sources.length !== 1)
@@ -55631,8 +56180,8 @@ async function runReferenceReport(args, io) {
     };
   const regions = Array.isArray(args.regions) ? args.regions : void 0;
   const cap = typeof args.maxFrames === "number" && args.maxFrames >= 1 ? Math.floor(args.maxFrames) : CHECK_FILE_MAX_FRAMES;
-  const outDir = path9.dirname(outPath);
-  await fs9.mkdir(outDir, { recursive: true });
+  const outDir = path10.dirname(outPath);
+  await fs10.mkdir(outDir, { recursive: true });
   const keepCaptures = args.keepCaptures === true;
   const perFrameMs = Math.max(
     1,
@@ -55650,11 +56199,11 @@ async function runReferenceReport(args, io) {
   let report;
   const renders = renderTally();
   const p = typeof args.path === "string" ? args.path : null;
-  if (p !== null && !path9.isAbsolute(p)) return { ok: false, error: "`path` must be absolute" };
-  const stat = p !== null ? await fs9.stat(p).catch(() => null) : null;
+  if (p !== null && !path10.isAbsolute(p)) return { ok: false, error: "`path` must be absolute" };
+  const stat = p !== null ? await fs10.stat(p).catch(() => null) : null;
   if (p !== null && !MOVIE_EXT.test(p)) {
     if (!stat) return { ok: false, error: `nothing at ${p}` };
-    const files = stat.isDirectory() ? (await fs9.readdir(p)).filter((f) => /\.png$/i.test(f)).sort(naturalOrder).map((f) => path9.join(p, f)) : [p];
+    const files = stat.isDirectory() ? (await fs10.readdir(p)).filter((f) => /\.png$/i.test(f)).sort(naturalOrder).map((f) => path10.join(p, f)) : [p];
     if (!files.length) return { ok: false, error: `no PNG frames in ${p}` };
     if (!files.every((f) => /\.png$/i.test(f)))
       return { ok: false, error: "a still must be a PNG (render other formats to PNG first)" };
@@ -55662,7 +56211,7 @@ async function runReferenceReport(args, io) {
     const frameRate = typeof args.frameRate === "number" ? args.frameRate : void 0;
     const given = typeof args.frameStep === "number" && args.frameStep >= 1 ? Math.round(args.frameStep) : null;
     const nums = files.map((f) => {
-      const m = /(\d+)(?!.*\d)/.exec(path9.basename(f, path9.extname(f)));
+      const m = /(\d+)(?!.*\d)/.exec(path10.basename(f, path10.extname(f)));
       return m ? Number(m[1]) : null;
     });
     const named = nums.every((n) => n !== null) && nums.every((n, i) => i === 0 || n > nums[i - 1]);
@@ -55724,7 +56273,7 @@ async function runReferenceReport(args, io) {
         for (const r of got) {
           if (!r.ok || !r.file) return { ok: false, error: `frame ${r.frame} did not render: ${r.error ?? "no file"}` };
           reader.add({ img: await io.readImage(r.file), frame: r.frame, time: r.frame / setup.frameRate });
-          if (!keepCaptures) await fs9.rm(r.file, { force: true });
+          if (!keepCaptures) await fs10.rm(r.file, { force: true });
         }
       }
       report = reader.finish();
@@ -55737,11 +56286,11 @@ async function runReferenceReport(args, io) {
     }
     source = fromComp ? { kind: "comp", name: setup.name, frames: setup.frames, frameRate: setup.frameRate } : { kind: p !== null ? "movie" : "item", path: p, item: setup.itemName, frames: setup.frames, frameRate: setup.frameRate, cleanup };
   }
-  await fs9.writeFile(outPath, JSON.stringify(report));
+  await fs10.writeFile(outPath, JSON.stringify(report));
   let compare;
   if (typeof args.against === "string") {
     try {
-      compare = compareReferences(JSON.parse(await fs9.readFile(args.against, "utf8")), report);
+      compare = compareReferences(JSON.parse(await fs10.readFile(args.against, "utf8")), report);
     } catch (e) {
       compare = { error: `could not compare with ${args.against}: ${e instanceof Error ? e.message : String(e)}` };
     }
@@ -55765,8 +56314,8 @@ async function runReferenceReport(args, io) {
 async function runReferenceCompare(args) {
   const read = async (k) => {
     const v = args[k];
-    if (typeof v !== "string" || !path9.isAbsolute(v)) throw new Error(`\`${k}\` must be the absolute path of a saved report`);
-    return JSON.parse(await fs9.readFile(v, "utf8"));
+    if (typeof v !== "string" || !path10.isAbsolute(v)) throw new Error(`\`${k}\` must be the absolute path of a saved report`);
+    return JSON.parse(await fs10.readFile(v, "utf8"));
   };
   try {
     const ref = await read("reference");
@@ -57174,7 +57723,7 @@ registerOp({
 // src/operations/inspect.ts
 init_config();
 init_registry();
-import * as path10 from "node:path";
+import * as path11 from "node:path";
 registerOp({
   name: "comp.info",
   category: "comp",
@@ -57250,7 +57799,7 @@ registerOp({
   readOnly: true,
   toJsx(args) {
     const raw = String(args.outPath);
-    if (!path10.isAbsolute(raw)) {
+    if (!path11.isAbsolute(raw)) {
       return `
             return { ok: false, error: ${jsxVal(`outPath must be absolute, got: ${raw}`)} };
         `;
@@ -57261,7 +57810,7 @@ registerOp({
             return { ok: false, error: ${jsxVal(rejection)} };
         `;
     }
-    const abs = path10.resolve(raw).replace(/\\/g, "/");
+    const abs = path11.resolve(raw).replace(/\\/g, "/");
     return `
             ${RENDER_FRAME_FN}
             ${jsxCompPreamble(args)}
@@ -59642,8 +60191,8 @@ registerOp({
 });
 
 // src/operations/sample.ts
-import { promises as fs10 } from "node:fs";
-import * as path11 from "node:path";
+import { promises as fs11 } from "node:fs";
+import * as path12 from "node:path";
 init_registry();
 var DEFAULT_PROPERTIES = [
   ["Transform", "Anchor Point"],
@@ -59786,8 +60335,8 @@ function curveReadJsx(args) {
 async function runCurve(args, io) {
   const p = propertyPath(args.property);
   if (!p) return { ok: false, error: "`property` must be a transform property's name or a path of names" };
-  const num = (k) => typeof args[k] === "number" ? args[k] : void 0;
-  const r = await io.execute(curveReadJsx({ comp: args.comp, layer: args.layer, path: p, start: num("start"), end: num("end") }), {
+  const num2 = (k) => typeof args[k] === "number" ? args[k] : void 0;
+  const r = await io.execute(curveReadJsx({ comp: args.comp, layer: args.layer, path: p, start: num2("start"), end: num2("end") }), {
     label: "motion.curve read",
     timeoutMs: 12e4
   });
@@ -59802,10 +60351,10 @@ async function runCurve(args, io) {
   const report = analyzeCurve(samples, r.fps);
   let graph = null;
   if (typeof args.outPath === "string") {
-    if (!path11.isAbsolute(args.outPath)) return { ok: false, error: "`outPath` must be absolute (.png)" };
+    if (!path12.isAbsolute(args.outPath)) return { ok: false, error: "`outPath` must be absolute (.png)" };
     const g = curveGraph(report, { width: 480, height: 160 });
-    await fs10.mkdir(path11.dirname(args.outPath), { recursive: true });
-    await fs10.writeFile(args.outPath, encodePngSrgb8(g.width, g.height, g.rgb));
+    await fs11.mkdir(path12.dirname(args.outPath), { recursive: true });
+    await fs11.writeFile(args.outPath, encodePngSrgb8(g.width, g.height, g.rgb));
     graph = args.outPath;
   }
   return {
@@ -59877,12 +60426,12 @@ async function runSoundMarkers(args, io) {
   let source;
   if (hasTiming) {
     const f = args.timing;
-    if (!path11.isAbsolute(f)) return { ok: false, error: "`timing` must be an absolute path" };
+    if (!path12.isAbsolute(f)) return { ok: false, error: "`timing` must be an absolute path" };
     const r = await io.execute(fpsJsx({ comp: args.comp }), { label: "sound.markers fps", timeoutMs: 3e4 });
     if (!r?.ok) return { ok: false, error: r?.error ?? "could not read the comp" };
     fps = r.fps;
     try {
-      found = parseTiming(await fs10.readFile(f, "utf8"), fps).map((m) => ({ ...m, frame: Math.round(m.time * fps) }));
+      found = parseTiming(await fs11.readFile(f, "utf8"), fps).map((m) => ({ ...m, frame: Math.round(m.time * fps) }));
     } catch (e) {
       return { ok: false, error: e instanceof Error ? e.message : String(e) };
     }
@@ -60022,8 +60571,8 @@ registerOp({
 
 // src/operations/instance.ts
 import { spawn } from "node:child_process";
-import { promises as fs11 } from "node:fs";
-import * as path12 from "node:path";
+import { promises as fs12 } from "node:fs";
+import * as path13 from "node:path";
 init_config();
 init_registry();
 var INSTALL_CMD = "npx @kumoproductions/mcp-aftereffects install-agent";
@@ -60037,7 +60586,7 @@ function nodeOnly(name) {
 function fail(error62, extra = {}) {
   return { ok: false, error: error62, ...extra };
 }
-var sleep3 = (ms) => new Promise((resolve12) => setTimeout(resolve12, ms));
+var sleep3 = (ms) => new Promise((resolve13) => setTimeout(resolve13, ms));
 function summarizeInstance(i) {
   return {
     label: instanceLabel(i),
@@ -60132,10 +60681,10 @@ registerOp({
     let copiedFrom = null;
     let copyTo = null;
     if (typeof args.copyFrom === "string" && args.copyFrom) {
-      const src = path12.resolve(args.copyFrom);
+      const src = path13.resolve(args.copyFrom);
       if (!await exists(src)) return fail(`copyFrom not found: ${src}`, { errorCode: "IO" });
-      const ext = path12.extname(src) || ".aep";
-      copyTo = typeof args.copyTo === "string" && args.copyTo ? path12.resolve(args.copyTo) : path12.join(path12.dirname(src), `${path12.basename(src, ext)}__${name}${ext}`);
+      const ext = path13.extname(src) || ".aep";
+      copyTo = typeof args.copyTo === "string" && args.copyTo ? path13.resolve(args.copyTo) : path13.join(path13.dirname(src), `${path13.basename(src, ext)}__${name}${ext}`);
       if (copyTo === src)
         return fail("copyTo must differ from copyFrom", { errorCode: "INVALID_ARGS" });
       const rejected = rejectedOutputPath(copyTo);
@@ -60143,7 +60692,7 @@ registerOp({
       copiedFrom = src;
       projectToOpen = copyTo;
     } else if (typeof args.project === "string" && args.project) {
-      projectToOpen = path12.resolve(args.project);
+      projectToOpen = path13.resolve(args.project);
       if (!await exists(projectToOpen))
         return fail(`project not found: ${projectToOpen}`, { errorCode: "IO" });
     }
@@ -60170,24 +60719,24 @@ registerOp({
       return fail(err instanceof Error ? err.message : String(err), { errorCode: "AE_NOT_FOUND" });
     }
     if (copiedFrom !== null && copyTo !== null) {
-      await fs11.mkdir(path12.dirname(copyTo), { recursive: true });
-      await fs11.copyFile(copiedFrom, copyTo);
+      await fs12.mkdir(path13.dirname(copyTo), { recursive: true });
+      await fs12.copyFile(copiedFrom, copyTo);
     }
     const plan = buildInstanceLaunchPlan(exe, name);
     const aePid = process.platform === "darwin" ? null : void 0;
     const launchedAt = Date.now();
     let spawnError = null;
-    const child = spawn(plan.command, plan.args, {
+    const child2 = spawn(plan.command, plan.args, {
       env: { ...process.env, AE_MCP_INSTANCE: name },
       detached: true,
       stdio: "ignore",
       // A worker instance is a real After Effects the user may want to watch.
       windowsHide: false
     });
-    child.on("error", (err) => {
+    child2.on("error", (err) => {
       spawnError = err;
     });
-    child.unref();
+    child2.unref();
     const timeoutMs = typeof args.timeoutMs === "number" && args.timeoutMs > 0 ? args.timeoutMs : DEFAULT_START_TIMEOUT_MS;
     const deadline = launchedAt + timeoutMs;
     let registered = null;
@@ -60206,7 +60755,7 @@ registerOp({
     }
     if (registered === null) {
       const dialogs = (await scanAeDialogs()).filter(
-        (d) => d.pid === child.pid || (d.startedAt ?? 0) >= launchedAt - 2e3
+        (d) => d.pid === child2.pid || (d.startedAt ?? 0) >= launchedAt - 2e3
       );
       if (dialogs.length > 0) {
         return {
@@ -60218,7 +60767,7 @@ registerOp({
         };
       }
       return fail(
-        `instance '${name}' did not register within ${timeoutMs} ms (After Effects was launched${aePid === null ? "" : `, pid ${child.pid ?? "?"}`})`,
+        `instance '${name}' did not register within ${timeoutMs} ms (After Effects was launched${aePid === null ? "" : `, pid ${child2.pid ?? "?"}`})`,
         {
           errorCode: "NO_INSTANCE",
           hint: "Is the agent installed for THIS After Effects version (`mcp-aftereffects agent-status`)? Did After Effects stop at a dialog while starting? After a force-killed or crashed session, every launch waits at the 'We detected a crash' Safe Mode dialog until someone dismisses it on screen. Raise timeoutMs for a slow machine. The launched process is still running; quit it from its window rather than killing it."
@@ -60252,7 +60801,7 @@ registerOp({
     return {
       ok: true,
       instance: name,
-      pid: aePid === null ? null : child.pid ?? null,
+      pid: aePid === null ? null : child2.pid ?? null,
       startupMs: Date.now() - launchedAt,
       project: opened,
       // Forward slashes, like every other path this server reports.
@@ -60353,7 +60902,7 @@ registerOp({
         `instance '${name}' accepted the quit but is still ticking after ${timeoutMs} ms \u2014 check it for a dialog`
       );
     }
-    await fs11.rm(dir, { recursive: true, force: true }).catch(() => {
+    await fs12.rm(dir, { recursive: true, force: true }).catch(() => {
     });
     return { ok: true, instance: name, stopped: true, saved: !!args.save, file: file2 };
   }
@@ -60427,7 +60976,7 @@ registerOp({
 });
 async function exists(p) {
   try {
-    await fs11.access(p);
+    await fs12.access(p);
     return true;
   } catch {
     return false;
@@ -60520,10 +61069,10 @@ var catalogTool = defineTool({
 });
 
 // src/tools/check-comp.ts
-import { randomUUID as randomUUID3 } from "node:crypto";
-import { promises as fs12 } from "node:fs";
+import { randomUUID as randomUUID4 } from "node:crypto";
+import { promises as fs13 } from "node:fs";
 import * as os4 from "node:os";
-import * as path14 from "node:path";
+import * as path15 from "node:path";
 
 // src/color/watch.ts
 var WATCH_DEFAULTS = {
@@ -60913,13 +61462,13 @@ var PieceWatcher = class {
     const out = [];
     const first = this.frames[0]?.frame;
     const last = this.frames[this.frames.length - 1]?.frame;
-    let run2 = [];
+    let run = [];
     const close = () => {
-      if (run2.length === 0) return;
-      const from = run2[0].frame;
-      const to = run2[run2.length - 1].frame;
-      let worst = run2[0];
-      for (const f of run2) if (score(f.m) > score(worst.m)) worst = f;
+      if (run.length === 0) return;
+      const from = run[0].frame;
+      const to = run[run.length - 1].frame;
+      let worst = run[0];
+      for (const f of run) if (score(f.m) > score(worst.m)) worst = f;
       const frames = to - from + 1;
       const s = {
         kind,
@@ -60939,7 +61488,7 @@ var PieceWatcher = class {
       } else {
         const c = kind === "clipped-high" ? m.clipHigh : m.clipLow;
         let box2 = null;
-        for (const f of run2) {
+        for (const f of run) {
           const b = (kind === "clipped-high" ? f.m.clipHigh : f.m.clipLow).box;
           if (b === null) continue;
           if (box2 === null) box2 = { ...b };
@@ -60963,13 +61512,13 @@ var PieceWatcher = class {
         s.reading = `${kind} from ${when}: at worst (frame ${worst.frame}) ${fmt3(c.all * 100)}% of pixels at ${code} in all three channels (per channel r ${fmt3(c.r * 100)}%, g ${fmt3(c.g * 100)}%, b ${fmt3(c.b * 100)}%)` + (s.box ? `, inside x ${s.box.x}..${s.box.x + s.box.width}, y ${s.box.y}..${s.box.y + s.box.height} (comp pixels)` : "");
       }
       out.push(s);
-      run2 = [];
+      run = [];
     };
     for (const f of this.frames) {
-      const prev = run2[run2.length - 1];
+      const prev = run[run.length - 1];
       if (prev !== void 0 && f.frame !== prev.frame + every) close();
       if (score(f.m) === null) close();
-      else run2.push(f);
+      else run.push(f);
     }
     close();
     return out;
@@ -61314,46 +61863,67 @@ function structureJsx(compNameOrId, o) {
 }
 
 // src/tools/check-comp.ts
-var frameFile = (dir, frame) => path14.join(dir, `frame-${frame}.png`).replace(/\\/g, "/");
+var CAPTURE_STALL_MS = 6e4;
+function frameOfCapture(file2) {
+  const m = /frame-(\d+)\.png$/.exec(file2);
+  return m ? Number(m[1]) : null;
+}
+var frameFile = (dir, frame) => path15.join(dir, `frame-${frame}.png`).replace(/\\/g, "/");
 function aeFrameSource(transport2, comp, opts) {
+  const stallMs = opts.stallMs ?? CAPTURE_STALL_MS;
+  const drain = async (paths, before) => {
+    if (paths.length === 0) return { settled: /* @__PURE__ */ new Set(), outstanding: [], unsettled: [] };
+    const settle2 = await waitForSettled(paths, {
+      timeoutMs: opts.settleTimeoutMs ?? settleTimeoutFor(paths.length, opts.pixels),
+      before,
+      stallMs
+    });
+    return {
+      settled: new Set(settle2.settled.map((i) => paths[i])),
+      outstanding: settle2.unsettled.map((u) => u.path),
+      unsettled: settle2.unsettled
+    };
+  };
   return {
     async capture(frames, dir) {
       const t0 = performance.now();
       const paths = frames.map((k) => frameFile(dir, k));
-      await fs12.mkdir(dir, { recursive: true });
+      await fs13.mkdir(dir, { recursive: true });
       const before = await stampFiles(paths);
       const result = await transport2.execute({
         code: captureJsx(comp, frames, paths, opts.factor, opts.tryOcio),
         label: "check_comp_capture",
         timeoutMs: 6e4 + frames.length * 5e3
       });
-      if (!result.ok) return { error: result.error ?? "capture call failed", details: result };
+      if (!result.ok) {
+        const error62 = result.error ?? "capture call failed";
+        if (/never picked up/i.test(error62)) return { error: error62, details: result, outstanding: [] };
+        const d2 = await drain(paths, before);
+        return { error: error62, details: result, outstanding: d2.outstanding };
+      }
       const payload = result.result;
+      const rendered = payload?.frames ?? [];
+      const ok = rendered.filter((f) => f.ok && typeof f.writtenTo === "string");
+      const okPaths = ok.map((f) => f.writtenTo);
+      const okBefore = ok.map((f) => before[frames.indexOf(f.frame)]);
       if (!payload || payload.ok !== true) {
+        const d2 = await drain(okPaths, okBefore);
         return {
           error: payload?.error ?? "capture reported no result",
-          details: { resolution: payload?.resolution }
+          details: { resolution: payload?.resolution },
+          outstanding: d2.outstanding
         };
       }
-      const rendered = payload.frames ?? [];
-      const ok = rendered.filter((f) => f.ok && typeof f.writtenTo === "string");
-      const settle2 = await waitForSettled(
-        ok.map((f) => f.writtenTo),
-        {
-          timeoutMs: opts.settleTimeoutMs ?? settleTimeoutFor(ok.length, opts.pixels),
-          before: ok.map((f) => before[frames.indexOf(f.frame)])
-        }
-      );
-      const settled = new Set(settle2.settled.map((i) => ok[i].frame));
+      const d = await drain(okPaths, okBefore);
       const out = frames.map((frame) => {
         const r = rendered.find((f) => f.frame === frame);
         if (!r) return { frame, error: "not captured" };
         if (!r.ok) return { frame, error: r.error ?? "capture failed" };
-        if (!settled.has(frame)) {
-          const u = settle2.unsettled.find((x) => ok[x.index]?.frame === frame);
+        if (!d.settled.has(r.writtenTo)) {
+          const u = d.unsettled.find((x) => x.path === r.writtenTo);
           return {
             frame,
-            error: `the capture did not finish writing within ${(settle2.timeoutMs / 1e3).toFixed(1)} s (${u?.state ?? "missing"})`
+            error: `the capture had not finished writing when the wait ended (no capture finished for ${(stallMs / 1e3).toFixed(0)} s; ${u?.state ?? "missing"}): After Effects may still write it`
           };
         }
         return { frame, path: r.writtenTo };
@@ -61368,13 +61938,14 @@ function aeFrameSource(transport2, comp, opts) {
           bgColor: payload.bgColor ?? null,
           resolution: payload.resolution
         },
-        seconds: (performance.now() - t0) / 1e3
+        seconds: (performance.now() - t0) / 1e3,
+        outstanding: d.outstanding
       };
     }
   };
 }
 async function readPicture(file2, target, convert) {
-  const img = decodePng(await fs12.readFile(file2));
+  const img = decodePng(await fs13.readFile(file2));
   if (convert) convert(img.rgb);
   let rgb = img.rgb;
   let width = img.width;
@@ -61434,7 +62005,7 @@ var CHECK_COMP_SHAPE = {
   ),
   maxFrames: external_exports.number().int().min(1).max(2e3).optional().describe("Frames checked per call at most (default 300); the rest is left for `next`."),
   chunkFrames: external_exports.number().int().min(1).max(300).optional().describe(
-    "Frames per After Effects script (default 100). A script returns as soon as it has asked for the frames; the files arrive over the following seconds and the wait for them grows with the count."
+    "Frames per After Effects script (default 100). A script returns as soon as it has asked for the frames; the files arrive over the following seconds. The next chunk is asked for only once every capture of this one has finished, so After Effects never holds more than one chunk in its queue."
   ),
   thresholds: thresholdsSchema,
   safeArea: external_exports.object({
@@ -61447,7 +62018,12 @@ var CHECK_COMP_SHAPE = {
   boundsStep: external_exports.number().positive().optional().describe("Bounds are sampled at every keyframe time and every boundsStep seconds (default 0.1)."),
   structure: external_exports.boolean().optional().describe("Run the structure checks on the call that reaches the end of the range (default true)."),
   colorManaged: external_exports.enum(["auto", "off"]).optional().describe("'auto' (default) measures the picture after colour conversion, as ae_render_frame; 'off' the raw capture."),
-  settleTimeoutMs: external_exports.number().int().positive().optional().describe("How long to wait for each chunk's captures to finish writing (default: grows with the chunk)."),
+  settleTimeoutMs: external_exports.number().int().positive().optional().describe(
+    "How long to wait for the first captures of each chunk (default: grows with the chunk). The wait then goes on for as long as captures keep finishing, so a long or heavy comp is not cut off by it."
+  ),
+  stallTimeoutMs: external_exports.number().int().positive().optional().describe(
+    `After Effects is taken to have stopped writing when no capture has finished for this long (default ${CAPTURE_STALL_MS / 1e3} s). The check then queues nothing more, keeps the capture folder (After Effects may still write into it) and says how many captures were outstanding and where to continue.`
+  ),
   outDir: external_exports.string().optional().describe("Folder for the contact sheet and its frames (default: a new folder under the system temp folder)."),
   sheet: external_exports.union([
     external_exports.boolean(),
@@ -61460,7 +62036,7 @@ var CHECK_COMP_SHAPE = {
 var checkCompTool = defineTool({
   name: "ae_check_comp",
   title: "Check comp",
-  description: "Check a whole comp the way a viewer would watch it, in one call: walks the work area (or `from`..`to`), renders every frame (or every `every`th) at a reduced size, measures each in Node and lists what stands out. Flagged moments (`flags`, sorted by time): a one-frame pop or flash, a cut or jump, a stutter (a frame repeated while the frames around move) and a repeat at the edge of the range \u2014 the `diff` flags of ae_render_frame over the whole piece. Stretches: frozen (no visible change for at least frozenSeconds; a held title is legitimate, the report states the fact), near-black and near-white frames, and clipping (pixels at 255 in all three channels, with the box where they sit; per-channel shares alongside). Structure, read from the project on the call that reaches the end of the range: text layers whose bounds leave the frame (or `safeArea`) while visible \u2014 layer, time range, edge, by how many pixels, partly or wholly outside \u2014 missing fonts and footage, and expressions in error (in nested comps too). One contact sheet tiles the flagged moments, labelled with time and kind; the frames on it are kept beside it, every other capture is deleted as soon as it is measured. A clean comp returns empty lists and no sheet. Bounded: at most `maxFrames` frames a call (default 300); when the range is not finished the result says where to continue (`next.startFrame`): call again with the same arguments plus that startFrame. Numbers are display values of the picture the viewer sees (stage 'output', after colour conversion, as ae_render_frame writes the file), with the thresholds used; it never says pass or fail. Times are seconds from the comp's start (frame \xD7 frame duration), ignoring the display start time.",
+  description: "Check a whole comp the way a viewer would watch it, in one call: walks the work area (or `from`..`to`), renders every frame (or every `every`th) at a reduced size, measures each in Node and lists what stands out. Flagged moments (`flags`, sorted by time): a one-frame pop or flash, a cut or jump, a stutter (a frame repeated while the frames around move) and a repeat at the edge of the range \u2014 the `diff` flags of ae_render_frame over the whole piece. Stretches: frozen (no visible change for at least frozenSeconds; a held title is legitimate, the report states the fact), near-black and near-white frames, and clipping (pixels at 255 in all three channels, with the box where they sit; per-channel shares alongside). Structure, read from the project on the call that reaches the end of the range: text layers whose bounds leave the frame (or `safeArea`) while visible \u2014 layer, time range, edge, by how many pixels, partly or wholly outside \u2014 missing fonts and footage, and expressions in error (in nested comps too). One contact sheet tiles the flagged moments, labelled with time and kind; the frames on it are kept beside it, every other capture is deleted as soon as it is measured. A clean comp returns empty lists and no sheet. Bounded: at most `maxFrames` frames a call (default 300); when the range is not finished the result says where to continue (`next.startFrame`): call again with the same arguments plus that startFrame. Captures are asked of After Effects a chunk at a time, the next chunk only once every capture of the last has finished writing, and the wait follows After Effects' pace (it goes on while captures keep arriving), so a long comp is not cut off part way. The check never returns with its captures still queued unless After Effects stopped writing (none finished for `stallTimeoutMs`): it then asks for nothing more, keeps the capture folder instead of deleting it, and says so in `captureQueue`; `coverage` says how many of the call's frames were measured. Numbers are display values of the picture the viewer sees (stage 'output', after colour conversion, as ae_render_frame writes the file), with the thresholds used; it never says pass or fail. Times are seconds from the comp's start (frame \xD7 frame duration), ignoring the display start time.",
   group: "render",
   // Like ae_render_frame: survives read-only mode (it renders and reads, and
   // the check is the point of a review session). Not a never-touches-the-
@@ -61541,14 +62117,14 @@ async function checkComp(args, transport2) {
     time: r64((ownedTo + every) * fd),
     framesLeft: remaining
   } : null;
-  const outDir = path14.resolve(
-    args.outDir ?? path14.join(
+  const outDir = path15.resolve(
+    args.outDir ?? path15.join(
       os4.tmpdir(),
       "comp-room-check",
       `${String(plan.compName).replace(/[^A-Za-z0-9_-]+/g, "-").slice(0, 40)}-${Date.now()}`
     )
   ).replace(/\\/g, "/");
-  const capDir = path14.join(outDir, `captures-${randomUUID3().slice(0, 8)}`).replace(/\\/g, "/");
+  const capDir = path15.join(outDir, `captures-${randomUUID4().slice(0, 8)}`).replace(/\\/g, "/");
   const readOnly = readOnlyMode();
   const target = {
     width: Math.max(1, Math.round(plan.width / downsample)),
@@ -61558,6 +62134,7 @@ async function checkComp(args, transport2) {
     factor: readOnly ? null : downsample,
     tryOcio: args.colorManaged !== "off" && !readOnly,
     settleTimeoutMs: args.settleTimeoutMs,
+    stallMs: args.stallTimeoutMs,
     pixels: target.width * target.height
   });
   const report = {
@@ -61607,12 +62184,19 @@ async function checkComp(args, transport2) {
   let measured = null;
   const failures = [];
   let captureError = null;
+  let stalled = null;
+  const outstanding = [];
+  const stallMs = args.stallTimeoutMs ?? CAPTURE_STALL_MS;
   let measuredFrames = 0;
-  for (let c = 0; c < frames.length && captureError === null; c += chunkFrames) {
+  let measuredOwned = 0;
+  let chunksAsked = 0;
+  for (let c = 0; c < frames.length; c += chunkFrames) {
     const chunk2 = frames.slice(c, c + chunkFrames);
+    chunksAsked++;
     const res = await source.capture(chunk2, capDir);
     if ("error" in res) {
       captureError = { error: res.error, atFrame: chunk2[0], details: res.details };
+      outstanding.push(...res.outstanding);
       break;
     }
     captureSeconds += res.seconds;
@@ -61647,19 +62231,26 @@ async function checkComp(args, transport2) {
         });
         watcher.add({ frame: f.frame, pic: pic.pic, width: pic.width, height: pic.height });
         measuredFrames++;
+        if (f.frame >= ownedFrom && f.frame <= ownedTo) measuredOwned++;
       } catch (err) {
         failures.push({ frame: f.frame, error: `could not read the capture: ${err instanceof Error ? err.message : String(err)}` });
       }
       readSeconds += (performance.now() - r0) / 1e3;
-      await fs12.rm(f.path, { force: true });
+      await fs13.rm(f.path, { force: true });
+    }
+    if (res.outstanding.length > 0) {
+      outstanding.push(...res.outstanding);
+      stalled = { atFrame: Math.min(...res.outstanding.map(frameOfCapture).filter((k) => k !== null)) };
+      break;
     }
   }
-  await fs12.rm(capDir, { recursive: true, force: true });
+  if (outstanding.length === 0) await fs13.rm(capDir, { recursive: true, force: true });
   const findings = watcher ? watcher.finish() : null;
   const measureSeconds = watcher ? watcher.measureMs / 1e3 : 0;
   let nextOut = next;
-  if (captureError !== null && captureError.atFrame <= ownedTo) {
-    const at = Math.max(captureError.atFrame, ownedFrom);
+  const stopAt = captureError?.atFrame ?? stalled?.atFrame ?? null;
+  if (stopAt !== null && Number.isFinite(stopAt) && stopAt <= ownedTo) {
+    const at = Math.max(stopAt, ownedFrom);
     nextOut = { startFrame: at, time: r64(at * fd), framesLeft: all.length - all.indexOf(at) };
   }
   report.checked = {
@@ -61686,6 +62277,11 @@ async function checkComp(args, transport2) {
     ...color.colorPipeline ? { colorPipeline: color.colorPipeline } : {},
     ...color.colorWarning ? { colorWarning: color.colorWarning } : {}
   };
+  if (stalled !== null) {
+    notes.push(
+      `After Effects stopped writing captures: ${outstanding.length} had not finished when no capture had finished for ${r3(stallMs / 1e3)} s, so nothing more was asked of it. What was measured is reported; call again with startFrame ${(nextOut ?? { startFrame: stalled.atFrame }).startFrame} to continue (look at After Effects first: a dialog, a full disk or its cache)`
+    );
+  }
   if (captureError !== null) {
     report.captureError = captureError;
     notes.push(
@@ -61728,7 +62324,12 @@ async function checkComp(args, transport2) {
   }
   let sheetSeconds = 0;
   report.sheet = null;
-  if (args.sheet !== false && findings !== null) {
+  if (args.sheet !== false && findings !== null && outstanding.length > 0) {
+    report.sheet = {
+      writtenTo: null,
+      skipped: "no sheet: captures of the check were still outstanding in After Effects, and none is queued behind them"
+    };
+  } else if (args.sheet !== false && findings !== null) {
     const s0 = performance.now();
     const sheetOpts = typeof args.sheet === "object" ? args.sheet : {};
     const sheet = await makeSheet(
@@ -61746,10 +62347,27 @@ async function checkComp(args, transport2) {
       `${ownedFrom}-${ownedTo}`
     );
     sheetSeconds = (performance.now() - s0) / 1e3;
-    report.sheet = sheet;
+    report.sheet = sheet.sheet;
+    outstanding.push(...sheet.outstanding);
   }
-  await fs12.rmdir(outDir).catch(() => {
+  if (outstanding.length === 0) await fs13.rmdir(outDir).catch(() => {
   });
+  report.captureQueue = outstanding.length === 0 ? {
+    outstanding: 0,
+    reading: "every capture asked of After Effects had finished writing before the check returned: nothing of the check is left in its queue"
+  } : {
+    outstanding: outstanding.length,
+    folder: outstanding.some((p) => p.startsWith(capDir + "/")) ? capDir : outDir,
+    frames: outstanding.map(frameOfCapture).filter((k) => k !== null).slice(0, LIST_CAP),
+    reading: `${outstanding.length} capture${outstanding.length > 1 ? "s" : ""} asked of After Effects had not finished when the check returned (none had finished for ${r3(stallMs / 1e3)} s); After Effects has no way to cancel them, so it may still write them. Their folder was kept, not deleted (deleting it while After Effects writes raises an error box there). Delete it once After Effects is idle.`
+  };
+  const coverageComplete = nextOut === next && failures.length === 0 && outstanding.length === 0;
+  report.coverage = {
+    framesAsked: owned.length,
+    framesMeasured: measuredOwned,
+    complete: coverageComplete && measuredOwned === owned.length,
+    reading: coverageComplete && measuredOwned === owned.length ? `all ${owned.length} frames of this call were measured` : `${measuredOwned} of the ${owned.length} frames of this call were measured` + (stalled !== null ? "; the pass stopped because After Effects stopped writing captures" : captureError !== null ? "; the pass stopped on a failed capture" : "") + (failures.length > 0 ? `; ${failures.length} could not be captured or read` : "") + ". The findings cover the measured frames only."
+  };
   const total = (performance.now() - started) / 1e3;
   report.timings = {
     captureSeconds: r3(captureSeconds),
@@ -61759,6 +62377,7 @@ async function checkComp(args, transport2) {
     sheetSeconds: r3(sheetSeconds),
     totalSeconds: r3(total),
     framesCaptured: measuredFrames,
+    chunks: chunksAsked,
     framesPerSecond: total > 0 ? r3(measuredFrames / total) : null,
     msPerFrame: measuredFrames > 0 ? { capture: r3(captureSeconds * 1e3 / measuredFrames), read: r3((readSeconds - measureSeconds) * 1e3 / measuredFrames), measure: r3(measureSeconds * 1e3 / measuredFrames) } : null
   };
@@ -61868,14 +62487,15 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
       `off-${o.edge}: "${o.layer.name}" at the first sampled time past the ${o.edge} edge (${o.from.time} s), while still partly in frame; the finding's worstAt is when it is furthest out`
     );
   }
-  if (tiles.size === 0) return null;
+  if (tiles.size === 0) return { sheet: null, outstanding: [] };
   const all = [...tiles.values()].sort((a, b) => a.frame - b.frame);
   const chosen = all.slice(0, maxTiles);
   const res = await source.capture(
     chosen.map((c) => c.frame),
     outDir
   );
-  if ("error" in res) return { writtenTo: null, error: `the sheet's frames could not be captured: ${res.error}` };
+  if ("error" in res)
+    return { sheet: { writtenTo: null, error: `the sheet's frames could not be captured: ${res.error}` }, outstanding: res.outstanding };
   const images = [];
   const labels = [];
   const kept = [];
@@ -61884,14 +62504,15 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
     if (!got?.path) continue;
     try {
       const pic = await readPicture(got.path, target, convert);
-      await fs12.writeFile(got.path, encodePngSrgb8(pic.width, pic.height, pic.rgb));
+      await fs13.writeFile(got.path, encodePngSrgb8(pic.width, pic.height, pic.rgb));
       images.push({ width: pic.width, height: pic.height, rgb: pic.rgb, bitDepth: 8 });
       kept.push({ frame: c.frame, time: r64(c.frame * fd), kinds: c.kinds, ...c.why ? { why: c.why } : {}, path: got.path });
     } catch {
-      await fs12.rm(got.path, { force: true });
+      await fs13.rm(got.path, { force: true });
     }
   }
-  if (images.length === 0) return { writtenTo: null, error: "none of the sheet's frames could be read" };
+  if (images.length === 0)
+    return { sheet: { writtenTo: null, error: "none of the sheet's frames could be read" }, outstanding: res.outstanding };
   const tileW = Math.min(thumbWidth ?? 320, images[0].width);
   const maxChars = Math.max(4, Math.floor((tileW - 4) / LABEL_CHAR_PX));
   for (const k of kept) labels.push(`${k.time.toFixed(2)}s ${k.kinds.map((x) => SHORT[x] ?? x).join("+")}`.slice(0, maxChars));
@@ -61900,15 +62521,18 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
     thumbWidth: tileW,
     labels
   });
-  const sheetPath = path14.join(outDir, `check-sheet-${tag}.png`).replace(/\\/g, "/");
-  await fs12.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+  const sheetPath = path15.join(outDir, `check-sheet-${tag}.png`).replace(/\\/g, "/");
+  await fs13.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
   return {
-    writtenTo: sheetPath,
-    size: [sheet.width, sheet.height],
-    tiles: kept.length,
-    omitted: all.length - chosen.length,
-    frames: kept,
-    label: "each tile is labelled '<time>s <kind>' (several joined by +; black, white, clip and crush stand for near-black, near-white, clipped-high and clipped-low), time in seconds from the comp's start"
+    sheet: {
+      writtenTo: sheetPath,
+      size: [sheet.width, sheet.height],
+      tiles: kept.length,
+      omitted: all.length - chosen.length,
+      frames: kept,
+      label: "each tile is labelled '<time>s <kind>' (several joined by +; black, white, clip and crush stand for near-black, near-white, clipped-high and clipped-low), time in seconds from the comp's start"
+    },
+    outstanding: res.outstanding
   };
 }
 
@@ -62438,8 +63062,8 @@ var layerInfoTool = defineTool({
 });
 
 // src/tools/project-export.ts
-import { promises as fs13 } from "node:fs";
-import * as path15 from "node:path";
+import { promises as fs14 } from "node:fs";
+import * as path16 from "node:path";
 init_config();
 var projectExportTool = defineTool({
   name: "ae_project_export_json",
@@ -62461,7 +63085,7 @@ var projectExportTool = defineTool({
       const rejection = rejectedOutputPath(args.outPath);
       if (rejection !== null) {
         return errorResult("IO", rejection, {
-          details: { outPath: path15.resolve(args.outPath) },
+          details: { outPath: path16.resolve(args.outPath) },
           hint: "Write the document somewhere outside the mailbox, or omit outPath to receive it inline."
         });
       }
@@ -62480,10 +63104,10 @@ var projectExportTool = defineTool({
     const pretty = args.pretty ?? !!args.outPath;
     const jsonText = JSON.stringify(doc, null, pretty ? 2 : 0);
     if (args.outPath) {
-      const abs = path15.resolve(args.outPath);
+      const abs = path16.resolve(args.outPath);
       try {
-        await fs13.mkdir(path15.dirname(abs), { recursive: true });
-        await fs13.writeFile(abs, jsonText, "utf8");
+        await fs14.mkdir(path16.dirname(abs), { recursive: true });
+        await fs14.writeFile(abs, jsonText, "utf8");
       } catch (err) {
         return errorResult(
           "IO",
@@ -62514,8 +63138,8 @@ var projectExportTool = defineTool({
 });
 
 // src/tools/project-import.ts
-import { promises as fs14 } from "node:fs";
-import * as path16 from "node:path";
+import { promises as fs15 } from "node:fs";
+import * as path17 from "node:path";
 
 // src/schema.ts
 var SCHEMA_VERSION = 3;
@@ -62524,11 +63148,11 @@ var SCHEMA_VERSION = 3;
 var Validator = class {
   issues = [];
   warnings = [];
-  err(path18, message) {
-    this.issues.push({ path: path18, message });
+  err(path19, message) {
+    this.issues.push({ path: path19, message });
   }
-  warn(path18, message) {
-    this.warnings.push({ path: path18, message });
+  warn(path19, message) {
+    this.warnings.push({ path: path19, message });
   }
   isObject(v) {
     return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -62629,64 +63253,64 @@ function validateAeProjectDoc(doc) {
   }
   return { ok: v.issues.length === 0, issues: v.issues, warnings: v.warnings };
 }
-function validateLayer(v, path18, layer) {
+function validateLayer(v, path19, layer) {
   if (!v.isObject(layer)) {
-    v.err(path18, "not an object");
+    v.err(path19, "not an object");
     return;
   }
-  if (typeof layer.index !== "number") v.err(`${path18}.index`, "missing or not a number");
-  if (typeof layer.name !== "string") v.err(`${path18}.name`, "missing or not a string");
-  if (typeof layer.type !== "string") v.err(`${path18}.type`, "missing or not a string");
+  if (typeof layer.index !== "number") v.err(`${path19}.index`, "missing or not a number");
+  if (typeof layer.name !== "string") v.err(`${path19}.name`, "missing or not a string");
+  if (typeof layer.type !== "string") v.err(`${path19}.type`, "missing or not a string");
   else if (["AVLayer", "TextLayer", "ShapeLayer", "CameraLayer", "LightLayer", "Layer"].indexOf(
     layer.type
   ) === -1) {
-    v.warn(`${path18}.type`, `unknown layer type: ${layer.type}`);
+    v.warn(`${path19}.type`, `unknown layer type: ${layer.type}`);
   }
   if (layer.transformGroup)
-    validatePropertyGroup(v, `${path18}.transformGroup`, layer.transformGroup);
-  if (layer.effectsGroup) validatePropertyGroup(v, `${path18}.effectsGroup`, layer.effectsGroup);
-  if (layer.masksGroup) validatePropertyGroup(v, `${path18}.masksGroup`, layer.masksGroup);
-  if (layer.textGroup) validatePropertyGroup(v, `${path18}.textGroup`, layer.textGroup);
-  if (layer.contentsGroup) validatePropertyGroup(v, `${path18}.contentsGroup`, layer.contentsGroup);
-  if (layer.markers) validateProperty(v, `${path18}.markers`, layer.markers);
+    validatePropertyGroup(v, `${path19}.transformGroup`, layer.transformGroup);
+  if (layer.effectsGroup) validatePropertyGroup(v, `${path19}.effectsGroup`, layer.effectsGroup);
+  if (layer.masksGroup) validatePropertyGroup(v, `${path19}.masksGroup`, layer.masksGroup);
+  if (layer.textGroup) validatePropertyGroup(v, `${path19}.textGroup`, layer.textGroup);
+  if (layer.contentsGroup) validatePropertyGroup(v, `${path19}.contentsGroup`, layer.contentsGroup);
+  if (layer.markers) validateProperty(v, `${path19}.markers`, layer.markers);
   if (layer.timeRemapProperty)
-    validateProperty(v, `${path18}.timeRemapProperty`, layer.timeRemapProperty);
+    validateProperty(v, `${path19}.timeRemapProperty`, layer.timeRemapProperty);
 }
-function validatePropertyGroup(v, path18, group) {
+function validatePropertyGroup(v, path19, group) {
   if (!v.isObject(group)) {
-    v.err(path18, "not an object");
+    v.err(path19, "not an object");
     return;
   }
-  if (typeof group.matchName !== "string") v.err(`${path18}.matchName`, "missing or not a string");
+  if (typeof group.matchName !== "string") v.err(`${path19}.matchName`, "missing or not a string");
   if (Array.isArray(group.properties)) {
     for (let i = 0; i < group.properties.length; i++) {
-      validateProperty(v, `${path18}.properties[${i}]`, group.properties[i]);
+      validateProperty(v, `${path19}.properties[${i}]`, group.properties[i]);
     }
   }
   if (Array.isArray(group.groups)) {
     for (let i = 0; i < group.groups.length; i++) {
-      validatePropertyGroup(v, `${path18}.groups[${i}]`, group.groups[i]);
+      validatePropertyGroup(v, `${path19}.groups[${i}]`, group.groups[i]);
     }
   }
 }
-function validateProperty(v, path18, prop) {
+function validateProperty(v, path19, prop) {
   if (!v.isObject(prop)) {
-    v.err(path18, "not an object");
+    v.err(path19, "not an object");
     return;
   }
-  if (typeof prop.matchName !== "string") v.err(`${path18}.matchName`, "missing or not a string");
+  if (typeof prop.matchName !== "string") v.err(`${path19}.matchName`, "missing or not a string");
   if (Array.isArray(prop.keyframes)) {
     for (let i = 0; i < prop.keyframes.length; i++) {
-      validateKeyframe(v, `${path18}.keyframes[${i}]`, prop.keyframes[i]);
+      validateKeyframe(v, `${path19}.keyframes[${i}]`, prop.keyframes[i]);
     }
   }
 }
-function validateKeyframe(v, path18, kf) {
+function validateKeyframe(v, path19, kf) {
   if (!v.isObject(kf)) {
-    v.err(path18, "not an object");
+    v.err(path19, "not an object");
     return;
   }
-  if (typeof kf.time !== "number") v.err(`${path18}.time`, "missing or not a number");
+  if (typeof kf.time !== "number") v.err(`${path19}.time`, "missing or not a number");
 }
 
 // src/tools/project-import.ts
@@ -62715,9 +63339,9 @@ var projectImportTool = defineTool({
   handler: async (args, transport2) => {
     let doc;
     if (args.inPath) {
-      const abs = path16.resolve(args.inPath);
+      const abs = path17.resolve(args.inPath);
       try {
-        doc = JSON.parse(await fs14.readFile(abs, "utf8"));
+        doc = JSON.parse(await fs15.readFile(abs, "utf8"));
       } catch (err) {
         return errorResult(
           "IO",
@@ -62982,7 +63606,7 @@ var ALL_TOOLS = [
 
 // src/tools/library.ts
 import { readFileSync as readFileSync2, realpathSync as realpathSync2 } from "node:fs";
-import path17 from "node:path";
+import path18 from "node:path";
 import { createHash } from "node:crypto";
 init_config();
 
@@ -63072,17 +63696,17 @@ function findModules(catalog, query) {
 
 // src/tools/library.ts
 function boundedFile(base, relative3) {
-  const candidate = path17.resolve(base, relative3);
+  const candidate = path18.resolve(base, relative3);
   const inside = (file3) => {
-    const rel = path17.relative(base, file3);
-    if (!rel || rel === ".." || rel.startsWith(".." + path17.sep) || path17.isAbsolute(rel)) throw new Error("Library path escapes bundle");
+    const rel = path18.relative(base, file3);
+    if (!rel || rel === ".." || rel.startsWith(".." + path18.sep) || path18.isAbsolute(rel)) throw new Error("Library path escapes bundle");
   };
   inside(candidate);
   const file2 = realpathSync2(candidate);
   inside(file2);
   return file2;
 }
-function readLibrary(document, query, root = path17.resolve(PACKAGE_ROOT, "../library")) {
+function readLibrary(document, query, root = path18.resolve(PACKAGE_ROOT, "../library")) {
   const base = realpathSync2(root);
   const manifest = JSON.parse(readFileSync2(boundedFile(base, "manifest.json"), "utf8"));
   const entries = manifest.documents;

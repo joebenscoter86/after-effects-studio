@@ -89,9 +89,27 @@ export function buildLaunchPlan(
   dispatcherJsx: string = DISPATCHER_JSX,
 ): LaunchPlan {
   if (platform === "darwin") {
+    // A DoScript is an Apple event: once sent, it cannot be withdrawn. It can
+    // sit queued in After Effects (behind a modal or a running script) long
+    // after its call was discarded ("never picked up ... discarded"), and run
+    // when the box is cleared. Live, 2026-11-12, each such run raised "Unable
+    // to execute script at line 1. File or folder does not exist", a new
+    // modal that blocks all scripting until someone clicks OK; line 1 is this
+    // bootstrap, so the error came out of its evalFile. So the bootstrap
+    // never lets anything escape into a dialog: it evalFiles the dispatcher
+    // only when the file is there, catches whatever the evalFile throws (a
+    // file or an #include gone, a parse error) and leaves one line in the
+    // mailbox's dispatcher.log instead. A stale run whose request was
+    // reclaimed reaches the dispatcher, finds nothing pending and exits
+    // without writing (dispatcher.jsx). The files it points at, the
+    // dispatcher and its includes, belong to the package and are never
+    // removed by a call.
+    const dispatcher = jsxPath(dispatcherJsx);
     const bootstrap =
       `$.global.AE_MCP_RUNTIME_DIR_OVERRIDE = ${jsxPath(runtimeDir)}; ` +
-      `$.evalFile(${jsxPath(dispatcherJsx)});`;
+      `try { if (new File(${dispatcher}).exists) $.evalFile(${dispatcher}); } catch (eBoot) { ` +
+      `try { var _bootLog = new File(${jsxPath(runtimeDir)} + '/dispatcher.log'); ` +
+      `if (_bootLog.open('a')) { _bootLog.writeln('[' + new Date().toString() + '] bootstrap: ' + eBoot); _bootLog.close(); } } catch (eLog) {} }`;
     return {
       command: "/usr/bin/osascript",
       args: [

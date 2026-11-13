@@ -175,6 +175,17 @@ export declare const renderFrameTool: import("./define-tool.js").ToolSpec<{
         }, z.core.$strip>]>>;
     }, z.core.$strip>]>>;
 }>;
+/**
+ * Per-frame output paths: the single path as-is, or stem_<call>_<index><ext>
+ * for `times`. The call id is new every call: saveFrameToPng writes after the
+ * script returns, so with names reused between calls (stem_<index>) a write
+ * still pending from an earlier call could land after this call's stamp and
+ * be taken for this call's frame, mixing frames between calls (first
+ * production use, 2026-11-12).
+ */
+export declare function framePaths(abs: string, count: number, multi: boolean, call?: string): string[];
+/** A short id for one call's batch of files. */
+export declare const newCallId: () => string;
 /** Options the JSX needs; everything else happens in Node on the captures. */
 export declare function renderJsx(args: {
     compNameOrId: string | number;

@@ -160,6 +160,22 @@ function shippedFiles(files, style) {
   return kept.sort();
 }
 
+// Styles the plugin wrote itself live beside the imported ones, each with a plugin-style.json holding its index entry.
+// An import never removes them, and they are listed with origin "plugin".
+const PLUGIN_STYLE = 'plugin-style.json';
+async function readPluginStyles(stylesDir) {
+  if (!(await exists(stylesDir))) return [];
+  const out = [];
+  for (const e of await fs.readdir(stylesDir, { withFileTypes: true })) {
+    if (!e.isDirectory() || !(await exists(path.join(stylesDir, e.name, PLUGIN_STYLE)))) continue;
+    const s = JSON.parse(await fs.readFile(path.join(stylesDir, e.name, PLUGIN_STYLE), 'utf8'));
+    if (s.id !== e.name) throw new Error(`${e.name}/${PLUGIN_STYLE} names the id "${s.id}"; it must match its folder, ${e.name}`);
+    out.push({ ...s, origin: 'plugin', contentStatus: null, contentProof: null, pluginProof: s.pluginProof ?? null });
+  }
+  return out;
+}
+const byId = (a, b) => a.id.localeCompare(b.id);
+
 function firstSentence(text) {
   const m = text.match(/^.*?\.(?=\s|$)/);
   return m ? m[0] : text;
@@ -172,6 +188,8 @@ function skillMarkdown(entries) {
     + 'Use when the user names one of these looks, asks which styles are available, or wants help choosing a style; ordinary motion work without a named look does not need it.';
   if (description.length > 1024) throw new Error(`visual-styles description is ${description.length} characters; the limit is 1024`);
   const fonts = (s) => [...new Set(s.fonts.map((f) => f.family))].join(', ') || 'none';
+  const own = entries.filter((s) => s.origin === 'plugin').map((s) => s.title);
+  const ownList = own.length > 1 ? `${own.slice(0, -1).join(', ')} and ${own.at(-1)}` : own[0];
   const rows = entries.map((s) => `| ${s.title} | \`${s.id}\` | ${s.tier} | ${s.goodFor} | ${fonts(s)} | ${s.needs.length ? s.needs.join(', ') : 'none'} |`);
   return `---
 name: visual-styles
@@ -191,9 +209,9 @@ Read through \`ae_library\`: **motion-language**, **production-workflow** and **
 5. Build natively with \`ae_do\` and \`eval.run\`. Each \`eval.run\` call runs in its own function scope, so load the shared helpers and the style's module in the same call as the code that uses them, for example \`$.evalFile(File(LIB + "/styles/aes-lib.jsx")); $.evalFile(File(LIB + "/styles/<id>/<module>"));\` followed by your build code, where \`LIB\` is the absolute path of the \`library\` folder two levels above this skill's folder. Follow the AE recipe (STYLE.md section 6). The module's \`buildScene(comp, scene, opts)\` builds the library's seven-beat test scene; read it as a worked example of the technique, not as a builder for the user's scene. Its captions and labels are the test scene's own lines, written into the module, and its timings assume about ten seconds for the seven beats; if you call it with the user's \`scene.json\` (the 3D plates need that format), replace those lines and give each beat at least a second.
 6. Render frames and check them against STYLE.md before showing the user.
 
-The styles are adaptations of Lemo-Opuscar (MIT, LemoLab). In \`style-index\`, \`contentStatus\` and \`contentProof\` record that a style was proven in the author's own proof setup before import; \`pluginProof\` stays null until the style has been built and checked through this plugin. Say which applies when you present a style.
+The styles are adaptations of Lemo-Opuscar (MIT, LemoLab)${own.length ? `, except ${ownList}: ${own.length > 1 ? 'they are' : 'it is'} the plugin's own, written from its own measurements (\`origin\` is \`plugin\` in \`style-index\`, and \`proofNote\` says how far ${own.length > 1 ? 'each is' : 'it is'} tested)` : ''}. In \`style-index\`, \`contentStatus\` and \`contentProof\` record that a style was proven in the author's own proof setup before import; \`pluginProof\` stays null until the style has been built and checked through this plugin. Say which applies when you present a style.
 
-| Style | id | Tier | Good for | Fonts | Needs |
+${own.map((t) => `${t} is the plugin's own style; read its STYLE.md for what was measured and how far it is tested.`).join('\n')}${own.length ? '\n\n' : ''}| Style | id | Tier | Good for | Fonts | Needs |
 |---|---|---|---|---|---|
 ${rows.join('\n')}
 `;
@@ -263,7 +281,9 @@ export async function importStyles({ from, to, skillDir, commit }) {
   // Replace earlier imports: only folders an earlier index listed, plus this run's.
   const indexPath = path.join(to, 'styles', 'index.json');
   const previousIndex = await exists(indexPath) ? JSON.parse(await fs.readFile(indexPath, 'utf8')).styles : [];
-  const previous = previousIndex.map((s) => s.id);
+  const ownStyles = await readPluginStyles(path.join(to, 'styles'));
+  const ownIds = new Set(ownStyles.map((s) => s.id));
+  const previous = previousIndex.map((s) => s.id).filter((id) => !ownIds.has(id));
   // Plugin-route evidence belongs to the plugin, not to Content: keep it across re-imports.
   for (const entry of entries) entry.pluginProof = previousIndex.find((s) => s.id === entry.id)?.pluginProof ?? null;
   for (const id of new Set([...previous, ...selected.map((s) => s.id)])) {
@@ -273,7 +293,8 @@ export async function importStyles({ from, to, skillDir, commit }) {
     await fs.mkdir(path.dirname(path.join(to, f.out)), { recursive: true });
     await fs.writeFile(path.join(to, f.out), f.data);
   }
-  await fs.writeFile(indexPath, `${JSON.stringify({ source: { repo: 'Content', path: 'production/styles', commit }, styles: entries }, null, 2)}\n`);
+  const listed = [...entries, ...ownStyles].sort(byId);
+  await fs.writeFile(indexPath, `${JSON.stringify({ source: { repo: 'Content', path: 'production/styles', commit }, styles: listed }, null, 2)}\n`);
 
   const mapPath = path.join(to, 'source-map.json');
   const map = JSON.parse(await fs.readFile(mapPath, 'utf8'));
@@ -296,14 +317,30 @@ export async function importStyles({ from, to, skillDir, commit }) {
   await fs.writeFile(mapPath, `${JSON.stringify(map, null, 2)}\n`);
 
   await fs.mkdir(skillDir, { recursive: true });
-  await fs.writeFile(path.join(skillDir, 'SKILL.md'), skillMarkdown(entries));
+  await fs.writeFile(path.join(skillDir, 'SKILL.md'), skillMarkdown(listed));
 
   return { imported: selected.map((s) => s.id), skipped, files: staged.map((f) => f.out).sort(), adaptations };
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+// Re-list the plugin's own styles in the index and the skill without Content: imported entries are kept as they are.
+export async function refreshStyles({ to, skillDir }) {
+  const indexPath = path.join(to, 'styles', 'index.json');
+  const index = JSON.parse(await fs.readFile(indexPath, 'utf8'));
+  const own = await readPluginStyles(path.join(to, 'styles'));
+  const listed = [...index.styles.filter((s) => s.origin !== 'plugin'), ...own].sort(byId);
+  await fs.writeFile(indexPath, `${JSON.stringify({ source: index.source, styles: listed }, null, 2)}\n`);
+  await fs.mkdir(skillDir, { recursive: true });
+  await fs.writeFile(path.join(skillDir, 'SKILL.md'), skillMarkdown(listed));
+  return { own: own.map((s) => s.id), total: listed.length };
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url) && process.argv.includes('--refresh')) {
+  const pluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+  const r = await refreshStyles({ to: path.join(pluginRoot, 'library'), skillDir: path.join(pluginRoot, 'skills', 'visual-styles') });
+  console.log(`listed ${r.total} styles; the plugin's own: ${r.own.join(', ') || 'none'}`);
+} else if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const i = process.argv.indexOf('--from');
-  if (i < 0) { console.error('usage: node plugin/scripts/import-styles.mjs --from <Content>/production/styles'); process.exit(2); }
+  if (i < 0) { console.error('usage: node plugin/scripts/import-styles.mjs --from <Content>/production/styles | --refresh'); process.exit(2); }
   const from = path.resolve(process.argv[i + 1]);
   const pluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
   const git = (args) => spawnSync('git', ['-C', from, ...args], { encoding: 'utf8' }).stdout.trim();

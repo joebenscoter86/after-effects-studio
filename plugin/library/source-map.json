@@ -665,6 +665,26 @@
       "path": "production/styles/art-deco/assets/LICENSE-lemo-opuscar.txt",
       "sha256": "14c9ff6f14bfb2391e74fedb01c256891d2a3bba1c2acf5789901bdf77e54e33",
       "id": "historical-64c4ee327720"
+    },
+    {
+      "id": "first-full-piece-2026-11-13",
+      "path": "first full piece (a 43 s vertical talking-head reel): working scripts and production notes from its sessions, not retained in any repository",
+      "classification": "original-production-observations-and-scripts",
+      "destinations": [
+        "plugin/library/techniques/page-recording.md",
+        "plugin/library/techniques/word-timing.md",
+        "plugin/library/techniques/phone-clip-cards.md",
+        "plugin/library/techniques/unattended-runs.md",
+        "plugin/library/scripts/capture/record-page.mjs",
+        "plugin/library/scripts/capture/check-clip.py",
+        "plugin/library/scripts/capture/word-timing.py",
+        "plugin/library/scripts/capture/clip-card.py",
+        "plugin/library/scripts/capture/record-page.example.json",
+        "plugin/library/scripts/capture/record-page.mobile.example.json"
+      ],
+      "scope": "Methods, values and failures observed while making the piece, written as generic guidance. The page recorder and the freeze and jump check are generalized from the working scripts (paths, sites and names removed; paths are arguments). The word-timing and clip-card scripts are new. No footage, voice, words, names, other creators' clips or tutorial content copied; example configs point at a local server.",
+      "technicalStatus": "scripts-run-offline-on-synthetic-media-2026-11-13",
+      "visualStatus": "methods-used-in-the-first-full-piece; documents-not-independently-reviewed"
     }
   ],
   "expansionInventory": {
