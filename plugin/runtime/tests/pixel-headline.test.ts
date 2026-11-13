@@ -37,6 +37,7 @@ class Prop {
   setValueAtTime(t: number, v: any) { const k = this.keys.find((x) => Math.abs(x.t - t) < 1e-9); if (k) k.v = v; else this.keys.push({ t, v }); this.keys.sort((a, b) => a.t - b.t); }
   nearestKeyIndex(t: number) { let best = 0; this.keys.forEach((k, i) => { if (Math.abs(k.t - t) < Math.abs(this.keys[best].t - t)) best = i; }); return best + 1; }
   keyTime(i: number) { return this.keys[i - 1].t; }
+  valueAtTime(t: number) { if (!this.keys.length) return this.value; let v = this.keys[0].v; for (const k of this.keys) if (k.t <= t + 1e-9) v = k.v; return v; }
   keyValue(i: number) { return this.keys[i - 1].v; }
   setInterpolationTypeAtKey(i: number, a: number, b: number) { this.interp[this.keys[i - 1].t] = [a, b]; }
   setTemporalEaseAtKey(i: number, a: any[], b: any[]) { this.eases[this.keys[i - 1].t] = { inE: a, outE: b }; }
@@ -51,7 +52,7 @@ function makeAE(opts: { deepGlow: boolean }) {
     const root = new Prop("root");
     const tg = root.property("ADBE Transform Group");
     const L: any = {
-      id: ++layerId, kind, name, comp, parent: null, inPoint: 0, startTime: 0, motionBlur: false, adjustmentLayer: false, enabled: true,
+      id: ++layerId, kind, name, comp, parent: null, inPoint: 0, outPoint: 1e9, startTime: 0, motionBlur: false, adjustmentLayer: false, enabled: true,
       hasAudio: kind === "footage" || kind === "precomp", audioEnabled: true, matte: null as any, matteType: null as any,
       property: (n: any) => root.property(n),
       position: Object.assign(tg.property("ADBE Position"), { propertyValueType: 6413 }),
@@ -177,7 +178,10 @@ describe("pixel-headline module", () => {
     const an = L.property("ADBE Text Properties").property("ADBE Text Animators").property("PH Reveal");
     const sel = an.property("ADBE Text Selectors").property("PH Words");
     expect(sel.property("ADBE Text Range Type2").value).toBe(3);
-    expect(sel.property("ADBE Text Expressible Amount").expression).toMatch(/Reveal Strength.*textIndex - 1.*Reveal Delay/s);
+    const amount = sel.property("ADBE Text Expressible Amount").expression;
+    expect(amount).toMatch(/textIndex - 1/); expect(amount).toMatch(/Reveal Delay/); expect(amount).toMatch(/Reveal Strength/);
+    expect(amount).toMatch(/textTotal - textIndex/);   // the exit runs from the last word
+    expect(fx.property("Reveal Exit").property(1).value).toBe(-1);
     expect(sel.property("ADBE Text Expressible Amount").expression).not.toMatch(/Pseudo\//);
     const props = an.property("ADBE Text Animator Properties");
     expect(props.property("ADBE Text Position 3D").value).toEqual([0, -136, 0]);
@@ -323,5 +327,87 @@ describe("pixel-headline module", () => {
     expect(rep.cards).toEqual([1.6 + F(8), 1.6 + F(12), 1.6 + F(16), 1.6 + F(20)]);
     expect(rep.cardPos.every((p: number[]) => p[0] > 540)).toBe(true);
     expect(comp.layer("PH Word").property("Source Text").value.text).toBe("edits");
+  });
+
+  it("a lead-in past 24 characters wraps to two lines that stack upward; a tail stacks downward", () => {
+    const { PH, comp } = makeAE({ deepGlow: true });
+    expect(PH.wrap("How to make the best", 24)).toEqual(["How to make the best"]);
+    expect(PH.wrap("Three websites that changed how I edit", 24)).toEqual(["Three websites that", "changed how I edit"]);
+    const L = PH.leadIn(comp, { text: "Three websites that changed how I edit", at: 1 });
+    expect(L.property("Source Text").value.text).toBe("Three websites that\rchanged how I edit");
+    expect(L.position.value[1]).toBeCloseTo(1920 * 0.147 - 64 * 1.2, 9);
+    const T = PH.tail(comp, { text: "and the one I use every single day", at: 2 });
+    expect(T.position.value[1]).toBeCloseTo(1920 * 0.318, 9);
+    expect(T.property("Source Text").value.text.split("\r").length).toBe(2);
+  });
+
+  it("exitBeat clears a beat in reverse within 10 frames: words from the last, the word, cards from the last", () => {
+    const { PH, comp } = makeAE({ deepGlow: true });
+    PH.beat(comp, referenceBrief());
+    const at = 4.0, r = PH.exitBeat(comp, { at });
+    expect(r.end).toBeLessThanOrEqual(at + F(10) + 1e-9);
+    const lead = comp.layer("PH Lead-in"), fx = lead.property("ADBE Effect Parade");
+    expect(fx.property("Reveal Exit").property(1).value).toBe(at);
+    const st = fx.property("Reveal Strength").property(1).keys;
+    expect(st.at(-2)).toEqual({ t: at, v: 0 }); expect(st.at(-1).t).toBeCloseTo(at + F(6), 9); expect(st.at(-1).v).toBe(100);
+    const w = comp.layer("PH Word").scale.keys;
+    expect(w.at(-1).v[0]).toBe(0); expect(w.at(-1).t).toBeCloseTo(at + F(7), 9);
+    const c3 = comp.layer("PH Card 3").scale.keys, c1 = comp.layer("PH Card 1").scale.keys;
+    expect(c3.at(-2).t).toBeCloseTo(at, 9); expect(c1.at(-2).t).toBeCloseTo(at + F(4), 9);
+    expect(comp.layer("PH Card 1").outPoint).toBeCloseTo(at + F(10), 9);
+    expect(r.layers).toContain("PH Tail");
+  });
+
+  it("the footage as the ground: no ground solid, the take covering the frame, pushed with the scene", () => {
+    const { PH, comp } = makeAE({ deepGlow: true });
+    const rep = PH.beat(comp, referenceBrief(0, { footageGround: true, take: { name: "room", width: 1920, height: 1080, isComp: false } }));
+    expect(comp.layer("PH Ground")).toBeUndefined();
+    const S = comp.layer("PH Speaker");
+    expect(S.scale.value[0]).toBeCloseTo(100 * Math.max(1080 / 1920, 1920 / 1080), 9);
+    expect(S.position.value).toEqual([540, 960]);
+    expect(S.parent.name).toBe("PH Camera");
+    expect(rep.glow).toBe("deep");
+  });
+
+  it("the zoom-out inset: scaled down, a feathered mask, a ground solid sampled from the footage", () => {
+    const { PH, comp } = makeAE({ deepGlow: true });
+    const st = PH.stage(comp, { take: { name: "room", width: 1920, height: 1080, isComp: false }, footageGround: true });
+    const r = PH.zoomOut(comp, { speaker: st.speaker, scale: 60, position: [540, 1400], feather: 60, ground: "sample" });
+    expect(st.speaker.scale.value).toEqual([60, 60]);
+    expect(st.speaker.position.value).toEqual([540, 1400]);
+    const mk = st.speaker.property("ADBE Mask Parade").property("Inset edge");
+    expect(mk.property("ADBE Mask Feather").value).toEqual([100, 100]);
+    expect(r.ground.name).toBe("PH Inset ground");
+    expect(comp._layers.indexOf(r.ground)).toBe(comp._layers.indexOf(st.speaker) + 1);
+    expect(r.ground.property("ADBE Effect Parade").kids[0].property("Color").expression).toMatch(/sampleImage/);
+    const back = PH.exitInset(comp, { speaker: st.speaker, at: 5 });
+    expect(back).toBeCloseTo(5 + F(8), 9);
+  });
+
+  it("a landscape card: the rim and corners scale by its shorter side, its width set on screen", () => {
+    const { PH, comp } = makeAE({ deepGlow: true });
+    const L = PH.card(comp, { clip: footage("site"), at: 2, pos: [540, 700], size: [1280, 800], width: 0.88 * 1080, name: "PH Site" });
+    const pre = L.source;
+    const outer = pre.layer("Outer").property("ADBE Root Vectors Group").property(1).property("ADBE Vectors Group").property("ADBE Vector Shape - Rect");
+    const inner = pre.layer("Inner").property("ADBE Root Vectors Group").property(1).property("ADBE Vectors Group").property("ADBE Vector Shape - Rect");
+    expect(inner.property("ADBE Vector Rect Size").value).toEqual([1280, 800]);
+    expect(outer.property("ADBE Vector Rect Size").value).toEqual([1280 + 48, 800 + 48]);
+    expect(inner.property("ADBE Vector Rect Roundness").value).toBeCloseTo(0.076 * 800, 9);
+    expect(L.scale.keys.at(-1).v[0]).toBeCloseTo(100 * 0.88 * 1080 / 1328, 9);
+    expect(L.scale.keys.map((k: Key) => k.t)).toEqual(PH.SIG.card.map((q: number[]) => 2 + F(q[0])));
+  });
+
+  it("several beats share one camera and one speaker; the second push holds full frame until it starts", () => {
+    const { PH, comp } = makeAE({ deepGlow: true });
+    const r1 = PH.beat(comp, referenceBrief(0, { prefix: "PH B1 " }));
+    const r2 = PH.beat(comp, { ...referenceBrief(0, { prefix: "PH B2 " }), words: words(6.6), speaker: r1.speaker, groundLayer: r1.ground, camera: r1.camera });
+    expect(comp._layers.filter((l: any) => l.kind === "null").length).toBe(1);
+    expect(comp._layers.filter((l: any) => /Speaker$/.test(l.name)).length).toBe(1);
+    const keys = r1.camera.scale.keys;
+    const p2 = r2.pushAt;
+    const hold = keys.find((k: Key) => Math.abs(k.t - (p2 - F(1))) < 1e-9);
+    expect(hold.v[0]).toBe(100);
+    expect(keys.find((k: Key) => Math.abs(k.t - p2) < 1e-9).v[0]).toBeCloseTo(PH.SIG.push[0][1] * 100, 9);
+    expect(comp.layer("PH B2 Word").parent).toBe(r1.camera);
   });
 });

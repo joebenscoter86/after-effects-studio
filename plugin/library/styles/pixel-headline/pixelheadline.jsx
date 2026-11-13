@@ -21,7 +21,7 @@ var AESPixelHeadline = (function () {
       opacity: [0, 55.3, 69, 69.9, 69.9, 69.8, 69.8, 69.8, 67.3, 61.6, 53.9, 53.8, 45.6, 45.6, 47.5, 51, 51, 49.7, 46.1, 42.3, 39.6, 35.2, 27.5, 16.4, 0] },
     cardFirst: 8, cardStagger: 4, cardBlur: 70, cardExposure: 2, cardHold: 7, cardClear: 12,
     card3WidthShare: .278, cardRect: [790, 1100], cardRound: 60, rimScale: 106, rimBlur: 25, rimExposure: .15, clipScale: 76,
-    cardTop: .244, cardMargin: .029, cardStep: .046, cardOverlap: .35,
+    cardTop: .244, cardMargin: .029, cardStep: .046, cardOverlap: .35, cardRimShare: .03, cardRoundShare: .076, rimBlurShare: .032,
     line: { width: 18, draw: [7.5, 18], wipe: [15, 22] },
     blocks: { cell: 39, strongOpacity: [70, 100], weakOpacity: [25, 50], weakRatio: .7, reach: 2.6, clusterMax: 2, minLife: 3,
       // The schedule, per frame from W: how many strong blocks are on, and the distance from the word's centre (in word
@@ -34,8 +34,11 @@ var AESPixelHeadline = (function () {
       seenRed: [7, 429, 697, 973, 6307, 6701, 8827, 11260, 6800, 6959, 8297, 7525, 6104, 5825, 2860, 2076, 811, 55],
       seenDist: [null, .32, .32, .32, .61, .59, .59, .67, .82, 1.01, 1.15, 1.51, 1.58, 1.76, .73, .87, null, null],
       sides: { above: .327, below: .122, left: .401, right: .15 }, lineFree: 6 },
-    type: { wordSize: .284, wordMax: .85, wordBaseline: .275, wordPivotUp: 18, leadSize: 64, leadBaseline: .147, tailSize: 86, tailBaseline: .318 },
-    pushLead: 18
+    type: { wordSize: .284, wordMax: .85, wordBaseline: .275, wordPivotUp: 18, leadSize: 64, leadBaseline: .147, tailSize: 86, tailBaseline: .318, leading: 1.2 },
+    pushLead: 18,
+    // exits (extended: the reference never shows one): each element leaves the way it came, about twice as fast, with no
+    // overshoot; text by word from the last word, cards from the last card; everything gone within 10 frames
+    exit: { textFrames: 6, wordDelay: 1, wordFrames: 7, cardFrames: 6, cardStagger: 2, easeOut: .75, easeIn: .1, within: 10 }
   };
   function k(comp) { return comp.width / REF.w; }
   function sec(frames) { return frames / REF.fps; }
@@ -63,76 +66,130 @@ var AESPixelHeadline = (function () {
   function effect(L, mn, name) { var e = L.property("ADBE Effect Parade").addProperty(mn); if (name) e.name = name;
     return L.property("ADBE Effect Parade").property(L.property("ADBE Effect Parade").numProperties); }
 
+  function pfx(o) { return (o && o.prefix) || "PH "; }
+  // text split into at most two lines at a word boundary, the lines as even as they can be (maxChars per line, default 24)
+  function wrap(text, maxChars) { var m = maxChars || 24; if (text.length <= m) return [text];
+    var w = text.split(" "), best = null, bestD = 1e9;
+    for (var i = 1; i < w.length; i++) { var a = w.slice(0, i).join(" "), b = w.slice(i).join(" "), d = Math.abs(a.length - b.length);
+      if (Math.max(a.length, b.length) <= m + 6 && d < bestD) { bestD = d; best = [a, b]; } }
+    return best || [text]; }
+
   // ---- stage: the ground and the graded speaker. o = { take (FootageItem), takeStart (s into the take at the comp's 0),
-  //      scale (%), x, ground [r,g,b], grade { mixer [r,g,b], inBlack, inWhite, gamma, saturation } }
+  //      scale (%), x, ground [r,g,b], grade { mixer [r,g,b], inBlack, inWhite, gamma, saturation }, prefix,
+  //      footageGround (true: the take is used as it is, filling the frame, with no cut-out and no ground solid) }
   function stage(comp, o) {
-    var W = comp.width, H = comp.height, g = o.ground || [.8, .8, .81];
-    var G = comp.layers.addSolid(g, "PH Ground", W, H, 1, comp.duration);
-    var r = effect(G, "ADBE Ramp");
-    r.property("Start of Ramp").setValue([W / 2, H * .469]); r.property("Start Color").setValue([g[0] + .04, g[1] + .04, g[2] + .04]);
-    r.property("End of Ramp").setValue([W / 2, H * 1.198]); r.property("End Color").setValue([g[0] - .06, g[1] - .06, g[2] - .06]); r.property("Ramp Shape").setValue(2);
-    effect(G, "ADBE Noise2").property("Amount of Noise").setValue(1.3);
-    var S = null;
-    if (o.take) { S = comp.layers.add(o.take); S.name = "PH Speaker"; if (S.hasAudio) S.audioEnabled = false;
+    var W = comp.width, H = comp.height, g = o.ground || [.8, .8, .81], P = pfx(o), G = null, S = null;
+    if (!o.footageGround) { G = comp.layers.addSolid(g, P + "Ground", W, H, 1, comp.duration);
+      var r = effect(G, "ADBE Ramp");
+      r.property("Start of Ramp").setValue([W / 2, H * .469]); r.property("Start Color").setValue([g[0] + .04, g[1] + .04, g[2] + .04]);
+      r.property("End of Ramp").setValue([W / 2, H * 1.198]); r.property("End Color").setValue([g[0] - .06, g[1] - .06, g[2] - .06]); r.property("Ramp Shape").setValue(2);
+      effect(G, "ADBE Noise2").property("Amount of Noise").setValue(1.3); }
+    if (o.take) { S = comp.layers.add(o.take); S.name = P + "Speaker"; if (S.hasAudio) S.audioEnabled = false;
       if (o.takeStart) S.startTime = -o.takeStart;
-      S.anchorPoint.setValue([o.take.width / 2, o.take.height]); S.position.setValue([o.x === undefined ? W / 2 : o.x, H]);
-      var sc = o.scale || 100; S.scale.setValue([sc, sc]);
+      if (o.footageGround) { var cover = 100 * Math.max(W / o.take.width, H / o.take.height);
+        S.anchorPoint.setValue([o.take.width / 2, o.take.height / 2]); S.position.setValue([W / 2, H / 2]); S.scale.setValue([cover, cover]); }
+      else { S.anchorPoint.setValue([o.take.width / 2, o.take.height]); S.position.setValue([o.x === undefined ? W / 2 : o.x, H]);
+        var sc = o.scale || 100; S.scale.setValue([sc, sc]); }
       var q = o.grade;
       if (q) { var m = effect(S, "ADBE CHANNEL MIXER"); m.property("Red-Red").setValue(q.mixer[0]); m.property("Green-Green").setValue(q.mixer[1]); m.property("Blue-Blue").setValue(q.mixer[2]);
         var lv = effect(S, "ADBE Easy Levels2"); lv.property("Input Black").setValue(q.inBlack); lv.property("Input White").setValue(q.inWhite); lv.property("Gamma").setValue(q.gamma); lv.property("Output Black").setValue(0);
         effect(S, "ADBE HUE SATURATION").property("Master Saturation").setValue(q.saturation); } }
-    return { ground: G, speaker: S }; }
+    return { ground: G, speaker: S, footageGround: !!o.footageGround }; }
 
-  // ---- the text reveal (native: one animator, an Expression Selector based on words, two sliders). Each word reads the
-  //      Strength slider at time - (its index - 1) x Delay / 30 s. Strength 100 = fully offset and clear; 0 = in place.
+  // ---- the zoom-out inset: the footage scaled down inside the frame, its edges feathered by a mask, over a ground solid of
+  //      the footage's own colour, so the speaker sits small and leaves room above. o = { speaker (layer), scale (%),
+  //      position [x, y] (the inset's centre), feather (px on screen), ground [r,g,b] or "sample" (read from the footage's top
+  //      edge by expression), at, dur (s: when given, it moves there from where it is, no overshoot), prefix }
+  function zoomOut(comp, o) { var S = o.speaker, P = pfx(o), src = S.source, sc = o.scale, fe = o.feather === undefined ? 60 : o.feather;
+    var G = comp.layers.addSolid(o.ground && o.ground.length ? o.ground : [0, 0, 0], P + "Inset ground", comp.width, comp.height, 1, comp.duration); G.moveAfter(S);
+    if (o.ground === "sample") { var f = effect(G, "ADBE Fill");
+      f.property("Color").expression = 'var L = thisComp.layer("' + S.name + '");\nvar c = L.sampleImage([L.width / 2, L.height * .03], [L.width * .45, L.height * .02], true, time);\n[c[0], c[1], c[2], 1];'; }
+    var mk = S.property("ADBE Mask Parade").addProperty("ADBE Mask Atom"); mk.name = "Inset edge";
+    var shp = new Shape(); shp.vertices = [[0, 0], [src.width, 0], [src.width, src.height], [0, src.height]]; shp.closed = true;
+    S.property("ADBE Mask Parade").property("Inset edge").property("ADBE Mask Shape").setValue(shp);
+    var lf = fe * 100 / sc; S.property("ADBE Mask Parade").property("Inset edge").property("ADBE Mask Feather").setValue([lf, lf]);
+    S.property("ADBE Mask Parade").property("Inset edge").property("ADBE Mask Offset").setValue(-lf / 2);
+    if (S.anchorPoint.value[1] !== src.height / 2) S.anchorPoint.setValue([src.width / 2, src.height / 2]);
+    if (o.at !== undefined) { var d = o.dur || sec(18), from = S.scale.valueAtTime(o.at, false), fp = S.position.valueAtTime(o.at, false);
+      AESLib.ease(S.scale, [o.at, o.at + d], [from, [sc, sc, 100].slice(0, from.length)], "travel");
+      AESLib.ease(S.position, [o.at, o.at + d], [fp, o.position], "travel"); }
+    else { S.scale.setValue([sc, sc]); S.position.setValue(o.position); }
+    return { ground: G, speaker: S }; }
+  // back to the full frame. o = { speaker, at, dur (default 8 frames), cover (%) }
+  function exitInset(comp, o) { var S = o.speaker, d = o.dur || sec(8), src = S.source, cv = o.cover || 100 * Math.max(comp.width / src.width, comp.height / src.height);
+    var from = S.scale.valueAtTime(o.at, false), fp = S.position.valueAtTime(o.at, false);
+    AESLib.ease(S.scale, [o.at, o.at + d], [from, [cv, cv, 100].slice(0, from.length)], "travel");
+    AESLib.ease(S.position, [o.at, o.at + d], [fp, [comp.width / 2, comp.height / 2]], "travel");
+    return o.at + d; }
+
+  // ---- the text reveal (native: one animator, an Expression Selector based on words, sliders). Each word reads the
+  //      Strength slider at time - rank x Delay / 30 s; rank is the word's place in reading order, or, from the exit time on,
+  //      its place from the end (the exit runs in reverse at its own delay). Strength 100 = fully offset and clear; 0 = in place.
   function reveal(L, at, strength, delay, offset, blur) {
     var fx = L.property("ADBE Effect Parade");
     fx.addProperty("ADBE Slider Control").name = "Reveal Strength";
     fx.addProperty("ADBE Slider Control").name = "Reveal Delay";
+    fx.addProperty("ADBE Slider Control").name = "Reveal Exit";
+    fx.addProperty("ADBE Slider Control").name = "Reveal Exit Delay";
     L.property("ADBE Effect Parade").property("Reveal Delay").property(1).setValue(delay);
+    L.property("ADBE Effect Parade").property("Reveal Exit").property(1).setValue(-1);
+    L.property("ADBE Effect Parade").property("Reveal Exit Delay").property(1).setValue(SIG.exit.wordDelay);
     sigKeys(L.property("ADBE Effect Parade").property("Reveal Strength").property(1), at, strength, 1, 0);
     var ans = L.property("ADBE Text Properties").property("ADBE Text Animators"); ans.addProperty("ADBE Text Animator").name = "PH Reveal";
     function an() { return L.property("ADBE Text Properties").property("ADBE Text Animators").property("PH Reveal"); }
     an().property("ADBE Text Selectors").addProperty("ADBE Text Expressible Selector").name = "PH Words";
     var sel = an().property("ADBE Text Selectors").property("PH Words");
     sel.property("ADBE Text Range Type2").setValue(3);
-    sel.property("ADBE Text Expressible Amount").expression = 'var s = effect("Reveal Strength")(1).valueAtTime(time - (textIndex - 1) * effect("Reveal Delay")(1) / 30);\n[s, s, s];';
+    sel.property("ADBE Text Expressible Amount").expression = 'var ex = effect("Reveal Exit")(1), out = ex >= 0 && time >= ex;\n'
+      + 'var rank = out ? textTotal - textIndex : textIndex - 1, d = out ? effect("Reveal Exit Delay")(1) : effect("Reveal Delay")(1);\n'
+      + 'var s = effect("Reveal Strength")(1).valueAtTime(time - rank * d / 30);\n[s, s, s];';
     an().property("ADBE Text Animator Properties").addProperty("ADBE Text Position 3D");
     an().property("ADBE Text Animator Properties").property("ADBE Text Position 3D").setValue([offset[0], offset[1], 0]);
     an().property("ADBE Text Animator Properties").addProperty("ADBE Text Opacity");
     an().property("ADBE Text Animator Properties").property("ADBE Text Opacity").setValue(0);
     if (blur) { an().property("ADBE Text Animator Properties").addProperty("ADBE Text Blur"); an().property("ADBE Text Animator Properties").property("ADBE Text Blur").setValue([blur, blur]); }
     return L; }
-  // ---- lead-in line. o = { text, at (s: the line's spoken start), colour }
-  function leadIn(comp, o) { var s = k(comp), T = SIG.type;
-    var L = AESLib.text(comp, "PH Lead-in", o.text, { family: FAM, style: FACE, size: T.leadSize * s, color: o.colour || [1, 1, 1], just: "center", pos: [comp.width / 2, comp.height * T.leadBaseline] });
+  // a revealed line leaves: its words go back the way they came, last word first, from `at`
+  function exitText(L, at) { var fx = L.property("ADBE Effect Parade"), X = SIG.exit;
+    fx.property("Reveal Exit").property(1).setValue(at);
+    var st = fx.property("Reveal Strength").property(1);
+    sigKeys(st, at, [[0, 0, .33, X.easeOut, 0, 0], [X.textFrames, 100, X.easeIn, .33, 0, 0]], 1, 0);
+    var words = L.property("Source Text").value.text.split(/\s+/).length;
+    var end = at + sec(X.textFrames + (words - 1) * X.wordDelay); L.outPoint = end; return end; }
+  // ---- lead-in line. o = { text, at (s: the line's spoken start), colour, prefix, maxChars }. Two lines when the text runs
+  //      past maxChars (24): they stack upward from the lead-in's baseline, so the giant word's place does not move.
+  function leadIn(comp, o) { var s = k(comp), T = SIG.type, lines = wrap(o.text, o.maxChars), size = T.leadSize * s, lead = size * T.leading;
+    var L = AESLib.text(comp, pfx(o) + "Lead-in", lines.join("\r"), { family: FAM, style: FACE, size: size, color: o.colour || [1, 1, 1], just: "center", leading: lead,
+      pos: [comp.width / 2, comp.height * T.leadBaseline - lead * (lines.length - 1)] });
     reveal(L, o.at, SIG.leadStrength, SIG.leadDelay, [0, -SIG.leadDrop * s], 0);
     return L; }
-  // ---- tail line. o = { text, at (s: its spoken start), colour, under (the giant word's layer, to clear its descenders) }
-  function tail(comp, o) { var s = k(comp), T = SIG.type, y = comp.height * T.tailBaseline;
+  // ---- tail line. o = { text, at (s: its spoken start), colour, under (the giant word's layer, to clear its descenders),
+  //      prefix, maxChars }. Two lines stack downward from the tail's baseline.
+  function tail(comp, o) { var s = k(comp), T = SIG.type, y = comp.height * T.tailBaseline, lines = wrap(o.text, o.maxChars), size = T.tailSize * s;
     if (o.under) { var r = o.under.sourceRectAtTime(o.at, false), sz = o.under.property("Source Text").value.fontSize, below = r.top + r.height;
       if (below > .05 * sz) y += below; }
-    var L = AESLib.text(comp, "PH Tail", o.text, { family: FAM, style: FACE, size: T.tailSize * s, color: o.colour || [1, 1, 1], just: "center", pos: [comp.width / 2, y] });
+    var L = AESLib.text(comp, pfx(o) + "Tail", lines.join("\r"), { family: FAM, style: FACE, size: size, color: o.colour || [1, 1, 1], just: "center", leading: size * T.leading, pos: [comp.width / 2, y] });
     reveal(L, o.at, SIG.tailStrength, SIG.tailDelay, [-SIG.tailSlide * s, 0], SIG.tailBlur * s);
     return L; }
 
   // ---- giant word and its glow. o = { text, at (s: W, the stressed word's spoken start), colour, glow ("auto"|"deep"|"stock"),
-  //      exposure (Deep Glow's peak, default the signature's) }. Returns { layer, glow, box (settled, comp px) }
-  function heroWord(comp, o) { var s = k(comp), T = SIG.type, W = comp.width, base = comp.height * T.wordBaseline, size = T.wordSize * W;
-    var L = AESLib.text(comp, "PH Word", o.text, { family: FAM, style: FACE, size: size, color: o.colour || [1, 0, 0], just: "center", pos: [W / 2, base] });
+  //      exposure (Deep Glow's peak; default the light-ground signature, SIG.deepGlow.darkGround on a dark ground), prefix }
+  //      Returns { layer, glow, box (settled, comp px) }
+  function heroWord(comp, o) { var s = k(comp), T = SIG.type, W = comp.width, base = comp.height * T.wordBaseline, size = T.wordSize * W, P = pfx(o);
+    var L = AESLib.text(comp, P + "Word", o.text, { family: FAM, style: FACE, size: size, color: o.colour || [1, 0, 0], just: "center", pos: [W / 2, base] });
     var r = L.sourceRectAtTime(o.at + 1, false);
     if (r.width > T.wordMax * W) { size *= T.wordMax * W / r.width; var td = L.property("Source Text").value; td.fontSize = size; L.property("Source Text").setValue(td); r = L.sourceRectAtTime(o.at + 1, false); }
     L.anchorPoint.setValue([0, -T.wordPivotUp * s]); L.position.setValue([W / 2, base - T.wordPivotUp * s]);
     sigKeys(L.scale, o.at, SIG.word, 100, dims(L.scale));
     L.inPoint = o.at;
     var mode = o.glow || "auto", used = mode === "auto" ? (hasEffect("PEDG2") ? "deep" : "stock") : mode;
-    if (used === "deep") { var e = effect(L, "PEDG2"), x = e.property(25), D = SIG.deepGlow, pk = o.exposure || D.keys[1][1], t = [], v = [];
+    if (used === "deep") { var e = effect(L, "PEDG2"), x = e.property(25), D = SIG.deepGlow, pk = o.exposure || (o.darkGround && D.darkGround ? D.darkGround : D.keys[1][1]), t = [], v = [];
       for (var i = 0; i < D.keys.length; i++) { t.push(o.at + sec(D.keys[i][0])); v.push(D.keys[i][1] ? pk : 0); }
       x.setValuesAtTimes(t, v); var B = KeyframeInterpolationType.BEZIER;
       for (i = 0; i < t.length; i++) { var ki = x.nearestKeyIndex(t[i]); x.setInterpolationTypeAtKey(ki, B, B);
         x.setTemporalEaseAtKey(ki, [new KeyframeEase(0, D.eases[i][0])], [new KeyframeEase(0, D.eases[i][1])]); } }
     var C = null;
-    if (used !== "deep") { C = L.duplicate(); C.name = "PH Word glow"; C.moveAfter(L); var S = SIG.stockGlow;
+    if (used !== "deep") { C = L.duplicate(); C.name = P + "Word glow"; C.moveAfter(L); var S = SIG.stockGlow;
       for (var g = 0; g < S.glows.length; g++) { var gl = effect(C, "ADBE Glo2"); gl.property("Glow Threshold").setValue(S.glows[g][0]); gl.property("Glow Radius").setValue(S.glows[g][1] * s); gl.property("Glow Intensity").setValue(S.glows[g][2]); }
       var tt = [], vv = []; for (var f = 0; f < S.opacity.length; f++) { tt.push(o.at + sec(S.from + f)); vv.push(S.opacity[f]); }
       linearKeys(C.opacity, tt, vv); }
@@ -188,7 +245,7 @@ var AESPixelHeadline = (function () {
     return out; }
   // o = { word (heroWord's result), at (W), colour, seed, lineBand }
   function pixelBlocks(comp, o) { var blocks = blockSchedule({ box: o.word.box, width: comp.width, height: comp.height, seed: o.seed || 7, cell: SIG.blocks.cell * k(comp), lineBand: o.lineBand, count: o.count, dist: o.dist });
-    var L = comp.layers.addShape(); L.name = "PH Pixels"; var root = L.property("ADBE Root Vectors Group");
+    var L = comp.layers.addShape(); L.name = pfx(o) + "Pixels"; var root = L.property("ADBE Root Vectors Group");
     for (var b = 0; b < blocks.length; b++) { var q = blocks[b], g = root.addProperty("ADBE Vector Group"); g.name = "B" + (b + 1);
       var rr = root.property(b + 1).property("ADBE Vectors Group").addProperty("ADBE Vector Shape - Rect");
       rr.property("ADBE Vector Rect Size").setValue([q.w, q.h]); rr.property("ADBE Vector Rect Position").setValue([q.x + q.w / 2 - comp.width / 2, q.y + q.h / 2 - comp.height / 2]);
@@ -196,28 +253,35 @@ var AESPixelHeadline = (function () {
       holdKeys(root.property(b + 1).property("ADBE Vector Transform Group").property("ADBE Vector Group Opacity"), [0, o.at + sec(q.on), o.at + sec(q.off)], [0, q.opacity, 0]); }
     return { layer: L, blocks: blocks }; }
 
-  // ---- one card. o = { clip (FootageItem), clipStart (s in the clip at the card's first frame), at (s: F), pos [x, y], scale (S, %), name }
-  function card(comp, o) { var R = SIG.cardRect, nm = o.name || "PH Card";
-    var C = app.project.items.addComp(nm, REF.w, REF.h, 1, comp.duration, comp.frameRate);
-    function rect(name, sc) { var L = C.layers.addShape(); L.name = name; var g = L.property("ADBE Root Vectors Group").addProperty("ADBE Vector Group");
+  // ---- one card. o = { clip (FootageItem), clipStart (s in the clip at the card's first frame), at (s: F), pos [x, y], scale (S, %),
+  //      name, size [w, h] (the card's inner rectangle in its own comp; default the upright 790 x 1100), width (px on screen,
+  //      rim included; sets S when given) }. The upright default keeps the calibrated 106 % rim; any other shape scales the rim
+  //      and the corners by its shorter side: rim 3 % of it on each edge, corner radius 7.6 % of it, rim blur 3.2 % of it.
+  function card(comp, o) { var R = o.size || SIG.cardRect, nm = o.name || (pfx(o) + "Card"), up = !o.size, mn = Math.min(R[0], R[1]);
+    var t = up ? 0 : SIG.cardRimShare * mn, outerR = up ? R : [R[0] + 2 * t, R[1] + 2 * t], round = up ? SIG.cardRound : SIG.cardRoundShare * mn;
+    var cw = up ? REF.w : Math.ceil(outerR[0] + .2 * mn), ch = up ? REF.h : Math.ceil(outerR[1] + .2 * mn);
+    var C = app.project.items.addComp(nm, cw, ch, 1, comp.duration, comp.frameRate);
+    function rect(name, size, sc, rnd) { var L = C.layers.addShape(); L.name = name; var g = L.property("ADBE Root Vectors Group").addProperty("ADBE Vector Group");
       var gs = L.property("ADBE Root Vectors Group").property(1).property("ADBE Vectors Group"); var rr = gs.addProperty("ADBE Vector Shape - Rect");
-      rr.property("ADBE Vector Rect Size").setValue(R); rr.property("ADBE Vector Rect Roundness").setValue(SIG.cardRound);
+      rr.property("ADBE Vector Rect Size").setValue(size); rr.property("ADBE Vector Rect Roundness").setValue(rnd);
       L.property("ADBE Root Vectors Group").property(1).property("ADBE Vectors Group").addProperty("ADBE Vector Graphic - Fill").property("ADBE Vector Fill Color").setValue([1, 1, 1]);
-      L.position.setValue([REF.w / 2, REF.h / 2]); L.scale.setValue([sc, sc]); return L; }
-    var outer = rect("Outer", SIG.rimScale);
-    var rim = C.layers.addSolid([1, 1, 1], "Rim", REF.w, REF.h, 1, comp.duration); rim.adjustmentLayer = true;
-    var rb = effect(rim, "ADBE Gaussian Blur 2"); rb.property("Blurriness").setValue(SIG.rimBlur); rb.property("Repeat Edge Pixels").setValue(1);
+      L.position.setValue([cw / 2, ch / 2]); L.scale.setValue([sc, sc]); return L; }
+    var outer = up ? rect("Outer", R, SIG.rimScale, round) : rect("Outer", outerR, 100, round + t);
+    var rim = C.layers.addSolid([1, 1, 1], "Rim", cw, ch, 1, comp.duration); rim.adjustmentLayer = true;
+    var rb = effect(rim, "ADBE Gaussian Blur 2"); rb.property("Blurriness").setValue(up ? SIG.rimBlur : SIG.rimBlurShare * mn); rb.property("Repeat Edge Pixels").setValue(1);
     effect(rim, "ADBE Exposure2").property("Exposure").setValue(SIG.rimExposure);
-    var inner = rect("Inner", 100);
+    var inner = rect("Inner", R, 100, round);
     var clip = C.layers.add(o.clip); clip.name = "Clip"; if (clip.hasAudio) clip.audioEnabled = false;
-    clip.startTime = o.at - (o.clipStart || 0); clip.scale.setValue([SIG.clipScale, SIG.clipScale]); clip.position.setValue([REF.w / 2, REF.h / 2]);
+    var cs = up ? SIG.clipScale : 104 * Math.max(R[0] / o.clip.width, R[1] / o.clip.height);
+    clip.startTime = o.at - (o.clipStart || 0); clip.scale.setValue([cs, cs]); clip.position.setValue([cw / 2, ch / 2]);
     clip.setTrackMatte(inner, TrackMatteType.ALPHA); rim.setTrackMatte(outer, TrackMatteType.ALPHA);
     var bl = effect(clip, "ADBE Gaussian Blur 2"); bl.property("Repeat Edge Pixels").setValue(1);
     var t3 = [o.at - sec(2), o.at + sec(SIG.cardHold), o.at + sec(SIG.cardClear)];
-    AESLib.ease(bl.property("Blurriness"), t3, [SIG.cardBlur, SIG.cardBlur, 0], "travel");
+    AESLib.ease(bl.property("Blurriness"), t3, [SIG.cardBlur * (up ? 1 : mn / SIG.cardRect[0]), SIG.cardBlur * (up ? 1 : mn / SIG.cardRect[0]), 0], "travel");
     AESLib.ease(effect(clip, "ADBE Exposure2").property("Exposure"), t3, [SIG.cardExposure, SIG.cardExposure, 0], "travel");
     var L = comp.layers.add(C); L.name = nm; if (L.hasAudio) L.audioEnabled = false; L.position.setValue(o.pos);
-    sigKeys(L.scale, o.at, SIG.card, o.scale, dims(L.scale));
+    var S = o.width ? 100 * o.width / (up ? R[0] * SIG.rimScale / 100 : outerR[0]) : o.scale;
+    sigKeys(L.scale, o.at, SIG.card, S, dims(L.scale));
     return L; }
   // card size and positions for n cards. o = { n, side ("left"|"right"), comp size, face {x0,y0,x1,y1} }
   // returns { scale (%), w, h, pos: [[x, y]...], warnings: [] }
@@ -238,9 +302,9 @@ var AESPixelHeadline = (function () {
     // the card layer's scale: the visible card (rim included) is w wide; the rim is SIG.rimScale % of the inner rect
     return { w: w, h: h, pos: pos, warnings: warn, cardScale: 100 * (w / (SIG.rimScale / 100)) / R[0] }; }
   // o = { clips: [{ item, start }], at (W), side, face }
-  function cardStack(comp, o) { var lay = stackLayout({ n: o.clips.length, side: o.side || "left", width: comp.width, height: comp.height, face: o.face }), layers = [], F = [];
+  function cardStack(comp, o) { var P = pfx(o), lay = stackLayout({ n: o.clips.length, side: o.side || "left", width: comp.width, height: comp.height, face: o.face }), layers = [], F = [];
     for (var i = 0; i < o.clips.length; i++) { var Fi = o.at + sec(SIG.cardFirst + i * SIG.cardStagger); F.push(Fi);
-      layers.push(card(comp, { clip: o.clips[i].item, clipStart: o.clips[i].start, at: Fi, pos: lay.pos[i], scale: lay.cardScale, name: "PH Card " + (i + 1) })); }
+      layers.push(card(comp, { clip: o.clips[i].item, clipStart: o.clips[i].start, at: Fi, pos: lay.pos[i], scale: lay.cardScale, name: P + "Card " + (i + 1) })); }
     return { layers: layers, first: F, layout: lay, path: linePath(comp, lay, o.side || "left", o.word) }; }
   // the drawn line's path from a stack layout: under the word, through the cards, curling toward the speaker
   function linePath(comp, lay, side, word) { var W = comp.width, H = comp.height, p = lay.pos, n = p.length, s = side === "right" ? -1 : 1, mid = p[Math.min(1, n - 1)], last = p[n - 1];
@@ -248,7 +312,7 @@ var AESPixelHeadline = (function () {
     return { vertices: [[x1, top], [x1, mid[1] + .025 * H], [last[0] - s * .007 * W, last[1] + .02 * H], [last[0] + s * .129 * W, last[1] + lay.h / 2 + .038 * H]],
       inTangents: [[0, 0], [0, -.083 * H], [-s * .023 * W, -.047 * H], [-s * .056 * W, -.021 * H]], outTangents: [[0, .083 * H], [0, .047 * H], [s * .037 * W, .047 * H], [0, 0]] }; }
   // o = { at (W), path, colour, cards (n, for the draw time) }
-  function drawnLine(comp, o) { var L = comp.layers.addShape(); L.name = "PH Line"; var g = L.property("ADBE Root Vectors Group").addProperty("ADBE Vector Group");
+  function drawnLine(comp, o) { var L = comp.layers.addShape(); L.name = pfx(o) + "Line"; var g = L.property("ADBE Root Vectors Group").addProperty("ADBE Vector Group");
     var gs = L.property("ADBE Root Vectors Group").property(1).property("ADBE Vectors Group"), sh = new Shape(), P = o.path, v = [], i;
     for (i = 0; i < P.vertices.length; i++) v.push([P.vertices[i][0] - comp.width / 2, P.vertices[i][1] - comp.height / 2]);
     sh.vertices = v; sh.inTangents = P.inTangents; sh.outTangents = P.outTangents; sh.closed = false;
@@ -264,18 +328,23 @@ var AESPixelHeadline = (function () {
     return L; }
 
   // ---- push. o = { at (s: P), pivotY (the face's height in the settled frame), layers, sway [{ f, r }] (the speaker's own head
-  //      size over the push, frames from P, as a ratio to P + 40; divided out when it moves by more than 3 %) }
-  function push(comp, o) { var N = comp.layers.addNull(comp.duration); N.name = "PH Camera"; N.position.setValue([comp.width / 2, comp.height / 2]);
-    for (var i = 0; i < o.layers.length; i++) if (o.layers[i]) o.layers[i].parent = N;
+  //      size over the push, frames from P, as a ratio to P + 40; divided out when it moves by more than 3 %), camera (an existing
+  //      null from an earlier beat: the keys are added to it, held at full frame until P), prefix }
+  function push(comp, o) { var N = o.camera, fresh = !N;
+    if (fresh) { N = comp.layers.addNull(comp.duration); N.name = pfx(o) + "Camera"; N.position.setValue([comp.width / 2, comp.height / 2]); }
+    for (var i = 0; i < o.layers.length; i++) if (o.layers[i] && o.layers[i] !== N && o.layers[i].parent !== N) o.layers[i].parent = N;
+    if (!fresh && N.scale.numKeys) holdKeys(N.scale, [o.at - sec(1)], [N.scale.valueAtTime(o.at - sec(1), false)]);
     sigKeys(N.scale, o.at, SIG.push, 100, dims(N.scale));
     var py = o.pivotY === undefined ? comp.height * .444 : o.pivotY, divided = false;
     var expr = "var s = transform.scale[1] / 100;\n[" + (comp.width / 2) + ", " + py + " + (" + (comp.height / 2) + " - " + py + ") * s];";
     if (o.sway && o.sway.length) { var dev = 0; for (i = 0; i < o.sway.length; i++) dev = Math.max(dev, Math.abs(o.sway[i].r - 1));
-      if (dev > .03) { divided = true; var sl = effect(N, "ADBE Slider Control", "Speaker sway"), t = [], v = [], last = 0;
+      if (dev > .03) { divided = true; var sl = effect(N, "ADBE Slider Control", "Speaker sway " + Math.round(o.at * 30)), t = [], v = [], last = 0;
         for (i = 0; i < o.sway.length; i++) { t.push(o.at + sec(o.sway[i].f)); v.push(100 / o.sway[i].r); last = o.sway[i].f; }
         t.push(o.at + sec(last + 10)); v.push(100); linearKeys(sl.property(1), t, v);
-        N.scale.expression = 'var k = effect("Speaker sway")(1) / 100;\n[value[0] * k, value[1] * k];'; } }
-    N.position.expression = expr;
+        var terms = [], fxs = N.property("ADBE Effect Parade");
+        for (i = 1; i <= fxs.numProperties; i++) if (fxs.property(i).name.indexOf("Speaker sway") === 0) terms.push('effect("' + fxs.property(i).name + '")(1) / 100');
+        N.scale.expression = "var k = " + terms.join(" * ") + ";\n[value[0] * k, value[1] * k];"; } }
+    if (fresh || !N.position.expression) N.position.expression = expr;
     return { layer: N, divided: divided }; }
 
   // ---- a whole beat. brief = { type ("opener"|"punch"), take, takeStart, speakerScale, speakerX, face {x0,y0,x1,y1}, pivotY, sway,
@@ -284,23 +353,46 @@ var AESPixelHeadline = (function () {
   function beat(comp, brief) { fontOK(); var rep = { warnings: [] }, b = brief, words = b.words, si = b.stressed, i;
     var W = words[si].t, lead = [], tl = [], lEnd = b.split ? b.split[0] : si, tStart = b.split ? b.split[1] : si + 1;
     for (i = 0; i < lEnd; i++) lead.push(words[i].text); for (i = tStart; i < words.length; i++) tl.push(words[i].text);
-    var type = b.type || "opener", st = stage(comp, { take: b.take, takeStart: b.takeStart, scale: b.speakerScale, x: b.speakerX, ground: b.ground, grade: b.grade });
+    var type = b.type || "opener", P = pfx(b);
+    // an earlier beat's speaker (and ground) can be passed in; otherwise the stage is built here
+    var st = b.speaker ? { speaker: b.speaker, ground: b.groundLayer || null } : stage(comp, { take: b.take, takeStart: b.takeStart, scale: b.speakerScale, x: b.speakerX, ground: b.ground, grade: b.grade, footageGround: b.footageGround, prefix: P });
     var scene = [st.speaker], stack = null, line = null, L = null, T = null;
-    if (type === "opener" && b.clips && b.clips.length) { stack = cardStack(comp, { clips: b.clips, at: W, side: b.side || "left", face: b.face, word: { box: { y1: comp.height * SIG.type.wordBaseline } } });
+    if (b.footageGround || b.insetGround) scene.push(b.insetGround || null);
+    if (type === "opener" && b.clips && b.clips.length) { stack = cardStack(comp, { clips: b.clips, at: W, side: b.side || "left", face: b.face, prefix: P, word: { box: { y1: comp.height * SIG.type.wordBaseline } } });
       for (i = 0; i < stack.layers.length; i++) scene.push(stack.layers[i]); rep.cards = stack.first; rep.warnings = rep.warnings.concat(stack.layout.warnings); }
-    if (stack) { line = drawnLine(comp, { at: W, path: stack.path, colour: b.accent, cards: b.clips.length }); scene.push(line); }
-    if (type === "opener" && lead.length) { L = leadIn(comp, { text: lead.join(" "), at: words[0].t }); scene.push(L); rep.leadAt = words[0].t; }
-    var hw = heroWord(comp, { text: words[si].text, at: W, colour: b.accent, glow: b.glow, exposure: b.exposure });
-    var px = pixelBlocks(comp, { word: hw, at: W, colour: b.accent, seed: b.seed, count: b.blockCount, dist: b.blockDist, lineBand: L ? [comp.height * SIG.type.leadBaseline - 50 * k(comp), comp.height * SIG.type.leadBaseline + 8 * k(comp)] : null });
+    if (stack) { line = drawnLine(comp, { at: W, path: stack.path, colour: b.accent, cards: b.clips.length, prefix: P }); scene.push(line); }
+    if (type === "opener" && lead.length) { L = leadIn(comp, { text: lead.join(" "), at: words[0].t, prefix: P, maxChars: b.maxChars }); scene.push(L); rep.leadAt = words[0].t; }
+    var hw = heroWord(comp, { text: words[si].text, at: W, colour: b.accent, glow: b.glow, exposure: b.exposure, darkGround: b.darkGround, prefix: P });
+    var px = pixelBlocks(comp, { word: hw, at: W, colour: b.accent, seed: b.seed, prefix: P, count: b.blockCount, dist: b.blockDist, lineBand: L ? [comp.height * SIG.type.leadBaseline - 50 * k(comp), comp.height * SIG.type.leadBaseline + 8 * k(comp)] : null });
     px.layer.moveAfter(hw.glowLayer || hw.layer); scene.push(px.layer, hw.layer); if (hw.glowLayer) scene.push(hw.glowLayer);   // blocks under the word and its glow
-    if (type === "opener" && tl.length) { T = tail(comp, { text: tl.join(" "), at: words[tStart].t, under: hw.layer }); scene.push(T); rep.tailAt = words[tStart].t; }
-    var pu = null; if (b.push !== false && type === "opener") { pu = push(comp, { at: b.pushAt !== undefined ? b.pushAt : (L ? words[0].t - sec(SIG.pushLead) : W - sec(48)), pivotY: b.pivotY, layers: scene, sway: b.sway }); rep.pushAt = pu.layer.scale.keyTime(1); rep.swayDivided = pu.divided; }
+    if (type === "opener" && tl.length) { T = tail(comp, { text: tl.join(" "), at: words[tStart].t, under: hw.layer, prefix: P, maxChars: b.maxChars }); scene.push(T); rep.tailAt = words[tStart].t; }
+    var pu = null; if (b.push !== false && type === "opener") { pu = push(comp, { at: b.pushAt !== undefined ? b.pushAt : (L ? words[0].t - sec(SIG.pushLead) : W - sec(48)), pivotY: b.pivotY, layers: scene, sway: b.sway, camera: b.camera, prefix: P }); rep.pushAt = b.camera ? (b.pushAt !== undefined ? b.pushAt : (L ? words[0].t - sec(SIG.pushLead) : W - sec(48))) : pu.layer.scale.keyTime(1); rep.swayDivided = pu.divided; rep.camera = pu.layer; }
+    else if (b.camera) { for (i = 0; i < scene.length; i++) if (scene[i] && scene[i].parent !== b.camera) scene[i].parent = b.camera; }
     motionBlur(comp, scene.concat([st.ground]));
+    rep.speaker = st.speaker; rep.ground = st.ground; rep.prefix = P;
     rep.W = W; rep.glow = hw.glow; rep.wordBox = hw.box; rep.wordSize = hw.size; rep.blocks = px.blocks.length;
     if (stack) { rep.cardScale = stack.layout.cardScale; rep.cardPos = stack.layout.pos; rep.linePath = stack.path.vertices; }
     return rep; }
 
-  return { SIG: SIG, fontOK: fontOK, hasEffect: hasEffect, stage: stage, push: push, leadIn: leadIn, heroWord: heroWord, blockSchedule: blockSchedule,
-    pixelBlocks: pixelBlocks, card: card, stackLayout: stackLayout, cardStack: cardStack, linePath: linePath, drawnLine: drawnLine, tail: tail,
-    motionBlur: motionBlur, beat: beat, reveal: reveal };
+  // ---- one call that clears a beat (extended). o = { prefix (the beat's), at (s: when it starts to leave) }. Text leaves by
+  //      word from the last word, the giant word scales away, cards go from the last one at a 2-frame stagger, each the way it
+  //      came at about twice the speed with no overshoot; all within SIG.exit.within frames. Returns { end (s), layers }.
+  function exitBeat(comp, o) { var P = pfx(o), X = SIG.exit, end = o.at, names = [], i, L, cards = [];
+    for (i = 1; i <= comp.numLayers; i++) { L = comp.layer(i); if (L.name.indexOf(P) !== 0) continue; var rest = L.name.substring(P.length);
+      if (rest === "Lead-in" || rest === "Tail") { end = Math.max(end, exitText(L, o.at)); names.push(L.name); }
+      else if (rest === "Word" || rest === "Word glow") { var v = L.scale.valueAtTime(o.at, false)[0];
+        sigKeys(L.scale, o.at, [[0, v / 100, .33, X.easeOut, 0, 0], [X.wordFrames, 0, X.easeIn, .33, 0, 0]], 100, dims(L.scale));
+        L.outPoint = o.at + sec(X.wordFrames); end = Math.max(end, L.outPoint); names.push(L.name); }
+      else if (/^Card \d+$/.test(rest)) cards.push(L);
+      else if (rest === "Pixels" || rest === "Line") { if (L.outPoint > o.at + sec(X.within)) L.outPoint = o.at + sec(X.within); names.push(L.name); } }
+    cards.sort(function (a, b) { return Number(b.name.substring(P.length + 5)) - Number(a.name.substring(P.length + 5)); });
+    var stg = cards.length > 1 ? Math.min(X.cardStagger, (X.within - X.cardFrames) / (cards.length - 1)) : 0;
+    for (i = 0; i < cards.length; i++) { var c = cards[i], t0 = o.at + sec(i * stg), sv = c.scale.valueAtTime(t0, false)[0];
+      sigKeys(c.scale, t0, [[0, sv / 100, .33, X.easeOut, 0, 0], [X.cardFrames, 0, X.easeIn, .33, 0, 0]], 100, dims(c.scale));
+      c.outPoint = t0 + sec(X.cardFrames); end = Math.max(end, c.outPoint); names.push(c.name); }
+    return { end: end, layers: names }; }
+
+  return { SIG: SIG, fontOK: fontOK, hasEffect: hasEffect, stage: stage, zoomOut: zoomOut, exitInset: exitInset, push: push, leadIn: leadIn, heroWord: heroWord,
+    blockSchedule: blockSchedule, pixelBlocks: pixelBlocks, card: card, stackLayout: stackLayout, cardStack: cardStack, linePath: linePath, drawnLine: drawnLine,
+    tail: tail, motionBlur: motionBlur, beat: beat, exitBeat: exitBeat, exitText: exitText, reveal: reveal, wrap: wrap };
 })();
