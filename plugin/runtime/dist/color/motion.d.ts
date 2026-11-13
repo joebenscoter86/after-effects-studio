@@ -198,4 +198,127 @@ export interface MotionRegistration {
  * footage the correlation stays low.
  */
 export declare function registerMotionMaps(ref: MotionMap, build: MotionMap): MotionRegistration | null;
+/**
+ * Starting points, not measured judgments:
+ * - restBelow 0.02: a frame moving under 2% of the property's top speed is at rest.
+ * - noEaseAbove 0.6: a move whose first (or last) moving frame already runs at
+ *   60% of its middle speed starts (or stops) with no ease; an ease of any
+ *   length starts near 0 (an easy ease's first frame of 30 runs at about 7%).
+ * - jumpRatio 2.5 and jumpShare 0.25: inside a move, speed changing 2.5 times
+ *   from one frame to the next and by a quarter of the move's top speed.
+ * - settleWithin 0.01: within 1% of the move's distance of where it ends is settled.
+ * - joinGap 2: moves at rest for 2 frames or fewer are one move (an overshoot
+ *   turns back through zero speed).
+ */
+export declare const CURVE_DEFAULTS: {
+    restBelow: number;
+    noEaseAbove: number;
+    jumpRatio: number;
+    jumpShare: number;
+    settleWithin: number;
+    joinGap: number;
+};
+export interface CurveSample {
+    frame: number;
+    time: number;
+    value: number[];
+}
+export interface CurveMove {
+    /** The last frame at rest before the move, and the first at rest after it. */
+    from: number;
+    to: number;
+    distance: number;
+    /** Units a second. */
+    peakSpeed: number;
+    peakFrame: number;
+    startEase: "eased" | "none";
+    endEase: "eased" | "none";
+    /** Past where it ends, along the way it moved: units and share of the distance. */
+    overshoot: {
+        amount: number;
+        share: number;
+        frame: number;
+    } | null;
+    /** Frames from first reaching the end value to staying within settleWithin of it. */
+    settle: {
+        frames: number;
+        from: number;
+        at: number;
+    } | null;
+}
+export interface CurveFlag {
+    kind: "no ease" | "speed jump" | "overshoot";
+    frames: number[];
+    reading: string;
+}
+export interface CurveReport {
+    frames: Array<CurveSample & {
+        speed: number;
+    }>;
+    moves: CurveMove[];
+    flags: CurveFlag[];
+    reading: string;
+}
+/** Speed per frame, the moves, and flags for a move with no ease, a jump in speed, and overshoot with its settle. */
+export declare function analyzeCurve(samples: CurveSample[], fps: number, opts?: Partial<typeof CURVE_DEFAULTS>): CurveReport;
+/** A small graph of the curve: each value channel scaled to its range (light), speed (orange), moves shaded, flags in red. */
+export declare function curveGraph(r: CurveReport, size?: {
+    width: number;
+    height: number;
+}): {
+    width: number;
+    height: number;
+    rgb: Float64Array;
+};
+/**
+ * Frames where loudness (Convert Audio to Keyframes' amplitude per frame)
+ * rises past `share` of the way from its median to its top, at least `gap`
+ * frames after the last. On three tone bursts at 0.5, 1.2 and 2.0 s it read
+ * frames 15, 36 and 60.
+ */
+export declare function soundOnsets(values: number[], fps: number, opts?: {
+    share?: number;
+    gap?: number;
+}): Array<{
+    frame: number;
+    time: number;
+    level: number;
+}>;
+/** Word or beat times from a timing file: a JSON list ({ word|w|text|label, start|time|t seconds, or frame }) or CSV (time,label). */
+export declare function parseTiming(text: string, fps: number): Array<{
+    time: number;
+    label: string;
+}>;
+/**
+ * Where picture meets sound: the detectability thresholds in ITU-R BT.1359
+ * are sound 45 ms early and 125 ms late against the picture; at 30 fps, a
+ * picture event 2 frames after its sound, or 4 frames before it, is flagged.
+ */
+export declare const SYNC_DEFAULTS: {
+    lateFrames: number;
+    earlyFrames: number;
+};
+export interface SyncEvent {
+    name: string;
+    time: number;
+    frames: number;
+    marker: {
+        time: number;
+        label: string;
+    } | null;
+}
+/** Each event's distance in frames to the nearest marker; late (after the marker) and early (before) beyond the limits are flagged. */
+export declare function syncReport(events: Array<{
+    name: string;
+    time: number;
+}>, markers: Array<{
+    time: number;
+    label: string;
+}>, fps: number, opts?: Partial<typeof SYNC_DEFAULTS>): {
+    events: SyncEvent[];
+    flags: Array<SyncEvent & {
+        reading: string;
+    }>;
+    reading: string;
+};
 //# sourceMappingURL=motion.d.ts.map

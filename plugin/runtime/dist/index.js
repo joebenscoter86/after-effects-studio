@@ -3271,8 +3271,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path15) {
-      let input2 = path15;
+    function removeDotSegments(path16) {
+      let input2 = path16;
       const output2 = [];
       let nextSlash = -1;
       let len = 0;
@@ -3346,11 +3346,11 @@ var require_utils = __commonJS({
       }
       return output2.join("");
     }
-    function removeDotSegmentsRelative(path15) {
-      if (path15 === "" || path15[0] === "/") {
-        return removeDotSegments(path15);
+    function removeDotSegmentsRelative(path16) {
+      if (path16 === "" || path16[0] === "/") {
+        return removeDotSegments(path16);
       }
-      const segments = path15.split("/");
+      const segments = path16.split("/");
       const last = segments.length - 1;
       const output2 = [];
       let trailingDirectory = false;
@@ -3713,8 +3713,8 @@ var require_schemes = __commonJS({
       }
       if (wsComponent.resourceName) {
         const queryIndex = wsComponent.resourceName.indexOf("?");
-        const path15 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
-        wsComponent.path = path15 && path15 !== "/" ? path15 : void 0;
+        const path16 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
+        wsComponent.path = path16 && path16 !== "/" ? path16 : void 0;
         wsComponent.query = queryIndex === -1 ? void 0 : wsComponent.resourceName.slice(queryIndex + 1);
         wsComponent.resourceName = void 0;
       }
@@ -7251,12 +7251,12 @@ var require_dist = __commonJS({
         throw new Error(`Unknown format "${name}"`);
       return f;
     };
-    function addFormats(ajv, list, fs12, exportName) {
+    function addFormats(ajv, list, fs13, exportName) {
       var _a3;
       var _b;
       (_a3 = (_b = ajv.opts.code).formats) !== null && _a3 !== void 0 ? _a3 : _b.formats = (0, codegen_1._)`require("ajv-formats/dist/formats").${exportName}`;
       for (const f of list)
-        ajv.addFormat(f, fs12[f]);
+        ajv.addFormat(f, fs13[f]);
     }
     module.exports = exports = formatsPlugin;
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -7555,23 +7555,23 @@ __export(eval_exports, {
   readScriptFile: () => readScriptFile
 });
 import { readFileSync, realpathSync, statSync as statSync2 } from "node:fs";
-import * as path10 from "node:path";
+import * as path11 from "node:path";
 function realOrResolved(p) {
   try {
     return realpathSync(p);
   } catch {
-    return path10.resolve(p);
+    return path11.resolve(p);
   }
 }
 function isInside(p, root) {
-  const rel = path10.relative(root, p);
-  return rel === "" || !rel.startsWith("..") && !path10.isAbsolute(rel);
+  const rel = path11.relative(root, p);
+  return rel === "" || !rel.startsWith("..") && !path11.isAbsolute(rel);
 }
 function refuse(error62, hint) {
   return hint ? { ok: false, error: error62, hint } : { ok: false, error: error62 };
 }
 function readScriptFile(file2) {
-  if (!path10.isAbsolute(file2)) {
+  if (!path11.isAbsolute(file2)) {
     return {
       ok: false,
       error: `file must be an absolute path (got '${file2}'): the server's working directory is not yours`
@@ -7849,8 +7849,8 @@ var ZodError = class _ZodError extends Error {
   constructor(issues) {
     super();
     this.issues = [];
-    this.addIssue = (sub) => {
-      this.issues = [...this.issues, sub];
+    this.addIssue = (sub2) => {
+      this.issues = [...this.issues, sub2];
     };
     this.addIssues = (subs = []) => {
       this.issues = [...this.issues, ...subs];
@@ -7932,13 +7932,13 @@ var ZodError = class _ZodError extends Error {
   flatten(mapper = (issue2) => issue2.message) {
     const fieldErrors = /* @__PURE__ */ Object.create(null);
     const formErrors = [];
-    for (const sub of this.issues) {
-      if (sub.path.length > 0) {
-        const firstEl = sub.path[0];
+    for (const sub2 of this.issues) {
+      if (sub2.path.length > 0) {
+        const firstEl = sub2.path[0];
         fieldErrors[firstEl] = fieldErrors[firstEl] || [];
-        fieldErrors[firstEl].push(mapper(sub));
+        fieldErrors[firstEl].push(mapper(sub2));
       } else {
-        formErrors.push(mapper(sub));
+        formErrors.push(mapper(sub2));
       }
     }
     return { formErrors, fieldErrors };
@@ -8063,8 +8063,8 @@ function getErrorMap() {
 
 // node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path15, errorMaps, issueData } = params;
-  const fullPath = [...path15, ...issueData.path || []];
+  const { data, path: path16, errorMaps, issueData } = params;
+  const fullPath = [...path16, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -8179,11 +8179,11 @@ var errorUtil;
 
 // node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path15, key) {
+  constructor(parent, value, path16, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path15;
+    this._path = path16;
     this._key = key;
   }
   get path() {
@@ -12138,10 +12138,10 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path15) {
-  if (!path15)
+function getElementAtPath(obj, path16) {
+  if (!path16)
     return obj;
-  return path15.reduce((acc, key) => acc?.[key], obj);
+  return path16.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -12481,11 +12481,11 @@ function explicitlyAborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path15, issues) {
+function prefixIssues(path16, issues) {
   return issues.map((iss) => {
     var _a3;
     (_a3 = iss).path ?? (_a3.path = []);
-    iss.path.unshift(path15);
+    iss.path.unshift(path16);
     return iss;
   });
 }
@@ -12936,27 +12936,27 @@ function node(obj, key, make) {
 function flattenError(error62, mapper = (issue2) => issue2.message) {
   const fieldErrors = {};
   const formErrors = [];
-  for (const sub of error62.issues) {
-    if (sub.path.length > 0) {
-      node(fieldErrors, sub.path[0], () => []).push(mapper(sub));
+  for (const sub2 of error62.issues) {
+    if (sub2.path.length > 0) {
+      node(fieldErrors, sub2.path[0], () => []).push(mapper(sub2));
     } else {
-      formErrors.push(mapper(sub));
+      formErrors.push(mapper(sub2));
     }
   }
   return { formErrors, fieldErrors };
 }
 function formatError(error62, mapper = (issue2) => issue2.message) {
   const fieldErrors = { _errors: [] };
-  const processError = (error63, path15 = []) => {
+  const processError = (error63, path16 = []) => {
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path15, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path16, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path15, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path16, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path15, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path16, ...issue2.path]);
       } else {
-        const fullpath = [...path15, ...issue2.path];
+        const fullpath = [...path16, ...issue2.path];
         if (fullpath.length === 0) {
           fieldErrors._errors.push(mapper(issue2));
         } else {
@@ -12995,17 +12995,17 @@ function formatError(error62, mapper = (issue2) => issue2.message) {
 }
 function treeifyError(error62, mapper = (issue2) => issue2.message) {
   const result = { errors: [] };
-  const processError = (error63, path15 = []) => {
+  const processError = (error63, path16 = []) => {
     var _a3;
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path15, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path16, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path15, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path16, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path15, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path16, ...issue2.path]);
       } else {
-        const fullpath = [...path15, ...issue2.path];
+        const fullpath = [...path16, ...issue2.path];
         if (fullpath.length === 0) {
           result.errors.push(mapper(issue2));
           continue;
@@ -13044,8 +13044,8 @@ function treeifyError(error62, mapper = (issue2) => issue2.message) {
 }
 function toDotPath(_path) {
   const segs = [];
-  const path15 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
-  for (const seg of path15) {
+  const path16 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
+  for (const seg of path16) {
     if (typeof seg === "number")
       segs.push(`[${seg}]`);
     else if (typeof seg === "symbol")
@@ -26784,13 +26784,13 @@ function _promise(Class2, innerType) {
 }
 // @__NO_SIDE_EFFECTS__
 function _custom(Class2, fn, _params) {
-  const norm = normalizeParams(_params);
-  norm.abort ?? (norm.abort = true);
+  const norm2 = normalizeParams(_params);
+  norm2.abort ?? (norm2.abort = true);
   const schema = new Class2({
     type: "custom",
     check: "custom",
     fn,
-    ...norm
+    ...norm2
   });
   return schema;
 }
@@ -28596,11 +28596,11 @@ function normalizeObjectSchema(schema) {
   }
   return void 0;
 }
-function getDotPath(path15) {
-  if (path15.length === 0) {
+function getDotPath(path16) {
+  if (path16.length === 0) {
     return "object root";
   }
-  return path15.reduce((acc, seg, index) => {
+  return path16.reduce((acc, seg, index) => {
     if (index === 0) {
       return String(seg);
     }
@@ -30827,13 +30827,13 @@ function resolveRef(ref, ctx) {
   if (!ref.startsWith("#")) {
     throw new Error("External $ref is not supported, only local refs (#/...) are allowed");
   }
-  const path15 = ref.slice(1).split("/").filter(Boolean);
-  if (path15.length === 0) {
+  const path16 = ref.slice(1).split("/").filter(Boolean);
+  if (path16.length === 0) {
     return ctx.rootSchema;
   }
   const defsKey = ctx.version === "draft-2020-12" ? "$defs" : "definitions";
-  if (path15[0] === defsKey) {
-    const key = path15[1] === void 0 ? void 0 : decodeJSONPointerSegment(path15[1]);
+  if (path16[0] === defsKey) {
+    const key = path16[1] === void 0 ? void 0 : decodeJSONPointerSegment(path16[1]);
     if (!key || !ctx.defs[key]) {
       throw new Error(`Reference not found: ${ref}`);
     }
@@ -30959,12 +30959,12 @@ function containsRef(value) {
     return value.some(containsRef);
   if (typeof value.$ref === "string")
     return true;
-  return Object.entries(value).some(([key, sub]) => {
+  return Object.entries(value).some(([key, sub2]) => {
     if (SCHEMA_KEYWORDS.has(key))
-      return containsRef(sub);
-    if (!SCHEMA_MAP_KEYWORDS.has(key) || typeof sub !== "object" || sub === null)
+      return containsRef(sub2);
+    if (!SCHEMA_MAP_KEYWORDS.has(key) || typeof sub2 !== "object" || sub2 === null)
       return false;
-    return Object.values(sub).some(containsRef);
+    return Object.values(sub2).some(containsRef);
   });
 }
 function plural(n) {
@@ -44602,7 +44602,7 @@ function measureEdge(img, bg, t) {
   }
   widths.sort((a, b) => a - b);
   const m = widths.length;
-  const median3 = m === 0 ? null : m % 2 ? widths[(m - 1) / 2] : (widths[m / 2 - 1] + widths[m / 2]) / 2;
+  const median4 = m === 0 ? null : m % 2 ? widths[(m - 1) / 2] : (widths[m / 2 - 1] + widths[m / 2]) / 2;
   const belowOpaque = labelRegions(
     alpha,
     width,
@@ -44706,7 +44706,7 @@ function measureEdge(img, bg, t) {
       transparent: r4(transparent / n)
     },
     width: {
-      typical: median3 === null ? null : r2(median3),
+      typical: median4 === null ? null : r2(median4),
       p90: m === 0 ? null : r2(widths[Math.floor(0.9 * (m - 1))]),
       worst: m === 0 ? null : r2(worst),
       worstAt,
@@ -46130,6 +46130,234 @@ function registerMotionMaps(ref, build) {
     correlation: r32(best.c)
   };
 }
+var CURVE_DEFAULTS = {
+  restBelow: 0.02,
+  noEaseAbove: 0.6,
+  jumpRatio: 2.5,
+  jumpShare: 0.25,
+  settleWithin: 0.01,
+  joinGap: 2
+};
+var median2 = (v) => {
+  if (!v.length) return 0;
+  const s = v.slice().sort((a, b) => a - b);
+  const m = s.length >> 1;
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+};
+var norm = (v) => Math.sqrt(v.reduce((s, x) => s + x * x, 0));
+var sub = (a, b) => a.map((x, i) => x - (b[i] ?? 0));
+var rnd = (v, k = 1e3) => Math.round(v * k) / k;
+function analyzeCurve(samples, fps, opts = {}) {
+  const o = { ...CURVE_DEFAULTS };
+  for (const [k, v] of Object.entries(opts)) if (typeof v === "number") o[k] = v;
+  const frames = samples.map((s, i) => ({
+    ...s,
+    speed: i === 0 ? 0 : rnd(norm(sub(s.value, samples[i - 1].value)) * fps)
+  }));
+  const peak = Math.max(0, ...frames.map((f) => f.speed));
+  const flags = [];
+  if (peak <= 1e-9)
+    return { frames, moves: [], flags, reading: "The property does not move over the frames read." };
+  const moving = frames.map((f) => f.speed > o.restBelow * peak);
+  const runs = [];
+  for (let i = 0; i < frames.length; i++) {
+    if (!moving[i]) continue;
+    let j = i;
+    while (j + 1 < frames.length && moving[j + 1]) j++;
+    const last = runs[runs.length - 1];
+    if (last && i - last[1] - 1 <= o.joinGap) last[1] = j;
+    else runs.push([i, j]);
+    i = j;
+  }
+  const moves = runs.map(([i0, i1]) => {
+    const from = Math.max(0, i0 - 1);
+    const to = i1;
+    const sp = frames.slice(i0, i1 + 1).map((f) => f.speed);
+    const mid = median2(sp);
+    let pk = i0;
+    for (let i = i0; i <= i1; i++) if (frames[i].speed > frames[pk].speed) pk = i;
+    const start = frames[from].value;
+    const end = frames[to].value;
+    const way = sub(end, start);
+    const distance = norm(way);
+    const unit = distance > 0 ? way.map((x) => x / distance) : way;
+    let over = 0;
+    let overFrame = -1;
+    let crossed = -1;
+    for (let i = i0; i <= to; i++) {
+      const p = sub(frames[i].value, end).reduce((s, x, k) => s + x * unit[k], 0);
+      if (p > over) {
+        over = p;
+        overFrame = frames[i].frame;
+      }
+      if (crossed < 0 && p >= -o.settleWithin * distance) crossed = i;
+    }
+    const overshoot = distance > 0 && over / distance >= o.settleWithin ? { amount: rnd(over), share: rnd(over / distance), frame: overFrame } : null;
+    let settle2 = null;
+    if (overshoot && crossed >= 0) {
+      let at = to;
+      while (at - 1 > crossed && norm(sub(frames[at - 1].value, end)) <= o.settleWithin * distance) at--;
+      settle2 = { frames: frames[at].frame - frames[crossed].frame, from: frames[crossed].frame, at: frames[at].frame };
+    }
+    return {
+      from: frames[from].frame,
+      to: frames[to].frame,
+      distance: rnd(distance),
+      peakSpeed: rnd(frames[pk].speed),
+      peakFrame: frames[pk].frame,
+      startEase: mid > 0 && frames[i0].speed >= o.noEaseAbove * mid ? "none" : "eased",
+      endEase: mid > 0 && frames[i1].speed >= o.noEaseAbove * mid ? "none" : "eased",
+      overshoot,
+      settle: settle2
+    };
+  });
+  for (const [k, m] of moves.entries()) {
+    const [i0, i1] = runs[k];
+    const span = `The move from frame ${m.from} to ${m.to}`;
+    const mid = median2(frames.slice(i0, i1 + 1).map((f) => f.speed));
+    const pc = (v) => `${Math.round(v / (mid || 1) * 100)}%`;
+    if (m.startEase === "none" || m.endEase === "none") {
+      const both = m.startEase === "none" && m.endEase === "none";
+      flags.push({
+        kind: "no ease",
+        frames: both ? [m.from, m.to] : m.startEase === "none" ? [m.from] : [m.to],
+        reading: `${span} ${both ? "starts and stops at full speed" : m.startEase === "none" ? "starts at full speed" : "stops at full speed"} (no ease): its ${both ? `first and last moving frames run at ${pc(frames[i0].speed)} and ${pc(frames[i1].speed)}` : m.startEase === "none" ? `first moving frame runs at ${pc(frames[i0].speed)}` : `last moving frame runs at ${pc(frames[i1].speed)}`} of its middle speed. Ease it, unless a mechanical, constant move is meant.`
+      });
+    }
+    const movePeak = m.peakSpeed;
+    for (let j = i0 + 2; j <= i1 - 1; j++) {
+      const a = frames[j - 1].speed;
+      const b = frames[j].speed;
+      const lo = Math.min(a, b);
+      if (Math.abs(b - a) >= o.jumpShare * movePeak && (lo <= 0 || Math.max(a, b) / lo >= o.jumpRatio))
+        flags.push({
+          kind: "speed jump",
+          frames: [frames[j - 1].frame, frames[j].frame],
+          reading: `${span} jumps in speed between frames ${frames[j - 1].frame} and ${frames[j].frame}: ${rnd(a, 10)} to ${rnd(b, 10)} units a second (top ${rnd(movePeak, 10)}). Look at the keys there.`
+        });
+    }
+    if (m.overshoot)
+      flags.push({
+        kind: "overshoot",
+        frames: [m.overshoot.frame],
+        reading: `${span} overshoots by ${Math.round(m.overshoot.share * 100)}% of its distance (${rnd(m.overshoot.amount, 10)} units, at frame ${m.overshoot.frame})${m.settle ? ` and takes ${m.settle.frames} frames to settle within ${o.settleWithin * 100}% (frames ${m.settle.from} to ${m.settle.at})` : ""}. Whether that is the bounce you want is a judgment.`
+      });
+  }
+  const problems = flags.filter((f) => f.kind !== "overshoot");
+  return {
+    frames,
+    moves,
+    flags,
+    reading: `${moves.length} move${moves.length === 1 ? "" : "s"} over frames ${frames[0].frame} to ${frames[frames.length - 1].frame}; ` + (problems.length ? problems.map((f) => f.reading).join(" ") : "every move eases in and out, with no jump in speed.") + flags.filter((f) => f.kind === "overshoot").map((f) => ` ${f.reading}`).join("")
+  };
+}
+function curveGraph(r, size = { width: 480, height: 160 }) {
+  const { width: W, height: H } = size;
+  const rgb = new Float64Array(W * H * 3);
+  const put = (x, y, c) => {
+    if (x < 0 || y < 0 || x >= W || y >= H) return;
+    const p = (Math.round(y) * W + Math.round(x)) * 3;
+    rgb[p] = c[0];
+    rgb[p + 1] = c[1];
+    rgb[p + 2] = c[2];
+  };
+  for (let i = 0; i < W * H; i++) rgb.set([0.08, 0.08, 0.1], i * 3);
+  const n = r.frames.length;
+  if (!n) return { width: W, height: H, rgb };
+  const pad = 6;
+  const X = (i) => pad + (W - 2 * pad) * i / Math.max(1, n - 1);
+  const Y = (u) => H - pad - (H - 2 * pad) * u;
+  const first = r.frames[0].frame;
+  for (const m of r.moves)
+    for (let x = Math.floor(X(m.from - first)); x <= Math.ceil(X(m.to - first)); x++)
+      for (let y = pad; y < H - pad; y++) put(x, y, [0.14, 0.14, 0.18]);
+  const line = (vals, c) => {
+    const lo = Math.min(...vals);
+    const hi = Math.max(...vals);
+    const s = hi - lo > 1e-12 ? hi - lo : 1;
+    for (let i = 1; i < n; i++) {
+      const x0 = X(i - 1);
+      const x1 = X(i);
+      const y0 = Y((vals[i - 1] - lo) / s);
+      const y1 = Y((vals[i] - lo) / s);
+      const steps2 = Math.max(1, Math.ceil(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0))));
+      for (let k = 0; k <= steps2; k++) put(x0 + (x1 - x0) * k / steps2, y0 + (y1 - y0) * k / steps2, c);
+    }
+  };
+  const dims2 = r.frames[0].value.length;
+  for (let d = 0; d < dims2; d++) line(r.frames.map((f) => f.value[d] ?? 0), [0.85 - 0.2 * d, 0.85, 0.9]);
+  line(r.frames.map((f) => f.speed), [1, 0.55, 0.15]);
+  for (const f of r.flags.filter((x) => x.kind !== "overshoot"))
+    for (const fr of f.frames) for (let y = pad; y < pad + 10; y++) put(X(fr - first), y, [0.95, 0.2, 0.2]);
+  return { width: W, height: H, rgb };
+}
+function soundOnsets(values, fps, opts = {}) {
+  const share = opts.share ?? 0.3;
+  const gap = opts.gap ?? 3;
+  const top = Math.max(0, ...values);
+  if (top <= 1e-6) return [];
+  const floor = median2(values);
+  const thr = floor + share * (top - floor);
+  const out = [];
+  let last = -Infinity;
+  for (let f = 0; f < values.length; f++) {
+    if (values[f] >= thr && (f === 0 || values[f - 1] < thr) && f - last >= gap) {
+      out.push({ frame: f, time: f / fps, level: rnd(values[f]) });
+      last = f;
+    }
+  }
+  return out;
+}
+function parseTiming(text, fps) {
+  const t = text.trim();
+  if (t.startsWith("[") || t.startsWith("{")) {
+    const j = JSON.parse(t);
+    const list = Array.isArray(j) ? j : j.words ?? j.markers ?? j.beats ?? [];
+    return list.map((e, i) => {
+      const x = typeof e === "number" ? { time: e } : e;
+      const label = String(x.word ?? x.w ?? x.text ?? x.label ?? x.name ?? "");
+      const sec = [x.start, x.time, x.t].find((v) => typeof v === "number");
+      const time3 = sec ?? (typeof x.frame === "number" ? x.frame / fps : void 0);
+      if (time3 === void 0) throw new Error(`entry ${i + 1} of the timing file has no time (start, time or t in seconds, or frame)`);
+      return { time: time3, label };
+    });
+  }
+  const out = [];
+  for (const line of t.split(/\r?\n/)) {
+    const [a, ...rest] = line.split(",");
+    const time3 = Number(a);
+    if (!line.trim() || !Number.isFinite(time3)) continue;
+    out.push({ time: time3, label: rest.join(",").trim() });
+  }
+  if (!out.length) throw new Error("no time,label lines in the timing file");
+  return out;
+}
+var SYNC_DEFAULTS = { lateFrames: 2, earlyFrames: 4 };
+function syncReport(events, markers, fps, opts = {}) {
+  const o = {
+    lateFrames: opts.lateFrames ?? SYNC_DEFAULTS.lateFrames,
+    earlyFrames: opts.earlyFrames ?? SYNC_DEFAULTS.earlyFrames
+  };
+  if (!markers.length)
+    return { events: [], flags: [], reading: "No markers to compare with: add word or beat markers first (sound.markers)." };
+  const out = events.map((e) => {
+    let best = markers[0];
+    for (const m of markers) if (Math.abs(m.time - e.time) < Math.abs(best.time - e.time)) best = m;
+    return { name: e.name, time: rnd(e.time, 1e4), frames: Math.round((e.time - best.time) * fps), marker: best };
+  });
+  const flags = out.filter((e) => e.frames >= o.lateFrames || e.frames <= -o.earlyFrames).map((e) => {
+    const n = Math.abs(e.frames);
+    return {
+      ...e,
+      reading: `${e.name} is ${n} frame${n === 1 ? "" : "s"} ${e.frames > 0 ? "after" : "before"} the nearest marker (${e.marker?.label ? `'${e.marker.label}' ` : ""}at ${rnd(e.marker.time, 1e3)} s): ${e.frames > 0 ? "late" : "early"} (flagged from ${e.frames > 0 ? o.lateFrames : o.earlyFrames} frames ${e.frames > 0 ? "after" : "before"}).`
+    };
+  });
+  return {
+    events: out,
+    flags,
+    reading: flags.length ? flags.map((f) => f.reading).join(" ") : `All ${out.length} events are within ${o.lateFrames - 1} frame${o.lateFrames - 1 === 1 ? "" : "s"} after and ${o.earlyFrames - 1} before their nearest marker.`
+  };
+}
 
 // src/color/sheet.ts
 var TOL = 2 / 255;
@@ -46628,7 +46856,7 @@ function lookCrops(img, args) {
   return out;
 }
 var MAD_TO_SD = 1.4826;
-function median2(v) {
+function median3(v) {
   if (!v.length) return NaN;
   const s = v.slice().sort((a, b) => a - b);
   const m = s.length >> 1;
@@ -46640,8 +46868,8 @@ function percentile(v, p) {
   return s[Math.min(s.length - 1, Math.max(0, Math.round(p / 100 * (s.length - 1))))];
 }
 var robustSd = (v) => {
-  const m = median2(v);
-  const band = Math.max(4 * MAD_TO_SD * median2(v.map((x) => Math.abs(x - m))), 3 / 255);
+  const m = median3(v);
+  const band = Math.max(4 * MAD_TO_SD * median3(v.map((x) => Math.abs(x - m))), 3 / 255);
   let n = 0;
   let sum = 0;
   let sq = 0;
@@ -46750,7 +46978,7 @@ function edgeWidths(c, minContrast) {
   scan(c.height, c.width, (u, v) => Y[u * c.width + v]);
   if (widths.length < 3) return { edgeWidth: null, p90: null, edges: widths.length };
   return {
-    edgeWidth: Math.round(median2(widths) * 100) / 100,
+    edgeWidth: Math.round(median3(widths) * 100) / 100,
     p90: Math.round(percentile(widths, 90) * 100) / 100,
     edges: widths.length
   };
@@ -47003,7 +47231,7 @@ function summarizeLookSeries(frames, args) {
       const t = a && b ? temporalGrain(a, b) : null;
       if (t) per.push(t);
     }
-    const temporal = per.length ? [0, 1, 2].map((k) => Math.round(median2(per.map((p) => p[k])) * 100) / 100) : null;
+    const temporal = per.length ? [0, 1, 2].map((k) => Math.round(median3(per.map((p) => p[k])) * 100) / 100) : null;
     const changes = [];
     for (let i = 1; i < frames.length; i++) {
       const a = frames[i - 1].get(r.name)?.alpha;
@@ -47013,7 +47241,7 @@ function summarizeLookSeries(frames, args) {
       for (let q = 0; q < a.length; q++) sum += Math.abs(b[q] - a[q]);
       changes.push(sum / a.length);
     }
-    const matteChange = changes.length ? Math.round(median2(changes) * 1e4) / 1e4 : null;
+    const matteChange = changes.length ? Math.round(median3(changes) * 1e4) / 1e4 : null;
     return { name: r.name, temporal, pairs: per.length, matteChange };
   });
   const out = { regions };
@@ -47234,7 +47462,7 @@ function paletteOf(samples, k) {
     return { hex: rgbHex(rgb), colour: labOf(rgb), share: Math.round(a[3] / pts.length * 1e3) / 1e3 };
   }).sort((x, y) => y.share - x.share);
 }
-var medianOf = (v) => v.length ? median2(v) : null;
+var medianOf = (v) => v.length ? median3(v) : null;
 function referenceReader(opts) {
   const D = REFERENCE_DEFAULTS;
   const nLook = Math.max(1, Math.min(opts.total, opts.lookFrames ?? D.lookFrames));
@@ -47323,7 +47551,7 @@ function referenceReader(opts) {
     const neighbours = pairs.length > 0 && pairs.every((q) => q.to.index === q.from.index + 1);
     let spacing = opts.spacing ?? { how: "rendered", step: neighbours ? 1 : null };
     let consecutive = neighbours;
-    const medianChange = pairs.length ? median2(pairs.map((q) => q.change)) : 0;
+    const medianChange = pairs.length ? median3(pairs.map((q) => q.change)) : 0;
     const mc = medianChange.toFixed(4);
     const unsure = spacing.how === "assumed" || spacing.how === "file names" && spacing.step === 1;
     if (consecutive && unsure) {
@@ -47389,7 +47617,7 @@ function referenceReader(opts) {
         },
         detail: { x: r32(avg(weights.map((w) => w.detail.x))), y: r32(avg(weights.map((w) => w.detail.y))) }
       },
-      sharpness: { edgeWidth: gridEw.length ? r22(median2(gridEw)) : null },
+      sharpness: { edgeWidth: gridEw.length ? r22(median3(gridEw)) : null },
       grain: r22(avg(regionReports.slice(0, 9).map((r) => r.grain))),
       motion: {
         consecutive,
@@ -48700,7 +48928,7 @@ function measureScreen(img, t) {
     if (y < minY) minY = y;
     if (y > maxY) maxY = y;
   }
-  const median3 = histMedian(hist, count);
+  const median4 = histMedian(hist, count);
   const mean = [sum[0] / count, sum[1] / count, sum[2] / count];
   const labels = new Int32Array(n);
   const queue = new Int32Array(n);
@@ -48757,11 +48985,11 @@ function measureScreen(img, t) {
   base.screenPixels = count;
   base.share = r43(count / measured);
   base.bounds = { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
-  base.colour = { median: r4rgb3(median3), mean: r4rgb3(mean), nearSubject };
+  base.colour = { median: r4rgb3(median4), mean: r4rgb3(mean), nearSubject };
   base.subject = subject;
   base.evenness = evenness;
   base.grain = grain;
-  base.reading = `${kind} screen, ${Math.round(base.share * 100)}% of the measured pixels; median ${fmt4(median3)}` + (near ? `, near the subject ${fmt4(near)}` : "") + `. ${evenness.reading}. ${grain ? grain.reading : "grain not measured (no screen pixel has screen all round it)"}.`;
+  base.reading = `${kind} screen, ${Math.round(base.share * 100)}% of the measured pixels; median ${fmt4(median4)}` + (near ? `, near the subject ${fmt4(near)}` : "") + `. ${evenness.reading}. ${grain ? grain.reading : "grain not measured (no screen pixel has screen all round it)"}.`;
   return base;
 }
 function measureEvenness(img, isScreen, measuredAt, ch, kind, t) {
@@ -50829,8 +51057,8 @@ function keylightViewNumber(v) {
   if (typeof v === "number" && Number.isInteger(v) && v >= 1 && v <= KEYLIGHT_VIEWS.length)
     return v;
   if (typeof v === "string") {
-    const norm = v.trim().toLowerCase().replace(/[\s-]+/g, "_").replace(/color/g, "colour");
-    const i = KEYLIGHT_VIEWS.indexOf(norm);
+    const norm2 = v.trim().toLowerCase().replace(/[\s-]+/g, "_").replace(/color/g, "colour");
+    const i = KEYLIGHT_VIEWS.indexOf(norm2);
     if (i >= 0) return i + 1;
   }
   return `unknown Keylight view ${JSON.stringify(v)}; views: ${VIEW_LIST}`;
@@ -58832,6 +59060,8 @@ registerOp({
 });
 
 // src/operations/sample.ts
+import { promises as fs8 } from "node:fs";
+import * as path9 from "node:path";
 init_registry();
 var DEFAULT_PROPERTIES = [
   ["Transform", "Anchor Point"],
@@ -58919,11 +59149,299 @@ registerOp({
         `;
   }
 });
+function liveIO(transport2) {
+  return {
+    async execute(code, opts) {
+      const r = await transport2.execute({
+        code,
+        label: opts.label,
+        timeoutMs: opts.timeoutMs,
+        undoGroup: opts.undoGroup ?? false,
+        suppressDialogs: true
+      });
+      return r.ok ? r.result : { ok: false, error: r.error ?? `${opts.label} failed` };
+    }
+  };
+}
+var TRANSFORM = ["Anchor Point", "Position", "Scale", "Rotation", "Opacity", "X Position", "Y Position", "Z Position", "Orientation"];
+function propertyPath(p) {
+  if (Array.isArray(p) && p.length && p.every((x) => typeof x === "string")) return p;
+  if (typeof p === "string") return TRANSFORM.includes(p) ? ["Transform", p] : [p];
+  return null;
+}
+function curveReadJsx(args) {
+  return `
+            ${jsxCompLayerPreamble(args)}
+            var _p = AE.propertyAtPath(_layer, ${jsxVal(args.path)});
+            if (!_p || _p.propertyType !== PropertyType.PROPERTY) return { ok: false, error: "no property " + ${jsxVal(args.path.join(" > "))} + " on " + _layer.name };
+            var _fd = _comp.frameDuration;
+            var _s = ${jsxVal(args.start ?? null)};
+            var _e = ${jsxVal(args.end ?? null)};
+            if (_s === null) _s = Math.max(0, _layer.inPoint);
+            if (_e === null) _e = Math.min(_comp.duration, _layer.outPoint);
+            var _f0 = Math.round(_s / _fd);
+            var _f1 = Math.round(_e / _fd);
+            if (_f1 - _f0 > 3000) return { ok: false, error: "over 3000 frames; give start and end" };
+            var _vals = [];
+            for (var _f = _f0; _f <= _f1; _f++) {
+                var _v = AE.valueToJson(AE.readValue(_p, _f * _fd));
+                _vals.push(_v);
+            }
+            var _interp = function (v) {
+                if (v === KeyframeInterpolationType.LINEAR) return "linear";
+                if (v === KeyframeInterpolationType.BEZIER) return "bezier";
+                if (v === KeyframeInterpolationType.HOLD) return "hold";
+                return "other";
+            };
+            var _keys = [];
+            for (var _k = 1; _k <= _p.numKeys; _k++) {
+                var _kt = _p.keyTime(_k);
+                _keys.push({ time: _kt, frame: Math.round(_kt / _fd), inInterpolation: _interp(_p.keyInInterpolationType(_k)), outInterpolation: _interp(_p.keyOutInterpolationType(_k)) });
+            }
+            return { ok: true, layer: _layer.name, property: _p.name, fps: 1 / _fd, startFrame: _f0, values: _vals, keys: _keys };
+        `;
+}
+async function runCurve(args, io) {
+  const p = propertyPath(args.property);
+  if (!p) return { ok: false, error: "`property` must be a transform property's name or a path of names" };
+  const num = (k) => typeof args[k] === "number" ? args[k] : void 0;
+  const r = await io.execute(curveReadJsx({ comp: args.comp, layer: args.layer, path: p, start: num("start"), end: num("end") }), {
+    label: "motion.curve read",
+    timeoutMs: 12e4
+  });
+  if (!r?.ok) return { ok: false, error: r?.error ?? "could not read the property" };
+  const samples = r.values.map((v, i) => ({
+    frame: r.startFrame + i,
+    time: (r.startFrame + i) / r.fps,
+    value: Array.isArray(v) ? v.map(Number) : [Number(v)]
+  }));
+  if (samples.some((s) => s.value.some((x) => !Number.isFinite(x))))
+    return { ok: false, error: `${r.property} is not a number or a list of numbers` };
+  const report = analyzeCurve(samples, r.fps);
+  let graph = null;
+  if (typeof args.outPath === "string") {
+    if (!path9.isAbsolute(args.outPath)) return { ok: false, error: "`outPath` must be absolute (.png)" };
+    const g = curveGraph(report, { width: 480, height: 160 });
+    await fs8.mkdir(path9.dirname(args.outPath), { recursive: true });
+    await fs8.writeFile(args.outPath, encodePngSrgb8(g.width, g.height, g.rgb));
+    graph = args.outPath;
+  }
+  return {
+    ok: true,
+    layer: r.layer,
+    property: r.property,
+    fps: r.fps,
+    span: { from: samples[0]?.frame ?? null, to: samples[samples.length - 1]?.frame ?? null },
+    keys: r.keys,
+    moves: report.moves,
+    flags: report.flags,
+    reading: report.reading,
+    graph,
+    ...args.perFrame === true ? { frames: report.frames } : {}
+  };
+}
+function amplitudeJsx(args) {
+  return `
+            ${jsxCompLayerPreamble(args)}
+            if (!_layer.hasAudio) return { ok: false, error: _layer.name + " has no audio" };
+            var _was = [];
+            for (var _i = 1; _i <= _comp.numLayers; _i++) { _was.push(_comp.layer(_i).selected); _comp.layer(_i).selected = false; }
+            var _before = _comp.numLayers;
+            _comp.openInViewer();
+            _layer.selected = true;
+            var _id = app.findMenuCommandId("Convert Audio to Keyframes");
+            if (!_id) return { ok: false, error: "After Effects has no Convert Audio to Keyframes command here" };
+            app.executeCommand(_id);
+            if (_comp.numLayers !== _before + 1) return { ok: false, error: "Convert Audio to Keyframes made no layer" };
+            var _amp = null;
+            for (var _j = 1; _j <= _comp.numLayers; _j++) { var _l = _comp.layer(_j); var _fx = _l.property("ADBE Effect Parade"); if (_fx && _fx.numProperties === 3 && _l !== _layer && _l.name.indexOf("Audio Amplitude") === 0) _amp = _l; }
+            if (!_amp) return { ok: false, error: "could not find the Audio Amplitude layer" };
+            var _fd = _comp.frameDuration;
+            var _n = Math.round(_comp.duration / _fd);
+            var _read = function (k) { var p = _amp.property("ADBE Effect Parade").property(k).property(1); var v = []; for (var f = 0; f < _n; f++) v.push(Math.round(p.valueAtTime(f * _fd, false) * 1000) / 1000); return v; };
+            var _out = { ok: true, fps: 1 / _fd, left: _read(1), right: _read(2), both: _read(3) };
+            _amp.remove();
+            for (var _r = 1; _r <= _comp.numLayers && _r <= _was.length; _r++) _comp.layer(_r).selected = _was[_r - 1];
+            return _out;
+        `;
+}
+function fpsJsx(args) {
+  return `
+            ${jsxCompPreamble(args)}
+            return { ok: true, fps: 1 / _comp.frameDuration };
+        `;
+}
+function addMarkersJsx(args) {
+  return `
+            ${jsxCompPreamble(args)}
+            var _mp = _comp.markerProperty;
+            var _removed = 0;
+            if (${jsxVal(args.replace)}) {
+                for (var _k = _mp.numKeys; _k >= 1; _k--) if (String(_mp.keyValue(_k).comment).indexOf(${jsxVal(args.prefix + ":")}) === 0) { _mp.removeKey(_k); _removed++; }
+            }
+            var _ms = ${jsxVal(args.markers)};
+            for (var _i = 0; _i < _ms.length; _i++) _mp.setValueAtTime(_ms[_i].time, new MarkerValue(_ms[_i].comment));
+            return { ok: true, added: _ms.length, removed: _removed, numMarkers: _mp.numKeys };
+        `;
+}
+var SILENCE_BELOW = 0.1;
+async function runSoundMarkers(args, io) {
+  const prefix = typeof args.prefix === "string" && args.prefix ? args.prefix : "sound";
+  const hasTiming = typeof args.timing === "string";
+  if (hasTiming === (args.layer !== void 0))
+    return { ok: false, error: "give exactly one of `timing` (a timing file) or `layer` (a layer with sound, read by loudness)" };
+  let fps;
+  let found;
+  let source;
+  if (hasTiming) {
+    const f = args.timing;
+    if (!path9.isAbsolute(f)) return { ok: false, error: "`timing` must be an absolute path" };
+    const r = await io.execute(fpsJsx({ comp: args.comp }), { label: "sound.markers fps", timeoutMs: 3e4 });
+    if (!r?.ok) return { ok: false, error: r?.error ?? "could not read the comp" };
+    fps = r.fps;
+    try {
+      found = parseTiming(await fs8.readFile(f, "utf8"), fps).map((m) => ({ ...m, frame: Math.round(m.time * fps) }));
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) };
+    }
+    source = { kind: "timing file", path: f };
+  } else {
+    const r = await io.execute(amplitudeJsx({ comp: args.comp, layer: args.layer }), {
+      label: "sound.markers amplitude",
+      timeoutMs: 3e5,
+      undoGroup: true
+    });
+    if (!r?.ok) return { ok: false, error: r?.error ?? "Convert Audio to Keyframes failed" };
+    fps = r.fps;
+    const left = r.left;
+    const right = r.right;
+    const louder = left.map((v, i) => Math.max(v, right[i] ?? 0));
+    const top = Math.max(0, ...louder);
+    if (top < SILENCE_BELOW)
+      return {
+        ok: false,
+        error: `After Effects read this layer's sound as silence (Convert Audio to Keyframes' amplitude stays under ${SILENCE_BELOW} on every frame; its top was ${top}). A four-channel AAC take did this, though a four-channel WAV with the voice on its first channel read as left: extract the voice to a mono WAV (ffmpeg -i take.mp4 -af pan=mono|c0=c0 voice.wav), import that and read it instead, or give a timing file.`
+      };
+    found = soundOnsets(louder, fps, {
+      share: typeof args.share === "number" ? args.share : void 0
+    }).map((o) => ({ time: o.time, frame: o.frame, label: "beat", level: o.level }));
+    source = { kind: "loudness", layer: args.layer, channels: { left: Math.max(0, ...left), right: Math.max(0, ...right) } };
+  }
+  const add = await io.execute(
+    addMarkersJsx({
+      comp: args.comp,
+      markers: found.map((m) => ({ time: m.time, comment: `${prefix}: ${m.label}` })),
+      prefix,
+      replace: args.replace !== false
+    }),
+    { label: "sound.markers add", timeoutMs: 6e4, undoGroup: true }
+  );
+  if (!add?.ok) return { ok: false, error: add?.error ?? "could not add the markers" };
+  return {
+    ok: true,
+    source,
+    fps,
+    markers: found,
+    added: add.added,
+    removed: add.removed,
+    reading: `${found.length} marker${found.length === 1 ? "" : "s"} added as '${prefix}: \u2026'${add.removed ? `, ${add.removed} earlier ones replaced` : ""}.`
+  };
+}
+function syncReadJsx(args) {
+  return `
+            ${jsxCompPreamble(args)}
+            var _mp = _comp.markerProperty;
+            var _markers = [];
+            for (var _k = 1; _k <= _mp.numKeys; _k++) _markers.push({ time: _mp.keyTime(_k), comment: String(_mp.keyValue(_k).comment) });
+            var _events = [];
+            var _keys = ${jsxVal(args.keys)};
+            for (var _i = 0; _i < _keys.length; _i++) {
+                var _l = AE.findLayerInComp(_comp, _keys[_i].layer);
+                if (!_l) return { ok: false, error: "no layer " + _keys[_i].layer };
+                var _p = AE.propertyAtPath(_l, _keys[_i].path);
+                if (!_p) return { ok: false, error: "no property " + _keys[_i].path.join(" > ") + " on " + _l.name };
+                for (var _j = 1; _j <= _p.numKeys; _j++) _events.push({ name: _l.name + " " + _p.name + " key " + _j, time: _p.keyTime(_j) });
+            }
+            var _ins = ${jsxVal(args.inPoints)};
+            for (var _n = 0; _n < _ins.length; _n++) {
+                var _li = AE.findLayerInComp(_comp, _ins[_n]);
+                if (!_li) return { ok: false, error: "no layer " + _ins[_n] };
+                _events.push({ name: _li.name + " in-point", time: _li.inPoint });
+            }
+            return { ok: true, fps: 1 / _comp.frameDuration, markers: _markers, events: _events };
+        `;
+}
+async function runSync(args, io) {
+  const keys = Array.isArray(args.keys) ? args.keys.map((k) => ({ layer: k.layer, path: propertyPath(k.property) ?? [] })) : [];
+  if (keys.some((k) => !k.path.length)) return { ok: false, error: "each of `keys` needs { layer, property }" };
+  const inPoints = Array.isArray(args.inPoints) ? args.inPoints : [];
+  const given = Array.isArray(args.events) ? args.events : [];
+  if (!keys.length && !inPoints.length && !given.length)
+    return { ok: false, error: "give events: `keys`, `inPoints` or `events` ({ name, time }, for example spikes from ae_render_frame diff)" };
+  const r = await io.execute(syncReadJsx({ comp: args.comp, keys, inPoints }), { label: "sound.sync read", timeoutMs: 6e4 });
+  if (!r?.ok) return { ok: false, error: r?.error ?? "could not read the comp" };
+  const prefix = typeof args.markerPrefix === "string" ? args.markerPrefix : null;
+  const markers = r.markers.filter((m) => prefix === null || m.comment.startsWith(prefix)).map((m) => ({ time: m.time, label: m.comment }));
+  const rep = syncReport([...r.events, ...given], markers, r.fps, {
+    lateFrames: typeof args.lateFrames === "number" ? args.lateFrames : void 0,
+    earlyFrames: typeof args.earlyFrames === "number" ? args.earlyFrames : void 0
+  });
+  return { ok: true, fps: r.fps, markers: markers.length, ...rep };
+}
+registerOp({
+  name: "motion.curve",
+  category: "motion",
+  readOnly: true,
+  description: "How a property moves: its value at every frame over a span (default the layer's span), speed per frame (units a second), the moves (from rest to rest), and flags: a move with no ease (its first or last moving frame already at 60% or more of its middle speed), a sudden jump in speed inside a move (2.5 times from one frame to the next and a quarter of its top speed), and how far a move overshoots and how many frames it takes to settle within 1%. `outPath` draws a 480 x 160 graph (values light, speed orange, moves shaded, flags red). Keys and their interpolation come with it. Thresholds are starting points, not judgments: a mechanical, constant move is linear on purpose.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    { name: "layer", type: "any", description: "Layer index, name or { id }", required: true },
+    { name: "property", type: "any", description: "A transform property's name ('Position') or a path of names", required: true },
+    { name: "start", type: "number", description: "Seconds (default the layer's in-point)", required: false },
+    { name: "end", type: "number", description: "Seconds (default the layer's out-point)", required: false },
+    { name: "outPath", type: "string", description: "Absolute .png path for the graph", required: false },
+    { name: "perFrame", type: "boolean", description: "Include value and speed of every frame (default false)", required: false }
+  ],
+  toJsx: () => jsxFail("motion.curve runs in Node; call it through ae_do"),
+  run: (args, transport2) => runCurve(args, liveIO(transport2))
+});
+registerOp({
+  name: "sound.markers",
+  category: "sound",
+  description: "Put word or beat times on the comp as markers ('<prefix>: <label>', prefix default 'sound'; earlier ones with the same prefix are replaced unless replace: false). From `timing` (a JSON list of { word|w|text|label, start|time|t in seconds, or frame }, or CSV time,label) or from `layer`'s loudness: After Effects' Convert Audio to Keyframes is run on the layer (the comp is opened in the viewer for it), the amplitude read per frame (the louder of left and right), the helper layer removed, and a beat marked where loudness rises past 30% of the way from its median to its top. Checked live on mono, stereo and four-channel WAVs (signal on channel 1 reads as left). A track After Effects reads as silence is refused with what to do.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    { name: "timing", type: "string", description: "Absolute path of a timing file", required: false },
+    { name: "layer", type: "any", description: "A layer with sound, read by loudness", required: false },
+    { name: "prefix", type: "string", description: "Marker comment prefix (default 'sound')", required: false },
+    { name: "replace", type: "boolean", description: "Replace earlier markers with the prefix (default true)", required: false },
+    { name: "share", type: "number", description: "Loudness threshold, share of the way from median to top (default 0.3)", required: false }
+  ],
+  toJsx: () => jsxFail("sound.markers runs in Node; call it through ae_do"),
+  run: (args, transport2) => runSoundMarkers(args, liveIO(transport2))
+});
+registerOp({
+  name: "sound.sync",
+  category: "sound",
+  readOnly: true,
+  description: "How far named events sit from the nearest comp marker, in frames: key times of properties (`keys`: [{ layer, property }]), layers' in-points (`inPoints`), and any `events` you give ({ name, time }, for example spikes from ae_render_frame diff). Positive is after the marker. Flagged from 2 frames after or 4 before (ITU-R BT.1359's detectability thresholds, sound 45 ms early and 125 ms late, at 30 fps); `markerPrefix` keeps only markers whose comment starts with it.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    { name: "keys", type: "array", description: "[{ layer, property }]: each key is an event", required: false },
+    { name: "inPoints", type: "array", description: "Layers whose in-points are events", required: false },
+    { name: "events", type: "array", description: "[{ name, time }] in seconds", required: false },
+    { name: "markerPrefix", type: "string", description: "Only markers whose comment starts with this", required: false },
+    { name: "lateFrames", type: "number", description: "Flag from this many frames after (default 2)", required: false },
+    { name: "earlyFrames", type: "number", description: "Flag from this many frames before (default 4)", required: false }
+  ],
+  toJsx: () => jsxFail("sound.sync runs in Node; call it through ae_do"),
+  run: (args, transport2) => runSync(args, liveIO(transport2))
+});
 
 // src/operations/instance.ts
 import { spawn } from "node:child_process";
-import { promises as fs8 } from "node:fs";
-import * as path9 from "node:path";
+import { promises as fs9 } from "node:fs";
+import * as path10 from "node:path";
 init_config();
 init_registry();
 var INSTALL_CMD = "npx @kumoproductions/mcp-aftereffects install-agent";
@@ -59032,10 +59550,10 @@ registerOp({
     let copiedFrom = null;
     let copyTo = null;
     if (typeof args.copyFrom === "string" && args.copyFrom) {
-      const src = path9.resolve(args.copyFrom);
+      const src = path10.resolve(args.copyFrom);
       if (!await exists(src)) return fail(`copyFrom not found: ${src}`, { errorCode: "IO" });
-      const ext = path9.extname(src) || ".aep";
-      copyTo = typeof args.copyTo === "string" && args.copyTo ? path9.resolve(args.copyTo) : path9.join(path9.dirname(src), `${path9.basename(src, ext)}__${name}${ext}`);
+      const ext = path10.extname(src) || ".aep";
+      copyTo = typeof args.copyTo === "string" && args.copyTo ? path10.resolve(args.copyTo) : path10.join(path10.dirname(src), `${path10.basename(src, ext)}__${name}${ext}`);
       if (copyTo === src)
         return fail("copyTo must differ from copyFrom", { errorCode: "INVALID_ARGS" });
       const rejected = rejectedOutputPath(copyTo);
@@ -59043,7 +59561,7 @@ registerOp({
       copiedFrom = src;
       projectToOpen = copyTo;
     } else if (typeof args.project === "string" && args.project) {
-      projectToOpen = path9.resolve(args.project);
+      projectToOpen = path10.resolve(args.project);
       if (!await exists(projectToOpen))
         return fail(`project not found: ${projectToOpen}`, { errorCode: "IO" });
     }
@@ -59070,8 +59588,8 @@ registerOp({
       return fail(err instanceof Error ? err.message : String(err), { errorCode: "AE_NOT_FOUND" });
     }
     if (copiedFrom !== null && copyTo !== null) {
-      await fs8.mkdir(path9.dirname(copyTo), { recursive: true });
-      await fs8.copyFile(copiedFrom, copyTo);
+      await fs9.mkdir(path10.dirname(copyTo), { recursive: true });
+      await fs9.copyFile(copiedFrom, copyTo);
     }
     const plan = buildInstanceLaunchPlan(exe, name);
     const aePid = process.platform === "darwin" ? null : void 0;
@@ -59253,7 +59771,7 @@ registerOp({
         `instance '${name}' accepted the quit but is still ticking after ${timeoutMs} ms \u2014 check it for a dialog`
       );
     }
-    await fs8.rm(dir, { recursive: true, force: true }).catch(() => {
+    await fs9.rm(dir, { recursive: true, force: true }).catch(() => {
     });
     return { ok: true, instance: name, stopped: true, saved: !!args.save, file: file2 };
   }
@@ -59327,7 +59845,7 @@ registerOp({
 });
 async function exists(p) {
   try {
-    await fs8.access(p);
+    await fs9.access(p);
     return true;
   } catch {
     return false;
@@ -59421,9 +59939,9 @@ var catalogTool = defineTool({
 
 // src/tools/check-comp.ts
 import { randomUUID as randomUUID3 } from "node:crypto";
-import { promises as fs9 } from "node:fs";
+import { promises as fs10 } from "node:fs";
 import * as os4 from "node:os";
-import * as path11 from "node:path";
+import * as path12 from "node:path";
 
 // src/color/watch.ts
 var WATCH_DEFAULTS = {
@@ -60211,13 +60729,13 @@ function structureJsx(compNameOrId, o) {
 }
 
 // src/tools/check-comp.ts
-var frameFile = (dir, frame) => path11.join(dir, `frame-${frame}.png`).replace(/\\/g, "/");
+var frameFile = (dir, frame) => path12.join(dir, `frame-${frame}.png`).replace(/\\/g, "/");
 function aeFrameSource(transport2, comp, opts) {
   return {
     async capture(frames, dir) {
       const t0 = performance.now();
       const paths = frames.map((k) => frameFile(dir, k));
-      await fs9.mkdir(dir, { recursive: true });
+      await fs10.mkdir(dir, { recursive: true });
       const before = await stampFiles(paths);
       const result = await transport2.execute({
         code: captureJsx(comp, frames, paths, opts.factor, opts.tryOcio),
@@ -60271,7 +60789,7 @@ function aeFrameSource(transport2, comp, opts) {
   };
 }
 async function readPicture(file2, target, convert) {
-  const img = decodePng(await fs9.readFile(file2));
+  const img = decodePng(await fs10.readFile(file2));
   if (convert) convert(img.rgb);
   let rgb = img.rgb;
   let width = img.width;
@@ -60438,14 +60956,14 @@ async function checkComp(args, transport2) {
     time: r64((ownedTo + every) * fd),
     framesLeft: remaining
   } : null;
-  const outDir = path11.resolve(
-    args.outDir ?? path11.join(
+  const outDir = path12.resolve(
+    args.outDir ?? path12.join(
       os4.tmpdir(),
       "comp-room-check",
       `${String(plan.compName).replace(/[^A-Za-z0-9_-]+/g, "-").slice(0, 40)}-${Date.now()}`
     )
   ).replace(/\\/g, "/");
-  const capDir = path11.join(outDir, `captures-${randomUUID3().slice(0, 8)}`).replace(/\\/g, "/");
+  const capDir = path12.join(outDir, `captures-${randomUUID3().slice(0, 8)}`).replace(/\\/g, "/");
   const readOnly = readOnlyMode();
   const target = {
     width: Math.max(1, Math.round(plan.width / downsample)),
@@ -60538,10 +61056,10 @@ async function checkComp(args, transport2) {
         failures.push({ frame: f.frame, error: `could not read the capture: ${err instanceof Error ? err.message : String(err)}` });
       }
       readSeconds += (performance.now() - r0) / 1e3;
-      await fs9.rm(f.path, { force: true });
+      await fs10.rm(f.path, { force: true });
     }
   }
-  await fs9.rm(capDir, { recursive: true, force: true });
+  await fs10.rm(capDir, { recursive: true, force: true });
   const findings = watcher ? watcher.finish() : null;
   const measureSeconds = watcher ? watcher.measureMs / 1e3 : 0;
   let nextOut = next;
@@ -60635,7 +61153,7 @@ async function checkComp(args, transport2) {
     sheetSeconds = (performance.now() - s0) / 1e3;
     report.sheet = sheet;
   }
-  await fs9.rmdir(outDir).catch(() => {
+  await fs10.rmdir(outDir).catch(() => {
   });
   const total = (performance.now() - started) / 1e3;
   report.timings = {
@@ -60771,11 +61289,11 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
     if (!got?.path) continue;
     try {
       const pic = await readPicture(got.path, target, convert);
-      await fs9.writeFile(got.path, encodePngSrgb8(pic.width, pic.height, pic.rgb));
+      await fs10.writeFile(got.path, encodePngSrgb8(pic.width, pic.height, pic.rgb));
       images.push({ width: pic.width, height: pic.height, rgb: pic.rgb, bitDepth: 8 });
       kept.push({ frame: c.frame, time: r64(c.frame * fd), kinds: c.kinds, ...c.why ? { why: c.why } : {}, path: got.path });
     } catch {
-      await fs9.rm(got.path, { force: true });
+      await fs10.rm(got.path, { force: true });
     }
   }
   if (images.length === 0) return { writtenTo: null, error: "none of the sheet's frames could be read" };
@@ -60787,8 +61305,8 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
     thumbWidth: tileW,
     labels
   });
-  const sheetPath = path11.join(outDir, `check-sheet-${tag}.png`).replace(/\\/g, "/");
-  await fs9.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+  const sheetPath = path12.join(outDir, `check-sheet-${tag}.png`).replace(/\\/g, "/");
+  await fs10.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
   return {
     writtenTo: sheetPath,
     size: [sheet.width, sheet.height],
@@ -61325,8 +61843,8 @@ var layerInfoTool = defineTool({
 });
 
 // src/tools/project-export.ts
-import { promises as fs10 } from "node:fs";
-import * as path12 from "node:path";
+import { promises as fs11 } from "node:fs";
+import * as path13 from "node:path";
 init_config();
 var projectExportTool = defineTool({
   name: "ae_project_export_json",
@@ -61348,7 +61866,7 @@ var projectExportTool = defineTool({
       const rejection = rejectedOutputPath(args.outPath);
       if (rejection !== null) {
         return errorResult("IO", rejection, {
-          details: { outPath: path12.resolve(args.outPath) },
+          details: { outPath: path13.resolve(args.outPath) },
           hint: "Write the document somewhere outside the mailbox, or omit outPath to receive it inline."
         });
       }
@@ -61367,10 +61885,10 @@ var projectExportTool = defineTool({
     const pretty = args.pretty ?? !!args.outPath;
     const jsonText = JSON.stringify(doc, null, pretty ? 2 : 0);
     if (args.outPath) {
-      const abs = path12.resolve(args.outPath);
+      const abs = path13.resolve(args.outPath);
       try {
-        await fs10.mkdir(path12.dirname(abs), { recursive: true });
-        await fs10.writeFile(abs, jsonText, "utf8");
+        await fs11.mkdir(path13.dirname(abs), { recursive: true });
+        await fs11.writeFile(abs, jsonText, "utf8");
       } catch (err) {
         return errorResult(
           "IO",
@@ -61401,8 +61919,8 @@ var projectExportTool = defineTool({
 });
 
 // src/tools/project-import.ts
-import { promises as fs11 } from "node:fs";
-import * as path13 from "node:path";
+import { promises as fs12 } from "node:fs";
+import * as path14 from "node:path";
 
 // src/schema.ts
 var SCHEMA_VERSION = 2;
@@ -61411,11 +61929,11 @@ var SCHEMA_VERSION = 2;
 var Validator = class {
   issues = [];
   warnings = [];
-  err(path15, message) {
-    this.issues.push({ path: path15, message });
+  err(path16, message) {
+    this.issues.push({ path: path16, message });
   }
-  warn(path15, message) {
-    this.warnings.push({ path: path15, message });
+  warn(path16, message) {
+    this.warnings.push({ path: path16, message });
   }
   isObject(v) {
     return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -61516,64 +62034,64 @@ function validateAeProjectDoc(doc) {
   }
   return { ok: v.issues.length === 0, issues: v.issues, warnings: v.warnings };
 }
-function validateLayer(v, path15, layer) {
+function validateLayer(v, path16, layer) {
   if (!v.isObject(layer)) {
-    v.err(path15, "not an object");
+    v.err(path16, "not an object");
     return;
   }
-  if (typeof layer.index !== "number") v.err(`${path15}.index`, "missing or not a number");
-  if (typeof layer.name !== "string") v.err(`${path15}.name`, "missing or not a string");
-  if (typeof layer.type !== "string") v.err(`${path15}.type`, "missing or not a string");
+  if (typeof layer.index !== "number") v.err(`${path16}.index`, "missing or not a number");
+  if (typeof layer.name !== "string") v.err(`${path16}.name`, "missing or not a string");
+  if (typeof layer.type !== "string") v.err(`${path16}.type`, "missing or not a string");
   else if (["AVLayer", "TextLayer", "ShapeLayer", "CameraLayer", "LightLayer", "Layer"].indexOf(
     layer.type
   ) === -1) {
-    v.warn(`${path15}.type`, `unknown layer type: ${layer.type}`);
+    v.warn(`${path16}.type`, `unknown layer type: ${layer.type}`);
   }
   if (layer.transformGroup)
-    validatePropertyGroup(v, `${path15}.transformGroup`, layer.transformGroup);
-  if (layer.effectsGroup) validatePropertyGroup(v, `${path15}.effectsGroup`, layer.effectsGroup);
-  if (layer.masksGroup) validatePropertyGroup(v, `${path15}.masksGroup`, layer.masksGroup);
-  if (layer.textGroup) validatePropertyGroup(v, `${path15}.textGroup`, layer.textGroup);
-  if (layer.contentsGroup) validatePropertyGroup(v, `${path15}.contentsGroup`, layer.contentsGroup);
-  if (layer.markers) validateProperty(v, `${path15}.markers`, layer.markers);
+    validatePropertyGroup(v, `${path16}.transformGroup`, layer.transformGroup);
+  if (layer.effectsGroup) validatePropertyGroup(v, `${path16}.effectsGroup`, layer.effectsGroup);
+  if (layer.masksGroup) validatePropertyGroup(v, `${path16}.masksGroup`, layer.masksGroup);
+  if (layer.textGroup) validatePropertyGroup(v, `${path16}.textGroup`, layer.textGroup);
+  if (layer.contentsGroup) validatePropertyGroup(v, `${path16}.contentsGroup`, layer.contentsGroup);
+  if (layer.markers) validateProperty(v, `${path16}.markers`, layer.markers);
   if (layer.timeRemapProperty)
-    validateProperty(v, `${path15}.timeRemapProperty`, layer.timeRemapProperty);
+    validateProperty(v, `${path16}.timeRemapProperty`, layer.timeRemapProperty);
 }
-function validatePropertyGroup(v, path15, group) {
+function validatePropertyGroup(v, path16, group) {
   if (!v.isObject(group)) {
-    v.err(path15, "not an object");
+    v.err(path16, "not an object");
     return;
   }
-  if (typeof group.matchName !== "string") v.err(`${path15}.matchName`, "missing or not a string");
+  if (typeof group.matchName !== "string") v.err(`${path16}.matchName`, "missing or not a string");
   if (Array.isArray(group.properties)) {
     for (let i = 0; i < group.properties.length; i++) {
-      validateProperty(v, `${path15}.properties[${i}]`, group.properties[i]);
+      validateProperty(v, `${path16}.properties[${i}]`, group.properties[i]);
     }
   }
   if (Array.isArray(group.groups)) {
     for (let i = 0; i < group.groups.length; i++) {
-      validatePropertyGroup(v, `${path15}.groups[${i}]`, group.groups[i]);
+      validatePropertyGroup(v, `${path16}.groups[${i}]`, group.groups[i]);
     }
   }
 }
-function validateProperty(v, path15, prop) {
+function validateProperty(v, path16, prop) {
   if (!v.isObject(prop)) {
-    v.err(path15, "not an object");
+    v.err(path16, "not an object");
     return;
   }
-  if (typeof prop.matchName !== "string") v.err(`${path15}.matchName`, "missing or not a string");
+  if (typeof prop.matchName !== "string") v.err(`${path16}.matchName`, "missing or not a string");
   if (Array.isArray(prop.keyframes)) {
     for (let i = 0; i < prop.keyframes.length; i++) {
-      validateKeyframe(v, `${path15}.keyframes[${i}]`, prop.keyframes[i]);
+      validateKeyframe(v, `${path16}.keyframes[${i}]`, prop.keyframes[i]);
     }
   }
 }
-function validateKeyframe(v, path15, kf) {
+function validateKeyframe(v, path16, kf) {
   if (!v.isObject(kf)) {
-    v.err(path15, "not an object");
+    v.err(path16, "not an object");
     return;
   }
-  if (typeof kf.time !== "number") v.err(`${path15}.time`, "missing or not a number");
+  if (typeof kf.time !== "number") v.err(`${path16}.time`, "missing or not a number");
 }
 
 // src/tools/project-import.ts
@@ -61602,9 +62120,9 @@ var projectImportTool = defineTool({
   handler: async (args, transport2) => {
     let doc;
     if (args.inPath) {
-      const abs = path13.resolve(args.inPath);
+      const abs = path14.resolve(args.inPath);
       try {
-        doc = JSON.parse(await fs11.readFile(abs, "utf8"));
+        doc = JSON.parse(await fs12.readFile(abs, "utf8"));
       } catch (err) {
         return errorResult(
           "IO",
@@ -61850,7 +62368,7 @@ var ALL_TOOLS = [
 
 // src/tools/library.ts
 import { readFileSync as readFileSync2, realpathSync as realpathSync2 } from "node:fs";
-import path14 from "node:path";
+import path15 from "node:path";
 import { createHash } from "node:crypto";
 init_config();
 
@@ -61940,17 +62458,17 @@ function findModules(catalog, query) {
 
 // src/tools/library.ts
 function boundedFile(base, relative3) {
-  const candidate = path14.resolve(base, relative3);
+  const candidate = path15.resolve(base, relative3);
   const inside = (file3) => {
-    const rel = path14.relative(base, file3);
-    if (!rel || rel === ".." || rel.startsWith(".." + path14.sep) || path14.isAbsolute(rel)) throw new Error("Library path escapes bundle");
+    const rel = path15.relative(base, file3);
+    if (!rel || rel === ".." || rel.startsWith(".." + path15.sep) || path15.isAbsolute(rel)) throw new Error("Library path escapes bundle");
   };
   inside(candidate);
   const file2 = realpathSync2(candidate);
   inside(file2);
   return file2;
 }
-function readLibrary(document, query, root = path14.resolve(PACKAGE_ROOT, "../library")) {
+function readLibrary(document, query, root = path15.resolve(PACKAGE_ROOT, "../library")) {
   const base = realpathSync2(root);
   const manifest = JSON.parse(readFileSync2(boundedFile(base, "manifest.json"), "utf8"));
   const entries = manifest.documents;

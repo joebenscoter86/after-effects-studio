@@ -1,4 +1,14 @@
-import { registerOp, jsxFail, jsxVal } from "../registry.js";
+import { promises as fs } from "node:fs";
+import * as path from "node:path";
+import {
+  analyzeCurve,
+  curveGraph,
+  parseTiming,
+  soundOnsets,
+  syncReport
+} from "../color/motion.js";
+import { encodePngSrgb8 } from "../color/png16.js";
+import { registerOp, jsxFail, jsxVal, jsxCompPreamble, jsxCompLayerPreamble } from "../registry.js";
 const DEFAULT_PROPERTIES = [
   ["Transform", "Anchor Point"],
   ["Transform", "Position"],
@@ -85,3 +95,297 @@ registerOp({
         `;
   }
 });
+function liveIO(transport) {
+  return {
+    async execute(code, opts) {
+      const r = await transport.execute({
+        code,
+        label: opts.label,
+        timeoutMs: opts.timeoutMs,
+        undoGroup: opts.undoGroup ?? false,
+        suppressDialogs: true
+      });
+      return r.ok ? r.result : { ok: false, error: r.error ?? `${opts.label} failed` };
+    }
+  };
+}
+const TRANSFORM = ["Anchor Point", "Position", "Scale", "Rotation", "Opacity", "X Position", "Y Position", "Z Position", "Orientation"];
+function propertyPath(p) {
+  if (Array.isArray(p) && p.length && p.every((x) => typeof x === "string")) return p;
+  if (typeof p === "string") return TRANSFORM.includes(p) ? ["Transform", p] : [p];
+  return null;
+}
+function curveReadJsx(args) {
+  return `
+            ${jsxCompLayerPreamble(args)}
+            var _p = AE.propertyAtPath(_layer, ${jsxVal(args.path)});
+            if (!_p || _p.propertyType !== PropertyType.PROPERTY) return { ok: false, error: "no property " + ${jsxVal(args.path.join(" > "))} + " on " + _layer.name };
+            var _fd = _comp.frameDuration;
+            var _s = ${jsxVal(args.start ?? null)};
+            var _e = ${jsxVal(args.end ?? null)};
+            if (_s === null) _s = Math.max(0, _layer.inPoint);
+            if (_e === null) _e = Math.min(_comp.duration, _layer.outPoint);
+            var _f0 = Math.round(_s / _fd);
+            var _f1 = Math.round(_e / _fd);
+            if (_f1 - _f0 > 3000) return { ok: false, error: "over 3000 frames; give start and end" };
+            var _vals = [];
+            for (var _f = _f0; _f <= _f1; _f++) {
+                var _v = AE.valueToJson(AE.readValue(_p, _f * _fd));
+                _vals.push(_v);
+            }
+            var _interp = function (v) {
+                if (v === KeyframeInterpolationType.LINEAR) return "linear";
+                if (v === KeyframeInterpolationType.BEZIER) return "bezier";
+                if (v === KeyframeInterpolationType.HOLD) return "hold";
+                return "other";
+            };
+            var _keys = [];
+            for (var _k = 1; _k <= _p.numKeys; _k++) {
+                var _kt = _p.keyTime(_k);
+                _keys.push({ time: _kt, frame: Math.round(_kt / _fd), inInterpolation: _interp(_p.keyInInterpolationType(_k)), outInterpolation: _interp(_p.keyOutInterpolationType(_k)) });
+            }
+            return { ok: true, layer: _layer.name, property: _p.name, fps: 1 / _fd, startFrame: _f0, values: _vals, keys: _keys };
+        `;
+}
+async function runCurve(args, io) {
+  const p = propertyPath(args.property);
+  if (!p) return { ok: false, error: "`property` must be a transform property's name or a path of names" };
+  const num = (k) => typeof args[k] === "number" ? args[k] : void 0;
+  const r = await io.execute(curveReadJsx({ comp: args.comp, layer: args.layer, path: p, start: num("start"), end: num("end") }), {
+    label: "motion.curve read",
+    timeoutMs: 12e4
+  });
+  if (!r?.ok) return { ok: false, error: r?.error ?? "could not read the property" };
+  const samples = r.values.map((v, i) => ({
+    frame: r.startFrame + i,
+    time: (r.startFrame + i) / r.fps,
+    value: Array.isArray(v) ? v.map(Number) : [Number(v)]
+  }));
+  if (samples.some((s) => s.value.some((x) => !Number.isFinite(x))))
+    return { ok: false, error: `${r.property} is not a number or a list of numbers` };
+  const report = analyzeCurve(samples, r.fps);
+  let graph = null;
+  if (typeof args.outPath === "string") {
+    if (!path.isAbsolute(args.outPath)) return { ok: false, error: "`outPath` must be absolute (.png)" };
+    const g = curveGraph(report, { width: 480, height: 160 });
+    await fs.mkdir(path.dirname(args.outPath), { recursive: true });
+    await fs.writeFile(args.outPath, encodePngSrgb8(g.width, g.height, g.rgb));
+    graph = args.outPath;
+  }
+  return {
+    ok: true,
+    layer: r.layer,
+    property: r.property,
+    fps: r.fps,
+    span: { from: samples[0]?.frame ?? null, to: samples[samples.length - 1]?.frame ?? null },
+    keys: r.keys,
+    moves: report.moves,
+    flags: report.flags,
+    reading: report.reading,
+    graph,
+    ...args.perFrame === true ? { frames: report.frames } : {}
+  };
+}
+function amplitudeJsx(args) {
+  return `
+            ${jsxCompLayerPreamble(args)}
+            if (!_layer.hasAudio) return { ok: false, error: _layer.name + " has no audio" };
+            var _was = [];
+            for (var _i = 1; _i <= _comp.numLayers; _i++) { _was.push(_comp.layer(_i).selected); _comp.layer(_i).selected = false; }
+            var _before = _comp.numLayers;
+            _comp.openInViewer();
+            _layer.selected = true;
+            var _id = app.findMenuCommandId("Convert Audio to Keyframes");
+            if (!_id) return { ok: false, error: "After Effects has no Convert Audio to Keyframes command here" };
+            app.executeCommand(_id);
+            if (_comp.numLayers !== _before + 1) return { ok: false, error: "Convert Audio to Keyframes made no layer" };
+            var _amp = null;
+            for (var _j = 1; _j <= _comp.numLayers; _j++) { var _l = _comp.layer(_j); var _fx = _l.property("ADBE Effect Parade"); if (_fx && _fx.numProperties === 3 && _l !== _layer && _l.name.indexOf("Audio Amplitude") === 0) _amp = _l; }
+            if (!_amp) return { ok: false, error: "could not find the Audio Amplitude layer" };
+            var _fd = _comp.frameDuration;
+            var _n = Math.round(_comp.duration / _fd);
+            var _read = function (k) { var p = _amp.property("ADBE Effect Parade").property(k).property(1); var v = []; for (var f = 0; f < _n; f++) v.push(Math.round(p.valueAtTime(f * _fd, false) * 1000) / 1000); return v; };
+            var _out = { ok: true, fps: 1 / _fd, left: _read(1), right: _read(2), both: _read(3) };
+            _amp.remove();
+            for (var _r = 1; _r <= _comp.numLayers && _r <= _was.length; _r++) _comp.layer(_r).selected = _was[_r - 1];
+            return _out;
+        `;
+}
+function fpsJsx(args) {
+  return `
+            ${jsxCompPreamble(args)}
+            return { ok: true, fps: 1 / _comp.frameDuration };
+        `;
+}
+function addMarkersJsx(args) {
+  return `
+            ${jsxCompPreamble(args)}
+            var _mp = _comp.markerProperty;
+            var _removed = 0;
+            if (${jsxVal(args.replace)}) {
+                for (var _k = _mp.numKeys; _k >= 1; _k--) if (String(_mp.keyValue(_k).comment).indexOf(${jsxVal(args.prefix + ":")}) === 0) { _mp.removeKey(_k); _removed++; }
+            }
+            var _ms = ${jsxVal(args.markers)};
+            for (var _i = 0; _i < _ms.length; _i++) _mp.setValueAtTime(_ms[_i].time, new MarkerValue(_ms[_i].comment));
+            return { ok: true, added: _ms.length, removed: _removed, numMarkers: _mp.numKeys };
+        `;
+}
+const SILENCE_BELOW = 0.1;
+async function runSoundMarkers(args, io) {
+  const prefix = typeof args.prefix === "string" && args.prefix ? args.prefix : "sound";
+  const hasTiming = typeof args.timing === "string";
+  if (hasTiming === (args.layer !== void 0))
+    return { ok: false, error: "give exactly one of `timing` (a timing file) or `layer` (a layer with sound, read by loudness)" };
+  let fps;
+  let found;
+  let source;
+  if (hasTiming) {
+    const f = args.timing;
+    if (!path.isAbsolute(f)) return { ok: false, error: "`timing` must be an absolute path" };
+    const r = await io.execute(fpsJsx({ comp: args.comp }), { label: "sound.markers fps", timeoutMs: 3e4 });
+    if (!r?.ok) return { ok: false, error: r?.error ?? "could not read the comp" };
+    fps = r.fps;
+    try {
+      found = parseTiming(await fs.readFile(f, "utf8"), fps).map((m) => ({ ...m, frame: Math.round(m.time * fps) }));
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) };
+    }
+    source = { kind: "timing file", path: f };
+  } else {
+    const r = await io.execute(amplitudeJsx({ comp: args.comp, layer: args.layer }), {
+      label: "sound.markers amplitude",
+      timeoutMs: 3e5,
+      undoGroup: true
+    });
+    if (!r?.ok) return { ok: false, error: r?.error ?? "Convert Audio to Keyframes failed" };
+    fps = r.fps;
+    const left = r.left;
+    const right = r.right;
+    const louder = left.map((v, i) => Math.max(v, right[i] ?? 0));
+    const top = Math.max(0, ...louder);
+    if (top < SILENCE_BELOW)
+      return {
+        ok: false,
+        error: `After Effects read this layer's sound as silence (Convert Audio to Keyframes' amplitude stays under ${SILENCE_BELOW} on every frame; its top was ${top}). A four-channel AAC take did this, though a four-channel WAV with the voice on its first channel read as left: extract the voice to a mono WAV (ffmpeg -i take.mp4 -af pan=mono|c0=c0 voice.wav), import that and read it instead, or give a timing file.`
+      };
+    found = soundOnsets(louder, fps, {
+      share: typeof args.share === "number" ? args.share : void 0
+    }).map((o) => ({ time: o.time, frame: o.frame, label: "beat", level: o.level }));
+    source = { kind: "loudness", layer: args.layer, channels: { left: Math.max(0, ...left), right: Math.max(0, ...right) } };
+  }
+  const add = await io.execute(
+    addMarkersJsx({
+      comp: args.comp,
+      markers: found.map((m) => ({ time: m.time, comment: `${prefix}: ${m.label}` })),
+      prefix,
+      replace: args.replace !== false
+    }),
+    { label: "sound.markers add", timeoutMs: 6e4, undoGroup: true }
+  );
+  if (!add?.ok) return { ok: false, error: add?.error ?? "could not add the markers" };
+  return {
+    ok: true,
+    source,
+    fps,
+    markers: found,
+    added: add.added,
+    removed: add.removed,
+    reading: `${found.length} marker${found.length === 1 ? "" : "s"} added as '${prefix}: \u2026'${add.removed ? `, ${add.removed} earlier ones replaced` : ""}.`
+  };
+}
+function syncReadJsx(args) {
+  return `
+            ${jsxCompPreamble(args)}
+            var _mp = _comp.markerProperty;
+            var _markers = [];
+            for (var _k = 1; _k <= _mp.numKeys; _k++) _markers.push({ time: _mp.keyTime(_k), comment: String(_mp.keyValue(_k).comment) });
+            var _events = [];
+            var _keys = ${jsxVal(args.keys)};
+            for (var _i = 0; _i < _keys.length; _i++) {
+                var _l = AE.findLayerInComp(_comp, _keys[_i].layer);
+                if (!_l) return { ok: false, error: "no layer " + _keys[_i].layer };
+                var _p = AE.propertyAtPath(_l, _keys[_i].path);
+                if (!_p) return { ok: false, error: "no property " + _keys[_i].path.join(" > ") + " on " + _l.name };
+                for (var _j = 1; _j <= _p.numKeys; _j++) _events.push({ name: _l.name + " " + _p.name + " key " + _j, time: _p.keyTime(_j) });
+            }
+            var _ins = ${jsxVal(args.inPoints)};
+            for (var _n = 0; _n < _ins.length; _n++) {
+                var _li = AE.findLayerInComp(_comp, _ins[_n]);
+                if (!_li) return { ok: false, error: "no layer " + _ins[_n] };
+                _events.push({ name: _li.name + " in-point", time: _li.inPoint });
+            }
+            return { ok: true, fps: 1 / _comp.frameDuration, markers: _markers, events: _events };
+        `;
+}
+async function runSync(args, io) {
+  const keys = Array.isArray(args.keys) ? args.keys.map((k) => ({ layer: k.layer, path: propertyPath(k.property) ?? [] })) : [];
+  if (keys.some((k) => !k.path.length)) return { ok: false, error: "each of `keys` needs { layer, property }" };
+  const inPoints = Array.isArray(args.inPoints) ? args.inPoints : [];
+  const given = Array.isArray(args.events) ? args.events : [];
+  if (!keys.length && !inPoints.length && !given.length)
+    return { ok: false, error: "give events: `keys`, `inPoints` or `events` ({ name, time }, for example spikes from ae_render_frame diff)" };
+  const r = await io.execute(syncReadJsx({ comp: args.comp, keys, inPoints }), { label: "sound.sync read", timeoutMs: 6e4 });
+  if (!r?.ok) return { ok: false, error: r?.error ?? "could not read the comp" };
+  const prefix = typeof args.markerPrefix === "string" ? args.markerPrefix : null;
+  const markers = r.markers.filter((m) => prefix === null || m.comment.startsWith(prefix)).map((m) => ({ time: m.time, label: m.comment }));
+  const rep = syncReport([...r.events, ...given], markers, r.fps, {
+    lateFrames: typeof args.lateFrames === "number" ? args.lateFrames : void 0,
+    earlyFrames: typeof args.earlyFrames === "number" ? args.earlyFrames : void 0
+  });
+  return { ok: true, fps: r.fps, markers: markers.length, ...rep };
+}
+registerOp({
+  name: "motion.curve",
+  category: "motion",
+  readOnly: true,
+  description: "How a property moves: its value at every frame over a span (default the layer's span), speed per frame (units a second), the moves (from rest to rest), and flags: a move with no ease (its first or last moving frame already at 60% or more of its middle speed), a sudden jump in speed inside a move (2.5 times from one frame to the next and a quarter of its top speed), and how far a move overshoots and how many frames it takes to settle within 1%. `outPath` draws a 480 x 160 graph (values light, speed orange, moves shaded, flags red). Keys and their interpolation come with it. Thresholds are starting points, not judgments: a mechanical, constant move is linear on purpose.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    { name: "layer", type: "any", description: "Layer index, name or { id }", required: true },
+    { name: "property", type: "any", description: "A transform property's name ('Position') or a path of names", required: true },
+    { name: "start", type: "number", description: "Seconds (default the layer's in-point)", required: false },
+    { name: "end", type: "number", description: "Seconds (default the layer's out-point)", required: false },
+    { name: "outPath", type: "string", description: "Absolute .png path for the graph", required: false },
+    { name: "perFrame", type: "boolean", description: "Include value and speed of every frame (default false)", required: false }
+  ],
+  toJsx: () => jsxFail("motion.curve runs in Node; call it through ae_do"),
+  run: (args, transport) => runCurve(args, liveIO(transport))
+});
+registerOp({
+  name: "sound.markers",
+  category: "sound",
+  description: "Put word or beat times on the comp as markers ('<prefix>: <label>', prefix default 'sound'; earlier ones with the same prefix are replaced unless replace: false). From `timing` (a JSON list of { word|w|text|label, start|time|t in seconds, or frame }, or CSV time,label) or from `layer`'s loudness: After Effects' Convert Audio to Keyframes is run on the layer (the comp is opened in the viewer for it), the amplitude read per frame (the louder of left and right), the helper layer removed, and a beat marked where loudness rises past 30% of the way from its median to its top. Checked live on mono, stereo and four-channel WAVs (signal on channel 1 reads as left). A track After Effects reads as silence is refused with what to do.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    { name: "timing", type: "string", description: "Absolute path of a timing file", required: false },
+    { name: "layer", type: "any", description: "A layer with sound, read by loudness", required: false },
+    { name: "prefix", type: "string", description: "Marker comment prefix (default 'sound')", required: false },
+    { name: "replace", type: "boolean", description: "Replace earlier markers with the prefix (default true)", required: false },
+    { name: "share", type: "number", description: "Loudness threshold, share of the way from median to top (default 0.3)", required: false }
+  ],
+  toJsx: () => jsxFail("sound.markers runs in Node; call it through ae_do"),
+  run: (args, transport) => runSoundMarkers(args, liveIO(transport))
+});
+registerOp({
+  name: "sound.sync",
+  category: "sound",
+  readOnly: true,
+  description: "How far named events sit from the nearest comp marker, in frames: key times of properties (`keys`: [{ layer, property }]), layers' in-points (`inPoints`), and any `events` you give ({ name, time }, for example spikes from ae_render_frame diff). Positive is after the marker. Flagged from 2 frames after or 4 before (ITU-R BT.1359's detectability thresholds, sound 45 ms early and 125 ms late, at 30 fps); `markerPrefix` keeps only markers whose comment starts with it.",
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    { name: "keys", type: "array", description: "[{ layer, property }]: each key is an event", required: false },
+    { name: "inPoints", type: "array", description: "Layers whose in-points are events", required: false },
+    { name: "events", type: "array", description: "[{ name, time }] in seconds", required: false },
+    { name: "markerPrefix", type: "string", description: "Only markers whose comment starts with this", required: false },
+    { name: "lateFrames", type: "number", description: "Flag from this many frames after (default 2)", required: false },
+    { name: "earlyFrames", type: "number", description: "Flag from this many frames before (default 4)", required: false }
+  ],
+  toJsx: () => jsxFail("sound.sync runs in Node; call it through ae_do"),
+  run: (args, transport) => runSync(args, liveIO(transport))
+});
+export {
+  SILENCE_BELOW,
+  runCurve,
+  runSoundMarkers,
+  runSync
+};
