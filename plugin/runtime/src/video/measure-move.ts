@@ -54,11 +54,14 @@ export function movesOfChannel(samples: CurveSample[], o: ChannelOptions): Json[
     for (let j = pk + 1; j < sp.length; j++) if (sp.slice(j).every((v) => Math.abs(v) < share * peak)) { k = j; break; }
     if (k < 0) return [mv];
     const tail = sp.slice(k), med = (a: number[]) => median(a.map(Math.abs));
-    if (tail.length < 6 || tail.some((v) => v < -0.25 * Math.abs(med(tail)) - 1e-9) || med(tail.slice(Math.floor(tail.length / 2))) < 0.5 * med(tail)) return [mv];
+    // a drift keeps its speed (the mean of its last third at least half its first third's); a settle decays
+    const third = Math.max(3, Math.floor(tail.length / 3)), mean = (a: number[]) => a.reduce((x, v) => x + Math.abs(v), 0) / Math.max(1, a.length);
+    if (tail.length < 6 || tail.some((v) => v < -0.25 * Math.abs(med(tail)) - 1e-9) || mean(tail.slice(-third)) < 0.5 * mean(tail.slice(0, third))) return [mv];
     // the handover: the first frame after the peak whose speed is down to 1.5 times the drift's own
     let h = k; for (let j = pk + 1; j < sp.length - 3; j++) if (Math.abs(sp[j]) <= 1.5 * med(tail)) { h = j; break; }
     const at = samples[i0 + h].frame, distOf = (f0: number, f1: number) => Math.hypot(...samples[idx(f1)].value.map((v, d) => v - samples[idx(f0)].value[d]));
     const a = { ...mv, to: at, distance: distOf(mv.from, at) }, b = { ...mv, from: at, distance: distOf(at, mv.to) };
+    if (b.distance < o.minMove) return [mv];   // a drift too small to be a move of its own is the move's settle
     handover.add(a); drifts.add(b);
     return [a, b];
   };
@@ -68,7 +71,8 @@ export function movesOfChannel(samples: CurveSample[], o: ChannelOptions): Json[
     const i0 = samples.findIndex((s) => s.frame === mv.from), i1 = samples.findIndex((s) => s.frame === mv.to);
     if (i0 < 0 || i1 <= i0) continue;
     // the moves either side (a drift split off a move starts on the move's last frame)
-    const prevMove = [...moves].reverse().find((x) => x !== mv && x.to <= mv.from), nextMove = moves.find((x) => x !== mv && x.from >= mv.to);
+    const real = (x: CurveMove) => x !== mv && (x.distance >= o.minMove || drifts.has(x));   // a step too small to be a move bounds nothing
+    const prevMove = [...moves].reverse().find((x) => real(x) && x.to <= mv.from), nextMove = moves.find((x) => real(x) && x.from >= mv.to);
     const restStart = prevMove ? Math.max(0, samples.findIndex((s) => s.frame === prevMove.to)) : 0;
     const restEnd = nextMove ? samples.findIndex((s) => s.frame === nextMove.from) : samples.length - 1;
     // the move's end value: the median of the rest that follows it (up to 10 samples, or the next move), else its last
