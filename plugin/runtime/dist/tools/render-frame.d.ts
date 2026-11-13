@@ -1,4 +1,16 @@
 import { z } from "zod";
+type LayerRef = string | number | {
+    id: number;
+};
+/** What the JSX needs for a strip: times are worked out there, from the comp's frame duration. */
+interface StripPlan {
+    at: number;
+    /** Frame offsets from the moment, already multiplied by step. */
+    offsets: number[];
+    frames: number;
+    step: number;
+    maxDimension: number;
+}
 /**
  * Where inside a frame `frames` and `strip` render: a quarter of a frame past
  * its start. Found live: a time a hair below a boundary renders the frame
@@ -174,4 +186,10 @@ export declare const renderFrameTool: import("./define-tool.js").ToolSpec<{
 export declare function framePaths(abs: string, count: number, multi: boolean, call?: string): string[];
 /** A short id for one call's batch of files. */
 export declare const newCallId: () => string;
+/** Options the JSX needs; everything else happens in Node on the captures. */
+export declare function renderJsx(args: {
+    compNameOrId: string | number;
+    useDisplayStartTime?: boolean;
+}, times: number[] | null, paths: string[], tryOcio: boolean, isolate: LayerRef[] | null, strip?: StripPlan | null, frameNums?: number[] | null): string;
+export {};
 //# sourceMappingURL=render-frame.d.ts.map
