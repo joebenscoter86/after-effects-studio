@@ -5,7 +5,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
-import { selectStyles, importStyles } from '../scripts/import-styles.mjs';
+import { selectStyles, importStyles, refreshStyles } from '../scripts/import-styles.mjs';
 
 async function write(root, rel, data) {
   const file = path.join(root, rel);
@@ -214,6 +214,61 @@ test('adaptation rules rewrite proof notes, upstream clone paths and caches', as
   assert.deepEqual(result.adaptations.filter((a) => a.file.startsWith('styles/fixture-proof/')), []);
 });
 
+// ---- Styles the plugin wrote itself ---------------------------------------------
+
+async function pluginStyle(to, id = 'own-style') {
+  const entry = { id, title: 'Own style', tier: 'native', origin: 'plugin', summary: 'A style measured from a reference shot. More.', goodFor: 'A loud headline',
+    triggers: ['own look'], module: 'own.jsx', moduleGlobal: 'AESOwn', needs: [], fonts: [{ family: 'Inter', style: 'Bold', license: 'OFL-1.1', source: 'Google Fonts' }],
+    tools: [], proofNote: 'Calibrated on one reference shot; not yet tried on a piece.' };
+  await write(to, `styles/${id}/plugin-style.json`, JSON.stringify(entry));
+  await write(to, `styles/${id}/STYLE.md`, '# Own style\n');
+  await write(to, `styles/${id}/own.jsx`, 'var AESOwn = {};\n');
+  return entry;
+}
+
+test('a plugin-authored style survives an import and is listed as the plugin\'s own', async () => {
+  const from = await fixture();
+  const { to, skillDir } = await runImport(from);
+  await pluginStyle(to);
+  await importStyles({ from, to, skillDir, commit: 'abc1234' });
+  assert.deepEqual(await listFiles(path.join(to, 'styles', 'own-style')), ['STYLE.md', 'own.jsx', 'plugin-style.json']);
+  const index = JSON.parse(await fs.readFile(path.join(to, 'styles', 'index.json'), 'utf8'));
+  assert.deepEqual(index.styles.map((s) => s.id), ['fixture-line', 'fixture-native', 'own-style']);
+  const own = index.styles.find((s) => s.id === 'own-style');
+  assert.equal(own.origin, 'plugin');
+  assert.equal(own.contentStatus, null);
+  assert.match(own.proofNote, /one reference shot/);
+  const skill = await fs.readFile(path.join(skillDir, 'SKILL.md'), 'utf8');
+  assert.match(skill, /^3 visual styles/m);
+  assert.match(skill, /\| Own style \| `own-style` \| native \|/);
+  assert.match(skill, /Own style is the plugin's own/);
+  // and it is not recorded as imported from Content
+  const map = JSON.parse(await fs.readFile(path.join(to, 'source-map.json'), 'utf8'));
+  assert.ok(!map.sources.find((x) => x.id === 'content-style-library').styles.includes('own-style'));
+  assert.ok(!map.sources.some((x) => (x.path || '').includes('own-style')));
+});
+
+test('a refresh lists plugin-authored styles without Content and keeps the imported entries', async () => {
+  const { to, skillDir } = await runImport(await fixture());
+  const before = JSON.parse(await fs.readFile(path.join(to, 'styles', 'index.json'), 'utf8'));
+  await pluginStyle(to);
+  await refreshStyles({ to, skillDir });
+  const index = JSON.parse(await fs.readFile(path.join(to, 'styles', 'index.json'), 'utf8'));
+  assert.deepEqual(index.source, before.source);
+  assert.deepEqual(index.styles.filter((s) => s.origin !== 'plugin'), before.styles);
+  assert.deepEqual(index.styles.map((s) => s.id), ['fixture-line', 'fixture-native', 'own-style']);
+  await refreshStyles({ to, skillDir });
+  assert.equal(JSON.parse(await fs.readFile(path.join(to, 'styles', 'index.json'), 'utf8')).styles.length, 3);
+  assert.match(await fs.readFile(path.join(skillDir, 'SKILL.md'), 'utf8'), /\| Own style \| `own-style` \|/);
+});
+
+test('a plugin-authored style whose folder and id disagree is refused', async () => {
+  const { to, skillDir } = await runImport(await fixture());
+  const entry = await pluginStyle(to);
+  await write(to, 'styles/own-style/plugin-style.json', JSON.stringify({ ...entry, id: 'other' }));
+  await assert.rejects(refreshStyles({ to, skillDir }), /own-style/);
+});
+
 // ---- The real imported library -------------------------------------------------
 
 const LIBRARY = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', 'library');
@@ -221,7 +276,7 @@ const LIBRARY = path.resolve(path.dirname(new URL(import.meta.url).pathname), '.
 test('every index entry has its files and every folder has an entry', async () => {
   const index = JSON.parse(await fs.readFile(path.join(LIBRARY, 'styles/index.json'), 'utf8'));
   const ids = index.styles.map((s) => s.id).sort();
-  assert.equal(ids.length, 30);
+  assert.equal(index.styles.filter((s) => s.origin !== 'plugin').length, 30);
   for (const s of index.styles) {
     await fs.access(path.join(LIBRARY, 'styles', s.id, 'STYLE.md'));
     await fs.access(path.join(LIBRARY, 'styles', s.id, s.module));
@@ -320,4 +375,16 @@ test('plugin-side proof survives a re-import', async () => {
   const again = JSON.parse(await fs.readFile(indexPath, 'utf8'));
   assert.deepEqual(again.styles.find((s) => s.id === 'fixture-native').pluginProof, { date: '2026-11-09', report: 'quality/reports/x/report.md' });
   assert.equal(again.styles.find((s) => s.id === 'fixture-line').pluginProof, null);
+});
+
+test('pixel headline is the plugin\'s own, and its index entry is honest about proof', async () => {
+  const index = JSON.parse(await fs.readFile(path.join(LIBRARY, 'styles/index.json'), 'utf8'));
+  const ph = index.styles.find((s) => s.id === 'pixel-headline');
+  assert.equal(ph.origin, 'plugin');
+  assert.equal(ph.contentStatus, null);
+  assert.equal(ph.pluginProof, null);
+  assert.match(ph.proofNote, /one reference shot/i);
+  assert.match(ph.proofNote, /not yet/i);
+  const own = JSON.parse(await fs.readFile(path.join(LIBRARY, 'styles/pixel-headline/plugin-style.json'), 'utf8'));
+  assert.deepEqual({ ...own, contentStatus: null, contentProof: null, pluginProof: null }, ph);
 });

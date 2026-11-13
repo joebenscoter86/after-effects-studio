@@ -1,0 +1,30 @@
+{
+  "id": "pixel-headline",
+  "title": "Pixel headline",
+  "tier": "native",
+  "origin": "plugin",
+  "summary": "A cut-out speaker on a clean light ground, with each spoken sentence set around them: a small lead-in falling into place word by word, one giant word in the accent colour that pops on the stressed syllable with a glow and a burst of pixel blocks, upright video cards popping in after it, a drawn line, and a tail line sliding in, while the camera eases out from the face.",
+  "goodFor": "A talking-head reel where one stressed word per sentence should hit hard",
+  "triggers": [
+    "pixel headline",
+    "pixel blocks",
+    "giant word",
+    "talking head headline",
+    "reel captions with a big word",
+    "pop-up video cards",
+    "creator reel style"
+  ],
+  "module": "pixelheadline.jsx",
+  "moduleGlobal": "AESPixelHeadline",
+  "needs": [],
+  "fonts": [
+    {
+      "family": "Inter",
+      "style": "Bold",
+      "license": "OFL-1.1",
+      "source": "Google Fonts"
+    }
+  ],
+  "tools": [],
+  "proofNote": "Calibrated on one reference shot: every element of one beat was measured on it frame by frame and matched within the tolerances in STYLE.md section 8, through these builders with no hand corrections. Not yet tried on a whole piece, and the punch, evidence and rest beats are written but not yet calibrated."
+}
