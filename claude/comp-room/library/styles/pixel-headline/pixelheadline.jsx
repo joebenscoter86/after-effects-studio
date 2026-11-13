@@ -357,7 +357,10 @@ var AESPixelHeadline = (function () {
     var B = SIG.blocks, R = rng(o.seed), c = o.cell || B.cell, bx = o.box, cx = (bx.x0 + bx.x1) / 2, cy = (bx.y0 + bx.y1) / 2, hw = (bx.x1 - bx.x0) / 2, hh = (bx.y1 - bx.y0) / 2;
     var cells = [], sides = ["above", "below", "left", "right"], i, j;
     var cb = o.clearBox;   // no block may touch this rectangle (the word's box at its peak scale, with a margin)
-    for (i = 0; i * c < o.width; i++) for (j = 1; j * c < o.height; j++) {
+    // the grid reaches gridDepth of the height (default .45, as calibrated and as the first piece was built; 1 reaches the
+    // bottom, so a word tucked behind the speaker gets blocks below it too: extended, not yet seen on a piece)
+    var depth = o.gridDepth === undefined ? .45 : o.gridDepth;
+    for (i = 0; i * c < o.width; i++) for (j = 1; j * c < o.height * depth; j++) {
       var x = i * c + c / 2, y = j * c + c / 2, nx = (x - cx) / hw, ny = (y - cy) / hh, d = Math.max(Math.abs(nx), Math.abs(ny));
       if (d > B.reach) continue;
       if (cb && i * c + c > cb.x0 && i * c < cb.x1 && j * c + c > cb.y0 && j * c < cb.y1) continue;
@@ -401,7 +404,8 @@ var AESPixelHeadline = (function () {
     return out; }
   // o = { word (heroWord's result), at (W), colour, seed, lineBand, blockScale, clear (true: no block touches the word's box
   //      at its peak scale; default on a dark ground, where the glow and the ground let blocks show through the letters, and
-  //      for a word of two or more words, whose gap would otherwise read as a hyphen) }
+  //      for a word of two or more words, whose gap would otherwise read as a hyphen), gridDepth (the share of the height the
+  //      blocks' grid reaches; default .45; 1 lets a word low in the frame have blocks below it: extended) }
   //      A word wider than 75 % of the frame sends its blocks above and below only (its sides are off the frame).
   // The blocks for a word, as a pure function (no After Effects): o = { box, pivot, text, width, height, seed, cell, lineBand,
   //      count, dist, blockScale, dark, clear }. With clear, the schedule runs as calibrated (its distances floored at
@@ -413,13 +417,13 @@ var AESPixelHeadline = (function () {
       cb = { x0: pv[0] + (bx.x0 - pv[0]) * pk - m, x1: pv[0] + (bx.x1 - pv[0]) * pk + m, y0: pv[1] + (bx.y0 - pv[1]) * pk - m, y1: pv[1] + (bx.y1 - pv[1]) * pk + m }; }
     if (bx.x1 - bx.x0 > .75 * o.width) sides = { above: .5, below: .5, left: 0, right: 0 };
     var bs = o.blockScale !== undefined ? o.blockScale : (o.dark ? SIG.dark.blockScale : undefined);
-    var all = blockSchedule({ box: bx, width: o.width, height: o.height, seed: o.seed || 7, cell: o.cell || SIG.blocks.cell * s, lineBand: o.lineBand, count: o.count, dist: o.dist, scale: bs,
+    var all = blockSchedule({ box: bx, width: o.width, height: o.height, seed: o.seed || 7, cell: o.cell || SIG.blocks.cell * s, lineBand: o.lineBand, count: o.count, dist: o.dist, scale: bs, gridDepth: o.gridDepth,
       sides: sides, minDist: clear ? SIG.dark.blockMinDist : 0 }), kept = [];
     for (var i = 0; i < all.length; i++) { var q = all[i]; if (!cb || !(q.x + q.w > cb.x0 && q.x < cb.x1 && q.y + q.h > cb.y0 && q.y < cb.y1)) kept.push(q); }
     return { blocks: kept, clearBox: cb, dropped: all.length - kept.length }; }
   function pixelBlocks(comp, o) { var wd = o.word;
     var bf = blocksFor({ box: wd.box, pivot: wd.pivot, text: wd.text, width: comp.width, height: comp.height, seed: o.seed, cell: SIG.blocks.cell * k(comp), lineBand: o.lineBand,
-      count: o.count, dist: o.dist, blockScale: o.blockScale, dark: isDark(o) || !!wd.dark, clear: o.clear }), blocks = bf.blocks, cb = bf.clearBox;
+      count: o.count, dist: o.dist, blockScale: o.blockScale, gridDepth: o.gridDepth, dark: isDark(o) || !!wd.dark, clear: o.clear }), blocks = bf.blocks, cb = bf.clearBox;
     var L = comp.layers.addShape(); L.name = pfx(o) + "Pixels"; var root = L.property("ADBE Root Vectors Group");
     for (var b = 0; b < blocks.length; b++) { var q = blocks[b], g = root.addProperty("ADBE Vector Group"); g.name = "B" + (b + 1);
       var rr = root.property(b + 1).property("ADBE Vectors Group").addProperty("ADBE Vector Shape - Rect");
