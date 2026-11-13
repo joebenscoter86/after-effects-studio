@@ -538,7 +538,7 @@ var AESPixelHeadline = (function () {
       for (var nm in lim) cr.property(nm).setValue(lim[nm]);
       var ex = effect(h, "ADBE Extract"); ex.property("Black Point").setValue(q.lighterThan === undefined ? 35 : q.lighterThan); ex.property("Black Softness").setValue(6);
       if (q.frames && q.frames.length) { var ht = [0], hv = [0]; for (var f = 0; f < q.frames.length; f++) { ht.push(sec(q.frames[f][0]), sec(q.frames[f][1])); hv.push(100, 0); } holdKeys(h.opacity, ht, hv); }
-      h.blendingMode = BlendingMode.SILHOUETTE_ALPHA; h.moveToBeginning(); holes.push(h); }
+      h.blendingMode = BlendingMode.SILHOUETE_ALPHA || BlendingMode.SILHOUETTE_ALPHA;   // After Effects spells it SILHOUETE h.moveToBeginning(); holes.push(h); }
     var L = comp.layers.add(C); L.name = P + "Speaker"; if (L.hasAudio) L.audioEnabled = false;
     L.anchorPoint.setValue([cu.width / 2, cu.height]); L.position.setValue([o.x === undefined ? W / 2 : o.x, H]);
     var sc = o.scale || 100 * H / cu.height; L.scale.setValue([sc, sc]);

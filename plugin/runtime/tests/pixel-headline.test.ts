@@ -110,7 +110,7 @@ function makeAE(opts: { deepGlow: boolean; workingSpace?: string }) {
     KeyframeInterpolationType: { LINEAR: 6612, BEZIER: 6613, HOLD: 6614 },
     PropertyValueType: { TwoD_SPATIAL: 6413, ThreeD_SPATIAL: 6412, TwoD: 6416, ThreeD: 6414, OneD: 6417 },
     TrackMatteType: { ALPHA: 1, ALPHA_INVERTED: 2, LUMA: 3 },
-    BlendingMode: { NORMAL: 1, ADD: 2, COLOR: 3, SOFT_LIGHT: 4, STENCIL_ALPHA: 5, SILHOUETTE_ALPHA: 6 },
+    BlendingMode: { NORMAL: 1, ADD: 2, COLOR: 3, SOFT_LIGHT: 4, STENCIL_ALPHA: 5, SILHOUETE_ALPHA: 6 },   // After Effects' own spelling
     ParagraphJustification: { LEFT_JUSTIFY: 1, CENTER_JUSTIFY: 2, RIGHT_JUSTIFY: 3 },
   });
   vm.runInContext(LIB, ctx);
