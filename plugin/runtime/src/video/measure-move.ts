@@ -62,6 +62,7 @@ export function movesOfChannel(samples: CurveSample[], o: ChannelOptions): Json[
     const at = samples[i0 + h].frame, distOf = (f0: number, f1: number) => Math.hypot(...samples[idx(f1)].value.map((v, d) => v - samples[idx(f0)].value[d]));
     const a = { ...mv, to: at, distance: distOf(mv.from, at) }, b = { ...mv, from: at, distance: distOf(at, mv.to) };
     if (b.distance < o.minMove) return [mv];   // a drift too small to be a move of its own is the move's settle
+    if (b.distance > 0.5 * a.distance) return [mv];   // and a drift is slower and shorter than the move it follows
     handover.add(a); drifts.add(b);
     return [a, b];
   };
