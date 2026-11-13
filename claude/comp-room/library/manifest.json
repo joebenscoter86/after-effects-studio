@@ -184,6 +184,76 @@
       "sha256": "39b8dcf61aa433a3a8a57f2b29af608fed85afc72a0c8aa602f974a939be6fa6"
     },
     {
+      "id": "page-recording",
+      "title": "Page recording: a web page as a smooth 30 fps clip",
+      "path": "techniques/page-recording.md",
+      "kind": "technique",
+      "sha256": "bfe44edd750b97f195fad36014d9fc3bddadff92887c76ee2949729cc57f073a"
+    },
+    {
+      "id": "word-timing",
+      "title": "Word timing: a stressed word's first frame from the voice",
+      "path": "techniques/word-timing.md",
+      "kind": "technique",
+      "sha256": "a73aba2f99aa6326c73cacd217a62bd122c9662d61281177a003c1df40c2a8d8"
+    },
+    {
+      "id": "phone-clip-cards",
+      "title": "Phone clip cards: screen recordings into clean video cards",
+      "path": "techniques/phone-clip-cards.md",
+      "kind": "technique",
+      "sha256": "fbc8c8447f612e7373da6369c79b332078769973d31681db08c2a3c96985c5b1"
+    },
+    {
+      "id": "unattended-runs",
+      "title": "Unattended runs: planning overnight and long After Effects work",
+      "path": "techniques/unattended-runs.md",
+      "kind": "technique",
+      "sha256": "0fb68e6c612fa845c050219e4fa398aa88275c83a4739dd17499719d2ba38f59"
+    },
+    {
+      "id": "page-recorder-mjs",
+      "title": "Page recorder command-line script (Node, Playwright, ffmpeg)",
+      "path": "scripts/capture/record-page.mjs",
+      "kind": "code",
+      "sha256": "60c8e9ab19fea76790e6d7fc361c57c1b7a21aed6aa3390563f15fc7f90b9ef3"
+    },
+    {
+      "id": "page-recorder-config",
+      "title": "Page recorder example config, desktop",
+      "path": "scripts/capture/record-page.example.json",
+      "kind": "examples",
+      "sha256": "f3d5e794e6ca5159922551ec94d94ef4074e582c5b4044cb6b40c1e64f966181"
+    },
+    {
+      "id": "page-recorder-config-mobile",
+      "title": "Page recorder example config, phone",
+      "path": "scripts/capture/record-page.mobile.example.json",
+      "kind": "examples",
+      "sha256": "ef6bf4f4ef5d6bb7bb1eb555cb3b314c2a876ae5c72e61d0cd724c3c1b70711f"
+    },
+    {
+      "id": "check-clip-py",
+      "title": "Clip freeze and jump check with contact sheet (Python, ffmpeg)",
+      "path": "scripts/capture/check-clip.py",
+      "kind": "code",
+      "sha256": "edf5771cb95b6a46314704bd9770221a1caca1b0d88f92dcd6373e1bf13bcc01"
+    },
+    {
+      "id": "word-timing-py",
+      "title": "Word timing script: level per frame, trim and transcribe (Python, ffmpeg)",
+      "path": "scripts/capture/word-timing.py",
+      "kind": "code",
+      "sha256": "9cf8c93e739add55ca56ded0d74ce46e034be2b5ef98fd220ac2e8a09ef07b72"
+    },
+    {
+      "id": "clip-card-py",
+      "title": "Clip card script: crop, trim and slow a screen recording (Python, ffmpeg)",
+      "path": "scripts/capture/clip-card.py",
+      "kind": "code",
+      "sha256": "9fc5e5b63202bd16fe0e40d947ec0a806832734362c024c6923717425def323d"
+    },
+    {
       "id": "scene-recipes",
       "title": "Seven explanatory scene recipes",
       "path": "recipes/recipes.md",
@@ -223,14 +293,14 @@
       "title": "Visual style library index: tiers, uses and needs",
       "path": "styles/index.json",
       "kind": "catalog",
-      "sha256": "25b496c5ed7d22a86addf235b41d6701e08eb04f67ea705825748507d0f4cabd"
+      "sha256": "936a8f7ae260ef918bf2cd7dff976a4444682c87416a179a77601c77834276c4"
     },
     {
       "id": "style-lib-jsx",
       "title": "Shared ES3 helpers for every style (AESLib)",
       "path": "styles/aes-lib.jsx",
       "kind": "code",
-      "sha256": "149e3a21e3b3da91a6813d4740045f4d1f339c82cd1fd5bc15f55bddeffa2333"
+      "sha256": "5a66f4849c37a71642e5e295e9b47f888732f8c3d8c15337448dd932e1325bb9"
     },
     {
       "id": "style-art-deco",
@@ -497,6 +567,20 @@
       "path": "styles/pictogram-motion/pictogram.jsx",
       "kind": "code",
       "sha256": "a8845c6ef36d43b42a50df78f46c6a93e453cb1722c91dc5e64a7f103508a3f5"
+    },
+    {
+      "id": "style-pixel-headline",
+      "title": "Pixel headline style",
+      "path": "styles/pixel-headline/STYLE.md",
+      "kind": "style",
+      "sha256": "9c0291f8b94f70b786e15ca9855e07499cdf19acb2bf8498184e2947b4ec99db"
+    },
+    {
+      "id": "style-pixel-headline-jsx",
+      "title": "Pixel headline helpers (AESPixelHeadline)",
+      "path": "styles/pixel-headline/pixelheadline.jsx",
+      "kind": "code",
+      "sha256": "8a57cb39324bde2d723f93661f0fb77a823a31a09ea207ac1a28a3ea7bd8b93b"
     },
     {
       "id": "style-risograph",

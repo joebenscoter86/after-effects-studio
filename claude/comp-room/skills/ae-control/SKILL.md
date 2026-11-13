@@ -20,6 +20,8 @@ The plugin supports AE's exposed scripting API. Third-party custom UI controls, 
 
 Use one controller at a time. The bundled native runtime serializes its own clients; unrelated CEP panels and the older Content shell bridge do not share that lock.
 
+For a long or unattended run, read `unattended-runs` first: a locked screen leaves an After Effects dialog undismissable and every call hangs behind it; keep the screen unlocked, save before long renders and keep `aerender` as the fallback.
+
 For green-screen keying, read `keying` in `ae_library` first: it gives the measure-key-measure procedure with `ae_render_frame` `screen` and `edge` and the `key.*` operations.
 
 For portable text fitting/entrances, read typography-jsx and typography-technique before calling AESType. Helpers use explicit owned layer IDs, protect existing Source Text animation/expressions and report partial completion. Ordinary native text operations remain available for supported needs outside helper scope; inspect and verify them independently.
