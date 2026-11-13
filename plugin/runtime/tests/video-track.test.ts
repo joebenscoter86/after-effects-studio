@@ -157,4 +157,24 @@ describe("video.track", () => {
     expect(Math.abs(ml.duration.visible.at - 12)).toBeLessThanOrEqual(1);
     expect(ml.best).toBe("linear");
   }, 60_000);
+  it("whole-stage travel: a fast eased pan's distance and visible span, from the frames' shifts added up", async (ctx) => {
+    if (!files["fast-pan"]) return ctx.skip();
+    // the band leaves out the chip fixed to the frame
+    const r: any = await track("fast-pan", [100, 40, 100, 100], { stage: { band: [0, 0.8] } });
+    expect(r.stage.gaps).toEqual([]);
+    const m = r.moves.find((x: any) => x.measure === "stage");
+    expect(Math.abs(m.distance - 600) / 600).toBeLessThan(0.05);
+    let truth = 12; for (let k = 10; k <= 22; k++) if (aeEase((k - 10) / 12, 0.5, 0.5) >= 0.98) { truth = k - 10; break; }
+    expect(Math.abs(m.duration.visible.at - truth)).toBeLessThanOrEqual(2);
+    expect(m.end[0]).toBeLessThan(0);   // the picture moved left
+    expect(m.status).toBe("measured");
+  }, 60_000);
+  it("whole-stage travel stops at a cut: nothing is carried across it", async (ctx) => {
+    if (!files["cut-then-fast-move"]) return ctx.skip();
+    const r: any = await track("cut-then-fast-move", [100, 40, 100, 100], { stage: true });
+    expect(r.cuts).toEqual([30]);
+    const f = r.stage.frames, at = (k: number) => f.find((x: any) => x.frame === k);
+    expect(at(31).segment).toBe(at(29).segment + 1);
+    expect(at(30).x).toBe(0);
+  }, 60_000);
 });

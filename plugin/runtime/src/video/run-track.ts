@@ -6,7 +6,7 @@ import { type CurveSample } from "../color/motion.js";
 import { cadenceOf, meanDiff, NO_FFMPEG, probeVideo, readFrames, type VideoInfo, type VideoTools, VIDEO_TOOLS } from "./decode.js";
 import { INK_CURVES, inkLike, inkOf, inkValue, witnessRuns, type InkCurve, type InkFrame, type InkMask } from "./ink.js";
 import { movesOfChannel } from "./measure-move.js";
-import { frameStats, registerShift, SHOT_RULES, shotList, type FrameStats } from "./shots.js";
+import { frameStats, registerShift, SHOT_RULES, shotList, type FrameStats, type Shift } from "./shots.js";
 import { matchTemplate, refineScale, resize, scaleSet, type Match } from "./track.js";
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -238,6 +238,47 @@ export async function runTrack(args: Json, opts: TrackOptions = {}): Promise<Jso
     }
   }
 
+  // whole-stage travel (`stage`): each frame registered on the one before under a whole-frame shift (in a band of the
+  // frame), coarse to fine with a sub-pixel peak, and the shifts added up. It stops at a cut, and where two frames do
+  // not register it says the frame: no number is carried across a gap, so a move cut by one is partial.
+  if (args.stage) {
+    const st: Json = args.stage === true ? {} : args.stage, band = Array.isArray(st.band) && st.band.length === 2 ? (st.band as number[]).map(Number) : [0, 1];
+    const by0 = Math.max(0, Math.round(band[0] * info.height)), bh = Math.max(8, Math.min(info.height - by0, Math.round((band[1] - band[0]) * info.height)));
+    const FW = Math.min(256, info.width), kf = FW / info.width, FH = Math.max(8, Math.round(bh * kf)), CW = Math.max(8, Math.round(FW / 4)), CH = Math.max(4, Math.round(FH / 4));
+    const pos: Array<{ frame: number; time: number; x: number; y: number; seg: number }> = [], gaps: Array<{ frame: number; time: number; score: number }> = [];
+    let prevF: Uint8Array | null = null, prevC: Uint8Array | null = null, x = 0, y = 0, seg = 0;
+    // registered: the shift scores like the same picture. (Inside a shot the cut list has already ruled out a different
+    // picture; the residual share, which tells a cut from a pan, means little between two slow blurred frames.)
+    const ok = (g: Shift | null) => !!g && g.score >= SHOT_RULES.sameScore;
+    for await (const fr of readFrames(info, { from: f0, to: f1, crop: [0, by0, info.width, bh], width: FW, height: FH, gray: true }, tools)) {
+      const cur = Uint8Array.from(fr.data), curC = Uint8Array.from(resize(Float64Array.from(cur), FW, FH, CW, CH), (v) => Math.round(v));
+      if (prevF && prevC) {
+        if (cutAt.has(fr.index)) { seg++; x = 0; y = 0; }
+        else if (meanDiff(cur, prevF) >= 0.5) {
+          const coarse = registerShift(prevC, curC, CW, CH), fine = coarse ? registerShift(prevF, cur, FW, FH, { near: { dx: coarse.dx * 4, dy: coarse.dy * 4, r: 6 } }) : null;
+          if (!ok(fine)) { gaps.push({ frame: fr.index, time: fr.time, score: fine ? Math.round(fine.score * 1000) / 1000 : 0 }); seg++; x = 0; y = 0; }
+          else {
+            // a sub-pixel peak: a parabola through the scores either side, on each axis
+            const at = (dx: number, dy: number) => registerShift(prevF!, cur, FW, FH, { near: { dx, dy, r: 0 }, minOverlap: 0 })?.score ?? 0;
+            const peak = (m: number, c: number, p: number) => { const d = m - 2 * c + p; return d < 0 ? Math.max(-0.5, Math.min(0.5, (0.5 * (m - p)) / d)) : 0; };
+            const g = fine!, sx = g.dx + peak(at(g.dx - 1, g.dy), g.score, at(g.dx + 1, g.dy)), sy = g.dy + peak(at(g.dx, g.dy - 1), g.score, at(g.dx, g.dy + 1));
+            x += sx / kf; y += sy / kf;
+          }
+        }
+      }
+      if (!rep.has(fr.index)) pos.push({ frame: fr.index, time: fr.time, x, y, seg });
+      prevF = cur; prevC = curC;
+    }
+    const segs = [...new Set(pos.map((p) => p.seg))];
+    for (const sg of segs) {
+      const samples: CurveSample[] = pos.filter((p) => p.seg === sg).map((p) => ({ frame: p.frame, time: p.time, value: [p.x, p.y] }));
+      for (const mv of movesOfChannel(samples, { fps, atFps, minMove: Math.max(2, 0.004 * Math.max(info.width, info.height)), epsAbs: 0.5 / kf, beginsAt: (f) => (cutAt.has(f) ? "cut" : null), endsAt: (f) => cutAt.has(f + 1) }))
+        out.moves.push({ measure: "stage", channel: "stage", like: "position", unit: "px", ...mv });
+    }
+    out.stage = { band: [by0, by0 + bh], gaps, frames: pos.map((p) => ({ frame: p.frame, x: r2(p.x), y: r2(p.y), segment: p.seg })),
+      reading: `The stage's travel: each frame registered on the one before in rows ${by0} to ${by0 + bh}, the shifts added up; ${gaps.length ? `${gaps.length} frame${gaps.length === 1 ? "" : "s"} did not register (${gaps.map((g) => g.frame).join(", ")}): nothing is carried across ${gaps.length === 1 ? "it" : "them"}` : "every frame registered"}.` };
+  }
+
   // the witness: frame differencing in the swept box (the region where it was matched, the ink box, and half the
   // region again round them); when it changes for materially longer than a move covers, the move is uncertain
   {
@@ -258,6 +299,7 @@ export async function runTrack(args: Json, opts: TrackOptions = {}): Promise<Jso
     out.witness = { box, threshold: wr.threshold, ground: wr.ground, runs,
       reading: wr.ground === "moving" ? "The ground in the box moves: frame differencing cannot see the move past it." : `The box changes in ${runs.length} run${runs.length === 1 ? "" : "s"}.` };
     for (const m of out.moves as Json[]) {
+      if (m.measure === "stage") continue;   // the stage moves the whole frame: a box's witness says nothing of it
       const vA = m.duration?.visible?.fromFrame ?? m.from.frame, vB = m.duration?.visible?.toFrame ?? m.to.frame, cA = m.covers.fromFrame, cB = m.covers.toFrame;
       const over = runs.filter((r) => r.from <= vB && r.to >= vA);
       if (!over.length) { m.witness = null; continue; }
