@@ -12,7 +12,7 @@ Read-only project/comp/layer introspection.
 
 | Tool              | Description                                                                                                                                                                                                   |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ae_project_info` | Project-level info: file path, dirty flag, all items with type/summary, active item.                                                                                                                          |
+| `ae_project_info` | Project-level info: file path, dirty flag, counts of items by type, active item, and the items with type/summary, 100 at a time (offset and limit for the rest; `more` says what was left out).               |
 | `ae_comp_info`    | Detailed comp info: size, fps, duration, work area, motion blur, comp markers (`markers.keyframes`: each `time` in seconds and `value.comment`, `value.duration`; null when there are none), layer summaries. |
 | `ae_layer_info`   | Full layer info: transform, effects, masks, text, shape contents, keyframes (incl.                                                                                                                            |
 | `ae_version_info` | AE version, build, and read-only capabilities (saveFrameToPng, app.effects, Socket).                                                                                                                          |
@@ -52,10 +52,12 @@ Each tool's full description and its inputs, from the tool schemas.
 
 ### `ae_project_info`
 
-Project-level info: file path, dirty flag, all items with type/summary, active item. Start here.
+Project-level info: file path, dirty flag, counts of items by type, active item, and the items with type/summary, 100 at a time (offset and limit for the rest; `more` says what was left out). Start here.
 
 | Parameter  | Required | Description                                                                                                                                                                                                                                                                                                                                                              |
 | ---------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `limit`    | no       | Items to list (default 100; about 400 characters each).                                                                                                                                                                                                                                                                                                                  |
+| `offset`   | no       | Items to skip before listing (default 0).                                                                                                                                                                                                                                                                                                                                |
 | `instance` | no       | After Effects instance to address for this call, when several are running (AfterFX.exe -m): an instance id (its AE_MCP_INSTANCE at launch, or the `name` given to instance.start) or the name of the project file it has open. Omit to use this server's default (AE_MCP_INSTANCE, else the single live instance). ae_context and ae_do instance.list show what is live. |
 
 ### `ae_comp_info`

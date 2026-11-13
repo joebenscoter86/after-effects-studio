@@ -2,9 +2,10 @@
 // document describing folders, comps (with full layer/property trees), solid
 // footage, and file footage references. ES3-compatible.
 
-AE.EXPORT_SCHEMA_VERSION = 2;
+AE.EXPORT_SCHEMA_VERSION = 3;
 // v1: basic items + layers + transform/effects/masks/text
 // v2: shape layer contents, layer/comp markers, time remap, material options, audio, extended text document fields
+// v3: compositing (blend mode, track matte, mask modes, switches, light type), camera and light options
 
 AE.exportProject = function () {
     var proj = app.project;

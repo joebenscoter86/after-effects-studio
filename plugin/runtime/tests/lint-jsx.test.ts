@@ -111,3 +111,38 @@ describe("findTernaryChains", () => {
     expect(chains("var t = a ? f(b ? 1 : 2) : 3;")).toBe(0);
   });
 });
+
+describe("the injection lint keeps its place in a file", () => {
+  it("past a nested template with braces, and past a regex holding a quote, a raw argument later on is still found", async () => {
+    const { mkdtempSync, writeFileSync, rmSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const { join } = await import("node:path");
+    const dir = mkdtempSync(join(tmpdir(), "lint-codegen-"));
+    const file = join(dir, "fixture.ts");
+    writeFileSync(
+      file,
+      [
+        "const quote = (p: string) => `'${p.replace(/'/g, \"\\\\'\")}'`;",
+        "function a(args: any) {",
+        "  return `",
+        "    var _rqi = 1;",
+        '    ${args.settings !== undefined ? `try { _rqi.setSettings(${jsxVal(args.settings)}); } catch (eSs) { _w.push(1); }` : ""}',
+        "    return _rqi;",
+        "  `;",
+        "}",
+        "function b(args: any) {",
+        "  return `",
+        "    var _n = \"${args.name}\";",
+        "    return AE.x(_n);",
+        "  `;",
+        "}",
+      ].join("\n"),
+    );
+    try {
+      const found = lintCodegenFile(file);
+      expect(found.map((f) => f.line)).toEqual([11]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
