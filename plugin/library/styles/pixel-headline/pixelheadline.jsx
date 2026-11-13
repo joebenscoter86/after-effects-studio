@@ -610,7 +610,7 @@ var AESPixelHeadline = (function () {
 
   // ---- the proof: one large card per item behind the speaker, its name as the giant word above it; as the next item lands,
   //      the earlier card steps back; then all together, each clip restarted from its opening as it joins the set.
-  //      o = { items: [{ clip, at (s: the card's first frame), text (the name), W (s: the name's spoken start), seed }],
+  //      o = { items: [{ clip, at (s: the card's first frame), text (the name), W (s: the name's spoken start), seed, blockScale }],
   //      card { pos, size, width } (default centred at 42 % of the height, 1280 x 800, 96 % of the frame wide),
   //      nameBaseline (comp px), back { scale (%), pos: [[x, y], ...] (card i's place once item i + 1 has landed), scaleDur
   //      (s, .3), posDur (s, .8) }, set { at (s), pos: [[x, y], ...], scale (%), stagger (frames, 4), dur (s, .6), restart
@@ -624,7 +624,7 @@ var AESPixelHeadline = (function () {
       cards.push(C);
       if (it[i].text) { var NP = P + String.fromCharCode(65 + i) + " ";
         var hw = heroWord(comp, { text: it[i].text, at: it[i].W, colour: o.colour, baseline: o.nameBaseline, behind: o.behind, tone: o.tone, darkGround: o.darkGround, prefix: NP });
-        var px = pixelBlocks(comp, { word: hw, at: it[i].W, colour: o.colour, seed: it[i].seed || (11 + i), tone: o.tone, darkGround: o.darkGround, prefix: NP });
+        var px = pixelBlocks(comp, { word: hw, at: it[i].W, colour: o.colour, seed: it[i].seed || (11 + i), blockScale: it[i].blockScale !== undefined ? it[i].blockScale : o.blockScale, tone: o.tone, darkGround: o.darkGround, prefix: NP });
         names.push({ prefix: NP, word: hw, blocks: px }); } }
     var bk = o.back;
     if (bk) for (i = 0; i + 1 < it.length; i++) { var t0 = it[i + 1].text ? it[i + 1].W : it[i + 1].at;

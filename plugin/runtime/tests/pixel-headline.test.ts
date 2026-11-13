@@ -658,6 +658,8 @@ describe("pixel-headline module", () => {
     expect(r.cards.map((c: any) => c.name)).toEqual(["PH P Card 1", "PH P Card 2", "PH P Card 3"]);
     expect(r.names.map((n: any) => n.prefix)).toEqual(["PH P A ", "PH P B ", "PH P C "]);
     expect(r.names[0].word.layer.position.value[1]).toBe(470 - 18);
+    const thin = PH.proof(comp, { items: [{ ...items[0], blockScale: 0.1 }], prefix: "PH Q " }), full = r.names[0].blocks.blocks.length;
+    expect(thin.names[0].blocks.blocks.length).toBeLessThan(full);   // a name's blocks thin with its blockScale
     for (const c of r.cards) expect(comp._layers.indexOf(c)).toBeGreaterThan(comp._layers.indexOf(sp.layer));
     const c1 = r.cards[0];
     expect(c1.scale.keys.some((q: Key) => near(q.t, 5) && q.v[0] !== 22)).toBe(true);   // the step-back starts at the next name's W
