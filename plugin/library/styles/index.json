@@ -969,8 +969,8 @@
       "title": "Pixel headline",
       "tier": "native",
       "origin": "plugin",
-      "summary": "A cut-out speaker on a clean light ground, with each spoken sentence set around them: a small lead-in falling into place word by word, one giant word in the accent colour that pops on the stressed syllable with a glow and a burst of pixel blocks, upright video cards popping in after it, a drawn line, and a tail line sliding in, while the camera eases out from the face.",
-      "goodFor": "A talking-head reel where one stressed word per sentence should hit hard",
+      "summary": "The speaker cut out on a clean ground, light or dark, with each spoken sentence set around them: a small lead-in falling into place word by word, one giant word in the accent colour that pops on the stressed syllable with a glow and a burst of pixel blocks, video cards popping in after it, a drawn line, and a tail line sliding in, while the camera eases out from the face. Words tuck behind the speaker and cards sit round them, so the cut-out shows.",
+      "goodFor": "A whole talking-head reel, built by a director agent from a script and a take, where one stressed word per sentence should hit hard and forty seconds must stay in one style",
       "triggers": [
         "pixel headline",
         "pixel blocks",
@@ -992,7 +992,7 @@
         }
       ],
       "tools": [],
-      "proofNote": "Calibrated on one reference shot: every element of one beat was measured on it frame by frame and matched within the tolerances in STYLE.md section 8, through these builders with no hand corrections. Not yet tried on a whole piece, and the punch, evidence and rest beats are written but not yet calibrated.",
+      "proofNote": "Calibrated on one reference shot: every element of one beat was measured on it frame by frame and matched within the tolerances in STYLE.md section 8, through these builders with no hand corrections. Then used for the first full piece (43.5 s, eleven beats, the speaker cut out on a dark ground, five versions reviewed by the user): its rules are marked proven, and its hand workarounds are now builders. The light ground on a whole piece is not yet tried.",
       "contentStatus": null,
       "contentProof": null,
       "pluginProof": null

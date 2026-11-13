@@ -41,7 +41,7 @@ Pixel headline is the plugin's own style; read its STYLE.md for what was measure
 | One-line drawing | `one-line` | native | One idea that connects everything; elegant and minimal | Caveat | ffmpeg, node |
 | Paper-cut lightbox | `paper-lantern` | print | A warm, story-like moment told in layers of light | Cormorant Garamond | none |
 | Pictogram motion | `pictogram-motion` | native | A fast list of facts or steps on a strong beat | Inter Tight, Space Mono | ffmpeg, node |
-| Pixel headline | `pixel-headline` | native | A talking-head reel where one stressed word per sentence should hit hard | Inter | none |
+| Pixel headline | `pixel-headline` | native | A whole talking-head reel, built by a director agent from a script and a take, where one stressed word per sentence should hit hard and forty seconds must stay in one style | Inter | none |
 | Risograph print | `risograph` | print | A zine-feeling explainer with indie, creative energy | Archivo Black, Josefin Sans | ffmpeg, node |
 | Rubber hose cartoon | `rubber-hose` | painterly | A comedic bit where an object comes alive | Shrikhand, Limelight, IM FELL English SC | ffmpeg, node |
 | Silent film | `silent-film` | native | An old-way-versus-new-way contrast, played for laughs | Playfair Display SC, Old Standard TT | ffmpeg, node |

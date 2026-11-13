@@ -293,7 +293,7 @@
       "title": "Visual style library index: tiers, uses and needs",
       "path": "styles/index.json",
       "kind": "catalog",
-      "sha256": "f485ad4bed9e7ba761005f784c07992038146d964e715993ff2d500dcc3c0e1f"
+      "sha256": "936a8f7ae260ef918bf2cd7dff976a4444682c87416a179a77601c77834276c4"
     },
     {
       "id": "style-lib-jsx",
@@ -573,14 +573,14 @@
       "title": "Pixel headline style",
       "path": "styles/pixel-headline/STYLE.md",
       "kind": "style",
-      "sha256": "71fc771ebf2a5c991ca7412697f353bf94b6eef39401038391150fecea2a824c"
+      "sha256": "d425fdde0d26d41710c066486bb838b35a6668c7898e8c96a57b2cd24a4d5dc9"
     },
     {
       "id": "style-pixel-headline-jsx",
       "title": "Pixel headline helpers (AESPixelHeadline)",
       "path": "styles/pixel-headline/pixelheadline.jsx",
       "kind": "code",
-      "sha256": "a0ca9f05992a01e3483e12c87d70dbf30fd8233064aad8a21cae9d6105e7f0d1"
+      "sha256": "1b9ba0357f6325b6bca3f89e76d63ab0078555d2c09a3699847f949f439692b2"
     },
     {
       "id": "style-risograph",
