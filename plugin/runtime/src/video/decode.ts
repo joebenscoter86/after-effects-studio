@@ -85,6 +85,8 @@ export interface ReadOptions {
   height: number;
   /** One channel (luma) or three (RGB). */
   gray?: boolean;
+  /** Resample to this many frames a second (a census's steps); frames are then numbered from 0 and timed i / fps from the first. */
+  fps?: number;
 }
 
 export interface Frame {
@@ -101,10 +103,12 @@ export async function* readFrames(info: VideoInfo, o: ReadOptions, tools: VideoT
   const from = Math.max(0, Math.min(info.frames - 1, o.from)), to = Math.max(from, Math.min(info.frames - 1, o.to));
   const half = (info.intervals.median || 1 / 30) / 2, seek = Math.max(0, info.times[from] - half);
   const filters: string[] = [];
+  if (o.fps) filters.push(`fps=${o.fps}`);
   if (o.crop) filters.push(`crop=${Math.round(o.crop[2])}:${Math.round(o.crop[3])}:${Math.round(o.crop[0])}:${Math.round(o.crop[1])}`);
   filters.push(`scale=${o.width}:${o.height}:flags=area`);
-  const args = ["-v", "error", ...(seek > 0 ? ["-ss", seek.toFixed(6)] : []), "-i", info.file, "-map", "0:v:0", "-fps_mode", "passthrough",
-    "-frames:v", String(to - from + 1), "-vf", filters.join(","), "-f", "rawvideo", "-pix_fmt", o.gray ? "gray" : "rgb24", "pipe:1"];
+  const count = o.fps ? Math.max(1, Math.round((info.times[to] - info.times[from]) * o.fps) + 1) : to - from + 1;
+  const args = ["-v", "error", ...(seek > 0 ? ["-ss", seek.toFixed(6)] : []), "-i", info.file, "-map", "0:v:0", ...(o.fps ? [] : ["-fps_mode", "passthrough"]),
+    "-frames:v", String(count), "-vf", filters.join(","), "-f", "rawvideo", "-pix_fmt", o.gray ? "gray" : "rgb24", "pipe:1"];
   const size = o.width * o.height * (o.gray ? 1 : 3);
   let proc: ReturnType<typeof spawn> | null = null;
   for (const bin of tools.ffmpeg) {
@@ -126,8 +130,8 @@ export async function* readFrames(info: VideoInfo, o: ReadOptions, tools: VideoT
   try {
     for await (const chunk of proc.stdout!) {
       buf = buf.length ? Buffer.concat([buf, chunk as Buffer]) : (chunk as Buffer);
-      while (buf.length >= size && index <= to) {
-        yield { index, time: info.times[index], data: new Uint8Array(buf.subarray(0, size)) };
+      while (buf.length >= size && (o.fps ? index - from < count : index <= to)) {
+        yield { index: o.fps ? index - from : index, time: o.fps ? info.times[from] + (index - from) / o.fps : info.times[index], data: new Uint8Array(buf.subarray(0, size)) };
         buf = buf.subarray(size);
         index++;
       }
@@ -135,7 +139,7 @@ export async function* readFrames(info: VideoInfo, o: ReadOptions, tools: VideoT
   } finally {
     if (proc.exitCode === null) proc.kill();
   }
-  if (index <= to && stderr.trim()) throw new Error(`ffmpeg stopped at frame ${index} of ${info.file}: ${stderr.trim().slice(0, 300)}`);
+  if (!o.fps && index <= to && stderr.trim()) throw new Error(`ffmpeg stopped at frame ${index} of ${info.file}: ${stderr.trim().slice(0, 300)}`);
 }
 
 /** Mean absolute difference of two equal-sized frames (0..255). */
