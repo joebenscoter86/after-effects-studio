@@ -71,7 +71,10 @@ export async function runCensus(args: Json, tools: VideoTools = VIDEO_TOOLS): Pr
   const band = Array.isArray(args.band) && args.band.length === 2 ? (args.band as number[]).map(Number) : [0.15, 0.6];
   const y0 = Math.max(0, Math.round(band[0] * h)), y1 = Math.min(h, Math.round(band[1] * h)), pageTest = args.pageTest === true;
   const blur = (src: Uint8Array) => { const out = new Uint8Array(src.length); for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { let s = 0, c = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const yy = y + dy, xx = x + dx; if (yy >= 0 && yy < h && xx >= 0 && xx < w) { s += src[yy * w + xx] * (dx || dy ? 1 : 4); c += dx || dy ? 1 : 4; } } out[y * w + x] = Math.round(s / c); } return out; };
-  const isPage = (f: Uint8Array) => { for (let y = 3; y <= 17 && y < h; y++) { let m = 0, m2 = 0; for (let x = 0; x < w; x++) { const v = f[y * w + x]; m += v; m2 += v * v; } if (Math.sqrt(Math.max(0, m2 / w - (m / w) ** 2)) >= 9) return false; } return true; };
+  // a flat page above the title: the grey of rows 3 to 16 and columns 5 to 174 (of a 180-wide frame) varies under 9, as a whole
+  const isPage = (f: Uint8Array) => { const x0 = Math.round((5 * w) / 180), x1 = Math.round((174 * w) / 180); let m = 0, m2 = 0, n = 0;
+    for (let y = 3; y <= 16 && y < h; y++) for (let x = x0; x <= x1 && x < w; x++) { const v = f[y * w + x]; m += v; m2 += v * v; n++; }
+    return n > 0 && Math.sqrt(Math.max(0, m2 / n - (m / n) ** 2)) < 9; };
   let prev: Uint8Array | null = null;
   const labels: string[] = [], shifts: number[] = [], steps: Json[] = [];
   for await (const fr of readFrames(info, { from: f0, to: f1, width: w, height: h, gray: true, fps: 1 / step }, tools)) {

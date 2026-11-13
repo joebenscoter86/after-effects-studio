@@ -48,7 +48,15 @@ Every track says so in its reply:
 
 Ink that grows (a draw-on stroke, a word fading in letter by letter, a flicker) is not a region that moves. Measure it as opacity over a fixed box, or mark it untested.
 
-When the tracker loses its region, it says at which frame and fits nothing past it. A fit of noise is not a measurement. Every fit carries its rms on the move normalised to 0..1: under 0.03 is a clean fit, over 0.05 is marked loose.
+When the tracker loses its region, it says at which frame and fits nothing past it. A fit of noise is not a measurement:
+- a frame matched under 0.8 is no match;
+- a move whose frames match under 0.85 at the median is marked **uncertain**, not measured, because on real files a wrong lock matched at 0.6 to 0.8;
+- every fit carries its rms on the move normalised to 0..1: under 0.03 is a clean fit, over 0.05 is marked loose.
+
+## Two ways to time a move
+
+- **As seen** (`duration`, `fits.easeSeen`): its keys where it crosses 1.5 % and 98.5 % of its travel, interpolated between frames, with the influences fitted between them. This is how a study times a move by hand, from when it visibly starts to when it visibly stops. Compare it with a study's numbers, and use it in `motion.compare_moves`.
+- **The keys that rebuild it** (`fits.ease`, `apply.keys`): After Effects' two keys with free times, the lowest rms. A slow ease in puts the real last key well after the move looks finished, so these keys run longer than the move as seen. Use them to build.
 
 ## Values that worked
 
@@ -59,6 +67,23 @@ When the tracker loses its region, it says at which frame and fits nothing past 
   - Calm: under 0.4 % of the band changed.
   - A dark stage reads calmer than it looks.
 - Tolerances that suit a hand study's own precision: duration within 2 frames at 30 fps, distance within 5 %, ease within 10 points, spring A within 0.05, f within 0.15 Hz, d within 1 per second. Tighter ones (1 frame, 2 %) hold on clean synthetic clips.
+
+## How far it is tested
+
+- **Synthetic clips with known moves:** each case holds at 1 frame, 2 % and 10 points:
+  - an After Effects ease, a linear move, a spring, a scale and a fade;
+  - a slide over a moving ground;
+  - a variable-rate file and a 24 fps piece in 30.
+
+  Every cut and one-frame swap is found, with no false ones.
+- **A hand study of 15 moves on real reels** (tuned on it): 5 within its tolerances. The misses:
+  - **blurred whips:** the match fails inside the blur;
+  - **growth from a few pixels:** a 10 % label, a card at 32 % on a low-contrast page;
+  - **pops with heavy blur;**
+  - **regions that are not rigid:** a draw-on, a glow pulse, a word fade;
+  - **two eases a few points outside 10.**
+- **A second study, held out, run once with no tuning:** 2 of 14. The tool does not yet generalise to moves like these, so read every track's frames before trusting its numbers.
+- **The census:** 97 to 99.8 % agreement with a study's own labels, step for step, on five reels, one of them a dark stage.
 
 ## Checks
 

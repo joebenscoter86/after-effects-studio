@@ -4,7 +4,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 
 import { analyzeCurve, type CurveMove, type CurveSample } from "../color/motion.js";
-import { fitMove, type Sample } from "./fit.js";
+import { fitEaseSeen, fitMove, type Sample } from "./fit.js";
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -82,9 +82,9 @@ export function movesOfSamples(samples: CurveSample[], fps: number, channel: str
     const startV = samples[i0].value, endV = samples[Math.min(samples.length - 1, i1)].value, way = endV.map((e, d) => e - startV[d]), len2 = way.reduce((s, x) => s + x * x, 0);
     if (len2 <= 0) continue;
     const prog: Sample[] = samples.slice(Math.max(0, i0 - 3), Math.min(samples.length, i1 + 7)).map((s) => ({ time: s.time, y: s.value.reduce((a, v, d) => a + (v - startV[d]) * way[d], 0) / len2 }));
-    const fits = fitMove(prog, { start: samples[i0].time, end: samples[i1].time }), best: Json = fits[fits.best];
-    out.push({ channel, from: { frame: mv.from, time: samples[i0].time }, distance: Math.sqrt(len2), best: fits.best, fits, curve: mv,
-      duration: { seconds: fits.best === "spring" ? best.settle : best.end - best.start } });
+    const fits = fitMove(prog, { start: samples[i0].time, end: samples[i1].time }), best: Json = fits[fits.best], seen = fitEaseSeen(prog);
+    out.push({ channel, from: { frame: mv.from, time: samples[i0].time }, distance: Math.sqrt(len2), best: fits.best, fits: { ...fits, easeSeen: seen }, curve: mv,
+      duration: { seconds: seen ? seen.end - seen.start : fits.best === "spring" ? best.settle : best.end - best.start } });
   }
   return out;
 }
@@ -96,7 +96,8 @@ function compare(label: string, measured: Json, built: Json, tol: Tolerance, atF
     reading: `${label}: ${what} ${r2(bv)}${unit} against ${r2(mv)}${unit}, ${within ? "within" : "outside"} tolerance` });
   add("duration", d(measured.duration.seconds), d(built.duration.seconds), " frames", Math.abs(measured.duration.seconds - built.duration.seconds) * atFps <= tol.frames + 1e-9);
   add("distance", measured.distance, built.distance, "", Math.abs(built.distance - measured.distance) <= tol.distanceShare * Math.abs(measured.distance) + 1e-9);
-  const me = measured.fits.ease, be = built.fits.ease;
+  // influences in the same convention on both sides: as seen (keys at 1.5 % and 98.5 % of the travel) when both have it
+  const me = measured.fits.easeSeen && built.fits.easeSeen ? measured.fits.easeSeen : measured.fits.ease, be = measured.fits.easeSeen && built.fits.easeSeen ? built.fits.easeSeen : built.fits.ease;
   if (measured.best === "ease" || built.best === "ease") {
     add("ease out", me.outInfluence, be.outInfluence, " %", Math.abs(me.outInfluence - be.outInfluence) <= tol.easePoints);
     add("ease in", me.inInfluence, be.inInfluence, " %", Math.abs(me.inInfluence - be.inInfluence) <= tol.easePoints);

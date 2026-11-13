@@ -38,7 +38,7 @@ describe("video.moves", () => {
     expect(r.moves[0]).toMatchObject({ move: "slide", channel: "position", best: "ease" });
     const sheet = await fs.readFile(r.files.beatSheet, "utf8");
     expect(sheet).toMatch(/## Scene 1 — /);
-    expect(sheet).toMatch(/slide \(position\) 260(\.\d+)?px over 2\d(\.\d+)? frames, ease/);
+    expect(sheet).toMatch(/slide \(position\) 260(\.\d+)?px over \d+(\.\d+)? frames, ease/);
     const json = JSON.parse(await fs.readFile(r.files.json, "utf8"));
     expect(json.moves[0].apply.keys).toHaveLength(2);
   });

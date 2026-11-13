@@ -112,6 +112,23 @@ export function fitMove(s: Sample[], guess: { start: number; end: number }): { e
 }
 
 /**
+ * The move as seen: its keys where it crosses `lo` and `1 - lo` of its travel (interpolated between samples, so a
+ * 24 fps source is not rounded to its frames), the influences fitted with the keys held there. This is how a hand study
+ * times a move, from when it visibly starts to when it visibly stops; tuned on the hand study (1.5 % put six of seven
+ * of its timed moves within two frames). The free fit's keys (fitMove) are the ones that rebuild the curve exactly.
+ */
+export function fitEaseSeen(s: Sample[], lo = 0.015): (EaseFit & { seen: true }) | null {
+  const cross = (th: number, from = 1) => { for (let k = Math.max(1, from); k < s.length; k++) if (s[k].y >= th && s[k - 1].y < th) return { k, t: s[k - 1].time + ((th - s[k - 1].y) / (s[k].y - s[k - 1].y)) * (s[k].time - s[k - 1].time) }; return null; };
+  const c0 = cross(lo), c1 = c0 ? cross(1 - lo, c0.k) : null;
+  if (!c0 || !c1 || c1.t <= c0.t) return null;
+  const a = c0.t, b = c1.t;
+  const f = (x: number[]) => { const o = clamp(x[0], 0.01, 1), i = clamp(x[1], 0.01, 1); return rmsOf(s, (t) => aeEase((t - a) / (b - a), o, i)); };
+  let best = { x: [0.33, 0.33], value: Infinity };
+  for (const o0 of [0.1, 0.33, 0.6, 0.9]) for (const i0 of [0.1, 0.33, 0.6, 0.9]) { const r = nelderMead(f, [o0, i0], [0.1, 0.1], 300); if (r.value < best.value) best = r; }
+  return { model: "ease", seen: true, start: a, end: b, outInfluence: Math.round(clamp(best.x[0], 0.01, 1) * 1000) / 10, inInfluence: Math.round(clamp(best.x[1], 0.01, 1) * 1000) / 10, rms: best.value };
+}
+
+/**
  * The hand study's spring on a move's tail: from the first sample at or past its end value, y - 1 = A e^(-d t) sin(2 pi f t).
  * null when the move does not overshoot.
  */

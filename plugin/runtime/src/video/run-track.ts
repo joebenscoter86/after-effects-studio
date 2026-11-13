@@ -4,7 +4,7 @@ import path from "node:path";
 
 import { analyzeCurve, type CurveMove, type CurveSample } from "../color/motion.js";
 import { cadenceOf, meanDiff, NO_FFMPEG, probeVideo, readFrames, type VideoInfo, type VideoTools, VIDEO_TOOLS } from "./decode.js";
-import { fitMove, fitSpringTail, keysFor, type Sample } from "./fit.js";
+import { fitEaseSeen, fitMove, fitSpringTail, keysFor, type Sample } from "./fit.js";
 import { matchTemplate, refineScale, resize, scaleSet, type Match } from "./track.js";
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -29,7 +29,7 @@ export function frameAt(info: VideoInfo, t: number): number {
 export interface TrackOptions { tools?: VideoTools; workLong?: number; minNcc?: number }
 
 export async function runTrack(args: Json, opts: TrackOptions = {}): Promise<Json> {
-  const tools = opts.tools ?? VIDEO_TOOLS, minNcc = opts.minNcc ?? 0.5;
+  const tools = opts.tools ?? VIDEO_TOOLS, minNcc = opts.minNcc ?? 0.8;   // under it a match is no match (a wrong lock read 0.6 to 0.8 on real files)
   if (typeof args.file !== "string" || !path.isAbsolute(args.file)) return { ok: false, error: "`file` must be an absolute path to a video file" };
   if (typeof args.outDir !== "string" || !path.isAbsolute(args.outDir)) return { ok: false, error: "`outDir` must be an absolute folder path" };
   const started = performance.now();
@@ -43,7 +43,7 @@ export async function runTrack(args: Json, opts: TrackOptions = {}): Promise<Jso
   if (f1 <= f0) return { ok: false, error: "`end` must be after `start`" };
   const refF = typeof args.ref === "number" ? frameAt(info, args.ref) : f1;
   const k = Math.min(1, (opts.workLong ?? 480) / Math.max(info.width, info.height)), W = Math.max(8, Math.round(info.width * k)), H = Math.max(8, Math.round(info.height * k));
-  const sr = Array.isArray(args.scaleRange) && args.scaleRange.length === 2 ? (args.scaleRange as number[]).map(Number) : [0.5, 2];
+  const sr = Array.isArray(args.scaleRange) && args.scaleRange.length === 2 ? (args.scaleRange as number[]).map(Number) : [0.25, 2.5];
   // the template: the region of the reference frame, at working resolution
   let ref: Float64Array | null = null;
   for await (const fr of readFrames(info, { from: refF, to: refF, width: W, height: H, gray: true }, tools)) ref = Float64Array.from(fr.data);
@@ -58,15 +58,36 @@ export async function runTrack(args: Json, opts: TrackOptions = {}): Promise<Jso
     const img = Float64Array.from(fr.data), diff = last ? meanDiff(fr.data, last) : 0;
     let m: Match | null = null;
     if (prev) {
-      const r = Math.max(6, Math.round(0.08 * Math.max(W, H))), sw = Math.ceil(tw * prev.scale * 1.15), sh = Math.ceil(th * prev.scale * 1.15);
+      const r = Math.max(6, Math.round(0.08 * Math.max(W, H))), sw = Math.ceil(tw * prev.scale * 1.35), sh = Math.ceil(th * prev.scale * 1.35);
       const cx0 = Math.max(0, Math.floor(prev.x - r - sw / 2)), cy0 = Math.max(0, Math.floor(prev.y - r - sh / 2));
       const cw = Math.min(W - cx0, Math.ceil(2 * r + sw)), ch = Math.min(H - cy0, Math.ceil(2 * r + sh));
       const crop = new Float64Array(cw * ch);
       for (let y = 0; y < ch; y++) for (let x = 0; x < cw; x++) crop[y * cw + x] = img[(cy0 + y) * W + cx0 + x];
-      const local = matchTemplate(crop, cw, ch, tmpl, tw, th, scaleSet(prev.scale / 1.04, prev.scale * 1.04, 9));
+      // round the last scale; when the best lands on the window's edge, the window moves on (a fast scale changes more
+      // than 4 % a frame) until the peak is inside it
+      let centre = prev.scale, local = matchTemplate(crop, cw, ch, tmpl, tw, th, scaleSet(centre / 1.04, centre * 1.04, 9));
+      for (let k2 = 0; k2 < 6 && local && Math.abs(Math.log(local.scale / centre)) > Math.log(1.04) - 1e-6; k2++) {
+        centre = local.scale > centre ? centre * 1.07 : centre / 1.07;
+        const next = matchTemplate(crop, cw, ch, tmpl, tw, th, scaleSet(centre / 1.04, centre * 1.04, 9));
+        if (!next || next.ncc < local.ncc) break;
+        local = next;
+      }
+      // a weak match (under 0.92) is often a scale the window could not reach: a wider window, then a fine pass
+      if (local && local.ncc < 0.92) {
+        const wide = matchTemplate(crop, cw, ch, tmpl, tw, th, scaleSet(prev.scale / 1.3, prev.scale * 1.3, 15));
+        if (wide && wide.ncc > local.ncc) {
+          const fine = matchTemplate(crop, cw, ch, tmpl, tw, th, scaleSet(wide.scale / 1.03, wide.scale * 1.03, 7));
+          local = fine && fine.ncc >= wide.ncc ? fine : wide;
+        }
+      }
       if (local) m = { ...local, x: local.x + cx0, y: local.y + cy0 };
     }
-    if (!m || m.ncc < minNcc) { const g = matchTemplate(img, W, H, tmpl, tw, th, scaleSet(sr[0], sr[1], 25)); if (g && (!m || g.ncc > m.ncc)) m = g; }
+    if (!m || m.ncc < minNcc) {
+      let g = matchTemplate(img, W, H, tmpl, tw, th, scaleSet(sr[0], sr[1], 33));
+      // the whole-frame search steps about 7 % between scales: a finer pass round its answer
+      if (g) { const fine = matchTemplate(img, W, H, tmpl, tw, th, scaleSet(g.scale / 1.05, g.scale * 1.05, 11), { x: g.x, y: g.y, r: 4 }); if (fine && fine.ncc >= g.ncc) g = fine; }
+      if (g && (!m || g.ncc > m.ncc)) m = g;
+    }
     if (m && m.ncc >= minNcc) m = refineScale(img, W, H, tmpl, tw, th, m, 1.01);
     // not matched (at 0 % opacity nothing can be): its opacity is still read in place, the window at the reference
     // position regressed on the template, so a fade has its frames at rest before it
@@ -126,21 +147,30 @@ export async function runTrack(args: Json, opts: TrackOptions = {}): Promise<Jso
       if (len2 <= 0) continue;
       const lo = Math.max(0, i0 - 3), hi = Math.min(samples.length - 1, i1 + 6);
       const prog: Sample[] = samples.slice(lo, hi + 1).map((s) => ({ time: s.time, y: s.value.reduce((acc, v, d) => acc + (v - startV[d]) * way[d], 0) / len2 }));
-      const fits = fitMove(prog, { start: samples[i0].time, end: samples[i1].time }), tail = fitSpringTail(prog);
+      const fits = fitMove(prog, { start: samples[i0].time, end: samples[i1].time }), tail = fitSpringTail(prog), seen = fitEaseSeen(prog);
       const best = fits[fits.best];
       out.moves.push({
         channel: ch.name, unit: ch.unit,
         curve: mv,
         from: { frame: mv.from, time: samples[i0].time, at: at(samples[i0].time) }, to: { frame: mv.to, time: samples[i1].time, at: at(samples[i1].time) },
-        duration: { seconds: Math.round((best.model === "spring" ? (best as Json).settle : (best as Json).end - best.start) * 10000) / 10000, at: at(best.model === "spring" ? (best as Json).settle : (best as Json).end - best.start) },
+        // duration as seen: from when it visibly starts to when it visibly stops (1.5 % and 98.5 % of its travel)
+        duration: (() => { const sec = seen ? seen.end - seen.start : best.model === "spring" ? (best as Json).settle : (best as Json).end - best.start; return { seconds: Math.round(sec * 10000) / 10000, at: at(sec), as: seen ? "seen (1.5 % to 98.5 % of the travel)" : "the best fit's span" }; })(),
         start: startV.map((v) => Math.round(v * 100) / 100), end: end.map((v) => Math.round(v * 100) / 100),
         distance: Math.round(Math.sqrt(len2) * 100) / 100,
-        fits: { ease: fits.ease, linear: fits.linear, spring: fits.spring, springTail: tail }, best: fits.best, margin: fits.margin,
+        fits: { ease: fits.ease, linear: fits.linear, spring: fits.spring, springTail: tail, easeSeen: seen }, best: fits.best, margin: fits.margin,
         apply: keysFor(best, startV, end, atFps),
-        status: best.rms <= 0.05 ? "measured" : "measured, loosely (rms over 0.05)",
+        match: (() => { const n = usable.filter((r) => r.index >= mv.from && r.index <= mv.to).map((r) => r.m!.ncc).sort((a, b) => a - b); return n.length ? { median: Math.round(n[Math.floor(n.length / 2)] * 1000) / 1000, min: Math.round(n[0] * 1000) / 1000 } : null; })(),
+        status: "measured",
       });
     }
   }
+  // a move followed by weak matches is not a measurement: under 0.85 at the median it is marked uncertain; a loose fit is said
+  for (const mv of out.moves as Json[]) {
+    if (mv.match && mv.match.median < 0.85) mv.status = `uncertain: the region matched weakly (median ${mv.match.median}); look at the frames before using it`;
+    else if (mv.fits[mv.best].rms > 0.05) mv.status = "measured, loosely (rms over 0.05)";
+  }
+  const nccAll = rows.filter((r) => r.m).map((r) => r.m!.ncc).sort((a, b) => a - b);
+  out.match = { matchedFrames: nccAll.length, frames: rows.length, median: nccAll.length ? Math.round(nccAll[Math.floor(nccAll.length / 2)] * 1000) / 1000 : null, threshold: minNcc };
   await fs.mkdir(args.outDir, { recursive: true });
   const jsonPath = path.join(args.outDir, "track.json"), csvPath = path.join(args.outDir, "track.csv");
   const perFrame = rows.map((r) => ({ index: r.index, time: Math.round(r.time * 1e6) / 1e6, at: at(r.time), repeat: rep.has(r.index), ...(r.m ? { ...Object.fromEntries(Object.entries(toSrc(r.m)).map(([a, v]) => [a, Math.round(v * 100) / 100])), ncc: Math.round(r.m.ncc * 1000) / 1000 } : { matched: false }) }));
