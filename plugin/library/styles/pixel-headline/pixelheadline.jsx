@@ -403,14 +403,23 @@ var AESPixelHeadline = (function () {
   //      at its peak scale; default on a dark ground, where the glow and the ground let blocks show through the letters, and
   //      for a word of two or more words, whose gap would otherwise read as a hyphen) }
   //      A word wider than 75 % of the frame sends its blocks above and below only (its sides are off the frame).
-  function pixelBlocks(comp, o) { var wd = o.word, bx = wd.box, dk = isDark(o) || !!wd.dark, multi = wd.text ? wd.text.indexOf(" ") >= 0 : false;
-    var clear = o.clear !== undefined ? o.clear : (dk || multi), cb = null, sides = null, pk = SIG.word[1][1], m = 6 * k(comp);
-    if (clear) { var pv = wd.pivot || [comp.width / 2, (bx.y0 + bx.y1) / 2];
+  // The blocks for a word, as a pure function (no After Effects): o = { box, pivot, text, width, height, seed, cell, lineBand,
+  //      count, dist, blockScale, dark, clear }. With clear, the schedule runs as calibrated (its distances floored at
+  //      SIG.dark.blockMinDist half-sizes) and the blocks that touch the word's box at its peak scale are dropped afterwards:
+  //      the first piece's order. Keeping them out while scheduling instead packs them against the box's edge, a dotted line.
+  function blocksFor(o) { var bx = o.box, multi = o.text ? String(o.text).indexOf(" ") >= 0 : false, s = o.width / REF.w;
+    var clear = o.clear !== undefined ? o.clear : (!!o.dark || multi), cb = null, sides = null, pk = SIG.word[1][1], m = 6 * s;
+    if (clear) { var pv = o.pivot || [o.width / 2, (bx.y0 + bx.y1) / 2];
       cb = { x0: pv[0] + (bx.x0 - pv[0]) * pk - m, x1: pv[0] + (bx.x1 - pv[0]) * pk + m, y0: pv[1] + (bx.y0 - pv[1]) * pk - m, y1: pv[1] + (bx.y1 - pv[1]) * pk + m }; }
-    if (bx.x1 - bx.x0 > .75 * comp.width) sides = { above: .5, below: .5, left: 0, right: 0 };
-    var bs = o.blockScale !== undefined ? o.blockScale : (dk ? SIG.dark.blockScale : undefined);
-    var blocks = blockSchedule({ box: bx, width: comp.width, height: comp.height, seed: o.seed || 7, cell: SIG.blocks.cell * k(comp), lineBand: o.lineBand, count: o.count, dist: o.dist, scale: bs,
-      clearBox: cb, sides: sides, minDist: clear ? SIG.dark.blockMinDist : 0 });
+    if (bx.x1 - bx.x0 > .75 * o.width) sides = { above: .5, below: .5, left: 0, right: 0 };
+    var bs = o.blockScale !== undefined ? o.blockScale : (o.dark ? SIG.dark.blockScale : undefined);
+    var all = blockSchedule({ box: bx, width: o.width, height: o.height, seed: o.seed || 7, cell: o.cell || SIG.blocks.cell * s, lineBand: o.lineBand, count: o.count, dist: o.dist, scale: bs,
+      sides: sides, minDist: clear ? SIG.dark.blockMinDist : 0 }), kept = [];
+    for (var i = 0; i < all.length; i++) { var q = all[i]; if (!cb || !(q.x + q.w > cb.x0 && q.x < cb.x1 && q.y + q.h > cb.y0 && q.y < cb.y1)) kept.push(q); }
+    return { blocks: kept, clearBox: cb, dropped: all.length - kept.length }; }
+  function pixelBlocks(comp, o) { var wd = o.word;
+    var bf = blocksFor({ box: wd.box, pivot: wd.pivot, text: wd.text, width: comp.width, height: comp.height, seed: o.seed, cell: SIG.blocks.cell * k(comp), lineBand: o.lineBand,
+      count: o.count, dist: o.dist, blockScale: o.blockScale, dark: isDark(o) || !!wd.dark, clear: o.clear }), blocks = bf.blocks, cb = bf.clearBox;
     var L = comp.layers.addShape(); L.name = pfx(o) + "Pixels"; var root = L.property("ADBE Root Vectors Group");
     for (var b = 0; b < blocks.length; b++) { var q = blocks[b], g = root.addProperty("ADBE Vector Group"); g.name = "B" + (b + 1);
       var rr = root.property(b + 1).property("ADBE Vectors Group").addProperty("ADBE Vector Shape - Rect");
@@ -780,7 +789,7 @@ var AESPixelHeadline = (function () {
     return { end: end, layers: names }; }
 
   return { SIG: SIG, fontOK: fontOK, hasEffect: hasEffect, stage: stage, zoomOut: zoomOut, exitInset: exitInset, push: push, leadIn: leadIn, heroWord: heroWord,
-    blockSchedule: blockSchedule, pixelBlocks: pixelBlocks, card: card, stackLayout: stackLayout, cardStack: cardStack, linePath: linePath, drawnLine: drawnLine,
+    blockSchedule: blockSchedule, blocksFor: blocksFor, pixelBlocks: pixelBlocks, card: card, stackLayout: stackLayout, cardStack: cardStack, linePath: linePath, drawnLine: drawnLine,
     tail: tail, motionBlur: motionBlur, beat: beat, moveCard: moveCard, textLine: textLine, exitBeat: exitBeat, exitText: exitText, reveal: reveal, wrap: wrap,
     setPiece: setPiece, piece: function () { return PIECE; }, ground: ground, speaker: speaker, look: look, projectSpace: projectSpace, lineTime: lineTime,
     settleTime: settleTime, popSettle: popSettle, curveAt: curveAt,

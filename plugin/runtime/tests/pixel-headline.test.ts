@@ -715,4 +715,21 @@ describe("pixel-headline module", () => {
     const ph = makeAE({ deepGlow: true });
     expect(ph.PH.heroWord(ph.comp, { text: "one big idea", at: 2 }).warnings.join(" ")).toMatch(/choose one stressed word/);
   });
+
+  it("blocks on a dark ground: scheduled as calibrated, then the ones touching the word's peak box dropped; the first piece's blocks, frame for frame", () => {
+    // Boxes measured live in After Effects for two giant words of the first full piece (92 % of the frame wide, Inter Bold);
+    // seeds, line bands and densities as built; the counts per frame from W + 4 to W + 14 as delivered.
+    const { PH } = makeAE({ deepGlow: true });
+    const cases = [
+      { box: { x0: 40.2019, x1: 1033.8019, y0: 383.0384, y1: 607.348 }, pivot: [540, 538], seed: 103, lineBand: [324, 382], blockScale: 0.2, counts: [2, 2, 5, 7, 0, 1, 2, 4, 3, 3, 1] },
+      { box: { x0: 43.7541, x1: 1037.3542, y0: 318.3935, y1: 610.0176 }, pivot: [540, 588], seed: 113, lineBand: [250, 308], blockScale: 0.3, counts: [17, 19, 26, 28, 10, 12, 14, 10, 5, 5, 2] },
+    ];
+    for (const c of cases) {
+      const r = PH.blocksFor({ ...c, text: "word", width: 1080, height: 1920, cell: 39, dark: true });
+      const per = Array.from({ length: 11 }, (_, i) => r.blocks.filter((q: any) => q.on <= i + 4 && i + 4 < q.off).length);
+      expect(per).toEqual(c.counts);
+      const X = r.clearBox;
+      expect(r.blocks.filter((q: any) => q.x + q.w > X.x0 && q.x < X.x1 && q.y + q.h > X.y0 && q.y < X.y1)).toEqual([]);
+    }
+  });
 });
