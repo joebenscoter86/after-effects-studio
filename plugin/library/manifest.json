@@ -209,7 +209,7 @@
       "title": "Unattended runs: planning overnight and long After Effects work",
       "path": "techniques/unattended-runs.md",
       "kind": "technique",
-      "sha256": "4f845c94aab751e731c259106883ec6a37340ad54ccddca1ecdf0ccfd8480abc"
+      "sha256": "0fb68e6c612fa845c050219e4fa398aa88275c83a4739dd17499719d2ba38f59"
     },
     {
       "id": "page-recorder-mjs",
@@ -573,14 +573,14 @@
       "title": "Pixel headline style",
       "path": "styles/pixel-headline/STYLE.md",
       "kind": "style",
-      "sha256": "d425fdde0d26d41710c066486bb838b35a6668c7898e8c96a57b2cd24a4d5dc9"
+      "sha256": "2622ccf845d7a9e2e69b51bb4c81c20ba96da34962418db2f2b4efe94f1ce99a"
     },
     {
       "id": "style-pixel-headline-jsx",
       "title": "Pixel headline helpers (AESPixelHeadline)",
       "path": "styles/pixel-headline/pixelheadline.jsx",
       "kind": "code",
-      "sha256": "84b2c8f4bc22fd4c2ff9a86bb04d5c4264b8b1cb2125435b0c2bef528a6c2780"
+      "sha256": "8459ffb53d2f64b99324d4e25d2f02e25bcf83ea686fd54ad12d0536be1d1852"
     },
     {
       "id": "style-risograph",
