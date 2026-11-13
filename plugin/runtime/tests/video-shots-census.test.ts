@@ -7,6 +7,7 @@ import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { cadence, censusStep } from "../src/video/census.js";
+import { shotList, type FrameStats } from "../src/video/shots.js";
 import { runCensus, runShots } from "../src/video/run-shots-census.js";
 import { clips, rng, writeClip } from "./helpers/video-clips.js";
 
@@ -29,6 +30,24 @@ describe("video.shots", () => {
     expect(r.shots).toHaveLength(2);
     expect(r.files.sheets.length).toBe(2); expect(r.files.strips.length).toBe(2);
   }, 60_000);
+  it("a fast pan is not a cut: it registers on the frame before under a whole-frame shift", async (ctx) => {
+    if (!files["fast-pan"]) return ctx.skip();
+    const r: any = await runShots({ file: files["fast-pan"], outDir: path.join(dir, "pan"), pictures: false });
+    expect(r.cuts).toEqual([]);
+    const pans = r.notCuts.filter((c: any) => c.kind === "pan");
+    expect(pans.length).toBeGreaterThan(0);
+    // the picture moves left; its fastest frame is about 95 px (a quarter of the width)
+    const fastest = Math.min(...pans.map((c: any) => c.shift.dx));
+    expect(fastest).toBeLessThan(-80); expect(fastest).toBeGreaterThan(-110);
+    expect(r.shots).toHaveLength(1);
+  }, 60_000);
+  it("a hard cut followed by a fast move is one cut, on its first frame; a cut on the same paper ground is still a cut", async (ctx) => {
+    if (!files["cut-then-fast-move"] || !files["cut-same-paper"]) return ctx.skip();
+    const a: any = await runShots({ file: files["cut-then-fast-move"], outDir: path.join(dir, "ctfm"), pictures: false });
+    expect(a.cuts.map((c: any) => c.frame)).toEqual([30]);
+    const b: any = await runShots({ file: files["cut-same-paper"], outDir: path.join(dir, "csp"), pictures: false });
+    expect(b.cuts.map((c: any) => c.frame)).toEqual([30]);
+  }, 60_000);
   it("no false cuts or swaps on clips that have none", async (ctx) => {
     if (!files["slide-spring"]) return ctx.skip();
     for (const name of ["slide-ease", "slide-linear", "slide-spring", "scale", "fade", "variable-rate", "pulled-up-24", "slide-over-moving-ground"]) {
@@ -36,6 +55,23 @@ describe("video.shots", () => {
       expect({ name, cuts: r.cuts.length, swaps: r.swaps.length }).toEqual({ name, cuts: 0, swaps: 0 });
     }
   }, 120_000);
+});
+
+describe("the shot list's runs of candidates", () => {
+  // made-up statistics: calm frames, then a run of large changes at frames 20 to 22
+  const stat = (i: number, change: number): FrameStats => ({ index: i, time: i / 30, change, back: change, regions: Array(16).fill(change), regionsBack: Array(16).fill(change), shiftShare: 0 });
+  const series = (big: Record<number, number>) => Array.from({ length: 40 }, (_, i) => stat(i, big[i] ?? 1));
+  const reg = (score: number, residual: number, dx = -10) => ({ dx, dy: 0, score, overlap: 0.8, residual });
+  it("a run whose largest change registers is a pan, its looser ends too; no cut", () => {
+    const l = shotList(series({ 20: 14, 21: 27, 22: 15 }), undefined, (i) => (i === 21 ? reg(0.99, 0.12) : reg(0.8, 0.6)));
+    expect(l.cuts).toEqual([]);
+    expect(l.notCuts.map((c) => [c.frame, c.kind])).toEqual([[20, "pan"], [21, "pan"], [22, "pan"]]);
+  });
+  it("a run whose largest change does not register is a cut, on its first frame that does not register", () => {
+    const l = shotList(series({ 20: 30, 21: 18 }), undefined, (i) => (i === 21 ? reg(0.97, 0.1, 0) : reg(0.3, 0.9)));
+    expect(l.cuts.map((c) => c.frame)).toEqual([20]);
+    expect(l.notCuts.map((c) => c.frame)).toEqual([21]);
+  });
 });
 
 describe("video.census", () => {

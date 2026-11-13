@@ -28,7 +28,7 @@ describe("test clips", () => {
     let peak = 0; for (let t = 0; t < 2; t += 0.001) peak = Math.max(peak, spring(t, 0.35, 12));
     expect(peak).toBeCloseTo(1 + Math.exp(-0.35 * Math.PI / Math.sqrt(1 - 0.35 * 0.35)), 3);   // the damped spring's overshoot
     const cs = clips();
-    expect(cs.map((c) => c.name)).toEqual(["slide-ease", "slide-linear", "slide-spring", "scale", "fade", "cut-and-swap", "variable-rate", "pulled-up-24", "slide-over-moving-ground", "slide-enters", "blur-first-half"]);
+    expect(cs.map((c) => c.name)).toEqual(["slide-ease", "slide-linear", "slide-spring", "scale", "fade", "cut-and-swap", "variable-rate", "pulled-up-24", "slide-over-moving-ground", "slide-enters", "blur-first-half", "fast-pan", "cut-then-fast-move", "cut-same-paper"]);
     for (const c of cs) { expect(c.truth.path.length).toBe(c.frames); expect(c.draw(0).length).toBe(W * H * 3); }
   });
   it("every clip encodes and decodes to the frames it claims", async (ctx) => {

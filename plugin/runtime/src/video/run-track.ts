@@ -6,6 +6,7 @@ import { type CurveSample } from "../color/motion.js";
 import { cadenceOf, meanDiff, NO_FFMPEG, probeVideo, readFrames, type VideoInfo, type VideoTools, VIDEO_TOOLS } from "./decode.js";
 import { INK_CURVES, inkLike, inkOf, inkValue, witnessRuns, type InkCurve, type InkFrame, type InkMask } from "./ink.js";
 import { movesOfChannel } from "./measure-move.js";
+import { frameStats, registerShift, SHOT_RULES, shotList, type FrameStats } from "./shots.js";
 import { matchTemplate, refineScale, resize, scaleSet, type Match } from "./track.js";
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -60,14 +61,15 @@ export async function runTrack(args: Json, opts: TrackOptions = {}): Promise<Jso
   const tmpl = new Float64Array(tw * th);
   for (let y = 0; y < th; y++) for (let x = 0; x < tw; x++) tmpl[y * tw + x] = ref[Math.min(H - 1, ty + y) * W + Math.min(W - 1, tx + x)];
   // match every frame: near the last match first (a crop round it), then the whole frame
-  const rows: Array<{ index: number; time: number; m: Match | null; diff: number; cutDiff: number; still?: number }> = [];
-  let prev: Match | null = null, last: Uint8Array | null = null, lastSmall: Float64Array | null = null;
+  const rows: Array<{ index: number; time: number; m: Match | null; diff: number; still?: number }> = [];
+  let prev: Match | null = null, last: Uint8Array | null = null;
+  const smalls: Uint8Array[] = [], shotStats: FrameStats[] = [];
   for await (const fr of readFrames(info, { from: f0, to: f1, width: W, height: H, gray: true }, tools)) {
     const img = Float64Array.from(fr.data), diff = last ? meanDiff(fr.data, last) : 0;
-    // the change video.shots reads cuts by: on a 64 x 36 picture (at full size a busy move reads as a cut)
-    const small = resize(img, W, H, 64, 36);
-    let cutDiff = 0; if (lastSmall) { for (let i = 0; i < small.length; i++) cutDiff += Math.abs(small[i] - lastSmall[i]); cutDiff /= small.length; }
-    lastSmall = small;
+    // the picture video.shots reads cuts on (64 x 36 grey): the same shot list decides the cuts here
+    const small = Uint8Array.from(resize(img, W, H, 64, 36), (v) => Math.round(v));
+    shotStats.push(frameStats(fr.index, fr.time, smalls.length > 1 ? smalls[smalls.length - 2] : null, smalls.length ? smalls[smalls.length - 1] : null, small, 64, 36));
+    smalls.push(small);
     let m: Match | null = null;
     if (prev) {
       const r = Math.max(6, Math.round(0.08 * Math.max(W, H))), sw = Math.ceil(tw * prev.scale * 1.35), sh = Math.ceil(th * prev.scale * 1.35);
@@ -110,7 +112,7 @@ export async function runTrack(args: Json, opts: TrackOptions = {}): Promise<Jso
       for (let y = 0; y < th; y++) for (let x = 0; x < tw; x++) { const t = tmpl[y * tw + x] - mean, v = img[Math.min(H - 1, ty + y) * W + Math.min(W - 1, tx + x)] - wm; cov += t * v; tv += t * t; }
       still = tv > 1e-6 ? Math.max(0, Math.min(1.5, cov / tv)) : 0;
     }
-    rows.push({ index: fr.index, time: fr.time, m: m && m.ncc >= minNcc ? m : null, diff, cutDiff, still });
+    rows.push({ index: fr.index, time: fr.time, m: m && m.ncc >= minNcc ? m : null, diff, still });
     if (m && m.ncc >= minNcc) prev = m;
     last = fr.data;
   }
@@ -124,14 +126,10 @@ export async function runTrack(args: Json, opts: TrackOptions = {}): Promise<Jso
     lost = { frame: rows[i].index, time: rows[i].time, reading: `Lost the region at frame ${rows[i].index} (${(rows[i].time).toFixed(3)} s): the match fell under ${minNcc} while it was still visible; nothing past it is measured.` };
     break;
   }
-  // cuts (as video.shots finds them: a change of 12 or more, 4 times the median of the 12 frames each side): no move
-  // spans one, and a move already moving on a shot's first frame started with the shot
-  const cutAt = new Set<number>();
-  for (let i = 1; i < rows.length; i++) {
-    const near = rows.slice(Math.max(1, i - 12), Math.min(rows.length, i + 13)).filter((_, j, a) => a[j] !== rows[i]).map((r) => r.cutDiff).sort((a, b) => a - b);
-    const med = near.length ? near[Math.floor(near.length / 2)] : 0;
-    if (rows[i].cutDiff >= 12 && rows[i].cutDiff >= 4 * Math.max(med, 0.5)) cutAt.add(rows[i].index);
-  }
+  // cuts, as video.shots finds them (the same shot list, a fast pan registered and set aside): no move spans one, and a
+  // move already moving on a shot's first frame started with the shot
+  const shotsHere = shotList(shotStats, SHOT_RULES, (i) => (i > 0 ? registerShift(smalls[i - 1], smalls[i], 64, 36) : null));
+  const cutAt = new Set<number>(shotsHere.cuts.map((c) => c.frame));
   const cutList = [...cutAt].sort((a, b) => a - b);
   const segments = (s: CurveSample[]): CurveSample[][] => {
     const out: CurveSample[][] = [[]];
@@ -149,7 +147,7 @@ export async function runTrack(args: Json, opts: TrackOptions = {}): Promise<Jso
   const out: Json = { ok: true, file: args.file, region: reg, span: { from: f0, to: f1, start: info.times[f0], end: info.times[f1] }, ref: refF, atFps,
     video: { width: info.width, height: info.height, frames: info.frames, nominalFps: info.nominalFps, averageFps: Math.round(info.averageFps * 1000) / 1000, variableRate: info.variableRate, intervals: info.intervals },
     cadence: { repeats: [...rep], period: cad.period, originalFps: cad.originalFps, reading: cad.reading },
-    cuts: cutList, lost, notMeasured: NOT_MEASURED, moves: [] as Json[] };
+    cuts: cutList, notCuts: shotsHere.notCuts.map((c) => ({ frame: c.frame, kind: c.kind, ...(c.shift ? { shift: c.shift } : {}) })), lost, notMeasured: NOT_MEASURED, moves: [] as Json[] };
   const fps = cad.originalFps ?? 1 / (info.intervals.median || 1 / 30);
   for (const ch of channels) {
     const samples: CurveSample[] = ch.name === "opacity"

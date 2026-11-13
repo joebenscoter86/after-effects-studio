@@ -176,6 +176,41 @@ export function clips(): Clip[] {
         return Uint8Array.from(acc, (v) => Math.round(v));
       },
       truth: { path, move: { from: a, to: a + dur, kind: "ease", params: { outInfluence: 50, inInfluence: 50 } }, cuts: [], swaps: [], base: BASE } }); }
+  // a fast eased pan: a wide picture slides 600 px left over 12 frames (peak about 95 px a frame, a quarter of the width), blurred
+  { const PW = W + 640, r = rng(31), pic = new Uint8Array(PW * H * 3), cell = 32, cells: number[] = [];
+    for (let i = 0; i < 4096; i++) cells.push(r());
+    for (let y = 0; y < H; y++) for (let x = 0; x < PW; x++) {
+      const c = cells[(Math.floor(y / cell) * 64 + Math.floor(x / cell)) % 4096], v = 20 + 215 * c, o = (y * PW + x) * 3;
+      pic[o] = Math.min(255, v + 25 * Math.sin(x / 40)); pic[o + 1] = v; pic[o + 2] = Math.max(0, v - 30);
+    }
+    const n = 50, a = 10, dur = 12, D = 600, off: number[] = [];
+    for (let f = 0; f < n; f++) off.push(D * aeEase(f <= a ? 0 : f >= a + dur ? 1 : (f - a) / dur, 0.5, 0.5));
+    out.push({ name: "fast-pan", frames: n,
+      // motion blur, as a real pan has: each frame averages the picture over its travel since the frame before
+      draw: (f) => { const fr = new Float64Array(W * H * 3), s0 = f > 0 ? off[f - 1] : off[0], s1 = off[f], k = 8;
+        for (let j = 0; j < k; j++) { const sx = s0 + ((s1 - s0) * (j + 1)) / k;
+          for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const px = Math.min(PW - 1, Math.round(x + sx)), o = (y * W + x) * 3, q = (y * PW + px) * 3; fr[o] += pic[q] / k; fr[o + 1] += pic[q + 1] / k; fr[o + 2] += pic[q + 2] / k; } }
+        // a caption chip fixed to the frame (it does not pan), as a reel's chip is
+        for (let y = 176; y < 204; y++) for (let x = 112; x < 272; x++) { const o = (y * W + x) * 3, t = (x >> 3) % 2 ? 30 : 120; fr[o] = t; fr[o + 1] = 190; fr[o + 2] = 150; }
+        return Uint8Array.from(fr, (v) => Math.round(v)); },
+      truth: { path: off.map((o) => ({ x: -o, y: 0, scale: 1, opacity: 1 })), move: { from: a, to: a + dur, kind: "ease", params: { outInfluence: 50, inInfluence: 50, distance: D } }, cuts: [], swaps: [], base: 0 } }); }
+  // a hard cut at frame 30, then a big patch moving 70 px a frame on the new shot's first frames
+  { const a = patchTexture(BASE, 21), b = patchTexture(96, 23), backA = background("flat", 1), path: Truth["path"] = [];
+    const backB = new Uint8Array(W * H * 3); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const o = (y * W + x) * 3, v = y > 150 && y < 200 && x > 40 && x < 340 ? 40 : 150; backB[o] = v; backB[o + 1] = v; backB[o + 2] = v + 8; }
+    for (let f = 0; f < 60; f++) path.push(f < 30 ? { x: 150, y: 90, scale: 1, opacity: 1 } : { x: 70 + 70 * Math.min(4, f - 30), y: 80, scale: 1, opacity: 1 });
+    out.push({ name: "cut-then-fast-move", frames: 60,
+      draw: (f) => { const fr = Uint8Array.from(f < 30 ? backA(f) : backB), p = path[f]!; if (f < 30) place(fr, a, BASE, p.x, p.y, 1, 1); else place(fr, b, 96, p.x, p.y, 1, 1); return fr; },
+      truth: { path, cuts: [30], swaps: [], base: BASE } }); }
+  // a hard cut at frame 30 between two layouts on one paper ground (a faint grid): still a cut
+  { const paper = new Uint8Array(W * H * 3);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const g = x % 24 === 0 || y % 24 === 0 ? 192 : 200, o = (y * W + x) * 3; paper[o] = g + 6; paper[o + 1] = g + 2; paper[o + 2] = g; }
+    const card = (fr: Uint8Array, x0: number, y0: number, w: number, h: number, v: number) => { for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) { const o = (y * W + x) * 3; fr[o] = v; fr[o + 1] = v; fr[o + 2] = v + 10; } };
+    const a = patchTexture(80, 41), b = patchTexture(72, 43);
+    out.push({ name: "cut-same-paper", frames: 60,
+      draw: (f) => { const fr = Uint8Array.from(paper);
+        if (f < 30) { card(fr, 30, 30, 170, 150, 30); place(fr, a, 80, 290, 100, 1, 1); } else { card(fr, 200, 20, 150, 90, 40); card(fr, 60, 130, 220, 60, 60); place(fr, b, 72, 100, 60, 1, 1); }
+        return fr; },
+      truth: { path: Array.from({ length: 60 }, () => null), cuts: [30], swaps: [], base: 80 } }); }
   return out;
 }
 
