@@ -1347,3 +1347,60 @@ describe("subject.check_file: seen through inside the cut-out", () => {
     expect(res.notes.filter((x: Any) => x.kind === "seen-through")).toEqual([]);
   });
 });
+
+// ------------------------------------------------------- the soft edge's region line
+
+describe("the soft edge's region line, beside the file and in the file check", () => {
+  it("render_cutout writes the line beside the movie when the cut-out has a soft edge", async () => {
+    const out = path.join(dir, "cut.mov");
+    const io = renderIO({
+      ...PLAN,
+      keep: ["raw_nogreen.mp4 soft edge", "raw_nogreen.mp4 gap fill"],
+      matteCopies: 2,
+      softEdge: "raw_nogreen.mp4 soft edge",
+      softEdgeComment: '{"compRoom":"soft-edge","layer":"raw_nogreen.mp4","radius":8,"smooth":0,"chatterReduction":2,"decontaminate":true,"regionBottom":1022,"feather":60,"wasEnabled":true}',
+    });
+    const res = await runRenderCutout({ comp: "Main", layer: 1, outputPath: out }, io);
+    expect(res.ok).toBe(true);
+    expect(res.sidecar).toBe(`${out}.comp-room.json`);
+    const side = JSON.parse(await fs.readFile(`${out}.comp-room.json`, "utf8"));
+    expect(side.softEdge).toMatchObject({ regionBottom: 1022, feather: 60, regionDepth: 0.12 });
+    // The fake writes every movie to cut.mov; the sidecar follows the path the render reports.
+    const plain = await runRenderCutout({ comp: "Main", layer: 1, outputPath: path.join(dir, "plain.mov") }, renderIO());
+    expect(plain.ok).toBe(true);
+    const plainSide = JSON.parse(await fs.readFile(plain.sidecar, "utf8"));
+    expect(plainSide.softEdge).toBeNull();
+  });
+
+  /** The body of fileFrame lowered by 30 px from frame 100 on. */
+  const sinking = (frame: number) => {
+    const a = new Float64Array(W * H);
+    const top = frame >= 100 ? 90 : 60;
+    for (let y = top; y < H; y++) for (let x = 40; x < 160; x++) a[y * W + x] = 1;
+    return a;
+  };
+
+  it("check_file notes the frames where the subject sits low enough for the hair to cross the line, from the sidecar", async () => {
+    const file = path.join(dir, "soft.mov");
+    await fs.writeFile(file, "");
+    await fs.writeFile(`${file}.comp-room.json`, JSON.stringify({ softEdge: { regionBottom: 100, regionDepth: 0.12, feather: 60 } }));
+    const res = await runCheckFile({ path: file, outDir: dir, frozenFrames: 1e9 }, { ...fileIO({ matteAt: sinking }), exists: async () => true });
+    // 12% of 300 is 36: hair from a top lower than 64 crosses the line at 100.
+    expect(res.region).toMatchObject({ line: 100, source: "sidecar", reach: 64, highest: { top: 60, frame: 0 }, lowest: { top: 90, frame: 100 } });
+    expect(res.region.lowFrames).toEqual(Array.from({ length: 20 }, (_, i) => 100 + i));
+    expect(res.notes).toContainEqual(expect.objectContaining({ kind: "region line" }));
+    expect(res.inOut).toMatch(/region line at y 100/);
+    expect(res.findings.filter((f: Any) => f.kind === "region line")).toEqual([]);
+  });
+
+  it("takes the line as a parameter for a file rendered before the sidecar, and says nothing without one", async () => {
+    const given = await runCheckFile(
+      { path: "/x/cut.mov", outDir: dir, frozenFrames: 1e9, regionLine: 200 },
+      fileIO({ matteAt: sinking }),
+    );
+    expect(given.region).toMatchObject({ line: 200, source: "given", lowFrames: [] });
+    expect(given.inOut).toMatch(/never/);
+    const none = await runCheckFile({ path: "/x/cut.mov", outDir: dir, frozenFrames: 1e9 }, fileIO({ matteAt: sinking }));
+    expect(none.region).toBeNull();
+  });
+});
