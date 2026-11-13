@@ -503,14 +503,14 @@
       "title": "Pixel headline style",
       "path": "styles/pixel-headline/STYLE.md",
       "kind": "style",
-      "sha256": "2b6406c02e2cec52053a203494d62a5c2541d1e1bc6c08e8cb3af5557ad95b30"
+      "sha256": "e14fda30e049c61c381be8518f565aa626cc3948602f5ad5a1b78491585041d2"
     },
     {
       "id": "style-pixel-headline-jsx",
       "title": "Pixel headline helpers (AESPixelHeadline)",
       "path": "styles/pixel-headline/pixelheadline.jsx",
       "kind": "code",
-      "sha256": "b002fba2edbae5f29df836801320a631558bf75028020f34113da70f1d867ff9"
+      "sha256": "dfe4733511c0784d2c109033778c454a414c454d7b7d6052bf73752a4970d535"
     },
     {
       "id": "style-risograph",
