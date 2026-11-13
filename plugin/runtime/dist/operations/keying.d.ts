@@ -337,8 +337,6 @@ export declare const SOFT_EDGE_DEFAULTS: {
     decontaminate: boolean;
     feather: number;
     regionDepth: number;
-    /** With `across: true`: frames spread across the clip. */
-    samples: number;
     /** By default the check samples the click frame and every `nearStep`th frame after it, up to `near` frames on. */
     near: number;
     nearStep: number;

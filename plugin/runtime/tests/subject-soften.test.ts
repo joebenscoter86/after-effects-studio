@@ -259,22 +259,27 @@ describe("subject.soften_edge", () => {
     const first = io.calls.find((c: Any) => c.render)!.render;
     expect(Math.max(...first.frames)).toBeLessThan(60);
     expect(res.check.furthest.frame).toBe(30);
-    expect(res.sampling.leavesOut).toMatch(/across: true/);
     expect(res.sampling.leavesOut).toMatch(/check_file/);
+    expect(res.sampling.leavesOut).toMatch(/region's line/);
   });
 
-  it("samples across the clip with across: true", async () => {
+  it("no longer samples across the clip: across: true is refused with why, and the parameter is gone", async () => {
     const io = fakeIO((f) => person(f >= 30 ? 20 : 0, true), {
       status: { span: { inFrame: 0, outFrame: 320, frameRate: 30 } },
     });
     const res = await runSoftenEdge({ ...ARGS, outDir: dir, across: true }, io);
-    expect(res.sampling.how).toBe("across the clip");
-    expect(res.region.tops.map((t: Any) => t.frame)).toEqual([0, 64, 128, 192, 256]);
+    expect(res.ok).toBe(false);
+    expect(res.error).toMatch(/removed/);
+    expect(res.error).toMatch(/check_file/);
+    expect(io.calls).toEqual([]);
+    const names = getOp("subject.soften_edge")!.params.map((p: Any) => p.name);
+    expect(names).not.toContain("across");
+    expect(names).not.toContain("samples");
   });
 
   it("builds, checks the click frame and the furthest frame, and keeps a build that passes", async () => {
     const io = fakeIO((f) => person(f >= 30 ? 20 : 0, true));
-    const res = await runSoftenEdge({ ...ARGS, outDir: dir, across: true }, io);
+    const res = await runSoftenEdge({ ...ARGS, outDir: dir, sampleFrames: [8, 16, 24, 32] }, io);
     expect(res.ok).toBe(true);
     expect(io.state.built).toBe(true);
     expect(io.state.undone).toBe(0);

@@ -181,7 +181,7 @@
       "title": "Keying, compositing and sitting an element in its scene",
       "path": "references/keying.md",
       "kind": "guidance",
-      "sha256": "25ae71e2cdbcdc34edf1c8f84820a8d4eb93427c72024a4dd640f083abd5d4e8"
+      "sha256": "39b8dcf61aa433a3a8a57f2b29af608fed85afc72a0c8aa602f974a939be6fa6"
     },
     {
       "id": "scene-recipes",
