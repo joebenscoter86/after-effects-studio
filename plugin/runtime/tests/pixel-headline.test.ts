@@ -476,5 +476,7 @@ describe("pixel-headline module", () => {
     expect(1204 * cs / 100).toBeGreaterThanOrEqual(1100);
     const ref = PH.card(comp, { clip: footage("ref"), at: 1, pos: [300, 700], scale: 35.85, name: "PH Ref" });
     expect(ref.source.layer("Clip").scale.value[0]).toBeCloseTo(104 * 790 / 1080, 6);
+    expect(C.collapseTransformation).toBe(true);   // the rim frosts what is behind the card only when it collapses into the main comp
+
   });
 });

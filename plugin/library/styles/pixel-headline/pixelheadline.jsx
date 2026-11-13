@@ -330,6 +330,7 @@ var AESPixelHeadline = (function () {
     AESLib.ease(bl.property("Blurriness"), t3, [SIG.cardBlur * (up ? 1 : mn / SIG.cardRect[0]), SIG.cardBlur * (up ? 1 : mn / SIG.cardRect[0]), 0], "travel");
     AESLib.ease(effect(clip, "ADBE Exposure2").property("Exposure"), t3, [SIG.cardExposure, SIG.cardExposure, 0], "travel");
     var L = comp.layers.add(C); L.name = nm; if (L.hasAudio) L.audioEnabled = false; L.position.setValue(o.pos);
+    L.collapseTransformation = true;   // the Rim adjustment layer frosts the main comp behind the card only through a collapsed layer
     var S = o.width ? 100 * o.width / (up ? R[0] * SIG.rimScale / 100 : outerR[0]) : o.scale;
     sigKeys(L.scale, o.at, SIG.card, S, dims(L.scale));
     return L; }
