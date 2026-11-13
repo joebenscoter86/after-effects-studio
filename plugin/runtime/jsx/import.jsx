@@ -181,7 +181,7 @@ AE.importProject = function (doc, opts) {
                 if (lspec.name) newLayer.name = lspec.name;
                 if (lspec.enabled !== undefined) newLayer.enabled = lspec.enabled;
                 if (lspec.shy !== undefined) newLayer.shy = lspec.shy;
-                if (lspec.solo !== undefined) newLayer.solo = lspec.solo;
+                if (lspec.solo === true) newLayer.solo = true;
                 if (lspec.locked !== undefined) newLayer.locked = lspec.locked;
                 if (lspec.label !== undefined) newLayer.label = lspec.label;
                 if (lspec.startTime !== undefined) newLayer.startTime = lspec.startTime;
@@ -261,6 +261,14 @@ AE.importProject = function (doc, opts) {
                         AE.applyPropertyGroup(newLayer.property("Audio"), lspec.audioGroup, warn);
                     } catch (eAud) { /* ignore */ }
                 }
+                // Compositing, camera and light options (schema 3); the track matte waits for every layer (pass 6)
+                if (lspec.compositing) AE.applyLayerCompositing(newLayer, lspec.compositing, warn);
+                if (lspec.cameraOptionsGroup && newLayer instanceof CameraLayer) {
+                    try { AE.applyPropertyGroup(newLayer.property("ADBE Camera Options Group"), lspec.cameraOptionsGroup, warn); } catch (eCo) { warn("camera options failed for '" + lspec.name + "': " + AE.errText(eCo)); }
+                }
+                if (lspec.lightOptionsGroup && newLayer instanceof LightLayer) {
+                    try { AE.applyPropertyGroup(newLayer.property("ADBE Light Options Group"), lspec.lightOptionsGroup, warn); } catch (eLo) { warn("light options failed for '" + lspec.name + "': " + AE.errText(eLo)); }
+                }
                 // Layer markers
                 if (lspec.markers) {
                     try {
@@ -294,6 +302,9 @@ AE.importProject = function (doc, opts) {
         // reverse-add pass above, the comp contains layers in the same order.
         for (var lk = 0; lk < spec2.layers.length; lk++) {
             var ls = spec2.layers[lk];
+            if (ls.compositing && ls.compositing.trackMatte) {
+                try { AE.applyTrackMatte(compDst2.layer(ls.index), compDst2, ls.compositing.trackMatte, warn); } catch (eTm) { warn("track matte failed for layer index " + ls.index + ": " + AE.errText(eTm)); }
+            }
             if (ls.parentIndex == null) continue;
             try {
                 var child = compDst2.layer(ls.index);

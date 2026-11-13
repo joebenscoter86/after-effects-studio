@@ -1,7 +1,13 @@
 // Render queue operations.
 
+import { execFile } from "node:child_process";
+import { promises as fs } from "node:fs";
+import * as path from "node:path";
+
+import { rejectedOutputPath } from "../config.js";
 import { readOnlyMode } from "../policy.js";
 import { registerOp, jsxFail, jsxVal, jsxCompPreamble } from "../registry.js";
+import type { AeTransport } from "../transport/AeTransport.js";
 
 /**
  * Said by every operation that changes the render queue (stage 7). serve.jsx
@@ -1027,4 +1033,387 @@ registerOp({
             return _out;
         `;
   },
+});
+
+// ---------------------------------------------------------------------------
+// Delivery (professional-finish plan, stage 9): named presets and a check of
+// the file that was written.
+// ---------------------------------------------------------------------------
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Json = any;
+
+/**
+ * Output templates a stock install has (Adobe's notes: High Quality and High
+ * Quality with Alpha, ProRes 422 and 4444, since 2021; H.264 - Match Render
+ * Settings at 5, 15 and 40 Mbps, 15 the default after a fresh install).
+ * Lossless and Lossless with Alpha were present on the Mac this was built on
+ * but are not named stock anywhere found; they are only fallbacks. A template
+ * can be deleted, so each preset reads the list and says when it falls back.
+ */
+export const DELIVERY_PRESETS: Record<
+  string,
+  { what: string; first: string; then: Array<string | RegExp>; fallback: Array<string | RegExp>; fallbackWhy: string; alpha: boolean; aspect?: number }
+> = {
+  "vertical-reel": {
+    what: "a vertical reel for upload: H.264 at the comp's size and rate",
+    first: "H.264 - Match Render Settings - 15 Mbps",
+    then: [/^H\.264/i],
+    fallback: ["High Quality", "Lossless"],
+    fallbackWhy: "no H.264 template on this install, so ProRes 422 instead: a larger file that most upload sites take, or transcode it",
+    alpha: false,
+    aspect: 9 / 16,
+  },
+  "master-alpha": {
+    what: "a master with alpha for compositing elsewhere: ProRes 4444",
+    first: "High Quality with Alpha",
+    then: ["Lossless with Alpha"],
+    fallback: [/alpha/i],
+    fallbackWhy: "neither High Quality with Alpha nor Lossless with Alpha is on this install, so another movie template whose name says alpha",
+    alpha: true,
+  },
+  master: {
+    what: "a master without alpha: ProRes 422",
+    first: "High Quality",
+    then: ["Lossless"],
+    fallback: [/^H\.264/i],
+    fallbackWhy: "neither High Quality nor Lossless is on this install, so H.264, which is not a master",
+    alpha: false,
+  },
+};
+
+const isSequenceTemplate = (n: string) => /sequence|photoshop|aiff|alpha only|^_hidden/i.test(n);
+
+export function chooseDeliveryTemplate(
+  preset: string,
+  templates: string[],
+): { template: string; fallback: boolean; why: string } | { error: string } {
+  const p = DELIVERY_PRESETS[preset];
+  if (!p) return { error: `no preset '${preset}'; presets: ${Object.keys(DELIVERY_PRESETS).join(", ")}` };
+  const movies = templates.filter((t) => !isSequenceTemplate(t));
+  const find = (rules: Array<string | RegExp>) => {
+    for (const r of rules) {
+      const hit = movies.find((t) => (typeof r === "string" ? t === r : r.test(t)));
+      if (hit) return hit;
+    }
+    return null;
+  };
+  if (movies.includes(p.first)) return { template: p.first, fallback: false, why: `${p.first}: ${p.what}` };
+  const near = find(p.then);
+  if (near) return { template: near, fallback: false, why: `${near} (${p.first} is not on this install): ${p.what}` };
+  const fb = find(p.fallback);
+  if (fb) return { template: fb, fallback: true, why: `${fb}: ${p.fallbackWhy}` };
+  return {
+    error: p.alpha
+      ? `no movie template with alpha on this install (templates: ${templates.join(", ")}); make one in Edit > Templates > Output Module (QuickTime, Apple ProRes 4444, RGB + Alpha)`
+      : `none of the templates this preset uses is on this install (templates: ${templates.join(", ")})`,
+  };
+}
+
+export interface CompFacts {
+  width: number;
+  height: number;
+  frameRate: number;
+  duration: number;
+  hasSound: boolean;
+  soundLayers: string[];
+}
+export interface FileFacts {
+  width: number;
+  height: number;
+  frameRate: number;
+  duration: number;
+  hasAudio: boolean;
+  /** From ffmpeg (dB) or from After Effects' Convert Audio to Keyframes (amplitude top), or null. */
+  level: { source: "ffmpeg"; meanDb: number; maxDb: number } | { source: "After Effects"; top: number } | null;
+}
+
+/** Convert Audio to Keyframes' amplitude under this on every frame is silence (stage 6: a 0.3 tone reads 21.2, a four-channel take 0.002). */
+export const DELIVERY_SILENCE_TOP = 0.1;
+/** ffmpeg's max_volume at or under this is silence. */
+export const DELIVERY_SILENCE_DB = -60;
+
+/** The file against its comp: size, frame rate, duration (within half a frame), and sound when the comp has some. */
+export function checkDelivered(comp: CompFacts, file: FileFacts) {
+  const findings: Array<{ kind: string; reading: string }> = [];
+  if (comp.width !== file.width || comp.height !== file.height)
+    findings.push({ kind: "size", reading: `The file is ${file.width} × ${file.height}; the comp is ${comp.width} × ${comp.height}.` });
+  if (Math.abs(comp.frameRate - file.frameRate) > 0.01)
+    findings.push({ kind: "frame rate", reading: `The file runs at ${file.frameRate} fps; the comp at ${comp.frameRate}.` });
+  if (Math.abs(comp.duration - file.duration) > 0.5 / (comp.frameRate || 30))
+    findings.push({ kind: "duration", reading: `The file is ${file.duration.toFixed(3)} s; the comp is ${comp.duration.toFixed(3)} s.` });
+  let sound: string;
+  const lv = file.level;
+  if (comp.hasSound) {
+    const who = comp.soundLayers.length ? ` (${comp.soundLayers.slice(0, 3).join(", ")})` : "";
+    if (!file.hasAudio) {
+      findings.push({
+        kind: "sound missing",
+        reading: `The comp has sound${who} but the file has no sound track: check the output module's audio setting.`,
+      });
+      sound = "no sound track";
+    } else if (lv && ((lv.source === "ffmpeg" && lv.maxDb <= DELIVERY_SILENCE_DB) || (lv.source === "After Effects" && lv.top < DELIVERY_SILENCE_TOP))) {
+      const measured = lv.source === "ffmpeg" ? "max " + lv.maxDb + " dB" : "amplitude " + lv.top;
+      findings.push({
+        kind: "sound silent",
+        reading: `The comp has sound${who} but the file's sound reads as silence (${measured}). A four-channel take has read as silence in After Effects with no warning: extract the voice to a mono WAV, use it in the comp, and deliver again.`,
+      });
+      sound = "silent";
+    } else if (lv && lv.source === "ffmpeg") sound = "sound at a mean of " + lv.meanDb + " dB (max " + lv.maxDb + " dB, ffmpeg)";
+    else if (lv && lv.source === "After Effects") sound = "sound present (amplitude up to " + lv.top + ", After Effects)";
+    else sound = "a sound track, whose level was not read (no ffmpeg, and After Effects could not read it)";
+  } else sound = file.hasAudio ? "a sound track, though the comp has no sound on" : "no sound, as in the comp";
+  const passed = findings.length === 0;
+  return {
+    passed,
+    findings,
+    comp,
+    file,
+    reading: passed
+      ? `The file matches the comp: ${file.width} × ${file.height}, ${file.frameRate} fps, ${file.duration.toFixed(3)} s; ${sound}.`
+      : findings.map((f) => f.reading).join(" "),
+  };
+}
+
+export interface DeliverIO {
+  execute(code: string, opts: { label: string; timeoutMs: number; undoGroup?: boolean }): Promise<Json>;
+  exists?(file: string): Promise<boolean>;
+  freeBytes?(dir: string): Promise<number | null>;
+  /** ffprobe and ffmpeg's reading of the file, or null when they are not there. */
+  probe?(file: string): Promise<{ width: number; height: number; frameRate: number; duration: number; hasAudio: boolean; meanDb: number | null; maxDb: number | null } | null>;
+}
+
+/** JSX: the comp's size, rate, length, which enabled layers carry sound, and the output templates. */
+function deliverPlanJsx(args: { comp: unknown }): string {
+  return `
+            ${jsxCompPreamble(args as Record<string, unknown>)}
+            var rq = app.project.renderQueue;
+            if (AE.safeGet(function () { return rq.rendering; }, false)) return { ok: false, error: "the render queue is already rendering" };
+            var _sound = [];
+            for (var _i = 1; _i <= _comp.numLayers; _i++) {
+                var _l = _comp.layer(_i);
+                if (AE.safeGet(function () { return _l.hasAudio && _l.audioEnabled; }, false)) _sound.push(_l.name);
+            }
+            var _tmp = null;
+            var _out = [];
+            try { _tmp = rq.items.add(_comp); _out = _tmp.outputModule(1).templates; } finally { if (_tmp) { try { _tmp.remove(); } catch (eRm) {} } }
+            return { ok: true, comp: _comp.name, width: _comp.width, height: _comp.height, frameRate: _comp.frameRate, duration: _comp.duration,
+                hasSound: _sound.length > 0, soundLayers: _sound, templates: _out };
+        `;
+}
+
+/** JSX: render the comp through one temporary queue item with the template; other items parked; the item removed. */
+function deliverRenderJsx(args: { comp: unknown; template: string; outputPath: string; overwrite: boolean }): string {
+  return `
+            ${jsxCompPreamble(args as Record<string, unknown>)}
+            ${PARK_QUEUE_FN}
+            var rq = app.project.renderQueue;
+            var _want = ${jsxVal(args.outputPath)};
+            if (new File(_want).exists && !${jsxVal(args.overwrite)}) return { ok: false, error: "a file already exists at " + _want + "; pass overwrite: true to replace it" };
+            var _parked = _parkQueue(rq);
+            var _rqi = null;
+            var _out = null;
+            try {
+                _rqi = rq.items.add(_comp);
+                var _om = _rqi.outputModule(1);
+                var _w = AE.applyTemplate(_om, ${jsxVal(args.template)}, "outputTemplate");
+                if (_w) throw new Error(_w);
+                _om.file = AE.ensureParentDir(_want);
+                var _path = _om.file.fsName.replace(/\\\\/g, "/");
+                var _audio = {};
+                try { var _st = _om.getSettings(GetSettingsFormat.STRING); for (var _k in _st) if (_st.hasOwnProperty(_k) && /audio|channels/i.test(_k)) _audio[_k] = String(_st[_k]); } catch (eA) {}
+                var _t0 = new Date().getTime();
+                rq.render();
+                var _f = new File(_path);
+                _out = { ok: _rqi.status === RQItemStatus.DONE && _f.exists && _f.length > 0, outputPath: _path, bytes: _f.exists ? _f.length : 0,
+                    renderSeconds: Math.round(new Date().getTime() - _t0) / 1000, audio: _audio };
+                if (!_out.ok) _out.error = "the render did not finish (status " + String(_rqi.status) + ")";
+            } catch (eR) {
+                _out = { ok: false, error: "the delivery render failed: " + AE.errText(eR) };
+            } finally {
+                if (_rqi) { try { _rqi.remove(); } catch (eRm) {} }
+                _unparkQueue(rq, _parked);
+            }
+            return _out;
+        `;
+}
+
+/** JSX: import the written file, read its size, rate, length and sound; its loudness through Convert Audio to Keyframes; remove what was added. */
+function deliverReadBackJsx(args: { path: string; readLevel: boolean }): string {
+  return `
+            var _f = new File(${jsxVal(args.path)});
+            if (!_f.exists) return { ok: false, error: "no file at " + ${jsxVal(args.path)} };
+            var _item = app.project.importFile(new ImportOptions(_f));
+            var _res = { ok: true, width: _item.width, height: _item.height, frameRate: _item.frameRate, duration: _item.duration, hasAudio: !!_item.hasAudio, amplitudeTop: null };
+            var _c = null;
+            try {
+                if (${jsxVal(args.readLevel)} && _item.hasAudio) {
+                    _c = app.project.items.addComp("delivery sound check", 16, 16, 1, _item.duration, _item.frameRate || 30);
+                    var _l = _c.layers.add(_item);
+                    _c.openInViewer();
+                    for (var _i = 1; _i <= _c.numLayers; _i++) _c.layer(_i).selected = false;
+                    _l.selected = true;
+                    var _id = app.findMenuCommandId("Convert Audio to Keyframes");
+                    if (_id) {
+                        app.executeCommand(_id);
+                        var _top = 0;
+                        for (var _j = 1; _j <= _c.numLayers; _j++) {
+                            var _a = _c.layer(_j);
+                            if (_a === _l || _a.name.indexOf("Audio Amplitude") !== 0) continue;
+                            var _fx = _a.property("ADBE Effect Parade");
+                            for (var _k = 1; _k <= 2 && _k <= _fx.numProperties; _k++) {
+                                var _p = _fx.property(_k).property(1);
+                                for (var _fr = 0; _fr < _c.duration * _c.frameRate; _fr++) _top = Math.max(_top, _p.valueAtTime(_fr / _c.frameRate, false));
+                            }
+                        }
+                        _res.amplitudeTop = Math.round(_top * 1000) / 1000;
+                    }
+                }
+            } finally {
+                if (_c) { try { _c.remove(); } catch (eC) {} }
+                try { _item.remove(); } catch (eI) {}
+            }
+            return _res;
+        `;
+}
+
+export async function runDeliver(args: Record<string, unknown>, io: DeliverIO): Promise<Json> {
+  const started = Date.now();
+  const outputPath = args.outputPath;
+  if (typeof outputPath !== "string" || !path.isAbsolute(outputPath)) return { ok: false, error: "`outputPath` must be an absolute path" };
+  const rejected = rejectedOutputPath(outputPath);
+  if (rejected) return { ok: false, error: rejected };
+  const preset = typeof args.preset === "string" ? args.preset : "";
+  const plan = await io.execute(deliverPlanJsx({ comp: args.comp }), { label: "render.deliver plan", timeoutMs: 60_000, undoGroup: true });
+  if (!plan?.ok) return { ok: false, error: plan?.error ?? "could not read the comp" };
+  const pick = chooseDeliveryTemplate(preset, plan.templates ?? []);
+  if ("error" in pick) return { ok: false, error: pick.error };
+  const notes: string[] = [];
+  const p = DELIVERY_PRESETS[preset];
+  if (p.aspect && Math.abs(plan.width / plan.height - p.aspect) > 0.01)
+    notes.push(`The comp is ${plan.width} × ${plan.height}, not 9:16: the reel will be delivered at the comp's size.`);
+  const frames = Math.round(plan.duration * plan.frameRate);
+  const estimate = frames * plan.width * plan.height * (p.alpha ? 4 : 3) * 0.6;
+  const free = io.freeBytes ? await io.freeBytes(path.dirname(outputPath)) : null;
+  if (free !== null && free < estimate + 3e9)
+    return { ok: false, error: `not enough room: about ${(estimate / 1e9).toFixed(1)} GB for the file plus 3 GB, ${(free / 1e9).toFixed(1)} GB free` };
+  const r = await io.execute(
+    deliverRenderJsx({ comp: args.comp, template: pick.template, outputPath, overwrite: args.overwrite === true }),
+    { label: "render.deliver render", timeoutMs: 120_000 + frames * 5_000, undoGroup: true },
+  );
+  if (!r?.ok) return { ok: false, error: r?.error ?? "the render failed", template: pick.template };
+  const written: string = r.outputPath ?? outputPath;
+  const probe = io.probe ? await io.probe(written).catch(() => null) : null;
+  const back = await io.execute(deliverReadBackJsx({ path: written, readLevel: !(probe && probe.maxDb !== null) }), {
+    label: "render.deliver read back",
+    timeoutMs: 300_000,
+    undoGroup: true,
+  });
+  if (!back?.ok) return { ok: false, error: back?.error ?? "could not bring the file back", outputPath: written };
+  const level: FileFacts["level"] =
+    probe && probe.maxDb !== null && probe.meanDb !== null
+      ? { source: "ffmpeg", meanDb: probe.meanDb, maxDb: probe.maxDb }
+      : typeof back.amplitudeTop === "number"
+        ? { source: "After Effects", top: back.amplitudeTop }
+        : null;
+  const check = checkDelivered(
+    { width: plan.width, height: plan.height, frameRate: plan.frameRate, duration: plan.duration, hasSound: plan.hasSound, soundLayers: plan.soundLayers ?? [] },
+    { width: back.width, height: back.height, frameRate: back.frameRate, duration: back.duration, hasAudio: back.hasAudio, level },
+  );
+  return {
+    ok: true,
+    preset,
+    template: pick.template,
+    templateWhy: pick.why,
+    fallback: pick.fallback,
+    outputPath: written,
+    bytes: r.bytes,
+    renderSeconds: r.renderSeconds,
+    audioSettings: r.audio,
+    check,
+    notes,
+    timing: { totalMs: Date.now() - started },
+    next: check.passed
+      ? "Delivered and checked. Watch it once at speed before calling it done."
+      : "Stop: tell the user what the check found, in plain words, before calling it delivered.",
+  };
+}
+
+const FFPROBE = ["ffprobe", "/opt/homebrew/bin/ffprobe", "/usr/local/bin/ffprobe"];
+const FFMPEG = ["ffmpeg", "/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg"];
+function run(cands: string[], argv: string[]): Promise<{ stdout: string; stderr: string } | null> {
+  return new Promise((resolve) => {
+    const tryAt = (i: number) => {
+      if (i >= cands.length) return resolve(null);
+      execFile(cands[i], argv, { timeout: 120_000, maxBuffer: 16 * 1024 * 1024 }, (err, stdout, stderr) => {
+        if (err && (err as NodeJS.ErrnoException).code === "ENOENT") return tryAt(i + 1);
+        resolve({ stdout: String(stdout), stderr: String(stderr) });
+      });
+    };
+    tryAt(0);
+  });
+}
+
+/** ffprobe's streams and ffmpeg's volumedetect, when both are installed; only reads the file. */
+export async function probeDelivered(file: string) {
+  const pr = await run(FFPROBE, ["-v", "error", "-show_entries", "stream=codec_type,width,height,r_frame_rate:format=duration", "-of", "json", file]);
+  if (!pr) return null;
+  let j: Json;
+  try {
+    j = JSON.parse(pr.stdout);
+  } catch {
+    return null;
+  }
+  const v = (j.streams ?? []).find((s: Json) => s.codec_type === "video");
+  const hasAudio = (j.streams ?? []).some((s: Json) => s.codec_type === "audio");
+  if (!v) return null;
+  const [a, b] = String(v.r_frame_rate ?? "0/1").split("/").map(Number);
+  let meanDb: number | null = null;
+  let maxDb: number | null = null;
+  if (hasAudio) {
+    const vd = await run(FFMPEG, ["-hide_banner", "-nostats", "-i", file, "-map", "0:a:0", "-af", "volumedetect", "-f", "null", "-"]);
+    const m = vd ? /mean_volume:\s*(-?[\d.]+|-inf) dB/.exec(vd.stderr) : null;
+    const x = vd ? /max_volume:\s*(-?[\d.]+|-inf) dB/.exec(vd.stderr) : null;
+    if (m && x) {
+      meanDb = m[1] === "-inf" ? -Infinity : Number(m[1]);
+      maxDb = x[1] === "-inf" ? -Infinity : Number(x[1]);
+    }
+  }
+  return { width: v.width, height: v.height, frameRate: b ? Math.round((a / b) * 1000) / 1000 : 0, duration: Number(j.format?.duration ?? 0), hasAudio, meanDb, maxDb };
+}
+
+function liveDeliverIO(transport: AeTransport): DeliverIO {
+  return {
+    async execute(code, opts) {
+      const r = await transport.execute({ code, label: opts.label, timeoutMs: opts.timeoutMs, undoGroup: opts.undoGroup ?? true, suppressDialogs: true });
+      return r.ok ? r.result : { ok: false, error: r.error ?? `${opts.label} failed` };
+    },
+    exists: (f) => fs.access(f).then(() => true, () => false),
+    freeBytes: async (dir) => {
+      try {
+        const st = await fs.statfs(dir);
+        return st.bavail * st.bsize;
+      } catch {
+        return null;
+      }
+    },
+    probe: probeDelivered,
+  };
+}
+
+registerOp({
+  name: "render.deliver",
+  category: "render",
+  description:
+    "Deliver a comp with a named preset and check the file that was written. Presets: 'vertical-reel' (H.264 - Match Render Settings - 15 Mbps, else another H.264 template, else High Quality (ProRes 422) and says so), 'master-alpha' (High Quality with Alpha (ProRes 4444), else Lossless with Alpha, else another movie template whose name says alpha; refuses when there is none), 'master' (High Quality, else Lossless). High Quality, High Quality with Alpha and the three H.264 templates are what Adobe documents for a stock install; a template can be deleted, so the result says which was used and why. " +
+    "Renders the whole comp through one temporary queue item (other items parked), then brings the file back and compares size, frame rate and duration (within half a frame) with the comp, and the sound: when the comp has sound on, a file with no sound track, or one that reads as silence, is flagged (a four-channel take read as silence in After Effects with no warning). The level comes from ffmpeg (mean and max dB) when it is installed, else from After Effects' Convert Audio to Keyframes on the file. Returns `check` { passed, findings, reading }." +
+    RENDER_QUEUE_UNDO_WARNING,
+  params: [
+    { name: "comp", type: "any", description: "Comp name or id", required: true },
+    { name: "preset", type: "string", description: "'vertical-reel', 'master-alpha' or 'master'", required: true },
+    { name: "outputPath", type: "string", description: "Absolute path for the file (the template may change the extension; the path written is returned)", required: true },
+    { name: "overwrite", type: "boolean", description: "Replace an existing file (default false)", required: false },
+  ],
+  toJsx: () => jsxFail("render.deliver runs in Node; call it through ae_do"),
+  run: (args, transport) => runDeliver(args, liveDeliverIO(transport)),
 });

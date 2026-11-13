@@ -3,13 +3,13 @@
 // these in a single file lets both the Node-side validator and any future
 // agent-side code share the shape without drift.
 //
-// Schema version: 2
+// Schema version: 3 (v3: compositing, camera and light options on layers)
 //
 // Versioning policy: breaking schema changes bump SCHEMA_VERSION. The import
 // loader will refuse documents with a schemaVersion higher than the runtime
 // version it understands; lower versions are read best-effort.
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 // --- Leaf value types ---
 
@@ -157,6 +157,19 @@ export interface LayerSpec {
   timeRemapEnabled?: boolean;
   timeRemapProperty?: PropertySpec | null;
   markers?: PropertySpec | null;
+  // v3: what the property walk does not see, and camera and light options
+  compositing?: {
+    blendingMode?: string | null;
+    trackMatte?: { type: string; layer: { index: number; name: string } | null } | null;
+    adjustmentLayer?: boolean | null;
+    guideLayer?: boolean | null;
+    preserveTransparency?: boolean | null;
+    isTrackMatte?: boolean | null;
+    masks?: Array<{ mode: string | null; inverted: boolean | null }>;
+    lightType?: string | null;
+  } | null;
+  cameraOptionsGroup?: PropertyGroupSpec | null;
+  lightOptionsGroup?: PropertyGroupSpec | null;
 }
 
 // --- Items (project level) ---

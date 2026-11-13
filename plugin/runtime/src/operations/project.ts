@@ -1070,3 +1070,27 @@ registerOp({
         `;
   },
 });
+
+registerOp({
+  name: "project.lint",
+  category: "project",
+  readOnly: true,
+  description:
+    "Could another person open this project and work in it? Read only. Finds: default layer and comp names ('Shape Layer 3', 'Black Solid 1', 'Comp 2'); items outside folders (footage, solids and precomps at the top level; top-level comps nothing uses are left there, as deliverables); unused footage (solids too); missing footage; missing fonts (After Effects 24+; `fontsChecked` false when it cannot say); expressions in error (every property of every layer); and layers switched off with no role (not a track matte, not sound only, not a guide); layers the cut-out path keeps switched off for a re-click (with Object Matte on them, or their gap fill or soft edge) are listed under `kept`, not as findings. Each finding names the item, the layer and what is wrong. `ignore` takes layer or item names kept on purpose (a matted layer kept for a re-click).",
+  params: [
+    {
+      name: "ignore",
+      type: "array",
+      description: "Layer or item names to leave out (kept on purpose)",
+      required: false,
+    },
+  ],
+  toJsx(args) {
+    return `
+            var _missing = AE.missingFontNames();
+            var _r = AE.lintProject(app.project, { missingFonts: _missing || [], ignore: ${jsxVal(Array.isArray(args.ignore) ? args.ignore : [])} });
+            return { ok: true, file: app.project.file ? app.project.file.fsName : null, numItems: app.project.numItems,
+                findings: _r.findings, counts: _r.counts, total: _r.findings.length, kept: _r.kept, fontsChecked: _missing !== null };
+        `;
+  },
+});

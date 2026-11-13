@@ -31,6 +31,32 @@ Save the intended version and include linked assets. Preserve editable type, sha
 
 Use `scripts/verify-export.mjs <file>` for metadata plus a full decode. It exits nonzero on failure and explicitly requires ffmpeg and ffprobe. Check the requested spec against its report.
 
+**Deliver with a preset and check the file.** `ae_do { operation: "render.deliver", args: { comp, preset, outputPath } }` renders the whole comp through one temporary queue item, brings the written file back and compares it with the comp: size, frame rate, duration within half a frame, and the sound. Presets:
+
+| Preset | Template | Falls back to |
+|---|---|---|
+| `vertical-reel` | H.264 - Match Render Settings - 15 Mbps | another H.264 template, then High Quality (ProRes 422, a larger file), and says so |
+| `master-alpha` | High Quality with Alpha (ProRes 4444) | Lossless with Alpha, then another movie template whose name says alpha; refuses when there is none |
+| `master` | High Quality (ProRes 422) | Lossless, then H.264 |
+
+High Quality, High Quality with Alpha and the three H.264 templates are what Adobe documents for a stock install. Lossless and Lossless with Alpha were on the Mac this was built on but are not named stock anywhere found. A template can be deleted, so the result says which one was used and why.
+
+**The sound.** Twice a take's sound read as silence in After Effects and nothing warned. When the comp has sound on, a file with no sound track, or one whose sound reads as silence, is flagged. The level comes from ffmpeg when it is installed (mean and max dB). Without it, the file's sound is read through After Effects' Convert Audio to Keyframes.
+
+Measured live (After Effects 27.0, 2026-11-12, a 2-second 1080 × 1920 comp with a beat track):
+- the reel and the alpha master each matched the comp, sound at a mean of −26.5 dB, about 2 s each;
+- the same comp with its sound from the four-channel take was flagged silent, at max −84.3 dB through ffmpeg and amplitude 0.002 through After Effects alone (a beat track reads 21.2).
+
 ## Handoff
+
+**Lint the project before handing it over.** `ae_do { operation: "project.lint" }` is read only and asks whether another person could open the project and work in it. It finds:
+- default layer and comp names;
+- footage, solids and precomps at the project's top level (top-level comps nothing uses are deliverables and stay);
+- unused footage, solids included;
+- missing footage, and missing fonts (After Effects 24+);
+- expressions in error, on every property;
+- layers switched off with no role (not a track matte, a guide or sound only).
+
+Layers the cut-out path keeps switched off for a re-click are listed under `kept`. Pass `ignore` for anything else kept on purpose. Measured live on a scratch project with one of each problem planted beside a track matte, a sound-only layer and solids in their folder: it named the nine planted problems and nothing else, in 250 ms. On the round-two head-to-head project (82 items) it found 30 unused footage items, mostly solids left by deleted nulls, and 19 items at the top level.
 
 Report what changed, the project and render paths, evidence reviewed, and any missing checks. Keep technical pass, craft judgment and user approval distinct. Record accepted new recipes in the project with exact timings and reference frames. Never claim publication, audience performance or approval from a clean export alone.
