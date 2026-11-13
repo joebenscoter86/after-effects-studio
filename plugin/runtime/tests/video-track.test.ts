@@ -177,4 +177,16 @@ describe("video.track", () => {
     expect(at(31).segment).toBe(at(29).segment + 1);
     expect(at(30).x).toBe(0);
   }, 60_000);
+  it("a slow drift after a move is split from it: the slide's own length and span, and the drift reported apart", async (ctx) => {
+    if (!files["slide-then-creep"]) return ctx.skip();
+    const r: any = await track("slide-then-creep", [276, 84, 48, 48]);
+    const pos = r.moves.filter((m: any) => m.channel === "position");
+    const slide = pos.find((m: any) => !m.drift), drift = pos.find((m: any) => m.drift);
+    expect(Math.abs(slide.distance - 240) / 240).toBeLessThan(0.05);
+    let truth = 18; for (let k = 10; k <= 28; k++) if (aeEase((k - 10) / 18, 0.33, 0.8) >= 0.98) { truth = k - 10; break; }
+    expect(Math.abs(slide.duration.visible.at - truth)).toBeLessThanOrEqual(2);
+    expect(slide.seen.ends).toBe("drift");
+    expect(drift).toBeDefined();
+    expect(Math.abs(drift.distance - 24)).toBeLessThan(4);   // 0.8 px a frame for 30 frames
+  }, 60_000);
 });

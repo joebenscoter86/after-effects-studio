@@ -194,6 +194,13 @@ export function clips(): Clip[] {
         for (let y = 176; y < 204; y++) for (let x = 112; x < 272; x++) { const o = (y * W + x) * 3, t = (x >> 3) % 2 ? 30 : 120; fr[o] = t; fr[o + 1] = 190; fr[o + 2] = 150; }
         return Uint8Array.from(fr, (v) => Math.round(v)); },
       truth: { path: off.map((o) => ({ x: -o, y: 0, scale: 1, opacity: 1 })), move: { from: a, to: a + dur, kind: "ease", params: { outInfluence: 50, inInfluence: 50, distance: D } }, cuts: [], swaps: [], base: 0 } }); }
+  // an eased slide (240 px over 18 frames) that hands over to a slow linear creep (0.8 px a frame for 30 frames), then rests
+  { const n = 70, a = 10, dur = 18, creep = 30, xs: number[] = [];
+    for (let f = 0; f < n; f++) xs.push(f <= a ? 60 : f <= a + dur ? 60 + 240 * aeEase((f - a) / dur, 0.33, 0.8) : 300 + 0.8 * Math.min(creep, f - a - dur));
+    const patch = patchTexture(BASE, 7), back = background("flat", 11);
+    out.push({ name: "slide-then-creep", frames: n,
+      draw: (f) => { const fr = Uint8Array.from(back(f)); place(fr, patch, BASE, xs[f], 108, 1, 1); return fr; },
+      truth: { path: xs.map((x) => ({ x, y: 108, scale: 1, opacity: 1 })), move: { from: a, to: a + dur, kind: "ease", params: { outInfluence: 33, inInfluence: 80, distance: 240, creepFrom: a + dur, creepTo: a + dur + creep, creepPerFrame: 0.8 } }, cuts: [], swaps: [], base: BASE } }); }
   // a hard cut at frame 30, then a big patch moving 70 px a frame on the new shot's first frames
   { const a = patchTexture(BASE, 21), b = patchTexture(96, 23), backA = background("flat", 1), path: Truth["path"] = [];
     const backB = new Uint8Array(W * H * 3); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const o = (y * W + x) * 3, v = y > 150 && y < 200 && x > 40 && x < 340 ? 40 : 150; backB[o] = v; backB[o + 1] = v; backB[o + 2] = v + 8; }
