@@ -318,6 +318,7 @@ export declare function renderCutoutJsx(args: {
     start: number;
     duration: number;
     overwrite: boolean;
+    subject?: string;
 }): string;
 export declare function runRenderCutout(args: Record<string, unknown>, io: FileIO): Promise<Json>;
 /** Default most frames subject.check_file reads one by one; beyond it, it reads pairs in steps. About 0.55 s a frame measured. */
