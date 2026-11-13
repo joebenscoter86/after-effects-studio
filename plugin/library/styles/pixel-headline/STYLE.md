@@ -31,7 +31,7 @@ These are requirements. A piece without them is not in this style.
 | The speaker is cut out | Lifted off their room onto a clean ground: the room is gone, and no copy of the speaker sits over their own room (proven) | On the first piece, a matted copy over the room still read as "not cut out" to the user. Footage as the ground is a fallback (`stage({ footageGround: true })`), to be named as one. |
 | The cut-out is rendered before building | The plugin's subject operations, then `subject.render_cutout`. The speaker builder takes the rendered movie. | `speaker()` refuses to run without it. |
 | **The user's click comes first** | The cut-out needs one click from the user, which cannot be made unattended. Get it before they leave. | The first piece's first version was built on the room because the user was asleep. |
-| A cut-out for a whole piece | Scale the take to delivery size first (1088 × 1920 for a 1080 frame). Render it in halves, emptying After Effects' cache between them. | Two halves of 43.5 s took about 4.3 minutes and 12 GB of cache each. |
+| A cut-out for a whole piece | Scale the take to delivery size first (1088 × 1920 for a 1080 frame). Render it in halves (`subject.render_cutout({ from, to })`), emptying After Effects' cache between them, and join the two movies with a stream copy. | Two halves of 43.5 s took about 4.3 minutes and 12 GB of cache each. |
 | No remnants of the room | Every piece of chair or wall left inside the matte comes out. Look on frames spread across the piece. | A clean ground shows every remnant. Take each out by brightness and colour together (`speaker({ remnants })`): keyed on brightness alone, one hole also took the hand. |
 | Disk | Check free space before each render. Under 14 GB free, purge After Effects' cache. | An Object Matte cache can reach about 19 GB per 10 s of 4K. |
 | The cut-out's own pitfalls | Use the builder's blend modes, not nested track mattes, which do not work. A hole keyed by colour needs Lab a* in Color Range: Linear Color Key on chroma or hue could not split skin from a chair under the same cast. A layer used only as a matte must be switched off, or it adds its own pixels. A render with `isolate` shows matte layers, so judge the outline on a full render. | All hit on the first piece (proven) |
@@ -172,13 +172,13 @@ The amounts are sliders on `<prefix>Skin controls`. Check lips, teeth, hands and
 | The build's warnings | `beat` and `stage` reports | Lines that cannot land, short holds, text in the margins, a carried-over working space |
 | Sound effects | Chosen and levelled by measurement, but unheard | Say so, and deliver a voice-only file beside the mix |
 
-### D6.1 Delivery, as run on the first piece
+### D6.1 Delivery: deliver the picture, mux the mix, check the file
 
-1. Check free disk; purge under 14 GB free. Save the project.
-2. Render the picture with the plugin's delivery operation and its file check.
-3. Mix the sound outside After Effects (the 1 dB rule; the voice's gain set so the mix's true peak lands near −2 dBTP, since After Effects has no limiter; the voice peaked at +0.3 dBTP alone).
-4. Join picture and sound with ffmpeg, which writes the AAC edit list: copy the video, AAC at 256 kbps and 48 kHz, faststart. Make a voice-only file the same way, and a phone file (H.264 High at about 4.5 Mbps).
-5. Verify each file: frame count, full decode, loudness and true peak. The first piece delivered at −15.1 LUFS and −2.1 dBTP.
+1. Check free disk space; purge After Effects' cache under 14 GB free. Save the project.
+2. **Deliver the picture** with `render.deliver`. Its file check now also reads the sound track's edit list and remuxes so the encoder's priming is skipped, and it reports loudness, loudness range and true peak.
+3. **Mix the sound outside After Effects:** the 1 dB rule, with the voice's gain set so the mix's true peak lands near −2 dBTP. After Effects has no limiter, and the voice alone peaked at +0.3 dBTP.
+4. **Mux the mix** with `render.mux_audio { video, audio }`: the picture copied, the mix as AAC at 48 kHz with its edit list. The same file check runs on the output. Make a voice-only file the same way, and a smaller phone file if one is wanted (H.264 High at about 4.5 Mbps).
+5. **Check each file:** frame count, a full decode, the voice on its frame, loudness and true peak. The first piece delivered at −15.1 LUFS and −2.1 dBTP.
 
 ## D7. Show a still before building any choice of taste
 
@@ -586,6 +586,8 @@ The reference shows one beat and nothing leaving. A whole piece needs the mechan
 - **Sound placement (measured, not yet heard).** Each effect is placed so its own measured hit lands on its event: a word's pop on W, the blocks' glitch on W + 1 (trimmed to 0.4 s with a 10 ms fade), a card's flick on its first frame, a whoosh's peak on the move's end. Peaks in the first piece's mix, after the 1 dB rule: pops −20 to −27 dBFS, the blocks −28, flicks −24 to −30, the push −25, whooshes −31 and −37, the voice at −2.5 dB of gain. Nobody has heard them; deliver a voice-only file beside the mix.
 
 ## 12. Still extended
+
+- A remnant taken out of the cut-out by a runtime operation (Color Range in Lab limited by a mask reference, set by script): waits on a live probe that the mask reference can be set. Until then, `subject.check_file` reports each speck's lightness and a* (a pale chair near +7, skin near +30), and the builder `speaker({ remnants })` takes it out.
 
 - The light ground on a whole piece: every light default is calibrated on the reference's one beat, not on a piece.
 - Cards circling the speaker's head, cards on both sides at once.
