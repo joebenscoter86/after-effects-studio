@@ -34,6 +34,14 @@ interface MatteSetting {
 }
 /** Object Matte's settings, as After Effects 27.0 reported them (2026-11-11). */
 export declare const OBJECT_MATTE_SETTINGS: Record<string, MatteSetting>;
+/**
+ * For the agent, on the cut-out operations' descriptions and results: the
+ * click cannot be made unattended (first production use, 2026-11-12: a piece
+ * meant to run overnight still needed it).
+ */
+export declare const SUBJECT_ATTENDED_NOTE: string;
+/** For the agent: how a whole piece's cut-out was rendered in production (2026-11-12). */
+export declare const SUBJECT_WHOLE_PIECE_NOTE: string;
 /** Said to the user before the steps, and in the skill before building starts. */
 export declare const SUBJECT_MATTE_NOTICE = "One step here needs you in After Effects: a single click on the subject, about ten seconds. Everything before and after it I do.";
 /**

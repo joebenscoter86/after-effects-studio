@@ -25,12 +25,47 @@ import { PieceWatcher, resolveWatchThresholds, watchArgsError, } from "../color/
 import { rejectedOutputPath } from "../config.js";
 import { errorResult } from "../errors.js";
 import { readOnlyMode } from "../policy.js";
-import { colorConversion, iccManagedReason } from "./capture-shared.js";
+import { colorConversion } from "./capture-shared.js";
 import { captureJsx, planJsx, structureJsx } from "./check-comp-jsx.js";
 import { defineTool, jsonResult, toMcpResult } from "./define-tool.js";
+/**
+ * How long the wait for a chunk goes on after the last capture finished
+ * before After Effects is taken to have stopped writing (60 s: a quarter-size
+ * capture of a heavy comp takes a few seconds, not a minute).
+ */
+export const CAPTURE_STALL_MS = 60_000;
+/** The frame number a capture path names (frame-<k>.png), or null. */
+export function frameOfCapture(file) {
+    const m = /frame-(\d+)\.png$/.exec(file);
+    return m ? Number(m[1]) : null;
+}
 const frameFile = (dir, frame) => path.join(dir, `frame-${frame}.png`).replace(/\\/g, "/");
-/** saveFrameToPng, a chunk at a time, waiting for the asynchronously written files. */
+/**
+ * saveFrameToPng, a chunk at a time, waiting for the asynchronously written
+ * files. The wait follows After Effects' pace: it goes on while captures keep
+ * finishing and ends when none has finished for `stallMs`, so a long or heavy
+ * comp is not cut off by a budget fixed in advance. Whatever is not finished
+ * then is returned as `outstanding`; a script that failed part way, or a call
+ * that timed out after After Effects took it, is waited on the same way
+ * before the failure is returned, since the frames it queued are still
+ * written.
+ */
 export function aeFrameSource(transport, comp, opts) {
+    const stallMs = opts.stallMs ?? CAPTURE_STALL_MS;
+    const drain = async (paths, before) => {
+        if (paths.length === 0)
+            return { settled: new Set(), outstanding: [], unsettled: [] };
+        const settle = await waitForSettled(paths, {
+            timeoutMs: opts.settleTimeoutMs ?? settleTimeoutFor(paths.length, opts.pixels),
+            before,
+            stallMs,
+        });
+        return {
+            settled: new Set(settle.settled.map((i) => paths[i])),
+            outstanding: settle.unsettled.map((u) => u.path),
+            unsettled: settle.unsettled,
+        };
+    };
     return {
         async capture(frames, dir) {
             const t0 = performance.now();
@@ -42,33 +77,41 @@ export function aeFrameSource(transport, comp, opts) {
                 label: "check_comp_capture",
                 timeoutMs: 60_000 + frames.length * 5_000,
             });
-            if (!result.ok)
-                return { error: result.error ?? "capture call failed", details: result };
+            if (!result.ok) {
+                // A call that never reached After Effects queued nothing; one that
+                // timed out after After Effects took it may have queued any of them.
+                const error = result.error ?? "capture call failed";
+                if (/never picked up/i.test(error))
+                    return { error, details: result, outstanding: [] };
+                const d = await drain(paths, before);
+                return { error, details: result, outstanding: d.outstanding };
+            }
             const payload = result.result;
+            const rendered = payload?.frames ?? [];
+            const ok = rendered.filter((f) => f.ok && typeof f.writtenTo === "string");
+            const okPaths = ok.map((f) => f.writtenTo);
+            const okBefore = ok.map((f) => before[frames.indexOf(f.frame)]);
             if (!payload || payload.ok !== true) {
+                // The script stopped part way: the frames it asked for before that are still written.
+                const d = await drain(okPaths, okBefore);
                 return {
                     error: payload?.error ?? "capture reported no result",
                     details: { resolution: payload?.resolution },
+                    outstanding: d.outstanding,
                 };
             }
-            const rendered = payload.frames ?? [];
-            const ok = rendered.filter((f) => f.ok && typeof f.writtenTo === "string");
-            const settle = await waitForSettled(ok.map((f) => f.writtenTo), {
-                timeoutMs: opts.settleTimeoutMs ?? settleTimeoutFor(ok.length, opts.pixels),
-                before: ok.map((f) => before[frames.indexOf(f.frame)]),
-            });
-            const settled = new Set(settle.settled.map((i) => ok[i].frame));
+            const d = await drain(okPaths, okBefore);
             const out = frames.map((frame) => {
                 const r = rendered.find((f) => f.frame === frame);
                 if (!r)
                     return { frame, error: "not captured" };
                 if (!r.ok)
                     return { frame, error: r.error ?? "capture failed" };
-                if (!settled.has(frame)) {
-                    const u = settle.unsettled.find((x) => ok[x.index]?.frame === frame);
+                if (!d.settled.has(r.writtenTo)) {
+                    const u = d.unsettled.find((x) => x.path === r.writtenTo);
                     return {
                         frame,
-                        error: `the capture did not finish writing within ${(settle.timeoutMs / 1000).toFixed(1)} s (${u?.state ?? "missing"})`,
+                        error: `the capture had not finished writing when the wait ended (no capture finished for ${(stallMs / 1000).toFixed(0)} s; ${u?.state ?? "missing"}): After Effects may still write it`,
                     };
                 }
                 return { frame, path: r.writtenTo };
@@ -84,6 +127,7 @@ export function aeFrameSource(transport, comp, opts) {
                     resolution: payload.resolution,
                 },
                 seconds: (performance.now() - t0) / 1000,
+                outstanding: d.outstanding,
             };
         },
     };
@@ -213,7 +257,8 @@ const CHECK_COMP_SHAPE = {
         .max(300)
         .optional()
         .describe("Frames per After Effects script (default 100). A script returns as soon as it has asked for the frames; " +
-        "the files arrive over the following seconds and the wait for them grows with the count."),
+        "the files arrive over the following seconds. The next chunk is asked for only once every capture of " +
+        "this one has finished, so After Effects never holds more than one chunk in its queue."),
     thresholds: thresholdsSchema,
     safeArea: z
         .object({
@@ -250,7 +295,16 @@ const CHECK_COMP_SHAPE = {
         .int()
         .positive()
         .optional()
-        .describe("How long to wait for each chunk's captures to finish writing (default: grows with the chunk)."),
+        .describe("How long to wait for the first captures of each chunk (default: grows with the chunk). The wait then goes on " +
+        "for as long as captures keep finishing, so a long or heavy comp is not cut off by it."),
+    stallTimeoutMs: z
+        .number()
+        .int()
+        .positive()
+        .optional()
+        .describe(`After Effects is taken to have stopped writing when no capture has finished for this long (default ${CAPTURE_STALL_MS / 1000} s). ` +
+        "The check then queues nothing more, keeps the capture folder (After Effects may still write into it) and " +
+        "says how many captures were outstanding and where to continue."),
     outDir: z
         .string()
         .optional()
@@ -283,6 +337,11 @@ export const checkCompTool = defineTool({
         "other capture is deleted as soon as it is measured. A clean comp returns empty lists and no sheet. " +
         "Bounded: at most `maxFrames` frames a call (default 300); when the range is not finished the result " +
         "says where to continue (`next.startFrame`): call again with the same arguments plus that startFrame. " +
+        "Captures are asked of After Effects a chunk at a time, the next chunk only once every capture of the last has " +
+        "finished writing, and the wait follows After Effects' pace (it goes on while captures keep arriving), so a long " +
+        "comp is not cut off part way. The check never returns with its captures still queued unless After Effects " +
+        "stopped writing (none finished for `stallTimeoutMs`): it then asks for nothing more, keeps the capture folder " +
+        "instead of deleting it, and says so in `captureQueue`; `coverage` says how many of the call's frames were measured. " +
         "Numbers are display values of the picture the viewer sees (stage 'output', after colour conversion, " +
         "as ae_render_frame writes the file), with the thresholds used; it never says pass or fail. Times are " +
         "seconds from the comp's start (frame × frame duration), ignoring the display start time.",
@@ -387,6 +446,7 @@ async function checkComp(args, transport) {
         factor: readOnly ? null : downsample,
         tryOcio: args.colorManaged !== "off" && !readOnly,
         settleTimeoutMs: args.settleTimeoutMs,
+        stallMs: args.stallTimeoutMs,
         pixels: target.width * target.height,
     });
     const report = {
@@ -418,22 +478,13 @@ async function checkComp(args, transport) {
         report.timings = { totalSeconds: r3((performance.now() - started) / 1000) };
         return jsonResult({ result: report });
     }
-    // Under Adobe's own colour management the picture would be measured on values
-    // that do not match the viewer (stage 7): refuse the picture checks plainly.
-    if (args.colorManaged !== "off" &&
-        plan.workingSpace !== "None" &&
-        plan.workingSpace !== "" &&
-        plan.colorManagementSystem !== 1) {
-        report.picture = {
-            checked: false,
-            reason: `${iccManagedReason(plan.workingSpace, plan.bitsPerChannel)} The whole-piece check's picture checks (blank frames, black bars, pops, stutters, cuts, clipping, elements off frame) are tuned on display values, so they are not run.`,
-        };
-        report.structure = await runStructure(args, transport, plan, first, end, fd);
-        report.next = null;
-        report.timings = { totalSeconds: r3((performance.now() - started) / 1000) };
-        return jsonResult({ result: report });
-    }
-    // Capture and measure, a chunk at a time; each capture is deleted once measured.
+    // Capture and measure, a chunk at a time; each capture is deleted once
+    // measured. The next chunk is asked for only when every capture of this one
+    // has finished: a capture still outstanding (After Effects stopped writing,
+    // or a failed script had already queued it) ends the pass, and the capture
+    // folder is then kept, since deleting a folder After Effects is still
+    // writing into raises an error box in After Effects (on a locked screen it
+    // jammed After Effects overnight, 2026-11-12).
     let watcher = null;
     let info = null;
     let convert = null;
@@ -444,12 +495,19 @@ async function checkComp(args, transport) {
     let measured = null;
     const failures = [];
     let captureError = null;
+    let stalled = null;
+    const outstanding = [];
+    const stallMs = args.stallTimeoutMs ?? CAPTURE_STALL_MS;
     let measuredFrames = 0;
-    for (let c = 0; c < frames.length && captureError === null; c += chunkFrames) {
+    let measuredOwned = 0;
+    let chunksAsked = 0;
+    for (let c = 0; c < frames.length; c += chunkFrames) {
         const chunk = frames.slice(c, c + chunkFrames);
+        chunksAsked++;
         const res = await source.capture(chunk, capDir);
         if ("error" in res) {
             captureError = { error: res.error, atFrame: chunk[0], details: res.details };
+            outstanding.push(...res.outstanding);
             break;
         }
         captureSeconds += res.seconds;
@@ -483,6 +541,8 @@ async function checkComp(args, transport) {
                 });
                 watcher.add({ frame: f.frame, pic: pic.pic, width: pic.width, height: pic.height });
                 measuredFrames++;
+                if (f.frame >= ownedFrom && f.frame <= ownedTo)
+                    measuredOwned++;
             }
             catch (err) {
                 failures.push({ frame: f.frame, error: `could not read the capture: ${err instanceof Error ? err.message : String(err)}` });
@@ -490,14 +550,22 @@ async function checkComp(args, transport) {
             readSeconds += (performance.now() - r0) / 1000;
             await fs.rm(f.path, { force: true });
         }
+        if (res.outstanding.length > 0) {
+            outstanding.push(...res.outstanding);
+            stalled = { atFrame: Math.min(...res.outstanding.map(frameOfCapture).filter((k) => k !== null)) };
+            break;
+        }
     }
-    await fs.rm(capDir, { recursive: true, force: true });
+    // Only a folder nothing more will be written into is deleted.
+    if (outstanding.length === 0)
+        await fs.rm(capDir, { recursive: true, force: true });
     const findings = watcher ? watcher.finish() : null;
     const measureSeconds = watcher ? watcher.measureMs / 1000 : 0;
-    // Where the check stops: a failed capture leaves `next` at the first frame not measured.
+    // Where the check stops: a failed or stalled capture leaves `next` at the first frame not measured.
     let nextOut = next;
-    if (captureError !== null && captureError.atFrame <= ownedTo) {
-        const at = Math.max(captureError.atFrame, ownedFrom);
+    const stopAt = captureError?.atFrame ?? stalled?.atFrame ?? null;
+    if (stopAt !== null && Number.isFinite(stopAt) && stopAt <= ownedTo) {
+        const at = Math.max(stopAt, ownedFrom);
         nextOut = { startFrame: at, time: r6(at * fd), framesLeft: all.length - all.indexOf(at) };
     }
     report.checked = {
@@ -534,6 +602,10 @@ async function checkComp(args, transport) {
         ...(color.colorPipeline ? { colorPipeline: color.colorPipeline } : {}),
         ...(color.colorWarning ? { colorWarning: color.colorWarning } : {}),
     };
+    if (stalled !== null) {
+        notes.push(`After Effects stopped writing captures: ${outstanding.length} had not finished when no capture had finished for ${r3(stallMs / 1000)} s, so nothing more was asked of it. ` +
+            `What was measured is reported; call again with startFrame ${(nextOut ?? { startFrame: stalled.atFrame }).startFrame} to continue (look at After Effects first: a dialog, a full disk or its cache)`);
+    }
     if (captureError !== null) {
         report.captureError = captureError;
         notes.push(`capturing stopped at frame ${captureError.atFrame}: ${captureError.error}. What was measured is reported; call again with startFrame ${(nextOut ?? { startFrame: captureError.atFrame }).startFrame} to continue`);
@@ -582,14 +654,53 @@ async function checkComp(args, transport) {
     // and kept beside the sheet.
     let sheetSeconds = 0;
     report.sheet = null;
-    if (args.sheet !== false && findings !== null) {
+    if (args.sheet !== false && findings !== null && outstanding.length > 0) {
+        report.sheet = {
+            writtenTo: null,
+            skipped: "no sheet: captures of the check were still outstanding in After Effects, and none is queued behind them",
+        };
+    }
+    else if (args.sheet !== false && findings !== null) {
         const s0 = performance.now();
         const sheetOpts = typeof args.sheet === "object" ? args.sheet : {};
         const sheet = await makeSheet(source, outDir, shownFlags, shownStretches, structure, fd, { from: first, to: end - 1 }, target, convert, sheetOpts.maxTiles ?? DEFAULT_MAX_TILES, sheetOpts.thumbWidth, `${ownedFrom}-${ownedTo}`);
         sheetSeconds = (performance.now() - s0) / 1000;
-        report.sheet = sheet;
+        report.sheet = sheet.sheet;
+        outstanding.push(...sheet.outstanding);
     }
-    await fs.rmdir(outDir).catch(() => { });
+    // The output folder goes only when it is empty and nothing more is coming into it.
+    if (outstanding.length === 0)
+        await fs.rmdir(outDir).catch(() => { });
+    report.captureQueue =
+        outstanding.length === 0
+            ? {
+                outstanding: 0,
+                reading: "every capture asked of After Effects had finished writing before the check returned: nothing of the check is left in its queue",
+            }
+            : {
+                outstanding: outstanding.length,
+                folder: outstanding.some((p) => p.startsWith(capDir + "/")) ? capDir : outDir,
+                frames: outstanding.map(frameOfCapture).filter((k) => k !== null).slice(0, LIST_CAP),
+                reading: `${outstanding.length} capture${outstanding.length > 1 ? "s" : ""} asked of After Effects had not finished when the check returned ` +
+                    `(none had finished for ${r3(stallMs / 1000)} s); After Effects has no way to cancel them, so it may still write them. ` +
+                    "Their folder was kept, not deleted (deleting it while After Effects writes raises an error box there). Delete it once After Effects is idle.",
+            };
+    const coverageComplete = nextOut === next && failures.length === 0 && outstanding.length === 0;
+    report.coverage = {
+        framesAsked: owned.length,
+        framesMeasured: measuredOwned,
+        complete: coverageComplete && measuredOwned === owned.length,
+        reading: coverageComplete && measuredOwned === owned.length
+            ? `all ${owned.length} frames of this call were measured`
+            : `${measuredOwned} of the ${owned.length} frames of this call were measured` +
+                (stalled !== null
+                    ? "; the pass stopped because After Effects stopped writing captures"
+                    : captureError !== null
+                        ? "; the pass stopped on a failed capture"
+                        : "") +
+                (failures.length > 0 ? `; ${failures.length} could not be captured or read` : "") +
+                ". The findings cover the measured frames only.",
+    };
     const total = (performance.now() - started) / 1000;
     report.timings = {
         captureSeconds: r3(captureSeconds),
@@ -599,6 +710,7 @@ async function checkComp(args, transport) {
         sheetSeconds: r3(sheetSeconds),
         totalSeconds: r3(total),
         framesCaptured: measuredFrames,
+        chunks: chunksAsked,
         framesPerSecond: total > 0 ? r3(measuredFrames / total) : null,
         msPerFrame: measuredFrames > 0
             ? { capture: r3((captureSeconds * 1000) / measuredFrames), read: r3(((readSeconds - measureSeconds) * 1000) / measuredFrames), measure: r3((measureSeconds * 1000) / measuredFrames) }
@@ -723,12 +835,12 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
         add(o.from.frame, `off-${o.edge}`, `off-${o.edge}: "${o.layer.name}" at the first sampled time past the ${o.edge} edge (${o.from.time} s), while still partly in frame; the finding's worstAt is when it is furthest out`);
     }
     if (tiles.size === 0)
-        return null;
+        return { sheet: null, outstanding: [] };
     const all = [...tiles.values()].sort((a, b) => a.frame - b.frame);
     const chosen = all.slice(0, maxTiles);
     const res = await source.capture(chosen.map((c) => c.frame), outDir);
     if ("error" in res)
-        return { writtenTo: null, error: `the sheet's frames could not be captured: ${res.error}` };
+        return { sheet: { writtenTo: null, error: `the sheet's frames could not be captured: ${res.error}` }, outstanding: res.outstanding };
     const images = [];
     const labels = [];
     const kept = [];
@@ -747,7 +859,7 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
         }
     }
     if (images.length === 0)
-        return { writtenTo: null, error: "none of the sheet's frames could be read" };
+        return { sheet: { writtenTo: null, error: "none of the sheet's frames could be read" }, outstanding: res.outstanding };
     const tileW = Math.min(thumbWidth ?? 320, images[0].width);
     const maxChars = Math.max(4, Math.floor((tileW - 4) / LABEL_CHAR_PX));
     for (const k of kept)
@@ -760,12 +872,15 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
     const sheetPath = path.join(outDir, `check-sheet-${tag}.png`).replace(/\\/g, "/");
     await fs.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
     return {
-        writtenTo: sheetPath,
-        size: [sheet.width, sheet.height],
-        tiles: kept.length,
-        omitted: all.length - chosen.length,
-        frames: kept,
-        label: "each tile is labelled '<time>s <kind>' (several joined by +; black, white, clip and crush stand for near-black, near-white, clipped-high and clipped-low), time in seconds from the comp's start",
+        sheet: {
+            writtenTo: sheetPath,
+            size: [sheet.width, sheet.height],
+            tiles: kept.length,
+            omitted: all.length - chosen.length,
+            frames: kept,
+            label: "each tile is labelled '<time>s <kind>' (several joined by +; black, white, clip and crush stand for near-black, near-white, clipped-high and clipped-low), time in seconds from the comp's start",
+        },
+        outstanding: res.outstanding,
     };
 }
 //# sourceMappingURL=check-comp.js.map

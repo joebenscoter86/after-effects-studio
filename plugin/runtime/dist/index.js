@@ -16396,9 +16396,9 @@ function isRecursive(inst, stack, resolve12) {
     return PROVEN;
   stack.add(inst);
   let result = NONE;
-  const check2 = (child) => {
-    if (result !== PROVEN && child?._zod) {
-      const answer = isRecursive(child, stack, resolve12);
+  const check2 = (child2) => {
+    if (result !== PROVEN && child2?._zod) {
+      const answer = isRecursive(child2, stack, resolve12);
       if (answer > result)
         result = answer;
     }
@@ -16409,9 +16409,9 @@ function isRecursive(inst, stack, resolve12) {
       const desc = Object.getOwnPropertyDescriptor(sh, key);
       if (spread && !desc.enumerable)
         continue;
-      const child = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve12) : NONE;
-      if (child > answer)
-        answer = child;
+      const child2 = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve12) : NONE;
+      if (child2 > answer)
+        answer = child2;
     }
     return answer;
   };
@@ -28365,7 +28365,7 @@ function visit(schema, fnOrHandlers) {
     return h ? h(node2, rewritten) : node2;
   };
   const cache2 = /* @__PURE__ */ new Map();
-  function run2(s) {
+  function run(s) {
     const cached2 = cache2.get(s);
     if (cached2 === RESOLVING) {
       return new $ZodLazy({
@@ -28391,21 +28391,21 @@ function visit(schema, fnOrHandlers) {
         let changed = false;
         const newShape = {};
         for (const k of keys) {
-          const mapped = run2(oldShape[k]);
+          const mapped = run(oldShape[k]);
           if (mapped !== oldShape[k])
             changed = true;
           newShape[k] = mapped;
         }
         let newCatchall = def.catchall;
         if (def.catchall) {
-          newCatchall = run2(def.catchall);
+          newCatchall = run(def.catchall);
           if (newCatchall !== def.catchall)
             changed = true;
         }
         return changed ? clone(s, { ...def, shape: newShape, catchall: newCatchall }) : s;
       }
       case "array": {
-        const mapped = run2(def.element);
+        const mapped = run(def.element);
         return mapped === def.element ? s : clone(s, { ...def, element: mapped });
       }
       case "tuple": {
@@ -28413,14 +28413,14 @@ function visit(schema, fnOrHandlers) {
         let changed = false;
         const newItems = [];
         for (const item of oldItems) {
-          const mapped = run2(item);
+          const mapped = run(item);
           if (mapped !== item)
             changed = true;
           newItems.push(mapped);
         }
         let newRest = def.rest;
         if (def.rest) {
-          newRest = run2(def.rest);
+          newRest = run(def.rest);
           if (newRest !== def.rest)
             changed = true;
         }
@@ -28428,12 +28428,12 @@ function visit(schema, fnOrHandlers) {
       }
       case "record":
       case "map": {
-        const newKey = run2(def.keyType);
-        const newVal = run2(def.valueType);
+        const newKey = run(def.keyType);
+        const newVal = run(def.valueType);
         return newKey === def.keyType && newVal === def.valueType ? s : clone(s, { ...def, keyType: newKey, valueType: newVal });
       }
       case "set": {
-        const newVal = run2(def.valueType);
+        const newVal = run(def.valueType);
         return newVal === def.valueType ? s : clone(s, { ...def, valueType: newVal });
       }
       case "union": {
@@ -28441,7 +28441,7 @@ function visit(schema, fnOrHandlers) {
         let changed = false;
         const newOptions = [];
         for (const opt of oldOptions) {
-          const mapped = run2(opt);
+          const mapped = run(opt);
           if (mapped !== opt)
             changed = true;
           newOptions.push(mapped);
@@ -28449,8 +28449,8 @@ function visit(schema, fnOrHandlers) {
         return changed ? clone(s, { ...def, options: newOptions }) : s;
       }
       case "intersection": {
-        const newLeft = run2(def.left);
-        const newRight = run2(def.right);
+        const newLeft = run(def.left);
+        const newRight = run(def.right);
         return newLeft === def.left && newRight === def.right ? s : clone(s, { ...def, left: newLeft, right: newRight });
       }
       case "optional":
@@ -28462,23 +28462,23 @@ function visit(schema, fnOrHandlers) {
       case "nonoptional":
       case "promise":
       case "success": {
-        const newInner = run2(def.innerType);
+        const newInner = run(def.innerType);
         return newInner === def.innerType ? s : clone(s, { ...def, innerType: newInner });
       }
       case "pipe": {
-        const newIn = run2(def.in);
-        const newOut = run2(def.out);
+        const newIn = run(def.in);
+        const newOut = run(def.out);
         return newIn === def.in && newOut === def.out ? s : clone(s, { ...def, in: newIn, out: newOut });
       }
       case "function": {
-        const newInput = run2(def.input);
-        const newOutput = run2(def.output);
+        const newInput = run(def.input);
+        const newOutput = run(def.output);
         return newInput === def.input && newOutput === def.output ? s : clone(s, { ...def, input: newInput, output: newOutput });
       }
       case "lazy": {
         const original = def.getter;
         const { _cachedInner, ...rest } = def;
-        return clone(s, { ...rest, getter: () => run2(original()) });
+        return clone(s, { ...rest, getter: () => run(original()) });
       }
       // A leaf by choice: `parts` are regex fragments, not data positions.
       case "template_literal":
@@ -28509,7 +28509,7 @@ function visit(schema, fnOrHandlers) {
       }
     }
   }
-  return run2(schema);
+  return run(schema);
 }
 
 // node_modules/@modelcontextprotocol/sdk/dist/esm/server/zod-compat.js
@@ -36149,11 +36149,11 @@ function toolInputElementCount(value, max) {
     if (node2 === null || typeof node2 !== "object")
       continue;
     if (Array.isArray(node2)) {
-      for (const child of node2) {
+      for (const child2 of node2) {
         if (++count > max)
           return count;
-        if (child !== null && typeof child === "object")
-          stack.push(child);
+        if (child2 !== null && typeof child2 === "object")
+          stack.push(child2);
       }
     } else {
       for (const key in node2) {
@@ -36161,9 +36161,9 @@ function toolInputElementCount(value, max) {
           continue;
         if (++count > max)
           return count;
-        const child = node2[key];
-        if (child !== null && typeof child === "object")
-          stack.push(child);
+        const child2 = node2[key];
+        if (child2 !== null && typeof child2 === "object")
+          stack.push(child2);
       }
     }
   }
@@ -37112,7 +37112,8 @@ function buildInstanceLaunchPlan(aePath, instanceId, platform = process.platform
 }
 function buildLaunchPlan(aePath, platform = process.platform, runtimeDir = RUNTIME_DIR, dispatcherJsx = DISPATCHER_JSX) {
   if (platform === "darwin") {
-    const bootstrap = `$.global.AE_MCP_RUNTIME_DIR_OVERRIDE = ${jsxPath(runtimeDir)}; $.evalFile(${jsxPath(dispatcherJsx)});`;
+    const dispatcher = jsxPath(dispatcherJsx);
+    const bootstrap = `$.global.AE_MCP_RUNTIME_DIR_OVERRIDE = ${jsxPath(runtimeDir)}; try { if (new File(${dispatcher}).exists) $.evalFile(${dispatcher}); } catch (eBoot) { try { var _bootLog = new File(${jsxPath(runtimeDir)} + '/dispatcher.log'); if (_bootLog.open('a')) { _bootLog.writeln('[' + new Date().toString() + '] bootstrap: ' + eBoot); _bootLog.close(); } } catch (eLog) {} }`;
     return {
       command: "/usr/bin/osascript",
       args: [
@@ -38000,6 +38001,7 @@ var FileIpcTransport = class {
   setupError = null;
   instanceOption;
   spawnFn;
+  dispatcherJsx;
   scanDialogs;
   reapIntervalMs;
   emptyTmpGraceMs;
@@ -38010,6 +38012,7 @@ var FileIpcTransport = class {
     this.reapIntervalMs = options.reapIntervalMs ?? REAP_INTERVAL_MS;
     this.emptyTmpGraceMs = options.emptyTmpGraceMs ?? EMPTY_TMP_GRACE_MS;
     this.spawnFn = options.spawn ?? ((command, args, opts) => nodeSpawn(command, args, opts));
+    this.dispatcherJsx = options.dispatcherJsx ?? DISPATCHER_JSX;
     this.scanDialogs = options.scanDialogs ?? (() => scanAeWindows());
     try {
       mkdirSync(RUNTIME_DIR, { recursive: true, mode: RUNTIME_DIR_MODE });
@@ -38213,6 +38216,16 @@ var FileIpcTransport = class {
         });
       }
     }
+    if (!await this.fileExists(this.dispatcherJsx)) {
+      return failure2(
+        "TRANSPORT",
+        `the dispatcher script ${this.dispatcherJsx} is not there (the plugin was updated, moved or removed while this server ran); nothing was sent to After Effects`,
+        {
+          durationMs: Date.now() - started,
+          hint: "Restart the MCP server (or the agent host) so it runs from the plugin's current folder."
+        }
+      );
+    }
     const id = request.id;
     const requestPath = requestPathFor(id);
     const responsePath = responsePathFor(id);
@@ -38338,28 +38351,28 @@ var FileIpcTransport = class {
    * how a denied macOS Automation permission (-1743) surfaces in seconds.
    */
   launchDispatcher(state) {
-    const launch = buildLaunchPlan(this.afterFxPath);
+    const launch = buildLaunchPlan(this.afterFxPath, process.platform, RUNTIME_DIR, this.dispatcherJsx);
     state.child = null;
     state.exited = false;
     try {
-      const child = this.spawnFn(launch.command, launch.args, {
+      const child2 = this.spawnFn(launch.command, launch.args, {
         stdio: launch.diagnoseExit ? ["ignore", "ignore", "pipe"] : "ignore",
         windowsHide: true,
         detached: false
       });
-      state.child = child;
-      child.unref?.();
-      child.on("error", (err) => {
+      state.child = child2;
+      child2.unref?.();
+      child2.on("error", (err) => {
         state.error = err;
       });
       let stderr = "";
       if (launch.diagnoseExit) {
-        child.stderr?.setEncoding("utf8");
-        child.stderr?.on("data", (chunk2) => {
+        child2.stderr?.setEncoding("utf8");
+        child2.stderr?.on("data", (chunk2) => {
           if (stderr.length < 4096) stderr += chunk2;
         });
       }
-      child.on("exit", (code) => {
+      child2.on("exit", (code) => {
         state.exited = true;
         if (launch.diagnoseExit && code !== null && code !== 0 && state.error === null) {
           const detail = stderr.trim();
@@ -41748,8 +41761,6 @@ registerOp({
 
 // src/operations/project.ts
 init_registry();
-import { promises as fs4 } from "node:fs";
-import * as path5 from "node:path";
 
 // src/operations/command.ts
 init_registry();
@@ -42858,149 +42869,6 @@ registerOp({
                 findings: _r.findings, counts: _r.counts, total: _r.findings.length, kept: _r.kept, fontsChecked: _missing !== null };
         `;
   }
-});
-function liveSnapshotIO(transport2) {
-  return {
-    async execute(code, opts) {
-      const r = await transport2.execute({ code, label: opts.label, timeoutMs: opts.timeoutMs, undoGroup: false, suppressDialogs: true });
-      return r.ok ? r.result : { ok: false, error: r.error ?? `${opts.label} failed` };
-    }
-  };
-}
-var STATE_JSX = "return { ok: true, file: app.project.file ? app.project.file.fsName : null, dirty: app.project.dirty };";
-var SNAP_DIR_SUFFIX = " snapshots";
-function snapshotPlace(projectFile) {
-  const ext = /\.aepx$/i.test(projectFile) ? ".aepx" : ".aep";
-  const base = path5.basename(projectFile).replace(/\.aepx?$/i, "");
-  const folder = path5.join(path5.dirname(projectFile), `${base}${SNAP_DIR_SUFFIX}`);
-  return { base, ext, folder, index: path5.join(folder, "snapshots.json") };
-}
-function isSnapshotFile(file2) {
-  const m = /^(.*)_snapshot_\d+\.aepx?$/i.exec(path5.basename(file2));
-  return !!m && path5.basename(path5.dirname(file2)) === `${m[1]}${SNAP_DIR_SUFFIX}`;
-}
-async function readIndex(index) {
-  try {
-    return JSON.parse(await fs4.readFile(index, "utf8"));
-  } catch {
-    return [];
-  }
-}
-async function copySnapshot(projectFile, label) {
-  const { base, ext, folder, index } = snapshotPlace(projectFile);
-  await fs4.mkdir(folder, { recursive: true });
-  const list = await readIndex(index);
-  const number4 = list.reduce((m, e) => Math.max(m, e.number), 0) + 1;
-  const name = `${base}_snapshot_${String(number4).padStart(3, "0")}${ext}`;
-  await fs4.copyFile(projectFile, path5.join(folder, name));
-  const entry = { number: number4, file: name, takenAt: (/* @__PURE__ */ new Date()).toISOString(), label, fromUnsaved: false };
-  await fs4.writeFile(index, JSON.stringify([...list, entry], null, 1));
-  return { ...entry, path: path5.join(folder, name) };
-}
-async function runSnapshot(args, io) {
-  const label = typeof args.label === "string" ? args.label : null;
-  const st = await io.execute(STATE_JSX, { label: "project.snapshot state", timeoutMs: 3e4 });
-  if (!st?.ok) return { ok: false, error: st?.error ?? "could not read the project" };
-  if (!st.file) return { ok: false, error: "the project has never been saved, so there is no file to snapshot: save it first (ae_save_project with a path)" };
-  if (isSnapshotFile(st.file))
-    return { ok: false, error: `the open project is itself a snapshot (${st.file}): open the working file first` };
-  if (!st.dirty) {
-    const e = await copySnapshot(st.file, label);
-    return {
-      ok: true,
-      number: e.number,
-      path: e.path,
-      label,
-      openFile: st.file,
-      note: "A copy of the project file as last saved; After Effects and the open project were not touched. project.restore { number } puts it back."
-    };
-  }
-  if (args.unsaved !== "save-as-snapshot")
-    return {
-      ok: false,
-      error: "the project has unsaved changes, and a copy of its file on disk would miss them. Either save first (ae_save_project) and take the snapshot, or pass unsaved: 'save-as-snapshot' to save the current state as the snapshot: the user's file stays as last saved, but After Effects then has the snapshot open, and later saves go there. No command saves a copy without a dialog."
-    };
-  const { base, ext, folder, index } = snapshotPlace(st.file);
-  await fs4.mkdir(folder, { recursive: true });
-  const list = await readIndex(index);
-  const number4 = list.reduce((m, e) => Math.max(m, e.number), 0) + 1;
-  const name = `${base}_snapshot_${String(number4).padStart(3, "0")}${ext}`;
-  const target = path5.join(folder, name);
-  const r = await io.execute(
-    `app.project.save(new File(${jsxVal(target)})); return { ok: true, file: app.project.file ? app.project.file.fsName : null, dirty: app.project.dirty };`,
-    { label: "project.snapshot save as", timeoutMs: 12e4 }
-  );
-  if (!r?.ok) return { ok: false, error: r?.error ?? "the save failed" };
-  const entry = { number: number4, file: name, takenAt: (/* @__PURE__ */ new Date()).toISOString(), label, fromUnsaved: true };
-  await fs4.writeFile(index, JSON.stringify([...list, entry], null, 1));
-  return {
-    ok: true,
-    number: number4,
-    path: target,
-    label,
-    openFile: r.file,
-    userFile: st.file,
-    note: `The current state, unsaved changes included, was saved as snapshot ${number4}. The user's file (${st.file}) is as last saved. After Effects now has the snapshot open: tell the user, and open their file again before going on (its unsaved changes are in the snapshot only).`
-  };
-}
-async function runRestore(args, io) {
-  const st = await io.execute(STATE_JSX, { label: "project.restore state", timeoutMs: 3e4 });
-  if (!st?.ok) return { ok: false, error: st?.error ?? "could not read the project" };
-  if (!st.file) return { ok: false, error: "the project has never been saved, so it has no snapshots" };
-  if (isSnapshotFile(st.file))
-    return { ok: false, error: `the open project is itself a snapshot (${st.file}): open the working file, then restore` };
-  const { folder, index } = snapshotPlace(st.file);
-  const list = await readIndex(index);
-  if (!list.length) return { ok: false, error: `no snapshots beside ${st.file}` };
-  const want = typeof args.number === "number" ? args.number : list[list.length - 1].number;
-  const snap = list.find((e) => e.number === want);
-  if (!snap) return { ok: false, error: `no snapshot ${want} (there are ${list.map((e) => e.number).join(", ")})` };
-  if (st.dirty && args.discardUnsaved !== true)
-    return {
-      ok: false,
-      error: "the project has unsaved changes, and restoring closes it without saving: save first (and snapshot it), or pass discardUnsaved: true to lose them"
-    };
-  const before = await copySnapshot(st.file, `before restoring ${want}${st.dirty ? " (as last saved; unsaved changes discarded)" : ""}`);
-  const c = await io.execute("app.project.close(CloseOptions.DO_NOT_SAVE_CHANGES); return { ok: true };", {
-    label: "project.restore close",
-    timeoutMs: 6e4
-  });
-  if (!c?.ok) return { ok: false, error: c?.error ?? "could not close the project", before };
-  await fs4.copyFile(path5.join(folder, snap.file), st.file);
-  const o = await io.execute(
-    `app.open(new File(${jsxVal(st.file)})); return { ok: true, file: app.project.file ? app.project.file.fsName : null, dirty: app.project.dirty };`,
-    { label: "project.restore open", timeoutMs: 12e4 }
-  );
-  if (!o?.ok) return { ok: false, error: `the snapshot was copied over ${st.file} but it did not open: ${o?.error ?? "unknown"}`, before };
-  return {
-    ok: true,
-    restored: { number: snap.number, label: snap.label, takenAt: snap.takenAt },
-    file: o.file,
-    before: { number: before.number, path: before.path },
-    note: `${st.file} now holds snapshot ${want} and is open. Its state before the restore${st.dirty ? ", as last saved (the unsaved changes were discarded)," : ""} is snapshot ${before.number}.`
-  };
-}
-registerOp({
-  name: "project.snapshot",
-  category: "project",
-  description: "Keep a numbered copy of the project before a risky change: the way back that does not depend on undo. A saved project with no unsaved changes is copied as a file to '<project> snapshots/<project>_snapshot_NNN.aep' beside it (with snapshots.json: number, time, label); After Effects is not touched. With unsaved changes it refuses and says why, unless unsaved: 'save-as-snapshot', which saves the current state as the snapshot: the user's file stays as last saved, but After Effects then has the snapshot open (no command saves a copy without a dialog). A project never saved is refused.",
-  params: [
-    { name: "label", type: "string", description: "What the snapshot is before (shown by project.restore)", required: false },
-    { name: "unsaved", type: "string", description: "'save-as-snapshot' to snapshot unsaved changes by saving as the snapshot (the snapshot is then open)", required: false }
-  ],
-  toJsx: () => jsxFail("project.snapshot runs in Node; call it through ae_do"),
-  run: (args, transport2) => runSnapshot(args, liveSnapshotIO(transport2))
-});
-registerOp({
-  name: "project.restore",
-  category: "project",
-  description: "Put snapshot `number` (default the latest) back: snapshots the current file first (so the restore can itself be undone), closes the project without saving, copies the snapshot over the project's own file and reopens it, so the user stays in their own file. Refuses over unsaved changes unless discardUnsaved: true, and when the open project is itself a snapshot.",
-  params: [
-    { name: "number", type: "number", description: "Snapshot number (default the latest)", required: false },
-    { name: "discardUnsaved", type: "boolean", description: "Restore even though the project has unsaved changes, losing them", required: false }
-  ],
-  toJsx: () => jsxFail("project.restore runs in Node; call it through ae_do"),
-  run: (args, transport2) => runRestore(args, liveSnapshotIO(transport2))
 });
 
 // src/operations/text.ts
@@ -45307,24 +45175,24 @@ function outlineTracker(opts = {}) {
     },
     result() {
       const frozen = [];
-      let run2 = [];
+      let run = [];
       const close = () => {
-        if (run2.length >= 2) {
-          const from = run2[0].a;
-          const to = run2[run2.length - 1].b;
+        if (run.length >= 2) {
+          const from = run[0].a;
+          const to = run[run.length - 1].b;
           if (to - from + 1 >= minFrames)
             frozen.push({
               from,
               to,
               length: to - from + 1,
-              drift: r6(Math.max(...run2.map((w) => w.drift))),
-              footageChange: r6(median(run2.map((w) => w.footage)) ?? 0)
+              drift: r6(Math.max(...run.map((w) => w.drift))),
+              footageChange: r6(median(run.map((w) => w.footage)) ?? 0)
             });
         }
-        run2 = [];
+        run = [];
       };
       for (const w of windows) {
-        if (w.drift < limit) run2.push(w);
+        if (w.drift < limit) run.push(w);
         else close();
       }
       close();
@@ -47963,10 +47831,236 @@ init_registry();
 
 // src/operations/render.ts
 init_config();
-import { execFile as execFile2 } from "node:child_process";
 import { promises as fs5 } from "node:fs";
 import * as path6 from "node:path";
 init_registry();
+
+// src/operations/delivery-sound.ts
+import { execFile as execFile2 } from "node:child_process";
+import { promises as fs4 } from "node:fs";
+import * as path5 from "node:path";
+var AE_AAC_PRIMING_SAMPLES = 1024;
+var FFPROBE = ["ffprobe", "/opt/homebrew/bin/ffprobe", "/usr/local/bin/ffprobe"];
+var FFMPEG = ["ffmpeg", "/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg"];
+function runTool(cands, argv, timeoutMs = 12e4) {
+  return new Promise((resolve12) => {
+    const tryAt = (i) => {
+      if (i >= cands.length) return resolve12(null);
+      execFile2(
+        cands[i],
+        argv,
+        { timeout: timeoutMs, maxBuffer: 16 * 1024 * 1024 },
+        (err, stdout, stderr) => {
+          if (err && err.code === "ENOENT") return tryAt(i + 1);
+          resolve12({ stdout: String(stdout), stderr: String(stderr), failed: err !== null });
+        }
+      );
+    };
+    tryAt(0);
+  });
+}
+function* boxes(buf, start, end) {
+  let o = start;
+  while (o + 8 <= end) {
+    let size = buf.readUInt32BE(o);
+    const type = buf.toString("latin1", o + 4, o + 8);
+    let header = 8;
+    if (size === 1) {
+      if (o + 16 > end) return;
+      size = Number(buf.readBigUInt64BE(o + 8));
+      header = 16;
+    } else if (size === 0) size = end - o;
+    if (size < header || o + size > end) return;
+    yield { type, start: o + header, end: o + size };
+    o += size;
+  }
+}
+var child = (buf, parent, type) => {
+  for (const b of boxes(buf, parent.start, parent.end)) if (b.type === type) return b;
+  return null;
+};
+function soundTrackFromMoov(moov) {
+  const root = { type: "moov", start: 0, end: moov.length };
+  const mvhd = child(moov, root, "mvhd");
+  const movieTimescale = mvhd ? moov.readUInt32BE(mvhd.start + (moov[mvhd.start] === 1 ? 20 : 12)) : 0;
+  for (const trak of boxes(moov, 0, moov.length)) {
+    if (trak.type !== "trak") continue;
+    const mdia = child(moov, trak, "mdia");
+    if (!mdia) continue;
+    const hdlr = child(moov, mdia, "hdlr");
+    if (!hdlr || moov.toString("latin1", hdlr.start + 8, hdlr.start + 12) !== "soun") continue;
+    const mdhd = child(moov, mdia, "mdhd");
+    const mediaTimescale = mdhd ? moov.readUInt32BE(mdhd.start + (moov[mdhd.start] === 1 ? 20 : 12)) : 0;
+    const minf = child(moov, mdia, "minf");
+    const stbl = minf ? child(moov, minf, "stbl") : null;
+    const stsd = stbl ? child(moov, stbl, "stsd") : null;
+    let codec2 = "";
+    let sampleRate = 0;
+    if (stsd && stsd.start + 16 <= stsd.end) {
+      const entry = stsd.start + 8;
+      codec2 = moov.toString("latin1", entry + 4, entry + 8);
+      if (entry + 36 <= stsd.end) sampleRate = moov.readUInt32BE(entry + 32) >>> 16;
+    }
+    let edits = null;
+    const edts = child(moov, trak, "edts");
+    const elst = edts ? child(moov, edts, "elst") : null;
+    if (elst) {
+      const v1 = moov[elst.start] === 1;
+      const count = moov.readUInt32BE(elst.start + 4);
+      edits = [];
+      let o = elst.start + 8;
+      for (let i = 0; i < count && o + (v1 ? 20 : 12) <= elst.end; i++) {
+        const segmentDuration = v1 ? Number(moov.readBigUInt64BE(o)) : moov.readUInt32BE(o);
+        const mediaTime = v1 ? Number(moov.readBigInt64BE(o + 8)) : moov.readInt32BE(o + 4);
+        edits.push({ segmentDuration, mediaTime });
+        o += v1 ? 20 : 12;
+      }
+    }
+    return {
+      codec: codec2,
+      sampleRate: sampleRate >= 8e3 ? sampleRate : mediaTimescale,
+      mediaTimescale,
+      movieTimescale,
+      edits
+    };
+  }
+  return null;
+}
+async function readMoov(file2) {
+  const fh = await fs4.open(file2, "r");
+  try {
+    const { size } = await fh.stat();
+    const head = Buffer.alloc(16);
+    let o = 0;
+    while (o + 8 <= size) {
+      await fh.read(head, 0, 16, o);
+      let boxSize = head.readUInt32BE(0);
+      const type = head.toString("latin1", 4, 8);
+      let header = 8;
+      if (boxSize === 1) {
+        boxSize = Number(head.readBigUInt64BE(8));
+        header = 16;
+      } else if (boxSize === 0) boxSize = size - o;
+      if (boxSize < header) return null;
+      if (type === "moov") {
+        const body = Buffer.alloc(boxSize - header);
+        await fh.read(body, 0, body.length, o + header);
+        return body;
+      }
+      o += boxSize;
+    }
+    return null;
+  } finally {
+    await fh.close();
+  }
+}
+function soundSyncOf(t) {
+  const rate = t.sampleRate || t.mediaTimescale || 48e3;
+  let delaySeconds = 0;
+  let skipped2 = 0;
+  for (const e of t.edits ?? []) {
+    if (e.mediaTime === -1) {
+      delaySeconds += t.movieTimescale ? e.segmentDuration / t.movieTimescale : 0;
+      continue;
+    }
+    skipped2 = t.mediaTimescale ? Math.round(e.mediaTime * rate / t.mediaTimescale) : e.mediaTime;
+    break;
+  }
+  const aac = t.codec === "mp4a";
+  const priming = aac ? skipped2 > 0 ? skipped2 : AE_AAC_PRIMING_SAMPLES : 0;
+  const late2 = Math.max(0, priming - skipped2) + Math.round(delaySeconds * rate);
+  const lateMs = Math.round(late2 / rate * 1e5) / 100;
+  return {
+    codec: t.codec,
+    sampleRate: rate,
+    primingSamples: priming,
+    skippedSamples: skipped2,
+    lateBySamples: late2,
+    lateMs,
+    reading: late2 === 0 ? aac ? `the sound is on its frame: the edit list skips the AAC encoder's ${priming} samples of priming` : `the sound is on its frame (${t.codec || "uncompressed"} sound, no priming)` : `the sound plays ${late2} samples (${lateMs} ms) late` + (aac && skipped2 === 0 ? `: the AAC encoder's ${priming} samples of priming are not skipped (no edit list)` : "")
+  };
+}
+async function readSoundSync(file2) {
+  const moov = await readMoov(file2).catch(() => null);
+  if (!moov) return null;
+  const t = soundTrackFromMoov(moov);
+  return t ? soundSyncOf(t) : null;
+}
+async function alignSound(file2, sync) {
+  if (sync.lateBySamples <= 0)
+    return { aligned: true, how: "already on its frame", before: sync, after: sync };
+  const ext = path5.extname(file2);
+  const tmp = path5.join(path5.dirname(file2), `.${path5.basename(file2, ext)}.sound-aligned${ext}`);
+  const offset = (sync.lateBySamples / sync.sampleRate).toFixed(9);
+  const r = await runTool(FFMPEG, [
+    "-hide_banner",
+    "-loglevel",
+    "error",
+    "-y",
+    "-i",
+    file2,
+    "-itsoffset",
+    `-${offset}`,
+    "-i",
+    file2,
+    "-map",
+    "0",
+    "-map",
+    "-0:a",
+    "-map",
+    "1:a",
+    "-c",
+    "copy",
+    tmp
+  ]);
+  if (r === null)
+    return {
+      aligned: false,
+      how: "ffmpeg is not installed, so the file could not be remuxed",
+      before: sync
+    };
+  const giveUp = async (how) => {
+    await fs4.rm(tmp, { force: true });
+    return { aligned: false, how, before: sync };
+  };
+  if (r.failed) return giveUp(`ffmpeg could not remux the file: ${r.stderr.trim().slice(0, 300)}`);
+  const after = await readSoundSync(tmp).catch(() => null);
+  const wanted = sync.skippedSamples + sync.lateBySamples;
+  if (!after || Math.abs(after.skippedSamples - wanted) > 1 || after.lateBySamples > 1) {
+    return giveUp(
+      `the remuxed file's edit list does not skip the ${wanted} samples (${after ? `it skips ${after.skippedSamples}` : "it has no sound track that could be read"}); the delivered file was left as it was`
+    );
+  }
+  await fs4.rename(tmp, file2);
+  return {
+    aligned: true,
+    how: `remuxed with ffmpeg (-c copy, nothing re-encoded): an edit list on the sound track now skips the ${wanted} samples of priming`,
+    before: sync,
+    after
+  };
+}
+var num = (s) => s === "-inf" ? -Infinity : Number(s);
+function parseEbur128Summary(stderr) {
+  const at = stderr.lastIndexOf("Summary:");
+  if (at < 0) return null;
+  const s = stderr.slice(at);
+  const i = /Integrated loudness:\s*I:\s*(-?[\d.]+|-inf)\s*LUFS/.exec(s);
+  const lra = /Loudness range:\s*LRA:\s*(-?[\d.]+)\s*LU/.exec(s);
+  const tp = /True peak:\s*Peak:\s*(-?[\d.]+|-inf)\s*dBFS/.exec(s);
+  if (!i || !tp) return null;
+  return {
+    integratedLufs: num(i[1]),
+    loudnessRangeLu: lra ? Number(lra[1]) : null,
+    truePeakDbtp: num(tp[1])
+  };
+}
+function parseVolumedetect(stderr) {
+  const m = /mean_volume:\s*(-?[\d.]+|-inf) dB/.exec(stderr);
+  const x = /max_volume:\s*(-?[\d.]+|-inf) dB/.exec(stderr);
+  return m && x ? { meanDb: num(m[1]), maxDb: num(x[1]) } : { meanDb: null, maxDb: null };
+}
+
+// src/operations/render.ts
 var RENDER_QUEUE_UNDO_WARNING = " After this, undo and rollback are refused for the rest of the After Effects session unless acceptRenderQueueRisk: true: After Effects 2027 has gone into crash recovery on undo after scripted render-queue changes (observed twice on 2026-11-10; a precaution, not a proven cause). Save the project before undoing anything afterwards; project.open / project.new clear the block.";
 var READ_TEMPLATES_FN = `
     function _readTemplates(_item) {
@@ -48964,6 +49058,7 @@ function chooseDeliveryTemplate(preset, templates) {
     error: p.alpha ? `no movie template with alpha on this install (templates: ${templates.join(", ")}); make one in Edit > Templates > Output Module (QuickTime, Apple ProRes 4444, RGB + Alpha)` : `none of the templates this preset uses is on this install (templates: ${templates.join(", ")})`
   };
 }
+var DELIVERY_TRUE_PEAK_NOTE_DBTP = -1;
 var DELIVERY_SILENCE_TOP = 0.1;
 var DELIVERY_SILENCE_DB = -60;
 function checkDelivered(comp, file2) {
@@ -48994,6 +49089,21 @@ function checkDelivered(comp, file2) {
     } else if (lv && lv.source === "ffmpeg") sound = "sound at a mean of " + lv.meanDb + " dB (max " + lv.maxDb + " dB, ffmpeg)";
     else if (lv && lv.source === "After Effects") sound = "sound present (amplitude up to " + lv.top + ", After Effects)";
     else sound = "a sound track, whose level was not read (no ffmpeg, and After Effects could not read it)";
+    const sync = file2.sync;
+    if (file2.hasAudio && sync && sync.lateBySamples > 1) {
+      const fr = comp.frameRate ? Math.round(sync.lateBySamples / sync.sampleRate * comp.frameRate * 100) / 100 : null;
+      findings.push({
+        kind: "sound late",
+        reading: `The sound plays ${sync.lateBySamples} samples (${sync.lateMs} ms${fr !== null ? `, ${fr} of a frame` : ""}) late against the picture: ${sync.reading.replace(/^the sound plays [^:]*: ?/, "") || "the edit list delays it"}. It could not be fixed (${file2.alignment?.how ?? "not attempted"}). Install ffmpeg and deliver again, or remux the file: ffmpeg -i in.mp4 -itsoffset -${(sync.lateBySamples / sync.sampleRate).toFixed(6)} -i in.mp4 -map 0 -map -0:a -map 1:a -c copy out.mp4`
+      });
+    } else if (file2.hasAudio && sync) {
+      sound += file2.alignment?.aligned && file2.alignment.before && file2.alignment.before.lateBySamples > 0 ? `; on its frame (it was ${file2.alignment.before.lateBySamples} samples late: ${file2.alignment.how})` : `; ${sync.reading.replace(/^the sound is /, "")}`;
+    }
+    if (file2.hasAudio && file2.loudness) {
+      const l = file2.loudness;
+      sound += `; ${l.integratedLufs} LUFS integrated, true peak ${l.truePeakDbtp} dBTP${l.loudnessRangeLu !== null ? `, range ${l.loudnessRangeLu} LU` : ""} (ffmpeg ebur128)`;
+      if (l.truePeakDbtp > DELIVERY_TRUE_PEAK_NOTE_DBTP) sound += ` \u2014 the true peak is above ${DELIVERY_TRUE_PEAK_NOTE_DBTP} dBTP, which a platform's own encode can clip`;
+    }
   } else sound = file2.hasAudio ? "a sound track, though the comp has no sound on" : "no sound, as in the comp";
   const passed = findings.length === 0;
   return {
@@ -49118,6 +49228,12 @@ async function runDeliver(args, io) {
   );
   if (!r?.ok) return { ok: false, error: r?.error ?? "the render failed", template: pick2.template };
   const written = r.outputPath ?? outputPath;
+  let sync = io.soundSync ? await io.soundSync(written).catch(() => null) : null;
+  let alignment = null;
+  if (sync && sync.lateBySamples > 1) {
+    alignment = io.alignSound ? await io.alignSound(written, sync).catch((e) => ({ aligned: false, how: `the remux failed: ${e instanceof Error ? e.message : String(e)}`, before: sync })) : { aligned: false, how: "no way to remux the file here", before: sync };
+    if (alignment.aligned && io.soundSync) sync = await io.soundSync(written).catch(() => null) ?? sync;
+  }
   const probe = io.probe ? await io.probe(written).catch(() => null) : null;
   const back = await io.execute(deliverReadBackJsx({ path: written, readLevel: !(probe && probe.maxDb !== null) }), {
     label: "render.deliver read back",
@@ -49128,7 +49244,16 @@ async function runDeliver(args, io) {
   const level = probe && probe.maxDb !== null && probe.meanDb !== null ? { source: "ffmpeg", meanDb: probe.meanDb, maxDb: probe.maxDb } : typeof back.amplitudeTop === "number" ? { source: "After Effects", top: back.amplitudeTop } : null;
   const check2 = checkDelivered(
     { width: plan.width, height: plan.height, frameRate: plan.frameRate, duration: plan.duration, hasSound: plan.hasSound, soundLayers: plan.soundLayers ?? [] },
-    { width: back.width, height: back.height, frameRate: back.frameRate, duration: back.duration, hasAudio: back.hasAudio, level }
+    {
+      width: back.width,
+      height: back.height,
+      frameRate: back.frameRate,
+      duration: back.duration,
+      hasAudio: back.hasAudio,
+      level,
+      ...io.probe ? { loudness: probe?.loudness ?? null } : {},
+      ...io.soundSync ? { sync, alignment } : {}
+    }
   );
   return {
     ok: true,
@@ -49146,22 +49271,8 @@ async function runDeliver(args, io) {
     next: check2.passed ? "Delivered and checked. Watch it once at speed before calling it done." : "Stop: tell the user what the check found, in plain words, before calling it delivered."
   };
 }
-var FFPROBE = ["ffprobe", "/opt/homebrew/bin/ffprobe", "/usr/local/bin/ffprobe"];
-var FFMPEG = ["ffmpeg", "/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg"];
-function run(cands, argv) {
-  return new Promise((resolve12) => {
-    const tryAt = (i) => {
-      if (i >= cands.length) return resolve12(null);
-      execFile2(cands[i], argv, { timeout: 12e4, maxBuffer: 16 * 1024 * 1024 }, (err, stdout, stderr) => {
-        if (err && err.code === "ENOENT") return tryAt(i + 1);
-        resolve12({ stdout: String(stdout), stderr: String(stderr) });
-      });
-    };
-    tryAt(0);
-  });
-}
 async function probeDelivered(file2) {
-  const pr = await run(FFPROBE, ["-v", "error", "-show_entries", "stream=codec_type,width,height,r_frame_rate:format=duration", "-of", "json", file2]);
+  const pr = await runTool(FFPROBE, ["-v", "error", "-show_entries", "stream=codec_type,width,height,r_frame_rate:format=duration", "-of", "json", file2]);
   if (!pr) return null;
   let j;
   try {
@@ -49175,16 +49286,15 @@ async function probeDelivered(file2) {
   const [a, b] = String(v.r_frame_rate ?? "0/1").split("/").map(Number);
   let meanDb = null;
   let maxDb = null;
+  let loudness = null;
   if (hasAudio) {
-    const vd = await run(FFMPEG, ["-hide_banner", "-nostats", "-i", file2, "-map", "0:a:0", "-af", "volumedetect", "-f", "null", "-"]);
-    const m = vd ? /mean_volume:\s*(-?[\d.]+|-inf) dB/.exec(vd.stderr) : null;
-    const x = vd ? /max_volume:\s*(-?[\d.]+|-inf) dB/.exec(vd.stderr) : null;
-    if (m && x) {
-      meanDb = m[1] === "-inf" ? -Infinity : Number(m[1]);
-      maxDb = x[1] === "-inf" ? -Infinity : Number(x[1]);
+    const vd = await runTool(FFMPEG, ["-hide_banner", "-nostats", "-i", file2, "-map", "0:a:0", "-af", "volumedetect,ebur128=peak=true", "-f", "null", "-"], 6e5);
+    if (vd) {
+      ({ meanDb, maxDb } = parseVolumedetect(vd.stderr));
+      loudness = parseEbur128Summary(vd.stderr);
     }
   }
-  return { width: v.width, height: v.height, frameRate: b ? Math.round(a / b * 1e3) / 1e3 : 0, duration: Number(j.format?.duration ?? 0), hasAudio, meanDb, maxDb };
+  return { width: v.width, height: v.height, frameRate: b ? Math.round(a / b * 1e3) / 1e3 : 0, duration: Number(j.format?.duration ?? 0), hasAudio, meanDb, maxDb, loudness };
 }
 function liveDeliverIO(transport2) {
   return {
@@ -49201,13 +49311,15 @@ function liveDeliverIO(transport2) {
         return null;
       }
     },
-    probe: probeDelivered
+    probe: probeDelivered,
+    soundSync: readSoundSync,
+    alignSound
   };
 }
 registerOp({
   name: "render.deliver",
   category: "render",
-  description: "Deliver a comp with a named preset and check the file that was written. Presets: 'vertical-reel' (H.264 - Match Render Settings - 15 Mbps, else another H.264 template, else High Quality (ProRes 422) and says so), 'master-alpha' (High Quality with Alpha (ProRes 4444), else Lossless with Alpha, else another movie template whose name says alpha; refuses when there is none), 'master' (High Quality, else Lossless). High Quality, High Quality with Alpha and the three H.264 templates are what Adobe documents for a stock install; a template can be deleted, so the result says which was used and why. Renders the whole comp through one temporary queue item (other items parked), then brings the file back and compares size, frame rate and duration (within half a frame) with the comp, and the sound: when the comp has sound on, a file with no sound track, or one that reads as silence, is flagged (a four-channel take read as silence in After Effects with no warning). The level comes from ffmpeg (mean and max dB) when it is installed, else from After Effects' Convert Audio to Keyframes on the file. Returns `check` { passed, findings, reading }." + RENDER_QUEUE_UNDO_WARNING,
+  description: `Deliver a comp with a named preset and check the file that was written. Presets: 'vertical-reel' (H.264 - Match Render Settings - 15 Mbps, else another H.264 template, else High Quality (ProRes 422) and says so), 'master-alpha' (High Quality with Alpha (ProRes 4444), else Lossless with Alpha, else another movie template whose name says alpha; refuses when there is none), 'master' (High Quality, else Lossless). High Quality, High Quality with Alpha and the three H.264 templates are what Adobe documents for a stock install; a template can be deleted, so the result says which was used and why. Renders the whole comp through one temporary queue item (other items parked), then brings the file back and compares size, frame rate and duration (within half a frame) with the comp, and the sound: when the comp has sound on, a file with no sound track, or one that reads as silence, is flagged (a four-channel take read as silence in After Effects with no warning). The level comes from ffmpeg (mean and max dB) when it is installed, else from After Effects' Convert Audio to Keyframes on the file. The sound is put on its frame: After Effects' AAC encoder starts the sound with ${AE_AAC_PRIMING_SAMPLES} samples of priming and writes no edit list, so in players the voice ran ${AE_AAC_PRIMING_SAMPLES} samples (0.64 of a frame at 30 fps, 48 kHz) late; the file's edit list is read from its own boxes, and when the priming is not skipped the file is remuxed with ffmpeg (-c copy, nothing re-encoded) so an edit list skips it, read back, and replaces the file only when it does (check.file.sync, check.file.alignment). Without ffmpeg that is a 'sound late' finding with the command that fixes it. With ffmpeg the check also reports the delivered file's integrated loudness (LUFS), loudness range (LU) and true peak (dBTP) from ebur128 (check.file.loudness), and says when the true peak is above -1 dBTP; it sets no loudness target. Returns \`check\` { passed, findings, reading }.` + RENDER_QUEUE_UNDO_WARNING,
   params: [
     { name: "comp", type: "any", description: "Comp name or id", required: true },
     { name: "preset", type: "string", description: "'vertical-reel', 'master-alpha' or 'master'", required: true },
@@ -49219,6 +49331,7 @@ registerOp({
 });
 
 // src/tools/render-frame.ts
+import { randomUUID as randomUUID3 } from "node:crypto";
 import { promises as fs8 } from "node:fs";
 import * as path8 from "node:path";
 
@@ -49715,7 +49828,7 @@ async function endsWithIend(p, size) {
 async function waitForSettled(paths, opts) {
   const stableMs = opts.stableMs ?? 250;
   const start = Date.now();
-  const deadline = start + opts.timeoutMs;
+  let deadline = start + opts.timeoutMs;
   const done = /* @__PURE__ */ new Set();
   const state = paths.map(() => ({
     size: -1,
@@ -49723,6 +49836,7 @@ async function waitForSettled(paths, opts) {
     status: "missing"
   }));
   for (; ; ) {
+    const before = done.size;
     await Promise.all(
       paths.map(async (p, i) => {
         if (done.has(i)) return;
@@ -49756,6 +49870,8 @@ async function waitForSettled(paths, opts) {
         if (await endsWithIend(p, size) || Date.now() - s.changedAt >= stableMs) done.add(i);
       })
     );
+    if (opts.stallMs !== void 0 && done.size > before)
+      deadline = Math.max(deadline, Date.now() + opts.stallMs);
     if (done.size === paths.length || Date.now() > deadline) break;
     await sleep2(POLL_MS);
   }
@@ -49770,7 +49886,13 @@ async function waitForSettled(paths, opts) {
       bytes: Math.max(0, state[i].size)
     });
   }
-  return { settled, unsettled, waitedMs: Date.now() - start, timeoutMs: opts.timeoutMs };
+  return {
+    settled,
+    unsettled,
+    waitedMs: Date.now() - start,
+    timeoutMs: opts.timeoutMs,
+    ...opts.stallMs !== void 0 ? { stallMs: opts.stallMs } : {}
+  };
 }
 async function readFileSettled(filePath, timeoutMs = SETTLE_BASE_MS, stableMs = 250) {
   const res = await waitForSettled([filePath], { timeoutMs, stableMs });
@@ -50155,9 +50277,6 @@ async function colorConversion(payload, transport2) {
     return null;
   }
 }
-function iccManagedReason(workingSpace, bitsPerChannel) {
-  return `The project is colour-managed (working space '${workingSpace}'${bitsPerChannel ? `, ${bitsPerChannel} bpc` : ""}, After Effects' own colour engine): colour readings here do not match the viewer (measured: an 8-bit grey of 128 read as 67, a neutral read L* 28 for 54, and spill turned its verdict), so they are refused. Alpha-based readings (edge widths, coverage, holes, specks, the file check) read the same as in a project with no working space and are given. For colour, measure in a copy of the project set to no working space at 8 or 16 bpc, or pass colorManaged: 'off' for the raw working-space values.`;
-}
 
 // src/tools/define-tool.ts
 function defineTool(spec) {
@@ -50246,7 +50365,7 @@ var regionSchema = external_exports.object({
 var renderFrameTool = defineTool({
   name: "ae_render_frame",
   title: "Render frame",
-  description: "Render one or more frames to PNG. Use to visually verify edits. The agent's 'eyes' \u2014 pair with mutations for a visual feedback loop. Headless and deterministic. Pass `time` for one frame, or `times` for several in ONE call (motion checks): files land at <outPath stem>_<index>.png and are listed in `frames`. `contactSheet` tiles every frame into one labelled PNG (<stem>_sheet.png) so a motion check is one image; `analyze` measures each capture (uniform edge bands = black bars / transparent margins, content bounds, coverage) so off-frame elements and letterboxing are caught numerically. In color-managed projects (workingSpace != None) the capture applies AE's own display transform via a transient OCIO Display Transform adjustment layer, and the PNG comes back viewer-accurate and sRGB-tagged. Where that layer cannot be used \u2014 read-only mode, an AE without the OCIO effect, or a failed capture calibration \u2014 the result falls back to a pure-math ACES conversion or to raw values with an explicit colorWarning; check colorPipeline / colorWarning on the response. Seeing the matte: `channels` picks what the file holds \u2014 'rgb' (default, transparency composited over `over`: the comp background as AE composites it, a checkerboard or a colour such as '#ff00ff'), 'rgba' (alpha kept, straight colour), or 'alpha' (the matte as greyscale: white opaque, black transparent). `isolate` renders one layer or a list alone (cameras and lights stay as they are), then restores every layer switch, even when the render fails. `alphaChannel` reports whether the capture carried alpha at all. Reading colour: `sample` takes named points or rectangles and returns mean / min / max per channel and alpha coverage for each; `histogram` counts the whole frame per channel; `compare` (with `times` and `sample`) reports each region's difference between two of the rendered frames. Matte quality: `edge` reports, from the capture's alpha, the shares of opaque / partly transparent / transparent pixels, edge width (typical and worst, px), holes, specks, partly transparent patches that are not thin edges (an unkeyed screen, a remnant), the soft edge's colour with the comp background taken out and whether it leans to the screen colour (spill), and with `times` the frame-to-frame change in alpha along the edge, inside the solid area and outside it (flicker). Green screen: `screen`, on a render of the UN-KEYED source (Keylight View 'source' or the key off, the keyed layer isolated), reports green or blue, which pixels are screen and their share, a suggested screen colour (the median, and the colour just outside the subject), evenness on a grid (darkest and brightest cells, the spread as a ratio, the darker side) and grain. Sitting in the scene: `look` reads grain, edge width, black and white points and CIELAB colour of named regions, names the cast on a neutral (with the gains that remove it) and skin's hue, and compares an element with its plate (add grain, soften, seat the blacks); with `times` on consecutive frames, the grain from frame to frame. Watching motion: `diff` (with `times`) reports how much the picture changes between consecutive frames, where, and per `sample` region, and flags pairs that stand out (a one-frame pop, a stutter where a frame repeats, a cut); `strip: { at, frames }` renders the frames around a moment into one small contact sheet with diff on. For playback at speed, render.preview (ae_do) writes a quick movie. It reports numbers and places, never a pass or fail. Every number is labelled with its stage \u2014 'capture' (before colour conversion) or 'output' (the file as written) \u2014 described once in `measurementStages`.",
+  description: "Render one or more frames to PNG. Use to visually verify edits. The agent's 'eyes' \u2014 pair with mutations for a visual feedback loop. Headless and deterministic. Pass `time` for one frame, or `times` for several in ONE call (motion checks): files land at <outPath stem>_<call id>_<index>.png, a new call id every call, so a late write left by an earlier call can never be taken for this one's frame; `frames` lists them and `batch.files` says which frame each file holds. `contactSheet` tiles every frame into one labelled PNG (<stem>_sheet.png) so a motion check is one image; `analyze` measures each capture (uniform edge bands = black bars / transparent margins, content bounds, coverage) so off-frame elements and letterboxing are caught numerically. In color-managed projects (workingSpace != None) the capture applies AE's own display transform via a transient OCIO Display Transform adjustment layer, and the PNG comes back viewer-accurate and sRGB-tagged. Where that layer cannot be used \u2014 read-only mode, an AE without the OCIO effect, or a failed capture calibration \u2014 the result falls back to a pure-math ACES conversion or to raw values with an explicit colorWarning; check colorPipeline / colorWarning on the response. Seeing the matte: `channels` picks what the file holds \u2014 'rgb' (default, transparency composited over `over`: the comp background as AE composites it, a checkerboard or a colour such as '#ff00ff'), 'rgba' (alpha kept, straight colour), or 'alpha' (the matte as greyscale: white opaque, black transparent). `isolate` renders one layer or a list alone (cameras and lights stay as they are), then restores every layer switch, even when the render fails. `alphaChannel` reports whether the capture carried alpha at all. Reading colour: `sample` takes named points or rectangles and returns mean / min / max per channel and alpha coverage for each; `histogram` counts the whole frame per channel; `compare` (with `times` and `sample`) reports each region's difference between two of the rendered frames. Matte quality: `edge` reports, from the capture's alpha, the shares of opaque / partly transparent / transparent pixels, edge width (typical and worst, px), holes, specks, partly transparent patches that are not thin edges (an unkeyed screen, a remnant), the soft edge's colour with the comp background taken out and whether it leans to the screen colour (spill), and with `times` the frame-to-frame change in alpha along the edge, inside the solid area and outside it (flicker). Green screen: `screen`, on a render of the UN-KEYED source (Keylight View 'source' or the key off, the keyed layer isolated), reports green or blue, which pixels are screen and their share, a suggested screen colour (the median, and the colour just outside the subject), evenness on a grid (darkest and brightest cells, the spread as a ratio, the darker side) and grain. Sitting in the scene: `look` reads grain, edge width, black and white points and CIELAB colour of named regions, names the cast on a neutral (with the gains that remove it) and skin's hue, and compares an element with its plate (add grain, soften, seat the blacks); with `times` on consecutive frames, the grain from frame to frame. Watching motion: `diff` (with `times`) reports how much the picture changes between consecutive frames, where, and per `sample` region, and flags pairs that stand out (a one-frame pop, a stutter where a frame repeats, a cut); `strip: { at, frames }` renders the frames around a moment into one small contact sheet with diff on. For playback at speed, render.preview (ae_do) writes a quick movie. It reports numbers and places, never a pass or fail. Every number is labelled with its stage \u2014 'capture' (before colour conversion) or 'output' (the file as written) \u2014 described once in `measurementStages`.",
   group: "render",
   // Survives read-only mode: it writes a PNG, and the visual verification loop
   // is the whole point of an audit session. Note this is NOT a
@@ -50264,7 +50383,7 @@ var renderFrameTool = defineTool({
       "Time in seconds to render. Give exactly one of `time`, `times`, `strip` or `frames`. Each rendered frame reports `frame` (the frame the time falls in: floor(time / frameDuration), worked out in After Effects) and `frameOffset` (where in it, 0..1); `frameWarning` says when two times land on one frame or a time sits within 2% of a frame below a boundary (a rounded time renders the frame before). Times are never moved."
     ),
     times: external_exports.array(external_exports.number().nonnegative()).min(1).max(32).optional().describe(
-      "Several times in seconds, rendered in ONE call. Files are written as <outPath stem>_<index><ext> and reported in `frames` (index-aligned)."
+      "Several times in seconds, rendered in ONE call. Files are written as <outPath stem>_<call id>_<index><ext> (a new id every call) and reported in `frames` (index-aligned) and `batch.files` (path, frame, time)."
     ),
     strip: external_exports.object({
       at: external_exports.number().nonnegative().describe("The moment, seconds (snapped to the nearest frame)."),
@@ -50277,10 +50396,10 @@ var renderFrameTool = defineTool({
       "'What happens around this moment' in one call: N consecutive frames around `at`, worked out from the comp's frame rate inside After Effects and rendered through the `times` path (files <stem>_<index>, listed in `frames`), tiled small into the contact sheet, with `diff` and its sheet on (pass `diff: false` to skip, or diff options to tune). The window is shifted to stay inside the comp; `strip` in the response says where it landed. Instead of `time` / `times`."
     ),
     frames: external_exports.array(external_exports.number().int().nonnegative()).min(1).max(32).optional().describe(
-      "Frame numbers (0 = the comp's first frame) instead of times: each is rendered a quarter of a frame inside it, so a time never lands on the frame before. Through the `times` path: files <stem>_<index>, reported in `frames` with their `frame`. Instead of `time` / `times` / `strip`."
+      "Frame numbers (0 = the comp's first frame) instead of times: each is rendered a quarter of a frame inside it, so a time never lands on the frame before. Through the `times` path: files <stem>_<call id>_<index>, reported in `frames` and `batch.files` with their `frame`. Instead of `time` / `times` / `strip`."
     ),
     outPath: external_exports.string().describe(
-      "Absolute path to write the PNG. Parent directory is created if missing. With `times`, used as the naming stem for every frame."
+      "Absolute path to write the PNG. Parent directory is created if missing. With `times`, used as the naming stem for every frame (plus a call id, new every call)."
     ),
     useDisplayStartTime: external_exports.boolean().optional().describe("If true, times are interpreted relative to comp.displayStartTime. Default false."),
     colorManaged: external_exports.enum(["auto", "off"]).optional().describe(
@@ -50688,14 +50807,15 @@ function sheetPathFor(abs, explicit) {
   const stem = abs.slice(0, abs.length - (path8.extname(abs).length || 0));
   return `${stem}_sheet${ext}`;
 }
-function framePaths(abs, count, multi) {
+function framePaths(abs, count, multi, call = newCallId()) {
   if (!multi) return [abs];
   const ext = path8.extname(abs) || ".png";
   const stem = abs.slice(0, abs.length - (path8.extname(abs).length || 0));
   const out = [];
-  for (let i = 0; i < count; i++) out.push(`${stem}_${i}${ext}`);
+  for (let i = 0; i < count; i++) out.push(`${stem}_${call}_${i}${ext}`);
   return out;
 }
+var newCallId = () => randomUUID3().slice(0, 8);
 var ISOLATE_FN = `
     function _refText(ref) {
         if (typeof ref === "string") return '"' + ref + '"';
@@ -50769,8 +50889,6 @@ function renderJsx(args, times, paths, tryOcio, isolate, strip = null, frameNums
         var _missingMedia = _missingSources(comp);
         if (_missingMedia.length) return { ok: false, error: "source media missing for comp " + comp.name + "; restore or relink before rendering", missingFootage: _missingMedia };
         var _ws = AE.safeGet(function () { return app.project.workingSpace; }, "None");
-        // 0: Adobe's own (ICC) colour management; 1: OCIO; null before After Effects 24.
-        var _cms = AE.safeGet(function () { return Number(app.project.colorManagementSystem); }, null);
         var _times = ${jsxVal(times)};
         var _strip = ${jsxVal(strip === null ? null : { at: strip.at, offsets: strip.offsets })};
         var _frameNums = ${jsxVal(frameNums)};
@@ -50810,8 +50928,7 @@ function renderJsx(args, times, paths, tryOcio, isolate, strip = null, frameNums
             if (_clamped > 0) _stripOut.note = "the comp is shorter than the strip: the last " + _clamped + " frames repeat the comp's last frame (they read as stutters in diff)";
         }
         var _useDst = ${jsxVal(!!args.useDisplayStartTime)};
-        // The OCIO Display Transform only under OCIO: under Adobe's ICC engine it does not give the viewer's picture (measured 2026-11-12).
-        var _useOcio = ${jsxVal(tryOcio)} && _ws !== "None" && _ws !== "" && _cms === 1;
+        var _useOcio = ${jsxVal(tryOcio)} && _ws !== "None" && _ws !== "";
         var _isolate = ${jsxVal(isolate)};
         var _frames = [];
         function _renderAll(kind) {
@@ -50870,7 +50987,6 @@ function renderJsx(args, times, paths, tryOcio, isolate, strip = null, frameNums
         if (_allOk) {
             _out.compName = comp.name;
             _out.workingSpace = _ws;
-            _out.colorManagementSystem = _cms;
             _out.bitsPerChannel = AE.safeGet(function () { return app.project.bitsPerChannel; }, 8);
             _out.projectFile = app.project.file ? app.project.file.fsName.replace(/\\\\/g, "/") : null;
             _out.bgColor = AE.safeGet(function () { return [comp.bgColor[0], comp.bgColor[1], comp.bgColor[2]]; }, null);
@@ -50884,7 +51000,8 @@ async function nativeFlow(args, opts, abs, transport2, strip = null) {
   const multi = args.times !== void 0 || strip !== null || frameNums !== null;
   const times = strip !== null || frameNums !== null ? null : args.times ?? [args.time];
   const count = strip?.frames ?? frameNums?.length ?? times?.length ?? 1;
-  const paths = framePaths(abs, count, multi);
+  const callId = newCallId();
+  const paths = framePaths(abs, count, multi, callId);
   const contactSheet = args.contactSheet ?? (strip !== null ? {} : void 0);
   const before = await stampFiles(paths);
   const tryOcio = args.colorManaged !== "off" && !readOnlyMode();
@@ -50932,34 +51049,7 @@ async function nativeFlow(args, opts, abs, transport2, strip = null) {
     if (multi) frames[i][key] = value;
     else payload[key] = value;
   };
-  const iccRefused = args.colorManaged !== "off" && typeof payload.workingSpace === "string" && payload.workingSpace !== "None" && payload.workingSpace !== "" && payload.colorManagementSystem !== 1;
-  let analyze = args.analyze === true;
-  let spillRefused = null;
-  if (iccRefused) {
-    const refused = [];
-    const reason = iccManagedReason(payload.workingSpace, payload.bitsPerChannel);
-    if (opts.sample) {
-      if (opts.sample.stages.includes("output")) refused.push("sample (output)");
-      const stages2 = opts.sample.stages.filter((st) => st === "capture");
-      opts = { ...opts, sample: stages2.length ? { ...opts.sample, stages: stages2 } : null };
-    }
-    if (opts.look) refused.push("look");
-    if (opts.histogram) refused.push("histogram");
-    if (opts.screen) refused.push("screen");
-    if (opts.diff) refused.push("diff");
-    if (analyze) refused.push("analyze");
-    if (opts.edge) {
-      refused.push("edge spill");
-      spillRefused = reason;
-    }
-    if (opts.channels === "rgba") refused.push("channels rgba");
-    if (opts.overGiven) refused.push("over");
-    opts = { ...opts, look: null, histogram: null, screen: null, diff: null, channels: "rgb", overGiven: false };
-    analyze = false;
-    payload.colorRefused = { reason, refused };
-    payload.colorWarning = `${reason} The written files are the raw captures (working-space values at the capture's scale), not the viewer's picture.`;
-  }
-  const managed = args.colorManaged !== "off" && !iccRefused;
+  const managed = args.colorManaged !== "off";
   let convert = null;
   let backdrop = null;
   if (managed) {
@@ -50978,6 +51068,20 @@ async function nativeFlow(args, opts, abs, transport2, strip = null) {
     before: before.slice(0, written.length)
   });
   payload.captureSettle = settle2;
+  const listBatch = () => {
+    if (!multi) return;
+    payload.batch = {
+      id: callId,
+      files: frames.map((f, i) => ({
+        index: i,
+        path: f.writtenTo ?? paths[i],
+        frame: f.frame ?? null,
+        time: f.time ?? null,
+        ok: f.ok === true,
+        ...f.ok === true ? {} : { error: f.error ?? "not captured" }
+      }))
+    };
+  };
   if (settle2.unsettled.length > 0) {
     const secs3 = (settle2.timeoutMs / 1e3).toFixed(1);
     for (const u of settle2.unsettled) {
@@ -50987,12 +51091,14 @@ async function nativeFlow(args, opts, abs, transport2, strip = null) {
     }
     payload.captureWarning = `${settle2.unsettled.length} of ${written.length} captures did not finish writing within ${secs3} s (saveFrameToPng writes asynchronously): frames ${settle2.unsettled.map((u) => u.index).join(", ")}. ` + (settle2.settled.length > 0 ? "The others were measured; see captureSettle, or render the missing ones again with a longer settleTimeoutMs." : "Nothing could be measured; try again with a longer settleTimeoutMs.");
     if (settle2.settled.length === 0) {
+      listBatch();
       if (args.analyze) payload.analysisWarning = "analysis failed: no capture finished writing";
       if (managed)
         payload.colorWarning = "color post-processing failed, file left as raw capture: no capture finished writing";
       return toMcpResult(result);
     }
   }
+  listBatch();
   const finished = new Set(settle2.settled);
   const keep = new Set(opts.compare ? [opts.compare.from, opts.compare.to] : []);
   const kept = /* @__PURE__ */ new Map();
@@ -51036,7 +51142,6 @@ async function nativeFlow(args, opts, abs, transport2, strip = null) {
           const t = resolveEdgeThresholds(opts.edge, capture.width, capture.height);
           payload.edgeThresholds ??= t;
           const { report, frame } = measureEdge(capture, bg ?? [0, 0, 0], t);
-          if (spillRefused !== null) report.spill = { refused: spillRefused };
           put(i, "edge", report);
           edgeMeasured++;
           if (edgePrev !== null && edgePrev.index === i - 1) {
@@ -51062,7 +51167,7 @@ async function nativeFlow(args, opts, abs, transport2, strip = null) {
         payload.screenWarning = `screen measurement failed: ${err instanceof Error ? err.message : String(err)}`;
       }
     }
-    if (analyze) {
+    if (args.analyze) {
       try {
         put(i, "analysis", analyzeFrame(capture));
       } catch (err) {
@@ -51939,6 +52044,8 @@ var OBJECT_MATTE_SETTINGS = {
     doc: "Decontaminate Edge Colors: true takes the background's colour out of the edge. On green-screen footage it moved the edge's green excess from -0.0005 to -0.009; turn it on when ae_render_frame's edge report shows the edge leaning to the screen colour. With no green screen, on the half-size take, it took the wall's colour in the hair's edge from 56% to 38% at the top and 23% at the side (look edgeColour against the wall), with no change to the alpha: the default for an Object Matte cut-out (keying.md Recipe 3)"
   }
 };
+var SUBJECT_ATTENDED_NOTE = "The cut-out needs the user's own click in After Effects (the Object Matte Tool); no script can make it, so it cannot be done unattended. Get the click, and check it with subject.check, before the user leaves: an overnight or unattended run cannot start a cut-out, only carry on from one the user has clicked.";
+var SUBJECT_WHOLE_PIECE_NOTE = "For a whole piece, scale the take to delivery size first (a delivery-size copy of the footage, before the click: sourceAdvice), then render the cut-out in halves, emptying After Effects' disk cache between them: two halves of a 43.5 s piece at 1088 x 1920 took about 4.3 minutes and 12 GB of cache each. Check free disk space before each half. subject.render_cutout renders the layer's whole span in one call; it has no range of its own yet.";
 var SUBJECT_MATTE_NOTICE = "One step here needs you in After Effects: a single click on the subject, about ten seconds. Everything before and after it I do.";
 function subjectMatteSteps(opts = {}) {
   const clip = opts.clip === void 0 ? "the clip's name" : `"${opts.clip}"`;
@@ -52145,7 +52252,7 @@ var REMOVE_NOTE = "To take out one wrong selection (a second click that landed o
 registerOp({
   name: "subject.prepare",
   category: "subject",
-  description: "Get a footage layer ready for the one manual step of a subject matte (After Effects 2027's Object Matte, the old Roto Brush): the user clicks the subject once with the Object Matte Tool; a script cannot make that selection. This call brings the comp forward, chooses View > Resolution > Full and reads the comp's resolution back (viewerResolution: verified only when it reads [1, 1] after the command and after the Layer panel opens; starting from the viewer's Auto setting is not verified), moves to `time` (default: the layer's in point; pick a frame where the subject is clearly visible), selects only that layer and opens it in the Layer panel. It adds no effect and does not pick the tool. Returns notice and steps (the user's instructions, with the clip's name and the subject filled in) and userMessage (both as one text): relay them to the user word for word. Also returns did (the steps done), couldNotDo (any that failed, with the error; beforeSteps then says what to tell the user first) and existing (an Object Matte already on the layer and its selections). Before any of that matters, read sourceAdvice and soundAdvice (or soundNote) when they are there. sourceAdvice: the layer's footage is at least 1.5 times the comp's size in both directions and scaled down to fit (a 2176 x 3840 take at 50% in a 1080 x 1920 comp); it gives the sizes, the disk cache a render needs at each, and the delivery-size copy to make and matte instead, before the click (replacing the footage under a matte freezes it), and relay then says not to give the steps yet. soundAdvice: the file's sound has more than two channels, or After Effects reports none while the file has some (a four-channel take with the voice on the first read as silence, with no warning); it gives the ffmpeg line that extracts the voice to a mono WAV. The file is only read (ffprobe), never changed. After the user says done, run subject.check before building anything. Verified in After Effects 27.0 on a real take, apart from the resolution step as written here; sourceAdvice and soundAdvice are worked out in Node from what After Effects reports and are tested offline.",
+  description: "Get a footage layer ready for the one manual step of a subject matte (After Effects 2027's Object Matte, the old Roto Brush): the user clicks the subject once with the Object Matte Tool; a script cannot make that selection. " + SUBJECT_ATTENDED_NOTE + " " + SUBJECT_WHOLE_PIECE_NOTE + " This call brings the comp forward, chooses View > Resolution > Full and reads the comp's resolution back (viewerResolution: verified only when it reads [1, 1] after the command and after the Layer panel opens; starting from the viewer's Auto setting is not verified), moves to `time` (default: the layer's in point; pick a frame where the subject is clearly visible), selects only that layer and opens it in the Layer panel. It adds no effect and does not pick the tool. Returns notice and steps (the user's instructions, with the clip's name and the subject filled in) and userMessage (both as one text): relay them to the user word for word. Also returns did (the steps done), couldNotDo (any that failed, with the error; beforeSteps then says what to tell the user first) and existing (an Object Matte already on the layer and its selections). Before any of that matters, read sourceAdvice and soundAdvice (or soundNote) when they are there. sourceAdvice: the layer's footage is at least 1.5 times the comp's size in both directions and scaled down to fit (a 2176 x 3840 take at 50% in a 1080 x 1920 comp); it gives the sizes, the disk cache a render needs at each, and the delivery-size copy to make and matte instead, before the click (replacing the footage under a matte freezes it), and relay then says not to give the steps yet. soundAdvice: the file's sound has more than two channels, or After Effects reports none while the file has some (a four-channel take with the voice on the first read as silence, with no warning); it gives the ffmpeg line that extracts the voice to a mono WAV. The file is only read (ffprobe), never changed. After the user says done, run subject.check before building anything. Verified in After Effects 27.0 on a real take, apart from the resolution step as written here; sourceAdvice and soundAdvice are worked out in Node from what After Effects reports and are tested offline.",
   params: [
     ...compLayerParams,
     {
@@ -52518,9 +52625,9 @@ function alikeRegions(a, b) {
   return small > 0 && big / small <= 2;
 }
 var isFrozenEntry = (e) => !("box" in e) && e.kind === "frozen";
-function frozenAccepted(run2, accept) {
+function frozenAccepted(run, accept) {
   return accept.some(
-    (e) => isFrozenEntry(e) && (e.from === void 0 || e.from <= run2.to) && (e.to === void 0 || e.to >= run2.from)
+    (e) => isFrozenEntry(e) && (e.from === void 0 || e.from <= run.to) && (e.to === void 0 || e.to >= run.from)
   );
 }
 function acceptedBy(f, accept) {
@@ -52686,6 +52793,8 @@ async function runSubjectPrepare(args, io) {
   if (sound.soundNote) res.soundNote = sound.soundNote;
   if (sound.soundAdvice || sound.soundNote)
     res.relay = `${res.relay} Sound: tell the user what ${sound.soundAdvice ? "soundAdvice" : "soundNote"} says, and deal with it before the render.`;
+  res.attended = SUBJECT_ATTENDED_NOTE;
+  res.wholePiece = SUBJECT_WHOLE_PIECE_NOTE;
   return res;
 }
 var RENDER_BYTES_PER_HD_FRAME = 76e4;
@@ -52836,13 +52945,13 @@ var frozenOpts = (args) => ({
   limit: typeof args.frozenLimit === "number" ? args.frozenLimit : FROZEN_DEFAULTS.limit,
   minFrames: typeof args.frozenFrames === "number" ? args.frozenFrames : FROZEN_DEFAULTS.minFrames
 });
-function frozenFinding(run2, pictures) {
-  const moved = run2.footageChange > 1e-3;
+function frozenFinding(run, pictures) {
+  const moved = run.footageChange > 1e-3;
   return {
     kind: "frozen",
-    ...run2,
+    ...run,
     pictures,
-    reading: `The cut-out's outline did not move for ${run2.length} frames` + (moved ? ` while the footage did (frames ${run2.from} to ${run2.to}; ${(run2.footageChange * 100).toFixed(1)}% of the frame changed inside the outline)` : ` (frames ${run2.from} to ${run2.to}), and the picture inside it barely changed either`) + `. The selection is probably not tracking: this happens when the layer's footage is replaced after the click. Click again on this footage (subject.prepare, then the steps). If the subject is genuinely motionless (a product on a table, a locked-off object) this is expected: pass accept: [{ kind: "frozen" }] to wave it through once seen.`
+    reading: `The cut-out's outline did not move for ${run.length} frames` + (moved ? ` while the footage did (frames ${run.from} to ${run.to}; ${(run.footageChange * 100).toFixed(1)}% of the frame changed inside the outline)` : ` (frames ${run.from} to ${run.to}), and the picture inside it barely changed either`) + `. The selection is probably not tracking: this happens when the layer's footage is replaced after the click. Click again on this footage (subject.prepare, then the steps). If the subject is genuinely motionless (a product on a table, a locked-off object) this is expected: pass accept: [{ kind: "frozen" }] to wave it through once seen.`
   };
 }
 var QUICK_NOTE = "Quick check: the click frames and two frames either side, which After Effects renders in seconds. A missed object, an enclosed gap and a second click on the same thing show there. To look across the clip, render the cut-out once (subject.render_cutout) and check the file (subject.check_file); across: true checks the live matte across the clip instead, which takes minutes (4 to 9 for nine frames on a 2176 x 3840 take), because After Effects recomputes the matte on every capture.";
@@ -53214,8 +53323,8 @@ function closeNote(pairs) {
   return `Clicks: ${closeHead(pairs)}. Nothing is missing, so they need not change anything; they are close together and probably redundant, and can be removed (notes gives the commands).`;
 }
 function laterClicks(pairs) {
-  const num = (n) => Number(/(\d+)\s*$/.exec(n)?.[1] ?? -1);
-  return [...new Set(pairs.map((p) => num(p.a) >= num(p.b) ? p.a : p.b))];
+  const num2 = (n) => Number(/(\d+)\s*$/.exec(n)?.[1] ?? -1);
+  return [...new Set(pairs.map((p) => num2(p.a) >= num2(p.b) ? p.a : p.b))];
 }
 function closeNoteAdvice(pairs) {
   return "To remove the redundant clicks, take the later one of each pair out: " + laterClicks(pairs).map((n) => `subject.remove_selection { selection: "${n}" }`).join(", then ") + ". Measured twice: on the take of 2026-11-11 the matte did not change when the redundant click was removed (opaque share 0.3083 before and after on frame 0); on 2026-11-12, removing five of twelve close clicks left the click frame identical and the opaque share the same on the frames near it, with only a thin band along the outline different elsewhere (After Effects tracking again after the change). Then run subject.check again. Leaving them in is also fine.";
@@ -53333,13 +53442,13 @@ async function runSubjectCheck(args, io) {
   );
   if ("unstable" in recheck) findings.push(...recheck.unstable);
   const frozenAcceptedRuns = [];
-  for (const run2 of outlineResult.frozen) {
-    if (frozenAccepted(run2, accept)) {
-      frozenAcceptedRuns.push({ kind: "frozen", ...run2 });
+  for (const run of outlineResult.frozen) {
+    if (frozenAccepted(run, accept)) {
+      frozenAcceptedRuns.push({ kind: "frozen", ...run });
       continue;
     }
     const pic = (f) => readings.find((r) => r.frame === f)?.picture ?? null;
-    findings.push(frozenFinding(run2, [pic(run2.from), pic(run2.to)]));
+    findings.push(frozenFinding(run, [pic(run.from), pic(run.to)]));
   }
   const somethingMissing = findings.length > 0;
   const notes = [];
@@ -53785,7 +53894,7 @@ var overParam = {
 registerOp({
   name: "subject.check",
   category: "subject",
-  description: `Proof a subject matte after the user says done, before anything else is built. Renders the cut-out with its alpha (ae_render_frame isolate, channels 'rgba'; with the layer's gap fill from subject.fill_gaps when the comp has one, reported as fillLayer) at the click frames and frames across the clip, finds holes (regions below opaque the frame edge cannot reach) and openings (regions closed off only by the subject and the frame edge: the missed microphone of 2026-11-11 ran off the bottom of the frame), draws each frame over a flat colour and one contact sheet, and returns picture (the sheet), findings, accepted, checked {frames, of}, inOut (a plain statement of what is in and what is out), frames, clicks and stop. A hole or opening of holeLimit px or more (default ${CUTOUT_HOLE_LIMIT}, at the comp's size) is a finding; so are frames that did not render (kind 'not-checked': a frame that was not rendered is never counted as clean). Two clicks close together are a finding only when something is missing too (a click meant for it may have landed on the subject again); otherwise they are the pieces of something clicked one by one, listed in notes, and do not set stop. With stop true: say in your reply what is out, in plain words, and give the picture's path, before the next call. \`accept\` entries (earlier findings the user called fine, such as a real gap between an arm and the body) are not counted again. Each frame with a finding is rendered once more at the end; a frame whose cut-out differs between the two renders is a finding of kind 'unstable' (seen once on 2026-11-11, cause unknown; agreement may come from the cache and does not prove a frame stable). A selection count is not a check. It can take minutes: 20 to 40 s a frame the first time on a 2176 x 3840 take; say so to the user before it runs. \`timing\` says where the time went (status, each render's After Effects call, settle wait and Node work, the pixel work, the total) and \`timeReading\` says it in one sentence.`,
+  description: `Proof a subject matte after the user says done, before anything else is built. Run it while the user is still there: what it finds can need another click, and a click cannot be made unattended. Renders the cut-out with its alpha (ae_render_frame isolate, channels 'rgba'; with the layer's gap fill from subject.fill_gaps when the comp has one, reported as fillLayer) at the click frames and frames across the clip, finds holes (regions below opaque the frame edge cannot reach) and openings (regions closed off only by the subject and the frame edge: the missed microphone of 2026-11-11 ran off the bottom of the frame), draws each frame over a flat colour and one contact sheet, and returns picture (the sheet), findings, accepted, checked {frames, of}, inOut (a plain statement of what is in and what is out), frames, clicks and stop. A hole or opening of holeLimit px or more (default ${CUTOUT_HOLE_LIMIT}, at the comp's size) is a finding; so are frames that did not render (kind 'not-checked': a frame that was not rendered is never counted as clean). Two clicks close together are a finding only when something is missing too (a click meant for it may have landed on the subject again); otherwise they are the pieces of something clicked one by one, listed in notes, and do not set stop. With stop true: say in your reply what is out, in plain words, and give the picture's path, before the next call. \`accept\` entries (earlier findings the user called fine, such as a real gap between an arm and the body) are not counted again. Each frame with a finding is rendered once more at the end; a frame whose cut-out differs between the two renders is a finding of kind 'unstable' (seen once on 2026-11-11, cause unknown; agreement may come from the cache and does not prove a frame stable). A selection count is not a check. It can take minutes: 20 to 40 s a frame the first time on a 2176 x 3840 take; say so to the user before it runs. \`timing\` says where the time went (status, each render's After Effects call, settle wait and Node work, the pixel work, the total) and \`timeReading\` says it in one sentence.`,
   params: [
     ...compLayerParams,
     {
@@ -54229,7 +54338,8 @@ async function runRenderCutout(args, io) {
     sidecar: sidecarWritten,
     ...fillOff ? { fillWarning: `${fillOffText} Rendered anyway (withoutFill: true).` } : {},
     cacheNote: `This render should have added about ${gb(cacheBytes)} to After Effects' disk cache (one 16-bit frame of the source per frame${matteCopies > 1 ? `, for each of the ${matteCopies === 2 ? "two" : matteCopies} copies of the matte subject.soften_edge built` : ""}). Nothing was deleted and no preference was changed.`,
-    next: (fillOff ? "The gap fill was off, so the file has its gaps open; tell the user before building on it. " : "") + `Check the file before building on it: subject.check_file { path: "${r.outputPath}", outDir }. Then subject.use_cutout puts it in the comp in place of the live matte. Once the file is checked, the cache this work wrote is no longer needed: tell the user to purge it (Edit > Purge > All Memory & Disk Cache in After Effects); it should free about ${gb(cacheBytes)} or more.`
+    next: (fillOff ? "The gap fill was off, so the file has its gaps open; tell the user before building on it. " : "") + `Check the file before building on it: subject.check_file { path: "${r.outputPath}", outDir }. Then subject.use_cutout puts it in the comp in place of the live matte. Once the file is checked, the cache this work wrote is no longer needed: tell the user to purge it (Edit > Purge > All Memory & Disk Cache in After Effects); it should free about ${gb(cacheBytes)} or more.`,
+    wholePiece: SUBJECT_WHOLE_PIECE_NOTE
   };
 }
 var CHECK_FILE_MAX_FRAMES = 400;
@@ -54301,16 +54411,16 @@ function speckAccepted(p, accept) {
 }
 function longestSpeckRun(t) {
   const touch = (a, b) => a.x <= b.x + b.width && b.x <= a.x + a.width && a.y <= b.y + b.height && b.y <= a.y + a.height;
-  const run2 = /* @__PURE__ */ new Map();
+  const run = /* @__PURE__ */ new Map();
   let best = 0;
   const sorted = t.pieces.slice().sort((a, b) => a.frame - b.frame);
   sorted.forEach((p, i) => {
     let len = 1;
     sorted.forEach((q, j) => {
       if (q.frame === p.frame - 1 && touch(q.box, p.box))
-        len = Math.max(len, (run2.get(j) ?? 1) + 1);
+        len = Math.max(len, (run.get(j) ?? 1) + 1);
     });
-    run2.set(i, len);
+    run.set(i, len);
     best = Math.max(best, len);
   });
   return best;
@@ -54531,19 +54641,19 @@ async function runCheckFile(args, io) {
       }
     }
     outlineResult = outline.result();
-    for (const run2 of outlineResult.frozen) {
-      if (frozenAccepted(run2, accept)) {
-        frozenAcceptedRuns.push({ kind: "frozen", ...run2 });
+    for (const run of outlineResult.frozen) {
+      if (frozenAccepted(run, accept)) {
+        frozenAcceptedRuns.push({ kind: "frozen", ...run });
         continue;
       }
-      const ends = [run2.from, run2.to];
+      const ends = [run.from, run.to];
       const again = await renderChunked(
         io,
         { compNameOrId: setup.compId, channels: "rgba" },
         ends,
         perFrameMs,
         outDir,
-        `check-file-frozen-${run2.from}`,
+        `check-file-frozen-${run.from}`,
         renders
       );
       const pics = [];
@@ -54552,7 +54662,7 @@ async function runCheckFile(args, io) {
         pics.push(r?.file ? await overPicture(io, r.file, over) : null);
         if (r?.file && !keepCaptures) await fs9.rm(r.file, { force: true });
       }
-      frozenFindings.push(frozenFinding(run2, pics));
+      frozenFindings.push(frozenFinding(run, pics));
     }
   } finally {
     cleanup = await io.execute(
@@ -54605,11 +54715,11 @@ async function runCheckFile(args, io) {
   const seenFrames = [...seen.keys()].sort((a, b) => a - b);
   let seenRun = 0;
   {
-    let run2 = 0;
+    let run = 0;
     let last = -1;
     for (const f of frames) {
-      run2 = seen.has(f) ? last >= 0 && seen.has(last) ? run2 + 1 : 1 : 0;
-      seenRun = Math.max(seenRun, run2);
+      run = seen.has(f) ? last >= 0 && seen.has(last) ? run + 1 : 1 : 0;
+      seenRun = Math.max(seenRun, run);
       last = f;
     }
   }
@@ -54887,7 +54997,7 @@ function liveFileIO(transport2) {
 registerOp({
   name: "subject.render_cutout",
   category: "subject",
-  description: "Render the cut-out once to a movie with alpha, so the piece is built on a file that cannot change: the layer with its gap fill when there is one, alone (every other layer's picture switched off for the render and put back afterwards, even when it fails; cameras and lights left as they are), over the layer's span, through one temporary render-queue item (other queue items are parked). Picks an output template that writes a movie with alpha ('High Quality with Alpha', 'Lossless with Alpha', or another whose name says alpha; image sequences are not used) and refuses, naming the templates, when none does. Returns outputPath, frameCount, renderSeconds, outputTemplate, templateChoice, layersSwitched, restored, sound and timing. Measured: 390 s for 320 frames of a 2176 x 3840 take, about one pass through the clip; tell the user before it runs. The movie is in comp space. The original layer keeps the sound; whether the movie carries a sound track is not promised. The kept layers render switched as they are: when the gap fill layer exists and is switched off, it refuses before rendering and says so (the file would come out with the gaps open), unless withoutFill: true, and then the result's fillWarning says the gaps are open (not checked live). Before rendering it checks that each drive has room for its share, the movie and After Effects' disk cache (about one 16-bit frame of the source per frame: 19 GB measured for 320 frames of a 2176 x 3840 take), plus 3 GB; `space` and `cacheNote` give the numbers, and `next` says to purge the cache once the file is checked." + RENDER_QUEUE_UNDO_WARNING,
+  description: "Render the cut-out once to a movie with alpha, so the piece is built on a file that cannot change: the layer with its gap fill when there is one, alone (every other layer's picture switched off for the render and put back afterwards, even when it fails; cameras and lights left as they are), over the layer's span, through one temporary render-queue item (other queue items are parked). Picks an output template that writes a movie with alpha ('High Quality with Alpha', 'Lossless with Alpha', or another whose name says alpha; image sequences are not used) and refuses, naming the templates, when none does. Returns outputPath, frameCount, renderSeconds, outputTemplate, templateChoice, layersSwitched, restored, sound and timing. Measured: 390 s for 320 frames of a 2176 x 3840 take, about one pass through the clip; tell the user before it runs. " + SUBJECT_WHOLE_PIECE_NOTE + " It renders the matte the user clicked; it cannot make the click (subject.prepare): get that before an unattended render. The movie is in comp space. The original layer keeps the sound; whether the movie carries a sound track is not promised. The kept layers render switched as they are: when the gap fill layer exists and is switched off, it refuses before rendering and says so (the file would come out with the gaps open), unless withoutFill: true, and then the result's fillWarning says the gaps are open (not checked live). Before rendering it checks that each drive has room for its share, the movie and After Effects' disk cache (about one 16-bit frame of the source per frame: 19 GB measured for 320 frames of a 2176 x 3840 take), plus 3 GB; `space` and `cacheNote` give the numbers, and `next` says to purge the cache once the file is checked." + RENDER_QUEUE_UNDO_WARNING,
   params: [
     ...compLayerParams,
     {
@@ -55228,16 +55338,16 @@ async function runSoftenEdge(args, io) {
   const outDir = args.outDir;
   if (typeof outDir !== "string" || !path9.isAbsolute(outDir))
     return { ok: false, error: "`outDir` must be an absolute folder for the pictures" };
-  const num = (k, d) => typeof args[k] === "number" && Number.isFinite(args[k]) ? args[k] : d;
+  const num2 = (k, d) => typeof args[k] === "number" && Number.isFinite(args[k]) ? args[k] : d;
   const D = SOFT_EDGE_DEFAULTS;
   const settings = {
-    radius: num("radius", D.radius),
-    smooth: num("smooth", D.smooth),
-    chatterReduction: num("chatterReduction", D.chatterReduction),
+    radius: num2("radius", D.radius),
+    smooth: num2("smooth", D.smooth),
+    chatterReduction: num2("chatterReduction", D.chatterReduction),
     decontaminate: typeof args.decontaminate === "boolean" ? args.decontaminate : D.decontaminate,
-    feather: num("feather", D.feather)
+    feather: num2("feather", D.feather)
   };
-  const outsideLimit = num("outsideLimit", D.outsideLimit);
+  const outsideLimit = num2("outsideLimit", D.outsideLimit);
   const background = Array.isArray(args.background) ? args.background : void 0;
   const st = await io.status();
   if (!st?.ok) return { ok: false, error: st?.error ?? "subject.status failed", status: st };
@@ -55688,15 +55798,6 @@ async function runReferenceReport(args, io) {
       frameRate: frameRate ?? null
     };
   } else {
-    const cm = await io.execute(
-      "return { ok: true, workingSpace: String(AE.safeGet(function () { return app.project.workingSpace; }, 'None')), colorManagementSystem: AE.safeGet(function () { return Number(app.project.colorManagementSystem); }, null), bitsPerChannel: app.project.bitsPerChannel };",
-      { label: "reference.report colour", timeoutMs: 3e4, undoGroup: false }
-    );
-    if (cm?.ok && cm.workingSpace && cm.workingSpace !== "None" && cm.workingSpace !== "" && cm.colorManagementSystem !== 1)
-      return {
-        ok: false,
-        error: `${iccManagedReason(cm.workingSpace, cm.bitsPerChannel)} reference.report reads colour, levels, grain and sharpness from rendered frames, so it does not run here. A PNG still or a folder of frames is read without After Effects and still works.`
-      };
     const fromComp = args.comp !== void 0;
     const setup = fromComp ? await io.execute(referenceCompJsx({ comp: args.comp }), { label: "reference.report comp", timeoutMs: 6e4, undoGroup: false }) : await io.execute(fileCompJsx({ path: p, item: typeof args.item === "number" ? args.item : null }), {
       label: "reference.report setup",
@@ -59786,8 +59887,8 @@ function curveReadJsx(args) {
 async function runCurve(args, io) {
   const p = propertyPath(args.property);
   if (!p) return { ok: false, error: "`property` must be a transform property's name or a path of names" };
-  const num = (k) => typeof args[k] === "number" ? args[k] : void 0;
-  const r = await io.execute(curveReadJsx({ comp: args.comp, layer: args.layer, path: p, start: num("start"), end: num("end") }), {
+  const num2 = (k) => typeof args[k] === "number" ? args[k] : void 0;
+  const r = await io.execute(curveReadJsx({ comp: args.comp, layer: args.layer, path: p, start: num2("start"), end: num2("end") }), {
     label: "motion.curve read",
     timeoutMs: 12e4
   });
@@ -60177,17 +60278,17 @@ registerOp({
     const aePid = process.platform === "darwin" ? null : void 0;
     const launchedAt = Date.now();
     let spawnError = null;
-    const child = spawn(plan.command, plan.args, {
+    const child2 = spawn(plan.command, plan.args, {
       env: { ...process.env, AE_MCP_INSTANCE: name },
       detached: true,
       stdio: "ignore",
       // A worker instance is a real After Effects the user may want to watch.
       windowsHide: false
     });
-    child.on("error", (err) => {
+    child2.on("error", (err) => {
       spawnError = err;
     });
-    child.unref();
+    child2.unref();
     const timeoutMs = typeof args.timeoutMs === "number" && args.timeoutMs > 0 ? args.timeoutMs : DEFAULT_START_TIMEOUT_MS;
     const deadline = launchedAt + timeoutMs;
     let registered = null;
@@ -60206,7 +60307,7 @@ registerOp({
     }
     if (registered === null) {
       const dialogs = (await scanAeDialogs()).filter(
-        (d) => d.pid === child.pid || (d.startedAt ?? 0) >= launchedAt - 2e3
+        (d) => d.pid === child2.pid || (d.startedAt ?? 0) >= launchedAt - 2e3
       );
       if (dialogs.length > 0) {
         return {
@@ -60218,7 +60319,7 @@ registerOp({
         };
       }
       return fail(
-        `instance '${name}' did not register within ${timeoutMs} ms (After Effects was launched${aePid === null ? "" : `, pid ${child.pid ?? "?"}`})`,
+        `instance '${name}' did not register within ${timeoutMs} ms (After Effects was launched${aePid === null ? "" : `, pid ${child2.pid ?? "?"}`})`,
         {
           errorCode: "NO_INSTANCE",
           hint: "Is the agent installed for THIS After Effects version (`mcp-aftereffects agent-status`)? Did After Effects stop at a dialog while starting? After a force-killed or crashed session, every launch waits at the 'We detected a crash' Safe Mode dialog until someone dismisses it on screen. Raise timeoutMs for a slow machine. The launched process is still running; quit it from its window rather than killing it."
@@ -60252,7 +60353,7 @@ registerOp({
     return {
       ok: true,
       instance: name,
-      pid: aePid === null ? null : child.pid ?? null,
+      pid: aePid === null ? null : child2.pid ?? null,
       startupMs: Date.now() - launchedAt,
       project: opened,
       // Forward slashes, like every other path this server reports.
@@ -60520,7 +60621,7 @@ var catalogTool = defineTool({
 });
 
 // src/tools/check-comp.ts
-import { randomUUID as randomUUID3 } from "node:crypto";
+import { randomUUID as randomUUID4 } from "node:crypto";
 import { promises as fs12 } from "node:fs";
 import * as os4 from "node:os";
 import * as path14 from "node:path";
@@ -60913,13 +61014,13 @@ var PieceWatcher = class {
     const out = [];
     const first = this.frames[0]?.frame;
     const last = this.frames[this.frames.length - 1]?.frame;
-    let run2 = [];
+    let run = [];
     const close = () => {
-      if (run2.length === 0) return;
-      const from = run2[0].frame;
-      const to = run2[run2.length - 1].frame;
-      let worst = run2[0];
-      for (const f of run2) if (score(f.m) > score(worst.m)) worst = f;
+      if (run.length === 0) return;
+      const from = run[0].frame;
+      const to = run[run.length - 1].frame;
+      let worst = run[0];
+      for (const f of run) if (score(f.m) > score(worst.m)) worst = f;
       const frames = to - from + 1;
       const s = {
         kind,
@@ -60939,7 +61040,7 @@ var PieceWatcher = class {
       } else {
         const c = kind === "clipped-high" ? m.clipHigh : m.clipLow;
         let box2 = null;
-        for (const f of run2) {
+        for (const f of run) {
           const b = (kind === "clipped-high" ? f.m.clipHigh : f.m.clipLow).box;
           if (b === null) continue;
           if (box2 === null) box2 = { ...b };
@@ -60963,13 +61064,13 @@ var PieceWatcher = class {
         s.reading = `${kind} from ${when}: at worst (frame ${worst.frame}) ${fmt3(c.all * 100)}% of pixels at ${code} in all three channels (per channel r ${fmt3(c.r * 100)}%, g ${fmt3(c.g * 100)}%, b ${fmt3(c.b * 100)}%)` + (s.box ? `, inside x ${s.box.x}..${s.box.x + s.box.width}, y ${s.box.y}..${s.box.y + s.box.height} (comp pixels)` : "");
       }
       out.push(s);
-      run2 = [];
+      run = [];
     };
     for (const f of this.frames) {
-      const prev = run2[run2.length - 1];
+      const prev = run[run.length - 1];
       if (prev !== void 0 && f.frame !== prev.frame + every) close();
       if (score(f.m) === null) close();
-      else run2.push(f);
+      else run.push(f);
     }
     close();
     return out;
@@ -61001,7 +61102,6 @@ function planJsx(compNameOrId) {
             displayStartTime: AE.safeGet(function () { return comp.displayStartTime; }, 0),
             resolutionFactor: AE.safeGet(function () { return [comp.resolutionFactor[0], comp.resolutionFactor[1]]; }, null),
             workingSpace: AE.safeGet(function () { return app.project.workingSpace; }, "None"),
-            colorManagementSystem: AE.safeGet(function () { return Number(app.project.colorManagementSystem); }, null),
             bitsPerChannel: AE.safeGet(function () { return app.project.bitsPerChannel; }, 8),
             missingFootage: _missingSources(comp)
         };
@@ -61019,9 +61119,7 @@ function captureJsx(compNameOrId, frames, paths, factor, tryOcio) {
         var _factor = ${jsxVal(factor)};
         var _pick = ${jsxVal(CHECK_FRAME_PICK)};
         var _ws = AE.safeGet(function () { return app.project.workingSpace; }, "None");
-        var _cms = AE.safeGet(function () { return Number(app.project.colorManagementSystem); }, null);
-        // The OCIO Display Transform only under OCIO (not right under Adobe's ICC engine, measured 2026-11-12).
-        var _useOcio = ${jsxVal(tryOcio)} && _ws !== "None" && _ws !== "" && _cms === 1;
+        var _useOcio = ${jsxVal(tryOcio)} && _ws !== "None" && _ws !== "";
         var _frames = [];
         function _renderAll(kind) {
             for (var _fi = 0; _fi < _frameNums.length; _fi++) {
@@ -61314,8 +61412,27 @@ function structureJsx(compNameOrId, o) {
 }
 
 // src/tools/check-comp.ts
+var CAPTURE_STALL_MS = 6e4;
+function frameOfCapture(file2) {
+  const m = /frame-(\d+)\.png$/.exec(file2);
+  return m ? Number(m[1]) : null;
+}
 var frameFile = (dir, frame) => path14.join(dir, `frame-${frame}.png`).replace(/\\/g, "/");
 function aeFrameSource(transport2, comp, opts) {
+  const stallMs = opts.stallMs ?? CAPTURE_STALL_MS;
+  const drain = async (paths, before) => {
+    if (paths.length === 0) return { settled: /* @__PURE__ */ new Set(), outstanding: [], unsettled: [] };
+    const settle2 = await waitForSettled(paths, {
+      timeoutMs: opts.settleTimeoutMs ?? settleTimeoutFor(paths.length, opts.pixels),
+      before,
+      stallMs
+    });
+    return {
+      settled: new Set(settle2.settled.map((i) => paths[i])),
+      outstanding: settle2.unsettled.map((u) => u.path),
+      unsettled: settle2.unsettled
+    };
+  };
   return {
     async capture(frames, dir) {
       const t0 = performance.now();
@@ -61327,33 +61444,35 @@ function aeFrameSource(transport2, comp, opts) {
         label: "check_comp_capture",
         timeoutMs: 6e4 + frames.length * 5e3
       });
-      if (!result.ok) return { error: result.error ?? "capture call failed", details: result };
+      if (!result.ok) {
+        const error62 = result.error ?? "capture call failed";
+        if (/never picked up/i.test(error62)) return { error: error62, details: result, outstanding: [] };
+        const d2 = await drain(paths, before);
+        return { error: error62, details: result, outstanding: d2.outstanding };
+      }
       const payload = result.result;
+      const rendered = payload?.frames ?? [];
+      const ok = rendered.filter((f) => f.ok && typeof f.writtenTo === "string");
+      const okPaths = ok.map((f) => f.writtenTo);
+      const okBefore = ok.map((f) => before[frames.indexOf(f.frame)]);
       if (!payload || payload.ok !== true) {
+        const d2 = await drain(okPaths, okBefore);
         return {
           error: payload?.error ?? "capture reported no result",
-          details: { resolution: payload?.resolution }
+          details: { resolution: payload?.resolution },
+          outstanding: d2.outstanding
         };
       }
-      const rendered = payload.frames ?? [];
-      const ok = rendered.filter((f) => f.ok && typeof f.writtenTo === "string");
-      const settle2 = await waitForSettled(
-        ok.map((f) => f.writtenTo),
-        {
-          timeoutMs: opts.settleTimeoutMs ?? settleTimeoutFor(ok.length, opts.pixels),
-          before: ok.map((f) => before[frames.indexOf(f.frame)])
-        }
-      );
-      const settled = new Set(settle2.settled.map((i) => ok[i].frame));
+      const d = await drain(okPaths, okBefore);
       const out = frames.map((frame) => {
         const r = rendered.find((f) => f.frame === frame);
         if (!r) return { frame, error: "not captured" };
         if (!r.ok) return { frame, error: r.error ?? "capture failed" };
-        if (!settled.has(frame)) {
-          const u = settle2.unsettled.find((x) => ok[x.index]?.frame === frame);
+        if (!d.settled.has(r.writtenTo)) {
+          const u = d.unsettled.find((x) => x.path === r.writtenTo);
           return {
             frame,
-            error: `the capture did not finish writing within ${(settle2.timeoutMs / 1e3).toFixed(1)} s (${u?.state ?? "missing"})`
+            error: `the capture had not finished writing when the wait ended (no capture finished for ${(stallMs / 1e3).toFixed(0)} s; ${u?.state ?? "missing"}): After Effects may still write it`
           };
         }
         return { frame, path: r.writtenTo };
@@ -61368,7 +61487,8 @@ function aeFrameSource(transport2, comp, opts) {
           bgColor: payload.bgColor ?? null,
           resolution: payload.resolution
         },
-        seconds: (performance.now() - t0) / 1e3
+        seconds: (performance.now() - t0) / 1e3,
+        outstanding: d.outstanding
       };
     }
   };
@@ -61434,7 +61554,7 @@ var CHECK_COMP_SHAPE = {
   ),
   maxFrames: external_exports.number().int().min(1).max(2e3).optional().describe("Frames checked per call at most (default 300); the rest is left for `next`."),
   chunkFrames: external_exports.number().int().min(1).max(300).optional().describe(
-    "Frames per After Effects script (default 100). A script returns as soon as it has asked for the frames; the files arrive over the following seconds and the wait for them grows with the count."
+    "Frames per After Effects script (default 100). A script returns as soon as it has asked for the frames; the files arrive over the following seconds. The next chunk is asked for only once every capture of this one has finished, so After Effects never holds more than one chunk in its queue."
   ),
   thresholds: thresholdsSchema,
   safeArea: external_exports.object({
@@ -61447,7 +61567,12 @@ var CHECK_COMP_SHAPE = {
   boundsStep: external_exports.number().positive().optional().describe("Bounds are sampled at every keyframe time and every boundsStep seconds (default 0.1)."),
   structure: external_exports.boolean().optional().describe("Run the structure checks on the call that reaches the end of the range (default true)."),
   colorManaged: external_exports.enum(["auto", "off"]).optional().describe("'auto' (default) measures the picture after colour conversion, as ae_render_frame; 'off' the raw capture."),
-  settleTimeoutMs: external_exports.number().int().positive().optional().describe("How long to wait for each chunk's captures to finish writing (default: grows with the chunk)."),
+  settleTimeoutMs: external_exports.number().int().positive().optional().describe(
+    "How long to wait for the first captures of each chunk (default: grows with the chunk). The wait then goes on for as long as captures keep finishing, so a long or heavy comp is not cut off by it."
+  ),
+  stallTimeoutMs: external_exports.number().int().positive().optional().describe(
+    `After Effects is taken to have stopped writing when no capture has finished for this long (default ${CAPTURE_STALL_MS / 1e3} s). The check then queues nothing more, keeps the capture folder (After Effects may still write into it) and says how many captures were outstanding and where to continue.`
+  ),
   outDir: external_exports.string().optional().describe("Folder for the contact sheet and its frames (default: a new folder under the system temp folder)."),
   sheet: external_exports.union([
     external_exports.boolean(),
@@ -61460,7 +61585,7 @@ var CHECK_COMP_SHAPE = {
 var checkCompTool = defineTool({
   name: "ae_check_comp",
   title: "Check comp",
-  description: "Check a whole comp the way a viewer would watch it, in one call: walks the work area (or `from`..`to`), renders every frame (or every `every`th) at a reduced size, measures each in Node and lists what stands out. Flagged moments (`flags`, sorted by time): a one-frame pop or flash, a cut or jump, a stutter (a frame repeated while the frames around move) and a repeat at the edge of the range \u2014 the `diff` flags of ae_render_frame over the whole piece. Stretches: frozen (no visible change for at least frozenSeconds; a held title is legitimate, the report states the fact), near-black and near-white frames, and clipping (pixels at 255 in all three channels, with the box where they sit; per-channel shares alongside). Structure, read from the project on the call that reaches the end of the range: text layers whose bounds leave the frame (or `safeArea`) while visible \u2014 layer, time range, edge, by how many pixels, partly or wholly outside \u2014 missing fonts and footage, and expressions in error (in nested comps too). One contact sheet tiles the flagged moments, labelled with time and kind; the frames on it are kept beside it, every other capture is deleted as soon as it is measured. A clean comp returns empty lists and no sheet. Bounded: at most `maxFrames` frames a call (default 300); when the range is not finished the result says where to continue (`next.startFrame`): call again with the same arguments plus that startFrame. Numbers are display values of the picture the viewer sees (stage 'output', after colour conversion, as ae_render_frame writes the file), with the thresholds used; it never says pass or fail. Times are seconds from the comp's start (frame \xD7 frame duration), ignoring the display start time.",
+  description: "Check a whole comp the way a viewer would watch it, in one call: walks the work area (or `from`..`to`), renders every frame (or every `every`th) at a reduced size, measures each in Node and lists what stands out. Flagged moments (`flags`, sorted by time): a one-frame pop or flash, a cut or jump, a stutter (a frame repeated while the frames around move) and a repeat at the edge of the range \u2014 the `diff` flags of ae_render_frame over the whole piece. Stretches: frozen (no visible change for at least frozenSeconds; a held title is legitimate, the report states the fact), near-black and near-white frames, and clipping (pixels at 255 in all three channels, with the box where they sit; per-channel shares alongside). Structure, read from the project on the call that reaches the end of the range: text layers whose bounds leave the frame (or `safeArea`) while visible \u2014 layer, time range, edge, by how many pixels, partly or wholly outside \u2014 missing fonts and footage, and expressions in error (in nested comps too). One contact sheet tiles the flagged moments, labelled with time and kind; the frames on it are kept beside it, every other capture is deleted as soon as it is measured. A clean comp returns empty lists and no sheet. Bounded: at most `maxFrames` frames a call (default 300); when the range is not finished the result says where to continue (`next.startFrame`): call again with the same arguments plus that startFrame. Captures are asked of After Effects a chunk at a time, the next chunk only once every capture of the last has finished writing, and the wait follows After Effects' pace (it goes on while captures keep arriving), so a long comp is not cut off part way. The check never returns with its captures still queued unless After Effects stopped writing (none finished for `stallTimeoutMs`): it then asks for nothing more, keeps the capture folder instead of deleting it, and says so in `captureQueue`; `coverage` says how many of the call's frames were measured. Numbers are display values of the picture the viewer sees (stage 'output', after colour conversion, as ae_render_frame writes the file), with the thresholds used; it never says pass or fail. Times are seconds from the comp's start (frame \xD7 frame duration), ignoring the display start time.",
   group: "render",
   // Like ae_render_frame: survives read-only mode (it renders and reads, and
   // the check is the point of a review session). Not a never-touches-the-
@@ -61548,7 +61673,7 @@ async function checkComp(args, transport2) {
       `${String(plan.compName).replace(/[^A-Za-z0-9_-]+/g, "-").slice(0, 40)}-${Date.now()}`
     )
   ).replace(/\\/g, "/");
-  const capDir = path14.join(outDir, `captures-${randomUUID3().slice(0, 8)}`).replace(/\\/g, "/");
+  const capDir = path14.join(outDir, `captures-${randomUUID4().slice(0, 8)}`).replace(/\\/g, "/");
   const readOnly = readOnlyMode();
   const target = {
     width: Math.max(1, Math.round(plan.width / downsample)),
@@ -61558,6 +61683,7 @@ async function checkComp(args, transport2) {
     factor: readOnly ? null : downsample,
     tryOcio: args.colorManaged !== "off" && !readOnly,
     settleTimeoutMs: args.settleTimeoutMs,
+    stallMs: args.stallTimeoutMs,
     pixels: target.width * target.height
   });
   const report = {
@@ -61587,16 +61713,6 @@ async function checkComp(args, transport2) {
     report.timings = { totalSeconds: r3((performance.now() - started) / 1e3) };
     return jsonResult({ result: report });
   }
-  if (args.colorManaged !== "off" && plan.workingSpace !== "None" && plan.workingSpace !== "" && plan.colorManagementSystem !== 1) {
-    report.picture = {
-      checked: false,
-      reason: `${iccManagedReason(plan.workingSpace, plan.bitsPerChannel)} The whole-piece check's picture checks (blank frames, black bars, pops, stutters, cuts, clipping, elements off frame) are tuned on display values, so they are not run.`
-    };
-    report.structure = await runStructure(args, transport2, plan, first, end, fd);
-    report.next = null;
-    report.timings = { totalSeconds: r3((performance.now() - started) / 1e3) };
-    return jsonResult({ result: report });
-  }
   let watcher = null;
   let info = null;
   let convert = null;
@@ -61607,12 +61723,19 @@ async function checkComp(args, transport2) {
   let measured = null;
   const failures = [];
   let captureError = null;
+  let stalled = null;
+  const outstanding = [];
+  const stallMs = args.stallTimeoutMs ?? CAPTURE_STALL_MS;
   let measuredFrames = 0;
-  for (let c = 0; c < frames.length && captureError === null; c += chunkFrames) {
+  let measuredOwned = 0;
+  let chunksAsked = 0;
+  for (let c = 0; c < frames.length; c += chunkFrames) {
     const chunk2 = frames.slice(c, c + chunkFrames);
+    chunksAsked++;
     const res = await source.capture(chunk2, capDir);
     if ("error" in res) {
       captureError = { error: res.error, atFrame: chunk2[0], details: res.details };
+      outstanding.push(...res.outstanding);
       break;
     }
     captureSeconds += res.seconds;
@@ -61647,19 +61770,26 @@ async function checkComp(args, transport2) {
         });
         watcher.add({ frame: f.frame, pic: pic.pic, width: pic.width, height: pic.height });
         measuredFrames++;
+        if (f.frame >= ownedFrom && f.frame <= ownedTo) measuredOwned++;
       } catch (err) {
         failures.push({ frame: f.frame, error: `could not read the capture: ${err instanceof Error ? err.message : String(err)}` });
       }
       readSeconds += (performance.now() - r0) / 1e3;
       await fs12.rm(f.path, { force: true });
     }
+    if (res.outstanding.length > 0) {
+      outstanding.push(...res.outstanding);
+      stalled = { atFrame: Math.min(...res.outstanding.map(frameOfCapture).filter((k) => k !== null)) };
+      break;
+    }
   }
-  await fs12.rm(capDir, { recursive: true, force: true });
+  if (outstanding.length === 0) await fs12.rm(capDir, { recursive: true, force: true });
   const findings = watcher ? watcher.finish() : null;
   const measureSeconds = watcher ? watcher.measureMs / 1e3 : 0;
   let nextOut = next;
-  if (captureError !== null && captureError.atFrame <= ownedTo) {
-    const at = Math.max(captureError.atFrame, ownedFrom);
+  const stopAt = captureError?.atFrame ?? stalled?.atFrame ?? null;
+  if (stopAt !== null && Number.isFinite(stopAt) && stopAt <= ownedTo) {
+    const at = Math.max(stopAt, ownedFrom);
     nextOut = { startFrame: at, time: r64(at * fd), framesLeft: all.length - all.indexOf(at) };
   }
   report.checked = {
@@ -61686,6 +61816,11 @@ async function checkComp(args, transport2) {
     ...color.colorPipeline ? { colorPipeline: color.colorPipeline } : {},
     ...color.colorWarning ? { colorWarning: color.colorWarning } : {}
   };
+  if (stalled !== null) {
+    notes.push(
+      `After Effects stopped writing captures: ${outstanding.length} had not finished when no capture had finished for ${r3(stallMs / 1e3)} s, so nothing more was asked of it. What was measured is reported; call again with startFrame ${(nextOut ?? { startFrame: stalled.atFrame }).startFrame} to continue (look at After Effects first: a dialog, a full disk or its cache)`
+    );
+  }
   if (captureError !== null) {
     report.captureError = captureError;
     notes.push(
@@ -61728,7 +61863,12 @@ async function checkComp(args, transport2) {
   }
   let sheetSeconds = 0;
   report.sheet = null;
-  if (args.sheet !== false && findings !== null) {
+  if (args.sheet !== false && findings !== null && outstanding.length > 0) {
+    report.sheet = {
+      writtenTo: null,
+      skipped: "no sheet: captures of the check were still outstanding in After Effects, and none is queued behind them"
+    };
+  } else if (args.sheet !== false && findings !== null) {
     const s0 = performance.now();
     const sheetOpts = typeof args.sheet === "object" ? args.sheet : {};
     const sheet = await makeSheet(
@@ -61746,10 +61886,27 @@ async function checkComp(args, transport2) {
       `${ownedFrom}-${ownedTo}`
     );
     sheetSeconds = (performance.now() - s0) / 1e3;
-    report.sheet = sheet;
+    report.sheet = sheet.sheet;
+    outstanding.push(...sheet.outstanding);
   }
-  await fs12.rmdir(outDir).catch(() => {
+  if (outstanding.length === 0) await fs12.rmdir(outDir).catch(() => {
   });
+  report.captureQueue = outstanding.length === 0 ? {
+    outstanding: 0,
+    reading: "every capture asked of After Effects had finished writing before the check returned: nothing of the check is left in its queue"
+  } : {
+    outstanding: outstanding.length,
+    folder: outstanding.some((p) => p.startsWith(capDir + "/")) ? capDir : outDir,
+    frames: outstanding.map(frameOfCapture).filter((k) => k !== null).slice(0, LIST_CAP),
+    reading: `${outstanding.length} capture${outstanding.length > 1 ? "s" : ""} asked of After Effects had not finished when the check returned (none had finished for ${r3(stallMs / 1e3)} s); After Effects has no way to cancel them, so it may still write them. Their folder was kept, not deleted (deleting it while After Effects writes raises an error box there). Delete it once After Effects is idle.`
+  };
+  const coverageComplete = nextOut === next && failures.length === 0 && outstanding.length === 0;
+  report.coverage = {
+    framesAsked: owned.length,
+    framesMeasured: measuredOwned,
+    complete: coverageComplete && measuredOwned === owned.length,
+    reading: coverageComplete && measuredOwned === owned.length ? `all ${owned.length} frames of this call were measured` : `${measuredOwned} of the ${owned.length} frames of this call were measured` + (stalled !== null ? "; the pass stopped because After Effects stopped writing captures" : captureError !== null ? "; the pass stopped on a failed capture" : "") + (failures.length > 0 ? `; ${failures.length} could not be captured or read` : "") + ". The findings cover the measured frames only."
+  };
   const total = (performance.now() - started) / 1e3;
   report.timings = {
     captureSeconds: r3(captureSeconds),
@@ -61759,6 +61916,7 @@ async function checkComp(args, transport2) {
     sheetSeconds: r3(sheetSeconds),
     totalSeconds: r3(total),
     framesCaptured: measuredFrames,
+    chunks: chunksAsked,
     framesPerSecond: total > 0 ? r3(measuredFrames / total) : null,
     msPerFrame: measuredFrames > 0 ? { capture: r3(captureSeconds * 1e3 / measuredFrames), read: r3((readSeconds - measureSeconds) * 1e3 / measuredFrames), measure: r3(measureSeconds * 1e3 / measuredFrames) } : null
   };
@@ -61868,14 +62026,15 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
       `off-${o.edge}: "${o.layer.name}" at the first sampled time past the ${o.edge} edge (${o.from.time} s), while still partly in frame; the finding's worstAt is when it is furthest out`
     );
   }
-  if (tiles.size === 0) return null;
+  if (tiles.size === 0) return { sheet: null, outstanding: [] };
   const all = [...tiles.values()].sort((a, b) => a.frame - b.frame);
   const chosen = all.slice(0, maxTiles);
   const res = await source.capture(
     chosen.map((c) => c.frame),
     outDir
   );
-  if ("error" in res) return { writtenTo: null, error: `the sheet's frames could not be captured: ${res.error}` };
+  if ("error" in res)
+    return { sheet: { writtenTo: null, error: `the sheet's frames could not be captured: ${res.error}` }, outstanding: res.outstanding };
   const images = [];
   const labels = [];
   const kept = [];
@@ -61891,7 +62050,8 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
       await fs12.rm(got.path, { force: true });
     }
   }
-  if (images.length === 0) return { writtenTo: null, error: "none of the sheet's frames could be read" };
+  if (images.length === 0)
+    return { sheet: { writtenTo: null, error: "none of the sheet's frames could be read" }, outstanding: res.outstanding };
   const tileW = Math.min(thumbWidth ?? 320, images[0].width);
   const maxChars = Math.max(4, Math.floor((tileW - 4) / LABEL_CHAR_PX));
   for (const k of kept) labels.push(`${k.time.toFixed(2)}s ${k.kinds.map((x) => SHORT[x] ?? x).join("+")}`.slice(0, maxChars));
@@ -61903,12 +62063,15 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
   const sheetPath = path14.join(outDir, `check-sheet-${tag}.png`).replace(/\\/g, "/");
   await fs12.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
   return {
-    writtenTo: sheetPath,
-    size: [sheet.width, sheet.height],
-    tiles: kept.length,
-    omitted: all.length - chosen.length,
-    frames: kept,
-    label: "each tile is labelled '<time>s <kind>' (several joined by +; black, white, clip and crush stand for near-black, near-white, clipped-high and clipped-low), time in seconds from the comp's start"
+    sheet: {
+      writtenTo: sheetPath,
+      size: [sheet.width, sheet.height],
+      tiles: kept.length,
+      omitted: all.length - chosen.length,
+      frames: kept,
+      label: "each tile is labelled '<time>s <kind>' (several joined by +; black, white, clip and crush stand for near-black, near-white, clipped-high and clipped-low), time in seconds from the comp's start"
+    },
+    outstanding: res.outstanding
   };
 }
 

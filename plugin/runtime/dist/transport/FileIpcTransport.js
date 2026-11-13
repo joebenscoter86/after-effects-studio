@@ -2,7 +2,7 @@ import { spawn as nodeSpawn } from "node:child_process";
 import { mkdirSync, promises as fs, unlinkSync, writeFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import * as path from "node:path";
-import { BUSY_LOCK_PATH, BUSY_LOCK_REFRESH_MS, BUSY_LOCK_STALE_MS, DEFAULT_TIMEOUT_MS, INSTANCES_DIR, LIVENESS_CHECK_MS, MAX_LAUNCH_ATTEMPTS, PHANTOM_LAUNCH_MS, POLL_INTERVAL_MS, RELAUNCH_UNCONSUMED_AFTER_MS, REQUEST_PREFIX, RESPONSE_PREFIX, RUNTIME_DIR, RUNTIME_DIR_IS_CUSTOM, RUNTIME_DIR_MODE, RUNTIME_POINTER_PATH, RUNTIME_ROOT, STALE_RUNTIME_FILE_MS, instanceTargetFromEnv, requestPathFor, resolveAfterFxPath, responsePathFor, runtimeDirWarnings, } from "../config.js";
+import { BUSY_LOCK_PATH, DISPATCHER_JSX, BUSY_LOCK_REFRESH_MS, BUSY_LOCK_STALE_MS, DEFAULT_TIMEOUT_MS, INSTANCES_DIR, LIVENESS_CHECK_MS, MAX_LAUNCH_ATTEMPTS, PHANTOM_LAUNCH_MS, POLL_INTERVAL_MS, RELAUNCH_UNCONSUMED_AFTER_MS, REQUEST_PREFIX, RESPONSE_PREFIX, RUNTIME_DIR, RUNTIME_DIR_IS_CUSTOM, RUNTIME_DIR_MODE, RUNTIME_POINTER_PATH, RUNTIME_ROOT, STALE_RUNTIME_FILE_MS, instanceTargetFromEnv, requestPathFor, resolveAfterFxPath, responsePathFor, runtimeDirWarnings, } from "../config.js";
 import { SCRIPT_RUNNING_HINT, dialogBlockMessage, dialogHint, scanAeWindows, scriptRunningMessage, splitScriptProgress, } from "./dialogs.js";
 import { describeInstance, listInstances, readInstance, resolveTarget, sweepDeadInstanceDirs, } from "./instances.js";
 import { buildLaunchPlan } from "./launcher.js";
@@ -99,6 +99,7 @@ export class FileIpcTransport {
     setupError = null;
     instanceOption;
     spawnFn;
+    dispatcherJsx;
     scanDialogs;
     reapIntervalMs;
     emptyTmpGraceMs;
@@ -109,6 +110,7 @@ export class FileIpcTransport {
         this.reapIntervalMs = options.reapIntervalMs ?? REAP_INTERVAL_MS;
         this.emptyTmpGraceMs = options.emptyTmpGraceMs ?? EMPTY_TMP_GRACE_MS;
         this.spawnFn = options.spawn ?? ((command, args, opts) => nodeSpawn(command, args, opts));
+        this.dispatcherJsx = options.dispatcherJsx ?? DISPATCHER_JSX;
         this.scanDialogs = options.scanDialogs ?? (() => scanAeWindows());
         try {
             // 0o700: write access to the mailbox is code execution inside AE (see
@@ -360,6 +362,17 @@ export class FileIpcTransport {
                 });
             }
         }
+        // The script file After Effects is told to run must be there: on Windows
+        // `-r` of a missing file, and on macOS an unguarded evalFile of one,
+        // raise a modal ("Unable to execute script at line 1. File or folder
+        // does not exist") that blocks all scripting. Nothing is written or
+        // launched when it is gone.
+        if (!(await this.fileExists(this.dispatcherJsx))) {
+            return failure("TRANSPORT", `the dispatcher script ${this.dispatcherJsx} is not there (the plugin was updated, moved or removed while this server ran); nothing was sent to After Effects`, {
+                durationMs: Date.now() - started,
+                hint: "Restart the MCP server (or the agent host) so it runs from the plugin's current folder.",
+            });
+        }
         const id = request.id;
         const requestPath = requestPathFor(id);
         const responsePath = responsePathFor(id);
@@ -526,7 +539,7 @@ export class FileIpcTransport {
      * how a denied macOS Automation permission (-1743) surfaces in seconds.
      */
     launchDispatcher(state) {
-        const launch = buildLaunchPlan(this.afterFxPath);
+        const launch = buildLaunchPlan(this.afterFxPath, process.platform, RUNTIME_DIR, this.dispatcherJsx);
         state.child = null;
         state.exited = false;
         try {

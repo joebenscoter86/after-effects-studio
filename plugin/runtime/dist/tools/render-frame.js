@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import * as path from "node:path";
 import { z } from "zod";
@@ -93,7 +94,8 @@ export const renderFrameTool = defineTool({
     description: "Render one or more frames to PNG. Use to visually verify edits. " +
         "The agent's 'eyes' — pair with mutations for a visual feedback loop. " +
         "Headless and deterministic. Pass `time` for one frame, or `times` for several in ONE call " +
-        "(motion checks): files land at <outPath stem>_<index>.png and are listed in `frames`. " +
+        "(motion checks): files land at <outPath stem>_<call id>_<index>.png, a new call id every call, so a late write left " +
+        "by an earlier call can never be taken for this one's frame; `frames` lists them and `batch.files` says which frame each file holds. " +
         "`contactSheet` tiles every frame into one labelled PNG (<stem>_sheet.png) so a motion check is one image; " +
         "`analyze` measures each capture (uniform edge bands = black bars / transparent margins, content bounds, coverage) " +
         "so off-frame elements and letterboxing are caught numerically. " +
@@ -158,7 +160,7 @@ export const renderFrameTool = defineTool({
             .max(32)
             .optional()
             .describe("Several times in seconds, rendered in ONE call. Files are written as " +
-            "<outPath stem>_<index><ext> and reported in `frames` (index-aligned)."),
+            "<outPath stem>_<call id>_<index><ext> (a new id every call) and reported in `frames` (index-aligned) and `batch.files` (path, frame, time)."),
         strip: z
             .object({
             at: z
@@ -200,11 +202,11 @@ export const renderFrameTool = defineTool({
             .optional()
             .describe("Frame numbers (0 = the comp's first frame) instead of times: each is rendered a quarter of a " +
             "frame inside it, so a time never lands on the frame before. Through the `times` path: files " +
-            "<stem>_<index>, reported in `frames` with their `frame`. Instead of `time` / `times` / `strip`."),
+            "<stem>_<call id>_<index>, reported in `frames` and `batch.files` with their `frame`. Instead of `time` / `times` / `strip`."),
         outPath: z
             .string()
             .describe("Absolute path to write the PNG. Parent directory is created if missing. " +
-            "With `times`, used as the naming stem for every frame."),
+            "With `times`, used as the naming stem for every frame (plus a call id, new every call)."),
         useDisplayStartTime: z
             .boolean()
             .optional()
@@ -864,17 +866,26 @@ function sheetPathFor(abs, explicit) {
     const stem = abs.slice(0, abs.length - (path.extname(abs).length || 0));
     return `${stem}_sheet${ext}`;
 }
-/** Per-frame output paths: the single path as-is, or stem_<index><ext> for `times`. */
-function framePaths(abs, count, multi) {
+/**
+ * Per-frame output paths: the single path as-is, or stem_<call>_<index><ext>
+ * for `times`. The call id is new every call: saveFrameToPng writes after the
+ * script returns, so with names reused between calls (stem_<index>) a write
+ * still pending from an earlier call could land after this call's stamp and
+ * be taken for this call's frame, mixing frames between calls (first
+ * production use, 2026-11-12).
+ */
+export function framePaths(abs, count, multi, call = newCallId()) {
     if (!multi)
         return [abs];
     const ext = path.extname(abs) || ".png";
     const stem = abs.slice(0, abs.length - (path.extname(abs).length || 0));
     const out = [];
     for (let i = 0; i < count; i++)
-        out.push(`${stem}_${i}${ext}`);
+        out.push(`${stem}_${call}_${i}${ext}`);
     return out;
 }
+/** A short id for one call's batch of files. */
+export const newCallId = () => randomUUID().slice(0, 8);
 /**
  * `isolate`, inside After Effects. _isolateLayers resolves every reference
  * first (nothing changes when one is missing), records each layer's enabled,
@@ -1078,7 +1089,8 @@ async function nativeFlow(args, opts, abs, transport, strip = null) {
     // A strip and frame numbers go down the `times` path; their times are worked out in AE.
     const times = strip !== null || frameNums !== null ? null : (args.times ?? [args.time]);
     const count = strip?.frames ?? frameNums?.length ?? times?.length ?? 1;
-    const paths = framePaths(abs, count, multi);
+    const callId = newCallId();
+    const paths = framePaths(abs, count, multi, callId);
     const contactSheet = args.contactSheet ?? (strip !== null ? {} : undefined);
     // What was at each path before the render, so a left-over file is never
     // taken for this call's capture.
@@ -1217,6 +1229,22 @@ async function nativeFlow(args, opts, abs, transport, strip = null) {
         before: before.slice(0, written.length),
     });
     payload.captureSettle = settle;
+    // Which frame each file of the batch holds, from what After Effects was asked for.
+    const listBatch = () => {
+        if (!multi)
+            return;
+        payload.batch = {
+            id: callId,
+            files: frames.map((f, i) => ({
+                index: i,
+                path: f.writtenTo ?? paths[i],
+                frame: f.frame ?? null,
+                time: f.time ?? null,
+                ok: f.ok === true,
+                ...(f.ok === true ? {} : { error: f.error ?? "not captured" }),
+            })),
+        };
+    };
     if (settle.unsettled.length > 0) {
         const secs = (settle.timeoutMs / 1000).toFixed(1);
         for (const u of settle.unsettled) {
@@ -1233,6 +1261,7 @@ async function nativeFlow(args, opts, abs, transport, strip = null) {
                     ? "The others were measured; see captureSettle, or render the missing ones again with a longer settleTimeoutMs."
                     : "Nothing could be measured; try again with a longer settleTimeoutMs.");
         if (settle.settled.length === 0) {
+            listBatch();
             if (args.analyze)
                 payload.analysisWarning = "analysis failed: no capture finished writing";
             if (managed)
@@ -1241,6 +1270,7 @@ async function nativeFlow(args, opts, abs, transport, strip = null) {
             return toMcpResult(result);
         }
     }
+    listBatch();
     const finished = new Set(settle.settled);
     // One frame at a time, as before these options: a decoded 1080p frame is
     // tens of MB, so only the frames `compare` needs are kept whole; the sheets

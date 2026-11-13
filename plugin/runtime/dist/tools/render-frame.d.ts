@@ -1,16 +1,4 @@
 import { z } from "zod";
-type LayerRef = string | number | {
-    id: number;
-};
-/** What the JSX needs for a strip: times are worked out there, from the comp's frame duration. */
-interface StripPlan {
-    at: number;
-    /** Frame offsets from the moment, already multiplied by step. */
-    offsets: number[];
-    frames: number;
-    step: number;
-    maxDimension: number;
-}
 /**
  * Where inside a frame `frames` and `strip` render: a quarter of a frame past
  * its start. Found live: a time a hair below a boundary renders the frame
@@ -175,10 +163,15 @@ export declare const renderFrameTool: import("./define-tool.js").ToolSpec<{
         }, z.core.$strip>]>>;
     }, z.core.$strip>]>>;
 }>;
-/** Options the JSX needs; everything else happens in Node on the captures. */
-export declare function renderJsx(args: {
-    compNameOrId: string | number;
-    useDisplayStartTime?: boolean;
-}, times: number[] | null, paths: string[], tryOcio: boolean, isolate: LayerRef[] | null, strip?: StripPlan | null, frameNums?: number[] | null): string;
-export {};
+/**
+ * Per-frame output paths: the single path as-is, or stem_<call>_<index><ext>
+ * for `times`. The call id is new every call: saveFrameToPng writes after the
+ * script returns, so with names reused between calls (stem_<index>) a write
+ * still pending from an earlier call could land after this call's stamp and
+ * be taken for this call's frame, mixing frames between calls (first
+ * production use, 2026-11-12).
+ */
+export declare function framePaths(abs: string, count: number, multi: boolean, call?: string): string[];
+/** A short id for one call's batch of files. */
+export declare const newCallId: () => string;
 //# sourceMappingURL=render-frame.d.ts.map

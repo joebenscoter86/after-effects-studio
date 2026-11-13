@@ -1,3 +1,4 @@
+import { type Loudness, type SoundAlignment, type SoundSync } from "./delivery-sound.js";
 /**
  * Said by every operation that changes the render queue (stage 7). serve.jsx
  * enforces it; this tells the caller before they find out by a refusal.
@@ -54,7 +55,15 @@ export interface FileFacts {
         source: "After Effects";
         top: number;
     } | null;
+    /** Integrated loudness and true peak, from ffmpeg's ebur128, when it is installed. */
+    loudness?: Loudness | null;
+    /** Where the sound sits against the picture, read from the file's edit list (after any fix). */
+    sync?: SoundSync | null;
+    /** What was done to put the sound on its frame, when it was late. */
+    alignment?: SoundAlignment | null;
 }
+/** True peak above this is reported: a platform's own lossy encode can clip it. */
+export declare const DELIVERY_TRUE_PEAK_NOTE_DBTP = -1;
 /** Convert Audio to Keyframes' amplitude under this on every frame is silence (stage 6: a 0.3 tone reads 21.2, a four-channel take 0.002). */
 export declare const DELIVERY_SILENCE_TOP = 0.1;
 /** ffmpeg's max_volume at or under this is silence. */
@@ -87,10 +96,15 @@ export interface DeliverIO {
         hasAudio: boolean;
         meanDb: number | null;
         maxDb: number | null;
+        loudness?: Loudness | null;
     } | null>;
+    /** Where the file's sound sits against the picture (its edit list), or null when it has no sound track that can be read. */
+    soundSync?(file: string): Promise<SoundSync | null>;
+    /** Put late sound on its frame (a lossless remux); the file is replaced only when that worked. */
+    alignSound?(file: string, sync: SoundSync): Promise<SoundAlignment>;
 }
 export declare function runDeliver(args: Record<string, unknown>, io: DeliverIO): Promise<Json>;
-/** ffprobe's streams and ffmpeg's volumedetect, when both are installed; only reads the file. */
+/** ffprobe's streams and ffmpeg's volumedetect and ebur128 (loudness, true peak), when both are installed; only reads the file. */
 export declare function probeDelivered(file: string): Promise<{
     width: any;
     height: any;
@@ -99,6 +113,7 @@ export declare function probeDelivered(file: string): Promise<{
     hasAudio: any;
     meanDb: number | null;
     maxDb: number | null;
+    loudness: Loudness | null;
 } | null>;
 export {};
 //# sourceMappingURL=render.d.ts.map
