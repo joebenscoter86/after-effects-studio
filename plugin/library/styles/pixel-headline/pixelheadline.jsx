@@ -1,5 +1,6 @@
 // Pixel headline style: ES3 builders, one per element, and one for a whole beat. No project mutation happens at load.
-// Read styles/pixel-headline/STYLE.md first. A cut-out speaker on a light ground; a small lead-in line, one giant word in the
+// Read styles/pixel-headline/STYLE.md first (D1 to D8 for a director). The speaker cut out on a clean ground (light, or dark:
+// setPiece({ tone: "dark" })); a small lead-in line, one giant word in the
 // accent colour that lands on the voice with a glow and a burst of pixel blocks, upright video cards that pop in after it, a
 // drawn line, and a tail line; the camera pushes out at the start. Every move is keyed from measured signatures (SIG below).
 // Loads after styles/aes-lib.jsx. Times: seconds in the comp; signature tables are in frames at 30 fps (time = frames / 30).
