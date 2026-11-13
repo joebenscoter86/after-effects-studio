@@ -6,6 +6,7 @@ import type { Readable } from "node:stream";
 
 import {
   BUSY_LOCK_PATH,
+  DISPATCHER_JSX,
   BUSY_LOCK_REFRESH_MS,
   BUSY_LOCK_STALE_MS,
   DEFAULT_TIMEOUT_MS,
@@ -105,6 +106,8 @@ export interface FileIpcTransportOptions {
    * progress (default 10 s; serve.jsx writes a whole response in one call).
    */
   emptyTmpGraceMs?: number;
+  /** The dispatcher script the push path launches (default: the package's jsx/dispatcher.jsx). Injectable for tests. */
+  dispatcherJsx?: string;
 }
 
 /** A temp request/response file older than this is an orphan (see sweepStaleFiles). */
@@ -248,6 +251,7 @@ export class FileIpcTransport implements AeTransport {
   private readonly setupError: string | null = null;
   private readonly instanceOption: string | null | undefined;
   private readonly spawnFn: SpawnFn;
+  private readonly dispatcherJsx: string;
   private readonly scanDialogs: () => Promise<AeDialog[]>;
   private readonly reapIntervalMs: number;
   private readonly emptyTmpGraceMs: number;
@@ -259,6 +263,7 @@ export class FileIpcTransport implements AeTransport {
     this.reapIntervalMs = options.reapIntervalMs ?? REAP_INTERVAL_MS;
     this.emptyTmpGraceMs = options.emptyTmpGraceMs ?? EMPTY_TMP_GRACE_MS;
     this.spawnFn = options.spawn ?? ((command, args, opts) => nodeSpawn(command, args, opts));
+    this.dispatcherJsx = options.dispatcherJsx ?? DISPATCHER_JSX;
     this.scanDialogs = options.scanDialogs ?? (() => scanAeWindows());
     try {
       // 0o700: write access to the mailbox is code execution inside AE (see
@@ -541,6 +546,22 @@ export class FileIpcTransport implements AeTransport {
       }
     }
 
+    // The script file After Effects is told to run must be there: on Windows
+    // `-r` of a missing file, and on macOS an unguarded evalFile of one,
+    // raise a modal ("Unable to execute script at line 1. File or folder
+    // does not exist") that blocks all scripting. Nothing is written or
+    // launched when it is gone.
+    if (!(await this.fileExists(this.dispatcherJsx))) {
+      return failure(
+        "TRANSPORT",
+        `the dispatcher script ${this.dispatcherJsx} is not there (the plugin was updated, moved or removed while this server ran); nothing was sent to After Effects`,
+        {
+          durationMs: Date.now() - started,
+          hint: "Restart the MCP server (or the agent host) so it runs from the plugin's current folder.",
+        },
+      );
+    }
+
     const id = request.id;
     const requestPath = requestPathFor(id);
     const responsePath = responsePathFor(id);
@@ -735,7 +756,7 @@ export class FileIpcTransport implements AeTransport {
    * how a denied macOS Automation permission (-1743) surfaces in seconds.
    */
   private launchDispatcher(state: SpawnState): LaunchPlan {
-    const launch = buildLaunchPlan(this.afterFxPath as string);
+    const launch = buildLaunchPlan(this.afterFxPath as string, process.platform, RUNTIME_DIR, this.dispatcherJsx);
     state.child = null;
     state.exited = false;
     try {

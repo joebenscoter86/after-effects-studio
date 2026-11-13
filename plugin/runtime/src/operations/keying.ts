@@ -721,6 +721,21 @@ export const OBJECT_MATTE_SETTINGS: Record<string, MatteSetting> = {
   },
 };
 
+/**
+ * For the agent, on the cut-out operations' descriptions and results: the
+ * click cannot be made unattended (first production use, 2026-11-12: a piece
+ * meant to run overnight still needed it).
+ */
+export const SUBJECT_ATTENDED_NOTE =
+  "The cut-out needs the user's own click in After Effects (the Object Matte Tool); no script can make it, so it cannot be done unattended. " +
+  "Get the click, and check it with subject.check, before the user leaves: an overnight or unattended run cannot start a cut-out, only carry on from one the user has clicked.";
+
+/** For the agent: how a whole piece's cut-out was rendered in production (2026-11-12). */
+export const SUBJECT_WHOLE_PIECE_NOTE =
+  "For a whole piece, scale the take to delivery size first (a delivery-size copy of the footage, before the click: sourceAdvice), then render the cut-out in halves, emptying After Effects' disk cache between them: " +
+  "two halves of a 43.5 s piece at 1088 x 1920 took about 4.3 minutes and 12 GB of cache each. Check free disk space before each half. " +
+  "subject.render_cutout renders the layer's whole span in one call; it has no range of its own yet.";
+
 /** Said to the user before the steps, and in the skill before building starts. */
 export const SUBJECT_MATTE_NOTICE =
   "One step here needs you in After Effects: a single click on the subject, about ten seconds. Everything before and after it I do.";
@@ -1020,6 +1035,10 @@ registerOp({
   category: "subject",
   description:
     "Get a footage layer ready for the one manual step of a subject matte (After Effects 2027's Object Matte, the old Roto Brush): the user clicks the subject once with the Object Matte Tool; a script cannot make that selection. " +
+    SUBJECT_ATTENDED_NOTE +
+    " " +
+    SUBJECT_WHOLE_PIECE_NOTE +
+    " " +
     "This call brings the comp forward, chooses View > Resolution > Full and reads the comp's resolution back (viewerResolution: verified only when it reads [1, 1] after the command and after the Layer panel opens; starting from the viewer's Auto setting is not verified), moves to `time` (default: the layer's in point; pick a frame where the subject is clearly visible), selects only that layer and opens it in the Layer panel. It adds no effect and does not pick the tool. " +
     "Returns notice and steps (the user's instructions, with the clip's name and the subject filled in) and userMessage (both as one text): relay them to the user word for word. " +
     "Also returns did (the steps done), couldNotDo (any that failed, with the error; beforeSteps then says what to tell the user first) and existing (an Object Matte already on the layer and its selections). " +
@@ -1766,6 +1785,8 @@ export async function runSubjectPrepare(
   if (sound.soundNote) res.soundNote = sound.soundNote;
   if (sound.soundAdvice || sound.soundNote)
     res.relay = `${res.relay} Sound: tell the user what ${sound.soundAdvice ? "soundAdvice" : "soundNote"} says, and deal with it before the render.`;
+  res.attended = SUBJECT_ATTENDED_NOTE;
+  res.wholePiece = SUBJECT_WHOLE_PIECE_NOTE;
   return res;
 }
 /** Measured: 243 MB for 320 frames of 1080 x 1920 ProRes 4444 with alpha ('High Quality with Alpha'). */
@@ -3269,7 +3290,7 @@ registerOp({
   name: "subject.check",
   category: "subject",
   description:
-    "Proof a subject matte after the user says done, before anything else is built. Renders the cut-out with its alpha (ae_render_frame isolate, channels 'rgba'; with the layer's gap fill from subject.fill_gaps when the comp has one, reported as fillLayer) at the click frames and frames across the clip, " +
+    "Proof a subject matte after the user says done, before anything else is built. Run it while the user is still there: what it finds can need another click, and a click cannot be made unattended. Renders the cut-out with its alpha (ae_render_frame isolate, channels 'rgba'; with the layer's gap fill from subject.fill_gaps when the comp has one, reported as fillLayer) at the click frames and frames across the clip, " +
     "finds holes (regions below opaque the frame edge cannot reach) and openings (regions closed off only by the subject and the frame edge: the missed microphone of 2026-11-11 ran off the bottom of the frame), draws each frame over a flat colour and one contact sheet, and returns " +
     "picture (the sheet), findings, accepted, checked {frames, of}, inOut (a plain statement of what is in and what is out), frames, clicks and stop. " +
     `A hole or opening of holeLimit px or more (default ${CUTOUT_HOLE_LIMIT}, at the comp's size) is a finding; so are frames that did not render (kind 'not-checked': a frame that was not rendered is never counted as clean). Two clicks close together are a finding only when something is missing too (a click meant for it may have landed on the subject again); otherwise they are the pieces of something clicked one by one, listed in notes, and do not set stop. ` +
@@ -3806,6 +3827,7 @@ export async function runRenderCutout(args: Record<string, unknown>, io: FileIO)
         : "") +
       `Check the file before building on it: subject.check_file { path: "${r.outputPath}", outDir }. Then subject.use_cutout puts it in the comp in place of the live matte. ` +
       `Once the file is checked, the cache this work wrote is no longer needed: tell the user to purge it (Edit > Purge > All Memory & Disk Cache in After Effects); it should free about ${gb(cacheBytes)} or more.`,
+    wholePiece: SUBJECT_WHOLE_PIECE_NOTE,
   };
 }
 
@@ -4614,6 +4636,9 @@ registerOp({
     "Render the cut-out once to a movie with alpha, so the piece is built on a file that cannot change: the layer with its gap fill when there is one, alone (every other layer's picture switched off for the render and put back afterwards, even when it fails; cameras and lights left as they are), over the layer's span, through one temporary render-queue item (other queue items are parked). " +
     "Picks an output template that writes a movie with alpha ('High Quality with Alpha', 'Lossless with Alpha', or another whose name says alpha; image sequences are not used) and refuses, naming the templates, when none does. " +
     "Returns outputPath, frameCount, renderSeconds, outputTemplate, templateChoice, layersSwitched, restored, sound and timing. Measured: 390 s for 320 frames of a 2176 x 3840 take, about one pass through the clip; tell the user before it runs. " +
+    SUBJECT_WHOLE_PIECE_NOTE +
+    " It renders the matte the user clicked; it cannot make the click (" +
+    "subject.prepare): get that before an unattended render. " +
     "The movie is in comp space. The original layer keeps the sound; whether the movie carries a sound track is not promised. " +
     "The kept layers render switched as they are: when the gap fill layer exists and is switched off, it refuses before rendering and says so (the file would come out with the gaps open), unless withoutFill: true, and then the result's fillWarning says the gaps are open (not checked live). " +
     "Before rendering it checks that each drive has room for its share, the movie and After Effects' disk cache (about one 16-bit frame of the source per frame: 19 GB measured for 320 frames of a 2176 x 3840 take), plus 3 GB; `space` and `cacheNote` give the numbers, and `next` says to purge the cache once the file is checked." +
