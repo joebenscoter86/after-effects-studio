@@ -723,6 +723,8 @@ describe("pixel-headline module", () => {
     const cases = [
       { box: { x0: 40.2019, x1: 1033.8019, y0: 383.0384, y1: 607.348 }, pivot: [540, 538], seed: 103, lineBand: [324, 382], blockScale: 0.2, counts: [2, 2, 5, 7, 0, 1, 2, 4, 3, 3, 1] },
       { box: { x0: 43.7541, x1: 1037.3542, y0: 318.3935, y1: 610.0176 }, pivot: [540, 588], seed: 113, lineBand: [250, 308], blockScale: 0.3, counts: [17, 19, 26, 28, 10, 12, 14, 10, 5, 5, 2] },
+      // a word tucked behind the speaker, low in the frame: the grid stops at 45 % of the height, as built
+      { box: { x0: 47.8216, x1: 1041.4216, y0: 651.6025, y1: 903.5068 }, pivot: [540, 827], seed: 105, lineBand: [586, 644], blockScale: 0.2, counts: [3, 3, 3, 3, 0, 2, 2, 3, 3, 3, 1] },
     ];
     for (const c of cases) {
       const r = PH.blocksFor({ ...c, text: "word", width: 1080, height: 1920, cell: 39, dark: true });
@@ -731,5 +733,9 @@ describe("pixel-headline module", () => {
       const X = r.clearBox;
       expect(r.blocks.filter((q: any) => q.x + q.w > X.x0 && q.x < X.x1 && q.y + q.h > X.y0 && q.y < X.y1)).toEqual([]);
     }
+    // gridDepth 1 reaches the bottom of the frame: more blocks below the tucked word (extended)
+    const low = cases[2], deep = PH.blocksFor({ ...low, text: "word", width: 1080, height: 1920, cell: 39, dark: true, gridDepth: 1 });
+    expect(deep.blocks.length).toBeGreaterThan(PH.blocksFor({ ...low, text: "word", width: 1080, height: 1920, cell: 39, dark: true }).blocks.length);
+    expect(deep.blocks.some((q: any) => q.y >= 0.45 * 1920)).toBe(true);
   });
 });
