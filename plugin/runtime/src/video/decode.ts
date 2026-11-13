@@ -122,7 +122,7 @@ export async function* readFrames(info: VideoInfo, o: ReadOptions, tools: VideoT
   if (!proc) throw new Error(NO_FFMPEG);
   let stderr = "";
   proc.stderr!.on("data", (d) => { stderr += String(d); });
-  let buf = Buffer.alloc(0), index = from;
+  let buf: Buffer = Buffer.alloc(0), index = from;
   try {
     for await (const chunk of proc.stdout!) {
       buf = buf.length ? Buffer.concat([buf, chunk as Buffer]) : (chunk as Buffer);
