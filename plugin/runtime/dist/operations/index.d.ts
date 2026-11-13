@@ -26,5 +26,6 @@ import "./pref.js";
 import "./shape-contents.js";
 import "./layout.js";
 import "./sample.js";
+import "./video.js";
 import "./instance.js";
 //# sourceMappingURL=index.d.ts.map

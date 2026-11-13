@@ -6,6 +6,7 @@ import { promises as fs } from "node:fs";
 import * as path from "node:path";
 import { analyzeCurve, curveGraph, parseTiming, soundOnsets, syncReport, } from "../color/motion.js";
 import { encodePngSrgb8 } from "../color/png16.js";
+import { runCompareMoves } from "../video/run-moves.js";
 import { registerOp, jsxFail, jsxVal, jsxCompPreamble, jsxCompLayerPreamble } from "../registry.js";
 const DEFAULT_PROPERTIES = [
     ["Transform", "Anchor Point"],
@@ -369,6 +370,25 @@ registerOp({
     ],
     toJsx: () => jsxFail("motion.curve runs in Node; call it through ae_do"),
     run: (args, transport) => runCurve(args, liveIO(transport)),
+});
+registerOp({
+    name: "motion.compare_moves",
+    category: "motion",
+    readOnly: true,
+    description: "Compare a build's moves with moves measured from a reference (video.track's track.json): per move, its duration, distance and ease (out and in influence) or a spring's overshoot, built against measured, within or outside a tolerance (default 1 frame, 2 % of the distance, 10 influence points), in sentences such as 'move 7 (position): duration 14 frames against 12, outside tolerance'. The build is a property (comp, layer, property: read once from After Effects and fitted the way video.track fits) or a second track.json from video.track on the build's rendered file. Do both: a property can pass while the picture does not (a subject that leans under a zoom); the picture is the one that counts.",
+    params: [
+        { name: "measured", type: "any", description: "Absolute path of the reference's track.json (or its moves)", required: true },
+        { name: "comp", type: "any", description: "The build: comp name or id (with layer and property)", required: false },
+        { name: "layer", type: "any", description: "The build: layer index, name or { id }", required: false },
+        { name: "property", type: "any", description: "The build: a transform property's name or a path of names", required: false },
+        { name: "start", type: "number", description: "Seconds (default the layer's in-point)", required: false },
+        { name: "end", type: "number", description: "Seconds (default the layer's out-point)", required: false },
+        { name: "buildTrack", type: "string", description: "Or the build as a track.json from video.track on its rendered file", required: false },
+        { name: "tolerance", type: "object", description: "{ frames (1), distanceShare (0.02), easePoints (10) }", required: false },
+        { name: "atFps", type: "number", description: "Frames at this rate (default 30)", required: false },
+    ],
+    toJsx: () => jsxFail("motion.compare_moves runs in Node; call it through ae_do"),
+    run: (args, transport) => runCompareMoves(args, (a) => runCurve(a, liveIO(transport))),
 });
 registerOp({
     name: "sound.markers",
