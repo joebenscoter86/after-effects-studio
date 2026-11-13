@@ -3619,9 +3619,11 @@ export function renderCutoutJsx(args: {
   start: number;
   duration: number;
   overwrite: boolean;
+  subject?: string;
 }): string {
   return `
             ${jsxCompPreamble(args as Record<string, unknown>)}
+            var _subject = ${jsxVal(args.subject ?? "")};
             ${PARK_QUEUE_FN}
             var rq = app.project.renderQueue;
             if (AE.safeGet(function () { return rq.rendering; }, false)) return { ok: false, error: "the render queue is already rendering; wait for it to finish" };
@@ -3648,7 +3650,9 @@ export function renderCutoutJsx(args: {
                     var _mn = AE.safeGet(function () { return L.matchName; }, "");
                     if (_mn === "ADBE Camera Layer" || _mn === "ADBE Light Layer") continue;
                     var _s = { layer: L, enabled: L.enabled, solo: AE.safeGet(function () { return !!L.solo; }, false), locked: AE.safeGet(function () { return !!L.locked; }, false) };
-                    var _want2 = _kept(L.name) ? _s.enabled : false;
+                    // the subject renders even when it is switched off for display (subject.use_cutout leaves it off); the
+                    // other kept layers (the gap fill, the soft edge) render as they are switched
+                    var _want2 = _kept(L.name) ? (L.name === _subject ? true : _s.enabled) : false;
                     if (_want2 === _s.enabled && !_s.solo) continue;
                     if (_s.locked) L.locked = false;
                     if (_s.solo) L.solo = false;
@@ -3778,6 +3782,7 @@ export async function runRenderCutout(args: Record<string, unknown>, io: FileIO)
     renderCutoutJsx({
       comp: args.comp,
       keep: plan.keep,
+      subject: plan.layer,
       outputPath,
       outputTemplate: choice.template,
       start: span ? span.start : plan.span.start,
@@ -4741,7 +4746,7 @@ registerOp({
     " It renders the matte the user clicked; it cannot make the click (" +
     "subject.prepare): get that before an unattended render. " +
     "The movie is in comp space. The original layer keeps the sound; whether the movie carries a sound track is not promised. " +
-    "The kept layers render switched as they are: when the gap fill layer exists and is switched off, it refuses before rendering and says so (the file would come out with the gaps open), unless withoutFill: true, and then the result's fillWarning says the gaps are open (not checked live). " +
+    "The subject layer is switched on for the render even when it is off for display (subject.use_cutout leaves it off), and back afterwards. The other kept layers render switched as they are: when the gap fill layer exists and is switched off, it refuses before rendering and says so (the file would come out with the gaps open), unless withoutFill: true, and then the result's fillWarning says the gaps are open (not checked live). " +
     "Before rendering it checks that each drive has room for its share, the movie and After Effects' disk cache (about one 16-bit frame of the source per frame: 19 GB measured for 320 frames of a 2176 x 3840 take), plus 3 GB; `space` and `cacheNote` give the numbers, and `next` says to purge the cache once the file is checked." +
     RENDER_QUEUE_UNDO_WARNING,
   params: [

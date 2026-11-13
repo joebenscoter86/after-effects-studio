@@ -144,4 +144,13 @@ describe("subject.render_cutout from / to", () => {
     expect(params).toEqual(expect.arrayContaining(["from", "to"]));
     expect(getOp("subject.render_cutout")!.description).toContain(HALVES_JOIN_NOTE);
   });
+
+  it("switches the subject layer on for the render, so a subject left off (after subject.use_cutout) is not rendered as nothing", async () => {
+    // Live, 2026-11-13: with the subject layer switched off, the render wrote 90 fully transparent frames and reported ok.
+    const f = io();
+    await runRenderCutout({ comp: "Main", layer: 1, outputPath: path.join(dir, "c.mov"), from: 0, to: 3 }, f);
+    const code = f.calls[1].code as string;
+    expect(code).toMatch(/var _subject = "take\.mov";/);
+    expect(code).toMatch(/_kept\(L\.name\) \? \(L\.name === _subject \? true : _s\.enabled\) : false/);
+  });
 });
