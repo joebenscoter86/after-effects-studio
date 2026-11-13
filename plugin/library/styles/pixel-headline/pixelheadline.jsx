@@ -15,7 +15,9 @@ var AESPixelHeadline = (function () {
     leadStrength: [[-1.865, 100, .33, .01, 0, -2.322], [26.119, 0, .823, .33, 0, 0]],
     tailStrength: [[-.376, 100, .33, .066, 0, -2.182], [26.078, 0, .842, .33, 0, 0]],
     leadDelay: 4.75, tailDelay: 6.4, leadDrop: 136, tailSlide: 154, tailBlur: 10,
-    deepGlow: { keys: [[-2, 0], [0, .64], [24.26, 0]], eases: [[33, 33], [30.7, 83.3], [5, 33]] },
+    // Exposure 0.64 on a light ground (calibrated); 0.2 on a dark one (set from test renders on a dark wall: at 0.64 the
+    // Screen haze washes the word's own letters toward white, at 0.2 they keep the accent and the haze still shows)
+    deepGlow: { keys: [[-2, 0], [0, .64], [24.26, 0]], eases: [[33, 33], [30.7, 83.3], [5, 33]], darkGround: .2 },
     // stock fallback: a copy of the word with two Glows, its opacity keyed per frame from W - 1 (linear)
     stockGlow: { glows: [[30, 110, 1.803], [30, 420, .35]], from: -1,
       opacity: [0, 55.3, 69, 69.9, 69.9, 69.8, 69.8, 69.8, 67.3, 61.6, 53.9, 53.8, 45.6, 45.6, 47.5, 51, 51, 49.7, 46.1, 42.3, 39.6, 35.2, 27.5, 16.4, 0] },
@@ -94,33 +96,58 @@ var AESPixelHeadline = (function () {
       if (q) { var m = effect(S, "ADBE CHANNEL MIXER"); m.property("Red-Red").setValue(q.mixer[0]); m.property("Green-Green").setValue(q.mixer[1]); m.property("Blue-Blue").setValue(q.mixer[2]);
         var lv = effect(S, "ADBE Easy Levels2"); lv.property("Input Black").setValue(q.inBlack); lv.property("Input White").setValue(q.inWhite); lv.property("Gamma").setValue(q.gamma); lv.property("Output Black").setValue(0);
         effect(S, "ADBE HUE SATURATION").property("Master Saturation").setValue(q.saturation); } }
-    return { ground: G, speaker: S, footageGround: !!o.footageGround }; }
+    // a shade in the wall's colour over the top of the frame (hides what the take shows there, e.g. a ceiling), its lower edge
+    // feathered; it rides the push with the footage. o.topShade = { share (of the height), colour [r,g,b], feather (px) }
+    var Sh = null;
+    if (o.topShade) { var ts = o.topShade, fh = ts.feather === undefined ? .05 * H : ts.feather;
+      Sh = comp.layers.addSolid(ts.colour, P + "Top shade", W, H, 1, comp.duration);
+      Sh.property("ADBE Mask Parade").addProperty("ADBE Mask Atom").name = "Shade";
+      var sm = new Shape(); sm.vertices = [[-fh, -2 * fh], [W + fh, -2 * fh], [W + fh, ts.share * H + fh / 2], [-fh, ts.share * H + fh / 2]]; sm.closed = true;
+      Sh.property("ADBE Mask Parade").property("Shade").property("ADBE Mask Shape").setValue(sm);
+      Sh.property("ADBE Mask Parade").property("Shade").property("ADBE Mask Feather").setValue([0, fh]); }
+    return { ground: G, speaker: S, shade: Sh, footageGround: !!o.footageGround }; }
 
   // ---- the zoom-out inset: the footage scaled down inside the frame, its edges feathered by a mask, over a ground solid of
   //      the footage's own colour, so the speaker sits small and leaves room above. o = { speaker (layer), scale (%),
   //      position [x, y] (the inset's centre), feather (px on screen), ground [r,g,b] or "sample" (read from the footage's top
-  //      edge by expression), at, dur (s: when given, it moves there from where it is, no overshoot), prefix }
+  //      edge by expression), trimTop (share of the footage's height left off its top), at (s: when given, it moves there on
+  //      the push's curve over 42 frames), prefix }
   function zoomOut(comp, o) { var S = o.speaker, P = pfx(o), src = S.source, sc = o.scale, fe = o.feather === undefined ? 60 : o.feather;
     var G = comp.layers.addSolid(o.ground && o.ground.length ? o.ground : [0, 0, 0], P + "Inset ground", comp.width, comp.height, 1, comp.duration); G.moveAfter(S);
     if (o.ground === "sample") { var f = effect(G, "ADBE Fill");
       f.property("Color").expression = 'var L = thisComp.layer("' + S.name + '");\nvar c = L.sampleImage([L.width / 2, L.height * .03], [L.width * .45, L.height * .02], true, time);\n[c[0], c[1], c[2], 1];'; }
     var mk = S.property("ADBE Mask Parade").addProperty("ADBE Mask Atom"); mk.name = "Inset edge";
-    var shp = new Shape(); shp.vertices = [[0, 0], [src.width, 0], [src.width, src.height], [0, src.height]]; shp.closed = true;
+    // trimTop: a share of the footage's height left off its top (e.g. a ceiling the top shade hid at full frame)
+    var y0 = (o.trimTop || 0) * src.height, shp = new Shape(); shp.vertices = [[0, y0], [src.width, y0], [src.width, src.height], [0, src.height]]; shp.closed = true;
     S.property("ADBE Mask Parade").property("Inset edge").property("ADBE Mask Shape").setValue(shp);
     var lf = fe * 100 / sc; S.property("ADBE Mask Parade").property("Inset edge").property("ADBE Mask Feather").setValue([lf, lf]);
     S.property("ADBE Mask Parade").property("Inset edge").property("ADBE Mask Offset").setValue(-lf / 2);
     if (S.anchorPoint.value[1] !== src.height / 2) S.anchorPoint.setValue([src.width / 2, src.height / 2]);
-    if (o.at !== undefined) { var d = o.dur || sec(18), from = S.scale.valueAtTime(o.at, false), fp = S.position.valueAtTime(o.at, false);
-      AESLib.ease(S.scale, [o.at, o.at + d], [from, [sc, sc, 100].slice(0, from.length)], "travel");
-      AESLib.ease(S.position, [o.at, o.at + d], [fp, o.position], "travel"); }
-    else { S.scale.setValue([sc, sc]); S.position.setValue(o.position); }
+    if (o.at !== undefined) { var from = S.scale.valueAtTime(o.at, false), fp = S.position.valueAtTime(o.at, false);
+      pushEase(S.scale, o.at, from, [sc, sc, 100].slice(0, from.length)); pushEase(S.position, o.at, fp, toParent(S, o.position, o.at)); }
+    else { S.scale.setValue([sc, sc]); S.position.setValue(toParent(S, o.position, 0)); }
     return { ground: G, speaker: S }; }
-  // back to the full frame. o = { speaker, at, dur (default 8 frames), cover (%) }
-  function exitInset(comp, o) { var S = o.speaker, d = o.dur || sec(8), src = S.source, cv = o.cover || 100 * Math.max(comp.width / src.width, comp.height / src.height);
+  // a comp-space point in a layer's parent space at time t (parent unrotated), so a parented layer can be sent to a place on screen
+  function toParent(L, p, t) { var P = L.parent; if (!P) return p;
+    var pp = P.position.valueAtTime(t, false), pa = P.anchorPoint.valueAtTime(t, false), ps = P.scale.valueAtTime(t, false);
+    return [pa[0] + (p[0] - pp[0]) * 100 / ps[0], pa[1] + (p[1] - pp[1]) * 100 / ps[1]]; }
+  // back to the full frame on the same ease. o = { speaker, at, cover (%) }
+  function exitInset(comp, o) { var S = o.speaker, src = S.source, cv = o.cover || 100 * Math.max(comp.width / src.width, comp.height / src.height);
     var from = S.scale.valueAtTime(o.at, false), fp = S.position.valueAtTime(o.at, false);
-    AESLib.ease(S.scale, [o.at, o.at + d], [from, [cv, cv, 100].slice(0, from.length)], "travel");
-    AESLib.ease(S.position, [o.at, o.at + d], [fp, [comp.width / 2, comp.height / 2]], "travel");
-    return o.at + d; }
+    pushEase(S.scale, o.at, from, [cv, cv, 100].slice(0, from.length)); pushEase(S.position, o.at, fp, toParent(S, [comp.width / 2, comp.height / 2], o.at));
+    return o.at + sec(SIG.push[1][0]); }
+  // a move from a to b (numbers or arrays) on the push's curve: fast out of the first frame, a long ease in, over 42 frames
+  function pushEase(prop, at, a, b) { var K = SIG.push, t1 = at + sec(K[1][0]), d = [], i, n = a instanceof Array ? a.length : 1;
+    if (a instanceof Array) { var bb = []; for (i = 0; i < n; i++) bb.push(i < b.length ? b[i] : a[i]); b = bb; }   // match the layer's dimensions
+    prop.setValuesAtTimes([at, t1], [a, b]);
+    var spd = K[0][5] / (K[0][1] - K[1][1]) * REF.fps;   // the push's out speed as a share of its travel, per second
+    var span = 0; for (i = 0; i < n; i++) span = Math.max(span, Math.abs((n > 1 ? b[i] - a[i] : b - a)));
+    var dm = dims(prop), B = KeyframeInterpolationType.BEZIER, ea = [], eb = [], ec = [], ed = [];
+    for (i = 0; i < dm; i++) { ea.push(new KeyframeEase(0, 33)); eb.push(new KeyframeEase(-spd * span, K[0][3] * 100)); ec.push(new KeyframeEase(0, K[1][2] * 100)); ed.push(new KeyframeEase(0, 33)); }
+    var k0 = prop.nearestKeyIndex(at), k1 = prop.nearestKeyIndex(t1);
+    prop.setInterpolationTypeAtKey(k0, B, B); prop.setTemporalEaseAtKey(k0, ea, eb);
+    prop.setInterpolationTypeAtKey(k1, B, B); prop.setTemporalEaseAtKey(k1, ec, ed);
+    return prop; }
 
   // ---- the text reveal (native: one animator, an Expression Selector based on words, sliders). Each word reads the
   //      Strength slider at time - rank x Delay / 30 s; rank is the word's place in reading order, or, from the exit time on,
@@ -154,8 +181,10 @@ var AESPixelHeadline = (function () {
     fx.property("Reveal Exit").property(1).setValue(at);
     var st = fx.property("Reveal Strength").property(1);
     sigKeys(st, at, [[0, 0, .33, X.easeOut, 0, 0], [X.textFrames, 100, X.easeIn, .33, 0, 0]], 1, 0);
-    var words = L.property("Source Text").value.text.split(/\s+/).length;
-    var end = at + sec(X.textFrames + (words - 1) * X.wordDelay); L.outPoint = end; return end; }
+    // the words' delay shrinks so a long line is still gone within X.within frames
+    var words = L.property("Source Text").value.text.split(/\s+/).length, d = words > 1 ? Math.min(X.wordDelay, (X.within - X.textFrames) / (words - 1)) : 0;
+    fx.property("Reveal Exit Delay").property(1).setValue(d);
+    var end = at + sec(X.textFrames + (words - 1) * d); L.outPoint = end; return end; }
   // ---- lead-in line. o = { text, at (s: the line's spoken start), colour, prefix, maxChars }. Two lines when the text runs
   //      past maxChars (24): they stack upward from the lead-in's baseline, so the giant word's place does not move.
   function leadIn(comp, o) { var s = k(comp), T = SIG.type, lines = wrap(o.text, o.maxChars), size = T.leadSize * s, lead = size * T.leading;
@@ -239,12 +268,12 @@ var AESPixelHeadline = (function () {
             var blk = { i: cl.i, j: cl.j, x: cl.x, y: cl.y, w: c, h: c, d: cl.d, on: f, off: null, opacity: lo[0] + R() * (lo[1] - lo[0]) };
             used[cl.i + "," + cl.j] = 1; act.push(blk); out.push(blk); } } }
       for (var a = 0; a < act.length; a++) act[a].off = counts.length; }
-    var strongC = [], weakC = [], area = (o.width * o.height) / (REF.w * REF.h), count = o.count || B.count, dist = o.dist || B.dist;
+    var strongC = [], weakC = [], area = (o.width * o.height) / (REF.w * REF.h) * (o.scale === undefined ? 1 : o.scale), count = o.count || B.count, dist = o.dist || B.dist;
     for (i = 0; i < count.length; i++) { strongC.push(Math.round(count[i] * area)); weakC.push(Math.round(count[i] * area * B.weakRatio)); }
     run(strongC, true); run(weakC, false);
     return out; }
   // o = { word (heroWord's result), at (W), colour, seed, lineBand }
-  function pixelBlocks(comp, o) { var blocks = blockSchedule({ box: o.word.box, width: comp.width, height: comp.height, seed: o.seed || 7, cell: SIG.blocks.cell * k(comp), lineBand: o.lineBand, count: o.count, dist: o.dist });
+  function pixelBlocks(comp, o) { var blocks = blockSchedule({ box: o.word.box, width: comp.width, height: comp.height, seed: o.seed || 7, cell: SIG.blocks.cell * k(comp), lineBand: o.lineBand, count: o.count, dist: o.dist, scale: o.blockScale });
     var L = comp.layers.addShape(); L.name = pfx(o) + "Pixels"; var root = L.property("ADBE Root Vectors Group");
     for (var b = 0; b < blocks.length; b++) { var q = blocks[b], g = root.addProperty("ADBE Vector Group"); g.name = "B" + (b + 1);
       var rr = root.property(b + 1).property("ADBE Vectors Group").addProperty("ADBE Vector Shape - Rect");
@@ -355,21 +384,22 @@ var AESPixelHeadline = (function () {
     for (i = 0; i < lEnd; i++) lead.push(words[i].text); for (i = tStart; i < words.length; i++) tl.push(words[i].text);
     var type = b.type || "opener", P = pfx(b);
     // an earlier beat's speaker (and ground) can be passed in; otherwise the stage is built here
-    var st = b.speaker ? { speaker: b.speaker, ground: b.groundLayer || null } : stage(comp, { take: b.take, takeStart: b.takeStart, scale: b.speakerScale, x: b.speakerX, ground: b.ground, grade: b.grade, footageGround: b.footageGround, prefix: P });
+    var st = b.speaker ? { speaker: b.speaker, ground: b.groundLayer || null } : stage(comp, { take: b.take, takeStart: b.takeStart, scale: b.speakerScale, x: b.speakerX, ground: b.ground, grade: b.grade, footageGround: b.footageGround, topShade: b.topShade, prefix: P });
     var scene = [st.speaker], stack = null, line = null, L = null, T = null;
+    if (st.shade) scene.push(st.shade); if (b.shadeLayer) scene.push(b.shadeLayer);
     if (b.footageGround || b.insetGround) scene.push(b.insetGround || null);
     if (type === "opener" && b.clips && b.clips.length) { stack = cardStack(comp, { clips: b.clips, at: W, side: b.side || "left", face: b.face, prefix: P, word: { box: { y1: comp.height * SIG.type.wordBaseline } } });
       for (i = 0; i < stack.layers.length; i++) scene.push(stack.layers[i]); rep.cards = stack.first; rep.warnings = rep.warnings.concat(stack.layout.warnings); }
     if (stack) { line = drawnLine(comp, { at: W, path: stack.path, colour: b.accent, cards: b.clips.length, prefix: P }); scene.push(line); }
     if (type === "opener" && lead.length) { L = leadIn(comp, { text: lead.join(" "), at: words[0].t, prefix: P, maxChars: b.maxChars }); scene.push(L); rep.leadAt = words[0].t; }
     var hw = heroWord(comp, { text: words[si].text, at: W, colour: b.accent, glow: b.glow, exposure: b.exposure, darkGround: b.darkGround, prefix: P });
-    var px = pixelBlocks(comp, { word: hw, at: W, colour: b.accent, seed: b.seed, prefix: P, count: b.blockCount, dist: b.blockDist, lineBand: L ? [comp.height * SIG.type.leadBaseline - 50 * k(comp), comp.height * SIG.type.leadBaseline + 8 * k(comp)] : null });
+    var px = pixelBlocks(comp, { word: hw, at: W, colour: b.accent, seed: b.seed, prefix: P, blockScale: b.blockScale, count: b.blockCount, dist: b.blockDist, lineBand: L ? [comp.height * SIG.type.leadBaseline - 50 * k(comp), comp.height * SIG.type.leadBaseline + 8 * k(comp)] : null });
     px.layer.moveAfter(hw.glowLayer || hw.layer); scene.push(px.layer, hw.layer); if (hw.glowLayer) scene.push(hw.glowLayer);   // blocks under the word and its glow
     if (type === "opener" && tl.length) { T = tail(comp, { text: tl.join(" "), at: words[tStart].t, under: hw.layer, prefix: P, maxChars: b.maxChars }); scene.push(T); rep.tailAt = words[tStart].t; }
     var pu = null; if (b.push !== false && type === "opener") { pu = push(comp, { at: b.pushAt !== undefined ? b.pushAt : (L ? words[0].t - sec(SIG.pushLead) : W - sec(48)), pivotY: b.pivotY, layers: scene, sway: b.sway, camera: b.camera, prefix: P }); rep.pushAt = b.camera ? (b.pushAt !== undefined ? b.pushAt : (L ? words[0].t - sec(SIG.pushLead) : W - sec(48))) : pu.layer.scale.keyTime(1); rep.swayDivided = pu.divided; rep.camera = pu.layer; }
     else if (b.camera) { for (i = 0; i < scene.length; i++) if (scene[i] && scene[i].parent !== b.camera) scene[i].parent = b.camera; }
     motionBlur(comp, scene.concat([st.ground]));
-    rep.speaker = st.speaker; rep.ground = st.ground; rep.prefix = P;
+    rep.speaker = st.speaker; rep.ground = st.ground; rep.shade = st.shade || b.shadeLayer || null; rep.prefix = P;
     rep.W = W; rep.glow = hw.glow; rep.wordBox = hw.box; rep.wordSize = hw.size; rep.blocks = px.blocks.length;
     if (stack) { rep.cardScale = stack.layout.cardScale; rep.cardPos = stack.layout.pos; rep.linePath = stack.path.vertices; }
     return rep; }

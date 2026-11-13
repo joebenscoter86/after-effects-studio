@@ -358,6 +358,14 @@ describe("pixel-headline module", () => {
     expect(r.layers).toContain("PH Tail");
   });
 
+  it("a long line still leaves within 10 frames: the exit's word delay shrinks", () => {
+    const { PH, comp } = makeAE({ deepGlow: true });
+    const L = PH.leadIn(comp, { text: "when in reality all you need is", at: 1 });
+    const end = PH.exitText(L, 3);
+    expect(end).toBeCloseTo(3 + F(10), 9);
+    expect(L.property("ADBE Effect Parade").property("Reveal Exit Delay").property(1).value).toBeCloseTo(4 / 6, 9);
+  });
+
   it("the footage as the ground: no ground solid, the take covering the frame, pushed with the scene", () => {
     const { PH, comp } = makeAE({ deepGlow: true });
     const rep = PH.beat(comp, referenceBrief(0, { footageGround: true, take: { name: "room", width: 1920, height: 1080, isComp: false } }));
@@ -377,11 +385,13 @@ describe("pixel-headline module", () => {
     expect(st.speaker.position.value).toEqual([540, 1400]);
     const mk = st.speaker.property("ADBE Mask Parade").property("Inset edge");
     expect(mk.property("ADBE Mask Feather").value).toEqual([100, 100]);
+    const r2 = PH.zoomOut(comp, { speaker: PH.stage(comp, { take: { name: "room2", width: 1920, height: 1080, isComp: false }, footageGround: true, prefix: "PH Z " }).speaker, scale: 60, position: [540, 1400], trimTop: 0.07, ground: [0, 0, 0], prefix: "PH Z " });
+    expect(r2.speaker.property("ADBE Mask Parade").property("Inset edge").property("ADBE Mask Shape").value.vertices[0]).toEqual([0, 0.07 * 1080]);
     expect(r.ground.name).toBe("PH Inset ground");
     expect(comp._layers.indexOf(r.ground)).toBe(comp._layers.indexOf(st.speaker) + 1);
     expect(r.ground.property("ADBE Effect Parade").kids[0].property("Color").expression).toMatch(/sampleImage/);
     const back = PH.exitInset(comp, { speaker: st.speaker, at: 5 });
-    expect(back).toBeCloseTo(5 + F(8), 9);
+    expect(back).toBeCloseTo(5 + F(42), 9);   // back on the push's curve
   });
 
   it("a landscape card: the rim and corners scale by its shorter side, its width set on screen", () => {
