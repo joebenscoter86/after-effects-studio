@@ -1,5 +1,7 @@
 // Project-level operations — clear, delete item, find layers, list effects.
-import { registerOp, jsxVal, jsxCompPreamble } from "../registry.js";
+import { promises as fs } from "node:fs";
+import * as path from "node:path";
+import { registerOp, jsxVal, jsxCompPreamble, jsxFail } from "../registry.js";
 import { REDO_COMMAND_ID, UNDO_COMMAND_ID } from "./command.js";
 registerOp({
     name: "project.open",
@@ -1012,5 +1014,156 @@ registerOp({
                 findings: _r.findings, counts: _r.counts, total: _r.findings.length, kept: _r.kept, fontsChecked: _missing !== null };
         `;
     },
+});
+function liveSnapshotIO(transport) {
+    return {
+        async execute(code, opts) {
+            const r = await transport.execute({ code, label: opts.label, timeoutMs: opts.timeoutMs, undoGroup: false, suppressDialogs: true });
+            return r.ok ? r.result : { ok: false, error: r.error ?? `${opts.label} failed` };
+        },
+    };
+}
+const STATE_JSX = "return { ok: true, file: app.project.file ? app.project.file.fsName : null, dirty: app.project.dirty };";
+const SNAP_DIR_SUFFIX = " snapshots";
+function snapshotPlace(projectFile) {
+    const ext = /\.aepx$/i.test(projectFile) ? ".aepx" : ".aep";
+    const base = path.basename(projectFile).replace(/\.aepx?$/i, "");
+    const folder = path.join(path.dirname(projectFile), `${base}${SNAP_DIR_SUFFIX}`);
+    return { base, ext, folder, index: path.join(folder, "snapshots.json") };
+}
+/** A file this op wrote: `<base>_snapshot_NNN.aep` inside `<base> snapshots`. */
+function isSnapshotFile(file) {
+    const m = /^(.*)_snapshot_\d+\.aepx?$/i.exec(path.basename(file));
+    return !!m && path.basename(path.dirname(file)) === `${m[1]}${SNAP_DIR_SUFFIX}`;
+}
+async function readIndex(index) {
+    try {
+        return JSON.parse(await fs.readFile(index, "utf8"));
+    }
+    catch {
+        return [];
+    }
+}
+/** Copy the project file on disk to the next numbered snapshot; nothing in After Effects changes. */
+async function copySnapshot(projectFile, label) {
+    const { base, ext, folder, index } = snapshotPlace(projectFile);
+    await fs.mkdir(folder, { recursive: true });
+    const list = await readIndex(index);
+    const number = list.reduce((m, e) => Math.max(m, e.number), 0) + 1;
+    const name = `${base}_snapshot_${String(number).padStart(3, "0")}${ext}`;
+    await fs.copyFile(projectFile, path.join(folder, name));
+    const entry = { number, file: name, takenAt: new Date().toISOString(), label, fromUnsaved: false };
+    await fs.writeFile(index, JSON.stringify([...list, entry], null, 1));
+    return { ...entry, path: path.join(folder, name) };
+}
+export async function runSnapshot(args, io) {
+    const label = typeof args.label === "string" ? args.label : null;
+    const st = await io.execute(STATE_JSX, { label: "project.snapshot state", timeoutMs: 30_000 });
+    if (!st?.ok)
+        return { ok: false, error: st?.error ?? "could not read the project" };
+    if (!st.file)
+        return { ok: false, error: "the project has never been saved, so there is no file to snapshot: save it first (ae_save_project with a path)" };
+    if (isSnapshotFile(st.file))
+        return { ok: false, error: `the open project is itself a snapshot (${st.file}): open the working file first` };
+    if (!st.dirty) {
+        const e = await copySnapshot(st.file, label);
+        return {
+            ok: true,
+            number: e.number,
+            path: e.path,
+            label,
+            openFile: st.file,
+            note: "A copy of the project file as last saved; After Effects and the open project were not touched. project.restore { number } puts it back.",
+        };
+    }
+    if (args.unsaved !== "save-as-snapshot")
+        return {
+            ok: false,
+            error: "the project has unsaved changes, and a copy of its file on disk would miss them. Either save first (ae_save_project) and take the snapshot, " +
+                "or pass unsaved: 'save-as-snapshot' to save the current state as the snapshot: the user's file stays as last saved, but After Effects then has the snapshot open, and later saves go there. No command saves a copy without a dialog.",
+        };
+    const { base, ext, folder, index } = snapshotPlace(st.file);
+    await fs.mkdir(folder, { recursive: true });
+    const list = await readIndex(index);
+    const number = list.reduce((m, e) => Math.max(m, e.number), 0) + 1;
+    const name = `${base}_snapshot_${String(number).padStart(3, "0")}${ext}`;
+    const target = path.join(folder, name);
+    const r = await io.execute(`app.project.save(new File(${jsxVal(target)})); return { ok: true, file: app.project.file ? app.project.file.fsName : null, dirty: app.project.dirty };`, { label: "project.snapshot save as", timeoutMs: 120_000 });
+    if (!r?.ok)
+        return { ok: false, error: r?.error ?? "the save failed" };
+    const entry = { number, file: name, takenAt: new Date().toISOString(), label, fromUnsaved: true };
+    await fs.writeFile(index, JSON.stringify([...list, entry], null, 1));
+    return {
+        ok: true,
+        number,
+        path: target,
+        label,
+        openFile: r.file,
+        userFile: st.file,
+        note: `The current state, unsaved changes included, was saved as snapshot ${number}. The user's file (${st.file}) is as last saved. After Effects now has the snapshot open: tell the user, and open their file again before going on (its unsaved changes are in the snapshot only).`,
+    };
+}
+export async function runRestore(args, io) {
+    const st = await io.execute(STATE_JSX, { label: "project.restore state", timeoutMs: 30_000 });
+    if (!st?.ok)
+        return { ok: false, error: st?.error ?? "could not read the project" };
+    if (!st.file)
+        return { ok: false, error: "the project has never been saved, so it has no snapshots" };
+    if (isSnapshotFile(st.file))
+        return { ok: false, error: `the open project is itself a snapshot (${st.file}): open the working file, then restore` };
+    const { folder, index } = snapshotPlace(st.file);
+    const list = await readIndex(index);
+    if (!list.length)
+        return { ok: false, error: `no snapshots beside ${st.file}` };
+    const want = typeof args.number === "number" ? args.number : list[list.length - 1].number;
+    const snap = list.find((e) => e.number === want);
+    if (!snap)
+        return { ok: false, error: `no snapshot ${want} (there are ${list.map((e) => e.number).join(", ")})` };
+    if (st.dirty && args.discardUnsaved !== true)
+        return {
+            ok: false,
+            error: "the project has unsaved changes, and restoring closes it without saving: save first (and snapshot it), or pass discardUnsaved: true to lose them",
+        };
+    // The current file first, so the restore itself can be undone.
+    const before = await copySnapshot(st.file, `before restoring ${want}${st.dirty ? " (as last saved; unsaved changes discarded)" : ""}`);
+    const c = await io.execute("app.project.close(CloseOptions.DO_NOT_SAVE_CHANGES); return { ok: true };", {
+        label: "project.restore close",
+        timeoutMs: 60_000,
+    });
+    if (!c?.ok)
+        return { ok: false, error: c?.error ?? "could not close the project", before };
+    await fs.copyFile(path.join(folder, snap.file), st.file);
+    const o = await io.execute(`app.open(new File(${jsxVal(st.file)})); return { ok: true, file: app.project.file ? app.project.file.fsName : null, dirty: app.project.dirty };`, { label: "project.restore open", timeoutMs: 120_000 });
+    if (!o?.ok)
+        return { ok: false, error: `the snapshot was copied over ${st.file} but it did not open: ${o?.error ?? "unknown"}`, before };
+    return {
+        ok: true,
+        restored: { number: snap.number, label: snap.label, takenAt: snap.takenAt },
+        file: o.file,
+        before: { number: before.number, path: before.path },
+        note: `${st.file} now holds snapshot ${want} and is open. Its state before the restore${st.dirty ? ", as last saved (the unsaved changes were discarded)," : ""} is snapshot ${before.number}.`,
+    };
+}
+registerOp({
+    name: "project.snapshot",
+    category: "project",
+    description: "Keep a numbered copy of the project before a risky change: the way back that does not depend on undo. A saved project with no unsaved changes is copied as a file to '<project> snapshots/<project>_snapshot_NNN.aep' beside it (with snapshots.json: number, time, label); After Effects is not touched. With unsaved changes it refuses and says why, unless unsaved: 'save-as-snapshot', which saves the current state as the snapshot: the user's file stays as last saved, but After Effects then has the snapshot open (no command saves a copy without a dialog). A project never saved is refused.",
+    params: [
+        { name: "label", type: "string", description: "What the snapshot is before (shown by project.restore)", required: false },
+        { name: "unsaved", type: "string", description: "'save-as-snapshot' to snapshot unsaved changes by saving as the snapshot (the snapshot is then open)", required: false },
+    ],
+    toJsx: () => jsxFail("project.snapshot runs in Node; call it through ae_do"),
+    run: (args, transport) => runSnapshot(args, liveSnapshotIO(transport)),
+});
+registerOp({
+    name: "project.restore",
+    category: "project",
+    description: "Put snapshot `number` (default the latest) back: snapshots the current file first (so the restore can itself be undone), closes the project without saving, copies the snapshot over the project's own file and reopens it, so the user stays in their own file. Refuses over unsaved changes unless discardUnsaved: true, and when the open project is itself a snapshot.",
+    params: [
+        { name: "number", type: "number", description: "Snapshot number (default the latest)", required: false },
+        { name: "discardUnsaved", type: "boolean", description: "Restore even though the project has unsaved changes, losing them", required: false },
+    ],
+    toJsx: () => jsxFail("project.restore runs in Node; call it through ae_do"),
+    run: (args, transport) => runRestore(args, liveSnapshotIO(transport)),
 });
 //# sourceMappingURL=project.js.map

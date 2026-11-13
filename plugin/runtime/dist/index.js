@@ -3271,8 +3271,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path17) {
-      let input2 = path17;
+    function removeDotSegments(path18) {
+      let input2 = path18;
       const output2 = [];
       let nextSlash = -1;
       let len = 0;
@@ -3346,11 +3346,11 @@ var require_utils = __commonJS({
       }
       return output2.join("");
     }
-    function removeDotSegmentsRelative(path17) {
-      if (path17 === "" || path17[0] === "/") {
-        return removeDotSegments(path17);
+    function removeDotSegmentsRelative(path18) {
+      if (path18 === "" || path18[0] === "/") {
+        return removeDotSegments(path18);
       }
-      const segments = path17.split("/");
+      const segments = path18.split("/");
       const last = segments.length - 1;
       const output2 = [];
       let trailingDirectory = false;
@@ -3713,8 +3713,8 @@ var require_schemes = __commonJS({
       }
       if (wsComponent.resourceName) {
         const queryIndex = wsComponent.resourceName.indexOf("?");
-        const path17 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
-        wsComponent.path = path17 && path17 !== "/" ? path17 : void 0;
+        const path18 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
+        wsComponent.path = path18 && path18 !== "/" ? path18 : void 0;
         wsComponent.query = queryIndex === -1 ? void 0 : wsComponent.resourceName.slice(queryIndex + 1);
         wsComponent.resourceName = void 0;
       }
@@ -7251,12 +7251,12 @@ var require_dist = __commonJS({
         throw new Error(`Unknown format "${name}"`);
       return f;
     };
-    function addFormats(ajv, list, fs14, exportName) {
+    function addFormats(ajv, list, fs15, exportName) {
       var _a3;
       var _b;
       (_a3 = (_b = ajv.opts.code).formats) !== null && _a3 !== void 0 ? _a3 : _b.formats = (0, codegen_1._)`require("ajv-formats/dist/formats").${exportName}`;
       for (const f of list)
-        ajv.addFormat(f, fs14[f]);
+        ajv.addFormat(f, fs15[f]);
     }
     module.exports = exports = formatsPlugin;
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -7555,23 +7555,23 @@ __export(eval_exports, {
   readScriptFile: () => readScriptFile
 });
 import { readFileSync, realpathSync, statSync as statSync2 } from "node:fs";
-import * as path12 from "node:path";
+import * as path13 from "node:path";
 function realOrResolved(p) {
   try {
     return realpathSync(p);
   } catch {
-    return path12.resolve(p);
+    return path13.resolve(p);
   }
 }
 function isInside(p, root) {
-  const rel = path12.relative(root, p);
-  return rel === "" || !rel.startsWith("..") && !path12.isAbsolute(rel);
+  const rel = path13.relative(root, p);
+  return rel === "" || !rel.startsWith("..") && !path13.isAbsolute(rel);
 }
 function refuse(error62, hint) {
   return hint ? { ok: false, error: error62, hint } : { ok: false, error: error62 };
 }
 function readScriptFile(file2) {
-  if (!path12.isAbsolute(file2)) {
+  if (!path13.isAbsolute(file2)) {
     return {
       ok: false,
       error: `file must be an absolute path (got '${file2}'): the server's working directory is not yours`
@@ -8063,8 +8063,8 @@ function getErrorMap() {
 
 // node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path17, errorMaps, issueData } = params;
-  const fullPath = [...path17, ...issueData.path || []];
+  const { data, path: path18, errorMaps, issueData } = params;
+  const fullPath = [...path18, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -8179,11 +8179,11 @@ var errorUtil;
 
 // node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path17, key) {
+  constructor(parent, value, path18, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path17;
+    this._path = path18;
     this._key = key;
   }
   get path() {
@@ -12138,10 +12138,10 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path17) {
-  if (!path17)
+function getElementAtPath(obj, path18) {
+  if (!path18)
     return obj;
-  return path17.reduce((acc, key) => acc?.[key], obj);
+  return path18.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -12481,11 +12481,11 @@ function explicitlyAborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path17, issues) {
+function prefixIssues(path18, issues) {
   return issues.map((iss) => {
     var _a3;
     (_a3 = iss).path ?? (_a3.path = []);
-    iss.path.unshift(path17);
+    iss.path.unshift(path18);
     return iss;
   });
 }
@@ -12947,16 +12947,16 @@ function flattenError(error62, mapper = (issue2) => issue2.message) {
 }
 function formatError(error62, mapper = (issue2) => issue2.message) {
   const fieldErrors = { _errors: [] };
-  const processError = (error63, path17 = []) => {
+  const processError = (error63, path18 = []) => {
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path17, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path18, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path17, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path18, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path17, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path18, ...issue2.path]);
       } else {
-        const fullpath = [...path17, ...issue2.path];
+        const fullpath = [...path18, ...issue2.path];
         if (fullpath.length === 0) {
           fieldErrors._errors.push(mapper(issue2));
         } else {
@@ -12995,17 +12995,17 @@ function formatError(error62, mapper = (issue2) => issue2.message) {
 }
 function treeifyError(error62, mapper = (issue2) => issue2.message) {
   const result = { errors: [] };
-  const processError = (error63, path17 = []) => {
+  const processError = (error63, path18 = []) => {
     var _a3;
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path17, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path18, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path17, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path18, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path17, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path18, ...issue2.path]);
       } else {
-        const fullpath = [...path17, ...issue2.path];
+        const fullpath = [...path18, ...issue2.path];
         if (fullpath.length === 0) {
           result.errors.push(mapper(issue2));
           continue;
@@ -13044,8 +13044,8 @@ function treeifyError(error62, mapper = (issue2) => issue2.message) {
 }
 function toDotPath(_path) {
   const segs = [];
-  const path17 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
-  for (const seg of path17) {
+  const path18 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
+  for (const seg of path18) {
     if (typeof seg === "number")
       segs.push(`[${seg}]`);
     else if (typeof seg === "symbol")
@@ -28596,11 +28596,11 @@ function normalizeObjectSchema(schema) {
   }
   return void 0;
 }
-function getDotPath(path17) {
-  if (path17.length === 0) {
+function getDotPath(path18) {
+  if (path18.length === 0) {
     return "object root";
   }
-  return path17.reduce((acc, seg, index) => {
+  return path18.reduce((acc, seg, index) => {
     if (index === 0) {
       return String(seg);
     }
@@ -30827,13 +30827,13 @@ function resolveRef(ref, ctx) {
   if (!ref.startsWith("#")) {
     throw new Error("External $ref is not supported, only local refs (#/...) are allowed");
   }
-  const path17 = ref.slice(1).split("/").filter(Boolean);
-  if (path17.length === 0) {
+  const path18 = ref.slice(1).split("/").filter(Boolean);
+  if (path18.length === 0) {
     return ctx.rootSchema;
   }
   const defsKey = ctx.version === "draft-2020-12" ? "$defs" : "definitions";
-  if (path17[0] === defsKey) {
-    const key = path17[1] === void 0 ? void 0 : decodeJSONPointerSegment(path17[1]);
+  if (path18[0] === defsKey) {
+    const key = path18[1] === void 0 ? void 0 : decodeJSONPointerSegment(path18[1]);
     if (!key || !ctx.defs[key]) {
       throw new Error(`Reference not found: ${ref}`);
     }
@@ -41748,6 +41748,8 @@ registerOp({
 
 // src/operations/project.ts
 init_registry();
+import { promises as fs4 } from "node:fs";
+import * as path5 from "node:path";
 
 // src/operations/command.ts
 init_registry();
@@ -42856,6 +42858,149 @@ registerOp({
                 findings: _r.findings, counts: _r.counts, total: _r.findings.length, kept: _r.kept, fontsChecked: _missing !== null };
         `;
   }
+});
+function liveSnapshotIO(transport2) {
+  return {
+    async execute(code, opts) {
+      const r = await transport2.execute({ code, label: opts.label, timeoutMs: opts.timeoutMs, undoGroup: false, suppressDialogs: true });
+      return r.ok ? r.result : { ok: false, error: r.error ?? `${opts.label} failed` };
+    }
+  };
+}
+var STATE_JSX = "return { ok: true, file: app.project.file ? app.project.file.fsName : null, dirty: app.project.dirty };";
+var SNAP_DIR_SUFFIX = " snapshots";
+function snapshotPlace(projectFile) {
+  const ext = /\.aepx$/i.test(projectFile) ? ".aepx" : ".aep";
+  const base = path5.basename(projectFile).replace(/\.aepx?$/i, "");
+  const folder = path5.join(path5.dirname(projectFile), `${base}${SNAP_DIR_SUFFIX}`);
+  return { base, ext, folder, index: path5.join(folder, "snapshots.json") };
+}
+function isSnapshotFile(file2) {
+  const m = /^(.*)_snapshot_\d+\.aepx?$/i.exec(path5.basename(file2));
+  return !!m && path5.basename(path5.dirname(file2)) === `${m[1]}${SNAP_DIR_SUFFIX}`;
+}
+async function readIndex(index) {
+  try {
+    return JSON.parse(await fs4.readFile(index, "utf8"));
+  } catch {
+    return [];
+  }
+}
+async function copySnapshot(projectFile, label) {
+  const { base, ext, folder, index } = snapshotPlace(projectFile);
+  await fs4.mkdir(folder, { recursive: true });
+  const list = await readIndex(index);
+  const number4 = list.reduce((m, e) => Math.max(m, e.number), 0) + 1;
+  const name = `${base}_snapshot_${String(number4).padStart(3, "0")}${ext}`;
+  await fs4.copyFile(projectFile, path5.join(folder, name));
+  const entry = { number: number4, file: name, takenAt: (/* @__PURE__ */ new Date()).toISOString(), label, fromUnsaved: false };
+  await fs4.writeFile(index, JSON.stringify([...list, entry], null, 1));
+  return { ...entry, path: path5.join(folder, name) };
+}
+async function runSnapshot(args, io) {
+  const label = typeof args.label === "string" ? args.label : null;
+  const st = await io.execute(STATE_JSX, { label: "project.snapshot state", timeoutMs: 3e4 });
+  if (!st?.ok) return { ok: false, error: st?.error ?? "could not read the project" };
+  if (!st.file) return { ok: false, error: "the project has never been saved, so there is no file to snapshot: save it first (ae_save_project with a path)" };
+  if (isSnapshotFile(st.file))
+    return { ok: false, error: `the open project is itself a snapshot (${st.file}): open the working file first` };
+  if (!st.dirty) {
+    const e = await copySnapshot(st.file, label);
+    return {
+      ok: true,
+      number: e.number,
+      path: e.path,
+      label,
+      openFile: st.file,
+      note: "A copy of the project file as last saved; After Effects and the open project were not touched. project.restore { number } puts it back."
+    };
+  }
+  if (args.unsaved !== "save-as-snapshot")
+    return {
+      ok: false,
+      error: "the project has unsaved changes, and a copy of its file on disk would miss them. Either save first (ae_save_project) and take the snapshot, or pass unsaved: 'save-as-snapshot' to save the current state as the snapshot: the user's file stays as last saved, but After Effects then has the snapshot open, and later saves go there. No command saves a copy without a dialog."
+    };
+  const { base, ext, folder, index } = snapshotPlace(st.file);
+  await fs4.mkdir(folder, { recursive: true });
+  const list = await readIndex(index);
+  const number4 = list.reduce((m, e) => Math.max(m, e.number), 0) + 1;
+  const name = `${base}_snapshot_${String(number4).padStart(3, "0")}${ext}`;
+  const target = path5.join(folder, name);
+  const r = await io.execute(
+    `app.project.save(new File(${jsxVal(target)})); return { ok: true, file: app.project.file ? app.project.file.fsName : null, dirty: app.project.dirty };`,
+    { label: "project.snapshot save as", timeoutMs: 12e4 }
+  );
+  if (!r?.ok) return { ok: false, error: r?.error ?? "the save failed" };
+  const entry = { number: number4, file: name, takenAt: (/* @__PURE__ */ new Date()).toISOString(), label, fromUnsaved: true };
+  await fs4.writeFile(index, JSON.stringify([...list, entry], null, 1));
+  return {
+    ok: true,
+    number: number4,
+    path: target,
+    label,
+    openFile: r.file,
+    userFile: st.file,
+    note: `The current state, unsaved changes included, was saved as snapshot ${number4}. The user's file (${st.file}) is as last saved. After Effects now has the snapshot open: tell the user, and open their file again before going on (its unsaved changes are in the snapshot only).`
+  };
+}
+async function runRestore(args, io) {
+  const st = await io.execute(STATE_JSX, { label: "project.restore state", timeoutMs: 3e4 });
+  if (!st?.ok) return { ok: false, error: st?.error ?? "could not read the project" };
+  if (!st.file) return { ok: false, error: "the project has never been saved, so it has no snapshots" };
+  if (isSnapshotFile(st.file))
+    return { ok: false, error: `the open project is itself a snapshot (${st.file}): open the working file, then restore` };
+  const { folder, index } = snapshotPlace(st.file);
+  const list = await readIndex(index);
+  if (!list.length) return { ok: false, error: `no snapshots beside ${st.file}` };
+  const want = typeof args.number === "number" ? args.number : list[list.length - 1].number;
+  const snap = list.find((e) => e.number === want);
+  if (!snap) return { ok: false, error: `no snapshot ${want} (there are ${list.map((e) => e.number).join(", ")})` };
+  if (st.dirty && args.discardUnsaved !== true)
+    return {
+      ok: false,
+      error: "the project has unsaved changes, and restoring closes it without saving: save first (and snapshot it), or pass discardUnsaved: true to lose them"
+    };
+  const before = await copySnapshot(st.file, `before restoring ${want}${st.dirty ? " (as last saved; unsaved changes discarded)" : ""}`);
+  const c = await io.execute("app.project.close(CloseOptions.DO_NOT_SAVE_CHANGES); return { ok: true };", {
+    label: "project.restore close",
+    timeoutMs: 6e4
+  });
+  if (!c?.ok) return { ok: false, error: c?.error ?? "could not close the project", before };
+  await fs4.copyFile(path5.join(folder, snap.file), st.file);
+  const o = await io.execute(
+    `app.open(new File(${jsxVal(st.file)})); return { ok: true, file: app.project.file ? app.project.file.fsName : null, dirty: app.project.dirty };`,
+    { label: "project.restore open", timeoutMs: 12e4 }
+  );
+  if (!o?.ok) return { ok: false, error: `the snapshot was copied over ${st.file} but it did not open: ${o?.error ?? "unknown"}`, before };
+  return {
+    ok: true,
+    restored: { number: snap.number, label: snap.label, takenAt: snap.takenAt },
+    file: o.file,
+    before: { number: before.number, path: before.path },
+    note: `${st.file} now holds snapshot ${want} and is open. Its state before the restore${st.dirty ? ", as last saved (the unsaved changes were discarded)," : ""} is snapshot ${before.number}.`
+  };
+}
+registerOp({
+  name: "project.snapshot",
+  category: "project",
+  description: "Keep a numbered copy of the project before a risky change: the way back that does not depend on undo. A saved project with no unsaved changes is copied as a file to '<project> snapshots/<project>_snapshot_NNN.aep' beside it (with snapshots.json: number, time, label); After Effects is not touched. With unsaved changes it refuses and says why, unless unsaved: 'save-as-snapshot', which saves the current state as the snapshot: the user's file stays as last saved, but After Effects then has the snapshot open (no command saves a copy without a dialog). A project never saved is refused.",
+  params: [
+    { name: "label", type: "string", description: "What the snapshot is before (shown by project.restore)", required: false },
+    { name: "unsaved", type: "string", description: "'save-as-snapshot' to snapshot unsaved changes by saving as the snapshot (the snapshot is then open)", required: false }
+  ],
+  toJsx: () => jsxFail("project.snapshot runs in Node; call it through ae_do"),
+  run: (args, transport2) => runSnapshot(args, liveSnapshotIO(transport2))
+});
+registerOp({
+  name: "project.restore",
+  category: "project",
+  description: "Put snapshot `number` (default the latest) back: snapshots the current file first (so the restore can itself be undone), closes the project without saving, copies the snapshot over the project's own file and reopens it, so the user stays in their own file. Refuses over unsaved changes unless discardUnsaved: true, and when the open project is itself a snapshot.",
+  params: [
+    { name: "number", type: "number", description: "Snapshot number (default the latest)", required: false },
+    { name: "discardUnsaved", type: "boolean", description: "Restore even though the project has unsaved changes, losing them", required: false }
+  ],
+  toJsx: () => jsxFail("project.restore runs in Node; call it through ae_do"),
+  run: (args, transport2) => runRestore(args, liveSnapshotIO(transport2))
 });
 
 // src/operations/text.ts
@@ -44343,8 +44488,8 @@ registerOp({
 
 // src/operations/keying.ts
 import { execFile as execFile3 } from "node:child_process";
-import { promises as fs8 } from "node:fs";
-import * as path8 from "node:path";
+import { promises as fs9 } from "node:fs";
+import * as path9 from "node:path";
 
 // src/color/matte.ts
 var EDGE_DEFAULTS = {
@@ -47819,8 +47964,8 @@ init_registry();
 // src/operations/render.ts
 init_config();
 import { execFile as execFile2 } from "node:child_process";
-import { promises as fs4 } from "node:fs";
-import * as path5 from "node:path";
+import { promises as fs5 } from "node:fs";
+import * as path6 from "node:path";
 init_registry();
 var RENDER_QUEUE_UNDO_WARNING = " After this, undo and rollback are refused for the rest of the After Effects session unless acceptRenderQueueRisk: true: After Effects 2027 has gone into crash recovery on undo after scripted render-queue changes (observed twice on 2026-11-10; a precaution, not a proven cause). Save the project before undoing anything afterwards; project.open / project.new clear the block.";
 var READ_TEMPLATES_FN = `
@@ -48950,7 +49095,7 @@ function deliverReadBackJsx(args) {
 async function runDeliver(args, io) {
   const started = Date.now();
   const outputPath = args.outputPath;
-  if (typeof outputPath !== "string" || !path5.isAbsolute(outputPath)) return { ok: false, error: "`outputPath` must be an absolute path" };
+  if (typeof outputPath !== "string" || !path6.isAbsolute(outputPath)) return { ok: false, error: "`outputPath` must be an absolute path" };
   const rejected = rejectedOutputPath(outputPath);
   if (rejected) return { ok: false, error: rejected };
   const preset = typeof args.preset === "string" ? args.preset : "";
@@ -48964,7 +49109,7 @@ async function runDeliver(args, io) {
     notes.push(`The comp is ${plan.width} \xD7 ${plan.height}, not 9:16: the reel will be delivered at the comp's size.`);
   const frames = Math.round(plan.duration * plan.frameRate);
   const estimate = frames * plan.width * plan.height * (p.alpha ? 4 : 3) * 0.6;
-  const free = io.freeBytes ? await io.freeBytes(path5.dirname(outputPath)) : null;
+  const free = io.freeBytes ? await io.freeBytes(path6.dirname(outputPath)) : null;
   if (free !== null && free < estimate + 3e9)
     return { ok: false, error: `not enough room: about ${(estimate / 1e9).toFixed(1)} GB for the file plus 3 GB, ${(free / 1e9).toFixed(1)} GB free` };
   const r = await io.execute(
@@ -49047,10 +49192,10 @@ function liveDeliverIO(transport2) {
       const r = await transport2.execute({ code, label: opts.label, timeoutMs: opts.timeoutMs, undoGroup: opts.undoGroup ?? true, suppressDialogs: true });
       return r.ok ? r.result : { ok: false, error: r.error ?? `${opts.label} failed` };
     },
-    exists: (f) => fs4.access(f).then(() => true, () => false),
+    exists: (f) => fs5.access(f).then(() => true, () => false),
     freeBytes: async (dir) => {
       try {
-        const st = await fs4.statfs(dir);
+        const st = await fs5.statfs(dir);
         return st.bavail * st.bsize;
       } catch {
         return null;
@@ -49074,8 +49219,8 @@ registerOp({
 });
 
 // src/tools/render-frame.ts
-import { promises as fs7 } from "node:fs";
-import * as path7 from "node:path";
+import { promises as fs8 } from "node:fs";
+import * as path8 from "node:path";
 
 // src/color/screen.ts
 var SCREEN_DEFAULTS = {
@@ -49523,7 +49668,7 @@ function measureGrain(img, isScreen, ch, kind, t) {
 }
 
 // src/color/settled-read.ts
-import { promises as fs5 } from "node:fs";
+import { promises as fs6 } from "node:fs";
 var SETTLE_BASE_MS = 15e3;
 var SETTLE_PER_HD_FRAME_MS = 3e3;
 var SETTLE_MIN_PER_FRAME_MS = 1e3;
@@ -49545,7 +49690,7 @@ async function stampFiles(paths) {
   return Promise.all(
     paths.map(async (p) => {
       try {
-        const st = await fs5.stat(p, { bigint: true });
+        const st = await fs6.stat(p, { bigint: true });
         return { exists: true, size: Number(st.size), mtimeNs: st.mtimeNs, ino: st.ino };
       } catch {
         return { exists: false, size: 0, mtimeNs: 0n, ino: 0n };
@@ -49557,7 +49702,7 @@ async function endsWithIend(p, size) {
   if (size < IEND.length) return false;
   let fh = null;
   try {
-    fh = await fs5.open(p, "r");
+    fh = await fs6.open(p, "r");
     const tail = Buffer.alloc(IEND.length);
     await fh.read(tail, 0, IEND.length, size - IEND.length);
     return tail.equals(IEND);
@@ -49584,7 +49729,7 @@ async function waitForSettled(paths, opts) {
         const s = state[i];
         let st = null;
         try {
-          st = await fs5.stat(p, { bigint: true });
+          st = await fs6.stat(p, { bigint: true });
         } catch {
         }
         if (st === null) {
@@ -49634,7 +49779,7 @@ async function readFileSettled(filePath, timeoutMs = SETTLE_BASE_MS, stableMs = 
       `file did not settle within ${timeoutMs}ms (saveFrameToPng writes asynchronously): ${filePath}`
     );
   }
-  return fs5.readFile(filePath);
+  return fs6.readFile(filePath);
 }
 
 // src/tools/render-frame.ts
@@ -49797,9 +49942,9 @@ init_registry();
 // src/color/calibration.ts
 init_registry();
 import { randomUUID as randomUUID2 } from "node:crypto";
-import { promises as fs6 } from "node:fs";
+import { promises as fs7 } from "node:fs";
 import * as os3 from "node:os";
-import * as path6 from "node:path";
+import * as path7 from "node:path";
 var CALIB_VALUES = [0.05, 0.18, 0.5, 1];
 var PATCH = 40;
 var cache = /* @__PURE__ */ new Map();
@@ -49832,7 +49977,7 @@ async function measureCaptureTransfer(transport2, key, allowRender = true) {
       error: "calibration needs a (transient, undo-grouped) render of a temporary comp, which read-only mode forbids"
     };
   }
-  const pngPath = path6.join(os3.tmpdir(), `mcp-ae-calib-${randomUUID2()}.png`).replace(/\\/g, "/");
+  const pngPath = path7.join(os3.tmpdir(), `mcp-ae-calib-${randomUUID2()}.png`).replace(/\\/g, "/");
   const code = `
         var _vals = ${jsxVal(CALIB_VALUES)};
         var _patch = ${jsxVal(PATCH)};
@@ -49868,7 +50013,7 @@ async function measureCaptureTransfer(transport2, key, allowRender = true) {
       error: `calibration PNG unreadable: ${err instanceof Error ? err.message : String(err)}`
     };
   } finally {
-    fs6.unlink(pngPath).catch(() => {
+    fs7.unlink(pngPath).catch(() => {
     });
   }
   try {
@@ -50009,6 +50154,9 @@ async function colorConversion(payload, transport2) {
     payload.colorWarning = `color post-processing failed, file left as raw capture: ${err instanceof Error ? err.message : String(err)}`;
     return null;
   }
+}
+function iccManagedReason(workingSpace, bitsPerChannel) {
+  return `The project is colour-managed (working space '${workingSpace}'${bitsPerChannel ? `, ${bitsPerChannel} bpc` : ""}, After Effects' own colour engine): colour readings here do not match the viewer (measured: an 8-bit grey of 128 read as 67, a neutral read L* 28 for 54, and spill turned its verdict), so they are refused. Alpha-based readings (edge widths, coverage, holes, specks, the file check) read the same as in a project with no working space and are given. For colour, measure in a copy of the project set to no working space at 8 or 16 bpc, or pass colorManaged: 'off' for the raw working-space values.`;
 }
 
 // src/tools/define-tool.ts
@@ -50348,16 +50496,16 @@ var renderFrameTool = defineTool({
     const rejection = rejectedOutputPath(args.outPath);
     if (rejection !== null) {
       return errorResult("IO", rejection, {
-        details: { outPath: path7.resolve(args.outPath) },
+        details: { outPath: path8.resolve(args.outPath) },
         hint: "Render to a path outside the mailbox."
       });
     }
-    const abs = path7.resolve(args.outPath).replace(/\\/g, "/");
+    const abs = path8.resolve(args.outPath).replace(/\\/g, "/");
     if (args.contactSheet?.outPath !== void 0) {
       const sheetRejection = rejectedOutputPath(args.contactSheet.outPath);
       if (sheetRejection !== null) {
         return errorResult("IO", sheetRejection, {
-          details: { outPath: path7.resolve(args.contactSheet.outPath) },
+          details: { outPath: path8.resolve(args.contactSheet.outPath) },
           hint: "Write the contact sheet to a path outside the mailbox."
         });
       }
@@ -50535,15 +50683,15 @@ function planStrip(strip) {
   return { plan: { at, offsets, frames, step, maxDimension } };
 }
 function sheetPathFor(abs, explicit) {
-  if (explicit !== void 0) return path7.resolve(explicit).replace(/\\/g, "/");
-  const ext = path7.extname(abs) || ".png";
-  const stem = abs.slice(0, abs.length - (path7.extname(abs).length || 0));
+  if (explicit !== void 0) return path8.resolve(explicit).replace(/\\/g, "/");
+  const ext = path8.extname(abs) || ".png";
+  const stem = abs.slice(0, abs.length - (path8.extname(abs).length || 0));
   return `${stem}_sheet${ext}`;
 }
 function framePaths(abs, count, multi) {
   if (!multi) return [abs];
-  const ext = path7.extname(abs) || ".png";
-  const stem = abs.slice(0, abs.length - (path7.extname(abs).length || 0));
+  const ext = path8.extname(abs) || ".png";
+  const stem = abs.slice(0, abs.length - (path8.extname(abs).length || 0));
   const out = [];
   for (let i = 0; i < count; i++) out.push(`${stem}_${i}${ext}`);
   return out;
@@ -50621,6 +50769,8 @@ function renderJsx(args, times, paths, tryOcio, isolate, strip = null, frameNums
         var _missingMedia = _missingSources(comp);
         if (_missingMedia.length) return { ok: false, error: "source media missing for comp " + comp.name + "; restore or relink before rendering", missingFootage: _missingMedia };
         var _ws = AE.safeGet(function () { return app.project.workingSpace; }, "None");
+        // 0: Adobe's own (ICC) colour management; 1: OCIO; null before After Effects 24.
+        var _cms = AE.safeGet(function () { return Number(app.project.colorManagementSystem); }, null);
         var _times = ${jsxVal(times)};
         var _strip = ${jsxVal(strip === null ? null : { at: strip.at, offsets: strip.offsets })};
         var _frameNums = ${jsxVal(frameNums)};
@@ -50660,7 +50810,8 @@ function renderJsx(args, times, paths, tryOcio, isolate, strip = null, frameNums
             if (_clamped > 0) _stripOut.note = "the comp is shorter than the strip: the last " + _clamped + " frames repeat the comp's last frame (they read as stutters in diff)";
         }
         var _useDst = ${jsxVal(!!args.useDisplayStartTime)};
-        var _useOcio = ${jsxVal(tryOcio)} && _ws !== "None" && _ws !== "";
+        // The OCIO Display Transform only under OCIO: under Adobe's ICC engine it does not give the viewer's picture (measured 2026-11-12).
+        var _useOcio = ${jsxVal(tryOcio)} && _ws !== "None" && _ws !== "" && _cms === 1;
         var _isolate = ${jsxVal(isolate)};
         var _frames = [];
         function _renderAll(kind) {
@@ -50719,6 +50870,7 @@ function renderJsx(args, times, paths, tryOcio, isolate, strip = null, frameNums
         if (_allOk) {
             _out.compName = comp.name;
             _out.workingSpace = _ws;
+            _out.colorManagementSystem = _cms;
             _out.bitsPerChannel = AE.safeGet(function () { return app.project.bitsPerChannel; }, 8);
             _out.projectFile = app.project.file ? app.project.file.fsName.replace(/\\\\/g, "/") : null;
             _out.bgColor = AE.safeGet(function () { return [comp.bgColor[0], comp.bgColor[1], comp.bgColor[2]]; }, null);
@@ -50780,7 +50932,34 @@ async function nativeFlow(args, opts, abs, transport2, strip = null) {
     if (multi) frames[i][key] = value;
     else payload[key] = value;
   };
-  const managed = args.colorManaged !== "off";
+  const iccRefused = args.colorManaged !== "off" && typeof payload.workingSpace === "string" && payload.workingSpace !== "None" && payload.workingSpace !== "" && payload.colorManagementSystem !== 1;
+  let analyze = args.analyze === true;
+  let spillRefused = null;
+  if (iccRefused) {
+    const refused = [];
+    const reason = iccManagedReason(payload.workingSpace, payload.bitsPerChannel);
+    if (opts.sample) {
+      if (opts.sample.stages.includes("output")) refused.push("sample (output)");
+      const stages2 = opts.sample.stages.filter((st) => st === "capture");
+      opts = { ...opts, sample: stages2.length ? { ...opts.sample, stages: stages2 } : null };
+    }
+    if (opts.look) refused.push("look");
+    if (opts.histogram) refused.push("histogram");
+    if (opts.screen) refused.push("screen");
+    if (opts.diff) refused.push("diff");
+    if (analyze) refused.push("analyze");
+    if (opts.edge) {
+      refused.push("edge spill");
+      spillRefused = reason;
+    }
+    if (opts.channels === "rgba") refused.push("channels rgba");
+    if (opts.overGiven) refused.push("over");
+    opts = { ...opts, look: null, histogram: null, screen: null, diff: null, channels: "rgb", overGiven: false };
+    analyze = false;
+    payload.colorRefused = { reason, refused };
+    payload.colorWarning = `${reason} The written files are the raw captures (working-space values at the capture's scale), not the viewer's picture.`;
+  }
+  const managed = args.colorManaged !== "off" && !iccRefused;
   let convert = null;
   let backdrop = null;
   if (managed) {
@@ -50837,7 +51016,7 @@ async function nativeFlow(args, opts, abs, transport2, strip = null) {
     if (!finished.has(i)) continue;
     let capture;
     try {
-      capture = decodePng(await fs7.readFile(file2));
+      capture = decodePng(await fs8.readFile(file2));
       read++;
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -50857,6 +51036,7 @@ async function nativeFlow(args, opts, abs, transport2, strip = null) {
           const t = resolveEdgeThresholds(opts.edge, capture.width, capture.height);
           payload.edgeThresholds ??= t;
           const { report, frame } = measureEdge(capture, bg ?? [0, 0, 0], t);
+          if (spillRefused !== null) report.spill = { refused: spillRefused };
           put(i, "edge", report);
           edgeMeasured++;
           if (edgePrev !== null && edgePrev.index === i - 1) {
@@ -50882,7 +51062,7 @@ async function nativeFlow(args, opts, abs, transport2, strip = null) {
         payload.screenWarning = `screen measurement failed: ${err instanceof Error ? err.message : String(err)}`;
       }
     }
-    if (args.analyze) {
+    if (analyze) {
       try {
         put(i, "analysis", analyzeFrame(capture));
       } catch (err) {
@@ -51127,9 +51307,9 @@ async function attachDiffSheet(payload, diff, thumbs, abs, opts, t) {
       thumbs.map((th) => th.img),
       { columns: opts.columns, thumbWidth: thumbs[0].img.width, labels }
     );
-    const sheetPath = opts.outPath !== void 0 ? path7.resolve(opts.outPath).replace(/\\/g, "/") : `${abs.slice(0, abs.length - path7.extname(abs).length)}_diff${path7.extname(abs) || ".png"}`;
-    await fs7.mkdir(path7.dirname(sheetPath), { recursive: true });
-    await fs7.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+    const sheetPath = opts.outPath !== void 0 ? path8.resolve(opts.outPath).replace(/\\/g, "/") : `${abs.slice(0, abs.length - path8.extname(abs).length)}_diff${path8.extname(abs) || ".png"}`;
+    await fs8.mkdir(path8.dirname(sheetPath), { recursive: true });
+    await fs8.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
     payload.diffSheet = {
       writtenTo: sheetPath,
       size: [sheet.width, sheet.height],
@@ -51172,8 +51352,8 @@ async function attachContactSheet(payload, labels, tiles, sheetPath, opts) {
       thumbWidth: opts.thumbWidth ?? tiles[0].width,
       labels
     });
-    await fs7.mkdir(path7.dirname(sheetPath), { recursive: true });
-    await fs7.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+    await fs8.mkdir(path8.dirname(sheetPath), { recursive: true });
+    await fs8.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
     payload.contactSheet = {
       writtenTo: sheetPath,
       size: [sheet.width, sheet.height],
@@ -51201,7 +51381,7 @@ async function writeOutput(file2, capture, convert, channels, backdrop, bg) {
     convert(rgb);
     bytes = channels === "rgba" ? encodePngSrgbRgba8(width, height, rgb, capture.alpha ?? opaque()) : encodePngSrgb8(width, height, flattenOver({ ...capture, rgb }, backdrop));
   }
-  await fs7.writeFile(file2, bytes);
+  await fs8.writeFile(file2, bytes);
   return decodePng(bytes);
 }
 
@@ -52394,14 +52574,14 @@ function cutoutFindings(frames, limit) {
 }
 async function writePng(io, file2, data) {
   if (io.writePng) return io.writePng(file2, data);
-  await fs8.mkdir(path8.dirname(file2), { recursive: true });
-  await fs8.writeFile(file2, data);
+  await fs9.mkdir(path9.dirname(file2), { recursive: true });
+  await fs9.writeFile(file2, data);
 }
 var GB = 1e9;
 var gb = (n) => `${(n / GB).toFixed(1)} GB`;
 var OVERSIZE_FACTOR = 1.5;
 var even = (n) => Math.max(2, Math.round(n / 2) * 2);
-var stemOf = (file2) => path8.join(path8.dirname(file2), path8.basename(file2, path8.extname(file2)));
+var stemOf = (file2) => path9.join(path9.dirname(file2), path9.basename(file2, path9.extname(file2)));
 var dims = (d) => `${d[0]} \xD7 ${d[1]}`;
 function sourceAdviceFor(f) {
   if (!f?.sourceSize || !f.compSize || !f.scale) return null;
@@ -52517,13 +52697,13 @@ function renderCutoutBytes(frames, size) {
 }
 var captureBytes = (size) => (Array.isArray(size) ? size[0] * size[1] : 1080 * 1920) * 4;
 async function statfsFree(dir) {
-  let d = path8.resolve(dir);
+  let d = path9.resolve(dir);
   for (; ; ) {
     try {
-      const st = await fs8.statfs(d);
+      const st = await fs9.statfs(d);
       return Number(st.bavail) * Number(st.bsize);
     } catch {
-      const up = path8.dirname(d);
+      const up = path9.dirname(d);
       if (up === d) return null;
       d = up;
     }
@@ -52543,12 +52723,12 @@ function cacheBytesFor(frames, sourceSize) {
   return frames * w * h * 8;
 }
 async function volumeKey(dir) {
-  let d = path8.resolve(dir);
+  let d = path9.resolve(dir);
   for (; ; ) {
     try {
-      return (await fs8.stat(d)).dev;
+      return (await fs9.stat(d)).dev;
     } catch {
-      const up = path8.dirname(d);
+      const up = path9.dirname(d);
       if (up === d) return null;
       d = up;
     }
@@ -52594,14 +52774,14 @@ function aeCacheRoot(folder, version3) {
   if (!folder || !version3) return null;
   const m = /^(\d+)\.(\d+)/.exec(version3);
   if (!m) return null;
-  return path8.join(folder, "Adobe", "After Effects", `${m[1]}.${m[2]}`);
+  return path9.join(folder, "Adobe", "After Effects", `${m[1]}.${m[2]}`);
 }
 async function folderBytes(root, budgetMs = 5e3) {
   const t0 = performance.now();
   let bytes = 0;
   const stack = [root];
   try {
-    await fs8.access(root);
+    await fs9.access(root);
   } catch {
     return null;
   }
@@ -52610,15 +52790,15 @@ async function folderBytes(root, budgetMs = 5e3) {
     const d = stack.pop();
     let entries = [];
     try {
-      entries = await fs8.readdir(d, { withFileTypes: true });
+      entries = await fs9.readdir(d, { withFileTypes: true });
     } catch {
       continue;
     }
     for (const e of entries) {
-      const p = path8.join(d, e.name);
+      const p = path9.join(d, e.name);
       if (e.isDirectory()) stack.push(p);
       else if (e.isFile())
-        bytes += await fs8.stat(p).then(
+        bytes += await fs9.stat(p).then(
           (st) => st.size,
           () => 0
         );
@@ -52718,7 +52898,7 @@ async function renderChunked(io, base, frames, perFrameMs, outDir, stem, tally =
     const payload = await io.render({
       ...base,
       frames: chunk2,
-      outPath: path8.join(outDir, `${stem}-${firstCall + c}.png`),
+      outPath: path9.join(outDir, `${stem}-${firstCall + c}.png`),
       settleTimeoutMs: Math.min(SETTLE_MAX_MS, Math.max(1, Math.round(perFrameMs * chunk2.length)))
     });
     tally.calls++;
@@ -52981,7 +53161,7 @@ async function recheckFrames(io, readings, limit, over, outDir, perFrameMs, base
     rendered,
     limit,
     over,
-    path8.join(outDir, "cutout-recheck_sheet.png"),
+    path9.join(outDir, "cutout-recheck_sheet.png"),
     pixels,
     false
   );
@@ -53067,7 +53247,7 @@ function timeReading(first, second, pixels, totalMs) {
 }
 async function runSubjectCheck(args, io) {
   const outDir = args.outDir;
-  if (typeof outDir !== "string" || !path8.isAbsolute(outDir))
+  if (typeof outDir !== "string" || !path9.isAbsolute(outDir))
     return { ok: false, error: "`outDir` must be an absolute folder for the pictures" };
   const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
   const over = typeof args.over === "string" ? args.over : CUTOUT_OVER;
@@ -53127,7 +53307,7 @@ async function runSubjectCheck(args, io) {
     rendered,
     limit,
     over,
-    path8.join(outDir, "cutout_sheet.png"),
+    path9.join(outDir, "cutout_sheet.png"),
     pixels,
     true,
     (r, img) => {
@@ -53184,7 +53364,7 @@ async function runSubjectCheck(args, io) {
       ...readings.map((r) => r.file),
       ..."captures" in recheck ? recheck.captures : []
     ].filter((f) => typeof f === "string");
-    await Promise.all(files.map((f) => fs8.rm(f, { force: true })));
+    await Promise.all(files.map((f) => fs9.rm(f, { force: true })));
     for (const r of readings) delete r.file;
   }
   return {
@@ -53244,12 +53424,12 @@ async function runFillGaps(args, io) {
     return res;
   } finally {
     if (args.keepCaptures !== true)
-      await Promise.all(captures.map((f) => fs8.rm(f, { force: true })));
+      await Promise.all(captures.map((f) => fs9.rm(f, { force: true })));
   }
 }
 async function fillGaps(args, io) {
   const still = args.stillPath;
-  if (typeof still !== "string" || !path8.isAbsolute(still) || path8.extname(still).toLowerCase() !== ".png") {
+  if (typeof still !== "string" || !path9.isAbsolute(still) || path9.extname(still).toLowerCase() !== ".png") {
     return {
       ok: false,
       error: "`stillPath` must be an absolute path to a .png file, kept with the project (the comp will use it)"
@@ -53257,7 +53437,7 @@ async function fillGaps(args, io) {
   }
   const rejected = rejectedOutputPath(still);
   if (rejected) return { ok: false, error: rejected };
-  const outDir = typeof args.outDir === "string" && path8.isAbsolute(args.outDir) ? args.outDir : path8.dirname(still);
+  const outDir = typeof args.outDir === "string" && path9.isAbsolute(args.outDir) ? args.outDir : path9.dirname(still);
   const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
   const over = typeof args.over === "string" ? args.over : CUTOUT_OVER;
   const minArea = typeof args.minArea === "number" ? args.minArea : 20;
@@ -53435,7 +53615,7 @@ async function fillGaps(args, io) {
     afterRendered,
     limit,
     over,
-    path8.join(outDir, "fill-after_sheet.png"),
+    path9.join(outDir, "fill-after_sheet.png"),
     pixels
   );
   const sum = summarize(measured.readings, limit, []);
@@ -53556,7 +53736,7 @@ function liveCutoutIO(args, transport2) {
       return sc?.result ?? { ok: false, error: "ae_render_frame returned no result" };
     },
     async readImage(file2) {
-      return decodePng(await fs8.readFile(file2));
+      return decodePng(await fs9.readFile(file2));
     },
     async unbuild(a) {
       const r = await transport2.execute({
@@ -53922,7 +54102,7 @@ function renderCutoutJsx(args) {
 async function runRenderCutout(args, io) {
   const started = performance.now();
   const outputPath = args.outputPath;
-  if (typeof outputPath !== "string" || !path8.isAbsolute(outputPath))
+  if (typeof outputPath !== "string" || !path9.isAbsolute(outputPath))
     return { ok: false, error: "`outputPath` must be an absolute path for the movie" };
   const rejected = rejectedOutputPath(outputPath);
   if (rejected) return { ok: false, error: rejected };
@@ -53947,7 +54127,7 @@ async function runRenderCutout(args, io) {
   );
   if ("error" in choice) return { ok: false, error: choice.error, templates: plan.templates };
   const frames = plan.span?.frames ?? 0;
-  const where = path8.dirname(outputPath);
+  const where = path9.dirname(outputPath);
   const cacheRoot = aeCacheRoot(plan.aeCache?.folder, plan.aeCache?.version);
   const movieBytes = renderCutoutBytes(frames, plan.compSize ?? [1080, 1920]);
   const matteCopies = typeof plan.matteCopies === "number" && plan.matteCopies > 1 ? plan.matteCopies : 1;
@@ -54031,7 +54211,7 @@ async function runRenderCutout(args, io) {
   const sidecar = `${r.outputPath}.comp-room.json`;
   let sidecarWritten = null;
   try {
-    await fs8.writeFile(
+    await fs9.writeFile(
       sidecar,
       JSON.stringify(
         { kind: "comp-room cut-out", comp: args.comp, layer: plan.layer, compSize: plan.compSize, fillLayer: plan.fillLayer ?? null, softEdge: soft, renderedAt: (/* @__PURE__ */ new Date()).toISOString() },
@@ -54177,16 +54357,16 @@ async function runCheckFile(args, io) {
       error: "give exactly one of `path` (the movie) or `item` (a footage item's id)"
     };
   if (file2 !== null) {
-    if (!path8.isAbsolute(file2))
+    if (!path9.isAbsolute(file2))
       return { ok: false, error: "`path` must be an absolute path to the movie" };
-    const there = io.exists ? await io.exists(file2) : await fs8.access(file2).then(
+    const there = io.exists ? await io.exists(file2) : await fs9.access(file2).then(
       () => true,
       () => false
     );
     if (!there) return { ok: false, error: `no file at ${file2}` };
   }
   const outDir = args.outDir;
-  if (typeof outDir !== "string" || !path8.isAbsolute(outDir))
+  if (typeof outDir !== "string" || !path9.isAbsolute(outDir))
     return { ok: false, error: "`outDir` must be an absolute folder for the pictures" };
   const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
   const jumpLimit = typeof args.jumpLimit === "number" ? args.jumpLimit : CHECK_FILE_JUMP_LIMIT;
@@ -54217,7 +54397,7 @@ async function runCheckFile(args, io) {
   let regionSource = regionLine !== null ? "given" : null;
   if (regionLine === null && file2 !== null) {
     try {
-      const side2 = JSON.parse(await fs8.readFile(`${file2}.comp-room.json`, "utf8"));
+      const side2 = JSON.parse(await fs9.readFile(`${file2}.comp-room.json`, "utf8"));
       if (typeof side2?.softEdge?.regionBottom === "number") {
         regionLine = side2.softEdge.regionBottom;
         if (typeof side2.softEdge.regionDepth === "number") regionDepth = side2.softEdge.regionDepth;
@@ -54265,7 +54445,7 @@ async function runCheckFile(args, io) {
     const f = kept.get(frame);
     if (!f || keepCaptures) return;
     kept.delete(frame);
-    await fs8.rm(f, { force: true });
+    await fs9.rm(f, { force: true });
   };
   const outline = outlineTracker(frozenOpts(args));
   let outlineResult = null;
@@ -54298,7 +54478,7 @@ async function runCheckFile(args, io) {
         rendered,
         limit,
         over,
-        path8.join(outDir, "check-file_unused.png"),
+        path9.join(outDir, "check-file_unused.png"),
         pixels,
         false,
         (r, img) => {
@@ -54370,7 +54550,7 @@ async function runCheckFile(args, io) {
       for (const e of ends) {
         const r = again.find((x) => x.frame === e);
         pics.push(r?.file ? await overPicture(io, r.file, over) : null);
-        if (r?.file && !keepCaptures) await fs8.rm(r.file, { force: true });
+        if (r?.file && !keepCaptures) await fs9.rm(r.file, { force: true });
       }
       frozenFindings.push(frozenFinding(run2, pics));
     }
@@ -54458,7 +54638,7 @@ async function runCheckFile(args, io) {
     const pic = file3 ? await overPicture(io, file3, over) : null;
     pictureOf2.set(f, pic);
     if (pic)
-      pictureBytes += await fs8.stat(pic).then(
+      pictureBytes += await fs9.stat(pic).then(
         (st) => st.size,
         () => 0
       );
@@ -54493,7 +54673,7 @@ async function runCheckFile(args, io) {
   }
   if (thumbs.length) {
     const sheet = composeContactSheet(thumbs, { labels, thumbWidth: 240 });
-    picture = path8.join(outDir, "check-file_sheet.png");
+    picture = path9.join(outDir, "check-file_sheet.png");
     const png = encodePngSrgb8(sheet.width, sheet.height, sheet.rgb, PICTURE_DEFLATE);
     await writePng(io, picture, png);
     sheetBytes = png.length;
@@ -54698,7 +54878,7 @@ function liveFileIO(transport2) {
       });
       return r.ok ? r.result : { ok: false, error: r.error ?? `${opts.label} failed` };
     },
-    exists: (file2) => fs8.access(file2).then(
+    exists: (file2) => fs9.access(file2).then(
       () => true,
       () => false
     )
@@ -55046,7 +55226,7 @@ async function runSoftenEdge(args, io) {
       error: "`across` was removed: sampling the whole clip before the render cost more disk cache than the render (12.9 GB estimated against 9.5 GB on the half-size take). subject.check_file reads every frame of the rendered file instead: it stops on see-through inside the cut-out and notes the frames where the hair crosses the region's line. Leave `across` out, or give sampleFrames."
     };
   const outDir = args.outDir;
-  if (typeof outDir !== "string" || !path8.isAbsolute(outDir))
+  if (typeof outDir !== "string" || !path9.isAbsolute(outDir))
     return { ok: false, error: "`outDir` must be an absolute folder for the pictures" };
   const num = (k, d) => typeof args[k] === "number" && Number.isFinite(args[k]) ? args[k] : d;
   const D = SOFT_EDGE_DEFAULTS;
@@ -55104,7 +55284,7 @@ async function runSoftenEdge(args, io) {
     const r = await io.render({
       compNameOrId: args.comp,
       frames,
-      outPath: path8.join(outDir, `${name}.png`),
+      outPath: path9.join(outDir, `${name}.png`),
       settleTimeoutMs: Math.min(SETTLE_MAX_MS, frames.length * perFrame + 3e4),
       ...extra
     });
@@ -55264,7 +55444,7 @@ async function runSoftenEdge(args, io) {
   const pictures = checkFrames.map((f) => wholeAfter.get(f)?.file).filter((f) => typeof f === "string");
   if (args.keepCaptures !== true)
     await Promise.all(
-      captures.filter((c) => !pictures.includes(c)).map((c) => fs8.rm(c, { force: true }))
+      captures.filter((c) => !pictures.includes(c)).map((c) => fs9.rm(c, { force: true }))
     );
   const region = {
     bottom,
@@ -55441,7 +55621,7 @@ function referenceCompJsx(args) {
 async function runReferenceReport(args, io) {
   const started = performance.now();
   const outPath = args.outPath;
-  if (typeof outPath !== "string" || !path8.isAbsolute(outPath) || !/\.json$/i.test(outPath))
+  if (typeof outPath !== "string" || !path9.isAbsolute(outPath) || !/\.json$/i.test(outPath))
     return { ok: false, error: "`outPath` must be an absolute path for the report (.json)" };
   const sources = ["path", "item", "comp"].filter((k) => args[k] !== void 0 && args[k] !== null);
   if (sources.length !== 1)
@@ -55451,8 +55631,8 @@ async function runReferenceReport(args, io) {
     };
   const regions = Array.isArray(args.regions) ? args.regions : void 0;
   const cap = typeof args.maxFrames === "number" && args.maxFrames >= 1 ? Math.floor(args.maxFrames) : CHECK_FILE_MAX_FRAMES;
-  const outDir = path8.dirname(outPath);
-  await fs8.mkdir(outDir, { recursive: true });
+  const outDir = path9.dirname(outPath);
+  await fs9.mkdir(outDir, { recursive: true });
   const keepCaptures = args.keepCaptures === true;
   const perFrameMs = Math.max(
     1,
@@ -55470,11 +55650,11 @@ async function runReferenceReport(args, io) {
   let report;
   const renders = renderTally();
   const p = typeof args.path === "string" ? args.path : null;
-  if (p !== null && !path8.isAbsolute(p)) return { ok: false, error: "`path` must be absolute" };
-  const stat = p !== null ? await fs8.stat(p).catch(() => null) : null;
+  if (p !== null && !path9.isAbsolute(p)) return { ok: false, error: "`path` must be absolute" };
+  const stat = p !== null ? await fs9.stat(p).catch(() => null) : null;
   if (p !== null && !MOVIE_EXT.test(p)) {
     if (!stat) return { ok: false, error: `nothing at ${p}` };
-    const files = stat.isDirectory() ? (await fs8.readdir(p)).filter((f) => /\.png$/i.test(f)).sort(naturalOrder).map((f) => path8.join(p, f)) : [p];
+    const files = stat.isDirectory() ? (await fs9.readdir(p)).filter((f) => /\.png$/i.test(f)).sort(naturalOrder).map((f) => path9.join(p, f)) : [p];
     if (!files.length) return { ok: false, error: `no PNG frames in ${p}` };
     if (!files.every((f) => /\.png$/i.test(f)))
       return { ok: false, error: "a still must be a PNG (render other formats to PNG first)" };
@@ -55482,7 +55662,7 @@ async function runReferenceReport(args, io) {
     const frameRate = typeof args.frameRate === "number" ? args.frameRate : void 0;
     const given = typeof args.frameStep === "number" && args.frameStep >= 1 ? Math.round(args.frameStep) : null;
     const nums = files.map((f) => {
-      const m = /(\d+)(?!.*\d)/.exec(path8.basename(f, path8.extname(f)));
+      const m = /(\d+)(?!.*\d)/.exec(path9.basename(f, path9.extname(f)));
       return m ? Number(m[1]) : null;
     });
     const named = nums.every((n) => n !== null) && nums.every((n, i) => i === 0 || n > nums[i - 1]);
@@ -55508,6 +55688,15 @@ async function runReferenceReport(args, io) {
       frameRate: frameRate ?? null
     };
   } else {
+    const cm = await io.execute(
+      "return { ok: true, workingSpace: String(AE.safeGet(function () { return app.project.workingSpace; }, 'None')), colorManagementSystem: AE.safeGet(function () { return Number(app.project.colorManagementSystem); }, null), bitsPerChannel: app.project.bitsPerChannel };",
+      { label: "reference.report colour", timeoutMs: 3e4, undoGroup: false }
+    );
+    if (cm?.ok && cm.workingSpace && cm.workingSpace !== "None" && cm.workingSpace !== "" && cm.colorManagementSystem !== 1)
+      return {
+        ok: false,
+        error: `${iccManagedReason(cm.workingSpace, cm.bitsPerChannel)} reference.report reads colour, levels, grain and sharpness from rendered frames, so it does not run here. A PNG still or a folder of frames is read without After Effects and still works.`
+      };
     const fromComp = args.comp !== void 0;
     const setup = fromComp ? await io.execute(referenceCompJsx({ comp: args.comp }), { label: "reference.report comp", timeoutMs: 6e4, undoGroup: false }) : await io.execute(fileCompJsx({ path: p, item: typeof args.item === "number" ? args.item : null }), {
       label: "reference.report setup",
@@ -55535,7 +55724,7 @@ async function runReferenceReport(args, io) {
         for (const r of got) {
           if (!r.ok || !r.file) return { ok: false, error: `frame ${r.frame} did not render: ${r.error ?? "no file"}` };
           reader.add({ img: await io.readImage(r.file), frame: r.frame, time: r.frame / setup.frameRate });
-          if (!keepCaptures) await fs8.rm(r.file, { force: true });
+          if (!keepCaptures) await fs9.rm(r.file, { force: true });
         }
       }
       report = reader.finish();
@@ -55548,11 +55737,11 @@ async function runReferenceReport(args, io) {
     }
     source = fromComp ? { kind: "comp", name: setup.name, frames: setup.frames, frameRate: setup.frameRate } : { kind: p !== null ? "movie" : "item", path: p, item: setup.itemName, frames: setup.frames, frameRate: setup.frameRate, cleanup };
   }
-  await fs8.writeFile(outPath, JSON.stringify(report));
+  await fs9.writeFile(outPath, JSON.stringify(report));
   let compare;
   if (typeof args.against === "string") {
     try {
-      compare = compareReferences(JSON.parse(await fs8.readFile(args.against, "utf8")), report);
+      compare = compareReferences(JSON.parse(await fs9.readFile(args.against, "utf8")), report);
     } catch (e) {
       compare = { error: `could not compare with ${args.against}: ${e instanceof Error ? e.message : String(e)}` };
     }
@@ -55576,8 +55765,8 @@ async function runReferenceReport(args, io) {
 async function runReferenceCompare(args) {
   const read = async (k) => {
     const v = args[k];
-    if (typeof v !== "string" || !path8.isAbsolute(v)) throw new Error(`\`${k}\` must be the absolute path of a saved report`);
-    return JSON.parse(await fs8.readFile(v, "utf8"));
+    if (typeof v !== "string" || !path9.isAbsolute(v)) throw new Error(`\`${k}\` must be the absolute path of a saved report`);
+    return JSON.parse(await fs9.readFile(v, "utf8"));
   };
   try {
     const ref = await read("reference");
@@ -56985,7 +57174,7 @@ registerOp({
 // src/operations/inspect.ts
 init_config();
 init_registry();
-import * as path9 from "node:path";
+import * as path10 from "node:path";
 registerOp({
   name: "comp.info",
   category: "comp",
@@ -57061,7 +57250,7 @@ registerOp({
   readOnly: true,
   toJsx(args) {
     const raw = String(args.outPath);
-    if (!path9.isAbsolute(raw)) {
+    if (!path10.isAbsolute(raw)) {
       return `
             return { ok: false, error: ${jsxVal(`outPath must be absolute, got: ${raw}`)} };
         `;
@@ -57072,7 +57261,7 @@ registerOp({
             return { ok: false, error: ${jsxVal(rejection)} };
         `;
     }
-    const abs = path9.resolve(raw).replace(/\\/g, "/");
+    const abs = path10.resolve(raw).replace(/\\/g, "/");
     return `
             ${RENDER_FRAME_FN}
             ${jsxCompPreamble(args)}
@@ -59453,8 +59642,8 @@ registerOp({
 });
 
 // src/operations/sample.ts
-import { promises as fs9 } from "node:fs";
-import * as path10 from "node:path";
+import { promises as fs10 } from "node:fs";
+import * as path11 from "node:path";
 init_registry();
 var DEFAULT_PROPERTIES = [
   ["Transform", "Anchor Point"],
@@ -59613,10 +59802,10 @@ async function runCurve(args, io) {
   const report = analyzeCurve(samples, r.fps);
   let graph = null;
   if (typeof args.outPath === "string") {
-    if (!path10.isAbsolute(args.outPath)) return { ok: false, error: "`outPath` must be absolute (.png)" };
+    if (!path11.isAbsolute(args.outPath)) return { ok: false, error: "`outPath` must be absolute (.png)" };
     const g = curveGraph(report, { width: 480, height: 160 });
-    await fs9.mkdir(path10.dirname(args.outPath), { recursive: true });
-    await fs9.writeFile(args.outPath, encodePngSrgb8(g.width, g.height, g.rgb));
+    await fs10.mkdir(path11.dirname(args.outPath), { recursive: true });
+    await fs10.writeFile(args.outPath, encodePngSrgb8(g.width, g.height, g.rgb));
     graph = args.outPath;
   }
   return {
@@ -59688,12 +59877,12 @@ async function runSoundMarkers(args, io) {
   let source;
   if (hasTiming) {
     const f = args.timing;
-    if (!path10.isAbsolute(f)) return { ok: false, error: "`timing` must be an absolute path" };
+    if (!path11.isAbsolute(f)) return { ok: false, error: "`timing` must be an absolute path" };
     const r = await io.execute(fpsJsx({ comp: args.comp }), { label: "sound.markers fps", timeoutMs: 3e4 });
     if (!r?.ok) return { ok: false, error: r?.error ?? "could not read the comp" };
     fps = r.fps;
     try {
-      found = parseTiming(await fs9.readFile(f, "utf8"), fps).map((m) => ({ ...m, frame: Math.round(m.time * fps) }));
+      found = parseTiming(await fs10.readFile(f, "utf8"), fps).map((m) => ({ ...m, frame: Math.round(m.time * fps) }));
     } catch (e) {
       return { ok: false, error: e instanceof Error ? e.message : String(e) };
     }
@@ -59833,8 +60022,8 @@ registerOp({
 
 // src/operations/instance.ts
 import { spawn } from "node:child_process";
-import { promises as fs10 } from "node:fs";
-import * as path11 from "node:path";
+import { promises as fs11 } from "node:fs";
+import * as path12 from "node:path";
 init_config();
 init_registry();
 var INSTALL_CMD = "npx @kumoproductions/mcp-aftereffects install-agent";
@@ -59943,10 +60132,10 @@ registerOp({
     let copiedFrom = null;
     let copyTo = null;
     if (typeof args.copyFrom === "string" && args.copyFrom) {
-      const src = path11.resolve(args.copyFrom);
+      const src = path12.resolve(args.copyFrom);
       if (!await exists(src)) return fail(`copyFrom not found: ${src}`, { errorCode: "IO" });
-      const ext = path11.extname(src) || ".aep";
-      copyTo = typeof args.copyTo === "string" && args.copyTo ? path11.resolve(args.copyTo) : path11.join(path11.dirname(src), `${path11.basename(src, ext)}__${name}${ext}`);
+      const ext = path12.extname(src) || ".aep";
+      copyTo = typeof args.copyTo === "string" && args.copyTo ? path12.resolve(args.copyTo) : path12.join(path12.dirname(src), `${path12.basename(src, ext)}__${name}${ext}`);
       if (copyTo === src)
         return fail("copyTo must differ from copyFrom", { errorCode: "INVALID_ARGS" });
       const rejected = rejectedOutputPath(copyTo);
@@ -59954,7 +60143,7 @@ registerOp({
       copiedFrom = src;
       projectToOpen = copyTo;
     } else if (typeof args.project === "string" && args.project) {
-      projectToOpen = path11.resolve(args.project);
+      projectToOpen = path12.resolve(args.project);
       if (!await exists(projectToOpen))
         return fail(`project not found: ${projectToOpen}`, { errorCode: "IO" });
     }
@@ -59981,8 +60170,8 @@ registerOp({
       return fail(err instanceof Error ? err.message : String(err), { errorCode: "AE_NOT_FOUND" });
     }
     if (copiedFrom !== null && copyTo !== null) {
-      await fs10.mkdir(path11.dirname(copyTo), { recursive: true });
-      await fs10.copyFile(copiedFrom, copyTo);
+      await fs11.mkdir(path12.dirname(copyTo), { recursive: true });
+      await fs11.copyFile(copiedFrom, copyTo);
     }
     const plan = buildInstanceLaunchPlan(exe, name);
     const aePid = process.platform === "darwin" ? null : void 0;
@@ -60164,7 +60353,7 @@ registerOp({
         `instance '${name}' accepted the quit but is still ticking after ${timeoutMs} ms \u2014 check it for a dialog`
       );
     }
-    await fs10.rm(dir, { recursive: true, force: true }).catch(() => {
+    await fs11.rm(dir, { recursive: true, force: true }).catch(() => {
     });
     return { ok: true, instance: name, stopped: true, saved: !!args.save, file: file2 };
   }
@@ -60238,7 +60427,7 @@ registerOp({
 });
 async function exists(p) {
   try {
-    await fs10.access(p);
+    await fs11.access(p);
     return true;
   } catch {
     return false;
@@ -60332,9 +60521,9 @@ var catalogTool = defineTool({
 
 // src/tools/check-comp.ts
 import { randomUUID as randomUUID3 } from "node:crypto";
-import { promises as fs11 } from "node:fs";
+import { promises as fs12 } from "node:fs";
 import * as os4 from "node:os";
-import * as path13 from "node:path";
+import * as path14 from "node:path";
 
 // src/color/watch.ts
 var WATCH_DEFAULTS = {
@@ -60812,6 +61001,7 @@ function planJsx(compNameOrId) {
             displayStartTime: AE.safeGet(function () { return comp.displayStartTime; }, 0),
             resolutionFactor: AE.safeGet(function () { return [comp.resolutionFactor[0], comp.resolutionFactor[1]]; }, null),
             workingSpace: AE.safeGet(function () { return app.project.workingSpace; }, "None"),
+            colorManagementSystem: AE.safeGet(function () { return Number(app.project.colorManagementSystem); }, null),
             bitsPerChannel: AE.safeGet(function () { return app.project.bitsPerChannel; }, 8),
             missingFootage: _missingSources(comp)
         };
@@ -60829,7 +61019,9 @@ function captureJsx(compNameOrId, frames, paths, factor, tryOcio) {
         var _factor = ${jsxVal(factor)};
         var _pick = ${jsxVal(CHECK_FRAME_PICK)};
         var _ws = AE.safeGet(function () { return app.project.workingSpace; }, "None");
-        var _useOcio = ${jsxVal(tryOcio)} && _ws !== "None" && _ws !== "";
+        var _cms = AE.safeGet(function () { return Number(app.project.colorManagementSystem); }, null);
+        // The OCIO Display Transform only under OCIO (not right under Adobe's ICC engine, measured 2026-11-12).
+        var _useOcio = ${jsxVal(tryOcio)} && _ws !== "None" && _ws !== "" && _cms === 1;
         var _frames = [];
         function _renderAll(kind) {
             for (var _fi = 0; _fi < _frameNums.length; _fi++) {
@@ -61122,13 +61314,13 @@ function structureJsx(compNameOrId, o) {
 }
 
 // src/tools/check-comp.ts
-var frameFile = (dir, frame) => path13.join(dir, `frame-${frame}.png`).replace(/\\/g, "/");
+var frameFile = (dir, frame) => path14.join(dir, `frame-${frame}.png`).replace(/\\/g, "/");
 function aeFrameSource(transport2, comp, opts) {
   return {
     async capture(frames, dir) {
       const t0 = performance.now();
       const paths = frames.map((k) => frameFile(dir, k));
-      await fs11.mkdir(dir, { recursive: true });
+      await fs12.mkdir(dir, { recursive: true });
       const before = await stampFiles(paths);
       const result = await transport2.execute({
         code: captureJsx(comp, frames, paths, opts.factor, opts.tryOcio),
@@ -61182,7 +61374,7 @@ function aeFrameSource(transport2, comp, opts) {
   };
 }
 async function readPicture(file2, target, convert) {
-  const img = decodePng(await fs11.readFile(file2));
+  const img = decodePng(await fs12.readFile(file2));
   if (convert) convert(img.rgb);
   let rgb = img.rgb;
   let width = img.width;
@@ -61349,14 +61541,14 @@ async function checkComp(args, transport2) {
     time: r64((ownedTo + every) * fd),
     framesLeft: remaining
   } : null;
-  const outDir = path13.resolve(
-    args.outDir ?? path13.join(
+  const outDir = path14.resolve(
+    args.outDir ?? path14.join(
       os4.tmpdir(),
       "comp-room-check",
       `${String(plan.compName).replace(/[^A-Za-z0-9_-]+/g, "-").slice(0, 40)}-${Date.now()}`
     )
   ).replace(/\\/g, "/");
-  const capDir = path13.join(outDir, `captures-${randomUUID3().slice(0, 8)}`).replace(/\\/g, "/");
+  const capDir = path14.join(outDir, `captures-${randomUUID3().slice(0, 8)}`).replace(/\\/g, "/");
   const readOnly = readOnlyMode();
   const target = {
     width: Math.max(1, Math.round(plan.width / downsample)),
@@ -61390,6 +61582,16 @@ async function checkComp(args, transport2) {
       reason: `source media missing for comp ${plan.compName}; restore or relink it, then check again`
     };
     report.missingFootage = plan.missingFootage;
+    report.structure = await runStructure(args, transport2, plan, first, end, fd);
+    report.next = null;
+    report.timings = { totalSeconds: r3((performance.now() - started) / 1e3) };
+    return jsonResult({ result: report });
+  }
+  if (args.colorManaged !== "off" && plan.workingSpace !== "None" && plan.workingSpace !== "" && plan.colorManagementSystem !== 1) {
+    report.picture = {
+      checked: false,
+      reason: `${iccManagedReason(plan.workingSpace, plan.bitsPerChannel)} The whole-piece check's picture checks (blank frames, black bars, pops, stutters, cuts, clipping, elements off frame) are tuned on display values, so they are not run.`
+    };
     report.structure = await runStructure(args, transport2, plan, first, end, fd);
     report.next = null;
     report.timings = { totalSeconds: r3((performance.now() - started) / 1e3) };
@@ -61449,10 +61651,10 @@ async function checkComp(args, transport2) {
         failures.push({ frame: f.frame, error: `could not read the capture: ${err instanceof Error ? err.message : String(err)}` });
       }
       readSeconds += (performance.now() - r0) / 1e3;
-      await fs11.rm(f.path, { force: true });
+      await fs12.rm(f.path, { force: true });
     }
   }
-  await fs11.rm(capDir, { recursive: true, force: true });
+  await fs12.rm(capDir, { recursive: true, force: true });
   const findings = watcher ? watcher.finish() : null;
   const measureSeconds = watcher ? watcher.measureMs / 1e3 : 0;
   let nextOut = next;
@@ -61546,7 +61748,7 @@ async function checkComp(args, transport2) {
     sheetSeconds = (performance.now() - s0) / 1e3;
     report.sheet = sheet;
   }
-  await fs11.rmdir(outDir).catch(() => {
+  await fs12.rmdir(outDir).catch(() => {
   });
   const total = (performance.now() - started) / 1e3;
   report.timings = {
@@ -61682,11 +61884,11 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
     if (!got?.path) continue;
     try {
       const pic = await readPicture(got.path, target, convert);
-      await fs11.writeFile(got.path, encodePngSrgb8(pic.width, pic.height, pic.rgb));
+      await fs12.writeFile(got.path, encodePngSrgb8(pic.width, pic.height, pic.rgb));
       images.push({ width: pic.width, height: pic.height, rgb: pic.rgb, bitDepth: 8 });
       kept.push({ frame: c.frame, time: r64(c.frame * fd), kinds: c.kinds, ...c.why ? { why: c.why } : {}, path: got.path });
     } catch {
-      await fs11.rm(got.path, { force: true });
+      await fs12.rm(got.path, { force: true });
     }
   }
   if (images.length === 0) return { writtenTo: null, error: "none of the sheet's frames could be read" };
@@ -61698,8 +61900,8 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
     thumbWidth: tileW,
     labels
   });
-  const sheetPath = path13.join(outDir, `check-sheet-${tag}.png`).replace(/\\/g, "/");
-  await fs11.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+  const sheetPath = path14.join(outDir, `check-sheet-${tag}.png`).replace(/\\/g, "/");
+  await fs12.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
   return {
     writtenTo: sheetPath,
     size: [sheet.width, sheet.height],
@@ -62236,8 +62438,8 @@ var layerInfoTool = defineTool({
 });
 
 // src/tools/project-export.ts
-import { promises as fs12 } from "node:fs";
-import * as path14 from "node:path";
+import { promises as fs13 } from "node:fs";
+import * as path15 from "node:path";
 init_config();
 var projectExportTool = defineTool({
   name: "ae_project_export_json",
@@ -62259,7 +62461,7 @@ var projectExportTool = defineTool({
       const rejection = rejectedOutputPath(args.outPath);
       if (rejection !== null) {
         return errorResult("IO", rejection, {
-          details: { outPath: path14.resolve(args.outPath) },
+          details: { outPath: path15.resolve(args.outPath) },
           hint: "Write the document somewhere outside the mailbox, or omit outPath to receive it inline."
         });
       }
@@ -62278,10 +62480,10 @@ var projectExportTool = defineTool({
     const pretty = args.pretty ?? !!args.outPath;
     const jsonText = JSON.stringify(doc, null, pretty ? 2 : 0);
     if (args.outPath) {
-      const abs = path14.resolve(args.outPath);
+      const abs = path15.resolve(args.outPath);
       try {
-        await fs12.mkdir(path14.dirname(abs), { recursive: true });
-        await fs12.writeFile(abs, jsonText, "utf8");
+        await fs13.mkdir(path15.dirname(abs), { recursive: true });
+        await fs13.writeFile(abs, jsonText, "utf8");
       } catch (err) {
         return errorResult(
           "IO",
@@ -62312,8 +62514,8 @@ var projectExportTool = defineTool({
 });
 
 // src/tools/project-import.ts
-import { promises as fs13 } from "node:fs";
-import * as path15 from "node:path";
+import { promises as fs14 } from "node:fs";
+import * as path16 from "node:path";
 
 // src/schema.ts
 var SCHEMA_VERSION = 3;
@@ -62322,11 +62524,11 @@ var SCHEMA_VERSION = 3;
 var Validator = class {
   issues = [];
   warnings = [];
-  err(path17, message) {
-    this.issues.push({ path: path17, message });
+  err(path18, message) {
+    this.issues.push({ path: path18, message });
   }
-  warn(path17, message) {
-    this.warnings.push({ path: path17, message });
+  warn(path18, message) {
+    this.warnings.push({ path: path18, message });
   }
   isObject(v) {
     return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -62427,64 +62629,64 @@ function validateAeProjectDoc(doc) {
   }
   return { ok: v.issues.length === 0, issues: v.issues, warnings: v.warnings };
 }
-function validateLayer(v, path17, layer) {
+function validateLayer(v, path18, layer) {
   if (!v.isObject(layer)) {
-    v.err(path17, "not an object");
+    v.err(path18, "not an object");
     return;
   }
-  if (typeof layer.index !== "number") v.err(`${path17}.index`, "missing or not a number");
-  if (typeof layer.name !== "string") v.err(`${path17}.name`, "missing or not a string");
-  if (typeof layer.type !== "string") v.err(`${path17}.type`, "missing or not a string");
+  if (typeof layer.index !== "number") v.err(`${path18}.index`, "missing or not a number");
+  if (typeof layer.name !== "string") v.err(`${path18}.name`, "missing or not a string");
+  if (typeof layer.type !== "string") v.err(`${path18}.type`, "missing or not a string");
   else if (["AVLayer", "TextLayer", "ShapeLayer", "CameraLayer", "LightLayer", "Layer"].indexOf(
     layer.type
   ) === -1) {
-    v.warn(`${path17}.type`, `unknown layer type: ${layer.type}`);
+    v.warn(`${path18}.type`, `unknown layer type: ${layer.type}`);
   }
   if (layer.transformGroup)
-    validatePropertyGroup(v, `${path17}.transformGroup`, layer.transformGroup);
-  if (layer.effectsGroup) validatePropertyGroup(v, `${path17}.effectsGroup`, layer.effectsGroup);
-  if (layer.masksGroup) validatePropertyGroup(v, `${path17}.masksGroup`, layer.masksGroup);
-  if (layer.textGroup) validatePropertyGroup(v, `${path17}.textGroup`, layer.textGroup);
-  if (layer.contentsGroup) validatePropertyGroup(v, `${path17}.contentsGroup`, layer.contentsGroup);
-  if (layer.markers) validateProperty(v, `${path17}.markers`, layer.markers);
+    validatePropertyGroup(v, `${path18}.transformGroup`, layer.transformGroup);
+  if (layer.effectsGroup) validatePropertyGroup(v, `${path18}.effectsGroup`, layer.effectsGroup);
+  if (layer.masksGroup) validatePropertyGroup(v, `${path18}.masksGroup`, layer.masksGroup);
+  if (layer.textGroup) validatePropertyGroup(v, `${path18}.textGroup`, layer.textGroup);
+  if (layer.contentsGroup) validatePropertyGroup(v, `${path18}.contentsGroup`, layer.contentsGroup);
+  if (layer.markers) validateProperty(v, `${path18}.markers`, layer.markers);
   if (layer.timeRemapProperty)
-    validateProperty(v, `${path17}.timeRemapProperty`, layer.timeRemapProperty);
+    validateProperty(v, `${path18}.timeRemapProperty`, layer.timeRemapProperty);
 }
-function validatePropertyGroup(v, path17, group) {
+function validatePropertyGroup(v, path18, group) {
   if (!v.isObject(group)) {
-    v.err(path17, "not an object");
+    v.err(path18, "not an object");
     return;
   }
-  if (typeof group.matchName !== "string") v.err(`${path17}.matchName`, "missing or not a string");
+  if (typeof group.matchName !== "string") v.err(`${path18}.matchName`, "missing or not a string");
   if (Array.isArray(group.properties)) {
     for (let i = 0; i < group.properties.length; i++) {
-      validateProperty(v, `${path17}.properties[${i}]`, group.properties[i]);
+      validateProperty(v, `${path18}.properties[${i}]`, group.properties[i]);
     }
   }
   if (Array.isArray(group.groups)) {
     for (let i = 0; i < group.groups.length; i++) {
-      validatePropertyGroup(v, `${path17}.groups[${i}]`, group.groups[i]);
+      validatePropertyGroup(v, `${path18}.groups[${i}]`, group.groups[i]);
     }
   }
 }
-function validateProperty(v, path17, prop) {
+function validateProperty(v, path18, prop) {
   if (!v.isObject(prop)) {
-    v.err(path17, "not an object");
+    v.err(path18, "not an object");
     return;
   }
-  if (typeof prop.matchName !== "string") v.err(`${path17}.matchName`, "missing or not a string");
+  if (typeof prop.matchName !== "string") v.err(`${path18}.matchName`, "missing or not a string");
   if (Array.isArray(prop.keyframes)) {
     for (let i = 0; i < prop.keyframes.length; i++) {
-      validateKeyframe(v, `${path17}.keyframes[${i}]`, prop.keyframes[i]);
+      validateKeyframe(v, `${path18}.keyframes[${i}]`, prop.keyframes[i]);
     }
   }
 }
-function validateKeyframe(v, path17, kf) {
+function validateKeyframe(v, path18, kf) {
   if (!v.isObject(kf)) {
-    v.err(path17, "not an object");
+    v.err(path18, "not an object");
     return;
   }
-  if (typeof kf.time !== "number") v.err(`${path17}.time`, "missing or not a number");
+  if (typeof kf.time !== "number") v.err(`${path18}.time`, "missing or not a number");
 }
 
 // src/tools/project-import.ts
@@ -62513,9 +62715,9 @@ var projectImportTool = defineTool({
   handler: async (args, transport2) => {
     let doc;
     if (args.inPath) {
-      const abs = path15.resolve(args.inPath);
+      const abs = path16.resolve(args.inPath);
       try {
-        doc = JSON.parse(await fs13.readFile(abs, "utf8"));
+        doc = JSON.parse(await fs14.readFile(abs, "utf8"));
       } catch (err) {
         return errorResult(
           "IO",
@@ -62780,7 +62982,7 @@ var ALL_TOOLS = [
 
 // src/tools/library.ts
 import { readFileSync as readFileSync2, realpathSync as realpathSync2 } from "node:fs";
-import path16 from "node:path";
+import path17 from "node:path";
 import { createHash } from "node:crypto";
 init_config();
 
@@ -62870,17 +63072,17 @@ function findModules(catalog, query) {
 
 // src/tools/library.ts
 function boundedFile(base, relative3) {
-  const candidate = path16.resolve(base, relative3);
+  const candidate = path17.resolve(base, relative3);
   const inside = (file3) => {
-    const rel = path16.relative(base, file3);
-    if (!rel || rel === ".." || rel.startsWith(".." + path16.sep) || path16.isAbsolute(rel)) throw new Error("Library path escapes bundle");
+    const rel = path17.relative(base, file3);
+    if (!rel || rel === ".." || rel.startsWith(".." + path17.sep) || path17.isAbsolute(rel)) throw new Error("Library path escapes bundle");
   };
   inside(candidate);
   const file2 = realpathSync2(candidate);
   inside(file2);
   return file2;
 }
-function readLibrary(document, query, root = path16.resolve(PACKAGE_ROOT, "../library")) {
+function readLibrary(document, query, root = path17.resolve(PACKAGE_ROOT, "../library")) {
   const base = realpathSync2(root);
   const manifest = JSON.parse(readFileSync2(boundedFile(base, "manifest.json"), "utf8"));
   const entries = manifest.documents;

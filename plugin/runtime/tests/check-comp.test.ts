@@ -77,6 +77,8 @@ function fakeAe(opts: {
   honourFactor?: boolean;
   structure?: unknown;
   missingFootage?: unknown[];
+  workingSpace?: string;
+  colorManagementSystem?: number;
   paint?: (k: number, w: number, h: number) => Float64Array;
   /** Comp size, when not the 1080x1920 default. */
   size?: [number, number];
@@ -110,8 +112,9 @@ function fakeAe(opts: {
           workAreaDuration: opts.frames / FPS,
           displayStartTime: 0,
           resolutionFactor: [1, 1],
-          workingSpace: "None",
-          bitsPerChannel: 8,
+          workingSpace: opts.workingSpace ?? "None",
+          colorManagementSystem: opts.colorManagementSystem ?? 0,
+          bitsPerChannel: opts.workingSpace ? 32 : 8,
           missingFootage: opts.missingFootage ?? [],
         });
       }
@@ -744,4 +747,22 @@ describe("ae_check_comp on a Node model of the review eval's comp", () => {
     expect(res.stretches).toEqual([]);
     expect(res.extremes.clipHighAll.max).toBe(0);
   }, 60_000);
+});
+
+
+describe("ae_check_comp in a project under Adobe's colour management (stage 7)", () => {
+  it("refuses the picture checks in plain words, runs the structure checks, and captures nothing", async () => {
+    const t = fakeAe({ frames: 12, workingSpace: "ACEScg ACES Working Space AMPAS S-2014-004", colorManagementSystem: 0 });
+    const { res } = await check({ compNameOrId: "Main" }, t);
+    expect(res.picture.checked).toBe(false);
+    expect(res.picture.reason).toMatch(/colour-managed/);
+    expect(t.labels()).not.toContain("check_comp_capture");
+    expect(t.labels()).toContain("check_comp_structure");
+  });
+
+  it("captures as before under OCIO, which was not measured live", async () => {
+    const t = fakeAe({ frames: 12, workingSpace: "ACEScg", colorManagementSystem: 1 });
+    await check({ compNameOrId: "Main" }, t).catch(() => null);
+    expect(t.labels()).toContain("check_comp_capture");
+  });
 });

@@ -12,7 +12,7 @@ import { errorResult } from "../errors.js";
 import { readOnlyMode } from "../policy.js";
 import { MISSING_SOURCES_FN, OCIO_CAPTURE_FN, RENDER_FRAME_FN } from "../operations/snippets.js";
 import { jsxVal } from "../registry.js";
-import { colorConversion, validRgb } from "./capture-shared.js";
+import { colorConversion, iccManagedReason, validRgb } from "./capture-shared.js";
 import { defineTool, toMcpResult } from "./define-tool.js";
 const STRIP_DEFAULT_MAX_DIMENSION = 360;
 /**
@@ -947,7 +947,7 @@ const ISOLATE_FN = `
     }
 `;
 /** Options the JSX needs; everything else happens in Node on the captures. */
-function renderJsx(args, times, paths, tryOcio, isolate, strip = null, frameNums = null) {
+export function renderJsx(args, times, paths, tryOcio, isolate, strip = null, frameNums = null) {
     // A strip's times come from the comp's own frame duration: snap the moment
     // to a frame, lay the offsets around it, shift the window to stay inside
     // the comp (frames 0 .. last, in the same time convention as `time`).
@@ -962,6 +962,8 @@ function renderJsx(args, times, paths, tryOcio, isolate, strip = null, frameNums
         var _missingMedia = _missingSources(comp);
         if (_missingMedia.length) return { ok: false, error: "source media missing for comp " + comp.name + "; restore or relink before rendering", missingFootage: _missingMedia };
         var _ws = AE.safeGet(function () { return app.project.workingSpace; }, "None");
+        // 0: Adobe's own (ICC) colour management; 1: OCIO; null before After Effects 24.
+        var _cms = AE.safeGet(function () { return Number(app.project.colorManagementSystem); }, null);
         var _times = ${jsxVal(times)};
         var _strip = ${jsxVal(strip === null ? null : { at: strip.at, offsets: strip.offsets })};
         var _frameNums = ${jsxVal(frameNums)};
@@ -1001,7 +1003,8 @@ function renderJsx(args, times, paths, tryOcio, isolate, strip = null, frameNums
             if (_clamped > 0) _stripOut.note = "the comp is shorter than the strip: the last " + _clamped + " frames repeat the comp's last frame (they read as stutters in diff)";
         }
         var _useDst = ${jsxVal(!!args.useDisplayStartTime)};
-        var _useOcio = ${jsxVal(tryOcio)} && _ws !== "None" && _ws !== "";
+        // The OCIO Display Transform only under OCIO: under Adobe's ICC engine it does not give the viewer's picture (measured 2026-11-12).
+        var _useOcio = ${jsxVal(tryOcio)} && _ws !== "None" && _ws !== "" && _cms === 1;
         var _isolate = ${jsxVal(isolate)};
         var _frames = [];
         function _renderAll(kind) {
@@ -1060,6 +1063,7 @@ function renderJsx(args, times, paths, tryOcio, isolate, strip = null, frameNums
         if (_allOk) {
             _out.compName = comp.name;
             _out.workingSpace = _ws;
+            _out.colorManagementSystem = _cms;
             _out.bitsPerChannel = AE.safeGet(function () { return app.project.bitsPerChannel; }, 8);
             _out.projectFile = app.project.file ? app.project.file.fsName.replace(/\\\\/g, "/") : null;
             _out.bgColor = AE.safeGet(function () { return [comp.bgColor[0], comp.bgColor[1], comp.bgColor[2]]; }, null);
@@ -1143,9 +1147,51 @@ async function nativeFlow(args, opts, abs, transport, strip = null) {
         else
             payload[key] = value;
     };
+    // Under Adobe's own colour management (a working space, not OCIO) the conversion to the
+    // viewer's picture is not right (stage 7, measured 2026-11-12): the colour readings are
+    // refused, the captures stay raw, and the alpha-based measures go on.
+    const iccRefused = args.colorManaged !== "off" &&
+        typeof payload.workingSpace === "string" &&
+        payload.workingSpace !== "None" &&
+        payload.workingSpace !== "" &&
+        payload.colorManagementSystem !== 1;
+    let analyze = args.analyze === true;
+    let spillRefused = null;
+    if (iccRefused) {
+        const refused = [];
+        const reason = iccManagedReason(payload.workingSpace, payload.bitsPerChannel);
+        if (opts.sample) {
+            if (opts.sample.stages.includes("output"))
+                refused.push("sample (output)");
+            const stages = opts.sample.stages.filter((st) => st === "capture");
+            opts = { ...opts, sample: stages.length ? { ...opts.sample, stages } : null };
+        }
+        if (opts.look)
+            refused.push("look");
+        if (opts.histogram)
+            refused.push("histogram");
+        if (opts.screen)
+            refused.push("screen");
+        if (opts.diff)
+            refused.push("diff");
+        if (analyze)
+            refused.push("analyze");
+        if (opts.edge) {
+            refused.push("edge spill");
+            spillRefused = reason;
+        }
+        if (opts.channels === "rgba")
+            refused.push("channels rgba");
+        if (opts.overGiven)
+            refused.push("over");
+        opts = { ...opts, look: null, histogram: null, screen: null, diff: null, channels: "rgb", overGiven: false };
+        analyze = false;
+        payload.colorRefused = { reason, refused };
+        payload.colorWarning = `${reason} The written files are the raw captures (working-space values at the capture's scale), not the viewer's picture.`;
+    }
     // How the files will be written, decided once (it may need a calibration
     // round trip). Null leaves the raw captures on disk.
-    const managed = args.colorManaged !== "off";
+    const managed = args.colorManaged !== "off" && !iccRefused;
     let convert = null;
     let backdrop = null;
     if (managed) {
@@ -1252,6 +1298,8 @@ async function nativeFlow(args, opts, abs, transport, strip = null) {
                     const t = resolveEdgeThresholds(opts.edge, capture.width, capture.height);
                     payload.edgeThresholds ??= t;
                     const { report, frame } = measureEdge(capture, bg ?? [0, 0, 0], t);
+                    if (spillRefused !== null)
+                        report.spill = { refused: spillRefused };
                     put(i, "edge", report);
                     edgeMeasured++;
                     if (edgePrev !== null && edgePrev.index === i - 1) {
@@ -1279,7 +1327,7 @@ async function nativeFlow(args, opts, abs, transport, strip = null) {
                 payload.screenWarning = `screen measurement failed: ${err instanceof Error ? err.message : String(err)}`;
             }
         }
-        if (args.analyze) {
+        if (analyze) {
             try {
                 put(i, "analysis", analyzeFrame(capture));
             }

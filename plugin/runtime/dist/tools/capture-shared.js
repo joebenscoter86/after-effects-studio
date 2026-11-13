@@ -75,4 +75,18 @@ export async function colorConversion(payload, transport) {
         return null;
     }
 }
+/**
+ * Why colour readings are refused under Adobe's colour management. Measured on
+ * 2026-11-12 (After Effects 27.0, ACEScg, 32 bpc, the same scene built from sRGB
+ * files in an 8 bpc project with no working space): an 8-bit grey of 128 read
+ * 67 (0.263) after the conversion, a neutral read L* 28 for 54, un-matting gave
+ * the working-space red, and spill turned its verdict; the alpha-based measures
+ * (edge widths, coverage, holes, the file check) read the same to the pixel.
+ */
+export function iccManagedReason(workingSpace, bitsPerChannel) {
+    return (`The project is colour-managed (working space '${workingSpace}'${bitsPerChannel ? `, ${bitsPerChannel} bpc` : ""}, After Effects' own colour engine): ` +
+        "colour readings here do not match the viewer (measured: an 8-bit grey of 128 read as 67, a neutral read L* 28 for 54, and spill turned its verdict), so they are refused. " +
+        "Alpha-based readings (edge widths, coverage, holes, specks, the file check) read the same as in a project with no working space and are given. " +
+        "For colour, measure in a copy of the project set to no working space at 8 or 16 bpc, or pass colorManaged: 'off' for the raw working-space values.");
+}
 //# sourceMappingURL=capture-shared.js.map
