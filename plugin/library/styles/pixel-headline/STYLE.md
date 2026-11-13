@@ -16,10 +16,10 @@ This style is the plugin's own. It was measured frame by frame from one referenc
 1. **Cut the speaker out before anything else**, onto a clean ground. The cut-out needs the user's click: get it before they leave. (D1)
 2. **Choose the ground** (light, the reference; or dark, proven) and the speaker's look. Show the user a still of each from their own footage before building. (D2, D4, D7)
 3. **One sentence, one beat, one stressed word.** The giant word lands on the voice's first frame of that word. (D2.3, D3)
-4. **Five words or fewer a line.** A lead-in of n words takes (n − 1) × 4.75 + 26 frames to land; check it fits before the beat leaves, with a 10-frame hold. (D3)
+4. **Five words or fewer a line.** A lead-in of five words takes about 40 frames to settle; check every line settles before the beat leaves, with a hold of 10 frames or more. (D3)
 5. **Depth shows the cut-out:** giant words without a tail tuck behind the head; cards sit behind, round the speaker; things the speaker "holds" sit on the chest. Nothing covers the face. (D2.4)
 6. **One accent, one ground, one tail size, one pop family for the whole piece**, and every beat clears before the next. (D5)
-7. **Keep the margins:** 190 px top, 420 bottom, 60 sides at 1080 × 1920. (D3)
+7. **Keep the margins:** 220 px top (190 for a lead-in's ink), 420 bottom, 60 sides at 1080 × 1920. (D3)
 8. **Check the whole piece**, every fifth frame, then the delivered file itself. (D6)
 
 ## D1. Before a frame is built
@@ -33,6 +33,8 @@ These are requirements. A piece without them is not in this style.
 | **The user's click comes first** | The cut-out needs one click from the user, which cannot be made unattended. Get it before they leave. | The first piece's first version was built on the room because the user was asleep. |
 | A cut-out for a whole piece | Scale the take to delivery size first (1088 × 1920 for a 1080 frame). Render it in halves, emptying After Effects' cache between them. | Two halves of 43.5 s took about 4.3 minutes and 12 GB of cache each. |
 | No remnants of the room | Every piece of chair or wall left inside the matte comes out. Look on frames spread across the piece. | A clean ground shows every remnant. Take each out by brightness and colour together (`speaker({ remnants })`): keyed on brightness alone, one hole also took the hand. |
+| Disk | Check free space before each render. Under 14 GB free, purge After Effects' cache. | An Object Matte cache can reach about 19 GB per 10 s of 4K. |
+| The cut-out's own pitfalls | Use the builder's blend modes, not nested track mattes, which do not work. A hole keyed by colour needs Lab a* in Color Range: Linear Color Key on chroma or hue could not split skin from a chair under the same cast. A layer used only as a matte must be switched off, or it adds its own pixels. A render with `isolate` shows matte layers, so judge the outline on a full render. | All hit on the first piece (proven) |
 | The project's colour settings | Working space None, 8 bpc. `stage` reports the working space and warns otherwise. | A working space carries over from the last project; an ACEScg space rendered one take at a gamma of about 1.8. |
 | The voice on its own track | Some cameras put the voice on channel one of four, and After Effects renders such a take silent. Extract a mono WAV of that channel first (technique `word-timing`). | |
 | Inter Bold installed | `fontOK()` stops the build without it. | |
@@ -46,10 +48,10 @@ Light grey is the reference, and every default is calibrated on it. A dark groun
 | Setting | Light (measured) | Dark (proven, on navy) |
 |---|---|---|
 | Ground | One colour, about 205 of 255, no hue; a radial ramp from +0.04 at 47 % of the height to −0.06 past the bottom; noise 1.3 % | A ramp from about 0.8 of the colour at the top to 0.42 at the bottom, a soft round lift of the colour added behind the speaker (centre at 60 % of the height, radius 47 %), noise 1.3 %. On the piece: top RGB 16, 24, 52, bottom 8, 12, 28, lift 22, 33, 60. |
-| Giant word's glow (Deep Glow) | Exposure 0.64 | Exposure 0.14, radius 250. At 0.64 the haze washed the word toward white and flooded the top third of the frame. |
+| Giant word's glow (Deep Glow) | Exposure 0.64 | Exposure 0.14, radius 250 (Deep Glow's own default is 1000). At 0.64 the haze washed the word toward white and flooded the top third. At 0.14 and 1000, the red one letter-height below the word still stood 19 levels over the bare ground; at 0.14 and 250, 1 level at half a letter-height and 0 at one. The letters read 238, 117, 76 at the peak against an accent of 226, 71, 43, and are exact again by W + 23. |
 | Pixel blocks | The calibrated schedule; they may fall behind the letters | `blockScale` 0.2 to 0.3 (default 0.25), and none inside the word's box at its peak scale: on a dark ground the glow lets them show through the letters |
-| Card entrance (over-bright, blurred, 7 frames) | Exposure 2 | 0.5 for video clips; 0.3 for white interface pieces. At 2, light pages read as white slabs. |
-| Card rim (frosts what is behind) | Exposure 0.15 | 1.0 |
+| Card entrance (over-bright, blurred, 7 frames) | Exposure 2 | 0.5 for video clips; 0.3 for white interface pieces and for clips whose page is white (`entrance: 0.3`). At 2, light pages read as white slabs; even at 0.5 one card's cream page clipped 3.7 % of the frame for its entrance. |
+| Card rim (frosts what is behind) | Exposure 0.15 | 1.0. At 2.5 it read as a hard blue frame on navy. Collapse Transformations on, always (section 11). |
 | Text | White | White, which reads cleanly at the calibrated sizes |
 
 ### D2.2 The speaker's look
@@ -92,12 +94,16 @@ Nothing covers the face, ever. Anything that would is placed behind the speaker.
 
 A line takes longer to land than a fast speaker takes to say it. This was the style's biggest gap on the first piece.
 
-**How long a line takes** (`lineTime(n, kind)`): a lead-in of n words has landed (n − 1) × 4.75 + 26 frames after it starts, and a tail (n − 1) × 6.4 + 26. (measured, proven)
+**The measure.** An element has *settled* when it has under 2 px left to travel. A beat's *hold* is its exit's start less the latest settle among its elements. For text, that is the last word's slide times what is left of its Reveal Strength, after its place in the stagger and any line-2 start. For a word or card, it is the last frame on which its scale is 2 px or more from rest at its half-width. `settleTime(n, kind, slide)` and `popSettle(keys, halfWidth)` compute it; `lineTime` gives the time to land fully, when the fade ends too. (proven: it matches the first piece's timeline within half a frame)
 
-| Words | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 9 |
+| Words in a line | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 9 |
 |---|---|---|---|---|---|---|---|---|
-| Lead-in, frames | 26 | 31 | 36 | 40 | 45 | 50 | 55 | 64 |
-| Tail, frames | 26 | 32 | 39 | 45 | 52 | 58 | 65 | 77 |
+| Lead-in (136 px fall), settled, frames | 21 | 26 | 31 | 36 | 40 | 45 | 50 | 59 |
+| Tail, settled, frames (154 px scaled to 70 px type up to three words, 24 px above) | 21 | 28 | 34 | 35 | 41 | 48 | 54 | 67 |
+| Lead-in, landed fully: (n − 1) × 4.75 + 26 | 26 | 31 | 36 | 40 | 45 | 50 | 55 | 64 |
+| Tail, landed fully: (n − 1) × 6.4 + 26 | 26 | 32 | 39 | 45 | 52 | 58 | 65 | 77 |
+
+A giant word settles about 22 frames after W, and a card about 20 after its first frame. A slide's length sets how long a tail takes to settle, so for a fast speaker one short slide on every tail can buy the holds: the first piece used 24 px on all of its tails, a one-word tail included, and its first beat reached a hold of 10 frames or more by this measure only with it (`setPiece({ tailSlide: 24 })`).
 
 **The limits that follow** (proven):
 
@@ -107,12 +113,12 @@ A line takes longer to land than a fast speaker takes to say it. This was the st
 | A line's start | On its first spoken word, or up to 8 frames after it |
 | The giant word | Never moves off the voice: W is the stressed syllable's first frame. Time it from the voice (technique `word-timing`), not from a transcriber's word times, which were off by more than half a second. |
 | An exit | May start once an element has under 2 px left to travel |
-| The hold | Aim for 10 frames or more of everything still before the beat leaves. `beat({ exitAt })` warns under 10. |
+| The hold | Aim for 10 frames or more by the measure above. `beat({ exitAt })` warns under 10. A punch that leads straight into a zoom may have none, as one did on the first piece; say so. |
 | The opener's lead-in | Starts about 10 frames into the push, or its first words arrive above the frame while the push is still wide |
 | One stressed word | A phrase shrinks to fit the width and stops being giant: two words came out at 53 % of the giant size and three at 39 %. `heroWord` warns below 60 %. |
 | One tail size per piece | 70 px on the first piece (`setPiece({ tailSize })`) |
-| The tail's slide | 154 px for up to three words (scaled with the size). A longer tail slides a third of its font size (24 px at 70), or its words ride over each other mid-slide and read as one run-on word. |
-| Margins of a vertical reel at 1080 × 1920 | 190 px clear at the top (the app's header), 420 at the bottom (caption and buttons), 60 at the sides. A two-line lead-in at the default baseline reaches y 158; lower it with `leadBaseline`. `beat` warns on text in a margin. |
+| The tail's slide | 154 px for up to three words (scaled with the size). A longer tail slides a third of its font size (24 px at 70), or its words ride over each other mid-slide and read as one run-on word: at 154 px they rode over each other for 50 frames, at 45 px they still touched for about 6. Or one slide for the piece (`setPiece({ tailSlide })`), as above. |
+| Margins of a vertical reel at 1080 × 1920 | 220 px clear at the top for the app's header (a lead-in's ink may come up to 190), 420 at the bottom for the caption and buttons, 60 at the sides. A two-line lead-in at the default baseline reaches y 158. Its `baseline` is the second line's, so lower that: 317 put the ink's top at 194. A shrunk giant word may pass the side margin for the 3 frames of its pop's peak (accepted). `beat` warns on settled text in a margin. |
 | A word heard two ways | When the recording could be "has" or "is", write the line so either reading is right (a contraction such as "it's") |
 
 ## D4. The speaker's look
@@ -122,7 +128,8 @@ Targets given as brightness alone made a face look blotchy, tired and off. A cha
 | Target, face skin on a settled frame | Value |
 |---|---|
 | Mean hue (Lab) | about a* 18, b* 17.5 |
-| Evenness | standard deviation of a* and of b* across the face under 4 each. From 13.6 and 11.0 before, the fix reached about 2. |
+| Evenness | standard deviation of a* and of b* across the face under 4 each. From 13.6 and 11.0 before, the fix reached 2.09 and 1.80 (mean L 58.1, a* 18.6, b* 17.8, none clipped). |
+| Lightness | match the stills the user approved, not a figure written beside them: they measured L 57.5 where the note said 54 |
 | Clipping | none |
 | Eyes, teeth, lips, hair, beard | keep their own colour |
 | Detail | pores and lines still there; waxy is too far |
@@ -141,7 +148,7 @@ The amounts are sliders on `<prefix>Skin controls`. Check lips, teeth, hands and
 
 - One accent colour for the whole piece, on the giant words, the blocks, the lines and the strike only (`setPiece({ accent })`).
 - One ground for the whole piece. It fills the frame on every frame and does not move with the push or a zoom.
-- One tail size for the whole piece.
+- One tail size, and one tail slide, for the whole piece.
 - One pop family: everything that pops uses the word's curve or the card's curve, and anything that is one of several staggers by 4 frames.
 - Every beat clears before the next beat's first element (`exitBeat`, within 10 frames), and each beat holds before it leaves.
 - The camera is shared: one push null for the piece; each later push holds full frame until its own start.
@@ -151,13 +158,27 @@ The amounts are sliders on `<prefix>Skin controls`. Check lips, teeth, hands and
 
 | Check | How | What it caught on the first piece |
 |---|---|---|
-| Contact sheets | Every fifth frame of the whole piece | Jammed tails, the glow flooding the top third, blocks through the letters, a card's white slab on the dark ground, a panel behind the speaker when zoomed out |
-| Each giant word's first frame | Count accent pixels either side of W; time W from the voice's level and from trimmed-audio transcription | Words placed from transcriber times, half a second off |
+| Contact sheets | Every fifth frame of the whole piece, as your own frame renders: never leave captures queued | Jammed tails, the glow flooding the top third, blocks through the letters, a card's white slab on the dark ground, a panel behind the speaker when zoomed out |
+| Each giant word's first frame | Render W − 3 to W + 1 and count accent pixels in the word's rows (for a red-orange accent: r > 150, g < 120, b < 100, r − g > 70): 0 on W − 1, more than 0 on W. Time W from the voice (technique `word-timing`). | Words placed from transcriber times, half a second off |
+| Exits clean | Render each beat's gone frame; count white (all channels over 200) and accent pixels in the text's region: 0 | |
+| Face clear of cards | Every frame of every card: the card's box (its outer rect × its scales, through its parent) against the face box through the speaker's transforms. Cards placed behind the speaker may overlap by design. | A card that crossed the face while shrinking (the ease's sign, now fixed); a straight step-back clipping the hair |
+| Holds | The measure in D3, per beat, as a table | A short first hold; a punch with none |
+| Tail jams | Strips of the tail's band on every frame from its start | Words touching at slides of 154 and 45 px |
 | The outline | At twice size, on consecutive frames, wherever something passes behind the speaker and on fast hands | Remnants of the chair, a crawling matte |
-| The skin | Hue and evenness on three stills, then frame runs at twice size | A blotchy, two-coloured face |
-| The delivered file, not the project | Loudness, true peak, the voice on its frame, effects never lifting a speech frame by more than 1 dB | After Effects' AAC encoder put 1,024 samples of silence in front with no edit list, so the voice ran 0.64 of a frame late in players |
+| The skin | sRGB to Lab (D65) in a face box; skin pixels where R > G, G ≥ B − 10, R − B > 35 and 35 < L < 85; mean and standard deviation of L, a*, b*, and the count of pixels at 254 or more. On three stills, then frame runs at twice size. | A blotchy, two-coloured face |
+| Clipped pixels | Share of pixels at 255 per frame | A card's cream page clipping 3.7 % of the frame on its entrance |
+| The delivered file, not the project | Integrated loudness and true peak (`ebur128=peak=true`); the voice on its frame (cross-correlate the decoded audio with the source voice: lag 0); a full decode; the frame count | After Effects' AAC encoder put 1,024 samples of silence in front with no edit list, so the voice ran 0.64 of a frame late in players |
+| The 1 dB rule | In 1/30 s frames, a speech frame is one where the voice alone is over −40 dB. Each effect is mixed onto the voice alone and lowered 1 dB at a time until no speech frame it touches rises more than 1 dB over the voice alone. Then the whole mix is checked again. | Seven effects that lifted speech |
 | The build's warnings | `beat` and `stage` reports | Lines that cannot land, short holds, text in the margins, a carried-over working space |
 | Sound effects | Chosen and levelled by measurement, but unheard | Say so, and deliver a voice-only file beside the mix |
+
+### D6.1 Delivery, as run on the first piece
+
+1. Check free disk; purge under 14 GB free. Save the project.
+2. Render the picture with the plugin's delivery operation and its file check.
+3. Mix the sound outside After Effects (the 1 dB rule; the voice's gain set so the mix's true peak lands near −2 dBTP, since After Effects has no limiter; the voice peaked at +0.3 dBTP alone).
+4. Join picture and sound with ffmpeg, which writes the AAC edit list: copy the video, AAC at 256 kbps and 48 kHz, faststart. Make a voice-only file the same way, and a phone file (H.264 High at about 4.5 Mbps).
+5. Verify each file: frame count, full decode, loudness and true peak. The first piece delivered at −15.1 LUFS and −2.1 dBTP.
 
 ## D7. Show a still before building any choice of taste
 
@@ -172,7 +193,7 @@ Words describing a look were misread three times on the first piece ("cut out" t
 
 | Builder | For |
 |---|---|
-| `setPiece({ tone, accent, tailSize })` | The piece's choices, read by every builder |
+| `setPiece({ tone, accent, tailSize, tailSlide })` | The piece's choices, read by every builder |
 | `ground`, `speaker({ cutout, take, look, remnants })` | The clean ground; the speaker built from the rendered cut-out, with its look and its remnants out |
 | `stage` | The older all-in-one stage: a ground and a take; `footageGround: true` is the fallback |
 | `beat(comp, brief)` | A whole opener or punch beat, with warnings |
@@ -555,12 +576,14 @@ The reference shows one beat and nothing leaving. A whole piece needs the mechan
 - **Where the words sit.** A giant word wider than 85 % shrinks to fit and keeps its tallest letters where an unshrunk word's would be, just under the lead-in. `widthShare` sets its width as a share of the frame instead (0.92 for a tucked word), and `fontShare` a fixed size. `baseline` in comp pixels overrides both, and `tuck: { hairY, depth }` sets it behind the speaker's head. The tail sits at 31.8 % of the height, or 3 % of the height below a descender's foot, and `baseline` overrides it. On the first piece the proof's names sat at a baseline of 470 above large cards.
 - **Blocks round any word.** `pixelBlocks` thins with `blockScale`. With `clear` (the default on a dark ground and for a word of two or more words), no block touches the word's box scaled to its peak (1.156) with a 6 px margin, and the blocks keep at least 1.2 half-sizes from the centre. The gap between two words is then inside, so it no longer reads as a hyphen. A word wider than 75 % of the frame sends its blocks above and below only.
 - **Cards of any shape.** `card(comp, { size: [w, h], width, ... })` builds a card of any proportion: the first piece's proof used 1280 × 800 at 96 % of the frame's width. The pop, the frosted rim and the blurred, over-bright entrance are the same. The rim and corners scale by the card's shorter side: rim 3 % on every edge, corner radius 7.6 % (or `radius`), rim blur 3.2 %, the entrance blur 70 × (shorter side / 790). The clip covers the card, at 104 × the larger of card width / clip width and card height / clip height, in per cent (a 1080 × 1920 clip upright: 76.1 %, the calibrated figure; an upright 860 × 1204 clip: 95.5 %). The card layer collapses transformations: without that the rim has nothing behind it to frost and does nothing. `freezeEnd` holds a short clip's last frame. `entrance` and `rim` set the exposures (D2.1). `behind` puts the card under a layer such as the speaker.
-- **Moving a card.** `moveCard(comp, { layer or name, at, pos, scale, dur })` moves a landed card to `pos` (comp pixels, even when it is parented to the push) and scales it, on the push's curve with no overshoot. `dur` is in seconds; the default is the push's 42 frames. On the first piece, cards stepped back with scale over 0.3 s and position over 0.8 s, and joined the set over 0.6 s.
-- **The proof.** `proof(comp, { items, card, nameBaseline, back, set, behind })` builds the evidence pattern: one large card per item, its name as that item's giant word (prefix `<prefix>A `, `B `, and so on, so each name leaves with `exitBeat`). As each next name lands, the card before steps back (`back.scale`, `back.pos[i]`). At `set.at` every card moves into the set, 4 frames apart, and each clip restarts from its opening as it joins (`restartClip`: time remapping plays to the join, then from 0).
+- **Moving a card.** `moveCard(comp, { layer or name, at, pos, scale, dur })` moves a landed card to `pos` (comp pixels, even when it is parented to the push) and scales it, on the push's curve with no overshoot. `dur` is in seconds; the default is the push's 42 frames. On the first piece, cards stepped back with scale over 0.3 s and position over 0.8 s, and joined the set over 0.6 s. Use single direct moves: a two-step move clipped the speaker's hair.
+- **The proof.** `proof(comp, { items, card, nameBaseline, back, set, behind })` builds the evidence pattern: one large card per item, its name as that item's giant word (prefix `<prefix>A `, `B `, and so on, so each name leaves with `exitBeat`). As each next name lands, the card before steps back (`back.scale`, `back.pos[i]`). At `set.at` every card moves into the set, 4 frames apart, and each clip restarts from its opening as it joins (`restartClip`: time remapping plays to the join, then from 0). Each card's first frame defaults to its name's W + 8. On the first piece: the large card 1037 px wide (96 %) with its bottom edge about 125 px behind the head and shoulders; the step-back to 302 px wide beside the shoulders; the set 605 px wide (56 %), filling y 250 to 1050. A card was large on screen for 2.5 to 3.5 s. A 15 s clip ran out while its card was still on: `freezeEnd` holds the last frame.
 - **Interface cards and the strike.** `uiCard(comp, { kind: "bubble" | "bar", text, at, pos, width })` pops a comment bubble or a prompt bar in as a card. Both are comps of native shapes and text (`bubble`, `promptBar`) and show an action, never real content: no names, handles or addresses, and the prompt itself is never shown. On the first piece the bar was 880 px wide across the chest at y 1300 and the bubbles 340 to 420 px wide. `strike(comp, { from, to, at })` draws one straight 26 px stroke in the accent over 6 frames and leaves it on; it is `<prefix>Line`, so it clears with its beat.
-- **Making room: the zoom-out.** With a cut-out, `zoomOut(comp, { speaker, scale, position, at, ease: "inOut", cutout: true })` scales the speaker down from the bottom centre on an ease in and out (26 frames). The push's own curve smears a face on its first frame, and a zoom that only makes room wants the gentler move. On the first piece it went to 0.8 of full size and back with `exitInset`. The target is converted into the camera's space with the camera at rest, never mid-push. On footage as the ground (the fallback), the same call masks the footage's edges with a feather over a ground solid: `ground: "sample"` reads its colour at `sampleAt`, by default just below `trimTop`, so a pale ceiling cut away at the top does not colour it. Match that ground to the graded footage, not the raw take.
+- **Making room: the zoom-out.** With a cut-out, `zoomOut(comp, { speaker, scale, position, at, ease: "inOut", cutout: true })` scales the speaker down from the bottom centre on an ease in and out (26 frames). The push's own curve smears a face on its first frame, and a zoom that only makes room wants the gentler move. On the first piece it went to 0.8 of full size and back with `exitInset`, 26 frames each way; it was moved 8 frames later so the punch word before it settled at full size. The target is converted into the camera's space with the camera at rest, never mid-push. On footage as the ground (the fallback), the same call masks the footage's edges with a feather over a ground solid: `ground: "sample"` reads its colour at `sampleAt`, by default just below `trimTop`, so a pale ceiling cut away at the top does not colour it. Match that ground to the graded footage, not the raw take.
 - **Rebuilding.** `clear(comp, { prefix })` (and `AESLib.clearOwned`) first sets any owned parent, such as the push camera, to its settled state. It then unparents the layers that stay, then removes the owned layers and comps. Deleting the camera with the speaker still parented baked its 171 % into the speaker, and the rebuild zoomed twice.
 - **The footage as the ground (the fallback).** `stage(comp, { take, footageGround: true, grade, topShade })` uses the take as it is, filling the frame, with no cut-out and no ground solid; the take is pushed with the scene. `topShade: { share, colour, feather }` lays a solid of the wall's colour over the top of the frame, its lower edge feathered, to hide a ceiling. `stage` warns that this is a fallback. On a dark wall the graded wall measured about RGB 7, 5, 11 against 21, 16, 27 raw.
+
+- **Sound placement (measured, not yet heard).** Each effect is placed so its own measured hit lands on its event: a word's pop on W, the blocks' glitch on W + 1 (trimmed to 0.4 s with a 10 ms fade), a card's flick on its first frame, a whoosh's peak on the move's end. Peaks in the first piece's mix, after the 1 dB rule: pops −20 to −27 dBFS, the blocks −28, flicks −24 to −30, the push −25, whooshes −31 and −37, the voice at −2.5 dB of gain. Nobody has heard them; deliver a voice-only file beside the mix.
 
 ## 12. Still extended
 

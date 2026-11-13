@@ -47,7 +47,7 @@ var AESPixelHeadline = (function () {
     dark: { glowExposure: .14, glowRadius: 250, blockScale: .25, blockMinDist: 1.2, entranceExposure: .5, uiEntranceExposure: .3, rimExposure: 1 },
     // what a vertical reel must keep clear (px at 1080 x 1920; scaled to the comp): the app's header, its caption and
     // buttons, the sides. A hold of at least `hold` frames before anything leaves; a line of at most `lineWords` words
-    margins: { top: 190, bottom: 420, side: 60 }, hold: 10, lineWords: 5, lateStart: 8,
+    margins: { top: 220, leadTop: 190, bottom: 420, side: 60 }, hold: 10, lineWords: 5, lateStart: 8,
     // a tail of more than `words` words slides `slideEm` of its font size (its words otherwise ride over each other mid-slide)
     tailLong: { words: 3, slideEm: .34 },
     // a word tucked behind the speaker: its baseline `depth` px below the top of the hair, `widthShare` of the frame wide
@@ -55,9 +55,10 @@ var AESPixelHeadline = (function () {
     // the zoom that only makes room: an ease in and out over `frames`
     zoomInOut: { frames: 26 }
   };
-  // one set of choices for the whole piece (setPiece): tone ("light"|"dark"), accent, tailSize. Builders read it when a call
+  // one set of choices for the whole piece (setPiece): tone ("light"|"dark"), accent, tailSize, tailSlide (px: one slide for
+  //      every tail, which a fast speaker's short holds may need). Builders read it when a call
   // does not say otherwise, so forty seconds stay in one accent, one tail size and one ground's settings.
-  var PIECE = { tone: "light", accent: null, tailSize: null };
+  var PIECE = { tone: "light", accent: null, tailSize: null, tailSlide: null };
   function setPiece(o) { for (var q in o) if (o.hasOwnProperty(q)) PIECE[q] = o[q]; return PIECE; }
   function isDark(o) { if (o && o.darkGround !== undefined) return !!o.darkGround; if (o && o.tone) return o.tone === "dark"; return PIECE.tone === "dark"; }
   function accentOf(o, fb) { return (o && (o.colour || o.accent)) || PIECE.accent || fb; }
@@ -265,6 +266,24 @@ var AESPixelHeadline = (function () {
   //      A lead-in of n words lands (n - 1) x 4.75 + 26 frames after it starts, a tail (n - 1) x 6.4 + 26.
   function lineTime(n, kind) { var tl = kind === "tail", K = tl ? SIG.tailStrength : SIG.leadStrength;
     return sec((Math.max(1, n) - 1) * (tl ? SIG.tailDelay : SIG.leadDelay) + K[K.length - 1][0]); }
+  // ---- "settled": under 2 px left to travel (the measure a hold is counted from). A signature curve is evaluated offline the
+  //      way After Effects draws a bezier key pair: control points one influence along the time span at the key's speed.
+  function curveAt(K, f) { if (f <= K[0][0]) return K[0][1]; var n = K.length; if (f >= K[n - 1][0]) return K[n - 1][1];
+    for (var i = 0; i + 1 < n; i++) if (f <= K[i + 1][0]) break;
+    var a = K[i], b = K[i + 1], dt = b[0] - a[0], x1 = a[0] + a[3] * dt, y1 = a[1] + a[5] * a[3] * dt, x2 = b[0] - b[2] * dt, y2 = b[1] - b[4] * b[2] * dt;
+    function bz(u, p0, p1, p2, p3) { var v = 1 - u; return v * v * v * p0 + 3 * v * v * u * p1 + 3 * v * u * u * p2 + u * u * u * p3; }
+    var lo = 0, hi = 1; for (var it = 0; it < 40; it++) { var m = (lo + hi) / 2; if (bz(m, a[0], x1, x2, b[0]) < f) lo = m; else hi = m; }
+    return bz((lo + hi) / 2, a[1], y1, y2, b[1]); }
+  // frames from the curve's start until what is left to travel stays under 2 px; px = pixels per unit of the curve's value
+  function settleFrames(K, px) { var end = K[K.length - 1][1], f0 = K[0][0], f1 = K[K.length - 1][0], last = f0;
+    for (var f = f0; f <= f1; f += .05) if (Math.abs(curveAt(K, f) - end) * px >= 2) last = f;
+    return Math.min(f1, last + .05) - f0; }
+  // a line of n words settles this long (s) after its start: kind "lead" | "tail"; slide (px; default the builder's own)
+  function settleTime(n, kind, slide, size) { var tl = kind === "tail", K = tl ? SIG.tailStrength : SIG.leadStrength;
+    var sl = slide || (tl ? tailSlide(n, size || SIG.type.tailSize, 1) : SIG.leadDrop);
+    return sec((Math.max(1, n) - 1) * (tl ? SIG.tailDelay : SIG.leadDelay) + K[0][0] + settleFrames(K, sl / 100)); }
+  // a popped element (the word or a card) settles this long (s) after its first key, for its half-width in px
+  function popSettle(K, halfWidth) { return sec(K[0][0] + settleFrames(K, halfWidth)); }
   // the comp time at which a built line has landed (its line-2 start included)
   function lineSettle(t, kind) { return t.at + lineTime(t.words, kind) + (t.line2 ? Math.max(0, t.line2.extra) : 0); }
   // ---- lead-in line. o = { text, at (s, or one per line), colour, prefix, maxChars, lines }. Two lines when the text runs
@@ -276,7 +295,8 @@ var AESPixelHeadline = (function () {
   // ---- tail line. o = { text, at (s, or one per line), colour, under (the giant word's layer, to clear its descenders),
   //      baseline (comp px; default 31.8 % of the height, below any descender), prefix, maxChars, lines }. Two lines stack
   //      downward from the tail's baseline.
-  //      size (px; default the piece's tail size, setPiece({ tailSize }), else the calibrated 86 x the comp's scale). The slide
+  //      size (px; default the piece's tail size, setPiece({ tailSize }), else the calibrated 86 x the comp's scale), slide
+  //      (px; default the piece's tailSlide, else the rule that follows). The slide
   //      is the measured 154 px (scaled with the size) for up to three words; a longer tail slides SIG.tailLong.slideEm of
   //      its size, or its words ride over each other mid-slide and read as one run-on word.
   function tail(comp, o) { var s = k(comp), T = SIG.type, y = comp.height * T.tailBaseline, at0 = isArr(o.at) ? o.at[0] : o.at;
@@ -286,7 +306,7 @@ var AESPixelHeadline = (function () {
       if (below > .05 * sz) y = Math.max(y, wb + below + .03 * comp.height); }
     var size0 = o.size || PIECE.tailSize || T.tailSize * s, t = textLine(comp, o, pfx(o) + "Tail", size0, SIG.tailDelay), L = t.layer;
     L.position.setValue([comp.width / 2, y]);
-    reveal(L, t.at, SIG.tailStrength, SIG.tailDelay, [-tailSlide(t.words, t.size, s), 0], SIG.tailBlur * s * t.size / (T.tailSize * s), t.line2);
+    reveal(L, t.at, SIG.tailStrength, SIG.tailDelay, [-(o.slide || PIECE.tailSlide || tailSlide(t.words, t.size, s)), 0], SIG.tailBlur * s * t.size / (T.tailSize * s), t.line2);
     return L; }
   function tailSlide(n, size, s) { var T = SIG.type; return n > SIG.tailLong.words ? SIG.tailLong.slideEm * size : SIG.tailSlide * s * size / (T.tailSize * s); }
 
@@ -610,7 +630,8 @@ var AESPixelHeadline = (function () {
 
   // ---- the proof: one large card per item behind the speaker, its name as the giant word above it; as the next item lands,
   //      the earlier card steps back; then all together, each clip restarted from its opening as it joins the set.
-  //      o = { items: [{ clip, at (s: the card's first frame), text (the name), W (s: the name's spoken start), seed, blockScale }],
+  //      o = { items: [{ clip, at (s: the card's first frame; default W + 8 frames), text (the name), W (s: the name's spoken
+  //      start), seed, blockScale }],
   //      card { pos, size, width } (default centred at 42 % of the height, 1280 x 800, 96 % of the frame wide),
   //      nameBaseline (comp px), back { scale (%), pos: [[x, y], ...] (card i's place once item i + 1 has landed), scaleDur
   //      (s, .3), posDur (s, .8) }, set { at (s), pos: [[x, y], ...], scale (%), stagger (frames, 4), dur (s, .6), restart
@@ -619,7 +640,8 @@ var AESPixelHeadline = (function () {
   //      Returns { cards, names: [{ prefix, word, blocks }], end }.
   function proof(comp, o) { var P = pfx(o), it = o.items, cd = o.card || {}, sz = cd.size || [1280, 800], cards = [], names = [], i, end = 0;
     for (i = 0; i < it.length; i++) {
-      var C = card(comp, { clip: it[i].clip, clipStart: it[i].clipStart || 0, at: it[i].at, pos: cd.pos || [comp.width / 2, .42 * comp.height], size: sz, width: cd.width || .96 * comp.width,
+      var atC = it[i].at !== undefined ? it[i].at : it[i].W + sec(SIG.cardFirst);
+      var C = card(comp, { clip: it[i].clip, clipStart: it[i].clipStart || 0, at: atC, pos: cd.pos || [comp.width / 2, .42 * comp.height], size: sz, width: cd.width || .96 * comp.width,
         name: P + "Card " + (i + 1), behind: o.behind, tone: o.tone, darkGround: o.darkGround });
       cards.push(C);
       if (it[i].text) { var NP = P + String.fromCharCode(65 + i) + " ";
@@ -627,7 +649,7 @@ var AESPixelHeadline = (function () {
         var px = pixelBlocks(comp, { word: hw, at: it[i].W, colour: o.colour, seed: it[i].seed || (11 + i), blockScale: it[i].blockScale !== undefined ? it[i].blockScale : o.blockScale, tone: o.tone, darkGround: o.darkGround, prefix: NP });
         names.push({ prefix: NP, word: hw, blocks: px }); } }
     var bk = o.back;
-    if (bk) for (i = 0; i + 1 < it.length; i++) { var t0 = it[i + 1].text ? it[i + 1].W : it[i + 1].at;
+    if (bk) for (i = 0; i + 1 < it.length; i++) { var t0 = it[i + 1].text ? it[i + 1].W : (it[i + 1].at !== undefined ? it[i + 1].at : it[i + 1].W + sec(SIG.cardFirst));
       if (bk.scale !== undefined) end = Math.max(end, moveCard(comp, { layer: cards[i], at: t0, scale: bk.scale, dur: bk.scaleDur || .3 }));
       if (bk.pos && bk.pos[i]) end = Math.max(end, moveCard(comp, { layer: cards[i], at: t0, pos: bk.pos[i], dur: bk.posDur || .8 })); }
     var st = o.set;
@@ -654,7 +676,8 @@ var AESPixelHeadline = (function () {
     return { layers: n, comps: items }; }
 
   // ---- what a beat must not do: a line that cannot land before the beat leaves, a hold under SIG.hold frames, a line of more
-  //      than SIG.lineWords words, text inside a reel's margins. o = { exitAt (s), settles: [{ what, at (s) }], lines:
+  //      than SIG.lineWords words, text inside a reel's margins (the lead-in's ink may come up to SIG.margins.leadTop). A hold
+  //      is the exit's start less the latest settle (under 2 px left to travel). o = { exitAt (s), settles: [{ what, at (s) }], lines:
   //      [{ what, words }], rects: [{ what, x0, y0, x1, y1 }] }. Returns warnings (strings).
   function beatWarnings(comp, o) { var w = [], i, M = SIG.margins, kx = comp.width / REF.w, ky = comp.height / REF.h, last = 0, lastWhat = "";
     for (i = 0; i < (o.lines || []).length; i++) if (o.lines[i].words > SIG.lineWords) w.push(o.lines[i].what + " has " + o.lines[i].words + " words; keep a line to " + SIG.lineWords + " or fewer, or it will not land while the words are spoken");
@@ -663,7 +686,7 @@ var AESPixelHeadline = (function () {
       if (hold < 0) w.push(lastWhat + " cannot land in its window: it lands " + (-hold) + " frames after the beat starts to leave");
       else if (hold < SIG.hold) w.push("the hold is " + hold + " frames (" + lastWhat + " lands last); aim for at least " + SIG.hold); }
     for (i = 0; i < (o.rects || []).length; i++) { var r = o.rects[i], m = [];
-      if (r.y0 < M.top * ky) m.push("top"); if (r.y1 > comp.height - M.bottom * ky) m.push("bottom"); if (r.x0 < M.side * kx || r.x1 > comp.width - M.side * kx) m.push("side");
+      if (r.y0 < (r.lead ? M.leadTop : M.top) * ky) m.push("top"); if (r.y1 > comp.height - M.bottom * ky) m.push("bottom"); if (r.x0 < M.side * kx || r.x1 > comp.width - M.side * kx) m.push("side");
       if (m.length) w.push(r.what + " enters the " + m.join(" and ") + " margin"); }
     return w; }
   function textRect(L, t, what) { var r = L.sourceRectAtTime(t, false), p = L.position.value; return { what: what, x0: p[0] + r.left, y0: p[1] + r.top, x1: p[0] + r.left + r.width, y1: p[1] + r.top + r.height }; }
@@ -715,19 +738,20 @@ var AESPixelHeadline = (function () {
     if (stack) { line = drawnLine(comp, { at: W, path: stack.path, colour: b.accent, cards: b.clips.length, prefix: P }); scene.push(line); }
     if (type === "opener" && lead.length) { var ll = wrap(lead.join(" "), b.maxChars), lat = ll.length > 1 ? [words[0].t, words[ll[0].split(" ").length].t] : words[0].t;
       L = leadIn(comp, { text: lead.join(" "), at: lat, prefix: P, maxChars: b.maxChars, baseline: b.leadBaseline }); scene.push(L); rep.leadAt = words[0].t;
-      var n2 = ll.length > 1 ? ll[1].split(" ").length : 0; settles.push({ what: "the lead-in", at: ll.length > 1 ? lat[1] + lineTime(n2, "lead") : lat + lineTime(lead.length, "lead") });
+      var n2 = ll.length > 1 ? ll[1].split(" ").length : 0, sl0 = SIG.leadDrop * k(comp); settles.push({ what: "the lead-in", at: ll.length > 1 ? lat[1] + settleTime(n2, "lead", sl0) : lat + settleTime(lead.length, "lead", sl0) });
       for (i = 0; i < ll.length; i++) lines.push({ what: "lead-in line " + (i + 1), words: ll[i].split(" ").length }); }
     var hw = heroWord(comp, { text: words[si].text, at: W, colour: b.accent, glow: b.glow, exposure: b.exposure, darkGround: b.darkGround, tone: b.tone, baseline: b.wordBaseline, tuck: b.tuck, behind: b.tuck ? st.speaker : null, prefix: P });
-    rep.warnings = rep.warnings.concat(hw.warnings); settles.push({ what: "the giant word", at: W + sec(SIG.word[SIG.word.length - 1][0]) });
+    rep.warnings = rep.warnings.concat(hw.warnings); settles.push({ what: "the giant word", at: W + popSettle(SIG.word, (hw.box.x1 - hw.box.x0) / 2) });
     var px = pixelBlocks(comp, { word: hw, at: W, colour: b.accent, seed: b.seed, prefix: P, blockScale: b.blockScale, count: b.blockCount, dist: b.blockDist, tone: b.tone, darkGround: b.darkGround,
       lineBand: L ? [(b.leadBaseline === undefined ? comp.height * SIG.type.leadBaseline : b.leadBaseline) - 50 * k(comp), (b.leadBaseline === undefined ? comp.height * SIG.type.leadBaseline : b.leadBaseline) + 8 * k(comp)] : null });
     px.layer.moveAfter(hw.glowLayer || hw.layer); scene.push(px.layer, hw.layer); if (hw.glowLayer) scene.push(hw.glowLayer);   // blocks under the word and its glow
     if (type === "opener" && tl.length) { var tw = wrap(tl.join(" "), b.maxChars), tat = tw.length > 1 ? [words[tStart].t, words[tStart + tw[0].split(" ").length].t] : words[tStart].t;
       T = tail(comp, { text: tl.join(" "), at: tat, under: hw.layer, baseline: b.tailBaseline, size: b.tailSize, prefix: P, maxChars: b.maxChars }); scene.push(T); rep.tailAt = words[tStart].t;
-      var m2 = tw.length > 1 ? tw[1].split(" ").length : 0; settles.push({ what: "the tail", at: tw.length > 1 ? tat[1] + lineTime(m2, "tail") : tat + lineTime(tl.length, "tail") });
+      var m2 = tw.length > 1 ? tw[1].split(" ").length : 0, tsz = T.property("Source Text").value.fontSize, tsl = PIECE.tailSlide || tailSlide(tl.length, tsz, k(comp));
+      settles.push({ what: "the tail", at: tw.length > 1 ? tat[1] + settleTime(m2, "tail", tsl) : tat + settleTime(tl.length, "tail", tsl) });
       for (i = 0; i < tw.length; i++) lines.push({ what: "tail line " + (i + 1), words: tw[i].split(" ").length }); }
-    if (stack) settles.push({ what: "the last card", at: stack.first[stack.first.length - 1] + sec(SIG.card[SIG.card.length - 1][0]) });
-    if (L) rects.push(textRect(L, W + 2, "the lead-in")); rects.push({ what: "the giant word", x0: hw.box.x0, y0: hw.box.y0, x1: hw.box.x1, y1: hw.box.y1 }); if (T) rects.push(textRect(T, W + 3, "the tail"));
+    if (stack) settles.push({ what: "the last card", at: stack.first[stack.first.length - 1] + popSettle(SIG.card, stack.layout.w / 2) });
+    if (L) { var lr = textRect(L, W + 2, "the lead-in"); lr.lead = true; rects.push(lr); } rects.push({ what: "the giant word", x0: hw.box.x0, y0: hw.box.y0, x1: hw.box.x1, y1: hw.box.y1 }); if (T) rects.push(textRect(T, W + 3, "the tail"));
     rep.warnings = rep.warnings.concat(beatWarnings(comp, { exitAt: b.exitAt, settles: settles, lines: lines, rects: rects })); rep.settles = settles;
     var pu = null; if (b.push !== false && type === "opener") { pu = push(comp, { at: b.pushAt !== undefined ? b.pushAt : (L ? words[0].t - sec(SIG.pushLead) : W - sec(48)), pivotY: b.pivotY, layers: scene, sway: b.sway, camera: b.camera, prefix: P }); rep.pushAt = b.camera ? (b.pushAt !== undefined ? b.pushAt : (L ? words[0].t - sec(SIG.pushLead) : W - sec(48))) : pu.layer.scale.keyTime(1); rep.swayDivided = pu.divided; rep.camera = pu.layer; }
     else if (b.camera) { for (i = 0; i < scene.length; i++) if (scene[i] && scene[i].parent !== b.camera) scene[i].parent = b.camera; }
@@ -759,5 +783,6 @@ var AESPixelHeadline = (function () {
     blockSchedule: blockSchedule, pixelBlocks: pixelBlocks, card: card, stackLayout: stackLayout, cardStack: cardStack, linePath: linePath, drawnLine: drawnLine,
     tail: tail, motionBlur: motionBlur, beat: beat, moveCard: moveCard, textLine: textLine, exitBeat: exitBeat, exitText: exitText, reveal: reveal, wrap: wrap,
     setPiece: setPiece, piece: function () { return PIECE; }, ground: ground, speaker: speaker, look: look, projectSpace: projectSpace, lineTime: lineTime,
+    settleTime: settleTime, popSettle: popSettle, curveAt: curveAt,
     bubble: bubble, promptBar: promptBar, uiCard: uiCard, strike: strike, proof: proof, restartClip: restartClip, clear: clear, beatWarnings: beatWarnings, tailSlide: tailSlide };
 })();

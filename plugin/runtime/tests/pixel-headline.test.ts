@@ -601,6 +601,8 @@ describe("pixel-headline module", () => {
     expect(slide(b)).toBeCloseTo(-154 * 70 / 86, 9);
     const c = PH.tail(comp, { text: "and I will send you", at: 2, prefix: "PH C " });
     expect(slide(c)).toBeCloseTo(-0.34 * 70, 9);
+    PH.setPiece({ tailSlide: 24 });
+    expect(slide(PH.tail(comp, { text: "right?", at: 2, prefix: "PH D " }))).toBe(-24);   // one slide for the piece, any length
   });
 
   it("a giant word tucked behind the speaker: baseline below the top of the hair, 92 % of the frame wide, under the speaker", () => {
@@ -694,12 +696,17 @@ describe("pixel-headline module", () => {
     const { PH } = makeAE({ deepGlow: true });
     expect(PH.lineTime(9, "lead") * 30).toBeCloseTo(8 * 4.75 + 26.119, 9);
     expect(PH.lineTime(5, "tail") * 30).toBeCloseTo(4 * 6.4 + 26.078, 9);
+    // settled = under 2 px left to travel, the measure a hold is counted from; against the first piece's timeline (a five-word
+    // tail line at a 24 px slide settled 41.5 frames after it started; a giant word 22.5 frames after W)
+    expect(PH.settleTime(5, "tail", 24) * 30).toBeCloseTo(41.5, 0);
+    expect(PH.popSettle(PH.SIG.word, 0.92 * 1080 / 2) * 30).toBeCloseTo(22.5, 0);
+    expect(PH.settleTime(5, "lead") * 30).toBeLessThan(PH.lineTime(5, "lead") * 30);
     const clean = makeAE({ deepGlow: true });
     expect(clean.PH.beat(clean.comp, referenceBrief(3, { exitAt: 4.4 })).warnings).toEqual([]);
     const late = makeAE({ deepGlow: true });
-    expect(late.PH.beat(late.comp, referenceBrief(3, { exitAt: 2.2 })).warnings.join(" | ")).toMatch(/cannot land in its window/);
+    expect(late.PH.beat(late.comp, referenceBrief(3, { exitAt: 3.3 })).warnings.join(" | ")).toMatch(/cannot land in its window/);
     const short = makeAE({ deepGlow: true });
-    expect(short.PH.beat(short.comp, referenceBrief(3, { exitAt: 3.8 })).warnings.join(" | ")).toMatch(/the hold is \d+(\.\d)? frames/);
+    expect(short.PH.beat(short.comp, referenceBrief(3, { exitAt: 3.6 })).warnings.join(" | ")).toMatch(/the hold is \d+(\.\d)? frames/);
     const ws = ["Here", "is", "a", "line", "with", "far", "too", "many", "words", "BIG", "today"].map((text, i) => ({ text, t: 0.5 + i * 0.15 }));
     const long = makeAE({ deepGlow: true });
     const w = long.PH.beat(long.comp, { ...referenceBrief(0), clips: [], words: ws, stressed: 9, maxChars: 60, leadBaseline: 150 }).warnings.join(" | ");
