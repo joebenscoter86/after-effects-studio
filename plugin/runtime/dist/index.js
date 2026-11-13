@@ -45621,12 +45621,12 @@ function labOf(rgb) {
   const A = 500 * (fx - fy);
   const B = 200 * (fy - fz);
   const hue = (Math.atan2(B, A) * 180 / Math.PI + 360) % 360;
-  const r23 = (v) => Math.round(v * 100) / 100;
+  const r25 = (v) => Math.round(v * 100) / 100;
   return {
-    L: r23(L),
-    a: r23(A),
-    b: r23(B),
-    chroma: r23(Math.hypot(A, B)),
+    L: r25(L),
+    a: r25(A),
+    b: r25(B),
+    chroma: r25(Math.hypot(A, B)),
     hue: Math.round(hue * 10) / 10
   };
 }
@@ -46332,7 +46332,7 @@ function referenceReader(opts) {
     const [width, height] = size2;
     const avg = (v) => v.reduce((s, x) => s + x, 0) / (v.length || 1);
     const r33 = (v) => Math.round(v * 1e3) / 1e3;
-    const r23 = (v) => Math.round(v * 100) / 100;
+    const r25 = (v) => Math.round(v * 100) / 100;
     const regionReports = [];
     for (const r of regions) {
       const e = perRegion.get(r.name);
@@ -46345,8 +46345,8 @@ function referenceReader(opts) {
         role: e.role,
         colour: labOf(mean),
         mean,
-        sharpness: { edgeWidth: ew === null ? null : r23(ew), p90: p90 === null ? null : r23(p90) },
-        grain: r23(avg(e.grain))
+        sharpness: { edgeWidth: ew === null ? null : r25(ew), p90: p90 === null ? null : r25(p90) },
+        grain: r25(avg(e.grain))
       });
     }
     const gridEw = regionReports.slice(0, 9).flatMap((r) => r.sharpness.edgeWidth === null ? [] : [r.sharpness.edgeWidth]);
@@ -46420,8 +46420,8 @@ function referenceReader(opts) {
         },
         detail: { x: r33(avg(weights.map((w) => w.detail.x))), y: r33(avg(weights.map((w) => w.detail.y))) }
       },
-      sharpness: { edgeWidth: gridEw.length ? r23(median2(gridEw)) : null },
-      grain: r23(avg(regionReports.slice(0, 9).map((r) => r.grain))),
+      sharpness: { edgeWidth: gridEw.length ? r25(median2(gridEw)) : null },
+      grain: r25(avg(regionReports.slice(0, 9).map((r) => r.grain))),
       motion: {
         consecutive,
         spacing,
@@ -46871,7 +46871,7 @@ function measureEdge(img, bg, t) {
   }
   widths.sort((a, b) => a - b);
   const m = widths.length;
-  const median5 = m === 0 ? null : m % 2 ? widths[(m - 1) / 2] : (widths[m / 2 - 1] + widths[m / 2]) / 2;
+  const median6 = m === 0 ? null : m % 2 ? widths[(m - 1) / 2] : (widths[m / 2 - 1] + widths[m / 2]) / 2;
   const belowOpaque = labelRegions(
     alpha,
     width,
@@ -46975,7 +46975,7 @@ function measureEdge(img, bg, t) {
       transparent: r42(transparent / n)
     },
     width: {
-      typical: median5 === null ? null : r2(median5),
+      typical: median6 === null ? null : r2(median6),
       p90: m === 0 ? null : r2(widths[Math.floor(0.9 * (m - 1))]),
       worst: m === 0 ? null : r2(worst),
       worstAt,
@@ -49837,7 +49837,7 @@ function measureScreen(img, t) {
     if (y < minY) minY = y;
     if (y > maxY) maxY = y;
   }
-  const median5 = histMedian(hist, count);
+  const median6 = histMedian(hist, count);
   const mean = [sum[0] / count, sum[1] / count, sum[2] / count];
   const labels = new Int32Array(n);
   const queue = new Int32Array(n);
@@ -49894,11 +49894,11 @@ function measureScreen(img, t) {
   base.screenPixels = count;
   base.share = r43(count / measured);
   base.bounds = { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
-  base.colour = { median: r4rgb3(median5), mean: r4rgb3(mean), nearSubject };
+  base.colour = { median: r4rgb3(median6), mean: r4rgb3(mean), nearSubject };
   base.subject = subject;
   base.evenness = evenness;
   base.grain = grain;
-  base.reading = `${kind} screen, ${Math.round(base.share * 100)}% of the measured pixels; median ${fmt4(median5)}` + (near ? `, near the subject ${fmt4(near)}` : "") + `. ${evenness.reading}. ${grain ? grain.reading : "grain not measured (no screen pixel has screen all round it)"}.`;
+  base.reading = `${kind} screen, ${Math.round(base.share * 100)}% of the measured pixels; median ${fmt4(median6)}` + (near ? `, near the subject ${fmt4(near)}` : "") + `. ${evenness.reading}. ${grain ? grain.reading : "grain not measured (no screen pixel has screen all round it)"}.`;
   return base;
 }
 function measureEvenness(img, isScreen, measuredAt, ch, kind, t) {
@@ -60315,7 +60315,9 @@ function fitEaseSeen(s, lo = 0.015) {
   };
   const c0 = cross(lo), c1 = c0 ? cross(1 - lo, c0.k) : null;
   if (!c0 || !c1 || c1.t <= c0.t) return null;
-  const a = c0.t, b = c1.t;
+  return { ...fitEaseBetween(s, c0.t, c1.t), seen: true };
+}
+function fitEaseBetween(s, a, b) {
   const f = (x) => {
     const o = clamp(x[0], 0.01, 1), i = clamp(x[1], 0.01, 1);
     return rmsOf(s, (t) => aeEase((t - a) / (b - a), o, i));
@@ -60325,7 +60327,7 @@ function fitEaseSeen(s, lo = 0.015) {
     const r = nelderMead(f, [o0, i0], [0.1, 0.1], 300);
     if (r.value < best.value) best = r;
   }
-  return { model: "ease", seen: true, start: a, end: b, outInfluence: Math.round(clamp(best.x[0], 0.01, 1) * 1e3) / 10, inInfluence: Math.round(clamp(best.x[1], 0.01, 1) * 1e3) / 10, rms: best.value };
+  return { model: "ease", start: a, end: b, outInfluence: Math.round(clamp(best.x[0], 0.01, 1) * 1e3) / 10, inInfluence: Math.round(clamp(best.x[1], 0.01, 1) * 1e3) / 10, rms: best.value };
 }
 function fitSpringTail(s) {
   const i0 = s.findIndex((p) => p.y >= 1);
@@ -60366,6 +60368,122 @@ function keysFor(fit, a, b, fps) {
 }
 var r44 = (x) => Math.round(x * 1e4) / 1e4;
 
+// src/video/measure-move.ts
+var r22 = (x) => Math.round(x * 100) / 100;
+var r45 = (x) => Math.round(x * 1e4) / 1e4;
+var median4 = (a) => {
+  if (!a.length) return 0;
+  const s = [...a].sort((x, y) => x - y);
+  return s[Math.floor(s.length / 2)];
+};
+function movesOfChannel(samples, o) {
+  if (samples.length < 4) return [];
+  const { fps, atFps } = o, moving = o.movingSpeed ?? 0.02, gap = 2.5 / fps, at = (t) => r22(t * atFps);
+  const report = analyzeCurve(samples, fps, { joinGap: 6 });
+  const moves = report.moves, out = [];
+  for (const mv of moves) {
+    if (mv.distance < o.minMove) continue;
+    const i0 = samples.findIndex((s) => s.frame === mv.from), i1 = samples.findIndex((s) => s.frame === mv.to);
+    if (i0 < 0 || i1 <= i0) continue;
+    const prevMove = [...moves].reverse().find((x) => x.to < mv.from), nextMove = moves.find((x) => x.from > mv.to);
+    const restStart = prevMove ? Math.max(0, samples.findIndex((s) => s.frame === prevMove.to)) : 0;
+    const restEnd = nextMove ? samples.findIndex((s) => s.frame === nextMove.from) : samples.length - 1;
+    const tailVals = samples.slice(i1, Math.max(i1 + 1, Math.min(restEnd + 1, i1 + 10))).map((s) => s.value);
+    const end = tailVals[0].map((_, d) => median4(tailVals.map((x) => x[d])));
+    const startV = samples[i0].value, way = end.map((e, d) => e - startV[d]), len2 = way.reduce((s, x) => s + x * x, 0);
+    if (len2 <= 0) continue;
+    const dist = Math.sqrt(len2), prog = (s) => s.value.reduce((acc, v, d) => acc + (v - startV[d]) * way[d], 0) / len2;
+    const lo = Math.max(0, i0 - 3), hi = Math.min(samples.length - 1, i1 + 6);
+    const fitS = samples.slice(lo, hi + 1).map((s) => ({ time: s.time, y: prog(s) }));
+    const fits = fitMove(fitS, { start: samples[i0].time, end: samples[i1].time }), tail = fitSpringTail(fitS), seen = fitEaseSeen(fitS);
+    const best = fits[fits.best];
+    const wlo = Math.max(restStart, i0 - 12), whi = Math.min(restEnd, i1 + 15), P = samples.map((s, k) => k >= wlo && k <= whi ? prog(s) : NaN);
+    const mad = (a2, c) => median4(a2.map((v) => Math.abs(v - c))) * 1.4826;
+    const after = P.slice(i1, whi + 1).filter(Number.isFinite), before = P.slice(wlo, i0 + 1).filter(Number.isFinite);
+    const noise = Math.max(after.length >= 3 ? mad(after, 1) : 0, before.length >= 3 ? mad(before, 0) : 0);
+    const eps = Math.max(3 * noise, o.epsAbs / dist, 15e-4);
+    let mid = i1;
+    for (let k = i0; k <= i1; k++) if (P[k] >= 0.5) {
+      mid = k;
+      break;
+    }
+    let a = null, b = null;
+    for (let k = mid; k >= wlo; k--) if (Math.abs(P[k]) <= eps) {
+      a = k;
+      break;
+    }
+    const band = Math.max(eps, o.endShare ?? 0.02);
+    for (let k = mid; k <= whi && b === null; k++) {
+      let ok = true;
+      for (let j = k; j <= whi; j++) if (Math.abs(P[j] - 1) > band) {
+        ok = false;
+        break;
+      }
+      if (ok) b = k;
+    }
+    const step = (k) => k + 1 < samples.length && Number.isFinite(P[k + 1]) ? (P[k + 1] - P[k]) / Math.max(1e-6, (samples[k + 1].time - samples[k].time) * fps) : 0;
+    const contigBefore = (k) => k > 0 && samples[k].time - samples[k - 1].time <= gap;
+    const contigAfter = (k) => k + 1 < samples.length && samples[k + 1].time - samples[k].time <= gap;
+    const begins = !contigBefore(a ?? i0) ? o.beginsAt?.(samples[a ?? i0].frame) ?? null : null;
+    const startSeen = a !== null && (begins !== null || contigBefore(a) || Math.abs(step(a)) <= moving);
+    const endsAtCut = !contigAfter(i1) && i1 === whi && !!o.endsAt?.(samples[i1].frame);
+    if (endsAtCut && (b === null || b >= whi)) b = i1;
+    const endSeen = endsAtCut || b !== null && b < whi && contigAfter(b);
+    const visible = a !== null && b !== null ? samples[b].time - samples[a].time : null;
+    let c0 = i0, c1 = i1;
+    while (contigBefore(c0)) c0--;
+    while (contigAfter(c1)) c1++;
+    const keysSec = best.model === "spring" ? best.reachesEndAt - best.start : best.end - best.start;
+    const m = {
+      curve: mv,
+      from: { frame: mv.from, time: samples[i0].time, at: at(samples[i0].time) },
+      to: { frame: mv.to, time: samples[i1].time, at: at(samples[i1].time) },
+      duration: {
+        seconds: visible !== null && startSeen && endSeen ? r45(visible) : null,
+        at: visible !== null && startSeen && endSeen ? at(visible) : null,
+        as: "visible: from the last frame at rest to the first frame that stays within 2 % of the end (as the hand studies count it)",
+        keys: { seconds: r45(keysSec), at: at(keysSec), as: "the fit's keys (what is set in After Effects)" },
+        visible: visible === null ? null : { seconds: r45(visible), at: at(visible), fromFrame: samples[a].frame, toFrame: samples[b].frame, fromTime: samples[a].time, toTime: samples[b].time }
+      },
+      start: startV.map(r22),
+      end: end.map(r22),
+      distance: r22(dist),
+      fits: {
+        ease: fits.ease,
+        linear: fits.linear,
+        spring: fits.spring,
+        springTail: tail,
+        easeSeen: seen,
+        // keys held at the visible span's ends (the last frame at rest, the first settled), the influences fitted
+        easeVisible: visible !== null && visible > 0 ? fitEaseBetween(fitS, samples[a].time, samples[b].time) : null
+      },
+      best: fits.best,
+      margin: fits.margin,
+      apply: keysFor(best, startV, end, atFps),
+      seen: { start: startSeen, end: endSeen, begins, ...endsAtCut ? { ends: "cut" } : {} },
+      covers: { fromFrame: samples[c0].frame, toFrame: samples[c1].frame },
+      status: "measured"
+    };
+    if (!startSeen) {
+      const first = samples[a ?? i0];
+      m.status = `partial: the start was not seen (already moving at frame ${first.frame}, the first frame measured); duration, distance and ease out are not measured, only the settle`;
+      m.notMeasured = ["duration", "distance", "ease out"];
+      m.seenTravel = m.distance;
+      m.distance = null;
+      m.apply = null;
+      m.settle = { end: m.end, inInfluence: (seen ?? fits.ease).inInfluence };
+    } else if (!endSeen) {
+      m.status = "partial: the end was not seen (still moving where the measure stops); duration, distance and ease in are not measured";
+      m.notMeasured = ["duration", "distance", "ease in"];
+      m.seenTravel = m.distance;
+      m.distance = null;
+      m.apply = null;
+    } else if (best.rms > 0.05) m.status = "measured, loosely (rms over 0.05)";
+    out.push(m);
+  }
+  return out;
+}
+
 // src/video/run-moves.ts
 async function readJson(p, what) {
   if (typeof p !== "string" || !path12.isAbsolute(p)) return { error: `${what} must be an absolute path to a JSON file` };
@@ -60375,16 +60493,17 @@ async function readJson(p, what) {
     return { error: `could not read ${what} ${p}: ${e.message}` };
   }
 }
-var r22 = (x) => Math.round(x * 100) / 100;
+var r23 = (x) => Math.round(x * 100) / 100;
 function row(label, m, atFps) {
-  const best = m.fits[m.best], at = (s) => r22(s * atFps);
+  const best = m.fits[m.best], at = (s) => r23(s * atFps);
   const tail = m.fits.springTail;
   return {
     move: label,
+    measure: m.measure ?? "match",
     channel: m.channel,
     unit: m.unit,
-    start: { seconds: r22(m.from.time * 1e3) / 1e3, at: at(m.from.time) },
-    duration: { seconds: m.duration.seconds, at: at(m.duration.seconds) },
+    start: { seconds: r23(m.from.time * 1e3) / 1e3, at: at(m.from.time) },
+    duration: m.duration.seconds === null ? { seconds: null, at: null, keys: m.duration.keys } : { seconds: m.duration.seconds, at: at(m.duration.seconds), keys: m.duration.keys },
     distance: m.distance,
     from: m.start,
     to: m.end,
@@ -60392,7 +60511,7 @@ function row(label, m, atFps) {
     spring: tail ? { A: tail.A, f: tail.f, d: tail.d } : null,
     best: m.best,
     margin: m.margin,
-    rms: r22(best.rms * 1e3) / 1e3,
+    rms: r23(best.rms * 1e3) / 1e3,
     status: m.status ?? "measured",
     apply: m.apply
   };
@@ -60411,6 +60530,23 @@ async function runMoves(args) {
   }
   for (const m of args.inferred ?? []) rows.push({ move: m.label ?? "inferred", channel: m.channel ?? null, status: "inferred", reason: m.reason ?? "no reason given", ...m });
   for (const m of args.untested ?? []) rows.push({ move: m.label ?? "untested", status: "untested", reason: m.reason ?? "not tracked" });
+  let words = [];
+  if (args.transcript !== void 0) {
+    const tj = await readJson(args.transcript, "transcript");
+    if ("error" in tj) return { ok: false, error: tj.error };
+    const list = Array.isArray(tj) ? tj : Array.isArray(tj.transcription) ? tj.transcription : Array.isArray(tj.words) ? tj.words : Array.isArray(tj.segments) ? tj.segments : [];
+    words = list.map((w) => ({
+      text: String(w.text ?? w.word ?? ""),
+      start: typeof w.start === "number" ? w.start : typeof w.startMs === "number" ? w.startMs / 1e3 : w.offsets ? w.offsets.from / 1e3 : NaN,
+      end: typeof w.end === "number" ? w.end : typeof w.endMs === "number" ? w.endMs / 1e3 : w.offsets ? w.offsets.to / 1e3 : NaN
+    })).filter((w) => w.text.trim() && Number.isFinite(w.start));
+  }
+  const spoken = (a, b) => words.filter((w) => w.start >= a - 1e-6 && w.start < b).map((w) => w.text).join("").replace(/\s+/g, " ").trim();
+  const wordAt = (t) => {
+    let best = null;
+    for (const w of words) if (w.start <= t + 0.05 && (!best || w.start > best.start)) best = w;
+    return best ? best.text.trim() : null;
+  };
   const shots = args.shots ? await readJson(args.shots, "shots") : null, census = args.census ? await readJson(args.census, "census") : null;
   if (shots && "error" in shots) return { ok: false, error: shots.error };
   if (census && "error" in census) return { ok: false, error: census.error };
@@ -60419,9 +60555,10 @@ async function runMoves(args) {
   scenes.forEach((s, i) => {
     const inShot = rows.filter((r) => r.start && r.start.seconds >= s.start - 1e-6 && r.start.seconds <= s.end + 1e-6);
     const travel = census ? census.steps?.filter((st) => st.time >= s.start && st.time <= s.end && st.label === "T").length ?? 0 : null;
-    lines.push(`## Scene ${i + 1} \u2014 ${r22(s.start * atFps)} to ${Number.isFinite(s.end) ? r22(s.end * atFps) : "end"}`, "");
+    lines.push(`## Scene ${i + 1} \u2014 ${r23(s.start * atFps)} to ${Number.isFinite(s.end) ? r23(s.end * atFps) : "end"}`, "");
+    if (words.length) lines.push(`- Words: "${spoken(s.start, Number.isFinite(s.end) ? s.end : Infinity) || "(none spoken)"}"`);
     lines.push("- One visual argument; operation (before \u2192 action \u2192 resolution): (not measured: read the picture)");
-    lines.push(`- Events: ${inShot.length ? inShot.map((r) => `${r.start.at}: ${r.move} (${r.channel}) ${r.distance}${r.unit ?? ""} over ${r.duration.at} frames, ${r.best === "ease" ? `ease ${r.ease}` : r.best}${r.spring ? `, spring A ${r.spring.A} f ${r.spring.f} d ${r.spring.d}` : ""}`).join("; ") : "none measured"}`);
+    lines.push(`- Events: ${inShot.length ? inShot.map((r) => `${r.start.at}${words.length && wordAt(r.start.seconds) ? ` (on "${wordAt(r.start.seconds)}")` : ""}: ${r.move} (${r.channel}${String(r.status).startsWith("measured") ? "" : `, ${String(r.status).split(":")[0]}`}) ${r.distance ?? "?"}${r.unit ?? ""} over ${r.duration?.at ?? "?"} frames, ${r.best === "ease" ? `ease ${r.ease}` : r.best}${r.spring ? `, spring A ${r.spring.A} f ${r.spring.f} d ${r.spring.d}` : ""}`).join("; ") : "none measured"}`);
     lines.push(`- Camera: ${travel === null ? "(no census given)" : travel ? `whole-stage travel in ${travel} census steps` : "no whole-stage travel in the census"}`);
     lines.push(`- Continuity: ${i + 1 < scenes.length ? "a cut to the next shot" : "the last shot"}`);
     lines.push("- Type roles, exact strings, material, depth, data sources: (not measured)", "");
@@ -60443,38 +60580,23 @@ async function runMoves(args) {
 }
 var TIGHT = { frames: 1, distanceShare: 0.02, easePoints: 10 };
 function movesOfSamples(samples, fps, channel) {
-  const report = analyzeCurve(samples, fps, { joinGap: 6 }), out = [];
-  for (const mv of report.moves) {
-    const i0 = samples.findIndex((s) => s.frame === mv.from), i1 = samples.findIndex((s) => s.frame === mv.to);
-    if (i0 < 0 || i1 <= i0) continue;
-    const startV = samples[i0].value, endV = samples[Math.min(samples.length - 1, i1)].value, way = endV.map((e, d) => e - startV[d]), len2 = way.reduce((s, x) => s + x * x, 0);
-    if (len2 <= 0) continue;
-    const prog = samples.slice(Math.max(0, i0 - 3), Math.min(samples.length, i1 + 7)).map((s) => ({ time: s.time, y: s.value.reduce((a, v, d) => a + (v - startV[d]) * way[d], 0) / len2 }));
-    const fits = fitMove(prog, { start: samples[i0].time, end: samples[i1].time }), best = fits[fits.best], seen = fitEaseSeen(prog);
-    out.push({
-      channel,
-      from: { frame: mv.from, time: samples[i0].time },
-      distance: Math.sqrt(len2),
-      best: fits.best,
-      fits: { ...fits, easeSeen: seen },
-      curve: mv,
-      duration: { seconds: seen ? seen.end - seen.start : fits.best === "spring" ? best.settle : best.end - best.start }
-    });
-  }
-  return out;
+  return movesOfChannel(samples, { fps, atFps: fps, minMove: channel === "position" ? 1 : 0.5, epsAbs: 0.01 }).map((m) => ({ channel, ...m }));
 }
 function compare(label, measured, built, tol, atFps) {
-  const d = (a) => r22(a * atFps), checks = [];
+  const d = (a) => r23(a * atFps), checks = [];
   const add = (what, mv, bv, unit, within) => checks.push({
     what,
-    measured: r22(mv),
-    built: r22(bv),
+    measured: r23(mv),
+    built: r23(bv),
     unit,
     within,
-    reading: `${label}: ${what} ${r22(bv)}${unit} against ${r22(mv)}${unit}, ${within ? "within" : "outside"} tolerance`
+    reading: `${label}: ${what} ${r23(bv)}${unit} against ${r23(mv)}${unit}, ${within ? "within" : "outside"} tolerance`
   });
-  add("duration", d(measured.duration.seconds), d(built.duration.seconds), " frames", Math.abs(measured.duration.seconds - built.duration.seconds) * atFps <= tol.frames + 1e-9);
-  add("distance", measured.distance, built.distance, "", Math.abs(built.distance - measured.distance) <= tol.distanceShare * Math.abs(measured.distance) + 1e-9);
+  const md = measured.duration.seconds ?? null, bd = built.duration.seconds ?? null;
+  if (md === null || bd === null) checks.push({ what: "duration", within: false, reading: `${label}: duration not measured on ${md === null ? "the reference" : "the build"} (${md === null ? measured.status : built.status})` });
+  else add("duration", d(md), d(bd), " frames", Math.abs(md - bd) * atFps <= tol.frames + 1e-9);
+  if (measured.distance === null || built.distance === null) checks.push({ what: "distance", within: false, reading: `${label}: distance not measured on ${measured.distance === null ? "the reference" : "the build"}` });
+  else add("distance", measured.distance, built.distance, "", Math.abs(built.distance - measured.distance) <= tol.distanceShare * Math.abs(measured.distance) + 1e-9);
   const me = measured.fits.easeSeen && built.fits.easeSeen ? measured.fits.easeSeen : measured.fits.ease, be = measured.fits.easeSeen && built.fits.easeSeen ? built.fits.easeSeen : built.fits.ease;
   if (measured.best === "ease" || built.best === "ease") {
     add("ease out", me.outInfluence, be.outInfluence, " %", Math.abs(me.outInfluence - be.outInfluence) <= tol.easePoints);
@@ -61164,6 +61286,124 @@ function cadenceOf(diffs, fps, still = 0.6, moving = 1.5) {
 import { promises as fs13 } from "node:fs";
 import path14 from "node:path";
 
+// src/video/ink.ts
+function luma3(r, g, b) {
+  return 0.299 * r + 0.587 * g + 0.114 * b;
+}
+function hsv(r, g, b) {
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+  let h = 0;
+  if (d > 0) h = mx === r ? (g - b) / d % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  h *= 60;
+  if (h < 0) h += 360;
+  return [h, mx > 0 ? d / mx : 0, mx / 255];
+}
+function isInk(m, r, g, b, emptyPx) {
+  if (m.luma) {
+    const l = luma3(r, g, b);
+    if (l < m.luma[0] || l > m.luma[1]) return false;
+  }
+  if (m.minChannel) {
+    const c = Math.min(r, g, b);
+    if (c < m.minChannel[0] || c > m.minChannel[1]) return false;
+  }
+  if (m.hue) {
+    const [h, s, v] = hsv(r, g, b);
+    if (s < (m.minSat ?? 0.2) || v < (m.minVal ?? 0.15)) return false;
+    const [a, z2] = m.hue;
+    if (a <= z2 ? h < a || h > z2 : h < a && h > z2) return false;
+  }
+  if (m.rgb) {
+    const t = m.tol ?? 8;
+    if (Math.abs(r - m.rgb[0]) > t || Math.abs(g - m.rgb[1]) > t || Math.abs(b - m.rgb[2]) > t) return false;
+  }
+  if (m.empty !== void 0) {
+    if (!emptyPx) return false;
+    const t = m.tol ?? 30;
+    if (Math.max(Math.abs(r - emptyPx[0]), Math.abs(g - emptyPx[1]), Math.abs(b - emptyPx[2])) <= t) return false;
+  }
+  return true;
+}
+function inkOf(rgb, w, h, m, o) {
+  const rows = new Uint32Array(h), cols = new Uint32Array(w), minCount = o.minCount ?? 1;
+  let count = 0, sx = 0, sy = 0, lum = 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = (y * w + x) * 3, r = rgb[i], g = rgb[i + 1], b = rgb[i + 2];
+    lum += luma3(r, g, b);
+    if (isInk(m, r, g, b, o.empty ? [o.empty[i], o.empty[i + 1], o.empty[i + 2]] : void 0)) {
+      rows[y]++;
+      cols[x]++;
+      count++;
+      sx += x;
+      sy += y;
+    }
+  }
+  let x0 = -1, x1 = -1, y0 = -1, y1 = -1;
+  for (let x = 0; x < w; x++) if (cols[x] >= minCount) {
+    if (x0 < 0) x0 = x;
+    x1 = x;
+  }
+  for (let y = 0; y < h; y++) if (rows[y] >= minCount) {
+    if (y0 < 0) y0 = y;
+    y1 = y;
+  }
+  const src = (v, off) => off + v / o.k;
+  if (!count || x0 < 0 || y0 < 0) return { count: 0, x0: NaN, y0: NaN, x1: NaN, y1: NaN, cx: NaN, cy: NaN, level: lum / (w * h) };
+  return { count: count / (o.k * o.k), x0: src(x0, o.ox), x1: src(x1 + 1, o.ox), y0: src(y0, o.oy), y1: src(y1 + 1, o.oy), cx: src(sx / count + 0.5, o.ox), cy: src(sy / count + 0.5, o.oy), level: lum / (w * h) };
+}
+var INK_CURVES = ["centroid", "x0", "x1", "y0", "y1", "width", "height", "size", "level"];
+function inkValue(f, c) {
+  if (c === "level") return [f.level];
+  if (!f.count) return null;
+  switch (c) {
+    case "centroid":
+      return [f.cx, f.cy];
+    case "x0":
+      return [f.x0];
+    case "x1":
+      return [f.x1];
+    case "y0":
+      return [f.y0];
+    case "y1":
+      return [f.y1];
+    case "width":
+      return [f.x1 - f.x0];
+    case "height":
+      return [f.y1 - f.y0];
+    case "size":
+      return [Math.sqrt(f.count)];
+  }
+  return null;
+}
+function inkLike(c) {
+  if (c === "centroid") return { like: "position", unit: "px" };
+  if (c === "x0" || c === "x1") return { like: "position", axis: 0, unit: "px" };
+  if (c === "y0" || c === "y1") return { like: "position", axis: 1, unit: "px" };
+  if (c === "level") return { like: "opacity", unit: "luma" };
+  return { like: "scale", unit: "px" };
+}
+function witnessRuns(counts, pixels, breaks = /* @__PURE__ */ new Set()) {
+  const med = [...counts].sort((a, b) => a - b)[Math.floor(counts.length / 2)] ?? 0;
+  const threshold = Math.max(3, Math.ceil(5e-4 * pixels), 3 * med + 2);
+  const runs = [];
+  let cur = null;
+  for (let i = 1; i < counts.length; i++) {
+    if (breaks.has(i)) {
+      if (cur) runs.push(cur);
+      cur = null;
+      continue;
+    }
+    if (counts[i] < threshold) continue;
+    if (cur && i - cur.to <= 3) cur.to = i;
+    else {
+      if (cur) runs.push(cur);
+      cur = { from: i - 1, to: i };
+    }
+  }
+  if (cur) runs.push(cur);
+  return { runs: runs.filter((r) => r.to - r.from >= 2), threshold, ground: med / Math.max(1, pixels) > 0.05 ? "moving" : "still" };
+}
+
 // src/video/track.ts
 function fft(re, im, inv = false) {
   const n = re.length;
@@ -61348,6 +61588,11 @@ function frameAt(info, t) {
   }
   return lo;
 }
+var r24 = (x) => Math.round(x * 100) / 100;
+function statusCount(moves) {
+  const n = (p) => moves.filter((m) => String(m.status).startsWith(p)).length;
+  return `${n("measured")} measured, ${n("uncertain")} uncertain, ${n("partial")} partial`;
+}
 async function runTrack(args, opts = {}) {
   const tools = opts.tools ?? VIDEO_TOOLS, minNcc = opts.minNcc ?? 0.8;
   if (typeof args.file !== "string" || !path14.isAbsolute(args.file)) return { ok: false, error: "`file` must be an absolute path to a video file" };
@@ -61371,9 +61616,16 @@ async function runTrack(args, opts = {}) {
   const tmpl = new Float64Array(tw * th);
   for (let y = 0; y < th; y++) for (let x = 0; x < tw; x++) tmpl[y * tw + x] = ref[Math.min(H - 1, ty + y) * W + Math.min(W - 1, tx + x)];
   const rows = [];
-  let prev = null, last = null;
+  let prev = null, last = null, lastSmall = null;
   for await (const fr of readFrames(info, { from: f0, to: f1, width: W, height: H, gray: true }, tools)) {
     const img = Float64Array.from(fr.data), diff = last ? meanDiff(fr.data, last) : 0;
+    const small = resize(img, W, H, 64, 36);
+    let cutDiff = 0;
+    if (lastSmall) {
+      for (let i = 0; i < small.length; i++) cutDiff += Math.abs(small[i] - lastSmall[i]);
+      cutDiff /= small.length;
+    }
+    lastSmall = small;
     let m = null;
     if (prev) {
       const r = Math.max(6, Math.round(0.08 * Math.max(W, H))), sw = Math.ceil(tw * prev.scale * 1.35), sh = Math.ceil(th * prev.scale * 1.35);
@@ -61421,7 +61673,7 @@ async function runTrack(args, opts = {}) {
       }
       still = tv > 1e-6 ? Math.max(0, Math.min(1.5, cov / tv)) : 0;
     }
-    rows.push({ index: fr.index, time: fr.time, m: m && m.ncc >= minNcc ? m : null, diff, still });
+    rows.push({ index: fr.index, time: fr.time, m: m && m.ncc >= minNcc ? m : null, diff, cutDiff, still });
     if (m && m.ncc >= minNcc) prev = m;
     last = fr.data;
   }
@@ -61433,15 +61685,30 @@ async function runTrack(args, opts = {}) {
     lost = { frame: rows[i].index, time: rows[i].time, reading: `Lost the region at frame ${rows[i].index} (${rows[i].time.toFixed(3)} s): the match fell under ${minNcc} while it was still visible; nothing past it is measured.` };
     break;
   }
+  const cutAt = /* @__PURE__ */ new Set();
+  for (let i = 1; i < rows.length; i++) {
+    const near = rows.slice(Math.max(1, i - 12), Math.min(rows.length, i + 13)).filter((_, j, a) => a[j] !== rows[i]).map((r) => r.cutDiff).sort((a, b) => a - b);
+    const med = near.length ? near[Math.floor(near.length / 2)] : 0;
+    if (rows[i].cutDiff >= 12 && rows[i].cutDiff >= 4 * Math.max(med, 0.5)) cutAt.add(rows[i].index);
+  }
+  const cutList = [...cutAt].sort((a, b) => a - b);
+  const segments = (s) => {
+    const out2 = [[]];
+    for (const x of s) {
+      if (out2[out2.length - 1].length && cutList.some((c) => c > out2[out2.length - 1][out2[out2.length - 1].length - 1].frame && c <= x.frame)) out2.push([]);
+      out2[out2.length - 1].push(x);
+    }
+    return out2.filter((x) => x.length >= 4);
+  };
   const usable = rows.filter((r) => r.m && !rep.has(r.index) && (!lost || r.index < lost.frame));
   const toSrc = (m) => ({ x: m.x / k, y: m.y / k, scale: m.scale * 100, opacity: m.opacity * 100 });
   const channels = [
     { name: "position", unit: "px", value: (m) => {
       const s = toSrc(m);
       return [s.x, s.y];
-    } },
-    { name: "scale", unit: "%", value: (m) => [toSrc(m).scale] },
-    { name: "opacity", unit: "%", value: (m) => [toSrc(m).opacity] }
+    }, epsAbs: 0.25 / k },
+    { name: "scale", unit: "%", value: (m) => [toSrc(m).scale], epsAbs: 0.3 },
+    { name: "opacity", unit: "%", value: (m) => [toSrc(m).opacity], epsAbs: 1 }
   ];
   const at = (t) => Math.round(t * atFps * 100) / 100;
   const out = {
@@ -61453,6 +61720,7 @@ async function runTrack(args, opts = {}) {
     atFps,
     video: { width: info.width, height: info.height, frames: info.frames, nominalFps: info.nominalFps, averageFps: Math.round(info.averageFps * 1e3) / 1e3, variableRate: info.variableRate, intervals: info.intervals },
     cadence: { repeats: [...rep], period: cad.period, originalFps: cad.originalFps, reading: cad.reading },
+    cuts: cutList,
     lost,
     notMeasured: NOT_MEASURED,
     moves: []
@@ -61461,76 +61729,175 @@ async function runTrack(args, opts = {}) {
   for (const ch of channels) {
     const samples = ch.name === "opacity" ? rows.filter((r) => !rep.has(r.index) && (!lost || r.index < lost.frame) && (r.m || r.still !== void 0)).map((r) => ({ frame: r.index, time: r.time, value: r.m ? ch.value(r.m) : [r.still * 100] })) : usable.map((r) => ({ frame: r.index, time: r.time, value: ch.value(r.m) }));
     if (samples.length < 4) continue;
-    const span = Math.max(...samples.map((s) => s.value[0])) - Math.min(...samples.map((s) => s.value[0]));
-    const span2 = samples[0].value.length > 1 ? Math.max(...samples.map((s) => s.value[1])) - Math.min(...samples.map((s) => s.value[1])) : 0;
     const minMove = ch.name === "position" ? Math.max(2, 4e-3 * Math.max(info.width, info.height)) : 2;
-    if (Math.max(span, span2) < minMove) continue;
-    const report = analyzeCurve(samples, fps, { joinGap: 6 });
-    for (const mv of report.moves) {
-      if (mv.distance < minMove) continue;
-      const i0 = samples.findIndex((s) => s.frame === mv.from), i1 = samples.findIndex((s) => s.frame === mv.to);
-      if (i0 < 0 || i1 <= i0) continue;
-      const nextMove = report.moves.find((x) => x.from > mv.to), restEnd = nextMove ? samples.findIndex((s) => s.frame === nextMove.from) : samples.length - 1;
-      const tailVals = samples.slice(i1, Math.max(i1 + 1, Math.min(restEnd + 1, i1 + 10))).map((s) => s.value);
-      const end = tailVals[0].map((_, d) => {
-        const v = tailVals.map((x) => x[d]).sort((a, b) => a - b);
-        return v[Math.floor(v.length / 2)];
-      });
-      const startV = samples[i0].value, way = end.map((e, d) => e - startV[d]), len2 = way.reduce((s, x) => s + x * x, 0);
-      if (len2 <= 0) continue;
-      const lo = Math.max(0, i0 - 3), hi = Math.min(samples.length - 1, i1 + 6);
-      const prog = samples.slice(lo, hi + 1).map((s) => ({ time: s.time, y: s.value.reduce((acc, v, d) => acc + (v - startV[d]) * way[d], 0) / len2 }));
-      const fits = fitMove(prog, { start: samples[i0].time, end: samples[i1].time }), tail = fitSpringTail(prog), seen = fitEaseSeen(prog);
-      const best = fits[fits.best];
+    for (const mv of segments(samples).flatMap((seg) => movesOfChannel(seg, { fps, atFps, minMove, epsAbs: ch.epsAbs, beginsAt: (f) => cutAt.has(f) ? "cut" : null, endsAt: (f) => cutAt.has(f + 1) }))) {
+      const n = usable.filter((r) => r.index >= mv.from.frame && r.index <= mv.to.frame).map((r) => r.m.ncc).sort((a, b) => a - b);
       out.moves.push({
+        measure: "match",
         channel: ch.name,
         unit: ch.unit,
-        curve: mv,
-        from: { frame: mv.from, time: samples[i0].time, at: at(samples[i0].time) },
-        to: { frame: mv.to, time: samples[i1].time, at: at(samples[i1].time) },
-        // duration as seen: from when it visibly starts to when it visibly stops (1.5 % and 98.5 % of its travel)
-        duration: (() => {
-          const sec = seen ? seen.end - seen.start : best.model === "spring" ? best.settle : best.end - best.start;
-          return { seconds: Math.round(sec * 1e4) / 1e4, at: at(sec), as: seen ? "seen (1.5 % to 98.5 % of the travel)" : "the best fit's span" };
-        })(),
-        start: startV.map((v) => Math.round(v * 100) / 100),
-        end: end.map((v) => Math.round(v * 100) / 100),
-        distance: Math.round(Math.sqrt(len2) * 100) / 100,
-        fits: { ease: fits.ease, linear: fits.linear, spring: fits.spring, springTail: tail, easeSeen: seen },
-        best: fits.best,
-        margin: fits.margin,
-        apply: keysFor(best, startV, end, atFps),
-        match: (() => {
-          const n = usable.filter((r) => r.index >= mv.from && r.index <= mv.to).map((r) => r.m.ncc).sort((a, b) => a - b);
-          return n.length ? { median: Math.round(n[Math.floor(n.length / 2)] * 1e3) / 1e3, min: Math.round(n[0] * 1e3) / 1e3 } : null;
-        })(),
-        status: "measured"
+        ...mv,
+        match: n.length ? { median: Math.round(n[Math.floor(n.length / 2)] * 1e3) / 1e3, min: Math.round(n[0] * 1e3) / 1e3 } : null
       });
     }
   }
-  for (const mv of out.moves) {
-    if (mv.match && mv.match.median < 0.85) mv.status = `uncertain: the region matched weakly (median ${mv.match.median}); look at the frames before using it`;
-    else if (mv.fits[mv.best].rms > 0.05) mv.status = "measured, loosely (rms over 0.05)";
+  for (const mv of out.moves) if (mv.match && mv.match.median < 0.85 && !String(mv.status).startsWith("partial")) mv.status = `uncertain: the region matched weakly (median ${mv.match.median}); look at the frames before using it`;
+  const inPlace = new Set(rows.filter((r) => !r.m && r.still !== void 0).map((r) => r.index));
+  for (const mv of out.moves.filter((x) => x.channel === "opacity" && !String(x.status).startsWith("partial"))) {
+    const a0 = mv.duration.visible?.fromFrame ?? mv.from.frame, b0 = mv.duration.visible?.toFrame ?? mv.to.frame;
+    const placed = [...inPlace].some((f) => f >= a0 && f <= b0);
+    const moved = out.moves.some((x) => x.channel === "position" && x.covers.fromFrame <= b0 + 2 && x.to.frame >= a0);
+    if (placed && moved) mv.status = "uncertain: the opacity was read where the region rests while it was moving there; an entrance or exit reads as a fade";
+  }
+  const inkRows = [];
+  let inkBox = null;
+  if (args.ink && typeof args.ink === "object") {
+    const ink = args.ink, mask = ink.mask ?? {};
+    const raw = regionPx(ink.box ?? args.region, info.width, info.height);
+    if (!raw) return { ok: false, error: "`ink.box` must be [x, y, width, height] in pixels or shares of the frame" };
+    const bx = Math.max(0, Math.floor(raw[0])), by = Math.max(0, Math.floor(raw[1]));
+    const bw = Math.max(2, Math.min(info.width - bx, Math.round(raw[2]))), bh = Math.max(2, Math.min(info.height - by, Math.round(raw[3])));
+    inkBox = [bx, by, bw, bh];
+    const kb = Math.min(1, 720 / Math.max(bw, bh)), ow = Math.max(2, Math.round(bw * kb)), oh = Math.max(2, Math.round(bh * kb));
+    let empty;
+    if (typeof mask.empty === "number") {
+      const ef = frameAt(info, mask.empty);
+      for await (const fr of readFrames(info, { from: ef, to: ef, crop: inkBox, width: ow, height: oh }, tools)) empty = Uint8Array.from(fr.data);
+      if (!empty) return { ok: false, error: `could not read the empty frame at ${mask.empty} s` };
+    }
+    for await (const fr of readFrames(info, { from: f0, to: f1, crop: inkBox, width: ow, height: oh }, tools))
+      inkRows.push({ index: fr.index, time: fr.time, f: inkOf(fr.data, ow, oh, mask, { k: kb, ox: bx, oy: by, minCount: typeof ink.minCount === "number" ? ink.minCount : 1, empty }) });
+    const minPixels = typeof ink.minPixels === "number" ? ink.minPixels : 4;
+    for (const r of inkRows) if (r.f.count < minPixels) r.f = { ...r.f, count: 0 };
+    const emptyAt = new Set(inkRows.filter((r) => r.f.count === 0).map((r) => r.index));
+    const byIndex = new Map(inkRows.map((r) => [r.index, r.f]));
+    const atEdge = (f) => f.x0 <= bx + 1 || f.y0 <= by + 1 || f.x1 >= bx + bw - 1 || f.y1 >= by + bh - 1;
+    const appearsAt = (frame) => emptyAt.has(frame - 1) && !!byIndex.get(frame)?.count && !atEdge(byIndex.get(frame));
+    const curves = (Array.isArray(ink.curves) && ink.curves.length ? ink.curves : ["centroid", "size", "level"]).filter((c) => INK_CURVES.includes(c));
+    for (const c of curves) {
+      const like = inkLike(c);
+      const samples = inkRows.filter((r) => !rep.has(r.index)).map((r) => ({ frame: r.index, time: r.time, value: inkValue(r.f, c) })).filter((s) => s.value !== null);
+      const minMove = c === "level" ? 3 : like.like === "position" ? Math.max(2, 4e-3 * Math.max(info.width, info.height)) : 2;
+      for (const mv of segments(samples).flatMap((seg) => movesOfChannel(seg, { fps, atFps, minMove, epsAbs: c === "level" ? 0.5 : c === "centroid" || c === "size" ? 0.3 : 1 / kb, beginsAt: (f) => cutAt.has(f) ? "cut" : appearsAt(f) ? "appears" : null, endsAt: (f) => cutAt.has(f + 1) })))
+        out.moves.push({
+          measure: "ink",
+          channel: `ink.${c}`,
+          like: like.like,
+          ...like.axis !== void 0 ? { axis: like.axis } : {},
+          unit: like.unit,
+          ...mv,
+          ...like.like === "scale" ? { asScale: { from: Math.round(mv.start[0] / mv.end[0] * 1e4) / 100, to: 100, as: "% of its settled size" } } : {}
+        });
+    }
+    out.ink = { box: inkBox, mask, curves, frames: inkRows.length, empty: emptyAt.size, reading: "The ink measure: a mask in a fixed box; its box, centroid, area and the box's mean level per frame. A moving ground defeats the difference from an empty frame." };
+  }
+  const visibleOf = (m) => m.duration?.visible?.seconds ?? null;
+  for (const m of out.moves.filter((x) => x.measure === "match")) {
+    const peers = out.moves.filter((x) => x.measure === "ink" && x.like === m.channel && x.from.time <= m.to.time + 0.1 && x.to.time >= m.from.time - 0.1);
+    if (!peers.length) continue;
+    const matchSure = String(m.status).startsWith("measured") && !(m.match && m.match.median < 0.85);
+    const verdicts = peers.map((p) => {
+      const dv = visibleOf(m) !== null && visibleOf(p) !== null ? Math.abs(visibleOf(m) - visibleOf(p)) * atFps : null;
+      let share = null;
+      if (m.channel === "position" && m.distance !== null && p.distance !== null) {
+        const md = p.axis !== void 0 ? Math.abs(m.end[p.axis] - m.start[p.axis]) : m.distance;
+        share = Math.abs(md - p.distance) / Math.max(1e-6, p.distance);
+      }
+      if (m.channel === "scale" && m.distance !== null && p.distance !== null) {
+        const mr = m.start[0] / m.end[0], pr = p.start[0] / p.end[0];
+        share = Math.abs(mr - pr) / Math.max(1e-6, pr);
+      }
+      const within = (dv === null || dv <= 2) && (share === null || share <= 0.05) && (dv !== null || share !== null);
+      return { with: p.channel, durationFrames: dv === null ? null : Math.round(dv * 100) / 100, distanceShare: share === null ? null : Math.round(share * 1e3) / 1e3, within };
+    });
+    const agree = verdicts.find((v) => v.within);
+    m.agreement = agree ?? verdicts[0];
+    for (const p of peers) p.agreement = { with: "match", within: !!agree, ...matchSure ? {} : { matchWeak: true } };
+    if (agree) {
+      if (String(m.status).startsWith("uncertain: the region matched weakly")) m.status = `measured: the match was weak but the ink measure (${agree.with}) agrees`;
+      else if (m.status === "measured") m.status = `measured: match and ink (${agree.with}) agree`;
+    } else if (!String(m.status).startsWith("partial")) {
+      const v = verdicts[0];
+      m.status = `uncertain: match and ink disagree (${v.with}: duration ${v.durationFrames ?? "?"} frames apart, distance ${v.distanceShare === null ? "?" : Math.round(v.distanceShare * 100) + " %"} apart); both are reported`;
+      if (matchSure) {
+        for (const p of peers) if (!String(p.status).startsWith("partial")) p.status = "uncertain: the ink and the match disagree; both are reported";
+      }
+    }
+  }
+  {
+    let x0 = reg[0], y0 = reg[1], x1 = reg[0] + reg[2], y1 = reg[1] + reg[3];
+    for (const r of usable) {
+      const s = toSrc(r.m), hw = reg[2] * r.m.scale / 2, hh = reg[3] * r.m.scale / 2;
+      x0 = Math.min(x0, s.x - hw);
+      x1 = Math.max(x1, s.x + hw);
+      y0 = Math.min(y0, s.y - hh);
+      y1 = Math.max(y1, s.y + hh);
+    }
+    if (inkBox) {
+      x0 = Math.min(x0, inkBox[0]);
+      y0 = Math.min(y0, inkBox[1]);
+      x1 = Math.max(x1, inkBox[0] + inkBox[2]);
+      y1 = Math.max(y1, inkBox[1] + inkBox[3]);
+    }
+    x0 = Math.max(0, Math.floor(x0 - reg[2] / 2));
+    y0 = Math.max(0, Math.floor(y0 - reg[3] / 2));
+    x1 = Math.min(info.width, Math.ceil(x1 + reg[2] / 2));
+    y1 = Math.min(info.height, Math.ceil(y1 + reg[3] / 2));
+    const box2 = [x0, y0, Math.max(2, x1 - x0), Math.max(2, y1 - y0)], ww = Math.max(8, Math.round(box2[2] * k)), wh = Math.max(8, Math.round(box2[3] * k));
+    const counts = [], idx = [];
+    let prevW = null;
+    for await (const fr of readFrames(info, { from: f0, to: f1, crop: box2, width: ww, height: wh, gray: true }, tools)) {
+      let c = 0;
+      if (prevW) {
+        for (let i = 0; i < fr.data.length; i++) if (Math.abs(fr.data[i] - prevW[i]) > 10) c++;
+      }
+      counts.push(c);
+      idx.push(fr.index);
+      prevW = Uint8Array.from(fr.data);
+    }
+    const breaks = new Set(idx.map((f, i) => cutAt.has(f) ? i : -1).filter((i) => i >= 0));
+    const wr = witnessRuns(counts, ww * wh, breaks), runs = wr.runs.map((r) => ({ from: idx[r.from], to: idx[r.to], at: { from: at(info.times[idx[r.from]]), to: at(info.times[idx[r.to]]) } }));
+    out.witness = {
+      box: box2,
+      threshold: wr.threshold,
+      ground: wr.ground,
+      runs,
+      reading: wr.ground === "moving" ? "The ground in the box moves: frame differencing cannot see the move past it." : `The box changes in ${runs.length} run${runs.length === 1 ? "" : "s"}.`
+    };
+    for (const m of out.moves) {
+      const vA = m.duration?.visible?.fromFrame ?? m.from.frame, vB = m.duration?.visible?.toFrame ?? m.to.frame, cA = m.covers.fromFrame, cB = m.covers.toFrame;
+      const over = runs.filter((r) => r.from <= vB && r.to >= vA);
+      if (!over.length) {
+        m.witness = null;
+        continue;
+      }
+      const wa = Math.min(...over.map((r) => r.from)), wb = Math.max(...over.map((r) => r.to)), tol = 2;
+      const wsec = info.times[wb] - info.times[wa];
+      m.witness = { from: wa, to: wb, seconds: Math.round(wsec * 1e4) / 1e4, at: at(wsec), covers: { from: cA, to: cB } };
+      if ((wa < cA - tol || wb > cB + tol) && !String(m.status).startsWith("partial") && !String(m.status).startsWith("uncertain"))
+        m.status = `uncertain: the region changes from frame ${wa} to ${wb}; the track covers ${cA} to ${cB}`;
+    }
   }
   const nccAll = rows.filter((r) => r.m).map((r) => r.m.ncc).sort((a, b) => a - b);
   out.match = { matchedFrames: nccAll.length, frames: rows.length, median: nccAll.length ? Math.round(nccAll[Math.floor(nccAll.length / 2)] * 1e3) / 1e3 : null, threshold: minNcc };
   await fs13.mkdir(args.outDir, { recursive: true });
   const jsonPath = path14.join(args.outDir, "track.json"), csvPath = path14.join(args.outDir, "track.csv");
   const perFrame = rows.map((r) => ({ index: r.index, time: Math.round(r.time * 1e6) / 1e6, at: at(r.time), repeat: rep.has(r.index), ...r.m ? { ...Object.fromEntries(Object.entries(toSrc(r.m)).map(([a, v]) => [a, Math.round(v * 100) / 100])), ncc: Math.round(r.m.ncc * 1e3) / 1e3 } : { matched: false } }));
-  await fs13.writeFile(jsonPath, JSON.stringify({ ...out, frames: perFrame }, null, 1));
+  const inkFrames = inkRows.map((r) => ({ index: r.index, time: Math.round(r.time * 1e6) / 1e6, count: Math.round(r.f.count), ...r.f.count ? { x0: r24(r.f.x0), y0: r24(r.f.y0), x1: r24(r.f.x1), y1: r24(r.f.y1), cx: r24(r.f.cx), cy: r24(r.f.cy) } : {}, level: r24(r.f.level) }));
+  await fs13.writeFile(jsonPath, JSON.stringify({ ...out, frames: perFrame, ...inkRows.length ? { inkFrames } : {} }, null, 1));
   await fs13.writeFile(csvPath, ["index,time,at,x,y,scale,opacity,ncc,repeat", ...perFrame.map((p) => [p.index, p.time, p.at, p.x ?? "", p.y ?? "", p.scale ?? "", p.opacity ?? "", p.ncc ?? "", p.repeat ? 1 : 0].join(","))].join("\n"));
   const seconds = Math.round((performance.now() - started) / 1e3 * 100) / 100;
   return {
     ...out,
     files: { json: jsonPath, csv: csvPath },
     timings: { seconds, decodeAndMatchSeconds: Math.round(decodeSeconds * 100) / 100, frames: rows.length },
-    reading: `${out.moves.length} move${out.moves.length === 1 ? "" : "s"} measured over frames ${f0} to ${f1}${lost ? `; ${lost.reading}` : ""}. ${cad.reading} Not measured: ${NOT_MEASURED.join(", ")}.`
+    reading: `${out.moves.length} move${out.moves.length === 1 ? "" : "s"} over frames ${f0} to ${f1} (${statusCount(out.moves)})${lost ? `; ${lost.reading}` : ""}. ${cad.reading} Not measured: ${NOT_MEASURED.join(", ")}.`
   };
 }
 
 // src/video/shots.ts
 var SHOT_RULES = { cutMin: 12, ratio: 4, heldRatio: 3, around: 12, softMin: 10, softRatio: 8, softEvery: 4, swapMin: 10, swapBack: 0.35, flashShare: 0.7 };
-var median4 = (a) => {
+var median5 = (a) => {
   if (!a.length) return 0;
   const s = [...a].sort((x, y) => x - y);
   return s[Math.floor(s.length / 2)];
@@ -61547,7 +61914,7 @@ function shotList(stats, rules = SHOT_RULES) {
     }
     for (let r = 0; r < a.regions.length; r++) {
       const ra = a.regions[r], rb = b.regions[r];
-      const loc = median4(stats.slice(Math.max(1, i - rules.around), Math.min(n, i + rules.around + 1)).map((s) => s.regions[r]));
+      const loc = median5(stats.slice(Math.max(1, i - rules.around), Math.min(n, i + rules.around + 1)).map((s) => s.regions[r]));
       if (ra >= Math.max(rules.swapMin * 2, 4 * loc) && rb >= Math.max(rules.swapMin * 2, 4 * loc) && b.regionsBack[r] < rules.swapBack * Math.min(ra, rb)) {
         swapAt.add(i);
         out.swaps.push({ frame: a.index, time: a.time, change: Math.round(ra * 10) / 10, region: r });
@@ -61558,7 +61925,7 @@ function shotList(stats, rules = SHOT_RULES) {
   for (let i = 1; i < n; i++) {
     if (swapAt.has(i) || swapAt.has(i - 1)) continue;
     const nb = [...ch.slice(Math.max(1, i - rules.around), i), ...ch.slice(i + 1, Math.min(n, i + rules.around + 1))];
-    const med = median4(nb), held = nb.filter((x) => x < 1).length > 0.6 * nb.length;
+    const med = median5(nb), held = nb.filter((x) => x < 1).length > 0.6 * nb.length;
     const hard = ch[i] >= rules.cutMin && ch[i] >= (held ? rules.heldRatio : rules.ratio) * Math.max(med, 0.5);
     const soft = !hard && ch[i] >= rules.softMin && ch[i] >= rules.softRatio * Math.max(med, 0.5) && ch[i] >= rules.softEvery * Math.max(ch[i - 1], i + 1 < n ? ch[i + 1] : 0);
     if (!hard && !soft) continue;
@@ -61783,12 +62150,13 @@ registerOp({
   name: "video.track",
   category: "video",
   readOnly: true,
-  description: "Follow one thing across a span of a video file and measure its moves: position, scale and opacity per frame (normalised cross-correlation over a range of scales with a sub-pixel peak; opacity as the window's regression on the template), the moves in motion.curve's own terms, and each move fitted three ways with its rms (After Effects ease: out and in influence; linear; spring: frequency, damping, overshoot, settle, and the hand-study form A, f, d), the best and by how much, and its keys ready for keyframe.apply (a spring also as the library's motion-jsx spring, and baked keys). Repeated frames are found (a 24 fps piece in 30 fps repeats every fifth) and moves are fitted on the unique frames at their own times. Says where it lost the region and fits nothing past it. Rotation, skew, blur and colour are not measured, and the reply says so. Writes track.json and track.csv." + ffmpegNote,
+  description: "Follow one thing across a span of a video file and measure its moves: position, scale and opacity per frame (normalised cross-correlation over a range of scales with a sub-pixel peak; opacity as the window's regression on the template), the moves in motion.curve's own terms, and each move fitted three ways with its rms (After Effects ease: out and in influence; linear; spring: frequency, damping, overshoot, settle, and the hand-study form A, f, d), the best and by how much, and its keys ready for keyframe.apply (a spring also as the library's motion-jsx spring, and baked keys). Repeated frames are found (a 24 fps piece in 30 fps repeats every fifth) and moves are fitted on the unique frames at their own times. Says where it lost the region and fits nothing past it. A move whose start or end was not seen (already moving at the first frame measured, or still moving where it stops) is partial: its duration, distance and the unseen ease are not measured. Each move has two durations: the fit's keys (what is set in After Effects) and the visible span (the last frame at rest to the first frame within 2 % of the end, as a hand study counts it); a witness (plain frame differencing round the region) gives the span over which anything there changes, and a move it outlasts is marked uncertain. Moves never span a cut. `ink` adds a second measure, a mask in a fixed box (by luma, colour, or difference from an empty frame) with its bounding box, centroid, area and level per frame: for anything that grows from nothing, draws on, fades, glows or blurs. Where both measures see a move, agreement within 2 frames and 5 % is a measurement and disagreement is reported, uncertain. Rotation, skew, blur and colour are not measured, and the reply says so. Writes track.json and track.csv." + ffmpegNote,
   params: [
     ...common,
     { name: "region", type: "any", description: "[x, y, width, height] round the thing in the reference frame, in pixels or as shares of the frame (all 1 or under)", required: true },
     { name: "ref", type: "number", description: "Seconds: the reference frame where the region is drawn, the thing at rest (default the span's last frame)", required: false },
-    { name: "scaleRange", type: "array", description: "[smallest, largest] scale to search, against the reference (default [0.5, 2])", required: false }
+    { name: "scaleRange", type: "array", description: "[smallest, largest] scale to search, against the reference (default [0.25, 2.5])", required: false },
+    { name: "ink", type: "object", description: "The ink measure: { box (default the region), mask: { luma: [lo, hi] | minChannel: [lo, hi] | hue: [from, to] with minSat, minVal | rgb: [r, g, b] with tol | empty: seconds of a frame without the thing, with tol }, curves: any of centroid, x0, x1, y0, y1, width, height, size, level (default centroid, size, level), minCount, minPixels }. A moving ground defeats the empty-frame difference", required: false }
   ],
   toJsx: () => jsxFail("video.track runs in Node; call it through ae_do"),
   run: (args) => runTrack(args)
@@ -61803,6 +62171,7 @@ registerOp({
     { name: "tracks", type: "array", description: "track.json paths from video.track, or [{ path, label }]", required: true },
     { name: "shots", type: "string", description: "shots.json from video.shots", required: false },
     { name: "census", type: "string", description: "census.json from video.census", required: false },
+    { name: "transcript", type: "string", description: "A transcript JSON (word or segment tokens with times): each scene gets its words and each event the word spoken as it starts", required: false },
     { name: "inferred", type: "array", description: "Moves carried by hand: [{ label, channel, reason, ... }]", required: false },
     { name: "untested", type: "array", description: "Moves named but not tracked: [{ label, reason }]", required: false },
     { name: "atFps", type: "number", description: "Frames at this rate (default 30)", required: false }
@@ -62387,7 +62756,7 @@ var TOP_CODE = 254.5 / 255;
 var BOTTOM_CODE = 0.5 / 255;
 var r63 = (v) => Math.round(v * 1e6) / 1e6;
 function measureFrame(pic, width, height, t) {
-  let luma3 = 0;
+  let luma4 = 0;
   let dark = 0;
   let light = 0;
   let hr = 0;
@@ -62413,7 +62782,7 @@ function measureFrame(pic, width, height, t) {
       const r = pic[i];
       const g = pic[i + 1];
       const b = pic[i + 2];
-      luma3 += 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      luma4 += 0.2126 * r + 0.7152 * g + 0.0722 * b;
       const max = r > g ? r > b ? r : b : g > b ? g : b;
       const min = r < g ? r < b ? r : b : g < b ? g : b;
       if (max <= darkBelow) dark++;
@@ -62447,7 +62816,7 @@ function measureFrame(pic, width, height, t) {
   const n = width * height || 1;
   const box2 = (x0, y0, x1, y1) => x1 < 0 ? null : { x: x0, y: y0, width: x1 - x0 + 1, height: y1 - y0 + 1 };
   return {
-    meanLuma: r63(luma3 / n),
+    meanLuma: r63(luma4 / n),
     darkShare: r63(dark / n),
     lightShare: r63(light / n),
     clipHigh: {

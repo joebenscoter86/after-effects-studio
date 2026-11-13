@@ -61,6 +61,8 @@ export declare function fitMove(s: Sample[], guess: {
 export declare function fitEaseSeen(s: Sample[], lo?: number): (EaseFit & {
     seen: true;
 }) | null;
+/** After Effects' ease with its keys held at a and b (seconds), the influences fitted. */
+export declare function fitEaseBetween(s: Sample[], a: number, b: number): EaseFit;
 /**
  * The hand study's spring on a move's tail: from the first sample at or past its end value, y - 1 = A e^(-d t) sin(2 pi f t).
  * null when the move does not overshoot.

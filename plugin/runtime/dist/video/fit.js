@@ -128,7 +128,10 @@ export function fitEaseSeen(s, lo = 0.015) {
     const c0 = cross(lo), c1 = c0 ? cross(1 - lo, c0.k) : null;
     if (!c0 || !c1 || c1.t <= c0.t)
         return null;
-    const a = c0.t, b = c1.t;
+    return { ...fitEaseBetween(s, c0.t, c1.t), seen: true };
+}
+/** After Effects' ease with its keys held at a and b (seconds), the influences fitted. */
+export function fitEaseBetween(s, a, b) {
     const f = (x) => { const o = clamp(x[0], 0.01, 1), i = clamp(x[1], 0.01, 1); return rmsOf(s, (t) => aeEase((t - a) / (b - a), o, i)); };
     let best = { x: [0.33, 0.33], value: Infinity };
     for (const o0 of [0.1, 0.33, 0.6, 0.9])
@@ -137,7 +140,7 @@ export function fitEaseSeen(s, lo = 0.015) {
             if (r.value < best.value)
                 best = r;
         }
-    return { model: "ease", seen: true, start: a, end: b, outInfluence: Math.round(clamp(best.x[0], 0.01, 1) * 1000) / 10, inInfluence: Math.round(clamp(best.x[1], 0.01, 1) * 1000) / 10, rms: best.value };
+    return { model: "ease", start: a, end: b, outInfluence: Math.round(clamp(best.x[0], 0.01, 1) * 1000) / 10, inInfluence: Math.round(clamp(best.x[1], 0.01, 1) * 1000) / 10, rms: best.value };
 }
 /**
  * The hand study's spring on a move's tail: from the first sample at or past its end value, y - 1 = A e^(-d t) sin(2 pi f t).
