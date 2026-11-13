@@ -59,7 +59,7 @@ function makeAE(opts: { deepGlow: boolean }) {
       anchorPoint: tg.property("ADBE Anchor Point"), scale: tg.property("ADBE Scale"), opacity: tg.property("ADBE Opacity"),
       sourceRectAtTime() {
         const td = root.property("ADBE Text Properties").property("ADBE Text Document").value;
-        const s = td.fontSize, n = td.text.length, desc = /[gjpqy]/.test(td.text);
+        const s = td.fontSize, n = Math.max(...String(td.text).split("\r").map((l: string) => l.length)), desc = /[gjpqy]/.test(td.text);
         return { left: -0.29 * s * n, top: -0.73 * s, width: 0.58 * s * n, height: 0.73 * s + (desc ? 0.24 * s : 0) };
       },
       duplicate() { const C = makeLayer(comp, kind, name + " copy"); C.inPoint = L.inPoint; C.scale.keys = L.scale.keys.map((k: Key) => ({ ...k })); comp._layers.unshift(C); return C; },
@@ -419,5 +419,62 @@ describe("pixel-headline module", () => {
     expect(hold.v[0]).toBe(100);
     expect(keys.find((k: Key) => Math.abs(k.t - p2) < 1e-9).v[0]).toBeCloseTo(PH.SIG.push[0][1] * 100, 9);
     expect(comp.layer("PH B2 Word").parent).toBe(r1.camera);
+  });
+
+  it("a shrunk word keeps its tallest letters where an unshrunk word's are; baseline overrides", () => {
+    const { PH, comp } = makeAE({ deepGlow: true });
+    const full = PH.heroWord(comp, { text: "shots", at: 1 });
+    const long = PH.heroWord(comp, { text: "transformation", at: 1, prefix: "PH L " });
+    expect(long.size).toBeLessThan(full.size);
+    expect(long.box.y0).toBeCloseTo(full.box.y0, 6);
+    expect(long.box.x1 - long.box.x0).toBeCloseTo(0.85 * 1080, 6);
+    const set = PH.heroWord(comp, { text: "shots", at: 1, baseline: 383, prefix: "PH S " });
+    expect(set.layer.position.value[1]).toBeCloseTo(383 - 18, 9);
+    const T = PH.tail(comp, { text: "three names", at: 2, baseline: 1500, prefix: "PH S " });
+    expect(T.position.value[1]).toBe(1500);
+  });
+
+  it("a two-line lead-in's second line starts when it is spoken", () => {
+    const { PH, comp } = makeAE({ deepGlow: true });
+    const L = PH.leadIn(comp, { text: "Three websites that changed how I edit", at: [1, 2.5] });
+    const fx = L.property("ADBE Effect Parade");
+    expect(fx.property("Reveal Line 2").property(1).value).toBeCloseTo(2.5 - 1 - 3 * 4.75 / 30, 9);
+    const amount = L.property("ADBE Text Properties").property("ADBE Text Animators").property("PH Reveal").property("ADBE Text Selectors").property("PH Words").property("ADBE Text Expressible Amount").expression;
+    expect(amount).toMatch(/textIndex > 3/);
+    expect(fx.property("Reveal Strength").property(1).keys[0].t).toBeCloseTo(1 + F(-1.865), 9);
+    // a beat takes the second line's time from its first word
+    const { PH: PH2, comp: c2 } = makeAE({ deepGlow: true });
+    const ws = [["Three", 0.2], ["websites", 0.4], ["that", 0.6], ["changed", 0.8], ["how", 1.2], ["I", 1.3], ["edit", 1.4], ["everything", 2.2]].map(([text, t]) => ({ text, t }));
+    PH2.beat(c2, { ...referenceBrief(0), words: ws, stressed: 7 });
+    expect(c2.layer("PH Lead-in").property("ADBE Effect Parade").property("Reveal Line 2").property(1).value).toBeCloseTo(0.8 - 0.2 - 3 * 4.75 / 30, 9);   // line 2 starts at "changed"
+  });
+
+  it("a lead-in wider than 85 % of the frame shrinks to fit", () => {
+    const { PH, comp } = makeAE({ deepGlow: true });
+    const L = PH.leadIn(comp, { text: "WWWWWWWWWWWWWWWWWWWWWWWWW", at: 1, maxChars: 30 });
+    const td = L.property("Source Text").value;
+    expect(0.58 * td.fontSize * 25).toBeCloseTo(0.85 * 1080, 6);
+  });
+
+  it("moveCard: a landed card moves on the push's curve to a place on screen, no overshoot", () => {
+    const { PH, comp } = makeAE({ deepGlow: true });
+    const C = PH.card(comp, { clip: footage("site"), at: 1, pos: [540, 700], size: [1280, 800], width: 950, name: "PH Site" });
+    const end = PH.moveCard(comp, { layer: C, at: 3, pos: [300, 1300], scale: 30, dur: 0.6 });
+    expect(end).toBeCloseTo(3.6, 9);
+    expect(C.position.keys.map((k: Key) => [k.t, k.v])).toEqual([[3, [540, 700]], [3.6, [300, 1300]]]);
+    const last = C.scale.keys.at(-1)!; expect(last.t).toBeCloseTo(3.6, 9); expect(last.v.slice(0, 2)).toEqual([30, 30]);   // z is left as it was
+    const e = C.scale.eases[3].outE[0];
+    expect(e.influence).toBeCloseTo(2, 9);
+    expect(C.scale.eases[3.6].inE[0].influence).toBeCloseTo(38.48, 6);
+  });
+
+  it("every card covers its clip: an upright 860 x 1204 clip fills the upright card", () => {
+    const { PH, comp } = makeAE({ deepGlow: true });
+    const C = PH.card(comp, { clip: { name: "up", width: 860, height: 1204, isComp: false }, at: 1, pos: [300, 700], scale: 35.85, name: "PH Up" });
+    const cs = C.source.layer("Clip").scale.value[0];
+    expect(860 * cs / 100).toBeGreaterThanOrEqual(790);
+    expect(1204 * cs / 100).toBeGreaterThanOrEqual(1100);
+    const ref = PH.card(comp, { clip: footage("ref"), at: 1, pos: [300, 700], scale: 35.85, name: "PH Ref" });
+    expect(ref.source.layer("Clip").scale.value[0]).toBeCloseTo(104 * 790 / 1080, 6);
   });
 });

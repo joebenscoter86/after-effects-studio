@@ -36,7 +36,7 @@ var AESPixelHeadline = (function () {
       seenRed: [7, 429, 697, 973, 6307, 6701, 8827, 11260, 6800, 6959, 8297, 7525, 6104, 5825, 2860, 2076, 811, 55],
       seenDist: [null, .32, .32, .32, .61, .59, .59, .67, .82, 1.01, 1.15, 1.51, 1.58, 1.76, .73, .87, null, null],
       sides: { above: .327, below: .122, left: .401, right: .15 }, lineFree: 6 },
-    type: { wordSize: .284, wordMax: .85, wordBaseline: .275, wordPivotUp: 18, leadSize: 64, leadBaseline: .147, tailSize: 86, tailBaseline: .318, leading: 1.2 },
+    type: { wordSize: .284, wordMax: .85, wordBaseline: .275, wordPivotUp: 18, leadSize: 64, leadBaseline: .147, tailSize: 86, tailBaseline: .318, leading: 1.2, lineMax: .85 },
     pushLead: 18,
     // exits (extended: the reference never shows one): each element leaves the way it came, about twice as fast, with no
     // overshoot; text by word from the last word, cards from the last card; everything gone within 10 frames
@@ -44,8 +44,10 @@ var AESPixelHeadline = (function () {
   };
   function k(comp) { return comp.width / REF.w; }
   function sec(frames) { return frames / REF.fps; }
+  function isArr(x) { return Object.prototype.toString.call(x) === "[object Array]"; }   // true for arrays from any realm
+
   function dims(prop) { var sp = prop.propertyValueType === PropertyValueType.TwoD_SPATIAL || prop.propertyValueType === PropertyValueType.ThreeD_SPATIAL;
-    return (!sp && prop.value instanceof Array) ? prop.value.length : 1; }
+    return (!sp && isArr(prop.value)) ? prop.value.length : 1; }
   function clampInf(x) { return Math.max(.1, Math.min(100, x * 100)); }
   // write signature keys: at (s), keys as above, mul scales values and speeds, vec makes a value a vector (scale)
   function sigKeys(prop, at, keysIn, mul, vec) {
@@ -137,10 +139,11 @@ var AESPixelHeadline = (function () {
     pushEase(S.scale, o.at, from, [cv, cv, 100].slice(0, from.length)); pushEase(S.position, o.at, fp, toParent(S, [comp.width / 2, comp.height / 2], o.at));
     return o.at + sec(SIG.push[1][0]); }
   // a move from a to b (numbers or arrays) on the push's curve: fast out of the first frame, a long ease in, over 42 frames
-  function pushEase(prop, at, a, b) { var K = SIG.push, t1 = at + sec(K[1][0]), d = [], i, n = a instanceof Array ? a.length : 1;
-    if (a instanceof Array) { var bb = []; for (i = 0; i < n; i++) bb.push(i < b.length ? b[i] : a[i]); b = bb; }   // match the layer's dimensions
+  // (or `frames`: the same curve compressed or stretched in time)
+  function pushEase(prop, at, a, b, frames) { var K = SIG.push, fr = frames || K[1][0], t1 = at + sec(fr), d = [], i, n = isArr(a) ? a.length : 1;
+    if (isArr(a)) { var bb = []; for (i = 0; i < n; i++) bb.push(i < b.length ? b[i] : a[i]); b = bb; }   // match the layer's dimensions
     prop.setValuesAtTimes([at, t1], [a, b]);
-    var spd = K[0][5] / (K[0][1] - K[1][1]) * REF.fps;   // the push's out speed as a share of its travel, per second
+    var spd = K[0][5] / (K[0][1] - K[1][1]) * REF.fps * K[1][0] / fr;   // the push's out speed as a share of its travel, per second
     var span = 0; for (i = 0; i < n; i++) span = Math.max(span, Math.abs((n > 1 ? b[i] - a[i] : b - a)));
     var dm = dims(prop), B = KeyframeInterpolationType.BEZIER, ea = [], eb = [], ec = [], ed = [];
     for (i = 0; i < dm; i++) { ea.push(new KeyframeEase(0, 33)); eb.push(new KeyframeEase(-spd * span, K[0][3] * 100)); ec.push(new KeyframeEase(0, K[1][2] * 100)); ed.push(new KeyframeEase(0, 33)); }
@@ -152,8 +155,10 @@ var AESPixelHeadline = (function () {
   // ---- the text reveal (native: one animator, an Expression Selector based on words, sliders). Each word reads the
   //      Strength slider at time - rank x Delay / 30 s; rank is the word's place in reading order, or, from the exit time on,
   //      its place from the end (the exit runs in reverse at its own delay). Strength 100 = fully offset and clear; 0 = in place.
-  function reveal(L, at, strength, delay, offset, blur) {
+  // line2 (optional) = { n1: words in line 1, extra: s added to every word of line 2 }, so line 2 starts when it is spoken
+  function reveal(L, at, strength, delay, offset, blur, line2) {
     var fx = L.property("ADBE Effect Parade");
+    fx.addProperty("ADBE Slider Control").name = "Reveal Line 2";
     fx.addProperty("ADBE Slider Control").name = "Reveal Strength";
     fx.addProperty("ADBE Slider Control").name = "Reveal Delay";
     fx.addProperty("ADBE Slider Control").name = "Reveal Exit";
@@ -161,6 +166,7 @@ var AESPixelHeadline = (function () {
     L.property("ADBE Effect Parade").property("Reveal Delay").property(1).setValue(delay);
     L.property("ADBE Effect Parade").property("Reveal Exit").property(1).setValue(-1);
     L.property("ADBE Effect Parade").property("Reveal Exit Delay").property(1).setValue(SIG.exit.wordDelay);
+    L.property("ADBE Effect Parade").property("Reveal Line 2").property(1).setValue(line2 ? line2.extra : 0);
     sigKeys(L.property("ADBE Effect Parade").property("Reveal Strength").property(1), at, strength, 1, 0);
     var ans = L.property("ADBE Text Properties").property("ADBE Text Animators"); ans.addProperty("ADBE Text Animator").name = "PH Reveal";
     function an() { return L.property("ADBE Text Properties").property("ADBE Text Animators").property("PH Reveal"); }
@@ -169,7 +175,8 @@ var AESPixelHeadline = (function () {
     sel.property("ADBE Text Range Type2").setValue(3);
     sel.property("ADBE Text Expressible Amount").expression = 'var ex = effect("Reveal Exit")(1), out = ex >= 0 && time >= ex;\n'
       + 'var rank = out ? textTotal - textIndex : textIndex - 1, d = out ? effect("Reveal Exit Delay")(1) : effect("Reveal Delay")(1);\n'
-      + 'var s = effect("Reveal Strength")(1).valueAtTime(time - rank * d / 30);\n[s, s, s];';
+      + 'var x = !out && textIndex > ' + (line2 ? line2.n1 : 9999) + ' ? effect("Reveal Line 2")(1) : 0;\n'
+      + 'var s = effect("Reveal Strength")(1).valueAtTime(time - rank * d / 30 - x);\n[s, s, s];';
     an().property("ADBE Text Animator Properties").addProperty("ADBE Text Position 3D");
     an().property("ADBE Text Animator Properties").property("ADBE Text Position 3D").setValue([offset[0], offset[1], 0]);
     an().property("ADBE Text Animator Properties").addProperty("ADBE Text Opacity");
@@ -185,20 +192,32 @@ var AESPixelHeadline = (function () {
     var words = L.property("Source Text").value.text.split(/\s+/).length, d = words > 1 ? Math.min(X.wordDelay, (X.within - X.textFrames) / (words - 1)) : 0;
     fx.property("Reveal Exit Delay").property(1).setValue(d);
     var end = at + sec(X.textFrames + (words - 1) * d); L.outPoint = end; return end; }
-  // ---- lead-in line. o = { text, at (s: the line's spoken start), colour, prefix, maxChars }. Two lines when the text runs
+  // a line of the triangle: one or two lines of text, shrunk to fit SIG.type.lineMax of the width, a start time per line.
+  //      o = { text, lines (two strings: force the split), maxChars, at (s, or [line 1, line 2] spoken starts) }
+  function textLine(comp, o, name, size0, delay) { var lines = o.lines || wrap(o.text, o.maxChars), size = size0, T = SIG.type;
+    var L = AESLib.text(comp, name, lines.join("\r"), { family: FAM, style: FACE, size: size, color: o.colour || [1, 1, 1], just: "center", leading: size * T.leading, pos: [comp.width / 2, 0] });
+    var r = L.sourceRectAtTime(0, false);
+    if (r.width > T.lineMax * comp.width) { size *= T.lineMax * comp.width / r.width; var td = L.property("Source Text").value; td.fontSize = size; td.leading = size * T.leading; L.property("Source Text").setValue(td); }
+    var at = isArr(o.at) ? o.at[0] : o.at, line2 = null;
+    if (lines.length > 1 && isArr(o.at) && o.at.length > 1) { var n1 = lines[0].split(" ").length; line2 = { n1: n1, extra: o.at[1] - at - n1 * delay / 30 }; }
+    return { layer: L, lines: lines, size: size, at: at, line2: line2 }; }
+  // ---- lead-in line. o = { text, at (s, or one per line), colour, prefix, maxChars, lines }. Two lines when the text runs
   //      past maxChars (24): they stack upward from the lead-in's baseline, so the giant word's place does not move.
-  function leadIn(comp, o) { var s = k(comp), T = SIG.type, lines = wrap(o.text, o.maxChars), size = T.leadSize * s, lead = size * T.leading;
-    var L = AESLib.text(comp, pfx(o) + "Lead-in", lines.join("\r"), { family: FAM, style: FACE, size: size, color: o.colour || [1, 1, 1], just: "center", leading: lead,
-      pos: [comp.width / 2, comp.height * T.leadBaseline - lead * (lines.length - 1)] });
-    reveal(L, o.at, SIG.leadStrength, SIG.leadDelay, [0, -SIG.leadDrop * s], 0);
+  function leadIn(comp, o) { var s = k(comp), T = SIG.type, t = textLine(comp, o, pfx(o) + "Lead-in", T.leadSize * s, SIG.leadDelay), L = t.layer;
+    L.position.setValue([comp.width / 2, (o.baseline === undefined ? comp.height * T.leadBaseline : o.baseline) - t.size * T.leading * (t.lines.length - 1)]);
+    reveal(L, t.at, SIG.leadStrength, SIG.leadDelay, [0, -SIG.leadDrop * s], 0, t.line2);
     return L; }
-  // ---- tail line. o = { text, at (s: its spoken start), colour, under (the giant word's layer, to clear its descenders),
-  //      prefix, maxChars }. Two lines stack downward from the tail's baseline.
-  function tail(comp, o) { var s = k(comp), T = SIG.type, y = comp.height * T.tailBaseline, lines = wrap(o.text, o.maxChars), size = T.tailSize * s;
-    if (o.under) { var r = o.under.sourceRectAtTime(o.at, false), sz = o.under.property("Source Text").value.fontSize, below = r.top + r.height;
-      if (below > .05 * sz) y += below; }
-    var L = AESLib.text(comp, pfx(o) + "Tail", lines.join("\r"), { family: FAM, style: FACE, size: size, color: o.colour || [1, 1, 1], just: "center", leading: size * T.leading, pos: [comp.width / 2, y] });
-    reveal(L, o.at, SIG.tailStrength, SIG.tailDelay, [-SIG.tailSlide * s, 0], SIG.tailBlur * s);
+  // ---- tail line. o = { text, at (s, or one per line), colour, under (the giant word's layer, to clear its descenders),
+  //      baseline (comp px; default 31.8 % of the height, below any descender), prefix, maxChars, lines }. Two lines stack
+  //      downward from the tail's baseline.
+  function tail(comp, o) { var s = k(comp), T = SIG.type, y = comp.height * T.tailBaseline, at0 = isArr(o.at) ? o.at[0] : o.at;
+    if (o.baseline !== undefined) y = o.baseline;
+    else if (o.under) { var r = o.under.sourceRectAtTime(at0, false), sz = o.under.property("Source Text").value.fontSize, below = r.top + r.height;
+      var wb = o.under.position.value[1] + o.under.anchorPoint.value[1] * -1 + 0;   // the word's baseline
+      if (below > .05 * sz) y = Math.max(y, wb + below + .03 * comp.height); }
+    var t = textLine(comp, o, pfx(o) + "Tail", T.tailSize * s, SIG.tailDelay), L = t.layer;
+    L.position.setValue([comp.width / 2, y]);
+    reveal(L, t.at, SIG.tailStrength, SIG.tailDelay, [-SIG.tailSlide * s, 0], SIG.tailBlur * s, t.line2);
     return L; }
 
   // ---- giant word and its glow. o = { text, at (s: W, the stressed word's spoken start), colour, glow ("auto"|"deep"|"stock"),
@@ -206,8 +225,10 @@ var AESPixelHeadline = (function () {
   //      Returns { layer, glow, box (settled, comp px) }
   function heroWord(comp, o) { var s = k(comp), T = SIG.type, W = comp.width, base = comp.height * T.wordBaseline, size = T.wordSize * W, P = pfx(o);
     var L = AESLib.text(comp, P + "Word", o.text, { family: FAM, style: FACE, size: size, color: o.colour || [1, 0, 0], just: "center", pos: [W / 2, base] });
-    var r = L.sourceRectAtTime(o.at + 1, false);
-    if (r.width > T.wordMax * W) { size *= T.wordMax * W / r.width; var td = L.property("Source Text").value; td.fontSize = size; L.property("Source Text").setValue(td); r = L.sourceRectAtTime(o.at + 1, false); }
+    var r = L.sourceRectAtTime(o.at + 1, false), top0 = base + r.top;
+    if (r.width > T.wordMax * W) { size *= T.wordMax * W / r.width; var td = L.property("Source Text").value; td.fontSize = size; L.property("Source Text").setValue(td); r = L.sourceRectAtTime(o.at + 1, false);
+      base = top0 - r.top; }   // a shrunk word keeps its tallest letters where they were: just under the lead-in's baseline
+    if (o.baseline !== undefined) base = o.baseline;
     L.anchorPoint.setValue([0, -T.wordPivotUp * s]); L.position.setValue([W / 2, base - T.wordPivotUp * s]);
     sigKeys(L.scale, o.at, SIG.word, 100, dims(L.scale));
     L.inPoint = o.at;
@@ -301,7 +322,7 @@ var AESPixelHeadline = (function () {
     effect(rim, "ADBE Exposure2").property("Exposure").setValue(SIG.rimExposure);
     var inner = rect("Inner", R, 100, round);
     var clip = C.layers.add(o.clip); clip.name = "Clip"; if (clip.hasAudio) clip.audioEnabled = false;
-    var cs = up ? SIG.clipScale : 104 * Math.max(R[0] / o.clip.width, R[1] / o.clip.height);
+    var cs = 104 * Math.max(R[0] / o.clip.width, R[1] / o.clip.height);   // the clip covers the card (76 % for a 1080 x 1920 clip upright)
     clip.startTime = o.at - (o.clipStart || 0); clip.scale.setValue([cs, cs]); clip.position.setValue([cw / 2, ch / 2]);
     clip.setTrackMatte(inner, TrackMatteType.ALPHA); rim.setTrackMatte(outer, TrackMatteType.ALPHA);
     var bl = effect(clip, "ADBE Gaussian Blur 2"); bl.property("Repeat Edge Pixels").setValue(1);
@@ -356,6 +377,14 @@ var AESPixelHeadline = (function () {
     L.position.setValue([comp.width / 2, comp.height / 2]);
     return L; }
 
+  // ---- a landed card moves (extended): position and scale on the push's curve, no overshoot. o = { layer or name, at (s),
+  //      pos [x, y] (comp px), scale (%), dur (s; default the push's 42 frames) }. Returns when it arrives.
+  function moveCard(comp, o) { var L = o.layer || comp.layer(o.name), fr = o.dur ? o.dur * REF.fps : SIG.push[1][0];
+    if (o.pos) pushEase(L.position, o.at, L.position.valueAtTime(o.at, false), toParent(L, o.pos, o.at), fr);
+    if (o.scale !== undefined) { var sv = L.scale.valueAtTime(o.at, false), tv = []; for (var i = 0; i < sv.length; i++) tv.push(i < 2 ? o.scale : sv[i]);
+      pushEase(L.scale, o.at, sv, tv, fr); }
+    return o.at + sec(fr); }
+
   // ---- push. o = { at (s: P), pivotY (the face's height in the settled frame), layers, sway [{ f, r }] (the speaker's own head
   //      size over the push, frames from P, as a ratio to P + 40; divided out when it moves by more than 3 %), camera (an existing
   //      null from an earlier beat: the keys are added to it, held at full frame until P), prefix }
@@ -391,11 +420,13 @@ var AESPixelHeadline = (function () {
     if (type === "opener" && b.clips && b.clips.length) { stack = cardStack(comp, { clips: b.clips, at: W, side: b.side || "left", face: b.face, prefix: P, word: { box: { y1: comp.height * SIG.type.wordBaseline } } });
       for (i = 0; i < stack.layers.length; i++) scene.push(stack.layers[i]); rep.cards = stack.first; rep.warnings = rep.warnings.concat(stack.layout.warnings); }
     if (stack) { line = drawnLine(comp, { at: W, path: stack.path, colour: b.accent, cards: b.clips.length, prefix: P }); scene.push(line); }
-    if (type === "opener" && lead.length) { L = leadIn(comp, { text: lead.join(" "), at: words[0].t, prefix: P, maxChars: b.maxChars }); scene.push(L); rep.leadAt = words[0].t; }
-    var hw = heroWord(comp, { text: words[si].text, at: W, colour: b.accent, glow: b.glow, exposure: b.exposure, darkGround: b.darkGround, prefix: P });
+    if (type === "opener" && lead.length) { var ll = wrap(lead.join(" "), b.maxChars), lat = ll.length > 1 ? [words[0].t, words[ll[0].split(" ").length].t] : words[0].t;
+      L = leadIn(comp, { text: lead.join(" "), at: lat, prefix: P, maxChars: b.maxChars }); scene.push(L); rep.leadAt = words[0].t; }
+    var hw = heroWord(comp, { text: words[si].text, at: W, colour: b.accent, glow: b.glow, exposure: b.exposure, darkGround: b.darkGround, baseline: b.wordBaseline, prefix: P });
     var px = pixelBlocks(comp, { word: hw, at: W, colour: b.accent, seed: b.seed, prefix: P, blockScale: b.blockScale, count: b.blockCount, dist: b.blockDist, lineBand: L ? [comp.height * SIG.type.leadBaseline - 50 * k(comp), comp.height * SIG.type.leadBaseline + 8 * k(comp)] : null });
     px.layer.moveAfter(hw.glowLayer || hw.layer); scene.push(px.layer, hw.layer); if (hw.glowLayer) scene.push(hw.glowLayer);   // blocks under the word and its glow
-    if (type === "opener" && tl.length) { T = tail(comp, { text: tl.join(" "), at: words[tStart].t, under: hw.layer, prefix: P, maxChars: b.maxChars }); scene.push(T); rep.tailAt = words[tStart].t; }
+    if (type === "opener" && tl.length) { var tw = wrap(tl.join(" "), b.maxChars), tat = tw.length > 1 ? [words[tStart].t, words[tStart + tw[0].split(" ").length].t] : words[tStart].t;
+      T = tail(comp, { text: tl.join(" "), at: tat, under: hw.layer, baseline: b.tailBaseline, prefix: P, maxChars: b.maxChars }); scene.push(T); rep.tailAt = words[tStart].t; }
     var pu = null; if (b.push !== false && type === "opener") { pu = push(comp, { at: b.pushAt !== undefined ? b.pushAt : (L ? words[0].t - sec(SIG.pushLead) : W - sec(48)), pivotY: b.pivotY, layers: scene, sway: b.sway, camera: b.camera, prefix: P }); rep.pushAt = b.camera ? (b.pushAt !== undefined ? b.pushAt : (L ? words[0].t - sec(SIG.pushLead) : W - sec(48))) : pu.layer.scale.keyTime(1); rep.swayDivided = pu.divided; rep.camera = pu.layer; }
     else if (b.camera) { for (i = 0; i < scene.length; i++) if (scene[i] && scene[i].parent !== b.camera) scene[i].parent = b.camera; }
     motionBlur(comp, scene.concat([st.ground]));
@@ -424,5 +455,5 @@ var AESPixelHeadline = (function () {
 
   return { SIG: SIG, fontOK: fontOK, hasEffect: hasEffect, stage: stage, zoomOut: zoomOut, exitInset: exitInset, push: push, leadIn: leadIn, heroWord: heroWord,
     blockSchedule: blockSchedule, pixelBlocks: pixelBlocks, card: card, stackLayout: stackLayout, cardStack: cardStack, linePath: linePath, drawnLine: drawnLine,
-    tail: tail, motionBlur: motionBlur, beat: beat, exitBeat: exitBeat, exitText: exitText, reveal: reveal, wrap: wrap };
+    tail: tail, motionBlur: motionBlur, beat: beat, moveCard: moveCard, textLine: textLine, exitBeat: exitBeat, exitText: exitText, reveal: reveal, wrap: wrap };
 })();
