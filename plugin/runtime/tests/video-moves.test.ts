@@ -9,7 +9,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import "../src/operations/index.js";
 import { getOp } from "../src/registry.js";
 import { aeEase } from "../src/video/fit.js";
-import { runCompareMoves, runMoves } from "../src/video/run-moves.js";
+import { movesOfSamples, runCompareMoves, runMoves } from "../src/video/run-moves.js";
 import { runShots } from "../src/video/run-shots-census.js";
 import { runTrack } from "../src/video/run-track.js";
 import { clips, writeClip } from "./helpers/video-clips.js";
@@ -70,6 +70,28 @@ describe("motion.compare_moves", () => {
       async () => ({ ok: true, layer: "L", property: "Position", fps: 30, frames }));
     expect(r.within).toBe(true);
     expect(r.note).toMatch(/the picture is the one that counts/);
+  });
+  // curves as a property gives them: the measured side through movesOfSamples, the built side read by a stub
+  const curve = (n: number, f: (k: number) => number) => Array.from({ length: n }, (_, k) => ({ frame: k, time: k / 30, value: [f(k)] }));
+  const ease = (k: number, a: number, d: number) => (k <= a ? 0 : k >= a + d ? 1 : aeEase((k - a) / d, 0.4, 0.7));
+  const prop = (frames: any[]) => async () => ({ ok: true, layer: "L", property: "Scale", fps: 30, frames });
+  it("scale is compared as a ratio: 100 to 91 and 95.3 to 86.7 agree", async () => {
+    const measured = movesOfSamples(curve(60, (k) => 100 - 9 * ease(k, 10, 20)), 30, "scale");
+    const r: any = await runCompareMoves({ measured, comp: "C", layer: "L", property: "Scale", tolerance: { frames: 2, distanceShare: 0.05 } }, prop(curve(60, (k) => 95.3 - 8.6 * ease(k, 10, 20))));
+    expect(r.results[0].checks.find((c: any) => c.what === "scale (end over start)").within).toBe(true);
+    expect(r.within).toBe(true);
+  });
+  it("a one-frame move is compared on duration and distance only, not on its ease or kind", async () => {
+    const measured = movesOfSamples(curve(40, (k) => (k < 20 ? 0 : 100)), 30, "opacity");
+    const r: any = await runCompareMoves({ measured, comp: "C", layer: "L", property: "Opacity" }, prop(curve(40, (k) => (k < 20 ? 2 : 100))));
+    expect(r.results[0].note).toMatch(/one-frame/);
+    expect(r.results[0].checks.map((c: any) => c.what)).toEqual(["duration", "distance"]);
+    expect(r.within).toBe(true);
+  });
+  it("a move the build makes as two is said as that, not as a distance miss", async () => {
+    const measured = movesOfSamples(curve(80, (k) => 100 * ease(k, 10, 30)), 30, "position");
+    const r: any = await runCompareMoves({ measured, comp: "C", layer: "L", property: "Position" }, prop(curve(80, (k) => 50 * ease(k, 10, 12) + 50 * ease(k, 34, 12))));
+    expect(r.reading).toMatch(/the build makes this as 2 moves where the reference has one/);
   });
   it("refuses without a build", async () => {
     expect((await runCompareMoves({ measured: [{ fits: {}, channel: "position" }] }) as any).error).toMatch(/buildTrack/);
