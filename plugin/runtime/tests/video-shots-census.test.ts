@@ -31,7 +31,7 @@ describe("video.shots", () => {
   }, 60_000);
   it("no false cuts or swaps on clips that have none", async (ctx) => {
     if (!files["slide-spring"]) return ctx.skip();
-    for (const name of ["slide-ease", "slide-linear", "slide-spring", "scale", "fade", "slide-over-moving-ground"]) {
+    for (const name of ["slide-ease", "slide-linear", "slide-spring", "scale", "fade", "variable-rate", "pulled-up-24", "slide-over-moving-ground"]) {
       const r: any = await runShots({ file: files[name], outDir: path.join(dir, name), pictures: false });
       expect({ name, cuts: r.cuts.length, swaps: r.swaps.length }).toEqual({ name, cuts: 0, swaps: 0 });
     }

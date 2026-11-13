@@ -94,6 +94,13 @@ export interface Clip {
   frames: number;
   draw: (f: number) => Uint8Array;
   truth: Truth;
+  /** ffmpeg setpts expression for a variable frame rate (frames keep these times); the drawing follows them. */
+  setpts?: string;
+  /** Each frame's real time, seconds (default frame / 30). */
+  times?: number[];
+  /** For a piece made at another rate inside this file: that rate, and the frames that repeat the one before. */
+  madeAt?: number;
+  repeats?: number[];
 }
 
 const BASE = 48;
@@ -137,6 +144,21 @@ export function clips(): Clip[] {
         const fr = Uint8Array.from(f < 30 ? backA(f) : backB(f)), p = path[f]!; place(fr, f < 30 ? a : b, BASE, p.x, p.y, 1, 1); return fr;
       },
       truth: { path, cuts: [30], swaps: [45], base: BASE } }); }
+  // a variable frame rate: intervals alternate 1/30 + 8 ms and 1/30 - 8 ms; the move follows the frames' real times
+  { const patch = patchTexture(BASE, 7), back = background("flat", 11), n = 60, times = Array.from({ length: n }, (_, i) => i / FPS + (i % 2) * 0.008), path: Truth["path"] = [];
+    const a = 10 / FPS, b = 34 / FPS;
+    for (let f = 0; f < n; f++) { const k = aeEase((times[f] - a) / (b - a), 0.33, 0.8); path.push({ x: 60 + 260 * k, y: 108, scale: 1, opacity: 1 }); }
+    out.push({ name: "variable-rate", frames: n, times, setpts: `(N/${FPS}+mod(N\\,2)*0.008)/TB`,
+      draw: (f) => { const fr = Uint8Array.from(back(f)); const p = path[f]!; place(fr, patch, BASE, p.x, p.y, 1, 1); return fr; },
+      truth: { path, move: { from: 10, to: 34, kind: "ease", params: { outInfluence: 33, inInfluence: 80 } }, cuts: [], swaps: [], base: BASE } }); }
+  // a 24 fps piece inside a 30 fps file: drawn at 24, shown at 30 by repeating every fifth frame (a pull-up)
+  { const patch = patchTexture(BASE, 7), back = background("flat", 11), n = 75, src = (j: number) => Math.floor((j * 24) / FPS), path: Truth["path"] = [];
+    const a = 8 / 24, b = 27 / 24;   // the move: 24 fps frames 8 to 27 (0.333 s to 1.125 s)
+    for (let j = 0; j < n; j++) { const t = src(j) / 24, k = aeEase((t - a) / (b - a), 0.4, 0.6); path.push({ x: 60 + 260 * k, y: 108, scale: 1, opacity: 1 }); }
+    const repeats = Array.from({ length: n }, (_, j) => j).filter((j) => j > 0 && src(j) === src(j - 1));
+    out.push({ name: "pulled-up-24", frames: n, madeAt: 24, repeats,
+      draw: (f) => { const fr = Uint8Array.from(back(f)); const p = path[f]!; place(fr, patch, BASE, p.x, p.y, 1, 1); return fr; },
+      truth: { path, move: { from: 10, to: 34, kind: "ease", params: { outInfluence: 40, inInfluence: 60, startSeconds: a, endSeconds: b } }, cuts: [], swaps: [], base: BASE } }); }
   // an eased slide over a background that scrolls 3 px a frame: the tracker must follow the patch, not the ground
   out.push(moveClip("slide-over-moving-ground", 60, 10, 24, [60, 108], [320, 108], (t) => aeEase(t, 0.5, 0.5), "ease", { outInfluence: 50, inInfluence: 50 }, "texture"));
   return out;
@@ -150,6 +172,8 @@ export async function writeClip(clip: Clip, dir: string, ffmpeg = ["ffmpeg", "/o
   for (const bin of ffmpeg) {
     const ok = await new Promise<boolean | null>((resolve) => {
       const p = execFile(bin, ["-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", `${W}x${H}`, "-r", String(FPS), "-i", "-",
+        // a fine time base before and after the encoder, or the times round back to whole frames of 1/30
+        ...(clip.setpts ? ["-vf", `settb=1/90000,setpts=${clip.setpts}`, "-fps_mode", "vfr", "-enc_time_base:v", "1:90000", "-video_track_timescale", "90000"] : []),
         "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "12", "-g", "1000", file], (err) => {
         if (err && (err as NodeJS.ErrnoException).code === "ENOENT") resolve(null); else resolve(!err);
       });

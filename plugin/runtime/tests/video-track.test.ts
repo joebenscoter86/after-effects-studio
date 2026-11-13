@@ -80,6 +80,29 @@ describe("video.track", () => {
     expect(Math.abs((m.fits.linear.end - m.fits.linear.start) * fps - 12)).toBeLessThanOrEqual(1);
     expect(Math.abs(m.fits.linear.start * fps - 8)).toBeLessThan(0.2);   // on its own frame
   }, 60_000);
+  it("a variable frame rate: said, and the move fitted on the frames' own times", async (ctx) => {
+    if (!files["variable-rate"]) return ctx.skip();
+    const info: any = await probeVideo(files["variable-rate"]);
+    expect(info.variableRate).toBe(true);
+    expect(info.times[1]).toBeCloseTo(1 / 30 + 0.008, 3);
+    const r: any = await track("variable-rate", [296, 84, 48, 48]);
+    expect(r.video.variableRate).toBe(true);
+    const m = moveOf(r, "position");
+    expect(m.best).toBe("ease");
+    expect(Math.abs((m.fits.ease.end - m.fits.ease.start) * fps - 24)).toBeLessThanOrEqual(1);
+    expect(Math.abs(m.fits.ease.outInfluence - 33)).toBeLessThanOrEqual(10); expect(Math.abs(m.fits.ease.inInfluence - 80)).toBeLessThanOrEqual(10);
+  }, 60_000);
+  it("a 24 fps piece inside 30 fps: its cadence and rate, and the move fitted on its unique frames", async (ctx) => {
+    if (!files["pulled-up-24"]) return ctx.skip();
+    const r: any = await track("pulled-up-24", [296, 84, 48, 48]);
+    expect(r.cadence.period).toBe(5);
+    expect(r.cadence.originalFps).toBeCloseTo(24, 1);
+    const m = moveOf(r, "position");
+    expect(m.best).toBe("ease");
+    expect(Math.abs((m.fits.ease.end - m.fits.ease.start) - (27 - 8) / 24) * fps).toBeLessThanOrEqual(1);
+    expect(Math.abs(m.fits.ease.outInfluence - 40)).toBeLessThanOrEqual(10); expect(Math.abs(m.fits.ease.inInfluence - 60)).toBeLessThanOrEqual(10);
+    expect(Math.abs(m.distance - 260) / 260).toBeLessThan(0.02);
+  }, 60_000);
   it("a slide over a scrolling ground follows the thing, not the ground", async (ctx) => {
     if (!files["slide-over-moving-ground"]) return ctx.skip();
     const m = moveOf(await track("slide-over-moving-ground", [296, 84, 48, 48]), "position");
