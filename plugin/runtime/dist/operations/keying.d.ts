@@ -42,6 +42,27 @@ export declare const OBJECT_MATTE_SETTINGS: Record<string, MatteSetting>;
 export declare const SUBJECT_ATTENDED_NOTE: string;
 /** For the agent: how a whole piece's cut-out was rendered in production (2026-11-12). */
 export declare const SUBJECT_WHOLE_PIECE_NOTE: string;
+/** How two halves of a cut-out are joined, with what the first piece measured across the join (2026-11-12). */
+export declare const HALVES_JOIN_NOTE: string;
+/**
+ * The span subject.render_cutout renders: the layer's whole span, or
+ * `from`..`to` (comp seconds) clipped to it and snapped to frame boundaries.
+ */
+export declare function cutoutSpan(layerSpan: {
+    start: number;
+    duration: number;
+    frameRate: number;
+}, from: unknown, to: unknown): {
+    start: number;
+    duration: number;
+    frames: number;
+    firstFrame: number;
+    lastFrame: number;
+    clipped: boolean;
+    whole: boolean;
+} | {
+    error: string;
+};
 /** Said to the user before the steps, and in the skill before building starts. */
 export declare const SUBJECT_MATTE_NOTICE = "One step here needs you in After Effects: a single click on the subject, about ten seconds. Everything before and after it I do.";
 /**
@@ -313,6 +334,9 @@ export declare function checkFileFrames(n: number, cap: number): {
     frames: number[];
     step: number;
 };
+/** a* at or above this reads as skin-like warm colour; at or below SPECK_PALE_A as pale grey or white (the first piece: chair +7, skin +30). */
+export declare const SPECK_SKIN_A = 20;
+export declare const SPECK_PALE_A = 12;
 export declare function runCheckFile(args: Record<string, unknown>, io: FileIO): Promise<Json>;
 /**
  * JSX: put the rendered cut-out in the comp in place of the live matte. The

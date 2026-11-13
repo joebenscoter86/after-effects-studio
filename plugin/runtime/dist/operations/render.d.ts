@@ -105,7 +105,10 @@ export interface DeliverIO {
 }
 export declare function runDeliver(args: Record<string, unknown>, io: DeliverIO): Promise<Json>;
 /** ffprobe's streams and ffmpeg's volumedetect and ebur128 (loudness, true peak), when both are installed; only reads the file. */
-export declare function probeDelivered(file: string): Promise<{
+export declare function probeDelivered(file: string, tools?: {
+    ffmpeg: string[];
+    ffprobe: string[];
+}): Promise<{
     width: any;
     height: any;
     frameRate: number;
@@ -115,5 +118,19 @@ export declare function probeDelivered(file: string): Promise<{
     maxDb: number | null;
     loudness: Loudness | null;
 } | null>;
+export interface MuxTools {
+    ffmpeg: string[];
+    ffprobe: string[];
+}
+/**
+ * Join a rendered picture with a mix made outside After Effects: the picture
+ * copied as it is (-c:v copy), the WAV encoded to AAC at 48 kHz by ffmpeg,
+ * which writes its own edit list over its priming. offsetSeconds moves the
+ * mix: positive pads silence before it, negative trims its start, both
+ * sample-exact (adelay / atrim). Then the same file check as render.deliver,
+ * and a finding when the mix's length differs from the picture's by more
+ * than a frame.
+ */
+export declare function runMuxAudio(args: Record<string, unknown>, tools?: MuxTools): Promise<Json>;
 export {};
 //# sourceMappingURL=render.d.ts.map

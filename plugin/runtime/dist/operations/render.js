@@ -1279,8 +1279,8 @@ export async function runDeliver(args, io) {
     };
 }
 /** ffprobe's streams and ffmpeg's volumedetect and ebur128 (loudness, true peak), when both are installed; only reads the file. */
-export async function probeDelivered(file) {
-    const pr = await runTool(FFPROBE, ["-v", "error", "-show_entries", "stream=codec_type,width,height,r_frame_rate:format=duration", "-of", "json", file]);
+export async function probeDelivered(file, tools = { ffmpeg: FFMPEG, ffprobe: FFPROBE }) {
+    const pr = await runTool(tools.ffprobe, ["-v", "error", "-show_entries", "stream=codec_type,width,height,r_frame_rate:format=duration", "-of", "json", file]);
     if (!pr)
         return null;
     let j;
@@ -1299,7 +1299,7 @@ export async function probeDelivered(file) {
     let maxDb = null;
     let loudness = null;
     if (hasAudio) {
-        const vd = await runTool(FFMPEG, ["-hide_banner", "-nostats", "-i", file, "-map", "0:a:0", "-af", "volumedetect,ebur128=peak=true", "-f", "null", "-"], 600_000);
+        const vd = await runTool(tools.ffmpeg, ["-hide_banner", "-nostats", "-i", file, "-map", "0:a:0", "-af", "volumedetect,ebur128=peak=true", "-f", "null", "-"], 600_000);
         if (vd) {
             ({ meanDb, maxDb } = parseVolumedetect(vd.stderr));
             loudness = parseEbur128Summary(vd.stderr);
@@ -1344,5 +1344,200 @@ registerOp({
     ],
     toJsx: () => jsxFail("render.deliver runs in Node; call it through ae_do"),
     run: (args, transport) => runDeliver(args, liveDeliverIO(transport)),
+});
+// ---------------------------------------------------------------------------
+// render.mux_audio: a mix made outside After Effects, joined to the picture
+// ---------------------------------------------------------------------------
+/** What ffprobe says of a file's first video and first audio stream. */
+async function probeStreams(file, ffprobe) {
+    const pr = await runTool(ffprobe, [
+        "-v",
+        "error",
+        "-show_entries",
+        "stream=codec_type,codec_name,width,height,r_frame_rate,sample_rate,channels,duration:format=duration",
+        "-of",
+        "json",
+        file,
+    ]);
+    if (!pr || pr.failed)
+        return null;
+    let j;
+    try {
+        j = JSON.parse(pr.stdout);
+    }
+    catch {
+        return null;
+    }
+    const streams = j.streams ?? [];
+    const v = streams.find((x) => x.codec_type === "video") ?? null;
+    const a = streams.find((x) => x.codec_type === "audio") ?? null;
+    const fmtDur = Number(j.format?.duration ?? NaN);
+    const dur = (x) => (x && Number.isFinite(Number(x.duration)) ? Number(x.duration) : Number.isFinite(fmtDur) ? fmtDur : null);
+    let video = null;
+    if (v) {
+        const [n, d] = String(v.r_frame_rate ?? "0/1").split("/").map(Number);
+        video = { codec: v.codec_name, width: v.width, height: v.height, frameRate: d ? Math.round((n / d) * 1000) / 1000 : 0, duration: dur(v) };
+    }
+    const audio = a
+        ? { codec: a.codec_name, sampleRate: Number(a.sample_rate), channels: Number(a.channels), duration: dur(a) }
+        : null;
+    return { video, audio };
+}
+/**
+ * Join a rendered picture with a mix made outside After Effects: the picture
+ * copied as it is (-c:v copy), the WAV encoded to AAC at 48 kHz by ffmpeg,
+ * which writes its own edit list over its priming. offsetSeconds moves the
+ * mix: positive pads silence before it, negative trims its start, both
+ * sample-exact (adelay / atrim). Then the same file check as render.deliver,
+ * and a finding when the mix's length differs from the picture's by more
+ * than a frame.
+ */
+export async function runMuxAudio(args, tools = { ffmpeg: FFMPEG, ffprobe: FFPROBE }) {
+    const started = Date.now();
+    const video = args.video;
+    const audio = args.audio;
+    if (typeof video !== "string" || !path.isAbsolute(video))
+        return { ok: false, error: "`video` must be an absolute path to the rendered picture" };
+    if (typeof audio !== "string" || !path.isAbsolute(audio))
+        return { ok: false, error: "`audio` must be an absolute path to the mix (a WAV)" };
+    const offset = typeof args.offsetSeconds === "number" ? args.offsetSeconds : 0;
+    if (!Number.isFinite(offset))
+        return { ok: false, error: "`offsetSeconds` must be a number of seconds" };
+    const bitrate = typeof args.bitrate === "string" ? args.bitrate : "320k";
+    if (!/^\d+(\.\d+)?k$/.test(bitrate))
+        return { ok: false, error: "`bitrate` is a number of kilobits a second followed by k, such as '320k'" };
+    const ext = path.extname(video) || ".mp4";
+    const output = typeof args.output === "string" ? args.output : path.join(path.dirname(video), `${path.basename(video, path.extname(video))}-mix${ext}`);
+    if (!path.isAbsolute(output))
+        return { ok: false, error: "`output` must be an absolute path" };
+    const rejected = rejectedOutputPath(output);
+    if (rejected)
+        return { ok: false, error: rejected };
+    if (path.resolve(output) === path.resolve(video) || path.resolve(output) === path.resolve(audio))
+        return { ok: false, error: "`output` must be a new file, not the picture or the mix it is made from" };
+    for (const [name, f] of [["video", video], ["audio", audio]])
+        if (!(await fs.access(f).then(() => true, () => false)))
+            return { ok: false, error: `no file at ${f} (\`${name}\`)` };
+    const outputExists = await fs.access(output).then(() => true, () => false);
+    if (outputExists && args.overwrite !== true)
+        return { ok: false, error: `a file already exists at ${output}; pass overwrite: true to replace it` };
+    const version = await runTool(tools.ffmpeg, ["-hide_banner", "-version"]);
+    const probeOk = await runTool(tools.ffprobe, ["-hide_banner", "-version"]);
+    if (version === null || probeOk === null)
+        return {
+            ok: false,
+            error: "render.mux_audio needs ffmpeg and ffprobe, and " +
+                (version === null ? "ffmpeg" : "ffprobe") +
+                " is not installed (looked for it on the PATH, in /opt/homebrew/bin and /usr/local/bin). Install it (on a Mac: brew install ffmpeg) and call again. Nothing was written.",
+        };
+    const vIn = await probeStreams(video, tools.ffprobe);
+    if (!vIn?.video)
+        return { ok: false, error: `ffprobe found no picture in ${video}` };
+    const aIn = await probeStreams(audio, tools.ffprobe);
+    if (!aIn?.audio)
+        return { ok: false, error: `ffprobe found no sound in ${audio}` };
+    const fps = vIn.video.frameRate || 30;
+    const frame = 1 / fps;
+    // The mix moved by the offset, sample-exact, and resampled to 48 kHz.
+    const rate = aIn.audio.sampleRate || 48_000;
+    const shift = Math.round(Math.abs(offset) * rate);
+    const filters = [];
+    if (offset > 0)
+        filters.push(`adelay=delays=${shift}S:all=1`);
+    if (offset < 0)
+        filters.push(`atrim=start_sample=${shift}`, "asetpts=PTS-STARTPTS");
+    const tmp = path.join(path.dirname(output), `.${path.basename(output, path.extname(output))}.mux${path.extname(output) || ext}`);
+    const argv = [
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-y",
+        "-i",
+        video,
+        "-i",
+        audio,
+        "-map",
+        "0:v:0",
+        "-map",
+        "1:a:0",
+        "-c:v",
+        "copy",
+        ...(filters.length ? ["-af", filters.join(",")] : []),
+        "-c:a",
+        "aac",
+        "-b:a",
+        bitrate,
+        "-ar",
+        "48000",
+        tmp,
+    ];
+    const r = await runTool(tools.ffmpeg, argv, 1_800_000);
+    if (r === null || r.failed) {
+        await fs.rm(tmp, { force: true });
+        return { ok: false, error: `ffmpeg could not join the picture and the mix: ${(r?.stderr ?? "ffmpeg is not installed").trim().slice(0, 400)}`, command: ["ffmpeg", ...argv].join(" ") };
+    }
+    await fs.rename(tmp, output);
+    // The file check, as render.deliver's, against the picture it was made from.
+    const probe = await probeDelivered(output, tools);
+    const sync = await readSoundSync(output).catch(() => null);
+    const out = await probeStreams(output, tools.ffprobe);
+    const mixSeconds = aIn.audio.duration !== null ? aIn.audio.duration + offset : null;
+    const pictureSeconds = vIn.video.duration;
+    const check = checkDelivered({ width: vIn.video.width, height: vIn.video.height, frameRate: fps, duration: pictureSeconds ?? 0, hasSound: true, soundLayers: [path.basename(audio)] }, {
+        width: probe?.width ?? out?.video?.width ?? 0,
+        height: probe?.height ?? out?.video?.height ?? 0,
+        frameRate: probe?.frameRate ?? out?.video?.frameRate ?? 0,
+        duration: probe?.duration ?? 0,
+        hasAudio: probe?.hasAudio ?? !!out?.audio,
+        level: probe && probe.meanDb !== null && probe.maxDb !== null ? { source: "ffmpeg", meanDb: probe.meanDb, maxDb: probe.maxDb } : null,
+        loudness: probe?.loudness ?? null,
+        sync,
+        alignment: null,
+    });
+    const r3 = (v) => Math.round(v * 1000) / 1000;
+    if (mixSeconds !== null && pictureSeconds !== null && Math.abs(mixSeconds - pictureSeconds) > frame + 1e-6) {
+        const diff = mixSeconds - pictureSeconds;
+        check.findings.push({
+            kind: "mix length",
+            reading: `The mix ${offset !== 0 ? `(moved ${offset} s) ` : ""}runs ${r3(mixSeconds)} s and the picture ${r3(pictureSeconds)} s: ` +
+                `${r3(Math.abs(diff))} s (${Math.round((Math.abs(diff) / frame) * 10) / 10} frames) ${diff > 0 ? "longer" : "shorter"}, more than a frame. ` +
+                (diff > 0 ? "The file runs on past the picture's last frame with sound over a held or missing picture." : "The end of the picture is silent.") +
+                " Check that the mix is the one for this cut.",
+        });
+        check.passed = false;
+        check.reading = check.findings.map((f) => f.reading).join(" ");
+    }
+    return {
+        ok: true,
+        output,
+        video: { path: video, ...vIn.video },
+        audio: { path: audio, ...aIn.audio, offsetSeconds: offset, encodedAs: `AAC ${bitrate} at 48 kHz` },
+        mixLength: mixSeconds !== null && pictureSeconds !== null ? { mixSeconds: r3(mixSeconds), pictureSeconds: r3(pictureSeconds), differenceFrames: Math.round(((mixSeconds - pictureSeconds) / frame) * 10) / 10 } : null,
+        check,
+        timing: { totalMs: Date.now() - started },
+        next: check.passed
+            ? "Joined and checked. Watch it once at speed before calling it done."
+            : "Stop: tell the user what the check found, in plain words, before calling it delivered.",
+    };
+}
+registerOp({
+    name: "render.mux_audio",
+    category: "render",
+    description: "Join a rendered picture with a mix made outside After Effects (a WAV): the recipe is render.deliver for the picture, then this, then look at its check. " +
+        "The picture is copied as it is (-c:v copy, nothing re-encoded); the mix is encoded to AAC at 48 kHz by ffmpeg, which writes its own edit list over the encoder's priming, so the sound sits on its frame. " +
+        "offsetSeconds moves the mix, sample-exact: positive pads silence before it, negative trims its start. " +
+        "Then the same file check as render.deliver on the new file: size, frame rate and duration against the picture, the sound's edit list read back (check.file.sync), its level, and its loudness (integrated LUFS, loudness range and true peak from ebur128, check.file.loudness); and a 'mix length' finding when the mix runs more than one frame longer or shorter than the picture. " +
+        "Needs ffmpeg and ffprobe: without them it says so and writes nothing. Does not touch the After Effects project.",
+    readOnly: true,
+    params: [
+        { name: "video", type: "string", description: "Absolute path of the rendered picture (from render.deliver).", required: true },
+        { name: "audio", type: "string", description: "Absolute path of the mix, a WAV made outside After Effects.", required: true },
+        { name: "output", type: "string", description: "Absolute path for the joined file (default: <video name>-mix beside the picture, same extension).", required: false },
+        { name: "overwrite", type: "boolean", description: "Replace an existing file at output (default false: refuse).", required: false },
+        { name: "offsetSeconds", type: "number", description: "Move the mix against the picture, seconds: positive starts it later (silence before), negative trims its start (default 0).", required: false },
+        { name: "bitrate", type: "string", description: "AAC bitrate, such as '320k' (default '320k').", required: false },
+    ],
+    toJsx: () => jsxFail("render.mux_audio runs in Node; call it through ae_do"),
+    run: (args) => runMuxAudio(args),
 });
 //# sourceMappingURL=render.js.map

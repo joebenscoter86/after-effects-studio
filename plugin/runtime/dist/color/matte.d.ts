@@ -1,5 +1,5 @@
 import type { DecodedPng } from "./png16.js";
-import type { Rgb } from "./sheet.js";
+import { type Rgb } from "./sheet.js";
 export type Screen = "green" | "blue";
 /** Where the matte is read from: the capture's alpha, or its luminance (Keylight's matte views). */
 export type MatteFrom = "alpha" | "luma";
@@ -409,6 +409,17 @@ export interface SpeckPiece {
     width: number;
     height: number;
     area: number;
+    /**
+     * Mean CIELAB (D65, from the display sRGB values) over the piece's opaque
+     * pixels, when the picture's RGB was given: tells a pale grey remnant (a
+     * chair, a* about +7 on the first piece) from skin (a* about +30).
+     */
+    colour?: {
+        L: number;
+        a: number;
+        b: number;
+        pixels: number;
+    };
 }
 /**
  * Small opaque pieces apart from the main cut-out, or joined to it only by a
@@ -417,7 +428,7 @@ export interface SpeckPiece {
  * box around the opaque pixels and grows labels back only over the pixels
  * the erosion took (about 5.5 ms a 1080 x 1920 frame, 1.8 s for 320).
  */
-export declare function speckPieces(alpha: Float64Array, width: number, height: number, opts?: Partial<typeof SPECK_DEFAULTS>): SpeckPiece[];
+export declare function speckPieces(alpha: Float64Array, width: number, height: number, opts?: Partial<typeof SPECK_DEFAULTS>, rgb?: Float64Array): SpeckPiece[];
 /** The top row of the subject (alpha 0.5 or more), or -1 when there is none. */
 export declare function subjectTop(alpha: Float64Array, width: number, height: number): number;
 /** The frame whose matte overlaps the reference (the click frame) least: where the subject has moved furthest. */
