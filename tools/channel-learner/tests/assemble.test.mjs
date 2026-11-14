@@ -66,3 +66,27 @@ test('assemble: recipes whose checks pass and are newer are collected', () => {
     assert.match(fs.readFileSync(path.join(dir, 'out', 'vid9.md'), 'utf8'), /Technique 02/);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
+
+test('assemble: proven recipes are counted, and proven needs a recorded acceptance', () => {
+  const dir = study({ '01-a': { check: pass('01-a') }, '02-b': { check: pass('02-b') }, '03-c': { check: pass('03-c') } });
+  const setStatus = (id, line) => {
+    const p = path.join(dir, 'recipes', `${id}.md`);
+    const when = fs.statSync(p).mtime;
+    fs.writeFileSync(p, `## Technique ${id.slice(0, 2)}\n${line}\njobs: test\n`);
+    fs.utimesSync(p, when, when);
+  };
+  try {
+    setStatus('01-a', 'status: proven (accepted by Joe 2026-11-14: built in After Effects, compared with the result)');
+    setStatus('02-b', 'status: unproven');
+    setStatus('03-c', 'status: unproven');
+    assemble(dir, path.join(dir, 'out'));
+    const out = fs.readFileSync(path.join(dir, 'out', 'vid9.md'), 'utf8');
+    assert.match(out, /^# Techniques from one video \(3 recipes, 1 proven\)/);
+    assert.doesNotMatch(out, /none has been accepted/);
+    assert.match(out, /\| 01 \| Technique 01 \| test \| 1 \| proven \|/);
+    assert.match(out, /\| 02 \| Technique 02 \| test \| 1 \| unproven \|/);
+
+    setStatus('03-c', 'status: proven');
+    assert.deepEqual(recipeProblems(dir), [{ recipe: '03-c.md', reason: 'proven without a recorded acceptance' }]);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});

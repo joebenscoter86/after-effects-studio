@@ -21,6 +21,9 @@ The first video's 25 recipes all passed the check. Building them found three rec
 - **Why.** The tutorial demonstrates a step inside a finished scene. The writer scoped the recipe to the step, set the shadows aside as "the next tip", and left "do the other discs carry the styles?" as an unknown the frame could answer. The checker checked claims, not sufficiency. The builder treated the rest as scene. The reviewer was told to judge "the technique, not the artwork".
 - **Rule.** The unit of a recipe is the result frame, not the demonstrated step. Writer: account for every trait of the result (`distil.md`, first item of the build-failures list; the `layout` line). Checker: check 8, "would the steps give this picture?". Builder: build the whole described picture (`prove-run.md` step 4). Reviewer: judge the look first, in plain words, and name what the recipe does not produce (`prove-review.md`, `the look` and `missing from the recipe` lines); `matches` now needs the look.
 
+- **Confirmed (2026-11-14).** With the recipe widened to the whole result and nothing else changed, a builder that never saw the video rebuilt it and the owner, scrubbing it in After Effects, called it perfect. The steps were never the problem; the scope was.
+- **What the rebuild still had to invent.** The video gives no values for the scene's shadows. The builder found them (CC Radial Fast Blur Amount 95 to 97, centre about two radii out, then Gaussian Blur about 25, opacity 16 to 27 %) and one trap: Amount is steep, 80 gives almost no streak. These are now build notes in the recipe. Rule: when the result's look depends on values the video never shows, the recipe names the effect and the measured target, and the first build's working values are written back as build notes so the next builder does not search again.
+
 ### 2. A shown setting did not give the shown result (14: Shadow Darkness 45 %)
 - The panel shows 45 %. The result's shadow measures 0.22 of the floor level; 45 % gives 0.55; 78 % matched. Rule: measure the effect on the result frame and compare (`distil.md`; check 9). A value found only by building goes in as a build note beside the tutorial's value, never over it.
 
@@ -45,7 +48,10 @@ The first video's 25 recipes all passed the check. Building them found three rec
 ### 9. After Effects scripting facts that cost rounds
 - Point controls and `fromComp`, match names, font substitutes, layer styles by menu command, cameras, one call per turn. Kept in `prove-run.md` under "What earlier builds learned".
 
-### 10. The orchestrator's own slips
+### 10. Only the owner proves a recipe
+- `status: proven` counts only with the owner's acceptance and its date written on the status line; `assemble.mjs` refuses a bare "proven" (test in `tests/assemble.test.mjs`). The draft's header counts proven recipes.
+
+### 11. The orchestrator's own slips
 - Times written from guesses ran an hour fast: take every time from `date`.
 - Verdicts were relayed to the owner before anyone had looked at a pair: look at each pair yourself before reporting it as matching, and say which ones you have not seen.
 - Recipes edited after their check: `assemble.mjs` refuses them until a check is newer than the recipe.

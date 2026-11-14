@@ -11,6 +11,13 @@ const readIf = (p) => (fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : null);
 const mtime = (p) => fs.statSync(p).mtimeMs;
 
 /** Recipes that may not be assembled, each with its reason, in file order. */
+// "status: proven" counts only with the acceptance written beside it, e.g.
+// "status: proven (accepted by Joe 2026-11-14: ...)"; only the owner proves a recipe.
+function statusOf(text) {
+  const line = (text.match(/^status:\s*(.+)$/m) || [, 'unproven'])[1];
+  return { proven: /^proven\b/.test(line), accepted: /\baccepted\b.*\d{4}-\d{2}-\d{2}/.test(line) };
+}
+
 export function recipeProblems(study) {
   const files = fs.readdirSync(path.join(study, 'recipes')).filter((f) => f.endsWith('.md')).sort();
   const out = [];
@@ -29,6 +36,10 @@ export function recipeProblems(study) {
       const newest = Math.max(mtime(checkPath), layout !== null ? mtime(layoutPath) : -Infinity);
       if (newest < mtime(path.join(study, 'recipes', f))) reason = 'edited after its check';
     }
+    if (!reason) {
+      const status = statusOf(fs.readFileSync(path.join(study, 'recipes', f), 'utf8'));
+      if (status.proven && !status.accepted) reason = 'proven without a recorded acceptance';
+    }
     if (reason) out.push({ recipe: f, reason });
   }
   return out;
@@ -40,6 +51,7 @@ export function assemble(study, outDir) {
   if (problems.length) throw new Error(`refused: ${problems.map((p) => `${p.recipe} (${p.reason})`).join('; ')}`);
   const files = fs.readdirSync(path.join(study, 'recipes')).filter((f) => f.endsWith('.md')).sort();
   const rows = [], bodies = [];
+  let proven = 0;
   for (const f of files) {
     const n = f.slice(0, 2);
     const text = fs.readFileSync(path.join(study, 'recipes', f), 'utf8').trim();
@@ -47,14 +59,16 @@ export function assemble(study, outDir) {
     const round = (check.match(/^round:\s*(\d)/m) || [, '1'])[1];
     const name = (text.match(/^## (.+)$/m) || [, f])[1];
     const jobs = (text.match(/^jobs: (.+)$/m) || [, ''])[1];
-    rows.push(`| ${n} | ${name} | ${jobs} | ${round} |`);
+    const status = statusOf(text).proven ? 'proven' : 'unproven';
+    if (status === 'proven') proven += 1;
+    rows.push(`| ${n} | ${name} | ${jobs} | ${round} | ${status} |`);
     bodies.push(text);
   }
   const head = [
-    `# Techniques from one video (${files.length} recipes, all unproven)`, '',
-    'Written by the channel learner from the video\'s narration and screen together, then checked against the video by a second reader. Every recipe here passed that check; none has been accepted by Joe, and none is in the plugin. `status: unproven` means it has not been built in After Effects and compared with the tutorial\'s own result.', '',
+    `# Techniques from one video (${files.length} recipes, ${proven ? `${proven} proven` : 'all unproven'})`, '',
+    `Written by the channel learner from the video\'s narration and screen together, then checked against the video by a second reader. Every recipe here passed that check; none is in the plugin. \`status: proven\` means it was built in After Effects from the recipe alone, compared with the tutorial\'s own result, and accepted by Joe (${proven} of ${files.length}); \`status: unproven\` means it has not been.`, '',
     'Each step is marked `said` (narrated), `shown` (on screen; `fNNNNNN` is a frame in the local study folder, frame number divided by the video\'s frame rate is seconds) or `inferred` (our reading). The `source` and frame references are for checking and stay out of the plugin. Credits: `CREDITS.md`.', '',
-    '| # | Technique | Jobs | Check passed in round |', '|---|---|---|---|', ...rows, '',
+    '| # | Technique | Jobs | Check passed in round | Status |', '|---|---|---|---|---|', ...rows, '',
   ];
   fs.mkdirSync(outDir, { recursive: true });
   fs.writeFileSync(path.join(outDir, `${info.id}.md`), `${head.join('\n')}\n${bodies.join('\n\n')}\n`);
