@@ -16,6 +16,10 @@ You run the recipe work for one video whose study folder (`STUDY`) is already ga
 
 ## Rules
 
+- Do not report back until the assemble step has run, or you can name the recipe and the reason it cannot. Waiting for your agents is not a reason to report.
+- Tell every agent to keep its scratch files under its own names inside its own `STUDY/scratch/<n>/` folder, never a shared folder: two writers once overwrote each other's script.
+- When no clean result frame exists for a technique, the recipe says so and names the best frame as a reference, with what in it is not the technique. That passes; a recipe that pretends otherwise does not.
+
 - No git commands. No After Effects. Do not edit anything tracked except through the assemble step.
 - You do not read frames yourself except to settle a disagreement between a writer and a checker.
 - Keep your own messages to agents short and specific; pass on the checker's evidence (frame numbers, times), not a summary of it.

@@ -31,6 +31,7 @@ You turn part of one tutorial video into technique recipes for a motion designer
 - **The finished example made a different way.** Sometimes the author demonstrates one route (keyframes) while the finished example on screen is driven another way (an expression, a preset). Say which is which and what is not shown.
 - **Eight or more words in a row from the narration,** or the example's own on-screen sentence, or a name from the creator's project or products.
 - **"Longest on" guessed.** Time it: seconds on screen for each part, from the frame numbers.
+- **The finished example is a different file.** The clip at the end of a technique is often a pre-made finished project, not the build you just watched: more layers, other values, a camera move, a grade. Say plainly which the result shows, and give both sets of values when both are on screen.
 - **No sizes.** Builders working from the first video's recipes had to guess every size (a ring's diameter, how far a pivot sits from its layer), because tutorials rarely say them. Measure the main elements on the result frame as shares of the picture and give them in `layout`.
 
 ## Output

@@ -8,3 +8,4 @@ The recipes in this folder were learned from public tutorials. The techniques ar
 | `eoBEBx1PbS4.md` | [SonduckFilm](https://www.youtube.com/channel/UC5DmsBrVi62DWBASLK5gMEw) | [Create Ultra 3D Typography in the NEW After Effects 27 Update!](https://www.youtube.com/watch?v=eoBEBx1PbS4) |
 | `il_OcNyqDOE.md` | [SonduckFilm](https://www.youtube.com/channel/UC5DmsBrVi62DWBASLK5gMEw) | [Make Cinematic Animation-Style Motion Graphics in After Effects](https://www.youtube.com/watch?v=il_OcNyqDOE) |
 | `8oVLS0ZlKC4.md` | [SonduckFilm](https://www.youtube.com/channel/UC5DmsBrVi62DWBASLK5gMEw) | [5 Hyper-Cinematic Effects You Should Know in After Effects](https://www.youtube.com/watch?v=8oVLS0ZlKC4) |
+| `ZqRE3ho8iP4.md` | [SonduckFilm](https://www.youtube.com/channel/UC5DmsBrVi62DWBASLK5gMEw) | [Make Trendy Carousel Motion Graphics in After Effects](https://www.youtube.com/watch?v=ZqRE3ho8iP4) |
