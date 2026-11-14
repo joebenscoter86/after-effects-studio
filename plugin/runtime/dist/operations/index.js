@@ -12,6 +12,7 @@ import "./project.js";
 import "./text.js";
 import "./mask.js";
 import "./keying.js";
+import "./look-sheet.js";
 import "./command.js";
 import "./property.js";
 import "./marker.js";
