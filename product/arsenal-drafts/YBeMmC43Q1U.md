@@ -587,7 +587,7 @@ variations: none given
 pitfalls: Grow Bounds must be at the top of the stack (said). It only helps effects limited by the layer's bounding box (said).
 longest on: the frustration of clipped effects and placing Grow Bounds first in the stack
 build notes: Script: var gb = layer.property("ADBE Effect Parade").addProperty("ADBE Grow Bounds"); gb.moveTo(1); gb.property("Pixels").setValue(2050). Very large values cost render time; use the smallest value that removes the clip (inferred, general advice). In the tutorial the layers are 3D under a camera (shown f018855); a 2D case is not shown.
-result: start=318 end=321 still crop=860,352,1504,842 frame=f019326 (whole landscape at 43.5 %; repaired shadows show as thin dark streaks down the hills; mask the dotted selection box over the sun). Close-up reference: f019155 at 200 %, shadow now spreads past the old box edge, compare with f018855 (transform gizmo in both)
+result: start=322.0 end=322.4 still crop=860,352,1504,842 frame=f019326 (whole landscape at 43.5 %; repaired shadows show as thin dark streaks down the hills; mask the dotted selection box over the sun). Close-up reference: f019155 at 200 %, shadow now spreads past the old box edge, compare with f018855 (transform gizmo in both)
 before: f018855 (shadow ends in a hard clipped edge on the hill, viewer zoomed to 200%)
 unknowns: how the shadow copy is made and positioned (outside this tip); the Pixels value before scrubbing is partly covered by the cursor in f019095; it reads about 10, the effect default (shown, partly). Fill colour is a dark near-black grey (shown f018855), exact value unreadable.
 

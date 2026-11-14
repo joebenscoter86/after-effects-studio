@@ -7,14 +7,14 @@ Each step is marked `said` (narrated), `shown` (on screen; `fNNNNNN` is a frame 
 | # | Technique | Jobs | Check passed in round |
 |---|---|---|---|
 | 01 | Bevelled 3D text wrapped in a tiled material | type; texture; depth and finish | 3 |
-| 02 | Backlit environment light over a shadow-only floor | shadows and light; depth and finish; camera and 3D | 2 |
+| 02 | Backlit environment light over a shadow-only floor | shadows and light; depth and finish; camera and 3D | 4 |
 | 03 | Shadowless parallel light as an extra backlight | shadows and light; depth and finish | 2 |
 | 04 | Soft front fill from a point light with smooth falloff | shadows and light; depth and finish; camera and 3D | 2 |
 | 05 | Letters tumble in from behind the camera, one after another | type; camera and 3D; energy and impact | 2 |
 | 06 | Depth-of-field camera on a null, pushed in through the shot | camera and 3D; depth and finish | 2 |
 | 07 | Warm-sided metal title: textured faces, plain tinted sides | depth and finish; type; glow and colour | 2 |
-| 08 | Hollow chrome outline title: only the extruded edge renders | depth and finish; type; shadows and light | 2 |
-| 09 | Spinning ring of standing 3D letters, stackable | camera and 3D; type; layout and repetition; trending formats | 2 |
+| 08 | Hollow chrome outline title: only the extruded edge renders | depth and finish; type; shadows and light | 3 |
+| 09 | Spinning ring of standing 3D letters, stackable | camera and 3D; type; layout and repetition; trending formats | 3 |
 
 ## Bevelled 3D text wrapped in a tiled material
 id: 01-bevelled-3d-text-material-texture
@@ -75,7 +75,7 @@ ingredients:
 - Environment light — built-in; new light layer, Light Type: Environment (shown f006771, f006951). Menu path Layer > New > Light... is inferred.
 - Solid layer, comp size, pale sky blue — built-in (shown f007128). Menu path Layer > New > Solid... is inferred.
 - Duplicate of that solid made 3D as a floor, with Material Options > Accepts Shadows: Only — built-in (shown f008167)
-- Builds on 01 (Advanced 3D renderer, extruded textured text). The word here is about 74% of the comp's width against about 55% in 01, so it was scaled up off screen between the two (measured; how is not shown)
+- Builds on 01 (Advanced 3D renderer, extruded textured text). The word ends up at about 74% of the comp's width, up from 01's size of about 52–55%. It keeps 01's size inside this technique (f006951, f007357) and grows across an edit cut at about 122.7–123.2 s, after the backdrop is made and before the floor. At the cut the viewer zoom changes from 63.3% to 44.7% while the word stays the same size on screen (measured; how the change was made is not shown)
 steps:
 1. Add a light and in Light Settings set Light Type to Environment (said; shown f006771 menu open on Environment, f006951 the layer "Environment Light 1" in the timeline)
    - Source: Default (no image) (shown f009210)
@@ -109,7 +109,7 @@ longest on: Building the backdrop and floor — about 26 s (113.7–139.8 s), ve
 layout: picture = the comp viewer, whole 16:9 comp visible at f009845 (picture box x 690–2160, y 330–1156 in the full frame). The word spans about 13% to 87% of the picture width (centred) and about 33% to 66% of the picture height; its base sits at about 66%, which is also where the floor meets the backdrop. The soft shadows start at the letter bases and darken the floor from about 65% down to the bottom edge, densest between about 66% and 80% (measured)
 build notes: comp.layers.addSolid([0.71,0.906,0.988], name, 1920, 1080, 1) for the backdrop; duplicate(), threeDLayer = true, Transform > X Rotation 90, Position [960,721,0], Scale [627,627,627]. Material Options > Accepts Shadows takes Off/On/Only (Only is the third state, value 2 — inferred). Light: comp.layers.addLight(name, [960,540]) then lightType = LightType.ENVIRONMENT (needs a recent After Effects; inferred); Transform > X Rotation -25, Y Rotation keyed 235 → 195 over 0–4.96 s with linear keys; Light Options > Intensity 187. Requires the comp renderer to be Advanced 3D (from 01).
 result: start=161.5 end=165.5 animated crop=700,390,1450,760 frame=f009845
-before: f006951 (textured text on black, environment light just added, no floor)
+before: f006951 (textured text on black, environment light just added, no floor; the word is still 01's smaller size, before the cut at about 122.7–123.2 s)
 unknowns: Light Settings dialog values other than type (hidden behind the open menu in f006771); floor Y position was dragged by eye (721 is where it landed); whether the floor Position's 721 vs 719 seen mid-drag matters.
 
 ## Shadowless parallel light as an extra backlight

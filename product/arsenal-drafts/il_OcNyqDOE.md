@@ -13,12 +13,12 @@ Each step is marked `said` (narrated), `shown` (on screen; `fNNNNNN` is a frame 
 | 05 | Endless wind sway from two rotation keys and a ping-pong loop | energy and impact; workflow | 3 |
 | 06 | Grass rippling in the wind with Wave Warp | energy and impact; texture | 3 |
 | 07 | Leaves blown across the frame with textured particles | B-roll scenes; layout and repetition | 3 |
-| 08 | Rain slanted to match the wind | B-roll scenes; texture | 1 |
-| 09 | Small body shifts on a wide-shot figure with puppet pins | B-roll scenes | 2 |
-| 10 | Film-stock grain and mood finish on a top adjustment layer | depth and finish; texture; glow and colour | 1 |
+| 08 | Rain slanted to match the wind | B-roll scenes; texture | 2 |
+| 09 | Small body shifts on a wide-shot figure with puppet pins | B-roll scenes | 3 |
+| 10 | Film-stock grain and mood finish on a top adjustment layer | depth and finish; texture; glow and colour | 2 |
 | 11 | Long-lens close-up that matches the wide shot | camera and 3D; depth and finish; B-roll scenes; workflow | 2 |
 | 12 | Wind in a still character's hair | B-roll scenes; energy and impact; workflow | 2 |
-| 13 | Side-light a face with a matted Curves layer | shadows and light; glow and colour; depth and finish | 1 |
+| 13 | Side-light a face with a matted Curves layer | shadows and light; glow and colour; depth and finish | 2 |
 
 ## Found vector art, one object per file, laid out as separate layers
 id: 01-vector-art-split-into-layers

@@ -7,9 +7,9 @@ Each step is marked `said` (narrated), `shown` (on screen; `fNNNNNN` is a frame 
 | # | Technique | Jobs | Check passed in round |
 |---|---|---|---|
 | 01 | Soft one-way blurred dark shapes with a bright stroke fringe on a pale ground | depth and finish; glow and colour; lines and shapes | 2 |
-| 02 | Breathing glow, darkest radial blur and fine grain finish for bright scenes | glow and colour; depth and finish; texture | 2 |
+| 02 | Breathing glow, darkest radial blur and fine grain finish for bright scenes | glow and colour; depth and finish; texture | 3 |
 | 03 | Drifting pockets of light from heavily blurred edge shapes | shadows and light; depth and finish; glow and colour | 3 |
-| 04 | Liquid merge of outlined circles with blur and choke | lines and shapes; depth and finish; B-roll scenes | 2 |
+| 04 | Liquid merge of outlined circles with blur and choke | lines and shapes; depth and finish; B-roll scenes | 3 |
 | 05 | A dark mass split open behind a travelling ball | lines and shapes; transitions; depth and finish | 3 |
 | 06 | Turning a crude gradient disc into a grainy glowing orb | depth and finish; glow and colour; texture | 2 |
 
