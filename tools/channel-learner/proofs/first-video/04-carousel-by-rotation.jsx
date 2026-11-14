@@ -96,13 +96,21 @@ for (i = 1; i < N; i++) {
 // Steps 4-6: top copy 0 deg, each one below a further -STEP.
 // SUBSTITUTE: the Ctrl+Alt / Cmd+Option drag on Rotation across the selected layers; a loop sets the same values.
 var k, lay, num, indexNote = "ok";
+var IDX_OFFSET = args.indexOffset !== undefined ? args.indexOffset : 4;
 for (k = 1; k <= N; k++) {
   lay = c.layer(k);
-  num = (k < 10 ? "0" : "") + k;
-  lay.name = "phrase " + num;
+  lay.name = "phrase " + (k < 10 ? "0" : "") + k;
+  // Final fix (2026-11-14): the index counts down the list on screen. Copy k sits (1 - k) steps below the level slot
+  // (mod N: copy 2 is one step above it, copy N one step below), so numbering by stack order ran 04, 03, 02, 01, 55, 54
+  // down the screen and the pointer read a countdown as the wheel turned. The number is now the copy's place down the
+  // list, offset so 01 is the topmost row in view at the start (four rows above the level slot, at about 26 deg, faded):
+  // 02 .. 04 above, 05 at the pointer, 06 .. below, rising to 09 at the pointer by the end. Rotations are untouched.
+  var below = ((1 - k) % N + N) % N; if (below > N / 2) below -= N;
+  var disp = ((below + IDX_OFFSET) % N + N) % N + 1;
+  num = (disp < 10 ? "0" : "") + disp;
   P.tf(lay, "ADBE Rotate Z").setValue(-(k - 1) * STEP);
   // Rebuild: each copy reads its own phrase plus a small index (Space Mono, 0.016 h cap height, 60 %).
-  var ph = PHRASES[(k - 1) % PHRASES.length];
+  var ph = PHRASES[(disp - 1) % PHRASES.length];
   var tdp = lay.property("ADBE Text Properties").property("ADBE Text Document");
   var td = tdp.value;
   td.text = ph + "  " + num;

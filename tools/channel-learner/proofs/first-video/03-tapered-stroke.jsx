@@ -124,7 +124,23 @@ var co = arc("arc core");
 var tech = P.effect(co, "Slider Control");
 tech.name = "TECH taper";
 co.property("ADBE Effect Parade").property("TECH taper").property(1).setValue(100);
-blueGlow(co, 40, args.coreRadius || 40, args.coreIntensity || 3); // Polish: 20/2 -> 40/3, a hotter crest
+// Final fix (2026-11-14): the recipe's blur stack sits on the visible stroke itself, before its Glow (step 2: Gaussian
+// Blur 9.9 with Repeat Edge Pixels, CC Radial Fast Blur Amount 62, Brightest). Before this it was only on the bloom
+// copy under the planet, so the visible rim was a crisp hairline. The Radial Blur centre is the arc's circle centre
+// (as on the bloom), so its rays run along the radii and throw outward. args.coreBlur === false gives the old core.
+if (args.coreBlur !== false) {
+  var cgb = P.effect(co, "Gaussian Blur");
+  co.property("ADBE Effect Parade").property(cgb.propertyIndex).property("Blurriness").setValue(9.9);
+  co.property("ADBE Effect Parade").property(cgb.propertyIndex).property("Repeat Edge Pixels").setValue(1);
+  var crb = P.effect(co, "CC Radial Fast Blur");
+  co.property("ADBE Effect Parade").property(crb.propertyIndex).property("Center").setValue(args.coreRfbCenter || args.rfbCenter || [CX, CY]);
+  co.property("ADBE Effect Parade").property(crb.propertyIndex).property("Amount").setValue(62);
+  co.property("ADBE Effect Parade").property(crb.propertyIndex).property("Zoom").setValue(2); // Brightest
+}
+// Final fix: with the blur stack on the core, the Polish Glow (40 %, 40, 3) clipped the whole arc white to 0.25 across
+// and the taper showed only in the last stretch; threshold 50 %, radius 40, intensity 1.3 leaves the crest at 250 with
+// a bright band 0.028 h deep and lets the brightness fall steadily outward (see build-notes Final fixes).
+blueGlow(co, args.coreThreshold || 50, args.coreRadius || 40, args.coreIntensity || 1.3);
 
 // Headline: Poppins SemiBold, cap height about 0.055 h (85 px type), line spacing 1.15, centred, #E9EEF8, centred
 // at 0.57 down (layout 0.39-0.75); the last word in #8FC4FF.

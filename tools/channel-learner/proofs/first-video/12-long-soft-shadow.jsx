@@ -53,9 +53,15 @@ P.tf(page, "ADBE Position").setValue([W / 2, H / 2]);
 // Directions: the recipe's layout measures 10 (top-left block), 38 (tall right bar), 40 (small lower block) and 71 (left
 // bar). The brief asks for one light from the upper left with every shadow down and to the right, matching the drawn
 // side faces; so the recipe's per-object variety is kept but pulled toward the brief's light (args.dirs overrides).
-var DIRS = args.dirs || [22, 38, 40, 60, 48, 30];
+// Final fix (2026-11-14): the recipe's measured directions are fixed and the brief's light no longer pulls them: top-left
+// block 10 (recipe 7-12; was 22), pillar 38, cube 40, bar left 71 (recipe about 71; was 60). The pill and wide slab have
+// no recipe figure and keep 48 and 30.
+var DIRS = args.dirs || [10, 38, 40, 71, 48, 30];
 var OBJ = [
-  { file: "block-square.png", name: "block square", s: 6.5, x: 0.145, y: 0.155 },
+  // Final fix (2026-11-14), art side: the square block is scaled 6.5 -> 4.8 % (about 110 -> 82 px). At 6.5 % its shadow's
+  // half-strength band measured 0.12 h deep beside it against the recipe's 0.082 h: the band is as deep as the cut-out's
+  // silhouette, and the Gaussian and Radial Blur values are fixed, so the object shrinks, not the shadow's settings.
+  { file: "block-square.png", name: "block square", s: args.blockScale || 4.8, x: 0.145, y: 0.155 },
   { file: "pillar-terracotta.png", name: "pillar", s: 8.9, x: 0.89, y: 0.315 },
   { file: "cube-sage.png", name: "cube sage", s: 4.2, x: 0.335, y: 0.805 },
   { file: "bar-long.png", name: "bar left", s: 10.6, x: 0.11, y: 0.63 },
@@ -136,7 +142,9 @@ for (k = 0; k < OBJ.length; k++) {
   fxp(s, "Gaussian Blur", "Repeat Edge Pixels").setValue(1);
   // Second copy only tops up the density: one copy measured 30 / 21 / 15 % peak darkening at 0.19 / 0.22 / 0.25 w below
   // the top-left block (reference 36 / 25 / 17 %), two full copies 51 / 38 / 28 %; the top-up copy runs at args.stackOpacity.
-  P.tf(s, "ADBE Opacity").setValue(stk > 1 ? (args.stackOpacity !== undefined ? args.stackOpacity : 25) : OPAC);
+  // Final fix: the smaller square block carries less mass, so its top-up copy runs stronger to keep the measured darkness.
+  var STACKOP = args.stackOpacities || { "block square": 85 };
+  P.tf(s, "ADBE Opacity").setValue(stk > 1 ? (STACKOP[o.name] !== undefined ? STACKOP[o.name] : (args.stackOpacity !== undefined ? args.stackOpacity : 25)) : OPAC);
   if (MULT) s.blendingMode = BlendingMode.MULTIPLY;
   shadows.push(s.name);
   }
