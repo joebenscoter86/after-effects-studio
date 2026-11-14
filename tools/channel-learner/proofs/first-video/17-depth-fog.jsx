@@ -54,10 +54,10 @@ var s = P.freshComp("17 fog scene", 1920, 1080, fps, 4, [0.02, 0.05, 0.08]);
         (it.name === "17 night" || it.name === "17 ground")) it.remove();
   }
 })();
-// Review correction: sky 10,26,36 -> 12,42,60, a little lighter than the fog colour (12,38,55), so full fog no longer
-// brightens the gaps between the trunks; the fog's lift then comes from the darks. (The review's 12,46,64 with the old trunks
-// left the upper picture only 1.5 % brighter.) args.sky overrides.
-var bg = P.solid(s, "night", args.sky || [12 / 255, 42 / 255, 60 / 255]);
+// Review correction: sky 10,26,36 -> 12,42,60 -> 13,46,66. The sky stands past Fog End, so with the fog on it is exactly the
+// fog colour (12,38,55, level 35). Its fog-off level sets how much contrast a fogged trunk keeps: kept = 24 * (1 - fog) / (sky - 11),
+// so a sky about 30 levels above the trunks (level 41.7) puts trunks with 32 to 46 % fog at 0.53 to 0.42. args.sky overrides.
+var bg = P.solid(s, "night", args.sky || [13 / 255, 46 / 255, 66 / 255]);
 bg.source.name = "17 night";
 // Run fix: as a 2D layer the sky carried no depth (Fog 3D read it as depth 0), so it was fogged or not as a block,
 // apart from the trunks. It is now a 3D layer behind the last trunk, scaled up to fill the view, so it sits in the same depth range.
@@ -73,14 +73,15 @@ P.tf(ground, "ADBE Position").setValue([960, GROUND_Y, 2500]);
 P.tf(ground, "ADBE Rotate X").setValue(90);
 
 // Trunks receding in depth: [world x, world z, width]. Each 2400 tall, standing on the ground.
-// Review correction: the three nearest trunks stood at z -300, 200 and 700, at or in front of the figure (z 0), so the fog
-// (which starts just behind the figure) never reached the first two. Every trunk now stands behind the figure, the nearest
-// at z 520, where Fog 3D with Start 2700 / End 5000 lifts it about a third of the way to the fog colour (measured: the fog
-// builds faster than a straight line, about 1 - (1 - t)^1.5). Two trunks added and all widened, so trunks cover about
-// 37 % of a row in the upper picture (was 20 %): with fewer darks the fog's lift of the upper picture was too small to measure.
-var trunks = [[80, 520, 150], [1694, 700, 130], [669, 900, 110], [1350, 1100, 95], [1130, 1400, 100], [450, 1500, 95],
-  [2000, 1800, 95], [-100, 2000, 95], [1650, 2300, 95], [560, 2400, 95], [900, 2600, 95], [1250, 3000, 95],
-  [200, 3200, 95], [1900, 3600, 95]];
+// Review correction: every trunk stands behind the figure (z 0), the nearest at z 520, where Fog 3D with Start 2700 / End 5000
+// lifts it about a third of the way to the fog colour (measured: the fog builds faster than a straight line, about 1 - (1 - t)^1.5).
+// Second review correction: the stand ran back to z 3600, so the far trunks reached the full fog colour and vanished. All nine
+// trunks now stand between z 520 and 800 (about 30 to 46 % fog), so each keeps about half its contrast against the sky, evenly.
+// (z 600 to 1100, 40 to 60 % fog, cannot hold an even ratio: kept contrast goes with 1 - fog, so 60 % fog keeps two thirds of what
+// 40 % keeps.) Widths about 160 so the trunks cover about 60 % of a row: the fog lifts trunks and dims the gaps, and the upper
+// picture only comes out brighter when trunks are the larger share.
+var trunks = [[-56, 520, 160], [155, 740, 158], [439, 600, 164], [700, 800, 156], [966, 560, 162], [1243, 690, 160],
+  [1516, 780, 158], [1766, 640, 162], [2046, 720, 160]];
 var i;
 for (i = 0; i < trunks.length; i++) {
   var tr = shape3d(s, "trunk " + (i + 1), [trunks[i][0], GROUND_Y - 1200, trunks[i][1]]);

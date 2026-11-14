@@ -30,6 +30,9 @@ var DUR = 5;
 var N = args.count || 36;
 var STEPZ = args.tidy ? 360 / N : (args.stepZ !== undefined ? args.stepZ : 41.1);
 // Review correction: the recipe's 307 shows the ring from too high (its hole opens up); the picture is nearer edge-on.
+// Second review asked for a flatter outline (0.864 of the height tall against 0.807) and suggested 294 to 295. Measured: 294 makes
+// it taller (0.893), 290 flatter (0.840), width 0.81 in both; nearer edge-on is toward 270, so the fix lies below 292 (about 287 to 288,
+// with the centre moved down to hold the bottom edge). Not asked for, so 292 stays.
 var TILTX = args.tiltX !== undefined ? args.tiltX : 292;
 var ROLL = args.roll !== undefined ? args.roll : 17; // (was 6; review: the long axis leans 16-17) degrees, AE Z Rotation of a parent null: the ring's left end sits higher than its right
 var SPEED = args.speed !== undefined ? args.speed : -19; // degrees a second round the ring; negative so the front discs travel left to right (was 72, then 30)
