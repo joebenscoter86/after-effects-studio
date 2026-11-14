@@ -64,7 +64,10 @@ The plugin is free to use for personal and paid client motion work under the inc
   - A read came back in 282 ms.
   - A read sent while After Effects was paused for 15 seconds waited and came back, with one script launch at a time across separate servers.
   - A server inside a `claude plugin eval` sandbox took the same lock.
-- **Evals on the final build:** <EVALS: planning-set and picture-set scores on this build, filled in after they run>.
+- **Evals,** through `claude plugin eval`, one run a case unless stated:
+  - Planning set, 22 cases, run before the search fix: 9 scored 1.0, 5 scored 0.8 or more, and 8 scored lower. Three of the lower ones (05, 08, 11) hit known limits of converting their prompts to the eval runner.
+  - The hand-over planning case scored 0.90 over three runs after the library search fix. The evals found that search fault before the release, when the case scored 0.29.
+  - Picture set, 8 cases: seven scored 0.9 or more, five of them 1.0. The review case scored 0.67, on a known fault in the case itself.
 - **Not run for this release:** the plan's acceptance test, a fresh build watched once at speed; a separate-Mac install; any Codex session; and Windows.
 
 Install Comp Room in Claude Code, or update it:
@@ -87,4 +90,4 @@ codex plugin add after-effects-studio@jb-technology
 
 Start a new session after installing. See the [Comp Room README](https://github.com/joebenscoter86/after-effects-studio/blob/main/claude/comp-room/README.md), the [Codex installation and permissions guide](https://github.com/joebenscoter86/after-effects-studio/blob/main/plugin/docs/local-install.md), [support](https://github.com/joebenscoter86/after-effects-studio/blob/main/release/website/support.md), [privacy information](https://github.com/joebenscoter86/after-effects-studio/blob/main/release/website/privacy.md), and [terms](https://github.com/joebenscoter86/after-effects-studio/blob/main/release/website/terms.md).
 
-The Git marketplaces install the reviewed source: Comp Room from `claude/comp-room/`, generated from `plugin/`, and After Effects Studio from `plugin/`. The attached ZIP is a curated 185-file standalone Codex package with a slim private `runtime/package.json` in place of the upstream development manifest. SHA-256 for `after-effects-studio-0.3.0+codex.20261114.zip`: `<SHA-256: from release/build-package.py at release time>`.
+The Git marketplaces install the reviewed source: Comp Room from `claude/comp-room/`, generated from `plugin/`, and After Effects Studio from `plugin/`. The attached ZIP is a curated 185-file standalone Codex package with a slim private `runtime/package.json` in place of the upstream development manifest. SHA-256 for `after-effects-studio-0.3.0+codex.20261114.zip`: `31c4e8f8b142b89c2d21903e6c9bb4ad82ef81adbb2b6b43d29221a5edf37a1a`.
