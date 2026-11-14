@@ -2,6 +2,8 @@
 
 3 pieces: a look: piece 1, piece 2, piece 3.
 
+With this few pieces, a piece of the same look will sit just outside several ranges: read the largest differences first, and add approved pieces to widen the sheet.
+
 - The sheet describes what these pieces did, not what a new piece must do.
 
 ## Levels

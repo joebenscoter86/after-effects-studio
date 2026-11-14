@@ -7,7 +7,7 @@ import path from "node:path";
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { SHOT_LIMIT } from "../src/color/look.js";
+import { FEW_PIECES_NOTE, SHOT_LIMIT } from "../src/color/look.js";
 import "../src/operations/index.js";
 import { runReferenceCompare, runReferenceReport } from "../src/operations/keying-reference.js";
 import { runLookSheet, runLookSheetAdd } from "../src/operations/look-sheet.js";
@@ -35,7 +35,7 @@ describe("reference.sheet", () => {
   it("finds what the pieces share and marks what varies", async (ctx) => {
     if (!files["look-a"]) return ctx.skip();
     expect(sheetReply.ok).toBe(true);
-    expect(sheetReply.standing).toBe("3 pieces: a look");
+    expect(sheetReply.standing).toBe(`3 pieces: a look. ${FEW_PIECES_NOTE}`);
     const s = await sheetOf(), m = (k: string) => s.measures.find((x: any) => x.key === k);
     for (const k of ["levels.black", "rhythm.cutsPerMinute", "rhythm.shotMedian", "rhythm.calm"]) expect({ k, look: m(k).look, pieces: m(k).pieces }).toEqual({ k, look: true, pieces: 3 });
     expect(m("texture.grain").look).toBe(false);
@@ -51,6 +51,7 @@ describe("reference.sheet", () => {
     if (!files["look-a"]) return ctx.skip();
     const page = await fs.readFile(path.join(sheetDir, "sheet.md"), "utf8");
     expect(page).toMatch(/3 pieces: a look: piece a, piece b, piece c/);
+    expect(page).toContain(FEW_PIECES_NOTE);   // fewer than eight pieces: the ranges are narrow, and the page says so
     expect(page).not.toContain(dir);
     const rhythm = page.slice(page.indexOf("## Rhythm"));
     expect(rhythm.slice(0, rhythm.indexOf("\n## ", 3))).toContain(SHOT_LIMIT);
@@ -61,7 +62,8 @@ describe("reference.sheet", () => {
     const r: any = await runReferenceReport({ path: files["look-soft"], outPath: path.join(dir, "soft.json"), rhythm: true, against: path.join(sheetDir, "sheet.json") }, io);
     expect(r.ok).toBe(true);
     expect(r.compare.differences.map((d: any) => d.measure)).toEqual(["edge width"]);
-    expect(r.compare.differences[0].reading).toMatch(/^edge width [\d.]+ px; your pieces sit between [\d.]+ px and [\d.]+ px \(3 pieces\)\.$/);
+    expect(r.compare.differences[0].reading).toMatch(/^edge width [\d.]+ px; your pieces sit between [\d.]+ px and [\d.]+ px \(3 pieces\) \([\d.]+ steps? outside\)\.$/);
+    expect(r.compare.reading).toContain(FEW_PIECES_NOTE);
     // the same through reference.compare, with the saved report (its rhythm kept in it)
     const c: any = await runReferenceCompare({ reference: path.join(sheetDir, "sheet.json"), build: path.join(dir, "soft.json") });
     expect(c.differences.map((d: any) => d.measure)).toEqual(["edge width"]);
@@ -77,7 +79,7 @@ describe("reference.sheet", () => {
     const r: any = await runLookSheetAdd({ sheet: path.join(sheetDir, "sheet.json"), piece: { label: "piece d", path: files["look-soft"] } }, io);
     expect(r.ok).toBe(true);
     expect(r.measured).toEqual(["piece d"]);
-    expect(r.standing).toBe("4 pieces: a look");
+    expect(r.standing).toBe(`4 pieces: a look. ${FEW_PIECES_NOTE}`);
     const after = await Promise.all(["piece-a", "piece-b", "piece-c"].map((n) => fs.stat(path.join(sheetDir, "pieces", `${n}.json`)).then((s) => s.mtimeMs)));
     expect(after).toEqual(before);
     expect((await sheetOf()).measures.find((x: any) => x.key === "texture.edge").look).toBe(false);   // now it varies

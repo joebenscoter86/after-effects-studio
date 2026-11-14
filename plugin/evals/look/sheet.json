@@ -92,9 +92,10 @@
   "colourPieces": 0.6666666666666666,
   "colourShare": 0.02,
   "newColourShare": 0.05,
-  "lookPieces": 3
+  "lookPieces": 3,
+  "fewPieces": 8
  },
- "standing": "3 pieces: a look",
+ "standing": "3 pieces: a look. With this few pieces, a piece of the same look will sit just outside several ranges: read the largest differences first, and add approved pieces to widen the sheet.",
  "measures": [
   {
    "key": "levels.black",

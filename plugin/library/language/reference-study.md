@@ -52,7 +52,7 @@ With the grid alone the same three came first, in the order cast, subject, sharp
 
 ## The user's own look: a look sheet
 
-When the user has pieces they approved, measure them once and keep the result, so a new piece is compared with their look without being told it again. `reference.sheet { pieces: [{ label, path }], outDir }` measures each piece as `reference.report` does, adds its rhythm (stage 13's census over the whole piece, and its shot list), and writes `sheet.json`, a readable `sheet.md` (pieces named by their labels) and one file per piece. `reference.sheet_add { sheet, piece }` adds a piece without measuring the others again.
+When the user has pieces they approved, measure them once and keep the result, so a new piece is compared with their look without being told it again. `reference.sheet { pieces: [{ label, path }], outDir }` measures each piece as `reference.report` does, adds its rhythm (`video.census` over the whole piece, and `video.shots`), and writes `sheet.json`, a readable `sheet.md` (pieces named by their labels) and one file per piece. `reference.sheet_add { sheet, piece }` adds a piece without measuring the others again.
 
 - **What it holds.** For each measure, the middle value, the lowest and highest piece, and how many pieces it rests on:
   - levels;
@@ -64,8 +64,8 @@ When the user has pieces they approved, measure them once and keep the result, s
 
   Type comes only from a comp's project (`{ label, comp, project: true }`): from a movie alone it is not measurable, and the sheet says so.
 - **What is the look.** A measure whose range across the pieces stays within 3 of `reference.compare`'s own steps is part of the look. Wider, it "varies in your pieces" and is never compared. A main colour is part of the look when two thirds of the pieces carry it.
-- **How many pieces.** One piece is its own numbers. Two give a range, not yet a look. Three or more are a look, and the sheet says how many every time: three pieces is a small base.
-- **Compare a build with it** before hand-over: render the build to a movie, then `reference.report { path: <render>, outPath, rhythm: true, against: <sheet.json> }`, or `reference.compare { reference: <sheet.json>, build: <saved report> }`. Only the look's measures are compared, each against the user's own range: "black point 0.09; your pieces sit between 0.02 and 0.04 (4 pieces)". Inside the range, or within one step of it, is no difference. There is no pass or fail.
+- **How many pieces.** One piece is its own numbers. Two give a range, not yet a look. Three or more are a look, and the sheet says how many every time. Under eight pieces the ranges are narrow, and the sheet, its page and every comparison say so: a piece of the same look will sit just outside several ranges. On one user's reels, a fifth piece held out from a sheet of four sat inside on 23 of the 32 measures compared. Some of the other nine were real (a cooler room, darker graphics, a busier cut), and some were the arithmetic of four pieces. Read the largest differences first, and add approved pieces to widen the sheet.
+- **Compare a build with it** before hand-over: render the build to a movie, then `reference.report { path: <render>, outPath, rhythm: true, against: <sheet.json> }`, or `reference.compare { reference: <sheet.json>, build: <saved report> }`. Only the look's measures are compared, each against the user's own range, with how far outside it is: "black point 0.09; your pieces sit between 0.02 and 0.04 (4 pieces) (2.5 steps outside)". Inside the range, or within one step of it, is no difference. There is no pass or fail.
 - **It describes what the user did, not what they must do.** A piece meant to look new will read as different; say which differences are the point.
 - **Not in it:**
   - a cut-out's edge;

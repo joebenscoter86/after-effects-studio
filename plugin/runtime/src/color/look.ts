@@ -49,7 +49,12 @@ export const LOOK_RULES = {
   newColourShare: 0.05,
   /** Pieces before a sheet is called a look. */
   lookPieces: 3,
+  /** Under this many pieces the ranges are narrow, and every reading says so. */
+  fewPieces: 8,
 };
+
+/** Said while a sheet rests on fewer than LOOK_RULES.fewPieces pieces: its ranges are narrow. */
+export const FEW_PIECES_NOTE = "With this few pieces, a piece of the same look will sit just outside several ranges: read the largest differences first, and add approved pieces to widen the sheet.";
 
 const D = REFERENCE_DEFAULTS;
 const P = (key: string, group: string, name: string, unit: string, how: How, step: number, digits: number, floor?: number): MeasureDef => ({ key, group, name, unit, how, step, digits, ...(floor ? { floor } : {}) });
@@ -129,7 +134,7 @@ export interface LookSheet {
 /** The shot list's known limit, said beside the shot lengths. */
 export const SHOT_LIMIT = "Shot lengths come from video.shots, which can read a change inside a shot (a launch, a flip) as a cut, so a shot can read shorter than it is.";
 
-const standingOf = (n: number) => (n <= 1 ? "one piece: these are its own numbers, not a range" : n < LOOK_RULES.lookPieces ? `${n} pieces: a range, not yet a look` : `${n} pieces: a look`);
+const standingOf = (n: number) => `${n <= 1 ? "one piece: these are its own numbers, not a range" : n < LOOK_RULES.lookPieces ? `${n} pieces: a range, not yet a look` : `${n} pieces: a look`}${n < LOOK_RULES.fewPieces ? `. ${FEW_PIECES_NOTE}` : ""}`;
 
 /** A sheet from pieces (with the file each was saved to). */
 export function buildSheet(pieces: Array<{ piece: LookPiece; file: string }>): LookSheet {
@@ -194,7 +199,8 @@ export function compareWithSheet(sheet: LookSheet, piece: { report: ReferenceRep
     const beyond = x < lo - st ? (lo - x) / st : x > hi + st ? (x - hi) / st : 0;
     if (!beyond) { inside.push(m.name); continue; }
     const range = m.min === m.max ? `your ${of(m.pieces)}: ${fmt(def, m.min)}` : `your pieces sit between ${fmt(def, m.min)} and ${fmt(def, m.max)} (${of(m.pieces)})`;
-    diffs.push({ measure: m.name, size: Math.round(beyond * 10) / 10, value: Number(v.toFixed(m.digits)), range: [m.min, m.max], pieces: m.pieces, reading: `${m.name} ${fmt(def, v)}; ${range}.` });
+    const size = Math.round(beyond * 10) / 10;
+    diffs.push({ measure: m.name, size, value: Number(v.toFixed(m.digits)), range: [m.min, m.max], pieces: m.pieces, reading: `${m.name} ${fmt(def, v)}; ${range} (${size} step${size === 1 ? "" : "s"} outside).` });
   }
   // colours: a colour of the look the piece lacks, or a large colour of the piece the pieces never had
   const pal = piece.report.palette.map((c) => ({ hex: c.hex, share: c.share, lab: [c.colour.L, c.colour.a, c.colour.b] as [number, number, number] }));
@@ -210,9 +216,13 @@ export function compareWithSheet(sheet: LookSheet, piece: { report: ReferenceRep
   diffs.sort((a, b) => b.size - a.size);
   return {
     ok: true, against: "look sheet", standing: sheet.standing, differences: diffs, insideTheLook: inside, notCompared,
-    reading: diffs.length ? `${diffs.length} difference${diffs.length === 1 ? "" : "s"} from your ${sheet.standing.split(":")[0]}, largest first: ${diffs.map((d) => d.reading).join(" ")}` : `Within your pieces' range on every measure of the look (${sheet.standing.split(":")[0]}).`,
+    reading: (diffs.length ? `${diffs.length} difference${diffs.length === 1 ? "" : "s"} from your ${sheet.standing.split(":")[0]}, largest first: ${diffs.map((d) => d.reading).join(" ")}` : `Within your pieces' range on every measure of the look (${sheet.standing.split(":")[0]}).`) +
+      (n < LOOK_RULES.fewPieces && diffs.length ? ` ${FEW_PIECES_NOTE}` : ""),
   };
 }
+
+/** The standing without its few-pieces note ("4 pieces: a look"), for a sentence that goes on. */
+export function standingBase(s: LookSheet): string { return s.standing.split(`. ${FEW_PIECES_NOTE}`)[0]; }
 
 export function isSheet(x: unknown): x is LookSheet { return !!x && typeof x === "object" && (x as Json).kind === "look-sheet"; }
 export function isPiece(x: unknown): x is LookPiece { return !!x && typeof x === "object" && (x as Json).kind === "look-piece"; }
@@ -222,7 +232,9 @@ export function sheetMarkdown(s: LookSheet): string {
   const of = (k: number) => `${k} piece${k === 1 ? "" : "s"}`;
   const row = (m: SheetMeasure) => { const d = m as unknown as MeasureDef; return `| ${m.name} | ${fmt(d, m.median)} | ${m.min === m.max ? fmt(d, m.min) : `${fmt(d, m.min)} to ${fmt(d, m.max)}`} | ${m.pieces} |`; };
   const groups = [...new Set(s.measures.map((m) => m.group))];
-  const lines = [`# Look sheet`, "", `${s.standing[0].toUpperCase()}${s.standing.slice(1)}: ${s.pieces.map((p) => p.label).join(", ")}.`, "", ...s.notes.map((x) => `- ${x}`), ""];
+  const base = standingBase(s);
+  const lines = [`# Look sheet`, "", `${base[0].toUpperCase()}${base.slice(1)}: ${s.pieces.map((p) => p.label).join(", ")}.`, "",
+    ...(s.pieces.length < LOOK_RULES.fewPieces ? [FEW_PIECES_NOTE, ""] : []), ...s.notes.map((x) => `- ${x}`), ""];
   for (const g of groups) {
     const look = s.measures.filter((m) => m.group === g && m.look);
     if (!look.length) continue;
