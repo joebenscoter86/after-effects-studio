@@ -18,31 +18,24 @@
 // VERIFY: Fractal Noise property names "Contrast", "Brightness", "Scale", "Complexity"; Tint "Map Black To", "Map White To".
 // VERIFY: font PostScript name "Impact" is installed (tall condensed caps); pass args.font otherwise.
 $.evalFile(args.prelude);
+// Rebuild with artwork (2026-11-14): art from PROOF/21/art (brief.md). Pass args.artLib (art.jsx) and args.artDir.
+// The Fractal Noise stand-in is gone: "Paper BG" is paper.png at 46.875 % (fills 1920 x 1080), and its duplicate
+// "TECH texture in title" is matted by the title, lifted with Levels Input White 70/255 (brief: the real paper is
+// brighter in its marks), and the title's Roughen Edges retuned on this paper. Labels in Space Mono Bold, #EDEBE6.
+// For the movie, everything is parented to "push null", which scales 100 -> 103 % over the comp (a slow push).
+$.evalFile(args.artLib);
+var ARTDIR = args.artDir;
 
 var before = !!args.before;
 var W = 1920, H = 1080, FPS = 24, DUR = 4;
 
-// Stand-in texture in its own comp, so that "Source" of the layer already includes the effects
-// (the recipe's Displacement Map reads the texture as Effects & Masks; a precomp makes Source and Effects & Masks the same).
-// ASSUMED: texture look (recipe: "dark creased, scratched paper"; the source is not given).
-var tc = P.freshComp("21 paper texture", W, H, FPS, DUR, [0, 0, 0]);
-var paper = P.solid(tc, "21 paper", [0.5, 0.5, 0.5]);
-var fn = P.effect(paper, "Fractal Noise");
-var fni = fn.propertyIndex;
-paper.property("ADBE Effect Parade").property(fni).property("Contrast").setValue(160);
-paper.property("ADBE Effect Parade").property(fni).property("Brightness").setValue(-10);
-paper.property("ADBE Effect Parade").property(fni).property("Scale").setValue(45);
-paper.property("ADBE Effect Parade").property(fni).property("Complexity").setValue(10);
-var tint = P.effect(paper, "Tint");
-var ti = tint.propertyIndex;
-paper.property("ADBE Effect Parade").property(ti).property("Map Black To").setValue([0.02, 0.02, 0.02]);
-paper.property("ADBE Effect Parade").property(ti).property("Map White To").setValue([0.115, 0.11, 0.105]); // Run fix: was 0.30; with Input White 33/255 the title clipped to white. The paper now peaks near 29/255 so the lifted title reads grey.
-
-var c = P.freshComp("21 texture through a matte", W, H, FPS, DUR, [0.03, 0.03, 0.035]);
+var c = P.freshComp("21 texture through a matte", W, H, FPS, DUR, ART.hex("#080808"));
+(function () { var j, it; for (j = app.project.numItems; j >= 1; j--) { it = app.project.item(j); if (it instanceof CompItem && it.name === "21 paper texture" && it.usedIn.length === 0) it.remove(); else if (it instanceof FootageItem && it.usedIn.length === 0 && (it.name === "21 paper" || it.name === "21 push null")) it.remove(); } })();
 
 // 1. Texture at the bottom, black title above it.
-var tex = c.layers.add(tc);
-tex.name = "texture";
+var tex = c.layers.add(ART.footage(ARTDIR, "paper.png", "art 21"));
+tex.name = "Paper BG";
+P.tf(tex, "ADBE Scale").setValue([46.875, 46.875]);
 // Run fix: sizes from the recipe's layout line. Title word 54% of the width wide, 42% of the height tall (cap height),
 // centred at 50% across, 47% down; strokes about 3% of the width thick, so a condensed face lighter than Impact.
 // ASSUMED: the word (recipe: "a tall condensed all-caps word"; font not given).
@@ -54,6 +47,7 @@ for (ci = 0; ci < cand.length && !FONT; ci++) {
 }
 if (!FONT) FONT = "Impact";
 var WORD = args.word || "DUST";
+var LCOL = ART.hex("#EDEBE6"), LFONT = args.labelFont || "SpaceMono-Bold", LSIZE = args.labelSize || 24;
 var TW = 0.54 * W, TH = 0.42 * H;
 var title = P.text(c, WORD, { size: 500, font: FONT, color: [0, 0, 0], name: "title" });
 var tdocP = title.property("ADBE Text Properties").property("ADBE Text Document");
@@ -70,7 +64,10 @@ td.tracking = trk;
 tdocP.setValue(td);
 r0 = title.sourceRectAtTime(0, false);
 P.tf(title, "ADBE Anchor Point").setValue([r0.left + r0.width / 2, r0.top + r0.height / 2]);
-P.tf(title, "ADBE Position").setValue([0.50 * W, 0.47 * H]);
+// The Displacement Map (vertical 46, Center Map) pushes the letters by the paper's green away from mid grey; this paper
+// is dark (median about 26/255), so the whole title shifts. args.dmShift moves the layer to compensate (measured on the render).
+var DMS = before ? 0 : (args.dmShift !== undefined ? args.dmShift : 35) /* run: the map pushed the letters about 35 px down on this paper */;
+P.tf(title, "ADBE Position").setValue([0.50 * W, 0.47 * H - DMS]);
 var tfill = P.effect(title, "Fill");
 title.property("ADBE Effect Parade").property(tfill.propertyIndex).property("Color").setValue([0, 0, 0]);
 
@@ -82,13 +79,12 @@ var fitW = function (l, w) {
   var s = 100 * w / rr.width;
   P.tf(l, "ADBE Scale").setValue([s, s]);
 };
-var lb1 = P.text(c, "PRINTED MATTER", { size: 28, font: FONT, color: [1, 1, 1], tracking: 200, pos: [0.50 * W, 0.77 * H], name: "label under" });
-fitW(lb1, 0.15 * W);
-var lb2 = P.text(c, "VOL. 02", { size: 28, font: FONT, color: [1, 1, 1], tracking: 200, pos: [0.50 * W, 0.12 * H], name: "label top" });
-var lb3 = P.text(c, "EDITION OF 50\rRISOGRAPH\rTWO INKS", { size: 26, font: FONT, color: [1, 1, 1], tracking: 150, name: "label bottom left" });
+var lb1 = P.text(c, "PRINTED MATTER", { size: LSIZE, font: LFONT, color: LCOL, tracking: 150, pos: [0.50 * W, 0.77 * H], name: "label under" });
+var lb2 = P.text(c, "VOL. 02", { size: LSIZE, font: LFONT, color: LCOL, tracking: 150, pos: [0.50 * W, 0.12 * H], name: "label top" });
+var lb3 = P.text(c, "EDITION OF 50\rRISOGRAPH\rTWO INKS", { size: LSIZE, font: LFONT, color: LCOL, tracking: 150, name: "label bottom left" });
+var t3 = lb3.property("ADBE Text Properties").property("ADBE Text Document"), d3 = t3.value;
+d3.justification = ParagraphJustification.LEFT_JUSTIFY; d3.autoLeading = false; d3.leading = Math.round(LSIZE * 1.6); t3.setValue(d3);
 var r3 = lb3.sourceRectAtTime(0, false);
-var s3 = 100 * (0.09 * H) / r3.height;
-P.tf(lb3, "ADBE Scale").setValue([s3, s3]);
 P.tf(lb3, "ADBE Anchor Point").setValue([r3.left, r3.top]);
 P.tf(lb3, "ADBE Position").setValue([0.04 * W, 0.85 * H]);
 
@@ -107,7 +103,10 @@ if (!before) {
   // cannot be set by script. A straight line from (0,0) to (33,255) is exactly a Levels white point.
   var lv = P.effect(tex2, "Levels");
   var lvi = lv.propertyIndex;
-  tex2.property("ADBE Effect Parade").property(lvi).property("Input White").setValue(33 / 255);
+  tex2.property("ADBE Effect Parade").property(lvi).property("Input White").setValue((args.white || 100) / 255);
+  // Run: the brief's Input White 70 put the letters' median at 83 (top of D) but 37 at its bottom and clipped the T's top
+  // to 237: the sheet is lighter top right. White 100 with Gamma 1.6 evens it to about 100 / 61 / 171, creases still white.
+  if (args.gamma !== 0) tex2.property("ADBE Effect Parade").property(lvi).property("Gamma").setValue(args.gamma || 1.6);
   tex2.property("ADBE Effect Parade").property(lvi).name = "TECH lift (Curves substitute)";
 
   // 6. Displacement Map on the title, above Roughen Edges in the stack (it is already there when Roughen Edges is added);
@@ -124,22 +123,25 @@ if (!before) {
   var re = P.effect(title, "Roughen Edges");
   var rei = re.propertyIndex;
   var R = function (n) { return title.property("ADBE Effect Parade").property(rei).property(n); };
-  R("Border").setValue(19);
-  R("Edge Sharpness").setValue(10);
+  // Recipe: Border 19, Sharpness 10, Scale 10. Brief: on this paper break the edge in a few larger bites, not a fine fuzz.
+  R("Border").setValue(args.border !== undefined ? args.border : 16);
+  R("Edge Sharpness").setValue(args.sharp !== undefined ? args.sharp : 6);
   R("Fractal Influence").setValue(1);
-  R("Scale").setValue(10);
+  R("Scale").setValue(args.rscale !== undefined ? args.rscale : 120 /* run: 45 gave an even scallop; 120 breaks the edge in larger bites */);
   R("Stretch Width or Height").setValue(0);
   R("Complexity").setValue(2);
   R("Evolution").setValue(360 + 161.4);
   title.property("ADBE Effect Parade").property(rei).name = "TECH Roughen Edges";
 }
 
-// Run fix: each run leaves the earlier run's "paper" solid unused in the project; remove this script's own unused ones.
-var oi, oit, removed = 0;
-for (oi = app.project.numItems; oi >= 1; oi--) {
-  oit = app.project.item(oi);
-  if (oit instanceof FootageItem && oit.name === "21 paper" && oit.mainSource instanceof SolidSource && oit.usedIn.length === 0) { oit.remove(); removed++; }
-}
+// Slow push for the movie: everything parented to a static null, then the null scales 100 -> 103 %.
+var push = c.layers.addNull(DUR);
+push.name = "push null"; push.source.name = "21 push null";
+var pl;
+for (pl = 2; pl <= c.numLayers; pl++) c.layer(pl).parent = push;
+var ps = P.tf(push, "ADBE Scale");
+ps.setValueAtTime(0, [100, 100]); ps.setValueAtTime(DUR, [args.push || 103, args.push || 103]);
+var removed = 0;
 var rf = title.sourceRectAtTime(0, false);
-return { comp: c.name, id: c.id, layers: c.numLayers, before: before, textureComp: tc.name, font: FONT, fontSize: fsz, tracking: trk,
+return { comp: c.name, id: c.id, layers: c.numLayers, before: before, labelFont: lb1.property("ADBE Text Properties").property("ADBE Text Document").value.font, font: FONT, fontSize: fsz, tracking: trk,
   titleRect: [rf.width, rf.height] };

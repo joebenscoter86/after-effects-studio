@@ -14,6 +14,13 @@
 // The technique is a layer setting, not an effect or a layer, so it cannot be switched off by a "TECH " name:
 // the runner either rebuilds with args.before or sets autoOrient on the returned layer to AutoOrientType.NO_AUTO_ORIENT.
 $.evalFile(args.prelude);
+// Rebuild with artwork (2026-11-14): art from PROOF/07/art (brief.md). Pass args.artLib (art.jsx) and args.artDir.
+// Layers, bottom to top: space plate (2D), ring, planet halo (blurred outline copy), planet outline, moon (cratered
+// moon texture, 3D, in the small circle's place in the orbit rig, Auto-Orient Towards Camera), moon outline (white
+// ring, fill off, also auto-oriented), glow adjustment layer, caption. The technique is unchanged: autoOrient on the
+// orbiting layers; args.before leaves it off on both.
+$.evalFile(args.artLib);
+var ARTDIR = args.artDir;
 
 // Local helpers (candidates for the prelude: P.group, P.groupContents, P.fill, P.null3d).
 function group(layer, name) {
@@ -54,77 +61,85 @@ function shapeLayer3d(comp, name) {
   return l;
 }
 
-var W = [1, 1, 1, 1];
-var K = [0, 0, 0, 1];
-// Layout line (shares of the result crop): planet about 24% of the width; ring about 1.7 times the planet's diameter wide
-// and 0.6 as tall as wide (spans 30-70% across, 27-70% down), long axis tilted slightly down to the right; small circle about
-// a third of the planet. Sizes below follow those ratios.
+var W = ART.hex("#F5F5F5").concat([1]);
+var K = ART.hex("#050505").concat([1]);
 var PLANET = 380;
-var RING = args.ring || 650;        // ring diameter (1.7 x planet); the orbit radius is half of it
-var MOON = args.moon || 125;        // about a third of the planet
-var TILT = args.tilt !== undefined ? args.tilt : 38; // ring height / width about 0.6 -> about 38 degrees; positive puts the near side at the bottom (-38 put it at the top)
-var ROLL = args.roll !== undefined ? args.roll : 6;   // long axis slightly down to the right
+var RING = args.ring || 650;        // 1.7 x planet
+var MOON = args.moon || 154;        // brief: small circle about 154 px
+var TILT = args.tilt !== undefined ? args.tilt : 38;
+var ROLL = args.roll !== undefined ? args.roll : 6;
 var DUR = 5;
 
-var c = P.freshComp("07 face the camera", 1920, 1080, 24, DUR, [0, 0, 0]);
-// Re-runs: freshComp removes the comp but not the null solids it made; remove this script's unused ones.
+var c = P.freshComp("07 face the camera", 1920, 1080, 24, DUR, ART.hex("#050505"));
 (function () {
   var j, it;
   for (j = app.project.numItems; j >= 1; j--) {
     it = app.project.item(j);
-    if (it instanceof FootageItem && it.usedIn.length === 0 && (it.name === "07 centre null" || it.name === "07 orbit null")) it.remove();
+    if (it instanceof FootageItem && it.usedIn.length === 0 && (it.name === "07 centre null" || it.name === "07 orbit null" || it.name === "07 glow")) it.remove();
   }
 })();
 
-// Rig, bottom of the stack first. All at identity until parenting is done.
+var space = c.layers.add(ART.footage(ARTDIR, "space.png", "art 07"));
+space.name = "space";
+
 var centre = null3d(c, "centre null");
 var orbit = null3d(c, "orbit null");
 
 var ring = shapeLayer3d(c, "ring");
 var gi = group(ring, "ring");
 ellipse(ring, gi, [RING, RING]);
-stroke(ring, gi, W, 4);
+stroke(ring, gi, W, args.ringStroke || 3);
 
-// ASSUMED: planet is not parented (so it stays a full circle); it sits at the centre, 3D so the ring can pass behind it.
+// Brief: soft halo, a copy of the planet outline with Gaussian Blur 60 at 40 %.
+var halo = shapeLayer3d(c, "planet halo");
+gi = group(halo, "halo");
+ellipse(halo, gi, [PLANET, PLANET]);
+stroke(halo, gi, W, 8);
+var hb = P.effect(halo, "ADBE Gaussian Blur 2");
+ART.setFx(hb, { "Blurriness": 60 });
+P.tf(halo, "ADBE Opacity").setValue(40);
+
+// Planet stays line art; its fill is the space black (#050505) so it hides the ring's back half and the moon behind it.
 var planet = shapeLayer3d(c, "planet");
 gi = group(planet, "planet");
 ellipse(planet, gi, [PLANET, PLANET]);
-stroke(planet, gi, W, 5);
+stroke(planet, gi, W, 4);
 fill(planet, gi, K);
 
-// ASSUMED: small circle 90 px, 5 px white stroke, black fill (recipe gives "black-filled, white-outlined", size unknown).
-var moon = shapeLayer3d(c, "orbiting circle");
-gi = group(moon, "moon");
-ellipse(moon, gi, [MOON, MOON]);
-stroke(moon, gi, W, 5);
-fill(moon, gi, K);
+// Moon texture in the small circle's place: 1010 px art at 15.2 % = 154 px.
+var MS = MOON / 1010 * 100;
+var moon = c.layers.add(ART.footage(ARTDIR, "moon.png", "art 07"));
+moon.name = "moon";
+moon.threeDLayer = true;
+P.tf(moon, "ADBE Scale").setValue([MS, MS, MS]);
+
+// Moon outline: the small circle's white stroke, fill off.
+var rim = shapeLayer3d(c, "moon outline");
+gi = group(rim, "rim");
+ellipse(rim, gi, [MOON, MOON]);
+stroke(rim, gi, W, 4);
 
 var cam = c.layers.addCamera("Camera", [960, 540]);
-// Run fix: addCamera(name, [960, 540]) left the camera at [0, 0, -2666.7] (looking at the comp from its top-left corner,
-// which skewed the ring into a diagonal). Place it in front of the comp centre explicitly.
-cam.property("ADBE Transform Group").property("ADBE Anchor Point") /* the camera's Point of Interest */.setValue([960, 540, 0]);
+cam.property("ADBE Transform Group").property("ADBE Anchor Point").setValue([960, 540, 0]);
 cam.property("ADBE Transform Group").property("ADBE Position").setValue([960, 540, -2666.7]);
 
-// Parenting: ring and orbit null to the centre null; the small circle to the orbit null.
 orbit.parent = centre;
 ring.parent = centre;
 moon.parent = orbit;
+rim.parent = orbit;
 
-// Transforms in parent space.
 P.tf(centre, "ADBE Position").setValue([960, 540, 0]);
 P.tf(planet, "ADBE Position").setValue([960, 540, 0]);
+P.tf(halo, "ADBE Position").setValue([960, 540, 0]);
 P.tf(orbit, "ADBE Position").setValue([0, 0, 0]);
 P.tf(ring, "ADBE Position").setValue([0, 0, 0]);
 P.tf(moon, "ADBE Position").setValue([RING / 2, 0, 0]);
+P.tf(rim, "ADBE Position").setValue([RING / 2, 0, 0]);
 
-// ASSUMED: the orbit plane is horizontal (ring laid flat with X Rotation 90) and tilted 18 degrees towards the camera,
-// and the orbit spins about the centre's Y axis once every 5 s. The recipe does not show how the orbit is animated.
 P.tf(centre, "ADBE Rotate X").setValue(TILT);
 P.tf(centre, "ADBE Rotate Z").setValue(ROLL);
 P.tf(ring, "ADBE Rotate X").setValue(90);
 
-// One turn over the comp, linear. Starts at 80 degrees so at frame 10 (the recipe's check time) the circle is at the
-// lower left of the ring's near side, turned about 110 degrees and seen as a thin sliver.
 var START = args.start !== undefined ? args.start : 80;
 var ry = P.tf(orbit, "ADBE Rotate Y");
 ry.setValueAtTime(0, START);
@@ -132,13 +147,37 @@ ry.setValueAtTime(DUR, START + 360);
 ry.setInterpolationTypeAtKey(1, KeyframeInterpolationType.LINEAR, KeyframeInterpolationType.LINEAR);
 ry.setInterpolationTypeAtKey(2, KeyframeInterpolationType.LINEAR, KeyframeInterpolationType.LINEAR);
 
-// The technique: Layer > Transform > Auto-Orient > Orient Towards Camera.
-if (!args.before) moon.autoOrient = AutoOrientType.CAMERA_OR_POINT_OF_INTEREST;
-// Review correction: the ring's line cut through the small circle's fill where the two 3D planes cross. With the circle
-// facing the camera its own Z axis runs along the line of sight, so an Anchor Point Z offset moves it along its facing.
-// Positive Z brings it toward the camera. 10 px cleared the line only at the front of the orbit: at the sides the ring's
-// line runs toward the camera inside the circle, so the offset has to exceed the circle's radius (62.5 px + stroke). args.lift overrides.
-var LIFT = args.lift !== undefined ? args.lift : 70;
-if (!args.before) P.tf(moon, "ADBE Anchor Point").setValue([0, 0, LIFT]);
+// The technique: Orient Towards Camera on the moon and its outline.
+// Lift (toward the camera along the facing) clears the ring's line; it must exceed the circle's radius (77 px).
+// The moon's anchor is in its own pixels, so its Z lift is divided by its scale; the outline sits 1 px nearer.
+var LIFT = args.lift !== undefined ? args.lift : 90;
+if (!args.before) {
+  moon.autoOrient = AutoOrientType.CAMERA_OR_POINT_OF_INTEREST;
+  rim.autoOrient = AutoOrientType.CAMERA_OR_POINT_OF_INTEREST;
+  P.tf(moon, "ADBE Anchor Point").setValue([505, 505, LIFT / (MS / 100)]);
+  P.tf(rim, "ADBE Anchor Point").setValue([0, 0, LIFT + 1]);
+} else {
+  P.tf(moon, "ADBE Anchor Point").setValue([505, 505, 0]);
+  P.tf(rim, "ADBE Anchor Point").setValue([0, 0, 0]);
+}
 
-return { comp: c.name, id: c.id, layers: c.numLayers, techLayer: moon.name, autoOrient: !args.before, lift: LIFT, edgeOnFrame: 10 };
+// Brief: Glow on an adjustment layer above everything but the space plate (threshold 50 %, radius 25, intensity 1).
+// Run fix: an adjustment layer also glows the space plate below it (its grey dust blew out to white), so the same Glow
+// sits on each line-art layer instead (ring, planet, moon outline); the moon texture keeps its crater detail.
+var GT = args.glowThreshold || 50, GR = args.glowRadius || 25, GI = args.glowIntensity || 1.0;
+ART.glow(ring, GT, GR, GI);
+ART.glow(planet, GT, GR, GI);
+ART.glow(rim, GT, GR, GI);
+
+// Optional caption (brief: Space Mono 0.018 h, #F5F5F5 at 60 %, bottom-left at 0.05, 0.92).
+var font = args.font || "Menlo-Regular";
+var cap = P.text(c, "LUNAR ORBIT  /  27.3 DAYS", { size: Math.round(0.018 * 1080 / 0.72), color: ART.hex("#F5F5F5"), name: "caption", font: font, tracking: 120 });
+var cd = cap.property("ADBE Text Properties").property("ADBE Text Document");
+var tdv = cd.value; tdv.justification = ParagraphJustification.LEFT_JUSTIFY; cd.setValue(tdv);
+var cr = cap.sourceRectAtTime(0, false);
+P.tf(cap, "ADBE Anchor Point").setValue([cr.left, cr.top + cr.height]);
+P.tf(cap, "ADBE Position").setValue([0.05 * 1920, 0.92 * 1080]);
+P.tf(cap, "ADBE Opacity").setValue(args.capOpacity || 60);
+
+var order = []; for (var li = 1; li <= c.numLayers; li++) order.push(c.layer(li).name);
+return { comp: c.name, id: c.id, order: order, techLayers: [moon.name, rim.name], autoOrient: !args.before, lift: LIFT, moonScale: MS, font: cd.value.font };

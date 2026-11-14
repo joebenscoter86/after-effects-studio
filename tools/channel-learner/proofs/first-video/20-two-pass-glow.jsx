@@ -10,6 +10,12 @@
 // VERIFY: a new shape layer sits at the comp centre with anchor [0,0], so shape coordinates are relative to the centre.
 // VERIFY: font PostScript name "Poppins-Light" is installed; pass args.font otherwise.
 $.evalFile(args.prelude);
+// Rebuild with artwork (2026-11-14): art from PROOF/20/art (brief.md). Pass args.artLib (art.jsx) and args.artDir.
+// Layers, bottom to top: Backdrop (dark navy plate, 75 %), Grain (adjustment, Noise 5 %, moving; under the graphic so the
+// bloom is not grained twice, and its grain breaks up the wide bloom's banding), arcs and dots (ring centred 50 / 50,
+// turning slowly for the movie), Icon (white-on-black sparkle, Screen), word (50 %, 54 %), TECH glow (unchanged).
+$.evalFile(args.artLib);
+var ARTDIR = args.artDir;
 
 // Candidate for the prelude: an open circular arc as a bezier path, angles in degrees, 0 = 3 o'clock, clockwise on screen.
 function arcPath(sh, r, a0, a1) {
@@ -42,7 +48,7 @@ var c = P.freshComp("20 two-pass glow", 1920, 1080, 24, 4, [0.03, 0.03, 0.035]);
   var j, it;
   for (j = app.project.numItems; j >= 1; j--) {
     it = app.project.item(j);
-    if (it instanceof FootageItem && it.mainSource instanceof SolidSource && it.usedIn.length === 0 && it.name === "20 glow adjustment") it.remove();
+    if (it instanceof FootageItem && it.mainSource instanceof SolidSource && it.usedIn.length === 0 && (it.name === "20 glow adjustment" || it.name === "20 grain")) it.remove();
   }
 })();
 
@@ -50,7 +56,7 @@ var c = P.freshComp("20 two-pass glow", 1920, 1080, 24, 4, [0.03, 0.03, 0.035]);
 // 47 % of the height across (radius 252 px), centred at 51 % across, 50 % down; three arcs of about 82 degrees centred
 // 120 degrees apart (gaps about 38 degrees); dot ends about 1 % of the width (19 px); line about 0.2 % (4 px);
 // centre word about 9 % of the width wide (173 px) and 5 % of the height tall.
-var CEN = [0.51 * 1920, 540];
+var CEN = [960, 540]; // brief: ring centred at 50 %, 50 %
 var R = 252;
 var arcs = [
   [R, -131, -49],
@@ -100,8 +106,31 @@ var word = P.text(c, "Bloom", { size: 100, font: FONT, color: [1, 1, 1], name: "
   prop.setValue(d0);
   rr = word.sourceRectAtTime(0, false);
   P.tf(word, "ADBE Anchor Point").setValue([rr.left + rr.width / 2, rr.top + rr.height / 2]);
-  P.tf(word, "ADBE Position").setValue(CEN);
+  P.tf(word, "ADBE Position").setValue([960, 0.54 * 1080]); // brief: word at 54 % down, under the icon
 })();
+
+// Artwork: icon, grain, backdrop.
+var ic = c.layers.add(ART.footage(ARTDIR, "sparkle-icon.png", "art 20"));
+ic.name = "Icon";
+ic.blendingMode = BlendingMode.SCREEN; // white strokes on black: only the strokes show
+var ICS = args.icon || 6.5; // run: at the brief's 5 % the drawn sparkle was 6.7 % of the height with 3 px strokes, fainter than the arcs; 6.5 % gives about 8.7 % and 4 px
+P.tf(ic, "ADBE Scale").setValue([ICS, ICS]);
+P.tf(ic, "ADBE Position").setValue([960, 0.40 * 1080]);
+var gr = P.solid(c, "20 grain", [1, 1, 1]);
+gr.name = "Grain";
+gr.adjustmentLayer = true;
+var nzMiss = ART.setFx(P.effect(gr, "ADBE Noise"), { "Amount of Noise": args.grain !== undefined ? args.grain : 5, "Noise Type": 0 });
+gr.moveToEnd();
+var bd = c.layers.add(ART.footage(ARTDIR, "backdrop.png", "art 20"));
+bd.name = "Backdrop";
+P.tf(bd, "ADBE Scale").setValue([75, 75]);
+bd.moveToEnd();
+// For the movie: the arcs and their dots turn slowly round the centre (24 degrees over the comp, linear).
+var spin = ["arc 1", "arc 2", "arc 3", "arc dots"], si, rz;
+for (si = 0; si < spin.length; si++) {
+  rz = P.tf(c.layer(spin[si]), "ADBE Rotate Z");
+  rz.setValueAtTime(0, 0); rz.setValueAtTime(c.duration, args.spin !== undefined ? args.spin : 24);
+}
 
 // 1. Adjustment layer at the top of the comp.
 var adj = P.solid(c, "TECH glow", [1, 1, 1]);
@@ -125,7 +154,8 @@ adj.property("ADBE Effect Parade").property(g2i).property("Glow Radius").setValu
 adj.property("ADBE Effect Parade").property(g2i).name = "TECH glow wide";
 
 var wd = word.property("ADBE Text Properties").property("ADBE Text Document").value;
-return { comp: c.name, id: c.id, layers: c.numLayers, techLayer: "TECH glow", font: wd.font, fontSize: wd.fontSize,
+var order = []; for (si = 1; si <= c.numLayers; si++) order.push(c.layer(si).name);
+return { order: order, noiseMissing: nzMiss, comp: c.name, id: c.id, layers: c.numLayers, techLayer: "TECH glow", font: wd.font, fontSize: wd.fontSize,
   fx: adj.property("ADBE Effect Parade").property(1).name + " [" + adj.property("ADBE Effect Parade").property(1).matchName + "] " +
       adj.property("ADBE Effect Parade").property(1).property("Glow Radius").value + " | " +
       adj.property("ADBE Effect Parade").property(2).name + " " + adj.property("ADBE Effect Parade").property(2).property("Glow Radius").value };
