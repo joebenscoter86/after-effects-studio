@@ -5231,6 +5231,12 @@ function init_video() {
 					required: false
 				},
 				{
+					name: "stage",
+					type: "any",
+					description: "Whole-stage travel: true, or { band: [top, bottom] as shares of the height } to leave out what is fixed to the frame (a caption rail). Each frame is registered on the one before under a whole-frame shift and the shifts added up, as a 'stage' move; it stops at a cut, and a frame that does not register is a gap nothing is carried across",
+					required: false
+				},
+				{
 					name: "ink",
 					type: "object",
 					description: "The ink measure: { box (default the region), mask: { luma: [lo, hi] | minChannel: [lo, hi] | hue: [from, to] with minSat, minVal | rgb: [r, g, b] with tol | empty: seconds of a frame without the thing, with tol }, curves: any of centroid, x0, x1, y0, y1, width, height, size, level (default centroid, size, level), minCount, minPixels }. A moving ground defeats the empty-frame difference",

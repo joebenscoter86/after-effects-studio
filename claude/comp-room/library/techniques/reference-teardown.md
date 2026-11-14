@@ -75,17 +75,31 @@ When the tracker loses its region, it says at which frame and fits nothing past 
 - **Keys** (`duration.keys`): the free fit's two keys, what is set in After Effects. A slow ease in puts the last key well after the move looks finished, so these run longer.
 - **Witness** (`witness`): to the last frame of any change at all.
 
-The influences to compare with a study are `fits.easeVisible` (keys held at the visible span's ends); the keys to build with are `apply.keys`.
+The influences to compare with a study, or a build with its reference, are `fits.easeVisible` (keys held at the visible span's ends); `motion.compare_moves` uses them on both sides. The keys to build with are `apply.keys`.
 
-## Not measured, by design
+`motion.compare_moves` also:
+- compares a one-frame move (a pop, a hard replace) on its duration and distance only;
+- compares scale as a ratio, end over start;
+- says when the build makes a move as two where the reference has one, or the other way round.
 
-Whole-stage travel where the content leaves the frame (a pan or a whip that carries one picture out and the next in) is not measured: each thing in it enters or leaves partial, and the tool does not yet add up frame-to-frame shifts of the whole stage. Mark such a move inferred, with the hand's numbers, or untested.
+## Pans, cuts and the stage's travel
 
-**A fast pan reads as a cut.** `video.shots` and the tracker call a fast pan a cut: on one whole reel, 4 of its 6 pans, the fastest at 186 px a frame. A fast move on the first frame after a real cut reads as a second cut. Look at the strip round every cut before building one: a build that cuts where the reference pans is the wrong build.
+- **A pan is not a cut.** At every cut candidate, `video.shots` registers the frame on the one before under a whole-frame shift. Two frames of one picture, panned fast, match at some shift; two different pictures match at none. A pan is listed under `notCuts` with its shift in source pixels a frame, and it ends no shot. Candidates within 3 frames of each other are one change, and its largest frame decides: a pan's looser first and last frames go with it, and a cut stays on the first frame that changed. `video.track` takes its cuts from the same shot list. The census's cut class is the census study's own rule, and a fast pan can still read as one there: `video.shots` is the authority on cuts.
+- **Still read as cuts:** a picture that changes inside a shot without a whole-frame shift. On one reel these were a car launching, a card's flip, and a bar growing beside a scan line. None of them registers, and no rule here separates them. Look at the strip round every cut before building one: a build that cuts where the reference pans is the wrong build.
+- **The stage's travel** (`video.track` with `stage: true`, or `stage: { band: [top, bottom] }` to leave out what is fixed to the frame, such as a caption rail). Each frame is registered on the one before, coarse to fine with a sub-pixel peak, and the shifts are added up as a `stage` move: its distance, the three durations, the fits and keys, like any move.
+  - **Measured:** the whole picture's shift across a span, inside a shot, in one plane.
+  - **Not measured:** travel across a cut (the sum starts again), across a frame that does not register (a gap, named in the reply, which leaves the move partial), parallax (layers moving at different speeds read as one compromise shift), and zoom or rotation of the stage (`video.track` without `stage` measures a scale).
+
+## A slow drift is not the move
+
+A slide that settles into a slow creep is two moves. Where a move's speed falls under 10 % of its peak and stays there, in one direction and not dying away (a settle decays to rest, and a spring's tail turns back), the move ends near where its speed comes down to the drift's own. The drift is reported as its own move, with its speed (`drift`). The move's `seen.ends` says `"drift"`.
 
 ## Values that worked
 
 - Cuts: change at least 12 out of 255 on a 64 × 36 grey picture, and 4 times the median of the 12 frames each side.
+- Not a cut (a pan): the frame registers on the one before with a normalised cross-correlation of at least 0.85 over the overlap, every shift up to half the frame, and that shift leaves at most 0.35 of the change. On drawn clips, pans scored 0.875 to 1.0 with leftovers up to 0.34; cuts scored 0.19 to 0.795 with leftovers from 0.47. The clips were a blurred eased pan at up to a quarter of the width a frame with a chip fixed to the frame, a cut between two layouts on one paper ground, and a cut followed by a fast move.
+- The stage's travel: the same score, 0.85, frame to frame. Inside a shot the leftover is not used: between two slow, blurred frames it means little.
+- A drift: speed under 10 % of the move's peak, staying there for at least 6 frames, chosen on a drawn slide of 240 px handing over to a creep of 0.8 px a frame.
 - One-frame swaps: by region. No global scene score caught swaps between two dark pictures, or cuts on the same paper background.
 - Census: 16 px blocks matched within 6 px on a picture 320 px on its long side.
   - Travel: at least half the textured blocks moved.
@@ -100,17 +114,30 @@ Whole-stage travel where the content leaves the frame (a pan or a whip that carr
   - a slide over a moving ground;
   - a variable-rate file and a 24 fps piece in 30.
 
-  A slide that enters from outside the frame, and a slide blurred through its first half, come back partial or uncertain, never as a clean fit. Every cut and one-frame swap is found, with no false ones.
-- **A hand study of 15 moves on real reels** (tuned on it): 5 within its tolerances on the first run; 6 on the second, with the ink measure, partial moves, the witness and the visible span. The misses:
-  - **blurred whips:** the match fails inside the blur, and a fixed box cannot follow the line;
-  - **a slide that settles into a slow drift:** the drift is joined to the move, which then runs long;
-  - **a label growing from a few pixels** beside an axis line that the camera moves into the box;
-  - **a pop with heavy blur;**
-  - **a glow on a moving camera** (the box is fixed);
-  - **a draw-on** that both measures time right but that disagree, so it is marked uncertain.
-- **A second study, held out, run once with no tuning:** 2 of 14. Run again after its failures were read: 0 of 14, more of them honestly partial or uncertain (a slide from the frame's edge, a whip, a pan) and five still measured but wrong, mostly on duration.
-- **A whole reel, against its own hand measurements:** 1 of 10 within. Its cuts were 6 of 7 right; it also found 6 false cuts, 4 of them fast pans. A build of one stretch, compared on its render: 1 of 6 measured moves within; on its properties: 2 of 5.
-- **Still confidently wrong at times:** across those three second runs, 12 moves are reported measured (4 loosely) and miss the hand, mostly on duration. Read every track's frames before trusting its numbers.
+  Other drawn clips:
+  - A slide that enters from outside the frame, and a slide blurred through its first half, come back partial or uncertain, never as a clean fit.
+  - Every cut and one-frame swap is found, with no false ones.
+  - A blurred fast pan, at up to a quarter of the width a frame, is a pan, not a cut. Its travel measures 592.8 px against 600, with a visible span of 12 frames against 11.
+  - A cut followed by a fast move is one cut, on its first frame, and a cut between two layouts on one paper ground is still a cut.
+  - A slide handing over to a creep measures 240 px against 240 and 15 frames against 15, with the creep reported apart.
+- **A hand study of 15 moves on real reels** (tuned on it): 5 within its tolerances on the first run, 6 on the second and 6 on the third, after the fixes for pans, travel, drift and comparison. On the third run the misses are:
+  - a slide that runs on into the next cut, so its "drift" speeds up and is no drift, and runs long;
+  - a label growing from a few pixels beside an axis line;
+  - a pop with heavy blur;
+  - a whip;
+  - a glow on a moving camera;
+  - a draw-on that both measures time right but that disagree, so it is marked uncertain.
+- **A second study:** 2 of 14 held out, run once with no tuning; 0 of 14 on the second and third runs, after its failures were read. Two of the third run's misses are worth naming:
+  - A whip whose end the old tracker called a cut is now, by `video.shots`' own rule, a flash, so the move runs on into the next picture and reads 45 px against 301.
+  - A card's drop followed by a creep is split where the hand took one ease (55 px over 10 frames against 64 over 17).
+- **A whole reel, against its own hand measurements:** 1 of 10 within. Its cuts:
+  - before the fixes, 6 of its 7 hard cuts and 6 false ones, 4 of them fast pans;
+  - after the fixes, the same 6 of 7 and 3 false ones (a car launching, a card's flip, a bar growing), with all six pans read as pans;
+  - missed: a cut to two empty grid frames, and a cut to black (set aside as a flash).
+
+  The stage's travel on its factory pan is 668 px against the hand's 674, a visible 17 frames against 17, and ease 70 / 53 against 70 / 52. A build of one stretch, compared on its render, came to 1 of 6 measured moves within. Mended where the tool had put a cut for a pan, the build's pan is within on its render: 720 px against 724, 20 frames against 20.
+- **Still confidently wrong at times:** across the three third runs, 12 moves are reported measured (5 of them loosely) and miss the hand, mostly on duration. Read every track's frames before trusting its numbers.
+- **The stage's travel reads any whole-band change as a shift.** A thing growing from a point inside the band reads as travel, so give it a span that holds the pan and no more.
 - **The census:** 97 to 99.8 % agreement with a study's own labels, step for step, on five reels, one of them a dark stage.
 
 ## Checks

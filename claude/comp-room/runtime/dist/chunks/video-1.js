@@ -375,12 +375,54 @@ function init_fit() {
 function movesOfChannel(samples, o) {
 	if (samples.length < 4) return [];
 	const { fps, atFps } = o, moving = o.movingSpeed ?? .02, gap = 2.5 / fps, at = (t) => r2$2(t * atFps);
-	const moves = analyzeCurve(samples, fps, { joinGap: 6 }).moves, out = [];
+	const report = analyzeCurve(samples, fps, { joinGap: 6 });
+	const drifts = /* @__PURE__ */ new Set(), handover = /* @__PURE__ */ new Set();
+	const idx = (f) => samples.findIndex((s) => s.frame === f);
+	const split = (mv) => {
+		const i0 = idx(mv.from), i1 = idx(mv.to);
+		if (i0 < 0 || i1 - i0 < 8) return [mv];
+		const way = samples[i1].value.map((v, d) => v - samples[i0].value[d]), L = Math.hypot(...way);
+		if (L <= 0) return [mv];
+		const sp = [];
+		for (let k2 = i0; k2 < i1; k2++) sp.push(samples[k2 + 1].value.reduce((a2, v, d) => a2 + (v - samples[k2].value[d]) * way[d], 0) / L / Math.max(1e-6, (samples[k2 + 1].time - samples[k2].time) * fps));
+		const pk = sp.reduce((b2, v, k2) => Math.abs(v) > Math.abs(sp[b2]) ? k2 : b2, 0), peak = Math.abs(sp[pk]), share = o.driftShare ?? .1;
+		let k = -1;
+		for (let j = pk + 1; j < sp.length; j++) if (sp.slice(j).every((v) => Math.abs(v) < share * peak)) {
+			k = j;
+			break;
+		}
+		if (k < 0) return [mv];
+		const tail = sp.slice(k), med = (a2) => median$1(a2.map(Math.abs));
+		const third = Math.max(3, Math.floor(tail.length / 3)), mean = (a2) => a2.reduce((x, v) => x + Math.abs(v), 0) / Math.max(1, a2.length);
+		if (tail.length < 6 || tail.some((v) => v < -.25 * Math.abs(med(tail)) - 1e-9) || mean(tail.slice(-third)) < .5 * mean(tail.slice(0, third))) return [mv];
+		let h = k;
+		for (let j = pk + 1; j < sp.length - 3; j++) if (Math.abs(sp[j]) <= 1.5 * med(tail)) {
+			h = j;
+			break;
+		}
+		const at2 = samples[i0 + h].frame, distOf = (f0, f1) => Math.hypot(...samples[idx(f1)].value.map((v, d) => v - samples[idx(f0)].value[d]));
+		const a = {
+			...mv,
+			to: at2,
+			distance: distOf(mv.from, at2)
+		}, b = {
+			...mv,
+			from: at2,
+			distance: distOf(at2, mv.to)
+		};
+		if (b.distance < o.minMove) return [mv];
+		if (b.distance > .5 * a.distance) return [mv];
+		handover.add(a);
+		drifts.add(b);
+		return [a, b];
+	};
+	const moves = report.moves.flatMap(split), out = [];
 	for (const mv of moves) {
 		if (mv.distance < o.minMove) continue;
 		const i0 = samples.findIndex((s) => s.frame === mv.from), i1 = samples.findIndex((s) => s.frame === mv.to);
 		if (i0 < 0 || i1 <= i0) continue;
-		const prevMove = [...moves].reverse().find((x) => x.to < mv.from), nextMove = moves.find((x) => x.from > mv.to);
+		const real = (x) => x !== mv && (x.distance >= o.minMove || drifts.has(x));
+		const prevMove = [...moves].reverse().find((x) => real(x) && x.to <= mv.from), nextMove = moves.find((x) => real(x) && x.from >= mv.to);
 		const restStart = prevMove ? Math.max(0, samples.findIndex((s) => s.frame === prevMove.to)) : 0;
 		const restEnd = nextMove ? samples.findIndex((s) => s.frame === nextMove.from) : samples.length - 1;
 		const tailVals = samples.slice(i1, Math.max(i1 + 1, Math.min(restEnd + 1, i1 + 10))).map((s) => s.value);
@@ -429,7 +471,9 @@ function movesOfChannel(samples, o) {
 		const startSeen = a !== null && (begins !== null || contigBefore(a) || Math.abs(step(a)) <= moving);
 		const endsAtCut = !contigAfter(i1) && i1 === whi && !!o.endsAt?.(samples[i1].frame);
 		if (endsAtCut && (b === null || b >= whi)) b = i1;
-		const endSeen = endsAtCut || b !== null && b < whi && contigAfter(b);
+		const handed = handover.has(mv);
+		if (handed && (b === null || b > i1)) b = i1;
+		const endSeen = endsAtCut || handed && b !== null || b !== null && b < whi && contigAfter(b);
 		const visible = a !== null && b !== null ? samples[b].time - samples[a].time : null;
 		let c0 = i0, c1 = i1;
 		while (contigBefore(c0)) c0--;
@@ -483,8 +527,13 @@ function movesOfChannel(samples, o) {
 				start: startSeen,
 				end: endSeen,
 				begins,
-				...endsAtCut ? { ends: "cut" } : {}
+				...endsAtCut ? { ends: "cut" } : handed ? { ends: "drift" } : {}
 			},
+			...drifts.has(mv) ? { drift: {
+				speed: r2$2(dist / Math.max(1e-6, samples[i1].time - samples[i0].time)),
+				unit: "a second",
+				reading: "a slow drift after the move before it, split from it"
+			} } : {},
 			covers: {
 				fromFrame: samples[c0].frame,
 				toFrame: samples[c1].frame
@@ -700,6 +749,13 @@ function movesOfSamples(samples, fps, channel) {
 		...m
 	}));
 }
+function oneFrame(m, atFps) {
+	const v = m.duration?.visible?.at ?? m.duration?.at ?? null;
+	return v !== null && v <= 1 + 1e-6 || m.to?.time !== void 0 && m.from?.time !== void 0 && (m.to.time - m.from.time) * atFps <= 1 + 1e-6;
+}
+function scaleLike(m) {
+	return m.channel === "scale" || m.like === "scale";
+}
 function compare(label, measured, built, tol, atFps) {
 	const d = (a) => r2$1(a * atFps), checks = [];
 	const add = (what, mv, bv, unit, within) => checks.push({
@@ -722,8 +778,18 @@ function compare(label, measured, built, tol, atFps) {
 		within: false,
 		reading: `${label}: distance not measured on ${measured.distance === null ? "the reference" : "the build"}`
 	});
-	else add("distance", measured.distance, built.distance, "", Math.abs(built.distance - measured.distance) <= tol.distanceShare * Math.abs(measured.distance) + 1e-9);
-	const me = measured.fits.easeSeen && built.fits.easeSeen ? measured.fits.easeSeen : measured.fits.ease, be = measured.fits.easeSeen && built.fits.easeSeen ? built.fits.easeSeen : built.fits.ease;
+	else if (scaleLike(measured) && scaleLike(built) && measured.start?.[0] && built.start?.[0]) {
+		const mr = measured.end[0] / measured.start[0], br = built.end[0] / built.start[0];
+		add("scale (end over start)", mr, br, "", Math.abs(br - mr) <= tol.distanceShare * Math.abs(mr) + 1e-9);
+	} else add("distance", measured.distance, built.distance, "", Math.abs(built.distance - measured.distance) <= tol.distanceShare * Math.abs(measured.distance) + 1e-9);
+	if (oneFrame(measured, atFps) || oneFrame(built, atFps)) return {
+		move: label,
+		within: checks.every((c) => c.within),
+		checks,
+		note: "a one-frame move: compared on duration and distance only"
+	};
+	const ev = (m) => m.fits.easeVisible ?? null, both = ev(measured) && ev(built);
+	const me = both ? ev(measured) : measured.fits.ease, be = both ? ev(built) : built.fits.ease;
 	if (measured.best === "ease" || built.best === "ease") {
 		add("ease out", me.outInfluence, be.outInfluence, " %", Math.abs(me.outInfluence - be.outInfluence) <= tol.easePoints);
 		add("ease in", me.inInfluence, be.inInfluence, " %", Math.abs(me.inInfluence - be.inInfluence) <= tol.easePoints);
@@ -797,18 +863,53 @@ async function runCompareMoves(args, readProperty) {
 		error: "give the build as `comp`, `layer` and `property`, or as `buildTrack` (a track.json of the build's render, which is the one that counts)"
 	};
 	const results = [];
+	const span = (m) => [m.duration?.visible?.fromTime ?? m.from.time, m.duration?.visible?.toTime ?? m.to.time];
+	const overlaps = (a, b) => {
+		const [a0, a1] = span(a), [b0, b1] = span(b);
+		return Math.min(a1, b1) - Math.max(a0, b0) > -.05;
+	};
+	const picks = measured.map((m) => built.filter((b) => b.channel === m.channel).sort((a, b) => Math.abs(a.from.time - m.from.time) - Math.abs(b.from.time - m.from.time))[0] ?? null);
 	measured.forEach((m, i) => {
-		const pick = built.filter((b) => b.channel === m.channel).sort((a, b) => Math.abs(a.from.time - m.from.time) - Math.abs(b.from.time - m.from.time))[0];
-		const label = `move ${i + 1} (${m.channel})`;
-		results.push(pick ? compare(label, m, pick, tol, atFps) : {
-			move: label,
-			within: false,
-			checks: [{
-				what: "missing",
+		const pick = picks[i], label = `move ${i + 1} (${m.channel})`;
+		if (!pick) {
+			results.push({
+				move: label,
 				within: false,
-				reading: `${label}: no ${m.channel} move in ${source}`
-			}]
-		});
+				checks: [{
+					what: "missing",
+					within: false,
+					reading: `${label}: no ${m.channel} move in ${source}`
+				}]
+			});
+			return;
+		}
+		const parts = built.filter((b) => b.channel === m.channel && overlaps(m, b)), shared = measured.filter((x, j) => picks[j] === pick && x.channel === m.channel);
+		if (parts.length > 1) {
+			results.push({
+				move: label,
+				within: false,
+				checks: [{
+					what: "split",
+					within: false,
+					reading: `${label}: the build makes this as ${parts.length} moves where the reference has one`
+				}]
+			});
+			return;
+		}
+		if (shared.length > 1 && shared[0] !== m) return;
+		if (shared.length > 1) {
+			results.push({
+				move: label,
+				within: false,
+				checks: [{
+					what: "joined",
+					within: false,
+					reading: `${label}: the reference has ${shared.length} moves here where the build has one`
+				}]
+			});
+			return;
+		}
+		results.push(compare(label, m, pick, tol, atFps));
 	});
 	const out = results.flatMap((r) => r.checks.filter((c) => !c.within).map((c) => c.reading));
 	return {
@@ -1299,6 +1400,212 @@ function init_ink() {
 	})))();
 }
 
+// video/shots.js
+function registerShift(a, b, w, h, o = {}) {
+	const maxDx = o.maxDx ?? Math.floor(w / 2), maxDy = o.maxDy ?? Math.floor(h / 2), minOverlap = o.minOverlap ?? .25;
+	let best = null;
+	const x0s = o.near ? o.near.dx - o.near.r : -maxDx, x1s = o.near ? o.near.dx + o.near.r : maxDx;
+	const y0s = o.near ? o.near.dy - o.near.r : -maxDy, y1s = o.near ? o.near.dy + o.near.r : maxDy;
+	for (let dy = y0s; dy <= y1s; dy++) for (let dx = x0s; dx <= x1s; dx++) {
+		const xa = Math.max(0, dx), xb = Math.min(w, w + dx), ya = Math.max(0, dy), yb = Math.min(h, h + dy);
+		const n = (xb - xa) * (yb - ya);
+		if (n <= 0 || n < minOverlap * w * h) continue;
+		let sa = 0, sb = 0, saa = 0, sbb = 0, sab = 0;
+		for (let y = ya; y < yb; y++) {
+			const rb = y * w, ra = (y - dy) * w;
+			for (let x = xa; x < xb; x++) {
+				const p = a[ra + x - dx], q = b[rb + x];
+				sa += p;
+				sb += q;
+				saa += p * p;
+				sbb += q * q;
+				sab += p * q;
+			}
+		}
+		const va = saa - sa * sa / n, vb = sbb - sb * sb / n, cov = sab - sa * sb / n;
+		const score = va > 1e-6 && vb > 1e-6 ? cov / Math.sqrt(va * vb) : 0;
+		if (!best || score > best.score) best = {
+			dx,
+			dy,
+			score,
+			overlap: n / (w * h),
+			residual: 0
+		};
+	}
+	if (best) {
+		const { dx, dy } = best, xa = Math.max(0, dx), xb = Math.min(w, w + dx), ya = Math.max(0, dy), yb = Math.min(h, h + dy);
+		let r = 0, z = 0;
+		for (let y = ya; y < yb; y++) for (let x = xa; x < xb; x++) {
+			const q = b[y * w + x];
+			r += Math.abs(q - a[(y - dy) * w + x - dx]);
+			z += Math.abs(q - a[y * w + x]);
+		}
+		best.residual = z > 0 ? r / z : 0;
+	}
+	return best;
+}
+function shotList(stats, rules = SHOT_RULES, register) {
+	const n = stats.length, ch = stats.map((s) => s.change), out = {
+		cuts: [],
+		swaps: [],
+		notCuts: [],
+		shots: []
+	};
+	const swapAt = /* @__PURE__ */ new Set();
+	for (let i = 1; i + 1 < n; i++) {
+		const a = stats[i], b = stats[i + 1];
+		if (a.change >= rules.swapMin && b.change >= rules.swapMin && b.back < rules.swapBack * Math.min(a.change, b.change)) {
+			swapAt.add(i);
+			out.swaps.push({
+				frame: a.index,
+				time: a.time,
+				change: Math.round(a.change * 10) / 10,
+				region: null
+			});
+			continue;
+		}
+		for (let r = 0; r < a.regions.length; r++) {
+			const ra = a.regions[r], rb = b.regions[r];
+			const loc = median(stats.slice(Math.max(1, i - rules.around), Math.min(n, i + rules.around + 1)).map((s) => s.regions[r]));
+			if (ra >= Math.max(rules.swapMin * 2, 4 * loc) && rb >= Math.max(rules.swapMin * 2, 4 * loc) && b.regionsBack[r] < rules.swapBack * Math.min(ra, rb)) {
+				swapAt.add(i);
+				out.swaps.push({
+					frame: a.index,
+					time: a.time,
+					change: Math.round(ra * 10) / 10,
+					region: r
+				});
+				break;
+			}
+		}
+	}
+	const cand = [];
+	for (let i = 1; i < n; i++) {
+		if (swapAt.has(i) || swapAt.has(i - 1)) continue;
+		const nb = [...ch.slice(Math.max(1, i - rules.around), i), ...ch.slice(i + 1, Math.min(n, i + rules.around + 1))];
+		const med = median(nb), held = nb.filter((x) => x < 1).length > .6 * nb.length;
+		const hard = ch[i] >= rules.cutMin && ch[i] >= (held ? rules.heldRatio : rules.ratio) * Math.max(med, .5);
+		const soft = !hard && ch[i] >= rules.softMin && ch[i] >= rules.softRatio * Math.max(med, .5) && ch[i] >= rules.softEvery * Math.max(ch[i - 1], i + 1 < n ? ch[i + 1] : 0);
+		if (!hard && !soft) continue;
+		if (stats[i].shiftShare >= rules.flashShare) {
+			out.notCuts.push({
+				frame: stats[i].index,
+				time: stats[i].time,
+				kind: "flash",
+				change: Math.round(ch[i] * 10) / 10
+			});
+			continue;
+		}
+		const reg = register ? register(i) : null;
+		cand.push({
+			i,
+			reg,
+			soft,
+			same: !!reg && reg.score >= rules.sameScore && reg.residual <= rules.sameResidual
+		});
+	}
+	const r1 = (x) => Math.round(x * 10) / 10;
+	const aside = (c, kind) => out.notCuts.push({
+		frame: stats[c.i].index,
+		time: stats[c.i].time,
+		kind,
+		change: r1(ch[c.i]),
+		...c.reg ? { shift: {
+			dx: c.reg.dx,
+			dy: c.reg.dy,
+			score: Math.round(c.reg.score * 1e3) / 1e3
+		} } : {}
+	});
+	for (let k = 0; k < cand.length;) {
+		let e = k;
+		while (e + 1 < cand.length && stats[cand[e + 1].i].index - stats[cand[e].i].index <= 3) e++;
+		const run = cand.slice(k, e + 1), top = run.reduce((a, b) => ch[b.i] > ch[a.i] ? b : a);
+		if (top.same) for (const c of run) aside(c, c.reg && Math.hypot(c.reg.dx, c.reg.dy) >= 1 ? "pan" : "motion");
+		else {
+			const cut = run.find((c) => !c.same) ?? top;
+			out.cuts.push({
+				frame: stats[cut.i].index,
+				time: stats[cut.i].time,
+				change: r1(ch[cut.i]),
+				...cut.soft ? { soft: true } : {}
+			});
+			for (const c of run) if (c !== cut) aside(c, c.same && c.reg && Math.hypot(c.reg.dx, c.reg.dy) >= 1 ? "pan" : "motion");
+		}
+		k = e + 1;
+	}
+	out.notCuts.sort((a, b) => a.frame - b.frame);
+	let from = stats[0]?.index ?? 0, start = stats[0]?.time ?? 0;
+	for (const c of out.cuts) {
+		const k = stats.findIndex((s) => s.index === c.frame);
+		out.shots.push({
+			from,
+			to: c.frame - 1,
+			start,
+			end: stats[k - 1]?.time ?? c.time
+		});
+		from = c.frame;
+		start = c.time;
+	}
+	if (n) out.shots.push({
+		from,
+		to: stats[n - 1].index,
+		start,
+		end: stats[n - 1].time
+	});
+	return out;
+}
+function frameStats(index, time, a, b, c, w, h) {
+	const grid = 4, regions = Array(16).fill(0), regionsBack = Array(16).fill(0), counts = Array(16).fill(0);
+	let change = 0, back = 0, mean = 0;
+	if (b) for (let i = 0; i < c.length; i++) mean += c[i] - b[i];
+	mean = b ? mean / c.length : 0;
+	let resid = 0;
+	for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+		const i = y * w + x, r = Math.min(3, Math.floor(y * grid / h)) * grid + Math.min(3, Math.floor(x * grid / w));
+		const d = b ? Math.abs(c[i] - b[i]) : 0, e = a ? Math.abs(c[i] - a[i]) : 0;
+		change += d;
+		back += e;
+		regions[r] += d;
+		regionsBack[r] += e;
+		counts[r]++;
+		if (b) resid += Math.abs(c[i] - b[i] - mean);
+	}
+	const N = w * h;
+	return {
+		index,
+		time,
+		change: change / N,
+		back: a ? back / N : Infinity,
+		regions: regions.map((v, r) => v / counts[r]),
+		regionsBack: regionsBack.map((v, r) => a ? v / counts[r] : Infinity),
+		shiftShare: change > 0 ? Math.max(0, 1 - resid / change) : 0
+	};
+}
+var SHOT_RULES, median;
+function init_shots() {
+	return (init_shots = __esmMin((() => {
+		SHOT_RULES = {
+			cutMin: 12,
+			ratio: 4,
+			heldRatio: 3,
+			around: 12,
+			softMin: 10,
+			softRatio: 8,
+			softEvery: 4,
+			swapMin: 10,
+			swapBack: .35,
+			flashShare: .7,
+			sameScore: .85,
+			sameResidual: .35
+		};
+		median = (a) => {
+			if (!a.length) return 0;
+			const s = [...a].sort((x, y) => x - y);
+			return s[Math.floor(s.length / 2)];
+		};
+	})))();
+}
+
 // video/track.js
 function fft(re, im, inv = false) {
 	const n = re.length;
@@ -1570,7 +1877,8 @@ async function runTrack(args, opts = {}) {
 	const tmpl = new Float64Array(tw * th);
 	for (let y = 0; y < th; y++) for (let x = 0; x < tw; x++) tmpl[y * tw + x] = ref[Math.min(H - 1, ty + y) * W + Math.min(W - 1, tx + x)];
 	const rows = [];
-	let prev = null, last = null, lastSmall = null;
+	let prev = null, last = null;
+	const smalls = [], shotStats = [];
 	for await (const fr of readFrames(info, {
 		from: f0,
 		to: f1,
@@ -1579,13 +1887,9 @@ async function runTrack(args, opts = {}) {
 		gray: true
 	}, tools)) {
 		const img = Float64Array.from(fr.data), diff = last ? meanDiff(fr.data, last) : 0;
-		const small = resize(img, W, H, 64, 36);
-		let cutDiff = 0;
-		if (lastSmall) {
-			for (let i = 0; i < small.length; i++) cutDiff += Math.abs(small[i] - lastSmall[i]);
-			cutDiff /= small.length;
-		}
-		lastSmall = small;
+		const small = Uint8Array.from(resize(img, W, H, 64, 36), (v) => Math.round(v));
+		shotStats.push(frameStats(fr.index, fr.time, smalls.length > 1 ? smalls[smalls.length - 2] : null, smalls.length ? smalls[smalls.length - 1] : null, small, 64, 36));
+		smalls.push(small);
 		let m = null;
 		if (prev) {
 			const r = Math.max(6, Math.round(.08 * Math.max(W, H))), sw = Math.ceil(tw * prev.scale * 1.35), sh = Math.ceil(th * prev.scale * 1.35);
@@ -1646,7 +1950,6 @@ async function runTrack(args, opts = {}) {
 			time: fr.time,
 			m: m && m.ncc >= minNcc ? m : null,
 			diff,
-			cutDiff,
 			still
 		});
 		if (m && m.ncc >= minNcc) prev = m;
@@ -1664,12 +1967,8 @@ async function runTrack(args, opts = {}) {
 		};
 		break;
 	}
-	const cutAt = /* @__PURE__ */ new Set();
-	for (let i = 1; i < rows.length; i++) {
-		const near = rows.slice(Math.max(1, i - 12), Math.min(rows.length, i + 13)).filter((_, j, a) => a[j] !== rows[i]).map((r) => r.cutDiff).sort((a, b) => a - b);
-		const med = near.length ? near[Math.floor(near.length / 2)] : 0;
-		if (rows[i].cutDiff >= 12 && rows[i].cutDiff >= 4 * Math.max(med, .5)) cutAt.add(rows[i].index);
-	}
+	const shotsHere = shotList(shotStats, SHOT_RULES, (i) => i > 0 ? registerShift(smalls[i - 1], smalls[i], 64, 36) : null);
+	const cutAt = new Set(shotsHere.cuts.map((c) => c.frame));
 	const cutList = [...cutAt].sort((a, b) => a - b);
 	const segments = (s) => {
 		const out2 = [[]];
@@ -1738,6 +2037,11 @@ async function runTrack(args, opts = {}) {
 			reading: cad.reading
 		},
 		cuts: cutList,
+		notCuts: shotsHere.notCuts.map((c) => ({
+			frame: c.frame,
+			kind: c.kind,
+			...c.shift ? { shift: c.shift } : {}
+		})),
 		lost,
 		notMeasured: NOT_MEASURED,
 		moves: []
@@ -1928,6 +2232,110 @@ async function runTrack(args, opts = {}) {
 			}
 		}
 	}
+	if (args.stage) {
+		const st = args.stage === true ? {} : args.stage, band = Array.isArray(st.band) && st.band.length === 2 ? st.band.map(Number) : [0, 1];
+		const by0 = Math.max(0, Math.round(band[0] * info.height)), bh = Math.max(8, Math.min(info.height - by0, Math.round((band[1] - band[0]) * info.height)));
+		const FW = Math.min(256, info.width), kf = FW / info.width, FH = Math.max(8, Math.round(bh * kf)), CW = Math.max(8, Math.round(FW / 4)), CH = Math.max(4, Math.round(FH / 4));
+		const pos = [], gaps = [];
+		let prevF = null, prevC = null, x = 0, y = 0, seg = 0;
+		const ok = (g) => !!g && g.score >= SHOT_RULES.sameScore;
+		for await (const fr of readFrames(info, {
+			from: f0,
+			to: f1,
+			crop: [
+				0,
+				by0,
+				info.width,
+				bh
+			],
+			width: FW,
+			height: FH,
+			gray: true
+		}, tools)) {
+			const cur = Uint8Array.from(fr.data), curC = Uint8Array.from(resize(Float64Array.from(cur), FW, FH, CW, CH), (v) => Math.round(v));
+			if (prevF && prevC) {
+				if (cutAt.has(fr.index)) {
+					seg++;
+					x = 0;
+					y = 0;
+				} else if (meanDiff(cur, prevF) >= .5) {
+					const coarse = registerShift(prevC, curC, CW, CH), fine = coarse ? registerShift(prevF, cur, FW, FH, { near: {
+						dx: coarse.dx * 4,
+						dy: coarse.dy * 4,
+						r: 6
+					} }) : null;
+					if (!ok(fine)) {
+						gaps.push({
+							frame: fr.index,
+							time: fr.time,
+							score: fine ? Math.round(fine.score * 1e3) / 1e3 : 0
+						});
+						seg++;
+						x = 0;
+						y = 0;
+					} else {
+						const at2 = (dx, dy) => registerShift(prevF, cur, FW, FH, {
+							near: {
+								dx,
+								dy,
+								r: 0
+							},
+							minOverlap: 0
+						})?.score ?? 0;
+						const peak = (m, c, p) => {
+							const d = m - 2 * c + p;
+							return d < 0 ? Math.max(-.5, Math.min(.5, .5 * (m - p) / d)) : 0;
+						};
+						const g = fine, sx = g.dx + peak(at2(g.dx - 1, g.dy), g.score, at2(g.dx + 1, g.dy)), sy = g.dy + peak(at2(g.dx, g.dy - 1), g.score, at2(g.dx, g.dy + 1));
+						x += sx / kf;
+						y += sy / kf;
+					}
+				}
+			}
+			if (!rep.has(fr.index)) pos.push({
+				frame: fr.index,
+				time: fr.time,
+				x,
+				y,
+				seg
+			});
+			prevF = cur;
+			prevC = curC;
+		}
+		const segs = [...new Set(pos.map((p) => p.seg))];
+		for (const sg of segs) {
+			const samples = pos.filter((p) => p.seg === sg).map((p) => ({
+				frame: p.frame,
+				time: p.time,
+				value: [p.x, p.y]
+			}));
+			for (const mv of movesOfChannel(samples, {
+				fps,
+				atFps,
+				minMove: Math.max(2, .004 * Math.max(info.width, info.height)),
+				epsAbs: .5 / kf,
+				beginsAt: (f) => cutAt.has(f) ? "cut" : null,
+				endsAt: (f) => cutAt.has(f + 1)
+			})) out.moves.push({
+				measure: "stage",
+				channel: "stage",
+				like: "position",
+				unit: "px",
+				...mv
+			});
+		}
+		out.stage = {
+			band: [by0, by0 + bh],
+			gaps,
+			frames: pos.map((p) => ({
+				frame: p.frame,
+				x: r2(p.x),
+				y: r2(p.y),
+				segment: p.seg
+			})),
+			reading: `The stage's travel: each frame registered on the one before in rows ${by0} to ${by0 + bh}, the shifts added up; ${gaps.length ? `${gaps.length} frame${gaps.length === 1 ? "" : "s"} did not register (${gaps.map((g) => g.frame).join(", ")}): nothing is carried across ${gaps.length === 1 ? "it" : "them"}` : "every frame registered"}.`
+		};
+	}
 	{
 		let x0 = reg[0], y0 = reg[1], x1 = reg[0] + reg[2], y1 = reg[1] + reg[3];
 		for (const r of usable) {
@@ -1988,6 +2396,7 @@ async function runTrack(args, opts = {}) {
 			reading: wr.ground === "moving" ? "The ground in the box moves: frame differencing cannot see the move past it." : `The box changes in ${runs.length} run${runs.length === 1 ? "" : "s"}.`
 		};
 		for (const m of out.moves) {
+			if (m.measure === "stage") continue;
 			const vA = m.duration?.visible?.fromFrame ?? m.from.frame, vB = m.duration?.visible?.toFrame ?? m.to.frame, cA = m.covers.fromFrame, cB = m.covers.toFrame;
 			const over = runs.filter((r) => r.from <= vB && r.to >= vA);
 			if (!over.length) {
@@ -2079,6 +2488,7 @@ function init_run_track() {
 		init_decode();
 		init_ink();
 		init_measure_move();
+		init_shots();
 		init_track();
 		NOT_MEASURED = [
 			"rotation",
@@ -2089,144 +2499,6 @@ function init_run_track() {
 			"anything outside the region's own picture (shadows, reflections)"
 		];
 		r2 = (x) => Math.round(x * 100) / 100;
-	})))();
-}
-
-// video/shots.js
-function shotList(stats, rules = SHOT_RULES) {
-	const n = stats.length, ch = stats.map((s) => s.change), out = {
-		cuts: [],
-		swaps: [],
-		notCuts: [],
-		shots: []
-	};
-	const swapAt = /* @__PURE__ */ new Set();
-	for (let i = 1; i + 1 < n; i++) {
-		const a = stats[i], b = stats[i + 1];
-		if (a.change >= rules.swapMin && b.change >= rules.swapMin && b.back < rules.swapBack * Math.min(a.change, b.change)) {
-			swapAt.add(i);
-			out.swaps.push({
-				frame: a.index,
-				time: a.time,
-				change: Math.round(a.change * 10) / 10,
-				region: null
-			});
-			continue;
-		}
-		for (let r = 0; r < a.regions.length; r++) {
-			const ra = a.regions[r], rb = b.regions[r];
-			const loc = median(stats.slice(Math.max(1, i - rules.around), Math.min(n, i + rules.around + 1)).map((s) => s.regions[r]));
-			if (ra >= Math.max(rules.swapMin * 2, 4 * loc) && rb >= Math.max(rules.swapMin * 2, 4 * loc) && b.regionsBack[r] < rules.swapBack * Math.min(ra, rb)) {
-				swapAt.add(i);
-				out.swaps.push({
-					frame: a.index,
-					time: a.time,
-					change: Math.round(ra * 10) / 10,
-					region: r
-				});
-				break;
-			}
-		}
-	}
-	for (let i = 1; i < n; i++) {
-		if (swapAt.has(i) || swapAt.has(i - 1)) continue;
-		const nb = [...ch.slice(Math.max(1, i - rules.around), i), ...ch.slice(i + 1, Math.min(n, i + rules.around + 1))];
-		const med = median(nb), held = nb.filter((x) => x < 1).length > .6 * nb.length;
-		const hard = ch[i] >= rules.cutMin && ch[i] >= (held ? rules.heldRatio : rules.ratio) * Math.max(med, .5);
-		const soft = !hard && ch[i] >= rules.softMin && ch[i] >= rules.softRatio * Math.max(med, .5) && ch[i] >= rules.softEvery * Math.max(ch[i - 1], i + 1 < n ? ch[i + 1] : 0);
-		if (!hard && !soft) continue;
-		if (stats[i].shiftShare >= rules.flashShare) {
-			out.notCuts.push({
-				frame: stats[i].index,
-				time: stats[i].time,
-				kind: "flash",
-				change: Math.round(ch[i] * 10) / 10
-			});
-			continue;
-		}
-		const last = out.cuts[out.cuts.length - 1];
-		if (last && stats[i].index - last.frame <= 3) {
-			if (ch[i] > last.change) Object.assign(last, {
-				frame: stats[i].index,
-				time: stats[i].time,
-				change: Math.round(ch[i] * 10) / 10
-			});
-			continue;
-		}
-		out.cuts.push({
-			frame: stats[i].index,
-			time: stats[i].time,
-			change: Math.round(ch[i] * 10) / 10,
-			...soft ? { soft: true } : {}
-		});
-	}
-	let from = stats[0]?.index ?? 0, start = stats[0]?.time ?? 0;
-	for (const c of out.cuts) {
-		const k = stats.findIndex((s) => s.index === c.frame);
-		out.shots.push({
-			from,
-			to: c.frame - 1,
-			start,
-			end: stats[k - 1]?.time ?? c.time
-		});
-		from = c.frame;
-		start = c.time;
-	}
-	if (n) out.shots.push({
-		from,
-		to: stats[n - 1].index,
-		start,
-		end: stats[n - 1].time
-	});
-	return out;
-}
-function frameStats(index, time, a, b, c, w, h) {
-	const grid = 4, regions = Array(16).fill(0), regionsBack = Array(16).fill(0), counts = Array(16).fill(0);
-	let change = 0, back = 0, mean = 0;
-	if (b) for (let i = 0; i < c.length; i++) mean += c[i] - b[i];
-	mean = b ? mean / c.length : 0;
-	let resid = 0;
-	for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-		const i = y * w + x, r = Math.min(3, Math.floor(y * grid / h)) * grid + Math.min(3, Math.floor(x * grid / w));
-		const d = b ? Math.abs(c[i] - b[i]) : 0, e = a ? Math.abs(c[i] - a[i]) : 0;
-		change += d;
-		back += e;
-		regions[r] += d;
-		regionsBack[r] += e;
-		counts[r]++;
-		if (b) resid += Math.abs(c[i] - b[i] - mean);
-	}
-	const N = w * h;
-	return {
-		index,
-		time,
-		change: change / N,
-		back: a ? back / N : Infinity,
-		regions: regions.map((v, r) => v / counts[r]),
-		regionsBack: regionsBack.map((v, r) => a ? v / counts[r] : Infinity),
-		shiftShare: change > 0 ? Math.max(0, 1 - resid / change) : 0
-	};
-}
-var SHOT_RULES, median;
-function init_shots() {
-	return (init_shots = __esmMin((() => {
-		SHOT_RULES = {
-			cutMin: 12,
-			ratio: 4,
-			heldRatio: 3,
-			around: 12,
-			softMin: 10,
-			softRatio: 8,
-			softEvery: 4,
-			swapMin: 10,
-			swapBack: .35,
-			flashShare: .7
-		};
-		median = (a) => {
-			if (!a.length) return 0;
-			const s = [...a].sort((x, y) => x - y);
-			return s[Math.floor(s.length / 2)];
-		};
 	})))();
 }
 
@@ -2272,6 +2544,7 @@ async function runShots(args, tools = VIDEO_TOOLS) {
 	};
 	const { info, f0, f1 } = o, { w, h } = size(info, 64), stats = [];
 	let a = null, b = null;
+	const small = [];
 	for await (const fr of readFrames(info, {
 		from: f0,
 		to: f1,
@@ -2280,10 +2553,12 @@ async function runShots(args, tools = VIDEO_TOOLS) {
 		gray: true
 	}, tools)) {
 		stats.push(frameStats(fr.index, fr.time, a, b, fr.data, w, h));
+		small.push(Uint8Array.from(fr.data));
 		a = b;
 		b = fr.data;
 	}
-	const list = shotList(stats);
+	const list = shotList(stats, SHOT_RULES, (i) => i > 0 ? registerShift(small[i - 1], small[i], w, h) : null);
+	const kx = info.width / w, ky = info.height / h;
 	await promises.mkdir(args.outDir, { recursive: true });
 	const atFps = typeof args.atFps === "number" && args.atFps > 0 ? args.atFps : 30, at = (t) => Math.round(t * atFps * 100) / 100;
 	const sheets = [], strips = [];
@@ -2331,7 +2606,13 @@ async function runShots(args, tools = VIDEO_TOOLS) {
 		})),
 		notCuts: list.notCuts.map((c) => ({
 			...c,
-			at: at(c.time)
+			at: at(c.time),
+			...c.shift ? { shift: {
+				...c.shift,
+				dx: Math.round(c.shift.dx * kx),
+				dy: Math.round(c.shift.dy * ky),
+				unit: "source px a frame"
+			} } : {}
 		})),
 		shots: list.shots.map((s) => ({
 			...s,
@@ -2351,7 +2632,7 @@ async function runShots(args, tools = VIDEO_TOOLS) {
 			seconds: timing(t0),
 			frames: stats.length
 		},
-		reading: `${list.cuts.length} cut${list.cuts.length === 1 ? "" : "s"}, ${list.swaps.length} one-frame swap${list.swaps.length === 1 ? "" : "s"}, ${list.notCuts.length} flash${list.notCuts.length === 1 ? "" : "es"} set aside, ${list.shots.length} shot${list.shots.length === 1 ? "" : "s"}.${info.variableRate ? " The file's frame rate varies; frames are timed by their own timestamps." : ""}`
+		reading: `${list.cuts.length} cut${list.cuts.length === 1 ? "" : "s"}, ${list.swaps.length} one-frame swap${list.swaps.length === 1 ? "" : "s"}, ${list.notCuts.filter((c) => c.kind === "flash").length} flash${list.notCuts.filter((c) => c.kind === "flash").length === 1 ? "" : "es"} and ${list.notCuts.filter((c) => c.kind !== "flash").length} pan${list.notCuts.filter((c) => c.kind !== "flash").length === 1 ? "" : "s"} or move${list.notCuts.filter((c) => c.kind !== "flash").length === 1 ? "" : "s"} set aside (notCuts), ${list.shots.length} shot${list.shots.length === 1 ? "" : "s"}.${info.variableRate ? " The file's frame rate varies; frames are timed by their own timestamps." : ""}`
 	};
 }
 async function runCensus(args, tools = VIDEO_TOOLS) {
@@ -2479,7 +2760,7 @@ async function runCensus(args, tools = VIDEO_TOOLS) {
 			seconds: timing(t0),
 			steps: labels.length
 		},
-		reading: `${labels.length} steps of ${step} s: calm ${Math.round(cad.shares.calm * 100)} %, local ${Math.round(cad.shares.local * 100)} %, travel ${Math.round(cad.shares.travel * 100)} %, cut ${Math.round(cad.shares.cut * 100)} %; ${cad.travel.perMinute} travel moves a minute (median ${cad.travel.medianSeconds} s); ${cad.burstsPer10s} bursts every 10 s; calm runs median ${cad.calmRuns.medianSeconds} s. A stage with little texture reads calmer than it looks (the census study's own caveat).`
+		reading: `${labels.length} steps of ${step} s: calm ${Math.round(cad.shares.calm * 100)} %, local ${Math.round(cad.shares.local * 100)} %, travel ${Math.round(cad.shares.travel * 100)} %, cut ${Math.round(cad.shares.cut * 100)} %; ${cad.travel.perMinute} travel moves a minute (median ${cad.travel.medianSeconds} s); ${cad.burstsPer10s} bursts every 10 s; calm runs median ${cad.calmRuns.medianSeconds} s. A stage with little texture reads calmer than it looks (the census study's own caveat). Its cut class is the census study's own rule: a fast pan can read as one; video.shots is the authority on cuts.`
 	};
 }
 var size, timing;
