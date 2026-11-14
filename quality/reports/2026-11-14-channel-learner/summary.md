@@ -23,7 +23,7 @@ Everything is on the local branch `adobe/channel-learner`. Nothing is pushed.
 | The learner tool (`tools/channel-learner/`) | Built. 90 tests pass. Reviewed by an agent that wrote none of it; its eight findings are fixed, each with a test that failed first. |
 | Videos read end to end | 5: the Top 25 tricks video you sent, plus 3D typography, a cinematic scene build, five cinematic effects, and carousels. |
 | Recipes written and checked | 64 (25 + 9 + 13 + 6 + 11), in `product/arsenal-drafts/`, one file per video. |
-| The menu (`product/arsenal-drafts/INDEX.md`) | Written for the first 53; being rewritten for all 64 as I write this. |
+| The menu (`product/arsenal-drafts/INDEX.md`) | Written for all 64, organised by what a beat needs, with 19 groups of techniques taught more than once. |
 | Build scripts for the first video's 25 tips | Written from the recipes alone. **None has been run.** |
 | The tutorial's own finished picture for each of the 25 | Cut and ready to set beside each build. |
 | Proofs in After Effects | 1 of 25 (tip 1), built before the block. |
@@ -58,7 +58,7 @@ Most recipes failed their first check on something, and all passed after correct
 
 1. **Unlock the Mac and press OK in After Effects,** then tell this session. I will run the 25 builds, render each beside the tutorial's result, and list what matches.
 2. **More videos.** After six downloads in about an hour, YouTube began answering "Sign in to confirm you're not a bot." I stopped there. I will not sign in or use your browser's cookies to get past that check, and I changed the design, which had said to retry with Chrome's cookies. The choices are a much slower pace, or you supplying the video files yourself.
-3. **Merging.** The menu found 16 techniques taught in more than one video (a particle field made from a graphic, a depth-of-field camera locked to a subject, shadows on a 3D floor, and others). It lists them as groups. I have not merged the recipe texts; say if you want that done.
+3. **Merging.** The menu found 19 techniques taught in more than one video (a particle field made from a graphic, a depth-of-field camera locked to a subject, shadows on a 3D floor, and others). It lists them as groups. I have not merged the recipe texts; say if you want that done.
 4. **Push.** 40-odd local commits on `adobe/channel-learner`. The repository is public, so nothing goes up without your word. The drafts name no creator; `CREDITS.md` names the channel and links the videos, as you asked.
 
 ## Where to look
