@@ -198,6 +198,13 @@
       "sha256": "a73aba2f99aa6326c73cacd217a62bd122c9662d61281177a003c1df40c2a8d8"
     },
     {
+      "id": "reference-teardown",
+      "title": "Reference teardown: a video's moves measured, built and compared",
+      "path": "techniques/reference-teardown.md",
+      "kind": "technique",
+      "sha256": "a347b71c1c06683fb4bb611ef64bbf2cc159dc59e04c9ab7c41edcfb9637eda4"
+    },
+    {
       "id": "phone-clip-cards",
       "title": "Phone clip cards: screen recordings into clean video cards",
       "path": "techniques/phone-clip-cards.md",

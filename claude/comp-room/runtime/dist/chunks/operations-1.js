@@ -2,7 +2,7 @@ import { __esmMin } from "./rolldown-runtime.js";
 import { HEARTBEAT_STALE_MS, RUNTIME_DIR, RUNTIME_ROOT, agentInstallStatus, denyAppConfig, denyOperation, denyUnregisteredOperation, evalRunEnabled, getOp, init_agent_install, init_config, init_opschema, init_policy, init_registry, instanceDirFor, jsxCompLayerPreamble, jsxCompPreamble, jsxFail, jsxPropertyLookup, jsxVal, prepareOp, registerOp, rejectedOutputPath, resolveAfterFxPath, sanitizeInstanceId, summarizeParams, validateOpArgs, wantsUndoGroup } from "./core-1.js";
 import { ACCESSIBILITY_HINT, SCRIPT_RUNNING_HINT, buildInstanceLaunchPlan, describeInstance, dialogBlockMessage, dialogHint, dialogScanSupported, dismissAeDialog, init_dialogs, init_instances, init_launcher, instanceLabel, listInstances, readInstance, scanAeDialogs, scanAeWindows, scriptRunningMessage, splitScriptProgress } from "./transport-1.js";
 import { init_layer, init_layer_advanced, init_layout, init_marker, init_mask, init_pref, init_project, init_property } from "./operations-3.js";
-import { COMP_INFO_FN, LAYER_FULL_FN, LIST_MISSING_FONTS_FN, LIST_MISSING_FOOTAGE_FN, RENDER_FRAME_FN, init_render, init_sample, init_shape, init_shape_contents, init_snippets, init_text, init_timeline, init_transform, init_viewer } from "./operations-4.js";
+import { COMP_INFO_FN, LAYER_FULL_FN, LIST_MISSING_FONTS_FN, LIST_MISSING_FOOTAGE_FN, RENDER_FRAME_FN, init_render, init_sample, init_shape, init_shape_contents, init_snippets, init_text, init_timeline, init_transform, init_video, init_viewer } from "./operations-4.js";
 import { init_keying } from "./operations-2.js";
 import { execFile, spawn } from "node:child_process";
 import { promises, readFileSync, realpathSync, statSync } from "node:fs";
@@ -4139,6 +4139,7 @@ function init_operations() {
 		init_shape_contents();
 		init_layout();
 		init_sample();
+		init_video();
 		init_instance();
 		if (evalRunEnabled()) await import("./eval.js");
 	})))();

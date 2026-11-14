@@ -31,6 +31,7 @@ const docs = [
  ['keying','Keying, compositing and sitting an element in its scene','references/keying.md','guidance'],
  ['page-recording','Page recording: a web page as a smooth 30 fps clip','techniques/page-recording.md','technique'],
  ['word-timing','Word timing: a stressed word\'s first frame from the voice','techniques/word-timing.md','technique'],
+ ['reference-teardown','Reference teardown: a video\'s moves measured, built and compared','techniques/reference-teardown.md','technique'],
  ['phone-clip-cards','Phone clip cards: screen recordings into clean video cards','techniques/phone-clip-cards.md','technique'],
  ['unattended-runs','Unattended runs: planning overnight and long After Effects work','techniques/unattended-runs.md','technique'],
  ['page-recorder-mjs','Page recorder command-line script (Node, Playwright, ffmpeg)','scripts/capture/record-page.mjs','code'],

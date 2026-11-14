@@ -2,6 +2,7 @@ import { __esmMin } from "./rolldown-runtime.js";
 import { init_config, init_policy, init_registry, jsxCompLayerPreamble, jsxCompPreamble, jsxFail, jsxVal, readOnlyMode, registerOp, rejectedOutputPath } from "./core-1.js";
 import { AE_AAC_PRIMING_SAMPLES, FFMPEG, FFPROBE, alignSound, init_delivery_sound, parseEbur128Summary, parseVolumedetect, readSoundSync, runTool } from "./operations-1.js";
 import { analyzeCurve, curveGraph, encodePngSrgb8, init_motion, init_png16, parseTiming, soundOnsets, syncReport } from "./color-1.js";
+import { init_run_moves, init_run_shots_census, init_run_track, runCensus, runCompareMoves, runMoves, runShots, runTrack } from "./video-1.js";
 import { promises } from "node:fs";
 import * as path$1 from "node:path";
 
@@ -4803,6 +4804,7 @@ function init_sample() {
 	return (init_sample = __esmMin((() => {
 		init_motion();
 		init_png16();
+		init_run_moves();
 		init_registry();
 		DEFAULT_PROPERTIES = [
 			["Transform", "Anchor Point"],
@@ -4956,6 +4958,70 @@ function init_sample() {
 			run: (args, transport) => runCurve(args, liveIO(transport))
 		});
 		registerOp({
+			name: "motion.compare_moves",
+			category: "motion",
+			readOnly: true,
+			description: "Compare a build's moves with moves measured from a reference (video.track's track.json): per move, its duration, distance and ease (out and in influence) or a spring's overshoot, built against measured, within or outside a tolerance (default 1 frame, 2 % of the distance, 10 influence points), in sentences such as 'move 7 (position): duration 14 frames against 12, outside tolerance'. The build is a property (comp, layer, property: read once from After Effects and fitted the way video.track fits) or a second track.json from video.track on the build's rendered file. Do both: a property can pass while the picture does not (a subject that leans under a zoom); the picture is the one that counts.",
+			params: [
+				{
+					name: "measured",
+					type: "any",
+					description: "Absolute path of the reference's track.json (or its moves)",
+					required: true
+				},
+				{
+					name: "comp",
+					type: "any",
+					description: "The build: comp name or id (with layer and property)",
+					required: false
+				},
+				{
+					name: "layer",
+					type: "any",
+					description: "The build: layer index, name or { id }",
+					required: false
+				},
+				{
+					name: "property",
+					type: "any",
+					description: "The build: a transform property's name or a path of names",
+					required: false
+				},
+				{
+					name: "start",
+					type: "number",
+					description: "Seconds (default the layer's in-point)",
+					required: false
+				},
+				{
+					name: "end",
+					type: "number",
+					description: "Seconds (default the layer's out-point)",
+					required: false
+				},
+				{
+					name: "buildTrack",
+					type: "string",
+					description: "Or the build as a track.json from video.track on its rendered file",
+					required: false
+				},
+				{
+					name: "tolerance",
+					type: "object",
+					description: "{ frames (1), distanceShare (0.02), easePoints (10) }",
+					required: false
+				},
+				{
+					name: "atFps",
+					type: "number",
+					description: "Frames at this rate (default 30)",
+					required: false
+				}
+			],
+			toJsx: () => jsxFail("motion.compare_moves runs in Node; call it through ae_do"),
+			run: (args, transport) => runCompareMoves(args, (a) => runCurve(a, liveIO(transport)))
+		});
+		registerOp({
 			name: "sound.markers",
 			category: "sound",
 			description: "Put word or beat times on the comp as markers ('<prefix>: <label>', prefix default 'sound'; earlier ones with the same prefix are replaced unless replace: false). From `timing` (a JSON list of { word|w|text|label, start|time|t in seconds, or frame }, or CSV time,label) or from `layer`'s loudness: After Effects' Convert Audio to Keyframes is run on the layer (the comp is opened in the viewer for it), the amplitude read per frame (the louder of left and right), the helper layer removed, and a beat marked where loudness rises past 30% of the way from its median to its top. Checked live on mono, stereo and four-channel WAVs (signal on channel 1 reads as left). A track After Effects reads as silence is refused with what to do.",
@@ -5055,4 +5121,190 @@ function init_sample() {
 	})))();
 }
 
-export { COMP_CORNERS_FN, COMP_INFO_FN, LAYER_FULL_FN, LIST_MISSING_FONTS_FN, LIST_MISSING_FOOTAGE_FN, MISSING_SOURCES_FN, OCIO_CAPTURE_FN, PARK_QUEUE_FN, QUEUE_CHANGE_NOTE, RENDER_FRAME_FN, RENDER_QUEUE_UNDO_WARNING, init_render, init_sample, init_shape, init_shape_contents, init_snippets, init_text, init_timeline, init_transform, init_viewer };
+// operations/video.js
+var common, ffmpegNote;
+function init_video() {
+	return (init_video = __esmMin((() => {
+		init_registry();
+		init_run_moves();
+		init_run_shots_census();
+		init_run_track();
+		common = [
+			{
+				name: "file",
+				type: "string",
+				description: "Absolute path of the video file (a reference, or a build's render)",
+				required: true
+			},
+			{
+				name: "outDir",
+				type: "string",
+				description: "Absolute folder for the JSON and pictures (made if missing)",
+				required: true
+			},
+			{
+				name: "start",
+				type: "number",
+				description: "Seconds into the file to start (default its first frame)",
+				required: false
+			},
+			{
+				name: "end",
+				type: "number",
+				description: "Seconds into the file to end (default its last frame)",
+				required: false
+			},
+			{
+				name: "atFps",
+				type: "number",
+				description: "Also give frames at this rate beside seconds and the file's own frames (default 30)",
+				required: false
+			}
+		];
+		ffmpegNote = " Needs ffmpeg and ffprobe (refuses plainly without them); never uses After Effects, so it fills no disk cache. Frames are read at their own timestamps (a variable rate is said).";
+		registerOp({
+			name: "video.shots",
+			category: "video",
+			readOnly: true,
+			description: "The shot list of a video file: exact cut frames (a cut changes the frame by 12 or more out of 255 on a 64 x 36 grey picture and by 4 times the median round it), one-frame swaps inside a shot (a frame that differs from both neighbours while they match, over the whole frame or one region of a 4 x 4 grid, which a scene score misses), brightness flashes set aside, and the shots. Writes shots.json, a contact sheet per shot and five consecutive frames round each change." + ffmpegNote,
+			params: [...common, {
+				name: "pictures",
+				type: "boolean",
+				description: "Write the contact sheets and change strips (default true)",
+				required: false
+			}],
+			toJsx: () => jsxFail("video.shots runs in Node; call it through ae_do"),
+			run: (args) => runShots(args)
+		});
+		registerOp({
+			name: "video.census",
+			category: "video",
+			readOnly: true,
+			description: "A census of movement: each short step (default 0.1 s) of a band of the frame classed calm (under 0.4 % of it changed), local movement, whole-stage travel (at least half the textured 16 px blocks moved) or a cut, with cadence numbers: shares, travel moves a minute and their median length and speed, bursts every 10 s, calm runs. A stage with little texture (a dark one) reads calmer than it looks. Writes census.json (labels c, l, T, X per step) and a strip." + ffmpegNote,
+			params: [
+				...common,
+				{
+					name: "window",
+					type: "number",
+					description: "Seconds a step (default 0.1)",
+					required: false
+				},
+				{
+					name: "band",
+					type: "array",
+					description: "[top, bottom] of the band as shares of the height (default [0.15, 0.6])",
+					required: false
+				},
+				{
+					name: "pageTest",
+					type: "boolean",
+					description: "Skip steps where the top of the frame is not a flat page (default false)",
+					required: false
+				}
+			],
+			toJsx: () => jsxFail("video.census runs in Node; call it through ae_do"),
+			run: (args) => runCensus(args)
+		});
+		registerOp({
+			name: "video.track",
+			category: "video",
+			readOnly: true,
+			description: "Follow one thing across a span of a video file and measure its moves: position, scale and opacity per frame (normalised cross-correlation over a range of scales with a sub-pixel peak; opacity as the window's regression on the template), the moves in motion.curve's own terms, and each move fitted three ways with its rms (After Effects ease: out and in influence; linear; spring: frequency, damping, overshoot, settle, and the hand-study form A, f, d), the best and by how much, and its keys ready for keyframe.apply (a spring also as the library's motion-jsx spring, and baked keys). Repeated frames are found (a 24 fps piece in 30 fps repeats every fifth) and moves are fitted on the unique frames at their own times. Says where it lost the region and fits nothing past it. A move whose start or end was not seen (already moving at the first frame measured, or still moving where it stops) is partial: its duration, distance and the unseen ease are not measured. Each move has two durations: the fit's keys (what is set in After Effects) and the visible span (the last frame at rest to the first frame within 2 % of the end, as a hand study counts it); a witness (plain frame differencing round the region) gives the span over which anything there changes, and a move it outlasts is marked uncertain. Moves never span a cut. `ink` adds a second measure, a mask in a fixed box (by luma, colour, or difference from an empty frame) with its bounding box, centroid, area and level per frame: for anything that grows from nothing, draws on, fades, glows or blurs. Where both measures see a move, agreement within 2 frames and 5 % is a measurement and disagreement is reported, uncertain. Rotation, skew, blur and colour are not measured, and the reply says so. Writes track.json and track.csv." + ffmpegNote,
+			params: [
+				...common,
+				{
+					name: "region",
+					type: "any",
+					description: "[x, y, width, height] round the thing in the reference frame, in pixels or as shares of the frame (all 1 or under)",
+					required: true
+				},
+				{
+					name: "ref",
+					type: "number",
+					description: "Seconds: the reference frame where the region is drawn, the thing at rest (default the span's last frame)",
+					required: false
+				},
+				{
+					name: "scaleRange",
+					type: "array",
+					description: "[smallest, largest] scale to search, against the reference (default [0.25, 2.5])",
+					required: false
+				},
+				{
+					name: "stage",
+					type: "any",
+					description: "Whole-stage travel: true, or { band: [top, bottom] as shares of the height } to leave out what is fixed to the frame (a caption rail). Each frame is registered on the one before under a whole-frame shift and the shifts added up, as a 'stage' move; it stops at a cut, and a frame that does not register is a gap nothing is carried across",
+					required: false
+				},
+				{
+					name: "ink",
+					type: "object",
+					description: "The ink measure: { box (default the region), mask: { luma: [lo, hi] | minChannel: [lo, hi] | hue: [from, to] with minSat, minVal | rgb: [r, g, b] with tol | empty: seconds of a frame without the thing, with tol }, curves: any of centroid, x0, x1, y0, y1, width, height, size, level (default centroid, size, level), minCount, minPixels }. A moving ground defeats the empty-frame difference",
+					required: false
+				}
+			],
+			toJsx: () => jsxFail("video.track runs in Node; call it through ae_do"),
+			run: (args) => runTrack(args)
+		});
+		registerOp({
+			name: "video.moves",
+			category: "video",
+			readOnly: true,
+			description: "The table of moves and a beat sheet in the brief's form, from video.track files (and video.shots and video.census when given): each move with its start, duration and distance, ease or spring values, fit and rms, marked measured, inferred (carried by hand, with the reason) or untested, and its keys ready to apply. The beat sheet has a scene per shot with the measured events; what the picture cannot say is left marked. Writes moves.json and beat-sheet.md. Reads files only.",
+			params: [
+				{
+					name: "outDir",
+					type: "string",
+					description: "Absolute folder for moves.json and beat-sheet.md",
+					required: true
+				},
+				{
+					name: "tracks",
+					type: "array",
+					description: "track.json paths from video.track, or [{ path, label }]",
+					required: true
+				},
+				{
+					name: "shots",
+					type: "string",
+					description: "shots.json from video.shots",
+					required: false
+				},
+				{
+					name: "census",
+					type: "string",
+					description: "census.json from video.census",
+					required: false
+				},
+				{
+					name: "transcript",
+					type: "string",
+					description: "A transcript JSON (word or segment tokens with times): each scene gets its words and each event the word spoken as it starts",
+					required: false
+				},
+				{
+					name: "inferred",
+					type: "array",
+					description: "Moves carried by hand: [{ label, channel, reason, ... }]",
+					required: false
+				},
+				{
+					name: "untested",
+					type: "array",
+					description: "Moves named but not tracked: [{ label, reason }]",
+					required: false
+				},
+				{
+					name: "atFps",
+					type: "number",
+					description: "Frames at this rate (default 30)",
+					required: false
+				}
+			],
+			toJsx: () => jsxFail("video.moves runs in Node; call it through ae_do"),
+			run: (args) => runMoves(args)
+		});
+	})))();
+}
+
+export { COMP_CORNERS_FN, COMP_INFO_FN, LAYER_FULL_FN, LIST_MISSING_FONTS_FN, LIST_MISSING_FOOTAGE_FN, MISSING_SOURCES_FN, OCIO_CAPTURE_FN, PARK_QUEUE_FN, QUEUE_CHANGE_NOTE, RENDER_FRAME_FN, RENDER_QUEUE_UNDO_WARNING, init_render, init_sample, init_shape, init_shape_contents, init_snippets, init_text, init_timeline, init_transform, init_video, init_viewer };

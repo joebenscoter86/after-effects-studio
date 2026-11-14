@@ -31,6 +31,7 @@ import "./pref.js";
 import "./shape-contents.js";
 import "./layout.js";
 import "./sample.js";
+import "./video.js";
 import "./instance.js";
 
 // eval.run executes arbitrary ExtendScript (file I/O, system.callSystem,
