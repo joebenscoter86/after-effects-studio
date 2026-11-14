@@ -29,8 +29,11 @@ var FPS = 23.976; // the recipe says the example comp runs at 23.976 fps
 var DUR = 5;
 var N = args.count || 36;
 var STEPZ = args.tidy ? 360 / N : (args.stepZ !== undefined ? args.stepZ : 41.1);
-var TILTX = args.tiltX !== undefined ? args.tiltX : 307;
-var CX = 960, CY = args.cy || 470; // raised from 540 so the large front discs stay in frame
+// Review correction: the recipe's 307 shows the ring from too high (its hole opens up); the picture is nearer edge-on.
+var TILTX = args.tiltX !== undefined ? args.tiltX : 292;
+var ROLL = args.roll !== undefined ? args.roll : 6; // degrees, AE Z Rotation of a parent null: the ring's left end sits higher than its right
+var SPEED = args.speed !== undefined ? args.speed : 30; // degrees a second round the ring (was 72)
+var CX = 960, CY = args.cy || 505; // set so the ring spans about 0.16-0.95 of the height at tilt 292
 // Layout (recipe's layout: line): ring 0.09-0.90 of the width, 0.16-0.96 of the height, front discs about 0.45 of the height tall;
 // sphere about 0.28 of the width across. With the recipe's anchor 910 and scale 48 the ring is only about 980 px wide under the
 // default camera, so the whole build sits closer to the camera (Z) to enlarge it in perspective, keeping the recipe's values.
@@ -46,6 +49,7 @@ var c = P.freshComp("06 3d orbit rings", 1920, 1080, FPS, DUR, [0.86, 0.86, 0.86
     it = app.project.item(j);
     if (it instanceof FootageItem && it.mainSource instanceof SolidSource && it.name === "background" && it.usedIn.length === 0 &&
         Math.abs(it.mainSource.color[0] - 0.86) < 0.001 && Math.abs(it.mainSource.color[2] - 0.86) < 0.001) it.remove();
+    else if (it instanceof FootageItem && it.mainSource instanceof SolidSource && it.name === "06 roll null" && it.usedIn.length === 0) it.remove();
   }
 })();
 // ASSUMED: "pale grey frame" = 86% grey.
@@ -102,8 +106,18 @@ for (i = 0; i < N; i++) {
 // each disc's Orientation Z advances one turn per 5 s, so the discs travel around the ring and the loop is seamless.
 if (!args.still) {
   for (i = 0; i < N; i++) {
-    c.layer(i + 1).property("ADBE Transform Group").property("ADBE Orientation").expression = "value + [0, 0, time * 72]";
+    c.layer(i + 1).property("ADBE Transform Group").property("ADBE Orientation").expression = "value + [0, 0, time * " + SPEED + "]";
   }
 }
 
-return { comp: c.name, id: c.id, layers: c.numLayers, discs: N, stepZ: STEPZ, tiltX: TILTX, sample: sample.join(" | ") };
+// Roll: the whole ring and the centre circle are parented to a 3D null at the centre, and the null's Z Rotation rolls the picture.
+// (A roll in the picture plane cannot be written into the discs' own Orientation without changing the tilt.)
+var rollNull = c.layers.addNull(c.duration);
+rollNull.source.name = "06 roll null";
+rollNull.name = "roll null";
+rollNull.threeDLayer = true;
+P.tf(rollNull, "ADBE Position").setValue([CX, CY, Z]);
+for (i = 2; i <= N + 2; i++) c.layer(i).parent = rollNull; // discs are now layers 2..N+1, the circle N+2
+P.tf(rollNull, "ADBE Rotate Z").setValue(ROLL);
+
+return { comp: c.name, id: c.id, layers: c.numLayers, discs: N, stepZ: STEPZ, tiltX: TILTX, roll: ROLL, speed: SPEED, sample: sample.join(" | ") };

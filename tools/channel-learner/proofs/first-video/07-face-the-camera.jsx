@@ -134,5 +134,11 @@ ry.setInterpolationTypeAtKey(2, KeyframeInterpolationType.LINEAR, KeyframeInterp
 
 // The technique: Layer > Transform > Auto-Orient > Orient Towards Camera.
 if (!args.before) moon.autoOrient = AutoOrientType.CAMERA_OR_POINT_OF_INTEREST;
+// Review correction: the ring's line cut through the small circle's fill where the two 3D planes cross. With the circle
+// facing the camera its own Z axis runs along the line of sight, so an Anchor Point Z offset moves it along its facing.
+// Positive Z brings it toward the camera. 10 px cleared the line only at the front of the orbit: at the sides the ring's
+// line runs toward the camera inside the circle, so the offset has to exceed the circle's radius (62.5 px + stroke). args.lift overrides.
+var LIFT = args.lift !== undefined ? args.lift : 70;
+if (!args.before) P.tf(moon, "ADBE Anchor Point").setValue([0, 0, LIFT]);
 
-return { comp: c.name, id: c.id, layers: c.numLayers, techLayer: moon.name, autoOrient: !args.before, edgeOnFrame: 10 };
+return { comp: c.name, id: c.id, layers: c.numLayers, techLayer: moon.name, autoOrient: !args.before, lift: LIFT, edgeOnFrame: 10 };

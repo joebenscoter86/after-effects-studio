@@ -37,38 +37,76 @@ function pointOn(r, a) {
 
 var c = P.freshComp("20 two-pass glow", 1920, 1080, 24, 4, [0.03, 0.03, 0.035]);
 
-// Stand-in graphic. ASSUMED: arc radii, angles and stroke width (the recipe says only "thin white circle arcs with dot ends").
+// Re-runs: freshComp removes the comp but not its solid; remove this script's unused one.
+(function () {
+  var j, it;
+  for (j = app.project.numItems; j >= 1; j--) {
+    it = app.project.item(j);
+    if (it instanceof FootageItem && it.mainSource instanceof SolidSource && it.usedIn.length === 0 && it.name === "20 glow adjustment") it.remove();
+  }
+})();
+
+// Stand-in graphic, sized from the recipe's layout: line (shares of the whole comp): arc ring about 26 % of the width and
+// 47 % of the height across (radius 252 px), centred at 51 % across, 50 % down; three arcs of about 82 degrees centred
+// 120 degrees apart (gaps about 38 degrees); dot ends about 1 % of the width (19 px); line about 0.2 % (4 px);
+// centre word about 9 % of the width wide (173 px) and 5 % of the height tall.
+var CEN = [0.51 * 1920, 540];
+var R = 252;
 var arcs = [
-  [320, -150, 20],
-  [320, 60, 200],
-  [260, 110, 300]
+  [R, -131, -49],
+  [R, -11, 71],
+  [R, 109, 191]
 ];
 var i, sh, ends = [];
 for (i = 0; i < arcs.length; i++) {
   sh = P.shape(c, "arc " + (i + 1));
   arcPath(sh, arcs[i][0], arcs[i][1], arcs[i][2]);
   P.stroke(sh, [1, 1, 1, 1], 4, 2);
+  P.tf(sh.layer, "ADBE Position").setValue(CEN);
   ends.push(pointOn(arcs[i][0], arcs[i][1]));
   ends.push(pointOn(arcs[i][0], arcs[i][2]));
 }
 // Dot ends: one shape layer holding a filled circle at each arc end.
 var dots = c.layers.addShape();
 dots.name = "arc dots";
+P.tf(dots, "ADBE Position").setValue(CEN);
 var root = dots.property("ADBE Root Vectors Group");
 var g = root.addProperty("ADBE Vector Group");
-var e;
+var e, ei;
 for (i = 0; i < ends.length; i++) {
-  e = dots.property("ADBE Root Vectors Group").property(1).property("ADBE Vectors Group").addProperty("ADBE Vector Shape - Ellipse");
-  e.property("ADBE Vector Ellipse Size").setValue([18, 18]);
+  ei = dots.property("ADBE Root Vectors Group").property(1).property("ADBE Vectors Group").addProperty("ADBE Vector Shape - Ellipse").propertyIndex;
+  e = dots.property("ADBE Root Vectors Group").property(1).property("ADBE Vectors Group").property(ei);
+  e.property("ADBE Vector Ellipse Size").setValue([19, 19]);
   e.property("ADBE Vector Ellipse Position").setValue(ends[i]);
 }
-var f = dots.property("ADBE Root Vectors Group").property(1).property("ADBE Vectors Group").addProperty("ADBE Vector Graphic - Fill");
-f.property("ADBE Vector Fill Color").setValue([1, 1, 1, 1]);
+var fi = dots.property("ADBE Root Vectors Group").property(1).property("ADBE Vectors Group").addProperty("ADBE Vector Graphic - Fill").propertyIndex;
+dots.property("ADBE Root Vectors Group").property(1).property("ADBE Vectors Group").property(fi).property("ADBE Vector Fill Color").setValue([1, 1, 1, 1]);
 
-P.text(c, "Bloom", { size: 110, font: args.font || "Poppins-Light", color: [1, 1, 1], name: "word" });
+// The centre word.
+// Run fix: getFontsByPostScriptName finds "Poppins-Light" here, but as a substitute (isSubstitute true, drawn in Helvetica),
+// so the first candidate that is really installed is used.
+var FONT = null, cand = [args.font, "Poppins-Light", "Poppins-Regular", "HelveticaNeue-Light"], ci, fo;
+for (ci = 0; ci < cand.length && !FONT; ci++) {
+  if (!cand[ci]) continue;
+  try { fo = app.fonts.getFontsByPostScriptName(cand[ci]); if (fo.length && !fo[0].isSubstitute) FONT = cand[ci]; } catch (errFont) {}
+}
+if (!FONT) FONT = "Poppins-Bold";
+var word = P.text(c, "Bloom", { size: 100, font: FONT, color: [1, 1, 1], name: "word" });
+(function () {
+  var prop = word.property("ADBE Text Properties").property("ADBE Text Document");
+  var rr = word.sourceRectAtTime(0, false);
+  var d0 = prop.value;
+  d0.fontSize = Math.round(100 * 173 / rr.width * 10) / 10;
+  prop.setValue(d0);
+  rr = word.sourceRectAtTime(0, false);
+  P.tf(word, "ADBE Anchor Point").setValue([rr.left + rr.width / 2, rr.top + rr.height / 2]);
+  P.tf(word, "ADBE Position").setValue(CEN);
+})();
 
 // 1. Adjustment layer at the top of the comp.
 var adj = P.solid(c, "TECH glow", [1, 1, 1]);
+adj.source.name = "20 glow adjustment";
+adj.name = "TECH glow";
 adj.adjustmentLayer = true;
 adj.moveToBeginning();
 
@@ -86,4 +124,8 @@ var g2i = g2.propertyIndex;
 adj.property("ADBE Effect Parade").property(g2i).property("Glow Radius").setValue(args.wide || 242);
 adj.property("ADBE Effect Parade").property(g2i).name = "TECH glow wide";
 
-return { comp: c.name, id: c.id, layers: c.numLayers, techLayer: "TECH glow" };
+var wd = word.property("ADBE Text Properties").property("ADBE Text Document").value;
+return { comp: c.name, id: c.id, layers: c.numLayers, techLayer: "TECH glow", font: wd.font, fontSize: wd.fontSize,
+  fx: adj.property("ADBE Effect Parade").property(1).name + " [" + adj.property("ADBE Effect Parade").property(1).matchName + "] " +
+      adj.property("ADBE Effect Parade").property(1).property("Glow Radius").value + " | " +
+      adj.property("ADBE Effect Parade").property(2).name + " " + adj.property("ADBE Effect Parade").property(2).property("Glow Radius").value };

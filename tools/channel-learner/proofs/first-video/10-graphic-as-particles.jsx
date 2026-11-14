@@ -99,6 +99,11 @@ leafLayer.enabled = false;
 // Step 2: black solid at the top of the stack carrying CC Particle World.
 var ps = P.solid(c, "leaf particles", [0, 0, 0]);
 ps.moveToBeginning();
+// Review correction: the particle layer starts before the comp, so the field is already full at frame 0
+// (the effect's clock runs from the layer's start). args.preroll overrides, in seconds.
+var PREROLL = args.preroll !== undefined ? args.preroll : 2;
+ps.startTime = -PREROLL;
+ps.outPoint = c.duration;
 P.effect(ps, "CC Particle World");
 var fx = ps.property("ADBE Effect Parade").property("CC Particle World");
 
@@ -119,8 +124,10 @@ need(fx, "Texture", "Align To Direction").setValue(0);
 // Step 5: particle look as shown on screen.
 need(fx, "Particle", "Rotation Speed").setValue(180);
 need(fx, "Particle", "Initial Rotation").setValue(360);
-need(fx, "Particle", "Birth Size").setValue(0.25);
-need(fx, "Particle", "Death Size").setValue(0.25);
+// Review correction: the recipe's 0.25 gave leaves about 15 % too small on this 300 x 300 texture; 0.29 matches the measured size.
+var SIZE = args.size !== undefined ? args.size : 0.29;
+need(fx, "Particle", "Birth Size").setValue(SIZE);
+need(fx, "Particle", "Death Size").setValue(SIZE);
 need(fx, "Particle", "Size Variation").setValue(50);
 need(fx, "Particle", "Max Opacity").setValue(75);
 
