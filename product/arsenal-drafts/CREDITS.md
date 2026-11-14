@@ -5,3 +5,4 @@ The recipes in this folder were learned from public tutorials. The techniques ar
 | Draft | Channel | Video |
 |---|---|---|
 | `YBeMmC43Q1U.md` | [SonduckFilm](https://www.youtube.com/channel/UC5DmsBrVi62DWBASLK5gMEw) | [Top 25 After Effects Motion Graphic Tricks You Should Know!](https://www.youtube.com/watch?v=YBeMmC43Q1U) |
+| `eoBEBx1PbS4.md` | [SonduckFilm](https://www.youtube.com/channel/UC5DmsBrVi62DWBASLK5gMEw) | [Create Ultra 3D Typography in the NEW After Effects 27 Update!](https://www.youtube.com/watch?v=eoBEBx1PbS4) |

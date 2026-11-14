@@ -1,8 +1,8 @@
-# Techniques from one tips video (25 recipes, all unproven)
+# Techniques from one video (25 recipes, all unproven)
 
-Written by the channel learner on 2026-11-14 from the video's narration and screen together, then checked against the video by a second reader. Every recipe passed that check; none has been accepted by Joe, and none is in the plugin yet. `status: unproven` means it has not been built in After Effects and compared with the tutorial's own result.
+Written by the channel learner from the video's narration and screen together, then checked against the video by a second reader. Every recipe here passed that check; none has been accepted by Joe, and none is in the plugin. `status: unproven` means it has not been built in After Effects and compared with the tutorial's own result.
 
-Each step is marked `said` (narrated), `shown` (on screen; `fNNNNNN` is the frame in the local study folder, frame number divided by 60 is seconds) or `inferred` (our reading). The `source` and frame references are for checking and stay out of the plugin. Credits: `CREDITS.md`.
+Each step is marked `said` (narrated), `shown` (on screen; `fNNNNNN` is a frame in the local study folder, frame number divided by the video's frame rate is seconds) or `inferred` (our reading). The `source` and frame references are for checking and stay out of the plugin. Credits: `CREDITS.md`.
 
 | # | Technique | Jobs | Check passed in round |
 |---|---|---|---|
