@@ -3389,6 +3389,336 @@ function init_library_modules() {
 	return (init_library_modules = __esmMin((() => {})))();
 }
 
+// tools/library-parts.js
+function nameSections(doc) {
+	const all = allSections(doc);
+	const count = /* @__PURE__ */ new Map();
+	for (const s of all) count.set(s.title, (count.get(s.title) ?? 0) + 1);
+	const visit = (list, trail) => {
+		for (const s of list) {
+			s.name = (count.get(s.title) ?? 0) > 1 ? [...trail, s.title].join(" > ") : s.title;
+			visit(s.children, [...trail, s.title]);
+		}
+	};
+	visit(doc.sections, []);
+	const seen = /* @__PURE__ */ new Map();
+	for (const s of all) {
+		const n = (seen.get(s.name) ?? 0) + 1;
+		seen.set(s.name, n);
+		if (n > 1) s.name = `${s.name} (${n})`;
+	}
+	return doc;
+}
+function parseMarkdown(text) {
+	const heads = [];
+	let fence = false;
+	for (const m of text.matchAll(/^.*$/gm)) {
+		const line = m[0];
+		if (/^\s*(```|~~~)/.test(line)) {
+			fence = !fence;
+			continue;
+		}
+		if (fence) continue;
+		const h = line.match(/^(#{2,6})\s+(.+?)\s*#*\s*$/);
+		if (h) heads.push({
+			at: m.index ?? 0,
+			level: h[1].length,
+			title: h[2]
+		});
+	}
+	const roots = [];
+	const stack = [];
+	const levels = [];
+	for (const [i, h] of heads.entries()) {
+		while (levels.length && levels[levels.length - 1] >= h.level) {
+			stack.pop();
+			levels.pop();
+		}
+		const next = heads.slice(i + 1).find((x) => x.level <= h.level);
+		const end = next ? next.at : text.length;
+		const firstChild = heads[i + 1] && heads[i + 1].level > h.level ? heads[i + 1].at : end;
+		const s = {
+			title: h.title,
+			name: h.title,
+			level: h.level,
+			text: text.slice(h.at, end),
+			intro: text.slice(h.at, firstChild),
+			children: []
+		};
+		(stack.length ? stack[stack.length - 1].children : roots).push(s);
+		stack.push(s);
+		levels.push(h.level);
+	}
+	return nameSections({
+		form: "markdown",
+		opening: text.slice(0, heads.length ? heads[0].at : text.length),
+		sections: roots
+	});
+}
+function parseJson(text) {
+	let value;
+	try {
+		value = JSON.parse(text);
+	} catch {
+		return null;
+	}
+	if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+	const sections = [];
+	const small = {};
+	for (const [key, v] of Object.entries(value)) {
+		const t = JSON.stringify(v, null, 2);
+		const items = Array.isArray(v) && v.length && v.every((e) => e && typeof e === "object" && typeof e.id === "string") ? v : null;
+		const children = items && new Set(items.map((e) => e.id)).size === items.length ? items.map((e) => {
+			const et = JSON.stringify(e, null, 2);
+			return {
+				title: e.id,
+				name: e.id,
+				level: 3,
+				text: et,
+				intro: et,
+				children: []
+			};
+		}) : [];
+		sections.push({
+			title: key,
+			name: key,
+			level: 2,
+			text: t,
+			intro: children.length ? "" : t,
+			children
+		});
+		if (t.length <= 2e3) small[key] = v;
+	}
+	return nameSections({
+		form: "json",
+		opening: Object.keys(small).length ? JSON.stringify(small, null, 2) : "",
+		sections
+	});
+}
+function parseCode(text) {
+	const decls = [...text.matchAll(/^( *)(?:function\s+([A-Za-z_$][\w$]*)\s*\(|def\s+([A-Za-z_]\w*)\s*\()/gm)].map((m) => ({
+		at: m.index ?? 0,
+		indent: m[1].length,
+		title: m[2] ?? m[3]
+	}));
+	const byIndent = /* @__PURE__ */ new Map();
+	for (const d of decls) byIndent.set(d.indent, (byIndent.get(d.indent) ?? 0) + 1);
+	const indent = [...byIndent.entries()].filter(([, n]) => n >= 3).map(([i]) => i).sort((a, b) => a - b)[0];
+	if (indent === void 0) return null;
+	const top = decls.filter((d) => d.indent === indent);
+	const sections = top.map((d, i) => {
+		const t = text.slice(d.at, i + 1 < top.length ? top[i + 1].at : text.length);
+		return {
+			title: d.title,
+			name: d.title,
+			level: 2,
+			text: t,
+			intro: t,
+			children: []
+		};
+	});
+	return nameSections({
+		form: "code",
+		opening: text.slice(0, top[0].at),
+		sections
+	});
+}
+function parseDocument(text, file) {
+	if (/\.md$/i.test(file)) return parseMarkdown(text);
+	if (/\.json$/i.test(file)) {
+		const j = parseJson(text);
+		if (j) return j;
+	}
+	if (/\.(jsx|js|mjs|py)$/i.test(file)) {
+		const c = parseCode(text);
+		if (c) return c;
+	}
+	return {
+		form: "text",
+		opening: "",
+		sections: []
+	};
+}
+function splitText(text, max = PART_CHARS) {
+	if (text.length <= max) return [text];
+	const out = [];
+	let cur = "";
+	const add = (piece) => {
+		if (cur.length + piece.length <= max) {
+			cur += piece;
+			return;
+		}
+		if (cur) {
+			out.push(cur);
+			cur = "";
+		}
+		if (piece.length <= max) {
+			cur = piece;
+			return;
+		}
+		for (const line of piece.match(/[^\n]*\n|[^\n]+$/g) ?? [piece]) {
+			if (cur.length + line.length <= max) {
+				cur += line;
+				continue;
+			}
+			if (cur) {
+				out.push(cur);
+				cur = "";
+			}
+			for (let i = 0; i < line.length; i += max) {
+				const c = line.slice(i, i + max);
+				if (c.length === max) out.push(c);
+				else cur = c;
+			}
+		}
+	};
+	for (const p of text.match(/[\s\S]*?\n\n+|[\s\S]+$/g) ?? [text]) add(p);
+	if (cur) out.push(cur);
+	return out;
+}
+function sectionNames(doc, text) {
+	const out = [];
+	const op = splitText(doc.opening);
+	if (op.length > 1) op.forEach((_, i) => out.push(partName(OPENING, i + 1, op.length)));
+	if (!doc.sections.length) {
+		const w = splitText(text);
+		if (w.length > 1) w.forEach((_, i) => out.push(partName(WHOLE, i + 1, w.length)));
+	}
+	for (const s of allSections(doc)) {
+		out.push(s.name);
+		const parts = splitText(ownText(s));
+		if (parts.length > 1) parts.forEach((_, i) => out.push(partName(s.name, i + 1, parts.length)));
+	}
+	return out;
+}
+function outlineLines(list, depth = 0) {
+	const out = [];
+	for (const s of list) {
+		const parts = splitText(ownText(s)).length;
+		out.push(`${"  ".repeat(depth)}- ${s.name} (${s.text.length} characters${parts > 1 ? `; its own text in ${parts} parts` : ""})`);
+		out.push(...outlineLines(s.children, depth + 1));
+	}
+	return out;
+}
+function wholeOrOutline(e, text, doc = parseDocument(text, e.path)) {
+	const whole = `${header(e, text.length)}
+
+${text}`;
+	if (whole.length <= 4e4) return whole;
+	if (!doc.sections.length) {
+		const parts = splitText(text);
+		return [
+			header(e, text.length),
+			`PART 1 OF ${parts.length}, NOT THE WHOLE DOCUMENT. ${e.id} (${e.title}, ${e.kind}) is ${text.length} characters, longer than one reply (${REPLY_CHARS} characters). Ask for the rest: ae_library { document: "${e.id}", section: [${parts.slice(1).map((_, i) => JSON.stringify(partName(WHOLE, i + 2, parts.length))).join(", ")}] }.`,
+			"",
+			parts[0]
+		].join("\n");
+	}
+	const opening = splitText(doc.opening);
+	return [
+		header(e, text.length),
+		`OUTLINE ONLY, NOT THE DOCUMENT. ${e.id} (${e.title}, ${e.kind}) is ${text.length} characters in ${allSections(doc).length} sections, longer than one reply (${REPLY_CHARS} characters). Below are its outline and its opening; nothing after the opening has been read yet. Read the sections the job needs before relying on this document: ae_library { document: "${e.id}", section: ["<section>", ...] }, several in one call while they fit.`,
+		...doc.form === "code" ? [loadNote(e)] : [],
+		"",
+		"Outline (each section and its size; ask for a section by the name shown):",
+		...outlineLines(doc.sections),
+		"",
+		opening.length > 1 ? `Opening (part 1 of ${opening.length}; ask for ${JSON.stringify(partName(OPENING, 2, opening.length))} next):` : "Opening:",
+		opening[0] ?? ""
+	].join("\n");
+}
+function resolve(doc, text, asked) {
+	const want = asked.trim();
+	const part = want.match(/^(.*) \(part (\d+) of (\d+)\)$/);
+	if (part) {
+		const [, base, k, n] = part;
+		let source = null;
+		if (base === "(opening)") source = doc.opening;
+		else if (base === "(whole)" && !doc.sections.length) source = text;
+		else {
+			const s2 = allSections(doc).find((x) => x.name === base);
+			if (s2) source = ownText(s2);
+		}
+		if (source === null) return null;
+		const parts = splitText(source);
+		const i = Number(k) - 1;
+		if (parts.length < 2 || Number(n) !== parts.length || i < 0 || i >= parts.length) return null;
+		return {
+			name: partName(base, i + 1, parts.length),
+			text: parts[i]
+		};
+	}
+	const s = allSections(doc).find((x) => x.name === want);
+	if (!s) return null;
+	return s.text.length <= 38e3 ? {
+		name: s.name,
+		text: s.text
+	} : {
+		name: s.name,
+		tooLong: s
+	};
+}
+function sectionsReply(e, text, asked, doc = parseDocument(text, e.path)) {
+	if (!asked.length) throw new Error("section is empty: name at least one section");
+	const missing = asked.filter((a) => !resolve(doc, text, a));
+	if (missing.length) {
+		const names = sectionNames(doc, text);
+		throw new Error(`${e.id} has no section ${missing.map((m) => JSON.stringify(m)).join(", ")} (names must match exactly). ` + (names.length ? `Its sections, by the names to ask for: ${names.map((n) => JSON.stringify(n)).join(", ")}.` : "It has no sections: read it without section."));
+	}
+	const blocks = [];
+	const notSent = [];
+	let size = 0;
+	for (const a of asked) {
+		const r = resolve(doc, text, a);
+		let block;
+		if (r.tooLong) {
+			const s = r.tooLong;
+			const own = splitText(ownText(s));
+			block = [
+				`== ${s.name} (${s.text.length} characters, longer than one reply): ${s.children.length ? "its own text and the outline of its subsections; ask for those by name" : `part 1 of ${own.length}`} ==`,
+				...s.children.length ? ["Subsections:", ...outlineLines(s.children)] : [],
+				...own.length > 1 ? [`Its own text is in ${own.length} parts: ${own.map((_, i) => JSON.stringify(partName(s.name, i + 1, own.length))).join(", ")}. Part 1:`] : [],
+				own[0]
+			].join("\n");
+		} else block = `== ${r.name} (${(r.text ?? "").length} characters) ==
+${r.text}`;
+		if (blocks.length && size + block.length > 38e3) {
+			notSent.push(r.name);
+			continue;
+		}
+		blocks.push(block);
+		size += block.length;
+	}
+	const head = `SECTIONS of ${e.id} (${e.title}, ${e.kind}, ${text.length} characters in ${allSections(doc).length} sections): ${blocks.length} of ${asked.length} asked for, in order.` + (notSent.length ? ` Not sent, to stay under one reply (${REPLY_CHARS} characters): ${notSent.map((n) => JSON.stringify(n)).join(", ")}; ask for them in another call.` : "") + (doc.form === "code" ? ` ${loadNote(e)}` : "");
+	return [
+		header(e, text.length),
+		head,
+		"",
+		...blocks
+	].join("\n");
+}
+var REPLY_CHARS, PART_CHARS, walk, allSections, ownText, partName, OPENING, WHOLE, header, loadNote;
+function init_library_parts() {
+	return (init_library_parts = __esmMin((() => {
+		REPLY_CHARS = 4e4;
+		PART_CHARS = 38e3;
+		walk = (list, out = []) => {
+			for (const s of list) {
+				out.push(s);
+				walk(s.children, out);
+			}
+			return out;
+		};
+		allSections = (doc) => walk(doc.sections);
+		ownText = (s) => s.children.length ? s.intro : s.text;
+		partName = (name, k, n) => `${name} (part ${k} of ${n})`;
+		OPENING = "(opening)";
+		WHOLE = "(whole)";
+		header = (e, chars) => `ae_library document ${e.id}: ${e.title} (kind ${e.kind}, ${chars} characters, sha256 ${e.sha256})`;
+		loadNote = (e) => `To use this code, load the whole file inside eval.run with $.evalFile from the plugin's library folder (${e.path}), as its document says; read a function here only to see what it does.`;
+	})))();
+}
+
 // tools/library.js
 function boundedFile(base, relative) {
 	const candidate = path.resolve(base, relative);
@@ -3468,6 +3798,22 @@ function readLibrary(document, query, root = path.resolve(PACKAGE_ROOT, "../libr
 		content: read(entry)
 	};
 }
+function readLibraryEntry(document, root = path.resolve(PACKAGE_ROOT, "../library")) {
+	const base = realpathSync(root);
+	const entry = JSON.parse(readFileSync(boundedFile(base, "manifest.json"), "utf8")).documents.find((e) => e.id === document);
+	if (!entry) throw new Error("Unknown library document. Call ae_library without arguments for valid IDs.");
+	const content = readFileSync(boundedFile(base, entry.path), "utf8");
+	if (createHash("sha256").update(content).digest("hex") !== entry.sha256) throw new Error("Library hash mismatch: regenerate manifest after intentional edits");
+	return {
+		entry,
+		content
+	};
+}
+function libraryDocumentReply(document, section, root) {
+	const { entry, content } = readLibraryEntry(document, root);
+	if (section === void 0) return wholeOrOutline(entry, content);
+	return sectionsReply(entry, content, Array.isArray(section) ? section : [section]);
+}
 var libraryTool;
 function init_library() {
 	return (init_library = __esmMin((() => {
@@ -3475,20 +3821,32 @@ function init_library() {
 		init_define_tool();
 		init_errors();
 		/* @__PURE__ */ init_library_modules();
+		init_library_parts();
 		libraryTool = defineTool({
 			name: "ae_library",
 			title: "Motion design library",
 			group: "document",
 			effect: "read",
 			blockedInReadOnly: false,
-			description: "Read the bundled production-derived motion language, detailed choreography/camera/material modules, worked scenes and native JSX. Begin every After Effects motion task with motion-language, production-workflow and brief-template. Craft applies to all styles; JoeB appearance is optional. Offline; no AE, original repo or account required. Omit document to list IDs and startHere; query filters the index. Pass an ID to read complete contents.",
+			description: `Read the bundled production-derived motion language, detailed choreography/camera/material modules, worked scenes and native JSX. Begin every After Effects motion task with motion-language, production-workflow and brief-template. Craft applies to all styles; JoeB appearance is optional. Offline; no AE, original repo or account required. Omit document to list IDs and startHere; query filters the index. Pass an ID to read a document: whole when it fits in one reply (${REPLY_CHARS} characters), otherwise its outline and opening only, which say so on their first line; then pass section (a heading's exact text or the name the outline shows, or a list of them) to read those sections, several in one call while they fit. Read the sections a job needs before relying on a long document.`,
 			inputShape: {
 				document: z.string().optional(),
-				query: z.string().optional()
+				query: z.string().optional(),
+				section: z.union([z.string(), z.array(z.string())]).optional().describe("With document: a section's name from its outline, or a list of them")
 			},
-			handler: async ({ document, query }) => {
+			handler: async ({ document, query, section }) => {
 				try {
-					return jsonResult(readLibrary(document, query));
+					if (!document) {
+						if (section !== void 0) return errorResult("INVALID_ARGS", "section needs a document: pass document and section together");
+						return jsonResult(readLibrary(void 0, query));
+					}
+					return {
+						content: [{
+							type: "text",
+							text: libraryDocumentReply(document, section)
+						}],
+						isError: false
+					};
 				} catch (e) {
 					return errorResult("IO", e instanceof Error ? e.message : String(e));
 				}
