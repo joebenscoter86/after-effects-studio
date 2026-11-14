@@ -109,6 +109,16 @@ The five render cases failed as run on a grader fault. `ae_render_frame` names i
 | 21, 22, 26 | the prompt: write the findings file, then grade | hand the findings to the grader as one JSON argument; bad JSON is refused without grading | A picture case is granted only read tools and the grader, so it could not write a file. |
 | 18 to 27 | a "plugin skill fired" indicator on every picture case | only where the prompt asks for a skill | Scored in a one-arm run. |
 | 18, 19, 20, 24, 27 | the grader read `<stem>_<index>.png` | it reads `<stem>_<call id>_<index>.png`, the newest call | The render tool's naming changed. |
+| 23 | answer checks `subject-check-first` and `subject-file-first` required the operation names (`subject.check` with "before anything else is built"; `subject.render_cutout`, then `subject.check_file`, then `subject.use_cutout`) | each accepts the operation's name or its plain description, and still requires the order: the check of the cut-out with a hole or what is missing shown, then a render or build step after it (or "before anything else is built" beside `subject.check`); "render the cut-out once / to a file", then "check every frame of the file", with no building on the file in between | The plans say it in the plain words the skill tells them to use with a user: "I check the cut-out around the frame you clicked. If any part of you is missing or there are holes, I'll tell you right away and show you the picture." Then "I render the cut-out to a file … Then I check every frame of that file, and I build the piece on the file". |
+
+Case 23's checks were regraded offline on the six answers kept from the stage 12 comparison, before any new session:
+
+| Check | Plain arm, old → new | Switched-off arm, old → new |
+|---|---|---|
+| check first | 0 → 3 of 3 | 0 → 0 of 3 |
+| file first | 0 → 2 of 3 | 0 → 0 of 3 |
+
+The plain answer that still fails file-first does build on the file before checking it: "Render the cut-out once to a movie with alpha, then build on that file", with the file check after.
 
 **Fixed before any run:**
 - answer checks became regex graders the runner scores, with "up front" a fixed 2,000 characters;
@@ -158,6 +168,10 @@ Its one real run, on the two halves of a side-by-side, went through from prepare
 | Switched-off arms | 24 |
 | Render reruns | 5 |
 
-**Not done:**
-- Case 23's answer checks for "check first" and "render once, build on the file" fail on every plain run. The plans say both in plain words without the operation names the patterns require; whether to widen them is open.
-- No no-plugin baseline was run.
+## Known faults in the cases, left as they are
+
+- **Case 22:** the assertion "with no score or pass or fail verdict" contradicts the case's own prompt, which has the session run the grader. Its answer then opens with the grader's pass.
+- **Cases 05 and 08:** they expect a SKILL.md read, which an explicitly invoked skill does not leave in Claude's trace.
+- **Case 11:** it continues an earlier session, which a single prompt cannot.
+
+**Not done:** no no-plugin baseline was run.

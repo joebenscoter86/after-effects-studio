@@ -195,8 +195,16 @@ export const NOTICE_LIMIT = 2000;
 const KEY = `(?:${['manual', 'by hand', 'your click', 'one click', 'a single click'].map(ci).join('|')}|` +
   `${ci('you')}(?:${ci("'ll")}|${GAP}${ci('will')})?${GAP}(?:${ci('need to')}${GAP})?${ci('click')})`;
 const TEN = `\\b(?:${ci('ten')}|10)${GAP}${ci('seconds')}\\b`;
-const BEFORE = `${ci('before')}${GAP}(?:${['any', 'anything', 'further', 'more', 'other', 'the rest'].map(ci).join('|')})\\b[^.]{0,60}?\\b` +
+// "before anything else is built", allowing a word or two between ("before doing anything else")
+const BEFORE = `${ci('before')}${GAP}(?:[A-Za-z]+${GAP}){0,2}(?:${['any', 'anything', 'further', 'more', 'other', 'the rest'].map(ci).join('|')})\\b[^.]{0,60}?\\b` +
   `(?:${['build', 'built', 'building', 'compositing', 'composite', 'else', 'work'].map(ci).join('|')})`;
+// The three steps of the cut-out by their operation's name or in the plain words a plan for the user uses:
+// the quick check near the click, rendering the cut-out once, and checking every frame of the file before building on it.
+const CHECK_OP = 'subject\\.check(?!_file)';
+const CHECK = `(?:${CHECK_OP}|${ci('quick check')}|${ci('check')}${GAP}(?:${ci('the')}|${ci('your')})${GAP}${ci('cut')}-?${ci('out')})`;
+const RENDER = `(?:subject\\.render_cutout|${ci('render once')}|${ci('render')}(?:${ci('s')}|${ci('ing')})?${GAP}(?:${ci('the')}${GAP}|${ci('your')}${GAP})?${ci('cut')}-?${ci('out')}${GAP}(?:${ci('once')}|${ci('to a')}${GAP}(?:${ci('file')}|${ci('movie')})))`;
+const FILE_CHECK = `(?:subject\\.check_file|${ci('file check')}|${ci('check')}${GAP}(?:${ci('every')}|${ci('each')})${GAP}${ci('frame of')}${GAP}(?:${ci('the')}|${ci('that')}|${ci('this')})${GAP}(?:${ci('file')}|${ci('movie')}|${ci('render')}))`;
+const BUILD_ON_FILE = `(?:subject\\.use_cutout|${ci('build')}(?:${GAP}${ci('the piece')})?${GAP}${ci('on')}${GAP}(?:${ci('the')}|${ci('that')}|${ci('this')})${GAP}${ci('file')})`;
 const HOLE = `\\b(?:${ci('show')}|${ci('picture')})[^.]{0,150}\\b(?:${ci('hole')}|${ci('opening')})|\\b(?:${ci('hole')}|${ci('opening')})[^.]{0,150}\\b(?:${ci('show')}|${ci('picture')})`;
 
 export const ANSWER_CHECKS = {
@@ -214,16 +222,19 @@ export const ANSWER_CHECKS = {
     async pattern() { return (await subjectSteps()).map(stepPattern).join('[\\s\\S]*?'); },
   },
   'subject-check-first': {
-    what: 'the answer runs subject.check after the click and before anything else is built (said within 300 characters of it), and says a hole or opening it finds is shown to the user',
+    what: 'the answer checks the cut-out after the click (subject.check, or in plain words: a quick check of the cut-out) before anything else is built, and says a hole or opening it finds is shown to the user; the order is said (before anything else is built, within 300 characters of subject.check) or shown (the check, a hole shown within 300 characters of it, then a render or build step after)',
     async pattern() {
-      const op = 'subject\\.check';
-      return `^(?=[\\s\\S]*?(?:${BEFORE}[\\s\\S]{0,300}?${op}|${op}[\\s\\S]{0,300}?${BEFORE}))(?=[\\s\\S]*?(?:${HOLE}))`;
+      const said = `(?=[\\s\\S]*?(?:${BEFORE}[\\s\\S]{0,300}?${CHECK_OP}|${CHECK_OP}[\\s\\S]{0,300}?${BEFORE}))(?=[\\s\\S]*?(?:${HOLE}))`;
+      // a plan in plain words says what is missing and shows it: "If anything is missing, I'll tell you … with a picture"
+      const hole = `\\b(?:${ci('show')}|${ci('picture')})[^.]{0,150}\\b(?:${ci('hole')}|${ci('opening')}|${ci('missing')})|\\b(?:${ci('hole')}|${ci('opening')}|${ci('missing')})[^.]{0,150}\\b(?:${ci('show')}|${ci('picture')})`;
+      const shown = `(?=[\\s\\S]*?${CHECK}[\\s\\S]{0,300}?(?:${hole})[\\s\\S]*?(?:${RENDER}|${BUILD_ON_FILE}))`;
+      return `^(?:${said}|${shown})`;
     },
   },
   'subject-file-first': {
-    what: 'the answer renders the cut-out once (subject.render_cutout) and checks the file (subject.check_file) before building on it (subject.use_cutout)',
+    what: 'the answer renders the cut-out once and checks every frame of the file before building on it: subject.render_cutout or "render the cut-out once / to a file", then subject.check_file or "check every frame of the file", with no building on the file (subject.use_cutout, "build on the file") in between',
     async pattern() {
-      return '^(?:(?!subject\\.(?:check_file|use_cutout))[\\s\\S])*?subject\\.render_cutout(?:(?!subject\\.use_cutout)[\\s\\S])*?subject\\.check_file';
+      return `${RENDER}(?:(?!${BUILD_ON_FILE})[\\s\\S])*?${FILE_CHECK}`;
     },
   },
   // Hand-over and delivery (stage 9): the operations and presets by name, which only its guidance gives.
