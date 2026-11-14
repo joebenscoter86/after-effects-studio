@@ -11,10 +11,13 @@
 // so the verdict is the state the agent finished in. The eval suite's regex
 // graders read picture-grade/verdict.txt, one PICTURE-CHECK line per check.
 //
-// The measurements come from the plugin's runtime (runtime/dist/color). It is
-// found from grade-config.json next to this file ({ "runtimeDist": "<dir>" },
-// written by release/claude-evals.mjs), else by walking up from this file to a
-// folder holding runtime/dist/color/matte.js (the plugin, or a package copy).
+// The measurements come from the plugin's runtime (dist/color). In a written
+// suite the case carries its own copy of the modules the grader needs, and
+// grade-config.json next to this file says where ({ "runtimeDist": "runtime" },
+// written by release/claude-evals.mjs). Without the config (run from the
+// repository) it walks up from this file to a folder holding
+// runtime/dist/color/matte.js. The footage eval also reads footage-truth.json,
+// the plate as measured from the handed clip, next to this file.
 import { existsSync, readFileSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -51,7 +54,9 @@ if (existsSync(verdictFile)) {
   console.log(`already graded: ${verdictFile} stands; the grade runs once.`);
   process.exit(3);
 }
-const res = await gradeDir(name, dir, await loadRuntime(runtimeDist()));
+const truthFile = path.join(HERE, 'footage-truth.json');
+const truth = name === 'footage' && existsSync(truthFile) ? JSON.parse(readFileSync(truthFile, 'utf8')) : null;
+const res = await gradeDir(name, dir, await loadRuntime(runtimeDist()), { truth });
 const text = formatVerdict(name, res);
 await fs.mkdir(dir, { recursive: true });
 await fs.writeFile(path.join(dir, 'verdict.json'), JSON.stringify({ eval: name, ...res }, null, 2) + '\n');

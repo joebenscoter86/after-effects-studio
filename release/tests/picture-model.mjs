@@ -11,7 +11,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { GRADE, KEYING, OVER, SEAT } from '../../plugin/evals/picture/scenes.mjs';
+import { FOOTAGE, GRADE, KEYING, OVER, SEAT } from '../../plugin/evals/picture/scenes.mjs';
 
 /** Signed distance from (px, py) to a polygon, positive inside. */
 function sdPoly(px, py, pts) {
@@ -258,6 +258,39 @@ export function seatFrame(frame, { element = {}, plate = {} } = {}) {
         const ev = card.colour[i] + (stripe.colour[i] - card.colour[i]) * Math.min(1, sc / Math.max(ca, 1e-9));
         const eNoise = (eg / 255) * gauss(re);
         rgb[p * 3 + i] = q8(pv * (1 - ca) + (ev + eNoise) * ca);
+      }
+    }
+  }
+  return { width: W, height: H, rgb, bitDepth: 8 };
+}
+
+// ---------------------------------------------------------------------------
+// Sit an element in real footage
+// ---------------------------------------------------------------------------
+
+/**
+ * One frame of the footage eval's seat comp as ae_render_frame writes it: a decoded plate frame (the clip itself),
+ * with the element (FOOTAGE's card and stripe at `layout`, in pixels) laid over it, its edges blurred by `sigma` px
+ * and grain of `grain` 8-bit steps that is new on every frame (`frame` seeds it). `plateGrain` adds that much grain
+ * to the plate as well, as a task that changed the plate would.
+ */
+export function footageFrame(plate, layout, frame, { sigma = 0, grain = 0, plateGrain = 0 } = {}) {
+  const { width: W, height: H } = plate;
+  const unit = (seed) => { const r = rng(seed); return () => (r(1) + 1) / 2; };
+  const re = unit(3000 + frame), rp = unit(5000 + frame);
+  const { card, stripe } = FOOTAGE.element;
+  const rgb = new Float64Array(W * H * 3);
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const p = y * W + x;
+      const ca = boxCover(x, y, layout.card, sigma);
+      const sc = boxCover(x, y, layout.stripe, sigma);
+      for (let i = 0; i < 3; i++) {
+        let pv = plate.rgb[p * 3 + i];
+        if (plateGrain) pv += (plateGrain / 255) * gauss(rp);
+        if (ca <= 1e-6) { rgb[p * 3 + i] = q8(pv); continue; }
+        const ev = card.colour[i] + (stripe.colour[i] - card.colour[i]) * Math.min(1, sc / Math.max(ca, 1e-9)) + (grain / 255) * gauss(re);
+        rgb[p * 3 + i] = q8(pv * (1 - ca) + ev * ca);
       }
     }
   }
