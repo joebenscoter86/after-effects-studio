@@ -66096,7 +66096,7 @@ function parseMarkdown(text) {
   let fence = false;
   for (const m of text.matchAll(/^.*$/gm)) {
     const line = m[0];
-    if (/^\s*(```|~~~)/.test(line)) {
+    if (/^\s*(\x60{3}|~{3})/.test(line)) {
       fence = !fence;
       continue;
     }
