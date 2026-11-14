@@ -66,7 +66,7 @@ function parseMarkdown(text: string): ParsedDocument {
   let fence = false;
   for (const m of text.matchAll(/^.*$/gm)) {
     const line = m[0];
-    if (/^\s*(```|~~~)/.test(line)) { fence = !fence; continue; }
+    if (/^\s*(\x60{3}|~{3})/.test(line)) { fence = !fence; continue; }   // a code fence (written without backticks)
     if (fence) continue;
     const h = line.match(/^(#{2,6})\s+(.+?)\s*#*\s*$/);
     if (h) heads.push({ at: m.index ?? 0, level: h[1].length, title: h[2] });
