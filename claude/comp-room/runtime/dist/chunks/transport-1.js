@@ -17,6 +17,10 @@ function appBundlePath(aePath) {
 	const match = normalized.match(/^(.*?\.app)(\/|$)/);
 	return match ? match[1] : normalized;
 }
+function pushRouteBanner(platform = process.platform) {
+	if (platform === "darwin") return "instance: none registered yet — calls reach the running After Effects through osascript and DoScript; a second instance needs the agent: `mcp-aftereffects install-agent`";
+	return "instance: none registered yet — calls launch AfterFX.exe -r into the running After Effects (instances started with -m need the agent: `mcp-aftereffects install-agent`)";
+}
 function buildInstanceLaunchPlan(aePath, instanceId, platform = process.platform) {
 	if (platform === "darwin") return {
 		command: "/usr/bin/open",
@@ -1491,4 +1495,4 @@ function init_FileIpcTransport() {
 	})))();
 }
 
-export { ACCESSIBILITY_HINT, FileIpcTransport, SCRIPT_RUNNING_HINT, buildInstanceLaunchPlan, describeInstance, dialogBlockMessage, dialogHint, dialogScanSupported, dismissAeDialog, init_FileIpcTransport, init_dialogs, init_instances, init_launcher, instanceLabel, jsxPath, listInstances, readInstance, resolveTarget, scanAeDialogs, scanAeWindows, scriptRunningMessage, splitScriptProgress };
+export { ACCESSIBILITY_HINT, FileIpcTransport, SCRIPT_RUNNING_HINT, buildInstanceLaunchPlan, describeInstance, dialogBlockMessage, dialogHint, dialogScanSupported, dismissAeDialog, init_FileIpcTransport, init_dialogs, init_instances, init_launcher, instanceLabel, jsxPath, listInstances, pushRouteBanner, readInstance, resolveTarget, scanAeDialogs, scanAeWindows, scriptRunningMessage, splitScriptProgress };

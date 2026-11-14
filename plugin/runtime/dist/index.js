@@ -37112,6 +37112,12 @@ function appBundlePath(aePath) {
   const match = normalized.match(/^(.*?\.app)(\/|$)/);
   return match ? match[1] : normalized;
 }
+function pushRouteBanner(platform = process.platform) {
+  if (platform === "darwin") {
+    return "instance: none registered yet \u2014 calls reach the running After Effects through osascript and DoScript; a second instance needs the agent: `mcp-aftereffects install-agent`";
+  }
+  return "instance: none registered yet \u2014 calls launch AfterFX.exe -r into the running After Effects (instances started with -m need the agent: `mcp-aftereffects install-agent`)";
+}
 function buildInstanceLaunchPlan(aePath, instanceId, platform = process.platform) {
   if (platform === "darwin") {
     return {
@@ -66731,7 +66737,7 @@ async function instanceBanner() {
     case "pull":
       return `instance: ${target.instance.id} (resident agent${named ? `, AE_MCP_INSTANCE=${named}` : ", the only live one"})`;
     case "push":
-      return "instance: none registered yet \u2014 calls launch AfterFX.exe -r into the running After Effects (instances started with -m need the agent: `mcp-aftereffects install-agent`)";
+      return pushRouteBanner();
     case "error":
       return `instance: UNRESOLVED \u2014 ${target.message}`;
   }

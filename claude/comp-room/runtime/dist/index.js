@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { __esmMin } from "./chunks/rolldown-runtime.js";
 import { RUNTIME_DIR, denyTool, errorResult, init_cli, init_config, init_errors, init_policy, instanceTargetFromEnv, policySummary, readOnlyMode, runCli } from "./chunks/core-1.js";
-import { FileIpcTransport, init_FileIpcTransport } from "./chunks/transport-1.js";
+import { FileIpcTransport, init_FileIpcTransport, init_launcher, pushRouteBanner } from "./chunks/transport-1.js";
 import { init_operations } from "./chunks/operations-1.js";
 import { ALL_TOOLS, init_library, init_tools, libraryTool } from "./chunks/tools-1.js";
 import { createRequire } from "node:module";
@@ -38,7 +38,7 @@ async function instanceBanner() {
 	const target = await transport.describeTarget();
 	switch (target.mode) {
 		case "pull": return `instance: ${target.instance.id} (resident agent${named ? `, AE_MCP_INSTANCE=${named}` : ", the only live one"})`;
-		case "push": return "instance: none registered yet — calls launch AfterFX.exe -r into the running After Effects (instances started with -m need the agent: `mcp-aftereffects install-agent`)";
+		case "push": return pushRouteBanner();
 		case "error": return `instance: UNRESOLVED \u2014 ${target.message}`;
 	}
 }
@@ -64,6 +64,7 @@ function init_server() {
 		init_errors();
 		init_policy();
 		init_FileIpcTransport();
+		init_launcher();
 		await init_operations();
 		init_tools();
 		init_library();
