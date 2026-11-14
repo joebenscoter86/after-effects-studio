@@ -3271,8 +3271,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path22) {
-      let input2 = path22;
+    function removeDotSegments(path27) {
+      let input2 = path27;
       const output2 = [];
       let nextSlash = -1;
       let len = 0;
@@ -3346,11 +3346,11 @@ var require_utils = __commonJS({
       }
       return output2.join("");
     }
-    function removeDotSegmentsRelative(path22) {
-      if (path22 === "" || path22[0] === "/") {
-        return removeDotSegments(path22);
+    function removeDotSegmentsRelative(path27) {
+      if (path27 === "" || path27[0] === "/") {
+        return removeDotSegments(path27);
       }
-      const segments = path22.split("/");
+      const segments = path27.split("/");
       const last = segments.length - 1;
       const output2 = [];
       let trailingDirectory = false;
@@ -3713,8 +3713,8 @@ var require_schemes = __commonJS({
       }
       if (wsComponent.resourceName) {
         const queryIndex = wsComponent.resourceName.indexOf("?");
-        const path22 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
-        wsComponent.path = path22 && path22 !== "/" ? path22 : void 0;
+        const path27 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
+        wsComponent.path = path27 && path27 !== "/" ? path27 : void 0;
         wsComponent.query = queryIndex === -1 ? void 0 : wsComponent.resourceName.slice(queryIndex + 1);
         wsComponent.resourceName = void 0;
       }
@@ -7251,12 +7251,12 @@ var require_dist = __commonJS({
         throw new Error(`Unknown format "${name}"`);
       return f;
     };
-    function addFormats(ajv, list, fs19, exportName) {
+    function addFormats(ajv, list, fs24, exportName) {
       var _a3;
       var _b;
       (_a3 = (_b = ajv.opts.code).formats) !== null && _a3 !== void 0 ? _a3 : _b.formats = (0, codegen_1._)`require("ajv-formats/dist/formats").${exportName}`;
       for (const f of list)
-        ajv.addFormat(f, fs19[f]);
+        ajv.addFormat(f, fs24[f]);
     }
     module.exports = exports = formatsPlugin;
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -7555,23 +7555,23 @@ __export(eval_exports, {
   readScriptFile: () => readScriptFile
 });
 import { readFileSync, realpathSync, statSync as statSync2 } from "node:fs";
-import * as path17 from "node:path";
+import * as path22 from "node:path";
 function realOrResolved(p) {
   try {
     return realpathSync(p);
   } catch {
-    return path17.resolve(p);
+    return path22.resolve(p);
   }
 }
 function isInside(p, root) {
-  const rel = path17.relative(root, p);
-  return rel === "" || !rel.startsWith("..") && !path17.isAbsolute(rel);
+  const rel = path22.relative(root, p);
+  return rel === "" || !rel.startsWith("..") && !path22.isAbsolute(rel);
 }
 function refuse(error62, hint) {
   return hint ? { ok: false, error: error62, hint } : { ok: false, error: error62 };
 }
 function readScriptFile(file2) {
-  if (!path17.isAbsolute(file2)) {
+  if (!path22.isAbsolute(file2)) {
     return {
       ok: false,
       error: `file must be an absolute path (got '${file2}'): the server's working directory is not yours`
@@ -8063,8 +8063,8 @@ function getErrorMap() {
 
 // node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path22, errorMaps, issueData } = params;
-  const fullPath = [...path22, ...issueData.path || []];
+  const { data, path: path27, errorMaps, issueData } = params;
+  const fullPath = [...path27, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -8179,11 +8179,11 @@ var errorUtil;
 
 // node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path22, key) {
+  constructor(parent, value, path27, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path22;
+    this._path = path27;
     this._key = key;
   }
   get path() {
@@ -12138,10 +12138,10 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path22) {
-  if (!path22)
+function getElementAtPath(obj, path27) {
+  if (!path27)
     return obj;
-  return path22.reduce((acc, key) => acc?.[key], obj);
+  return path27.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -12481,11 +12481,11 @@ function explicitlyAborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path22, issues) {
+function prefixIssues(path27, issues) {
   return issues.map((iss) => {
     var _a3;
     (_a3 = iss).path ?? (_a3.path = []);
-    iss.path.unshift(path22);
+    iss.path.unshift(path27);
     return iss;
   });
 }
@@ -12947,16 +12947,16 @@ function flattenError(error62, mapper = (issue2) => issue2.message) {
 }
 function formatError(error62, mapper = (issue2) => issue2.message) {
   const fieldErrors = { _errors: [] };
-  const processError = (error63, path22 = []) => {
+  const processError = (error63, path27 = []) => {
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path22, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path27, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path22, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path27, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path22, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path27, ...issue2.path]);
       } else {
-        const fullpath = [...path22, ...issue2.path];
+        const fullpath = [...path27, ...issue2.path];
         if (fullpath.length === 0) {
           fieldErrors._errors.push(mapper(issue2));
         } else {
@@ -12995,17 +12995,17 @@ function formatError(error62, mapper = (issue2) => issue2.message) {
 }
 function treeifyError(error62, mapper = (issue2) => issue2.message) {
   const result = { errors: [] };
-  const processError = (error63, path22 = []) => {
+  const processError = (error63, path27 = []) => {
     var _a3;
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path22, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path27, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path22, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path27, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path22, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path27, ...issue2.path]);
       } else {
-        const fullpath = [...path22, ...issue2.path];
+        const fullpath = [...path27, ...issue2.path];
         if (fullpath.length === 0) {
           result.errors.push(mapper(issue2));
           continue;
@@ -13044,8 +13044,8 @@ function treeifyError(error62, mapper = (issue2) => issue2.message) {
 }
 function toDotPath(_path) {
   const segs = [];
-  const path22 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
-  for (const seg of path22) {
+  const path27 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
+  for (const seg of path27) {
     if (typeof seg === "number")
       segs.push(`[${seg}]`);
     else if (typeof seg === "symbol")
@@ -28596,11 +28596,11 @@ function normalizeObjectSchema(schema) {
   }
   return void 0;
 }
-function getDotPath(path22) {
-  if (path22.length === 0) {
+function getDotPath(path27) {
+  if (path27.length === 0) {
     return "object root";
   }
-  return path22.reduce((acc, seg, index) => {
+  return path27.reduce((acc, seg, index) => {
     if (index === 0) {
       return String(seg);
     }
@@ -30827,13 +30827,13 @@ function resolveRef(ref, ctx) {
   if (!ref.startsWith("#")) {
     throw new Error("External $ref is not supported, only local refs (#/...) are allowed");
   }
-  const path22 = ref.slice(1).split("/").filter(Boolean);
-  if (path22.length === 0) {
+  const path27 = ref.slice(1).split("/").filter(Boolean);
+  if (path27.length === 0) {
     return ctx.rootSchema;
   }
   const defsKey = ctx.version === "draft-2020-12" ? "$defs" : "definitions";
-  if (path22[0] === defsKey) {
-    const key = path22[1] === void 0 ? void 0 : decodeJSONPointerSegment(path22[1]);
+  if (path27[0] === defsKey) {
+    const key = path27[1] === void 0 ? void 0 : decodeJSONPointerSegment(path27[1]);
     if (!key || !ctx.defs[key]) {
       throw new Error(`Reference not found: ${ref}`);
     }
@@ -44499,11 +44499,6 @@ registerOp({
   }
 });
 
-// src/operations/keying.ts
-import { execFile as execFile3 } from "node:child_process";
-import { promises as fs10 } from "node:fs";
-import * as path10 from "node:path";
-
 // src/color/motion.ts
 var DIFF_DEFAULTS = {
   changeAbove: 0.04,
@@ -51849,7 +51844,692 @@ async function writeOutput(file2, capture, convert, channels, backdrop, bg) {
   return decodePng(bytes);
 }
 
-// src/operations/keying.ts
+// src/operations/keying-key.ts
+init_registry();
+
+// src/operations/keying-shared.ts
+import { promises as fs10 } from "node:fs";
+import * as path10 from "node:path";
+init_registry();
+var compLayerParams = [
+  { name: "comp", type: "any", description: "Comp name or id", required: true },
+  {
+    name: "layer",
+    type: "any",
+    description: "1-based layer index, or the layer name",
+    required: true
+  }
+];
+var FX_ROOT_JSX = `
+            var _fxRoot = _layer.property("ADBE Effect Parade");
+            if (!_fxRoot) return { ok: false, error: "layer '" + _layer.name + "' cannot carry effects" };
+`;
+var OBJECT_MATTE_MATCH_NAME = "ADBE Samurai";
+var OBJECT_MATTE_SELECTIONS_MATCH_NAME = "ADBE Samurai Strokes Group";
+var SUBJECT_WHOLE_PIECE_NOTE = "For a whole piece, scale the take to delivery size first (a delivery-size copy of the footage, before the click: sourceAdvice), then render the cut-out in halves, emptying After Effects' disk cache between them: two halves of a 43.5 s piece at 1088 x 1920 took about 4.3 minutes and 12 GB of cache each. Check free disk space before each half. subject.render_cutout takes from and to (comp seconds) for each half; join the halves with a stream copy (HALVES_JOIN_NOTE).";
+var CLOSE_CLICK_SHARE = 0.05;
+var COUNT_NOTE = "A selection count is not a check: it does not say what was selected. Run subject.check and look at its picture before building anything on the cut-out.";
+var NEED_CLICK = "run subject.prepare and ask the user for the click, relaying its steps word for word";
+var subjectIndexParam = {
+  name: "effectIndex",
+  type: "number",
+  description: "1-based index of the Object Matte to use when the layer has several (it must be Object Matte, ADBE Samurai). Default: the first in the stack.",
+  required: false
+};
+var CUTOUT_HOLE_LIMIT = 1e3;
+var CUTOUT_OVER = "#ff00ff";
+var CUTOUT_SECONDS_PER_FRAME = 60;
+var SETTLE_MAX_MS = 6e5;
+var THUMB = 360;
+var PICTURE_DEFLATE = 1;
+var intersects = (a, b) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+var union2 = (a, b) => {
+  const x = Math.min(a.x, b.x);
+  const y = Math.min(a.y, b.y);
+  return {
+    x,
+    y,
+    width: Math.max(a.x + a.width, b.x + b.width) - x,
+    height: Math.max(a.y + a.height, b.y + b.height) - y
+  };
+};
+var fmt2 = (n) => Math.round(n).toLocaleString("en-US");
+var boxText = (b) => `(${b.x}, ${b.y}, ${b.width} \xD7 ${b.height})`;
+var plural2 = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+var boxArea = (b) => b.width * b.height;
+var iou = (a, b) => {
+  const w = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
+  const h = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
+  if (w <= 0 || h <= 0) return 0;
+  const inter = w * h;
+  return inter / (boxArea(a) + boxArea(b) - inter);
+};
+function alikeRegions(a, b) {
+  if (iou(a, b) >= 0.5) return true;
+  if (!intersects(a, b)) return false;
+  const big = Math.max(a.area, b.area);
+  const small = Math.min(a.area, b.area);
+  return small > 0 && big / small <= 2;
+}
+var isFrozenEntry = (e) => !("box" in e) && e.kind === "frozen";
+function frozenAccepted(run, accept) {
+  return accept.some(
+    (e) => isFrozenEntry(e) && (e.from === void 0 || e.from <= run.to) && (e.to === void 0 || e.to >= run.from)
+  );
+}
+function acceptedBy(f, accept) {
+  return accept.some((e) => {
+    if (isFrozenEntry(e)) return false;
+    const box2 = "box" in e ? e.box : e;
+    const kind = ("box" in e ? e.kind : void 0) ?? "opening";
+    return kind === f.kind && iou(f.box, box2) >= 0.5;
+  });
+}
+function cutoutFindings(frames, limit) {
+  const out = [];
+  for (const kind of ["hole", "opening"]) {
+    const groups = [];
+    for (const fr of frames) {
+      for (const h of (kind === "hole" ? fr.holes : fr.openings) ?? []) {
+        if (h.area < limit) continue;
+        const b = { x: h.x, y: h.y, width: h.width, height: h.height };
+        const g = groups.find((x) => x.members.some((m) => alikeRegions(m, h)));
+        if (g) {
+          const f = g.f;
+          g.members.push(h);
+          f.box = union2(f.box, b);
+          if (h.area > f.largestArea) {
+            f.largestArea = h.area;
+            f.largestFrame = fr.frame;
+          }
+          f.smallestArea = Math.min(f.smallestArea, h.area);
+          if (!f.frames.includes(fr.frame)) f.frames.push(fr.frame);
+          if (f.edges) {
+            for (const e of h.edges ?? []) if (!f.edges.includes(e)) f.edges.push(e);
+          }
+        } else
+          groups.push({
+            members: [h],
+            f: {
+              kind,
+              frames: [fr.frame],
+              smallestArea: h.area,
+              largestArea: h.area,
+              largestFrame: fr.frame,
+              box: b,
+              ...kind === "opening" ? { edges: [...h.edges ?? []] } : {}
+            }
+          });
+      }
+    }
+    out.push(...groups.map((g) => g.f).sort((a, b) => b.largestArea - a.largestArea));
+  }
+  return out;
+}
+async function writePng(io, file2, data) {
+  if (io.writePng) return io.writePng(file2, data);
+  await fs10.mkdir(path10.dirname(file2), { recursive: true });
+  await fs10.writeFile(file2, data);
+}
+var GB = 1e9;
+var gb = (n) => `${(n / GB).toFixed(1)} GB`;
+var PICTURE_MARGIN_BYTES = 1 * GB;
+var captureBytes = (size2) => (Array.isArray(size2) ? size2[0] * size2[1] : 1080 * 1920) * 4;
+async function statfsFree(dir) {
+  let d = path10.resolve(dir);
+  for (; ; ) {
+    try {
+      const st = await fs10.statfs(d);
+      return Number(st.bavail) * Number(st.bsize);
+    } catch {
+      const up = path10.dirname(d);
+      if (up === d) return null;
+      d = up;
+    }
+  }
+}
+async function spaceRefusal(io, dir, needed, margin, what) {
+  const free = await (io.freeBytes ?? statfsFree)(dir);
+  if (free === null || free >= needed + margin) return null;
+  return {
+    ok: false,
+    error: `only ${gb(free)} free on the drive holding ${dir}; ${what} needs about ${gb(needed)} plus a margin of ${gb(margin)} (After Effects writes its disk cache to the same drive while it renders, and a render on a nearly full drive stalls instead of failing). Free some space first, for example by purging After Effects' cache: Edit > Purge > All Memory & Disk Cache. Nothing was rendered.`,
+    space: { free, needed: Math.round(needed), margin, where: dir }
+  };
+}
+function cacheBytesFor(frames, sourceSize) {
+  const [w, h] = Array.isArray(sourceSize) && sourceSize.length >= 2 ? sourceSize : [1920, 1080];
+  return frames * w * h * 8;
+}
+async function volumeKey(dir) {
+  let d = path10.resolve(dir);
+  for (; ; ) {
+    try {
+      return (await fs10.stat(d)).dev;
+    } catch {
+      const up = path10.dirname(d);
+      if (up === d) return null;
+      d = up;
+    }
+  }
+}
+var PART_NAMES = {
+  movie: "the movie",
+  cache: "After Effects' disk cache",
+  pictures: "captures and pictures"
+};
+async function spacePlan(io, entries, margin, what) {
+  const byVol = [];
+  for (const e of entries) {
+    const key = await (io.volumeOf ?? volumeKey)(e.where);
+    const v = byVol.find((x) => x.key === key && key !== null);
+    if (v)
+      for (const [k, n] of Object.entries(e.parts))
+        v.parts[k] = (v.parts[k] ?? 0) + (n ?? 0);
+    else byVol.push({ key, where: e.where, parts: { ...e.parts } });
+  }
+  const volumes = [];
+  let refusal = null;
+  for (const v of byVol) {
+    const free = await (io.freeBytes ?? statfsFree)(v.where);
+    const needed = Object.values(v.parts).reduce((a, b) => a + (b ?? 0), 0);
+    const ok = free === null || free >= needed + margin;
+    const row2 = { where: v.where, free, parts: v.parts, needed: Math.round(needed), margin, ok };
+    volumes.push(row2);
+    if (!ok && !refusal) {
+      const partText = Object.entries(v.parts).map(([k, n]) => `${PART_NAMES[k]} ${gb(n ?? 0)}`).join(", ");
+      refusal = {
+        ok: false,
+        error: `only ${gb(free)} free on the drive holding ${v.where}; ${what} needs about ${gb(needed)} there (${partText}) plus a margin of ${gb(margin)}. A render on a nearly full drive stalls instead of failing. Free some space first, for example by purging After Effects' cache: Edit > Purge > All Memory & Disk Cache. Nothing was rendered.`,
+        space: { ...row2, volumes }
+      };
+    }
+  }
+  if (refusal) refusal.space.volumes = volumes;
+  return { volumes, refusal };
+}
+var trackedSpan = (frames) => frames.length ? Math.max(...frames) - Math.min(...frames) + 1 : 0;
+function aeCacheRoot(folder, version3) {
+  if (!folder || !version3) return null;
+  const m = /^(\d+)\.(\d+)/.exec(version3);
+  if (!m) return null;
+  return path10.join(folder, "Adobe", "After Effects", `${m[1]}.${m[2]}`);
+}
+var FROZEN_DEFAULTS = { gap: 30, limit: 2e-3, minFrames: 60 };
+var frozenOpts = (args) => ({
+  gap: typeof args.frozenGap === "number" ? args.frozenGap : FROZEN_DEFAULTS.gap,
+  limit: typeof args.frozenLimit === "number" ? args.frozenLimit : FROZEN_DEFAULTS.limit,
+  minFrames: typeof args.frozenFrames === "number" ? args.frozenFrames : FROZEN_DEFAULTS.minFrames
+});
+function frozenFinding(run, pictures) {
+  const moved = run.footageChange > 1e-3;
+  return {
+    kind: "frozen",
+    ...run,
+    pictures,
+    reading: `The cut-out's outline did not move for ${run.length} frames` + (moved ? ` while the footage did (frames ${run.from} to ${run.to}; ${(run.footageChange * 100).toFixed(1)}% of the frame changed inside the outline)` : ` (frames ${run.from} to ${run.to}), and the picture inside it barely changed either`) + `. The selection is probably not tracking: this happens when the layer's footage is replaced after the click. Click again on this footage (subject.prepare, then the steps). If the subject is genuinely motionless (a product on a table, a locked-off object) this is expected: pass accept: [{ kind: "frozen" }] to wave it through once seen.`
+  };
+}
+var renderTally = () => ({
+  frames: 0,
+  calls: 0,
+  ms: 0,
+  aeCallMs: 0,
+  settleMs: 0,
+  renderNodeMs: 0
+});
+var pixelTally = () => ({
+  frames: 0,
+  readMs: 0,
+  regionsMs: 0,
+  picturesMs: 0,
+  sheetMs: 0,
+  ms: 0
+});
+var since = (t) => performance.now() - t;
+var roundTally = (t) => Object.fromEntries(
+  Object.entries(t).map(([k, v]) => [k, typeof v === "number" ? Math.round(v) : v])
+);
+async function renderChunked(io, base, frames, perFrameMs, outDir, stem, tally = renderTally(), firstCall = 0) {
+  const size2 = Math.max(1, Math.min(32, Math.floor(SETTLE_MAX_MS / perFrameMs)));
+  const out = [];
+  for (let c = 0; c * size2 < frames.length; c++) {
+    const chunk2 = frames.slice(c * size2, (c + 1) * size2);
+    const t0 = performance.now();
+    const payload = await io.render({
+      ...base,
+      frames: chunk2,
+      outPath: path10.join(outDir, `${stem}-${firstCall + c}.png`),
+      settleTimeoutMs: Math.min(SETTLE_MAX_MS, Math.max(1, Math.round(perFrameMs * chunk2.length)))
+    });
+    tally.calls++;
+    tally.frames += chunk2.length;
+    tally.ms += since(t0);
+    tally.aeCallMs += payload?.timing?.aeCallMs ?? 0;
+    tally.settleMs += payload?.timing?.settleMs ?? payload?.captureSettle?.waitedMs ?? 0;
+    tally.renderNodeMs += payload?.timing?.nodeMs ?? 0;
+    if (!payload?.ok) {
+      for (const frame of chunk2)
+        out.push({
+          frame,
+          ok: false,
+          error: `the render call failed: ${payload?.error ?? "no result"}`
+        });
+      continue;
+    }
+    const list = payload.frames ?? (payload.writtenTo ? [{ ...payload, ok: true, frame: chunk2[0] }] : []);
+    for (const [i, frame] of chunk2.entries()) {
+      const f = list.find((x) => x.frame === frame) ?? list[i];
+      if (!f) out.push({ frame, ok: false, error: "not in the render's result" });
+      else if (f.ok === false || typeof f.writtenTo !== "string")
+        out.push({ frame, ok: false, error: f.error ?? "the frame was not written" });
+      else out.push({ frame, ok: true, file: f.writtenTo, edge: f.edge });
+    }
+  }
+  return out;
+}
+function parseHex(c) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(c.trim());
+  if (!m) return [1, 0, 1];
+  const v = parseInt(m[1], 16);
+  return [(v >> 16 & 255) / 255, (v >> 8 & 255) / 255, (v & 255) / 255];
+}
+async function measureFrames(io, rendered, limit, over, sheetPath, tally = pixelTally(), pictures = true, onImage) {
+  const started = performance.now();
+  const colour = parseHex(over);
+  const readings = [];
+  const thumbs = [];
+  const labels = [];
+  const split = (list) => ({
+    big: list.filter((r) => r.area >= limit),
+    small: {
+      count: list.filter((r) => r.area < limit).length,
+      area: list.filter((r) => r.area < limit).reduce((s, r) => s + r.area, 0)
+    }
+  });
+  for (const r of rendered) {
+    if (!r.ok || !r.file) {
+      readings.push({
+        frame: r.frame,
+        checked: false,
+        holes: null,
+        openings: null,
+        error: r.error
+      });
+      continue;
+    }
+    let img;
+    const tRead = performance.now();
+    try {
+      img = await io.readImage(r.file);
+    } catch (err) {
+      readings.push({
+        frame: r.frame,
+        checked: false,
+        holes: null,
+        openings: null,
+        error: `could not read ${r.file}: ${err instanceof Error ? err.message : String(err)}`
+      });
+      continue;
+    } finally {
+      tally.readMs += since(tRead);
+    }
+    if (!img.alpha) {
+      readings.push({
+        frame: r.frame,
+        checked: false,
+        holes: null,
+        openings: null,
+        error: `${r.file} has no alpha channel`
+      });
+      continue;
+    }
+    tally.frames++;
+    const tRegions = performance.now();
+    const regions = cutoutRegions(img.alpha, img.width, img.height);
+    let opaquePx = 0;
+    const alpha = img.alpha;
+    for (let p = 0; p < alpha.length; p++) if (alpha[p] >= EDGE_DEFAULTS.opaque) opaquePx++;
+    tally.regionsMs += since(tRegions);
+    const h = split(regions.holes);
+    const o = split(regions.openings);
+    const tPic = performance.now();
+    if (!pictures) {
+      readings.push({
+        frame: r.frame,
+        checked: true,
+        file: r.file,
+        opaqueShare: Math.round(opaquePx / img.alpha.length * 1e4) / 1e4,
+        holes: h.big,
+        openings: o.big,
+        holesUnderLimit: h.small,
+        openingsUnderLimit: o.small
+      });
+      onImage?.(readings[readings.length - 1], img);
+      continue;
+    }
+    const composite = flattenOver(img, { kind: "color", color: colour });
+    const picture2 = r.file.replace(/\.png$/i, "") + "_over.png";
+    await writePng(io, picture2, encodePngSrgb8(img.width, img.height, composite, PICTURE_DEFLATE));
+    const tw = Math.min(THUMB, img.width);
+    const th = Math.max(1, Math.round(img.height * tw / img.width));
+    thumbs.push({
+      width: tw,
+      height: th,
+      rgb: resample({ ...img, rgb: composite }, tw, th),
+      bitDepth: 8
+    });
+    labels.push(`frame ${r.frame}`);
+    tally.picturesMs += since(tPic);
+    readings.push({
+      frame: r.frame,
+      checked: true,
+      file: r.file,
+      picture: picture2,
+      opaqueShare: Math.round(opaquePx / img.alpha.length * 1e4) / 1e4,
+      holes: h.big,
+      openings: o.big,
+      holesUnderLimit: h.small,
+      openingsUnderLimit: o.small,
+      edgeWidth: r.edge?.width ? { typical: r.edge.width.typical ?? null, p90: r.edge.width.p90 ?? null } : null,
+      solidAreas: r.edge?.solidAreas?.count ?? null
+    });
+    onImage?.(readings[readings.length - 1], img);
+  }
+  let picture = null;
+  const tSheet = performance.now();
+  if (thumbs.length) {
+    const sheet = composeContactSheet(thumbs, { labels, thumbWidth: THUMB });
+    await writePng(
+      io,
+      sheetPath,
+      encodePngSrgb8(sheet.width, sheet.height, sheet.rgb, PICTURE_DEFLATE)
+    );
+    picture = sheetPath;
+  }
+  tally.sheetMs += since(tSheet);
+  tally.ms += since(started);
+  return { readings, picture };
+}
+function regionLines(findings, frames) {
+  return findings.map(
+    (f) => `${f.smallestArea === f.largestArea ? `${fmt2(f.largestArea)} px` : `${fmt2(f.smallestArea)} to ${fmt2(f.largestArea)} px (largest on frame ${f.largestFrame})`} at ${boxText(f.box)} on ${f.frames.length} of ${frames} frames (${f.frames.join(", ")})` + (f.kind === "opening" && f.edges?.length ? `, reaches the ${f.edges.join(" and ")} edge` : "")
+  );
+}
+var needSelection = (st) => {
+  if (!st?.objectMatte?.present || !Array.isArray(st.selections) || st.selections.length === 0)
+    return `${st?.summary ?? "no selection"}; ${NEED_CLICK}`;
+  return null;
+};
+var perFrameMsOf = (args) => Math.max(
+  1,
+  Math.round(
+    (typeof args.secondsPerFrame === "number" && args.secondsPerFrame > 0 ? args.secondsPerFrame : CUTOUT_SECONDS_PER_FRAME) * 1e3
+  )
+);
+function summarize(readings, limit, accept, picture = null, passText = null) {
+  const regions = cutoutFindings(readings, limit);
+  const accepted = regions.filter((f) => acceptedBy(f, accept));
+  const open3 = regions.filter((f) => !accepted.includes(f));
+  const missed = readings.filter((r) => !r.checked);
+  const checked = { frames: readings.length - missed.length, of: readings.length };
+  const notChecked = missed.length ? [
+    {
+      kind: "not-checked",
+      frames: missed.map((r) => r.frame),
+      errors: [...new Set(missed.map((r) => r.error ?? "not rendered"))]
+    }
+  ] : [];
+  const holes = open3.filter((f) => f.kind === "hole");
+  const openings = open3.filter((f) => f.kind === "opening");
+  const parts = [];
+  parts.push(
+    missed.length ? `Checked ${checked.frames} of ${checked.of} frames; ${missed.length} did not render (${missed.map((r) => r.frame).join(", ")}): ${notChecked[0].errors.join("; ")}. Those frames were not checked.` : `Checked ${checked.frames} of ${checked.of} frames.`
+  );
+  if (holes.length)
+    parts.push(
+      `${plural2(holes.length, "enclosed hole")} of ${fmt2(limit)} px or more inside the cut-out: ${regionLines(holes, readings.length).join("; ")}. A hole is something in front of the subject not selected (a cup) or a gap inside a piece that no click fills (subject.fill_gaps).`
+    );
+  if (openings.length)
+    parts.push(
+      `${plural2(openings.length, "opening")} of ${fmt2(limit)} px or more, closed off by the subject and the frame edge: ${regionLines(openings, readings.length).join("; ")}. An opening may be something in front of the subject left out (a microphone, a desk), or a real gap such as between an arm and the body; the picture decides.`
+    );
+  if (!holes.length && !openings.length)
+    parts.push(
+      missed.length ? `No hole or opening of ${fmt2(limit)} px or more on the ${checked.frames} frames checked; the other ${missed.length} were not checked.` : passText ?? `Nothing over the limit on ${checked.frames} of ${checked.of} frames; the picture is at ${picture ?? "(none)"}.`
+    );
+  if (accepted.length)
+    parts.push(
+      `Accepted earlier and not counted: ${regionLines(accepted, readings.length).join("; ")}.`
+    );
+  return { findings: [...open3, ...notChecked], accepted, checked, text: parts.join(" ") };
+}
+var regionsOf = (r) => [
+  ...(r.holes ?? []).map((x) => ({ ...x, kind: "hole" })),
+  ...(r.openings ?? []).map((x) => ({ ...x, kind: "opening" }))
+];
+async function overPicture(io, file2, over) {
+  try {
+    const img = await io.readImage(file2);
+    const picture = file2.replace(/\.png$/i, "") + "_over.png";
+    await writePng(
+      io,
+      picture,
+      encodePngSrgb8(
+        img.width,
+        img.height,
+        flattenOver(img, { kind: "color", color: parseHex(over) }),
+        PICTURE_DEFLATE
+      )
+    );
+    return picture;
+  } catch {
+    return null;
+  }
+}
+function fillUnbuildJsx(args) {
+  return `
+            ${jsxCompPreamble(args)}
+            var _names = [${jsxVal(args.fillLayer)}, ${jsxVal(args.maskLayer)}];
+            var _removed = [];
+            for (var _ni = 0; _ni < _names.length; _ni++) {
+                for (var _li = _comp.numLayers; _li >= 1; _li--) {
+                    var _l = _comp.layer(_li);
+                    if (_l.name === _names[_ni]) { _l.remove(); _removed.push(_names[_ni]); break; }
+                }
+            }
+            var _id = ${jsxVal(args.stillItemId)};
+            if (_id !== null) {
+                var _item = AE.safeGet(function () { return app.project.itemByID(_id); }, null);
+                if (_item) { var _iname = _item.name; _item.remove(); _removed.push(_iname); }
+            }
+            return { ok: true, removed: _removed };
+        `;
+}
+function fillBuildJsx(args) {
+  return `
+            ${jsxCompLayerPreamble(args)}
+            var _fillName = _layer.name + " gap fill";
+            var _maskName = _layer.name + " gap mask";
+            for (var _li = 1; _li <= _comp.numLayers; _li++) {
+                var _ln = _comp.layer(_li).name;
+                if (_ln === _fillName || _ln === _maskName) return { ok: false, error: "comp " + _comp.name + " already has a layer '" + _ln + "'; delete the earlier fill's two layers first" };
+            }
+            var _file = new File(${jsxVal(args.stillPath)});
+            if (!_file.exists) return { ok: false, error: "no file at " + ${jsxVal(args.stillPath)} };
+            var _item = app.project.importFile(new ImportOptions(_file));
+            var _mask = _comp.layers.add(_item);
+            _mask.name = _maskName;
+            var _fill = _layer.duplicate();
+            _fill.name = _fillName;
+            var _fxs = _fill.property("ADBE Effect Parade");
+            var _removed = 0;
+            if (_fxs) {
+                for (var _fi = _fxs.numProperties; _fi >= 1; _fi--) {
+                    if (_fxs.property(_fi).matchName === ${jsxVal(OBJECT_MATTE_MATCH_NAME)}) { _fxs.property(_fi).remove(); _removed++; }
+                }
+            }
+            _fill.moveAfter(_layer);
+            _mask.moveBefore(_fill);
+            var _spanError = null;
+            try {
+                _mask.startTime = 0;
+                _mask.inPoint = Math.min(_layer.inPoint, _layer.outPoint);
+                _mask.outPoint = Math.max(_layer.inPoint, _layer.outPoint);
+            } catch (eSpan) { _spanError = AE.errText(eSpan); }
+            _fill.setTrackMatte(_mask, TrackMatteType.LUMA);
+            _mask.enabled = false;
+            var _audioOff = false;
+            var _audioError = null;
+            if (AE.safeGet(function () { return _fill.hasAudio; }, false)) {
+                try { _fill.audioEnabled = false; _audioOff = true; } catch (eAud) { _audioError = AE.errText(eAud); }
+            }
+            var _out = { ok: true, fillLayer: _fill.name, fillIndex: _fill.index, maskLayer: _mask.name, maskIndex: _mask.index, stillItem: _item.name, stillItemId: AE.safeGet(function () { return _item.id; }, null), removedFromCopy: _removed, audioOff: _audioOff, hasAudio: AE.safeGet(function () { return _fill.hasAudio; }, false) };
+            if (_audioError !== null) _out.audioError = _audioError;
+            if (_spanError !== null) _out.maskSpanError = _spanError;
+            return _out;
+        `;
+}
+function liveCutoutIO(args, transport2) {
+  return {
+    async status() {
+      const code = getOp("subject.status").toJsx({
+        comp: args.comp,
+        layer: args.layer,
+        effectIndex: args.effectIndex
+      });
+      const r = await transport2.execute({
+        code,
+        label: "subject.status",
+        undoGroup: false,
+        timeoutMs: 3e4
+      });
+      return r.ok ? r.result : { ok: false, error: r.error ?? "subject.status failed" };
+    },
+    async render(renderArgs) {
+      const out = await renderFrameTool.handler(renderArgs, transport2);
+      const sc = out.structuredContent;
+      if (out.isError)
+        return {
+          ok: false,
+          error: sc?.error?.message ?? sc?.error ?? "ae_render_frame failed",
+          details: sc
+        };
+      return sc?.result ?? { ok: false, error: "ae_render_frame returned no result" };
+    },
+    async readImage(file2) {
+      return decodePng(await fs10.readFile(file2));
+    },
+    async unbuild(a) {
+      const r = await transport2.execute({
+        code: fillUnbuildJsx(a),
+        label: "subject.fill_gaps undo",
+        undoGroup: true,
+        suppressDialogs: true,
+        timeoutMs: 6e4
+      });
+      return r.ok ? r.result : { ok: false, error: r.error ?? "undoing the build failed" };
+    },
+    async build(a) {
+      const r = await transport2.execute({
+        code: fillBuildJsx(a),
+        label: "subject.fill_gaps",
+        undoGroup: true,
+        suppressDialogs: true,
+        rollback: true,
+        timeoutMs: 6e4
+      });
+      return r.ok ? r.result : { ok: false, error: r.error ?? "the build failed", rollback: r.rollback };
+    }
+  };
+}
+var NODE_ONLY = (name) => jsxFail(
+  `${name} runs in Node (it reads pixels), so it cannot ride inside batch.run; call it through ae_do`
+);
+var overParam = {
+  name: "over",
+  type: "string",
+  description: `The flat colour of the picture (default '${CUTOUT_OVER}').`,
+  required: false
+};
+var CHECK_FILE_MAX_FRAMES = 400;
+function fileCompJsx(args) {
+  return `
+            var _item = null;
+            var _imported = false;
+            if (${jsxVal(args.item)} !== null) {
+                _item = AE.safeGet(function () { return app.project.itemByID(${jsxVal(args.item)}); }, null);
+                if (!_item) return { ok: false, error: "no project item with id " + ${jsxVal(args.item)} };
+            } else {
+                var _f = new File(${jsxVal(args.path)});
+                if (!_f.exists) return { ok: false, error: "no file at " + ${jsxVal(args.path)} };
+                _item = app.project.importFile(new ImportOptions(_f));
+                _imported = true;
+            }
+            if (!AE.safeGet(function () { return _item.hasVideo; }, false)) return { ok: false, error: "'" + _item.name + "' has no video" };
+            var _fr = AE.safeGet(function () { return _item.frameRate; }, 0) || 30;
+            var _dur = _item.duration;
+            var _c = app.project.items.addComp("check_file " + _item.name, _item.width, _item.height, AE.safeGet(function () { return _item.pixelAspect; }, 1) || 1, _dur, _fr);
+            _c.layers.add(_item);
+            return { ok: true, compId: _c.id, compName: _c.name, itemId: _item.id, itemName: _item.name, imported: _imported,
+                width: _item.width, height: _item.height, frames: Math.round(_dur * _fr), frameRate: _fr };
+        `;
+}
+function fileCleanupJsx(args) {
+  return `
+            var _removed = [];
+            var _c = AE.safeGet(function () { return app.project.itemByID(${jsxVal(args.compId)}); }, null);
+            if (_c) { var _cn = _c.name; _c.remove(); _removed.push(_cn); }
+            var removeItem = ${jsxVal(args.removeItem)};
+            if (removeItem && ${jsxVal(args.itemId)} !== null) {
+                var _it = AE.safeGet(function () { return app.project.itemByID(${jsxVal(args.itemId)}); }, null);
+                if (_it) { var _in = _it.name; _it.remove(); _removed.push(_in); }
+            }
+            return { ok: true, removed: _removed };
+        `;
+}
+function liveFileIO(transport2) {
+  const cut = liveCutoutIO({}, transport2);
+  return {
+    render: cut.render,
+    readImage: cut.readImage,
+    async execute(code, opts) {
+      const r = await transport2.execute({
+        code,
+        label: opts.label,
+        timeoutMs: opts.timeoutMs,
+        undoGroup: opts.undoGroup ?? true,
+        suppressDialogs: true
+      });
+      return r.ok ? r.result : { ok: false, error: r.error ?? `${opts.label} failed` };
+    },
+    exists: (file2) => fs10.access(file2).then(
+      () => true,
+      () => false
+    )
+  };
+}
+var SOFT_EDGE_DEFAULTS = {
+  radius: 8,
+  smooth: 0,
+  chatterReduction: 2,
+  decontaminate: true,
+  feather: 60,
+  regionDepth: 0.12,
+  /** By default the check samples the click frame and every `nearStep`th frame after it, up to `near` frames on. */
+  near: 60,
+  nearStep: 10,
+  /** The closing check: a pixel solid in the matte as clicked and more than this far inside its edge must stay solid. */
+  deep: 30,
+  /** Matte more than this far outside the outline as clicked counts as spread (a smear). */
+  outside: 10,
+  /** Spread pixels allowed before the build is undone (look C left 0 to 12 px on the take; look D's smear was 156). */
+  outsideLimit: 50,
+  /** Face colour against the matte as clicked, CIELAB difference allowed. */
+  colourLimit: 1
+};
+
+// src/operations/keying-key.ts
 var KEYLIGHT_MATCH_NAME = "Keylight 906";
 var KEY_CLEANER_MATCH_NAME = "ADBE KeyCleaner";
 var SPILL_SUPPRESSOR_MATCH_NAME = "ADBE Spill2";
@@ -52040,19 +52720,6 @@ var keylightIndexParam = {
   description: "1-based index of the Keylight to use when the layer has several (it must be Keylight). Default: the first Keylight in the stack.",
   required: false
 };
-var compLayerParams = [
-  { name: "comp", type: "any", description: "Comp name or id", required: true },
-  {
-    name: "layer",
-    type: "any",
-    description: "1-based layer index, or the layer name",
-    required: true
-  }
-];
-var FX_ROOT_JSX = `
-            var _fxRoot = _layer.property("ADBE Effect Parade");
-            if (!_fxRoot) return { ok: false, error: "layer '" + _layer.name + "' cannot carry effects" };
-`;
 function keylightLookupJsx(effectIndexJsx, hint) {
   return `
             var _kl = AE.pickEffect(_fxRoot, ${jsxVal(KEYLIGHT_MATCH_NAME)}, "Keylight", ${effectIndexJsx});
@@ -52313,8 +52980,12 @@ registerOp({
         `;
   }
 });
-var OBJECT_MATTE_MATCH_NAME = "ADBE Samurai";
-var OBJECT_MATTE_SELECTIONS_MATCH_NAME = "ADBE Samurai Strokes Group";
+
+// src/operations/keying-subject-prepare.ts
+init_registry();
+import { execFile as execFile3 } from "node:child_process";
+import { promises as fs11 } from "node:fs";
+import * as path11 from "node:path";
 var PAINT_DURATION_MATCH_NAME = "ADBE Paint Duration";
 var PAINT_TRANSFORM_MATCH_NAME = "ADBE Paint Transform";
 var PAINT_POSITION_MATCH_NAME = "ADBE Paint Position";
@@ -52404,34 +53075,6 @@ var OBJECT_MATTE_SETTINGS = {
   }
 };
 var SUBJECT_ATTENDED_NOTE = "The cut-out needs the user's own click in After Effects (the Object Matte Tool); no script can make it, so it cannot be done unattended. Get the click, and check it with subject.check, before the user leaves: an overnight or unattended run cannot start a cut-out, only carry on from one the user has clicked.";
-var SUBJECT_WHOLE_PIECE_NOTE = "For a whole piece, scale the take to delivery size first (a delivery-size copy of the footage, before the click: sourceAdvice), then render the cut-out in halves, emptying After Effects' disk cache between them: two halves of a 43.5 s piece at 1088 x 1920 took about 4.3 minutes and 12 GB of cache each. Check free disk space before each half. subject.render_cutout takes from and to (comp seconds) for each half; join the halves with a stream copy (HALVES_JOIN_NOTE).";
-var HALVES_JOIN_NOTE = "Two halves are joined by a stream copy, nothing re-encoded: list them in order in a text file (file 'first.mov' then file 'second.mov', one per line) and run ffmpeg -f concat -safe 0 -i halves.txt -c copy whole.mov. Empty After Effects' disk cache between the halves (it holds about a half's worth). On the first piece the halves were frames 600 to 1304, then 0 to 599, and the outline's step across the join was 0.002 of the frame, no different from any other pair of neighbouring frames. Check the joined file with subject.check_file, and give subject.use_cutout the first half's start.";
-function cutoutSpan(layerSpan, from, to) {
-  const rate2 = layerSpan.frameRate || 30;
-  const snap = (t) => Math.round(t * rate2) / rate2;
-  const s0 = layerSpan.start;
-  const s1 = layerSpan.start + layerSpan.duration;
-  for (const [name, v] of [["from", from], ["to", to]])
-    if (v !== void 0 && (typeof v !== "number" || !Number.isFinite(v))) return { error: `\`${name}\` must be a number of comp seconds` };
-  const a = typeof from === "number" ? from : s0;
-  const b = typeof to === "number" ? to : s1;
-  if (b <= a) return { error: `\`to\` (${b}) must be after \`from\` (${a})` };
-  const start = snap(Math.max(s0, a));
-  const end = snap(Math.min(s1, b));
-  if (end <= start)
-    return { error: `the span ${a} to ${b} s is outside the layer, which runs ${Math.round(s0 * 1e4) / 1e4} to ${Math.round(s1 * 1e4) / 1e4} s` };
-  const frames = Math.round((end - start) * rate2);
-  const firstFrame = Math.round(start * rate2);
-  return {
-    start,
-    duration: end - start,
-    frames,
-    firstFrame,
-    lastFrame: firstFrame + frames - 1,
-    clipped: a < s0 - 1e-9 || b > s1 + 1e-9,
-    whole: Math.abs(start - snap(s0)) < 1e-9 && Math.abs(end - snap(s1)) < 1e-9
-  };
-}
 var SUBJECT_MATTE_NOTICE = "One step here needs you in After Effects: a single click on the subject, about ten seconds. Everything before and after it I do.";
 function subjectMatteSteps(opts = {}) {
   const clip = opts.clip === void 0 ? "the clip's name" : `"${opts.clip}"`;
@@ -52449,29 +53092,6 @@ function subjectMatteSteps(opts = {}) {
     'Tell me "done". No Spacebar and no Freeze are needed. I will then check the cut-out and show you what is in and what is out.'
   ];
 }
-var CLOSE_CLICK_SHARE = 0.05;
-var closeClickReading = (a, b, d, limit) => `${a} and ${b} were clicked ${Math.round(d)} source pixels apart (closer than ${Math.round(limit)}): they probably selected the same thing, so a click meant for something else (a microphone) may have landed on the subject again`;
-function closeClicks(clicks, sourceSize, minDistance) {
-  const limit = minDistance ?? (sourceSize ? Math.round(CLOSE_CLICK_SHARE * Math.min(sourceSize[0], sourceSize[1]) * 100) / 100 : null);
-  if (limit === null) return [];
-  const out = [];
-  const pts = clicks.filter((c) => Array.isArray(c.point) && c.point.length >= 2);
-  for (let i = 0; i < pts.length; i++)
-    for (let j = i + 1; j < pts.length; j++) {
-      const p = pts[i].point;
-      const q = pts[j].point;
-      const d = Math.hypot(p[0] - q[0], p[1] - q[1]);
-      if (d < limit)
-        out.push({
-          a: pts[i].name,
-          b: pts[j].name,
-          distance: Math.round(d * 100) / 100,
-          limit,
-          reading: closeClickReading(pts[i].name, pts[j].name, d, limit)
-        });
-    }
-  return out;
-}
 var CHECK_NEXT = "Run subject.check next, before building anything on the cut-out: it renders the cut-out over a flat colour across the clip, finds holes, and returns a picture to show the user.";
 var VIEWER_FULL_JSX = `
             function _viewerToFull() {
@@ -52482,8 +53102,6 @@ var VIEWER_FULL_JSX = `
             }
 `;
 var VIEWER_NOTE = "View > Resolution > Full sets the comp's resolutionFactor (measured in After Effects 27.0, with the comp open in the viewer); verified means the comp read [1, 1] after the command and again after the Layer panel opened. Starting from the viewer's Auto setting (it drew at Half while the comp was set to Full on 2026-11-11) is not verified, and a script cannot choose Auto. If the yellow full-resolution bar shows, step 4 has the user choose Full.";
-var COUNT_NOTE = "A selection count is not a check: it does not say what was selected. Run subject.check and look at its picture before building anything on the cut-out.";
-var NEED_CLICK = "run subject.prepare and ask the user for the click, relaying its steps word for word";
 var OBJECT_MATTE_JSX = `
             function _omWalk(g, key, field, depth) {
                 if (depth > 4) return null;
@@ -52628,12 +53246,6 @@ var OBJECT_MATTE_JSX = `
                 return parts.join(", ");
             }
 `;
-var subjectIndexParam = {
-  name: "effectIndex",
-  type: "number",
-  description: "1-based index of the Object Matte to use when the layer has several (it must be Object Matte, ADBE Samurai). Default: the first in the stack.",
-  required: false
-};
 var REMOVE_NOTE = "To take out one wrong selection (a second click that landed on the subject, an 'Add Object Rect' from a click that dragged): subject.remove_selection { comp, layer, selection }. To start the whole selection again: remove this Object Matte with effect.remove { comp, layer, effectIndex }, run subject.prepare, and ask the user for the click again. The user can also take one thing out by Option-clicking it with the Object Matte Tool.";
 registerOp({
   name: "subject.prepare",
@@ -52973,108 +53585,9 @@ registerOp({
         `;
   }
 });
-var CUTOUT_HOLE_LIMIT = 1e3;
-var CUTOUT_FRAMES = 8;
-var CUTOUT_OVER = "#ff00ff";
-var CUTOUT_SECONDS_PER_FRAME = 60;
-var EDGE_TRANSPARENT = EDGE_DEFAULTS.transparent;
-var SETTLE_MAX_MS = 6e5;
-var THUMB = 360;
-var PICTURE_DEFLATE = 1;
-var intersects = (a, b) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
-var union2 = (a, b) => {
-  const x = Math.min(a.x, b.x);
-  const y = Math.min(a.y, b.y);
-  return {
-    x,
-    y,
-    width: Math.max(a.x + a.width, b.x + b.width) - x,
-    height: Math.max(a.y + a.height, b.y + b.height) - y
-  };
-};
-var fmt2 = (n) => Math.round(n).toLocaleString("en-US");
-var boxText = (b) => `(${b.x}, ${b.y}, ${b.width} \xD7 ${b.height})`;
-var plural2 = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
-var boxArea = (b) => b.width * b.height;
-var iou = (a, b) => {
-  const w = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
-  const h = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
-  if (w <= 0 || h <= 0) return 0;
-  const inter = w * h;
-  return inter / (boxArea(a) + boxArea(b) - inter);
-};
-function alikeRegions(a, b) {
-  if (iou(a, b) >= 0.5) return true;
-  if (!intersects(a, b)) return false;
-  const big = Math.max(a.area, b.area);
-  const small = Math.min(a.area, b.area);
-  return small > 0 && big / small <= 2;
-}
-var isFrozenEntry = (e) => !("box" in e) && e.kind === "frozen";
-function frozenAccepted(run, accept) {
-  return accept.some(
-    (e) => isFrozenEntry(e) && (e.from === void 0 || e.from <= run.to) && (e.to === void 0 || e.to >= run.from)
-  );
-}
-function acceptedBy(f, accept) {
-  return accept.some((e) => {
-    if (isFrozenEntry(e)) return false;
-    const box2 = "box" in e ? e.box : e;
-    const kind = ("box" in e ? e.kind : void 0) ?? "opening";
-    return kind === f.kind && iou(f.box, box2) >= 0.5;
-  });
-}
-function cutoutFindings(frames, limit) {
-  const out = [];
-  for (const kind of ["hole", "opening"]) {
-    const groups = [];
-    for (const fr of frames) {
-      for (const h of (kind === "hole" ? fr.holes : fr.openings) ?? []) {
-        if (h.area < limit) continue;
-        const b = { x: h.x, y: h.y, width: h.width, height: h.height };
-        const g = groups.find((x) => x.members.some((m) => alikeRegions(m, h)));
-        if (g) {
-          const f = g.f;
-          g.members.push(h);
-          f.box = union2(f.box, b);
-          if (h.area > f.largestArea) {
-            f.largestArea = h.area;
-            f.largestFrame = fr.frame;
-          }
-          f.smallestArea = Math.min(f.smallestArea, h.area);
-          if (!f.frames.includes(fr.frame)) f.frames.push(fr.frame);
-          if (f.edges) {
-            for (const e of h.edges ?? []) if (!f.edges.includes(e)) f.edges.push(e);
-          }
-        } else
-          groups.push({
-            members: [h],
-            f: {
-              kind,
-              frames: [fr.frame],
-              smallestArea: h.area,
-              largestArea: h.area,
-              largestFrame: fr.frame,
-              box: b,
-              ...kind === "opening" ? { edges: [...h.edges ?? []] } : {}
-            }
-          });
-      }
-    }
-    out.push(...groups.map((g) => g.f).sort((a, b) => b.largestArea - a.largestArea));
-  }
-  return out;
-}
-async function writePng(io, file2, data) {
-  if (io.writePng) return io.writePng(file2, data);
-  await fs10.mkdir(path10.dirname(file2), { recursive: true });
-  await fs10.writeFile(file2, data);
-}
-var GB = 1e9;
-var gb = (n) => `${(n / GB).toFixed(1)} GB`;
 var OVERSIZE_FACTOR = 1.5;
 var even = (n) => Math.max(2, Math.round(n / 2) * 2);
-var stemOf = (file2) => path10.join(path10.dirname(file2), path10.basename(file2, path10.extname(file2)));
+var stemOf = (file2) => path11.join(path11.dirname(file2), path11.basename(file2, path11.extname(file2)));
 var dims = (d) => `${d[0]} \xD7 ${d[1]}`;
 function sourceAdviceFor(f) {
   if (!f?.sourceSize || !f.compSize || !f.scale) return null;
@@ -53183,100 +53696,13 @@ async function runSubjectPrepare(args, io) {
   res.wholePiece = SUBJECT_WHOLE_PIECE_NOTE;
   return res;
 }
-var RENDER_BYTES_PER_HD_FRAME = 76e4;
-var RENDER_MARGIN_BYTES = 3 * GB;
-var PICTURE_MARGIN_BYTES = 1 * GB;
 var LOW_FREE_BYTES = 10 * GB;
-function renderCutoutBytes(frames, size2) {
-  return frames * RENDER_BYTES_PER_HD_FRAME * (size2[0] * size2[1] / (1080 * 1920));
-}
-var captureBytes = (size2) => (Array.isArray(size2) ? size2[0] * size2[1] : 1080 * 1920) * 4;
-async function statfsFree(dir) {
-  let d = path10.resolve(dir);
-  for (; ; ) {
-    try {
-      const st = await fs10.statfs(d);
-      return Number(st.bavail) * Number(st.bsize);
-    } catch {
-      const up = path10.dirname(d);
-      if (up === d) return null;
-      d = up;
-    }
-  }
-}
-async function spaceRefusal(io, dir, needed, margin, what) {
-  const free = await (io.freeBytes ?? statfsFree)(dir);
-  if (free === null || free >= needed + margin) return null;
-  return {
-    ok: false,
-    error: `only ${gb(free)} free on the drive holding ${dir}; ${what} needs about ${gb(needed)} plus a margin of ${gb(margin)} (After Effects writes its disk cache to the same drive while it renders, and a render on a nearly full drive stalls instead of failing). Free some space first, for example by purging After Effects' cache: Edit > Purge > All Memory & Disk Cache. Nothing was rendered.`,
-    space: { free, needed: Math.round(needed), margin, where: dir }
-  };
-}
-function cacheBytesFor(frames, sourceSize) {
-  const [w, h] = Array.isArray(sourceSize) && sourceSize.length >= 2 ? sourceSize : [1920, 1080];
-  return frames * w * h * 8;
-}
-async function volumeKey(dir) {
-  let d = path10.resolve(dir);
-  for (; ; ) {
-    try {
-      return (await fs10.stat(d)).dev;
-    } catch {
-      const up = path10.dirname(d);
-      if (up === d) return null;
-      d = up;
-    }
-  }
-}
-var PART_NAMES = {
-  movie: "the movie",
-  cache: "After Effects' disk cache",
-  pictures: "captures and pictures"
-};
-async function spacePlan(io, entries, margin, what) {
-  const byVol = [];
-  for (const e of entries) {
-    const key = await (io.volumeOf ?? volumeKey)(e.where);
-    const v = byVol.find((x) => x.key === key && key !== null);
-    if (v)
-      for (const [k, n] of Object.entries(e.parts))
-        v.parts[k] = (v.parts[k] ?? 0) + (n ?? 0);
-    else byVol.push({ key, where: e.where, parts: { ...e.parts } });
-  }
-  const volumes = [];
-  let refusal = null;
-  for (const v of byVol) {
-    const free = await (io.freeBytes ?? statfsFree)(v.where);
-    const needed = Object.values(v.parts).reduce((a, b) => a + (b ?? 0), 0);
-    const ok = free === null || free >= needed + margin;
-    const row2 = { where: v.where, free, parts: v.parts, needed: Math.round(needed), margin, ok };
-    volumes.push(row2);
-    if (!ok && !refusal) {
-      const partText = Object.entries(v.parts).map(([k, n]) => `${PART_NAMES[k]} ${gb(n ?? 0)}`).join(", ");
-      refusal = {
-        ok: false,
-        error: `only ${gb(free)} free on the drive holding ${v.where}; ${what} needs about ${gb(needed)} there (${partText}) plus a margin of ${gb(margin)}. A render on a nearly full drive stalls instead of failing. Free some space first, for example by purging After Effects' cache: Edit > Purge > All Memory & Disk Cache. Nothing was rendered.`,
-        space: { ...row2, volumes }
-      };
-    }
-  }
-  if (refusal) refusal.space.volumes = volumes;
-  return { volumes, refusal };
-}
-var trackedSpan = (frames) => frames.length ? Math.max(...frames) - Math.min(...frames) + 1 : 0;
-function aeCacheRoot(folder, version3) {
-  if (!folder || !version3) return null;
-  const m = /^(\d+)\.(\d+)/.exec(version3);
-  if (!m) return null;
-  return path10.join(folder, "Adobe", "After Effects", `${m[1]}.${m[2]}`);
-}
 async function folderBytes(root, budgetMs = 5e3) {
   const t0 = performance.now();
   let bytes = 0;
   const stack = [root];
   try {
-    await fs10.access(root);
+    await fs11.access(root);
   } catch {
     return null;
   }
@@ -53285,15 +53711,15 @@ async function folderBytes(root, budgetMs = 5e3) {
     const d = stack.pop();
     let entries = [];
     try {
-      entries = await fs10.readdir(d, { withFileTypes: true });
+      entries = await fs11.readdir(d, { withFileTypes: true });
     } catch {
       continue;
     }
     for (const e of entries) {
-      const p = path10.join(d, e.name);
+      const p = path11.join(d, e.name);
       if (e.isDirectory()) stack.push(p);
       else if (e.isFile())
-        bytes += await fs10.stat(p).then(
+        bytes += await fs11.stat(p).then(
           (st) => st.size,
           () => 0
         );
@@ -53325,21 +53751,36 @@ async function diskReport(cache2, freeFn = statfsFree) {
     out.note = `Only ${gb(free)} free on the drive After Effects caches to (${cacheRoot}); its disk cache holds ${size2 ? gb(size2.bytes) + (size2.complete ? "" : " or more") : "an unknown amount"}. Object Matte work grows it past the Disk Cache size set in the preferences (about one 16-bit frame of the source for every frame it tracks through), and a render on a nearly full drive stalls. Ask the user to purge it: Edit > Purge > All Memory & Disk Cache in After Effects. Nothing was deleted and no preference was changed.`;
   return out;
 }
-var FROZEN_DEFAULTS = { gap: 30, limit: 2e-3, minFrames: 60 };
-var frozenOpts = (args) => ({
-  gap: typeof args.frozenGap === "number" ? args.frozenGap : FROZEN_DEFAULTS.gap,
-  limit: typeof args.frozenLimit === "number" ? args.frozenLimit : FROZEN_DEFAULTS.limit,
-  minFrames: typeof args.frozenFrames === "number" ? args.frozenFrames : FROZEN_DEFAULTS.minFrames
-});
-function frozenFinding(run, pictures) {
-  const moved = run.footageChange > 1e-3;
-  return {
-    kind: "frozen",
-    ...run,
-    pictures,
-    reading: `The cut-out's outline did not move for ${run.length} frames` + (moved ? ` while the footage did (frames ${run.from} to ${run.to}; ${(run.footageChange * 100).toFixed(1)}% of the frame changed inside the outline)` : ` (frames ${run.from} to ${run.to}), and the picture inside it barely changed either`) + `. The selection is probably not tracking: this happens when the layer's footage is replaced after the click. Click again on this footage (subject.prepare, then the steps). If the subject is genuinely motionless (a product on a table, a locked-off object) this is expected: pass accept: [{ kind: "frozen" }] to wave it through once seen.`
-  };
+
+// src/operations/keying-subject-check.ts
+import { promises as fs12 } from "node:fs";
+import * as path12 from "node:path";
+init_config();
+init_registry();
+var closeClickReading = (a, b, d, limit) => `${a} and ${b} were clicked ${Math.round(d)} source pixels apart (closer than ${Math.round(limit)}): they probably selected the same thing, so a click meant for something else (a microphone) may have landed on the subject again`;
+function closeClicks(clicks, sourceSize, minDistance) {
+  const limit = minDistance ?? (sourceSize ? Math.round(CLOSE_CLICK_SHARE * Math.min(sourceSize[0], sourceSize[1]) * 100) / 100 : null);
+  if (limit === null) return [];
+  const out = [];
+  const pts = clicks.filter((c) => Array.isArray(c.point) && c.point.length >= 2);
+  for (let i = 0; i < pts.length; i++)
+    for (let j = i + 1; j < pts.length; j++) {
+      const p = pts[i].point;
+      const q = pts[j].point;
+      const d = Math.hypot(p[0] - q[0], p[1] - q[1]);
+      if (d < limit)
+        out.push({
+          a: pts[i].name,
+          b: pts[j].name,
+          distance: Math.round(d * 100) / 100,
+          limit,
+          reading: closeClickReading(pts[i].name, pts[j].name, d, limit)
+        });
+    }
+  return out;
 }
+var CUTOUT_FRAMES = 8;
+var EDGE_TRANSPARENT = EDGE_DEFAULTS.transparent;
 var QUICK_NOTE = "Quick check: the click frames and two frames either side, which After Effects renders in seconds. A missed object, an enclosed gap and a second click on the same thing show there. To look across the clip, render the cut-out once (subject.render_cutout) and check the file (subject.check_file); across: true checks the live matte across the clip instead, which takes minutes (4 to 9 for nine frames on a 2176 x 3840 take), because After Effects recomputes the matte on every capture.";
 var ACROSS_NOTE = "Across the clip on the live matte: After Effects recomputes the matte on every capture, so this takes minutes (4 to 9 for nine frames on a 2176 x 3840 take). Rendering the cut-out once (subject.render_cutout) and checking the file (subject.check_file) reads every frame in about the time of one pass.";
 function quickFrames(span, clickFrames) {
@@ -53364,265 +53805,8 @@ function framesAcross(span, count, extra) {
   for (const e of extra) if (typeof e === "number" && e >= a && e < b) set2.add(Math.round(e));
   return [...set2].sort((x, y) => x - y).slice(0, 64);
 }
-var renderTally = () => ({
-  frames: 0,
-  calls: 0,
-  ms: 0,
-  aeCallMs: 0,
-  settleMs: 0,
-  renderNodeMs: 0
-});
-var pixelTally = () => ({
-  frames: 0,
-  readMs: 0,
-  regionsMs: 0,
-  picturesMs: 0,
-  sheetMs: 0,
-  ms: 0
-});
-var since = (t) => performance.now() - t;
-var roundTally = (t) => Object.fromEntries(
-  Object.entries(t).map(([k, v]) => [k, typeof v === "number" ? Math.round(v) : v])
-);
-async function renderChunked(io, base, frames, perFrameMs, outDir, stem, tally = renderTally(), firstCall = 0) {
-  const size2 = Math.max(1, Math.min(32, Math.floor(SETTLE_MAX_MS / perFrameMs)));
-  const out = [];
-  for (let c = 0; c * size2 < frames.length; c++) {
-    const chunk2 = frames.slice(c * size2, (c + 1) * size2);
-    const t0 = performance.now();
-    const payload = await io.render({
-      ...base,
-      frames: chunk2,
-      outPath: path10.join(outDir, `${stem}-${firstCall + c}.png`),
-      settleTimeoutMs: Math.min(SETTLE_MAX_MS, Math.max(1, Math.round(perFrameMs * chunk2.length)))
-    });
-    tally.calls++;
-    tally.frames += chunk2.length;
-    tally.ms += since(t0);
-    tally.aeCallMs += payload?.timing?.aeCallMs ?? 0;
-    tally.settleMs += payload?.timing?.settleMs ?? payload?.captureSettle?.waitedMs ?? 0;
-    tally.renderNodeMs += payload?.timing?.nodeMs ?? 0;
-    if (!payload?.ok) {
-      for (const frame of chunk2)
-        out.push({
-          frame,
-          ok: false,
-          error: `the render call failed: ${payload?.error ?? "no result"}`
-        });
-      continue;
-    }
-    const list = payload.frames ?? (payload.writtenTo ? [{ ...payload, ok: true, frame: chunk2[0] }] : []);
-    for (const [i, frame] of chunk2.entries()) {
-      const f = list.find((x) => x.frame === frame) ?? list[i];
-      if (!f) out.push({ frame, ok: false, error: "not in the render's result" });
-      else if (f.ok === false || typeof f.writtenTo !== "string")
-        out.push({ frame, ok: false, error: f.error ?? "the frame was not written" });
-      else out.push({ frame, ok: true, file: f.writtenTo, edge: f.edge });
-    }
-  }
-  return out;
-}
-function parseHex(c) {
-  const m = /^#?([0-9a-f]{6})$/i.exec(c.trim());
-  if (!m) return [1, 0, 1];
-  const v = parseInt(m[1], 16);
-  return [(v >> 16 & 255) / 255, (v >> 8 & 255) / 255, (v & 255) / 255];
-}
-async function measureFrames(io, rendered, limit, over, sheetPath, tally = pixelTally(), pictures = true, onImage) {
-  const started = performance.now();
-  const colour = parseHex(over);
-  const readings = [];
-  const thumbs = [];
-  const labels = [];
-  const split = (list) => ({
-    big: list.filter((r) => r.area >= limit),
-    small: {
-      count: list.filter((r) => r.area < limit).length,
-      area: list.filter((r) => r.area < limit).reduce((s, r) => s + r.area, 0)
-    }
-  });
-  for (const r of rendered) {
-    if (!r.ok || !r.file) {
-      readings.push({
-        frame: r.frame,
-        checked: false,
-        holes: null,
-        openings: null,
-        error: r.error
-      });
-      continue;
-    }
-    let img;
-    const tRead = performance.now();
-    try {
-      img = await io.readImage(r.file);
-    } catch (err) {
-      readings.push({
-        frame: r.frame,
-        checked: false,
-        holes: null,
-        openings: null,
-        error: `could not read ${r.file}: ${err instanceof Error ? err.message : String(err)}`
-      });
-      continue;
-    } finally {
-      tally.readMs += since(tRead);
-    }
-    if (!img.alpha) {
-      readings.push({
-        frame: r.frame,
-        checked: false,
-        holes: null,
-        openings: null,
-        error: `${r.file} has no alpha channel`
-      });
-      continue;
-    }
-    tally.frames++;
-    const tRegions = performance.now();
-    const regions = cutoutRegions(img.alpha, img.width, img.height);
-    let opaquePx = 0;
-    const alpha = img.alpha;
-    for (let p = 0; p < alpha.length; p++) if (alpha[p] >= EDGE_DEFAULTS.opaque) opaquePx++;
-    tally.regionsMs += since(tRegions);
-    const h = split(regions.holes);
-    const o = split(regions.openings);
-    const tPic = performance.now();
-    if (!pictures) {
-      readings.push({
-        frame: r.frame,
-        checked: true,
-        file: r.file,
-        opaqueShare: Math.round(opaquePx / img.alpha.length * 1e4) / 1e4,
-        holes: h.big,
-        openings: o.big,
-        holesUnderLimit: h.small,
-        openingsUnderLimit: o.small
-      });
-      onImage?.(readings[readings.length - 1], img);
-      continue;
-    }
-    const composite = flattenOver(img, { kind: "color", color: colour });
-    const picture2 = r.file.replace(/\.png$/i, "") + "_over.png";
-    await writePng(io, picture2, encodePngSrgb8(img.width, img.height, composite, PICTURE_DEFLATE));
-    const tw = Math.min(THUMB, img.width);
-    const th = Math.max(1, Math.round(img.height * tw / img.width));
-    thumbs.push({
-      width: tw,
-      height: th,
-      rgb: resample({ ...img, rgb: composite }, tw, th),
-      bitDepth: 8
-    });
-    labels.push(`frame ${r.frame}`);
-    tally.picturesMs += since(tPic);
-    readings.push({
-      frame: r.frame,
-      checked: true,
-      file: r.file,
-      picture: picture2,
-      opaqueShare: Math.round(opaquePx / img.alpha.length * 1e4) / 1e4,
-      holes: h.big,
-      openings: o.big,
-      holesUnderLimit: h.small,
-      openingsUnderLimit: o.small,
-      edgeWidth: r.edge?.width ? { typical: r.edge.width.typical ?? null, p90: r.edge.width.p90 ?? null } : null,
-      solidAreas: r.edge?.solidAreas?.count ?? null
-    });
-    onImage?.(readings[readings.length - 1], img);
-  }
-  let picture = null;
-  const tSheet = performance.now();
-  if (thumbs.length) {
-    const sheet = composeContactSheet(thumbs, { labels, thumbWidth: THUMB });
-    await writePng(
-      io,
-      sheetPath,
-      encodePngSrgb8(sheet.width, sheet.height, sheet.rgb, PICTURE_DEFLATE)
-    );
-    picture = sheetPath;
-  }
-  tally.sheetMs += since(tSheet);
-  tally.ms += since(started);
-  return { readings, picture };
-}
-function regionLines(findings, frames) {
-  return findings.map(
-    (f) => `${f.smallestArea === f.largestArea ? `${fmt2(f.largestArea)} px` : `${fmt2(f.smallestArea)} to ${fmt2(f.largestArea)} px (largest on frame ${f.largestFrame})`} at ${boxText(f.box)} on ${f.frames.length} of ${frames} frames (${f.frames.join(", ")})` + (f.kind === "opening" && f.edges?.length ? `, reaches the ${f.edges.join(" and ")} edge` : "")
-  );
-}
-var needSelection = (st) => {
-  if (!st?.objectMatte?.present || !Array.isArray(st.selections) || st.selections.length === 0)
-    return `${st?.summary ?? "no selection"}; ${NEED_CLICK}`;
-  return null;
-};
-var perFrameMsOf = (args) => Math.max(
-  1,
-  Math.round(
-    (typeof args.secondsPerFrame === "number" && args.secondsPerFrame > 0 ? args.secondsPerFrame : CUTOUT_SECONDS_PER_FRAME) * 1e3
-  )
-);
 var TAKES_MINUTES = "This check can take minutes: on a 2176 x 3840 take each frame took 20 to 40 s the first time (the matte is tracked from the click), well under a second once rendered; tell the user before it runs on a long or large clip.";
-function summarize(readings, limit, accept, picture = null, passText = null) {
-  const regions = cutoutFindings(readings, limit);
-  const accepted = regions.filter((f) => acceptedBy(f, accept));
-  const open3 = regions.filter((f) => !accepted.includes(f));
-  const missed = readings.filter((r) => !r.checked);
-  const checked = { frames: readings.length - missed.length, of: readings.length };
-  const notChecked = missed.length ? [
-    {
-      kind: "not-checked",
-      frames: missed.map((r) => r.frame),
-      errors: [...new Set(missed.map((r) => r.error ?? "not rendered"))]
-    }
-  ] : [];
-  const holes = open3.filter((f) => f.kind === "hole");
-  const openings = open3.filter((f) => f.kind === "opening");
-  const parts = [];
-  parts.push(
-    missed.length ? `Checked ${checked.frames} of ${checked.of} frames; ${missed.length} did not render (${missed.map((r) => r.frame).join(", ")}): ${notChecked[0].errors.join("; ")}. Those frames were not checked.` : `Checked ${checked.frames} of ${checked.of} frames.`
-  );
-  if (holes.length)
-    parts.push(
-      `${plural2(holes.length, "enclosed hole")} of ${fmt2(limit)} px or more inside the cut-out: ${regionLines(holes, readings.length).join("; ")}. A hole is something in front of the subject not selected (a cup) or a gap inside a piece that no click fills (subject.fill_gaps).`
-    );
-  if (openings.length)
-    parts.push(
-      `${plural2(openings.length, "opening")} of ${fmt2(limit)} px or more, closed off by the subject and the frame edge: ${regionLines(openings, readings.length).join("; ")}. An opening may be something in front of the subject left out (a microphone, a desk), or a real gap such as between an arm and the body; the picture decides.`
-    );
-  if (!holes.length && !openings.length)
-    parts.push(
-      missed.length ? `No hole or opening of ${fmt2(limit)} px or more on the ${checked.frames} frames checked; the other ${missed.length} were not checked.` : passText ?? `Nothing over the limit on ${checked.frames} of ${checked.of} frames; the picture is at ${picture ?? "(none)"}.`
-    );
-  if (accepted.length)
-    parts.push(
-      `Accepted earlier and not counted: ${regionLines(accepted, readings.length).join("; ")}.`
-    );
-  return { findings: [...open3, ...notChecked], accepted, checked, text: parts.join(" ") };
-}
 var RECHECK_NOTE = "Each frame with a hole or opening over the limit was rendered a second time at the end. After Effects may have served the second render from its cache, so two renders that agree do not show the frame is stable; a frame that differed between them did come out differently (on 2026-11-11 frame 0 of a take rendered once without the microphone and then with it; the cause is not known).";
-var regionsOf = (r) => [
-  ...(r.holes ?? []).map((x) => ({ ...x, kind: "hole" })),
-  ...(r.openings ?? []).map((x) => ({ ...x, kind: "opening" }))
-];
-async function overPicture(io, file2, over) {
-  try {
-    const img = await io.readImage(file2);
-    const picture = file2.replace(/\.png$/i, "") + "_over.png";
-    await writePng(
-      io,
-      picture,
-      encodePngSrgb8(
-        img.width,
-        img.height,
-        flattenOver(img, { kind: "color", color: parseHex(over) }),
-        PICTURE_DEFLATE
-      )
-    );
-    return picture;
-  } catch {
-    return null;
-  }
-}
 async function recheckFrames(io, readings, limit, over, outDir, perFrameMs, base, accept, renders, pixels) {
   const isAccepted = (x) => acceptedBy(
     { kind: x.kind, box: { x: x.x, y: x.y, width: x.width, height: x.height } },
@@ -53656,7 +53840,7 @@ async function recheckFrames(io, readings, limit, over, outDir, perFrameMs, base
     rendered,
     limit,
     over,
-    path10.join(outDir, "cutout-recheck_sheet.png"),
+    path12.join(outDir, "cutout-recheck_sheet.png"),
     pixels,
     false
   );
@@ -53742,7 +53926,7 @@ function timeReading(first, second, pixels, totalMs) {
 }
 async function runSubjectCheck(args, io) {
   const outDir = args.outDir;
-  if (typeof outDir !== "string" || !path10.isAbsolute(outDir))
+  if (typeof outDir !== "string" || !path12.isAbsolute(outDir))
     return { ok: false, error: "`outDir` must be an absolute folder for the pictures" };
   const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
   const over = typeof args.over === "string" ? args.over : CUTOUT_OVER;
@@ -53802,7 +53986,7 @@ async function runSubjectCheck(args, io) {
     rendered,
     limit,
     over,
-    path10.join(outDir, "cutout_sheet.png"),
+    path12.join(outDir, "cutout_sheet.png"),
     pixels,
     true,
     (r, img) => {
@@ -53859,7 +54043,7 @@ async function runSubjectCheck(args, io) {
       ...readings.map((r) => r.file),
       ..."captures" in recheck ? recheck.captures : []
     ].filter((f) => typeof f === "string");
-    await Promise.all(files.map((f) => fs10.rm(f, { force: true })));
+    await Promise.all(files.map((f) => fs12.rm(f, { force: true })));
     for (const r of readings) delete r.file;
   }
   return {
@@ -53919,12 +54103,12 @@ async function runFillGaps(args, io) {
     return res;
   } finally {
     if (args.keepCaptures !== true)
-      await Promise.all(captures.map((f) => fs10.rm(f, { force: true })));
+      await Promise.all(captures.map((f) => fs12.rm(f, { force: true })));
   }
 }
 async function fillGaps(args, io) {
   const still = args.stillPath;
-  if (typeof still !== "string" || !path10.isAbsolute(still) || path10.extname(still).toLowerCase() !== ".png") {
+  if (typeof still !== "string" || !path12.isAbsolute(still) || path12.extname(still).toLowerCase() !== ".png") {
     return {
       ok: false,
       error: "`stillPath` must be an absolute path to a .png file, kept with the project (the comp will use it)"
@@ -53932,7 +54116,7 @@ async function fillGaps(args, io) {
   }
   const rejected = rejectedOutputPath(still);
   if (rejected) return { ok: false, error: rejected };
-  const outDir = typeof args.outDir === "string" && path10.isAbsolute(args.outDir) ? args.outDir : path10.dirname(still);
+  const outDir = typeof args.outDir === "string" && path12.isAbsolute(args.outDir) ? args.outDir : path12.dirname(still);
   const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
   const over = typeof args.over === "string" ? args.over : CUTOUT_OVER;
   const minArea = typeof args.minArea === "number" ? args.minArea : 20;
@@ -54110,7 +54294,7 @@ async function fillGaps(args, io) {
     afterRendered,
     limit,
     over,
-    path10.join(outDir, "fill-after_sheet.png"),
+    path12.join(outDir, "fill-after_sheet.png"),
     pixels
   );
   const sum = summarize(measured.readings, limit, []);
@@ -54140,125 +54324,6 @@ async function fillGaps(args, io) {
     next: "Show the user the picture after the fill and say what is left. To undo the fill, delete the two layers it added." + (layers.audioOff ? " The fill copy's audio was switched off, so the footage's sound plays once." : "") + (built.audioError ? ` The fill copy's audio could not be switched off (${built.audioError}): the sound may play twice; switch it off by hand.` : "") + (fillAlone.ok === null ? " The fill layer alone could not be rendered, so whether the track matte limits it was not checked: look at it." : "")
   };
 }
-function fillUnbuildJsx(args) {
-  return `
-            ${jsxCompPreamble(args)}
-            var _names = [${jsxVal(args.fillLayer)}, ${jsxVal(args.maskLayer)}];
-            var _removed = [];
-            for (var _ni = 0; _ni < _names.length; _ni++) {
-                for (var _li = _comp.numLayers; _li >= 1; _li--) {
-                    var _l = _comp.layer(_li);
-                    if (_l.name === _names[_ni]) { _l.remove(); _removed.push(_names[_ni]); break; }
-                }
-            }
-            var _id = ${jsxVal(args.stillItemId)};
-            if (_id !== null) {
-                var _item = AE.safeGet(function () { return app.project.itemByID(_id); }, null);
-                if (_item) { var _iname = _item.name; _item.remove(); _removed.push(_iname); }
-            }
-            return { ok: true, removed: _removed };
-        `;
-}
-function fillBuildJsx(args) {
-  return `
-            ${jsxCompLayerPreamble(args)}
-            var _fillName = _layer.name + " gap fill";
-            var _maskName = _layer.name + " gap mask";
-            for (var _li = 1; _li <= _comp.numLayers; _li++) {
-                var _ln = _comp.layer(_li).name;
-                if (_ln === _fillName || _ln === _maskName) return { ok: false, error: "comp " + _comp.name + " already has a layer '" + _ln + "'; delete the earlier fill's two layers first" };
-            }
-            var _file = new File(${jsxVal(args.stillPath)});
-            if (!_file.exists) return { ok: false, error: "no file at " + ${jsxVal(args.stillPath)} };
-            var _item = app.project.importFile(new ImportOptions(_file));
-            var _mask = _comp.layers.add(_item);
-            _mask.name = _maskName;
-            var _fill = _layer.duplicate();
-            _fill.name = _fillName;
-            var _fxs = _fill.property("ADBE Effect Parade");
-            var _removed = 0;
-            if (_fxs) {
-                for (var _fi = _fxs.numProperties; _fi >= 1; _fi--) {
-                    if (_fxs.property(_fi).matchName === ${jsxVal(OBJECT_MATTE_MATCH_NAME)}) { _fxs.property(_fi).remove(); _removed++; }
-                }
-            }
-            _fill.moveAfter(_layer);
-            _mask.moveBefore(_fill);
-            var _spanError = null;
-            try {
-                _mask.startTime = 0;
-                _mask.inPoint = Math.min(_layer.inPoint, _layer.outPoint);
-                _mask.outPoint = Math.max(_layer.inPoint, _layer.outPoint);
-            } catch (eSpan) { _spanError = AE.errText(eSpan); }
-            _fill.setTrackMatte(_mask, TrackMatteType.LUMA);
-            _mask.enabled = false;
-            var _audioOff = false;
-            var _audioError = null;
-            if (AE.safeGet(function () { return _fill.hasAudio; }, false)) {
-                try { _fill.audioEnabled = false; _audioOff = true; } catch (eAud) { _audioError = AE.errText(eAud); }
-            }
-            var _out = { ok: true, fillLayer: _fill.name, fillIndex: _fill.index, maskLayer: _mask.name, maskIndex: _mask.index, stillItem: _item.name, stillItemId: AE.safeGet(function () { return _item.id; }, null), removedFromCopy: _removed, audioOff: _audioOff, hasAudio: AE.safeGet(function () { return _fill.hasAudio; }, false) };
-            if (_audioError !== null) _out.audioError = _audioError;
-            if (_spanError !== null) _out.maskSpanError = _spanError;
-            return _out;
-        `;
-}
-function liveCutoutIO(args, transport2) {
-  return {
-    async status() {
-      const code = getOp("subject.status").toJsx({
-        comp: args.comp,
-        layer: args.layer,
-        effectIndex: args.effectIndex
-      });
-      const r = await transport2.execute({
-        code,
-        label: "subject.status",
-        undoGroup: false,
-        timeoutMs: 3e4
-      });
-      return r.ok ? r.result : { ok: false, error: r.error ?? "subject.status failed" };
-    },
-    async render(renderArgs) {
-      const out = await renderFrameTool.handler(renderArgs, transport2);
-      const sc = out.structuredContent;
-      if (out.isError)
-        return {
-          ok: false,
-          error: sc?.error?.message ?? sc?.error ?? "ae_render_frame failed",
-          details: sc
-        };
-      return sc?.result ?? { ok: false, error: "ae_render_frame returned no result" };
-    },
-    async readImage(file2) {
-      return decodePng(await fs10.readFile(file2));
-    },
-    async unbuild(a) {
-      const r = await transport2.execute({
-        code: fillUnbuildJsx(a),
-        label: "subject.fill_gaps undo",
-        undoGroup: true,
-        suppressDialogs: true,
-        timeoutMs: 6e4
-      });
-      return r.ok ? r.result : { ok: false, error: r.error ?? "undoing the build failed" };
-    },
-    async build(a) {
-      const r = await transport2.execute({
-        code: fillBuildJsx(a),
-        label: "subject.fill_gaps",
-        undoGroup: true,
-        suppressDialogs: true,
-        rollback: true,
-        timeoutMs: 6e4
-      });
-      return r.ok ? r.result : { ok: false, error: r.error ?? "the build failed", rollback: r.rollback };
-    }
-  };
-}
-var NODE_ONLY = (name) => jsxFail(
-  `${name} runs in Node (it reads pixels), so it cannot ride inside batch.run; call it through ae_do`
-);
 var frameListParam = {
   name: "frames",
   type: "array",
@@ -54269,12 +54334,6 @@ var secondsPerFrameParam = {
   name: "secondsPerFrame",
   type: "number",
   description: `Settle time to allow each frame, s (default ${CUTOUT_SECONDS_PER_FRAME}; measured 20 to 40 s a frame the first time on a 2176 x 3840 take). Frames are split over several renders when one cannot hold them (600 s a render).`,
-  required: false
-};
-var overParam = {
-  name: "over",
-  type: "string",
-  description: `The flat colour of the picture (default '${CUTOUT_OVER}').`,
   required: false
 };
 registerOp({
@@ -54431,6 +54490,44 @@ registerOp({
   toJsx: () => NODE_ONLY("subject.fill_gaps"),
   run: (args, transport2) => runFillGaps(args, liveCutoutIO(args, transport2))
 });
+
+// src/operations/keying-subject-cutout.ts
+import { promises as fs13 } from "node:fs";
+import * as path13 from "node:path";
+init_config();
+init_registry();
+var HALVES_JOIN_NOTE = "Two halves are joined by a stream copy, nothing re-encoded: list them in order in a text file (file 'first.mov' then file 'second.mov', one per line) and run ffmpeg -f concat -safe 0 -i halves.txt -c copy whole.mov. Empty After Effects' disk cache between the halves (it holds about a half's worth). On the first piece the halves were frames 600 to 1304, then 0 to 599, and the outline's step across the join was 0.002 of the frame, no different from any other pair of neighbouring frames. Check the joined file with subject.check_file, and give subject.use_cutout the first half's start.";
+function cutoutSpan(layerSpan, from, to) {
+  const rate2 = layerSpan.frameRate || 30;
+  const snap = (t) => Math.round(t * rate2) / rate2;
+  const s0 = layerSpan.start;
+  const s1 = layerSpan.start + layerSpan.duration;
+  for (const [name, v] of [["from", from], ["to", to]])
+    if (v !== void 0 && (typeof v !== "number" || !Number.isFinite(v))) return { error: `\`${name}\` must be a number of comp seconds` };
+  const a = typeof from === "number" ? from : s0;
+  const b = typeof to === "number" ? to : s1;
+  if (b <= a) return { error: `\`to\` (${b}) must be after \`from\` (${a})` };
+  const start = snap(Math.max(s0, a));
+  const end = snap(Math.min(s1, b));
+  if (end <= start)
+    return { error: `the span ${a} to ${b} s is outside the layer, which runs ${Math.round(s0 * 1e4) / 1e4} to ${Math.round(s1 * 1e4) / 1e4} s` };
+  const frames = Math.round((end - start) * rate2);
+  const firstFrame = Math.round(start * rate2);
+  return {
+    start,
+    duration: end - start,
+    frames,
+    firstFrame,
+    lastFrame: firstFrame + frames - 1,
+    clipped: a < s0 - 1e-9 || b > s1 + 1e-9,
+    whole: Math.abs(start - snap(s0)) < 1e-9 && Math.abs(end - snap(s1)) < 1e-9
+  };
+}
+var RENDER_BYTES_PER_HD_FRAME = 76e4;
+var RENDER_MARGIN_BYTES = 3 * GB;
+function renderCutoutBytes(frames, size2) {
+  return frames * RENDER_BYTES_PER_HD_FRAME * (size2[0] * size2[1] / (1080 * 1920));
+}
 var ALPHA_TEMPLATES = ["High Quality with Alpha", "Lossless with Alpha"];
 var isSequence = (name) => /sequence/i.test(name);
 function chooseAlphaTemplate(available, wanted) {
@@ -54600,7 +54697,7 @@ function renderCutoutJsx(args) {
 async function runRenderCutout(args, io) {
   const started = performance.now();
   const outputPath = args.outputPath;
-  if (typeof outputPath !== "string" || !path10.isAbsolute(outputPath))
+  if (typeof outputPath !== "string" || !path13.isAbsolute(outputPath))
     return { ok: false, error: "`outputPath` must be an absolute path for the movie" };
   const rejected = rejectedOutputPath(outputPath);
   if (rejected) return { ok: false, error: rejected };
@@ -54628,7 +54725,7 @@ async function runRenderCutout(args, io) {
   const span = ranged && plan.span ? cutoutSpan(plan.span, args.from, args.to) : null;
   if (span && "error" in span) return { ok: false, error: span.error, layerSpan: plan.span };
   const frames = span ? span.frames : plan.span?.frames ?? 0;
-  const where = path10.dirname(outputPath);
+  const where = path13.dirname(outputPath);
   const cacheRoot = aeCacheRoot(plan.aeCache?.folder, plan.aeCache?.version);
   const movieBytes = renderCutoutBytes(frames, plan.compSize ?? [1080, 1920]);
   const matteCopies = typeof plan.matteCopies === "number" && plan.matteCopies > 1 ? plan.matteCopies : 1;
@@ -54713,7 +54810,7 @@ async function runRenderCutout(args, io) {
   const sidecar = `${r.outputPath}.comp-room.json`;
   let sidecarWritten = null;
   try {
-    await fs10.writeFile(
+    await fs13.writeFile(
       sidecar,
       JSON.stringify(
         { kind: "comp-room cut-out", comp: args.comp, layer: plan.layer, compSize: plan.compSize, fillLayer: plan.fillLayer ?? null, softEdge: soft, ...span ? { span } : {}, renderedAt: (/* @__PURE__ */ new Date()).toISOString() },
@@ -54742,7 +54839,6 @@ async function runRenderCutout(args, io) {
     } : {}
   };
 }
-var CHECK_FILE_MAX_FRAMES = 400;
 var CHECK_FILE_JUMP_LIMIT = 0.025;
 function checkFileFrames(n, cap) {
   if (n <= cap) return { frames: Array.from({ length: n }, (_, i) => i), step: 1 };
@@ -54754,41 +54850,6 @@ function checkFileFrames(n, cap) {
   }
   for (const f of [0, 1, 2, n - 3, n - 2, n - 1]) if (f >= 0 && f < n) set2.add(f);
   return { frames: [...set2].sort((a, b) => a - b), step };
-}
-function fileCompJsx(args) {
-  return `
-            var _item = null;
-            var _imported = false;
-            if (${jsxVal(args.item)} !== null) {
-                _item = AE.safeGet(function () { return app.project.itemByID(${jsxVal(args.item)}); }, null);
-                if (!_item) return { ok: false, error: "no project item with id " + ${jsxVal(args.item)} };
-            } else {
-                var _f = new File(${jsxVal(args.path)});
-                if (!_f.exists) return { ok: false, error: "no file at " + ${jsxVal(args.path)} };
-                _item = app.project.importFile(new ImportOptions(_f));
-                _imported = true;
-            }
-            if (!AE.safeGet(function () { return _item.hasVideo; }, false)) return { ok: false, error: "'" + _item.name + "' has no video" };
-            var _fr = AE.safeGet(function () { return _item.frameRate; }, 0) || 30;
-            var _dur = _item.duration;
-            var _c = app.project.items.addComp("check_file " + _item.name, _item.width, _item.height, AE.safeGet(function () { return _item.pixelAspect; }, 1) || 1, _dur, _fr);
-            _c.layers.add(_item);
-            return { ok: true, compId: _c.id, compName: _c.name, itemId: _item.id, itemName: _item.name, imported: _imported,
-                width: _item.width, height: _item.height, frames: Math.round(_dur * _fr), frameRate: _fr };
-        `;
-}
-function fileCleanupJsx(args) {
-  return `
-            var _removed = [];
-            var _c = AE.safeGet(function () { return app.project.itemByID(${jsxVal(args.compId)}); }, null);
-            if (_c) { var _cn = _c.name; _c.remove(); _removed.push(_cn); }
-            var removeItem = ${jsxVal(args.removeItem)};
-            if (removeItem && ${jsxVal(args.itemId)} !== null) {
-                var _it = AE.safeGet(function () { return app.project.itemByID(${jsxVal(args.itemId)}); }, null);
-                if (_it) { var _in = _it.name; _it.remove(); _removed.push(_in); }
-            }
-            return { ok: true, removed: _removed };
-        `;
 }
 function frameRanges(frames) {
   const out = [];
@@ -54892,16 +54953,16 @@ async function runCheckFile(args, io) {
       error: "give exactly one of `path` (the movie) or `item` (a footage item's id)"
     };
   if (file2 !== null) {
-    if (!path10.isAbsolute(file2))
+    if (!path13.isAbsolute(file2))
       return { ok: false, error: "`path` must be an absolute path to the movie" };
-    const there = io.exists ? await io.exists(file2) : await fs10.access(file2).then(
+    const there = io.exists ? await io.exists(file2) : await fs13.access(file2).then(
       () => true,
       () => false
     );
     if (!there) return { ok: false, error: `no file at ${file2}` };
   }
   const outDir = args.outDir;
-  if (typeof outDir !== "string" || !path10.isAbsolute(outDir))
+  if (typeof outDir !== "string" || !path13.isAbsolute(outDir))
     return { ok: false, error: "`outDir` must be an absolute folder for the pictures" };
   const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
   const jumpLimit = typeof args.jumpLimit === "number" ? args.jumpLimit : CHECK_FILE_JUMP_LIMIT;
@@ -54932,7 +54993,7 @@ async function runCheckFile(args, io) {
   let regionSource = regionLine !== null ? "given" : null;
   if (regionLine === null && file2 !== null) {
     try {
-      const side2 = JSON.parse(await fs10.readFile(`${file2}.comp-room.json`, "utf8"));
+      const side2 = JSON.parse(await fs13.readFile(`${file2}.comp-room.json`, "utf8"));
       if (typeof side2?.softEdge?.regionBottom === "number") {
         regionLine = side2.softEdge.regionBottom;
         if (typeof side2.softEdge.regionDepth === "number") regionDepth = side2.softEdge.regionDepth;
@@ -54980,7 +55041,7 @@ async function runCheckFile(args, io) {
     const f = kept.get(frame);
     if (!f || keepCaptures) return;
     kept.delete(frame);
-    await fs10.rm(f, { force: true });
+    await fs13.rm(f, { force: true });
   };
   const outline = outlineTracker(frozenOpts(args));
   let outlineResult = null;
@@ -55013,7 +55074,7 @@ async function runCheckFile(args, io) {
         rendered,
         limit,
         over,
-        path10.join(outDir, "check-file_unused.png"),
+        path13.join(outDir, "check-file_unused.png"),
         pixels,
         false,
         (r, img) => {
@@ -55085,7 +55146,7 @@ async function runCheckFile(args, io) {
       for (const e of ends) {
         const r = again.find((x) => x.frame === e);
         pics.push(r?.file ? await overPicture(io, r.file, over) : null);
-        if (r?.file && !keepCaptures) await fs10.rm(r.file, { force: true });
+        if (r?.file && !keepCaptures) await fs13.rm(r.file, { force: true });
       }
       frozenFindings.push(frozenFinding(run, pics));
     }
@@ -55173,7 +55234,7 @@ async function runCheckFile(args, io) {
     const pic = file3 ? await overPicture(io, file3, over) : null;
     pictureOf2.set(f, pic);
     if (pic)
-      pictureBytes += await fs10.stat(pic).then(
+      pictureBytes += await fs13.stat(pic).then(
         (st) => st.size,
         () => 0
       );
@@ -55208,7 +55269,7 @@ async function runCheckFile(args, io) {
   }
   if (thumbs.length) {
     const sheet = composeContactSheet(thumbs, { labels, thumbWidth: 240 });
-    picture = path10.join(outDir, "check-file_sheet.png");
+    picture = path13.join(outDir, "check-file_sheet.png");
     const png = encodePngSrgb8(sheet.width, sheet.height, sheet.rgb, PICTURE_DEFLATE);
     await writePng(io, picture, png);
     sheetBytes = png.length;
@@ -55399,27 +55460,6 @@ function useCutoutJsx(args) {
             if (_spanError !== null) _res.spanError = _spanError;
             return _res;
         `;
-}
-function liveFileIO(transport2) {
-  const cut = liveCutoutIO({}, transport2);
-  return {
-    render: cut.render,
-    readImage: cut.readImage,
-    async execute(code, opts) {
-      const r = await transport2.execute({
-        code,
-        label: opts.label,
-        timeoutMs: opts.timeoutMs,
-        undoGroup: opts.undoGroup ?? true,
-        suppressDialogs: true
-      });
-      return r.ok ? r.result : { ok: false, error: r.error ?? `${opts.label} failed` };
-    },
-    exists: (file2) => fs10.access(file2).then(
-      () => true,
-      () => false
-    )
-  };
 }
 registerOp({
   name: "subject.render_cutout",
@@ -55624,25 +55664,11 @@ registerOp({
     );
   }
 });
-var SOFT_EDGE_DEFAULTS = {
-  radius: 8,
-  smooth: 0,
-  chatterReduction: 2,
-  decontaminate: true,
-  feather: 60,
-  regionDepth: 0.12,
-  /** By default the check samples the click frame and every `nearStep`th frame after it, up to `near` frames on. */
-  near: 60,
-  nearStep: 10,
-  /** The closing check: a pixel solid in the matte as clicked and more than this far inside its edge must stay solid. */
-  deep: 30,
-  /** Matte more than this far outside the outline as clicked counts as spread (a smear). */
-  outside: 10,
-  /** Spread pixels allowed before the build is undone (look C left 0 to 12 px on the take; look D's smear was 156). */
-  outsideLimit: 50,
-  /** Face colour against the matte as clicked, CIELAB difference allowed. */
-  colourLimit: 1
-};
+
+// src/operations/keying-subject-soften.ts
+import { promises as fs14 } from "node:fs";
+import * as path14 from "node:path";
+init_registry();
 var SOFT_EDGE_COST = "The soft edge is two copies of the matte, so After Effects computes Object Matte twice for every frame: a render writes about twice the disk cache and takes several times as long (on the half-size take, 320 frames at 1088 \xD7 1920: 342 s and 9.0 GB of cache, against 65 to 92 s and about 5 GB with one matte; subject.render_cutout counts both copies).";
 function softRegionBottom(tops, compHeight, given) {
   if (typeof given === "number" && Number.isFinite(given)) return Math.round(given);
@@ -55775,7 +55801,7 @@ async function runSoftenEdge(args, io) {
       error: "`across` was removed: sampling the whole clip before the render cost more disk cache than the render (12.9 GB estimated against 9.5 GB on the half-size take). subject.check_file reads every frame of the rendered file instead: it stops on see-through inside the cut-out and notes the frames where the hair crosses the region's line. Leave `across` out, or give sampleFrames."
     };
   const outDir = args.outDir;
-  if (typeof outDir !== "string" || !path10.isAbsolute(outDir))
+  if (typeof outDir !== "string" || !path14.isAbsolute(outDir))
     return { ok: false, error: "`outDir` must be an absolute folder for the pictures" };
   const num2 = (k, d) => typeof args[k] === "number" && Number.isFinite(args[k]) ? args[k] : d;
   const D = SOFT_EDGE_DEFAULTS;
@@ -55833,7 +55859,7 @@ async function runSoftenEdge(args, io) {
     const r = await io.render({
       compNameOrId: args.comp,
       frames,
-      outPath: path10.join(outDir, `${name}.png`),
+      outPath: path14.join(outDir, `${name}.png`),
       settleTimeoutMs: Math.min(SETTLE_MAX_MS, frames.length * perFrame + 3e4),
       ...extra
     });
@@ -55993,7 +56019,7 @@ async function runSoftenEdge(args, io) {
   const pictures = checkFrames.map((f) => wholeAfter.get(f)?.file).filter((f) => typeof f === "string");
   if (args.keepCaptures !== true)
     await Promise.all(
-      captures.filter((c) => !pictures.includes(c)).map((c) => fs10.rm(c, { force: true }))
+      captures.filter((c) => !pictures.includes(c)).map((c) => fs14.rm(c, { force: true }))
     );
   const region = {
     bottom,
@@ -56154,6 +56180,11 @@ registerOp({
     });
   }
 });
+
+// src/operations/keying-reference.ts
+import { promises as fs15 } from "node:fs";
+import * as path15 from "node:path";
+init_registry();
 var MOVIE_EXT = /\.(mov|mp4|m4v|mxf|avi|webm|mkv|mpe?g)$/i;
 var naturalOrder = (a, b) => a.localeCompare(b, void 0, { numeric: true });
 function reportForReply(r) {
@@ -56170,7 +56201,7 @@ function referenceCompJsx(args) {
 async function runReferenceReport(args, io) {
   const started = performance.now();
   const outPath = args.outPath;
-  if (typeof outPath !== "string" || !path10.isAbsolute(outPath) || !/\.json$/i.test(outPath))
+  if (typeof outPath !== "string" || !path15.isAbsolute(outPath) || !/\.json$/i.test(outPath))
     return { ok: false, error: "`outPath` must be an absolute path for the report (.json)" };
   const sources = ["path", "item", "comp"].filter((k) => args[k] !== void 0 && args[k] !== null);
   if (sources.length !== 1)
@@ -56180,8 +56211,8 @@ async function runReferenceReport(args, io) {
     };
   const regions = Array.isArray(args.regions) ? args.regions : void 0;
   const cap = typeof args.maxFrames === "number" && args.maxFrames >= 1 ? Math.floor(args.maxFrames) : CHECK_FILE_MAX_FRAMES;
-  const outDir = path10.dirname(outPath);
-  await fs10.mkdir(outDir, { recursive: true });
+  const outDir = path15.dirname(outPath);
+  await fs15.mkdir(outDir, { recursive: true });
   const keepCaptures = args.keepCaptures === true;
   const perFrameMs = Math.max(
     1,
@@ -56199,11 +56230,11 @@ async function runReferenceReport(args, io) {
   let report;
   const renders = renderTally();
   const p = typeof args.path === "string" ? args.path : null;
-  if (p !== null && !path10.isAbsolute(p)) return { ok: false, error: "`path` must be absolute" };
-  const stat = p !== null ? await fs10.stat(p).catch(() => null) : null;
+  if (p !== null && !path15.isAbsolute(p)) return { ok: false, error: "`path` must be absolute" };
+  const stat = p !== null ? await fs15.stat(p).catch(() => null) : null;
   if (p !== null && !MOVIE_EXT.test(p)) {
     if (!stat) return { ok: false, error: `nothing at ${p}` };
-    const files = stat.isDirectory() ? (await fs10.readdir(p)).filter((f) => /\.png$/i.test(f)).sort(naturalOrder).map((f) => path10.join(p, f)) : [p];
+    const files = stat.isDirectory() ? (await fs15.readdir(p)).filter((f) => /\.png$/i.test(f)).sort(naturalOrder).map((f) => path15.join(p, f)) : [p];
     if (!files.length) return { ok: false, error: `no PNG frames in ${p}` };
     if (!files.every((f) => /\.png$/i.test(f)))
       return { ok: false, error: "a still must be a PNG (render other formats to PNG first)" };
@@ -56211,7 +56242,7 @@ async function runReferenceReport(args, io) {
     const frameRate = typeof args.frameRate === "number" ? args.frameRate : void 0;
     const given = typeof args.frameStep === "number" && args.frameStep >= 1 ? Math.round(args.frameStep) : null;
     const nums = files.map((f) => {
-      const m = /(\d+)(?!.*\d)/.exec(path10.basename(f, path10.extname(f)));
+      const m = /(\d+)(?!.*\d)/.exec(path15.basename(f, path15.extname(f)));
       return m ? Number(m[1]) : null;
     });
     const named = nums.every((n) => n !== null) && nums.every((n, i) => i === 0 || n > nums[i - 1]);
@@ -56273,7 +56304,7 @@ async function runReferenceReport(args, io) {
         for (const r of got) {
           if (!r.ok || !r.file) return { ok: false, error: `frame ${r.frame} did not render: ${r.error ?? "no file"}` };
           reader.add({ img: await io.readImage(r.file), frame: r.frame, time: r.frame / setup.frameRate });
-          if (!keepCaptures) await fs10.rm(r.file, { force: true });
+          if (!keepCaptures) await fs15.rm(r.file, { force: true });
         }
       }
       report = reader.finish();
@@ -56286,11 +56317,11 @@ async function runReferenceReport(args, io) {
     }
     source = fromComp ? { kind: "comp", name: setup.name, frames: setup.frames, frameRate: setup.frameRate } : { kind: p !== null ? "movie" : "item", path: p, item: setup.itemName, frames: setup.frames, frameRate: setup.frameRate, cleanup };
   }
-  await fs10.writeFile(outPath, JSON.stringify(report));
+  await fs15.writeFile(outPath, JSON.stringify(report));
   let compare2;
   if (typeof args.against === "string") {
     try {
-      compare2 = compareReferences(JSON.parse(await fs10.readFile(args.against, "utf8")), report);
+      compare2 = compareReferences(JSON.parse(await fs15.readFile(args.against, "utf8")), report);
     } catch (e) {
       compare2 = { error: `could not compare with ${args.against}: ${e instanceof Error ? e.message : String(e)}` };
     }
@@ -56314,8 +56345,8 @@ async function runReferenceReport(args, io) {
 async function runReferenceCompare(args) {
   const read = async (k) => {
     const v = args[k];
-    if (typeof v !== "string" || !path10.isAbsolute(v)) throw new Error(`\`${k}\` must be the absolute path of a saved report`);
-    return JSON.parse(await fs10.readFile(v, "utf8"));
+    if (typeof v !== "string" || !path15.isAbsolute(v)) throw new Error(`\`${k}\` must be the absolute path of a saved report`);
+    return JSON.parse(await fs15.readFile(v, "utf8"));
   };
   try {
     const ref = await read("reference");
@@ -57723,7 +57754,7 @@ registerOp({
 // src/operations/inspect.ts
 init_config();
 init_registry();
-import * as path11 from "node:path";
+import * as path16 from "node:path";
 registerOp({
   name: "comp.info",
   category: "comp",
@@ -57799,7 +57830,7 @@ registerOp({
   readOnly: true,
   toJsx(args) {
     const raw = String(args.outPath);
-    if (!path11.isAbsolute(raw)) {
+    if (!path16.isAbsolute(raw)) {
       return `
             return { ok: false, error: ${jsxVal(`outPath must be absolute, got: ${raw}`)} };
         `;
@@ -57810,7 +57841,7 @@ registerOp({
             return { ok: false, error: ${jsxVal(rejection)} };
         `;
     }
-    const abs = path11.resolve(raw).replace(/\\/g, "/");
+    const abs = path16.resolve(raw).replace(/\\/g, "/");
     return `
             ${RENDER_FRAME_FN}
             ${jsxCompPreamble(args)}
@@ -60191,12 +60222,12 @@ registerOp({
 });
 
 // src/operations/sample.ts
-import { promises as fs12 } from "node:fs";
-import * as path13 from "node:path";
+import { promises as fs17 } from "node:fs";
+import * as path18 from "node:path";
 
 // src/video/run-moves.ts
-import { promises as fs11 } from "node:fs";
-import path12 from "node:path";
+import { promises as fs16 } from "node:fs";
+import path17 from "node:path";
 
 // src/video/fit.ts
 function nelderMead(f, x0, steps2, iterations = 600) {
@@ -60275,13 +60306,13 @@ function fitMove(s, guess) {
   };
   const rl = nelderMead(fl, [guess.start, guess.end], [dur0 * 0.1, dur0 * 0.1]);
   const linear = { model: "linear", start: rl.x[0], end: Math.max(rl.x[0] + 1e-3, rl.x[1]), rms: rl.value };
-  const fs19 = (x) => {
+  const fs24 = (x) => {
     const f2 = clamp(x[1], 0.2, 20), d2 = clamp(x[2], 0.1, 60);
     return rmsOf(s, (t) => springFromRest(t - x[0], f2, d2));
   };
   let bestS = { x: [guess.start, 2, 6], value: Infinity };
   for (const f0 of [0.8, 1.5, 3, 6]) for (const d0 of [2, 5, 10, 20]) {
-    const r = nelderMead(fs19, [guess.start, f0, d0], [dur0 * 0.1, f0 * 0.3, d0 * 0.3]);
+    const r = nelderMead(fs24, [guess.start, f0, d0], [dur0 * 0.1, f0 * 0.3, d0 * 0.3]);
     if (r.value < bestS.value) bestS = r;
   }
   const f = clamp(bestS.x[1], 0.2, 20), d = clamp(bestS.x[2], 0.1, 60), w = 2 * Math.PI * f;
@@ -60522,9 +60553,9 @@ function movesOfChannel(samples, o) {
 
 // src/video/run-moves.ts
 async function readJson(p, what) {
-  if (typeof p !== "string" || !path12.isAbsolute(p)) return { error: `${what} must be an absolute path to a JSON file` };
+  if (typeof p !== "string" || !path17.isAbsolute(p)) return { error: `${what} must be an absolute path to a JSON file` };
   try {
-    return JSON.parse(await fs11.readFile(p, "utf8"));
+    return JSON.parse(await fs16.readFile(p, "utf8"));
   } catch (e) {
     return { error: `could not read ${what} ${p}: ${e.message}` };
   }
@@ -60553,7 +60584,7 @@ function row(label, m, atFps) {
   };
 }
 async function runMoves(args) {
-  if (typeof args.outDir !== "string" || !path12.isAbsolute(args.outDir)) return { ok: false, error: "`outDir` must be an absolute folder path" };
+  if (typeof args.outDir !== "string" || !path17.isAbsolute(args.outDir)) return { ok: false, error: "`outDir` must be an absolute folder path" };
   const atFps = typeof args.atFps === "number" && args.atFps > 0 ? args.atFps : 30;
   const tracks = Array.isArray(args.tracks) ? args.tracks : [];
   if (!tracks.length && !Array.isArray(args.inferred)) return { ok: false, error: "`tracks` must list track.json files from video.track ([{ path, label }] or paths)" };
@@ -60561,7 +60592,7 @@ async function runMoves(args) {
   for (let i = 0; i < tracks.length; i++) {
     const t = typeof tracks[i] === "string" ? { path: tracks[i] } : tracks[i], j = await readJson(t.path, "a track");
     if ("error" in j) return { ok: false, error: j.error };
-    if (j.lost) notes.push(`${t.label ?? path12.basename(path12.dirname(t.path))}: ${j.lost.reading}`);
+    if (j.lost) notes.push(`${t.label ?? path17.basename(path17.dirname(t.path))}: ${j.lost.reading}`);
     j.moves.forEach((m, k) => rows.push(row(`${t.label ?? `track ${i + 1}`}${j.moves.length > 1 ? ` ${k + 1}` : ""}`, m, atFps)));
   }
   for (const m of args.inferred ?? []) rows.push({ move: m.label ?? "inferred", channel: m.channel ?? null, status: "inferred", reason: m.reason ?? "no reason given", ...m });
@@ -60600,10 +60631,10 @@ async function runMoves(args) {
     lines.push("- Type roles, exact strings, material, depth, data sources: (not measured)", "");
   });
   if (notes.length) lines.push("## Not measured", "", ...notes.map((n) => `- ${n}`), "");
-  await fs11.mkdir(args.outDir, { recursive: true });
-  const jsonPath = path12.join(args.outDir, "moves.json"), sheetPath = path12.join(args.outDir, "beat-sheet.md");
-  await fs11.writeFile(jsonPath, JSON.stringify({ atFps, moves: rows, notes }, null, 1));
-  await fs11.writeFile(sheetPath, lines.join("\n"));
+  await fs16.mkdir(args.outDir, { recursive: true });
+  const jsonPath = path17.join(args.outDir, "moves.json"), sheetPath = path17.join(args.outDir, "beat-sheet.md");
+  await fs16.writeFile(jsonPath, JSON.stringify({ atFps, moves: rows, notes }, null, 1));
+  await fs16.writeFile(sheetPath, lines.join("\n"));
   const counts = { measured: rows.filter((r) => String(r.status).startsWith("measured")).length, inferred: rows.filter((r) => r.status === "inferred").length, untested: rows.filter((r) => r.status === "untested").length };
   return {
     ok: true,
@@ -60666,7 +60697,7 @@ async function runCompareMoves(args, readProperty) {
     const bj = await readJson(args.buildTrack, "buildTrack");
     if ("error" in bj) return { ok: false, error: bj.error };
     built = bj.moves ?? [];
-    source = `the build's render (${path12.basename(args.buildTrack)})`;
+    source = `the build's render (${path17.basename(args.buildTrack)})`;
   } else if (args.comp !== void 0 && args.layer !== void 0 && args.property !== void 0) {
     if (!readProperty) return { ok: false, error: "reading a property needs After Effects" };
     const r = await readProperty({ comp: args.comp, layer: args.layer, property: args.property, start: args.start, end: args.end, perFrame: true });
@@ -60873,10 +60904,10 @@ async function runCurve(args, io) {
   const report = analyzeCurve(samples, r.fps);
   let graph = null;
   if (typeof args.outPath === "string") {
-    if (!path13.isAbsolute(args.outPath)) return { ok: false, error: "`outPath` must be absolute (.png)" };
+    if (!path18.isAbsolute(args.outPath)) return { ok: false, error: "`outPath` must be absolute (.png)" };
     const g = curveGraph(report, { width: 480, height: 160 });
-    await fs12.mkdir(path13.dirname(args.outPath), { recursive: true });
-    await fs12.writeFile(args.outPath, encodePngSrgb8(g.width, g.height, g.rgb));
+    await fs17.mkdir(path18.dirname(args.outPath), { recursive: true });
+    await fs17.writeFile(args.outPath, encodePngSrgb8(g.width, g.height, g.rgb));
     graph = args.outPath;
   }
   return {
@@ -60948,12 +60979,12 @@ async function runSoundMarkers(args, io) {
   let source;
   if (hasTiming) {
     const f = args.timing;
-    if (!path13.isAbsolute(f)) return { ok: false, error: "`timing` must be an absolute path" };
+    if (!path18.isAbsolute(f)) return { ok: false, error: "`timing` must be an absolute path" };
     const r = await io.execute(fpsJsx({ comp: args.comp }), { label: "sound.markers fps", timeoutMs: 3e4 });
     if (!r?.ok) return { ok: false, error: r?.error ?? "could not read the comp" };
     fps = r.fps;
     try {
-      found = parseTiming(await fs12.readFile(f, "utf8"), fps).map((m) => ({ ...m, frame: Math.round(m.time * fps) }));
+      found = parseTiming(await fs17.readFile(f, "utf8"), fps).map((m) => ({ ...m, frame: Math.round(m.time * fps) }));
     } catch (e) {
       return { ok: false, error: e instanceof Error ? e.message : String(e) };
     }
@@ -61114,8 +61145,8 @@ registerOp({
 init_registry();
 
 // src/video/run-shots-census.ts
-import { promises as fs14 } from "node:fs";
-import path15 from "node:path";
+import { promises as fs19 } from "node:fs";
+import path20 from "node:path";
 
 // src/video/census.ts
 var CENSUS_RULES = { block: 16, search: 6, pixel: 8, calmBelow: 4e-3, travelMoved: 0.5, cutChanged: 0.55, cutMoved: 0.35, texture: 5 };
@@ -61349,8 +61380,8 @@ function cadenceOf(diffs, fps, still = 0.6, moving = 1.5) {
 }
 
 // src/video/run-track.ts
-import { promises as fs13 } from "node:fs";
-import path14 from "node:path";
+import { promises as fs18 } from "node:fs";
+import path19 from "node:path";
 
 // src/video/ink.ts
 function luma3(r, g, b) {
@@ -61799,8 +61830,8 @@ function statusCount(moves) {
 }
 async function runTrack(args, opts = {}) {
   const tools = opts.tools ?? VIDEO_TOOLS, minNcc = opts.minNcc ?? 0.8;
-  if (typeof args.file !== "string" || !path14.isAbsolute(args.file)) return { ok: false, error: "`file` must be an absolute path to a video file" };
-  if (typeof args.outDir !== "string" || !path14.isAbsolute(args.outDir)) return { ok: false, error: "`outDir` must be an absolute folder path" };
+  if (typeof args.file !== "string" || !path19.isAbsolute(args.file)) return { ok: false, error: "`file` must be an absolute path to a video file" };
+  if (typeof args.outDir !== "string" || !path19.isAbsolute(args.outDir)) return { ok: false, error: "`outDir` must be an absolute folder path" };
   const started = performance.now();
   const info = await probeVideo(args.file, tools);
   if (info === null) return { ok: false, error: NO_FFMPEG };
@@ -62129,12 +62160,12 @@ async function runTrack(args, opts = {}) {
   }
   const nccAll = rows.filter((r) => r.m).map((r) => r.m.ncc).sort((a, b) => a - b);
   out.match = { matchedFrames: nccAll.length, frames: rows.length, median: nccAll.length ? Math.round(nccAll[Math.floor(nccAll.length / 2)] * 1e3) / 1e3 : null, threshold: minNcc };
-  await fs13.mkdir(args.outDir, { recursive: true });
-  const jsonPath = path14.join(args.outDir, "track.json"), csvPath = path14.join(args.outDir, "track.csv");
+  await fs18.mkdir(args.outDir, { recursive: true });
+  const jsonPath = path19.join(args.outDir, "track.json"), csvPath = path19.join(args.outDir, "track.csv");
   const perFrame = rows.map((r) => ({ index: r.index, time: Math.round(r.time * 1e6) / 1e6, at: at(r.time), repeat: rep.has(r.index), ...r.m ? { ...Object.fromEntries(Object.entries(toSrc(r.m)).map(([a, v]) => [a, Math.round(v * 100) / 100])), ncc: Math.round(r.m.ncc * 1e3) / 1e3 } : { matched: false } }));
   const inkFrames = inkRows.map((r) => ({ index: r.index, time: Math.round(r.time * 1e6) / 1e6, count: Math.round(r.f.count), ...r.f.count ? { x0: r24(r.f.x0), y0: r24(r.f.y0), x1: r24(r.f.x1), y1: r24(r.f.y1), cx: r24(r.f.cx), cy: r24(r.f.cy) } : {}, level: r24(r.f.level) }));
-  await fs13.writeFile(jsonPath, JSON.stringify({ ...out, frames: perFrame, ...inkRows.length ? { inkFrames } : {} }, null, 1));
-  await fs13.writeFile(csvPath, ["index,time,at,x,y,scale,opacity,ncc,repeat", ...perFrame.map((p) => [p.index, p.time, p.at, p.x ?? "", p.y ?? "", p.scale ?? "", p.opacity ?? "", p.ncc ?? "", p.repeat ? 1 : 0].join(","))].join("\n"));
+  await fs18.writeFile(jsonPath, JSON.stringify({ ...out, frames: perFrame, ...inkRows.length ? { inkFrames } : {} }, null, 1));
+  await fs18.writeFile(csvPath, ["index,time,at,x,y,scale,opacity,ncc,repeat", ...perFrame.map((p) => [p.index, p.time, p.at, p.x ?? "", p.y ?? "", p.scale ?? "", p.opacity ?? "", p.ncc ?? "", p.repeat ? 1 : 0].join(","))].join("\n"));
   const seconds = Math.round((performance.now() - started) / 1e3 * 100) / 100;
   return {
     ...out,
@@ -62146,8 +62177,8 @@ async function runTrack(args, opts = {}) {
 
 // src/video/run-shots-census.ts
 async function open2(args, tools) {
-  if (typeof args.file !== "string" || !path15.isAbsolute(args.file)) return { error: "`file` must be an absolute path to a video file" };
-  if (typeof args.outDir !== "string" || !path15.isAbsolute(args.outDir)) return { error: "`outDir` must be an absolute folder path" };
+  if (typeof args.file !== "string" || !path20.isAbsolute(args.file)) return { error: "`file` must be an absolute path to a video file" };
+  if (typeof args.outDir !== "string" || !path20.isAbsolute(args.outDir)) return { error: "`outDir` must be an absolute folder path" };
   const info = await probeVideo(args.file, tools);
   if (info === null) return { error: NO_FFMPEG };
   if ("error" in info) return { error: info.error };
@@ -62180,22 +62211,22 @@ async function runShots(args, tools = VIDEO_TOOLS) {
   }
   const list = shotList(stats, SHOT_RULES, (i) => i > 0 ? registerShift(small[i - 1], small[i], w, h) : null);
   const kx = info.width / w, ky = info.height / h;
-  await fs14.mkdir(args.outDir, { recursive: true });
+  await fs19.mkdir(args.outDir, { recursive: true });
   const atFps = typeof args.atFps === "number" && args.atFps > 0 ? args.atFps : 30, at = (t) => Math.round(t * atFps * 100) / 100;
   const sheets = [], strips = [];
   if (args.pictures !== false) {
     for (let s = 0; s < list.shots.length && s < 60; s++) {
       const sh = list.shots[s], n = Math.min(8, sh.to - sh.from + 1), fr = Array.from({ length: n }, (_, i) => Math.round(sh.from + i * (sh.to - sh.from) / Math.max(1, n - 1)));
-      const p = path15.join(args.outDir, `shot-${String(s + 1).padStart(3, "0")}.png`);
+      const p = path20.join(args.outDir, `shot-${String(s + 1).padStart(3, "0")}.png`);
       if (await tilePng(info, [...new Set(fr)], p, 160, tools)) sheets.push(p);
     }
     const changes = [...list.cuts.map((c) => c.frame), ...list.swaps.map((c) => c.frame)].sort((x, y) => x - y);
     for (const c of changes.slice(0, 40)) {
-      const fr = [c - 2, c - 1, c, c + 1, c + 2].filter((f) => f >= 0 && f < info.frames), p = path15.join(args.outDir, `change-${c}.png`);
+      const fr = [c - 2, c - 1, c, c + 1, c + 2].filter((f) => f >= 0 && f < info.frames), p = path20.join(args.outDir, `change-${c}.png`);
       if (await tilePng(info, fr, p, 160, tools)) strips.push(p);
     }
   }
-  const jsonPath = path15.join(args.outDir, "shots.json");
+  const jsonPath = path20.join(args.outDir, "shots.json");
   const result = {
     ok: true,
     file: args.file,
@@ -62207,7 +62238,7 @@ async function runShots(args, tools = VIDEO_TOOLS) {
     notCuts: list.notCuts.map((c) => ({ ...c, at: at(c.time), ...c.shift ? { shift: { ...c.shift, dx: Math.round(c.shift.dx * kx), dy: Math.round(c.shift.dy * ky), unit: "source px a frame" } } : {} })),
     shots: list.shots.map((s) => ({ ...s, at: [at(s.start), at(s.end)] }))
   };
-  await fs14.writeFile(jsonPath, JSON.stringify(result, null, 1));
+  await fs19.writeFile(jsonPath, JSON.stringify(result, null, 1));
   return {
     ...result,
     shots: result.shots.length > 40 ? `${result.shots.length} shots: see shots.json` : result.shots,
@@ -62267,13 +62298,13 @@ async function runCensus(args, tools = VIDEO_TOOLS) {
     prev = cur;
   }
   const lab = labels.join(""), cad = cadence(lab.replace(/\./g, ""), shifts.filter((_, i) => labels[i] !== "."), step, Math.max(info.width, info.height) / Math.max(w, h));
-  await fs14.mkdir(args.outDir, { recursive: true });
+  await fs19.mkdir(args.outDir, { recursive: true });
   const col = { c: [90, 90, 90], l: [230, 200, 60], T: [240, 120, 30], X: [220, 40, 40], ".": [0, 0, 0] }, sw = Math.max(1, labels.length), sh = 24, rgb = new Float64Array(sw * sh * 3);
   for (let x = 0; x < sw; x++) for (let y = 0; y < sh; y++) rgb.set(col[labels[x] ?? "."].map((v) => v / 255), (y * sw + x) * 3);
-  const strip = path15.join(args.outDir, "census.png"), jsonPath = path15.join(args.outDir, "census.json");
-  await fs14.writeFile(strip, encodePngSrgb8(sw, sh, rgb));
+  const strip = path20.join(args.outDir, "census.png"), jsonPath = path20.join(args.outDir, "census.json");
+  await fs19.writeFile(strip, encodePngSrgb8(sw, sh, rgb));
   const result = { ok: true, file: args.file, window: step, band, pageTest, rules: CENSUS_RULES, labels: lab, cadence: cad };
-  await fs14.writeFile(jsonPath, JSON.stringify({ ...result, steps: steps2 }, null, 1));
+  await fs19.writeFile(jsonPath, JSON.stringify({ ...result, steps: steps2 }, null, 1));
   return {
     ...result,
     labels: lab.length > 600 ? `${lab.slice(0, 600)}\u2026 (${lab.length} steps: see census.json)` : lab,
@@ -62352,8 +62383,8 @@ registerOp({
 
 // src/operations/instance.ts
 import { spawn as spawn2 } from "node:child_process";
-import { promises as fs15 } from "node:fs";
-import * as path16 from "node:path";
+import { promises as fs20 } from "node:fs";
+import * as path21 from "node:path";
 init_config();
 init_registry();
 var INSTALL_CMD = "npx @kumoproductions/mcp-aftereffects install-agent";
@@ -62462,10 +62493,10 @@ registerOp({
     let copiedFrom = null;
     let copyTo = null;
     if (typeof args.copyFrom === "string" && args.copyFrom) {
-      const src = path16.resolve(args.copyFrom);
+      const src = path21.resolve(args.copyFrom);
       if (!await exists(src)) return fail(`copyFrom not found: ${src}`, { errorCode: "IO" });
-      const ext = path16.extname(src) || ".aep";
-      copyTo = typeof args.copyTo === "string" && args.copyTo ? path16.resolve(args.copyTo) : path16.join(path16.dirname(src), `${path16.basename(src, ext)}__${name}${ext}`);
+      const ext = path21.extname(src) || ".aep";
+      copyTo = typeof args.copyTo === "string" && args.copyTo ? path21.resolve(args.copyTo) : path21.join(path21.dirname(src), `${path21.basename(src, ext)}__${name}${ext}`);
       if (copyTo === src)
         return fail("copyTo must differ from copyFrom", { errorCode: "INVALID_ARGS" });
       const rejected = rejectedOutputPath(copyTo);
@@ -62473,7 +62504,7 @@ registerOp({
       copiedFrom = src;
       projectToOpen = copyTo;
     } else if (typeof args.project === "string" && args.project) {
-      projectToOpen = path16.resolve(args.project);
+      projectToOpen = path21.resolve(args.project);
       if (!await exists(projectToOpen))
         return fail(`project not found: ${projectToOpen}`, { errorCode: "IO" });
     }
@@ -62500,8 +62531,8 @@ registerOp({
       return fail(err instanceof Error ? err.message : String(err), { errorCode: "AE_NOT_FOUND" });
     }
     if (copiedFrom !== null && copyTo !== null) {
-      await fs15.mkdir(path16.dirname(copyTo), { recursive: true });
-      await fs15.copyFile(copiedFrom, copyTo);
+      await fs20.mkdir(path21.dirname(copyTo), { recursive: true });
+      await fs20.copyFile(copiedFrom, copyTo);
     }
     const plan = buildInstanceLaunchPlan(exe, name);
     const aePid = process.platform === "darwin" ? null : void 0;
@@ -62683,7 +62714,7 @@ registerOp({
         `instance '${name}' accepted the quit but is still ticking after ${timeoutMs} ms \u2014 check it for a dialog`
       );
     }
-    await fs15.rm(dir, { recursive: true, force: true }).catch(() => {
+    await fs20.rm(dir, { recursive: true, force: true }).catch(() => {
     });
     return { ok: true, instance: name, stopped: true, saved: !!args.save, file: file2 };
   }
@@ -62757,7 +62788,7 @@ registerOp({
 });
 async function exists(p) {
   try {
-    await fs15.access(p);
+    await fs20.access(p);
     return true;
   } catch {
     return false;
@@ -62851,9 +62882,9 @@ var catalogTool = defineTool({
 
 // src/tools/check-comp.ts
 import { randomUUID as randomUUID4 } from "node:crypto";
-import { promises as fs16 } from "node:fs";
+import { promises as fs21 } from "node:fs";
 import * as os4 from "node:os";
-import * as path18 from "node:path";
+import * as path23 from "node:path";
 
 // src/color/watch.ts
 var WATCH_DEFAULTS = {
@@ -63649,7 +63680,7 @@ function frameOfCapture(file2) {
   const m = /frame-(\d+)\.png$/.exec(file2);
   return m ? Number(m[1]) : null;
 }
-var frameFile = (dir, frame) => path18.join(dir, `frame-${frame}.png`).replace(/\\/g, "/");
+var frameFile = (dir, frame) => path23.join(dir, `frame-${frame}.png`).replace(/\\/g, "/");
 function aeFrameSource(transport2, comp, opts) {
   const stallMs = opts.stallMs ?? CAPTURE_STALL_MS;
   const drain = async (paths, before) => {
@@ -63669,7 +63700,7 @@ function aeFrameSource(transport2, comp, opts) {
     async capture(frames, dir) {
       const t0 = performance.now();
       const paths = frames.map((k) => frameFile(dir, k));
-      await fs16.mkdir(dir, { recursive: true });
+      await fs21.mkdir(dir, { recursive: true });
       const before = await stampFiles(paths);
       const result = await transport2.execute({
         code: captureJsx(comp, frames, paths, opts.factor, opts.tryOcio),
@@ -63726,7 +63757,7 @@ function aeFrameSource(transport2, comp, opts) {
   };
 }
 async function readPicture(file2, target, convert) {
-  const img = decodePng(await fs16.readFile(file2));
+  const img = decodePng(await fs21.readFile(file2));
   if (convert) convert(img.rgb);
   let rgb = img.rgb;
   let width = img.width;
@@ -63898,14 +63929,14 @@ async function checkComp(args, transport2) {
     time: r64((ownedTo + every) * fd),
     framesLeft: remaining
   } : null;
-  const outDir = path18.resolve(
-    args.outDir ?? path18.join(
+  const outDir = path23.resolve(
+    args.outDir ?? path23.join(
       os4.tmpdir(),
       "comp-room-check",
       `${String(plan.compName).replace(/[^A-Za-z0-9_-]+/g, "-").slice(0, 40)}-${Date.now()}`
     )
   ).replace(/\\/g, "/");
-  const capDir = path18.join(outDir, `captures-${randomUUID4().slice(0, 8)}`).replace(/\\/g, "/");
+  const capDir = path23.join(outDir, `captures-${randomUUID4().slice(0, 8)}`).replace(/\\/g, "/");
   const readOnly = readOnlyMode();
   const target = {
     width: Math.max(1, Math.round(plan.width / downsample)),
@@ -64017,7 +64048,7 @@ async function checkComp(args, transport2) {
         failures.push({ frame: f.frame, error: `could not read the capture: ${err instanceof Error ? err.message : String(err)}` });
       }
       readSeconds += (performance.now() - r0) / 1e3;
-      await fs16.rm(f.path, { force: true });
+      await fs21.rm(f.path, { force: true });
     }
     if (res.outstanding.length > 0) {
       outstanding.push(...res.outstanding);
@@ -64025,7 +64056,7 @@ async function checkComp(args, transport2) {
       break;
     }
   }
-  if (outstanding.length === 0) await fs16.rm(capDir, { recursive: true, force: true });
+  if (outstanding.length === 0) await fs21.rm(capDir, { recursive: true, force: true });
   const findings = watcher ? watcher.finish() : null;
   const measureSeconds = watcher ? watcher.measureMs / 1e3 : 0;
   let nextOut = next;
@@ -64131,7 +64162,7 @@ async function checkComp(args, transport2) {
     report.sheet = sheet.sheet;
     outstanding.push(...sheet.outstanding);
   }
-  if (outstanding.length === 0) await fs16.rmdir(outDir).catch(() => {
+  if (outstanding.length === 0) await fs21.rmdir(outDir).catch(() => {
   });
   report.captureQueue = outstanding.length === 0 ? {
     outstanding: 0,
@@ -64285,11 +64316,11 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
     if (!got?.path) continue;
     try {
       const pic = await readPicture(got.path, target, convert);
-      await fs16.writeFile(got.path, encodePngSrgb8(pic.width, pic.height, pic.rgb));
+      await fs21.writeFile(got.path, encodePngSrgb8(pic.width, pic.height, pic.rgb));
       images.push({ width: pic.width, height: pic.height, rgb: pic.rgb, bitDepth: 8 });
       kept.push({ frame: c.frame, time: r64(c.frame * fd), kinds: c.kinds, ...c.why ? { why: c.why } : {}, path: got.path });
     } catch {
-      await fs16.rm(got.path, { force: true });
+      await fs21.rm(got.path, { force: true });
     }
   }
   if (images.length === 0)
@@ -64302,8 +64333,8 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
     thumbWidth: tileW,
     labels
   });
-  const sheetPath = path18.join(outDir, `check-sheet-${tag}.png`).replace(/\\/g, "/");
-  await fs16.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+  const sheetPath = path23.join(outDir, `check-sheet-${tag}.png`).replace(/\\/g, "/");
+  await fs21.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
   return {
     sheet: {
       writtenTo: sheetPath,
@@ -64843,8 +64874,8 @@ var layerInfoTool = defineTool({
 });
 
 // src/tools/project-export.ts
-import { promises as fs17 } from "node:fs";
-import * as path19 from "node:path";
+import { promises as fs22 } from "node:fs";
+import * as path24 from "node:path";
 init_config();
 var projectExportTool = defineTool({
   name: "ae_project_export_json",
@@ -64866,7 +64897,7 @@ var projectExportTool = defineTool({
       const rejection = rejectedOutputPath(args.outPath);
       if (rejection !== null) {
         return errorResult("IO", rejection, {
-          details: { outPath: path19.resolve(args.outPath) },
+          details: { outPath: path24.resolve(args.outPath) },
           hint: "Write the document somewhere outside the mailbox, or omit outPath to receive it inline."
         });
       }
@@ -64885,10 +64916,10 @@ var projectExportTool = defineTool({
     const pretty = args.pretty ?? !!args.outPath;
     const jsonText = JSON.stringify(doc, null, pretty ? 2 : 0);
     if (args.outPath) {
-      const abs = path19.resolve(args.outPath);
+      const abs = path24.resolve(args.outPath);
       try {
-        await fs17.mkdir(path19.dirname(abs), { recursive: true });
-        await fs17.writeFile(abs, jsonText, "utf8");
+        await fs22.mkdir(path24.dirname(abs), { recursive: true });
+        await fs22.writeFile(abs, jsonText, "utf8");
       } catch (err) {
         return errorResult(
           "IO",
@@ -64919,8 +64950,8 @@ var projectExportTool = defineTool({
 });
 
 // src/tools/project-import.ts
-import { promises as fs18 } from "node:fs";
-import * as path20 from "node:path";
+import { promises as fs23 } from "node:fs";
+import * as path25 from "node:path";
 
 // src/schema.ts
 var SCHEMA_VERSION = 3;
@@ -64929,11 +64960,11 @@ var SCHEMA_VERSION = 3;
 var Validator = class {
   issues = [];
   warnings = [];
-  err(path22, message) {
-    this.issues.push({ path: path22, message });
+  err(path27, message) {
+    this.issues.push({ path: path27, message });
   }
-  warn(path22, message) {
-    this.warnings.push({ path: path22, message });
+  warn(path27, message) {
+    this.warnings.push({ path: path27, message });
   }
   isObject(v) {
     return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -65034,64 +65065,64 @@ function validateAeProjectDoc(doc) {
   }
   return { ok: v.issues.length === 0, issues: v.issues, warnings: v.warnings };
 }
-function validateLayer(v, path22, layer) {
+function validateLayer(v, path27, layer) {
   if (!v.isObject(layer)) {
-    v.err(path22, "not an object");
+    v.err(path27, "not an object");
     return;
   }
-  if (typeof layer.index !== "number") v.err(`${path22}.index`, "missing or not a number");
-  if (typeof layer.name !== "string") v.err(`${path22}.name`, "missing or not a string");
-  if (typeof layer.type !== "string") v.err(`${path22}.type`, "missing or not a string");
+  if (typeof layer.index !== "number") v.err(`${path27}.index`, "missing or not a number");
+  if (typeof layer.name !== "string") v.err(`${path27}.name`, "missing or not a string");
+  if (typeof layer.type !== "string") v.err(`${path27}.type`, "missing or not a string");
   else if (["AVLayer", "TextLayer", "ShapeLayer", "CameraLayer", "LightLayer", "Layer"].indexOf(
     layer.type
   ) === -1) {
-    v.warn(`${path22}.type`, `unknown layer type: ${layer.type}`);
+    v.warn(`${path27}.type`, `unknown layer type: ${layer.type}`);
   }
   if (layer.transformGroup)
-    validatePropertyGroup(v, `${path22}.transformGroup`, layer.transformGroup);
-  if (layer.effectsGroup) validatePropertyGroup(v, `${path22}.effectsGroup`, layer.effectsGroup);
-  if (layer.masksGroup) validatePropertyGroup(v, `${path22}.masksGroup`, layer.masksGroup);
-  if (layer.textGroup) validatePropertyGroup(v, `${path22}.textGroup`, layer.textGroup);
-  if (layer.contentsGroup) validatePropertyGroup(v, `${path22}.contentsGroup`, layer.contentsGroup);
-  if (layer.markers) validateProperty(v, `${path22}.markers`, layer.markers);
+    validatePropertyGroup(v, `${path27}.transformGroup`, layer.transformGroup);
+  if (layer.effectsGroup) validatePropertyGroup(v, `${path27}.effectsGroup`, layer.effectsGroup);
+  if (layer.masksGroup) validatePropertyGroup(v, `${path27}.masksGroup`, layer.masksGroup);
+  if (layer.textGroup) validatePropertyGroup(v, `${path27}.textGroup`, layer.textGroup);
+  if (layer.contentsGroup) validatePropertyGroup(v, `${path27}.contentsGroup`, layer.contentsGroup);
+  if (layer.markers) validateProperty(v, `${path27}.markers`, layer.markers);
   if (layer.timeRemapProperty)
-    validateProperty(v, `${path22}.timeRemapProperty`, layer.timeRemapProperty);
+    validateProperty(v, `${path27}.timeRemapProperty`, layer.timeRemapProperty);
 }
-function validatePropertyGroup(v, path22, group) {
+function validatePropertyGroup(v, path27, group) {
   if (!v.isObject(group)) {
-    v.err(path22, "not an object");
+    v.err(path27, "not an object");
     return;
   }
-  if (typeof group.matchName !== "string") v.err(`${path22}.matchName`, "missing or not a string");
+  if (typeof group.matchName !== "string") v.err(`${path27}.matchName`, "missing or not a string");
   if (Array.isArray(group.properties)) {
     for (let i = 0; i < group.properties.length; i++) {
-      validateProperty(v, `${path22}.properties[${i}]`, group.properties[i]);
+      validateProperty(v, `${path27}.properties[${i}]`, group.properties[i]);
     }
   }
   if (Array.isArray(group.groups)) {
     for (let i = 0; i < group.groups.length; i++) {
-      validatePropertyGroup(v, `${path22}.groups[${i}]`, group.groups[i]);
+      validatePropertyGroup(v, `${path27}.groups[${i}]`, group.groups[i]);
     }
   }
 }
-function validateProperty(v, path22, prop) {
+function validateProperty(v, path27, prop) {
   if (!v.isObject(prop)) {
-    v.err(path22, "not an object");
+    v.err(path27, "not an object");
     return;
   }
-  if (typeof prop.matchName !== "string") v.err(`${path22}.matchName`, "missing or not a string");
+  if (typeof prop.matchName !== "string") v.err(`${path27}.matchName`, "missing or not a string");
   if (Array.isArray(prop.keyframes)) {
     for (let i = 0; i < prop.keyframes.length; i++) {
-      validateKeyframe(v, `${path22}.keyframes[${i}]`, prop.keyframes[i]);
+      validateKeyframe(v, `${path27}.keyframes[${i}]`, prop.keyframes[i]);
     }
   }
 }
-function validateKeyframe(v, path22, kf) {
+function validateKeyframe(v, path27, kf) {
   if (!v.isObject(kf)) {
-    v.err(path22, "not an object");
+    v.err(path27, "not an object");
     return;
   }
-  if (typeof kf.time !== "number") v.err(`${path22}.time`, "missing or not a number");
+  if (typeof kf.time !== "number") v.err(`${path27}.time`, "missing or not a number");
 }
 
 // src/tools/project-import.ts
@@ -65120,9 +65151,9 @@ var projectImportTool = defineTool({
   handler: async (args, transport2) => {
     let doc;
     if (args.inPath) {
-      const abs = path20.resolve(args.inPath);
+      const abs = path25.resolve(args.inPath);
       try {
-        doc = JSON.parse(await fs18.readFile(abs, "utf8"));
+        doc = JSON.parse(await fs23.readFile(abs, "utf8"));
       } catch (err) {
         return errorResult(
           "IO",
@@ -65387,7 +65418,7 @@ var ALL_TOOLS = [
 
 // src/tools/library.ts
 import { readFileSync as readFileSync2, realpathSync as realpathSync2 } from "node:fs";
-import path21 from "node:path";
+import path26 from "node:path";
 import { createHash } from "node:crypto";
 init_config();
 
@@ -65477,17 +65508,17 @@ function findModules(catalog, query) {
 
 // src/tools/library.ts
 function boundedFile(base, relative3) {
-  const candidate = path21.resolve(base, relative3);
+  const candidate = path26.resolve(base, relative3);
   const inside = (file3) => {
-    const rel = path21.relative(base, file3);
-    if (!rel || rel === ".." || rel.startsWith(".." + path21.sep) || path21.isAbsolute(rel)) throw new Error("Library path escapes bundle");
+    const rel = path26.relative(base, file3);
+    if (!rel || rel === ".." || rel.startsWith(".." + path26.sep) || path26.isAbsolute(rel)) throw new Error("Library path escapes bundle");
   };
   inside(candidate);
   const file2 = realpathSync2(candidate);
   inside(file2);
   return file2;
 }
-function readLibrary(document, query, root = path21.resolve(PACKAGE_ROOT, "../library")) {
+function readLibrary(document, query, root = path26.resolve(PACKAGE_ROOT, "../library")) {
   const base = realpathSync2(root);
   const manifest = JSON.parse(readFileSync2(boundedFile(base, "manifest.json"), "utf8"));
   const entries = manifest.documents;
