@@ -9,7 +9,7 @@ This style is the plugin's own. It was measured frame by frame from one referenc
 - **proven**: used on the first full piece and kept after review;
 - **extended**: our reading beyond both, not yet tried on a piece.
 
-**Who reads what.** Sections D1 to D8 are for the director: an agent that already has a script and a take and must build a whole reel that stays in the style. They cover what the style requires, the choices and their costs, and how to check the result. They do not say what the reel should be about. Sections 1 to 8 describe the style itself. Sections 9 to 12 are the builder's mechanics, with every number. `pixelheadline.jsx` (global `AESPixelHeadline`) holds them as code.
+**Who reads what.** Sections D1 to D8 are for the director: an agent that already has a script and a take and must build a whole reel that stays in the style. They cover what the style requires, the choices and their costs, and how to check the result. They do not say what the reel should be about. Sections 1 to 8 describe the style itself. Sections 9 to 12 are the builder's mechanics, with every number. `pixelheadline.jsx` (global `AESPixelHeadline`) holds them as code. A plan for a piece reads D8 as well as D1 to D7: it names the builder each beat is made with, so nothing in the style is built by hand.
 
 ## In two minutes
 

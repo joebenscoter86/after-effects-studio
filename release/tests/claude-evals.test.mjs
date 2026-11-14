@@ -312,12 +312,35 @@ test('the subject-matte case fails without the notice, with it last, or with a s
 
 test('the subject-matte case fails without subject.check, with it not before building, or with no hole shown', async () => {
   assert.equal((await verdict(answer({ check: 'After you say done I look at the cut-out.' })))['subject-check-first'], false);
-  assert.equal((await verdict(answer({ check: 'Then I run subject.check and show you the picture of any hole.' })))['subject-check-first'], false);
+  // the order shown rather than said: the check with the hole shown, then the render after it, passes; the same check
+  // after the render and the build does not
+  assert.equal((await verdict(answer({ check: 'Then I run subject.check and show you the picture of any hole.' })))['subject-check-first'], true);
+  assert.equal((await verdict(answer({ check: '', file: `${FILE} Then I run subject.check and show you the picture of any hole.` })))['subject-check-first'], false);
   assert.equal((await verdict(answer({ check: 'Before anything else is built I run subject.check on the cut-out.' })))['subject-check-first'], false);
   // An opening counts as well as a hole: the missed microphone ran off the frame edge.
   assert.equal((await verdict(answer({ check: 'Before anything else is built I run subject.check; an opening it finds, such as a missed microphone, I show you in its picture.' })))['subject-check-first'], true);
   // A selection count instead of the check: the run of 2026-11-11.
   assert.equal((await verdict(answer({ check: 'subject.status says 2 objects selected, so the cut-out is done before anything else is built.' })))['subject-check-first'], false);
+});
+
+test('the subject-matte checks accept the plain words a plan for the user uses, and still require the order', async () => {
+  // as a run's plan put it (case 23, 2026-11-14): the quick check, then render once, check the file, build on it
+  const quick = 'Quick check. I check the cut-out around the frame you clicked. If any part of you is missing or there are holes, I\u2019ll tell you right away and show you the picture.';
+  const once = 'Render once. I render the cut-out to a file with transparency. Then I check every frame of that file, and I build the piece on the file rather than the live cut-out.';
+  assert.deepEqual(await verdict(answer({ check: quick, file: once })), ALL_PASS);
+  // "If anything is missing, I'll tell you … with a picture" counts as the hole shown
+  const missing = '**Quick check** (seconds): holes and openings around the click frame. If anything is missing, I\u2019ll tell you in plain words with a picture path before doing anything else.';
+  assert.equal((await verdict(answer({ check: missing, file: once })))['subject-check-first'], true);
+  // two more ways a plan put it (the reruns of 2026-11-14): what is out, shown in a picture; checking holes near the click
+  const shownOut = '**Quick check.** I check the cut-out and show you a picture of what\u2019s in and what\u2019s out. If anything is missing, I tell you straight away and we fix it.';
+  const holesNear = 'Check holes and openings near the click frame. I\u2019ll tell you immediately if anything is out, with a picture.';
+  assert.equal((await verdict(answer({ check: shownOut, file: once })))['subject-check-first'], true);
+  assert.equal((await verdict(answer({ check: holesNear, file: once })))['subject-check-first'], true);
+  // building on the file before checking it fails, in plain words as with the names
+  assert.equal((await verdict(answer({ file: 'Render the cut-out once to a movie with alpha, then build on that file. File check: subject.check_file reads every frame.' })))['subject-file-first'], false);
+  // a general check of the edges is not the check of the cut-out (the switched-off answers' kind)
+  assert.equal((await verdict(answer({ check: 'I check your outline over bright magenta and measure flicker on still frames.', file: once })))['subject-check-first'], false);
+  assert.equal((await verdict(answer({ check: quick, file: 'Then it renders the matte for all 900 frames, and I check the result frame by frame.' })))['subject-file-first'], false);
 });
 
 test('the subject-matte case fails without the render and the file check, or with them out of order', async () => {
@@ -401,4 +424,8 @@ test('the pixel headline case passes an answer with the builders and the word on
   assert.deepEqual(await passes(30, 'Each beat shows a big bold word with a glow and some blocks, timed to the sentence.'),
     { 'pixel-builders': false, 'pixel-word-lands': false });
   assert.equal((await passes(30, 'The giant word lands on the **first frame** of that **word** in the voice.'))['pixel-word-lands'], true);
+  // the style's all-in-one builder counts, named as code; the plain word "beat" does not
+  assert.equal((await passes(30, 'Every sentence is built with beat(comp, brief), the opener and punch kinds.'))['pixel-builders'], true);
+  assert.equal((await passes(30, 'Each beat is made with `beat`.'))['pixel-builders'], true);
+  assert.equal((await passes(30, 'One sentence, one beat; the beat map lists each beat type.'))['pixel-builders'], false);
 });
