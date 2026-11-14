@@ -13,9 +13,9 @@ The plugin route was driven the way the runbook (`Content/.claude/skills/joeb-re
 
 ## Preflight and ownership
 
-- Open project at the start: `~/Assets/joeb/reels/2026-11-08-projects-part-three/2026-11-08-projects-part-three.aep`, saved, not dirty, 394 items (Joe's; he said After Effects was free).
+- Open project at the start: the user's open reel project (saved, not dirty, 394 items; Joe's; he said After Effects was free).
 - One controller: no session held `/tmp/joeb-ae.lock`. Five Higgsfield bridge proxy pairs were running, owned by other Claude sessions. They were left running, because stopping them would break those sessions, and nothing on the plugin route called them. The bridge route used them on purpose, in its own step. For the real reel night, close those sessions first (the plan's "proxy stopped").
-- Owned items: two scratch reels, `2026-11-09-cl10-rehearsal-bridge` and `2026-11-09-cl10-rehearsal-plugin`. Each had a project under `~/Assets/joeb/reels/<id>/` and a folder in the Content worktree.
+- Owned items: two scratch reels, `2026-11-09-cl10-rehearsal-bridge` and `2026-11-09-cl10-rehearsal-plugin`. Each had a scratch project of its own in the reels folder and a folder in the Content worktree.
 - Stop conditions: someone else's unsaved project open at a handoff, a modal dialog, an `ERR` result, a log older than its manifest.
 
 ## Action log
@@ -56,12 +56,12 @@ The plugin route was driven the way the runbook (`Content/.claude/skills/joeb-re
    - Joe's project was reopened, as above.
    - Both scratch projects and both scratch reel folders were moved to the Trash (`~/.Trash/2026-11-09-cl10-rehearsal-*`, `~/.Trash/cl10-content-*`). The evidence was copied first.
    - No handoff is waiting, and no lock is held.
-   - `/tmp/house-last.log` now holds the rehearsal's last build log; `projects-part-three` keeps its own in its `scripts/last-build.log`.
+   - `/tmp/house-last.log` now holds the rehearsal's last build log; the posted reel keeps its own in its `scripts/last-build.log`.
 5. **Earlier in the day:** the first failing-test run of `tests/test_route.py` reached the real bridge (recorded in the plan ledger). Seven probe scripts ran; nothing was changed. The tests now fake `node` on PATH and refuse unless the lock path can be overridden.
 
 ## The real reel: army of agents, rebuilt through the plugin
 
-Joe chose the army-of-agents reel (`2026-11-08-projects-part-three`), posted today from Content worktree `awesome-heisenberg-c4eae3` (picture lock v3b, then bed g2, master, cover). It was already accepted and posted, so it was rebuilt as a copy, `2026-11-09-cl10-army-of-agents`. Its project, folders and posted files were only read.
+Joe chose the army-of-agents reel, posted today from a Content worktree (picture lock v3b, then bed g2, master, cover). It was already accepted and posted, so it was rebuilt as a copy, `2026-11-09-cl10-army-of-agents`. Its project, folders and posted files were only read.
 
 - **Same inputs.** The house libraries the copy built with (`house.jsx`, `motion.jsx`, `reel.jsx`, `joeb-house.jsx`, `aes-lib.jsx`) are byte-identical to the reel's worktree. The copy used the reel's own build files (`00-reset.jsx`, `b00-face.jsx` to `b99.jsx`, `STYLES`, `THEME` light, `LOOK` polish), its `face-match.json` and its take `raw-remotion-prores-lt.mov`.
 - **Every After Effects call went through the plugin route.**

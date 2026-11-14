@@ -8,7 +8,7 @@
 
 ## Preflight and ownership
 
-- Open project: `~/Assets/joeb/reels/2026-11-07-does-ai-dream/2026-11-07-does-ai-dream.aep`, saved, not dirty, 295 items. This is Joe's live reel project.
+- Open project: the user's open reel project (saved, not dirty, 295 items). This is Joe's live reel project.
 - Owned test items: none. Every live call ran with `AE_MCP_READONLY=1` (the smoke's default); no project write was attempted.
 - One controller: no Higgsfield bridge or proxy process was running; the only After Effects calls were these read-only checks.
 - Stop condition met: native create, revise and export would write into Joe's reel or replace it, so they wait for his decision.
