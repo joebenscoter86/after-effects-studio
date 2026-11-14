@@ -3,9 +3,10 @@ import { HEARTBEAT_STALE_MS, RUNTIME_DIR, RUNTIME_ROOT, agentInstallStatus, deny
 import { ACCESSIBILITY_HINT, SCRIPT_RUNNING_HINT, buildInstanceLaunchPlan, describeInstance, dialogBlockMessage, dialogHint, dialogScanSupported, dismissAeDialog, init_dialogs, init_instances, init_launcher, instanceLabel, listInstances, readInstance, scanAeDialogs, scanAeWindows, scriptRunningMessage, splitScriptProgress } from "./transport-1.js";
 import { init_keying, init_layer, init_layer_advanced, init_layout } from "./operations-2.js";
 import { COMP_INFO_FN, LAYER_FULL_FN, LIST_MISSING_FONTS_FN, LIST_MISSING_FOOTAGE_FN, RENDER_FRAME_FN, init_shape, init_snippets, init_text, init_timeline, init_transform, init_video, init_viewer } from "./operations-4.js";
-import { init_marker, init_mask, init_pref, init_project, init_property, init_render, init_sample, init_shape_contents } from "./operations-3.js";
-import { EDGE_DEFAULTS, compareReferences, composeContactSheet, cutoutRegions, decodePng, encodePngSrgb8, flattenOver, init_matte, init_png16, init_sheet, referenceReader, resample } from "./color-1.js";
+import { init_look_sheet, init_marker, init_mask, init_pref, init_project, init_property, init_render, init_sample, init_shape_contents } from "./operations-3.js";
+import { EDGE_DEFAULTS, compareReferences, compareWithSheet, composeContactSheet, cutoutRegions, decodePng, encodePngSrgb8, flattenOver, init_look, init_matte, init_png16, init_sheet, isPiece, isSheet, referenceReader, resample } from "./color-1.js";
 import { iccManagedReason, init_capture_shared, init_render_frame, renderFrameTool } from "./tools-1.js";
+import { init_decode, init_movie_rgb, init_rhythm, measureRhythm, movieColour, movieFrames, probeVideo } from "./video-1.js";
 import { execFile, spawn } from "node:child_process";
 import { promises, readFileSync, realpathSync, statSync } from "node:fs";
 import * as path$1 from "node:path";
@@ -3451,7 +3452,38 @@ async function runReferenceReport(args, io) {
 		error: "`path` must be absolute"
 	};
 	const stat = p !== null ? await promises.stat(p).catch(() => null) : null;
-	if (p !== null && !MOVIE_EXT.test(p)) {
+	const viaAe = args.via === "after-effects";
+	const movieInfo = p !== null && MOVIE_EXT.test(p) && !viaAe && stat ? await probeVideo(p) : null;
+	const colour = movieInfo && !("error" in movieInfo) ? await movieColour(p) : null;
+	if (p !== null && movieInfo && !("error" in movieInfo) && colour) {
+		const idx = pick(movieInfo.frames);
+		const reader = referenceReader({
+			total: idx.length,
+			regions,
+			frameRate: movieInfo.nominalFps
+		});
+		for await (const fr of movieFrames(movieInfo, idx, colour)) reader.add({
+			img: fr.img,
+			frame: fr.frame,
+			time: fr.time
+		});
+		report = reader.finish();
+		source = {
+			kind: "movie",
+			path: p,
+			via: "ffmpeg",
+			frames: movieInfo.frames,
+			read: idx.length,
+			frameRate: movieInfo.nominalFps,
+			colour: {
+				matrix: colour.matrix,
+				range: colour.range,
+				tags: colour.tags,
+				assumed: colour.assumed,
+				reading: colour.reading
+			}
+		};
+	} else if (p !== null && !MOVIE_EXT.test(p)) {
 		if (!stat) return {
 			ok: false,
 			error: `nothing at ${p}`
@@ -3590,10 +3622,25 @@ async function runReferenceReport(args, io) {
 			cleanup
 		};
 	}
-	await promises.writeFile(outPath, JSON.stringify(report));
+	let rhythm = null, rhythmNote = null;
+	if (args.rhythm === true) {
+		if (p !== null && MOVIE_EXT.test(p)) {
+			const r = await measureRhythm(p);
+			if ("error" in r) rhythmNote = `The rhythm was not measured: ${r.error}`;
+			else rhythm = r;
+		} else rhythmNote = "The rhythm is measured on a movie only (stage 13's census and shot list): render the build to a file and report that.";
+	}
+	await promises.writeFile(outPath, JSON.stringify(rhythm ? {
+		...report,
+		rhythm
+	} : report));
 	let compare;
 	if (typeof args.against === "string") try {
-		compare = compareReferences(JSON.parse(await promises.readFile(args.against, "utf8")), report);
+		const against = JSON.parse(await promises.readFile(args.against, "utf8"));
+		compare = isSheet(against) ? compareWithSheet(against, {
+			report,
+			rhythm
+		}) : compareReferences(against, report);
 	} catch (e) {
 		compare = { error: `could not compare with ${args.against}: ${e instanceof Error ? e.message : String(e)}` };
 	}
@@ -3605,7 +3652,12 @@ async function runReferenceReport(args, io) {
 		report: reply,
 		savedTo: outPath,
 		...compare ? { compare } : {},
-		notes: [...report.notes, ...source.kind !== "frames" && source.kind !== "still" && !report.motion.consecutive && report.frames > 1 ? [`Only ${report.frames} frames spread over the source were read (maxFrames ${cap}), so cuts and motion were not.`] : []],
+		notes: [
+			...report.notes,
+			...rhythmNote ? [rhythmNote] : [],
+			...source.kind !== "frames" && source.kind !== "still" && !report.motion.consecutive && report.frames > 1 ? [`Only ${report.frames} frames spread over the source were read (maxFrames ${cap}), so cuts and motion were not.`] : []
+		],
+		...rhythm ? { rhythm } : {},
 		timing: {
 			render: roundTally(renders),
 			totalMs: Math.round(since(started))
@@ -3622,9 +3674,21 @@ async function runReferenceCompare(args) {
 	try {
 		const ref = await read("reference");
 		const build = await read("build");
+		if (isSheet(ref)) {
+			const piece = isPiece(build) ? build : {
+				report: build,
+				rhythm: build.rhythm ?? null,
+				type: null
+			};
+			return compareWithSheet(ref, piece);
+		}
+		if (isSheet(build)) return {
+			ok: false,
+			error: "`build` is a look sheet: give the sheet as `reference` and the build's saved report as `build`"
+		};
 		return {
 			ok: true,
-			...compareReferences(ref, build)
+			...compareReferences(ref, isPiece(build) ? build.report : build)
 		};
 	} catch (e) {
 		return {
@@ -3636,16 +3700,19 @@ async function runReferenceCompare(args) {
 var MOVIE_EXT, naturalOrder;
 function init_keying_reference() {
 	return (init_keying_reference = __esmMin((() => {
+		init_look();
 		init_sheet();
 		init_registry();
 		init_capture_shared();
+		init_movie_rgb();
+		init_rhythm();
 		init_keying_shared();
 		MOVIE_EXT = /\.(mov|mp4|m4v|mxf|avi|webm|mkv|mpe?g)$/i;
 		naturalOrder = (a, b) => a.localeCompare(b, void 0, { numeric: true });
 		registerOp({
 			name: "reference.report",
 			category: "look",
-			description: "Measure a reference, or a build, for working to it. Give exactly one source: `path` (a PNG still, a folder of PNG frames in name order, or a movie), `item` (a footage item's id) or `comp` (the build). Stills and folders are read in Node; a movie or item is brought into a throwaway comp and, like a comp, rendered through ae_render_frame by frame numbers (a quarter of a frame inside each frame, so no time lands on the frame before; checked live at 30, 29.97 and 24 fps), read and removed a chunk at a time. Reports the main colours and their shares (k-means in CIELAB), black and white points and mean, CIELAB colour, edge width (sharpness) and grain at the grid's nine regions (top left to bottom right) and any named `regions`, where the weight of the frame sits (centres of brightness and of detail), and on consecutive frames the cuts, the mean change between frames and where the picture moves (a motion map; its centre is the moving subject in a talking-head shot). Colour and texture are read on 24 frames spread over the source, motion on every pair. Saves the whole report as JSON at `outPath` (the reply leaves the motion map out). With `against` (a saved report of the reference) it adds `compare`: the differences largest first, each over a step (a CIELAB a* or b* of 2 is a cast, a quarter in edge width or grain, 5% in the subject's size, 3% of the frame in a place), in words. The subject's size and place are compared by lining up the two motion maps, only when they match as the same footage. Measured live (After Effects 27.0): 235 frames of a 1080 x 1920 H.264 movie in 314 s, and of a comp in 317 s, nothing added to the disk cache. A comp renders without the compression noise of a delivered movie, so against a movie reference its grain reads lower: compare like with like where grain matters.",
+			description: "Measure a reference, or a build, for working to it. Give exactly one source: `path` (a PNG still, a folder of PNG frames in name order, or a movie), `item` (a footage item's id) or `comp` (the build). Stills and folders are read in Node; a movie is decoded by ffmpeg in Node when ffmpeg is installed (its YUV-to-RGB matrix and range read from the file's tags, Rec. 709 video range assumed where a tag is missing, and the reply says which; checked against After Effects' own render of the same frames: levels within 0.001, CIELAB within 0.02), else, like an item, brought into a throwaway comp and, like a comp, rendered through ae_render_frame by frame numbers (a quarter of a frame inside each frame, so no time lands on the frame before; checked live at 30, 29.97 and 24 fps), read and removed a chunk at a time. Reports the main colours and their shares (k-means in CIELAB), black and white points and mean, CIELAB colour, edge width (sharpness) and grain at the grid's nine regions (top left to bottom right) and any named `regions`, where the weight of the frame sits (centres of brightness and of detail), and on consecutive frames the cuts, the mean change between frames and where the picture moves (a motion map; its centre is the moving subject in a talking-head shot). Colour and texture are read on 24 frames spread over the source, motion on every pair. Saves the whole report as JSON at `outPath` (the reply leaves the motion map out). With `against` (a saved report of the reference) it adds `compare`: the differences largest first, each over a step (a CIELAB a* or b* of 2 is a cast, a quarter in edge width or grain, 5% in the subject's size, 3% of the frame in a place), in words. The subject's size and place are compared by lining up the two motion maps, only when they match as the same footage. Measured live (After Effects 27.0): 235 frames of a 1080 x 1920 H.264 movie in 314 s, and of a comp in 317 s, nothing added to the disk cache. A comp renders without the compression noise of a delivered movie, so against a movie reference its grain reads lower: compare like with like where grain matters.",
 			params: [
 				{
 					name: "path",
@@ -3680,7 +3747,19 @@ function init_keying_reference() {
 				{
 					name: "against",
 					type: "string",
-					description: "A saved report (the reference) to compare this one with.",
+					description: "A saved report (the reference), or a look sheet (reference.sheet's sheet.json), to compare this one with. Against a sheet, only the measures of the user's look are compared, each against their own range and the number of pieces it rests on.",
+					required: false
+				},
+				{
+					name: "via",
+					type: "string",
+					description: "How a movie is read: 'ffmpeg' (the default when ffmpeg is installed: decoded in Node, no After Effects) or 'after-effects' (rendered frame by frame).",
+					required: false
+				},
+				{
+					name: "rhythm",
+					type: "boolean",
+					description: "Also measure a movie's rhythm (stage 13's census over the whole movie and its shot list: calm, local and travel shares, travel moves a minute, calm runs, bursts, shot lengths, cuts a minute), kept in the saved report so a look sheet can compare it.",
 					required: false
 				},
 				{
@@ -3721,16 +3800,16 @@ function init_keying_reference() {
 			name: "reference.compare",
 			category: "look",
 			readOnly: true,
-			description: "Compare two saved reference reports (reference.report's outPath): every difference over its step, largest first, in words (cast, lightness, sharpness, grain, levels, the moving subject's size and place, where the weight sits, main colours missing, cuts, motion). Node only; no After Effects.",
+			description: "Compare two saved reference reports (reference.report's outPath): every difference over its step, largest first, in words (cast, lightness, sharpness, grain, levels, the moving subject's size and place, where the weight sits, main colours missing, cuts, motion). `reference` may be a look sheet (reference.sheet): then only the measures of the user's look are compared, each against their own range ('black point 0.09; your pieces sit between 0.02 and 0.04 (4 pieces)'); inside the range, or within one step of it, is no difference. No pass or fail. Node only; no After Effects.",
 			params: [{
 				name: "reference",
 				type: "string",
-				description: "Absolute path of the reference's saved report.",
+				description: "Absolute path of the reference's saved report, or of a look sheet (sheet.json).",
 				required: true
 			}, {
 				name: "build",
 				type: "string",
-				description: "Absolute path of the build's saved report.",
+				description: "Absolute path of the build's saved report (with its rhythm when reference.report measured it), or of a piece a sheet saved.",
 				required: true
 			}],
 			toJsx: () => NODE_ONLY("reference.compare"),
@@ -5663,6 +5742,7 @@ function init_operations() {
 		init_text();
 		init_mask();
 		init_keying();
+		init_look_sheet();
 		init_command();
 		init_property();
 		init_marker();
@@ -5840,4 +5920,4 @@ function init_eval() {
 	})))();
 }
 
-export { AE_AAC_PRIMING_SAMPLES, CLOSE_CLICK_SHARE, COUNT_NOTE, CUTOUT_HOLE_LIMIT, CUTOUT_OVER, FFMPEG, FFPROBE, FX_ROOT_JSX, GB, MAX_SCRIPT_ARGS_BYTES, MAX_SCRIPT_FILE_BYTES, NEED_CLICK, NODE_ONLY, OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, PICTURE_MARGIN_BYTES, REDO_COMMAND_ID, SETTLE_MAX_MS, SOFT_EDGE_DEFAULTS, SUBJECT_WHOLE_PIECE_NOTE, acceptedBy, aeCacheRoot, alignSound, alikeRegions, cacheBytesFor, captureBytes, compLayerParams, fileCleanupJsx, fileCompJsx, fmt, frozenAccepted, frozenFinding, frozenOpts, gb, init_command, init_delivery_sound, init_eval, init_keying_key, init_keying_reference, init_keying_shared, init_operations, intersects, liveCutoutIO, liveFileIO, measureFrames, needSelection, overParam, overPicture, parseEbur128Summary, parseHex, parseVolumedetect, perFrameMsOf, pixelTally, plural, readScriptFile, readSoundSync, regionsOf, renderChunked, renderTally, roundTally, runTool, since, spacePlan, spaceRefusal, statfsFree, subjectIndexParam, summarize, trackedSpan, writePng };
+export { AE_AAC_PRIMING_SAMPLES, CLOSE_CLICK_SHARE, COUNT_NOTE, CUTOUT_HOLE_LIMIT, CUTOUT_OVER, FFMPEG, FFPROBE, FX_ROOT_JSX, GB, MAX_SCRIPT_ARGS_BYTES, MAX_SCRIPT_FILE_BYTES, NEED_CLICK, NODE_ONLY, OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, PICTURE_MARGIN_BYTES, REDO_COMMAND_ID, SETTLE_MAX_MS, SOFT_EDGE_DEFAULTS, SUBJECT_WHOLE_PIECE_NOTE, acceptedBy, aeCacheRoot, alignSound, alikeRegions, cacheBytesFor, captureBytes, compLayerParams, fileCleanupJsx, fileCompJsx, fmt, frozenAccepted, frozenFinding, frozenOpts, gb, init_command, init_delivery_sound, init_eval, init_keying_key, init_keying_reference, init_keying_shared, init_operations, intersects, liveCutoutIO, liveFileIO, measureFrames, needSelection, overParam, overPicture, parseEbur128Summary, parseHex, parseVolumedetect, perFrameMsOf, pixelTally, plural, readScriptFile, readSoundSync, regionsOf, renderChunked, renderTally, roundTally, runReferenceReport, runTool, since, spacePlan, spaceRefusal, statfsFree, subjectIndexParam, summarize, trackedSpan, writePng };

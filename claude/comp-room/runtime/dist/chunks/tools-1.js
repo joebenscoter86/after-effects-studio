@@ -4,7 +4,7 @@ import { init_instances, instanceLabel, listInstances, resolveTarget } from "./t
 import { COMP_CORNERS_FN, COMP_INFO_FN, LAYER_FULL_FN, LIST_MISSING_FONTS_FN, LIST_MISSING_FOOTAGE_FN, MISSING_SOURCES_FN, OCIO_CAPTURE_FN, RENDER_FRAME_FN, init_snippets } from "./operations-4.js";
 import { PieceWatcher, alphaChange, analyzeFrame, calibrationKey, compareRegions, composeContactSheet, decodePng, diffArgsError, edgeArgsError, encodePngGray8, encodePngSrgb8, encodePngSrgbRgba8, flattenOver, frameLabel, histogramOf, init_calibration, init_matte, init_motion, init_png16, init_screen, init_settled_read, init_sheet, init_transform, init_watch, lookArgsError, lookCrops, measureCaptureTransfer, measureEdge, measureLook, measureScreen, pictureChange, pictureOf, profileForWorkingSpace, resample, resolveDiffThresholds, resolveEdgeThresholds, resolveScreenThresholds, resolveWatchThresholds, rgbHex, sampleRegions, sceneLinearToDisplaySrgb, screenArgsError, settleTimeoutFor, stampFiles, summarizeFlicker, summarizeLookSeries, summarizeSeries, unmatte, waitForSettled, watchArgsError } from "./color-1.js";
 import { promises, readFileSync, realpathSync } from "node:fs";
-import * as os from "node:os";
+import * as os$1 from "node:os";
 import * as path$1 from "node:path";
 import path from "node:path";
 import { createHash, randomUUID } from "node:crypto";
@@ -1785,7 +1785,7 @@ async function checkComp(args, transport) {
 		time: r6((ownedTo + every) * fd),
 		framesLeft: remaining
 	} : null;
-	const outDir = path$1.resolve(args.outDir ?? path$1.join(os.tmpdir(), "comp-room-check", `${String(plan.compName).replace(/[^A-Za-z0-9_-]+/g, "-").slice(0, 40)}-${Date.now()}`)).replace(/\\/g, "/");
+	const outDir = path$1.resolve(args.outDir ?? path$1.join(os$1.tmpdir(), "comp-room-check", `${String(plan.compName).replace(/[^A-Za-z0-9_-]+/g, "-").slice(0, 40)}-${Date.now()}`)).replace(/\\/g, "/");
 	const capDir = path$1.join(outDir, `captures-${randomUUID().slice(0, 8)}`).replace(/\\/g, "/");
 	const readOnly = readOnlyMode();
 	const target = {

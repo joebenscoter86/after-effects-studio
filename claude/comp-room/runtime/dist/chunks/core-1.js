@@ -3,7 +3,7 @@ import { describeInstance, init_instances, init_launcher, jsxPath, listInstances
 import { spawnSync } from "node:child_process";
 import { existsSync, promises, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import * as os from "node:os";
+import * as os$1 from "node:os";
 import * as path$1 from "node:path";
 
 // config.js
@@ -130,7 +130,7 @@ function init_config() {
 	return (init_config = __esmMin((() => {
 		PACKAGE_ROOT = findPackageRoot(path$1.dirname(fileURLToPath(import.meta.url)));
 		DISPATCHER_JSX = path$1.join(PACKAGE_ROOT, "jsx", "dispatcher.jsx");
-		RUNTIME_ROOT = path$1.join(os.tmpdir(), "mcp-aftereffects");
+		RUNTIME_ROOT = path$1.join(os$1.tmpdir(), "mcp-aftereffects");
 		DEFAULT_RUNTIME_DIR = path$1.join(RUNTIME_ROOT, "runtime");
 		RUNTIME_POINTER_PATH = path$1.join(RUNTIME_ROOT, "runtime-dir.txt");
 		RUNTIME_DIR = resolveRuntimeDir();
@@ -179,7 +179,7 @@ function init_config() {
 }
 
 // agent-install.js
-function aeProfileRoot(platform = process.platform, env = process.env, home = os.homedir()) {
+function aeProfileRoot(platform = process.platform, env = process.env, home = os$1.homedir()) {
 	if (platform === "win32") {
 		const appData = env.APPDATA ?? path$1.join(home, "AppData", "Roaming");
 		return path$1.join(appData, "Adobe", "After Effects");

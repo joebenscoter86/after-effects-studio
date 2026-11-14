@@ -1,7 +1,7 @@
 import { __esmMin } from "./rolldown-runtime.js";
 import { init_registry, jsxVal } from "./core-1.js";
 import { promises } from "node:fs";
-import * as os from "node:os";
+import * as os$1 from "node:os";
 import * as path$1 from "node:path";
 import { randomUUID } from "node:crypto";
 import * as zlib from "node:zlib";
@@ -221,7 +221,7 @@ function summarizeSeries(pairs, t) {
 				change,
 				reference: r6$2(reference),
 				ratio: r6$2(change / reference),
-				reading: `frame ${frameText(frame)} differs from the frames before and after it by ${fmt$1(change)} or more, while its neighbours change about ${fmt$1(reference)}: a one-frame pop`
+				reading: `frame ${frameText(frame)} differs from the frames before and after it by ${fmt$2(change)} or more, while its neighbours change about ${fmt$2(reference)}: a one-frame pop`
 			};
 			if (s.besideRepeat || spike[end].besideRepeat) {
 				flag.besideRepeat = true;
@@ -240,7 +240,7 @@ function summarizeSeries(pairs, t) {
 				change: pairs[j].change,
 				reference: r6$2(sj.reference),
 				ratio: r6$2(pairs[j].change / sj.reference),
-				reading: `${frameText(between[0])} to ${frameText(between[1])} changes ${fmt$1(pairs[j].change)}, ${(pairs[j].change / sj.reference).toFixed(1)}\xD7 its neighbours: a cut or a jump`
+				reading: `${frameText(between[0])} to ${frameText(between[1])} changes ${fmt$2(pairs[j].change)}, ${(pairs[j].change / sj.reference).toFixed(1)}\xD7 its neighbours: a cut or a jump`
 			};
 			if (sj.edge) {
 				flag.atSeriesEdge = true;
@@ -274,7 +274,7 @@ function summarizeSeries(pairs, t) {
 				reference: r6$2(reference2),
 				ratio: r6$2(pairs[i].change / reference2),
 				unreliablePairs,
-				reading: `frame ${frameText(frame)} barely changes from the one before (${fmt$1(pairs[i].change)}) while the frames around it move about ${fmt$1(reference2)}: a repeated frame, a stutter${unreliable}. Rounded times can do this: a time just below a frame boundary renders the frame before (see frameWarning)`
+				reading: `frame ${frameText(frame)} barely changes from the one before (${fmt$2(pairs[i].change)}) while the frames around it move about ${fmt$2(reference2)}: a repeated frame, a stutter${unreliable}. Rounded times can do this: a time just below a frame boundary renders the frame before (see frameWarning)`
 			});
 			continue;
 		}
@@ -292,7 +292,7 @@ function summarizeSeries(pairs, t) {
 			ratio: r6$2(pairs[i].change / reference),
 			atSeriesEdge: true,
 			unreliablePairs,
-			reading: `frame ${frameText(frame)} repeats the one before (change ${fmt$1(pairs[i].change)}) beside motion of about ${fmt$1(reference)}, at the ${rawBefore === null ? "start" : "end"} of the series, so a stutter cannot be told from a hold${unreliable}`
+			reading: `frame ${frameText(frame)} repeats the one before (change ${fmt$2(pairs[i].change)}) beside motion of about ${fmt$2(reference)}, at the ${rawBefore === null ? "start" : "end"} of the series, so a stutter cannot be told from a hold${unreliable}`
 		});
 	}
 	flags.sort((a, b) => a.pairs[0] - b.pairs[0]);
@@ -303,7 +303,7 @@ function summarizeSeries(pairs, t) {
 		"cut",
 		"repeat"
 	].map((k) => [k, flags.filter((f) => f.kind === k).length]).filter(([, c]) => c > 0).map(([k, c]) => `${c} ${k}${c > 1 ? "s" : ""}`);
-	summary.reading = `${n} pairs, median change ${fmt$1(summary.median)}, largest ${fmt$1(summary.largest.change)} (pair ${largest}); ` + (flags.length === 0 ? "no pair stands out from its neighbours" : `${counts.join(", ")}: ${flags.map((f) => `${f.kind} at pair ${f.pairs.join("+")}`).join("; ")}`);
+	summary.reading = `${n} pairs, median change ${fmt$2(summary.median)}, largest ${fmt$2(summary.largest.change)} (pair ${largest}); ` + (flags.length === 0 ? "no pair stands out from its neighbours" : `${counts.join(", ")}: ${flags.map((f) => `${f.kind} at pair ${f.pairs.join("+")}`).join("; ")}`);
 	return summary;
 }
 function cellLuma(img, cell) {
@@ -469,7 +469,7 @@ function analyzeCurve(samples, fps, opts = {}) {
 		const from = Math.max(0, i0 - 1);
 		const to = i1;
 		const sp = frames.slice(i0, i1 + 1).map((f) => f.speed);
-		const mid = median$2(sp);
+		const mid = median$3(sp);
 		let pk = i0;
 		for (let i = i0; i <= i1; i++) if (frames[i].speed > frames[pk].speed) pk = i;
 		const start = frames[from].value;
@@ -518,7 +518,7 @@ function analyzeCurve(samples, fps, opts = {}) {
 	for (const [k, m] of moves.entries()) {
 		const [i0, i1] = runs[k];
 		const span = `The move from frame ${m.from} to ${m.to}`;
-		const mid = median$2(frames.slice(i0, i1 + 1).map((f) => f.speed));
+		const mid = median$3(frames.slice(i0, i1 + 1).map((f) => f.speed));
 		const pc = (v) => `${Math.round(v / (mid || 1) * 100)}%`;
 		if (m.startEase === "none" || m.endEase === "none") {
 			const both = m.startEase === "none" && m.endEase === "none";
@@ -626,7 +626,7 @@ function soundOnsets(values, fps, opts = {}) {
 	const gap = opts.gap ?? 3;
 	const top = Math.max(0, ...values);
 	if (top <= 1e-6) return [];
-	const floor = median$2(values);
+	const floor = median$3(values);
 	const thr = floor + share * (top - floor);
 	const out = [];
 	let last = -Infinity;
@@ -705,7 +705,7 @@ function syncReport(events, markers, fps, opts = {}) {
 		reading: flags.length ? flags.map((f) => f.reading).join(" ") : `All ${out.length} events are within ${o.lateFrames - 1} frame${o.lateFrames - 1 === 1 ? "" : "s"} after and ${o.earlyFrames - 1} before their nearest marker.`
 	};
 }
-var DIFF_DEFAULTS, LIMITS$1, r6$2, fmt$1, frameText, CURVE_DEFAULTS, median$2, norm, sub, rnd, SYNC_DEFAULTS;
+var DIFF_DEFAULTS, LIMITS$1, r6$2, fmt$2, frameText, CURVE_DEFAULTS, median$3, norm, sub, rnd, SYNC_DEFAULTS;
 function init_motion() {
 	return (init_motion = __esmMin((() => {
 		init_sheet();
@@ -757,7 +757,7 @@ function init_motion() {
 			}
 		};
 		r6$2 = (v) => Math.round(v * 1e6) / 1e6;
-		fmt$1 = (v) => v.toFixed(4);
+		fmt$2 = (v) => v.toFixed(4);
 		frameText = (f) => `#${f.index}${f.time === void 0 ? "" : ` (${r6$2(f.time)} s)`}`;
 		CURVE_DEFAULTS = {
 			restBelow: .02,
@@ -767,7 +767,7 @@ function init_motion() {
 			settleWithin: .01,
 			joinGap: 2
 		};
-		median$2 = (v) => {
+		median$3 = (v) => {
 			if (!v.length) return 0;
 			const s = v.slice().sort((a, b) => a - b);
 			const m = s.length >> 1;
@@ -1293,7 +1293,7 @@ function lookCrops(img, args) {
 	}
 	return out;
 }
-function median$1(v) {
+function median$2(v) {
 	if (!v.length) return NaN;
 	const s = v.slice().sort((a, b) => a - b);
 	const m = s.length >> 1;
@@ -1401,7 +1401,7 @@ function edgeWidths(c, minContrast) {
 		edges: widths.length
 	};
 	return {
-		edgeWidth: Math.round(median$1(widths) * 100) / 100,
+		edgeWidth: Math.round(median$2(widths) * 100) / 100,
 		p90: Math.round(percentile(widths, 90) * 100) / 100,
 		edges: widths.length
 	};
@@ -1680,7 +1680,7 @@ function summarizeLookSeries(frames, args) {
 			0,
 			1,
 			2
-		].map((k) => Math.round(median$1(per.map((p) => p[k])) * 100) / 100) : null;
+		].map((k) => Math.round(median$2(per.map((p) => p[k])) * 100) / 100) : null;
 		const changes = [];
 		for (let i = 1; i < frames.length; i++) {
 			const a = frames[i - 1].get(r.name)?.alpha;
@@ -1690,7 +1690,7 @@ function summarizeLookSeries(frames, args) {
 			for (let q = 0; q < a.length; q++) sum += Math.abs(b[q] - a[q]);
 			changes.push(sum / a.length);
 		}
-		const matteChange = changes.length ? Math.round(median$1(changes) * 1e4) / 1e4 : null;
+		const matteChange = changes.length ? Math.round(median$2(changes) * 1e4) / 1e4 : null;
 		return {
 			name: r.name,
 			temporal,
@@ -2059,7 +2059,7 @@ function referenceReader(opts) {
 			step: neighbours ? 1 : null
 		};
 		let consecutive = neighbours;
-		const medianChange = pairs.length ? median$1(pairs.map((q) => q.change)) : 0;
+		const medianChange = pairs.length ? median$2(pairs.map((q) => q.change)) : 0;
 		const mc = medianChange.toFixed(4);
 		const unsure = spacing.how === "assumed" || spacing.how === "file names" && spacing.step === 1;
 		if (consecutive && unsure) {
@@ -2129,7 +2129,7 @@ function referenceReader(opts) {
 					y: r3(avg(weights.map((w) => w.detail.y)))
 				}
 			},
-			sharpness: { edgeWidth: gridEw.length ? r2(median$1(gridEw)) : null },
+			sharpness: { edgeWidth: gridEw.length ? r2(median$2(gridEw)) : null },
 			grain: r2(avg(regionReports.slice(0, 9).map((r) => r.grain))),
 			motion: {
 				consecutive,
@@ -2781,8 +2781,8 @@ function init_sheet() {
 		luma$1 = (c) => .2126 * c[0] + .7152 * c[1] + .0722 * c[2];
 		MAD_TO_SD = 1.4826;
 		robustSd = (v) => {
-			const m = median$1(v);
-			const band = Math.max(4 * MAD_TO_SD * median$1(v.map((x) => Math.abs(x - m))), 3 / 255);
+			const m = median$2(v);
+			const band = Math.max(4 * MAD_TO_SD * median$2(v.map((x) => Math.abs(x - m))), 3 / 255);
 			let n = 0;
 			let sum = 0;
 			let sq = 0;
@@ -2842,7 +2842,7 @@ function init_sheet() {
 				"bottom right"
 			]
 		];
-		medianOf = (v) => v.length ? median$1(v) : null;
+		medianOf = (v) => v.length ? median$2(v) : null;
 	})))();
 }
 
@@ -3624,7 +3624,7 @@ function outlineTracker(opts = {}) {
 						to,
 						length: to - from + 1,
 						drift: r6$1(Math.max(...run.map((w) => w.drift))),
-						footageChange: r6$1(median(run.map((w) => w.footage)) ?? 0)
+						footageChange: r6$1(median$1(run.map((w) => w.footage)) ?? 0)
 					});
 				}
 				run = [];
@@ -3634,7 +3634,7 @@ function outlineTracker(opts = {}) {
 			close();
 			const stats = (xs) => ({
 				min: xs.length ? r6$1(Math.min(...xs)) : null,
-				median: xs.length ? r6$1(median(xs)) : null,
+				median: xs.length ? r6$1(median$1(xs)) : null,
 				max: xs.length ? r6$1(Math.max(...xs)) : null
 			});
 			return {
@@ -4062,7 +4062,7 @@ function seenThroughInside(alpha, width, height, opts = {}) {
 		} : null
 	};
 }
-var EDGE_DEFAULTS, CONTOUR_ALPHA, OUTSIDE, EDGE, INSIDE, r2, r4$1, r4rgb$1, INF, newRegion, box, N4X, N4Y, N8X, N8Y, byArea, zoneAcc, median, r6$1, SPECK_DEFAULTS, SEEN_THROUGH_DEFAULTS;
+var EDGE_DEFAULTS, CONTOUR_ALPHA, OUTSIDE, EDGE, INSIDE, r2, r4$1, r4rgb$1, INF, newRegion, box, N4X, N4Y, N8X, N8Y, byArea, zoneAcc, median$1, r6$1, SPECK_DEFAULTS, SEEN_THROUGH_DEFAULTS;
 function init_matte() {
 	return (init_matte = __esmMin((() => {
 		init_sheet();
@@ -4151,7 +4151,7 @@ function init_matte() {
 			maxX: -1,
 			maxY: -1
 		});
-		median = (xs) => {
+		median$1 = (xs) => {
 			if (!xs.length) return null;
 			const s = [...xs].sort((a, b) => a - b);
 			const m = s.length;
@@ -5032,7 +5032,7 @@ async function measureCaptureTransfer(transport, key, allowRender = true) {
 	const cached = cache.get(key);
 	if (cached) return cached;
 	if (!allowRender) return { error: "calibration needs a (transient, undo-grouped) render of a temporary comp, which read-only mode forbids" };
-	const pngPath = path$1.join(os.tmpdir(), `mcp-ae-calib-${randomUUID()}.png`).replace(/\\/g, "/");
+	const pngPath = path$1.join(os$1.tmpdir(), `mcp-ae-calib-${randomUUID()}.png`).replace(/\\/g, "/");
 	const code = `
         var _vals = ${jsxVal(CALIB_VALUES)};
         var _patch = ${jsxVal(PATCH)};
@@ -5230,6 +5230,310 @@ function init_transform() {
 				1.07602
 			]
 		];
+	})))();
+}
+
+// color/look.js
+function pieceMeasures(p) {
+	const r = p.report, out = [];
+	const add = (def, v) => {
+		if (typeof v === "number" && Number.isFinite(v)) out.push({
+			def,
+			value: v
+		});
+	};
+	add(P("levels.black", "levels", "black point", "", "add", D.levelStep, 3), r.levels.lumaBlack);
+	add(P("levels.white", "levels", "white point", "", "add", D.levelStep, 3), r.levels.lumaWhite);
+	add(P("levels.mean", "levels", "mean level", "", "add", D.levelStep, 3), r.levels.lumaMean);
+	for (const g of r.regions) {
+		add(P(`region.${g.name}.L`, "colour by region", `lightness (L*) at ${g.name}`, "", "add", D.lightnessStep, 1), g.colour.L);
+		add(P(`region.${g.name}.a`, "colour by region", `a* at ${g.name}`, "", "add", D.castStep, 1), g.colour.a);
+		add(P(`region.${g.name}.b`, "colour by region", `b* at ${g.name}`, "", "add", D.castStep, 1), g.colour.b);
+	}
+	add(P("texture.edge", "texture", "edge width", " px", "ratio", D.ratioStep, 2), r.sharpness.edgeWidth);
+	add(P("texture.grain", "texture", "grain", "", "ratio", D.ratioStep, 2, .05), r.grain);
+	add(P("place.brightness.x", "placement", "centre of brightness across", "", "add", D.placeStep, 3), r.weight.brightness.x);
+	add(P("place.brightness.y", "placement", "centre of brightness down", "", "add", D.placeStep, 3), r.weight.brightness.y);
+	add(P("place.detail.x", "placement", "centre of detail across", "", "add", D.placeStep, 3), r.weight.detail.x);
+	add(P("place.detail.y", "placement", "centre of detail down", "", "add", D.placeStep, 3), r.weight.detail.y);
+	const s = r.motion.subject;
+	if (s) {
+		add(P("place.subject.x", "placement", "moving subject's centre across", "", "add", D.placeStep, 3), s.x);
+		add(P("place.subject.y", "placement", "moving subject's centre down", "", "add", D.placeStep, 3), s.y);
+	}
+	const rh = p.rhythm;
+	if (rh) {
+		add(P("rhythm.calm", "rhythm", "calm share", "", "add", D.shareStep, 2), rh.census.calm);
+		add(P("rhythm.local", "rhythm", "local movement share", "", "add", D.shareStep, 2), rh.census.local);
+		add(P("rhythm.travel", "rhythm", "whole-stage travel share", "", "add", D.shareStep, 2), rh.census.travel);
+		add(P("rhythm.travelPerMinute", "rhythm", "travel moves a minute", "", "ratio", D.ratioStep, 1, 1), rh.census.travelPerMinute);
+		add(P("rhythm.calmRun", "rhythm", "calm run, median", " s", "ratio", D.ratioStep, 2, .1), rh.census.calmRunMedian);
+		add(P("rhythm.bursts", "rhythm", "bursts every 10 s", "", "ratio", D.ratioStep, 2, .2), rh.census.burstsPer10s);
+		add(P("rhythm.shotMedian", "rhythm", "shot length, median", " s", "ratio", D.ratioStep, 2, .2), rh.shots.medianSeconds);
+		add(P("rhythm.cutsPerMinute", "rhythm", "cuts a minute", "", "ratio", D.ratioStep, 1, 1), rh.shots.cutsPerMinute);
+	}
+	const t = p.type;
+	if (t) {
+		add(P("type.sizeMedian", "type", "text size, median (share of frame height)", "", "ratio", D.ratioStep, 3, .005), t.sizeMedian);
+		add(P("type.sizeLargest", "type", "largest text size (share of frame height)", "", "ratio", D.ratioStep, 3, .005), t.sizeLargest);
+		add(P("type.tracking", "type", "tracking, median", "", "add", 10, 0), t.trackingMedian);
+	}
+	return out;
+}
+function buildSheet(pieces) {
+	const n = pieces.length, byKey = /* @__PURE__ */ new Map();
+	for (const { piece } of pieces) for (const v of pieceMeasures(piece)) {
+		if (!byKey.has(v.def.key)) byKey.set(v.def.key, []);
+		byKey.get(v.def.key).push(v);
+	}
+	const measures = [];
+	for (const vals of byKey.values()) {
+		const def = vals[0].def, xs = vals.map((v) => v.value), min = Math.min(...xs), max = Math.max(...xs);
+		const spreadSteps = (lv(def, max) - lv(def, min)) / lstep(def);
+		const look = spreadSteps <= LOOK_RULES.lookSteps + 1e-9;
+		measures.push({
+			...def,
+			median: median(xs),
+			min,
+			max,
+			pieces: vals.length,
+			look,
+			...look ? {} : { why: `varies in your pieces: ${fmt$1(def, min)} to ${fmt$1(def, max)}, ${spreadSteps.toFixed(1)} steps apart (a look holds within ${LOOK_RULES.lookSteps})` }
+		});
+	}
+	const clusters = [];
+	pieces.forEach(({ piece }, i) => {
+		for (const c of piece.report.palette.filter((c2) => c2.share >= LOOK_RULES.colourShare)) {
+			const lab = [
+				c.colour.L,
+				c.colour.a,
+				c.colour.b
+			];
+			const hit = clusters.find((k) => dE(k.lab, lab) <= D.colourMatch);
+			if (hit) {
+				hit.members.push({
+					i,
+					share: c.share,
+					lab
+				});
+				const m = hit.members;
+				hit.lab = [
+					0,
+					1,
+					2
+				].map((d) => m.reduce((s, x) => s + x.lab[d], 0) / m.length);
+			} else clusters.push({
+				lab,
+				members: [{
+					i,
+					share: c.share,
+					lab
+				}]
+			});
+		}
+	});
+	const palette = clusters.map((k) => {
+		const per = /* @__PURE__ */ new Map();
+		for (const m of k.members) per.set(m.i, (per.get(m.i) ?? 0) + m.share);
+		const shares = [...per.values()];
+		return {
+			hex: hexOfLab(k.lab),
+			lab: k.lab.map((v) => Math.round(v * 10) / 10),
+			pieces: per.size,
+			ofPieces: n,
+			shareMin: Math.round(Math.min(...shares) * 1e3) / 1e3,
+			shareMax: Math.round(Math.max(...shares) * 1e3) / 1e3,
+			look: per.size >= Math.ceil(LOOK_RULES.colourPieces * n - 1e-9)
+		};
+	}).sort((a, b) => b.pieces - a.pieces || b.shareMax - a.shareMax);
+	const typed = pieces.filter((p) => p.piece.type);
+	const fontCount = /* @__PURE__ */ new Map();
+	for (const p of typed) for (const f of new Set(p.piece.type.fonts)) fontCount.set(f, (fontCount.get(f) ?? 0) + 1);
+	const rhythmless = pieces.filter((p) => !p.piece.rhythm).map((p) => p.piece.label);
+	return {
+		kind: "look-sheet",
+		version: 1,
+		pieces: pieces.map(({ piece, file }) => ({
+			label: piece.label,
+			file,
+			source: piece.source
+		})),
+		rules: LOOK_RULES,
+		standing: standingOf(n),
+		measures,
+		palette,
+		type: typed.length ? {
+			fonts: [...fontCount].map(([font, k]) => ({
+				font,
+				pieces: k
+			})).sort((a, b) => b.pieces - a.pieces),
+			pieces: typed.length
+		} : null,
+		notMeasured: [
+			...typed.length < n ? [`type (fonts, sizes, tracking): read only from a project, ${typed.length} of ${n} pieces had one; from a movie alone it is not measurable`] : [],
+			...rhythmless.length ? [`rhythm for ${rhythmless.join(", ")}: needs the piece as a movie read by ffmpeg`] : [],
+			"a cut-out's edge (not in version 1)",
+			"the tracker's per-move numbers (not reliable enough to average)"
+		],
+		notes: ["The sheet describes what these pieces did, not what a new piece must do."]
+	};
+}
+function compareWithSheet(sheet, piece) {
+	const values = new Map(pieceMeasures(piece).map((v) => [v.def.key, v.value]));
+	const n = sheet.pieces.length, of = (k) => `${k} piece${k === 1 ? "" : "s"}`;
+	const diffs = [], inside = [], notCompared = [];
+	for (const m of sheet.measures) {
+		const v = values.get(m.key);
+		if (!m.look) {
+			notCompared.push(`${m.name} (${m.why})`);
+			continue;
+		}
+		if (v === void 0) {
+			if (m.group === "rhythm" || m.group === "type") notCompared.push(`${m.name} (not measured on this piece)`);
+			continue;
+		}
+		const def = m, lo = lv(def, m.min), hi = lv(def, m.max), x = lv(def, v), st = lstep(def);
+		const beyond = x < lo - st ? (lo - x) / st : x > hi + st ? (x - hi) / st : 0;
+		if (!beyond) {
+			inside.push(m.name);
+			continue;
+		}
+		const range = m.min === m.max ? `your ${of(m.pieces)}: ${fmt$1(def, m.min)}` : `your pieces sit between ${fmt$1(def, m.min)} and ${fmt$1(def, m.max)} (${of(m.pieces)})`;
+		diffs.push({
+			measure: m.name,
+			size: Math.round(beyond * 10) / 10,
+			value: Number(v.toFixed(m.digits)),
+			range: [m.min, m.max],
+			pieces: m.pieces,
+			reading: `${m.name} ${fmt$1(def, v)}; ${range}.`
+		});
+	}
+	const pal = piece.report.palette.map((c) => ({
+		hex: c.hex,
+		share: c.share,
+		lab: [
+			c.colour.L,
+			c.colour.a,
+			c.colour.b
+		]
+	}));
+	for (const c of sheet.palette.filter((c2) => c2.look)) if (!pal.some((p) => dE(p.lab, c.lab) <= D.colourMatch)) diffs.push({
+		measure: "main colours",
+		size: 1,
+		value: "missing",
+		pieces: c.pieces,
+		reading: `${c.hex} is missing; ${c.pieces} of your ${of(n)} carry it (${Math.round(c.shareMin * 100)} to ${Math.round(c.shareMax * 100)} % of the frame).`
+	});
+	for (const p of pal.filter((p2) => p2.share >= LOOK_RULES.newColourShare)) if (!sheet.palette.some((c) => dE(p.lab, c.lab) <= D.colourMatch)) diffs.push({
+		measure: "main colours",
+		size: 1,
+		value: p.hex,
+		pieces: n,
+		reading: `${p.hex} covers ${Math.round(p.share * 100)} % of the frame; none of your ${of(n)} has a colour like it.`
+	});
+	if (sheet.type && piece.type) {
+		const known = new Set(sheet.type.fonts.map((f) => f.font));
+		const fresh = piece.type.fonts.filter((f) => !known.has(f));
+		if (fresh.length) diffs.push({
+			measure: "fonts",
+			size: 1,
+			value: fresh.join(", "),
+			pieces: sheet.type.pieces,
+			reading: `${fresh.join(", ")} ${fresh.length === 1 ? "is" : "are"} not in your pieces; they use ${sheet.type.fonts.map((f) => f.font).join(", ")} (${of(sheet.type.pieces)} with a project).`
+		});
+	}
+	diffs.sort((a, b) => b.size - a.size);
+	return {
+		ok: true,
+		against: "look sheet",
+		standing: sheet.standing,
+		differences: diffs,
+		insideTheLook: inside,
+		notCompared,
+		reading: diffs.length ? `${diffs.length} difference${diffs.length === 1 ? "" : "s"} from your ${sheet.standing.split(":")[0]}, largest first: ${diffs.map((d) => d.reading).join(" ")}` : `Within your pieces' range on every measure of the look (${sheet.standing.split(":")[0]}).`
+	};
+}
+function isSheet(x) {
+	return !!x && typeof x === "object" && x.kind === "look-sheet";
+}
+function isPiece(x) {
+	return !!x && typeof x === "object" && x.kind === "look-piece";
+}
+function sheetMarkdown(s) {
+	const of = (k) => `${k} piece${k === 1 ? "" : "s"}`;
+	const row = (m) => {
+		const d = m;
+		return `| ${m.name} | ${fmt$1(d, m.median)} | ${m.min === m.max ? fmt$1(d, m.min) : `${fmt$1(d, m.min)} to ${fmt$1(d, m.max)}`} | ${m.pieces} |`;
+	};
+	const groups = [...new Set(s.measures.map((m) => m.group))];
+	const lines = [
+		`# Look sheet`,
+		"",
+		`${s.standing[0].toUpperCase()}${s.standing.slice(1)}: ${s.pieces.map((p) => p.label).join(", ")}.`,
+		"",
+		...s.notes.map((x) => `- ${x}`),
+		""
+	];
+	for (const g of groups) {
+		const look = s.measures.filter((m) => m.group === g && m.look);
+		if (!look.length) continue;
+		lines.push(`## ${g[0].toUpperCase()}${g.slice(1)}`, "", "| Measure | Middle | Range | Pieces |", "|---|---|---|---|", ...look.map(row), "");
+		if (g === "rhythm") lines.push(SHOT_LIMIT, "");
+	}
+	const varies = s.measures.filter((m) => !m.look);
+	if (varies.length) lines.push("## Varies in your pieces (not compared)", "", ...varies.map((m) => `- ${m.name}: ${m.why}`), "");
+	lines.push("## Main colours", "", "| Colour | Pieces | Share of the frame | Part of the look |", "|---|---|---|---|", ...s.palette.map((c) => `| ${c.hex} | ${c.pieces} of ${c.ofPieces} | ${Math.round(c.shareMin * 100)} to ${Math.round(c.shareMax * 100)} % | ${c.look ? "yes" : "no"} |`), "");
+	if (s.type) lines.push("## Type", "", `From ${of(s.type.pieces)} with a project: ${s.type.fonts.map((f) => `${f.font} (${f.pieces})`).join(", ")}.`, "");
+	lines.push("## Not measured", "", ...s.notMeasured.map((x) => `- ${x}`), "");
+	return lines.join("\n");
+}
+var LOOK_RULES, D, P, median, lv, lstep, fmt$1, dE, hexOfLab, SHOT_LIMIT, standingOf;
+function init_look() {
+	return (init_look = __esmMin((() => {
+		init_sheet();
+		LOOK_RULES = {
+			/** A measure is part of the look when its range across pieces is within this many of its comparison steps. */
+			lookSteps: 3,
+			/** A main colour is part of the look when this share of the pieces carry it (at least two thirds). */
+			colourPieces: 2 / 3,
+			/** Main colours under this share of a piece are left out of its palette. */
+			colourShare: .02,
+			/** A build's colour this large with nothing like it in the pieces is named. */
+			newColourShare: .05,
+			/** Pieces before a sheet is called a look. */
+			lookPieces: 3
+		};
+		D = REFERENCE_DEFAULTS;
+		P = (key, group, name, unit, how, step, digits, floor) => ({
+			key,
+			group,
+			name,
+			unit,
+			how,
+			step,
+			digits,
+			...floor ? { floor } : {}
+		});
+		median = (a) => {
+			const s = [...a].sort((x, y) => x - y);
+			const m = s.length >> 1;
+			return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+		};
+		lv = (def, v) => def.how === "ratio" ? Math.log(Math.max(v, def.floor ?? 1e-6)) : v;
+		lstep = (def) => def.how === "ratio" ? Math.log(def.step) : def.step;
+		fmt$1 = (def, v) => `${Number(v.toFixed(def.digits))}${def.unit}`;
+		dE = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+		hexOfLab = (lab) => {
+			const fy = (lab[0] + 16) / 116, fx = fy + lab[1] / 500, fz = fy - lab[2] / 200, inv = (t) => t ** 3 > 216 / 24389 ? t ** 3 : (116 * t - 16) / (24389 / 27);
+			const X = inv(fx) * .95047, Y = inv(fy), Z = inv(fz) * 1.08883;
+			return "#" + [
+				3.2406 * X - 1.5372 * Y - .4986 * Z,
+				-.9689 * X + 1.8758 * Y + .0415 * Z,
+				.0557 * X - .204 * Y + 1.057 * Z
+			].map((u) => Math.round(255 * Math.max(0, Math.min(1, u <= .0031308 ? 12.92 * u : 1.055 * u ** (1 / 2.4) - .055)))).map((v) => v.toString(16).padStart(2, "0")).join("");
+		};
+		SHOT_LIMIT = "Shot lengths come from video.shots, which can read a change inside a shot (a launch, a flip) as a cut, so a shot can read shorter than it is.";
+		standingOf = (n) => n <= 1 ? "one piece: these are its own numbers, not a range" : n < LOOK_RULES.lookPieces ? `${n} pieces: a range, not yet a look` : `${n} pieces: a look`;
 	})))();
 }
 
@@ -5768,4 +6072,4 @@ function init_watch() {
 	})))();
 }
 
-export { EDGE_DEFAULTS, PieceWatcher, SEEN_THROUGH_DEFAULTS, SPECK_DEFAULTS, alphaChange, analyzeCurve, analyzeFrame, calibrationKey, compareReferences, compareRegions, composeContactSheet, curveGraph, cutoutRegions, decodePng, diffArgsError, distanceTo, edgeArgsError, enclosedHoles, encodePngGray8, encodePngSrgb8, encodePngSrgbRgba8, flattenOver, frameLabel, furthestFrame, growMask, histogramOf, init_calibration, init_matte, init_motion, init_png16, init_screen, init_settled_read, init_sheet, init_transform, init_watch, labOf, lookArgsError, lookCrops, matteCoverage, measureCaptureTransfer, measureEdge, measureLook, measureScreen, outlineTracker, parseTiming, pictureChange, pictureOf, profileForWorkingSpace, referenceReader, resample, resolveDiffThresholds, resolveEdgeThresholds, resolveScreenThresholds, resolveWatchThresholds, rgbHex, sampleRegions, sceneLinearToDisplaySrgb, screenArgsError, seenThroughInside, settleTimeoutFor, soundOnsets, speckPieces, stampFiles, subjectTop, summarizeFlicker, summarizeLookSeries, summarizeSeries, syncReport, unmatte, waitForSettled, watchArgsError };
+export { EDGE_DEFAULTS, PieceWatcher, SEEN_THROUGH_DEFAULTS, SPECK_DEFAULTS, alphaChange, analyzeCurve, analyzeFrame, buildSheet, calibrationKey, compareReferences, compareRegions, compareWithSheet, composeContactSheet, curveGraph, cutoutRegions, decodePng, diffArgsError, distanceTo, edgeArgsError, enclosedHoles, encodePngGray8, encodePngSrgb8, encodePngSrgbRgba8, flattenOver, frameLabel, furthestFrame, growMask, histogramOf, init_calibration, init_look, init_matte, init_motion, init_png16, init_screen, init_settled_read, init_sheet, init_transform, init_watch, isPiece, isSheet, labOf, lookArgsError, lookCrops, matteCoverage, measureCaptureTransfer, measureEdge, measureLook, measureScreen, outlineTracker, parseTiming, pictureChange, pictureOf, profileForWorkingSpace, referenceReader, resample, resolveDiffThresholds, resolveEdgeThresholds, resolveScreenThresholds, resolveWatchThresholds, rgbHex, sampleRegions, sceneLinearToDisplaySrgb, screenArgsError, seenThroughInside, settleTimeoutFor, sheetMarkdown, soundOnsets, speckPieces, stampFiles, subjectTop, summarizeFlicker, summarizeLookSeries, summarizeSeries, syncReport, unmatte, waitForSettled, watchArgsError };
