@@ -110,6 +110,8 @@ The five render cases failed as run on a grader fault. `ae_render_frame` names i
 | 18 to 27 | a "plugin skill fired" indicator on every picture case | only where the prompt asks for a skill | Scored in a one-arm run. |
 | 18, 19, 20, 24, 27 | the grader read `<stem>_<index>.png` | it reads `<stem>_<call id>_<index>.png`, the newest call | The render tool's naming changed. |
 | 23 | answer checks `subject-check-first` and `subject-file-first` required the operation names (`subject.check` with "before anything else is built"; `subject.render_cutout`, then `subject.check_file`, then `subject.use_cutout`) | each accepts the operation's name or its plain description, and still requires the order: the check of the cut-out with a hole or what is missing shown, then a render or build step after it (or "before anything else is built" beside `subject.check`); "render the cut-out once / to a file", then "check every frame of the file", with no building on the file in between | The plans say it in the plain words the skill tells them to use with a user: "I check the cut-out around the frame you clicked. If any part of you is missing or there are holes, I'll tell you right away and show you the picture." Then "I render the cut-out to a file … Then I check every frame of that file, and I build the piece on the file". |
+| 23 (on the reruns) | the plain words above | also "check holes / openings" as the check, and "what's out / anything is out" beside a picture as the hole shown ("out" counts only beside "picture": click step 7, which every plan quotes, says "show you what is in and what is out") | Two reruns said it in other words: "**Quick check.** I check the cut-out and show you a picture of what's in and what's out. If anything is missing, I tell you straight away"; "Check holes and openings near the click frame. I'll tell you immediately if anything is out, with a picture." |
+| 30 | `pixel-builders` required `heroWord` and `pixelBlocks` by name | also accepts the style's all-in-one builder named as code (`beat(comp, brief)` or `` `beat` ``); the plain word "beat" does not count | A plan that builds every beat with the style's own all-in-one builder is using the builders. The reruns' plans name no builder at all, so their scores do not change. |
 
 Case 23's checks were regraded offline on the six answers kept from the stage 12 comparison, before any new session:
 
@@ -120,10 +122,35 @@ Case 23's checks were regraded offline on the six answers kept from the stage 12
 
 The plain answer that still fails file-first does build on the file before checking it: "Render the cut-out once to a movie with alpha, then build on that file", with the file check after.
 
+Under the checks as committed, the same six answers stay at 3 and 2 (plain) and 0 and 0 (switched off). Case 30's switched-off answers stay at 0 on both of its checks.
+
 **Fixed before any run:**
 - answer checks became regex graders the runner scores, with "up front" a fixed 2,000 characters;
 - picture graders lost the undocumented `m` flag;
 - a case's files reach the run through `case.yaml` and `scaffold.sh`, since a run cannot read the eval directory.
+
+## Reruns of cases 23 and 30 on the final build
+
+Five sessions, after the checks above were widened and the style's opening gained its sentence.
+
+| Case | The runner's scores | Graded again under the checks as committed | Before library parts |
+|---|---|---|---|
+| 23 (3 runs) | 0.82, 0.64, 0.73 (mean 0.73) | 0.82, 0.73, 0.82 (mean 0.79): check-first 3 of 3, file-first 3 of 3 | 0.36 |
+| 30 (2 runs) | 0.43, 0.57 (mean 0.50) | unchanged | 0.14 |
+
+- **Case 30:** both runs now read the style's builders section, D8, which no run had before. Their plans still name no builder; they plan by beat type.
+- **Case 23:** the runner graded with the first widening; the second, made after seeing these answers, is what lifts check-first from 1 to 3.
+
+## Found: the "second script" dialog
+
+After the reruns, a read call from the supervising session's own server left After Effects showing "Attempt was made to run a second script while another script was already running". No eval session caused it: the five sessions made no After Effects calls at all.
+
+**The cause:** the server launched its script, and After Effects did not start it within 2.5 s. The server's relaunch rule then launched again while the first launcher was still waiting on After Effects.
+
+**A separate gap, found while tracing it:**
+- Servers serialise launches only through a busy lock in their temp folder.
+- So sessions with different temp folders (each eval sandbox) do not see each other's lock.
+- A fix is designed, not built: don't relaunch on macOS while the last launcher is alive, and take the launch lock per user and per After Effects. Until then, sessions that may call After Effects run one at a time against one After Effects.
 
 ## Library parts
 
@@ -157,7 +184,7 @@ Its one real run, on the two halves of a side-by-side, went through from prepare
 
 ## Sessions and cost
 
-**63 sessions, about $33.** No usage limit was hit.
+**68 sessions, about $35.5.** No usage limit was hit.
 
 | Runs | Sessions |
 |---|---|
@@ -167,6 +194,7 @@ Its one real run, on the two halves of a side-by-side, went through from prepare
 | Probe | 1 |
 | Switched-off arms | 24 |
 | Render reruns | 5 |
+| Reruns of cases 23 and 30 | 5 |
 
 ## Known faults in the cases, left as they are
 

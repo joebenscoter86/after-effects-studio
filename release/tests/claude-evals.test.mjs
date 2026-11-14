@@ -331,6 +331,11 @@ test('the subject-matte checks accept the plain words a plan for the user uses, 
   // "If anything is missing, I'll tell you … with a picture" counts as the hole shown
   const missing = '**Quick check** (seconds): holes and openings around the click frame. If anything is missing, I\u2019ll tell you in plain words with a picture path before doing anything else.';
   assert.equal((await verdict(answer({ check: missing, file: once })))['subject-check-first'], true);
+  // two more ways a plan put it (the reruns of 2026-11-14): what is out, shown in a picture; checking holes near the click
+  const shownOut = '**Quick check.** I check the cut-out and show you a picture of what\u2019s in and what\u2019s out. If anything is missing, I tell you straight away and we fix it.';
+  const holesNear = 'Check holes and openings near the click frame. I\u2019ll tell you immediately if anything is out, with a picture.';
+  assert.equal((await verdict(answer({ check: shownOut, file: once })))['subject-check-first'], true);
+  assert.equal((await verdict(answer({ check: holesNear, file: once })))['subject-check-first'], true);
   // building on the file before checking it fails, in plain words as with the names
   assert.equal((await verdict(answer({ file: 'Render the cut-out once to a movie with alpha, then build on that file. File check: subject.check_file reads every frame.' })))['subject-file-first'], false);
   // a general check of the edges is not the check of the cut-out (the switched-off answers' kind)
@@ -419,4 +424,8 @@ test('the pixel headline case passes an answer with the builders and the word on
   assert.deepEqual(await passes(30, 'Each beat shows a big bold word with a glow and some blocks, timed to the sentence.'),
     { 'pixel-builders': false, 'pixel-word-lands': false });
   assert.equal((await passes(30, 'The giant word lands on the **first frame** of that **word** in the voice.'))['pixel-word-lands'], true);
+  // the style's all-in-one builder counts, named as code; the plain word "beat" does not
+  assert.equal((await passes(30, 'Every sentence is built with beat(comp, brief), the opener and punch kinds.'))['pixel-builders'], true);
+  assert.equal((await passes(30, 'Each beat is made with `beat`.'))['pixel-builders'], true);
+  assert.equal((await passes(30, 'One sentence, one beat; the beat map lists each beat type.'))['pixel-builders'], false);
 });

@@ -201,7 +201,7 @@ const BEFORE = `${ci('before')}${GAP}(?:[A-Za-z]+${GAP}){0,2}(?:${['any', 'anyth
 // The three steps of the cut-out by their operation's name or in the plain words a plan for the user uses:
 // the quick check near the click, rendering the cut-out once, and checking every frame of the file before building on it.
 const CHECK_OP = 'subject\\.check(?!_file)';
-const CHECK = `(?:${CHECK_OP}|${ci('quick check')}|${ci('check')}${GAP}(?:${ci('the')}|${ci('your')})${GAP}${ci('cut')}-?${ci('out')})`;
+const CHECK = `(?:${CHECK_OP}|${ci('quick check')}|${ci('check')}${GAP}(?:${ci('the')}|${ci('your')})${GAP}${ci('cut')}-?${ci('out')}|${ci('check')}${GAP}(?:${ci('for')}${GAP})?(?:${ci('holes')}|${ci('openings')}))`;
 const RENDER = `(?:subject\\.render_cutout|${ci('render once')}|${ci('render')}(?:${ci('s')}|${ci('ing')})?${GAP}(?:${ci('the')}${GAP}|${ci('your')}${GAP})?${ci('cut')}-?${ci('out')}${GAP}(?:${ci('once')}|${ci('to a')}${GAP}(?:${ci('file')}|${ci('movie')})))`;
 const FILE_CHECK = `(?:subject\\.check_file|${ci('file check')}|${ci('check')}${GAP}(?:${ci('every')}|${ci('each')})${GAP}${ci('frame of')}${GAP}(?:${ci('the')}|${ci('that')}|${ci('this')})${GAP}(?:${ci('file')}|${ci('movie')}|${ci('render')}))`;
 const BUILD_ON_FILE = `(?:subject\\.use_cutout|${ci('build')}(?:${GAP}${ci('the piece')})?${GAP}${ci('on')}${GAP}(?:${ci('the')}|${ci('that')}|${ci('this')})${GAP}${ci('file')})`;
@@ -226,7 +226,11 @@ export const ANSWER_CHECKS = {
     async pattern() {
       const said = `(?=[\\s\\S]*?(?:${BEFORE}[\\s\\S]{0,300}?${CHECK_OP}|${CHECK_OP}[\\s\\S]{0,300}?${BEFORE}))(?=[\\s\\S]*?(?:${HOLE}))`;
       // a plan in plain words says what is missing and shows it: "If anything is missing, I'll tell you … with a picture"
-      const hole = `\\b(?:${ci('show')}|${ci('picture')})[^.]{0,150}\\b(?:${ci('hole')}|${ci('opening')}|${ci('missing')})|\\b(?:${ci('hole')}|${ci('opening')}|${ci('missing')})[^.]{0,150}\\b(?:${ci('show')}|${ci('picture')})`;
+      const gone = `(?:${ci('hole')}|${ci('opening')}|${ci('missing')})`;
+      // what is out counts only beside a picture: click step 7, which every plan quotes, says "show you what is in and
+      // what is out" without being the check
+      const out = `(?:${ci('what')}(?:${ci("'s")}|${GAP}${ci('is')})${GAP}${ci('out')}|${ci('anything is out')})`;
+      const hole = `\\b(?:${ci('show')}|${ci('picture')})[^.]{0,150}\\b${gone}|\\b${gone}[^.]{0,150}\\b(?:${ci('show')}|${ci('picture')})|\\b${ci('picture')}[^.]{0,150}${out}|${out}[^.]{0,150}\\b${ci('picture')}`;
       const shown = `(?=[\\s\\S]*?${CHECK}[\\s\\S]{0,300}?(?:${hole})[\\s\\S]*?(?:${RENDER}|${BUILD_ON_FILE}))`;
       return `^(?:${said}|${shown})`;
     },
@@ -257,8 +261,8 @@ export const ANSWER_CHECKS = {
   },
   // Building in the pixel headline style (stage 14): its builders and its rule for the giant word.
   'pixel-builders': {
-    what: 'the answer names the style\'s builders heroWord and pixelBlocks',
-    async pattern() { return '^(?=[\\s\\S]*?\\bheroWord\\b)(?=[\\s\\S]*?\\bpixelBlocks\\b)'; },
+    what: 'the answer names the style\'s builders: heroWord and pixelBlocks, or the all-in-one beat builder (beat(comp, brief), named as code)',
+    async pattern() { return '^(?:(?=[\\s\\S]*?\\bheroWord\\b)(?=[\\s\\S]*?\\bpixelBlocks\\b)|(?=[\\s\\S]*?(?:\\bbeat\\s*\\(|`beat`)))'; },
   },
   'pixel-word-lands': {
     what: 'the answer lands the giant word on the voice\'s first frame of that word (said within one sentence)',
