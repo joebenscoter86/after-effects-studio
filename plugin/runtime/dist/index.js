@@ -2993,7 +2993,7 @@ var require_compile = __commonJS({
       const schOrFunc = root.refs[ref];
       if (schOrFunc)
         return schOrFunc;
-      let _sch = resolve13.call(this, root, ref);
+      let _sch = resolve14.call(this, root, ref);
       if (_sch === void 0) {
         const schema = (_a3 = root.localRefs) === null || _a3 === void 0 ? void 0 : _a3[ref];
         const { schemaId } = this.opts;
@@ -3020,7 +3020,7 @@ var require_compile = __commonJS({
     function sameSchemaEnv(s1, s2) {
       return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
     }
-    function resolve13(root, ref) {
+    function resolve14(root, ref) {
       let sch;
       while (typeof (sch = this.refs[ref]) == "string")
         ref = sch;
@@ -3884,7 +3884,7 @@ var require_fast_uri = __commonJS({
       }
       return uri;
     }
-    function resolve13(baseURI, relativeURI, options) {
+    function resolve14(baseURI, relativeURI, options) {
       const schemelessOptions = options ? Object.assign({ scheme: "null" }, options) : { scheme: "null" };
       const {
         parsed: baseParsed,
@@ -4275,7 +4275,7 @@ var require_fast_uri = __commonJS({
     var fastUri = {
       SCHEMES,
       normalize,
-      resolve: resolve13,
+      resolve: resolve14,
       resolveComponent,
       equal,
       serialize,
@@ -8575,10 +8575,10 @@ function isValidJWT(jwt2, alg) {
   if (!jwtRegex.test(jwt2))
     return false;
   try {
-    const [header] = jwt2.split(".");
-    if (!header)
+    const [header2] = jwt2.split(".");
+    if (!header2)
       return false;
-    const base643 = header.replace(/-/g, "+").replace(/_/g, "/").padEnd(header.length + (4 - header.length % 4) % 4, "=");
+    const base643 = header2.replace(/-/g, "+").replace(/_/g, "/").padEnd(header2.length + (4 - header2.length % 4) % 4, "=");
     const decoded = JSON.parse(atob(base643));
     if (typeof decoded !== "object" || decoded === null)
       return false;
@@ -14456,10 +14456,10 @@ function isValidJWT2(token, algorithm = null) {
     const tokensParts = token.split(".");
     if (tokensParts.length !== 3)
       return false;
-    const [header] = tokensParts;
-    if (!header)
+    const [header2] = tokensParts;
+    if (!header2)
       return false;
-    const parsedHeader = JSON.parse(atob(header));
+    const parsedHeader = JSON.parse(atob(header2));
     if ("typ" in parsedHeader && parsedHeader?.typ !== "JWT")
       return false;
     if (!parsedHeader.alg)
@@ -16388,7 +16388,7 @@ var recursive = /* @__PURE__ */ new WeakMap();
 var NONE = 0;
 var ASSUMED = 1;
 var PROVEN = 2;
-function isRecursive(inst, stack, resolve13) {
+function isRecursive(inst, stack, resolve14) {
   const cached2 = recursive.get(inst);
   if (cached2 !== void 0)
     return cached2 ? PROVEN : NONE;
@@ -16398,7 +16398,7 @@ function isRecursive(inst, stack, resolve13) {
   let result = NONE;
   const check2 = (child2) => {
     if (result !== PROVEN && child2?._zod) {
-      const answer = isRecursive(child2, stack, resolve13);
+      const answer = isRecursive(child2, stack, resolve14);
       if (answer > result)
         result = answer;
     }
@@ -16409,7 +16409,7 @@ function isRecursive(inst, stack, resolve13) {
       const desc = Object.getOwnPropertyDescriptor(sh, key);
       if (spread && !desc.enumerable)
         continue;
-      const child2 = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve13) : NONE;
+      const child2 = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve14) : NONE;
       if (child2 > answer)
         answer = child2;
     }
@@ -16473,7 +16473,7 @@ function isRecursive(inst, stack, resolve13) {
       break;
     // `$ZodLazy` caches its inner on the def, so a resolved edge is followed exactly
     case "lazy": {
-      const inner = def._cachedInner ?? (resolve13 ? inst._zod.innerType : void 0);
+      const inner = def._cachedInner ?? (resolve14 ? inst._zod.innerType : void 0);
       merge2(inner ? isRecursive(inner, stack, false) : ASSUMED);
       break;
     }
@@ -34911,7 +34911,7 @@ var Protocol = class {
           return;
         }
         const pollInterval = task2.pollInterval ?? this._options?.defaultTaskPollInterval ?? 1e3;
-        await new Promise((resolve13) => setTimeout(resolve13, pollInterval));
+        await new Promise((resolve14) => setTimeout(resolve14, pollInterval));
         options?.signal?.throwIfAborted();
       }
     } catch (error62) {
@@ -34928,7 +34928,7 @@ var Protocol = class {
    */
   request(request, resultSchema, options) {
     const { relatedRequestId, resumptionToken, onresumptiontoken, task, relatedTask } = options ?? {};
-    return new Promise((resolve13, reject) => {
+    return new Promise((resolve14, reject) => {
       const earlyReject = (error62) => {
         reject(error62);
       };
@@ -35006,7 +35006,7 @@ var Protocol = class {
           if (!parseResult.success) {
             reject(parseResult.error);
           } else {
-            resolve13(parseResult.data);
+            resolve14(parseResult.data);
           }
         } catch (error62) {
           reject(error62);
@@ -35268,12 +35268,12 @@ var Protocol = class {
       }
     } catch {
     }
-    return new Promise((resolve13, reject) => {
+    return new Promise((resolve14, reject) => {
       if (signal.aborted) {
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
         return;
       }
-      const timeoutId = setTimeout(resolve13, interval);
+      const timeoutId = setTimeout(resolve14, interval);
       signal.addEventListener("abort", () => {
         clearTimeout(timeoutId);
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
@@ -36404,7 +36404,7 @@ var McpServer = class {
     let task = createTaskResult.task;
     const pollInterval = task.pollInterval ?? 5e3;
     while (task.status !== "completed" && task.status !== "failed" && task.status !== "cancelled") {
-      await new Promise((resolve13) => setTimeout(resolve13, pollInterval));
+      await new Promise((resolve14) => setTimeout(resolve14, pollInterval));
       const updatedTask = await extra.taskStore.getTask(taskId);
       if (!updatedTask) {
         throw new McpError(ErrorCode.InternalError, `Task ${taskId} not found during polling`);
@@ -37068,12 +37068,12 @@ var StdioServerTransport = class {
     this.onclose?.();
   }
   send(message) {
-    return new Promise((resolve13) => {
+    return new Promise((resolve14) => {
       const json2 = serializeMessage(message);
       if (this._stdout.write(json2)) {
-        resolve13();
+        resolve14();
       } else {
-        this._stdout.once("drain", resolve13);
+        this._stdout.once("drain", resolve14);
       }
     });
   }
@@ -37830,7 +37830,7 @@ if (mode === 'dismiss') {
 function encodeScript(script) {
   return Buffer.from(script, "utf16le").toString("base64");
 }
-var defaultRunner = (script, env) => new Promise((resolve13, reject) => {
+var defaultRunner = (script, env) => new Promise((resolve14, reject) => {
   execFile(
     "powershell.exe",
     [
@@ -37848,10 +37848,10 @@ var defaultRunner = (script, env) => new Promise((resolve13, reject) => {
       encoding: "utf8",
       maxBuffer: 1024 * 1024
     },
-    (err, stdout) => err ? reject(err) : resolve13(stdout)
+    (err, stdout) => err ? reject(err) : resolve14(stdout)
   );
 });
-var defaultOsascriptRunner = (script, env) => new Promise((resolve13, reject) => {
+var defaultOsascriptRunner = (script, env) => new Promise((resolve14, reject) => {
   execFile(
     "/usr/bin/osascript",
     ["-l", "JavaScript", "-e", script],
@@ -37861,7 +37861,7 @@ var defaultOsascriptRunner = (script, env) => new Promise((resolve13, reject) =>
       encoding: "utf8",
       maxBuffer: 1024 * 1024
     },
-    (err, stdout) => err ? reject(err) : resolve13(stdout)
+    (err, stdout) => err ? reject(err) : resolve14(stdout)
   );
 });
 var runner = defaultRunner;
@@ -38726,7 +38726,7 @@ function isAutomationDenial(message) {
   return /(?:-1743\b|not (?:authorized|permitted) to send apple events)/i.test(message);
 }
 function sleep(ms) {
-  return new Promise((resolve13) => setTimeout(resolve13, ms));
+  return new Promise((resolve14) => setTimeout(resolve14, ms));
 }
 function serializeRequest(request) {
   return JSON.stringify(request).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
@@ -48005,16 +48005,16 @@ var AE_AAC_PRIMING_SAMPLES = 1024;
 var FFPROBE = ["ffprobe", "/opt/homebrew/bin/ffprobe", "/usr/local/bin/ffprobe"];
 var FFMPEG = ["ffmpeg", "/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg"];
 function runTool(cands, argv, timeoutMs = 12e4) {
-  return new Promise((resolve13) => {
+  return new Promise((resolve14) => {
     const tryAt = (i) => {
-      if (i >= cands.length) return resolve13(null);
+      if (i >= cands.length) return resolve14(null);
       execFile2(
         cands[i],
         argv,
         { timeout: timeoutMs, maxBuffer: 16 * 1024 * 1024 },
         (err, stdout, stderr) => {
           if (err && err.code === "ENOENT") return tryAt(i + 1);
-          resolve13({ stdout: String(stdout), stderr: String(stderr), failed: err !== null });
+          resolve14({ stdout: String(stdout), stderr: String(stderr), failed: err !== null });
         }
       );
     };
@@ -48026,14 +48026,14 @@ function* boxes(buf, start, end) {
   while (o + 8 <= end) {
     let size2 = buf.readUInt32BE(o);
     const type = buf.toString("latin1", o + 4, o + 8);
-    let header = 8;
+    let header2 = 8;
     if (size2 === 1) {
       if (o + 16 > end) return;
       size2 = Number(buf.readBigUInt64BE(o + 8));
-      header = 16;
+      header2 = 16;
     } else if (size2 === 0) size2 = end - o;
-    if (size2 < header || o + size2 > end) return;
-    yield { type, start: o + header, end: o + size2 };
+    if (size2 < header2 || o + size2 > end) return;
+    yield { type, start: o + header2, end: o + size2 };
     o += size2;
   }
 }
@@ -48098,15 +48098,15 @@ async function readMoov(file2) {
       await fh.read(head, 0, 16, o);
       let boxSize = head.readUInt32BE(0);
       const type = head.toString("latin1", 4, 8);
-      let header = 8;
+      let header2 = 8;
       if (boxSize === 1) {
         boxSize = Number(head.readBigUInt64BE(8));
-        header = 16;
+        header2 = 16;
       } else if (boxSize === 0) boxSize = size2 - o;
-      if (boxSize < header) return null;
+      if (boxSize < header2) return null;
       if (type === "moov") {
-        const body = Buffer.alloc(boxSize - header);
-        await fh.read(body, 0, body.length, o + header);
+        const body = Buffer.alloc(boxSize - header2);
+        await fh.read(body, 0, body.length, o + header2);
         return body;
       }
       o += boxSize;
@@ -50108,7 +50108,7 @@ var HD_PIXELS = 1080 * 1920;
 var POLL_MS = 60;
 var IEND = Buffer.from([0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130]);
 function sleep2(ms) {
-  return new Promise((resolve13) => setTimeout(resolve13, ms));
+  return new Promise((resolve14) => setTimeout(resolve14, ms));
 }
 function settleTimeoutFor(frames, pixelsPerFrame) {
   const n = Math.max(1, Math.floor(frames));
@@ -53640,7 +53640,7 @@ function soundAdviceFor(f, streams) {
 var FFPROBE2 = ["ffprobe", "/opt/homebrew/bin/ffprobe", "/usr/local/bin/ffprobe"];
 async function ffprobeAudio(file2) {
   for (const exe of FFPROBE2) {
-    const out = await new Promise((resolve13) => {
+    const out = await new Promise((resolve14) => {
       execFile3(
         exe,
         [
@@ -53657,8 +53657,8 @@ async function ffprobeAudio(file2) {
         { timeout: 15e3 },
         (err, stdout) => {
           if (err)
-            resolve13({ missing: err.code === "ENOENT", stdout: null });
-          else resolve13({ missing: false, stdout: String(stdout) });
+            resolve14({ missing: err.code === "ENOENT", stdout: null });
+          else resolve14({ missing: false, stdout: String(stdout) });
         }
       );
     });
@@ -56516,10 +56516,10 @@ async function* readFrames(info, o, tools = VIDEO_TOOLS) {
   let proc = null;
   for (const bin of tools.ffmpeg) {
     try {
-      proc = await new Promise((resolve13, reject) => {
+      proc = await new Promise((resolve14, reject) => {
         const p = spawn(bin, args, { stdio: ["ignore", "pipe", "pipe"] });
         p.once("error", reject);
-        p.once("spawn", () => resolve13(p));
+        p.once("spawn", () => resolve14(p));
       });
       break;
     } catch (e) {
@@ -56637,10 +56637,10 @@ async function* movieRun(info, picks, colour, tools) {
   let proc = null;
   for (const bin of tools.ffmpeg) {
     try {
-      proc = await new Promise((resolve13, reject) => {
+      proc = await new Promise((resolve14, reject) => {
         const p = spawn2(bin, args, { stdio: ["ignore", "pipe", "pipe"] });
         p.once("error", reject);
-        p.once("spawn", () => resolve13(p));
+        p.once("spawn", () => resolve14(p));
       });
       break;
     } catch (e) {
@@ -62951,7 +62951,7 @@ function nodeOnly(name) {
 function fail(error62, extra = {}) {
   return { ok: false, error: error62, ...extra };
 }
-var sleep3 = (ms) => new Promise((resolve13) => setTimeout(resolve13, ms));
+var sleep3 = (ms) => new Promise((resolve14) => setTimeout(resolve14, ms));
 function summarizeInstance(i) {
   return {
     label: instanceLabel(i),
@@ -66059,6 +66059,266 @@ function findModules(catalog, query) {
   return catalog.modules.filter((m) => !q || [m.id, m.title, m.summary, ...m.tags].some((v) => v.toLowerCase().includes(q)));
 }
 
+// src/tools/library-parts.ts
+var REPLY_CHARS = 4e4;
+var FRAME_CHARS = 2e3;
+var PART_CHARS = REPLY_CHARS - FRAME_CHARS;
+var walk = (list, out = []) => {
+  for (const s of list) {
+    out.push(s);
+    walk(s.children, out);
+  }
+  return out;
+};
+var allSections = (doc) => walk(doc.sections);
+var ownText = (s) => s.children.length ? s.intro : s.text;
+function nameSections(doc) {
+  const all = allSections(doc);
+  const count = /* @__PURE__ */ new Map();
+  for (const s of all) count.set(s.title, (count.get(s.title) ?? 0) + 1);
+  const visit2 = (list, trail) => {
+    for (const s of list) {
+      s.name = (count.get(s.title) ?? 0) > 1 ? [...trail, s.title].join(" > ") : s.title;
+      visit2(s.children, [...trail, s.title]);
+    }
+  };
+  visit2(doc.sections, []);
+  const seen = /* @__PURE__ */ new Map();
+  for (const s of all) {
+    const n = (seen.get(s.name) ?? 0) + 1;
+    seen.set(s.name, n);
+    if (n > 1) s.name = `${s.name} (${n})`;
+  }
+  return doc;
+}
+function parseMarkdown(text) {
+  const heads = [];
+  let fence = false;
+  for (const m of text.matchAll(/^.*$/gm)) {
+    const line = m[0];
+    if (/^\s*(```|~~~)/.test(line)) {
+      fence = !fence;
+      continue;
+    }
+    if (fence) continue;
+    const h = line.match(/^(#{2,6})\s+(.+?)\s*#*\s*$/);
+    if (h) heads.push({ at: m.index ?? 0, level: h[1].length, title: h[2] });
+  }
+  const roots = [];
+  const stack = [];
+  const levels = [];
+  for (const [i, h] of heads.entries()) {
+    while (levels.length && levels[levels.length - 1] >= h.level) {
+      stack.pop();
+      levels.pop();
+    }
+    const next = heads.slice(i + 1).find((x) => x.level <= h.level);
+    const end = next ? next.at : text.length;
+    const firstChild = heads[i + 1] && heads[i + 1].level > h.level ? heads[i + 1].at : end;
+    const s = { title: h.title, name: h.title, level: h.level, text: text.slice(h.at, end), intro: text.slice(h.at, firstChild), children: [] };
+    (stack.length ? stack[stack.length - 1].children : roots).push(s);
+    stack.push(s);
+    levels.push(h.level);
+  }
+  return nameSections({ form: "markdown", opening: text.slice(0, heads.length ? heads[0].at : text.length), sections: roots });
+}
+function parseJson(text) {
+  let value;
+  try {
+    value = JSON.parse(text);
+  } catch {
+    return null;
+  }
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const sections = [];
+  const small = {};
+  for (const [key, v] of Object.entries(value)) {
+    const t = JSON.stringify(v, null, 2);
+    const items = Array.isArray(v) && v.length && v.every((e) => e && typeof e === "object" && typeof e.id === "string") ? v : null;
+    const children = items && new Set(items.map((e) => e.id)).size === items.length ? items.map((e) => {
+      const et = JSON.stringify(e, null, 2);
+      return { title: e.id, name: e.id, level: 3, text: et, intro: et, children: [] };
+    }) : [];
+    sections.push({ title: key, name: key, level: 2, text: t, intro: children.length ? "" : t, children });
+    if (t.length <= 2e3) small[key] = v;
+  }
+  return nameSections({ form: "json", opening: Object.keys(small).length ? JSON.stringify(small, null, 2) : "", sections });
+}
+function parseCode(text) {
+  const decls = [...text.matchAll(/^( *)(?:function\s+([A-Za-z_$][\w$]*)\s*\(|def\s+([A-Za-z_]\w*)\s*\()/gm)].map((m) => ({ at: m.index ?? 0, indent: m[1].length, title: m[2] ?? m[3] }));
+  const byIndent = /* @__PURE__ */ new Map();
+  for (const d of decls) byIndent.set(d.indent, (byIndent.get(d.indent) ?? 0) + 1);
+  const indent = [...byIndent.entries()].filter(([, n]) => n >= 3).map(([i]) => i).sort((a, b) => a - b)[0];
+  if (indent === void 0) return null;
+  const top = decls.filter((d) => d.indent === indent);
+  const sections = top.map((d, i) => {
+    const t = text.slice(d.at, i + 1 < top.length ? top[i + 1].at : text.length);
+    return { title: d.title, name: d.title, level: 2, text: t, intro: t, children: [] };
+  });
+  return nameSections({ form: "code", opening: text.slice(0, top[0].at), sections });
+}
+function parseDocument(text, file2) {
+  if (/\.md$/i.test(file2)) return parseMarkdown(text);
+  if (/\.json$/i.test(file2)) {
+    const j = parseJson(text);
+    if (j) return j;
+  }
+  if (/\.(jsx|js|mjs|py)$/i.test(file2)) {
+    const c = parseCode(text);
+    if (c) return c;
+  }
+  return { form: "text", opening: "", sections: [] };
+}
+function splitText(text, max = PART_CHARS) {
+  if (text.length <= max) return [text];
+  const out = [];
+  let cur = "";
+  const add = (piece) => {
+    if (cur.length + piece.length <= max) {
+      cur += piece;
+      return;
+    }
+    if (cur) {
+      out.push(cur);
+      cur = "";
+    }
+    if (piece.length <= max) {
+      cur = piece;
+      return;
+    }
+    for (const line of piece.match(/[^\n]*\n|[^\n]+$/g) ?? [piece]) {
+      if (cur.length + line.length <= max) {
+        cur += line;
+        continue;
+      }
+      if (cur) {
+        out.push(cur);
+        cur = "";
+      }
+      for (let i = 0; i < line.length; i += max) {
+        const c = line.slice(i, i + max);
+        if (c.length === max) out.push(c);
+        else cur = c;
+      }
+    }
+  };
+  for (const p of text.match(/[\s\S]*?\n\n+|[\s\S]+$/g) ?? [text]) add(p);
+  if (cur) out.push(cur);
+  return out;
+}
+var partName = (name, k, n) => `${name} (part ${k} of ${n})`;
+var OPENING = "(opening)";
+var WHOLE = "(whole)";
+function sectionNames(doc, text) {
+  const out = [];
+  const op = splitText(doc.opening);
+  if (op.length > 1) op.forEach((_, i) => out.push(partName(OPENING, i + 1, op.length)));
+  if (!doc.sections.length) {
+    const w = splitText(text);
+    if (w.length > 1) w.forEach((_, i) => out.push(partName(WHOLE, i + 1, w.length)));
+  }
+  for (const s of allSections(doc)) {
+    out.push(s.name);
+    const parts = splitText(ownText(s));
+    if (parts.length > 1) parts.forEach((_, i) => out.push(partName(s.name, i + 1, parts.length)));
+  }
+  return out;
+}
+var header = (e, chars) => `ae_library document ${e.id}: ${e.title} (kind ${e.kind}, ${chars} characters, sha256 ${e.sha256})`;
+function outlineLines(list, depth = 0) {
+  const out = [];
+  for (const s of list) {
+    const parts = splitText(ownText(s)).length;
+    out.push(`${"  ".repeat(depth)}- ${s.name} (${s.text.length} characters${parts > 1 ? `; its own text in ${parts} parts` : ""})`);
+    out.push(...outlineLines(s.children, depth + 1));
+  }
+  return out;
+}
+var loadNote = (e) => `To use this code, load the whole file inside eval.run with $.evalFile from the plugin's library folder (${e.path}), as its document says; read a function here only to see what it does.`;
+function wholeOrOutline(e, text, doc = parseDocument(text, e.path)) {
+  const whole = `${header(e, text.length)}
+
+${text}`;
+  if (whole.length <= REPLY_CHARS) return whole;
+  if (!doc.sections.length) {
+    const parts = splitText(text);
+    return [
+      header(e, text.length),
+      `PART 1 OF ${parts.length}, NOT THE WHOLE DOCUMENT. ${e.id} (${e.title}, ${e.kind}) is ${text.length} characters, longer than one reply (${REPLY_CHARS} characters). Ask for the rest: ae_library { document: "${e.id}", section: [${parts.slice(1).map((_, i) => JSON.stringify(partName(WHOLE, i + 2, parts.length))).join(", ")}] }.`,
+      "",
+      parts[0]
+    ].join("\n");
+  }
+  const opening = splitText(doc.opening);
+  return [
+    header(e, text.length),
+    `OUTLINE ONLY, NOT THE DOCUMENT. ${e.id} (${e.title}, ${e.kind}) is ${text.length} characters in ${allSections(doc).length} sections, longer than one reply (${REPLY_CHARS} characters). Below are its outline and its opening; nothing after the opening has been read yet. Read the sections the job needs before relying on this document: ae_library { document: "${e.id}", section: ["<section>", ...] }, several in one call while they fit.`,
+    ...doc.form === "code" ? [loadNote(e)] : [],
+    "",
+    "Outline (each section and its size; ask for a section by the name shown):",
+    ...outlineLines(doc.sections),
+    "",
+    opening.length > 1 ? `Opening (part 1 of ${opening.length}; ask for ${JSON.stringify(partName(OPENING, 2, opening.length))} next):` : "Opening:",
+    opening[0] ?? ""
+  ].join("\n");
+}
+function resolve13(doc, text, asked) {
+  const want = asked.trim();
+  const part = want.match(/^(.*) \(part (\d+) of (\d+)\)$/);
+  if (part) {
+    const [, base, k, n] = part;
+    let source = null;
+    if (base === OPENING) source = doc.opening;
+    else if (base === WHOLE && !doc.sections.length) source = text;
+    else {
+      const s2 = allSections(doc).find((x) => x.name === base);
+      if (s2) source = ownText(s2);
+    }
+    if (source === null) return null;
+    const parts = splitText(source);
+    const i = Number(k) - 1;
+    if (parts.length < 2 || Number(n) !== parts.length || i < 0 || i >= parts.length) return null;
+    return { name: partName(base, i + 1, parts.length), text: parts[i] };
+  }
+  const s = allSections(doc).find((x) => x.name === want);
+  if (!s) return null;
+  return s.text.length <= PART_CHARS ? { name: s.name, text: s.text } : { name: s.name, tooLong: s };
+}
+function sectionsReply(e, text, asked, doc = parseDocument(text, e.path)) {
+  if (!asked.length) throw new Error("section is empty: name at least one section");
+  const missing = asked.filter((a) => !resolve13(doc, text, a));
+  if (missing.length) {
+    const names = sectionNames(doc, text);
+    throw new Error(`${e.id} has no section ${missing.map((m) => JSON.stringify(m)).join(", ")} (names must match exactly). ` + (names.length ? `Its sections, by the names to ask for: ${names.map((n) => JSON.stringify(n)).join(", ")}.` : "It has no sections: read it without section."));
+  }
+  const blocks = [];
+  const notSent = [];
+  let size2 = 0;
+  for (const a of asked) {
+    const r = resolve13(doc, text, a);
+    let block;
+    if (r.tooLong) {
+      const s = r.tooLong;
+      const own2 = splitText(ownText(s));
+      block = [
+        `== ${s.name} (${s.text.length} characters, longer than one reply): ${s.children.length ? "its own text and the outline of its subsections; ask for those by name" : `part 1 of ${own2.length}`} ==`,
+        ...s.children.length ? ["Subsections:", ...outlineLines(s.children)] : [],
+        ...own2.length > 1 ? [`Its own text is in ${own2.length} parts: ${own2.map((_, i) => JSON.stringify(partName(s.name, i + 1, own2.length))).join(", ")}. Part 1:`] : [],
+        own2[0]
+      ].join("\n");
+    } else block = `== ${r.name} (${(r.text ?? "").length} characters) ==
+${r.text}`;
+    if (blocks.length && size2 + block.length > PART_CHARS) {
+      notSent.push(r.name);
+      continue;
+    }
+    blocks.push(block);
+    size2 += block.length;
+  }
+  const head = `SECTIONS of ${e.id} (${e.title}, ${e.kind}, ${text.length} characters in ${allSections(doc).length} sections): ${blocks.length} of ${asked.length} asked for, in order.` + (notSent.length ? ` Not sent, to stay under one reply (${REPLY_CHARS} characters): ${notSent.map((n) => JSON.stringify(n)).join(", ")}; ask for them in another call.` : "") + (doc.form === "code" ? ` ${loadNote(e)}` : "");
+  return [header(e, text.length), head, "", ...blocks].join("\n");
+}
+
 // src/tools/library.ts
 function boundedFile(base, relative3) {
   const candidate = path28.resolve(base, relative3);
@@ -66113,17 +66373,39 @@ function readLibrary(document, query, root = path28.resolve(PACKAGE_ROOT, "../li
   if (!entry) throw new Error("Unknown library document. Call ae_library without arguments for valid IDs.");
   return { document: entry.id, title: entry.title, kind: entry.kind, content: read(entry) };
 }
+function readLibraryEntry(document, root = path28.resolve(PACKAGE_ROOT, "../library")) {
+  const base = realpathSync2(root);
+  const manifest = JSON.parse(readFileSync2(boundedFile(base, "manifest.json"), "utf8"));
+  const entry = manifest.documents.find((e) => e.id === document);
+  if (!entry) throw new Error("Unknown library document. Call ae_library without arguments for valid IDs.");
+  const content = readFileSync2(boundedFile(base, entry.path), "utf8");
+  if (createHash("sha256").update(content).digest("hex") !== entry.sha256) throw new Error("Library hash mismatch: regenerate manifest after intentional edits");
+  return { entry, content };
+}
+function libraryDocumentReply(document, section, root) {
+  const { entry, content } = readLibraryEntry(document, root);
+  if (section === void 0) return wholeOrOutline(entry, content);
+  return sectionsReply(entry, content, Array.isArray(section) ? section : [section]);
+}
 var libraryTool = defineTool({
   name: "ae_library",
   title: "Motion design library",
   group: "document",
   effect: "read",
   blockedInReadOnly: false,
-  description: "Read the bundled production-derived motion language, detailed choreography/camera/material modules, worked scenes and native JSX. Begin every After Effects motion task with motion-language, production-workflow and brief-template. Craft applies to all styles; JoeB appearance is optional. Offline; no AE, original repo or account required. Omit document to list IDs and startHere; query filters the index. Pass an ID to read complete contents.",
-  inputShape: { document: external_exports.string().optional(), query: external_exports.string().optional() },
-  handler: async ({ document, query }) => {
+  description: `Read the bundled production-derived motion language, detailed choreography/camera/material modules, worked scenes and native JSX. Begin every After Effects motion task with motion-language, production-workflow and brief-template. Craft applies to all styles; JoeB appearance is optional. Offline; no AE, original repo or account required. Omit document to list IDs and startHere; query filters the index. Pass an ID to read a document: whole when it fits in one reply (${REPLY_CHARS} characters), otherwise its outline and opening only, which say so on their first line; then pass section (a heading's exact text or the name the outline shows, or a list of them) to read those sections, several in one call while they fit. Read the sections a job needs before relying on a long document.`,
+  inputShape: {
+    document: external_exports.string().optional(),
+    query: external_exports.string().optional(),
+    section: external_exports.union([external_exports.string(), external_exports.array(external_exports.string())]).optional().describe("With document: a section's name from its outline, or a list of them")
+  },
+  handler: async ({ document, query, section }) => {
     try {
-      return jsonResult(readLibrary(document, query));
+      if (!document) {
+        if (section !== void 0) return errorResult("INVALID_ARGS", "section needs a document: pass document and section together");
+        return jsonResult(readLibrary(void 0, query));
+      }
+      return { content: [{ type: "text", text: libraryDocumentReply(document, section) }], isError: false };
     } catch (e) {
       return errorResult("IO", e instanceof Error ? e.message : String(e));
     }
