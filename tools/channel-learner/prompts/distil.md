@@ -31,6 +31,7 @@ You turn part of one tutorial video into technique recipes for a motion designer
 - **The finished example made a different way.** Sometimes the author demonstrates one route (keyframes) while the finished example on screen is driven another way (an expression, a preset). Say which is which and what is not shown.
 - **Eight or more words in a row from the narration,** or the example's own on-screen sentence, or a name from the creator's project or products.
 - **"Longest on" guessed.** Time it: seconds on screen for each part, from the frame numbers.
+- **No sizes.** Builders working from the first video's recipes had to guess every size (a ring's diameter, how far a pivot sits from its layer), because tutorials rarely say them. Measure the main elements on the result frame as shares of the picture and give them in `layout`.
 
 ## Output
 
@@ -49,6 +50,7 @@ ingredients:
 steps:
 1. <what to do> (said | shown fNNNNNN | inferred)
    - <Property>: <value> (said | shown fNNNNNN | inferred)
+layout: <sizes and positions of the main elements as shares of the picture, measured on the result frame: "ring diameter about 37% of the picture height, centred"; mark each `measured`>
 timing and easing: <keyframes, durations, eases given; or "none given">
 variations: <what the author says can be changed; or "none given">
 pitfalls: <warnings the author gives; or "none given">
