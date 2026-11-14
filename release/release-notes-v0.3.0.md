@@ -27,7 +27,8 @@ This release gives the agent ways to check its own work, cut a subject out of fo
 - **The library:**
   - new guides for keying and cut-outs, review, reference teardown, unattended runs, page recording and word timing;
   - a new visual style, Pixel headline;
-  - long documents are read in parts.
+  - long documents are read in parts;
+  - a library search now matches each word of a query.
 
 **Changes existing users will notice:**
 - `ae_render_frame` names multi-frame files `<stem>_<call id>_<index>.png`.
@@ -57,7 +58,7 @@ For visually demanding builds, use the most capable model your host offers. A lo
 The plugin is free to use for personal and paid client motion work under the included original-material license, with separate upstream notices. It runs a bundled local Node server against a licensed local After Effects installation on macOS, with Node.js 24 or newer. Comp Room targets After Effects 2027 in Claude Code or a Cowork session on the Mac. Windows and other After Effects versions are not verified product support. `ffmpeg` and `ffprobe` are optional; some footage and keying operations use them when they are installed.
 
 **Verification for this release:**
-- **Runtime tests:** 1,488 passed and 117 skipped, under a system profile that refuses to start `osascript`, so no test reached After Effects.
+- **Runtime tests:** 1,493 passed and 117 skipped, under a system profile that refuses to start `osascript`, so no test reached After Effects.
 - **Packaging:** the TypeScript type-checks, 123 release tests, the offline MCP smoke test for both packages, `claude plugin validate --strict` for the marketplace and for the package, and the public-source audit all passed. The 185-file Codex ZIP builds deterministically.
 - **Live, on the development Mac, 2026-11-14:** the new launch lock was checked against a running After Effects.
   - A read came back in 282 ms.

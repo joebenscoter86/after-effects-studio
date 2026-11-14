@@ -54,6 +54,8 @@ Some defects raise no flag: a colour cast, a soft background, a fringe and a bea
 
 ## The hand-over message
 
+Before handing over, run `project.lint` and deliver with `render.deliver`, and say what each check found, the sound included: `quality`, "Technical delivery", has both steps.
+
 To the user, after the loop:
 
 - who reviewed (a fresh agent, or the builder's own frames-only pass, marked not independent) and what it found, by severity;

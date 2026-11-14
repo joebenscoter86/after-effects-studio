@@ -66324,9 +66324,17 @@ function validateCatalog(raw, refs) {
   for (const id of ids) visit2(id);
   return catalog;
 }
+function queryWords(query) {
+  return [...new Set((query ?? "").toLowerCase().split(/[^\p{L}\p{N}.-]+/u).filter(Boolean))];
+}
+function moduleWords(m, words) {
+  const fields = [m.id, m.title, m.summary, ...m.tags].map((v) => v.toLowerCase());
+  return words.filter((w) => fields.some((v) => v.includes(w)));
+}
 function findModules(catalog, query) {
-  const q = query?.trim().toLowerCase();
-  return catalog.modules.filter((m) => !q || [m.id, m.title, m.summary, ...m.tags].some((v) => v.toLowerCase().includes(q)));
+  if (!query?.trim()) return catalog.modules;
+  const words = queryWords(query);
+  return catalog.modules.filter((m) => moduleWords(m, words).length > 0);
 }
 
 // src/tools/library-parts.ts
@@ -66624,18 +66632,23 @@ function readLibrary(document, query, root = path29.resolve(PACKAGE_ROOT, "../li
       }
     }
     const matches = findModules(catalog, query);
-    const entryIds = new Set(matches.map((m) => m.entryDocument));
+    const words = queryWords(query);
+    const viaModules = /* @__PURE__ */ new Map();
+    for (const m of matches) for (const w of moduleWords(m, words)) viaModules.set(m.entryDocument, (viaModules.get(m.entryDocument) ?? /* @__PURE__ */ new Set()).add(w));
     const seen = /* @__PURE__ */ new Set();
+    const scored = [];
+    for (const e of entries) {
+      if (seen.has(e.id)) continue;
+      const text = `${e.id} ${e.title} ${e.kind}`.toLowerCase();
+      const score = needle ? words.filter((w) => text.includes(w) || viaModules.get(e.id)?.has(w)).length : 1;
+      if (score > 0) {
+        seen.add(e.id);
+        scored.push({ entry: e, score });
+      }
+    }
     return {
       startHere: ["motion-language", "production-workflow", "brief-template"],
-      documents: entries.filter((e) => {
-        if (seen.has(e.id)) return false;
-        if (!needle || `${e.id} ${e.title} ${e.kind}`.toLowerCase().includes(needle) || entryIds.has(e.id)) {
-          seen.add(e.id);
-          return true;
-        }
-        return false;
-      }).map(({ id, title, kind }) => ({ id, title, kind })),
+      documents: [...scored].sort((a, b) => b.score - a.score).map(({ entry: entry2 }) => ({ id: entry2.id, title: entry2.title, kind: entry2.kind })),
       modules: matches.map(({ id, kind, title, summary, entryDocument, requires, tags, evidence }) => ({ id, kind, title, summary, entryDocument, requires, tags, evidence }))
     };
   }

@@ -6,7 +6,7 @@ import { PACKAGE_ROOT } from "../config.js";
 import { defineTool, jsonResult } from "./define-tool.js";
 import { errorResult } from "../errors.js";
 
-import { validateCatalog, findModules } from "./library-modules.js";
+import { validateCatalog, findModules, moduleWords, queryWords } from "./library-modules.js";
 import { REPLY_CHARS, sectionsReply, wholeOrOutline } from "./library-parts.js";
 
 type Entry = { id: string; title: string; path: string; sha256: string; kind: string };
@@ -42,15 +42,22 @@ export function readLibrary(document?: string, query?: string, root = path.resol
       } catch (e) { throw new Error(`Module catalog: ${e instanceof Error ? e.message : String(e)}`); }
     }
     const matches = findModules(catalog, query);
-    const entryIds = new Set(matches.map(m => m.entryDocument));
+    // Each word of the query counts once for a document when it is in the document's id, title or
+    // kind, or in a matched module that points at it. Best score first; ties keep the listing order.
+    const words = queryWords(query);
+    const viaModules = new Map<string, Set<string>>();
+    for (const m of matches) for (const w of moduleWords(m, words)) viaModules.set(m.entryDocument, (viaModules.get(m.entryDocument) ?? new Set()).add(w));
     const seen = new Set<string>();
+    const scored: {entry: Entry; score: number}[] = [];
+    for (const e of entries) {
+      if (seen.has(e.id)) continue;
+      const text = `${e.id} ${e.title} ${e.kind}`.toLowerCase();
+      const score = needle ? words.filter(w => text.includes(w) || viaModules.get(e.id)?.has(w)).length : 1;
+      if (score > 0) {seen.add(e.id); scored.push({entry: e, score});}
+    }
     return {
       startHere: ["motion-language", "production-workflow", "brief-template"],
-      documents: entries.filter(e => {
-        if (seen.has(e.id)) return false;
-        if (!needle || `${e.id} ${e.title} ${e.kind}`.toLowerCase().includes(needle) || entryIds.has(e.id)) {seen.add(e.id); return true;}
-        return false;
-      }).map(({id, title, kind}) => ({id, title, kind})),
+      documents: [...scored].sort((a, b) => b.score - a.score).map(({entry}) => ({id: entry.id, title: entry.title, kind: entry.kind})),
       modules: matches.map(({id,kind,title,summary,entryDocument,requires,tags,evidence}) => ({id,kind,title,summary,entryDocument,requires,tags,evidence})),
     };
   }

@@ -88,3 +88,52 @@ describe("studio library", () => {
     } finally { rmSync(root,{recursive:true,force:true}); }
   });
 });
+
+describe("library search, word by word", () => {
+  // Release evals, 2026-11-14: sessions searched "delivery hand-over export alpha audio" and got no
+  // documents, because the whole query was matched as one substring; they never reached `quality`.
+  const all = readLibrary();
+  const docs = all.documents!;
+  const modules = all.modules!;
+  /** The rule before this change, for one word: the word in "id title kind", or in a module that points at the document. */
+  const before = (word: string) => {
+    const w = word.trim().toLowerCase();
+    const mods = modules.filter(m => [m.id, m.title, m.summary, ...m.tags].some(v => v.toLowerCase().includes(w)));
+    const entry = new Set(mods.map(m => m.entryDocument));
+    return {
+      documents: docs.filter(d => `${d.id} ${d.title} ${d.kind}`.toLowerCase().includes(w) || entry.has(d.id)).map(d => d.id),
+      modules: mods.map(m => m.id),
+    };
+  };
+  const ids = (q: string) => ({ documents: readLibrary(undefined, q).documents!.map(d => d.id), modules: readLibrary(undefined, q).modules!.map(m => m.id) });
+
+  it("returns exactly what it did for a one-word query, in the same order", () => {
+    for (const word of ["delivery", "keying", "style", "quality", "type"]) {
+      expect(before(word).documents.length, word).toBeGreaterThan(0);
+      expect(ids(word), word).toEqual(before(word));
+    }
+  });
+
+  it("finds quality first for the query the hand-over sessions used", () => {
+    expect(ids("delivery hand-over export alpha audio").documents[0]).toBe("quality");
+    expect(ids("delivery handover export render alpha audio").documents[0]).toBe("quality");
+  });
+
+  it("ranks a document matching more words first, then keeps the listing order", () => {
+    // "quality" matches both words of its title; assets-depth is listed earlier but matches one.
+    const got = ids("delivery quality").documents;
+    expect(got[0]).toBe("quality");
+    expect(got).toEqual(["quality", ...before("quality").documents.concat(before("delivery").documents).filter((id, i, a) => id !== "quality" && a.indexOf(id) === i).toSorted((a, b) => docs.findIndex(d => d.id === a) - docs.findIndex(d => d.id === b))]);
+  });
+
+  it("keeps hyphenated and dotted words whole and splits on other punctuation", () => {
+    expect(ids("hand-over")).toEqual(before("hand-over"));
+    expect(ids("keying, delivery").documents.toSorted()).toEqual(["keying", "quality"]);
+  });
+
+  it("returns the same empty shape when nothing matches, and counts a repeated word once", () => {
+    const none = readLibrary(undefined, "zzznomatch qqqq");
+    expect(none).toEqual({ startHere: ["motion-language", "production-workflow", "brief-template"], documents: [], modules: [] });
+    expect(ids("quality quality")).toEqual(ids("quality"));
+  });
+});
