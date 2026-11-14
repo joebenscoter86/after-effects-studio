@@ -1,6 +1,6 @@
-# Techniques from one video (25 recipes, all unproven)
+# Techniques from one video (25 recipes, 1 proven)
 
-Written by the channel learner from the video's narration and screen together, then checked against the video by a second reader. Every recipe here passed that check; none is in the plugin. `status: proven` means it was built in After Effects from the recipe alone, compared with the tutorial's own result, and accepted by Joe (0 of 25); `status: unproven` means it has not been.
+Written by the channel learner from the video's narration and screen together, then checked against the video by a second reader. Every recipe here passed that check; none is in the plugin. `status: proven` means it was built in After Effects from the recipe alone, compared with the tutorial's own result, and accepted by Joe (1 of 25); `status: unproven` means it has not been.
 
 Each step is marked `said` (narrated), `shown` (on screen; `fNNNNNN` is a frame in the local study folder, frame number divided by the video's frame rate is seconds) or `inferred` (our reading). The `source` and frame references are for checking and stay out of the plugin. Credits: `CREDITS.md`.
 
@@ -16,7 +16,7 @@ Each step is marked `said` (narrated), `shown` (on screen; `fNNNNNN` is a frame 
 | 08 | Perform puppet-pin motion live with the mouse | workflow; B-roll scenes | 1 | unproven |
 | 09 | Slide a background endlessly with mirrored tiling | B-roll scenes; layout and repetition | 2 | unproven |
 | 10 | Leaf-shaped particles from any graphic | texture; energy and impact; B-roll scenes | 2 | unproven |
-| 11 | Soft embossed finish for white shapes on a pale background | depth and finish; shadows and light; glow and colour | 4 | unproven |
+| 11 | Soft embossed finish for white shapes on a pale background | depth and finish; shadows and light; glow and colour | 4 | proven |
 | 12 | Long soft shadow from a radially blurred black copy | shadows and light; depth and finish | 2 | unproven |
 | 13 | Fine dot-grid background from a ball-grid effect | texture; layout and repetition | 2 | unproven |
 | 14 | Real cast shadows on an invisible 3D floor | shadows and light; camera and 3D; depth and finish | 2 | unproven |
@@ -403,7 +403,7 @@ unknowns: Direction Axis sub-settings (axis X/Y/Z) not shown; whether the rotati
 
 ## Soft embossed finish for white shapes on a pale background
 id: 11-white-on-light-finish
-status: unproven
+status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects from this recipe alone and compared with the tutorial's result)
 source: YBeMmC43Q1U 197–224 s
 jobs: depth and finish; shadows and light; glow and colour
 what it does for a beat: When a pure white shape or title vanishes into a light background, two layer styles give it a faint cool shading and a bright rim. On their own they only tint the shape; it reads as a raised, soft-plastic object once a long soft shadow lies under it and the shapes around it get the same treatment, so the pieces look stacked.
