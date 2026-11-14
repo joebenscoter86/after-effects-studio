@@ -1,9 +1,11 @@
 import { __esmMin } from "./rolldown-runtime.js";
 import { HEARTBEAT_STALE_MS, RUNTIME_DIR, RUNTIME_ROOT, agentInstallStatus, denyAppConfig, denyOperation, denyUnregisteredOperation, evalRunEnabled, getOp, init_agent_install, init_config, init_opschema, init_policy, init_registry, instanceDirFor, jsxCompLayerPreamble, jsxCompPreamble, jsxFail, jsxPropertyLookup, jsxVal, prepareOp, registerOp, rejectedOutputPath, resolveAfterFxPath, sanitizeInstanceId, summarizeParams, validateOpArgs, wantsUndoGroup } from "./core-1.js";
 import { ACCESSIBILITY_HINT, SCRIPT_RUNNING_HINT, buildInstanceLaunchPlan, describeInstance, dialogBlockMessage, dialogHint, dialogScanSupported, dismissAeDialog, init_dialogs, init_instances, init_launcher, instanceLabel, listInstances, readInstance, scanAeDialogs, scanAeWindows, scriptRunningMessage, splitScriptProgress } from "./transport-1.js";
-import { init_layer, init_layer_advanced, init_layout, init_marker, init_mask, init_pref, init_project, init_property } from "./operations-3.js";
-import { COMP_INFO_FN, LAYER_FULL_FN, LIST_MISSING_FONTS_FN, LIST_MISSING_FOOTAGE_FN, RENDER_FRAME_FN, init_render, init_sample, init_shape, init_shape_contents, init_snippets, init_text, init_timeline, init_transform, init_video, init_viewer } from "./operations-4.js";
-import { init_keying } from "./operations-2.js";
+import { init_keying, init_layer, init_layer_advanced, init_layout } from "./operations-2.js";
+import { COMP_INFO_FN, LAYER_FULL_FN, LIST_MISSING_FONTS_FN, LIST_MISSING_FOOTAGE_FN, RENDER_FRAME_FN, init_shape, init_snippets, init_text, init_timeline, init_transform, init_video, init_viewer } from "./operations-4.js";
+import { init_marker, init_mask, init_pref, init_project, init_property, init_render, init_sample, init_shape_contents } from "./operations-3.js";
+import { EDGE_DEFAULTS, compareReferences, composeContactSheet, cutoutRegions, decodePng, encodePngSrgb8, flattenOver, init_matte, init_png16, init_sheet, referenceReader, resample } from "./color-1.js";
+import { iccManagedReason, init_capture_shared, init_render_frame, renderFrameTool } from "./tools-1.js";
 import { execFile, spawn } from "node:child_process";
 import { promises, readFileSync, realpathSync, statSync } from "node:fs";
 import * as path$1 from "node:path";
@@ -2198,6 +2200,1545 @@ function init_delivery_sound() {
 	})))();
 }
 
+// operations/keying-shared.js
+function alikeRegions(a, b) {
+	if (iou(a, b) >= .5) return true;
+	if (!intersects(a, b)) return false;
+	const big = Math.max(a.area, b.area);
+	const small = Math.min(a.area, b.area);
+	return small > 0 && big / small <= 2;
+}
+function frozenAccepted(run, accept) {
+	return accept.some((e) => isFrozenEntry(e) && (e.from === void 0 || e.from <= run.to) && (e.to === void 0 || e.to >= run.from));
+}
+function acceptedBy(f, accept) {
+	return accept.some((e) => {
+		if (isFrozenEntry(e)) return false;
+		const box = "box" in e ? e.box : e;
+		return (("box" in e ? e.kind : void 0) ?? "opening") === f.kind && iou(f.box, box) >= .5;
+	});
+}
+function cutoutFindings(frames, limit) {
+	const out = [];
+	for (const kind of ["hole", "opening"]) {
+		const groups = [];
+		for (const fr of frames) for (const h of (kind === "hole" ? fr.holes : fr.openings) ?? []) {
+			if (h.area < limit) continue;
+			const b = {
+				x: h.x,
+				y: h.y,
+				width: h.width,
+				height: h.height
+			};
+			const g = groups.find((x) => x.members.some((m) => alikeRegions(m, h)));
+			if (g) {
+				const f = g.f;
+				g.members.push(h);
+				f.box = union(f.box, b);
+				if (h.area > f.largestArea) {
+					f.largestArea = h.area;
+					f.largestFrame = fr.frame;
+				}
+				f.smallestArea = Math.min(f.smallestArea, h.area);
+				if (!f.frames.includes(fr.frame)) f.frames.push(fr.frame);
+				if (f.edges) {
+					for (const e of h.edges ?? []) if (!f.edges.includes(e)) f.edges.push(e);
+				}
+			} else groups.push({
+				members: [h],
+				f: {
+					kind,
+					frames: [fr.frame],
+					smallestArea: h.area,
+					largestArea: h.area,
+					largestFrame: fr.frame,
+					box: b,
+					...kind === "opening" ? { edges: [...h.edges ?? []] } : {}
+				}
+			});
+		}
+		out.push(...groups.map((g) => g.f).sort((a, b) => b.largestArea - a.largestArea));
+	}
+	return out;
+}
+async function writePng(io, file, data) {
+	if (io.writePng) return io.writePng(file, data);
+	await promises.mkdir(path$1.dirname(file), { recursive: true });
+	await promises.writeFile(file, data);
+}
+async function statfsFree(dir) {
+	let d = path$1.resolve(dir);
+	for (;;) try {
+		const st = await promises.statfs(d);
+		return Number(st.bavail) * Number(st.bsize);
+	} catch {
+		const up = path$1.dirname(d);
+		if (up === d) return null;
+		d = up;
+	}
+}
+async function spaceRefusal(io, dir, needed, margin, what) {
+	const free = await (io.freeBytes ?? statfsFree)(dir);
+	if (free === null || free >= needed + margin) return null;
+	return {
+		ok: false,
+		error: `only ${gb(free)} free on the drive holding ${dir}; ${what} needs about ${gb(needed)} plus a margin of ${gb(margin)} (After Effects writes its disk cache to the same drive while it renders, and a render on a nearly full drive stalls instead of failing). Free some space first, for example by purging After Effects' cache: Edit > Purge > All Memory & Disk Cache. Nothing was rendered.`,
+		space: {
+			free,
+			needed: Math.round(needed),
+			margin,
+			where: dir
+		}
+	};
+}
+function cacheBytesFor(frames, sourceSize) {
+	const [w, h] = Array.isArray(sourceSize) && sourceSize.length >= 2 ? sourceSize : [1920, 1080];
+	return frames * w * h * 8;
+}
+async function volumeKey(dir) {
+	let d = path$1.resolve(dir);
+	for (;;) try {
+		return (await promises.stat(d)).dev;
+	} catch {
+		const up = path$1.dirname(d);
+		if (up === d) return null;
+		d = up;
+	}
+}
+async function spacePlan(io, entries, margin, what) {
+	const byVol = [];
+	for (const e of entries) {
+		const key = await (io.volumeOf ?? volumeKey)(e.where);
+		const v = byVol.find((x) => x.key === key && key !== null);
+		if (v) for (const [k, n] of Object.entries(e.parts)) v.parts[k] = (v.parts[k] ?? 0) + (n ?? 0);
+		else byVol.push({
+			key,
+			where: e.where,
+			parts: { ...e.parts }
+		});
+	}
+	const volumes = [];
+	let refusal = null;
+	for (const v of byVol) {
+		const free = await (io.freeBytes ?? statfsFree)(v.where);
+		const needed = Object.values(v.parts).reduce((a, b) => a + (b ?? 0), 0);
+		const ok = free === null || free >= needed + margin;
+		const row = {
+			where: v.where,
+			free,
+			parts: v.parts,
+			needed: Math.round(needed),
+			margin,
+			ok
+		};
+		volumes.push(row);
+		if (!ok && !refusal) {
+			const partText = Object.entries(v.parts).map(([k, n]) => `${PART_NAMES[k]} ${gb(n ?? 0)}`).join(", ");
+			refusal = {
+				ok: false,
+				error: `only ${gb(free)} free on the drive holding ${v.where}; ${what} needs about ${gb(needed)} there (${partText}) plus a margin of ${gb(margin)}. A render on a nearly full drive stalls instead of failing. Free some space first, for example by purging After Effects' cache: Edit > Purge > All Memory & Disk Cache. Nothing was rendered.`,
+				space: {
+					...row,
+					volumes
+				}
+			};
+		}
+	}
+	if (refusal) refusal.space.volumes = volumes;
+	return {
+		volumes,
+		refusal
+	};
+}
+function aeCacheRoot(folder, version) {
+	if (!folder || !version) return null;
+	const m = /^(\d+)\.(\d+)/.exec(version);
+	if (!m) return null;
+	return path$1.join(folder, "Adobe", "After Effects", `${m[1]}.${m[2]}`);
+}
+function frozenFinding(run, pictures) {
+	const moved = run.footageChange > .001;
+	return {
+		kind: "frozen",
+		...run,
+		pictures,
+		reading: `The cut-out's outline did not move for ${run.length} frames` + (moved ? ` while the footage did (frames ${run.from} to ${run.to}; ${(run.footageChange * 100).toFixed(1)}% of the frame changed inside the outline)` : ` (frames ${run.from} to ${run.to}), and the picture inside it barely changed either`) + `. The selection is probably not tracking: this happens when the layer's footage is replaced after the click. Click again on this footage (subject.prepare, then the steps). If the subject is genuinely motionless (a product on a table, a locked-off object) this is expected: pass accept: [{ kind: "frozen" }] to wave it through once seen.`
+	};
+}
+async function renderChunked(io, base, frames, perFrameMs, outDir, stem, tally = renderTally(), firstCall = 0) {
+	const size = Math.max(1, Math.min(32, Math.floor(SETTLE_MAX_MS / perFrameMs)));
+	const out = [];
+	for (let c = 0; c * size < frames.length; c++) {
+		const chunk = frames.slice(c * size, (c + 1) * size);
+		const t0 = performance.now();
+		const payload = await io.render({
+			...base,
+			frames: chunk,
+			outPath: path$1.join(outDir, `${stem}-${firstCall + c}.png`),
+			settleTimeoutMs: Math.min(SETTLE_MAX_MS, Math.max(1, Math.round(perFrameMs * chunk.length)))
+		});
+		tally.calls++;
+		tally.frames += chunk.length;
+		tally.ms += since(t0);
+		tally.aeCallMs += payload?.timing?.aeCallMs ?? 0;
+		tally.settleMs += payload?.timing?.settleMs ?? payload?.captureSettle?.waitedMs ?? 0;
+		tally.renderNodeMs += payload?.timing?.nodeMs ?? 0;
+		if (!payload?.ok) {
+			for (const frame of chunk) out.push({
+				frame,
+				ok: false,
+				error: `the render call failed: ${payload?.error ?? "no result"}`
+			});
+			continue;
+		}
+		const list = payload.frames ?? (payload.writtenTo ? [{
+			...payload,
+			ok: true,
+			frame: chunk[0]
+		}] : []);
+		for (const [i, frame] of chunk.entries()) {
+			const f = list.find((x) => x.frame === frame) ?? list[i];
+			if (!f) out.push({
+				frame,
+				ok: false,
+				error: "not in the render's result"
+			});
+			else if (f.ok === false || typeof f.writtenTo !== "string") out.push({
+				frame,
+				ok: false,
+				error: f.error ?? "the frame was not written"
+			});
+			else out.push({
+				frame,
+				ok: true,
+				file: f.writtenTo,
+				edge: f.edge
+			});
+		}
+	}
+	return out;
+}
+function parseHex(c) {
+	const m = /^#?([0-9a-f]{6})$/i.exec(c.trim());
+	if (!m) return [
+		1,
+		0,
+		1
+	];
+	const v = parseInt(m[1], 16);
+	return [
+		(v >> 16 & 255) / 255,
+		(v >> 8 & 255) / 255,
+		(v & 255) / 255
+	];
+}
+async function measureFrames(io, rendered, limit, over, sheetPath, tally = pixelTally(), pictures = true, onImage) {
+	const started = performance.now();
+	const colour = parseHex(over);
+	const readings = [];
+	const thumbs = [];
+	const labels = [];
+	const split = (list) => ({
+		big: list.filter((r) => r.area >= limit),
+		small: {
+			count: list.filter((r) => r.area < limit).length,
+			area: list.filter((r) => r.area < limit).reduce((s, r) => s + r.area, 0)
+		}
+	});
+	for (const r of rendered) {
+		if (!r.ok || !r.file) {
+			readings.push({
+				frame: r.frame,
+				checked: false,
+				holes: null,
+				openings: null,
+				error: r.error
+			});
+			continue;
+		}
+		let img;
+		const tRead = performance.now();
+		try {
+			img = await io.readImage(r.file);
+		} catch (err) {
+			readings.push({
+				frame: r.frame,
+				checked: false,
+				holes: null,
+				openings: null,
+				error: `could not read ${r.file}: ${err instanceof Error ? err.message : String(err)}`
+			});
+			continue;
+		} finally {
+			tally.readMs += since(tRead);
+		}
+		if (!img.alpha) {
+			readings.push({
+				frame: r.frame,
+				checked: false,
+				holes: null,
+				openings: null,
+				error: `${r.file} has no alpha channel`
+			});
+			continue;
+		}
+		tally.frames++;
+		const tRegions = performance.now();
+		const regions = cutoutRegions(img.alpha, img.width, img.height);
+		let opaquePx = 0;
+		const alpha = img.alpha;
+		for (let p = 0; p < alpha.length; p++) if (alpha[p] >= EDGE_DEFAULTS.opaque) opaquePx++;
+		tally.regionsMs += since(tRegions);
+		const h = split(regions.holes);
+		const o = split(regions.openings);
+		const tPic = performance.now();
+		if (!pictures) {
+			readings.push({
+				frame: r.frame,
+				checked: true,
+				file: r.file,
+				opaqueShare: Math.round(opaquePx / img.alpha.length * 1e4) / 1e4,
+				holes: h.big,
+				openings: o.big,
+				holesUnderLimit: h.small,
+				openingsUnderLimit: o.small
+			});
+			onImage?.(readings[readings.length - 1], img);
+			continue;
+		}
+		const composite = flattenOver(img, {
+			kind: "color",
+			color: colour
+		});
+		const picture2 = r.file.replace(/\.png$/i, "") + "_over.png";
+		await writePng(io, picture2, encodePngSrgb8(img.width, img.height, composite, 1));
+		const tw = Math.min(360, img.width);
+		const th = Math.max(1, Math.round(img.height * tw / img.width));
+		thumbs.push({
+			width: tw,
+			height: th,
+			rgb: resample({
+				...img,
+				rgb: composite
+			}, tw, th),
+			bitDepth: 8
+		});
+		labels.push(`frame ${r.frame}`);
+		tally.picturesMs += since(tPic);
+		readings.push({
+			frame: r.frame,
+			checked: true,
+			file: r.file,
+			picture: picture2,
+			opaqueShare: Math.round(opaquePx / img.alpha.length * 1e4) / 1e4,
+			holes: h.big,
+			openings: o.big,
+			holesUnderLimit: h.small,
+			openingsUnderLimit: o.small,
+			edgeWidth: r.edge?.width ? {
+				typical: r.edge.width.typical ?? null,
+				p90: r.edge.width.p90 ?? null
+			} : null,
+			solidAreas: r.edge?.solidAreas?.count ?? null
+		});
+		onImage?.(readings[readings.length - 1], img);
+	}
+	let picture = null;
+	const tSheet = performance.now();
+	if (thumbs.length) {
+		const sheet = composeContactSheet(thumbs, {
+			labels,
+			thumbWidth: 360
+		});
+		await writePng(io, sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb, 1));
+		picture = sheetPath;
+	}
+	tally.sheetMs += since(tSheet);
+	tally.ms += since(started);
+	return {
+		readings,
+		picture
+	};
+}
+function regionLines(findings, frames) {
+	return findings.map((f) => `${f.smallestArea === f.largestArea ? `${fmt(f.largestArea)} px` : `${fmt(f.smallestArea)} to ${fmt(f.largestArea)} px (largest on frame ${f.largestFrame})`} at ${boxText(f.box)} on ${f.frames.length} of ${frames} frames (${f.frames.join(", ")})` + (f.kind === "opening" && f.edges?.length ? `, reaches the ${f.edges.join(" and ")} edge` : ""));
+}
+function summarize(readings, limit, accept, picture = null, passText = null) {
+	const regions = cutoutFindings(readings, limit);
+	const accepted = regions.filter((f) => acceptedBy(f, accept));
+	const open = regions.filter((f) => !accepted.includes(f));
+	const missed = readings.filter((r) => !r.checked);
+	const checked = {
+		frames: readings.length - missed.length,
+		of: readings.length
+	};
+	const notChecked = missed.length ? [{
+		kind: "not-checked",
+		frames: missed.map((r) => r.frame),
+		errors: [...new Set(missed.map((r) => r.error ?? "not rendered"))]
+	}] : [];
+	const holes = open.filter((f) => f.kind === "hole");
+	const openings = open.filter((f) => f.kind === "opening");
+	const parts = [];
+	parts.push(missed.length ? `Checked ${checked.frames} of ${checked.of} frames; ${missed.length} did not render (${missed.map((r) => r.frame).join(", ")}): ${notChecked[0].errors.join("; ")}. Those frames were not checked.` : `Checked ${checked.frames} of ${checked.of} frames.`);
+	if (holes.length) parts.push(`${plural(holes.length, "enclosed hole")} of ${fmt(limit)} px or more inside the cut-out: ${regionLines(holes, readings.length).join("; ")}. A hole is something in front of the subject not selected (a cup) or a gap inside a piece that no click fills (subject.fill_gaps).`);
+	if (openings.length) parts.push(`${plural(openings.length, "opening")} of ${fmt(limit)} px or more, closed off by the subject and the frame edge: ${regionLines(openings, readings.length).join("; ")}. An opening may be something in front of the subject left out (a microphone, a desk), or a real gap such as between an arm and the body; the picture decides.`);
+	if (!holes.length && !openings.length) parts.push(missed.length ? `No hole or opening of ${fmt(limit)} px or more on the ${checked.frames} frames checked; the other ${missed.length} were not checked.` : passText ?? `Nothing over the limit on ${checked.frames} of ${checked.of} frames; the picture is at ${picture ?? "(none)"}.`);
+	if (accepted.length) parts.push(`Accepted earlier and not counted: ${regionLines(accepted, readings.length).join("; ")}.`);
+	return {
+		findings: [...open, ...notChecked],
+		accepted,
+		checked,
+		text: parts.join(" ")
+	};
+}
+async function overPicture(io, file, over) {
+	try {
+		const img = await io.readImage(file);
+		const picture = file.replace(/\.png$/i, "") + "_over.png";
+		await writePng(io, picture, encodePngSrgb8(img.width, img.height, flattenOver(img, {
+			kind: "color",
+			color: parseHex(over)
+		}), 1));
+		return picture;
+	} catch {
+		return null;
+	}
+}
+function fillUnbuildJsx(args) {
+	return `
+            ${jsxCompPreamble(args)}
+            var _names = [${jsxVal(args.fillLayer)}, ${jsxVal(args.maskLayer)}];
+            var _removed = [];
+            for (var _ni = 0; _ni < _names.length; _ni++) {
+                for (var _li = _comp.numLayers; _li >= 1; _li--) {
+                    var _l = _comp.layer(_li);
+                    if (_l.name === _names[_ni]) { _l.remove(); _removed.push(_names[_ni]); break; }
+                }
+            }
+            var _id = ${jsxVal(args.stillItemId)};
+            if (_id !== null) {
+                var _item = AE.safeGet(function () { return app.project.itemByID(_id); }, null);
+                if (_item) { var _iname = _item.name; _item.remove(); _removed.push(_iname); }
+            }
+            return { ok: true, removed: _removed };
+        `;
+}
+function fillBuildJsx(args) {
+	return `
+            ${jsxCompLayerPreamble(args)}
+            var _fillName = _layer.name + " gap fill";
+            var _maskName = _layer.name + " gap mask";
+            for (var _li = 1; _li <= _comp.numLayers; _li++) {
+                var _ln = _comp.layer(_li).name;
+                if (_ln === _fillName || _ln === _maskName) return { ok: false, error: "comp " + _comp.name + " already has a layer '" + _ln + "'; delete the earlier fill's two layers first" };
+            }
+            var _file = new File(${jsxVal(args.stillPath)});
+            if (!_file.exists) return { ok: false, error: "no file at " + ${jsxVal(args.stillPath)} };
+            var _item = app.project.importFile(new ImportOptions(_file));
+            var _mask = _comp.layers.add(_item);
+            _mask.name = _maskName;
+            var _fill = _layer.duplicate();
+            _fill.name = _fillName;
+            var _fxs = _fill.property("ADBE Effect Parade");
+            var _removed = 0;
+            if (_fxs) {
+                for (var _fi = _fxs.numProperties; _fi >= 1; _fi--) {
+                    if (_fxs.property(_fi).matchName === ${jsxVal(OBJECT_MATTE_MATCH_NAME)}) { _fxs.property(_fi).remove(); _removed++; }
+                }
+            }
+            _fill.moveAfter(_layer);
+            _mask.moveBefore(_fill);
+            var _spanError = null;
+            try {
+                _mask.startTime = 0;
+                _mask.inPoint = Math.min(_layer.inPoint, _layer.outPoint);
+                _mask.outPoint = Math.max(_layer.inPoint, _layer.outPoint);
+            } catch (eSpan) { _spanError = AE.errText(eSpan); }
+            _fill.setTrackMatte(_mask, TrackMatteType.LUMA);
+            _mask.enabled = false;
+            var _audioOff = false;
+            var _audioError = null;
+            if (AE.safeGet(function () { return _fill.hasAudio; }, false)) {
+                try { _fill.audioEnabled = false; _audioOff = true; } catch (eAud) { _audioError = AE.errText(eAud); }
+            }
+            var _out = { ok: true, fillLayer: _fill.name, fillIndex: _fill.index, maskLayer: _mask.name, maskIndex: _mask.index, stillItem: _item.name, stillItemId: AE.safeGet(function () { return _item.id; }, null), removedFromCopy: _removed, audioOff: _audioOff, hasAudio: AE.safeGet(function () { return _fill.hasAudio; }, false) };
+            if (_audioError !== null) _out.audioError = _audioError;
+            if (_spanError !== null) _out.maskSpanError = _spanError;
+            return _out;
+        `;
+}
+function liveCutoutIO(args, transport) {
+	return {
+		async status() {
+			const code = getOp("subject.status").toJsx({
+				comp: args.comp,
+				layer: args.layer,
+				effectIndex: args.effectIndex
+			});
+			const r = await transport.execute({
+				code,
+				label: "subject.status",
+				undoGroup: false,
+				timeoutMs: 3e4
+			});
+			return r.ok ? r.result : {
+				ok: false,
+				error: r.error ?? "subject.status failed"
+			};
+		},
+		async render(renderArgs) {
+			const out = await renderFrameTool.handler(renderArgs, transport);
+			const sc = out.structuredContent;
+			if (out.isError) return {
+				ok: false,
+				error: sc?.error?.message ?? sc?.error ?? "ae_render_frame failed",
+				details: sc
+			};
+			return sc?.result ?? {
+				ok: false,
+				error: "ae_render_frame returned no result"
+			};
+		},
+		async readImage(file) {
+			return decodePng(await promises.readFile(file));
+		},
+		async unbuild(a) {
+			const r = await transport.execute({
+				code: fillUnbuildJsx(a),
+				label: "subject.fill_gaps undo",
+				undoGroup: true,
+				suppressDialogs: true,
+				timeoutMs: 6e4
+			});
+			return r.ok ? r.result : {
+				ok: false,
+				error: r.error ?? "undoing the build failed"
+			};
+		},
+		async build(a) {
+			const r = await transport.execute({
+				code: fillBuildJsx(a),
+				label: "subject.fill_gaps",
+				undoGroup: true,
+				suppressDialogs: true,
+				rollback: true,
+				timeoutMs: 6e4
+			});
+			return r.ok ? r.result : {
+				ok: false,
+				error: r.error ?? "the build failed",
+				rollback: r.rollback
+			};
+		}
+	};
+}
+function fileCompJsx(args) {
+	return `
+            var _item = null;
+            var _imported = false;
+            if (${jsxVal(args.item)} !== null) {
+                _item = AE.safeGet(function () { return app.project.itemByID(${jsxVal(args.item)}); }, null);
+                if (!_item) return { ok: false, error: "no project item with id " + ${jsxVal(args.item)} };
+            } else {
+                var _f = new File(${jsxVal(args.path)});
+                if (!_f.exists) return { ok: false, error: "no file at " + ${jsxVal(args.path)} };
+                _item = app.project.importFile(new ImportOptions(_f));
+                _imported = true;
+            }
+            if (!AE.safeGet(function () { return _item.hasVideo; }, false)) return { ok: false, error: "'" + _item.name + "' has no video" };
+            var _fr = AE.safeGet(function () { return _item.frameRate; }, 0) || 30;
+            var _dur = _item.duration;
+            var _c = app.project.items.addComp("check_file " + _item.name, _item.width, _item.height, AE.safeGet(function () { return _item.pixelAspect; }, 1) || 1, _dur, _fr);
+            _c.layers.add(_item);
+            return { ok: true, compId: _c.id, compName: _c.name, itemId: _item.id, itemName: _item.name, imported: _imported,
+                width: _item.width, height: _item.height, frames: Math.round(_dur * _fr), frameRate: _fr };
+        `;
+}
+function fileCleanupJsx(args) {
+	return `
+            var _removed = [];
+            var _c = AE.safeGet(function () { return app.project.itemByID(${jsxVal(args.compId)}); }, null);
+            if (_c) { var _cn = _c.name; _c.remove(); _removed.push(_cn); }
+            var removeItem = ${jsxVal(args.removeItem)};
+            if (removeItem && ${jsxVal(args.itemId)} !== null) {
+                var _it = AE.safeGet(function () { return app.project.itemByID(${jsxVal(args.itemId)}); }, null);
+                if (_it) { var _in = _it.name; _it.remove(); _removed.push(_in); }
+            }
+            return { ok: true, removed: _removed };
+        `;
+}
+function liveFileIO(transport) {
+	const cut = liveCutoutIO({}, transport);
+	return {
+		render: cut.render,
+		readImage: cut.readImage,
+		async execute(code, opts) {
+			const r = await transport.execute({
+				code,
+				label: opts.label,
+				timeoutMs: opts.timeoutMs,
+				undoGroup: opts.undoGroup ?? true,
+				suppressDialogs: true
+			});
+			return r.ok ? r.result : {
+				ok: false,
+				error: r.error ?? `${opts.label} failed`
+			};
+		},
+		exists: (file) => promises.access(file).then(() => true, () => false)
+	};
+}
+var compLayerParams, FX_ROOT_JSX, OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, SUBJECT_WHOLE_PIECE_NOTE, CLOSE_CLICK_SHARE, COUNT_NOTE, NEED_CLICK, subjectIndexParam, CUTOUT_HOLE_LIMIT, CUTOUT_OVER, CUTOUT_SECONDS_PER_FRAME, SETTLE_MAX_MS, THUMB, PICTURE_DEFLATE, intersects, union, fmt, boxText, plural, boxArea, iou, isFrozenEntry, GB, gb, PICTURE_MARGIN_BYTES, captureBytes, PART_NAMES, trackedSpan, FROZEN_DEFAULTS, frozenOpts, renderTally, pixelTally, since, roundTally, needSelection, perFrameMsOf, regionsOf, NODE_ONLY, overParam, SOFT_EDGE_DEFAULTS;
+function init_keying_shared() {
+	return (init_keying_shared = __esmMin((() => {
+		init_matte();
+		init_png16();
+		init_sheet();
+		init_registry();
+		init_render_frame();
+		compLayerParams = [{
+			name: "comp",
+			type: "any",
+			description: "Comp name or id",
+			required: true
+		}, {
+			name: "layer",
+			type: "any",
+			description: "1-based layer index, or the layer name",
+			required: true
+		}];
+		FX_ROOT_JSX = `
+            var _fxRoot = _layer.property("ADBE Effect Parade");
+            if (!_fxRoot) return { ok: false, error: "layer '" + _layer.name + "' cannot carry effects" };
+`;
+		OBJECT_MATTE_MATCH_NAME = "ADBE Samurai";
+		OBJECT_MATTE_SELECTIONS_MATCH_NAME = "ADBE Samurai Strokes Group";
+		SUBJECT_WHOLE_PIECE_NOTE = "For a whole piece, scale the take to delivery size first (a delivery-size copy of the footage, before the click: sourceAdvice), then render the cut-out in halves, emptying After Effects' disk cache between them: two halves of a 43.5 s piece at 1088 x 1920 took about 4.3 minutes and 12 GB of cache each. Check free disk space before each half. subject.render_cutout takes from and to (comp seconds) for each half; join the halves with a stream copy (HALVES_JOIN_NOTE).";
+		CLOSE_CLICK_SHARE = .05;
+		COUNT_NOTE = "A selection count is not a check: it does not say what was selected. Run subject.check and look at its picture before building anything on the cut-out.";
+		NEED_CLICK = "run subject.prepare and ask the user for the click, relaying its steps word for word";
+		subjectIndexParam = {
+			name: "effectIndex",
+			type: "number",
+			description: "1-based index of the Object Matte to use when the layer has several (it must be Object Matte, ADBE Samurai). Default: the first in the stack.",
+			required: false
+		};
+		CUTOUT_HOLE_LIMIT = 1e3;
+		CUTOUT_OVER = "#ff00ff";
+		CUTOUT_SECONDS_PER_FRAME = 60;
+		SETTLE_MAX_MS = 6e5;
+		THUMB = 360;
+		PICTURE_DEFLATE = 1;
+		intersects = (a, b) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+		union = (a, b) => {
+			const x = Math.min(a.x, b.x);
+			const y = Math.min(a.y, b.y);
+			return {
+				x,
+				y,
+				width: Math.max(a.x + a.width, b.x + b.width) - x,
+				height: Math.max(a.y + a.height, b.y + b.height) - y
+			};
+		};
+		fmt = (n) => Math.round(n).toLocaleString("en-US");
+		boxText = (b) => `(${b.x}, ${b.y}, ${b.width} \xD7 ${b.height})`;
+		plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+		boxArea = (b) => b.width * b.height;
+		iou = (a, b) => {
+			const w = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
+			const h = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
+			if (w <= 0 || h <= 0) return 0;
+			const inter = w * h;
+			return inter / (boxArea(a) + boxArea(b) - inter);
+		};
+		isFrozenEntry = (e) => !("box" in e) && e.kind === "frozen";
+		GB = 1e9;
+		gb = (n) => `${(n / GB).toFixed(1)} GB`;
+		PICTURE_MARGIN_BYTES = 1 * GB;
+		captureBytes = (size) => (Array.isArray(size) ? size[0] * size[1] : 2073600) * 4;
+		PART_NAMES = {
+			movie: "the movie",
+			cache: "After Effects' disk cache",
+			pictures: "captures and pictures"
+		};
+		trackedSpan = (frames) => frames.length ? Math.max(...frames) - Math.min(...frames) + 1 : 0;
+		FROZEN_DEFAULTS = {
+			gap: 30,
+			limit: .002,
+			minFrames: 60
+		};
+		frozenOpts = (args) => ({
+			gap: typeof args.frozenGap === "number" ? args.frozenGap : FROZEN_DEFAULTS.gap,
+			limit: typeof args.frozenLimit === "number" ? args.frozenLimit : FROZEN_DEFAULTS.limit,
+			minFrames: typeof args.frozenFrames === "number" ? args.frozenFrames : FROZEN_DEFAULTS.minFrames
+		});
+		renderTally = () => ({
+			frames: 0,
+			calls: 0,
+			ms: 0,
+			aeCallMs: 0,
+			settleMs: 0,
+			renderNodeMs: 0
+		});
+		pixelTally = () => ({
+			frames: 0,
+			readMs: 0,
+			regionsMs: 0,
+			picturesMs: 0,
+			sheetMs: 0,
+			ms: 0
+		});
+		since = (t) => performance.now() - t;
+		roundTally = (t) => Object.fromEntries(Object.entries(t).map(([k, v]) => [k, typeof v === "number" ? Math.round(v) : v]));
+		needSelection = (st) => {
+			if (!st?.objectMatte?.present || !Array.isArray(st.selections) || st.selections.length === 0) return `${st?.summary ?? "no selection"}; ${NEED_CLICK}`;
+			return null;
+		};
+		perFrameMsOf = (args) => Math.max(1, Math.round((typeof args.secondsPerFrame === "number" && args.secondsPerFrame > 0 ? args.secondsPerFrame : 60) * 1e3));
+		regionsOf = (r) => [...(r.holes ?? []).map((x) => ({
+			...x,
+			kind: "hole"
+		})), ...(r.openings ?? []).map((x) => ({
+			...x,
+			kind: "opening"
+		}))];
+		NODE_ONLY = (name) => jsxFail(`${name} runs in Node (it reads pixels), so it cannot ride inside batch.run; call it through ae_do`);
+		overParam = {
+			name: "over",
+			type: "string",
+			description: `The flat colour of the picture (default '${CUTOUT_OVER}').`,
+			required: false
+		};
+		SOFT_EDGE_DEFAULTS = {
+			radius: 8,
+			smooth: 0,
+			chatterReduction: 2,
+			decontaminate: true,
+			feather: 60,
+			regionDepth: .12,
+			/** By default the check samples the click frame and every `nearStep`th frame after it, up to `near` frames on. */
+			near: 60,
+			nearStep: 10,
+			/** The closing check: a pixel solid in the matte as clicked and more than this far inside its edge must stay solid. */
+			deep: 30,
+			/** Matte more than this far outside the outline as clicked counts as spread (a smear). */
+			outside: 10,
+			/** Spread pixels allowed before the build is undone (look C left 0 to 12 px on the take; look D's smear was 156). */
+			outsideLimit: 50,
+			/** Face colour against the matte as clicked, CIELAB difference allowed. */
+			colourLimit: 1
+		};
+	})))();
+}
+
+// operations/keying-key.js
+function readMap(settings, extra = {}) {
+	const out = { ...extra };
+	for (const [k, s] of Object.entries(settings)) out[k] = s.matchName;
+	return out;
+}
+function colourValue(name, v) {
+	if (!(Array.isArray(v) && (v.length === 3 || v.length === 4) && v.every((c2) => typeof c2 === "number" && Number.isFinite(c2) && c2 >= 0 && c2 <= 1))) return `\`${name}\` must be [r, g, b] or [r, g, b, a] with each number in 0..1 (capture values); got ${JSON.stringify(v)}`;
+	const c = v;
+	return c.length === 3 ? [...c, 1] : [...c];
+}
+function settingValue(name, s, v) {
+	if (s.kind === "colour") return colourValue(name, v);
+	if (s.kind === "switch") {
+		if (typeof v !== "boolean" && v !== 0 && v !== 1) return `\`${name}\` must be true or false`;
+		return v === true || v === 1 ? 1 : 0;
+	}
+	if (typeof v !== "number" || !Number.isFinite(v)) return `\`${name}\` must be a number; got ${JSON.stringify(v)}`;
+	return v;
+}
+function keylightViewNumber(v) {
+	if (typeof v === "number" && Number.isInteger(v) && v >= 1 && v <= KEYLIGHT_VIEWS.length) return v;
+	if (typeof v === "string") {
+		const norm = v.trim().toLowerCase().replace(/[\s-]+/g, "_").replace(/color/g, "colour");
+		const i = KEYLIGHT_VIEWS.indexOf(norm);
+		if (i >= 0) return i + 1;
+	}
+	return `unknown Keylight view ${JSON.stringify(v)}; views: ${VIEW_LIST}`;
+}
+function keylightLookupJsx(effectIndexJsx, hint) {
+	return `
+            var _kl = AE.pickEffect(_fxRoot, ${jsxVal(KEYLIGHT_MATCH_NAME)}, "Keylight", ${effectIndexJsx});
+            if (_kl.error) return { ok: false, error: _kl.error };
+            if (_kl.index === null) return { ok: false, error: "layer '" + _layer.name + "' has no Keylight (effects: " + AE.effectListText(_fxRoot) + ")" + ${jsxVal(hint)} };
+`;
+}
+function cleanupGroup(name, v, settings) {
+	if (v === false) return { want: false };
+	if (v === void 0 || v === true) return {
+		want: true,
+		writes: [],
+		fromKeylight: false
+	};
+	if (typeof v !== "object" || v === null || Array.isArray(v)) return `\`${name}\` must be an object of settings, true (defaults) or false (leave it out); got ${JSON.stringify(v)}`;
+	const writes = [];
+	let fromKeylight = false;
+	for (const [key, val] of Object.entries(v)) {
+		const s = settings[key];
+		if (!s) return `\`${name}.${key}\` is not a setting; settings: ${Object.keys(settings).join(", ")}`;
+		if (key === "keyColor" && val === "keylight") {
+			fromKeylight = true;
+			continue;
+		}
+		const value = settingValue(`${name}.${key}`, s, val);
+		if (typeof value === "string") return value;
+		writes.push({
+			key,
+			matchName: s.matchName,
+			value
+		});
+	}
+	return {
+		want: true,
+		writes,
+		fromKeylight
+	};
+}
+var KEYLIGHT_MATCH_NAME, KEY_CLEANER_MATCH_NAME, SPILL_SUPPRESSOR_MATCH_NAME, VIEW_MATCH_NAME, SCREEN_COLOUR_MATCH_NAME, KEYLIGHT_VIEWS, VIEW_LIST, KEYLIGHT_SETTINGS, KEY_CLEANER_SETTINGS, SPILL_SUPPRESSOR_SETTINGS, keylightIndexParam;
+function init_keying_key() {
+	return (init_keying_key = __esmMin((() => {
+		init_registry();
+		init_keying_shared();
+		KEYLIGHT_MATCH_NAME = "Keylight 906";
+		KEY_CLEANER_MATCH_NAME = "ADBE KeyCleaner";
+		SPILL_SUPPRESSOR_MATCH_NAME = "ADBE Spill2";
+		VIEW_MATCH_NAME = "Keylight 906-0002";
+		SCREEN_COLOUR_MATCH_NAME = "Keylight 906-0004";
+		KEYLIGHT_VIEWS = [
+			"source",
+			"source_alpha",
+			"corrected_source",
+			"colour_correction_edges",
+			"screen_matte",
+			"inside_mask",
+			"outside_mask",
+			"combined_matte",
+			"status",
+			"intermediate_result",
+			"final_result"
+		];
+		VIEW_LIST = KEYLIGHT_VIEWS.map((v, i) => `${v} (${i + 1})`).join(", ");
+		KEYLIGHT_SETTINGS = {
+			screenColour: {
+				matchName: SCREEN_COLOUR_MATCH_NAME,
+				kind: "colour",
+				doc: "Screen Colour [r, g, b] 0..1, capture values: from ae_render_frame `screen` (colour.nearSubject or colour.median) on the un-keyed source"
+			},
+			screenGain: {
+				matchName: "Keylight 906-0005",
+				kind: "number",
+				doc: "Screen Gain, 0..5000 (default 100)"
+			},
+			screenBalance: {
+				matchName: "Keylight 906-0006",
+				kind: "number",
+				doc: "Screen Balance, 0..100 (default 50)"
+			},
+			despillBias: {
+				matchName: "Keylight 906-0007",
+				kind: "colour",
+				doc: "Despill Bias [r, g, b] 0..1 (default 0.498 grey)"
+			},
+			alphaBias: {
+				matchName: "Keylight 906-0008",
+				kind: "colour",
+				doc: "Alpha Bias [r, g, b] 0..1 (default 0.498 grey)"
+			},
+			lockBiases: {
+				matchName: "Keylight 906-0009",
+				kind: "switch",
+				doc: "Lock Biases Together (default on)"
+			},
+			screenPreBlur: {
+				matchName: "Keylight 906-0010",
+				kind: "number",
+				doc: "Screen Pre-blur, 0..5000 (default 0)"
+			},
+			clipBlack: {
+				matchName: "Keylight 906-0012",
+				kind: "number",
+				doc: "Clip Black, 0..100 (default 0)"
+			},
+			clipWhite: {
+				matchName: "Keylight 906-0013",
+				kind: "number",
+				doc: "Clip White, 0..100 (default 100)"
+			},
+			clipRollback: {
+				matchName: "Keylight 906-0014",
+				kind: "number",
+				doc: "Clip Rollback, 0..5000 (default 0)"
+			},
+			screenShrinkGrow: {
+				matchName: "Keylight 906-0015",
+				kind: "number",
+				doc: "Screen Shrink/Grow, -5000..5000 (default 0)"
+			},
+			screenSoftness: {
+				matchName: "Keylight 906-0016",
+				kind: "number",
+				doc: "Screen Softness, 0..5000 (default 0)"
+			},
+			despotBlack: {
+				matchName: "Keylight 906-0017",
+				kind: "number",
+				doc: "Screen Despot Black, 0..5000 (default 0)"
+			},
+			despotWhite: {
+				matchName: "Keylight 906-0018",
+				kind: "number",
+				doc: "Screen Despot White, 0..5000 (default 0)"
+			}
+		};
+		KEY_CLEANER_SETTINGS = {
+			additionalEdgeRadius: {
+				matchName: "ADBE KeyCleaner-0006",
+				kind: "number",
+				doc: "Additional Edge Radius, 0..250 (default 10)"
+			},
+			reduceChatter: {
+				matchName: "ADBE KeyCleaner-0002",
+				kind: "switch",
+				doc: "Reduce Chatter (default off)"
+			},
+			alphaContrast: {
+				matchName: "ADBE KeyCleaner-0016",
+				kind: "number",
+				doc: "Alpha Contrast, 0..100 (default 0)"
+			},
+			strength: {
+				matchName: "ADBE KeyCleaner-0001",
+				kind: "number",
+				doc: "Strength, 0..100 (default 100)"
+			}
+		};
+		SPILL_SUPPRESSOR_SETTINGS = {
+			method: {
+				matchName: "ADBE Spill2-0001",
+				kind: "number",
+				doc: "Method, 1 or 2 (default 1)"
+			},
+			suppression: {
+				matchName: "ADBE Spill2-1001",
+				kind: "number",
+				doc: "Suppression, 0..100 (default 100)"
+			},
+			keyColor: {
+				matchName: "ADBE Spill2-0003",
+				kind: "colour",
+				doc: "Key Color [r, g, b] 0..1 (default pure green), or 'keylight' for Keylight's Screen Colour"
+			},
+			tolerance: {
+				matchName: "ADBE Spill2-0004",
+				kind: "number",
+				doc: "Tolerance, 0..100 (default 50)"
+			},
+			desaturate: {
+				matchName: "ADBE Spill2-0005",
+				kind: "number",
+				doc: "Desaturate, 0..100 (default 50)"
+			},
+			spillRange: {
+				matchName: "ADBE Spill2-0006",
+				kind: "number",
+				doc: "Spill Range, 0..100 (default 50)"
+			},
+			spillColorCorrection: {
+				matchName: "ADBE Spill2-0007",
+				kind: "number",
+				doc: "Spill Color Correction, 0..100 (default 50)"
+			},
+			lumaCorrection: {
+				matchName: "ADBE Spill2-0008",
+				kind: "number",
+				doc: "Luma Correction, 0..100 (default 0)"
+			}
+		};
+		keylightIndexParam = {
+			name: "effectIndex",
+			type: "number",
+			description: "1-based index of the Keylight to use when the layer has several (it must be Keylight). Default: the first Keylight in the stack.",
+			required: false
+		};
+		registerOp({
+			name: "key.keylight",
+			category: "key",
+			description: "Key a layer with Keylight from measured values: add Keylight (Keylight 906) if the layer has none, or update the one there, then read every setting back. Measure first: render the un-keyed source with ae_render_frame { screen: true } and pass colour.nearSubject (or colour.median) as screenColour. Every value is checked against After Effects' reported range before anything is written; a refusal writes nothing and removes a Keylight this call added. Returns effectIndex, added, keylightCount, written, values (view and every setting below, as read back) and the effect order. With no settings it only reads. Then look at the result with key.view (screen_matte, status) and ae_render_frame { edge: true }.",
+			params: [
+				...compLayerParams,
+				keylightIndexParam,
+				...Object.entries(KEYLIGHT_SETTINGS).map(([name, s]) => ({
+					name,
+					type: s.kind === "colour" ? "array" : s.kind === "switch" ? "boolean" : "number",
+					description: s.doc,
+					required: false
+				}))
+			],
+			toJsx(args) {
+				const writes = [];
+				for (const [key, s] of Object.entries(KEYLIGHT_SETTINGS)) {
+					if (args[key] === void 0) continue;
+					const v = settingValue(key, s, args[key]);
+					if (typeof v === "string") return jsxFail(v);
+					writes.push({
+						key,
+						matchName: s.matchName,
+						value: v
+					});
+				}
+				return `
+            ${jsxCompLayerPreamble(args)}
+            ${FX_ROOT_JSX}
+            var _pick = AE.pickEffect(_fxRoot, ${jsxVal(KEYLIGHT_MATCH_NAME)}, "Keylight", ${jsxVal(args.effectIndex ?? null)});
+            if (_pick.error) return { ok: false, error: _pick.error };
+            var _writes = ${jsxVal(writes)};
+            var _idx = _pick.index;
+            var _added = false;
+            if (_idx === null) {
+                if (!${jsxVal(args.screenColour !== void 0)}) {
+                    return { ok: false, error: "layer '" + _layer.name + "' has no Keylight (effects: " + AE.effectListText(_fxRoot) + ")" + ${jsxVal("; adding one needs screenColour: measure it from the un-keyed source with ae_render_frame { screen: true } and pass colour.nearSubject or colour.median")} };
+                }
+                _idx = _fxRoot.addProperty(${jsxVal(KEYLIGHT_MATCH_NAME)}).propertyIndex;
+                _added = true;
+            }
+            var _refused = AE.checkEffectWrites(_fxRoot.property(_idx), _writes);
+            if (_refused.length > 0) {
+                if (_added) { try { _fxRoot.property(_idx).remove(); } catch (eRm) {} }
+                var _msgs = [];
+                for (var _ri = 0; _ri < _refused.length; _ri++) _msgs.push(_refused[_ri].error);
+                return { ok: false, error: "nothing written: " + _msgs.join("; "), refused: _refused, removedAddedKeylight: _added };
+            }
+            var _failed = AE.applyEffectWrites(_fxRoot.property(_idx), _writes);
+            var _written = [];
+            for (var _wi = 0; _wi < _writes.length; _wi++) {
+                var _bad = false;
+                for (var _fi = 0; _fi < _failed.length; _fi++) if (_failed[_fi].setting === _writes[_wi].key) _bad = true;
+                if (!_bad) _written.push(_writes[_wi].key);
+            }
+            var _out = {
+                ok: _failed.length === 0,
+                effectIndex: _idx,
+                added: _added,
+                keylightCount: _pick.count + (_added ? 1 : 0),
+                name: _fxRoot.property(_idx).name,
+                written: _written,
+                values: AE.readEffectValues(_fxRoot.property(_idx), ${jsxVal(readMap(KEYLIGHT_SETTINGS, { view: VIEW_MATCH_NAME }))}),
+                order: AE.effectOrder(_fxRoot)
+            };
+            if (_failed.length > 0) {
+                _out.failed = _failed;
+                _out.error = "After Effects rejected " + _failed.length + " of the checked writes; the rest were written";
+            }
+            return _out;
+        `;
+			}
+		});
+		registerOp({
+			name: "key.view",
+			category: "key",
+			description: "Set Keylight's View and report the previous one (pass previous.number back to restore it). Look at the key in screen_matte (the key's own matte, before the layer masks), combined_matte (with the masks), status (white solid, black clear, grey partly transparent) and intermediate_result (keyed, without Keylight's own despill). Use source to measure the screen with ae_render_frame { screen: true }. The view is not keyframable.",
+			params: [
+				...compLayerParams,
+				{
+					name: "view",
+					type: "any",
+					description: `View by name or number: ${VIEW_LIST}. Spaces, hyphens and 'color' are accepted (Screen Matte, final-result).`,
+					required: true
+				},
+				keylightIndexParam
+			],
+			toJsx(args) {
+				const view = keylightViewNumber(args.view);
+				if (typeof view === "string") return jsxFail(view);
+				return `
+            ${jsxCompLayerPreamble(args)}
+            ${FX_ROOT_JSX}
+            ${keylightLookupJsx(jsxVal(args.effectIndex ?? null), "; add one with key.keylight")}
+            var _names = ${jsxVal(KEYLIGHT_VIEWS)};
+            var _viewProp = _fxRoot.property(_kl.index).property(${jsxVal(VIEW_MATCH_NAME)});
+            if (!_viewProp) return { ok: false, error: "Keylight has no View property " + ${jsxVal(VIEW_MATCH_NAME)} };
+            var _prev = AE.safeGet(function () { return _viewProp.value; }, null);
+            var _want = ${jsxVal(view)};
+            var _why = AE.checkPropertyWrite(_viewProp, _want);
+            if (_why !== null) return { ok: false, error: _why };
+            _viewProp.setValue(_want);
+            var _now = AE.safeGet(function () { return _viewProp.value; }, null);
+            return {
+                ok: true,
+                effectIndex: _kl.index,
+                view: { number: _now, name: _names[_now - 1] || null },
+                previous: { number: _prev, name: _prev === null ? null : (_names[_prev - 1] || null) }
+            };
+        `;
+			}
+		});
+		registerOp({
+			name: "key.cleanup",
+			category: "key",
+			description: "Add or update Key Cleaner (ADBE KeyCleaner) and Advanced Spill Suppressor (ADBE Spill2) after the layer's Keylight, in that order, moving existing ones into place, with their main settings (checked before writing; a refusal writes and moves nothing and removes what this call added). Adobe's intended chain is Keylight on Intermediate Result (View 10), then Key Cleaner, then Advanced Spill Suppressor: with Keylight on Final Result, Keylight has already despilled what the others receive. The caller chooses: keylightView: 'intermediate_result' sets that view; otherwise the view is left and a chainNote says so. Returns keylight {index, view}, keyCleaner and spillSuppressor {index, added, written, values} (null when left out), the effect order, and chainNote. Remove spill only after the matte is right; read edge spill on the final alpha afterwards.",
+			params: [
+				...compLayerParams,
+				{
+					name: "keyCleaner",
+					type: "any",
+					description: `Key Cleaner settings object, true for its defaults (the default), or false to leave it out. Settings: ${Object.entries(KEY_CLEANER_SETTINGS).map(([k, s]) => `${k} (${s.doc})`).join("; ")}.`,
+					required: false
+				},
+				{
+					name: "spillSuppressor",
+					type: "any",
+					description: `Advanced Spill Suppressor settings object, true for its defaults (the default), or false to leave it out. Settings: ${Object.entries(SPILL_SUPPRESSOR_SETTINGS).map(([k, s]) => `${k} (${s.doc})`).join("; ")}. Which Method value is Standard and which Ultra was not confirmed live.`,
+					required: false
+				},
+				{
+					name: "keylightView",
+					type: "any",
+					description: "Also set Keylight's View (name or number, as key.view); 'intermediate_result' for Adobe's intended chain.",
+					required: false
+				},
+				{
+					...keylightIndexParam,
+					name: "keylightIndex"
+				}
+			],
+			toJsx(args) {
+				const kc = cleanupGroup("keyCleaner", args.keyCleaner, KEY_CLEANER_SETTINGS);
+				if (typeof kc === "string") return jsxFail(kc);
+				const ss = cleanupGroup("spillSuppressor", args.spillSuppressor, SPILL_SUPPRESSOR_SETTINGS);
+				if (typeof ss === "string") return jsxFail(ss);
+				let view = null;
+				if (args.keylightView !== void 0) {
+					const v = keylightViewNumber(args.keylightView);
+					if (typeof v === "string") return jsxFail(`keylightView: ${v}`);
+					view = v;
+				}
+				return `
+            ${jsxCompLayerPreamble(args)}
+            ${FX_ROOT_JSX}
+            ${keylightLookupJsx(jsxVal(args.keylightIndex ?? null), "; key the layer with key.keylight first")}
+            var _names = ${jsxVal(KEYLIGHT_VIEWS)};
+            var _wantKC = ${jsxVal(kc.want)};
+            var _wantSS = ${jsxVal(ss.want)};
+            var _kcWrites = ${jsxVal(kc.want ? kc.writes : [])};
+            var _ssWrites = ${jsxVal(ss.want ? ss.writes : [])};
+            var _view = ${jsxVal(view)};
+            var _track = { kl: _kl.index, kc: null, ss: null };
+            var _kcAnchorOnly = false;
+            var _kcFound = AE.pickEffect(_fxRoot, ${jsxVal(KEY_CLEANER_MATCH_NAME)}, "Key Cleaner", null);
+            if (_wantKC) _track.kc = _kcFound.index;
+            else if (_kcFound.index !== null && _kcFound.index > _kl.index) { _track.kc = _kcFound.index; _kcAnchorOnly = true; }
+            if (_wantSS) _track.ss = AE.pickEffect(_fxRoot, ${jsxVal(SPILL_SUPPRESSOR_MATCH_NAME)}, "Advanced Spill Suppressor", null).index;
+            if (${jsxVal(ss.want && ss.fromKeylight)}) {
+                var _sc = AE.safeGet(function () { return AE.valueToJson(_fxRoot.property(_kl.index).property(${jsxVal(SCREEN_COLOUR_MATCH_NAME)}).value); }, null);
+                if (!_sc) return { ok: false, error: "could not read Keylight's Screen Colour for keyColor 'keylight'" };
+                _ssWrites.push({ key: "keyColor", matchName: ${jsxVal(SPILL_SUPPRESSOR_SETTINGS.keyColor.matchName)}, value: _sc });
+            }
+            var _kcAdded = false;
+            var _ssAdded = false;
+            if (_wantKC && _track.kc === null) { _track.kc = _fxRoot.addProperty(${jsxVal(KEY_CLEANER_MATCH_NAME)}).propertyIndex; _kcAdded = true; }
+            if (_wantSS && _track.ss === null) { _track.ss = _fxRoot.addProperty(${jsxVal(SPILL_SUPPRESSOR_MATCH_NAME)}).propertyIndex; _ssAdded = true; }
+            var _refused = [];
+            if (_wantKC) _refused = _refused.concat(AE.checkEffectWrites(_fxRoot.property(_track.kc), _kcWrites));
+            if (_wantSS) _refused = _refused.concat(AE.checkEffectWrites(_fxRoot.property(_track.ss), _ssWrites));
+            if (_view !== null) {
+                var _vw = AE.checkPropertyWrite(_fxRoot.property(_track.kl).property(${jsxVal(VIEW_MATCH_NAME)}), _view);
+                if (_vw !== null) _refused.push({ setting: "keylightView", error: _vw });
+            }
+            if (_refused.length > 0) {
+                var _drop = [];
+                if (_kcAdded) _drop.push(_track.kc);
+                if (_ssAdded) _drop.push(_track.ss);
+                _drop.sort(function (a, b) { return b - a; });
+                for (var _di = 0; _di < _drop.length; _di++) { try { _fxRoot.property(_drop[_di]).remove(); } catch (eRm) {} }
+                var _msgs = [];
+                for (var _ri = 0; _ri < _refused.length; _ri++) _msgs.push(_refused[_ri].error);
+                return { ok: false, error: "nothing written or moved: " + _msgs.join("; "), refused: _refused };
+            }
+            if (_wantKC) AE.placeTrackedAfter(_fxRoot, _track, "kc", "kl");
+            if (_wantSS) AE.placeTrackedAfter(_fxRoot, _track, "ss", _track.kc !== null ? "kc" : "kl");
+            var _failed = [];
+            if (_wantKC) _failed = _failed.concat(AE.applyEffectWrites(_fxRoot.property(_track.kc), _kcWrites));
+            if (_wantSS) _failed = _failed.concat(AE.applyEffectWrites(_fxRoot.property(_track.ss), _ssWrites));
+            var _viewProp = _fxRoot.property(_track.kl).property(${jsxVal(VIEW_MATCH_NAME)});
+            if (_view !== null) {
+                try { _viewProp.setValue(_view); } catch (eV) { _failed.push({ setting: "keylightView", error: AE.errText(eV) }); }
+            }
+            function _keys(ws) { var o = []; for (var i = 0; i < ws.length; i++) o.push(ws[i].key); return o; }
+            var _nowView = AE.safeGet(function () { return _viewProp.value; }, null);
+            var _out = {
+                ok: _failed.length === 0,
+                keylight: { index: _track.kl, view: { number: _nowView, name: _names[_nowView - 1] || null } },
+                keyCleaner: _wantKC ? {
+                    index: _track.kc,
+                    added: _kcAdded,
+                    written: _keys(_kcWrites),
+                    values: AE.readEffectValues(_fxRoot.property(_track.kc), ${jsxVal(readMap(KEY_CLEANER_SETTINGS))})
+                } : null,
+                spillSuppressor: _wantSS ? {
+                    index: _track.ss,
+                    added: _ssAdded,
+                    written: _keys(_ssWrites),
+                    values: AE.readEffectValues(_fxRoot.property(_track.ss), ${jsxVal(readMap(SPILL_SUPPRESSOR_SETTINGS))})
+                } : null,
+                order: AE.effectOrder(_fxRoot)
+            };
+            if (_kcAnchorOnly) _out.keyCleanerLeftAsIs = _track.kc;
+            if (_nowView !== 10) _out.chainNote = ${jsxVal("Adobe's intended chain is Keylight on Intermediate Result (10), then Key Cleaner, then Advanced Spill Suppressor; on any other view Keylight hands the cleanup effects its own output (on Final Result already despilled). Pass keylightView: 'intermediate_result' (or use key.view) for that chain.")};
+            if (_failed.length > 0) {
+                _out.failed = _failed;
+                _out.error = "After Effects rejected " + _failed.length + " of the checked writes; the rest were written";
+            }
+            return _out;
+        `;
+			}
+		});
+	})))();
+}
+
+// operations/keying-reference.js
+function reportForReply(r) {
+	const { map: _map, ...motion } = r.motion;
+	return {
+		...r,
+		motion
+	};
+}
+function referenceCompJsx(args) {
+	return `
+            ${jsxCompPreamble(args)}
+            return { ok: true, name: _comp.name, id: _comp.id, width: _comp.width, height: _comp.height,
+                frames: Math.round(_comp.duration * _comp.frameRate), frameRate: _comp.frameRate };
+        `;
+}
+async function runReferenceReport(args, io) {
+	const started = performance.now();
+	const outPath = args.outPath;
+	if (typeof outPath !== "string" || !path$1.isAbsolute(outPath) || !/\.json$/i.test(outPath)) return {
+		ok: false,
+		error: "`outPath` must be an absolute path for the report (.json)"
+	};
+	if ([
+		"path",
+		"item",
+		"comp"
+	].filter((k) => args[k] !== void 0 && args[k] !== null).length !== 1) return {
+		ok: false,
+		error: "give exactly one of `path` (a still, a folder of frames or a movie), `item` (a footage item's id) or `comp` (a build)"
+	};
+	const regions = Array.isArray(args.regions) ? args.regions : void 0;
+	const cap = typeof args.maxFrames === "number" && args.maxFrames >= 1 ? Math.floor(args.maxFrames) : 400;
+	const outDir = path$1.dirname(outPath);
+	await promises.mkdir(outDir, { recursive: true });
+	const keepCaptures = args.keepCaptures === true;
+	const perFrameMs = Math.max(1, Math.round((typeof args.secondsPerFrame === "number" && args.secondsPerFrame > 0 ? args.secondsPerFrame : 10) * 1e3));
+	const pick = (n) => {
+		if (n <= cap) return Array.from({ length: n }, (_, i) => i);
+		const out = /* @__PURE__ */ new Set();
+		for (let i = 0; i < cap; i++) out.add(Math.floor(i * n / cap));
+		return [...out].sort((a, b) => a - b);
+	};
+	let source;
+	let report;
+	const renders = renderTally();
+	const p = typeof args.path === "string" ? args.path : null;
+	if (p !== null && !path$1.isAbsolute(p)) return {
+		ok: false,
+		error: "`path` must be absolute"
+	};
+	const stat = p !== null ? await promises.stat(p).catch(() => null) : null;
+	if (p !== null && !MOVIE_EXT.test(p)) {
+		if (!stat) return {
+			ok: false,
+			error: `nothing at ${p}`
+		};
+		const files = stat.isDirectory() ? (await promises.readdir(p)).filter((f) => /\.png$/i.test(f)).sort(naturalOrder).map((f) => path$1.join(p, f)) : [p];
+		if (!files.length) return {
+			ok: false,
+			error: `no PNG frames in ${p}`
+		};
+		if (!files.every((f) => /\.png$/i.test(f))) return {
+			ok: false,
+			error: "a still must be a PNG (render other formats to PNG first)"
+		};
+		const idx = pick(files.length);
+		const frameRate = typeof args.frameRate === "number" ? args.frameRate : void 0;
+		const given = typeof args.frameStep === "number" && args.frameStep >= 1 ? Math.round(args.frameStep) : null;
+		const nums = files.map((f) => {
+			const m = /(\d+)(?!.*\d)/.exec(path$1.basename(f, path$1.extname(f)));
+			return m ? Number(m[1]) : null;
+		});
+		const named = nums.every((n) => n !== null) && nums.every((n, i) => i === 0 || n > nums[i - 1]);
+		const numberOf = (i) => given !== null ? i * given : named ? nums[i] : i;
+		const steps = idx.slice(1).map((i, k) => numberOf(i) - numberOf(idx[k]));
+		const even = steps.length > 0 && steps.every((d) => d === steps[0]) ? steps[0] : null;
+		const spacing = given !== null ? {
+			how: "given",
+			step: idx.length < files.length ? null : given
+		} : named ? {
+			how: "file names",
+			step: even
+		} : {
+			how: "assumed",
+			step: even
+		};
+		const reader = referenceReader({
+			total: idx.length,
+			regions,
+			frameRate,
+			spacing
+		});
+		for (const i of idx) {
+			const n = numberOf(i);
+			reader.add({
+				img: await io.readImage(files[i]),
+				frame: n,
+				time: frameRate ? n / frameRate : void 0
+			});
+		}
+		report = reader.finish();
+		source = {
+			kind: stat.isDirectory() ? "frames" : "still",
+			path: p,
+			files: files.length,
+			read: idx.length,
+			frameRate: frameRate ?? null
+		};
+	} else {
+		const cm = await io.execute("return { ok: true, workingSpace: String(AE.safeGet(function () { return app.project.workingSpace; }, 'None')), colorManagementSystem: AE.safeGet(function () { return Number(app.project.colorManagementSystem); }, null), bitsPerChannel: app.project.bitsPerChannel };", {
+			label: "reference.report colour",
+			timeoutMs: 3e4,
+			undoGroup: false
+		});
+		if (cm?.ok && cm.workingSpace && cm.workingSpace !== "None" && cm.workingSpace !== "" && cm.colorManagementSystem !== 1) return {
+			ok: false,
+			error: `${iccManagedReason(cm.workingSpace, cm.bitsPerChannel)} reference.report reads colour, levels, grain and sharpness from rendered frames, so it does not run here. A PNG still or a folder of frames is read without After Effects and still works.`
+		};
+		const fromComp = args.comp !== void 0;
+		const setup = fromComp ? await io.execute(referenceCompJsx({ comp: args.comp }), {
+			label: "reference.report comp",
+			timeoutMs: 6e4,
+			undoGroup: false
+		}) : await io.execute(fileCompJsx({
+			path: p,
+			item: typeof args.item === "number" ? args.item : null
+		}), {
+			label: "reference.report setup",
+			timeoutMs: 12e4,
+			undoGroup: true
+		});
+		if (!setup?.ok) return {
+			ok: false,
+			error: setup?.error ?? "could not read the source in After Effects",
+			setup
+		};
+		const compRef = fromComp ? args.comp : setup.compId;
+		let cleanup = null;
+		try {
+			const roomless = await spaceRefusal(io, outDir, 40 * captureBytes([setup.width, setup.height]), PICTURE_MARGIN_BYTES, "this reference report");
+			if (roomless) return roomless;
+			const idx = pick(setup.frames);
+			const reader = referenceReader({
+				total: idx.length,
+				regions,
+				frameRate: setup.frameRate
+			});
+			const size = Math.max(1, Math.min(32, Math.floor(SETTLE_MAX_MS / perFrameMs)));
+			for (let b = 0; b * size < idx.length; b++) {
+				const chunk = idx.slice(b * size, (b + 1) * size);
+				const got = await renderChunked(io, { compNameOrId: compRef }, chunk, perFrameMs, outDir, "reference", renders, b);
+				for (const r of got) {
+					if (!r.ok || !r.file) return {
+						ok: false,
+						error: `frame ${r.frame} did not render: ${r.error ?? "no file"}`
+					};
+					reader.add({
+						img: await io.readImage(r.file),
+						frame: r.frame,
+						time: r.frame / setup.frameRate
+					});
+					if (!keepCaptures) await promises.rm(r.file, { force: true });
+				}
+			}
+			report = reader.finish();
+		} finally {
+			if (!fromComp) cleanup = await io.execute(fileCleanupJsx({
+				compId: setup.compId,
+				itemId: setup.itemId,
+				removeItem: setup.imported === true
+			}), {
+				label: "reference.report cleanup",
+				timeoutMs: 6e4,
+				undoGroup: true
+			});
+		}
+		source = fromComp ? {
+			kind: "comp",
+			name: setup.name,
+			frames: setup.frames,
+			frameRate: setup.frameRate
+		} : {
+			kind: p !== null ? "movie" : "item",
+			path: p,
+			item: setup.itemName,
+			frames: setup.frames,
+			frameRate: setup.frameRate,
+			cleanup
+		};
+	}
+	await promises.writeFile(outPath, JSON.stringify(report));
+	let compare;
+	if (typeof args.against === "string") try {
+		compare = compareReferences(JSON.parse(await promises.readFile(args.against, "utf8")), report);
+	} catch (e) {
+		compare = { error: `could not compare with ${args.against}: ${e instanceof Error ? e.message : String(e)}` };
+	}
+	const reply = reportForReply(report);
+	return {
+		ok: true,
+		source,
+		frames: report.frames,
+		report: reply,
+		savedTo: outPath,
+		...compare ? { compare } : {},
+		notes: [...report.notes, ...source.kind !== "frames" && source.kind !== "still" && !report.motion.consecutive && report.frames > 1 ? [`Only ${report.frames} frames spread over the source were read (maxFrames ${cap}), so cuts and motion were not.`] : []],
+		timing: {
+			render: roundTally(renders),
+			totalMs: Math.round(since(started))
+		},
+		next: compare ? "Read the differences largest first and decide which to fix; measure again after each fix." : "Run the same report on the build (comp) with against: this file's path, or reference.compare with two saved reports."
+	};
+}
+async function runReferenceCompare(args) {
+	const read = async (k) => {
+		const v = args[k];
+		if (typeof v !== "string" || !path$1.isAbsolute(v)) throw new Error(`\`${k}\` must be the absolute path of a saved report`);
+		return JSON.parse(await promises.readFile(v, "utf8"));
+	};
+	try {
+		const ref = await read("reference");
+		const build = await read("build");
+		return {
+			ok: true,
+			...compareReferences(ref, build)
+		};
+	} catch (e) {
+		return {
+			ok: false,
+			error: e instanceof Error ? e.message : String(e)
+		};
+	}
+}
+var MOVIE_EXT, naturalOrder;
+function init_keying_reference() {
+	return (init_keying_reference = __esmMin((() => {
+		init_sheet();
+		init_registry();
+		init_capture_shared();
+		init_keying_shared();
+		MOVIE_EXT = /\.(mov|mp4|m4v|mxf|avi|webm|mkv|mpe?g)$/i;
+		naturalOrder = (a, b) => a.localeCompare(b, void 0, { numeric: true });
+		registerOp({
+			name: "reference.report",
+			category: "look",
+			description: "Measure a reference, or a build, for working to it. Give exactly one source: `path` (a PNG still, a folder of PNG frames in name order, or a movie), `item` (a footage item's id) or `comp` (the build). Stills and folders are read in Node; a movie or item is brought into a throwaway comp and, like a comp, rendered through ae_render_frame by frame numbers (a quarter of a frame inside each frame, so no time lands on the frame before; checked live at 30, 29.97 and 24 fps), read and removed a chunk at a time. Reports the main colours and their shares (k-means in CIELAB), black and white points and mean, CIELAB colour, edge width (sharpness) and grain at the grid's nine regions (top left to bottom right) and any named `regions`, where the weight of the frame sits (centres of brightness and of detail), and on consecutive frames the cuts, the mean change between frames and where the picture moves (a motion map; its centre is the moving subject in a talking-head shot). Colour and texture are read on 24 frames spread over the source, motion on every pair. Saves the whole report as JSON at `outPath` (the reply leaves the motion map out). With `against` (a saved report of the reference) it adds `compare`: the differences largest first, each over a step (a CIELAB a* or b* of 2 is a cast, a quarter in edge width or grain, 5% in the subject's size, 3% of the frame in a place), in words. The subject's size and place are compared by lining up the two motion maps, only when they match as the same footage. Measured live (After Effects 27.0): 235 frames of a 1080 x 1920 H.264 movie in 314 s, and of a comp in 317 s, nothing added to the disk cache. A comp renders without the compression noise of a delivered movie, so against a movie reference its grain reads lower: compare like with like where grain matters.",
+			params: [
+				{
+					name: "path",
+					type: "string",
+					description: "Absolute path of a PNG still, a folder of PNG frames, or a movie.",
+					required: false
+				},
+				{
+					name: "item",
+					type: "number",
+					description: "A footage item's id, instead of path.",
+					required: false
+				},
+				{
+					name: "comp",
+					type: "string",
+					description: "A comp (the build), by name or id, instead of path.",
+					required: false
+				},
+				{
+					name: "outPath",
+					type: "string",
+					description: "Absolute path for the report (.json). Captures are written beside it and removed once read.",
+					required: true
+				},
+				{
+					name: "regions",
+					type: "array",
+					description: "Named regions in frame pixels, read beside the grid's nine ({ name, x, y, width, height, role? }); name the parts you mean (a wall, the subject's face, a neutral headrest) so the differences say them.",
+					required: false
+				},
+				{
+					name: "against",
+					type: "string",
+					description: "A saved report (the reference) to compare this one with.",
+					required: false
+				},
+				{
+					name: "frameRate",
+					type: "number",
+					description: "Frames per second of a folder of frames (for times).",
+					required: false
+				},
+				{
+					name: "frameStep",
+					type: "number",
+					description: "How many frames apart a folder's files are (1: neighbours). Without it the step is read from numbers in the file names; with none, the files are taken as neighbours unless neighbouring files change by a median of 0.02 or more, as frames far apart do (a guess, said in notes). Cuts and movement are read only on neighbours.",
+					required: false
+				},
+				{
+					name: "maxFrames",
+					type: "number",
+					description: `Most frames read (default ${400}); beyond it frames are spread and cuts and motion are not read.`,
+					required: false
+				},
+				{
+					name: "secondsPerFrame",
+					type: "number",
+					description: "Render time allowed a frame (default 10).",
+					required: false
+				},
+				{
+					name: "keepCaptures",
+					type: "boolean",
+					description: "Keep the rendered frames (default false).",
+					required: false
+				}
+			],
+			toJsx: () => NODE_ONLY("reference.report"),
+			run: (args, transport) => runReferenceReport(args, liveFileIO(transport))
+		});
+		registerOp({
+			name: "reference.compare",
+			category: "look",
+			readOnly: true,
+			description: "Compare two saved reference reports (reference.report's outPath): every difference over its step, largest first, in words (cast, lightness, sharpness, grain, levels, the moving subject's size and place, where the weight sits, main colours missing, cuts, motion). Node only; no After Effects.",
+			params: [{
+				name: "reference",
+				type: "string",
+				description: "Absolute path of the reference's saved report.",
+				required: true
+			}, {
+				name: "build",
+				type: "string",
+				description: "Absolute path of the build's saved report.",
+				required: true
+			}],
+			toJsx: () => NODE_ONLY("reference.compare"),
+			run: (args) => runReferenceCompare(args)
+		});
+	})))();
+}
+
 // operations/batch.js
 function denialText(denial) {
 	return denial.hint ? `${denial.message} \u2014 ${denial.hint}` : denial.message;
@@ -4299,4 +5840,4 @@ function init_eval() {
 	})))();
 }
 
-export { AE_AAC_PRIMING_SAMPLES, FFMPEG, FFPROBE, MAX_SCRIPT_ARGS_BYTES, MAX_SCRIPT_FILE_BYTES, REDO_COMMAND_ID, alignSound, init_command, init_delivery_sound, init_eval, init_operations, parseEbur128Summary, parseVolumedetect, readScriptFile, readSoundSync, runTool };
+export { AE_AAC_PRIMING_SAMPLES, CLOSE_CLICK_SHARE, COUNT_NOTE, CUTOUT_HOLE_LIMIT, CUTOUT_OVER, FFMPEG, FFPROBE, FX_ROOT_JSX, GB, MAX_SCRIPT_ARGS_BYTES, MAX_SCRIPT_FILE_BYTES, NEED_CLICK, NODE_ONLY, OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, PICTURE_MARGIN_BYTES, REDO_COMMAND_ID, SETTLE_MAX_MS, SOFT_EDGE_DEFAULTS, SUBJECT_WHOLE_PIECE_NOTE, acceptedBy, aeCacheRoot, alignSound, alikeRegions, cacheBytesFor, captureBytes, compLayerParams, fileCleanupJsx, fileCompJsx, fmt, frozenAccepted, frozenFinding, frozenOpts, gb, init_command, init_delivery_sound, init_eval, init_keying_key, init_keying_reference, init_keying_shared, init_operations, intersects, liveCutoutIO, liveFileIO, measureFrames, needSelection, overParam, overPicture, parseEbur128Summary, parseHex, parseVolumedetect, perFrameMsOf, pixelTally, plural, readScriptFile, readSoundSync, regionsOf, renderChunked, renderTally, roundTally, runTool, since, spacePlan, spaceRefusal, statfsFree, subjectIndexParam, summarize, trackedSpan, writePng };
