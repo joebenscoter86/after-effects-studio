@@ -15,8 +15,8 @@ export interface ShotRules {
     flashShare: number;
     /** Not a cut: the frame registers on the one before under some whole-frame shift with at least this score
      * (normalised cross-correlation over the overlap) and that shift leaves at most sameResidual of the change: the same
-     * picture, panned. Chosen on drawn clips: pans scored 0.905 to 1.0 with a residual of 0 to 0.21; cuts 0.19 to 0.795,
-     * with a residual of 0.47 to 0.96. */
+     * picture, panned. Chosen on drawn clips: pans scored 0.875 to 1.0 with a residual up to 0.34; cuts 0.19 to 0.795,
+     * with a residual from 0.47. */
     sameScore: number;
     sameResidual: number;
 }
