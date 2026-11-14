@@ -30,7 +30,7 @@ var before = !!args.before;
 var W = 1920, H = 1080, FPS = 24, DUR = 4;
 
 var c = P.freshComp("21 texture through a matte", W, H, FPS, DUR, ART.hex("#080808"));
-(function () { var j, it; for (j = app.project.numItems; j >= 1; j--) { it = app.project.item(j); if (it instanceof CompItem && it.name === "21 paper texture" && it.usedIn.length === 0) it.remove(); else if (it instanceof FootageItem && it.usedIn.length === 0 && (it.name === "21 paper" || it.name === "21 push null")) it.remove(); } })();
+(function () { var j, it; for (j = app.project.numItems; j >= 1; j--) { it = app.project.item(j); if (it instanceof CompItem && it.name === "21 paper texture" && it.usedIn.length === 0) it.remove(); else if (it instanceof FootageItem && it.usedIn.length === 0 && (it.name === "21 paper" || it.name === "21 push null" || it.name === "21 lower lift")) it.remove(); } })();
 
 // 1. Texture at the bottom, black title above it.
 var tex = c.layers.add(ART.footage(ARTDIR, "paper.png", "art 21"));
@@ -103,7 +103,7 @@ if (!before) {
   // cannot be set by script. A straight line from (0,0) to (33,255) is exactly a Levels white point.
   var lv = P.effect(tex2, "Levels");
   var lvi = lv.propertyIndex;
-  tex2.property("ADBE Effect Parade").property(lvi).property("Input White").setValue((args.white || 100) / 255);
+  tex2.property("ADBE Effect Parade").property(lvi).property("Input White").setValue((args.white || 126) / 255); // polish: 126 (with the paper tone) puts the letters at a median of 116 on paper 18
   // Run: the brief's Input White 70 put the letters' median at 83 (top of D) but 37 at its bottom and clipped the T's top
   // to 237: the sheet is lighter top right. White 100 with Gamma 1.6 evens it to about 100 / 61 / 171, creases still white.
   if (args.gamma !== 0) tex2.property("ADBE Effect Parade").property(lvi).property("Gamma").setValue(args.gamma || 1.6);
@@ -123,15 +123,41 @@ if (!before) {
   var re = P.effect(title, "Roughen Edges");
   var rei = re.propertyIndex;
   var R = function (n) { return title.property("ADBE Effect Parade").property(rei).property(n); };
-  // Recipe: Border 19, Sharpness 10, Scale 10. Brief: on this paper break the edge in a few larger bites, not a fine fuzz.
-  R("Border").setValue(args.border !== undefined ? args.border : 16);
-  R("Edge Sharpness").setValue(args.sharp !== undefined ? args.sharp : 6);
+  // Recipe: Border 19, Sharpness 10, Scale 10. Polish (2026-11-14): back to the recipe's values; the earlier art build's
+  // 16 / 6 / 120 turned the fine crumbly fray into slow waves (LESSONS 12: the technique's measured effect is fixed).
+  R("Border").setValue(args.border !== undefined ? args.border : 19);
+  R("Edge Sharpness").setValue(args.sharp !== undefined ? args.sharp : 10);
   R("Fractal Influence").setValue(1);
-  R("Scale").setValue(args.rscale !== undefined ? args.rscale : 120 /* run: 45 gave an even scallop; 120 breaks the edge in larger bites */);
+  R("Scale").setValue(args.rscale !== undefined ? args.rscale : 10);
   R("Stretch Width or Height").setValue(0);
   R("Complexity").setValue(2);
   R("Evolution").setValue(360 + 161.4);
   title.property("ADBE Effect Parade").property(rei).name = "TECH Roughen Edges";
+}
+
+// Polish (2026-11-14), art side: the sheet is darker below its middle fold, so the letters' lower halves sat at a median
+// of 94 against 130 above. "art lower lift" is an adjustment layer with Levels, masked to the comp below the fold (feathered),
+// that uses the title as its alpha matte too: it lifts only the paper inside the lower half of the letters, so both halves
+// read the same. The technique's own lift (TECH lift) and its values are unchanged. args.lowGamma 0 switches it off.
+// "art paper tone" (args.bgGamma, Levels Gamma on Paper BG only) darkens the plate toward the recipe's paper level (about 15-20).
+if (!before && args.lowGamma !== 0) {
+  var adj = c.layers.addSolid([1, 1, 1], "21 lower lift", W, H, 1, DUR);
+  adj.adjustmentLayer = true; adj.name = "art lower lift";
+  adj.moveBefore(title);
+  var mk = adj.property("ADBE Mask Parade").addProperty("ADBE Mask Atom");
+  var ms = new Shape(); var y0 = (args.lowTop || 0.50) * H;
+  ms.vertices = [[-50, y0], [W + 50, y0], [W + 50, H + 50], [-50, H + 50]]; ms.closed = true;
+  mk.property("ADBE Mask Shape").setValue(ms);
+  adj.property("ADBE Mask Parade").property(1).property("ADBE Mask Feather").setValue([0, args.lowFeather || 120]);
+  var alv = P.effect(adj, "Levels");
+  adj.property("ADBE Effect Parade").property(alv.propertyIndex).property("Gamma").setValue(args.lowGamma || 1.35);
+  adj.setTrackMatte(title, TrackMatteType.ALPHA);
+}
+var BGG = args.bgGamma !== undefined ? args.bgGamma : 0.85;
+if (BGG) {
+  var blv = P.effect(tex, "Levels");
+  tex.property("ADBE Effect Parade").property(blv.propertyIndex).property("Gamma").setValue(BGG);
+  tex.property("ADBE Effect Parade").property(blv.propertyIndex).name = "art paper tone";
 }
 
 // Slow push for the movie: everything parented to a static null, then the null scales 100 -> 103 %.

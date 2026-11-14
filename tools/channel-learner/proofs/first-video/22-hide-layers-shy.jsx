@@ -107,10 +107,26 @@ for (i = N - 1; i >= 0; i--) {
   addFill(dot, ART.hex(SEASON[i]).concat([1]));
   P.tf(dot.layer, "ADBE Position").setValue([pos[0], pos[1] - BH / 2 - 6]);
 
-  mon = P.text(c, MONTHS[i], { size: Math.round(0.011 * CH / 0.72), font: FMON, color: ART.hex("#B8AA94"), tracking: 200,
-    pos: [pos[0], pos[1] + BH / 2 + 41], name: "Month " + (i + 1) });
-  lab = P.text(c, num, { size: Math.round(0.022 * CH / 0.72), font: FNUM, color: ART.hex("#F3EBDD"),
-    pos: [pos[0], pos[1] + BH / 2 + 19], name: "Label " + (i + 1) });
+  // Polish (2026-11-14): month names were 12 px (1.1 % of the height), unreadable on a phone. They are now about 18 px
+  // before Null 1's 92 % scale (about 17 px on screen), set on one line with the number under the card: two stacked
+  // lines at this size would run into the next card's season dot at 2-4 and 8-10 o'clock. Still two layers per card.
+  mon = P.text(c, MONTHS[i], { size: args.monSize || 26, font: FMON, color: ART.hex("#B8AA94"), tracking: (args.monTrack !== undefined ? args.monTrack : 80) /* polish: 200 (brief) ran the wider names into the next card */,
+    pos: [pos[0], pos[1] + BH / 2 + 22], name: "Month " + (i + 1) });
+  lab = P.text(c, num, { size: args.numSize || 28, font: FNUM, color: ART.hex("#F3EBDD"),
+    pos: [pos[0], pos[1] + BH / 2 + 22], name: "Label " + (i + 1) });
+  (function () {
+    var rn = lab.sourceRectAtTime(0, false), rm = mon.sourceRectAtTime(0, false), gap = 9;
+    var tot = rn.width + gap + rm.width, yy = pos[1] + BH / 2 + 22;
+    // The one-line label is wider than the card: align it to the card edge on the side away from the next card down
+    // (the neighbour with the larger y), so it never runs into that card. January and July stay centred.
+    var aN = ((i + 1) % N) * 2 * Math.PI / N, aP = ((i + N - 1) % N) * 2 * Math.PI / N;
+    var below = (-Math.cos(aN) > -Math.cos(aP)) ? aN : aP, dx = Math.sin(below) - Math.sin(a), x0;
+    if (i === 0 || i === N / 2 || args.labelAlign === "centre") x0 = pos[0] - tot / 2;
+    else if (dx > 0) x0 = pos[0] + BW / 2 - tot;      // next card down is to the right: end at the card's right edge
+    else x0 = pos[0] - BW / 2;                        // to the left: start at the card's left edge
+    P.tf(lab, "ADBE Position").setValue([x0 + rn.width / 2, yy]);
+    P.tf(mon, "ADBE Position").setValue([x0 + tot - rm.width / 2, yy]);
+  })();
 
   hl = [lab, mon, dot.layer, outline.layer, matte.layer];
   for (h = 0; h < hl.length; h++) { hl[h].shy = true; shyCount++; }
@@ -127,10 +143,13 @@ P.tf(ctl, "ADBE Position").setValue([CW / 2, CH / 2]);
 var k;
 for (k = 0; k < boxes.length; k++) boxes[k].parent = ctl;
 wheel.parent = ctl;
-P.tf(ctl, "ADBE Position").setValue([CW / 2, CH / 2 - 19]); // after parenting, so the set moves with it
+// Polish (2026-11-14): the set filled the frame top to bottom (about 22 px margins). Null 1 now starts at 92 % (args.setScale)
+// and still pushes 1.5 % to the last frame; the lift re-centres the set (dot of 01 to the 07 label).
+var SS = args.setScale || 92;
+P.tf(ctl, "ADBE Position").setValue([CW / 2, CH / 2 - (args.lift !== undefined ? args.lift : 10)]); // after parenting, so the set moves with it
 var ns = P.tf(ctl, "ADBE Scale");
-ns.setValueAtTime(0, [100, 100]);
-ns.setValueAtTime(DUR, [101.5, 101.5]); // linear: still moving on the last frame
+ns.setValueAtTime(0, [SS, SS]);
+ns.setValueAtTime(DUR, [SS * 1.015, SS * 1.015]); // linear: still moving on the last frame
 
 // FX: a light vignette and Noise 3 % (brief).
 var fxLayer = P.solid(c, "22 FX", [1, 1, 1]);

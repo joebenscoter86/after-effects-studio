@@ -91,12 +91,10 @@ var i, a, t, k, td, tdp, dot, ex, ez;
 for (i = 0; i < 4; i++) {
   a = i * Math.PI / 2;               // face normals at 0, 90, 180, 270 degrees
   for (k = 1; k >= 0; k--) {
-    t = P.text(c, WORD, { size: FS, font: FONT, color: k ? ART.hex("#2A2D31") : WHITE, tracking: TRK,
+    // Polish (2026-11-14): the dark copies were #2A2D31 with a 2 px #8A9097 stroke and read as muddy outlined grey type
+    // over the floor's light pool. Now a plain deep fill, no stroke (args.copyColor), so each reads as a shadowed echo.
+    t = P.text(c, WORD, { size: FS, font: FONT, color: k ? ART.hex(args.copyColor || "#15171A") : WHITE, tracking: TRK,
       name: "word " + (i + 1) + (k ? " dark copy" : "") });
-    if (k) {
-      tdp = t.property("ADBE Text Properties").property("ADBE Text Document");
-      td = tdp.value; td.applyStroke = true; td.strokeColor = ART.hex("#8A9097"); td.strokeWidth = 2; td.strokeOverFill = false; tdp.setValue(td);
-    }
     t.threeDLayer = true;
     t.parent = ctl;
     P.tf(t, "ADBE Position").setValue([HALF * Math.sin(a), k * CAP, -HALF * Math.cos(a)]);
@@ -107,7 +105,8 @@ for (i = 0; i < 4; i++) {
   ex = HALF * Math.sin(a) + HALF * Math.cos(a);
   ez = -HALF * Math.cos(a) + HALF * Math.sin(a);
   dot = P.shape(c, "dot " + (i + 1));
-  P.ellipse(dot, [0.3 * CAP, 0.3 * CAP]);
+  // Polish: 30 % of the cap height (27 px) read as stray specks in three-quarter views; 40 % (args.dotShare).
+  P.ellipse(dot, [(args.dotShare || 0.4) * CAP, (args.dotShare || 0.4) * CAP]);
   (function (sh) { var f = P.contents(sh).addProperty("ADBE Vector Graphic - Fill"); P.contents(sh).property(f.propertyIndex).property("ADBE Vector Fill Color").setValue(WHITE); })(dot);
   dot.layer.threeDLayer = true;
   dot.layer.parent = ctl;

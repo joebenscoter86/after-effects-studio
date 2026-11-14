@@ -58,6 +58,15 @@ addRect(frame, [outer * 2, BAR], [0, top + BAR / 2], 20);
 addRect(frame, R3.size, [-R3.pos[0], R3.pos[1]], 20);
 // Rectangle 3: right block, recipe values.
 addRect(frame, R3.size, R3.pos, 20);
+// Polish (2026-11-14): the union of three rectangles leaves the notch's two inside corners square while the outer corners
+// are rounded. Merge Paths (Add) makes one outline, then Round Corners rounds the corner points it creates (the notch's
+// inside corners) to the same 20 px; the rectangles' own rounded corners are smooth points and stay as they are.
+if (args.roundInside !== false) {
+  var mg = P.contents(frame).addProperty("ADBE Vector Filter - Merge");
+  P.contents(frame).property(mg.propertyIndex).property("ADBE Vector Merge Type").setValue(2); // Add
+  var rc = P.contents(frame).addProperty("ADBE Vector Filter - RC");
+  P.contents(frame).property(rc.propertyIndex).property("ADBE Vector RoundCorner Radius").setValue(args.innerRadius || 20);
+}
 addFill(frame, [0.5, 0.5, 0.5, 1]); // ASSUMED: grey value
 var st = P.stroke(frame, [0, 0, 0, 1], 3);
 P.contents(frame).property(st).enabled = false; // recipe: Stroke Width 3.0, stroke switched off
@@ -105,28 +114,39 @@ hr = head.sourceRectAtTime(0, false);
 P.tf(head, "ADBE Anchor Point").setValue([hr.left + hr.width / 2, hr.top + hr.height / 2]);
 P.tf(head, "ADBE Position").setValue([W / 2, (notchTop + notchBottom) / 2]);
 
-// Small slide text (brief): studio name top left on the frame's left edge, page number top right on its right edge,
-// both 1.2 % of the height (cap height), #111111 at 60 %, with one accent dot before the studio name.
-var SFONT = "Poppins-Regular";
+// Small slide text. Polish (2026-11-14): the top third was empty white with only a 1.2 % header line that vanished on a
+// phone. The header is now a two-line block over the frame's left edge (studio name Poppins SemiBold, caps 2.4 % of the
+// height, with the accent dot; subtitle Poppins Regular 1.6 % at 60 %) and the page number with a second line on its right
+// edge, baselines at 21.5 % and 26.5 % down, so the band above the frame (which starts at 32.4 %) carries visible content.
+var SFONT = "Poppins-Regular", BFONT = FONT;
 try { var sfo = app.fonts.getFontsByPostScriptName(SFONT); if (!sfo.length || sfo[0].isSubstitute) SFONT = FONT; } catch (eS) { SFONT = FONT; }
-var SCAP = 0.012 * H, SFS = 100, LEFTX = W / 2 - outer, RIGHTX = W / 2 + outer, SY = 0.215 * H;
-function small(str, name, alignRight) {
-  var l = P.text(c, str, { size: SFS, font: SFONT, color: ART.hex("#111111"), tracking: 120, name: name });
-  var r = l.sourceRectAtTime(0, false), k = SCAP / r.height * 100;
-  var tp = l.property("ADBE Text Properties").property("ADBE Text Document"), td = tp.value; td.fontSize = SFS * k / 100 * (100 / 100); tp.setValue(td);
-  r = l.sourceRectAtTime(0, false);
-  P.tf(l, "ADBE Anchor Point").setValue([alignRight ? r.left + r.width : r.left, r.top + r.height]);
-  P.tf(l, "ADBE Opacity").setValue(60);
+var LEFTX = W / 2 - outer, RIGHTX = W / 2 + outer, SY1 = (args.hdrY1 || 0.215) * H, SY2 = (args.hdrY2 || 0.265) * H;
+function small(str, name, alignRight, capShare, font, opacity, tracking) {
+  var l = P.text(c, str, { size: 100, font: font, color: ART.hex("#111111"), tracking: tracking, name: name });
+  var tp = l.property("ADBE Text Properties").property("ADBE Text Document"), td = tp.value;
+  var probeR = l.sourceRectAtTime(0, false);
+  // Cap height from a probe of the capitals only (descenders and the slash would inflate the box).
+  var cp = P.text(c, "H", { size: 100, font: font, color: [0, 0, 0], name: "cap probe" });
+  var capH = cp.sourceRectAtTime(0, false).height; cp.remove();
+  td.fontSize = 100 * capShare * H / capH; tp.setValue(td);
+  var r = l.sourceRectAtTime(0, false);
+  P.tf(l, "ADBE Anchor Point").setValue([alignRight ? r.left + r.width : r.left, 0]); // baseline
+  P.tf(l, "ADBE Opacity").setValue(opacity);
   return l;
 }
-var sn = small("STUDIO BRUT  /  HOUSING STUDIES", "studio name", false);
-P.tf(sn, "ADBE Position").setValue([LEFTX + 54, SY]);
-var pg = small("24 / 24", "page number", true);
-P.tf(pg, "ADBE Position").setValue([RIGHTX, SY]);
+var CAP1 = 0.024 * H;
+var sn = small("STUDIO BRUT", "studio name", false, 0.024, BFONT, 100, 60);
+P.tf(sn, "ADBE Position").setValue([LEFTX + 0.9 * CAP1, SY1]);
+var sub = small("HOUSING STUDIES  /  CLOSING NOTES", "studio subtitle", false, 0.016, SFONT, 60, 120);
+P.tf(sub, "ADBE Position").setValue([LEFTX, SY2]);
+var pg = small("24 / 24", "page number", true, 0.024, BFONT, 100, 60);
+P.tf(pg, "ADBE Position").setValue([RIGHTX, SY1]);
+var pg2 = small("STUDIOBRUT.ARCHI", "page subtitle", true, 0.016, SFONT, 60, 120);
+P.tf(pg2, "ADBE Position").setValue([RIGHTX, SY2]);
 var acc = P.shape(c, "accent dot");
-P.ellipse(acc, [22, 22]);
+P.ellipse(acc, [0.5 * CAP1, 0.5 * CAP1]);
 (function () { var f = P.contents(acc).addProperty("ADBE Vector Graphic - Fill"); P.contents(acc).property(f.propertyIndex).property("ADBE Vector Fill Color").setValue(ART.hex("#E8913A")); })();
-P.tf(acc.layer, "ADBE Position").setValue([LEFTX + 11, SY - SCAP / 2]);
+P.tf(acc.layer, "ADBE Position").setValue([LEFTX + 0.25 * CAP1, SY1 - CAP1 / 2]);
 
 // Remove this script's own unused solids from earlier runs.
 var oi, oit;

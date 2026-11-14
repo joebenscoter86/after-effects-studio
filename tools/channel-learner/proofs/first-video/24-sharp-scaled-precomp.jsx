@@ -114,7 +114,9 @@ P.tf(icon, "ADBE Position").setValue([62, 112]);
 // Message, sized from the layout divided by the 2050 % scale (as in the plain build).
 var K = 20.5;
 var CAP = 0.45 * 1080 / K, FIXW = (0.55 - 0.105) * 1920 / K, GAP = 0.116 * 1920 / K, LEAD = 0.61 * 1080 / K;
-var FONT = pickFont([args.font || "ArialNarrow-Bold", "ArialNarrow", "HelveticaNeue-CondensedBold", "Arial-BoldMT"]);
+// Polish (2026-11-14): Arial Narrow Bold gave stems 4.4 % of the width against the layout's 3.3 % (a regular-weight narrow
+// sans). The default is now a lighter face, measured on the render (see build-notes); args.font overrides.
+var FONT = pickFont([args.font || "AvenirNextCondensed-Medium" /* polish: stems 3.2 % (Arial Narrow 2.7, Narrow Bold 4.4) */, "ArialNarrow", "ArialNarrow-Bold", "HelveticaNeue-CondensedBold", "Arial-BoldMT"]);
 var probe = P.text(pre, "FIX", { size: 100, font: FONT, color: [0, 0, 0], name: "probe" });
 var pr = probe.sourceRectAtTime(0, false);
 var FS = 100 * CAP / pr.height;
@@ -148,14 +150,16 @@ desk.name = "Desktop";
 P.tf(desk, "ADBE Scale").setValue([71.5, 71.5]);
 
 var LFONT = pickFont(["SpaceMono-Bold", "Courier-Bold"]);
+var ICX = args.iconX || 0.07;
 var icons = [["icon-folder.png", "Icon folder", "Projects", 0.14], ["icon-document.png", "Icon doc", "readme.txt", 0.30], ["icon-computer.png", "Icon computer", "My Machine", 0.46]];
 var ii, il, lab, lr, ds;
 for (ii = 0; ii < icons.length; ii++) {
   il = c.layers.add(ART.footage(ARTDIR, icons[ii][0], "art 24"));
   il.name = icons[ii][1];
   P.tf(il, "ADBE Scale").setValue([8, 8]);
-  P.tf(il, "ADBE Position").setValue([0.06 * CW, icons[ii][3] * CH]);
-  lab = P.text(c, icons[ii][2], { size: 20, font: LFONT, color: [1, 1, 1], pos: [0.06 * CW, icons[ii][3] * CH + 41 + 18], name: icons[ii][1] + " label" });
+  // Polish: labels were about 14 px tall, unreadable on a phone; now 30 px type (caps about 2 % of the height), column at 7 %.
+  P.tf(il, "ADBE Position").setValue([ICX * CW, icons[ii][3] * CH]);
+  lab = P.text(c, icons[ii][2], { size: args.labelSize || 30, font: LFONT, color: [1, 1, 1], pos: [ICX * CW, icons[ii][3] * CH + 41 + 24], name: icons[ii][1] + " label" });
   ds = P.effect(lab, "ADBE Drop Shadow");
   ART.setFx(ds, { "Shadow Color": ART.hex("#0B3B36"), "Opacity": 255, "Direction": 135, "Distance": 1, "Softness": 0 });
 }
@@ -165,13 +169,16 @@ L.name = "Dialog";
 // Anchor on FIX so that at 2050 % FIX spans 10.5 % to 55 % across with its capitals centred 54.5 % down (plain build).
 var A = [fixT.cx + (0.5 - 0.3275) * CW / K, fixT.cy - (0.545 - 0.5) * CH / K];
 P.tf(L, "ADBE Anchor Point").setValue(A);
-// Pure zoom about a fixed screen point Z: dialog centre D sits at the comp centre at 100 %, the anchor at 2050 %.
+// Pure zoom about a fixed screen point Z: dialog centre D sits at the comp centre at the start scale S0, the anchor at 2050 %.
+// Polish: the wide shot starts at S0 = 140 % (args.startScale), so the dialog fills about a third of the width
+// instead of a small box on a large empty desktop. Fixed point: XZ = (K A - S0 D) / (K - S0), Z = C0 - K (A - XZ).
+var S0 = (args.startScale || 140) / 100;
 var C0 = [CW / 2, CH / 2], D = [PW / 2, PH / 2];
-var XZ = [(K * A[0] - D[0]) / (K - 1), (K * A[1] - D[1]) / (K - 1)];
-var Z = [C0[0] - D[0] + XZ[0], C0[1] - D[1] + XZ[1]];
+var XZ = [(K * A[0] - S0 * D[0]) / (K - S0), (K * A[1] - S0 * D[1]) / (K - S0)];
+var Z = [C0[0] - K * (A[0] - XZ[0]), C0[1] - K * (A[1] - XZ[1])];
 P.tf(L, "ADBE Scale").expression =
   "var u = ease(time, " + T0 + ", " + T1 + ", 0, 1);\n" +
-  "var s = 100 * Math.pow(" + K + ", u) * (1 + 0.012 * Math.max(0, time - " + T1 + "));\n[s, s]";
+  "var s = 100 * " + S0 + " * Math.pow(" + (K / S0) + ", u) * (1 + 0.012 * Math.max(0, time - " + T1 + "));\n[s, s]";
 P.tf(L, "ADBE Position").expression =
   "var s = transform.scale[0] / 100;\n[" + Z[0] + " + s * (" + (A[0] - XZ[0]) + "), " + Z[1] + " + s * (" + (A[1] - XZ[1]) + ")]";
 var dsh = P.effect(L, "ADBE Drop Shadow");
