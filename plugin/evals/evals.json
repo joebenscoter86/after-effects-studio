@@ -340,6 +340,23 @@
         "Trace shows look measured again after the changes, and the final ae_render_frame call made exactly as the grader's plan printed it, followed by a single grade run.",
         "The report gives both regions' grain and edge width before and after, without claiming a match the numbers do not show."
       ]
+    },
+    {
+      "id": 25,
+      "prompt": "I keep a look sheet of my approved reels at look/sheet.json (its page is look/sheet.md beside it). Plan a new 40-second vertical explainer on why small teams should write things down, in my look, and tell me how you will check it matches my look before you hand it over. Plan it for my approval, then stop before After Effects.",
+      "expected_output": "The answer reads the look sheet before planning and carries what it holds into the plan: the main colours that are part of the look (paper, navy, vermilion), the black point and levels, and the rhythm (about 22 cuts a minute, shots of about 2.5 s, a calm share near 60 %), each with the range and the 3 pieces it rests on, and it names what varies across the pieces (grain among them) as not part of the look. It says the sheet describes what the user's pieces did, not a rule, and that 3 pieces is a small base. Before hand-over it plans to render the build to a movie and compare it with the sheet (reference.report on the render with against: the sheet and rhythm: true, or reference.compare with the sheet as reference), and to fix or explain each difference stated against the user's range. It does not claim type or fonts from the sheet, which has none.",
+      "files": [
+        "look/sheet.json",
+        "look/sheet.md"
+      ],
+      "assertions": [
+        "Trace shows look/sheet.json or look/sheet.md read before the plan is written.",
+        "The plan carries specific values from the sheet (at least two of: the main colours, the black point or levels, the cut rate or shot length, the calm share), each tied to the user's range or the number of pieces, rather than generic advice.",
+        "The answer names at least one measure the sheet marks as varying across the pieces (such as grain) and does not treat it as part of the look.",
+        "Before hand-over, the plan compares the build's rendered movie with the sheet (reference.report with against: the sheet, with rhythm, or reference.compare with the sheet as reference) and says differences are read against the user's own range.",
+        "The answer treats the sheet as a description of 3 past pieces, not a rule, and does not invent fonts or type sizes the sheet does not hold.",
+        "No After Effects inspection or mutation, render, install or publication occurs in the planning-only test."
+      ]
     }
   ]
 }

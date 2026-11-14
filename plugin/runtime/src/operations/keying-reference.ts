@@ -3,9 +3,12 @@
 
 import { promises as fs } from "node:fs";
 import * as path from "node:path";
+import { compareWithSheet, isPiece, isSheet, type PieceRhythm } from "../color/look.js";
 import { compareReferences, referenceReader, type LookRegionSpec, type ReferenceReport } from "../color/sheet.js";
 import { registerOp, jsxCompPreamble } from "../registry.js";
 import { iccManagedReason } from "../tools/capture-shared.js";
+import { movieColour, movieFrames, probeVideo } from "../video/movie-rgb.js";
+import { measureRhythm } from "../video/rhythm.js";
 import { CHECK_FILE_MAX_FRAMES, NODE_ONLY, PICTURE_MARGIN_BYTES, SETTLE_MAX_MS, captureBytes, fileCleanupJsx, fileCompJsx, liveFileIO, renderChunked, renderTally, roundTally, since, spaceRefusal, type FileIO, type Json } from "./keying-shared.js";
 
 
@@ -67,7 +70,18 @@ export async function runReferenceReport(args: Record<string, unknown>, io: File
   const p = typeof args.path === "string" ? args.path : null;
   if (p !== null && !path.isAbsolute(p)) return { ok: false, error: "`path` must be absolute" };
   const stat = p !== null ? await fs.stat(p).catch(() => null) : null;
-  if (p !== null && !MOVIE_EXT.test(p)) {
+  // A movie, read by ffmpeg in Node when it is installed (After Effects is the fallback, or asked for with via).
+  const viaAe = args.via === "after-effects";
+  const movieInfo = p !== null && MOVIE_EXT.test(p) && !viaAe && stat ? await probeVideo(p) : null;
+  const colour = movieInfo && !("error" in movieInfo) ? await movieColour(p!) : null;
+  if (p !== null && movieInfo && !("error" in movieInfo) && colour) {
+    const idx = pick(movieInfo.frames);
+    // read as the After Effects path reads a movie: the same frames, the same reader
+    const reader = referenceReader({ total: idx.length, regions, frameRate: movieInfo.nominalFps });
+    for await (const fr of movieFrames(movieInfo, idx, colour)) reader.add({ img: fr.img, frame: fr.frame, time: fr.time });
+    report = reader.finish();
+    source = { kind: "movie", path: p, via: "ffmpeg", frames: movieInfo.frames, read: idx.length, frameRate: movieInfo.nominalFps, colour: { matrix: colour.matrix, range: colour.range, tags: colour.tags, assumed: colour.assumed, reading: colour.reading } };
+  } else if (p !== null && !MOVIE_EXT.test(p)) {
     // A still or a folder of frames: read in Node, no After Effects.
     if (!stat) return { ok: false, error: `nothing at ${p}` };
     const files = stat.isDirectory()
@@ -173,11 +187,21 @@ export async function runReferenceReport(args: Record<string, unknown>, io: File
       ? { kind: "comp", name: setup.name, frames: setup.frames, frameRate: setup.frameRate }
       : { kind: p !== null ? "movie" : "item", path: p, item: setup.itemName, frames: setup.frames, frameRate: setup.frameRate, cleanup };
   }
-  await fs.writeFile(outPath, JSON.stringify(report));
+  // the rhythm (stage 13's census and shot list over the whole movie), when asked for: kept in the saved report
+  let rhythm: PieceRhythm | null = null, rhythmNote: string | null = null;
+  if (args.rhythm === true) {
+    if (p !== null && MOVIE_EXT.test(p)) {
+      const r = await measureRhythm(p);
+      if ("error" in r) rhythmNote = `The rhythm was not measured: ${r.error}`;
+      else rhythm = r;
+    } else rhythmNote = "The rhythm is measured on a movie only (stage 13's census and shot list): render the build to a file and report that.";
+  }
+  await fs.writeFile(outPath, JSON.stringify(rhythm ? { ...report, rhythm } : report));
   let compare: Json;
   if (typeof args.against === "string") {
     try {
-      compare = compareReferences(JSON.parse(await fs.readFile(args.against, "utf8")), report);
+      const against = JSON.parse(await fs.readFile(args.against, "utf8"));
+      compare = isSheet(against) ? compareWithSheet(against, { report, rhythm }) : compareReferences(against, report);
     } catch (e) {
       compare = { error: `could not compare with ${args.against}: ${e instanceof Error ? e.message : String(e)}` };
     }
@@ -192,10 +216,12 @@ export async function runReferenceReport(args: Record<string, unknown>, io: File
     ...(compare ? { compare } : {}),
     notes: [
       ...report.notes,
+      ...(rhythmNote ? [rhythmNote] : []),
       ...(source.kind !== "frames" && source.kind !== "still" && !report.motion.consecutive && report.frames > 1
         ? [`Only ${report.frames} frames spread over the source were read (maxFrames ${cap}), so cuts and motion were not.`]
         : []),
     ],
+    ...(rhythm ? { rhythm } : {}),
     timing: { render: roundTally(renders), totalMs: Math.round(since(started)) },
     next: compare
       ? "Read the differences largest first and decide which to fix; measure again after each fix."
@@ -210,9 +236,15 @@ export async function runReferenceCompare(args: Record<string, unknown>): Promis
     return JSON.parse(await fs.readFile(v, "utf8")) as ReferenceReport;
   };
   try {
-    const ref = await read("reference");
-    const build = await read("build");
-    return { ok: true, ...compareReferences(ref, build) };
+    const ref = (await read("reference")) as unknown;
+    const build = (await read("build")) as unknown;
+    if (isSheet(ref)) {
+      // a sheet: the build's report (with its rhythm when measured), or a piece a sheet saved
+      const piece = isPiece(build) ? build : { report: build as ReferenceReport, rhythm: (build as Json).rhythm ?? null, type: null };
+      return compareWithSheet(ref, piece);
+    }
+    if (isSheet(build)) return { ok: false, error: "`build` is a look sheet: give the sheet as `reference` and the build's saved report as `build`" };
+    return { ok: true, ...compareReferences(ref as ReferenceReport, (isPiece(build) ? build.report : build) as ReferenceReport) };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) };
   }
@@ -230,7 +262,7 @@ registerOp({
   name: "reference.report",
   category: "look",
   description:
-    "Measure a reference, or a build, for working to it. Give exactly one source: `path` (a PNG still, a folder of PNG frames in name order, or a movie), `item` (a footage item's id) or `comp` (the build). Stills and folders are read in Node; a movie or item is brought into a throwaway comp and, like a comp, rendered through ae_render_frame by frame numbers (a quarter of a frame inside each frame, so no time lands on the frame before; checked live at 30, 29.97 and 24 fps), read and removed a chunk at a time. " +
+    "Measure a reference, or a build, for working to it. Give exactly one source: `path` (a PNG still, a folder of PNG frames in name order, or a movie), `item` (a footage item's id) or `comp` (the build). Stills and folders are read in Node; a movie is decoded by ffmpeg in Node when ffmpeg is installed (its YUV-to-RGB matrix and range read from the file's tags, Rec. 709 video range assumed where a tag is missing, and the reply says which; checked against After Effects' own render of the same frames: levels within 0.001, CIELAB within 0.02), else, like an item, brought into a throwaway comp and, like a comp, rendered through ae_render_frame by frame numbers (a quarter of a frame inside each frame, so no time lands on the frame before; checked live at 30, 29.97 and 24 fps), read and removed a chunk at a time. " +
     "Reports the main colours and their shares (k-means in CIELAB), black and white points and mean, CIELAB colour, edge width (sharpness) and grain at the grid's nine regions (top left to bottom right) and any named `regions`, where the weight of the frame sits (centres of brightness and of detail), and on consecutive frames the cuts, the mean change between frames and where the picture moves (a motion map; its centre is the moving subject in a talking-head shot). Colour and texture are read on 24 frames spread over the source, motion on every pair. " +
     "Saves the whole report as JSON at `outPath` (the reply leaves the motion map out). With `against` (a saved report of the reference) it adds `compare`: the differences largest first, each over a step (a CIELAB a* or b* of 2 is a cast, a quarter in edge width or grain, 5% in the subject's size, 3% of the frame in a place), in words. The subject's size and place are compared by lining up the two motion maps, only when they match as the same footage. " +
     "Measured live (After Effects 27.0): 235 frames of a 1080 x 1920 H.264 movie in 314 s, and of a comp in 317 s, nothing added to the disk cache. A comp renders without the compression noise of a delivered movie, so against a movie reference its grain reads lower: compare like with like where grain matters.",
@@ -240,7 +272,9 @@ registerOp({
     { name: "comp", type: "string", description: "A comp (the build), by name or id, instead of path.", required: false },
     { name: "outPath", type: "string", description: "Absolute path for the report (.json). Captures are written beside it and removed once read.", required: true },
     REFERENCE_REGIONS_PARAM,
-    { name: "against", type: "string", description: "A saved report (the reference) to compare this one with.", required: false },
+    { name: "against", type: "string", description: "A saved report (the reference), or a look sheet (reference.sheet's sheet.json), to compare this one with. Against a sheet, only the measures of the user's look are compared, each against their own range and the number of pieces it rests on.", required: false },
+    { name: "via", type: "string", description: "How a movie is read: 'ffmpeg' (the default when ffmpeg is installed: decoded in Node, no After Effects) or 'after-effects' (rendered frame by frame).", required: false },
+    { name: "rhythm", type: "boolean", description: "Also measure a movie's rhythm (stage 13's census over the whole movie and its shot list: calm, local and travel shares, travel moves a minute, calm runs, bursts, shot lengths, cuts a minute), kept in the saved report so a look sheet can compare it.", required: false },
     { name: "frameRate", type: "number", description: "Frames per second of a folder of frames (for times).", required: false },
     {
       name: "frameStep",
@@ -262,10 +296,10 @@ registerOp({
   category: "look",
   readOnly: true,
   description:
-    "Compare two saved reference reports (reference.report's outPath): every difference over its step, largest first, in words (cast, lightness, sharpness, grain, levels, the moving subject's size and place, where the weight sits, main colours missing, cuts, motion). Node only; no After Effects.",
+    "Compare two saved reference reports (reference.report's outPath): every difference over its step, largest first, in words (cast, lightness, sharpness, grain, levels, the moving subject's size and place, where the weight sits, main colours missing, cuts, motion). `reference` may be a look sheet (reference.sheet): then only the measures of the user's look are compared, each against their own range ('black point 0.09; your pieces sit between 0.02 and 0.04 (4 pieces)'); inside the range, or within one step of it, is no difference. No pass or fail. Node only; no After Effects.",
   params: [
-    { name: "reference", type: "string", description: "Absolute path of the reference's saved report.", required: true },
-    { name: "build", type: "string", description: "Absolute path of the build's saved report.", required: true },
+    { name: "reference", type: "string", description: "Absolute path of the reference's saved report, or of a look sheet (sheet.json).", required: true },
+    { name: "build", type: "string", description: "Absolute path of the build's saved report (with its rhythm when reference.report measured it), or of a piece a sheet saved.", required: true },
   ],
   toJsx: () => NODE_ONLY("reference.compare"),
   run: (args) => runReferenceCompare(args),
