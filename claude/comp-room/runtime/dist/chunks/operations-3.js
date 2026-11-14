@@ -1,859 +1,10 @@
 import { __esmMin } from "./rolldown-runtime.js";
-import { init_registry, jsxCompLayerPreamble, jsxCompPreamble, jsxFail, jsxPropertyLookup, jsxVal, registerOp } from "./core-1.js";
-import { REDO_COMMAND_ID, init_command } from "./operations-1.js";
-import { COMP_CORNERS_FN, init_snippets } from "./operations-4.js";
+import { init_config, init_policy, init_registry, jsxCompLayerPreamble, jsxCompPreamble, jsxFail, jsxPropertyLookup, jsxVal, readOnlyMode, registerOp, rejectedOutputPath } from "./core-1.js";
+import { AE_AAC_PRIMING_SAMPLES, FFMPEG, FFPROBE, REDO_COMMAND_ID, alignSound, init_command, init_delivery_sound, parseEbur128Summary, parseVolumedetect, readSoundSync, runTool } from "./operations-1.js";
+import { analyzeCurve, curveGraph, encodePngSrgb8, init_motion, init_png16, parseTiming, soundOnsets, syncReport } from "./color-1.js";
+import { init_run_moves, runCompareMoves } from "./video-1.js";
 import { promises } from "node:fs";
 import * as path$1 from "node:path";
-
-// operations/layer.js
-function init_layer() {
-	return (init_layer = __esmMin((() => {
-		init_registry();
-		registerOp({
-			name: "layer.create_solid",
-			category: "layer",
-			description: "Create a solid layer in a composition.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "name",
-					type: "string",
-					description: "Layer name",
-					required: false,
-					default: "Solid"
-				},
-				{
-					name: "color",
-					type: "array",
-					description: "[r,g,b] 0-1",
-					required: false,
-					default: [
-						1,
-						1,
-						1
-					]
-				},
-				{
-					name: "width",
-					type: "number",
-					description: "Width in px (default: comp width)",
-					required: false
-				},
-				{
-					name: "height",
-					type: "number",
-					description: "Height in px (default: comp height)",
-					required: false
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompPreamble(args)}
-            var _w = ${jsxVal(args.width)} || _comp.width;
-            var _h = ${jsxVal(args.height)} || _comp.height;
-            var _layer = _comp.layers.addSolid(${jsxVal(args.color ?? [
-					1,
-					1,
-					1
-				])}, ${jsxVal(args.name ?? "Solid")}, _w, _h, _comp.pixelAspect, _comp.duration);
-            return { ok: true, index: _layer.index, name: _layer.name };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.create_adjustment",
-			category: "layer",
-			description: "Create an adjustment layer (a comp-sized solid with adjustmentLayer on) — the carrier for comp-wide effects such as Posterize Time or a color grade. Add effects with effect.add.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "name",
-					type: "string",
-					description: "Layer name",
-					required: false,
-					default: "Adjustment Layer"
-				},
-				{
-					name: "width",
-					type: "number",
-					description: "Width in px (default: comp width)",
-					required: false
-				},
-				{
-					name: "height",
-					type: "number",
-					description: "Height in px (default: comp height)",
-					required: false
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompPreamble(args)}
-            var _w = ${jsxVal(args.width)} || _comp.width;
-            var _h = ${jsxVal(args.height)} || _comp.height;
-            var _layer = _comp.layers.addSolid([1, 1, 1], ${jsxVal(args.name ?? "Adjustment Layer")}, _w, _h, _comp.pixelAspect, _comp.duration);
-            _layer.adjustmentLayer = true;
-            return { ok: true, index: _layer.index, name: _layer.name, adjustmentLayer: _layer.adjustmentLayer };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.create_shape",
-			category: "layer",
-			description: "Create an empty shape layer.",
-			params: [{
-				name: "comp",
-				type: "any",
-				description: "Comp name or id",
-				required: true
-			}, {
-				name: "name",
-				type: "string",
-				description: "Layer name",
-				required: false
-			}],
-			toJsx(args) {
-				return `
-            ${jsxCompPreamble(args)}
-            var _layer = _comp.layers.addShape();
-            ${args.name ? `_layer.name = ${jsxVal(args.name)};` : ""}
-            return { ok: true, index: _layer.index, name: _layer.name };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.create_text",
-			category: "layer",
-			description: "Create a text layer: point text by default, paragraph (box) text when boxSize is given, vertical when orientation='vertical' (AE 24.2+). Point<->box conversion is not scriptable, so pick the right kind here.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "text",
-					type: "string",
-					description: "Text content",
-					required: false,
-					default: ""
-				},
-				{
-					name: "name",
-					type: "string",
-					description: "Layer name",
-					required: false
-				},
-				{
-					name: "boxSize",
-					type: "array",
-					description: "[width, height] — creates paragraph (box) text instead of point text",
-					required: false
-				},
-				{
-					name: "boxPosition",
-					type: "array",
-					description: "[x, y] top-left of the box in layer space (box text only)",
-					required: false
-				},
-				{
-					name: "orientation",
-					type: "string",
-					description: "horizontal|vertical (vertical needs AE 24.2+)",
-					required: false,
-					default: "horizontal"
-				}
-			],
-			toJsx(args) {
-				const boxPosJsx = !args.boxPosition ? "" : `try {
-                var _src = _layer.property("Source Text");
-                var _doc = _src.value;
-                _doc.boxTextPos = ${jsxVal(args.boxPosition)};
-                _src.setValue(_doc);
-            } catch (eBp) {}`;
-				return `
-            ${jsxCompPreamble(args)}
-            var _box = ${jsxVal(args.boxSize ?? null)};
-            var _vertical = ${jsxVal(args.orientation)} === "vertical";
-            var _layer;
-            if (_box !== null) {
-                if (_vertical) {
-                    if (typeof _comp.layers.addVerticalBoxText !== "function") return { ok: false, error: "vertical box text needs AE 24.2+" };
-                    _layer = _comp.layers.addVerticalBoxText(_box, ${jsxVal(args.text ?? "")});
-                } else {
-                    _layer = _comp.layers.addBoxText(_box, ${jsxVal(args.text ?? "")});
-                }
-            } else {
-                if (_vertical) {
-                    if (typeof _comp.layers.addVerticalText !== "function") return { ok: false, error: "vertical text needs AE 24.2+" };
-                    _layer = _comp.layers.addVerticalText(${jsxVal(args.text ?? "")});
-                } else {
-                    _layer = _comp.layers.addText(${jsxVal(args.text ?? "")});
-                }
-            }
-            ${args.name ? `_layer.name = ${jsxVal(args.name)};` : ""}
-            ${boxPosJsx}
-            return { ok: true, index: _layer.index, name: _layer.name, boxText: _box !== null, vertical: _vertical };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.create_null",
-			category: "layer",
-			description: "Create a null object layer.",
-			params: [{
-				name: "comp",
-				type: "any",
-				description: "Comp name or id",
-				required: true
-			}, {
-				name: "name",
-				type: "string",
-				description: "Layer name",
-				required: false
-			}],
-			toJsx(args) {
-				return `
-            ${jsxCompPreamble(args)}
-            var _layer = _comp.layers.addNull();
-            ${args.name ? `_layer.name = ${jsxVal(args.name)};` : ""}
-            return { ok: true, index: _layer.index, name: _layer.name };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.create_camera",
-			category: "layer",
-			description: "Create a camera layer.",
-			params: [{
-				name: "comp",
-				type: "any",
-				description: "Comp name or id",
-				required: true
-			}, {
-				name: "name",
-				type: "string",
-				description: "Layer name",
-				required: false,
-				default: "Camera"
-			}],
-			toJsx(args) {
-				return `
-            ${jsxCompPreamble(args)}
-            var _layer = _comp.layers.addCamera(${jsxVal(args.name ?? "Camera")}, [_comp.width/2, _comp.height/2]);
-            return { ok: true, index: _layer.index, name: _layer.name };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.create_light",
-			category: "layer",
-			description: "Create a light layer.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "name",
-					type: "string",
-					description: "Layer name",
-					required: false,
-					default: "Light"
-				},
-				{
-					name: "lightType",
-					type: "string",
-					description: "spot|parallel|point|ambient|environment (environment needs AE 24.3+ / Advanced 3D)",
-					required: false,
-					default: "spot"
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompPreamble(args)}
-            var _ltMap = {
-                "spot": LightType.SPOT,
-                "parallel": LightType.PARALLEL,
-                "point": LightType.POINT,
-                "ambient": LightType.AMBIENT
-            };
-            // 24.3+ only \u2014 probed so older hosts keep the classic four.
-            try { if (LightType.ENVIRONMENT !== undefined) _ltMap.environment = LightType.ENVIRONMENT; } catch (eEnv) {}
-            var _ltArg = ${jsxVal(args.lightType ?? "spot")};
-            if (!_ltMap.hasOwnProperty(_ltArg)) {
-                return { ok: false, error: "unknown lightType '" + _ltArg + "'" + (_ltArg === "environment" ? " \u2014 environment lights need AE 24.3+" : "") };
-            }
-            var _layer = _comp.layers.addLight(${jsxVal(args.name ?? "Light")}, [_comp.width/2, _comp.height/2]);
-            var _applied = null;
-            try { _layer.lightType = _ltMap[_ltArg]; _applied = _ltArg; } catch (eLt) {}
-            return { ok: true, index: _layer.index, name: _layer.name, lightType: _applied };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.create_parametric_mesh",
-			category: "layer",
-			description: "Create a parametric 3D mesh layer (LayerCollection.addParametricMesh, AE 26.3+): cube|sphere|plane|cylinder|cone|torus. Best rendered with the Advanced 3D renderer (comp.set_renderer).",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "name",
-					type: "string",
-					description: "Layer name",
-					required: false,
-					default: "Mesh"
-				},
-				{
-					name: "meshType",
-					type: "string",
-					description: "cube|sphere|plane|cylinder|cone|torus",
-					required: true
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompPreamble(args)}
-            if (typeof _comp.layers.addParametricMesh !== "function") return { ok: false, error: "addParametricMesh needs AE 26.3+" };
-            var _mtMap = {
-                "cube": ParametricMeshType.CUBE,
-                "sphere": ParametricMeshType.SPHERE,
-                "plane": ParametricMeshType.PLANE,
-                "cylinder": ParametricMeshType.CYLINDER,
-                "cone": ParametricMeshType.CONE,
-                "torus": ParametricMeshType.TORUS
-            };
-            var _mtArg = ${jsxVal(args.meshType)};
-            if (!_mtMap.hasOwnProperty(_mtArg)) return { ok: false, error: "meshType must be cube|sphere|plane|cylinder|cone|torus" };
-            var _layer = null;
-            try { _layer = _comp.layers.addParametricMesh(${jsxVal(args.name ?? "Mesh")}, _mtMap[_mtArg]); } catch (ePm) { return { ok: false, error: "addParametricMesh failed: " + AE.errText(ePm) }; }
-            return { ok: true, index: _layer.index, name: _layer.name, meshType: _mtArg };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.delete",
-			category: "layer",
-			description: "Delete layers. comp supports pattern ('review_id_*'). layer supports index, name, 'selected', 'all'.",
-			params: [{
-				name: "comp",
-				type: "any",
-				description: "Comp name/id/pattern (e.g. 'review_id_*')",
-				required: true
-			}, {
-				name: "layer",
-				type: "any",
-				description: "Layer index, name, 'selected', or 'all'",
-				required: true
-			}],
-			toJsx(args) {
-				return `
-            var _comps = AE.findComps(${jsxVal(args.comp)});
-            if (_comps.length === 0) return { ok: false, error: "no comps matched" };
-            var _removed = 0;
-            for (var _ci = 0; _ci < _comps.length; _ci++) {
-                var _layers = AE.resolveLayers(_comps[_ci], ${jsxVal(args.layer)});
-                for (var _li = _layers.length - 1; _li >= 0; _li--) {
-                    try { _layers[_li].remove(); _removed++; } catch(e) {}
-                }
-            }
-            return { ok: true, removed: _removed, comps: _comps.length };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.duplicate",
-			category: "layer",
-			description: "Duplicate a layer. Returns the new layer's index.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "1-based layer index, or the layer name",
-					required: true
-				},
-				{
-					name: "newName",
-					type: "string",
-					description: "Name for the duplicate",
-					required: false
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompLayerPreamble(args)}
-            var _dup = _layer.duplicate();
-            ${args.newName ? `_dup.name = ${jsxVal(args.newName)};` : ""}
-            return { ok: true, index: _dup.index, name: _dup.name };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.set_parent",
-			category: "layer",
-			description: "Set or clear a layer's parent. By default AE compensates the child's transform so it doesn't move; jump=true skips compensation (setParentWithJump) so the child adopts the parent's space.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "1-based child layer index, or the layer name",
-					required: true
-				},
-				{
-					name: "parentLayer",
-					type: "any",
-					description: "1-based parent layer index or name. Pass null or 0 to unparent.",
-					required: true,
-					nullable: true
-				},
-				{
-					name: "jump",
-					type: "boolean",
-					description: "true = no transform compensation (setParentWithJump). Default false.",
-					required: false,
-					default: false
-				}
-			],
-			toJsx(args) {
-				const parentVal = args.parentLayer === null || args.parentLayer === 0 ? "null" : `_comp.layer(${jsxVal(args.parentLayer)})`;
-				const assign = args.jump === true ? `if (typeof _layer.setParentWithJump !== "function") return { ok: false, error: "setParentWithJump needs AE 17.1+" };
-            _layer.setParentWithJump(${parentVal});` : `_layer.parent = ${parentVal};`;
-				return `
-            ${jsxCompLayerPreamble(args)}
-            ${assign}
-            return { ok: true, parent: _layer.parent ? { index: _layer.parent.index, name: _layer.parent.name } : null };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.scene_edit_detection",
-			category: "layer",
-			description: "Run Scene Edit Detection on a video layer (Layer.doSceneEditDetection, AE 22.3+): find cuts in edited footage and mark or split at them.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "1-based layer index, or the layer name",
-					required: true
-				},
-				{
-					name: "mode",
-					type: "string",
-					description: "markers (add layer markers) | split (split layer) | splitPrecomp (split + precompose each) | none (detect only)",
-					required: true
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompLayerPreamble(args)}
-            if (typeof _layer.doSceneEditDetection !== "function") return { ok: false, error: "doSceneEditDetection needs AE 22.3+" };
-            var _sdMap = {
-                "markers": SceneEditDetectionMode.MARKERS,
-                "split": SceneEditDetectionMode.SPLIT,
-                "splitPrecomp": SceneEditDetectionMode.SPLIT_PRECOMP,
-                "none": SceneEditDetectionMode.NONE
-            };
-            var _mode = ${jsxVal(args.mode)};
-            if (!_sdMap.hasOwnProperty(_mode)) return { ok: false, error: "mode must be markers|split|splitPrecomp|none" };
-            var _edits = null;
-            try { _edits = _layer.doSceneEditDetection(_sdMap[_mode]); } catch (eSd) { return { ok: false, error: "doSceneEditDetection failed: " + AE.errText(eSd) }; }
-            return { ok: true, mode: _mode, editTimes: AE.valueToJson(_edits), numLayers: _comp.numLayers };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.move",
-			category: "layer",
-			description: "Move a layer to a new stacking position (1 = top).",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "1-based current layer index, or the layer name",
-					required: true
-				},
-				{
-					name: "toIndex",
-					type: "number",
-					description: "1-based target index, within 1..numLayers",
-					required: true
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompLayerPreamble(args)}
-            var _to = ${jsxVal(args.toIndex)};
-            if (typeof _to !== "number" || isNaN(_to) || _to !== Math.floor(_to)) {
-                return { ok: false, error: "toIndex must be a whole number, got " + _to };
-            }
-            if (_to < 1 || _to > _comp.numLayers) {
-                return { ok: false, error: "toIndex " + _to + " is out of range (comp has " + _comp.numLayers + " layers)" };
-            }
-            var _from = _layer.index;
-            // NOT _layer.moveTo(_to). Layer inherits moveTo from PropertyBase,
-            // so it exists and type-checks \u2014 and then throws for every layer,
-            // every time: "Can not moveTo this property, because parent is not
-            // an INDEXED_GROUP". A layer's parent is the composition, not a
-            // property group, so the inherited method never applies. Reordering
-            // layers is only expressible relative to a sibling.
-            if (_to < _from) {
-                // Upward: land directly above whoever holds _to right now.
-                _layer.moveBefore(_comp.layer(_to));
-            } else if (_to > _from) {
-                // Downward: everything between _from and _to shifts up by one
-                // as soon as _layer vacates its slot, so the layer currently at
-                // _to ends up at _to - 1 \u2014 landing AFTER it is what puts
-                // _layer at _to.
-                _layer.moveAfter(_comp.layer(_to));
-            }
-            return { ok: true, fromIndex: _from, newIndex: _layer.index, name: _layer.name };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.create_footage",
-			category: "layer",
-			description: "Add an existing project item (footage or comp) as a layer in a composition.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "sourceItemId",
-					type: "number",
-					description: "Project item id to use as source",
-					required: true
-				},
-				{
-					name: "name",
-					type: "string",
-					description: "Layer name",
-					required: false
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompPreamble(args)}
-            var _src = AE.findItemById(${jsxVal(args.sourceItemId)});
-            if (!_src) return { ok: false, error: "no item with id " + ${jsxVal(args.sourceItemId)} };
-            var _layer = _comp.layers.add(_src);
-            ${args.name ? `_layer.name = ${jsxVal(args.name)};` : ""}
-            return { ok: true, index: _layer.index, name: _layer.name };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.set_enabled",
-			category: "layer",
-			description: "Enable or disable a layer by name or index. Can target all comps matching a pattern.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name/id, or '*' for all comps, or 'review_id_*' for pattern match",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "Layer index (number) or name (string)",
-					required: true
-				},
-				{
-					name: "enabled",
-					type: "boolean",
-					description: "true=visible, false=hidden",
-					required: true
-				}
-			],
-			toJsx(args) {
-				return `
-            var _comps = AE.findComps(${jsxVal(args.comp)});
-            var _updated = 0;
-            for (var ci = 0; ci < _comps.length; ci++) {
-                var _layer = AE.findLayerInComp(_comps[ci], ${jsxVal(args.layer)});
-                if (_layer) { _layer.enabled = ${jsxVal(!!args.enabled)}; _updated++; }
-            }
-            return { ok: true, updated: _updated };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.set_guide",
-			category: "layer",
-			description: "Set guideLayer on/off for a layer. Can target all comps matching a pattern.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name/id, or '*' for all comps, or 'review_id_*' for pattern match",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "Layer index (number) or name (string)",
-					required: true
-				},
-				{
-					name: "guide",
-					type: "boolean",
-					description: "true=guide layer, false=normal",
-					required: true
-				}
-			],
-			toJsx(args) {
-				return `
-            var _comps = AE.findComps(${jsxVal(args.comp)});
-            var _updated = 0;
-            for (var ci = 0; ci < _comps.length; ci++) {
-                var _layer = AE.findLayerInComp(_comps[ci], ${jsxVal(args.layer)});
-                if (_layer) { _layer.guideLayer = ${jsxVal(!!args.guide)}; _updated++; }
-            }
-            return { ok: true, updated: _updated };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.set_props",
-			category: "layer",
-			description: "Set basic layer properties. layer can be index, name, 'selected', or 'all'. Enum-valued attributes accept string names: quality (best|draft|wireframe), samplingQuality (bilinear|bicubic), frameBlendingType (off|frameMix|pixelMotion), autoOrient (off|alongPath|cameraOrPointOfInterest|charactersTowardCamera), blendingMode, lightType (spot|parallel|point|ambient|environment).",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "Layer index, name, 'selected', or 'all'",
-					required: true
-				},
-				{
-					name: "props",
-					type: "object",
-					description: "Object with keys to set, e.g. { name: 'foo', enabled: false, label: 5, threeDLayer: true }",
-					required: true
-				}
-			],
-			toJsx(args) {
-				const props = args.props ?? {};
-				const lines = [];
-				for (const [k, v] of Object.entries(props)) lines.push(`try { _l[${jsxVal(k)}] = AE.coerceLayerPropValue(${jsxVal(k)}, ${jsxVal(v)}); } catch (e) { _w.push(${jsxVal(k)} + ": " + AE.errText(e)); }`);
-				return `
-            ${jsxCompPreamble(args)}
-            var _layers = AE.resolveLayers(_comp, ${jsxVal(args.layer)});
-            if (_layers.length === 0) return { ok: false, error: "no layers matched" };
-            var _results = [];
-            for (var _li = 0; _li < _layers.length; _li++) {
-                var _l = _layers[_li];
-                var _w = [];
-                ${lines.join("\n")}
-                _results.push({ name: _l.name, warnings: _w });
-            }
-            return { ok: true, count: _results.length, layers: _results };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.add_guide",
-			category: "layer",
-			description: "Add a ruler guide to a layer's Layer panel view (Layer.addGuide, AE 16.1+). Comp-panel guides live under comp.add_guide.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "1-based layer index, or the layer name",
-					required: true
-				},
-				{
-					name: "orientation",
-					type: "string",
-					description: "horizontal|vertical",
-					required: true
-				},
-				{
-					name: "position",
-					type: "number",
-					description: "Position in px (y for horizontal, x for vertical)",
-					required: true
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompLayerPreamble(args)}
-            if (typeof _layer.addGuide !== "function") return { ok: false, error: "layer guides need AE 16.1+" };
-            var _orient = ${jsxVal(args.orientation)} === "vertical" ? 1 : 0;
-            var _idx = _layer.addGuide(_orient, ${jsxVal(args.position)});
-            return { ok: true, guideIndex: _idx, numGuides: _layer.guides.length };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.remove_guide",
-			category: "layer",
-			description: "Remove a Layer-panel ruler guide by its 0-based index (see layer.list_guides).",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "1-based layer index, or the layer name",
-					required: true
-				},
-				{
-					name: "guideIndex",
-					type: "number",
-					description: "0-based guide index",
-					required: true
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompLayerPreamble(args)}
-            if (typeof _layer.removeGuide !== "function") return { ok: false, error: "layer guides need AE 16.1+" };
-            var _guides = _layer.guides;
-            if (${jsxVal(args.guideIndex)} < 0 || ${jsxVal(args.guideIndex)} >= _guides.length) {
-                return { ok: false, error: "guide index out of range (0-" + (_guides.length - 1) + ")" };
-            }
-            _layer.removeGuide(${jsxVal(args.guideIndex)});
-            return { ok: true, numGuides: _layer.guides.length };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.move_guide",
-			category: "layer",
-			description: "Move an existing Layer-panel ruler guide to a new position (Layer.setGuide). Named move_guide because layer.set_guide already means the guide-LAYER flag.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "1-based layer index, or the layer name",
-					required: true
-				},
-				{
-					name: "guideIndex",
-					type: "number",
-					description: "0-based guide index",
-					required: true
-				},
-				{
-					name: "position",
-					type: "number",
-					description: "New position in px",
-					required: true
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompLayerPreamble(args)}
-            if (typeof _layer.setGuide !== "function") return { ok: false, error: "layer guides need AE 16.1+" };
-            var _guides = _layer.guides;
-            if (${jsxVal(args.guideIndex)} < 0 || ${jsxVal(args.guideIndex)} >= _guides.length) {
-                return { ok: false, error: "guide index out of range (0-" + (_guides.length - 1) + ")" };
-            }
-            _layer.setGuide(${jsxVal(args.position)}, ${jsxVal(args.guideIndex)});
-            return { ok: true, guideIndex: ${jsxVal(args.guideIndex)}, position: ${jsxVal(args.position)} };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.list_guides",
-			category: "layer",
-			readOnly: true,
-			description: "List a layer's Layer-panel ruler guides with orientation and position (AE 16.1+).",
-			params: [{
-				name: "comp",
-				type: "any",
-				description: "Comp name or id",
-				required: true
-			}, {
-				name: "layer",
-				type: "any",
-				description: "1-based layer index, or the layer name",
-				required: true
-			}],
-			toJsx(args) {
-				return `
-            ${jsxCompLayerPreamble(args)}
-            var _guides = null;
-            try { _guides = _layer.guides; } catch (eG) {}
-            if (!_guides) return { ok: false, error: "layer guides need AE 16.1+" };
-            var _out = [];
-            for (var _i = 0; _i < _guides.length; _i++) {
-                _out.push({ index: _i, orientation: _guides[_i].orientationType === 1 ? "vertical" : "horizontal", position: _guides[_i].position });
-            }
-            return { ok: true, count: _out.length, guides: _out };
-        `;
-			}
-		});
-	})))();
-}
 
 // operations/project.js
 function liveSnapshotIO(transport) {
@@ -2607,6 +1758,1634 @@ function init_mask() {
 	})))();
 }
 
+// operations/render.js
+function jsxRqItemPreamble(args) {
+	return `
+        var rq = app.project.renderQueue;
+        if (rq.numItems === 0) return { ok: false, error: "render queue is empty" };
+        var _qi = ${jsxVal(args.queueIndex ?? null)};
+        if (_qi === null) _qi = rq.numItems;
+        if (_qi < 1 || _qi > rq.numItems) return { ok: false, error: "queue index out of range (1-" + rq.numItems + ")" };
+        var _rqi = rq.item(_qi);
+    `;
+}
+function chooseDeliveryTemplate(preset, templates) {
+	const p = DELIVERY_PRESETS[preset];
+	if (!p) return { error: `no preset '${preset}'; presets: ${Object.keys(DELIVERY_PRESETS).join(", ")}` };
+	const movies = templates.filter((t) => !isSequenceTemplate(t));
+	const find = (rules) => {
+		for (const r of rules) {
+			const hit = movies.find((t) => typeof r === "string" ? t === r : r.test(t));
+			if (hit) return hit;
+		}
+		return null;
+	};
+	if (movies.includes(p.first)) return {
+		template: p.first,
+		fallback: false,
+		why: `${p.first}: ${p.what}`
+	};
+	const near = find(p.then);
+	if (near) return {
+		template: near,
+		fallback: false,
+		why: `${near} (${p.first} is not on this install): ${p.what}`
+	};
+	const fb = find(p.fallback);
+	if (fb) return {
+		template: fb,
+		fallback: true,
+		why: `${fb}: ${p.fallbackWhy}`
+	};
+	return { error: p.alpha ? `no movie template with alpha on this install (templates: ${templates.join(", ")}); make one in Edit > Templates > Output Module (QuickTime, Apple ProRes 4444, RGB + Alpha)` : `none of the templates this preset uses is on this install (templates: ${templates.join(", ")})` };
+}
+function checkDelivered(comp, file) {
+	const findings = [];
+	if (comp.width !== file.width || comp.height !== file.height) findings.push({
+		kind: "size",
+		reading: `The file is ${file.width} \xD7 ${file.height}; the comp is ${comp.width} \xD7 ${comp.height}.`
+	});
+	if (Math.abs(comp.frameRate - file.frameRate) > .01) findings.push({
+		kind: "frame rate",
+		reading: `The file runs at ${file.frameRate} fps; the comp at ${comp.frameRate}.`
+	});
+	if (Math.abs(comp.duration - file.duration) > .5 / (comp.frameRate || 30)) findings.push({
+		kind: "duration",
+		reading: `The file is ${file.duration.toFixed(3)} s; the comp is ${comp.duration.toFixed(3)} s.`
+	});
+	let sound;
+	const lv = file.level;
+	if (comp.hasSound) {
+		const who = comp.soundLayers.length ? ` (${comp.soundLayers.slice(0, 3).join(", ")})` : "";
+		if (!file.hasAudio) {
+			findings.push({
+				kind: "sound missing",
+				reading: `The comp has sound${who} but the file has no sound track: check the output module's audio setting.`
+			});
+			sound = "no sound track";
+		} else if (lv && (lv.source === "ffmpeg" && lv.maxDb <= -60 || lv.source === "After Effects" && lv.top < .1)) {
+			const measured = lv.source === "ffmpeg" ? "max " + lv.maxDb + " dB" : "amplitude " + lv.top;
+			findings.push({
+				kind: "sound silent",
+				reading: `The comp has sound${who} but the file's sound reads as silence (${measured}). A four-channel take has read as silence in After Effects with no warning: extract the voice to a mono WAV, use it in the comp, and deliver again.`
+			});
+			sound = "silent";
+		} else if (lv && lv.source === "ffmpeg") sound = "sound at a mean of " + lv.meanDb + " dB (max " + lv.maxDb + " dB, ffmpeg)";
+		else if (lv && lv.source === "After Effects") sound = "sound present (amplitude up to " + lv.top + ", After Effects)";
+		else sound = "a sound track, whose level was not read (no ffmpeg, and After Effects could not read it)";
+		const sync = file.sync;
+		if (file.hasAudio && sync && sync.lateBySamples > 1) {
+			const fr = comp.frameRate ? Math.round(sync.lateBySamples / sync.sampleRate * comp.frameRate * 100) / 100 : null;
+			findings.push({
+				kind: "sound late",
+				reading: `The sound plays ${sync.lateBySamples} samples (${sync.lateMs} ms${fr !== null ? `, ${fr} of a frame` : ""}) late against the picture: ${sync.reading.replace(/^the sound plays [^:]*: ?/, "") || "the edit list delays it"}. It could not be fixed (${file.alignment?.how ?? "not attempted"}). Install ffmpeg and deliver again, or remux the file: ffmpeg -i in.mp4 -itsoffset -${(sync.lateBySamples / sync.sampleRate).toFixed(6)} -i in.mp4 -map 0 -map -0:a -map 1:a -c copy out.mp4`
+			});
+		} else if (file.hasAudio && sync) sound += file.alignment?.aligned && file.alignment.before && file.alignment.before.lateBySamples > 0 ? `; on its frame (it was ${file.alignment.before.lateBySamples} samples late: ${file.alignment.how})` : `; ${sync.reading.replace(/^the sound is /, "")}`;
+		if (file.hasAudio && file.loudness) {
+			const l = file.loudness;
+			sound += `; ${l.integratedLufs} LUFS integrated, true peak ${l.truePeakDbtp} dBTP${l.loudnessRangeLu !== null ? `, range ${l.loudnessRangeLu} LU` : ""} (ffmpeg ebur128)`;
+			if (l.truePeakDbtp > -1) sound += ` \u2014 the true peak is above ${-1} dBTP, which a platform's own encode can clip`;
+		}
+	} else sound = file.hasAudio ? "a sound track, though the comp has no sound on" : "no sound, as in the comp";
+	const passed = findings.length === 0;
+	return {
+		passed,
+		findings,
+		comp,
+		file,
+		reading: passed ? `The file matches the comp: ${file.width} \xD7 ${file.height}, ${file.frameRate} fps, ${file.duration.toFixed(3)} s; ${sound}.` : findings.map((f) => f.reading).join(" ")
+	};
+}
+function deliverPlanJsx(args) {
+	return `
+            ${jsxCompPreamble(args)}
+            var rq = app.project.renderQueue;
+            if (AE.safeGet(function () { return rq.rendering; }, false)) return { ok: false, error: "the render queue is already rendering" };
+            var _sound = [];
+            for (var _i = 1; _i <= _comp.numLayers; _i++) {
+                var _l = _comp.layer(_i);
+                if (AE.safeGet(function () { return _l.hasAudio && _l.audioEnabled; }, false)) _sound.push(_l.name);
+            }
+            var _tmp = null;
+            var _out = [];
+            try { _tmp = rq.items.add(_comp); _out = _tmp.outputModule(1).templates; } finally { if (_tmp) { try { _tmp.remove(); } catch (eRm) {} } }
+            return { ok: true, comp: _comp.name, width: _comp.width, height: _comp.height, frameRate: _comp.frameRate, duration: _comp.duration,
+                hasSound: _sound.length > 0, soundLayers: _sound, templates: _out };
+        `;
+}
+function deliverRenderJsx(args) {
+	return `
+            ${jsxCompPreamble(args)}
+            ${PARK_QUEUE_FN}
+            var rq = app.project.renderQueue;
+            var _want = ${jsxVal(args.outputPath)};
+            if (new File(_want).exists && !${jsxVal(args.overwrite)}) return { ok: false, error: "a file already exists at " + _want + "; pass overwrite: true to replace it" };
+            var _parked = _parkQueue(rq);
+            var _rqi = null;
+            var _out = null;
+            try {
+                _rqi = rq.items.add(_comp);
+                var _om = _rqi.outputModule(1);
+                var _w = AE.applyTemplate(_om, ${jsxVal(args.template)}, "outputTemplate");
+                if (_w) throw new Error(_w);
+                _om.file = AE.ensureParentDir(_want);
+                var _path = _om.file.fsName.replace(/\\\\/g, "/");
+                var _audio = {};
+                try { var _st = _om.getSettings(GetSettingsFormat.STRING); for (var _k in _st) if (_st.hasOwnProperty(_k) && /audio|channels/i.test(_k)) _audio[_k] = String(_st[_k]); } catch (eA) {}
+                var _t0 = new Date().getTime();
+                rq.render();
+                var _f = new File(_path);
+                _out = { ok: _rqi.status === RQItemStatus.DONE && _f.exists && _f.length > 0, outputPath: _path, bytes: _f.exists ? _f.length : 0,
+                    renderSeconds: Math.round(new Date().getTime() - _t0) / 1000, audio: _audio };
+                if (!_out.ok) _out.error = "the render did not finish (status " + String(_rqi.status) + ")";
+            } catch (eR) {
+                _out = { ok: false, error: "the delivery render failed: " + AE.errText(eR) };
+            } finally {
+                if (_rqi) { try { _rqi.remove(); } catch (eRm) {} }
+                _unparkQueue(rq, _parked);
+            }
+            return _out;
+        `;
+}
+function deliverReadBackJsx(args) {
+	return `
+            var _f = new File(${jsxVal(args.path)});
+            if (!_f.exists) return { ok: false, error: "no file at " + ${jsxVal(args.path)} };
+            var _item = app.project.importFile(new ImportOptions(_f));
+            var _res = { ok: true, width: _item.width, height: _item.height, frameRate: _item.frameRate, duration: _item.duration, hasAudio: !!_item.hasAudio, amplitudeTop: null };
+            var _c = null;
+            try {
+                if (${jsxVal(args.readLevel)} && _item.hasAudio) {
+                    _c = app.project.items.addComp("delivery sound check", 16, 16, 1, _item.duration, _item.frameRate || 30);
+                    var _l = _c.layers.add(_item);
+                    _c.openInViewer();
+                    for (var _i = 1; _i <= _c.numLayers; _i++) _c.layer(_i).selected = false;
+                    _l.selected = true;
+                    var _id = app.findMenuCommandId("Convert Audio to Keyframes");
+                    if (_id) {
+                        app.executeCommand(_id);
+                        var _top = 0;
+                        for (var _j = 1; _j <= _c.numLayers; _j++) {
+                            var _a = _c.layer(_j);
+                            if (_a === _l || _a.name.indexOf("Audio Amplitude") !== 0) continue;
+                            var _fx = _a.property("ADBE Effect Parade");
+                            for (var _k = 1; _k <= 2 && _k <= _fx.numProperties; _k++) {
+                                var _p = _fx.property(_k).property(1);
+                                for (var _fr = 0; _fr < _c.duration * _c.frameRate; _fr++) _top = Math.max(_top, _p.valueAtTime(_fr / _c.frameRate, false));
+                            }
+                        }
+                        _res.amplitudeTop = Math.round(_top * 1000) / 1000;
+                    }
+                }
+            } finally {
+                if (_c) { try { _c.remove(); } catch (eC) {} }
+                try { _item.remove(); } catch (eI) {}
+            }
+            return _res;
+        `;
+}
+async function runDeliver(args, io) {
+	const started = Date.now();
+	const outputPath = args.outputPath;
+	if (typeof outputPath !== "string" || !path$1.isAbsolute(outputPath)) return {
+		ok: false,
+		error: "`outputPath` must be an absolute path"
+	};
+	const rejected = rejectedOutputPath(outputPath);
+	if (rejected) return {
+		ok: false,
+		error: rejected
+	};
+	const preset = typeof args.preset === "string" ? args.preset : "";
+	const plan = await io.execute(deliverPlanJsx({ comp: args.comp }), {
+		label: "render.deliver plan",
+		timeoutMs: 6e4,
+		undoGroup: true
+	});
+	if (!plan?.ok) return {
+		ok: false,
+		error: plan?.error ?? "could not read the comp"
+	};
+	const pick = chooseDeliveryTemplate(preset, plan.templates ?? []);
+	if ("error" in pick) return {
+		ok: false,
+		error: pick.error
+	};
+	const notes = [];
+	const p = DELIVERY_PRESETS[preset];
+	if (p.aspect && Math.abs(plan.width / plan.height - p.aspect) > .01) notes.push(`The comp is ${plan.width} \xD7 ${plan.height}, not 9:16: the reel will be delivered at the comp's size.`);
+	const frames = Math.round(plan.duration * plan.frameRate);
+	const estimate = frames * plan.width * plan.height * (p.alpha ? 4 : 3) * .6;
+	const free = io.freeBytes ? await io.freeBytes(path$1.dirname(outputPath)) : null;
+	if (free !== null && free < estimate + 3e9) return {
+		ok: false,
+		error: `not enough room: about ${(estimate / 1e9).toFixed(1)} GB for the file plus 3 GB, ${(free / 1e9).toFixed(1)} GB free`
+	};
+	const r = await io.execute(deliverRenderJsx({
+		comp: args.comp,
+		template: pick.template,
+		outputPath,
+		overwrite: args.overwrite === true
+	}), {
+		label: "render.deliver render",
+		timeoutMs: 12e4 + frames * 5e3,
+		undoGroup: true
+	});
+	if (!r?.ok) return {
+		ok: false,
+		error: r?.error ?? "the render failed",
+		template: pick.template
+	};
+	const written = r.outputPath ?? outputPath;
+	let sync = io.soundSync ? await io.soundSync(written).catch(() => null) : null;
+	let alignment = null;
+	if (sync && sync.lateBySamples > 1) {
+		alignment = io.alignSound ? await io.alignSound(written, sync).catch((e) => ({
+			aligned: false,
+			how: `the remux failed: ${e instanceof Error ? e.message : String(e)}`,
+			before: sync
+		})) : {
+			aligned: false,
+			how: "no way to remux the file here",
+			before: sync
+		};
+		if (alignment.aligned && io.soundSync) sync = await io.soundSync(written).catch(() => null) ?? sync;
+	}
+	const probe = io.probe ? await io.probe(written).catch(() => null) : null;
+	const back = await io.execute(deliverReadBackJsx({
+		path: written,
+		readLevel: !(probe && probe.maxDb !== null)
+	}), {
+		label: "render.deliver read back",
+		timeoutMs: 3e5,
+		undoGroup: true
+	});
+	if (!back?.ok) return {
+		ok: false,
+		error: back?.error ?? "could not bring the file back",
+		outputPath: written
+	};
+	const level = probe && probe.maxDb !== null && probe.meanDb !== null ? {
+		source: "ffmpeg",
+		meanDb: probe.meanDb,
+		maxDb: probe.maxDb
+	} : typeof back.amplitudeTop === "number" ? {
+		source: "After Effects",
+		top: back.amplitudeTop
+	} : null;
+	const check = checkDelivered({
+		width: plan.width,
+		height: plan.height,
+		frameRate: plan.frameRate,
+		duration: plan.duration,
+		hasSound: plan.hasSound,
+		soundLayers: plan.soundLayers ?? []
+	}, {
+		width: back.width,
+		height: back.height,
+		frameRate: back.frameRate,
+		duration: back.duration,
+		hasAudio: back.hasAudio,
+		level,
+		...io.probe ? { loudness: probe?.loudness ?? null } : {},
+		...io.soundSync ? {
+			sync,
+			alignment
+		} : {}
+	});
+	return {
+		ok: true,
+		preset,
+		template: pick.template,
+		templateWhy: pick.why,
+		fallback: pick.fallback,
+		outputPath: written,
+		bytes: r.bytes,
+		renderSeconds: r.renderSeconds,
+		audioSettings: r.audio,
+		check,
+		notes,
+		timing: { totalMs: Date.now() - started },
+		next: check.passed ? "Delivered and checked. Watch it once at speed before calling it done." : "Stop: tell the user what the check found, in plain words, before calling it delivered."
+	};
+}
+async function probeDelivered(file, tools = {
+	ffmpeg: FFMPEG,
+	ffprobe: FFPROBE
+}) {
+	const pr = await runTool(tools.ffprobe, [
+		"-v",
+		"error",
+		"-show_entries",
+		"stream=codec_type,width,height,r_frame_rate:format=duration",
+		"-of",
+		"json",
+		file
+	]);
+	if (!pr) return null;
+	let j;
+	try {
+		j = JSON.parse(pr.stdout);
+	} catch {
+		return null;
+	}
+	const v = (j.streams ?? []).find((s) => s.codec_type === "video");
+	const hasAudio = (j.streams ?? []).some((s) => s.codec_type === "audio");
+	if (!v) return null;
+	const [a, b] = String(v.r_frame_rate ?? "0/1").split("/").map(Number);
+	let meanDb = null;
+	let maxDb = null;
+	let loudness = null;
+	if (hasAudio) {
+		const vd = await runTool(tools.ffmpeg, [
+			"-hide_banner",
+			"-nostats",
+			"-i",
+			file,
+			"-map",
+			"0:a:0",
+			"-af",
+			"volumedetect,ebur128=peak=true",
+			"-f",
+			"null",
+			"-"
+		], 6e5);
+		if (vd) {
+			({meanDb, maxDb} = parseVolumedetect(vd.stderr));
+			loudness = parseEbur128Summary(vd.stderr);
+		}
+	}
+	return {
+		width: v.width,
+		height: v.height,
+		frameRate: b ? Math.round(a / b * 1e3) / 1e3 : 0,
+		duration: Number(j.format?.duration ?? 0),
+		hasAudio,
+		meanDb,
+		maxDb,
+		loudness
+	};
+}
+function liveDeliverIO(transport) {
+	return {
+		async execute(code, opts) {
+			const r = await transport.execute({
+				code,
+				label: opts.label,
+				timeoutMs: opts.timeoutMs,
+				undoGroup: opts.undoGroup ?? true,
+				suppressDialogs: true
+			});
+			return r.ok ? r.result : {
+				ok: false,
+				error: r.error ?? `${opts.label} failed`
+			};
+		},
+		exists: (f) => promises.access(f).then(() => true, () => false),
+		freeBytes: async (dir) => {
+			try {
+				const st = await promises.statfs(dir);
+				return st.bavail * st.bsize;
+			} catch {
+				return null;
+			}
+		},
+		probe: probeDelivered,
+		soundSync: readSoundSync,
+		alignSound
+	};
+}
+async function probeStreams(file, ffprobe) {
+	const pr = await runTool(ffprobe, [
+		"-v",
+		"error",
+		"-show_entries",
+		"stream=codec_type,codec_name,width,height,r_frame_rate,sample_rate,channels,duration:format=duration",
+		"-of",
+		"json",
+		file
+	]);
+	if (!pr || pr.failed) return null;
+	let j;
+	try {
+		j = JSON.parse(pr.stdout);
+	} catch {
+		return null;
+	}
+	const streams = j.streams ?? [];
+	const v = streams.find((x) => x.codec_type === "video") ?? null;
+	const a = streams.find((x) => x.codec_type === "audio") ?? null;
+	const fmtDur = Number(j.format?.duration ?? NaN);
+	const dur = (x) => x && Number.isFinite(Number(x.duration)) ? Number(x.duration) : Number.isFinite(fmtDur) ? fmtDur : null;
+	let video = null;
+	if (v) {
+		const [n, d] = String(v.r_frame_rate ?? "0/1").split("/").map(Number);
+		video = {
+			codec: v.codec_name,
+			width: v.width,
+			height: v.height,
+			frameRate: d ? Math.round(n / d * 1e3) / 1e3 : 0,
+			duration: dur(v)
+		};
+	}
+	const audio = a ? {
+		codec: a.codec_name,
+		sampleRate: Number(a.sample_rate),
+		channels: Number(a.channels),
+		duration: dur(a)
+	} : null;
+	return {
+		video,
+		audio
+	};
+}
+async function runMuxAudio(args, tools = {
+	ffmpeg: FFMPEG,
+	ffprobe: FFPROBE
+}) {
+	const started = Date.now();
+	const video = args.video;
+	const audio = args.audio;
+	if (typeof video !== "string" || !path$1.isAbsolute(video)) return {
+		ok: false,
+		error: "`video` must be an absolute path to the rendered picture"
+	};
+	if (typeof audio !== "string" || !path$1.isAbsolute(audio)) return {
+		ok: false,
+		error: "`audio` must be an absolute path to the mix (a WAV)"
+	};
+	const offset = typeof args.offsetSeconds === "number" ? args.offsetSeconds : 0;
+	if (!Number.isFinite(offset)) return {
+		ok: false,
+		error: "`offsetSeconds` must be a number of seconds"
+	};
+	const bitrate = typeof args.bitrate === "string" ? args.bitrate : "320k";
+	if (!/^\d+(\.\d+)?k$/.test(bitrate)) return {
+		ok: false,
+		error: "`bitrate` is a number of kilobits a second followed by k, such as '320k'"
+	};
+	const ext = path$1.extname(video) || ".mp4";
+	const output = typeof args.output === "string" ? args.output : path$1.join(path$1.dirname(video), `${path$1.basename(video, path$1.extname(video))}-mix${ext}`);
+	if (!path$1.isAbsolute(output)) return {
+		ok: false,
+		error: "`output` must be an absolute path"
+	};
+	const rejected = rejectedOutputPath(output);
+	if (rejected) return {
+		ok: false,
+		error: rejected
+	};
+	if (path$1.resolve(output) === path$1.resolve(video) || path$1.resolve(output) === path$1.resolve(audio)) return {
+		ok: false,
+		error: "`output` must be a new file, not the picture or the mix it is made from"
+	};
+	for (const [name, f] of [["video", video], ["audio", audio]]) if (!await promises.access(f).then(() => true, () => false)) return {
+		ok: false,
+		error: `no file at ${f} (\`${name}\`)`
+	};
+	if (await promises.access(output).then(() => true, () => false) && args.overwrite !== true) return {
+		ok: false,
+		error: `a file already exists at ${output}; pass overwrite: true to replace it`
+	};
+	const version = await runTool(tools.ffmpeg, ["-hide_banner", "-version"]);
+	const probeOk = await runTool(tools.ffprobe, ["-hide_banner", "-version"]);
+	if (version === null || probeOk === null) return {
+		ok: false,
+		error: "render.mux_audio needs ffmpeg and ffprobe, and " + (version === null ? "ffmpeg" : "ffprobe") + " is not installed (looked for it on the PATH, in /opt/homebrew/bin and /usr/local/bin). Install it (on a Mac: brew install ffmpeg) and call again. Nothing was written."
+	};
+	const vIn = await probeStreams(video, tools.ffprobe);
+	if (!vIn?.video) return {
+		ok: false,
+		error: `ffprobe found no picture in ${video}`
+	};
+	const aIn = await probeStreams(audio, tools.ffprobe);
+	if (!aIn?.audio) return {
+		ok: false,
+		error: `ffprobe found no sound in ${audio}`
+	};
+	const fps = vIn.video.frameRate || 30;
+	const frame = 1 / fps;
+	const rate = aIn.audio.sampleRate || 48e3;
+	const shift = Math.round(Math.abs(offset) * rate);
+	const filters = [];
+	if (offset > 0) filters.push(`adelay=delays=${shift}S:all=1`);
+	if (offset < 0) filters.push(`atrim=start_sample=${shift}`, "asetpts=PTS-STARTPTS");
+	const tmp = path$1.join(path$1.dirname(output), `.${path$1.basename(output, path$1.extname(output))}.mux${path$1.extname(output) || ext}`);
+	const argv = [
+		"-hide_banner",
+		"-loglevel",
+		"error",
+		"-y",
+		"-i",
+		video,
+		"-i",
+		audio,
+		"-map",
+		"0:v:0",
+		"-map",
+		"1:a:0",
+		"-c:v",
+		"copy",
+		...filters.length ? ["-af", filters.join(",")] : [],
+		"-c:a",
+		"aac",
+		"-b:a",
+		bitrate,
+		"-ar",
+		"48000",
+		tmp
+	];
+	const r = await runTool(tools.ffmpeg, argv, 18e5);
+	if (r === null || r.failed) {
+		await promises.rm(tmp, { force: true });
+		return {
+			ok: false,
+			error: `ffmpeg could not join the picture and the mix: ${(r?.stderr ?? "ffmpeg is not installed").trim().slice(0, 400)}`,
+			command: ["ffmpeg", ...argv].join(" ")
+		};
+	}
+	await promises.rename(tmp, output);
+	const probe = await probeDelivered(output, tools);
+	const sync = await readSoundSync(output).catch(() => null);
+	const out = await probeStreams(output, tools.ffprobe);
+	const mixSeconds = aIn.audio.duration !== null ? aIn.audio.duration + offset : null;
+	const pictureSeconds = vIn.video.duration;
+	const check = checkDelivered({
+		width: vIn.video.width,
+		height: vIn.video.height,
+		frameRate: fps,
+		duration: pictureSeconds ?? 0,
+		hasSound: true,
+		soundLayers: [path$1.basename(audio)]
+	}, {
+		width: probe?.width ?? out?.video?.width ?? 0,
+		height: probe?.height ?? out?.video?.height ?? 0,
+		frameRate: probe?.frameRate ?? out?.video?.frameRate ?? 0,
+		duration: probe?.duration ?? 0,
+		hasAudio: probe?.hasAudio ?? !!out?.audio,
+		level: probe && probe.meanDb !== null && probe.maxDb !== null ? {
+			source: "ffmpeg",
+			meanDb: probe.meanDb,
+			maxDb: probe.maxDb
+		} : null,
+		loudness: probe?.loudness ?? null,
+		sync,
+		alignment: null
+	});
+	const r3 = (v) => Math.round(v * 1e3) / 1e3;
+	if (mixSeconds !== null && pictureSeconds !== null && Math.abs(mixSeconds - pictureSeconds) > frame + 1e-6) {
+		const diff = mixSeconds - pictureSeconds;
+		check.findings.push({
+			kind: "mix length",
+			reading: `The mix ${offset !== 0 ? `(moved ${offset} s) ` : ""}runs ${r3(mixSeconds)} s and the picture ${r3(pictureSeconds)} s: ${r3(Math.abs(diff))} s (${Math.round(Math.abs(diff) / frame * 10) / 10} frames) ${diff > 0 ? "longer" : "shorter"}, more than a frame. ` + (diff > 0 ? "The file runs on past the picture's last frame with sound over a held or missing picture." : "The end of the picture is silent.") + " Check that the mix is the one for this cut."
+		});
+		check.passed = false;
+		check.reading = check.findings.map((f) => f.reading).join(" ");
+	}
+	return {
+		ok: true,
+		output,
+		video: {
+			path: video,
+			...vIn.video
+		},
+		audio: {
+			path: audio,
+			...aIn.audio,
+			offsetSeconds: offset,
+			encodedAs: `AAC ${bitrate} at 48 kHz`
+		},
+		mixLength: mixSeconds !== null && pictureSeconds !== null ? {
+			mixSeconds: r3(mixSeconds),
+			pictureSeconds: r3(pictureSeconds),
+			differenceFrames: Math.round((mixSeconds - pictureSeconds) / frame * 10) / 10
+		} : null,
+		check,
+		timing: { totalMs: Date.now() - started },
+		next: check.passed ? "Joined and checked. Watch it once at speed before calling it done." : "Stop: tell the user what the check found, in plain words, before calling it delivered."
+	};
+}
+var RENDER_QUEUE_UNDO_WARNING, READ_TEMPLATES_FN, QUEUE_CHANGE_NOTE, PARK_QUEUE_FN, PREVIEW_RESOLUTIONS, DELIVERY_PRESETS, isSequenceTemplate, DELIVERY_TRUE_PEAK_NOTE_DBTP, DELIVERY_SILENCE_TOP, DELIVERY_SILENCE_DB;
+function init_render() {
+	return (init_render = __esmMin((() => {
+		init_config();
+		init_policy();
+		init_registry();
+		init_delivery_sound();
+		RENDER_QUEUE_UNDO_WARNING = " After this, undo and rollback are refused for the rest of the After Effects session unless acceptRenderQueueRisk: true: After Effects 2027 has gone into crash recovery on undo after scripted render-queue changes (observed twice on 2026-11-10; a precaution, not a proven cause). Save the project before undoing anything afterwards; project.open / project.new clear the block.";
+		READ_TEMPLATES_FN = `
+    function _readTemplates(_item) {
+        var _render = [];
+        var _output = [];
+        try { _render = _item.templates; } catch (eR) {}
+        try { _output = _item.outputModule(1).templates; } catch (eO) {}
+        return { renderTemplates: _render, outputTemplates: _output };
+    }
+`;
+		QUEUE_CHANGE_NOTE = "the project is left modified (unsaved): a render-queue item was added and removed. Nothing in the comps changed; save or revert as you normally would";
+		PARK_QUEUE_FN = `
+    function _parkQueue(rq) {
+        var _parked = [];
+        for (var _pi = 1; _pi <= rq.numItems; _pi++) {
+            var _ex = rq.item(_pi);
+            var _was = false;
+            try { _was = _ex.render; } catch (eR) {}
+            _parked.push(_was);
+            if (_was) { try { _ex.render = false; } catch (eP) {} }
+        }
+        return _parked;
+    }
+    function _unparkQueue(rq, _parked) {
+        for (var _ui = 0; _ui < _parked.length && _ui < rq.numItems; _ui++) {
+            if (_parked[_ui]) { try { rq.item(_ui + 1).render = true; } catch (eU) {} }
+        }
+    }
+`;
+		registerOp({
+			name: "render.add_to_queue",
+			category: "render",
+			description: "Add a composition to the render queue. Optionally set output path." + RENDER_QUEUE_UNDO_WARNING,
+			params: [{
+				name: "comp",
+				type: "any",
+				description: "Comp name or id",
+				required: true
+			}, {
+				name: "outputPath",
+				type: "string",
+				description: "Output file path (optional, sets on the first output module)",
+				required: false
+			}],
+			toJsx(args) {
+				const outputPathJsx = args.outputPath ? `
+                try {
+                    _rqi.outputModules[1].file = AE.ensureParentDir(${jsxVal(args.outputPath)});
+                    _result.outputPath = ${jsxVal(args.outputPath)};
+                } catch(e) { _result.outputWarning = "could not set output path: " + AE.errText(e); }
+            ` : "";
+				return `
+            ${jsxCompPreamble(args)}
+            var _rqi = app.project.renderQueue.items.add(_comp);
+            var _result = { ok: true, queueIndex: app.project.renderQueue.numItems, compName: _comp.name };
+            ${outputPathJsx}
+            return _result;
+        `;
+			}
+		});
+		registerOp({
+			name: "render.start",
+			category: "render",
+			description: "Render queued items and verify each output file was newly written. Blocks until complete. Missing output directories are created first. Completed items are not counted as new renders." + RENDER_QUEUE_UNDO_WARNING,
+			params: [],
+			toJsx() {
+				return `
+            var rq = app.project.renderQueue;
+            if (rq.numItems === 0) return { ok: false, error: "render queue is empty" };
+            var _before = [];
+            function _fileMeta(_path) {
+                if (!_path) return { exists: false, bytes: 0, modifiedMs: null };
+                var _file = new File(_path);
+                if (!_file.exists) return { exists: false, bytes: 0, modifiedMs: null };
+                var _date = _file.modified;
+                return { exists: true, bytes: _file.length, modifiedMs: _date ? _date.getTime() : null };
+            }
+            // A completed item can retain a true render flag. Only QUEUED
+            // items are candidates for this invocation's output evidence.
+            for (var _ri = 1; _ri <= rq.numItems; _ri++) {
+                var _it = rq.item(_ri);
+                if (!_it.render || _it.status !== RQItemStatus.QUEUED) continue;
+                var _outputs = [];
+                for (var _oi = 1; _oi <= _it.numOutputModules; _oi++) {
+                    var _target = _it.outputModule(_oi).file;
+                    if (_target) AE.ensureParentDir(_target);
+                    var _path = _target ? _target.fsName : null;
+                    if (!_path) return { ok: false, rendered: 0,
+                        error: "queued item " + _ri + " output module " + _oi + " has no output path" };
+                    _outputs.push({ path: _path, before: _fileMeta(_path) });
+                }
+                _before.push({ index: _ri, outputs: _outputs });
+            }
+            if (_before.length === 0) return { ok: false, rendered: 0, error: "no queued render items; add a fresh queue item or requeue an eligible item" };
+            rq.render();
+            var _items = [];
+            var _rendered = 0;
+            for (var _bi = 0; _bi < _before.length; _bi++) {
+                var _entry = _before[_bi];
+                var _afterItem = rq.item(_entry.index);
+                var _verified = _afterItem.status === RQItemStatus.DONE && _entry.outputs.length > 0;
+                var _checked = [];
+                for (var _ci = 0; _ci < _entry.outputs.length; _ci++) {
+                    var _out = _entry.outputs[_ci];
+                    var _meta = _fileMeta(_out.path);
+                    var _fresh = _meta.exists && _meta.bytes > 0 &&
+                        (!_out.before.exists || _meta.bytes !== _out.before.bytes ||
+                         (_meta.modifiedMs !== null && _meta.modifiedMs !== _out.before.modifiedMs));
+                    if (!_fresh) _verified = false;
+                    _checked.push({ path: _out.path, exists: _meta.exists, bytes: _meta.bytes,
+                        modifiedMs: _meta.modifiedMs, newlyWritten: _fresh });
+                }
+                if (_verified) _rendered++;
+                _items.push({ index: _entry.index, done: _afterItem.status === RQItemStatus.DONE,
+                    verified: _verified, outputs: _checked });
+            }
+            return { ok: _rendered === _before.length, rendered: _rendered,
+                error: _rendered === _before.length ? null : "one or more queued items did not produce a verifiably new nonempty output file",
+                items: _items };
+        `;
+			}
+		});
+		registerOp({
+			name: "render.clear_queue",
+			category: "render",
+			description: "Remove all items from the render queue.",
+			params: [],
+			toJsx() {
+				return `
+            var rq = app.project.renderQueue;
+            var removed = 0;
+            while (rq.numItems > 0) {
+                rq.item(1).remove();
+                removed++;
+            }
+            return { ok: true, removed: removed };
+        `;
+			}
+		});
+		registerOp({
+			name: "render.set_output",
+			category: "render",
+			description: "Configure a render-queue item: render/output templates, output path, time span, render flag, skipFrames, logType, postRenderAction. Discover template names with render.list_templates; raw settings via render.get_settings / render.set_settings.",
+			params: [
+				{
+					name: "queueIndex",
+					type: "number",
+					description: "1-based queue item index (default: last item)",
+					required: false
+				},
+				{
+					name: "renderTemplate",
+					type: "string",
+					description: "Render settings template name (e.g. \"Best Settings\", \"Draft Settings\")",
+					required: false
+				},
+				{
+					name: "outputTemplate",
+					type: "string",
+					description: "Output module template name (e.g. \"Lossless\", \"High Quality\")",
+					required: false
+				},
+				{
+					name: "outputPath",
+					type: "string",
+					description: "Output file path",
+					required: false
+				},
+				{
+					name: "timeSpanStart",
+					type: "number",
+					description: "Render span start in seconds (comp time)",
+					required: false
+				},
+				{
+					name: "timeSpanDuration",
+					type: "number",
+					description: "Render span duration in seconds",
+					required: false
+				},
+				{
+					name: "outputModuleIndex",
+					type: "number",
+					description: "1-based output module index (default 1)",
+					required: false,
+					default: 1
+				},
+				{
+					name: "render",
+					type: "boolean",
+					description: "Whether this item renders when the queue starts (the Render checkbox)",
+					required: false
+				},
+				{
+					name: "skipFrames",
+					type: "number",
+					description: "Render every Nth frame (0 = every frame)",
+					required: false
+				},
+				{
+					name: "logType",
+					type: "string",
+					description: "errorsOnly|errorsAndSettings|errorsAndPerFrameInfo",
+					required: false
+				},
+				{
+					name: "postRenderAction",
+					type: "string",
+					description: "none|import|importAndReplaceUsage|setProxy (on the output module)",
+					required: false
+				},
+				{
+					name: "includeSourceXMP",
+					type: "boolean",
+					description: "Embed source-footage XMP metadata in the output",
+					required: false
+				},
+				{
+					name: "queueItemNotify",
+					type: "boolean",
+					description: "Per-item Notify checkbox (AE 22.0+)",
+					required: false
+				},
+				{
+					name: "queueNotify",
+					type: "boolean",
+					description: "QUEUE-WIDE Notify checkbox (RenderQueue.queueNotify, AE 22.0+)",
+					required: false
+				}
+			],
+			toJsx(args) {
+				const rqiSets = [];
+				if (args.queueNotify !== void 0) rqiSets.push(`try { rq.queueNotify = ${jsxVal(args.queueNotify)}; } catch (eQq) { _w.push("queueNotify (AE 22.0+): " + AE.errText(eQq)); }`);
+				if (args.renderTemplate !== void 0) rqiSets.push(`_applyTpl(_rqi, ${jsxVal(args.renderTemplate)}, "renderTemplate");`);
+				if (args.timeSpanStart !== void 0) rqiSets.push(`try { _rqi.timeSpanStart = ${jsxVal(args.timeSpanStart)}; } catch (eTs) { _w.push("timeSpanStart: " + AE.errText(eTs)); }`);
+				if (args.timeSpanDuration !== void 0) rqiSets.push(`try { _rqi.timeSpanDuration = ${jsxVal(args.timeSpanDuration)}; } catch (eTd) { _w.push("timeSpanDuration: " + AE.errText(eTd)); }`);
+				if (args.render !== void 0) rqiSets.push(`try { _rqi.render = ${jsxVal(args.render)}; } catch (eRf) { _w.push("render: " + AE.errText(eRf)); }`);
+				if (args.skipFrames !== void 0) rqiSets.push(`try { _rqi.skipFrames = ${jsxVal(args.skipFrames)}; } catch (eSk) { _w.push("skipFrames: " + AE.errText(eSk)); }`);
+				if (args.logType !== void 0) rqiSets.push(`
+                try {
+                    var _ltMap = { "errorsOnly": LogType.ERRORS_ONLY, "errorsAndSettings": LogType.ERRORS_AND_SETTINGS, "errorsAndPerFrameInfo": LogType.ERRORS_AND_PER_FRAME_INFO };
+                    if (_ltMap.hasOwnProperty(${jsxVal(args.logType)})) {
+                        _rqi.logType = _ltMap[${jsxVal(args.logType)}];
+                    } else { _w.push("logType: unknown value " + ${jsxVal(args.logType)}); }
+                } catch (eLt) { _w.push("logType: " + AE.errText(eLt)); }
+            `);
+				if (args.queueItemNotify !== void 0) rqiSets.push(`try { _rqi.queueItemNotify = ${jsxVal(args.queueItemNotify)}; } catch (eQn) { _w.push("queueItemNotify (AE 22.0+): " + AE.errText(eQn)); }`);
+				const omSets = [];
+				if (args.outputTemplate !== void 0) omSets.push(`_applyTpl(_om, ${jsxVal(args.outputTemplate)}, "outputTemplate");`);
+				if (args.outputPath !== void 0) omSets.push(`try { _om.file = AE.ensureParentDir(${jsxVal(args.outputPath)}); } catch (eOp) { _w.push("outputPath: " + AE.errText(eOp)); }`);
+				if (args.postRenderAction !== void 0) omSets.push(`
+                try {
+                    var _praMap = { "none": PostRenderAction.NONE, "import": PostRenderAction.IMPORT, "importAndReplaceUsage": PostRenderAction.IMPORT_AND_REPLACE_USAGE, "setProxy": PostRenderAction.SET_PROXY };
+                    if (_praMap.hasOwnProperty(${jsxVal(args.postRenderAction)})) {
+                        _om.postRenderAction = _praMap[${jsxVal(args.postRenderAction)}];
+                    } else { _w.push("postRenderAction: unknown value " + ${jsxVal(args.postRenderAction)}); }
+                } catch (ePa) { _w.push("postRenderAction: " + AE.errText(ePa)); }
+            `);
+				if (args.includeSourceXMP !== void 0) omSets.push(`try { _om.includeSourceXMP = ${jsxVal(args.includeSourceXMP)}; } catch (eXm) { _w.push("includeSourceXMP: " + AE.errText(eXm)); }`);
+				return `
+            ${jsxRqItemPreamble(args)}
+            var _w = [];
+            // Template names are LOCALIZED ("Lossless" does not exist on a
+            // Japanese AE). Exact name first, then a case-insensitive scan of
+            // the target's own template list; when nothing matches, the
+            // warning carries that list so the caller can self-correct
+            // without a separate render.list_templates round trip.
+            function _applyTpl(target, name, label) {
+                try { target.applyTemplate(name); return; } catch (eT1) {}
+                var _avail = [];
+                try { _avail = target.templates; } catch (eT2) {}
+                var _want = String(name).toLowerCase();
+                for (var _ti = 0; _ti < _avail.length; _ti++) {
+                    if (String(_avail[_ti]).toLowerCase() === _want) {
+                        try { target.applyTemplate(_avail[_ti]); return; } catch (eT3) {}
+                    }
+                }
+                _w.push(label + ": no template named '" + name + "' \u2014 available: " + _avail.join(" | "));
+            }
+            ${rqiSets.join("\n")}
+            var _om = null;
+            try { _om = _rqi.outputModule(${jsxVal(args.outputModuleIndex ?? 1)}); } catch (eOm) {}
+            if (!_om) return { ok: false, error: "no output module at index " + ${jsxVal(args.outputModuleIndex ?? 1)} };
+            ${omSets.join("\n")}
+            return {
+                ok: true,
+                queueIndex: _qi,
+                comp: _rqi.comp.name,
+                timeSpanStart: _rqi.timeSpanStart,
+                timeSpanDuration: _rqi.timeSpanDuration,
+                outputPath: _om.file ? _om.file.fsName.replace(/\\\\/g, "/") : null,
+                warnings: _w
+            };
+        `;
+			}
+		});
+		registerOp({
+			name: "render.get_settings",
+			category: "render",
+			readOnly: true,
+			description: "Read the raw render settings of a queue item and the settings of each of its output modules (getSettings, AE 13.0+). format 'settable' returns only keys accepted by render.set_settings / render.set_om_settings.",
+			params: [{
+				name: "queueIndex",
+				type: "number",
+				description: "1-based queue item index (default: last item)",
+				required: false
+			}, {
+				name: "format",
+				type: "string",
+				description: "settable|all (default settable)",
+				required: false,
+				default: "settable"
+			}],
+			toJsx(args) {
+				return `
+            ${jsxRqItemPreamble(args)}
+            if (typeof _rqi.getSettings !== "function") return { ok: false, error: "getSettings needs AE 13.0+" };
+            var _fmt = ${jsxVal(args.format ?? "settable")} === "all" ? GetSettingsFormat.STRING : GetSettingsFormat.STRING_SETTABLE;
+            var _rs = null;
+            try { _rs = _rqi.getSettings(_fmt); } catch (eRs) { return { ok: false, error: "getSettings failed: " + AE.errText(eRs) }; }
+            var _oms = [];
+            for (var _o = 1; _o <= _rqi.numOutputModules; _o++) {
+                var _om = _rqi.outputModule(_o);
+                var _os = null;
+                try { _os = _om.getSettings(_fmt); } catch (eOs) {}
+                _oms.push({ index: _o, name: AE.safeGet(function () { return _om.name; }, null), settings: _os });
+            }
+            return { ok: true, queueIndex: _qi, comp: _rqi.comp ? _rqi.comp.name : null, renderSettings: _rs, outputModules: _oms };
+        `;
+			}
+		});
+		registerOp({
+			name: "render.set_settings",
+			category: "render",
+			description: "Set raw render settings on a queue item (RenderQueueItem.setSettings, AE 13.0+), e.g. { \"Quality\": \"Best\", \"Resolution\": \"Half\" }. Discover valid keys/values with render.get_settings.",
+			params: [{
+				name: "queueIndex",
+				type: "number",
+				description: "1-based queue item index (default: last item)",
+				required: false
+			}, {
+				name: "settings",
+				type: "object",
+				description: "Key/value map from render.get_settings format 'settable'",
+				required: true
+			}],
+			toJsx(args) {
+				return `
+            ${jsxRqItemPreamble(args)}
+            if (typeof _rqi.setSettings !== "function") return { ok: false, error: "setSettings needs AE 13.0+" };
+            try { _rqi.setSettings(${jsxVal(args.settings)}); } catch (eSs) { return { ok: false, error: "setSettings failed: " + AE.errText(eSs) }; }
+            var _after = null;
+            try { _after = _rqi.getSettings(GetSettingsFormat.STRING_SETTABLE); } catch (eAf) {}
+            return { ok: true, queueIndex: _qi, renderSettings: _after };
+        `;
+			}
+		});
+		registerOp({
+			name: "render.set_om_settings",
+			category: "render",
+			description: "Set raw output-module settings on a queue item (OutputModule.setSettings, AE 13.0+), e.g. { \"Format\": \"QuickTime\", \"Channels\": \"RGB + Alpha\" }. Discover valid keys/values with render.get_settings.",
+			params: [
+				{
+					name: "queueIndex",
+					type: "number",
+					description: "1-based queue item index (default: last item)",
+					required: false
+				},
+				{
+					name: "outputModuleIndex",
+					type: "number",
+					description: "1-based output module index (default 1)",
+					required: false,
+					default: 1
+				},
+				{
+					name: "settings",
+					type: "object",
+					description: "Key/value map from render.get_settings format 'settable'",
+					required: true
+				}
+			],
+			toJsx(args) {
+				return `
+            ${jsxRqItemPreamble(args)}
+            var _om = null;
+            try { _om = _rqi.outputModule(${jsxVal(args.outputModuleIndex ?? 1)}); } catch (eOm) {}
+            if (!_om) return { ok: false, error: "no output module at index " + ${jsxVal(args.outputModuleIndex ?? 1)} };
+            if (typeof _om.setSettings !== "function") return { ok: false, error: "setSettings needs AE 13.0+" };
+            try { _om.setSettings(${jsxVal(args.settings)}); } catch (eSs) { return { ok: false, error: "setSettings failed: " + AE.errText(eSs) }; }
+            var _after = null;
+            try { _after = _om.getSettings(GetSettingsFormat.STRING_SETTABLE); } catch (eAf) {}
+            return { ok: true, queueIndex: _qi, outputModuleIndex: ${jsxVal(args.outputModuleIndex ?? 1)}, settings: _after };
+        `;
+			}
+		});
+		registerOp({
+			name: "render.remove_item",
+			category: "render",
+			description: "Remove ONE item from the render queue by its 1-based index (render.clear_queue removes all)." + RENDER_QUEUE_UNDO_WARNING,
+			params: [{
+				name: "queueIndex",
+				type: "number",
+				description: "1-based queue item index (explicit — no default for a destructive op)",
+				required: true
+			}],
+			toJsx(args) {
+				return `
+            ${jsxRqItemPreamble(args)}
+            var _compName = _rqi.comp ? _rqi.comp.name : null;
+            try { _rqi.remove(); } catch (eRm) { return { ok: false, error: "remove failed: " + AE.errText(eRm) }; }
+            return { ok: true, removed: _compName, remaining: rq.numItems };
+        `;
+			}
+		});
+		registerOp({
+			name: "render.duplicate_item",
+			category: "render",
+			description: "Duplicate a render-queue item (RenderQueueItem.duplicate) — e.g. to render the same comp with a second settings/output combination.",
+			params: [{
+				name: "queueIndex",
+				type: "number",
+				description: "1-based queue item index (default: last item)",
+				required: false
+			}],
+			toJsx(args) {
+				return `
+            ${jsxRqItemPreamble(args)}
+            var _dup = null;
+            try { _dup = _rqi.duplicate(); } catch (eDp) { return { ok: false, error: "duplicate failed: " + AE.errText(eDp) }; }
+            return { ok: true, comp: _dup.comp ? _dup.comp.name : null, numItems: rq.numItems };
+        `;
+			}
+		});
+		registerOp({
+			name: "render.list_templates",
+			category: "render",
+			readOnly: true,
+			description: "List available render-settings templates and output-module templates. They are read from a queue item: the first one, or, when the queue is empty and `comp` is given, a temporary item for that comp that is removed again (the project is then left modified by the queue change; render.preview with listTemplates does the same). A temporary item counts as a render-queue change:" + RENDER_QUEUE_UNDO_WARNING,
+			params: [{
+				name: "comp",
+				type: "any",
+				description: "Comp name or id for a temporary queue item, used only when the queue is empty",
+				required: false
+			}],
+			toJsx(args) {
+				return `
+            ${READ_TEMPLATES_FN}
+            var rq = app.project.renderQueue;
+            if (rq.numItems > 0) {
+                var _first = _readTemplates(rq.item(1));
+                return { ok: true, renderTemplates: _first.renderTemplates, outputTemplates: _first.outputTemplates };
+            }
+            var _compArg = ${jsxVal(args.comp ?? null)};
+            if (${jsxVal(readOnlyMode())}) return { ok: false, error: "the render queue is empty, and AE_MCP_READONLY=1 forbids the temporary queue item that would modify the project" };
+            if (_compArg === null) return { ok: false, error: "the render queue is empty: pass comp (a temporary item is added, read and removed), or use render.preview with listTemplates" };
+            var _comp = AE.findCompByNameOrId(_compArg);
+            if (!_comp) return { ok: false, error: "no comp matching " + String(_compArg) };
+            var _tmp = null;
+            try {
+                _tmp = rq.items.add(_comp);
+                var _read = _readTemplates(_tmp);
+                return { ok: true, renderTemplates: _read.renderTemplates, outputTemplates: _read.outputTemplates, temporaryItem: true, projectModified: true, projectNote: ${jsxVal(QUEUE_CHANGE_NOTE)} };
+            } catch (eT) {
+                return { ok: false, error: "could not read templates: " + AE.errText(eT) };
+            } finally {
+                if (_tmp) { try { _tmp.remove(); } catch (eRm) {} }
+            }
+        `;
+			}
+		});
+		registerOp({
+			name: "render.status",
+			category: "render",
+			readOnly: true,
+			description: "Report the render queue state: per-item status, time spans, and output paths.",
+			params: [],
+			toJsx() {
+				return `
+            var rq = app.project.renderQueue;
+            var _statusNames = {};
+            try {
+                _statusNames[RQItemStatus.WILL_CONTINUE] = "WILL_CONTINUE";
+                _statusNames[RQItemStatus.NEEDS_OUTPUT] = "NEEDS_OUTPUT";
+                _statusNames[RQItemStatus.UNQUEUED] = "UNQUEUED";
+                _statusNames[RQItemStatus.QUEUED] = "QUEUED";
+                _statusNames[RQItemStatus.RENDERING] = "RENDERING";
+                _statusNames[RQItemStatus.USER_STOPPED] = "USER_STOPPED";
+                _statusNames[RQItemStatus.ERR_STOPPED] = "ERR_STOPPED";
+                _statusNames[RQItemStatus.DONE] = "DONE";
+            } catch (eSn) {}
+            var _items = [];
+            for (var _i = 1; _i <= rq.numItems; _i++) {
+                var _rqi = rq.item(_i);
+                var _outputs = [];
+                try {
+                    for (var _o = 1; _o <= _rqi.numOutputModules; _o++) {
+                        var _f = _rqi.outputModule(_o).file;
+                        _outputs.push(_f ? _f.fsName.replace(/\\\\/g, "/") : null);
+                    }
+                } catch (eOut) {}
+                _items.push({
+                    index: _i,
+                    comp: _rqi.comp ? _rqi.comp.name : null,
+                    status: _statusNames[_rqi.status] || String(_rqi.status),
+                    render: _rqi.render,
+                    timeSpanStart: _rqi.timeSpanStart,
+                    timeSpanDuration: _rqi.timeSpanDuration,
+                    elapsedSeconds: AE.safeGet(function () { return _rqi.elapsedSeconds; }, null),
+                    outputs: _outputs
+                });
+            }
+            return { ok: true, rendering: rq.rendering, numItems: rq.numItems, canQueueInAME: AE.safeGet(function () { return rq.canQueueInAME; }, false), items: _items };
+        `;
+			}
+		});
+		registerOp({
+			name: "render.queue_in_ame",
+			category: "render",
+			description: "Send the render queue to Adobe Media Encoder (for H.264/HEVC etc.). Requires AME installed. renderImmediately=true starts the AME queue.",
+			params: [{
+				name: "renderImmediately",
+				type: "boolean",
+				description: "Start rendering in AME right away (default false)",
+				required: false,
+				default: false
+			}],
+			toJsx(args) {
+				return `
+            var rq = app.project.renderQueue;
+            if (rq.numItems === 0) return { ok: false, error: "render queue is empty" };
+            if (typeof rq.queueInAME !== "function") return { ok: false, error: "queueInAME not available (needs AE 14.0 / CC 2017+)" };
+            var _can = false;
+            try { _can = rq.canQueueInAME; } catch (eC) {}
+            if (!_can) return { ok: false, error: "cannot queue in AME \u2014 is Adobe Media Encoder installed and at least one item queued?" };
+            rq.queueInAME(${jsxVal(!!args.renderImmediately)});
+            return { ok: true, sent: rq.numItems, renderImmediately: ${jsxVal(!!args.renderImmediately)} };
+        `;
+			}
+		});
+		registerOp({
+			name: "render.variants",
+			category: "render",
+			description: "Render the same comp several times with different property values — a slider that switches a state, a text that changes per version — in ONE call. Each variant sets its values (static properties only; keyed ones are refused), renders through a temporary queue item to outputPath with {name}/{index} substituted, then the original values are restored. Other queue items are not rendered. Blocks until done: raise timeoutMs.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				{
+					name: "variants",
+					type: "array",
+					description: "[{ name, sets: [{ layer, property, value }, …] }, …] — e.g. [{ name: \"A\", sets: [{ layer: \"Ctrl\", property: [\"Effects\",\"Slider Control\",\"Slider\"], value: 1 }] }]",
+					required: true
+				},
+				{
+					name: "outputPath",
+					type: "string",
+					description: "Output file path template; {name} and {index} are replaced per variant",
+					required: true
+				},
+				{
+					name: "renderTemplate",
+					type: "string",
+					description: "Render settings template name",
+					required: false
+				},
+				{
+					name: "outputTemplate",
+					type: "string",
+					description: "Output module template name",
+					required: false
+				},
+				{
+					name: "timeSpanStart",
+					type: "number",
+					description: "Render span start in seconds",
+					required: false
+				},
+				{
+					name: "timeSpanDuration",
+					type: "number",
+					description: "Render span duration in seconds",
+					required: false
+				}
+			],
+			toJsx(args) {
+				const variants = Array.isArray(args.variants) ? args.variants : [];
+				if (variants.length === 0) return jsxFail("variants must be a non-empty array");
+				for (const [i, v] of variants.entries()) {
+					const variant = v;
+					if (!variant || typeof variant !== "object" || typeof variant.name !== "string") return jsxFail(`variants[${i}] needs a string name`);
+					if (!Array.isArray(variant.sets)) return jsxFail(`variants[${i}].sets must be an array of { layer, property, value }`);
+					for (const [j, s] of variant.sets.entries()) {
+						const set = s;
+						if (!set || typeof set !== "object" || set.layer === void 0 || !Array.isArray(set.property) || set.value === void 0) return jsxFail(`variants[${i}].sets[${j}] must be { layer, property: [path], value }`);
+					}
+				}
+				const template = String(args.outputPath);
+				if (variants.length > 1 && !template.includes("{name}") && !template.includes("{index}")) return jsxFail("outputPath must contain {name} or {index} when rendering more than one variant, or every render overwrites the last");
+				return `
+            ${jsxCompPreamble(args)}
+            var _variants = ${jsxVal(variants)};
+            var _tpl = ${jsxVal(template)};
+            var rq = app.project.renderQueue;
+            ${PARK_QUEUE_FN}
+            // Only the temporary item may render: park every existing item.
+            var _parked = _parkQueue(rq);
+            var _results = [];
+            var _failed = 0;
+            try {
+                for (var _vi = 0; _vi < _variants.length; _vi++) {
+                    var _v = _variants[_vi];
+                    var _entry = { name: _v.name, ok: true, warnings: [] };
+                    var _restore = [];
+                    var _rqi = null;
+                    try {
+                        for (var _si = 0; _si < _v.sets.length; _si++) {
+                            var _s = _v.sets[_si];
+                            var _layer = AE.findLayerInComp(_comp, _s.layer);
+                            if (!_layer) throw new Error("no layer matching " + String(_s.layer));
+                            var _prop = AE.propertyAtPath(_layer, _s.property);
+                            if (!_prop || _prop.propertyType !== PropertyType.PROPERTY) throw new Error("property " + _s.property.join("/") + " not found on '" + _layer.name + "'");
+                            if (AE.hasKeys(_prop)) throw new Error("property " + _s.property.join("/") + " on '" + _layer.name + "' has keyframes \u2014 variants switch static values only");
+                            _restore.push({ prop: _prop, value: AE.readValue(_prop) });
+                            AE.writeValue(_prop, _s.value);
+                        }
+                        var _safe = String(_v.name).replace(/[\\\\\\/:*?"<>|]/g, "_");
+                        var _path = _tpl.replace(/\\{name\\}/g, _safe).replace(/\\{index\\}/g, String(_vi));
+                        _rqi = rq.items.add(_comp);
+                        ${args.renderTemplate !== void 0 ? `var _wr = AE.applyTemplate(_rqi, ${jsxVal(args.renderTemplate)}, "renderTemplate"); if (_wr) _entry.warnings.push(_wr);` : ""}
+                        var _om = _rqi.outputModule(1);
+                        ${args.outputTemplate !== void 0 ? `var _wo = AE.applyTemplate(_om, ${jsxVal(args.outputTemplate)}, "outputTemplate"); if (_wo) _entry.warnings.push(_wo);` : ""}
+                        _om.file = AE.ensureParentDir(_path);
+                        ${args.timeSpanStart !== void 0 ? `_rqi.timeSpanStart = ${jsxVal(args.timeSpanStart)};` : ""}
+                        ${args.timeSpanDuration !== void 0 ? `_rqi.timeSpanDuration = ${jsxVal(args.timeSpanDuration)};` : ""}
+                        rq.render();
+                        _entry.status = String(_rqi.status);
+                        _entry.outputPath = _om.file ? _om.file.fsName.replace(/\\\\/g, "/") : _path;
+                        if (_rqi.status === RQItemStatus.ERR_STOPPED || _rqi.status === RQItemStatus.USER_STOPPED) { _entry.ok = false; _entry.error = "render stopped (" + _entry.status + ")"; }
+                    } catch (eV) {
+                        _entry.ok = false;
+                        _entry.error = AE.errText(eV);
+                    } finally {
+                        if (_rqi) { try { _rqi.remove(); } catch (eRm) {} }
+                        for (var _ri = _restore.length - 1; _ri >= 0; _ri--) {
+                            try { AE.writeValue(_restore[_ri].prop, _restore[_ri].value); } catch (eRs) { _entry.warnings.push("restore failed: " + AE.errText(eRs)); }
+                        }
+                    }
+                    if (!_entry.ok) _failed++;
+                    _results.push(_entry);
+                }
+            } finally {
+                _unparkQueue(rq, _parked);
+            }
+            return { ok: _failed === 0, error: _failed === 0 ? null : (_failed + " of " + _results.length + " variants failed"), rendered: _results.length - _failed, variants: _results };
+        `;
+			}
+		});
+		registerOp({
+			name: "render.save_template",
+			category: "render",
+			appConfig: true,
+			description: "Save a queue item's current render settings, or an output module's current settings, as a named template (saveAsTemplate) for reuse via render.set_output.",
+			params: [
+				{
+					name: "type",
+					type: "string",
+					description: "render (RenderQueueItem settings) | output (OutputModule settings)",
+					required: true
+				},
+				{
+					name: "name",
+					type: "string",
+					description: "Template name to save under",
+					required: true
+				},
+				{
+					name: "queueIndex",
+					type: "number",
+					description: "1-based queue item index (default: last item)",
+					required: false
+				},
+				{
+					name: "outputModuleIndex",
+					type: "number",
+					description: "1-based output module index (type=output only, default 1)",
+					required: false,
+					default: 1
+				}
+			],
+			toJsx(args) {
+				return `
+            ${jsxRqItemPreamble(args)}
+            var _type = ${jsxVal(args.type)};
+            if (_type === "render") {
+                try { _rqi.saveAsTemplate(${jsxVal(args.name)}); } catch (eSt) { return { ok: false, error: "saveAsTemplate failed: " + AE.errText(eSt) }; }
+                return { ok: true, type: "render", name: ${jsxVal(args.name)} };
+            }
+            if (_type === "output") {
+                var _om = null;
+                try { _om = _rqi.outputModule(${jsxVal(args.outputModuleIndex ?? 1)}); } catch (eOm) {}
+                if (!_om) return { ok: false, error: "no output module at index " + ${jsxVal(args.outputModuleIndex ?? 1)} };
+                try { _om.saveAsTemplate(${jsxVal(args.name)}); } catch (eSo) { return { ok: false, error: "saveAsTemplate failed: " + AE.errText(eSo) }; }
+                return { ok: true, type: "output", name: ${jsxVal(args.name)} };
+            }
+            return { ok: false, error: "type must be render|output" };
+        `;
+			}
+		});
+		PREVIEW_RESOLUTIONS = {
+			full: "Full",
+			half: "Half",
+			third: "Third",
+			quarter: "Quarter"
+		};
+		registerOp({
+			name: "render.preview",
+			category: "render",
+			description: "Render a quick preview movie of a comp's work area (or the whole comp, or a span) through the render queue, so it can be watched at speed. Adds ONE temporary queue item, renders only that item (others are parked and their Render checkboxes restored), then removes it: the queue is left as it was found. Never overwrites an existing file unless overwrite is true; creates the output folder. Returns outputPath, timeSpanStart, durationSeconds, frameCount, frameRate, renderSeconds (wall clock of the render), elapsedSeconds (AE's own count), bytes, outputTemplate, resolution (+ resolutionReadBack) and warnings. It changes the render queue:" + RENDER_QUEUE_UNDO_WARNING + " Blocks until done: raise ae_do timeoutMs for long comps (235 frames at 1080×1920 with 'High Quality' took about 20 s). Defaults are what is known to work: output template 'High Quality' (a ProRes .mov) at full resolution; resolution 'half' was measured live (540×960 from 1080×1920, about a third of the time). listTemplates: true renders nothing and returns the render-settings and output-module template names, read from a temporary queue item that is removed again. Every answer carries projectModified: true and projectNote: adding and removing a queue item leaves the project unsaved.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				{
+					name: "outputPath",
+					type: "string",
+					description: "Movie file path (the output template may change the extension; the path AE actually wrote is returned). Required unless listTemplates",
+					required: false
+				},
+				{
+					name: "listTemplates",
+					type: "boolean",
+					description: "Render nothing: return renderTemplates and outputTemplates, read from a temporary queue item for comp that is removed again",
+					required: false,
+					default: false
+				},
+				{
+					name: "span",
+					type: "string",
+					description: "workArea (default) | comp — what to render when no explicit time span is given",
+					required: false,
+					default: "workArea"
+				},
+				{
+					name: "timeSpanStart",
+					type: "number",
+					description: "Explicit span start in seconds (comp time); overrides span",
+					required: false
+				},
+				{
+					name: "timeSpanDuration",
+					type: "number",
+					description: "Explicit span duration in seconds; overrides span",
+					required: false
+				},
+				{
+					name: "outputTemplate",
+					type: "string",
+					description: "Output module template (default 'High Quality'); refused, with the available names, when it does not exist",
+					required: false,
+					default: "High Quality"
+				},
+				{
+					name: "renderTemplate",
+					type: "string",
+					description: "Render settings template (default: the queue item's own default)",
+					required: false
+				},
+				{
+					name: "resolution",
+					type: "string",
+					description: "full (default, untouched) | half | third | quarter. Set through setSettings({ Resolution }) and read back; resolutionReadBack and a warning say whether it took",
+					required: false,
+					default: "full"
+				},
+				{
+					name: "renderSettings",
+					type: "object",
+					description: "Raw render settings applied to the temporary item (RenderQueueItem.setSettings, keys from render.get_settings), after renderTemplate and resolution",
+					required: false
+				},
+				{
+					name: "overwrite",
+					type: "boolean",
+					description: "Replace an existing file at the output path (default false: refuse)",
+					required: false,
+					default: false
+				}
+			],
+			toJsx(args) {
+				if (args.listTemplates === true) return `
+            ${jsxCompPreamble(args)}
+            ${READ_TEMPLATES_FN}
+            var rq = app.project.renderQueue;
+            if (AE.safeGet(function () { return rq.rendering; }, false)) return { ok: false, error: "the render queue is already rendering; wait for it to finish" };
+            var _tmp = null;
+            try {
+                _tmp = rq.items.add(_comp);
+                var _read = _readTemplates(_tmp);
+                return { ok: true, renderTemplates: _read.renderTemplates, outputTemplates: _read.outputTemplates, projectModified: true, projectNote: ${jsxVal(QUEUE_CHANGE_NOTE)} };
+            } catch (eT) {
+                return { ok: false, error: "could not read templates: " + AE.errText(eT), projectModified: true, projectNote: ${jsxVal(QUEUE_CHANGE_NOTE)} };
+            } finally {
+                if (_tmp) { try { _tmp.remove(); } catch (eRm) {} }
+            }
+        `;
+				if (typeof args.outputPath !== "string" || args.outputPath === "") return jsxFail("outputPath is required (unless listTemplates is true)");
+				const span = args.span ?? "workArea";
+				if (span !== "workArea" && span !== "comp") return jsxFail("span must be workArea or comp");
+				const resolution = String(args.resolution ?? "full").toLowerCase();
+				if (!(resolution in PREVIEW_RESOLUTIONS)) return jsxFail("resolution must be full, half, third or quarter");
+				if (args.timeSpanStart === void 0 !== (args.timeSpanDuration === void 0)) return jsxFail("give both timeSpanStart and timeSpanDuration, or neither");
+				if (args.timeSpanDuration !== void 0 && !(Number(args.timeSpanDuration) > 0)) return jsxFail("timeSpanDuration must be above 0");
+				return `
+            ${jsxCompPreamble(args)}
+            ${PARK_QUEUE_FN}
+            var rq = app.project.renderQueue;
+            if (AE.safeGet(function () { return rq.rendering; }, false)) return { ok: false, error: "the render queue is already rendering; wait for it to finish" };
+            var _overwrite = ${jsxVal(!!args.overwrite)};
+            var _want = ${jsxVal(String(args.outputPath))};
+            function _meta(_path) {
+                var _f = new File(_path);
+                if (!_f.exists) return { exists: false, bytes: 0, modifiedMs: null };
+                var _d = _f.modified;
+                return { exists: true, bytes: _f.length, modifiedMs: _d ? _d.getTime() : null };
+            }
+            var _existing = _meta(_want);
+            if (_existing.exists && !_overwrite) return { ok: false, error: "a file already exists at " + _want + "; pass overwrite: true to replace it, or choose another outputPath", existing: _want };
+            var _w = [];
+            var _out = null;
+            var _rqi = null;
+            var _numBefore = rq.numItems;
+            var _parked = _parkQueue(rq);
+            try {
+                _rqi = rq.items.add(_comp);
+                ${args.renderTemplate !== void 0 ? `var _wr = AE.applyTemplate(_rqi, ${jsxVal(args.renderTemplate)}, "renderTemplate"); if (_wr) throw new Error(_wr);` : ""}
+                var _om = _rqi.outputModule(1);
+                var _wo = AE.applyTemplate(_om, ${jsxVal(args.outputTemplate ?? "High Quality")}, "outputTemplate");
+                if (_wo) throw new Error(_wo);
+                var _start = ${args.timeSpanStart !== void 0 ? jsxVal(args.timeSpanStart) : span === "comp" ? "0" : "_comp.workAreaStart"};
+                var _dur = ${args.timeSpanDuration !== void 0 ? jsxVal(args.timeSpanDuration) : span === "comp" ? "_comp.duration" : "_comp.workAreaDuration"};
+                _rqi.timeSpanStart = _start;
+                _rqi.timeSpanDuration = _dur;
+                var _res = ${jsxVal(resolution)};
+                var _resBack = null;
+                if (_res !== "full") {
+                    var _resName = ${jsxVal(PREVIEW_RESOLUTIONS[resolution])};
+                    try { _rqi.setSettings({ "Resolution": _resName }); } catch (eRs) { _w.push("resolution: setSettings failed: " + AE.errText(eRs)); }
+                    try { _resBack = _rqi.getSettings(GetSettingsFormat.STRING_SETTABLE)["Resolution"]; } catch (eRb) { _w.push("resolution: could not read it back: " + AE.errText(eRb)); }
+                    if (_resBack !== null && String(_resBack) !== _resName) _w.push("resolution: asked for " + _resName + " but the item reads " + String(_resBack) + " \u2014 the preview may be full size");
+                }
+                ${args.renderSettings !== void 0 ? `try { _rqi.setSettings(${jsxVal(args.renderSettings)}); } catch (eSs) { _w.push("renderSettings: " + AE.errText(eSs)); }` : ""}
+                _om.file = AE.ensureParentDir(_want);
+                var _path = _om.file ? _om.file.fsName.replace(/\\\\/g, "/") : _want;
+                var _before = _meta(_path);
+                if (_path !== _want && _before.exists && !_overwrite) throw new Error("the output template writes " + _path + ", which already exists; pass overwrite: true to replace it");
+                var _t0 = new Date().getTime();
+                rq.render();
+                var _t1 = new Date().getTime();
+                var _after = _meta(_path);
+                var _fresh = _after.exists && _after.bytes > 0 &&
+                    (!_before.exists || _after.bytes !== _before.bytes || (_after.modifiedMs !== null && _after.modifiedMs !== _before.modifiedMs));
+                var _status = _rqi.status;
+                var _fd = _comp.frameDuration;
+                _out = {
+                    ok: _status === RQItemStatus.DONE && _fresh,
+                    outputPath: _path,
+                    span: ${args.timeSpanStart !== void 0 ? "\"custom\"" : jsxVal(span)},
+                    timeSpanStart: _start,
+                    durationSeconds: _dur,
+                    frameCount: Math.round(_dur / _fd),
+                    frameRate: Math.round(1e3 / _fd) / 1e3,
+                    renderSeconds: Math.round(_t1 - _t0) / 1000,
+                    elapsedSeconds: AE.safeGet(function () { return _rqi.elapsedSeconds; }, null),
+                    bytes: _after.bytes,
+                    outputTemplate: ${jsxVal(args.outputTemplate ?? "High Quality")},
+                    resolution: _res,
+                    overwritten: _before.exists,
+                    warnings: _w
+                };
+                if (_res !== "full") _out.resolutionReadBack = _resBack;
+                if (!_out.ok) _out.error = _status !== RQItemStatus.DONE ? "the render did not finish (status " + String(_status) + ")" : "the render left no new file at " + _path;
+            } catch (eP) {
+                _out = { ok: false, error: "preview render failed: " + AE.errText(eP), warnings: _w };
+            } finally {
+                if (_rqi) { try { _rqi.remove(); } catch (eRm) { _w.push("could not remove the preview's queue item: " + AE.errText(eRm)); } }
+                _unparkQueue(rq, _parked);
+            }
+            if (rq.numItems !== _numBefore) _w.push("the render queue has " + rq.numItems + " items, it had " + _numBefore);
+            _out.projectModified = true;
+            _out.projectNote = ${jsxVal(QUEUE_CHANGE_NOTE)};
+            return _out;
+        `;
+			}
+		});
+		DELIVERY_PRESETS = {
+			"vertical-reel": {
+				what: "a vertical reel for upload: H.264 at the comp's size and rate",
+				first: "H.264 - Match Render Settings - 15 Mbps",
+				then: [/^H\.264/i],
+				fallback: ["High Quality", "Lossless"],
+				fallbackWhy: "no H.264 template on this install, so ProRes 422 instead: a larger file that most upload sites take, or transcode it",
+				alpha: false,
+				aspect: 9 / 16
+			},
+			"master-alpha": {
+				what: "a master with alpha for compositing elsewhere: ProRes 4444",
+				first: "High Quality with Alpha",
+				then: ["Lossless with Alpha"],
+				fallback: [/alpha/i],
+				fallbackWhy: "neither High Quality with Alpha nor Lossless with Alpha is on this install, so another movie template whose name says alpha",
+				alpha: true
+			},
+			master: {
+				what: "a master without alpha: ProRes 422",
+				first: "High Quality",
+				then: ["Lossless"],
+				fallback: [/^H\.264/i],
+				fallbackWhy: "neither High Quality nor Lossless is on this install, so H.264, which is not a master",
+				alpha: false
+			}
+		};
+		isSequenceTemplate = (n) => /sequence|photoshop|aiff|alpha only|^_hidden/i.test(n);
+		DELIVERY_TRUE_PEAK_NOTE_DBTP = -1;
+		DELIVERY_SILENCE_TOP = .1;
+		DELIVERY_SILENCE_DB = -60;
+		registerOp({
+			name: "render.deliver",
+			category: "render",
+			description: `Deliver a comp with a named preset and check the file that was written. Presets: 'vertical-reel' (H.264 - Match Render Settings - 15 Mbps, else another H.264 template, else High Quality (ProRes 422) and says so), 'master-alpha' (High Quality with Alpha (ProRes 4444), else Lossless with Alpha, else another movie template whose name says alpha; refuses when there is none), 'master' (High Quality, else Lossless). High Quality, High Quality with Alpha and the three H.264 templates are what Adobe documents for a stock install; a template can be deleted, so the result says which was used and why. Renders the whole comp through one temporary queue item (other items parked), then brings the file back and compares size, frame rate and duration (within half a frame) with the comp, and the sound: when the comp has sound on, a file with no sound track, or one that reads as silence, is flagged (a four-channel take read as silence in After Effects with no warning). The level comes from ffmpeg (mean and max dB) when it is installed, else from After Effects' Convert Audio to Keyframes on the file. The sound is put on its frame: After Effects' AAC encoder starts the sound with ${AE_AAC_PRIMING_SAMPLES} samples of priming and writes no edit list, so in players the voice ran ${AE_AAC_PRIMING_SAMPLES} samples (0.64 of a frame at 30 fps, 48 kHz) late; the file's edit list is read from its own boxes, and when the priming is not skipped the file is remuxed with ffmpeg (-c copy, nothing re-encoded) so an edit list skips it, read back, and replaces the file only when it does (check.file.sync, check.file.alignment). Without ffmpeg that is a 'sound late' finding with the command that fixes it. With ffmpeg the check also reports the delivered file's integrated loudness (LUFS), loudness range (LU) and true peak (dBTP) from ebur128 (check.file.loudness), and says when the true peak is above -1 dBTP; it sets no loudness target. Returns \`check\` { passed, findings, reading }. After this, undo and rollback are refused for the rest of the After Effects session unless acceptRenderQueueRisk: true: After Effects 2027 has gone into crash recovery on undo after scripted render-queue changes (observed twice on 2026-11-10; a precaution, not a proven cause). Save the project before undoing anything afterwards; project.open / project.new clear the block.`,
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				{
+					name: "preset",
+					type: "string",
+					description: "'vertical-reel', 'master-alpha' or 'master'",
+					required: true
+				},
+				{
+					name: "outputPath",
+					type: "string",
+					description: "Absolute path for the file (the template may change the extension; the path written is returned)",
+					required: true
+				},
+				{
+					name: "overwrite",
+					type: "boolean",
+					description: "Replace an existing file (default false)",
+					required: false
+				}
+			],
+			toJsx: () => jsxFail("render.deliver runs in Node; call it through ae_do"),
+			run: (args, transport) => runDeliver(args, liveDeliverIO(transport))
+		});
+		registerOp({
+			name: "render.mux_audio",
+			category: "render",
+			description: "Join a rendered picture with a mix made outside After Effects (a WAV): the recipe is render.deliver for the picture, then this, then look at its check. The picture is copied as it is (-c:v copy, nothing re-encoded); the mix is encoded to AAC at 48 kHz by ffmpeg, which writes its own edit list over the encoder's priming, so the sound sits on its frame. offsetSeconds moves the mix, sample-exact: positive pads silence before it, negative trims its start. Then the same file check as render.deliver on the new file: size, frame rate and duration against the picture, the sound's edit list read back (check.file.sync), its level, and its loudness (integrated LUFS, loudness range and true peak from ebur128, check.file.loudness); and a 'mix length' finding when the mix runs more than one frame longer or shorter than the picture. Needs ffmpeg and ffprobe: without them it says so and writes nothing. Does not touch the After Effects project.",
+			readOnly: true,
+			params: [
+				{
+					name: "video",
+					type: "string",
+					description: "Absolute path of the rendered picture (from render.deliver).",
+					required: true
+				},
+				{
+					name: "audio",
+					type: "string",
+					description: "Absolute path of the mix, a WAV made outside After Effects.",
+					required: true
+				},
+				{
+					name: "output",
+					type: "string",
+					description: "Absolute path for the joined file (default: <video name>-mix beside the picture, same extension).",
+					required: false
+				},
+				{
+					name: "overwrite",
+					type: "boolean",
+					description: "Replace an existing file at output (default false: refuse).",
+					required: false
+				},
+				{
+					name: "offsetSeconds",
+					type: "number",
+					description: "Move the mix against the picture, seconds: positive starts it later (silence before), negative trims its start (default 0).",
+					required: false
+				},
+				{
+					name: "bitrate",
+					type: "string",
+					description: "AAC bitrate, such as '320k' (default '320k').",
+					required: false
+				}
+			],
+			toJsx: () => jsxFail("render.mux_audio runs in Node; call it through ae_do"),
+			run: (args) => runMuxAudio(args)
+		});
+	})))();
+}
+
 // operations/property.js
 function init_property() {
 	return (init_property = __esmMin((() => {
@@ -3323,498 +4102,6 @@ function init_marker() {
 	})))();
 }
 
-// operations/layer-advanced.js
-function init_layer_advanced() {
-	return (init_layer_advanced = __esmMin((() => {
-		init_registry();
-		init_snippets();
-		registerOp({
-			name: "layer.bounds",
-			category: "layer",
-			readOnly: true,
-			description: "Measure a layer's rendered bounds via sourceRectAtTime — essential for aligning/fitting text and shape layers. Returns layer-space rect and, when the host supports it, comp-space corners.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "1-based layer index, or the layer name",
-					required: true
-				},
-				{
-					name: "time",
-					type: "number",
-					description: "Time in seconds (default: current comp time)",
-					required: false
-				},
-				{
-					name: "includeExtents",
-					type: "boolean",
-					description: "Include pixel extents beyond the layer edges (default false)",
-					required: false,
-					default: false
-				}
-			],
-			toJsx(args) {
-				return `
-            ${COMP_CORNERS_FN}
-            ${jsxCompLayerPreamble(args)}
-            if (typeof _layer.sourceRectAtTime !== "function") return { ok: false, error: "layer has no sourceRectAtTime (camera/light?)" };
-            var _t = ${jsxVal(args.time ?? null)};
-            if (_t === null) _t = _comp.time;
-            var _r = _layer.sourceRectAtTime(_t, ${jsxVal(args.includeExtents ?? false)});
-            var _out = { ok: true, time: _t, layerSpace: { top: _r.top, left: _r.left, width: _r.width, height: _r.height } };
-            // Comp-space corners via sourcePointToComp (AE 13.2+; meaningful for
-            // text layers \u2014 reflects the first character at the current comp
-            // time). The function evaluates at the current time, so nudge and restore.
-            try {
-                if (typeof _layer.sourcePointToComp === "function") {
-                    var _prevT = _comp.time;
-                    // finally, not a trailing assignment: sourcePointToComp is
-                    // documented for text layers and can throw on others, and
-                    // this op is readOnly \u2014 leaving the playhead moved would be
-                    // a visible edit made by a read-only call.
-                    try {
-                        _comp.time = _t;
-                        _out.compSpace = _compCorners(_layer, _r);
-                    } finally {
-                        _comp.time = _prevT;
-                    }
-                }
-            } catch (eSp) {}
-            return _out;
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.convert_point",
-			category: "layer",
-			readOnly: true,
-			description: "Convert a point between layer source space and comp space (sourcePointToComp / compPointToSource, AE 13.2+; designed for text layers — evaluates at the first character at the given time).",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "1-based layer index, or the layer name",
-					required: true
-				},
-				{
-					name: "direction",
-					type: "string",
-					description: "sourceToComp|compToSource",
-					required: true
-				},
-				{
-					name: "point",
-					type: "array",
-					description: "[x, y] point to convert",
-					required: true
-				},
-				{
-					name: "time",
-					type: "number",
-					description: "Evaluate at this time (default: current comp time)",
-					required: false
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompLayerPreamble(args)}
-            var _toComp = ${jsxVal(args.direction)} === "sourceToComp";
-            var _fn = _toComp ? _layer.sourcePointToComp : _layer.compPointToSource;
-            if (typeof _fn !== "function") return { ok: false, error: "point conversion unavailable on this layer (text layers, AE 13.2+)" };
-            var _t = ${jsxVal(args.time ?? null)};
-            var _prevT = _comp.time;
-            if (_t !== null) _comp.time = _t;
-            var _res;
-            try {
-                _res = _toComp ? _layer.sourcePointToComp(${jsxVal(args.point)}) : _layer.compPointToSource(${jsxVal(args.point)});
-            } catch (eCv) {
-                _comp.time = _prevT;
-                return { ok: false, error: "conversion failed: " + AE.errText(eCv) };
-            }
-            if (_t !== null) _comp.time = _prevT;
-            return { ok: true, point: AE.valueToJson(_res) };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.apply_preset",
-			category: "layer",
-			description: "Apply an animation preset (.ffx file) to a layer — applies effects/keyframes in one call.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "1-based layer index, or the layer name",
-					required: true
-				},
-				{
-					name: "path",
-					type: "string",
-					description: "Absolute path to the .ffx preset",
-					required: true
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompLayerPreamble(args)}
-            var _f = new File(${jsxVal(args.path)});
-            if (!_f.exists) return { ok: false, error: "preset file not found: " + ${jsxVal(args.path)} };
-            // applyPreset can target the comp's selected layers (e.g. presets that
-            // create layers), so pin the selection to the target layer first \u2014
-            // then put the user's selection back. "selected" is a real
-            // addressing mode elsewhere in this registry and is reported in the
-            // ambient context, so leaving it rewritten would silently retarget
-            // later operations in the same batch. Layer references, not
-            // indices: a preset may insert layers and shift every index.
-            var _prevSel = [];
-            for (var _si = 1; _si <= _comp.numLayers; _si++) {
-                var _sl = _comp.layer(_si);
-                if (_sl.selected) _prevSel.push(_sl);
-                _sl.selected = false;
-            }
-            _layer.selected = true;
-            try {
-                _layer.applyPreset(_f);
-            } finally {
-                for (var _di = 1; _di <= _comp.numLayers; _di++) {
-                    try { _comp.layer(_di).selected = false; } catch (eDs) {}
-                }
-                for (var _ri = 0; _ri < _prevSel.length; _ri++) {
-                    try { _prevSel[_ri].selected = true; } catch (eRs) {}
-                }
-            }
-            var _fx = 0;
-            try { _fx = _layer.property("Effects").numProperties; } catch (eFx) {}
-            return { ok: true, applied: _f.displayName, numEffects: _fx };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.replace_source",
-			category: "layer",
-			description: "Replace a layer's source with another project item (footage or comp), keeping keyframes/effects. Set fixExpressions=false to skip expression rewriting.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "1-based layer index, or the layer name",
-					required: true
-				},
-				{
-					name: "item",
-					type: "any",
-					description: "New source: project item id (number) or name (string)",
-					required: true
-				},
-				{
-					name: "fixExpressions",
-					type: "boolean",
-					description: "Rewrite expressions that reference the old source (default true)",
-					required: false,
-					default: true
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompLayerPreamble(args)}
-            if (!(_layer instanceof AVLayer)) return { ok: false, error: "layer has no source (not an AVLayer)" };
-            var _item = AE.findItem(${jsxVal(args.item)});
-            if (!_item) return { ok: false, error: "no project item matching " + ${jsxVal(String(args.item))} };
-            if (_item instanceof FolderItem) return { ok: false, error: "item is a folder, not footage/comp" };
-            _layer.replaceSource(_item, ${jsxVal(args.fixExpressions !== false)});
-            return { ok: true, layer: _layer.name, source: _item.name };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.set_track_matte",
-			category: "layer",
-			description: "Set (or remove) a track matte on a layer. Uses AVLayer.setTrackMatte (AE 23.0+): the matte can be ANY layer in the comp — it does not need to sit directly above the target.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "1-based index (or name) of the layer to apply matte TO",
-					required: true
-				},
-				{
-					name: "matteLayer",
-					type: "any",
-					description: "Matte source layer: 1-based index or name. Ignored when matteType is 'none'.",
-					required: false
-				},
-				{
-					name: "matteType",
-					type: "string",
-					description: "alpha|alphaInverted|luma|lumaInverted|none",
-					required: true
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompLayerPreamble(args)}
-            var _matteMap = {
-                "alpha": TrackMatteType.ALPHA,
-                "alphaInverted": TrackMatteType.ALPHA_INVERTED,
-                "luma": TrackMatteType.LUMA,
-                "lumaInverted": TrackMatteType.LUMA_INVERTED,
-                "none": TrackMatteType.NO_TRACK_MATTE
-            };
-            var _type = _matteMap[${jsxVal(args.matteType)}];
-            if (!_type && ${jsxVal(args.matteType)} !== "none") return { ok: false, error: "unknown matteType" };
-            if (${jsxVal(args.matteType)} === "none") {
-                _layer.removeTrackMatte();
-                return { ok: true, layer: _layer.name, matte: null };
-            }
-            var _matteArg = ${jsxVal(args.matteLayer ?? null)};
-            if (_matteArg === null) return { ok: false, error: "matteLayer is required when matteType is not 'none'" };
-            var _matte = AE.findLayerInComp(_comp, _matteArg);
-            if (!_matte) return { ok: false, error: "no matte layer matching " + String(_matteArg) };
-            if (_matte === _layer) return { ok: false, error: "a layer cannot be its own track matte" };
-            _layer.setTrackMatte(_matte, _type);
-            return { ok: true, layer: _layer.name, matte: _matte.name };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.set_blend_mode",
-			category: "layer",
-			description: "Set blending mode on a layer.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "1-based layer index, or the layer name",
-					required: true
-				},
-				{
-					name: "mode",
-					type: "string",
-					description: "normal|add|multiply|screen|overlay|softLight|hardLight|difference|exclusion|colorDodge|colorBurn|darken|lighten|stencilAlpha|stencilLuma|silhouetteAlpha|silhouetteLuma",
-					required: true
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompLayerPreamble(args)}
-            var _modeMap = {
-                "normal": BlendingMode.NORMAL, "add": BlendingMode.ADD,
-                "multiply": BlendingMode.MULTIPLY, "screen": BlendingMode.SCREEN,
-                "overlay": BlendingMode.OVERLAY, "softLight": BlendingMode.SOFT_LIGHT,
-                "hardLight": BlendingMode.HARD_LIGHT, "difference": BlendingMode.DIFFERENCE,
-                "exclusion": BlendingMode.EXCLUSION, "colorDodge": BlendingMode.COLOR_DODGE,
-                "colorBurn": BlendingMode.COLOR_BURN, "darken": BlendingMode.DARKEN,
-                "lighten": BlendingMode.LIGHTEN, "stencilAlpha": BlendingMode.STENCIL_ALPHA,
-                "stencilLuma": BlendingMode.STENCIL_LUMA,
-                "silhouetteAlpha": BlendingMode.SILHOUETTE_ALPHA,
-                "silhouetteLuma": BlendingMode.SILHOUETTE_LUMA
-            };
-            var _mode = _modeMap[${jsxVal(args.mode)}];
-            if (!_mode) return { ok: false, error: "unknown blend mode: " + ${jsxVal(args.mode)} };
-            _layer.blendingMode = _mode;
-            return { ok: true, layer: _layer.name, mode: ${jsxVal(args.mode)} };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.split",
-			category: "layer",
-			description: "Split a layer at a given time. Creates a new layer that starts at the split time.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "1-based layer index, or the layer name",
-					required: true
-				},
-				{
-					name: "time",
-					type: "number",
-					description: "Time in seconds to split at",
-					required: true
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompLayerPreamble(args)}
-            var _t = ${jsxVal(args.time)};
-            if (typeof _t !== "number") return { ok: false, error: "time must be a number" };
-            if (_t <= _layer.inPoint || _t >= _layer.outPoint) {
-                return { ok: false, error: "split time " + _t + " is outside the layer's span (" + _layer.inPoint + ", " + _layer.outPoint + ")" };
-            }
-            var _dup = _layer.duplicate();
-            _layer.outPoint = _t;
-            _dup.inPoint = _t;
-            return { ok: true, originalIndex: _layer.index, newIndex: _dup.index, splitTime: _t };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.copy_to_comp",
-			category: "layer",
-			description: "Copy a layer into another comp. The copy is identified by its Layer.id (never by assuming it landed on top). Options: timeOffset/startTime to place it in time, bakeAtTime to freeze every animated property at that source time and drop the keys (match-cut copies), name to rename. The copy keeps the source comp's span — use layer.set_timing outPoint:'comp' to extend it.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Source comp name or id",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "1-based layer index, name, or { id } in the source comp",
-					required: true
-				},
-				{
-					name: "targetComp",
-					type: "any",
-					description: "Target comp name or id",
-					required: true
-				},
-				{
-					name: "timeOffset",
-					type: "number",
-					description: "Seconds added to the copy's startTime",
-					required: false
-				},
-				{
-					name: "startTime",
-					type: "number",
-					description: "Absolute startTime for the copy (applied after timeOffset)",
-					required: false
-				},
-				{
-					name: "bakeAtTime",
-					type: "number",
-					description: "Freeze every keyframed property of the copy at this SOURCE-comp time and remove its keys",
-					required: false
-				},
-				{
-					name: "name",
-					type: "string",
-					description: "Rename the copy",
-					required: false
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompLayerPreamble(args)}
-            var _target = AE.findCompByNameOrId(${jsxVal(args.targetComp)});
-            if (!_target) return { ok: false, error: "target comp not found" };
-            var _snap = AE.layerIdSnapshot(_target);
-            _layer.copyToComp(_target);
-            var _added = AE.layersSince(_target, _snap);
-            if (_added.length !== 1) {
-                return { ok: false, error: "copyToComp added " + _added.length + " layers to " + _target.name + " (expected 1)" };
-            }
-            var _newLayer = _added[0];
-            var _baked = 0;
-            var _bakeT = ${jsxVal(args.bakeAtTime ?? null)};
-            if (_bakeT !== null) _baked = AE.bakeKeysAtTime(_newLayer, _bakeT);
-            var _off = ${jsxVal(args.timeOffset ?? null)};
-            if (_off !== null) _newLayer.startTime = _newLayer.startTime + _off;
-            var _start = ${jsxVal(args.startTime ?? null)};
-            if (_start !== null) _newLayer.startTime = _start;
-            ${args.name ? `_newLayer.name = ${jsxVal(args.name)};` : ""}
-            return { ok: true, copied: _layer.name, targetComp: _target.name, newIndex: _newLayer.index, newName: _newLayer.name, newId: AE.safeGet(function () { return _newLayer.id; }, null), startTime: _newLayer.startTime, inPoint: _newLayer.inPoint, outPoint: _newLayer.outPoint, bakedProperties: _baked };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.calculate_transform",
-			category: "layer",
-			readOnly: true,
-			description: "Calculate the transform that maps a 3D layer onto three corner points (AVLayer.calculateTransformFromPoints) - corner-pin style placement in 3D space. Calculation-only: returns anchorPoint/position/x-y-zRotation/scale without touching the layer — apply them with property.set / layer.set_props.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "1-based layer index, or the layer name (3D layer)",
-					required: true
-				},
-				{
-					name: "topLeft",
-					type: "array",
-					description: "[x,y,z] world point for the layer's top-left",
-					required: true
-				},
-				{
-					name: "topRight",
-					type: "array",
-					description: "[x,y,z] world point for the top-right",
-					required: true
-				},
-				{
-					name: "bottomLeft",
-					type: "array",
-					description: "[x,y,z] world point for the bottom-left. The scripting guide names this pointBottomRight, but the implementation expects the bottom-left (the guide's own example passes bl): a true bottom-right returns the same placement with zScale skewed by sin(corner angle) — verified on AE 26.3.",
-					required: true
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompLayerPreamble(args)}
-            if (typeof _layer.calculateTransformFromPoints !== "function") return { ok: false, error: "calculateTransformFromPoints is not available on this layer" };
-            if (!_layer.threeDLayer) return { ok: false, error: "layer must be 3D (threeDLayer: true) for calculateTransformFromPoints" };
-            var _xf = null;
-            try { _xf = _layer.calculateTransformFromPoints(${jsxVal(args.topLeft)}, ${jsxVal(args.topRight)}, ${jsxVal(args.bottomLeft)}); } catch (eCt) { return { ok: false, error: "calculateTransformFromPoints failed: " + AE.errText(eCt) }; }
-            return { ok: true, transform: AE.valueToJson(_xf) };
-        `;
-			}
-		});
-	})))();
-}
-
 // operations/pref.js
 function jsxPrefTypePreamble(args) {
 	return `
@@ -4056,21 +4343,22 @@ function init_pref() {
 	})))();
 }
 
-// operations/layout.js
+// operations/shape-contents.js
 var LAYER_TARGET_PARAM;
-function init_layout() {
-	return (init_layout = __esmMin((() => {
+function init_shape_contents() {
+	return (init_shape_contents = __esmMin((() => {
 		init_registry();
 		LAYER_TARGET_PARAM = {
 			name: "layer",
 			type: "any",
-			description: "Layer index, name, { id }, 'selected', 'all', or an array of those",
+			description: "Layer index, name, { id }, 'selected', 'all', or an array of those (shape layers)",
 			required: true
 		};
 		registerOp({
-			name: "layer.set_anchor",
-			category: "layer",
-			description: "Move the anchor point WITHOUT moving the layer on screen (Position is compensated through Scale/Rotation; Position keyframes are all shifted). Address the anchor by preset on the layer's rendered bounds (sourceRectAtTime), by an explicit layer-space point, or by an offset from the current anchor.",
+			name: "shape.group_bounds",
+			category: "shape",
+			readOnly: true,
+			description: "Bounds of each top-level vector group of a shape layer, in LAYER space with the group's own transform applied — what you need to split, align, or anchor per part. Geometry-based (exact for paths/rects/ellipses; strokes padded in; stars and path modifiers such as Trim/Repeater are listed in `approximate`). Also reports the whole layer's bounds.",
 			params: [
 				{
 					name: "comp",
@@ -4080,78 +4368,275 @@ function init_layout() {
 				},
 				LAYER_TARGET_PARAM,
 				{
-					name: "preset",
+					name: "time",
+					type: "number",
+					description: "Evaluate animated paths/transforms at this time (default: current value)",
+					required: false
+				},
+				{
+					name: "includeStroke",
+					type: "boolean",
+					description: "Pad by half the widest stroke (default true)",
+					required: false,
+					default: true
+				}
+			],
+			toJsx(args) {
+				return `
+            ${jsxCompPreamble(args)}
+            var _layers = AE.resolveLayers(_comp, ${jsxVal(args.layer)});
+            if (_layers.length === 0) return { ok: false, error: "no layers matched" };
+            var _opts = { time: ${jsxVal(args.time ?? null)}, includeStroke: ${jsxVal(args.includeStroke !== false)} };
+            var _out = [];
+            for (var _li = 0; _li < _layers.length; _li++) {
+                var _l = _layers[_li];
+                if (!(_l instanceof ShapeLayer)) { _out.push({ index: _l.index, name: _l.name, ok: false, error: "not a shape layer" }); continue; }
+                var _contents = _l.property("Contents");
+                var _groups = [];
+                for (var _gi = 1; _gi <= _contents.numProperties; _gi++) {
+                    var _g = _contents.property(_gi);
+                    if (_g.matchName !== "ADBE Vector Group") continue;
+                    var _b = AE.shapeGroupBounds(_g, _opts);
+                    _b.index = _gi;
+                    _b.name = _g.name;
+                    _groups.push(_b);
+                }
+                _out.push({ index: _l.index, name: _l.name, ok: true, layer: AE.shapeLayerBounds(_l, _opts), groups: _groups });
+            }
+            return { ok: true, count: _out.length, layers: _out };
+        `;
+			}
+		});
+		registerOp({
+			name: "shape.recolor",
+			category: "shape",
+			description: "Replace fill and/or stroke colors throughout a shape layer's contents (any nesting depth). Either `color` (paint everything one color — silhouettes) or `map` ([{ from, to }] — per-color substitution, matched within `tolerance`). Colors are [r,g,b] 0-1 (alpha optional).",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				LAYER_TARGET_PARAM,
+				{
+					name: "target",
 					type: "string",
-					description: "center | topLeft | topCenter | topRight | centerLeft | centerRight | bottomLeft | bottomCenter | bottomRight",
+					description: "fill|stroke|both (default both)",
+					required: false,
+					default: "both"
+				},
+				{
+					name: "color",
+					type: "array",
+					description: "[r,g,b] — set every matching fill/stroke to this color",
 					required: false
 				},
 				{
-					name: "point",
+					name: "map",
 					type: "array",
-					description: "[x, y] (or [x, y, z]) explicit anchor in layer space",
+					description: "[{ from: [r,g,b], to: [r,g,b] }, …] — replace only colors that match `from`",
 					required: false
 				},
 				{
-					name: "offset",
-					type: "array",
-					description: "[dx, dy] added to the current anchor",
-					required: false
+					name: "tolerance",
+					type: "number",
+					description: "Per-channel match tolerance for `map` (default 0.01)",
+					required: false,
+					default: .01
+				}
+			],
+			toJsx(args) {
+				if (args.color === void 0 && args.map === void 0) return jsxFail("give either color (recolor everything) or map (per-color substitution)");
+				return `
+            ${jsxCompPreamble(args)}
+            var _layers = AE.resolveLayers(_comp, ${jsxVal(args.layer)});
+            if (_layers.length === 0) return { ok: false, error: "no layers matched" };
+            var _target = ${jsxVal(args.target ?? "both")};
+            if (_target !== "fill" && _target !== "stroke" && _target !== "both") return { ok: false, error: "target must be fill|stroke|both" };
+            var _opts = { target: _target, color: ${jsxVal(args.color ?? null)}, map: ${jsxVal(args.map ?? null)}, tolerance: ${jsxVal(args.tolerance ?? .01)} };
+            var _out = [];
+            var _total = 0;
+            for (var _li = 0; _li < _layers.length; _li++) {
+                var _l = _layers[_li];
+                if (!(_l instanceof ShapeLayer)) { _out.push({ index: _l.index, name: _l.name, ok: false, error: "not a shape layer" }); continue; }
+                var _r = AE.recolorContents(_l.property("Contents"), _opts);
+                _total += _r.changed;
+                _out.push({ index: _l.index, name: _l.name, ok: true, changed: _r.changed, visited: _r.visited });
+            }
+            return { ok: true, changed: _total, layers: _out };
+        `;
+			}
+		});
+		registerOp({
+			name: "shape.signature",
+			category: "shape",
+			readOnly: true,
+			description: "Structural hash of a shape layer's contents and of each top-level group — matchNames plus rounded values, NO display names — so identical artwork hashes the same even after renaming. Use it to find duplicate layers when merging comps, or to check that a copy still matches its source.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				LAYER_TARGET_PARAM,
+				{
+					name: "precision",
+					type: "number",
+					description: "Decimal places kept when rounding values (default 2)",
+					required: false,
+					default: 2
 				},
 				{
 					name: "time",
 					type: "number",
-					description: "Time at which the bounds are measured for a preset (default: current comp time)",
+					description: "Evaluate animated values at this time (default: current value)",
 					required: false
+				},
+				{
+					name: "includeLayerTransform",
+					type: "boolean",
+					description: "Also hash the layer's Transform group (default false — copies usually differ only in position)",
+					required: false,
+					default: false
 				}
 			],
 			toJsx(args) {
-				if ([
-					args.preset,
-					args.point,
-					args.offset
-				].filter((v) => v !== void 0).length !== 1) return jsxFail("give exactly one of preset, point, or offset");
 				return `
             ${jsxCompPreamble(args)}
             var _layers = AE.resolveLayers(_comp, ${jsxVal(args.layer)});
             if (_layers.length === 0) return { ok: false, error: "no layers matched" };
-            var _preset = ${jsxVal(args.preset ?? null)};
-            if (_preset !== null && !AE.ANCHOR_PRESETS.hasOwnProperty(_preset)) return { ok: false, error: "unknown preset '" + _preset + "'" };
-            var _point = ${jsxVal(args.point ?? null)};
-            var _offset = ${jsxVal(args.offset ?? null)};
+            var _prec = ${jsxVal(args.precision ?? 2)};
             var _t = ${jsxVal(args.time ?? null)};
-            if (_t === null) _t = _comp.time;
+            var _withXf = ${jsxVal(args.includeLayerTransform === true)};
             var _out = [];
-            var _failed = 0;
             for (var _li = 0; _li < _layers.length; _li++) {
                 var _l = _layers[_li];
-                var _target = null;
-                try {
-                    if (_preset !== null) {
-                        var _rect = AE.layerRect(_l, _t);
-                        if (!_rect) throw new Error("layer has no measurable bounds");
-                        _target = AE.pointInRect(_rect, _preset);
-                    } else if (_point !== null) {
-                        _target = _point;
-                    } else {
-                        var _cur = _l.transform.anchorPoint.value;
-                        _target = [_cur[0] + (_offset[0] || 0), _cur[1] + (_offset[1] || 0)];
-                        if (_cur.length > 2) _target.push(_cur[2] + (_offset[2] || 0));
-                    }
-                    var _r = AE.moveAnchor(_l, _target);
-                    _out.push({ index: _l.index, name: _l.name, ok: true, anchorPoint: _r.anchorPoint, positionDelta: _r.positionDelta, positionKeysShifted: _r.positionKeysShifted, warnings: _r.warnings });
-                } catch (eA) {
-                    _failed++;
-                    _out.push({ index: _l.index, name: _l.name, ok: false, error: AE.errText(eA) });
+                if (!(_l instanceof ShapeLayer)) { _out.push({ index: _l.index, name: _l.name, ok: false, error: "not a shape layer" }); continue; }
+                var _contents = _l.property("Contents");
+                var _canon = AE.canonicalGroup(_contents, _prec, _t);
+                if (_withXf) _canon += "|xf:" + AE.canonicalGroup(_l.property("Transform"), _prec, _t);
+                var _groups = [];
+                for (var _gi = 1; _gi <= _contents.numProperties; _gi++) {
+                    var _g = _contents.property(_gi);
+                    _groups.push({ index: _gi, name: _g.name, matchName: _g.matchName, signature: AE.hashString(AE.canonicalGroup(_g, _prec, _t)) });
                 }
+                _out.push({ index: _l.index, name: _l.name, ok: true, signature: AE.hashString(_canon), groups: _groups });
             }
-            return { ok: _failed === 0, error: _failed === 0 ? null : (_failed + " of " + _out.length + " layers failed"), count: _out.length, layers: _out };
+            return { ok: true, count: _out.length, layers: _out };
         `;
 			}
 		});
 		registerOp({
-			name: "layer.set_timing",
+			name: "layer.split_groups",
 			category: "layer",
-			description: "Set a layer's timing in one call: shift (relative move of the whole layer), startTime, inPoint, outPoint ('comp' = comp start / comp end — e.g. to extend a layer copied out of a shorter comp), stretch. Applied in that order; AE clamps in/out to the source for footage.",
+			description: "Split a shape layer into one layer per top-level vector group (letters of a word, parts of a character), keeping every group's transform, fills and strokes. New layers stack in group order directly above the original. `anchor` re-anchors each new layer to its own artwork without moving it on screen.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				{
+					name: "layer",
+					type: "any",
+					description: "1-based layer index, name, or { id } (a shape layer)",
+					required: true
+				},
+				{
+					name: "groups",
+					type: "array",
+					description: "1-based indices of the groups to split out (default: every top-level group)",
+					required: false
+				},
+				{
+					name: "anchor",
+					type: "string",
+					description: "keep | center | topLeft | topCenter | topRight | centerLeft | centerRight | bottomLeft | bottomCenter | bottomRight — anchor each new layer on its own bounds (default keep)",
+					required: false,
+					default: "keep"
+				},
+				{
+					name: "nameTemplate",
+					type: "string",
+					description: "Name for each new layer; tokens {group}, {layer}, {index} (default '{group}')",
+					required: false,
+					default: "{group}"
+				},
+				{
+					name: "keepOriginal",
+					type: "boolean",
+					description: "Leave the source layer in place (default false: it is removed once split)",
+					required: false,
+					default: false
+				}
+			],
+			toJsx(args) {
+				return `
+            ${jsxCompLayerPreamble(args)}
+            if (!(_layer instanceof ShapeLayer)) return { ok: false, error: "not a shape layer" };
+            var _anchor = ${jsxVal(args.anchor ?? "keep")};
+            if (_anchor !== "keep" && !AE.ANCHOR_PRESETS.hasOwnProperty(_anchor)) return { ok: false, error: "unknown anchor preset '" + _anchor + "'" };
+            var _tpl = ${jsxVal(args.nameTemplate ?? "{group}")};
+            var _contents = _layer.property("Contents");
+            var _want = ${jsxVal(args.groups ?? null)};
+            var _indices = [];
+            if (_want === null) {
+                for (var _gi = 1; _gi <= _contents.numProperties; _gi++) {
+                    if (_contents.property(_gi).matchName === "ADBE Vector Group") _indices.push(_gi);
+                }
+            } else {
+                for (var _wi = 0; _wi < _want.length; _wi++) {
+                    var _w = _want[_wi];
+                    if (_w < 1 || _w > _contents.numProperties) return { ok: false, error: "group index " + _w + " out of range (layer has " + _contents.numProperties + ")" };
+                    _indices.push(_w);
+                }
+            }
+            if (_indices.length === 0) return { ok: false, error: "no vector groups to split" };
+            var _srcName = _layer.name;
+            var _created = [];
+            // duplicate() lands directly above the original, so each copy
+            // slips in BELOW the copies made before it: creating the groups in
+            // order leaves group 1 on top and the last group just above the
+            // original, matching the render order inside the layer.
+            for (var _k = 0; _k < _indices.length; _k++) {
+                var _keep = _indices[_k];
+                var _dup = _layer.duplicate();
+                var _dc = _dup.property("Contents");
+                for (var _ri = _dc.numProperties; _ri >= 1; _ri--) {
+                    if (_ri !== _keep) _dc.property(_ri).remove();
+                }
+                var _grp = _dc.property(1);
+                var _gname = _grp.name;
+                _dup.name = _tpl.replace(/\\{group\\}/g, _gname).replace(/\\{layer\\}/g, _srcName).replace(/\\{index\\}/g, String(_keep));
+                var _entry = { index: _dup.index, name: _dup.name, group: _gname, groupIndex: _keep };
+                if (_anchor !== "keep") {
+                    var _b = AE.shapeGroupBounds(_grp, {});
+                    if (_b.empty) {
+                        _entry.warning = "group has no geometry; anchor left unchanged";
+                    } else {
+                        var _pt = AE.pointInRect(_b, _anchor);
+                        var _mv = AE.moveAnchor(_dup, _pt);
+                        _entry.anchorPoint = _mv.anchorPoint;
+                        if (_mv.warnings.length) _entry.warning = _mv.warnings.join("; ");
+                    }
+                }
+                _created.push(_entry);
+            }
+            if (!${jsxVal(args.keepOriginal === true)}) _layer.remove();
+            for (var _ci = 0; _ci < _created.length; _ci++) {
+                _created[_ci].index = AE.findLayerInComp(_comp, _created[_ci].name) ? AE.findLayerInComp(_comp, _created[_ci].name).index : _created[_ci].index;
+            }
+            return { ok: true, source: _srcName, created: _created.length, layers: _created };
+        `;
+			}
+		});
+		registerOp({
+			name: "layer.convert_to_shapes",
+			category: "layer",
+			description: "Run 'Create Shapes from Vector Layer' on imported Illustrator/vector layers: each becomes a shape layer directly above the original (which AE switches off). By default the ' Outlines' suffix AE appends is stripped; removeSource deletes the vector layers, removeFootage also deletes their footage items when nothing else uses them. Note: the shape layers can arrive with Position dimensions SEPARATED — every write in this server handles that.",
 			params: [
 				{
 					name: "comp",
@@ -4161,210 +4646,436 @@ function init_layout() {
 				},
 				LAYER_TARGET_PARAM,
 				{
-					name: "shift",
-					type: "number",
-					description: "Seconds to move the layer by (in/out points follow)",
-					required: false
+					name: "stripSuffix",
+					type: "boolean",
+					description: "Rename the new layer to the original's name (drop ' Outlines' / localized suffix). Default true",
+					required: false,
+					default: true
 				},
 				{
-					name: "startTime",
-					type: "number",
-					description: "Absolute layer start",
-					required: false
+					name: "removeSource",
+					type: "boolean",
+					description: "Delete the original vector layer after conversion (default false)",
+					required: false,
+					default: false
 				},
 				{
-					name: "inPoint",
-					type: "any",
-					description: "In point in seconds, or 'comp' for the comp start (0)",
-					required: false
-				},
-				{
-					name: "outPoint",
-					type: "any",
-					description: "Out point in seconds, or 'comp' for the comp end (comp.duration)",
-					required: false
-				},
-				{
-					name: "stretch",
-					type: "number",
-					description: "Time stretch in percent",
-					required: false
+					name: "removeFootage",
+					type: "boolean",
+					description: "With removeSource: also delete the footage item when no other layer uses it (default false)",
+					required: false,
+					default: false
 				}
 			],
 			toJsx(args) {
-				const sets = [];
-				if (args.shift !== void 0) sets.push(`_l.startTime = _l.startTime + ${jsxVal(args.shift)};`);
-				if (args.startTime !== void 0) sets.push(`_l.startTime = ${jsxVal(args.startTime)};`);
-				if (args.inPoint !== void 0) sets.push(`_l.inPoint = (${jsxVal(args.inPoint)} === "comp") ? 0 : ${jsxVal(args.inPoint)};`);
-				if (args.outPoint !== void 0) sets.push(`_l.outPoint = (${jsxVal(args.outPoint)} === "comp") ? _comp.duration : ${jsxVal(args.outPoint)};`);
-				if (args.stretch !== void 0) sets.push(`_l.stretch = ${jsxVal(args.stretch)};`);
-				if (sets.length === 0) return jsxFail("give at least one of shift, startTime, inPoint, outPoint, stretch");
-				const inBad = typeof args.inPoint === "string" && args.inPoint !== "comp";
-				const outBad = typeof args.outPoint === "string" && args.outPoint !== "comp";
-				if (inBad || outBad) return jsxFail("inPoint/outPoint must be a number or 'comp'");
 				return `
             ${jsxCompPreamble(args)}
             var _layers = AE.resolveLayers(_comp, ${jsxVal(args.layer)});
             if (_layers.length === 0) return { ok: false, error: "no layers matched" };
-            var _out = [];
-            var _failed = 0;
-            for (var _li = 0; _li < _layers.length; _li++) {
-                var _l = _layers[_li];
-                try {
-                    ${sets.join("\n                    ")}
-                    _out.push({ index: _l.index, name: _l.name, ok: true, startTime: _l.startTime, inPoint: _l.inPoint, outPoint: _l.outPoint, stretch: _l.stretch });
-                } catch (eT) {
-                    _failed++;
-                    _out.push({ index: _l.index, name: _l.name, ok: false, error: AE.errText(eT) });
-                }
+            var _cmd = 0;
+            try { _cmd = app.findMenuCommandId("Create Shapes from Vector Layer"); } catch (eFind) {}
+            // Menu names are localized; the id is not (3973 on every AE since CS6).
+            if (!_cmd) _cmd = 3973;
+            var _sources = [];
+            for (var _si = 0; _si < _layers.length; _si++) {
+                if (!(_layers[_si] instanceof AVLayer) || !_layers[_si].source) return { ok: false, error: "layer '" + _layers[_si].name + "' is not a footage layer" };
+                _sources.push(_layers[_si]);
             }
-            return { ok: _failed === 0, error: _failed === 0 ? null : (_failed + " of " + _out.length + " layers failed"), count: _out.length, layers: _out };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.set_visibility_schedule",
-			category: "layer",
-			description: "Show layers only during given time ranges — sequential pops, material swaps, flip-books — in one call. mode 'opacity' (default) writes HOLD opacity keys (on inside each range, off outside; existing opacity keys replaced); mode 'inOut' sets in/out points (one range per layer).",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "entries",
-					type: "array",
-					description: "[{ layer, ranges: [[start, end], …] }] — layer accepts the usual index | name | { id } | 'selected' | 'all' | array",
-					required: true
-				},
-				{
-					name: "mode",
-					type: "string",
-					description: "opacity|inOut (default opacity)",
-					required: false,
-					default: "opacity"
-				},
-				{
-					name: "onValue",
-					type: "number",
-					description: "Opacity inside the ranges (default 100)",
-					required: false,
-					default: 100
-				},
-				{
-					name: "offValue",
-					type: "number",
-					description: "Opacity outside the ranges (default 0)",
-					required: false,
-					default: 0
-				}
-			],
-			toJsx(args) {
-				const mode = args.mode ?? "opacity";
-				if (mode !== "opacity" && mode !== "inOut") return jsxFail("mode must be opacity|inOut");
-				const entries = Array.isArray(args.entries) ? args.entries : [];
-				for (const [i, entry] of entries.entries()) {
-					const e = entry;
-					if (!e || typeof e !== "object" || e.layer === void 0 || !Array.isArray(e.ranges)) return jsxFail(`entries[${i}] must be { layer, ranges: [[start, end], \u2026] }`);
-					for (const [j, range] of e.ranges.entries()) if (!Array.isArray(range) || range.length !== 2 || typeof range[0] !== "number" || typeof range[1] !== "number" || !(range[1] > range[0])) return jsxFail(`entries[${i}].ranges[${j}] must be [start, end] with end > start`);
-					if (mode === "inOut" && e.ranges.length !== 1) return jsxFail(`entries[${i}]: mode 'inOut' takes exactly one range per entry`);
-				}
-				return `
-            ${jsxCompPreamble(args)}
-            var _entries = ${jsxVal(entries)};
-            var _mode = ${jsxVal(mode)};
-            var _on = ${jsxVal(args.onValue ?? 100)};
-            var _off = ${jsxVal(args.offValue ?? 0)};
             var _out = [];
-            var _failed = 0;
-            for (var _ei = 0; _ei < _entries.length; _ei++) {
-                var _e = _entries[_ei];
-                var _layers = AE.resolveLayers(_comp, _e.layer);
-                if (_layers.length === 0) { _failed++; _out.push({ entry: _ei, ok: false, error: "no layers matched " + String(_e.layer) }); continue; }
-                var _ranges = _e.ranges.slice(0);
-                _ranges.sort(function (a, b) { return a[0] - b[0]; });
-                for (var _li = 0; _li < _layers.length; _li++) {
-                    var _l = _layers[_li];
-                    try {
-                        if (_mode === "inOut") {
-                            _l.inPoint = _ranges[0][0];
-                            _l.outPoint = _ranges[0][1];
-                            _out.push({ entry: _ei, index: _l.index, name: _l.name, ok: true, inPoint: _l.inPoint, outPoint: _l.outPoint });
-                        } else {
-                            var _op = _l.transform.opacity;
-                            var _specs = [];
-                            if (_ranges[0][0] > 0) _specs.push({ time: 0, value: _off, interp: "hold" });
-                            for (var _ri = 0; _ri < _ranges.length; _ri++) {
-                                _specs.push({ time: _ranges[_ri][0], value: _on, interp: "hold" });
-                                _specs.push({ time: _ranges[_ri][1], value: _off, interp: "hold" });
-                            }
-                            var _r = AE.applyKeySpecs(_op, _specs, { replace: true });
-                            _out.push({ entry: _ei, index: _l.index, name: _l.name, ok: true, numKeys: _r.numKeys, warnings: _r.warnings });
-                        }
-                    } catch (eS) {
-                        _failed++;
-                        _out.push({ entry: _ei, index: _l.index, name: _l.name, ok: false, error: AE.errText(eS) });
+            var _strip = ${jsxVal(args.stripSuffix !== false)};
+            var _rmSrc = ${jsxVal(args.removeSource === true)};
+            var _rmFoot = ${jsxVal(args.removeFootage === true)};
+            try { _comp.openInViewer(); } catch (eV) {}
+            for (var _i = 0; _i < _sources.length; _i++) {
+                var _src = _sources[_i];
+                var _srcName = _src.name;
+                var _foot = _src.source;
+                var _snap = AE.layerIdSnapshot(_comp);
+                AE.withSelection(_comp, [_src], function () { app.executeCommand(_cmd); });
+                var _added = AE.layersSince(_comp, _snap);
+                var _shape = null;
+                for (var _ai = 0; _ai < _added.length; _ai++) {
+                    if (_added[_ai] instanceof ShapeLayer) { _shape = _added[_ai]; break; }
+                }
+                if (!_shape) { _out.push({ source: _srcName, ok: false, error: "the command created no shape layer (is the layer a vector footage layer?)" }); continue; }
+                var _entry = { source: _srcName, ok: true, index: _shape.index, name: _shape.name, originalName: _shape.name };
+                if (_strip) {
+                    var _clean = _shape.name.replace(/\\s*Outlines$/, "").replace(/\\s*(\u306E)?\u30A2\u30A6\u30C8\u30E9\u30A4\u30F3$/, "");
+                    if (_clean.length === 0) _clean = _srcName;
+                    _shape.name = _clean;
+                    _entry.name = _shape.name;
+                }
+                if (_rmSrc) {
+                    _src.remove();
+                    _entry.sourceRemoved = true;
+                    if (_rmFoot && _foot) {
+                        var _used = 0;
+                        try { _used = _foot.usedIn.length; } catch (eU) { _used = 1; }
+                        if (_used === 0) { try { _foot.remove(); _entry.footageRemoved = true; } catch (eF) { _entry.footageRemoved = false; } }
+                        else _entry.footageRemoved = false;
                     }
+                    _entry.index = _shape.index;
                 }
+                _out.push(_entry);
             }
-            return { ok: _failed === 0, error: _failed === 0 ? null : (_failed + " entries failed"), count: _out.length, layers: _out };
+            var _failed = 0;
+            for (var _fi = 0; _fi < _out.length; _fi++) if (!_out[_fi].ok) _failed++;
+            return { ok: _failed === 0, error: _failed === 0 ? null : (_failed + " of " + _out.length + " layers did not convert"), converted: _out.length - _failed, layers: _out };
         `;
 			}
 		});
-		registerOp({
-			name: "comp.set_layer_order",
-			category: "comp",
-			description: "Arrange layers by listing them top to bottom. The listed layers occupy startIndex.. in that order; unlisted layers keep their relative order below (or above) them.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "layers",
-					type: "array",
-					description: "Layer references (index | name | { id }), top first",
-					required: true
-				},
-				{
-					name: "startIndex",
-					type: "number",
-					description: "1-based index the first listed layer lands on (default 1 = top)",
-					required: false,
-					default: 1
-				}
-			],
-			toJsx(args) {
-				return `
+	})))();
+}
+
+// operations/sample.js
+function liveIO(transport) {
+	return { async execute(code, opts) {
+		const r = await transport.execute({
+			code,
+			label: opts.label,
+			timeoutMs: opts.timeoutMs,
+			undoGroup: opts.undoGroup ?? false,
+			suppressDialogs: true
+		});
+		return r.ok ? r.result : {
+			ok: false,
+			error: r.error ?? `${opts.label} failed`
+		};
+	} };
+}
+function propertyPath(p) {
+	if (Array.isArray(p) && p.length && p.every((x) => typeof x === "string")) return p;
+	if (typeof p === "string") return TRANSFORM.includes(p) ? ["Transform", p] : [p];
+	return null;
+}
+function curveReadJsx(args) {
+	return `
+            ${jsxCompLayerPreamble(args)}
+            var _p = AE.propertyAtPath(_layer, ${jsxVal(args.path)});
+            if (!_p || _p.propertyType !== PropertyType.PROPERTY) return { ok: false, error: "no property " + ${jsxVal(args.path.join(" > "))} + " on " + _layer.name };
+            var _fd = _comp.frameDuration;
+            var _s = ${jsxVal(args.start ?? null)};
+            var _e = ${jsxVal(args.end ?? null)};
+            if (_s === null) _s = Math.max(0, _layer.inPoint);
+            if (_e === null) _e = Math.min(_comp.duration, _layer.outPoint);
+            var _f0 = Math.round(_s / _fd);
+            var _f1 = Math.round(_e / _fd);
+            if (_f1 - _f0 > 3000) return { ok: false, error: "over 3000 frames; give start and end" };
+            var _vals = [];
+            for (var _f = _f0; _f <= _f1; _f++) {
+                var _v = AE.valueToJson(AE.readValue(_p, _f * _fd));
+                _vals.push(_v);
+            }
+            var _interp = function (v) {
+                if (v === KeyframeInterpolationType.LINEAR) return "linear";
+                if (v === KeyframeInterpolationType.BEZIER) return "bezier";
+                if (v === KeyframeInterpolationType.HOLD) return "hold";
+                return "other";
+            };
+            var _keys = [];
+            for (var _k = 1; _k <= _p.numKeys; _k++) {
+                var _kt = _p.keyTime(_k);
+                _keys.push({ time: _kt, frame: Math.round(_kt / _fd), inInterpolation: _interp(_p.keyInInterpolationType(_k)), outInterpolation: _interp(_p.keyOutInterpolationType(_k)) });
+            }
+            return { ok: true, layer: _layer.name, property: _p.name, fps: 1 / _fd, startFrame: _f0, values: _vals, keys: _keys };
+        `;
+}
+async function runCurve(args, io) {
+	const p = propertyPath(args.property);
+	if (!p) return {
+		ok: false,
+		error: "`property` must be a transform property's name or a path of names"
+	};
+	const num = (k) => typeof args[k] === "number" ? args[k] : void 0;
+	const r = await io.execute(curveReadJsx({
+		comp: args.comp,
+		layer: args.layer,
+		path: p,
+		start: num("start"),
+		end: num("end")
+	}), {
+		label: "motion.curve read",
+		timeoutMs: 12e4
+	});
+	if (!r?.ok) return {
+		ok: false,
+		error: r?.error ?? "could not read the property"
+	};
+	const samples = r.values.map((v, i) => ({
+		frame: r.startFrame + i,
+		time: (r.startFrame + i) / r.fps,
+		value: Array.isArray(v) ? v.map(Number) : [Number(v)]
+	}));
+	if (samples.some((s) => s.value.some((x) => !Number.isFinite(x)))) return {
+		ok: false,
+		error: `${r.property} is not a number or a list of numbers`
+	};
+	const report = analyzeCurve(samples, r.fps);
+	let graph = null;
+	if (typeof args.outPath === "string") {
+		if (!path$1.isAbsolute(args.outPath)) return {
+			ok: false,
+			error: "`outPath` must be absolute (.png)"
+		};
+		const g = curveGraph(report, {
+			width: 480,
+			height: 160
+		});
+		await promises.mkdir(path$1.dirname(args.outPath), { recursive: true });
+		await promises.writeFile(args.outPath, encodePngSrgb8(g.width, g.height, g.rgb));
+		graph = args.outPath;
+	}
+	return {
+		ok: true,
+		layer: r.layer,
+		property: r.property,
+		fps: r.fps,
+		span: {
+			from: samples[0]?.frame ?? null,
+			to: samples[samples.length - 1]?.frame ?? null
+		},
+		keys: r.keys,
+		moves: report.moves,
+		flags: report.flags,
+		reading: report.reading,
+		graph,
+		...args.perFrame === true ? { frames: report.frames } : {}
+	};
+}
+function amplitudeJsx(args) {
+	return `
+            ${jsxCompLayerPreamble(args)}
+            if (!_layer.hasAudio) return { ok: false, error: _layer.name + " has no audio" };
+            var _was = [];
+            for (var _i = 1; _i <= _comp.numLayers; _i++) { _was.push(_comp.layer(_i).selected); _comp.layer(_i).selected = false; }
+            var _before = _comp.numLayers;
+            _comp.openInViewer();
+            _layer.selected = true;
+            var _id = app.findMenuCommandId("Convert Audio to Keyframes");
+            if (!_id) return { ok: false, error: "After Effects has no Convert Audio to Keyframes command here" };
+            app.executeCommand(_id);
+            if (_comp.numLayers !== _before + 1) return { ok: false, error: "Convert Audio to Keyframes made no layer" };
+            var _amp = null;
+            for (var _j = 1; _j <= _comp.numLayers; _j++) { var _l = _comp.layer(_j); var _fx = _l.property("ADBE Effect Parade"); if (_fx && _fx.numProperties === 3 && _l !== _layer && _l.name.indexOf("Audio Amplitude") === 0) _amp = _l; }
+            if (!_amp) return { ok: false, error: "could not find the Audio Amplitude layer" };
+            var _fd = _comp.frameDuration;
+            var _n = Math.round(_comp.duration / _fd);
+            var _read = function (k) { var p = _amp.property("ADBE Effect Parade").property(k).property(1); var v = []; for (var f = 0; f < _n; f++) v.push(Math.round(p.valueAtTime(f * _fd, false) * 1000) / 1000); return v; };
+            var _out = { ok: true, fps: 1 / _fd, left: _read(1), right: _read(2), both: _read(3) };
+            _amp.remove();
+            for (var _r = 1; _r <= _comp.numLayers && _r <= _was.length; _r++) _comp.layer(_r).selected = _was[_r - 1];
+            return _out;
+        `;
+}
+function fpsJsx(args) {
+	return `
             ${jsxCompPreamble(args)}
-            var _refs = ${jsxVal(args.layers)};
-            var _start = ${jsxVal(args.startIndex ?? 1)};
-            var _targets = [];
-            var _seen = {};
-            for (var _ri = 0; _ri < _refs.length; _ri++) {
-                var _l = AE.findLayerInComp(_comp, _refs[_ri]);
-                if (!_l) return { ok: false, error: "no layer matching " + String(_refs[_ri]) };
-                var _key = "k" + _l.index;
-                if (_seen.hasOwnProperty(_key)) return { ok: false, error: "layer '" + _l.name + "' listed twice" };
-                _seen[_key] = true;
-                _targets.push(_l);
-            }
-            if (_start < 1 || _start + _targets.length - 1 > _comp.numLayers) return { ok: false, error: "startIndex " + _start + " leaves no room for " + _targets.length + " layers (comp has " + _comp.numLayers + ")" };
-            for (var _ti = 0; _ti < _targets.length; _ti++) AE.moveLayerToIndex(_targets[_ti], _start + _ti);
-            var _order = [];
-            for (var _oi = 1; _oi <= _comp.numLayers; _oi++) _order.push(_comp.layer(_oi).name);
-            return { ok: true, moved: _targets.length, order: _order };
+            return { ok: true, fps: 1 / _comp.frameDuration };
         `;
-			}
+}
+function addMarkersJsx(args) {
+	return `
+            ${jsxCompPreamble(args)}
+            var _mp = _comp.markerProperty;
+            var _removed = 0;
+            if (${jsxVal(args.replace)}) {
+                for (var _k = _mp.numKeys; _k >= 1; _k--) if (String(_mp.keyValue(_k).comment).indexOf(${jsxVal(args.prefix + ":")}) === 0) { _mp.removeKey(_k); _removed++; }
+            }
+            var _ms = ${jsxVal(args.markers)};
+            for (var _i = 0; _i < _ms.length; _i++) _mp.setValueAtTime(_ms[_i].time, new MarkerValue(_ms[_i].comment));
+            return { ok: true, added: _ms.length, removed: _removed, numMarkers: _mp.numKeys };
+        `;
+}
+async function runSoundMarkers(args, io) {
+	const prefix = typeof args.prefix === "string" && args.prefix ? args.prefix : "sound";
+	const hasTiming = typeof args.timing === "string";
+	if (hasTiming === (args.layer !== void 0)) return {
+		ok: false,
+		error: "give exactly one of `timing` (a timing file) or `layer` (a layer with sound, read by loudness)"
+	};
+	let fps;
+	let found;
+	let source;
+	if (hasTiming) {
+		const f = args.timing;
+		if (!path$1.isAbsolute(f)) return {
+			ok: false,
+			error: "`timing` must be an absolute path"
+		};
+		const r = await io.execute(fpsJsx({ comp: args.comp }), {
+			label: "sound.markers fps",
+			timeoutMs: 3e4
 		});
+		if (!r?.ok) return {
+			ok: false,
+			error: r?.error ?? "could not read the comp"
+		};
+		fps = r.fps;
+		try {
+			found = parseTiming(await promises.readFile(f, "utf8"), fps).map((m) => ({
+				...m,
+				frame: Math.round(m.time * fps)
+			}));
+		} catch (e) {
+			return {
+				ok: false,
+				error: e instanceof Error ? e.message : String(e)
+			};
+		}
+		source = {
+			kind: "timing file",
+			path: f
+		};
+	} else {
+		const r = await io.execute(amplitudeJsx({
+			comp: args.comp,
+			layer: args.layer
+		}), {
+			label: "sound.markers amplitude",
+			timeoutMs: 3e5,
+			undoGroup: true
+		});
+		if (!r?.ok) return {
+			ok: false,
+			error: r?.error ?? "Convert Audio to Keyframes failed"
+		};
+		fps = r.fps;
+		const left = r.left;
+		const right = r.right;
+		const louder = left.map((v, i) => Math.max(v, right[i] ?? 0));
+		const top = Math.max(0, ...louder);
+		if (top < .1) return {
+			ok: false,
+			error: `After Effects read this layer's sound as silence (Convert Audio to Keyframes' amplitude stays under ${SILENCE_BELOW} on every frame; its top was ${top}). A four-channel AAC take did this, though a four-channel WAV with the voice on its first channel read as left: extract the voice to a mono WAV (ffmpeg -i take.mp4 -af pan=mono|c0=c0 voice.wav), import that and read it instead, or give a timing file.`
+		};
+		found = soundOnsets(louder, fps, { share: typeof args.share === "number" ? args.share : void 0 }).map((o) => ({
+			time: o.time,
+			frame: o.frame,
+			label: "beat",
+			level: o.level
+		}));
+		source = {
+			kind: "loudness",
+			layer: args.layer,
+			channels: {
+				left: Math.max(0, ...left),
+				right: Math.max(0, ...right)
+			}
+		};
+	}
+	const add = await io.execute(addMarkersJsx({
+		comp: args.comp,
+		markers: found.map((m) => ({
+			time: m.time,
+			comment: `${prefix}: ${m.label}`
+		})),
+		prefix,
+		replace: args.replace !== false
+	}), {
+		label: "sound.markers add",
+		timeoutMs: 6e4,
+		undoGroup: true
+	});
+	if (!add?.ok) return {
+		ok: false,
+		error: add?.error ?? "could not add the markers"
+	};
+	return {
+		ok: true,
+		source,
+		fps,
+		markers: found,
+		added: add.added,
+		removed: add.removed,
+		reading: `${found.length} marker${found.length === 1 ? "" : "s"} added as '${prefix}: \u2026'${add.removed ? `, ${add.removed} earlier ones replaced` : ""}.`
+	};
+}
+function syncReadJsx(args) {
+	return `
+            ${jsxCompPreamble(args)}
+            var _mp = _comp.markerProperty;
+            var _markers = [];
+            for (var _k = 1; _k <= _mp.numKeys; _k++) _markers.push({ time: _mp.keyTime(_k), comment: String(_mp.keyValue(_k).comment) });
+            var _events = [];
+            var _keys = ${jsxVal(args.keys)};
+            for (var _i = 0; _i < _keys.length; _i++) {
+                var _l = AE.findLayerInComp(_comp, _keys[_i].layer);
+                if (!_l) return { ok: false, error: "no layer " + _keys[_i].layer };
+                var _p = AE.propertyAtPath(_l, _keys[_i].path);
+                if (!_p) return { ok: false, error: "no property " + _keys[_i].path.join(" > ") + " on " + _l.name };
+                for (var _j = 1; _j <= _p.numKeys; _j++) _events.push({ name: _l.name + " " + _p.name + " key " + _j, time: _p.keyTime(_j) });
+            }
+            var _ins = ${jsxVal(args.inPoints)};
+            for (var _n = 0; _n < _ins.length; _n++) {
+                var _li = AE.findLayerInComp(_comp, _ins[_n]);
+                if (!_li) return { ok: false, error: "no layer " + _ins[_n] };
+                _events.push({ name: _li.name + " in-point", time: _li.inPoint });
+            }
+            return { ok: true, fps: 1 / _comp.frameDuration, markers: _markers, events: _events };
+        `;
+}
+async function runSync(args, io) {
+	const keys = Array.isArray(args.keys) ? args.keys.map((k) => ({
+		layer: k.layer,
+		path: propertyPath(k.property) ?? []
+	})) : [];
+	if (keys.some((k) => !k.path.length)) return {
+		ok: false,
+		error: "each of `keys` needs { layer, property }"
+	};
+	const inPoints = Array.isArray(args.inPoints) ? args.inPoints : [];
+	const given = Array.isArray(args.events) ? args.events : [];
+	if (!keys.length && !inPoints.length && !given.length) return {
+		ok: false,
+		error: "give events: `keys`, `inPoints` or `events` ({ name, time }, for example spikes from ae_render_frame diff)"
+	};
+	const r = await io.execute(syncReadJsx({
+		comp: args.comp,
+		keys,
+		inPoints
+	}), {
+		label: "sound.sync read",
+		timeoutMs: 6e4
+	});
+	if (!r?.ok) return {
+		ok: false,
+		error: r?.error ?? "could not read the comp"
+	};
+	const prefix = typeof args.markerPrefix === "string" ? args.markerPrefix : null;
+	const markers = r.markers.filter((m) => prefix === null || m.comment.startsWith(prefix)).map((m) => ({
+		time: m.time,
+		label: m.comment
+	}));
+	const rep = syncReport([...r.events, ...given], markers, r.fps, {
+		lateFrames: typeof args.lateFrames === "number" ? args.lateFrames : void 0,
+		earlyFrames: typeof args.earlyFrames === "number" ? args.earlyFrames : void 0
+	});
+	return {
+		ok: true,
+		fps: r.fps,
+		markers: markers.length,
+		...rep
+	};
+}
+var DEFAULT_PROPERTIES, TRANSFORM, SILENCE_BELOW;
+function init_sample() {
+	return (init_sample = __esmMin((() => {
+		init_motion();
+		init_png16();
+		init_run_moves();
+		init_registry();
+		DEFAULT_PROPERTIES = [
+			["Transform", "Anchor Point"],
+			["Transform", "Position"],
+			["Transform", "Scale"],
+			["Transform", "Rotation"],
+			["Transform", "Opacity"]
+		];
 		registerOp({
-			name: "comp.resize",
+			name: "comp.sample",
 			category: "comp",
-			description: "Change a comp's size and keep its content where it was: every unparented layer's Position (keyframes included, separated dimensions handled) is offset so the content stays pinned to `anchor` — 'center' keeps it centred, 'topLeft' keeps the top-left corner, etc. Children follow their parents. Comp accepts a name, id, pattern, or array.",
+			readOnly: true,
+			description: "Sample property values at several times across layers of one or more comps in ONE call. Each row says whether the layer is active at that time (enabled and inside its in/out span) and gives the post-expression value of every requested property (default: the five transform properties). Use it to verify motion, list what is visible when, or compare two comps for a match cut.",
 			params: [
 				{
 					name: "comp",
@@ -4373,195 +5084,299 @@ function init_layout() {
 					required: true
 				},
 				{
-					name: "width",
-					type: "number",
-					description: "New width in px",
-					required: false
-				},
-				{
-					name: "height",
-					type: "number",
-					description: "New height in px",
-					required: false
-				},
-				{
-					name: "anchor",
-					type: "string",
-					description: "Where the existing content stays pinned: center | topLeft | topCenter | topRight | centerLeft | centerRight | bottomLeft | bottomCenter | bottomRight (default center)",
-					required: false,
-					default: "center"
-				},
-				{
-					name: "offset",
+					name: "times",
 					type: "array",
-					description: "[dx, dy] explicit offset applied to every unparented layer instead of `anchor`",
-					required: false
-				}
-			],
-			toJsx(args) {
-				if (args.width === void 0 && args.height === void 0) return jsxFail("give width and/or height");
-				return `
-            var _comps = AE.findComps(${jsxVal(args.comp)});
-            if (_comps.length === 0) return { ok: false, error: "no comps matched" };
-            var _anchor = ${jsxVal(args.anchor ?? "center")};
-            if (!AE.ANCHOR_PRESETS.hasOwnProperty(_anchor)) return { ok: false, error: "unknown anchor '" + _anchor + "'" };
-            var _explicit = ${jsxVal(args.offset ?? null)};
-            var _out = [];
-            for (var _ci = 0; _ci < _comps.length; _ci++) {
-                var _c = _comps[_ci];
-                var _oldW = _c.width, _oldH = _c.height;
-                var _newW = ${jsxVal(args.width ?? null)};
-                var _newH = ${jsxVal(args.height ?? null)};
-                if (_newW === null) _newW = _oldW;
-                if (_newH === null) _newH = _oldH;
-                var _f = AE.ANCHOR_PRESETS[_anchor];
-                var _d = _explicit !== null ? [_explicit[0] || 0, _explicit[1] || 0] : [(_newW - _oldW) * _f[0], (_newH - _oldH) * _f[1]];
-                _c.width = _newW;
-                _c.height = _newH;
-                var _moved = 0;
-                var _warn = [];
-                for (var _li = 1; _li <= _c.numLayers; _li++) {
-                    var _l = _c.layer(_li);
-                    if (_l.parent) continue;
-                    var _pos = null;
-                    try { _pos = _l.transform.position; } catch (eP) {}
-                    if (!_pos) continue;
-                    try { AE.offsetValue(_pos, [_d[0], _d[1]]); _moved++; }
-                    catch (eO) { _warn.push(_l.name + ": " + AE.errText(eO)); }
-                    if (_l instanceof CameraLayer || _l instanceof LightLayer) {
-                        try { var _poi = _l.transform.pointOfInterest; if (_poi) AE.offsetValue(_poi, [_d[0], _d[1]]); } catch (ePoi) {}
-                    }
-                }
-                _out.push({ comp: _c.name, from: [_oldW, _oldH], to: [_c.width, _c.height], offset: _d, layersMoved: _moved, warnings: _warn });
-            }
-            return { ok: true, comps: _out };
-        `;
-			}
-		});
-		registerOp({
-			name: "project.rename",
-			category: "project",
-			description: "Rename project items and/or layers in bulk: an exact `map` ({ from: to }) or a regex `pattern` + `replacement` ($1 works). scope 'items' covers comps, footage and folders; 'layers' covers layers in every comp (or the comps matched by `comp`). dryRun previews without renaming.",
-			params: [
+					description: "Times in seconds to sample",
+					required: true
+				},
 				{
-					name: "scope",
-					type: "string",
-					description: "items|layers|all (default all)",
+					name: "layer",
+					type: "any",
+					description: "Layer filter: index | name | { id } | 'selected' | 'all' | array (default 'all')",
 					required: false,
 					default: "all"
 				},
 				{
-					name: "map",
-					type: "object",
-					description: "{ 'old name': 'new name', … }",
-					required: false
-				},
-				{
-					name: "pattern",
-					type: "string",
-					description: "Regular expression (JavaScript syntax) applied to each name",
-					required: false
-				},
-				{
-					name: "replacement",
-					type: "string",
-					description: "Replacement for `pattern` matches ($1… for groups)",
-					required: false
-				},
-				{
-					name: "flags",
-					type: "string",
-					description: "Regex flags: any of g, i, m (default 'g')",
-					required: false,
-					default: "g"
-				},
-				{
-					name: "comp",
-					type: "any",
-					description: "Restrict layer renames to these comps (name/id/pattern/array; default all)",
-					required: false
-				},
-				{
-					name: "itemTypes",
+					name: "properties",
 					type: "array",
-					description: "Restrict item renames to these types: CompItem|FootageItem|FolderItem",
+					description: "Property paths to read, e.g. [[\"Transform\",\"Position\"], [\"Effects\",\"Slider Control\",\"Slider\"]] (default: the five transform properties)",
 					required: false
 				},
 				{
-					name: "dryRun",
+					name: "activeOnly",
 					type: "boolean",
-					description: "Report what would change without renaming (default false)",
+					description: "Omit layers that are not active at the sampled time (default false)",
 					required: false,
 					default: false
 				}
 			],
 			toJsx(args) {
-				const scope = args.scope ?? "all";
-				if (scope !== "items" && scope !== "layers" && scope !== "all") return jsxFail("scope must be items|layers|all");
-				const hasMap = args.map !== void 0;
-				const hasPattern = args.pattern !== void 0;
-				if (hasMap === hasPattern) return jsxFail("give exactly one of map or pattern (+ replacement)");
-				const flags = String(args.flags ?? "g");
-				if (hasPattern) {
-					if (args.replacement === void 0) return jsxFail("pattern needs a replacement");
-					if (!/^[gim]*$/.test(flags)) return jsxFail("flags may only contain g, i, m");
-					try {
-						RegExp(String(args.pattern), flags);
-					} catch (regexErr) {
-						const msg = regexErr instanceof Error ? regexErr.message : String(regexErr);
-						return jsxFail(`invalid pattern: ${msg}`);
-					}
-				}
+				const times = Array.isArray(args.times) ? args.times : [];
+				if (times.length === 0 || !times.every((t) => typeof t === "number")) return jsxFail("times must be a non-empty array of numbers");
+				const props = args.properties ?? DEFAULT_PROPERTIES;
+				if (!Array.isArray(props) || !props.every((p) => Array.isArray(p) && p.length > 0)) return jsxFail("properties must be an array of property paths (arrays)");
 				return `
-            var _scope = ${jsxVal(scope)};
-            var _map = ${jsxVal(args.map ?? null)};
-            var _re = ${hasPattern ? `new RegExp(${jsxVal(args.pattern)}, ${jsxVal(flags)})` : "null"};
-            var _repl = ${jsxVal(args.replacement ?? "")};
-            var _types = ${jsxVal(args.itemTypes ?? null)};
-            var _dry = ${jsxVal(args.dryRun === true)};
-            function _next(name) {
-                if (_map !== null) return (_map.hasOwnProperty(name) && typeof _map[name] === "string") ? _map[name] : name;
-                _re.lastIndex = 0;
-                return name.replace(_re, _repl);
-            }
-            function _typeOk(t) {
-                if (_types === null) return true;
-                for (var _ti = 0; _ti < _types.length; _ti++) if (_types[_ti] === t) return true;
-                return false;
-            }
-            var _changes = [];
-            var _failed = 0;
-            if (_scope !== "layers") {
-                for (var _ii = 1; _ii <= app.project.numItems; _ii++) {
-                    var _it = app.project.item(_ii);
-                    var _t = AE.itemTypeName(_it);
-                    if (!_typeOk(_t)) continue;
-                    var _to = _next(_it.name);
-                    if (_to === _it.name) continue;
-                    var _ch = { kind: "item", type: _t, id: _it.id, from: _it.name, to: _to };
-                    if (!_dry) { try { _it.name = _to; _ch.applied = true; } catch (eI) { _failed++; _ch.applied = false; _ch.error = AE.errText(eI); } }
-                    _changes.push(_ch);
-                }
-            }
-            if (_scope !== "items") {
-                var _comps = AE.findComps(${args.comp !== void 0 ? jsxVal(args.comp) : "\"*\""});
-                for (var _ci = 0; _ci < _comps.length; _ci++) {
-                    var _c = _comps[_ci];
-                    for (var _li = 1; _li <= _c.numLayers; _li++) {
-                        var _l = _c.layer(_li);
-                        var _lto = _next(_l.name);
-                        if (_lto === _l.name) continue;
-                        var _lch = { kind: "layer", comp: _c.name, index: _li, from: _l.name, to: _lto };
-                        if (!_dry) { try { _l.name = _lto; _lch.applied = true; } catch (eL) { _failed++; _lch.applied = false; _lch.error = AE.errText(eL); } }
-                        _changes.push(_lch);
+            var _comps = AE.findComps(${jsxVal(args.comp)});
+            if (_comps.length === 0) return { ok: false, error: "no comps matched" };
+            var _times = ${jsxVal(times)};
+            var _paths = ${jsxVal(props)};
+            var _activeOnly = ${jsxVal(args.activeOnly === true)};
+            var _out = [];
+            for (var _ci = 0; _ci < _comps.length; _ci++) {
+                var _c = _comps[_ci];
+                var _layers = AE.resolveLayers(_c, ${jsxVal(args.layer ?? "all")});
+                var _samples = [];
+                for (var _ti = 0; _ti < _times.length; _ti++) {
+                    var _t = _times[_ti];
+                    var _rows = [];
+                    for (var _li = 0; _li < _layers.length; _li++) {
+                        var _l = _layers[_li];
+                        var _active = _l.enabled && _t >= _l.inPoint && _t < _l.outPoint;
+                        if (_activeOnly && !_active) continue;
+                        var _row = { index: _l.index, name: _l.name, active: _active, values: {} };
+                        for (var _pi = 0; _pi < _paths.length; _pi++) {
+                            var _p = AE.propertyAtPath(_l, _paths[_pi]);
+                            var _key = _paths[_pi].join("/");
+                            if (!_p || _p.propertyType !== PropertyType.PROPERTY) { _row.values[_key] = null; continue; }
+                            try { _row.values[_key] = AE.valueToJson(AE.readValue(_p, _t)); }
+                            catch (eV) { _row.values[_key] = null; }
+                        }
+                        _rows.push(_row);
                     }
+                    _samples.push({ time: _t, layers: _rows });
                 }
+                _out.push({ comp: _c.name, id: _c.id, samples: _samples });
             }
-            return { ok: _failed === 0, error: _failed === 0 ? null : (_failed + " renames failed"), dryRun: _dry, count: _changes.length, changes: _changes };
+            return { ok: true, comps: _out };
         `;
 			}
+		});
+		TRANSFORM = [
+			"Anchor Point",
+			"Position",
+			"Scale",
+			"Rotation",
+			"Opacity",
+			"X Position",
+			"Y Position",
+			"Z Position",
+			"Orientation"
+		];
+		SILENCE_BELOW = .1;
+		registerOp({
+			name: "motion.curve",
+			category: "motion",
+			readOnly: true,
+			description: "How a property moves: its value at every frame over a span (default the layer's span), speed per frame (units a second), the moves (from rest to rest), and flags: a move with no ease (its first or last moving frame already at 60% or more of its middle speed), a sudden jump in speed inside a move (2.5 times from one frame to the next and a quarter of its top speed), and how far a move overshoots and how many frames it takes to settle within 1%. `outPath` draws a 480 x 160 graph (values light, speed orange, moves shaded, flags red). Keys and their interpolation come with it. Thresholds are starting points, not judgments: a mechanical, constant move is linear on purpose.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				{
+					name: "layer",
+					type: "any",
+					description: "Layer index, name or { id }",
+					required: true
+				},
+				{
+					name: "property",
+					type: "any",
+					description: "A transform property's name ('Position') or a path of names",
+					required: true
+				},
+				{
+					name: "start",
+					type: "number",
+					description: "Seconds (default the layer's in-point)",
+					required: false
+				},
+				{
+					name: "end",
+					type: "number",
+					description: "Seconds (default the layer's out-point)",
+					required: false
+				},
+				{
+					name: "outPath",
+					type: "string",
+					description: "Absolute .png path for the graph",
+					required: false
+				},
+				{
+					name: "perFrame",
+					type: "boolean",
+					description: "Include value and speed of every frame (default false)",
+					required: false
+				}
+			],
+			toJsx: () => jsxFail("motion.curve runs in Node; call it through ae_do"),
+			run: (args, transport) => runCurve(args, liveIO(transport))
+		});
+		registerOp({
+			name: "motion.compare_moves",
+			category: "motion",
+			readOnly: true,
+			description: "Compare a build's moves with moves measured from a reference (video.track's track.json): per move, its duration, distance and ease (out and in influence) or a spring's overshoot, built against measured, within or outside a tolerance (default 1 frame, 2 % of the distance, 10 influence points), in sentences such as 'move 7 (position): duration 14 frames against 12, outside tolerance'. The build is a property (comp, layer, property: read once from After Effects and fitted the way video.track fits) or a second track.json from video.track on the build's rendered file. Do both: a property can pass while the picture does not (a subject that leans under a zoom); the picture is the one that counts.",
+			params: [
+				{
+					name: "measured",
+					type: "any",
+					description: "Absolute path of the reference's track.json (or its moves)",
+					required: true
+				},
+				{
+					name: "comp",
+					type: "any",
+					description: "The build: comp name or id (with layer and property)",
+					required: false
+				},
+				{
+					name: "layer",
+					type: "any",
+					description: "The build: layer index, name or { id }",
+					required: false
+				},
+				{
+					name: "property",
+					type: "any",
+					description: "The build: a transform property's name or a path of names",
+					required: false
+				},
+				{
+					name: "start",
+					type: "number",
+					description: "Seconds (default the layer's in-point)",
+					required: false
+				},
+				{
+					name: "end",
+					type: "number",
+					description: "Seconds (default the layer's out-point)",
+					required: false
+				},
+				{
+					name: "buildTrack",
+					type: "string",
+					description: "Or the build as a track.json from video.track on its rendered file",
+					required: false
+				},
+				{
+					name: "tolerance",
+					type: "object",
+					description: "{ frames (1), distanceShare (0.02), easePoints (10) }",
+					required: false
+				},
+				{
+					name: "atFps",
+					type: "number",
+					description: "Frames at this rate (default 30)",
+					required: false
+				}
+			],
+			toJsx: () => jsxFail("motion.compare_moves runs in Node; call it through ae_do"),
+			run: (args, transport) => runCompareMoves(args, (a) => runCurve(a, liveIO(transport)))
+		});
+		registerOp({
+			name: "sound.markers",
+			category: "sound",
+			description: "Put word or beat times on the comp as markers ('<prefix>: <label>', prefix default 'sound'; earlier ones with the same prefix are replaced unless replace: false). From `timing` (a JSON list of { word|w|text|label, start|time|t in seconds, or frame }, or CSV time,label) or from `layer`'s loudness: After Effects' Convert Audio to Keyframes is run on the layer (the comp is opened in the viewer for it), the amplitude read per frame (the louder of left and right), the helper layer removed, and a beat marked where loudness rises past 30% of the way from its median to its top. Checked live on mono, stereo and four-channel WAVs (signal on channel 1 reads as left). A track After Effects reads as silence is refused with what to do.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				{
+					name: "timing",
+					type: "string",
+					description: "Absolute path of a timing file",
+					required: false
+				},
+				{
+					name: "layer",
+					type: "any",
+					description: "A layer with sound, read by loudness",
+					required: false
+				},
+				{
+					name: "prefix",
+					type: "string",
+					description: "Marker comment prefix (default 'sound')",
+					required: false
+				},
+				{
+					name: "replace",
+					type: "boolean",
+					description: "Replace earlier markers with the prefix (default true)",
+					required: false
+				},
+				{
+					name: "share",
+					type: "number",
+					description: "Loudness threshold, share of the way from median to top (default 0.3)",
+					required: false
+				}
+			],
+			toJsx: () => jsxFail("sound.markers runs in Node; call it through ae_do"),
+			run: (args, transport) => runSoundMarkers(args, liveIO(transport))
+		});
+		registerOp({
+			name: "sound.sync",
+			category: "sound",
+			readOnly: true,
+			description: "How far named events sit from the nearest comp marker, in frames: key times of properties (`keys`: [{ layer, property }]), layers' in-points (`inPoints`), and any `events` you give ({ name, time }, for example spikes from ae_render_frame diff). Positive is after the marker. Flagged from 2 frames after or 4 before (ITU-R BT.1359's detectability thresholds, sound 45 ms early and 125 ms late, at 30 fps); `markerPrefix` keeps only markers whose comment starts with it.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				{
+					name: "keys",
+					type: "array",
+					description: "[{ layer, property }]: each key is an event",
+					required: false
+				},
+				{
+					name: "inPoints",
+					type: "array",
+					description: "Layers whose in-points are events",
+					required: false
+				},
+				{
+					name: "events",
+					type: "array",
+					description: "[{ name, time }] in seconds",
+					required: false
+				},
+				{
+					name: "markerPrefix",
+					type: "string",
+					description: "Only markers whose comment starts with this",
+					required: false
+				},
+				{
+					name: "lateFrames",
+					type: "number",
+					description: "Flag from this many frames after (default 2)",
+					required: false
+				},
+				{
+					name: "earlyFrames",
+					type: "number",
+					description: "Flag from this many frames before (default 4)",
+					required: false
+				}
+			],
+			toJsx: () => jsxFail("sound.sync runs in Node; call it through ae_do"),
+			run: (args, transport) => runSync(args, liveIO(transport))
 		});
 	})))();
 }
 
-export { init_layer, init_layer_advanced, init_layout, init_marker, init_mask, init_pref, init_project, init_property };
+export { PARK_QUEUE_FN, QUEUE_CHANGE_NOTE, RENDER_QUEUE_UNDO_WARNING, init_marker, init_mask, init_pref, init_project, init_property, init_render, init_sample, init_shape_contents };
