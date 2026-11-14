@@ -3271,8 +3271,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path29) {
-      let input2 = path29;
+    function removeDotSegments(path30) {
+      let input2 = path30;
       const output2 = [];
       let nextSlash = -1;
       let len = 0;
@@ -3346,11 +3346,11 @@ var require_utils = __commonJS({
       }
       return output2.join("");
     }
-    function removeDotSegmentsRelative(path29) {
-      if (path29 === "" || path29[0] === "/") {
-        return removeDotSegments(path29);
+    function removeDotSegmentsRelative(path30) {
+      if (path30 === "" || path30[0] === "/") {
+        return removeDotSegments(path30);
       }
-      const segments = path29.split("/");
+      const segments = path30.split("/");
       const last = segments.length - 1;
       const output2 = [];
       let trailingDirectory = false;
@@ -3713,8 +3713,8 @@ var require_schemes = __commonJS({
       }
       if (wsComponent.resourceName) {
         const queryIndex = wsComponent.resourceName.indexOf("?");
-        const path29 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
-        wsComponent.path = path29 && path29 !== "/" ? path29 : void 0;
+        const path30 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
+        wsComponent.path = path30 && path30 !== "/" ? path30 : void 0;
         wsComponent.query = queryIndex === -1 ? void 0 : wsComponent.resourceName.slice(queryIndex + 1);
         wsComponent.resourceName = void 0;
       }
@@ -7251,12 +7251,12 @@ var require_dist = __commonJS({
         throw new Error(`Unknown format "${name}"`);
       return f;
     };
-    function addFormats(ajv, list, fs26, exportName) {
+    function addFormats(ajv, list, fs27, exportName) {
       var _a3;
       var _b;
       (_a3 = (_b = ajv.opts.code).formats) !== null && _a3 !== void 0 ? _a3 : _b.formats = (0, codegen_1._)`require("ajv-formats/dist/formats").${exportName}`;
       for (const f of list)
-        ajv.addFormat(f, fs26[f]);
+        ajv.addFormat(f, fs27[f]);
     }
     module.exports = exports = formatsPlugin;
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -7376,6 +7376,15 @@ function resolveAfterFxPath(platform = process.platform, root, running = () => p
     platform === "darwin" ? 'Could not locate After Effects. Set the AE_MCP_EXE env var to the .app bundle, e.g. "/Applications/Adobe After Effects 2026/Adobe After Effects 2026.app"' : 'Could not locate AfterFX.exe. Set the AE_MCP_EXE env var to the full path, e.g. "C:/Program Files/Adobe/Adobe After Effects 2026/Support Files/AfterFX.exe"'
   );
 }
+function launchLockDir() {
+  const override = process.env.AE_MCP_LAUNCH_LOCK_DIR?.trim();
+  if (override) return path.resolve(override);
+  try {
+    return path.join(os.userInfo().homedir, "Library", "Caches", "comp-room");
+  } catch {
+    return path.join("/tmp", `comp-room-${process.getuid?.() ?? "user"}`);
+  }
+}
 function instanceDirFor(id) {
   return path.join(INSTANCES_DIR, id);
 }
@@ -7391,7 +7400,7 @@ function instanceTargetFromEnv(env = process.env) {
   const value = env.AE_MCP_INSTANCE?.trim();
   return value ? value : null;
 }
-var PACKAGE_ROOT, DISPATCHER_JSX, RUNTIME_ROOT, DEFAULT_RUNTIME_DIR, RUNTIME_POINTER_PATH, RUNTIME_DIR_MODE, RUNTIME_DIR, RUNTIME_DIR_IS_CUSTOM, REQUEST_PREFIX, RESPONSE_PREFIX, STALE_RUNTIME_FILE_MS, DEFAULT_AE_PATHS_WIN32, DEFAULT_AE_PATHS_DARWIN, AE_RELEASE_DIR, SUPPORTED_AE_YEARS, MIN_AE_YEAR, AE_APP_IN_PROCESS, DEFAULT_TIMEOUT_MS, POLL_INTERVAL_MS, BUSY_LOCK_PATH, BUSY_LOCK_STALE_MS, BUSY_LOCK_REFRESH_MS, RELAUNCH_UNCONSUMED_AFTER_MS, MAX_LAUNCH_ATTEMPTS, INSTANCES_DIRNAME, INSTANCES_DIR, HEARTBEAT_FILENAME, HEARTBEAT_STALE_MS, HEARTBEAT_BUSY_STALE_MS, INSTANCE_DIR_SWEEP_MS, LIVENESS_CHECK_MS, AGENT_JSX, AGENT_STUB_FILENAME, INSTANCE_ID_MAX_LENGTH, PHANTOM_LAUNCH_MS;
+var PACKAGE_ROOT, DISPATCHER_JSX, RUNTIME_ROOT, DEFAULT_RUNTIME_DIR, RUNTIME_POINTER_PATH, RUNTIME_DIR_MODE, RUNTIME_DIR, RUNTIME_DIR_IS_CUSTOM, REQUEST_PREFIX, RESPONSE_PREFIX, STALE_RUNTIME_FILE_MS, DEFAULT_AE_PATHS_WIN32, DEFAULT_AE_PATHS_DARWIN, AE_RELEASE_DIR, SUPPORTED_AE_YEARS, MIN_AE_YEAR, AE_APP_IN_PROCESS, DEFAULT_TIMEOUT_MS, POLL_INTERVAL_MS, BUSY_LOCK_PATH, BUSY_LOCK_STALE_MS, BUSY_LOCK_REFRESH_MS, RELAUNCH_UNCONSUMED_AFTER_MS, MAX_LAUNCH_ATTEMPTS, LAUNCH_LOCK_STALE_MS, LAUNCH_LOCK_SPAWN_GRACE_MS, INSTANCES_DIRNAME, INSTANCES_DIR, HEARTBEAT_FILENAME, HEARTBEAT_STALE_MS, HEARTBEAT_BUSY_STALE_MS, INSTANCE_DIR_SWEEP_MS, LIVENESS_CHECK_MS, AGENT_JSX, AGENT_STUB_FILENAME, INSTANCE_ID_MAX_LENGTH, PHANTOM_LAUNCH_MS;
 var init_config = __esm({
   "src/config.ts"() {
     "use strict";
@@ -7429,6 +7438,8 @@ var init_config = __esm({
     BUSY_LOCK_REFRESH_MS = 15e3;
     RELAUNCH_UNCONSUMED_AFTER_MS = 2500;
     MAX_LAUNCH_ATTEMPTS = 3;
+    LAUNCH_LOCK_STALE_MS = 75e5;
+    LAUNCH_LOCK_SPAWN_GRACE_MS = 1e4;
     INSTANCES_DIRNAME = "instances";
     INSTANCES_DIR = path.join(RUNTIME_DIR, INSTANCES_DIRNAME);
     HEARTBEAT_FILENAME = "heartbeat.json";
@@ -7555,23 +7566,23 @@ __export(eval_exports, {
   readScriptFile: () => readScriptFile
 });
 import { readFileSync, realpathSync, statSync as statSync2 } from "node:fs";
-import * as path24 from "node:path";
+import * as path25 from "node:path";
 function realOrResolved(p) {
   try {
     return realpathSync(p);
   } catch {
-    return path24.resolve(p);
+    return path25.resolve(p);
   }
 }
 function isInside(p, root) {
-  const rel = path24.relative(root, p);
-  return rel === "" || !rel.startsWith("..") && !path24.isAbsolute(rel);
+  const rel = path25.relative(root, p);
+  return rel === "" || !rel.startsWith("..") && !path25.isAbsolute(rel);
 }
 function refuse(error62, hint) {
   return hint ? { ok: false, error: error62, hint } : { ok: false, error: error62 };
 }
 function readScriptFile(file2) {
-  if (!path24.isAbsolute(file2)) {
+  if (!path25.isAbsolute(file2)) {
     return {
       ok: false,
       error: `file must be an absolute path (got '${file2}'): the server's working directory is not yours`
@@ -8063,8 +8074,8 @@ function getErrorMap() {
 
 // node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path29, errorMaps, issueData } = params;
-  const fullPath = [...path29, ...issueData.path || []];
+  const { data, path: path30, errorMaps, issueData } = params;
+  const fullPath = [...path30, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -8179,11 +8190,11 @@ var errorUtil;
 
 // node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path29, key) {
+  constructor(parent, value, path30, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path29;
+    this._path = path30;
     this._key = key;
   }
   get path() {
@@ -12138,10 +12149,10 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path29) {
-  if (!path29)
+function getElementAtPath(obj, path30) {
+  if (!path30)
     return obj;
-  return path29.reduce((acc, key) => acc?.[key], obj);
+  return path30.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -12481,11 +12492,11 @@ function explicitlyAborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path29, issues) {
+function prefixIssues(path30, issues) {
   return issues.map((iss) => {
     var _a3;
     (_a3 = iss).path ?? (_a3.path = []);
-    iss.path.unshift(path29);
+    iss.path.unshift(path30);
     return iss;
   });
 }
@@ -12947,16 +12958,16 @@ function flattenError(error62, mapper = (issue2) => issue2.message) {
 }
 function formatError(error62, mapper = (issue2) => issue2.message) {
   const fieldErrors = { _errors: [] };
-  const processError = (error63, path29 = []) => {
+  const processError = (error63, path30 = []) => {
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path29, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path30, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path29, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path30, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path29, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path30, ...issue2.path]);
       } else {
-        const fullpath = [...path29, ...issue2.path];
+        const fullpath = [...path30, ...issue2.path];
         if (fullpath.length === 0) {
           fieldErrors._errors.push(mapper(issue2));
         } else {
@@ -12995,17 +13006,17 @@ function formatError(error62, mapper = (issue2) => issue2.message) {
 }
 function treeifyError(error62, mapper = (issue2) => issue2.message) {
   const result = { errors: [] };
-  const processError = (error63, path29 = []) => {
+  const processError = (error63, path30 = []) => {
     var _a3;
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path29, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path30, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path29, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path30, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path29, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path30, ...issue2.path]);
       } else {
-        const fullpath = [...path29, ...issue2.path];
+        const fullpath = [...path30, ...issue2.path];
         if (fullpath.length === 0) {
           result.errors.push(mapper(issue2));
           continue;
@@ -13044,8 +13055,8 @@ function treeifyError(error62, mapper = (issue2) => issue2.message) {
 }
 function toDotPath(_path) {
   const segs = [];
-  const path29 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
-  for (const seg of path29) {
+  const path30 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
+  for (const seg of path30) {
     if (typeof seg === "number")
       segs.push(`[${seg}]`);
     else if (typeof seg === "symbol")
@@ -28596,11 +28607,11 @@ function normalizeObjectSchema(schema) {
   }
   return void 0;
 }
-function getDotPath(path29) {
-  if (path29.length === 0) {
+function getDotPath(path30) {
+  if (path30.length === 0) {
     return "object root";
   }
-  return path29.reduce((acc, seg, index) => {
+  return path30.reduce((acc, seg, index) => {
     if (index === 0) {
       return String(seg);
     }
@@ -30827,13 +30838,13 @@ function resolveRef(ref, ctx) {
   if (!ref.startsWith("#")) {
     throw new Error("External $ref is not supported, only local refs (#/...) are allowed");
   }
-  const path29 = ref.slice(1).split("/").filter(Boolean);
-  if (path29.length === 0) {
+  const path30 = ref.slice(1).split("/").filter(Boolean);
+  if (path30.length === 0) {
     return ctx.rootSchema;
   }
   const defsKey = ctx.version === "draft-2020-12" ? "$defs" : "definitions";
-  if (path29[0] === defsKey) {
-    const key = path29[1] === void 0 ? void 0 : decodeJSONPointerSegment(path29[1]);
+  if (path30[0] === defsKey) {
+    const key = path30[1] === void 0 ? void 0 : decodeJSONPointerSegment(path30[1]);
     if (!key || !ctx.defs[key]) {
       throw new Error(`Reference not found: ${ref}`);
     }
@@ -37584,9 +37595,9 @@ function policySummary() {
 // src/transport/FileIpcTransport.ts
 init_config();
 import { spawn as nodeSpawn } from "node:child_process";
-import { mkdirSync, promises as fs3, unlinkSync, writeFileSync } from "node:fs";
-import { randomUUID } from "node:crypto";
-import * as path4 from "node:path";
+import { mkdirSync, promises as fs4, unlinkSync, writeFileSync } from "node:fs";
+import { randomUUID as randomUUID2 } from "node:crypto";
+import * as path5 from "node:path";
 
 // src/transport/dialogs.ts
 import { execFile } from "node:child_process";
@@ -37964,24 +37975,146 @@ function dialogHint(dialogs) {
   return dialogs.some((d) => d.accessibility === false) ? `${DIALOG_HINT} ${ACCESSIBILITY_HINT}` : DIALOG_HINT;
 }
 
+// src/transport/launch-lock.ts
+init_config();
+import { createHash, randomUUID } from "node:crypto";
+import { promises as fs3 } from "node:fs";
+import * as path4 from "node:path";
+var HELD_KEY = /* @__PURE__ */ Symbol.for("comp-room.launch-lock.held");
+var held = globalThis[HELD_KEY] ?? (globalThis[HELD_KEY] = /* @__PURE__ */ new Set());
+function launchLockPath(dir, afterFxPath) {
+  const key = createHash("sha256").update(appBundlePath(afterFxPath)).digest("hex").slice(0, 12);
+  return path4.join(dir, `launch-${key}.lock`);
+}
+function pidAlive(pid) {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (err) {
+    return err.code === "EPERM";
+  }
+}
+var LaunchLock = class {
+  constructor(file2, staleMs = LAUNCH_LOCK_STALE_MS) {
+    this.file = file2;
+    this.staleMs = staleMs;
+  }
+  file;
+  staleMs;
+  /**
+   * Take the lock for a launch of `requestId`, or report the live launch
+   * that holds it. Throws only when the lock folder itself is unusable; the
+   * caller then launches without it, as before this lock existed.
+   */
+  async tryAcquire(requestId) {
+    await fs3.mkdir(path4.dirname(this.file), { recursive: true, mode: 448 });
+    for (let tries = 0; tries < 3; tries++) {
+      const record2 = {
+        token: randomUUID(),
+        serverPid: process.pid,
+        launcherPid: null,
+        requestId,
+        launchedAt: (/* @__PURE__ */ new Date()).toISOString()
+      };
+      try {
+        const handle = await fs3.open(this.file, "wx", 384);
+        try {
+          await handle.writeFile(JSON.stringify(record2), "utf8");
+        } finally {
+          await handle.close();
+        }
+        held.add(record2.token);
+        return { token: record2.token };
+      } catch (err) {
+        if (err.code !== "EEXIST") throw err;
+      }
+      const current2 = await this.read();
+      if (current2 === null) continue;
+      if (this.alive(current2)) return { heldBy: current2 };
+      await unlinkQuietly(this.file);
+    }
+    const current = await this.read();
+    return { heldBy: current ?? placeholder(requestId) };
+  }
+  /** Record the launcher's pid, so other processes can tell when it is gone. */
+  async setLauncher(token, launcherPid) {
+    const current = await this.read();
+    if (current === null || current.token !== token) return;
+    const tmp = `${this.file}.${token}.tmp`;
+    await fs3.writeFile(tmp, JSON.stringify({ ...current, launcherPid }), { encoding: "utf8", mode: 384 });
+    await fs3.rename(tmp, this.file);
+  }
+  /** Give the lock back, if it is still the one `token` took. */
+  async release(token) {
+    held.delete(token);
+    const current = await this.read();
+    if (current !== null && current.token === token) await unlinkQuietly(this.file);
+  }
+  /** The record in the lock, or null when there is none. An unreadable one is dated by its mtime. */
+  async read() {
+    let raw;
+    let mtimeMs;
+    try {
+      [raw, mtimeMs] = await Promise.all([
+        fs3.readFile(this.file, "utf8"),
+        fs3.stat(this.file).then((s) => s.mtimeMs)
+      ]);
+    } catch {
+      return null;
+    }
+    try {
+      const parsed = JSON.parse(raw);
+      if (typeof parsed.token === "string" && typeof parsed.serverPid === "number") {
+        return {
+          token: parsed.token,
+          serverPid: parsed.serverPid,
+          launcherPid: typeof parsed.launcherPid === "number" ? parsed.launcherPid : null,
+          requestId: typeof parsed.requestId === "string" ? parsed.requestId : "",
+          launchedAt: typeof parsed.launchedAt === "string" && !Number.isNaN(Date.parse(parsed.launchedAt)) ? parsed.launchedAt : new Date(mtimeMs).toISOString()
+        };
+      }
+    } catch {
+    }
+    return { token: "", serverPid: -1, launcherPid: null, requestId: "", launchedAt: new Date(mtimeMs).toISOString() };
+  }
+  /** Can the launch this record describes still deliver a script? */
+  alive(record2) {
+    const age = Date.now() - Date.parse(record2.launchedAt);
+    if (age > this.staleMs) return false;
+    if (record2.serverPid === process.pid) return held.has(record2.token);
+    if (record2.launcherPid !== null) return pidAlive(record2.launcherPid);
+    if (record2.serverPid > 0 && !pidAlive(record2.serverPid)) return false;
+    return age < LAUNCH_LOCK_SPAWN_GRACE_MS;
+  }
+};
+function placeholder(requestId) {
+  return { token: "", serverPid: -1, launcherPid: null, requestId, launchedAt: (/* @__PURE__ */ new Date()).toISOString() };
+}
+async function unlinkQuietly(file2) {
+  try {
+    await fs3.unlink(file2);
+  } catch {
+  }
+}
+
 // src/transport/FileIpcTransport.ts
 var ORPHAN_TMP_SWEEP_MS = 5 * 6e4;
 async function sweepOrphanTmpFiles(dir, now = Date.now()) {
   const removed = [];
   let entries;
   try {
-    entries = await fs3.readdir(dir);
+    entries = await fs4.readdir(dir);
   } catch {
     return removed;
   }
   for (const entry of entries) {
     const isTmp = (entry.startsWith(`.${REQUEST_PREFIX}`) || entry.startsWith(`.${RESPONSE_PREFIX}`)) && entry.endsWith(".json.tmp");
     if (!isTmp) continue;
-    const full = path4.join(dir, entry);
+    const full = path5.join(dir, entry);
     try {
-      const stat = await fs3.stat(full);
+      const stat = await fs4.stat(full);
       if (stat.isFile() && now - stat.mtimeMs > ORPHAN_TMP_SWEEP_MS) {
-        await fs3.unlink(full);
+        await fs4.unlink(full);
         removed.push(entry);
       }
     } catch {
@@ -37994,6 +38127,13 @@ var EMPTY_TMP_GRACE_MS = 1e4;
 var UNCLAIMED_RESPONSE_GRACE_MS = 2e3;
 var ORPHAN_WATCH_MS = 30 * 6e4;
 var PICKED_UP_TIMEOUT_NOTE = "The most likely cause is a modal dialog in After Effects \u2014 an error box raised by the script (an undo raised one on 2026-11-10) or a warning \u2014 which blocks all scripting until a person clicks it; instance.dialogs may not list it, so look at the After Effects window. Once it is dismissed the script finishes and the plugin cleans up after it (busy lock, temp response).";
+function waitingLaunchSentence(since2, by, now = /* @__PURE__ */ new Date()) {
+  const pad = (n) => String(n).padStart(2, "0");
+  const clock = `${pad(since2.getHours())}:${pad(since2.getMinutes())}:${pad(since2.getSeconds())}`;
+  const seconds = Math.max(0, Math.round((now.getTime() - since2.getTime()) / 1e3));
+  return `a launch has been waiting in After Effects since ${clock} (${seconds} s ago, sent by ${by}), and nothing new was launched`;
+}
+var WAITING_LAUNCH_HINT = "Look at the After Effects window: a dialog there blocks every script until someone closes it (instance.dialogs lists it when Accessibility allows), and a running script holds the next one until it ends. When it clears, the waiting launch runs; it no longer finds this request, so retry after that. Do not quit or force-quit After Effects to clear it, and do not repeat a write until you have inspected the project.";
 var FileIpcTransport = class {
   afterFxPath = null;
   inflight = Promise.resolve();
@@ -38005,6 +38145,9 @@ var FileIpcTransport = class {
   scanDialogs;
   reapIntervalMs;
   emptyTmpGraceMs;
+  platform;
+  launchLockDir;
+  launchLockWarned = false;
   orphans = /* @__PURE__ */ new Map();
   reapTimer = null;
   constructor(options = {}) {
@@ -38013,6 +38156,8 @@ var FileIpcTransport = class {
     this.emptyTmpGraceMs = options.emptyTmpGraceMs ?? EMPTY_TMP_GRACE_MS;
     this.spawnFn = options.spawn ?? ((command, args, opts) => nodeSpawn(command, args, opts));
     this.dispatcherJsx = options.dispatcherJsx ?? DISPATCHER_JSX;
+    this.platform = options.platform ?? process.platform;
+    this.launchLockDir = this.platform !== "darwin" ? null : options.launchLockDir !== void 0 ? options.launchLockDir : launchLockDir();
     this.scanDialogs = options.scanDialogs ?? (() => scanAeWindows());
     try {
       mkdirSync(RUNTIME_DIR, { recursive: true, mode: RUNTIME_DIR_MODE });
@@ -38099,7 +38244,7 @@ var FileIpcTransport = class {
       });
     }
     const request = {
-      id: randomUUID(),
+      id: randomUUID2(),
       label: req.label ?? "action",
       code: req.code,
       payload: req.payload ?? null,
@@ -38121,9 +38266,9 @@ var FileIpcTransport = class {
   // --- Pull: the instance's agent serves its own mailbox ---------------------
   async executePull(request, instance, started, timeoutMs) {
     const dir = instance.dir;
-    const requestPath = path4.join(dir, `${REQUEST_PREFIX}${request.id}.json`);
-    const responsePath = path4.join(dir, `${RESPONSE_PREFIX}${request.id}.json`);
-    await fs3.mkdir(dir, { recursive: true });
+    const requestPath = path5.join(dir, `${REQUEST_PREFIX}${request.id}.json`);
+    const responsePath = path5.join(dir, `${RESPONSE_PREFIX}${request.id}.json`);
+    await fs4.mkdir(dir, { recursive: true });
     await this.writeRequest(dir, requestPath, request);
     const deadline = started + timeoutMs;
     let requestConsumed = false;
@@ -38243,24 +38388,42 @@ var FileIpcTransport = class {
       );
     }
     let leaveLockForRunningScript = false;
+    let consumedByAe = false;
+    const lock = this.launchLockFor();
+    let releaseLaunch = () => {
+    };
     try {
       const spawnState = { error: null, child: null, exited: false };
-      const launch = this.launchDispatcher(spawnState);
+      const ls = { plan: null, launchedAt: started, attempts: 0, waitingBehind: null };
+      const tryLaunch = async () => {
+        const outcome = await this.launchUnderLock(spawnState, id, lock);
+        if ("heldBy" in outcome) {
+          ls.waitingBehind = outcome.heldBy;
+          return;
+        }
+        ls.waitingBehind = null;
+        ls.plan = outcome.plan;
+        releaseLaunch = outcome.release;
+        ls.launchedAt = Date.now();
+        ls.attempts++;
+      };
+      await tryLaunch();
       if (spawnState.error !== null) {
         return await this.spawnFailure(spawnState.error, requestPath, started);
       }
-      let attempts = 1;
-      let lastLaunchAt = started;
       let lastRefreshAt = started;
       let requestConsumed = false;
+      let looksWhileWaiting = 0;
       const unreadable = new UnreadableResponseWatch();
       while (Date.now() < deadline) {
         const read = await this.tryReadResponse(responsePath);
         if (read.kind === "ready") {
+          consumedByAe = true;
           await this.safeUnlink(responsePath);
           return this.toEvalResult(read.response, Date.now() - started);
         }
         if (unreadable.settled(read, Date.now()) && read.kind === "unreadable") {
+          consumedByAe = true;
           await this.safeUnlink(responsePath);
           return unreadableResponseFailure(read, started);
         }
@@ -38272,41 +38435,88 @@ var FileIpcTransport = class {
           lastRefreshAt = now;
           await this.refreshBusyLock(id);
         }
-        if (!requestConsumed && now - lastLaunchAt >= RELAUNCH_UNCONSUMED_AFTER_MS) {
+        const current = ls.plan;
+        if (!requestConsumed && ls.waitingBehind !== null) {
           if (!await this.fileExists(requestPath)) {
             requestConsumed = true;
-          } else if (launch.detectPhantom && spawnState.child !== null && !spawnState.exited) {
-            if (now - lastLaunchAt >= PHANTOM_LAUNCH_MS) {
+            consumedByAe = true;
+          } else {
+            await tryLaunch();
+            if (spawnState.error !== null) {
+              return await this.spawnFailure(spawnState.error, requestPath, started);
+            }
+          }
+        } else if (!requestConsumed && current !== null && now - ls.launchedAt >= RELAUNCH_UNCONSUMED_AFTER_MS) {
+          if (!await this.fileExists(requestPath)) {
+            requestConsumed = true;
+            consumedByAe = true;
+            releaseLaunch();
+          } else if (spawnState.child !== null && !spawnState.exited && current.detectPhantom) {
+            if (now - ls.launchedAt >= PHANTOM_LAUNCH_MS) {
               return await this.phantomFailure(spawnState, requestPath, started);
             }
-          } else if (attempts < MAX_LAUNCH_ATTEMPTS && now - lastLaunchAt >= RELAUNCH_UNCONSUMED_AFTER_MS * attempts) {
+          } else if (spawnState.child !== null && !spawnState.exited) {
+            if (looksWhileWaiting < MAX_LAUNCH_ATTEMPTS - 1 && now - ls.launchedAt >= RELAUNCH_UNCONSUMED_AFTER_MS * (looksWhileWaiting + 1)) {
+              looksWhileWaiting++;
+              const { dialogs } = await this.lookAtAe();
+              if (dialogs.length > 0) {
+                const reclaimed2 = await this.safeUnlink(requestPath);
+                leaveLockForRunningScript = !reclaimed2;
+                consumedByAe = !reclaimed2;
+                if (!reclaimed2) this.watchOrphan(id, RUNTIME_DIR);
+                return dialogFailure(
+                  dialogs,
+                  reclaimed2 ? `${waitingLaunchSentence(new Date(ls.launchedAt), "this call")}; the request was never picked up and has been discarded` : "the request disappeared before it could be reclaimed; the operation may have started",
+                  started
+                );
+              }
+            }
+          } else if (ls.attempts < MAX_LAUNCH_ATTEMPTS && now - ls.launchedAt >= RELAUNCH_UNCONSUMED_AFTER_MS * ls.attempts) {
             const { dialogs, scripts } = await this.lookAtAe();
             if (dialogs.length === 0 && scripts.length > 0) {
-              lastLaunchAt = Date.now();
+              ls.launchedAt = Date.now();
               await sleep(POLL_INTERVAL_MS);
               continue;
             }
             if (dialogs.length > 0) {
               const reclaimed2 = await this.safeUnlink(requestPath);
               leaveLockForRunningScript = !reclaimed2;
+              consumedByAe = !reclaimed2;
               if (!reclaimed2) this.watchOrphan(id, RUNTIME_DIR);
               return dialogFailure(
                 dialogs,
-                reclaimed2 ? `the request was never picked up after ${attempts} launch attempt${attempts === 1 ? "" : "s"} and has been discarded` : "the request disappeared before it could be reclaimed; the operation may have started",
+                reclaimed2 ? `the request was never picked up after ${ls.attempts} launch attempt${ls.attempts === 1 ? "" : "s"} and has been discarded` : "the request disappeared before it could be reclaimed; the operation may have started",
                 started
               );
             }
-            attempts++;
-            lastLaunchAt = Date.now();
-            this.launchDispatcher(spawnState);
+            await tryLaunch();
+            if (spawnState.error !== null) {
+              return await this.spawnFailure(spawnState.error, requestPath, started);
+            }
           }
         }
         await sleep(POLL_INTERVAL_MS);
       }
       const reclaimed = await this.safeUnlink(requestPath);
       leaveLockForRunningScript = !reclaimed;
+      consumedByAe = !reclaimed;
       if (!reclaimed) this.watchOrphan(id, RUNTIME_DIR);
       const { dialogs: pushDialogs, scripts: pushScripts } = await this.lookAtAe();
+      const waiting = !reclaimed ? null : ls.waitingBehind !== null ? waitingLaunchSentence(new Date(ls.waitingBehind.launchedAt), "an earlier call") : ls.plan !== null && !ls.plan.detectPhantom && spawnState.child !== null && !spawnState.exited ? waitingLaunchSentence(new Date(ls.launchedAt), "this call") : null;
+      if (waiting !== null) {
+        if (pushDialogs.length > 0) {
+          return dialogFailure(
+            pushDialogs,
+            `timeout after ${timeoutMs}ms; ${waiting}; the request was never picked up and has been discarded`,
+            started
+          );
+        }
+        return failure2(
+          "TIMEOUT",
+          `timeout after ${timeoutMs}ms: ${waiting}. ` + (pushScripts.length > 0 ? `${scriptRunningMessage(pushScripts)}. ` : "After Effects is probably showing a dialog or is busy with another script. ") + "The request was never picked up and has been discarded.",
+          { durationMs: Date.now() - started, hint: WAITING_LAUNCH_HINT }
+        );
+      }
       if (pushDialogs.length === 0 && pushScripts.length > 0) {
         return failure2(
           "TIMEOUT",
@@ -38323,13 +38533,14 @@ var FileIpcTransport = class {
       }
       return failure2(
         "TIMEOUT",
-        `timeout after ${timeoutMs}ms waiting for After Effects to respond` + (reclaimed ? ` (the request was never picked up by AE after ${attempts} launch attempt${attempts === 1 ? "" : "s"} and has been discarded)` : ` (the request WAS picked up by AE; the operation may still be running). ${PICKED_UP_TIMEOUT_NOTE}`),
+        `timeout after ${timeoutMs}ms waiting for After Effects to respond` + (reclaimed ? ` (the request was never picked up by AE after ${ls.attempts} launch attempt${ls.attempts === 1 ? "" : "s"} and has been discarded)` : ` (the request WAS picked up by AE; the operation may still be running). ${PICKED_UP_TIMEOUT_NOTE}`),
         {
           durationMs: Date.now() - started,
           hint: "Is AE running with a project open? Is 'Allow Scripts to Write Files and Access Network' enabled? Is AE showing a modal dialog (e.g. 'Attempt was made to run a second script')? Dismiss it \u2014 scripting is blocked while it is open. " + (process.platform === "darwin" ? "Is your MCP client allowed to control After Effects (System Settings \u2192 Privacy & Security \u2192 Automation)? " : "") + "Do not repeat a write until you inspect the actual project state. Preserve unsaved work; do not force-quit AE as routine recovery."
         }
       );
     } finally {
+      if (consumedByAe) releaseLaunch();
       if (!leaveLockForRunningScript) await this.releaseBusyLock(id);
     }
   }
@@ -38338,9 +38549,9 @@ var FileIpcTransport = class {
    * can never match the JSX side's `request-*.json` glob mid-write.
    */
   async writeRequest(dir, requestPath, request) {
-    const tmpRequestPath = path4.join(dir, `.${REQUEST_PREFIX}${request.id}.json.tmp`);
-    await fs3.writeFile(tmpRequestPath, serializeRequest(request), "utf8");
-    await fs3.rename(tmpRequestPath, requestPath);
+    const tmpRequestPath = path5.join(dir, `.${REQUEST_PREFIX}${request.id}.json.tmp`);
+    await fs4.writeFile(tmpRequestPath, serializeRequest(request), "utf8");
+    await fs4.rename(tmpRequestPath, requestPath);
   }
   /**
    * Spawn the dispatcher launch command. Errors land in `state.error` rather
@@ -38350,8 +38561,9 @@ var FileIpcTransport = class {
    * meaningful (osascript), a non-zero exit is treated the same way — that is
    * how a denied macOS Automation permission (-1743) surfaces in seconds.
    */
-  launchDispatcher(state) {
-    const launch = buildLaunchPlan(this.afterFxPath, process.platform, RUNTIME_DIR, this.dispatcherJsx);
+  launchDispatcher(state, onGone = () => {
+  }) {
+    const launch = buildLaunchPlan(this.afterFxPath, this.platform, RUNTIME_DIR, this.dispatcherJsx);
     state.child = null;
     state.exited = false;
     try {
@@ -38364,6 +38576,7 @@ var FileIpcTransport = class {
       child2.unref?.();
       child2.on("error", (err) => {
         state.error = err;
+        onGone();
       });
       let stderr = "";
       if (launch.diagnoseExit) {
@@ -38374,6 +38587,7 @@ var FileIpcTransport = class {
       }
       child2.on("exit", (code) => {
         state.exited = true;
+        onGone();
         if (launch.diagnoseExit && code !== null && code !== 0 && state.error === null) {
           const detail = stderr.trim();
           state.error = new Error(
@@ -38383,8 +38597,58 @@ var FileIpcTransport = class {
       });
     } catch (err) {
       state.error = err instanceof Error ? err : new Error(String(err));
+      onGone();
     }
     return launch;
+  }
+  /** The launch lock for this After Effects, or null where launches take none (Windows, or switched off). */
+  launchLockFor() {
+    if (this.launchLockDir === null || this.afterFxPath === null) return null;
+    return new LaunchLock(launchLockPath(this.launchLockDir, this.afterFxPath));
+  }
+  /**
+   * Launch the dispatcher holding the launch lock, or report the live launch
+   * that holds it and launch nothing. The lock goes back when the launcher
+   * exits or fails to start, or when the caller calls `release` (the request
+   * was consumed). A lock folder that cannot be used costs the lock, not the
+   * launch: the call goes ahead as it did before the lock existed.
+   */
+  async launchUnderLock(state, requestId, lock) {
+    let token = null;
+    if (lock !== null) {
+      try {
+        const claim2 = await lock.tryAcquire(requestId);
+        if ("heldBy" in claim2) return { heldBy: claim2.heldBy };
+        token = claim2.token;
+      } catch (err) {
+        if (!this.launchLockWarned) {
+          this.launchLockWarned = true;
+          console.error(
+            `[mcp-aftereffects] launch lock ${lock.file} is unusable (${err instanceof Error ? err.message : String(err)}); launching without it, so another server process could launch at the same moment`
+          );
+        }
+      }
+    }
+    let recorded = Promise.resolve();
+    let released = false;
+    const release = () => {
+      if (released || token === null || lock === null) return;
+      released = true;
+      const own2 = token;
+      void recorded.then(() => lock.release(own2)).catch(() => {
+      });
+    };
+    const plan = this.launchDispatcher(state, release);
+    if (token !== null && lock !== null && state.error === null && state.child?.pid !== void 0) {
+      const own2 = token;
+      const pid = state.child.pid;
+      recorded = lock.setLauncher(own2, pid).catch(() => {
+      });
+      await recorded;
+    } else if (state.error !== null || state.child === null) {
+      release();
+    }
+    return { plan, release };
   }
   /**
    * The launcher child outlived a forwarder with our request untouched: it is
@@ -38429,7 +38693,7 @@ var FileIpcTransport = class {
   async acquireBusyLock(deadline, id) {
     for (; ; ) {
       try {
-        const handle = await fs3.open(BUSY_LOCK_PATH, "wx");
+        const handle = await fs4.open(BUSY_LOCK_PATH, "wx");
         try {
           await handle.writeFile(
             JSON.stringify({ pid: process.pid, id, startedAt: (/* @__PURE__ */ new Date()).toISOString() }),
@@ -38441,7 +38705,7 @@ var FileIpcTransport = class {
         return true;
       } catch {
         try {
-          const stat = await fs3.stat(BUSY_LOCK_PATH);
+          const stat = await fs4.stat(BUSY_LOCK_PATH);
           if (Date.now() - stat.mtimeMs > BUSY_LOCK_STALE_MS) {
             await this.safeUnlink(BUSY_LOCK_PATH);
           } else {
@@ -38468,7 +38732,7 @@ var FileIpcTransport = class {
   /** Id recorded in the busy lock, or null when there is none or it is unreadable. */
   async lockHolder() {
     try {
-      const raw = await fs3.readFile(BUSY_LOCK_PATH, "utf8");
+      const raw = await fs4.readFile(BUSY_LOCK_PATH, "utf8");
       const holder = JSON.parse(raw).id;
       return typeof holder === "string" ? holder : null;
     } catch {
@@ -38482,15 +38746,15 @@ var FileIpcTransport = class {
    * tmp response untouched for emptyTmpGraceMs — which is then removed.
    */
   async requestFinished(id, dir, foreign) {
-    const responsePath = path4.join(dir, `${RESPONSE_PREFIX}${id}.json`);
+    const responsePath = path5.join(dir, `${RESPONSE_PREFIX}${id}.json`);
     try {
-      const stat = await fs3.stat(responsePath);
+      const stat = await fs4.stat(responsePath);
       if (!foreign || Date.now() - stat.mtimeMs >= UNCLAIMED_RESPONSE_GRACE_MS) return true;
     } catch {
     }
-    const tmpPath = path4.join(dir, `.${RESPONSE_PREFIX}${id}.json.tmp`);
+    const tmpPath = path5.join(dir, `.${RESPONSE_PREFIX}${id}.json.tmp`);
     try {
-      const stat = await fs3.stat(tmpPath);
+      const stat = await fs4.stat(tmpPath);
       if (stat.size === 0 && Date.now() - stat.mtimeMs >= this.emptyTmpGraceMs) {
         await this.safeUnlink(tmpPath);
         return true;
@@ -38516,8 +38780,8 @@ var FileIpcTransport = class {
     for (const orphan of Array.from(this.orphans.values())) {
       try {
         if (await this.requestFinished(orphan.id, orphan.dir, false)) {
-          await this.safeUnlink(path4.join(orphan.dir, `${RESPONSE_PREFIX}${orphan.id}.json`));
-          await this.safeUnlink(path4.join(orphan.dir, `.${RESPONSE_PREFIX}${orphan.id}.json.tmp`));
+          await this.safeUnlink(path5.join(orphan.dir, `${RESPONSE_PREFIX}${orphan.id}.json`));
+          await this.safeUnlink(path5.join(orphan.dir, `.${RESPONSE_PREFIX}${orphan.id}.json.tmp`));
           await this.releaseBusyLock(orphan.id);
           this.orphans.delete(orphan.id);
         } else if (Date.now() > orphan.watchUntil) {
@@ -38542,7 +38806,7 @@ var FileIpcTransport = class {
    */
   async ownsBusyLock(id) {
     try {
-      const raw = await fs3.readFile(BUSY_LOCK_PATH, "utf8");
+      const raw = await fs4.readFile(BUSY_LOCK_PATH, "utf8");
       return JSON.parse(raw).id === id;
     } catch {
       return false;
@@ -38553,7 +38817,7 @@ var FileIpcTransport = class {
     if (!await this.ownsBusyLock(id)) return;
     const now = /* @__PURE__ */ new Date();
     try {
-      await fs3.utimes(BUSY_LOCK_PATH, now, now);
+      await fs4.utimes(BUSY_LOCK_PATH, now, now);
     } catch {
     }
   }
@@ -38564,7 +38828,7 @@ var FileIpcTransport = class {
   }
   async fileExists(p) {
     try {
-      await fs3.access(p);
+      await fs4.access(p);
       return true;
     } catch {
       return false;
@@ -38613,7 +38877,7 @@ var FileIpcTransport = class {
   async tryReadResponse(responsePath) {
     let raw;
     try {
-      raw = await fs3.readFile(responsePath, "utf8");
+      raw = await fs4.readFile(responsePath, "utf8");
     } catch {
       return { kind: "pending" };
     }
@@ -38622,7 +38886,7 @@ var FileIpcTransport = class {
   /** Unlink and report whether the file was actually there. */
   async safeUnlink(p) {
     try {
-      await fs3.unlink(p);
+      await fs4.unlink(p);
       return true;
     } catch {
       return false;
@@ -38637,28 +38901,28 @@ var FileIpcTransport = class {
    */
   async sweepStaleFiles() {
     try {
-      const entries = await fs3.readdir(RUNTIME_DIR);
+      const entries = await fs4.readdir(RUNTIME_DIR);
       const cutoff = Date.now() - STALE_RUNTIME_FILE_MS;
       for (const entry of entries) {
         const isMail = (entry.startsWith(REQUEST_PREFIX) || entry.startsWith(RESPONSE_PREFIX)) && entry.endsWith(".json");
         if (!isMail) continue;
-        const full = path4.join(RUNTIME_DIR, entry);
+        const full = path5.join(RUNTIME_DIR, entry);
         try {
-          const stat = await fs3.stat(full);
-          if (stat.mtimeMs < cutoff) await fs3.unlink(full);
+          const stat = await fs4.stat(full);
+          if (stat.mtimeMs < cutoff) await fs4.unlink(full);
         } catch {
         }
       }
       await sweepOrphanTmpFiles(RUNTIME_DIR);
       try {
-        for (const entry of await fs3.readdir(INSTANCES_DIR)) {
-          await sweepOrphanTmpFiles(path4.join(INSTANCES_DIR, entry));
+        for (const entry of await fs4.readdir(INSTANCES_DIR)) {
+          await sweepOrphanTmpFiles(path5.join(INSTANCES_DIR, entry));
         }
       } catch {
       }
       try {
-        const lockStat = await fs3.stat(BUSY_LOCK_PATH);
-        if (Date.now() - lockStat.mtimeMs > BUSY_LOCK_STALE_MS) await fs3.unlink(BUSY_LOCK_PATH);
+        const lockStat = await fs4.stat(BUSY_LOCK_PATH);
+        if (Date.now() - lockStat.mtimeMs > BUSY_LOCK_STALE_MS) await fs4.unlink(BUSY_LOCK_PATH);
       } catch {
       }
       await sweepDeadInstanceDirs();
@@ -41761,8 +42025,8 @@ registerOp({
 
 // src/operations/project.ts
 init_registry();
-import { promises as fs4 } from "node:fs";
-import * as path5 from "node:path";
+import { promises as fs5 } from "node:fs";
+import * as path6 from "node:path";
 
 // src/operations/command.ts
 init_registry();
@@ -42884,31 +43148,31 @@ var STATE_JSX = "return { ok: true, file: app.project.file ? app.project.file.fs
 var SNAP_DIR_SUFFIX = " snapshots";
 function snapshotPlace(projectFile) {
   const ext = /\.aepx$/i.test(projectFile) ? ".aepx" : ".aep";
-  const base = path5.basename(projectFile).replace(/\.aepx?$/i, "");
-  const folder = path5.join(path5.dirname(projectFile), `${base}${SNAP_DIR_SUFFIX}`);
-  return { base, ext, folder, index: path5.join(folder, "snapshots.json") };
+  const base = path6.basename(projectFile).replace(/\.aepx?$/i, "");
+  const folder = path6.join(path6.dirname(projectFile), `${base}${SNAP_DIR_SUFFIX}`);
+  return { base, ext, folder, index: path6.join(folder, "snapshots.json") };
 }
 function isSnapshotFile(file2) {
-  const m = /^(.*)_snapshot_\d+\.aepx?$/i.exec(path5.basename(file2));
-  return !!m && path5.basename(path5.dirname(file2)) === `${m[1]}${SNAP_DIR_SUFFIX}`;
+  const m = /^(.*)_snapshot_\d+\.aepx?$/i.exec(path6.basename(file2));
+  return !!m && path6.basename(path6.dirname(file2)) === `${m[1]}${SNAP_DIR_SUFFIX}`;
 }
 async function readIndex(index) {
   try {
-    return JSON.parse(await fs4.readFile(index, "utf8"));
+    return JSON.parse(await fs5.readFile(index, "utf8"));
   } catch {
     return [];
   }
 }
 async function copySnapshot(projectFile, label) {
   const { base, ext, folder, index } = snapshotPlace(projectFile);
-  await fs4.mkdir(folder, { recursive: true });
+  await fs5.mkdir(folder, { recursive: true });
   const list = await readIndex(index);
   const number4 = list.reduce((m, e) => Math.max(m, e.number), 0) + 1;
   const name = `${base}_snapshot_${String(number4).padStart(3, "0")}${ext}`;
-  await fs4.copyFile(projectFile, path5.join(folder, name));
+  await fs5.copyFile(projectFile, path6.join(folder, name));
   const entry = { number: number4, file: name, takenAt: (/* @__PURE__ */ new Date()).toISOString(), label, fromUnsaved: false };
-  await fs4.writeFile(index, JSON.stringify([...list, entry], null, 1));
-  return { ...entry, path: path5.join(folder, name) };
+  await fs5.writeFile(index, JSON.stringify([...list, entry], null, 1));
+  return { ...entry, path: path6.join(folder, name) };
 }
 async function runSnapshot(args, io) {
   const label = typeof args.label === "string" ? args.label : null;
@@ -42934,18 +43198,18 @@ async function runSnapshot(args, io) {
       error: "the project has unsaved changes, and a copy of its file on disk would miss them. Either save first (ae_save_project) and take the snapshot, or pass unsaved: 'save-as-snapshot' to save the current state as the snapshot: the user's file stays as last saved, but After Effects then has the snapshot open, and later saves go there. No command saves a copy without a dialog."
     };
   const { base, ext, folder, index } = snapshotPlace(st.file);
-  await fs4.mkdir(folder, { recursive: true });
+  await fs5.mkdir(folder, { recursive: true });
   const list = await readIndex(index);
   const number4 = list.reduce((m, e) => Math.max(m, e.number), 0) + 1;
   const name = `${base}_snapshot_${String(number4).padStart(3, "0")}${ext}`;
-  const target = path5.join(folder, name);
+  const target = path6.join(folder, name);
   const r = await io.execute(
     `app.project.save(new File(${jsxVal(target)})); return { ok: true, file: app.project.file ? app.project.file.fsName : null, dirty: app.project.dirty };`,
     { label: "project.snapshot save as", timeoutMs: 12e4 }
   );
   if (!r?.ok) return { ok: false, error: r?.error ?? "the save failed" };
   const entry = { number: number4, file: name, takenAt: (/* @__PURE__ */ new Date()).toISOString(), label, fromUnsaved: true };
-  await fs4.writeFile(index, JSON.stringify([...list, entry], null, 1));
+  await fs5.writeFile(index, JSON.stringify([...list, entry], null, 1));
   return {
     ok: true,
     number: number4,
@@ -42979,7 +43243,7 @@ async function runRestore(args, io) {
     timeoutMs: 6e4
   });
   if (!c?.ok) return { ok: false, error: c?.error ?? "could not close the project", before };
-  await fs4.copyFile(path5.join(folder, snap.file), st.file);
+  await fs5.copyFile(path6.join(folder, snap.file), st.file);
   const o = await io.execute(
     `app.open(new File(${jsxVal(st.file)})); return { ok: true, file: app.project.file ? app.project.file.fsName : null, dirty: app.project.dirty };`,
     { label: "project.restore open", timeoutMs: 12e4 }
@@ -47993,14 +48257,14 @@ init_registry();
 
 // src/operations/render.ts
 init_config();
-import { promises as fs6 } from "node:fs";
-import * as path7 from "node:path";
+import { promises as fs7 } from "node:fs";
+import * as path8 from "node:path";
 init_registry();
 
 // src/operations/delivery-sound.ts
 import { execFile as execFile2 } from "node:child_process";
-import { promises as fs5 } from "node:fs";
-import * as path6 from "node:path";
+import { promises as fs6 } from "node:fs";
+import * as path7 from "node:path";
 var AE_AAC_PRIMING_SAMPLES = 1024;
 var FFPROBE = ["ffprobe", "/opt/homebrew/bin/ffprobe", "/usr/local/bin/ffprobe"];
 var FFMPEG = ["ffmpeg", "/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg"];
@@ -48089,7 +48353,7 @@ function soundTrackFromMoov(moov) {
   return null;
 }
 async function readMoov(file2) {
-  const fh = await fs5.open(file2, "r");
+  const fh = await fs6.open(file2, "r");
   try {
     const { size: size2 } = await fh.stat();
     const head = Buffer.alloc(16);
@@ -48151,8 +48415,8 @@ async function readSoundSync(file2) {
 async function alignSound(file2, sync) {
   if (sync.lateBySamples <= 0)
     return { aligned: true, how: "already on its frame", before: sync, after: sync };
-  const ext = path6.extname(file2);
-  const tmp = path6.join(path6.dirname(file2), `.${path6.basename(file2, ext)}.sound-aligned${ext}`);
+  const ext = path7.extname(file2);
+  const tmp = path7.join(path7.dirname(file2), `.${path7.basename(file2, ext)}.sound-aligned${ext}`);
   const offset = (sync.lateBySamples / sync.sampleRate).toFixed(9);
   const r = await runTool(FFMPEG, [
     "-hide_banner",
@@ -48182,7 +48446,7 @@ async function alignSound(file2, sync) {
       before: sync
     };
   const giveUp = async (how) => {
-    await fs5.rm(tmp, { force: true });
+    await fs6.rm(tmp, { force: true });
     return { aligned: false, how, before: sync };
   };
   if (r.failed) return giveUp(`ffmpeg could not remux the file: ${r.stderr.trim().slice(0, 300)}`);
@@ -48193,7 +48457,7 @@ async function alignSound(file2, sync) {
       `the remuxed file's edit list does not skip the ${wanted} samples (${after ? `it skips ${after.skippedSamples}` : "it has no sound track that could be read"}); the delivered file was left as it was`
     );
   }
-  await fs5.rename(tmp, file2);
+  await fs6.rename(tmp, file2);
   return {
     aligned: true,
     how: `remuxed with ffmpeg (-c copy, nothing re-encoded): an edit list on the sound track now skips the ${wanted} samples of priming`,
@@ -49367,7 +49631,7 @@ function deliverReadBackJsx(args) {
 async function runDeliver(args, io) {
   const started = Date.now();
   const outputPath = args.outputPath;
-  if (typeof outputPath !== "string" || !path7.isAbsolute(outputPath)) return { ok: false, error: "`outputPath` must be an absolute path" };
+  if (typeof outputPath !== "string" || !path8.isAbsolute(outputPath)) return { ok: false, error: "`outputPath` must be an absolute path" };
   const rejected = rejectedOutputPath(outputPath);
   if (rejected) return { ok: false, error: rejected };
   const preset = typeof args.preset === "string" ? args.preset : "";
@@ -49381,7 +49645,7 @@ async function runDeliver(args, io) {
     notes.push(`The comp is ${plan.width} \xD7 ${plan.height}, not 9:16: the reel will be delivered at the comp's size.`);
   const frames = Math.round(plan.duration * plan.frameRate);
   const estimate = frames * plan.width * plan.height * (p.alpha ? 4 : 3) * 0.6;
-  const free = io.freeBytes ? await io.freeBytes(path7.dirname(outputPath)) : null;
+  const free = io.freeBytes ? await io.freeBytes(path8.dirname(outputPath)) : null;
   if (free !== null && free < estimate + 3e9)
     return { ok: false, error: `not enough room: about ${(estimate / 1e9).toFixed(1)} GB for the file plus 3 GB, ${(free / 1e9).toFixed(1)} GB free` };
   const r = await io.execute(
@@ -49464,10 +49728,10 @@ function liveDeliverIO(transport2) {
       const r = await transport2.execute({ code, label: opts.label, timeoutMs: opts.timeoutMs, undoGroup: opts.undoGroup ?? true, suppressDialogs: true });
       return r.ok ? r.result : { ok: false, error: r.error ?? `${opts.label} failed` };
     },
-    exists: (f) => fs6.access(f).then(() => true, () => false),
+    exists: (f) => fs7.access(f).then(() => true, () => false),
     freeBytes: async (dir) => {
       try {
-        const st = await fs6.statfs(dir);
+        const st = await fs7.statfs(dir);
         return st.bavail * st.bsize;
       } catch {
         return null;
@@ -49525,22 +49789,22 @@ async function runMuxAudio(args, tools = { ffmpeg: FFMPEG, ffprobe: FFPROBE }) {
   const started = Date.now();
   const video = args.video;
   const audio = args.audio;
-  if (typeof video !== "string" || !path7.isAbsolute(video)) return { ok: false, error: "`video` must be an absolute path to the rendered picture" };
-  if (typeof audio !== "string" || !path7.isAbsolute(audio)) return { ok: false, error: "`audio` must be an absolute path to the mix (a WAV)" };
+  if (typeof video !== "string" || !path8.isAbsolute(video)) return { ok: false, error: "`video` must be an absolute path to the rendered picture" };
+  if (typeof audio !== "string" || !path8.isAbsolute(audio)) return { ok: false, error: "`audio` must be an absolute path to the mix (a WAV)" };
   const offset = typeof args.offsetSeconds === "number" ? args.offsetSeconds : 0;
   if (!Number.isFinite(offset)) return { ok: false, error: "`offsetSeconds` must be a number of seconds" };
   const bitrate = typeof args.bitrate === "string" ? args.bitrate : "320k";
   if (!/^\d+(\.\d+)?k$/.test(bitrate)) return { ok: false, error: "`bitrate` is a number of kilobits a second followed by k, such as '320k'" };
-  const ext = path7.extname(video) || ".mp4";
-  const output2 = typeof args.output === "string" ? args.output : path7.join(path7.dirname(video), `${path7.basename(video, path7.extname(video))}-mix${ext}`);
-  if (!path7.isAbsolute(output2)) return { ok: false, error: "`output` must be an absolute path" };
+  const ext = path8.extname(video) || ".mp4";
+  const output2 = typeof args.output === "string" ? args.output : path8.join(path8.dirname(video), `${path8.basename(video, path8.extname(video))}-mix${ext}`);
+  if (!path8.isAbsolute(output2)) return { ok: false, error: "`output` must be an absolute path" };
   const rejected = rejectedOutputPath(output2);
   if (rejected) return { ok: false, error: rejected };
-  if (path7.resolve(output2) === path7.resolve(video) || path7.resolve(output2) === path7.resolve(audio))
+  if (path8.resolve(output2) === path8.resolve(video) || path8.resolve(output2) === path8.resolve(audio))
     return { ok: false, error: "`output` must be a new file, not the picture or the mix it is made from" };
   for (const [name, f] of [["video", video], ["audio", audio]])
-    if (!await fs6.access(f).then(() => true, () => false)) return { ok: false, error: `no file at ${f} (\`${name}\`)` };
-  const outputExists = await fs6.access(output2).then(() => true, () => false);
+    if (!await fs7.access(f).then(() => true, () => false)) return { ok: false, error: `no file at ${f} (\`${name}\`)` };
+  const outputExists = await fs7.access(output2).then(() => true, () => false);
   if (outputExists && args.overwrite !== true)
     return { ok: false, error: `a file already exists at ${output2}; pass overwrite: true to replace it` };
   const version3 = await runTool(tools.ffmpeg, ["-hide_banner", "-version"]);
@@ -49561,7 +49825,7 @@ async function runMuxAudio(args, tools = { ffmpeg: FFMPEG, ffprobe: FFPROBE }) {
   const filters = [];
   if (offset > 0) filters.push(`adelay=delays=${shift}S:all=1`);
   if (offset < 0) filters.push(`atrim=start_sample=${shift}`, "asetpts=PTS-STARTPTS");
-  const tmp = path7.join(path7.dirname(output2), `.${path7.basename(output2, path7.extname(output2))}.mux${path7.extname(output2) || ext}`);
+  const tmp = path8.join(path8.dirname(output2), `.${path8.basename(output2, path8.extname(output2))}.mux${path8.extname(output2) || ext}`);
   const argv = [
     "-hide_banner",
     "-loglevel",
@@ -49588,17 +49852,17 @@ async function runMuxAudio(args, tools = { ffmpeg: FFMPEG, ffprobe: FFPROBE }) {
   ];
   const r = await runTool(tools.ffmpeg, argv, 18e5);
   if (r === null || r.failed) {
-    await fs6.rm(tmp, { force: true });
+    await fs7.rm(tmp, { force: true });
     return { ok: false, error: `ffmpeg could not join the picture and the mix: ${(r?.stderr ?? "ffmpeg is not installed").trim().slice(0, 400)}`, command: ["ffmpeg", ...argv].join(" ") };
   }
-  await fs6.rename(tmp, output2);
+  await fs7.rename(tmp, output2);
   const probe = await probeDelivered(output2, tools);
   const sync = await readSoundSync(output2).catch(() => null);
   const out = await probeStreams(output2, tools.ffprobe);
   const mixSeconds = aIn.audio.duration !== null ? aIn.audio.duration + offset : null;
   const pictureSeconds = vIn.video.duration;
   const check2 = checkDelivered(
-    { width: vIn.video.width, height: vIn.video.height, frameRate: fps, duration: pictureSeconds ?? 0, hasSound: true, soundLayers: [path7.basename(audio)] },
+    { width: vIn.video.width, height: vIn.video.height, frameRate: fps, duration: pictureSeconds ?? 0, hasSound: true, soundLayers: [path8.basename(audio)] },
     {
       width: probe?.width ?? out?.video?.width ?? 0,
       height: probe?.height ?? out?.video?.height ?? 0,
@@ -49650,9 +49914,9 @@ registerOp({
 });
 
 // src/tools/render-frame.ts
-import { randomUUID as randomUUID3 } from "node:crypto";
-import { promises as fs9 } from "node:fs";
-import * as path9 from "node:path";
+import { randomUUID as randomUUID4 } from "node:crypto";
+import { promises as fs10 } from "node:fs";
+import * as path10 from "node:path";
 
 // src/color/screen.ts
 var SCREEN_DEFAULTS = {
@@ -50100,7 +50364,7 @@ function measureGrain(img, isScreen, ch, kind, t) {
 }
 
 // src/color/settled-read.ts
-import { promises as fs7 } from "node:fs";
+import { promises as fs8 } from "node:fs";
 var SETTLE_BASE_MS = 15e3;
 var SETTLE_PER_HD_FRAME_MS = 3e3;
 var SETTLE_MIN_PER_FRAME_MS = 1e3;
@@ -50122,7 +50386,7 @@ async function stampFiles(paths) {
   return Promise.all(
     paths.map(async (p) => {
       try {
-        const st = await fs7.stat(p, { bigint: true });
+        const st = await fs8.stat(p, { bigint: true });
         return { exists: true, size: Number(st.size), mtimeNs: st.mtimeNs, ino: st.ino };
       } catch {
         return { exists: false, size: 0, mtimeNs: 0n, ino: 0n };
@@ -50134,7 +50398,7 @@ async function endsWithIend(p, size2) {
   if (size2 < IEND.length) return false;
   let fh = null;
   try {
-    fh = await fs7.open(p, "r");
+    fh = await fs8.open(p, "r");
     const tail = Buffer.alloc(IEND.length);
     await fh.read(tail, 0, IEND.length, size2 - IEND.length);
     return tail.equals(IEND);
@@ -50162,7 +50426,7 @@ async function waitForSettled(paths, opts) {
         const s = state[i];
         let st = null;
         try {
-          st = await fs7.stat(p, { bigint: true });
+          st = await fs8.stat(p, { bigint: true });
         } catch {
         }
         if (st === null) {
@@ -50220,7 +50484,7 @@ async function readFileSettled(filePath, timeoutMs = SETTLE_BASE_MS, stableMs = 
       `file did not settle within ${timeoutMs}ms (saveFrameToPng writes asynchronously): ${filePath}`
     );
   }
-  return fs7.readFile(filePath);
+  return fs8.readFile(filePath);
 }
 
 // src/tools/render-frame.ts
@@ -50382,10 +50646,10 @@ init_registry();
 
 // src/color/calibration.ts
 init_registry();
-import { randomUUID as randomUUID2 } from "node:crypto";
-import { promises as fs8 } from "node:fs";
+import { randomUUID as randomUUID3 } from "node:crypto";
+import { promises as fs9 } from "node:fs";
 import * as os3 from "node:os";
-import * as path8 from "node:path";
+import * as path9 from "node:path";
 var CALIB_VALUES = [0.05, 0.18, 0.5, 1];
 var PATCH = 40;
 var cache = /* @__PURE__ */ new Map();
@@ -50418,7 +50682,7 @@ async function measureCaptureTransfer(transport2, key, allowRender = true) {
       error: "calibration needs a (transient, undo-grouped) render of a temporary comp, which read-only mode forbids"
     };
   }
-  const pngPath = path8.join(os3.tmpdir(), `mcp-ae-calib-${randomUUID2()}.png`).replace(/\\/g, "/");
+  const pngPath = path9.join(os3.tmpdir(), `mcp-ae-calib-${randomUUID3()}.png`).replace(/\\/g, "/");
   const code = `
         var _vals = ${jsxVal(CALIB_VALUES)};
         var _patch = ${jsxVal(PATCH)};
@@ -50454,7 +50718,7 @@ async function measureCaptureTransfer(transport2, key, allowRender = true) {
       error: `calibration PNG unreadable: ${err instanceof Error ? err.message : String(err)}`
     };
   } finally {
-    fs8.unlink(pngPath).catch(() => {
+    fs9.unlink(pngPath).catch(() => {
     });
   }
   try {
@@ -50937,16 +51201,16 @@ var renderFrameTool = defineTool({
     const rejection = rejectedOutputPath(args.outPath);
     if (rejection !== null) {
       return errorResult("IO", rejection, {
-        details: { outPath: path9.resolve(args.outPath) },
+        details: { outPath: path10.resolve(args.outPath) },
         hint: "Render to a path outside the mailbox."
       });
     }
-    const abs = path9.resolve(args.outPath).replace(/\\/g, "/");
+    const abs = path10.resolve(args.outPath).replace(/\\/g, "/");
     if (args.contactSheet?.outPath !== void 0) {
       const sheetRejection = rejectedOutputPath(args.contactSheet.outPath);
       if (sheetRejection !== null) {
         return errorResult("IO", sheetRejection, {
-          details: { outPath: path9.resolve(args.contactSheet.outPath) },
+          details: { outPath: path10.resolve(args.contactSheet.outPath) },
           hint: "Write the contact sheet to a path outside the mailbox."
         });
       }
@@ -51124,20 +51388,20 @@ function planStrip(strip) {
   return { plan: { at, offsets, frames, step, maxDimension } };
 }
 function sheetPathFor(abs, explicit) {
-  if (explicit !== void 0) return path9.resolve(explicit).replace(/\\/g, "/");
-  const ext = path9.extname(abs) || ".png";
-  const stem = abs.slice(0, abs.length - (path9.extname(abs).length || 0));
+  if (explicit !== void 0) return path10.resolve(explicit).replace(/\\/g, "/");
+  const ext = path10.extname(abs) || ".png";
+  const stem = abs.slice(0, abs.length - (path10.extname(abs).length || 0));
   return `${stem}_sheet${ext}`;
 }
 function framePaths(abs, count, multi, call = newCallId()) {
   if (!multi) return [abs];
-  const ext = path9.extname(abs) || ".png";
-  const stem = abs.slice(0, abs.length - (path9.extname(abs).length || 0));
+  const ext = path10.extname(abs) || ".png";
+  const stem = abs.slice(0, abs.length - (path10.extname(abs).length || 0));
   const out = [];
   for (let i = 0; i < count; i++) out.push(`${stem}_${call}_${i}${ext}`);
   return out;
 }
-var newCallId = () => randomUUID3().slice(0, 8);
+var newCallId = () => randomUUID4().slice(0, 8);
 var ISOLATE_FN = `
     function _refText(ref) {
         if (typeof ref === "string") return '"' + ref + '"';
@@ -51475,7 +51739,7 @@ async function nativeFlow(args, opts, abs, transport2, strip = null) {
     if (!finished.has(i)) continue;
     let capture;
     try {
-      capture = decodePng(await fs9.readFile(file2));
+      capture = decodePng(await fs10.readFile(file2));
       read++;
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -51766,9 +52030,9 @@ async function attachDiffSheet(payload, diff, thumbs, abs, opts, t) {
       thumbs.map((th) => th.img),
       { columns: opts.columns, thumbWidth: thumbs[0].img.width, labels }
     );
-    const sheetPath = opts.outPath !== void 0 ? path9.resolve(opts.outPath).replace(/\\/g, "/") : `${abs.slice(0, abs.length - path9.extname(abs).length)}_diff${path9.extname(abs) || ".png"}`;
-    await fs9.mkdir(path9.dirname(sheetPath), { recursive: true });
-    await fs9.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+    const sheetPath = opts.outPath !== void 0 ? path10.resolve(opts.outPath).replace(/\\/g, "/") : `${abs.slice(0, abs.length - path10.extname(abs).length)}_diff${path10.extname(abs) || ".png"}`;
+    await fs10.mkdir(path10.dirname(sheetPath), { recursive: true });
+    await fs10.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
     payload.diffSheet = {
       writtenTo: sheetPath,
       size: [sheet.width, sheet.height],
@@ -51811,8 +52075,8 @@ async function attachContactSheet(payload, labels, tiles, sheetPath, opts) {
       thumbWidth: opts.thumbWidth ?? tiles[0].width,
       labels
     });
-    await fs9.mkdir(path9.dirname(sheetPath), { recursive: true });
-    await fs9.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+    await fs10.mkdir(path10.dirname(sheetPath), { recursive: true });
+    await fs10.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
     payload.contactSheet = {
       writtenTo: sheetPath,
       size: [sheet.width, sheet.height],
@@ -51840,7 +52104,7 @@ async function writeOutput(file2, capture, convert, channels, backdrop, bg) {
     convert(rgb);
     bytes = channels === "rgba" ? encodePngSrgbRgba8(width, height, rgb, capture.alpha ?? opaque()) : encodePngSrgb8(width, height, flattenOver({ ...capture, rgb }, backdrop));
   }
-  await fs9.writeFile(file2, bytes);
+  await fs10.writeFile(file2, bytes);
   return decodePng(bytes);
 }
 
@@ -51848,8 +52112,8 @@ async function writeOutput(file2, capture, convert, channels, backdrop, bg) {
 init_registry();
 
 // src/operations/keying-shared.ts
-import { promises as fs10 } from "node:fs";
-import * as path10 from "node:path";
+import { promises as fs11 } from "node:fs";
+import * as path11 from "node:path";
 init_registry();
 var compLayerParams = [
   { name: "comp", type: "any", description: "Comp name or id", required: true },
@@ -51968,21 +52232,21 @@ function cutoutFindings(frames, limit) {
 }
 async function writePng(io, file2, data) {
   if (io.writePng) return io.writePng(file2, data);
-  await fs10.mkdir(path10.dirname(file2), { recursive: true });
-  await fs10.writeFile(file2, data);
+  await fs11.mkdir(path11.dirname(file2), { recursive: true });
+  await fs11.writeFile(file2, data);
 }
 var GB = 1e9;
 var gb = (n) => `${(n / GB).toFixed(1)} GB`;
 var PICTURE_MARGIN_BYTES = 1 * GB;
 var captureBytes = (size2) => (Array.isArray(size2) ? size2[0] * size2[1] : 1080 * 1920) * 4;
 async function statfsFree(dir) {
-  let d = path10.resolve(dir);
+  let d = path11.resolve(dir);
   for (; ; ) {
     try {
-      const st = await fs10.statfs(d);
+      const st = await fs11.statfs(d);
       return Number(st.bavail) * Number(st.bsize);
     } catch {
-      const up = path10.dirname(d);
+      const up = path11.dirname(d);
       if (up === d) return null;
       d = up;
     }
@@ -52002,12 +52266,12 @@ function cacheBytesFor(frames, sourceSize) {
   return frames * w * h * 8;
 }
 async function volumeKey(dir) {
-  let d = path10.resolve(dir);
+  let d = path11.resolve(dir);
   for (; ; ) {
     try {
-      return (await fs10.stat(d)).dev;
+      return (await fs11.stat(d)).dev;
     } catch {
-      const up = path10.dirname(d);
+      const up = path11.dirname(d);
       if (up === d) return null;
       d = up;
     }
@@ -52053,7 +52317,7 @@ function aeCacheRoot(folder, version3) {
   if (!folder || !version3) return null;
   const m = /^(\d+)\.(\d+)/.exec(version3);
   if (!m) return null;
-  return path10.join(folder, "Adobe", "After Effects", `${m[1]}.${m[2]}`);
+  return path11.join(folder, "Adobe", "After Effects", `${m[1]}.${m[2]}`);
 }
 var FROZEN_DEFAULTS = { gap: 30, limit: 2e-3, minFrames: 60 };
 var frozenOpts = (args) => ({
@@ -52099,7 +52363,7 @@ async function renderChunked(io, base, frames, perFrameMs, outDir, stem, tally =
     const payload = await io.render({
       ...base,
       frames: chunk2,
-      outPath: path10.join(outDir, `${stem}-${firstCall + c}.png`),
+      outPath: path11.join(outDir, `${stem}-${firstCall + c}.png`),
       settleTimeoutMs: Math.min(SETTLE_MAX_MS, Math.max(1, Math.round(perFrameMs * chunk2.length)))
     });
     tally.calls++;
@@ -52418,7 +52682,7 @@ function liveCutoutIO(args, transport2) {
       return sc?.result ?? { ok: false, error: "ae_render_frame returned no result" };
     },
     async readImage(file2) {
-      return decodePng(await fs10.readFile(file2));
+      return decodePng(await fs11.readFile(file2));
     },
     async unbuild(a) {
       const r = await transport2.execute({
@@ -52503,7 +52767,7 @@ function liveFileIO(transport2) {
       });
       return r.ok ? r.result : { ok: false, error: r.error ?? `${opts.label} failed` };
     },
-    exists: (file2) => fs10.access(file2).then(
+    exists: (file2) => fs11.access(file2).then(
       () => true,
       () => false
     )
@@ -52984,8 +53248,8 @@ registerOp({
 // src/operations/keying-subject-prepare.ts
 init_registry();
 import { execFile as execFile3 } from "node:child_process";
-import { promises as fs11 } from "node:fs";
-import * as path11 from "node:path";
+import { promises as fs12 } from "node:fs";
+import * as path12 from "node:path";
 var PAINT_DURATION_MATCH_NAME = "ADBE Paint Duration";
 var PAINT_TRANSFORM_MATCH_NAME = "ADBE Paint Transform";
 var PAINT_POSITION_MATCH_NAME = "ADBE Paint Position";
@@ -53587,7 +53851,7 @@ registerOp({
 });
 var OVERSIZE_FACTOR = 1.5;
 var even = (n) => Math.max(2, Math.round(n / 2) * 2);
-var stemOf = (file2) => path11.join(path11.dirname(file2), path11.basename(file2, path11.extname(file2)));
+var stemOf = (file2) => path12.join(path12.dirname(file2), path12.basename(file2, path12.extname(file2)));
 var dims = (d) => `${d[0]} \xD7 ${d[1]}`;
 function sourceAdviceFor(f) {
   if (!f?.sourceSize || !f.compSize || !f.scale) return null;
@@ -53702,7 +53966,7 @@ async function folderBytes(root, budgetMs = 5e3) {
   let bytes = 0;
   const stack = [root];
   try {
-    await fs11.access(root);
+    await fs12.access(root);
   } catch {
     return null;
   }
@@ -53711,15 +53975,15 @@ async function folderBytes(root, budgetMs = 5e3) {
     const d = stack.pop();
     let entries = [];
     try {
-      entries = await fs11.readdir(d, { withFileTypes: true });
+      entries = await fs12.readdir(d, { withFileTypes: true });
     } catch {
       continue;
     }
     for (const e of entries) {
-      const p = path11.join(d, e.name);
+      const p = path12.join(d, e.name);
       if (e.isDirectory()) stack.push(p);
       else if (e.isFile())
-        bytes += await fs11.stat(p).then(
+        bytes += await fs12.stat(p).then(
           (st) => st.size,
           () => 0
         );
@@ -53753,8 +54017,8 @@ async function diskReport(cache2, freeFn = statfsFree) {
 }
 
 // src/operations/keying-subject-check.ts
-import { promises as fs12 } from "node:fs";
-import * as path12 from "node:path";
+import { promises as fs13 } from "node:fs";
+import * as path13 from "node:path";
 init_config();
 init_registry();
 var closeClickReading = (a, b, d, limit) => `${a} and ${b} were clicked ${Math.round(d)} source pixels apart (closer than ${Math.round(limit)}): they probably selected the same thing, so a click meant for something else (a microphone) may have landed on the subject again`;
@@ -53840,7 +54104,7 @@ async function recheckFrames(io, readings, limit, over, outDir, perFrameMs, base
     rendered,
     limit,
     over,
-    path12.join(outDir, "cutout-recheck_sheet.png"),
+    path13.join(outDir, "cutout-recheck_sheet.png"),
     pixels,
     false
   );
@@ -53926,7 +54190,7 @@ function timeReading(first, second, pixels, totalMs) {
 }
 async function runSubjectCheck(args, io) {
   const outDir = args.outDir;
-  if (typeof outDir !== "string" || !path12.isAbsolute(outDir))
+  if (typeof outDir !== "string" || !path13.isAbsolute(outDir))
     return { ok: false, error: "`outDir` must be an absolute folder for the pictures" };
   const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
   const over = typeof args.over === "string" ? args.over : CUTOUT_OVER;
@@ -53986,7 +54250,7 @@ async function runSubjectCheck(args, io) {
     rendered,
     limit,
     over,
-    path12.join(outDir, "cutout_sheet.png"),
+    path13.join(outDir, "cutout_sheet.png"),
     pixels,
     true,
     (r, img) => {
@@ -54043,7 +54307,7 @@ async function runSubjectCheck(args, io) {
       ...readings.map((r) => r.file),
       ..."captures" in recheck ? recheck.captures : []
     ].filter((f) => typeof f === "string");
-    await Promise.all(files.map((f) => fs12.rm(f, { force: true })));
+    await Promise.all(files.map((f) => fs13.rm(f, { force: true })));
     for (const r of readings) delete r.file;
   }
   return {
@@ -54103,12 +54367,12 @@ async function runFillGaps(args, io) {
     return res;
   } finally {
     if (args.keepCaptures !== true)
-      await Promise.all(captures.map((f) => fs12.rm(f, { force: true })));
+      await Promise.all(captures.map((f) => fs13.rm(f, { force: true })));
   }
 }
 async function fillGaps(args, io) {
   const still = args.stillPath;
-  if (typeof still !== "string" || !path12.isAbsolute(still) || path12.extname(still).toLowerCase() !== ".png") {
+  if (typeof still !== "string" || !path13.isAbsolute(still) || path13.extname(still).toLowerCase() !== ".png") {
     return {
       ok: false,
       error: "`stillPath` must be an absolute path to a .png file, kept with the project (the comp will use it)"
@@ -54116,7 +54380,7 @@ async function fillGaps(args, io) {
   }
   const rejected = rejectedOutputPath(still);
   if (rejected) return { ok: false, error: rejected };
-  const outDir = typeof args.outDir === "string" && path12.isAbsolute(args.outDir) ? args.outDir : path12.dirname(still);
+  const outDir = typeof args.outDir === "string" && path13.isAbsolute(args.outDir) ? args.outDir : path13.dirname(still);
   const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
   const over = typeof args.over === "string" ? args.over : CUTOUT_OVER;
   const minArea = typeof args.minArea === "number" ? args.minArea : 20;
@@ -54294,7 +54558,7 @@ async function fillGaps(args, io) {
     afterRendered,
     limit,
     over,
-    path12.join(outDir, "fill-after_sheet.png"),
+    path13.join(outDir, "fill-after_sheet.png"),
     pixels
   );
   const sum = summarize(measured.readings, limit, []);
@@ -54492,8 +54756,8 @@ registerOp({
 });
 
 // src/operations/keying-subject-cutout.ts
-import { promises as fs13 } from "node:fs";
-import * as path13 from "node:path";
+import { promises as fs14 } from "node:fs";
+import * as path14 from "node:path";
 init_config();
 init_registry();
 var HALVES_JOIN_NOTE = "Two halves are joined by a stream copy, nothing re-encoded: list them in order in a text file (file 'first.mov' then file 'second.mov', one per line) and run ffmpeg -f concat -safe 0 -i halves.txt -c copy whole.mov. Empty After Effects' disk cache between the halves (it holds about a half's worth). On the first piece the halves were frames 600 to 1304, then 0 to 599, and the outline's step across the join was 0.002 of the frame, no different from any other pair of neighbouring frames. Check the joined file with subject.check_file, and give subject.use_cutout the first half's start.";
@@ -54697,7 +54961,7 @@ function renderCutoutJsx(args) {
 async function runRenderCutout(args, io) {
   const started = performance.now();
   const outputPath = args.outputPath;
-  if (typeof outputPath !== "string" || !path13.isAbsolute(outputPath))
+  if (typeof outputPath !== "string" || !path14.isAbsolute(outputPath))
     return { ok: false, error: "`outputPath` must be an absolute path for the movie" };
   const rejected = rejectedOutputPath(outputPath);
   if (rejected) return { ok: false, error: rejected };
@@ -54725,7 +54989,7 @@ async function runRenderCutout(args, io) {
   const span = ranged && plan.span ? cutoutSpan(plan.span, args.from, args.to) : null;
   if (span && "error" in span) return { ok: false, error: span.error, layerSpan: plan.span };
   const frames = span ? span.frames : plan.span?.frames ?? 0;
-  const where = path13.dirname(outputPath);
+  const where = path14.dirname(outputPath);
   const cacheRoot = aeCacheRoot(plan.aeCache?.folder, plan.aeCache?.version);
   const movieBytes = renderCutoutBytes(frames, plan.compSize ?? [1080, 1920]);
   const matteCopies = typeof plan.matteCopies === "number" && plan.matteCopies > 1 ? plan.matteCopies : 1;
@@ -54810,7 +55074,7 @@ async function runRenderCutout(args, io) {
   const sidecar = `${r.outputPath}.comp-room.json`;
   let sidecarWritten = null;
   try {
-    await fs13.writeFile(
+    await fs14.writeFile(
       sidecar,
       JSON.stringify(
         { kind: "comp-room cut-out", comp: args.comp, layer: plan.layer, compSize: plan.compSize, fillLayer: plan.fillLayer ?? null, softEdge: soft, ...span ? { span } : {}, renderedAt: (/* @__PURE__ */ new Date()).toISOString() },
@@ -54953,16 +55217,16 @@ async function runCheckFile(args, io) {
       error: "give exactly one of `path` (the movie) or `item` (a footage item's id)"
     };
   if (file2 !== null) {
-    if (!path13.isAbsolute(file2))
+    if (!path14.isAbsolute(file2))
       return { ok: false, error: "`path` must be an absolute path to the movie" };
-    const there = io.exists ? await io.exists(file2) : await fs13.access(file2).then(
+    const there = io.exists ? await io.exists(file2) : await fs14.access(file2).then(
       () => true,
       () => false
     );
     if (!there) return { ok: false, error: `no file at ${file2}` };
   }
   const outDir = args.outDir;
-  if (typeof outDir !== "string" || !path13.isAbsolute(outDir))
+  if (typeof outDir !== "string" || !path14.isAbsolute(outDir))
     return { ok: false, error: "`outDir` must be an absolute folder for the pictures" };
   const limit = typeof args.holeLimit === "number" ? args.holeLimit : CUTOUT_HOLE_LIMIT;
   const jumpLimit = typeof args.jumpLimit === "number" ? args.jumpLimit : CHECK_FILE_JUMP_LIMIT;
@@ -54993,7 +55257,7 @@ async function runCheckFile(args, io) {
   let regionSource = regionLine !== null ? "given" : null;
   if (regionLine === null && file2 !== null) {
     try {
-      const side2 = JSON.parse(await fs13.readFile(`${file2}.comp-room.json`, "utf8"));
+      const side2 = JSON.parse(await fs14.readFile(`${file2}.comp-room.json`, "utf8"));
       if (typeof side2?.softEdge?.regionBottom === "number") {
         regionLine = side2.softEdge.regionBottom;
         if (typeof side2.softEdge.regionDepth === "number") regionDepth = side2.softEdge.regionDepth;
@@ -55041,7 +55305,7 @@ async function runCheckFile(args, io) {
     const f = kept.get(frame);
     if (!f || keepCaptures) return;
     kept.delete(frame);
-    await fs13.rm(f, { force: true });
+    await fs14.rm(f, { force: true });
   };
   const outline = outlineTracker(frozenOpts(args));
   let outlineResult = null;
@@ -55074,7 +55338,7 @@ async function runCheckFile(args, io) {
         rendered,
         limit,
         over,
-        path13.join(outDir, "check-file_unused.png"),
+        path14.join(outDir, "check-file_unused.png"),
         pixels,
         false,
         (r, img) => {
@@ -55146,7 +55410,7 @@ async function runCheckFile(args, io) {
       for (const e of ends) {
         const r = again.find((x) => x.frame === e);
         pics.push(r?.file ? await overPicture(io, r.file, over) : null);
-        if (r?.file && !keepCaptures) await fs13.rm(r.file, { force: true });
+        if (r?.file && !keepCaptures) await fs14.rm(r.file, { force: true });
       }
       frozenFindings.push(frozenFinding(run, pics));
     }
@@ -55234,7 +55498,7 @@ async function runCheckFile(args, io) {
     const pic = file3 ? await overPicture(io, file3, over) : null;
     pictureOf2.set(f, pic);
     if (pic)
-      pictureBytes += await fs13.stat(pic).then(
+      pictureBytes += await fs14.stat(pic).then(
         (st) => st.size,
         () => 0
       );
@@ -55269,7 +55533,7 @@ async function runCheckFile(args, io) {
   }
   if (thumbs.length) {
     const sheet = composeContactSheet(thumbs, { labels, thumbWidth: 240 });
-    picture = path13.join(outDir, "check-file_sheet.png");
+    picture = path14.join(outDir, "check-file_sheet.png");
     const png = encodePngSrgb8(sheet.width, sheet.height, sheet.rgb, PICTURE_DEFLATE);
     await writePng(io, picture, png);
     sheetBytes = png.length;
@@ -55666,8 +55930,8 @@ registerOp({
 });
 
 // src/operations/keying-subject-soften.ts
-import { promises as fs14 } from "node:fs";
-import * as path14 from "node:path";
+import { promises as fs15 } from "node:fs";
+import * as path15 from "node:path";
 init_registry();
 var SOFT_EDGE_COST = "The soft edge is two copies of the matte, so After Effects computes Object Matte twice for every frame: a render writes about twice the disk cache and takes several times as long (on the half-size take, 320 frames at 1088 \xD7 1920: 342 s and 9.0 GB of cache, against 65 to 92 s and about 5 GB with one matte; subject.render_cutout counts both copies).";
 function softRegionBottom(tops, compHeight, given) {
@@ -55801,7 +56065,7 @@ async function runSoftenEdge(args, io) {
       error: "`across` was removed: sampling the whole clip before the render cost more disk cache than the render (12.9 GB estimated against 9.5 GB on the half-size take). subject.check_file reads every frame of the rendered file instead: it stops on see-through inside the cut-out and notes the frames where the hair crosses the region's line. Leave `across` out, or give sampleFrames."
     };
   const outDir = args.outDir;
-  if (typeof outDir !== "string" || !path14.isAbsolute(outDir))
+  if (typeof outDir !== "string" || !path15.isAbsolute(outDir))
     return { ok: false, error: "`outDir` must be an absolute folder for the pictures" };
   const num2 = (k, d) => typeof args[k] === "number" && Number.isFinite(args[k]) ? args[k] : d;
   const D2 = SOFT_EDGE_DEFAULTS;
@@ -55835,15 +56099,15 @@ async function runSoftenEdge(args, io) {
       ...args.sampleFrames.filter((f) => typeof f === "number" && f >= span.inFrame && f < span.outFrame).map((f) => Math.round(f))
     ])
   ].sort((a, b) => a - b) : nearFrames;
-  const held = [];
-  for (let f = click; f < Math.min(span.outFrame, click + 5); f++) held.push(f);
+  const held2 = [];
+  for (let f = click; f < Math.min(span.outFrame, click + 5); f++) held2.push(f);
   const perFrame = perFrameMsOf(args);
   const room = await spacePlan(
     io,
     [
       {
         where: outDir,
-        parts: { pictures: (samples.length + held.length) * 4 * captureBytes(st.compSize) }
+        parts: { pictures: (samples.length + held2.length) * 4 * captureBytes(st.compSize) }
       },
       {
         where: aeCacheRoot(st.aeCache?.folder, st.aeCache?.version) ?? outDir,
@@ -55859,7 +56123,7 @@ async function runSoftenEdge(args, io) {
     const r = await io.render({
       compNameOrId: args.comp,
       frames,
-      outPath: path14.join(outDir, `${name}.png`),
+      outPath: path15.join(outDir, `${name}.png`),
       settleTimeoutMs: Math.min(SETTLE_MAX_MS, frames.length * perFrame + 3e4),
       ...extra
     });
@@ -55872,7 +56136,7 @@ async function runSoftenEdge(args, io) {
     return out;
   };
   const uniq = (a) => [...new Set(a)].sort((x, y) => x - y);
-  const asClicked = await renderFrames(uniq([...samples, ...held]), "soft-edge_as-clicked", {
+  const asClicked = await renderFrames(uniq([...samples, ...held2]), "soft-edge_as-clicked", {
     isolate: args.layer,
     channels: "rgba"
   });
@@ -55929,7 +56193,7 @@ async function runSoftenEdge(args, io) {
     if (!first) return null;
     const per = measureLook(first, lookArgs).regions;
     const series = summarizeLookSeries(
-      held.filter((f) => frames.get(f)).map((f) => lookCrops(frames.get(f).img, lookArgs)),
+      held2.filter((f) => frames.get(f)).map((f) => lookCrops(frames.get(f).img, lookArgs)),
       lookArgs
     );
     const out = {};
@@ -55955,7 +56219,7 @@ async function runSoftenEdge(args, io) {
   );
   if (!built?.ok) return { ok: false, error: built?.error ?? "the build failed", built };
   const softLayer = built.softLayer;
-  const after = await renderFrames(uniq([...checkFrames, ...held]), "soft-edge_after", {
+  const after = await renderFrames(uniq([...checkFrames, ...held2]), "soft-edge_after", {
     isolate: softLayer,
     channels: "rgba"
   });
@@ -56019,7 +56283,7 @@ async function runSoftenEdge(args, io) {
   const pictures = checkFrames.map((f) => wholeAfter.get(f)?.file).filter((f) => typeof f === "string");
   if (args.keepCaptures !== true)
     await Promise.all(
-      captures.filter((c) => !pictures.includes(c)).map((c) => fs14.rm(c, { force: true }))
+      captures.filter((c) => !pictures.includes(c)).map((c) => fs15.rm(c, { force: true }))
     );
   const region = {
     bottom,
@@ -56182,8 +56446,8 @@ registerOp({
 });
 
 // src/operations/keying-reference.ts
-import { promises as fs18 } from "node:fs";
-import * as path18 from "node:path";
+import { promises as fs19 } from "node:fs";
+import * as path19 from "node:path";
 
 // src/color/look.ts
 var LOOK_RULES = {
@@ -56673,13 +56937,13 @@ async function* movieRun(info, picks, colour, tools) {
 }
 
 // src/video/rhythm.ts
-import { promises as fs17 } from "node:fs";
+import { promises as fs18 } from "node:fs";
 import os4 from "node:os";
-import path17 from "node:path";
+import path18 from "node:path";
 
 // src/video/run-shots-census.ts
-import { promises as fs16 } from "node:fs";
-import path16 from "node:path";
+import { promises as fs17 } from "node:fs";
+import path17 from "node:path";
 
 // src/video/census.ts
 var CENSUS_RULES = { block: 16, search: 6, pixel: 8, calmBelow: 4e-3, travelMoved: 0.5, cutChanged: 0.55, cutMoved: 0.35, texture: 5 };
@@ -56769,8 +57033,8 @@ function cadence(labels, shifts, step, pxScale) {
 var r3 = (x) => Math.round(x * 1e3) / 1e3;
 
 // src/video/run-track.ts
-import { promises as fs15 } from "node:fs";
-import path15 from "node:path";
+import { promises as fs16 } from "node:fs";
+import path16 from "node:path";
 
 // src/video/ink.ts
 function luma3(r, g, b) {
@@ -56967,13 +57231,13 @@ function fitMove(s, guess) {
   };
   const rl = nelderMead(fl, [guess.start, guess.end], [dur0 * 0.1, dur0 * 0.1]);
   const linear = { model: "linear", start: rl.x[0], end: Math.max(rl.x[0] + 1e-3, rl.x[1]), rms: rl.value };
-  const fs26 = (x) => {
+  const fs27 = (x) => {
     const f2 = clamp(x[1], 0.2, 20), d2 = clamp(x[2], 0.1, 60);
     return rmsOf(s, (t) => springFromRest(t - x[0], f2, d2));
   };
   let bestS = { x: [guess.start, 2, 6], value: Infinity };
   for (const f0 of [0.8, 1.5, 3, 6]) for (const d0 of [2, 5, 10, 20]) {
-    const r = nelderMead(fs26, [guess.start, f0, d0], [dur0 * 0.1, f0 * 0.3, d0 * 0.3]);
+    const r = nelderMead(fs27, [guess.start, f0, d0], [dur0 * 0.1, f0 * 0.3, d0 * 0.3]);
     if (r.value < bestS.value) bestS = r;
   }
   const f = clamp(bestS.x[1], 0.2, 20), d = clamp(bestS.x[2], 0.1, 60), w = 2 * Math.PI * f;
@@ -57280,8 +57544,8 @@ function shotList(stats, rules = SHOT_RULES, register2) {
   for (let i = 1; i < n; i++) {
     if (swapAt.has(i) || swapAt.has(i - 1)) continue;
     const nb = [...ch.slice(Math.max(1, i - rules.around), i), ...ch.slice(i + 1, Math.min(n, i + rules.around + 1))];
-    const med = median6(nb), held = nb.filter((x) => x < 1).length > 0.6 * nb.length;
-    const hard = ch[i] >= rules.cutMin && ch[i] >= (held ? rules.heldRatio : rules.ratio) * Math.max(med, 0.5);
+    const med = median6(nb), held2 = nb.filter((x) => x < 1).length > 0.6 * nb.length;
+    const hard = ch[i] >= rules.cutMin && ch[i] >= (held2 ? rules.heldRatio : rules.ratio) * Math.max(med, 0.5);
     const soft = !hard && ch[i] >= rules.softMin && ch[i] >= rules.softRatio * Math.max(med, 0.5) && ch[i] >= rules.softEvery * Math.max(ch[i - 1], i + 1 < n ? ch[i + 1] : 0);
     if (!hard && !soft) continue;
     if (stats[i].shiftShare >= rules.flashShare) {
@@ -57541,8 +57805,8 @@ function statusCount(moves) {
 }
 async function runTrack(args, opts = {}) {
   const tools = opts.tools ?? VIDEO_TOOLS, minNcc = opts.minNcc ?? 0.8;
-  if (typeof args.file !== "string" || !path15.isAbsolute(args.file)) return { ok: false, error: "`file` must be an absolute path to a video file" };
-  if (typeof args.outDir !== "string" || !path15.isAbsolute(args.outDir)) return { ok: false, error: "`outDir` must be an absolute folder path" };
+  if (typeof args.file !== "string" || !path16.isAbsolute(args.file)) return { ok: false, error: "`file` must be an absolute path to a video file" };
+  if (typeof args.outDir !== "string" || !path16.isAbsolute(args.outDir)) return { ok: false, error: "`outDir` must be an absolute folder path" };
   const started = performance.now();
   const info = await probeVideo(args.file, tools);
   if (info === null) return { ok: false, error: NO_FFMPEG };
@@ -57871,12 +58135,12 @@ async function runTrack(args, opts = {}) {
   }
   const nccAll = rows.filter((r) => r.m).map((r) => r.m.ncc).sort((a, b) => a - b);
   out.match = { matchedFrames: nccAll.length, frames: rows.length, median: nccAll.length ? Math.round(nccAll[Math.floor(nccAll.length / 2)] * 1e3) / 1e3 : null, threshold: minNcc };
-  await fs15.mkdir(args.outDir, { recursive: true });
-  const jsonPath = path15.join(args.outDir, "track.json"), csvPath = path15.join(args.outDir, "track.csv");
+  await fs16.mkdir(args.outDir, { recursive: true });
+  const jsonPath = path16.join(args.outDir, "track.json"), csvPath = path16.join(args.outDir, "track.csv");
   const perFrame = rows.map((r) => ({ index: r.index, time: Math.round(r.time * 1e6) / 1e6, at: at(r.time), repeat: rep.has(r.index), ...r.m ? { ...Object.fromEntries(Object.entries(toSrc(r.m)).map(([a, v]) => [a, Math.round(v * 100) / 100])), ncc: Math.round(r.m.ncc * 1e3) / 1e3 } : { matched: false } }));
   const inkFrames = inkRows.map((r) => ({ index: r.index, time: Math.round(r.time * 1e6) / 1e6, count: Math.round(r.f.count), ...r.f.count ? { x0: r23(r.f.x0), y0: r23(r.f.y0), x1: r23(r.f.x1), y1: r23(r.f.y1), cx: r23(r.f.cx), cy: r23(r.f.cy) } : {}, level: r23(r.f.level) }));
-  await fs15.writeFile(jsonPath, JSON.stringify({ ...out, frames: perFrame, ...inkRows.length ? { inkFrames } : {} }, null, 1));
-  await fs15.writeFile(csvPath, ["index,time,at,x,y,scale,opacity,ncc,repeat", ...perFrame.map((p) => [p.index, p.time, p.at, p.x ?? "", p.y ?? "", p.scale ?? "", p.opacity ?? "", p.ncc ?? "", p.repeat ? 1 : 0].join(","))].join("\n"));
+  await fs16.writeFile(jsonPath, JSON.stringify({ ...out, frames: perFrame, ...inkRows.length ? { inkFrames } : {} }, null, 1));
+  await fs16.writeFile(csvPath, ["index,time,at,x,y,scale,opacity,ncc,repeat", ...perFrame.map((p) => [p.index, p.time, p.at, p.x ?? "", p.y ?? "", p.scale ?? "", p.opacity ?? "", p.ncc ?? "", p.repeat ? 1 : 0].join(","))].join("\n"));
   const seconds = Math.round((performance.now() - started) / 1e3 * 100) / 100;
   return {
     ...out,
@@ -57888,8 +58152,8 @@ async function runTrack(args, opts = {}) {
 
 // src/video/run-shots-census.ts
 async function open2(args, tools) {
-  if (typeof args.file !== "string" || !path16.isAbsolute(args.file)) return { error: "`file` must be an absolute path to a video file" };
-  if (typeof args.outDir !== "string" || !path16.isAbsolute(args.outDir)) return { error: "`outDir` must be an absolute folder path" };
+  if (typeof args.file !== "string" || !path17.isAbsolute(args.file)) return { error: "`file` must be an absolute path to a video file" };
+  if (typeof args.outDir !== "string" || !path17.isAbsolute(args.outDir)) return { error: "`outDir` must be an absolute folder path" };
   const info = await probeVideo(args.file, tools);
   if (info === null) return { error: NO_FFMPEG };
   if ("error" in info) return { error: info.error };
@@ -57922,22 +58186,22 @@ async function runShots(args, tools = VIDEO_TOOLS) {
   }
   const list = shotList(stats, SHOT_RULES, (i) => i > 0 ? registerShift(small[i - 1], small[i], w, h) : null);
   const kx = info.width / w, ky = info.height / h;
-  await fs16.mkdir(args.outDir, { recursive: true });
+  await fs17.mkdir(args.outDir, { recursive: true });
   const atFps = typeof args.atFps === "number" && args.atFps > 0 ? args.atFps : 30, at = (t) => Math.round(t * atFps * 100) / 100;
   const sheets = [], strips = [];
   if (args.pictures !== false) {
     for (let s = 0; s < list.shots.length && s < 60; s++) {
       const sh = list.shots[s], n = Math.min(8, sh.to - sh.from + 1), fr = Array.from({ length: n }, (_, i) => Math.round(sh.from + i * (sh.to - sh.from) / Math.max(1, n - 1)));
-      const p = path16.join(args.outDir, `shot-${String(s + 1).padStart(3, "0")}.png`);
+      const p = path17.join(args.outDir, `shot-${String(s + 1).padStart(3, "0")}.png`);
       if (await tilePng(info, [...new Set(fr)], p, 160, tools)) sheets.push(p);
     }
     const changes = [...list.cuts.map((c) => c.frame), ...list.swaps.map((c) => c.frame)].sort((x, y) => x - y);
     for (const c of changes.slice(0, 40)) {
-      const fr = [c - 2, c - 1, c, c + 1, c + 2].filter((f) => f >= 0 && f < info.frames), p = path16.join(args.outDir, `change-${c}.png`);
+      const fr = [c - 2, c - 1, c, c + 1, c + 2].filter((f) => f >= 0 && f < info.frames), p = path17.join(args.outDir, `change-${c}.png`);
       if (await tilePng(info, fr, p, 160, tools)) strips.push(p);
     }
   }
-  const jsonPath = path16.join(args.outDir, "shots.json");
+  const jsonPath = path17.join(args.outDir, "shots.json");
   const result = {
     ok: true,
     file: args.file,
@@ -57949,7 +58213,7 @@ async function runShots(args, tools = VIDEO_TOOLS) {
     notCuts: list.notCuts.map((c) => ({ ...c, at: at(c.time), ...c.shift ? { shift: { ...c.shift, dx: Math.round(c.shift.dx * kx), dy: Math.round(c.shift.dy * ky), unit: "source px a frame" } } : {} })),
     shots: list.shots.map((s) => ({ ...s, at: [at(s.start), at(s.end)] }))
   };
-  await fs16.writeFile(jsonPath, JSON.stringify(result, null, 1));
+  await fs17.writeFile(jsonPath, JSON.stringify(result, null, 1));
   return {
     ...result,
     shots: result.shots.length > 40 ? `${result.shots.length} shots: see shots.json` : result.shots,
@@ -58009,13 +58273,13 @@ async function runCensus(args, tools = VIDEO_TOOLS) {
     prev = cur;
   }
   const lab = labels.join(""), cad = cadence(lab.replace(/\./g, ""), shifts.filter((_, i) => labels[i] !== "."), step, Math.max(info.width, info.height) / Math.max(w, h));
-  await fs16.mkdir(args.outDir, { recursive: true });
+  await fs17.mkdir(args.outDir, { recursive: true });
   const col = { c: [90, 90, 90], l: [230, 200, 60], T: [240, 120, 30], X: [220, 40, 40], ".": [0, 0, 0] }, sw = Math.max(1, labels.length), sh = 24, rgb = new Float64Array(sw * sh * 3);
   for (let x = 0; x < sw; x++) for (let y = 0; y < sh; y++) rgb.set(col[labels[x] ?? "."].map((v) => v / 255), (y * sw + x) * 3);
-  const strip = path16.join(args.outDir, "census.png"), jsonPath = path16.join(args.outDir, "census.json");
-  await fs16.writeFile(strip, encodePngSrgb8(sw, sh, rgb));
+  const strip = path17.join(args.outDir, "census.png"), jsonPath = path17.join(args.outDir, "census.json");
+  await fs17.writeFile(strip, encodePngSrgb8(sw, sh, rgb));
   const result = { ok: true, file: args.file, window: step, band, pageTest, rules: CENSUS_RULES, labels: lab, cadence: cad };
-  await fs16.writeFile(jsonPath, JSON.stringify({ ...result, steps: steps2 }, null, 1));
+  await fs17.writeFile(jsonPath, JSON.stringify({ ...result, steps: steps2 }, null, 1));
   return {
     ...result,
     labels: lab.length > 600 ? `${lab.slice(0, 600)}\u2026 (${lab.length} steps: see census.json)` : lab,
@@ -58027,13 +58291,13 @@ async function runCensus(args, tools = VIDEO_TOOLS) {
 
 // src/video/rhythm.ts
 async function measureRhythm(file2) {
-  const tmp = await fs17.mkdtemp(path17.join(os4.tmpdir(), "look-rhythm-"));
+  const tmp = await fs18.mkdtemp(path18.join(os4.tmpdir(), "look-rhythm-"));
   try {
-    const census = await runCensus({ file: file2, outDir: path17.join(tmp, "census") });
+    const census = await runCensus({ file: file2, outDir: path18.join(tmp, "census") });
     if (!census.ok) return { error: census.error };
-    const shotsReply = await runShots({ file: file2, outDir: path17.join(tmp, "shots"), pictures: false });
+    const shotsReply = await runShots({ file: file2, outDir: path18.join(tmp, "shots"), pictures: false });
     if (!shotsReply.ok) return { error: shotsReply.error };
-    const shots = JSON.parse(await fs17.readFile(path17.join(tmp, "shots", "shots.json"), "utf8"));
+    const shots = JSON.parse(await fs18.readFile(path18.join(tmp, "shots", "shots.json"), "utf8"));
     const fps = shots.video.nominalFps || 30, seconds = shots.video.frames / fps;
     const lengths = shots.shots.map((s) => (s.to - s.from + 1) / fps).sort((a, b) => a - b);
     const mid = lengths.length ? lengths.length % 2 ? lengths[lengths.length >> 1] : (lengths[lengths.length / 2 - 1] + lengths[lengths.length / 2]) / 2 : seconds;
@@ -58044,7 +58308,7 @@ async function measureRhythm(file2) {
       shots: { count: lengths.length, cutsPerMinute: r(shots.cuts.length / Math.max(1e-6, seconds) * 60, 2), medianSeconds: r(mid, 2), shortestSeconds: r(lengths[0] ?? seconds, 2), longestSeconds: r(lengths[lengths.length - 1] ?? seconds, 2) }
     };
   } finally {
-    await fs17.rm(tmp, { recursive: true, force: true });
+    await fs18.rm(tmp, { recursive: true, force: true });
   }
 }
 
@@ -58065,7 +58329,7 @@ function referenceCompJsx(args) {
 async function runReferenceReport(args, io) {
   const started = performance.now();
   const outPath = args.outPath;
-  if (typeof outPath !== "string" || !path18.isAbsolute(outPath) || !/\.json$/i.test(outPath))
+  if (typeof outPath !== "string" || !path19.isAbsolute(outPath) || !/\.json$/i.test(outPath))
     return { ok: false, error: "`outPath` must be an absolute path for the report (.json)" };
   const sources = ["path", "item", "comp"].filter((k) => args[k] !== void 0 && args[k] !== null);
   if (sources.length !== 1)
@@ -58075,8 +58339,8 @@ async function runReferenceReport(args, io) {
     };
   const regions = Array.isArray(args.regions) ? args.regions : void 0;
   const cap = typeof args.maxFrames === "number" && args.maxFrames >= 1 ? Math.floor(args.maxFrames) : CHECK_FILE_MAX_FRAMES;
-  const outDir = path18.dirname(outPath);
-  await fs18.mkdir(outDir, { recursive: true });
+  const outDir = path19.dirname(outPath);
+  await fs19.mkdir(outDir, { recursive: true });
   const keepCaptures = args.keepCaptures === true;
   const perFrameMs = Math.max(
     1,
@@ -58094,8 +58358,8 @@ async function runReferenceReport(args, io) {
   let report;
   const renders = renderTally();
   const p = typeof args.path === "string" ? args.path : null;
-  if (p !== null && !path18.isAbsolute(p)) return { ok: false, error: "`path` must be absolute" };
-  const stat = p !== null ? await fs18.stat(p).catch(() => null) : null;
+  if (p !== null && !path19.isAbsolute(p)) return { ok: false, error: "`path` must be absolute" };
+  const stat = p !== null ? await fs19.stat(p).catch(() => null) : null;
   const viaAe = args.via === "after-effects";
   const movieInfo = p !== null && MOVIE_EXT.test(p) && !viaAe && stat ? await probeVideo(p) : null;
   const colour = movieInfo && !("error" in movieInfo) ? await movieColour(p) : null;
@@ -58107,7 +58371,7 @@ async function runReferenceReport(args, io) {
     source = { kind: "movie", path: p, via: "ffmpeg", frames: movieInfo.frames, read: idx.length, frameRate: movieInfo.nominalFps, colour: { matrix: colour.matrix, range: colour.range, tags: colour.tags, assumed: colour.assumed, reading: colour.reading } };
   } else if (p !== null && !MOVIE_EXT.test(p)) {
     if (!stat) return { ok: false, error: `nothing at ${p}` };
-    const files = stat.isDirectory() ? (await fs18.readdir(p)).filter((f) => /\.png$/i.test(f)).sort(naturalOrder).map((f) => path18.join(p, f)) : [p];
+    const files = stat.isDirectory() ? (await fs19.readdir(p)).filter((f) => /\.png$/i.test(f)).sort(naturalOrder).map((f) => path19.join(p, f)) : [p];
     if (!files.length) return { ok: false, error: `no PNG frames in ${p}` };
     if (!files.every((f) => /\.png$/i.test(f)))
       return { ok: false, error: "a still must be a PNG (render other formats to PNG first)" };
@@ -58115,7 +58379,7 @@ async function runReferenceReport(args, io) {
     const frameRate = typeof args.frameRate === "number" ? args.frameRate : void 0;
     const given = typeof args.frameStep === "number" && args.frameStep >= 1 ? Math.round(args.frameStep) : null;
     const nums = files.map((f) => {
-      const m = /(\d+)(?!.*\d)/.exec(path18.basename(f, path18.extname(f)));
+      const m = /(\d+)(?!.*\d)/.exec(path19.basename(f, path19.extname(f)));
       return m ? Number(m[1]) : null;
     });
     const named = nums.every((n) => n !== null) && nums.every((n, i) => i === 0 || n > nums[i - 1]);
@@ -58177,7 +58441,7 @@ async function runReferenceReport(args, io) {
         for (const r of got) {
           if (!r.ok || !r.file) return { ok: false, error: `frame ${r.frame} did not render: ${r.error ?? "no file"}` };
           reader.add({ img: await io.readImage(r.file), frame: r.frame, time: r.frame / setup.frameRate });
-          if (!keepCaptures) await fs18.rm(r.file, { force: true });
+          if (!keepCaptures) await fs19.rm(r.file, { force: true });
         }
       }
       report = reader.finish();
@@ -58198,11 +58462,11 @@ async function runReferenceReport(args, io) {
       else rhythm = r;
     } else rhythmNote = "The rhythm is measured on a movie only (video.census and video.shots read it): render the build to a file and report that.";
   }
-  await fs18.writeFile(outPath, JSON.stringify(rhythm ? { ...report, rhythm } : report));
+  await fs19.writeFile(outPath, JSON.stringify(rhythm ? { ...report, rhythm } : report));
   let compare2;
   if (typeof args.against === "string") {
     try {
-      const against = JSON.parse(await fs18.readFile(args.against, "utf8"));
+      const against = JSON.parse(await fs19.readFile(args.against, "utf8"));
       compare2 = isSheet(against) ? compareWithSheet(against, { report, rhythm }) : compareReferences(against, report);
     } catch (e) {
       compare2 = { error: `could not compare with ${args.against}: ${e instanceof Error ? e.message : String(e)}` };
@@ -58229,8 +58493,8 @@ async function runReferenceReport(args, io) {
 async function runReferenceCompare(args) {
   const read = async (k) => {
     const v = args[k];
-    if (typeof v !== "string" || !path18.isAbsolute(v)) throw new Error(`\`${k}\` must be the absolute path of a saved report`);
-    return JSON.parse(await fs18.readFile(v, "utf8"));
+    if (typeof v !== "string" || !path19.isAbsolute(v)) throw new Error(`\`${k}\` must be the absolute path of a saved report`);
+    return JSON.parse(await fs19.readFile(v, "utf8"));
   };
   try {
     const ref = await read("reference");
@@ -58292,9 +58556,9 @@ registerOp({
 });
 
 // src/operations/look-sheet.ts
-import { promises as fs19 } from "node:fs";
+import { promises as fs20 } from "node:fs";
 import os5 from "node:os";
-import * as path19 from "node:path";
+import * as path20 from "node:path";
 init_registry();
 var MOVIE_EXT2 = /\.(mov|mp4|m4v|mxf|avi|webm|mkv|mpe?g)$/i;
 var slug = (label) => label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "piece";
@@ -58320,11 +58584,11 @@ async function measurePiece(spec, dir, io, maxFrames, regions) {
   if (!label) return { error: "every piece needs a `label` (it names the piece on the sheet's page)" };
   const hasPath = typeof spec.path === "string", hasComp = spec.comp !== void 0;
   if (hasPath === hasComp) return { error: `piece "${label}": give exactly one of \`path\` (a movie, a folder of PNG frames or a still) and \`comp\`` };
-  const tmp = await fs19.mkdtemp(path19.join(os5.tmpdir(), "look-piece-"));
+  const tmp = await fs20.mkdtemp(path20.join(os5.tmpdir(), "look-piece-"));
   try {
-    const r = await runReferenceReport({ ...hasPath ? { path: spec.path } : { comp: spec.comp }, outPath: path19.join(tmp, "report.json"), maxFrames, ...regions ? { regions } : {}, ...spec.via ? { via: spec.via } : {} }, io);
+    const r = await runReferenceReport({ ...hasPath ? { path: spec.path } : { comp: spec.comp }, outPath: path20.join(tmp, "report.json"), maxFrames, ...regions ? { regions } : {}, ...spec.via ? { via: spec.via } : {} }, io);
     if (!r.ok) return { error: `piece "${label}": ${r.error}` };
-    const report = JSON.parse(await fs19.readFile(path19.join(tmp, "report.json"), "utf8"));
+    const report = JSON.parse(await fs20.readFile(path20.join(tmp, "report.json"), "utf8"));
     let rhythm = null, rhythmNote = null;
     if (hasPath && MOVIE_EXT2.test(spec.path)) {
       const rh = await measureRhythm(spec.path);
@@ -58350,13 +58614,13 @@ async function measurePiece(spec, dir, io, maxFrames, regions) {
       source: { kind: src.kind, via: src.via ?? (src.kind === "frames" || src.kind === "still" ? "node" : "after-effects"), frames: src.frames ?? src.files ?? null, read: r.frames, frameRate: src.frameRate ?? null, ...src.colour ? { colour: src.colour } : {}, ...rhythmNote ? { rhythmNote } : {}, path: spec.path ?? null, comp: spec.comp ?? null }
     };
   } finally {
-    await fs19.rm(tmp, { recursive: true, force: true });
+    await fs20.rm(tmp, { recursive: true, force: true });
   }
 }
 async function writeSheet(dir, pieces) {
-  const sheet = buildSheet(pieces), json2 = path19.join(dir, "sheet.json"), page = path19.join(dir, "sheet.md");
-  await fs19.writeFile(json2, JSON.stringify(sheet, null, 1));
-  await fs19.writeFile(page, sheetMarkdown(sheet));
+  const sheet = buildSheet(pieces), json2 = path20.join(dir, "sheet.json"), page = path20.join(dir, "sheet.md");
+  await fs20.writeFile(json2, JSON.stringify(sheet, null, 1));
+  await fs20.writeFile(page, sheetMarkdown(sheet));
   return { sheet, json: json2, page };
 }
 function reply(sheet, json2, page, started, measured) {
@@ -58370,25 +58634,25 @@ function reply(sheet, json2, page, started, measured) {
     colours: sheet.palette.filter((c) => c.look).map((c) => c.hex),
     files: { sheet: json2, page },
     seconds: Math.round((performance.now() - started) / 100) / 10,
-    reading: `A look sheet from ${standingBase(sheet)}: ${look} measures hold across the pieces, ${varies} vary (not compared); ${sheet.palette.filter((c) => c.look).length} main colours are part of the look.${sheet.pieces.length < LOOK_RULES.fewPieces ? ` ${FEW_PIECES_NOTE}` : ""} Read ${path19.basename(page)}; compare a build with reference.compare { reference: sheet.json, build } or reference.report { against: sheet.json }.`,
+    reading: `A look sheet from ${standingBase(sheet)}: ${look} measures hold across the pieces, ${varies} vary (not compared); ${sheet.palette.filter((c) => c.look).length} main colours are part of the look.${sheet.pieces.length < LOOK_RULES.fewPieces ? ` ${FEW_PIECES_NOTE}` : ""} Read ${path20.basename(page)}; compare a build with reference.compare { reference: sheet.json, build } or reference.report { against: sheet.json }.`,
     next: "Compare a build with the sheet before hand-over: reference.report on its render with against: the sheet (rhythm: true for the rhythm)."
   };
 }
 async function runLookSheet(args, io) {
   const started = performance.now();
-  if (typeof args.outDir !== "string" || !path19.isAbsolute(args.outDir)) return { ok: false, error: "`outDir` must be an absolute folder for the sheet" };
+  if (typeof args.outDir !== "string" || !path20.isAbsolute(args.outDir)) return { ok: false, error: "`outDir` must be an absolute folder for the sheet" };
   const pieces = Array.isArray(args.pieces) ? args.pieces : [];
   if (!pieces.length) return { ok: false, error: "`pieces` must list the approved pieces: [{ label, path } or { label, comp, project? }]" };
   const labels = pieces.map((p) => p?.label);
   if (new Set(labels).size !== labels.length) return { ok: false, error: "every piece needs its own `label`" };
   const maxFrames = typeof args.maxFrames === "number" && args.maxFrames >= 1 ? Math.floor(args.maxFrames) : CHECK_FILE_MAX_FRAMES;
-  await fs19.mkdir(path19.join(args.outDir, "pieces"), { recursive: true });
+  await fs20.mkdir(path20.join(args.outDir, "pieces"), { recursive: true });
   const done = [];
   for (const spec of pieces) {
     const p = await measurePiece(spec, args.outDir, io, maxFrames, args.regions);
     if ("error" in p) return { ok: false, error: p.error, measuredBefore: done.map((d) => d.piece.label) };
-    const file2 = path19.join("pieces", `${slug(p.label)}.json`);
-    await fs19.writeFile(path19.join(args.outDir, file2), JSON.stringify(p));
+    const file2 = path20.join("pieces", `${slug(p.label)}.json`);
+    await fs20.writeFile(path20.join(args.outDir, file2), JSON.stringify(p));
     done.push({ piece: p, file: file2 });
   }
   const { sheet, json: json2, page } = await writeSheet(args.outDir, done);
@@ -58396,29 +58660,29 @@ async function runLookSheet(args, io) {
 }
 async function runLookSheetAdd(args, io) {
   const started = performance.now();
-  if (typeof args.sheet !== "string" || !path19.isAbsolute(args.sheet)) return { ok: false, error: "`sheet` must be the absolute path of a sheet.json from reference.sheet" };
+  if (typeof args.sheet !== "string" || !path20.isAbsolute(args.sheet)) return { ok: false, error: "`sheet` must be the absolute path of a sheet.json from reference.sheet" };
   let sheet;
   try {
-    sheet = JSON.parse(await fs19.readFile(args.sheet, "utf8"));
+    sheet = JSON.parse(await fs20.readFile(args.sheet, "utf8"));
   } catch (e) {
     return { ok: false, error: `could not read ${args.sheet}: ${e.message}` };
   }
   if (!isSheet(sheet)) return { ok: false, error: `${args.sheet} is not a look sheet` };
-  const dir = path19.dirname(args.sheet), spec = args.piece ?? {};
+  const dir = path20.dirname(args.sheet), spec = args.piece ?? {};
   if (sheet.pieces.some((p2) => p2.label === spec.label)) return { ok: false, error: `the sheet already has a piece labelled "${spec.label}"` };
   const old = [];
   for (const p2 of sheet.pieces) {
-    const got = JSON.parse(await fs19.readFile(path19.join(dir, p2.file), "utf8"));
+    const got = JSON.parse(await fs20.readFile(path20.join(dir, p2.file), "utf8"));
     if (!isPiece(got)) return { ok: false, error: `${p2.file} is not a measured piece` };
     old.push({ piece: got, file: p2.file });
   }
   const maxFrames = typeof args.maxFrames === "number" && args.maxFrames >= 1 ? Math.floor(args.maxFrames) : CHECK_FILE_MAX_FRAMES;
   const p = await measurePiece(spec, dir, io, maxFrames, args.regions);
   if ("error" in p) return { ok: false, error: p.error };
-  let file2 = path19.join("pieces", `${slug(p.label)}.json`);
-  for (let k = 2; old.some((o) => o.file === file2); k++) file2 = path19.join("pieces", `${slug(p.label)}-${k}.json`);
-  await fs19.mkdir(path19.join(dir, "pieces"), { recursive: true });
-  await fs19.writeFile(path19.join(dir, file2), JSON.stringify(p));
+  let file2 = path20.join("pieces", `${slug(p.label)}.json`);
+  for (let k = 2; old.some((o) => o.file === file2); k++) file2 = path20.join("pieces", `${slug(p.label)}-${k}.json`);
+  await fs20.mkdir(path20.join(dir, "pieces"), { recursive: true });
+  await fs20.writeFile(path20.join(dir, file2), JSON.stringify(p));
   const w = await writeSheet(dir, [...old, { piece: p, file: file2 }]);
   return reply(w.sheet, w.json, w.page, started, [p.label]);
 }
@@ -59803,7 +60067,7 @@ registerOp({
 // src/operations/inspect.ts
 init_config();
 init_registry();
-import * as path20 from "node:path";
+import * as path21 from "node:path";
 registerOp({
   name: "comp.info",
   category: "comp",
@@ -59879,7 +60143,7 @@ registerOp({
   readOnly: true,
   toJsx(args) {
     const raw = String(args.outPath);
-    if (!path20.isAbsolute(raw)) {
+    if (!path21.isAbsolute(raw)) {
       return `
             return { ok: false, error: ${jsxVal(`outPath must be absolute, got: ${raw}`)} };
         `;
@@ -59890,7 +60154,7 @@ registerOp({
             return { ok: false, error: ${jsxVal(rejection)} };
         `;
     }
-    const abs = path20.resolve(raw).replace(/\\/g, "/");
+    const abs = path21.resolve(raw).replace(/\\/g, "/");
     return `
             ${RENDER_FRAME_FN}
             ${jsxCompPreamble(args)}
@@ -62271,16 +62535,16 @@ registerOp({
 });
 
 // src/operations/sample.ts
-import { promises as fs21 } from "node:fs";
-import * as path22 from "node:path";
+import { promises as fs22 } from "node:fs";
+import * as path23 from "node:path";
 
 // src/video/run-moves.ts
-import { promises as fs20 } from "node:fs";
-import path21 from "node:path";
+import { promises as fs21 } from "node:fs";
+import path22 from "node:path";
 async function readJson(p, what) {
-  if (typeof p !== "string" || !path21.isAbsolute(p)) return { error: `${what} must be an absolute path to a JSON file` };
+  if (typeof p !== "string" || !path22.isAbsolute(p)) return { error: `${what} must be an absolute path to a JSON file` };
   try {
-    return JSON.parse(await fs20.readFile(p, "utf8"));
+    return JSON.parse(await fs21.readFile(p, "utf8"));
   } catch (e) {
     return { error: `could not read ${what} ${p}: ${e.message}` };
   }
@@ -62309,7 +62573,7 @@ function row(label, m, atFps) {
   };
 }
 async function runMoves(args) {
-  if (typeof args.outDir !== "string" || !path21.isAbsolute(args.outDir)) return { ok: false, error: "`outDir` must be an absolute folder path" };
+  if (typeof args.outDir !== "string" || !path22.isAbsolute(args.outDir)) return { ok: false, error: "`outDir` must be an absolute folder path" };
   const atFps = typeof args.atFps === "number" && args.atFps > 0 ? args.atFps : 30;
   const tracks = Array.isArray(args.tracks) ? args.tracks : [];
   if (!tracks.length && !Array.isArray(args.inferred)) return { ok: false, error: "`tracks` must list track.json files from video.track ([{ path, label }] or paths)" };
@@ -62317,7 +62581,7 @@ async function runMoves(args) {
   for (let i = 0; i < tracks.length; i++) {
     const t = typeof tracks[i] === "string" ? { path: tracks[i] } : tracks[i], j = await readJson(t.path, "a track");
     if ("error" in j) return { ok: false, error: j.error };
-    if (j.lost) notes.push(`${t.label ?? path21.basename(path21.dirname(t.path))}: ${j.lost.reading}`);
+    if (j.lost) notes.push(`${t.label ?? path22.basename(path22.dirname(t.path))}: ${j.lost.reading}`);
     j.moves.forEach((m, k) => rows.push(row(`${t.label ?? `track ${i + 1}`}${j.moves.length > 1 ? ` ${k + 1}` : ""}`, m, atFps)));
   }
   for (const m of args.inferred ?? []) rows.push({ move: m.label ?? "inferred", channel: m.channel ?? null, status: "inferred", reason: m.reason ?? "no reason given", ...m });
@@ -62356,10 +62620,10 @@ async function runMoves(args) {
     lines.push("- Type roles, exact strings, material, depth, data sources: (not measured)", "");
   });
   if (notes.length) lines.push("## Not measured", "", ...notes.map((n) => `- ${n}`), "");
-  await fs20.mkdir(args.outDir, { recursive: true });
-  const jsonPath = path21.join(args.outDir, "moves.json"), sheetPath = path21.join(args.outDir, "beat-sheet.md");
-  await fs20.writeFile(jsonPath, JSON.stringify({ atFps, moves: rows, notes }, null, 1));
-  await fs20.writeFile(sheetPath, lines.join("\n"));
+  await fs21.mkdir(args.outDir, { recursive: true });
+  const jsonPath = path22.join(args.outDir, "moves.json"), sheetPath = path22.join(args.outDir, "beat-sheet.md");
+  await fs21.writeFile(jsonPath, JSON.stringify({ atFps, moves: rows, notes }, null, 1));
+  await fs21.writeFile(sheetPath, lines.join("\n"));
   const counts = { measured: rows.filter((r) => String(r.status).startsWith("measured")).length, inferred: rows.filter((r) => r.status === "inferred").length, untested: rows.filter((r) => r.status === "untested").length };
   return {
     ok: true,
@@ -62422,7 +62686,7 @@ async function runCompareMoves(args, readProperty) {
     const bj = await readJson(args.buildTrack, "buildTrack");
     if ("error" in bj) return { ok: false, error: bj.error };
     built = bj.moves ?? [];
-    source = `the build's render (${path21.basename(args.buildTrack)})`;
+    source = `the build's render (${path22.basename(args.buildTrack)})`;
   } else if (args.comp !== void 0 && args.layer !== void 0 && args.property !== void 0) {
     if (!readProperty) return { ok: false, error: "reading a property needs After Effects" };
     const r = await readProperty({ comp: args.comp, layer: args.layer, property: args.property, start: args.start, end: args.end, perFrame: true });
@@ -62629,10 +62893,10 @@ async function runCurve(args, io) {
   const report = analyzeCurve(samples, r.fps);
   let graph = null;
   if (typeof args.outPath === "string") {
-    if (!path22.isAbsolute(args.outPath)) return { ok: false, error: "`outPath` must be absolute (.png)" };
+    if (!path23.isAbsolute(args.outPath)) return { ok: false, error: "`outPath` must be absolute (.png)" };
     const g = curveGraph(report, { width: 480, height: 160 });
-    await fs21.mkdir(path22.dirname(args.outPath), { recursive: true });
-    await fs21.writeFile(args.outPath, encodePngSrgb8(g.width, g.height, g.rgb));
+    await fs22.mkdir(path23.dirname(args.outPath), { recursive: true });
+    await fs22.writeFile(args.outPath, encodePngSrgb8(g.width, g.height, g.rgb));
     graph = args.outPath;
   }
   return {
@@ -62704,12 +62968,12 @@ async function runSoundMarkers(args, io) {
   let source;
   if (hasTiming) {
     const f = args.timing;
-    if (!path22.isAbsolute(f)) return { ok: false, error: "`timing` must be an absolute path" };
+    if (!path23.isAbsolute(f)) return { ok: false, error: "`timing` must be an absolute path" };
     const r = await io.execute(fpsJsx({ comp: args.comp }), { label: "sound.markers fps", timeoutMs: 3e4 });
     if (!r?.ok) return { ok: false, error: r?.error ?? "could not read the comp" };
     fps = r.fps;
     try {
-      found = parseTiming(await fs21.readFile(f, "utf8"), fps).map((m) => ({ ...m, frame: Math.round(m.time * fps) }));
+      found = parseTiming(await fs22.readFile(f, "utf8"), fps).map((m) => ({ ...m, frame: Math.round(m.time * fps) }));
     } catch (e) {
       return { ok: false, error: e instanceof Error ? e.message : String(e) };
     }
@@ -62936,8 +63200,8 @@ registerOp({
 
 // src/operations/instance.ts
 import { spawn as spawn3 } from "node:child_process";
-import { promises as fs22 } from "node:fs";
-import * as path23 from "node:path";
+import { promises as fs23 } from "node:fs";
+import * as path24 from "node:path";
 init_config();
 init_registry();
 var INSTALL_CMD = "npx @kumoproductions/mcp-aftereffects install-agent";
@@ -63046,10 +63310,10 @@ registerOp({
     let copiedFrom = null;
     let copyTo = null;
     if (typeof args.copyFrom === "string" && args.copyFrom) {
-      const src = path23.resolve(args.copyFrom);
+      const src = path24.resolve(args.copyFrom);
       if (!await exists(src)) return fail(`copyFrom not found: ${src}`, { errorCode: "IO" });
-      const ext = path23.extname(src) || ".aep";
-      copyTo = typeof args.copyTo === "string" && args.copyTo ? path23.resolve(args.copyTo) : path23.join(path23.dirname(src), `${path23.basename(src, ext)}__${name}${ext}`);
+      const ext = path24.extname(src) || ".aep";
+      copyTo = typeof args.copyTo === "string" && args.copyTo ? path24.resolve(args.copyTo) : path24.join(path24.dirname(src), `${path24.basename(src, ext)}__${name}${ext}`);
       if (copyTo === src)
         return fail("copyTo must differ from copyFrom", { errorCode: "INVALID_ARGS" });
       const rejected = rejectedOutputPath(copyTo);
@@ -63057,7 +63321,7 @@ registerOp({
       copiedFrom = src;
       projectToOpen = copyTo;
     } else if (typeof args.project === "string" && args.project) {
-      projectToOpen = path23.resolve(args.project);
+      projectToOpen = path24.resolve(args.project);
       if (!await exists(projectToOpen))
         return fail(`project not found: ${projectToOpen}`, { errorCode: "IO" });
     }
@@ -63084,8 +63348,8 @@ registerOp({
       return fail(err instanceof Error ? err.message : String(err), { errorCode: "AE_NOT_FOUND" });
     }
     if (copiedFrom !== null && copyTo !== null) {
-      await fs22.mkdir(path23.dirname(copyTo), { recursive: true });
-      await fs22.copyFile(copiedFrom, copyTo);
+      await fs23.mkdir(path24.dirname(copyTo), { recursive: true });
+      await fs23.copyFile(copiedFrom, copyTo);
     }
     const plan = buildInstanceLaunchPlan(exe, name);
     const aePid = process.platform === "darwin" ? null : void 0;
@@ -63267,7 +63531,7 @@ registerOp({
         `instance '${name}' accepted the quit but is still ticking after ${timeoutMs} ms \u2014 check it for a dialog`
       );
     }
-    await fs22.rm(dir, { recursive: true, force: true }).catch(() => {
+    await fs23.rm(dir, { recursive: true, force: true }).catch(() => {
     });
     return { ok: true, instance: name, stopped: true, saved: !!args.save, file: file2 };
   }
@@ -63341,7 +63605,7 @@ registerOp({
 });
 async function exists(p) {
   try {
-    await fs22.access(p);
+    await fs23.access(p);
     return true;
   } catch {
     return false;
@@ -63434,10 +63698,10 @@ var catalogTool = defineTool({
 });
 
 // src/tools/check-comp.ts
-import { randomUUID as randomUUID4 } from "node:crypto";
-import { promises as fs23 } from "node:fs";
+import { randomUUID as randomUUID5 } from "node:crypto";
+import { promises as fs24 } from "node:fs";
 import * as os6 from "node:os";
-import * as path25 from "node:path";
+import * as path26 from "node:path";
 
 // src/color/watch.ts
 var WATCH_DEFAULTS = {
@@ -64233,7 +64497,7 @@ function frameOfCapture(file2) {
   const m = /frame-(\d+)\.png$/.exec(file2);
   return m ? Number(m[1]) : null;
 }
-var frameFile = (dir, frame) => path25.join(dir, `frame-${frame}.png`).replace(/\\/g, "/");
+var frameFile = (dir, frame) => path26.join(dir, `frame-${frame}.png`).replace(/\\/g, "/");
 function aeFrameSource(transport2, comp, opts) {
   const stallMs = opts.stallMs ?? CAPTURE_STALL_MS;
   const drain = async (paths, before) => {
@@ -64253,7 +64517,7 @@ function aeFrameSource(transport2, comp, opts) {
     async capture(frames, dir) {
       const t0 = performance.now();
       const paths = frames.map((k) => frameFile(dir, k));
-      await fs23.mkdir(dir, { recursive: true });
+      await fs24.mkdir(dir, { recursive: true });
       const before = await stampFiles(paths);
       const result = await transport2.execute({
         code: captureJsx(comp, frames, paths, opts.factor, opts.tryOcio),
@@ -64310,7 +64574,7 @@ function aeFrameSource(transport2, comp, opts) {
   };
 }
 async function readPicture(file2, target, convert) {
-  const img = decodePng(await fs23.readFile(file2));
+  const img = decodePng(await fs24.readFile(file2));
   if (convert) convert(img.rgb);
   let rgb = img.rgb;
   let width = img.width;
@@ -64482,14 +64746,14 @@ async function checkComp(args, transport2) {
     time: r64((ownedTo + every) * fd),
     framesLeft: remaining
   } : null;
-  const outDir = path25.resolve(
-    args.outDir ?? path25.join(
+  const outDir = path26.resolve(
+    args.outDir ?? path26.join(
       os6.tmpdir(),
       "comp-room-check",
       `${String(plan.compName).replace(/[^A-Za-z0-9_-]+/g, "-").slice(0, 40)}-${Date.now()}`
     )
   ).replace(/\\/g, "/");
-  const capDir = path25.join(outDir, `captures-${randomUUID4().slice(0, 8)}`).replace(/\\/g, "/");
+  const capDir = path26.join(outDir, `captures-${randomUUID5().slice(0, 8)}`).replace(/\\/g, "/");
   const readOnly = readOnlyMode();
   const target = {
     width: Math.max(1, Math.round(plan.width / downsample)),
@@ -64601,7 +64865,7 @@ async function checkComp(args, transport2) {
         failures.push({ frame: f.frame, error: `could not read the capture: ${err instanceof Error ? err.message : String(err)}` });
       }
       readSeconds += (performance.now() - r0) / 1e3;
-      await fs23.rm(f.path, { force: true });
+      await fs24.rm(f.path, { force: true });
     }
     if (res.outstanding.length > 0) {
       outstanding.push(...res.outstanding);
@@ -64609,7 +64873,7 @@ async function checkComp(args, transport2) {
       break;
     }
   }
-  if (outstanding.length === 0) await fs23.rm(capDir, { recursive: true, force: true });
+  if (outstanding.length === 0) await fs24.rm(capDir, { recursive: true, force: true });
   const findings = watcher ? watcher.finish() : null;
   const measureSeconds = watcher ? watcher.measureMs / 1e3 : 0;
   let nextOut = next;
@@ -64715,7 +64979,7 @@ async function checkComp(args, transport2) {
     report.sheet = sheet.sheet;
     outstanding.push(...sheet.outstanding);
   }
-  if (outstanding.length === 0) await fs23.rmdir(outDir).catch(() => {
+  if (outstanding.length === 0) await fs24.rmdir(outDir).catch(() => {
   });
   report.captureQueue = outstanding.length === 0 ? {
     outstanding: 0,
@@ -64869,11 +65133,11 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
     if (!got?.path) continue;
     try {
       const pic = await readPicture(got.path, target, convert);
-      await fs23.writeFile(got.path, encodePngSrgb8(pic.width, pic.height, pic.rgb));
+      await fs24.writeFile(got.path, encodePngSrgb8(pic.width, pic.height, pic.rgb));
       images.push({ width: pic.width, height: pic.height, rgb: pic.rgb, bitDepth: 8 });
       kept.push({ frame: c.frame, time: r64(c.frame * fd), kinds: c.kinds, ...c.why ? { why: c.why } : {}, path: got.path });
     } catch {
-      await fs23.rm(got.path, { force: true });
+      await fs24.rm(got.path, { force: true });
     }
   }
   if (images.length === 0)
@@ -64886,8 +65150,8 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
     thumbWidth: tileW,
     labels
   });
-  const sheetPath = path25.join(outDir, `check-sheet-${tag}.png`).replace(/\\/g, "/");
-  await fs23.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+  const sheetPath = path26.join(outDir, `check-sheet-${tag}.png`).replace(/\\/g, "/");
+  await fs24.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
   return {
     sheet: {
       writtenTo: sheetPath,
@@ -65427,8 +65691,8 @@ var layerInfoTool = defineTool({
 });
 
 // src/tools/project-export.ts
-import { promises as fs24 } from "node:fs";
-import * as path26 from "node:path";
+import { promises as fs25 } from "node:fs";
+import * as path27 from "node:path";
 init_config();
 var projectExportTool = defineTool({
   name: "ae_project_export_json",
@@ -65450,7 +65714,7 @@ var projectExportTool = defineTool({
       const rejection = rejectedOutputPath(args.outPath);
       if (rejection !== null) {
         return errorResult("IO", rejection, {
-          details: { outPath: path26.resolve(args.outPath) },
+          details: { outPath: path27.resolve(args.outPath) },
           hint: "Write the document somewhere outside the mailbox, or omit outPath to receive it inline."
         });
       }
@@ -65469,10 +65733,10 @@ var projectExportTool = defineTool({
     const pretty = args.pretty ?? !!args.outPath;
     const jsonText = JSON.stringify(doc, null, pretty ? 2 : 0);
     if (args.outPath) {
-      const abs = path26.resolve(args.outPath);
+      const abs = path27.resolve(args.outPath);
       try {
-        await fs24.mkdir(path26.dirname(abs), { recursive: true });
-        await fs24.writeFile(abs, jsonText, "utf8");
+        await fs25.mkdir(path27.dirname(abs), { recursive: true });
+        await fs25.writeFile(abs, jsonText, "utf8");
       } catch (err) {
         return errorResult(
           "IO",
@@ -65503,8 +65767,8 @@ var projectExportTool = defineTool({
 });
 
 // src/tools/project-import.ts
-import { promises as fs25 } from "node:fs";
-import * as path27 from "node:path";
+import { promises as fs26 } from "node:fs";
+import * as path28 from "node:path";
 
 // src/schema.ts
 var SCHEMA_VERSION = 3;
@@ -65513,11 +65777,11 @@ var SCHEMA_VERSION = 3;
 var Validator = class {
   issues = [];
   warnings = [];
-  err(path29, message) {
-    this.issues.push({ path: path29, message });
+  err(path30, message) {
+    this.issues.push({ path: path30, message });
   }
-  warn(path29, message) {
-    this.warnings.push({ path: path29, message });
+  warn(path30, message) {
+    this.warnings.push({ path: path30, message });
   }
   isObject(v) {
     return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -65618,64 +65882,64 @@ function validateAeProjectDoc(doc) {
   }
   return { ok: v.issues.length === 0, issues: v.issues, warnings: v.warnings };
 }
-function validateLayer(v, path29, layer) {
+function validateLayer(v, path30, layer) {
   if (!v.isObject(layer)) {
-    v.err(path29, "not an object");
+    v.err(path30, "not an object");
     return;
   }
-  if (typeof layer.index !== "number") v.err(`${path29}.index`, "missing or not a number");
-  if (typeof layer.name !== "string") v.err(`${path29}.name`, "missing or not a string");
-  if (typeof layer.type !== "string") v.err(`${path29}.type`, "missing or not a string");
+  if (typeof layer.index !== "number") v.err(`${path30}.index`, "missing or not a number");
+  if (typeof layer.name !== "string") v.err(`${path30}.name`, "missing or not a string");
+  if (typeof layer.type !== "string") v.err(`${path30}.type`, "missing or not a string");
   else if (["AVLayer", "TextLayer", "ShapeLayer", "CameraLayer", "LightLayer", "Layer"].indexOf(
     layer.type
   ) === -1) {
-    v.warn(`${path29}.type`, `unknown layer type: ${layer.type}`);
+    v.warn(`${path30}.type`, `unknown layer type: ${layer.type}`);
   }
   if (layer.transformGroup)
-    validatePropertyGroup(v, `${path29}.transformGroup`, layer.transformGroup);
-  if (layer.effectsGroup) validatePropertyGroup(v, `${path29}.effectsGroup`, layer.effectsGroup);
-  if (layer.masksGroup) validatePropertyGroup(v, `${path29}.masksGroup`, layer.masksGroup);
-  if (layer.textGroup) validatePropertyGroup(v, `${path29}.textGroup`, layer.textGroup);
-  if (layer.contentsGroup) validatePropertyGroup(v, `${path29}.contentsGroup`, layer.contentsGroup);
-  if (layer.markers) validateProperty(v, `${path29}.markers`, layer.markers);
+    validatePropertyGroup(v, `${path30}.transformGroup`, layer.transformGroup);
+  if (layer.effectsGroup) validatePropertyGroup(v, `${path30}.effectsGroup`, layer.effectsGroup);
+  if (layer.masksGroup) validatePropertyGroup(v, `${path30}.masksGroup`, layer.masksGroup);
+  if (layer.textGroup) validatePropertyGroup(v, `${path30}.textGroup`, layer.textGroup);
+  if (layer.contentsGroup) validatePropertyGroup(v, `${path30}.contentsGroup`, layer.contentsGroup);
+  if (layer.markers) validateProperty(v, `${path30}.markers`, layer.markers);
   if (layer.timeRemapProperty)
-    validateProperty(v, `${path29}.timeRemapProperty`, layer.timeRemapProperty);
+    validateProperty(v, `${path30}.timeRemapProperty`, layer.timeRemapProperty);
 }
-function validatePropertyGroup(v, path29, group) {
+function validatePropertyGroup(v, path30, group) {
   if (!v.isObject(group)) {
-    v.err(path29, "not an object");
+    v.err(path30, "not an object");
     return;
   }
-  if (typeof group.matchName !== "string") v.err(`${path29}.matchName`, "missing or not a string");
+  if (typeof group.matchName !== "string") v.err(`${path30}.matchName`, "missing or not a string");
   if (Array.isArray(group.properties)) {
     for (let i = 0; i < group.properties.length; i++) {
-      validateProperty(v, `${path29}.properties[${i}]`, group.properties[i]);
+      validateProperty(v, `${path30}.properties[${i}]`, group.properties[i]);
     }
   }
   if (Array.isArray(group.groups)) {
     for (let i = 0; i < group.groups.length; i++) {
-      validatePropertyGroup(v, `${path29}.groups[${i}]`, group.groups[i]);
+      validatePropertyGroup(v, `${path30}.groups[${i}]`, group.groups[i]);
     }
   }
 }
-function validateProperty(v, path29, prop) {
+function validateProperty(v, path30, prop) {
   if (!v.isObject(prop)) {
-    v.err(path29, "not an object");
+    v.err(path30, "not an object");
     return;
   }
-  if (typeof prop.matchName !== "string") v.err(`${path29}.matchName`, "missing or not a string");
+  if (typeof prop.matchName !== "string") v.err(`${path30}.matchName`, "missing or not a string");
   if (Array.isArray(prop.keyframes)) {
     for (let i = 0; i < prop.keyframes.length; i++) {
-      validateKeyframe(v, `${path29}.keyframes[${i}]`, prop.keyframes[i]);
+      validateKeyframe(v, `${path30}.keyframes[${i}]`, prop.keyframes[i]);
     }
   }
 }
-function validateKeyframe(v, path29, kf) {
+function validateKeyframe(v, path30, kf) {
   if (!v.isObject(kf)) {
-    v.err(path29, "not an object");
+    v.err(path30, "not an object");
     return;
   }
-  if (typeof kf.time !== "number") v.err(`${path29}.time`, "missing or not a number");
+  if (typeof kf.time !== "number") v.err(`${path30}.time`, "missing or not a number");
 }
 
 // src/tools/project-import.ts
@@ -65704,9 +65968,9 @@ var projectImportTool = defineTool({
   handler: async (args, transport2) => {
     let doc;
     if (args.inPath) {
-      const abs = path27.resolve(args.inPath);
+      const abs = path28.resolve(args.inPath);
       try {
-        doc = JSON.parse(await fs25.readFile(abs, "utf8"));
+        doc = JSON.parse(await fs26.readFile(abs, "utf8"));
       } catch (err) {
         return errorResult(
           "IO",
@@ -65971,8 +66235,8 @@ var ALL_TOOLS = [
 
 // src/tools/library.ts
 import { readFileSync as readFileSync2, realpathSync as realpathSync2 } from "node:fs";
-import path28 from "node:path";
-import { createHash } from "node:crypto";
+import path29 from "node:path";
+import { createHash as createHash2 } from "node:crypto";
 init_config();
 
 // src/tools/library-modules.ts
@@ -66321,23 +66585,23 @@ ${r.text}`;
 
 // src/tools/library.ts
 function boundedFile(base, relative3) {
-  const candidate = path28.resolve(base, relative3);
+  const candidate = path29.resolve(base, relative3);
   const inside = (file3) => {
-    const rel = path28.relative(base, file3);
-    if (!rel || rel === ".." || rel.startsWith(".." + path28.sep) || path28.isAbsolute(rel)) throw new Error("Library path escapes bundle");
+    const rel = path29.relative(base, file3);
+    if (!rel || rel === ".." || rel.startsWith(".." + path29.sep) || path29.isAbsolute(rel)) throw new Error("Library path escapes bundle");
   };
   inside(candidate);
   const file2 = realpathSync2(candidate);
   inside(file2);
   return file2;
 }
-function readLibrary(document, query, root = path28.resolve(PACKAGE_ROOT, "../library")) {
+function readLibrary(document, query, root = path29.resolve(PACKAGE_ROOT, "../library")) {
   const base = realpathSync2(root);
   const manifest = JSON.parse(readFileSync2(boundedFile(base, "manifest.json"), "utf8"));
   const entries = manifest.documents;
   const read = (entry2) => {
     const content = readFileSync2(boundedFile(base, entry2.path), "utf8");
-    if (createHash("sha256").update(content).digest("hex") !== entry2.sha256) throw new Error("Library hash mismatch: regenerate manifest after intentional edits");
+    if (createHash2("sha256").update(content).digest("hex") !== entry2.sha256) throw new Error("Library hash mismatch: regenerate manifest after intentional edits");
     return content;
   };
   if (!document) {
@@ -66373,13 +66637,13 @@ function readLibrary(document, query, root = path28.resolve(PACKAGE_ROOT, "../li
   if (!entry) throw new Error("Unknown library document. Call ae_library without arguments for valid IDs.");
   return { document: entry.id, title: entry.title, kind: entry.kind, content: read(entry) };
 }
-function readLibraryEntry(document, root = path28.resolve(PACKAGE_ROOT, "../library")) {
+function readLibraryEntry(document, root = path29.resolve(PACKAGE_ROOT, "../library")) {
   const base = realpathSync2(root);
   const manifest = JSON.parse(readFileSync2(boundedFile(base, "manifest.json"), "utf8"));
   const entry = manifest.documents.find((e) => e.id === document);
   if (!entry) throw new Error("Unknown library document. Call ae_library without arguments for valid IDs.");
   const content = readFileSync2(boundedFile(base, entry.path), "utf8");
-  if (createHash("sha256").update(content).digest("hex") !== entry.sha256) throw new Error("Library hash mismatch: regenerate manifest after intentional edits");
+  if (createHash2("sha256").update(content).digest("hex") !== entry.sha256) throw new Error("Library hash mismatch: regenerate manifest after intentional edits");
   return { entry, content };
 }
 function libraryDocumentReply(document, section, root) {
