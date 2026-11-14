@@ -607,8 +607,8 @@ export function gradeCurve(doc) {
 /** The curve eval has no final render: the agent writes what it found, and the grader reads that. */
 function curvePlan(dir) {
   const limits = THRESHOLDS.curve.filter((t) => !t.setup).map((t) => `  curve.${t.id}: ${t.what}, limit ${limitText(t)}`).join('\n');
-  return 'Findings for the curve eval. When your checks are done, and not before, write what a viewer would notice to ' +
-    `${JSON.stringify(path.join(dir, EVALS.curve.findings))}, then run the grader without --plan. The file is JSON: ` +
+  return 'Findings for the curve eval. When your checks are done, and not before, hand the grader what a viewer would notice, once: ' +
+    `node grade.mjs curve --findings '<json>' writes them to ${JSON.stringify(path.join(dir, EVALS.curve.findings))} and grades (or write that file yourself and run the grader without --plan). The JSON is: ` +
     '{ "findings": [ <finding>, ... ] }, one finding per problem, each ' +
     `{ "kind": one of ${CURVE_KINDS.map((k) => `"${k}"`).join(', ')}, "layer": the layer's name, "from": seconds from the comp's start where it starts, ` +
     '"to": seconds (for a span), "frames": for "late" or "early", frames after (+) or before (-) the beat, "note": what you saw }. ' +
@@ -742,8 +742,8 @@ export function renderPlan(name, dir) {
 /** The finish eval has no final render: the agent writes what it found, and the grader reads that. */
 function finishPlan(dir) {
   const limits = THRESHOLDS.finish.filter((t) => !t.setup).map((t) => `  finish.${t.id}: ${t.what}, limit ${limitText(t)}`).join('\n');
-  return 'Findings for the finish eval. When your checks are done, and not before, write what a viewer would notice in each comp to ' +
-    `${JSON.stringify(path.join(dir, EVALS.finish.findings))}, then run the grader without --plan. The file is JSON: ` +
+  return 'Findings for the finish eval. When your checks are done, and not before, hand the grader what a viewer would notice in each comp, once: ' +
+    `node grade.mjs finish --findings '<json>' writes them to ${JSON.stringify(path.join(dir, EVALS.finish.findings))} and grades (or write that file yourself and run the grader without --plan). The JSON is: ` +
     '{ "seeded": [ <finding>, ... ], "clean": [ <finding>, ... ] }, one finding per problem, each ' +
     `{ "kind": one of ${FINISH_KINDS.map((k) => `"${k}"`).join(', ')}, "from": seconds from the comp's start, "to": seconds (for a stretch), "note": what you saw }. ` +
     '"flash" is a one-frame flash or pop, "frozen" a stretch where the picture stops changing, "off-frame" a layer leaving the frame, ' +
@@ -754,8 +754,8 @@ function finishPlan(dir) {
 /** The review eval has no final render: the reviewer writes its review, and the grader reads that. */
 function reviewPlan(dir) {
   const limits = THRESHOLDS.review.filter((t) => !t.setup).map((t) => `  review.${t.id}: ${t.what}, limit ${limitText(t)}`).join('\n');
-  return 'Findings for the review eval. When your review is done, and not before, write it to ' +
-    `${JSON.stringify(path.join(dir, EVALS.review.findings))}, then run the grader without --plan. The file is JSON in the review document's form: ` +
+  return 'Findings for the review eval. When your review is done, and not before, hand it to the grader, once: ' +
+    `node grade.mjs review --findings '<json>' writes it to ${JSON.stringify(path.join(dir, EVALS.review.findings))} and grades (or write that file yourself and run the grader without --plan). The JSON is in the review document's form: ` +
     '{ "findings": [ <finding>, ... ], "intended": [ { "from": seconds, "note": why it is intended }, ... ], "notJudged": [ "what you could not judge", ... ] }. ' +
     'One finding per defect a viewer would notice, most noticeable first, each ' +
     `{ "kind": one of ${REVIEW_KINDS.map((k) => `"${k}"`).join(', ')}, "from": seconds from the comp's start where it starts, "to": seconds (for a span), ` +

@@ -199,6 +199,9 @@ test('the picture set: each case carries its setup, grader and runtime copy, a s
       assert.ok(!re.test(`x PICTURE-CHECK ${c.picture.check}.${id} PASS | measured: a\n`));
     }
     assert.equal(cases[i].graders, c.assertions.length + ids.length);
+    // the skill indicator is scored in a one-arm run: only where the prompt asks for a skill
+    const skill = (await fs.readdir(path.join(dir, 'graders'))).includes('plugin-skill.md');
+    assert.equal(skill, /\$[a-z]/.test(c.prompt), `case ${c.id}`);
   }
   const cmd = pictureCommand('/copy', cases);
   assert.match(cmd, / -j 1 /);

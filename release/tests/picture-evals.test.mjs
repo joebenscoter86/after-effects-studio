@@ -442,3 +442,17 @@ test('curve: the plan names the findings file and its form, and gradeDir reads i
   await fs.writeFile(path.join(dir, 'findings.json'), JSON.stringify(CURVE_FOUND));
   assert.deepEqual(failing((await gradeDir('curve', dir, rt)).checks), []);
 });
+
+test('the findings evals take their findings on the grader\'s command line, once, and refuse bad JSON without grading', async () => {
+  const cwd = await fs.mkdtemp(path.join(os.tmpdir(), 'findings-'));
+  const grader = path.join(PICTURE, 'grade.mjs');
+  const doc = JSON.stringify({ findings: [{ kind: 'no-ease', layer: 'card B', from: 2.0 }, { kind: 'late', layer: 'badge 3', from: 5.133, frames: 4, note: "it's late" }] });
+  await assert.rejects(run(process.execPath, [grader, 'curve', '--findings', '{not json'], { cwd }), (e) => e.code === 2 && /not JSON/.test(e.stderr));
+  await assert.rejects(fs.access(path.join(cwd, 'picture-grade', 'verdict.txt')));
+  const { stdout } = await run(process.execPath, [grader, 'curve', '--findings', doc], { cwd });
+  assert.match(stdout, /^PICTURE-RESULT curve 4\/4 checks passed$/m);
+  assert.deepEqual(JSON.parse(await fs.readFile(path.join(cwd, 'picture-grade', 'findings.json'), 'utf8')), JSON.parse(doc));
+  await assert.rejects(run(process.execPath, [grader, 'curve', '--findings', doc], { cwd }), (e) => e.code === 3);
+  await assert.rejects(run(process.execPath, [grader, 'seat', '--findings', doc], { cwd }), (e) => e.code === 2 && /graded on its renders/.test(e.stderr));
+  for (const name of ['finish', 'review', 'curve']) assert.match(renderPlan(name, cwd), new RegExp(`node grade\\.mjs ${name} --findings '<json>'`));
+});

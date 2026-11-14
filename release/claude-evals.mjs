@@ -393,8 +393,9 @@ export async function writeEvalSuite(canon, outDir, { set = 'planning', runtimeD
     for (const check of checks) await fs.writeFile(path.join(dir, 'graders', `check-${check.id}.md`), pictureGrader(check, `${c.picture.check}.${check.id}`));
     const answers = c.answer_checks ?? [];
     for (const id of answers) await fs.writeFile(path.join(dir, 'graders', `answer-${id}.md`), await answerGrader(id));
+    // With one arm the skill indicator is scored, so a picture case gets it only when its prompt asks for a skill.
     const negative = NEGATIVE.test(c.expected_output);
-    await fs.writeFile(path.join(dir, 'graders', negative ? 'no-plugin-skill.md' : 'plugin-skill.md'), skillGrader(negative));
+    if (!picture || /\$[a-z]/.test(c.prompt)) await fs.writeFile(path.join(dir, 'graders', negative ? 'no-plugin-skill.md' : 'plugin-skill.md'), skillGrader(negative));
     cases.push({ id: c.id, name, graders: c.assertions.length + checks.length + answers.length, ...(bash ? { bash } : {}) });
   }
   return cases;
