@@ -35,38 +35,76 @@ var FPS = 24;
 var N = args.count || 10;
 // Recipe value: Per Layer offset 0:00:00:22.34 at 60 fps = 22.34 / 60 s, about 0.372 s (8.94 frames at 24 fps).
 var STEP = args.step || (22.34 / 60);
-var GROW = 0.4; // ASSUMED: the recipe shows no animation on the staggered layers; each bar grows on over 0.4 s so the stagger can be seen
 var DUR = 5;
 
-var c = P.freshComp("05 stagger layers", 1920, 1080, FPS, DUR, [0.93, 0.92, 0.89]);
-P.solid(c, "background", [0.93, 0.92, 0.89]);
+// Rebuild with artwork (2026-11-14): art from PROOF/05/art (brief.md). Pass args.artLib (art.jsx) and args.artDir.
+// The bars become ten picture cards (slices of one panorama) on paper. In place of the Scale Y grow, each card arrives
+// over 0.45 s: Position y +70 px to rest with a slight overshoot, Opacity 0 -> 100, Scale 94 -> 100 %. The keys sit
+// on card 01 before duplicating; each copy swaps its source (replaceSource keeps keyframes and effects).
+// VERIFY (rebuild): layer.replaceSource(item, false) keeps keyframes and effects; Drop Shadow Opacity's range.
+$.evalFile(args.artLib);
+var ARTDIR = args.artDir;
 
-// One bar: a rounded rectangle whose bottom edge sits on the layer origin, so scaling Y grows it upwards.
-var sh = P.shape(c, "bar 01");
-rect(sh, [96, 420], [0, -210], 18);
-fill(sh, [0.11, 0.12, 0.16, 1]);
-var spacing = 150;
-var x0 = 1920 / 2 - spacing * (N - 1) / 2;
-var baseY = 760;
-P.tf(sh.layer, "ADBE Position").setValue([x0, baseY]);
-var sc = P.tf(sh.layer, "ADBE Scale");
-sc.setValueAtTime(0, [100, 0, 100]);
-sc.setValueAtTime(GROW * 0.6, [100, 112, 100]);
-sc.setValueAtTime(GROW, [100, 100, 100]);
+var c = P.freshComp("05 stagger layers", 1920, 1080, FPS, DUR, ART.hex("#E9E4DD"));
+// Remove the plain build's unused off-white "background" solids (P.freshComp removes the comp, not its solids).
+(function () { var i, it; for (i = app.project.numItems; i >= 1; i--) { it = app.project.item(i); if (it instanceof FootageItem && it.name === "background" && it.mainSource instanceof SolidSource && Math.abs(it.mainSource.color[0] - 0.93) < 0.005 && Math.abs(it.mainSource.color[2] - 0.89) < 0.005 && it.usedIn.length === 0) it.remove(); } })();
 
-// Duplicate the bar up the stack: each copy lands on top, one step to the right.
-// Bottom of the stack = bar 01 (leftmost), top = bar N (rightmost), as in the example (bottom layer keeps 0).
-var cur = sh.layer;
-var k;
+var bg = c.layers.add(ART.footage(ARTDIR, "paper.png", "art 05"));
+bg.name = "background";
+
+function cardName(k) { return "card-" + (k < 10 ? "0" + k : "" + k) + ".png"; }
+var REST_Y = 800, RISE = 70, ARRIVE = 0.45, SC = 50;
+var first = c.layers.add(ART.footage(ARTDIR, cardName(1), "art 05"));
+first.name = "card 01";
+P.tf(first, "ADBE Anchor Point").setValue([136, 1040]);
+var pos = P.tf(first, "ADBE Position");
+pos.setValueAtTime(0, [240, REST_Y + RISE]);
+pos.setValueAtTime(ARRIVE * 0.7, [240, REST_Y - 6]);
+pos.setValueAtTime(ARRIVE, [240, REST_Y]);
+var sc = P.tf(first, "ADBE Scale");
+sc.setValueAtTime(0, [SC * 0.94, SC * 0.94]);
+sc.setValueAtTime(ARRIVE * 0.7, [SC * 1.01, SC * 1.01]);
+sc.setValueAtTime(ARRIVE, [SC, SC]);
+var op = P.tf(first, "ADBE Opacity");
+op.setValueAtTime(0, 0);
+op.setValueAtTime(ARRIVE * 0.55, 100);
+// Ease out: fast start, soft landing on every key after the first.
+var props = [pos, sc, op], pi, kk, dims;
+for (pi = 0; pi < props.length; pi++) {
+  for (kk = 1; kk <= props[pi].numKeys; kk++) {
+    dims = props[pi] === op ? 1 : 1; // spatial Position and 2D Scale take one ease; Scale takes one per dimension
+    var eIn = new KeyframeEase(0, kk === 1 ? 33 : 75), eOut = new KeyframeEase(0, kk === 1 ? 10 : 33);
+    if (props[pi] === sc) props[pi].setTemporalEaseAtKey(kk, [eIn, eIn, eIn], [eOut, eOut, eOut]);
+    else props[pi].setTemporalEaseAtKey(kk, [eIn], [eOut]);
+  }
+}
+// Brief: soft drop shadow so the cards sit on the paper (#2A2420, 30 %, 160 deg, distance 14, softness 30 on screen;
+// the effect works in the layer's own pixels, at 50 % scale, so the values are doubled).
+var ds = P.effect(first, "ADBE Drop Shadow");
+var dsOp = null;
+(function () {
+  var j, pr;
+  for (j = 1; j <= ds.numProperties; j++) {
+    pr = ds.property(j);
+    if (pr.name === "Opacity") { dsOp = pr.hasMax ? pr.maxValue : null; pr.setValue(pr.hasMax && pr.maxValue > 100 ? 0.3 * pr.maxValue : 30); }
+  }
+})();
+ART.setFx(first.property("ADBE Effect Parade").property(1), { "Shadow Color": ART.hex("#2A2420"), "Direction": 160, "Distance": 28, "Softness": 60 });
+
+// Duplicate up the stack: each copy lands on top, one slot (160 px) to the right, with its own slice.
+var cur = first, k, x;
 for (k = 2; k <= N; k++) {
   cur = cur.duplicate();
-  cur.name = "bar " + (k < 10 ? "0" + k : "" + k);
-  P.tf(cur, "ADBE Position").setValue([x0 + spacing * (k - 1), baseY]);
+  cur.name = "card " + (k < 10 ? "0" + k : "" + k);
+  cur.replaceSource(ART.footage(ARTDIR, cardName(k), "art 05"), false);
+  x = 240 + 160 * (k - 1);
+  pos = P.tf(cur, "ADBE Position");
+  for (kk = 1; kk <= pos.numKeys; kk++) pos.setValueAtKey(kk, [x, pos.keyValue(kk)[1]]);
 }
 
 // SUBSTITUTE: the Ctrl+Alt / Cmd+Option drag of the selected layer bars in the timeline (interface only).
 // Same result by property: the i-th layer counted from the bottom of the stack (i = 0 for the bottom) starts at base + i * step.
-// The bars are layers 1..N; the background solid is layer N + 1 and is not staggered.
+// The cards are layers 1..N; the paper is layer N + 1 and is not staggered.
 var base = 0;
 var starts = [];
 var lines = [];
@@ -81,4 +119,4 @@ for (i = 0; i < N; i++) {
   lines.push("layer " + L.index + " " + L.name + " start " + L.startTime + " s (" + (L.startTime * FPS) + " f)");
 }
 
-return { comp: c.name, id: c.id, layers: c.numLayers, step: STEP, stepFrames24: STEP * FPS, starts: starts, report: lines.join("\n") };
+return { dropShadowOpacityMax: dsOp, keysOnCard10: c.layer("card 10").property("ADBE Transform Group").property("ADBE Position").numKeys, comp: c.name, id: c.id, layers: c.numLayers, step: STEP, stepFrames24: STEP * FPS, starts: starts, report: lines.join("\n") };

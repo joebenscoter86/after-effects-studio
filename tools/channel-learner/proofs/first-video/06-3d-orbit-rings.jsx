@@ -16,12 +16,21 @@
 // args.tidy = true uses stepZ = 360 / count (the recipe's suggestion for a single even pass);
 // args.still = true leaves out the orbit expression.
 $.evalFile(args.prelude);
+// Rebuild with artwork (2026-11-14): art from PROOF/06/art (brief.md). Pass args.artLib (art.jsx) and args.artDir.
+// paper.png replaces the grey solid; sphere.png (a 3D footage layer facing the camera, not parented to the roll null so its
+// highlight stays upper left) replaces the black circle at the same place; discs become ink line drawings on paper;
+// a soft contact shadow and two ink sparkles are added.
+// VERIFY (rebuild): star match names ADBE Vector Shape - Star / Star Type, Points, Outer Radius, Inner Radius.
+$.evalFile(args.artLib);
+var ARTDIR = args.artDir;
+var INK = ART.hex("#1A1A1A");
 
 // Local helper (candidate for the prelude: P.fill).
-function fill(sh, color) {
+function fill(sh, color, opacity) {
   var f = P.contents(sh).addProperty("ADBE Vector Graphic - Fill");
   var idx = f.propertyIndex;
   P.contents(sh).property(idx).property("ADBE Vector Fill Color").setValue(color);
+  if (opacity !== undefined) P.contents(sh).property(idx).property("ADBE Vector Fill Opacity").setValue(opacity);
   return idx;
 }
 
@@ -44,7 +53,7 @@ var Z = args.z !== undefined ? args.z : -700;
 var DISC = args.disc || 540; // ASSUMED: sized so the front discs are about 0.4 of the height tall
 var CORE = args.core || 400; // about 540 px on screen at this depth (layout: 0.28 of the width)
 
-var c = P.freshComp("06 3d orbit rings", 1920, 1080, FPS, DUR, [0.86, 0.86, 0.86]);
+var c = P.freshComp("06 3d orbit rings", 1920, 1080, FPS, DUR, ART.hex("#E4E0DA"));
 // Re-runs: freshComp removes the comp but not its solid; remove this script's unused background solid (86% grey) first.
 (function () {
   var j, it;
@@ -55,23 +64,35 @@ var c = P.freshComp("06 3d orbit rings", 1920, 1080, FPS, DUR, [0.86, 0.86, 0.86
     else if (it instanceof FootageItem && it.mainSource instanceof SolidSource && it.name === "06 roll null" && it.usedIn.length === 0) it.remove();
   }
 })();
-// ASSUMED: "pale grey frame" = 86% grey.
-P.solid(c, "background", [0.86, 0.86, 0.86]);
+// Rebuild: paper.png as "background" (replaces the 86 % grey solid).
+var paper = c.layers.add(ART.footage(ARTDIR, "paper.png", "art 06"));
+paper.name = "background";
 
-// Step 1: the centre object, a filled black circle, 3D.
-// ASSUMED: diameter 440 px (the recipe gives no size); the ring's projected half-height is about 263 px, so the near discs overlap the circle's lower edge.
-var core = P.shape(c, "centre circle");
-P.ellipse(core, [CORE, CORE]);
-fill(core, [0, 0, 0, 1]);
+// Brief: soft contact shadow under the ring, #1A1A1A at 10 %, about 0.6 of the width wide at 0.95 down (2D, below the 3D layers).
+var cs = P.shape(c, "contact shadow");
+P.ellipse(cs, [0.6 * 1920, 90]);
+fill(cs, INK);
+P.tf(cs.layer, "ADBE Position").setValue([CX, 0.95 * 1080]);
+P.tf(cs.layer, "ADBE Opacity").setValue(10);
+P.effect(cs.layer, "ADBE Gaussian Blur 2").property("Blurriness").setValue(70); // 45 read as a flat band
+
+// Step 1: the centre object. Rebuild: the obsidian sphere stands where the black circle was (3D, same position and depth,
+// facing the camera). Scale so it is CORE px wide in layer space, as the circle was (about 540 px on screen at Z -700;
+// the brief's 53.2 % assumes Z 0).
+var core = { layer: c.layers.add(ART.footage(ARTDIR, "sphere.png", "art 06")) };
+core.layer.name = "sphere";
 core.layer.threeDLayer = true;
+var SPH = 100 * CORE / 1012;
+P.tf(core.layer, "ADBE Scale").setValue([SPH, SPH, SPH]);
 P.tf(core.layer, "ADBE Position").setValue([CX, CY, Z]);
 
 // Step 2: one disc, white fill, 6 px dark stroke, scale 48%.
 // ASSUMED: ellipse 200 x 200 px before scaling (about 96 px on screen); colours pure white and near-black.
 var disc = P.shape(c, "disc 01");
 P.ellipse(disc, [DISC, DISC]);
-fill(disc, [1, 1, 1, 1]);
-P.stroke(disc, [0.08, 0.08, 0.08, 1], 6);
+// Rebuild (brief): fill #F3F0EB at 88 %, ink stroke #1A1A1A about 2 px on screen (3 px in layer space at 48 % scale, Z -700).
+fill(disc, ART.hex("#F3F0EB").concat([1]), args.discFill || 88);
+P.stroke(disc, INK.concat([1]), args.discStroke || 4); // 3 read as a faint hairline on the first render
 var d = disc.layer;
 
 // Step 4 (part): 3D switch on first, so the transform takes 3-value arrays.
@@ -120,7 +141,27 @@ rollNull.source.name = "06 roll null";
 rollNull.name = "roll null";
 rollNull.threeDLayer = true;
 P.tf(rollNull, "ADBE Position").setValue([CX, CY, Z]);
-for (i = 2; i <= N + 2; i++) c.layer(i).parent = rollNull; // discs are now layers 2..N+1, the circle N+2
+for (i = 2; i <= N + 1; i++) c.layer(i).parent = rollNull; // discs are layers 2..N+1; the sphere (N+2) stays unparented so it does not roll
 P.tf(rollNull, "ADBE Rotate Z").setValue(ROLL);
 
-return { comp: c.name, id: c.id, layers: c.numLayers, discs: N, stepZ: STEPZ, tiltX: TILTX, roll: ROLL, speed: SPEED, sample: sample.join(" | ") };
+// Brief: two four-point ink sparkles at the recipe's positions (0.13 w across at 0.17, 0.35; 0.07 w across at 0.18, 0.79),
+// with a very slow twinkle (scale 95-105 %). 2D, on top of the 3D layers.
+function sparkle(name, across, x, y, phase) {
+  var st = P.shape(c, name);
+  var sp = P.contents(st).addProperty("ADBE Vector Shape - Star");
+  var si = sp.propertyIndex;
+  var g = function () { return P.contents(st).property(si); };
+  g().property("ADBE Vector Star Type").setValue(1);
+  g().property("ADBE Vector Star Points").setValue(4);
+  g().property("ADBE Vector Star Outer Radius").setValue(across / 2);
+  g().property("ADBE Vector Star Inner Radius").setValue(across * 0.085);
+  fill(st, INK);
+  P.tf(st.layer, "ADBE Position").setValue([x, y]);
+  P.tf(st.layer, "ADBE Scale").expression = "var s = 100 + 5 * Math.sin(2 * Math.PI * time / 2.5 + " + phase + "); [s, s];";
+  return st.layer;
+}
+sparkle("sparkle big", 0.13 * 1920, 0.17 * 1920, 0.35 * 1080, 0);
+sparkle("sparkle small", 0.07 * 1920, 0.18 * 1920, 0.79 * 1080, 2);
+
+var order = []; for (i = 1; i <= c.numLayers; i++) if (i < 4 || i > c.numLayers - 4) order.push(i + " " + c.layer(i).name);
+return { order: order, comp: c.name, id: c.id, layers: c.numLayers, discs: N, stepZ: STEPZ, tiltX: TILTX, roll: ROLL, speed: SPEED, sample: sample.join(" | ") };

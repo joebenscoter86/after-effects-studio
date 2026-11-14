@@ -9,6 +9,15 @@
 // VERIFY: the text layer's anchor and position are in pixels with no scale or rotation applied, so shifting both by the same
 //         amount leaves the words where they were.
 $.evalFile(args.prelude);
+// Rebuild with artwork (2026-11-14): art from PROOF/04/art (brief.md). Pass args.artLib (art.jsx) and args.artDir.
+// VERIFY (rebuild): SpaceMono-Regular is not installed; SpaceMono-Bold is. characterRange sets the index's font and size.
+$.evalFile(args.artLib);
+var ARTDIR = args.artDir;
+var BG = ART.hex("#080C0A"), WORD = ART.hex("#BEF0D7");
+// Index colour: #BEF0D7 at 60 % over the background (per-character opacity is not scriptable).
+var IDX = [0.6 * WORD[0] + 0.4 * BG[0], 0.6 * WORD[1] + 0.4 * BG[1], 0.6 * WORD[2] + 0.4 * BG[2]];
+// ASSUMED: phrases for the readout (the recipe's steps repeat one phrase; the brief asks for a readout of ideas).
+var PHRASES = ["Bold Moves", "Clear Goals", "Fresh Ideas", "Quiet Focus", "Sharp Edits", "Big Picture", "Small Wins", "Next Steps", "Open Doors", "True North", "Deep Work"];
 
 var N = args.copies || 55;          // recipe: 55 copies
 var STEP = args.step || 6.533;      // recipe: settles at -6.5 per layer (0, -6.5, -13.1, -19.6 ... -58.8)
@@ -33,27 +42,48 @@ var oldNullSrc = [];
     }
   }
 })();
-var c = P.freshComp("04 carousel by rotation", 1920, 1080, 24, 5, [0.03, 0.04, 0.04]);
+var c = P.freshComp("04 carousel by rotation", 1920, 1080, 24, 5, BG);
+(function () { var i, it; for (i = app.project.numItems; i >= 1; i--) { it = app.project.item(i); if (it instanceof FootageItem && (it.name === "04 background" || it.name === "04 title shade") && it.usedIn.length === 0) it.remove(); } })();
+
+// Brief: background solid #080C0A with a faint radial Ramp, #12201A at the hub fading to #080C0A by the right edge.
+var bg = P.solid(c, "04 background", BG);
+bg.name = "background";
+var rp = P.effect(bg, "ADBE Ramp");
+ART.setFx(rp, { "Start of Ramp": PIVOT, "Start Color": ART.hex("#12201A"), "End of Ramp": [1920, 540], "End Color": BG, "Ramp Shape": 2 });
+
+// Brief: dial at 74.5 % centred on the hub, darkened (Exposure -0.4); parented to the null below so it turns with the words.
+var dial = c.layers.add(ART.footage(ARTDIR, "dial.png", "art 04"));
+dial.name = "dial";
+P.tf(dial, "ADBE Scale").setValue([74.5, 74.5]);
+P.tf(dial, "ADBE Position").setValue(PIVOT);
+ART.setFx(P.effect(dial, "ADBE Exposure2"), { "Exposure": args.dialExposure !== undefined ? args.dialExposure : -0.4 });
 
 // Step 1: one text layer, a two-word phrase in a bold geometric sans, light mint.
 // Run fix (layout line): middle word about 0.32 of the width wide (614 px), cap height about 0.066h (71 px): size 107 measures 613 px wide.
 // Run fix: Plus Jakarta Sans is not installed; Poppins-Bold (installed) stands in.
+// Rebuild: brief type, Poppins Bold, cap height 0.066 h (size 102), #BEF0D7.
 var l = P.text(c, "Bold Moves", {
-  size: args.size || 107,
-  color: [0.78, 0.96, 0.86],
+  size: args.size || 102,
+  color: WORD,
   font: args.font || "Poppins-Bold",
   pos: [960, 540],
   name: "phrase"
 });
+// Rebuild: left-justified so each copy can carry its own phrase and index with its left end on the arc.
+var tdp0 = l.property("ADBE Text Properties").property("ADBE Text Document");
+var td0 = tdp0.value;
+td0.justification = ParagraphJustification.LEFT_JUSTIFY;
+tdp0.setValue(td0);
 var r0 = l.sourceRectAtTime(0, false);
 var TEXT_W = r0.width;
 // Place the words so their left end is at LEFT_END, centred 0.50 down.
-P.tf(l, "ADBE Position").setValue([LEFT_END + TEXT_W / 2, 540]);
+P.tf(l, "ADBE Anchor Point").setValue([r0.left, r0.top + r0.height / 2]);
+P.tf(l, "ADBE Position").setValue([LEFT_END, 540]);
 
 // Step 2: move the anchor to the wheel's centre without moving the text.
 // SUBSTITUTE: the Pan Behind (Anchor Point) tool drag; anchor and position are shifted by the same amount instead.
 var ap = P.tf(l, "ADBE Anchor Point").value;
-var SHIFT = LEFT_END + TEXT_W / 2 - PIVOT[0];
+var SHIFT = LEFT_END - PIVOT[0];
 P.tf(l, "ADBE Anchor Point").setValue([ap[0] - SHIFT, ap[1]]);
 P.tf(l, "ADBE Position").setValue(PIVOT);
 
@@ -65,12 +95,29 @@ for (i = 1; i < N; i++) {
 
 // Steps 4-6: top copy 0 deg, each one below a further -STEP.
 // SUBSTITUTE: the Ctrl+Alt / Cmd+Option drag on Rotation across the selected layers; a loop sets the same values.
-var k, lay, num;
+var k, lay, num, indexNote = "ok";
 for (k = 1; k <= N; k++) {
   lay = c.layer(k);
   num = (k < 10 ? "0" : "") + k;
   lay.name = "phrase " + num;
   P.tf(lay, "ADBE Rotate Z").setValue(-(k - 1) * STEP);
+  // Rebuild: each copy reads its own phrase plus a small index (Space Mono, 0.016 h cap height, 60 %).
+  var ph = PHRASES[(k - 1) % PHRASES.length];
+  var tdp = lay.property("ADBE Text Properties").property("ADBE Text Document");
+  var td = tdp.value;
+  td.text = ph + "  " + num;
+  tdp.setValue(td);
+  try {
+    td = tdp.value;
+    // The two spaces take the index's small size too, so the number sits close after the phrase.
+    var cr = td.characterRange(ph.length, ph.length + 4);
+    cr.font = "SpaceMono-Bold";
+    cr.fontSize = args.indexSize || 26;
+    cr.fillColor = IDX;
+    tdp.setValue(td);
+  } catch (e) { indexNote = e.toString(); }
+  // Brief: the middle (level) word at full opacity, falling to about 55 % by the frame edges (about 20 deg).
+  P.tf(lay, "ADBE Opacity").expression = 'var a = transform.rotation + (hasParent ? parent.transform.rotation : 0);\na = ((a % 360) + 540) % 360 - 180;\n100 - 45 * Math.min(Math.abs(a) / 20, 1);';
 }
 
 // Finished example: copies parented to a null; how the null is animated is not shown.
@@ -80,6 +127,7 @@ P.tf(n, "ADBE Position").setValue(PIVOT);
 for (k = 2; k <= N + 1; k++) {
   c.layer(k).parent = n;
 }
+c.layer("dial").parent = n;
 // ASSUMED: the null turns 4 steps over the comp, eased, so four words scroll past the 0 deg slot.
 // Review fix: the turn is negative (anticlockwise), so the words on the right of the hub move up, as in the tutorial.
 var rot = P.tf(n, "ADBE Rotate Z");
@@ -91,12 +139,43 @@ rot.setTemporalEaseAtKey(2, [ease], [ease]);
 
 // Layout: a title block on the left, 0.04 to 0.49 of the width, centred 0.49 down. Not part of the technique.
 // ASSUMED: words, white, Poppins-Bold; sized to the block's width.
-var tt = P.text(c, "Text\rCarousel", { size: args.titleSize || 150, color: [1, 1, 1], font: args.font || "Poppins-Bold", pos: [0.265 * 1920, 0.49 * 1080], name: "title" });
+// Rebuild: brief places the title over the dial, 0.04 to 0.30 across, Poppins Bold cap height 0.07 h (size 108),
+// #F5F5F5, two lines, left-aligned, centred 0.49 down; the pointer and a soft dark radial behind the title.
+var pt = c.layers.add(ART.footage(ARTDIR, "pointer.png", "art 04"));
+pt.name = "pointer";
+P.tf(pt, "ADBE Scale").setValue([9, 9]);
+P.tf(pt, "ADBE Position").setValue([0.55 * 1920, 540]);
+ART.glow(pt, 60, 15, 0.5);
+
+var ts = P.solid(c, "04 title shade", BG);
+ts.name = "title shade";
+var mk = ts.property("ADBE Mask Parade").addProperty("ADBE Mask Atom");
+var ms = new Shape(), mx = 330, my = 0.49 * 1080, rx = 330, ry = 200, kk = 0.5523;
+ms.vertices = [[mx, my - ry], [mx + rx, my], [mx, my + ry], [mx - rx, my]];
+ms.inTangents = [[-rx * kk, 0], [0, -ry * kk], [rx * kk, 0], [0, ry * kk]];
+ms.outTangents = [[rx * kk, 0], [0, ry * kk], [-rx * kk, 0], [0, -ry * kk]];
+ms.closed = true;
+mk.property("ADBE Mask Shape").setValue(ms);
+ts.property("ADBE Mask Parade").property(1).property("ADBE Mask Feather").setValue([200, 200]);
+P.tf(ts, "ADBE Opacity").setValue(args.titleShade !== undefined ? args.titleShade : 50);
+
+var tt = P.text(c, "Text\rCarousel", { size: args.titleSize || 108, color: ART.hex("#F5F5F5"), font: args.font || "Poppins-Bold", pos: [0.265 * 1920, 0.49 * 1080], name: "title" });
+var ttp = tt.property("ADBE Text Properties").property("ADBE Text Document");
+var ttd = ttp.value;
+ttd.justification = ParagraphJustification.LEFT_JUSTIFY;
+ttp.setValue(ttd);
 var tr = tt.sourceRectAtTime(0, false);
+P.tf(tt, "ADBE Anchor Point").setValue([tr.left, tr.top + tr.height / 2]);
+P.tf(tt, "ADBE Position").setValue([0.04 * 1920, 0.49 * 1080]);
+
+// Brief layer order: background, dial, words, pointer, title (shade just under the title).
+bg.moveToEnd();
+c.layer("dial").moveBefore(bg);
 
 var removed = 0;
 for (k = 0; k < oldNullSrc.length; k++) {
   if (oldNullSrc[k] && oldNullSrc[k].usedIn.length === 0) { oldNullSrc[k].remove(); removed++; }
 }
 
-return { removedOldNullSolids: removed, comp: c.name, id: c.id, layers: c.numLayers, copies: N, step: STEP, pivot: PIVOT, textW: TEXT_W, textH: r0.height, titleW: tr.width, titleH: tr.height, font: l.property("ADBE Text Properties").property("ADBE Text Document").value.font };
+var order = []; for (k = 1; k <= c.numLayers; k++) if (k < 4 || k > c.numLayers - 4) order.push(k + " " + c.layer(k).name);
+return { order: order, indexNote: indexNote, sample: c.layer("phrase 03").property("ADBE Text Properties").property("ADBE Text Document").value.text, removedOldNullSolids: removed, comp: c.name, id: c.id, layers: c.numLayers, copies: N, step: STEP, pivot: PIVOT, textW: TEXT_W, textH: r0.height, titleW: tr.width, titleH: tr.height, font: l.property("ADBE Text Properties").property("ADBE Text Document").value.font };

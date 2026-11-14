@@ -16,6 +16,18 @@
 // VERIFY: layer.duplicate() keeps the shape contents and returns the new layer.
 // VERIFY (run): "Poppins-Light" is not installed (silently substituted); the script uses Poppins-Regular.
 $.evalFile(args.prelude);
+// Rebuild with artwork (2026-11-14): art from PROOF/02/art (brief.md). Pass args.artLib (art.jsx) and args.artDir.
+$.evalFile(args.artLib);
+var ARTDIR = args.artDir;
+var COOL = ART.hex("#F4F6FA");
+function glowCool(layer, radius) {
+  var fx = ART.glow(layer, 60, radius, 0.6);
+  // Brief, optional: tint the glow very slightly cool (#BFEFFF). Glow Colors 2 = A & B Colors.
+  var miss = ART.setFx(fx, { "Glow Colors": 2 });
+  fx = layer.property("ADBE Effect Parade").property(fx.propertyIndex);
+  miss = miss.concat(ART.setFx(fx, { "Color A": ART.hex("#BFEFFF"), "Color B": ART.hex("#F4F6FA") }));
+  return miss;
+}
 
 // Own helpers: the prelude's P.shape / P.contents handle only the first group. Candidates for the prelude.
 function addGroup(layer, name) {
@@ -46,10 +58,18 @@ var D = args.diameter || 513;
 var TRIM_START = 77; // recipe
 var GAP = (TRIM_START / 100) * Math.PI * D; // recipe build notes: Gap = Start% x circumference (about 1136.9 at 470 px)
 
-var c = P.freshComp("02 line with end dots", 1920, 1080, 24, 4, [0.03, 0.04, 0.03]);
+var c = P.freshComp("02 line with end dots", 1920, 1080, 24, 4, ART.hex("#08080A"));
+(function () { var i, it; for (i = app.project.numItems; i >= 1; i--) { it = app.project.item(i); if (it instanceof FootageItem && it.name === "02 arcs null" && it.usedIn.length === 0) it.remove(); } })();
 
-// Stand-in: a short white word in the middle. ASSUMED: word, size and font.
-P.text(c, "Orbit", { size: args.size || 70, color: [1, 1, 1], font: args.font || "Poppins-Regular", name: "label", pos: [960, 540] });
+// Brief: backdrop at 100 %, no offset, slow push-in 100 -> 103 %.
+var bd = c.layers.add(ART.footage(ARTDIR, "backdrop.png", "art 02"));
+bd.name = "backdrop";
+P.tf(bd, "ADBE Scale").setValueAtTime(0, [100, 100]);
+P.tf(bd, "ADBE Scale").setValueAtTime(c.duration, [103, 103]);
+
+// Brief: Poppins Regular, cool white #F4F6FA, soft glow.
+P.text(c, args.word || "Orbit", { size: args.size || 70, color: COOL, font: args.font || "Poppins-Regular", name: "label", pos: [960, 540] });
+var glowMiss = glowCool(c.layer("label"), 18);
 
 var l = c.layers.addShape();
 l.name = "arc 1";
@@ -57,7 +77,7 @@ l.name = "arc 1";
 // Step 2: the solid line group, made first so it sits above the dot group ("Ellipse 2" above "Ellipse 1").
 var gLine = addGroup(l, "Ellipse 2 line");
 addEllipse(l, gLine, [D, D]);
-addStroke(l, gLine, [1, 1, 1, 1], 3, 2); // Stroke Width 3, Round Cap, no dashes
+addStroke(l, gLine, COOL.concat([1]), 3, 2); // Stroke Width 3, Round Cap, no dashes
 // Step 3: Trim Paths inside the line group: Start 77, End 100, Offset 0.
 var t = groupContents(l, gLine).addProperty("ADBE Vector Filter - Trim");
 var tIdx = t.propertyIndex;
@@ -68,7 +88,7 @@ groupContents(l, gLine).property(tIdx).property("ADBE Vector Trim Offset").setVa
 // Step 1: the dotted group, as in technique 01 (Stroke Width 18, Round Cap, Dash 0).
 var gDots = addGroup(l, "Ellipse 1 dots");
 addEllipse(l, gDots, [D, D]);
-var sDots = addStroke(l, gDots, [1, 1, 1, 1], 18, 2);
+var sDots = addStroke(l, gDots, COOL.concat([1]), 18, 2);
 // Step 4: Gap raised until only the two end dots are left (worked out, not eyeballed).
 groupContents(l, gDots).property(sDots).property("ADBE Vector Stroke Dashes").addProperty("ADBE Vector Stroke Dash 1");
 groupContents(l, gDots).property(sDots).property("ADBE Vector Stroke Dashes").property("ADBE Vector Stroke Dash 1").setValue(0);
@@ -80,6 +100,8 @@ groupContents(l, gDots).property(sDots).property("ADBE Vector Stroke Dashes").pr
 // between about 77 and 110 deg from the right. Unrotated, the 77-100% arc spans 90..172.8 deg (counter-clockwise from
 // the right); layer Rotation r (clockwise on screen) moves it to 90-r..172.8-r. Arcs at 110-193, 231-314, 355-78 deg.
 // ASSUMED: which of the 38 and 44 deg gaps comes first (not given).
+// Glow on the arc layer before duplicating so all three carry it (dots must stay distinct).
+glowMiss = glowMiss.concat(glowCool(l, args.arcGlowRadius || 15));
 var l2 = l.duplicate();
 l2.name = "arc 2";
 var l3 = l.duplicate();
@@ -90,6 +112,7 @@ P.tf(l3, "ADBE Rotate Z").setValue(-265);
 
 var n = c.layers.addNull(c.duration);
 n.name = "arcs null";
+n.source.name = "02 arcs null";
 P.tf(n, "ADBE Position").setValue([c.width / 2, c.height / 2]);
 l.parent = n;
 l2.parent = n;
@@ -103,5 +126,8 @@ var ease = new KeyframeEase(0, 50);
 rot.setTemporalEaseAtKey(1, [ease], [ease]);
 rot.setTemporalEaseAtKey(2, [ease], [ease]);
 
+// Brief layer order: backdrop, arcs, word (word on top).
+c.layer("label").moveToBeginning();
 var lb = c.layer("label").sourceRectAtTime(0, false);
-return { comp: c.name, id: c.id, layers: c.numLayers, diameter: D, gap: GAP, labelW: lb.width, order: [c.layer(1).name, c.layer(2).name, c.layer(3).name, c.layer(4).name, c.layer(5).name], groups: [l.property("ADBE Root Vectors Group").property(1).name, l.property("ADBE Root Vectors Group").property(2).name], composite: groupContents(l, gLine).property(2).property("ADBE Vector Composite Order").value };
+var order = []; for (var li = 1; li <= c.numLayers; li++) order.push(c.layer(li).name);
+return { glowMiss: glowMiss, allOrder: order, comp: c.name, id: c.id, layers: c.numLayers, diameter: D, gap: GAP, labelW: lb.width, order: [c.layer(1).name, c.layer(2).name, c.layer(3).name, c.layer(4).name, c.layer(5).name], groups: [l.property("ADBE Root Vectors Group").property(1).name, l.property("ADBE Root Vectors Group").property(2).name], composite: groupContents(l, gLine).property(2).property("ADBE Vector Composite Order").value };
