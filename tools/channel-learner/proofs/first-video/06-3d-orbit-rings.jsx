@@ -31,9 +31,9 @@ var N = args.count || 36;
 var STEPZ = args.tidy ? 360 / N : (args.stepZ !== undefined ? args.stepZ : 41.1);
 // Review correction: the recipe's 307 shows the ring from too high (its hole opens up); the picture is nearer edge-on.
 var TILTX = args.tiltX !== undefined ? args.tiltX : 292;
-var ROLL = args.roll !== undefined ? args.roll : 6; // degrees, AE Z Rotation of a parent null: the ring's left end sits higher than its right
-var SPEED = args.speed !== undefined ? args.speed : 30; // degrees a second round the ring (was 72)
-var CX = 960, CY = args.cy || 505; // set so the ring spans about 0.16-0.95 of the height at tilt 292
+var ROLL = args.roll !== undefined ? args.roll : 17; // (was 6; review: the long axis leans 16-17) degrees, AE Z Rotation of a parent null: the ring's left end sits higher than its right
+var SPEED = args.speed !== undefined ? args.speed : -19; // degrees a second round the ring; negative so the front discs travel left to right (was 72, then 30)
+var CX = 960, CY = args.cy || 512; // at tilt 292 and roll 17 the ring spans about 0.10-0.96 of the height (was 505 at roll 6)
 // Layout (recipe's layout: line): ring 0.09-0.90 of the width, 0.16-0.96 of the height, front discs about 0.45 of the height tall;
 // sphere about 0.28 of the width across. With the recipe's anchor 910 and scale 48 the ring is only about 980 px wide under the
 // default camera, so the whole build sits closer to the camera (Z) to enlarge it in perspective, keeping the recipe's values.

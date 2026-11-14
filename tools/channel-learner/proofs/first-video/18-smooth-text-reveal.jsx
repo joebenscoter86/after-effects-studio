@@ -49,9 +49,11 @@ var txt = P.text(c, "Every word arrives softly\reach in its turn", {
 var f = c.frameDuration;
 txt.inPoint = 29 * f; // the layer's in point is 0:00:01:05, where the first Offset key sits
 
-// Step 6 note: the recipe's text is parented to a null, and mid-reveal the block sits about 11 % of the height (119 px)
-// higher than when finished. ASSUMED: the null travels down 238 px over the reveal with a light ease at both ends, so the
-// block is 119 px high at the middle of the reveal. args.still leaves it out; args.travel overrides the distance.
+// Step 6 note: the recipe's text is parented to a null, and mid-reveal the block sits about 11 % of the height higher than
+// when finished. Review correction: the block does not drift through the whole reveal (it was 238 px, eased lightly, over
+// frames 29-78). It holds 126 px (11.7 % of the height) above its final place while the words arrive, then drops into place
+// over about a third of a second as the last word settles, with an eased stop.
+// args.still leaves it out; args.travel overrides the distance; args.dropStart / args.dropEnd override the frames.
 if (!args.still) {
   var blockNull = c.layers.addNull(c.duration);
   blockNull.name = "block null";
@@ -59,10 +61,13 @@ if (!args.still) {
   txt.parent = blockNull;
   var np = P.tf(blockNull, "ADBE Position");
   var base = np.value;
-  np.setValueAtTime(29 * f, [base[0], base[1] - (args.travel !== undefined ? args.travel : 238)]);
-  np.setValueAtTime(78 * f, [base[0], base[1]]);
-  np.setTemporalEaseAtKey(1, [new KeyframeEase(0, 20)], [new KeyframeEase(0, 20)]);
-  np.setTemporalEaseAtKey(2, [new KeyframeEase(0, 20)], [new KeyframeEase(0, 20)]);
+  var TRAVEL = args.travel !== undefined ? args.travel : 126;
+  var DROP_A = args.dropStart !== undefined ? args.dropStart : 53; // frame the drop starts (the last word begins to show)
+  var DROP_B = args.dropEnd !== undefined ? args.dropEnd : 62;     // frame the block reaches its final place
+  np.setValueAtTime(DROP_A * f, [base[0], base[1] - TRAVEL]); // before this key the value holds, so the block is still
+  np.setValueAtTime(DROP_B * f, [base[0], base[1]]);
+  np.setTemporalEaseAtKey(1, [new KeyframeEase(0, 25)], [new KeyframeEase(0, 25)]); // a short ease away
+  np.setTemporalEaseAtKey(2, [new KeyframeEase(0, 75)], [new KeyframeEase(0, 75)]); // a long eased stop
 }
 
 // Steps 1 to 3: one animator with Position and Opacity.
