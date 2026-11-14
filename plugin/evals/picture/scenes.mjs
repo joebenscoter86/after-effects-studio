@@ -6,7 +6,10 @@
 // colour.
 //
 // Nothing here is footage: every shot is solids, masks and effects built by
-// the setup script. Coordinates are comp pixels, origin top left.
+// the setup script. The one exception is FOOTAGE (eval 27), whose plate is a
+// clip handed to the suite writer at run time (an environment variable); no
+// clip is in the repository. Coordinates are comp pixels, origin top left,
+// except FOOTAGE's, which are shares of the clip's width and height.
 
 const r2 = (v) => Math.round(v * 100) / 100;
 
@@ -384,4 +387,99 @@ export const SEAT = {
   },
 };
 
-export const SCENES = { keying: KEYING, grade: GRADE, over: OVER, finish: FINISH, review: REVIEW, seat: SEAT };
+/**
+ * Read motion and sound (eval 26): one comp, 1920x1080 at 30 fps, 6 s, on a
+ * dark ground, for motion.curve and sound.sync.
+ *   eased: card A slides right once, eased at both ends (influence 66 %);
+ *     nothing a viewer would flag.
+ *   linear: card B slides left once with linear keys: it starts and stops at
+ *     full speed, the move with no ease.
+ *   beats: three comp markers ("sound: beat 1" to "beat 3", sound.markers'
+ *     form) where three hits land in the sound; badge 1 and badge 2 appear
+ *     (their in-points) on their beats, badge 3 appears four frames after
+ *     beat 3: the late hit.
+ * Card A and card B move at different times, and the badges do not move.
+ */
+export const CURVE = {
+  id: "curve-sync",
+  version: 1,
+  width: 1920,
+  height: 1080,
+  fps: 30,
+  frames: 180,
+  bg: [0.1, 0.11, 0.14],
+  eased: { name: "card A", colour: [0.85, 0.55, 0.3], size: [240, 160], y: 280, fromX: 300, toX: 1200, fromFrame: 15, toFrame: 45, influence: 66 },
+  linear: { name: "card B", colour: [0.3, 0.6, 0.85], size: [240, 160], y: 560, fromX: 1600, toX: 700, fromFrame: 60, toFrame: 90 },
+  beats: [
+    { frame: 120, comment: "sound: beat 1" },
+    { frame: 135, comment: "sound: beat 2" },
+    { frame: 150, comment: "sound: beat 3" },
+  ],
+  badges: [
+    { name: "badge 1", inFrame: 120, x: 500 },
+    { name: "badge 2", inFrame: 135, x: 960 },
+    { name: "badge 3", inFrame: 154, x: 1420 },
+  ],
+  badge: { size: 140, y: 860, colour: [0.95, 0.85, 0.2] },
+};
+
+/**
+ * Sit an element in real footage (eval 27). The plate is a clip handed to the
+ * suite writer (the environment variable `env`), never one in the repository:
+ * a locked-off shot with grain and some still edges, at most `maxSide` px on
+ * its longer side, at least `minFrames` frames at a constant rate. The comp
+ * takes the clip's own size and rate. The element is the seat eval's clean
+ * card with a dark stripe, placed by share of the frame (x and width of the
+ * width, y and height of the height), so the same element fits any clip.
+ * The plate's truth is measured from the clip itself when the suite is
+ * written (footage-truth.json): its frame-to-frame grain and edge width in
+ * the stillest blocks of a grid of `blocks` across its shorter side, leaving
+ * out the blocks under the card.
+ */
+export const FOOTAGE = {
+  id: "seat-footage",
+  version: 1,
+  env: "COMP_ROOM_EVAL_FOOTAGE",
+  maxSide: 1920,
+  minFrames: 2,
+  seconds: 2,
+  bg: [0, 0, 0],
+  layer: "element",
+  plateLayer: "plate",
+  element: {
+    card: { colour: [0.78, 0.76, 0.72], box: { x: 0.55, y: 0.08, width: 0.35, height: 0.26 } },
+    stripe: { colour: [0.15, 0.15, 0.16], box: { x: 0.55, y: 0.18, width: 0.35, height: 0.06 } },
+  },
+  /** Inside the card, holding the stripe's two edges. */
+  region: { x: 0.58, y: 0.12, width: 0.29, height: 0.18 },
+  gradeFrames: [0, 1],
+  blocks: 6,
+  /** Blocks this close to the card (px) are left out, so a blur on the element does not reach them. */
+  margin: 24,
+};
+
+/** FOOTAGE's boxes in pixels for a clip of `width` x `height` (whole pixels). */
+export function footageLayout(width, height, scene = FOOTAGE) {
+  const px = (b) => {
+    const x = Math.round(b.x * width), y = Math.round(b.y * height);
+    return { x, y, width: Math.round((b.x + b.width) * width) - x, height: Math.round((b.y + b.height) * height) - y };
+  };
+  return { card: px(scene.element.card.box), stripe: px(scene.element.stripe.box), region: px(scene.region) };
+}
+
+/** The grid of plate blocks for a clip (square, `blocks` across the shorter side), without those near the card. */
+export function footageBlocks(width, height, scene = FOOTAGE) {
+  const size = Math.floor(Math.min(width, height) / scene.blocks);
+  const { card } = footageLayout(width, height, scene);
+  const m = scene.margin;
+  const out = [];
+  for (let y = 0; y + size <= height; y += size) {
+    for (let x = 0; x + size <= width; x += size) {
+      const near = x < card.x + card.width + m && x + size > card.x - m && y < card.y + card.height + m && y + size > card.y - m;
+      if (!near) out.push({ x, y, width: size, height: size });
+    }
+  }
+  return out;
+}
+
+export const SCENES = { keying: KEYING, grade: GRADE, over: OVER, finish: FINISH, review: REVIEW, seat: SEAT, curve: CURVE, footage: FOOTAGE };

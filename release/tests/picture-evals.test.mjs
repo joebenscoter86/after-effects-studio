@@ -14,7 +14,7 @@ import vm from 'node:vm';
 
 import {
   THRESHOLDS, checkIds, formatVerdict, gradeFinish, gradeGrade, gradeKeying, gradeOver, gradeReview, gradeSeat, loadRuntime, renderPlan, EVALS,
-  REVIEW_TRUTH, REVIEW_KINDS, SEVERITIES,
+  REVIEW_TRUTH, REVIEW_KINDS, SEVERITIES, gradeCurve, CURVE_TRUTH, CURVE_KINDS, gradeDir,
 } from '../../plugin/evals/picture/checks.mjs';
 import { SCENES, GRADE, decodeBuild, reviewBuild } from '../../plugin/evals/picture/scenes.mjs';
 import { gradeFrame, keyedFrame, keyingSource, overFile, seatFrame, undoGradeError, writePng } from './picture-model.mjs';
@@ -386,4 +386,94 @@ test('review: the grader CLI prints the findings format, grades the file once', 
   const out = (await run(process.execPath, [cli, 'review'], { cwd })).stdout;
   assert.match(out, /PICTURE-RESULT review 2\/2 checks passed/);
   await assert.rejects(run(process.execPath, [cli, 'review'], { cwd }), (e) => e.code === 3);
+});
+
+// ---------------------------------------------------------------------------
+// Read motion and sound (eval 26): graded on the findings file
+// ---------------------------------------------------------------------------
+
+const CURVE_FOUND = {
+  findings: [
+    { kind: 'no-ease', layer: 'card B', from: 2.0, to: 3.0, note: 'motion.curve: starts and stops at full speed' },
+    { kind: 'late', layer: 'badge 3', from: 5.133, frames: 4, note: 'sound.sync: 4 frames after beat 3' },
+  ],
+};
+const curveWith = (change) => ({ findings: change(CURVE_FOUND.findings.map((f) => ({ ...f }))) });
+
+test('curve: the scene puts the linear move and the late hit where the truth says', () => {
+  const c = SCENES.curve;
+  assert.deepEqual(CURVE_TRUTH.linear, { layer: 'card B', from: 2, to: 3 });
+  assert.equal(CURVE_TRUTH.late.frames, 4);
+  assert.deepEqual(c.badges.map((b, i) => b.inFrame - c.beats[i].frame), [0, 0, 4]);
+  assert.ok(c.eased.toFrame < c.linear.fromFrame, 'the two moves do not overlap');
+  assert.ok(CURVE_KINDS.includes('no-ease') && CURVE_KINDS.includes('late'));
+});
+
+test('curve: the linear move and the late hit named, nothing else, passes every check', () => {
+  const r = gradeCurve(CURVE_FOUND);
+  assert.ok(r.setup.every((x) => x.pass));
+  assert.deepEqual(failing(r.checks), []);
+  assert.deepEqual(r.checks.map((c) => c.id), checkIds('curve'));
+  // the late hit given as a time alone: its frames follow from the beat
+  assert.deepEqual(failing(gradeCurve(curveWith((f) => [f[0], { kind: 'late', layer: 'Badge 3', from: 5.1333 }])).checks), []);
+});
+
+test('curve: a bad findings file fails the check it should, and an unreadable one fails them all', () => {
+  assert.deepEqual(failing(gradeCurve(curveWith((f) => [f[1]])).checks), ['linear-move']);
+  assert.deepEqual(failing(gradeCurve(curveWith((f) => [{ ...f[0], layer: 'card A' }, f[1]])).checks), ['eased-quiet', 'linear-move']);
+  assert.deepEqual(failing(gradeCurve(curveWith((f) => [f[0]])).checks), ['late-hit']);
+  assert.deepEqual(failing(gradeCurve(curveWith((f) => [f[0], { ...f[1], frames: 8 }])).checks), ['late-hit']);
+  assert.deepEqual(failing(gradeCurve(curveWith((f) => [...f, { kind: 'early', layer: 'badge 1', from: 3.9, frames: -3 }])).checks), ['on-beat-quiet']);
+  assert.deepEqual(failing(gradeCurve(curveWith((f) => [...f, { kind: 'overshoot', layer: 'card A', from: 1.5 }])).checks), ['eased-quiet']);
+  for (const bad of [null, [], { findings: 'none' }, curveWith((f) => [{ ...f[0], kind: 'linear' }]), curveWith((f) => [{ ...f[0], layer: '' }])]) {
+    const r = gradeCurve(bad);
+    assert.equal(r.setup[0].pass, false);
+    assert.deepEqual(failing(r.checks), ['eased-quiet', 'late-hit', 'linear-move', 'on-beat-quiet']);
+  }
+});
+
+test('curve: the plan names the findings file and its form, and gradeDir reads it', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'curve-'));
+  const plan = renderPlan('curve', dir);
+  assert.ok(plan.includes(JSON.stringify(path.join(dir, 'findings.json'))));
+  for (const k of CURVE_KINDS) assert.ok(plan.includes(`"${k}"`), k);
+  assert.match(plan, /curve\.late-hit: .*limit 3 to 5 frames/);
+  assert.equal((await gradeDir('curve', dir, rt)).setup[0].pass, false);
+  await fs.writeFile(path.join(dir, 'findings.json'), JSON.stringify(CURVE_FOUND));
+  assert.deepEqual(failing((await gradeDir('curve', dir, rt)).checks), []);
+});
+
+test('the findings evals take their findings on the grader\'s command line, once, and refuse bad JSON without grading', async () => {
+  const cwd = await fs.mkdtemp(path.join(os.tmpdir(), 'findings-'));
+  const grader = path.join(PICTURE, 'grade.mjs');
+  const doc = JSON.stringify({ findings: [{ kind: 'no-ease', layer: 'card B', from: 2.0 }, { kind: 'late', layer: 'badge 3', from: 5.133, frames: 4, note: "it's late" }] });
+  await assert.rejects(run(process.execPath, [grader, 'curve', '--findings', '{not json'], { cwd }), (e) => e.code === 2 && /not JSON/.test(e.stderr));
+  await assert.rejects(fs.access(path.join(cwd, 'picture-grade', 'verdict.txt')));
+  const { stdout } = await run(process.execPath, [grader, 'curve', '--findings', doc], { cwd });
+  assert.match(stdout, /^PICTURE-RESULT curve 4\/4 checks passed$/m);
+  assert.deepEqual(JSON.parse(await fs.readFile(path.join(cwd, 'picture-grade', 'findings.json'), 'utf8')), JSON.parse(doc));
+  await assert.rejects(run(process.execPath, [grader, 'curve', '--findings', doc], { cwd }), (e) => e.code === 3);
+  await assert.rejects(run(process.execPath, [grader, 'seat', '--findings', doc], { cwd }), (e) => e.code === 2 && /graded on its renders/.test(e.stderr));
+  for (const name of ['finish', 'review', 'curve']) assert.match(renderPlan(name, cwd), new RegExp(`node grade\\.mjs ${name} --findings '<json>'`));
+});
+
+test('the grader reads renders as ae_render_frame names them: <stem>_<call id>_<index>.png, the newest call when there are several', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'callid-'));
+  const { findRender } = await import('../../plugin/evals/picture/checks.mjs');
+  // an earlier call, before the change: clean and sharp; the final call: matched
+  const [clean0, clean1] = seatPair({});
+  const [good0, good1] = seatPair(MATCHED);
+  await writePng(rt, path.join(dir, 'seat_0aa11bb2_0.png'), clean0);
+  await writePng(rt, path.join(dir, 'seat_0aa11bb2_1.png'), clean1);
+  const old = new Date(Date.now() - 60_000);
+  for (const f of ['seat_0aa11bb2_0.png', 'seat_0aa11bb2_1.png']) await fs.utimes(path.join(dir, f), old, old);
+  await writePng(rt, path.join(dir, 'seat_9ff88ee7_0.png'), good0);
+  await writePng(rt, path.join(dir, 'seat_9ff88ee7_1.png'), good1);
+  assert.equal(await findRender(dir, 'seat_0.png'), 'seat_9ff88ee7_0.png');
+  assert.equal(await findRender(dir, 'seat_2.png'), null);
+  assert.equal(await findRender(dir, 'glow-still.png'), null);
+  assert.deepEqual(failing((await gradeDir('seat', dir, rt)).checks), []);
+  // the plain name, when it is there, is the file
+  await writePng(rt, path.join(dir, 'seat_0.png'), clean0);
+  assert.equal(await findRender(dir, 'seat_0.png'), 'seat_0.png');
 });

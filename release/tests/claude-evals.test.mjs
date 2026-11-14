@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 
-import { writeEvalSuite, claudePrompt, pictureCommand, checkAnswer, subjectSteps, ANSWER_CHECKS } from '../claude-evals.mjs';
+import { writeEvalSuite, claudePrompt, pictureCommand, evalArgs, checkAnswer, answerPattern, subjectSteps, ANSWER_CHECKS, moduleClosure, GRADER_MODULES, NOTICE_LIMIT } from '../claude-evals.mjs';
 import { THRESHOLDS } from '../../plugin/evals/picture/checks.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -43,12 +43,16 @@ test('the prompt body is the canonical prompt, with Codex skill syntax made Clau
     const { head, body } = frontMatter(await fs.readFile(path.join(out, dir, 'prompt.md'), 'utf8'));
     if (!c.files?.length) assert.equal(body.trim(), claudePrompt(c.prompt).trim());
     else {
-      // a planning case with its own files: the canonical prompt, then where each file was copied (and it is there)
+      // a planning case with its own files: the canonical prompt, then the files by their names in the workspace,
+      // where the case's scaffold copies them (a run cannot read the eval directory)
       assert.ok(body.trim().startsWith(claudePrompt(c.prompt).trim()), `case ${c.id}`);
+      assert.ok(body.includes("This case's files are in your working folder"), `case ${c.id}`);
       for (const f of c.files) {
-        assert.ok(body.includes(`${f} is ${path.join(out, dir, f)}`), `case ${c.id} names ${f}`);
-        await fs.access(path.join(out, dir, f));
+        assert.ok(body.includes(`\`${f}\``), `case ${c.id} names ${f}`);
+        assert.ok(!body.includes(path.join(out, dir)), `case ${c.id}: no path into the eval directory`);
+        await fs.access(path.join(out, dir, 'files', f));
       }
+      await fs.access(path.join(out, dir, 'case.yaml'));
     }
     assert.match(head, /^max_turns: \d+$/m);
     assert.match(head, /allowed_tools: \[.*Skill.*\]/);
@@ -116,10 +120,10 @@ test('refuses to write into a folder that already holds files', async () => {
   await assert.rejects(writeEvalSuite(CANON, out), /not empty/);
 });
 
-test('the canonical evals: 19 planning cases and the picture cases, ids in order', () => {
-  assert.equal(PLAN.evals.length, 19);
+test('the canonical evals: 22 planning cases and the picture cases, ids in order', () => {
+  assert.equal(PLAN.evals.length, 22);
   assert.deepEqual(CANON.evals.map((c) => c.id), CANON.evals.map((_, i) => i + 1));
-  assert.deepEqual(PICTURES.map((c) => c.picture.check), ['keying', 'grade', 'over', 'finish', 'review', 'seat']);
+  assert.deepEqual(PICTURES.map((c) => c.picture.check), ['keying', 'grade', 'over', 'finish', 'review', 'seat', 'curve', 'footage']);
   for (const c of PICTURES) {
     for (const f of c.files) assert.ok(f.startsWith('picture/'), f);
     assert.ok(c.files.includes(`picture/${c.picture.setup}`));
@@ -154,20 +158,32 @@ test('the default set leaves the picture cases out', async () => {
   }
 });
 
-test('the picture set: each case carries its setup and grader, a scoped Bash grant and one regex grader per check', async () => {
+// The footage case is written only when its clip is named; these tests write the set without one.
+const NO_CLIP = {};
+const WRITTEN = PICTURES.filter((c) => !c.picture.footage);
+
+test('the picture set: each case carries its setup, grader and runtime copy, a scoped Bash grant and one regex grader per check', async () => {
   const out = path.join(await tmp('evals-'), 'evals');
-  const dist = path.join(ROOT, 'plugin', 'runtime', 'dist');
-  const cases = await writeEvalSuite(CANON, out, { set: 'picture', runtimeDist: dist });
-  assert.deepEqual(cases.map((c) => c.id), PICTURES.map((c) => c.id));
+  const cases = await writeEvalSuite(CANON, out, { set: 'picture', env: NO_CLIP });
+  assert.deepEqual(cases.map((c) => c.id), WRITTEN.map((c) => c.id));
+  assert.deepEqual(cases.skipped.map((s) => s.id), [27]);
+  assert.match(cases.skipped[0].why, /COMP_ROOM_EVAL_FOOTAGE/);
   const dirs = (await fs.readdir(out)).sort();
   assert.match(dirs[0], /^18-/);
-  for (const [i, c] of PICTURES.entries()) {
+  const modules = await moduleClosure(path.join(ROOT, 'plugin', 'runtime', 'dist'));
+  for (const m of GRADER_MODULES) assert.ok(modules.includes(m), m);
+  for (const [i, c] of WRITTEN.entries()) {
     const dir = path.join(out, dirs[i]);
-    for (const f of ['grade.mjs', 'checks.mjs', 'scenes.mjs', c.picture.setup, 'grade-config.json']) await fs.access(path.join(dir, f));
+    for (const f of ['grade.mjs', 'checks.mjs', 'scenes.mjs', c.picture.setup, 'grade-config.json']) await fs.access(path.join(dir, 'files', f));
+    for (const m of modules) await fs.access(path.join(dir, 'files', 'runtime', m));
+    assert.deepEqual(JSON.parse(await fs.readFile(path.join(dir, 'files', 'grade-config.json'), 'utf8')), { runtimeDist: 'runtime' });
     const { head, body } = frontMatter(await fs.readFile(path.join(dir, 'prompt.md'), 'utf8'));
-    assert.ok(head.includes(`"Bash(node ${path.join(dir, 'grade.mjs')}:*)"`), head);
+    assert.ok(head.includes('"Bash(node grade.mjs:*)"'), head);
     assert.match(head, /^tags: \[picture\]$/m);
-    assert.ok(body.includes(path.join(dir, c.picture.setup)));
+    assert.ok(body.includes(`the setup script is \`${c.picture.setup}\``));
+    assert.ok(body.includes(`\`node grade.mjs ${c.picture.check} --plan\``));
+    assert.ok(!body.includes(out), 'no path into the eval directory');
+    assert.equal(await fs.readFile(path.join(dir, 'case.yaml'), 'utf8'), `schema_version: "1.1"\nname: ${dirs[i]}\ncontext:\n  scaffold_script: scaffold.sh\n`);
     const ids = THRESHOLDS[c.picture.check].filter((t) => !t.setup).map((t) => t.id);
     const files = (await fs.readdir(path.join(dir, 'graders'))).filter((f) => f.startsWith('check-')).sort();
     assert.deepEqual(files, ids.map((id) => `check-${id}.md`).sort());
@@ -175,32 +191,70 @@ test('the picture set: each case carries its setup and grader, a scoped Bash gra
       const g = frontMatter(await fs.readFile(path.join(dir, 'graders', `check-${id}.md`), 'utf8'));
       assert.match(g.head, /^type: regex$/m);
       assert.match(g.head, /^target: \{source: file, path: picture-grade\/verdict\.txt\}$/m);
-      const pattern = g.head.match(/^pattern: '(.*)'$/m)[1];
-      const re = new RegExp(pattern, 'm');
-      assert.ok(re.test(`x\nPICTURE-CHECK ${c.picture.check}.${id} PASS | measured: a | value: 1 | limit: 2\n`));
+      assert.doesNotMatch(g.head, /^flags:/m);                            // the runner documents only `i`
+      const re = new RegExp(g.head.match(/^pattern: '(.*)'$/m)[1]);
+      assert.ok(re.test(`PICTURE-GRADE x\nPICTURE-CHECK ${c.picture.check}.${id} PASS | measured: a | value: 1 | limit: 2\n`));
+      assert.ok(re.test(`PICTURE-CHECK ${c.picture.check}.${id} PASS | measured: a | value: 1 | limit: 2\n`));
       assert.ok(!re.test(`PICTURE-CHECK ${c.picture.check}.${id} FAIL | measured: a | value: 1 | limit: 2\n`));
+      assert.ok(!re.test(`x PICTURE-CHECK ${c.picture.check}.${id} PASS | measured: a\n`));
     }
     assert.equal(cases[i].graders, c.assertions.length + ids.length);
+    // the skill indicator is scored in a one-arm run: only where the prompt asks for a skill
+    const skill = (await fs.readdir(path.join(dir, 'graders'))).includes('plugin-skill.md');
+    assert.equal(skill, /\$[a-z]/.test(c.prompt), `case ${c.id}`);
   }
   const cmd = pictureCommand('/copy', cases);
   assert.match(cmd, / -j 1 /);
-  assert.match(cmd, /ae_do'/);
-  assert.match(cmd, /ae_render_frame'/);
-  for (const c of cases) assert.ok(cmd.includes(`'${c.bash}'`));
+  assert.match(cmd, / --ablation none /);
+  assert.match(cmd, / --no-publish /);
+  assert.match(cmd, / --scaffold /);
+  assert.match(cmd, /__ae_do /);
+  assert.match(cmd, /__ae_render_frame /);
+  assert.equal(cmd.split("'Bash(node grade.mjs:*)'").length, 2, 'the grader grant once');
 });
 
-test('a picture case\'s copied grader runs from the case folder with its config', async () => {
+test('the run arguments: one run, no no-plugin arm, the report kept local, and a tool can be withheld', () => {
+  const cases = [{ id: 21, bash: 'Bash(node /x/grade.mjs:*)' }];
+  const args = evalArgs('/copy', cases, { set: 'picture', withhold: ['ae_check_comp'], extra: ['--case', '21-*'] });
+  assert.deepEqual(args.slice(0, 3), ['plugin', 'eval', '/copy']);
+  for (const [flag, value] of [['--runs', '1'], ['-j', '1'], ['--ablation', 'none'], ['--threshold', '0'], ['--case', '21-*']]) assert.equal(args[args.indexOf(flag) + 1], value, flag);
+  assert.ok(args.includes('--no-publish') && args.includes('--allow-real-servers') && args.includes('--scaffold'));
+  assert.ok(!args.some((a) => a.endsWith('__ae_check_comp')));
+  assert.ok(args.some((a) => a.endsWith('__ae_render_frame')) && args.includes('Bash(node /x/grade.mjs:*)'));
+  const planning = evalArgs('/copy', [], { runs: 3 });
+  assert.equal(planning[planning.indexOf('--runs') + 1], '3');
+  assert.ok(!planning.some((a) => /__ae_do$|__ae_render_frame$|^Bash/.test(a)));
+});
+
+test("a case's scaffold copies its files into an empty workspace, and the grader runs there on its own runtime", async () => {
   const out = path.join(await tmp('evals-'), 'evals');
-  await writeEvalSuite(CANON, out, { set: 'picture', runtimeDist: path.join(ROOT, 'plugin', 'runtime', 'dist') });
+  await writeEvalSuite(CANON, out, { set: 'picture', env: NO_CLIP });
   const dir = path.join(out, (await fs.readdir(out)).sort()[2]);
-  const cwd = await tmp('run-');
-  const { stdout } = await promisify(execFile)(process.execPath, [path.join(dir, 'grade.mjs'), 'over'], { cwd });
+  const workspace = await tmp('workspace-');
+  await promisify(execFile)('bash', [path.join(dir, 'scaffold.sh')], { cwd: workspace, env: { PATH: process.env.PATH, HOME: workspace } });
+  for (const f of ['grade.mjs', 'checks.mjs', 'scenes.mjs', 'over-still.jsx', 'grade-config.json', 'runtime/color/sheet.js']) await fs.access(path.join(workspace, f));
+  await fs.rm(out, { recursive: true, force: true });                     // nothing in the eval directory to fall back on
+  const { stdout } = await promisify(execFile)(process.execPath, ['grade.mjs', 'over'], { cwd: workspace });
   assert.match(stdout, /^PICTURE-RESULT over 0\/2 checks passed$/m);
+  await fs.access(path.join(workspace, 'picture-grade', 'verdict.txt'));  // where the regex graders read it
 });
 
-test('the picture set refuses to guess where the runtime is', async () => {
-  const out = path.join(await tmp('evals-'), 'evals');
-  await assert.rejects(writeEvalSuite(CANON, out, { set: 'picture' }), /no runtime\/dist/);
+test('the picture set refuses a runtime build older than its sources', async () => {
+  const base = await tmp('stale-');
+  const dist = path.join(base, 'dist'), src = path.join(base, 'src');
+  for (const m of await moduleClosure(path.join(ROOT, 'plugin', 'runtime', 'dist'))) {
+    await fs.mkdir(path.dirname(path.join(dist, m)), { recursive: true });
+    await fs.copyFile(path.join(ROOT, 'plugin', 'runtime', 'dist', m), path.join(dist, m));
+  }
+  await fs.mkdir(path.join(src, 'color'), { recursive: true });
+  await fs.writeFile(path.join(src, 'color', 'sheet.ts'), '// changed after the build\n');
+  const old = new Date(Date.now() - 60_000);
+  await fs.utimes(path.join(dist, 'color', 'sheet.js'), old, old);
+  await assert.rejects(writeEvalSuite(CANON, path.join(base, 'evals'), { set: 'picture', runtimeDist: dist, env: NO_CLIP }), /dist\/color\/sheet\.js is older than src\/color\/sheet\.ts/);
+  const now = new Date(Date.now() + 5_000);
+  await fs.utimes(path.join(dist, 'color', 'sheet.js'), now, now);
+  const cases = await writeEvalSuite(CANON, path.join(base, 'evals2'), { set: 'picture', runtimeDist: dist, env: NO_CLIP });
+  assert.equal(cases.length, WRITTEN.length);
 });
 
 // The subject-matte planning case (stages 12, 12b): it passes only when the answer gives the manual-click notice up
@@ -228,7 +282,9 @@ test('the subject-matte case: a footage brief with no green screen, graded by bo
   assert.match(SUBJECT.assertions.join(' '), /ten seconds/);
   assert.match(SUBJECT.assertions.join(' '), /seven click steps/);
   assert.match(SUBJECT.assertions.join(' '), /subject\.check right after the click and before anything else is built/);
-  for (const c of CANON.evals.filter((x) => x !== SUBJECT)) assert.equal(c.answer_checks, undefined, `case ${c.id}`);
+  const withChecks = CANON.evals.filter((x) => x.answer_checks).map((x) => x.id);
+  assert.deepEqual(withChecks, [23, 28, 29, 30]);
+  for (const c of CANON.evals) for (const id of c.answer_checks ?? []) assert.ok(ANSWER_CHECKS[id], `case ${c.id}: ${id}`);
 });
 
 test('the subject-matte case passes an answer with the notice first, the steps and the check before building', async () => {
@@ -275,4 +331,74 @@ test('the subject-matte case fails without the render and the file check, or wit
 
 test('answer checks refuse a name they do not know', async () => {
   await assert.rejects(checkAnswer({ id: 99, answer_checks: ['nope'] }, 'x'), /unknown answer check nope/);
+});
+
+// The answer checks are scored by the runner: each is a regex grader on the final answer with the very pattern the
+// offline check uses (no flags; YAML single quotes, quotes doubled).
+const unyaml = (head) => head.match(/^pattern: '(.*)'$/m)[1].replace(/''/g, "'");
+
+test('a case with answer checks gets one regex grader per check, the same pattern the offline check runs', async () => {
+  const out = path.join(await tmp('evals-'), 'evals');
+  const cases = await writeEvalSuite(CANON, out);
+  const dirs = (await fs.readdir(out)).sort();
+  for (const [i, c] of PLAN.evals.entries()) {
+    const g = path.join(out, dirs[i], 'graders');
+    const files = (await fs.readdir(g)).filter((f) => f.startsWith('answer-')).sort();
+    assert.deepEqual(files, (c.answer_checks ?? []).map((id) => `answer-${id}.md`).sort(), `case ${c.id}`);
+    for (const id of c.answer_checks ?? []) {
+      const { head, body } = frontMatter(await fs.readFile(path.join(g, `answer-${id}.md`), 'utf8'));
+      assert.match(head, /^type: regex$/m);
+      assert.doesNotMatch(head, /^(flags|target):/m);                     // the final message, no flags
+      assert.equal(unyaml(head), await answerPattern(id));
+      assert.ok(body.includes(ANSWER_CHECKS[id].what));
+    }
+    assert.equal(cases[i].graders, c.assertions.length + (c.answer_checks?.length ?? 0));
+  }
+  // the grader's pattern, read back from the file, gives the offline verdict on the case's own answers
+  const i = PLAN.evals.findIndex((c) => c === SUBJECT);
+  for (const id of SUBJECT.answer_checks) {
+    const re = new RegExp(unyaml(frontMatter(await fs.readFile(path.join(out, dirs[i], 'graders', `answer-${id}.md`), 'utf8')).head));
+    assert.equal(re.test(answer()), true, id);
+    assert.equal(re.test(answer({ notice: 'Here is the plan.', steps: STEPS.slice(0, 3), check: 'Then I look.', file: 'Then I build.' })), false, id);
+  }
+});
+
+test(`the notice counts as up front when it starts within the first ${NOTICE_LIMIT} characters`, async () => {
+  const pad = (n) => `${'Background on the piece, which runs to length. '.repeat(Math.ceil(n / 47)).slice(0, n)}\n\n`;
+  const early = `${pad(NOTICE_LIMIT - 300)}${answer()}`;
+  const late = `${pad(NOTICE_LIMIT + 300)}${answer()}`;
+  assert.equal((await verdict(early))['subject-notice-first'], true);
+  assert.equal((await verdict(late))['subject-notice-first'], false);
+  // the first sentence that names the click must carry the time, or one of the next two sentences
+  const split = answer({ notice: 'One manual click in After Effects will be needed. It comes once the footage is in. It takes about ten seconds.' });
+  assert.equal((await verdict(split))['subject-notice-first'], true);
+  const tooFar = answer({ notice: 'One manual click in After Effects will be needed. It comes once the footage is in. Then I build. It takes about ten seconds.' });
+  assert.equal((await verdict(tooFar))['subject-notice-first'], false);
+});
+
+const byCase = (id) => CANON.evals.find((c) => c.id === id);
+const passes = async (id, text) => Object.fromEntries((await checkAnswer(byCase(id), text)).map((r) => [r.id, r.pass]));
+
+test('the hand-over case passes an answer that lints and delivers with both presets, and fails one that does not', async () => {
+  assert.deepEqual(await passes(28, 'Before hand-over I run project.lint and fix or name each finding. Then render.deliver with vertical-reel for the reel and master-alpha for the master, and I check each file.'),
+    { 'handover-lint': true, 'handover-deliver': true });
+  assert.deepEqual(await passes(28, 'I tidy the layer names, render H.264 and ProRes 4444 from the render queue and watch both files.'),
+    { 'handover-lint': false, 'handover-deliver': false });
+  assert.equal((await passes(28, 'project.lint first; render.deliver with vertical-reel.'))['handover-deliver'], false);   // no master with alpha
+});
+
+test('the teardown case passes an answer that measures the file and compares the build, and fails one that does not', async () => {
+  assert.deepEqual(await passes(29, 'I run video.shots for the cuts, video.census for how much moves and video.track on each move, then motion.compare_moves on the render.'),
+    { 'teardown-measures': true, 'teardown-compare': true });
+  assert.deepEqual(await passes(29, 'I watch the reference, count the cuts by eye and match the timing by feel.'),
+    { 'teardown-measures': false, 'teardown-compare': false });
+  assert.equal((await passes(29, 'video.shots and video.track, then motion.compare_moves.'))['teardown-measures'], false); // no census
+});
+
+test('the pixel headline case passes an answer with the builders and the word on its first frame, and fails one without', async () => {
+  assert.deepEqual(await passes(30, 'Each beat: leadIn, then heroWord on the voice’s first frame of the stressed word, then pixelBlocks and cardStack.'),
+    { 'pixel-builders': true, 'pixel-word-lands': true });
+  assert.deepEqual(await passes(30, 'Each beat shows a big bold word with a glow and some blocks, timed to the sentence.'),
+    { 'pixel-builders': false, 'pixel-word-lands': false });
+  assert.equal((await passes(30, 'The giant word lands on the **first frame** of that **word** in the voice.'))['pixel-word-lands'], true);
 });

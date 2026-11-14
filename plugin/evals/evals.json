@@ -262,7 +262,7 @@
     },
     {
       "id": 21,
-      "prompt": "Find what a viewer would notice in two comps in the open After Effects project, using only the plugin's tools. First run this eval's setup script `finish-check.jsx` once, unchanged, as the code of the eval.run operation; it builds two 5-second comps and returns `seededComp` and `cleanComp`. Then run `node grade.mjs finish --plan`: it prints where your findings go, their format and every check's limit. Check each whole comp, not a few stills, and name every problem a viewer would see, with the time it starts (and ends, for a stretch) in seconds from the comp's start; a comp with nothing wrong gets an empty list. Change nothing in either comp. When your checks are finished, and not before, write the findings file the plan describes, then run `node grade.mjs finish` once. The grade runs once and is final. Work only on the items the setup made; do not save, close, clear or switch the project, and do not use the render queue or undo. Say how you checked each comp and what you found.",
+      "prompt": "Find what a viewer would notice in two comps in the open After Effects project, using only the plugin's tools. First run this eval's setup script `finish-check.jsx` once, unchanged, as the code of the eval.run operation; it builds two 5-second comps and returns `seededComp` and `cleanComp`. Then run `node grade.mjs finish --plan`: it prints where your findings go, their format and every check's limit. Check each whole comp, not a few stills, and name every problem a viewer would see, with the time it starts (and ends, for a stretch) in seconds from the comp's start; a comp with nothing wrong gets an empty list. Change nothing in either comp. When your checks are finished, and not before, hand your findings to the grader once, as the plan describes (`node grade.mjs finish --findings '<json>'`). The grade runs once and is final. Work only on the items the setup made; do not save, close, clear or switch the project, and do not use the render queue or undo. Say how you checked each comp and what you found.",
       "expected_output": "Both comps checked frame by frame (ae_check_comp over each comp's work area, or an equivalent walk of every frame), the seeded comp's four defects named with their times (a one-frame white flash at 1.2 s, the picture frozen from 2.0 to 2.67 s, the title leaving the right edge during its slide after 3.0 s, a highlight clipped to white from 4.0 s) and nothing named for the clean comp; jumps the tool flags where the glare appears or the freeze ends may be mentioned as extras. Only a run against After Effects shows whether the setup builds the comps it claims (the title's width in the default font is not fixed, so the off-frame limit spans the slide); the no-plugin baseline has no After Effects tools, so it scores 0 on every picture check by construction.",
       "files": [
         "picture/finish-check.jsx",
@@ -276,13 +276,13 @@
       },
       "assertions": [
         "Trace shows the setup script run once through eval.run and each comp's whole work area checked (ae_check_comp, or renders of every frame), not only a few stills.",
-        "Trace shows no change to either comp: no write operation on the setup's comps after the setup ran.",
+        "Trace shows no change to either comp: no write operation on the setup's comps after the setup ran (ae_check_comp sets a comp's resolution for its captures and puts it back; that is not a change).",
         "The answer names the four seeded problems with their times and says the clean comp showed nothing, without claiming a problem the checks did not show."
       ]
     },
     {
       "id": 22,
-      "prompt": "Use $motion-review to review a finished piece you did not build, in the open After Effects project, using only the plugin's read and render tools. First run this eval's setup script `review-plate.jsx` once, unchanged, as the code of the eval.run operation; it builds the delivered comp and returns `reviewComp` and the brief. Its data is encoded on purpose: do not decode it; judge the comp. Then run `node grade.mjs review --plan`: it prints where your review goes, its form and every check's limit. The brief: A 6-second 1920x1080 teaser at 30 fps. A presenter, keyed, composited over a studio wall plate; it must read as one shot filmed in that room. Two takes: take 1 from 0 to 3.0 s, then a cut to take 2 (closer) at 3.0 s, held to 6.0 s. The orange badge (a stand-in for the price tag) drops in from the top and must land on the beat at the comp marker \"hit\", 2.0 s. No on-screen copy. Review the whole delivered comp the way the plugin's review document (ae_library `review`) says: start with ae_check_comp over the whole work area, then look at frames at full size where it matters, and name each defect a viewer would notice with its time, where in the frame, the evidence it rests on and a severity; put each flag the brief explains in `intended`, and say what you could not judge. Change nothing in the comp. When your review is finished, and not before, write the findings file the plan describes, then run `node grade.mjs review` once. The grade runs once and is final. Work only on the items the setup made; do not save, close, clear or switch the project, and do not use the render queue or undo. Say how you reviewed and what you found.",
+      "prompt": "Use $motion-review to review a finished piece you did not build, in the open After Effects project, using only the plugin's read and render tools. First run this eval's setup script `review-plate.jsx` once, unchanged, as the code of the eval.run operation; it builds the delivered comp and returns `reviewComp` and the brief. Its data is encoded on purpose: do not decode it; judge the comp. Then run `node grade.mjs review --plan`: it prints where your review goes, its form and every check's limit. The brief: A 6-second 1920x1080 teaser at 30 fps. A presenter, keyed, composited over a studio wall plate; it must read as one shot filmed in that room. Two takes: take 1 from 0 to 3.0 s, then a cut to take 2 (closer) at 3.0 s, held to 6.0 s. The orange badge (a stand-in for the price tag) drops in from the top and must land on the beat at the comp marker \"hit\", 2.0 s. No on-screen copy. Review the whole delivered comp the way the plugin's review document (ae_library `review`) says: start with ae_check_comp over the whole work area, then look at frames at full size where it matters, and name each defect a viewer would notice with its time, where in the frame, the evidence it rests on and a severity; put each flag the brief explains in `intended`, and say what you could not judge. Change nothing in the comp. When your review is finished, and not before, hand your findings to the grader once, as the plan describes (`node grade.mjs review --findings '<json>'`). The grade runs once and is final. Work only on the items the setup made; do not save, close, clear or switch the project, and do not use the render queue or undo. Say how you reviewed and what you found.",
       "expected_output": "The whole comp checked with ae_check_comp, the flags it raised judged against the brief (the cut at 3.0 s as intended; the changes it flags at 4.0 and 5.0 s traced to what changes there), full-size frames rendered at the moments that matter, and four defects named with times: in take 1 (0 to 3.0 s) a light fringe a few pixels wide round the presenter; in take 2 (3.0 to 6.0 s) the presenter graded toward magenta against the neutral wall; the wall blurred from 4.0 to 5.0 s while the presenter stays sharp; the badge landing on frame 68 (2.27 s), eight frames after the \"hit\" marker at 2.0 s. The found check needs three of the four with a time inside the span where each shows; at most two findings may match nothing. Only a run against After Effects shows whether the setup builds the comp it claims (an effect property set by index, a mask's expansion on a feathered mask, the comp marker); the no-plugin baseline has no After Effects tools, so it scores 0 on every picture check by construction.",
       "files": [
         "picture/review-plate.jsx",
@@ -296,7 +296,7 @@
       },
       "assertions": [
         "Trace shows the setup script run once through eval.run, then ae_check_comp over the review comp's whole work area before the findings were written, and full-size frames rendered with ae_render_frame at moments the report or the brief points to.",
-        "Trace shows no change to the review comp: no write operation on the setup's items after the setup ran, and no attempt to decode the setup's data.",
+        "Trace shows no change to the review comp: no write operation on the setup's items after the setup ran, and no attempt to decode the setup's data (ae_check_comp sets a comp's resolution for its captures and puts it back; that is not a change).",
         "The answer gives the findings ranked by what a viewer would notice, each with a time, where in the frame, its evidence and a severity, says which flags it judged intended and why, and states what it could not judge, with no score or pass or fail verdict."
       ]
     },
@@ -354,8 +354,98 @@
         "The plan carries specific values from the sheet (at least two of: the main colours, the black point or levels, the cut rate or shot length, the calm share), each tied to the user's range or the number of pieces, rather than generic advice.",
         "The answer names at least one measure the sheet marks as varying across the pieces (such as grain) and does not treat it as part of the look.",
         "Before hand-over, the plan compares the build's rendered movie with the sheet (reference.report with against: the sheet, with rhythm, or reference.compare with the sheet as reference) and says differences are read against the user's own range.",
-        "The answer treats the sheet as a description of 3 past pieces, not a rule, and does not invent fonts or type sizes the sheet does not hold.",
+        "The answer treats the sheet as a description of 3 past pieces, not a rule, and does not claim fonts or type sizes from the sheet, which holds none (a font proposed as a default for the user to confirm is not a claim).",
         "No After Effects inspection or mutation, render, install or publication occurs in the planning-only test."
+      ]
+    },
+    {
+      "id": 26,
+      "prompt": "Check how things move and land in a comp in the open After Effects project, using only the plugin's tools. First run this eval's setup script `curve-sync.jsx` once, unchanged, as the code of the eval.run operation; it builds one 6-second comp and returns `curveComp` and its layers. Then run `node grade.mjs curve --plan`: it prints where your findings go, their format and every check's limit. Card A and card B each make one move: read how each moves over its whole span, not from a few stills. Three badges should each appear on a beat: the comp markers \"sound: beat 1\" to \"sound: beat 3\" mark where the hits land in the sound. Name each problem a viewer would notice, on which layer, with its time in seconds from the comp's start, and for a hit off its beat how many frames off; a layer with nothing wrong gets no finding. Change nothing in the comp. When your checks are finished, and not before, hand your findings to the grader once, as the plan describes (`node grade.mjs curve --findings '<json>'`). The grade runs once and is final. Work only on the items the setup made; do not save, close, clear or switch the project, and do not use the render queue or undo. Say how you checked each layer and what you found.",
+      "expected_output": "Both cards read over their spans with motion.curve (or the value at every frame and the speed from it): card A's eased move flagged for nothing, card B's move named as a move with no ease, from 2.0 to 3.0 s. The badges' in-points measured against the beat markers with sound.sync (or read from layer info against the markers): badge 1 and badge 2 on their beats, badge 3 four frames after beat 3 (5.13 s against 5.0 s), named late by 4 frames. Nothing else named. Only a run against After Effects shows whether the setup's ease reads as eased; the no-plugin baseline has no After Effects tools, so it scores 0 on every picture check by construction.",
+      "files": [
+        "picture/curve-sync.jsx",
+        "picture/grade.mjs",
+        "picture/checks.mjs",
+        "picture/scenes.mjs"
+      ],
+      "picture": {
+        "check": "curve",
+        "setup": "curve-sync.jsx"
+      },
+      "assertions": [
+        "Trace shows the setup script run once through eval.run, then each card's move read over its whole span (motion.curve, or the value at every frame) and the badges compared with the beat markers (sound.sync, or their in-points against the markers) before the findings were written.",
+        "Trace shows no change to the comp: no write operation on the setup's items after the setup ran (ae_check_comp sets a comp's resolution for its captures and puts it back; that is not a change).",
+        "The answer names card B's move as having no ease and badge 3 as four frames late, says card A and the other two badges are fine, and claims nothing the measurements did not show."
+      ]
+    },
+    {
+      "id": 27,
+      "prompt": "Make an element sit in real footage in the open After Effects project, using only the plugin's tools. First run this eval's setup script `seat-footage.jsx` once, unchanged, as the code of the eval.run operation; it imports a filmed clip as the plate, lays a clean card over it and returns `seatComp`, the comp's size and the regions to measure. Then run `node grade.mjs footage --plan`: it prints the final render and every check's limit. The plate (layer `plate`) is real footage with its own grain and softness; the element (layer `element`, a card with a stripe) is clean and sharp, so it looks pasted on. Change the layer `element` itself (effects on that layer) so that its grain and softness match the plate's, using the plate and element regions the setup returned, in comp pixels. Measure with ae_render_frame `look` on frames 0 and 1 before and after each change (role 'plate' and 'element', and a pair), and read the effects' properties before setting them. Leave the plate as it is and keep the element's colours. When your work is finished, and not before, make exactly the final ae_render_frame call `node grade.mjs footage --plan` printed, then run `node grade.mjs footage` once. The grade runs once and is final. Work only on the items the setup made; do not save, close, clear or switch the project, and do not use the render queue or undo. Report the grain and edge width of both regions before and after.",
+      "expected_output": "As the seat eval, on a filmed plate: look on both regions over frames 0 and 1 before any change (the element clean and sharp, the plate with the clip's own grain and softness), effects on the element layer found and range-checked through the plugin (a blur, then grain that changes every frame), look again after each change until the element's frame-to-frame grain and edge width are within a quarter of the plate's, the plate and the element's colours untouched, the planned render and one grade run. The plate's numbers are measured from the clip itself when the suite is written, so any suitable clip can be handed; without one the case is not written. The no-plugin baseline has no After Effects tools, so it scores 0 on every picture check by construction.",
+      "files": [
+        "picture/seat-footage.jsx",
+        "picture/grade.mjs",
+        "picture/checks.mjs",
+        "picture/scenes.mjs"
+      ],
+      "picture": {
+        "check": "footage",
+        "setup": "seat-footage.jsx",
+        "footage": "COMP_ROOM_EVAL_FOOTAGE"
+      },
+      "assertions": [
+        "Trace shows the setup script run once through eval.run and ae_render_frame `look` on the plate and element regions, over frames 0 and 1, before the first change.",
+        "Trace shows the change made as effects on the element layer through plugin operations, with no operation on the plate layer or inside either precomp.",
+        "Trace shows look measured again after the changes, and the final ae_render_frame call made exactly as the grader's plan printed it, followed by a single grade run.",
+        "The report gives both regions' grain and edge width before and after, without claiming a match the numbers do not show."
+      ]
+    },
+    {
+      "id": 28,
+      "prompt": "When my 20-second vertical explainer is built and I have approved it, another editor will open the project, and I need a reel for posting and a master with transparency. Plan the hand-over and the delivery now, for my approval: how you will check that the project is fit to hand over, which files you will deliver and how you will check each delivered file, its sound included. Then stop before After Effects.",
+      "expected_output": "The plan runs project.lint (read only) before hand-over and fixes or names each thing it finds: default layer and comp names, footage, solids and precomps loose at the project's top level, unused footage, missing footage and fonts, expressions in error, layers switched off with no role. It delivers with render.deliver and a preset for each file: vertical-reel (H.264) for posting and master-alpha (ProRes 4444) for the master with transparency, and says the preset may fall back to another template, which the result names. Each delivered file is brought back and compared with the comp (size, frame rate, duration within half a frame) and its sound is read, so a file with no sound or sound that reads as silence is flagged. The technical checks, the editor's handover and the user's approval are kept apart; nothing is delivered before the user approves.",
+      "files": [],
+      "answer_checks": [
+        "handover-lint",
+        "handover-deliver"
+      ],
+      "assertions": [
+        "Trace shows the plugin's hand-over and delivery guidance read before the plan is written (the quality reference through ae_library, or project.lint and render.deliver in the catalog).",
+        "The plan runs project.lint before hand-over and says it fixes or names each thing it finds, naming at least two of the kinds it looks for (default names, items loose at the top level, unused footage, missing footage or fonts, expressions in error, layers switched off with no role).",
+        "The plan delivers with render.deliver and a named preset for each file (vertical-reel for the reel, master-alpha for the master with transparency) and checks each written file against the comp (size, frame rate, duration) and its sound.",
+        "The plan keeps the technical checks apart from the user's approval and does not claim the delivery is approved or published."
+      ]
+    },
+    {
+      "id": 29,
+      "prompt": "I have a 30-second reference reel, reference.mp4, that I want my next 30-second vertical explainer to move like: where it cuts, how much of the time something moves, and how its moves are timed and eased. Plan how you will measure the reference and build to it, and how you will check the build against it, for my approval. Then stop before After Effects.",
+      "expected_output": "The plan reads the reference-teardown technique and measures the file before building, with ffmpeg and without After Effects: its cuts with video.shots (looking at the strips before believing a count), how much moves with video.census in the band where the stage is, the moves worth borrowing with video.track (a region round the thing at rest and a span from a little before the move to a little after), and the table of moves and a beat sheet with video.moves, each move marked measured, inferred or untested. It builds the measured moves from their keys, then compares the build with motion.compare_moves on its properties and on its render, the render being the one that counts, and reference.compare for look. It names limits of the measures (rotation, blur, colour and anything outside the region are not measured; a lost or weak match is marked uncertain; a change inside a shot can read as a cut, and a cut between similar sparse layouts as a pan; frame numbers at the source's rate against 30 fps).",
+      "files": [],
+      "answer_checks": [
+        "teardown-measures",
+        "teardown-compare"
+      ],
+      "assertions": [
+        "Trace shows the reference-teardown technique (or the reference study) read through ae_library before the plan is written.",
+        "The plan measures the file before building: its cuts (video.shots), how much moves (video.census) and the moves themselves (video.track or video.moves), without After Effects.",
+        "After the build, the plan compares the build's moves with the reference's (motion.compare_moves), on the render as well as the properties, and states differences in measured terms (durations, distances, ease).",
+        "The answer names at least one limit of the measures (something not measured, a weak match marked uncertain, a change read as a cut or a cut read as a pan, frame rates to convert) instead of presenting the numbers as certain."
+      ]
+    },
+    {
+      "id": 30,
+      "prompt": "Plan a 40-second talking-head reel in the pixel headline style, built from my script and my take (a vertical 4K take of me talking at my desk, no green screen), where one stressed word in each sentence hits hard. Plan it for my approval, then stop before After Effects.",
+      "expected_output": "The plan reads the pixel headline style (its STYLE.md) and follows it. The speaker is cut out first, onto a clean ground, and the user is told up front that the cut-out needs one click of theirs. Before building, the user is shown a still of the ground (light, the reference's, or dark, proven) and of the speaker's look from their own footage. Each sentence is one beat with one stressed word: a small lead-in (five words or fewer a line, settled before the beat leaves), the giant word in the accent colour landing on the voice's first frame of that word, cards popping in after it, pixel blocks and a drawn line carrying the eye; giant words without a tail tuck behind the head and nothing covers the face; one accent, one ground and one pop family for the whole piece, inside the style's margins. It names the style's builders (stage, push, leadIn, heroWord, pixelBlocks, card or cardStack, drawnLine, tail) and plans the whole-piece check every fifth frame and a check of the delivered file.",
+      "files": [],
+      "answer_checks": [
+        "pixel-builders",
+        "pixel-word-lands"
+      ],
+      "assertions": [
+        "Trace shows the pixel headline style's document read through ae_library (its STYLE.md) before the plan is written.",
+        "The plan cuts the speaker out before anything else, onto a clean ground, and tells the user up front that the cut-out needs one click of theirs.",
+        "Each sentence is planned as one beat with one stressed word set as the giant word landing on the voice's first frame of that word, with a short lead-in and cards after it, built with the style's own builders.",
+        "Before building, the plan shows the user a still of the ground and the speaker's look from their own footage, and it plans a check of the whole piece and of the delivered file."
       ]
     }
   ]
