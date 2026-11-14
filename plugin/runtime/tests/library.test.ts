@@ -126,9 +126,11 @@ describe("library search, word by word", () => {
     expect(got).toEqual(["quality", ...before("quality").documents.concat(before("delivery").documents).filter((id, i, a) => id !== "quality" && a.indexOf(id) === i).toSorted((a, b) => docs.findIndex(d => d.id === a) - docs.findIndex(d => d.id === b))]);
   });
 
-  it("keeps hyphenated and dotted words whole and splits on other punctuation", () => {
-    expect(ids("hand-over")).toEqual(before("hand-over"));
+  it("keeps a word with punctuation inside it whole, as before, and splits only on spaces, commas and semicolons", () => {
+    // Sessions type apostrophes, underscored names, colons and brackets; each stays one word.
+    for (const word of ["hand-over", "word's", "ae_render_frame", "recording:", "(node"]) expect(ids(word), word).toEqual(before(word));
     expect(ids("keying, delivery").documents.toSorted()).toEqual(["keying", "quality"]);
+    expect(ids("keying;delivery").documents.toSorted()).toEqual(["keying", "quality"]);
   });
 
   it("returns the same empty shape when nothing matches, and counts a repeated word once", () => {

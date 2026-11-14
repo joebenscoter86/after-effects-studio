@@ -43,8 +43,9 @@ export type Refs = {
 export declare function isReportReference(value: string): boolean;
 export declare function validateCatalog(raw: unknown, refs: Refs): Catalog;
 /**
- * A library query's words: lower-cased, split on whitespace and on punctuation other than "-" and ".",
- * each word once. A one-word query gives that word, so it matches exactly as the whole query did.
+ * A library query's words: lower-cased, split only on whitespace, "," and ";", each word once. Any other
+ * punctuation stays inside its word (word's, ae_render_frame, recording:, (node), so a one-word query
+ * gives that word and matches exactly as the whole query did.
  */
 export declare function queryWords(query?: string): string[];
 /** The query words a module matches in its id, title, summary or tags. */

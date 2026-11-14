@@ -69,11 +69,12 @@ export function validateCatalog(raw:unknown,refs:Refs):Catalog {
  return catalog;
 }
 /**
- * A library query's words: lower-cased, split on whitespace and on punctuation other than "-" and ".",
- * each word once. A one-word query gives that word, so it matches exactly as the whole query did.
+ * A library query's words: lower-cased, split only on whitespace, "," and ";", each word once. Any other
+ * punctuation stays inside its word (word's, ae_render_frame, recording:, (node), so a one-word query
+ * gives that word and matches exactly as the whole query did.
  */
 export function queryWords(query?:string):string[]{
- return [...new Set((query??'').toLowerCase().split(/[^\p{L}\p{N}.-]+/u).filter(Boolean))];
+ return [...new Set((query??'').toLowerCase().split(/[\s,;]+/u).filter(Boolean))];
 }
 /** The query words a module matches in its id, title, summary or tags. */
 export function moduleWords(m:Module,words:string[]):string[]{

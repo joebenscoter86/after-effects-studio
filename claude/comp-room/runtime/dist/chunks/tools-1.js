@@ -3377,7 +3377,7 @@ function validateCatalog(raw, refs) {
 	return catalog;
 }
 function queryWords(query) {
-	return [...new Set((query ?? "").toLowerCase().split(/[^\p{L}\p{N}.-]+/u).filter(Boolean))];
+	return [...new Set((query ?? "").toLowerCase().split(/[\s,;]+/u).filter(Boolean))];
 }
 function moduleWords(m, words) {
 	const fields = [
