@@ -66,27 +66,34 @@ P.tf(floor, "ADBE Scale").setValue([233, 233, 233]);
 floor.property("ADBE Material Options Group").property("ADBE Accepts Shadows").setValue(2);
 floor.property("ADBE Material Options Group").property("ADBE Casts Shadows").setValue(0);
 
-// Stand-in 3D graphics standing on/above the floor (floor plane is at Y 840).
-// ASSUMED: plain rounded cards stand in for the panel of icon buttons, weather card and tickers; sizes, colours and positions chosen.
-var panel = card(c, "panel", [720, 220], 40, [0.27, 0.45, 0.95, 1], [760, 640, 0]);
-var b1 = card(c, "button 1", [140, 140], 30, [1, 1, 1, 1], [520, 640, -20]);
-var b2 = card(c, "button 2", [140, 140], 30, [1, 1, 1, 1], [760, 640, -20]);
-var b3 = card(c, "button 3", [140, 140], 30, [1, 1, 1, 1], [1000, 640, -20]);
-var weather = card(c, "weather card", [380, 300], 36, [1, 0.72, 0.25, 1], [1420, 600, 0]);
-var tick1 = card(c, "ticker 1", [200, 70], 20, [0.22, 0.75, 0.48, 1], [1340, 800, -200]);
-var tick2 = card(c, "ticker 2", [200, 70], 20, [0.95, 0.35, 0.35, 1], [1580, 800, -200]);
+// Stand-in 3D graphics standing on the floor (floor plane is at Y 840, about 0.78 of the height).
+// Run fix (layout line): button panel 0.17-0.51w, 0.12-0.78h; weather card 0.53-0.85w, 0.51-0.76h; both bottoms at the
+// floor line, so the shadow starts at the objects' bottom edge. The tickers are not in the layout and are dropped.
+// ASSUMED: pale UI colours; a 3 x 4 grid of white buttons on the panel, a little in front of it.
+var W = 1920, H = 1080;
+var panel = card(c, "panel", [0.34 * W, 0.66 * H], 48, [0.84, 0.88, 0.95, 1], [0.34 * W, 0.45 * H, 0]);
+var buttons = [];
+var bx, by, bsz = 150;
+for (by = 0; by < 4; by++) {
+  for (bx = 0; bx < 3; bx++) {
+    buttons.push(card(c, "button " + (by * 3 + bx + 1), [bsz, bsz], 34, [1, 1, 1, 1],
+      [0.34 * W + (bx - 1) * 190, 0.45 * H + (by - 1.5) * 168, -10]));
+  }
+}
+var weather = card(c, "weather card", [0.32 * W, 0.25 * H], 40, [0.98, 0.80, 0.45, 1], [0.69 * W, 0.635 * H, 0]);
 
 // A little motion so the shadow is seen to follow: the weather card rises and settles.
 // ASSUMED: the tutorial's graphics have their own animations; this one is ours.
 var wp = P.tf(weather.layer, "ADBE Position");
-wp.setValueAtTime(0, [1420, 700, 0]);
-wp.setValueAtTime(1.5, [1420, 560, 0]);
-wp.setValueAtTime(3, [1420, 600, 0]);
+wp.setValueAtTime(0, [0.69 * W, 0.635 * H + 80, 0]);
+wp.setValueAtTime(1.5, [0.69 * W, 0.635 * H - 40, 0]);
+wp.setValueAtTime(3, [0.69 * W, 0.635 * H, 0]);
 var e = new KeyframeEase(0, 66);
 var k;
 for (k = 1; k <= wp.numKeys; k++) wp.setTemporalEaseAtKey(k, [e], [e]);
 
-var graphics = [panel.layer, b1.layer, b2.layer, b3.layer, weather.layer, tick1.layer, tick2.layer];
+var graphics = [panel.layer, weather.layer];
+for (k = 0; k < buttons.length; k++) graphics.push(buttons[k].layer);
 var i;
 for (i = 0; i < graphics.length; i++) graphicMaterial(graphics[i]);
 
@@ -105,11 +112,15 @@ light.property("ADBE Light Options Group").property("Shadow Darkness").setValue(
 light.property("ADBE Light Options Group").property("Shadow Diffusion").setValue(205);
 
 // 2D title on top of everything (above all 3D layers, so it does not split the 3D group).
-P.text(c, "Big Bold Title", { size: 150, font: args.font || "Poppins-Bold", color: [0.10, 0.12, 0.18], name: "title", pos: [960, 260] });
+// Run fix (layout line): bold title word 0.54-0.86w, 0.24-0.45h (614 x 227 px); a script-style word above it reaching
+// about 0.11h, 0.57-0.90w. ASSUMED: words "Weather" and "today"; Poppins-Bold and Poppins-Regular stand in for the script face.
+var t1 = P.text(c, "Weather", { size: args.titleSize || 139, font: args.font || "Poppins-Bold", color: [0.10, 0.12, 0.18], name: "title", pos: [0.70 * W, 0.345 * H] });
+var t2 = P.text(c, "today", { size: 110, font: "Poppins-Regular", color: [0.27, 0.45, 0.95], name: "title script", pos: [0.735 * W, 0.17 * H] });
+var t1r = t1.sourceRectAtTime(0, false);
 
 // Step 4: stack order. Title (2D) top, light, 3D graphics, floor directly under the lowest 3D graphic, background (2D) last.
 // With Classic 3D a 2D layer between 3D layers splits them into groups that cannot shadow each other.
 floor.moveAfter(panel.layer);
 bg.moveToEnd();
 
-return { comp: c.name, id: c.id, layers: c.numLayers, floorIndex: floor.index, lightIndex: light.index };
+return { title: [t1r.width, t1r.height], renderer: c.renderer, comp: c.name, id: c.id, layers: c.numLayers, floorIndex: floor.index, lightIndex: light.index };

@@ -15,11 +15,24 @@ var STEP = args.step || 6.533;      // recipe: settles at -6.5 per layer (0, -6.
 // Run fix (layout line): the words' left ends follow an arc of radius about 0.61 of the width (1171 px) whose hub sits
 // just off the comp's left edge at 0.50 down; the middle (level) word's left end is the furthest right, at 0.57w (1094).
 // So the hub is at (1094 - 1171, 540) = (-77, 540), and each word's left end sits 1171 px right of it.
-var RADIUS = args.radius || 0.61 * 1920;
+// Review fix: the tutorial's row spacing (about 0.11h) fits a hub near x 170, radius about 0.48 of the width (922 px)
+// to the middle word's left end; 0.61 gave rows 0.14-0.15h apart (7 words showing instead of 9).
+var RADIUS = args.radius || 0.48 * 1920;
 var LEFT_END = 0.57 * 1920;
 var PIVOT = [LEFT_END - RADIUS, 540];
 
 // Rules: 1920 x 1080 at 24 fps (the example comp ran at 60 fps; see build notes).
+// Re-run tidy: remember the earlier build's null solid so it can be removed once its comp is gone.
+var oldNullSrc = [];
+(function () {
+  var i, it, j;
+  for (i = 1; i <= app.project.numItems; i++) {
+    it = app.project.item(i);
+    if (it instanceof CompItem && it.name === "04 carousel by rotation") {
+      for (j = 1; j <= it.numLayers; j++) if (it.layer(j).nullLayer) oldNullSrc.push(it.layer(j).source);
+    }
+  }
+})();
 var c = P.freshComp("04 carousel by rotation", 1920, 1080, 24, 5, [0.03, 0.04, 0.04]);
 
 // Step 1: one text layer, a two-word phrase in a bold geometric sans, light mint.
@@ -67,10 +80,11 @@ P.tf(n, "ADBE Position").setValue(PIVOT);
 for (k = 2; k <= N + 1; k++) {
   c.layer(k).parent = n;
 }
-// ASSUMED: the null turns +4 steps over the comp, eased, so four words scroll past the 0 deg slot.
+// ASSUMED: the null turns 4 steps over the comp, eased, so four words scroll past the 0 deg slot.
+// Review fix: the turn is negative (anticlockwise), so the words on the right of the hub move up, as in the tutorial.
 var rot = P.tf(n, "ADBE Rotate Z");
 rot.setValueAtTime(0, 0);
-rot.setValueAtTime(c.duration, args.turn !== undefined ? args.turn : 4 * STEP);
+rot.setValueAtTime(c.duration, args.turn !== undefined ? args.turn : -4 * STEP);
 var ease = new KeyframeEase(0, 50);
 rot.setTemporalEaseAtKey(1, [ease], [ease]);
 rot.setTemporalEaseAtKey(2, [ease], [ease]);
@@ -80,4 +94,9 @@ rot.setTemporalEaseAtKey(2, [ease], [ease]);
 var tt = P.text(c, "Text\rCarousel", { size: args.titleSize || 150, color: [1, 1, 1], font: args.font || "Poppins-Bold", pos: [0.265 * 1920, 0.49 * 1080], name: "title" });
 var tr = tt.sourceRectAtTime(0, false);
 
-return { comp: c.name, id: c.id, layers: c.numLayers, copies: N, step: STEP, pivot: PIVOT, textW: TEXT_W, textH: r0.height, titleW: tr.width, titleH: tr.height, font: l.property("ADBE Text Properties").property("ADBE Text Document").value.font };
+var removed = 0;
+for (k = 0; k < oldNullSrc.length; k++) {
+  if (oldNullSrc[k] && oldNullSrc[k].usedIn.length === 0) { oldNullSrc[k].remove(); removed++; }
+}
+
+return { removedOldNullSolids: removed, comp: c.name, id: c.id, layers: c.numLayers, copies: N, step: STEP, pivot: PIVOT, textW: TEXT_W, textH: r0.height, titleW: tr.width, titleH: tr.height, font: l.property("ADBE Text Properties").property("ADBE Text Document").value.font };

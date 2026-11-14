@@ -58,8 +58,21 @@ function sp(layer, styleName, prop) {
 var c = P.freshComp("11 white on light finish", 1920, 1080, 24, 4, [0.93, 0.945, 0.957]);
 var bg = P.solid(c, "background", hex("EDF1F4"));
 
-var D = args.diameter || 600;
+// Run fix (layout line): disc diameter about 0.375 of the width (720 px), centred.
+var D = args.diameter || 0.375 * 1920;
 var C = [960, 540];
+
+// Run fix (layout line): the other pale discs, all partly behind the main one (scene, not technique). Plain white.
+// [centre x, centre y, diameter] from the layout's boxes: above (0.52-0.62w, 0-0.13h), left (0.17-0.32w, 0.36-0.64h),
+// lower left (0.26-0.39w, from 0.68h off the bottom), lower right (0.56-0.73w, 0.66-0.97h).
+var others = [[0.60 * 1920, 0.02 * 1080, 300], [0.245 * 1920, 0.50 * 1080, 290], [0.325 * 1920, 0.80 * 1080, 250], [0.645 * 1920, 0.815 * 1080, 330]];
+var oi, od;
+for (oi = 0; oi < others.length; oi++) {
+  od = P.shape(c, "pale disc " + (oi + 1));
+  P.ellipse(od, [others[oi][2], others[oi][2]]);
+  fill(od, [1, 1, 1, 1]);
+  P.tf(od.layer, "ADBE Position").setValue([others[oi][0], others[oi][1]]);
+}
 var disc = P.shape(c, "disc");
 P.ellipse(disc, [D, D]);
 fill(disc, [1, 1, 1, 1]);
@@ -71,8 +84,14 @@ fin.name = "TECH disc finish";
 fin.moveBefore(disc.layer);
 
 // Small dark two-line title on top (unstyled).
-// ASSUMED: font left to the default unless args.font is given.
-var title = P.text(c, "Soft\rfinish", { size: 64, color: [0.16, 0.19, 0.24], font: args.font, name: "title" });
+// Run fix (layout line): two lines of different size: line 1 about 0.39-0.61w (422 px wide), letters 0.04h tall, at 0.47h;
+// line 2 about 0.42-0.58w (307 px), 0.025h tall, at 0.52h. Built as two text layers so each can be sized.
+// ASSUMED: words "Soft Finish" / "white on light"; Poppins-Bold and Poppins-Regular (installed).
+var title = P.text(c, "Soft Finish", { size: args.titleSize || 82, color: [0.16, 0.19, 0.24], font: args.font || "Poppins-Bold", pos: [960, 0.47 * 1080], name: "title line 1" });
+var tr1 = title.sourceRectAtTime(0, false);
+var sub = P.text(c, "white on light", { size: args.subSize || 46, color: [0.16, 0.19, 0.24], font: "Poppins-Regular", pos: [960, 0.52 * 1080], name: "title line 2" });
+var tr2 = sub.sourceRectAtTime(0, false);
+sub.moveToBeginning();
 title.moveToBeginning();
 
 // Steps 1-2 (substitute): gradient #F1F5F7 at stop 0 to #DAE1E7 at stop 99.8 %, angle 40 degrees, aligned to the layer.
@@ -132,6 +151,7 @@ sp(fin, B, "Shadow Opacity").setValue(100);
 return {
   comp: c.name,
   layers: c.numLayers,
+  title1: [tr1.width, tr1.height], title2: [tr2.width, tr2.height],
   switchOff: "layer TECH disc finish",
   gradient: args.realGradientOverlay ? "real Gradient Overlay (set colours by hand)" : "Gradient Ramp substitute",
   readBack: {

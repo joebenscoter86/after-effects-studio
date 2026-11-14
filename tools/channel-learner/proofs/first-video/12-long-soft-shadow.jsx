@@ -9,6 +9,7 @@
 // VERIFY: effects are reachable after adding by display names "Fill", "CC Radial Fast Blur", "Gaussian Blur".
 // VERIFY: Zoom popup 1 = Standard; Blur Dimensions 1 = Horizontal and Vertical; Repeat Edge Pixels 1 = on; Fill Opacity default is 100 % (read back in result.fillOpacity, not set).
 // VERIFY: the Center expression fromComp(toComp(anchorPoint) + offset) lands up and to the left of each object on shape and text layers alike.
+//   RUN: false. Center is read in comp pixels on these layers; the expression is now toComp(anchorPoint) + offset.
 // VERIFY: the streak is not cut off at the layer's edge: shape and text layers are expected not to clip; if they do, add Grow Bounds first in the stack (see technique 15).
 // VERIFY: layer.duplicate() of a shape or text layer places the copy directly above; moveAfter puts it below; setting parent keeps it in place.
 $.evalFile(args.prelude);
@@ -41,33 +42,39 @@ var c = P.freshComp("12 long soft shadow", 1920, 1080, 24, 4, [0.957, 0.965, 0.9
 P.solid(c, "background", hex("F4F6F8"));
 var objColor = hex("CFD9E2").concat([1]);
 
-var objects = [];
-var b1 = P.shape(c, "bar 1");
-rect(b1, [560, 70], 35);
-fill(b1, objColor);
-P.tf(b1.layer, "ADBE Position").setValue([640, 330]);
-objects.push(b1.layer);
+// Run fix (layout line): objects placed and sized from the layout's boxes (shares of 1920 x 1080), each with the
+// direction its shadow runs (degrees below horizontal, measured in the tutorial): every shadow aims away from its
+// own blur centre, so the direction differs per object.
+var W = 1920, H = 1080;
+var objects = [], angles = [];
+function addRect(name, x0, x1, y0, y1, round, ang) {
+  var sh = P.shape(c, name);
+  var w = (x1 - x0) * W, h = (y1 - y0) * H;
+  rect(sh, [w, h], round === undefined ? Math.min(w, h) * 0.2 : round);
+  fill(sh, objColor);
+  P.tf(sh.layer, "ADBE Position").setValue([(x0 + x1) / 2 * W, (y0 + y1) / 2 * H]);
+  objects.push(sh.layer);
+  angles.push(ang);
+}
+addRect("top-left block", 0.12, 0.17, 0.10, 0.21, undefined, 10);
+addRect("tall right bar", 0.87, 0.91, 0.21, 0.42, undefined, 38);
+addRect("small lower block", 0.32, 0.35, 0.78, 0.83, undefined, 40);
+addRect("left bar", 0.04, 0.18, 0.60, 0.66, undefined, 71);
 
-var b2 = P.shape(c, "bar 2");
-rect(b2, [400, 70], 35);
-fill(b2, objColor);
-P.tf(b2.layer, "ADBE Position").setValue([560, 460]);
-objects.push(b2.layer);
+// Title: upper word about 0.40-0.62w, 0.20-0.40h; lower word about 0.27-0.72w, 0.37-0.66h. Letters' shadows about 55-65 deg.
+// ASSUMED: words "Long" / "Shadow", Poppins-Bold (installed), sized to the layout's widths (422 and 864 px).
+var up = P.text(c, "Long", { size: args.upSize || 180, color: objColor.slice(0, 3), font: args.font || "Poppins-Bold", name: "title upper", pos: [0.51 * W, 0.30 * H] });
+var lo = P.text(c, "Shadow", { size: args.loSize || 210, color: objColor.slice(0, 3), font: args.font || "Poppins-Bold", name: "title lower", pos: [0.495 * W, 0.515 * H] });
+objects.push(up); angles.push(60);
+objects.push(lo); angles.push(60);
+var upR = up.sourceRectAtTime(0, false), loR = lo.sourceRectAtTime(0, false);
 
-var blk = P.shape(c, "block");
-rect(blk, [220, 220], 24);
-fill(blk, objColor);
-P.tf(blk.layer, "ADBE Position").setValue([1360, 380]);
-objects.push(blk.layer);
-
-// ASSUMED: font left to the default unless args.font is given.
-var title = P.text(c, "LONG SHADOW", { size: 150, color: hex("CFD9E2"), font: args.font, name: "title", pos: [960, 760], tracking: 40 });
-objects.push(title);
-
-// ASSUMED: centre 260 px left and 170 px above each object's middle (recipe: "up and to the left"; its values are in an unknown layer's space).
-var off = args.centerOffset || [-260, -170];
+// ASSUMED: each blur centre sits DIST px from the object's middle, opposite the shadow's direction. The recipe's own
+// Center values are in an unknown layer's space; DIST is tuned by render so the streak runs about 0.09-0.14 of the
+// width past the object (layout).
+var DIST = args.dist || 220;
 // ASSUMED: shadow layer opacity 60 % (recipe: not shown, "shadows read as mid grey").
-var shadowOpacity = args.shadowOpacity === undefined ? 60 : args.shadowOpacity;
+var shadowOpacity = args.shadowOpacity === undefined ? 40 : args.shadowOpacity;
 
 var i, o, s, names = [];
 for (i = 0; i < objects.length; i++) {
@@ -88,7 +95,14 @@ for (i = 0; i < objects.length; i++) {
   fxp(s, "CC Radial Fast Blur", "Zoom").setValue(1);
   // Step 5: aim the streak. SUBSTITUTE: the Center is dragged in the viewer in the tutorial; here an expression places it
   // up and to the left of the object, in comp pixels, converted to the layer's space.
-  fxp(s, "CC Radial Fast Blur", "Center").expression = "fromComp(toComp(anchorPoint) + [" + off[0] + ", " + off[1] + "])";
+  var th = angles[i] * Math.PI / 180;
+  var d = (o === up || o === lo) ? (args.titleDist || 300) : DIST; // ASSUMED: farther centre for the wide title words (less fanning)
+  var off = [-d * Math.cos(th), -d * Math.sin(th)];
+  // Run fix: on these shape and text layers (comp-sized, unscaled) CC Radial Fast Blur reads Center in COMP pixels, not
+  // layer space: a fixed Center of (1100, 167) on the top-left block's shadow threw it straight left, and (979, 600) on the
+  // title's threw it straight up. fromComp() therefore put every centre near the comp's top-left corner, so all shadows
+  // fanned out from there. The expression now gives the comp point directly.
+  fxp(s, "CC Radial Fast Blur", "Center").expression = "toComp(anchorPoint) + [" + off[0] + ", " + off[1] + "]";
   // Step 6: Gaussian Blur 25.6, both directions, repeat edge pixels.
   P.effect(s, "ADBE Gaussian Blur 2");
   fxp(s, "Gaussian Blur", "Blurriness").setValue(25.6);
@@ -98,4 +112,4 @@ for (i = 0; i < objects.length; i++) {
   names.push(s.name);
 }
 
-return { comp: c.name, layers: c.numLayers, switchOff: names.join(", "), fillOpacity: fxp(s, "Fill", "Opacity").value };
+return { comp: c.name, layers: c.numLayers, upper: [upR.width, upR.height], lower: [loR.width, loR.height], switchOff: names.join(", "), fillOpacity: fxp(s, "Fill", "Opacity").value };
