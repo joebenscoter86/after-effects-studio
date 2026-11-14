@@ -3,6 +3,7 @@
 // parented to it, turned black with Fill, streaked with CC Radial Fast Blur (Amount 95, Zoom Standard, centre up and
 // to the left of the object so the streak runs down and to the right), then softened with Gaussian Blur 25.6.
 // Switch-off for a "before" frame: disable every layer whose name starts with "TECH shadow".
+// Since the 2026-11-14 correction the title's shadows are one black letter layer per letter ("TECH shadow letter ..."), not a copy of each word.
 //
 // VERIFY: match names "ADBE Fill", "CC Radial Fast Blur", "ADBE Gaussian Blur 2" (given in the recipe).
 // VERIFY: property display names: Fill "Color", "Opacity"; CC Radial Fast Blur "Center", "Amount", "Zoom"; Gaussian Blur "Blurriness", "Blur Dimensions", "Repeat Edge Pixels".
@@ -46,7 +47,7 @@ var objColor = hex("CFD9E2").concat([1]);
 // direction its shadow runs (degrees below horizontal, measured in the tutorial): every shadow aims away from its
 // own blur centre, so the direction differs per object.
 var W = 1920, H = 1080;
-var objects = [], angles = [];
+var objects = [], angles = [], sizes = [];
 function addRect(name, x0, x1, y0, y1, round, ang) {
   var sh = P.shape(c, name);
   var w = (x1 - x0) * W, h = (y1 - y0) * H;
@@ -55,6 +56,7 @@ function addRect(name, x0, x1, y0, y1, round, ang) {
   P.tf(sh.layer, "ADBE Position").setValue([(x0 + x1) / 2 * W, (y0 + y1) / 2 * H]);
   objects.push(sh.layer);
   angles.push(ang);
+  sizes.push([w, h]);
 }
 addRect("top-left block", 0.12, 0.17, 0.10, 0.21, undefined, 10);
 addRect("tall right bar", 0.87, 0.91, 0.21, 0.42, undefined, 38);
@@ -65,25 +67,68 @@ addRect("left bar", 0.04, 0.18, 0.60, 0.66, undefined, 71);
 // ASSUMED: words "Long" / "Shadow", Poppins-Bold (installed), sized to the layout's widths (422 and 864 px).
 var up = P.text(c, "Long", { size: args.upSize || 180, color: objColor.slice(0, 3), font: args.font || "Poppins-Bold", name: "title upper", pos: [0.51 * W, 0.30 * H] });
 var lo = P.text(c, "Shadow", { size: args.loSize || 210, color: objColor.slice(0, 3), font: args.font || "Poppins-Bold", name: "title lower", pos: [0.495 * W, 0.515 * H] });
-objects.push(up); angles.push(60);
-objects.push(lo); angles.push(60);
 var upR = up.sourceRectAtTime(0, false), loR = lo.sourceRectAtTime(0, false);
+// Correction (2026-11-14, from the review): one shadow copy and one blur centre per title letter, so each letter throws
+// its own narrow band (a single centre for a whole word made the letters' rays fan out like a sunburst).
+// Each letter is its own black text layer, placed over its letter in the word from measured rectangles.
+function letterShadows(word, str, size) {
+  var R = word.sourceRectAtTime(0, false);
+  var wp = P.tf(word, "ADBE Position").value;
+  var left = wp[0] - R.width / 2, base = wp[1] - (R.top + R.height / 2);
+  var k, pre, pw, l, r, last = word;
+  for (k = 0; k < str.length; k++) {
+    pre = P.text(c, str.substr(0, k + 1), { size: size, color: [0, 0, 0], font: args.font || "Poppins-Bold", name: "probe" });
+    pw = pre.sourceRectAtTime(0, false).width;
+    pre.remove();
+    l = P.text(c, str.charAt(k), { size: size, color: [0, 0, 0], font: args.font || "Poppins-Bold", name: "letter " + word.name + " " + str.charAt(k) + (k + 1) });
+    r = l.sourceRectAtTime(0, false);
+    P.tf(l, "ADBE Position").setValue([left + pw - r.width / 2, base + r.top + r.height / 2]);
+    l.moveAfter(last);
+    last = l;
+    objects.push(l); angles.push(60); sizes.push([r.width, r.height]); isLetter.push(objects.length - 1); letterParent.push(word);
+  }
+}
+var isLetter = [], letterParent = [];
+var perLetter = (args.perLetter !== false);
+if (perLetter) {
+  letterShadows(up, "Long", args.upSize || 180);
+  letterShadows(lo, "Shadow", args.loSize || 210);
+} else {
+  objects.push(up); angles.push(60); sizes.push([upR.width, upR.height]);
+  objects.push(lo); angles.push(60); sizes.push([loR.width, loR.height]);
+}
 
-// ASSUMED: each blur centre sits DIST px from the object's middle, opposite the shadow's direction. The recipe's own
-// Center values are in an unknown layer's space; DIST is tuned by render so the streak runs about 0.09-0.14 of the
-// width past the object (layout).
-var DIST = args.dist || 220;
-// ASSUMED: shadow layer opacity 60 % (recipe: not shown, "shadows read as mid grey").
-var shadowOpacity = args.shadowOpacity === undefined ? 40 : args.shadowOpacity;
+// Correction (2026-11-14): the blur centre's distance is now worked out per object from the spread wanted. The rays from
+// one centre across an object open by about 2 * atan(half the object's width across the shadow / centre distance), so
+// distance = (width across / 2) / tan(spread / 2). args.spread is that spread in degrees; args.dist forces one distance.
+// The first build used 220 px for shapes and 300 px for whole title words (spreads of about 25 to 110 degrees).
+var SPREAD = (args.spread || 15) * Math.PI / 180;
+function centreDistance(idx) {
+  if (args.dist) return args.dist;
+  var th = angles[idx] * Math.PI / 180;
+  var across = sizes[idx][0] * Math.abs(Math.sin(th)) + sizes[idx][1] * Math.abs(Math.cos(th));
+  return (across / 2) / Math.tan(SPREAD / 2);
+}
+// Shadow layer opacity (recipe: not shown). First build 40 %; the review asks for about 60 to 70 %.
+var shadowOpacity = args.shadowOpacity === undefined ? 70 : args.shadowOpacity;
 
-var i, o, s, names = [];
+var i, o, s, names = [], dists = [];
 for (i = 0; i < objects.length; i++) {
   o = objects[i];
-  // Step 1: duplicate; the copy underneath is the shadow, parented to its object.
-  s = o.duplicate();
-  s.name = "TECH shadow " + o.name;
-  s.moveAfter(o);
-  s.parent = o;
+  var li = -1, q;
+  for (q = 0; q < isLetter.length; q++) if (isLetter[q] === i) li = q;
+  if (li >= 0) {
+    // A title letter: the black letter layer itself is the shadow copy, parented to its word (already below it).
+    s = o;
+    s.name = "TECH shadow " + o.name;
+    s.parent = letterParent[li];
+  } else {
+    // Step 1: duplicate; the copy underneath is the shadow, parented to its object.
+    s = o.duplicate();
+    s.name = "TECH shadow " + o.name;
+    s.moveAfter(o);
+    s.parent = o;
+  }
   // Step 2: no layer styles on the copy. The stand-ins have none, so there is nothing to remove.
   // Step 3: solid black with Fill.
   P.effect(s, "ADBE Fill");
@@ -96,7 +141,8 @@ for (i = 0; i < objects.length; i++) {
   // Step 5: aim the streak. SUBSTITUTE: the Center is dragged in the viewer in the tutorial; here an expression places it
   // up and to the left of the object, in comp pixels, converted to the layer's space.
   var th = angles[i] * Math.PI / 180;
-  var d = (o === up || o === lo) ? (args.titleDist || 300) : DIST; // ASSUMED: farther centre for the wide title words (less fanning)
+  var d = centreDistance(i);
+  dists.push(Math.round(d));
   var off = [-d * Math.cos(th), -d * Math.sin(th)];
   // Run fix: on these shape and text layers (comp-sized, unscaled) CC Radial Fast Blur reads Center in COMP pixels, not
   // layer space: a fixed Center of (1100, 167) on the top-left block's shadow threw it straight left, and (979, 600) on the
@@ -112,4 +158,4 @@ for (i = 0; i < objects.length; i++) {
   names.push(s.name);
 }
 
-return { comp: c.name, layers: c.numLayers, upper: [upR.width, upR.height], lower: [loR.width, loR.height], switchOff: names.join(", "), fillOpacity: fxp(s, "Fill", "Opacity").value };
+return { comp: c.name, layers: c.numLayers, upper: [upR.width, upR.height], lower: [loR.width, loR.height], switchOff: names.join(", "), centreDistances: dists, shadowOpacity: shadowOpacity, fillOpacity: fxp(s, "Fill", "Opacity").value };

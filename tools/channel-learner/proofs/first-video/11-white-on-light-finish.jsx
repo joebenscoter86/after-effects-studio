@@ -97,7 +97,10 @@ title.moveToBeginning();
 // Steps 1-2 (substitute): gradient #F1F5F7 at stop 0 to #DAE1E7 at stop 99.8 %, angle 40 degrees, aligned to the layer.
 var ang = 40 * Math.PI / 180;
 var dir = [Math.cos(ang), -Math.sin(ang)]; // comp y runs down
-var L = D * (Math.abs(Math.cos(ang)) + Math.abs(Math.sin(ang))); // ASSUMED: Align with Layer spans the bounds along the angle
+// Correction (2026-11-14, from the review): the ramp spans the disc's own diameter along 40 degrees, from its lower-left edge
+// to its upper-right edge. The first build spanned the bounding box along the angle (1.41 diameters), so the disc
+// showed only the darker half of the ramp. args.span overrides (in diameters).
+var L = D * (args.span || 1);
 var sgn = args.reverse ? -1 : 1;
 var p0 = [C[0] - sgn * dir[0] * L / 2, C[1] - sgn * dir[1] * L / 2];
 var p1 = [C[0] + sgn * dir[0] * L / 2 * 0.998, C[1] + sgn * dir[1] * L / 2 * 0.998];
@@ -107,8 +110,11 @@ ramp = fin.property("ADBE Effect Parade").property("TECH gradient overlay substi
 ramp.property("Ramp Shape").setValue(1);
 ramp.property("Start Color").setValue(hex("F1F5F7"));
 ramp.property("End Color").setValue(hex("DAE1E7"));
-ramp.property("Start of Ramp").expression = "fromComp([" + p0[0] + ", " + p0[1] + "])";
-ramp.property("End of Ramp").expression = "fromComp([" + p1[0] + ", " + p1[1] + "])";
+// Correction (2026-11-14): on a shape layer the effect's point controls read comp pixels, not the layer's own space.
+// The fromComp() expressions used before moved both points by the layer's position (960, 540), so the ramp sat up and
+// to the left of the disc and the disc's lower-left edge was already 55 % of the way along it. Plain comp values now.
+ramp.property("Start of Ramp").setValue(p0);
+ramp.property("End of Ramp").setValue(p1);
 
 // Layer styles need the comp open and the layer selected.
 c.openInViewer();

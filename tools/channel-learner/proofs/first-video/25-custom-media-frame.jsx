@@ -26,32 +26,44 @@ function addFill(sh, color) {
   return idx;
 }
 
-// ASSUMED: comp 1920 x 1080, 24 fps, 4 s (recipe: comp size unknown).
-var c = P.freshComp("25 custom media frame", 1920, 1080, 24, 4, [1, 1, 1]);
-var slide = P.solid(c, "white slide", [1, 1, 1]);
+// Run fix: comp 3840 x 2160 (the recipe measures it; the script predates that) and the shapes from the layout line.
+// A new shape layer sits at the comp centre with its anchor at 0,0, so the recipe's Rectangle 3 values
+// (595 x 1285 at 1374.5, 261.5) land at x 2997..3592, y 699..1984 in the comp: the layout's right block
+// (15.4% of the width wide, the frame's full height, right edge at 93.4%). The other two follow from the layout:
+// the left block is its mirror, and the top bar spans both blocks and is 29% of the height deep.
+var W = 3840, H = 2160;
+var c = P.freshComp("25 custom media frame", W, H, 24, 4, [1, 1, 1]);
+var slide = P.solid(c, "25 white slide", [1, 1, 1]);
+slide.name = "white slide";
 
 // Step 1: the frame shape, three rectangles in one shape layer with one grey fill and a switched-off stroke.
 var frame = P.shape(c, "frame shape");
 P.tf(frame.layer, "ADBE Anchor Point").setValue([0, 0]);
-P.tf(frame.layer, "ADBE Position").setValue([0, 0]);
-// Rectangle 1: wide bar across the top. ASSUMED: spans the outer edges of the two blocks (x 248..1672), y -100..560, bleeding off the top
-// because Rectangle 3 (recipe values) already runs past the top edge.
-addRect(frame, [1424, 660], [960, 230], 20);
-// Rectangle 2: left block. ASSUMED: narrower than Rectangle 3 (x 248..648) so the notch is wide enough for the text.
-addRect(frame, [400, 1285], [448, 261.5], 20);
+P.tf(frame.layer, "ADBE Position").setValue([W / 2, H / 2]);
+var R3 = { size: [595, 1285], pos: [1374.5, 261.5] };                 // recipe values
+var top = R3.pos[1] - R3.size[1] / 2;                                  // -381 (699 in the comp)
+var outer = R3.pos[0] + R3.size[0] / 2;                                // 1672 (3592 in the comp)
+var BAR = 0.29 * H;                                                    // 626 px deep (layout)
+// Rectangle 1: wide bar across the top, spanning both blocks.
+addRect(frame, [outer * 2, BAR], [0, top + BAR / 2], 20);
+// Rectangle 2: left block, the mirror of Rectangle 3 (layout: both blocks 15.4% of the width wide).
+addRect(frame, R3.size, [-R3.pos[0], R3.pos[1]], 20);
 // Rectangle 3: right block, recipe values.
-addRect(frame, [595, 1285], [1374.5, 261.5], 20);
+addRect(frame, R3.size, R3.pos, 20);
 addFill(frame, [0.5, 0.5, 0.5, 1]); // ASSUMED: grey value
 var st = P.stroke(frame, [0, 0, 0, 1], 3);
 P.contents(frame).property(st).enabled = false; // recipe: Stroke Width 3.0, stroke switched off
 
 // The "photo": a dark building stand-in, created after the shape so it sits directly above it (step 2).
-var photo = P.solid(c, "building photo", [0.15, 0.17, 0.2]);
+var photo = P.solid(c, "25 building photo", [0.15, 0.17, 0.2]);
+photo.name = "building photo";
 var ramp = P.effect(photo, "Gradient Ramp");
-ramp.property("Start of Ramp").setValue([960, 0]);
-ramp.property("Start Color").setValue([0.32, 0.36, 0.42]);
-ramp.property("End of Ramp").setValue([960, 1080]);
-ramp.property("End Color").setValue([0.05, 0.06, 0.08]);
+var ri = ramp.propertyIndex;
+var RP = function (n) { return photo.property("ADBE Effect Parade").property(ri).property(n); };
+RP("Start of Ramp").setValue([W * 0.3, 0.33 * H]);
+RP("Start Color").setValue([0.36, 0.42, 0.5]);
+RP("End of Ramp").setValue([W * 0.7, 0.92 * H]);
+RP("End Color").setValue([0.04, 0.05, 0.07]);
 
 // Step 3: the photo's eye stays on (a hidden layer renders nothing even with a matte).
 photo.enabled = true;
@@ -64,7 +76,35 @@ if (args.matte !== false) {
   photo.enabled = false; // before: grey shape over the slide, clip hidden
 }
 
-// The headline in the notch (on the white slide, below the top bar, between the blocks: x 648..1077).
-P.text(c, "Thank You", { size: 78, color: [0, 0, 0], pos: [862, 760], name: "thank you" }); // ASSUMED: size and place
+// The headline in the notch: about 52% of the width wide, capitals 12% of the height tall, centred at 50% across (layout);
+// placed in the middle of the notch (the layout gives no height for it).
+var cand = [args.font || "Poppins-SemiBold", "Poppins-Bold", "HelveticaNeue-Bold", "Arial-BoldMT"];
+var FONT = null, ci, fo;
+for (ci = 0; ci < cand.length && !FONT; ci++) {
+  try { fo = app.fonts.getFontsByPostScriptName(cand[ci]); if (fo.length && !fo[0].isSubstitute) FONT = cand[ci]; } catch (errFont) {}
+}
+if (!FONT) FONT = "Arial-BoldMT";
+var probe = P.text(c, "T", { size: 100, font: FONT, color: [0, 0, 0], name: "probe" });
+var FS = 100 * (0.12 * H) / probe.sourceRectAtTime(0, false).height;
+probe.remove();
+var STR = args.headline || "Thank You";
+var notchTop = H / 2 + top + BAR, notchBottom = H / 2 + top + R3.size[1];
+var head = P.text(c, STR, { size: FS, font: FONT, color: [0, 0, 0], name: "headline" });
+var hr = head.sourceRectAtTime(0, false);
+var TRK = Math.round((0.52 * W - hr.width) / (STR.length - 1) * 1000 / FS);
+var hp = head.property("ADBE Text Properties").property("ADBE Text Document");
+var hd = hp.value; hd.tracking = TRK; hp.setValue(hd);
+hr = head.sourceRectAtTime(0, false);
+P.tf(head, "ADBE Anchor Point").setValue([hr.left + hr.width / 2, hr.top + hr.height / 2]);
+P.tf(head, "ADBE Position").setValue([W / 2, (notchTop + notchBottom) / 2]);
 
-return { comp: c.name, id: c.id, layers: c.numLayers, matte: (args.matte !== false) };
+// Remove this script's own unused solids from earlier runs.
+var oi, oit;
+for (oi = app.project.numItems; oi >= 1; oi--) {
+  oit = app.project.item(oi);
+  if (oit instanceof FootageItem && oit.mainSource instanceof SolidSource && oit.usedIn.length === 0 &&
+      (oit.name === "25 white slide" || oit.name === "25 building photo")) oit.remove();
+}
+var ml = null; try { ml = photo.trackMatteLayer ? photo.trackMatteLayer.name : null; } catch (e1) {}
+return { comp: c.name, id: c.id, layers: c.numLayers, matte: (args.matte !== false), matteLayer: ml, shapeEye: frame.layer.enabled,
+  font: FONT, fontSize: FS, tracking: TRK, headline: [hr.width, hr.height], notch: [notchTop, notchBottom] };

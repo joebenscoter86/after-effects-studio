@@ -108,7 +108,9 @@ light.property("ADBE Light Options Group").property("Falloff").setValue(2); // S
 light.property("ADBE Light Options Group").property("Radius").setValue(3530);
 light.property("ADBE Light Options Group").property("Falloff Distance").setValue(500);
 light.property("ADBE Light Options Group").property("Casts Shadows").setValue(1);
-light.property("ADBE Light Options Group").property("Shadow Darkness").setValue(45);
+// Correction (2026-11-14, from the review): the recipe shows 45 %, which gives a mid-grey shadow (0.55 of the open floor)
+// where the tutorial's is near black (0.22). Raised toward 78 %. args.shadowDarkness = 45 gives the recipe's value.
+light.property("ADBE Light Options Group").property("Shadow Darkness").setValue(args.shadowDarkness === undefined ? 78 : args.shadowDarkness);
 light.property("ADBE Light Options Group").property("Shadow Diffusion").setValue(205);
 
 // 2D title on top of everything (above all 3D layers, so it does not split the 3D group).

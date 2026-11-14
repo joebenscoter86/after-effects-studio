@@ -26,7 +26,7 @@ var W = 1920, H = 1080, FPS = 24, DUR = 4;
 // (the recipe's Displacement Map reads the texture as Effects & Masks; a precomp makes Source and Effects & Masks the same).
 // ASSUMED: texture look (recipe: "dark creased, scratched paper"; the source is not given).
 var tc = P.freshComp("21 paper texture", W, H, FPS, DUR, [0, 0, 0]);
-var paper = P.solid(tc, "paper", [0.5, 0.5, 0.5]);
+var paper = P.solid(tc, "21 paper", [0.5, 0.5, 0.5]);
 var fn = P.effect(paper, "Fractal Noise");
 var fni = fn.propertyIndex;
 paper.property("ADBE Effect Parade").property(fni).property("Contrast").setValue(160);
@@ -36,21 +36,61 @@ paper.property("ADBE Effect Parade").property(fni).property("Complexity").setVal
 var tint = P.effect(paper, "Tint");
 var ti = tint.propertyIndex;
 paper.property("ADBE Effect Parade").property(ti).property("Map Black To").setValue([0.02, 0.02, 0.02]);
-paper.property("ADBE Effect Parade").property(ti).property("Map White To").setValue([0.3, 0.29, 0.27]);
+paper.property("ADBE Effect Parade").property(ti).property("Map White To").setValue([0.115, 0.11, 0.105]); // Run fix: was 0.30; with Input White 33/255 the title clipped to white. The paper now peaks near 29/255 so the lifted title reads grey.
 
 var c = P.freshComp("21 texture through a matte", W, H, FPS, DUR, [0.03, 0.03, 0.035]);
 
 // 1. Texture at the bottom, black title above it.
 var tex = c.layers.add(tc);
 tex.name = "texture";
-// ASSUMED: word, font and size (recipe: "a tall condensed all-caps word"; font and size not given).
-var title = P.text(c, args.word || "GRIT", { size: args.size || 520, font: args.font || "Impact", color: [0, 0, 0], name: "title" });
+// Run fix: sizes from the recipe's layout line. Title word 54% of the width wide, 42% of the height tall (cap height),
+// centred at 50% across, 47% down; strokes about 3% of the width thick, so a condensed face lighter than Impact.
+// ASSUMED: the word (recipe: "a tall condensed all-caps word"; font not given).
+// Run fix: a font found by name may be a substitute; take the first candidate that is really installed.
+var cand = [args.font || "DINCondensed-Bold", "BebasNeue-Regular", "Oswald-Medium", "Impact", "HelveticaNeue-CondensedBold"];
+var FONT = null, ci, fo;
+for (ci = 0; ci < cand.length && !FONT; ci++) {
+  try { fo = app.fonts.getFontsByPostScriptName(cand[ci]); if (fo.length && !fo[0].isSubstitute) FONT = cand[ci]; } catch (errFont) {}
+}
+if (!FONT) FONT = "Impact";
+var WORD = args.word || "DUST";
+var TW = 0.54 * W, TH = 0.42 * H;
+var title = P.text(c, WORD, { size: 500, font: FONT, color: [0, 0, 0], name: "title" });
+var tdocP = title.property("ADBE Text Properties").property("ADBE Text Document");
+var r0 = title.sourceRectAtTime(0, false);
+var td = tdocP.value;
+var fsz = 500 * TH / r0.height;
+td.fontSize = fsz;
+tdocP.setValue(td);
+r0 = title.sourceRectAtTime(0, false);
+// Tracking brings the word to the measured width (1000 units = one em per letter gap).
+td = tdocP.value;
+var trk = Math.round((TW - r0.width) / (WORD.length - 1) * 1000 / fsz);
+td.tracking = trk;
+tdocP.setValue(td);
+r0 = title.sourceRectAtTime(0, false);
+P.tf(title, "ADBE Anchor Point").setValue([r0.left + r0.width / 2, r0.top + r0.height / 2]);
+P.tf(title, "ADBE Position").setValue([0.50 * W, 0.47 * H]);
 var tfill = P.effect(title, "Fill");
 title.property("ADBE Effect Parade").property(tfill.propertyIndex).property("Color").setValue([0, 0, 0]);
 
-// Example content: small white labels round the title (not part of the technique).
-P.text(c, "VOL. 02", { size: 28, color: [1, 1, 1], tracking: 200, pos: [W / 2 - 380, H / 2 - 300], name: "label 1" });
-P.text(c, "PRINTED MATTER", { size: 28, color: [1, 1, 1], tracking: 200, pos: [W / 2 + 330, H / 2 + 310], name: "label 2" });
+// Example content: small white labels round the title (not part of the technique), placed from the layout line:
+// a line under the title at 77% down, about 15% of the width wide; a top line centred at 12% down;
+// a block at the bottom left, 4% in, 85 to 94% down.
+var fitW = function (l, w) {
+  var rr = l.sourceRectAtTime(0, false);
+  var s = 100 * w / rr.width;
+  P.tf(l, "ADBE Scale").setValue([s, s]);
+};
+var lb1 = P.text(c, "PRINTED MATTER", { size: 28, font: FONT, color: [1, 1, 1], tracking: 200, pos: [0.50 * W, 0.77 * H], name: "label under" });
+fitW(lb1, 0.15 * W);
+var lb2 = P.text(c, "VOL. 02", { size: 28, font: FONT, color: [1, 1, 1], tracking: 200, pos: [0.50 * W, 0.12 * H], name: "label top" });
+var lb3 = P.text(c, "EDITION OF 50\rRISOGRAPH\rTWO INKS", { size: 26, font: FONT, color: [1, 1, 1], tracking: 150, name: "label bottom left" });
+var r3 = lb3.sourceRectAtTime(0, false);
+var s3 = 100 * (0.09 * H) / r3.height;
+P.tf(lb3, "ADBE Scale").setValue([s3, s3]);
+P.tf(lb3, "ADBE Anchor Point").setValue([r3.left, r3.top]);
+P.tf(lb3, "ADBE Position").setValue([0.04 * W, 0.85 * H]);
 
 if (!before) {
   // 2. Duplicate the texture and put the copy directly under the title.
@@ -94,4 +134,12 @@ if (!before) {
   title.property("ADBE Effect Parade").property(rei).name = "TECH Roughen Edges";
 }
 
-return { comp: c.name, id: c.id, layers: c.numLayers, before: before, textureComp: tc.name };
+// Run fix: each run leaves the earlier run's "paper" solid unused in the project; remove this script's own unused ones.
+var oi, oit, removed = 0;
+for (oi = app.project.numItems; oi >= 1; oi--) {
+  oit = app.project.item(oi);
+  if (oit instanceof FootageItem && oit.name === "21 paper" && oit.mainSource instanceof SolidSource && oit.usedIn.length === 0) { oit.remove(); removed++; }
+}
+var rf = title.sourceRectAtTime(0, false);
+return { comp: c.name, id: c.id, layers: c.numLayers, before: before, textureComp: tc.name, font: FONT, fontSize: fsz, tracking: trk,
+  titleRect: [rf.width, rf.height] };

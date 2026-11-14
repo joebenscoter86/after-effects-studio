@@ -52,7 +52,8 @@ P.text(pre, "System Error", { size: 30, color: [1, 1, 1], pos: [PW / 2, 30], nam
 // X icon: a red disc with two crossed strokes.
 var icon = originShape(pre, "x icon disc");
 var disc = P.ellipse(icon, [120, 120]);
-P.contents(icon).property(disc.propertyIndex).property("ADBE Vector Ellipse Position").setValue([150, 210]);
+var discIdx = disc.propertyIndex;
+P.contents(icon).property(discIdx).property("ADBE Vector Ellipse Position").setValue([150, 210]);
 addFill(icon, [0.8, 0.1, 0.1, 1]);
 var cross = originShape(pre, "x icon cross");
 P.path(cross, [[115, 175], [185, 245]], null, null, false);
@@ -60,21 +61,55 @@ P.path(cross, [[185, 175], [115, 245]], null, null, false);
 P.stroke(cross, [1, 1, 1, 1], 14, 2);
 
 // Message text.
-P.text(pre, "Something went wrong.", { size: 40, color: [0, 0, 0], pos: [470, 210], name: "message" });
+// Run fix: sized from the recipe's layout line, divided by the 2050% scale (x 20.5). In the main comp the word FIX has
+// capitals 45% of the height tall (486 px -> 23.7 px here), spans 10.5% to 55% across (854 px -> 41.7 px here), with a gap
+// of 11.6% of the width to the next word (223 px -> 10.9 px) and the line above on a baseline 61% of the height higher
+// (659 px -> 32.1 px). So FIX is a word in a two-line message, not the button label the script first zoomed on.
+// ASSUMED: the words ("CANNOT CONTINUE" / "FIX THE ERROR") and the face.
+var K = 20.5;
+var CAP = 0.45 * 1080 / K, FIXW = (0.55 - 0.105) * 1920 / K, GAP = 0.116 * 1920 / K, LEAD = 0.61 * 1080 / K;
+// Run fix: Helvetica Neue Condensed Bold gave stems 5.1% of the width at 2050% (layout 3.3%); Arial Narrow is lighter.
+var cand = [args.font || "ArialNarrow", "HelveticaNeue-CondensedBold", "DINCondensed-Bold", "Arial-BoldMT"];
+var FONT = null, ci, fo;
+for (ci = 0; ci < cand.length && !FONT; ci++) {
+  try { fo = app.fonts.getFontsByPostScriptName(cand[ci]); if (fo.length && !fo[0].isSubstitute) FONT = cand[ci]; } catch (errFont) {}
+}
+if (!FONT) FONT = "Arial-BoldMT";
+var probe = P.text(pre, "FIX", { size: 100, font: FONT, color: [0, 0, 0], name: "probe" });
+var pr = probe.sourceRectAtTime(0, false);
+var FS = 100 * CAP / pr.height;
+var pd = probe.property("ADBE Text Properties").property("ADBE Text Document");
+var pdoc = pd.value; pdoc.fontSize = FS; pd.setValue(pdoc);
+pr = probe.sourceRectAtTime(0, false);
+var TRK = Math.round((FIXW - pr.width) / 2 * 1000 / FS); // two letter gaps in FIX
+probe.remove();
+// Place a caps-only text layer by its left edge and baseline (P.text centres the anchor on the bounds).
+function lineAt(str, left, base, name) {
+  var l = P.text(pre, str, { size: FS, font: FONT, color: [0, 0, 0], tracking: TRK, name: name });
+  var r = l.sourceRectAtTime(0, false);
+  P.tf(l, "ADBE Position").setValue([left + r.width / 2, base - r.height / 2]);
+  return { layer: l, w: r.width, h: r.height, cx: left + r.width / 2, cy: base - r.height / 2 };
+}
+var MX = 250, BASE = 250; // message block: left edge and the FIX line's baseline, to the right of the X icon
+var fixT = lineAt("FIX", MX, BASE, "message FIX");
+lineAt("THE ERROR", MX + fixT.w + GAP, BASE, "message rest");
+lineAt("CANNOT CONTINUE", MX, BASE - LEAD, "message line 1");
 
-// FIX button: outlined light box with the label the zoom lands on.
+// Button: outlined light box (kept from the first build; the zoom no longer lands on it).
 var BTN = [PW / 2, 390];
 var btn = originShape(pre, "fix button");
 addRect(btn, [200, 70], BTN, 0);
 addFill(btn, [0.88, 0.88, 0.88, 1]);
 P.stroke(btn, [0, 0, 0, 1], 3);
-P.text(pre, "FIX", { size: 40, color: [0, 0, 0], pos: BTN, name: "fix label" });
+P.text(pre, "OK", { size: 34, font: FONT, color: [0, 0, 0], pos: BTN, name: "button label" });
 
 // Main comp: step 1, the precomp placed in the main comp.
-var c = P.freshComp("24 sharp scaled precomp", 1920, 1080, 24, DUR, [0.12, 0.12, 0.14]);
+// Run fix: background a flat light grey (layout); at 2050% the grey panel fills the frame anyway.
+var c = P.freshComp("24 sharp scaled precomp", 1920, 1080, 24, DUR, [0.75, 0.75, 0.75]);
 var L = c.layers.add(pre);
 L.name = "dialog";
-var ANCHOR = BTN; // zoom on the FIX label
+// Anchor so that at 2050% FIX spans 10.5% to 55% across (its centre at 32.75%) with its capitals centred at 54.5% down.
+var ANCHOR = [fixT.cx + (0.5 - 0.3275) * 1920 / K, fixT.cy - (0.545 - 0.5) * 1080 / K];
 P.tf(L, "ADBE Anchor Point").setValue(ANCHOR);
 P.tf(L, "ADBE Position").setValue([960, 540]);
 
@@ -88,4 +123,5 @@ sc.setValueAtTime(4, [2050, 2050]);
 // Step 3: the sunburst switch.
 L.collapseTransformation = (args.sharp !== false);
 
-return { comp: c.name, id: c.id, precomp: pre.name, judgeTime: 4.5, collapseTransformation: L.collapseTransformation };
+return { comp: c.name, id: c.id, precomp: pre.name, judgeTime: 4.5, collapseTransformation: L.collapseTransformation,
+  font: FONT, fontSize: FS, tracking: TRK, fix: [fixT.w, fixT.h], anchor: ANCHOR };
