@@ -13,3 +13,14 @@ Started 2026-11-14 01:20 PST. Branch `adobe/channel-learner` (from main at 770d9
 
 ## Ledger
 
+- Task 1 done (words, sentences, transcript comparison): 13 tests pass. On the real files: whisper 1,671 words, captions 1,682, agreement 97.3 %, 60 disagreements. Whisper is right on effect names where the captions are wrong ("roughen edges", "Auto-Orient", "pre-compose"); both miss "Gaussian" (whisper "gauge and", captions "gajon"), so the on-screen text has to settle it. The timeline uses whisper's words when there are no uploaded captions.
+- 01:28 After Effects handed over by the other session. Its scratch project was closed unsaved at its request; our project is `proof/proofs.aep` in the study folder (8 bpc, no working space).
+- Task 2 done (frame change measurement, noisy cells, kept frames): 12 tests pass. Measured about 540 frames a second on the real 4K file, so the whole video takes about a minute.
+- Task 3 done (text recognition binary, value changes between frames): 12 tests pass. About 0.08 s an image in batches. One-digit values are kept (the video sets a grid spacing of 3 and a ball size of 7); confidence floor 0.6.
+- Task 4 done (timeline, command line with a ledger, `--redo`): whole suite 54 tests pass. Commits c0967df, 63d6e57, 129843f, b3f535f, c659f41.
+- 01:40 Task 5, first run on the real video: gather adopted the files on disk; align took 3 min 18 s (changes 77 s, frames 78 s, text 47 s). 68 sentences (whisper), 565 kept frames (385 motion, 133 settle, 47 sentence), all read.
+  - Fault found: 43,067 "text changes" and a 1.5 MB timeline. The video's editor zooms, pans and cuts around the screen recording, so matching text boxes by position reports everything as new at each view change. Being reworked to match by property label (rows of label and value), with timecodes left out and a "named on screen" list per sentence. Task 5 is not done until that lands and three tips are checked by eye.
+  - No cell is "noisy" by the 50 % rule (the advert panel moves with the zooms), so nothing is ignored.
+- First proof ahead of the recipes, to prove the harness: technique 01 (dotted stroke) built by script through the plugin's eval.run, rendered with ae_render_frame, set beside the tutorial's frame at 0:34 (`proof/01/side-by-side.png`). It matches, including the doubled dot where the dashes wrap. The plugin has no operation for stroke dashes or line caps; done in ExtendScript.
+- Prompts for writing, checking and proving recipes are in `tools/channel-learner/prompts/`. Proof builders get the recipe only, never the video: that is the test of whether a recipe is enough.
+- Gather for the next three videos (8oVLS0ZlKC4, il_OcNyqDOE, eoBEBx1PbS4) started in the background.
