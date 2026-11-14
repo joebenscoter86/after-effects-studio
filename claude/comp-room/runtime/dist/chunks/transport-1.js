@@ -737,7 +737,9 @@ async function sweepOrphanTmpFiles(dir, now = Date.now()) {
 }
 function waitingLaunchSentence(since, by, now = /* @__PURE__ */ new Date()) {
 	const pad = (n) => String(n).padStart(2, "0");
-	return `a launch has been waiting in After Effects since ${`${pad(since.getHours())}:${pad(since.getMinutes())}:${pad(since.getSeconds())}`} (${Math.max(0, Math.round((now.getTime() - since.getTime()) / 1e3))} s ago, sent by ${by}), and nothing new was launched`;
+	const clock = `${pad(since.getHours())}:${pad(since.getMinutes())}:${pad(since.getSeconds())}`;
+	const seconds = Math.max(0, Math.round((now.getTime() - since.getTime()) / 1e3));
+	return `${by === "this call" ? "a launch has been waiting" : "a script has been running or waiting"} in After Effects since ${clock} (${seconds} s ago, sent by ${by}), and nothing new was launched`;
 }
 function failure(errorCode, message, extra = {}) {
 	return {
@@ -789,7 +791,7 @@ function sleep(ms) {
 function serializeRequest(request) {
 	return JSON.stringify(request).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
 }
-var ORPHAN_TMP_SWEEP_MS, REAP_INTERVAL_MS, EMPTY_TMP_GRACE_MS, UNCLAIMED_RESPONSE_GRACE_MS, ORPHAN_WATCH_MS, PICKED_UP_TIMEOUT_NOTE, WAITING_LAUNCH_HINT, FileIpcTransport, UNREADABLE_RESPONSE_GRACE_MS, UnreadableResponseWatch;
+var ORPHAN_TMP_SWEEP_MS, REAP_INTERVAL_MS, EMPTY_TMP_GRACE_MS, UNCLAIMED_RESPONSE_GRACE_MS, ORPHAN_WATCH_MS, PICKED_UP_TIMEOUT_NOTE, WAITING_LAUNCH_HINT, RUNNING_ELSEWHERE_HINT, FileIpcTransport, UNREADABLE_RESPONSE_GRACE_MS, UnreadableResponseWatch;
 function init_FileIpcTransport() {
 	return (init_FileIpcTransport = __esmMin((() => {
 		init_config();
@@ -804,6 +806,7 @@ function init_FileIpcTransport() {
 		ORPHAN_WATCH_MS = 18e5;
 		PICKED_UP_TIMEOUT_NOTE = "The most likely cause is a modal dialog in After Effects — an error box raised by the script (an undo raised one on 2026-11-10) or a warning — which blocks all scripting until a person clicks it; instance.dialogs may not list it, so look at the After Effects window. Once it is dismissed the script finishes and the plugin cleans up after it (busy lock, temp response).";
 		WAITING_LAUNCH_HINT = "Look at the After Effects window: a dialog there blocks every script until someone closes it (instance.dialogs lists it when Accessibility allows), and a running script holds the next one until it ends. When it clears, the waiting launch runs; it no longer finds this request, so retry after that. Do not quit or force-quit After Effects to clear it, and do not repeat a write until you have inspected the project.";
+		RUNNING_ELSEWHERE_HINT = "Retry when that script has ended; a render can take minutes. If nothing should be running, look at the After Effects window for a dialog (instance.dialogs lists it when Accessibility allows). Do not quit or force-quit After Effects to clear it, and do not repeat a write until you have inspected the project.";
 		FileIpcTransport = class {
 			afterFxPath = null;
 			inflight = Promise.resolve();
@@ -1007,9 +1010,7 @@ function init_FileIpcTransport() {
 					});
 				}
 				let leaveLockForRunningScript = false;
-				let consumedByAe = false;
 				const lock = this.launchLockFor();
-				let releaseLaunch = () => {};
 				try {
 					const spawnState = {
 						error: null,
@@ -1030,7 +1031,6 @@ function init_FileIpcTransport() {
 						}
 						ls.waitingBehind = null;
 						ls.plan = outcome.plan;
-						releaseLaunch = outcome.release;
 						ls.launchedAt = Date.now();
 						ls.attempts++;
 					};
@@ -1043,12 +1043,10 @@ function init_FileIpcTransport() {
 					while (Date.now() < deadline) {
 						const read = await this.tryReadResponse(responsePath);
 						if (read.kind === "ready") {
-							consumedByAe = true;
 							await this.safeUnlink(responsePath);
 							return this.toEvalResult(read.response, Date.now() - started);
 						}
 						if (unreadable.settled(read, Date.now()) && read.kind === "unreadable") {
-							consumedByAe = true;
 							await this.safeUnlink(responsePath);
 							return unreadableResponseFailure(read, started);
 						}
@@ -1060,19 +1058,14 @@ function init_FileIpcTransport() {
 						}
 						const current = ls.plan;
 						if (!requestConsumed && ls.waitingBehind !== null) {
-							if (!await this.fileExists(requestPath)) {
-								requestConsumed = true;
-								consumedByAe = true;
-							} else {
+							if (!await this.fileExists(requestPath)) requestConsumed = true;
+							else {
 								await tryLaunch();
 								if (spawnState.error !== null) return await this.spawnFailure(spawnState.error, requestPath, started);
 							}
 						} else if (!requestConsumed && current !== null && now - ls.launchedAt >= 2500) {
-							if (!await this.fileExists(requestPath)) {
-								requestConsumed = true;
-								consumedByAe = true;
-								releaseLaunch();
-							} else if (spawnState.child !== null && !spawnState.exited && current.detectPhantom) {
+							if (!await this.fileExists(requestPath)) requestConsumed = true;
+							else if (spawnState.child !== null && !spawnState.exited && current.detectPhantom) {
 								if (now - ls.launchedAt >= 4e3) return await this.phantomFailure(spawnState, requestPath, started);
 							} else if (spawnState.child !== null && !spawnState.exited) {
 								if (looksWhileWaiting < 3 - 1 && now - ls.launchedAt >= 2500 * (looksWhileWaiting + 1)) {
@@ -1081,7 +1074,6 @@ function init_FileIpcTransport() {
 									if (dialogs.length > 0) {
 										const reclaimed2 = await this.safeUnlink(requestPath);
 										leaveLockForRunningScript = !reclaimed2;
-										consumedByAe = !reclaimed2;
 										if (!reclaimed2) this.watchOrphan(id, RUNTIME_DIR);
 										return dialogFailure(dialogs, reclaimed2 ? `${waitingLaunchSentence(new Date(ls.launchedAt), "this call")}; the request was never picked up and has been discarded` : "the request disappeared before it could be reclaimed; the operation may have started", started);
 									}
@@ -1096,7 +1088,6 @@ function init_FileIpcTransport() {
 								if (dialogs.length > 0) {
 									const reclaimed2 = await this.safeUnlink(requestPath);
 									leaveLockForRunningScript = !reclaimed2;
-									consumedByAe = !reclaimed2;
 									if (!reclaimed2) this.watchOrphan(id, RUNTIME_DIR);
 									return dialogFailure(dialogs, reclaimed2 ? `the request was never picked up after ${ls.attempts} launch attempt${ls.attempts === 1 ? "" : "s"} and has been discarded` : "the request disappeared before it could be reclaimed; the operation may have started", started);
 								}
@@ -1108,15 +1099,16 @@ function init_FileIpcTransport() {
 					}
 					const reclaimed = await this.safeUnlink(requestPath);
 					leaveLockForRunningScript = !reclaimed;
-					consumedByAe = !reclaimed;
 					if (!reclaimed) this.watchOrphan(id, RUNTIME_DIR);
 					const { dialogs: pushDialogs, scripts: pushScripts } = await this.lookAtAe();
-					const waiting = !reclaimed ? null : ls.waitingBehind !== null ? waitingLaunchSentence(new Date(ls.waitingBehind.launchedAt), "an earlier call") : ls.plan !== null && !ls.plan.detectPhantom && spawnState.child !== null && !spawnState.exited ? waitingLaunchSentence(new Date(ls.launchedAt), "this call") : null;
-					if (waiting !== null) {
+					const behindAnother = reclaimed && ls.waitingBehind !== null ? ls.waitingBehind : null;
+					const ownWaiting = reclaimed && behindAnother === null && ls.plan !== null && !ls.plan.detectPhantom && spawnState.child !== null && !spawnState.exited;
+					if (behindAnother !== null || ownWaiting) {
+						const waiting = waitingLaunchSentence(new Date(behindAnother !== null ? behindAnother.launchedAt : ls.launchedAt), behindAnother !== null ? "another call" : "this call");
 						if (pushDialogs.length > 0) return dialogFailure(pushDialogs, `timeout after ${timeoutMs}ms; ${waiting}; the request was never picked up and has been discarded`, started);
-						return failure("TIMEOUT", `timeout after ${timeoutMs}ms: ${waiting}. ` + (pushScripts.length > 0 ? `${scriptRunningMessage(pushScripts)}. ` : "After Effects is probably showing a dialog or is busy with another script. ") + "The request was never picked up and has been discarded.", {
+						return failure("TIMEOUT", `timeout after ${timeoutMs}ms: ${waiting}. ${pushScripts.length > 0 ? `${scriptRunningMessage(pushScripts)}. ` : behindAnother !== null ? "One After Effects takes one script at a time, so a long one, such as a render, makes every other call wait. " : "After Effects is probably showing a dialog or is busy with another script. "}The request was never picked up and has been discarded.`, {
 							durationMs: Date.now() - started,
-							hint: WAITING_LAUNCH_HINT
+							hint: behindAnother !== null ? RUNNING_ELSEWHERE_HINT : WAITING_LAUNCH_HINT
 						});
 					}
 					if (pushDialogs.length === 0 && pushScripts.length > 0) return failure("TIMEOUT", `timeout after ${timeoutMs}ms waiting for After Effects to respond` + (reclaimed ? " (the request was never picked up and has been discarded)" : " (the request WAS picked up by AE; the operation may still be running)") + `. ${scriptRunningMessage(pushScripts)}.`, {
@@ -1129,7 +1121,6 @@ function init_FileIpcTransport() {
 						hint: "Is AE running with a project open? Is 'Allow Scripts to Write Files and Access Network' enabled? Is AE showing a modal dialog (e.g. 'Attempt was made to run a second script')? Dismiss it — scripting is blocked while it is open. " + (process.platform === "darwin" ? "Is your MCP client allowed to control After Effects (System Settings → Privacy & Security → Automation)? " : "") + "Do not repeat a write until you inspect the actual project state. Preserve unsaved work; do not force-quit AE as routine recovery."
 					});
 				} finally {
-					if (consumedByAe) releaseLaunch();
 					if (!leaveLockForRunningScript) await this.releaseBusyLock(id);
 				}
 			}
@@ -1198,10 +1189,12 @@ function init_FileIpcTransport() {
 			}
 			/**
 			* Launch the dispatcher holding the launch lock, or report the live launch
-			* that holds it and launch nothing. The lock goes back when the launcher
-			* exits or fails to start, or when the caller calls `release` (the request
-			* was consumed). A lock folder that cannot be used costs the lock, not the
-			* launch: the call goes ahead as it did before the lock existed.
+			* that holds it and launch nothing. The lock goes back only when the
+			* launcher exits or fails to start: on macOS the osascript lives as long as
+			* its DoScript, waiting and then running, and one DoScript at a time is
+			* what After Effects' "second script" warning asks for. A lock folder that
+			* cannot be used costs the lock, not the launch: the call goes ahead as it
+			* did before the lock existed.
 			*/
 			async launchUnderLock(state, requestId, lock) {
 				let token = null;
@@ -1230,10 +1223,7 @@ function init_FileIpcTransport() {
 					recorded = lock.setLauncher(own, pid).catch(() => {});
 					await recorded;
 				} else if (state.error !== null || state.child === null) release();
-				return {
-					plan,
-					release
-				};
+				return { plan };
 			}
 			/**
 			* The launcher child outlived a forwarder with our request untouched: it is

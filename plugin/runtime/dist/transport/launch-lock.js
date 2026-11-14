@@ -5,7 +5,7 @@
 //
 //   { token, serverPid, launcherPid, requestId, launchedAt }
 //
-// and it is held while that launcher can still deliver a script: a waiter
+// and it is held while that launcher lives, its script waiting or running: a waiter
 // breaks it only when the launcher is gone (its pid is dead, or, in the
 // process that wrote it, it is no longer in the table below) or when it is
 // older than LAUNCH_LOCK_STALE_MS.

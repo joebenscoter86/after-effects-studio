@@ -88,14 +88,18 @@ export declare const ORPHAN_WATCH_MS: number;
  */
 export declare const PICKED_UP_TIMEOUT_NOTE: string;
 /**
- * What a call says when its deadline passes with a launch still waiting in
- * After Effects (macOS: its osascript alive, the request never consumed):
- * when that launch was sent, by whom, and that nothing new was launched.
- * Live, 2026-11-14: a second DoScript sent 3 s after the first, while the
- * first still waited, raised After Effects' "second script" warning.
+ * What a call says when its deadline passes behind a launch it would not
+ * double (macOS): when that launch was sent, by whom, and that nothing new
+ * was launched. "this call": our own osascript is alive and the request was
+ * never consumed, so the DoScript waits in After Effects. "another call": the
+ * launch lock is held by a live launcher, which may be waiting or already
+ * running its script. Live, 2026-11-14: a second DoScript sent 3 s after the
+ * first, while the first still waited, raised After Effects' "second script"
+ * warning.
  */
-export declare function waitingLaunchSentence(since: Date, by: "this call" | "an earlier call", now?: Date): string;
+export declare function waitingLaunchSentence(since: Date, by: "this call" | "another call", now?: Date): string;
 export declare const WAITING_LAUNCH_HINT: string;
+export declare const RUNNING_ELSEWHERE_HINT: string;
 export interface DispatcherResponse {
     id: string | null;
     ok: boolean;
@@ -198,10 +202,12 @@ export declare class FileIpcTransport implements AeTransport {
     private launchLockFor;
     /**
      * Launch the dispatcher holding the launch lock, or report the live launch
-     * that holds it and launch nothing. The lock goes back when the launcher
-     * exits or fails to start, or when the caller calls `release` (the request
-     * was consumed). A lock folder that cannot be used costs the lock, not the
-     * launch: the call goes ahead as it did before the lock existed.
+     * that holds it and launch nothing. The lock goes back only when the
+     * launcher exits or fails to start: on macOS the osascript lives as long as
+     * its DoScript, waiting and then running, and one DoScript at a time is
+     * what After Effects' "second script" warning asks for. A lock folder that
+     * cannot be used costs the lock, not the launch: the call goes ahead as it
+     * did before the lock existed.
      */
     private launchUnderLock;
     /**
