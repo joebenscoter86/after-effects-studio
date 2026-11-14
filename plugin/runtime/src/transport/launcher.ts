@@ -53,7 +53,7 @@ function appleScriptString(value: string): string {
  * AppleScript addresses the application bundle, not the binary inside it —
  * accept either and normalize to the `.app` path.
  */
-function appBundlePath(aePath: string): string {
+export function appBundlePath(aePath: string): string {
   const normalized = aePath.replace(/\\/g, "/");
   const match = normalized.match(/^(.*?\.app)(\/|$)/);
   return match ? match[1] : normalized;
