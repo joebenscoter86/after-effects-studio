@@ -7,6 +7,7 @@ import { defineTool, jsonResult } from "./define-tool.js";
 import { errorResult } from "../errors.js";
 
 import { validateCatalog, findModules } from "./library-modules.js";
+import { REPLY_CHARS, sectionsReply, wholeOrOutline } from "./library-parts.js";
 
 type Entry = { id: string; title: string; path: string; sha256: string; kind: string };
 function boundedFile(base: string, relative: string) {
@@ -57,12 +58,45 @@ export function readLibrary(document?: string, query?: string, root = path.resol
   if (!entry) throw new Error("Unknown library document. Call ae_library without arguments for valid IDs.");
   return { document: entry.id, title: entry.title, kind: entry.kind, content: read(entry) };
 }
+
+/** One document's manifest entry and its checked text. */
+export function readLibraryEntry(document: string, root = path.resolve(PACKAGE_ROOT, "../library")): { entry: Entry; content: string } {
+  const base = realpathSync(root);
+  const manifest = JSON.parse(readFileSync(boundedFile(base, "manifest.json"), "utf8")) as { documents: Entry[] };
+  const entry = manifest.documents.find(e => e.id === document);
+  if (!entry) throw new Error("Unknown library document. Call ae_library without arguments for valid IDs.");
+  const content = readFileSync(boundedFile(base, entry.path), "utf8");
+  if (createHash("sha256").update(content).digest("hex") !== entry.sha256) throw new Error("Library hash mismatch: regenerate manifest after intentional edits");
+  return { entry, content };
+}
+
+/**
+ * A document reply: text only (see library-parts.ts for why there is no structured part), its first line the
+ * document's id, kind, size and sha256. Whole when it fits in one reply, else the outline and opening; with
+ * `section`, the sections asked for.
+ */
+export function libraryDocumentReply(document: string, section?: string | string[], root?: string): string {
+  const { entry, content } = readLibraryEntry(document, root);
+  if (section === undefined) return wholeOrOutline(entry, content);
+  return sectionsReply(entry, content, Array.isArray(section) ? section : [section]);
+}
 export const libraryTool = defineTool({
   name: "ae_library", title: "Motion design library", group: "document", effect: "read", blockedInReadOnly: false,
-  description: "Read the bundled production-derived motion language, detailed choreography/camera/material modules, worked scenes and native JSX. Begin every After Effects motion task with motion-language, production-workflow and brief-template. Craft applies to all styles; JoeB appearance is optional. Offline; no AE, original repo or account required. Omit document to list IDs and startHere; query filters the index. Pass an ID to read complete contents.",
-  inputShape: { document: z.string().optional(), query: z.string().optional() },
-  handler: async ({ document, query }) => {
-    try { return jsonResult(readLibrary(document, query)); }
+  description: "Read the bundled production-derived motion language, detailed choreography/camera/material modules, worked scenes and native JSX. Begin every After Effects motion task with motion-language, production-workflow and brief-template. Craft applies to all styles; JoeB appearance is optional. Offline; no AE, original repo or account required. Omit document to list IDs and startHere; query filters the index. " +
+    `Pass an ID to read a document: whole when it fits in one reply (${REPLY_CHARS} characters), otherwise its outline and opening only, which say so on their first line; then pass section (a heading's exact text or the name the outline shows, or a list of them) to read those sections, several in one call while they fit. Read the sections a job needs before relying on a long document.`,
+  inputShape: {
+    document: z.string().optional(),
+    query: z.string().optional(),
+    section: z.union([z.string(), z.array(z.string())]).optional().describe("With document: a section's name from its outline, or a list of them"),
+  },
+  handler: async ({ document, query, section }) => {
+    try {
+      if (!document) {
+        if (section !== undefined) return errorResult("INVALID_ARGS", "section needs a document: pass document and section together");
+        return jsonResult(readLibrary(undefined, query));
+      }
+      return { content: [{ type: "text", text: libraryDocumentReply(document, section) }], isError: false };
+    }
     catch (e) { return errorResult("IO", e instanceof Error ? e.message : String(e)); }
   },
 });
