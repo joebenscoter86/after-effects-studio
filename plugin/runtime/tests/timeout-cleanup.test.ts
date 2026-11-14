@@ -50,7 +50,8 @@ let consumed: string[];
 
 /**
  * A launcher whose "After Effects" consumes the request labelled `label` and
- * then does `answer(id, dir)` — or nothing.
+ * then does `answer(id, dir)` and exits, as osascript does when its DoScript
+ * returns — or, with no answer, stays alive: the script still running.
  */
 function consumingSpawn(
   label: string,
@@ -70,7 +71,10 @@ function consumingSpawn(
             if (req.label !== label) continue;
             await fs.unlink(full);
             consumed.push(req.id);
-            if (answer) await answer(req.id);
+            if (answer) {
+              await answer(req.id);
+              child.emit("exit", 0);
+            }
             return;
           } catch {
             /* torn read or someone else's mail */

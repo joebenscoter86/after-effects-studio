@@ -110,6 +110,15 @@ function resolveAfterFxPath(platform = process.platform, root, running = () => p
 	for (const candidate of candidates) if (existsSync(candidate)) return candidate;
 	throw new Error(platform === "darwin" ? "Could not locate After Effects. Set the AE_MCP_EXE env var to the .app bundle, e.g. \"/Applications/Adobe After Effects 2026/Adobe After Effects 2026.app\"" : "Could not locate AfterFX.exe. Set the AE_MCP_EXE env var to the full path, e.g. \"C:/Program Files/Adobe/Adobe After Effects 2026/Support Files/AfterFX.exe\"");
 }
+function launchLockDir() {
+	const override = process.env.AE_MCP_LAUNCH_LOCK_DIR?.trim();
+	if (override) return path$1.resolve(override);
+	try {
+		return path$1.join(os$1.userInfo().homedir, "Library", "Caches", "comp-room");
+	} catch {
+		return path$1.join("/tmp", `comp-room-${process.getuid?.() ?? "user"}`);
+	}
+}
 function instanceDirFor(id) {
 	return path$1.join(INSTANCES_DIR, id);
 }
@@ -125,7 +134,7 @@ function instanceTargetFromEnv(env = process.env) {
 	const value = env.AE_MCP_INSTANCE?.trim();
 	return value ? value : null;
 }
-var PACKAGE_ROOT, DISPATCHER_JSX, RUNTIME_ROOT, DEFAULT_RUNTIME_DIR, RUNTIME_POINTER_PATH, RUNTIME_DIR, RUNTIME_DIR_IS_CUSTOM, REQUEST_PREFIX, RESPONSE_PREFIX, STALE_RUNTIME_FILE_MS, DEFAULT_AE_PATHS_WIN32, DEFAULT_AE_PATHS_DARWIN, AE_RELEASE_DIR, SUPPORTED_AE_YEARS, MIN_AE_YEAR, AE_APP_IN_PROCESS, DEFAULT_TIMEOUT_MS, BUSY_LOCK_PATH, BUSY_LOCK_STALE_MS, BUSY_LOCK_REFRESH_MS, RELAUNCH_UNCONSUMED_AFTER_MS, INSTANCES_DIRNAME, INSTANCES_DIR, HEARTBEAT_FILENAME, HEARTBEAT_STALE_MS, HEARTBEAT_BUSY_STALE_MS, INSTANCE_DIR_SWEEP_MS, LIVENESS_CHECK_MS, AGENT_JSX, AGENT_STUB_FILENAME, INSTANCE_ID_MAX_LENGTH, PHANTOM_LAUNCH_MS;
+var PACKAGE_ROOT, DISPATCHER_JSX, RUNTIME_ROOT, DEFAULT_RUNTIME_DIR, RUNTIME_POINTER_PATH, RUNTIME_DIR, RUNTIME_DIR_IS_CUSTOM, REQUEST_PREFIX, RESPONSE_PREFIX, STALE_RUNTIME_FILE_MS, DEFAULT_AE_PATHS_WIN32, DEFAULT_AE_PATHS_DARWIN, AE_RELEASE_DIR, SUPPORTED_AE_YEARS, MIN_AE_YEAR, AE_APP_IN_PROCESS, DEFAULT_TIMEOUT_MS, BUSY_LOCK_PATH, BUSY_LOCK_STALE_MS, BUSY_LOCK_REFRESH_MS, RELAUNCH_UNCONSUMED_AFTER_MS, LAUNCH_LOCK_STALE_MS, LAUNCH_LOCK_SPAWN_GRACE_MS, INSTANCES_DIRNAME, INSTANCES_DIR, HEARTBEAT_FILENAME, HEARTBEAT_STALE_MS, HEARTBEAT_BUSY_STALE_MS, INSTANCE_DIR_SWEEP_MS, LIVENESS_CHECK_MS, AGENT_JSX, AGENT_STUB_FILENAME, INSTANCE_ID_MAX_LENGTH, PHANTOM_LAUNCH_MS;
 function init_config() {
 	return (init_config = __esmMin((() => {
 		PACKAGE_ROOT = findPackageRoot(path$1.dirname(fileURLToPath(import.meta.url)));
@@ -164,6 +173,8 @@ function init_config() {
 		BUSY_LOCK_STALE_MS = 9e4;
 		BUSY_LOCK_REFRESH_MS = 15e3;
 		RELAUNCH_UNCONSUMED_AFTER_MS = 2500;
+		LAUNCH_LOCK_STALE_MS = 75e5;
+		LAUNCH_LOCK_SPAWN_GRACE_MS = 1e4;
 		INSTANCES_DIRNAME = "instances";
 		INSTANCES_DIR = path$1.join(RUNTIME_DIR, INSTANCES_DIRNAME);
 		HEARTBEAT_FILENAME = "heartbeat.json";
@@ -890,4 +901,4 @@ function init_validate() {
 	})))();
 }
 
-export { AMBIENT_CONTEXT_JSX, BUSY_LOCK_PATH, BUSY_LOCK_REFRESH_MS, BUSY_LOCK_STALE_MS, DEFAULT_TIMEOUT_MS, DISPATCHER_JSX, HEARTBEAT_BUSY_STALE_MS, HEARTBEAT_FILENAME, HEARTBEAT_STALE_MS, INSTANCES_DIR, INSTANCE_DIR_SWEEP_MS, LIVENESS_CHECK_MS, PACKAGE_ROOT, PHANTOM_LAUNCH_MS, RELAUNCH_UNCONSUMED_AFTER_MS, REQUEST_PREFIX, RESPONSE_PREFIX, RUNTIME_DIR, RUNTIME_DIR_IS_CUSTOM, RUNTIME_POINTER_PATH, RUNTIME_ROOT, STALE_RUNTIME_FILE_MS, agentInstallStatus, denyAppConfig, denyOperation, denyTool, denyUnregisteredCategory, denyUnregisteredOperation, errorResult, evalRunEnabled, getOp, init_agent_install, init_cli, init_config, init_errors, init_opschema, init_policy, init_registry, init_validate, instanceDirFor, instanceTargetFromEnv, jsxCompLayerPreamble, jsxCompPreamble, jsxFail, jsxPropertyLookup, jsxVal, listOps, policySummary, prepareOp, readOnlyMode, registerOp, rejectedOutputPath, requestPathFor, resolveAfterFxPath, responsePathFor, runCli, runtimeDirWarnings, sanitizeInstanceId, suggestName, summarizeParams, validateAeProjectDoc, validateOpArgs, wantsDialogSuppression, wantsRollback, wantsUndoGroup };
+export { AMBIENT_CONTEXT_JSX, BUSY_LOCK_PATH, BUSY_LOCK_REFRESH_MS, BUSY_LOCK_STALE_MS, DEFAULT_TIMEOUT_MS, DISPATCHER_JSX, HEARTBEAT_BUSY_STALE_MS, HEARTBEAT_FILENAME, HEARTBEAT_STALE_MS, INSTANCES_DIR, INSTANCE_DIR_SWEEP_MS, LAUNCH_LOCK_SPAWN_GRACE_MS, LAUNCH_LOCK_STALE_MS, LIVENESS_CHECK_MS, PACKAGE_ROOT, PHANTOM_LAUNCH_MS, RELAUNCH_UNCONSUMED_AFTER_MS, REQUEST_PREFIX, RESPONSE_PREFIX, RUNTIME_DIR, RUNTIME_DIR_IS_CUSTOM, RUNTIME_POINTER_PATH, RUNTIME_ROOT, STALE_RUNTIME_FILE_MS, agentInstallStatus, denyAppConfig, denyOperation, denyTool, denyUnregisteredCategory, denyUnregisteredOperation, errorResult, evalRunEnabled, getOp, init_agent_install, init_cli, init_config, init_errors, init_opschema, init_policy, init_registry, init_validate, instanceDirFor, instanceTargetFromEnv, jsxCompLayerPreamble, jsxCompPreamble, jsxFail, jsxPropertyLookup, jsxVal, launchLockDir, listOps, policySummary, prepareOp, readOnlyMode, registerOp, rejectedOutputPath, requestPathFor, resolveAfterFxPath, responsePathFor, runCli, runtimeDirWarnings, sanitizeInstanceId, suggestName, summarizeParams, validateAeProjectDoc, validateOpArgs, wantsDialogSuppression, wantsRollback, wantsUndoGroup };

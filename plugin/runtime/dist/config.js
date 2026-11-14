@@ -315,6 +315,50 @@ export const BUSY_LOCK_REFRESH_MS = 15_000;
 export const RELAUNCH_UNCONSUMED_AFTER_MS = 2_500;
 /** Total dispatcher launches per call, first attempt included. */
 export const MAX_LAUNCH_ATTEMPTS = 3;
+// --- The launch lock (macOS) ---------------------------------------------------
+//
+// The busy lock lives in the mailbox, and the mailbox follows TMPDIR: servers
+// with different temp folders (each eval sandbox, any host that sets its own
+// TMPDIR) never see each other's busy lock. A DoScript sent while another is
+// still waiting or running in After Effects is how its "second script"
+// warning starts, so on macOS every launch also takes one lock per user and
+// per After Effects, in a folder that follows neither TMPDIR nor HOME. It is
+// held from just before the launch until the launcher (osascript) exits,
+// which is when its DoScript returns: one DoScript at a time for one After
+// Effects. A call that finds it held by a launcher still alive launches
+// nothing and waits, so a long script (a render of minutes) makes the others
+// wait, some past their deadline; the alternative is the warning. Windows
+// keeps the busy lock only: its launcher hands the script over and exits
+// within a second, so the same lock would hold nothing there.
+/**
+ * Where the launch lock lives: AE_MCP_LAUNCH_LOCK_DIR when set, else
+ * `<home>/Library/Caches/comp-room`, with the home folder read from the user
+ * database (os.userInfo), not from $HOME. Read per transport, not at import,
+ * so a test can point it elsewhere.
+ */
+export function launchLockDir() {
+    const override = process.env.AE_MCP_LAUNCH_LOCK_DIR?.trim();
+    if (override)
+        return path.resolve(override);
+    try {
+        return path.join(os.userInfo().homedir, "Library", "Caches", "comp-room");
+    }
+    catch {
+        // No entry in the user database (some containers): /tmp does not follow TMPDIR either.
+        return path.join("/tmp", `comp-room-${process.getuid?.() ?? "user"}`);
+    }
+}
+/**
+ * Age past which a launch lock is broken whoever holds it: osascript gives
+ * up on its DoScript after 7,200 s (launcher.ts), so a holder older than
+ * that plus five minutes is gone. Locks of dead launchers are broken at once.
+ */
+export const LAUNCH_LOCK_STALE_MS = 7_500_000;
+/**
+ * A lock written by another process before its launcher's pid was recorded
+ * belongs to a launch being started; past this it is taken as abandoned.
+ */
+export const LAUNCH_LOCK_SPAWN_GRACE_MS = 10_000;
 // --- Instances: the pull path -------------------------------------------------
 //
 // Instances started with `AfterFX.exe -m` never receive `-r` scripts, so the

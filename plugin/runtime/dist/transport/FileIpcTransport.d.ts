@@ -51,6 +51,17 @@ export interface FileIpcTransportOptions {
     emptyTmpGraceMs?: number;
     /** The dispatcher script the push path launches (default: the package's jsx/dispatcher.jsx). Injectable for tests. */
     dispatcherJsx?: string;
+    /**
+     * The platform whose launch plan the push path follows (default:
+     * process.platform). Injectable so the macOS launch rules can be tested
+     * with a fake launcher on any machine.
+     */
+    platform?: NodeJS.Platform;
+    /**
+     * Folder of the launch lock (macOS only; config.ts, "The launch lock").
+     * Default: launchLockDir(). null launches without it.
+     */
+    launchLockDir?: string | null;
 }
 /** A temp request/response file older than this is an orphan (see sweepStaleFiles). */
 export declare const ORPHAN_TMP_SWEEP_MS: number;
@@ -76,6 +87,19 @@ export declare const ORPHAN_WATCH_MS: number;
  * instance.dialogs returned no dialogs while the box was up.
  */
 export declare const PICKED_UP_TIMEOUT_NOTE: string;
+/**
+ * What a call says when its deadline passes behind a launch it would not
+ * double (macOS): when that launch was sent, by whom, and that nothing new
+ * was launched. "this call": our own osascript is alive and the request was
+ * never consumed, so the DoScript waits in After Effects. "another call": the
+ * launch lock is held by a live launcher, which may be waiting or already
+ * running its script. Live, 2026-11-14: a second DoScript sent 3 s after the
+ * first, while the first still waited, raised After Effects' "second script"
+ * warning.
+ */
+export declare function waitingLaunchSentence(since: Date, by: "this call" | "another call", now?: Date): string;
+export declare const WAITING_LAUNCH_HINT: string;
+export declare const RUNNING_ELSEWHERE_HINT: string;
 export interface DispatcherResponse {
     id: string | null;
     ok: boolean;
@@ -140,6 +164,9 @@ export declare class FileIpcTransport implements AeTransport {
     private readonly scanDialogs;
     private readonly reapIntervalMs;
     private readonly emptyTmpGraceMs;
+    private readonly platform;
+    private readonly launchLockDir;
+    private launchLockWarned;
     private readonly orphans;
     private reapTimer;
     constructor(options?: FileIpcTransportOptions);
@@ -171,6 +198,18 @@ export declare class FileIpcTransport implements AeTransport {
      * how a denied macOS Automation permission (-1743) surfaces in seconds.
      */
     private launchDispatcher;
+    /** The launch lock for this After Effects, or null where launches take none (Windows, or switched off). */
+    private launchLockFor;
+    /**
+     * Launch the dispatcher holding the launch lock, or report the live launch
+     * that holds it and launch nothing. The lock goes back only when the
+     * launcher exits or fails to start: on macOS the osascript lives as long as
+     * its DoScript, waiting and then running, and one DoScript at a time is
+     * what After Effects' "second script" warning asks for. A lock folder that
+     * cannot be used costs the lock, not the launch: the call goes ahead as it
+     * did before the lock existed.
+     */
+    private launchUnderLock;
     /**
      * The launcher child outlived a forwarder with our request untouched: it is
      * AfterFX.exe becoming an instance, not delivering to one. Stop it before

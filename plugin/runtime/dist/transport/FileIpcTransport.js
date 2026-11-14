@@ -2,9 +2,10 @@ import { spawn as nodeSpawn } from "node:child_process";
 import { mkdirSync, promises as fs, unlinkSync, writeFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import * as path from "node:path";
-import { BUSY_LOCK_PATH, DISPATCHER_JSX, BUSY_LOCK_REFRESH_MS, BUSY_LOCK_STALE_MS, DEFAULT_TIMEOUT_MS, INSTANCES_DIR, LIVENESS_CHECK_MS, MAX_LAUNCH_ATTEMPTS, PHANTOM_LAUNCH_MS, POLL_INTERVAL_MS, RELAUNCH_UNCONSUMED_AFTER_MS, REQUEST_PREFIX, RESPONSE_PREFIX, RUNTIME_DIR, RUNTIME_DIR_IS_CUSTOM, RUNTIME_DIR_MODE, RUNTIME_POINTER_PATH, RUNTIME_ROOT, STALE_RUNTIME_FILE_MS, instanceTargetFromEnv, requestPathFor, resolveAfterFxPath, responsePathFor, runtimeDirWarnings, } from "../config.js";
+import { BUSY_LOCK_PATH, DISPATCHER_JSX, BUSY_LOCK_REFRESH_MS, BUSY_LOCK_STALE_MS, DEFAULT_TIMEOUT_MS, INSTANCES_DIR, LIVENESS_CHECK_MS, launchLockDir, MAX_LAUNCH_ATTEMPTS, PHANTOM_LAUNCH_MS, POLL_INTERVAL_MS, RELAUNCH_UNCONSUMED_AFTER_MS, REQUEST_PREFIX, RESPONSE_PREFIX, RUNTIME_DIR, RUNTIME_DIR_IS_CUSTOM, RUNTIME_DIR_MODE, RUNTIME_POINTER_PATH, RUNTIME_ROOT, STALE_RUNTIME_FILE_MS, instanceTargetFromEnv, requestPathFor, resolveAfterFxPath, responsePathFor, runtimeDirWarnings, } from "../config.js";
 import { SCRIPT_RUNNING_HINT, dialogBlockMessage, dialogHint, scanAeWindows, scriptRunningMessage, splitScriptProgress, } from "./dialogs.js";
 import { describeInstance, listInstances, readInstance, resolveTarget, sweepDeadInstanceDirs, } from "./instances.js";
+import { LaunchLock, launchLockPath } from "./launch-lock.js";
 import { buildLaunchPlan } from "./launcher.js";
 /** A temp request/response file older than this is an orphan (see sweepStaleFiles). */
 export const ORPHAN_TMP_SWEEP_MS = 5 * 60_000;
@@ -60,6 +61,30 @@ export const PICKED_UP_TIMEOUT_NOTE = "The most likely cause is a modal dialog i
     "or a warning — which blocks all scripting until a person clicks it; instance.dialogs may not list it, so look at the After Effects window. " +
     "Once it is dismissed the script finishes and the plugin cleans up after it (busy lock, temp response).";
 /**
+ * What a call says when its deadline passes behind a launch it would not
+ * double (macOS): when that launch was sent, by whom, and that nothing new
+ * was launched. "this call": our own osascript is alive and the request was
+ * never consumed, so the DoScript waits in After Effects. "another call": the
+ * launch lock is held by a live launcher, which may be waiting or already
+ * running its script. Live, 2026-11-14: a second DoScript sent 3 s after the
+ * first, while the first still waited, raised After Effects' "second script"
+ * warning.
+ */
+export function waitingLaunchSentence(since, by, now = new Date()) {
+    const pad = (n) => String(n).padStart(2, "0");
+    const clock = `${pad(since.getHours())}:${pad(since.getMinutes())}:${pad(since.getSeconds())}`;
+    const seconds = Math.max(0, Math.round((now.getTime() - since.getTime()) / 1000));
+    const what = by === "this call" ? "a launch has been waiting" : "a script has been running or waiting";
+    return `${what} in After Effects since ${clock} (${seconds} s ago, sent by ${by}), and nothing new was launched`;
+}
+export const WAITING_LAUNCH_HINT = "Look at the After Effects window: a dialog there blocks every script until someone closes it (instance.dialogs lists it when " +
+    "Accessibility allows), and a running script holds the next one until it ends. When it clears, the waiting launch runs; it no " +
+    "longer finds this request, so retry after that. Do not quit or force-quit After Effects to clear it, and do not repeat a write " +
+    "until you have inspected the project.";
+export const RUNNING_ELSEWHERE_HINT = "Retry when that script has ended; a render can take minutes. If nothing should be running, look at the After Effects window " +
+    "for a dialog (instance.dialogs lists it when Accessibility allows). Do not quit or force-quit After Effects to clear it, and do " +
+    "not repeat a write until you have inspected the project.";
+/**
  * File-IPC transport. Two ways to reach After Effects, chosen per call by
  * `resolveTarget` (see transport/instances.ts):
  *
@@ -103,6 +128,9 @@ export class FileIpcTransport {
     scanDialogs;
     reapIntervalMs;
     emptyTmpGraceMs;
+    platform;
+    launchLockDir;
+    launchLockWarned = false;
     orphans = new Map();
     reapTimer = null;
     constructor(options = {}) {
@@ -111,6 +139,9 @@ export class FileIpcTransport {
         this.emptyTmpGraceMs = options.emptyTmpGraceMs ?? EMPTY_TMP_GRACE_MS;
         this.spawnFn = options.spawn ?? ((command, args, opts) => nodeSpawn(command, args, opts));
         this.dispatcherJsx = options.dispatcherJsx ?? DISPATCHER_JSX;
+        this.platform = options.platform ?? process.platform;
+        this.launchLockDir =
+            this.platform !== "darwin" ? null : options.launchLockDir !== undefined ? options.launchLockDir : launchLockDir();
         this.scanDialogs = options.scanDialogs ?? (() => scanAeWindows());
         try {
             // 0o700: write access to the mailbox is code execution inside AE (see
@@ -398,30 +429,53 @@ export class FileIpcTransport {
         // script may still be running inside AE, so the lock must outlive this
         // call and expire on its own instead of inviting an immediate collision.
         let leaveLockForRunningScript = false;
+        // Held until the launcher exits (launchUnderLock): on macOS the
+        // osascript lives as long as its DoScript, waiting and running.
+        const lock = this.launchLockFor();
         try {
-            // 3. Launch the dispatcher (launcher.ts picks the per-platform command).
-            // The command returns immediately on Windows; on macOS osascript blocks
-            // for the DoScript duration — either way the actual work happens inside
-            // AE and we learn the outcome from the response file, not the child.
+            // 3. Launch the dispatcher (launcher.ts picks the per-platform command)
+            // unless another launch is still waiting in After Effects: on macOS a
+            // second DoScript sent while one waits is how AE's "second script"
+            // warning starts. The command returns immediately on Windows; on macOS
+            // osascript blocks for the DoScript duration — either way the actual
+            // work happens inside AE and we learn the outcome from the response
+            // file, not the child.
             const spawnState = { error: null, child: null, exited: false };
-            const launch = this.launchDispatcher(spawnState);
+            const ls = { plan: null, launchedAt: started, attempts: 0, waitingBehind: null };
+            const tryLaunch = async () => {
+                const outcome = await this.launchUnderLock(spawnState, id, lock);
+                if ("heldBy" in outcome) {
+                    ls.waitingBehind = outcome.heldBy;
+                    return;
+                }
+                ls.waitingBehind = null;
+                ls.plan = outcome.plan;
+                ls.launchedAt = Date.now();
+                ls.attempts++;
+            };
+            await tryLaunch();
             if (spawnState.error !== null) {
                 return await this.spawnFailure(spawnState.error, requestPath, started);
             }
             // 4. Poll for OUR response file. While polling: keep the busy lock
             // fresh, and watch what became of the launch while the request sits
-            // unconsumed. Two things can be wrong there:
+            // unconsumed. What can be wrong there:
             //   - AE refused the script (its "second script" warning) because
             //     something we cannot see was running when ours arrived — the
             //     launcher child exited normally, so launch again;
-            //   - the launcher child is still alive: nothing was registered to
-            //     receive the hand-off, and it is booting an instance of its own
-            //     that would run the request on an empty project ~8s from now.
-            //     Kill it and say so; relaunching would only boot a second one.
-            let attempts = 1;
-            let lastLaunchAt = started;
+            //   - macOS, the launcher (osascript) is still alive: AE has the
+            //     DoScript and has not started it — a dialog, a running script, a
+            //     slow start. Launching again is exactly how a second script
+            //     arrives, so never do; look for a dialog to say so early, else
+            //     wait for the deadline;
+            //   - Windows, the launcher child is still alive: nothing was
+            //     registered to receive the hand-off, and it is booting an
+            //     instance of its own that would run the request on an empty
+            //     project ~8s from now. Kill it and say so; relaunching would only
+            //     boot a second one.
             let lastRefreshAt = started;
             let requestConsumed = false;
+            let looksWhileWaiting = 0;
             const unreadable = new UnreadableResponseWatch();
             while (Date.now() < deadline) {
                 const read = await this.tryReadResponse(responsePath);
@@ -441,20 +495,55 @@ export class FileIpcTransport {
                     lastRefreshAt = now;
                     await this.refreshBusyLock(id);
                 }
-                if (!requestConsumed && now - lastLaunchAt >= RELAUNCH_UNCONSUMED_AFTER_MS) {
+                const current = ls.plan;
+                if (!requestConsumed && ls.waitingBehind !== null) {
+                    // Someone else's launch still waits in After Effects. Launch only
+                    // once it is served or gone; if it runs from our own mailbox it
+                    // may even serve this request.
                     if (!(await this.fileExists(requestPath))) {
                         requestConsumed = true;
                     }
-                    else if (launch.detectPhantom && spawnState.child !== null && !spawnState.exited) {
-                        if (now - lastLaunchAt >= PHANTOM_LAUNCH_MS) {
+                    else {
+                        await tryLaunch();
+                        if (spawnState.error !== null) {
+                            return await this.spawnFailure(spawnState.error, requestPath, started);
+                        }
+                    }
+                }
+                else if (!requestConsumed && current !== null && now - ls.launchedAt >= RELAUNCH_UNCONSUMED_AFTER_MS) {
+                    if (!(await this.fileExists(requestPath))) {
+                        requestConsumed = true;
+                    }
+                    else if (spawnState.child !== null && !spawnState.exited && current.detectPhantom) {
+                        if (now - ls.launchedAt >= PHANTOM_LAUNCH_MS) {
                             return await this.phantomFailure(spawnState, requestPath, started);
                         }
                         // A forwarder that is merely slow exits shortly; give it until
                         // PHANTOM_LAUNCH_MS before deciding.
                     }
-                    else if (attempts < MAX_LAUNCH_ATTEMPTS &&
-                        now - lastLaunchAt >= RELAUNCH_UNCONSUMED_AFTER_MS * attempts) {
-                        // Unconsumed with the forwarder gone: either AE refused the
+                    else if (spawnState.child !== null && !spawnState.exited) {
+                        // macOS: our DoScript waits in After Effects. A dialog there
+                        // would keep it waiting past any deadline, so look for one a
+                        // couple of times (as often as the relaunches used to), and
+                        // otherwise wait. Nothing is launched.
+                        if (looksWhileWaiting < MAX_LAUNCH_ATTEMPTS - 1 &&
+                            now - ls.launchedAt >= RELAUNCH_UNCONSUMED_AFTER_MS * (looksWhileWaiting + 1)) {
+                            looksWhileWaiting++;
+                            const { dialogs } = await this.lookAtAe();
+                            if (dialogs.length > 0) {
+                                const reclaimed = await this.safeUnlink(requestPath);
+                                leaveLockForRunningScript = !reclaimed;
+                                if (!reclaimed)
+                                    this.watchOrphan(id, RUNTIME_DIR);
+                                return dialogFailure(dialogs, reclaimed
+                                    ? `${waitingLaunchSentence(new Date(ls.launchedAt), "this call")}; the request was never picked up and has been discarded`
+                                    : "the request disappeared before it could be reclaimed; the operation may have started", started);
+                            }
+                        }
+                    }
+                    else if (ls.attempts < MAX_LAUNCH_ATTEMPTS &&
+                        now - ls.launchedAt >= RELAUNCH_UNCONSUMED_AFTER_MS * ls.attempts) {
+                        // Unconsumed with the launcher gone: either AE refused the
                         // script (the "second script" case — relaunching fixes it) or a
                         // dialog blocks scripting, where each relaunch only adds another
                         // alert. Tell the two apart before launching again.
@@ -462,7 +551,7 @@ export class FileIpcTransport {
                         if (dialogs.length === 0 && scripts.length > 0) {
                             // Someone else's script is still running: launching again would
                             // only stack AE's "second script" warning. Wait for it.
-                            lastLaunchAt = Date.now();
+                            ls.launchedAt = Date.now();
                             await sleep(POLL_INTERVAL_MS);
                             continue;
                         }
@@ -472,12 +561,13 @@ export class FileIpcTransport {
                             if (!reclaimed)
                                 this.watchOrphan(id, RUNTIME_DIR);
                             return dialogFailure(dialogs, reclaimed
-                                ? `the request was never picked up after ${attempts} launch attempt${attempts === 1 ? "" : "s"} and has been discarded`
+                                ? `the request was never picked up after ${ls.attempts} launch attempt${ls.attempts === 1 ? "" : "s"} and has been discarded`
                                 : "the request disappeared before it could be reclaimed; the operation may have started", started);
                         }
-                        attempts++;
-                        lastLaunchAt = Date.now();
-                        this.launchDispatcher(spawnState);
+                        await tryLaunch();
+                        if (spawnState.error !== null) {
+                            return await this.spawnFailure(spawnState.error, requestPath, started);
+                        }
                     }
                 }
                 await sleep(POLL_INTERVAL_MS);
@@ -491,6 +581,32 @@ export class FileIpcTransport {
             if (!reclaimed)
                 this.watchOrphan(id, RUNTIME_DIR);
             const { dialogs: pushDialogs, scripts: pushScripts } = await this.lookAtAe();
+            // A launch this call would not double, and this request never picked
+            // up: say that, in those words. Behind another call's launch, its
+            // script may be waiting or already running (a render of minutes holds
+            // every other call); behind our own, the DoScript waits.
+            const behindAnother = reclaimed && ls.waitingBehind !== null ? ls.waitingBehind : null;
+            const ownWaiting = reclaimed &&
+                behindAnother === null &&
+                ls.plan !== null &&
+                !ls.plan.detectPhantom &&
+                spawnState.child !== null &&
+                !spawnState.exited;
+            if (behindAnother !== null || ownWaiting) {
+                const waiting = waitingLaunchSentence(new Date(behindAnother !== null ? behindAnother.launchedAt : ls.launchedAt), behindAnother !== null ? "another call" : "this call");
+                if (pushDialogs.length > 0) {
+                    return dialogFailure(pushDialogs, `timeout after ${timeoutMs}ms; ${waiting}; the request was never picked up and has been discarded`, started);
+                }
+                const why = pushScripts.length > 0
+                    ? `${scriptRunningMessage(pushScripts)}. `
+                    : behindAnother !== null
+                        ? "One After Effects takes one script at a time, so a long one, such as a render, makes every other call wait. "
+                        : "After Effects is probably showing a dialog or is busy with another script. ";
+                return failure("TIMEOUT", `timeout after ${timeoutMs}ms: ${waiting}. ${why}The request was never picked up and has been discarded.`, {
+                    durationMs: Date.now() - started,
+                    hint: behindAnother !== null ? RUNNING_ELSEWHERE_HINT : WAITING_LAUNCH_HINT,
+                });
+            }
             if (pushDialogs.length === 0 && pushScripts.length > 0) {
                 return failure("TIMEOUT", `timeout after ${timeoutMs}ms waiting for After Effects to respond` +
                     (reclaimed
@@ -505,7 +621,7 @@ export class FileIpcTransport {
             }
             return failure("TIMEOUT", `timeout after ${timeoutMs}ms waiting for After Effects to respond` +
                 (reclaimed
-                    ? ` (the request was never picked up by AE after ${attempts} launch attempt${attempts === 1 ? "" : "s"} and has been discarded)`
+                    ? ` (the request was never picked up by AE after ${ls.attempts} launch attempt${ls.attempts === 1 ? "" : "s"} and has been discarded)`
                     : ` (the request WAS picked up by AE; the operation may still be running). ${PICKED_UP_TIMEOUT_NOTE}`), {
                 durationMs: Date.now() - started,
                 hint: "Is AE running with a project open? Is 'Allow Scripts to Write Files and Access Network' enabled? " +
@@ -538,8 +654,8 @@ export class FileIpcTransport {
      * meaningful (osascript), a non-zero exit is treated the same way — that is
      * how a denied macOS Automation permission (-1743) surfaces in seconds.
      */
-    launchDispatcher(state) {
-        const launch = buildLaunchPlan(this.afterFxPath, process.platform, RUNTIME_DIR, this.dispatcherJsx);
+    launchDispatcher(state, onGone = () => { }) {
+        const launch = buildLaunchPlan(this.afterFxPath, this.platform, RUNTIME_DIR, this.dispatcherJsx);
         state.child = null;
         state.exited = false;
         try {
@@ -555,6 +671,7 @@ export class FileIpcTransport {
             child.unref?.();
             child.on("error", (err) => {
                 state.error = err;
+                onGone();
             });
             let stderr = "";
             if (launch.diagnoseExit) {
@@ -566,6 +683,7 @@ export class FileIpcTransport {
             }
             child.on("exit", (code) => {
                 state.exited = true;
+                onGone();
                 if (launch.diagnoseExit && code !== null && code !== 0 && state.error === null) {
                     const detail = stderr.trim();
                     state.error = new Error(`${launch.command} exited with code ${code}${detail ? `: ${detail}` : ""}`);
@@ -574,8 +692,62 @@ export class FileIpcTransport {
         }
         catch (err) {
             state.error = err instanceof Error ? err : new Error(String(err));
+            onGone();
         }
         return launch;
+    }
+    /** The launch lock for this After Effects, or null where launches take none (Windows, or switched off). */
+    launchLockFor() {
+        if (this.launchLockDir === null || this.afterFxPath === null)
+            return null;
+        return new LaunchLock(launchLockPath(this.launchLockDir, this.afterFxPath));
+    }
+    /**
+     * Launch the dispatcher holding the launch lock, or report the live launch
+     * that holds it and launch nothing. The lock goes back only when the
+     * launcher exits or fails to start: on macOS the osascript lives as long as
+     * its DoScript, waiting and then running, and one DoScript at a time is
+     * what After Effects' "second script" warning asks for. A lock folder that
+     * cannot be used costs the lock, not the launch: the call goes ahead as it
+     * did before the lock existed.
+     */
+    async launchUnderLock(state, requestId, lock) {
+        let token = null;
+        if (lock !== null) {
+            try {
+                const claim = await lock.tryAcquire(requestId);
+                if ("heldBy" in claim)
+                    return { heldBy: claim.heldBy };
+                token = claim.token;
+            }
+            catch (err) {
+                if (!this.launchLockWarned) {
+                    this.launchLockWarned = true;
+                    console.error(`[mcp-aftereffects] launch lock ${lock.file} is unusable (${err instanceof Error ? err.message : String(err)}); ` +
+                        "launching without it, so another server process could launch at the same moment");
+                }
+            }
+        }
+        let recorded = Promise.resolve();
+        let released = false;
+        const release = () => {
+            if (released || token === null || lock === null)
+                return;
+            released = true;
+            const own = token;
+            void recorded.then(() => lock.release(own)).catch(() => { });
+        };
+        const plan = this.launchDispatcher(state, release);
+        if (token !== null && lock !== null && state.error === null && state.child?.pid !== undefined) {
+            const own = token;
+            const pid = state.child.pid;
+            recorded = lock.setLauncher(own, pid).catch(() => { });
+            await recorded;
+        }
+        else if (state.error !== null || state.child === null) {
+            release();
+        }
+        return { plan };
     }
     /**
      * The launcher child outlived a forwarder with our request untouched: it is

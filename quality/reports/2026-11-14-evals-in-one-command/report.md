@@ -150,7 +150,7 @@ After the reruns, a read call from the supervising session's own server left Aft
 **A separate gap, found while tracing it:**
 - Servers serialise launches only through a busy lock in their temp folder.
 - So sessions with different temp folders (each eval sandbox) do not see each other's lock.
-- A fix is designed, not built: don't relaunch on macOS while the last launcher is alive, and take the launch lock per user and per After Effects. Until then, sessions that may call After Effects run one at a time against one After Effects.
+- The fix, built after this report: on macOS, no relaunch while the last launcher is alive, and one launch lock per user and per After Effects (`plugin/runtime/src/transport/launch-lock.ts`), held until the launcher exits, so it covers the script as well as the launch. The release steps still run sessions that may call After Effects one at a time (release-criteria.md says why).
 
 ## Library parts
 
@@ -201,5 +201,9 @@ Its one real run, on the two halves of a side-by-side, went through from prepare
 - **Case 22:** the assertion "with no score or pass or fail verdict" contradicts the case's own prompt, which has the session run the grader. Its answer then opens with the grader's pass.
 - **Cases 05 and 08:** they expect a SKILL.md read, which an explicitly invoked skill does not leave in Claude's trace.
 - **Case 11:** it continues an earlier session, which a single prompt cannot.
+
+## Open
+
+- **Case 30:** a plan written for a user does not name the style's builders; whether it should is a question for the work on building from a reference.
 
 **Not done:** no no-plugin baseline was run.

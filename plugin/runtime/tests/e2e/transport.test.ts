@@ -1,18 +1,32 @@
 // Transport-level round-trip tests against a real After Effects instance.
 // Read-only with respect to the user's project — nothing here mutates AE
-// state, so these run whenever AE is reachable (no env-var opt-in needed).
-// Skips itself (loudly) when AE isn't running — see harness.probeAe().
+// state — but every test sends a script into the running After Effects, so
+// like the other end-to-end suites they run only with AE_MCP_E2E=1. An
+// offline run must not reach a running After Effects, whatever is on PATH:
+// the launcher calls /usr/bin/osascript by its full path, so a stand-in on
+// PATH never kept these from it (found 2026-11-14).
 
 import { beforeAll, describe, expect, it } from "vitest";
 
 import type { FileIpcTransport } from "../../src/transport/FileIpcTransport.js";
-import { probeAe } from "./harness.js";
+import { printSkipBanner, probeAe } from "./harness.js";
+
+const E2E_ENABLED = process.env.AE_MCP_E2E === "1";
 
 let ready = false;
 let transport: FileIpcTransport | null = null;
 
 describe("e2e transport", () => {
   beforeAll(async () => {
+    if (!E2E_ENABLED) {
+      printSkipBanner("transport", "SKIPPING — AE_MCP_E2E not set", [
+        " This suite sends scripts into the running After Effects (read-only).",
+        " Opt in explicitly:",
+        "   macOS/Linux: AE_MCP_E2E=1 npx vitest run tests/e2e/transport.test.ts",
+        "   PowerShell : $env:AE_MCP_E2E = '1'; npm test",
+      ]);
+      return;
+    }
     const probe = await probeAe("transport");
     ready = probe.ready;
     transport = probe.transport ?? null;
