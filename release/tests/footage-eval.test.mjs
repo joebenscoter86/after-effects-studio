@@ -56,7 +56,7 @@ test('the footage eval: the clip is measured, the setup filled in, and the case 
   assert.deepEqual(cases.skipped, []);
   const written = cases.find((c) => c.id === 27);
   assert.ok(written, 'case 27 written');
-  const caseDir = path.join(out, written.name);
+  const caseDir = path.join(out, written.name, 'files');   // what the scaffold copies into the workspace
 
   // the plate's truth, measured from the clip with the grader's own code
   const truth = JSON.parse(await fs.readFile(path.join(caseDir, 'footage-truth.json'), 'utf8'));

@@ -43,12 +43,16 @@ test('the prompt body is the canonical prompt, with Codex skill syntax made Clau
     const { head, body } = frontMatter(await fs.readFile(path.join(out, dir, 'prompt.md'), 'utf8'));
     if (!c.files?.length) assert.equal(body.trim(), claudePrompt(c.prompt).trim());
     else {
-      // a planning case with its own files: the canonical prompt, then where each file was copied (and it is there)
+      // a planning case with its own files: the canonical prompt, then the files by their names in the workspace,
+      // where the case's scaffold copies them (a run cannot read the eval directory)
       assert.ok(body.trim().startsWith(claudePrompt(c.prompt).trim()), `case ${c.id}`);
+      assert.ok(body.includes("This case's files are in your working folder"), `case ${c.id}`);
       for (const f of c.files) {
-        assert.ok(body.includes(`${f} is ${path.join(out, dir, f)}`), `case ${c.id} names ${f}`);
-        await fs.access(path.join(out, dir, f));
+        assert.ok(body.includes(`\`${f}\``), `case ${c.id} names ${f}`);
+        assert.ok(!body.includes(path.join(out, dir)), `case ${c.id}: no path into the eval directory`);
+        await fs.access(path.join(out, dir, 'files', f));
       }
+      await fs.access(path.join(out, dir, 'case.yaml'));
     }
     assert.match(head, /^max_turns: \d+$/m);
     assert.match(head, /allowed_tools: \[.*Skill.*\]/);
@@ -170,13 +174,16 @@ test('the picture set: each case carries its setup, grader and runtime copy, a s
   for (const m of GRADER_MODULES) assert.ok(modules.includes(m), m);
   for (const [i, c] of WRITTEN.entries()) {
     const dir = path.join(out, dirs[i]);
-    for (const f of ['grade.mjs', 'checks.mjs', 'scenes.mjs', c.picture.setup, 'grade-config.json']) await fs.access(path.join(dir, f));
-    for (const m of modules) await fs.access(path.join(dir, 'runtime', m));
-    assert.deepEqual(JSON.parse(await fs.readFile(path.join(dir, 'grade-config.json'), 'utf8')), { runtimeDist: 'runtime' });
+    for (const f of ['grade.mjs', 'checks.mjs', 'scenes.mjs', c.picture.setup, 'grade-config.json']) await fs.access(path.join(dir, 'files', f));
+    for (const m of modules) await fs.access(path.join(dir, 'files', 'runtime', m));
+    assert.deepEqual(JSON.parse(await fs.readFile(path.join(dir, 'files', 'grade-config.json'), 'utf8')), { runtimeDist: 'runtime' });
     const { head, body } = frontMatter(await fs.readFile(path.join(dir, 'prompt.md'), 'utf8'));
-    assert.ok(head.includes(`"Bash(node ${path.join(dir, 'grade.mjs')}:*)"`), head);
+    assert.ok(head.includes('"Bash(node grade.mjs:*)"'), head);
     assert.match(head, /^tags: \[picture\]$/m);
-    assert.ok(body.includes(path.join(dir, c.picture.setup)));
+    assert.ok(body.includes(`the setup script is \`${c.picture.setup}\``));
+    assert.ok(body.includes(`\`node grade.mjs ${c.picture.check} --plan\``));
+    assert.ok(!body.includes(out), 'no path into the eval directory');
+    assert.equal(await fs.readFile(path.join(dir, 'case.yaml'), 'utf8'), `schema_version: "1.1"\nname: ${dirs[i]}\ncontext:\n  scaffold_script: scaffold.sh\n`);
     const ids = THRESHOLDS[c.picture.check].filter((t) => !t.setup).map((t) => t.id);
     const files = (await fs.readdir(path.join(dir, 'graders'))).filter((f) => f.startsWith('check-')).sort();
     assert.deepEqual(files, ids.map((id) => `check-${id}.md`).sort());
@@ -197,9 +204,10 @@ test('the picture set: each case carries its setup, grader and runtime copy, a s
   assert.match(cmd, / -j 1 /);
   assert.match(cmd, / --ablation none /);
   assert.match(cmd, / --no-publish /);
+  assert.match(cmd, / --scaffold /);
   assert.match(cmd, /__ae_do /);
   assert.match(cmd, /__ae_render_frame /);
-  for (const c of cases) assert.ok(cmd.includes(`'${c.bash}'`));
+  assert.equal(cmd.split("'Bash(node grade.mjs:*)'").length, 2, 'the grader grant once');
 });
 
 test('the run arguments: one run, no no-plugin arm, the report kept local, and a tool can be withheld', () => {
@@ -207,7 +215,7 @@ test('the run arguments: one run, no no-plugin arm, the report kept local, and a
   const args = evalArgs('/copy', cases, { set: 'picture', withhold: ['ae_check_comp'], extra: ['--case', '21-*'] });
   assert.deepEqual(args.slice(0, 3), ['plugin', 'eval', '/copy']);
   for (const [flag, value] of [['--runs', '1'], ['-j', '1'], ['--ablation', 'none'], ['--threshold', '0'], ['--case', '21-*']]) assert.equal(args[args.indexOf(flag) + 1], value, flag);
-  assert.ok(args.includes('--no-publish') && args.includes('--allow-real-servers'));
+  assert.ok(args.includes('--no-publish') && args.includes('--allow-real-servers') && args.includes('--scaffold'));
   assert.ok(!args.some((a) => a.endsWith('__ae_check_comp')));
   assert.ok(args.some((a) => a.endsWith('__ae_render_frame')) && args.includes('Bash(node /x/grade.mjs:*)'));
   const planning = evalArgs('/copy', [], { runs: 3 });
@@ -215,15 +223,17 @@ test('the run arguments: one run, no no-plugin arm, the report kept local, and a
   assert.ok(!planning.some((a) => /__ae_do$|__ae_render_frame$|^Bash/.test(a)));
 });
 
-test("a picture case's copied grader runs from the case folder with its own runtime, wherever the folder is", async () => {
+test("a case's scaffold copies its files into an empty workspace, and the grader runs there on its own runtime", async () => {
   const out = path.join(await tmp('evals-'), 'evals');
   await writeEvalSuite(CANON, out, { set: 'picture', env: NO_CLIP });
-  const moved = path.join(await tmp('moved-'), 'case');
-  await fs.cp(path.join(out, (await fs.readdir(out)).sort()[2]), moved, { recursive: true });
-  await fs.rm(out, { recursive: true, force: true });                     // nothing left to fall back on
-  const cwd = await tmp('run-');
-  const { stdout } = await promisify(execFile)(process.execPath, [path.join(moved, 'grade.mjs'), 'over'], { cwd });
+  const dir = path.join(out, (await fs.readdir(out)).sort()[2]);
+  const workspace = await tmp('workspace-');
+  await promisify(execFile)('bash', [path.join(dir, 'scaffold.sh')], { cwd: workspace, env: { PATH: process.env.PATH, HOME: workspace } });
+  for (const f of ['grade.mjs', 'checks.mjs', 'scenes.mjs', 'over-still.jsx', 'grade-config.json', 'runtime/color/sheet.js']) await fs.access(path.join(workspace, f));
+  await fs.rm(out, { recursive: true, force: true });                     // nothing in the eval directory to fall back on
+  const { stdout } = await promisify(execFile)(process.execPath, ['grade.mjs', 'over'], { cwd: workspace });
   assert.match(stdout, /^PICTURE-RESULT over 0\/2 checks passed$/m);
+  await fs.access(path.join(workspace, 'picture-grade', 'verdict.txt'));  // where the regex graders read it
 });
 
 test('the picture set refuses a runtime build older than its sources', async () => {

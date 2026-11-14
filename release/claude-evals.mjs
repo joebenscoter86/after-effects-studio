@@ -315,6 +315,18 @@ export const FOOTAGE_NEEDS = 'a locked-off clip with grain and some still edges,
 // The suite
 // ---------------------------------------------------------------------------
 
+const shellSingle = (s) => `'${s.replace(/'/g, "'\\''")}'`;
+
+/**
+ * case.yaml beside prompt.md (prompt.md's fields win; its graders are added), naming scaffold.sh: it runs in the
+ * run's empty workspace before the session and copies the case's files/ into it. The runner does not tell the script
+ * where the case is, so the path is written into it.
+ */
+async function writeScaffold(dir, name) {
+  await fs.writeFile(path.join(dir, 'case.yaml'), `schema_version: "1.1"\nname: ${name}\ncontext:\n  scaffold_script: scaffold.sh\n`);
+  await fs.writeFile(path.join(dir, 'scaffold.sh'), `#!/bin/bash\n# Copy this case's files into the run's workspace (the working folder).\nset -euo pipefail\ncp -R ${shellSingle(path.join(dir, 'files'))}/. .\n`, { mode: 0o755 });
+}
+
 /**
  * Write one set of cases into `outDir` (empty or missing). Returns the cases written; `skipped` on the array lists
  * cases not written and why (the footage case without its clip). `runtimeDist`: the dist the picture grader's modules
@@ -346,31 +358,35 @@ export async function writeEvalSuite(canon, outDir, { set = 'planning', runtimeD
     await fs.mkdir(path.join(dir, 'graders'), { recursive: true });
     let prompt = claudePrompt(c.prompt), head = `max_turns: ${MAX_TURNS}\ntimeout_seconds: ${TIMEOUT_SECONDS}\nallowed_tools: [${ALLOWED_TOOLS.join(', ')}]\n`;
     let bash = null;
+    // A run starts in an empty workspace and cannot read the eval directory, so a case's own files go in files/ and
+    // its scaffold script copies them into the workspace before the session starts (`--scaffold`).
+    const files = path.join(dir, 'files');
     if (picture) {
-      for (const f of PICTURE_SHARED) await fs.copyFile(path.join(PICTURE_SRC, f), path.join(dir, f));
+      await fs.mkdir(files, { recursive: true });
+      for (const f of PICTURE_SHARED) await fs.copyFile(path.join(PICTURE_SRC, f), path.join(files, f));
       let setup = await fs.readFile(path.join(PICTURE_SRC, c.picture.setup), 'utf8');
       if (footageVar) {
         const truth = await footageTruth(path.resolve(clip), runtimeDist);
-        await fs.writeFile(path.join(dir, 'footage-truth.json'), `${JSON.stringify(truth, null, 2)}\n`);
+        await fs.writeFile(path.join(files, 'footage-truth.json'), `${JSON.stringify(truth, null, 2)}\n`);
         setup = footageSetup(setup, path.resolve(clip), truth.plateRegion);
       }
-      await fs.writeFile(path.join(dir, c.picture.setup), setup);
+      await fs.writeFile(path.join(files, c.picture.setup), setup);
       for (const rel of modules) {
-        await fs.mkdir(path.dirname(path.join(dir, 'runtime', rel)), { recursive: true });
-        await fs.copyFile(path.join(runtimeDist, rel), path.join(dir, 'runtime', rel));
+        await fs.mkdir(path.dirname(path.join(files, 'runtime', rel)), { recursive: true });
+        await fs.copyFile(path.join(runtimeDist, rel), path.join(files, 'runtime', rel));
       }
-      await fs.writeFile(path.join(dir, 'grade-config.json'), `${JSON.stringify({ runtimeDist: 'runtime' }, null, 2)}\n`);
-      const grader = path.join(dir, 'grade.mjs');
-      bash = `Bash(node ${grader}:*)`;
-      prompt += `\n\nThis case's files: the setup script is ${path.join(dir, c.picture.setup)} (read it and pass its whole text as eval.run's code). ` +
-        `Run the grader as \`node ${grader} ${c.picture.check} --plan\` and, at the end, \`node ${grader} ${c.picture.check}\`, from your working folder.`;
+      await fs.writeFile(path.join(files, 'grade-config.json'), `${JSON.stringify({ runtimeDist: 'runtime' }, null, 2)}\n`);
+      bash = 'Bash(node grade.mjs:*)';
+      prompt += `\n\nThis case's files are in your working folder: the setup script is \`${c.picture.setup}\` (read it and pass its whole text as eval.run's code). ` +
+        `Run the grader as \`node grade.mjs ${c.picture.check} --plan\` and, at the end, \`node grade.mjs ${c.picture.check}\`, from your working folder.`;
       head = `max_turns: ${PICTURE_MAX_TURNS}\ntimeout_seconds: ${PICTURE_TIMEOUT_SECONDS}\nallowed_tools: [${[...ALLOWED_TOOLS, `"${bash}"`].join(', ')}]\ntags: [picture]\n`;
     }
     if (!picture && c.files?.length) {
-      // a planning case's own files (a look sheet, say), copied beside it and named in the prompt
-      for (const f of c.files) { await fs.mkdir(path.dirname(path.join(dir, f)), { recursive: true }); await fs.copyFile(path.join(PICTURE_SRC, '..', f), path.join(dir, f)); }
-      prompt += `\n\nThis case's files: ${c.files.map((f) => `${f} is ${path.join(dir, f)}`).join('; ')}.`;
+      // a planning case's own files (a look sheet, say), copied into the workspace and named in the prompt
+      for (const f of c.files) { await fs.mkdir(path.dirname(path.join(files, f)), { recursive: true }); await fs.copyFile(path.join(PICTURE_SRC, '..', f), path.join(files, f)); }
+      prompt += `\n\nThis case's files are in your working folder: ${c.files.map((f) => `\`${f}\``).join(', ')}.`;
     }
+    if (existsSync(files)) await writeScaffold(dir, name);
     await fs.writeFile(path.join(dir, 'prompt.md'), `---\n${head}---\n\n${prompt}\n`);
     for (const [k, a] of c.assertions.entries()) await fs.writeFile(path.join(dir, 'graders', `assertion-${k + 1}.md`), graderText(a, c.expected_output));
     const checks = picture ? thresholds[c.picture.check].filter((t) => !t.setup) : [];
@@ -399,7 +415,7 @@ export function evalArgs(pluginCopy, cases, { set = 'planning', runs = 1, withho
   const tools = [...READ_TOOLS, ...(picture ? PICTURE_TOOLS : []), ...cases.map((c) => c.bash).filter(Boolean)]
     .filter((t) => !withhold.some((w) => t === `mcp__plugin_${PLUGIN_NAME}_${PLUGIN_NAME}__${w}`));
   return ['plugin', 'eval', pluginCopy, '--runs', String(runs), '-j', picture ? '1' : '4', '--ablation', 'none',
-    '--allow-real-servers', '--no-publish', '--threshold', '0', ...extra, '--allow-tools', ...tools];
+    '--allow-real-servers', '--no-publish', '--threshold', '0', '--scaffold', ...extra, '--allow-tools', ...[...new Set(tools)]];
 }
 
 const shellQuote = (a) => (/^[\w@%+=:,./-]+$/.test(a) ? a : `'${a.replace(/'/g, "'\\''")}'`);
