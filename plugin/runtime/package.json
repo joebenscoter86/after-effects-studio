@@ -49,6 +49,7 @@
     "clean": "rimraf dist",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:offline": "env -u AE_MCP_E2E -u AE_MCP_E2E_MULTI -u AE_MCP_E2E_DESTRUCTIVE sandbox-exec -f tests/no-osascript.sb vitest run",
     "typecheck": "tsc --noEmit",
     "typecheck:test": "tsc --noEmit -p tsconfig.test.json",
     "lint": "oxlint",

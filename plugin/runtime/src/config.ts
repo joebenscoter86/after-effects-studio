@@ -358,14 +358,16 @@ export const MAX_LAUNCH_ATTEMPTS = 3;
 // The busy lock lives in the mailbox, and the mailbox follows TMPDIR: servers
 // with different temp folders (each eval sandbox, any host that sets its own
 // TMPDIR) never see each other's busy lock. A DoScript sent while another is
-// still waiting in After Effects is how its "second script" warning starts,
-// so on macOS every launch also takes one lock per user and per After
-// Effects, in a folder that follows neither TMPDIR nor HOME. It is held from
-// just before the launch until the request is consumed or the launcher
-// (osascript) exits, whichever comes first; a call that finds it held by a
-// launcher still alive launches nothing and waits. Windows keeps the busy
-// lock only: its launcher hands the script over and exits within a second,
-// so the same lock would hold nothing there.
+// still waiting or running in After Effects is how its "second script"
+// warning starts, so on macOS every launch also takes one lock per user and
+// per After Effects, in a folder that follows neither TMPDIR nor HOME. It is
+// held from just before the launch until the launcher (osascript) exits,
+// which is when its DoScript returns: one DoScript at a time for one After
+// Effects. A call that finds it held by a launcher still alive launches
+// nothing and waits, so a long script (a render of minutes) makes the others
+// wait, some past their deadline; the alternative is the warning. Windows
+// keeps the busy lock only: its launcher hands the script over and exits
+// within a second, so the same lock would hold nothing there.
 
 /**
  * Where the launch lock lives: AE_MCP_LAUNCH_LOCK_DIR when set, else

@@ -15,7 +15,7 @@ import { promises as fs } from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { DISPATCHER_JSX, LAUNCH_LOCK_STALE_MS, REQUEST_PREFIX, RUNTIME_DIR } from "../src/config.js";
 import type { AeDialog } from "../src/transport/dialogs.js";
@@ -89,7 +89,36 @@ function macTransport(spawn: SpawnFn, dialogs: AeDialog[] = []): FileIpcTranspor
   });
 }
 
-const WAITING = /a launch has been waiting in After Effects since \d\d:\d\d:\d\d \(\d+ s ago, sent by (this call|an earlier call)\), and nothing new was launched/;
+const WAITING = /a launch has been waiting in After Effects since \d\d:\d\d:\d\d \(\d+ s ago, sent by this call\), and nothing new was launched/;
+const BEHIND_ANOTHER =
+  /a script has been running or waiting in After Effects since \d\d:\d\d:\d\d \(\d+ s ago, sent by another call\), and nothing new was launched/;
+
+/** Do what dispatcher.jsx does first: take the request labelled `label` out of `dir`. Returns its id. */
+async function consume(dir: string, label: string): Promise<string> {
+  const deadline = Date.now() + 2_000;
+  while (Date.now() < deadline) {
+    for (const name of await fs.readdir(dir).catch(() => [] as string[])) {
+      if (!name.startsWith(REQUEST_PREFIX) || !name.endsWith(".json")) continue;
+      try {
+        const body = JSON.parse(await fs.readFile(path.join(dir, name), "utf8")) as { id: string; label: string };
+        if (body.label !== label) continue;
+        await fs.unlink(path.join(dir, name));
+        return body.id;
+      } catch {
+        /* torn read */
+      }
+    }
+    await sleep(25);
+  }
+  throw new Error(`no request labelled ${label} in ${dir}`);
+}
+
+/** The script's answer, written the way serve.jsx writes it. */
+async function answer(dir: string, id: string): Promise<void> {
+  const body = JSON.stringify({ id, ok: true, phase: "execute", result: 1, error: null, stack: null, logs: [] });
+  await fs.writeFile(path.join(dir, `.response-${id}.json.tmp`), body, "utf8");
+  await fs.rename(path.join(dir, `.response-${id}.json.tmp`), path.join(dir, `response-${id}.json`));
+}
 
 describe("macOS: a launcher still alive", () => {
   it("is not relaunched past 2.5 s, and the deadline says why in plain words", async () => {
@@ -116,8 +145,7 @@ describe("macOS: a launcher still alive", () => {
     const later = await transport.execute({ code: "return 1;", label: "ll_later", timeoutMs: 800 });
     expect(launches).toHaveLength(1);
     expect(later.errorCode).toBe("TIMEOUT");
-    expect(later.error).toMatch(WAITING);
-    expect(later.error).toMatch(/sent by an earlier call/);
+    expect(later.error).toMatch(BEHIND_ANOTHER);
 
     launches[0].exit(0); // the waiting DoScript finally ran, or gave up
     await sleep(50);
@@ -142,37 +170,64 @@ describe("macOS: a launcher still alive", () => {
     expect(res.durationMs ?? 0).toBeLessThan(5_000); // at the first look, 2.5 s in
   });
 
-  it("is given back once the request is consumed, though the launcher lives on running the script", async () => {
-    const spawn: SpawnFn = () => {
-      const child = new FakeLauncher();
-      live.push(child);
-      return child;
-    };
+  it("stays held while the launcher runs the consumed request: a server with another TMPDIR launches nothing until it exits", async () => {
+    const first = launcher(null);
     const lock = new LaunchLock(launchLockPath(lockDir, AE));
-    const transport = macTransport(spawn);
-    const pending = transport.execute({ code: "return 1;", label: "ll_consumed", timeoutMs: 4_000 });
-    await sleep(300);
+    const a = macTransport(first.spawn);
+    const running = a.execute({ code: "return 1;", label: "ll_running", timeoutMs: 20_000 });
+    const id = await consume(RUNTIME_DIR, "ll_running"); // After Effects starts on it: the script runs
+    await sleep(2_700); // past the consumption check, 2.5 s after the launch
     expect(await lock.read()).not.toBeNull();
-    // After Effects takes the request (what dispatcher.jsx does first).
-    let consumed: string | null = null;
-    for (const name of await fs.readdir(RUNTIME_DIR)) {
-      if (!name.startsWith(REQUEST_PREFIX) || !name.endsWith(".json")) continue;
-      const body = JSON.parse(await fs.readFile(path.join(RUNTIME_DIR, name), "utf8")) as { id: string; label: string };
-      if (body.label !== "ll_consumed") continue;
-      await fs.unlink(path.join(RUNTIME_DIR, name));
-      consumed = body.id;
+
+    // A second server: the same modules loaded again under another TMPDIR,
+    // so its mailbox and busy lock are its own and only the launch lock is shared.
+    const otherTmp = await fs.mkdtemp(path.join(os.tmpdir(), "launch-lock-other-"));
+    const saved = { TMPDIR: process.env.TMPDIR, TMP: process.env.TMP, TEMP: process.env.TEMP };
+    let other: typeof import("../src/transport/FileIpcTransport.js");
+    let otherRuntime: string;
+    try {
+      process.env.TMPDIR = process.env.TMP = process.env.TEMP = otherTmp;
+      vi.resetModules();
+      other = await import("../src/transport/FileIpcTransport.js");
+      otherRuntime = (await import("../src/config.js")).RUNTIME_DIR;
+    } finally {
+      for (const [name, value] of Object.entries(saved)) {
+        if (value === undefined) delete process.env[name];
+        else process.env[name] = value;
+      }
     }
-    const pendingId = Promise.resolve(consumed);
-    expect(consumed).not.toBeNull();
-    await sleep(2_900); // the consumption check runs 2.5 s after the launch
-    expect(await lock.read()).toBeNull();
-    // The script answers; nothing is left behind for the next test.
-    const id = (await pendingId)!;
-    const body = JSON.stringify({ id, ok: true, phase: "execute", result: 1, error: null, stack: null, logs: [] });
-    await fs.writeFile(path.join(RUNTIME_DIR, `.response-${id}.json.tmp`), body, "utf8");
-    await fs.rename(path.join(RUNTIME_DIR, `.response-${id}.json.tmp`), path.join(RUNTIME_DIR, `response-${id}.json`));
-    expect((await pending).ok).toBe(true);
-    await transport.close();
+    expect(otherRuntime.startsWith(otherTmp)).toBe(true);
+    const second = launcher(null);
+    const b = new other.FileIpcTransport({
+      instance: null,
+      platform: "darwin",
+      launchLockDir: lockDir,
+      spawn: second.spawn,
+      scanDialogs: async () => [],
+      reapIntervalMs: 60_000,
+    });
+    try {
+      const blocked = await b.execute({ code: "return 1;", label: "ll_other", timeoutMs: 1_000 });
+      expect(second.launches).toHaveLength(0);
+      expect(blocked.errorCode).toBe("TIMEOUT");
+      expect(blocked.error).toMatch(BEHIND_ANOTHER);
+      expect(blocked.error).toMatch(/a long one, such as a render, makes every other call wait/);
+      expect(blocked.error).toMatch(/Retry when that script has ended/);
+
+      // The script ends: its answer arrives, then its osascript exits.
+      await answer(RUNTIME_DIR, id);
+      expect((await running).ok).toBe(true);
+      expect(await lock.read()).not.toBeNull(); // the launcher still lives
+      first.launches[0].exit(0);
+      await sleep(50);
+      expect(await lock.read()).toBeNull();
+      await b.execute({ code: "return 1;", label: "ll_other_after", timeoutMs: 300 });
+      expect(second.launches).toHaveLength(1);
+    } finally {
+      await a.close();
+      await b.close();
+      await fs.rm(otherTmp, { recursive: true, force: true });
+    }
   });
 });
 
@@ -237,7 +292,7 @@ describe("the launch lock across processes", () => {
       const transport = macTransport(spawn);
       const res = await transport.execute({ code: "return 1;", label: "ll_foreign", timeoutMs: 600 });
       expect(launches).toHaveLength(0);
-      expect(res.error).toMatch(/sent by an earlier call/);
+      expect(res.error).toMatch(BEHIND_ANOTHER);
 
       const old = new Date(Date.now() - LAUNCH_LOCK_STALE_MS - 60_000).toISOString();
       await writeLock({ serverPid: other.pid as number, launcherPid: other.pid as number, launchedAt: old });
