@@ -7,7 +7,7 @@ import { runTool } from "../operations/delivery-sound.js";
 import { censusStep, cadence, CENSUS_RULES } from "./census.js";
 import { NO_FFMPEG, probeVideo, readFrames, VIDEO_TOOLS } from "./decode.js";
 import { frameAt } from "./run-track.js";
-import { frameStats, shotList } from "./shots.js";
+import { frameStats, registerShift, SHOT_RULES, shotList } from "./shots.js";
 async function open(args, tools) {
     if (typeof args.file !== "string" || !path.isAbsolute(args.file))
         return { error: "`file` must be an absolute path to a video file" };
@@ -39,12 +39,16 @@ export async function runShots(args, tools = VIDEO_TOOLS) {
         return { ok: false, error: o.error };
     const { info, f0, f1 } = o, { w, h } = size(info, 64), stats = [];
     let a = null, b = null;
+    const small = [];
     for await (const fr of readFrames(info, { from: f0, to: f1, width: w, height: h, gray: true }, tools)) {
         stats.push(frameStats(fr.index, fr.time, a, b, fr.data, w, h));
+        small.push(Uint8Array.from(fr.data));
         a = b;
         b = fr.data;
     }
-    const list = shotList(stats);
+    // a cut candidate that registers on the frame before under a whole-frame shift is the same picture: a pan, not a cut
+    const list = shotList(stats, SHOT_RULES, (i) => (i > 0 ? registerShift(small[i - 1], small[i], w, h) : null));
+    const kx = info.width / w, ky = info.height / h;
     await fs.mkdir(args.outDir, { recursive: true });
     const atFps = typeof args.atFps === "number" && args.atFps > 0 ? args.atFps : 30, at = (t) => Math.round(t * atFps * 100) / 100;
     const sheets = [], strips = [];
@@ -65,11 +69,11 @@ export async function runShots(args, tools = VIDEO_TOOLS) {
     const jsonPath = path.join(args.outDir, "shots.json");
     const result = { ok: true, file: args.file, atFps, span: { from: f0, to: f1 },
         video: { width: info.width, height: info.height, frames: info.frames, nominalFps: info.nominalFps, variableRate: info.variableRate },
-        cuts: list.cuts.map((c) => ({ ...c, at: at(c.time) })), swaps: list.swaps.map((c) => ({ ...c, at: at(c.time) })), notCuts: list.notCuts.map((c) => ({ ...c, at: at(c.time) })),
+        cuts: list.cuts.map((c) => ({ ...c, at: at(c.time) })), swaps: list.swaps.map((c) => ({ ...c, at: at(c.time) })), notCuts: list.notCuts.map((c) => ({ ...c, at: at(c.time), ...(c.shift ? { shift: { ...c.shift, dx: Math.round(c.shift.dx * kx), dy: Math.round(c.shift.dy * ky), unit: "source px a frame" } } : {}) })),
         shots: list.shots.map((s) => ({ ...s, at: [at(s.start), at(s.end)] })) };
     await fs.writeFile(jsonPath, JSON.stringify(result, null, 1));
     return { ...result, shots: result.shots.length > 40 ? `${result.shots.length} shots: see shots.json` : result.shots, files: { json: jsonPath, sheets, strips }, timings: { seconds: timing(t0), frames: stats.length },
-        reading: `${list.cuts.length} cut${list.cuts.length === 1 ? "" : "s"}, ${list.swaps.length} one-frame swap${list.swaps.length === 1 ? "" : "s"}, ${list.notCuts.length} flash${list.notCuts.length === 1 ? "" : "es"} set aside, ${list.shots.length} shot${list.shots.length === 1 ? "" : "s"}.${info.variableRate ? " The file's frame rate varies; frames are timed by their own timestamps." : ""}` };
+        reading: `${list.cuts.length} cut${list.cuts.length === 1 ? "" : "s"}, ${list.swaps.length} one-frame swap${list.swaps.length === 1 ? "" : "s"}, ${list.notCuts.filter((c) => c.kind === "flash").length} flash${list.notCuts.filter((c) => c.kind === "flash").length === 1 ? "" : "es"} and ${list.notCuts.filter((c) => c.kind !== "flash").length} pan${list.notCuts.filter((c) => c.kind !== "flash").length === 1 ? "" : "s"} or move${list.notCuts.filter((c) => c.kind !== "flash").length === 1 ? "" : "s"} set aside (notCuts), ${list.shots.length} shot${list.shots.length === 1 ? "" : "s"}.${info.variableRate ? " The file's frame rate varies; frames are timed by their own timestamps." : ""}` };
 }
 export async function runCensus(args, tools = VIDEO_TOOLS) {
     const t0 = performance.now(), o = await open(args, tools);
@@ -135,6 +139,6 @@ export async function runCensus(args, tools = VIDEO_TOOLS) {
     const result = { ok: true, file: args.file, window: step, band, pageTest, rules: CENSUS_RULES, labels: lab, cadence: cad };
     await fs.writeFile(jsonPath, JSON.stringify({ ...result, steps }, null, 1));
     return { ...result, labels: lab.length > 600 ? `${lab.slice(0, 600)}… (${lab.length} steps: see census.json)` : lab, files: { json: jsonPath, strip }, timings: { seconds: timing(t0), steps: labels.length },
-        reading: `${labels.length} steps of ${step} s: calm ${Math.round(cad.shares.calm * 100)} %, local ${Math.round(cad.shares.local * 100)} %, travel ${Math.round(cad.shares.travel * 100)} %, cut ${Math.round(cad.shares.cut * 100)} %; ${cad.travel.perMinute} travel moves a minute (median ${cad.travel.medianSeconds} s); ${cad.burstsPer10s} bursts every 10 s; calm runs median ${cad.calmRuns.medianSeconds} s. A stage with little texture reads calmer than it looks (the census study's own caveat).` };
+        reading: `${labels.length} steps of ${step} s: calm ${Math.round(cad.shares.calm * 100)} %, local ${Math.round(cad.shares.local * 100)} %, travel ${Math.round(cad.shares.travel * 100)} %, cut ${Math.round(cad.shares.cut * 100)} %; ${cad.travel.perMinute} travel moves a minute (median ${cad.travel.medianSeconds} s); ${cad.burstsPer10s} bursts every 10 s; calm runs median ${cad.calmRuns.medianSeconds} s. A stage with little texture reads calmer than it looks (the census study's own caveat). Its cut class is the census study's own rule: a fast pan can read as one; video.shots is the authority on cuts.` };
 }
 //# sourceMappingURL=run-shots-census.js.map

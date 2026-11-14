@@ -15,6 +15,8 @@ export interface ChannelOptions {
     endsAt?: (frame: number) => boolean;
     /** Where the visible span ends: the first frame that stays within this share of the travel from the end (0.02). */
     endShare?: number;
+    /** A drift: speed under this share of the move's peak, and staying there (0.1, chosen on a drawn slide into a creep). */
+    driftShare?: number;
     /** Speed (share of the travel a frame) over which "already moving" means the start was not seen. */
     movingSpeed?: number;
 }

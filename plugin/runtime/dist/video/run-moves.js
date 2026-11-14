@@ -102,6 +102,13 @@ export const TIGHT = { frames: 1, distanceShare: 0.02, easePoints: 10 };
 export function movesOfSamples(samples, fps, channel) {
     return movesOfChannel(samples, { fps, atFps: fps, minMove: channel === "position" ? 1 : 0.5, epsAbs: 0.01 }).map((m) => ({ channel, ...m }));
 }
+/** A move of one frame (a pop, a hard replace): its ease, overshoot and kind are not measurable from two samples. */
+function oneFrame(m, atFps) {
+    const v = m.duration?.visible?.at ?? m.duration?.at ?? null;
+    return (v !== null && v <= 1 + 1e-6) || (m.to?.time !== undefined && m.from?.time !== undefined && (m.to.time - m.from.time) * atFps <= 1 + 1e-6);
+}
+/** Scale-like: compared as a ratio (end over start), so 100 -> 91 and 95.3 -> 86.7 agree. */
+function scaleLike(m) { return m.channel === "scale" || m.like === "scale"; }
 /** One comparison line per quantity. */
 function compare(label, measured, built, tol, atFps) {
     const d = (a) => r2(a * atFps), checks = [];
@@ -115,10 +122,18 @@ function compare(label, measured, built, tol, atFps) {
         add("duration", d(md), d(bd), " frames", Math.abs(md - bd) * atFps <= tol.frames + 1e-9);
     if (measured.distance === null || built.distance === null)
         checks.push({ what: "distance", within: false, reading: `${label}: distance not measured on ${measured.distance === null ? "the reference" : "the build"}` });
+    else if (scaleLike(measured) && scaleLike(built) && measured.start?.[0] && built.start?.[0]) {
+        const mr = measured.end[0] / measured.start[0], br = built.end[0] / built.start[0];
+        add("scale (end over start)", mr, br, "", Math.abs(br - mr) <= tol.distanceShare * Math.abs(mr) + 1e-9);
+    }
     else
         add("distance", measured.distance, built.distance, "", Math.abs(built.distance - measured.distance) <= tol.distanceShare * Math.abs(measured.distance) + 1e-9);
-    // influences in the same convention on both sides: as seen (keys at 1.5 % and 98.5 % of the travel) when both have it
-    const me = measured.fits.easeSeen && built.fits.easeSeen ? measured.fits.easeSeen : measured.fits.ease, be = measured.fits.easeSeen && built.fits.easeSeen ? built.fits.easeSeen : built.fits.ease;
+    // a one-frame move on either side: duration and distance only
+    if (oneFrame(measured, atFps) || oneFrame(built, atFps))
+        return { move: label, within: checks.every((c) => c.within), checks, note: "a one-frame move: compared on duration and distance only" };
+    // influences as the technique says: keys held at the visible span's ends (easeVisible) on both sides, else the free fit
+    const ev = (m) => m.fits.easeVisible ?? null, both = ev(measured) && ev(built);
+    const me = both ? ev(measured) : measured.fits.ease, be = both ? ev(built) : built.fits.ease;
     if (measured.best === "ease" || built.best === "ease") {
         add("ease out", me.outInfluence, be.outInfluence, " %", Math.abs(me.outInfluence - be.outInfluence) <= tol.easePoints);
         add("ease in", me.inInfluence, be.inInfluence, " %", Math.abs(me.inInfluence - be.inInfluence) <= tol.easePoints);
@@ -160,11 +175,28 @@ export async function runCompareMoves(args, readProperty) {
     else
         return { ok: false, error: "give the build as `comp`, `layer` and `property`, or as `buildTrack` (a track.json of the build's render, which is the one that counts)" };
     const results = [];
+    // which built move answers each measured one; a move made as two (or two made as one) is said as that
+    const span = (m) => [m.duration?.visible?.fromTime ?? m.from.time, m.duration?.visible?.toTime ?? m.to.time];
+    const overlaps = (a, b) => { const [a0, a1] = span(a), [b0, b1] = span(b); return Math.min(a1, b1) - Math.max(a0, b0) > -0.05; };
+    const picks = measured.map((m) => built.filter((b) => b.channel === m.channel).sort((a, b) => Math.abs(a.from.time - m.from.time) - Math.abs(b.from.time - m.from.time))[0] ?? null);
     measured.forEach((m, i) => {
-        const same = built.filter((b) => b.channel === m.channel);
-        const pick = same.sort((a, b) => Math.abs(a.from.time - m.from.time) - Math.abs(b.from.time - m.from.time))[0];
-        const label = `move ${i + 1} (${m.channel})`;
-        results.push(pick ? compare(label, m, pick, tol, atFps) : { move: label, within: false, checks: [{ what: "missing", within: false, reading: `${label}: no ${m.channel} move in ${source}` }] });
+        const pick = picks[i], label = `move ${i + 1} (${m.channel})`;
+        if (!pick) {
+            results.push({ move: label, within: false, checks: [{ what: "missing", within: false, reading: `${label}: no ${m.channel} move in ${source}` }] });
+            return;
+        }
+        const parts = built.filter((b) => b.channel === m.channel && overlaps(m, b)), shared = measured.filter((x, j) => picks[j] === pick && x.channel === m.channel);
+        if (parts.length > 1) {
+            results.push({ move: label, within: false, checks: [{ what: "split", within: false, reading: `${label}: the build makes this as ${parts.length} moves where the reference has one` }] });
+            return;
+        }
+        if (shared.length > 1 && shared[0] !== m)
+            return;
+        if (shared.length > 1) {
+            results.push({ move: label, within: false, checks: [{ what: "joined", within: false, reading: `${label}: the reference has ${shared.length} moves here where the build has one` }] });
+            return;
+        }
+        results.push(compare(label, m, pick, tol, atFps));
     });
     const out = results.flatMap((r) => r.checks.filter((c) => !c.within).map((c) => c.reading));
     return { ok: true, atFps, tolerance: tol, build: source, results, within: results.every((r) => r.within),

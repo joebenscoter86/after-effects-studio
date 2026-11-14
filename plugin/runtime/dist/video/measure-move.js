@@ -14,14 +14,62 @@ export function movesOfChannel(samples, o) {
         return [];
     const { fps, atFps } = o, moving = o.movingSpeed ?? 0.02, gap = 2.5 / fps, at = (t) => r2(t * atFps);
     const report = analyzeCurve(samples, fps, { joinGap: 6 }); // a spring slows to a stop at each turn: one move
-    const moves = report.moves, out = [];
+    // a slow drift after a move is not the move: where its speed falls under driftShare of its peak and stays there, in one
+    // direction and not dying away (a settle decays to rest; a spring's tail turns back), the move ends and the drift is
+    // its own move. Split near where the speed comes down to the drift's own.
+    const drifts = new Set(), handover = new Set();
+    const idx = (f) => samples.findIndex((s) => s.frame === f);
+    const split = (mv) => {
+        const i0 = idx(mv.from), i1 = idx(mv.to);
+        if (i0 < 0 || i1 - i0 < 8)
+            return [mv];
+        const way = samples[i1].value.map((v, d) => v - samples[i0].value[d]), L = Math.hypot(...way);
+        if (L <= 0)
+            return [mv];
+        const sp = []; // signed speed along the move's way, units a frame
+        for (let k = i0; k < i1; k++)
+            sp.push(samples[k + 1].value.reduce((a, v, d) => a + (v - samples[k].value[d]) * way[d], 0) / L / Math.max(1e-6, (samples[k + 1].time - samples[k].time) * fps));
+        const pk = sp.reduce((b, v, k) => (Math.abs(v) > Math.abs(sp[b]) ? k : b), 0), peak = Math.abs(sp[pk]), share = o.driftShare ?? 0.1;
+        let k = -1;
+        for (let j = pk + 1; j < sp.length; j++)
+            if (sp.slice(j).every((v) => Math.abs(v) < share * peak)) {
+                k = j;
+                break;
+            }
+        if (k < 0)
+            return [mv];
+        const tail = sp.slice(k), med = (a) => median(a.map(Math.abs));
+        // a drift keeps its speed (the mean of its last third at least half its first third's); a settle decays
+        const third = Math.max(3, Math.floor(tail.length / 3)), mean = (a) => a.reduce((x, v) => x + Math.abs(v), 0) / Math.max(1, a.length);
+        if (tail.length < 6 || tail.some((v) => v < -0.25 * Math.abs(med(tail)) - 1e-9) || mean(tail.slice(-third)) < 0.5 * mean(tail.slice(0, third)))
+            return [mv];
+        // the handover: the first frame after the peak whose speed is down to 1.5 times the drift's own
+        let h = k;
+        for (let j = pk + 1; j < sp.length - 3; j++)
+            if (Math.abs(sp[j]) <= 1.5 * med(tail)) {
+                h = j;
+                break;
+            }
+        const at = samples[i0 + h].frame, distOf = (f0, f1) => Math.hypot(...samples[idx(f1)].value.map((v, d) => v - samples[idx(f0)].value[d]));
+        const a = { ...mv, to: at, distance: distOf(mv.from, at) }, b = { ...mv, from: at, distance: distOf(at, mv.to) };
+        if (b.distance < o.minMove)
+            return [mv]; // a drift too small to be a move of its own is the move's settle
+        if (b.distance > 0.5 * a.distance)
+            return [mv]; // and a drift is slower and shorter than the move it follows
+        handover.add(a);
+        drifts.add(b);
+        return [a, b];
+    };
+    const moves = report.moves.flatMap(split), out = [];
     for (const mv of moves) {
         if (mv.distance < o.minMove)
             continue;
         const i0 = samples.findIndex((s) => s.frame === mv.from), i1 = samples.findIndex((s) => s.frame === mv.to);
         if (i0 < 0 || i1 <= i0)
             continue;
-        const prevMove = [...moves].reverse().find((x) => x.to < mv.from), nextMove = moves.find((x) => x.from > mv.to);
+        // the moves either side (a drift split off a move starts on the move's last frame)
+        const real = (x) => x !== mv && (x.distance >= o.minMove || drifts.has(x)); // a step too small to be a move bounds nothing
+        const prevMove = [...moves].reverse().find((x) => real(x) && x.to <= mv.from), nextMove = moves.find((x) => real(x) && x.from >= mv.to);
         const restStart = prevMove ? Math.max(0, samples.findIndex((s) => s.frame === prevMove.to)) : 0;
         const restEnd = nextMove ? samples.findIndex((s) => s.frame === nextMove.from) : samples.length - 1;
         // the move's end value: the median of the rest that follows it (up to 10 samples, or the next move), else its last
@@ -75,7 +123,11 @@ export function movesOfChannel(samples, o) {
         const endsAtCut = !contigAfter(i1) && i1 === whi && !!o.endsAt?.(samples[i1].frame);
         if (endsAtCut && (b === null || b >= whi))
             b = i1;
-        const endSeen = endsAtCut || (b !== null && b < whi && contigAfter(b));
+        // a move handed over to a drift ends where the drift begins
+        const handed = handover.has(mv);
+        if (handed && (b === null || b > i1))
+            b = i1;
+        const endSeen = endsAtCut || (handed && b !== null) || (b !== null && b < whi && contigAfter(b));
         const visible = a !== null && b !== null ? samples[b].time - samples[a].time : null;
         // the frames the measure covers round the move: the unbroken run of samples that holds it
         let c0 = i0, c1 = i1;
@@ -98,7 +150,8 @@ export function movesOfChannel(samples, o) {
                 // keys held at the visible span's ends (the last frame at rest, the first settled), the influences fitted
                 easeVisible: visible !== null && visible > 0 ? fitEaseBetween(fitS, samples[a].time, samples[b].time) : null }, best: fits.best, margin: fits.margin,
             apply: keysFor(best, startV, end, atFps),
-            seen: { start: startSeen, end: endSeen, begins, ...(endsAtCut ? { ends: "cut" } : {}) }, covers: { fromFrame: samples[c0].frame, toFrame: samples[c1].frame },
+            seen: { start: startSeen, end: endSeen, begins, ...(endsAtCut ? { ends: "cut" } : handed ? { ends: "drift" } : {}) },
+            ...(drifts.has(mv) ? { drift: { speed: r2(dist / Math.max(1e-6, samples[i1].time - samples[i0].time)), unit: "a second", reading: "a slow drift after the move before it, split from it" } } : {}), covers: { fromFrame: samples[c0].frame, toFrame: samples[c1].frame },
             status: "measured",
         };
         if (!startSeen) {
