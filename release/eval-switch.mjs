@@ -241,7 +241,7 @@ export function sideBySide(plain, off, name) {
 
 function runArm(a, { runs, maxCost }) {
   const json = path.join(path.dirname(a.copy), `${a.arm}.json`);
-  const extra = ['--trust-plugin', '--json', json, '--output-dir', path.join(path.dirname(a.copy), `${a.arm}-results`), ...(maxCost ? ['--max-cost-usd', String(maxCost)] : [])];
+  const extra = ['--trust-plugin', '--keep-temp', '--json', json, '--output-dir', path.join(path.dirname(a.copy), `${a.arm}-results`), ...(maxCost ? ['--max-cost-usd', String(maxCost)] : [])];
   const args = evalArgs(a.copy, a.cases, { set: a.set, runs, withhold: a.withhold, extra });
   return new Promise((resolve, reject) => {
     const child = spawn('claude', args, { stdio: 'inherit' });

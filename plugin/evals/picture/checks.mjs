@@ -716,7 +716,7 @@ export function renderPlan(name, dir) {
   if (name === 'review') return reviewPlan(dir);
   if (name === 'curve') return curvePlan(dir);
   const head = `Final renders for the ${name} eval. Make these calls exactly, once, when your work is finished, then run the grader without --plan. ` +
-    `Ids come from what the setup script returned. With \`frames\`, ae_render_frame writes <outPath stem>_<index>.png (key_0.png, grade_0.png, ...); the grader reads those.\n`;
+    `Ids come from what the setup script returned. With \`frames\`, ae_render_frame writes <outPath stem>_<call id>_<index>.png (seat_1a2b3c4d_0.png, ...), a new call id every call; the grader reads the newest call's files.\n`;
   const limits = THRESHOLDS[name].filter((t) => !t.setup).map((t) => `  ${name}.${t.id}: ${t.what}, limit ${limitText(t)}`).join('\n');
   let calls;
   if (name === 'keying') {
@@ -765,10 +765,28 @@ function reviewPlan(dir) {
     `Checks and limits:\n${limits}\n`;
 }
 
+/**
+ * The file a render plan's name stands for: the name itself, or ae_render_frame's <stem>_<call id>_<index>.png for
+ * it (a new call id every call), the newest when the call was made more than once. Null when there is neither.
+ */
+export async function findRender(dir, file) {
+  try { await fs.access(path.join(dir, file)); return file; } catch { /* look for a call id */ }
+  const m = file.match(/^(.*)_(\d+)(\.png)$/);
+  if (!m) return null;
+  const re = new RegExp(`^${m[1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}_[0-9a-f]{8}_${m[2]}\\${m[3]}$`);
+  let names;
+  try { names = (await fs.readdir(dir)).filter((n) => re.test(n)); } catch { return null; }
+  if (!names.length) return null;
+  const dated = await Promise.all(names.map(async (n) => ({ n, t: (await fs.stat(path.join(dir, n))).mtimeMs })));
+  return dated.sort((a, b) => b.t - a.t || (a.n < b.n ? 1 : -1))[0].n;
+}
+
 /** Read an eval's renders from `dir` (missing files come back null) and grade them. `truth`: the footage eval's plate. */
 export async function gradeDir(name, dir, rt, { truth = null } = {}) {
   const read = async (file) => {
-    try { return rt.png16.decodePng(await fs.readFile(path.join(dir, file))); } catch { return null; }
+    const found = await findRender(dir, file);
+    if (!found) return null;
+    try { return rt.png16.decodePng(await fs.readFile(path.join(dir, found))); } catch { return null; }
   };
   if (name === 'keying') {
     const [source, ...keyed] = await Promise.all(EVALS.keying.renders.map(read));

@@ -456,3 +456,24 @@ test('the findings evals take their findings on the grader\'s command line, once
   await assert.rejects(run(process.execPath, [grader, 'seat', '--findings', doc], { cwd }), (e) => e.code === 2 && /graded on its renders/.test(e.stderr));
   for (const name of ['finish', 'review', 'curve']) assert.match(renderPlan(name, cwd), new RegExp(`node grade\\.mjs ${name} --findings '<json>'`));
 });
+
+test('the grader reads renders as ae_render_frame names them: <stem>_<call id>_<index>.png, the newest call when there are several', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'callid-'));
+  const { findRender } = await import('../../plugin/evals/picture/checks.mjs');
+  // an earlier call, before the change: clean and sharp; the final call: matched
+  const [clean0, clean1] = seatPair({});
+  const [good0, good1] = seatPair(MATCHED);
+  await writePng(rt, path.join(dir, 'seat_0aa11bb2_0.png'), clean0);
+  await writePng(rt, path.join(dir, 'seat_0aa11bb2_1.png'), clean1);
+  const old = new Date(Date.now() - 60_000);
+  for (const f of ['seat_0aa11bb2_0.png', 'seat_0aa11bb2_1.png']) await fs.utimes(path.join(dir, f), old, old);
+  await writePng(rt, path.join(dir, 'seat_9ff88ee7_0.png'), good0);
+  await writePng(rt, path.join(dir, 'seat_9ff88ee7_1.png'), good1);
+  assert.equal(await findRender(dir, 'seat_0.png'), 'seat_9ff88ee7_0.png');
+  assert.equal(await findRender(dir, 'seat_2.png'), null);
+  assert.equal(await findRender(dir, 'glow-still.png'), null);
+  assert.deepEqual(failing((await gradeDir('seat', dir, rt)).checks), []);
+  // the plain name, when it is there, is the file
+  await writePng(rt, path.join(dir, 'seat_0.png'), clean0);
+  assert.equal(await findRender(dir, 'seat_0.png'), 'seat_0.png');
+});
