@@ -57,6 +57,7 @@ steps:
    - Gap: 67.0 in the example, with an 18 px stroke (shown f002051)
 6. A finishing touch, not part of the spoken trick: the finished ring turns on layer Rotation keyframes, one at 0 s and another around 3 s. (shown f002288 only; the end value is not shown)
    - Rotation at first key: 0x+0.0° (shown f002288)
+layout: dot ring: 28 dots, outer diameter 0.29 of the comp's width and 0.52 of its height (a true circle), centre at 0.50 across, 0.51 down; each dot about 0.009 of the width across; dot centres about 0.033 of the width apart along the ring; word inside: about 0.085 of the width wide, cap height about 0.048 of the height, centred at 0.50, 0.50 (all measured on scratch/01/layout-crop.png, cut at 38.9 s, shares of the whole comp: the viewer shows the full 16:9 picture at 43.2%)
 timing and easing: The finished example turns through layer Rotation keyframes: 0° at 0:00 and a second key at about 3 s (the timeline marker sits near 03:06f in a 23.976 fps comp, shown f002288). The end angle and ease are not given.
 variations: The narrator says it works on any line or stroke, straight or a shape outline (said). The gap sets the spacing (said).
 pitfalls: none given
@@ -96,6 +97,7 @@ steps:
 4. On the dotted group's stroke, drag Gap up until only two dots are left, one at each end of the arc. (said; shown f003334) Why it works: dots fall at the start of the path and then every Gap pixels along it, so a long enough gap leaves one dot at the path start, where the trimmed arc ends, and one more where the arc begins. (inferred; f003334 fits it, with one dot at 12 o'clock and one at about 9 o'clock)
    - Gap: 1136.3 (shown f003334, cropped from the full frame in scratch/02/gap-3334.png; the screen reader caught 164.3 mid-drag at f003260)
 5. The finished design repeats this on three layers, parented to one null, laid out around the centre. (shown f002816 and f002408, layer list; f003401, viewer; how they were offset is not shown)
+layout: arcs: three arcs of one circle, diameter about 0.27 of the comp's width and 0.47 of its height, centre at 0.50 across, 0.50 down; each arc spans about 82° with gaps of about 32°, 38° and 44° between them (one gap at the top, between about 77° and 110° from the right); line about 0.002 of the width thick; end dots about 0.010 of the width across, roughly four to five times the line width; word in the middle about 0.086 of the width wide, centred at 0.50, 0.50 (all measured on scratch/02/layout-crop.png, cut at 56.2 s, shares of the whole comp: the viewer shows the full 16:9 picture at 43.2%)
 timing and easing: none given. The finished arcs move in the result (f003401 compared with f002408), but no keyframes are shown.
 variations: The narrator says it lets you make your own line shapes quickly. The same set-up should work on any custom path, not only ellipses (said).
 pitfalls: none given
@@ -137,6 +139,7 @@ steps:
    - Start Width: 0.0% (shown f004018; left at default)
    - End Width: 0.0% (shown f004018; left at default)
    - Start Ease: 0.0% (shown f004018; left at default)
+layout: arc: a glowing arc across the top half, visible from about 0.18 to 0.84 of the comp's width (0.66 wide); its crest sits at 0.51 across, 0.19 down, and its two faded ends at about 0.46–0.49 down, level with the headline's second line; its core is thickest at the crest (about 0.03 of the height with glow) and narrows to a hairline and dim at both ends; it reads as part of a circle of radius roughly 0.37–0.45 of the width centred below the crest (rough fit); headline block: about 0.40 of the width wide, centred at 0.50, from 0.39 to 0.75 down (all measured on scratch/03/layout-crop.png, cut at 68.6 s, shares of the whole comp: the viewer shows the full 16:9 picture at 43.2%)
 timing and easing: none given
 variations: none given
 pitfalls: The narrator ties it to open stroked lines (said). On a closed path there are no ends to taper, which is why the example's ellipse is trimmed open first (inferred).
@@ -169,6 +172,7 @@ steps:
    - Rotation step while dragging: about −7.8° (shown f005116), then −6.3° (shown f005236); it settles at −6.5° per layer (shown f005326: 0, −6.5, −13.1, −19.6, −26.1, −32.7, −39.2, −45.8, −52.3, −58.8)
    - Direction: negative values, so each lower layer is turned further counter-clockwise (shown f005326)
 6. Adjust the drag until the gap between neighbouring copies looks even; the top copy stays at 0°, so 55 copies make 54 steps, and at about 6.53° the ring spans roughly 353°, close to a full turn (inferred).
+layout: word wheel: words stacked on the right half, their left ends from about 0.50 to 0.57 of the comp's width, bowing furthest right at the middle word, which is level (centred 0.50 down); the left ends follow an arc of radius about 0.61 of the width (1.09 of the height) whose hub sits just off the comp's left edge at about 0.50 down (fitted); about ten words show at once, about 0.12 of the height apart near the middle, tilting more the further they sit from the middle (about 20° at the top and bottom edges); middle word about 0.32 of the width wide, cap height about 0.066 of the height; title block on the left from 0.04 to 0.49 of the width, centred 0.49 down (all measured on scratch/04/layout-crop.png, cut at 72.0 s, shares of the whole comp: the viewer shows the full 16:9 picture at 43.2%)
 timing and easing: none given for the build. The finished example rotates the wheel so words scroll past (shown f004140–f004325, words move between frames); the copies there are parented to a null (shown f004205, Parent column), but how that null is animated is not shown.
 variations: The same Ctrl+Alt (Cmd+Option) drag also offsets layers in time (said; see recipe 05). In the finished example each copy carries a different word and a small index number (shown f004205), not the same phrase.
 pitfalls: none given
@@ -195,6 +199,7 @@ steps:
    - Per Layer offset: 0:00:00:22.34, i.e. about 22.34 frames at 60 fps ≈ 0.37 s (shown in the drag tooltip, source 92.8 s, crop scratch/05/tooltip.png)
    - Total Offset: 0:00:21:58 (shown, same tooltip)
 3. Let go when the per-layer offset shown in the tooltip is what you want (inferred from the live tooltip).
+layout: not a picture of the comp; the Timeline panel shows a straight staircase of 45 text-layer bars (layers 21–65 visible, all parented to the same null), the bottom layer starting at 0 s and each layer above starting one even step later: 28.7 px per row against a ruler of 77 px per second, so about 0.373 s (22.4 frames at 60 fps) per layer, and about 16.4 s from the bottom bar to the top visible one; rows are 35.8 px apart, bars about 29 px tall; every bar runs on past the panel's right edge (all measured on scratch/05/layout-crop.png, cut at 93.17 s, and the ruler in scratch/05/layout-full.png)
 timing and easing: Even linear stagger of 22.34 frames per layer at 60 fps in the example (shown, tooltip at 92.8 s). The per-layer value is fractional, so layers would land between frames (inferred from the tooltip value; no frame shows a layer between frames).
 variations: The same shortcut offsets property values instead of time (said; recipe 04).
 pitfalls: none given
@@ -234,6 +239,7 @@ steps:
    - Orientation X: 315.0° (shown f006607), then 307.0° (shown f006667)
    - Orientation Y: 0.0° (shown f006667)
 8. Result: a tilted ring of discs around the black circle, near discs in front of it and far ones behind (shown f006667, crop scratch/06/f006667-crop.png).
+layout: disc ring: a loop of edge-on discs filling 0.09–0.90 of the comp's width and 0.16–0.96 of its height, centred at about 0.49 across, 0.55 down, seen from above so its back half sits higher; front discs are the largest (about 0.45 of the height tall), back discs smaller; black sphere: 0.28 of the width and 0.52 of the height across (a true circle), centred at 0.51, 0.50, so the ring passes in front of it at the bottom and behind it at the top; two four-point stars: about 0.13 of the width across at 0.17, 0.35 and about 0.07 across at 0.18, 0.79 (all measured on scratch/06/layout-crop.png, cut at 93.9 s, shares of the whole comp: the viewer shows the full 16:9 picture at 43.2%)
 timing and easing: none given for the build. The finished example moves (shown f005650–f005770 and f006727–f006787 playing); its discs are parented to a null (shown f005650, Parent column), but how that null or the discs are animated is not shown. The comp runs at 23.976 fps (shown f005793).
 variations: Tilt the ring to any angle by changing Orientation X and Y on all the discs (said).
 pitfalls: none given
@@ -262,6 +268,7 @@ steps:
 4. Choose Orient Towards Camera (said; selected, shown f007464) and confirm with OK (shown f007464, cursor on OK)
    - Auto-Orientation: Orient Towards Camera (said, shown f007464)
 5. Play the comp: the small circle now stays round and flat to the viewer as it goes round the ring (shown f007493, at the same comp time 0:00:00:10 as the edge-on view behind the dialog at f007407; and f007522)
+layout: all figures measured on f007522 as shares of the result crop, which is only part of the comp (the viewer is at 50% zoom, the black background fills it and no comp edge is inside the viewer here or at f006813, so the comp's size and the crop's share of it cannot be read); large centre circle: diameter about 24% of the width and 45% of the height, centre about 50% across, 45% down (measured); tilted orbit ring: spans about 30–70% across and 27–70% down, about 1.7 times the circle's diameter wide, long axis tilted slightly down to the right (measured); small orbiting circle: diameter about 8% of the width (about a third of the large circle), centre about 53% across, 69% down, on the ring's near edge below the large circle (measured)
 timing and easing: none given (the orbit animation already existed; nothing is keyframed here)
 variations: none given
 pitfalls: none given
@@ -296,6 +303,7 @@ steps:
    - Puppet Pin 2 Position: 431.3, 1297.1 — one keyframe at the start (shown f008370)
    - Puppet Pin 3 Position: 910.0, 1348.5 — one keyframe at the start (shown f008370)
 6. Play back to see the recorded head movement (shown f008250, f008370)
+layout: character's head with bun: from about 10% to 72% down (about 62% of the height), face centre about 44% across (measured on f008250, shares of the whole comp: viewer at 43.2%, picture edges just inside the viewer and matching the crop); shoulders: about 14–53% across where the bottom edge cuts them (measured on f008250, shares of the whole comp: viewer at 43.2%, picture edges just inside the viewer and matching the crop); headphone ear cup centre: about 30% across, 50% down (measured on f008250, shares of the whole comp: viewer at 43.2%, picture edges just inside the viewer and matching the crop); window opening behind her: about 4–91% across, down to about 90%, with a window post filling about 91–100% across (measured on f008250, shares of the whole comp: viewer at 43.2%, picture edges just inside the viewer and matching the crop)
 timing and easing: Keyframes are generated by the recording; the head pin has about a dozen keys from 0:00 to beyond 3:12, several frames apart at irregular spacing (shown f008370). No easing was set by hand (inferred).
 variations: none given
 pitfalls: none given
@@ -330,6 +338,7 @@ steps:
    - Tile Center: -6006.0, 540.0 as displayed (shown f009036, f009096). The screen wins here over the timeline's "6006.0": the value is negative.
    - The expression itself is never shown (see unknowns)
 5. Play back: the landscape slides sideways through the window continuously (shown f009096 against f008424)
+layout: main window opening the landscape slides through: about 4–90% across, top edge at about 15% down, bottom edge at about 90% down (the part left of the post behind her starts lower, at about 30% down) (measured on f009096, shares of the whole comp: viewer at 43.9%, picture edges inside the viewer and matching the crop to within a few pixels); character in front of it: about 15–52% across (measured on f009096, shares of the whole comp: viewer at 43.9%, picture edges inside the viewer and matching the crop to within a few pixels); second narrow window strip: about 97–100% across (measured on f009096, shares of the whole comp: viewer at 43.9%, picture edges inside the viewer and matching the crop to within a few pixels); landscape inside the window: mountain peaks about 25–30% down, tree line from about 35% down to the window's bottom; the mirrored joins do not show in this still (measured on f009096, shares of the whole comp: viewer at 43.9%, picture edges inside the viewer and matching the crop to within a few pixels)
 timing and easing: Only X of Tile Center changes; Y stays 540 (shown). Keyframed demonstration: 960 at 3:20, X being dragged to about 3720–3920 at 3:21 (shown f008916, f008976), never played. Final playback: expression-driven, speed and direction not given. Easing none given.
 variations: none given
 pitfalls: none given
@@ -381,6 +390,7 @@ steps:
    - Physics > Gravity: 0.030 (changed from 0.500 shown f010018; new value shown f010078)
    - Physics > Inherit Velocity %: 0.0; Resistance: 0.0; Extra: 0.50; Extra Angle: 1x +0.0° (shown f010018, f010078)
 7. Composite the particle layer over the scene (inferred; the scene with the particle layer switched off is shown f010138, and earlier copies of the particle layer sit lower in the stack, shown f009173)
+layout: leaves visible at once: about 140 (measured on f010078, shares of the result crop, which shows the comp's full width and about 90% of its height, the top ~10% left off below the camera label; viewer at 43.9%); leaf long side: mostly 0.7–2.1% of the width, median about 1.3%, largest about 2.6% (measured on f010078, shares of the result crop, which shows the comp's full width and about 90% of its height, the top ~10% left off below the camera label; viewer at 43.9%); spread: 2–97% across, the middle 80% of leaves between about 24% and 79% down, no visible clustering at the emitter (measured on f010078, shares of the result crop, which shows the comp's full width and about 90% of its height, the top ~10% left off below the camera label; viewer at 43.9%)
 timing and easing: none given (no keyframes shown; the particles animate by themselves)
 variations: the narrator says the particle settings are free to change to suit the scene; any graphic can be the texture
 pitfalls: none given
@@ -423,6 +433,7 @@ steps:
    - Shadow Mode: Screen (said; shown f013130)
    - Shadow Color: white (said; shown f013130)
    - Shadow Opacity: 100 % (said; shown f013187 — still 75 % in f013130 before it was changed)
+layout: styled disc: diameter about 37.5% of the width (about 67% of the height), centre about 50% across, 50% down (measured on f013332, shares of the whole comp: viewer at 43.5%, picture edges inside the viewer and matching the crop); title on the disc: first line about 39–61% across, letters about 4% of the height tall, at about 47% down; second line about 42–58% across, about 2.5% tall, at about 52% down (measured on f013332, shares of the whole comp: viewer at 43.5%, picture edges inside the viewer and matching the crop); other pale discs, all partly behind the main one: one peeking out above its top at about 52–62% across, 0–13% down; one to the left at about 17–32% across, 36–64% down; one at the lower left at about 26–39% across, 68% down to the bottom edge; one at the lower right at about 56–73% across, 66–97% down (measured on f013332, shares of the whole comp: viewer at 43.5%, picture edges inside the viewer and matching the crop)
 timing and easing: none given (static finish; the comp's own build-on animation plays at the end but is not part of the technique)
 variations: none given beyond "any white graphic"
 pitfalls: none given
@@ -459,6 +470,7 @@ steps:
    - Blurriness: 25.6 (shown, cropped from f015132)
    - Blur Dimensions: Horizontal and Vertical (shown f015072, label truncated)
    - Repeat Edge Pixels: on (shown f015072)
+layout: shadow direction differs from object to object, because each shadow comes from its own radial blur and points away from that object's blur centre: top-left block (about 12–17% across, 10–21% down) nearly level, about 7–12° below horizontal, reaching about 28% across at about 16–17% down; tall right bar (87–91% across, 21–42% down) about 36–40°, running off the right edge; small lower block (about 32–35% across, 78–83% down) about 40°; letters of the lower word about 55–65°; left bar (4–18% across, 60–66% down) almost straight down, about 71°, fading out at about 88–92% down (measured on f013692, shares of the whole comp: viewer at 43.5%, picture edges inside the viewer and matching the crop; angles in picture pixels, from the centre line of each shadow's darkening); shadow length from object edge to fade-out: about 9–14% of the width (measured on f013692, shares of the whole comp: viewer at 43.5%, picture edges inside the viewer and matching the crop; angles in picture pixels, from the centre line of each shadow's darkening); shadow width: about the object's own width at the object, densest there (measured on f013692, shares of the whole comp: viewer at 43.5%, picture edges inside the viewer and matching the crop; angles in picture pixels, from the centre line of each shadow's darkening); title: lower word about 27–72% across, 37–66% down; upper word about 40–62% across, 20–40% down (measured on f013692, shares of the whole comp: viewer at 43.5%, picture edges inside the viewer and matching the crop; angles in picture pixels, from the centre line of each shadow's darkening)
 timing and easing: none given (static shadow; because the shadow is parented to its object it follows it, inferred)
 variations: colour the copy black either by the layer's own colour or by the Fill effect (said)
 pitfalls: the shadow copy must not keep the original's layer styles (said)
@@ -490,6 +502,7 @@ steps:
    - Ball Size: 7.0 (said "seven"; shown typed f016035, settled 7.0 f016275)
    - Coloring: Medium, Shading: -75.0 left at default (shown f016275)
 4. Leave the rest at default; the black areas between balls become empty, so only the dots sit over the pale background (inferred from viewer f016275: the solid no longer hides the background)
+layout: crop is a zoomed-in part of the comp: the viewer reads 180.2 % and no comp edge is inside it; scaled from a 1920-wide comp measuring 1506 px at 43.5 % in f019326 and corrected for this frame's recording scale (menu bar Edit to Window 887 px here against 842 px in f019326, factor 1.053), the crop shows about 24 % of the comp's width and 25 % of its height (measured on f016275); dot grid: square, pitch 27.5 crop px across and down, about 58 columns by 33 rows across the crop, so 1.7 % of the crop's width, which is about 0.42 % of the comp's width or roughly 8 comp px (measured on f016275); dot core: about 4 crop px, 0.25 % of the crop's width, roughly 1 comp px across (measured on f016275); dots cover the whole picture evenly, behind the shapes as well as in the open areas (measured on f016275, shares of the result crop, which shows about 24 % of the comp's width)
 timing and easing: none given (static texture)
 variations: the author says "somewhere around those values" — spacing near 3 and ball size near 7 are a starting point, not exact (said)
 pitfalls: none given
@@ -505,7 +518,7 @@ status: unproven
 source: YBeMmC43Q1U 272–309 s
 jobs: shadows and light; camera and 3D; depth and finish
 what it does for a beat: Grounds flat 3D layers in a scene by giving them soft, believable shadows on the ground, without letting the light change the colour of the graphics themselves.
-what it looks like: A pale UI-style scene (a rounded panel of icon buttons, a weather card, small stock tickers, a big bold title) gains a soft grey shadow that spreads across the floor beneath the objects and darkens toward the bottom of the frame; the graphics keep their original flat colours.
+what it looks like: A pale UI-style scene (a rounded panel of icon buttons, a weather card, small stock tickers, a big bold title) gains a soft grey shadow that spreads across the floor beneath the objects, darkest just under them (about 78 to 88 % down) and lightening toward the bottom edge; the graphics keep their original flat colours.
 ingredients:
 - Solid layer as the floor — built-in (said "create a solid layer"); menu path Layer > New > Solid (inferred, not shown)
 - 3D layer switch — built-in (said)
@@ -538,6 +551,7 @@ steps:
 8. Set each 3D graphic layer to ignore the light so its colours stay as designed, while still casting shadows (said)
    - Accepts Lights: Off (said; shown f018538, f018604)
    - Casts Shadows: On, Accepts Shadows: On (shown f018538); shown switched on two of the 3D precomps (f018538, f018604, and about 308.6 s)
+layout: crop is the whole comp at 43.5 % (a 1920-wide comp at 43.5 % measures 1506 px in f019326; corrected for this frame's recording scale, menu bar Edit to Window 795 px here against 842 px there, it is about 1422 px, and the crop is 1420 x 796; measured on f018354); button panel: 17-51 % across, 12-78 % down; weather card: 53-85 % across, 51-76 % down; bold title word: 54-86 % across, 24-45 % down, with the script word above it reaching about 11 % down and 57-90 % across (measured on f018354); shadow on the floor: starts at the objects' bottom edge at about 78 % down, darkest from 78 % to about 88 % down (grey level about 47 against about 215 for open floor), lightening to about 180-190 at the bottom edge, and spans from about 20 % across to the right edge, with nothing at the far left (measured on f018354, compared with f016568 where the same area is an even pale grey) (all shares of the whole comp)
 timing and easing: none given (static set-up; the graphics have their own animations)
 variations: the light can be placed anywhere; behind the graphics is suggested (said). Shadow and falloff values are to taste ("you might want", "mess with") (said).
 pitfalls: Without turning off Accepts Lights on the graphics, the point light will shade and tint them (said, as the reason for the last step).
@@ -567,6 +581,7 @@ steps:
 2. Add Grow Bounds and drag it to the top of the effect stack, above every effect it must make room for (said; shown first in stack f019095, f019155)
 3. Raise Pixels until the effect is no longer cut off (inferred from the value change; said only "solve the issue")
    - Pixels: 2050 (shown f019155)
+layout: crop is the whole comp at 43.5 % (comp edges at the crop edges, measured on f019326); hill crest under the trees: about 64 % down; figure: centred at 50 % across, 57-64 % down; trees beside it at about 40 % and 60 % across, tops about 55 % down; repaired shadows: thin darker streaks running straight down from each base, from about 65 % to about 72-73 % down, roughly as long as the figure or tree is tall, about a third darker than the hill beside them (measured on f019326, shares of the whole comp)
 timing and easing: none given
 variations: none given
 pitfalls: Grow Bounds must be at the top of the stack (said). It only helps effects limited by the layer's bounding box (said).
@@ -595,6 +610,7 @@ steps:
    - Not the neighbouring "Set Focus Distance to Layer", which sets the value once; Link keeps it following (inferred from the menu in f020069 and the narrator's "the entire time")
    - "Link Focus Distance to Point of Interest" is greyed out in this menu (shown f020069), so it was not an option for this camera (inferred: likely a one-node camera)
 5. Play the camera move: the chosen layer stays in focus for the whole move (said; shown in the playback after the link, 337–341 s: wide view pushing in to the figure, figure sharp, near hills soft; f020429)
+layout: crop is the whole comp at 43.5 % (comp edges at the crop edges, measured on scratch/16/result-340.8.png); at the end of the push: figure centred at 50 % across, 50-65 % down (about 15 % of the comp's height), feet on the hill crest at about 65 % down; trees either side at 25-34 % and 69-75 % across; sun disc about 55 % of the comp's width, centred at 50 % across; at the start of the push (scratch/16/layout-start-337.6.png, 337.6 s): figure at 50 % across, 58.5-64 % down (about 5.5 % of the comp's height), sun disc about 27 % of the comp's width, so the push roughly doubles the sun and nearly triples the figure while the figure's feet stay near 64-65 % down (measured on scratch/16/result-340.8.png and scratch/16/layout-start-337.6.png, shares of the whole comp)
 timing and easing: none given (the camera move itself was pre-built; its keyframes are not shown)
 variations: none given
 pitfalls: none given
@@ -627,6 +643,7 @@ steps:
    - Gradient Layer: None, Source (inferred from truncated menu text "N..." and "So..." in f020482)
    - Layer Contribution: 100.00 (shown f020482; default 0.00 shown f021117)
 5. Toggle the effect off and on to judge it (shown f020709 off, f021339 on; the author flicks the fx switch repeatedly from about 353 to 356 s)
+layout: crop is the whole comp at 43.5 % (the selected precomp's corner and edge handles sit on the crop edges, measured on scratch/17/result-356.2.png); character: 39-57 % across, 34-83 % down, centred near 49 % across; tree trunks fill the upper 60 % of the picture, foliage the bottom 40 %; fog effect: the upper 60 % gets about a third brighter (mean level 15.5 to 20.5 on 0-255) and the trunk-to-gap contrast across a row at 15 % down nearly halves, while the bottom 20 % changes little (measured on scratch/17/result-356.2.png against f020709 fog off, shares of the whole comp)
 timing and easing: none given (static settings)
 variations: none given beyond tuning the settings to taste (said)
 pitfalls: none given
@@ -664,6 +681,8 @@ steps:
    - Offset: -100% at 0:00:01:05 comp time, the layer's in point (shown f023025)
    - Offset: 100% at 0:00:03:06 (shown f022899)
 6. Play: the words rise and fade in left to right (shown f022965 mid-reveal, f023025 finished)
+   - The text layer is parented to a null (shown f022965: parent column reads "3. Null 1"); mid-reveal the whole first line sits about 11 % of the comp's height higher than when finished (measured on f022965 against scratch/18/result-384.1.png), so the block also travels down while the words reveal, most likely because the parent null moves (inferred; its keyframes are not shown)
+layout: crop is the whole comp at 43.5 % (comp edges at the crop edges, measured on scratch/18/result-384.1.png); finished headline: centred on 50 % across; line 1 spans 19.9-80.1 % across (60 % of the comp's width), ink 55.2-61.9 % down; line 2 spans 32.3-68.1 % across (36 %), ink 66.3-73.1 % down; line to line 11.1 % of the comp's height (measured on scratch/18/result-384.1.png); mid-reveal: a settled word's ink is about 7 % of the comp's height tall and the word still entering sits about 3.5 % of the comp's height lower and mid grey, about half the 75 px push (measured on f022965); the whole first line sits about 11 % of the comp's height higher mid-reveal than when finished, so something else moves the block as well (measured on f022965 against scratch/18/result-384.1.png) (all shares of the whole comp)
 timing and easing: Two Offset keyframes, -100% at comp frame 29 (0:00:01:05) and 100% at frame 78 (0:00:03:06) in a 23.976 fps comp, about 49 frames / 2.0 s (shown f023025, f022899). Both keyframes are linear diamonds (shown f022899, cropped); the softness comes from Ramp Up plus Ease High/Low, not from keyframe easing (inferred).
 variations: none given
 pitfalls: none given
@@ -671,7 +690,7 @@ longest on: the Range Selector Advanced settings — Shape Ramp Up with Ease Hig
 build notes: Text layer > Text > Animators: addProperty("ADBE Text Animator"); in its Properties add "ADBE Text Position 3D" (0,75) and "ADBE Text Opacity" (0). Range selector "ADBE Text Selector": Advanced > "Based On" = Words (3; menu order Characters 1, Characters Excluding Spaces 2, Words 3, Lines 4; from memory, verify in After Effects), "Shape" = Ramp Up (2; from memory, verify in After Effects), "Ease High" -50, "Ease Low" 100; keyframe "Offset" -100 → 100 with linear interpolation. All settable by script.
 result: start=383.7 end=384.2 still crop=856,340,1506,848 frame=scratch/18/result-384.1.png (cut from source.mp4 at 384.1 s; kept frame f023025 at 383.75 s also shows the finished state). The reveal itself plays 381.6–383.6 s in the same crop (f022965 is mid-reveal); from 383.7 s both lines are solid and the layout holds until the cut to the next tip at about 384.3 s. No fully clean frame: the mouse cursor is in the picture throughout; at 384.1 s it sits lower left by the button, off the text. The cards and button in the picture are separate animations.
 before: f022123 (animator set, Position 0,115 and Opacity 0%, text hidden)
-unknowns: whether Position 115 or 75 was the intended final value (75 is what the end state shows); font size and font (two different fonts appear in the character panel across frames); whether the author also changed anything on the layer's own transform.
+unknowns: whether Position 115 or 75 was the intended final value (75 is what the end state shows); font size and font (two different fonts appear in the character panel across frames); whether the author also changed anything on the layer's own transform; the parent null's motion (keyframes, distance, timing and easing are not shown; only the block's roughly 11 % shift between mid-reveal and finished is seen).
 
 ## Text that runs round a drawn path
 id: 19-text-on-a-path
@@ -700,6 +719,7 @@ steps:
    - First Margin keyframe 2: 512.0 at 0:00:03:01 (shown f024211; comp is 23.976 fps)
    - Force Alignment: Off, Last Margin: 0.0 (shown f024211)
 8. A separate bold two-line title layer sits in the centre of the ring; it is example content, not part of the technique (hidden in f023385–f023911, visible from f024031: shown)
+layout: ring of type: outer diameter about 43% of the comp's width and 76% of its height, i.e. a circle about 0.76 of the comp height across (measured on scratch/19/f024114.png, shares of the whole comp: the viewer is at 43.5% zoom with the comp's edges at the panel's edges, and the result crop covers about 97% of the comp's width, missing a sliver at the right); ring centre at about 50% across, 50% down (measured, same frame, shares of the whole comp); ring letters about 4% of the comp's height tall, three repeats of the phrase with roughly one word-space between them (measured, same frame, shares of the whole comp); centre title block about 25% of the comp's width by 24% of its height, centred at about 51% across, 51% down, tilted about 10 to 13 degrees anticlockwise (measured, same frame, shares of the whole comp)
 timing and easing: First Margin 0 to 512 over about 3 s (0:00:00:00 to 0:00:03:01 at 23.976 fps); no ease given (keyframes look linear, inferred from the diamond icons in f024211).
 variations: Path can be any mask drawn with the shape tools or the Pen tool (said).
 pitfalls: none given (inferred: leaving the mask on Add hides everything outside the circle, which is why it is set to None).
@@ -707,7 +727,7 @@ longest on: Path Options: choosing the mask, then Reverse Path and the First Mar
 build notes: Script: add a text layer; layer.property("ADBE Mask Parade").addProperty("ADBE Mask Atom") with an elliptical Shape (four vertices with tangents), maskMode = MaskMode.NONE. Then layer.property("ADBE Text Properties").property("ADBE Text Path Options"): "ADBE Text Path" = mask index (1), "ADBE Text Reverse Path" = 1, "ADBE Text Perpendicular To Path" = 1, "ADBE Text Force Align Path" = 0, "ADBE Text First Margin" setValueAtTime(0, 0) and setValueAtTime(3.04, 512). Tracking and size via TextDocument (tracking 125, fontSize 48.7). Everything is scriptable.
 result: start=401.9 end=404 animated crop=828,304,1392,804 frame=f024114 (not a kept frame: cut from source.mp4 at 401.9 s, saved as scratch/19/f024114.png; same state as f024211, no cursor)
 before: f023385 (phrase on one straight line with the circle being drawn)
-unknowns: exact phrase length/number of repeats needed; circle diameter (looks roughly 300 px at 43.5% view, not given); keyframe easing; comp size; whether the mask is inside the text layer or a separate path layer (shown inside, Masks > Mask 1, f023725).
+unknowns: exact phrase length/number of repeats needed; circle diameter not given (measured: the ring is about 0.77 of the comp's height across, about 830 comp px, about 360 px on screen at 43.5%; on scratch/19/f024114.png); keyframe easing; comp size; whether the mask is inside the text layer or a separate path layer (shown inside, Masks > Mask 1, f023725).
 
 ## Two stacked glows for a soft cinematic bloom
 id: 20-two-pass-glow
@@ -732,6 +752,7 @@ steps:
    - Glow Radius: 242.0 on the visible effect labelled "Glow", scrubbed from 39.0 (shown f024751) up to 282.0 (shown f024871), back through 266.0 (shown f025051) to 242.0 (shown f025291)
    - The other glow is never shown; it presumably keeps radius 39 (inferred)
    - Other properties of the visible glow: unchanged (Threshold 60%, Intensity 1.0, Behind, Add; shown f025291)
+layout: arc ring: about 26% of the comp's width and 47% of its height across, centred at about 51% across, 50% down (measured on f025291, shares of the whole comp: the viewer is at 43.5% zoom and the result crop takes in the whole comp); three arcs of about 80 to 85 degrees each, centred about 120 degrees apart, with gaps of about 33 to 43 degrees between them (measured, same frame, angles read from the arc ends); dot ends about 1% of the comp's width across, line about 0.2% (measured, same frame, shares of the whole comp); centre word about 9% of the comp's width wide and 5% of its height tall (measured, same frame, shares of the whole comp)
 timing and easing: none given (static finish).
 variations: The second radius is "around" 200 (said); the first is only a slight increase (said).
 pitfalls: none given.
@@ -774,6 +795,7 @@ steps:
    - Use For Horizontal: Red, Max Horizontal Displacement: 0.0 (shown f026231)
    - Use For Vertical: Green, Max Vertical Displacement: 46.0 (shown f026231)
    - Displacement Map Behavior: Center Map; Wrap Pixels Around: off; Expand Output: on (shown f026231)
+layout: title word: about 54% of the comp's width wide (left edge at 23%, right at 77%) and 42% of its height tall (top at 26%, bottom at 68%), centred at about 50% across, 47% down (measured on f026657, shares of the whole comp: the viewer is at 41.4% zoom and the result crop takes in the whole comp); letter strokes about 3% of the comp's width thick; roughened edge breaks up the outline by about 0.5% of the comp's width (measured, same frame); small label line under the title at about 77% down, about 15% of the width wide; top label line centred at about 12% down; bottom-left label block at about 4% in, 85 to 94% down (measured, same frame, shares of the whole comp)
 timing and easing: none given for the technique (the title has an "IN" layer marker, shown f025640, so it likely animates on; not covered).
 variations: Works for "anything", a title or a graphic, as long as the matte layer is black (said).
 pitfalls: Once matted, the texture copy matches the background, so the title nearly vanishes (shown f026082, title faint; inferred cause: it is the same texture); Curves is what brings the title back (said). Lowering Roughen Edges Scale is what blends the edge into the grunge (said).
@@ -798,6 +820,7 @@ steps:
    - Layers marked here: the decoration, outline and text layers and the mattes; the card image, box, null, effects, wheel and background layers stay unmarked (shown f027224, f027653)
 2. Click the Hide All Shy Layers button in the Timeline panel's top bar to collapse the marked layers out of view (said; shown f027410, tooltip "Hides all layers for which the 'Shy' switch is set" at about 458.5 s)
 3. Work on the remaining layers (said); the shy layers still render, since the viewer shows the same picture before and after the toggle (shown f027410 → f027653)
+layout: not a picture of the comp; the Timeline panel after hiding shows 28 of 88 layers (measured on f027653): FX (1), Null 1 (2), twelve image layers each followed by its box shape layer (7/9, 14/16, 21/23 … 84/86, a pair every 7 layer numbers, so 5 shy layers per card; the image is parented to its box and each box to Null 1), then the wheel (87) and background (88); 60 layers hidden; rows about 36 px apart at this recording's interface scale
 timing and easing: none given
 variations: none given
 pitfalls: none given (the author only contrasts it with precomposing, which is not needed)
@@ -827,7 +850,9 @@ steps:
    - Samples Per Frame: 16 (shown f028191)
    - Adaptive Sample Limit: 128 (shown f028191)
 5. Leave Preview ticked (shown f028264), confirm the dialog and play the comp to compare (inferred; the dialog is gone and the blurred spin plays by about 473.8 s)
+   - The example has two text layers holding the same word, both parented to a null (shown in the Timeline, f028450); the second shows as a darker copy one cap height below each word (measured on f028450)
    - Comp: 1920 x 1080, 23.976 fps (shown on the Basic tab at about 469.0 s, crop scratch/23/basic-469.0.png; 23.976 fps also in the timecode, f027900)
+layout: spinning ring of words: spans about 24% to 75% across (about 51% of the comp's width) and about 33% to 72% down, centred at about 50% across (measured on f028450, shares of the whole comp: the viewer is at 41.4% zoom and the result crop takes in the whole comp); the front word is about 31% of the comp's width wide with capitals about 10% of its height tall, the back word about 7% tall (measured, same frame, shares of the whole comp); a darker copy of each word sits directly under it, offset down by about one cap height (measured, same frame); at 720 degrees the vertical strokes of the front word are smeared sideways by about 1% of the comp's width (measured, same frame, shares of the whole comp)
 timing and easing: none given (the spinning ring's animation is pre-built in the example)
 variations: Any angle can be used to dial the blur amount up or down (said)
 pitfalls: none given
@@ -835,7 +860,7 @@ longest on: On screen, playing the spin at the default angle before opening the 
 build notes: `comp.motionBlur = true`; `layer.motionBlur = true` on the moving layers; `comp.shutterAngle = 720` (range 0–720); `comp.shutterPhase = -90`; `comp.motionBlurSamplesPerFrame = 16`; `comp.motionBlurAdaptiveSampleLimit = 128`. All scriptable.
 result: start=473.8 end=475.2 animated crop=896,342,1366,768 frame=f028450
 before: f027900 (same spin at the default 180°)
-unknowns: The motion behind the effect (how the ring of words is animated, its speed); whether any other comp settings were touched; the exact moment the dialog was confirmed. Whether the viewer updated live with Preview on is not shown (the viewer is the same in f028191 and f028264).
+unknowns: The motion behind the effect (how the ring of words is animated, its speed); whether any other comp settings were touched; the exact moment the dialog was confirmed. Whether the second, darker text layer is flipped like a reflection cannot be told at this blur. Whether the viewer updated live with Preview on is not shown (the viewer is the same in f028191 and f028264).
 
 ## Keep a scaled-up precomp of vector art crisp
 id: 24-sharp-scaled-precomp
@@ -852,6 +877,7 @@ steps:
    - Scale: 100% → 670% → 2050% (shown f028752, f028973)
 3. Click the sunburst switch on the precomp layer, the one the narrator calls continuously rasterize (said; shown f029105, switch filled)
 4. The enlarged graphic re-renders sharp; scaling back down (160% around f029225, then 400%) also stays clean (shown f029105, f029285)
+layout: at 2050% scale the word FIX has capitals about 45% of the comp's height tall and spans about 10.5% to 55% across, its stems about 3.3% of the comp's width thick (measured on f029105, shares of the whole comp: the viewer is at 41.4% zoom and the result crop takes in the whole comp); the gap between FIX and the next word is about 11.6% of the comp's width; the line above sits with its baseline about 61% of the comp's height higher (measured, same frame, shares of the whole comp); the layer's anchor point marker is at the comp centre, 50% across, 50% down, just right of the X (measured, same frame); background a flat light grey
 timing and easing: none given
 variations: none given
 pitfalls: Scaling a precomp far up makes it pixelated if the switch is off (said)
@@ -867,7 +893,7 @@ status: unproven
 source: YBeMmC43Q1U 488–505 s
 jobs: layout and repetition; B-roll scenes
 what it does for a beat: When a photo or clip should sit in a designed window rather than a plain rectangle (for example, a cut-out that leaves room for a headline), draw any shape and use it as the clip's matte.
-what it looks like: On a white slide, a dark building photo fills a wide frame whose lower middle is notched out, so a white panel with large black "Thank You" text sits inside the notch; the image reads as a custom-shaped placeholder.
+what it looks like: On a white slide, a dark building photo fills a wide frame whose lower middle is notched out, so a white panel with a large black headline sits inside the notch; the image reads as a custom-shaped placeholder.
 ingredients:
 - Shape layer drawn with the Rectangle tool (or the Pen tool) — built-in
 - Track Matte column (Alpha Matte) on the media layer — built-in
@@ -878,12 +904,14 @@ steps:
    - Rectangle 3 Size: 595.0, 1285.0 (shown f030065)
    - Rectangle 3 Roundness: 20.0 (shown f030065)
    - Rectangle 3 Position: 1374.5, 261.5 (shown f030065)
+   - Comp: 3840 x 2160 (measured: a 3840 comp at the 20% zoom readout is about 1378 px on screen and the result crop is 1376 px, f030125)
    - Fill: grey; Stroke Width 3.0 with the stroke switched off (shown f030065)
    - The clip layer's visibility (eye) is off while the shape is drawn, so the grey shape is seen over the slide (shown f029645, f029885)
 2. Drag the video or image layer from below the shape (layer 3 in f029645) to directly above it (layer 1, shape on layer 2; shown f029885)
 3. Turn the clip layer's eye back on; a hidden layer renders nothing even with a matte (shown f029885 cursor on the eye column, eye on in f030065; the reason is inferred)
 4. Set the clip's Track Matte to the shape layer, alpha matte (said "matte your video or images to it"; shown f030065, Track Matte "2. Shape L…" with the alpha icon)
 5. The shape layer's visibility turns off and the clip shows only inside the shape (shown f030065, f030125)
+layout: whole frame: about 87% of the comp's width (6.3% to 93.4% across) by 59% of its height (33% to 92% down) (measured on f030125, shares of the whole comp: the viewer is at 20% zoom and the result crop takes in the whole comp; the comp is 3840 x 2160: the viewer reads 20% and the crop is 1376 px wide against about 1378 px for a 3840 comp at that zoom, measured); top bar about 29% of the comp's height deep across the full frame width; left and right blocks each about 15.4% of the comp's width wide, running the full frame height; the notch between them about 56% of the width wide and 30% of the height deep, centred at 50% across (measured, same frame, shares of the whole comp); corner rounding about 0.4% of the comp's width (measured, same frame); the headline in the notch about 52% of the width wide, capitals about 12% of the height tall, centred at 50% across (measured, same frame, shares of the whole comp)
 timing and easing: none given
 variations: Any shape made with the pen or shape tools works (said)
 pitfalls: none given
@@ -891,4 +919,4 @@ longest on: Drawing and arranging the rectangles that make up the frame around t
 build notes: Add a shape layer with three `ADBE Vector Shape - Rect` groups (Size, Position, Roundness) and a Fill; put the footage layer above it with `footage.enabled = true` (a hidden footage layer renders nothing), then call `footage.setTrackMatte(shapeLayer, TrackMatteType.ALPHA)` (AE 23+; older: move footage directly above and set `trackMatteType`). All scriptable.
 result: start=501.1 end=502.1 still crop=938,376,1376,776 frame=f030125
 before: f029885 (grey shape over the slide, clip hidden, no matte yet); f029405 at the start shows the template's finished version with large rounded corners, which the author then rebuilds
-unknowns: Comp size; sizes and positions of Rectangles 1 and 2; the fill colour value. A later shot (f030245, 504 s) shows the same layout with clearly rounded corners on every edge, but the step that rounded them is not shown (Roundness reads 20 throughout).
+unknowns: Sizes and positions of Rectangles 1 and 2; the fill colour value. A later shot (f030245, 504 s) shows the same layout with clearly rounded corners on every edge, but the step that rounded them is not shown (Roundness reads 20 throughout).
