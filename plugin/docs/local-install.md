@@ -1,6 +1,6 @@
 # Local installation and update
 
-This guide covers the public v0.2.0 Git release and local installation. An earlier public-Git package passed a first install and native AE journey on a separate Mac; the expanded v0.2.0 system passed development-Mac tests, native builds and a fresh agent task. A separate-Mac v0.2.0 install remains unverified. The [redacted first-install report](https://github.com/joebenscoter86/after-effects-studio/issues/1) records the earlier package and limitations.
+This guide covers the public v0.3.0 Git release and local installation. An earlier public-Git package passed a first install and native AE journey on a separate Mac. The operations new in v0.3.0 were built and checked on the development Mac in Claude, through Comp Room, which runs the same server; no Codex session has run them yet, so in Codex they are untested. A separate-Mac v0.3.0 install remains unverified. The [redacted first-install report](https://github.com/joebenscoter86/after-effects-studio/issues/1) records the earlier package and limitations.
 
 ## Prerequisites for a creator
 
@@ -53,4 +53,4 @@ For rollback, restore a known-good, publisher-provided version of the marketplac
 
 ## Release verification boundary
 
-The public Git source and two Codex plugin commands are available. The separate-Mac first install and native first-use journey passed for an earlier package, with the original installer transcript unavailable. The expanded v0.2.0 release passed development-Mac native and fresh-agent checks; a separate-Mac install of this exact version has not yet been reported. The creator does not need Git commands or a source build.
+The public Git source and two Codex plugin commands are available. The separate-Mac first install and native first-use journey passed for an earlier package, with the original installer transcript unavailable. v0.3.0 passed the offline test suite, an offline smoke test of this package and development-Mac checks in Claude; no Codex session has run its new operations, and a separate-Mac install of this exact version has not yet been reported. The creator does not need Git commands or a source build.

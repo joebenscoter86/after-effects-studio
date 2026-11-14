@@ -1,6 +1,6 @@
 # Support for After Effects Studio and Comp Room
 
-For ordinary support with the v0.2.0 Git release or with Comp Room, the Claude package, use [repository Issues](https://github.com/joebenscoter86/after-effects-studio/issues).
+For ordinary support with the v0.3.0 Git release or with Comp Room, the Claude package, use [repository Issues](https://github.com/joebenscoter86/after-effects-studio/issues).
 
 Before reporting a problem, run `node scripts/doctor.mjs` from the installed plugin folder and read the [connection recovery guide](../../plugin/docs/connection-recovery.md). Doctor checks local prerequisites but cannot prove AE permissions or a live connection. If a write timed out, inspect the current AE project before trying it again; the operation may have completed.
 

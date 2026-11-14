@@ -32,7 +32,7 @@ Why a tag: a tracked branch makes every merge to `main` a new candidate version,
 
 ## Listing details step
 
-Read from `plugin.json` and the README; there are no separate fields. Name "Comp Room", description "Editable motion for Adobe After Effects: native control, typography, paper collage, a 30-style visual style library, and a production-derived motion language.", author JB Technology LLC, icon `assets/gate-mark.svg`. To change them, edit `claude/src/`, rebuild, merge, re-tag and re-validate.
+Read from `plugin.json` and the README; there are no separate fields. Name "Comp Room", description "Editable motion for Adobe After Effects: native control, typography, paper collage, a 31-style visual style library, and a production-derived motion language.", author JB Technology LLC, icon `assets/gate-mark.svg`. To change them, edit `claude/src/`, rebuild, merge, re-tag and re-validate.
 
 ## Data handling step
 
