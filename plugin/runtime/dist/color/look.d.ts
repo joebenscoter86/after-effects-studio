@@ -65,7 +65,11 @@ export declare const LOOK_RULES: {
     newColourShare: number;
     /** Pieces before a sheet is called a look. */
     lookPieces: number;
+    /** Under this many pieces the ranges are narrow, and every reading says so. */
+    fewPieces: number;
 };
+/** Said while a sheet rests on fewer than LOOK_RULES.fewPieces pieces: its ranges are narrow. */
+export declare const FEW_PIECES_NOTE = "With this few pieces, a piece of the same look will sit just outside several ranges: read the largest differences first, and add approved pieces to widen the sheet.";
 /** Every measure a piece gives. */
 export declare function pieceMeasures(p: {
     report: ReferenceReport;
@@ -141,6 +145,8 @@ export declare function compareWithSheet(sheet: LookSheet, piece: {
     rhythm?: PieceRhythm | null;
     type?: PieceType | null;
 }): Json;
+/** The standing without its few-pieces note ("4 pieces: a look"), for a sentence that goes on. */
+export declare function standingBase(s: LookSheet): string;
 export declare function isSheet(x: unknown): x is LookSheet;
 export declare function isPiece(x: unknown): x is LookPiece;
 /** The sheet's readable page: the look first, then what varies, the colours, the rhythm's limits and what was not measured. */

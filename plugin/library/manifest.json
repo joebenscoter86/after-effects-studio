@@ -118,7 +118,7 @@
       "title": "Measure and transfer a reference mechanism",
       "path": "language/reference-study.md",
       "kind": "technique",
-      "sha256": "6f16c80e4f294739a02f3e1d6e99bf3f46d636732992f205c6fd9a188de2432b"
+      "sha256": "7ba2ab1edc80146e7644581c78bf8512f3168208b5e95d90b2246d4a748d3b64"
     },
     {
       "id": "failure-atlas",
@@ -202,7 +202,7 @@
       "title": "Reference teardown: a video's moves measured, built and compared",
       "path": "techniques/reference-teardown.md",
       "kind": "technique",
-      "sha256": "a347b71c1c06683fb4bb611ef64bbf2cc159dc59e04c9ab7c41edcfb9637eda4"
+      "sha256": "94beac4becbacb33962052c563933b42535dce9e8b154518536d52cd180bd09f"
     },
     {
       "id": "phone-clip-cards",

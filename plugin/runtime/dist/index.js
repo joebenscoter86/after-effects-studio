@@ -56196,8 +56196,11 @@ var LOOK_RULES = {
   /** A build's colour this large with nothing like it in the pieces is named. */
   newColourShare: 0.05,
   /** Pieces before a sheet is called a look. */
-  lookPieces: 3
+  lookPieces: 3,
+  /** Under this many pieces the ranges are narrow, and every reading says so. */
+  fewPieces: 8
 };
+var FEW_PIECES_NOTE = "With this few pieces, a piece of the same look will sit just outside several ranges: read the largest differences first, and add approved pieces to widen the sheet.";
 var D = REFERENCE_DEFAULTS;
 var P = (key, group, name, unit, how, step, digits, floor) => ({ key, group, name, unit, how, step, digits, ...floor ? { floor } : {} });
 function pieceMeasures(p) {
@@ -56259,7 +56262,7 @@ var hexOfLab = (lab) => {
   return "#" + lin.map((u) => Math.round(255 * Math.max(0, Math.min(1, u <= 31308e-7 ? 12.92 * u : 1.055 * u ** (1 / 2.4) - 0.055)))).map((v) => v.toString(16).padStart(2, "0")).join("");
 };
 var SHOT_LIMIT = "Shot lengths come from video.shots, which can read a change inside a shot (a launch, a flip) as a cut, so a shot can read shorter than it is.";
-var standingOf = (n) => n <= 1 ? "one piece: these are its own numbers, not a range" : n < LOOK_RULES.lookPieces ? `${n} pieces: a range, not yet a look` : `${n} pieces: a look`;
+var standingOf = (n) => `${n <= 1 ? "one piece: these are its own numbers, not a range" : n < LOOK_RULES.lookPieces ? `${n} pieces: a range, not yet a look` : `${n} pieces: a look`}${n < LOOK_RULES.fewPieces ? `. ${FEW_PIECES_NOTE}` : ""}`;
 function buildSheet(pieces) {
   const n = pieces.length, byKey = /* @__PURE__ */ new Map();
   for (const { piece } of pieces) for (const v of pieceMeasures(piece)) {
@@ -56352,7 +56355,8 @@ function compareWithSheet(sheet, piece) {
       continue;
     }
     const range = m.min === m.max ? `your ${of(m.pieces)}: ${fmt3(def, m.min)}` : `your pieces sit between ${fmt3(def, m.min)} and ${fmt3(def, m.max)} (${of(m.pieces)})`;
-    diffs.push({ measure: m.name, size: Math.round(beyond * 10) / 10, value: Number(v.toFixed(m.digits)), range: [m.min, m.max], pieces: m.pieces, reading: `${m.name} ${fmt3(def, v)}; ${range}.` });
+    const size2 = Math.round(beyond * 10) / 10;
+    diffs.push({ measure: m.name, size: size2, value: Number(v.toFixed(m.digits)), range: [m.min, m.max], pieces: m.pieces, reading: `${m.name} ${fmt3(def, v)}; ${range} (${size2} step${size2 === 1 ? "" : "s"} outside).` });
   }
   const pal = piece.report.palette.map((c) => ({ hex: c.hex, share: c.share, lab: [c.colour.L, c.colour.a, c.colour.b] }));
   for (const c of sheet.palette.filter((c2) => c2.look)) if (!pal.some((p) => dE(p.lab, c.lab) <= D.colourMatch))
@@ -56372,8 +56376,11 @@ function compareWithSheet(sheet, piece) {
     differences: diffs,
     insideTheLook: inside,
     notCompared,
-    reading: diffs.length ? `${diffs.length} difference${diffs.length === 1 ? "" : "s"} from your ${sheet.standing.split(":")[0]}, largest first: ${diffs.map((d) => d.reading).join(" ")}` : `Within your pieces' range on every measure of the look (${sheet.standing.split(":")[0]}).`
+    reading: (diffs.length ? `${diffs.length} difference${diffs.length === 1 ? "" : "s"} from your ${sheet.standing.split(":")[0]}, largest first: ${diffs.map((d) => d.reading).join(" ")}` : `Within your pieces' range on every measure of the look (${sheet.standing.split(":")[0]}).`) + (n < LOOK_RULES.fewPieces && diffs.length ? ` ${FEW_PIECES_NOTE}` : "")
   };
+}
+function standingBase(s) {
+  return s.standing.split(`. ${FEW_PIECES_NOTE}`)[0];
 }
 function isSheet(x) {
   return !!x && typeof x === "object" && x.kind === "look-sheet";
@@ -56388,7 +56395,16 @@ function sheetMarkdown(s) {
     return `| ${m.name} | ${fmt3(d, m.median)} | ${m.min === m.max ? fmt3(d, m.min) : `${fmt3(d, m.min)} to ${fmt3(d, m.max)}`} | ${m.pieces} |`;
   };
   const groups = [...new Set(s.measures.map((m) => m.group))];
-  const lines = [`# Look sheet`, "", `${s.standing[0].toUpperCase()}${s.standing.slice(1)}: ${s.pieces.map((p) => p.label).join(", ")}.`, "", ...s.notes.map((x) => `- ${x}`), ""];
+  const base = standingBase(s);
+  const lines = [
+    `# Look sheet`,
+    "",
+    `${base[0].toUpperCase()}${base.slice(1)}: ${s.pieces.map((p) => p.label).join(", ")}.`,
+    "",
+    ...s.pieces.length < LOOK_RULES.fewPieces ? [FEW_PIECES_NOTE, ""] : [],
+    ...s.notes.map((x) => `- ${x}`),
+    ""
+  ];
   for (const g of groups) {
     const look = s.measures.filter((m) => m.group === g && m.look);
     if (!look.length) continue;
@@ -58180,7 +58196,7 @@ async function runReferenceReport(args, io) {
       const r = await measureRhythm(p);
       if ("error" in r) rhythmNote = `The rhythm was not measured: ${r.error}`;
       else rhythm = r;
-    } else rhythmNote = "The rhythm is measured on a movie only (stage 13's census and shot list): render the build to a file and report that.";
+    } else rhythmNote = "The rhythm is measured on a movie only (video.census and video.shots read it): render the build to a file and report that.";
   }
   await fs18.writeFile(outPath, JSON.stringify(rhythm ? { ...report, rhythm } : report));
   let compare2;
@@ -58247,7 +58263,7 @@ registerOp({
     REFERENCE_REGIONS_PARAM,
     { name: "against", type: "string", description: "A saved report (the reference), or a look sheet (reference.sheet's sheet.json), to compare this one with. Against a sheet, only the measures of the user's look are compared, each against their own range and the number of pieces it rests on.", required: false },
     { name: "via", type: "string", description: "How a movie is read: 'ffmpeg' (the default when ffmpeg is installed: decoded in Node, no After Effects) or 'after-effects' (rendered frame by frame).", required: false },
-    { name: "rhythm", type: "boolean", description: "Also measure a movie's rhythm (stage 13's census over the whole movie and its shot list: calm, local and travel shares, travel moves a minute, calm runs, bursts, shot lengths, cuts a minute), kept in the saved report so a look sheet can compare it.", required: false },
+    { name: "rhythm", type: "boolean", description: "Also measure a movie's rhythm (video.census over the whole movie and video.shots: calm, local and travel shares, travel moves a minute, calm runs, bursts, shot lengths, cuts a minute), kept in the saved report so a look sheet can compare it.", required: false },
     { name: "frameRate", type: "number", description: "Frames per second of a folder of frames (for times).", required: false },
     {
       name: "frameStep",
@@ -58354,7 +58370,7 @@ function reply(sheet, json2, page, started, measured) {
     colours: sheet.palette.filter((c) => c.look).map((c) => c.hex),
     files: { sheet: json2, page },
     seconds: Math.round((performance.now() - started) / 100) / 10,
-    reading: `A look sheet from ${sheet.standing}: ${look} measures hold across the pieces, ${varies} vary (not compared); ${sheet.palette.filter((c) => c.look).length} main colours are part of the look. Read ${path19.basename(page)}; compare a build with reference.compare { reference: sheet.json, build } or reference.report { against: sheet.json }.`,
+    reading: `A look sheet from ${standingBase(sheet)}: ${look} measures hold across the pieces, ${varies} vary (not compared); ${sheet.palette.filter((c) => c.look).length} main colours are part of the look.${sheet.pieces.length < LOOK_RULES.fewPieces ? ` ${FEW_PIECES_NOTE}` : ""} Read ${path19.basename(page)}; compare a build with reference.compare { reference: sheet.json, build } or reference.report { against: sheet.json }.`,
     next: "Compare a build with the sheet before hand-over: reference.report on its render with against: the sheet (rhythm: true for the rhythm)."
   };
 }
@@ -58410,7 +58426,7 @@ var PIECES_DESC = "The approved pieces: [{ label, path, via? }] for a movie, a f
 registerOp({
   name: "reference.sheet",
   category: "look",
-  description: "A look sheet from a user's approved pieces: what stays the same across them, and how much it varies. Each piece is measured as reference.report measures it (a movie decoded by ffmpeg in Node when it is installed, no After Effects), with its rhythm from stage 13's census and shot list (calm, local and travel shares, travel moves a minute, calm runs, bursts, shot lengths, cuts a minute) and, for a comp with project: true, its type. For each measure the sheet keeps the middle value, the lowest and highest piece and how many pieces it rests on; a measure whose range is wider than 3 of reference.compare's steps varies in the user's pieces and is never compared. Main colours are matched across pieces (within CIELAB 10) and are part of the look when two thirds of the pieces carry them. One piece is its own numbers, two give a range, three or more a look, and the sheet says how many every time. Writes sheet.json, sheet.md (pieces named by their labels) and one file per piece under pieces/ (numbers only, nothing of the pictures), so reference.sheet_add never measures a piece twice. It describes what the pieces did, not what a new piece must do. Compare a build with reference.compare { reference: sheet.json } or reference.report { against: sheet.json }.",
+  description: "A look sheet from a user's approved pieces: what stays the same across them, and how much it varies. Each piece is measured as reference.report measures it (a movie decoded by ffmpeg in Node when it is installed, no After Effects), with its rhythm from video.census over the whole movie and video.shots (calm, local and travel shares, travel moves a minute, calm runs, bursts, shot lengths, cuts a minute) and, for a comp with project: true, its type. For each measure the sheet keeps the middle value, the lowest and highest piece and how many pieces it rests on; a measure whose range is wider than 3 of reference.compare's steps varies in the user's pieces and is never compared. Main colours are matched across pieces (within CIELAB 10) and are part of the look when two thirds of the pieces carry them. One piece is its own numbers, two give a range, three or more a look, and the sheet says how many every time. Writes sheet.json, sheet.md (pieces named by their labels) and one file per piece under pieces/ (numbers only, nothing of the pictures), so reference.sheet_add never measures a piece twice. It describes what the pieces did, not what a new piece must do. Compare a build with reference.compare { reference: sheet.json } or reference.report { against: sheet.json }.",
   params: [
     { name: "pieces", type: "array", description: PIECES_DESC, required: true },
     { name: "outDir", type: "string", description: "Absolute folder for the sheet.", required: true },

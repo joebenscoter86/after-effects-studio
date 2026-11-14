@@ -6,7 +6,7 @@
 import { promises as fs } from "node:fs";
 import os from "node:os";
 import * as path from "node:path";
-import { buildSheet, isPiece, isSheet, sheetMarkdown } from "../color/look.js";
+import { buildSheet, FEW_PIECES_NOTE, isPiece, isSheet, LOOK_RULES, sheetMarkdown, standingBase } from "../color/look.js";
 import { registerOp, jsxVal } from "../registry.js";
 import { measureRhythm } from "../video/rhythm.js";
 import { runReferenceReport } from "./keying-reference.js";
@@ -81,7 +81,7 @@ function reply(sheet, json, page, started, measured) {
     return { ok: true, standing: sheet.standing, pieces: sheet.pieces.map((p) => ({ label: p.label, via: p.source.via, colour: p.source.colour?.reading ?? null })), measured,
         measures: { look, varies }, colours: sheet.palette.filter((c) => c.look).map((c) => c.hex), files: { sheet: json, page },
         seconds: Math.round((performance.now() - started) / 100) / 10,
-        reading: `A look sheet from ${sheet.standing}: ${look} measures hold across the pieces, ${varies} vary (not compared); ${sheet.palette.filter((c) => c.look).length} main colours are part of the look. Read ${path.basename(page)}; compare a build with reference.compare { reference: sheet.json, build } or reference.report { against: sheet.json }.`,
+        reading: `A look sheet from ${standingBase(sheet)}: ${look} measures hold across the pieces, ${varies} vary (not compared); ${sheet.palette.filter((c) => c.look).length} main colours are part of the look.${sheet.pieces.length < LOOK_RULES.fewPieces ? ` ${FEW_PIECES_NOTE}` : ""} Read ${path.basename(page)}; compare a build with reference.compare { reference: sheet.json, build } or reference.report { against: sheet.json }.`,
         next: "Compare a build with the sheet before hand-over: reference.report on its render with against: the sheet (rhythm: true for the rhythm)." };
 }
 export async function runLookSheet(args, io) {
@@ -148,7 +148,7 @@ const PIECES_DESC = "The approved pieces: [{ label, path, via? }] for a movie, a
 registerOp({
     name: "reference.sheet",
     category: "look",
-    description: "A look sheet from a user's approved pieces: what stays the same across them, and how much it varies. Each piece is measured as reference.report measures it (a movie decoded by ffmpeg in Node when it is installed, no After Effects), with its rhythm from stage 13's census and shot list (calm, local and travel shares, travel moves a minute, calm runs, bursts, shot lengths, cuts a minute) and, for a comp with project: true, its type. " +
+    description: "A look sheet from a user's approved pieces: what stays the same across them, and how much it varies. Each piece is measured as reference.report measures it (a movie decoded by ffmpeg in Node when it is installed, no After Effects), with its rhythm from video.census over the whole movie and video.shots (calm, local and travel shares, travel moves a minute, calm runs, bursts, shot lengths, cuts a minute) and, for a comp with project: true, its type. " +
         "For each measure the sheet keeps the middle value, the lowest and highest piece and how many pieces it rests on; a measure whose range is wider than 3 of reference.compare's steps varies in the user's pieces and is never compared. Main colours are matched across pieces (within CIELAB 10) and are part of the look when two thirds of the pieces carry them. One piece is its own numbers, two give a range, three or more a look, and the sheet says how many every time. " +
         "Writes sheet.json, sheet.md (pieces named by their labels) and one file per piece under pieces/ (numbers only, nothing of the pictures), so reference.sheet_add never measures a piece twice. It describes what the pieces did, not what a new piece must do. Compare a build with reference.compare { reference: sheet.json } or reference.report { against: sheet.json }.",
     params: [

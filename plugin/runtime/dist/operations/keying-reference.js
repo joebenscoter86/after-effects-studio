@@ -183,7 +183,7 @@ export async function runReferenceReport(args, io) {
                 rhythm = r;
         }
         else
-            rhythmNote = "The rhythm is measured on a movie only (stage 13's census and shot list): render the build to a file and report that.";
+            rhythmNote = "The rhythm is measured on a movie only (video.census and video.shots read it): render the build to a file and report that.";
     }
     await fs.writeFile(outPath, JSON.stringify(rhythm ? { ...report, rhythm } : report));
     let compare;
@@ -262,7 +262,7 @@ registerOp({
         REFERENCE_REGIONS_PARAM,
         { name: "against", type: "string", description: "A saved report (the reference), or a look sheet (reference.sheet's sheet.json), to compare this one with. Against a sheet, only the measures of the user's look are compared, each against their own range and the number of pieces it rests on.", required: false },
         { name: "via", type: "string", description: "How a movie is read: 'ffmpeg' (the default when ffmpeg is installed: decoded in Node, no After Effects) or 'after-effects' (rendered frame by frame).", required: false },
-        { name: "rhythm", type: "boolean", description: "Also measure a movie's rhythm (stage 13's census over the whole movie and its shot list: calm, local and travel shares, travel moves a minute, calm runs, bursts, shot lengths, cuts a minute), kept in the saved report so a look sheet can compare it.", required: false },
+        { name: "rhythm", type: "boolean", description: "Also measure a movie's rhythm (video.census over the whole movie and video.shots: calm, local and travel shares, travel moves a minute, calm runs, bursts, shot lengths, cuts a minute), kept in the saved report so a look sheet can compare it.", required: false },
         { name: "frameRate", type: "number", description: "Frames per second of a folder of frames (for times).", required: false },
         {
             name: "frameStep",
