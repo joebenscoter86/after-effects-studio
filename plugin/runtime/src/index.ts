@@ -8,6 +8,7 @@ import { RUNTIME_DIR, instanceTargetFromEnv } from "./config.js";
 import { errorResult } from "./errors.js";
 import { denyTool, policySummary, readOnlyMode } from "./policy.js";
 import { FileIpcTransport } from "./transport/FileIpcTransport.js";
+import { pushRouteBanner } from "./transport/launcher.js";
 
 // Load all operations into the registry (must run before catalog/do handle calls).
 import "./operations/index.js";
@@ -88,7 +89,7 @@ async function instanceBanner(): Promise<string> {
     case "pull":
       return `instance: ${target.instance.id} (resident agent${named ? `, AE_MCP_INSTANCE=${named}` : ", the only live one"})`;
     case "push":
-      return "instance: none registered yet — calls launch AfterFX.exe -r into the running After Effects (instances started with -m need the agent: `mcp-aftereffects install-agent`)";
+      return pushRouteBanner();
     case "error":
       return `instance: UNRESOLVED — ${target.message}`;
   }

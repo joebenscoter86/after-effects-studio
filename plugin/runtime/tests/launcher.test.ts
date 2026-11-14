@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { buildLaunchPlan } from "../src/transport/launcher.js";
+import { buildLaunchPlan, pushRouteBanner } from "../src/transport/launcher.js";
 
 const AE_WIN = "C:/Program Files/Adobe/Adobe After Effects 2026/Support Files/AfterFX.exe";
 const AE_MAC = "/Applications/Adobe After Effects 2026/Adobe After Effects 2026.app";
@@ -64,5 +64,26 @@ describe("buildLaunchPlan (darwin)", () => {
     // Single quote inside a single-quoted JSX literal: escaped with \' — which
     // the AppleScript string layer then doubles into \\'.
     expect(tellLine).toContain("it\\\\'s here");
+  });
+});
+
+describe("pushRouteBanner", () => {
+  // The server's startup line when no resident agent is registered. It named
+  // `AfterFX.exe -r` on every platform, which on macOS is a launch that never
+  // happens: there the route is osascript and DoScript.
+  it("names osascript and DoScript on macOS, and no AfterFX.exe", () => {
+    const line = pushRouteBanner("darwin");
+    expect(line).toMatch(/^instance: none registered yet — /);
+    expect(line).toContain("osascript");
+    expect(line).toContain("DoScript");
+    expect(line).not.toContain("AfterFX.exe");
+    expect(line).not.toContain("-m");
+    expect(line).toContain("mcp-aftereffects install-agent");
+  });
+
+  it("keeps the AfterFX.exe -r line on Windows", () => {
+    expect(pushRouteBanner("win32")).toBe(
+      "instance: none registered yet — calls launch AfterFX.exe -r into the running After Effects (instances started with -m need the agent: `mcp-aftereffects install-agent`)",
+    );
   });
 });

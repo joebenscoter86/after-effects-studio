@@ -60,6 +60,17 @@ export function appBundlePath(aePath: string): string {
 }
 
 /**
+ * The server's startup line when no resident agent is registered: how a call
+ * will reach After Effects on this platform (see buildLaunchPlan).
+ */
+export function pushRouteBanner(platform: NodeJS.Platform = process.platform): string {
+  if (platform === "darwin") {
+    return "instance: none registered yet — calls reach the running After Effects through osascript and DoScript; a second instance needs the agent: `mcp-aftereffects install-agent`";
+  }
+  return "instance: none registered yet — calls launch AfterFX.exe -r into the running After Effects (instances started with -m need the agent: `mcp-aftereffects install-agent`)";
+}
+
+/**
  * How to start a NEW After Effects instance (instance.start), as opposed to
  * reaching a running one. Windows: `AfterFX.exe -m` — the spawned process IS
  * the instance, so the AE_MCP_INSTANCE the caller puts in its environment is
