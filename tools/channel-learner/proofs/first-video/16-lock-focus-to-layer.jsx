@@ -1,167 +1,139 @@
 // Technique 16: keep a chosen layer sharp while the camera travels (Link Focus Distance to Layer).
-// A layered 3D landscape (sky, sun, clouds, far hill with trees, the figure's hill, near hills) and a
-// one-node camera parented to a null; the null pushes in towards a small figure on a hilltop.
-// The camera's Focus Distance carries an expression that follows the figure, so it stays sharp.
+// A layered 3D landscape and a one-node camera parented to a null; the null pushes in towards a small figure on a
+// hilltop. The camera's Focus Distance carries an expression that follows the figure, so it stays sharp.
+// Before frame: run with args.before = true (the Focus Distance expression switched off; the static value under it is
+// the start distance, so the figure goes soft as the camera pushes in).
 //
-// VERIFY: camera Options match names: "ADBE Camera Options Group", "ADBE Camera Zoom", "ADBE Camera Depth of Field",
-//         "ADBE Camera Focus Distance", "ADBE Camera Aperture", "ADBE Camera Blur Level"
-// VERIFY: cam.autoOrient = AutoOrientType.NO_AUTO_ORIENT turns the new camera into a one-node camera (no Point of Interest)
-// VERIFY: setting layer.parent = null layer keeps the camera's world position (camera position becomes [0,0,-2666.7])
-// VERIFY: toWorld() is available inside an expression on a camera property (used to get the camera's world position)
-// VERIFY: the expression the menu command writes; ours measures straight-line distance camera -> target anchor point
-// VERIFY: Gradient Ramp display property names "Start of Ramp", "Start Color", "End of Ramp", "End Color"
-// VERIFY: "ADBE Vector Ellipse Position", "ADBE Vector Rect Size", "ADBE Vector Rect Position", "ADBE Vector Rect Roundness"
-// VERIFY: Aperture 200 px with Blur Level 100% gives clearly visible softness at these distances
-//
-// To see "before": set the Focus Distance expression's expressionEnabled to false; the static value left
-// underneath is the distance at the start of the move, so the figure goes soft as the camera pushes in.
+// Rebuild with artwork (2026-11-14): art from PROOF/16/art (brief.md). Pass args.artLib (art.jsx) and args.artDir.
+// All 3D footage layers. In-focus group at the figure's depth z 590: `hill main`, `tree round`, `tree cone`, `figure`.
+// Behind: `sky` (sky with sun), `hills far` (z 1100), clouds (z 900). In front: `cloud small 2` (z 250), `hills near`.
+// Each layer is placed by where it should read on screen at the END of the push (see `art`), so sizes follow the brief.
+// The push (from the first run): figure grows x 2.73 over a 2064 px dolly along Z while the camera sinks 119 px.
+// Earlier VERIFY items resolved in the first run (camera option match names, one-node camera, toWorld in the expression).
 $.evalFile(args.prelude);
-
-var Z = 2666.7; // ASSUMED: camera zoom (the 50 mm default for a 1920 comp); the recipe gives no lens values
-
-function grp(layer) {
-  return layer.property("ADBE Root Vectors Group").property(1).property("ADBE Vectors Group");
-}
-function addEll(layer, size, pos) {
-  var i = grp(layer).addProperty("ADBE Vector Shape - Ellipse").propertyIndex;
-  grp(layer).property(i).property("ADBE Vector Ellipse Size").setValue(size);
-  grp(layer).property(i).property("ADBE Vector Ellipse Position").setValue(pos);
-}
-function addRect(layer, size, pos, round) {
-  var i = grp(layer).addProperty("ADBE Vector Shape - Rect").propertyIndex;
-  grp(layer).property(i).property("ADBE Vector Rect Size").setValue(size);
-  grp(layer).property(i).property("ADBE Vector Rect Position").setValue(pos);
-  grp(layer).property(i).property("ADBE Vector Rect Roundness").setValue(round || 0);
-}
-function addFill(layer, color) {
-  var i = grp(layer).addProperty("ADBE Vector Graphic - Fill").propertyIndex;
-  grp(layer).property(i).property("ADBE Vector Fill Color").setValue(color);
-}
-// Layout (recipe's layout: line, shares of the whole comp). At the END of the push: figure centred at 50 % across, 50-65 % down
-// (162 px tall), feet on the crest at 65 % down; trees at 25-34 % and 69-75 % across; sun 55 % of the width, centred. At the START:
-// figure 5.5 % of the height tall (x 2.73 by the end), sun 27 % of the width (x 2.04), feet still at 64-65 % down.
-// Those two growth factors fix the depths: with the figure at z 590 the push is D = 2064 and the sun sits at z 1381.
-// The camera also sinks from y 540 to 659 so the feet stay at 64-65 % down. Everything below is drawn in END-frame pixels.
+$.evalFile(args.artLib);
+args = args || {};
+var ARTDIR = args.artDir;
+var FOLDER = "art 16";
+var W = 1920, H = 1080, FPS = 24, DUR = args.dur || 6;
+var Z = 2666.7;           // camera zoom (50 mm default at 1920)
 var D = 2064, CAMY1 = 659.3;
-var PUSH0 = 0.5, PUSH1 = 3.5; // the recipe's push plays for about 3 s and then holds
-// Make a 3D shape layer and place it so that at the END of the push it sits at screen point (ex, ey) at the size it was drawn.
-function placed(comp, name, ex, ey, z) {
-  var l = P.shape(comp, name).layer;
-  l.threeDLayer = true;
-  var k = (z + Z - D) / Z;
-  var w = [960 + (ex - 960) * k, CAMY1 + (ey - 540) * k, z];
-  P.tf(l, "ADBE Position").setValue(w);
-  P.tf(l, "ADBE Scale").setValue([100 * k, 100 * k, 100 * k]);
-  return { layer: l, world: w };
-}
 
-var c = P.freshComp("16 lock focus", 1920, 1080, 24, 5, [0.55, 0.75, 0.9]);
-// Re-runs: freshComp removes the comp but not its solids; remove this script's unused ones.
+var c = P.freshComp("16 lock focus", W, H, FPS, DUR, ART.hex("#8E7F9C"));
 (function () {
   var j, it;
   for (j = app.project.numItems; j >= 1; j--) {
     it = app.project.item(j);
     if (it instanceof FootageItem && it.mainSource instanceof SolidSource && it.usedIn.length === 0 &&
-        (it.name === "16 sky" || it.name === "16 camera rig")) it.remove();
+        (it.name === "16 sky" || it.name === "16 camera rig" || it.name === "16 sky backing")) it.remove();
   }
 })();
 
-// Sky: a 2D gradient at the bottom of the stack, behind every 3D layer.
-var sky = P.solid(c, "sky", [1, 1, 1]);
-sky.source.name = "16 sky";
-var ramp = P.effect(sky, "ADBE Ramp");
-ramp.property("ADBE Ramp-0001").setValue([960, 0]);
-ramp.property("ADBE Ramp-0002").setValue([0.98, 0.72, 0.45, 1]);
-ramp.property("ADBE Ramp-0003").setValue([960, 1080]);
-ramp.property("ADBE Ramp-0004").setValue([1, 0.9, 0.7, 1]);
-
-// Far to near. Sizes are in end-frame screen pixels.
-var sun = placed(c, "sun", 960, 430, 1381).layer;
-addEll(sun, [1056, 1056], [0, 0]);
-addFill(sun, [1, 0.82, 0.45, 1]);
-
-var clouds = placed(c, "clouds", 960, 190, 1250).layer;
-addEll(clouds, [300, 180], [-760, 20]);
-addEll(clouds, [360, 250], [-560, -20]);
-addEll(clouds, [260, 170], [-370, 30]);
-addEll(clouds, [260, 160], [470, -30]);
-addEll(clouds, [330, 220], [650, -60]);
-addEll(clouds, [240, 150], [830, -20]);
-addFill(clouds, [1, 0.97, 0.92, 1]);
-
-var farHill = placed(c, "far hill", 960, 1050, 1200).layer;
-addEll(farHill, [5000, 900], [0, 0]);
-addFill(farHill, [0.55, 0.68, 0.5, 1]);
-
-// Two trees either side of the figure (layout: 25-34 % and 69-75 % across at the end), standing on the far hill.
-var treeSpec = [[566, 173], [1382, 115]]; // end-frame centre x, crown width
-var t, ts;
-for (t = 0; t < treeSpec.length; t++) {
-  ts = treeSpec[t][1] / 60;
-  var tree = placed(c, "far tree " + (t + 1), treeSpec[t][0], 610, 1100).layer;
-  addEll(tree, [60 * ts, 70 * ts], [0, -60 * ts]);
-  addRect(tree, [14 * ts, 40 * ts], [0, -20 * ts], 0);
-  addFill(tree, [0.22, 0.4, 0.28, 1]);
+// Screen growth of a layer at depth z over the push.
+function growth(z) { return (z + Z) / (z + Z - D); }
+var report = [];
+// Place a 3D footage layer so that at the END of the push the image point `ip` (shares of the image, default its
+// centre) reads at screen point (ex, ey) and the whole image reads `ew` px wide. Optional anchor in source px.
+function art(file, name, z, ex, ey, ew, ip) {
+  var ft = ART.footage(ARTDIR, file, FOLDER);
+  var L = c.layers.add(ft);
+  L.name = name;
+  L.threeDLayer = true;
+  var k = (z + Z - D) / Z;             // world px per end-screen px at depth z
+  var s = 100 * ew / ft.width * k;     // layer scale
+  ip = ip || [0.5, 0.5];
+  P.tf(L, "ADBE Anchor Point").setValue([ip[0] * ft.width, ip[1] * ft.height, 0]);
+  P.tf(L, "ADBE Position").setValue([960 + (ex - 960) * k, CAMY1 + (ey - 540) * k, z]);
+  P.tf(L, "ADBE Scale").setValue([s, s, s]);
+  // where it reads at the start (camera at 960, 540, -Z)
+  var wx = 960 + (ex - 960) * k, wy = CAMY1 + (ey - 540) * k, k0 = Z / (z + Z);
+  var sw = ew / growth(z);
+  report.push(name + ": start " + Math.round(sw) + " px wide, anchor at (" + Math.round(960 + (wx - 960) * k0) + ", " + Math.round(540 + (wy - 540) * k0) + ")");
+  return L;
 }
 
-var figHill = placed(c, "figure hill", 960, 1054, 600).layer;
-addEll(figHill, [3000, 700], [0, 0]);
-addFill(figHill, [0.36, 0.56, 0.36, 1]);
+// A 2D backing behind the sky plate, in its top colour, in case an edge of the plate shows at the start.
+var back = P.solid(c, "16 sky backing", ART.hex("#8E7F9C"));
+back.name = "sky backing";
 
-// The hero: a small silhouette standing on the crest, 162 px tall at the end of the push; its anchor is at its feet.
-var fig = placed(c, "figure", 960, 702, 590);
-addEll(fig.layer, [54, 54], [0, -135]);
-addRect(fig.layer, [58, 108], [0, -54], 18);
-addFill(fig.layer, [0.07, 0.07, 0.09, 1]);
+// Sky with sun. The sun disc is about 44 % of the image's width, its centre near the image's bottom edge.
+// Run: at the brief's z 1381 a plate sized for a 55 % disc at the end is only 1176 px wide at the start (growth 2.04),
+// far short of the frame. Placed deeper (args.skyZ, default 5000) it grows only x 1.45, so a plate that covers the frame
+// at the start gives a disc of about 64 % of the width at the end (brief 55 %; start about 44 %, brief 27 %).
+var SKYZ = args.skyZ || 5000;
+var skyEndW = Math.max(2400, 1.04 * W * growth(SKYZ));
+var sky = art("sky-sun.png", "sky", SKYZ, 960, args.sunY || 735, skyEndW, [0.5, 0.99]);
 
-// Near hills: at the end they are a soft band along the bottom; at the start they cover the bottom of the frame.
-var nearL = placed(c, "near hill left", -386, 2189, 150).layer;
-addEll(nearL, [7480, 2618], [0, 0]);
-addFill(nearL, [0.2, 0.38, 0.25, 1]);
-var nearR = placed(c, "near hill right", 2306, 2204, 150).layer;
-addEll(nearR, [7480, 2618], [0, 0]);
-addFill(nearR, [0.18, 0.35, 0.23, 1]);
+var far = art("hills-far.png", "hills far", 1100, 960, 0.55 * H, args.farW || 4500, [0.5, 108 / 619]);
+var cb = art("cloud-big.png", "cloud big", 900, 0.15 * W, 0.12 * H, 600);
+var cs = art("cloud-small.png", "cloud small", 900, 0.86 * W, 0.10 * H, 450);
 
-// Camera rig. SUBSTITUTE: Layer > New > Camera (dialog) is replaced by addCamera plus property values.
+// The in-focus group at z 590. Hill crest (top centre of the art, 2 px down) at 50 % across, 65 % down.
+var HW = args.hillW || 3600;
+var hill = art("hill-main.png", "hill main", 590, 960, 0.65 * H, HW, [0.5, 2 / 815]);
+// Feet on the hill's surface: the hill art's top edge measured from its alpha (source px from the top at shares of
+// its width): 0.35 -> 49, 0.40 -> 24, 0.60 -> 30, 0.65 -> 60. Trees centred at 29.5 % and 72 % across (brief).
+function surfaceY(sx) {
+  var prof = [[0.30, 84], [0.35, 49], [0.40, 24], [0.45, 8], [0.50, 2], [0.55, 10], [0.60, 30], [0.65, 60], [0.70, 102]];
+  var u = 0.5 + (sx - 960) / HW, i, a, b, y = 2;
+  for (i = 0; i < prof.length - 1; i++) {
+    a = prof[i]; b = prof[i + 1];
+    if (u >= a[0] && u <= b[0]) y = a[1] + (u - a[0]) / (b[0] - a[0]) * (b[1] - a[1]);
+  }
+  return 0.65 * H + (y - 2) * HW / 2688 + 3; // 3 px into the grass so the foot is planted
+}
+var tr = art("tree-round.png", "tree round", 590, 0.295 * W, surfaceY(0.295 * W), 173, [765 / 1530, 2277 / 2281]);
+var tc = art("tree-cone.png", "tree cone", 590, 0.72 * W, surfaceY(0.72 * W), 115, [712 / 1425, 2622 / 2626]);
+// Figure: 162 px tall at the end -> width 162 * 1467 / 2306.
+var fig = art("figure.png", "figure", 590, 960, 0.65 * H + 2, 162 * 1467 / 2306, [733 / 1467, 2302 / 2306]);
+
+// Fringe (brief): the cut-outs' alpha ramps over about 6 source px; the round tree's crown also carries an opaque warm
+// band about 30 source px wide on its left (painted rim light), which read as a halo round the crown at the end of the
+// push. Simple Choker trims it (source px; the tree reads at 0.113 of its source size at the end).
+function choke(L, px) {
+  var e = P.effect(L, "ADBE Simple Choker");
+  L.property("ADBE Effect Parade").property(e.propertyIndex).property("Choke Matte").setValue(px);
+}
+choke(tr, args.chokeTree === undefined ? 18 : args.chokeTree);
+choke(tc, 4); choke(fig, 3);
+var cs2 = art("cloud-small.png", "cloud small 2", 250, 0.70 * W, 0.22 * H, 500);
+// Near mounds: at z 100 they grow x 3.94 over the push. Sized so they frame the start (args.nearW); by the end they
+// have slid out past the frame's sides, the classic push-through. Run: 7200 wide with its bottom at 1500 (end px) left
+// the mounds' hard bottom and side edges inside the start frame; 8000 at 2300 puts them outside it.
+var near = art("hills-near.png", "hills near", 100, 960, args.nearY || 2300, args.nearW || 8000, [0.5, 1.0]);
+
+// Camera and rig.
 var cam = c.layers.addCamera("camera", [960, 540]);
-cam.autoOrient = AutoOrientType.NO_AUTO_ORIENT; // one-node camera, as the greyed "Point of Interest" option suggests
+cam.autoOrient = AutoOrientType.NO_AUTO_ORIENT;
 P.tf(cam, "ADBE Position").setValue([960, 540, -Z]);
 var opts = cam.property("ADBE Camera Options Group");
 opts.property("ADBE Camera Zoom").setValue(Z);
 opts.property("ADBE Camera Depth of Field").setValue(1);
-opts.property("ADBE Camera Aperture").setValue(args.aperture || 400); // ASSUMED: wide, so the softness is easy to judge (40 showed no blur at all; 200 only a little on the trees)
-opts.property("ADBE Camera Blur Level").setValue(100); // ASSUMED
+opts.property("ADBE Camera Aperture").setValue(args.aperture || 400);  // first run: 400 (200 gave little softness)
+opts.property("ADBE Camera Blur Level").setValue(100);
 
-var rig = c.layers.addNull(c.duration);
+var rig = c.layers.addNull(DUR);
 rig.name = "camera rig";
 rig.source.name = "16 camera rig";
 rig.threeDLayer = true;
 P.tf(rig, "ADBE Anchor Point").setValue([0, 0, 0]);
 P.tf(rig, "ADBE Position").setValue([960, 540, 0]);
 cam.parent = rig;
-
-// ASSUMED: the push's easing (the recipe gives no keyframes). Distance and drop come from the layout line.
-var fw = fig.world;
+// The push runs the whole comp: eased out of rest, still travelling (slowly) on the last frame.
 var rp = P.tf(rig, "ADBE Position");
-rp.setValueAtTime(PUSH0, [960, 540, 0]);
-rp.setValueAtTime(PUSH1, [960, CAMY1, D]);
-var ease = new KeyframeEase(0, 60);
-rp.setTemporalEaseAtKey(1, [ease], [ease]);
-rp.setTemporalEaseAtKey(2, [ease], [ease]);
+rp.setValueAtTime(0, [960, 540, 0]);
+rp.setValueAtTime(DUR, [960, CAMY1, D]);
+rp.setTemporalEaseAtKey(1, [new KeyframeEase(0, 70)], [new KeyframeEase(0, 70)]);
+rp.setTemporalEaseAtKey(2, [new KeyframeEase(args.endSpeed || 160, 45)], [new KeyframeEase(args.endSpeed || 160, 45)]);
 
-// The technique. SUBSTITUTE: Layer > Camera > Link Focus Distance to Layer (context menu) is replaced by
-// writing the equivalent expression on Focus Distance. The static value underneath is the start distance.
-var dx = fw[0] - 960, dy = fw[1] - 540, dz = fw[2] + Z;
+// The technique: Link Focus Distance to Layer, written as the equivalent expression.
 var fd = cam.property("ADBE Camera Options Group").property("ADBE Camera Focus Distance");
-var startFocus = Math.sqrt(dx * dx + dy * dy + dz * dz);
-fd.setValue(startFocus);
+var fw = P.tf(fig, "ADBE Position").value;
+var dx = fw[0] - 960, dy = fw[1] - 540, dz = fw[2] + Z;
+fd.setValue(Math.sqrt(dx * dx + dy * dy + dz * dz));
 fd.expression = 'var t = thisComp.layer("figure");\nlength(toWorld([0,0,0]), t.toWorld(t.anchorPoint));';
 if (args.before) cam.property("ADBE Camera Options Group").property("ADBE Camera Focus Distance").expressionEnabled = false;
 
-return {
-  comp: c.name,
-  layers: c.numLayers,
-  focusTarget: "figure",
-  tech: "camera > Camera Options > Focus Distance expression (expressionEnabled false = before)",
-  staticFocus: startFocus
-};
+// 2D stack: backing at the bottom, then far to near, camera and rig on top.
+back.moveToEnd();
+return { comp: c.name, layers: c.numLayers, before: !!args.before, skyEndW: Math.round(skyEndW), start: report };

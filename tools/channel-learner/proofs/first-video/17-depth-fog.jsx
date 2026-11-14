@@ -1,139 +1,138 @@
 // Technique 17: tie a 3D scene together with Fog 3D applied to its precomp.
-// Inner comp "17 fog scene": a dark night forest of 3D trunks receding over a ground plane, a small orange-cloaked
-// figure with a flame in front, one camera. Outer comp "17 depth fog": that comp as one layer, Fog 3D on it.
+// Inner comp "17 fog scene": the night forest as 3D layers at depth with one camera. Outer comp "17 depth fog": that comp
+// as one layer, Fog 3D on it ("TECH Fog 3D"), and a 2D lantern glow above it so the fog does not grey the light.
+// Before frame: run with args.before = true (Fog 3D switched off), or switch "TECH Fog 3D" off by hand.
 //
-// VERIFY: Fog 3D is found by its display name "Fog 3D" (match name thought to be "ADBE FOG3D")
-// VERIFY: Fog 3D property display names "Fog Color", "Fog Start Depth", "Fog End Depth", "Fog Opacity",
-//         "Scattering Density", "Foggy Background", "Layer Contribution" (and "Gradient Layer", left at None)
-// VERIFY: whether Fog 3D gets any depth from a precomp of After Effects 3D layers; if it fogs the whole frame
-//         evenly (or not at all), the recipe's step does not carry over and the fog is not depth fog
-// VERIFY: Fog Start Depth 51 and End Depth -23 are in the effect's own units; whether they mean anything without a 3D channel
-// VERIFY: "ADBE Vector Rect Size", "ADBE Vector Rect Position", "ADBE Vector Ellipse Position" match names
-//
-// To see "before": switch off the effect named "TECH Fog 3D" on the "fog scene" layer of "17 depth fog".
+// Rebuild with artwork (2026-11-14): art from PROOF/17/art (brief.md). Pass args.artLib (art.jsx) and args.artDir.
+// Inside the precomp, far to near: `sky mist` z 6000, `trunks far` z 3500, `trunks mid` z 1500 (60 px left on screen),
+// `figure` z 0, `shrubs mid` z -150, `trunks near` z -700, `foliage front` z -1200. Full-frame plates are scaled by
+// (2666.7 + z) / 2666.7 so each reads at its brief size through the camera. The art is already graded to night levels
+// (brief); no further darkening.
+// Earlier runs found: match name "ADBE FOG_3D", properties "-0001".."-0008"; Fog 3D reads depth from a precomp of 3D
+// layers as the distance from the precomp's camera in pixels (figure 2667), and the recipe's 51 / -23 fog nothing.
+// Movie: the camera drifts slowly right and in (eased out of rest, still moving on the last frame); the glow follows
+// the lantern through an expression.
 $.evalFile(args.prelude);
+$.evalFile(args.artLib);
+args = args || {};
+var ARTDIR = args.artDir;
+var FOLDER = "art 17";
+var W = 1920, H = 1080, FPS = 23.976, DUR = args.dur || 6;
+var CAMD = 2666.7;
 
-function grp(layer) {
-  return layer.property("ADBE Root Vectors Group").property(1).property("ADBE Vectors Group");
-}
-function addEll(layer, size, pos) {
-  var i = grp(layer).addProperty("ADBE Vector Shape - Ellipse").propertyIndex;
-  grp(layer).property(i).property("ADBE Vector Ellipse Size").setValue(size);
-  grp(layer).property(i).property("ADBE Vector Ellipse Position").setValue(pos);
-}
-function addRect(layer, size, pos) {
-  var i = grp(layer).addProperty("ADBE Vector Shape - Rect").propertyIndex;
-  grp(layer).property(i).property("ADBE Vector Rect Size").setValue(size);
-  grp(layer).property(i).property("ADBE Vector Rect Position").setValue(pos);
-}
-function addFill(layer, color) {
-  var i = grp(layer).addProperty("ADBE Vector Graphic - Fill").propertyIndex;
-  grp(layer).property(i).property("ADBE Vector Fill Color").setValue(color);
-}
-function shape3d(comp, name, pos) {
-  var l = P.shape(comp, name).layer;
-  l.threeDLayer = true;
-  P.tf(l, "ADBE Position").setValue(pos);
-  return l;
-}
-
-var fps = 23.976; // the recipe's example comp runs at 23.976
-var GROUND_Y = 900;
-
-// Outer first, so a re-run removes the comp that uses the scene before the scene itself.
-var c = P.freshComp("17 depth fog", 1920, 1080, fps, 4, [0, 0, 0]);
-var s = P.freshComp("17 fog scene", 1920, 1080, fps, 4, [0.02, 0.05, 0.08]);
-
-// Night sky behind everything (2D, bottom of the stack).
-// Re-runs: freshComp removes the comps but not their solids; remove this script's unused ones.
+var c = P.freshComp("17 depth fog", W, H, FPS, DUR, ART.hex("#0B1428"));
+var s = P.freshComp("17 fog scene", W, H, FPS, DUR, ART.hex("#0B1428"));
 (function () {
   var j, it;
   for (j = app.project.numItems; j >= 1; j--) {
     it = app.project.item(j);
     if (it instanceof FootageItem && it.mainSource instanceof SolidSource && it.usedIn.length === 0 &&
-        (it.name === "17 night" || it.name === "17 ground")) it.remove();
+        (it.name === "17 night" || it.name === "17 ground" || it.name === "17 lantern glow")) it.remove();
   }
 })();
-// Review correction: sky 10,26,36 -> 12,42,60 -> 13,46,66. The sky stands past Fog End, so with the fog on it is exactly the
-// fog colour (12,38,55, level 35). Its fog-off level sets how much contrast a fogged trunk keeps: kept = 24 * (1 - fog) / (sky - 11),
-// so a sky about 30 levels above the trunks (level 41.7) puts trunks with 32 to 46 % fog at 0.53 to 0.42. args.sky overrides.
-var bg = P.solid(s, "night", args.sky || [13 / 255, 46 / 255, 66 / 255]);
-bg.source.name = "17 night";
-// Run fix: as a 2D layer the sky carried no depth (Fog 3D read it as depth 0), so it was fogged or not as a block,
-// apart from the trunks. It is now a 3D layer behind the last trunk, scaled up to fill the view, so it sits in the same depth range.
-bg.threeDLayer = true;
-P.tf(bg, "ADBE Position").setValue([960, 540, 5200]);
-P.tf(bg, "ADBE Scale").setValue([320, 320, 320]);
 
-// Ground plane, lying flat from just in front of the camera to far back.
-var ground = P.solid(s, "ground", [0.04, 0.09, 0.09], 6000, 7000);
-ground.source.name = "17 ground";
-ground.threeDLayer = true;
-P.tf(ground, "ADBE Position").setValue([960, GROUND_Y, 2500]);
-P.tf(ground, "ADBE Rotate X").setValue(90);
-
-// Trunks receding in depth: [world x, world z, width]. Each 2400 tall, standing on the ground.
-// Review correction: every trunk stands behind the figure (z 0), the nearest at z 520, where Fog 3D with Start 2700 / End 5000
-// lifts it about a third of the way to the fog colour (measured: the fog builds faster than a straight line, about 1 - (1 - t)^1.5).
-// Second review correction: the stand ran back to z 3600, so the far trunks reached the full fog colour and vanished. All nine
-// trunks now stand between z 520 and 800 (about 30 to 46 % fog), so each keeps about half its contrast against the sky, evenly.
-// (z 600 to 1100, 40 to 60 % fog, cannot hold an even ratio: kept contrast goes with 1 - fog, so 60 % fog keeps two thirds of what
-// 40 % keeps.) Widths about 160 so the trunks cover about 60 % of a row: the fog lifts trunks and dims the gaps, and the upper
-// picture only comes out brighter when trunks are the larger share.
-var trunks = [[-56, 520, 160], [155, 740, 158], [439, 600, 164], [700, 800, 156], [966, 560, 162], [1243, 690, 160],
-  [1516, 780, 158], [1766, 640, 162], [2046, 720, 160]];
-var i;
-for (i = 0; i < trunks.length; i++) {
-  var tr = shape3d(s, "trunk " + (i + 1), [trunks[i][0], GROUND_Y - 1200, trunks[i][1]]);
-  addRect(tr, [trunks[i][2], 2400], [0, 0]);
-  addFill(tr, [0.02, 0.05, 0.06, 1]);
+function plate(file, name, z, xShift, blur) {
+  var L = s.layers.add(ART.footage(ARTDIR, file, FOLDER));
+  L.name = name;
+  L.threeDLayer = true;
+  var f = (CAMD + z) / CAMD;
+  var sc = 100 * W / 2688 * f;
+  P.tf(L, "ADBE Scale").setValue([sc, sc, sc]);
+  P.tf(L, "ADBE Position").setValue([960 + (xShift || 0) * f, 540, z]);
+  if (blur) ART.setFx(P.effect(L, "ADBE Gaussian Blur 2"), { "Blurriness": blur, "Repeat Edge Pixels": 1 });
+  return L;
 }
+// sky: brief "about 2000 x 1130 on screen" -> 2000 / 1920 of a full-frame plate
+// Run: at the brief's z 6000 the sky sat 2500 px behind the far trunks, whose painted alpha is soft and noisy (they fade
+// into haze at the bottom). Fog 3D takes one depth per pixel, so where that alpha flickers the depth jumps between the
+// trunks and the sky and the fog came out in pale blotches. The sky now stands just behind the far trunks (z 3600), so
+// both get nearly the same fog and the blotches go; the trunks keep their own z (args.skyZ).
+var sky = plate("sky-mist.png", "sky mist", args.skyZ || 3600, 0, 6);
+var skS = P.tf(sky, "ADBE Scale").value[0] * 2000 / 1920 * 1.06; // run: +6 % margin for the camera drift
+P.tf(sky, "ADBE Scale").setValue([skS, skS, skS]);
+var tfar = plate("trunks-far.png", "trunks far", 3500, 0, 3.5);
+var tmid = plate("trunks-mid.png", "trunks mid", 1500, -60, 0);
 
-// Foliage (layout: the bottom 40 % of the picture is foliage): a row of bushes behind the figure and a row in front.
-var bushBack = shape3d(s, "foliage back", [960, GROUND_Y, 400]);
-var b;
-for (b = 0; b < 9; b++) addEll(bushBack, [420, 330 + (b % 3) * 60], [-1300 + b * 325, -110]);
-addFill(bushBack, [0.03, 0.12, 0.11, 1]);
+// Figure: 529 px tall at z 0, spanning 39 to 56 % across, feet at 83 % down (anchor at the bottom centre).
+var fft = ART.footage(ARTDIR, "figure-lantern.png", FOLDER);
+var fig = s.layers.add(fft);
+fig.name = "figure";
+fig.threeDLayer = true;
+var FS = 529 / fft.height;
+P.tf(fig, "ADBE Anchor Point").setValue([fft.width / 2, fft.height, 0]);
+P.tf(fig, "ADBE Scale").setValue([100 * FS, 100 * FS, 100 * FS]);
+P.tf(fig, "ADBE Position").setValue([0.475 * W, 0.83 * H, 0]);
+// Fringe check (brief): the cut-out's alpha ramps over about 4 source px; Simple Choker trims it (source px).
+var ch = P.effect(fig, "ADBE Simple Choker");
+fig.property("ADBE Effect Parade").property(ch.propertyIndex).property("Choke Matte").setValue(args.choke === undefined ? 4 : args.choke);
 
-// The character (layout: 39-57 % across, 34-83 % down, centred near 49 % across): orange cloak and head,
-// feet on the ground (anchor at the feet), and a separate flame.
-var hero = shape3d(s, "cloaked figure", [940, GROUND_Y, 0]);
-P.path({ layer: hero }, [[-170, 0], [0, -440], [170, 0]], null, null, true);
-addEll(hero, [130, 130], [0, -465]);
-addFill(hero, [0.95, 0.45, 0.12, 1]);
-var flame = shape3d(s, "flame", [1090, GROUND_Y - 290, -5]);
-addEll(flame, [60, 96], [0, 0]);
-addFill(flame, [1, 0.82, 0.3, 1]);
+var shr = plate("shrubs-mid.png", "shrubs mid", -150, 0, 0);
+// Run: at full frame the shrubs' top line dips to about 85 % down in the middle and the boots (83 %) floated above it;
+// raised 100 screen px so the shrubs cover the boots (brief).
+P.tf(shr, "ADBE Position").setValue([960, 540 - (args.shrubLift || 100) * (CAMD - 150) / CAMD, -150]);
+var tnear = plate("trunks-near.png", "trunks near", -700, 0, 0);
+var fol = plate("foliage-front.png", "foliage front", -1200, 0, 0);
 
-var bushFront = shape3d(s, "foliage front", [960, GROUND_Y + 130, -250]);
-for (b = 0; b < 7; b++) addEll(bushFront, [460, 230 + (b % 2) * 50], [-1150 + b * 385, 0]);
-addFill(bushFront, [0.02, 0.09, 0.08, 1]);
+// Run: Fog 3D takes the depth of the nearest layer even where that layer is barely there, so wherever the shrubs' soft
+// painted tops or the mid trunks' soft edges were partly transparent, the far haze behind them showed through UNfogged:
+// pale blotches along the shrub line and speckle down the trunk edges. Simple Choker on every layer that stands in front
+// of fogged depth hardens those low-alpha fringes (it is also the fringe check the brief asks for).
+function harden(L, px) {
+  var e = P.effect(L, "ADBE Simple Choker");
+  L.property("ADBE Effect Parade").property(e.propertyIndex).property("Choke Matte").setValue(px);
+  L.property("ADBE Effect Parade").property(e.propertyIndex).name = "alpha harden";
+}
+var HC = args.harden === undefined ? 1 : args.harden;
+if (HC > 0) { harden(tmid, HC); harden(shr, HC); harden(tnear, HC); harden(fol, HC); }
 
-// SUBSTITUTE: Layer > New > Camera (dialog) is replaced by addCamera.
+// One-node camera looking straight down Z, drifting right and in.
 var cam = s.layers.addCamera("scene camera", [960, 540]);
-P.tf(cam, "ADBE Position").setValue([960, 540, -2666.7]);
-P.tf(cam, "ADBE Anchor Point").setValue([960, 540, 0]); // a camera's Point of Interest is ADBE Anchor Point
+cam.autoOrient = AutoOrientType.NO_AUTO_ORIENT;
+cam.property("ADBE Camera Options Group").property("ADBE Camera Zoom").setValue(CAMD);
+var cp = P.tf(cam, "ADBE Position");
+cp.setValueAtTime(0, [960 - 40, 540, -CAMD]);
+cp.setValueAtTime(DUR, [960 + 40, 540, -CAMD + 120]);
+cp.setTemporalEaseAtKey(1, [new KeyframeEase(0, 60)], [new KeyframeEase(0, 60)]);
+cp.setTemporalEaseAtKey(2, [new KeyframeEase(15, 30)], [new KeyframeEase(15, 30)]);
 
-// Step 1. SUBSTITUTE: Layer > Pre-compose (dialog) is replaced by building the scene in its own comp
-// and adding that comp as one layer of the outer comp.
+// Step 1 (substitute for Pre-compose): the scene as one layer of the outer comp.
 var pre = c.layers.add(s);
 pre.name = "fog scene";
 
-// Steps 2 to 4: Fog 3D on the precomp layer with the recipe's values.
+// Steps 2-4: Fog 3D on the precomp layer.
 var fx = P.effect(pre, "ADBE FOG_3D");
 fx.name = "TECH Fog 3D";
 fx = pre.property("ADBE Effect Parade").property("TECH Fog 3D");
-fx.property("ADBE FOG_3D-0001").setValue([12 / 255, 38 / 255, 55 / 255, 1]); // Fog Color: sampled from the video, approximate
-// Run fix: the recipe's Fog Start Depth 51 and Fog End Depth -23 do not carry over. Here the depth Fog 3D reads from a
-// precomp of 3D layers is the distance from the precomp's camera in pixels (the figure is 2667 away, the last trunk 7267,
-// the sky 7867). With 51 / -23 every 3D layer stayed clear. The recipe says to tune these by eye, so the fog starts just
-// behind the figure and is full at the sky. args.fogStart / args.fogEnd override.
-fx.property("ADBE FOG_3D-0002").setValue(args.fogStart !== undefined ? args.fogStart : 2700); // Fog Start Depth
-fx.property("ADBE FOG_3D-0003").setValue(args.fogEnd !== undefined ? args.fogEnd : 5000);     // Fog End Depth (was 9000: too far, so the fog began too weakly and ended too strong)
+fx.property("ADBE FOG_3D-0001").setValue(ART.hex(args.fogColor || "#0E2737").concat([1])); // brief's fog colour
+// Depth = distance from the precomp's camera: figure 2667, shrubs 2517, mid trunks 4167, far trunks 6167, sky 8667.
+// Start just behind the figure (recipe's proof note, brief); End beyond the far trunks, tuned by eye on the render.
+fx.property("ADBE FOG_3D-0002").setValue(args.fogStart !== undefined ? args.fogStart : 2700);
+fx.property("ADBE FOG_3D-0003").setValue(args.fogEnd !== undefined ? args.fogEnd : 11000); // run: 9500 sank the far trunks almost to the fog colour
 fx.property("ADBE FOG_3D-0004").setValue(100); // Fog Opacity
 fx.property("ADBE FOG_3D-0005").setValue(24);  // Scattering Density
 fx.property("ADBE FOG_3D-0006").setValue(1);   // Foggy Background
 fx.property("ADBE FOG_3D-0008").setValue(100); // Layer Contribution
-// "Gradient Layer" left at its default (None, Source), as the recipe reads it.
+fx.enabled = !args.before;
 
-return { comp: c.name, scene: s.name, sceneLayers: s.numLayers, tech: "fog scene > effect TECH Fog 3D" };
+// Lantern glow (brief): 2D orange solid with a feathered ellipse mask, Add, about 40 %, about 300 px across, above the
+// precomp. Its position follows the lantern through the inner camera (toComp on the 3D figure layer).
+// The lantern's centre in the figure's source pixels (measured on the art: about 15 % across, 17 % down).
+var LX = args.lanternX || 0.152 * fft.width, LY = args.lanternY || 0.171 * fft.height;
+var GS = 800; // run: a 400 px solid cut the feathered edge off in a visible square
+var glow = c.layers.addSolid(ART.hex("#FF9A3C"), "17 lantern glow", GS, GS, 1, DUR);
+glow.name = "lantern glow";
+var m = glow.property("ADBE Mask Parade").addProperty("ADBE Mask Atom");
+var sh = new Shape();
+var r = 150, k = 0.5523 * r;
+sh.vertices = [[GS / 2, GS / 2 - r], [GS / 2 + r, GS / 2], [GS / 2, GS / 2 + r], [GS / 2 - r, GS / 2]];
+sh.inTangents = [[-k, 0], [0, -k], [k, 0], [0, k]];
+sh.outTangents = [[k, 0], [0, k], [-k, 0], [0, -k]];
+sh.closed = true;
+m.property("ADBE Mask Shape").setValue(sh);
+glow.property("ADBE Mask Parade").property(1).property("ADBE Mask Feather").setValue([120, 120]);
+glow.blendingMode = BlendingMode.ADD;
+P.tf(glow, "ADBE Opacity").setValue(args.glowOpacity || 40);
+P.tf(glow, "ADBE Position").expression = 'var L = comp("17 fog scene").layer("figure");\nL.toComp([' + LX.toFixed(1) + ', ' + LY.toFixed(1) + ', 0]);';
+
+var gp = P.tf(glow, "ADBE Position").valueAtTime(0, false);
+return { comp: c.name, scene: s.name, sceneLayers: s.numLayers, before: !!args.before, glowAt0: [Math.round(gp[0]), Math.round(gp[1])] };
