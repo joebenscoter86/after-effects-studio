@@ -44,7 +44,7 @@ c.renderer = "ADBE Advanced 3d"; // Classic 3D, as in the tutorial
     it = app.project.item(i);
     if (!(it instanceof FootageItem) || !(it.mainSource instanceof SolidSource) || it.usedIn.length > 0) continue;
     col = it.mainSource.color;
-    if (it.name === "TECH floor" || it.name === "14 floor") it.remove();
+    if (it.name === "TECH floor" || it.name === "14 floor" || it.name === "14 floor lift") it.remove();
     else if (it.name === "background" && Math.abs(col[0] - 0.92) < 0.002 && Math.abs(col[1] - 0.93) < 0.002) it.remove();
   }
 })();
@@ -53,6 +53,21 @@ var bd = c.layers.add(ART.footage(ARTDIR, "backdrop.png", FOLDER));
 bd.name = "backdrop";
 P.tf(bd, "ADBE Scale").setValue([150, 150]);
 P.tf(bd, "ADBE Position").setValue([W / 2, H / 2]);
+
+// Polish (2026-11-14): the art bends to the technique. At the recipe's measured darkness (core 0.22 of the open floor) the
+// greige plate's floor area (about 0.72) put the core near 42 of 255, a near-black slab. The tutorial's floor reads about
+// 215 with a 47 core, so the floor is lifted instead: a 2D "floor lift" solid (Gradient Ramp black above the feet to
+// warm white below, Screen) brightens only the floor area, under the shadow-catching floor, never above the wall.
+var lift = null;
+if (args.lift !== false) {
+  lift = P.solid(c, "14 floor lift", [0, 0, 0], W, H);
+  lift.name = "floor lift";
+  var rp = P.effect(lift, "ADBE Ramp");
+  rp = lift.property("ADBE Effect Parade").property(rp.propertyIndex);
+  ART.setFx(rp, { "Start of Ramp": [W / 2, (args.liftTop || 0.70) * H], "Start Color": [0, 0, 0], "End of Ramp": [W / 2, (args.liftBottom || 0.86) * H], "End Color": ART.hex("#FFF6EA") });
+  lift.blendingMode = BlendingMode.SCREEN;
+  P.tf(lift, "ADBE Opacity").setValue(args.liftOpacity === undefined ? 45 : args.liftOpacity);
+}
 
 // Objects: scale, horizontal centre (share), cut-out trim padding (16 px at source scale) below the visible bottom.
 function stand(file, name, s, xc) {
@@ -76,11 +91,13 @@ if (!BEFORE) {
   floor.name = "TECH floor";
   floor.threeDLayer = true;
   P.tf(floor, "ADBE Rotate X").setValue(90);
-  P.tf(floor, "ADBE Position").setValue([960, FLOORY, 0]);
+  // args.floorDrop (px) lowers the floor below the objects' feet; tried in the polish to soften the contact edge.
+  P.tf(floor, "ADBE Position").setValue([960, FLOORY + (args.floorDrop || 0), 0]);
   P.tf(floor, "ADBE Scale").setValue([233, 233, 233]);
   floor.property("ADBE Material Options Group").property("ADBE Accepts Shadows").setValue(2);
   floor.property("ADBE Material Options Group").property("ADBE Casts Shadows").setValue(0);
   floor.moveAfter(panel);  // directly under the lowest 3D graphic, above the 2D backdrop
+  if (lift) lift.moveAfter(floor); // 2D, below the floor, so it never splits the 3D group
 
   light = c.layers.addLight("TECH point light", [960, 540]);
   light.lightType = LightType.POINT;
@@ -93,9 +110,13 @@ if (!BEFORE) {
   LO("Falloff Distance").setValue(500);
   LO("Casts Shadows").setValue(1);
   // First run's correction: 45 % (recipe) gave half the tutorial's darkness; 78 % matched. args.shadowDarkness overrides.
-  // Rebuild run: on the greige backdrop 78 % read as a near-black slab under the clay objects; 50 % keeps it soft and warm.
-  LO("Shadow Darkness").setValue(args.shadowDarkness === undefined ? 50 : args.shadowDarkness);
-  LO("Shadow Diffusion").setValue(args.diffusion || 205);
+  // Polish (2026-11-14): back to 78 %, the value that gives the recipe's measured core (0.22 of the open floor); the
+  // rebuild's 50 % (0.50 of the floor) changed the technique's look to suit the art. Any slab look is fixed on the art.
+  // Then, to keep it from reading as a slab with a crisp near edge, the spread is softened (Shadow Diffusion 205 -> 450)
+  // and the darkness re-tuned so the core still measures 0.22 of the open floor: 78 % with 450 gave 0.29, 90 % 0.18,
+  // 86 % is the interpolated value for 0.22 (measured in the polish notes). The target is the measured core, not 78.
+  LO("Shadow Darkness").setValue(args.shadowDarkness === undefined ? 86 : args.shadowDarkness);
+  LO("Shadow Diffusion").setValue(args.diffusion || 450);
 }
 
 // Title, 2D, above everything.

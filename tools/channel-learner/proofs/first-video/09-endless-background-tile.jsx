@@ -13,7 +13,7 @@ $.evalFile(args.prelude);
 // "trees near" (foreground trees, a second Motion Tile, 2.5 times faster, slight blur), "reflection" (the passenger
 // flipped, faint, Screen), "train wall" (window openings transparent), "passenger".
 // The technique is the recipe's: Motion Tile, sizes 100, Mirror Edges on, an expression sliding only Tile Center X.
-// Speed: the brief's glide (120 px/s far, 300 px/s near, comp pixels) instead of the recipe's fitted 1740 px/s, which strobes.
+// Speed (polish): the recipe's range, 400 px/s far and 1100 px/s near (comp pixels), with shutter blur against strobing.
 // Motion Tile moves pixels inside the effect, so layer motion blur never sees it; a Directional Blur after it, as long as
 // half a frame's travel (a 180-degree shutter), stands in for motion blur.
 $.evalFile(args.artLib);
@@ -36,7 +36,7 @@ function tile(layer, name, scale, compSpeed, blurPx) {
   fx.enabled = techOn;
   if (blurPx > 0) {
     var db = P.effect(layer, "ADBE Motion Blur");   // Directional Blur
-    ART.setFx(db, { "Direction": 90, "Blur Length": blurPx });
+    ART.setFx(db, { "Direction": 90, "Blur Length": blurPx / (scale / 100) }); // effects act in layer pixels: comp blur / scale
     layer.property("ADBE Effect Parade").property(db.propertyIndex).name = name + " shutter blur";
     db = layer.property("ADBE Effect Parade").property(db.propertyIndex);
     db.enabled = techOn;
@@ -44,12 +44,15 @@ function tile(layer, name, scale, compSpeed, blurPx) {
   return k;
 }
 
-var FAR = args.farSpeed || 120, NEAR = args.nearSpeed || 300;
+// Polish (2026-11-14): back to the recipe's speed range (near about 1000-1150 comp px a second, far about 400); the
+// earlier 120 / 300 glide was 4 to 10 times too slow. Strobing is handled by the shutter blur, sized to each layer's
+// travel per frame (args.shutter, share of a frame: 0.5 = 180 degrees), not by slowing the slide.
+var FAR = args.farSpeed || 400, NEAR = args.nearSpeed || 1100, SHUT = args.shutter !== undefined ? args.shutter : 0.5;
 var far = c.layers.add(ART.footage(ARTDIR, "landscape-far.png", FOLDER));
 far.name = "landscape far";
 P.tf(far, "ADBE Scale").setValue([41.67, 41.67]);
 P.tf(far, "ADBE Position").setValue([960, 540]);
-var kFar = tile(far, "TECH Motion Tile", 41.67, FAR, FAR / FPS / 2);
+var kFar = tile(far, "TECH Motion Tile", 41.67, FAR, FAR / FPS * SHUT);
 
 var near = c.layers.add(ART.footage(ARTDIR, "trees-near.png", FOLDER));
 near.name = "trees near";
@@ -59,7 +62,7 @@ P.tf(near, "ADBE Scale").setValue([80, 80]);
 var NEARTOP = (args.nearTop || 0.56) * 1080;
 // The trees fill the lower 65 % of their image, so the layer top sits 35 % of its height above the treetops.
 P.tf(near, "ADBE Position").setValue([960, NEARTOP - 0.35 * 0.8 * near.source.height + 0.8 * near.source.height / 2]);
-var kNear = tile(near, "TECH Motion Tile near", 80, NEAR, NEAR / FPS / 2);
+var kNear = tile(near, "TECH Motion Tile near", 80, NEAR, NEAR / FPS * SHUT);
 var gb = P.effect(near, "ADBE Gaussian Blur 2");
 ART.setFx(gb, { "Blurriness": 3 });
 

@@ -64,7 +64,14 @@ var OBJ = [
 ];
 // Run: spread 46 deg (centres 100 to 620 px out) gave shadows that read dense at the object; the 60 px sage cube still
 // read faint, so it alone gets a closer centre (70 deg). args.spreads overrides per object, args.spread all of them.
-var SPREADS = args.spreads || (args.spread ? [args.spread, args.spread, args.spread, args.spread, args.spread, args.spread] : [46, 46, 70, 46, 46, 46]);
+// Polish (2026-11-14): the 46-degree fan broke the recipe's measured look (near-parallel bands about as wide as their
+// object). Spread is back to 15 degrees for every object (centres several object-widths out). Density is kept by
+// Multiply at 100 % and by stacking the shadow copy (args.stack copies, default 2), never by widening the fan. The small
+// sage cube's shadow copy is scaled 2x about the cube (a Transform effect before the blur) so it carries enough mass.
+var SPREADS = args.spreads || (args.spread ? [args.spread, args.spread, args.spread, args.spread, args.spread, args.spread] : [15, 15, 15, 15, 15, 15]);
+var STACK = args.stack || 2;
+var PADX = args.padX !== undefined ? args.padX : 1200, PADY = args.padY !== undefined ? args.padY : 1000;
+var GROW = args.grow || { "cube sage": 2 };
 var AMOUNT = args.amount || 95;
 var GAUSS = args.gauss === undefined ? 25.6 : args.gauss;
 // Run (rebuild): the far centres of the first build (15 deg spread) spread a small block's mass over a ray 20 times its
@@ -79,21 +86,33 @@ var k;
 for (k = 0; k < OBJ.length; k++) {
   var o = OBJ[k];
   var ft = ART.footage(ARTDIR, o.file, FOLDER);
-  var pc = app.project.items.addComp("12 obj " + o.name, W, H, 1, DUR, FPS);
+  // Polish: the 15-degree centres sit far outside the frame, and CC Radial Fast Blur stops its Center at the layer's
+  // edge. Each object precomp is padded by PADX / PADY on every side, so the layer is bigger than the comp and the
+  // centre lands inside it; effect points then read comp pixels + [PADX, PADY].
+  var pc = app.project.items.addComp("12 obj " + o.name, W + 2 * PADX, H + 2 * PADY, 1, DUR, FPS);
   pc.parentFolder = ART.folder(FOLDER);
   var inner = pc.layers.add(ft);
   P.tf(inner, "ADBE Scale").setValue([o.s, o.s]);
-  P.tf(inner, "ADBE Position").setValue([o.x * W, o.y * H]);
+  P.tf(inner, "ADBE Position").setValue([o.x * W + PADX, o.y * H + PADY]);
   var L = c.layers.add(pc);
   L.name = o.name;
   objs.push(L);
   if (BEFORE) continue;
 
+  var stk;
+  for (stk = 1; stk <= STACK; stk++) {
   // Step 1: duplicate; the copy underneath is the shadow, parented to its object.
   var s = L.duplicate();
-  s.name = "TECH shadow " + o.name;
+  s.name = "TECH shadow " + o.name + (stk > 1 ? " " + stk : "");
   s.moveAfter(L);
   s.parent = L;
+  if (GROW[o.name]) {
+    P.effect(s, "ADBE Geometry2");
+    fxp(s, "Transform", "Anchor Point").setValue([o.x * W + PADX, o.y * H + PADY]);
+    fxp(s, "Transform", "Position").setValue([o.x * W + PADX, o.y * H + PADY]);
+    fxp(s, "Transform", "Scale Height").setValue(100 * GROW[o.name]); // Transform names its scale "Scale Height" / "Scale Width"
+    fxp(s, "Transform", "Scale Width").setValue(100 * GROW[o.name]);
+  }
   // Step 2: no layer styles on the copy (the cut-outs carry none).
   // Step 3: solid with Fill, the brief's warm shadow ink.
   P.effect(s, "ADBE Fill");
@@ -105,19 +124,22 @@ for (k = 0; k < OBJ.length; k++) {
   // Step 5: aim. Centre opposite the shadow's direction; distance from the spread wanted (see the first run's notes).
   var wpx = ft.width * o.s / 100, hpx = ft.height * o.s / 100;
   var th = DIRS[k] * Math.PI / 180;
-  var across = wpx * Math.abs(Math.sin(th)) + hpx * Math.abs(Math.cos(th));
+  var across = (wpx * Math.abs(Math.sin(th)) + hpx * Math.abs(Math.cos(th))) * (GROW[o.name] || 1); // a grown copy keeps the same spread
   var d = (across / 2) / Math.tan(SPREADS[k] * Math.PI / 360);
   var cen = [o.x * W - d * Math.cos(th), o.y * H - d * Math.sin(th)];
-  fxp(s, "CC Radial Fast Blur", "Center").setValue(cen);
-  centres.push([Math.round(cen[0]), Math.round(cen[1]), Math.round(d)]);
+  fxp(s, "CC Radial Fast Blur", "Center").setValue([cen[0] + PADX, cen[1] + PADY]);
+  if (stk === 1) centres.push([Math.round(cen[0]), Math.round(cen[1]), Math.round(d)]);
   // Step 6: Gaussian Blur.
   P.effect(s, "ADBE Gaussian Blur 2");
   fxp(s, "Gaussian Blur", "Blurriness").setValue(GAUSS);
   fxp(s, "Gaussian Blur", "Blur Dimensions").setValue(1);
   fxp(s, "Gaussian Blur", "Repeat Edge Pixels").setValue(1);
-  P.tf(s, "ADBE Opacity").setValue(OPAC);
+  // Second copy only tops up the density: one copy measured 30 / 21 / 15 % peak darkening at 0.19 / 0.22 / 0.25 w below
+  // the top-left block (reference 36 / 25 / 17 %), two full copies 51 / 38 / 28 %; the top-up copy runs at args.stackOpacity.
+  P.tf(s, "ADBE Opacity").setValue(stk > 1 ? (args.stackOpacity !== undefined ? args.stackOpacity : 25) : OPAC);
   if (MULT) s.blendingMode = BlendingMode.MULTIPLY;
   shadows.push(s.name);
+  }
 }
 
 // Title, flat on the page, above every shadow.

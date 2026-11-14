@@ -57,9 +57,11 @@ for (j = 1; j <= bn.numProperties; j++) if (bn.property(j).name === "Amount") am
 var bnProps = []; for (j = 1; j <= bn.numProperties; j++) bnProps.push(bn.property(j).name);
 // The "recorded" take: times irregular as a live drag writes them; mostly one way (lean right, towards the lamp),
 // with small returns. Scaled by args.amp.
-var AMP = args.amp || 2.2; // run: Amount 13 x 1 moved the upper head about 20 px; x 2.2 gives about 56 px (brief: 3-5 % of 1080)
-var T = [0, 0.33, 0.58, 0.96, 1.25, 1.50, 1.88, 2.17, 2.42, 2.79, 3.04, 3.38, 3.63];
-var A = [0, 3, 7, 11, 13, 12, 9, 10, 13, 14, 12, 9, 8];
+var AMP = args.amp || 1.6; // polish: x 2.2 gave +74 / -45 px at the forehead row (y 250); x 1.6 aims at the review's +0.05 h / -0.03 h. // run: Amount 13 x 1 moved the upper head about 20 px; x 2.2 gives about 56 px (brief: 3-5 % of 1080)
+// Polish (2026-11-14): the take now sways both ways (towards the lamp, back past centre towards the window, and back)
+// and keeps moving to the end: the last key sits past the comp's end so 5 s is mid-move, not a hold.
+var T = [0, 0.38, 0.71, 1.04, 1.46, 1.79, 2.13, 2.50, 2.92, 3.25, 3.63, 4.00, 4.42, 4.75, 5.30];
+var A = [0, 5, 11, 13, 9, 2, -5, -8, -6, 1, 8, 11, 7, 1, -6];
 if (amt) {
   for (j = 0; j < T.length; j++) amt.setValueAtTime(T[j], A[j] * AMP);
   for (j = 1; j <= amt.numKeys; j++) amt.setTemporalAutoBezierAtKey(j, true);
@@ -72,8 +74,30 @@ var trMiss = ART.setFx(tr, { "Anchor Point": BASE, "Position": BASE });
 var sh = null; var uni = null;
 for (j = 1; j <= tr.numProperties; j++) { if (tr.property(j).name === "Uniform Scale") uni = tr.property(j); if (tr.property(j).name === "Scale Height") sh = tr.property(j); }
 if (uni) uni.setValue(0);
-var NT = [0, 0.7, 1.15, 1.6, 2.6, 3.0, 3.5], NV = [100, 100, 98.6, 100, 100, 98.8, 100];
+var NT = [0, 0.7, 1.15, 1.6, 2.6, 3.0, 3.5, 4.1, 4.55, 5.0], NV = [100, 100, 98.6, 100, 100, 98.8, 100, 100, 98.7, 100];
 if (sh) { for (j = 0; j < NT.length; j++) sh.setValueAtTime(NT[j], NV[j]); for (j = 1; j <= sh.numKeys; j++) sh.setTemporalAutoBezierAtKey(j, true); }
+
+// Polish: inner edge darken. The pale rim is painted into the strands and the shoulder's edge, so a choke cannot remove
+// it; instead a copy of the character (same bend and nod keys) is turned into a dark band just inside its alpha edge
+// (alpha inverted, filled night blue, blurred inwards) and matted by the character's own alpha, so it only darkens
+// the outer few pixels: thin strands go dark, the solid areas keep their paint.
+var ed = ch.duplicate();
+ed.name = "edge darken";
+var ex; for (j = ed.property("ADBE Effect Parade").numProperties; j >= 1; j--) { ex = ed.property("ADBE Effect Parade").property(j); if (ex.matchName === "ADBE Matte Choker") ex.remove(); }
+var inv = P.effect(ed, "ADBE Invert");
+var invMiss = ART.setFx(inv, { "Channel": 16 });
+var fl = P.effect(ed, "ADBE Fill");
+var flMiss = ART.setFx(fl, { "Color": ART.hex(args.edgeColor || "#5A2616") }); // dark auburn: pale strands multiply to darker hair, not to blue
+var eb = P.effect(ed, "ADBE Box Blur2");
+var ebMiss = ART.setFx(eb, { "Blur Radius": args.edgeRadius !== undefined ? args.edgeRadius : 16, "Iterations": 2, "Repeat Edge Pixels": 1 });
+// Only the window side (left) carries the pale rim; the lamp side's light edge is wanted. A mask would act before the
+// alpha inversion, so a Linear Wipe at the end of the chain removes the right part instead (feathered).
+var lw = P.effect(ed, "ADBE Linear Wipe");
+var lwMiss = ART.setFx(lw, { "Transition Completion": args.wipe !== undefined ? args.wipe : 46, "Wipe Angle": args.wipeAngle !== undefined ? args.wipeAngle : 270, "Feather": 160 });
+ed.setTrackMatte(ch, TrackMatteType.ALPHA);
+ch.enabled = true; // setTrackMatte switches the matte layer's video off; the character must still show
+ed.blendingMode = BlendingMode.MULTIPLY;
+P.tf(ed, "ADBE Opacity").setValue(args.edgeOpacity !== undefined ? args.edgeOpacity : 100);
 
 // Film grain over everything (lo-fi plate already has grain; a little moving noise ties the cut-out to it).
 var gr = P.solid(c, "08 grain", [0.5, 0.5, 0.5]);
@@ -83,4 +107,4 @@ ART.setFx(nz, { "Amount of Noise": 100 });
 gr.blendingMode = BlendingMode.OVERLAY;
 P.tf(gr, "ADBE Opacity").setValue(args.grain !== undefined ? args.grain : 12);
 
-return { comp: c.name, id: c.id, base: BASE, top: TOP, missing: { lens: lbMiss, choker: chkMiss, bender: bnMiss, nod: trMiss }, benderProps: bnProps, haveAmount: !!amt, haveScaleH: !!sh };
+return { comp: c.name, id: c.id, base: BASE, top: TOP, missing: { lens: lbMiss, choker: chkMiss, bender: bnMiss, nod: trMiss, inv: invMiss, fill: flMiss, blur: ebMiss, wipe: lwMiss }, benderProps: bnProps, haveAmount: !!amt, haveScaleH: !!sh };

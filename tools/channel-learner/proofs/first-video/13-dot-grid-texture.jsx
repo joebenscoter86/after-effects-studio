@@ -51,15 +51,26 @@ if (!BEFORE) {
   // tints it toward the ground's lilac and the layer opacity keeps it quiet (args.dotOpacity).
   if (args.tint !== false) {
     var fl = P.effect(dots, "ADBE Fill");
-    dots.property("ADBE Effect Parade").property(fl.propertyIndex).property("Color").setValue(ART.hex(args.dotColor || "#7E7B98").concat([1]));
+    dots.property("ADBE Effect Parade").property(fl.propertyIndex).property("Color").setValue(ART.hex(args.dotColor || "#6E6B8A").concat([1]));
   }
   // Run: #8C89A6 at 70 % left the darkest dot pixel at 0.82 on a 0.90 ground (invisible even on a crop); #7E7B98 at 100 %
   // gives 0.78: the 1 px dots only partly cover a pixel, so this reads as the brief's faint #9A98AE.
+  // Polish: at #7E7B98 an open patch darkened 0.2 % overall, invisible on a phone (reference crop 0.9 %). The 1 px
+  // balls are mostly transparent (antialiased), so colour alone cannot lift it (#45425F reached only 0.3 %). Levels on
+  // the dots' alpha (Alpha Input White, args.alphaWhite) makes each 1 px dot solid without growing it; the recipe's
+  // Grid Spacing 3 and Ball Size 7 stay.
+  if (args.alphaWhite !== 0) {
+    var lv = P.effect(dots, "ADBE Pro Levels2");
+    lv = dots.property("ADBE Effect Parade").property(lv.propertyIndex);
+    lv.property("ADBE Pro Levels2-0033").setValue(args.alphaWhite || 0.3);
+  }
   P.tf(dots, "ADBE Opacity").setValue(args.dotOpacity === undefined ? 100 : args.dotOpacity);
 }
 
 var SH = [
-  { file: "arch.png", name: "arch", s: 17, x: 0.19, y: 0.38, ph: 0.0 },
+  // Polish: the arch at 0.19, 0.38 sat beside the "p" in the x-height band and read as a letter ("nplayful"); moved up
+  // and left, clear of the word.
+  { file: "arch.png", name: "arch", s: 17, x: args.archX || 0.15, y: args.archY || 0.245, ph: 0.0 },
   { file: "sphere.png", name: "ball", s: 12, x: 0.80, y: 0.26, ph: 1.7 },
   { file: "ring.png", name: "ring", s: 13, x: 0.84, y: 0.72, ph: 3.1 },
   { file: "squiggle.png", name: "squiggle", s: 15, x: 0.30, y: 0.78, ph: 4.4 }
@@ -90,4 +101,4 @@ title.moveToBeginning();
 if (dots) dots.moveAfter(c.layer("arch"));
 bg.moveToEnd();
 var tr = title.sourceRectAtTime(0, false);
-return { comp: c.name, layers: c.numLayers, before: BEFORE, poppinsReal: fo.length > 0 && !fo[0].isSubstitute, title: [tr.width, tr.height], dropShadowOpacityMax: opMax };
+return { alphaWhite: dots ? dots.property("ADBE Effect Parade").property("ADBE Pro Levels2").property("ADBE Pro Levels2-0033").value : null, comp: c.name, layers: c.numLayers, before: BEFORE, poppinsReal: fo.length > 0 && !fo[0].isSubstitute, title: [tr.width, tr.height], dropShadowOpacityMax: opMax };

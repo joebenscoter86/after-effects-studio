@@ -68,7 +68,8 @@ function fill(sh, color) {
 }
 
 // The graphic: leaf.png in a small square precomp (brief), so the texture is 128 px, not 2048.
-var TEX = args.tex || 128;
+// Polish (2026-11-14): 256 px texture, so each leaf is drawn from a sharper texture (smoother edges, veins survive).
+var TEX = args.tex || 256;
 (function () { var j, it; for (j = app.project.numItems; j >= 1; j--) { it = app.project.item(j); if (it instanceof CompItem && it.name === "10 leaf graphic") it.remove(); } })();
 var leafComp = P.freshComp("10 leaf texture", TEX, TEX, 24, 8, [0, 0, 0]);
 var leafFoot = ART.footage(ARTDIR, "leaf.png", "art 10");
@@ -132,11 +133,13 @@ need(fx, "Texture", "Align To Direction").setValue(0);
 need(fx, "Particle", "Rotation Speed").setValue(180);
 need(fx, "Particle", "Initial Rotation").setValue(360);
 // Review correction: the recipe's 0.25 gave leaves about 15 % too small on this 300 x 300 texture; 0.29 matches the measured size.
-var SIZE = args.size !== undefined ? args.size : 0.29; // run: retuned for the 128 px texture below
+var SIZE = args.size !== undefined ? args.size : 0.29; // polish: halving to 0.145 with the 256 px texture halved the leaves (median 0.68 % of the width): the on-screen size does not follow the texture's pixel size here, so 0.29 stays
 need(fx, "Particle", "Birth Size").setValue(SIZE);
 need(fx, "Particle", "Death Size").setValue(SIZE);
 need(fx, "Particle", "Size Variation").setValue(50);
 need(fx, "Particle", "Max Opacity").setValue(75);
+// Polish run: Birth/Death Color and Volume Shade were tried for tone variation; with Textured QuadPolygon neither changes
+// the render (pure red / blue / green colours left the leaves gold), so tone comes from extra particle layers below.
 
 // Step 6: emitter and physics for a sideways drift.
 need(fx, "Producer", "Position X").setValue(-0.58);
@@ -176,8 +179,40 @@ setOptional(fx, "Grid & Guides", "Axis Box", 0);
 // Brief: a faint Glow so the leaves catch the lamplight.
 if (args.glow !== false) ART.glow(ps, args.glowThreshold || 60, 20, 0.3);
 
+// Polish (2026-11-14): tone variation and softer edges. The textured quads ignore the particle colours, so the field is
+// split into three particle layers with different Random Seeds whose Birth Rates add up to the recipe's 2.0: the main
+// gold one (1.0), a deeper amber one (0.6) and a paler straw one (0.4), each graded after the effect with Color Balance
+// (HLS). Drift, size, spread and every other recipe value are the same on all three. A slight blur softens the quads'
+// stepped (unantialiased) edges.
+var tones = args.tones !== false;
+var soft = args.soft !== undefined ? args.soft : 1.5;
+function grade(layer, hue, light, sat) {
+  var cb = P.effect(layer, "ADBE Color Balance (HLS)");
+  ART.setFx(layer.property("ADBE Effect Parade").property(cb.propertyIndex), { "Hue": hue, "Lightness": light, "Saturation": sat });
+}
+var extra = [];
+if (tones) {
+  var j, shares = [["leaf particles amber", 0.3, 7, -12, -28, 5], ["leaf particles pale", 0.2, 13, 4, 12, -45]];
+  for (j = 0; j < shares.length; j++) {
+    var d = ps.duplicate();
+    d.name = shares[j][0];
+    var dfx = d.property("ADBE Effect Parade").property("CC Particle World");
+    need(dfx, null, "Birth Rate").setValue((args.birthRate || 2.0) * shares[j][1]);
+    dfx = d.property("ADBE Effect Parade").property("CC Particle World");
+    need(dfx, null, "Random Seed").setValue(shares[j][2]);
+    grade(d, shares[j][3], shares[j][4], shares[j][5]);
+    if (soft > 0) ART.setFx(P.effect(d, "ADBE Gaussian Blur 2"), { "Blurriness": soft });
+    dfx = d.property("ADBE Effect Parade").property("CC Particle World");
+    extra.push({ name: d.name, textureLayer: need(dfx, "Texture", "Texture Layer").value });
+  }
+  fx = ps.property("ADBE Effect Parade").property("CC Particle World");
+  need(fx, null, "Birth Rate").setValue((args.birthRate || 2.0) * 0.5); // main gold layer: 1.0 of the 2.0
+}
+if (soft > 0) ART.setFx(P.effect(ps, "ADBE Gaussian Blur 2"), { "Blurriness": soft });
+
 fx = ps.property("ADBE Effect Parade").property("CC Particle World");
 return {
+  extra: extra, leafIndex: leafLayer.index,
   comp: c.name,
   textureComp: leafComp.name,
   layers: c.numLayers,
