@@ -51,7 +51,10 @@ The first video's 25 recipes all passed the check. Building them found three rec
 ### 10. Only the owner proves a recipe
 - `status: proven` counts only with the owner's acceptance and its date written on the status line; `assemble.mjs` refuses a bare "proven" (test in `tests/assemble.test.mjs`). The draft's header counts proven recipes.
 
-### 11. The orchestrator's own slips
+### 11. Plain stand-ins hide whether a technique sells (owner, 2026-11-14)
+- Proofs on plain shapes showed mechanisms; the owner wants each to look as if a professional made it, and a few techniques cannot be judged at all without real art (a puppet pin needs a character; fog needs layered painted depth). Rule: every proof build gets designed artwork, generated to a brief (`prompts/art.md`): our own art of the same kind as the tutorial's, split into layers where the technique acts on layers.
+
+### 12. The orchestrator's own slips
 - Times written from guesses ran an hour fast: take every time from `date`.
 - Verdicts were relayed to the owner before anyone had looked at a pair: look at each pair yourself before reporting it as matching, and say which ones you have not seen.
 - Recipes edited after their check: `assemble.mjs` refuses them until a check is newer than the recipe.
