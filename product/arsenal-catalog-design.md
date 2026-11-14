@@ -83,3 +83,21 @@ The planning eval in the design (a storyboard whose beats need techniques it doe
 3. Where does the nightly run live: a session Joe starts each evening, a scheduled routine, or a machine kept awake? Overnight After Effects needs an unlocked screen, and YouTube's bot check limits downloads.
 4. Should unproven techniques be offered to briefs at all, or only after a cheap first build?
 5. Do merged variants keep each creator's settings, or one canonical recipe with notes?
+
+## Reconciled with the Content draft (2026-11-14)
+
+Content's draft: `docs/superpowers/specs/2026-11-14-brief-technique-catalog-contract-design.md` on branch `adobe/brief-catalog-contract` in the Content repo (commit 320c2656, local only). It proposes **jobs v1**: 27 jobs in three groups (18 line jobs such as `land-number`, `step-through-process`, `before-after`; 6 picture jobs such as `add-depth`, `light-the-hero`, `finish-the-look`; 3 connective jobs: `hand-over`, `move-camera`, `keep-it-alive`), a beat format, and a query per beat. The two drafts agree on the split and the shape. Changes this side takes from it:
+
+1. **Jobs come from jobs v1, not craft categories.** Today's `jobs:` fields ("lines and shapes", "glow and colour") are craft groups a brief cannot ask for. Every recipe is re-tagged: one primary job and up to two support jobs from jobs v1, taken from its `what it does for a beat` line. Build aids (shy layers, Grow Bounds, crisp precomps, stagger by drag, shutter angle) get `build-aid` and never come back from a beat query. A recipe that fits no job is tagged `unmatched` and goes to a proposals queue; neither the plugin nor the nightly learner ever invents a job id.
+2. **The query takes the beat as Content writes it**: `vocab` (pinned version), `job`, `support`, `duration`, `takeaway`, `mood` (soft), `assets` (typed: footage, screen, photo, logo, voice, library, type), `constraints` (aspect, theme, palette, status), `exclude`, `limit`. It refuses an unknown job id and lists the valid ones.
+3. **The answer carries what Content needs to choose**: `id@revision`, name, one line, a still from **our own proof build** (never the tutorial's frame), status and how it was proven, `needs`, natural play length, and a one-line `fit` saying why it ranked for this beat. The catalog version is stamped on every answer.
+4. **Revisions.** Recipes get stable ids and revisions; a brief pins `id@revision`; a retracted or improved recipe stays fetchable at the pinned revision.
+5. **Status gains `shipped`** beside `proven` (matched to the tutorial and accepted by Joe): used in a posted reel. Who writes it back is open.
+6. **A wanted list.** When a beat finds nothing, Content adds the ask to a wanted list; the nightly learner reads it when choosing what to tear down next, so the catalog grows toward what briefs ask for.
+7. **The `look` field becomes mood tags** matched softly against the beat's mood words; no hard filter.
+
+Still to settle between the two sides:
+- **Stills in the package.** Content needs a still per candidate; this side had kept images out of the package. Options: stills ship only for proven recipes (24 today), or the catalog is read from a hosted copy. Decision for Joe.
+- **Where jobs v1 lives for the plugin.** Proposed: Content owns `jobs.json`; the plugin vendors a pinned copy (like a lockfile), written brand-agnostic as Content drafted it, since Comp Room ships to other users.
+- **Combinations.** Both drafts return single recipes; pairing (a matte window plus its glow) stays the brief writer's call for now, with `pairs_with` filled from finished pieces later.
+- **Fit to 9:16 and the house palette.** Recipes were measured on 16:9 tutorial frames; whether the catalog can say "works at 1080x1920" or the brief writer judges from the still is open.
