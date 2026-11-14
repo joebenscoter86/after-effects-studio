@@ -40,19 +40,32 @@ function fakes(dir, opts = {}) {
   const calls = {};
   const count = (name) => { calls[name] = (calls[name] ?? 0) + 1; };
   const logs = [];
+  const bot = (name) => {
+    if (opts.botAt === name) throw new Error('ERROR: [video] vid1: Sign in to confirm you\u2019re not a bot. Try again later\nsecond line');
+  };
   const deps = {
-    fetchInfo: async ({ dir: d }) => { count('fetchInfo'); await writeFile(join(d, 'source.info.json'), JSON.stringify(opts.info ?? info())); },
-    downloadVideo: async ({ dir: d }) => { count('downloadVideo'); await writeFile(join(d, 'source.mp4'), 'video'); },
+    fetchInfo: async ({ dir: d }) => { count('fetchInfo'); bot('info'); await writeFile(join(d, 'source.info.json'), JSON.stringify(opts.info ?? info())); },
+    downloadVideo: async ({ dir: d }) => {
+      count('downloadVideo');
+      bot('video');
+      if (opts.downloadFail) throw new Error('HTTP Error 503');
+      await writeFile(join(d, 'source.mp4'), opts.video ?? 'video');
+    },
     fetchCaptions: async ({ dir: d, lang, auto }) => {
       count(`fetchCaptions:${lang}:${auto ? 'auto' : 'creator'}`);
+      bot('captions');
       if (opts.captionsFail) throw new Error('HTTP Error 429: Too Many Requests');
       await writeFile(join(d, `captions.${lang}.json3`), JSON.stringify(auto ? autoCaptions : creatorCaptions));
     },
-    extractAudio: async ({ dir: d }) => { count('extractAudio'); await writeFile(join(d, 'audio.wav'), 'wav'); },
-    transcribe: async ({ dir: d }) => {
+    extractAudio: async ({ dir: d, out }) => {
+      count('extractAudio');
+      await writeFile(join(d, out ?? 'audio.wav'), opts.audioInterrupt ? 'wa' : 'wav');
+      if (opts.audioInterrupt) throw new Error('ffmpeg killed');
+    },
+    transcribe: async ({ dir: d, out }) => {
       count('transcribe');
       if (opts.whisperFail) throw new Error('whisper-cli: model not found');
-      await writeFile(join(d, 'whisper.json'), JSON.stringify(whisper));
+      await writeFile(join(d, out ?? 'whisper.json'), JSON.stringify(whisper));
     },
     measureChanges: async (video, out) => {
       count('measureChanges');
@@ -77,7 +90,8 @@ function fakes(dir, opts = {}) {
       count('readBoxes');
       const label = { t: 'Amount', c: 0.95, x: 0.1, y: 0.3, w: 0.08, h: 0.02 };
       const value = (t) => ({ t, c: 0.95, x: 0.3, y: 0.3, w: 0.05, h: 0.02 });
-      return new Map(images.map((p, k) => [p, [label, value(k === 0 ? '50.0' : '40.0')]]));
+      const read = opts.unreadable ? images.slice(0, Math.floor(images.length / 3)) : images;
+      return new Map(read.map((p, k) => [p, [label, value(k === 0 ? '50.0' : '40.0')]]));
     },
     log: (...a) => logs.push(a.join(' ')),
   };
@@ -285,6 +299,98 @@ test('align fails the frames step when an extracted frame is missing', async () 
     assert.notEqual(state.steps.frames?.done, true);
     assert.equal(state.stopped.step, 'frames');
     assert.match(state.stopped.reason, /missing/);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('--redo of a step also clears every later step', async () => {
+  const dir = await gathered();
+  try {
+    assert.equal(await run(['align', dir], fakes(dir).deps), 0);
+    const before = await readJson(join(dir, 'state.json'));
+    const again = fakes(dir);
+    assert.equal(await run(['align', dir, '--redo', 'changes'], again.deps), 0);
+    // frames are already on disk, so only changes and text call out; text and timeline run again
+    assert.deepEqual(again.calls, { measureChanges: 1, readBoxes: 1 });
+    const after = await readJson(join(dir, 'state.json'));
+    for (const s of ['changes', 'frames', 'text', 'timeline']) assert.notEqual(after.steps[s].at, before.steps[s].at, s);
+    assert.equal(after.steps.whisper.at, before.steps.whisper.at, 'earlier steps are kept');
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('gather --redo fetches a gathered file again instead of adopting it', async () => {
+  const dir = await gathered();
+  try {
+    for (const [step, call] of [['whisper', 'transcribe'], ['audio', 'extractAudio'],
+      ['captions', 'fetchCaptions:en-orig:auto'], ['video', 'downloadVideo'], ['info', 'fetchInfo']]) {
+      const again = fakes(dir, { video: `video for ${step}` });
+      assert.equal(await run(['gather', 'https://example.invalid/watch?v=vid1', '--out', dir, '--redo', step], again.deps), 0, step);
+      assert.equal(again.calls[call], 1, `${step} fetched again`);
+    }
+    // later steps are cleared but only the named step fetches again; the rest re-adopt their files
+    assert.equal(await readFile(join(dir, 'source.mp4'), 'utf8'), 'video for video');
+    // a failed re-fetch puts the old file back
+    const failing = fakes(dir, { downloadFail: true });
+    assert.equal(await run(['gather', 'https://example.invalid/watch?v=vid1', '--out', dir, '--redo', 'video'], failing.deps), 1);
+    assert.equal(await readFile(join(dir, 'source.mp4'), 'utf8'), 'video for video');
+    assert.equal(existsSync(join(dir, 'source.mp4.redo-old')), false);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('an interrupted audio extraction is not adopted by the next run; leftover partial files are never adopted', async () => {
+  const dir = await tempDir();
+  try {
+    const first = fakes(dir, { audioInterrupt: true });
+    assert.equal(await run(['gather', 'https://example.invalid/watch?v=vid1', '--out', dir], first.deps), 0);
+    assert.notEqual((await readJson(join(dir, 'state.json'))).steps.audio.done, true);
+    assert.equal(existsSync(join(dir, 'audio.wav')), false, 'no audio.wav from a failed extraction');
+
+    const again = fakes(dir);
+    assert.equal(await run(['gather', 'https://example.invalid/watch?v=vid1', '--out', dir], again.deps), 0);
+    assert.equal(again.calls.extractAudio, 1, 'extracted again, not adopted');
+    assert.equal(await readFile(join(dir, 'audio.wav'), 'utf8'), 'wav');
+    assert.equal(again.calls.transcribe, 1);
+    assert.ok(existsSync(join(dir, 'whisper.json')));
+    const leftovers = (await readdir(dir)).filter((n) => /part/.test(n));
+    assert.deepEqual(leftovers, []);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('a YouTube bot check stops gather at once with exit 3 and a plain reason', async () => {
+  for (const [at, expectCalls] of [
+    ['info', { fetchInfo: 1 }],
+    ['video', { fetchInfo: 1, downloadVideo: 1 }],
+    ['captions', { fetchInfo: 1, downloadVideo: 1, 'fetchCaptions:en:creator': 1 }],
+  ]) {
+    const dir = await tempDir();
+    try {
+      const { deps, calls, logs } = fakes(dir, { botAt: at, info: info({ subtitles: { en: [{ ext: 'json3' }] } }) });
+      assert.equal(await run(['gather', 'https://example.invalid/watch?v=vid1', '--out', dir], deps), 3, at);
+      assert.deepEqual(calls, expectCalls, `${at}: nothing else is fetched`);
+      const state = await readJson(join(dir, 'state.json'));
+      assert.deepEqual(state.stopped, {
+        step: at, reason: 'youtube bot check: ERROR: [video] vid1: Sign in to confirm you’re not a bot. Try again later',
+      });
+      assert.equal(logs.filter((l) => /bot check/.test(l)).length, 1, `${at}: one line logged`);
+    } finally { await rm(dir, { recursive: true, force: true }); }
+  }
+});
+
+test('every yt-dlp call ignores user config, and there is no cookie or sign-in option', async () => {
+  const src = await readFile(new URL('../learn.mjs', import.meta.url), 'utf8');
+  const calls = [...src.matchAll(/exec\('yt-dlp', \[([^\]]*)/g)].map((m) => m[1]);
+  assert.ok(calls.length >= 1);
+  for (const args of calls) assert.match(args, /'--ignore-config'/);
+  assert.doesNotMatch(src, /cookie|--username|--password|netrc/i);
+});
+
+test('align fails the text step when fewer than half of the kept frames could be read', async () => {
+  const dir = await gathered();
+  try {
+    assert.equal(await run(['align', dir], fakes(dir, { unreadable: true }).deps), 1);
+    const state = await readJson(join(dir, 'state.json'));
+    assert.notEqual(state.steps.text?.done, true);
+    assert.equal(state.stopped.step, 'text');
+    assert.match(state.stopped.reason, /of \d+ frames read/);
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 

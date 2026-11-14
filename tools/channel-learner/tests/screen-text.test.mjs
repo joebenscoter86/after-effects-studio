@@ -303,3 +303,24 @@ test('toRows: stopwatch and twirl marks read as O, vO or v• are trimmed; a run
   ];
   assert.deepEqual(toRows(boxes).map((r) => [r.label, r.value]), [['Twist Angle', '0.0'], ['Blur', '2.0'], ['Gap', '9.0']]);
 });
+
+test('toRows + diffRows: misreadings of the same text are not changes; real value changes are', () => {
+  const frame = (value) => toRows([box('Taper Mode', 0.10, 0.4, 0.95, 0.05, 0.013), box(value, 0.17, 0.4, 0.95, 0.05, 0.013)]);
+  const changesFor = (readings) => {
+    const seen = new Map();
+    return readings.flatMap((v) => diffRows(seen, frame(v))).filter((c) => c.kind === 'changed').map((c) => [c.was, c.text]);
+  };
+  // junk: icon glyphs read differently, a stray letter, a colon read as "i"
+  assert.deepEqual(changesFor(['fx', 'Zfx', 'Vfx', 'Zfx']), []);
+  assert.deepEqual(changesFor(['VA O', 'VA', 'VA O']), []);
+  assert.deepEqual(changesFor(['Above Next in Pt V', 'Above Next in P: V']), []);
+  // a truncated reading of the same words
+  assert.deepEqual(changesFor(['Sideways Motion', 'Sideways']), []);
+  // keepers
+  for (const [a, b] of [['0.0', '67.0'], ['100%', '0%'], ['Butt Cap', 'Round Cap'], ['Square', 'Ramp Up'],
+    ['Characters', 'Words'], ['Standard', 'Brightest']]) {
+    assert.deepEqual(changesFor([a, b]), [[a, b]], `${a} -> ${b}`);
+  }
+  // a dropped misreading still updates what was seen, so the next real change starts from it
+  assert.deepEqual(changesFor(['Standard', 'Standord', 'Brightest']), [['Standord', 'Brightest']]);
+});

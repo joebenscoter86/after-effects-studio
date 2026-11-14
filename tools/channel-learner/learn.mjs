@@ -16,7 +16,13 @@
 // `--redo timeline` rebuilds the value list without reading text again.
 //
 // Outside actions go through `deps` so tests can pass fakes; the real ones are below.
-// Exit codes: 0 done, 1 a step failed, 2 stopped because the video has no usable words.
+// Exit codes: 0 done, 1 a step failed, 2 stopped because the video has no usable words,
+// 3 stopped because YouTube asked to confirm we are not a bot (gather stops at once and
+// does not try again; run it again later).
+//
+// --redo <step> also clears every later step. A redone gather step fetches its file again
+// (the old one is set aside and put back if the fetch fails). audio.wav and whisper.json
+// are written under a temporary name and renamed when complete.
 
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
@@ -82,18 +88,20 @@ export async function extractFramesFfmpeg({ video, frames, outDir, batch = 1000 
   }
 }
 
+// --ignore-config: a user's yt-dlp config (which may carry sign-in settings) is never read.
 export const realDeps = {
-  fetchInfo: ({ url, dir }) => exec('yt-dlp', ['--no-playlist', '--skip-download', '--write-info-json',
+  fetchInfo: ({ url, dir }) => exec('yt-dlp', ['--ignore-config', '--no-playlist', '--skip-download', '--write-info-json',
     '-o', 'source.%(ext)s', url], { cwd: dir }),
-  downloadVideo: ({ url, dir }) => exec('yt-dlp', ['--no-playlist', '-f', '401+140/315+251/bv*[height<=2160]+ba',
+  downloadVideo: ({ url, dir }) => exec('yt-dlp', ['--ignore-config', '--no-playlist', '-f', '401+140/315+251/bv*[height<=2160]+ba',
     '--merge-output-format', 'mp4', '--write-info-json', '-o', 'source.%(ext)s', url], { cwd: dir }),
-  fetchCaptions: ({ url, dir, lang, auto }) => exec('yt-dlp', ['--no-playlist', '--skip-download',
+  fetchCaptions: ({ url, dir, lang, auto }) => exec('yt-dlp', ['--ignore-config', '--no-playlist', '--skip-download',
     auto ? '--write-auto-subs' : '--write-subs', '--sub-langs', lang, '--sub-format', 'json3',
     '-o', 'captions.%(ext)s', url], { cwd: dir }),
-  extractAudio: ({ dir }) => exec('ffmpeg', ['-y', '-nostdin', '-v', 'error', '-i', 'source.mp4',
-    '-vn', '-ac', '1', '-ar', '16000', '-c:a', 'pcm_s16le', 'audio.wav'], { cwd: dir }),
-  transcribe: ({ dir }) => exec('whisper-cli', ['-m', WHISPER_MODEL, '-f', 'audio.wav',
-    '-ml', '1', '-sow', '-oj', '-of', 'whisper', '-np'], { cwd: dir }),
+  // `out` is the temporary file to write (audio.part.wav, whisper.part.json); the caller renames it.
+  extractAudio: ({ dir, out }) => exec('ffmpeg', ['-y', '-nostdin', '-v', 'error', '-i', 'source.mp4',
+    '-vn', '-ac', '1', '-ar', '16000', '-c:a', 'pcm_s16le', out], { cwd: dir }),
+  transcribe: ({ dir, out }) => exec('whisper-cli', ['-m', WHISPER_MODEL, '-f', 'audio.wav',
+    '-ml', '1', '-sow', '-oj', '-of', out.replace(/\.json$/, ''), '-np'], { cwd: dir }),
   measureChanges: (video, out) => measureChanges(video, out, {
     onProgress: (f) => { if (f % 6000 === 0) console.log(`  changes: ${f} frames`); },
   }),
@@ -178,6 +186,11 @@ function noWordsReason(state) {
   return `no usable words: captions (${why('captions')}); whisper (${why('whisper')})`;
 }
 
+// YouTube's "Sign in to confirm you're not a bot". Retrying soon only makes it worse.
+const BOT_CHECK = /confirm you.?re not a bot|sign in to confirm/i;
+const isBotCheck = (e) => BOT_CHECK.test(errText(e));
+const botReason = (e) => `youtube bot check: ${errText(e).split('\n')[0].trim()}`;
+
 // Run one step unless done. `body` returns a note (or { note, extra }). Failure records `stopped`.
 async function step(dir, state, name, body) {
   if (done(state, name)) return true;
@@ -189,18 +202,50 @@ async function step(dir, state, name, body) {
     return true;
   } catch (e) {
     markFailed(state, name, errText(e));
-    state.stopped = { step: name, reason: errText(e) };
+    state.stopped = { step: name, reason: isBotCheck(e) ? botReason(e) : errText(e) };
     await saveState(dir, state);
     return false;
   }
 }
 
 // Adopt `file` if it is in dir, else run `fetch` and check the file appeared.
-async function adoptOrFetch(dir, file, fetch) {
-  if (existsSync(join(dir, file))) return `adopted ${file}`;
-  await fetch();
-  if (!existsSync(join(dir, file))) throw new Error(`${file} was not written`);
-  return `wrote ${file}`;
+// fresh: set an existing file aside and fetch anyway; the old file is put back if that fails.
+async function adoptOrFetch(dir, file, fetch, { fresh = false } = {}) {
+  const p = join(dir, file);
+  const old = `${p}.redo-old`;
+  if (fresh && existsSync(p)) await rename(p, old);
+  try {
+    if (existsSync(p)) return `adopted ${file}`;
+    await fetch();
+    if (!existsSync(p)) throw new Error(`${file} was not written`);
+    await rm(old, { force: true });
+    return `wrote ${file}`;
+  } catch (e) {
+    if (existsSync(old) && !existsSync(p)) await rename(old, p);
+    throw e;
+  }
+}
+
+// Like adoptOrFetch for a file we make: `make(tmp)` writes the temporary name, which is
+// renamed to `file` only when it succeeds, so a partial file is never adopted.
+async function adoptOrMake(dir, file, tmp, make, opts) {
+  await rm(join(dir, tmp), { force: true });
+  try {
+    return await adoptOrFetch(dir, file, async () => {
+      await make(tmp);
+      if (!existsSync(join(dir, tmp))) throw new Error(`${tmp} was not written`);
+      await rename(join(dir, tmp), join(dir, file));
+    }, opts);
+  } finally {
+    await rm(join(dir, tmp), { force: true });
+  }
+}
+
+// --redo clears the named steps and every step after the earliest of them.
+function clearForRedo(state, redo) {
+  if (!redo.length) return;
+  const from = Math.min(...redo.map((s) => STEPS.indexOf(s)));
+  for (const s of STEPS.slice(from)) delete state.steps[s];
 }
 
 // ---------- gather ----------
@@ -209,9 +254,15 @@ async function gather(url, dir, d, redo) {
   await mkdir(dir, { recursive: true });
   const state = await loadState(dir);
   delete state.stopped;
-  for (const s of redo) delete state.steps[s];
+  clearForRedo(state, redo);
+  const fresh = (name) => ({ fresh: redo.includes(name) });
+  const failed = () => {
+    if (!state.stopped?.reason.startsWith('youtube bot check')) return 1;
+    d.log(`stopped at ${state.stopped.step}: ${state.stopped.reason}; not trying again in this run`);
+    return 3;
+  };
 
-  if (!(await step(dir, state, 'info', () => adoptOrFetch(dir, 'source.info.json', () => d.fetchInfo({ url, dir }))))) return 1;
+  if (!(await step(dir, state, 'info', () => adoptOrFetch(dir, 'source.info.json', () => d.fetchInfo({ url, dir }), fresh('info'))))) return failed();
   const info = await readJson(join(dir, 'source.info.json'));
   state.video = {
     ...state.video,
@@ -224,7 +275,7 @@ async function gather(url, dir, d, redo) {
   await saveState(dir, state);
   d.log(`gather ${state.video.id}: ${state.video.title}`);
 
-  if (!(await step(dir, state, 'video', () => adoptOrFetch(dir, 'source.mp4', () => d.downloadVideo({ url, dir }))))) return 1;
+  if (!(await step(dir, state, 'video', () => adoptOrFetch(dir, 'source.mp4', () => d.downloadVideo({ url, dir }), fresh('video'))))) return failed();
 
   // Captions are fetched apart from the video: a failure here (HTTP 429 is common) is noted,
   // does not stop gather, and is retried on the next run.
@@ -235,10 +286,16 @@ async function gather(url, dir, d, redo) {
     for (const t of tries) {
       const file = `captions.${t.lang}.json3`;
       try {
-        const note = await adoptOrFetch(dir, file, () => d.fetchCaptions({ url, dir, lang: t.lang, auto: t.auto }));
+        const note = await adoptOrFetch(dir, file, () => d.fetchCaptions({ url, dir, lang: t.lang, auto: t.auto }), fresh('captions'));
         got = { note, file, auto: t.auto };
         break;
       } catch (e) {
+        if (isBotCheck(e)) {
+          markFailed(state, 'captions', errText(e));
+          state.stopped = { step: 'captions', reason: botReason(e) };
+          await saveState(dir, state);
+          return failed();
+        }
         errors.push(`${t.lang}: ${errText(e)}`);
       }
     }
@@ -249,13 +306,15 @@ async function gather(url, dir, d, redo) {
 
   // Whisper always runs when it can: it is the fallback and the check on the captions.
   if (!done(state, 'audio')) {
-    try { mark(state, 'audio', await adoptOrFetch(dir, 'audio.wav', () => d.extractAudio({ dir }))); } catch (e) { markFailed(state, 'audio', errText(e)); }
+    try {
+      mark(state, 'audio', await adoptOrMake(dir, 'audio.wav', 'audio.part.wav', (out) => d.extractAudio({ dir, out }), fresh('audio')));
+    } catch (e) { markFailed(state, 'audio', errText(e)); }
     await saveState(dir, state);
   }
   if (!done(state, 'whisper')) {
     try {
       if (!done(state, 'audio')) throw new Error(`no audio (${state.steps.audio?.note})`);
-      mark(state, 'whisper', await adoptOrFetch(dir, 'whisper.json', () => d.transcribe({ dir })));
+      mark(state, 'whisper', await adoptOrMake(dir, 'whisper.json', 'whisper.part.json', (out) => d.transcribe({ dir, out }), fresh('whisper')));
     } catch (e) { markFailed(state, 'whisper', errText(e)); }
     await saveState(dir, state);
   }
@@ -280,7 +339,7 @@ async function align(dir, d, redo) {
     return 1;
   }
   delete state.stopped;
-  for (const s of redo) delete state.steps[s];
+  clearForRedo(state, redo);
   const info = await readJson(join(dir, 'source.info.json'));
   const video = join(dir, 'source.mp4');
 
@@ -328,7 +387,9 @@ async function align(dir, d, redo) {
       return JSON.stringify({ file: k.file, f: k.f, t: k.t, boxes: boxes ?? null });
     });
     await writeFile(boxesPath, lines.join('\n') + (lines.length ? '\n' : ''));
-    return `${kept.length - unread} of ${kept.length} frames read${unread ? `; ${unread} unreadable` : ''}`;
+    const note = `${kept.length - unread} of ${kept.length} frames read${unread ? `; ${unread} unreadable` : ''}`;
+    if (unread > kept.length / 2) throw new Error(`too few frames read: ${note}`);
+    return note;
   }))) return 1;
 
   if (!(await step(dir, state, 'timeline', async () => {

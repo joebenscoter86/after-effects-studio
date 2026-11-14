@@ -169,10 +169,40 @@ export function toRows(boxes, opts = {}) {
   return out.sort((p, q) => p.y - q.y || p.x - q.x);
 }
 
+function editDistance(a, b) {
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    prev = cur;
+  }
+  return prev[b.length];
+}
+
+const letters = (t) => String(t).toLowerCase().replace(/[^\p{L}]/gu, '');
+const hasWord = (t) => /\p{L}{3,}/u.test(String(t));
+
+/**
+ * True when `was` to `now` is a real change rather than two readings of the same
+ * text: both are values, or both have a word of three letters and their letters
+ * differ by more than two edits with neither a prefix of the other (a cut-off reading).
+ */
+export function isRealChange(was, now) {
+  if (isValueLike(was) && isValueLike(now)) return true;
+  if (!hasWord(was) || !hasWord(now)) return false;
+  const a = letters(was);
+  const b = letters(now);
+  if (a.startsWith(b) || b.startsWith(a)) return false;
+  return editDistance(a, b) > 2;
+}
+
 /**
  * Changes in one frame's rows against what each label showed the last time it
  * was on screen. `seen` (label -> sorted values) is updated in place. A label
  * not in this frame is left as it was and reports nothing (the view moved).
+ * A change that is only another reading of the same text (isRealChange) is not reported.
  */
 export function diffRows(seen, rows) {
   const byLabel = new Map();
@@ -201,6 +231,8 @@ export function diffRows(seen, rows) {
         if (i >= 0) left.splice(i, 1); else came.push(v);
       }
       if (came.length === 1) {
+        // a misreading is dropped; `seen` already holds the newer reading
+        if (!isRealChange(left[0], came[0])) continue;
         const r = at(came[0]);
         out.push({ kind: 'changed', label, was: left[0], text: came[0], x: r.x, y: r.y });
         continue;
