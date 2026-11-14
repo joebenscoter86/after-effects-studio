@@ -11,8 +11,17 @@
 // VERIFY: "Vibrance" is the display name of the effect and its property, accepted by P.effect.
 // VERIFY: shape Rect and Fill match names: "ADBE Vector Shape - Rect", "ADBE Vector Rect Size/Position/Roundness", "ADBE Vector Graphic - Fill", "ADBE Vector Fill Color".
 $.evalFile(args.prelude);
+// Rebuild with artwork (2026-11-14): art from PROOF/22/art (brief.md). Pass args.artLib (art.jsx) and args.artDir.
+// "A year in pictures": twelve framed month photos round a cream calendar dial on a warm umber ground.
+// Per card, top to bottom: Label N (number), Month N (name), Dot N, Outline N, [month-NN.png], Matte N, Box N.
+// The recipe's layout puts four shy layers above each image and one between image and box (88 layers); the brief's
+// single label is split into number and month, and the matte sits under the photo (setTrackMatte needs no adjacency).
+// Shy: everything except FX, Null 1, the twelve photos, the twelve boxes, Wheel and BG (60 shy, 28 showing).
+// Movie: Null 1 pushes 100 -> 103 % linearly (still moving at the end); the Wheel turns 1 degree a second.
+$.evalFile(args.artLib);
+var ARTDIR = args.artDir;
+var FOLDER = "art 22";
 
-// Local helpers (candidates for the prelude: 22, 24 and 25 all need rectangles and fills).
 function addRect(sh, size, pos, round) {
   var r = P.contents(sh).addProperty("ADBE Vector Shape - Rect");
   var idx = r.propertyIndex;
@@ -27,104 +36,124 @@ function addFill(sh, color) {
   P.contents(sh).property(idx).property("ADBE Vector Fill Color").setValue(color);
   return idx;
 }
+function pickFont(list) {
+  var i, fo;
+  for (i = 0; i < list.length; i++) {
+    try { fo = app.fonts.getFontsByPostScriptName(list[i]); if (fo.length && !fo[0].isSubstitute) return list[i]; } catch (e) {}
+  }
+  return list[list.length - 1];
+}
 
-// Run fix: layer stack rebuilt to the recipe's layout line: 88 layers; FX (1), Null 1 (2), then twelve cards of seven layers
-// each (four shy helpers, the image, one shy helper, the box: image at 7, 14 ... 84, box at 9, 16 ... 86), wheel (87),
-// background (88). The image is parented to its box and each box to Null 1. 60 shy, 28 left showing.
-// Layers are added bottom-up, since a new layer always lands on top.
-var N = args.cards || 12;
-var R = 410;              // ASSUMED: ring radius (run fix: 380 with 130 x 170 cards made neighbours overlap at the sides)
-var W = 100, H = 130;     // ASSUMED: card size
-var c = P.freshComp("22 hide layers shy", 1920, 1080, 24, 4, [0.05, 0.05, 0.06]);
+var N = 12;
+var CW = 1920, CH = 1080, DUR = args.dur || 6;
+// Run: 0.36 (brief) left the 03/04 and 10/11 labels touching the next card's dot; 0.38 and tighter labels clear them.
+var R = (args.radius || 0.38) * CH;
+var BW = 108, BH = 140;      // box (brief)
+var c = P.freshComp("22 hide layers shy", CW, CH, 24, DUR, ART.hex("#120E0B"));
 
-var bg = P.solid(c, "22 background", [0.08, 0.08, 0.1]);
-bg.name = "background";
-var wheel = P.shape(c, "wheel");
-P.ellipse(wheel, [R * 2, R * 2]);
-P.stroke(wheel, [0.45, 0.45, 0.5, 1], 6);
+var FNUM = pickFont(["Poppins-SemiBold", "Poppins-Bold"]);
+var FMON = pickFont(["Poppins-Regular", "Poppins-SemiBold"]);
+var MONTHS = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+var SEASON = ["#9DB4C8", "#9DB4C8", "#E7A9B4", "#E7A9B4", "#E7A9B4", "#E9C46A", "#E9C46A", "#E9C46A", "#D9773A", "#D9773A", "#D9773A", "#9DB4C8"];
+var CREAM = ART.hex("#EADFC8");
 
-var palette = [[0.85, 0.35, 0.25], [0.95, 0.7, 0.2], [0.3, 0.6, 0.85], [0.35, 0.75, 0.5], [0.7, 0.4, 0.8], [0.9, 0.5, 0.6]];
+// Background and wheel (added first: new layers land on top).
+var bg = c.layers.add(ART.footage(ARTDIR, "backdrop.png", FOLDER));
+bg.name = "BG";
+P.tf(bg, "ADBE Scale").setValue([75, 75]);
+var wheel = c.layers.add(ART.footage(ARTDIR, "dial-ring.png", FOLDER));
+wheel.name = "Wheel";
+// Run: at the brief's 54 % the rim ran through the labels under the top three cards; 46 % clears them.
+var WS = 100 * (args.dial || 0.46) * CH / 2048;
+P.tf(wheel, "ADBE Scale").setValue([WS, WS]);
+var wr = P.tf(wheel, "ADBE Rotate Z");
+wr.expression = "time * 1"; // one degree a second (brief)
+
 var boxes = [];
 var shyCount = 0;
-var i, a, pos, col, box, img, matte, outline, deco, label, cap, nm, hl, h;
+var i, a, pos, nm, num, box, img, matte, outline, dot, lab, mon, hl, h, sidx;
 for (i = N - 1; i >= 0; i--) {
-  a = i * 2 * Math.PI / N;
-  pos = [960 + R * Math.sin(a), 540 - R * Math.cos(a)];
-  col = palette[i % palette.length];
-  nm = "card " + (i < 9 ? "0" : "") + (i + 1);
+  a = i * 2 * Math.PI / N;               // January at 12 o'clock, clockwise
+  pos = [CW / 2 + R * Math.sin(a), CH / 2 - R * Math.cos(a)];
+  num = (i < 9 ? "0" : "") + (i + 1);
 
-  box = P.shape(c, nm + " box");
-  addRect(box, [W + 16, H + 16], [0, 0], 10);
-  addFill(box, [0.16, 0.16, 0.18, 1]);
+  box = P.shape(c, "Box " + (i + 1));
+  addRect(box, [BW, BH], [0, 0], 10);
+  addFill(box, ART.hex("#1D1916").concat([1]));
   P.tf(box.layer, "ADBE Position").setValue(pos);
+  // A soft shadow under each card so it sits on the ground (brief's optional Shadow N, done as an effect on the box).
+  var ds = P.effect(box.layer, "ADBE Drop Shadow");
+  ART.setFx(ds, { "Opacity": 140 /* VERIFY: 0..255 in script, about 55 % */, "Direction": 160, "Distance": 6, "Softness": 22 });
 
-  // ASSUMED: the one shy layer between image and box is the matte (the recipe lists "matte, outline, decoration and text" but not their order).
-  matte = P.shape(c, nm + " matte");
-  addRect(matte, [W, H], [0, 0], 14);
+  matte = P.shape(c, "Matte " + (i + 1));
+  addRect(matte, [BW - 12, BH - 12], [0, 0], 6);
   addFill(matte, [1, 1, 1, 1]);
   P.tf(matte.layer, "ADBE Position").setValue(pos);
 
-  img = P.solid(c, "22 card image", col, W, H);
-  img.name = nm + " image";
+  img = c.layers.add(ART.footage(ARTDIR, "month-" + num + ".png", FOLDER));
+  P.tf(img, "ADBE Scale").setValue([11, 11]);
   P.tf(img, "ADBE Position").setValue(pos);
   img.setTrackMatte(matte.layer, TrackMatteType.ALPHA);
   matte.layer.enabled = false;
 
-  outline = P.shape(c, nm + " outline");
-  addRect(outline, [W + 8, H + 8], [0, 0], 18);
-  P.stroke(outline, [1, 1, 1, 1], 2);
+  outline = P.shape(c, "Outline " + (i + 1));
+  addRect(outline, [BW, BH], [0, 0], 10);
+  sidx = P.stroke(outline, CREAM.concat([1]), 1.5);
+  P.contents(outline).property(sidx).property("ADBE Vector Stroke Opacity").setValue(45);
   P.tf(outline.layer, "ADBE Position").setValue(pos);
 
-  deco = P.shape(c, nm + " decoration");
-  P.ellipse(deco, [14, 14]);
-  addFill(deco, [col[0], col[1], col[2], 1]);
-  P.tf(deco.layer, "ADBE Position").setValue([pos[0], pos[1] - H / 2 - 22]);
+  dot = P.shape(c, "Dot " + (i + 1));
+  P.ellipse(dot, [6, 6]);
+  addFill(dot, ART.hex(SEASON[i]).concat([1]));
+  P.tf(dot.layer, "ADBE Position").setValue([pos[0], pos[1] - BH / 2 - 6]);
 
-  cap = P.text(c, "PHOTO", { size: 13, tracking: 200, pos: [pos[0], pos[1] + H / 2 + 52], name: nm + " text caption" });
-  label = P.text(c, (i < 9 ? "0" : "") + (i + 1), { size: 26, pos: [pos[0], pos[1] + H / 2 + 30], name: nm + " text" });
+  mon = P.text(c, MONTHS[i], { size: Math.round(0.011 * CH / 0.72), font: FMON, color: ART.hex("#B8AA94"), tracking: 200,
+    pos: [pos[0], pos[1] + BH / 2 + 41], name: "Month " + (i + 1) });
+  lab = P.text(c, num, { size: Math.round(0.022 * CH / 0.72), font: FNUM, color: ART.hex("#F3EBDD"),
+    pos: [pos[0], pos[1] + BH / 2 + 19], name: "Label " + (i + 1) });
 
-  // Step 1: mark the helper layers shy; image and box stay unmarked.
-  hl = [matte.layer, outline.layer, deco.layer, cap, label];
+  hl = [lab, mon, dot.layer, outline.layer, matte.layer];
   for (h = 0; h < hl.length; h++) { hl[h].shy = true; shyCount++; }
-  // Image parented to its box (layout); ASSUMED: the helpers ride on the box too.
   img.parent = box.layer;
   for (h = 0; h < hl.length; h++) hl[h].parent = box.layer;
   boxes.push(box.layer);
 }
 
-// Null that turns the whole ring (unmarked). Each box is parented to it (layout).
 var ctl = c.layers.addNull(c.duration);
 ctl.source.name = "22 Null 1";
 ctl.name = "Null 1";
-P.tf(ctl, "ADBE Position").setValue([960, 540]);
+// Run: the set spans 62 to 1050 px down (dot of 01 to the JULY label); lifted 19 px to centre it in the frame.
+P.tf(ctl, "ADBE Position").setValue([CW / 2, CH / 2]);
 var k;
 for (k = 0; k < boxes.length; k++) boxes[k].parent = ctl;
-wheel.layer.parent = ctl; // ASSUMED
-var rot = P.tf(ctl, "ADBE Rotate Z");
-rot.setValueAtTime(0, 0);
-rot.setValueAtTime(c.duration, 20); // ASSUMED: a slow turn so the comp is not a dead still
+wheel.parent = ctl;
+P.tf(ctl, "ADBE Position").setValue([CW / 2, CH / 2 - 19]); // after parenting, so the set moves with it
+var ns = P.tf(ctl, "ADBE Scale");
+ns.setValueAtTime(0, [100, 100]);
+ns.setValueAtTime(DUR, [101.5, 101.5]); // linear: still moving on the last frame
 
-// Effects layer: an adjustment layer over everything (unmarked), top of the stack.
+// FX: a light vignette and Noise 3 % (brief).
 var fxLayer = P.solid(c, "22 FX", [1, 1, 1]);
 fxLayer.name = "FX";
 fxLayer.adjustmentLayer = true;
-var vib = P.effect(fxLayer, "Vibrance");
-fxLayer.property("ADBE Effect Parade").property(vib.propertyIndex).property("Vibrance").setValue(20); // ASSUMED: any mild grade
+var vg = null;
+try { vg = P.effect(fxLayer, "CC Vignette"); ART.setFx(vg, { "Amount": 35 }); } catch (eV) { vg = null; }
+var nz = P.effect(fxLayer, "ADBE Noise");
+var nmiss = ART.setFx(nz, { "Amount of Noise": 3 });
 
-// Step 2: the master toggle, Hide All Shy Layers.
 c.hideShyLayers = (args.hide !== false);
 
-// Read-back: this is the proof, since the Timeline panel cannot be rendered.
 var shown = [], shyIdx = [], li;
 for (li = 1; li <= c.numLayers; li++) {
   if (c.layer(li).shy) shyIdx.push(li); else shown.push(li + " " + c.layer(li).name);
 }
-// Remove this script's own unused solids from earlier runs.
 var oi, oit;
 for (oi = app.project.numItems; oi >= 1; oi--) {
   oit = app.project.item(oi);
   if (oit instanceof FootageItem && oit.mainSource instanceof SolidSource && oit.usedIn.length === 0 &&
       (oit.name === "22 card image" || oit.name === "22 Null 1" || oit.name === "22 FX" || oit.name === "22 background")) oit.remove();
 }
+var lr = c.layer("Label 1").sourceRectAtTime(0, false), mr = c.layer("Month 1").sourceRectAtTime(0, false);
 return { comp: c.name, id: c.id, layers: c.numLayers, shy: shyIdx.length, hideShyLayers: c.hideShyLayers,
-  showingInTimeline: c.hideShyLayers ? shown.length : c.numLayers, notShy: shown, shyIndices: shyIdx };
+  showingInTimeline: c.hideShyLayers ? shown.length : c.numLayers, notShy: shown, fonts: [FNUM, FMON], vignette: !!vg, noiseMissing: nmiss,
+  labelH: lr.height, monthH: mr.height, monthW: mr.width };

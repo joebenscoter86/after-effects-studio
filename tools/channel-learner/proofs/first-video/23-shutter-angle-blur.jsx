@@ -11,35 +11,45 @@
 // VERIFY: the font "Poppins-Bold" is installed (01 used Poppins-Light); pass args.font to override.
 // VERIFY: render.preview honours comp motion blur (Best quality, motion blur on) so the streaks show in build.mov.
 $.evalFile(args.prelude);
+// Rebuild with artwork (2026-11-14): art from PROOF/23/art (brief.md). Pass args.artLib (art.jsx) and args.artDir.
+// Stage.png (2D, 75 %) under a moving Grain adjustment; the ring is now four faces of a square in plan (the recipe's
+// "four repeats of one word with a round dot between each"; the brief: a box with flat faces and sharp corners), one word
+// centred on each face and a filled dot at each corner; under each word a dark copy (#2A2D31, 2 px #8A9097 stroke) one
+// cap height lower. The technique is unchanged: layer and comp motion blur on, shutter angle 180 -> 720.
+$.evalFile(args.artLib);
+var ARTDIR = args.artDir;
 
-// Run fix: sizes from the recipe's layout line (the assumed sizes predate it).
-//  - ring about 51% of the width across, front word 31% of the width wide with capitals 10% of the height tall, back word
-//    capitals 7% tall: with the default 50 mm view (zoom 2666.67) that is a ring radius of about 470 px (front scale 1.21,
-//    back 0.85), layer-space capitals of 89 px and a word about 490 px wide;
-//  - ring spans 33% to 72% down: more than three cap heights, so the camera looks down on the ring a little (about 6 degrees);
-//  - a darker copy of each word sits one cap height under it;
-//  - at 720 degrees the front word's uprights smear about 1% of the width (19 px): two frames of travel, so about 8 px a frame
-//    in layer space, about 1 degree a frame, 24 degrees a second. The script's first guess (two turns in 5 s) was six times faster.
-var FPS = 23.976;                     // recipe: comp 1920 x 1080, 23.976 fps
-var DUR = 5;                          // ASSUMED: 5 s
+// Sizes from the layout line: ring 51 % of the width across, front word 31 % wide with capitals 10 % of the height,
+// back word capitals about 7 %. With the default 50 mm view (zoom 2666.67) a square of side S, seen face-on, is
+// S * Z / (Z - S/2) wide: 979 px gives S = 827, front scale 1.184, back scale 0.866 (back capitals 7.3 %).
+// Smear at 720 degrees 1.25 % of the width = 24 px over two frames = 10 px a frame in layer space at the front face
+// (413 px from the axis): about 1.39 degrees a frame, 33 degrees a second.
+var FPS = 23.976, DUR = args.dur || 6;
 var W = 1920, H = 1080;
 var ZOOM = 2666.67;
-var R = 470;
-var DEG_PER_S = (args.degPerSec !== undefined) ? args.degPerSec : 24;
-var NW = 5;                           // five copies of one word fill the ring (2 * pi * 470 = 2953 px; word 490 px)
-var WORD = args.word || "MOTION";     // stand-in word (the example repeats one word)
-var CAP = 0.10 * H / (ZOOM / (ZOOM - R));   // layer-space cap height that reads 10% of the height at the front
-var WW = 0.31 * W / (ZOOM / (ZOOM - R));    // layer-space word width that reads 31% of the width at the front
-var c = P.freshComp("23 shutter angle blur", W, H, FPS, DUR, [0.04, 0.04, 0.05]);
+var S = 827, HALF = S / 2;
+var FRONT = ZOOM / (ZOOM - HALF);
+var DEG_PER_S = (args.degPerSec !== undefined) ? args.degPerSec : 33;
+var WORD = args.word || "MOTION";
+var CAP = 0.10 * H / FRONT;
+var WW = 0.31 * W / FRONT;
+var c = P.freshComp("23 shutter angle blur", W, H, FPS, DUR, ART.hex("#050506"));
 
-// Dark grainy background.
-var bg = P.solid(c, "23 background", [0.07, 0.07, 0.08]);
-bg.name = "background";
-var noise = P.effect(bg, "Noise");
-bg.property("ADBE Effect Parade").property(noise.propertyIndex).property("Amount of Noise").setValue(8); // ASSUMED: grain amount
+// Stage: 2D backdrop, never motion-blurred.
+var stage = c.layers.add(ART.footage(ARTDIR, "stage.png", "art 23"));
+stage.name = "Stage";
+P.tf(stage, "ADBE Scale").setValue([75, 75]);
+// Brief: if the floor's bright streak competes with the front word, lower its output white to about 70 %.
+var lv = P.effect(stage, "ADBE Easy Levels2");
+ART.setFx(lv, { "Output White": (args.stageWhite !== undefined ? args.stageWhite : 0.8) });
 
-// Camera placed explicitly: the default 50 mm view, raised so it looks down on the ring.
-// Run fix: 6 degrees gave a ring 43% to 69% down; 13 degrees and the ring centre at 45% down give the layout's 33% to 72%.
+// Grain: adjustment layer, Noise 4 % (Noise is new on every frame, so it moves).
+var grain = P.solid(c, "23 grain", [1, 1, 1]);
+grain.name = "Grain";
+grain.adjustmentLayer = true;
+ART.setFx(P.effect(grain, "ADBE Noise"), { "Amount of Noise": 4 });
+
+// Camera: the default 50 mm view, raised to look down 13 degrees (ring 33 % to 72 % down, layout).
 var TILT = (args.tilt !== undefined ? args.tilt : 13) * Math.PI / 180;
 var RINGY = (args.ringY !== undefined) ? args.ringY : 0.451 * H;
 var cam = c.layers.addCamera("camera", [W / 2, H / 2]);
@@ -47,7 +57,6 @@ cam.property("ADBE Camera Options Group").property("ADBE Camera Zoom").setValue(
 P.tf(cam, "ADBE Anchor Point").setValue([W / 2, H / 2, 0]);
 P.tf(cam, "ADBE Position").setValue([W / 2, H / 2 - ZOOM * Math.sin(TILT), -ZOOM * Math.cos(TILT)]);
 
-// 3D null that carries the ring and spins it.
 var ctl = c.layers.addNull(DUR);
 ctl.source.name = "23 ring spin";
 ctl.name = "ring spin";
@@ -55,21 +64,19 @@ ctl.threeDLayer = true;
 P.tf(ctl, "ADBE Anchor Point").setValue([0, 0, 0]);
 P.tf(ctl, "ADBE Position").setValue([W / 2, RINGY, 0]);
 var spin = P.tf(ctl, "ADBE Rotate Y");
-spin.setValueAtTime(0, 0);
-spin.setValueAtTime(DUR, DEG_PER_S * DUR);
-// Linear, so the spin speed is constant (the recipe gives no easing).
+spin.setValueAtTime(0, (args.startAngle !== undefined ? args.startAngle : -20));
+spin.setValueAtTime(DUR, (args.startAngle !== undefined ? args.startAngle : -20) + DEG_PER_S * DUR);
+// Linear: constant speed, still spinning on the last frame.
 spin.setInterpolationTypeAtKey(1, KeyframeInterpolationType.LINEAR, KeyframeInterpolationType.LINEAR);
 spin.setInterpolationTypeAtKey(2, KeyframeInterpolationType.LINEAR, KeyframeInterpolationType.LINEAR);
 
-// Run fix: a font found by name may be a substitute; take the first candidate that is really installed.
-var cand = [args.font || "Poppins-Bold", "Poppins-SemiBold", "Montserrat-Bold", "HelveticaNeue-Bold", "Arial-BoldMT"];
+var cand = [args.font || "Montserrat-Black", "Poppins-Bold", "Arial-BoldMT"];
 var FONT = null, ci, fo;
 for (ci = 0; ci < cand.length && !FONT; ci++) {
   try { fo = app.fonts.getFontsByPostScriptName(cand[ci]); if (fo.length && !fo[0].isSubstitute) FONT = cand[ci]; } catch (errFont) {}
 }
 if (!FONT) FONT = "Arial-BoldMT";
 
-// Size the word from its own rectangle: capitals CAP tall, word WW wide (tracking takes up the difference).
 var probe = P.text(c, WORD, { size: 100, font: FONT, color: [1, 1, 1], name: "probe" });
 var pr = probe.sourceRectAtTime(0, false);
 var FS = 100 * CAP / pr.height;
@@ -79,40 +86,47 @@ pr = probe.sourceRectAtTime(0, false);
 var TRK = Math.round((WW - pr.width) / (WORD.length - 1) * 1000 / FS);
 probe.remove();
 
-var sign = (args.rySign !== undefined) ? args.rySign : -1;
-var i, a, t, ry, k, col, rr;
-for (i = 0; i < NW; i++) {
-  a = i * 2 * Math.PI / NW;
-  ry = sign * a * 180 / Math.PI;
-  // k = 1: the darker copy, one cap height below (added first so it sits under the white word in the stack).
-  // ASSUMED: plain darker copy, not flipped (the recipe cannot tell at this blur).
+var WHITE = ART.hex("#F4F4F2");
+var i, a, t, k, td, tdp, dot, ex, ez;
+for (i = 0; i < 4; i++) {
+  a = i * Math.PI / 2;               // face normals at 0, 90, 180, 270 degrees
   for (k = 1; k >= 0; k--) {
-    col = k ? [0.3, 0.3, 0.32] : [1, 1, 1];
-    t = P.text(c, WORD, { size: FS, font: FONT, color: col, tracking: TRK, name: "word " + (i + 1) + (k ? " dark copy" : "") });
+    t = P.text(c, WORD, { size: FS, font: FONT, color: k ? ART.hex("#2A2D31") : WHITE, tracking: TRK,
+      name: "word " + (i + 1) + (k ? " dark copy" : "") });
+    if (k) {
+      tdp = t.property("ADBE Text Properties").property("ADBE Text Document");
+      td = tdp.value; td.applyStroke = true; td.strokeColor = ART.hex("#8A9097"); td.strokeWidth = 2; td.strokeOverFill = false; tdp.setValue(td);
+    }
     t.threeDLayer = true;
     t.parent = ctl;
-    // Parent space: the null's anchor is at its origin, so positions are offsets from the ring centre.
-    P.tf(t, "ADBE Position").setValue([R * Math.sin(a), k * CAP, -R * Math.cos(a)]);
-    P.tf(t, "ADBE Rotate Y").setValue(ry);
-    t.motionBlur = true; // step 1: layer motion blur switch
+    P.tf(t, "ADBE Position").setValue([HALF * Math.sin(a), k * CAP, -HALF * Math.cos(a)]);
+    P.tf(t, "ADBE Rotate Y").setValue(-a * 180 / Math.PI);
+    t.motionBlur = true;
   }
+  // Dot at the corner after this face, 30 % of the cap height, set at 45 degrees between the two faces.
+  ex = HALF * Math.sin(a) + HALF * Math.cos(a);
+  ez = -HALF * Math.cos(a) + HALF * Math.sin(a);
+  dot = P.shape(c, "dot " + (i + 1));
+  P.ellipse(dot, [0.3 * CAP, 0.3 * CAP]);
+  (function (sh) { var f = P.contents(sh).addProperty("ADBE Vector Graphic - Fill"); P.contents(sh).property(f.propertyIndex).property("ADBE Vector Fill Color").setValue(WHITE); })(dot);
+  dot.layer.threeDLayer = true;
+  dot.layer.parent = ctl;
+  P.tf(dot.layer, "ADBE Position").setValue([ex, 0, ez]);
+  P.tf(dot.layer, "ADBE Rotate Y").setValue(-(a + Math.PI / 4) * 180 / Math.PI);
+  dot.layer.motionBlur = true;
 }
+cam.moveToBeginning();
 
-// Step 1: comp motion blur on. Steps 2-5: Composition Settings > Advanced > Motion Blur.
-// SUBSTITUTE: the Composition Settings dialog is replaced by setting the comp's properties directly.
 c.motionBlur = true;
-c.shutterAngle = (args.shutterAngle !== undefined) ? args.shutterAngle : 720; // 180 default -> 720
+c.shutterAngle = (args.shutterAngle !== undefined) ? args.shutterAngle : 720;
 c.shutterPhase = -90;
 c.motionBlurSamplesPerFrame = 16;
 c.motionBlurAdaptiveSampleLimit = 128;
 
-// Remove this script's own unused solids from earlier runs.
 var oi, oit;
 for (oi = app.project.numItems; oi >= 1; oi--) {
   oit = app.project.item(oi);
   if (oit instanceof FootageItem && oit.mainSource instanceof SolidSource && oit.usedIn.length === 0 &&
-      (oit.name === "23 background" || oit.name === "23 ring spin")) oit.remove();
+      (oit.name === "23 background" || oit.name === "23 ring spin" || oit.name === "23 grain")) oit.remove();
 }
-return { comp: c.name, id: c.id, layers: c.numLayers, shutterAngle: c.shutterAngle, shutterPhase: c.shutterPhase, fps: c.frameRate,
-  samples: c.motionBlurSamplesPerFrame, adaptive: c.motionBlurAdaptiveSampleLimit, motionBlur: c.motionBlur,
-  font: FONT, fontSize: FS, tracking: TRK, cap: CAP, wordWidth: WW };
+return { comp: c.name, id: c.id, layers: c.numLayers, shutterAngle: c.shutterAngle, fps: c.frameRate, font: FONT, fontSize: FS, tracking: TRK, cap: CAP, wordWidth: WW };

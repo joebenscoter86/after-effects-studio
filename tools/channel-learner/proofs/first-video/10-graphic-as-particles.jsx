@@ -19,6 +19,14 @@
 // VERIFY: Birth Size 0.25 on a 300 x 300 texture comp gives leaves of a sensible size at 1920 x 1080; if tiny or huge, the texture comp's size is the lever, not the recipe values.
 $.evalFile(args.prelude);
 args = args || {};
+// Rebuild with artwork (2026-11-14): art from PROOF/10/art (brief.md). Pass args.artLib (art.jsx) and args.artDir.
+// "park dusk" (park-dusk.png, 37.5 %) is the scene; the texture is leaf.png (a golden ginkgo leaf, 2048 px) shrunk
+// into a 128 x 128 precomp "10 leaf texture" (CC Particle World sizes particles from the texture's pixel size), and
+// that precomp is the hidden "leaf" layer the Texture Layer points at. Birth/Death Size retuned for the 128 px texture
+// against the layout (median leaf long side about 1.3 % of the width, largest about 2.6 %). A faint Glow on the
+// particle layer so the leaves catch the lamplight. Comp 6 s.
+$.evalFile(args.artLib);
+var ARTDIR = args.artDir;
 
 // Candidate for the prelude: depth-first search of a property group by display name.
 function find(group, name) {
@@ -59,23 +67,20 @@ function fill(sh, color) {
   return idx;
 }
 
-// The graphic. SUBSTITUTE: the tutorial imports a leaf vector file (its own tight bounds). A small comp holding a
-// shape leaf stands in for it, so the texture is the leaf and not a comp-sized frame with a leaf in the middle.
-// ASSUMED: leaf colour green; texture comp 300 x 300.
-var leafComp = P.freshComp("10 leaf graphic", 300, 300, 24, 5, [0, 0, 0]);
-var leaf = P.shape(leafComp, "leaf");
-P.path(leaf, [[0, -140], [0, 140]], [[-95, 70], [75, -85]], [[95, 70], [-75, -85]], true);
-fill(leaf, [0.36, 0.68, 0.28, 1]);
-P.tf(leaf.layer, "ADBE Position").setValue([150, 150]);
-P.tf(leaf.layer, "ADBE Rotate Z").setValue(25);
-var vein = P.shape(leafComp, "vein");
-P.path(vein, [[0, -120], [0, 125]], null, null, false);
-P.stroke(vein, [0.22, 0.45, 0.17, 1], 6, 2);
-P.tf(vein.layer, "ADBE Position").setValue([150, 150]);
-P.tf(vein.layer, "ADBE Rotate Z").setValue(25);
+// The graphic: leaf.png in a small square precomp (brief), so the texture is 128 px, not 2048.
+var TEX = args.tex || 128;
+(function () { var j, it; for (j = app.project.numItems; j >= 1; j--) { it = app.project.item(j); if (it instanceof CompItem && it.name === "10 leaf graphic") it.remove(); } })();
+var leafComp = P.freshComp("10 leaf texture", TEX, TEX, 24, 8, [0, 0, 0]);
+var leafFoot = ART.footage(ARTDIR, "leaf.png", "art 10");
+var leafImg = leafComp.layers.add(leafFoot);
+leafImg.name = "leaf.png";
+var lsc = 100 * TEX / Math.max(leafFoot.width, leafFoot.height);
+P.tf(leafImg, "ADBE Scale").setValue([lsc, lsc]);
+P.tf(leafImg, "ADBE Position").setValue([TEX / 2, TEX / 2]);
 
 // ASSUMED: dark frame, 5 s, 24 fps (recipe gives no comp size, solid colour or scene).
-var c = P.freshComp("10 graphic as particles", 1920, 1080, 24, 5, [0.04, 0.05, 0.07]);
+var DUR = args.dur || 6;
+var c = P.freshComp("10 graphic as particles", 1920, 1080, 24, DUR, ART.hex("#13213A"));
 // Re-runs: freshComp removes the comps but not the solids they used; remove this script's unused ones first.
 (function () {
   var j, it, col;
@@ -87,11 +92,13 @@ var c = P.freshComp("10 graphic as particles", 1920, 1080, 24, 5, [0.04, 0.05, 0
     if ((it.name === "background" && near(col, [0.05, 0.07, 0.10])) || (it.name === "leaf particles" && near(col, [0, 0, 0]))) it.remove();
   }
 })();
-var bg = P.solid(c, "background", [0.05, 0.07, 0.10]);
+var bg = c.layers.add(ART.footage(ARTDIR, "park-dusk.png", "art 10"));
+bg.name = "park dusk";
+P.tf(bg, "ADBE Scale").setValue([37.5, 37.5]);
 
 // Step 1: the graphic as its own layer, scaled to 32 %. Hidden: it is only the texture source (inferred in recipe).
 var leafLayer = c.layers.add(leafComp);
-leafLayer.name = "leaf graphic";
+leafLayer.name = "leaf";
 P.tf(leafLayer, "ADBE Scale").setValue([32, 32]);
 P.tf(leafLayer, "ADBE Position").setValue([1700, 160]);
 leafLayer.enabled = false;
@@ -125,7 +132,7 @@ need(fx, "Texture", "Align To Direction").setValue(0);
 need(fx, "Particle", "Rotation Speed").setValue(180);
 need(fx, "Particle", "Initial Rotation").setValue(360);
 // Review correction: the recipe's 0.25 gave leaves about 15 % too small on this 300 x 300 texture; 0.29 matches the measured size.
-var SIZE = args.size !== undefined ? args.size : 0.29;
+var SIZE = args.size !== undefined ? args.size : 0.29; // run: retuned for the 128 px texture below
 need(fx, "Particle", "Birth Size").setValue(SIZE);
 need(fx, "Particle", "Death Size").setValue(SIZE);
 need(fx, "Particle", "Size Variation").setValue(50);
@@ -166,6 +173,8 @@ setOptional(fx, "Grid & Guides", "Horizon", 0);
 setOptional(fx, "Grid & Guides", "Axis Box", 0);
 
 // Step 7: the particle layer composites over the scene in Normal mode (blend not shown; ASSUMED Normal, 100 %).
+// Brief: a faint Glow so the leaves catch the lamplight.
+if (args.glow !== false) ART.glow(ps, args.glowThreshold || 60, 20, 0.3);
 
 fx = ps.property("ADBE Effect Parade").property("CC Particle World");
 return {
