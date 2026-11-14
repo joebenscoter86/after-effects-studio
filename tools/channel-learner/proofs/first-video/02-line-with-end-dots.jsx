@@ -14,7 +14,7 @@
 //         9 o'clock to 12 o'clock and the two dots land on its ends (inferred in the recipe).
 // VERIFY: the dash pattern starts at the path start with Offset 0, and no third dot appears at 100% (= 0%).
 // VERIFY: layer.duplicate() keeps the shape contents and returns the new layer.
-// VERIFY: font "Poppins-Light" exists; pass args.font otherwise.
+// VERIFY (run): "Poppins-Light" is not installed (silently substituted); the script uses Poppins-Regular.
 $.evalFile(args.prelude);
 
 // Own helpers: the prelude's P.shape / P.contents handle only the first group. Candidates for the prelude.
@@ -41,15 +41,15 @@ function addStroke(layer, gi, color, width, cap) {
   return idx;
 }
 
-// ASSUMED: ellipse diameter 470 px. The recipe treats the size as unknown; 470 is what the shown Gap 1136.3 implies.
-var D = args.diameter || 470;
+// Run fix (layout line): circle about 0.27 of the width and 0.47 of the height across (518 x 508 px), so D = 513.
+var D = args.diameter || 513;
 var TRIM_START = 77; // recipe
 var GAP = (TRIM_START / 100) * Math.PI * D; // recipe build notes: Gap = Start% x circumference (about 1136.9 at 470 px)
 
 var c = P.freshComp("02 line with end dots", 1920, 1080, 24, 4, [0.03, 0.04, 0.03]);
 
 // Stand-in: a short white word in the middle. ASSUMED: word, size and font.
-P.text(c, "Orbit", { size: 72, color: [1, 1, 1], font: args.font || "Poppins-Light", name: "label" });
+P.text(c, "Orbit", { size: args.size || 70, color: [1, 1, 1], font: args.font || "Poppins-Regular", name: "label", pos: [960, 540] });
 
 var l = c.layers.addShape();
 l.name = "arc 1";
@@ -76,14 +76,17 @@ groupContents(l, gDots).property(sDots).property("ADBE Vector Stroke Dashes").ad
 groupContents(l, gDots).property(sDots).property("ADBE Vector Stroke Dashes").property("ADBE Vector Stroke Gap 1").setValue(GAP);
 
 // Step 5: three layers parented to one null, laid out around the centre.
-// ASSUMED: the copies are spaced by layer Rotation, 0 / 120 / 240 deg (the recipe does not show how they were offset).
+// Run fix (layout line): arcs of about 82 deg with uneven gaps of 32, 38 and 44 deg, the 32 deg gap at the top
+// between about 77 and 110 deg from the right. Unrotated, the 77-100% arc spans 90..172.8 deg (counter-clockwise from
+// the right); layer Rotation r (clockwise on screen) moves it to 90-r..172.8-r. Arcs at 110-193, 231-314, 355-78 deg.
+// ASSUMED: which of the 38 and 44 deg gaps comes first (not given).
 var l2 = l.duplicate();
 l2.name = "arc 2";
 var l3 = l.duplicate();
 l3.name = "arc 3";
-P.tf(l, "ADBE Rotate Z").setValue(0);
-P.tf(l2, "ADBE Rotate Z").setValue(120);
-P.tf(l3, "ADBE Rotate Z").setValue(240);
+P.tf(l, "ADBE Rotate Z").setValue(-20);
+P.tf(l2, "ADBE Rotate Z").setValue(-141);
+P.tf(l3, "ADBE Rotate Z").setValue(-265);
 
 var n = c.layers.addNull(c.duration);
 n.name = "arcs null";
@@ -100,4 +103,5 @@ var ease = new KeyframeEase(0, 50);
 rot.setTemporalEaseAtKey(1, [ease], [ease]);
 rot.setTemporalEaseAtKey(2, [ease], [ease]);
 
-return { comp: c.name, id: c.id, layers: c.numLayers, diameter: D, gap: GAP };
+var lb = c.layer("label").sourceRectAtTime(0, false);
+return { comp: c.name, id: c.id, layers: c.numLayers, diameter: D, gap: GAP, labelW: lb.width, order: [c.layer(1).name, c.layer(2).name, c.layer(3).name, c.layer(4).name, c.layer(5).name], groups: [l.property("ADBE Root Vectors Group").property(1).name, l.property("ADBE Root Vectors Group").property(2).name], composite: groupContents(l, gLine).property(2).property("ADBE Vector Composite Order").value };

@@ -8,7 +8,7 @@
 //
 // VERIFY: "ADBE Vector Stroke Taper" group and its "ADBE Vector Taper Length Units", "ADBE Vector Taper Start Length",
 //         "ADBE Vector Taper End Length" match names (need After Effects 17.0 or later).
-// VERIFY: "ADBE Vector Taper Length Units" value 2 = Percent (1 = Pixels assumed).
+// VERIFY (run): "ADBE Vector Taper Length Units" value 1 = Percent, 2 = Pixels (the guess was the other way round).
 // VERIFY: "ADBE Vector Stroke Line Cap" value 1 = Butt Cap.
 // VERIFY: the expression Effect object's .active is false when the effect's eye is off, and effect(...)(1) reads the slider.
 // VERIFY: effect display names "Slider Control", "Gaussian Blur", "CC Radial Fast Blur", "Glow", "Tint" and the property
@@ -32,15 +32,19 @@ var D = args.diameter || 1600;
 
 var sh = P.shape(c, "arc");
 var el = P.ellipse(sh, [D, D]);
-P.contents(sh).property(1).property("ADBE Vector Ellipse Position").setValue([0, 560]);
+// Run fix (layout line): crest at (0.51w, 0.19h) = (979, 205), visible ends at x 0.18w..0.84w, y about 0.475h.
+// A circle through those points has radius about 801 px, centre (980, 1006): ellipse offset [20, 466] from the layer centre.
+P.contents(sh).property(1).property("ADBE Vector Ellipse Position").setValue([20, 466]);
 // Step 1: white stroke, 16 px, Butt Cap, no fill.
 var s = P.stroke(sh, [1, 1, 1, 1], 16, 1);
 // Step 1: Trim Paths inside the shape's contents. ASSUMED values (not shown in the recipe).
 var t = P.contents(sh).addProperty("ADBE Vector Filter - Trim");
 var tIdx = t.propertyIndex;
 P.contents(sh).property(tIdx).property("ADBE Vector Trim Start").setValue(0);
-P.contents(sh).property(tIdx).property("ADBE Vector Trim End").setValue(25);
-P.contents(sh).property(tIdx).property("ADBE Vector Trim Offset").setValue(-45);
+// Run fix (layout line): the visible arc spans about 104 deg (ends at +/-52 deg from the crest); trimmed a little
+// longer, 30% = 108 deg, because the taper thins the last stretch to nothing.
+P.contents(sh).property(tIdx).property("ADBE Vector Trim End").setValue(30);
+P.contents(sh).property(tIdx).property("ADBE Vector Trim Offset").setValue(-54);
 
 // Switch for the technique (see top). Its value is the taper length in percent.
 var tech = P.effect(sh.layer, "Slider Control");
@@ -51,7 +55,9 @@ sh.layer.property("ADBE Effect Parade").property("TECH taper").property(1).setVa
 var taperPath = function () {
   return P.contents(sh).property(s).property("ADBE Vector Stroke Taper");
 };
-taperPath().property("ADBE Vector Taper Length Units").setValue(2);
+// Run fix: Length Units 1 = Percent, 2 = Pixels (with 2, "Start Length"/"End Length" are hidden and the pixel
+// versions "ADBE Vector Taper StartWidthPx"/"EndWidthPx" show instead).
+taperPath().property("ADBE Vector Taper Length Units").setValue(1);
 var expr = 'var e = effect("TECH taper"); e.active ? e(1) : 0;';
 taperPath().property("ADBE Vector Taper Start Length").setValue(100);
 taperPath().property("ADBE Vector Taper Start Length").expression = expr;
@@ -84,8 +90,10 @@ sh.layer.property("ADBE Effect Parade").property(tiIdx).property("Map White To")
 sh.layer.property("ADBE Effect Parade").property(tiIdx).property("Amount to Tint").setValue(100);
 
 // Stand-in: a centred multi-line headline above the arc layer. ASSUMED: words, size, font (default font unless args.font).
-var opts = { size: 96, color: [1, 1, 1], name: "headline" };
-if (args.font) opts.font = args.font;
-P.text(c, "Beyond\rthe horizon", opts);
+// Run fix (layout line): headline block about 0.40 of the width wide, centred at 0.50 across, from 0.39 to 0.75 down
+// (centre y 0.57 = 616). ASSUMED three lines (the block's height fits three lines at this width).
+var opts = { size: args.size || 112, color: [1, 1, 1], name: "headline", font: args.font || "Poppins-SemiBold", pos: [960, 0.57 * 1080] };
+var hl = P.text(c, "Look past\rthe edge of\rthe horizon", opts);
+var hr = hl.sourceRectAtTime(0, false);
 
-return { comp: c.name, id: c.id, layers: c.numLayers };
+return { comp: c.name, id: c.id, layers: c.numLayers, headlineW: hr.width, headlineH: hr.height };

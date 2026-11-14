@@ -3,7 +3,7 @@
 // the top copy stays at 0 deg and each one below is turned a further -6.53 deg, so the words fan out around the anchor.
 // All copies are parented to a null at the pivot, which turns to scroll the words past.
 //
-// VERIFY: font "PlusJakartaSans-Bold" (PostScript name) exists on the build machine; pass args.font otherwise.
+// VERIFY (run): Plus Jakarta Sans is not installed on the build machine; Poppins-Bold stands in.
 // VERIFY: layer.duplicate() places the copy directly above the original, so the 55 text layers are indices 1..55.
 // VERIFY: setting layer.parent keeps each copy's on-screen position and rotation (After Effects compensates).
 // VERIFY: the text layer's anchor and position are in pixels with no scale or rotation applied, so shifting both by the same
@@ -12,28 +12,36 @@ $.evalFile(args.prelude);
 
 var N = args.copies || 55;          // recipe: 55 copies
 var STEP = args.step || 6.533;      // recipe: settles at -6.5 per layer (0, -6.5, -13.1, -19.6 ... -58.8)
-var RADIUS = args.radius || 640;    // recipe: the anchor sits roughly a third of the frame width left of the text
-// ASSUMED: text centre at (1600, 540), so the pivot is at (960, 540). The exact pivot is unknown.
-var TEXT_POS = [1600, 540];
-var PIVOT = [TEXT_POS[0] - RADIUS, TEXT_POS[1]];
+// Run fix (layout line): the words' left ends follow an arc of radius about 0.61 of the width (1171 px) whose hub sits
+// just off the comp's left edge at 0.50 down; the middle (level) word's left end is the furthest right, at 0.57w (1094).
+// So the hub is at (1094 - 1171, 540) = (-77, 540), and each word's left end sits 1171 px right of it.
+var RADIUS = args.radius || 0.61 * 1920;
+var LEFT_END = 0.57 * 1920;
+var PIVOT = [LEFT_END - RADIUS, 540];
 
 // Rules: 1920 x 1080 at 24 fps (the example comp ran at 60 fps; see build notes).
 var c = P.freshComp("04 carousel by rotation", 1920, 1080, 24, 5, [0.03, 0.04, 0.04]);
 
 // Step 1: one text layer, a two-word phrase in a bold geometric sans, light mint.
-// ASSUMED: the phrase, size 56 and the mint value.
+// Run fix (layout line): middle word about 0.32 of the width wide (614 px), cap height about 0.066h (71 px): size 107 measures 613 px wide.
+// Run fix: Plus Jakarta Sans is not installed; Poppins-Bold (installed) stands in.
 var l = P.text(c, "Bold Moves", {
-  size: 56,
+  size: args.size || 107,
   color: [0.78, 0.96, 0.86],
-  font: args.font || "PlusJakartaSans-Bold",
-  pos: TEXT_POS,
+  font: args.font || "Poppins-Bold",
+  pos: [960, 540],
   name: "phrase"
 });
+var r0 = l.sourceRectAtTime(0, false);
+var TEXT_W = r0.width;
+// Place the words so their left end is at LEFT_END, centred 0.50 down.
+P.tf(l, "ADBE Position").setValue([LEFT_END + TEXT_W / 2, 540]);
 
 // Step 2: move the anchor to the wheel's centre without moving the text.
 // SUBSTITUTE: the Pan Behind (Anchor Point) tool drag; anchor and position are shifted by the same amount instead.
 var ap = P.tf(l, "ADBE Anchor Point").value;
-P.tf(l, "ADBE Anchor Point").setValue([ap[0] - RADIUS, ap[1]]);
+var SHIFT = LEFT_END + TEXT_W / 2 - PIVOT[0];
+P.tf(l, "ADBE Anchor Point").setValue([ap[0] - SHIFT, ap[1]]);
 P.tf(l, "ADBE Position").setValue(PIVOT);
 
 // Step 3: duplicate to N copies in all.
@@ -67,4 +75,9 @@ var ease = new KeyframeEase(0, 50);
 rot.setTemporalEaseAtKey(1, [ease], [ease]);
 rot.setTemporalEaseAtKey(2, [ease], [ease]);
 
-return { comp: c.name, id: c.id, layers: c.numLayers, copies: N, step: STEP, pivot: PIVOT };
+// Layout: a title block on the left, 0.04 to 0.49 of the width, centred 0.49 down. Not part of the technique.
+// ASSUMED: words, white, Poppins-Bold; sized to the block's width.
+var tt = P.text(c, "Text\rCarousel", { size: args.titleSize || 150, color: [1, 1, 1], font: args.font || "Poppins-Bold", pos: [0.265 * 1920, 0.49 * 1080], name: "title" });
+var tr = tt.sourceRectAtTime(0, false);
+
+return { comp: c.name, id: c.id, layers: c.numLayers, copies: N, step: STEP, pivot: PIVOT, textW: TEXT_W, textH: r0.height, titleW: tr.width, titleH: tr.height, font: l.property("ADBE Text Properties").property("ADBE Text Document").value.font };
