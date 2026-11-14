@@ -41,7 +41,15 @@ test('the prompt body is the canonical prompt, with Codex skill syntax made Clau
   for (const [i, c] of PLAN.evals.entries()) {
     const dir = (await fs.readdir(out)).sort()[i];
     const { head, body } = frontMatter(await fs.readFile(path.join(out, dir, 'prompt.md'), 'utf8'));
-    assert.equal(body.trim(), claudePrompt(c.prompt).trim());
+    if (!c.files?.length) assert.equal(body.trim(), claudePrompt(c.prompt).trim());
+    else {
+      // a planning case with its own files: the canonical prompt, then where each file was copied (and it is there)
+      assert.ok(body.trim().startsWith(claudePrompt(c.prompt).trim()), `case ${c.id}`);
+      for (const f of c.files) {
+        assert.ok(body.includes(`${f} is ${path.join(out, dir, f)}`), `case ${c.id} names ${f}`);
+        await fs.access(path.join(out, dir, f));
+      }
+    }
     assert.match(head, /^max_turns: \d+$/m);
     assert.match(head, /allowed_tools: \[.*Skill.*\]/);
   }
@@ -108,8 +116,8 @@ test('refuses to write into a folder that already holds files', async () => {
   await assert.rejects(writeEvalSuite(CANON, out), /not empty/);
 });
 
-test('the canonical evals: 18 planning cases and the picture cases, ids in order', () => {
-  assert.equal(PLAN.evals.length, 18);
+test('the canonical evals: 19 planning cases and the picture cases, ids in order', () => {
+  assert.equal(PLAN.evals.length, 19);
   assert.deepEqual(CANON.evals.map((c) => c.id), CANON.evals.map((_, i) => i + 1));
   assert.deepEqual(PICTURES.map((c) => c.picture.check), ['keying', 'grade', 'over', 'finish', 'review', 'seat']);
   for (const c of PICTURES) {
