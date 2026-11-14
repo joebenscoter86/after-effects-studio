@@ -217,6 +217,38 @@ test('align writes kept frames, boxes, the timeline and the transcript check; a 
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 
+test('align tracks values by label, writes rows.jsonl, and starts each chapter fresh (review h)', async () => {
+  const dir = await gathered();
+  try {
+    assert.equal(await run(['align', dir], fakes(dir).deps), 0);
+    const kept = (await readJson(join(dir, 'kept.json'))).kept;
+    const rows = (await readFile(join(dir, 'rows.jsonl'), 'utf8')).trim().split('\n').map((l) => JSON.parse(l));
+    assert.equal(rows.length, kept.length);
+    assert.deepEqual(rows[0], { f: kept[0].f, t: kept[0].t, rows: [{ label: 'Amount', value: '50.0', x: 0.3, y: 0.3 }] });
+
+    // the fake shows Amount 50.0 on the first kept frame and 40.0 on every later one
+    const tl = await readJson(join(dir, 'timeline.json'));
+    const intro = tl.chapters[0].sentences.flatMap((s) => s.changes);
+    const tip = tl.chapters[1].sentences.flatMap((s) => s.changes);
+    assert.deepEqual(intro.map((c) => [c.kind, c.label, c.was, c.text]),
+      [['appeared', 'Amount', undefined, '50.0'], ['changed', 'Amount', '50.0', '40.0']]);
+    // a new chapter forgets what it saw: 40.0 is new again, not "no change"
+    assert.deepEqual(tip.map((c) => [c.kind, c.label, c.text]), [['appeared', 'Amount', '40.0']]);
+    assert.match((await readJson(join(dir, 'state.json'))).steps.timeline.note, /1 changed, 2 appeared/);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('align --redo timeline rebuilds from boxes.jsonl without reading text again', async () => {
+  const dir = await gathered();
+  try {
+    assert.equal(await run(['align', dir], fakes(dir).deps), 0);
+    const again = fakes(dir);
+    assert.equal(await run(['align', dir, '--redo', 'timeline'], again.deps), 0);
+    assert.deepEqual(again.calls, {});
+    assert.ok(existsSync(join(dir, 'rows.jsonl')));
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
 test('align takes creator captions first, then whisper, then automatic captions', async () => {
   const creator = await gathered({ info: info({ subtitles: { en: [{ ext: 'json3' }] } }) });
   const autoOnly = await gathered({ whisperFail: true });

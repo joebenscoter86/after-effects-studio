@@ -11,6 +11,10 @@
 // Each step records itself and is skipped once done; files already in <dir>
 // (source.info.json, source.mp4, captions.*.json3, audio.wav, whisper.json) are adopted.
 //
+// align writes boxes.jsonl (recognised text per kept frame) in the text step and rows.jsonl
+// (label and value pairs per kept frame, from boxes.jsonl) in the timeline step, so
+// `--redo timeline` rebuilds the value list without reading text again.
+//
 // Outside actions go through `deps` so tests can pass fakes; the real ones are below.
 // Exit codes: 0 done, 1 a step failed, 2 stopped because the video has no usable words.
 
@@ -23,7 +27,7 @@ import { fileURLToPath } from 'node:url';
 
 import { compareTranscripts, parseJson3, parseWhisperJson, toSentences } from './lib/words.mjs';
 import { measureChanges, noisyCells, pickFrames } from './lib/change.mjs';
-import { diffBoxes, readBoxes } from './lib/screen-text.mjs';
+import { diffRows, readBoxes, toRows } from './lib/screen-text.mjs';
 import { buildTimeline, renderTimelineMarkdown } from './lib/timeline.mjs';
 
 export const STEPS = ['info', 'video', 'captions', 'audio', 'whisper', 'changes', 'frames', 'text', 'timeline'];
@@ -336,18 +340,32 @@ async function align(dir, d, redo) {
       const raw = await readJson(ignorePath);
       ignore = Array.isArray(raw) ? raw : (raw.ignore ?? []);
     }
-    const changes = [];
-    let prev = null;
-    for (const row of boxRows) {
-      if (!row.boxes) continue;
-      if (prev) for (const c of diffBoxes(prev.boxes, row.boxes, { ignore })) changes.push({ ...c, t: row.t, f: row.f });
-      prev = row;
-    }
     const chapters = (info.chapters ?? []).map((c) => ({ title: c.title, start: c.start_time, end: c.end_time }));
+    // Values are tracked by label, not position (the editor zooms and pans the recording),
+    // and each chapter starts with nothing seen.
+    const chapterStarts = chapters.map((c) => c.start).sort((a, b) => a - b);
+    const chapterAt = (t) => chapterStarts.filter((s) => s <= t).length;
+    const changes = [];
+    const rowsByFrame = new Map();
+    const rowLines = [];
+    let seen = new Map();
+    let chapter = null;
+    for (const row of [...boxRows].sort((a, b) => a.t - b.t)) {
+      const rows = row.boxes ? toRows(row.boxes, { ignore }) : [];
+      rowsByFrame.set(row.f, rows);
+      rowLines.push(JSON.stringify({ f: row.f, t: row.t, rows }));
+      if (!row.boxes) continue;
+      const ch = chapterAt(row.t);
+      if (ch !== chapter) { seen = new Map(); chapter = ch; }
+      for (const c of diffRows(seen, rows)) changes.push({ ...c, t: row.t, f: row.f });
+    }
+    await writeFile(join(dir, 'rows.jsonl'), rowLines.join('\n') + (rowLines.length ? '\n' : ''));
     const timeline = buildTimeline({
       video: { ...state.video, wordsFrom: chosen.name },
-      chapters, sentences, kept, changes,
+      chapters, sentences, kept, changes, rowsByFrame,
     });
+    const count = (kind) => changes.filter((c) => c.kind === kind).length;
+    const mentioned = timeline.chapters.reduce((n, c) => n + c.sentences.reduce((m, s) => m + s.mentioned.length, 0), 0);
     await writeFile(join(dir, 'timeline.json'), JSON.stringify(timeline, null, 2) + '\n');
     await writeFile(join(dir, 'timeline.md'), renderTimelineMarkdown(timeline));
     if (other) {
@@ -356,7 +374,8 @@ async function align(dir, d, redo) {
         JSON.stringify({ a: chosen.name, b: other.name, ...cmp }, null, 2) + '\n');
     }
     state.words = chosen.name;
-    return `words from ${chosen.name}; ${sentences.length} sentences, ${kept.length} frames, ${changes.length} text changes`
+    return `words from ${chosen.name}; ${sentences.length} sentences, ${kept.length} frames; `
+      + `${count('changed')} changed, ${count('appeared')} appeared, ${mentioned} named on screen`
       + (other ? `; checked against ${other.name}` : '');
   }))) return 1;
 

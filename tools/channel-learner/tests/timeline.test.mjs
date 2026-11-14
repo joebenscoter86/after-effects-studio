@@ -78,7 +78,9 @@ test('renderTimelineMarkdown shows chapters, times, text, value changes and fram
   assert.match(md, /## Tip 1 \(1:02\.5\)/);
   assert.match(md, /Set the amount to 40\./);
   assert.match(md, /f000120\.png/);
-  assert.match(md, /appeared: Gaussian Blur/);
+  // an appeared text that is not a value (here "Gaussian Blur") is no longer listed: only value-like
+  // first-seen values reach the page ("New values:")
+  assert.doesNotMatch(md, /Gaussian Blur/);
   assert.ok(md.indexOf('Intro') < md.indexOf('Tip 1'), 'chapters in time order');
 });
 
@@ -86,4 +88,84 @@ test('formatTime', () => {
   assert.equal(formatTime(0), '0:00.0');
   assert.equal(formatTime(62.54), '1:02.5');
   assert.equal(formatTime(3725), '1:02:05.0');
+});
+
+// ---------- named on screen, and the short per-sentence lists ----------
+
+const capSentences = [
+  { i: 0, start: 0, end: 4, text: 'Switch the line cap over to a round cap.', words: [] },
+  { i: 1, start: 5, end: 8, text: 'Then lower the opacity of the stroke.', words: [] },
+];
+const capRows = {
+  30: [
+    { label: 'Line Cap', value: 'Butt Cap', x: 0.3, y: 0.6 },
+    { label: 'Opacity', value: '100 %', x: 0.3, y: 0.7 },
+  ],
+  60: [
+    { label: 'Line Cap', value: 'Round Cap', x: 0.3, y: 0.6 },
+    { label: 'Opacity', value: '100 %', x: 0.3, y: 0.7 },
+  ],
+  180: [{ label: 'Opacity', value: '40 %', x: 0.3, y: 0.7 }],
+};
+const capKept = [
+  { f: 30, t: 1, why: 'settle', file: 'frames/f000030.png' },
+  { f: 60, t: 2, why: 'settle', file: 'frames/f000060.png' },
+  { f: 180, t: 6, why: 'settle', file: 'frames/f000180.png' },
+];
+
+test('mentioned: rows whose label the sentence names, once per label, last frame wins (review f)', () => {
+  for (const rowsByFrame of [capRows, new Map(Object.entries(capRows).map(([k, v]) => [Number(k), v]))]) {
+    const tl = buildTimeline({ video, chapters: [], sentences: capSentences, kept: capKept, changes: [], rowsByFrame });
+    const [s0, s1] = tl.chapters[0].sentences;
+    assert.deepEqual(s0.mentioned, [{ label: 'Line Cap', value: 'Round Cap', f: 60 }]);
+    assert.deepEqual(s1.mentioned, [{ label: 'Opacity', value: '40 %', f: 180 }]);
+  }
+  // without rows every sentence still has an empty list
+  const bare = buildTimeline({ video, chapters: [], sentences: capSentences, kept: capKept, changes: [] });
+  assert.deepEqual(bare.chapters[0].sentences[0].mentioned, []);
+});
+
+test('mentioned: a label with no word of three letters or more is never named; a word must match whole', () => {
+  const rowsByFrame = { 30: [{ label: 'IT', value: '100 %', x: 0, y: 0 }, { label: 'Cap', value: 'Round Cap', x: 0, y: 0 }] };
+  const tl = buildTimeline({ video, chapters: [], sentences: [{ i: 0, start: 0, end: 4, text: 'Is it capped? Pick a cap.', words: [] }],
+    kept: [capKept[0]], changes: [], rowsByFrame });
+  assert.deepEqual(tl.chapters[0].sentences[0].mentioned.map((m) => m.label), ['Cap']);
+});
+
+test('renderTimelineMarkdown: Changed, New values (value-like only), Named on screen, frames with why', () => {
+  const tl = buildTimeline({
+    video, chapters: [], sentences: capSentences, kept: capKept, rowsByFrame: capRows,
+    changes: [
+      { kind: 'changed', label: 'Line Cap', was: 'Butt Cap', text: 'Round Cap', x: 0, y: 0, t: 2 },
+      { kind: 'appeared', label: 'Gap', text: '67.0', x: 0, y: 0, t: 1 },
+      { kind: 'appeared', label: 'Layer Name', text: 'Shape Layer 1', x: 0, y: 0, t: 1 },
+    ],
+  });
+  const md = renderTimelineMarkdown(tl);
+  assert.match(md, /Changed: Line Cap: Butt Cap → Round Cap/);
+  assert.match(md, /New values: Gap: 67\.0/);
+  assert.doesNotMatch(md, /Shape Layer 1/);
+  assert.match(md, /Named on screen: Line Cap: Round Cap/);
+  assert.match(md, /f000060\.png \(settle\)/);
+  // the second sentence has no changes: no empty Changed or New values line under it
+  const second = md.slice(md.indexOf('Then lower'));
+  assert.doesNotMatch(second, /Changed:|New values:/);
+});
+
+test('renderTimelineMarkdown caps each list at 12 with (+N more) (review g)', () => {
+  const changes = Array.from({ length: 15 }, (_, k) => ({ kind: 'appeared', label: `Prop ${k}`, text: `${k}.0`, x: 0, y: 0, t: 1 }));
+  const md = renderTimelineMarkdown(buildTimeline({ video, chapters: [], sentences: capSentences.slice(0, 1), kept: [], changes }));
+  const line = md.split('\n').find((l) => l.includes('New values:'));
+  assert.match(line, /Prop 11: 11\.0 \(\+3 more\)$/);
+  assert.doesNotMatch(line, /Prop 12/);
+});
+
+test('renderTimelineMarkdown: a label changed several times in a sentence shows first → last; a round trip shows nothing', () => {
+  const ch = (label, was, text, t) => ({ kind: 'changed', label, was, text, x: 0, y: 0, t });
+  const md = renderTimelineMarkdown(buildTimeline({
+    video, chapters: [], sentences: capSentences.slice(0, 1), kept: [],
+    changes: [ch('Gap', '10.0', '101.0', 1), ch('Layer', 'None', 'fx', 1.5), ch('Gap', '101.0', '67.0', 2), ch('Layer', 'fx', 'None', 3)],
+  }));
+  const line = md.split('\n').find((l) => l.includes('Changed:'));
+  assert.equal(line, '  - Changed: Gap: 10.0 → 67.0');
 });
