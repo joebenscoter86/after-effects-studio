@@ -1,40 +1,40 @@
-# Techniques from one video (25 recipes, 1 proven)
+# Techniques from one video (25 recipes, 24 proven)
 
-Written by the channel learner from the video's narration and screen together, then checked against the video by a second reader. Every recipe here passed that check; none is in the plugin. `status: proven` means it was built in After Effects from the recipe alone, compared with the tutorial's own result, and accepted by Joe (1 of 25); `status: unproven` means it has not been.
+Written by the channel learner from the video's narration and screen together, then checked against the video by a second reader. Every recipe here passed that check; none is in the plugin. `status: proven` means it was built in After Effects from the recipe alone, compared with the tutorial's own result, and accepted by Joe (24 of 25); `status: unproven` means it has not been.
 
 Each step is marked `said` (narrated), `shown` (on screen; `fNNNNNN` is a frame in the local study folder, frame number divided by the video's frame rate is seconds) or `inferred` (our reading). The `source` and frame references are for checking and stay out of the plugin. Credits: `CREDITS.md`.
 
 | # | Technique | Jobs | Check passed in round | Status |
 |---|---|---|---|---|
-| 01 | Round dots from a shape stroke | lines and shapes; layout and repetition | 1 | unproven |
-| 02 | Arc with a dot at each end | lines and shapes | 2 | unproven |
-| 03 | Fade both ends of an open stroke with Taper | lines and shapes; glow and colour | 2 | unproven |
-| 04 | Text carousel from rotated copies around one pivot | layout and repetition; type | 1 | unproven |
-| 05 | Even time stagger by dragging a whole stack at once | workflow; layout and repetition | 2 | unproven |
-| 06 | Tilted 3D ring of discs orbiting a centre | camera and 3D; layout and repetition | 2 | unproven |
-| 07 | Keep an orbiting 3D layer turned towards the camera | camera and 3D; workflow | 2 | unproven |
+| 01 | Round dots from a shape stroke | lines and shapes; layout and repetition | 1 | proven |
+| 02 | Arc with a dot at each end | lines and shapes | 2 | proven |
+| 03 | Fade both ends of an open stroke with Taper | lines and shapes; glow and colour | 2 | proven |
+| 04 | Text carousel from rotated copies around one pivot | layout and repetition; type | 1 | proven |
+| 05 | Even time stagger by dragging a whole stack at once | workflow; layout and repetition | 2 | proven |
+| 06 | Tilted 3D ring of discs orbiting a centre | camera and 3D; layout and repetition | 2 | proven |
+| 07 | Keep an orbiting 3D layer turned towards the camera | camera and 3D; workflow | 2 | proven |
 | 08 | Perform puppet-pin motion live with the mouse | workflow; B-roll scenes | 1 | unproven |
-| 09 | Slide a background endlessly with mirrored tiling | B-roll scenes; layout and repetition | 2 | unproven |
-| 10 | Leaf-shaped particles from any graphic | texture; energy and impact; B-roll scenes | 2 | unproven |
+| 09 | Slide a background endlessly with mirrored tiling | B-roll scenes; layout and repetition | 2 | proven |
+| 10 | Leaf-shaped particles from any graphic | texture; energy and impact; B-roll scenes | 2 | proven |
 | 11 | Soft embossed finish for white shapes on a pale background | depth and finish; shadows and light; glow and colour | 4 | proven |
-| 12 | Long soft shadow from a radially blurred black copy | shadows and light; depth and finish | 2 | unproven |
-| 13 | Fine dot-grid background from a ball-grid effect | texture; layout and repetition | 2 | unproven |
-| 14 | Real cast shadows on an invisible 3D floor | shadows and light; camera and 3D; depth and finish | 2 | unproven |
-| 15 | Un-clip an effect with Grow Bounds | workflow; shadows and light | 1 | unproven |
-| 16 | Keep a chosen layer sharp while the camera travels | camera and 3D; depth and finish | 2 | unproven |
-| 17 | Tie a 3D scene together with depth fog over the precomp | depth and finish; camera and 3D; glow and colour | 1 | unproven |
-| 18 | Soft word-by-word rise-and-fade text reveal | type | 2 | unproven |
-| 19 | Text that runs round a drawn path | type; lines and shapes | 1 | unproven |
-| 20 | Two stacked glows for a soft cinematic bloom | glow and colour; depth and finish | 3 | unproven |
-| 21 | Paper texture through a title matte, with roughened edges | texture; type; depth and finish | 3 | unproven |
-| 22 | Tuck helper layers out of the timeline with the shy switch | workflow | 2 | unproven |
-| 23 | Dial motion blur strength with the comp's shutter angle | energy and impact; workflow | 2 | unproven |
-| 24 | Keep a scaled-up precomp of vector art crisp | workflow; depth and finish | 1 | unproven |
-| 25 | Frame video in a custom shape with a track matte | layout and repetition; B-roll scenes | 3 | unproven |
+| 12 | Long soft shadow from a radially blurred black copy | shadows and light; depth and finish | 2 | proven |
+| 13 | Fine dot-grid background from a ball-grid effect | texture; layout and repetition | 2 | proven |
+| 14 | Real cast shadows on an invisible 3D floor | shadows and light; camera and 3D; depth and finish | 2 | proven |
+| 15 | Un-clip an effect with Grow Bounds | workflow; shadows and light | 1 | proven |
+| 16 | Keep a chosen layer sharp while the camera travels | camera and 3D; depth and finish | 2 | proven |
+| 17 | Tie a 3D scene together with depth fog over the precomp | depth and finish; camera and 3D; glow and colour | 1 | proven |
+| 18 | Soft word-by-word rise-and-fade text reveal | type | 2 | proven |
+| 19 | Text that runs round a drawn path | type; lines and shapes | 1 | proven |
+| 20 | Two stacked glows for a soft cinematic bloom | glow and colour; depth and finish | 3 | proven |
+| 21 | Paper texture through a title matte, with roughened edges | texture; type; depth and finish | 3 | proven |
+| 22 | Tuck helper layers out of the timeline with the shy switch | workflow | 2 | proven |
+| 23 | Dial motion blur strength with the comp's shutter angle | energy and impact; workflow | 2 | proven |
+| 24 | Keep a scaled-up precomp of vector art crisp | workflow; depth and finish | 1 | proven |
+| 25 | Frame video in a custom shape with a track matte | layout and repetition; B-roll scenes | 3 | proven |
 
 ## Round dots from a shape stroke
 id: 01-dotted-stroke
-status: unproven
+status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
 source: YBeMmC43Q1U 18–39 s
 jobs: lines and shapes; layout and repetition
 what it does for a beat: Turns any stroked line or outline into an evenly spaced row or ring of round dots with no extra layers, for loaders, orbit rings, borders and decorative circles around a title.
@@ -69,7 +69,7 @@ unknowns: The ellipse size. The ring fills roughly a fifth of the comp's width i
 
 ## Arc with a dot at each end
 id: 02-line-with-end-dots
-status: unproven
+status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
 source: YBeMmC43Q1U 39–58 s
 jobs: lines and shapes
 what it does for a beat: A thin line or arc with a round dot at each end, built inside one shape layer, for orbit segments, connector lines, data callouts and ring loaders.
@@ -109,7 +109,7 @@ unknowns: The ellipse size (the inferred 470 px does not match the roughly 400 p
 
 ## Fade both ends of an open stroke with Taper
 id: 03-tapered-stroke
-status: unproven
+status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
 source: YBeMmC43Q1U 58–68 s
 jobs: lines and shapes; glow and colour
 what it does for a beat: Makes an open stroke thin to nothing at both ends, so a light streak, horizon arc or swoosh fades out softly instead of stopping in a hard square end.
@@ -151,7 +151,7 @@ unknowns: The Trim Paths start and end, and the ellipse size, which set the arc'
 
 ## Text carousel from rotated copies around one pivot
 id: 04-carousel-by-rotation
-status: unproven
+status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
 source: YBeMmC43Q1U 68.0–88.8 s
 jobs: layout and repetition; type
 what it does for a beat: Builds a wheel of repeated words (or any layer) curving around an off-screen pivot. Use it for list reveals, title wheels and "rolodex" type moments without expressions or plugins.
@@ -184,7 +184,7 @@ unknowns: exact pivot coordinates and comp size; font size; text colour value; h
 
 ## Even time stagger by dragging a whole stack at once
 id: 05-stagger-layers-in-time
-status: unproven
+status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
 source: YBeMmC43Q1U 88.1–93.4 s
 jobs: workflow; layout and repetition
 what it does for a beat: Makes a stack of copies appear one after another at an even interval, so items of a list, ring or grid arrive in sequence. A quick replacement for Sequence Layers or hand-nudging each bar.
@@ -211,7 +211,7 @@ unknowns: the exact layer grabbed for the drag; whether a whole-frame offset is 
 
 ## Tilted 3D ring of discs orbiting a centre
 id: 06-3d-orbit-rings
-status: unproven
+status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
 source: YBeMmC43Q1U 93.0–112.0 s
 jobs: camera and 3D; layout and repetition
 what it does for a beat: Wraps a central object in a tilted, torus-like ring of repeated flat shapes that pass in front of and behind it. Use it for an orbit or "planet with rings" look, or any hero object that needs a 3D halo, with no 3D plugin.
@@ -252,7 +252,7 @@ unknowns: comp size; disc ellipse size before scaling and exact colours; size an
 
 ## Keep an orbiting 3D layer turned towards the camera
 id: 07-face-the-camera
-status: unproven
+status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
 source: YBeMmC43Q1U 112–127 s
 jobs: camera and 3D; workflow
 what it does for a beat: When a flat 3D layer circles around something (a moon round a planet, an icon on an orbit), it turns edge-on and thins out at parts of the loop; this keeps it reading as a full, flat shape the whole way round.
@@ -316,7 +316,7 @@ unknowns: the exact path the pin was dragged along; Record Options settings (spe
 
 ## Slide a background endlessly with mirrored tiling
 id: 09-endless-background-tile
-status: unproven
+status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
 source: YBeMmC43Q1U 139–152 s
 jobs: B-roll scenes; layout and repetition
 what it does for a beat: For a background that has to keep moving longer than the artwork is wide, such as the view out of a moving vehicle's window; the image is repeated and slid along without visible seams.
@@ -351,7 +351,7 @@ unknowns: the Tile Center expression that drives the finished playback (only its
 
 ## Leaf-shaped particles from any graphic
 id: 10-graphic-as-particles
-status: unproven
+status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
 source: YBeMmC43Q1U 152–171 s
 jobs: texture; energy and impact; B-roll scenes
 what it does for a beat: Fill a scene with drifting copies of a small graphic (leaves, petals, confetti, logos) without hand-placing them; the particle system births, spins and moves each copy for you.
@@ -461,7 +461,7 @@ unknowns: the settings of the shadow layers in this scene (effects, blur centres
 
 ## Long soft shadow from a radially blurred black copy
 id: 12-long-soft-shadow
-status: unproven
+status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
 source: YBeMmC43Q1U 224–252 s
 jobs: shadows and light; depth and finish
 what it does for a beat: Gives flat shapes or letters a long, fading directional shadow, as if lit by a low sun, which reads especially well on bright, pale backgrounds.
@@ -498,7 +498,7 @@ unknowns: the shadow layer's opacity or blend mode (not shown; shadows read as m
 
 ## Fine dot-grid background from a ball-grid effect
 id: 13-dot-grid-texture
-status: unproven
+status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
 source: YBeMmC43Q1U 252–272 s
 jobs: texture; layout and repetition
 what it does for a beat: A quick, quiet design texture for a plain or pale background, so an empty backdrop reads as designed rather than blank without pulling focus from the type or graphics in front.
@@ -530,7 +530,7 @@ unknowns: Why the dots read mid grey rather than black (layer opacity and blend 
 
 ## Real cast shadows on an invisible 3D floor
 id: 14-3d-floor-shadows
-status: unproven
+status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
 source: YBeMmC43Q1U 272–309 s
 jobs: shadows and light; camera and 3D; depth and finish
 what it does for a beat: Grounds flat 3D layers in a scene by giving them soft, believable shadows on the ground, without letting the light change the colour of the graphics themselves.
@@ -580,7 +580,7 @@ unknowns: The comp's camera (default active camera shown, no custom camera given
 
 ## Un-clip an effect with Grow Bounds
 id: 15-grow-bounds-fix
-status: unproven
+status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
 source: YBeMmC43Q1U 309–321 s
 jobs: workflow; shadows and light
 what it does for a beat: Fixes effects that are cut off with a hard edge because the layer's bounding box is too small, for example a blurred or stretched shadow running past the edge of its source artwork.
@@ -610,7 +610,7 @@ unknowns: how the shadow copy is made and positioned (outside this tip); the Pix
 
 ## Keep a chosen layer sharp while the camera travels
 id: 16-lock-focus-to-layer
-status: unproven
+status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
 source: YBeMmC43Q1U 321–341 s
 jobs: camera and 3D; depth and finish
 what it does for a beat: Use when a camera push or drift through a layered 3D scene should keep the hero element crisp the whole time, so depth of field never drifts off the subject as the camera's distance to it changes.
@@ -639,7 +639,7 @@ unknowns: camera Aperture, Blur Level, F-Stop and Focal Length; whether depth of
 
 ## Tie a 3D scene together with depth fog over the precomp
 id: 17-depth-fog
-status: unproven
+status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
 source: YBeMmC43Q1U 341–356 s
 jobs: depth and finish; camera and 3D; glow and colour
 what it does for a beat: Use when separately made 3D layers look pasted together; a coloured depth fog over the finished scene lifts the darks and sinks the distance into one atmosphere.
@@ -673,7 +673,7 @@ unknowns: exact Fog Color value (only sampled from the video); how the precomp's
 
 ## Soft word-by-word rise-and-fade text reveal
 id: 18-smooth-text-reveal
-status: unproven
+status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
 source: YBeMmC43Q1U 356–383 s
 jobs: type
 what it does for a beat: Use for a headline or tagline that should arrive gently, words sliding up and fading in one after another with a smooth overlap, with no per-word keyframes.
@@ -712,7 +712,7 @@ unknowns: whether Position 115 or 75 was the intended final value (75 is what th
 
 ## Text that runs round a drawn path
 id: 19-text-on-a-path
-status: unproven
+status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
 source: YBeMmC43Q1U 383–404 s
 jobs: type; lines and shapes
 what it does for a beat: Wrap a repeated line of type round a circle (or any shape you draw) and slide it along the path, so a badge or seal of words circles a central title.
@@ -749,7 +749,7 @@ unknowns: exact phrase length/number of repeats needed; circle diameter not give
 
 ## Two stacked glows for a soft cinematic bloom
 id: 20-two-pass-glow
-status: unproven
+status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
 source: YBeMmC43Q1U 404–421 s
 jobs: glow and colour; depth and finish
 what it does for a beat: A finishing pass on bright line art or type on a dark ground: one tight glow for a halo near the edges plus one very wide glow for a faint bloom, without looking blown out.
@@ -782,7 +782,7 @@ unknowns: the duplicate glow is never shown, so which glow carries 39 and which 
 
 ## Paper texture through a title matte, with roughened edges
 id: 21-texture-through-a-matte
-status: unproven
+status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
 source: YBeMmC43Q1U 421–445 s
 jobs: texture; type; depth and finish
 what it does for a beat: Make a title look printed or stamped into a worn paper texture instead of floating on top of it: the texture itself forms the letters, brightened, and the letter edges are broken up.
@@ -825,7 +825,7 @@ unknowns: the texture source; title font, size and colour beyond black; exact cu
 
 ## Tuck helper layers out of the timeline with the shy switch
 id: 22-hide-layers-shy
-status: unproven
+status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
 source: YBeMmC43Q1U 445–461 s
 jobs: workflow
 what it does for a beat: When a comp has dozens of support layers (mattes, lines, labels) and you only want to touch a few, mark the rest shy and hide them from the layer stack without precomposing. The comp structure and the render stay unchanged.
@@ -850,7 +850,7 @@ unknowns: Which layers were marked shy before the recording began: f026777 shows
 
 ## Dial motion blur strength with the comp's shutter angle
 id: 23-shutter-angle-blur
-status: unproven
+status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
 source: YBeMmC43Q1U 461–475 s
 jobs: energy and impact; workflow
 what it does for a beat: When motion blur is on but reads too subtle (or too smeary), change the composition's shutter angle to set how long each frame's blur streak is, without touching the animation.
@@ -882,7 +882,7 @@ unknowns: The motion behind the effect (how the ring of words is animated, its s
 
 ## Keep a scaled-up precomp of vector art crisp
 id: 24-sharp-scaled-precomp
-status: unproven
+status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
 source: YBeMmC43Q1U 475–488 s
 jobs: workflow; depth and finish
 what it does for a beat: When a precomp built from shape and text layers is pushed far past 100% (a big push-in or a hero zoom), turn on the layer's collapse/rasterize switch so the vector contents are redrawn at the new size instead of being enlarged as pixels.
@@ -907,7 +907,7 @@ unknowns: Precomp and comp sizes; whether the scale was keyframed (no stopwatch 
 
 ## Frame video in a custom shape with a track matte
 id: 25-custom-media-frame
-status: unproven
+status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
 source: YBeMmC43Q1U 488–505 s
 jobs: layout and repetition; B-roll scenes
 what it does for a beat: When a photo or clip should sit in a designed window rather than a plain rectangle (for example, a cut-out that leaves room for a headline), draw any shape and use it as the clip's matte.

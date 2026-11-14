@@ -2,7 +2,7 @@
 
 ## The short version
 
-- **All 25 techniques from the first video are built in After Effects on designed artwork** and checked against the tutorial's own result. On the reviewers' measurements, 23 match and 1 is proven on Joe's word (11). One cannot be proven by script: 8, puppet pins, is done by hand.
+- **24 of the 25 techniques are proven**: built in After Effects on designed artwork from their recipes alone, checked against the tutorial, and accepted by Joe ("yes they all match"). The 25th, 8 (puppet pins), is done by hand and stays unproven.
 - **The tool learned from its failures.** Every miss today is written into its prompts and `tools/channel-learner/LESSONS.md`, so the next video starts from them.
 - **Nothing is pushed.** About 95 local commits on `adobe/channel-learner`; the repository is public.
 
