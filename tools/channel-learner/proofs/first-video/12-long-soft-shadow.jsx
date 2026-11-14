@@ -3,7 +3,9 @@
 // parented to it, turned black with Fill, streaked with CC Radial Fast Blur (Amount 95, Zoom Standard, centre up and
 // to the left of the object so the streak runs down and to the right), then softened with Gaussian Blur 25.6.
 // Switch-off for a "before" frame: disable every layer whose name starts with "TECH shadow".
-// Since the 2026-11-14 correction the title's shadows are one black letter layer per letter ("TECH shadow letter ..."), not a copy of each word.
+// Second 2026-11-14 correction: the title throws no shadow by default (the tutorial's letters throw none that can be
+// measured; only the four shapes do). args.letterShadows = true brings back one black letter layer per letter
+// ("TECH shadow letter ..."); with it, args.perLetter = false gives one copy per word instead.
 //
 // VERIFY: match names "ADBE Fill", "CC Radial Fast Blur", "ADBE Gaussian Blur 2" (given in the recipe).
 // VERIFY: property display names: Fill "Color", "Opacity"; CC Radial Fast Blur "Center", "Amount", "Zoom"; Gaussian Blur "Blurriness", "Blur Dimensions", "Repeat Edge Pixels".
@@ -90,7 +92,11 @@ function letterShadows(word, str, size) {
 }
 var isLetter = [], letterParent = [];
 var perLetter = (args.perLetter !== false);
-if (perLetter) {
+// Second correction (2026-11-14, from the review): the title's shadows are off unless args.letterShadows is true.
+var titleShadows = (args.letterShadows === true);
+if (!titleShadows) {
+  // no shadow for the title: the two words stay as they are
+} else if (perLetter) {
   letterShadows(up, "Long", args.upSize || 180);
   letterShadows(lo, "Shadow", args.loSize || 210);
 } else {
@@ -102,6 +108,10 @@ if (perLetter) {
 // one centre across an object open by about 2 * atan(half the object's width across the shadow / centre distance), so
 // distance = (width across / 2) / tan(spread / 2). args.spread is that spread in degrees; args.dist forces one distance.
 // The first build used 220 px for shapes and 300 px for whole title words (spreads of about 25 to 110 degrees).
+// Tried once (2026-11-14) and not kept: a centre twice as far for the left bar alone (2100 px against 1045, to halve how
+// fast its band widens). The render came out identical pixel for pixel, although Center read back as (-472, -1305)
+// against (-129, -308): both lie outside the frame, so the effect seems to stop the centre at the frame's edge. A centre
+// placed past the edge of the frame therefore does not narrow the spread any further.
 var SPREAD = (args.spread || 15) * Math.PI / 180;
 function centreDistance(idx) {
   if (args.dist) return args.dist;
@@ -158,4 +168,4 @@ for (i = 0; i < objects.length; i++) {
   names.push(s.name);
 }
 
-return { comp: c.name, layers: c.numLayers, upper: [upR.width, upR.height], lower: [loR.width, loR.height], switchOff: names.join(", "), centreDistances: dists, shadowOpacity: shadowOpacity, fillOpacity: fxp(s, "Fill", "Opacity").value };
+return { comp: c.name, layers: c.numLayers, upper: [upR.width, upR.height], lower: [loR.width, loR.height], switchOff: names.join(", "), letterShadows: titleShadows, centreDistances: dists, shadowOpacity: shadowOpacity, fillOpacity: fxp(s, "Fill", "Opacity").value };
