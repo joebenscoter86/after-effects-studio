@@ -285,7 +285,7 @@ describe("e2e feedback fixes", () => {
     expect(data.result.frames).toHaveLength(3);
     for (const [i, frame] of data.result.frames.entries()) {
       expect(frame.ok, `frame ${i} failed`).toBe(true);
-      expect(frame.writtenTo).toContain(`multi_${i}.png`);
+      expect(frame.writtenTo).toMatch(new RegExp(`multi_[0-9a-f]{8}_${i}\\.png$`));
       const stat = await fs.stat(frame.writtenTo as string);
       expect(stat.size).toBeGreaterThan(0);
     }

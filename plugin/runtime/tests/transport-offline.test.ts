@@ -1,7 +1,8 @@
 // Transport behaviour that needs no After Effects: the per-id mailbox, the
-// timeout path, and the spawn-failure path. AfterFX.exe is replaced with a
-// stand-in that can never answer, so these run identically on a machine
-// without AE installed.
+// timeout path, and the spawn-failure path. The launcher is a stand-in in
+// this process that starts and exits without delivering anything (STAND_IN
+// below), so nothing is spawned at all — not osascript, not AfterFX.exe — and
+// these run identically on any machine, with or without AE installed.
 //
 // Every transport here is built with `instance: null`: these are PUSH-path
 // tests, and with nothing pinned the transport would route to a live agent
@@ -24,7 +25,14 @@ import {
   requestPathFor,
   responsePathFor,
 } from "../src/config.js";
-import { FileIpcTransport, isAutomationDenial } from "../src/transport/FileIpcTransport.js";
+import { EventEmitter } from "node:events";
+
+import {
+  FileIpcTransport,
+  isAutomationDenial,
+  type LaunchedProcess,
+  type SpawnFn,
+} from "../src/transport/FileIpcTransport.js";
 import { setOsascriptRunner, setPowerShellRunner } from "../src/transport/dialogs.js";
 
 // The transport scans for After Effects dialogs on its failure paths. Never
@@ -36,19 +44,27 @@ beforeAll(() => {
 afterAll(() => restoreRunners.forEach((restore) => restore()));
 
 /**
- * An executable that exists and starts, but will never write a response.
+ * A file that exists, for `resolveAfterFxPath` to stat. Nothing runs it: every
+ * transport here launches STAND_IN instead.
  *
- * Per-platform because `resolveAfterFxPath` stats it: a Windows-only path made
- * every timeout and busy-lock test fail with AE_NOT_FOUND on Linux CI, before
- * the behaviour under test could run at all. (`/usr/bin/true`: macOS has no
- * `/bin/true`.)
+ * Per-platform because a Windows-only path made every timeout and busy-lock
+ * test fail with AE_NOT_FOUND on Linux CI, before the behaviour under test
+ * could run at all. (`/usr/bin/true`: macOS has no `/bin/true`.)
  */
 const INERT_EXE = process.platform === "win32" ? "C:/Windows/System32/cmd.exe" : "/usr/bin/true";
 
-// On macOS the push path is `osascript … tell application <bundle> to
-// DoScript`, and osascript fails at once against an executable that is not an
-// app (TRANSPORT) instead of leaving the request unconsumed until TIMEOUT.
-const itUnlessDarwin = it.skipIf(process.platform === "darwin");
+/** A launcher that starts and exits at once, delivering nothing: AE never answers. */
+class GoneAtOnce extends EventEmitter implements LaunchedProcess {
+  pid = 4_194_400; // past every platform's pid range: no real process is ever taken for it
+  stderr = null;
+  constructor() {
+    super();
+    setTimeout(() => this.emit("exit", 0), 10);
+  }
+  kill(): void {}
+  unref(): void {}
+}
+const STAND_IN: SpawnFn = () => new GoneAtOnce();
 
 const savedExe = process.env.AE_MCP_EXE;
 
@@ -127,10 +143,10 @@ describe("timeout", () => {
 
   beforeEach(() => {
     process.env.AE_MCP_EXE = INERT_EXE;
-    transport = new FileIpcTransport({ instance: null });
+    transport = new FileIpcTransport({ instance: null, spawn: STAND_IN });
   });
 
-  itUnlessDarwin("returns TIMEOUT and reclaims the unconsumed request", async () => {
+  it("returns TIMEOUT and reclaims the unconsumed request", async () => {
     const before = await mailboxEntries(REQUEST_PREFIX);
     const res = await transport.execute({
       code: "return 1;",
@@ -178,7 +194,7 @@ describe("busy lock", () => {
     await fs.writeFile(BUSY_LOCK_PATH, JSON.stringify({ pid: 0, id: "foreign" }), "utf8");
     const before = await mailboxEntries(REQUEST_PREFIX);
 
-    const transport = new FileIpcTransport({ instance: null });
+    const transport = new FileIpcTransport({ instance: null, spawn: STAND_IN });
     const res = await transport.execute({
       code: "return 1;",
       label: "offline_busy",
@@ -193,12 +209,12 @@ describe("busy lock", () => {
     await expect(fs.access(BUSY_LOCK_PATH)).resolves.toBeUndefined();
   });
 
-  itUnlessDarwin("breaks a stale lock and proceeds with the call", async () => {
+  it("breaks a stale lock and proceeds with the call", async () => {
     await fs.writeFile(BUSY_LOCK_PATH, JSON.stringify({ pid: 0, id: "orphan" }), "utf8");
     const expired = new Date(Date.now() - BUSY_LOCK_STALE_MS - 60_000);
     await fs.utimes(BUSY_LOCK_PATH, expired, expired);
 
-    const transport = new FileIpcTransport({ instance: null });
+    const transport = new FileIpcTransport({ instance: null, spawn: STAND_IN });
     const res = await transport.execute({
       code: "return 1;",
       label: "offline_stale_lock",
@@ -219,7 +235,7 @@ describe("busy lock", () => {
     // and retaken by a waiter. Releasing must not delete the successor's lock,
     // or a third caller gets a dispatch slot while the second is still driving
     // AE: the collision the lock exists to prevent.
-    const transport = new FileIpcTransport({ instance: null });
+    const transport = new FileIpcTransport({ instance: null, spawn: STAND_IN });
     const call = transport.execute({
       code: "return 1;",
       label: "offline_lock_stolen",
@@ -236,13 +252,13 @@ describe("busy lock", () => {
     expect(held.id).toBe("successor");
   });
 
-  itUnlessDarwin(
+  it(
     "relaunches the dispatcher while the request stays unconsumed",
     async () => {
       // AE refusing our script (its "second script" warning) leaves the request
       // file unconsumed — the transport must try again rather than wait out the
       // whole timeout on a launch that already died.
-      const transport = new FileIpcTransport({ instance: null });
+      const transport = new FileIpcTransport({ instance: null, spawn: STAND_IN });
       const res = await transport.execute({
         code: "return 1;",
         label: "offline_relaunch",
@@ -264,7 +280,7 @@ describe("undo group flag", () => {
   it("travels to the dispatcher as an explicit field", async () => {
     // undo/redo must reach AE with no group open (see tests/undo-group.test.ts).
     // The flag is only worth anything if it survives serialization.
-    const transport = new FileIpcTransport({ instance: null });
+    const transport = new FileIpcTransport({ instance: null, spawn: STAND_IN });
     const call = transport.execute({
       code: "return 1;",
       label: "offline_undo_off",
@@ -280,7 +296,7 @@ describe("undo group flag", () => {
   it("is sent as true when the caller says nothing", async () => {
     // Explicit rather than omitted: "group this" must not ride on a key that
     // survives the trip.
-    const transport = new FileIpcTransport({ instance: null });
+    const transport = new FileIpcTransport({ instance: null, spawn: STAND_IN });
     const call = transport.execute({
       code: "return 1;",
       label: "offline_undo_default",
@@ -354,7 +370,13 @@ describe("spawn failure", () => {
     await fs.writeFile(notAnExe, "not a program", "utf8");
     process.env.AE_MCP_EXE = notAnExe;
 
-    const transport = new FileIpcTransport({ instance: null });
+    // What spawning such a file does, without spawning it: 'error' on the next tick.
+    const cannotStart: SpawnFn = () => {
+      const child = Object.assign(new EventEmitter(), { stderr: null, kill: () => {}, unref: () => {} });
+      setTimeout(() => child.emit("error", Object.assign(new Error(`spawn ${notAnExe} EACCES`), { code: "EACCES" })), 5);
+      return child as unknown as LaunchedProcess;
+    };
+    const transport = new FileIpcTransport({ instance: null, spawn: cannotStart });
     const before = await mailboxEntries(REQUEST_PREFIX);
     const started = Date.now();
     const res = await transport.execute({

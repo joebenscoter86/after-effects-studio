@@ -1,0 +1,243 @@
+// Test clips with known moves, drawn frame by frame here and encoded with ffmpeg when a test runs; nothing is committed
+// as media. Each clip carries its truth: where the moving thing is on every frame, its scale and opacity, and the frames
+// of any cut or one-frame swap. Used by the video tests (shot list, census, tracker, fits).
+import { execFile } from "node:child_process";
+import { promises as fs } from "node:fs";
+import path from "node:path";
+
+export const W = 384;
+export const H = 216;
+export const FPS = 30;
+
+/** A deterministic random generator (the same textures on every run). */
+export function rng(seed: number): () => number {
+  let s = seed >>> 0 || 1;
+  return () => {
+    s ^= s << 13;
+    s ^= s >>> 17;
+    s ^= s << 5;
+    return (s >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * After Effects' ease between two keys with zero speed at both ends: the time axis is a cubic bezier with control points
+ * at outInfluence and 1 - inInfluence, the value axis rises 0, 0, 1, 1. outInfluence and inInfluence are 0..1.
+ */
+export function aeEase(t: number, outInfluence: number, inInfluence: number): number {
+  if (t <= 0) return 0;
+  if (t >= 1) return 1;
+  const x1 = outInfluence, x2 = 1 - inInfluence;
+  const bx = (u: number) => 3 * (1 - u) * (1 - u) * u * x1 + 3 * (1 - u) * u * u * x2 + u * u * u;
+  let lo = 0, hi = 1;
+  for (let i = 0; i < 50; i++) { const m = (lo + hi) / 2; if (bx(m) < t) lo = m; else hi = m; }
+  const u = (lo + hi) / 2;
+  return 3 * (1 - u) * u * u + u * u * u;
+}
+
+/** A damped spring from 0 to 1: damping ratio zeta (< 1 overshoots), natural frequency omega (radians a second). */
+export function spring(tSeconds: number, zeta: number, omega: number): number {
+  if (tSeconds <= 0) return 0;
+  const wd = omega * Math.sqrt(1 - zeta * zeta);
+  return 1 - Math.exp(-zeta * omega * tSeconds) * (Math.cos(wd * tSeconds) + ((zeta * omega) / wd) * Math.sin(wd * tSeconds));
+}
+
+/** A textured patch: blocks of light and dark with a diagonal gradient, so a match locks on it and on nothing else. */
+function patchTexture(size: number, seed: number): Uint8Array {
+  const r = rng(seed), out = new Uint8Array(size * size * 3), cell = Math.max(4, Math.round(size / 6));
+  const cells: number[] = [];
+  for (let i = 0; i < 64; i++) cells.push(r());
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+    const c = cells[(Math.floor(y / cell) * 8 + Math.floor(x / cell)) % 64], g = (x + y) / (2 * size);
+    const v = 40 + 180 * (0.65 * c + 0.35 * g), o = (y * size + x) * 3;
+    out[o] = Math.min(255, v + 30); out[o + 1] = v; out[o + 2] = Math.max(0, v - 40);
+  }
+  return out;
+}
+
+/** A background: flat grey, or a scrolling noise texture (offset px to the left per frame). */
+function background(kind: "flat" | "texture", seed: number): (frame: number) => Uint8Array {
+  if (kind === "flat") { const b = new Uint8Array(W * H * 3).fill(70); return () => b; }
+  const r = rng(seed), tw = W * 2, tex = new Uint8Array(tw * H);
+  for (let i = 0; i < tex.length; i++) tex[i] = 50 + Math.floor(r() * 60);
+  return (frame) => {
+    const b = new Uint8Array(W * H * 3), off = (frame * 3) % W;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const v = tex[y * tw + ((x + off) % tw)], o = (y * W + x) * 3; b[o] = v; b[o + 1] = v; b[o + 2] = v + 10; }
+    return b;
+  };
+}
+
+/** Composite a patch at centre (cx, cy), scale s (of its base size), opacity a, onto a frame (nearest-neighbour). */
+function place(frame: Uint8Array, patch: Uint8Array, base: number, cx: number, cy: number, s: number, a: number): void {
+  const size = base * s, x0 = cx - size / 2, y0 = cy - size / 2;
+  for (let y = Math.max(0, Math.floor(y0)); y < Math.min(H, Math.ceil(y0 + size)); y++)
+    for (let x = Math.max(0, Math.floor(x0)); x < Math.min(W, Math.ceil(x0 + size)); x++) {
+      const px = Math.min(base - 1, Math.floor(((x + 0.5 - x0) / size) * base)), py = Math.min(base - 1, Math.floor(((y + 0.5 - y0) / size) * base));
+      if (px < 0 || py < 0) continue;
+      const o = (y * W + x) * 3, p = (py * base + px) * 3;
+      for (let c = 0; c < 3; c++) frame[o + c] = Math.round(frame[o + c] * (1 - a) + patch[p + c] * a);
+    }
+}
+
+export interface Truth {
+  /** Per frame: the patch's centre, scale (1 = base size) and opacity, or null where it is not in shot. */
+  path: Array<{ x: number; y: number; scale: number; opacity: number } | null>;
+  /** The move's first and last frame (the frames where it starts and stops moving). */
+  move?: { from: number; to: number; kind: "ease" | "linear" | "spring" | "scale" | "fade"; params?: Record<string, number> };
+  cuts: number[];
+  swaps: number[];
+  base: number;
+}
+
+export interface Clip {
+  name: string;
+  frames: number;
+  draw: (f: number) => Uint8Array;
+  truth: Truth;
+  /** ffmpeg setpts expression for a variable frame rate (frames keep these times); the drawing follows them. */
+  setpts?: string;
+  /** Each frame's real time, seconds (default frame / 30). */
+  times?: number[];
+  /** For a piece made at another rate inside this file: that rate, and the frames that repeat the one before. */
+  madeAt?: number;
+  repeats?: number[];
+}
+
+const BASE = 48;
+
+function moveClip(name: string, frames: number, start: number, dur: number, from: [number, number], to: [number, number], curve: (t: number) => number, kind: "ease" | "linear" | "spring", params: Record<string, number>, bg: "flat" | "texture" = "flat"): Clip {
+  const patch = patchTexture(BASE, 7), back = background(bg, 11), path: Truth["path"] = [];
+  for (let f = 0; f < frames; f++) {
+    const t = f <= start ? 0 : f >= start + dur ? 1 : (f - start) / dur, k = curve(t);
+    path.push({ x: from[0] + (to[0] - from[0]) * k, y: from[1] + (to[1] - from[1]) * k, scale: 1, opacity: 1 });
+  }
+  return {
+    name, frames,
+    draw: (f) => { const fr = Uint8Array.from(back(f)); const p = path[f]!; place(fr, patch, BASE, p.x, p.y, 1, 1); return fr; },
+    truth: { path, move: { from: start, to: start + dur, kind, params }, cuts: [], swaps: [], base: BASE },
+  };
+}
+
+/** The clips the video tests use, with their truth. */
+export function clips(): Clip[] {
+  const out: Clip[] = [];
+  out.push(moveClip("slide-ease", 60, 10, 24, [60, 108], [320, 108], (t) => aeEase(t, 0.33, 0.8), "ease", { outInfluence: 33, inInfluence: 80 }));
+  out.push(moveClip("slide-linear", 60, 10, 20, [60, 108], [320, 108], (t) => t, "linear", {}));
+  // a spring over a 1.2 s window: ζ 0.35, ω 12 rad/s (about 30 % overshoot, settled within 2 % by about 20 frames)
+  const zeta = 0.35, omega = 12, sp = moveClip("slide-spring", 70, 10, 40, [60, 108], [260, 108], (t) => spring(t * (40 / FPS), zeta, omega), "spring", { zeta, omega });
+  out.push(sp);
+  // scale 1 -> 1.8 about the centre, eased; fade 0 -> 1, linear
+  { const patch = patchTexture(BASE, 9), back = background("flat", 3), path: Truth["path"] = [];
+    for (let f = 0; f < 50; f++) { const t = f <= 10 ? 0 : f >= 25 ? 1 : (f - 10) / 15; path.push({ x: 192, y: 108, scale: 1 + 0.8 * aeEase(t, 0.33, 0.33), opacity: 1 }); }
+    out.push({ name: "scale", frames: 50, draw: (f) => { const fr = Uint8Array.from(back(f)); const p = path[f]!; place(fr, patch, BASE, p.x, p.y, p.scale, 1); return fr; },
+      truth: { path, move: { from: 10, to: 25, kind: "scale", params: { scale: 1.8 } }, cuts: [], swaps: [], base: BASE } }); }
+  { const patch = patchTexture(BASE, 13), back = background("flat", 5), path: Truth["path"] = [];
+    for (let f = 0; f < 40; f++) { const t = f <= 8 ? 0 : f >= 20 ? 1 : (f - 8) / 12; path.push({ x: 192, y: 108, scale: 1, opacity: t }); }
+    out.push({ name: "fade", frames: 40, draw: (f) => { const fr = Uint8Array.from(back(f)); const p = path[f]!; place(fr, patch, BASE, p.x, p.y, 1, p.opacity); return fr; },
+      truth: { path, move: { from: 8, to: 20, kind: "fade" }, cuts: [], swaps: [], base: BASE } }); }
+  // a hard cut at frame 30, and a one-frame swap at frame 45 (one frame of another shot inside the second shot)
+  { const a = patchTexture(BASE, 21), b = patchTexture(BASE, 23), backA = background("flat", 1), backB = background("texture", 2), path: Truth["path"] = [];
+    for (let f = 0; f < 70; f++) path.push(f < 30 ? { x: 120 + f, y: 100, scale: 1, opacity: 1 } : f === 45 ? null : { x: 260 - (f - 30), y: 120, scale: 1, opacity: 1 });
+    out.push({ name: "cut-and-swap", frames: 70,
+      draw: (f) => {
+        if (f === 45) { const fr = new Uint8Array(W * H * 3).fill(200); place(fr, b, BASE, 100, 60, 1.5, 1); return fr; }
+        const fr = Uint8Array.from(f < 30 ? backA(f) : backB(f)), p = path[f]!; place(fr, f < 30 ? a : b, BASE, p.x, p.y, 1, 1); return fr;
+      },
+      truth: { path, cuts: [30], swaps: [45], base: BASE } }); }
+  // a variable frame rate: intervals alternate 1/30 + 8 ms and 1/30 - 8 ms; the move follows the frames' real times
+  { const patch = patchTexture(BASE, 7), back = background("flat", 11), n = 60, times = Array.from({ length: n }, (_, i) => i / FPS + (i % 2) * 0.008), path: Truth["path"] = [];
+    const a = 10 / FPS, b = 34 / FPS;
+    for (let f = 0; f < n; f++) { const k = aeEase((times[f] - a) / (b - a), 0.33, 0.8); path.push({ x: 60 + 260 * k, y: 108, scale: 1, opacity: 1 }); }
+    out.push({ name: "variable-rate", frames: n, times, setpts: `(N/${FPS}+mod(N\\,2)*0.008)/TB`,
+      draw: (f) => { const fr = Uint8Array.from(back(f)); const p = path[f]!; place(fr, patch, BASE, p.x, p.y, 1, 1); return fr; },
+      truth: { path, move: { from: 10, to: 34, kind: "ease", params: { outInfluence: 33, inInfluence: 80 } }, cuts: [], swaps: [], base: BASE } }); }
+  // a 24 fps piece inside a 30 fps file: drawn at 24, shown at 30 by repeating every fifth frame (a pull-up)
+  { const patch = patchTexture(BASE, 7), back = background("flat", 11), n = 75, src = (j: number) => Math.floor((j * 24) / FPS), path: Truth["path"] = [];
+    const a = 8 / 24, b = 27 / 24;   // the move: 24 fps frames 8 to 27 (0.333 s to 1.125 s)
+    for (let j = 0; j < n; j++) { const t = src(j) / 24, k = aeEase((t - a) / (b - a), 0.4, 0.6); path.push({ x: 60 + 260 * k, y: 108, scale: 1, opacity: 1 }); }
+    const repeats = Array.from({ length: n }, (_, j) => j).filter((j) => j > 0 && src(j) === src(j - 1));
+    out.push({ name: "pulled-up-24", frames: n, madeAt: 24, repeats,
+      draw: (f) => { const fr = Uint8Array.from(back(f)); const p = path[f]!; place(fr, patch, BASE, p.x, p.y, 1, 1); return fr; },
+      truth: { path, move: { from: 10, to: 34, kind: "ease", params: { outInfluence: 40, inInfluence: 60, startSeconds: a, endSeconds: b } }, cuts: [], swaps: [], base: BASE } }); }
+  // an eased slide over a background that scrolls 3 px a frame: the tracker must follow the patch, not the ground
+  out.push(moveClip("slide-over-moving-ground", 60, 10, 24, [60, 108], [320, 108], (t) => aeEase(t, 0.5, 0.5), "ease", { outInfluence: 50, inInfluence: 50 }, "texture"));
+  // a slide that enters from outside the frame (beyond any search's reach): its start cannot be seen
+  out.push(moveClip("slide-enters", 50, 10, 24, [-60, 108], [200, 108], (t) => aeEase(t, 0.33, 0.8), "ease", { outInfluence: 33, inInfluence: 80 }));
+  // an eased slide with heavy motion blur in its first half: each frame averages the patch over its travel through a
+  // frame and a half, while the move is in its first half
+  { const patch = patchTexture(BASE, 7), back = background("flat", 11), n = 60, a = 10, dur = 24, path: Truth["path"] = [];
+    const xAt = (f: number) => { const t = f <= a ? 0 : f >= a + dur ? 1 : (f - a) / dur; return 60 + 260 * aeEase(t, 0.5, 0.5); };
+    for (let f = 0; f < n; f++) path.push({ x: xAt(f), y: 108, scale: 1, opacity: 1 });
+    out.push({ name: "blur-first-half", frames: n,
+      draw: (f) => {
+        if (f <= a || f > a + dur / 2) { const fr = Uint8Array.from(back(f)); place(fr, patch, BASE, xAt(f), 108, 1, 1); return fr; }
+        const acc = new Float64Array(W * H * 3), steps = 16;
+        for (let s = 0; s < steps; s++) { const fr = Uint8Array.from(back(f)); place(fr, patch, BASE, xAt(f - 1.5 + (1.5 * s) / (steps - 1)) , 108, 1, 1); for (let i = 0; i < acc.length; i++) acc[i] += fr[i] / steps; }
+        return Uint8Array.from(acc, (v) => Math.round(v));
+      },
+      truth: { path, move: { from: a, to: a + dur, kind: "ease", params: { outInfluence: 50, inInfluence: 50 } }, cuts: [], swaps: [], base: BASE } }); }
+  // a fast eased pan: a wide picture slides 600 px left over 12 frames (peak about 95 px a frame, a quarter of the width), blurred
+  { const PW = W + 640, r = rng(31), pic = new Uint8Array(PW * H * 3), cell = 32, cells: number[] = [];
+    for (let i = 0; i < 4096; i++) cells.push(r());
+    for (let y = 0; y < H; y++) for (let x = 0; x < PW; x++) {
+      const c = cells[(Math.floor(y / cell) * 64 + Math.floor(x / cell)) % 4096], v = 20 + 215 * c, o = (y * PW + x) * 3;
+      pic[o] = Math.min(255, v + 25 * Math.sin(x / 40)); pic[o + 1] = v; pic[o + 2] = Math.max(0, v - 30);
+    }
+    const n = 50, a = 10, dur = 12, D = 600, off: number[] = [];
+    for (let f = 0; f < n; f++) off.push(D * aeEase(f <= a ? 0 : f >= a + dur ? 1 : (f - a) / dur, 0.5, 0.5));
+    out.push({ name: "fast-pan", frames: n,
+      // motion blur, as a real pan has: each frame averages the picture over its travel since the frame before
+      draw: (f) => { const fr = new Float64Array(W * H * 3), s0 = f > 0 ? off[f - 1] : off[0], s1 = off[f], k = 8;
+        for (let j = 0; j < k; j++) { const sx = s0 + ((s1 - s0) * (j + 1)) / k;
+          for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const px = Math.min(PW - 1, Math.round(x + sx)), o = (y * W + x) * 3, q = (y * PW + px) * 3; fr[o] += pic[q] / k; fr[o + 1] += pic[q + 1] / k; fr[o + 2] += pic[q + 2] / k; } }
+        // a caption chip fixed to the frame (it does not pan), as a reel's chip is
+        for (let y = 176; y < 204; y++) for (let x = 112; x < 272; x++) { const o = (y * W + x) * 3, t = (x >> 3) % 2 ? 30 : 120; fr[o] = t; fr[o + 1] = 190; fr[o + 2] = 150; }
+        return Uint8Array.from(fr, (v) => Math.round(v)); },
+      truth: { path: off.map((o) => ({ x: -o, y: 0, scale: 1, opacity: 1 })), move: { from: a, to: a + dur, kind: "ease", params: { outInfluence: 50, inInfluence: 50, distance: D } }, cuts: [], swaps: [], base: 0 } }); }
+  // an eased slide (240 px over 18 frames) that hands over to a slow linear creep (0.8 px a frame for 30 frames), then rests
+  { const n = 70, a = 10, dur = 18, creep = 30, xs: number[] = [];
+    for (let f = 0; f < n; f++) xs.push(f <= a ? 60 : f <= a + dur ? 60 + 240 * aeEase((f - a) / dur, 0.33, 0.8) : 300 + 0.8 * Math.min(creep, f - a - dur));
+    const patch = patchTexture(BASE, 7), back = background("flat", 11);
+    out.push({ name: "slide-then-creep", frames: n,
+      draw: (f) => { const fr = Uint8Array.from(back(f)); place(fr, patch, BASE, xs[f], 108, 1, 1); return fr; },
+      truth: { path: xs.map((x) => ({ x, y: 108, scale: 1, opacity: 1 })), move: { from: a, to: a + dur, kind: "ease", params: { outInfluence: 33, inInfluence: 80, distance: 240, creepFrom: a + dur, creepTo: a + dur + creep, creepPerFrame: 0.8 } }, cuts: [], swaps: [], base: BASE } }); }
+  // a hard cut at frame 30, then a big patch moving 70 px a frame on the new shot's first frames
+  { const a = patchTexture(BASE, 21), b = patchTexture(96, 23), backA = background("flat", 1), path: Truth["path"] = [];
+    const backB = new Uint8Array(W * H * 3); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const o = (y * W + x) * 3, v = y > 150 && y < 200 && x > 40 && x < 340 ? 40 : 150; backB[o] = v; backB[o + 1] = v; backB[o + 2] = v + 8; }
+    for (let f = 0; f < 60; f++) path.push(f < 30 ? { x: 150, y: 90, scale: 1, opacity: 1 } : { x: 70 + 70 * Math.min(4, f - 30), y: 80, scale: 1, opacity: 1 });
+    out.push({ name: "cut-then-fast-move", frames: 60,
+      draw: (f) => { const fr = Uint8Array.from(f < 30 ? backA(f) : backB), p = path[f]!; if (f < 30) place(fr, a, BASE, p.x, p.y, 1, 1); else place(fr, b, 96, p.x, p.y, 1, 1); return fr; },
+      truth: { path, cuts: [30], swaps: [], base: BASE } }); }
+  // a hard cut at frame 30 between two layouts on one paper ground (a faint grid): still a cut
+  { const paper = new Uint8Array(W * H * 3);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const g = x % 24 === 0 || y % 24 === 0 ? 192 : 200, o = (y * W + x) * 3; paper[o] = g + 6; paper[o + 1] = g + 2; paper[o + 2] = g; }
+    const card = (fr: Uint8Array, x0: number, y0: number, w: number, h: number, v: number) => { for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) { const o = (y * W + x) * 3; fr[o] = v; fr[o + 1] = v; fr[o + 2] = v + 10; } };
+    const a = patchTexture(80, 41), b = patchTexture(72, 43);
+    out.push({ name: "cut-same-paper", frames: 60,
+      draw: (f) => { const fr = Uint8Array.from(paper);
+        if (f < 30) { card(fr, 30, 30, 170, 150, 30); place(fr, a, 80, 290, 100, 1, 1); } else { card(fr, 200, 20, 150, 90, 40); card(fr, 60, 130, 220, 60, 60); place(fr, b, 72, 100, 60, 1, 1); }
+        return fr; },
+      truth: { path: Array.from({ length: 60 }, () => null), cuts: [30], swaps: [], base: 80 } }); }
+  return out;
+}
+
+/** Encode a clip with ffmpeg (H.264, yuv420p, quality high) into dir; null when ffmpeg is not installed. */
+export async function writeClip(clip: Clip, dir: string, ffmpeg = ["ffmpeg", "/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg"]): Promise<string | null> {
+  const file = path.join(dir, `${clip.name}.mp4`);
+  const raw = Buffer.concat(Array.from({ length: clip.frames }, (_, f) => Buffer.from(clip.draw(f))));
+  await fs.mkdir(dir, { recursive: true });
+  for (const bin of ffmpeg) {
+    const ok = await new Promise<boolean | null>((resolve) => {
+      const p = execFile(bin, ["-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", `${W}x${H}`, "-r", String(FPS), "-i", "-",
+        // a fine time base before and after the encoder, or the times round back to whole frames of 1/30
+        ...(clip.setpts ? ["-vf", `settb=1/90000,setpts=${clip.setpts}`, "-fps_mode", "vfr", "-enc_time_base:v", "1:90000", "-video_track_timescale", "90000"] : []),
+        "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "12", "-g", "1000", file], (err) => {
+        if (err && (err as NodeJS.ErrnoException).code === "ENOENT") resolve(null); else resolve(!err);
+      });
+      p.stdin?.end(raw);
+    });
+    if (ok === null) continue;
+    return ok ? file : null;
+  }
+  return null;
+}

@@ -76,13 +76,13 @@
     "--skip-git-repo-check",
     "--json",
     "--output-last-message",
-    "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/reports/2026-11-02-aft54-installed-planning/library-book-first-answer.md",
+    "~/.codex/worktrees/brief-to-motion-planning/after-effects-studio/quality/reports/2026-11-02-aft54-installed-planning/library-book-first-answer.md",
     "-"
   ],
   "exitCode": 1,
   "stopReason": null,
   "toolCalls": 0,
   "elapsedSeconds": 1.0,
-  "rawTrace": "/Users/joeb/.codex/worktrees/brief-to-motion-planning/after-effects-studio/release/packages/aft54-installed-eval-2026-11-02/library-book-first.jsonl",
+  "rawTrace": "~/.codex/worktrees/brief-to-motion-planning/after-effects-studio/release/packages/aft54-installed-eval-2026-11-02/library-book-first.jsonl",
   "rawTraceSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 }

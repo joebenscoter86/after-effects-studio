@@ -1,4 +1,4 @@
-export declare const SCHEMA_VERSION = 2;
+export declare const SCHEMA_VERSION = 3;
 export type AeColor = [number, number, number];
 /** A serialized ExtendScript `TextDocument` value. */
 export interface TextDocumentValue {
@@ -122,6 +122,27 @@ export interface LayerSpec {
     timeRemapEnabled?: boolean;
     timeRemapProperty?: PropertySpec | null;
     markers?: PropertySpec | null;
+    compositing?: {
+        blendingMode?: string | null;
+        trackMatte?: {
+            type: string;
+            layer: {
+                index: number;
+                name: string;
+            } | null;
+        } | null;
+        adjustmentLayer?: boolean | null;
+        guideLayer?: boolean | null;
+        preserveTransparency?: boolean | null;
+        isTrackMatte?: boolean | null;
+        masks?: Array<{
+            mode: string | null;
+            inverted: boolean | null;
+        }>;
+        lightType?: string | null;
+    } | null;
+    cameraOptionsGroup?: PropertyGroupSpec | null;
+    lightOptionsGroup?: PropertyGroupSpec | null;
 }
 export type ItemType = "FolderItem" | "CompItem" | "FootageItem" | "UnknownItem";
 export type SourceKind = "solid" | "file" | "placeholder" | "unknown";

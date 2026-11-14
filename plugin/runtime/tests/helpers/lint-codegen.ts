@@ -180,6 +180,64 @@ function looksLikeJsx(body: string): boolean {
   );
 }
 
+/**
+ * The index just past the template literal opening at `i`. Inside a `${…}`
+ * it follows code: braces, quoted strings and nested template literals (a
+ * `${cond ? \`try { … } catch (e) { … }\` : ""}` fragment), so a brace or a
+ * backtick inside them does not end the outer literal early.
+ */
+function skipTemplate(src: string, i: number): number {
+  i++;
+  while (i < src.length) {
+    const ch = src[i];
+    if (ch === "\\") {
+      i += 2;
+      continue;
+    }
+    if (ch === "`") return i + 1;
+    if (ch === "$" && src[i + 1] === "{") {
+      i += 2;
+      let depth = 1;
+      while (i < src.length && depth > 0) {
+        const c = src[i];
+        if (c === "`") {
+          i = skipTemplate(src, i);
+          continue;
+        }
+        if (c === '"' || c === "'") {
+          i++;
+          while (i < src.length && src[i] !== c) {
+            if (src[i] === "\\") i++;
+            i++;
+          }
+          i++;
+          continue;
+        }
+        // A regex literal (a slash where an operand starts), so a quote or brace inside it is not code.
+        if (c === "/" && /[(,=:[!&|?{};]\s*$|^\s*$/.test(src.slice(Math.max(0, i - 40), i).split("\n").pop() ?? "")) {
+          i++;
+          let inClass = false;
+          while (i < src.length && src[i] !== "\n") {
+            if (src[i] === "\\") i += 2;
+            else if (src[i] === "[") (inClass = true), i++;
+            else if (src[i] === "]") (inClass = false), i++;
+            else if (src[i] === "/" && !inClass) break;
+            else i++;
+          }
+          i++;
+          continue;
+        }
+        if (c === "{") depth++;
+        else if (c === "}") depth--;
+        i++;
+      }
+      continue;
+    }
+    i++;
+  }
+  return i;
+}
+
 /** Spans of every template literal in `src`, as [start, end) over the raw text. */
 function templateLiteralSpans(src: string): Array<[number, number]> {
   const spans: Array<[number, number]> = [];
@@ -209,28 +267,8 @@ function templateLiteralSpans(src: string): Array<[number, number]> {
     }
     if (ch === "`") {
       const start = i;
-      i++;
-      let depth = 0;
-      while (i < src.length) {
-        if (src[i] === "\\") {
-          i += 2;
-          continue;
-        }
-        if (src[i] === "$" && src[i + 1] === "{") {
-          depth++;
-          i += 2;
-          continue;
-        }
-        if (depth > 0 && src[i] === "}") {
-          depth--;
-          i++;
-          continue;
-        }
-        if (depth === 0 && src[i] === "`") break;
-        i++;
-      }
-      spans.push([start, Math.min(i + 1, src.length)]);
-      i++;
+      i = skipTemplate(src, i);
+      spans.push([start, Math.min(i, src.length)]);
       continue;
     }
     i++;

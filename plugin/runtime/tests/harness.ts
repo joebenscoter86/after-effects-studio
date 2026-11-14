@@ -32,18 +32,43 @@ function newestMtimeMs(dir: string): number {
   return newest;
 }
 
-export function ensureBuilt(): void {
-  // Rebuild when dist is missing OR stale — otherwise a run right after editing
-  // a tool (e.g. adding one) would spawn the old build and fail confusingly
-  // ("unknown tool …") instead of testing the current source.
+/**
+ * Where the harness builds a server when the committed bundle is older than
+ * the source. Not committed (.gitignore), and beside dist so the bundle finds
+ * ../package.json and the package root the same way.
+ */
+export const TEST_BUILD_DIR = path.join(REPO_ROOT, ".test-build");
+
+/**
+ * The server entry to run: the committed bundle (dist/index.js) when it is
+ * newer than every source file, otherwise a fresh bundle of the source in
+ * TEST_BUILD_DIR, built the way the release builds it (one esbuild bundle,
+ * plugin/scripts/build.mjs). It never writes into dist: `npm run build`
+ * (plain tsc) there would replace the committed bundle with an unbundled
+ * index.js.
+ */
+export function ensureBuilt(): string {
   const stale =
     !existsSync(SERVER_ENTRY) ||
     newestMtimeMs(path.join(REPO_ROOT, "src")) > statSync(SERVER_ENTRY).mtimeMs;
-  if (!stale) return;
-  const r = spawnSync("npm", ["run", "build"], { cwd: REPO_ROOT, stdio: "inherit", shell: true });
-  if (r.status !== 0) {
-    throw new Error("failed to build MCP server before tests");
-  }
+  if (!stale) return SERVER_ENTRY;
+  const out = path.join(TEST_BUILD_DIR, "index.js");
+  const script = [
+    'const { build } = await import("esbuild");',
+    "await build({",
+    `  absWorkingDir: ${JSON.stringify(REPO_ROOT)},`,
+    '  entryPoints: ["src/index.ts"],',
+    `  outfile: ${JSON.stringify(out)},`,
+    '  bundle: true, platform: "node", format: "esm", target: "node24", logLevel: "error",',
+    "  banner: { js: \"import { createRequire as __aesRequire } from 'node:module'; var require = __aesRequire(import.meta.url);\" },",
+    "});",
+  ].join("\n");
+  const r = spawnSync(process.execPath, ["--input-type=module", "-e", script], {
+    cwd: REPO_ROOT,
+    stdio: "inherit",
+  });
+  if (r.status !== 0) throw new Error("failed to build the MCP server for the tests");
+  return out;
 }
 
 /** Thin MCP client wrapper that returns JSON-parsed tool results. */
@@ -59,10 +84,10 @@ export class McpTestClient {
   }
 
   async connect(env: Record<string, string> = {}): Promise<void> {
-    ensureBuilt();
+    const entry = ensureBuilt();
     this.transport = new StdioClientTransport({
       command: process.execPath, // current Node binary
-      args: [SERVER_ENTRY],
+      args: [entry],
       // Let AE_MCP_* settings flow through from the shell env, with
       // per-test overrides on top.
       env: { ...process.env, ...env } as Record<string, string>,

@@ -23,12 +23,13 @@ Inspect `ae_version_info` and `ae_context`, or run the plugin's doctor if no con
 | Camera, depth, traversal or continuous transition | camera-continuity |
 | Product art, illustrated objects, compositing, material polish | assets-depth |
 | Animated text and kinetic typography | typography-technique, typography-recipes, typography-examples; sibling typography/SKILL.md |
-| Green-screen keying, spill, grading a keyed subject to a plate | keying |
+| Green-screen keying, spill, grading a keyed subject to a plate; making an element sit in its scene (grain, softness, black level, light wrap, a room's colour cast on a cut-out); cutting a person or object out of footage, with or without a green screen | keying |
 | Paper collage, cutouts or tactile cardstock | paper-collage-style, paper-collage-recipes, paper-collage-examples; sibling paper-collage/SKILL.md |
 | Voiceover, captions, UI, factual evidence | type-evidence |
-| Supplied reference or a look that isn't landing | reference-study, failure-atlas |
+| Easing, hits on the beat, word timing (check curves with `motion.curve`, mark words or beats with `sound.markers`, measure with `sound.sync`) | timing |
+| Supplied reference or a look that isn't landing (measure both with `reference.report`, fix the differences largest first) | reference-study, failure-atlas |
 | Native implementation | scripting, motion-jsx; sibling ae-control/SKILL.md |
-| Every review/delivery | quality, failure-atlas |
+| Every review/delivery | review, quality, failure-atlas |
 
 Use ae_library with a document ID. The index returns relative paths for direct reading; load relevant modules, not every historical document. scene-recipes is a quick index; worked-scenes carries actual event/timing studies. timing is a compact lookup alongside construction.
 
@@ -54,13 +55,49 @@ Use measured values as concrete starting points; adapt with reasons. Do not redu
 
 For a new look, test a bounded hard transition and an ordinary explanatory beat. Preserve approved material. If full execution is authorized, self-review and continue; request creative input when necessary or requested, without imposing extra approval stages.
 
+## Cutting a subject out of footage: one click by the user
+
+When a brief involves cutting a person or object out of footage, with or without a green screen, tell the user before building starts, in the first answer: one manual step in After Effects will be needed, a single click on the subject with After Effects' Object Matte Tool; it comes once the footage is in its comp, before anything is laid over or behind the subject; it takes about ten seconds. A script cannot make that click.
+
+At that point run `subject.prepare` and give the user its `userMessage` word for word: the notice and seven numbered steps, with the clip's name filled in. Do not paraphrase or shorten them. In a plan written before After Effects, quote the seven steps from `keying` ("Tell the user first") as they are. `keying` is longer than one `ae_library` reply, so it comes as its outline first: read `section: ["Tell the user first", "Cutting a subject out with Object Matte > The procedure"]` before planning the cut-out.
+
+Two things about the footage come before the click. When `subject.prepare` returns `sourceAdvice` (footage much larger than the comp and scaled down to fit, such as a 4K take in a 1080 × 1920 comp), its `relay` says not to give the steps yet: tell the user its numbers, make the copy at the delivery size (`sourceAdvice.copy` with ffmpeg when it is there; otherwise render the footage alone from After Effects at that size), put it in the comp in the take's place and run `subject.prepare` on the copy. Do it before the click, because replacing footage under a matte freezes it. The edge comes out the same; a render takes about a quarter of the time and the cache drops from about 19 GB to about 5 GB. When it returns `soundAdvice` (more than two channels, or sound After Effects does not report), the take may play as silence: extract the voice with its `extract` line, put the WAV in the comp and switch the take's own audio off. Whatever it returns, measure the take's sound and the delivered file's sound before calling the piece done.
+
+After "done", and before building anything else, run `subject.check`: the quick check near the click frame, which takes seconds. A selection count is not a check. When it returns `stop: true` (a hole or opening of 1,000 px or more not accepted, a frame it could not check, an unstable or frozen frame; close clicks set it only alongside one of these), say so in your reply before your next call: what is out, in plain words, and the path of its picture. Not later, and not only in the final report, even when you judge a finding to be a real gap yourself (then say that too, and why). Then fix it as `keying` says (another click, `subject.remove_selection`, `subject.fill_gaps` for a hole no click fills, or `accept` for a real gap the user calls fine) and check again. Call `subject.fill_gaps` without `only`, so every enclosed gap is filled the first time: a gap under the limit on one frame can grow past it on others, and the second render that catches it costs a minute at half size and five minutes and 19 GB on a 4K source. Openings are never filled, so real gaps at the frame edge are safe; pass `only` only to keep a real enclosed gap (between an arm and the body). When the user asks you to make the click and you have full-screen control, hover each piece, confirm from a screenshot that the magenta tint is on the piece you mean, click, and then run `subject.check`.
+
+Then render the cut-out once with `subject.render_cutout` (tell the user it takes about one pass through the clip, roughly a second a frame on 4K footage), check every frame of the file with `subject.check_file` (on any finding, the same: say what is wrong and the picture's path in your reply before the next call), and build the piece on the file with `subject.use_cutout`. After Effects recomputes the live matte on every render, so a piece built on the live matte can change between renders; the file cannot. The render writes After Effects' disk cache (about 19 GB for 320 frames of a 4K take): say so before it starts, and once the file is checked tell the user to purge it (Edit > Purge > All Memory & Disk Cache) and how much it frees. Delete nothing yourself and change no preference.
+
+For a person, after `subject.check` passes and any fill is in, and before the render, run `subject.soften_edge` with its defaults: it softens the hair's edge the way the user chose (look C in `keying`), checks itself and undoes itself if anything is seen through, tinted or smeared. Tell the user it costs a second Object Matte pass in every render after it (about twice the disk cache and several times the render time: 342 s against 65 to 92 s on the half-size take), and switch any gap fill on before the render (subject.render_cutout refuses when it is off). Then render and run subject.check_file: its check before the render samples only the sixty frames after the click, and the file check reads every frame (it also notes the frames where the head sits low enough for the hair to cross the soft edge's region line); a `seen-through` finding means the soft edge let the background through the subject, so undo it (subject.soften_edge with undo: true), switch Decontaminate Edge Colors on, render again and check the new file. When its check fails, or the user wants the hard edge, switch Decontaminate Edge Colors on instead (`subject.settings`). Show the user the hair at twice size over the background before and after. Before calling a cut-out finished, measure whether it sits in its scene with `ae_render_frame` `look` (`keying`, "Sitting an element in its scene"). Over a filmed plate, match the plate's grain and softness and seat the blacks. Over a designed background there is no plate: measure the cast of the room's light on surfaces in the take that should be neutral, correct the cut-out alone, measure again, and show the user a before and an after frame; how far to take it is their call.
+
+## The user's own look
+
+When the user has approved pieces, or keeps a look sheet, read the look sheet section of `reference-study`. `reference.sheet` measures the approved pieces once (with ffmpeg, no After Effects) into a sheet of what stays the same across them. Before hand-over, compare the build's render with the sheet (`reference.report` with `against: <sheet.json>` and `rhythm: true`) and fix or explain each difference against the user's own range. The sheet describes what they did, not a rule.
+
+## A reference's motion
+
+When the user hands over a reference video to move like, read `reference-teardown` in `ae_library`. `video.shots`, `video.census` and `video.track` measure the file with ffmpeg, without After Effects. `video.moves` gives the table of moves and a beat sheet. After the build, `motion.compare_moves` compares it against the reference, both on its properties and on its render; the render is the one that counts.
+
+## Long or unattended runs
+
+Before planning an overnight or otherwise unattended run, read `unattended-runs` in `ae_library`. With the Mac's screen locked, an After Effects error box cannot be dismissed, every later call hangs behind it, and relaunching after a force-quit hangs too; the command-line renderer `aerender` still renders a saved project. So: tell the user to keep the screen unlocked and the Mac awake; get every step that needs their click (the cut-out) done before they leave; save the project before any long capture or render; never let a step return while captures it queued are still running, or delete their folder; write down the `aerender` fallback; and check free disk space and purge After Effects' cache between long renders (Object Matte renders filled about 12 GB per half of a 43 s piece at 1088 × 1920).
+
 ## Execute, inspect and deliver
 
 Discover exact operations via ae_catalog. Use this plugin's native tools; no cloud bridge is required. eval.run executes custom ES3. Name owned layers, preserve unrelated work, read back results and inspect uncertain completion before retrying. Portable motion-jsx has no rig, brand or media dependency.
 
 Render first-readable, peak-action, overlap, hold and transition frames. Inspect actual images, fix defects, and render again. Review a playable export for motion rhythm/audio; state plainly if that check cannot be done. A successful script or automated score does not establish premium quality.
 
-Deliver editable project/assets and the requested verified export. Separate technical validation, visual judgment and user approval. Record accepted recipes in the user's project with timings and evidence.
+## Review before you say it is done
+
+Do not say a build is done, finished or ready until this step is complete. Read `review` through `ae_library` for the details.
+
+1. Run `ae_check_comp` on the delivered comp, repeating with `next.startFrame` until `next` is null. Fix what is plainly wrong and re-run it.
+2. Render the moments that matter as files: `ae_render_frame` strips around each cut and hit, full-size stills of each reading hold, and a preview movie (`render.preview`) where the host can play one.
+3. Hand the review to a reviewer that did not build the piece, with only the brief, the report and its sheet, and those file paths; not your notes, reasoning or list of fixes. In Claude Code, delegate to the plugin's agent `comp-room:motion-reviewer`. In another host that can start a fresh agent, start one with the motion-review skill and the same material. If the host cannot, do a frames-only pass yourself: judge only from the brief, the report and the frames, and say in the hand-over that the review was not independent.
+4. Fix what the review found, re-run `ae_check_comp`, re-render the changed moments and review again with that fresh evidence. Stop after two review passes, or sooner when nothing is left at `first-watch` or `careful-watch`.
+5. Hand over as `review` describes: what was found, what was fixed, what was left and why (each `ae_check_comp` flag fixed or named as intended, with its reason), and what nobody could check.
+
+Before handing over, run `project.lint` and fix or name what it finds; deliver with `render.deliver` and a preset (`vertical-reel`, `master-alpha`, `master`), and say what its check found, the sound included (`quality`). Deliver editable project/assets and the requested verified export. Separate technical validation, visual judgment and user approval. Record accepted recipes in the user's project with timings and evidence.
 
 ## Optional style and legacy integrations
 

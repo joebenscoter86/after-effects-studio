@@ -6,7 +6,7 @@ Status: all bounded installed-candidate planning checks passed; ready for human 
 
 - Source snapshot: `679b7adde790ad965db61996ef4b656e43cd33b4` in the isolated `codex/brief-to-motion-m4` worktree. The canonical root's unrelated changes remain untouched.
 - Prepared archive: `release/packages/aft54-install-candidate-v3.zip`, SHA-256 `42be5d722ded2d5b7a7be3ce573ea1c06efa3522570f1407daf2318103fe82fd`, 67 files, manifest version `0.2.1-rc.1+aft54.20261023`.
-- [Supported CLI install](https://learn.chatgpt.com/docs/developer-commands#codex-plugin): temporary local marketplace `aft54-local-test`, separate from `jb-technology`. The tested cache was `/Users/joeb/.codex/plugins/cache/aft54-local-test/after-effects-studio/0.2.1-rc.1+aft54.20261023`.
+- [Supported CLI install](https://learn.chatgpt.com/docs/developer-commands#codex-plugin): temporary local marketplace `aft54-local-test`, separate from `jb-technology`. The tested cache was `~/.codex/plugins/cache/aft54-local-test/after-effects-studio/0.2.1-rc.1+aft54.20261023`.
 - [Installed identity](installed-identity.json): all 67 cache files exactly match the ZIP, with no extra files. The skill SHA-256 is `d9092644ebd81ba1fb2978052331f5429a1114c5fcf7cdeeda314b9bdf1d5849`.
 - Offline smoke against that installed cache passed handshake, 29 hashed library document reads, three module routes, traversal rejection and the offline policy-filtered catalog. See [smoke results](offline-smoke/smoke-report.json).
 

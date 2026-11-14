@@ -31,10 +31,20 @@ function appleScriptString(value) {
  * AppleScript addresses the application bundle, not the binary inside it —
  * accept either and normalize to the `.app` path.
  */
-function appBundlePath(aePath) {
+export function appBundlePath(aePath) {
     const normalized = aePath.replace(/\\/g, "/");
     const match = normalized.match(/^(.*?\.app)(\/|$)/);
     return match ? match[1] : normalized;
+}
+/**
+ * The server's startup line when no resident agent is registered: how a call
+ * will reach After Effects on this platform (see buildLaunchPlan).
+ */
+export function pushRouteBanner(platform = process.platform) {
+    if (platform === "darwin") {
+        return "instance: none registered yet — calls reach the running After Effects through osascript and DoScript; a second instance needs the agent: `mcp-aftereffects install-agent`";
+    }
+    return "instance: none registered yet — calls launch AfterFX.exe -r into the running After Effects (instances started with -m need the agent: `mcp-aftereffects install-agent`)";
 }
 /**
  * How to start a NEW After Effects instance (instance.start), as opposed to
@@ -56,8 +66,26 @@ export function buildInstanceLaunchPlan(aePath, instanceId, platform = process.p
 }
 export function buildLaunchPlan(aePath, platform = process.platform, runtimeDir = RUNTIME_DIR, dispatcherJsx = DISPATCHER_JSX) {
     if (platform === "darwin") {
+        // A DoScript is an Apple event: once sent, it cannot be withdrawn. It can
+        // sit queued in After Effects (behind a modal or a running script) long
+        // after its call was discarded ("never picked up ... discarded"), and run
+        // when the box is cleared. Live, 2026-11-12, each such run raised "Unable
+        // to execute script at line 1. File or folder does not exist", a new
+        // modal that blocks all scripting until someone clicks OK; line 1 is this
+        // bootstrap, so the error came out of its evalFile. So the bootstrap
+        // never lets anything escape into a dialog: it evalFiles the dispatcher
+        // only when the file is there, catches whatever the evalFile throws (a
+        // file or an #include gone, a parse error) and leaves one line in the
+        // mailbox's dispatcher.log instead. A stale run whose request was
+        // reclaimed reaches the dispatcher, finds nothing pending and exits
+        // without writing (dispatcher.jsx). The files it points at, the
+        // dispatcher and its includes, belong to the package and are never
+        // removed by a call.
+        const dispatcher = jsxPath(dispatcherJsx);
         const bootstrap = `$.global.AE_MCP_RUNTIME_DIR_OVERRIDE = ${jsxPath(runtimeDir)}; ` +
-            `$.evalFile(${jsxPath(dispatcherJsx)});`;
+            `try { if (new File(${dispatcher}).exists) $.evalFile(${dispatcher}); } catch (eBoot) { ` +
+            `try { var _bootLog = new File(${jsxPath(runtimeDir)} + '/dispatcher.log'); ` +
+            `if (_bootLog.open('a')) { _bootLog.writeln('[' + new Date().toString() + '] bootstrap: ' + eBoot); _bootLog.close(); } } catch (eLog) {} }`;
         return {
             command: "/usr/bin/osascript",
             args: [

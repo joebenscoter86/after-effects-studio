@@ -1,19 +1,29 @@
-export declare const KEYLIGHT_MATCH_NAME = "Keylight 906";
-export declare const KEY_CLEANER_MATCH_NAME = "ADBE KeyCleaner";
-export declare const SPILL_SUPPRESSOR_MATCH_NAME = "ADBE Spill2";
-/** Keylight's View values 1..11, by name (confirmed live by rendering each). */
-export declare const KEYLIGHT_VIEWS: readonly ["source", "source_alpha", "corrected_source", "colour_correction_edges", "screen_matte", "inside_mask", "outside_mask", "combined_matte", "status", "intermediate_result", "final_result"];
-type Kind = "number" | "colour" | "switch";
-interface Setting {
-    matchName: string;
-    kind: Kind;
-    doc: string;
-}
-/** The Keylight settings key.keylight writes, as After Effects 2027 reports them. */
-export declare const KEYLIGHT_SETTINGS: Record<string, Setting>;
-export declare const KEY_CLEANER_SETTINGS: Record<string, Setting>;
-export declare const SPILL_SUPPRESSOR_SETTINGS: Record<string, Setting>;
-/** A Keylight view by name (forgiving spelling) or number 1..11 → number, or a message. */
-export declare function keylightViewNumber(v: unknown): number | string;
-export {};
+import "node:child_process";
+import "node:fs";
+import "node:path";
+import "../color/matte.js";
+import "../color/png16.js";
+import "../color/sheet.js";
+import "../config.js";
+import "../registry.js";
+import "./render.js";
+import "../tools/render-frame.js";
+import "../tools/capture-shared.js";
+import "./keying-key.js";
+import "./keying-subject-prepare.js";
+import "./keying-subject-check.js";
+import "./keying-subject-cutout.js";
+import "./keying-subject-soften.js";
+import "./keying-reference.js";
+export { OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, SUBJECT_WHOLE_PIECE_NOTE, CLOSE_CLICK_SHARE, CUTOUT_HOLE_LIMIT, CUTOUT_SECONDS_PER_FRAME, alikeRegions, acceptedBy, cutoutFindings, statfsFree, cacheBytesFor, aeCacheRoot, fillUnbuildJsx, fillBuildJsx, CHECK_FILE_MAX_FRAMES, SOFT_EDGE_DEFAULTS } from "./keying-shared.js";
+export type { RegionFinding, AcceptEntry, CutoutIO, RenderTally, PixelTally, FileIO } from "./keying-shared.js";
+export { KEYLIGHT_MATCH_NAME, KEY_CLEANER_MATCH_NAME, SPILL_SUPPRESSOR_MATCH_NAME, KEYLIGHT_VIEWS, KEYLIGHT_SETTINGS, KEY_CLEANER_SETTINGS, SPILL_SUPPRESSOR_SETTINGS, keylightViewNumber } from "./keying-key.js";
+export { OBJECT_MATTE_SETTINGS, SUBJECT_ATTENDED_NOTE, SUBJECT_MATTE_NOTICE, subjectMatteSteps, selectionKind, OVERSIZE_FACTOR, sourceAdviceFor, soundAdviceFor, runSubjectPrepare, diskReport } from "./keying-subject-prepare.js";
+export type { SelectionKind, PrepareFootage, AudioStream, PrepareIO } from "./keying-subject-prepare.js";
+export { closeClicks, runSubjectCheck, runFillGaps } from "./keying-subject-check.js";
+export type { CloseClick } from "./keying-subject-check.js";
+export { HALVES_JOIN_NOTE, cutoutSpan, RENDER_MARGIN_BYTES, renderCutoutBytes, chooseAlphaTemplate, renderCutoutPlanJsx, renderCutoutJsx, runRenderCutout, CHECK_FILE_JUMP_LIMIT, checkFileFrames, SPECK_SKIN_A, SPECK_PALE_A, runCheckFile, useCutoutJsx } from "./keying-subject-cutout.js";
+export { SOFT_EDGE_COST, softRegionBottom, softenBuildJsx, softenUndoJsx, runSoftenEdge } from "./keying-subject-soften.js";
+export type { SoftenIO } from "./keying-subject-soften.js";
+export { runReferenceReport, runReferenceCompare } from "./keying-reference.js";
 //# sourceMappingURL=keying.d.ts.map

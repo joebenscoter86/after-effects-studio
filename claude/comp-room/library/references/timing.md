@@ -29,3 +29,26 @@ These are measured offsets for one look: scale travel with layout, retain the ac
 ## Density and restraint
 
 The JoeB preset uses roughly 12–16 overlapping construction events per 2.5–6 second section. Do not turn this into a generic quota. A cinematic title may require a long hold; a UI explainer may need fewer states to stay legible. Count meaningful changes rather than keys. Pacing must serve understanding.
+
+## Reading motion and sound
+
+Measure the curves and the sync before calling timing done. A linear move and a hit a few frames off the beat are easy to miss in stills.
+
+1. **Each move's curve.** `ae_do { operation: "motion.curve", args: { comp, layer, property: "Position", outPath } }` reads the property at every frame of the layer's span (or `start` to `end`). It gives the speed per frame, the moves (from rest to rest) and the keys with their interpolation, and draws a 480 × 160 graph: values light, speed orange, moves shaded, flags red. It flags three things:
+   - **No ease:** a move whose first or last moving frame already runs at 60% or more of its middle speed. An easy ease's first frame of 30 runs at about 7%; a linear move's at 100%.
+   - **Speed jump:** speed changing 2.5 times from one frame to the next inside a move, by a quarter of its top speed.
+   - **Overshoot:** how far a move goes past where it ends (share of its distance) and how many frames it takes to settle within 1%.
+   A mechanical, constant move can be linear on purpose; say so rather than easing it.
+2. **Word and beat markers.** `ae_do { operation: "sound.markers", args: { comp, timing } }` reads a timing file: a JSON list of `{ word | w | text | label, start | time | t }` in seconds or `frame`, or CSV `time,label`. `{ comp, layer }` instead reads the layer's loudness: After Effects' Convert Audio to Keyframes runs from the script (no dialog), the amplitude is read per frame and the helper layer removed, and a beat is marked where loudness rises past 30% of the way from its median to its top. Markers read `sound: <label>`; earlier ones with the prefix are replaced.
+3. **Sync.** `ae_do { operation: "sound.sync", args: { comp, inPoints, keys, events, markerPrefix: "sound:" } }` gives each event's distance in frames to the nearest marker, positive after it. Events can be layers' in-points, the key times of `{ layer, property }`, or times you give (spikes from `ae_render_frame` diff). It flags 2 frames or more after the marker, or 4 or more before. Those are ITU-R BT.1359's thresholds for noticing sound 45 ms early or 125 ms late against the picture, at 30 fps: a hit after its sound is noticed sooner than one before it.
+
+**Measured live** (After Effects 27.0, 2026-11-12, scratch projects):
+
+- **Convert Audio to Keyframes:**
+  - On mono and stereo WAVs with tone bursts at 0.5, 1.2 and 2.0 s, it peaked on frames 15 to 16, 36 to 37 and 60 to 61; `sound.markers` marked 15, 36 and 60 in under a second.
+  - A four-channel WAV with the signal on channel 1 read as the left channel (right flat, both channels half).
+  - The four-channel AAC take (voice on channel 1) read a top of 0.002 against 21.2 for a tone at 0.3 of full scale: silence. `sound.markers` refuses anything under 0.1 and says to extract a mono WAV; the extracted voice gave 13 onsets.
+- **The done-when comp** (30 fps): one move eased with easy ease, one linear, and three layers starting at 0.5 s, 1.2 s and 2.0 s plus 4 frames, against those beats.
+  - The eased move came back clean.
+  - The linear one was flagged: its first and last moving frames run at 100% of its middle speed.
+  - The hits read 0, 0 and 4 frames after their markers; the third was flagged late.

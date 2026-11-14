@@ -17,6 +17,12 @@ Inspect full-frame captures at the beginning, build, peak overlap, hold and hand
 - Proper alpha/key edges, no green spill, wrong blend mode or double shadows.
 - Seam continuity, source-media completeness and no obsolete asset paths.
 
+## Whole-piece check
+
+A few stills show the moments you chose; a viewer sees every frame. Before handing over a piece, and after any change late in the build, run `ae_check_comp` on the delivered comp. It renders every frame of the work area at quarter size, measures each one and lists what stands out: a one-frame flash or pop, a cut or jump, a repeated frame, a stretch where nothing moves (half a second or more by default), near-black or near-white frames, highlights clipped to 255 with the box they sit in, text that leaves the frame (or a safe area) while visible, missing fonts and footage, and expressions in error. One contact sheet shows the flagged moments.
+
+Read every flag as a fact to judge, not a verdict: a held title is a frozen stretch, a fade to black is a near-black stretch, pure white type sits at 255 by design. Look at the sheet, then render the moments that matter at full size with `ae_render_frame` (`frames: [...]`) before changing anything. A long comp takes more than one call: repeat it with the `next.startFrame` it returns until `next` is null; the structure findings come with the last call. `every: 2` halves the time but can miss a one-frame flash; use it for a first pass, not the final one. A clean result means none of these measures found anything, not that the piece is good: keep the design and motion review above.
+
 Contact sheets cannot prove playback rhythm, sound balance or lip sync. Play the export at speed for those checks. If this interface cannot play audiovisual content, report that limitation separately from inspected frames.
 
 ## Technical delivery
@@ -25,6 +31,65 @@ Save the intended version and include linked assets. Preserve editable type, sha
 
 Use `scripts/verify-export.mjs <file>` for metadata plus a full decode. It exits nonzero on failure and explicitly requires ffmpeg and ffprobe. Check the requested spec against its report.
 
+**Deliver with a preset and check the file.** `ae_do { operation: "render.deliver", args: { comp, preset, outputPath } }` renders the whole comp through one temporary queue item, brings the written file back and compares it with the comp: size, frame rate, duration within half a frame, and the sound. Presets:
+
+| Preset | Template | Falls back to |
+|---|---|---|
+| `vertical-reel` | H.264 - Match Render Settings - 15 Mbps | another H.264 template, then High Quality (ProRes 422, a larger file), and says so |
+| `master-alpha` | High Quality with Alpha (ProRes 4444) | Lossless with Alpha, then another movie template whose name says alpha; refuses when there is none |
+| `master` | High Quality (ProRes 422) | Lossless, then H.264 |
+
+High Quality, High Quality with Alpha and the three H.264 templates are what Adobe documents for a stock install. Lossless and Lossless with Alpha were on the Mac this was built on but are not named stock anywhere found. A template can be deleted, so the result says which one was used and why.
+
+**The sound.** Twice a take's sound read as silence in After Effects and nothing warned. When the comp has sound on, a file with no sound track, or one whose sound reads as silence, is flagged. The level comes from ffmpeg when it is installed (mean and max dB). Without it, the file's sound is read through After Effects' Convert Audio to Keyframes.
+
+Measured live (After Effects 27.0, 2026-11-12, a 2-second 1080 × 1920 comp with a beat track):
+- the reel and the alpha master each matched the comp, sound at a mean of −26.5 dB, about 2 s each;
+- the same comp with its sound from the four-channel take was flagged silent, at max −84.3 dB through ffmpeg and amplitude 0.002 through After Effects alone (a beat track reads 21.2).
+
+## Colour-managed and 32 bpc projects
+
+Measured live on 2026-11-12, After Effects 27.0. The same scene was built from sRGB image files in two projects: one at 8 bpc with no working space, and one at 32 bpc with the working space "ACEScg ACES Working Space AMPAS S-2014-004" under After Effects' own colour engine. The scene had a grey, a skin patch, a noisy patch, white and black, a red half at 50%, and a feathered subject with a green fringe.
+
+Under that engine the captures are working-space values at a tenth of their scale. The conversion to the viewer's picture was wrong:
+- an 8-bit grey of 128 read 67;
+- `look` put the neutral at L* 28 for 54;
+- un-matting gave the working-space red, not red;
+- spill turned its verdict;
+- the reference report found a cast of 8.8 steps between two identical scenes.
+
+None of it warned. So those readings now refuse in plain words (`colorRefused`, `picture.reason`), and the alpha-based readings go on. The tolerance for "the same" is one 8-bit step; the alpha readings matched exactly.
+
+| Tool | 32 bpc ACEScg, After Effects' engine |
+|---|---|
+| `ae_render_frame` `sample` | output stage refused; the raw `capture` stage is given, labelled |
+| `look` | refused |
+| `edge` | widths, coverage, holes, specks: the same (difference 0); spill refused |
+| `screen`, `histogram`, `analyze`, `diff` | refused |
+| `channels: "rgba"`, `over` (un-matting) | refused; the file written is the raw capture |
+| `ae_check_comp` (whole-piece check) | picture checks refused; structure checks run |
+| `reference.report` on a comp, movie or footage item | refused before rendering; a PNG still or a folder of frames still works (read without After Effects) |
+| `subject.check_file` | the same: holes, openings, specks, seen-through and opaque share all read alike (opaque 0.283 to 0.308, largest step 0.0067, in both) |
+| Picture evals (seat, review, over, keying, grade, finish) | refuse outside 8 bpc with no working space, as before |
+
+Not checked:
+- **OCIO:** no working space could be set by script under OCIO (every name read back "None"), so the OCIO path is left as it was and is unverified.
+- **16 bpc with a working space.**
+
+`colorManaged: "off"` still gives the raw working-space values on request. For colour readings, measure in a copy of the project set to no working space.
+
+A script that changes a project's bit depth or colour engine also changes After Effects' default for new projects: put them back.
+
 ## Handoff
+
+**Lint the project before handing it over.** `ae_do { operation: "project.lint" }` is read only and asks whether another person could open the project and work in it. It finds:
+- default layer and comp names;
+- footage, solids and precomps at the project's top level (top-level comps nothing uses are deliverables and stay);
+- unused footage, solids included;
+- missing footage, and missing fonts (After Effects 24+);
+- expressions in error, on every property;
+- layers switched off with no role (not a track matte, a guide or sound only).
+
+Layers the cut-out path keeps switched off for a re-click, and video layers used for their sound alone (picture off, sound on), are listed under `kept`; a layer with its picture and its sound both off is a finding. Pass `ignore` for anything else kept on purpose. Measured live on a scratch project with one of each problem planted beside a track matte, a sound-only layer and solids in their folder: it named the nine planted problems and nothing else, in 250 ms. On the round-two head-to-head project (82 items) it found 30 unused footage items, mostly solids left by deleted nulls, and 19 items at the top level.
 
 Report what changed, the project and render paths, evidence reviewed, and any missing checks. Keep technical pass, craft judgment and user approval distinct. Record accepted new recipes in the project with exact timings and reference frames. Never claim publication, audience performance or approval from a clean export alone.

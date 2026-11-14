@@ -15,6 +15,13 @@
 // budget grows with the number of frames and their size (settleTimeoutFor).
 // When it runs out, the answer says which frames finished and which did not,
 // so a caller can keep the finished ones.
+//
+// A fixed budget does not follow After Effects' real pace: on a long, heavy
+// comp (a 1,305-frame piece with a cut-out, 2026-11-12) the frames past
+// about 640 came slower than the budget allowed, every later chunk timed out
+// and the captures piled up in After Effects' queue. With `stallMs` the wait
+// goes on for as long as captures keep finishing, and ends only when none has
+// finished for that long (or the budget runs out before the first does).
 import { promises as fs } from "node:fs";
 /** The wait for one frame, as before stage 4: hit once live on a keyed 1080×1920 comp. */
 export const SETTLE_BASE_MS = 15_000;
@@ -69,7 +76,7 @@ async function endsWithIend(p, size) {
 export async function waitForSettled(paths, opts) {
     const stableMs = opts.stableMs ?? 250;
     const start = Date.now();
-    const deadline = start + opts.timeoutMs;
+    let deadline = start + opts.timeoutMs;
     const done = new Set();
     const state = paths.map(() => ({
         size: -1,
@@ -77,6 +84,7 @@ export async function waitForSettled(paths, opts) {
         status: "missing",
     }));
     for (;;) {
+        const before = done.size;
         await Promise.all(paths.map(async (p, i) => {
             if (done.has(i))
                 return;
@@ -112,6 +120,8 @@ export async function waitForSettled(paths, opts) {
             if ((await endsWithIend(p, size)) || Date.now() - s.changedAt >= stableMs)
                 done.add(i);
         }));
+        if (opts.stallMs !== undefined && done.size > before)
+            deadline = Math.max(deadline, Date.now() + opts.stallMs);
         if (done.size === paths.length || Date.now() > deadline)
             break;
         await sleep(POLL_MS);
@@ -128,7 +138,13 @@ export async function waitForSettled(paths, opts) {
             bytes: Math.max(0, state[i].size),
         });
     }
-    return { settled, unsettled, waitedMs: Date.now() - start, timeoutMs: opts.timeoutMs };
+    return {
+        settled,
+        unsettled,
+        waitedMs: Date.now() - start,
+        timeoutMs: opts.timeoutMs,
+        ...(opts.stallMs !== undefined ? { stallMs: opts.stallMs } : {}),
+    };
 }
 /**
  * Read a file once it has finished writing (see waitForSettled). Throws when

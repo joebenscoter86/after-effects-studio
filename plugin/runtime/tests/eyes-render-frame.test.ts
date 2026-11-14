@@ -130,6 +130,21 @@ afterEach(async () => {
 // 128; over magenta it must be (255, 0, 127), over the light checkerboard
 // square (230, 102, 102).
 
+describe("timing", () => {
+  it("reports how long the After Effects call, the settle wait and the Node work took", async () => {
+    const { res, isError } = await render({ time: 0 });
+    expect(isError).toBe(false);
+    expect(res.timing).toEqual({
+      aeCallMs: expect.any(Number),
+      settleMs: expect.any(Number),
+      nodeMs: expect.any(Number),
+      totalMs: expect.any(Number),
+    });
+    expect(res.timing.totalMs).toBeGreaterThanOrEqual(res.timing.aeCallMs + res.timing.settleMs);
+    expect(res.timing.settleMs).toBe(res.captureSettle.waitedMs);
+  });
+});
+
 describe("channels: rgb (default)", () => {
   it("leaves the capture's colour as AE composited it over the comp background", async () => {
     const { res, isError } = await render({ time: 0 });

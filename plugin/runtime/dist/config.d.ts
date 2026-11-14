@@ -111,6 +111,24 @@ export declare const BUSY_LOCK_REFRESH_MS = 15000;
 export declare const RELAUNCH_UNCONSUMED_AFTER_MS = 2500;
 /** Total dispatcher launches per call, first attempt included. */
 export declare const MAX_LAUNCH_ATTEMPTS = 3;
+/**
+ * Where the launch lock lives: AE_MCP_LAUNCH_LOCK_DIR when set, else
+ * `<home>/Library/Caches/comp-room`, with the home folder read from the user
+ * database (os.userInfo), not from $HOME. Read per transport, not at import,
+ * so a test can point it elsewhere.
+ */
+export declare function launchLockDir(): string;
+/**
+ * Age past which a launch lock is broken whoever holds it: osascript gives
+ * up on its DoScript after 7,200 s (launcher.ts), so a holder older than
+ * that plus five minutes is gone. Locks of dead launchers are broken at once.
+ */
+export declare const LAUNCH_LOCK_STALE_MS = 7500000;
+/**
+ * A lock written by another process before its launcher's pid was recorded
+ * belongs to a launch being started; past this it is taken as abandoned.
+ */
+export declare const LAUNCH_LOCK_SPAWN_GRACE_MS = 10000;
 export declare const INSTANCES_DIRNAME = "instances";
 export declare const INSTANCES_DIR: string;
 export declare const HEARTBEAT_FILENAME = "heartbeat.json";

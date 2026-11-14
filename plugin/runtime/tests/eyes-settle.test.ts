@@ -215,10 +215,21 @@ describe("ae_render_frame waits for every capture, and keeps the finished ones",
   });
 
   it("does not take a file left at the frame's path by an earlier render", async () => {
+    // A batch's files carry a call id now, so a file of an earlier render is never at this call's path.
     await fs.writeFile(path.join(dir, "f_1.png"), PNG);
     const res = await render({ times: [0, 0.04, 0.08], settleTimeoutMs: 300 }, fakeAe([0, 2]));
     expect(res.captureSettle.unsettled).toEqual([
-      expect.objectContaining({ index: 1, state: "unchanged" }),
+      expect.objectContaining({ index: 1, state: "missing" }),
+    ]);
+    // A single frame keeps the path it was given, and a file left there is still not taken.
+    const single = path.join(dir, "one.png");
+    await fs.writeFile(single, PNG);
+    const one = await renderFrameTool.handler(
+      { compNameOrId: "Main", outPath: single, time: 0, settleTimeoutMs: 300 } as never,
+      fakeAe([]),
+    );
+    expect((one.structuredContent as any).result.captureSettle.unsettled).toEqual([
+      expect.objectContaining({ index: 0, state: "unchanged" }),
     ]);
   });
 

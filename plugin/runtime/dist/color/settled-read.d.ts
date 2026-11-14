@@ -31,6 +31,8 @@ export interface SettleResult {
     unsettled: UnsettledFile[];
     waitedMs: number;
     timeoutMs: number;
+    /** The stall limit, when the wait was extended by progress. */
+    stallMs?: number;
 }
 export interface SettleOptions {
     timeoutMs: number;
@@ -38,6 +40,14 @@ export interface SettleOptions {
     before?: FileStamp[];
     /** Size must hold this long when the file is not a complete PNG. Default 250 ms. */
     stableMs?: number;
+    /**
+     * Keep waiting past `timeoutMs` while files keep finishing: each file that
+     * finishes moves the deadline to at least `stallMs` from then. The wait
+     * ends when every file has finished, or when none has finished for
+     * `stallMs` (and the `timeoutMs` budget is spent). Unset: `timeoutMs` is a
+     * fixed budget, as before.
+     */
+    stallMs?: number;
 }
 /** Wait until every path has finished writing, or the time runs out; never throws. */
 export declare function waitForSettled(paths: string[], opts: SettleOptions): Promise<SettleResult>;

@@ -1,4 +1,16 @@
 import { z } from "zod";
+type LayerRef = string | number | {
+    id: number;
+};
+/** What the JSX needs for a strip: times are worked out there, from the comp's frame duration. */
+interface StripPlan {
+    at: number;
+    /** Frame offsets from the moment, already multiplied by step. */
+    offsets: number[];
+    frames: number;
+    step: number;
+    maxDimension: number;
+}
 /**
  * Where inside a frame `frames` and `strip` render: a quarter of a frame past
  * its start. Found live: a time a hair below a boundary renders the frame
@@ -72,15 +84,15 @@ export declare const renderFrameTool: import("./define-tool.js").ToolSpec<{
         }, z.core.$strip>>;
         stage: z.ZodOptional<z.ZodEnum<{
             both: "both";
-            output: "output";
             capture: "capture";
+            output: "output";
         }>>;
     }, z.core.$strip>>;
     histogram: z.ZodOptional<z.ZodUnion<readonly [z.ZodBoolean, z.ZodObject<{
         bins: z.ZodOptional<z.ZodNumber>;
         stage: z.ZodOptional<z.ZodEnum<{
-            output: "output";
             capture: "capture";
+            output: "output";
         }>>;
     }, z.core.$strip>]>>;
     compare: z.ZodOptional<z.ZodObject<{
@@ -124,6 +136,29 @@ export declare const renderFrameTool: import("./define-tool.js").ToolSpec<{
         unevenRatio: z.ZodOptional<z.ZodNumber>;
         grainAbove: z.ZodOptional<z.ZodNumber>;
     }, z.core.$strip>]>>;
+    look: z.ZodOptional<z.ZodObject<{
+        regions: z.ZodArray<z.ZodObject<{
+            name: z.ZodString;
+            x: z.ZodNumber;
+            y: z.ZodNumber;
+            width: z.ZodOptional<z.ZodNumber>;
+            height: z.ZodOptional<z.ZodNumber>;
+            role: z.ZodOptional<z.ZodEnum<{
+                neutral: "neutral";
+                skin: "skin";
+                plate: "plate";
+                element: "element";
+            }>>;
+        }, z.core.$strip>>;
+        pairs: z.ZodOptional<z.ZodArray<z.ZodObject<{
+            element: z.ZodString;
+            plate: z.ZodString;
+        }, z.core.$strip>>>;
+        minContrast: z.ZodOptional<z.ZodNumber>;
+        grainTolerance: z.ZodOptional<z.ZodNumber>;
+        background: z.ZodOptional<z.ZodArray<z.ZodNumber>>;
+        sharpnessTolerance: z.ZodOptional<z.ZodNumber>;
+    }, z.core.$strip>>;
     diff: z.ZodOptional<z.ZodUnion<readonly [z.ZodBoolean, z.ZodObject<{
         changeAbove: z.ZodOptional<z.ZodNumber>;
         spikeRatio: z.ZodOptional<z.ZodNumber>;
@@ -140,4 +175,21 @@ export declare const renderFrameTool: import("./define-tool.js").ToolSpec<{
         }, z.core.$strip>]>>;
     }, z.core.$strip>]>>;
 }>;
+/**
+ * Per-frame output paths: the single path as-is, or stem_<call>_<index><ext>
+ * for `times`. The call id is new every call: saveFrameToPng writes after the
+ * script returns, so with names reused between calls (stem_<index>) a write
+ * still pending from an earlier call could land after this call's stamp and
+ * be taken for this call's frame, mixing frames between calls (first
+ * production use, 2026-11-12).
+ */
+export declare function framePaths(abs: string, count: number, multi: boolean, call?: string): string[];
+/** A short id for one call's batch of files. */
+export declare const newCallId: () => string;
+/** Options the JSX needs; everything else happens in Node on the captures. */
+export declare function renderJsx(args: {
+    compNameOrId: string | number;
+    useDisplayStartTime?: boolean;
+}, times: number[] | null, paths: string[], tryOcio: boolean, isolate: LayerRef[] | null, strip?: StripPlan | null, frameNums?: number[] | null): string;
+export {};
 //# sourceMappingURL=render-frame.d.ts.map

@@ -15,6 +15,13 @@
 // budget grows with the number of frames and their size (settleTimeoutFor).
 // When it runs out, the answer says which frames finished and which did not,
 // so a caller can keep the finished ones.
+//
+// A fixed budget does not follow After Effects' real pace: on a long, heavy
+// comp (a 1,305-frame piece with a cut-out, 2026-11-12) the frames past
+// about 640 came slower than the budget allowed, every later chunk timed out
+// and the captures piled up in After Effects' queue. With `stallMs` the wait
+// goes on for as long as captures keep finishing, and ends only when none has
+// finished for that long (or the budget runs out before the first does).
 
 import { promises as fs } from "node:fs";
 
@@ -83,6 +90,8 @@ export interface SettleResult {
   unsettled: UnsettledFile[];
   waitedMs: number;
   timeoutMs: number;
+  /** The stall limit, when the wait was extended by progress. */
+  stallMs?: number;
 }
 
 export interface SettleOptions {
@@ -91,6 +100,14 @@ export interface SettleOptions {
   before?: FileStamp[];
   /** Size must hold this long when the file is not a complete PNG. Default 250 ms. */
   stableMs?: number;
+  /**
+   * Keep waiting past `timeoutMs` while files keep finishing: each file that
+   * finishes moves the deadline to at least `stallMs` from then. The wait
+   * ends when every file has finished, or when none has finished for
+   * `stallMs` (and the `timeoutMs` budget is spent). Unset: `timeoutMs` is a
+   * fixed budget, as before.
+   */
+  stallMs?: number;
 }
 
 async function endsWithIend(p: string, size: number): Promise<boolean> {
@@ -112,7 +129,7 @@ async function endsWithIend(p: string, size: number): Promise<boolean> {
 export async function waitForSettled(paths: string[], opts: SettleOptions): Promise<SettleResult> {
   const stableMs = opts.stableMs ?? 250;
   const start = Date.now();
-  const deadline = start + opts.timeoutMs;
+  let deadline = start + opts.timeoutMs;
   const done = new Set<number>();
   const state = paths.map(() => ({
     size: -1,
@@ -120,6 +137,7 @@ export async function waitForSettled(paths: string[], opts: SettleOptions): Prom
     status: "missing" as UnsettledState,
   }));
   for (;;) {
+    const before = done.size;
     await Promise.all(
       paths.map(async (p, i) => {
         if (done.has(i)) return;
@@ -154,6 +172,8 @@ export async function waitForSettled(paths: string[], opts: SettleOptions): Prom
         if ((await endsWithIend(p, size)) || Date.now() - s.changedAt >= stableMs) done.add(i);
       }),
     );
+    if (opts.stallMs !== undefined && done.size > before)
+      deadline = Math.max(deadline, Date.now() + opts.stallMs);
     if (done.size === paths.length || Date.now() > deadline) break;
     await sleep(POLL_MS);
   }
@@ -168,7 +188,13 @@ export async function waitForSettled(paths: string[], opts: SettleOptions): Prom
       bytes: Math.max(0, state[i].size),
     });
   }
-  return { settled, unsettled, waitedMs: Date.now() - start, timeoutMs: opts.timeoutMs };
+  return {
+    settled,
+    unsettled,
+    waitedMs: Date.now() - start,
+    timeoutMs: opts.timeoutMs,
+    ...(opts.stallMs !== undefined ? { stallMs: opts.stallMs } : {}),
+  };
 }
 
 /**

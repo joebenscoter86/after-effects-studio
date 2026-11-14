@@ -1,0 +1,9 @@
+; What "offline" means for this suite, checked by the system, not by PATH:
+; the run and everything it starts may do anything except start osascript
+; (by any path; the launcher calls /usr/bin/osascript by its full path) or
+; After Effects itself. `npm run test:offline` (macOS) runs the suite under
+; it with every end-to-end opt-in unset; it must pass there.
+(version 1)
+(allow default)
+(deny process-exec (literal "/usr/bin/osascript"))
+(deny process-exec (regex #"/After Effects$"))

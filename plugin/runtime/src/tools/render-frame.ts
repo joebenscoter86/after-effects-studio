@@ -1,8 +1,8 @@
+import { randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import * as path from "node:path";
 import { z } from "zod";
 
-import { measureCaptureTransfer, calibrationKey } from "../color/calibration.js";
 import {
   alphaChange,
   edgeArgsError,
@@ -56,22 +56,30 @@ import {
   resample,
   frameLabel,
   histogramOf,
+  lookArgsError,
+  lookCrops,
+  measureLook,
   rgbHex,
   sampleRegions,
+  summarizeLookSeries,
   unmatte,
   type Backdrop,
   type FrameAnalysis,
   type FrameHistogram,
+  type LookArgs,
+  type LookCrop,
+  type LookFrame,
+  type LookSeries,
   type RegionSpec,
   type Rgb,
 } from "../color/sheet.js";
-import { profileForWorkingSpace, sceneLinearToDisplaySrgb } from "../color/transform.js";
 import { rejectedOutputPath } from "../config.js";
 import { errorResult } from "../errors.js";
 import { readOnlyMode } from "../policy.js";
-import { RENDER_FRAME_FN } from "../operations/snippets.js";
+import { MISSING_SOURCES_FN, OCIO_CAPTURE_FN, RENDER_FRAME_FN } from "../operations/snippets.js";
 import { jsxVal } from "../registry.js";
 import type { AeTransport } from "../transport/AeTransport.js";
+import { colorConversion, iccManagedReason, validRgb, type Convert } from "./capture-shared.js";
 import { defineTool, toMcpResult } from "./define-tool.js";
 
 type Stage = "capture" | "output";
@@ -98,6 +106,7 @@ interface RenderedFrame {
   histogram?: StagedHistogram;
   edge?: EdgeReport;
   screen?: ScreenReport;
+  look?: LookFrame;
 }
 
 interface IsolationReport {
@@ -118,6 +127,20 @@ interface ContactSheetReport {
 
 interface RenderFramePayload {
   ok: boolean;
+  /** With `times`, `strip` or `frames`: the call's id and which frame each file holds. */
+  batch?: {
+    id: string;
+    files: Array<{
+      index: number;
+      path: string;
+      frame: number | null;
+      time: number | null;
+      ok: boolean;
+      error?: string;
+    }>;
+  };
+  /** Milliseconds: the After Effects call, the settle wait, the work in Node, and the whole call. */
+  timing?: { aeCallMs: number; settleMs: number; nodeMs: number; totalMs: number };
   error?: string;
   frames?: RenderedFrame[];
   writtenTo?: string;
@@ -129,6 +152,10 @@ interface RenderFramePayload {
   compName?: string;
   size?: [number, number];
   workingSpace?: string;
+  /** 0: Adobe's ICC colour management, 1: OCIO, null: not reported. */
+  colorManagementSystem?: number | null;
+  /** In a project under Adobe's colour management: why the colour readings were refused, and which. */
+  colorRefused?: { reason: string; refused: string[] };
   bitsPerChannel?: number;
   projectFile?: string | null;
   captureKind?: "ocio" | "direct";
@@ -163,6 +190,9 @@ interface RenderFramePayload {
   screen?: ScreenReport;
   screenThresholds?: ScreenThresholds;
   screenWarning?: string;
+  look?: LookFrame;
+  lookSeries?: LookSeries;
+  lookWarning?: string;
   captureWarning?: string;
   /** Which captures finished writing (saveFrameToPng writes asynchronously). */
   captureSettle?: {
@@ -294,6 +324,7 @@ interface EyesOptions {
   compare: { from: number; to: number } | null;
   edge: EdgeThresholdArgs | null;
   screen: ScreenArgs | null;
+  look: LookArgs | null;
   diff: { thresholds: DiffThresholds; sheet: ContactSheetArgs | null } | null;
 }
 
@@ -336,7 +367,8 @@ export const renderFrameTool = defineTool({
     "Render one or more frames to PNG. Use to visually verify edits. " +
     "The agent's 'eyes' — pair with mutations for a visual feedback loop. " +
     "Headless and deterministic. Pass `time` for one frame, or `times` for several in ONE call " +
-    "(motion checks): files land at <outPath stem>_<index>.png and are listed in `frames`. " +
+    "(motion checks): files land at <outPath stem>_<call id>_<index>.png, a new call id every call, so a late write left " +
+    "by an earlier call can never be taken for this one's frame; `frames` lists them and `batch.files` says which frame each file holds. " +
     "`contactSheet` tiles every frame into one labelled PNG (<stem>_sheet.png) so a motion check is one image; " +
     "`analyze` measures each capture (uniform edge bands = black bars / transparent margins, content bounds, coverage) " +
     "so off-frame elements and letterboxing are caught numerically. " +
@@ -363,6 +395,7 @@ export const renderFrameTool = defineTool({
     "off, the keyed layer isolated), reports green or blue, which pixels are screen and their share, " +
     "a suggested screen colour (the median, and the colour just outside the subject), evenness on a " +
     "grid (darkest and brightest cells, the spread as a ratio, the darker side) and grain. " +
+    "Sitting in the scene: `look` reads grain, edge width, black and white points and CIELAB colour of named regions, names the cast on a neutral (with the gains that remove it) and skin's hue, and compares an element with its plate (add grain, soften, seat the blacks); with `times` on consecutive frames, the grain from frame to frame. " +
     "Watching motion: `diff` (with `times`) reports how much the picture changes between consecutive " +
     "frames, where, and per `sample` region, and flags pairs that stand out (a one-frame pop, a stutter " +
     "where a frame repeats, a cut); `strip: { at, frames }` renders the frames around a moment into one " +
@@ -403,7 +436,7 @@ export const renderFrameTool = defineTool({
       .optional()
       .describe(
         "Several times in seconds, rendered in ONE call. Files are written as " +
-          "<outPath stem>_<index><ext> and reported in `frames` (index-aligned).",
+          "<outPath stem>_<call id>_<index><ext> (a new id every call) and reported in `frames` (index-aligned) and `batch.files` (path, frame, time).",
       ),
     strip: z
       .object({
@@ -451,13 +484,13 @@ export const renderFrameTool = defineTool({
       .describe(
         "Frame numbers (0 = the comp's first frame) instead of times: each is rendered a quarter of a " +
           "frame inside it, so a time never lands on the frame before. Through the `times` path: files " +
-          "<stem>_<index>, reported in `frames` with their `frame`. Instead of `time` / `times` / `strip`.",
+          "<stem>_<call id>_<index>, reported in `frames` and `batch.files` with their `frame`. Instead of `time` / `times` / `strip`.",
       ),
     outPath: z
       .string()
       .describe(
         "Absolute path to write the PNG. Parent directory is created if missing. " +
-          "With `times`, used as the naming stem for every frame.",
+          "With `times`, used as the naming stem for every frame (plus a call id, new every call).",
       ),
     useDisplayStartTime: z
       .boolean()
@@ -810,6 +843,64 @@ export const renderFrameTool = defineTool({
           "grain {stdDev, level, steps8bit, samples, grainy, reading}; reading; warning; " +
           "screenColourNote (capture values and what they mean for Keylight's Screen Colour).",
       ),
+    look: z
+      .object({
+        regions: z
+          .array(
+            regionSchema.extend({
+              role: z
+                .enum(["neutral", "skin", "plate", "element"])
+                .optional()
+                .describe(
+                  "neutral: a surface that should read grey or white (a wall, a card, a metal grille) — its cast is named and the gains that remove it given; skin: its hue angle is read against the usual range; plate / element: for `pairs`.",
+                ),
+            }),
+          )
+          .min(1)
+          .max(64),
+        pairs: z
+          .array(z.object({ element: z.string(), plate: z.string() }))
+          .optional()
+          .describe(
+            "Element regions read against plate regions, by name: grain, edge width, black and white points, with what to do.",
+          ),
+        minContrast: z
+          .number()
+          .gt(0)
+          .max(1)
+          .optional()
+          .describe("Smallest luma step (0..1) read as an edge. Default 0.1."),
+        grainTolerance: z
+          .number()
+          .gt(0)
+          .max(1)
+          .optional()
+          .describe("Default 0.25: within a quarter of the plate's grain matches."),
+        background: z
+          .array(z.number().min(0).max(1))
+          .length(3)
+          .optional()
+          .describe(
+            "The background the subject was cut from (the wall's mean colour, [r, g, b] 0..1, read with `sample` on the take): each region's edgeColour then says how far the soft edge's colour leans toward it.",
+          ),
+        sharpnessTolerance: z
+          .number()
+          .gt(0)
+          .max(1)
+          .optional()
+          .describe("Default 0.25: within a quarter of the plate's edge width matches."),
+      })
+      .optional()
+      .describe(
+        "Does it sit in the scene: for each named region, on the file as written (stage 'output'; with channels 'rgba' only the opaque pixels, straight colour), " +
+          "levels {black, white, mean per channel, lumaBlack, lumaWhite, lumaMean} (0.5th and 99.5th percentiles, 0..1), " +
+          "grain {spatial: per channel in 8-bit steps, the robust spread of each pixel against its 3 x 3 neighbourhood}, " +
+          "sharpness {edgeWidth: median 10 to 90% rise across edges with a luma step of at least minContrast, px (a hard step about 0.8, a Gaussian blur of sigma s about 2.56 s), p90 (the widest tenth), edges}, " +
+          "with alpha (channels 'rgba'): matte {edgeWidth, p90, edges, softBand: soft pixels (alpha 0.02 to 0.98) per pixel of outline, opaqueShare (alpha 0.99 or more) and minAlpha: a region inside the subject reads 1 and 1, so a see-through band shows} read on the alpha, and edgeColour {band, inside, difference, towardBackground, reading}: the soft edge's straight colour against the colour well inside, and with `background` how far it leans toward the background (wall colour ringing the subject); lookSeries adds matteChange (mean change in alpha over the region, frame to frame). " +
+          "colour (CIELAB L, a, b, chroma, hue of the mean). role 'neutral' adds cast {a, b, amount, toward, gains, channelMixer} and a reading; role 'skin' a hue reading. " +
+          "pairs add, per element and plate, grain, sharpness and levels compared, with readings (add grain, soften, seat the blacks). " +
+          "With `times` on consecutive frames, lookSeries adds frame-to-frame grain per region (a still element reads 0). Reported as `look` (per frame with `times`).",
+      ),
     diff: z
       .union([
         z.boolean(),
@@ -1009,6 +1100,7 @@ function checkEyesOptions(
     compare?: { from?: number; to?: number };
     edge?: boolean | EdgeThresholdArgs;
     screen?: boolean | ScreenArgs;
+    look?: LookArgs;
     diff?: boolean | DiffArgs;
     contactSheet?: ContactSheetArgs;
   },
@@ -1110,6 +1202,13 @@ function checkEyesOptions(
     if (problem !== null) return invalid(problem);
   }
 
+  let look: EyesOptions["look"] = null;
+  if (args.look !== undefined) {
+    const problem = lookArgsError(args.look as unknown as Record<string, unknown>);
+    if (problem !== null) return invalid(problem);
+    look = args.look;
+  }
+
   let diff: EyesOptions["diff"] = null;
   const diffArg = args.diff ?? (isStrip ? true : undefined);
   if (diffArg !== undefined && diffArg !== false) {
@@ -1149,6 +1248,7 @@ function checkEyesOptions(
       compare,
       edge,
       screen,
+      look,
       diff,
     },
   };
@@ -1188,15 +1288,30 @@ function sheetPathFor(abs: string, explicit: string | undefined): string {
   return `${stem}_sheet${ext}`;
 }
 
-/** Per-frame output paths: the single path as-is, or stem_<index><ext> for `times`. */
-function framePaths(abs: string, count: number, multi: boolean): string[] {
+/**
+ * Per-frame output paths: the single path as-is, or stem_<call>_<index><ext>
+ * for `times`. The call id is new every call: saveFrameToPng writes after the
+ * script returns, so with names reused between calls (stem_<index>) a write
+ * still pending from an earlier call could land after this call's stamp and
+ * be taken for this call's frame, mixing frames between calls (first
+ * production use, 2026-11-12).
+ */
+export function framePaths(
+  abs: string,
+  count: number,
+  multi: boolean,
+  call: string = newCallId(),
+): string[] {
   if (!multi) return [abs];
   const ext = path.extname(abs) || ".png";
   const stem = abs.slice(0, abs.length - (path.extname(abs).length || 0));
   const out: string[] = [];
-  for (let i = 0; i < count; i++) out.push(`${stem}_${i}${ext}`);
+  for (let i = 0; i < count; i++) out.push(`${stem}_${call}_${i}${ext}`);
   return out;
 }
+
+/** A short id for one call's batch of files. */
+export const newCallId = () => randomUUID().slice(0, 8);
 
 /**
  * `isolate`, inside After Effects. _isolateLayers resolves every reference
@@ -1271,7 +1386,7 @@ const ISOLATE_FN = `
 `;
 
 /** Options the JSX needs; everything else happens in Node on the captures. */
-function renderJsx(
+export function renderJsx(
   args: { compNameOrId: string | number; useDisplayStartTime?: boolean },
   times: number[] | null,
   paths: string[],
@@ -1285,33 +1400,17 @@ function renderJsx(
   // the comp (frames 0 .. last, in the same time convention as `time`).
   return `
         ${RENDER_FRAME_FN}
+        ${MISSING_SOURCES_FN}
+        ${OCIO_CAPTURE_FN}
         ${ISOLATE_FN}
         var _arg = ${jsxVal(args.compNameOrId)};
         var comp = AE.findCompByNameOrId(_arg);
         if (!comp) return { ok: false, error: "no comp matching " + String(_arg) };
-        var _missingMedia = [];
-        var _seenComps = {};
-        var _seenFootage = {};
-        function _checkSources(_comp) {
-            if (_seenComps[_comp.id]) return;
-            _seenComps[_comp.id] = true;
-            for (var _li = 1; _li <= _comp.numLayers; _li++) {
-                var _source = AE.safeGet(function () { return _comp.layer(_li).source; }, null);
-                if (!_source) continue;
-                if (_source instanceof CompItem) { _checkSources(_source); continue; }
-                if (!(_source instanceof FootageItem) || _seenFootage[_source.id]) continue;
-                _seenFootage[_source.id] = true;
-                var _file = AE.safeGet(function () { return _source.file; }, null);
-                var _missing = AE.safeGet(function () { return _source.footageMissing; }, false);
-                if (!_missing && (!_file || _file.exists)) continue;
-                var _missingPath = AE.safeGet(function () { return _source.mainSource.missingFootagePath; }, null);
-                if (!_missingPath && _file) _missingPath = _file.fsName;
-                _missingMedia.push({ id: _source.id, name: _source.name, path: _missingPath });
-            }
-        }
-        _checkSources(comp);
+        var _missingMedia = _missingSources(comp);
         if (_missingMedia.length) return { ok: false, error: "source media missing for comp " + comp.name + "; restore or relink before rendering", missingFootage: _missingMedia };
         var _ws = AE.safeGet(function () { return app.project.workingSpace; }, "None");
+        // 0: Adobe's own (ICC) colour management; 1: OCIO; null before After Effects 24.
+        var _cms = AE.safeGet(function () { return Number(app.project.colorManagementSystem); }, null);
         var _times = ${jsxVal(times)};
         var _strip = ${jsxVal(strip === null ? null : { at: strip.at, offsets: strip.offsets })};
         var _frameNums = ${jsxVal(frameNums)};
@@ -1351,7 +1450,8 @@ function renderJsx(
             if (_clamped > 0) _stripOut.note = "the comp is shorter than the strip: the last " + _clamped + " frames repeat the comp's last frame (they read as stutters in diff)";
         }
         var _useDst = ${jsxVal(!!args.useDisplayStartTime)};
-        var _useOcio = ${jsxVal(tryOcio)} && _ws !== "None" && _ws !== "";
+        // The OCIO Display Transform only under OCIO: under Adobe's ICC engine it does not give the viewer's picture (measured 2026-11-12).
+        var _useOcio = ${jsxVal(tryOcio)} && _ws !== "None" && _ws !== "" && _cms === 1;
         var _isolate = ${jsxVal(isolate)};
         var _frames = [];
         function _renderAll(kind) {
@@ -1378,27 +1478,10 @@ function renderJsx(
         var _renderError = null;
         try {
             if (_useOcio) {
-                var _adj = null;
-                var _adjSrc = null;
-                try {
-                    _adj = comp.layers.addSolid([1, 1, 1], "__mcp_ocio__", comp.width, comp.height, comp.pixelAspect);
-                    _adjSrc = _adj.source;
-                    _adj.adjustmentLayer = true;
-                    try {
-                        var _maxT = _times[0];
-                        for (var _mi = 1; _mi < _times.length; _mi++) { if (_times[_mi] > _maxT) _maxT = _times[_mi]; }
-                        if (_useDst) _maxT = _maxT + comp.displayStartTime;
-                        if (_adj.outPoint < _maxT + comp.frameDuration) _adj.outPoint = _maxT + comp.frameDuration;
-                    } catch (eOp) { }
-                    var _fxOk = false;
-                    try {
-                        _adj.property("Effects").addProperty("ADBE OCIO Display Transform");
-                        _fxOk = true;
-                    } catch (eFx) { /* pre-OCIO AE or ICC color engine */ }
-                    if (_fxOk) _renderAll("ocio");
-                } catch (eTmp) { /* fall through to direct capture */ }
-                if (_adj) { try { _adj.remove(); } catch (eRm) { } }
-                if (_adjSrc) { try { _adjSrc.remove(); } catch (eRs) { } }
+                var _maxT = _times[0];
+                for (var _mi = 1; _mi < _times.length; _mi++) { if (_times[_mi] > _maxT) _maxT = _times[_mi]; }
+                if (_useDst) _maxT = _maxT + comp.displayStartTime;
+                _captureWithOcio(comp, _maxT, _renderAll);
             }
             if (_frames.length === 0) _renderAll("direct");
         } catch (eRender) {
@@ -1427,6 +1510,7 @@ function renderJsx(
         if (_allOk) {
             _out.compName = comp.name;
             _out.workingSpace = _ws;
+            _out.colorManagementSystem = _cms;
             _out.bitsPerChannel = AE.safeGet(function () { return app.project.bitsPerChannel; }, 8);
             _out.projectFile = app.project.file ? app.project.file.fsName.replace(/\\\\/g, "/") : null;
             _out.bgColor = AE.safeGet(function () { return [comp.bgColor[0], comp.bgColor[1], comp.bgColor[2]]; }, null);
@@ -1452,12 +1536,14 @@ async function nativeFlow(
   transport: AeTransport,
   strip: StripPlan | null = null,
 ) {
+  const startedAt = performance.now();
   const frameNums = args.frames ?? null;
   const multi = args.times !== undefined || strip !== null || frameNums !== null;
   // A strip and frame numbers go down the `times` path; their times are worked out in AE.
   const times = strip !== null || frameNums !== null ? null : (args.times ?? [args.time as number]);
   const count = strip?.frames ?? frameNums?.length ?? times?.length ?? 1;
-  const paths = framePaths(abs, count, multi);
+  const callId = newCallId();
+  const paths = framePaths(abs, count, multi, callId);
   const contactSheet = args.contactSheet ?? (strip !== null ? {} : undefined);
   // What was at each path before the render, so a left-over file is never
   // taken for this call's capture.
@@ -1478,6 +1564,7 @@ async function nativeFlow(
     label: "render_frame",
     timeoutMs: 120_000 + (count - 1) * 30_000,
   });
+  const aeCallMs = performance.now() - startedAt;
   if (!result.ok) return toMcpResult(result);
   const payload = result.result as RenderFramePayload;
   const frames = payload?.frames ?? [];
@@ -1518,7 +1605,7 @@ async function nativeFlow(
     (p): p is string => typeof p === "string",
   );
   /** Attach a per-frame result where this response shape keeps it. */
-  const put = <K extends "analysis" | "samples" | "histogram" | "edge" | "screen">(
+  const put = <K extends "analysis" | "samples" | "histogram" | "edge" | "screen" | "look">(
     i: number,
     key: K,
     value: RenderedFrame[K],
@@ -1527,9 +1614,44 @@ async function nativeFlow(
     else (payload as RenderedFrame)[key] = value;
   };
 
+  // Under Adobe's own colour management (a working space, not OCIO) the conversion to the
+  // viewer's picture is not right (stage 7, measured 2026-11-12): the colour readings are
+  // refused, the captures stay raw, and the alpha-based measures go on.
+  const iccRefused =
+    args.colorManaged !== "off" &&
+    typeof payload.workingSpace === "string" &&
+    payload.workingSpace !== "None" &&
+    payload.workingSpace !== "" &&
+    payload.colorManagementSystem !== 1;
+  let analyze = args.analyze === true;
+  let spillRefused: string | null = null;
+  if (iccRefused) {
+    const refused: string[] = [];
+    const reason = iccManagedReason(payload.workingSpace as string, payload.bitsPerChannel);
+    if (opts.sample) {
+      if (opts.sample.stages.includes("output")) refused.push("sample (output)");
+      const stages = opts.sample.stages.filter((st) => st === "capture");
+      opts = { ...opts, sample: stages.length ? { ...opts.sample, stages } : null };
+    }
+    if (opts.look) refused.push("look");
+    if (opts.histogram) refused.push("histogram");
+    if (opts.screen) refused.push("screen");
+    if (opts.diff) refused.push("diff");
+    if (analyze) refused.push("analyze");
+    if (opts.edge) {
+      refused.push("edge spill");
+      spillRefused = reason;
+    }
+    if (opts.channels === "rgba") refused.push("channels rgba");
+    if (opts.overGiven) refused.push("over");
+    opts = { ...opts, look: null, histogram: null, screen: null, diff: null, channels: "rgb", overGiven: false };
+    analyze = false;
+    payload.colorRefused = { reason, refused };
+    payload.colorWarning = `${reason} The written files are the raw captures (working-space values at the capture's scale), not the viewer's picture.`;
+  }
   // How the files will be written, decided once (it may need a calibration
   // round trip). Null leaves the raw captures on disk.
-  const managed = args.colorManaged !== "off";
+  const managed = args.colorManaged !== "off" && !iccRefused;
   let convert: Convert | null = null;
   let backdrop: Backdrop | null = null;
   if (managed) {
@@ -1556,6 +1678,21 @@ async function nativeFlow(
     before: before.slice(0, written.length),
   });
   payload.captureSettle = settle;
+  // Which frame each file of the batch holds, from what After Effects was asked for.
+  const listBatch = () => {
+    if (!multi) return;
+    payload.batch = {
+      id: callId,
+      files: frames.map((f, i) => ({
+        index: i,
+        path: f.writtenTo ?? paths[i],
+        frame: f.frame ?? null,
+        time: f.time ?? null,
+        ok: f.ok === true,
+        ...(f.ok === true ? {} : { error: f.error ?? "not captured" }),
+      })),
+    };
+  };
   if (settle.unsettled.length > 0) {
     const secs = (settle.timeoutMs / 1000).toFixed(1);
     for (const u of settle.unsettled) {
@@ -1571,6 +1708,7 @@ async function nativeFlow(
         ? "The others were measured; see captureSettle, or render the missing ones again with a longer settleTimeoutMs."
         : "Nothing could be measured; try again with a longer settleTimeoutMs.");
     if (settle.settled.length === 0) {
+      listBatch();
       if (args.analyze) payload.analysisWarning = "analysis failed: no capture finished writing";
       if (managed)
         payload.colorWarning =
@@ -1578,6 +1716,7 @@ async function nativeFlow(
       return toMcpResult(result);
     }
   }
+  listBatch();
   const finished = new Set(settle.settled);
 
   // One frame at a time, as before these options: a decoded 1080p frame is
@@ -1601,6 +1740,12 @@ async function nativeFlow(
   let edgeMeasured = 0;
   let edgeFromLuma = 0;
   let withAlpha = 0;
+  // Frame-to-frame grain: only the regions' crops are kept.
+  const lookFrames: Array<{
+    index: number;
+    frame: number | undefined;
+    crops: Map<string, LookCrop>;
+  }> = [];
   let writing = convert !== null;
   for (const [i, file] of written.entries()) {
     if (!finished.has(i)) continue;
@@ -1628,6 +1773,7 @@ async function nativeFlow(
           const t = resolveEdgeThresholds(opts.edge, capture.width, capture.height);
           payload.edgeThresholds ??= t;
           const { report, frame } = measureEdge(capture, bg ?? [0, 0, 0], t);
+          if (spillRefused !== null) (report as unknown as Record<string, unknown>).spill = { refused: spillRefused };
           put(i, "edge", report);
           edgeMeasured++;
           if (edgePrev !== null && edgePrev.index === i - 1) {
@@ -1653,7 +1799,7 @@ async function nativeFlow(
         payload.screenWarning = `screen measurement failed: ${err instanceof Error ? err.message : String(err)}`;
       }
     }
-    if (args.analyze) {
+    if (analyze) {
       try {
         put(i, "analysis", analyzeFrame(capture));
       } catch (err) {
@@ -1683,6 +1829,19 @@ async function nativeFlow(
 
     const pixels: Record<Stage, DecodedPng> = { capture, output };
     if (opts.sample) put(i, "samples", sampleReport(pixels, opts.sample));
+    if (opts.look) {
+      try {
+        put(i, "look", measureLook(output, opts.look));
+        if (multi)
+          lookFrames.push({
+            index: i,
+            frame: frames[i]?.frame,
+            crops: lookCrops(output, opts.look),
+          });
+      } catch (err) {
+        payload.lookWarning = `look measurement failed: ${err instanceof Error ? err.message : String(err)}`;
+      }
+    }
     if (opts.histogram) {
       const { bins, stage } = opts.histogram;
       put(i, "histogram", { stage, ...histogramOf(pixels[stage], bins) });
@@ -1788,6 +1947,24 @@ async function nativeFlow(
     }
   }
 
+  if (opts.look && lookFrames.length >= 2) {
+    const consecutive = lookFrames.every(
+      (f, k) =>
+        k === 0 ||
+        (typeof f.frame === "number" &&
+          typeof lookFrames[k - 1].frame === "number" &&
+          f.frame - (lookFrames[k - 1].frame as number) === 1),
+    );
+    if (consecutive)
+      payload.lookSeries = summarizeLookSeries(
+        lookFrames.map((f) => f.crops),
+        opts.look,
+      );
+    else
+      payload.lookWarning =
+        "frame-to-frame grain needs consecutive frames (one frame apart, in order); these were not, so lookSeries was left out";
+  }
+
   if (opts.compare && opts.sample) {
     const { from, to } = opts.compare;
     const a = kept.get(from);
@@ -1848,6 +2025,15 @@ async function nativeFlow(
       opts.diff.thresholds,
     );
   }
+  // Where the time went: the After Effects call (the render itself), waiting
+  // for saveFrameToPng's files to finish writing, and everything done in Node.
+  const totalMs = performance.now() - startedAt;
+  payload.timing = {
+    aeCallMs: Math.round(aeCallMs),
+    settleMs: settle.waitedMs,
+    nodeMs: Math.max(0, Math.round(totalMs - aeCallMs - settle.waitedMs)),
+    totalMs: Math.round(totalMs),
+  };
   return toMcpResult(result);
 }
 
@@ -1952,8 +2138,6 @@ async function attachDiffSheet(
   }
 }
 
-type Convert = (rgb: Float64Array) => void;
-
 /** Drop the name (reported once per region) and add the display hex where it means something. */
 function stageBlock(stats: Record<string, unknown>, stage: Stage): Record<string, unknown> {
   const { name: _name, ...rest } = stats;
@@ -1987,14 +2171,6 @@ function chooseBackdrop(payload: RenderFramePayload, opts: EyesOptions): Backdro
   }
   payload.over = opts.over.kind === "checkerboard" ? "checkerboard" : opts.over.color;
   return opts.over;
-}
-
-function validRgb(value: unknown): Rgb | null {
-  return Array.isArray(value) &&
-    value.length === 3 &&
-    value.every((v) => typeof v === "number" && Number.isFinite(v))
-    ? [value[0], value[1], value[2]]
-    : null;
 }
 
 /** Tile the final images into one labelled sheet. */
@@ -2064,76 +2240,3 @@ async function writeOutput(
   return decodePng(bytes);
 }
 
-/**
- * Decide how the captures are converted to viewer-accurate sRGB (see the
- * tool description for the three pipelines) and return the conversion,
- * applied in place to RGB only — alpha is coverage, not colour, and is never
- * converted. Reports through payload.colorPipeline / payload.colorWarning;
- * returns null (and never throws) when the files must stay raw.
- */
-async function colorConversion(
-  payload: RenderFramePayload,
-  transport: AeTransport,
-): Promise<Convert | null> {
-  const workingSpace = payload.workingSpace ?? "None";
-  try {
-    if (workingSpace === "None" || workingSpace === "") {
-      // Values are already display-referred; the only fix needed is an
-      // explicit color tag so viewers stop guessing at the 16-bit file.
-      payload.colorPipeline = "untagged 16-bit → 8-bit sRGB-tagged (values unchanged)";
-      return () => {};
-    }
-
-    const calib = await measureCaptureTransfer(
-      transport,
-      calibrationKey(payload.projectFile ?? null, workingSpace, payload.bitsPerChannel ?? 8),
-      !readOnlyMode(),
-    );
-    const calibFailed = "error" in calib || calib.kind === "unknown";
-    const gain = !calibFailed && calib.kind === "linear" ? 1 / calib.scale : 1;
-    const applyGain = (rgb: Float64Array) => {
-      if (gain !== 1) for (let i = 0; i < rgb.length; i++) rgb[i] *= gain;
-    };
-
-    if (payload.captureKind === "ocio") {
-      if (calibFailed) {
-        payload.colorWarning =
-          `AE applied its display transform, but the capture scale could not be measured (${"error" in calib ? calib.error : "non-linear transfer"}) — ` +
-          "the file is uniformly dark by that unknown scale. Verify colors against the AE viewer manually.";
-        return null;
-      }
-      payload.colorPipeline =
-        "AE OCIO display transform (viewer-exact, any working space)" +
-        (gain !== 1 ? ` + capture scale 1/${gain.toFixed(2)} restored` : "");
-      return applyGain;
-    }
-
-    // Direct capture of a color-managed project (read-only mode, or an AE
-    // without the OCIO effect): pure-math fallback for the working spaces we
-    // know, verified within ~1.7/255 of the viewer on ACES/ACEScg.
-    const profile = profileForWorkingSpace(workingSpace);
-    if (profile === null) {
-      payload.colorWarning =
-        `working space '${workingSpace}' has no built-in conversion — the file contains raw working-space ` +
-        "values and will not match the viewer. Verify colors against the AE viewer manually if they matter here.";
-      return null;
-    }
-    if (calibFailed) {
-      payload.colorWarning =
-        `could not characterize this AE version's capture transfer (${"error" in calib ? calib.error : "non-linear transfer"}) — ` +
-        "the file contains raw working-space values. Verify colors against the AE viewer manually if they matter here.";
-      return null;
-    }
-    payload.colorPipeline =
-      `${profile.note}` + (gain !== 1 ? ` (capture scale 1/${gain.toFixed(2)} restored)` : "");
-    return (rgb) => {
-      applyGain(rgb);
-      sceneLinearToDisplaySrgb(rgb, profile.toRec709);
-    };
-  } catch (err) {
-    payload.colorWarning = `color post-processing failed, file left as raw capture: ${
-      err instanceof Error ? err.message : String(err)
-    }`;
-    return null;
-  }
-}

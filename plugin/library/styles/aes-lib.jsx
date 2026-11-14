@@ -14,8 +14,26 @@ var AESLib = (function () {
   function importFile(p) { var f = new File(p); if (!f.exists) throw new Error("missing " + p);
     for (var i = 1; i <= app.project.numItems; i++) { var it = app.project.item(i); if (it instanceof FootageItem && it.file && it.file.fsName === f.fsName) return it; }
     return app.project.importFile(new ImportOptions(f)); }
+  // removes a build's own layers (named with prefix). A layer that stays but is parented to one that goes (a camera null) is
+  // unparented first, with that parent set to rest (keys and expressions gone, scale 100, no rotation, position on its anchor),
+  // so the parent's current zoom is not baked into it; otherwise a rebuild would zoom twice. Returns how many layers went.
   function clearOwned(comp, prefix) { if (!prefix || prefix.length < 3) throw new Error("Use a prefix of at least three characters");
-    for (var i = comp.numLayers; i >= 1; i--) if (comp.layer(i).name.indexOf(prefix) === 0) comp.layer(i).remove(); }
+    var own = [], i, j;
+    for (i = 1; i <= comp.numLayers; i++) if (comp.layer(i).name.indexOf(prefix) === 0) own.push(comp.layer(i));
+    function owned(L) { for (var q = 0; q < own.length; q++) if (own[q] === L) return true; return false; }
+    // the parent's settled state: its value at its last key (a push camera ends at 100 % on the full frame), held without
+    // keys or expressions, so unparenting bakes nothing a rebuild would apply again
+    function rest(N) { var tg = N.property("ADBE Transform Group"), ps = ["ADBE Position", "ADBE Scale", "ADBE Rotate Z", "ADBE Anchor Point"], tr = 0, vals = [], q;
+      for (q = 0; q < ps.length; q++) { var pr = tg.property(ps[q]); if (pr && pr.numKeys) tr = Math.max(tr, pr.keyTime(pr.numKeys)); }
+      for (q = 0; q < ps.length; q++) { var p1 = tg.property(ps[q]); vals.push(p1 ? p1.valueAtTime(tr, false) : null); }
+      for (q = 0; q < ps.length; q++) { var p2 = tg.property(ps[q]); if (!p2) continue; try { p2.expression = ""; } catch (e) {} while (p2.numKeys) p2.removeKey(1); if (vals[q] !== null) p2.setValue(vals[q]); } }
+    var rested = [];
+    for (i = 1; i <= comp.numLayers; i++) { var L = comp.layer(i); if (L.parent && owned(L.parent) && !owned(L)) {
+      var known = false; for (j = 0; j < rested.length; j++) if (rested[j] === L.parent) known = true;
+      if (!known) { rest(L.parent); rested.push(L.parent); }
+      L.parent = null; } }
+    for (i = own.length - 1; i >= 0; i--) own[i].remove();
+    return own.length; }
   function font(family, style) { var f = app.fonts.getFontsByFamilyNameAndStyleName(family, style); if (!f || !f.length) throw new Error(family + " " + style + " is not installed"); return f[0].postScriptName; }
   // a text layer: o = { family, style, size, color, pos, just ("left"|"center"|"right"), leading, tracking, t0, t1 }
   function text(comp, name, str, o) { var L = comp.layers.addText(str || " "); L.name = name; var sp = L.property("Source Text"), td = sp.value;

@@ -18,6 +18,16 @@ export interface LaunchPlan {
 /** ExtendScript single-quoted string literal for a filesystem path. */
 export declare function jsxPath(p: string): string;
 /**
+ * AppleScript addresses the application bundle, not the binary inside it —
+ * accept either and normalize to the `.app` path.
+ */
+export declare function appBundlePath(aePath: string): string;
+/**
+ * The server's startup line when no resident agent is registered: how a call
+ * will reach After Effects on this platform (see buildLaunchPlan).
+ */
+export declare function pushRouteBanner(platform?: NodeJS.Platform): string;
+/**
  * How to start a NEW After Effects instance (instance.start), as opposed to
  * reaching a running one. Windows: `AfterFX.exe -m` — the spawned process IS
  * the instance, so the AE_MCP_INSTANCE the caller puts in its environment is

@@ -1,6 +1,7 @@
 // Font operations — enumerate and inspect fonts via app.fonts (AE 24.0+),
 // including variable-font design axes and glyph coverage.
 import { registerOp, jsxVal } from "../registry.js";
+import { LIST_MISSING_FONTS_FN } from "./snippets.js";
 /**
  * Serialize one FontObject into a JSON-safe summary. Enum-valued members go
  * through getEnumAsString when the host has it (AE 24.0+), raw otherwise.
@@ -96,20 +97,8 @@ registerOp({
     params: [],
     toJsx() {
         return `
-            if (!app.fonts) return { ok: false, error: "app.fonts needs AE 24.0+" };
-            var _missing = [];
-            try {
-                var _list = app.fonts.missingOrSubstitutedFonts;
-                for (var _i = 0; _i < _list.length; _i++) {
-                    var _font = _list[_i];
-                    _missing.push({
-                        postScriptName: AE.safeGet(function () { return _font.postScriptName; }, null),
-                        familyName: AE.safeGet(function () { return _font.familyName; }, null),
-                        styleName: AE.safeGet(function () { return _font.styleName; }, null)
-                    });
-                }
-            } catch (eM) { return { ok: false, error: "missingOrSubstitutedFonts failed: " + AE.errText(eM) }; }
-            return { ok: true, count: _missing.length, fonts: _missing };
+            ${LIST_MISSING_FONTS_FN}
+            return _listMissingFonts();
         `;
     },
 });

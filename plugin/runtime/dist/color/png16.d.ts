@@ -19,7 +19,12 @@ export declare function decodePng(buf: Buffer): DecodedPng;
  * output of saveFrameToPng was one of the two sources of "wrong color"
  * reports.
  */
-export declare function encodePngSrgb8(width: number, height: number, rgb: Float64Array): Buffer;
+/**
+ * `level` is zlib's compression level (default 6). subject.check writes its
+ * pictures at 1: on a synthetic 1080 x 1920 frame with noise that took 82 ms against
+ * 285 ms at 6, for a file about 3% larger.
+ */
+export declare function encodePngSrgb8(width: number, height: number, rgb: Float64Array, level?: number): Buffer;
 /**
  * 8-bit RGBA with the same sRGB tags. Alpha is straight (unassociated), as
  * the PNG format defines it: the RGB under a transparent pixel is kept, not

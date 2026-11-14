@@ -12,6 +12,7 @@ node_modules/
 __pycache__/
 *.pyc
 coverage/
+plugin/runtime/.test-build/
 .vitest/
 # Keep the self-contained runtime bundle; ignore scratch reports and logs
 *.log

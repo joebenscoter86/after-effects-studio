@@ -185,3 +185,56 @@ describe("decodePng alpha", () => {
     expect(a.edges.left).toMatchObject({ width: 1, kind: "transparent" });
   });
 });
+
+describe("sheet labels: lowercase letters with descenders", () => {
+  // Render one label and read each character's ink back, glyph row by glyph
+  // row (each glyph pixel is a 2x2 block; characters are 12 px apart).
+  const LABEL = "o p g j q y x";
+  const sheet = composeContactSheet([blank(200, 40, false)], { thumbWidth: 200, labels: [LABEL] });
+  const ink = (x: number, y: number) => sheet.rgb[(y * sheet.width + x) * 3] > 0.5;
+  const strip = 8 + 7 * 2 + 6;
+  // The label starts at the leftmost ink ('o' has ink in its first column);
+  // 'o' starts at glyph row 2 (the x-height), so the cell's top is 4 px above its first ink.
+  let left = Infinity;
+  for (let y = 0; y < strip; y++) for (let x = 0; x < sheet.width; x++) if (ink(x, y)) left = Math.min(left, x);
+  let oTop = Infinity;
+  for (let y = 0; y < strip; y++) for (let x = left; x < left + 10; x++) if (ink(x, y)) oTop = Math.min(oTop, y);
+  const cellTop = oTop - 4;
+  /** The character at index i as glyph rows of 5 columns ('#' ink, '.' none). */
+  function glyphRows(i: number, rows: number): string[] {
+    const out: string[] = [];
+    for (let r = 0; r < rows; r++) {
+      let line = "";
+      for (let c = 0; c < 5; c++) line += ink(left + i * 12 + c * 2, cellTop + r * 2) ? "#" : ".";
+      out.push(line);
+    }
+    return out;
+  }
+  const inkedRows = (rows: string[]) => rows.flatMap((l, r) => (l.includes("#") ? [r] : []));
+  const at = (ch: string) => glyphRows(LABEL.indexOf(ch), 9);
+
+  it("letters without descenders sit on the baseline (row 6) and nothing is drawn below it", () => {
+    for (const ch of ["o", "x"]) {
+      expect(Math.min(...inkedRows(at(ch))), ch).toBe(2);
+      expect(Math.max(...inkedRows(at(ch))), ch).toBe(6);
+    }
+  });
+
+  it("p, g, j, q and y reach two rows below the baseline; all but j start at the x-height like o", () => {
+    for (const ch of ["p", "g", "j", "q", "y"]) {
+      const rows = inkedRows(at(ch));
+      expect(Math.max(...rows), ch).toBe(8);
+      if (ch !== "j") expect(Math.min(...rows), ch).toBe(2);
+    }
+  });
+
+  it("p's descender is its stem on the left and q's on the right, below a bowl closed on the baseline", () => {
+    expect(at("p").slice(6)).toEqual(["####.", "#....", "#...."]);
+    expect(at("q").slice(6)).toEqual([".####", "....#", "....#"]);
+  });
+
+  it("keeps the label strip's height: the descenders stay above the tile", () => {
+    expect(sheet.height).toBe(strip + sheet.thumbHeight + 8);
+    for (let x = 0; x < sheet.width; x++) expect(ink(x, strip)).toBe(false);
+  });
+});

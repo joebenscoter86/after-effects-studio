@@ -9,6 +9,7 @@ import "./project.js";
 import "./text.js";
 import "./mask.js";
 import "./keying.js";
+import "./look-sheet.js";
 import "./command.js";
 import "./property.js";
 import "./marker.js";
@@ -26,5 +27,6 @@ import "./pref.js";
 import "./shape-contents.js";
 import "./layout.js";
 import "./sample.js";
+import "./video.js";
 import "./instance.js";
 //# sourceMappingURL=index.d.ts.map

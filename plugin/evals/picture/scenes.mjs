@@ -6,7 +6,10 @@
 // colour.
 //
 // Nothing here is footage: every shot is solids, masks and effects built by
-// the setup script. Coordinates are comp pixels, origin top left.
+// the setup script. The one exception is FOOTAGE (eval 27), whose plate is a
+// clip handed to the suite writer at run time (an environment variable); no
+// clip is in the repository. Coordinates are comp pixels, origin top left,
+// except FOOTAGE's, which are shares of the clip's width and height.
 
 const r2 = (v) => Math.round(v * 100) / 100;
 
@@ -204,4 +207,279 @@ export const OVER = {
   ring: { inner: 150, outer: 300 },
 };
 
-export const SCENES = { keying: KEYING, grade: GRADE, over: OVER };
+/**
+ * The whole-piece check: two comps built side by side, 1080x1920 at 30 fps,
+ * 150 frames (5 s), a dark blue-grey background, a square "dot" that moves
+ * left to right the whole time, and a centred title.
+ *   seeded: four defects at known frames. A one-frame white flash
+ *     (`flash.frame`); the dot holds still from frozen.fromFrame to
+ *     frozen.toFrame (nothing else moves then, so the whole picture is frozen);
+ *     the title slides right from title.moveFromFrame to title.moveToFrame and
+ *     leaves the frame on the way (when exactly depends on the font's width);
+ *     a white feathered glare (`glare`) clipped to 255 from glare.fromFrame to
+ *     glare.toFrame.
+ *   clean: the same dot moving steadily from start to end and the title held
+ *     in place; nothing a viewer would flag.
+ * Nothing is pure white except the flash and the glare (the title is 0.95).
+ */
+export const FINISH = {
+  id: "finish-check",
+  version: 1,
+  width: 1080,
+  height: 1920,
+  fps: 30,
+  frames: 150,
+  bg: [0.12, 0.14, 0.2],
+  dot: { name: "dot", size: 160, colour: [0.85, 0.55, 0.3], y: 1500, fromX: 150, toX: 930 },
+  flash: { name: "flash", frame: 36, colour: [1, 1, 1] },
+  frozen: { fromFrame: 60, toFrame: 80 },
+  title: { name: "Title", text: "FINISH", fontSize: 140, colour: [0.95, 0.93, 0.88], x: 540, y: 700, moveFromFrame: 90, moveToFrame: 135, toX: 1500 },
+  glare: { name: "glare", fromFrame: 120, toFrame: 134, centre: [300, 1100], radius: 140, feather: 40, colour: [1, 1, 1] },
+};
+
+/** The grade error of the second take: out = true × cast per channel (red and blue up, green down: magenta). */
+const REVIEW_CAST = [1.14, 0.88, 1.12];
+const castOf = (c) => c.map((v, i) => Math.round(Math.min(1, v * REVIEW_CAST[i]) * 1e4) / 1e4);
+// The presenter, in comp pixels at take 1's framing: trousers, shirt, neck, head. Each a masked solid the size of the comp.
+const PRESENTER = [
+  { name: "trousers", colour: [0.12, 0.12, 0.13], polygon: [[780, 860], [1140, 860], [1150, 1100], [770, 1100]] },
+  { name: "shirt", colour: [0.62, 0.62, 0.62], polygon: [[760, 560], [1160, 560], [1180, 880], [740, 880]] },
+  { name: "neck", colour: [0.67, 0.46, 0.4], polygon: [[925, 500], [995, 500], [995, 580], [925, 580]] },
+  { name: "head", colour: [0.67, 0.46, 0.4], polygon: ellipse(960, 410, 105, 130) },
+];
+
+/**
+ * The independent review (eval 22): one comp, 1920x1080 at 30 fps, 6 s, a
+ * composited presenter over a studio wall, with four planted defects a
+ * reviewer has to find. Everything is solids and masks.
+ *   plate: a neutral grey wall with a fine grid of darker lines (detail that
+ *     shows focus), a precomp larger than the frame so a blur has no edge.
+ *   take 1 (frames 0..89): the presenter with a light fringe `fringe.width` px
+ *     wide all round (the masks grown, behind the parts): the outline defect.
+ *   take 2 (frames 90..179), after an intended cut, closer: the presenter's
+ *     colours put through REVIEW_CAST (magenta) against the neutral wall: the
+ *     colour defect.
+ *   plate soft (frames soft.fromFrame..soft.toFrame): the plate blurred while
+ *     the presenter stays sharp: the focus defect.
+ *   badge: drops in from above the frame and should land on the comp marker
+ *     `marker` (2.0 s); it lands on landFrame, several frames late: the
+ *     timing defect.
+ * Both takes drift a little, so the picture never freezes.
+ */
+export const REVIEW = {
+  id: "review-plate",
+  version: 1,
+  width: 1920,
+  height: 1080,
+  fps: 30,
+  frames: 180,
+  bg: [0, 0, 0],
+  marker: { name: "hit", frame: 60, comment: "hit" },
+  plate: { name: "plate", width: 2112, height: 1272, wall: [0.46, 0.46, 0.46], lines: [0.34, 0.34, 0.34], lineWidth: 4, spacing: 48 },
+  soft: { name: "plate soft", fromFrame: 120, toFrame: 149, blur: 30 },
+  fringe: { colour: [0.92, 0.92, 0.9], width: 4 },
+  partFeather: 1,
+  takes: [
+    { name: "take 1", fromFrame: 0, toFrame: 89, fringe: true, cast: null, anchor: [960, 540], scale: 100, fromPos: [900, 540], toPos: [1020, 540],
+      parts: PRESENTER },
+    { name: "take 2", fromFrame: 90, toFrame: 179, fringe: false, cast: REVIEW_CAST, anchor: [960, 1080], scale: 125, fromPos: [1000, 1080], toPos: [1120, 1080],
+      parts: PRESENTER.map((p) => ({ ...p, colour: castOf(p.colour) })) },
+  ],
+  badge: { name: "badge", colour: [0.95, 0.5, 0.15], size: [360, 140], x: 1500, fromY: -120, toY: 220, fromFrame: 45, landFrame: 68, toFrame: 89 },
+  /** The brief the reviewer is handed (the eval prompt carries the same text). */
+  brief: "A 6-second 1920x1080 teaser at 30 fps. A presenter, keyed, composited over a studio wall plate; it must read as one shot filmed in that room. " +
+    "Two takes: take 1 from 0 to 3.0 s, then a cut to take 2 (closer) at 3.0 s, held to 6.0 s. The orange badge (a stand-in for the price tag) drops in " +
+    "from the top and must land on the beat at the comp marker \"hit\", 2.0 s. No on-screen copy.",
+};
+
+const rectPts = (x, y, w, h) => [[x, y], [x + w, y], [x + w, y + h], [x, y + h]];
+
+/**
+ * REVIEW as a generic build: comps in the order they are made, each with its
+ * layers bottom to top. Layer: { name, solid?: colour, comp?: id, size?,
+ * span?: [fromFrame, toFrame], masks?: [{ points, feather?, grow? }],
+ * effects?: [{ matchName, set: [[property index, value]] }], anchor?, scale?,
+ * position?: [x, y] | [[frame, [x, y]], ...] (linear keys) }. The main comp
+ * has `markers`. Names are neutral: what the comp holds is found by looking.
+ * review-plate.jsx carries this, base64-encoded, so a reviewer who reads the
+ * setup script to run it learns nothing from it.
+ */
+export function reviewBuild(scene = REVIEW) {
+  const P = scene.plate;
+  const grid = [];
+  for (let x = P.spacing / 2; x < P.width; x += P.spacing) grid.push({ points: rectPts(x - P.lineWidth / 2, 0, P.lineWidth, P.height) });
+  for (let y = P.spacing / 2; y < P.height; y += P.spacing) grid.push({ points: rectPts(0, y - P.lineWidth / 2, P.width, P.lineWidth) });
+  const plate = { id: "plate", name: "plate", size: [P.width, P.height], layers: [
+    { name: "wall", solid: P.wall },
+    { name: "wall detail", solid: P.lines, masks: grid },
+  ] };
+  const takes = scene.takes.map((t, i) => ({ id: `take${i + 1}`, name: t.name, size: [scene.width, scene.height], layers: [
+    ...(t.fringe ? [{ name: "presenter 0", solid: scene.fringe.colour,
+      masks: t.parts.map((p) => ({ points: p.polygon, feather: scene.partFeather, grow: scene.fringe.width })) }] : []),
+    ...t.parts.map((p, j) => ({ name: `presenter ${j + 1}`, solid: p.colour, masks: [{ points: p.polygon, feather: scene.partFeather }] })),
+  ] }));
+  const B = scene.badge;
+  const main = { id: "main", name: "review", size: [scene.width, scene.height], main: true,
+    markers: [{ frame: scene.marker.frame, name: scene.marker.name, comment: scene.marker.comment }],
+    layers: [
+      { name: "plate", comp: "plate" },
+      { name: "plate", comp: "plate", span: [scene.soft.fromFrame, scene.soft.toFrame],
+        effects: [{ matchName: "ADBE Gaussian Blur 2", set: [[1, scene.soft.blur]] }] },
+      ...scene.takes.map((t, i) => ({ name: t.name, comp: `take${i + 1}`, span: [t.fromFrame, t.toFrame], anchor: t.anchor, scale: t.scale,
+        position: [[t.fromFrame, t.fromPos], [t.toFrame, t.toPos]] })),
+      { name: B.name, solid: B.colour, size: B.size, span: [B.fromFrame, B.toFrame], position: [[B.fromFrame, [B.x, B.fromY]], [B.landFrame, [B.x, B.toY]]] },
+    ] };
+  return { id: scene.id, version: scene.version, width: scene.width, height: scene.height, fps: scene.fps, frames: scene.frames, bg: scene.bg,
+    comps: [plate, ...takes, main] };
+}
+
+/** The build as the setup script carries it: base64 of its JSON. */
+export const encodeBuild = (build) => Buffer.from(JSON.stringify(build), "utf8").toString("base64");
+export const decodeBuild = (text) => JSON.parse(Buffer.from(text, "base64").toString("utf8"));
+
+/**
+ * Sit an element in its plate (stage 4 of the professional-finish plan): a
+ * landscape plate (precomp layer "plate") of a wall and a dark panel, softened
+ * by Gaussian Blur and grained by Noise on an adjustment layer inside the
+ * plate comp, and a clean, sharp element (precomp layer "element": a light
+ * card with a dark stripe) laid over it. The task is to give the element the
+ * plate's grain and softness with effects on the element layer only.
+ * `expected` holds what the plate measured in After Effects 27.0 (look, on
+ * frames 0 and 1): the grader checks the plate is still that.
+ */
+export const SEAT = {
+  id: "seat-plate",
+  version: 1,
+  width: 1280,
+  height: 720,
+  fps: 24,
+  frames: 24,
+  bg: [0, 0, 0],
+  layer: "element",
+  plateLayer: "plate",
+  plate: {
+    wall: [0.45, 0.43, 0.4],
+    panel: { colour: [0.12, 0.12, 0.13], box: { x: 120, y: 150, width: 400, height: 450 } },
+    /** Gaussian Blur Blurriness, then Noise Amount of Noise (%), on an adjustment layer. */
+    blur: 6,
+    noise: 6,
+  },
+  element: {
+    card: { colour: [0.78, 0.76, 0.72], box: { x: 760, y: 160, width: 360, height: 400 } },
+    stripe: { colour: [0.15, 0.15, 0.16], box: { x: 760, y: 330, width: 360, height: 80 } },
+  },
+  /** Two consecutive frames: grain is read between them. */
+  gradeFrames: [0, 1],
+  /** The plate region holds the panel's left edge; the element region the stripe's two edges, inside the card. */
+  regions: {
+    plate: { x: 40, y: 200, width: 180, height: 350 },
+    element: { x: 800, y: 250, width: 280, height: 240 },
+  },
+  /**
+   * Measured in After Effects 27.0 with look on frames 0 and 1 of the built
+   * scene (2026-11-12). The scene built three times read the same; over the
+   * frame pairs 0-1, 6-7 and 12-13 the plate read 4.41 to 4.43 steps of grain
+   * and 4.64 to 4.70 px of edge, a spread of at most 1.3%.
+   */
+  expected: {
+    plate: { temporalGrain: 4.42, spatialGrain: 4.43, edgeWidth: 4.7, lumaMean: 0.2616 },
+    element: { temporalGrain: 0, spatialGrain: 0, edgeWidth: 0.8, lumaMean: 0.558 },
+  },
+};
+
+/**
+ * Read motion and sound (eval 26): one comp, 1920x1080 at 30 fps, 6 s, on a
+ * dark ground, for motion.curve and sound.sync.
+ *   eased: card A slides right once, eased at both ends (influence 66 %);
+ *     nothing a viewer would flag.
+ *   linear: card B slides left once with linear keys: it starts and stops at
+ *     full speed, the move with no ease.
+ *   beats: three comp markers ("sound: beat 1" to "beat 3", sound.markers'
+ *     form) where three hits land in the sound; badge 1 and badge 2 appear
+ *     (their in-points) on their beats, badge 3 appears four frames after
+ *     beat 3: the late hit.
+ * Card A and card B move at different times, and the badges do not move.
+ */
+export const CURVE = {
+  id: "curve-sync",
+  version: 1,
+  width: 1920,
+  height: 1080,
+  fps: 30,
+  frames: 180,
+  bg: [0.1, 0.11, 0.14],
+  eased: { name: "card A", colour: [0.85, 0.55, 0.3], size: [240, 160], y: 280, fromX: 300, toX: 1200, fromFrame: 15, toFrame: 45, influence: 66 },
+  linear: { name: "card B", colour: [0.3, 0.6, 0.85], size: [240, 160], y: 560, fromX: 1600, toX: 700, fromFrame: 60, toFrame: 90 },
+  beats: [
+    { frame: 120, comment: "sound: beat 1" },
+    { frame: 135, comment: "sound: beat 2" },
+    { frame: 150, comment: "sound: beat 3" },
+  ],
+  badges: [
+    { name: "badge 1", inFrame: 120, x: 500 },
+    { name: "badge 2", inFrame: 135, x: 960 },
+    { name: "badge 3", inFrame: 154, x: 1420 },
+  ],
+  badge: { size: 140, y: 860, colour: [0.95, 0.85, 0.2] },
+};
+
+/**
+ * Sit an element in real footage (eval 27). The plate is a clip handed to the
+ * suite writer (the environment variable `env`), never one in the repository:
+ * a locked-off shot with grain and some still edges, at most `maxSide` px on
+ * its longer side, at least `minFrames` frames at a constant rate. The comp
+ * takes the clip's own size and rate. The element is the seat eval's clean
+ * card with a dark stripe, placed by share of the frame (x and width of the
+ * width, y and height of the height), so the same element fits any clip.
+ * The plate's truth is measured from the clip itself when the suite is
+ * written (footage-truth.json): its frame-to-frame grain and edge width in
+ * the stillest blocks of a grid of `blocks` across its shorter side, leaving
+ * out the blocks under the card.
+ */
+export const FOOTAGE = {
+  id: "seat-footage",
+  version: 1,
+  env: "COMP_ROOM_EVAL_FOOTAGE",
+  maxSide: 1920,
+  minFrames: 2,
+  seconds: 2,
+  bg: [0, 0, 0],
+  layer: "element",
+  plateLayer: "plate",
+  element: {
+    card: { colour: [0.78, 0.76, 0.72], box: { x: 0.55, y: 0.08, width: 0.35, height: 0.26 } },
+    stripe: { colour: [0.15, 0.15, 0.16], box: { x: 0.55, y: 0.18, width: 0.35, height: 0.06 } },
+  },
+  /** Inside the card, holding the stripe's two edges. */
+  region: { x: 0.58, y: 0.12, width: 0.29, height: 0.18 },
+  gradeFrames: [0, 1],
+  blocks: 6,
+  /** Blocks this close to the card (px) are left out, so a blur on the element does not reach them. */
+  margin: 24,
+};
+
+/** FOOTAGE's boxes in pixels for a clip of `width` x `height` (whole pixels). */
+export function footageLayout(width, height, scene = FOOTAGE) {
+  const px = (b) => {
+    const x = Math.round(b.x * width), y = Math.round(b.y * height);
+    return { x, y, width: Math.round((b.x + b.width) * width) - x, height: Math.round((b.y + b.height) * height) - y };
+  };
+  return { card: px(scene.element.card.box), stripe: px(scene.element.stripe.box), region: px(scene.region) };
+}
+
+/** The grid of plate blocks for a clip (square, `blocks` across the shorter side), without those near the card. */
+export function footageBlocks(width, height, scene = FOOTAGE) {
+  const size = Math.floor(Math.min(width, height) / scene.blocks);
+  const { card } = footageLayout(width, height, scene);
+  const m = scene.margin;
+  const out = [];
+  for (let y = 0; y + size <= height; y += size) {
+    for (let x = 0; x + size <= width; x += size) {
+      const near = x < card.x + card.width + m && x + size > card.x - m && y < card.y + card.height + m && y + size > card.y - m;
+      if (!near) out.push({ x, y, width: size, height: size });
+    }
+  }
+  return out;
+}
+
+export const SCENES = { keying: KEYING, grade: GRADE, over: OVER, finish: FINISH, review: REVIEW, seat: SEAT, curve: CURVE, footage: FOOTAGE };

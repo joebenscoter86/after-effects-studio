@@ -68,6 +68,20 @@ export function validateCatalog(raw:unknown,refs:Refs):Catalog {
  for(const id of ids)visit(id);
  return catalog;
 }
+/**
+ * A library query's words: lower-cased, split only on whitespace, "," and ";", each word once. Any other
+ * punctuation stays inside its word (word's, ae_render_frame, recording:, (node), so a one-word query
+ * gives that word and matches exactly as the whole query did.
+ */
+export function queryWords(query?:string):string[]{
+ return [...new Set((query??'').toLowerCase().split(/[\s,;]+/u).filter(Boolean))];
+}
+/** The query words a module matches in its id, title, summary or tags. */
+export function moduleWords(m:Module,words:string[]):string[]{
+ const fields=[m.id,m.title,m.summary,...m.tags].map(v=>v.toLowerCase());return words.filter(w=>fields.some(v=>v.includes(w)));
+}
+/** Every module with no query; otherwise those matching at least one of its words, in catalog order. */
 export function findModules(catalog:Catalog,query?:string):Module[]{
- const q=query?.trim().toLowerCase();return catalog.modules.filter(m=>!q||[m.id,m.title,m.summary,...m.tags].some(v=>v.toLowerCase().includes(q)));
+ if(!query?.trim())return catalog.modules;
+ const words=queryWords(query);return catalog.modules.filter(m=>moduleWords(m,words).length>0);
 }
