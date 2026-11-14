@@ -12,7 +12,7 @@ Measure: main object bounding boxes and anchors; trajectory by frame; rotation/s
 
 When the user gives a reference to match (a still, frames, or a movie), measure it, measure the build the same way, and fix the differences largest first. Looking alone missed all three of the differences below in a build that lost a blind comparison.
 
-1. **Report on the reference.** `ae_do { operation: "reference.report", args: { path, outPath, regions } }`. `path` is a PNG still, a folder of PNG frames (name order; give `frameRate`), or a movie. Stills and folders are read in Node. A movie is brought into a throwaway comp and rendered by frame number, then removed. `outPath` is where the report is saved (.json). Name the parts you mean in `regions` ({ name, x, y, width, height }, frame pixels; `role: "neutral"` for a surface that should read grey), for example the room's shelves, a wall or a headrest, so the differences use those names. Otherwise they use the grid's nine regions (top left to bottom right).
+1. **Report on the reference.** `ae_do { operation: "reference.report", args: { path, outPath, regions } }`. `path` is a PNG still, a folder of PNG frames (name order; give `frameRate`), or a movie. Stills and folders are read in Node. A movie is decoded by ffmpeg in Node when ffmpeg is installed (the reply says which colour matrix and range were read from the file and which were assumed); without ffmpeg, or with `via: "after-effects"`, it is brought into a throwaway comp and rendered by frame number, then removed. On five delivered 1080 × 1920 reels, 400 frames each, the two read the same: levels within 0.0013, CIELAB within 0.04, edge width and grain within 0.02. ffmpeg read the five in 562 s, After Effects in 984 s; most of either is the measuring itself, about 3 s for each of the 24 frames colour and texture are read on. `outPath` is where the report is saved (.json). Name the parts you mean in `regions` ({ name, x, y, width, height }, frame pixels; `role: "neutral"` for a surface that should read grey), for example the room's shelves, a wall or a headrest, so the differences use those names. Otherwise they use the grid's nine regions (top left to bottom right).
 2. **Report on the build, against it.** `ae_do { operation: "reference.report", args: { comp, outPath, regions, against: <the reference's outPath> } }`. The build is rendered by frame number and read one chunk at a time. `compare` lists every difference over its step, largest first:
    - a cast: CIELAB a* or b* differing by 2 or more, region by region, with the direction in words;
    - lightness: 3 in L*;
@@ -49,6 +49,30 @@ With the grid alone the same three came first, in the order cast, subject, sharp
   - the subject at 80% (correlation 0.94).
 - **Why grain came first live:** the comp renders without the H.264 noise of the delivered reference, so its grain reads lower than the file's. Compare a comp with a rendered file of the reference, or a movie with a movie, where grain matters.
 - **Cuts:** the comp reads a cut at frame 18, the slam flash; the delivered file read one at frame 1 instead.
+
+## The user's own look: a look sheet
+
+When the user has pieces they approved, measure them once and keep the result, so a new piece is compared with their look without being told it again. `reference.sheet { pieces: [{ label, path }], outDir }` measures each piece as `reference.report` does, adds its rhythm (`video.census` over the whole piece, and `video.shots`), and writes `sheet.json`, a readable `sheet.md` (pieces named by their labels) and one file per piece. `reference.sheet_add { sheet, piece }` adds a piece without measuring the others again.
+
+- **What it holds.** For each measure, the middle value, the lowest and highest piece, and how many pieces it rests on:
+  - levels;
+  - colour by region;
+  - edge width and grain;
+  - the centres of brightness and detail, and the moving subject's place;
+  - the rhythm: calm, local and travel shares, travel moves a minute, calm runs, bursts, shot lengths and cuts a minute;
+  - the main colours, matched across pieces.
+
+  Type comes only from a comp's project (`{ label, comp, project: true }`): from a movie alone it is not measurable, and the sheet says so.
+- **What is the look.** A measure whose range across the pieces stays within 3 of `reference.compare`'s own steps is part of the look. Wider, it "varies in your pieces" and is never compared. A main colour is part of the look when two thirds of the pieces carry it.
+- **How many pieces.** One piece is its own numbers. Two give a range, not yet a look. Three or more are a look, and the sheet says how many every time. Under eight pieces the ranges are narrow, and the sheet, its page and every comparison say so: a piece of the same look will sit just outside several ranges. On one user's reels, a fifth piece held out from a sheet of four sat inside on 23 of the 32 measures compared. Some of the other nine were real (a cooler room, darker graphics, a busier cut), and some were the arithmetic of four pieces. Read the largest differences first, and add approved pieces to widen the sheet.
+- **Compare a build with it** before hand-over: render the build to a movie, then `reference.report { path: <render>, outPath, rhythm: true, against: <sheet.json> }`, or `reference.compare { reference: <sheet.json>, build: <saved report> }`. Only the look's measures are compared, each against the user's own range, with how far outside it is: "black point 0.09; your pieces sit between 0.02 and 0.04 (4 pieces) (2.5 steps outside)". Inside the range, or within one step of it, is no difference. There is no pass or fail.
+- **It describes what the user did, not what they must do.** A piece meant to look new will read as different; say which differences are the point.
+- **Not in it:**
+  - a cut-out's edge;
+  - the tracker's per-move numbers;
+  - type from a movie.
+
+  The shot lengths carry the shot list's limit: a change inside a shot can read as a cut.
 
 ## Rebuild a bounded study
 

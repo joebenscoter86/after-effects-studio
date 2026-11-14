@@ -3271,8 +3271,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path27) {
-      let input2 = path27;
+    function removeDotSegments(path29) {
+      let input2 = path29;
       const output2 = [];
       let nextSlash = -1;
       let len = 0;
@@ -3346,11 +3346,11 @@ var require_utils = __commonJS({
       }
       return output2.join("");
     }
-    function removeDotSegmentsRelative(path27) {
-      if (path27 === "" || path27[0] === "/") {
-        return removeDotSegments(path27);
+    function removeDotSegmentsRelative(path29) {
+      if (path29 === "" || path29[0] === "/") {
+        return removeDotSegments(path29);
       }
-      const segments = path27.split("/");
+      const segments = path29.split("/");
       const last = segments.length - 1;
       const output2 = [];
       let trailingDirectory = false;
@@ -3713,8 +3713,8 @@ var require_schemes = __commonJS({
       }
       if (wsComponent.resourceName) {
         const queryIndex = wsComponent.resourceName.indexOf("?");
-        const path27 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
-        wsComponent.path = path27 && path27 !== "/" ? path27 : void 0;
+        const path29 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
+        wsComponent.path = path29 && path29 !== "/" ? path29 : void 0;
         wsComponent.query = queryIndex === -1 ? void 0 : wsComponent.resourceName.slice(queryIndex + 1);
         wsComponent.resourceName = void 0;
       }
@@ -6524,11 +6524,11 @@ var require_format = __commonJS({
           }
           function getFormat(fmtDef) {
             const code = fmtDef instanceof RegExp ? (0, codegen_1.regexpCode)(fmtDef) : opts.code.formats ? (0, codegen_1._)`${opts.code.formats}${(0, codegen_1.getProperty)(schema)}` : void 0;
-            const fmt4 = gen.scopeValue("formats", { key: schema, ref: fmtDef, code });
+            const fmt5 = gen.scopeValue("formats", { key: schema, ref: fmtDef, code });
             if (typeof fmtDef == "object" && !(fmtDef instanceof RegExp)) {
-              return [fmtDef.type || "string", fmtDef.validate, (0, codegen_1._)`${fmt4}.validate`];
+              return [fmtDef.type || "string", fmtDef.validate, (0, codegen_1._)`${fmt5}.validate`];
             }
-            return ["string", fmtDef, fmt4];
+            return ["string", fmtDef, fmt5];
           }
           function validCondition() {
             if (typeof formatDef == "object" && !(formatDef instanceof RegExp) && formatDef.async) {
@@ -7190,8 +7190,8 @@ var require_limit = __commonJS({
             ref: self.formats,
             code: opts.code.formats
           });
-          const fmt4 = gen.const("fmt", (0, codegen_1._)`${fmts}[${fCxt.schemaCode}]`);
-          cxt.fail$data((0, codegen_1.or)((0, codegen_1._)`typeof ${fmt4} != "object"`, (0, codegen_1._)`${fmt4} instanceof RegExp`, (0, codegen_1._)`typeof ${fmt4}.compare != "function"`, compareCode(fmt4)));
+          const fmt5 = gen.const("fmt", (0, codegen_1._)`${fmts}[${fCxt.schemaCode}]`);
+          cxt.fail$data((0, codegen_1.or)((0, codegen_1._)`typeof ${fmt5} != "object"`, (0, codegen_1._)`${fmt5} instanceof RegExp`, (0, codegen_1._)`typeof ${fmt5}.compare != "function"`, compareCode(fmt5)));
         }
         function validateFormat() {
           const format = fCxt.schema;
@@ -7201,15 +7201,15 @@ var require_limit = __commonJS({
           if (typeof fmtDef != "object" || fmtDef instanceof RegExp || typeof fmtDef.compare != "function") {
             throw new Error(`"${keyword}": format "${format}" does not define "compare" function`);
           }
-          const fmt4 = gen.scopeValue("formats", {
+          const fmt5 = gen.scopeValue("formats", {
             key: format,
             ref: fmtDef,
             code: opts.code.formats ? (0, codegen_1._)`${opts.code.formats}${(0, codegen_1.getProperty)(format)}` : void 0
           });
-          cxt.fail$data(compareCode(fmt4));
+          cxt.fail$data(compareCode(fmt5));
         }
-        function compareCode(fmt4) {
-          return (0, codegen_1._)`${fmt4}.compare(${data}, ${schemaCode}) ${KWDs[keyword].fail} 0`;
+        function compareCode(fmt5) {
+          return (0, codegen_1._)`${fmt5}.compare(${data}, ${schemaCode}) ${KWDs[keyword].fail} 0`;
         }
       },
       dependencies: ["format"]
@@ -7251,12 +7251,12 @@ var require_dist = __commonJS({
         throw new Error(`Unknown format "${name}"`);
       return f;
     };
-    function addFormats(ajv, list, fs24, exportName) {
+    function addFormats(ajv, list, fs26, exportName) {
       var _a3;
       var _b;
       (_a3 = (_b = ajv.opts.code).formats) !== null && _a3 !== void 0 ? _a3 : _b.formats = (0, codegen_1._)`require("ajv-formats/dist/formats").${exportName}`;
       for (const f of list)
-        ajv.addFormat(f, fs24[f]);
+        ajv.addFormat(f, fs26[f]);
     }
     module.exports = exports = formatsPlugin;
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -7555,23 +7555,23 @@ __export(eval_exports, {
   readScriptFile: () => readScriptFile
 });
 import { readFileSync, realpathSync, statSync as statSync2 } from "node:fs";
-import * as path22 from "node:path";
+import * as path24 from "node:path";
 function realOrResolved(p) {
   try {
     return realpathSync(p);
   } catch {
-    return path22.resolve(p);
+    return path24.resolve(p);
   }
 }
 function isInside(p, root) {
-  const rel = path22.relative(root, p);
-  return rel === "" || !rel.startsWith("..") && !path22.isAbsolute(rel);
+  const rel = path24.relative(root, p);
+  return rel === "" || !rel.startsWith("..") && !path24.isAbsolute(rel);
 }
 function refuse(error62, hint) {
   return hint ? { ok: false, error: error62, hint } : { ok: false, error: error62 };
 }
 function readScriptFile(file2) {
-  if (!path22.isAbsolute(file2)) {
+  if (!path24.isAbsolute(file2)) {
     return {
       ok: false,
       error: `file must be an absolute path (got '${file2}'): the server's working directory is not yours`
@@ -8063,8 +8063,8 @@ function getErrorMap() {
 
 // node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path27, errorMaps, issueData } = params;
-  const fullPath = [...path27, ...issueData.path || []];
+  const { data, path: path29, errorMaps, issueData } = params;
+  const fullPath = [...path29, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -8179,11 +8179,11 @@ var errorUtil;
 
 // node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path27, key) {
+  constructor(parent, value, path29, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path27;
+    this._path = path29;
     this._key = key;
   }
   get path() {
@@ -12138,10 +12138,10 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path27) {
-  if (!path27)
+function getElementAtPath(obj, path29) {
+  if (!path29)
     return obj;
-  return path27.reduce((acc, key) => acc?.[key], obj);
+  return path29.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -12481,11 +12481,11 @@ function explicitlyAborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path27, issues) {
+function prefixIssues(path29, issues) {
   return issues.map((iss) => {
     var _a3;
     (_a3 = iss).path ?? (_a3.path = []);
-    iss.path.unshift(path27);
+    iss.path.unshift(path29);
     return iss;
   });
 }
@@ -12947,16 +12947,16 @@ function flattenError(error62, mapper = (issue2) => issue2.message) {
 }
 function formatError(error62, mapper = (issue2) => issue2.message) {
   const fieldErrors = { _errors: [] };
-  const processError = (error63, path27 = []) => {
+  const processError = (error63, path29 = []) => {
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path27, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path29, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path27, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path29, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path27, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path29, ...issue2.path]);
       } else {
-        const fullpath = [...path27, ...issue2.path];
+        const fullpath = [...path29, ...issue2.path];
         if (fullpath.length === 0) {
           fieldErrors._errors.push(mapper(issue2));
         } else {
@@ -12995,17 +12995,17 @@ function formatError(error62, mapper = (issue2) => issue2.message) {
 }
 function treeifyError(error62, mapper = (issue2) => issue2.message) {
   const result = { errors: [] };
-  const processError = (error63, path27 = []) => {
+  const processError = (error63, path29 = []) => {
     var _a3;
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path27, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path29, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path27, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path29, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path27, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path29, ...issue2.path]);
       } else {
-        const fullpath = [...path27, ...issue2.path];
+        const fullpath = [...path29, ...issue2.path];
         if (fullpath.length === 0) {
           result.errors.push(mapper(issue2));
           continue;
@@ -13044,8 +13044,8 @@ function treeifyError(error62, mapper = (issue2) => issue2.message) {
 }
 function toDotPath(_path) {
   const segs = [];
-  const path27 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
-  for (const seg of path27) {
+  const path29 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
+  for (const seg of path29) {
     if (typeof seg === "number")
       segs.push(`[${seg}]`);
     else if (typeof seg === "symbol")
@@ -24725,45 +24725,45 @@ var PATTERN_IS_COMPLETE = /* @__PURE__ */ new Set([
   "xid"
 ]);
 function generateStringFormatCheck(doc, ctx, def, accessor, needsValue = true) {
-  const fmt4 = def.format;
-  if (fmt4 === "base64") {
+  const fmt5 = def.format;
+  if (fmt5 === "base64") {
     const validator = addConstant(ctx, isValidBase64);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (fmt4 === "base64url") {
+  if (fmt5 === "base64url") {
     const validator = addConstant(ctx, isValidBase64URL);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (fmt4 === "jwt") {
+  if (fmt5 === "jwt") {
     const validator = addConstant(ctx, isValidJWT2);
     const alg = addConstant(ctx, def.alg ?? null);
     doc.write(`if (!${validator}(${accessor}, ${alg})) return INVALID;`);
     return accessor;
   }
-  if (fmt4 === "ipv6") {
+  if (fmt5 === "ipv6") {
     const validator = addConstant(ctx, isValidIPv6);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (fmt4 === "cidrv6") {
+  if (fmt5 === "cidrv6") {
     const validator = addConstant(ctx, isValidCIDRv6);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (fmt4 === "credit_card") {
+  if (fmt5 === "credit_card") {
     const validator = addConstant(ctx, isValidCreditCard);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (fmt4 === "iban") {
+  if (fmt5 === "iban") {
     const validator = addConstant(ctx, isValidIBAN);
     doc.write(`if (!${validator}(${accessor})) return INVALID;`);
     return accessor;
   }
   const formatDef = def;
-  if (fmt4 === "url" || fmt4 === "httpurl" || formatDef.normalize || formatDef.hostname !== void 0 || formatDef.protocol !== void 0) {
+  if (fmt5 === "url" || fmt5 === "httpurl" || formatDef.normalize || formatDef.hostname !== void 0 || formatDef.protocol !== void 0) {
     const parseConst = addConstant(ctx, validateURL);
     const defConst = addConstant(ctx, def);
     const trimVar = newVar(ctx);
@@ -24789,12 +24789,12 @@ function generateStringFormatCheck(doc, ctx, def, accessor, needsValue = true) {
   const customFn = def.fn;
   if (customFn) {
     if (isAsyncFunction(customFn))
-      throw new ZodCompileUnsupportedError(`async string format ${fmt4}`);
+      throw new ZodCompileUnsupportedError(`async string format ${fmt5}`);
     const fnConst = addConstant(ctx, customFn);
     doc.write(`if (!${fnConst}(${accessor})) return INVALID;`);
     return accessor;
   }
-  if (PATTERN_IS_COMPLETE.has(fmt4) && def.pattern) {
+  if (PATTERN_IS_COMPLETE.has(fmt5) && def.pattern) {
     const patternConst = addConstant(ctx, def.pattern);
     doc.write(`${patternConst}.lastIndex = 0;`);
     doc.write(`if (!${patternConst}.test(${accessor})) return INVALID;`);
@@ -28596,11 +28596,11 @@ function normalizeObjectSchema(schema) {
   }
   return void 0;
 }
-function getDotPath(path27) {
-  if (path27.length === 0) {
+function getDotPath(path29) {
+  if (path29.length === 0) {
     return "object root";
   }
-  return path27.reduce((acc, seg, index) => {
+  return path29.reduce((acc, seg, index) => {
     if (index === 0) {
       return String(seg);
     }
@@ -30827,13 +30827,13 @@ function resolveRef(ref, ctx) {
   if (!ref.startsWith("#")) {
     throw new Error("External $ref is not supported, only local refs (#/...) are allowed");
   }
-  const path27 = ref.slice(1).split("/").filter(Boolean);
-  if (path27.length === 0) {
+  const path29 = ref.slice(1).split("/").filter(Boolean);
+  if (path29.length === 0) {
     return ctx.rootSchema;
   }
   const defsKey = ctx.version === "draft-2020-12" ? "$defs" : "definitions";
-  if (path27[0] === defsKey) {
-    const key = path27[1] === void 0 ? void 0 : decodeJSONPointerSegment(path27[1]);
+  if (path29[0] === defsKey) {
+    const key = path29[1] === void 0 ? void 0 : decodeJSONPointerSegment(path29[1]);
     if (!key || !ctx.defs[key]) {
       throw new Error(`Reference not found: ${ref}`);
     }
@@ -46262,11 +46262,11 @@ function paletteOf(samples, k) {
 }
 var medianOf = (v) => v.length ? median2(v) : null;
 function referenceReader(opts) {
-  const D = REFERENCE_DEFAULTS;
-  const nLook = Math.max(1, Math.min(opts.total, opts.lookFrames ?? D.lookFrames));
+  const D2 = REFERENCE_DEFAULTS;
+  const nLook = Math.max(1, Math.min(opts.total, opts.lookFrames ?? D2.lookFrames));
   const lookIdx = /* @__PURE__ */ new Set();
   for (let i = 0; i < nLook; i++) lookIdx.add(Math.floor(i * opts.total / nLook));
-  const cell = opts.motionCell ?? D.motionCell;
+  const cell = opts.motionCell ?? D2.motionCell;
   let size2 = null;
   let regions = [];
   let added = 0;
@@ -46297,8 +46297,8 @@ function referenceReader(opts) {
       }
       levels.push(frameLevels(img));
       weights.push(frameWeight(img));
-      for (let y = 0; y < img.height; y += D.paletteStep)
-        for (let x = 0; x < img.width; x += D.paletteStep) {
+      for (let y = 0; y < img.height; y += D2.paletteStep)
+        for (let x = 0; x < img.width; x += D2.paletteStep) {
           const p = (y * img.width + x) * 3;
           const rgb = [img.rgb[p], img.rgb[p + 1], img.rgb[p + 2]];
           const l = labOf(rgb);
@@ -46354,17 +46354,17 @@ function referenceReader(opts) {
     const unsure = spacing.how === "assumed" || spacing.how === "file names" && spacing.step === 1;
     if (consecutive && unsure) {
       const said = spacing.how === "file names" ? "The file names count up by one" : "Nothing said how far apart the frames are";
-      if (medianChange >= D.spreadGuess) {
+      if (medianChange >= D2.spreadGuess) {
         consecutive = false;
         spacing = { how: "guessed from change", step: null };
         notes.push(
-          `${said}, but neighbouring files change by a median of ${mc}, as frames far apart do (${D.spreadGuess} or more), so this guess reads them as spread: cuts and movement are not read. Pass frameStep: 1 if they are neighbours.`
+          `${said}, but neighbouring files change by a median of ${mc}, as frames far apart do (${D2.spreadGuess} or more), so this guess reads them as spread: cuts and movement are not read. Pass frameStep: 1 if they are neighbours.`
         );
       } else if (spacing.how === "file names")
         notes.push(`The frames are neighbours, read from their file names (neighbouring files change by a median of ${mc}).`);
       else
         notes.push(
-          `Nothing said how far apart the frames are; they were assumed to be neighbours (neighbouring files change by a median of ${mc}, under the ${D.spreadGuess} that spread frames read), so cuts and movement were read. Pass frameStep if they are not.`
+          `Nothing said how far apart the frames are; they were assumed to be neighbours (neighbouring files change by a median of ${mc}, under the ${D2.spreadGuess} that spread frames read), so cuts and movement were read. Pass frameStep if they are not.`
         );
     } else if (pairs.length && !consecutive) {
       const apart = spacing.step ? `${spacing.step} frames apart` : "unevenly spaced";
@@ -46399,7 +46399,7 @@ function referenceReader(opts) {
       notes,
       size: [width, height],
       frameRate: opts.frameRate ?? null,
-      palette: paletteOf(samples, D.paletteColours),
+      palette: paletteOf(samples, D2.paletteColours),
       levels: {
         lumaBlack: r4(avg(levels.map((l) => l.lumaBlack))),
         lumaWhite: r4(avg(levels.map((l) => l.lumaWhite))),
@@ -46432,7 +46432,7 @@ function referenceReader(opts) {
   return { add, finish };
 }
 function compareReferences(ref, build) {
-  const D = REFERENCE_DEFAULTS;
+  const D2 = REFERENCE_DEFAULTS;
   const out = [];
   const notes = [];
   const f1 = (v) => v.toFixed(1);
@@ -46440,28 +46440,28 @@ function compareReferences(ref, build) {
   const list = (items, max = 4) => items.length <= max ? items.join("; ") : `${items.slice(0, max).join("; ")}; and ${items.length - max} more`;
   const byName = new Map(build.regions.map((r) => [r.name, r]));
   const pairsOf = ref.regions.flatMap((r) => byName.has(r.name) ? [[r, byName.get(r.name)]] : []);
-  const cast = pairsOf.map(([r, b]) => ({ name: r.name, da: b.colour.a - r.colour.a, db: b.colour.b - r.colour.b, r, b })).map((c) => ({ ...c, d: Math.hypot(c.da, c.db) })).filter((c) => c.d >= D.castStep).sort((x, y) => y.d - x.d);
+  const cast = pairsOf.map(([r, b]) => ({ name: r.name, da: b.colour.a - r.colour.a, db: b.colour.b - r.colour.b, r, b })).map((c) => ({ ...c, d: Math.hypot(c.da, c.db) })).filter((c) => c.d >= D2.castStep).sort((x, y) => y.d - x.d);
   if (cast.length) {
     const da = cast.reduce((s, c) => s + c.da, 0) / cast.length;
     const db = cast.reduce((s, c) => s + c.db, 0) / cast.length;
     const words = castWords(da, db) ?? "a different colour";
     out.push({
       measure: "cast",
-      size: Math.round(cast[0].d / D.castStep * 10) / 10,
+      size: Math.round(cast[0].d / D2.castStep * 10) / 10,
       reading: `The build leans ${words} against the reference in ${cast.length} of ${pairsOf.length} regions (a* ${signed(da)}, b* ${signed(db)} on average, CIELAB): ` + list(cast.map((c) => `${c.name} a* ${f1(c.b.colour.a)} b* ${f1(c.b.colour.b)} against ${f1(c.r.colour.a)} ${f1(c.r.colour.b)}`)) + ".",
       reference: Object.fromEntries(cast.map((c) => [c.name, { a: c.r.colour.a, b: c.r.colour.b }])),
       build: Object.fromEntries(cast.map((c) => [c.name, { a: c.b.colour.a, b: c.b.colour.b }]))
     });
   }
-  const light = pairsOf.map(([r, b]) => ({ name: r.name, d: b.colour.L - r.colour.L, r, b })).filter((c) => Math.abs(c.d) >= D.lightnessStep).sort((x, y) => Math.abs(y.d) - Math.abs(x.d));
+  const light = pairsOf.map(([r, b]) => ({ name: r.name, d: b.colour.L - r.colour.L, r, b })).filter((c) => Math.abs(c.d) >= D2.lightnessStep).sort((x, y) => Math.abs(y.d) - Math.abs(x.d));
   if (light.length)
     out.push({
       measure: "lightness",
-      size: Math.round(Math.abs(light[0].d) / D.lightnessStep * 10) / 10,
+      size: Math.round(Math.abs(light[0].d) / D2.lightnessStep * 10) / 10,
       reading: `Lightness differs in ${light.length} of ${pairsOf.length} regions: ` + list(light.map((c) => `${c.name} ${c.d < 0 ? "darker" : "lighter"} (L* ${f1(c.b.colour.L)} against ${f1(c.r.colour.L)})`)) + "."
     });
   const ratioItem = (measure, get, more, less, unit) => {
-    const rows = pairsOf.map(([r, b]) => ({ name: r.name, rv: get(r), bv: get(b) })).filter((c) => c.rv !== null && c.bv !== null && c.rv > 0 && c.bv > 0).map((c) => ({ ...c, k: Math.log(c.bv / c.rv) / Math.log(D.ratioStep) })).filter((c) => Math.abs(c.k) >= 1).sort((x, y) => Math.abs(y.k) - Math.abs(x.k));
+    const rows = pairsOf.map(([r, b]) => ({ name: r.name, rv: get(r), bv: get(b) })).filter((c) => c.rv !== null && c.bv !== null && c.rv > 0 && c.bv > 0).map((c) => ({ ...c, k: Math.log(c.bv / c.rv) / Math.log(D2.ratioStep) })).filter((c) => Math.abs(c.k) >= 1).sort((x, y) => Math.abs(y.k) - Math.abs(x.k));
     if (!rows.length) return;
     const up = rows.filter((c) => c.k > 0);
     const down = rows.filter((c) => c.k < 0);
@@ -46474,7 +46474,7 @@ function compareReferences(ref, build) {
   };
   ratioItem("sharpness", (r) => r.sharpness.edgeWidth, "softer", "sharper", " px");
   ratioItem("grain", (r) => r.grain, "grainier", "smoother (less grain)", "");
-  const lv = [];
+  const lv2 = [];
   let lvMax = 0;
   for (const [k, word] of [
     ["lumaBlack", "black point"],
@@ -46482,28 +46482,28 @@ function compareReferences(ref, build) {
     ["lumaMean", "mean level"]
   ]) {
     const d = build.levels[k] - ref.levels[k];
-    if (Math.abs(d) < D.levelStep) continue;
-    lvMax = Math.max(lvMax, Math.abs(d) / D.levelStep);
-    lv.push(`${word} ${d > 0 ? "higher" : "lower"} (${build.levels[k].toFixed(3)} against ${ref.levels[k].toFixed(3)})`);
+    if (Math.abs(d) < D2.levelStep) continue;
+    lvMax = Math.max(lvMax, Math.abs(d) / D2.levelStep);
+    lv2.push(`${word} ${d > 0 ? "higher" : "lower"} (${build.levels[k].toFixed(3)} against ${ref.levels[k].toFixed(3)})`);
   }
-  if (lv.length) out.push({ measure: "levels", size: Math.round(lvMax * 10) / 10, reading: `Levels: ${lv.join("; ")}.` });
+  if (lv2.length) out.push({ measure: "levels", size: Math.round(lvMax * 10) / 10, reading: `Levels: ${lv2.join("; ")}.` });
   let subject = null;
   if (ref.motion.subject && build.motion.subject) {
     const reg = registerMotionMaps(ref.motion.map, build.motion.map);
     if (reg) {
-      const compared = reg.correlation >= D.sameFootage;
+      const compared = reg.correlation >= D2.sameFootage;
       subject = { ...reg, compared };
       const spreadSides = [ref, build].filter((r) => r.motion.spread);
       if (compared && spreadSides.length)
         notes.push(
-          `The subject's size and place rest on spread frames (what differs between frames ${[...new Set(spreadSides.map((r) => r.motion.spacing.step ? `${r.motion.spacing.step} apart` : "spaced unknown or unevenly"))].join(" and ")}${spreadSides.length === 2 ? " on both sides" : ` on the ${spreadSides[0] === ref ? "reference's" : "build's"} side`}, not motion), lined up at correlation ${reg.correlation}. Trusted from ${D.sameFootage}: on the round-two pair, every frame read 0.93 and 80 to 81%, every twentieth 0.68 to 0.71 and 81 to 82%.`
+          `The subject's size and place rest on spread frames (what differs between frames ${[...new Set(spreadSides.map((r) => r.motion.spacing.step ? `${r.motion.spacing.step} apart` : "spaced unknown or unevenly"))].join(" and ")}${spreadSides.length === 2 ? " on both sides" : ` on the ${spreadSides[0] === ref ? "reference's" : "build's"} side`}, not motion), lined up at correlation ${reg.correlation}. Trusted from ${D2.sameFootage}: on the round-two pair, every frame read 0.93 and 80 to 81%, every twentieth 0.68 to 0.71 and 81 to 82%.`
         );
       if (!compared)
         notes.push(
           `The moving parts of the two do not line up (correlation ${reg.correlation}): not the same footage, or not framed alike, so the subject's size and place are not compared.`
         );
       else {
-        const k = Math.log(reg.scale) / Math.log(1 + D.sizeStep);
+        const k = Math.log(reg.scale) / Math.log(1 + D2.sizeStep);
         if (Math.abs(k) >= 1)
           out.push({
             measure: "subject size",
@@ -46515,11 +46515,11 @@ function compareReferences(ref, build) {
         const dx = reg.to.x - reg.from.x;
         const dy = reg.to.y - reg.from.y;
         const dist = Math.hypot(dx, dy);
-        if (dist >= D.placeStep)
+        if (dist >= D2.placeStep)
           out.push({
             measure: "subject place",
-            size: Math.round(dist / D.placeStep * 10) / 10,
-            reading: `The moving subject sits ${[Math.abs(dy) >= D.placeStep / 2 ? `${pctOf(Math.abs(dy))} of the height ${dy > 0 ? "lower" : "higher"}` : "", Math.abs(dx) >= D.placeStep / 2 ? `${pctOf(Math.abs(dx))} of the width ${dx > 0 ? "right" : "left"}` : ""].filter(Boolean).join(" and ")} than in the reference.`
+            size: Math.round(dist / D2.placeStep * 10) / 10,
+            reading: `The moving subject sits ${[Math.abs(dy) >= D2.placeStep / 2 ? `${pctOf(Math.abs(dy))} of the height ${dy > 0 ? "lower" : "higher"}` : "", Math.abs(dx) >= D2.placeStep / 2 ? `${pctOf(Math.abs(dx))} of the width ${dx > 0 ? "right" : "left"}` : ""].filter(Boolean).join(" and ")} than in the reference.`
           });
       }
     }
@@ -46532,24 +46532,24 @@ function compareReferences(ref, build) {
     const dx = build.weight[k].x - ref.weight[k].x;
     const dy = build.weight[k].y - ref.weight[k].y;
     const dist = Math.hypot(dx, dy);
-    if (dist >= D.placeStep)
+    if (dist >= D2.placeStep)
       out.push({
         measure: `weight of ${word}`,
-        size: Math.round(dist / D.placeStep * 10) / 10,
+        size: Math.round(dist / D2.placeStep * 10) / 10,
         reading: `The centre of ${word} sits at ${pctOf(build.weight[k].x)} across, ${pctOf(build.weight[k].y)} down, against ${pctOf(ref.weight[k].x)}, ${pctOf(ref.weight[k].y)} in the reference.`
       });
   }
-  const missing = ref.palette.filter((c) => c.share >= D.shareStep).map((c) => {
+  const missing = ref.palette.filter((c) => c.share >= D2.shareStep).map((c) => {
     let best = Infinity;
     for (const b of build.palette)
       best = Math.min(best, Math.hypot(b.colour.L - c.colour.L, b.colour.a - c.colour.a, b.colour.b - c.colour.b));
     return { c, best };
-  }).filter((m) => m.best >= D.colourMatch);
+  }).filter((m) => m.best >= D2.colourMatch);
   if (missing.length)
     out.push({
       measure: "main colours",
-      size: Math.round(Math.max(...missing.map((m) => m.best)) / D.colourMatch * 10) / 10,
-      reading: `Main colours of the reference with nothing within ${D.colourMatch} (CIELAB) among the build's: ${list(missing.map((m) => `${m.c.hex} (${pctOf(m.c.share)} of the reference, nearest ${f1(m.best)} away)`))}.`
+      size: Math.round(Math.max(...missing.map((m) => m.best)) / D2.colourMatch * 10) / 10,
+      reading: `Main colours of the reference with nothing within ${D2.colourMatch} (CIELAB) among the build's: ${list(missing.map((m) => `${m.c.hex} (${pctOf(m.c.share)} of the reference, nearest ${f1(m.best)} away)`))}.`
     });
   if (ref.motion.consecutive && build.motion.consecutive) {
     const has = (cuts, f) => cuts.some((c) => Math.abs(c.frame - f) <= 1);
@@ -46567,7 +46567,7 @@ function compareReferences(ref, build) {
     const rm = ref.motion.meanChange;
     const bm = build.motion.meanChange;
     if (rm && bm) {
-      const k = Math.log(bm / rm) / Math.log(D.ratioStep);
+      const k = Math.log(bm / rm) / Math.log(D2.ratioStep);
       if (Math.abs(k) >= 1)
         out.push({
           measure: "motion",
@@ -46866,7 +46866,7 @@ function measureEdge(img, bg, t) {
   }
   widths.sort((a, b) => a - b);
   const m = widths.length;
-  const median6 = m === 0 ? null : m % 2 ? widths[(m - 1) / 2] : (widths[m / 2 - 1] + widths[m / 2]) / 2;
+  const median7 = m === 0 ? null : m % 2 ? widths[(m - 1) / 2] : (widths[m / 2 - 1] + widths[m / 2]) / 2;
   const belowOpaque = labelRegions(
     alpha,
     width,
@@ -46970,7 +46970,7 @@ function measureEdge(img, bg, t) {
       transparent: r42(transparent / n)
     },
     width: {
-      typical: median6 === null ? null : r2(median6),
+      typical: median7 === null ? null : r2(median7),
       p90: m === 0 ? null : r2(widths[Math.floor(0.9 * (m - 1))]),
       worst: m === 0 ? null : r2(worst),
       worstAt,
@@ -49232,7 +49232,7 @@ function checkDelivered(comp, file2) {
   if (Math.abs(comp.duration - file2.duration) > 0.5 / (comp.frameRate || 30))
     findings.push({ kind: "duration", reading: `The file is ${file2.duration.toFixed(3)} s; the comp is ${comp.duration.toFixed(3)} s.` });
   let sound;
-  const lv = file2.level;
+  const lv2 = file2.level;
   if (comp.hasSound) {
     const who = comp.soundLayers.length ? ` (${comp.soundLayers.slice(0, 3).join(", ")})` : "";
     if (!file2.hasAudio) {
@@ -49241,15 +49241,15 @@ function checkDelivered(comp, file2) {
         reading: `The comp has sound${who} but the file has no sound track: check the output module's audio setting.`
       });
       sound = "no sound track";
-    } else if (lv && (lv.source === "ffmpeg" && lv.maxDb <= DELIVERY_SILENCE_DB || lv.source === "After Effects" && lv.top < DELIVERY_SILENCE_TOP)) {
-      const measured = lv.source === "ffmpeg" ? "max " + lv.maxDb + " dB" : "amplitude " + lv.top;
+    } else if (lv2 && (lv2.source === "ffmpeg" && lv2.maxDb <= DELIVERY_SILENCE_DB || lv2.source === "After Effects" && lv2.top < DELIVERY_SILENCE_TOP)) {
+      const measured = lv2.source === "ffmpeg" ? "max " + lv2.maxDb + " dB" : "amplitude " + lv2.top;
       findings.push({
         kind: "sound silent",
         reading: `The comp has sound${who} but the file's sound reads as silence (${measured}). A four-channel take has read as silence in After Effects with no warning: extract the voice to a mono WAV, use it in the comp, and deliver again.`
       });
       sound = "silent";
-    } else if (lv && lv.source === "ffmpeg") sound = "sound at a mean of " + lv.meanDb + " dB (max " + lv.maxDb + " dB, ffmpeg)";
-    else if (lv && lv.source === "After Effects") sound = "sound present (amplitude up to " + lv.top + ", After Effects)";
+    } else if (lv2 && lv2.source === "ffmpeg") sound = "sound at a mean of " + lv2.meanDb + " dB (max " + lv2.maxDb + " dB, ffmpeg)";
+    else if (lv2 && lv2.source === "After Effects") sound = "sound present (amplitude up to " + lv2.top + ", After Effects)";
     else sound = "a sound track, whose level was not read (no ffmpeg, and After Effects could not read it)";
     const sync = file2.sync;
     if (file2.hasAudio && sync && sync.lateBySamples > 1) {
@@ -49832,7 +49832,7 @@ function measureScreen(img, t) {
     if (y < minY) minY = y;
     if (y > maxY) maxY = y;
   }
-  const median6 = histMedian(hist, count);
+  const median7 = histMedian(hist, count);
   const mean = [sum[0] / count, sum[1] / count, sum[2] / count];
   const labels = new Int32Array(n);
   const queue = new Int32Array(n);
@@ -49885,15 +49885,15 @@ function measureScreen(img, t) {
   const evenness = measureEvenness(img, isScreen, measuredAt, ch, kind, t);
   const grain = measureGrain(img, isScreen, ch, kind, t);
   const near = nearSubject ? nearSubject.colour : null;
-  const fmt4 = (c) => `(${c.map((v) => v.toFixed(3)).join(", ")})`;
+  const fmt5 = (c) => `(${c.map((v) => v.toFixed(3)).join(", ")})`;
   base.screenPixels = count;
   base.share = r43(count / measured);
   base.bounds = { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
-  base.colour = { median: r4rgb3(median6), mean: r4rgb3(mean), nearSubject };
+  base.colour = { median: r4rgb3(median7), mean: r4rgb3(mean), nearSubject };
   base.subject = subject;
   base.evenness = evenness;
   base.grain = grain;
-  base.reading = `${kind} screen, ${Math.round(base.share * 100)}% of the measured pixels; median ${fmt4(median6)}` + (near ? `, near the subject ${fmt4(near)}` : "") + `. ${evenness.reading}. ${grain ? grain.reading : "grain not measured (no screen pixel has screen all round it)"}.`;
+  base.reading = `${kind} screen, ${Math.round(base.share * 100)}% of the measured pixels; median ${fmt5(median7)}` + (near ? `, near the subject ${fmt5(near)}` : "") + `. ${evenness.reading}. ${grain ? grain.reading : "grain not measured (no screen pixel has screen all round it)"}.`;
   return base;
 }
 function measureEvenness(img, isScreen, measuredAt, ch, kind, t) {
@@ -55804,15 +55804,15 @@ async function runSoftenEdge(args, io) {
   if (typeof outDir !== "string" || !path14.isAbsolute(outDir))
     return { ok: false, error: "`outDir` must be an absolute folder for the pictures" };
   const num2 = (k, d) => typeof args[k] === "number" && Number.isFinite(args[k]) ? args[k] : d;
-  const D = SOFT_EDGE_DEFAULTS;
+  const D2 = SOFT_EDGE_DEFAULTS;
   const settings = {
-    radius: num2("radius", D.radius),
-    smooth: num2("smooth", D.smooth),
-    chatterReduction: num2("chatterReduction", D.chatterReduction),
-    decontaminate: typeof args.decontaminate === "boolean" ? args.decontaminate : D.decontaminate,
-    feather: num2("feather", D.feather)
+    radius: num2("radius", D2.radius),
+    smooth: num2("smooth", D2.smooth),
+    chatterReduction: num2("chatterReduction", D2.chatterReduction),
+    decontaminate: typeof args.decontaminate === "boolean" ? args.decontaminate : D2.decontaminate,
+    feather: num2("feather", D2.feather)
   };
-  const outsideLimit = num2("outsideLimit", D.outsideLimit);
+  const outsideLimit = num2("outsideLimit", D2.outsideLimit);
   const background = Array.isArray(args.background) ? args.background : void 0;
   const st = await io.status();
   if (!st?.ok) return { ok: false, error: st?.error ?? "subject.status failed", status: st };
@@ -55828,7 +55828,7 @@ async function runSoftenEdge(args, io) {
   const click = clicks.length ? Math.min(...clicks) : span.inFrame;
   const sampling = Array.isArray(args.sampleFrames) ? "given" : "near the click";
   const nearFrames = [];
-  for (let f = click; f < Math.min(span.outFrame, click + D.near); f += D.nearStep) nearFrames.push(f);
+  for (let f = click; f < Math.min(span.outFrame, click + D2.near); f += D2.nearStep) nearFrames.push(f);
   const samples = Array.isArray(args.sampleFrames) ? [
     .../* @__PURE__ */ new Set([
       click,
@@ -55967,11 +55967,11 @@ async function runSoftenEdge(args, io) {
     const wa = wholeAfter.get(f)?.img;
     if (!a?.alpha || !b?.alpha || !wb || !wa)
       return { frame: f, error: "a render of this frame is missing", seenThrough: null };
-    const cov = matteCoverage(a.alpha, b.alpha, W, H, { deep: D.deep, outside: D.outside });
+    const cov = matteCoverage(a.alpha, b.alpha, W, H, { deep: D2.deep, outside: D2.outside });
     const scratch = new Float32Array(W * H);
     const dIn = new Float32Array(W * H);
     distanceToSolid(a.alpha, W, H, scratch, dIn);
-    const deepAt = (p) => a.alpha[p] >= 0.99 && dIn[p] > D.deep;
+    const deepAt = (p) => a.alpha[p] >= 0.99 && dIn[p] > D2.deep;
     let worst = 0;
     const whole0 = meanLab(wb, deepAt);
     const whole1 = meanLab(wa, deepAt);
@@ -56001,9 +56001,9 @@ async function runSoftenEdge(args, io) {
         );
       if ((c.outside?.px ?? 0) > outsideLimit)
         failures.push(
-          `frame ${c.frame}: ${c.outside.px} px of matte more than ${D.outside} px outside the outline as clicked (a smear, within ${JSON.stringify(c.outside.box)})`
+          `frame ${c.frame}: ${c.outside.px} px of matte more than ${D2.outside} px outside the outline as clicked (a smear, within ${JSON.stringify(c.outside.box)})`
         );
-      if ((c.colourDifference ?? 0) > D.colourLimit)
+      if ((c.colourDifference ?? 0) > D2.colourLimit)
         failures.push(
           `frame ${c.frame}: colour inside the subject differs from the matte as clicked by ${c.colourDifference} (CIELAB)`
         );
@@ -56014,7 +56014,7 @@ async function runSoftenEdge(args, io) {
     frames: checks,
     furthest,
     failures,
-    definition: `seen through: a pixel solid in the matte as clicked and more than ${D.deep} px inside its edge that is under 0.99 after; outside: matte at alpha 0.2 or more lying more than ${D.outside} px outside the outline as clicked (allowed: ${outsideLimit} px); colour: CIELAB difference inside the subject against the matte as clicked (allowed: ${D.colourLimit})`
+    definition: `seen through: a pixel solid in the matte as clicked and more than ${D2.deep} px inside its edge that is under 0.99 after; outside: matte at alpha 0.2 or more lying more than ${D2.outside} px outside the outline as clicked (allowed: ${outsideLimit} px); colour: CIELAB difference inside the subject against the matte as clicked (allowed: ${D2.colourLimit})`
   };
   const pictures = checkFrames.map((f) => wholeAfter.get(f)?.file).filter((f) => typeof f === "string");
   if (args.keepCaptures !== true)
@@ -56026,7 +56026,7 @@ async function runSoftenEdge(args, io) {
     feather: settings.feather,
     chosen: given === void 0 ? "automatic" : "given",
     tops: samples.map((f, i) => ({ frame: f, top: tops[i] })),
-    rule: given === void 0 ? `${Math.round(D.regionDepth * 100)}% of the comp's height under the lowest top of the subject on the sampled frames` : "regionBottom as given"
+    rule: given === void 0 ? `${Math.round(D2.regionDepth * 100)}% of the comp's height under the lowest top of the subject on the sampled frames` : "regionBottom as given"
   };
   const last = samples[samples.length - 1];
   const sampled2 = {
@@ -56182,9 +56182,1873 @@ registerOp({
 });
 
 // src/operations/keying-reference.ts
-import { promises as fs15 } from "node:fs";
-import * as path15 from "node:path";
+import { promises as fs18 } from "node:fs";
+import * as path18 from "node:path";
+
+// src/color/look.ts
+var LOOK_RULES = {
+  /** A measure is part of the look when its range across pieces is within this many of its comparison steps. */
+  lookSteps: 3,
+  /** A main colour is part of the look when this share of the pieces carry it (at least two thirds). */
+  colourPieces: 2 / 3,
+  /** Main colours under this share of a piece are left out of its palette. */
+  colourShare: 0.02,
+  /** A build's colour this large with nothing like it in the pieces is named. */
+  newColourShare: 0.05,
+  /** Pieces before a sheet is called a look. */
+  lookPieces: 3,
+  /** Under this many pieces the ranges are narrow, and every reading says so. */
+  fewPieces: 8
+};
+var FEW_PIECES_NOTE = "With this few pieces, a piece of the same look will sit just outside several ranges: read the largest differences first, and add approved pieces to widen the sheet.";
+var D = REFERENCE_DEFAULTS;
+var P = (key, group, name, unit, how, step, digits, floor) => ({ key, group, name, unit, how, step, digits, ...floor ? { floor } : {} });
+function pieceMeasures(p) {
+  const r = p.report, out = [];
+  const add = (def, v) => {
+    if (typeof v === "number" && Number.isFinite(v)) out.push({ def, value: v });
+  };
+  add(P("levels.black", "levels", "black point", "", "add", D.levelStep, 3), r.levels.lumaBlack);
+  add(P("levels.white", "levels", "white point", "", "add", D.levelStep, 3), r.levels.lumaWhite);
+  add(P("levels.mean", "levels", "mean level", "", "add", D.levelStep, 3), r.levels.lumaMean);
+  for (const g of r.regions) {
+    add(P(`region.${g.name}.L`, "colour by region", `lightness (L*) at ${g.name}`, "", "add", D.lightnessStep, 1), g.colour.L);
+    add(P(`region.${g.name}.a`, "colour by region", `a* at ${g.name}`, "", "add", D.castStep, 1), g.colour.a);
+    add(P(`region.${g.name}.b`, "colour by region", `b* at ${g.name}`, "", "add", D.castStep, 1), g.colour.b);
+  }
+  add(P("texture.edge", "texture", "edge width", " px", "ratio", D.ratioStep, 2), r.sharpness.edgeWidth);
+  add(P("texture.grain", "texture", "grain", "", "ratio", D.ratioStep, 2, 0.05), r.grain);
+  add(P("place.brightness.x", "placement", "centre of brightness across", "", "add", D.placeStep, 3), r.weight.brightness.x);
+  add(P("place.brightness.y", "placement", "centre of brightness down", "", "add", D.placeStep, 3), r.weight.brightness.y);
+  add(P("place.detail.x", "placement", "centre of detail across", "", "add", D.placeStep, 3), r.weight.detail.x);
+  add(P("place.detail.y", "placement", "centre of detail down", "", "add", D.placeStep, 3), r.weight.detail.y);
+  const s = r.motion.subject;
+  if (s) {
+    add(P("place.subject.x", "placement", "moving subject's centre across", "", "add", D.placeStep, 3), s.x);
+    add(P("place.subject.y", "placement", "moving subject's centre down", "", "add", D.placeStep, 3), s.y);
+  }
+  const rh = p.rhythm;
+  if (rh) {
+    add(P("rhythm.calm", "rhythm", "calm share", "", "add", D.shareStep, 2), rh.census.calm);
+    add(P("rhythm.local", "rhythm", "local movement share", "", "add", D.shareStep, 2), rh.census.local);
+    add(P("rhythm.travel", "rhythm", "whole-stage travel share", "", "add", D.shareStep, 2), rh.census.travel);
+    add(P("rhythm.travelPerMinute", "rhythm", "travel moves a minute", "", "ratio", D.ratioStep, 1, 1), rh.census.travelPerMinute);
+    add(P("rhythm.calmRun", "rhythm", "calm run, median", " s", "ratio", D.ratioStep, 2, 0.1), rh.census.calmRunMedian);
+    add(P("rhythm.bursts", "rhythm", "bursts every 10 s", "", "ratio", D.ratioStep, 2, 0.2), rh.census.burstsPer10s);
+    add(P("rhythm.shotMedian", "rhythm", "shot length, median", " s", "ratio", D.ratioStep, 2, 0.2), rh.shots.medianSeconds);
+    add(P("rhythm.cutsPerMinute", "rhythm", "cuts a minute", "", "ratio", D.ratioStep, 1, 1), rh.shots.cutsPerMinute);
+  }
+  const t = p.type;
+  if (t) {
+    add(P("type.sizeMedian", "type", "text size, median (share of frame height)", "", "ratio", D.ratioStep, 3, 5e-3), t.sizeMedian);
+    add(P("type.sizeLargest", "type", "largest text size (share of frame height)", "", "ratio", D.ratioStep, 3, 5e-3), t.sizeLargest);
+    add(P("type.tracking", "type", "tracking, median", "", "add", 10, 0), t.trackingMedian);
+  }
+  return out;
+}
+var median4 = (a) => {
+  const s = [...a].sort((x, y) => x - y);
+  const m = s.length >> 1;
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+};
+var lv = (def, v) => def.how === "ratio" ? Math.log(Math.max(v, def.floor ?? 1e-6)) : v;
+var lstep = (def) => def.how === "ratio" ? Math.log(def.step) : def.step;
+var fmt3 = (def, v) => `${Number(v.toFixed(def.digits))}${def.unit}`;
+var dE = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+var hexOfLab = (lab) => {
+  const fy = (lab[0] + 16) / 116, fx = fy + lab[1] / 500, fz = fy - lab[2] / 200, inv = (t) => t ** 3 > 216 / 24389 ? t ** 3 : (116 * t - 16) / (24389 / 27);
+  const X = inv(fx) * 0.95047, Y = inv(fy), Z = inv(fz) * 1.08883;
+  const lin = [3.2406 * X - 1.5372 * Y - 0.4986 * Z, -0.9689 * X + 1.8758 * Y + 0.0415 * Z, 0.0557 * X - 0.204 * Y + 1.057 * Z];
+  return "#" + lin.map((u) => Math.round(255 * Math.max(0, Math.min(1, u <= 31308e-7 ? 12.92 * u : 1.055 * u ** (1 / 2.4) - 0.055)))).map((v) => v.toString(16).padStart(2, "0")).join("");
+};
+var SHOT_LIMIT = "Shot lengths come from video.shots, which can read a change inside a shot (a launch, a flip) as a cut, so a shot can read shorter than it is.";
+var standingOf = (n) => `${n <= 1 ? "one piece: these are its own numbers, not a range" : n < LOOK_RULES.lookPieces ? `${n} pieces: a range, not yet a look` : `${n} pieces: a look`}${n < LOOK_RULES.fewPieces ? `. ${FEW_PIECES_NOTE}` : ""}`;
+function buildSheet(pieces) {
+  const n = pieces.length, byKey = /* @__PURE__ */ new Map();
+  for (const { piece } of pieces) for (const v of pieceMeasures(piece)) {
+    if (!byKey.has(v.def.key)) byKey.set(v.def.key, []);
+    byKey.get(v.def.key).push(v);
+  }
+  const measures = [];
+  for (const vals of byKey.values()) {
+    const def = vals[0].def, xs = vals.map((v) => v.value), min = Math.min(...xs), max = Math.max(...xs);
+    const spreadSteps = (lv(def, max) - lv(def, min)) / lstep(def);
+    const look = spreadSteps <= LOOK_RULES.lookSteps + 1e-9;
+    measures.push({
+      ...def,
+      median: median4(xs),
+      min,
+      max,
+      pieces: vals.length,
+      look,
+      ...look ? {} : { why: `varies in your pieces: ${fmt3(def, min)} to ${fmt3(def, max)}, ${spreadSteps.toFixed(1)} steps apart (a look holds within ${LOOK_RULES.lookSteps})` }
+    });
+  }
+  const clusters = [];
+  pieces.forEach(({ piece }, i) => {
+    for (const c of piece.report.palette.filter((c2) => c2.share >= LOOK_RULES.colourShare)) {
+      const lab = [c.colour.L, c.colour.a, c.colour.b];
+      const hit = clusters.find((k) => dE(k.lab, lab) <= D.colourMatch);
+      if (hit) {
+        hit.members.push({ i, share: c.share, lab });
+        const m = hit.members;
+        hit.lab = [0, 1, 2].map((d) => m.reduce((s, x) => s + x.lab[d], 0) / m.length);
+      } else clusters.push({ lab, members: [{ i, share: c.share, lab }] });
+    }
+  });
+  const palette = clusters.map((k) => {
+    const per = /* @__PURE__ */ new Map();
+    for (const m of k.members) per.set(m.i, (per.get(m.i) ?? 0) + m.share);
+    const shares = [...per.values()];
+    return {
+      hex: hexOfLab(k.lab),
+      lab: k.lab.map((v) => Math.round(v * 10) / 10),
+      pieces: per.size,
+      ofPieces: n,
+      shareMin: Math.round(Math.min(...shares) * 1e3) / 1e3,
+      shareMax: Math.round(Math.max(...shares) * 1e3) / 1e3,
+      look: per.size >= Math.ceil(LOOK_RULES.colourPieces * n - 1e-9)
+    };
+  }).sort((a, b) => b.pieces - a.pieces || b.shareMax - a.shareMax);
+  const typed = pieces.filter((p) => p.piece.type);
+  const fontCount = /* @__PURE__ */ new Map();
+  for (const p of typed) for (const f of new Set(p.piece.type.fonts)) fontCount.set(f, (fontCount.get(f) ?? 0) + 1);
+  const rhythmless = pieces.filter((p) => !p.piece.rhythm).map((p) => p.piece.label);
+  return {
+    kind: "look-sheet",
+    version: 1,
+    pieces: pieces.map(({ piece, file: file2 }) => ({ label: piece.label, file: file2, source: piece.source })),
+    rules: LOOK_RULES,
+    standing: standingOf(n),
+    measures,
+    palette,
+    type: typed.length ? { fonts: [...fontCount].map(([font, k]) => ({ font, pieces: k })).sort((a, b) => b.pieces - a.pieces), pieces: typed.length } : null,
+    notMeasured: [
+      ...typed.length < n ? [`type (fonts, sizes, tracking): read only from a project, ${typed.length} of ${n} pieces had one; from a movie alone it is not measurable`] : [],
+      ...rhythmless.length ? [`rhythm for ${rhythmless.join(", ")}: needs the piece as a movie read by ffmpeg`] : [],
+      "a cut-out's edge (not in version 1)",
+      "the tracker's per-move numbers (not reliable enough to average)"
+    ],
+    notes: [
+      "The sheet describes what these pieces did, not what a new piece must do."
+    ]
+  };
+}
+function compareWithSheet(sheet, piece) {
+  const values = new Map(pieceMeasures(piece).map((v) => [v.def.key, v.value]));
+  const n = sheet.pieces.length, of = (k) => `${k} piece${k === 1 ? "" : "s"}`;
+  const diffs = [], inside = [], notCompared = [];
+  for (const m of sheet.measures) {
+    const v = values.get(m.key);
+    if (!m.look) {
+      notCompared.push(`${m.name} (${m.why})`);
+      continue;
+    }
+    if (v === void 0) {
+      if (m.group === "rhythm" || m.group === "type") notCompared.push(`${m.name} (not measured on this piece)`);
+      continue;
+    }
+    const def = m, lo = lv(def, m.min), hi = lv(def, m.max), x = lv(def, v), st = lstep(def);
+    const beyond = x < lo - st ? (lo - x) / st : x > hi + st ? (x - hi) / st : 0;
+    if (!beyond) {
+      inside.push(m.name);
+      continue;
+    }
+    const range = m.min === m.max ? `your ${of(m.pieces)}: ${fmt3(def, m.min)}` : `your pieces sit between ${fmt3(def, m.min)} and ${fmt3(def, m.max)} (${of(m.pieces)})`;
+    const size2 = Math.round(beyond * 10) / 10;
+    diffs.push({ measure: m.name, size: size2, value: Number(v.toFixed(m.digits)), range: [m.min, m.max], pieces: m.pieces, reading: `${m.name} ${fmt3(def, v)}; ${range} (${size2} step${size2 === 1 ? "" : "s"} outside).` });
+  }
+  const pal = piece.report.palette.map((c) => ({ hex: c.hex, share: c.share, lab: [c.colour.L, c.colour.a, c.colour.b] }));
+  for (const c of sheet.palette.filter((c2) => c2.look)) if (!pal.some((p) => dE(p.lab, c.lab) <= D.colourMatch))
+    diffs.push({ measure: "main colours", size: 1, value: "missing", pieces: c.pieces, reading: `${c.hex} is missing; ${c.pieces} of your ${of(n)} carry it (${Math.round(c.shareMin * 100)} to ${Math.round(c.shareMax * 100)} % of the frame).` });
+  for (const p of pal.filter((p2) => p2.share >= LOOK_RULES.newColourShare)) if (!sheet.palette.some((c) => dE(p.lab, c.lab) <= D.colourMatch))
+    diffs.push({ measure: "main colours", size: 1, value: p.hex, pieces: n, reading: `${p.hex} covers ${Math.round(p.share * 100)} % of the frame; none of your ${of(n)} has a colour like it.` });
+  if (sheet.type && piece.type) {
+    const known = new Set(sheet.type.fonts.map((f) => f.font));
+    const fresh = piece.type.fonts.filter((f) => !known.has(f));
+    if (fresh.length) diffs.push({ measure: "fonts", size: 1, value: fresh.join(", "), pieces: sheet.type.pieces, reading: `${fresh.join(", ")} ${fresh.length === 1 ? "is" : "are"} not in your pieces; they use ${sheet.type.fonts.map((f) => f.font).join(", ")} (${of(sheet.type.pieces)} with a project).` });
+  }
+  diffs.sort((a, b) => b.size - a.size);
+  return {
+    ok: true,
+    against: "look sheet",
+    standing: sheet.standing,
+    differences: diffs,
+    insideTheLook: inside,
+    notCompared,
+    reading: (diffs.length ? `${diffs.length} difference${diffs.length === 1 ? "" : "s"} from your ${sheet.standing.split(":")[0]}, largest first: ${diffs.map((d) => d.reading).join(" ")}` : `Within your pieces' range on every measure of the look (${sheet.standing.split(":")[0]}).`) + (n < LOOK_RULES.fewPieces && diffs.length ? ` ${FEW_PIECES_NOTE}` : "")
+  };
+}
+function standingBase(s) {
+  return s.standing.split(`. ${FEW_PIECES_NOTE}`)[0];
+}
+function isSheet(x) {
+  return !!x && typeof x === "object" && x.kind === "look-sheet";
+}
+function isPiece(x) {
+  return !!x && typeof x === "object" && x.kind === "look-piece";
+}
+function sheetMarkdown(s) {
+  const of = (k) => `${k} piece${k === 1 ? "" : "s"}`;
+  const row2 = (m) => {
+    const d = m;
+    return `| ${m.name} | ${fmt3(d, m.median)} | ${m.min === m.max ? fmt3(d, m.min) : `${fmt3(d, m.min)} to ${fmt3(d, m.max)}`} | ${m.pieces} |`;
+  };
+  const groups = [...new Set(s.measures.map((m) => m.group))];
+  const base = standingBase(s);
+  const lines = [
+    `# Look sheet`,
+    "",
+    `${base[0].toUpperCase()}${base.slice(1)}: ${s.pieces.map((p) => p.label).join(", ")}.`,
+    "",
+    ...s.pieces.length < LOOK_RULES.fewPieces ? [FEW_PIECES_NOTE, ""] : [],
+    ...s.notes.map((x) => `- ${x}`),
+    ""
+  ];
+  for (const g of groups) {
+    const look = s.measures.filter((m) => m.group === g && m.look);
+    if (!look.length) continue;
+    lines.push(`## ${g[0].toUpperCase()}${g.slice(1)}`, "", "| Measure | Middle | Range | Pieces |", "|---|---|---|---|", ...look.map(row2), "");
+    if (g === "rhythm") lines.push(SHOT_LIMIT, "");
+  }
+  const varies = s.measures.filter((m) => !m.look);
+  if (varies.length) lines.push("## Varies in your pieces (not compared)", "", ...varies.map((m) => `- ${m.name}: ${m.why}`), "");
+  lines.push(
+    "## Main colours",
+    "",
+    "| Colour | Pieces | Share of the frame | Part of the look |",
+    "|---|---|---|---|",
+    ...s.palette.map((c) => `| ${c.hex} | ${c.pieces} of ${c.ofPieces} | ${Math.round(c.shareMin * 100)} to ${Math.round(c.shareMax * 100)} % | ${c.look ? "yes" : "no"} |`),
+    ""
+  );
+  if (s.type) lines.push("## Type", "", `From ${of(s.type.pieces)} with a project: ${s.type.fonts.map((f) => `${f.font} (${f.pieces})`).join(", ")}.`, "");
+  lines.push("## Not measured", "", ...s.notMeasured.map((x) => `- ${x}`), "");
+  return lines.join("\n");
+}
+
+// src/operations/keying-reference.ts
 init_registry();
+
+// src/video/movie-rgb.ts
+import { spawn as spawn2 } from "node:child_process";
+
+// src/video/decode.ts
+import { spawn } from "node:child_process";
+var VIDEO_TOOLS = { ffmpeg: FFMPEG, ffprobe: FFPROBE };
+var NO_FFMPEG = "ffmpeg and ffprobe are not installed, so the video cannot be read. Install them (macOS: brew install ffmpeg; Windows: winget install ffmpeg) and try again.";
+function rate(s) {
+  if (!s) return NaN;
+  const [a, b] = s.split("/").map(Number);
+  return b ? a / b : a;
+}
+async function probeVideo(file2, tools = VIDEO_TOOLS) {
+  const head = await runTool(tools.ffprobe, [
+    "-v",
+    "error",
+    "-select_streams",
+    "v:0",
+    "-show_entries",
+    "stream=width,height,r_frame_rate,avg_frame_rate,duration:format=duration",
+    "-of",
+    "json",
+    file2
+  ], 6e4);
+  if (head === null) return null;
+  if (head.failed) return { error: `ffprobe could not read ${file2}: ${head.stderr.trim().slice(0, 300)}` };
+  let j;
+  try {
+    j = JSON.parse(head.stdout);
+  } catch {
+    return { error: `ffprobe gave no stream information for ${file2}` };
+  }
+  const st = j.streams?.[0];
+  if (!st) return { error: `${file2} has no video stream` };
+  const pk = await runTool(tools.ffprobe, ["-v", "error", "-select_streams", "v:0", "-show_entries", "packet=pts_time", "-of", "csv=p=0", file2], 12e4);
+  if (pk === null) return null;
+  const raw = pk.stdout.split("\n").map((l) => l.split(",")[0].trim()).filter((l) => l !== "" && l !== "N/A").map(Number).filter((t) => Number.isFinite(t)).sort((a, b) => a - b);
+  if (!raw.length) return { error: `${file2} has no video frames` };
+  const t0 = raw[0], times = raw.map((t) => t - t0);
+  const iv = [];
+  for (let i = 1; i < times.length; i++) iv.push(times[i] - times[i - 1]);
+  const sorted = [...iv].sort((a, b) => a - b), med = sorted.length ? sorted[Math.floor(sorted.length / 2)] : 0;
+  const nominal = rate(String(st.r_frame_rate)), duration3 = Number(j.format?.duration ?? st.duration ?? times[times.length - 1] + med);
+  return {
+    file: file2,
+    width: Number(st.width),
+    height: Number(st.height),
+    frames: times.length,
+    duration: duration3,
+    nominalFps: nominal,
+    averageFps: duration3 > 0 ? times.length / duration3 : nominal,
+    times,
+    variableRate: sorted.length > 1 && sorted[sorted.length - 1] - sorted[0] > 0.1 * med,
+    intervals: { min: sorted[0] ?? 0, max: sorted[sorted.length - 1] ?? 0, median: med }
+  };
+}
+async function* readFrames(info, o, tools = VIDEO_TOOLS) {
+  const from = Math.max(0, Math.min(info.frames - 1, o.from)), to = Math.max(from, Math.min(info.frames - 1, o.to));
+  const half = (info.intervals.median || 1 / 30) / 2, seek = Math.max(0, info.times[from] - half);
+  const filters = [];
+  if (o.fps) filters.push(`fps=${o.fps}`);
+  if (o.crop) filters.push(`crop=${Math.round(o.crop[2])}:${Math.round(o.crop[3])}:${Math.round(o.crop[0])}:${Math.round(o.crop[1])}`);
+  filters.push(`scale=${o.width}:${o.height}:flags=area`);
+  const count = o.fps ? Math.max(1, Math.round((info.times[to] - info.times[from]) * o.fps) + 1) : to - from + 1;
+  const args = [
+    "-v",
+    "error",
+    ...seek > 0 ? ["-ss", seek.toFixed(6)] : [],
+    "-i",
+    info.file,
+    "-map",
+    "0:v:0",
+    ...o.fps ? [] : ["-fps_mode", "passthrough"],
+    "-frames:v",
+    String(count),
+    "-vf",
+    filters.join(","),
+    "-f",
+    "rawvideo",
+    "-pix_fmt",
+    o.gray ? "gray" : "rgb24",
+    "pipe:1"
+  ];
+  const size2 = o.width * o.height * (o.gray ? 1 : 3);
+  let proc = null;
+  for (const bin of tools.ffmpeg) {
+    try {
+      proc = await new Promise((resolve13, reject) => {
+        const p = spawn(bin, args, { stdio: ["ignore", "pipe", "pipe"] });
+        p.once("error", reject);
+        p.once("spawn", () => resolve13(p));
+      });
+      break;
+    } catch (e) {
+      if (e.code !== "ENOENT") throw e;
+    }
+  }
+  if (!proc) throw new Error(NO_FFMPEG);
+  let stderr = "";
+  proc.stderr.on("data", (d) => {
+    stderr += String(d);
+  });
+  let buf = Buffer.alloc(0), index = from;
+  try {
+    for await (const chunk2 of proc.stdout) {
+      buf = buf.length ? Buffer.concat([buf, chunk2]) : chunk2;
+      while (buf.length >= size2 && (o.fps ? index - from < count : index <= to)) {
+        yield { index: o.fps ? index - from : index, time: o.fps ? info.times[from] + (index - from) / o.fps : info.times[index], data: new Uint8Array(buf.subarray(0, size2)) };
+        buf = buf.subarray(size2);
+        index++;
+      }
+    }
+  } finally {
+    if (proc.exitCode === null) proc.kill();
+  }
+  if (!o.fps && index <= to && stderr.trim()) throw new Error(`ffmpeg stopped at frame ${index} of ${info.file}: ${stderr.trim().slice(0, 300)}`);
+}
+function meanDiff(a, b) {
+  let s = 0;
+  for (let i = 0; i < a.length; i++) s += Math.abs(a[i] - b[i]);
+  return s / a.length;
+}
+function cadenceOf(diffs, fps, still = 0.6, moving = 1.5) {
+  const repeats = [];
+  for (let i = 1; i < diffs.length; i++) {
+    if (diffs[i] >= still) continue;
+    const before = i >= 2 ? diffs[i - 1] : Infinity, after = i + 1 < diffs.length ? diffs[i + 1] : Infinity;
+    if (Math.min(before, after) > moving) repeats.push(i);
+  }
+  let period = null;
+  if (repeats.length >= 3) {
+    const gaps = [];
+    for (let i = 1; i < repeats.length; i++) gaps.push(repeats[i] - repeats[i - 1]);
+    const counts = /* @__PURE__ */ new Map();
+    for (const g of gaps) counts.set(g, (counts.get(g) ?? 0) + 1);
+    const [best, n] = [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
+    if (best >= 2 && n >= 0.6 * gaps.length) period = best;
+  }
+  const originalFps = period ? Math.round(fps * (period - 1) / period * 1e3) / 1e3 : null;
+  return {
+    repeats,
+    period,
+    originalFps,
+    reading: period ? `Every ${period}th frame repeats the one before while things move: likely made at ${originalFps} fps inside ${Math.round(fps * 1e3) / 1e3} fps. Moves are measured on the unique frames at their own times.` : repeats.length ? `${repeats.length} frames repeat the one before, with no steady pattern; they are left out of the fits.` : "No repeated frames while things move."
+  };
+}
+
+// src/video/movie-rgb.ts
+var MATRIX = { bt709: "bt709", smpte170m: "bt601", bt470bg: "bt601", bt601: "bt601", fcc: "fcc", smpte240m: "smpte240m", bt2020nc: "bt2020", bt2020c: "bt2020" };
+async function movieColour(file2, tools = VIDEO_TOOLS) {
+  const r = await runTool(tools.ffprobe, ["-v", "error", "-select_streams", "v:0", "-show_entries", "stream=color_space,color_range,color_transfer,color_primaries", "-of", "json", file2], 6e4);
+  if (r === null) return null;
+  let st = {};
+  try {
+    st = JSON.parse(r.stdout).streams?.[0] ?? {};
+  } catch {
+  }
+  const tag = (v) => v && v !== "unknown" && v !== "unspecified" ? v : null;
+  const tags = { space: tag(st.color_space), range: tag(st.color_range), transfer: tag(st.color_transfer), primaries: tag(st.color_primaries) };
+  const assumed = [];
+  const matrix = tags.space && MATRIX[tags.space] ? MATRIX[tags.space] : (assumed.push("matrix"), "bt709");
+  const range = tags.range === "pc" || tags.range === "jpeg" ? "pc" : tags.range === "tv" || tags.range === "mpeg" ? "tv" : (assumed.push("range"), "tv");
+  const said = (k, v) => v ? `${k} ${v}` : `${k} not tagged`;
+  return {
+    matrix,
+    range,
+    tags,
+    assumed,
+    reading: `Decoded with matrix ${matrix} and ${range === "tv" ? "video" : "full"} range: ${said("colour space", tags.space)}, ${said("range", tags.range)}${assumed.length ? `; ${assumed.join(" and ")} assumed as After Effects reads untagged video (Rec. 709, video range)` : "; both read from the file"}.`
+  };
+}
+async function* movieFrames(info, picks, colour, tools = VIDEO_TOOLS) {
+  const runs = [];
+  for (const f of picks) {
+    const r = runs[runs.length - 1];
+    if (r && f - r[r.length - 1] <= 8) r.push(f);
+    else runs.push([f]);
+  }
+  for (const run of runs) yield* movieRun(info, run, colour, tools);
+}
+async function* movieRun(info, picks, colour, tools) {
+  if (!picks.length) return;
+  const from = picks[0], to = picks[picks.length - 1], want = new Set(picks);
+  const half = (info.intervals.median || 1 / 30) / 2, seek = Math.max(0, info.times[from] - half);
+  const w = info.width, h = info.height, size2 = w * h * 3;
+  const args = [
+    "-v",
+    "error",
+    ...seek > 0 ? ["-ss", seek.toFixed(6)] : [],
+    "-i",
+    info.file,
+    "-map",
+    "0:v:0",
+    "-fps_mode",
+    "passthrough",
+    "-frames:v",
+    String(to - from + 1),
+    "-vf",
+    `scale=${w}:${h}:in_color_matrix=${colour.matrix}:in_range=${colour.range}:out_range=pc:flags=accurate_rnd+full_chroma_int`,
+    "-f",
+    "rawvideo",
+    "-pix_fmt",
+    "rgb24",
+    "pipe:1"
+  ];
+  let proc = null;
+  for (const bin of tools.ffmpeg) {
+    try {
+      proc = await new Promise((resolve13, reject) => {
+        const p = spawn2(bin, args, { stdio: ["ignore", "pipe", "pipe"] });
+        p.once("error", reject);
+        p.once("spawn", () => resolve13(p));
+      });
+      break;
+    } catch (e) {
+      if (e.code !== "ENOENT") throw e;
+    }
+  }
+  if (!proc) throw new Error(NO_FFMPEG);
+  let stderr = "";
+  proc.stderr.on("data", (d) => {
+    stderr += String(d);
+  });
+  let buf = Buffer.alloc(0), index = from;
+  try {
+    for await (const chunk2 of proc.stdout) {
+      buf = buf.length ? Buffer.concat([buf, chunk2]) : chunk2;
+      while (buf.length >= size2 && index <= to) {
+        if (want.has(index)) {
+          const rgb = new Float64Array(size2);
+          for (let i = 0; i < size2; i++) rgb[i] = buf[i] / 255;
+          yield { frame: index, time: info.times[index], img: { width: w, height: h, rgb, bitDepth: 8 } };
+        }
+        buf = buf.subarray(size2);
+        index++;
+      }
+    }
+  } finally {
+    if (proc.exitCode === null) proc.kill();
+  }
+  if (index <= to) throw new Error(`ffmpeg stopped at frame ${index} of ${info.file} (wanted up to ${to})${stderr ? `: ${stderr.trim().slice(0, 300)}` : ""}`);
+}
+
+// src/video/rhythm.ts
+import { promises as fs17 } from "node:fs";
+import os4 from "node:os";
+import path17 from "node:path";
+
+// src/video/run-shots-census.ts
+import { promises as fs16 } from "node:fs";
+import path16 from "node:path";
+
+// src/video/census.ts
+var CENSUS_RULES = { block: 16, search: 6, pixel: 8, calmBelow: 4e-3, travelMoved: 0.5, cutChanged: 0.55, cutMoved: 0.35, texture: 5 };
+function censusStep(a, b, w, h, y0, y1, rules = CENSUS_RULES) {
+  let changedPx = 0, total = 0;
+  for (let y = y0; y < y1; y++) for (let x = 0; x < w; x++) {
+    total++;
+    if (Math.abs(a[y * w + x] - b[y * w + x]) > rules.pixel) changedPx++;
+  }
+  const changed = total ? changedPx / total : 0, B = rules.block, S = rules.search;
+  let textured = 0, moved = 0;
+  const shifts = [];
+  for (let by = y0 + S; by + B + S <= y1; by += B) for (let bx = S; bx + B + S <= w; bx += B) {
+    let m = 0, m2 = 0;
+    for (let y = 0; y < B; y++) for (let x = 0; x < B; x++) {
+      const v = a[(by + y) * w + bx + x];
+      m += v;
+      m2 += v * v;
+    }
+    const n = B * B, sd = Math.sqrt(Math.max(0, m2 / n - (m / n) ** 2));
+    if (sd <= rules.texture) continue;
+    textured++;
+    const cost = (dx, dy) => {
+      let s = 0;
+      for (let y = 0; y < B; y++) for (let x = 0; x < B; x++) s += Math.abs(a[(by + y) * w + bx + x] - b[(by + y + dy) * w + bx + x + dx]);
+      return s;
+    };
+    const zero = cost(0, 0);
+    let best = zero, bdx = 0, bdy = 0;
+    for (let dy = -S; dy <= S; dy++) for (let dx = -S; dx <= S; dx++) {
+      if (!dx && !dy) continue;
+      const c = cost(dx, dy);
+      if (c < best) {
+        best = c;
+        bdx = dx;
+        bdy = dy;
+      }
+    }
+    if ((bdx || bdy) && best < 0.7 * zero && zero > 3 * n) {
+      moved++;
+      shifts.push(Math.hypot(bdx, bdy));
+    }
+  }
+  const mv = textured >= 3 ? moved / textured : 0;
+  const label = changed > rules.cutChanged && mv < rules.cutMoved ? "X" : mv >= rules.travelMoved && changed > rules.calmBelow ? "T" : changed < rules.calmBelow ? "c" : "l";
+  const sorted = shifts.sort((x, y) => x - y);
+  return { changed, moved: mv, textured, shift: sorted.length ? sorted[Math.floor(sorted.length / 2)] : 0, label };
+}
+function cadence(labels, shifts, step, pxScale) {
+  const n = labels.length || 1, count = (c) => [...labels].filter((x) => x === c).length / n;
+  const runs = [];
+  for (let i = 0; i < labels.length; i++) {
+    if (labels[i] !== "T") continue;
+    let j = i;
+    while (j + 1 < labels.length && labels[j + 1] === "T") j++;
+    const last = runs[runs.length - 1];
+    if (last && i - last[1] - 1 <= 2) last[1] = j;
+    else runs.push([i, j]);
+    i = j;
+  }
+  const travelRuns = runs.filter(([a, b]) => (b - a + 1) * step >= 0.2);
+  const med = (a) => {
+    if (!a.length) return 0;
+    const s = [...a].sort((x, y) => x - y);
+    return s[Math.floor(s.length / 2)];
+  };
+  const speeds = travelRuns.map(([a, b]) => med(shifts.slice(a, b + 1)) * pxScale / step);
+  const calmRuns = [];
+  let bursts = 0, calmLen = 0;
+  for (const c of labels) {
+    if (c === "c") calmLen++;
+    else {
+      if (calmLen * step >= 0.3) bursts++;
+      if (calmLen) calmRuns.push(calmLen * step);
+      calmLen = 0;
+    }
+  }
+  if (calmLen) calmRuns.push(calmLen * step);
+  const seconds = labels.length * step;
+  return {
+    shares: { calm: r3(count("c")), local: r3(count("l")), travel: r3(count("T")), cut: r3(count("X")) },
+    travel: { perMinute: seconds ? r3(travelRuns.length / seconds * 60) : 0, medianSeconds: r3(med(travelRuns.map(([a, b]) => (b - a + 1) * step))), medianSpeed: Math.round(med(speeds)) },
+    burstsPer10s: seconds ? r3(bursts / seconds * 10) : 0,
+    calmRuns: { medianSeconds: r3(med(calmRuns)), maxSeconds: r3(Math.max(0, ...calmRuns)) }
+  };
+}
+var r3 = (x) => Math.round(x * 1e3) / 1e3;
+
+// src/video/run-track.ts
+import { promises as fs15 } from "node:fs";
+import path15 from "node:path";
+
+// src/video/ink.ts
+function luma3(r, g, b) {
+  return 0.299 * r + 0.587 * g + 0.114 * b;
+}
+function hsv(r, g, b) {
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+  let h = 0;
+  if (d > 0) h = mx === r ? (g - b) / d % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  h *= 60;
+  if (h < 0) h += 360;
+  return [h, mx > 0 ? d / mx : 0, mx / 255];
+}
+function isInk(m, r, g, b, emptyPx) {
+  if (m.luma) {
+    const l = luma3(r, g, b);
+    if (l < m.luma[0] || l > m.luma[1]) return false;
+  }
+  if (m.minChannel) {
+    const c = Math.min(r, g, b);
+    if (c < m.minChannel[0] || c > m.minChannel[1]) return false;
+  }
+  if (m.hue) {
+    const [h, s, v] = hsv(r, g, b);
+    if (s < (m.minSat ?? 0.2) || v < (m.minVal ?? 0.15)) return false;
+    const [a, z2] = m.hue;
+    if (a <= z2 ? h < a || h > z2 : h < a && h > z2) return false;
+  }
+  if (m.rgb) {
+    const t = m.tol ?? 8;
+    if (Math.abs(r - m.rgb[0]) > t || Math.abs(g - m.rgb[1]) > t || Math.abs(b - m.rgb[2]) > t) return false;
+  }
+  if (m.empty !== void 0) {
+    if (!emptyPx) return false;
+    const t = m.tol ?? 30;
+    if (Math.max(Math.abs(r - emptyPx[0]), Math.abs(g - emptyPx[1]), Math.abs(b - emptyPx[2])) <= t) return false;
+  }
+  return true;
+}
+function inkOf(rgb, w, h, m, o) {
+  const rows = new Uint32Array(h), cols = new Uint32Array(w), minCount = o.minCount ?? 1;
+  let count = 0, sx = 0, sy = 0, lum = 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = (y * w + x) * 3, r = rgb[i], g = rgb[i + 1], b = rgb[i + 2];
+    lum += luma3(r, g, b);
+    if (isInk(m, r, g, b, o.empty ? [o.empty[i], o.empty[i + 1], o.empty[i + 2]] : void 0)) {
+      rows[y]++;
+      cols[x]++;
+      count++;
+      sx += x;
+      sy += y;
+    }
+  }
+  let x0 = -1, x1 = -1, y0 = -1, y1 = -1;
+  for (let x = 0; x < w; x++) if (cols[x] >= minCount) {
+    if (x0 < 0) x0 = x;
+    x1 = x;
+  }
+  for (let y = 0; y < h; y++) if (rows[y] >= minCount) {
+    if (y0 < 0) y0 = y;
+    y1 = y;
+  }
+  const src = (v, off) => off + v / o.k;
+  if (!count || x0 < 0 || y0 < 0) return { count: 0, x0: NaN, y0: NaN, x1: NaN, y1: NaN, cx: NaN, cy: NaN, level: lum / (w * h) };
+  return { count: count / (o.k * o.k), x0: src(x0, o.ox), x1: src(x1 + 1, o.ox), y0: src(y0, o.oy), y1: src(y1 + 1, o.oy), cx: src(sx / count + 0.5, o.ox), cy: src(sy / count + 0.5, o.oy), level: lum / (w * h) };
+}
+var INK_CURVES = ["centroid", "x0", "x1", "y0", "y1", "width", "height", "size", "level"];
+function inkValue(f, c) {
+  if (c === "level") return [f.level];
+  if (!f.count) return null;
+  switch (c) {
+    case "centroid":
+      return [f.cx, f.cy];
+    case "x0":
+      return [f.x0];
+    case "x1":
+      return [f.x1];
+    case "y0":
+      return [f.y0];
+    case "y1":
+      return [f.y1];
+    case "width":
+      return [f.x1 - f.x0];
+    case "height":
+      return [f.y1 - f.y0];
+    case "size":
+      return [Math.sqrt(f.count)];
+  }
+  return null;
+}
+function inkLike(c) {
+  if (c === "centroid") return { like: "position", unit: "px" };
+  if (c === "x0" || c === "x1") return { like: "position", axis: 0, unit: "px" };
+  if (c === "y0" || c === "y1") return { like: "position", axis: 1, unit: "px" };
+  if (c === "level") return { like: "opacity", unit: "luma" };
+  return { like: "scale", unit: "px" };
+}
+function witnessRuns(counts, pixels, breaks = /* @__PURE__ */ new Set()) {
+  const med = [...counts].sort((a, b) => a - b)[Math.floor(counts.length / 2)] ?? 0;
+  const threshold = Math.max(3, Math.ceil(5e-4 * pixels), 3 * med + 2);
+  const runs = [];
+  let cur = null;
+  for (let i = 1; i < counts.length; i++) {
+    if (breaks.has(i)) {
+      if (cur) runs.push(cur);
+      cur = null;
+      continue;
+    }
+    if (counts[i] < threshold) continue;
+    if (cur && i - cur.to <= 3) cur.to = i;
+    else {
+      if (cur) runs.push(cur);
+      cur = { from: i - 1, to: i };
+    }
+  }
+  if (cur) runs.push(cur);
+  return { runs: runs.filter((r) => r.to - r.from >= 2), threshold, ground: med / Math.max(1, pixels) > 0.05 ? "moving" : "still" };
+}
+
+// src/video/fit.ts
+function nelderMead(f, x0, steps2, iterations = 600) {
+  const n = x0.length;
+  let simplex = [x0.slice(), ...x0.map((_, i) => x0.map((v, j) => j === i ? v + steps2[i] : v))].map((x) => ({ x, v: f(x) }));
+  for (let it = 0; it < iterations; it++) {
+    simplex.sort((a, b) => a.v - b.v);
+    const best = simplex[0], worst = simplex[n], second = simplex[n - 1];
+    if (Math.abs(worst.v - best.v) < 1e-12) break;
+    const c = Array(n).fill(0);
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) c[j] += simplex[i].x[j] / n;
+    const at = (t) => c.map((cj, j) => cj + t * (worst.x[j] - cj));
+    const r = at(-1), fr = f(r);
+    if (fr < best.v) {
+      const e = at(-2), fe = f(e);
+      simplex[n] = fe < fr ? { x: e, v: fe } : { x: r, v: fr };
+      continue;
+    }
+    if (fr < second.v) {
+      simplex[n] = { x: r, v: fr };
+      continue;
+    }
+    const k = fr < worst.v ? at(-0.5) : at(0.5), fk = f(k);
+    if (fk < Math.min(fr, worst.v)) {
+      simplex[n] = { x: k, v: fk };
+      continue;
+    }
+    simplex = simplex.map((s, i) => i === 0 ? s : { x: s.x.map((v, j) => best.x[j] + 0.5 * (v - best.x[j])), v: f(s.x.map((v, j) => best.x[j] + 0.5 * (v - best.x[j]))) });
+  }
+  simplex.sort((a, b) => a.v - b.v);
+  return { x: simplex[0].x, value: simplex[0].v };
+}
+function aeEase(t, outInfluence, inInfluence) {
+  if (t <= 0) return 0;
+  if (t >= 1) return 1;
+  const x1 = outInfluence, x2 = 1 - inInfluence;
+  const bx = (u2) => 3 * (1 - u2) * (1 - u2) * u2 * x1 + 3 * (1 - u2) * u2 * u2 * x2 + u2 * u2 * u2;
+  let lo = 0, hi = 1;
+  for (let i = 0; i < 40; i++) {
+    const m = (lo + hi) / 2;
+    if (bx(m) < t) lo = m;
+    else hi = m;
+  }
+  const u = (lo + hi) / 2;
+  return 3 * (1 - u) * u * u + u * u * u;
+}
+function springFromRest(t, f, d) {
+  if (t <= 0) return 0;
+  const w = 2 * Math.PI * f;
+  return 1 - Math.exp(-d * t) * (Math.cos(w * t) + d / w * Math.sin(w * t));
+}
+var clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+function rmsOf(s, model) {
+  let e = 0;
+  for (const p of s) {
+    const d = model(p.time) - p.y;
+    e += d * d;
+  }
+  return Math.sqrt(e / Math.max(1, s.length));
+}
+function fitMove(s, guess) {
+  const dur0 = Math.max(1e-3, guess.end - guess.start), tSpan = s.length ? s[s.length - 1].time - s[0].time : dur0;
+  const fe = (x) => {
+    const a = x[0], b = Math.max(a + 1e-3, x[1]), o = clamp(x[2], 0.01, 1), i = clamp(x[3], 0.01, 1);
+    return rmsOf(s, (t) => aeEase((t - a) / (b - a), o, i));
+  };
+  let bestE = { x: [guess.start, guess.end, 0.33, 0.33], value: Infinity };
+  for (const o0 of [0.15, 0.33, 0.6, 0.85]) for (const i0 of [0.15, 0.33, 0.6, 0.85]) {
+    const r = nelderMead(fe, [guess.start, guess.end, o0, i0], [dur0 * 0.1, dur0 * 0.1, 0.1, 0.1]);
+    if (r.value < bestE.value) bestE = r;
+  }
+  const ease = { model: "ease", start: bestE.x[0], end: Math.max(bestE.x[0] + 1e-3, bestE.x[1]), outInfluence: Math.round(clamp(bestE.x[2], 0.01, 1) * 1e3) / 10, inInfluence: Math.round(clamp(bestE.x[3], 0.01, 1) * 1e3) / 10, rms: bestE.value };
+  const fl = (x) => {
+    const a = x[0], b = Math.max(a + 1e-3, x[1]);
+    return rmsOf(s, (t) => clamp((t - a) / (b - a), 0, 1));
+  };
+  const rl = nelderMead(fl, [guess.start, guess.end], [dur0 * 0.1, dur0 * 0.1]);
+  const linear = { model: "linear", start: rl.x[0], end: Math.max(rl.x[0] + 1e-3, rl.x[1]), rms: rl.value };
+  const fs26 = (x) => {
+    const f2 = clamp(x[1], 0.2, 20), d2 = clamp(x[2], 0.1, 60);
+    return rmsOf(s, (t) => springFromRest(t - x[0], f2, d2));
+  };
+  let bestS = { x: [guess.start, 2, 6], value: Infinity };
+  for (const f0 of [0.8, 1.5, 3, 6]) for (const d0 of [2, 5, 10, 20]) {
+    const r = nelderMead(fs26, [guess.start, f0, d0], [dur0 * 0.1, f0 * 0.3, d0 * 0.3]);
+    if (r.value < bestS.value) bestS = r;
+  }
+  const f = clamp(bestS.x[1], 0.2, 20), d = clamp(bestS.x[2], 0.1, 60), w = 2 * Math.PI * f;
+  const tc = (Math.PI / 2 + Math.atan(d / w)) / w;
+  const peakT = Math.PI / w, overshoot = Math.max(0, springFromRest(peakT, f, d) - 1);
+  let settle2 = tSpan;
+  for (let t = 0; t < 30; t += 1e-3) {
+    if (Math.exp(-d * t) * Math.sqrt(1 + (d / w) ** 2) < 0.02) {
+      settle2 = t;
+      break;
+    }
+  }
+  const spring = {
+    model: "spring",
+    start: bestS.x[0],
+    f: Math.round(f * 1e3) / 1e3,
+    d: Math.round(d * 1e3) / 1e3,
+    A: Math.round(Math.sqrt(1 + (d / w) ** 2) * Math.exp(-d * tc) * 1e3) / 1e3,
+    reachesEndAt: bestS.x[0] + tc,
+    overshoot: Math.round(overshoot * 1e3) / 1e3,
+    settle: settle2,
+    rms: bestS.value
+  };
+  const ranked = [ease, linear, spring].sort((a, b) => a.rms - b.rms);
+  return { ease, linear, spring, best: ranked[0].model, margin: ranked[0].rms > 0 ? Math.round(ranked[1].rms / ranked[0].rms * 100) / 100 : Infinity };
+}
+function fitEaseSeen(s, lo = 0.015) {
+  const cross = (th, from = 1) => {
+    for (let k = Math.max(1, from); k < s.length; k++) if (s[k].y >= th && s[k - 1].y < th) return { k, t: s[k - 1].time + (th - s[k - 1].y) / (s[k].y - s[k - 1].y) * (s[k].time - s[k - 1].time) };
+    return null;
+  };
+  const c0 = cross(lo), c1 = c0 ? cross(1 - lo, c0.k) : null;
+  if (!c0 || !c1 || c1.t <= c0.t) return null;
+  return { ...fitEaseBetween(s, c0.t, c1.t), seen: true };
+}
+function fitEaseBetween(s, a, b) {
+  const f = (x) => {
+    const o = clamp(x[0], 0.01, 1), i = clamp(x[1], 0.01, 1);
+    return rmsOf(s, (t) => aeEase((t - a) / (b - a), o, i));
+  };
+  let best = { x: [0.33, 0.33], value: Infinity };
+  for (const o0 of [0.1, 0.33, 0.6, 0.9]) for (const i0 of [0.1, 0.33, 0.6, 0.9]) {
+    const r = nelderMead(f, [o0, i0], [0.1, 0.1], 300);
+    if (r.value < best.value) best = r;
+  }
+  return { model: "ease", start: a, end: b, outInfluence: Math.round(clamp(best.x[0], 0.01, 1) * 1e3) / 10, inInfluence: Math.round(clamp(best.x[1], 0.01, 1) * 1e3) / 10, rms: best.value };
+}
+function fitSpringTail(s) {
+  const i0 = s.findIndex((p) => p.y >= 1);
+  if (i0 < 0 || !s.slice(i0).some((p) => p.y > 1.01)) return null;
+  const t0 = i0 > 0 ? s[i0 - 1].time + (1 - s[i0 - 1].y) / (s[i0].y - s[i0 - 1].y) * (s[i0].time - s[i0 - 1].time) : s[i0].time;
+  const tail = s.slice(i0).map((p) => ({ time: p.time - t0, y: p.y }));
+  const fe = (x) => {
+    const A = x[0], f = clamp(x[1], 0.1, 20), d = clamp(x[2], 0, 60);
+    return rmsOf(tail, (t) => 1 + A * Math.exp(-d * t) * Math.sin(2 * Math.PI * f * t));
+  };
+  const cross = [];
+  for (let i = 1; i < tail.length; i++) if ((tail[i - 1].y - 1) * (tail[i].y - 1) < 0) {
+    const a = tail[i - 1], b = tail[i];
+    cross.push(a.time + (1 - a.y) / (b.y - a.y) * (b.time - a.time));
+  }
+  const fGuess = cross.length >= 1 ? 1 / (2 * (cross.length >= 2 ? (cross[cross.length - 1] - cross[0]) / (cross.length - 1) : cross[0])) : 1.5;
+  const peak = Math.max(...tail.map((p) => p.y)) - 1;
+  let best = { x: [peak, fGuess, 5], value: Infinity };
+  for (const f0 of [fGuess, 0.8, 1.5, 3, 6]) for (const d0 of [1, 2, 5, 10]) for (const a0 of [peak, peak * 2]) {
+    const r = nelderMead(fe, [a0, f0, d0], [a0 * 0.3, f0 * 0.3, d0 * 0.3]);
+    if (r.value < best.value) best = r;
+  }
+  return { A: Math.round(best.x[0] * 1e3) / 1e3, f: Math.round(clamp(best.x[1], 0.1, 20) * 1e3) / 1e3, d: Math.round(clamp(best.x[2], 0, 60) * 1e3) / 1e3, from: t0, rms: best.value };
+}
+function keysFor(fit, a, b, fps) {
+  const v = (k) => a.map((x, i) => Math.round((x + (b[i] - x) * k) * 1e3) / 1e3);
+  const one = (x) => x.length === 1 ? x[0] : x;
+  if (fit.model === "ease")
+    return { keys: [{ time: r44(fit.start), value: one(v(0)), interp: "ease", outInfluence: fit.outInfluence, outSpeed: 0 }, { time: r44(fit.end), value: one(v(1)), interp: "ease", inInfluence: fit.inInfluence, inSpeed: 0 }] };
+  if (fit.model === "linear") return { keys: [{ time: r44(fit.start), value: one(v(0)), interp: "linear" }, { time: r44(fit.end), value: one(v(1)), interp: "linear" }] };
+  const rise = Math.max(1e-3, fit.reachesEndAt - fit.start), baked = [];
+  for (let t = fit.start; t <= fit.start + fit.settle + 1 / fps; t += 1 / fps) baked.push({ time: r44(t), value: one(v(springFromRest(t - fit.start, fit.f, fit.d))), interp: "linear" });
+  return {
+    keys: [{ time: r44(fit.start), value: one(v(0)), interp: "linear" }, { time: r44(fit.reachesEndAt), value: one(v(1)), interp: "linear" }],
+    librarySpring: { freq: fit.f, decay: fit.d, amp: Math.round(fit.A * rise * 1e4) / 1e4, form: "value + v * amp * sin(freq * t * 2 * PI) / exp(decay * t) after the last key (motion-jsx spring)" },
+    baked
+  };
+}
+var r44 = (x) => Math.round(x * 1e4) / 1e4;
+
+// src/video/measure-move.ts
+var r22 = (x) => Math.round(x * 100) / 100;
+var r45 = (x) => Math.round(x * 1e4) / 1e4;
+var median5 = (a) => {
+  if (!a.length) return 0;
+  const s = [...a].sort((x, y) => x - y);
+  return s[Math.floor(s.length / 2)];
+};
+function movesOfChannel(samples, o) {
+  if (samples.length < 4) return [];
+  const { fps, atFps } = o, moving = o.movingSpeed ?? 0.02, gap = 2.5 / fps, at = (t) => r22(t * atFps);
+  const report = analyzeCurve(samples, fps, { joinGap: 6 });
+  const drifts = /* @__PURE__ */ new Set(), handover = /* @__PURE__ */ new Set();
+  const idx = (f) => samples.findIndex((s) => s.frame === f);
+  const split = (mv) => {
+    const i0 = idx(mv.from), i1 = idx(mv.to);
+    if (i0 < 0 || i1 - i0 < 8) return [mv];
+    const way = samples[i1].value.map((v, d) => v - samples[i0].value[d]), L = Math.hypot(...way);
+    if (L <= 0) return [mv];
+    const sp = [];
+    for (let k2 = i0; k2 < i1; k2++) sp.push(samples[k2 + 1].value.reduce((a2, v, d) => a2 + (v - samples[k2].value[d]) * way[d], 0) / L / Math.max(1e-6, (samples[k2 + 1].time - samples[k2].time) * fps));
+    const pk = sp.reduce((b2, v, k2) => Math.abs(v) > Math.abs(sp[b2]) ? k2 : b2, 0), peak = Math.abs(sp[pk]), share = o.driftShare ?? 0.1;
+    let k = -1;
+    for (let j = pk + 1; j < sp.length; j++) if (sp.slice(j).every((v) => Math.abs(v) < share * peak)) {
+      k = j;
+      break;
+    }
+    if (k < 0) return [mv];
+    const tail = sp.slice(k), med = (a2) => median5(a2.map(Math.abs));
+    const third = Math.max(3, Math.floor(tail.length / 3)), mean = (a2) => a2.reduce((x, v) => x + Math.abs(v), 0) / Math.max(1, a2.length);
+    if (tail.length < 6 || tail.some((v) => v < -0.25 * Math.abs(med(tail)) - 1e-9) || mean(tail.slice(-third)) < 0.5 * mean(tail.slice(0, third))) return [mv];
+    let h = k;
+    for (let j = pk + 1; j < sp.length - 3; j++) if (Math.abs(sp[j]) <= 1.5 * med(tail)) {
+      h = j;
+      break;
+    }
+    const at2 = samples[i0 + h].frame, distOf = (f0, f1) => Math.hypot(...samples[idx(f1)].value.map((v, d) => v - samples[idx(f0)].value[d]));
+    const a = { ...mv, to: at2, distance: distOf(mv.from, at2) }, b = { ...mv, from: at2, distance: distOf(at2, mv.to) };
+    if (b.distance < o.minMove) return [mv];
+    if (b.distance > 0.5 * a.distance) return [mv];
+    handover.add(a);
+    drifts.add(b);
+    return [a, b];
+  };
+  const moves = report.moves.flatMap(split), out = [];
+  for (const mv of moves) {
+    if (mv.distance < o.minMove) continue;
+    const i0 = samples.findIndex((s) => s.frame === mv.from), i1 = samples.findIndex((s) => s.frame === mv.to);
+    if (i0 < 0 || i1 <= i0) continue;
+    const real = (x) => x !== mv && (x.distance >= o.minMove || drifts.has(x));
+    const prevMove = [...moves].reverse().find((x) => real(x) && x.to <= mv.from), nextMove = moves.find((x) => real(x) && x.from >= mv.to);
+    const restStart = prevMove ? Math.max(0, samples.findIndex((s) => s.frame === prevMove.to)) : 0;
+    const restEnd = nextMove ? samples.findIndex((s) => s.frame === nextMove.from) : samples.length - 1;
+    const tailVals = samples.slice(i1, Math.max(i1 + 1, Math.min(restEnd + 1, i1 + 10))).map((s) => s.value);
+    const end = tailVals[0].map((_, d) => median5(tailVals.map((x) => x[d])));
+    const startV = samples[i0].value, way = end.map((e, d) => e - startV[d]), len2 = way.reduce((s, x) => s + x * x, 0);
+    if (len2 <= 0) continue;
+    const dist = Math.sqrt(len2), prog = (s) => s.value.reduce((acc, v, d) => acc + (v - startV[d]) * way[d], 0) / len2;
+    const lo = Math.max(0, i0 - 3), hi = Math.min(samples.length - 1, i1 + 6);
+    const fitS = samples.slice(lo, hi + 1).map((s) => ({ time: s.time, y: prog(s) }));
+    const fits = fitMove(fitS, { start: samples[i0].time, end: samples[i1].time }), tail = fitSpringTail(fitS), seen = fitEaseSeen(fitS);
+    const best = fits[fits.best];
+    const wlo = Math.max(restStart, i0 - 12), whi = Math.min(restEnd, i1 + 15), P2 = samples.map((s, k) => k >= wlo && k <= whi ? prog(s) : NaN);
+    const mad = (a2, c) => median5(a2.map((v) => Math.abs(v - c))) * 1.4826;
+    const after = P2.slice(i1, whi + 1).filter(Number.isFinite), before = P2.slice(wlo, i0 + 1).filter(Number.isFinite);
+    const noise = Math.max(after.length >= 3 ? mad(after, 1) : 0, before.length >= 3 ? mad(before, 0) : 0);
+    const eps = Math.max(3 * noise, o.epsAbs / dist, 15e-4);
+    let mid = i1;
+    for (let k = i0; k <= i1; k++) if (P2[k] >= 0.5) {
+      mid = k;
+      break;
+    }
+    let a = null, b = null;
+    for (let k = mid; k >= wlo; k--) if (Math.abs(P2[k]) <= eps) {
+      a = k;
+      break;
+    }
+    const band = Math.max(eps, o.endShare ?? 0.02);
+    for (let k = mid; k <= whi && b === null; k++) {
+      let ok = true;
+      for (let j = k; j <= whi; j++) if (Math.abs(P2[j] - 1) > band) {
+        ok = false;
+        break;
+      }
+      if (ok) b = k;
+    }
+    const step = (k) => k + 1 < samples.length && Number.isFinite(P2[k + 1]) ? (P2[k + 1] - P2[k]) / Math.max(1e-6, (samples[k + 1].time - samples[k].time) * fps) : 0;
+    const contigBefore = (k) => k > 0 && samples[k].time - samples[k - 1].time <= gap;
+    const contigAfter = (k) => k + 1 < samples.length && samples[k + 1].time - samples[k].time <= gap;
+    const begins = !contigBefore(a ?? i0) ? o.beginsAt?.(samples[a ?? i0].frame) ?? null : null;
+    const startSeen = a !== null && (begins !== null || contigBefore(a) || Math.abs(step(a)) <= moving);
+    const endsAtCut = !contigAfter(i1) && i1 === whi && !!o.endsAt?.(samples[i1].frame);
+    if (endsAtCut && (b === null || b >= whi)) b = i1;
+    const handed = handover.has(mv);
+    if (handed && (b === null || b > i1)) b = i1;
+    const endSeen = endsAtCut || handed && b !== null || b !== null && b < whi && contigAfter(b);
+    const visible = a !== null && b !== null ? samples[b].time - samples[a].time : null;
+    let c0 = i0, c1 = i1;
+    while (contigBefore(c0)) c0--;
+    while (contigAfter(c1)) c1++;
+    const keysSec = best.model === "spring" ? best.reachesEndAt - best.start : best.end - best.start;
+    const m = {
+      curve: mv,
+      from: { frame: mv.from, time: samples[i0].time, at: at(samples[i0].time) },
+      to: { frame: mv.to, time: samples[i1].time, at: at(samples[i1].time) },
+      duration: {
+        seconds: visible !== null && startSeen && endSeen ? r45(visible) : null,
+        at: visible !== null && startSeen && endSeen ? at(visible) : null,
+        as: "visible: from the last frame at rest to the first frame that stays within 2 % of the end (as the hand studies count it)",
+        keys: { seconds: r45(keysSec), at: at(keysSec), as: "the fit's keys (what is set in After Effects)" },
+        visible: visible === null ? null : { seconds: r45(visible), at: at(visible), fromFrame: samples[a].frame, toFrame: samples[b].frame, fromTime: samples[a].time, toTime: samples[b].time }
+      },
+      start: startV.map(r22),
+      end: end.map(r22),
+      distance: r22(dist),
+      fits: {
+        ease: fits.ease,
+        linear: fits.linear,
+        spring: fits.spring,
+        springTail: tail,
+        easeSeen: seen,
+        // keys held at the visible span's ends (the last frame at rest, the first settled), the influences fitted
+        easeVisible: visible !== null && visible > 0 ? fitEaseBetween(fitS, samples[a].time, samples[b].time) : null
+      },
+      best: fits.best,
+      margin: fits.margin,
+      apply: keysFor(best, startV, end, atFps),
+      seen: { start: startSeen, end: endSeen, begins, ...endsAtCut ? { ends: "cut" } : handed ? { ends: "drift" } : {} },
+      ...drifts.has(mv) ? { drift: { speed: r22(dist / Math.max(1e-6, samples[i1].time - samples[i0].time)), unit: "a second", reading: "a slow drift after the move before it, split from it" } } : {},
+      covers: { fromFrame: samples[c0].frame, toFrame: samples[c1].frame },
+      status: "measured"
+    };
+    if (!startSeen) {
+      const first = samples[a ?? i0];
+      m.status = `partial: the start was not seen (already moving at frame ${first.frame}, the first frame measured); duration, distance and ease out are not measured, only the settle`;
+      m.notMeasured = ["duration", "distance", "ease out"];
+      m.seenTravel = m.distance;
+      m.distance = null;
+      m.apply = null;
+      m.settle = { end: m.end, inInfluence: (seen ?? fits.ease).inInfluence };
+    } else if (!endSeen) {
+      m.status = "partial: the end was not seen (still moving where the measure stops); duration, distance and ease in are not measured";
+      m.notMeasured = ["duration", "distance", "ease in"];
+      m.seenTravel = m.distance;
+      m.distance = null;
+      m.apply = null;
+    } else if (best.rms > 0.05) m.status = "measured, loosely (rms over 0.05)";
+    out.push(m);
+  }
+  return out;
+}
+
+// src/video/shots.ts
+var SHOT_RULES = { cutMin: 12, ratio: 4, heldRatio: 3, around: 12, softMin: 10, softRatio: 8, softEvery: 4, swapMin: 10, swapBack: 0.35, flashShare: 0.7, sameScore: 0.85, sameResidual: 0.35 };
+function registerShift(a, b, w, h, o = {}) {
+  const maxDx = o.maxDx ?? Math.floor(w / 2), maxDy = o.maxDy ?? Math.floor(h / 2), minOverlap = o.minOverlap ?? 0.25;
+  let best = null;
+  const x0s = o.near ? o.near.dx - o.near.r : -maxDx, x1s = o.near ? o.near.dx + o.near.r : maxDx;
+  const y0s = o.near ? o.near.dy - o.near.r : -maxDy, y1s = o.near ? o.near.dy + o.near.r : maxDy;
+  for (let dy = y0s; dy <= y1s; dy++) for (let dx = x0s; dx <= x1s; dx++) {
+    const xa = Math.max(0, dx), xb = Math.min(w, w + dx), ya = Math.max(0, dy), yb = Math.min(h, h + dy);
+    const n = (xb - xa) * (yb - ya);
+    if (n <= 0 || n < minOverlap * w * h) continue;
+    let sa = 0, sb = 0, saa = 0, sbb = 0, sab = 0;
+    for (let y = ya; y < yb; y++) {
+      const rb = y * w, ra = (y - dy) * w;
+      for (let x = xa; x < xb; x++) {
+        const p = a[ra + x - dx], q = b[rb + x];
+        sa += p;
+        sb += q;
+        saa += p * p;
+        sbb += q * q;
+        sab += p * q;
+      }
+    }
+    const va = saa - sa * sa / n, vb = sbb - sb * sb / n, cov = sab - sa * sb / n;
+    const score = va > 1e-6 && vb > 1e-6 ? cov / Math.sqrt(va * vb) : 0;
+    if (!best || score > best.score) best = { dx, dy, score, overlap: n / (w * h), residual: 0 };
+  }
+  if (best) {
+    const { dx, dy } = best, xa = Math.max(0, dx), xb = Math.min(w, w + dx), ya = Math.max(0, dy), yb = Math.min(h, h + dy);
+    let r = 0, z2 = 0;
+    for (let y = ya; y < yb; y++) for (let x = xa; x < xb; x++) {
+      const q = b[y * w + x];
+      r += Math.abs(q - a[(y - dy) * w + x - dx]);
+      z2 += Math.abs(q - a[y * w + x]);
+    }
+    best.residual = z2 > 0 ? r / z2 : 0;
+  }
+  return best;
+}
+var median6 = (a) => {
+  if (!a.length) return 0;
+  const s = [...a].sort((x, y) => x - y);
+  return s[Math.floor(s.length / 2)];
+};
+function shotList(stats, rules = SHOT_RULES, register2) {
+  const n = stats.length, ch = stats.map((s) => s.change), out = { cuts: [], swaps: [], notCuts: [], shots: [] };
+  const swapAt = /* @__PURE__ */ new Set();
+  for (let i = 1; i + 1 < n; i++) {
+    const a = stats[i], b = stats[i + 1];
+    if (a.change >= rules.swapMin && b.change >= rules.swapMin && b.back < rules.swapBack * Math.min(a.change, b.change)) {
+      swapAt.add(i);
+      out.swaps.push({ frame: a.index, time: a.time, change: Math.round(a.change * 10) / 10, region: null });
+      continue;
+    }
+    for (let r = 0; r < a.regions.length; r++) {
+      const ra = a.regions[r], rb = b.regions[r];
+      const loc = median6(stats.slice(Math.max(1, i - rules.around), Math.min(n, i + rules.around + 1)).map((s) => s.regions[r]));
+      if (ra >= Math.max(rules.swapMin * 2, 4 * loc) && rb >= Math.max(rules.swapMin * 2, 4 * loc) && b.regionsBack[r] < rules.swapBack * Math.min(ra, rb)) {
+        swapAt.add(i);
+        out.swaps.push({ frame: a.index, time: a.time, change: Math.round(ra * 10) / 10, region: r });
+        break;
+      }
+    }
+  }
+  const cand = [];
+  for (let i = 1; i < n; i++) {
+    if (swapAt.has(i) || swapAt.has(i - 1)) continue;
+    const nb = [...ch.slice(Math.max(1, i - rules.around), i), ...ch.slice(i + 1, Math.min(n, i + rules.around + 1))];
+    const med = median6(nb), held = nb.filter((x) => x < 1).length > 0.6 * nb.length;
+    const hard = ch[i] >= rules.cutMin && ch[i] >= (held ? rules.heldRatio : rules.ratio) * Math.max(med, 0.5);
+    const soft = !hard && ch[i] >= rules.softMin && ch[i] >= rules.softRatio * Math.max(med, 0.5) && ch[i] >= rules.softEvery * Math.max(ch[i - 1], i + 1 < n ? ch[i + 1] : 0);
+    if (!hard && !soft) continue;
+    if (stats[i].shiftShare >= rules.flashShare) {
+      out.notCuts.push({ frame: stats[i].index, time: stats[i].time, kind: "flash", change: Math.round(ch[i] * 10) / 10 });
+      continue;
+    }
+    const reg = register2 ? register2(i) : null;
+    cand.push({ i, reg, soft, same: !!reg && reg.score >= rules.sameScore && reg.residual <= rules.sameResidual });
+  }
+  const r1 = (x) => Math.round(x * 10) / 10;
+  const aside = (c, kind) => out.notCuts.push({
+    frame: stats[c.i].index,
+    time: stats[c.i].time,
+    kind,
+    change: r1(ch[c.i]),
+    ...c.reg ? { shift: { dx: c.reg.dx, dy: c.reg.dy, score: Math.round(c.reg.score * 1e3) / 1e3 } } : {}
+  });
+  for (let k = 0; k < cand.length; ) {
+    let e = k;
+    while (e + 1 < cand.length && stats[cand[e + 1].i].index - stats[cand[e].i].index <= 3) e++;
+    const run = cand.slice(k, e + 1), top = run.reduce((a, b) => ch[b.i] > ch[a.i] ? b : a);
+    if (top.same) for (const c of run) aside(c, c.reg && Math.hypot(c.reg.dx, c.reg.dy) >= 1 ? "pan" : "motion");
+    else {
+      const cut = run.find((c) => !c.same) ?? top;
+      out.cuts.push({ frame: stats[cut.i].index, time: stats[cut.i].time, change: r1(ch[cut.i]), ...cut.soft ? { soft: true } : {} });
+      for (const c of run) if (c !== cut) aside(c, c.same && c.reg && Math.hypot(c.reg.dx, c.reg.dy) >= 1 ? "pan" : "motion");
+    }
+    k = e + 1;
+  }
+  out.notCuts.sort((a, b) => a.frame - b.frame);
+  let from = stats[0]?.index ?? 0, start = stats[0]?.time ?? 0;
+  for (const c of out.cuts) {
+    const k = stats.findIndex((s) => s.index === c.frame);
+    out.shots.push({ from, to: c.frame - 1, start, end: stats[k - 1]?.time ?? c.time });
+    from = c.frame;
+    start = c.time;
+  }
+  if (n) out.shots.push({ from, to: stats[n - 1].index, start, end: stats[n - 1].time });
+  return out;
+}
+function frameStats(index, time3, a, b, c, w, h) {
+  const grid = 4, regions = Array(grid * grid).fill(0), regionsBack = Array(grid * grid).fill(0), counts = Array(grid * grid).fill(0);
+  let change = 0, back = 0, mean = 0;
+  if (b) for (let i = 0; i < c.length; i++) mean += c[i] - b[i];
+  mean = b ? mean / c.length : 0;
+  let resid = 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = y * w + x, r = Math.min(grid - 1, Math.floor(y * grid / h)) * grid + Math.min(grid - 1, Math.floor(x * grid / w));
+    const d = b ? Math.abs(c[i] - b[i]) : 0, e = a ? Math.abs(c[i] - a[i]) : 0;
+    change += d;
+    back += e;
+    regions[r] += d;
+    regionsBack[r] += e;
+    counts[r]++;
+    if (b) resid += Math.abs(c[i] - b[i] - mean);
+  }
+  const N = w * h;
+  return {
+    index,
+    time: time3,
+    change: change / N,
+    back: a ? back / N : Infinity,
+    regions: regions.map((v, r) => v / counts[r]),
+    regionsBack: regionsBack.map((v, r) => a ? v / counts[r] : Infinity),
+    shiftShare: change > 0 ? Math.max(0, 1 - resid / change) : 0
+  };
+}
+
+// src/video/track.ts
+function fft(re, im, inv = false) {
+  const n = re.length;
+  for (let i = 1, j = 0; i < n; i++) {
+    let bit = n >> 1;
+    for (; j & bit; bit >>= 1) j ^= bit;
+    j ^= bit;
+    if (i < j) {
+      [re[i], re[j]] = [re[j], re[i]];
+      [im[i], im[j]] = [im[j], im[i]];
+    }
+  }
+  for (let len = 2; len <= n; len <<= 1) {
+    const ang = (inv ? 2 : -2) * Math.PI / len, wr = Math.cos(ang), wi = Math.sin(ang);
+    for (let i = 0; i < n; i += len) {
+      let cr = 1, ci = 0;
+      for (let k = 0; k < len / 2; k++) {
+        const a = i + k, b = a + len / 2, xr = re[b] * cr - im[b] * ci, xi = re[b] * ci + im[b] * cr;
+        re[b] = re[a] - xr;
+        im[b] = im[a] - xi;
+        re[a] += xr;
+        im[a] += xi;
+        const t = cr * wr - ci * wi;
+        ci = cr * wi + ci * wr;
+        cr = t;
+      }
+    }
+  }
+  if (inv) for (let i = 0; i < n; i++) {
+    re[i] /= n;
+    im[i] /= n;
+  }
+}
+var pow2 = (n) => {
+  let p = 1;
+  while (p < n) p <<= 1;
+  return p;
+};
+function fft2(img, w, h, P2, Q) {
+  const re = new Float64Array(P2 * Q), im = new Float64Array(P2 * Q);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) re[y * P2 + x] = img[y * w + x];
+  const rr = new Float64Array(P2), ri = new Float64Array(P2);
+  for (let y = 0; y < Q; y++) {
+    rr.set(re.subarray(y * P2, y * P2 + P2));
+    ri.set(im.subarray(y * P2, y * P2 + P2));
+    fft(rr, ri);
+    re.set(rr, y * P2);
+    im.set(ri, y * P2);
+  }
+  const cr = new Float64Array(Q), ci = new Float64Array(Q);
+  for (let x = 0; x < P2; x++) {
+    for (let y = 0; y < Q; y++) {
+      cr[y] = re[y * P2 + x];
+      ci[y] = im[y * P2 + x];
+    }
+    fft(cr, ci);
+    for (let y = 0; y < Q; y++) {
+      re[y * P2 + x] = cr[y];
+      im[y * P2 + x] = ci[y];
+    }
+  }
+  return { re, im };
+}
+function ifft2(re, im, P2, Q) {
+  const cr = new Float64Array(Q), ci = new Float64Array(Q);
+  for (let x = 0; x < P2; x++) {
+    for (let y = 0; y < Q; y++) {
+      cr[y] = re[y * P2 + x];
+      ci[y] = im[y * P2 + x];
+    }
+    fft(cr, ci, true);
+    for (let y = 0; y < Q; y++) {
+      re[y * P2 + x] = cr[y];
+      im[y * P2 + x] = ci[y];
+    }
+  }
+  const rr = new Float64Array(P2), ri = new Float64Array(P2);
+  for (let y = 0; y < Q; y++) {
+    rr.set(re.subarray(y * P2, y * P2 + P2));
+    ri.set(im.subarray(y * P2, y * P2 + P2));
+    fft(rr, ri, true);
+    re.set(rr, y * P2);
+  }
+  return re;
+}
+function resize(src, w, h, nw, nh) {
+  const out = new Float64Array(nw * nh);
+  for (let y = 0; y < nh; y++) for (let x = 0; x < nw; x++) {
+    const sx = Math.min(w - 1, Math.max(0, (x + 0.5) * w / nw - 0.5)), sy = Math.min(h - 1, Math.max(0, (y + 0.5) * h / nh - 0.5));
+    const x0 = Math.floor(sx), y0 = Math.floor(sy), x1 = Math.min(w - 1, x0 + 1), y1 = Math.min(h - 1, y0 + 1), fx = sx - x0, fy = sy - y0;
+    out[y * nw + x] = src[y0 * w + x0] * (1 - fx) * (1 - fy) + src[y0 * w + x1] * fx * (1 - fy) + src[y1 * w + x0] * (1 - fx) * fy + src[y1 * w + x1] * fx * fy;
+  }
+  return out;
+}
+function matchTemplate(f, fw, fh, t, tw, th, scales, near) {
+  const P2 = pow2(fw), Q = pow2(fh), F = fft2(f, fw, fh, P2, Q);
+  const I = new Float64Array((fw + 1) * (fh + 1)), I2 = new Float64Array((fw + 1) * (fh + 1));
+  for (let y = 0; y < fh; y++) {
+    let s = 0, s2 = 0;
+    for (let x = 0; x < fw; x++) {
+      const v = f[y * fw + x];
+      s += v;
+      s2 += v * v;
+      I[(y + 1) * (fw + 1) + x + 1] = I[y * (fw + 1) + x + 1] + s;
+      I2[(y + 1) * (fw + 1) + x + 1] = I2[y * (fw + 1) + x + 1] + s2;
+    }
+  }
+  const box2 = (A, x, y, w, h) => A[(y + h) * (fw + 1) + x + w] - A[y * (fw + 1) + x + w] - A[(y + h) * (fw + 1) + x] + A[y * (fw + 1) + x];
+  let best = null;
+  for (const sc of scales) {
+    const w = Math.max(4, Math.round(tw * sc)), h = Math.max(4, Math.round(th * sc));
+    if (w >= fw || h >= fh) continue;
+    const ts = resize(t, tw, th, w, h);
+    let m = 0;
+    for (let i = 0; i < ts.length; i++) m += ts[i];
+    m /= ts.length;
+    let tv = 0;
+    for (let i = 0; i < ts.length; i++) {
+      ts[i] -= m;
+      tv += ts[i] * ts[i];
+    }
+    if (tv < 1e-6) continue;
+    const T = fft2(ts, w, h, P2, Q);
+    const re = new Float64Array(P2 * Q), im = new Float64Array(P2 * Q);
+    for (let i = 0; i < P2 * Q; i++) {
+      re[i] = F.re[i] * T.re[i] + F.im[i] * T.im[i];
+      im[i] = F.im[i] * T.re[i] - F.re[i] * T.im[i];
+    }
+    const c = ifft2(re, im, P2, Q), n = w * h;
+    const x0 = near ? Math.max(0, Math.floor(near.x - near.r - w / 2)) : 0, x1 = near ? Math.min(fw - w, Math.ceil(near.x + near.r - w / 2)) : fw - w;
+    const y0 = near ? Math.max(0, Math.floor(near.y - near.r - h / 2)) : 0, y1 = near ? Math.min(fh - h, Math.ceil(near.y + near.r - h / 2)) : fh - h;
+    const score = (x, y) => {
+      const s = box2(I, x, y, w, h), s2 = box2(I2, x, y, w, h), v = s2 - s * s / n;
+      return v > 1e-6 ? c[y * P2 + x] / Math.sqrt(v * tv) : -1;
+    };
+    let bx = -1, by = -1, bs = -2;
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+      const s = score(x, y);
+      if (s > bs) {
+        bs = s;
+        bx = x;
+        by = y;
+      }
+    }
+    if (bx < 0 || best && bs <= best.ncc) continue;
+    const para = (a, b, cc) => {
+      const den = a - 2 * b + cc;
+      return Math.abs(den) > 1e-9 ? Math.max(-0.5, Math.min(0.5, 0.5 * (a - cc) / den)) : 0;
+    };
+    const dx = bx > 0 && bx < fw - w ? para(score(bx - 1, by), bs, score(bx + 1, by)) : 0, dy = by > 0 && by < fh - h ? para(score(bx, by - 1), bs, score(bx, by + 1)) : 0;
+    const slope = c[by * P2 + bx] / tv;
+    best = { x: bx + dx + w / 2, y: by + dy + h / 2, scale: sc, ncc: bs, opacity: Math.max(0, Math.min(1.5, slope)) };
+  }
+  return best;
+}
+function scaleSet(lo, hi, n) {
+  if (n <= 1 || hi <= lo) return [lo];
+  return Array.from({ length: n }, (_, i) => lo * Math.pow(hi / lo, i / (n - 1)));
+}
+function refineScale(f, fw, fh, t, tw, th, m, k = 1.02) {
+  const lo = matchTemplate(f, fw, fh, t, tw, th, [m.scale / k], { x: m.x, y: m.y, r: 3 }), hi = matchTemplate(f, fw, fh, t, tw, th, [m.scale * k], { x: m.x, y: m.y, r: 3 });
+  if (!lo || !hi) return m;
+  const a = lo.ncc, b = m.ncc, c = hi.ncc, den = a - 2 * b + c;
+  const off = Math.abs(den) > 1e-9 ? Math.max(-1, Math.min(1, 0.5 * (a - c) / den)) : 0;
+  return { ...m, scale: m.scale * Math.pow(k, off) };
+}
+
+// src/video/run-track.ts
+var NOT_MEASURED = ["rotation", "skew and perspective", "motion blur and its shutter", "colour and tint change", "depth (3D)", "anything outside the region's own picture (shadows, reflections)"];
+function regionPx(r, w, h) {
+  const a = Array.isArray(r) ? r.map(Number) : r && typeof r === "object" ? ["x", "y", "w", "h"].map((k) => Number(r[k])) : null;
+  if (!a || a.length !== 4 || a.some((v) => !Number.isFinite(v)) || a[2] <= 0 || a[3] <= 0) return null;
+  const share = a.every((v) => v <= 1);
+  return share ? [a[0] * w, a[1] * h, a[2] * w, a[3] * h] : a;
+}
+function frameAt(info, t) {
+  let lo = 0, hi = info.frames - 1;
+  while (lo < hi) {
+    const m = lo + hi + 1 >> 1;
+    if (info.times[m] <= t + 1e-6) lo = m;
+    else hi = m - 1;
+  }
+  return lo;
+}
+var r23 = (x) => Math.round(x * 100) / 100;
+function statusCount(moves) {
+  const n = (p) => moves.filter((m) => String(m.status).startsWith(p)).length;
+  return `${n("measured")} measured, ${n("uncertain")} uncertain, ${n("partial")} partial`;
+}
+async function runTrack(args, opts = {}) {
+  const tools = opts.tools ?? VIDEO_TOOLS, minNcc = opts.minNcc ?? 0.8;
+  if (typeof args.file !== "string" || !path15.isAbsolute(args.file)) return { ok: false, error: "`file` must be an absolute path to a video file" };
+  if (typeof args.outDir !== "string" || !path15.isAbsolute(args.outDir)) return { ok: false, error: "`outDir` must be an absolute folder path" };
+  const started = performance.now();
+  const info = await probeVideo(args.file, tools);
+  if (info === null) return { ok: false, error: NO_FFMPEG };
+  if ("error" in info) return { ok: false, error: info.error };
+  const reg = regionPx(args.region, info.width, info.height);
+  if (!reg) return { ok: false, error: "`region` must be [x, y, width, height] in pixels, or as shares of the frame (all 1 or under), round the thing in the reference frame" };
+  const atFps = typeof args.atFps === "number" && args.atFps > 0 ? args.atFps : 30;
+  const f0 = typeof args.start === "number" ? frameAt(info, args.start) : 0, f1 = typeof args.end === "number" ? frameAt(info, args.end) : info.frames - 1;
+  if (f1 <= f0) return { ok: false, error: "`end` must be after `start`" };
+  const refF = typeof args.ref === "number" ? frameAt(info, args.ref) : f1;
+  const k = Math.min(1, (opts.workLong ?? 480) / Math.max(info.width, info.height)), W = Math.max(8, Math.round(info.width * k)), H = Math.max(8, Math.round(info.height * k));
+  const sr = Array.isArray(args.scaleRange) && args.scaleRange.length === 2 ? args.scaleRange.map(Number) : [0.25, 2.5];
+  let ref = null;
+  for await (const fr of readFrames(info, { from: refF, to: refF, width: W, height: H, gray: true }, tools)) ref = Float64Array.from(fr.data);
+  if (!ref) return { ok: false, error: `could not read frame ${refF} of ${args.file}` };
+  const tx = Math.round(reg[0] * k), ty = Math.round(reg[1] * k), tw = Math.max(4, Math.round(reg[2] * k)), th = Math.max(4, Math.round(reg[3] * k));
+  const tmpl = new Float64Array(tw * th);
+  for (let y = 0; y < th; y++) for (let x = 0; x < tw; x++) tmpl[y * tw + x] = ref[Math.min(H - 1, ty + y) * W + Math.min(W - 1, tx + x)];
+  const rows = [];
+  let prev = null, last = null;
+  const smalls = [], shotStats = [];
+  for await (const fr of readFrames(info, { from: f0, to: f1, width: W, height: H, gray: true }, tools)) {
+    const img = Float64Array.from(fr.data), diff = last ? meanDiff(fr.data, last) : 0;
+    const small = Uint8Array.from(resize(img, W, H, 64, 36), (v) => Math.round(v));
+    shotStats.push(frameStats(fr.index, fr.time, smalls.length > 1 ? smalls[smalls.length - 2] : null, smalls.length ? smalls[smalls.length - 1] : null, small, 64, 36));
+    smalls.push(small);
+    let m = null;
+    if (prev) {
+      const r = Math.max(6, Math.round(0.08 * Math.max(W, H))), sw = Math.ceil(tw * prev.scale * 1.35), sh = Math.ceil(th * prev.scale * 1.35);
+      const cx0 = Math.max(0, Math.floor(prev.x - r - sw / 2)), cy0 = Math.max(0, Math.floor(prev.y - r - sh / 2));
+      const cw = Math.min(W - cx0, Math.ceil(2 * r + sw)), ch = Math.min(H - cy0, Math.ceil(2 * r + sh));
+      const crop = new Float64Array(cw * ch);
+      for (let y = 0; y < ch; y++) for (let x = 0; x < cw; x++) crop[y * cw + x] = img[(cy0 + y) * W + cx0 + x];
+      let centre = prev.scale, local = matchTemplate(crop, cw, ch, tmpl, tw, th, scaleSet(centre / 1.04, centre * 1.04, 9));
+      for (let k2 = 0; k2 < 6 && local && Math.abs(Math.log(local.scale / centre)) > Math.log(1.04) - 1e-6; k2++) {
+        centre = local.scale > centre ? centre * 1.07 : centre / 1.07;
+        const next = matchTemplate(crop, cw, ch, tmpl, tw, th, scaleSet(centre / 1.04, centre * 1.04, 9));
+        if (!next || next.ncc < local.ncc) break;
+        local = next;
+      }
+      if (local && local.ncc < 0.92) {
+        const wide = matchTemplate(crop, cw, ch, tmpl, tw, th, scaleSet(prev.scale / 1.3, prev.scale * 1.3, 15));
+        if (wide && wide.ncc > local.ncc) {
+          const fine = matchTemplate(crop, cw, ch, tmpl, tw, th, scaleSet(wide.scale / 1.03, wide.scale * 1.03, 7));
+          local = fine && fine.ncc >= wide.ncc ? fine : wide;
+        }
+      }
+      if (local) m = { ...local, x: local.x + cx0, y: local.y + cy0 };
+    }
+    if (!m || m.ncc < minNcc) {
+      let g = matchTemplate(img, W, H, tmpl, tw, th, scaleSet(sr[0], sr[1], 33));
+      if (g) {
+        const fine = matchTemplate(img, W, H, tmpl, tw, th, scaleSet(g.scale / 1.05, g.scale * 1.05, 11), { x: g.x, y: g.y, r: 4 });
+        if (fine && fine.ncc >= g.ncc) g = fine;
+      }
+      if (g && (!m || g.ncc > m.ncc)) m = g;
+    }
+    if (m && m.ncc >= minNcc) m = refineScale(img, W, H, tmpl, tw, th, m, 1.01);
+    let still;
+    if (!m || m.ncc < minNcc) {
+      let mean = 0;
+      for (let i = 0; i < tmpl.length; i++) mean += tmpl[i];
+      mean /= tmpl.length;
+      let cov = 0, tv = 0, wm = 0;
+      for (let y = 0; y < th; y++) for (let x = 0; x < tw; x++) wm += img[Math.min(H - 1, ty + y) * W + Math.min(W - 1, tx + x)];
+      wm /= tw * th;
+      for (let y = 0; y < th; y++) for (let x = 0; x < tw; x++) {
+        const t = tmpl[y * tw + x] - mean, v = img[Math.min(H - 1, ty + y) * W + Math.min(W - 1, tx + x)] - wm;
+        cov += t * v;
+        tv += t * t;
+      }
+      still = tv > 1e-6 ? Math.max(0, Math.min(1.5, cov / tv)) : 0;
+    }
+    rows.push({ index: fr.index, time: fr.time, m: m && m.ncc >= minNcc ? m : null, diff, still });
+    if (m && m.ncc >= minNcc) prev = m;
+    last = fr.data;
+  }
+  const decodeSeconds = (performance.now() - started) / 1e3;
+  const cad = cadenceOf(rows.map((r) => r.diff), 1 / (info.intervals.median || 1 / 30));
+  const rep = new Set(cad.repeats.map((i) => rows[i].index));
+  let lost = null;
+  for (let i = 1; i + 2 < rows.length; i++) if (rows[i - 1].m && !rows[i].m && !rows[i + 1].m && !rows[i + 2].m && (rows[i - 1].m.opacity ?? 1) > 0.35) {
+    lost = { frame: rows[i].index, time: rows[i].time, reading: `Lost the region at frame ${rows[i].index} (${rows[i].time.toFixed(3)} s): the match fell under ${minNcc} while it was still visible; nothing past it is measured.` };
+    break;
+  }
+  const shotsHere = shotList(shotStats, SHOT_RULES, (i) => i > 0 ? registerShift(smalls[i - 1], smalls[i], 64, 36) : null);
+  const cutAt = new Set(shotsHere.cuts.map((c) => c.frame));
+  const cutList = [...cutAt].sort((a, b) => a - b);
+  const segments = (s) => {
+    const out2 = [[]];
+    for (const x of s) {
+      if (out2[out2.length - 1].length && cutList.some((c) => c > out2[out2.length - 1][out2[out2.length - 1].length - 1].frame && c <= x.frame)) out2.push([]);
+      out2[out2.length - 1].push(x);
+    }
+    return out2.filter((x) => x.length >= 4);
+  };
+  const usable = rows.filter((r) => r.m && !rep.has(r.index) && (!lost || r.index < lost.frame));
+  const toSrc = (m) => ({ x: m.x / k, y: m.y / k, scale: m.scale * 100, opacity: m.opacity * 100 });
+  const channels = [
+    { name: "position", unit: "px", value: (m) => {
+      const s = toSrc(m);
+      return [s.x, s.y];
+    }, epsAbs: 0.25 / k },
+    { name: "scale", unit: "%", value: (m) => [toSrc(m).scale], epsAbs: 0.3 },
+    { name: "opacity", unit: "%", value: (m) => [toSrc(m).opacity], epsAbs: 1 }
+  ];
+  const at = (t) => Math.round(t * atFps * 100) / 100;
+  const out = {
+    ok: true,
+    file: args.file,
+    region: reg,
+    span: { from: f0, to: f1, start: info.times[f0], end: info.times[f1] },
+    ref: refF,
+    atFps,
+    video: { width: info.width, height: info.height, frames: info.frames, nominalFps: info.nominalFps, averageFps: Math.round(info.averageFps * 1e3) / 1e3, variableRate: info.variableRate, intervals: info.intervals },
+    cadence: { repeats: [...rep], period: cad.period, originalFps: cad.originalFps, reading: cad.reading },
+    cuts: cutList,
+    notCuts: shotsHere.notCuts.map((c) => ({ frame: c.frame, kind: c.kind, ...c.shift ? { shift: c.shift } : {} })),
+    lost,
+    notMeasured: NOT_MEASURED,
+    moves: []
+  };
+  const fps = cad.originalFps ?? 1 / (info.intervals.median || 1 / 30);
+  for (const ch of channels) {
+    const samples = ch.name === "opacity" ? rows.filter((r) => !rep.has(r.index) && (!lost || r.index < lost.frame) && (r.m || r.still !== void 0)).map((r) => ({ frame: r.index, time: r.time, value: r.m ? ch.value(r.m) : [r.still * 100] })) : usable.map((r) => ({ frame: r.index, time: r.time, value: ch.value(r.m) }));
+    if (samples.length < 4) continue;
+    const minMove = ch.name === "position" ? Math.max(2, 4e-3 * Math.max(info.width, info.height)) : 2;
+    for (const mv of segments(samples).flatMap((seg) => movesOfChannel(seg, { fps, atFps, minMove, epsAbs: ch.epsAbs, beginsAt: (f) => cutAt.has(f) ? "cut" : null, endsAt: (f) => cutAt.has(f + 1) }))) {
+      const n = usable.filter((r) => r.index >= mv.from.frame && r.index <= mv.to.frame).map((r) => r.m.ncc).sort((a, b) => a - b);
+      out.moves.push({
+        measure: "match",
+        channel: ch.name,
+        unit: ch.unit,
+        ...mv,
+        match: n.length ? { median: Math.round(n[Math.floor(n.length / 2)] * 1e3) / 1e3, min: Math.round(n[0] * 1e3) / 1e3 } : null
+      });
+    }
+  }
+  for (const mv of out.moves) if (mv.match && mv.match.median < 0.85 && !String(mv.status).startsWith("partial")) mv.status = `uncertain: the region matched weakly (median ${mv.match.median}); look at the frames before using it`;
+  const inPlace = new Set(rows.filter((r) => !r.m && r.still !== void 0).map((r) => r.index));
+  for (const mv of out.moves.filter((x) => x.channel === "opacity" && !String(x.status).startsWith("partial"))) {
+    const a0 = mv.duration.visible?.fromFrame ?? mv.from.frame, b0 = mv.duration.visible?.toFrame ?? mv.to.frame;
+    const placed = [...inPlace].some((f) => f >= a0 && f <= b0);
+    const moved = out.moves.some((x) => x.channel === "position" && x.covers.fromFrame <= b0 + 2 && x.to.frame >= a0);
+    if (placed && moved) mv.status = "uncertain: the opacity was read where the region rests while it was moving there; an entrance or exit reads as a fade";
+  }
+  const inkRows = [];
+  let inkBox = null;
+  if (args.ink && typeof args.ink === "object") {
+    const ink = args.ink, mask = ink.mask ?? {};
+    const raw = regionPx(ink.box ?? args.region, info.width, info.height);
+    if (!raw) return { ok: false, error: "`ink.box` must be [x, y, width, height] in pixels or shares of the frame" };
+    const bx = Math.max(0, Math.floor(raw[0])), by = Math.max(0, Math.floor(raw[1]));
+    const bw = Math.max(2, Math.min(info.width - bx, Math.round(raw[2]))), bh = Math.max(2, Math.min(info.height - by, Math.round(raw[3])));
+    inkBox = [bx, by, bw, bh];
+    const kb = Math.min(1, 720 / Math.max(bw, bh)), ow = Math.max(2, Math.round(bw * kb)), oh = Math.max(2, Math.round(bh * kb));
+    let empty;
+    if (typeof mask.empty === "number") {
+      const ef = frameAt(info, mask.empty);
+      for await (const fr of readFrames(info, { from: ef, to: ef, crop: inkBox, width: ow, height: oh }, tools)) empty = Uint8Array.from(fr.data);
+      if (!empty) return { ok: false, error: `could not read the empty frame at ${mask.empty} s` };
+    }
+    for await (const fr of readFrames(info, { from: f0, to: f1, crop: inkBox, width: ow, height: oh }, tools))
+      inkRows.push({ index: fr.index, time: fr.time, f: inkOf(fr.data, ow, oh, mask, { k: kb, ox: bx, oy: by, minCount: typeof ink.minCount === "number" ? ink.minCount : 1, empty }) });
+    const minPixels = typeof ink.minPixels === "number" ? ink.minPixels : 4;
+    for (const r of inkRows) if (r.f.count < minPixels) r.f = { ...r.f, count: 0 };
+    const emptyAt = new Set(inkRows.filter((r) => r.f.count === 0).map((r) => r.index));
+    const byIndex = new Map(inkRows.map((r) => [r.index, r.f]));
+    const atEdge = (f) => f.x0 <= bx + 1 || f.y0 <= by + 1 || f.x1 >= bx + bw - 1 || f.y1 >= by + bh - 1;
+    const appearsAt = (frame) => emptyAt.has(frame - 1) && !!byIndex.get(frame)?.count && !atEdge(byIndex.get(frame));
+    const curves = (Array.isArray(ink.curves) && ink.curves.length ? ink.curves : ["centroid", "size", "level"]).filter((c) => INK_CURVES.includes(c));
+    for (const c of curves) {
+      const like = inkLike(c);
+      const samples = inkRows.filter((r) => !rep.has(r.index)).map((r) => ({ frame: r.index, time: r.time, value: inkValue(r.f, c) })).filter((s) => s.value !== null);
+      const minMove = c === "level" ? 3 : like.like === "position" ? Math.max(2, 4e-3 * Math.max(info.width, info.height)) : 2;
+      for (const mv of segments(samples).flatMap((seg) => movesOfChannel(seg, { fps, atFps, minMove, epsAbs: c === "level" ? 0.5 : c === "centroid" || c === "size" ? 0.3 : 1 / kb, beginsAt: (f) => cutAt.has(f) ? "cut" : appearsAt(f) ? "appears" : null, endsAt: (f) => cutAt.has(f + 1) })))
+        out.moves.push({
+          measure: "ink",
+          channel: `ink.${c}`,
+          like: like.like,
+          ...like.axis !== void 0 ? { axis: like.axis } : {},
+          unit: like.unit,
+          ...mv,
+          ...like.like === "scale" ? { asScale: { from: Math.round(mv.start[0] / mv.end[0] * 1e4) / 100, to: 100, as: "% of its settled size" } } : {}
+        });
+    }
+    out.ink = { box: inkBox, mask, curves, frames: inkRows.length, empty: emptyAt.size, reading: "The ink measure: a mask in a fixed box; its box, centroid, area and the box's mean level per frame. A moving ground defeats the difference from an empty frame." };
+  }
+  const visibleOf = (m) => m.duration?.visible?.seconds ?? null;
+  for (const m of out.moves.filter((x) => x.measure === "match")) {
+    const peers = out.moves.filter((x) => x.measure === "ink" && x.like === m.channel && x.from.time <= m.to.time + 0.1 && x.to.time >= m.from.time - 0.1);
+    if (!peers.length) continue;
+    const matchSure = String(m.status).startsWith("measured") && !(m.match && m.match.median < 0.85);
+    const verdicts = peers.map((p) => {
+      const dv = visibleOf(m) !== null && visibleOf(p) !== null ? Math.abs(visibleOf(m) - visibleOf(p)) * atFps : null;
+      let share = null;
+      if (m.channel === "position" && m.distance !== null && p.distance !== null) {
+        const md = p.axis !== void 0 ? Math.abs(m.end[p.axis] - m.start[p.axis]) : m.distance;
+        share = Math.abs(md - p.distance) / Math.max(1e-6, p.distance);
+      }
+      if (m.channel === "scale" && m.distance !== null && p.distance !== null) {
+        const mr = m.start[0] / m.end[0], pr = p.start[0] / p.end[0];
+        share = Math.abs(mr - pr) / Math.max(1e-6, pr);
+      }
+      const within = (dv === null || dv <= 2) && (share === null || share <= 0.05) && (dv !== null || share !== null);
+      return { with: p.channel, durationFrames: dv === null ? null : Math.round(dv * 100) / 100, distanceShare: share === null ? null : Math.round(share * 1e3) / 1e3, within };
+    });
+    const agree = verdicts.find((v) => v.within);
+    m.agreement = agree ?? verdicts[0];
+    for (const p of peers) p.agreement = { with: "match", within: !!agree, ...matchSure ? {} : { matchWeak: true } };
+    if (agree) {
+      if (String(m.status).startsWith("uncertain: the region matched weakly")) m.status = `measured: the match was weak but the ink measure (${agree.with}) agrees`;
+      else if (m.status === "measured") m.status = `measured: match and ink (${agree.with}) agree`;
+    } else if (!String(m.status).startsWith("partial")) {
+      const v = verdicts[0];
+      m.status = `uncertain: match and ink disagree (${v.with}: duration ${v.durationFrames ?? "?"} frames apart, distance ${v.distanceShare === null ? "?" : Math.round(v.distanceShare * 100) + " %"} apart); both are reported`;
+      if (matchSure) {
+        for (const p of peers) if (!String(p.status).startsWith("partial")) p.status = "uncertain: the ink and the match disagree; both are reported";
+      }
+    }
+  }
+  if (args.stage) {
+    const st = args.stage === true ? {} : args.stage, band = Array.isArray(st.band) && st.band.length === 2 ? st.band.map(Number) : [0, 1];
+    const by0 = Math.max(0, Math.round(band[0] * info.height)), bh = Math.max(8, Math.min(info.height - by0, Math.round((band[1] - band[0]) * info.height)));
+    const FW = Math.min(256, info.width), kf = FW / info.width, FH = Math.max(8, Math.round(bh * kf)), CW = Math.max(8, Math.round(FW / 4)), CH2 = Math.max(4, Math.round(FH / 4));
+    const pos = [], gaps = [];
+    let prevF = null, prevC = null, x = 0, y = 0, seg = 0;
+    const ok = (g) => !!g && g.score >= SHOT_RULES.sameScore;
+    for await (const fr of readFrames(info, { from: f0, to: f1, crop: [0, by0, info.width, bh], width: FW, height: FH, gray: true }, tools)) {
+      const cur = Uint8Array.from(fr.data), curC = Uint8Array.from(resize(Float64Array.from(cur), FW, FH, CW, CH2), (v) => Math.round(v));
+      if (prevF && prevC) {
+        if (cutAt.has(fr.index)) {
+          seg++;
+          x = 0;
+          y = 0;
+        } else if (meanDiff(cur, prevF) >= 0.5) {
+          const coarse = registerShift(prevC, curC, CW, CH2), fine = coarse ? registerShift(prevF, cur, FW, FH, { near: { dx: coarse.dx * 4, dy: coarse.dy * 4, r: 6 } }) : null;
+          if (!ok(fine)) {
+            gaps.push({ frame: fr.index, time: fr.time, score: fine ? Math.round(fine.score * 1e3) / 1e3 : 0 });
+            seg++;
+            x = 0;
+            y = 0;
+          } else {
+            const at2 = (dx, dy) => registerShift(prevF, cur, FW, FH, { near: { dx, dy, r: 0 }, minOverlap: 0 })?.score ?? 0;
+            const peak = (m, c, p) => {
+              const d = m - 2 * c + p;
+              return d < 0 ? Math.max(-0.5, Math.min(0.5, 0.5 * (m - p) / d)) : 0;
+            };
+            const g = fine, sx = g.dx + peak(at2(g.dx - 1, g.dy), g.score, at2(g.dx + 1, g.dy)), sy = g.dy + peak(at2(g.dx, g.dy - 1), g.score, at2(g.dx, g.dy + 1));
+            x += sx / kf;
+            y += sy / kf;
+          }
+        }
+      }
+      if (!rep.has(fr.index)) pos.push({ frame: fr.index, time: fr.time, x, y, seg });
+      prevF = cur;
+      prevC = curC;
+    }
+    const segs = [...new Set(pos.map((p) => p.seg))];
+    for (const sg of segs) {
+      const samples = pos.filter((p) => p.seg === sg).map((p) => ({ frame: p.frame, time: p.time, value: [p.x, p.y] }));
+      for (const mv of movesOfChannel(samples, { fps, atFps, minMove: Math.max(2, 4e-3 * Math.max(info.width, info.height)), epsAbs: 0.5 / kf, beginsAt: (f) => cutAt.has(f) ? "cut" : null, endsAt: (f) => cutAt.has(f + 1) }))
+        out.moves.push({ measure: "stage", channel: "stage", like: "position", unit: "px", ...mv });
+    }
+    out.stage = {
+      band: [by0, by0 + bh],
+      gaps,
+      frames: pos.map((p) => ({ frame: p.frame, x: r23(p.x), y: r23(p.y), segment: p.seg })),
+      reading: `The stage's travel: each frame registered on the one before in rows ${by0} to ${by0 + bh}, the shifts added up; ${gaps.length ? `${gaps.length} frame${gaps.length === 1 ? "" : "s"} did not register (${gaps.map((g) => g.frame).join(", ")}): nothing is carried across ${gaps.length === 1 ? "it" : "them"}` : "every frame registered"}.`
+    };
+  }
+  {
+    let x0 = reg[0], y0 = reg[1], x1 = reg[0] + reg[2], y1 = reg[1] + reg[3];
+    for (const r of usable) {
+      const s = toSrc(r.m), hw = reg[2] * r.m.scale / 2, hh = reg[3] * r.m.scale / 2;
+      x0 = Math.min(x0, s.x - hw);
+      x1 = Math.max(x1, s.x + hw);
+      y0 = Math.min(y0, s.y - hh);
+      y1 = Math.max(y1, s.y + hh);
+    }
+    if (inkBox) {
+      x0 = Math.min(x0, inkBox[0]);
+      y0 = Math.min(y0, inkBox[1]);
+      x1 = Math.max(x1, inkBox[0] + inkBox[2]);
+      y1 = Math.max(y1, inkBox[1] + inkBox[3]);
+    }
+    x0 = Math.max(0, Math.floor(x0 - reg[2] / 2));
+    y0 = Math.max(0, Math.floor(y0 - reg[3] / 2));
+    x1 = Math.min(info.width, Math.ceil(x1 + reg[2] / 2));
+    y1 = Math.min(info.height, Math.ceil(y1 + reg[3] / 2));
+    const box2 = [x0, y0, Math.max(2, x1 - x0), Math.max(2, y1 - y0)], ww = Math.max(8, Math.round(box2[2] * k)), wh = Math.max(8, Math.round(box2[3] * k));
+    const counts = [], idx = [];
+    let prevW = null;
+    for await (const fr of readFrames(info, { from: f0, to: f1, crop: box2, width: ww, height: wh, gray: true }, tools)) {
+      let c = 0;
+      if (prevW) {
+        for (let i = 0; i < fr.data.length; i++) if (Math.abs(fr.data[i] - prevW[i]) > 10) c++;
+      }
+      counts.push(c);
+      idx.push(fr.index);
+      prevW = Uint8Array.from(fr.data);
+    }
+    const breaks = new Set(idx.map((f, i) => cutAt.has(f) ? i : -1).filter((i) => i >= 0));
+    const wr = witnessRuns(counts, ww * wh, breaks), runs = wr.runs.map((r) => ({ from: idx[r.from], to: idx[r.to], at: { from: at(info.times[idx[r.from]]), to: at(info.times[idx[r.to]]) } }));
+    out.witness = {
+      box: box2,
+      threshold: wr.threshold,
+      ground: wr.ground,
+      runs,
+      reading: wr.ground === "moving" ? "The ground in the box moves: frame differencing cannot see the move past it." : `The box changes in ${runs.length} run${runs.length === 1 ? "" : "s"}.`
+    };
+    for (const m of out.moves) {
+      if (m.measure === "stage") continue;
+      const vA = m.duration?.visible?.fromFrame ?? m.from.frame, vB = m.duration?.visible?.toFrame ?? m.to.frame, cA = m.covers.fromFrame, cB = m.covers.toFrame;
+      const over = runs.filter((r) => r.from <= vB && r.to >= vA);
+      if (!over.length) {
+        m.witness = null;
+        continue;
+      }
+      const wa = Math.min(...over.map((r) => r.from)), wb = Math.max(...over.map((r) => r.to)), tol = 2;
+      const wsec = info.times[wb] - info.times[wa];
+      m.witness = { from: wa, to: wb, seconds: Math.round(wsec * 1e4) / 1e4, at: at(wsec), covers: { from: cA, to: cB } };
+      if ((wa < cA - tol || wb > cB + tol) && !String(m.status).startsWith("partial") && !String(m.status).startsWith("uncertain"))
+        m.status = `uncertain: the region changes from frame ${wa} to ${wb}; the track covers ${cA} to ${cB}`;
+    }
+  }
+  const nccAll = rows.filter((r) => r.m).map((r) => r.m.ncc).sort((a, b) => a - b);
+  out.match = { matchedFrames: nccAll.length, frames: rows.length, median: nccAll.length ? Math.round(nccAll[Math.floor(nccAll.length / 2)] * 1e3) / 1e3 : null, threshold: minNcc };
+  await fs15.mkdir(args.outDir, { recursive: true });
+  const jsonPath = path15.join(args.outDir, "track.json"), csvPath = path15.join(args.outDir, "track.csv");
+  const perFrame = rows.map((r) => ({ index: r.index, time: Math.round(r.time * 1e6) / 1e6, at: at(r.time), repeat: rep.has(r.index), ...r.m ? { ...Object.fromEntries(Object.entries(toSrc(r.m)).map(([a, v]) => [a, Math.round(v * 100) / 100])), ncc: Math.round(r.m.ncc * 1e3) / 1e3 } : { matched: false } }));
+  const inkFrames = inkRows.map((r) => ({ index: r.index, time: Math.round(r.time * 1e6) / 1e6, count: Math.round(r.f.count), ...r.f.count ? { x0: r23(r.f.x0), y0: r23(r.f.y0), x1: r23(r.f.x1), y1: r23(r.f.y1), cx: r23(r.f.cx), cy: r23(r.f.cy) } : {}, level: r23(r.f.level) }));
+  await fs15.writeFile(jsonPath, JSON.stringify({ ...out, frames: perFrame, ...inkRows.length ? { inkFrames } : {} }, null, 1));
+  await fs15.writeFile(csvPath, ["index,time,at,x,y,scale,opacity,ncc,repeat", ...perFrame.map((p) => [p.index, p.time, p.at, p.x ?? "", p.y ?? "", p.scale ?? "", p.opacity ?? "", p.ncc ?? "", p.repeat ? 1 : 0].join(","))].join("\n"));
+  const seconds = Math.round((performance.now() - started) / 1e3 * 100) / 100;
+  return {
+    ...out,
+    files: { json: jsonPath, csv: csvPath },
+    timings: { seconds, decodeAndMatchSeconds: Math.round(decodeSeconds * 100) / 100, frames: rows.length },
+    reading: `${out.moves.length} move${out.moves.length === 1 ? "" : "s"} over frames ${f0} to ${f1} (${statusCount(out.moves)})${lost ? `; ${lost.reading}` : ""}. ${cad.reading} Not measured: ${NOT_MEASURED.join(", ")}.`
+  };
+}
+
+// src/video/run-shots-census.ts
+async function open2(args, tools) {
+  if (typeof args.file !== "string" || !path16.isAbsolute(args.file)) return { error: "`file` must be an absolute path to a video file" };
+  if (typeof args.outDir !== "string" || !path16.isAbsolute(args.outDir)) return { error: "`outDir` must be an absolute folder path" };
+  const info = await probeVideo(args.file, tools);
+  if (info === null) return { error: NO_FFMPEG };
+  if ("error" in info) return { error: info.error };
+  const f0 = typeof args.start === "number" ? frameAt(info, args.start) : 0, f1 = typeof args.end === "number" ? frameAt(info, args.end) : info.frames - 1;
+  if (f1 <= f0) return { error: "`end` must be after `start`" };
+  return { info, f0, f1 };
+}
+var size = (info, long) => {
+  const k = long / Math.max(info.width, info.height);
+  return { w: Math.max(4, Math.round(info.width * k / 2) * 2), h: Math.max(4, Math.round(info.height * k / 2) * 2) };
+};
+var timing = (t0) => Math.round((performance.now() - t0) / 1e3 * 100) / 100;
+async function tilePng(info, frames, out, tile, tools) {
+  if (!frames.length) return false;
+  const sel = frames.map((f) => `eq(n\\,${f})`).join("+");
+  const r = await runTool(tools.ffmpeg, ["-v", "error", "-y", "-i", info.file, "-vf", `select='${sel}',scale=${tile}:-2,tile=${frames.length}x1`, "-fps_mode", "passthrough", "-frames:v", "1", out], 12e4);
+  return !!r && !r.failed;
+}
+async function runShots(args, tools = VIDEO_TOOLS) {
+  const t0 = performance.now(), o = await open2(args, tools);
+  if ("error" in o) return { ok: false, error: o.error };
+  const { info, f0, f1 } = o, { w, h } = size(info, 64), stats = [];
+  let a = null, b = null;
+  const small = [];
+  for await (const fr of readFrames(info, { from: f0, to: f1, width: w, height: h, gray: true }, tools)) {
+    stats.push(frameStats(fr.index, fr.time, a, b, fr.data, w, h));
+    small.push(Uint8Array.from(fr.data));
+    a = b;
+    b = fr.data;
+  }
+  const list = shotList(stats, SHOT_RULES, (i) => i > 0 ? registerShift(small[i - 1], small[i], w, h) : null);
+  const kx = info.width / w, ky = info.height / h;
+  await fs16.mkdir(args.outDir, { recursive: true });
+  const atFps = typeof args.atFps === "number" && args.atFps > 0 ? args.atFps : 30, at = (t) => Math.round(t * atFps * 100) / 100;
+  const sheets = [], strips = [];
+  if (args.pictures !== false) {
+    for (let s = 0; s < list.shots.length && s < 60; s++) {
+      const sh = list.shots[s], n = Math.min(8, sh.to - sh.from + 1), fr = Array.from({ length: n }, (_, i) => Math.round(sh.from + i * (sh.to - sh.from) / Math.max(1, n - 1)));
+      const p = path16.join(args.outDir, `shot-${String(s + 1).padStart(3, "0")}.png`);
+      if (await tilePng(info, [...new Set(fr)], p, 160, tools)) sheets.push(p);
+    }
+    const changes = [...list.cuts.map((c) => c.frame), ...list.swaps.map((c) => c.frame)].sort((x, y) => x - y);
+    for (const c of changes.slice(0, 40)) {
+      const fr = [c - 2, c - 1, c, c + 1, c + 2].filter((f) => f >= 0 && f < info.frames), p = path16.join(args.outDir, `change-${c}.png`);
+      if (await tilePng(info, fr, p, 160, tools)) strips.push(p);
+    }
+  }
+  const jsonPath = path16.join(args.outDir, "shots.json");
+  const result = {
+    ok: true,
+    file: args.file,
+    atFps,
+    span: { from: f0, to: f1 },
+    video: { width: info.width, height: info.height, frames: info.frames, nominalFps: info.nominalFps, variableRate: info.variableRate },
+    cuts: list.cuts.map((c) => ({ ...c, at: at(c.time) })),
+    swaps: list.swaps.map((c) => ({ ...c, at: at(c.time) })),
+    notCuts: list.notCuts.map((c) => ({ ...c, at: at(c.time), ...c.shift ? { shift: { ...c.shift, dx: Math.round(c.shift.dx * kx), dy: Math.round(c.shift.dy * ky), unit: "source px a frame" } } : {} })),
+    shots: list.shots.map((s) => ({ ...s, at: [at(s.start), at(s.end)] }))
+  };
+  await fs16.writeFile(jsonPath, JSON.stringify(result, null, 1));
+  return {
+    ...result,
+    shots: result.shots.length > 40 ? `${result.shots.length} shots: see shots.json` : result.shots,
+    files: { json: jsonPath, sheets, strips },
+    timings: { seconds: timing(t0), frames: stats.length },
+    reading: `${list.cuts.length} cut${list.cuts.length === 1 ? "" : "s"}, ${list.swaps.length} one-frame swap${list.swaps.length === 1 ? "" : "s"}, ${list.notCuts.filter((c) => c.kind === "flash").length} flash${list.notCuts.filter((c) => c.kind === "flash").length === 1 ? "" : "es"} and ${list.notCuts.filter((c) => c.kind !== "flash").length} pan${list.notCuts.filter((c) => c.kind !== "flash").length === 1 ? "" : "s"} or move${list.notCuts.filter((c) => c.kind !== "flash").length === 1 ? "" : "s"} set aside (notCuts), ${list.shots.length} shot${list.shots.length === 1 ? "" : "s"}.${info.variableRate ? " The file's frame rate varies; frames are timed by their own timestamps." : ""}`
+  };
+}
+async function runCensus(args, tools = VIDEO_TOOLS) {
+  const t0 = performance.now(), o = await open2(args, tools);
+  if ("error" in o) return { ok: false, error: o.error };
+  const { info, f0, f1 } = o, step = typeof args.window === "number" && args.window > 0 ? args.window : 0.1, { w, h } = size(info, 320);
+  const band = Array.isArray(args.band) && args.band.length === 2 ? args.band.map(Number) : [0.15, 0.6];
+  const y0 = Math.max(0, Math.round(band[0] * h)), y1 = Math.min(h, Math.round(band[1] * h)), pageTest = args.pageTest === true;
+  const blur = (src) => {
+    const out = new Uint8Array(src.length);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      let s = 0, c = 0;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const yy = y + dy, xx = x + dx;
+        if (yy >= 0 && yy < h && xx >= 0 && xx < w) {
+          s += src[yy * w + xx] * (dx || dy ? 1 : 4);
+          c += dx || dy ? 1 : 4;
+        }
+      }
+      out[y * w + x] = Math.round(s / c);
+    }
+    return out;
+  };
+  const isPage = (f) => {
+    const x0 = Math.round(5 * w / 180), x1 = Math.round(174 * w / 180);
+    let m = 0, m2 = 0, n = 0;
+    for (let y = 3; y <= 16 && y < h; y++) for (let x = x0; x <= x1 && x < w; x++) {
+      const v = f[y * w + x];
+      m += v;
+      m2 += v * v;
+      n++;
+    }
+    return n > 0 && Math.sqrt(Math.max(0, m2 / n - (m / n) ** 2)) < 9;
+  };
+  let prev = null;
+  const labels = [], shifts = [], steps2 = [];
+  for await (const fr of readFrames(info, { from: f0, to: f1, width: w, height: h, gray: true, fps: 1 / step }, tools)) {
+    const cur = blur(fr.data);
+    if (prev) {
+      if (pageTest && (!isPage(prev) || !isPage(cur))) {
+        labels.push(".");
+        shifts.push(0);
+        steps2.push({ time: fr.time, label: "." });
+      } else {
+        const s = censusStep(prev, cur, w, h, y0, y1);
+        labels.push(s.label);
+        shifts.push(s.shift);
+        steps2.push({ time: Math.round(fr.time * 1e3) / 1e3, label: s.label, changed: Math.round(s.changed * 1e4) / 1e4, moved: Math.round(s.moved * 1e3) / 1e3 });
+      }
+    }
+    prev = cur;
+  }
+  const lab = labels.join(""), cad = cadence(lab.replace(/\./g, ""), shifts.filter((_, i) => labels[i] !== "."), step, Math.max(info.width, info.height) / Math.max(w, h));
+  await fs16.mkdir(args.outDir, { recursive: true });
+  const col = { c: [90, 90, 90], l: [230, 200, 60], T: [240, 120, 30], X: [220, 40, 40], ".": [0, 0, 0] }, sw = Math.max(1, labels.length), sh = 24, rgb = new Float64Array(sw * sh * 3);
+  for (let x = 0; x < sw; x++) for (let y = 0; y < sh; y++) rgb.set(col[labels[x] ?? "."].map((v) => v / 255), (y * sw + x) * 3);
+  const strip = path16.join(args.outDir, "census.png"), jsonPath = path16.join(args.outDir, "census.json");
+  await fs16.writeFile(strip, encodePngSrgb8(sw, sh, rgb));
+  const result = { ok: true, file: args.file, window: step, band, pageTest, rules: CENSUS_RULES, labels: lab, cadence: cad };
+  await fs16.writeFile(jsonPath, JSON.stringify({ ...result, steps: steps2 }, null, 1));
+  return {
+    ...result,
+    labels: lab.length > 600 ? `${lab.slice(0, 600)}\u2026 (${lab.length} steps: see census.json)` : lab,
+    files: { json: jsonPath, strip },
+    timings: { seconds: timing(t0), steps: labels.length },
+    reading: `${labels.length} steps of ${step} s: calm ${Math.round(cad.shares.calm * 100)} %, local ${Math.round(cad.shares.local * 100)} %, travel ${Math.round(cad.shares.travel * 100)} %, cut ${Math.round(cad.shares.cut * 100)} %; ${cad.travel.perMinute} travel moves a minute (median ${cad.travel.medianSeconds} s); ${cad.burstsPer10s} bursts every 10 s; calm runs median ${cad.calmRuns.medianSeconds} s. A stage with little texture reads calmer than it looks (the census study's own caveat). Its cut class is the census study's own rule: a fast pan can read as one; video.shots is the authority on cuts.`
+  };
+}
+
+// src/video/rhythm.ts
+async function measureRhythm(file2) {
+  const tmp = await fs17.mkdtemp(path17.join(os4.tmpdir(), "look-rhythm-"));
+  try {
+    const census = await runCensus({ file: file2, outDir: path17.join(tmp, "census") });
+    if (!census.ok) return { error: census.error };
+    const shotsReply = await runShots({ file: file2, outDir: path17.join(tmp, "shots"), pictures: false });
+    if (!shotsReply.ok) return { error: shotsReply.error };
+    const shots = JSON.parse(await fs17.readFile(path17.join(tmp, "shots", "shots.json"), "utf8"));
+    const fps = shots.video.nominalFps || 30, seconds = shots.video.frames / fps;
+    const lengths = shots.shots.map((s) => (s.to - s.from + 1) / fps).sort((a, b) => a - b);
+    const mid = lengths.length ? lengths.length % 2 ? lengths[lengths.length >> 1] : (lengths[lengths.length / 2 - 1] + lengths[lengths.length / 2]) / 2 : seconds;
+    const c = census.cadence, r = (x, d = 3) => Math.round(x * 10 ** d) / 10 ** d;
+    return {
+      seconds: r(seconds, 2),
+      census: { calm: c.shares.calm, local: c.shares.local, travel: c.shares.travel, travelPerMinute: c.travel.perMinute, calmRunMedian: c.calmRuns.medianSeconds, calmRunLongest: c.calmRuns.maxSeconds, burstsPer10s: c.burstsPer10s },
+      shots: { count: lengths.length, cutsPerMinute: r(shots.cuts.length / Math.max(1e-6, seconds) * 60, 2), medianSeconds: r(mid, 2), shortestSeconds: r(lengths[0] ?? seconds, 2), longestSeconds: r(lengths[lengths.length - 1] ?? seconds, 2) }
+    };
+  } finally {
+    await fs17.rm(tmp, { recursive: true, force: true });
+  }
+}
+
+// src/operations/keying-reference.ts
 var MOVIE_EXT = /\.(mov|mp4|m4v|mxf|avi|webm|mkv|mpe?g)$/i;
 var naturalOrder = (a, b) => a.localeCompare(b, void 0, { numeric: true });
 function reportForReply(r) {
@@ -56201,7 +58065,7 @@ function referenceCompJsx(args) {
 async function runReferenceReport(args, io) {
   const started = performance.now();
   const outPath = args.outPath;
-  if (typeof outPath !== "string" || !path15.isAbsolute(outPath) || !/\.json$/i.test(outPath))
+  if (typeof outPath !== "string" || !path18.isAbsolute(outPath) || !/\.json$/i.test(outPath))
     return { ok: false, error: "`outPath` must be an absolute path for the report (.json)" };
   const sources = ["path", "item", "comp"].filter((k) => args[k] !== void 0 && args[k] !== null);
   if (sources.length !== 1)
@@ -56211,8 +58075,8 @@ async function runReferenceReport(args, io) {
     };
   const regions = Array.isArray(args.regions) ? args.regions : void 0;
   const cap = typeof args.maxFrames === "number" && args.maxFrames >= 1 ? Math.floor(args.maxFrames) : CHECK_FILE_MAX_FRAMES;
-  const outDir = path15.dirname(outPath);
-  await fs15.mkdir(outDir, { recursive: true });
+  const outDir = path18.dirname(outPath);
+  await fs18.mkdir(outDir, { recursive: true });
   const keepCaptures = args.keepCaptures === true;
   const perFrameMs = Math.max(
     1,
@@ -56230,11 +58094,20 @@ async function runReferenceReport(args, io) {
   let report;
   const renders = renderTally();
   const p = typeof args.path === "string" ? args.path : null;
-  if (p !== null && !path15.isAbsolute(p)) return { ok: false, error: "`path` must be absolute" };
-  const stat = p !== null ? await fs15.stat(p).catch(() => null) : null;
-  if (p !== null && !MOVIE_EXT.test(p)) {
+  if (p !== null && !path18.isAbsolute(p)) return { ok: false, error: "`path` must be absolute" };
+  const stat = p !== null ? await fs18.stat(p).catch(() => null) : null;
+  const viaAe = args.via === "after-effects";
+  const movieInfo = p !== null && MOVIE_EXT.test(p) && !viaAe && stat ? await probeVideo(p) : null;
+  const colour = movieInfo && !("error" in movieInfo) ? await movieColour(p) : null;
+  if (p !== null && movieInfo && !("error" in movieInfo) && colour) {
+    const idx = pick2(movieInfo.frames);
+    const reader = referenceReader({ total: idx.length, regions, frameRate: movieInfo.nominalFps });
+    for await (const fr of movieFrames(movieInfo, idx, colour)) reader.add({ img: fr.img, frame: fr.frame, time: fr.time });
+    report = reader.finish();
+    source = { kind: "movie", path: p, via: "ffmpeg", frames: movieInfo.frames, read: idx.length, frameRate: movieInfo.nominalFps, colour: { matrix: colour.matrix, range: colour.range, tags: colour.tags, assumed: colour.assumed, reading: colour.reading } };
+  } else if (p !== null && !MOVIE_EXT.test(p)) {
     if (!stat) return { ok: false, error: `nothing at ${p}` };
-    const files = stat.isDirectory() ? (await fs15.readdir(p)).filter((f) => /\.png$/i.test(f)).sort(naturalOrder).map((f) => path15.join(p, f)) : [p];
+    const files = stat.isDirectory() ? (await fs18.readdir(p)).filter((f) => /\.png$/i.test(f)).sort(naturalOrder).map((f) => path18.join(p, f)) : [p];
     if (!files.length) return { ok: false, error: `no PNG frames in ${p}` };
     if (!files.every((f) => /\.png$/i.test(f)))
       return { ok: false, error: "a still must be a PNG (render other formats to PNG first)" };
@@ -56242,7 +58115,7 @@ async function runReferenceReport(args, io) {
     const frameRate = typeof args.frameRate === "number" ? args.frameRate : void 0;
     const given = typeof args.frameStep === "number" && args.frameStep >= 1 ? Math.round(args.frameStep) : null;
     const nums = files.map((f) => {
-      const m = /(\d+)(?!.*\d)/.exec(path15.basename(f, path15.extname(f)));
+      const m = /(\d+)(?!.*\d)/.exec(path18.basename(f, path18.extname(f)));
       return m ? Number(m[1]) : null;
     });
     const named = nums.every((n) => n !== null) && nums.every((n, i) => i === 0 || n > nums[i - 1]);
@@ -56304,7 +58177,7 @@ async function runReferenceReport(args, io) {
         for (const r of got) {
           if (!r.ok || !r.file) return { ok: false, error: `frame ${r.frame} did not render: ${r.error ?? "no file"}` };
           reader.add({ img: await io.readImage(r.file), frame: r.frame, time: r.frame / setup.frameRate });
-          if (!keepCaptures) await fs15.rm(r.file, { force: true });
+          if (!keepCaptures) await fs18.rm(r.file, { force: true });
         }
       }
       report = reader.finish();
@@ -56317,27 +58190,38 @@ async function runReferenceReport(args, io) {
     }
     source = fromComp ? { kind: "comp", name: setup.name, frames: setup.frames, frameRate: setup.frameRate } : { kind: p !== null ? "movie" : "item", path: p, item: setup.itemName, frames: setup.frames, frameRate: setup.frameRate, cleanup };
   }
-  await fs15.writeFile(outPath, JSON.stringify(report));
+  let rhythm = null, rhythmNote = null;
+  if (args.rhythm === true) {
+    if (p !== null && MOVIE_EXT.test(p)) {
+      const r = await measureRhythm(p);
+      if ("error" in r) rhythmNote = `The rhythm was not measured: ${r.error}`;
+      else rhythm = r;
+    } else rhythmNote = "The rhythm is measured on a movie only (video.census and video.shots read it): render the build to a file and report that.";
+  }
+  await fs18.writeFile(outPath, JSON.stringify(rhythm ? { ...report, rhythm } : report));
   let compare2;
   if (typeof args.against === "string") {
     try {
-      compare2 = compareReferences(JSON.parse(await fs15.readFile(args.against, "utf8")), report);
+      const against = JSON.parse(await fs18.readFile(args.against, "utf8"));
+      compare2 = isSheet(against) ? compareWithSheet(against, { report, rhythm }) : compareReferences(against, report);
     } catch (e) {
       compare2 = { error: `could not compare with ${args.against}: ${e instanceof Error ? e.message : String(e)}` };
     }
   }
-  const reply = reportForReply(report);
+  const reply2 = reportForReply(report);
   return {
     ok: true,
     source,
     frames: report.frames,
-    report: reply,
+    report: reply2,
     savedTo: outPath,
     ...compare2 ? { compare: compare2 } : {},
     notes: [
       ...report.notes,
+      ...rhythmNote ? [rhythmNote] : [],
       ...source.kind !== "frames" && source.kind !== "still" && !report.motion.consecutive && report.frames > 1 ? [`Only ${report.frames} frames spread over the source were read (maxFrames ${cap}), so cuts and motion were not.`] : []
     ],
+    ...rhythm ? { rhythm } : {},
     timing: { render: roundTally(renders), totalMs: Math.round(since(started)) },
     next: compare2 ? "Read the differences largest first and decide which to fix; measure again after each fix." : "Run the same report on the build (comp) with against: this file's path, or reference.compare with two saved reports."
   };
@@ -56345,13 +58229,18 @@ async function runReferenceReport(args, io) {
 async function runReferenceCompare(args) {
   const read = async (k) => {
     const v = args[k];
-    if (typeof v !== "string" || !path15.isAbsolute(v)) throw new Error(`\`${k}\` must be the absolute path of a saved report`);
-    return JSON.parse(await fs15.readFile(v, "utf8"));
+    if (typeof v !== "string" || !path18.isAbsolute(v)) throw new Error(`\`${k}\` must be the absolute path of a saved report`);
+    return JSON.parse(await fs18.readFile(v, "utf8"));
   };
   try {
     const ref = await read("reference");
     const build = await read("build");
-    return { ok: true, ...compareReferences(ref, build) };
+    if (isSheet(ref)) {
+      const piece = isPiece(build) ? build : { report: build, rhythm: build.rhythm ?? null, type: null };
+      return compareWithSheet(ref, piece);
+    }
+    if (isSheet(build)) return { ok: false, error: "`build` is a look sheet: give the sheet as `reference` and the build's saved report as `build`" };
+    return { ok: true, ...compareReferences(ref, isPiece(build) ? build.report : build) };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) };
   }
@@ -56365,14 +58254,16 @@ var REFERENCE_REGIONS_PARAM = {
 registerOp({
   name: "reference.report",
   category: "look",
-  description: "Measure a reference, or a build, for working to it. Give exactly one source: `path` (a PNG still, a folder of PNG frames in name order, or a movie), `item` (a footage item's id) or `comp` (the build). Stills and folders are read in Node; a movie or item is brought into a throwaway comp and, like a comp, rendered through ae_render_frame by frame numbers (a quarter of a frame inside each frame, so no time lands on the frame before; checked live at 30, 29.97 and 24 fps), read and removed a chunk at a time. Reports the main colours and their shares (k-means in CIELAB), black and white points and mean, CIELAB colour, edge width (sharpness) and grain at the grid's nine regions (top left to bottom right) and any named `regions`, where the weight of the frame sits (centres of brightness and of detail), and on consecutive frames the cuts, the mean change between frames and where the picture moves (a motion map; its centre is the moving subject in a talking-head shot). Colour and texture are read on 24 frames spread over the source, motion on every pair. Saves the whole report as JSON at `outPath` (the reply leaves the motion map out). With `against` (a saved report of the reference) it adds `compare`: the differences largest first, each over a step (a CIELAB a* or b* of 2 is a cast, a quarter in edge width or grain, 5% in the subject's size, 3% of the frame in a place), in words. The subject's size and place are compared by lining up the two motion maps, only when they match as the same footage. Measured live (After Effects 27.0): 235 frames of a 1080 x 1920 H.264 movie in 314 s, and of a comp in 317 s, nothing added to the disk cache. A comp renders without the compression noise of a delivered movie, so against a movie reference its grain reads lower: compare like with like where grain matters.",
+  description: "Measure a reference, or a build, for working to it. Give exactly one source: `path` (a PNG still, a folder of PNG frames in name order, or a movie), `item` (a footage item's id) or `comp` (the build). Stills and folders are read in Node; a movie is decoded by ffmpeg in Node when ffmpeg is installed (its YUV-to-RGB matrix and range read from the file's tags, Rec. 709 video range assumed where a tag is missing, and the reply says which; checked against After Effects' own render of the same 400 frames of five delivered 1080 x 1920 reels: levels within 0.0013, CIELAB within 0.04, edge width and grain within 0.02), else, like an item, brought into a throwaway comp and, like a comp, rendered through ae_render_frame by frame numbers (a quarter of a frame inside each frame, so no time lands on the frame before; checked live at 30, 29.97 and 24 fps), read and removed a chunk at a time. Reports the main colours and their shares (k-means in CIELAB), black and white points and mean, CIELAB colour, edge width (sharpness) and grain at the grid's nine regions (top left to bottom right) and any named `regions`, where the weight of the frame sits (centres of brightness and of detail), and on consecutive frames the cuts, the mean change between frames and where the picture moves (a motion map; its centre is the moving subject in a talking-head shot). Colour and texture are read on 24 frames spread over the source, motion on every pair. Saves the whole report as JSON at `outPath` (the reply leaves the motion map out). With `against` (a saved report of the reference) it adds `compare`: the differences largest first, each over a step (a CIELAB a* or b* of 2 is a cast, a quarter in edge width or grain, 5% in the subject's size, 3% of the frame in a place), in words. The subject's size and place are compared by lining up the two motion maps, only when they match as the same footage. Measured live (After Effects 27.0): 235 frames of a 1080 x 1920 H.264 movie in 314 s, and of a comp in 317 s, nothing added to the disk cache. A comp renders without the compression noise of a delivered movie, so against a movie reference its grain reads lower: compare like with like where grain matters.",
   params: [
     { name: "path", type: "string", description: "Absolute path of a PNG still, a folder of PNG frames, or a movie.", required: false },
     { name: "item", type: "number", description: "A footage item's id, instead of path.", required: false },
     { name: "comp", type: "string", description: "A comp (the build), by name or id, instead of path.", required: false },
     { name: "outPath", type: "string", description: "Absolute path for the report (.json). Captures are written beside it and removed once read.", required: true },
     REFERENCE_REGIONS_PARAM,
-    { name: "against", type: "string", description: "A saved report (the reference) to compare this one with.", required: false },
+    { name: "against", type: "string", description: "A saved report (the reference), or a look sheet (reference.sheet's sheet.json), to compare this one with. Against a sheet, only the measures of the user's look are compared, each against their own range and the number of pieces it rests on.", required: false },
+    { name: "via", type: "string", description: "How a movie is read: 'ffmpeg' (the default when ffmpeg is installed: decoded in Node, no After Effects) or 'after-effects' (rendered frame by frame).", required: false },
+    { name: "rhythm", type: "boolean", description: "Also measure a movie's rhythm (video.census over the whole movie and video.shots: calm, local and travel shares, travel moves a minute, calm runs, bursts, shot lengths, cuts a minute), kept in the saved report so a look sheet can compare it.", required: false },
     { name: "frameRate", type: "number", description: "Frames per second of a folder of frames (for times).", required: false },
     {
       name: "frameStep",
@@ -56391,13 +58282,171 @@ registerOp({
   name: "reference.compare",
   category: "look",
   readOnly: true,
-  description: "Compare two saved reference reports (reference.report's outPath): every difference over its step, largest first, in words (cast, lightness, sharpness, grain, levels, the moving subject's size and place, where the weight sits, main colours missing, cuts, motion). Node only; no After Effects.",
+  description: "Compare two saved reference reports (reference.report's outPath): every difference over its step, largest first, in words (cast, lightness, sharpness, grain, levels, the moving subject's size and place, where the weight sits, main colours missing, cuts, motion). `reference` may be a look sheet (reference.sheet): then only the measures of the user's look are compared, each against their own range ('black point 0.09; your pieces sit between 0.02 and 0.04 (4 pieces)'); inside the range, or within one step of it, is no difference. No pass or fail. Node only; no After Effects.",
   params: [
-    { name: "reference", type: "string", description: "Absolute path of the reference's saved report.", required: true },
-    { name: "build", type: "string", description: "Absolute path of the build's saved report.", required: true }
+    { name: "reference", type: "string", description: "Absolute path of the reference's saved report, or of a look sheet (sheet.json).", required: true },
+    { name: "build", type: "string", description: "Absolute path of the build's saved report (with its rhythm when reference.report measured it), or of a piece a sheet saved.", required: true }
   ],
   toJsx: () => NODE_ONLY("reference.compare"),
   run: (args) => runReferenceCompare(args)
+});
+
+// src/operations/look-sheet.ts
+import { promises as fs19 } from "node:fs";
+import os5 from "node:os";
+import * as path19 from "node:path";
+init_registry();
+var MOVIE_EXT2 = /\.(mov|mp4|m4v|mxf|avi|webm|mkv|mpe?g)$/i;
+var slug = (label) => label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "piece";
+function typeJsx(comp) {
+  return `var c = AE.findCompByNameOrId(${jsxVal(comp)});
+if (!c) return { ok: false, error: "no comp " + ${jsxVal(String(comp))} };
+var out = [];
+for (var i = 1; i <= c.numLayers; i++) {
+  var l = c.layer(i);
+  if (!(l instanceof TextLayer) || !l.enabled) continue;
+  var mid = (Math.max(0, l.inPoint) + Math.min(c.duration, l.outPoint)) / 2;
+  var d = l.property("ADBE Text Properties").property("ADBE Text Document").valueAtTime(mid, false);
+  var sc = AE.safeGet(function () { return l.property("ADBE Transform Group").property("ADBE Scale").valueAtTime(mid, false); }, [100, 100]);
+  out.push({ font: String(d.font), size: d.fontSize * Math.abs(sc[1]) / 100, tracking: d.tracking, fill: d.applyFill ? d.fillColor : null });
+}
+return { ok: true, height: c.height, layers: out };`;
+}
+function hexOf(c) {
+  return c ? "#" + c.slice(0, 3).map((v) => Math.round(Math.max(0, Math.min(1, v)) * 255).toString(16).padStart(2, "0")).join("") : null;
+}
+async function measurePiece(spec, dir, io, maxFrames, regions) {
+  const label = typeof spec.label === "string" && spec.label.trim() ? spec.label.trim() : null;
+  if (!label) return { error: "every piece needs a `label` (it names the piece on the sheet's page)" };
+  const hasPath = typeof spec.path === "string", hasComp = spec.comp !== void 0;
+  if (hasPath === hasComp) return { error: `piece "${label}": give exactly one of \`path\` (a movie, a folder of PNG frames or a still) and \`comp\`` };
+  const tmp = await fs19.mkdtemp(path19.join(os5.tmpdir(), "look-piece-"));
+  try {
+    const r = await runReferenceReport({ ...hasPath ? { path: spec.path } : { comp: spec.comp }, outPath: path19.join(tmp, "report.json"), maxFrames, ...regions ? { regions } : {}, ...spec.via ? { via: spec.via } : {} }, io);
+    if (!r.ok) return { error: `piece "${label}": ${r.error}` };
+    const report = JSON.parse(await fs19.readFile(path19.join(tmp, "report.json"), "utf8"));
+    let rhythm = null, rhythmNote = null;
+    if (hasPath && MOVIE_EXT2.test(spec.path)) {
+      const rh = await measureRhythm(spec.path);
+      if ("error" in rh) rhythmNote = rh.error;
+      else rhythm = rh;
+    }
+    let type = null;
+    if (hasComp && spec.project === true) {
+      const t = await io.execute(typeJsx(spec.comp), { label: "reference.sheet type", timeoutMs: 6e4, undoGroup: false });
+      if (t?.ok) {
+        const ls = t.layers, sizes = ls.map((l) => l.size / t.height).sort((a, b) => a - b), tr = ls.map((l) => l.tracking).sort((a, b) => a - b);
+        const mid = (a) => a.length ? a[a.length >> 1] : null;
+        type = { layers: ls.length, fonts: [...new Set(ls.map((l) => String(l.font)))], sizeMedian: mid(sizes), sizeLargest: sizes.length ? sizes[sizes.length - 1] : null, trackingMedian: mid(tr), fills: [...new Set(ls.map((l) => hexOf(l.fill)).filter((x) => !!x))] };
+      }
+    }
+    const src = r.source;
+    return {
+      kind: "look-piece",
+      label,
+      report,
+      rhythm,
+      type,
+      source: { kind: src.kind, via: src.via ?? (src.kind === "frames" || src.kind === "still" ? "node" : "after-effects"), frames: src.frames ?? src.files ?? null, read: r.frames, frameRate: src.frameRate ?? null, ...src.colour ? { colour: src.colour } : {}, ...rhythmNote ? { rhythmNote } : {}, path: spec.path ?? null, comp: spec.comp ?? null }
+    };
+  } finally {
+    await fs19.rm(tmp, { recursive: true, force: true });
+  }
+}
+async function writeSheet(dir, pieces) {
+  const sheet = buildSheet(pieces), json2 = path19.join(dir, "sheet.json"), page = path19.join(dir, "sheet.md");
+  await fs19.writeFile(json2, JSON.stringify(sheet, null, 1));
+  await fs19.writeFile(page, sheetMarkdown(sheet));
+  return { sheet, json: json2, page };
+}
+function reply(sheet, json2, page, started, measured) {
+  const look = sheet.measures.filter((m) => m.look).length, varies = sheet.measures.length - look;
+  return {
+    ok: true,
+    standing: sheet.standing,
+    pieces: sheet.pieces.map((p) => ({ label: p.label, via: p.source.via, colour: p.source.colour?.reading ?? null })),
+    measured,
+    measures: { look, varies },
+    colours: sheet.palette.filter((c) => c.look).map((c) => c.hex),
+    files: { sheet: json2, page },
+    seconds: Math.round((performance.now() - started) / 100) / 10,
+    reading: `A look sheet from ${standingBase(sheet)}: ${look} measures hold across the pieces, ${varies} vary (not compared); ${sheet.palette.filter((c) => c.look).length} main colours are part of the look.${sheet.pieces.length < LOOK_RULES.fewPieces ? ` ${FEW_PIECES_NOTE}` : ""} Read ${path19.basename(page)}; compare a build with reference.compare { reference: sheet.json, build } or reference.report { against: sheet.json }.`,
+    next: "Compare a build with the sheet before hand-over: reference.report on its render with against: the sheet (rhythm: true for the rhythm)."
+  };
+}
+async function runLookSheet(args, io) {
+  const started = performance.now();
+  if (typeof args.outDir !== "string" || !path19.isAbsolute(args.outDir)) return { ok: false, error: "`outDir` must be an absolute folder for the sheet" };
+  const pieces = Array.isArray(args.pieces) ? args.pieces : [];
+  if (!pieces.length) return { ok: false, error: "`pieces` must list the approved pieces: [{ label, path } or { label, comp, project? }]" };
+  const labels = pieces.map((p) => p?.label);
+  if (new Set(labels).size !== labels.length) return { ok: false, error: "every piece needs its own `label`" };
+  const maxFrames = typeof args.maxFrames === "number" && args.maxFrames >= 1 ? Math.floor(args.maxFrames) : CHECK_FILE_MAX_FRAMES;
+  await fs19.mkdir(path19.join(args.outDir, "pieces"), { recursive: true });
+  const done = [];
+  for (const spec of pieces) {
+    const p = await measurePiece(spec, args.outDir, io, maxFrames, args.regions);
+    if ("error" in p) return { ok: false, error: p.error, measuredBefore: done.map((d) => d.piece.label) };
+    const file2 = path19.join("pieces", `${slug(p.label)}.json`);
+    await fs19.writeFile(path19.join(args.outDir, file2), JSON.stringify(p));
+    done.push({ piece: p, file: file2 });
+  }
+  const { sheet, json: json2, page } = await writeSheet(args.outDir, done);
+  return reply(sheet, json2, page, started, done.map((d) => d.piece.label));
+}
+async function runLookSheetAdd(args, io) {
+  const started = performance.now();
+  if (typeof args.sheet !== "string" || !path19.isAbsolute(args.sheet)) return { ok: false, error: "`sheet` must be the absolute path of a sheet.json from reference.sheet" };
+  let sheet;
+  try {
+    sheet = JSON.parse(await fs19.readFile(args.sheet, "utf8"));
+  } catch (e) {
+    return { ok: false, error: `could not read ${args.sheet}: ${e.message}` };
+  }
+  if (!isSheet(sheet)) return { ok: false, error: `${args.sheet} is not a look sheet` };
+  const dir = path19.dirname(args.sheet), spec = args.piece ?? {};
+  if (sheet.pieces.some((p2) => p2.label === spec.label)) return { ok: false, error: `the sheet already has a piece labelled "${spec.label}"` };
+  const old = [];
+  for (const p2 of sheet.pieces) {
+    const got = JSON.parse(await fs19.readFile(path19.join(dir, p2.file), "utf8"));
+    if (!isPiece(got)) return { ok: false, error: `${p2.file} is not a measured piece` };
+    old.push({ piece: got, file: p2.file });
+  }
+  const maxFrames = typeof args.maxFrames === "number" && args.maxFrames >= 1 ? Math.floor(args.maxFrames) : CHECK_FILE_MAX_FRAMES;
+  const p = await measurePiece(spec, dir, io, maxFrames, args.regions);
+  if ("error" in p) return { ok: false, error: p.error };
+  let file2 = path19.join("pieces", `${slug(p.label)}.json`);
+  for (let k = 2; old.some((o) => o.file === file2); k++) file2 = path19.join("pieces", `${slug(p.label)}-${k}.json`);
+  await fs19.mkdir(path19.join(dir, "pieces"), { recursive: true });
+  await fs19.writeFile(path19.join(dir, file2), JSON.stringify(p));
+  const w = await writeSheet(dir, [...old, { piece: p, file: file2 }]);
+  return reply(w.sheet, w.json, w.page, started, [p.label]);
+}
+var PIECES_DESC = "The approved pieces: [{ label, path, via? }] for a movie, a folder of PNG frames or a still (via: 'after-effects' renders a movie through After Effects instead of decoding it with ffmpeg), or [{ label, comp, project? }] for a comp (project: true also reads its text layers' fonts, sizes and tracking). The label names the piece on the sheet's page.";
+registerOp({
+  name: "reference.sheet",
+  category: "look",
+  description: "A look sheet from a user's approved pieces: what stays the same across them, and how much it varies. Each piece is measured as reference.report measures it (a movie decoded by ffmpeg in Node when it is installed, no After Effects), with its rhythm from video.census over the whole movie and video.shots (calm, local and travel shares, travel moves a minute, calm runs, bursts, shot lengths, cuts a minute) and, for a comp with project: true, its type. For each measure the sheet keeps the middle value, the lowest and highest piece and how many pieces it rests on; a measure whose range is wider than 3 of reference.compare's steps varies in the user's pieces and is never compared. Main colours are matched across pieces (within CIELAB 10) and are part of the look when two thirds of the pieces carry them. One piece is its own numbers, two give a range, three or more a look, and the sheet says how many every time. Writes sheet.json, sheet.md (pieces named by their labels) and one file per piece under pieces/ (numbers only, nothing of the pictures), so reference.sheet_add never measures a piece twice. It describes what the pieces did, not what a new piece must do. Compare a build with reference.compare { reference: sheet.json } or reference.report { against: sheet.json }.",
+  params: [
+    { name: "pieces", type: "array", description: PIECES_DESC, required: true },
+    { name: "outDir", type: "string", description: "Absolute folder for the sheet.", required: true },
+    { name: "maxFrames", type: "number", description: `Most frames read a piece for its report (default ${CHECK_FILE_MAX_FRAMES}); the rhythm is read over the whole movie.`, required: false },
+    { name: "regions", type: "array", description: "Named regions in frame pixels, read beside the grid's nine in every piece.", required: false }
+  ],
+  toJsx: () => NODE_ONLY("reference.sheet"),
+  run: (args, transport2) => runLookSheet(args, liveFileIO(transport2))
+});
+registerOp({
+  name: "reference.sheet_add",
+  category: "look",
+  description: "Add one approved piece to a look sheet (reference.sheet): the piece is measured, the others are read back from their saved files, and the sheet and its page are written again with the new ranges.",
+  params: [
+    { name: "sheet", type: "string", description: "Absolute path of the sheet.json.", required: true },
+    { name: "piece", type: "object", description: "{ label, path } or { label, comp, project? }, as in reference.sheet.", required: true },
+    { name: "maxFrames", type: "number", description: `Most frames read for the piece's report (default ${CHECK_FILE_MAX_FRAMES}).`, required: false }
+  ],
+  toJsx: () => NODE_ONLY("reference.sheet_add"),
+  run: (args, transport2) => runLookSheetAdd(args, liveFileIO(transport2))
 });
 
 // src/operations/property.ts
@@ -57754,7 +59803,7 @@ registerOp({
 // src/operations/inspect.ts
 init_config();
 init_registry();
-import * as path16 from "node:path";
+import * as path20 from "node:path";
 registerOp({
   name: "comp.info",
   category: "comp",
@@ -57830,7 +59879,7 @@ registerOp({
   readOnly: true,
   toJsx(args) {
     const raw = String(args.outPath);
-    if (!path16.isAbsolute(raw)) {
+    if (!path20.isAbsolute(raw)) {
       return `
             return { ok: false, error: ${jsxVal(`outPath must be absolute, got: ${raw}`)} };
         `;
@@ -57841,7 +59890,7 @@ registerOp({
             return { ok: false, error: ${jsxVal(rejection)} };
         `;
     }
-    const abs = path16.resolve(raw).replace(/\\/g, "/");
+    const abs = path20.resolve(raw).replace(/\\/g, "/");
     return `
             ${RENDER_FRAME_FN}
             ${jsxCompPreamble(args)}
@@ -60222,354 +62271,30 @@ registerOp({
 });
 
 // src/operations/sample.ts
-import { promises as fs17 } from "node:fs";
-import * as path18 from "node:path";
+import { promises as fs21 } from "node:fs";
+import * as path22 from "node:path";
 
 // src/video/run-moves.ts
-import { promises as fs16 } from "node:fs";
-import path17 from "node:path";
-
-// src/video/fit.ts
-function nelderMead(f, x0, steps2, iterations = 600) {
-  const n = x0.length;
-  let simplex = [x0.slice(), ...x0.map((_, i) => x0.map((v, j) => j === i ? v + steps2[i] : v))].map((x) => ({ x, v: f(x) }));
-  for (let it = 0; it < iterations; it++) {
-    simplex.sort((a, b) => a.v - b.v);
-    const best = simplex[0], worst = simplex[n], second = simplex[n - 1];
-    if (Math.abs(worst.v - best.v) < 1e-12) break;
-    const c = Array(n).fill(0);
-    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) c[j] += simplex[i].x[j] / n;
-    const at = (t) => c.map((cj, j) => cj + t * (worst.x[j] - cj));
-    const r = at(-1), fr = f(r);
-    if (fr < best.v) {
-      const e = at(-2), fe = f(e);
-      simplex[n] = fe < fr ? { x: e, v: fe } : { x: r, v: fr };
-      continue;
-    }
-    if (fr < second.v) {
-      simplex[n] = { x: r, v: fr };
-      continue;
-    }
-    const k = fr < worst.v ? at(-0.5) : at(0.5), fk = f(k);
-    if (fk < Math.min(fr, worst.v)) {
-      simplex[n] = { x: k, v: fk };
-      continue;
-    }
-    simplex = simplex.map((s, i) => i === 0 ? s : { x: s.x.map((v, j) => best.x[j] + 0.5 * (v - best.x[j])), v: f(s.x.map((v, j) => best.x[j] + 0.5 * (v - best.x[j]))) });
-  }
-  simplex.sort((a, b) => a.v - b.v);
-  return { x: simplex[0].x, value: simplex[0].v };
-}
-function aeEase(t, outInfluence, inInfluence) {
-  if (t <= 0) return 0;
-  if (t >= 1) return 1;
-  const x1 = outInfluence, x2 = 1 - inInfluence;
-  const bx = (u2) => 3 * (1 - u2) * (1 - u2) * u2 * x1 + 3 * (1 - u2) * u2 * u2 * x2 + u2 * u2 * u2;
-  let lo = 0, hi = 1;
-  for (let i = 0; i < 40; i++) {
-    const m = (lo + hi) / 2;
-    if (bx(m) < t) lo = m;
-    else hi = m;
-  }
-  const u = (lo + hi) / 2;
-  return 3 * (1 - u) * u * u + u * u * u;
-}
-function springFromRest(t, f, d) {
-  if (t <= 0) return 0;
-  const w = 2 * Math.PI * f;
-  return 1 - Math.exp(-d * t) * (Math.cos(w * t) + d / w * Math.sin(w * t));
-}
-var clamp = (x, a, b) => Math.max(a, Math.min(b, x));
-function rmsOf(s, model) {
-  let e = 0;
-  for (const p of s) {
-    const d = model(p.time) - p.y;
-    e += d * d;
-  }
-  return Math.sqrt(e / Math.max(1, s.length));
-}
-function fitMove(s, guess) {
-  const dur0 = Math.max(1e-3, guess.end - guess.start), tSpan = s.length ? s[s.length - 1].time - s[0].time : dur0;
-  const fe = (x) => {
-    const a = x[0], b = Math.max(a + 1e-3, x[1]), o = clamp(x[2], 0.01, 1), i = clamp(x[3], 0.01, 1);
-    return rmsOf(s, (t) => aeEase((t - a) / (b - a), o, i));
-  };
-  let bestE = { x: [guess.start, guess.end, 0.33, 0.33], value: Infinity };
-  for (const o0 of [0.15, 0.33, 0.6, 0.85]) for (const i0 of [0.15, 0.33, 0.6, 0.85]) {
-    const r = nelderMead(fe, [guess.start, guess.end, o0, i0], [dur0 * 0.1, dur0 * 0.1, 0.1, 0.1]);
-    if (r.value < bestE.value) bestE = r;
-  }
-  const ease = { model: "ease", start: bestE.x[0], end: Math.max(bestE.x[0] + 1e-3, bestE.x[1]), outInfluence: Math.round(clamp(bestE.x[2], 0.01, 1) * 1e3) / 10, inInfluence: Math.round(clamp(bestE.x[3], 0.01, 1) * 1e3) / 10, rms: bestE.value };
-  const fl = (x) => {
-    const a = x[0], b = Math.max(a + 1e-3, x[1]);
-    return rmsOf(s, (t) => clamp((t - a) / (b - a), 0, 1));
-  };
-  const rl = nelderMead(fl, [guess.start, guess.end], [dur0 * 0.1, dur0 * 0.1]);
-  const linear = { model: "linear", start: rl.x[0], end: Math.max(rl.x[0] + 1e-3, rl.x[1]), rms: rl.value };
-  const fs24 = (x) => {
-    const f2 = clamp(x[1], 0.2, 20), d2 = clamp(x[2], 0.1, 60);
-    return rmsOf(s, (t) => springFromRest(t - x[0], f2, d2));
-  };
-  let bestS = { x: [guess.start, 2, 6], value: Infinity };
-  for (const f0 of [0.8, 1.5, 3, 6]) for (const d0 of [2, 5, 10, 20]) {
-    const r = nelderMead(fs24, [guess.start, f0, d0], [dur0 * 0.1, f0 * 0.3, d0 * 0.3]);
-    if (r.value < bestS.value) bestS = r;
-  }
-  const f = clamp(bestS.x[1], 0.2, 20), d = clamp(bestS.x[2], 0.1, 60), w = 2 * Math.PI * f;
-  const tc = (Math.PI / 2 + Math.atan(d / w)) / w;
-  const peakT = Math.PI / w, overshoot = Math.max(0, springFromRest(peakT, f, d) - 1);
-  let settle2 = tSpan;
-  for (let t = 0; t < 30; t += 1e-3) {
-    if (Math.exp(-d * t) * Math.sqrt(1 + (d / w) ** 2) < 0.02) {
-      settle2 = t;
-      break;
-    }
-  }
-  const spring = {
-    model: "spring",
-    start: bestS.x[0],
-    f: Math.round(f * 1e3) / 1e3,
-    d: Math.round(d * 1e3) / 1e3,
-    A: Math.round(Math.sqrt(1 + (d / w) ** 2) * Math.exp(-d * tc) * 1e3) / 1e3,
-    reachesEndAt: bestS.x[0] + tc,
-    overshoot: Math.round(overshoot * 1e3) / 1e3,
-    settle: settle2,
-    rms: bestS.value
-  };
-  const ranked = [ease, linear, spring].sort((a, b) => a.rms - b.rms);
-  return { ease, linear, spring, best: ranked[0].model, margin: ranked[0].rms > 0 ? Math.round(ranked[1].rms / ranked[0].rms * 100) / 100 : Infinity };
-}
-function fitEaseSeen(s, lo = 0.015) {
-  const cross = (th, from = 1) => {
-    for (let k = Math.max(1, from); k < s.length; k++) if (s[k].y >= th && s[k - 1].y < th) return { k, t: s[k - 1].time + (th - s[k - 1].y) / (s[k].y - s[k - 1].y) * (s[k].time - s[k - 1].time) };
-    return null;
-  };
-  const c0 = cross(lo), c1 = c0 ? cross(1 - lo, c0.k) : null;
-  if (!c0 || !c1 || c1.t <= c0.t) return null;
-  return { ...fitEaseBetween(s, c0.t, c1.t), seen: true };
-}
-function fitEaseBetween(s, a, b) {
-  const f = (x) => {
-    const o = clamp(x[0], 0.01, 1), i = clamp(x[1], 0.01, 1);
-    return rmsOf(s, (t) => aeEase((t - a) / (b - a), o, i));
-  };
-  let best = { x: [0.33, 0.33], value: Infinity };
-  for (const o0 of [0.1, 0.33, 0.6, 0.9]) for (const i0 of [0.1, 0.33, 0.6, 0.9]) {
-    const r = nelderMead(f, [o0, i0], [0.1, 0.1], 300);
-    if (r.value < best.value) best = r;
-  }
-  return { model: "ease", start: a, end: b, outInfluence: Math.round(clamp(best.x[0], 0.01, 1) * 1e3) / 10, inInfluence: Math.round(clamp(best.x[1], 0.01, 1) * 1e3) / 10, rms: best.value };
-}
-function fitSpringTail(s) {
-  const i0 = s.findIndex((p) => p.y >= 1);
-  if (i0 < 0 || !s.slice(i0).some((p) => p.y > 1.01)) return null;
-  const t0 = i0 > 0 ? s[i0 - 1].time + (1 - s[i0 - 1].y) / (s[i0].y - s[i0 - 1].y) * (s[i0].time - s[i0 - 1].time) : s[i0].time;
-  const tail = s.slice(i0).map((p) => ({ time: p.time - t0, y: p.y }));
-  const fe = (x) => {
-    const A = x[0], f = clamp(x[1], 0.1, 20), d = clamp(x[2], 0, 60);
-    return rmsOf(tail, (t) => 1 + A * Math.exp(-d * t) * Math.sin(2 * Math.PI * f * t));
-  };
-  const cross = [];
-  for (let i = 1; i < tail.length; i++) if ((tail[i - 1].y - 1) * (tail[i].y - 1) < 0) {
-    const a = tail[i - 1], b = tail[i];
-    cross.push(a.time + (1 - a.y) / (b.y - a.y) * (b.time - a.time));
-  }
-  const fGuess = cross.length >= 1 ? 1 / (2 * (cross.length >= 2 ? (cross[cross.length - 1] - cross[0]) / (cross.length - 1) : cross[0])) : 1.5;
-  const peak = Math.max(...tail.map((p) => p.y)) - 1;
-  let best = { x: [peak, fGuess, 5], value: Infinity };
-  for (const f0 of [fGuess, 0.8, 1.5, 3, 6]) for (const d0 of [1, 2, 5, 10]) for (const a0 of [peak, peak * 2]) {
-    const r = nelderMead(fe, [a0, f0, d0], [a0 * 0.3, f0 * 0.3, d0 * 0.3]);
-    if (r.value < best.value) best = r;
-  }
-  return { A: Math.round(best.x[0] * 1e3) / 1e3, f: Math.round(clamp(best.x[1], 0.1, 20) * 1e3) / 1e3, d: Math.round(clamp(best.x[2], 0, 60) * 1e3) / 1e3, from: t0, rms: best.value };
-}
-function keysFor(fit, a, b, fps) {
-  const v = (k) => a.map((x, i) => Math.round((x + (b[i] - x) * k) * 1e3) / 1e3);
-  const one = (x) => x.length === 1 ? x[0] : x;
-  if (fit.model === "ease")
-    return { keys: [{ time: r44(fit.start), value: one(v(0)), interp: "ease", outInfluence: fit.outInfluence, outSpeed: 0 }, { time: r44(fit.end), value: one(v(1)), interp: "ease", inInfluence: fit.inInfluence, inSpeed: 0 }] };
-  if (fit.model === "linear") return { keys: [{ time: r44(fit.start), value: one(v(0)), interp: "linear" }, { time: r44(fit.end), value: one(v(1)), interp: "linear" }] };
-  const rise = Math.max(1e-3, fit.reachesEndAt - fit.start), baked = [];
-  for (let t = fit.start; t <= fit.start + fit.settle + 1 / fps; t += 1 / fps) baked.push({ time: r44(t), value: one(v(springFromRest(t - fit.start, fit.f, fit.d))), interp: "linear" });
-  return {
-    keys: [{ time: r44(fit.start), value: one(v(0)), interp: "linear" }, { time: r44(fit.reachesEndAt), value: one(v(1)), interp: "linear" }],
-    librarySpring: { freq: fit.f, decay: fit.d, amp: Math.round(fit.A * rise * 1e4) / 1e4, form: "value + v * amp * sin(freq * t * 2 * PI) / exp(decay * t) after the last key (motion-jsx spring)" },
-    baked
-  };
-}
-var r44 = (x) => Math.round(x * 1e4) / 1e4;
-
-// src/video/measure-move.ts
-var r22 = (x) => Math.round(x * 100) / 100;
-var r45 = (x) => Math.round(x * 1e4) / 1e4;
-var median4 = (a) => {
-  if (!a.length) return 0;
-  const s = [...a].sort((x, y) => x - y);
-  return s[Math.floor(s.length / 2)];
-};
-function movesOfChannel(samples, o) {
-  if (samples.length < 4) return [];
-  const { fps, atFps } = o, moving = o.movingSpeed ?? 0.02, gap = 2.5 / fps, at = (t) => r22(t * atFps);
-  const report = analyzeCurve(samples, fps, { joinGap: 6 });
-  const drifts = /* @__PURE__ */ new Set(), handover = /* @__PURE__ */ new Set();
-  const idx = (f) => samples.findIndex((s) => s.frame === f);
-  const split = (mv) => {
-    const i0 = idx(mv.from), i1 = idx(mv.to);
-    if (i0 < 0 || i1 - i0 < 8) return [mv];
-    const way = samples[i1].value.map((v, d) => v - samples[i0].value[d]), L = Math.hypot(...way);
-    if (L <= 0) return [mv];
-    const sp = [];
-    for (let k2 = i0; k2 < i1; k2++) sp.push(samples[k2 + 1].value.reduce((a2, v, d) => a2 + (v - samples[k2].value[d]) * way[d], 0) / L / Math.max(1e-6, (samples[k2 + 1].time - samples[k2].time) * fps));
-    const pk = sp.reduce((b2, v, k2) => Math.abs(v) > Math.abs(sp[b2]) ? k2 : b2, 0), peak = Math.abs(sp[pk]), share = o.driftShare ?? 0.1;
-    let k = -1;
-    for (let j = pk + 1; j < sp.length; j++) if (sp.slice(j).every((v) => Math.abs(v) < share * peak)) {
-      k = j;
-      break;
-    }
-    if (k < 0) return [mv];
-    const tail = sp.slice(k), med = (a2) => median4(a2.map(Math.abs));
-    const third = Math.max(3, Math.floor(tail.length / 3)), mean = (a2) => a2.reduce((x, v) => x + Math.abs(v), 0) / Math.max(1, a2.length);
-    if (tail.length < 6 || tail.some((v) => v < -0.25 * Math.abs(med(tail)) - 1e-9) || mean(tail.slice(-third)) < 0.5 * mean(tail.slice(0, third))) return [mv];
-    let h = k;
-    for (let j = pk + 1; j < sp.length - 3; j++) if (Math.abs(sp[j]) <= 1.5 * med(tail)) {
-      h = j;
-      break;
-    }
-    const at2 = samples[i0 + h].frame, distOf = (f0, f1) => Math.hypot(...samples[idx(f1)].value.map((v, d) => v - samples[idx(f0)].value[d]));
-    const a = { ...mv, to: at2, distance: distOf(mv.from, at2) }, b = { ...mv, from: at2, distance: distOf(at2, mv.to) };
-    if (b.distance < o.minMove) return [mv];
-    if (b.distance > 0.5 * a.distance) return [mv];
-    handover.add(a);
-    drifts.add(b);
-    return [a, b];
-  };
-  const moves = report.moves.flatMap(split), out = [];
-  for (const mv of moves) {
-    if (mv.distance < o.minMove) continue;
-    const i0 = samples.findIndex((s) => s.frame === mv.from), i1 = samples.findIndex((s) => s.frame === mv.to);
-    if (i0 < 0 || i1 <= i0) continue;
-    const real = (x) => x !== mv && (x.distance >= o.minMove || drifts.has(x));
-    const prevMove = [...moves].reverse().find((x) => real(x) && x.to <= mv.from), nextMove = moves.find((x) => real(x) && x.from >= mv.to);
-    const restStart = prevMove ? Math.max(0, samples.findIndex((s) => s.frame === prevMove.to)) : 0;
-    const restEnd = nextMove ? samples.findIndex((s) => s.frame === nextMove.from) : samples.length - 1;
-    const tailVals = samples.slice(i1, Math.max(i1 + 1, Math.min(restEnd + 1, i1 + 10))).map((s) => s.value);
-    const end = tailVals[0].map((_, d) => median4(tailVals.map((x) => x[d])));
-    const startV = samples[i0].value, way = end.map((e, d) => e - startV[d]), len2 = way.reduce((s, x) => s + x * x, 0);
-    if (len2 <= 0) continue;
-    const dist = Math.sqrt(len2), prog = (s) => s.value.reduce((acc, v, d) => acc + (v - startV[d]) * way[d], 0) / len2;
-    const lo = Math.max(0, i0 - 3), hi = Math.min(samples.length - 1, i1 + 6);
-    const fitS = samples.slice(lo, hi + 1).map((s) => ({ time: s.time, y: prog(s) }));
-    const fits = fitMove(fitS, { start: samples[i0].time, end: samples[i1].time }), tail = fitSpringTail(fitS), seen = fitEaseSeen(fitS);
-    const best = fits[fits.best];
-    const wlo = Math.max(restStart, i0 - 12), whi = Math.min(restEnd, i1 + 15), P = samples.map((s, k) => k >= wlo && k <= whi ? prog(s) : NaN);
-    const mad = (a2, c) => median4(a2.map((v) => Math.abs(v - c))) * 1.4826;
-    const after = P.slice(i1, whi + 1).filter(Number.isFinite), before = P.slice(wlo, i0 + 1).filter(Number.isFinite);
-    const noise = Math.max(after.length >= 3 ? mad(after, 1) : 0, before.length >= 3 ? mad(before, 0) : 0);
-    const eps = Math.max(3 * noise, o.epsAbs / dist, 15e-4);
-    let mid = i1;
-    for (let k = i0; k <= i1; k++) if (P[k] >= 0.5) {
-      mid = k;
-      break;
-    }
-    let a = null, b = null;
-    for (let k = mid; k >= wlo; k--) if (Math.abs(P[k]) <= eps) {
-      a = k;
-      break;
-    }
-    const band = Math.max(eps, o.endShare ?? 0.02);
-    for (let k = mid; k <= whi && b === null; k++) {
-      let ok = true;
-      for (let j = k; j <= whi; j++) if (Math.abs(P[j] - 1) > band) {
-        ok = false;
-        break;
-      }
-      if (ok) b = k;
-    }
-    const step = (k) => k + 1 < samples.length && Number.isFinite(P[k + 1]) ? (P[k + 1] - P[k]) / Math.max(1e-6, (samples[k + 1].time - samples[k].time) * fps) : 0;
-    const contigBefore = (k) => k > 0 && samples[k].time - samples[k - 1].time <= gap;
-    const contigAfter = (k) => k + 1 < samples.length && samples[k + 1].time - samples[k].time <= gap;
-    const begins = !contigBefore(a ?? i0) ? o.beginsAt?.(samples[a ?? i0].frame) ?? null : null;
-    const startSeen = a !== null && (begins !== null || contigBefore(a) || Math.abs(step(a)) <= moving);
-    const endsAtCut = !contigAfter(i1) && i1 === whi && !!o.endsAt?.(samples[i1].frame);
-    if (endsAtCut && (b === null || b >= whi)) b = i1;
-    const handed = handover.has(mv);
-    if (handed && (b === null || b > i1)) b = i1;
-    const endSeen = endsAtCut || handed && b !== null || b !== null && b < whi && contigAfter(b);
-    const visible = a !== null && b !== null ? samples[b].time - samples[a].time : null;
-    let c0 = i0, c1 = i1;
-    while (contigBefore(c0)) c0--;
-    while (contigAfter(c1)) c1++;
-    const keysSec = best.model === "spring" ? best.reachesEndAt - best.start : best.end - best.start;
-    const m = {
-      curve: mv,
-      from: { frame: mv.from, time: samples[i0].time, at: at(samples[i0].time) },
-      to: { frame: mv.to, time: samples[i1].time, at: at(samples[i1].time) },
-      duration: {
-        seconds: visible !== null && startSeen && endSeen ? r45(visible) : null,
-        at: visible !== null && startSeen && endSeen ? at(visible) : null,
-        as: "visible: from the last frame at rest to the first frame that stays within 2 % of the end (as the hand studies count it)",
-        keys: { seconds: r45(keysSec), at: at(keysSec), as: "the fit's keys (what is set in After Effects)" },
-        visible: visible === null ? null : { seconds: r45(visible), at: at(visible), fromFrame: samples[a].frame, toFrame: samples[b].frame, fromTime: samples[a].time, toTime: samples[b].time }
-      },
-      start: startV.map(r22),
-      end: end.map(r22),
-      distance: r22(dist),
-      fits: {
-        ease: fits.ease,
-        linear: fits.linear,
-        spring: fits.spring,
-        springTail: tail,
-        easeSeen: seen,
-        // keys held at the visible span's ends (the last frame at rest, the first settled), the influences fitted
-        easeVisible: visible !== null && visible > 0 ? fitEaseBetween(fitS, samples[a].time, samples[b].time) : null
-      },
-      best: fits.best,
-      margin: fits.margin,
-      apply: keysFor(best, startV, end, atFps),
-      seen: { start: startSeen, end: endSeen, begins, ...endsAtCut ? { ends: "cut" } : handed ? { ends: "drift" } : {} },
-      ...drifts.has(mv) ? { drift: { speed: r22(dist / Math.max(1e-6, samples[i1].time - samples[i0].time)), unit: "a second", reading: "a slow drift after the move before it, split from it" } } : {},
-      covers: { fromFrame: samples[c0].frame, toFrame: samples[c1].frame },
-      status: "measured"
-    };
-    if (!startSeen) {
-      const first = samples[a ?? i0];
-      m.status = `partial: the start was not seen (already moving at frame ${first.frame}, the first frame measured); duration, distance and ease out are not measured, only the settle`;
-      m.notMeasured = ["duration", "distance", "ease out"];
-      m.seenTravel = m.distance;
-      m.distance = null;
-      m.apply = null;
-      m.settle = { end: m.end, inInfluence: (seen ?? fits.ease).inInfluence };
-    } else if (!endSeen) {
-      m.status = "partial: the end was not seen (still moving where the measure stops); duration, distance and ease in are not measured";
-      m.notMeasured = ["duration", "distance", "ease in"];
-      m.seenTravel = m.distance;
-      m.distance = null;
-      m.apply = null;
-    } else if (best.rms > 0.05) m.status = "measured, loosely (rms over 0.05)";
-    out.push(m);
-  }
-  return out;
-}
-
-// src/video/run-moves.ts
+import { promises as fs20 } from "node:fs";
+import path21 from "node:path";
 async function readJson(p, what) {
-  if (typeof p !== "string" || !path17.isAbsolute(p)) return { error: `${what} must be an absolute path to a JSON file` };
+  if (typeof p !== "string" || !path21.isAbsolute(p)) return { error: `${what} must be an absolute path to a JSON file` };
   try {
-    return JSON.parse(await fs16.readFile(p, "utf8"));
+    return JSON.parse(await fs20.readFile(p, "utf8"));
   } catch (e) {
     return { error: `could not read ${what} ${p}: ${e.message}` };
   }
 }
-var r23 = (x) => Math.round(x * 100) / 100;
+var r24 = (x) => Math.round(x * 100) / 100;
 function row(label, m, atFps) {
-  const best = m.fits[m.best], at = (s) => r23(s * atFps);
+  const best = m.fits[m.best], at = (s) => r24(s * atFps);
   const tail = m.fits.springTail;
   return {
     move: label,
     measure: m.measure ?? "match",
     channel: m.channel,
     unit: m.unit,
-    start: { seconds: r23(m.from.time * 1e3) / 1e3, at: at(m.from.time) },
+    start: { seconds: r24(m.from.time * 1e3) / 1e3, at: at(m.from.time) },
     duration: m.duration.seconds === null ? { seconds: null, at: null, keys: m.duration.keys } : { seconds: m.duration.seconds, at: at(m.duration.seconds), keys: m.duration.keys },
     distance: m.distance,
     from: m.start,
@@ -60578,13 +62303,13 @@ function row(label, m, atFps) {
     spring: tail ? { A: tail.A, f: tail.f, d: tail.d } : null,
     best: m.best,
     margin: m.margin,
-    rms: r23(best.rms * 1e3) / 1e3,
+    rms: r24(best.rms * 1e3) / 1e3,
     status: m.status ?? "measured",
     apply: m.apply
   };
 }
 async function runMoves(args) {
-  if (typeof args.outDir !== "string" || !path17.isAbsolute(args.outDir)) return { ok: false, error: "`outDir` must be an absolute folder path" };
+  if (typeof args.outDir !== "string" || !path21.isAbsolute(args.outDir)) return { ok: false, error: "`outDir` must be an absolute folder path" };
   const atFps = typeof args.atFps === "number" && args.atFps > 0 ? args.atFps : 30;
   const tracks = Array.isArray(args.tracks) ? args.tracks : [];
   if (!tracks.length && !Array.isArray(args.inferred)) return { ok: false, error: "`tracks` must list track.json files from video.track ([{ path, label }] or paths)" };
@@ -60592,7 +62317,7 @@ async function runMoves(args) {
   for (let i = 0; i < tracks.length; i++) {
     const t = typeof tracks[i] === "string" ? { path: tracks[i] } : tracks[i], j = await readJson(t.path, "a track");
     if ("error" in j) return { ok: false, error: j.error };
-    if (j.lost) notes.push(`${t.label ?? path17.basename(path17.dirname(t.path))}: ${j.lost.reading}`);
+    if (j.lost) notes.push(`${t.label ?? path21.basename(path21.dirname(t.path))}: ${j.lost.reading}`);
     j.moves.forEach((m, k) => rows.push(row(`${t.label ?? `track ${i + 1}`}${j.moves.length > 1 ? ` ${k + 1}` : ""}`, m, atFps)));
   }
   for (const m of args.inferred ?? []) rows.push({ move: m.label ?? "inferred", channel: m.channel ?? null, status: "inferred", reason: m.reason ?? "no reason given", ...m });
@@ -60622,7 +62347,7 @@ async function runMoves(args) {
   scenes.forEach((s, i) => {
     const inShot = rows.filter((r) => r.start && r.start.seconds >= s.start - 1e-6 && r.start.seconds <= s.end + 1e-6);
     const travel = census ? census.steps?.filter((st) => st.time >= s.start && st.time <= s.end && st.label === "T").length ?? 0 : null;
-    lines.push(`## Scene ${i + 1} \u2014 ${r23(s.start * atFps)} to ${Number.isFinite(s.end) ? r23(s.end * atFps) : "end"}`, "");
+    lines.push(`## Scene ${i + 1} \u2014 ${r24(s.start * atFps)} to ${Number.isFinite(s.end) ? r24(s.end * atFps) : "end"}`, "");
     if (words.length) lines.push(`- Words: "${spoken(s.start, Number.isFinite(s.end) ? s.end : Infinity) || "(none spoken)"}"`);
     lines.push("- One visual argument; operation (before \u2192 action \u2192 resolution): (not measured: read the picture)");
     lines.push(`- Events: ${inShot.length ? inShot.map((r) => `${r.start.at}${words.length && wordAt(r.start.seconds) ? ` (on "${wordAt(r.start.seconds)}")` : ""}: ${r.move} (${r.channel}${String(r.status).startsWith("measured") ? "" : `, ${String(r.status).split(":")[0]}`}) ${r.distance ?? "?"}${r.unit ?? ""} over ${r.duration?.at ?? "?"} frames, ${r.best === "ease" ? `ease ${r.ease}` : r.best}${r.spring ? `, spring A ${r.spring.A} f ${r.spring.f} d ${r.spring.d}` : ""}`).join("; ") : "none measured"}`);
@@ -60631,10 +62356,10 @@ async function runMoves(args) {
     lines.push("- Type roles, exact strings, material, depth, data sources: (not measured)", "");
   });
   if (notes.length) lines.push("## Not measured", "", ...notes.map((n) => `- ${n}`), "");
-  await fs16.mkdir(args.outDir, { recursive: true });
-  const jsonPath = path17.join(args.outDir, "moves.json"), sheetPath = path17.join(args.outDir, "beat-sheet.md");
-  await fs16.writeFile(jsonPath, JSON.stringify({ atFps, moves: rows, notes }, null, 1));
-  await fs16.writeFile(sheetPath, lines.join("\n"));
+  await fs20.mkdir(args.outDir, { recursive: true });
+  const jsonPath = path21.join(args.outDir, "moves.json"), sheetPath = path21.join(args.outDir, "beat-sheet.md");
+  await fs20.writeFile(jsonPath, JSON.stringify({ atFps, moves: rows, notes }, null, 1));
+  await fs20.writeFile(sheetPath, lines.join("\n"));
   const counts = { measured: rows.filter((r) => String(r.status).startsWith("measured")).length, inferred: rows.filter((r) => r.status === "inferred").length, untested: rows.filter((r) => r.status === "untested").length };
   return {
     ok: true,
@@ -60657,14 +62382,14 @@ function scaleLike(m) {
   return m.channel === "scale" || m.like === "scale";
 }
 function compare(label, measured, built, tol, atFps) {
-  const d = (a) => r23(a * atFps), checks = [];
+  const d = (a) => r24(a * atFps), checks = [];
   const add = (what, mv, bv, unit, within) => checks.push({
     what,
-    measured: r23(mv),
-    built: r23(bv),
+    measured: r24(mv),
+    built: r24(bv),
     unit,
     within,
-    reading: `${label}: ${what} ${r23(bv)}${unit} against ${r23(mv)}${unit}, ${within ? "within" : "outside"} tolerance`
+    reading: `${label}: ${what} ${r24(bv)}${unit} against ${r24(mv)}${unit}, ${within ? "within" : "outside"} tolerance`
   });
   const md = measured.duration.seconds ?? null, bd = built.duration.seconds ?? null;
   if (md === null || bd === null) checks.push({ what: "duration", within: false, reading: `${label}: duration not measured on ${md === null ? "the reference" : "the build"} (${md === null ? measured.status : built.status})` });
@@ -60697,7 +62422,7 @@ async function runCompareMoves(args, readProperty) {
     const bj = await readJson(args.buildTrack, "buildTrack");
     if ("error" in bj) return { ok: false, error: bj.error };
     built = bj.moves ?? [];
-    source = `the build's render (${path17.basename(args.buildTrack)})`;
+    source = `the build's render (${path21.basename(args.buildTrack)})`;
   } else if (args.comp !== void 0 && args.layer !== void 0 && args.property !== void 0) {
     if (!readProperty) return { ok: false, error: "reading a property needs After Effects" };
     const r = await readProperty({ comp: args.comp, layer: args.layer, property: args.property, start: args.start, end: args.end, perFrame: true });
@@ -60904,10 +62629,10 @@ async function runCurve(args, io) {
   const report = analyzeCurve(samples, r.fps);
   let graph = null;
   if (typeof args.outPath === "string") {
-    if (!path18.isAbsolute(args.outPath)) return { ok: false, error: "`outPath` must be absolute (.png)" };
+    if (!path22.isAbsolute(args.outPath)) return { ok: false, error: "`outPath` must be absolute (.png)" };
     const g = curveGraph(report, { width: 480, height: 160 });
-    await fs17.mkdir(path18.dirname(args.outPath), { recursive: true });
-    await fs17.writeFile(args.outPath, encodePngSrgb8(g.width, g.height, g.rgb));
+    await fs21.mkdir(path22.dirname(args.outPath), { recursive: true });
+    await fs21.writeFile(args.outPath, encodePngSrgb8(g.width, g.height, g.rgb));
     graph = args.outPath;
   }
   return {
@@ -60979,12 +62704,12 @@ async function runSoundMarkers(args, io) {
   let source;
   if (hasTiming) {
     const f = args.timing;
-    if (!path18.isAbsolute(f)) return { ok: false, error: "`timing` must be an absolute path" };
+    if (!path22.isAbsolute(f)) return { ok: false, error: "`timing` must be an absolute path" };
     const r = await io.execute(fpsJsx({ comp: args.comp }), { label: "sound.markers fps", timeoutMs: 3e4 });
     if (!r?.ok) return { ok: false, error: r?.error ?? "could not read the comp" };
     fps = r.fps;
     try {
-      found = parseTiming(await fs17.readFile(f, "utf8"), fps).map((m) => ({ ...m, frame: Math.round(m.time * fps) }));
+      found = parseTiming(await fs21.readFile(f, "utf8"), fps).map((m) => ({ ...m, frame: Math.round(m.time * fps) }));
     } catch (e) {
       return { ok: false, error: e instanceof Error ? e.message : String(e) };
     }
@@ -61143,1178 +62868,6 @@ registerOp({
 
 // src/operations/video.ts
 init_registry();
-
-// src/video/run-shots-census.ts
-import { promises as fs19 } from "node:fs";
-import path20 from "node:path";
-
-// src/video/census.ts
-var CENSUS_RULES = { block: 16, search: 6, pixel: 8, calmBelow: 4e-3, travelMoved: 0.5, cutChanged: 0.55, cutMoved: 0.35, texture: 5 };
-function censusStep(a, b, w, h, y0, y1, rules = CENSUS_RULES) {
-  let changedPx = 0, total = 0;
-  for (let y = y0; y < y1; y++) for (let x = 0; x < w; x++) {
-    total++;
-    if (Math.abs(a[y * w + x] - b[y * w + x]) > rules.pixel) changedPx++;
-  }
-  const changed = total ? changedPx / total : 0, B = rules.block, S = rules.search;
-  let textured = 0, moved = 0;
-  const shifts = [];
-  for (let by = y0 + S; by + B + S <= y1; by += B) for (let bx = S; bx + B + S <= w; bx += B) {
-    let m = 0, m2 = 0;
-    for (let y = 0; y < B; y++) for (let x = 0; x < B; x++) {
-      const v = a[(by + y) * w + bx + x];
-      m += v;
-      m2 += v * v;
-    }
-    const n = B * B, sd = Math.sqrt(Math.max(0, m2 / n - (m / n) ** 2));
-    if (sd <= rules.texture) continue;
-    textured++;
-    const cost = (dx, dy) => {
-      let s = 0;
-      for (let y = 0; y < B; y++) for (let x = 0; x < B; x++) s += Math.abs(a[(by + y) * w + bx + x] - b[(by + y + dy) * w + bx + x + dx]);
-      return s;
-    };
-    const zero = cost(0, 0);
-    let best = zero, bdx = 0, bdy = 0;
-    for (let dy = -S; dy <= S; dy++) for (let dx = -S; dx <= S; dx++) {
-      if (!dx && !dy) continue;
-      const c = cost(dx, dy);
-      if (c < best) {
-        best = c;
-        bdx = dx;
-        bdy = dy;
-      }
-    }
-    if ((bdx || bdy) && best < 0.7 * zero && zero > 3 * n) {
-      moved++;
-      shifts.push(Math.hypot(bdx, bdy));
-    }
-  }
-  const mv = textured >= 3 ? moved / textured : 0;
-  const label = changed > rules.cutChanged && mv < rules.cutMoved ? "X" : mv >= rules.travelMoved && changed > rules.calmBelow ? "T" : changed < rules.calmBelow ? "c" : "l";
-  const sorted = shifts.sort((x, y) => x - y);
-  return { changed, moved: mv, textured, shift: sorted.length ? sorted[Math.floor(sorted.length / 2)] : 0, label };
-}
-function cadence(labels, shifts, step, pxScale) {
-  const n = labels.length || 1, count = (c) => [...labels].filter((x) => x === c).length / n;
-  const runs = [];
-  for (let i = 0; i < labels.length; i++) {
-    if (labels[i] !== "T") continue;
-    let j = i;
-    while (j + 1 < labels.length && labels[j + 1] === "T") j++;
-    const last = runs[runs.length - 1];
-    if (last && i - last[1] - 1 <= 2) last[1] = j;
-    else runs.push([i, j]);
-    i = j;
-  }
-  const travelRuns = runs.filter(([a, b]) => (b - a + 1) * step >= 0.2);
-  const med = (a) => {
-    if (!a.length) return 0;
-    const s = [...a].sort((x, y) => x - y);
-    return s[Math.floor(s.length / 2)];
-  };
-  const speeds = travelRuns.map(([a, b]) => med(shifts.slice(a, b + 1)) * pxScale / step);
-  const calmRuns = [];
-  let bursts = 0, calmLen = 0;
-  for (const c of labels) {
-    if (c === "c") calmLen++;
-    else {
-      if (calmLen * step >= 0.3) bursts++;
-      if (calmLen) calmRuns.push(calmLen * step);
-      calmLen = 0;
-    }
-  }
-  if (calmLen) calmRuns.push(calmLen * step);
-  const seconds = labels.length * step;
-  return {
-    shares: { calm: r3(count("c")), local: r3(count("l")), travel: r3(count("T")), cut: r3(count("X")) },
-    travel: { perMinute: seconds ? r3(travelRuns.length / seconds * 60) : 0, medianSeconds: r3(med(travelRuns.map(([a, b]) => (b - a + 1) * step))), medianSpeed: Math.round(med(speeds)) },
-    burstsPer10s: seconds ? r3(bursts / seconds * 10) : 0,
-    calmRuns: { medianSeconds: r3(med(calmRuns)), maxSeconds: r3(Math.max(0, ...calmRuns)) }
-  };
-}
-var r3 = (x) => Math.round(x * 1e3) / 1e3;
-
-// src/video/decode.ts
-import { spawn } from "node:child_process";
-var VIDEO_TOOLS = { ffmpeg: FFMPEG, ffprobe: FFPROBE };
-var NO_FFMPEG = "ffmpeg and ffprobe are not installed, so the video cannot be read. Install them (macOS: brew install ffmpeg; Windows: winget install ffmpeg) and try again.";
-function rate(s) {
-  if (!s) return NaN;
-  const [a, b] = s.split("/").map(Number);
-  return b ? a / b : a;
-}
-async function probeVideo(file2, tools = VIDEO_TOOLS) {
-  const head = await runTool(tools.ffprobe, [
-    "-v",
-    "error",
-    "-select_streams",
-    "v:0",
-    "-show_entries",
-    "stream=width,height,r_frame_rate,avg_frame_rate,duration:format=duration",
-    "-of",
-    "json",
-    file2
-  ], 6e4);
-  if (head === null) return null;
-  if (head.failed) return { error: `ffprobe could not read ${file2}: ${head.stderr.trim().slice(0, 300)}` };
-  let j;
-  try {
-    j = JSON.parse(head.stdout);
-  } catch {
-    return { error: `ffprobe gave no stream information for ${file2}` };
-  }
-  const st = j.streams?.[0];
-  if (!st) return { error: `${file2} has no video stream` };
-  const pk = await runTool(tools.ffprobe, ["-v", "error", "-select_streams", "v:0", "-show_entries", "packet=pts_time", "-of", "csv=p=0", file2], 12e4);
-  if (pk === null) return null;
-  const raw = pk.stdout.split("\n").map((l) => l.split(",")[0].trim()).filter((l) => l !== "" && l !== "N/A").map(Number).filter((t) => Number.isFinite(t)).sort((a, b) => a - b);
-  if (!raw.length) return { error: `${file2} has no video frames` };
-  const t0 = raw[0], times = raw.map((t) => t - t0);
-  const iv = [];
-  for (let i = 1; i < times.length; i++) iv.push(times[i] - times[i - 1]);
-  const sorted = [...iv].sort((a, b) => a - b), med = sorted.length ? sorted[Math.floor(sorted.length / 2)] : 0;
-  const nominal = rate(String(st.r_frame_rate)), duration3 = Number(j.format?.duration ?? st.duration ?? times[times.length - 1] + med);
-  return {
-    file: file2,
-    width: Number(st.width),
-    height: Number(st.height),
-    frames: times.length,
-    duration: duration3,
-    nominalFps: nominal,
-    averageFps: duration3 > 0 ? times.length / duration3 : nominal,
-    times,
-    variableRate: sorted.length > 1 && sorted[sorted.length - 1] - sorted[0] > 0.1 * med,
-    intervals: { min: sorted[0] ?? 0, max: sorted[sorted.length - 1] ?? 0, median: med }
-  };
-}
-async function* readFrames(info, o, tools = VIDEO_TOOLS) {
-  const from = Math.max(0, Math.min(info.frames - 1, o.from)), to = Math.max(from, Math.min(info.frames - 1, o.to));
-  const half = (info.intervals.median || 1 / 30) / 2, seek = Math.max(0, info.times[from] - half);
-  const filters = [];
-  if (o.fps) filters.push(`fps=${o.fps}`);
-  if (o.crop) filters.push(`crop=${Math.round(o.crop[2])}:${Math.round(o.crop[3])}:${Math.round(o.crop[0])}:${Math.round(o.crop[1])}`);
-  filters.push(`scale=${o.width}:${o.height}:flags=area`);
-  const count = o.fps ? Math.max(1, Math.round((info.times[to] - info.times[from]) * o.fps) + 1) : to - from + 1;
-  const args = [
-    "-v",
-    "error",
-    ...seek > 0 ? ["-ss", seek.toFixed(6)] : [],
-    "-i",
-    info.file,
-    "-map",
-    "0:v:0",
-    ...o.fps ? [] : ["-fps_mode", "passthrough"],
-    "-frames:v",
-    String(count),
-    "-vf",
-    filters.join(","),
-    "-f",
-    "rawvideo",
-    "-pix_fmt",
-    o.gray ? "gray" : "rgb24",
-    "pipe:1"
-  ];
-  const size2 = o.width * o.height * (o.gray ? 1 : 3);
-  let proc = null;
-  for (const bin of tools.ffmpeg) {
-    try {
-      proc = await new Promise((resolve13, reject) => {
-        const p = spawn(bin, args, { stdio: ["ignore", "pipe", "pipe"] });
-        p.once("error", reject);
-        p.once("spawn", () => resolve13(p));
-      });
-      break;
-    } catch (e) {
-      if (e.code !== "ENOENT") throw e;
-    }
-  }
-  if (!proc) throw new Error(NO_FFMPEG);
-  let stderr = "";
-  proc.stderr.on("data", (d) => {
-    stderr += String(d);
-  });
-  let buf = Buffer.alloc(0), index = from;
-  try {
-    for await (const chunk2 of proc.stdout) {
-      buf = buf.length ? Buffer.concat([buf, chunk2]) : chunk2;
-      while (buf.length >= size2 && (o.fps ? index - from < count : index <= to)) {
-        yield { index: o.fps ? index - from : index, time: o.fps ? info.times[from] + (index - from) / o.fps : info.times[index], data: new Uint8Array(buf.subarray(0, size2)) };
-        buf = buf.subarray(size2);
-        index++;
-      }
-    }
-  } finally {
-    if (proc.exitCode === null) proc.kill();
-  }
-  if (!o.fps && index <= to && stderr.trim()) throw new Error(`ffmpeg stopped at frame ${index} of ${info.file}: ${stderr.trim().slice(0, 300)}`);
-}
-function meanDiff(a, b) {
-  let s = 0;
-  for (let i = 0; i < a.length; i++) s += Math.abs(a[i] - b[i]);
-  return s / a.length;
-}
-function cadenceOf(diffs, fps, still = 0.6, moving = 1.5) {
-  const repeats = [];
-  for (let i = 1; i < diffs.length; i++) {
-    if (diffs[i] >= still) continue;
-    const before = i >= 2 ? diffs[i - 1] : Infinity, after = i + 1 < diffs.length ? diffs[i + 1] : Infinity;
-    if (Math.min(before, after) > moving) repeats.push(i);
-  }
-  let period = null;
-  if (repeats.length >= 3) {
-    const gaps = [];
-    for (let i = 1; i < repeats.length; i++) gaps.push(repeats[i] - repeats[i - 1]);
-    const counts = /* @__PURE__ */ new Map();
-    for (const g of gaps) counts.set(g, (counts.get(g) ?? 0) + 1);
-    const [best, n] = [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
-    if (best >= 2 && n >= 0.6 * gaps.length) period = best;
-  }
-  const originalFps = period ? Math.round(fps * (period - 1) / period * 1e3) / 1e3 : null;
-  return {
-    repeats,
-    period,
-    originalFps,
-    reading: period ? `Every ${period}th frame repeats the one before while things move: likely made at ${originalFps} fps inside ${Math.round(fps * 1e3) / 1e3} fps. Moves are measured on the unique frames at their own times.` : repeats.length ? `${repeats.length} frames repeat the one before, with no steady pattern; they are left out of the fits.` : "No repeated frames while things move."
-  };
-}
-
-// src/video/run-track.ts
-import { promises as fs18 } from "node:fs";
-import path19 from "node:path";
-
-// src/video/ink.ts
-function luma3(r, g, b) {
-  return 0.299 * r + 0.587 * g + 0.114 * b;
-}
-function hsv(r, g, b) {
-  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
-  let h = 0;
-  if (d > 0) h = mx === r ? (g - b) / d % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
-  h *= 60;
-  if (h < 0) h += 360;
-  return [h, mx > 0 ? d / mx : 0, mx / 255];
-}
-function isInk(m, r, g, b, emptyPx) {
-  if (m.luma) {
-    const l = luma3(r, g, b);
-    if (l < m.luma[0] || l > m.luma[1]) return false;
-  }
-  if (m.minChannel) {
-    const c = Math.min(r, g, b);
-    if (c < m.minChannel[0] || c > m.minChannel[1]) return false;
-  }
-  if (m.hue) {
-    const [h, s, v] = hsv(r, g, b);
-    if (s < (m.minSat ?? 0.2) || v < (m.minVal ?? 0.15)) return false;
-    const [a, z2] = m.hue;
-    if (a <= z2 ? h < a || h > z2 : h < a && h > z2) return false;
-  }
-  if (m.rgb) {
-    const t = m.tol ?? 8;
-    if (Math.abs(r - m.rgb[0]) > t || Math.abs(g - m.rgb[1]) > t || Math.abs(b - m.rgb[2]) > t) return false;
-  }
-  if (m.empty !== void 0) {
-    if (!emptyPx) return false;
-    const t = m.tol ?? 30;
-    if (Math.max(Math.abs(r - emptyPx[0]), Math.abs(g - emptyPx[1]), Math.abs(b - emptyPx[2])) <= t) return false;
-  }
-  return true;
-}
-function inkOf(rgb, w, h, m, o) {
-  const rows = new Uint32Array(h), cols = new Uint32Array(w), minCount = o.minCount ?? 1;
-  let count = 0, sx = 0, sy = 0, lum = 0;
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-    const i = (y * w + x) * 3, r = rgb[i], g = rgb[i + 1], b = rgb[i + 2];
-    lum += luma3(r, g, b);
-    if (isInk(m, r, g, b, o.empty ? [o.empty[i], o.empty[i + 1], o.empty[i + 2]] : void 0)) {
-      rows[y]++;
-      cols[x]++;
-      count++;
-      sx += x;
-      sy += y;
-    }
-  }
-  let x0 = -1, x1 = -1, y0 = -1, y1 = -1;
-  for (let x = 0; x < w; x++) if (cols[x] >= minCount) {
-    if (x0 < 0) x0 = x;
-    x1 = x;
-  }
-  for (let y = 0; y < h; y++) if (rows[y] >= minCount) {
-    if (y0 < 0) y0 = y;
-    y1 = y;
-  }
-  const src = (v, off) => off + v / o.k;
-  if (!count || x0 < 0 || y0 < 0) return { count: 0, x0: NaN, y0: NaN, x1: NaN, y1: NaN, cx: NaN, cy: NaN, level: lum / (w * h) };
-  return { count: count / (o.k * o.k), x0: src(x0, o.ox), x1: src(x1 + 1, o.ox), y0: src(y0, o.oy), y1: src(y1 + 1, o.oy), cx: src(sx / count + 0.5, o.ox), cy: src(sy / count + 0.5, o.oy), level: lum / (w * h) };
-}
-var INK_CURVES = ["centroid", "x0", "x1", "y0", "y1", "width", "height", "size", "level"];
-function inkValue(f, c) {
-  if (c === "level") return [f.level];
-  if (!f.count) return null;
-  switch (c) {
-    case "centroid":
-      return [f.cx, f.cy];
-    case "x0":
-      return [f.x0];
-    case "x1":
-      return [f.x1];
-    case "y0":
-      return [f.y0];
-    case "y1":
-      return [f.y1];
-    case "width":
-      return [f.x1 - f.x0];
-    case "height":
-      return [f.y1 - f.y0];
-    case "size":
-      return [Math.sqrt(f.count)];
-  }
-  return null;
-}
-function inkLike(c) {
-  if (c === "centroid") return { like: "position", unit: "px" };
-  if (c === "x0" || c === "x1") return { like: "position", axis: 0, unit: "px" };
-  if (c === "y0" || c === "y1") return { like: "position", axis: 1, unit: "px" };
-  if (c === "level") return { like: "opacity", unit: "luma" };
-  return { like: "scale", unit: "px" };
-}
-function witnessRuns(counts, pixels, breaks = /* @__PURE__ */ new Set()) {
-  const med = [...counts].sort((a, b) => a - b)[Math.floor(counts.length / 2)] ?? 0;
-  const threshold = Math.max(3, Math.ceil(5e-4 * pixels), 3 * med + 2);
-  const runs = [];
-  let cur = null;
-  for (let i = 1; i < counts.length; i++) {
-    if (breaks.has(i)) {
-      if (cur) runs.push(cur);
-      cur = null;
-      continue;
-    }
-    if (counts[i] < threshold) continue;
-    if (cur && i - cur.to <= 3) cur.to = i;
-    else {
-      if (cur) runs.push(cur);
-      cur = { from: i - 1, to: i };
-    }
-  }
-  if (cur) runs.push(cur);
-  return { runs: runs.filter((r) => r.to - r.from >= 2), threshold, ground: med / Math.max(1, pixels) > 0.05 ? "moving" : "still" };
-}
-
-// src/video/shots.ts
-var SHOT_RULES = { cutMin: 12, ratio: 4, heldRatio: 3, around: 12, softMin: 10, softRatio: 8, softEvery: 4, swapMin: 10, swapBack: 0.35, flashShare: 0.7, sameScore: 0.85, sameResidual: 0.35 };
-function registerShift(a, b, w, h, o = {}) {
-  const maxDx = o.maxDx ?? Math.floor(w / 2), maxDy = o.maxDy ?? Math.floor(h / 2), minOverlap = o.minOverlap ?? 0.25;
-  let best = null;
-  const x0s = o.near ? o.near.dx - o.near.r : -maxDx, x1s = o.near ? o.near.dx + o.near.r : maxDx;
-  const y0s = o.near ? o.near.dy - o.near.r : -maxDy, y1s = o.near ? o.near.dy + o.near.r : maxDy;
-  for (let dy = y0s; dy <= y1s; dy++) for (let dx = x0s; dx <= x1s; dx++) {
-    const xa = Math.max(0, dx), xb = Math.min(w, w + dx), ya = Math.max(0, dy), yb = Math.min(h, h + dy);
-    const n = (xb - xa) * (yb - ya);
-    if (n <= 0 || n < minOverlap * w * h) continue;
-    let sa = 0, sb = 0, saa = 0, sbb = 0, sab = 0;
-    for (let y = ya; y < yb; y++) {
-      const rb = y * w, ra = (y - dy) * w;
-      for (let x = xa; x < xb; x++) {
-        const p = a[ra + x - dx], q = b[rb + x];
-        sa += p;
-        sb += q;
-        saa += p * p;
-        sbb += q * q;
-        sab += p * q;
-      }
-    }
-    const va = saa - sa * sa / n, vb = sbb - sb * sb / n, cov = sab - sa * sb / n;
-    const score = va > 1e-6 && vb > 1e-6 ? cov / Math.sqrt(va * vb) : 0;
-    if (!best || score > best.score) best = { dx, dy, score, overlap: n / (w * h), residual: 0 };
-  }
-  if (best) {
-    const { dx, dy } = best, xa = Math.max(0, dx), xb = Math.min(w, w + dx), ya = Math.max(0, dy), yb = Math.min(h, h + dy);
-    let r = 0, z2 = 0;
-    for (let y = ya; y < yb; y++) for (let x = xa; x < xb; x++) {
-      const q = b[y * w + x];
-      r += Math.abs(q - a[(y - dy) * w + x - dx]);
-      z2 += Math.abs(q - a[y * w + x]);
-    }
-    best.residual = z2 > 0 ? r / z2 : 0;
-  }
-  return best;
-}
-var median5 = (a) => {
-  if (!a.length) return 0;
-  const s = [...a].sort((x, y) => x - y);
-  return s[Math.floor(s.length / 2)];
-};
-function shotList(stats, rules = SHOT_RULES, register2) {
-  const n = stats.length, ch = stats.map((s) => s.change), out = { cuts: [], swaps: [], notCuts: [], shots: [] };
-  const swapAt = /* @__PURE__ */ new Set();
-  for (let i = 1; i + 1 < n; i++) {
-    const a = stats[i], b = stats[i + 1];
-    if (a.change >= rules.swapMin && b.change >= rules.swapMin && b.back < rules.swapBack * Math.min(a.change, b.change)) {
-      swapAt.add(i);
-      out.swaps.push({ frame: a.index, time: a.time, change: Math.round(a.change * 10) / 10, region: null });
-      continue;
-    }
-    for (let r = 0; r < a.regions.length; r++) {
-      const ra = a.regions[r], rb = b.regions[r];
-      const loc = median5(stats.slice(Math.max(1, i - rules.around), Math.min(n, i + rules.around + 1)).map((s) => s.regions[r]));
-      if (ra >= Math.max(rules.swapMin * 2, 4 * loc) && rb >= Math.max(rules.swapMin * 2, 4 * loc) && b.regionsBack[r] < rules.swapBack * Math.min(ra, rb)) {
-        swapAt.add(i);
-        out.swaps.push({ frame: a.index, time: a.time, change: Math.round(ra * 10) / 10, region: r });
-        break;
-      }
-    }
-  }
-  const cand = [];
-  for (let i = 1; i < n; i++) {
-    if (swapAt.has(i) || swapAt.has(i - 1)) continue;
-    const nb = [...ch.slice(Math.max(1, i - rules.around), i), ...ch.slice(i + 1, Math.min(n, i + rules.around + 1))];
-    const med = median5(nb), held = nb.filter((x) => x < 1).length > 0.6 * nb.length;
-    const hard = ch[i] >= rules.cutMin && ch[i] >= (held ? rules.heldRatio : rules.ratio) * Math.max(med, 0.5);
-    const soft = !hard && ch[i] >= rules.softMin && ch[i] >= rules.softRatio * Math.max(med, 0.5) && ch[i] >= rules.softEvery * Math.max(ch[i - 1], i + 1 < n ? ch[i + 1] : 0);
-    if (!hard && !soft) continue;
-    if (stats[i].shiftShare >= rules.flashShare) {
-      out.notCuts.push({ frame: stats[i].index, time: stats[i].time, kind: "flash", change: Math.round(ch[i] * 10) / 10 });
-      continue;
-    }
-    const reg = register2 ? register2(i) : null;
-    cand.push({ i, reg, soft, same: !!reg && reg.score >= rules.sameScore && reg.residual <= rules.sameResidual });
-  }
-  const r1 = (x) => Math.round(x * 10) / 10;
-  const aside = (c, kind) => out.notCuts.push({
-    frame: stats[c.i].index,
-    time: stats[c.i].time,
-    kind,
-    change: r1(ch[c.i]),
-    ...c.reg ? { shift: { dx: c.reg.dx, dy: c.reg.dy, score: Math.round(c.reg.score * 1e3) / 1e3 } } : {}
-  });
-  for (let k = 0; k < cand.length; ) {
-    let e = k;
-    while (e + 1 < cand.length && stats[cand[e + 1].i].index - stats[cand[e].i].index <= 3) e++;
-    const run = cand.slice(k, e + 1), top = run.reduce((a, b) => ch[b.i] > ch[a.i] ? b : a);
-    if (top.same) for (const c of run) aside(c, c.reg && Math.hypot(c.reg.dx, c.reg.dy) >= 1 ? "pan" : "motion");
-    else {
-      const cut = run.find((c) => !c.same) ?? top;
-      out.cuts.push({ frame: stats[cut.i].index, time: stats[cut.i].time, change: r1(ch[cut.i]), ...cut.soft ? { soft: true } : {} });
-      for (const c of run) if (c !== cut) aside(c, c.same && c.reg && Math.hypot(c.reg.dx, c.reg.dy) >= 1 ? "pan" : "motion");
-    }
-    k = e + 1;
-  }
-  out.notCuts.sort((a, b) => a.frame - b.frame);
-  let from = stats[0]?.index ?? 0, start = stats[0]?.time ?? 0;
-  for (const c of out.cuts) {
-    const k = stats.findIndex((s) => s.index === c.frame);
-    out.shots.push({ from, to: c.frame - 1, start, end: stats[k - 1]?.time ?? c.time });
-    from = c.frame;
-    start = c.time;
-  }
-  if (n) out.shots.push({ from, to: stats[n - 1].index, start, end: stats[n - 1].time });
-  return out;
-}
-function frameStats(index, time3, a, b, c, w, h) {
-  const grid = 4, regions = Array(grid * grid).fill(0), regionsBack = Array(grid * grid).fill(0), counts = Array(grid * grid).fill(0);
-  let change = 0, back = 0, mean = 0;
-  if (b) for (let i = 0; i < c.length; i++) mean += c[i] - b[i];
-  mean = b ? mean / c.length : 0;
-  let resid = 0;
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-    const i = y * w + x, r = Math.min(grid - 1, Math.floor(y * grid / h)) * grid + Math.min(grid - 1, Math.floor(x * grid / w));
-    const d = b ? Math.abs(c[i] - b[i]) : 0, e = a ? Math.abs(c[i] - a[i]) : 0;
-    change += d;
-    back += e;
-    regions[r] += d;
-    regionsBack[r] += e;
-    counts[r]++;
-    if (b) resid += Math.abs(c[i] - b[i] - mean);
-  }
-  const N = w * h;
-  return {
-    index,
-    time: time3,
-    change: change / N,
-    back: a ? back / N : Infinity,
-    regions: regions.map((v, r) => v / counts[r]),
-    regionsBack: regionsBack.map((v, r) => a ? v / counts[r] : Infinity),
-    shiftShare: change > 0 ? Math.max(0, 1 - resid / change) : 0
-  };
-}
-
-// src/video/track.ts
-function fft(re, im, inv = false) {
-  const n = re.length;
-  for (let i = 1, j = 0; i < n; i++) {
-    let bit = n >> 1;
-    for (; j & bit; bit >>= 1) j ^= bit;
-    j ^= bit;
-    if (i < j) {
-      [re[i], re[j]] = [re[j], re[i]];
-      [im[i], im[j]] = [im[j], im[i]];
-    }
-  }
-  for (let len = 2; len <= n; len <<= 1) {
-    const ang = (inv ? 2 : -2) * Math.PI / len, wr = Math.cos(ang), wi = Math.sin(ang);
-    for (let i = 0; i < n; i += len) {
-      let cr = 1, ci = 0;
-      for (let k = 0; k < len / 2; k++) {
-        const a = i + k, b = a + len / 2, xr = re[b] * cr - im[b] * ci, xi = re[b] * ci + im[b] * cr;
-        re[b] = re[a] - xr;
-        im[b] = im[a] - xi;
-        re[a] += xr;
-        im[a] += xi;
-        const t = cr * wr - ci * wi;
-        ci = cr * wi + ci * wr;
-        cr = t;
-      }
-    }
-  }
-  if (inv) for (let i = 0; i < n; i++) {
-    re[i] /= n;
-    im[i] /= n;
-  }
-}
-var pow2 = (n) => {
-  let p = 1;
-  while (p < n) p <<= 1;
-  return p;
-};
-function fft2(img, w, h, P, Q) {
-  const re = new Float64Array(P * Q), im = new Float64Array(P * Q);
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) re[y * P + x] = img[y * w + x];
-  const rr = new Float64Array(P), ri = new Float64Array(P);
-  for (let y = 0; y < Q; y++) {
-    rr.set(re.subarray(y * P, y * P + P));
-    ri.set(im.subarray(y * P, y * P + P));
-    fft(rr, ri);
-    re.set(rr, y * P);
-    im.set(ri, y * P);
-  }
-  const cr = new Float64Array(Q), ci = new Float64Array(Q);
-  for (let x = 0; x < P; x++) {
-    for (let y = 0; y < Q; y++) {
-      cr[y] = re[y * P + x];
-      ci[y] = im[y * P + x];
-    }
-    fft(cr, ci);
-    for (let y = 0; y < Q; y++) {
-      re[y * P + x] = cr[y];
-      im[y * P + x] = ci[y];
-    }
-  }
-  return { re, im };
-}
-function ifft2(re, im, P, Q) {
-  const cr = new Float64Array(Q), ci = new Float64Array(Q);
-  for (let x = 0; x < P; x++) {
-    for (let y = 0; y < Q; y++) {
-      cr[y] = re[y * P + x];
-      ci[y] = im[y * P + x];
-    }
-    fft(cr, ci, true);
-    for (let y = 0; y < Q; y++) {
-      re[y * P + x] = cr[y];
-      im[y * P + x] = ci[y];
-    }
-  }
-  const rr = new Float64Array(P), ri = new Float64Array(P);
-  for (let y = 0; y < Q; y++) {
-    rr.set(re.subarray(y * P, y * P + P));
-    ri.set(im.subarray(y * P, y * P + P));
-    fft(rr, ri, true);
-    re.set(rr, y * P);
-  }
-  return re;
-}
-function resize(src, w, h, nw, nh) {
-  const out = new Float64Array(nw * nh);
-  for (let y = 0; y < nh; y++) for (let x = 0; x < nw; x++) {
-    const sx = Math.min(w - 1, Math.max(0, (x + 0.5) * w / nw - 0.5)), sy = Math.min(h - 1, Math.max(0, (y + 0.5) * h / nh - 0.5));
-    const x0 = Math.floor(sx), y0 = Math.floor(sy), x1 = Math.min(w - 1, x0 + 1), y1 = Math.min(h - 1, y0 + 1), fx = sx - x0, fy = sy - y0;
-    out[y * nw + x] = src[y0 * w + x0] * (1 - fx) * (1 - fy) + src[y0 * w + x1] * fx * (1 - fy) + src[y1 * w + x0] * (1 - fx) * fy + src[y1 * w + x1] * fx * fy;
-  }
-  return out;
-}
-function matchTemplate(f, fw, fh, t, tw, th, scales, near) {
-  const P = pow2(fw), Q = pow2(fh), F = fft2(f, fw, fh, P, Q);
-  const I = new Float64Array((fw + 1) * (fh + 1)), I2 = new Float64Array((fw + 1) * (fh + 1));
-  for (let y = 0; y < fh; y++) {
-    let s = 0, s2 = 0;
-    for (let x = 0; x < fw; x++) {
-      const v = f[y * fw + x];
-      s += v;
-      s2 += v * v;
-      I[(y + 1) * (fw + 1) + x + 1] = I[y * (fw + 1) + x + 1] + s;
-      I2[(y + 1) * (fw + 1) + x + 1] = I2[y * (fw + 1) + x + 1] + s2;
-    }
-  }
-  const box2 = (A, x, y, w, h) => A[(y + h) * (fw + 1) + x + w] - A[y * (fw + 1) + x + w] - A[(y + h) * (fw + 1) + x] + A[y * (fw + 1) + x];
-  let best = null;
-  for (const sc of scales) {
-    const w = Math.max(4, Math.round(tw * sc)), h = Math.max(4, Math.round(th * sc));
-    if (w >= fw || h >= fh) continue;
-    const ts = resize(t, tw, th, w, h);
-    let m = 0;
-    for (let i = 0; i < ts.length; i++) m += ts[i];
-    m /= ts.length;
-    let tv = 0;
-    for (let i = 0; i < ts.length; i++) {
-      ts[i] -= m;
-      tv += ts[i] * ts[i];
-    }
-    if (tv < 1e-6) continue;
-    const T = fft2(ts, w, h, P, Q);
-    const re = new Float64Array(P * Q), im = new Float64Array(P * Q);
-    for (let i = 0; i < P * Q; i++) {
-      re[i] = F.re[i] * T.re[i] + F.im[i] * T.im[i];
-      im[i] = F.im[i] * T.re[i] - F.re[i] * T.im[i];
-    }
-    const c = ifft2(re, im, P, Q), n = w * h;
-    const x0 = near ? Math.max(0, Math.floor(near.x - near.r - w / 2)) : 0, x1 = near ? Math.min(fw - w, Math.ceil(near.x + near.r - w / 2)) : fw - w;
-    const y0 = near ? Math.max(0, Math.floor(near.y - near.r - h / 2)) : 0, y1 = near ? Math.min(fh - h, Math.ceil(near.y + near.r - h / 2)) : fh - h;
-    const score = (x, y) => {
-      const s = box2(I, x, y, w, h), s2 = box2(I2, x, y, w, h), v = s2 - s * s / n;
-      return v > 1e-6 ? c[y * P + x] / Math.sqrt(v * tv) : -1;
-    };
-    let bx = -1, by = -1, bs = -2;
-    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
-      const s = score(x, y);
-      if (s > bs) {
-        bs = s;
-        bx = x;
-        by = y;
-      }
-    }
-    if (bx < 0 || best && bs <= best.ncc) continue;
-    const para = (a, b, cc) => {
-      const den = a - 2 * b + cc;
-      return Math.abs(den) > 1e-9 ? Math.max(-0.5, Math.min(0.5, 0.5 * (a - cc) / den)) : 0;
-    };
-    const dx = bx > 0 && bx < fw - w ? para(score(bx - 1, by), bs, score(bx + 1, by)) : 0, dy = by > 0 && by < fh - h ? para(score(bx, by - 1), bs, score(bx, by + 1)) : 0;
-    const slope = c[by * P + bx] / tv;
-    best = { x: bx + dx + w / 2, y: by + dy + h / 2, scale: sc, ncc: bs, opacity: Math.max(0, Math.min(1.5, slope)) };
-  }
-  return best;
-}
-function scaleSet(lo, hi, n) {
-  if (n <= 1 || hi <= lo) return [lo];
-  return Array.from({ length: n }, (_, i) => lo * Math.pow(hi / lo, i / (n - 1)));
-}
-function refineScale(f, fw, fh, t, tw, th, m, k = 1.02) {
-  const lo = matchTemplate(f, fw, fh, t, tw, th, [m.scale / k], { x: m.x, y: m.y, r: 3 }), hi = matchTemplate(f, fw, fh, t, tw, th, [m.scale * k], { x: m.x, y: m.y, r: 3 });
-  if (!lo || !hi) return m;
-  const a = lo.ncc, b = m.ncc, c = hi.ncc, den = a - 2 * b + c;
-  const off = Math.abs(den) > 1e-9 ? Math.max(-1, Math.min(1, 0.5 * (a - c) / den)) : 0;
-  return { ...m, scale: m.scale * Math.pow(k, off) };
-}
-
-// src/video/run-track.ts
-var NOT_MEASURED = ["rotation", "skew and perspective", "motion blur and its shutter", "colour and tint change", "depth (3D)", "anything outside the region's own picture (shadows, reflections)"];
-function regionPx(r, w, h) {
-  const a = Array.isArray(r) ? r.map(Number) : r && typeof r === "object" ? ["x", "y", "w", "h"].map((k) => Number(r[k])) : null;
-  if (!a || a.length !== 4 || a.some((v) => !Number.isFinite(v)) || a[2] <= 0 || a[3] <= 0) return null;
-  const share = a.every((v) => v <= 1);
-  return share ? [a[0] * w, a[1] * h, a[2] * w, a[3] * h] : a;
-}
-function frameAt(info, t) {
-  let lo = 0, hi = info.frames - 1;
-  while (lo < hi) {
-    const m = lo + hi + 1 >> 1;
-    if (info.times[m] <= t + 1e-6) lo = m;
-    else hi = m - 1;
-  }
-  return lo;
-}
-var r24 = (x) => Math.round(x * 100) / 100;
-function statusCount(moves) {
-  const n = (p) => moves.filter((m) => String(m.status).startsWith(p)).length;
-  return `${n("measured")} measured, ${n("uncertain")} uncertain, ${n("partial")} partial`;
-}
-async function runTrack(args, opts = {}) {
-  const tools = opts.tools ?? VIDEO_TOOLS, minNcc = opts.minNcc ?? 0.8;
-  if (typeof args.file !== "string" || !path19.isAbsolute(args.file)) return { ok: false, error: "`file` must be an absolute path to a video file" };
-  if (typeof args.outDir !== "string" || !path19.isAbsolute(args.outDir)) return { ok: false, error: "`outDir` must be an absolute folder path" };
-  const started = performance.now();
-  const info = await probeVideo(args.file, tools);
-  if (info === null) return { ok: false, error: NO_FFMPEG };
-  if ("error" in info) return { ok: false, error: info.error };
-  const reg = regionPx(args.region, info.width, info.height);
-  if (!reg) return { ok: false, error: "`region` must be [x, y, width, height] in pixels, or as shares of the frame (all 1 or under), round the thing in the reference frame" };
-  const atFps = typeof args.atFps === "number" && args.atFps > 0 ? args.atFps : 30;
-  const f0 = typeof args.start === "number" ? frameAt(info, args.start) : 0, f1 = typeof args.end === "number" ? frameAt(info, args.end) : info.frames - 1;
-  if (f1 <= f0) return { ok: false, error: "`end` must be after `start`" };
-  const refF = typeof args.ref === "number" ? frameAt(info, args.ref) : f1;
-  const k = Math.min(1, (opts.workLong ?? 480) / Math.max(info.width, info.height)), W = Math.max(8, Math.round(info.width * k)), H = Math.max(8, Math.round(info.height * k));
-  const sr = Array.isArray(args.scaleRange) && args.scaleRange.length === 2 ? args.scaleRange.map(Number) : [0.25, 2.5];
-  let ref = null;
-  for await (const fr of readFrames(info, { from: refF, to: refF, width: W, height: H, gray: true }, tools)) ref = Float64Array.from(fr.data);
-  if (!ref) return { ok: false, error: `could not read frame ${refF} of ${args.file}` };
-  const tx = Math.round(reg[0] * k), ty = Math.round(reg[1] * k), tw = Math.max(4, Math.round(reg[2] * k)), th = Math.max(4, Math.round(reg[3] * k));
-  const tmpl = new Float64Array(tw * th);
-  for (let y = 0; y < th; y++) for (let x = 0; x < tw; x++) tmpl[y * tw + x] = ref[Math.min(H - 1, ty + y) * W + Math.min(W - 1, tx + x)];
-  const rows = [];
-  let prev = null, last = null;
-  const smalls = [], shotStats = [];
-  for await (const fr of readFrames(info, { from: f0, to: f1, width: W, height: H, gray: true }, tools)) {
-    const img = Float64Array.from(fr.data), diff = last ? meanDiff(fr.data, last) : 0;
-    const small = Uint8Array.from(resize(img, W, H, 64, 36), (v) => Math.round(v));
-    shotStats.push(frameStats(fr.index, fr.time, smalls.length > 1 ? smalls[smalls.length - 2] : null, smalls.length ? smalls[smalls.length - 1] : null, small, 64, 36));
-    smalls.push(small);
-    let m = null;
-    if (prev) {
-      const r = Math.max(6, Math.round(0.08 * Math.max(W, H))), sw = Math.ceil(tw * prev.scale * 1.35), sh = Math.ceil(th * prev.scale * 1.35);
-      const cx0 = Math.max(0, Math.floor(prev.x - r - sw / 2)), cy0 = Math.max(0, Math.floor(prev.y - r - sh / 2));
-      const cw = Math.min(W - cx0, Math.ceil(2 * r + sw)), ch = Math.min(H - cy0, Math.ceil(2 * r + sh));
-      const crop = new Float64Array(cw * ch);
-      for (let y = 0; y < ch; y++) for (let x = 0; x < cw; x++) crop[y * cw + x] = img[(cy0 + y) * W + cx0 + x];
-      let centre = prev.scale, local = matchTemplate(crop, cw, ch, tmpl, tw, th, scaleSet(centre / 1.04, centre * 1.04, 9));
-      for (let k2 = 0; k2 < 6 && local && Math.abs(Math.log(local.scale / centre)) > Math.log(1.04) - 1e-6; k2++) {
-        centre = local.scale > centre ? centre * 1.07 : centre / 1.07;
-        const next = matchTemplate(crop, cw, ch, tmpl, tw, th, scaleSet(centre / 1.04, centre * 1.04, 9));
-        if (!next || next.ncc < local.ncc) break;
-        local = next;
-      }
-      if (local && local.ncc < 0.92) {
-        const wide = matchTemplate(crop, cw, ch, tmpl, tw, th, scaleSet(prev.scale / 1.3, prev.scale * 1.3, 15));
-        if (wide && wide.ncc > local.ncc) {
-          const fine = matchTemplate(crop, cw, ch, tmpl, tw, th, scaleSet(wide.scale / 1.03, wide.scale * 1.03, 7));
-          local = fine && fine.ncc >= wide.ncc ? fine : wide;
-        }
-      }
-      if (local) m = { ...local, x: local.x + cx0, y: local.y + cy0 };
-    }
-    if (!m || m.ncc < minNcc) {
-      let g = matchTemplate(img, W, H, tmpl, tw, th, scaleSet(sr[0], sr[1], 33));
-      if (g) {
-        const fine = matchTemplate(img, W, H, tmpl, tw, th, scaleSet(g.scale / 1.05, g.scale * 1.05, 11), { x: g.x, y: g.y, r: 4 });
-        if (fine && fine.ncc >= g.ncc) g = fine;
-      }
-      if (g && (!m || g.ncc > m.ncc)) m = g;
-    }
-    if (m && m.ncc >= minNcc) m = refineScale(img, W, H, tmpl, tw, th, m, 1.01);
-    let still;
-    if (!m || m.ncc < minNcc) {
-      let mean = 0;
-      for (let i = 0; i < tmpl.length; i++) mean += tmpl[i];
-      mean /= tmpl.length;
-      let cov = 0, tv = 0, wm = 0;
-      for (let y = 0; y < th; y++) for (let x = 0; x < tw; x++) wm += img[Math.min(H - 1, ty + y) * W + Math.min(W - 1, tx + x)];
-      wm /= tw * th;
-      for (let y = 0; y < th; y++) for (let x = 0; x < tw; x++) {
-        const t = tmpl[y * tw + x] - mean, v = img[Math.min(H - 1, ty + y) * W + Math.min(W - 1, tx + x)] - wm;
-        cov += t * v;
-        tv += t * t;
-      }
-      still = tv > 1e-6 ? Math.max(0, Math.min(1.5, cov / tv)) : 0;
-    }
-    rows.push({ index: fr.index, time: fr.time, m: m && m.ncc >= minNcc ? m : null, diff, still });
-    if (m && m.ncc >= minNcc) prev = m;
-    last = fr.data;
-  }
-  const decodeSeconds = (performance.now() - started) / 1e3;
-  const cad = cadenceOf(rows.map((r) => r.diff), 1 / (info.intervals.median || 1 / 30));
-  const rep = new Set(cad.repeats.map((i) => rows[i].index));
-  let lost = null;
-  for (let i = 1; i + 2 < rows.length; i++) if (rows[i - 1].m && !rows[i].m && !rows[i + 1].m && !rows[i + 2].m && (rows[i - 1].m.opacity ?? 1) > 0.35) {
-    lost = { frame: rows[i].index, time: rows[i].time, reading: `Lost the region at frame ${rows[i].index} (${rows[i].time.toFixed(3)} s): the match fell under ${minNcc} while it was still visible; nothing past it is measured.` };
-    break;
-  }
-  const shotsHere = shotList(shotStats, SHOT_RULES, (i) => i > 0 ? registerShift(smalls[i - 1], smalls[i], 64, 36) : null);
-  const cutAt = new Set(shotsHere.cuts.map((c) => c.frame));
-  const cutList = [...cutAt].sort((a, b) => a - b);
-  const segments = (s) => {
-    const out2 = [[]];
-    for (const x of s) {
-      if (out2[out2.length - 1].length && cutList.some((c) => c > out2[out2.length - 1][out2[out2.length - 1].length - 1].frame && c <= x.frame)) out2.push([]);
-      out2[out2.length - 1].push(x);
-    }
-    return out2.filter((x) => x.length >= 4);
-  };
-  const usable = rows.filter((r) => r.m && !rep.has(r.index) && (!lost || r.index < lost.frame));
-  const toSrc = (m) => ({ x: m.x / k, y: m.y / k, scale: m.scale * 100, opacity: m.opacity * 100 });
-  const channels = [
-    { name: "position", unit: "px", value: (m) => {
-      const s = toSrc(m);
-      return [s.x, s.y];
-    }, epsAbs: 0.25 / k },
-    { name: "scale", unit: "%", value: (m) => [toSrc(m).scale], epsAbs: 0.3 },
-    { name: "opacity", unit: "%", value: (m) => [toSrc(m).opacity], epsAbs: 1 }
-  ];
-  const at = (t) => Math.round(t * atFps * 100) / 100;
-  const out = {
-    ok: true,
-    file: args.file,
-    region: reg,
-    span: { from: f0, to: f1, start: info.times[f0], end: info.times[f1] },
-    ref: refF,
-    atFps,
-    video: { width: info.width, height: info.height, frames: info.frames, nominalFps: info.nominalFps, averageFps: Math.round(info.averageFps * 1e3) / 1e3, variableRate: info.variableRate, intervals: info.intervals },
-    cadence: { repeats: [...rep], period: cad.period, originalFps: cad.originalFps, reading: cad.reading },
-    cuts: cutList,
-    notCuts: shotsHere.notCuts.map((c) => ({ frame: c.frame, kind: c.kind, ...c.shift ? { shift: c.shift } : {} })),
-    lost,
-    notMeasured: NOT_MEASURED,
-    moves: []
-  };
-  const fps = cad.originalFps ?? 1 / (info.intervals.median || 1 / 30);
-  for (const ch of channels) {
-    const samples = ch.name === "opacity" ? rows.filter((r) => !rep.has(r.index) && (!lost || r.index < lost.frame) && (r.m || r.still !== void 0)).map((r) => ({ frame: r.index, time: r.time, value: r.m ? ch.value(r.m) : [r.still * 100] })) : usable.map((r) => ({ frame: r.index, time: r.time, value: ch.value(r.m) }));
-    if (samples.length < 4) continue;
-    const minMove = ch.name === "position" ? Math.max(2, 4e-3 * Math.max(info.width, info.height)) : 2;
-    for (const mv of segments(samples).flatMap((seg) => movesOfChannel(seg, { fps, atFps, minMove, epsAbs: ch.epsAbs, beginsAt: (f) => cutAt.has(f) ? "cut" : null, endsAt: (f) => cutAt.has(f + 1) }))) {
-      const n = usable.filter((r) => r.index >= mv.from.frame && r.index <= mv.to.frame).map((r) => r.m.ncc).sort((a, b) => a - b);
-      out.moves.push({
-        measure: "match",
-        channel: ch.name,
-        unit: ch.unit,
-        ...mv,
-        match: n.length ? { median: Math.round(n[Math.floor(n.length / 2)] * 1e3) / 1e3, min: Math.round(n[0] * 1e3) / 1e3 } : null
-      });
-    }
-  }
-  for (const mv of out.moves) if (mv.match && mv.match.median < 0.85 && !String(mv.status).startsWith("partial")) mv.status = `uncertain: the region matched weakly (median ${mv.match.median}); look at the frames before using it`;
-  const inPlace = new Set(rows.filter((r) => !r.m && r.still !== void 0).map((r) => r.index));
-  for (const mv of out.moves.filter((x) => x.channel === "opacity" && !String(x.status).startsWith("partial"))) {
-    const a0 = mv.duration.visible?.fromFrame ?? mv.from.frame, b0 = mv.duration.visible?.toFrame ?? mv.to.frame;
-    const placed = [...inPlace].some((f) => f >= a0 && f <= b0);
-    const moved = out.moves.some((x) => x.channel === "position" && x.covers.fromFrame <= b0 + 2 && x.to.frame >= a0);
-    if (placed && moved) mv.status = "uncertain: the opacity was read where the region rests while it was moving there; an entrance or exit reads as a fade";
-  }
-  const inkRows = [];
-  let inkBox = null;
-  if (args.ink && typeof args.ink === "object") {
-    const ink = args.ink, mask = ink.mask ?? {};
-    const raw = regionPx(ink.box ?? args.region, info.width, info.height);
-    if (!raw) return { ok: false, error: "`ink.box` must be [x, y, width, height] in pixels or shares of the frame" };
-    const bx = Math.max(0, Math.floor(raw[0])), by = Math.max(0, Math.floor(raw[1]));
-    const bw = Math.max(2, Math.min(info.width - bx, Math.round(raw[2]))), bh = Math.max(2, Math.min(info.height - by, Math.round(raw[3])));
-    inkBox = [bx, by, bw, bh];
-    const kb = Math.min(1, 720 / Math.max(bw, bh)), ow = Math.max(2, Math.round(bw * kb)), oh = Math.max(2, Math.round(bh * kb));
-    let empty;
-    if (typeof mask.empty === "number") {
-      const ef = frameAt(info, mask.empty);
-      for await (const fr of readFrames(info, { from: ef, to: ef, crop: inkBox, width: ow, height: oh }, tools)) empty = Uint8Array.from(fr.data);
-      if (!empty) return { ok: false, error: `could not read the empty frame at ${mask.empty} s` };
-    }
-    for await (const fr of readFrames(info, { from: f0, to: f1, crop: inkBox, width: ow, height: oh }, tools))
-      inkRows.push({ index: fr.index, time: fr.time, f: inkOf(fr.data, ow, oh, mask, { k: kb, ox: bx, oy: by, minCount: typeof ink.minCount === "number" ? ink.minCount : 1, empty }) });
-    const minPixels = typeof ink.minPixels === "number" ? ink.minPixels : 4;
-    for (const r of inkRows) if (r.f.count < minPixels) r.f = { ...r.f, count: 0 };
-    const emptyAt = new Set(inkRows.filter((r) => r.f.count === 0).map((r) => r.index));
-    const byIndex = new Map(inkRows.map((r) => [r.index, r.f]));
-    const atEdge = (f) => f.x0 <= bx + 1 || f.y0 <= by + 1 || f.x1 >= bx + bw - 1 || f.y1 >= by + bh - 1;
-    const appearsAt = (frame) => emptyAt.has(frame - 1) && !!byIndex.get(frame)?.count && !atEdge(byIndex.get(frame));
-    const curves = (Array.isArray(ink.curves) && ink.curves.length ? ink.curves : ["centroid", "size", "level"]).filter((c) => INK_CURVES.includes(c));
-    for (const c of curves) {
-      const like = inkLike(c);
-      const samples = inkRows.filter((r) => !rep.has(r.index)).map((r) => ({ frame: r.index, time: r.time, value: inkValue(r.f, c) })).filter((s) => s.value !== null);
-      const minMove = c === "level" ? 3 : like.like === "position" ? Math.max(2, 4e-3 * Math.max(info.width, info.height)) : 2;
-      for (const mv of segments(samples).flatMap((seg) => movesOfChannel(seg, { fps, atFps, minMove, epsAbs: c === "level" ? 0.5 : c === "centroid" || c === "size" ? 0.3 : 1 / kb, beginsAt: (f) => cutAt.has(f) ? "cut" : appearsAt(f) ? "appears" : null, endsAt: (f) => cutAt.has(f + 1) })))
-        out.moves.push({
-          measure: "ink",
-          channel: `ink.${c}`,
-          like: like.like,
-          ...like.axis !== void 0 ? { axis: like.axis } : {},
-          unit: like.unit,
-          ...mv,
-          ...like.like === "scale" ? { asScale: { from: Math.round(mv.start[0] / mv.end[0] * 1e4) / 100, to: 100, as: "% of its settled size" } } : {}
-        });
-    }
-    out.ink = { box: inkBox, mask, curves, frames: inkRows.length, empty: emptyAt.size, reading: "The ink measure: a mask in a fixed box; its box, centroid, area and the box's mean level per frame. A moving ground defeats the difference from an empty frame." };
-  }
-  const visibleOf = (m) => m.duration?.visible?.seconds ?? null;
-  for (const m of out.moves.filter((x) => x.measure === "match")) {
-    const peers = out.moves.filter((x) => x.measure === "ink" && x.like === m.channel && x.from.time <= m.to.time + 0.1 && x.to.time >= m.from.time - 0.1);
-    if (!peers.length) continue;
-    const matchSure = String(m.status).startsWith("measured") && !(m.match && m.match.median < 0.85);
-    const verdicts = peers.map((p) => {
-      const dv = visibleOf(m) !== null && visibleOf(p) !== null ? Math.abs(visibleOf(m) - visibleOf(p)) * atFps : null;
-      let share = null;
-      if (m.channel === "position" && m.distance !== null && p.distance !== null) {
-        const md = p.axis !== void 0 ? Math.abs(m.end[p.axis] - m.start[p.axis]) : m.distance;
-        share = Math.abs(md - p.distance) / Math.max(1e-6, p.distance);
-      }
-      if (m.channel === "scale" && m.distance !== null && p.distance !== null) {
-        const mr = m.start[0] / m.end[0], pr = p.start[0] / p.end[0];
-        share = Math.abs(mr - pr) / Math.max(1e-6, pr);
-      }
-      const within = (dv === null || dv <= 2) && (share === null || share <= 0.05) && (dv !== null || share !== null);
-      return { with: p.channel, durationFrames: dv === null ? null : Math.round(dv * 100) / 100, distanceShare: share === null ? null : Math.round(share * 1e3) / 1e3, within };
-    });
-    const agree = verdicts.find((v) => v.within);
-    m.agreement = agree ?? verdicts[0];
-    for (const p of peers) p.agreement = { with: "match", within: !!agree, ...matchSure ? {} : { matchWeak: true } };
-    if (agree) {
-      if (String(m.status).startsWith("uncertain: the region matched weakly")) m.status = `measured: the match was weak but the ink measure (${agree.with}) agrees`;
-      else if (m.status === "measured") m.status = `measured: match and ink (${agree.with}) agree`;
-    } else if (!String(m.status).startsWith("partial")) {
-      const v = verdicts[0];
-      m.status = `uncertain: match and ink disagree (${v.with}: duration ${v.durationFrames ?? "?"} frames apart, distance ${v.distanceShare === null ? "?" : Math.round(v.distanceShare * 100) + " %"} apart); both are reported`;
-      if (matchSure) {
-        for (const p of peers) if (!String(p.status).startsWith("partial")) p.status = "uncertain: the ink and the match disagree; both are reported";
-      }
-    }
-  }
-  if (args.stage) {
-    const st = args.stage === true ? {} : args.stage, band = Array.isArray(st.band) && st.band.length === 2 ? st.band.map(Number) : [0, 1];
-    const by0 = Math.max(0, Math.round(band[0] * info.height)), bh = Math.max(8, Math.min(info.height - by0, Math.round((band[1] - band[0]) * info.height)));
-    const FW = Math.min(256, info.width), kf = FW / info.width, FH = Math.max(8, Math.round(bh * kf)), CW = Math.max(8, Math.round(FW / 4)), CH2 = Math.max(4, Math.round(FH / 4));
-    const pos = [], gaps = [];
-    let prevF = null, prevC = null, x = 0, y = 0, seg = 0;
-    const ok = (g) => !!g && g.score >= SHOT_RULES.sameScore;
-    for await (const fr of readFrames(info, { from: f0, to: f1, crop: [0, by0, info.width, bh], width: FW, height: FH, gray: true }, tools)) {
-      const cur = Uint8Array.from(fr.data), curC = Uint8Array.from(resize(Float64Array.from(cur), FW, FH, CW, CH2), (v) => Math.round(v));
-      if (prevF && prevC) {
-        if (cutAt.has(fr.index)) {
-          seg++;
-          x = 0;
-          y = 0;
-        } else if (meanDiff(cur, prevF) >= 0.5) {
-          const coarse = registerShift(prevC, curC, CW, CH2), fine = coarse ? registerShift(prevF, cur, FW, FH, { near: { dx: coarse.dx * 4, dy: coarse.dy * 4, r: 6 } }) : null;
-          if (!ok(fine)) {
-            gaps.push({ frame: fr.index, time: fr.time, score: fine ? Math.round(fine.score * 1e3) / 1e3 : 0 });
-            seg++;
-            x = 0;
-            y = 0;
-          } else {
-            const at2 = (dx, dy) => registerShift(prevF, cur, FW, FH, { near: { dx, dy, r: 0 }, minOverlap: 0 })?.score ?? 0;
-            const peak = (m, c, p) => {
-              const d = m - 2 * c + p;
-              return d < 0 ? Math.max(-0.5, Math.min(0.5, 0.5 * (m - p) / d)) : 0;
-            };
-            const g = fine, sx = g.dx + peak(at2(g.dx - 1, g.dy), g.score, at2(g.dx + 1, g.dy)), sy = g.dy + peak(at2(g.dx, g.dy - 1), g.score, at2(g.dx, g.dy + 1));
-            x += sx / kf;
-            y += sy / kf;
-          }
-        }
-      }
-      if (!rep.has(fr.index)) pos.push({ frame: fr.index, time: fr.time, x, y, seg });
-      prevF = cur;
-      prevC = curC;
-    }
-    const segs = [...new Set(pos.map((p) => p.seg))];
-    for (const sg of segs) {
-      const samples = pos.filter((p) => p.seg === sg).map((p) => ({ frame: p.frame, time: p.time, value: [p.x, p.y] }));
-      for (const mv of movesOfChannel(samples, { fps, atFps, minMove: Math.max(2, 4e-3 * Math.max(info.width, info.height)), epsAbs: 0.5 / kf, beginsAt: (f) => cutAt.has(f) ? "cut" : null, endsAt: (f) => cutAt.has(f + 1) }))
-        out.moves.push({ measure: "stage", channel: "stage", like: "position", unit: "px", ...mv });
-    }
-    out.stage = {
-      band: [by0, by0 + bh],
-      gaps,
-      frames: pos.map((p) => ({ frame: p.frame, x: r24(p.x), y: r24(p.y), segment: p.seg })),
-      reading: `The stage's travel: each frame registered on the one before in rows ${by0} to ${by0 + bh}, the shifts added up; ${gaps.length ? `${gaps.length} frame${gaps.length === 1 ? "" : "s"} did not register (${gaps.map((g) => g.frame).join(", ")}): nothing is carried across ${gaps.length === 1 ? "it" : "them"}` : "every frame registered"}.`
-    };
-  }
-  {
-    let x0 = reg[0], y0 = reg[1], x1 = reg[0] + reg[2], y1 = reg[1] + reg[3];
-    for (const r of usable) {
-      const s = toSrc(r.m), hw = reg[2] * r.m.scale / 2, hh = reg[3] * r.m.scale / 2;
-      x0 = Math.min(x0, s.x - hw);
-      x1 = Math.max(x1, s.x + hw);
-      y0 = Math.min(y0, s.y - hh);
-      y1 = Math.max(y1, s.y + hh);
-    }
-    if (inkBox) {
-      x0 = Math.min(x0, inkBox[0]);
-      y0 = Math.min(y0, inkBox[1]);
-      x1 = Math.max(x1, inkBox[0] + inkBox[2]);
-      y1 = Math.max(y1, inkBox[1] + inkBox[3]);
-    }
-    x0 = Math.max(0, Math.floor(x0 - reg[2] / 2));
-    y0 = Math.max(0, Math.floor(y0 - reg[3] / 2));
-    x1 = Math.min(info.width, Math.ceil(x1 + reg[2] / 2));
-    y1 = Math.min(info.height, Math.ceil(y1 + reg[3] / 2));
-    const box2 = [x0, y0, Math.max(2, x1 - x0), Math.max(2, y1 - y0)], ww = Math.max(8, Math.round(box2[2] * k)), wh = Math.max(8, Math.round(box2[3] * k));
-    const counts = [], idx = [];
-    let prevW = null;
-    for await (const fr of readFrames(info, { from: f0, to: f1, crop: box2, width: ww, height: wh, gray: true }, tools)) {
-      let c = 0;
-      if (prevW) {
-        for (let i = 0; i < fr.data.length; i++) if (Math.abs(fr.data[i] - prevW[i]) > 10) c++;
-      }
-      counts.push(c);
-      idx.push(fr.index);
-      prevW = Uint8Array.from(fr.data);
-    }
-    const breaks = new Set(idx.map((f, i) => cutAt.has(f) ? i : -1).filter((i) => i >= 0));
-    const wr = witnessRuns(counts, ww * wh, breaks), runs = wr.runs.map((r) => ({ from: idx[r.from], to: idx[r.to], at: { from: at(info.times[idx[r.from]]), to: at(info.times[idx[r.to]]) } }));
-    out.witness = {
-      box: box2,
-      threshold: wr.threshold,
-      ground: wr.ground,
-      runs,
-      reading: wr.ground === "moving" ? "The ground in the box moves: frame differencing cannot see the move past it." : `The box changes in ${runs.length} run${runs.length === 1 ? "" : "s"}.`
-    };
-    for (const m of out.moves) {
-      if (m.measure === "stage") continue;
-      const vA = m.duration?.visible?.fromFrame ?? m.from.frame, vB = m.duration?.visible?.toFrame ?? m.to.frame, cA = m.covers.fromFrame, cB = m.covers.toFrame;
-      const over = runs.filter((r) => r.from <= vB && r.to >= vA);
-      if (!over.length) {
-        m.witness = null;
-        continue;
-      }
-      const wa = Math.min(...over.map((r) => r.from)), wb = Math.max(...over.map((r) => r.to)), tol = 2;
-      const wsec = info.times[wb] - info.times[wa];
-      m.witness = { from: wa, to: wb, seconds: Math.round(wsec * 1e4) / 1e4, at: at(wsec), covers: { from: cA, to: cB } };
-      if ((wa < cA - tol || wb > cB + tol) && !String(m.status).startsWith("partial") && !String(m.status).startsWith("uncertain"))
-        m.status = `uncertain: the region changes from frame ${wa} to ${wb}; the track covers ${cA} to ${cB}`;
-    }
-  }
-  const nccAll = rows.filter((r) => r.m).map((r) => r.m.ncc).sort((a, b) => a - b);
-  out.match = { matchedFrames: nccAll.length, frames: rows.length, median: nccAll.length ? Math.round(nccAll[Math.floor(nccAll.length / 2)] * 1e3) / 1e3 : null, threshold: minNcc };
-  await fs18.mkdir(args.outDir, { recursive: true });
-  const jsonPath = path19.join(args.outDir, "track.json"), csvPath = path19.join(args.outDir, "track.csv");
-  const perFrame = rows.map((r) => ({ index: r.index, time: Math.round(r.time * 1e6) / 1e6, at: at(r.time), repeat: rep.has(r.index), ...r.m ? { ...Object.fromEntries(Object.entries(toSrc(r.m)).map(([a, v]) => [a, Math.round(v * 100) / 100])), ncc: Math.round(r.m.ncc * 1e3) / 1e3 } : { matched: false } }));
-  const inkFrames = inkRows.map((r) => ({ index: r.index, time: Math.round(r.time * 1e6) / 1e6, count: Math.round(r.f.count), ...r.f.count ? { x0: r24(r.f.x0), y0: r24(r.f.y0), x1: r24(r.f.x1), y1: r24(r.f.y1), cx: r24(r.f.cx), cy: r24(r.f.cy) } : {}, level: r24(r.f.level) }));
-  await fs18.writeFile(jsonPath, JSON.stringify({ ...out, frames: perFrame, ...inkRows.length ? { inkFrames } : {} }, null, 1));
-  await fs18.writeFile(csvPath, ["index,time,at,x,y,scale,opacity,ncc,repeat", ...perFrame.map((p) => [p.index, p.time, p.at, p.x ?? "", p.y ?? "", p.scale ?? "", p.opacity ?? "", p.ncc ?? "", p.repeat ? 1 : 0].join(","))].join("\n"));
-  const seconds = Math.round((performance.now() - started) / 1e3 * 100) / 100;
-  return {
-    ...out,
-    files: { json: jsonPath, csv: csvPath },
-    timings: { seconds, decodeAndMatchSeconds: Math.round(decodeSeconds * 100) / 100, frames: rows.length },
-    reading: `${out.moves.length} move${out.moves.length === 1 ? "" : "s"} over frames ${f0} to ${f1} (${statusCount(out.moves)})${lost ? `; ${lost.reading}` : ""}. ${cad.reading} Not measured: ${NOT_MEASURED.join(", ")}.`
-  };
-}
-
-// src/video/run-shots-census.ts
-async function open2(args, tools) {
-  if (typeof args.file !== "string" || !path20.isAbsolute(args.file)) return { error: "`file` must be an absolute path to a video file" };
-  if (typeof args.outDir !== "string" || !path20.isAbsolute(args.outDir)) return { error: "`outDir` must be an absolute folder path" };
-  const info = await probeVideo(args.file, tools);
-  if (info === null) return { error: NO_FFMPEG };
-  if ("error" in info) return { error: info.error };
-  const f0 = typeof args.start === "number" ? frameAt(info, args.start) : 0, f1 = typeof args.end === "number" ? frameAt(info, args.end) : info.frames - 1;
-  if (f1 <= f0) return { error: "`end` must be after `start`" };
-  return { info, f0, f1 };
-}
-var size = (info, long) => {
-  const k = long / Math.max(info.width, info.height);
-  return { w: Math.max(4, Math.round(info.width * k / 2) * 2), h: Math.max(4, Math.round(info.height * k / 2) * 2) };
-};
-var timing = (t0) => Math.round((performance.now() - t0) / 1e3 * 100) / 100;
-async function tilePng(info, frames, out, tile, tools) {
-  if (!frames.length) return false;
-  const sel = frames.map((f) => `eq(n\\,${f})`).join("+");
-  const r = await runTool(tools.ffmpeg, ["-v", "error", "-y", "-i", info.file, "-vf", `select='${sel}',scale=${tile}:-2,tile=${frames.length}x1`, "-fps_mode", "passthrough", "-frames:v", "1", out], 12e4);
-  return !!r && !r.failed;
-}
-async function runShots(args, tools = VIDEO_TOOLS) {
-  const t0 = performance.now(), o = await open2(args, tools);
-  if ("error" in o) return { ok: false, error: o.error };
-  const { info, f0, f1 } = o, { w, h } = size(info, 64), stats = [];
-  let a = null, b = null;
-  const small = [];
-  for await (const fr of readFrames(info, { from: f0, to: f1, width: w, height: h, gray: true }, tools)) {
-    stats.push(frameStats(fr.index, fr.time, a, b, fr.data, w, h));
-    small.push(Uint8Array.from(fr.data));
-    a = b;
-    b = fr.data;
-  }
-  const list = shotList(stats, SHOT_RULES, (i) => i > 0 ? registerShift(small[i - 1], small[i], w, h) : null);
-  const kx = info.width / w, ky = info.height / h;
-  await fs19.mkdir(args.outDir, { recursive: true });
-  const atFps = typeof args.atFps === "number" && args.atFps > 0 ? args.atFps : 30, at = (t) => Math.round(t * atFps * 100) / 100;
-  const sheets = [], strips = [];
-  if (args.pictures !== false) {
-    for (let s = 0; s < list.shots.length && s < 60; s++) {
-      const sh = list.shots[s], n = Math.min(8, sh.to - sh.from + 1), fr = Array.from({ length: n }, (_, i) => Math.round(sh.from + i * (sh.to - sh.from) / Math.max(1, n - 1)));
-      const p = path20.join(args.outDir, `shot-${String(s + 1).padStart(3, "0")}.png`);
-      if (await tilePng(info, [...new Set(fr)], p, 160, tools)) sheets.push(p);
-    }
-    const changes = [...list.cuts.map((c) => c.frame), ...list.swaps.map((c) => c.frame)].sort((x, y) => x - y);
-    for (const c of changes.slice(0, 40)) {
-      const fr = [c - 2, c - 1, c, c + 1, c + 2].filter((f) => f >= 0 && f < info.frames), p = path20.join(args.outDir, `change-${c}.png`);
-      if (await tilePng(info, fr, p, 160, tools)) strips.push(p);
-    }
-  }
-  const jsonPath = path20.join(args.outDir, "shots.json");
-  const result = {
-    ok: true,
-    file: args.file,
-    atFps,
-    span: { from: f0, to: f1 },
-    video: { width: info.width, height: info.height, frames: info.frames, nominalFps: info.nominalFps, variableRate: info.variableRate },
-    cuts: list.cuts.map((c) => ({ ...c, at: at(c.time) })),
-    swaps: list.swaps.map((c) => ({ ...c, at: at(c.time) })),
-    notCuts: list.notCuts.map((c) => ({ ...c, at: at(c.time), ...c.shift ? { shift: { ...c.shift, dx: Math.round(c.shift.dx * kx), dy: Math.round(c.shift.dy * ky), unit: "source px a frame" } } : {} })),
-    shots: list.shots.map((s) => ({ ...s, at: [at(s.start), at(s.end)] }))
-  };
-  await fs19.writeFile(jsonPath, JSON.stringify(result, null, 1));
-  return {
-    ...result,
-    shots: result.shots.length > 40 ? `${result.shots.length} shots: see shots.json` : result.shots,
-    files: { json: jsonPath, sheets, strips },
-    timings: { seconds: timing(t0), frames: stats.length },
-    reading: `${list.cuts.length} cut${list.cuts.length === 1 ? "" : "s"}, ${list.swaps.length} one-frame swap${list.swaps.length === 1 ? "" : "s"}, ${list.notCuts.filter((c) => c.kind === "flash").length} flash${list.notCuts.filter((c) => c.kind === "flash").length === 1 ? "" : "es"} and ${list.notCuts.filter((c) => c.kind !== "flash").length} pan${list.notCuts.filter((c) => c.kind !== "flash").length === 1 ? "" : "s"} or move${list.notCuts.filter((c) => c.kind !== "flash").length === 1 ? "" : "s"} set aside (notCuts), ${list.shots.length} shot${list.shots.length === 1 ? "" : "s"}.${info.variableRate ? " The file's frame rate varies; frames are timed by their own timestamps." : ""}`
-  };
-}
-async function runCensus(args, tools = VIDEO_TOOLS) {
-  const t0 = performance.now(), o = await open2(args, tools);
-  if ("error" in o) return { ok: false, error: o.error };
-  const { info, f0, f1 } = o, step = typeof args.window === "number" && args.window > 0 ? args.window : 0.1, { w, h } = size(info, 320);
-  const band = Array.isArray(args.band) && args.band.length === 2 ? args.band.map(Number) : [0.15, 0.6];
-  const y0 = Math.max(0, Math.round(band[0] * h)), y1 = Math.min(h, Math.round(band[1] * h)), pageTest = args.pageTest === true;
-  const blur = (src) => {
-    const out = new Uint8Array(src.length);
-    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-      let s = 0, c = 0;
-      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
-        const yy = y + dy, xx = x + dx;
-        if (yy >= 0 && yy < h && xx >= 0 && xx < w) {
-          s += src[yy * w + xx] * (dx || dy ? 1 : 4);
-          c += dx || dy ? 1 : 4;
-        }
-      }
-      out[y * w + x] = Math.round(s / c);
-    }
-    return out;
-  };
-  const isPage = (f) => {
-    const x0 = Math.round(5 * w / 180), x1 = Math.round(174 * w / 180);
-    let m = 0, m2 = 0, n = 0;
-    for (let y = 3; y <= 16 && y < h; y++) for (let x = x0; x <= x1 && x < w; x++) {
-      const v = f[y * w + x];
-      m += v;
-      m2 += v * v;
-      n++;
-    }
-    return n > 0 && Math.sqrt(Math.max(0, m2 / n - (m / n) ** 2)) < 9;
-  };
-  let prev = null;
-  const labels = [], shifts = [], steps2 = [];
-  for await (const fr of readFrames(info, { from: f0, to: f1, width: w, height: h, gray: true, fps: 1 / step }, tools)) {
-    const cur = blur(fr.data);
-    if (prev) {
-      if (pageTest && (!isPage(prev) || !isPage(cur))) {
-        labels.push(".");
-        shifts.push(0);
-        steps2.push({ time: fr.time, label: "." });
-      } else {
-        const s = censusStep(prev, cur, w, h, y0, y1);
-        labels.push(s.label);
-        shifts.push(s.shift);
-        steps2.push({ time: Math.round(fr.time * 1e3) / 1e3, label: s.label, changed: Math.round(s.changed * 1e4) / 1e4, moved: Math.round(s.moved * 1e3) / 1e3 });
-      }
-    }
-    prev = cur;
-  }
-  const lab = labels.join(""), cad = cadence(lab.replace(/\./g, ""), shifts.filter((_, i) => labels[i] !== "."), step, Math.max(info.width, info.height) / Math.max(w, h));
-  await fs19.mkdir(args.outDir, { recursive: true });
-  const col = { c: [90, 90, 90], l: [230, 200, 60], T: [240, 120, 30], X: [220, 40, 40], ".": [0, 0, 0] }, sw = Math.max(1, labels.length), sh = 24, rgb = new Float64Array(sw * sh * 3);
-  for (let x = 0; x < sw; x++) for (let y = 0; y < sh; y++) rgb.set(col[labels[x] ?? "."].map((v) => v / 255), (y * sw + x) * 3);
-  const strip = path20.join(args.outDir, "census.png"), jsonPath = path20.join(args.outDir, "census.json");
-  await fs19.writeFile(strip, encodePngSrgb8(sw, sh, rgb));
-  const result = { ok: true, file: args.file, window: step, band, pageTest, rules: CENSUS_RULES, labels: lab, cadence: cad };
-  await fs19.writeFile(jsonPath, JSON.stringify({ ...result, steps: steps2 }, null, 1));
-  return {
-    ...result,
-    labels: lab.length > 600 ? `${lab.slice(0, 600)}\u2026 (${lab.length} steps: see census.json)` : lab,
-    files: { json: jsonPath, strip },
-    timings: { seconds: timing(t0), steps: labels.length },
-    reading: `${labels.length} steps of ${step} s: calm ${Math.round(cad.shares.calm * 100)} %, local ${Math.round(cad.shares.local * 100)} %, travel ${Math.round(cad.shares.travel * 100)} %, cut ${Math.round(cad.shares.cut * 100)} %; ${cad.travel.perMinute} travel moves a minute (median ${cad.travel.medianSeconds} s); ${cad.burstsPer10s} bursts every 10 s; calm runs median ${cad.calmRuns.medianSeconds} s. A stage with little texture reads calmer than it looks (the census study's own caveat). Its cut class is the census study's own rule: a fast pan can read as one; video.shots is the authority on cuts.`
-  };
-}
-
-// src/operations/video.ts
 var common = [
   { name: "file", type: "string", description: "Absolute path of the video file (a reference, or a build's render)", required: true },
   { name: "outDir", type: "string", description: "Absolute folder for the JSON and pictures (made if missing)", required: true },
@@ -62382,9 +62935,9 @@ registerOp({
 });
 
 // src/operations/instance.ts
-import { spawn as spawn2 } from "node:child_process";
-import { promises as fs20 } from "node:fs";
-import * as path21 from "node:path";
+import { spawn as spawn3 } from "node:child_process";
+import { promises as fs22 } from "node:fs";
+import * as path23 from "node:path";
 init_config();
 init_registry();
 var INSTALL_CMD = "npx @kumoproductions/mcp-aftereffects install-agent";
@@ -62493,10 +63046,10 @@ registerOp({
     let copiedFrom = null;
     let copyTo = null;
     if (typeof args.copyFrom === "string" && args.copyFrom) {
-      const src = path21.resolve(args.copyFrom);
+      const src = path23.resolve(args.copyFrom);
       if (!await exists(src)) return fail(`copyFrom not found: ${src}`, { errorCode: "IO" });
-      const ext = path21.extname(src) || ".aep";
-      copyTo = typeof args.copyTo === "string" && args.copyTo ? path21.resolve(args.copyTo) : path21.join(path21.dirname(src), `${path21.basename(src, ext)}__${name}${ext}`);
+      const ext = path23.extname(src) || ".aep";
+      copyTo = typeof args.copyTo === "string" && args.copyTo ? path23.resolve(args.copyTo) : path23.join(path23.dirname(src), `${path23.basename(src, ext)}__${name}${ext}`);
       if (copyTo === src)
         return fail("copyTo must differ from copyFrom", { errorCode: "INVALID_ARGS" });
       const rejected = rejectedOutputPath(copyTo);
@@ -62504,7 +63057,7 @@ registerOp({
       copiedFrom = src;
       projectToOpen = copyTo;
     } else if (typeof args.project === "string" && args.project) {
-      projectToOpen = path21.resolve(args.project);
+      projectToOpen = path23.resolve(args.project);
       if (!await exists(projectToOpen))
         return fail(`project not found: ${projectToOpen}`, { errorCode: "IO" });
     }
@@ -62531,14 +63084,14 @@ registerOp({
       return fail(err instanceof Error ? err.message : String(err), { errorCode: "AE_NOT_FOUND" });
     }
     if (copiedFrom !== null && copyTo !== null) {
-      await fs20.mkdir(path21.dirname(copyTo), { recursive: true });
-      await fs20.copyFile(copiedFrom, copyTo);
+      await fs22.mkdir(path23.dirname(copyTo), { recursive: true });
+      await fs22.copyFile(copiedFrom, copyTo);
     }
     const plan = buildInstanceLaunchPlan(exe, name);
     const aePid = process.platform === "darwin" ? null : void 0;
     const launchedAt = Date.now();
     let spawnError = null;
-    const child2 = spawn2(plan.command, plan.args, {
+    const child2 = spawn3(plan.command, plan.args, {
       env: { ...process.env, AE_MCP_INSTANCE: name },
       detached: true,
       stdio: "ignore",
@@ -62714,7 +63267,7 @@ registerOp({
         `instance '${name}' accepted the quit but is still ticking after ${timeoutMs} ms \u2014 check it for a dialog`
       );
     }
-    await fs20.rm(dir, { recursive: true, force: true }).catch(() => {
+    await fs22.rm(dir, { recursive: true, force: true }).catch(() => {
     });
     return { ok: true, instance: name, stopped: true, saved: !!args.save, file: file2 };
   }
@@ -62788,7 +63341,7 @@ registerOp({
 });
 async function exists(p) {
   try {
-    await fs20.access(p);
+    await fs22.access(p);
     return true;
   } catch {
     return false;
@@ -62882,9 +63435,9 @@ var catalogTool = defineTool({
 
 // src/tools/check-comp.ts
 import { randomUUID as randomUUID4 } from "node:crypto";
-import { promises as fs21 } from "node:fs";
-import * as os4 from "node:os";
-import * as path23 from "node:path";
+import { promises as fs23 } from "node:fs";
+import * as os6 from "node:os";
+import * as path25 from "node:path";
 
 // src/color/watch.ts
 var WATCH_DEFAULTS = {
@@ -63036,7 +63589,7 @@ function measureFrame(pic, width, height, t) {
     }
   };
 }
-var fmt3 = (v) => v.toFixed(4);
+var fmt4 = (v) => v.toFixed(4);
 var secs2 = (v) => `${r63(v)} s`;
 var PieceWatcher = class {
   t;
@@ -63259,7 +63812,7 @@ var PieceWatcher = class {
             seconds: r63(seconds),
             ...this.edges(from, to, first, last),
             largestChange: largest,
-            reading: `no visible change from ${secs2(from * fd)} to ${secs2(to * fd)} (frames ${from} to ${to}, ${r63(seconds)} s): at most ${fmt3(t.frozenShare * 100)}% of pixels changed by more than ${t.changeAbove} between checked frames. A held title or a still is legitimate; a stop in the middle of a move is not`
+            reading: `no visible change from ${secs2(from * fd)} to ${secs2(to * fd)} (frames ${from} to ${to}, ${r63(seconds)} s): at most ${fmt4(t.frozenShare * 100)}% of pixels changed by more than ${t.changeAbove} between checked frames. A held title or a still is legitimate; a stop in the middle of a move is not`
           });
         }
         i = j + 1;
@@ -63296,7 +63849,7 @@ var PieceWatcher = class {
       if (kind === "near-black" || kind === "near-white") {
         const share = kind === "near-black" ? m.darkShare : m.lightShare;
         s.worst = { frame: worst.frame, time: r63(worst.frame * fd), share, meanLuma: m.meanLuma };
-        s.reading = `${kind} from ${when}: at worst (frame ${worst.frame}) mean luma ${fmt3(m.meanLuma)}, ${fmt3(share * 100)}% of pixels ${kind === "near-black" ? `at or below ${this.t.darkBelow}` : `at or above ${this.t.lightAbove}`} in every channel`;
+        s.reading = `${kind} from ${when}: at worst (frame ${worst.frame}) mean luma ${fmt4(m.meanLuma)}, ${fmt4(share * 100)}% of pixels ${kind === "near-black" ? `at or below ${this.t.darkBelow}` : `at or above ${this.t.lightAbove}`} in every channel`;
       } else {
         const c = kind === "clipped-high" ? m.clipHigh : m.clipLow;
         let box2 = null;
@@ -63321,7 +63874,7 @@ var PieceWatcher = class {
           channels: { r: c.r, g: c.g, b: c.b }
         };
         const code = kind === "clipped-high" ? "255 (the top code)" : "0 (the bottom code)";
-        s.reading = `${kind} from ${when}: at worst (frame ${worst.frame}) ${fmt3(c.all * 100)}% of pixels at ${code} in all three channels (per channel r ${fmt3(c.r * 100)}%, g ${fmt3(c.g * 100)}%, b ${fmt3(c.b * 100)}%)` + (s.box ? `, inside x ${s.box.x}..${s.box.x + s.box.width}, y ${s.box.y}..${s.box.y + s.box.height} (comp pixels)` : "");
+        s.reading = `${kind} from ${when}: at worst (frame ${worst.frame}) ${fmt4(c.all * 100)}% of pixels at ${code} in all three channels (per channel r ${fmt4(c.r * 100)}%, g ${fmt4(c.g * 100)}%, b ${fmt4(c.b * 100)}%)` + (s.box ? `, inside x ${s.box.x}..${s.box.x + s.box.width}, y ${s.box.y}..${s.box.y + s.box.height} (comp pixels)` : "");
       }
       out.push(s);
       run = [];
@@ -63680,7 +64233,7 @@ function frameOfCapture(file2) {
   const m = /frame-(\d+)\.png$/.exec(file2);
   return m ? Number(m[1]) : null;
 }
-var frameFile = (dir, frame) => path23.join(dir, `frame-${frame}.png`).replace(/\\/g, "/");
+var frameFile = (dir, frame) => path25.join(dir, `frame-${frame}.png`).replace(/\\/g, "/");
 function aeFrameSource(transport2, comp, opts) {
   const stallMs = opts.stallMs ?? CAPTURE_STALL_MS;
   const drain = async (paths, before) => {
@@ -63700,7 +64253,7 @@ function aeFrameSource(transport2, comp, opts) {
     async capture(frames, dir) {
       const t0 = performance.now();
       const paths = frames.map((k) => frameFile(dir, k));
-      await fs21.mkdir(dir, { recursive: true });
+      await fs23.mkdir(dir, { recursive: true });
       const before = await stampFiles(paths);
       const result = await transport2.execute({
         code: captureJsx(comp, frames, paths, opts.factor, opts.tryOcio),
@@ -63757,7 +64310,7 @@ function aeFrameSource(transport2, comp, opts) {
   };
 }
 async function readPicture(file2, target, convert) {
-  const img = decodePng(await fs21.readFile(file2));
+  const img = decodePng(await fs23.readFile(file2));
   if (convert) convert(img.rgb);
   let rgb = img.rgb;
   let width = img.width;
@@ -63929,14 +64482,14 @@ async function checkComp(args, transport2) {
     time: r64((ownedTo + every) * fd),
     framesLeft: remaining
   } : null;
-  const outDir = path23.resolve(
-    args.outDir ?? path23.join(
-      os4.tmpdir(),
+  const outDir = path25.resolve(
+    args.outDir ?? path25.join(
+      os6.tmpdir(),
       "comp-room-check",
       `${String(plan.compName).replace(/[^A-Za-z0-9_-]+/g, "-").slice(0, 40)}-${Date.now()}`
     )
   ).replace(/\\/g, "/");
-  const capDir = path23.join(outDir, `captures-${randomUUID4().slice(0, 8)}`).replace(/\\/g, "/");
+  const capDir = path25.join(outDir, `captures-${randomUUID4().slice(0, 8)}`).replace(/\\/g, "/");
   const readOnly = readOnlyMode();
   const target = {
     width: Math.max(1, Math.round(plan.width / downsample)),
@@ -64048,7 +64601,7 @@ async function checkComp(args, transport2) {
         failures.push({ frame: f.frame, error: `could not read the capture: ${err instanceof Error ? err.message : String(err)}` });
       }
       readSeconds += (performance.now() - r0) / 1e3;
-      await fs21.rm(f.path, { force: true });
+      await fs23.rm(f.path, { force: true });
     }
     if (res.outstanding.length > 0) {
       outstanding.push(...res.outstanding);
@@ -64056,7 +64609,7 @@ async function checkComp(args, transport2) {
       break;
     }
   }
-  if (outstanding.length === 0) await fs21.rm(capDir, { recursive: true, force: true });
+  if (outstanding.length === 0) await fs23.rm(capDir, { recursive: true, force: true });
   const findings = watcher ? watcher.finish() : null;
   const measureSeconds = watcher ? watcher.measureMs / 1e3 : 0;
   let nextOut = next;
@@ -64162,7 +64715,7 @@ async function checkComp(args, transport2) {
     report.sheet = sheet.sheet;
     outstanding.push(...sheet.outstanding);
   }
-  if (outstanding.length === 0) await fs21.rmdir(outDir).catch(() => {
+  if (outstanding.length === 0) await fs23.rmdir(outDir).catch(() => {
   });
   report.captureQueue = outstanding.length === 0 ? {
     outstanding: 0,
@@ -64316,11 +64869,11 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
     if (!got?.path) continue;
     try {
       const pic = await readPicture(got.path, target, convert);
-      await fs21.writeFile(got.path, encodePngSrgb8(pic.width, pic.height, pic.rgb));
+      await fs23.writeFile(got.path, encodePngSrgb8(pic.width, pic.height, pic.rgb));
       images.push({ width: pic.width, height: pic.height, rgb: pic.rgb, bitDepth: 8 });
       kept.push({ frame: c.frame, time: r64(c.frame * fd), kinds: c.kinds, ...c.why ? { why: c.why } : {}, path: got.path });
     } catch {
-      await fs21.rm(got.path, { force: true });
+      await fs23.rm(got.path, { force: true });
     }
   }
   if (images.length === 0)
@@ -64333,8 +64886,8 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
     thumbWidth: tileW,
     labels
   });
-  const sheetPath = path23.join(outDir, `check-sheet-${tag}.png`).replace(/\\/g, "/");
-  await fs21.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
+  const sheetPath = path25.join(outDir, `check-sheet-${tag}.png`).replace(/\\/g, "/");
+  await fs23.writeFile(sheetPath, encodePngSrgb8(sheet.width, sheet.height, sheet.rgb));
   return {
     sheet: {
       writtenTo: sheetPath,
@@ -64874,8 +65427,8 @@ var layerInfoTool = defineTool({
 });
 
 // src/tools/project-export.ts
-import { promises as fs22 } from "node:fs";
-import * as path24 from "node:path";
+import { promises as fs24 } from "node:fs";
+import * as path26 from "node:path";
 init_config();
 var projectExportTool = defineTool({
   name: "ae_project_export_json",
@@ -64897,7 +65450,7 @@ var projectExportTool = defineTool({
       const rejection = rejectedOutputPath(args.outPath);
       if (rejection !== null) {
         return errorResult("IO", rejection, {
-          details: { outPath: path24.resolve(args.outPath) },
+          details: { outPath: path26.resolve(args.outPath) },
           hint: "Write the document somewhere outside the mailbox, or omit outPath to receive it inline."
         });
       }
@@ -64916,10 +65469,10 @@ var projectExportTool = defineTool({
     const pretty = args.pretty ?? !!args.outPath;
     const jsonText = JSON.stringify(doc, null, pretty ? 2 : 0);
     if (args.outPath) {
-      const abs = path24.resolve(args.outPath);
+      const abs = path26.resolve(args.outPath);
       try {
-        await fs22.mkdir(path24.dirname(abs), { recursive: true });
-        await fs22.writeFile(abs, jsonText, "utf8");
+        await fs24.mkdir(path26.dirname(abs), { recursive: true });
+        await fs24.writeFile(abs, jsonText, "utf8");
       } catch (err) {
         return errorResult(
           "IO",
@@ -64950,8 +65503,8 @@ var projectExportTool = defineTool({
 });
 
 // src/tools/project-import.ts
-import { promises as fs23 } from "node:fs";
-import * as path25 from "node:path";
+import { promises as fs25 } from "node:fs";
+import * as path27 from "node:path";
 
 // src/schema.ts
 var SCHEMA_VERSION = 3;
@@ -64960,11 +65513,11 @@ var SCHEMA_VERSION = 3;
 var Validator = class {
   issues = [];
   warnings = [];
-  err(path27, message) {
-    this.issues.push({ path: path27, message });
+  err(path29, message) {
+    this.issues.push({ path: path29, message });
   }
-  warn(path27, message) {
-    this.warnings.push({ path: path27, message });
+  warn(path29, message) {
+    this.warnings.push({ path: path29, message });
   }
   isObject(v) {
     return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -65065,64 +65618,64 @@ function validateAeProjectDoc(doc) {
   }
   return { ok: v.issues.length === 0, issues: v.issues, warnings: v.warnings };
 }
-function validateLayer(v, path27, layer) {
+function validateLayer(v, path29, layer) {
   if (!v.isObject(layer)) {
-    v.err(path27, "not an object");
+    v.err(path29, "not an object");
     return;
   }
-  if (typeof layer.index !== "number") v.err(`${path27}.index`, "missing or not a number");
-  if (typeof layer.name !== "string") v.err(`${path27}.name`, "missing or not a string");
-  if (typeof layer.type !== "string") v.err(`${path27}.type`, "missing or not a string");
+  if (typeof layer.index !== "number") v.err(`${path29}.index`, "missing or not a number");
+  if (typeof layer.name !== "string") v.err(`${path29}.name`, "missing or not a string");
+  if (typeof layer.type !== "string") v.err(`${path29}.type`, "missing or not a string");
   else if (["AVLayer", "TextLayer", "ShapeLayer", "CameraLayer", "LightLayer", "Layer"].indexOf(
     layer.type
   ) === -1) {
-    v.warn(`${path27}.type`, `unknown layer type: ${layer.type}`);
+    v.warn(`${path29}.type`, `unknown layer type: ${layer.type}`);
   }
   if (layer.transformGroup)
-    validatePropertyGroup(v, `${path27}.transformGroup`, layer.transformGroup);
-  if (layer.effectsGroup) validatePropertyGroup(v, `${path27}.effectsGroup`, layer.effectsGroup);
-  if (layer.masksGroup) validatePropertyGroup(v, `${path27}.masksGroup`, layer.masksGroup);
-  if (layer.textGroup) validatePropertyGroup(v, `${path27}.textGroup`, layer.textGroup);
-  if (layer.contentsGroup) validatePropertyGroup(v, `${path27}.contentsGroup`, layer.contentsGroup);
-  if (layer.markers) validateProperty(v, `${path27}.markers`, layer.markers);
+    validatePropertyGroup(v, `${path29}.transformGroup`, layer.transformGroup);
+  if (layer.effectsGroup) validatePropertyGroup(v, `${path29}.effectsGroup`, layer.effectsGroup);
+  if (layer.masksGroup) validatePropertyGroup(v, `${path29}.masksGroup`, layer.masksGroup);
+  if (layer.textGroup) validatePropertyGroup(v, `${path29}.textGroup`, layer.textGroup);
+  if (layer.contentsGroup) validatePropertyGroup(v, `${path29}.contentsGroup`, layer.contentsGroup);
+  if (layer.markers) validateProperty(v, `${path29}.markers`, layer.markers);
   if (layer.timeRemapProperty)
-    validateProperty(v, `${path27}.timeRemapProperty`, layer.timeRemapProperty);
+    validateProperty(v, `${path29}.timeRemapProperty`, layer.timeRemapProperty);
 }
-function validatePropertyGroup(v, path27, group) {
+function validatePropertyGroup(v, path29, group) {
   if (!v.isObject(group)) {
-    v.err(path27, "not an object");
+    v.err(path29, "not an object");
     return;
   }
-  if (typeof group.matchName !== "string") v.err(`${path27}.matchName`, "missing or not a string");
+  if (typeof group.matchName !== "string") v.err(`${path29}.matchName`, "missing or not a string");
   if (Array.isArray(group.properties)) {
     for (let i = 0; i < group.properties.length; i++) {
-      validateProperty(v, `${path27}.properties[${i}]`, group.properties[i]);
+      validateProperty(v, `${path29}.properties[${i}]`, group.properties[i]);
     }
   }
   if (Array.isArray(group.groups)) {
     for (let i = 0; i < group.groups.length; i++) {
-      validatePropertyGroup(v, `${path27}.groups[${i}]`, group.groups[i]);
+      validatePropertyGroup(v, `${path29}.groups[${i}]`, group.groups[i]);
     }
   }
 }
-function validateProperty(v, path27, prop) {
+function validateProperty(v, path29, prop) {
   if (!v.isObject(prop)) {
-    v.err(path27, "not an object");
+    v.err(path29, "not an object");
     return;
   }
-  if (typeof prop.matchName !== "string") v.err(`${path27}.matchName`, "missing or not a string");
+  if (typeof prop.matchName !== "string") v.err(`${path29}.matchName`, "missing or not a string");
   if (Array.isArray(prop.keyframes)) {
     for (let i = 0; i < prop.keyframes.length; i++) {
-      validateKeyframe(v, `${path27}.keyframes[${i}]`, prop.keyframes[i]);
+      validateKeyframe(v, `${path29}.keyframes[${i}]`, prop.keyframes[i]);
     }
   }
 }
-function validateKeyframe(v, path27, kf) {
+function validateKeyframe(v, path29, kf) {
   if (!v.isObject(kf)) {
-    v.err(path27, "not an object");
+    v.err(path29, "not an object");
     return;
   }
-  if (typeof kf.time !== "number") v.err(`${path27}.time`, "missing or not a number");
+  if (typeof kf.time !== "number") v.err(`${path29}.time`, "missing or not a number");
 }
 
 // src/tools/project-import.ts
@@ -65151,9 +65704,9 @@ var projectImportTool = defineTool({
   handler: async (args, transport2) => {
     let doc;
     if (args.inPath) {
-      const abs = path25.resolve(args.inPath);
+      const abs = path27.resolve(args.inPath);
       try {
-        doc = JSON.parse(await fs23.readFile(abs, "utf8"));
+        doc = JSON.parse(await fs25.readFile(abs, "utf8"));
       } catch (err) {
         return errorResult(
           "IO",
@@ -65418,7 +65971,7 @@ var ALL_TOOLS = [
 
 // src/tools/library.ts
 import { readFileSync as readFileSync2, realpathSync as realpathSync2 } from "node:fs";
-import path26 from "node:path";
+import path28 from "node:path";
 import { createHash } from "node:crypto";
 init_config();
 
@@ -65508,17 +66061,17 @@ function findModules(catalog, query) {
 
 // src/tools/library.ts
 function boundedFile(base, relative3) {
-  const candidate = path26.resolve(base, relative3);
+  const candidate = path28.resolve(base, relative3);
   const inside = (file3) => {
-    const rel = path26.relative(base, file3);
-    if (!rel || rel === ".." || rel.startsWith(".." + path26.sep) || path26.isAbsolute(rel)) throw new Error("Library path escapes bundle");
+    const rel = path28.relative(base, file3);
+    if (!rel || rel === ".." || rel.startsWith(".." + path28.sep) || path28.isAbsolute(rel)) throw new Error("Library path escapes bundle");
   };
   inside(candidate);
   const file2 = realpathSync2(candidate);
   inside(file2);
   return file2;
 }
-function readLibrary(document, query, root = path26.resolve(PACKAGE_ROOT, "../library")) {
+function readLibrary(document, query, root = path28.resolve(PACKAGE_ROOT, "../library")) {
   const base = realpathSync2(root);
   const manifest = JSON.parse(readFileSync2(boundedFile(base, "manifest.json"), "utf8"));
   const entries = manifest.documents;

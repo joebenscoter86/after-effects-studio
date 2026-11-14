@@ -137,6 +137,7 @@ A slide that settles into a slow creep is two moves. Where a move's speed falls 
 
   The stage's travel on one of its pans is 668 px against the hand's 674, a visible 17 frames against 17, and ease 70 / 53 against 70 / 52. A build of one stretch, compared on its render, came to 1 of 6 measured moves within. Mended where the tool had put a cut for a pan, the build's pan is within on its render: 720 px against 724, 20 frames against 20.
 - **Still confidently wrong at times:** across the three third runs, 12 moves are reported measured (5 of them loosely) and miss the hand, mostly on duration. Read every track's frames before trusting its numbers.
+- **A cut between sparse layouts can read as a pan:** two layouts of a few flat shapes on one paper ground, one the other's mirror, line up under a whole-frame shift.
 - **The stage's travel reads any whole-band change as a shift.** A thing growing from a point inside the band reads as travel, so give it a span that holds the pan and no more.
 - **The census:** 97 to 99.8 % agreement with a study's own labels, step for step, on five reels, one of them a dark stage.
 

@@ -198,6 +198,11 @@ export async function writeEvalSuite(canon, outDir, { set = 'planning', runtimeD
         `Run the grader as \`node ${grader} ${c.picture.check} --plan\` and, at the end, \`node ${grader} ${c.picture.check}\`, from your working folder.`;
       head = `max_turns: ${PICTURE_MAX_TURNS}\ntimeout_seconds: ${PICTURE_TIMEOUT_SECONDS}\nallowed_tools: [${[...ALLOWED_TOOLS, `"${bash}"`].join(', ')}]\ntags: [picture]\n`;
     }
+    if (!picture && c.files?.length) {
+      // a planning case's own files (a look sheet, say), copied beside it and named in the prompt
+      for (const f of c.files) { await fs.mkdir(path.dirname(path.join(dir, f)), { recursive: true }); await fs.copyFile(path.join(PICTURE_SRC, '..', f), path.join(dir, f)); }
+      prompt += `\n\nThis case's files: ${c.files.map((f) => `${f} is ${path.join(dir, f)}`).join('; ')}.`;
+    }
     await fs.writeFile(path.join(dir, 'prompt.md'), `---\n${head}---\n\n${prompt}\n`);
     for (const [k, a] of c.assertions.entries()) await fs.writeFile(path.join(dir, 'graders', `assertion-${k + 1}.md`), graderText(a, c.expected_output));
     const checks = picture ? thresholds[c.picture.check].filter((t) => !t.setup) : [];
