@@ -5399,13 +5399,14 @@ function compareWithSheet(sheet, piece) {
 			continue;
 		}
 		const range = m.min === m.max ? `your ${of(m.pieces)}: ${fmt$1(def, m.min)}` : `your pieces sit between ${fmt$1(def, m.min)} and ${fmt$1(def, m.max)} (${of(m.pieces)})`;
+		const size = Math.round(beyond * 10) / 10;
 		diffs.push({
 			measure: m.name,
-			size: Math.round(beyond * 10) / 10,
+			size,
 			value: Number(v.toFixed(m.digits)),
 			range: [m.min, m.max],
 			pieces: m.pieces,
-			reading: `${m.name} ${fmt$1(def, v)}; ${range}.`
+			reading: `${m.name} ${fmt$1(def, v)}; ${range} (${size} step${size === 1 ? "" : "s"} outside).`
 		});
 	}
 	const pal = piece.report.palette.map((c) => ({
@@ -5450,8 +5451,11 @@ function compareWithSheet(sheet, piece) {
 		differences: diffs,
 		insideTheLook: inside,
 		notCompared,
-		reading: diffs.length ? `${diffs.length} difference${diffs.length === 1 ? "" : "s"} from your ${sheet.standing.split(":")[0]}, largest first: ${diffs.map((d) => d.reading).join(" ")}` : `Within your pieces' range on every measure of the look (${sheet.standing.split(":")[0]}).`
+		reading: (diffs.length ? `${diffs.length} difference${diffs.length === 1 ? "" : "s"} from your ${sheet.standing.split(":")[0]}, largest first: ${diffs.map((d) => d.reading).join(" ")}` : `Within your pieces' range on every measure of the look (${sheet.standing.split(":")[0]}).`) + (n < LOOK_RULES.fewPieces && diffs.length ? ` ${FEW_PIECES_NOTE}` : "")
 	};
+}
+function standingBase(s) {
+	return s.standing.split(`. ${FEW_PIECES_NOTE}`)[0];
 }
 function isSheet(x) {
 	return !!x && typeof x === "object" && x.kind === "look-sheet";
@@ -5466,11 +5470,13 @@ function sheetMarkdown(s) {
 		return `| ${m.name} | ${fmt$1(d, m.median)} | ${m.min === m.max ? fmt$1(d, m.min) : `${fmt$1(d, m.min)} to ${fmt$1(d, m.max)}`} | ${m.pieces} |`;
 	};
 	const groups = [...new Set(s.measures.map((m) => m.group))];
+	const base = standingBase(s);
 	const lines = [
 		`# Look sheet`,
 		"",
-		`${s.standing[0].toUpperCase()}${s.standing.slice(1)}: ${s.pieces.map((p) => p.label).join(", ")}.`,
+		`${base[0].toUpperCase()}${base.slice(1)}: ${s.pieces.map((p) => p.label).join(", ")}.`,
 		"",
+		...s.pieces.length < LOOK_RULES.fewPieces ? [FEW_PIECES_NOTE, ""] : [],
 		...s.notes.map((x) => `- ${x}`),
 		""
 	];
@@ -5487,7 +5493,7 @@ function sheetMarkdown(s) {
 	lines.push("## Not measured", "", ...s.notMeasured.map((x) => `- ${x}`), "");
 	return lines.join("\n");
 }
-var LOOK_RULES, D, P, median, lv, lstep, fmt$1, dE, hexOfLab, SHOT_LIMIT, standingOf;
+var LOOK_RULES, FEW_PIECES_NOTE, D, P, median, lv, lstep, fmt$1, dE, hexOfLab, SHOT_LIMIT, standingOf;
 function init_look() {
 	return (init_look = __esmMin((() => {
 		init_sheet();
@@ -5501,8 +5507,11 @@ function init_look() {
 			/** A build's colour this large with nothing like it in the pieces is named. */
 			newColourShare: .05,
 			/** Pieces before a sheet is called a look. */
-			lookPieces: 3
+			lookPieces: 3,
+			/** Under this many pieces the ranges are narrow, and every reading says so. */
+			fewPieces: 8
 		};
+		FEW_PIECES_NOTE = "With this few pieces, a piece of the same look will sit just outside several ranges: read the largest differences first, and add approved pieces to widen the sheet.";
 		D = REFERENCE_DEFAULTS;
 		P = (key, group, name, unit, how, step, digits, floor) => ({
 			key,
@@ -5533,7 +5542,7 @@ function init_look() {
 			].map((u) => Math.round(255 * Math.max(0, Math.min(1, u <= .0031308 ? 12.92 * u : 1.055 * u ** (1 / 2.4) - .055)))).map((v) => v.toString(16).padStart(2, "0")).join("");
 		};
 		SHOT_LIMIT = "Shot lengths come from video.shots, which can read a change inside a shot (a launch, a flip) as a cut, so a shot can read shorter than it is.";
-		standingOf = (n) => n <= 1 ? "one piece: these are its own numbers, not a range" : n < LOOK_RULES.lookPieces ? `${n} pieces: a range, not yet a look` : `${n} pieces: a look`;
+		standingOf = (n) => `${n <= 1 ? "one piece: these are its own numbers, not a range" : n < LOOK_RULES.lookPieces ? `${n} pieces: a range, not yet a look` : `${n} pieces: a look`}${n < LOOK_RULES.fewPieces ? `. ${FEW_PIECES_NOTE}` : ""}`;
 	})))();
 }
 
@@ -6072,4 +6081,4 @@ function init_watch() {
 	})))();
 }
 
-export { EDGE_DEFAULTS, PieceWatcher, SEEN_THROUGH_DEFAULTS, SPECK_DEFAULTS, alphaChange, analyzeCurve, analyzeFrame, buildSheet, calibrationKey, compareReferences, compareRegions, compareWithSheet, composeContactSheet, curveGraph, cutoutRegions, decodePng, diffArgsError, distanceTo, edgeArgsError, enclosedHoles, encodePngGray8, encodePngSrgb8, encodePngSrgbRgba8, flattenOver, frameLabel, furthestFrame, growMask, histogramOf, init_calibration, init_look, init_matte, init_motion, init_png16, init_screen, init_settled_read, init_sheet, init_transform, init_watch, isPiece, isSheet, labOf, lookArgsError, lookCrops, matteCoverage, measureCaptureTransfer, measureEdge, measureLook, measureScreen, outlineTracker, parseTiming, pictureChange, pictureOf, profileForWorkingSpace, referenceReader, resample, resolveDiffThresholds, resolveEdgeThresholds, resolveScreenThresholds, resolveWatchThresholds, rgbHex, sampleRegions, sceneLinearToDisplaySrgb, screenArgsError, seenThroughInside, settleTimeoutFor, sheetMarkdown, soundOnsets, speckPieces, stampFiles, subjectTop, summarizeFlicker, summarizeLookSeries, summarizeSeries, syncReport, unmatte, waitForSettled, watchArgsError };
+export { EDGE_DEFAULTS, FEW_PIECES_NOTE, LOOK_RULES, PieceWatcher, SEEN_THROUGH_DEFAULTS, SPECK_DEFAULTS, alphaChange, analyzeCurve, analyzeFrame, buildSheet, calibrationKey, compareReferences, compareRegions, compareWithSheet, composeContactSheet, curveGraph, cutoutRegions, decodePng, diffArgsError, distanceTo, edgeArgsError, enclosedHoles, encodePngGray8, encodePngSrgb8, encodePngSrgbRgba8, flattenOver, frameLabel, furthestFrame, growMask, histogramOf, init_calibration, init_look, init_matte, init_motion, init_png16, init_screen, init_settled_read, init_sheet, init_transform, init_watch, isPiece, isSheet, labOf, lookArgsError, lookCrops, matteCoverage, measureCaptureTransfer, measureEdge, measureLook, measureScreen, outlineTracker, parseTiming, pictureChange, pictureOf, profileForWorkingSpace, referenceReader, resample, resolveDiffThresholds, resolveEdgeThresholds, resolveScreenThresholds, resolveWatchThresholds, rgbHex, sampleRegions, sceneLinearToDisplaySrgb, screenArgsError, seenThroughInside, settleTimeoutFor, sheetMarkdown, soundOnsets, speckPieces, stampFiles, standingBase, subjectTop, summarizeFlicker, summarizeLookSeries, summarizeSeries, syncReport, unmatte, waitForSettled, watchArgsError };

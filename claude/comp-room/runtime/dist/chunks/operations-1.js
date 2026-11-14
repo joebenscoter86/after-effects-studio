@@ -3628,7 +3628,7 @@ async function runReferenceReport(args, io) {
 			const r = await measureRhythm(p);
 			if ("error" in r) rhythmNote = `The rhythm was not measured: ${r.error}`;
 			else rhythm = r;
-		} else rhythmNote = "The rhythm is measured on a movie only (stage 13's census and shot list): render the build to a file and report that.";
+		} else rhythmNote = "The rhythm is measured on a movie only (video.census and video.shots read it): render the build to a file and report that.";
 	}
 	await promises.writeFile(outPath, JSON.stringify(rhythm ? {
 		...report,
@@ -3759,7 +3759,7 @@ function init_keying_reference() {
 				{
 					name: "rhythm",
 					type: "boolean",
-					description: "Also measure a movie's rhythm (stage 13's census over the whole movie and its shot list: calm, local and travel shares, travel moves a minute, calm runs, bursts, shot lengths, cuts a minute), kept in the saved report so a look sheet can compare it.",
+					description: "Also measure a movie's rhythm (video.census over the whole movie and video.shots: calm, local and travel shares, travel moves a minute, calm runs, bursts, shot lengths, cuts a minute), kept in the saved report so a look sheet can compare it.",
 					required: false
 				},
 				{
