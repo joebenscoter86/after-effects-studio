@@ -54,7 +54,12 @@ The first video's 25 recipes all passed the check. Building them found three rec
 ### 11. Plain stand-ins hide whether a technique sells (owner, 2026-11-14)
 - Proofs on plain shapes showed mechanisms; the owner wants each to look as if a professional made it, and a few techniques cannot be judged at all without real art (a puppet pin needs a character; fog needs layered painted depth). Rule: every proof build gets designed artwork, generated to a brief (`prompts/art.md`): our own art of the same kind as the tutorial's, split into layers where the technique acts on layers.
 
-### 12. The orchestrator's own slips
+### 12. Building on art pulls the technique off its recipe (2026-11-14)
+- **What happened.** Rebuilding 24 proofs on generated art, builders changed the technique to make it sit well on the art: a shadow lightened from the measured 78 % to 50 % because it "drew a near-black slab" (14), a blur Amount cut from 95 to 70 because streaks ran off the frame (15), a shadow fan widened to 46 degrees because 15 looked faint (12), fog depths moved until the fog darkened the picture instead of hazing it (17), letter fray made into slow waves (21). Each looked better to the builder; each made the proof stop proving the technique.
+- **Why.** The art was not made for the technique's measured targets (the forest's far trunks were painted lighter than the fog colour, the reverse of the tutorial), and the builder fixed the clash on the technique's side.
+- **Rule.** The recipe's measured effect is fixed; the art and the layout bend to it. When the two clash, change the art (darken a plate, move a layer, re-generate) or the scene's scale, never the technique's measured result, and record the clash. Builders now measure their render against the recipe's figures after placing art (`prove-run.md` step 0), and art briefs state the technique's targets the art must allow (`art.md`).
+
+### 13. The orchestrator's own slips
 - Times written from guesses ran an hour fast: take every time from `date`.
 - Verdicts were relayed to the owner before anyone had looked at a pair: look at each pair yourself before reporting it as matching, and say which ones you have not seen.
 - Recipes edited after their check: `assemble.mjs` refuses them until a check is newer than the recipe.
