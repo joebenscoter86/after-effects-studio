@@ -45,6 +45,10 @@ var missing = [];
 function setOptional(fx, groupName, name, v) {
   var g = find(fx, groupName);
   var p = g ? find(g, name) : null;
+  // Run fix: in AE 2027 neither "Direction Axis" nor "Grid & Guides" is found as a group by display name; the properties
+  // are reachable by a whole-effect search. The Grid & Guides "Position" and "Radius" come first in the effect, before
+  // Producer's "Position X" and "Radius X", so the first match is the right one.
+  if (!p) p = find(fx, name);
   if (!p) { missing.push(groupName + " > " + name); return; }
   p.setValue(v);
 }
@@ -63,15 +67,26 @@ var leaf = P.shape(leafComp, "leaf");
 P.path(leaf, [[0, -140], [0, 140]], [[-95, 70], [75, -85]], [[95, 70], [-75, -85]], true);
 fill(leaf, [0.36, 0.68, 0.28, 1]);
 P.tf(leaf.layer, "ADBE Position").setValue([150, 150]);
-P.tf(leaf.layer, "ADBE Rotation").setValue(25);
+P.tf(leaf.layer, "ADBE Rotate Z").setValue(25);
 var vein = P.shape(leafComp, "vein");
 P.path(vein, [[0, -120], [0, 125]], null, null, false);
 P.stroke(vein, [0.22, 0.45, 0.17, 1], 6, 2);
 P.tf(vein.layer, "ADBE Position").setValue([150, 150]);
-P.tf(vein.layer, "ADBE Rotation").setValue(25);
+P.tf(vein.layer, "ADBE Rotate Z").setValue(25);
 
 // ASSUMED: dark frame, 5 s, 24 fps (recipe gives no comp size, solid colour or scene).
 var c = P.freshComp("10 graphic as particles", 1920, 1080, 24, 5, [0.04, 0.05, 0.07]);
+// Re-runs: freshComp removes the comps but not the solids they used; remove this script's unused ones first.
+(function () {
+  var j, it, col;
+  function near(a, b) { return Math.abs(a[0] - b[0]) < 0.002 && Math.abs(a[1] - b[1]) < 0.002 && Math.abs(a[2] - b[2]) < 0.002; }
+  for (j = app.project.numItems; j >= 1; j--) {
+    it = app.project.item(j);
+    if (!(it instanceof FootageItem) || !(it.mainSource instanceof SolidSource) || it.usedIn.length !== 0) continue;
+    col = it.mainSource.color;
+    if ((it.name === "background" && near(col, [0.05, 0.07, 0.10])) || (it.name === "leaf particles" && near(col, [0, 0, 0]))) it.remove();
+  }
+})();
 var bg = P.solid(c, "background", [0.05, 0.07, 0.10]);
 
 // Step 1: the graphic as its own layer, scaled to 32 %. Hidden: it is only the texture source (inferred in recipe).
@@ -87,8 +102,9 @@ ps.moveToBeginning();
 P.effect(ps, "CC Particle World");
 var fx = ps.property("ADBE Effect Parade").property("CC Particle World");
 
-need(fx, null, "Birth Rate").setValue(2.0);
-need(fx, null, "Longevity (sec)").setValue(1.0);
+// Recipe values (shown f009598). args.birthRate / args.longevity override.
+need(fx, null, "Birth Rate").setValue(args.birthRate || 2.0);
+need(fx, null, "Longevity (sec)").setValue(args.longevity || 1.0);
 
 // Step 3: Particle Type first, as the recipe stresses.
 // ASSUMED: index 13 for "Textured QuadPolygon"; pass args.particleType to correct it.
@@ -123,11 +139,16 @@ need(fx, "Physics", "Gravity").setValue(0.03);
 need(fx, "Physics", "Resistance").setValue(0);
 need(fx, "Physics", "Extra").setValue(0.5);
 need(fx, "Physics", "Extra Angle").setValue(360);
-// ASSUMED: Direction Axis along X so the drift runs left to right (the recipe does not show the axis).
-var ax = args.axis || [1, 0, 0];
-setOptional(fx, "Direction Axis", "Axis X", ax[0]);
-setOptional(fx, "Direction Axis", "Axis Y", ax[1]);
-setOptional(fx, "Direction Axis", "Axis Z", ax[2]);
+// Direction Axis is left at its default (Axis X 0, Y -1, Z 0); the recipe does not show it being changed.
+// Run fix: the script first set it to (1, 0, 0) for a left-to-right drift. That sent the leaves away from the viewer
+// into a cluster converging on a point left of centre, covering only about the left 40% of the frame. With the default
+// axis, the recipe's values give leaves spread across the whole frame, as the layout line measures.
+// args.axis = [x, y, z] still overrides.
+if (args.axis) {
+  setOptional(fx, "Direction Axis", "Axis X", args.axis[0]);
+  setOptional(fx, "Direction Axis", "Axis Y", args.axis[1]);
+  setOptional(fx, "Direction Axis", "Axis Z", args.axis[2]);
+}
 
 // ASSUMED: guides off (the grid is gone in the recipe's result frame; the change is not shown).
 setOptional(fx, "Grid & Guides", "Position", 0);

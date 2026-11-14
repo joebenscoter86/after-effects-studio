@@ -34,6 +34,13 @@ function fill(layer, gi, color) {
   var f = groupContents(layer, gi).addProperty("ADBE Vector Graphic - Fill");
   groupContents(layer, gi).property(f.propertyIndex).property("ADBE Vector Fill Color").setValue(color);
 }
+function poly(layer, gi, verts) {
+  var p = groupContents(layer, gi).addProperty("ADBE Vector Shape - Group");
+  var sh = new Shape();
+  sh.vertices = verts;
+  sh.closed = true;
+  groupContents(layer, gi).property(p.propertyIndex).property("ADBE Vector Shape").setValue(sh);
+}
 function flatShape(comp, name) {
   var l = comp.layers.addShape();
   l.name = name;
@@ -47,33 +54,46 @@ var c = P.freshComp("09 endless background tile", 1920, 1080, 24, DUR, [0.12, 0.
 
 // The landscape artwork: one 1920x1080 shape layer, deliberately uneven so the slide and the mirrored joins show.
 // Groups render top to bottom in the order added, so the nearest things come first.
+// Layout (recipe's layout: line): mountain peaks about 25-30% down (270-324 px), tree line from about 35% down (378 px)
+// to the window's bottom (972 px).
 var land = flatShape(c, "landscape");
 var gi = group(land, "trees");
-// Tree canopies at uneven spacing, trunks below.
-ellipseAt(land, gi, [230, 690], [150, 190]);
-ellipseAt(land, gi, [610, 720], [110, 140]);
-ellipseAt(land, gi, [1180, 670], [190, 230]);
-ellipseAt(land, gi, [1290, 720], [100, 130]);
-ellipseAt(land, gi, [1700, 700], [140, 170]);
+// Tree canopies at uneven spacing; their tops make the tree line at about 378-470 px.
+ellipseAt(land, gi, [150, 560], [200, 330]);
+ellipseAt(land, gi, [330, 600], [150, 260]);
+ellipseAt(land, gi, [610, 620], [130, 220]);
+ellipseAt(land, gi, [1000, 560], [230, 360]);
+ellipseAt(land, gi, [1180, 610], [150, 250]);
+ellipseAt(land, gi, [1520, 580], [190, 300]);
+ellipseAt(land, gi, [1780, 620], [140, 230]);
 fill(land, gi, [0.16, 0.38, 0.22, 1]);
 gi = group(land, "trunks");
-rect(land, gi, [230, 820], [22, 90]);
-rect(land, gi, [610, 820], [18, 70]);
-rect(land, gi, [1180, 820], [26, 100]);
-rect(land, gi, [1290, 820], [16, 60]);
-rect(land, gi, [1700, 820], [20, 80]);
+rect(land, gi, [150, 800], [28, 160]);
+rect(land, gi, [330, 790], [22, 120]);
+rect(land, gi, [610, 790], [18, 100]);
+rect(land, gi, [1000, 800], [30, 160]);
+rect(land, gi, [1180, 790], [20, 110]);
+rect(land, gi, [1520, 800], [26, 140]);
+rect(land, gi, [1780, 790], [20, 100]);
 fill(land, gi, [0.33, 0.23, 0.15, 1]);
 gi = group(land, "near hills");
-ellipseAt(land, gi, [500, 1000], [1400, 420]);
-ellipseAt(land, gi, [1600, 1030], [1100, 360]);
+ellipseAt(land, gi, [500, 980], [1400, 300]);
+ellipseAt(land, gi, [1600, 1000], [1100, 280]);
 fill(land, gi, [0.32, 0.56, 0.32, 1]);
 gi = group(land, "far hills");
-ellipseAt(land, gi, [250, 820], [900, 420]);
-ellipseAt(land, gi, [1050, 800], [1000, 520]);
-ellipseAt(land, gi, [1750, 830], [800, 380]);
+ellipseAt(land, gi, [250, 760], [900, 420]);
+ellipseAt(land, gi, [1050, 740], [1000, 480]);
+ellipseAt(land, gi, [1750, 770], [800, 380]);
 fill(land, gi, [0.58, 0.74, 0.55, 1]);
+gi = group(land, "mountains");
+// Peaks at 270-324 px down, uneven widths.
+poly(land, gi, [[-100, 760], [380, 280], [760, 760]]);
+poly(land, gi, [[520, 760], [880, 324], [1240, 760]]);
+poly(land, gi, [[1050, 760], [1420, 270], [1900, 760]]);
+poly(land, gi, [[1600, 760], [1850, 300], [2100, 760]]);
+fill(land, gi, [0.48, 0.55, 0.68, 1]);
 gi = group(land, "sun");
-ellipseAt(land, gi, [1480, 230], [150, 150]);
+ellipseAt(land, gi, [1560, 220], [130, 130]);
 fill(land, gi, [1, 0.88, 0.55, 1]);
 gi = group(land, "sky");
 rect(land, gi, [960, 540], [1920, 1080]);
@@ -94,23 +114,32 @@ mt.property("Mirror Edges").setValue(1);
 // at 0:00:04:00 as on screen: 960 - 4 * 1741.5 = -6006. About 1740 px a second, landscape moving left.
 mt.property("Tile Center").expression = "[value[0] - time * 1741.5, value[1]]";
 
-// Train wall with the window opening, over the landscape (four panels around the hole).
-var WL = 260, WT = 140, WR = 1660, WB = 800;
+// Train wall with the window opening, over the landscape (panels around the hole).
+// Layout: main window 4-90% across (77-1728 px), top edge 15% down (162 px), bottom edge 90% down (972 px);
+// a narrow second window strip at 97-100% across (1862-1920 px), so a wall post at 1728-1862 px.
+// ASSUMED: the narrow strip's top and bottom match the main window. The layout also says the part of the opening left of
+// "the post behind her" starts lower, at about 30% down; it is unclear which post that is, so it is left out.
+var WL = 77, WT = 162, WR = 1728, WB = 972, SL = 1862;
 var wall = flatShape(c, "train wall");
 gi = group(wall, "frame");
 rect(wall, gi, [960, WT / 2], [1920, WT]);
 rect(wall, gi, [960, (WB + 1080) / 2], [1920, 1080 - WB]);
 rect(wall, gi, [WL / 2, 540], [WL, 1080]);
-rect(wall, gi, [(WR + 1920) / 2, 540], [1920 - WR, 1080]);
+rect(wall, gi, [(WR + SL) / 2, 540], [SL - WR, 1080]);
 fill(wall, gi, [0.20, 0.22, 0.30, 1]);
 
 // A seated figure in silhouette in front, so it reads as "the view out of the window behind a character".
+// Layout: character about 15-52% across (288-998 px).
 var fig = flatShape(c, "figure");
 gi = group(fig, "head");
-ellipseAt(fig, gi, [1420, 560], [190, 210]);
+ellipseAt(fig, gi, [640, 470], [300, 330]);
 fill(fig, gi, [0.08, 0.08, 0.11, 1]);
 gi = group(fig, "torso");
-rect(fig, gi, [1420, 900], [420, 520]);
+rect(fig, gi, [643, 900], [710, 420]);
+ellipseAt(fig, gi, [643, 720], [710, 200]);
+fill(fig, gi, [0.08, 0.08, 0.11, 1]);
+gi = group(fig, "neck");
+rect(fig, gi, [640, 640], [120, 120]);
 fill(fig, gi, [0.08, 0.08, 0.11, 1]);
 
 return { comp: c.name, id: c.id, layers: c.numLayers, techEffect: mt.name, tileCenterAt4s: [960 - 4 * 1741.5, 540] };

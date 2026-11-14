@@ -41,6 +41,7 @@ function fill(layer, gi, color) {
 function null3d(comp, name) {
   var n = comp.layers.addNull(comp.duration);
   n.name = name;
+  n.source.name = "07 " + name; // named source, so a re-run can find and remove its own unused null solids
   n.threeDLayer = true;
   P.tf(n, "ADBE Anchor Point").setValue([0, 0, 0]);
   return n;
@@ -55,10 +56,25 @@ function shapeLayer3d(comp, name) {
 
 var W = [1, 1, 1, 1];
 var K = [0, 0, 0, 1];
-var RING = 900;        // ring diameter; the orbit radius is half of it
+// Layout line (shares of the result crop): planet about 24% of the width; ring about 1.7 times the planet's diameter wide
+// and 0.6 as tall as wide (spans 30-70% across, 27-70% down), long axis tilted slightly down to the right; small circle about
+// a third of the planet. Sizes below follow those ratios.
+var PLANET = 380;
+var RING = args.ring || 650;        // ring diameter (1.7 x planet); the orbit radius is half of it
+var MOON = args.moon || 125;        // about a third of the planet
+var TILT = args.tilt !== undefined ? args.tilt : 38; // ring height / width about 0.6 -> about 38 degrees; positive puts the near side at the bottom (-38 put it at the top)
+var ROLL = args.roll !== undefined ? args.roll : 6;   // long axis slightly down to the right
 var DUR = 5;
 
 var c = P.freshComp("07 face the camera", 1920, 1080, 24, DUR, [0, 0, 0]);
+// Re-runs: freshComp removes the comp but not the null solids it made; remove this script's unused ones.
+(function () {
+  var j, it;
+  for (j = app.project.numItems; j >= 1; j--) {
+    it = app.project.item(j);
+    if (it instanceof FootageItem && it.usedIn.length === 0 && (it.name === "07 centre null" || it.name === "07 orbit null")) it.remove();
+  }
+})();
 
 // Rig, bottom of the stack first. All at identity until parenting is done.
 var centre = null3d(c, "centre null");
@@ -72,18 +88,22 @@ stroke(ring, gi, W, 4);
 // ASSUMED: planet is not parented (so it stays a full circle); it sits at the centre, 3D so the ring can pass behind it.
 var planet = shapeLayer3d(c, "planet");
 gi = group(planet, "planet");
-ellipse(planet, gi, [380, 380]);
+ellipse(planet, gi, [PLANET, PLANET]);
 stroke(planet, gi, W, 5);
 fill(planet, gi, K);
 
 // ASSUMED: small circle 90 px, 5 px white stroke, black fill (recipe gives "black-filled, white-outlined", size unknown).
 var moon = shapeLayer3d(c, "orbiting circle");
 gi = group(moon, "moon");
-ellipse(moon, gi, [90, 90]);
+ellipse(moon, gi, [MOON, MOON]);
 stroke(moon, gi, W, 5);
 fill(moon, gi, K);
 
-c.layers.addCamera("Camera", [960, 540]);
+var cam = c.layers.addCamera("Camera", [960, 540]);
+// Run fix: addCamera(name, [960, 540]) left the camera at [0, 0, -2666.7] (looking at the comp from its top-left corner,
+// which skewed the ring into a diagonal). Place it in front of the comp centre explicitly.
+cam.property("ADBE Transform Group").property("ADBE Anchor Point") /* the camera's Point of Interest */.setValue([960, 540, 0]);
+cam.property("ADBE Transform Group").property("ADBE Position").setValue([960, 540, -2666.7]);
 
 // Parenting: ring and orbit null to the centre null; the small circle to the orbit null.
 orbit.parent = centre;
@@ -99,13 +119,16 @@ P.tf(moon, "ADBE Position").setValue([RING / 2, 0, 0]);
 
 // ASSUMED: the orbit plane is horizontal (ring laid flat with X Rotation 90) and tilted 18 degrees towards the camera,
 // and the orbit spins about the centre's Y axis once every 5 s. The recipe does not show how the orbit is animated.
-P.tf(centre, "ADBE Rotate X").setValue(-18);
+P.tf(centre, "ADBE Rotate X").setValue(TILT);
+P.tf(centre, "ADBE Rotate Z").setValue(ROLL);
 P.tf(ring, "ADBE Rotate X").setValue(90);
 
-// One turn over the comp, linear. Starts at 60 degrees so the circle is edge-on (90 degrees) at frame 10, the recipe's check time.
+// One turn over the comp, linear. Starts at 80 degrees so at frame 10 (the recipe's check time) the circle is at the
+// lower left of the ring's near side, turned about 110 degrees and seen as a thin sliver.
+var START = args.start !== undefined ? args.start : 80;
 var ry = P.tf(orbit, "ADBE Rotate Y");
-ry.setValueAtTime(0, 60);
-ry.setValueAtTime(DUR, 420);
+ry.setValueAtTime(0, START);
+ry.setValueAtTime(DUR, START + 360);
 ry.setInterpolationTypeAtKey(1, KeyframeInterpolationType.LINEAR, KeyframeInterpolationType.LINEAR);
 ry.setInterpolationTypeAtKey(2, KeyframeInterpolationType.LINEAR, KeyframeInterpolationType.LINEAR);
 

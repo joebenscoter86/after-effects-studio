@@ -30,24 +30,39 @@ var DUR = 5;
 var N = args.count || 36;
 var STEPZ = args.tidy ? 360 / N : (args.stepZ !== undefined ? args.stepZ : 41.1);
 var TILTX = args.tiltX !== undefined ? args.tiltX : 307;
-var CX = 960, CY = 540;
+var CX = 960, CY = args.cy || 470; // raised from 540 so the large front discs stay in frame
+// Layout (recipe's layout: line): ring 0.09-0.90 of the width, 0.16-0.96 of the height, front discs about 0.45 of the height tall;
+// sphere about 0.28 of the width across. With the recipe's anchor 910 and scale 48 the ring is only about 980 px wide under the
+// default camera, so the whole build sits closer to the camera (Z) to enlarge it in perspective, keeping the recipe's values.
+var Z = args.z !== undefined ? args.z : -700;
+var DISC = args.disc || 540; // ASSUMED: sized so the front discs are about 0.4 of the height tall
+var CORE = args.core || 400; // about 540 px on screen at this depth (layout: 0.28 of the width)
 
 var c = P.freshComp("06 3d orbit rings", 1920, 1080, FPS, DUR, [0.86, 0.86, 0.86]);
+// Re-runs: freshComp removes the comp but not its solid; remove this script's unused background solid (86% grey) first.
+(function () {
+  var j, it;
+  for (j = app.project.numItems; j >= 1; j--) {
+    it = app.project.item(j);
+    if (it instanceof FootageItem && it.mainSource instanceof SolidSource && it.name === "background" && it.usedIn.length === 0 &&
+        Math.abs(it.mainSource.color[0] - 0.86) < 0.001 && Math.abs(it.mainSource.color[2] - 0.86) < 0.001) it.remove();
+  }
+})();
 // ASSUMED: "pale grey frame" = 86% grey.
 P.solid(c, "background", [0.86, 0.86, 0.86]);
 
 // Step 1: the centre object, a filled black circle, 3D.
 // ASSUMED: diameter 440 px (the recipe gives no size); the ring's projected half-height is about 263 px, so the near discs overlap the circle's lower edge.
 var core = P.shape(c, "centre circle");
-P.ellipse(core, [440, 440]);
+P.ellipse(core, [CORE, CORE]);
 fill(core, [0, 0, 0, 1]);
 core.layer.threeDLayer = true;
-P.tf(core.layer, "ADBE Position").setValue([CX, CY, 0]);
+P.tf(core.layer, "ADBE Position").setValue([CX, CY, Z]);
 
 // Step 2: one disc, white fill, 6 px dark stroke, scale 48%.
 // ASSUMED: ellipse 200 x 200 px before scaling (about 96 px on screen); colours pure white and near-black.
 var disc = P.shape(c, "disc 01");
-P.ellipse(disc, [200, 200]);
+P.ellipse(disc, [DISC, DISC]);
 fill(disc, [1, 1, 1, 1]);
 P.stroke(disc, [0.08, 0.08, 0.08, 1], 6);
 var d = disc.layer;
@@ -59,7 +74,7 @@ P.tf(d, "ADBE Scale").setValue([48, 48, 48]);
 // Step 3: anchor moved 910 px down in layer space while the position stays at the centre object.
 // SUBSTITUTE: the Pan Behind tool drag; the recipe's Anchor Point value is set directly.
 P.tf(d, "ADBE Anchor Point").setValue([0, 910, 0]);
-P.tf(d, "ADBE Position").setValue([CX, CY, 0]);
+P.tf(d, "ADBE Position").setValue([CX, CY, Z]);
 
 // Step 4: Y Rotation 90 turns the disc edge-on (a slice of the doughnut).
 P.tf(d, "ADBE Rotate Y").setValue(90);

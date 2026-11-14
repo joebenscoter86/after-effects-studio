@@ -75,57 +75,65 @@ function rectMask(layer, left, top, right, bottom) {
 var DUR = 5;
 var c = P.freshComp("08 record puppet pin motion", 1920, 1080, 23.976, DUR, [0.16, 0.18, 0.24]);
 
-// Window opening (comp coordinates).
-var WL = 180, WT = 170, WR = 900, WB = 720;
+// Layout (recipe's layout: line, shares of the comp): window opening 4-91% across, down to about 90%, a window post at
+// 91-100% across; head with bun 10-72% down, face centre about 44% across; headphone ear cup centre about 30% across,
+// 50% down; shoulders about 14-53% across where the bottom edge cuts them. Sizes below follow those shares.
+// Window opening (comp coordinates). ASSUMED: top edge at 60 px (the layout gives no top).
+var WL = 77, WT = 60, WR = 1747, WB = 972;
 
 // Landscape outside the window, masked to the opening.
 var land = flatShape(c, "landscape");
-var gi = group(land, "sky");
+var gi = group(land, "near hill");
+ellipseAt(land, gi, [900, 1010], [1900, 320]);
+fill(land, gi, [0.33, 0.55, 0.36, 1]);
+gi = group(land, "far hills");
+ellipseAt(land, gi, [420, 900], [1100, 420]);
+ellipseAt(land, gi, [1320, 920], [1200, 380]);
+fill(land, gi, [0.55, 0.72, 0.52, 1]);
+gi = group(land, "sky");
 rect(land, gi, [(WL + WR) / 2, (WT + WB) / 2], [WR - WL, WB - WT], 0);
 fill(land, gi, [0.62, 0.80, 0.93, 1]);
-gi = group(land, "far hills");
-ellipseAt(land, gi, [300, 690], [700, 300]);
-ellipseAt(land, gi, [780, 700], [800, 260]);
-fill(land, gi, [0.55, 0.72, 0.52, 1]);
-gi = group(land, "near hill");
-ellipseAt(land, gi, [560, 790], [1000, 300]);
-fill(land, gi, [0.33, 0.55, 0.36, 1]);
 rectMask(land, WL, WT, WR, WB);
 
-// Window frame.
+// Window frame and the post at the right edge.
 var frame = flatShape(c, "window frame");
+gi = group(frame, "post");
+rect(frame, gi, [(WR + 1920) / 2 + 7, 540], [1920 - WR + 14, 1080], 0);
+fill(frame, gi, [0.80, 0.81, 0.84, 1]);
 gi = group(frame, "frame");
 rect(frame, gi, [(WL + WR) / 2, (WT + WB) / 2], [WR - WL, WB - WT], 24);
 stroke(frame, gi, [0.85, 0.86, 0.88, 1], 28);
 
-// Body: the part the two shoulder pins hold still. No keyframes.
+// Body: the part the two shoulder pins hold still. No keyframes. Shoulders 14-53% across (269-1018 px) at the bottom edge.
 var body = flatShape(c, "body");
-gi = group(body, "torso");
-rect(body, gi, [1110, 900], [460, 520], 150);
-fill(body, gi, [0.93, 0.55, 0.42, 1]);
 gi = group(body, "neck");
-rect(body, gi, [1110, 630], [90, 110], 30);
+rect(body, gi, [845, 800], [150, 170], 40);
 fill(body, gi, [0.96, 0.80, 0.68, 1]);
+gi = group(body, "torso");
+rect(body, gi, [644, 1010], [750, 360], 170);
+fill(body, gi, [0.93, 0.55, 0.42, 1]);
 
-// Head with headphones: one layer, pivoting at the neck.
-var PIVOT = [1110, 610];
+// Head with headphones: one layer, pivoting at the neck. Head with bun 108-778 px down, face centre 845 px across,
+// ear cup centre 576, 540.
+var PIVOT = [845, 790];
 var head = c.layers.addShape();
 head.name = "head";
 P.tf(head, "ADBE Anchor Point").setValue(PIVOT);
 P.tf(head, "ADBE Position").setValue(PIVOT);
-// Groups render top to bottom in the order added: ear cups, band, face, hair.
+// Groups render top to bottom in the order added (the first group is drawn on top): ear cups, band, face, hair.
 gi = group(head, "ear cups");
-rect(head, gi, [962, 490], [56, 110], 22);
-rect(head, gi, [1258, 490], [56, 110], 22);
+rect(head, gi, [576, 540], [96, 180], 36);
+rect(head, gi, [1114, 540], [96, 180], 36);
 fill(head, gi, [0.15, 0.15, 0.18, 1]);
 gi = group(head, "headphone band");
-arc(head, gi, [[962, 470], [1110, 318], [1258, 470]], [[0, 0], [-84, 0], [0, -84]], [[0, -84], [84, 0], [0, 0]]);
-stroke(head, gi, [0.15, 0.15, 0.18, 1], 22);
+arc(head, gi, [[576, 480], [845, 210], [1114, 480]], [[0, 0], [-150, 0], [0, -150]], [[0, -150], [150, 0], [0, 0]]);
+stroke(head, gi, [0.15, 0.15, 0.18, 1], 30);
 gi = group(head, "face");
-ellipseAt(head, gi, [1110, 495], [220, 240]);
+ellipseAt(head, gi, [860, 540], [430, 470]);
 fill(head, gi, [0.96, 0.80, 0.68, 1]);
 gi = group(head, "hair");
-ellipseAt(head, gi, [1110, 470], [270, 280]);
+ellipseAt(head, gi, [840, 480], [540, 560]);
+ellipseAt(head, gi, [900, 195], [175, 175]); // bun: top at about 10% down
 fill(head, gi, [0.24, 0.16, 0.12, 1]);
 
 // The "recorded" take for the head pin. Times in seconds at irregular spacing (as a live drag writes them),
@@ -133,7 +141,7 @@ fill(head, gi, [0.24, 0.16, 0.12, 1]);
 // ASSUMED: path, amplitude (up to about 7 degrees) and timing; the recipe says the drag path and Record Options are unknown.
 var T = [0, 0.29, 0.54, 0.83, 1.13, 1.38, 1.71, 2.04, 2.25, 2.63, 2.92, 3.25, 3.54];
 var A = [0, 2.5, 5.5, 7.0, 5.0, 1.5, -2.5, -5.0, -4.0, -1.0, 2.5, 4.0, 1.5];
-var DX = [0, 3, 6, 8, 6, 2, -3, -6, -5, -1, 3, 5, 2];
+var DX = [0, 5, 10, 13, 10, 3, -5, -10, -8, -2, 5, 8, 3];
 var DY = [0, -1, -2, -1, 0, 1, 1, 0, -1, -2, -1, 0, 0];
 var rot = P.tf(head, "ADBE Rotate Z");
 var pos = P.tf(head, "ADBE Position");
