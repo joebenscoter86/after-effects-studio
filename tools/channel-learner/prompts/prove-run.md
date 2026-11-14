@@ -21,8 +21,21 @@ The build scripts were written from the recipes alone, without After Effects (`p
 1. Read the recipe, including its `layout:` line (sizes measured on the tutorial's picture; the script was written before that line existed, so correct the script's assumed sizes to match it), then the script and its `// VERIFY:` list and `PROOF/<n>/build-notes.md`.
 2. Run it: `ae_do` `eval.run` `{ file: "<SCRIPTS>/<n>-<slug>.jsx", args: { prelude: "<SCRIPTS>/prelude.jsx" } }`. Fix what fails, in the script, with the smallest change (ExtendScript is ES3; after `addProperty` fetch properties again). Scripts are re-runnable: `P.freshComp` removes the earlier comp. Resolve each VERIFY item as you meet it (use `ae_catalog`, `effect.describe`, `ae_layer_info` to look things up) and correct the script.
 3. Render with `ae_render_frame`: `PROOF/<n>/build.png` at a moment that shows the technique. When the technique is a finish or a fix, also `PROOF/<n>/before.png` with it switched off (the notes say how: layers or effects named `TECH ...`, or `args.before`), then switch it back on. For an animated technique also write `PROOF/<n>/build.mov` with `ae_do` `render.preview` `{ comp, outputPath, span: "comp", overwrite: true }` (raise `timeoutMs`), as the last thing you do for that technique.
-4. Look at your render. Does it show what the recipe's "what it looks like" and `layout:` describe? Fix what is yours to fix; two or three rounds at most.
+4. Look at your render. Does it show what the recipe's "what it looks like" and `layout:` describe, as a whole picture and not only on the one layer the steps name? If the recipe describes several objects carrying the effect, shadows between them, or a shaded background, build those too: they are part of the technique's look, not decoration. If the recipe is silent on whether the other objects carry the effect, apply it to all like objects and say so. A render in which the technique "reads more as a tint than as the thing described" is not done: say what the recipe would need to tell you to close it. Fix what is yours to fix; two or three rounds at most.
 5. Append a section `## Run` to `PROOF/<n>/build-notes.md`: what ran; each fix you made to the script and why; each VERIFY item and what turned out true; where the recipe was unclear or silent and what you assumed; each step that has no plugin operation and needed raw scripting (name the operation the plugin lacks); anything substituted; and whether your render shows the technique.
+
+## What earlier builds learned
+
+- Edit a script, confirm the edit applied, then run it: never an After Effects call in the same turn as a file edit, and never more than one After Effects call in a turn.
+- Address comps and layers by name or id in every call, never "active" or "selected": the active comp can change between calls.
+- On a comp-sized shape or text layer an effect's point control reads comp pixels; on a smaller precomp layer it reads the layer's own space. Test with a fixed value before trusting an expression (`fromComp` put a gradient off its disc and a blur centre in a corner).
+- CC Radial Fast Blur appears to stop its Center at the frame's edge: centres farther out render identically.
+- Place cameras explicitly. Match names that cost a round: `ADBE Rotate Z` (not `ADBE Rotation`), `ADBE FOG_3D`, `ADBE Easy Levels`.
+- A font found by name may be a substitute: check `isSubstitute`, fall back to an installed face, and say so.
+- A layer style can be added by menu command when it opens no dialog (Bevel and Emboss 9004, Gradient Overlay 9007) after selecting the layer by script. Gradient Overlay colours and Curves points cannot be set by script: use the closest scriptable substitute and say so.
+- Fog 3D depths, apertures and blur centres do not carry over from the tutorial's scene: aim for the effect the recipe measures, and record the values that reached it.
+- A reviewer's suggested value is an estimate. Aim for the target it describes, measure your own render, and report when the suggestion goes the wrong way.
+- Each re-run leaves orphan solids; remove only your own.
 
 ## Report (at most 12 lines)
 

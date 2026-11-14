@@ -34,6 +34,19 @@ You turn part of one tutorial video into technique recipes for a motion designer
 - **The finished example is a different file.** The clip at the end of a technique is often a pre-made finished project, not the build you just watched: more layers, other values, a camera move, a grade. Say plainly which the result shows, and give both sets of values when both are on screen.
 - **No sizes.** Builders working from the first video's recipes had to guess every size (a ring's diameter, how far a pivot sits from its layer), because tutorials rarely say them. Measure the main elements on the result frame as shares of the picture and give them in `layout`.
 
+## What failed when the first video's recipes were built (avoid these)
+
+All 25 recipes passed their check against the video. Building them in After Effects then showed what a check against the video cannot. `../LESSONS.md` has each case.
+
+- **The recipe rebuilt the step, not the result.** One tip styled a single disc; the result frame shows five styled discs stacked with soft shadows between them. The build followed the steps and looked nothing like the result. Before you finish, go over the result frame and list every visible trait that makes it read the way it does (every object that carries the effect, shadows, overlaps, the background's own shading, grain). Each trait must be produced by a step, or named in `layout` with its measurements and where it comes from: another tip in this video (give that recipe's id and the figures needed here, so this recipe stands alone), or the finished example alone. "That belongs to the next tip" is not a reason to leave it out of the picture.
+- **Does it apply to one object or all of them?** If the author styles one layer while the result shows several styled alike, say which, from the frame. Do not leave it in `unknowns` when the picture answers it.
+- **A shown setting that does not give the shown result.** A light's Shadow Darkness read 45 % in the panel; the result frame's shadow measured more than twice as dark. When a result can be measured (a shadow's darkness against the floor, a blur's length, a glow's reach), measure it and put it in `layout`. If the shown setting cannot plausibly give it, say so.
+- **Values that only mean something in the tutorial's own scene.** Fog depths, a camera's aperture, a Curves point, a font size in pixels and a blur's centre depend on the scene's scale, depths and artwork. Keep the shown value, and give the effect it has in the result in terms a builder can aim for in any scene ("each trunk keeps about half its contrast", "letters 3.2 % of the height").
+- **Direction and motion written from the words, not the picture.** "Top-to-bottom shading" was diagonal; a ring's roll and its direction of travel were not given; a block of text was said to drift when it holds and then drops. For anything that moves, cut three or four frames across the result and write the direction, the speed as a share of the picture per second, and what holds still and when.
+- **An effect credited to the wrong object.** Shadows beside a word were read as the letters' own; they came from bars standing next to it. Trace each shadow, glow or streak back to the object it starts at before you write who casts it.
+- **Two figures that disagree.** A step's pixel size and the `layout` share described the same letters at two different sizes. Check each size in the steps against the result frame; when they differ, say why (the example was resized, the comp is a different size).
+- **Names for scripting.** Give an effect's match name only when you are sure of it; a wrong one costs a builder a round.
+
 ## Output
 
 One file per technique: `STUDY/recipes/<n>-<slug>.md`, exactly in this form.
@@ -51,7 +64,7 @@ ingredients:
 steps:
 1. <what to do> (said | shown fNNNNNN | inferred)
    - <Property>: <value> (said | shown fNNNNNN | inferred)
-layout: <sizes and positions of the main elements as shares of the picture, measured on the result frame: "ring diameter about 37% of the picture height, centred"; mark each `measured`>
+layout: <sizes and positions of the main elements as shares of the picture, measured on the result frame: "ring diameter about 37% of the picture height, centred"; mark each `measured`. Then everything else the result frame shows that makes the look: which objects carry the effect, each shadow's direction, reach and darkness, overlaps and stacking order, the background's own shading, and for motion the direction and speed. A trait no step produces is named here with its source>
 timing and easing: <keyframes, durations, eases given; or "none given">
 variations: <what the author says can be changed; or "none given">
 pitfalls: <warnings the author gives; or "none given">

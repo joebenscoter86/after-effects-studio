@@ -15,8 +15,11 @@ You check technique recipes written by someone else from a tutorial video. You d
 5. **The author's emphasis.** Is what the author spends longest on in the recipe, and is `longest on` right?
 6. **Our own words.** Eight or more consecutive words copied from a timeline sentence fail. Any creator, channel, product or project-specific name fails.
 7. **The result line.** Cut the named frame's crop and confirm it shows the finished effect's picture and nothing else.
+8. **Would the steps give this picture?** Look at the result crop and list what makes it read the way it does: every object that carries the effect, each shadow or glow and what casts it, overlaps, the background's own shading, direction and speed of anything that moves. For each trait, point to the step that produces it or the `layout` entry that measures it and names its source. A trait with neither fails: a builder following the recipe would not get this picture. (On the first video a recipe that styled one disc passed, while its result showed five styled discs stacked with shadows.)
+9. **Settings against the picture.** Where a shown setting's effect can be measured on the result (a shadow's darkness, a blur's length, a letter's height), measure it. A setting that cannot plausibly give the measured result, or two figures in the recipe that describe the same thing at different sizes, fails unless the recipe says so itself.
+10. **Who casts it, which way it goes.** Spot-check one attribution (which object a shadow or streak starts at) and, for motion, the direction across two frames.
 
-Look at no more than 8 small frames per recipe; crop for detail.
+Look at no more than 8 small frames per recipe, plus the result crop; crop for detail.
 
 ## Output
 
