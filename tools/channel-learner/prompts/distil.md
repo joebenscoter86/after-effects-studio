@@ -22,6 +22,16 @@ You turn part of one tutorial video into technique recipes for a motion designer
 7. **Find the result.** Record when the finished effect is visible in the viewer and where the viewer's picture is in the full-size frame at that moment (the picture only, without panel edges), so a build can be compared with it.
 8. Write only inside `STUDY/recipes/` and `STUDY/scratch/`. Do not edit tracked files. Do not use After Effects.
 
+## What failed the check on the first video (avoid these)
+
+- **A frame cited for something it does not show.** Before you write `shown fNNNNNN`, look at that frame (or a crop of it) and confirm it shows exactly that value or state. A value still being dragged, a menu still open, or a switch not yet clicked does not count: cite the frame where it has landed.
+- **Result windows that do not hold.** The recording's editor zooms, pans and rearranges panels every second or two, so a crop is only right for a short stretch. Give a narrow window in which your crop holds the finished picture from start to end (cut a frame at each end and check), and name a clean frame: no mouse arrow, no selection handles, no dialog, no viewer label or panel border inside the crop. Cut one from `source.mp4` if no kept frame is clean. When the result is in a panel, not the viewer (a timeline change, for example), crop that panel.
+- **Menu paths and shortcuts tagged `said`.** If the narrator only names the action ("duplicate", "make a solid") and the menu is not on screen, the menu path or shortcut is `inferred`.
+- **Steps done on screen without a word.** Watch for a layer's eye switched off and on, a layer dragged up or down the stack, effects enabled one at a time, a property changed in a dialog. If the result depends on it, it is a step.
+- **The finished example made a different way.** Sometimes the author demonstrates one route (keyframes) while the finished example on screen is driven another way (an expression, a preset). Say which is which and what is not shown.
+- **Eight or more words in a row from the narration,** or the example's own on-screen sentence, or a name from the creator's project or products.
+- **"Longest on" guessed.** Time it: seconds on screen for each part, from the frame numbers.
+
 ## Output
 
 One file per technique: `STUDY/recipes/<n>-<slug>.md`, exactly in this form.
