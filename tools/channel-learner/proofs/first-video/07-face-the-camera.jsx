@@ -171,13 +171,14 @@ ART.glow(rim, GT, GR, GI);
 
 // Optional caption (brief: Space Mono 0.018 h, #F5F5F5 at 60 %, bottom-left at 0.05, 0.92).
 var font = args.font || "Menlo-Regular";
-var cap = P.text(c, "LUNAR ORBIT  /  27.3 DAYS", { size: Math.round(0.018 * 1080 / 0.72), color: ART.hex("#F5F5F5"), name: "caption", font: font, tracking: 120 });
+var cap = P.text(c, "LUNAR ORBIT  /  27.3 DAYS", { size: args.capSize || 2 * Math.round(0.018 * 1080 / 0.72), color: ART.hex("#F5F5F5"), name: "caption", font: font, tracking: 120 });
 var cd = cap.property("ADBE Text Properties").property("ADBE Text Document");
 var tdv = cd.value; tdv.justification = ParagraphJustification.LEFT_JUSTIFY; cd.setValue(tdv);
 var cr = cap.sourceRectAtTime(0, false);
 P.tf(cap, "ADBE Anchor Point").setValue([cr.left, cr.top + cr.height]);
 P.tf(cap, "ADBE Position").setValue([0.05 * 1920, 0.92 * 1080]);
-P.tf(cap, "ADBE Opacity").setValue(args.capOpacity || 60);
+// Polish (2026-11-14): the caption was tiny and faint on a phone; now twice the size (54 px) at 88 %.
+P.tf(cap, "ADBE Opacity").setValue(args.capOpacity || 88);
 
 var order = []; for (var li = 1; li <= c.numLayers; li++) order.push(c.layer(li).name);
 return { comp: c.name, id: c.id, order: order, techLayers: [moon.name, rim.name], autoOrient: !args.before, lift: LIFT, moonScale: MS, font: cd.value.font };

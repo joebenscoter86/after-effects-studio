@@ -112,12 +112,15 @@ for (k = 1; k <= N; k++) {
     // The two spaces take the index's small size too, so the number sits close after the phrase.
     var cr = td.characterRange(ph.length, ph.length + 4);
     cr.font = "SpaceMono-Bold";
-    cr.fontSize = args.indexSize || 26;
+    // Polish: 26 -> 40 px (cap height about 0.026 h): at the brief's 0.016 h the numbers read as texture.
+    cr.fontSize = args.indexSize || 40;
     cr.fillColor = IDX;
     tdp.setValue(td);
   } catch (e) { indexNote = e.toString(); }
   // Brief: the middle (level) word at full opacity, falling to about 55 % by the frame edges (about 20 deg).
-  P.tf(lay, "ADBE Opacity").expression = 'var a = transform.rotation + (hasParent ? parent.transform.rotation : 0);\na = ((a % 360) + 540) % 360 - 180;\n100 - 45 * Math.min(Math.abs(a) / 20, 1);';
+  P.tf(lay, "ADBE Opacity").expression = 'var a = transform.rotation + (hasParent ? parent.transform.rotation : 0);\na = ((a % 360) + 540) % 360 - 180;\nvar d = Math.abs(a);\nd <= 17 ? 100 - 45 * d / 17 : 55 * Math.max(0, 1 - (d - 17) / 10);';
+  // Polish: 55 % is now reached at 17 deg and the words fade on to 0 at 27 deg, so the words the frame's top and bottom
+  // edges cut (at about 26 deg) dissolve instead of being chopped.
 }
 
 // Finished example: copies parented to a null; how the null is animated is not shown.
@@ -143,14 +146,21 @@ rot.setTemporalEaseAtKey(2, [ease], [ease]);
 // #F5F5F5, two lines, left-aligned, centred 0.49 down; the pointer and a soft dark radial behind the title.
 var pt = c.layers.add(ART.footage(ARTDIR, "pointer.png", "art 04"));
 pt.name = "pointer";
-P.tf(pt, "ADBE Scale").setValue([9, 9]);
+// Polish: the chevron rendered near white and heavy. Now tinted to the word mint #BEF0D7 (Tint maps its white to
+// the mint and its shading to a deep green), a little smaller (9 -> 7 %, about 32 x 49 px), and without its glow.
+P.tf(pt, "ADBE Scale").setValue([args.pointerScale || 7, args.pointerScale || 7]);
 P.tf(pt, "ADBE Position").setValue([0.55 * 1920, 540]);
-ART.glow(pt, 60, 15, 0.5);
+var tn = P.effect(pt, "ADBE Tint");
+var tnMiss = ART.setFx(tn, { "Map Black To": ART.hex("#2E5A47"), "Map White To": ART.hex("#BEF0D7"), "Amount to Tint": 100 });
+if (tnMiss.length) throw new Error("tint params not found: " + tnMiss.join(", "));
 
 var ts = P.solid(c, "04 title shade", BG);
 ts.name = "title shade";
 var mk = ts.property("ADBE Mask Parade").addProperty("ADBE Mask Atom");
-var ms = new Shape(), mx = 330, my = 0.49 * 1080, rx = 330, ry = 200, kk = 0.5523;
+// Polish: the title straddled the dial's hub cap. It now sits clear of the hub, below it at the lower left
+// (left edge 0.04 w, block about 0.70-0.91 h); the shade moves with it.
+var TY = args.titleY || 0.805 * 1080;
+var ms = new Shape(), mx = 330, my = TY, rx = 360, ry = 170, kk = 0.5523;
 ms.vertices = [[mx, my - ry], [mx + rx, my], [mx, my + ry], [mx - rx, my]];
 ms.inTangents = [[-rx * kk, 0], [0, -ry * kk], [rx * kk, 0], [0, ry * kk]];
 ms.outTangents = [[rx * kk, 0], [0, ry * kk], [-rx * kk, 0], [0, -ry * kk]];
@@ -166,7 +176,7 @@ ttd.justification = ParagraphJustification.LEFT_JUSTIFY;
 ttp.setValue(ttd);
 var tr = tt.sourceRectAtTime(0, false);
 P.tf(tt, "ADBE Anchor Point").setValue([tr.left, tr.top + tr.height / 2]);
-P.tf(tt, "ADBE Position").setValue([0.04 * 1920, 0.49 * 1080]);
+P.tf(tt, "ADBE Position").setValue([0.04 * 1920, TY]);
 
 // Brief layer order: background, dial, words, pointer, title (shade just under the title).
 bg.moveToEnd();

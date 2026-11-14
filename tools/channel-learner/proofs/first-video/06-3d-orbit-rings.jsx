@@ -69,12 +69,21 @@ var paper = c.layers.add(ART.footage(ARTDIR, "paper.png", "art 06"));
 paper.name = "background";
 
 // Brief: soft contact shadow under the ring, #1A1A1A at 10 %, about 0.6 of the width wide at 0.95 down (2D, below the 3D layers).
-var cs = P.shape(c, "contact shadow");
-P.ellipse(cs, [0.6 * 1920, 90]);
-fill(cs, INK);
-P.tf(cs.layer, "ADBE Position").setValue([CX, 0.95 * 1080]);
-P.tf(cs.layer, "ADBE Opacity").setValue(10);
-P.effect(cs.layer, "ADBE Gaussian Blur 2").property("Blurriness").setValue(70); // 45 read as a flat band
+// Polish: the blurred shape layer rendered as a band with hard top and bottom edges (the blur was clipped). Now an ink
+// solid with a feathered elliptical mask, which falls off softly on every side.
+(function () { var j, it; for (j = app.project.numItems; j >= 1; j--) { it = app.project.item(j); if (it instanceof FootageItem && it.name === "06 contact shadow" && it.usedIn.length === 0) it.remove(); } })();
+var csl = P.solid(c, "06 contact shadow", INK);
+csl.name = "contact shadow";
+var csm = csl.property("ADBE Mask Parade").addProperty("ADBE Mask Atom");
+var cms = new Shape(), cmx = 960, cmy = (args.shadowY || 0.955) * 1080, crx = 0.3 * 1920, cry = 45, ck = 0.5523;
+cms.vertices = [[cmx, cmy - cry], [cmx + crx, cmy], [cmx, cmy + cry], [cmx - crx, cmy]];
+cms.inTangents = [[-crx * ck, 0], [0, -cry * ck], [crx * ck, 0], [0, cry * ck]];
+cms.outTangents = [[crx * ck, 0], [0, cry * ck], [-crx * ck, 0], [0, -cry * ck]];
+cms.closed = true;
+csm.property("ADBE Mask Shape").setValue(cms);
+csl.property("ADBE Mask Parade").property(1).property("ADBE Mask Feather").setValue([160, 80]);
+P.tf(csl, "ADBE Opacity").setValue(args.shadowOpacity || 14);
+var cs = { layer: csl };
 
 // Step 1: the centre object. Rebuild: the obsidian sphere stands where the black circle was (3D, same position and depth,
 // facing the camera). Scale so it is CORE px wide in layer space, as the circle was (about 540 px on screen at Z -700;
@@ -91,7 +100,8 @@ P.tf(core.layer, "ADBE Position").setValue([CX, CY, Z]);
 var disc = P.shape(c, "disc 01");
 P.ellipse(disc, [DISC, DISC]);
 // Rebuild (brief): fill #F3F0EB at 88 %, ink stroke #1A1A1A about 2 px on screen (3 px in layer space at 48 % scale, Z -700).
-fill(disc, ART.hex("#F3F0EB").concat([1]), args.discFill || 88);
+// Polish: fill 88 -> 100 %: at 88 the sphere showed through the near discs and they read ghostly.
+fill(disc, ART.hex("#F3F0EB").concat([1]), args.discFill || 100);
 P.stroke(disc, INK.concat([1]), args.discStroke || 4); // 3 read as a faint hairline on the first render
 var d = disc.layer;
 
@@ -143,6 +153,18 @@ rollNull.threeDLayer = true;
 P.tf(rollNull, "ADBE Position").setValue([CX, CY, Z]);
 for (i = 2; i <= N + 1; i++) c.layer(i).parent = rollNull; // discs are layers 2..N+1; the sphere (N+2) stays unparented so it does not roll
 P.tf(rollNull, "ADBE Rotate Z").setValue(ROLL);
+// Polish: the ring sat too high and too large (0.09-0.97 w, 0.04-0.88 h against the layout's 0.10-0.90 w, 0.16-0.96 h).
+// The roll null (and so the whole ring) moves back and down; the recipe's ring values (anchor 910, scale 48, tilt, roll,
+// step) are untouched, only where the ring stands in the scene. Under the default camera (zoom 2666.7) Z -504 shows the
+// ring smaller than at Z -700; the values were found by measuring the render (see build-notes Polish).
+var RING = args.ring || [975, 540, -580]; // measured: ring 0.12-0.88 w, 0.15-0.97 h
+P.tf(rollNull, "ADBE Position").setValue(RING);
+// The sphere moves to the same depth and is rescaled to keep the layout's 0.28 w across, centred 0.51, 0.50 on screen.
+var PSC = 2666.7 / (2666.7 + RING[2]);
+var SPW = args.sphereW || 0.28 * 1920;
+SPH = 100 * (SPW / PSC) / 1012;
+P.tf(core.layer, "ADBE Scale").setValue([SPH, SPH, SPH]);
+P.tf(core.layer, "ADBE Position").setValue([960 + (0.51 * 1920 - 960) / PSC, 540 + (0.50 * 1080 - 540) / PSC, RING[2]]);
 
 // Brief: two four-point ink sparkles at the recipe's positions (0.13 w across at 0.17, 0.35; 0.07 w across at 0.18, 0.79),
 // with a very slow twinkle (scale 95-105 %). 2D, on top of the 3D layers.
@@ -160,8 +182,10 @@ function sparkle(name, across, x, y, phase) {
   P.tf(st.layer, "ADBE Scale").expression = "var s = 100 + 5 * Math.sin(2 * Math.PI * time / 2.5 + " + phase + "); [s, s];";
   return st.layer;
 }
-sparkle("sparkle big", 0.13 * 1920, 0.17 * 1920, 0.35 * 1080, 0);
-sparkle("sparkle small", 0.07 * 1920, 0.18 * 1920, 0.79 * 1080, 2);
+// Polish: the big sparkle sat on the ring's left end; args move them into clear paper.
+var SB = args.sparkleBig || [0.83 * 1920, 0.17 * 1080], SS = args.sparkleSmall || [0.18 * 1920, 0.79 * 1080];
+sparkle("sparkle big", 0.13 * 1920, SB[0], SB[1], 0);
+sparkle("sparkle small", 0.07 * 1920, SS[0], SS[1], 2);
 
 var order = []; for (i = 1; i <= c.numLayers; i++) if (i < 4 || i > c.numLayers - 4) order.push(i + " " + c.layer(i).name);
 return { order: order, comp: c.name, id: c.id, layers: c.numLayers, discs: N, stepZ: STEPZ, tiltX: TILTX, roll: ROLL, speed: SPEED, sample: sample.join(" | ") };

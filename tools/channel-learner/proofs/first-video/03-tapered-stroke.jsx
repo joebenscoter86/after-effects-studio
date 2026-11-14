@@ -44,7 +44,7 @@ pl.name = "planet";
 P.tf(pl, "ADBE Scale").setValue([74.6, 74.6]);
 P.tf(pl, "ADBE Position").setValue([CX, CY]);
 var ex = P.effect(pl, "ADBE Exposure2");
-ART.setFx(ex, { "Exposure": args.exposure !== undefined ? args.exposure : -0.8 });
+ART.setFx(ex, { "Exposure": args.exposure !== undefined ? args.exposure : -1.3 }); // Polish: -0.8 -> -1.3 so the rim is the brightest thing
 
 // Brief: soft radial dark (#03050E at 60 % in the centre, clear at the edge) over the lower centre, under the headline.
 var sd = P.solid(c, "03 planet shade", ART.hex("#03050E"));
@@ -64,13 +64,13 @@ P.tf(sd, "ADBE Opacity").setValue(args.shade !== undefined ? args.shade : 60);
 var D = 2 * R;
 var BLUE_A = ART.hex("#8FC4FF"), BLUE_B = ART.hex("#2F6BFF");
 var expr = 'var e = thisComp.layer("arc core").effect("TECH taper"); e.active ? e(1) : 0;';
-function arc(name) {
+function arc(name, col) {
   var sh = P.shape(c, name);
   P.ellipse(sh, [D, D]);
   // Layer sits at the comp centre (960, 540): ellipse offset to the circle's centre.
   P.contents(sh).property(1).property("ADBE Vector Ellipse Position").setValue([CX - 960, CY - 540]);
   // Step 1: white stroke, 16 px, Butt Cap, no fill.
-  var s = P.stroke(sh, [1, 1, 1, 1], args.width || 16, 1);
+  var s = P.stroke(sh, col || [1, 1, 1, 1], args.width || 16, 1);
   var t = P.contents(sh).addProperty("ADBE Vector Filter - Trim");
   var tIdx = t.propertyIndex;
   P.contents(sh).property(tIdx).property("ADBE Vector Trim Start").setValue(0);
@@ -97,23 +97,34 @@ function blueGlow(layer, threshold, radius, intensity) {
 // CC Radial Fast Blur (Center 962.4, 692.4, Amount 62, Brightest), then the brief's wide blue Glow (radius 110,
 // intensity 1.2). Recipe's Glow uses Original Colors on white and leaves the blue unexplained; the brief's A & B
 // colours give the blue (the plain build's "ASSUMED blue tint" is gone).
-var bl = arc("arc bloom");
+// Polish: the bloom copy's stroke is the brief's bloom blue instead of white (colour is the art's; the core stays
+// white): a white copy blurred and added read grey-blue above the crest.
+var bl = arc("arc bloom", (args.bloomColor ? ART.hex(args.bloomColor) : ART.hex("#2F6BFF")).concat([1]));
 var gb = P.effect(bl, "Gaussian Blur");
 gb.property("Blurriness").setValue(9.9);
 bl.property("ADBE Effect Parade").property(gb.propertyIndex).property("Repeat Edge Pixels").setValue(1);
 var rb = P.effect(bl, "CC Radial Fast Blur");
-rb.property("Center").setValue([962.4, 692.4]);
+// Polish (2026-11-14): the review found the bloom half as wide as the tutorial's, spread both ways and grey-blue where
+// the tutorial throws it outward from the rim in saturated blue. The recipe's Center 962.4, 692.4 is the tutorial
+// scene's point below its crest; here the centre goes to the arc's own circle centre (the planet centre), so the
+// streaks run straight out along every radius of the arc. Amount 62 and Brightest stay as the recipe gives them.
+rb.property("Center").setValue(args.rfbCenter || [CX, CY]);
 bl.property("ADBE Effect Parade").property(rb.propertyIndex).property("Amount").setValue(62);
 bl.property("ADBE Effect Parade").property(rb.propertyIndex).property("Zoom").setValue(2); // Brightest
-blueGlow(bl, 40, args.bloomRadius || 110, args.bloomIntensity || 1.2);
+// Polish: bloom Glow widened and strengthened (radius 110 -> 200, intensity 1.2 -> 3, threshold 40 -> 10 so the blue
+// stroke's whole streak feeds it), measured on the render against the review's target (see build-notes Polish).
+blueGlow(bl, args.bloomThreshold || 10, args.bloomRadius || 200, args.bloomIntensity || 3);
 bl.blendingMode = BlendingMode.ADD;
+// Polish: the bloom sits under the planet (an art/layout move, not a technique value): the opaque disc hides the
+// inner half, so the blue throws outward from the rim only, as the tutorial's does.
+if (args.bloomUnderPlanet !== false) bl.moveAfter(c.layer("planet"));
 
 // Core: white tapered stroke with the tight blue Glow (threshold 40 %, radius 20, intensity 2).
 var co = arc("arc core");
 var tech = P.effect(co, "Slider Control");
 tech.name = "TECH taper";
 co.property("ADBE Effect Parade").property("TECH taper").property(1).setValue(100);
-blueGlow(co, 40, args.coreRadius || 20, args.coreIntensity || 2);
+blueGlow(co, 40, args.coreRadius || 40, args.coreIntensity || 3); // Polish: 20/2 -> 40/3, a hotter crest
 
 // Headline: Poppins SemiBold, cap height about 0.055 h (85 px type), line spacing 1.15, centred, #E9EEF8, centred
 // at 0.57 down (layout 0.39-0.75); the last word in #8FC4FF.
@@ -136,5 +147,18 @@ try {
 var hr = hl.sourceRectAtTime(0, false);
 P.tf(hl, "ADBE Anchor Point").setValue([hr.left + hr.width / 2, hr.top + hr.height / 2]);
 
+// Polish: the brief's optional slow push (100 -> 103 % over the comp) on a null parenting the planet, its shade and both
+// arc layers, so build.mov shows a sense of approach; the stars stay put. The taper itself is still.
+(function () { var i, it; for (i = app.project.numItems; i >= 1; i--) { it = app.project.item(i); if (it instanceof FootageItem && it.name === "03 push null" && it.usedIn.length === 0) it.remove(); } })();
+if (args.push !== false) {
+  var pn = c.layers.addNull(c.duration);
+  pn.name = "push null";
+  pn.source.name = "03 push null";
+  P.tf(pn, "ADBE Position").setValue([960, 540]);
+  var lay = ["planet", "planet shade", "arc bloom", "arc core"];
+  for (var pi = 0; pi < lay.length; pi++) c.layer(lay[pi]).parent = pn;
+  P.tf(pn, "ADBE Scale").setValueAtTime(0, [100, 100]);
+  P.tf(pn, "ADBE Scale").setValueAtTime(c.duration, [103, 103]);
+}
 var order = []; for (var li = 1; li <= c.numLayers; li++) order.push(c.layer(li).name);
 return { comp: c.name, id: c.id, order: order, accent: accent, font: tdp.value.font, headlineW: hr.width, headlineH: hr.height, top: hr.top };

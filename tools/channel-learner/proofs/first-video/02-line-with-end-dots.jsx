@@ -118,13 +118,16 @@ l.parent = n;
 l2.parent = n;
 l3.parent = n;
 
-// ASSUMED: the finished arcs move, but no keyframes are shown. The null turns 0 -> 90 deg over the comp, eased.
+// ASSUMED: the finished arcs move, but no keyframes are shown.
+// Polish (2026-11-14): the review measured the tutorial's set turning steadily clockwise at about 20 deg/s; the old
+// eased 0 -> 90 deg ran 7 deg/s at the ends and 44 deg/s mid-move. The null now turns linearly at 20 deg/s through the
+// whole comp (0 deg at 0 s, 80 deg at 4 s; linear keys, no ease).
+var RATE = args.rate !== undefined ? args.rate : 20;
 var rot = P.tf(n, "ADBE Rotate Z");
 rot.setValueAtTime(0, 0);
-rot.setValueAtTime(c.duration, args.endAngle !== undefined ? args.endAngle : 90);
-var ease = new KeyframeEase(0, 50);
-rot.setTemporalEaseAtKey(1, [ease], [ease]);
-rot.setTemporalEaseAtKey(2, [ease], [ease]);
+rot.setValueAtTime(c.duration, RATE * c.duration);
+rot.setInterpolationTypeAtKey(1, KeyframeInterpolationType.LINEAR, KeyframeInterpolationType.LINEAR);
+rot.setInterpolationTypeAtKey(2, KeyframeInterpolationType.LINEAR, KeyframeInterpolationType.LINEAR);
 
 // Brief layer order: backdrop, arcs, word (word on top).
 c.layer("label").moveToBeginning();

@@ -55,11 +55,14 @@ P.tf(sh.layer, "ADBE Position").setValue([960, 0.51 * 1080]);
 sh.layer.moveAfter(word);
 ART.glow(sh.layer, 60, args.ringGlowRadius || 20, args.ringGlowIntensity || 0.6);
 
-// Step 6: the ring turns. First key 0 deg at 0 s, second key at 3 s.
-// ASSUMED: end angle 90 deg and linear interpolation (the recipe gives neither).
+// Step 6: the ring turns on layer Rotation keyframes, first key 0 deg at 0 s.
+// Polish (2026-11-14): the review measured the tutorial's ring at about 27 deg/s clockwise and never stopping;
+// the old 0 -> 90 deg over 3 s froze for the last second. Keys now run linear at 27 deg/s through the comp's end
+// (0 deg at 0 s, 108 deg at 4 s), so the ring is still turning on the last frame.
+var RATE = args.rate !== undefined ? args.rate : 27;
 var rot = P.tf(sh.layer, "ADBE Rotate Z");
 rot.setValueAtTime(0, 0);
-rot.setValueAtTime(3, args.endAngle !== undefined ? args.endAngle : 90);
+rot.setValueAtTime(c.duration, RATE * c.duration);
 
 var lb = c.layer("label").sourceRectAtTime(0, false);
 var order = []; for (var li = 1; li <= c.numLayers; li++) order.push(c.layer(li).name);
