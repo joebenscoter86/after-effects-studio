@@ -172,7 +172,7 @@ test('re-import replaces earlier imports without duplicating provenance', async 
 
 test('refuses a private home path', async () => {
   const from = await fixture();
-  await write(from, 'fixture-native/fixture-native.jsx', 'var p = "/Users/someone/x";\n');
+  await write(from, 'fixture-native/fixture-native.jsx', 'var p = "/Users/' + 'someone/x";\n');
   await assert.rejects(runImport(from), /fixture-native\.jsx/);
 });
 

@@ -50,12 +50,12 @@
   - `copies STYLE.md, module and tools, and nothing else`: the imported folder holds exactly `STYLE.md`, the module, `tools/x.mjs`; no `.ttf`, `OFL-*`, `LICENSE-lemo-opuscar.txt` or `proof/`.
   - `index lists needs, adding blender when a tool calls it`: a fixture tool containing `Blender` yields `needs` `['blender','ffmpeg','node']`.
   - `rewrites Content package paths and reports the rest`: a header `// production/styles/fixture-native/tools/x.mjs` becomes `// library/styles/fixture-native/tools/x.mjs`; a line containing `~/Assets/` appears in `adaptations` with its file and line.
-  - `refuses a private home path`: a module containing `/Users/someone/` rejects with a message naming the file.
+  - `refuses a private home path`: a module containing a home path (`/Users/<name>/`) rejects with a message naming the file.
   - `generated skill names every style and fits the limit`: the skill's frontmatter `description` is ≤ 1024 characters and contains each imported title.
 - [ ] **Step 2: Run** `node --test plugin/tests/import-styles.test.mjs`. Expected: FAIL, module not found.
 - [ ] **Step 3: Implement** `import-styles.mjs`. Rewrites are exact: `production/styles/<id>/` → `library/styles/<id>/`. `adaptations` lists remaining lines matching `~/Assets|production/|harness|prove\.mjs|go\.sh|Higgsfield|JoeB` (case-insensitive JoeB). Skill text comes from a template in the importer: frontmatter (`name: visual-styles`, the description), then the routing instructions and a picker table generated from the index (title, id, tier, what it is good for from `summary`, needs).
 - [ ] **Step 4: Run** the tests. Expected: PASS.
-- [ ] **Step 5: Import for real.** Run the CLI against `/Users/joeb/Projects/Content/production/styles` (record the Content commit). Expected: 30 imported; skipped lists the excluded packages with reasons; adaptations listed.
+- [ ] **Step 5: Import for real.** Run the CLI against `<content checkout>/production/styles` (record the Content commit). Expected: 30 imported; skipped lists the excluded packages with reasons; adaptations listed.
 - [ ] **Step 6: Commit** importer, tests and imported files with `feat(library): import 30 proven styles from the Content style library`.
 
 ### Task 2: Adapt, index and route the styles

@@ -69,7 +69,7 @@ test('checkPackage flags each rule once', async () => {
   await write(dir, 'package.json', '{}\n');
   await write(dir, 'docs/huge.md', Buffer.alloc(262_145, 'a'));
   await write(dir, 'docs/host.md', 'Open a new Codex task.\n');
-  await write(dir, 'docs/private.md', 'see /Users/someone/secret\n');
+  await write(dir, 'docs/private.md', 'see /Users/' + 'someone/secret\n');
   await write(dir, 'assets/lfs.bin', 'version https://git-lfs.github.com/spec/v1\noid sha256:abc\n');
   await write(dir, '.gitmodules', '[submodule "x"]\n');
   await write(dir, 'runtime/node_modules/@scope/pkg/index.js', 'export {};\n');

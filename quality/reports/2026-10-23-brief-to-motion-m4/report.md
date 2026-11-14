@@ -12,7 +12,7 @@ It still lacks a distinct construction-ready brief. The format has no viewing ra
 
 The [second brief](second-brief-v1.md) changed subject, mechanism, format and style to a nine-second portrait technical diagram of a zipper closing. Task `01a1690e-70a1-7081-880d-ddd63961de5a` read the candidate guidance and produced the [first answer](zipper-first-answer-v2.md): a plausible causal sequence with frame ranges, proposed copy, a native vector approach and one middle-action review criterion. It stopped before AE.
 
-The task also searched `/Users/joeb/.codex/memories/MEMORY.md` and read an entry covering earlier creator-review motion proposals, including an AFT-54 first answer. That violates the intended blind isolation, although it did not read the repo's eval or report files. The run therefore cannot prove unfamiliar-subject transfer. Its answer again stopped at a proposal instead of the distinct builder's plan, with no per-frame contact sequence or review contract. Do not count this as a clean regression or pass.
+The task also searched `~/.codex/memories/MEMORY.md` and read an entry covering earlier creator-review motion proposals, including an AFT-54 first answer. That violates the intended blind isolation, although it did not read the repo's eval or report files. The run therefore cannot prove unfamiliar-subject transfer. Its answer again stopped at a proposal instead of the distinct builder's plan, with no per-frame contact sequence or review contract. Do not count this as a clean regression or pass.
 
 ## Next candidate and remaining gates
 

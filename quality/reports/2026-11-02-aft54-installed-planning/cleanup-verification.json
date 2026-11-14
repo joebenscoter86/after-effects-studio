@@ -11,7 +11,7 @@
     "enabled": true,
     "source": {
       "source": "local",
-      "path": "/Users/joeb/.codex/.tmp/marketplaces/jb-technology/plugin"
+      "path": "~/.codex/.tmp/marketplaces/jb-technology/plugin"
     },
     "marketplaceSource": {
       "sourceType": "git",
