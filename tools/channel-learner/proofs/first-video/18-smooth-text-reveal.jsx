@@ -137,7 +137,10 @@ var cards = [
   { n: "C", file: "portrait-centre.png", x: 0.50, y: 0.30, rot: 2, d: 6 }
 ];
 var SHOP = null;
-var CARD_IN = args.cardIn !== undefined ? args.cardIn : 6; // first card starts at frame 6, each lasts 14 frames
+// Polish (2026-11-14): riding with the held block put the top card 38 px from the frame's top. The cards now stay at
+// their resting place and enter after the block starts to drop (frame 58, 61, 64, 14 frames each, done by frame 78, as
+// the last word settles), so nothing above the headline is on screen while it is held high.
+var CARD_IN = args.cardIn !== undefined ? args.cardIn : 58;
 for (var ci = 0; ci < cards.length; ci++) {
   var cd = cards[ci];
   var card = c.layers.addShape();
@@ -183,8 +186,8 @@ for (var ci = 0; ci < cards.length; ci++) {
 }
 // Run fix: parenting the cards null to the block null compensated for the block's held offset and left the cards
 // about 90 px low. Instead the cards null copies the block's move by expression (added after the cards are parented).
-if (!args.still) P.tf(cardsNull, "ADBE Position").expression =
-  'var b = thisComp.layer("block null").transform.position; value + b - b.valueAtTime(thisComp.duration);';
+if (args.cardsRide && !args.still) P.tf(cardsNull, "ADBE Position").expression =
+  'var b = thisComp.layer("block null").transform.position; value + b - b.valueAtTime(thisComp.duration);'; // old behaviour
 // Stack: headline over the cards; centre card on top of the cards (added last, so it is above L and R already).
 
 // Underline under "people", parented to the headline (layer space: line 1 is centred on x 0, its baseline at y 0).
@@ -206,7 +209,8 @@ ul.parent = txt;
 P.tf(ul, "ADBE Position").setValue([0, 0]);
 var ug = addGroup(ul);
 var up = grpC(ul, ug).addProperty("ADBE Vector Shape - Group");
-var uy = 0.2 * fsz, us = new Shape();
+// Polish: at 0.2 of the size it ran through the descenders of both "p"s; now it passes under them (args.underlineY).
+var uy = (args.underlineY !== undefined ? args.underlineY : 0.2) * fsz + (args.underlineDrop !== undefined ? args.underlineDrop : 16), us = new Shape();
 us.vertices = [[UX0, uy + 2], [UX1, uy - 3]];
 us.inTangents = [[0, 0], [-(UX1 - UX0) * 0.4, 9]];
 us.outTangents = [[(UX1 - UX0) * 0.4, 9], [0, 0]];
@@ -223,7 +227,7 @@ uend.setTemporalEaseAtKey(1, [new KeyframeEase(0, 40)], [new KeyframeEase(0, 40)
 uend.setTemporalEaseAtKey(2, [new KeyframeEase(0, 85)], [new KeyframeEase(0, 85)]);
 
 // Button: pill outline, label and a rust arrow, centred under the headline, fades up after the drop.
-var BY = 0.855 * 1080, BW = 236, BH = 56;
+var BY = 0.855 * 1080, BW = 268, BH = 62; // polish: label 18 -> 22 px for a phone, pill to suit
 var pill = c.layers.addShape();
 pill.name = "button";
 P.tf(pill, "ADBE Anchor Point").setValue([0, 0]);
@@ -238,19 +242,19 @@ grpC(pill, pg).property(pst.propertyIndex).property("ADBE Vector Stroke Width").
 grpC(pill, pg).property(pst.propertyIndex).property("ADBE Vector Stroke Opacity").setValue(25);
 var ag = addGroup(pill); // arrow
 var ap = grpC(pill, ag).addProperty("ADBE Vector Shape - Group");
-var as1 = new Shape(); as1.vertices = [[62, 0], [82, 0]]; as1.closed = false;
+var as1 = new Shape(); as1.vertices = [[74, 0], [96, 0]]; as1.closed = false;
 grpC(pill, ag).property(ap.propertyIndex).property("ADBE Vector Shape").setValue(as1);
 var ap2 = grpC(pill, ag).addProperty("ADBE Vector Shape - Group");
-var as2 = new Shape(); as2.vertices = [[75, -7], [82, 0], [75, 7]]; as2.closed = false;
+var as2 = new Shape(); as2.vertices = [[88, -8], [96, 0], [88, 8]]; as2.closed = false;
 grpC(pill, ag).property(ap2.propertyIndex).property("ADBE Vector Shape").setValue(as2);
 var ast = grpC(pill, ag).addProperty("ADBE Vector Graphic - Stroke");
 grpC(pill, ag).property(ast.propertyIndex).property("ADBE Vector Stroke Color").setValue(RUST);
 grpC(pill, ag).property(ast.propertyIndex).property("ADBE Vector Stroke Width").setValue(2.5);
 grpC(pill, ag).property(ast.propertyIndex).property("ADBE Vector Stroke Line Cap").setValue(2);
 grpC(pill, ag).property(ast.propertyIndex).property("ADBE Vector Stroke Line Join").setValue(2);
-var lbl = P.text(c, "Meet the team", { size: 18, color: INK, font: args.labelFont || "Poppins-Regular", name: "button label", tracking: 20 });
+var lbl = P.text(c, "Meet the team", { size: 22, color: INK, font: args.labelFont || "Poppins-Regular", name: "button label", tracking: 20 });
 var lr = lbl.sourceRectAtTime(0, false);
-P.tf(lbl, "ADBE Position").setValue([960 - 14, BY]);
+P.tf(lbl, "ADBE Position").setValue([960 - 16, BY]);
 lbl.parent = pill;
 var po = P.tf(pill, "ADBE Opacity"), pp = P.tf(pill, "ADBE Position");
 po.setValueAtTime(2.7, 0); po.setValueAtTime(3.2, 100);

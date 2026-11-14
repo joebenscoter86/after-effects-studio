@@ -63,28 +63,42 @@ cb.property("ADBE Transform Group").property("ADBE Position").expression = "valu
 cs2.property("ADBE Transform Group").property("ADBE Position").expression = "value + [time * 5, 0]";
 cs.property("ADBE Transform Group").property("ADBE Position").expression = "value + [-time * 7, 0]";
 var far = put("hills-far.png", "hills far", 75, [960, 794]);
-var hill = put("hill-main.png", "hill main", 86, [960, 1041]);
+// Polish (2026-11-14): the hilltop group (hill main, the three objects and their shadows) is scaled by GS about the
+// crest, so the objects read at phone size and their shadows fill the lower frame. The technique's values stay the
+// recipe's; only the layout changes (prove-run step 0, lesson 12).
+var GS = args.groupScale || 1.5;
+var CY = 1041 - 701 / 2;              // hill crest, comp px (hill main's top edge)
+function gp(p) { return [960 + (p[0] - 960) * GS, CY + (p[1] - CY) * GS]; }
+var hill = put("hill-main.png", "hill main", 86 * GS, gp([960, 1041]));
 
 // Objects: file, name, scale, anchor (feet), position, and the shadow's CC Radial Fast Blur centre height above the
 // feet in source pixels (straight above, so the streak runs straight down the hill toward us).
 var OBJ = [
-  { file: "tree-round.png", name: "tree round", s: 4.3, a: [765, 2277], p: [0.40 * W, 0.655 * H] },
+  { file: args.treeRoundFile || "tree-round-rimless.png", name: "tree round", s: 4.3, a: [765, 2277], p: [0.40 * W, 0.655 * H] },
   { file: "tree-cone.png", name: "tree cone", s: 3.9, a: [712, 2622], p: [0.60 * W, 0.659 * H] }, // run: at 0.655 its trunk stopped 4 px above the sloping hill
   { file: "figure.png", name: "figure", s: 3.3, a: [733, 2302], p: [0.50 * W, 0.645 * H] } // run: at 0.64 the boots hovered 3 px above the soft crest
 ];
 // Run: 1.55 (the plain build's ratio) streaked only about a third of the object's height past its feet; the zoom streak
 // grows with the centre's distance, so 3.5 reaches the layout's "about as long as the object is tall".
-var CEN = args.centreAbove || 3;   // centre height above the feet, as a share of the object's own height
+// Polish: with Amount 95 back, a copy standing on its feet with the centre above it gives a 1 / distance streak that
+// either fades from the foot (centre close) or runs to the frame's bottom (centre far); the reference's streak holds
+// 21-30 % darker for most of an object height, then ends within about half a height. The recipe leaves the shadow
+// copy's making open, so the copy is laid down the hill instead: flipped about the feet and stretched FLIPK times
+// (the shadow a back light throws toward us), with the centre CEN object heights above the feet in the layer's own
+// space, which after the flip sits FLIPK * CEN heights below the feet: the zoom streak then holds and fades out
+// before the shadow's far end.
+var FLIPK = args.flipK === undefined ? 1.55 : args.flipK;   // 0 = the old upright copy
+var CEN = args.centreAbove || (FLIPK ? 1.875 : 3);   // centre height above the feet, as a share of the object's own height
 // Run: with the recipe's Amount 95 every streak ran to the bottom of the frame (a zoom streak reaches about
 // 1 / (1 - Amount) times the centre's distance), and a centre close enough to stop it fanned the crowns into a haze over
 // the whole hill. The shadow itself is this tip's starting point, not its technique (the technique is Grow Bounds), so
 // it is tuned to the layout instead: centre 3 object heights above the feet (a narrow band); Amount 25 stopped the
 // streak at the feet, 70 ends it about one object height below them (65 to about 73 % down, as the layout says).
 // Opacity 100 % (brief: 55 to 70 %): a thin streak is already light, and at 70 % it read barely darker than the hill.
-var AMT = args.amount || 70;
-var GAUSS = args.gauss || 5;          // comp px (recipe 71.2 was on a layer of unknown scale; the plain build had 18 comp px)
+var AMT = args.amount || 95;      // Polish: back to the recipe's 95 (lesson 12)
+var GAUSS = (args.gauss || 5) * GS;         // comp px (recipe 71.2 was on a layer of unknown scale; the plain build had 18 comp px)
 var GROW = args.grow || 2050;          // recipe's Pixels (source px)
-var OPAC = args.shadowOpacity || 100;
+var OPAC = args.shadowOpacity || 65;   // polish: 65 with the laid-down copy (brief 55-70 %)
 var INK = ART.hex("#1F3324");
 
 // The matte for the shadows: a duplicate of the hill, its video off.
@@ -99,19 +113,20 @@ var objs = [], shadows = [], inners = [], k, o, L, s, gb;
 for (k = 0; k < OBJ.length; k++) {
   o = OBJ[k];
   var ft = ART.footage(ARTDIR, o.file, FOLDER);
-  var pw = Math.ceil(ft.width * o.s / 100) + 2, ph = Math.ceil(ft.height * o.s / 100) + 2;
+  var os = o.s * GS;
+  var pw = Math.ceil(ft.width * os / 100) + 2, ph = Math.ceil(ft.height * os / 100) + 2;
   var pc = app.project.items.addComp("15 obj " + o.name, pw, ph, 1, DUR, FPS);
   pc.parentFolder = ART.folder(FOLDER);
   var inn = pc.layers.add(ft);
-  P.tf(inn, "ADBE Scale").setValue([o.s, o.s]);
+  P.tf(inn, "ADBE Scale").setValue([os, os]);
   P.tf(inn, "ADBE Position").setValue([pw / 2, ph / 2]);
   inners.push(inn);
   L = c.layers.add(pc);
   L.name = o.name;
   // anchor at the feet, in the precomp's pixels
-  var ax = pw / 2 + (o.a[0] - ft.width / 2) * o.s / 100, ay = ph / 2 + (o.a[1] - ft.height / 2) * o.s / 100;
+  var ax = pw / 2 + (o.a[0] - ft.width / 2) * os / 100, ay = ph / 2 + (o.a[1] - ft.height / 2) * os / 100;
   P.tf(L, "ADBE Anchor Point").setValue([ax, ay]);
-  P.tf(L, "ADBE Position").setValue(o.p);
+  P.tf(L, "ADBE Position").setValue(gp(o.p));
   o.ax = ax; o.ay = ay; o.hpx = ph;
   objs.push(L);
 }
@@ -132,6 +147,7 @@ for (k = 0; k < OBJ.length; k++) {
   fx(s, "Gaussian Blur").property("Blur Dimensions").setValue(1);
   fx(s, "Gaussian Blur").property("Repeat Edge Pixels").setValue(1);
   P.tf(s, "ADBE Opacity").setValue(OPAC);
+  if (FLIPK) P.tf(s, "ADBE Scale").setValue([100, -100 * FLIPK]);
   // Steps 2-3: Grow Bounds at the top of the stack.
   gb = P.effect(s, "Grow Bounds"); // run: the match name "ADBE Grow Bounds" is refused; the display name adds it
   gb.name = "TECH Grow Bounds";
@@ -140,6 +156,7 @@ for (k = 0; k < OBJ.length; k++) {
   fx(s, "TECH Grow Bounds").enabled = !BEFORE;
   // Keep the shadow on the ground (brief).
   s.setTrackMatte(hm, TrackMatteType.ALPHA);
+  if (args.noShadow) s.enabled = false;   // measurement baseline only
   shadows.push(s);
 }
 // Fringe trim on the objects themselves (after duplicating, so the shadows keep the full silhouette).

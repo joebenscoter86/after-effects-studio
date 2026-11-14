@@ -32,7 +32,9 @@ var s = P.freshComp("17 fog scene", W, H, FPS, DUR, ART.hex("#0B1428"));
 })();
 
 function plate(file, name, z, xShift, blur) {
-  var L = s.layers.add(ART.footage(ARTDIR, file, FOLDER));
+  var ft = ART.footage(ARTDIR, file, FOLDER);
+  ft.mainSource.reload(); // polish: the v2 art replaced files of the same names on disk
+  var L = s.layers.add(ft);
   L.name = name;
   L.threeDLayer = true;
   var f = (CAMD + z) / CAMD;
@@ -42,16 +44,24 @@ function plate(file, name, z, xShift, blur) {
   if (blur) ART.setFx(P.effect(L, "ADBE Gaussian Blur 2"), { "Blurriness": blur, "Repeat Edge Pixels": 1 });
   return L;
 }
-// sky: brief "about 2000 x 1130 on screen" -> 2000 / 1920 of a full-frame plate
-// Run: at the brief's z 6000 the sky sat 2500 px behind the far trunks, whose painted alpha is soft and noisy (they fade
-// into haze at the bottom). Fog 3D takes one depth per pixel, so where that alpha flickers the depth jumps between the
-// trunks and the sky and the fog came out in pale blotches. The sky now stands just behind the far trunks (z 3600), so
-// both get nearly the same fog and the blotches go; the trunks keep their own z (args.skyZ).
-var sky = plate("sky-mist.png", "sky mist", args.skyZ || 3600, 0, 6);
-var skS = P.tf(sky, "ADBE Scale").value[0] * 2000 / 1920 * 1.06; // run: +6 % margin for the camera drift
+// Polish (2026-11-14), art v2 (brief "## Art v2"): every trunk is darker than the fog colour and the mist a little
+// lighter, so the fog lifts the trunks and dims the gaps. All four trunk layers stand behind the figure, inside the fog,
+// at the brief's z; their positions are in the files (no shift). The sky is back at z 8000 with a light blur; no blur on
+// the trunks (their softness is painted). Plates get a 3 % margin for the camera drift.
+var sky = plate("sky-mist.png", "sky mist", args.skyZ || 8000, 0, 5);
+var skS = P.tf(sky, "ADBE Scale").value[0] * 1.06;
 P.tf(sky, "ADBE Scale").setValue([skS, skS, skS]);
-var tfar = plate("trunks-far.png", "trunks far", 3500, 0, 3.5);
-var tmid = plate("trunks-mid.png", "trunks mid", 1500, -60, 0);
+var TZ = args.trunkZ || { far: 2865, back: 2720, mid: 2570, near: 2420 };
+function trunks(file, name, z) {
+  var L = plate(file, name, z, 0, 0);
+  var v = P.tf(L, "ADBE Scale").value[0] * 1.03;
+  P.tf(L, "ADBE Scale").setValue([v, v, v]);
+  return L;
+}
+var tfar = trunks("trunks-far.png", "trunks far", TZ.far);
+var tback = trunks("trunks-back.png", "trunks back", TZ.back);
+var tmid = trunks("trunks-mid.png", "trunks mid", TZ.mid);
+var tnear = trunks("trunks-near.png", "trunks near", TZ.near);
 
 // Figure: 529 px tall at z 0, spanning 39 to 56 % across, feet at 83 % down (anchor at the bottom centre).
 var fft = ART.footage(ARTDIR, "figure-lantern.png", FOLDER);
@@ -70,20 +80,30 @@ var shr = plate("shrubs-mid.png", "shrubs mid", -150, 0, 0);
 // Run: at full frame the shrubs' top line dips to about 85 % down in the middle and the boots (83 %) floated above it;
 // raised 100 screen px so the shrubs cover the boots (brief).
 P.tf(shr, "ADBE Position").setValue([960, 540 - (args.shrubLift || 100) * (CAMD - 150) / CAMD, -150]);
-var tnear = plate("trunks-near.png", "trunks near", -700, 0, 0);
 var fol = plate("foliage-front.png", "foliage front", -1200, 0, 0);
 
-// Run: Fog 3D takes the depth of the nearest layer even where that layer is barely there, so wherever the shrubs' soft
-// painted tops or the mid trunks' soft edges were partly transparent, the far haze behind them showed through UNfogged:
-// pale blotches along the shrub line and speckle down the trunk edges. Simple Choker on every layer that stands in front
-// of fogged depth hardens those low-alpha fringes (it is also the fringe check the brief asks for).
+// Art v2: the trunk and shrub alpha is clean, so the v1 "alpha harden" chokers are off (brief); args.harden puts them
+// back on the layers in front of fogged depth if fog blotches return at their edges.
 function harden(L, px) {
   var e = P.effect(L, "ADBE Simple Choker");
   L.property("ADBE Effect Parade").property(e.propertyIndex).property("Choke Matte").setValue(px);
   L.property("ADBE Effect Parade").property(e.propertyIndex).name = "alpha harden";
 }
-var HC = args.harden === undefined ? 1 : args.harden;
-if (HC > 0) { harden(tmid, HC); harden(shr, HC); harden(tnear, HC); harden(fol, HC); }
+var HC = args.harden === undefined ? 0 : args.harden;
+if (HC > 0) { harden(shr, HC); harden(fol, HC); }
+// Polish run: with fog on, the front foliage drew a dark outline round every frond and the upper picture had dark
+// specks. Fog 3D gives each pixel the depth of its nearest layer even where that layer is nearly transparent, so the
+// fronds' soft outer fringe and stray faint alpha specks in the foliage and shrub files took their unfogged depth and
+// let the unfogged dark trunks show through. Levels (Individual Controls) on alpha clears alpha below ACUT and rescales
+// the rest, so a fringe is either solid (foliage depth) or gone (trunk depth).
+var fogFixMissing = [];
+function alphaCut(L, black) {
+  var e = P.effect(L, "ADBE Pro Levels2");
+  e.name = "alpha cut";
+  fogFixMissing = fogFixMissing.concat(ART.setFx(L.property("ADBE Effect Parade").property("alpha cut"), { "Alpha Input Black": black }));
+}
+var ACUT = args.alphaCut === undefined ? 0.3 : args.alphaCut;
+if (ACUT > 0) { alphaCut(fol, ACUT); alphaCut(shr, ACUT); }
 
 // One-node camera looking straight down Z, drifting right and in.
 var cam = s.layers.addCamera("scene camera", [960, 540]);
@@ -104,10 +124,10 @@ var fx = P.effect(pre, "ADBE FOG_3D");
 fx.name = "TECH Fog 3D";
 fx = pre.property("ADBE Effect Parade").property("TECH Fog 3D");
 fx.property("ADBE FOG_3D-0001").setValue(ART.hex(args.fogColor || "#0E2737").concat([1])); // brief's fog colour
-// Depth = distance from the precomp's camera: figure 2667, shrubs 2517, mid trunks 4167, far trunks 6167, sky 8667.
+// Depth = distance from the precomp's camera: figure 2667, shrubs 2517; art v2 trunks 5087 (near) to 5532 (far), sky 10667.
 // Start just behind the figure (recipe's proof note, brief); End beyond the far trunks, tuned by eye on the render.
 fx.property("ADBE FOG_3D-0002").setValue(args.fogStart !== undefined ? args.fogStart : 2700);
-fx.property("ADBE FOG_3D-0003").setValue(args.fogEnd !== undefined ? args.fogEnd : 11000); // run: 9500 sank the far trunks almost to the fog colour
+fx.property("ADBE FOG_3D-0003").setValue(args.fogEnd !== undefined ? args.fogEnd : 12000); // art v2 brief: 12000; tuned on the measured shares
 fx.property("ADBE FOG_3D-0004").setValue(100); // Fog Opacity
 fx.property("ADBE FOG_3D-0005").setValue(24);  // Scattering Density
 fx.property("ADBE FOG_3D-0006").setValue(1);   // Foggy Background
@@ -135,4 +155,4 @@ P.tf(glow, "ADBE Opacity").setValue(args.glowOpacity || 40);
 P.tf(glow, "ADBE Position").expression = 'var L = comp("17 fog scene").layer("figure");\nL.toComp([' + LX.toFixed(1) + ', ' + LY.toFixed(1) + ', 0]);';
 
 var gp = P.tf(glow, "ADBE Position").valueAtTime(0, false);
-return { comp: c.name, scene: s.name, sceneLayers: s.numLayers, before: !!args.before, glowAt0: [Math.round(gp[0]), Math.round(gp[1])] };
+return { fogFixMissing: fogFixMissing.join(","), alphaBlack: (ACUT > 0 ? fol.property("ADBE Effect Parade").property("alpha cut").property("Alpha Input Black").value : null), comp: c.name, scene: s.name, sceneLayers: s.numLayers, before: !!args.before, glowAt0: [Math.round(gp[0]), Math.round(gp[1])] };

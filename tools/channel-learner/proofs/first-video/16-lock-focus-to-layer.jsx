@@ -26,6 +26,7 @@ var c = P.freshComp("16 lock focus", W, H, FPS, DUR, ART.hex("#8E7F9C"));
     it = app.project.item(j);
     if (it instanceof FootageItem && it.mainSource instanceof SolidSource && it.usedIn.length === 0 &&
         (it.name === "16 sky" || it.name === "16 camera rig" || it.name === "16 sky backing")) it.remove();
+    else if (it instanceof FootageItem && it.name === "mound-right.png" && it.usedIn.length === 0) it.remove(); // polish trial, dropped
   }
 })();
 
@@ -62,7 +63,12 @@ back.name = "sky backing";
 // at the start gives a disc of about 64 % of the width at the end (brief 55 %; start about 44 %, brief 27 %).
 var SKYZ = args.skyZ || 5000;
 var skyEndW = Math.max(2400, 1.04 * W * growth(SKYZ));
-var sky = art("sky-sun.png", "sky", SKYZ, 960, args.sunY || 735, skyEndW, [0.5, 0.99]);
+// Polish (2026-11-14): the sun is split from the plate (art/make-sun-split.py): `sky` is now sky-nosun.png at SKYZ, and
+// the disc with its bloom (sun-disc.png, disc 73.5 % of the image) is its own layer `sun` at the brief's z 1381, where
+// it grows x 2.04 over the push: 27 % of the width at the start, 55 % at the end, as the layout measures.
+var sky = art(args.skyFile || "sky-nosun.png", "sky", SKYZ, 960, args.sunY || 735, skyEndW, [0.5, 0.99]);
+var SUNZ = args.sunZ || 1381;
+var sun = art("sun-disc.png", "sun", SUNZ, 960, args.sunCY || 0.65 * H + 25, 0.55 * W / 0.7348, [0.5, 0.5]);
 
 var far = art("hills-far.png", "hills far", 1100, 960, 0.55 * H, args.farW || 4500, [0.5, 108 / 619]);
 var cb = art("cloud-big.png", "cloud big", 900, 0.15 * W, 0.12 * H, 600);
@@ -96,11 +102,15 @@ function choke(L, px) {
 }
 choke(tr, args.chokeTree === undefined ? 18 : args.chokeTree);
 choke(tc, 4); choke(fig, 3);
-var cs2 = art("cloud-small.png", "cloud small 2", 250, 0.70 * W, 0.22 * H, 500);
+// Polish: moved from (70 %, 22 %) where it piled onto `cloud small` at the end, to the clear sky left of the sun.
+var cs2 = art("cloud-small.png", "cloud small 2", 250, (args.cs2X || 0.47) * W, (args.cs2Y || 0.17) * H, 500);
 // Near mounds: at z 100 they grow x 3.94 over the push. Sized so they frame the start (args.nearW); by the end they
 // have slid out past the frame's sides, the classic push-through. Run: 7200 wide with its bottom at 1500 (end px) left
 // the mounds' hard bottom and side edges inside the start frame; 8000 at 2300 puts them outside it.
 var near = art("hills-near.png", "hills near", 100, 960, args.nearY || 2300, args.nearW || 8000, [0.5, 1.0]);
+// Polish: a near hill to frame the right of the end shot was tried and dropped. Any layer in front of the figure reads
+// at about a third of its end size, nearer the centre, at the start (a near layer only leaves the frame in a push), so
+// a hill big enough to frame the end sat as a dark blob in the middle of the start shot (see build-notes, Polish).
 
 // Camera and rig.
 var cam = c.layers.addCamera("camera", [960, 540]);

@@ -77,7 +77,12 @@ var title = P.text(c, "MAKE\rIT MOVE", { size: 100, font: args.titleFont || "Arc
 
 // 1. The repeated phrase on one line.
 // ASSUMED: the phrase (recipe: "a short all-caps phrase repeated three times"; exact phrase not given).
-var phrase = args.phrase || "MOTION NEVER SLEEPS \u2022 " /* 22 characters: at the brief size three repeats fill the ring near tracking 125 */;
+// Polish (2026-11-14): no dots. The recipe's three repeats leave open gaps of about 12-15.5 degrees, four to five
+// word-spaces, so the ring reads as three arcs, not one closed badge. The gap is made of four trailing spaces; the
+// tracking is then solved (below) so the three repeats fill the circle, which puts it near the reviewer's 70-80.
+var GAPSP = args.gapSpaces !== undefined ? args.gapSpaces : 4;
+var WORDS = args.phrase || "MOTION NEVER SLEEPS";
+var phrase = WORDS + new Array(GAPSP + 1).join(" ");
 var str = phrase + phrase + phrase;
 var t = c.layers.addText(str);
 t.name = "ring text";
@@ -112,6 +117,11 @@ if (!args.tracking) {
 } else { d = docProp.value; d.tracking = args.tracking; docProp.setValue(d); }
 pitch = measure();
 r = args.radius || (OUTER / 2 - CAP * docProp.value.fontSize);
+// Polish: measure the open gap and a word-space as angles on the path (straight-line widths at the final tracking).
+function wOf(x) { d = docProp.value; d.text = x; docProp.setValue(d); return t.sourceRectAtTime(0, false).width; }
+var inkW = wOf(WORDS), wA = wOf("MOTION"), wAB = wOf("MOTION NEVER"), wB = wOf("NEVER");
+d = docProp.value; d.text = str; docProp.setValue(d);
+var gapDeg = (pitch - inkW) / r * 180 / Math.PI, wordSpaceDeg = (wAB - wA - wB) / r * 180 / Math.PI;
 // Put the text layer's origin at the comp centre so the mask can be drawn round [0,0].
 P.tf(t, "ADBE Anchor Point").setValue([0, 0]);
 P.tf(t, "ADBE Position").setValue([c.width / 2, c.height / 2]);
@@ -136,6 +146,14 @@ var fm = po.property("ADBE Text First Margin");
 fm.setValueAtTime(0, 0);
 fm.setValueAtTime(3 + 1 / fps, 512); // 0:00:03:01 at 23.976 fps
 // Keyframes left linear (the recipe's diamond icons look linear).
+// Polish: the ring stopped dead at 3.04 s and held for the last 1.9 s. A third key at the comp's end carries the same
+// linear rate (about 168 px per second) on, so the ring keeps turning to the last frame; the recipe's two keys stand.
+if (!args.stopAtKey) {
+  var rate = 512 / (3 + 1 / fps);
+  fm.setValueAtTime(c.duration, 512 + rate * (c.duration - (3 + 1 / fps)));
+  var kk;
+  for (kk = 1; kk <= fm.numKeys; kk++) fm.setInterpolationTypeAtKey(kk, KeyframeInterpolationType.LINEAR, KeyframeInterpolationType.LINEAR);
+}
 
 title.moveToBeginning(); t.moveToBeginning();
-return { comp: c.name, id: c.id, layers: c.numLayers, chars: str.length, fontSize: docProp.value.fontSize, font: docProp.value.font, tracking: docProp.value.tracking, radius: r, pitch: pitch, target: target, titleFont: title.property("ADBE Text Properties").property("ADBE Text Document").value.font, titleSize: title.property("ADBE Text Properties").property("ADBE Text Document").value.fontSize, noiseMissing: nzMiss };
+return { gapDeg: gapDeg, wordSpaceDeg: wordSpaceDeg, fmKeys: fm.numKeys, fmEnd: fm.keyValue(fm.numKeys), comp: c.name, id: c.id, layers: c.numLayers, chars: str.length, fontSize: docProp.value.fontSize, font: docProp.value.font, tracking: docProp.value.tracking, radius: r, pitch: pitch, target: target, titleFont: title.property("ADBE Text Properties").property("ADBE Text Document").value.font, titleSize: title.property("ADBE Text Properties").property("ADBE Text Document").value.fontSize, noiseMissing: nzMiss };
