@@ -150,7 +150,7 @@ After the reruns, a read call from the supervising session's own server left Aft
 **A separate gap, found while tracing it:**
 - Servers serialise launches only through a busy lock in their temp folder.
 - So sessions with different temp folders (each eval sandbox) do not see each other's lock.
-- The fix, built after this report: on macOS, no relaunch while the last launcher is alive, and one launch lock per user and per After Effects (`plugin/runtime/src/transport/launch-lock.ts`). The lock covers a launch until After Effects picks the request up, not the script after it, so sessions that may call After Effects still run one at a time against one After Effects.
+- The fix, built after this report: on macOS, no relaunch while the last launcher is alive, and one launch lock per user and per After Effects (`plugin/runtime/src/transport/launch-lock.ts`), held until the launcher exits, so it covers the script as well as the launch. The release steps still run sessions that may call After Effects one at a time (release-criteria.md says why).
 
 ## Library parts
 
