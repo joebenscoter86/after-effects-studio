@@ -15,6 +15,10 @@ Read `ae_library` documents **motion-language**, **production-workflow**, and **
 
 Inspect `ae_version_info` and `ae_context`, or run the plugin's doctor if no connection is available. Determine the target project, viewer takeaway, format, duration and real inputs. Ask only for missing information that changes the output. A blank AE project is supported: explicitly create native comps/layers. Don't assume a personal MASTER rig, asset folder, font or generation account exists.
 
+## Ask the arsenal per beat
+
+When planning shots, ask `ae_arsenal` per beat by the job the beat must do, before building: `action: "jobs"` lists the job ids, `action: "find"` with the beat's `job` (and its `assets`, `duration`, `mood` when known) returns a shortlist of proven techniques with a still of each, and `action: "get"` reads the chosen recipe. Pick a valid job id; never invent one. If nothing comes back, build it from the library below.
+
 ## Load the technique the scene needs
 
 | Task or problem | Library documents to read |

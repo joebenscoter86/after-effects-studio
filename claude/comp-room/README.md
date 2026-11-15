@@ -76,4 +76,31 @@ Claude inspects the open project before it writes and keeps unrelated work, incl
 
 ## What's inside
 
-Six skills (motion-studio, ae-control, motion-review, typography, paper-collage and visual-styles), a reviewer agent (motion-reviewer) that checks a finished piece it did not build and can change nothing, thirteen tools, and a hashed library of 106 documents and code helpers that the `ae_library` tool serves offline. The library includes 31 visual styles, from art deco to woodcut, each with a written grammar, an After Effects recipe and a worked ES3 module; 30 are adapted from Lemo-Opuscar (MIT), and Pixel headline is the plugin's own. The motion language applies to every style; the paper, navy and vermilion JoeB look is an optional preset. [Architecture](docs/ARCHITECTURE.md) describes the package.
+Six skills (motion-studio, ae-control, motion-review, typography, paper-collage and visual-styles), a reviewer agent (motion-reviewer) that checks a finished piece it did not build and can change nothing, fourteen tools, and a hashed library of 113 documents and code helpers that the `ae_library` tool serves offline. The library includes 31 visual styles, from art deco to woodcut, each with a written grammar, an After Effects recipe and a worked ES3 module; 30 are adapted from Lemo-Opuscar (MIT), and Pixel headline is the plugin's own. The motion language applies to every style; the paper, navy and vermilion JoeB look is an optional preset. [Architecture](docs/ARCHITECTURE.md) describes the package.
+
+## Technique arsenal
+
+The library also holds a catalog of technique recipes filed by the job a beat needs (land a number, add depth, hand over to the next picture). The `ae_arsenal` tool lists the jobs, returns a ranked shortlist for one beat (proven recipes only, unless asked) and reads the chosen recipe.
+
+<!-- arsenal-stills:start -->
+Proven techniques in the arsenal, each a still of our own proof build. The ae_arsenal tool returns them with its shortlist.
+
+![Round dots from a shape stroke](library/arsenal/stills/01-dotted-stroke.jpg)
+![Arc with a dot at each end](library/arsenal/stills/02-line-with-end-dots.jpg)
+![Fade both ends of an open stroke with Taper](library/arsenal/stills/03-tapered-stroke.jpg)
+![Text carousel from rotated copies around one pivot](library/arsenal/stills/04-carousel-by-rotation.jpg)
+![Tilted 3D ring of discs orbiting a centre](library/arsenal/stills/06-3d-orbit-rings.jpg)
+![Slide a background endlessly with mirrored tiling](library/arsenal/stills/09-endless-background-tile.jpg)
+![Leaf-shaped particles from any graphic](library/arsenal/stills/10-graphic-as-particles.jpg)
+![Soft embossed finish for white shapes on a pale background](library/arsenal/stills/11-white-on-light-finish.jpg)
+![Long soft shadow from a radially blurred black copy](library/arsenal/stills/12-long-soft-shadow.jpg)
+![Fine dot-grid background from a ball-grid effect](library/arsenal/stills/13-dot-grid-texture.jpg)
+![Real cast shadows on an invisible 3D floor](library/arsenal/stills/14-3d-floor-shadows.jpg)
+![Keep a chosen layer sharp while the camera travels](library/arsenal/stills/16-lock-focus-to-layer.jpg)
+![Tie a 3D scene together with depth fog over the precomp](library/arsenal/stills/17-depth-fog.jpg)
+![Soft word-by-word rise-and-fade text reveal](library/arsenal/stills/18-smooth-text-reveal.jpg)
+![Text that runs round a drawn path](library/arsenal/stills/19-text-on-a-path.jpg)
+![Two stacked glows for a soft cinematic bloom](library/arsenal/stills/20-two-pass-glow.jpg)
+![Paper texture through a title matte, with roughened edges](library/arsenal/stills/21-texture-through-a-matte.jpg)
+![Frame video in a custom shape with a track matte](library/arsenal/stills/25-custom-media-frame.jpg)
+<!-- arsenal-stills:end -->

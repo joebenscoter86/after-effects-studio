@@ -104,6 +104,11 @@ export class McpTestClient {
     this.transport = null;
   }
 
+  /** The instructions string the server sent on initialize. */
+  instructions(): string | undefined {
+    return this.client.getInstructions();
+  }
+
   /** Raw tools/list result. */
   async listTools(): Promise<{ tools: Array<{ name: string }> }> {
     return (await this.client.listTools()) as { tools: Array<{ name: string }> };

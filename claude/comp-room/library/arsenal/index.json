@@ -1,0 +1,55 @@
+{
+ "arsenal": "Technique recipes for beats, filed under the job vocabulary. Ask ae_arsenal per beat by job (find), read the chosen recipe (get), list the jobs (jobs).",
+ "tool": "ae_arsenal",
+ "vocab": "jobs-v1",
+ "version": "dba75f7f",
+ "documents": [
+  {
+   "id": "arsenal-index",
+   "title": "Technique arsenal index: documents, vocabulary and counts",
+   "path": "arsenal/index.json",
+   "kind": "catalog"
+  },
+  {
+   "id": "arsenal-catalog",
+   "title": "Technique arsenal catalog: one record per recipe, queried by ae_arsenal",
+   "path": "arsenal/catalog.json",
+   "kind": "catalog"
+  },
+  {
+   "id": "arsenal-jobs",
+   "title": "Job vocabulary jobs-v1: the jobs a beat asks for",
+   "path": "arsenal/jobs-v1.json",
+   "kind": "catalog"
+  },
+  {
+   "id": "arsenal-line",
+   "title": "Arsenal recipes: line jobs: what the viewer must get from this line",
+   "path": "arsenal/recipes-line.md",
+   "kind": "recipes"
+  },
+  {
+   "id": "arsenal-picture",
+   "title": "Arsenal recipes: picture jobs: how the picture has to read, whatever the line says",
+   "path": "arsenal/recipes-picture.md",
+   "kind": "recipes"
+  },
+  {
+   "id": "arsenal-connective",
+   "title": "Arsenal recipes: connective jobs: between and across pictures",
+   "path": "arsenal/recipes-connective.md",
+   "kind": "recipes"
+  },
+  {
+   "id": "arsenal-build-aid",
+   "title": "Arsenal recipes: build aids and unmatched recipes",
+   "path": "arsenal/recipes-build-aid.md",
+   "kind": "recipes"
+  }
+ ],
+ "counts": {
+  "recipes": 64,
+  "proven": 24,
+  "stills": 18
+ }
+}

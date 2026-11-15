@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 const root = new URL('../library/', import.meta.url);
@@ -52,6 +52,10 @@ docs.push(['style-index','Visual style library index: tiers, uses and needs','st
  ['style-lib-jsx','Shared ES3 helpers for every style (AESLib)','styles/aes-lib.jsx','code']);
 for (const s of styleIndex.styles) docs.push([`style-${s.id}`,`${s.title} style`,`styles/${s.id}/STYLE.md`,'style'],
  [`style-${s.id}-jsx`,`${s.title} helpers (${s.moduleGlobal})`,`styles/${s.id}/${s.module}`,'code']);
+// The technique arsenal (tools/channel-learner/arsenal.mjs): its index lists its documents; its stills are images,
+// read by ae_arsenal against the hashes in the arsenal catalog, so they are not manifest documents.
+const arsenalIndex = new URL('arsenal/index.json', root);
+if (existsSync(arsenalIndex)) for (const d of JSON.parse(readFileSync(arsenalIndex, 'utf8')).documents) docs.push([d.id, d.title, d.path, d.kind]);
 const manifest = {version:1, documents:docs.map(([id,title,path,kind]) => ({id,title,path,kind,sha256:createHash('sha256').update(readFileSync(new URL(path,root))).digest('hex')}))};
 writeFileSync(new URL('manifest.json',root),JSON.stringify(manifest,null,2)+'\n');
 console.log(`Indexed ${docs.length} documents in ${fileURLToPath(root)}`);

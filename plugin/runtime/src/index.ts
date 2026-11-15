@@ -13,6 +13,7 @@ import { pushRouteBanner } from "./transport/launcher.js";
 // Load all operations into the registry (must run before catalog/do handle calls).
 import "./operations/index.js";
 import { ALL_TOOLS, type AnyTool } from "./tools/index.js";
+import { arsenalTool } from "./tools/arsenal.js";
 import { libraryTool } from "./tools/library.js";
 
 // Read the real package version at runtime so the server never self-reports a
@@ -27,7 +28,7 @@ const transport = new FileIpcTransport();
 const server = new McpServer({
   name: serverName ?? "after-effects-studio",
   version,
-}, { instructions: "Local native After Effects control with a detailed production-derived motion language for any brand or style. Before designing or building motion in After Effects, read ae_library documents motion-language, production-workflow and brief-template; load construction, camera-continuity, assets-depth, type-evidence and worked-scenes as relevant. This craft foundation is the default for all styles, not an optional JoeB preset. Everything required is bundled; do not require the original repo, personal rig or assets. Inspect ae_context and discover exact operations with ae_catalog. eval.run enables custom ES3. A call that throws is rolled back and says whether that worked (details.rollback); a batch.run is rolled back only with stopOnError. Inspect failures, unconfirmed rollbacks and timeouts before retrying. Render and visually inspect actual artifacts, and distinguish technical success from visual quality. The paper/navy/vermilion JoeB appearance is optional." });
+}, { instructions: "Local native After Effects control with a detailed production-derived motion language for any brand or style. Before designing or building motion in After Effects, read ae_library documents motion-language, production-workflow and brief-template; load construction, camera-continuity, assets-depth, type-evidence and worked-scenes as relevant. This craft foundation is the default for all styles, not an optional JoeB preset. Everything required is bundled; do not require the original repo, personal rig or assets. When planning shots, ask ae_arsenal per beat by the beat's job before building: it returns proven techniques with stills, and get reads the chosen recipe. Inspect ae_context and discover exact operations with ae_catalog. eval.run enables custom ES3. A call that throws is rolled back and says whether that worked (details.rollback); a batch.run is rolled back only with stopOnError. Inspect failures, unconfirmed rollbacks and timeouts before retrying. Render and visually inspect actual artifacts, and distinguish technical success from visual quality. The paper/navy/vermilion JoeB appearance is optional." });
 
 /**
  * MCP behaviour hints, derived from each tool's declared `effect` rather than
@@ -72,7 +73,7 @@ function register(tool: AnyTool): void {
 }
 
 const skipped: string[] = [];
-for (const tool of [...ALL_TOOLS, libraryTool]) {
+for (const tool of [...ALL_TOOLS, libraryTool, arsenalTool]) {
   const denial = denyTool(tool.name, tool.blockedInReadOnly);
   if (denial) {
     skipped.push(tool.name);

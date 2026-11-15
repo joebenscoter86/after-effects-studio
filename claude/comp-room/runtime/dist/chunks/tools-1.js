@@ -3871,4 +3871,243 @@ function init_library() {
 	})))();
 }
 
-export { ALL_TOOLS, iccManagedReason, init_capture_shared, init_library, init_render_frame, init_tools, libraryTool, renderFrameTool };
+// tools/arsenal.js
+function assetKinds(assets) {
+	if (assets === void 0 || assets === null) return null;
+	if (assets === "none") return [];
+	if (Array.isArray(assets)) return lower(assets);
+	return lower(Object.keys(assets));
+}
+function distance(duration, want) {
+	if (want === void 0 || duration === null || duration === void 0) return 0;
+	const m = String(duration).match(/(\d+(?:\.\d+)?)\s*(?:s)?\s*(\+)?/);
+	if (!m) return 0;
+	const d = parseFloat(m[1]);
+	return m[2] ? Math.max(0, d - want) : Math.abs(d - want);
+}
+function findTechniques(catalog, ask) {
+	if (ask.vocab !== catalog.vocab) throw new ArsenalRefusal(`refused: ask is vocab ${ask.vocab} but the catalog is ${catalog.vocab}`);
+	for (const j of [ask.job, ...ask.support ?? []]) if (!catalog.jobs.includes(j)) throw new ArsenalRefusal(`refused: unknown job "${j}"; valid ids: ${catalog.jobs.join(", ")}`);
+	const support = ask.support ?? [];
+	const mood = lower(ask.mood);
+	const have = assetKinds(ask.assets);
+	const exclude = new Set(ask.exclude ?? []);
+	const limit = ask.limit ?? 5;
+	const tier = (r) => r.job === ask.job ? 0 : r.support.includes(ask.job) ? 1 : [r.job, ...r.support].some((j) => j !== null && support.includes(j)) ? 2 : null;
+	const byJob = catalog.recipes.filter((r) => r.kind === "technique" && tier(r) !== null && !exclude.has(r.id));
+	const pass = (r, loose) => (loose.includes("status") || ask.constraints?.status === "any" || r.status === "proven") && (loose.includes("needs") || have === null || unmet(r.needs, have).length === 0);
+	let relaxed = [];
+	let hits = byJob.filter((r) => pass(r, relaxed));
+	for (const step of ["status", "needs"]) {
+		if (hits.length || !byJob.length) break;
+		relaxed = [...relaxed, step];
+		hits = byJob.filter((r) => pass(r, relaxed));
+	}
+	const overlap = (r) => lower(r.mood).filter((m) => mood.includes(m));
+	const ranked = hits.map((r) => ({
+		r,
+		key: [
+			tier(r),
+			r.status === "proven" ? 0 : 1,
+			-r.taught_by,
+			-overlap(r).length,
+			distance(r.duration, ask.duration)
+		]
+	})).sort((a, b) => {
+		for (let i = 0; i < a.key.length; i++) if (a.key[i] !== b.key[i]) return a.key[i] - b.key[i];
+		return 0;
+	}).slice(0, limit);
+	const fit = (r) => {
+		const t = tier(r);
+		const job = t === 0 ? `primary job ${ask.job}` : t === 1 ? `supports ${ask.job}` : `serves support job ${[r.job, ...r.support].find((j) => j !== null && support.includes(j))}`;
+		const missing = have === null ? [] : unmet(r.needs, have);
+		const needs = !r.needs.length ? "needs nothing" : missing.length ? `needs ${missing.join(", ")}, not on hand` : have === null ? `needs ${r.needs.join(", ")}` : `needs met: ${r.needs.join(", ")}`;
+		const m = overlap(r);
+		return [
+			job,
+			needs,
+			m.length ? `mood: ${m.join(", ")}` : mood.length ? "no mood overlap" : null,
+			r.taught_by > 1 ? `taught ${r.taught_by} times` : null,
+			r.status === "proven" ? "proven" : "unproven, needs a test build first"
+		].filter(Boolean).join("; ");
+	};
+	const out = {
+		vocab: catalog.vocab,
+		version: catalog.version,
+		results: ranked.map(({ r }) => ({
+			id: r.id,
+			revision: r.revision,
+			name: r.name,
+			line: r.line,
+			status: r.status,
+			needs: r.needs,
+			duration: r.duration,
+			motion: r.motion,
+			still: r.still?.path ?? null,
+			section: r.section,
+			fit: fit(r)
+		}))
+	};
+	if (relaxed.length && out.results.length) out.relaxed = relaxed;
+	return out;
+}
+function loadCatalog(root = LIBRARY) {
+	return JSON.parse(readLibraryEntry("arsenal-catalog", root).content);
+}
+function listJobs(root = LIBRARY) {
+	const file = JSON.parse(readLibraryEntry("arsenal-jobs", root).content);
+	return {
+		vocab: `jobs-v${String(file.version).replace(/^v/, "")}`,
+		groups: file.groups,
+		jobs: file.jobs.map(({ id, group, name, definition }) => ({
+			id,
+			group,
+			name,
+			definition
+		})),
+		tags: file.tags
+	};
+}
+function recipeReply(id, revision, root = LIBRARY) {
+	const catalog = loadCatalog(root);
+	const r = catalog.recipes.find((x) => x.id === id);
+	if (!r) throw new ArsenalRefusal(`refused: unknown recipe "${id}"; ae_arsenal find returns ids for a beat`);
+	const { content } = readLibraryEntry(r.section.document, root);
+	const section = content.split(/^(?=## )/m).find((s) => s.startsWith(`## ${r.section.heading}
+`) && new RegExp(`^id: ${r.id}$`, "m").test(s));
+	if (!section) throw new Error(`the arsenal is inconsistent: ${r.section.document} has no section for ${r.id}`);
+	return [
+		`ae_arsenal recipe ${r.id}@${r.revision} (${r.status}, ${r.kind}; ${catalog.vocab}, catalog ${catalog.version}; from library document ${r.section.document})`,
+		revision !== void 0 && revision !== r.revision ? `WARNING: pinned revision ${revision}; the shipped revision is ${r.revision}. The recipe changed since it was pinned: this is the shipped text, not the pinned one. Check it still fits the beat.` : null,
+		"",
+		section.trimEnd()
+	].filter((l) => l !== null).join("\n");
+}
+function readStill(still, root = LIBRARY) {
+	const base = realpathSync(root);
+	const file = realpathSync(path.resolve(base, still.path));
+	const rel = path.relative(base, file);
+	if (!rel || rel.startsWith("..") || path.isAbsolute(rel)) throw new Error("Arsenal still escapes the library");
+	const bytes = readFileSync(file);
+	if (createHash("sha256").update(bytes).digest("hex") !== still.sha256) throw new Error(`Arsenal still hash mismatch: ${still.path}`);
+	return bytes;
+}
+function stillContent(r, root = LIBRARY) {
+	if (!r.still) return [];
+	return [{
+		type: "text",
+		text: `Still of ${r.id} (${r.name}), from our own proof build:`
+	}, {
+		type: "image",
+		data: readStill(r.still, root).toString("base64"),
+		mimeType: "image/jpeg"
+	}];
+}
+var LIBRARY, ArsenalRefusal, MET_BY, lower, unmet, askShape, arsenalTool;
+function init_arsenal() {
+	return (init_arsenal = __esmMin((() => {
+		init_config();
+		init_errors();
+		init_define_tool();
+		init_library();
+		LIBRARY = path.resolve(PACKAGE_ROOT, "../library");
+		ArsenalRefusal = class extends Error {};
+		MET_BY = {
+			footage: ["footage", "screen"],
+			photo: ["photo", "library"],
+			illustration: [
+				"photo",
+				"library",
+				"logo"
+			],
+			character: ["library"]
+		};
+		lower = (xs) => (xs ?? []).map((x) => String(x).toLowerCase());
+		unmet = (needs, have) => lower(needs).filter((n) => MET_BY[n] && !MET_BY[n].some((a) => have.includes(a)));
+		askShape = {
+			action: z.enum([
+				"find",
+				"get",
+				"jobs"
+			]).describe("find: a shortlist for one beat; get: one recipe's full text; jobs: the job vocabulary"),
+			vocab: z.string().optional().describe("find: the job vocabulary the beat was written against (e.g. jobs-v1); omitted means the shipped one"),
+			job: z.string().optional().describe("find: the beat's job id, from action jobs (e.g. add-depth, land-number, hand-over)"),
+			support: z.array(z.string()).optional().describe("find: up to two support job ids"),
+			duration: z.number().optional().describe("find: the beat's length in seconds"),
+			takeaway: z.string().optional().describe("find: what the viewer must get from the beat (carried for the record; not ranked on)"),
+			mood: z.array(z.string()).optional().describe("find: mood words, matched softly against each recipe's mood tags"),
+			assets: z.union([
+				z.record(z.string(), z.unknown()),
+				z.array(z.string()),
+				z.literal("none")
+			]).optional().describe("find: what the beat has on hand, by kind (footage, screen, photo, logo, voice, library, type), or \"none\"; omitted means needs are not filtered"),
+			constraints: z.object({
+				aspect: z.string().optional(),
+				theme: z.string().optional(),
+				palette: z.string().optional(),
+				status: z.enum(["proven", "any"]).optional().describe("proven (the default) or any, to let unproven recipes through")
+			}).optional(),
+			exclude: z.array(z.string()).optional().describe("find: recipe ids already used or ruled out"),
+			limit: z.number().int().positive().max(20).optional().describe("find: how many candidates, default 5"),
+			id: z.string().optional().describe("get: the recipe id from find"),
+			revision: z.string().optional().describe("get: the revision the brief pinned; a different shipped revision is answered with a warning")
+		};
+		arsenalTool = defineTool({
+			name: "ae_arsenal",
+			title: "Technique arsenal",
+			group: "document",
+			effect: "read",
+			blockedInReadOnly: false,
+			description: "Find proven After Effects techniques for a beat by the job it must do, then read the chosen recipe. Use it while planning shots, once per beat, before building. action jobs lists the job vocabulary (ids with one-line definitions). action find takes the beat (job, and optionally support, duration, mood, assets, constraints.status, exclude, limit) and returns a ranked shortlist (proven recipes only unless constraints.status is any; relaxed names any filter loosened when nothing passed; never another job) with each candidate's still from our own proof build. An unknown job is refused with the valid ids: pick one, never invent one. action get takes id (and the pinned revision) and returns the full recipe. Offline; no After Effects needed.",
+			inputShape: askShape,
+			handler: async (args) => {
+				try {
+					if (args.action === "jobs") return jsonResult(listJobs());
+					if (args.action === "get") {
+						if (!args.id) return errorResult("INVALID_ARGS", "get needs id: a recipe id from ae_arsenal find");
+						const text = recipeReply(args.id, args.revision);
+						const r = loadCatalog().recipes.find((x) => x.id === args.id);
+						return {
+							content: [{
+								type: "text",
+								text
+							}, ...stillContent(r)],
+							isError: false
+						};
+					}
+					if (!args.job) return errorResult("INVALID_ARGS", "find needs job: a job id from ae_arsenal action jobs", { hint: "call ae_arsenal with action jobs for the valid ids" });
+					const catalog = loadCatalog();
+					const answer = findTechniques(catalog, {
+						vocab: args.vocab ?? catalog.vocab,
+						job: args.job,
+						support: args.support,
+						duration: args.duration,
+						takeaway: args.takeaway,
+						mood: args.mood,
+						assets: args.assets,
+						constraints: args.constraints,
+						exclude: args.exclude,
+						limit: args.limit
+					});
+					const byId = new Map(catalog.recipes.map((r) => [r.id, r]));
+					const images = answer.results.flatMap((c) => stillContent(byId.get(c.id)));
+					return {
+						content: [{
+							type: "text",
+							text: JSON.stringify({
+								ok: true,
+								...answer
+							}, null, 2)
+						}, ...images],
+						isError: false
+					};
+				} catch (e) {
+					if (e instanceof ArsenalRefusal) return errorResult("INVALID_ARGS", e.message);
+					return errorResult("IO", e instanceof Error ? e.message : String(e));
+				}
+			}
+		});
+	})))();
+}
+
+export { ALL_TOOLS, arsenalTool, iccManagedReason, init_arsenal, init_capture_shared, init_library, init_render_frame, init_tools, libraryTool, renderFrameTool };
