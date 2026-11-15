@@ -101,3 +101,14 @@ Still to settle between the two sides:
 - **Where jobs v1 lives for the plugin.** Proposed: Content owns `jobs.json`; the plugin vendors a pinned copy (like a lockfile), written brand-agnostic as Content drafted it, since Comp Room ships to other users.
 - **Combinations.** Both drafts return single recipes; pairing (a matte window plus its glow) stays the brief writer's call for now, with `pairs_with` filled from finished pieces later.
 - **Fit to 9:16 and the house palette.** Recipes were measured on 16:9 tutorial frames; whether the catalog can say "works at 1080x1920" or the brief writer judges from the still is open.
+
+## Decisions (Joe, 2026-11-14: "yes to all")
+
+1. **Jobs v1 as drafted (27 jobs)**, not polished further; real briefs will show what to change, and versioning makes changes cheap.
+2. **Proven only by default**, with at most one unproven technique per reel, given a short test build first.
+3. **Finish the house look first**: the catalog serves house reels mainly through picture jobs (depth, light, finish); devices keep the line jobs. Widening the look comes later, on purpose, one reel at a time.
+4. **The 54 devices are tagged with the same jobs**, so one vocabulary indexes both libraries.
+5. **Stills ship only for proven recipes** (24 today); hosting is considered only if the catalog grows large.
+6. **Joe approves new jobs, rarely**: the learner and briefs only propose; the queue comes to Joe when a few have gathered, not nightly.
+
+Build order: Content creates `jobs.json` (jobs v1) and teaches the brief writer the new lines; this side re-tags the 64 recipes against jobs v1, builds the catalog file and the query in `tools/channel-learner/` with tests, and later wires the query into the plugin as an operation on the current main (this branch predates 0.3.0).
