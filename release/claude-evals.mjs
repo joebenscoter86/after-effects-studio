@@ -26,7 +26,7 @@ const PLUGIN_NAME = JSON.parse(await fs.readFile(path.join(ROOT, 'claude', 'src'
 // Read-only built-ins only. The plugin's MCP tools are granted on the command line (`--allow-tools`), read tools only,
 // so no case can change the open After Effects project.
 export const ALLOWED_TOOLS = ['Read', 'Glob', 'Grep', 'Skill', 'ToolSearch'];
-export const READ_TOOLS = ['ae_library', 'ae_catalog', 'ae_context', 'ae_version_info', 'ae_project_info', 'ae_comp_info', 'ae_layer_info']
+export const READ_TOOLS = ['ae_library', 'ae_arsenal', 'ae_catalog', 'ae_context', 'ae_version_info', 'ae_project_info', 'ae_comp_info', 'ae_layer_info']
   .map((t) => `mcp__plugin_${PLUGIN_NAME}_${PLUGIN_NAME}__${t}`);
 export const MAX_TURNS = 20;
 export const TIMEOUT_SECONDS = 600;
