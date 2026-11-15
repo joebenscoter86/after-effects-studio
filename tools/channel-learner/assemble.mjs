@@ -13,7 +13,7 @@ const mtime = (p) => fs.statSync(p).mtimeMs;
 /** Recipes that may not be assembled, each with its reason, in file order. */
 // "status: proven" counts only with the acceptance written beside it, e.g.
 // "status: proven (accepted by Joe 2026-11-14: ...)"; only the owner proves a recipe.
-function statusOf(text) {
+export function statusOf(text) {
   const line = (text.match(/^status:\s*(.+)$/m) || [, 'unproven'])[1];
   return { proven: /^proven\b/.test(line), accepted: /\baccepted\b.*\d{4}-\d{2}-\d{2}/.test(line) };
 }
