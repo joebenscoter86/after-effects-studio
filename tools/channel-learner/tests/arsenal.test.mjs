@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { buildCatalog } from '../catalog.mjs';
-import { scrubRecipe, buildArsenal, writeArsenal, galleryBlock, withGallery, creatorsOf, publicJobs, PRIVATE_NAMES } from '../arsenal.mjs';
+import { scrubRecipe, buildArsenal, writeArsenal, galleryBlock, withGallery, creatorsOf, publicJobs, publicStatus, JOBS_REWORDING, PRIVATE_NAMES } from '../arsenal.mjs';
 
 const CLI = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'arsenal.mjs');
 const ACCEPTED = 'status: proven (accepted by the owner 2026-11-14: rebuilt and compared)';
@@ -149,8 +149,29 @@ test('build: each shipped recipe carries its id, revision and jobs, and none of 
   assert.match(text, /^id: 01-pic$/m);
   assert.match(text, new RegExp(`^revision: ${cat.recipes[0].revision}$`, 'm'));
   assert.match(text, /^job: add-depth; support: before-after$/m);
-  assert.match(text, /^status: proven \(accepted by the owner 2026-11-14: rebuilt and compared\)$/m);
+  assert.match(text, /^status: proven \(accepted 2026-11-14\)$/m);
+  assert.doesNotMatch(text, /accepted by|rebuilt and compared/);
   assert.doesNotMatch(text, /vidAAAAAAAA|\bf\d{4,6}\b|scratch\//);
+  assert.equal(JSON.parse(files.get('catalog.json')).recipes[0].status, 'proven');
+});
+
+test('status: a shipped status line keeps the acceptance date and drops who accepted it and what they said', () => {
+  assert.equal(publicStatus('status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects (twice) and compared; he said "yes they all match")'), 'status: proven (accepted 2026-11-14)');
+  assert.equal(publicStatus('status: proven (accepted by the owner 2026-11-14: rebuilt and compared)'), 'status: proven (accepted 2026-11-14)');
+});
+
+test('status: a status line without a name, and any other line, is left alone', () => {
+  for (const line of ['status: proven (accepted 2026-11-14)', 'status: proven (accepted 2026-11-14: rebuilt)', 'status: unproven', 'steps: accepted by the owner 2026-11-14: x)']) {
+    assert.equal(publicStatus(line), line);
+  }
+});
+
+test('status: the drafts on disk keep the full line; only the shipped recipe is shortened', () => {
+  const { dir, catalog } = fixture([{ slug: 'a', status: 'proven' }]);
+  try {
+    buildArsenal({ catalog, jobs: JOBS, examples: EXAMPLES, draftsDir: dir, stills: {}, creators: [] });
+    assert.match(fs.readFileSync(path.join(dir, 'vidAAAAAAAA.md'), 'utf8'), /^status: proven \(accepted by the owner 2026-11-14: rebuilt and compared\)$/m);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
 test('build: the catalog line is scrubbed like the recipe text', () => {
@@ -194,19 +215,70 @@ test('build: wanted lists the proven techniques that have a proof render', () =>
   assert.deepEqual(wanted, { '01-p': 'x/01.png' });
 });
 
+// Content's jobs file as Content writes it: the fields the runtime reads, and the ones it does not, some naming the owner.
+const CONTENT_JOBS = {
+  version: '1',
+  approved: 'Joe, 2026-11-14 ("yes to all", via the channel-learner session)',
+  design: 'docs/superpowers/specs/x.md',
+  notes: 'The ids are the contract. Joe approves every change.',
+  groups: JOBS.groups,
+  tags: {
+    'build-aid': 'A recipe that helps build but serves no beat. Never returned by a beat query.',
+    unmatched: 'A recipe that fits no job yet. Goes to the proposals queue; never becomes a job without Joe.',
+  },
+  jobs: JOBS.jobs.map((j) => ({ ...j, example: `private example for ${j.id}` })),
+};
+
 test('build: the jobs file keeps Content\'s ids, groups, names and definitions and ships the public examples', () => {
-  const content = { ...JOBS, notes: 'The ids are the contract.', jobs: JOBS.jobs.map((j) => ({ ...j, example: `private example for ${j.id}` })) };
   const { dir, catalog } = fixture([{ slug: 'a', status: 'proven' }]);
   try {
-    const { files } = buildArsenal({ catalog, jobs: content, examples: EXAMPLES, draftsDir: dir, stills: {}, creators: [] });
+    const { files } = buildArsenal({ catalog, jobs: CONTENT_JOBS, examples: EXAMPLES, draftsDir: dir, stills: {}, creators: [] });
     const shipped = JSON.parse(files.get('jobs-v1.json'));
     assert.equal(shipped.version, '1');
-    assert.equal(shipped.notes, 'The ids are the contract.');
     assert.deepEqual(shipped.groups, JOBS.groups);
     assert.deepEqual(shipped.jobs.map(({ id, group, name, definition }) => ({ id, group, name, definition })), JOBS.jobs);
     assert.deepEqual(Object.fromEntries(shipped.jobs.map((j) => [j.id, j.example])), EXAMPLES);
     assert.doesNotMatch(files.get('jobs-v1.json'), /private example/);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('jobs: ships only the top-level fields the runtime reads, in Content\'s order', () => {
+  const shipped = JSON.parse(publicJobs(CONTENT_JOBS, EXAMPLES));
+  assert.deepEqual(Object.keys(shipped), ['version', 'groups', 'tags', 'jobs']);
+  assert.deepEqual(Object.keys(shipped.tags), ['build-aid', 'unmatched']);
+  assert.equal(shipped.tags['build-aid'], CONTENT_JOBS.tags['build-aid']);
+});
+
+test('jobs: text that names the owner is reworded by the explicit map, and nothing else changes', () => {
+  const shipped = JSON.parse(publicJobs(CONTENT_JOBS, EXAMPLES));
+  assert.equal(shipped.tags.unmatched, 'A recipe that fits no job yet. Goes to the proposals queue; never becomes a job without the owner\'s approval.');
+  assert.equal(JOBS_REWORDING['never becomes a job without Joe'], 'never becomes a job without the owner\'s approval');
+  assert.equal(JSON.parse(publicJobs(JOBS, EXAMPLES)).tags, undefined);
+});
+
+test('guard: passes on Content\'s jobs file and drafts accepted by a named person', () => {
+  const { dir, catalog } = fixture([{ slug: 'a', status: 'proven' }, { slug: 'b' }]);
+  try {
+    const draft = path.join(dir, 'vidAAAAAAAA.md');
+    fs.writeFileSync(draft, fs.readFileSync(draft, 'utf8').replace('accepted by the owner 2026-11-14: rebuilt and compared', 'accepted by Joe 2026-11-14: rebuilt by Joe; he said "yes"'));
+    const { files } = buildArsenal({ catalog, jobs: CONTENT_JOBS, examples: EXAMPLES, draftsDir: dir, stills: {}, creators: [] });
+    assert.match(files.get('recipes-line.md'), /^status: proven \(accepted 2026-11-14\)$/m);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('guard: the repo\'s own drafts and jobs file build, and the shipped arsenal names no private name', () => {
+  const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+  const drafts = path.join(root, 'product', 'arsenal-drafts');
+  const out = path.join(root, 'plugin', 'library', 'arsenal');
+  const jobs = JSON.parse(fs.readFileSync(path.join(out, 'jobs-v1.json'), 'utf8'));
+  const examples = JSON.parse(fs.readFileSync(path.join(root, 'tools', 'channel-learner', 'arsenal-public-examples.json'), 'utf8'));
+  const catalog = buildCatalog({ draftsDir: drafts, jobs, tags: JSON.parse(fs.readFileSync(path.join(drafts, 'tags.json'), 'utf8')), proofs: JSON.parse(fs.readFileSync(path.join(drafts, 'proof-stills.json'), 'utf8')) });
+  const creators = creatorsOf(fs.readFileSync(path.join(drafts, 'CREDITS.md'), 'utf8'));
+  assert.doesNotThrow(() => buildArsenal({ catalog, jobs, examples, draftsDir: drafts, creators }));
+  for (const f of fs.readdirSync(out).filter((n) => n !== 'stills')) {
+    const text = fs.readFileSync(path.join(out, f), 'utf8');
+    for (const n of PRIVATE_NAMES) assert.doesNotMatch(text, new RegExp(`\\b${n}\\b`, 'i'), `${f} names ${n}`);
+  }
 });
 
 test('jobs: written one job per line, the way Content lays its file out', () => {
@@ -270,14 +342,14 @@ test('guard: refuses a recipe, the catalog or the jobs file that names a private
   try {
     const draft = path.join(dir, 'vidAAAAAAAA.md');
     const original = fs.readFileSync(draft, 'utf8');
-    fs.writeFileSync(draft, original.replace('accepted by the owner', 'accepted by joe'));
+    fs.writeFileSync(draft, original.replace('1. Draw it.', '1. Draw it the way joe does.'));
     assert.throws(() => run(), /recipes-line\.md names a private name: Joe/);
     fs.writeFileSync(draft, original);
     catalog.recipes[0].line = 'Built the way JOEB builds it.';
     assert.throws(() => run(), /catalog\.json names a private name: JoeB/);
     catalog.recipes[0].line = 'A plain line.';
     assert.throws(() => run({ examples: { ...EXAMPLES, 'add-depth': 'a Higgsfield render with a shadow' } }), /jobs-v1\.json names a private name: Higgsfield/);
-    assert.throws(() => run({ jobs: { ...JOBS, notes: 'Anthropic approves.' } }), /jobs-v1\.json names a private name: Anthropic/);
+    assert.throws(() => run({ jobs: { ...JOBS, tags: { unmatched: 'Anthropic approves.' } } }), /jobs-v1\.json names a private name: Anthropic/);
     assert.doesNotThrow(() => run({ examples: { ...EXAMPLES, 'add-depth': 'Joey and Claudette on a mat' } }));
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });

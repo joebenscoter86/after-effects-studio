@@ -6,7 +6,7 @@ Generated from the recipe drafts; do not edit by hand. Recipes whose primary job
 id: 01-dotted-stroke
 revision: 228e87a2
 job: point-at-detail; support: show-time, keep-it-alive
-status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
+status: proven (accepted 2026-11-14)
 what it does for a beat: Turns any stroked line or outline into an evenly spaced row or ring of round dots with no extra layers, for loaders, orbit rings, borders and decorative circles around a title.
 what it looks like: A thin white ring of about thirty small round dots circles a short white word on a near-black background, and the ring slowly turns.
 ingredients:
@@ -38,7 +38,7 @@ unknowns: The ellipse size. The ring fills roughly a fifth of the comp's width i
 id: 02-line-with-end-dots
 revision: 1571ddbc
 job: relate-things; support: point-at-detail
-status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
+status: proven (accepted 2026-11-14)
 what it does for a beat: A thin line or arc with a round dot at each end, built inside one shape layer, for orbit segments, connector lines, data callouts and ring loaders.
 what it looks like: Three thin white arcs, each with a small round white dot at both ends, sit evenly around a short white word on near-black. Together they nearly close a circle and they move in the finished piece.
 ingredients:
@@ -75,7 +75,7 @@ unknowns: The ellipse size (the inferred 470 px does not match the roughly 400 p
 id: 04-carousel-by-rotation
 revision: 3a03f5d0
 job: list-items; support: reveal-headline
-status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
+status: proven (accepted 2026-11-14)
 what it does for a beat: Builds a wheel of repeated words (or any layer) curving around an off-screen pivot. Use it for list reveals, title wheels and "rolodex" type moments without expressions or plugins.
 what it looks like: A stack of short bold phrases in pale mint on a near-black background, fanned out along an arc that bulges to the right of frame. Each phrase is a copy of one text layer turned a few degrees further than the one above it, so the words follow the curve of a large ring whose centre sits far to the left of the words.
 ingredients:
@@ -105,7 +105,7 @@ unknowns: exact pivot coordinates and comp size; font size; text colour value; h
 id: 18-smooth-text-reveal
 revision: 8c8e30dd
 job: reveal-headline
-status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
+status: proven (accepted 2026-11-14)
 what it does for a beat: Use for a headline or tagline that should arrive gently, words sliding up and fading in one after another with a smooth overlap, with no per-word keyframes.
 what it looks like: A two-line bold sans headline in near-black on an off-white background; words rise a short distance and fade from grey to solid left to right, each overlapping the next (: the first three words solid, the fourth still pale and low). The fan of photo cards above, the underline under one word and the small button below are separate layers with their own animations (shown, separate layers parented to a null), not part of this technique.
 ingredients:
@@ -141,7 +141,7 @@ unknowns: whether Position 115 or 75 was the intended final value (75 is what th
 id: 19-text-on-a-path
 revision: d8d51815
 job: reveal-headline; support: keep-it-alive
-status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
+status: proven (accepted 2026-11-14)
 what it does for a beat: Wrap a repeated line of type round a circle (or any shape you draw) and slide it along the path, so a badge or seal of words circles a central title.
 what it looks like: A short all-caps phrase repeated three times sits in a ring round a bold two-line title, white on near-black; the ring of words travels round the circle as the first margin animates.
 ingredients:
@@ -175,7 +175,7 @@ unknowns: exact phrase length/number of repeats needed; circle diameter not give
 id: 21-texture-through-a-matte
 revision: c33c4c28
 job: reveal-headline; support: finish-the-look
-status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
+status: proven (accepted 2026-11-14)
 what it does for a beat: Make a title look printed or stamped into a worn paper texture instead of floating on top of it: the texture itself forms the letters, brightened, and the letter edges are broken up.
 what it looks like: A tall condensed all-caps word in grey, made of the same creased, scratched dark paper as the background, with ragged, eroded edges; small white labels sit around it.
 ingredients:
@@ -215,7 +215,7 @@ unknowns: the texture source; title font, size and colour beyond black; exact cu
 id: 25-custom-media-frame
 revision: 8c6d3c5f
 job: show-real-screen; support: reveal-headline
-status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
+status: proven (accepted 2026-11-14)
 what it does for a beat: When a photo or clip should sit in a designed window rather than a plain rectangle (for example, a cut-out that leaves room for a headline), draw any shape and use it as the clip's matte.
 what it looks like: On a white slide, a dark building photo fills a wide frame whose lower middle is notched out, so a white panel with a large black headline sits inside the notch; the image reads as a custom-shaped placeholder.
 ingredients:

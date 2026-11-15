@@ -762,35 +762,35 @@
       "title": "Job vocabulary jobs-v1: the jobs a beat asks for",
       "path": "arsenal/jobs-v1.json",
       "kind": "catalog",
-      "sha256": "aef04992052fac3b025d44f4ce8809c7c5a1a31b91b5375f5e192c924a9715f4"
+      "sha256": "52bbd772da324dacc11c06b01349c69b7c298995be99cad80851e8e4a3554016"
     },
     {
       "id": "arsenal-line",
       "title": "Arsenal recipes: line jobs: what the viewer must get from this line",
       "path": "arsenal/recipes-line.md",
       "kind": "recipes",
-      "sha256": "9f49b4db7975ce12e991db9ff1eb3aee854c884a7c6b43498ddc0db3f7f25982"
+      "sha256": "2639ca05d1e5cf83dc4731fdb7c66fc59a91170ee1ba6e4fce0ff08c9e0a4b8e"
     },
     {
       "id": "arsenal-picture",
       "title": "Arsenal recipes: picture jobs: how the picture has to read, whatever the line says",
       "path": "arsenal/recipes-picture.md",
       "kind": "recipes",
-      "sha256": "345dcde320815ca0036aa527744fdd4fee9119a00bd43aff9d9014d9b83e3557"
+      "sha256": "931ac0223651281bf45757054a0e21f95f947cf46db5bdd90e5e69d93f2d4c1b"
     },
     {
       "id": "arsenal-connective",
       "title": "Arsenal recipes: connective jobs: between and across pictures",
       "path": "arsenal/recipes-connective.md",
       "kind": "recipes",
-      "sha256": "3599f359e2c230ccf01c282e364d31600088246f5b22a9cfb567891e36e3f8c2"
+      "sha256": "280bd4e62f4a7ec4f087a6ddb690a5e4b8daa59728fd9f9f232e53f42b756309"
     },
     {
       "id": "arsenal-build-aid",
       "title": "Arsenal recipes: build aids and unmatched recipes",
       "path": "arsenal/recipes-build-aid.md",
       "kind": "recipes",
-      "sha256": "b44dc0c858ca0dbf22940863d0e781bf0ad113a1fc84a2faa982c83276cd9148"
+      "sha256": "6380008e8256ffda3b6c21818e34d43ee64b854c0be087c70e6b139878e293b1"
     }
   ]
 }

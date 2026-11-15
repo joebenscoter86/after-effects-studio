@@ -223,7 +223,7 @@ unknowns: The final gradient's Start Point, End Point and colour stops after the
 id: 03-tapered-stroke
 revision: c61c2fb0
 job: fill-the-backdrop; support: add-impact
-status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
+status: proven (accepted 2026-11-14)
 what it does for a beat: Makes an open stroke thin to nothing at both ends, so a light streak, horizon arc or swoosh fades out softly instead of stopping in a hard square end.
 what it looks like: A glowing blue-white arc, like a planet's rim, curves over a centred multi-line headline on a dark navy background. It is brightest and thickest at the top and thins to nothing at both ends.
 ingredients:
@@ -262,7 +262,7 @@ unknowns: The Trim Paths start and end, and the ellipse size, which set the arc'
 id: 09-endless-background-tile
 revision: dff1920a
 job: fill-the-backdrop; support: keep-it-alive, establish-place
-status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
+status: proven (accepted 2026-11-14)
 what it does for a beat: For a background that has to keep moving longer than the artwork is wide, such as the view out of a moving vehicle's window; the image is repeated and slid along without visible seams.
 what it looks like: An illustrated landscape (hills, trees, sky) seen through a train window behind a seated character. With the effect animating, the landscape scrolls sideways past the window and keeps going, the repeated copies flipped at the joins so there is no hard edge.
 ingredients:
@@ -294,7 +294,7 @@ unknowns: the Tile Center expression that drives the finished playback (only its
 id: 11-white-on-light-finish
 revision: 0f345098
 job: add-depth; support: finish-the-look
-status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects from this recipe alone and compared with the tutorial's result)
+status: proven (accepted 2026-11-14)
 what it does for a beat: When a pure white shape or title vanishes into a light background, two layer styles give it a faint cool shading and a bright rim. On their own they only tint the shape; it reads as a raised, soft-plastic object once a long soft shadow lies under it and the shapes around it get the same treatment, so the pieces look stacked.
 what it looks like: Five pale discs stacked on a near-white, faintly cyan page: a large one in the middle carrying a small dark two-line title, and four smaller ones tucked partly behind it, slightly out of focus. Every disc has the same gentle diagonal grey-blue shading (lightest lower left, darkest upper right) and throws a long, soft grey shadow to the left and downward, darkest right at its own edge, so the left half of the page is full of overlapping shadow and the right third is clean; the big disc's shadow lies across the discs behind it. The bright rim shows only where that dark shadow sits behind it. The full scene, seen before the demonstration, has five more small sharp discs in front of the big one, each shading its face.
 ingredients:
@@ -349,7 +349,7 @@ unknowns: the settings of the shadow layers in this scene (effects, blur centres
 id: 12-long-soft-shadow
 revision: 5b8fb6a4
 job: add-depth; support: finish-the-look
-status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
+status: proven (accepted 2026-11-14)
 what it does for a beat: Gives flat shapes or letters a long, fading directional shadow, as if lit by a low sun, which reads especially well on bright, pale backgrounds.
 what it looks like: Pale grey-blue bars and blocks around a large two-word title on a near-white dotted background each cast a long soft grey shadow streaking diagonally down and to the right, dense at the object and fading out; the title's letters lie flat and throw no shadow.
 ingredients:
@@ -383,7 +383,7 @@ unknowns: the shadow layer's opacity or blend mode (not shown; shadows read as m
 id: 13-dot-grid-texture
 revision: 4222655e
 job: fill-the-backdrop; support: finish-the-look
-status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
+status: proven (accepted 2026-11-14)
 what it does for a beat: A quick, quiet design texture for a plain or pale background, so an empty backdrop reads as designed rather than blank without pulling focus from the type or graphics in front.
 what it looks like: A pale grey-blue background covered by an even grid of tiny grey dots, sitting behind 3D-looking letters and simple outline shapes; the dots are only noticeable when you look closely.
 ingredients:
@@ -412,7 +412,7 @@ unknowns: Why the dots read mid grey rather than black (layer opacity and blend 
 id: 14-3d-floor-shadows
 revision: b210d945
 job: add-depth; support: light-the-hero
-status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
+status: proven (accepted 2026-11-14)
 what it does for a beat: Grounds flat 3D layers in a scene by giving them soft, believable shadows on the ground, without letting the light change the colour of the graphics themselves.
 what it looks like: A pale UI-style scene (a rounded panel of icon buttons, a weather card, small stock tickers, a big bold title) gains a soft grey shadow that spreads across the floor beneath the objects, darkest just under them (about 78 to 88 % down) and lightening toward the bottom edge; the graphics keep their original flat colours.
 ingredients:
@@ -459,7 +459,7 @@ unknowns: The comp's camera (default active camera shown, no custom camera given
 id: 17-depth-fog
 revision: 443696ce
 job: add-depth; support: finish-the-look
-status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
+status: proven (accepted 2026-11-14)
 what it does for a beat: Use when separately made 3D layers look pasted together; a coloured depth fog over the finished scene lifts the darks and sinks the distance into one atmosphere.
 what it looks like: A dark blue-teal night forest with tree trunks receding behind a small character in an orange cloak holding a flame; with the fog on, the background trunks and blacks lift into a soft teal haze and the scene reads as one space (compare off on).
 ingredients:
@@ -490,7 +490,7 @@ unknowns: exact Fog Color value (only sampled from the video); how the precomp's
 id: 20-two-pass-glow
 revision: 295cc9bc
 job: finish-the-look; support: light-the-hero
-status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
+status: proven (accepted 2026-11-14)
 what it does for a beat: A finishing pass on bright line art or type on a dark ground: one tight glow for a halo near the edges plus one very wide glow for a faint bloom, without looking blown out.
 what it looks like: Thin white circle arcs with dot ends and a light word in the centre, on near-black; the white parts carry a close soft halo and a wide, faint haze around the whole graphic.
 ingredients:

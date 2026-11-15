@@ -6,7 +6,7 @@ Generated from the recipe drafts; do not edit by hand. Recipes that help a build
 id: 05-stagger-layers-in-time
 revision: 9201d48e
 job: none (build-aid)
-status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
+status: proven (accepted 2026-11-14)
 what it does for a beat: Makes a stack of copies appear one after another at an even interval, so items of a list, ring or grid arrive in sequence. A quick replacement for Sequence Layers or hand-nudging each bar.
 what it looks like: In the timeline the layer bars form a clean diagonal staircase: the bottom layer still starts at 0, and each layer above it starts the same few frames later than the one below, so the top of a 60-layer stack starts about 22 s in. In the example these are the word layers of the text carousel from recipe 04.
 ingredients:
@@ -30,7 +30,7 @@ unknowns: the exact layer grabbed for the drag; whether a whole-frame offset is 
 id: 07-face-the-camera
 revision: 59029d99
 job: none (build-aid)
-status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
+status: proven (accepted 2026-11-14)
 what it does for a beat: When a flat 3D layer circles around something (a moon round a planet, an icon on an orbit), it turns edge-on and thins out at parts of the loop; this keeps it reading as a full, flat shape the whole way round.
 what it looks like: White line art on black: a large outlined circle with a tilted elliptical ring around it, and a small black-filled, white-outlined circle travelling round the ring. Before the fix the small circle squashes into a thin sliver as it orbits; after it, it stays a perfect circle facing the viewer.
 ingredients:
@@ -88,7 +88,7 @@ unknowns: the exact path the pin was dragged along; Record Options settings (spe
 id: 15-grow-bounds-fix
 revision: 8e648131
 job: none (build-aid)
-status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
+status: proven (accepted 2026-11-14)
 what it does for a beat: Fixes effects that are cut off with a hard edge because the layer's bounding box is too small, for example a blurred or stretched shadow running past the edge of its source artwork.
 what it looks like: In a cartoon landscape of rolling green hills, trees and a sunset sky, each tree has a long soft shadow made from a dark-filled, radially blurred copy; before the fix the shadow stops at a straight edge, after it streaks smoothly across the hills.
 ingredients:
@@ -115,7 +115,7 @@ unknowns: how the shadow copy is made and positioned (outside this tip); the Pix
 id: 22-hide-layers-shy
 revision: ff77e41e
 job: none (build-aid)
-status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
+status: proven (accepted 2026-11-14)
 what it does for a beat: When a comp has dozens of support layers (mattes, lines, labels) and you only want to touch a few, mark the rest shy and hide them from the layer stack without precomposing. The comp structure and the render stay unchanged.
 what it looks like: In the example, a long stack of about ninety layers (photo cards arranged around a wheel, each with its own matte, outline, decoration and text layers) shrinks to a short list: the card images, their box layers, a null, an effects layer, the wheel and the background. Pressing the master toggle leaves the composition picture as it was.
 ingredients:
@@ -137,7 +137,7 @@ unknowns: Which layers were marked shy before the recording began: shows most sw
 id: 23-shutter-angle-blur
 revision: 955188f5
 job: none (build-aid)
-status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
+status: proven (accepted 2026-11-14)
 what it does for a beat: When motion blur is on but reads too subtle (or too smeary), change the composition's shutter angle to set how long each frame's blur streak is, without touching the animation.
 what it looks like: A ring made of one white bold word repeated four times with a round dot between repeats, spinning in 3D on a dark grainy background, with a darker copy under each word; at the default angle the letters show a light trail, and after raising the angle their upright strokes smear sideways by about 1.25% of the comp's width, soft-edged but still readable.
 ingredients:
@@ -166,7 +166,7 @@ unknowns: The motion behind the effect (how the ring of words is animated, its s
 id: 24-sharp-scaled-precomp
 revision: 42775cad
 job: none (build-aid)
-status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
+status: proven (accepted 2026-11-14)
 what it does for a beat: When a precomp built from shape and text layers is pushed far past 100% (a big push-in or a hero zoom), turn on the layer's collapse/rasterize switch so the vector contents are redrawn at the new size instead of being enlarged as pixels.
 what it looks like: An old-style error-dialog graphic (black title bar, grey panel, X icon, a two-line message and a small button) is scaled until a few letters of the message fill the frame; without the switch the edges are soft and blocky, with it the letters stay razor sharp.
 ingredients:

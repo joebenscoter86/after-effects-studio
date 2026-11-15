@@ -47,7 +47,7 @@ unknowns: The ball's exact Ellipse Size (never shown landed; 20.9 is a mid-drag 
 id: 06-3d-orbit-rings
 revision: 55063a18
 job: keep-it-alive; support: light-the-hero, add-depth
-status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
+status: proven (accepted 2026-11-14)
 what it does for a beat: Wraps a central object in a tilted, torus-like ring of repeated flat shapes that pass in front of and behind it. Use it for an orbit or "planet with rings" look, or any hero object that needs a 3D halo, with no 3D plugin.
 what it looks like: A solid black circle sits in the middle of a pale grey frame. Around it runs a tilted ring of white discs with thin dark outlines, each disc standing edge-on to the centre like slices of a doughnut; the near discs overlap the black circle and the far ones go behind it. Small black four-point sparkles float around.
 ingredients:
@@ -85,7 +85,7 @@ unknowns: comp size; disc ellipse size before scaling and exact colours; size an
 id: 10-graphic-as-particles
 revision: f4725be7
 job: keep-it-alive; support: fill-the-backdrop, add-impact
-status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
+status: proven (accepted 2026-11-14)
 what it does for a beat: Fill a scene with drifting copies of a small graphic (leaves, petals, confetti, logos) without hand-placing them; the particle system births, spins and moves each copy for you.
 what it looks like: Dozens of small green leaf graphics of varied size tumble and spin as they drift across a dark frame, spread through depth; in the tutorial's scene they are meant to float over an illustrated window view.
 ingredients:
@@ -134,7 +134,7 @@ unknowns: Direction Axis sub-settings (axis X/Y/Z) not shown; whether the rotati
 id: 16-lock-focus-to-layer
 revision: 45bd25eb
 job: move-camera; support: light-the-hero, add-depth
-status: proven (accepted by Joe 2026-11-14: rebuilt in After Effects on generated artwork from this recipe alone and compared with the tutorial's result; he said "yes they all match")
+status: proven (accepted 2026-11-14)
 what it does for a beat: Use when a camera push or drift through a layered 3D scene should keep the hero element crisp the whole time, so depth of field never drifts off the subject as the camera's distance to it changes.
 what it looks like: A stylised 3D landscape of rounded hills, trees and puffy clouds against a big warm sun; the camera pushes in from a wide view towards a small silhouetted figure on a hilltop, and the figure stays sharp, as do the two trees standing beside it at about its own depth, while the clouds and the nearer hill soften.
 ingredients:

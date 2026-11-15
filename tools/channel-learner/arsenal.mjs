@@ -3,9 +3,10 @@
 //   node tools/channel-learner/arsenal.mjs [--renders <folder holding quality/renders>] [--jobs <Content's jobs.json>]
 //     [--examples <file>] [--drafts <dir>] [--tags <file>] [--proofs <file>] [--credits <file>] [--out <dir>]
 //     [--readme <file>] [--no-manifest]
-// Writes the jobs file (Content's ids, groups, names and definitions, with the public examples in
-// arsenal-public-examples.json, since Content's own examples come from the owner's reels), the catalog data file, an
-// index and the recipes grouped by job group; makes a small
+// Writes the jobs file (Content's version, groups, tags, ids, names and definitions, with the public examples in
+// arsenal-public-examples.json, since Content's own examples come from the owner's reels; the fields the runtime does not
+// read are dropped), the catalog data file, an index and the recipes grouped by job group, each proven recipe's status
+// line shortened to its acceptance date (the drafts keep the full line); makes a small
 // JPEG still from our own proof render for each proven technique (never a tutorial frame); writes the README gallery
 // that shows those stills (the directory rule: every bundled image is shown in the README); regenerates the library
 // manifest. Never hand-edit the output. Design: product/arsenal-catalog-design.md.
@@ -101,10 +102,32 @@ export function wantedStills(catalog) {
 }
 
 /**
- * The shipped jobs file: Content's jobs file with each job's example swapped for the public one (id -> one line), laid out
- * as Content lays it out. Refuses a Content job with no public example, and a public example for a job Content lacks.
+ * A shipped recipe's status line: `status: proven (accepted by <name> <date>: ...)` becomes `status: proven (accepted <date>)`.
+ * The drafts keep the full line, as the record. Any other line, a status line with no name among them, is left alone.
  */
-export function publicJobs(jobs, examples) {
+export function publicStatus(line) {
+  return line.replace(/^(\s*status: proven) \(accepted by \D+? (\d{4}-\d{2}-\d{2})\b.*\)\s*$/, '$1 (accepted $2)');
+}
+
+/** The top-level fields of Content's jobs file that the runtime reads (plugin/runtime/src/tools/arsenal.ts JobsFile). */
+const JOBS_FIELDS = ['version', 'groups', 'tags', 'jobs'];
+
+/** Content's phrases that name a person, and the generic wording the shipped jobs file uses instead. Exact phrases only. */
+export const JOBS_REWORDING = {
+  'never becomes a job without Joe': "never becomes a job without the owner's approval",
+};
+const reword = (s) => Object.entries(JOBS_REWORDING).reduce((t, [from, to]) => t.split(from).join(to), s);
+const rewordAll = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, typeof v === 'string' ? reword(v) : v]));
+
+/**
+ * The shipped jobs file: Content's version, groups, tags and jobs (ids, groups, names and definitions as Content has them),
+ * each job's example swapped for the public one (id -> one line), the group and tag text reworded by JOBS_REWORDING, laid
+ * out as Content lays it out; the fields the runtime does not read are dropped. Refuses a Content job with no public
+ * example, and a public example for a job Content lacks.
+ */
+export function publicJobs(content, examples) {
+  const jobs = Object.fromEntries(Object.entries(content).filter(([k]) => JOBS_FIELDS.includes(k))
+    .map(([k, v]) => [k, (k === 'groups' || k === 'tags') && v && typeof v === 'object' ? rewordAll(v) : v]));
   const ids = jobs.jobs.map((j) => j.id);
   const missing = ids.filter((id) => typeof examples[id] !== 'string' || !examples[id].trim());
   const unknown = Object.keys(examples).filter((id) => !ids.includes(id));
@@ -140,7 +163,8 @@ export function buildArsenal({ catalog, jobs, examples, draftsDir, stills = {}, 
   const shippedStills = {};
   for (const r of catalog.recipes) {
     const g = groupOf(r, jobs);
-    const body = scrubRecipe(textOf(r), { videos }).split('\n').filter((l, i) => i > 0 && !/^id:/.test(l)).join('\n');
+    const own = textOf(r).split('\n').map(publicStatus).join('\n');
+    const body = scrubRecipe(own, { videos }).split('\n').filter((l, i) => i > 0 && !/^id:/.test(l)).join('\n');
     const job = r.kind === 'technique' ? `job: ${r.job}${r.support.length ? `; support: ${r.support.join(', ')}` : ''}` : `job: none (${r.kind})`;
     (byGroup.get(g) ?? byGroup.set(g, []).get(g)).push(`## ${r.name}\nid: ${r.id}\nrevision: ${r.revision}\n${job}\n${body}\n`);
     let still = null;
