@@ -7,10 +7,10 @@ import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { buildCatalog } from '../catalog.mjs';
-import { scrubRecipe, buildArsenal, writeArsenal, galleryBlock, withGallery, creatorsOf } from '../arsenal.mjs';
+import { scrubRecipe, buildArsenal, writeArsenal, galleryBlock, withGallery, creatorsOf, publicJobs, PRIVATE_NAMES } from '../arsenal.mjs';
 
 const CLI = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'arsenal.mjs');
-const ACCEPTED = 'status: proven (accepted by Joe 2026-11-14: rebuilt and compared)';
+const ACCEPTED = 'status: proven (accepted by the owner 2026-11-14: rebuilt and compared)';
 const sha = (b) => createHash('sha256').update(b).digest('hex');
 
 // A recipe section in the draft format, with the provenance lines the drafts carry.
@@ -30,6 +30,7 @@ const JOBS = {
   ],
 };
 const JOBS_TEXT = `${JSON.stringify(JOBS, null, 1)}\n`;
+const EXAMPLES = { 'before-after': 'the cluttered dashboard, then the clean one', 'add-depth': 'the product on the table with a real shadow', 'hand-over': 'the camera travels along the map to the next stop' };
 const tag = (id, o = {}) => ({ id, kind: 'technique', job: 'before-after', support: [], mood: [], needs: [], duration: 2, motion: 'one-shot', difficulty: 1, group: null, why: 'quote', ...o });
 
 // entries: [{ slug, status?: 'proven', video?, ...tag fields }] -> { dir, catalog }
@@ -51,7 +52,7 @@ function fixture(entries, proofs = {}) {
 }
 const build = (entries, o = {}) => {
   const { dir, catalog } = fixture(entries, o.proofs);
-  try { return buildArsenal({ catalog, jobs: JOBS, jobsText: JOBS_TEXT, draftsDir: dir, stills: o.stills ?? {}, creators: o.creators ?? ['Some Channel'] }); }
+  try { return buildArsenal({ catalog, jobs: JOBS, examples: EXAMPLES, draftsDir: dir, stills: o.stills ?? {}, creators: o.creators ?? ['Some Channel'] }); }
   finally { fs.rmSync(dir, { recursive: true, force: true }); }
 };
 
@@ -148,7 +149,7 @@ test('build: each shipped recipe carries its id, revision and jobs, and none of 
   assert.match(text, /^id: 01-pic$/m);
   assert.match(text, new RegExp(`^revision: ${cat.recipes[0].revision}$`, 'm'));
   assert.match(text, /^job: add-depth; support: before-after$/m);
-  assert.match(text, /^status: proven \(accepted by Joe 2026-11-14: rebuilt and compared\)$/m);
+  assert.match(text, /^status: proven \(accepted by the owner 2026-11-14: rebuilt and compared\)$/m);
   assert.doesNotMatch(text, /vidAAAAAAAA|\bf\d{4,6}\b|scratch\//);
 });
 
@@ -156,7 +157,7 @@ test('build: the catalog line is scrubbed like the recipe text', () => {
   const { dir, catalog } = fixture([{ slug: 'a' }]);
   try {
     catalog.recipes[0].line = 'Sets up depth (off at f010901) as in vidAAAAAAAA.';
-    const { files } = buildArsenal({ catalog, jobs: JOBS, jobsText: JOBS_TEXT, draftsDir: dir, stills: {}, creators: [] });
+    const { files } = buildArsenal({ catalog, jobs: JOBS, examples: EXAMPLES, draftsDir: dir, stills: {}, creators: [] });
     assert.equal(JSON.parse(files.get('catalog.json')).recipes[0].line, 'Sets up depth (off) as in the source video.');
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
@@ -193,9 +194,49 @@ test('build: wanted lists the proven techniques that have a proof render', () =>
   assert.deepEqual(wanted, { '01-p': 'x/01.png' });
 });
 
-test('build: the jobs file is vendored byte for byte under its version', () => {
-  const { files } = build([{ slug: 'a', status: 'proven' }]);
-  assert.equal(files.get('jobs-v1.json'), JOBS_TEXT);
+test('build: the jobs file keeps Content\'s ids, groups, names and definitions and ships the public examples', () => {
+  const content = { ...JOBS, notes: 'The ids are the contract.', jobs: JOBS.jobs.map((j) => ({ ...j, example: `private example for ${j.id}` })) };
+  const { dir, catalog } = fixture([{ slug: 'a', status: 'proven' }]);
+  try {
+    const { files } = buildArsenal({ catalog, jobs: content, examples: EXAMPLES, draftsDir: dir, stills: {}, creators: [] });
+    const shipped = JSON.parse(files.get('jobs-v1.json'));
+    assert.equal(shipped.version, '1');
+    assert.equal(shipped.notes, 'The ids are the contract.');
+    assert.deepEqual(shipped.groups, JOBS.groups);
+    assert.deepEqual(shipped.jobs.map(({ id, group, name, definition }) => ({ id, group, name, definition })), JOBS.jobs);
+    assert.deepEqual(Object.fromEntries(shipped.jobs.map((j) => [j.id, j.example])), EXAMPLES);
+    assert.doesNotMatch(files.get('jobs-v1.json'), /private example/);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('jobs: written one job per line, the way Content lays its file out', () => {
+  const text = publicJobs({ version: '1', groups: { line: 'Line jobs' }, jobs: [{ id: 'a', group: 'line', name: 'A', definition: 'D.', example: 'old' }] }, { a: 'new' });
+  assert.equal(text, '{\n  "version": "1",\n  "groups": {\n    "line": "Line jobs"\n  },\n  "jobs": [\n    {"id": "a", "group": "line", "name": "A", "definition": "D.", "example": "new"}\n  ]\n}\n');
+});
+
+test('jobs: refuses a Content job with no public example, naming it', () => {
+  const { 'add-depth': _, ...missing } = EXAMPLES;
+  assert.throws(() => publicJobs(JOBS, missing), /no public example for add-depth/);
+  const { dir, catalog } = fixture([{ slug: 'a' }]);
+  try {
+    assert.throws(() => buildArsenal({ catalog, jobs: JOBS, examples: missing, draftsDir: dir, stills: {}, creators: [] }), /no public example for add-depth/);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('jobs: refuses a public example for a job id Content does not have, naming it', () => {
+  assert.throws(() => publicJobs(JOBS, { ...EXAMPLES, 'old-job': 'x', 'other-job': 'y' }), /public examples for jobs Content does not have: old-job, other-job/);
+});
+
+test('jobs: the plugin\'s public examples cover exactly the shipped job ids and name no one', () => {
+  const here = path.dirname(fileURLToPath(import.meta.url));
+  const examples = JSON.parse(fs.readFileSync(path.join(here, '..', 'arsenal-public-examples.json'), 'utf8'));
+  const shipped = JSON.parse(fs.readFileSync(path.join(here, '..', '..', '..', 'plugin', 'library', 'arsenal', 'jobs-v1.json'), 'utf8'));
+  assert.deepEqual(Object.keys(examples).sort(), shipped.jobs.map((j) => j.id).sort());
+  for (const [id, ex] of Object.entries(examples)) {
+    assert.equal(typeof ex, 'string', id);
+    assert.ok(ex.length > 0 && !ex.includes('\n'), id);
+    for (const n of PRIVATE_NAMES) assert.doesNotMatch(ex, new RegExp(`\\b${n}\\b`, 'i'), `${id} names ${n}`);
+  }
 });
 
 test('build: the index names the documents, the vocab, the catalog version and the counts', () => {
@@ -219,12 +260,34 @@ test('build: refuses shipped text that names a creator', () => {
   assert.throws(() => build([{ slug: 'a', status: 'proven' }], { creators: ['Name a'] }), /names a creator.*Name a/);
 });
 
+test('guard: one list of private names, checked alongside the creators', () => {
+  assert.deepEqual(PRIVATE_NAMES, ['Joe', 'JoeB', 'Benscoter', 'Claude', 'Anthropic', 'Higgsfield']);
+});
+
+test('guard: refuses a recipe, the catalog or the jobs file that names a private name, whole word and any case', () => {
+  const { dir, catalog } = fixture([{ slug: 'a', status: 'proven' }]);
+  const run = (o = {}) => buildArsenal({ catalog, jobs: JOBS, examples: EXAMPLES, draftsDir: dir, stills: {}, creators: [], ...o });
+  try {
+    const draft = path.join(dir, 'vidAAAAAAAA.md');
+    const original = fs.readFileSync(draft, 'utf8');
+    fs.writeFileSync(draft, original.replace('accepted by the owner', 'accepted by joe'));
+    assert.throws(() => run(), /recipes-line\.md names a private name: Joe/);
+    fs.writeFileSync(draft, original);
+    catalog.recipes[0].line = 'Built the way JOEB builds it.';
+    assert.throws(() => run(), /catalog\.json names a private name: JoeB/);
+    catalog.recipes[0].line = 'A plain line.';
+    assert.throws(() => run({ examples: { ...EXAMPLES, 'add-depth': 'a Higgsfield render with a shadow' } }), /jobs-v1\.json names a private name: Higgsfield/);
+    assert.throws(() => run({ jobs: { ...JOBS, notes: 'Anthropic approves.' } }), /jobs-v1\.json names a private name: Anthropic/);
+    assert.doesNotThrow(() => run({ examples: { ...EXAMPLES, 'add-depth': 'Joey and Claudette on a mat' } }));
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
 test('build: refuses a file over the 256 KiB package limit', () => {
   const big = 'x'.repeat(270_000);
   const { dir, catalog } = fixture([{ slug: 'a' }]);
   try {
     catalog.recipes[0].line = big;
-    assert.throws(() => buildArsenal({ catalog, jobs: JOBS, jobsText: JOBS_TEXT, draftsDir: dir, stills: {}, creators: [] }), /catalog\.json is \d+ bytes, over the 262144/);
+    assert.throws(() => buildArsenal({ catalog, jobs: JOBS, examples: EXAMPLES, draftsDir: dir, stills: {}, creators: [] }), /catalog\.json is \d+ bytes, over the 262144/);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
@@ -240,7 +303,7 @@ test('write: writes the files, makes each wanted still once, keeps an existing o
     fs.writeFileSync(path.join(out, 'recipes-old.md'), 'stale');
     const made = [];
     const makeStill = (from, to) => { made.push(from); fs.writeFileSync(to, `made from ${from}`); };
-    const res = writeArsenal({ catalog, jobs: JOBS, jobsText: JOBS_TEXT, draftsDir: dir, outDir: out, rendersRoot: '/renders', makeStill, creators: [] });
+    const res = writeArsenal({ catalog, jobs: JOBS, examples: EXAMPLES, draftsDir: dir, outDir: out, rendersRoot: '/renders', makeStill, creators: [] });
     assert.deepEqual(made, ['/renders/proofs/01.png']);
     assert.equal(fs.readFileSync(path.join(out, 'stills', '02-q.jpg'), 'utf8'), 'kept');
     assert.deepEqual(fs.readdirSync(path.join(out, 'stills')).sort(), ['01-p.jpg', '02-q.jpg']);
@@ -256,7 +319,7 @@ test('write: a wanted still with no render and no existing copy is reported miss
   const out = fs.mkdtempSync(path.join(tmpdir(), 'arsenal-out-'));
   try {
     const makeStill = () => { throw new Error('no such render'); };
-    const res = writeArsenal({ catalog, jobs: JOBS, jobsText: JOBS_TEXT, draftsDir: dir, outDir: out, rendersRoot: null, makeStill, creators: [] });
+    const res = writeArsenal({ catalog, jobs: JOBS, examples: EXAMPLES, draftsDir: dir, outDir: out, rendersRoot: null, makeStill, creators: [] });
     assert.deepEqual(res.missing, ['01-p']);
     assert.equal(JSON.parse(fs.readFileSync(path.join(out, 'catalog.json'), 'utf8')).recipes[0].still, null);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); fs.rmSync(out, { recursive: true, force: true }); }
@@ -296,11 +359,12 @@ test('cli: one command builds the arsenal from drafts, tags and a jobs file, and
   try {
     fs.writeFileSync(path.join(dir, 'tags.json'), JSON.stringify({ vocab: 'jobs-v1', recipes: { 'vidAAAAAAAA#1': tag('01-a') } }));
     fs.writeFileSync(path.join(dir, 'jobs.json'), JOBS_TEXT);
+    fs.writeFileSync(path.join(dir, 'examples.json'), JSON.stringify(EXAMPLES));
     fs.writeFileSync(path.join(dir, 'proofs.json'), '{}');
     fs.writeFileSync(path.join(dir, 'CREDITS.txt'), '| Draft | Channel | Video |\n|---|---|---|\n| `x` | [Chan](https://c) | [V](https://v) |\n');
     fs.writeFileSync(readme, 'R\n<!-- arsenal-stills:start -->\n<!-- arsenal-stills:end -->\n');
     const r = spawnSync(process.execPath, [CLI, '--drafts', dir, '--tags', path.join(dir, 'tags.json'), '--jobs', path.join(dir, 'jobs.json'),
-      '--proofs', path.join(dir, 'proofs.json'), '--credits', path.join(dir, 'CREDITS.txt'), '--out', out, '--readme', readme, '--no-manifest'], { encoding: 'utf8' });
+      '--proofs', path.join(dir, 'proofs.json'), '--examples', path.join(dir, 'examples.json'), '--credits', path.join(dir, 'CREDITS.txt'), '--out', out, '--readme', readme, '--no-manifest'], { encoding: 'utf8' });
     assert.equal(r.status, 0, r.stderr);
     assert.deepEqual(fs.readdirSync(out).sort(), ['catalog.json', 'index.json', 'jobs-v1.json', 'recipes-line.md']);
     assert.match(r.stdout, /"recipes":1/);

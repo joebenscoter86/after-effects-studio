@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 // The arsenal as Comp Room ships it: plugin/library/arsenal/, generated from the recipe drafts in one command.
 //   node tools/channel-learner/arsenal.mjs [--renders <folder holding quality/renders>] [--jobs <Content's jobs.json>]
-//     [--drafts <dir>] [--tags <file>] [--proofs <file>] [--credits <file>] [--out <dir>] [--readme <file>] [--no-manifest]
-// Writes the vendored jobs file, the catalog data file, an index and the recipes grouped by job group; makes a small
+//     [--examples <file>] [--drafts <dir>] [--tags <file>] [--proofs <file>] [--credits <file>] [--out <dir>]
+//     [--readme <file>] [--no-manifest]
+// Writes the jobs file (Content's ids, groups, names and definitions, with the public examples in
+// arsenal-public-examples.json, since Content's own examples come from the owner's reels), the catalog data file, an
+// index and the recipes grouped by job group; makes a small
 // JPEG still from our own proof render for each proven technique (never a tutorial frame); writes the README gallery
 // that shows those stills (the directory rule: every bundled image is shown in the README); regenerates the library
 // manifest. Never hand-edit the output. Design: product/arsenal-catalog-design.md.
@@ -22,6 +25,10 @@ const AID_LABEL = 'Build aids and unmatched recipes';
 const START = '<!-- arsenal-stills:start -->';
 const END = '<!-- arsenal-stills:end -->';
 const sha = (b) => createHash('sha256').update(b).digest('hex');
+const EXAMPLES_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), 'arsenal-public-examples.json');
+
+/** Names no shipped arsenal file may contain (whole words, any case), besides the creators in the credits. The one list. */
+export const PRIVATE_NAMES = ['Joe', 'JoeB', 'Benscoter', 'Claude', 'Anthropic', 'Higgsfield'];
 
 // ---------- scrubbing: the shipped text keeps the craft and drops where it was learned ----------
 
@@ -94,10 +101,31 @@ export function wantedStills(catalog) {
 }
 
 /**
- * The arsenal's files from a built catalog (catalog.mjs buildCatalog). `jobsText` is Content's jobs file as read, vendored
- * unchanged; `stills` maps id -> JPEG bytes already made; `creators` are names no shipped file may contain.
+ * The shipped jobs file: Content's jobs file with each job's example swapped for the public one (id -> one line), laid out
+ * as Content lays it out. Refuses a Content job with no public example, and a public example for a job Content lacks.
  */
-export function buildArsenal({ catalog, jobs, jobsText, draftsDir, stills = {}, creators = [] }) {
+export function publicJobs(jobs, examples) {
+  const ids = jobs.jobs.map((j) => j.id);
+  const missing = ids.filter((id) => typeof examples[id] !== 'string' || !examples[id].trim());
+  const unknown = Object.keys(examples).filter((id) => !ids.includes(id));
+  const problems = [];
+  if (missing.length) problems.push(`no public example for ${missing.join(', ')}`);
+  if (unknown.length) problems.push(`public examples for jobs Content does not have: ${unknown.join(', ')}`);
+  if (problems.length) throw new Error(`refused: ${problems.join('; ')}`);
+  const inline = (o) => `{${Object.entries(o).map(([k, v]) => `${JSON.stringify(k)}: ${JSON.stringify(v)}`).join(', ')}}`;
+  const block = (o) => `{\n${Object.entries(o).map(([k, v]) => `    ${JSON.stringify(k)}: ${JSON.stringify(v)}`).join(',\n')}\n  }`;
+  const top = Object.entries(jobs).filter(([k]) => k !== 'jobs').map(([k, v]) => `  ${JSON.stringify(k)}: ${v && typeof v === 'object' ? block(v) : JSON.stringify(v)}`);
+  const rows = jobs.jobs.map((j) => `    ${inline({ ...j, example: examples[j.id] })}`);
+  return `{\n${[...top, `  "jobs": [\n${rows.join(',\n')}\n  ]`].join(',\n')}\n}\n`;
+}
+
+/**
+ * The arsenal's files from a built catalog (catalog.mjs buildCatalog). `jobs` is Content's jobs file, shipped with the
+ * public `examples` (publicJobs); `stills` maps id -> JPEG bytes already made; `creators` are names no shipped file may
+ * contain, checked with PRIVATE_NAMES.
+ */
+export function buildArsenal({ catalog, jobs, examples, draftsDir, stills = {}, creators = [] }) {
+  const jobsText = publicJobs(jobs, examples);
   const videos = [...new Set(catalog.recipes.map((r) => r.video).filter(Boolean))];
   const drafts = new Map();
   const textOf = (r) => {
@@ -155,8 +183,10 @@ export function buildArsenal({ catalog, jobs, jobsText, draftsDir, stills = {}, 
   for (const [f, text] of files) {
     const bytes = Buffer.byteLength(text);
     if (bytes > FILE_LIMIT) problems.push(`${f} is ${bytes} bytes, over the ${FILE_LIMIT}-byte package file limit`);
-    for (const c of creators) {
-      if (c && new RegExp(`\\b${c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(text)) problems.push(`${f} names a creator: ${c}`);
+    for (const [kind, names] of [['a creator', creators], ['a private name', PRIVATE_NAMES]]) {
+      for (const c of names) {
+        if (c && new RegExp(`\\b${c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(text)) problems.push(`${f} names ${kind}: ${c}`);
+      }
     }
   }
   if (files.size > TEXT_FILES_MAX) problems.push(`${files.size} text files, over the arsenal's ${TEXT_FILES_MAX}`);
@@ -165,7 +195,7 @@ export function buildArsenal({ catalog, jobs, jobsText, draftsDir, stills = {}, 
 }
 
 /** Writes the arsenal into outDir, which it owns: makes missing stills, keeps existing ones, removes what is stale. */
-export function writeArsenal({ catalog, jobs, jobsText, draftsDir, outDir, rendersRoot, makeStill = ffmpegStill, creators = [] }) {
+export function writeArsenal({ catalog, jobs, examples, draftsDir, outDir, rendersRoot, makeStill = ffmpegStill, creators = [] }) {
   const stillsDir = path.join(outDir, 'stills');
   fs.mkdirSync(stillsDir, { recursive: true });
   const stills = {};
@@ -178,7 +208,7 @@ export function writeArsenal({ catalog, jobs, jobsText, draftsDir, outDir, rende
     }
     stills[id] = fs.readFileSync(to);
   }
-  const built = buildArsenal({ catalog, jobs, jobsText, draftsDir, stills, creators });
+  const built = buildArsenal({ catalog, jobs, examples, draftsDir, stills, creators });
   for (const f of fs.readdirSync(stillsDir)) if (!built.stills[f.replace(/\.jpg$/, '')]) fs.rmSync(path.join(stillsDir, f));
   for (const f of fs.readdirSync(outDir)) if (f !== 'stills' && !built.files.has(f)) fs.rmSync(path.join(outDir, f), { recursive: true });
   for (const [f, text] of built.files) fs.writeFileSync(path.join(outDir, f), text);
@@ -240,14 +270,14 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const drafts = arg(argv, '--drafts', path.join(ROOT, 'product', 'arsenal-drafts'));
     const out = arg(argv, '--out', path.join(ROOT, 'plugin', 'library', 'arsenal'));
     const jobsPath = arg(argv, '--jobs') ?? vendoredJobs(out);
-    const jobsText = fs.readFileSync(jobsPath, 'utf8');
-    const jobs = JSON.parse(jobsText);
+    const jobs = JSON.parse(fs.readFileSync(jobsPath, 'utf8'));
+    const examples = JSON.parse(fs.readFileSync(arg(argv, '--examples', EXAMPLES_FILE), 'utf8'));
     const tags = JSON.parse(fs.readFileSync(arg(argv, '--tags', path.join(drafts, 'tags.json')), 'utf8'));
     const proofs = JSON.parse(fs.readFileSync(arg(argv, '--proofs', path.join(drafts, 'proof-stills.json')), 'utf8'));
     const creators = creatorsOf(fs.readFileSync(arg(argv, '--credits', path.join(drafts, 'CREDITS.md')), 'utf8'));
     const catalog = buildCatalog({ draftsDir: drafts, tags, jobs, proofs });
     fs.mkdirSync(out, { recursive: true });
-    const res = writeArsenal({ catalog, jobs, jobsText, draftsDir: drafts, outDir: out, rendersRoot: arg(argv, '--renders', ROOT), creators });
+    const res = writeArsenal({ catalog, jobs, examples, draftsDir: drafts, outDir: out, rendersRoot: arg(argv, '--renders', ROOT), creators });
     const readme = arg(argv, '--readme', path.join(ROOT, 'claude', 'src', 'README.md'));
     fs.writeFileSync(readme, withGallery(fs.readFileSync(readme, 'utf8'), galleryBlock(JSON.parse(res.files.get('catalog.json')))));
     if (!argv.includes('--no-manifest')) {
