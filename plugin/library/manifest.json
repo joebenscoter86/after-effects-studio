@@ -742,6 +742,55 @@
       "path": "styles/woodcut/woodcut.jsx",
       "kind": "code",
       "sha256": "555a86a5ebad48cd0dc2799a936f542bffc3f32060b06641f8331a1e13cdf992"
+    },
+    {
+      "id": "arsenal-index",
+      "title": "Technique arsenal index: documents, vocabulary and counts",
+      "path": "arsenal/index.json",
+      "kind": "catalog",
+      "sha256": "8f91a459054d77a8f576975db6595487397eed3652f11b6ad4815b70f1a184f4"
+    },
+    {
+      "id": "arsenal-catalog",
+      "title": "Technique arsenal catalog: one record per recipe, queried by ae_arsenal",
+      "path": "arsenal/catalog.json",
+      "kind": "catalog",
+      "sha256": "e44c84934754b4f093edd16168c16b339314f03873c7fca2aae34c56305390e9"
+    },
+    {
+      "id": "arsenal-jobs",
+      "title": "Job vocabulary jobs-v1: the jobs a beat asks for",
+      "path": "arsenal/jobs-v1.json",
+      "kind": "catalog",
+      "sha256": "aef04992052fac3b025d44f4ce8809c7c5a1a31b91b5375f5e192c924a9715f4"
+    },
+    {
+      "id": "arsenal-line",
+      "title": "Arsenal recipes: line jobs: what the viewer must get from this line",
+      "path": "arsenal/recipes-line.md",
+      "kind": "recipes",
+      "sha256": "9f49b4db7975ce12e991db9ff1eb3aee854c884a7c6b43498ddc0db3f7f25982"
+    },
+    {
+      "id": "arsenal-picture",
+      "title": "Arsenal recipes: picture jobs: how the picture has to read, whatever the line says",
+      "path": "arsenal/recipes-picture.md",
+      "kind": "recipes",
+      "sha256": "345dcde320815ca0036aa527744fdd4fee9119a00bd43aff9d9014d9b83e3557"
+    },
+    {
+      "id": "arsenal-connective",
+      "title": "Arsenal recipes: connective jobs: between and across pictures",
+      "path": "arsenal/recipes-connective.md",
+      "kind": "recipes",
+      "sha256": "3599f359e2c230ccf01c282e364d31600088246f5b22a9cfb567891e36e3f8c2"
+    },
+    {
+      "id": "arsenal-build-aid",
+      "title": "Arsenal recipes: build aids and unmatched recipes",
+      "path": "arsenal/recipes-build-aid.md",
+      "kind": "recipes",
+      "sha256": "b44dc0c858ca0dbf22940863d0e781bf0ad113a1fc84a2faa982c83276cd9148"
     }
   ]
 }

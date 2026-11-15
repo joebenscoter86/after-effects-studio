@@ -8,6 +8,7 @@ import { McpTestClient } from "./harness.js";
 
 const EXPECTED_TOOLS = [
   "ae_library",
+  "ae_arsenal",
   "ae_catalog",
   "ae_check_comp",
   "ae_comp_info",
@@ -37,6 +38,21 @@ describe("mcp server over stdio (offline)", () => {
     const res = await client.listTools();
     const names = res.tools.map((t) => t.name).toSorted();
     expect(names).toEqual(EXPECTED_TOOLS.toSorted());
+  });
+
+  it("the server instructions send an agent planning shots to ae_arsenal per beat, by job, before building", () => {
+    const text = client.instructions() ?? "";
+    expect(text).toMatch(/ae_arsenal/);
+    expect(text).toMatch(/ae_arsenal[^.]*\bper beat\b[^.]*\bjob\b[^.]*before building/i);
+  });
+
+  it("ae_arsenal answers offline: the job list and a refused job", async () => {
+    const jobs = await client.call<{ vocab: string; jobs: Array<{ id: string }> }>("ae_arsenal", { action: "jobs" });
+    expect(jobs.vocab).toBe("jobs-v1");
+    expect(jobs.jobs.map((j) => j.id)).toContain("add-depth");
+    const text = await client.callExpectError("ae_arsenal", { action: "find", job: "make-it-pop" });
+    expect(text).toContain("[INVALID_ARGS]");
+    expect(text).toMatch(/unknown job "make-it-pop"/);
   });
 
   it("ae_catalog without args lists categories including layer and keyframe", async () => {

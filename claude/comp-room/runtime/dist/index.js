@@ -3,7 +3,7 @@ import { __esmMin } from "./chunks/rolldown-runtime.js";
 import { RUNTIME_DIR, denyTool, errorResult, init_cli, init_config, init_errors, init_policy, instanceTargetFromEnv, policySummary, readOnlyMode, runCli } from "./chunks/core-1.js";
 import { FileIpcTransport, init_FileIpcTransport, init_launcher, pushRouteBanner } from "./chunks/transport-1.js";
 import { init_operations } from "./chunks/operations-1.js";
-import { ALL_TOOLS, init_library, init_tools, libraryTool } from "./chunks/tools-1.js";
+import { ALL_TOOLS, arsenalTool, init_arsenal, init_library, init_tools, libraryTool } from "./chunks/tools-1.js";
 import { createRequire } from "node:module";
 import { McpServer } from "modelcontextprotocol-sdk/server/mcp.js";
 import { StdioServerTransport } from "modelcontextprotocol-sdk/server/stdio.js";
@@ -67,15 +67,20 @@ function init_server() {
 		init_launcher();
 		await init_operations();
 		init_tools();
+		init_arsenal();
 		init_library();
 		({version, serverName} = createRequire(import.meta.url)("../package.json"));
 		transport = new FileIpcTransport();
 		server = new McpServer({
 			name: serverName ?? "after-effects-studio",
 			version
-		}, { instructions: "Local native After Effects control with a detailed production-derived motion language for any brand or style. Before designing or building motion in After Effects, read ae_library documents motion-language, production-workflow and brief-template; load construction, camera-continuity, assets-depth, type-evidence and worked-scenes as relevant. This craft foundation is the default for all styles, not an optional JoeB preset. Everything required is bundled; do not require the original repo, personal rig or assets. Inspect ae_context and discover exact operations with ae_catalog. eval.run enables custom ES3. A call that throws is rolled back and says whether that worked (details.rollback); a batch.run is rolled back only with stopOnError. Inspect failures, unconfirmed rollbacks and timeouts before retrying. Render and visually inspect actual artifacts, and distinguish technical success from visual quality. The paper/navy/vermilion JoeB appearance is optional." });
+		}, { instructions: "Local native After Effects control with a detailed production-derived motion language for any brand or style. Before designing or building motion in After Effects, read ae_library documents motion-language, production-workflow and brief-template; load construction, camera-continuity, assets-depth, type-evidence and worked-scenes as relevant. This craft foundation is the default for all styles, not an optional JoeB preset. Everything required is bundled; do not require the original repo, personal rig or assets. When planning shots, ask ae_arsenal per beat by the beat's job before building: it returns proven techniques with stills, and get reads the chosen recipe. Inspect ae_context and discover exact operations with ae_catalog. eval.run enables custom ES3. A call that throws is rolled back and says whether that worked (details.rollback); a batch.run is rolled back only with stopOnError. Inspect failures, unconfirmed rollbacks and timeouts before retrying. Render and visually inspect actual artifacts, and distinguish technical success from visual quality. The paper/navy/vermilion JoeB appearance is optional." });
 		skipped = [];
-		for (const tool of [...ALL_TOOLS, libraryTool]) {
+		for (const tool of [
+			...ALL_TOOLS,
+			libraryTool,
+			arsenalTool
+		]) {
 			if (denyTool(tool.name, tool.blockedInReadOnly)) {
 				skipped.push(tool.name);
 				continue;

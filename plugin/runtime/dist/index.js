@@ -3271,8 +3271,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path30) {
-      let input2 = path30;
+    function removeDotSegments(path31) {
+      let input2 = path31;
       const output2 = [];
       let nextSlash = -1;
       let len = 0;
@@ -3346,11 +3346,11 @@ var require_utils = __commonJS({
       }
       return output2.join("");
     }
-    function removeDotSegmentsRelative(path30) {
-      if (path30 === "" || path30[0] === "/") {
-        return removeDotSegments(path30);
+    function removeDotSegmentsRelative(path31) {
+      if (path31 === "" || path31[0] === "/") {
+        return removeDotSegments(path31);
       }
-      const segments = path30.split("/");
+      const segments = path31.split("/");
       const last = segments.length - 1;
       const output2 = [];
       let trailingDirectory = false;
@@ -3713,8 +3713,8 @@ var require_schemes = __commonJS({
       }
       if (wsComponent.resourceName) {
         const queryIndex = wsComponent.resourceName.indexOf("?");
-        const path30 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
-        wsComponent.path = path30 && path30 !== "/" ? path30 : void 0;
+        const path31 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
+        wsComponent.path = path31 && path31 !== "/" ? path31 : void 0;
         wsComponent.query = queryIndex === -1 ? void 0 : wsComponent.resourceName.slice(queryIndex + 1);
         wsComponent.resourceName = void 0;
       }
@@ -8074,8 +8074,8 @@ function getErrorMap() {
 
 // node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path30, errorMaps, issueData } = params;
-  const fullPath = [...path30, ...issueData.path || []];
+  const { data, path: path31, errorMaps, issueData } = params;
+  const fullPath = [...path31, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -8190,11 +8190,11 @@ var errorUtil;
 
 // node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path30, key) {
+  constructor(parent, value, path31, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path30;
+    this._path = path31;
     this._key = key;
   }
   get path() {
@@ -12149,10 +12149,10 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path30) {
-  if (!path30)
+function getElementAtPath(obj, path31) {
+  if (!path31)
     return obj;
-  return path30.reduce((acc, key) => acc?.[key], obj);
+  return path31.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -12492,11 +12492,11 @@ function explicitlyAborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path30, issues) {
+function prefixIssues(path31, issues) {
   return issues.map((iss) => {
     var _a3;
     (_a3 = iss).path ?? (_a3.path = []);
-    iss.path.unshift(path30);
+    iss.path.unshift(path31);
     return iss;
   });
 }
@@ -12958,16 +12958,16 @@ function flattenError(error62, mapper = (issue2) => issue2.message) {
 }
 function formatError(error62, mapper = (issue2) => issue2.message) {
   const fieldErrors = { _errors: [] };
-  const processError = (error63, path30 = []) => {
+  const processError = (error63, path31 = []) => {
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path30, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path31, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path30, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path31, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path30, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path31, ...issue2.path]);
       } else {
-        const fullpath = [...path30, ...issue2.path];
+        const fullpath = [...path31, ...issue2.path];
         if (fullpath.length === 0) {
           fieldErrors._errors.push(mapper(issue2));
         } else {
@@ -13006,17 +13006,17 @@ function formatError(error62, mapper = (issue2) => issue2.message) {
 }
 function treeifyError(error62, mapper = (issue2) => issue2.message) {
   const result = { errors: [] };
-  const processError = (error63, path30 = []) => {
+  const processError = (error63, path31 = []) => {
     var _a3;
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path30, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path31, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path30, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path31, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path30, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path31, ...issue2.path]);
       } else {
-        const fullpath = [...path30, ...issue2.path];
+        const fullpath = [...path31, ...issue2.path];
         if (fullpath.length === 0) {
           result.errors.push(mapper(issue2));
           continue;
@@ -13055,8 +13055,8 @@ function treeifyError(error62, mapper = (issue2) => issue2.message) {
 }
 function toDotPath(_path) {
   const segs = [];
-  const path30 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
-  for (const seg of path30) {
+  const path31 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
+  for (const seg of path31) {
     if (typeof seg === "number")
       segs.push(`[${seg}]`);
     else if (typeof seg === "symbol")
@@ -28607,11 +28607,11 @@ function normalizeObjectSchema(schema) {
   }
   return void 0;
 }
-function getDotPath(path30) {
-  if (path30.length === 0) {
+function getDotPath(path31) {
+  if (path31.length === 0) {
     return "object root";
   }
-  return path30.reduce((acc, seg, index) => {
+  return path31.reduce((acc, seg, index) => {
     if (index === 0) {
       return String(seg);
     }
@@ -30838,13 +30838,13 @@ function resolveRef(ref, ctx) {
   if (!ref.startsWith("#")) {
     throw new Error("External $ref is not supported, only local refs (#/...) are allowed");
   }
-  const path30 = ref.slice(1).split("/").filter(Boolean);
-  if (path30.length === 0) {
+  const path31 = ref.slice(1).split("/").filter(Boolean);
+  if (path31.length === 0) {
     return ctx.rootSchema;
   }
   const defsKey = ctx.version === "draft-2020-12" ? "$defs" : "definitions";
-  if (path30[0] === defsKey) {
-    const key = path30[1] === void 0 ? void 0 : decodeJSONPointerSegment(path30[1]);
+  if (path31[0] === defsKey) {
+    const key = path31[1] === void 0 ? void 0 : decodeJSONPointerSegment(path31[1]);
     if (!key || !ctx.defs[key]) {
       throw new Error(`Reference not found: ${ref}`);
     }
@@ -45247,8 +45247,8 @@ function analyzeCurve(samples, fps, opts = {}) {
     const start = frames[from].value;
     const end = frames[to].value;
     const way = sub(end, start);
-    const distance = norm(way);
-    const unit = distance > 0 ? way.map((x) => x / distance) : way;
+    const distance2 = norm(way);
+    const unit = distance2 > 0 ? way.map((x) => x / distance2) : way;
     let over = 0;
     let overFrame = -1;
     let crossed = -1;
@@ -45258,19 +45258,19 @@ function analyzeCurve(samples, fps, opts = {}) {
         over = p;
         overFrame = frames[i].frame;
       }
-      if (crossed < 0 && p >= -o.settleWithin * distance) crossed = i;
+      if (crossed < 0 && p >= -o.settleWithin * distance2) crossed = i;
     }
-    const overshoot = distance > 0 && over / distance >= o.settleWithin ? { amount: rnd(over), share: rnd(over / distance), frame: overFrame } : null;
+    const overshoot = distance2 > 0 && over / distance2 >= o.settleWithin ? { amount: rnd(over), share: rnd(over / distance2), frame: overFrame } : null;
     let settle2 = null;
     if (overshoot && crossed >= 0) {
       let at = to;
-      while (at - 1 > crossed && norm(sub(frames[at - 1].value, end)) <= o.settleWithin * distance) at--;
+      while (at - 1 > crossed && norm(sub(frames[at - 1].value, end)) <= o.settleWithin * distance2) at--;
       settle2 = { frames: frames[at].frame - frames[crossed].frame, from: frames[crossed].frame, at: frames[at].frame };
     }
     return {
       from: frames[from].frame,
       to: frames[to].frame,
-      distance: rnd(distance),
+      distance: rnd(distance2),
       peakSpeed: rnd(frames[pk].speed),
       peakFrame: frames[pk].frame,
       startEase: mid > 0 && frames[i0].speed >= o.noEaseAbove * mid ? "none" : "eased",
@@ -59353,9 +59353,9 @@ function suggestName(key, candidates) {
   let best = null;
   let bestDistance = Number.POSITIVE_INFINITY;
   for (const candidate of candidates) {
-    const distance = levenshtein(lowered, candidate.toLowerCase());
-    if (distance < bestDistance) {
-      bestDistance = distance;
+    const distance2 = levenshtein(lowered, candidate.toLowerCase());
+    if (distance2 < bestDistance) {
+      bestDistance = distance2;
       best = candidate;
     }
   }
@@ -65783,11 +65783,11 @@ var SCHEMA_VERSION = 3;
 var Validator = class {
   issues = [];
   warnings = [];
-  err(path30, message) {
-    this.issues.push({ path: path30, message });
+  err(path31, message) {
+    this.issues.push({ path: path31, message });
   }
-  warn(path30, message) {
-    this.warnings.push({ path: path30, message });
+  warn(path31, message) {
+    this.warnings.push({ path: path31, message });
   }
   isObject(v) {
     return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -65888,64 +65888,64 @@ function validateAeProjectDoc(doc) {
   }
   return { ok: v.issues.length === 0, issues: v.issues, warnings: v.warnings };
 }
-function validateLayer(v, path30, layer) {
+function validateLayer(v, path31, layer) {
   if (!v.isObject(layer)) {
-    v.err(path30, "not an object");
+    v.err(path31, "not an object");
     return;
   }
-  if (typeof layer.index !== "number") v.err(`${path30}.index`, "missing or not a number");
-  if (typeof layer.name !== "string") v.err(`${path30}.name`, "missing or not a string");
-  if (typeof layer.type !== "string") v.err(`${path30}.type`, "missing or not a string");
+  if (typeof layer.index !== "number") v.err(`${path31}.index`, "missing or not a number");
+  if (typeof layer.name !== "string") v.err(`${path31}.name`, "missing or not a string");
+  if (typeof layer.type !== "string") v.err(`${path31}.type`, "missing or not a string");
   else if (["AVLayer", "TextLayer", "ShapeLayer", "CameraLayer", "LightLayer", "Layer"].indexOf(
     layer.type
   ) === -1) {
-    v.warn(`${path30}.type`, `unknown layer type: ${layer.type}`);
+    v.warn(`${path31}.type`, `unknown layer type: ${layer.type}`);
   }
   if (layer.transformGroup)
-    validatePropertyGroup(v, `${path30}.transformGroup`, layer.transformGroup);
-  if (layer.effectsGroup) validatePropertyGroup(v, `${path30}.effectsGroup`, layer.effectsGroup);
-  if (layer.masksGroup) validatePropertyGroup(v, `${path30}.masksGroup`, layer.masksGroup);
-  if (layer.textGroup) validatePropertyGroup(v, `${path30}.textGroup`, layer.textGroup);
-  if (layer.contentsGroup) validatePropertyGroup(v, `${path30}.contentsGroup`, layer.contentsGroup);
-  if (layer.markers) validateProperty(v, `${path30}.markers`, layer.markers);
+    validatePropertyGroup(v, `${path31}.transformGroup`, layer.transformGroup);
+  if (layer.effectsGroup) validatePropertyGroup(v, `${path31}.effectsGroup`, layer.effectsGroup);
+  if (layer.masksGroup) validatePropertyGroup(v, `${path31}.masksGroup`, layer.masksGroup);
+  if (layer.textGroup) validatePropertyGroup(v, `${path31}.textGroup`, layer.textGroup);
+  if (layer.contentsGroup) validatePropertyGroup(v, `${path31}.contentsGroup`, layer.contentsGroup);
+  if (layer.markers) validateProperty(v, `${path31}.markers`, layer.markers);
   if (layer.timeRemapProperty)
-    validateProperty(v, `${path30}.timeRemapProperty`, layer.timeRemapProperty);
+    validateProperty(v, `${path31}.timeRemapProperty`, layer.timeRemapProperty);
 }
-function validatePropertyGroup(v, path30, group) {
+function validatePropertyGroup(v, path31, group) {
   if (!v.isObject(group)) {
-    v.err(path30, "not an object");
+    v.err(path31, "not an object");
     return;
   }
-  if (typeof group.matchName !== "string") v.err(`${path30}.matchName`, "missing or not a string");
+  if (typeof group.matchName !== "string") v.err(`${path31}.matchName`, "missing or not a string");
   if (Array.isArray(group.properties)) {
     for (let i = 0; i < group.properties.length; i++) {
-      validateProperty(v, `${path30}.properties[${i}]`, group.properties[i]);
+      validateProperty(v, `${path31}.properties[${i}]`, group.properties[i]);
     }
   }
   if (Array.isArray(group.groups)) {
     for (let i = 0; i < group.groups.length; i++) {
-      validatePropertyGroup(v, `${path30}.groups[${i}]`, group.groups[i]);
+      validatePropertyGroup(v, `${path31}.groups[${i}]`, group.groups[i]);
     }
   }
 }
-function validateProperty(v, path30, prop) {
+function validateProperty(v, path31, prop) {
   if (!v.isObject(prop)) {
-    v.err(path30, "not an object");
+    v.err(path31, "not an object");
     return;
   }
-  if (typeof prop.matchName !== "string") v.err(`${path30}.matchName`, "missing or not a string");
+  if (typeof prop.matchName !== "string") v.err(`${path31}.matchName`, "missing or not a string");
   if (Array.isArray(prop.keyframes)) {
     for (let i = 0; i < prop.keyframes.length; i++) {
-      validateKeyframe(v, `${path30}.keyframes[${i}]`, prop.keyframes[i]);
+      validateKeyframe(v, `${path31}.keyframes[${i}]`, prop.keyframes[i]);
     }
   }
 }
-function validateKeyframe(v, path30, kf) {
+function validateKeyframe(v, path31, kf) {
   if (!v.isObject(kf)) {
-    v.err(path30, "not an object");
+    v.err(path31, "not an object");
     return;
   }
-  if (typeof kf.time !== "number") v.err(`${path30}.time`, "missing or not a number");
+  if (typeof kf.time !== "number") v.err(`${path31}.time`, "missing or not a number");
 }
 
 // src/tools/project-import.ts
@@ -66238,6 +66238,12 @@ var ALL_TOOLS = [
   doTool,
   contextTool
 ].map((tool) => withInstanceParam(tool));
+
+// src/tools/arsenal.ts
+import { readFileSync as readFileSync3, realpathSync as realpathSync3 } from "node:fs";
+import { createHash as createHash3 } from "node:crypto";
+import path30 from "node:path";
+init_config();
 
 // src/tools/library.ts
 import { readFileSync as readFileSync2, realpathSync as realpathSync2 } from "node:fs";
@@ -66695,6 +66701,191 @@ var libraryTool = defineTool({
   }
 });
 
+// src/tools/arsenal.ts
+var LIBRARY = path30.resolve(PACKAGE_ROOT, "../library");
+var ArsenalRefusal = class extends Error {
+};
+var MET_BY = {
+  footage: ["footage", "screen"],
+  photo: ["photo", "library"],
+  illustration: ["photo", "library", "logo"],
+  character: ["library"]
+};
+var lower = (xs) => (xs ?? []).map((x) => String(x).toLowerCase());
+function assetKinds(assets) {
+  if (assets === void 0 || assets === null) return null;
+  if (assets === "none") return [];
+  if (Array.isArray(assets)) return lower(assets);
+  return lower(Object.keys(assets));
+}
+var unmet = (needs, have) => lower(needs).filter((n) => MET_BY[n] && !MET_BY[n].some((a) => have.includes(a)));
+function distance(duration3, want) {
+  if (want === void 0 || duration3 === null || duration3 === void 0) return 0;
+  const m = String(duration3).match(/(\d+(?:\.\d+)?)\s*(?:s)?\s*(\+)?/);
+  if (!m) return 0;
+  const d = parseFloat(m[1]);
+  return m[2] ? Math.max(0, d - want) : Math.abs(d - want);
+}
+function findTechniques(catalog, ask) {
+  if (ask.vocab !== catalog.vocab) throw new ArsenalRefusal(`refused: ask is vocab ${ask.vocab} but the catalog is ${catalog.vocab}`);
+  for (const j of [ask.job, ...ask.support ?? []]) {
+    if (!catalog.jobs.includes(j)) throw new ArsenalRefusal(`refused: unknown job "${j}"; valid ids: ${catalog.jobs.join(", ")}`);
+  }
+  const support = ask.support ?? [];
+  const mood = lower(ask.mood);
+  const have = assetKinds(ask.assets);
+  const exclude = new Set(ask.exclude ?? []);
+  const limit = ask.limit ?? 5;
+  const tier = (r) => r.job === ask.job ? 0 : r.support.includes(ask.job) ? 1 : [r.job, ...r.support].some((j) => j !== null && support.includes(j)) ? 2 : null;
+  const byJob = catalog.recipes.filter((r) => r.kind === "technique" && tier(r) !== null && !exclude.has(r.id));
+  const pass = (r, loose) => (loose.includes("status") || ask.constraints?.status === "any" || r.status === "proven") && (loose.includes("needs") || have === null || unmet(r.needs, have).length === 0);
+  let relaxed = [];
+  let hits = byJob.filter((r) => pass(r, relaxed));
+  for (const step of ["status", "needs"]) {
+    if (hits.length || !byJob.length) break;
+    relaxed = [...relaxed, step];
+    hits = byJob.filter((r) => pass(r, relaxed));
+  }
+  const overlap = (r) => lower(r.mood).filter((m) => mood.includes(m));
+  const ranked = hits.map((r) => ({ r, key: [tier(r), r.status === "proven" ? 0 : 1, -r.taught_by, -overlap(r).length, distance(r.duration, ask.duration)] })).sort((a, b) => {
+    for (let i = 0; i < a.key.length; i++) if (a.key[i] !== b.key[i]) return a.key[i] - b.key[i];
+    return 0;
+  }).slice(0, limit);
+  const fit = (r) => {
+    const t = tier(r);
+    const job = t === 0 ? `primary job ${ask.job}` : t === 1 ? `supports ${ask.job}` : `serves support job ${[r.job, ...r.support].find((j) => j !== null && support.includes(j))}`;
+    const missing = have === null ? [] : unmet(r.needs, have);
+    const needs = !r.needs.length ? "needs nothing" : missing.length ? `needs ${missing.join(", ")}, not on hand` : have === null ? `needs ${r.needs.join(", ")}` : `needs met: ${r.needs.join(", ")}`;
+    const m = overlap(r);
+    return [
+      job,
+      needs,
+      m.length ? `mood: ${m.join(", ")}` : mood.length ? "no mood overlap" : null,
+      r.taught_by > 1 ? `taught ${r.taught_by} times` : null,
+      r.status === "proven" ? "proven" : "unproven, needs a test build first"
+    ].filter(Boolean).join("; ");
+  };
+  const out = {
+    vocab: catalog.vocab,
+    version: catalog.version,
+    results: ranked.map(({ r }) => ({
+      id: r.id,
+      revision: r.revision,
+      name: r.name,
+      line: r.line,
+      status: r.status,
+      needs: r.needs,
+      duration: r.duration,
+      motion: r.motion,
+      still: r.still?.path ?? null,
+      section: r.section,
+      fit: fit(r)
+    }))
+  };
+  if (relaxed.length && out.results.length) out.relaxed = relaxed;
+  return out;
+}
+function loadCatalog(root = LIBRARY) {
+  return JSON.parse(readLibraryEntry("arsenal-catalog", root).content);
+}
+function listJobs(root = LIBRARY) {
+  const file2 = JSON.parse(readLibraryEntry("arsenal-jobs", root).content);
+  return {
+    vocab: `jobs-v${String(file2.version).replace(/^v/, "")}`,
+    groups: file2.groups,
+    jobs: file2.jobs.map(({ id, group, name, definition }) => ({ id, group, name, definition })),
+    tags: file2.tags
+  };
+}
+function recipeReply(id, revision, root = LIBRARY) {
+  const catalog = loadCatalog(root);
+  const r = catalog.recipes.find((x) => x.id === id);
+  if (!r) throw new ArsenalRefusal(`refused: unknown recipe "${id}"; ae_arsenal find returns ids for a beat`);
+  const { content } = readLibraryEntry(r.section.document, root);
+  const section = content.split(/^(?=## )/m).find((s) => s.startsWith(`## ${r.section.heading}
+`) && new RegExp(`^id: ${r.id}$`, "m").test(s));
+  if (!section) throw new Error(`the arsenal is inconsistent: ${r.section.document} has no section for ${r.id}`);
+  const head = `ae_arsenal recipe ${r.id}@${r.revision} (${r.status}, ${r.kind}; ${catalog.vocab}, catalog ${catalog.version}; from library document ${r.section.document})`;
+  const warning = revision !== void 0 && revision !== r.revision ? `WARNING: pinned revision ${revision}; the shipped revision is ${r.revision}. The recipe changed since it was pinned: this is the shipped text, not the pinned one. Check it still fits the beat.` : null;
+  return [head, warning, "", section.trimEnd()].filter((l) => l !== null).join("\n");
+}
+function readStill(still, root = LIBRARY) {
+  const base = realpathSync3(root);
+  const file2 = realpathSync3(path30.resolve(base, still.path));
+  const rel = path30.relative(base, file2);
+  if (!rel || rel.startsWith("..") || path30.isAbsolute(rel)) throw new Error("Arsenal still escapes the library");
+  const bytes = readFileSync3(file2);
+  if (createHash3("sha256").update(bytes).digest("hex") !== still.sha256) throw new Error(`Arsenal still hash mismatch: ${still.path}`);
+  return bytes;
+}
+function stillContent(r, root = LIBRARY) {
+  if (!r.still) return [];
+  return [
+    { type: "text", text: `Still of ${r.id} (${r.name}), from our own proof build:` },
+    { type: "image", data: readStill(r.still, root).toString("base64"), mimeType: "image/jpeg" }
+  ];
+}
+var askShape = {
+  action: external_exports.enum(["find", "get", "jobs"]).describe("find: a shortlist for one beat; get: one recipe's full text; jobs: the job vocabulary"),
+  vocab: external_exports.string().optional().describe("find: the job vocabulary the beat was written against (e.g. jobs-v1); omitted means the shipped one"),
+  job: external_exports.string().optional().describe("find: the beat's job id, from action jobs (e.g. add-depth, land-number, hand-over)"),
+  support: external_exports.array(external_exports.string()).optional().describe("find: up to two support job ids"),
+  duration: external_exports.number().optional().describe("find: the beat's length in seconds"),
+  takeaway: external_exports.string().optional().describe("find: what the viewer must get from the beat (carried for the record; not ranked on)"),
+  mood: external_exports.array(external_exports.string()).optional().describe("find: mood words, matched softly against each recipe's mood tags"),
+  assets: external_exports.union([external_exports.record(external_exports.string(), external_exports.unknown()), external_exports.array(external_exports.string()), external_exports.literal("none")]).optional().describe('find: what the beat has on hand, by kind (footage, screen, photo, logo, voice, library, type), or "none"; omitted means needs are not filtered'),
+  constraints: external_exports.object({
+    aspect: external_exports.string().optional(),
+    theme: external_exports.string().optional(),
+    palette: external_exports.string().optional(),
+    status: external_exports.enum(["proven", "any"]).optional().describe("proven (the default) or any, to let unproven recipes through")
+  }).optional(),
+  exclude: external_exports.array(external_exports.string()).optional().describe("find: recipe ids already used or ruled out"),
+  limit: external_exports.number().int().positive().max(20).optional().describe("find: how many candidates, default 5"),
+  id: external_exports.string().optional().describe("get: the recipe id from find"),
+  revision: external_exports.string().optional().describe("get: the revision the brief pinned; a different shipped revision is answered with a warning")
+};
+var arsenalTool = defineTool({
+  name: "ae_arsenal",
+  title: "Technique arsenal",
+  group: "document",
+  effect: "read",
+  blockedInReadOnly: false,
+  description: "Find proven After Effects techniques for a beat by the job it must do, then read the chosen recipe. Use it while planning shots, once per beat, before building. action jobs lists the job vocabulary (ids with one-line definitions). action find takes the beat (job, and optionally support, duration, mood, assets, constraints.status, exclude, limit) and returns a ranked shortlist (proven recipes only unless constraints.status is any; relaxed names any filter loosened when nothing passed; never another job) with each candidate's still from our own proof build. An unknown job is refused with the valid ids: pick one, never invent one. action get takes id (and the pinned revision) and returns the full recipe. Offline; no After Effects needed.",
+  inputShape: askShape,
+  handler: async (args) => {
+    try {
+      if (args.action === "jobs") return jsonResult(listJobs());
+      if (args.action === "get") {
+        if (!args.id) return errorResult("INVALID_ARGS", "get needs id: a recipe id from ae_arsenal find");
+        const text = recipeReply(args.id, args.revision);
+        const r = loadCatalog().recipes.find((x) => x.id === args.id);
+        return { content: [{ type: "text", text }, ...stillContent(r)], isError: false };
+      }
+      if (!args.job) return errorResult("INVALID_ARGS", "find needs job: a job id from ae_arsenal action jobs", { hint: "call ae_arsenal with action jobs for the valid ids" });
+      const catalog = loadCatalog();
+      const answer = findTechniques(catalog, {
+        vocab: args.vocab ?? catalog.vocab,
+        job: args.job,
+        support: args.support,
+        duration: args.duration,
+        takeaway: args.takeaway,
+        mood: args.mood,
+        assets: args.assets,
+        constraints: args.constraints,
+        exclude: args.exclude,
+        limit: args.limit
+      });
+      const byId = new Map(catalog.recipes.map((r) => [r.id, r]));
+      const images = answer.results.flatMap((c) => stillContent(byId.get(c.id)));
+      return { content: [{ type: "text", text: JSON.stringify({ ok: true, ...answer }, null, 2) }, ...images], isError: false };
+    } catch (e) {
+      if (e instanceof ArsenalRefusal) return errorResult("INVALID_ARGS", e.message);
+      return errorResult("IO", e instanceof Error ? e.message : String(e));
+    }
+  }
+});
+
 // src/index.ts
 var require2 = createRequire(import.meta.url);
 var { version: version2, serverName } = require2("../package.json");
@@ -66702,7 +66893,7 @@ var transport = new FileIpcTransport();
 var server = new McpServer({
   name: serverName ?? "after-effects-studio",
   version: version2
-}, { instructions: "Local native After Effects control with a detailed production-derived motion language for any brand or style. Before designing or building motion in After Effects, read ae_library documents motion-language, production-workflow and brief-template; load construction, camera-continuity, assets-depth, type-evidence and worked-scenes as relevant. This craft foundation is the default for all styles, not an optional JoeB preset. Everything required is bundled; do not require the original repo, personal rig or assets. Inspect ae_context and discover exact operations with ae_catalog. eval.run enables custom ES3. A call that throws is rolled back and says whether that worked (details.rollback); a batch.run is rolled back only with stopOnError. Inspect failures, unconfirmed rollbacks and timeouts before retrying. Render and visually inspect actual artifacts, and distinguish technical success from visual quality. The paper/navy/vermilion JoeB appearance is optional." });
+}, { instructions: "Local native After Effects control with a detailed production-derived motion language for any brand or style. Before designing or building motion in After Effects, read ae_library documents motion-language, production-workflow and brief-template; load construction, camera-continuity, assets-depth, type-evidence and worked-scenes as relevant. This craft foundation is the default for all styles, not an optional JoeB preset. Everything required is bundled; do not require the original repo, personal rig or assets. When planning shots, ask ae_arsenal per beat by the beat's job before building: it returns proven techniques with stills, and get reads the chosen recipe. Inspect ae_context and discover exact operations with ae_catalog. eval.run enables custom ES3. A call that throws is rolled back and says whether that worked (details.rollback); a batch.run is rolled back only with stopOnError. Inspect failures, unconfirmed rollbacks and timeouts before retrying. Render and visually inspect actual artifacts, and distinguish technical success from visual quality. The paper/navy/vermilion JoeB appearance is optional." });
 function annotationsFor(tool) {
   switch (tool.effect) {
     case "read":
@@ -66735,7 +66926,7 @@ function register(tool) {
   );
 }
 var skipped = [];
-for (const tool of [...ALL_TOOLS, libraryTool]) {
+for (const tool of [...ALL_TOOLS, libraryTool, arsenalTool]) {
   const denial = denyTool(tool.name, tool.blockedInReadOnly);
   if (denial) {
     skipped.push(tool.name);
