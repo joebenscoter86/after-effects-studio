@@ -1,0 +1,1360 @@
+{
+  "vocab": "jobs-v1",
+  "tagged": "2026-11-14",
+  "recipes": {
+    "YBeMmC43Q1U#01": {
+      "id": "01-dotted-stroke",
+      "kind": "technique",
+      "job": "point-at-detail",
+      "support": [
+        "show-time",
+        "keep-it-alive"
+      ],
+      "mood": [
+        "minimal",
+        "dark",
+        "editorial"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 4,
+      "motion": "loop",
+      "difficulty": 2,
+      "group": "round-cap dashes",
+      "why": "'decorative circles around a title', 'orbit rings', 'loaders': a turning ring of dots that circles the word"
+    },
+    "YBeMmC43Q1U#02": {
+      "id": "02-line-with-end-dots",
+      "kind": "technique",
+      "job": "relate-things",
+      "support": [
+        "point-at-detail"
+      ],
+      "mood": [
+        "minimal",
+        "dark",
+        "editorial"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 3,
+      "motion": "loop",
+      "difficulty": 1,
+      "group": "round-cap dashes",
+      "why": "'connector lines, data callouts': a line with a dot at each end ties two points together"
+    },
+    "YBeMmC43Q1U#03": {
+      "id": "03-tapered-stroke",
+      "kind": "technique",
+      "job": "fill-the-backdrop",
+      "support": [
+        "add-impact"
+      ],
+      "mood": [
+        "glow",
+        "dark",
+        "cinematic"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 4,
+      "motion": "still",
+      "difficulty": 1,
+      "group": null,
+      "why": "'a light streak, horizon arc or swoosh fades out softly': a planet-rim arc set behind a headline"
+    },
+    "YBeMmC43Q1U#04": {
+      "id": "04-carousel-by-rotation",
+      "kind": "technique",
+      "job": "list-items",
+      "support": [
+        "reveal-headline"
+      ],
+      "mood": [
+        "bold",
+        "dark",
+        "playful"
+      ],
+      "needs": [
+        "type"
+      ],
+      "duration": 4,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "duplicate-and-step ring",
+      "why": "'list reveals, title wheels and \"rolodex\" type moments'"
+    },
+    "YBeMmC43Q1U#05": {
+      "id": "05-stagger-layers-in-time",
+      "kind": "build-aid",
+      "job": null,
+      "support": [],
+      "mood": [
+        "neutral",
+        "workflow"
+      ],
+      "needs": [
+        "none"
+      ],
+      "duration": 0,
+      "motion": "one-shot",
+      "difficulty": 1,
+      "group": "time stagger",
+      "why": "stagger by drag: 'a quick replacement for Sequence Layers'; a timing aid inside other builds"
+    },
+    "YBeMmC43Q1U#06": {
+      "id": "06-3d-orbit-rings",
+      "kind": "technique",
+      "job": "keep-it-alive",
+      "support": [
+        "light-the-hero",
+        "add-depth"
+      ],
+      "mood": [
+        "3D",
+        "light",
+        "playful"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 5,
+      "motion": "loop",
+      "difficulty": 2,
+      "group": "duplicate-and-step ring",
+      "why": "'an orbit or \"planet with rings\" look', 'any hero object that needs a 3D halo'; passes 'in front of and behind it'"
+    },
+    "YBeMmC43Q1U#07": {
+      "id": "07-face-the-camera",
+      "kind": "build-aid",
+      "job": null,
+      "support": [],
+      "mood": [
+        "3D",
+        "neutral"
+      ],
+      "needs": [
+        "3d-camera"
+      ],
+      "duration": 0,
+      "motion": "loop",
+      "difficulty": 1,
+      "group": null,
+      "why": "a switch (auto-orient): 'keeps it reading as a full, flat shape the whole way round' inside an orbit build"
+    },
+    "YBeMmC43Q1U#08": {
+      "id": "08-record-puppet-pin-motion",
+      "kind": "build-aid",
+      "job": null,
+      "support": [],
+      "mood": [
+        "illustration",
+        "organic"
+      ],
+      "needs": [
+        "character"
+      ],
+      "duration": 0,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "puppet pins",
+      "why": "recording a pin by hand: 'you act the motion out once and After Effects writes the keyframes'"
+    },
+    "YBeMmC43Q1U#09": {
+      "id": "09-endless-background-tile",
+      "kind": "technique",
+      "job": "fill-the-backdrop",
+      "support": [
+        "keep-it-alive",
+        "establish-place"
+      ],
+      "mood": [
+        "illustration",
+        "calm",
+        "playful"
+      ],
+      "needs": [
+        "illustration"
+      ],
+      "duration": 8,
+      "motion": "loop",
+      "difficulty": 1,
+      "group": null,
+      "why": "'a background that has to keep moving ... the view out of a moving vehicle's window'"
+    },
+    "YBeMmC43Q1U#10": {
+      "id": "10-graphic-as-particles",
+      "kind": "technique",
+      "job": "keep-it-alive",
+      "support": [
+        "fill-the-backdrop",
+        "add-impact"
+      ],
+      "mood": [
+        "playful",
+        "organic",
+        "dark"
+      ],
+      "needs": [
+        "illustration"
+      ],
+      "duration": 6,
+      "motion": "loop",
+      "difficulty": 2,
+      "group": "particle drift",
+      "why": "'Fill a scene with drifting copies of a small graphic (leaves, petals, confetti, logos)'"
+    },
+    "YBeMmC43Q1U#11": {
+      "id": "11-white-on-light-finish",
+      "kind": "technique",
+      "job": "add-depth",
+      "support": [
+        "finish-the-look"
+      ],
+      "mood": [
+        "light",
+        "soft",
+        "premium"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 4,
+      "motion": "still",
+      "difficulty": 2,
+      "group": null,
+      "why": "'it reads as a raised, soft-plastic object ... so the pieces look stacked'"
+    },
+    "YBeMmC43Q1U#12": {
+      "id": "12-long-soft-shadow",
+      "kind": "technique",
+      "job": "add-depth",
+      "support": [
+        "finish-the-look"
+      ],
+      "mood": [
+        "light",
+        "editorial",
+        "calm"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 4,
+      "motion": "still",
+      "difficulty": 2,
+      "group": "radial-blur shadow",
+      "why": "'a long, fading directional shadow, as if lit by a low sun'"
+    },
+    "YBeMmC43Q1U#13": {
+      "id": "13-dot-grid-texture",
+      "kind": "technique",
+      "job": "fill-the-backdrop",
+      "support": [
+        "finish-the-look"
+      ],
+      "mood": [
+        "light",
+        "minimal",
+        "calm"
+      ],
+      "needs": [
+        "none"
+      ],
+      "duration": 6,
+      "motion": "still",
+      "difficulty": 1,
+      "group": null,
+      "why": "'a quiet design texture for a plain or pale background ... without pulling focus'"
+    },
+    "YBeMmC43Q1U#14": {
+      "id": "14-3d-floor-shadows",
+      "kind": "technique",
+      "job": "add-depth",
+      "support": [
+        "light-the-hero"
+      ],
+      "mood": [
+        "light",
+        "3D",
+        "clean"
+      ],
+      "needs": [
+        "3d-camera",
+        "shapes"
+      ],
+      "duration": 5,
+      "motion": "still",
+      "difficulty": 2,
+      "group": "shadow-catcher floor",
+      "why": "'Grounds flat 3D layers in a scene by giving them soft, believable shadows on the ground'"
+    },
+    "YBeMmC43Q1U#15": {
+      "id": "15-grow-bounds-fix",
+      "kind": "build-aid",
+      "job": null,
+      "support": [],
+      "mood": [
+        "neutral",
+        "any"
+      ],
+      "needs": [
+        "none"
+      ],
+      "duration": 0,
+      "motion": "still",
+      "difficulty": 1,
+      "group": "radial-blur shadow",
+      "why": "Grow Bounds: 'Fixes effects that are cut off with a hard edge because the layer's bounding box is too small'"
+    },
+    "YBeMmC43Q1U#16": {
+      "id": "16-lock-focus-to-layer",
+      "kind": "technique",
+      "job": "move-camera",
+      "support": [
+        "light-the-hero",
+        "add-depth"
+      ],
+      "mood": [
+        "cinematic",
+        "3D",
+        "illustration"
+      ],
+      "needs": [
+        "3d-camera"
+      ],
+      "duration": 4,
+      "motion": "one-shot",
+      "difficulty": 1,
+      "group": "DOF camera push",
+      "why": "'a camera push or drift through a layered 3D scene should keep the hero element crisp'"
+    },
+    "YBeMmC43Q1U#17": {
+      "id": "17-depth-fog",
+      "kind": "technique",
+      "job": "add-depth",
+      "support": [
+        "finish-the-look"
+      ],
+      "mood": [
+        "cinematic",
+        "dark",
+        "atmospheric"
+      ],
+      "needs": [
+        "3d-camera"
+      ],
+      "duration": 5,
+      "motion": "still",
+      "difficulty": 1,
+      "group": null,
+      "why": "'separately made 3D layers look pasted together ... sinks the distance into one atmosphere'; looks line: 'reads as one space'"
+    },
+    "YBeMmC43Q1U#18": {
+      "id": "18-smooth-text-reveal",
+      "kind": "technique",
+      "job": "reveal-headline",
+      "support": [],
+      "mood": [
+        "calm",
+        "editorial",
+        "light"
+      ],
+      "needs": [
+        "type"
+      ],
+      "duration": 2,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "ramped range reveal",
+      "why": "'a headline or tagline that should arrive gently, words sliding up and fading in one after another'"
+    },
+    "YBeMmC43Q1U#19": {
+      "id": "19-text-on-a-path",
+      "kind": "technique",
+      "job": "reveal-headline",
+      "support": [
+        "keep-it-alive"
+      ],
+      "mood": [
+        "editorial",
+        "dark",
+        "retro"
+      ],
+      "needs": [
+        "type"
+      ],
+      "duration": 4,
+      "motion": "loop",
+      "difficulty": 2,
+      "group": "type on circle path",
+      "why": "'a badge or seal of words circles a central title'"
+    },
+    "YBeMmC43Q1U#20": {
+      "id": "20-two-pass-glow",
+      "kind": "technique",
+      "job": "finish-the-look",
+      "support": [
+        "light-the-hero"
+      ],
+      "mood": [
+        "glow",
+        "dark",
+        "cinematic"
+      ],
+      "needs": [
+        "none"
+      ],
+      "duration": 5,
+      "motion": "still",
+      "difficulty": 1,
+      "group": "double glow",
+      "why": "'A finishing pass on bright line art or type on a dark ground'"
+    },
+    "YBeMmC43Q1U#21": {
+      "id": "21-texture-through-a-matte",
+      "kind": "technique",
+      "job": "reveal-headline",
+      "support": [
+        "finish-the-look"
+      ],
+      "mood": [
+        "paper",
+        "dark",
+        "retro"
+      ],
+      "needs": [
+        "type",
+        "texture"
+      ],
+      "duration": 4,
+      "motion": "still",
+      "difficulty": 2,
+      "group": "alpha matte treatment",
+      "why": "'Make a title look printed or stamped into a worn paper texture'"
+    },
+    "YBeMmC43Q1U#22": {
+      "id": "22-hide-layers-shy",
+      "kind": "build-aid",
+      "job": null,
+      "support": [],
+      "mood": [
+        "neutral",
+        "workflow"
+      ],
+      "needs": [
+        "none"
+      ],
+      "duration": 0,
+      "motion": "still",
+      "difficulty": 1,
+      "group": null,
+      "why": "shy layers: 'The comp structure and the render stay unchanged'"
+    },
+    "YBeMmC43Q1U#23": {
+      "id": "23-shutter-angle-blur",
+      "kind": "build-aid",
+      "job": null,
+      "support": [],
+      "mood": [
+        "neutral",
+        "any"
+      ],
+      "needs": [
+        "none"
+      ],
+      "duration": 0,
+      "motion": "still",
+      "difficulty": 1,
+      "group": null,
+      "why": "shutter angle: 'set how long each frame's blur streak is, without touching the animation'"
+    },
+    "YBeMmC43Q1U#24": {
+      "id": "24-sharp-scaled-precomp",
+      "kind": "build-aid",
+      "job": null,
+      "support": [],
+      "mood": [
+        "neutral",
+        "any"
+      ],
+      "needs": [
+        "none"
+      ],
+      "duration": 0,
+      "motion": "one-shot",
+      "difficulty": 1,
+      "group": null,
+      "why": "crisp precomp: 'the vector contents are redrawn at the new size instead of being enlarged as pixels'"
+    },
+    "YBeMmC43Q1U#25": {
+      "id": "25-custom-media-frame",
+      "kind": "technique",
+      "job": "show-real-screen",
+      "support": [
+        "reveal-headline"
+      ],
+      "mood": [
+        "editorial",
+        "light",
+        "clean"
+      ],
+      "needs": [
+        "footage",
+        "photo",
+        "shapes"
+      ],
+      "duration": 4,
+      "motion": "still",
+      "difficulty": 1,
+      "group": "media in shape matte",
+      "why": "'a photo or clip should sit in a designed window ... a cut-out that leaves room for a headline'"
+    },
+    "eoBEBx1PbS4#01": {
+      "id": "01-bevelled-3d-text-material-texture",
+      "kind": "technique",
+      "job": "reveal-headline",
+      "support": [
+        "add-depth"
+      ],
+      "mood": [
+        "3D",
+        "textured",
+        "bold"
+      ],
+      "needs": [
+        "type",
+        "texture"
+      ],
+      "duration": 4,
+      "motion": "still",
+      "difficulty": 3,
+      "group": "per-face materials",
+      "why": "'Turns a flat title into a solid, physical object ... the base for any lit 3D title shot'"
+    },
+    "eoBEBx1PbS4#02": {
+      "id": "02-backlit-environment-light-with-shadow-floor",
+      "kind": "technique",
+      "job": "add-depth",
+      "support": [
+        "light-the-hero"
+      ],
+      "mood": [
+        "3D",
+        "light",
+        "cinematic"
+      ],
+      "needs": [
+        "type",
+        "3d-camera"
+      ],
+      "duration": 5,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "shadow-catcher floor",
+      "why": "'make a textured 3D title look photographed rather than flat ... long soft shadows fall toward the viewer'"
+    },
+    "eoBEBx1PbS4#03": {
+      "id": "03-parallel-rim-light-no-shadows",
+      "kind": "technique",
+      "job": "light-the-hero",
+      "support": [
+        "finish-the-look"
+      ],
+      "mood": [
+        "3D",
+        "premium",
+        "light"
+      ],
+      "needs": [
+        "type",
+        "3d-camera"
+      ],
+      "duration": 4,
+      "motion": "still",
+      "difficulty": 1,
+      "group": null,
+      "why": "'brightens the edges and tops of the letters without adding a second set of shadows'"
+    },
+    "eoBEBx1PbS4#04": {
+      "id": "04-point-light-falloff-front-fill",
+      "kind": "technique",
+      "job": "light-the-hero",
+      "support": [],
+      "mood": [
+        "3D",
+        "soft",
+        "light"
+      ],
+      "needs": [
+        "type",
+        "3d-camera"
+      ],
+      "duration": 4,
+      "motion": "still",
+      "difficulty": 2,
+      "group": null,
+      "why": "'a small, soft pool of light off to one side gives the faces a gentle gradient'"
+    },
+    "eoBEBx1PbS4#05": {
+      "id": "05-per-character-3d-fly-in-ramp-up",
+      "kind": "technique",
+      "job": "reveal-headline",
+      "support": [
+        "add-impact"
+      ],
+      "mood": [
+        "3D",
+        "cinematic",
+        "bold"
+      ],
+      "needs": [
+        "type",
+        "3d-camera"
+      ],
+      "duration": 4,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "ramped range reveal",
+      "why": "'A smooth, weighty title entrance for extruded 3D type ... the word assembles itself'"
+    },
+    "eoBEBx1PbS4#06": {
+      "id": "06-depth-of-field-camera-push-on-null",
+      "kind": "technique",
+      "job": "move-camera",
+      "support": [
+        "keep-it-alive",
+        "add-depth"
+      ],
+      "mood": [
+        "cinematic",
+        "3D"
+      ],
+      "needs": [
+        "3d-camera"
+      ],
+      "duration": 5,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "DOF camera push",
+      "why": "'make it feel filmed ... a slow camera push keeps the frame alive after the word has landed'"
+    },
+    "eoBEBx1PbS4#07": {
+      "id": "07-gold-face-plain-sides-look",
+      "kind": "technique",
+      "job": "reveal-headline",
+      "support": [
+        "light-the-hero"
+      ],
+      "mood": [
+        "premium",
+        "3D",
+        "warm"
+      ],
+      "needs": [
+        "type",
+        "texture"
+      ],
+      "duration": 4,
+      "motion": "still",
+      "difficulty": 2,
+      "group": "per-face materials",
+      "why": "'a warmer, more polished metal read' on 'an already-built textured 3D title'"
+    },
+    "eoBEBx1PbS4#08": {
+      "id": "08-outline-only-3d-title",
+      "kind": "technique",
+      "job": "reveal-headline",
+      "support": [
+        "light-the-hero"
+      ],
+      "mood": [
+        "premium",
+        "dark",
+        "3D",
+        "sleek"
+      ],
+      "needs": [
+        "type"
+      ],
+      "duration": 4,
+      "motion": "still",
+      "difficulty": 2,
+      "group": "per-face materials",
+      "why": "'A cut-out, stroke-like 3D title for a sleek or dark mood'"
+    },
+    "eoBEBx1PbS4#09": {
+      "id": "09-rotating-3d-text-ring-loop",
+      "kind": "technique",
+      "job": "reveal-headline",
+      "support": [
+        "keep-it-alive",
+        "fill-the-backdrop"
+      ],
+      "mood": [
+        "3D",
+        "playful",
+        "bold"
+      ],
+      "needs": [
+        "type",
+        "3d-camera"
+      ],
+      "duration": 6,
+      "motion": "loop",
+      "difficulty": 3,
+      "group": "type on circle path",
+      "why": "'A seamless looping title or bumper ... good for intros, loops and background type'"
+    },
+    "il_OcNyqDOE#01": {
+      "id": "01-vector-art-split-into-layers",
+      "kind": "build-aid",
+      "job": null,
+      "support": [],
+      "mood": [
+        "illustration",
+        "workflow"
+      ],
+      "needs": [
+        "illustration"
+      ],
+      "duration": 0,
+      "motion": "still",
+      "difficulty": 2,
+      "group": null,
+      "why": "'The groundwork ... bring every object into After Effects as its own layer'; set-up, not a visible result"
+    },
+    "il_OcNyqDOE#02": {
+      "id": "02-tritone-curves-mood-grade",
+      "kind": "technique",
+      "job": "finish-the-look",
+      "support": [
+        "establish-place"
+      ],
+      "mood": [
+        "dark",
+        "moody",
+        "illustration"
+      ],
+      "needs": [
+        "illustration"
+      ],
+      "duration": 5,
+      "motion": "still",
+      "difficulty": 2,
+      "group": null,
+      "why": "'scene is built from stock pieces that do not match ... pulls them into one night-time or moody colour world'"
+    },
+    "il_OcNyqDOE#03": {
+      "id": "03-z-depth-push-and-rescale",
+      "kind": "technique",
+      "job": "add-depth",
+      "support": [
+        "move-camera"
+      ],
+      "mood": [
+        "illustration",
+        "cinematic"
+      ],
+      "needs": [
+        "illustration",
+        "3d-camera"
+      ],
+      "duration": 5,
+      "motion": "still",
+      "difficulty": 2,
+      "group": "deep-Z push",
+      "why": "'Sets up real parallax and depth of field for a 2D illustrated scene'"
+    },
+    "il_OcNyqDOE#04": {
+      "id": "04-camera-depth-of-field-focus-lock-dolly",
+      "kind": "technique",
+      "job": "move-camera",
+      "support": [
+        "establish-place",
+        "add-depth"
+      ],
+      "mood": [
+        "cinematic",
+        "dark",
+        "illustration"
+      ],
+      "needs": [
+        "illustration",
+        "3d-camera"
+      ],
+      "duration": 3,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "DOF camera push",
+      "why": "'Turns a staged 2D-in-3D layout into a filmed shot ... a short push-in gives the opening beat life'"
+    },
+    "il_OcNyqDOE#05": {
+      "id": "05-looping-wind-sway-rotation",
+      "kind": "technique",
+      "job": "keep-it-alive",
+      "support": [
+        "establish-place"
+      ],
+      "mood": [
+        "calm",
+        "illustration",
+        "organic"
+      ],
+      "needs": [
+        "illustration"
+      ],
+      "duration": 6,
+      "motion": "loop",
+      "difficulty": 2,
+      "group": null,
+      "why": "'Gives a still illustrated scene a reason to move (wind) ... rocks back and forth forever'"
+    },
+    "il_OcNyqDOE#06": {
+      "id": "06-wave-warp-grass-wind",
+      "kind": "technique",
+      "job": "keep-it-alive",
+      "support": [
+        "establish-place"
+      ],
+      "mood": [
+        "calm",
+        "illustration",
+        "organic"
+      ],
+      "needs": [
+        "illustration"
+      ],
+      "duration": 6,
+      "motion": "loop",
+      "difficulty": 1,
+      "group": "wave warp wind",
+      "why": "'Makes a field of many thin blades ... move in the wind ... it moves on its own'"
+    },
+    "il_OcNyqDOE#07": {
+      "id": "07-leaf-particles-blown-across",
+      "kind": "technique",
+      "job": "keep-it-alive",
+      "support": [
+        "establish-place",
+        "fill-the-backdrop"
+      ],
+      "mood": [
+        "illustration",
+        "dark",
+        "organic"
+      ],
+      "needs": [
+        "illustration"
+      ],
+      "duration": 8,
+      "motion": "loop",
+      "difficulty": 3,
+      "group": "particle drift",
+      "why": "'Sells wind in an illustrated scene by sending a steady trickle of tumbling leaves across it'"
+    },
+    "il_OcNyqDOE#08": {
+      "id": "08-rainfall-matched-to-wind",
+      "kind": "technique",
+      "job": "establish-place",
+      "support": [
+        "keep-it-alive",
+        "finish-the-look"
+      ],
+      "mood": [
+        "dark",
+        "moody",
+        "cinematic"
+      ],
+      "needs": [
+        "none"
+      ],
+      "duration": 6,
+      "motion": "loop",
+      "difficulty": 1,
+      "group": null,
+      "why": "'Adds weather on top of a wind-animated scene so the motion has a reason'"
+    },
+    "il_OcNyqDOE#09": {
+      "id": "09-puppet-pin-subtle-character-motion",
+      "kind": "technique",
+      "job": "keep-it-alive",
+      "support": [
+        "establish-place"
+      ],
+      "mood": [
+        "illustration",
+        "calm",
+        "subtle"
+      ],
+      "needs": [
+        "character",
+        "illustration"
+      ],
+      "duration": 5,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "puppet pins",
+      "why": "'Keeps a still character from looking frozen in a wide establishing shot'"
+    },
+    "il_OcNyqDOE#10": {
+      "id": "10-film-grain-finish-stack",
+      "kind": "technique",
+      "job": "finish-the-look",
+      "support": [],
+      "mood": [
+        "cinematic",
+        "retro",
+        "gritty"
+      ],
+      "needs": [
+        "none"
+      ],
+      "duration": 5,
+      "motion": "still",
+      "difficulty": 1,
+      "group": "grain-and-glow finish",
+      "why": "'The last pass on an illustrated shot: real-film grain, one last overall curve'"
+    },
+    "il_OcNyqDOE#11": {
+      "id": "11-matching-closeup-telephoto-compression",
+      "kind": "unmatched",
+      "job": null,
+      "support": [
+        "establish-place",
+        "add-depth"
+      ],
+      "mood": [
+        "cinematic",
+        "dark",
+        "illustration"
+      ],
+      "needs": [
+        "illustration",
+        "character",
+        "3d-camera"
+      ],
+      "duration": 4,
+      "motion": "still",
+      "difficulty": 2,
+      "group": "deep-Z push",
+      "unmatched_need": "cut in to a matching close-up of the subject",
+      "why": "'Cut from an established wide scene to a close-up of the character without building a new world': a cut-in, not a hand-over (which must not read as a cut) nor a point at a held picture"
+    },
+    "il_OcNyqDOE#12": {
+      "id": "12-isolated-hair-wave-and-puppet",
+      "kind": "technique",
+      "job": "keep-it-alive",
+      "support": [],
+      "mood": [
+        "illustration",
+        "calm",
+        "subtle"
+      ],
+      "needs": [
+        "character",
+        "illustration"
+      ],
+      "duration": 5,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "puppet pins",
+      "why": "'Gives a still illustrated character life in a close-up by letting only the hair drift'"
+    },
+    "il_OcNyqDOE#13": {
+      "id": "13-masked-curves-relight-track-matte",
+      "kind": "technique",
+      "job": "light-the-hero",
+      "support": [
+        "finish-the-look"
+      ],
+      "mood": [
+        "cinematic",
+        "moody",
+        "illustration"
+      ],
+      "needs": [
+        "character",
+        "illustration"
+      ],
+      "duration": 4,
+      "motion": "still",
+      "difficulty": 1,
+      "group": "alpha matte treatment",
+      "why": "'Adds a soft wash of differently coloured light to one side of the face ... a light direction without touching the background'"
+    },
+    "8oVLS0ZlKC4#01": {
+      "id": "01-blurred-stroked-shapes-on-light-ground",
+      "kind": "technique",
+      "job": "fill-the-backdrop",
+      "support": [
+        "finish-the-look"
+      ],
+      "mood": [
+        "soft",
+        "light",
+        "abstract"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 6,
+      "motion": "still",
+      "difficulty": 2,
+      "group": "one-way soft blur",
+      "why": "'a soft, lens-like backdrop ... an organic, out-of-focus base layer'"
+    },
+    "8oVLS0ZlKC4#02": {
+      "id": "02-glow-radial-blur-noise-finish-stack",
+      "kind": "technique",
+      "job": "finish-the-look",
+      "support": [
+        "keep-it-alive"
+      ],
+      "mood": [
+        "glow",
+        "light",
+        "grain",
+        "abstract"
+      ],
+      "needs": [
+        "none"
+      ],
+      "duration": 6,
+      "motion": "loop",
+      "difficulty": 2,
+      "group": "grain-and-glow finish",
+      "why": "'makes any soft, light-backed composition bloom, pulse and gain film grit'"
+    },
+    "8oVLS0ZlKC4#03": {
+      "id": "03-blurred-light-shapes-at-frame-edges",
+      "kind": "technique",
+      "job": "fill-the-backdrop",
+      "support": [
+        "light-the-hero",
+        "keep-it-alive"
+      ],
+      "mood": [
+        "dark",
+        "glow",
+        "soft"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 6,
+      "motion": "loop",
+      "difficulty": 2,
+      "group": "one-way soft blur",
+      "why": "'make a background feel lit and alive ... the eye is pulled toward the centre'"
+    },
+    "8oVLS0ZlKC4#04": {
+      "id": "04-blur-and-choke-gooey-morph",
+      "kind": "technique",
+      "job": "fill-the-backdrop",
+      "support": [
+        "keep-it-alive",
+        "one-to-many"
+      ],
+      "mood": [
+        "organic",
+        "soft",
+        "abstract"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 6,
+      "motion": "loop",
+      "difficulty": 2,
+      "group": "one-way soft blur",
+      "why": "'an organic, slow-breathing background or a morph between two forms'"
+    },
+    "8oVLS0ZlKC4#05": {
+      "id": "05-path-opening-split-driven-by-moving-ball",
+      "kind": "technique",
+      "job": "hand-over",
+      "support": [
+        "reveal-headline",
+        "show-time"
+      ],
+      "mood": [
+        "dark",
+        "soft",
+        "abstract"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 3,
+      "motion": "transition",
+      "difficulty": 2,
+      "group": "one-way soft blur",
+      "why": "'good for line-led animation, progress moments or a reveal that clears space for a headline'"
+    },
+    "8oVLS0ZlKC4#06": {
+      "id": "06-gradient-shapes-blur-noise-glow-posterize",
+      "kind": "technique",
+      "job": "light-the-hero",
+      "support": [
+        "finish-the-look"
+      ],
+      "mood": [
+        "dark",
+        "glow",
+        "grain",
+        "cinematic"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 5,
+      "motion": "still",
+      "difficulty": 2,
+      "group": "grain-and-glow finish",
+      "why": "'a soft, filmic hero object for a title card or an event poster background'"
+    },
+    "ZqRE3ho8iP4#01": {
+      "id": "01-rounded-shape-matte-media-card",
+      "kind": "technique",
+      "job": "show-real-screen",
+      "support": [
+        "list-items"
+      ],
+      "mood": [
+        "clean",
+        "editorial",
+        "light"
+      ],
+      "needs": [
+        "photo",
+        "footage",
+        "shapes"
+      ],
+      "duration": 4,
+      "motion": "still",
+      "difficulty": 2,
+      "group": "media in shape matte",
+      "why": "'Turns any photo or clip into a tidy rounded card ... the base piece of any card carousel or media stack'"
+    },
+    "ZqRE3ho8iP4#02": {
+      "id": "02-pivot-null-swing-loop",
+      "kind": "technique",
+      "job": "list-items",
+      "support": [
+        "keep-it-alive"
+      ],
+      "mood": [
+        "playful",
+        "editorial",
+        "light"
+      ],
+      "needs": [
+        "photo"
+      ],
+      "duration": 4,
+      "motion": "loop",
+      "difficulty": 3,
+      "group": null,
+      "why": "'a carousel step ... list reveals, or any \"next item\" rhythm'"
+    },
+    "ZqRE3ho8iP4#03": {
+      "id": "03-tilt-and-shrink-on-swing",
+      "kind": "technique",
+      "job": "list-items",
+      "support": [
+        "point-at-detail"
+      ],
+      "mood": [
+        "playful",
+        "editorial",
+        "light"
+      ],
+      "needs": [
+        "photo"
+      ],
+      "duration": 4,
+      "motion": "loop",
+      "difficulty": 2,
+      "group": null,
+      "why": "'gives the centred item its emphasis' on the swinging carousel"
+    },
+    "ZqRE3ho8iP4#04": {
+      "id": "04-duplicate-cards-round-the-pivot",
+      "kind": "technique",
+      "job": "list-items",
+      "support": [
+        "keep-it-alive"
+      ],
+      "mood": [
+        "playful",
+        "editorial",
+        "light"
+      ],
+      "needs": [
+        "photo"
+      ],
+      "duration": 6,
+      "motion": "loop",
+      "difficulty": 3,
+      "group": "duplicate-and-step ring",
+      "why": "'a carousel of several cards ... where each beat shows the next item'"
+    },
+    "ZqRE3ho8iP4#05": {
+      "id": "05-mask-path-to-position-loop",
+      "kind": "technique",
+      "job": "keep-it-alive",
+      "support": [
+        "fill-the-backdrop",
+        "reveal-headline"
+      ],
+      "mood": [
+        "editorial",
+        "calm",
+        "light"
+      ],
+      "needs": [
+        "photo"
+      ],
+      "duration": 8,
+      "motion": "loop",
+      "difficulty": 3,
+      "group": "mask path to position",
+      "why": "'an endless moodboard or gallery loop behind a headline, or a hold that has to run for any length'"
+    },
+    "ZqRE3ho8iP4#06": {
+      "id": "06-path-trail-scale-rotate-in",
+      "kind": "technique",
+      "job": "list-items",
+      "support": [
+        "reveal-headline",
+        "one-to-many"
+      ],
+      "mood": [
+        "editorial",
+        "playful",
+        "light"
+      ],
+      "needs": [
+        "photo"
+      ],
+      "duration": 6,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "mask path to position",
+      "why": "'A stream of photo cards ... brakes to a stop in a fanned stack ... a gallery reveal, a \"many stories\" opener'"
+    },
+    "ZqRE3ho8iP4#07": {
+      "id": "07-3d-spinning-box-of-cards",
+      "kind": "technique",
+      "job": "keep-it-alive",
+      "support": [
+        "add-depth"
+      ],
+      "mood": [
+        "3D",
+        "dark",
+        "playful"
+      ],
+      "needs": [
+        "photo",
+        "3d-camera"
+      ],
+      "duration": 5,
+      "motion": "loop",
+      "difficulty": 3,
+      "group": "duplicate-and-step ring",
+      "why": "'a rotating four-walled box ... a quick 3D showcase loop for a gallery or \"many images\" moment'"
+    },
+    "ZqRE3ho8iP4#08": {
+      "id": "08-tunnel-from-stacked-boxes",
+      "kind": "technique",
+      "job": "keep-it-alive",
+      "support": [
+        "add-depth"
+      ],
+      "mood": [
+        "3D",
+        "dark",
+        "hypnotic"
+      ],
+      "needs": [
+        "photo",
+        "3d-camera"
+      ],
+      "duration": 6,
+      "motion": "loop",
+      "difficulty": 2,
+      "group": null,
+      "why": "'a deep tunnel of photo walls ... a hypnotic gallery loop'"
+    },
+    "ZqRE3ho8iP4#09": {
+      "id": "09-camera-fly-through-with-depth-of-field",
+      "kind": "technique",
+      "job": "hand-over",
+      "support": [
+        "move-camera",
+        "add-depth"
+      ],
+      "mood": [
+        "3D",
+        "cinematic",
+        "immersive"
+      ],
+      "needs": [
+        "photo",
+        "3d-camera"
+      ],
+      "duration": 4,
+      "motion": "transition",
+      "difficulty": 1,
+      "group": "DOF camera push",
+      "why": "'Flies the viewer into the ... card tunnel ... for an immersive opener or transition through a wall of images'"
+    },
+    "ZqRE3ho8iP4#10": {
+      "id": "10-inner-ring-carousel",
+      "kind": "technique",
+      "job": "keep-it-alive",
+      "support": [
+        "add-depth"
+      ],
+      "mood": [
+        "3D",
+        "light",
+        "editorial"
+      ],
+      "needs": [
+        "photo",
+        "3d-camera"
+      ],
+      "duration": 6,
+      "motion": "loop",
+      "difficulty": 2,
+      "group": "duplicate-and-step ring",
+      "why": "'Puts the viewer in the middle of a slowly turning ring of photo cards'"
+    },
+    "ZqRE3ho8iP4#11": {
+      "id": "11-wide-lens-camera-distortion",
+      "kind": "technique",
+      "job": "add-depth",
+      "support": [],
+      "mood": [
+        "3D",
+        "immersive",
+        "light"
+      ],
+      "needs": [
+        "photo",
+        "3d-camera"
+      ],
+      "duration": 5,
+      "motion": "still",
+      "difficulty": 1,
+      "group": null,
+      "why": "'stretches the perspective ... whenever a 3D layout looks too flat under the default view'"
+    }
+  }
+}

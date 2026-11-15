@@ -1,0 +1,229 @@
+// Technique 10: drifting copies of a small graphic made by CC Particle World.
+// A leaf graphic sits in the comp as its own (hidden) layer. A black solid on top carries CC Particle World with
+// Particle Type "Textured QuadPolygon" and Texture Layer pointing at the leaf, so every particle is a leaf.
+// The producer is moved to the left and stretched tall, and the physics set to Direction Axis with almost no
+// gravity, so the leaves drift sideways across a dark frame, spinning, at varied sizes.
+// Not a finish: nothing is named TECH; the particle layer itself is the technique.
+//
+// VERIFY: match name "CC Particle World" (recipe gives it) is addable.
+// VERIFY: effect groups ("Producer", "Physics", "Particle", "Texture", "Grid & Guides", "Direction Axis") appear as nested property groups in scripting; find() searches depth-first by display name, so it also works if they are flat.
+// VERIFY: display names "Birth Rate", "Longevity (sec)", "Position X/Y/Z", "Radius X/Y/Z", "Animation", "Velocity", "Inherit Velocity %", "Gravity", "Resistance", "Extra", "Extra Angle", "Particle Type", "Texture Layer", "Scatter", "Align To Direction", "Texture Time", "Rotation Speed", "Initial Rotation", "Rotation Axis", "Birth Size", "Death Size", "Size Variation", "Max Opacity", "Color Map".
+// VERIFY: Particle Type popup index for "Textured QuadPolygon" (args.particleType, default 13 is a guess); read the installed menu order.
+// VERIFY: Animation popup index 2 = "Direction Axis" (1 = Explosive believed).
+// VERIFY: Rotation Axis index 1 = "Any Axis"; Color Map index 1 = "Birth to Death"; Texture Time index 1 = "Current". The script does not set these three; it reads them back in the result so they can be checked against the recipe.
+// VERIFY: Extra Angle "1x +0.0°" is the value 360 in scripting.
+// VERIFY: Texture Layer takes the leaf layer's index; its second dropdown (Source / Masks / Effects & Masks) is not scriptable and is expected to default to "Source".
+// VERIFY: a hidden (enabled = false) layer still serves as the texture.
+// VERIFY: Direction Axis sub-properties are named "Axis X", "Axis Y", "Axis Z" (recorded in result.missing if not found).
+// VERIFY: Grid & Guides checkboxes "Position", "Radius", "Motion Path", "Grid", "Horizon", "Axis Box" (recorded in result.missing if not found); whether the grid shows in a render at all.
+// VERIFY: Birth Size 0.25 on a 300 x 300 texture comp gives leaves of a sensible size at 1920 x 1080; if tiny or huge, the texture comp's size is the lever, not the recipe values.
+$.evalFile(args.prelude);
+args = args || {};
+// Rebuild with artwork (2026-11-14): art from PROOF/10/art (brief.md). Pass args.artLib (art.jsx) and args.artDir.
+// "park dusk" (park-dusk.png, 37.5 %) is the scene; the texture is leaf.png (a golden ginkgo leaf, 2048 px) shrunk
+// into a 128 x 128 precomp "10 leaf texture" (CC Particle World sizes particles from the texture's pixel size), and
+// that precomp is the hidden "leaf" layer the Texture Layer points at. Birth/Death Size retuned for the 128 px texture
+// against the layout (median leaf long side about 1.3 % of the width, largest about 2.6 %). A faint Glow on the
+// particle layer so the leaves catch the lamplight. Comp 6 s.
+$.evalFile(args.artLib);
+var ARTDIR = args.artDir;
+
+// Candidate for the prelude: depth-first search of a property group by display name.
+function find(group, name) {
+  var i, p, r;
+  for (i = 1; i <= group.numProperties; i++) {
+    p = group.property(i);
+    if (p.name === name) return p;
+    if (p.propertyType !== PropertyType.PROPERTY) {
+      r = find(p, name);
+      if (r) return r;
+    }
+  }
+  return null;
+}
+// Look inside a named sub-group first (to avoid a same-named property elsewhere), then anywhere in the effect.
+function need(fx, groupName, name) {
+  var g = groupName ? find(fx, groupName) : null;
+  var p = g ? find(g, name) : null;
+  if (!p) p = find(fx, name);
+  if (!p) throw new Error("CC Particle World property not found: " + (groupName ? groupName + " > " : "") + name);
+  return p;
+}
+var missing = [];
+function setOptional(fx, groupName, name, v) {
+  var g = find(fx, groupName);
+  var p = g ? find(g, name) : null;
+  // Run fix: in AE 2027 neither "Direction Axis" nor "Grid & Guides" is found as a group by display name; the properties
+  // are reachable by a whole-effect search. The Grid & Guides "Position" and "Radius" come first in the effect, before
+  // Producer's "Position X" and "Radius X", so the first match is the right one.
+  if (!p) p = find(fx, name);
+  if (!p) { missing.push(groupName + " > " + name); return; }
+  p.setValue(v);
+}
+function fill(sh, color) {
+  var f = P.contents(sh).addProperty("ADBE Vector Graphic - Fill");
+  var idx = f.propertyIndex;
+  P.contents(sh).property(idx).property("ADBE Vector Fill Color").setValue(color);
+  return idx;
+}
+
+// The graphic: leaf.png in a small square precomp (brief), so the texture is 128 px, not 2048.
+// Polish (2026-11-14): 256 px texture, so each leaf is drawn from a sharper texture (smoother edges, veins survive).
+var TEX = args.tex || 256;
+(function () { var j, it; for (j = app.project.numItems; j >= 1; j--) { it = app.project.item(j); if (it instanceof CompItem && it.name === "10 leaf graphic") it.remove(); } })();
+var leafComp = P.freshComp("10 leaf texture", TEX, TEX, 24, 8, [0, 0, 0]);
+var leafFoot = ART.footage(ARTDIR, "leaf.png", "art 10");
+var leafImg = leafComp.layers.add(leafFoot);
+leafImg.name = "leaf.png";
+var lsc = 100 * TEX / Math.max(leafFoot.width, leafFoot.height);
+P.tf(leafImg, "ADBE Scale").setValue([lsc, lsc]);
+P.tf(leafImg, "ADBE Position").setValue([TEX / 2, TEX / 2]);
+
+// ASSUMED: dark frame, 5 s, 24 fps (recipe gives no comp size, solid colour or scene).
+var DUR = args.dur || 6;
+var c = P.freshComp("10 graphic as particles", 1920, 1080, 24, DUR, ART.hex("#13213A"));
+// Re-runs: freshComp removes the comps but not the solids they used; remove this script's unused ones first.
+(function () {
+  var j, it, col;
+  function near(a, b) { return Math.abs(a[0] - b[0]) < 0.002 && Math.abs(a[1] - b[1]) < 0.002 && Math.abs(a[2] - b[2]) < 0.002; }
+  for (j = app.project.numItems; j >= 1; j--) {
+    it = app.project.item(j);
+    if (!(it instanceof FootageItem) || !(it.mainSource instanceof SolidSource) || it.usedIn.length !== 0) continue;
+    col = it.mainSource.color;
+    if ((it.name === "background" && near(col, [0.05, 0.07, 0.10])) || (it.name === "leaf particles" && near(col, [0, 0, 0]))) it.remove();
+  }
+})();
+var bg = c.layers.add(ART.footage(ARTDIR, "park-dusk.png", "art 10"));
+bg.name = "park dusk";
+P.tf(bg, "ADBE Scale").setValue([37.5, 37.5]);
+
+// Step 1: the graphic as its own layer, scaled to 32 %. Hidden: it is only the texture source (inferred in recipe).
+var leafLayer = c.layers.add(leafComp);
+leafLayer.name = "leaf";
+P.tf(leafLayer, "ADBE Scale").setValue([32, 32]);
+P.tf(leafLayer, "ADBE Position").setValue([1700, 160]);
+leafLayer.enabled = false;
+
+// Step 2: black solid at the top of the stack carrying CC Particle World.
+var ps = P.solid(c, "leaf particles", [0, 0, 0]);
+ps.moveToBeginning();
+// Review correction: the particle layer starts before the comp, so the field is already full at frame 0
+// (the effect's clock runs from the layer's start). args.preroll overrides, in seconds.
+var PREROLL = args.preroll !== undefined ? args.preroll : 2;
+ps.startTime = -PREROLL;
+ps.outPoint = c.duration;
+P.effect(ps, "CC Particle World");
+var fx = ps.property("ADBE Effect Parade").property("CC Particle World");
+
+// Recipe values (shown f009598). args.birthRate / args.longevity override.
+need(fx, null, "Birth Rate").setValue(args.birthRate || 2.0);
+need(fx, null, "Longevity (sec)").setValue(args.longevity || 1.0);
+
+// Step 3: Particle Type first, as the recipe stresses.
+// ASSUMED: index 13 for "Textured QuadPolygon"; pass args.particleType to correct it.
+need(fx, "Particle", "Particle Type").setValue(args.particleType || 13);
+
+// Step 4: Texture Layer = the leaf layer (by index); Scatter 0; Align To Direction off.
+fx = ps.property("ADBE Effect Parade").property("CC Particle World");
+need(fx, "Texture", "Texture Layer").setValue(leafLayer.index);
+need(fx, "Texture", "Scatter").setValue(0);
+need(fx, "Texture", "Align To Direction").setValue(0);
+
+// Step 5: particle look as shown on screen.
+need(fx, "Particle", "Rotation Speed").setValue(180);
+need(fx, "Particle", "Initial Rotation").setValue(360);
+// Review correction: the recipe's 0.25 gave leaves about 15 % too small on this 300 x 300 texture; 0.29 matches the measured size.
+var SIZE = args.size !== undefined ? args.size : 0.29; // polish: halving to 0.145 with the 256 px texture halved the leaves (median 0.68 % of the width): the on-screen size does not follow the texture's pixel size here, so 0.29 stays
+need(fx, "Particle", "Birth Size").setValue(SIZE);
+need(fx, "Particle", "Death Size").setValue(SIZE);
+need(fx, "Particle", "Size Variation").setValue(50);
+need(fx, "Particle", "Max Opacity").setValue(75);
+// Polish run: Birth/Death Color and Volume Shade were tried for tone variation; with Textured QuadPolygon neither changes
+// the render (pure red / blue / green colours left the leaves gold), so tone comes from extra particle layers below.
+
+// Step 6: emitter and physics for a sideways drift.
+need(fx, "Producer", "Position X").setValue(-0.58);
+need(fx, "Producer", "Position Y").setValue(0);
+need(fx, "Producer", "Position Z").setValue(0);
+need(fx, "Producer", "Radius X").setValue(0.025);
+need(fx, "Producer", "Radius Y").setValue(0.225);
+need(fx, "Producer", "Radius Z").setValue(0.025);
+need(fx, "Physics", "Animation").setValue(2); // Direction Axis (VERIFY index)
+fx = ps.property("ADBE Effect Parade").property("CC Particle World");
+need(fx, "Physics", "Velocity").setValue(1.08);
+need(fx, "Physics", "Inherit Velocity %").setValue(0);
+need(fx, "Physics", "Gravity").setValue(0.03);
+need(fx, "Physics", "Resistance").setValue(0);
+need(fx, "Physics", "Extra").setValue(0.5);
+need(fx, "Physics", "Extra Angle").setValue(360);
+// Direction Axis is left at its default (Axis X 0, Y -1, Z 0); the recipe does not show it being changed.
+// Run fix: the script first set it to (1, 0, 0) for a left-to-right drift. That sent the leaves away from the viewer
+// into a cluster converging on a point left of centre, covering only about the left 40% of the frame. With the default
+// axis, the recipe's values give leaves spread across the whole frame, as the layout line measures.
+// args.axis = [x, y, z] still overrides.
+if (args.axis) {
+  setOptional(fx, "Direction Axis", "Axis X", args.axis[0]);
+  setOptional(fx, "Direction Axis", "Axis Y", args.axis[1]);
+  setOptional(fx, "Direction Axis", "Axis Z", args.axis[2]);
+}
+
+// ASSUMED: guides off (the grid is gone in the recipe's result frame; the change is not shown).
+setOptional(fx, "Grid & Guides", "Position", 0);
+setOptional(fx, "Grid & Guides", "Radius", 0);
+setOptional(fx, "Grid & Guides", "Motion Path", 0);
+setOptional(fx, "Grid & Guides", "Grid", 0);
+setOptional(fx, "Grid & Guides", "Horizon", 0);
+setOptional(fx, "Grid & Guides", "Axis Box", 0);
+
+// Step 7: the particle layer composites over the scene in Normal mode (blend not shown; ASSUMED Normal, 100 %).
+// Brief: a faint Glow so the leaves catch the lamplight.
+if (args.glow !== false) ART.glow(ps, args.glowThreshold || 60, 20, 0.3);
+
+// Polish (2026-11-14): tone variation and softer edges. The textured quads ignore the particle colours, so the field is
+// split into three particle layers with different Random Seeds whose Birth Rates add up to the recipe's 2.0: the main
+// gold one (1.0), a deeper amber one (0.6) and a paler straw one (0.4), each graded after the effect with Color Balance
+// (HLS). Drift, size, spread and every other recipe value are the same on all three. A slight blur softens the quads'
+// stepped (unantialiased) edges.
+var tones = args.tones !== false;
+var soft = args.soft !== undefined ? args.soft : 1.5;
+function grade(layer, hue, light, sat) {
+  var cb = P.effect(layer, "ADBE Color Balance (HLS)");
+  ART.setFx(layer.property("ADBE Effect Parade").property(cb.propertyIndex), { "Hue": hue, "Lightness": light, "Saturation": sat });
+}
+var extra = [];
+if (tones) {
+  var j, shares = [["leaf particles amber", 0.3, 7, -12, -28, 5], ["leaf particles pale", 0.2, 13, 4, 12, -45]];
+  for (j = 0; j < shares.length; j++) {
+    var d = ps.duplicate();
+    d.name = shares[j][0];
+    var dfx = d.property("ADBE Effect Parade").property("CC Particle World");
+    need(dfx, null, "Birth Rate").setValue((args.birthRate || 2.0) * shares[j][1]);
+    dfx = d.property("ADBE Effect Parade").property("CC Particle World");
+    need(dfx, null, "Random Seed").setValue(shares[j][2]);
+    grade(d, shares[j][3], shares[j][4], shares[j][5]);
+    if (soft > 0) ART.setFx(P.effect(d, "ADBE Gaussian Blur 2"), { "Blurriness": soft });
+    dfx = d.property("ADBE Effect Parade").property("CC Particle World");
+    extra.push({ name: d.name, textureLayer: need(dfx, "Texture", "Texture Layer").value });
+  }
+  fx = ps.property("ADBE Effect Parade").property("CC Particle World");
+  need(fx, null, "Birth Rate").setValue((args.birthRate || 2.0) * 0.5); // main gold layer: 1.0 of the 2.0
+}
+if (soft > 0) ART.setFx(P.effect(ps, "ADBE Gaussian Blur 2"), { "Blurriness": soft });
+
+fx = ps.property("ADBE Effect Parade").property("CC Particle World");
+return {
+  extra: extra, leafIndex: leafLayer.index,
+  comp: c.name,
+  textureComp: leafComp.name,
+  layers: c.numLayers,
+  textureLayerIndex: leafLayer.index,
+  readBack: {
+    particleType: need(fx, "Particle", "Particle Type").value,
+    animation: need(fx, "Physics", "Animation").value,
+    rotationAxis: need(fx, "Particle", "Rotation Axis").value,
+    colorMap: need(fx, "Particle", "Color Map").value,
+    textureTime: need(fx, "Texture", "Texture Time").value,
+    textureLayer: need(fx, "Texture", "Texture Layer").value
+  },
+  missing: missing.join("; ")
+};

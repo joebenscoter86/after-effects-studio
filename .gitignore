@@ -24,3 +24,6 @@ quality/renders/*
 !quality/renders/.gitkeep
 release/packages/*
 !release/packages/.gitkeep
+
+# Channel learner build output
+tools/channel-learner/.build/
