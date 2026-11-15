@@ -112,3 +112,12 @@ Still to settle between the two sides:
 6. **Joe approves new jobs, rarely**: the learner and briefs only propose; the queue comes to Joe when a few have gathered, not nightly.
 
 Build order: Content creates `jobs.json` (jobs v1) and teaches the brief writer the new lines; this side re-tags the 64 recipes against jobs v1, builds the catalog file and the query in `tools/channel-learner/` with tests, and later wires the query into the plugin as an operation on the current main (this branch predates 0.3.0).
+
+## Advisor review (Fable, 2026-11-15) and what follows on this side
+
+Points for the plugin, not blocking tonight (the Content brief step guards each one):
+1. **Auto-loosening status contradicts decision 2.** `find` returns unproven candidates with `relaxed: ["status"]` when nothing proven passes. It should return none and name the near miss. Content treats `relaxed` status as device-only meanwhile. Fix in 0.4.1.
+2. **Pinning is promised, not delivered.** `get` with an old revision returns current text and a warning; hash revisions change on any edit. Either keep old revisions in the shipped arsenal or stop promising reproducibility. Content's wording now says "pinned for reference".
+3. **Moods are tutorial moods** (dark, retro, glow); house moods (premium, calm, lit) rarely overlap, so mood ranking is near noise. Map recipe moods to the house list.
+4. **Ranking inside a job** favours `taught_by` over everything after status, so the most-taught trick tops every list and reels converge. Add variety (rotate ties, respect `exclude`).
+5. **Next most valuable move:** re-prove the roughly 12 proven picture-job recipes on a real house frame (1080x1920, house palette) and ship those stills. "Proven" today means "matches a 16:9 tutorial", not "works in Joe's look", and the brief writer chooses from stills.
