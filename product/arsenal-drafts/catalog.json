@@ -1,6 +1,6 @@
 {
   "vocab": "jobs-v1",
-  "version": "06a8da5a",
+  "version": "956579c3",
   "jobs": [
     "land-number",
     "count-things",
@@ -403,7 +403,10 @@
       "revision": "5af2a365",
       "still": "quality/renders/channel-study/7pgDb6NKEXM/proof/11/build.png",
       "taught_by": 5,
-      "variants": []
+      "variants": [
+        "09-camera-fly-through-with-depth-of-field",
+        "06-depth-of-field-camera-push-on-null"
+      ]
     },
     {
       "id": "01-blurred-stroked-shapes-on-light-ground",
@@ -434,7 +437,7 @@
         "file": "8oVLS0ZlKC4.md",
         "heading": "Soft one-way blurred dark shapes with a bright stroke fringe on a pale ground"
       },
-      "revision": "7620130e",
+      "revision": "c83fa0bd",
       "still": null,
       "taught_by": 4,
       "variants": []
@@ -443,8 +446,8 @@
       "id": "02-glow-radial-blur-noise-finish-stack",
       "video": "8oVLS0ZlKC4",
       "n": 2,
-      "name": "Breathing glow, darkest radial blur and fine grain finish for bright scenes",
-      "line": "A three-adjustment-layer finish that makes any soft, light-backed composition bloom, pulse and gain film grit, with motion coming only from wiggle expressions. Use it over a blurred or abstract backdrop (in the tutorial, the blurred shapes of technique 01) when the frame feels static and digital.",
+      "name": "Wiggled glow, darkest radial blur and fine grain finish for bright scenes",
+      "line": "A three-adjustment-layer finish that makes any soft, light-backed composition bloom and gain film grit, with wiggle expressions on the glow radius and blur amount as its only source of movement. Use it over a blurred or abstract backdrop (in the tutorial, the blurred shapes of technique 01, whose figures are repeated in step 1) when the frame feels static and digital.",
       "status": "unproven",
       "kind": "technique",
       "job": "finish-the-look",
@@ -464,12 +467,12 @@
       "motion": "loop",
       "difficulty": 2,
       "group": "grain-and-glow finish",
-      "why": "'makes any soft, light-backed composition bloom, pulse and gain film grit'",
+      "why": "'makes any soft, light-backed composition bloom and gain film grit'",
       "section": {
         "file": "8oVLS0ZlKC4.md",
-        "heading": "Breathing glow, darkest radial blur and fine grain finish for bright scenes"
+        "heading": "Wiggled glow, darkest radial blur and fine grain finish for bright scenes"
       },
-      "revision": "37c482d0",
+      "revision": "adbbcd5e",
       "still": null,
       "taught_by": 3,
       "variants": []
@@ -478,8 +481,8 @@
       "id": "03-blurred-light-shapes-at-frame-edges",
       "video": "8oVLS0ZlKC4",
       "n": 3,
-      "name": "Drifting pockets of light from heavily blurred edge shapes",
-      "line": "Adds soft, moving patches of lighter tone around the edges of an otherwise finished frame, so the dark areas are not flat and the eye is pulled toward the centre. A quick pass to make a background feel lit and alive.",
+      "name": "Soft pockets of light from heavily blurred edge shapes",
+      "line": "Adds soft patches of lighter tone around the edges of an otherwise finished frame (with a wiggle on one blur for movement), so the dark areas are not flat and the eye is pulled toward the centre. A quick pass to make a background feel lit and alive.",
       "status": "unproven",
       "kind": "technique",
       "job": "fill-the-backdrop",
@@ -502,9 +505,9 @@
       "why": "'make a background feel lit and alive ... the eye is pulled toward the centre'",
       "section": {
         "file": "8oVLS0ZlKC4.md",
-        "heading": "Drifting pockets of light from heavily blurred edge shapes"
+        "heading": "Soft pockets of light from heavily blurred edge shapes"
       },
-      "revision": "7f0e0985",
+      "revision": "f4eb0a7d",
       "still": null,
       "taught_by": 4,
       "variants": []
@@ -539,7 +542,7 @@
         "file": "8oVLS0ZlKC4.md",
         "heading": "Liquid merge of outlined circles with blur and choke"
       },
-      "revision": "fff1d625",
+      "revision": "37495fac",
       "still": null,
       "taught_by": 4,
       "variants": []
@@ -574,7 +577,7 @@
         "file": "8oVLS0ZlKC4.md",
         "heading": "A dark mass split open behind a travelling ball"
       },
-      "revision": "ce7f0409",
+      "revision": "5554546e",
       "still": null,
       "taught_by": 4,
       "variants": []
@@ -609,7 +612,7 @@
         "file": "8oVLS0ZlKC4.md",
         "heading": "Turning a crude gradient disc into a grainy glowing orb"
       },
-      "revision": "e00e3d8c",
+      "revision": "c26250c8",
       "still": null,
       "taught_by": 3,
       "variants": []
@@ -750,7 +753,8 @@
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/04/build.png",
       "taught_by": 6,
       "variants": [
-        "03-graphics-orbit-a-real-object"
+        "03-graphics-orbit-a-real-object",
+        "04-duplicate-cards-round-the-pivot"
       ]
     },
     {
@@ -817,7 +821,10 @@
       "revision": "55063a18",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/06/build.png",
       "taught_by": 6,
-      "variants": []
+      "variants": [
+        "07-3d-spinning-box-of-cards",
+        "10-inner-ring-carousel"
+      ]
     },
     {
       "id": "07-face-the-camera",
@@ -878,7 +885,7 @@
       },
       "revision": "1ecba9c9",
       "still": null,
-      "taught_by": 3,
+      "taught_by": 1,
       "variants": []
     },
     {
@@ -949,7 +956,9 @@
       "revision": "f4725be7",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/10/build.png",
       "taught_by": 2,
-      "variants": []
+      "variants": [
+        "07-leaf-particles-blown-across"
+      ]
     },
     {
       "id": "11-white-on-light-finish",
@@ -1088,7 +1097,9 @@
       "revision": "b210d945",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/14/build.png",
       "taught_by": 3,
-      "variants": []
+      "variants": [
+        "02-backlit-environment-light-with-shadow-floor"
+      ]
     },
     {
       "id": "15-grow-bounds-fix",
@@ -1154,7 +1165,9 @@
       "revision": "45bd25eb",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/16/build.png",
       "taught_by": 5,
-      "variants": []
+      "variants": [
+        "04-camera-depth-of-field-focus-lock-dolly"
+      ]
     },
     {
       "id": "17-depth-fog",
@@ -1220,7 +1233,9 @@
       "revision": "8c8e30dd",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/18/build.png",
       "taught_by": 2,
-      "variants": []
+      "variants": [
+        "05-per-character-3d-fly-in-ramp-up"
+      ]
     },
     {
       "id": "19-text-on-a-path",
@@ -1254,7 +1269,9 @@
       "revision": "d8d51815",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/19/build.png",
       "taught_by": 2,
-      "variants": []
+      "variants": [
+        "09-rotating-3d-text-ring-loop"
+      ]
     },
     {
       "id": "20-two-pass-glow",
@@ -1452,7 +1469,9 @@
       "revision": "8c6d3c5f",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/25/build.png",
       "taught_by": 2,
-      "variants": []
+      "variants": [
+        "01-rounded-shape-matte-media-card"
+      ]
     },
     {
       "id": "01-rounded-shape-matte-media-card",
@@ -1485,9 +1504,10 @@
         "file": "ZqRE3ho8iP4.md",
         "heading": "Rounded-rectangle matte card that carries its media and labels"
       },
-      "revision": "987d70ca",
+      "revision": "6305ccdf",
       "still": null,
       "taught_by": 2,
+      "variant_of": "25-custom-media-frame",
       "variants": []
     },
     {
@@ -1519,7 +1539,7 @@
         "file": "ZqRE3ho8iP4.md",
         "heading": "Card that swings round a pivot below the frame, one step at a time, forever"
       },
-      "revision": "aef43825",
+      "revision": "e8d498e7",
       "still": null,
       "taught_by": 1,
       "variants": []
@@ -1553,7 +1573,7 @@
         "file": "ZqRE3ho8iP4.md",
         "heading": "Card shrinks and leans outward at the ends of its swing"
       },
-      "revision": "4dc3ff2c",
+      "revision": "66c61d6a",
       "still": null,
       "taught_by": 1,
       "variants": []
@@ -1587,9 +1607,10 @@
         "file": "ZqRE3ho8iP4.md",
         "heading": "Chained copies of a swinging card, placed with a helper null"
       },
-      "revision": "c642968f",
+      "revision": "fafb7596",
       "still": null,
       "taught_by": 6,
+      "variant_of": "04-carousel-by-rotation",
       "variants": []
     },
     {
@@ -1622,7 +1643,7 @@
         "file": "ZqRE3ho8iP4.md",
         "heading": "Cards orbiting an ellipse drawn as a mask"
       },
-      "revision": "0a285402",
+      "revision": "cc03a86c",
       "still": null,
       "taught_by": 2,
       "variants": []
@@ -1657,7 +1678,7 @@
         "file": "ZqRE3ho8iP4.md",
         "heading": "Cards growing along a drawn path into a stacked trail"
       },
-      "revision": "8624fbb9",
+      "revision": "8a4d9a97",
       "still": null,
       "taught_by": 2,
       "variants": []
@@ -1692,9 +1713,10 @@
         "file": "ZqRE3ho8iP4.md",
         "heading": "Spinning square box built from four 3D cards"
       },
-      "revision": "257f8710",
+      "revision": "218a6bac",
       "still": null,
       "taught_by": 6,
+      "variant_of": "06-3d-orbit-rings",
       "variants": []
     },
     {
@@ -1727,7 +1749,7 @@
         "file": "ZqRE3ho8iP4.md",
         "heading": "Counter-spinning tunnel from stacked card boxes"
       },
-      "revision": "5cabc2f0",
+      "revision": "c5ca4eb3",
       "still": null,
       "taught_by": 1,
       "variants": []
@@ -1763,9 +1785,10 @@
         "file": "ZqRE3ho8iP4.md",
         "heading": "Camera push into the card tunnel with depth of field"
       },
-      "revision": "df331963",
+      "revision": "f486c2fd",
       "still": null,
       "taught_by": 5,
+      "variant_of": "11-camera-depth-of-field-advanced-3d",
       "variants": []
     },
     {
@@ -1798,9 +1821,10 @@
         "file": "ZqRE3ho8iP4.md",
         "heading": "Ring of 3D photo cards seen from inside"
       },
-      "revision": "6aaef1bc",
+      "revision": "f6e85b1b",
       "still": null,
       "taught_by": 6,
+      "variant_of": "06-3d-orbit-rings",
       "variants": []
     },
     {
@@ -1831,7 +1855,7 @@
         "file": "ZqRE3ho8iP4.md",
         "heading": "Wide-lens camera inside the card ring"
       },
-      "revision": "9d356f19",
+      "revision": "0aeddeb5",
       "still": null,
       "taught_by": 1,
       "variants": []
@@ -1866,7 +1890,7 @@
         "file": "eoBEBx1PbS4.md",
         "heading": "Bevelled 3D text wrapped in a tiled material"
       },
-      "revision": "f3337a2e",
+      "revision": "7111fca6",
       "still": null,
       "taught_by": 3,
       "variants": []
@@ -1901,9 +1925,10 @@
         "file": "eoBEBx1PbS4.md",
         "heading": "Backlit environment light over a shadow-only floor"
       },
-      "revision": "57bcf211",
+      "revision": "813da270",
       "still": null,
       "taught_by": 3,
+      "variant_of": "14-3d-floor-shadows",
       "variants": []
     },
     {
@@ -1936,7 +1961,7 @@
         "file": "eoBEBx1PbS4.md",
         "heading": "Shadowless parallel light as an extra backlight"
       },
-      "revision": "fad26040",
+      "revision": "0f24c9e6",
       "still": null,
       "taught_by": 1,
       "variants": []
@@ -1969,7 +1994,7 @@
         "file": "eoBEBx1PbS4.md",
         "heading": "Soft front fill from a point light with smooth falloff"
       },
-      "revision": "bf8ba489",
+      "revision": "accf500e",
       "still": null,
       "taught_by": 1,
       "variants": []
@@ -1978,7 +2003,7 @@
       "id": "05-per-character-3d-fly-in-ramp-up",
       "video": "eoBEBx1PbS4",
       "n": 5,
-      "name": "Letters tumble in from behind the camera, one after another",
+      "name": "Letters tumble in from just in front of the lens, one after another",
       "line": "A smooth, weighty title entrance for extruded 3D type: each letter starts turned and in front of the lens, then swings into place in a rolling wave, so the word assembles itself without any hard pop.",
       "status": "unproven",
       "kind": "technique",
@@ -2002,11 +2027,12 @@
       "why": "'A smooth, weighty title entrance for extruded 3D type ... the word assembles itself'",
       "section": {
         "file": "eoBEBx1PbS4.md",
-        "heading": "Letters tumble in from behind the camera, one after another"
+        "heading": "Letters tumble in from just in front of the lens, one after another"
       },
-      "revision": "1e910df2",
+      "revision": "95094a0c",
       "still": null,
       "taught_by": 2,
+      "variant_of": "18-smooth-text-reveal",
       "variants": []
     },
     {
@@ -2038,9 +2064,10 @@
         "file": "eoBEBx1PbS4.md",
         "heading": "Depth-of-field camera on a null, pushed in through the shot"
       },
-      "revision": "cecbb36e",
+      "revision": "d1f6287b",
       "still": null,
       "taught_by": 5,
+      "variant_of": "11-camera-depth-of-field-advanced-3d",
       "variants": []
     },
     {
@@ -2073,7 +2100,7 @@
         "file": "eoBEBx1PbS4.md",
         "heading": "Warm-sided metal title: textured faces, plain tinted sides"
       },
-      "revision": "96d7263f",
+      "revision": "c21c2d9c",
       "still": null,
       "taught_by": 3,
       "variants": []
@@ -2082,8 +2109,8 @@
       "id": "08-outline-only-3d-title",
       "video": "eoBEBx1PbS4",
       "n": 8,
-      "name": "Hollow chrome outline title: only the extruded edge renders",
-      "line": "A cut-out, stroke-like 3D title for a sleek or dark mood: the letter faces vanish and only the lit extrusion walls remain, so the word reads as a hollow metal outline standing on a floor.",
+      "name": "Hollow chrome outline title: faces hidden, bevels and walls remain",
+      "line": "A cut-out, stroke-like 3D title for a sleek or dark mood: the letter faces vanish and only the rounded bevels and the extrusion walls remain, so the word reads as a hollow metal outline standing on a floor.",
       "status": "unproven",
       "kind": "technique",
       "job": "reveal-headline",
@@ -2106,9 +2133,9 @@
       "why": "'A cut-out, stroke-like 3D title for a sleek or dark mood'",
       "section": {
         "file": "eoBEBx1PbS4.md",
-        "heading": "Hollow chrome outline title: only the extruded edge renders"
+        "heading": "Hollow chrome outline title: faces hidden, bevels and walls remain"
       },
-      "revision": "983b4b1f",
+      "revision": "fdb05df9",
       "still": null,
       "taught_by": 3,
       "variants": []
@@ -2144,9 +2171,10 @@
         "file": "eoBEBx1PbS4.md",
         "heading": "Spinning ring of standing 3D letters, stackable"
       },
-      "revision": "351145a5",
+      "revision": "a5ed1d79",
       "still": null,
       "taught_by": 2,
+      "variant_of": "19-text-on-a-path",
       "variants": []
     },
     {
@@ -2175,7 +2203,7 @@
         "file": "il_OcNyqDOE.md",
         "heading": "Found vector art, one object per file, laid out as separate layers"
       },
-      "revision": "d5c78a40",
+      "revision": "4f6aed0b",
       "still": null,
       "taught_by": 1,
       "variants": []
@@ -2209,7 +2237,7 @@
         "file": "il_OcNyqDOE.md",
         "heading": "One mood grade for mismatched art: Tritone plus a single-point Curves, pasted to every layer"
       },
-      "revision": "b858b451",
+      "revision": "72dcb2f7",
       "still": null,
       "taught_by": 1,
       "variants": []
@@ -2243,7 +2271,7 @@
         "file": "il_OcNyqDOE.md",
         "heading": "Flat cut-outs into a deep stage: push far layers back in Z, pull near ones forward, rescale to frame"
       },
-      "revision": "d871fbdb",
+      "revision": "daf37d2f",
       "still": null,
       "taught_by": 2,
       "variants": []
@@ -2279,9 +2307,10 @@
         "file": "il_OcNyqDOE.md",
         "heading": "Depth-of-field camera locked on the subject, with a slow dolly in"
       },
-      "revision": "4baff6c1",
+      "revision": "3b47a9f2",
       "still": null,
       "taught_by": 5,
+      "variant_of": "16-lock-focus-to-layer",
       "variants": []
     },
     {
@@ -2313,7 +2342,7 @@
         "file": "il_OcNyqDOE.md",
         "heading": "Endless wind sway from two rotation keys and a ping-pong loop"
       },
-      "revision": "1cb03031",
+      "revision": "b0e13bd1",
       "still": null,
       "taught_by": 1,
       "variants": []
@@ -2341,13 +2370,13 @@
       "duration": 6,
       "motion": "loop",
       "difficulty": 1,
-      "group": "wave warp wind",
+      "group": null,
       "why": "'Makes a field of many thin blades ... move in the wind ... it moves on its own'",
       "section": {
         "file": "il_OcNyqDOE.md",
         "heading": "Grass rippling in the wind with Wave Warp"
       },
-      "revision": "e6a8aee2",
+      "revision": "2afa00ea",
       "still": null,
       "taught_by": 1,
       "variants": []
@@ -2382,9 +2411,10 @@
         "file": "il_OcNyqDOE.md",
         "heading": "Leaves blown across the frame with textured particles"
       },
-      "revision": "59d14a07",
+      "revision": "00cf265a",
       "still": null,
       "taught_by": 2,
+      "variant_of": "10-graphic-as-particles",
       "variants": []
     },
     {
@@ -2417,44 +2447,9 @@
         "file": "il_OcNyqDOE.md",
         "heading": "Rain slanted to match the wind"
       },
-      "revision": "8f1f79ee",
+      "revision": "be19bdd5",
       "still": null,
       "taught_by": 1,
-      "variants": []
-    },
-    {
-      "id": "09-puppet-pin-subtle-character-motion",
-      "video": "il_OcNyqDOE",
-      "n": 9,
-      "name": "Small body shifts on a wide-shot figure with puppet pins",
-      "line": "Keeps a still character from looking frozen in a wide establishing shot by nudging a few puppet pins, enough to read as breathing or shifting weight. Assumes the character is its own layer in the scene (technique 01), here already carrying the scene grade (technique 02).",
-      "status": "unproven",
-      "kind": "technique",
-      "job": "keep-it-alive",
-      "support": [
-        "establish-place"
-      ],
-      "mood": [
-        "illustration",
-        "calm",
-        "subtle"
-      ],
-      "needs": [
-        "character",
-        "illustration"
-      ],
-      "duration": 5,
-      "motion": "one-shot",
-      "difficulty": 2,
-      "group": "puppet pins",
-      "why": "'Keeps a still character from looking frozen in a wide establishing shot'",
-      "section": {
-        "file": "il_OcNyqDOE.md",
-        "heading": "Small body shifts on a wide-shot figure with puppet pins"
-      },
-      "revision": "51175c8a",
-      "still": null,
-      "taught_by": 3,
       "variants": []
     },
     {
@@ -2484,7 +2479,7 @@
         "file": "il_OcNyqDOE.md",
         "heading": "Film-stock grain and mood finish on a top adjustment layer"
       },
-      "revision": "78d8fc73",
+      "revision": "081295b2",
       "still": null,
       "taught_by": 3,
       "variants": []
@@ -2521,42 +2516,9 @@
         "file": "il_OcNyqDOE.md",
         "heading": "Long-lens close-up that matches the wide shot"
       },
-      "revision": "27a97373",
+      "revision": "e6446569",
       "still": null,
       "taught_by": 2,
-      "variants": []
-    },
-    {
-      "id": "12-isolated-hair-wave-and-puppet",
-      "video": "il_OcNyqDOE",
-      "n": 12,
-      "name": "Wind in a still character's hair",
-      "line": "Assumes a single flat character image already placed and graded in a close-up comp (technique 11). Gives a still illustrated character life in a close-up by letting only the hair drift, without a rigged model.",
-      "status": "unproven",
-      "kind": "technique",
-      "job": "keep-it-alive",
-      "support": [],
-      "mood": [
-        "illustration",
-        "calm",
-        "subtle"
-      ],
-      "needs": [
-        "character",
-        "illustration"
-      ],
-      "duration": 5,
-      "motion": "one-shot",
-      "difficulty": 3,
-      "group": "puppet pins",
-      "why": "'Gives a still illustrated character life in a close-up by letting only the hair drift'",
-      "section": {
-        "file": "il_OcNyqDOE.md",
-        "heading": "Wind in a still character's hair"
-      },
-      "revision": "62e1b40d",
-      "still": null,
-      "taught_by": 3,
       "variants": []
     },
     {
@@ -2589,7 +2551,7 @@
         "file": "il_OcNyqDOE.md",
         "heading": "Side-light a face with a matted Curves layer"
       },
-      "revision": "6dc3df1a",
+      "revision": "a0e2e0a2",
       "still": null,
       "taught_by": 2,
       "variants": []

@@ -1,6 +1,6 @@
 {
  "vocab": "jobs-v1",
- "version": "06a8da5a",
+ "version": "956579c3",
  "jobs": [
   "land-number",
   "count-things",
@@ -378,7 +378,10 @@
    "motion": "one-shot",
    "difficulty": 3,
    "taught_by": 5,
-   "variants": [],
+   "variants": [
+    "09-camera-fly-through-with-depth-of-field",
+    "06-depth-of-field-camera-push-on-null"
+   ],
    "section": {
     "document": "arsenal-connective",
     "heading": "Depth of field on a row of glossy plates (Advanced 3D camera)"
@@ -390,7 +393,7 @@
   },
   {
    "id": "01-blurred-stroked-shapes-on-light-ground",
-   "revision": "7620130e",
+   "revision": "c83fa0bd",
    "name": "Soft one-way blurred dark shapes with a bright stroke fringe on a pale ground",
    "line": "Turns two flat, crude shapes into a soft, lens-like backdrop in under a minute. Reach for it when a title or scene needs an organic, out-of-focus base layer rather than hard vector art.",
    "status": "unproven",
@@ -420,9 +423,9 @@
   },
   {
    "id": "02-glow-radial-blur-noise-finish-stack",
-   "revision": "37c482d0",
-   "name": "Breathing glow, darkest radial blur and fine grain finish for bright scenes",
-   "line": "A three-adjustment-layer finish that makes any soft, light-backed composition bloom, pulse and gain film grit, with motion coming only from wiggle expressions. Use it over a blurred or abstract backdrop (in the tutorial, the blurred shapes of technique 01) when the frame feels static and digital.",
+   "revision": "adbbcd5e",
+   "name": "Wiggled glow, darkest radial blur and fine grain finish for bright scenes",
+   "line": "A three-adjustment-layer finish that makes any soft, light-backed composition bloom and gain film grit, with wiggle expressions on the glow radius and blur amount as its only source of movement. Use it over a blurred or abstract backdrop (in the tutorial, the blurred shapes of technique 01, whose figures are repeated in step 1) when the frame feels static and digital.",
    "status": "unproven",
    "kind": "technique",
    "job": "finish-the-look",
@@ -445,15 +448,15 @@
    "variants": [],
    "section": {
     "document": "arsenal-picture",
-    "heading": "Breathing glow, darkest radial blur and fine grain finish for bright scenes"
+    "heading": "Wiggled glow, darkest radial blur and fine grain finish for bright scenes"
    },
    "still": null
   },
   {
    "id": "03-blurred-light-shapes-at-frame-edges",
-   "revision": "7f0e0985",
-   "name": "Drifting pockets of light from heavily blurred edge shapes",
-   "line": "Adds soft, moving patches of lighter tone around the edges of an otherwise finished frame, so the dark areas are not flat and the eye is pulled toward the centre. A quick pass to make a background feel lit and alive.",
+   "revision": "f4eb0a7d",
+   "name": "Soft pockets of light from heavily blurred edge shapes",
+   "line": "Adds soft patches of lighter tone around the edges of an otherwise finished frame (with a wiggle on one blur for movement), so the dark areas are not flat and the eye is pulled toward the centre. A quick pass to make a background feel lit and alive.",
    "status": "unproven",
    "kind": "technique",
    "job": "fill-the-backdrop",
@@ -476,13 +479,13 @@
    "variants": [],
    "section": {
     "document": "arsenal-picture",
-    "heading": "Drifting pockets of light from heavily blurred edge shapes"
+    "heading": "Soft pockets of light from heavily blurred edge shapes"
    },
    "still": null
   },
   {
    "id": "04-blur-and-choke-gooey-morph",
-   "revision": "fff1d625",
+   "revision": "37495fac",
    "name": "Liquid merge of outlined circles with blur and choke",
    "line": "Makes separate shapes fuse like drops of liquid when one drifts into another, so a plain layout of circles becomes an organic, slow-breathing background or a morph between two forms.",
    "status": "unproven",
@@ -513,7 +516,7 @@
   },
   {
    "id": "05-path-opening-split-driven-by-moving-ball",
-   "revision": "ce7f0409",
+   "revision": "5554546e",
    "name": "A dark mass split open behind a travelling ball",
    "line": "A small ball crosses the frame and a large dark form tears open behind it, revealing the light ground; good for line-led animation, progress moments or a reveal that clears space for a headline.",
    "status": "unproven",
@@ -544,7 +547,7 @@
   },
   {
    "id": "06-gradient-shapes-blur-noise-glow-posterize",
-   "revision": "e00e3d8c",
+   "revision": "c26250c8",
    "name": "Turning a crude gradient disc into a grainy glowing orb",
    "line": "Rescues a deliberately plain graphic (two gradient circles) into a soft, filmic hero object for a title card or an event poster background, using only blur, heavy grain, a huge glow and posterize.",
    "status": "unproven",
@@ -697,7 +700,8 @@
    "difficulty": 2,
    "taught_by": 6,
    "variants": [
-    "03-graphics-orbit-a-real-object"
+    "03-graphics-orbit-a-real-object",
+    "04-duplicate-cards-round-the-pivot"
    ],
    "section": {
     "document": "arsenal-line",
@@ -759,7 +763,10 @@
    "motion": "loop",
    "difficulty": 2,
    "taught_by": 6,
-   "variants": [],
+   "variants": [
+    "07-3d-spinning-box-of-cards",
+    "10-inner-ring-carousel"
+   ],
    "section": {
     "document": "arsenal-connective",
     "heading": "Tilted 3D ring of discs orbiting a centre"
@@ -815,7 +822,7 @@
    "duration": 0,
    "motion": "one-shot",
    "difficulty": 2,
-   "taught_by": 3,
+   "taught_by": 1,
    "variants": [],
    "section": {
     "document": "arsenal-build-aid",
@@ -881,7 +888,9 @@
    "motion": "loop",
    "difficulty": 2,
    "taught_by": 2,
-   "variants": [],
+   "variants": [
+    "07-leaf-particles-blown-across"
+   ],
    "section": {
     "document": "arsenal-connective",
     "heading": "Leaf-shaped particles from any graphic"
@@ -1016,7 +1025,9 @@
    "motion": "still",
    "difficulty": 2,
    "taught_by": 3,
-   "variants": [],
+   "variants": [
+    "02-backlit-environment-light-with-shadow-floor"
+   ],
    "section": {
     "document": "arsenal-picture",
     "heading": "Real cast shadows on an invisible 3D floor"
@@ -1077,7 +1088,9 @@
    "motion": "one-shot",
    "difficulty": 1,
    "taught_by": 5,
-   "variants": [],
+   "variants": [
+    "04-camera-depth-of-field-focus-lock-dolly"
+   ],
    "section": {
     "document": "arsenal-connective",
     "heading": "Keep a chosen layer sharp while the camera travels"
@@ -1141,7 +1154,9 @@
    "motion": "one-shot",
    "difficulty": 2,
    "taught_by": 2,
-   "variants": [],
+   "variants": [
+    "05-per-character-3d-fly-in-ramp-up"
+   ],
    "section": {
     "document": "arsenal-line",
     "heading": "Soft word-by-word rise-and-fade text reveal"
@@ -1174,7 +1189,9 @@
    "motion": "loop",
    "difficulty": 2,
    "taught_by": 2,
-   "variants": [],
+   "variants": [
+    "09-rotating-3d-text-ring-loop"
+   ],
    "section": {
     "document": "arsenal-line",
     "heading": "Text that runs round a drawn path"
@@ -1357,7 +1374,9 @@
    "motion": "still",
    "difficulty": 1,
    "taught_by": 2,
-   "variants": [],
+   "variants": [
+    "01-rounded-shape-matte-media-card"
+   ],
    "section": {
     "document": "arsenal-line",
     "heading": "Frame video in a custom shape with a track matte"
@@ -1369,7 +1388,7 @@
   },
   {
    "id": "01-rounded-shape-matte-media-card",
-   "revision": "987d70ca",
+   "revision": "6305ccdf",
    "name": "Rounded-rectangle matte card that carries its media and labels",
    "line": "Turns any photo or clip into a tidy rounded card whose size and position are driven by one shape layer, so the card can later be swung, scaled or duplicated as a unit. Reach for it as the base piece of any card carousel or media stack.",
    "status": "unproven",
@@ -1392,6 +1411,7 @@
    "motion": "still",
    "difficulty": 2,
    "taught_by": 2,
+   "variant_of": "25-custom-media-frame",
    "variants": [],
    "section": {
     "document": "arsenal-line",
@@ -1401,7 +1421,7 @@
   },
   {
    "id": "02-pivot-null-swing-loop",
-   "revision": "aef43825",
+   "revision": "e8d498e7",
    "name": "Card that swings round a pivot below the frame, one step at a time, forever",
    "line": "Gives a card (or later a row of cards) a carousel step: it swings in from one side on a big arc, settles upright, pauses, then swings out the other side, and the step repeats endlessly from only three keyframes. Use it for product or photo carousels, list reveals, or any \"next item\" rhythm.",
    "status": "unproven",
@@ -1431,7 +1451,7 @@
   },
   {
    "id": "03-tilt-and-shrink-on-swing",
-   "revision": "4dc3ff2c",
+   "revision": "66c61d6a",
    "name": "Card shrinks and leans outward at the ends of its swing",
    "line": "Adds a size-and-lean change on top of the pivot swing so the card is small and tipped outward while it is off to the side and full size and upright when it reaches the top. This is what makes a swinging carousel feel like it is \"resizing\" and gives the centred item its emphasis.",
    "status": "unproven",
@@ -1461,7 +1481,7 @@
   },
   {
    "id": "04-duplicate-cards-round-the-pivot",
-   "revision": "c642968f",
+   "revision": "fafb7596",
    "name": "Chained copies of a swinging card, placed with a helper null",
    "line": "Turns one looping swing card into a carousel of several cards that follow each other round the same pivot, one swing step apart, so a new card always arrives as the previous one leaves. Reach for it for product, photo or profile carousels where each beat shows the next item.",
    "status": "unproven",
@@ -1482,6 +1502,7 @@
    "motion": "loop",
    "difficulty": 3,
    "taught_by": 6,
+   "variant_of": "04-carousel-by-rotation",
    "variants": [],
    "section": {
     "document": "arsenal-line",
@@ -1491,7 +1512,7 @@
   },
   {
    "id": "05-mask-path-to-position-loop",
-   "revision": "0a285402",
+   "revision": "cc03a86c",
    "name": "Cards orbiting an ellipse drawn as a mask",
    "line": "Sends a ring of photo cards round an oval forever, framing a title or product in the middle. Use it for an endless moodboard or gallery loop behind a headline, or a hold that has to run for any length.",
    "status": "unproven",
@@ -1522,7 +1543,7 @@
   },
   {
    "id": "06-path-trail-scale-rotate-in",
-   "revision": "8624fbb9",
+   "revision": "8a4d9a97",
    "name": "Cards growing along a drawn path into a stacked trail",
    "line": "A stream of photo cards is born as specks, grows and straightens as it sweeps along a looping path, and brakes to a stop in a fanned stack. Use it for a gallery reveal, a \"many stories\" opener, or a build-up behind a title.",
    "status": "unproven",
@@ -1553,7 +1574,7 @@
   },
   {
    "id": "07-3d-spinning-box-of-cards",
-   "revision": "257f8710",
+   "revision": "218a6bac",
    "name": "Spinning square box built from four 3D cards",
    "line": "Turns a handful of photo cards into a rotating four-walled box seen end-on, a quick 3D showcase loop for a gallery or \"many images\" moment, and the base unit for the tunnel in 08.",
    "status": "unproven",
@@ -1575,6 +1596,7 @@
    "motion": "loop",
    "difficulty": 3,
    "taught_by": 6,
+   "variant_of": "06-3d-orbit-rings",
    "variants": [],
    "section": {
     "document": "arsenal-connective",
@@ -1584,7 +1606,7 @@
   },
   {
    "id": "08-tunnel-from-stacked-boxes",
-   "revision": "5cabc2f0",
+   "revision": "c5ca4eb3",
    "name": "Counter-spinning tunnel from stacked card boxes",
    "line": "Extends the spinning box (07) into a deep tunnel of photo walls whose alternate rings turn in opposite directions; a hypnotic gallery loop or the set for a camera fly-through (09).",
    "status": "unproven",
@@ -1615,7 +1637,7 @@
   },
   {
    "id": "09-camera-fly-through-with-depth-of-field",
-   "revision": "df331963",
+   "revision": "f486c2fd",
    "name": "Camera push into the card tunnel with depth of field",
    "line": "Flies the viewer into the counter-spinning card tunnel (08) while shallow focus melts the near and far walls, for an immersive opener or transition through a wall of images.",
    "status": "unproven",
@@ -1638,6 +1660,7 @@
    "motion": "transition",
    "difficulty": 1,
    "taught_by": 5,
+   "variant_of": "11-camera-depth-of-field-advanced-3d",
    "variants": [],
    "section": {
     "document": "arsenal-connective",
@@ -1647,7 +1670,7 @@
   },
   {
    "id": "10-inner-ring-carousel",
-   "revision": "6aaef1bc",
+   "revision": "f6e85b1b",
    "name": "Ring of 3D photo cards seen from inside",
    "line": "Puts the viewer in the middle of a slowly turning ring of photo cards, so a gallery wraps around the frame instead of sliding past it. Reach for it for a portfolio, lookbook or \"many stories\" moment.",
    "status": "unproven",
@@ -1669,6 +1692,7 @@
    "motion": "loop",
    "difficulty": 2,
    "taught_by": 6,
+   "variant_of": "06-3d-orbit-rings",
    "variants": [],
    "section": {
     "document": "arsenal-connective",
@@ -1678,7 +1702,7 @@
   },
   {
    "id": "11-wide-lens-camera-distortion",
-   "revision": "9d356f19",
+   "revision": "0aeddeb5",
    "name": "Wide-lens camera inside the card ring",
    "line": "A one-step finish for the ring of cards in 10-inner-ring-carousel: a short-focal-length camera stretches the perspective so the ring reads as a wide, immersive sweep rather than three flat cards. Use it whenever a 3D layout looks too flat under the default view.",
    "status": "unproven",
@@ -1707,7 +1731,7 @@
   },
   {
    "id": "01-bevelled-3d-text-material-texture",
-   "revision": "f3337a2e",
+   "revision": "7111fca6",
    "name": "Bevelled 3D text wrapped in a tiled material",
    "line": "Turns a flat title into a solid, physical object with rounded edges and a real surface (metal, stone, paint) in a few clicks; the base for any lit 3D title shot.",
    "status": "unproven",
@@ -1738,7 +1762,7 @@
   },
   {
    "id": "02-backlit-environment-light-with-shadow-floor",
-   "revision": "57bcf211",
+   "revision": "813da270",
    "name": "Backlit environment light over a shadow-only floor",
    "line": "The quick way to make a textured 3D title look photographed rather than flat: one environment light turned round behind the text so long soft shadows fall toward the viewer onto an invisible floor, with a slow light swing for movement.",
    "status": "unproven",
@@ -1760,6 +1784,7 @@
    "motion": "one-shot",
    "difficulty": 2,
    "taught_by": 3,
+   "variant_of": "14-3d-floor-shadows",
    "variants": [],
    "section": {
     "document": "arsenal-picture",
@@ -1769,7 +1794,7 @@
   },
   {
    "id": "03-parallel-rim-light-no-shadows",
-   "revision": "fad26040",
+   "revision": "0f24c9e6",
    "name": "Shadowless parallel light as an extra backlight",
    "line": "A small finishing touch on a lit 3D title: a second, shadowless directional light from behind and to one side brightens the edges and tops of the letters without adding a second set of shadows.",
    "status": "unproven",
@@ -1800,7 +1825,7 @@
   },
   {
    "id": "04-point-light-falloff-front-fill",
-   "revision": "bf8ba489",
+   "revision": "accf500e",
    "name": "Soft front fill from a point light with smooth falloff",
    "line": "Reach for this when lit 3D type reads as one flat wash from the front; a small, soft pool of light off to one side gives the faces a gentle gradient so the letters stop looking evenly lit.",
    "status": "unproven",
@@ -1829,8 +1854,8 @@
   },
   {
    "id": "05-per-character-3d-fly-in-ramp-up",
-   "revision": "1e910df2",
-   "name": "Letters tumble in from behind the camera, one after another",
+   "revision": "95094a0c",
+   "name": "Letters tumble in from just in front of the lens, one after another",
    "line": "A smooth, weighty title entrance for extruded 3D type: each letter starts turned and in front of the lens, then swings into place in a rolling wave, so the word assembles itself without any hard pop.",
    "status": "unproven",
    "kind": "technique",
@@ -1851,16 +1876,17 @@
    "motion": "one-shot",
    "difficulty": 3,
    "taught_by": 2,
+   "variant_of": "18-smooth-text-reveal",
    "variants": [],
    "section": {
     "document": "arsenal-line",
-    "heading": "Letters tumble in from behind the camera, one after another"
+    "heading": "Letters tumble in from just in front of the lens, one after another"
    },
    "still": null
   },
   {
    "id": "06-depth-of-field-camera-push-on-null",
-   "revision": "cecbb36e",
+   "revision": "d1f6287b",
    "name": "Depth-of-field camera on a null, pushed in through the shot",
    "line": "Add this on top of a 3D type entrance to make it feel filmed: letters close to the lens go soft, and a slow camera push keeps the frame alive after the word has landed.",
    "status": "unproven",
@@ -1881,6 +1907,7 @@
    "motion": "one-shot",
    "difficulty": 2,
    "taught_by": 5,
+   "variant_of": "11-camera-depth-of-field-advanced-3d",
    "variants": [],
    "section": {
     "document": "arsenal-connective",
@@ -1890,7 +1917,7 @@
   },
   {
    "id": "07-gold-face-plain-sides-look",
-   "revision": "96d7263f",
+   "revision": "c21c2d9c",
    "name": "Warm-sided metal title: textured faces, plain tinted sides",
    "line": "A fast restyle of an already-built textured 3D title when you want a warmer, more polished metal read without rebuilding the material: keep the texture only where it matters and let the extruded sides catch light as a tinted metal.",
    "status": "unproven",
@@ -1921,9 +1948,9 @@
   },
   {
    "id": "08-outline-only-3d-title",
-   "revision": "983b4b1f",
-   "name": "Hollow chrome outline title: only the extruded edge renders",
-   "line": "A cut-out, stroke-like 3D title for a sleek or dark mood: the letter faces vanish and only the lit extrusion walls remain, so the word reads as a hollow metal outline standing on a floor.",
+   "revision": "fdb05df9",
+   "name": "Hollow chrome outline title: faces hidden, bevels and walls remain",
+   "line": "A cut-out, stroke-like 3D title for a sleek or dark mood: the letter faces vanish and only the rounded bevels and the extrusion walls remain, so the word reads as a hollow metal outline standing on a floor.",
    "status": "unproven",
    "kind": "technique",
    "job": "reveal-headline",
@@ -1946,13 +1973,13 @@
    "variants": [],
    "section": {
     "document": "arsenal-line",
-    "heading": "Hollow chrome outline title: only the extruded edge renders"
+    "heading": "Hollow chrome outline title: faces hidden, bevels and walls remain"
    },
    "still": null
   },
   {
    "id": "09-rotating-3d-text-ring-loop",
-   "revision": "351145a5",
+   "revision": "a5ed1d79",
    "name": "Spinning ring of standing 3D letters, stackable",
    "line": "A seamless looping title or bumper: a word repeated around a circle stands up like a carousel and turns forever, and stacked copies make a tower of rings; good for intros, loops and background type.",
    "status": "unproven",
@@ -1975,6 +2002,7 @@
    "motion": "loop",
    "difficulty": 3,
    "taught_by": 2,
+   "variant_of": "19-text-on-a-path",
    "variants": [],
    "section": {
     "document": "arsenal-line",
@@ -1984,7 +2012,7 @@
   },
   {
    "id": "01-vector-art-split-into-layers",
-   "revision": "d5c78a40",
+   "revision": "4f6aed0b",
    "name": "Found vector art, one object per file, laid out as separate layers",
    "line": "The groundwork for a lit, deep 2D scene when you cannot draw: gather ready-made vector illustrations, keep only the pieces you need, and bring every object into After Effects as its own layer so each one can later be graded and placed in depth on its own. Assumes: nothing; it starts from an empty project.",
    "status": "unproven",
@@ -2011,7 +2039,7 @@
   },
   {
    "id": "02-tritone-curves-mood-grade",
-   "revision": "b858b451",
+   "revision": "72dcb2f7",
    "name": "One mood grade for mismatched art: Tritone plus a single-point Curves, pasted to every layer",
    "line": "When a scene is built from stock pieces that do not match (saturated greens, different palettes), this pulls them into one night-time or moody colour world in a minute, before any lighting or depth work. Assumes: a composition in which every scene object is its own layer (technique 01).",
    "status": "unproven",
@@ -2041,7 +2069,7 @@
   },
   {
    "id": "03-z-depth-push-and-rescale",
-   "revision": "d871fbdb",
+   "revision": "daf37d2f",
    "name": "Flat cut-outs into a deep stage: push far layers back in Z, pull near ones forward, rescale to frame",
    "line": "Sets up real parallax and depth of field for a 2D illustrated scene: the picture through the default view barely changes, but layers now sit thousands of pixels apart, so any later camera move or focus pull separates them. Assumes: the scene is already split into one layer per object (technique 01) and graded (technique 02), with Tritone switched off on the stone-wall layer so its lamp glows warm (off).",
    "status": "unproven",
@@ -2071,7 +2099,7 @@
   },
   {
    "id": "04-camera-depth-of-field-focus-lock-dolly",
-   "revision": "4baff6c1",
+   "revision": "3b47a9f2",
    "name": "Depth-of-field camera locked on the subject, with a slow dolly in",
    "line": "Turns a staged 2D-in-3D layout into a filmed shot: near and far layers fall out of focus, the subject stays sharp, and a short push-in gives the opening beat life without any layer being animated.",
    "status": "unproven",
@@ -2094,6 +2122,7 @@
    "motion": "one-shot",
    "difficulty": 2,
    "taught_by": 5,
+   "variant_of": "16-lock-focus-to-layer",
    "variants": [],
    "section": {
     "document": "arsenal-connective",
@@ -2103,7 +2132,7 @@
   },
   {
    "id": "05-looping-wind-sway-rotation",
-   "revision": "1cb03031",
+   "revision": "b0e13bd1",
    "name": "Endless wind sway from two rotation keys and a ping-pong loop",
    "line": "Gives a still illustrated scene a reason to move (wind) with almost no keyframing: each branch or tree rocks back and forth forever from just two keys.",
    "status": "unproven",
@@ -2133,7 +2162,7 @@
   },
   {
    "id": "06-wave-warp-grass-wind",
-   "revision": "e6a8aee2",
+   "revision": "2afa00ea",
    "name": "Grass rippling in the wind with Wave Warp",
    "line": "Makes a field of many thin blades (grass, reeds, fur-like edges) move in the wind without animating a single blade: one effect, one setting, and it moves on its own.",
    "status": "unproven",
@@ -2163,7 +2192,7 @@
   },
   {
    "id": "07-leaf-particles-blown-across",
-   "revision": "59d14a07",
+   "revision": "00cf265a",
    "name": "Leaves blown across the frame with textured particles",
    "line": "Sells wind in an illustrated scene by sending a steady trickle of tumbling leaves across it from one side, without animating a single leaf by hand. Assumes a finished, graded 2D scene in a 3D comp with a camera (techniques 02–04) and the scene's Tritone plus Curves grade on a layer to copy from.",
    "status": "unproven",
@@ -2185,6 +2214,7 @@
    "motion": "loop",
    "difficulty": 3,
    "taught_by": 2,
+   "variant_of": "10-graphic-as-particles",
    "variants": [],
    "section": {
     "document": "arsenal-connective",
@@ -2194,7 +2224,7 @@
   },
   {
    "id": "08-rainfall-matched-to-wind",
-   "revision": "8f1f79ee",
+   "revision": "be19bdd5",
    "name": "Rain slanted to match the wind",
    "line": "Adds weather on top of a wind-animated scene so the motion has a reason, with the rain leaning the same way everything else is blowing. Assumes a scene that already moves in one wind direction (techniques 05–07; here the leaves enter from the left edge).",
    "status": "unproven",
@@ -2224,39 +2254,8 @@
    "still": null
   },
   {
-   "id": "09-puppet-pin-subtle-character-motion",
-   "revision": "51175c8a",
-   "name": "Small body shifts on a wide-shot figure with puppet pins",
-   "line": "Keeps a still character from looking frozen in a wide establishing shot by nudging a few puppet pins, enough to read as breathing or shifting weight. Assumes the character is its own layer in the scene (technique 01), here already carrying the scene grade (technique 02).",
-   "status": "unproven",
-   "kind": "technique",
-   "job": "keep-it-alive",
-   "support": [
-    "establish-place"
-   ],
-   "mood": [
-    "illustration",
-    "calm",
-    "subtle"
-   ],
-   "needs": [
-    "character",
-    "illustration"
-   ],
-   "duration": 5,
-   "motion": "one-shot",
-   "difficulty": 2,
-   "taught_by": 3,
-   "variants": [],
-   "section": {
-    "document": "arsenal-connective",
-    "heading": "Small body shifts on a wide-shot figure with puppet pins"
-   },
-   "still": null
-  },
-  {
    "id": "10-film-grain-finish-stack",
-   "revision": "78d8fc73",
+   "revision": "081295b2",
    "name": "Film-stock grain and mood finish on a top adjustment layer",
    "line": "The last pass on an illustrated shot: real-film grain, one last overall curve, and an optional posterize for a rougher look, all in one layer over everything. Assumes the full scene is built beneath (techniques 01–09).",
    "status": "unproven",
@@ -2284,7 +2283,7 @@
   },
   {
    "id": "11-matching-closeup-telephoto-compression",
-   "revision": "27a97373",
+   "revision": "e6446569",
    "name": "Long-lens close-up that matches the wide shot",
    "line": "Assumes a finished wide scene already exists with separate 2D layers, a cold grade on each (Tritone + Curves, technique 02), a 3D camera with depth of field (04), sway on trees (05), rain and finishing adjustment layers (08, 10). Cut from an established wide scene to a close-up of the character without building a new world: reuse the wide shot's backdrop pieces, camera and finishing layers, and push the backdrop very deep so the close-up reads as shot on a long lens.",
    "status": "unproven",
@@ -2316,37 +2315,8 @@
    "still": null
   },
   {
-   "id": "12-isolated-hair-wave-and-puppet",
-   "revision": "62e1b40d",
-   "name": "Wind in a still character's hair",
-   "line": "Assumes a single flat character image already placed and graded in a close-up comp (technique 11). Gives a still illustrated character life in a close-up by letting only the hair drift, without a rigged model.",
-   "status": "unproven",
-   "kind": "technique",
-   "job": "keep-it-alive",
-   "support": [],
-   "mood": [
-    "illustration",
-    "calm",
-    "subtle"
-   ],
-   "needs": [
-    "character",
-    "illustration"
-   ],
-   "duration": 5,
-   "motion": "one-shot",
-   "difficulty": 3,
-   "taught_by": 3,
-   "variants": [],
-   "section": {
-    "document": "arsenal-connective",
-    "heading": "Wind in a still character's hair"
-   },
-   "still": null
-  },
-  {
    "id": "13-masked-curves-relight-track-matte",
-   "revision": "6dc3df1a",
+   "revision": "a0e2e0a2",
    "name": "Side-light a face with a matted Curves layer",
    "line": "Assumes a close-up with the character on its own layer (or pre-comp) under a scene grade (techniques 11 and 12). Adds a soft wash of differently coloured light to one side of the face and hair only, so a flat close-up gains a light direction without touching the background.",
    "status": "unproven",
