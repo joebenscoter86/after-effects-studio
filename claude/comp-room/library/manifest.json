@@ -307,7 +307,7 @@
       "title": "Shared ES3 helpers for every style (AESLib)",
       "path": "styles/aes-lib.jsx",
       "kind": "code",
-      "sha256": "5a66f4849c37a71642e5e295e9b47f888732f8c3d8c15337448dd932e1325bb9"
+      "sha256": "eb49c952df6064485e19c3abfb8c82494b436479361c75b4b55e9a71b92f4136"
     },
     {
       "id": "style-art-deco",
@@ -580,14 +580,14 @@
       "title": "Pixel headline style",
       "path": "styles/pixel-headline/STYLE.md",
       "kind": "style",
-      "sha256": "a1af4bb21591126b3b8a52073ba674acbe7b26b85392773dd61966e15bbb9dbf"
+      "sha256": "985be3bc1da0adde9ea022567ef6d6597d9262c290d6377df3b77c6ad4f50747"
     },
     {
       "id": "style-pixel-headline-jsx",
       "title": "Pixel headline helpers (AESPixelHeadline)",
       "path": "styles/pixel-headline/pixelheadline.jsx",
       "kind": "code",
-      "sha256": "6700c7f96d788b2eac7a373fc42ede36345a0988e635dab3bd2cdf27a49185dd"
+      "sha256": "15c06561dbad0f9523be5b368284f39456f8c83969291b0b667df168dc926ed5"
     },
     {
       "id": "style-risograph",

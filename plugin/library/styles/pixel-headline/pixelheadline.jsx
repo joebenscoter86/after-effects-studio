@@ -310,7 +310,8 @@ var AESPixelHeadline = (function () {
     return L; }
   function tailSlide(n, size, s) { var T = SIG.type; return n > SIG.tailLong.words ? SIG.tailLong.slideEm * size : SIG.tailSlide * s * size / (T.tailSize * s); }
 
-  // ---- giant word and its glow. o = { text, at (s: W, the stressed word's spoken start), colour, glow ("auto"|"deep"|"stock"),
+  // ---- giant word and its glow. o = { text, at (s: W, the stressed word's spoken start), colour, glow ("auto"|"deep"|"stock";
+  //      auto is Deep Glow when installed and licensed), licensed (true: Deep Glow is licensed though no licence file is found),
   //      exposure (Deep Glow's peak; default the light-ground signature, SIG.dark.glowExposure on a dark ground), radius
   //      (Deep Glow's; default its own, SIG.dark.glowRadius on a dark ground), tone / darkGround, baseline (comp px),
   //      widthShare (the word's width as a share of the frame; it may pass the 85 % cap), fontShare (a fixed font size as a
@@ -332,7 +333,11 @@ var AESPixelHeadline = (function () {
     L.anchorPoint.setValue([0, -T.wordPivotUp * s]); L.position.setValue([W / 2, base - T.wordPivotUp * s]);
     sigKeys(L.scale, o.at, SIG.word, 100, dims(L.scale));
     L.inPoint = o.at;
-    var mode = o.glow || "auto", used = mode === "auto" ? (hasEffect("PEDG2") ? "deep" : "stock") : mode;
+    // Deep Glow only when installed and licensed: an unlicensed install renders the trial watermark (o.licensed: true
+    // overrides a licence stored elsewhere). Asked for by name on an unlicensed install, it is used and the report says so.
+    var mode = o.glow || "auto", dg = AESLib.effectUsable("PEDG2", { licensed: o.licensed }), used = mode === "auto" ? (dg.usable ? "deep" : "stock") : mode;
+    if (mode === "auto" && dg.installed && !dg.usable) warn.push(dg.reason);
+    if (mode === "deep" && dg.installed && !dg.usable) warn.push("Deep Glow is installed but not licensed; glow \"deep\" was asked for, so the trial watermark will render: license it, pass licensed: true, or use glow \"stock\"");
     var dk = isDark(o);
     if (used === "deep") { var e = effect(L, "PEDG2"), x = e.property(25), D = SIG.deepGlow, pk = o.exposure || (dk ? SIG.dark.glowExposure : D.keys[1][1]), t = [], v = [];
       var rad = o.radius || (dk ? SIG.dark.glowRadius : 0); if (rad) e.property("Radius").setValue(rad);
@@ -753,7 +758,7 @@ var AESPixelHeadline = (function () {
       L = leadIn(comp, { text: lead.join(" "), at: lat, prefix: P, maxChars: b.maxChars, baseline: b.leadBaseline }); scene.push(L); rep.leadAt = words[0].t;
       var n2 = ll.length > 1 ? ll[1].split(" ").length : 0, sl0 = SIG.leadDrop * k(comp); settles.push({ what: "the lead-in", at: ll.length > 1 ? lat[1] + settleTime(n2, "lead", sl0) : lat + settleTime(lead.length, "lead", sl0) });
       for (i = 0; i < ll.length; i++) lines.push({ what: "lead-in line " + (i + 1), words: ll[i].split(" ").length }); }
-    var hw = heroWord(comp, { text: words[si].text, at: W, colour: b.accent, glow: b.glow, exposure: b.exposure, darkGround: b.darkGround, tone: b.tone, baseline: b.wordBaseline, tuck: b.tuck, behind: b.tuck ? st.speaker : null, prefix: P });
+    var hw = heroWord(comp, { text: words[si].text, at: W, colour: b.accent, glow: b.glow, licensed: b.licensed, exposure: b.exposure, darkGround: b.darkGround, tone: b.tone, baseline: b.wordBaseline, tuck: b.tuck, behind: b.tuck ? st.speaker : null, prefix: P });
     rep.warnings = rep.warnings.concat(hw.warnings); settles.push({ what: "the giant word", at: W + popSettle(SIG.word, (hw.box.x1 - hw.box.x0) / 2) });
     var px = pixelBlocks(comp, { word: hw, at: W, colour: b.accent, seed: b.seed, prefix: P, blockScale: b.blockScale, count: b.blockCount, dist: b.blockDist, tone: b.tone, darkGround: b.darkGround,
       lineBand: L ? [(b.leadBaseline === undefined ? comp.height * SIG.type.leadBaseline : b.leadBaseline) - 50 * k(comp), (b.leadBaseline === undefined ? comp.height * SIG.type.leadBaseline : b.leadBaseline) + 8 * k(comp)] : null });

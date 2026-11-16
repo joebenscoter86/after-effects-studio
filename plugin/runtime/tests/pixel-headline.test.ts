@@ -46,8 +46,11 @@ class Prop {
   keyOutTemporalEase(i: number) { return this.eases[this.keys[i - 1].t]?.outE; }
 }
 
-function makeAE(opts: { deepGlow: boolean; workingSpace?: string }) {
+// deepGlow: Deep Glow installed; licence (default true): its licence file present in the fake Application Support folder
+function makeAE(opts: { deepGlow: boolean; workingSpace?: string; licence?: boolean }) {
   const comps: any[] = [];
+  const files = new Set<string>(opts.licence === false ? [] : ["/fake/AppSupport/com.aescripts.DeepGlow2.lic"]);
+  class File { constructor(public fsName: string) {} get exists() { return files.has(this.fsName); } }
   let layerId = 0;
   function makeLayer(comp: any, kind: string, name: string): any {
     const root = new Prop("root");
@@ -106,7 +109,7 @@ function makeAE(opts: { deepGlow: boolean; workingSpace?: string }) {
   function KeyframeEase(this: any, speed: number, influence: number) { this.speed = speed; this.influence = influence; }
   function Shape(this: any) { this.vertices = []; this.inTangents = []; this.outTangents = []; this.closed = true; }
   const ctx = vm.createContext({
-    app, KeyframeEase, Shape, Math,
+    app, KeyframeEase, Shape, Math, File, Folder: { userData: { fsName: "/fake/AppSupport" } },
     KeyframeInterpolationType: { LINEAR: 6612, BEZIER: 6613, HOLD: 6614 },
     PropertyValueType: { TwoD_SPATIAL: 6413, ThreeD_SPATIAL: 6412, TwoD: 6416, ThreeD: 6414, OneD: 6417 },
     TrackMatteType: { ALPHA: 1, ALPHA_INVERTED: 2, LUMA: 3 },
@@ -134,6 +137,37 @@ describe("pixel-headline module", () => {
   it("is ES3 and loads without touching After Effects", () => {
     expect(lintJsxFile(MOD_PATH).filter((f) => f.severity === "error")).toEqual([]);
     vm.runInNewContext(LIB + "\n" + MOD, { get app() { throw new Error("load touched app"); } });
+  });
+
+  it("the glow on auto: Deep Glow only when it is installed and licensed; the stock pair and a warning otherwise", () => {
+    const lic = makeAE({ deepGlow: true });
+    const a = lic.PH.heroWord(lic.comp, { text: "shots", at: 1.6 });
+    expect(a.glow).toBe("deep");
+    expect(a.layer.property("ADBE Effect Parade").kids.map((k: Prop) => k.matchName)).toContain("PEDG2");
+    const un = makeAE({ deepGlow: true, licence: false });
+    const b = un.PH.heroWord(un.comp, { text: "shots", at: 1.6 });
+    expect(b.glow).toBe("stock");
+    expect(b.layer.property("ADBE Effect Parade").kids.map((k: Prop) => k.matchName)).not.toContain("PEDG2");
+    expect(b.glowLayer.property("ADBE Effect Parade").kids.map((k: Prop) => k.matchName)).toEqual(["ADBE Glo2", "ADBE Glo2"]);
+    expect(b.warnings).toContain("Deep Glow is installed but not licensed; used the stock glow");
+    // a licence stored elsewhere: licensed: true overrides the missing file
+    const ov = makeAE({ deepGlow: true, licence: false });
+    const c = ov.PH.heroWord(ov.comp, { text: "shots", at: 1.6, licensed: true });
+    expect(c.glow).toBe("deep");
+    expect(c.warnings.join("\n")).not.toMatch(/not licensed/);
+    // the beat passes licensed through to the word
+    const bt = makeAE({ deepGlow: true, licence: false });
+    expect(bt.PH.beat(bt.comp, referenceBrief(3)).glow).toBe("stock");
+    const bt2 = makeAE({ deepGlow: true, licence: false });
+    expect(bt2.PH.beat(bt2.comp, referenceBrief(3, { licensed: true })).glow).toBe("deep");
+    expect(typeof lic.PH.hasEffect).toBe("function");
+  });
+
+  it("glow deep asked for on an unlicensed install: Deep Glow is used and the report warns of the trial watermark", () => {
+    const { PH, comp } = makeAE({ deepGlow: true, licence: false });
+    const r = PH.heroWord(comp, { text: "shots", at: 1.6, glow: "deep" });
+    expect(r.glow).toBe("deep");
+    expect(r.warnings.some((w: string) => /not licensed/.test(w) && /trial watermark will render/.test(w))).toBe(true);
   });
 
   it("the giant word: sized by letter height, keyed on the word signature from W, nothing before W", () => {
