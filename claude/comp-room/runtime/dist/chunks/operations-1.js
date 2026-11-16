@@ -1,9 +1,9 @@
 import { __esmMin } from "./rolldown-runtime.js";
 import { HEARTBEAT_STALE_MS, RUNTIME_DIR, RUNTIME_ROOT, agentInstallStatus, denyAppConfig, denyOperation, denyUnregisteredOperation, evalRunEnabled, getOp, init_agent_install, init_config, init_opschema, init_policy, init_registry, instanceDirFor, jsxCompLayerPreamble, jsxCompPreamble, jsxFail, jsxPropertyLookup, jsxVal, prepareOp, registerOp, rejectedOutputPath, resolveAfterFxPath, sanitizeInstanceId, summarizeParams, validateOpArgs, wantsUndoGroup } from "./core-1.js";
 import { ACCESSIBILITY_HINT, SCRIPT_RUNNING_HINT, buildInstanceLaunchPlan, describeInstance, dialogBlockMessage, dialogHint, dialogScanSupported, dismissAeDialog, init_dialogs, init_instances, init_launcher, instanceLabel, listInstances, readInstance, scanAeDialogs, scanAeWindows, scriptRunningMessage, splitScriptProgress } from "./transport-1.js";
-import { init_keying, init_layer, init_layer_advanced, init_layout } from "./operations-2.js";
-import { COMP_INFO_FN, LAYER_FULL_FN, LIST_MISSING_FONTS_FN, LIST_MISSING_FOOTAGE_FN, RENDER_FRAME_FN, init_shape, init_snippets, init_text, init_timeline, init_transform, init_video, init_viewer } from "./operations-4.js";
-import { init_look_sheet, init_marker, init_mask, init_pref, init_project, init_property, init_render, init_sample, init_shape_contents } from "./operations-3.js";
+import { init_keying, init_layer, init_layer_advanced } from "./operations-2.js";
+import { COMP_INFO_FN, LAYER_FULL_FN, LIST_MISSING_FONTS_FN, LIST_MISSING_FOOTAGE_FN, RENDER_FRAME_FN, init_shape, init_shape_contents, init_snippets, init_text, init_timeline, init_transform, init_video, init_viewer } from "./operations-4.js";
+import { init_layout, init_look_sheet, init_marker, init_mask, init_pref, init_project, init_property, init_render, init_sample } from "./operations-3.js";
 import { EDGE_DEFAULTS, compareReferences, compareWithSheet, composeContactSheet, cutoutRegions, decodePng, encodePngSrgb8, flattenOver, init_look, init_matte, init_png16, init_sheet, isPiece, isSheet, referenceReader, resample } from "./color-1.js";
 import { iccManagedReason, init_capture_shared, init_render_frame, renderFrameTool } from "./tools-1.js";
 import { init_decode, init_movie_rgb, init_rhythm, measureRhythm, movieColour, movieFrames, probeVideo } from "./video-1.js";
@@ -2790,7 +2790,7 @@ function liveFileIO(transport) {
 		exists: (file) => promises.access(file).then(() => true, () => false)
 	};
 }
-var compLayerParams, FX_ROOT_JSX, OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, SUBJECT_WHOLE_PIECE_NOTE, CLOSE_CLICK_SHARE, COUNT_NOTE, NEED_CLICK, subjectIndexParam, CUTOUT_HOLE_LIMIT, CUTOUT_OVER, CUTOUT_SECONDS_PER_FRAME, SETTLE_MAX_MS, THUMB, PICTURE_DEFLATE, intersects, union, fmt, boxText, plural, boxArea, iou, isFrozenEntry, GB, gb, PICTURE_MARGIN_BYTES, captureBytes, PART_NAMES, trackedSpan, FROZEN_DEFAULTS, frozenOpts, renderTally, pixelTally, since, roundTally, needSelection, perFrameMsOf, regionsOf, NODE_ONLY, overParam, SOFT_EDGE_DEFAULTS;
+var compLayerParams, FX_ROOT_JSX, OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, SUBJECT_WHOLE_PIECE_NOTE, CLOSE_CLICK_SHARE, COUNT_NOTE, NEED_CLICK, subjectIndexParam, CUTOUT_HOLE_LIMIT, CUTOUT_OVER, CUTOUT_SECONDS_PER_FRAME, SETTLE_MAX_MS, THUMB, PICTURE_DEFLATE, intersects, union, fmt, boxText, plural, boxArea, iou, isFrozenEntry, GB, gb, PICTURE_MARGIN_BYTES, captureBytes, PART_NAMES, trackedSpan, FROZEN_DEFAULTS, frozenOpts, renderTally, pixelTally, since, roundTally, needSelection, perFrameMsOf, regionsOf, NODE_ONLY, overParam, SOFT_EDGE_DEFAULTS, MOTION_EDGE_DEFAULTS;
 function init_keying_shared() {
 	return (init_keying_shared = __esmMin((() => {
 		init_matte();
@@ -2929,6 +2929,18 @@ function init_keying_shared() {
 			outsideLimit: 50,
 			/** Face colour against the matte as clicked, CIELAB difference allowed. */
 			colourLimit: 1
+		};
+		MOTION_EDGE_DEFAULTS = {
+			threshold: {
+				black: .25,
+				white: .45
+			},
+			motionGrow: 25,
+			motionBlur: 15,
+			motionBlurIterations: 2,
+			band: 50,
+			/** Minimax's Channel menu value for alpha alone. */
+			bandChannel: 2
 		};
 	})))();
 }
@@ -5920,4 +5932,4 @@ function init_eval() {
 	})))();
 }
 
-export { AE_AAC_PRIMING_SAMPLES, CLOSE_CLICK_SHARE, COUNT_NOTE, CUTOUT_HOLE_LIMIT, CUTOUT_OVER, FFMPEG, FFPROBE, FX_ROOT_JSX, GB, MAX_SCRIPT_ARGS_BYTES, MAX_SCRIPT_FILE_BYTES, NEED_CLICK, NODE_ONLY, OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, PICTURE_MARGIN_BYTES, REDO_COMMAND_ID, SETTLE_MAX_MS, SOFT_EDGE_DEFAULTS, SUBJECT_WHOLE_PIECE_NOTE, acceptedBy, aeCacheRoot, alignSound, alikeRegions, cacheBytesFor, captureBytes, compLayerParams, fileCleanupJsx, fileCompJsx, fmt, frozenAccepted, frozenFinding, frozenOpts, gb, init_command, init_delivery_sound, init_eval, init_keying_key, init_keying_reference, init_keying_shared, init_operations, intersects, liveCutoutIO, liveFileIO, measureFrames, needSelection, overParam, overPicture, parseEbur128Summary, parseHex, parseVolumedetect, perFrameMsOf, pixelTally, plural, readScriptFile, readSoundSync, regionsOf, renderChunked, renderTally, roundTally, runReferenceReport, runTool, since, spacePlan, spaceRefusal, statfsFree, subjectIndexParam, summarize, trackedSpan, writePng };
+export { AE_AAC_PRIMING_SAMPLES, CLOSE_CLICK_SHARE, COUNT_NOTE, CUTOUT_HOLE_LIMIT, CUTOUT_OVER, FFMPEG, FFPROBE, FX_ROOT_JSX, GB, MAX_SCRIPT_ARGS_BYTES, MAX_SCRIPT_FILE_BYTES, MOTION_EDGE_DEFAULTS, NEED_CLICK, NODE_ONLY, OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, PICTURE_MARGIN_BYTES, REDO_COMMAND_ID, SETTLE_MAX_MS, SOFT_EDGE_DEFAULTS, SUBJECT_WHOLE_PIECE_NOTE, acceptedBy, aeCacheRoot, alignSound, alikeRegions, cacheBytesFor, captureBytes, compLayerParams, fileCleanupJsx, fileCompJsx, fmt, frozenAccepted, frozenFinding, frozenOpts, gb, init_command, init_delivery_sound, init_eval, init_keying_key, init_keying_reference, init_keying_shared, init_operations, intersects, liveCutoutIO, liveFileIO, measureFrames, needSelection, overParam, overPicture, parseEbur128Summary, parseHex, parseVolumedetect, perFrameMsOf, pixelTally, plural, readScriptFile, readSoundSync, regionsOf, renderChunked, renderTally, roundTally, runReferenceReport, runTool, since, spacePlan, spaceRefusal, statfsFree, subjectIndexParam, summarize, trackedSpan, writePng };

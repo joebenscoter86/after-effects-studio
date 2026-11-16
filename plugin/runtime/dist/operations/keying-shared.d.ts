@@ -352,4 +352,27 @@ export declare const SOFT_EDGE_DEFAULTS: {
     /** Face colour against the matte as clicked, CIELAB difference allowed. */
     colourLimit: number;
 };
+/**
+ * The motion edge's defaults, measured by hand on a studio take (2176 × 3840,
+ * 30 fps, a phone camera on a tripod that shifts slightly from frame to frame,
+ * 2026-11-16): Levels on the difference of neighbouring frames from 0.25 to
+ * 0.45 (lower thresholds, 0.03 to 0.10 and then 0.12 to 0.30, lit every still
+ * edge because of the camera's shift), the motion grown 25 px and blurred
+ * 15 px (Box Blur, 2 iterations), and the matte grown 50 px into the band
+ * where the keyer's edge shows. A plain 50 px band with no motion mask filled
+ * the gaps in a microphone mount, brought back the keyer's halo and let a
+ * plant behind the head through.
+ */
+export declare const MOTION_EDGE_DEFAULTS: {
+    threshold: {
+        black: number;
+        white: number;
+    };
+    motionGrow: number;
+    motionBlur: number;
+    motionBlurIterations: number;
+    band: number;
+    /** Minimax's Channel menu value for alpha alone. */
+    bandChannel: number;
+};
 //# sourceMappingURL=keying-shared.d.ts.map

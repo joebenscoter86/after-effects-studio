@@ -1,6 +1,6 @@
 import { __esmMin } from "./rolldown-runtime.js";
 import { getOp, init_config, init_registry, jsxCompLayerPreamble, jsxCompPreamble, jsxFail, jsxVal, registerOp, rejectedOutputPath } from "./core-1.js";
-import { CLOSE_CLICK_SHARE, COUNT_NOTE, CUTOUT_HOLE_LIMIT, CUTOUT_OVER, FX_ROOT_JSX, GB, NEED_CLICK, NODE_ONLY, OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, PICTURE_MARGIN_BYTES, SETTLE_MAX_MS, SOFT_EDGE_DEFAULTS, SUBJECT_WHOLE_PIECE_NOTE, acceptedBy, aeCacheRoot, alikeRegions, cacheBytesFor, captureBytes, compLayerParams, fileCleanupJsx, fileCompJsx, fmt, frozenAccepted, frozenFinding, frozenOpts, gb, init_keying_key, init_keying_reference, init_keying_shared, intersects, liveCutoutIO, liveFileIO, measureFrames, needSelection, overParam, overPicture, parseHex, perFrameMsOf, pixelTally, plural, regionsOf, renderChunked, renderTally, roundTally, since, spacePlan, spaceRefusal, statfsFree, subjectIndexParam, summarize, trackedSpan, writePng } from "./operations-1.js";
+import { CLOSE_CLICK_SHARE, COUNT_NOTE, CUTOUT_HOLE_LIMIT, CUTOUT_OVER, FX_ROOT_JSX, GB, MOTION_EDGE_DEFAULTS, NEED_CLICK, NODE_ONLY, OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, PICTURE_MARGIN_BYTES, SETTLE_MAX_MS, SOFT_EDGE_DEFAULTS, SUBJECT_WHOLE_PIECE_NOTE, acceptedBy, aeCacheRoot, alikeRegions, cacheBytesFor, captureBytes, compLayerParams, fileCleanupJsx, fileCompJsx, fmt, frozenAccepted, frozenFinding, frozenOpts, gb, init_keying_key, init_keying_reference, init_keying_shared, intersects, liveCutoutIO, liveFileIO, measureFrames, needSelection, overParam, overPicture, parseHex, perFrameMsOf, pixelTally, plural, regionsOf, renderChunked, renderTally, roundTally, since, spacePlan, spaceRefusal, statfsFree, subjectIndexParam, summarize, trackedSpan, writePng } from "./operations-1.js";
 import { COMP_CORNERS_FN, init_snippets } from "./operations-4.js";
 import { PARK_QUEUE_FN, QUEUE_CHANGE_NOTE, RENDER_QUEUE_UNDO_WARNING, init_render } from "./operations-3.js";
 import { EDGE_DEFAULTS, SEEN_THROUGH_DEFAULTS, SPECK_DEFAULTS, composeContactSheet, cutoutRegions, distanceTo, enclosedHoles, encodePngGray8, encodePngSrgb8, flattenOver, furthestFrame, growMask, init_matte, init_png16, init_sheet, labOf, lookCrops, matteCoverage, measureLook, outlineTracker, resample, seenThroughInside, speckPieces, subjectTop, summarizeLookSeries } from "./color-1.js";
@@ -4156,6 +4156,366 @@ function init_keying_subject_soften() {
 	})))();
 }
 
+// operations/keying-subject-motion.js
+function motionEdgeSettings(args) {
+	const D = MOTION_EDGE_DEFAULTS;
+	const fail = (error) => ({
+		ok: false,
+		error
+	});
+	const isNum = (v) => typeof v === "number" && Number.isFinite(v);
+	if (typeof args.keyerMatchName !== "string" || args.keyerMatchName.trim() === "") return fail("`keyerMatchName` must be the match name of the keyer effect (a per-pixel machine-learning keyer installed separately): ask the user which keyer they have, and read its match name from the effect on a layer (ae_layer_info) or from app.effects");
+	const keyerSettings = {};
+	if (args.keyerSettings !== void 0) {
+		const ks = args.keyerSettings;
+		if (typeof ks !== "object" || ks === null || Array.isArray(ks)) return fail("`keyerSettings` must be an object of { property name: value }, such as { \"Despill Strength\": 1 }");
+		for (const [k, v] of Object.entries(ks)) if (typeof v === "boolean") keyerSettings[k] = v ? 1 : 0;
+		else if (isNum(v)) keyerSettings[k] = v;
+		else if (Array.isArray(v) && v.length > 0 && v.every(isNum)) keyerSettings[k] = v;
+		else return fail(`\`keyerSettings\`: '${k}' must be a number, a boolean or an array of numbers`);
+	}
+	let threshold = { ...D.threshold };
+	if (args.threshold !== void 0) {
+		const t = args.threshold;
+		if (typeof t !== "object" || t === null || Array.isArray(t)) return fail("`threshold` must be { black, white }, each 0 to 1");
+		for (const k of ["black", "white"]) if (t[k] !== void 0 && !isNum(t[k])) return fail(`\`threshold.${k}\` must be a number from 0 to 1`);
+		threshold = {
+			black: isNum(t.black) ? t.black : D.threshold.black,
+			white: isNum(t.white) ? t.white : D.threshold.white
+		};
+	}
+	if (threshold.black < 0 || threshold.white > 1 || threshold.black >= threshold.white) return fail(`\`threshold\` must have 0 <= black < white <= 1 (given black ${threshold.black}, white ${threshold.white}; default ${D.threshold.black} to ${D.threshold.white})`);
+	const size = (k, min) => {
+		const v = args[k];
+		if (v === void 0) return D[k];
+		if (!isNum(v) || v < min) return null;
+		return v;
+	};
+	const motionGrow = size("motionGrow", 0);
+	if (motionGrow === null) return fail("`motionGrow` must be a number of pixels, 0 or more");
+	const motionBlur = size("motionBlur", 0);
+	if (motionBlur === null) return fail("`motionBlur` must be a number of pixels, 0 or more");
+	const band = args.band === void 0 ? D.band : isNum(args.band) && args.band > 0 ? args.band : null;
+	if (band === null) return fail("`band` must be a number of pixels, more than 0");
+	return {
+		ok: true,
+		settings: {
+			keyerMatchName: args.keyerMatchName.trim(),
+			keyerSettings,
+			threshold,
+			motionGrow,
+			motionBlur,
+			band
+		}
+	};
+}
+function motionKeyerCheckJsx(matchName) {
+	return `
+            var _keyerMN = ${jsxVal(matchName)};
+            var _keyerName = null;
+            var _fxList = null;
+            try { _fxList = app.effects; } catch (eFx) { _fxList = null; }
+            if (!_fxList) return { ok: false, error: "could not read the installed effects (app.effects), so the keyer '" + _keyerMN + "' could not be checked" };
+            for (var _ei = 0; _ei < _fxList.length; _ei++) if (_fxList[_ei] && _fxList[_ei].matchName === _keyerMN) { _keyerName = _fxList[_ei].displayName; break; }
+            if (_keyerName === null) return { ok: false, error: "no installed effect has the match name '" + _keyerMN + "' (" + _fxList.length + " effects installed). subject.motion_edge needs a per-pixel machine-learning keyer effect installed separately: install it, or pass the match name of the keyer that is installed." };
+`;
+}
+function motionEdgeBuildJsx(args) {
+	const D = MOTION_EDGE_DEFAULTS;
+	const settings = {
+		keyerMatchName: args.keyerMatchName,
+		keyerSettings: args.keyerSettings,
+		threshold: args.threshold,
+		motionGrow: args.motionGrow,
+		motionBlur: args.motionBlur,
+		band: args.band
+	};
+	const keyerCheck = motionKeyerCheckJsx(args.keyerMatchName);
+	return `
+            ${jsxCompLayerPreamble(args)}
+            var _L = _layer.name;
+            var _name = _L + " motion edge";
+            for (var _li = 1; _li <= _comp.numLayers; _li++) if (_comp.layer(_li).name === _name) return { ok: false, error: "comp " + _comp.name + " already has a layer '" + _name + "'; undo it first (subject.motion_edge { undo: true })" };
+            ${keyerCheck}
+            var _fxRoot = _layer.property("ADBE Effect Parade");
+            var _hasOm = false;
+            if (_fxRoot) for (var _fi = 1; _fi <= _fxRoot.numProperties; _fi++) if (_fxRoot.property(_fi).matchName === ${jsxVal(OBJECT_MATTE_MATCH_NAME)}) { _hasOm = true; break; }
+            if (!_hasOm) return { ok: false, error: "layer '" + _L + "' has no Object Matte" };
+            function _find(fx, key) {
+                var p = null;
+                try { p = fx.property(key); } catch (eP) { p = null; }
+                if (p) return p;
+                function walk(g) {
+                    for (var k = 1; k <= g.numProperties; k++) {
+                        var q = g.property(k);
+                        if (q.matchName === key || q.name === key) return q;
+                        if (q.propertyType !== PropertyType.PROPERTY) { var r = walk(q); if (r) return r; }
+                    }
+                    return null;
+                }
+                return walk(fx);
+            }
+            function _setAll(fx, vals, what) {
+                for (var k in vals) {
+                    if (!vals.hasOwnProperty(k)) continue;
+                    var p = _find(fx, k);
+                    if (!p) throw new Error(what + " has no property '" + k + "'");
+                    p.setValue(vals[k]);
+                }
+            }
+            function _strip(l) { var r = l.property("ADBE Effect Parade"); for (var i = r.numProperties; i >= 1; i--) r.property(i).remove(); }
+            function _mute(l) { if (AE.safeGet(function () { return l.hasAudio; }, false)) { try { l.audioEnabled = false; } catch (eA) {} } }
+            function _pre(indices, name) {
+                var pc = _comp.layers.precompose(indices, name, true);
+                for (var i = 1; i <= _comp.numLayers; i++) if (AE.safeGet(function () { return _comp.layer(i).source; }, null) === pc) return { comp: pc, layer: _comp.layer(i) };
+                throw new Error("the precomp layer of '" + name + "' was not found after precompose");
+            }
+            function _newComp(name) { return app.project.items.addComp(name, _comp.width, _comp.height, _comp.pixelAspect, _comp.duration, _comp.frameRate); }
+            var _wasEnabled = _layer.enabled;
+            var _fd = _comp.frameDuration;
+            // The Object Matte comp: the matted layer as clicked.
+            var _om = _layer.duplicate(); _om.name = _L + " object matte"; _om.enabled = true; _mute(_om);
+            var _omP = _pre([_om.index], _L + " object matte");
+            // The keyer comp: the take with the keyer and nothing else.
+            var _ck = _layer.duplicate(); _ck.name = _L + " keyer"; _ck.enabled = true; _mute(_ck); _strip(_ck);
+            if (!_ck.property("ADBE Effect Parade").addProperty(_keyerMN)) throw new Error("the keyer '" + _keyerMN + "' could not be added to the layer");
+            _setAll(_ck.property("ADBE Effect Parade").property(1), ${jsxVal(args.keyerSettings)}, "the keyer");
+            var _ckP = _pre([_ck.index], _L + " keyer");
+            // The motion comp: the take against itself one frame later, thresholded, grown and blurred.
+            var _t0 = _layer.duplicate(); _t0.name = _L + " this frame"; _t0.enabled = true; _mute(_t0); _strip(_t0);
+            var _t1 = _layer.duplicate(); _t1.name = _L + " frame before"; _t1.enabled = true; _mute(_t1); _strip(_t1);
+            _t1.startTime = _t1.startTime + _fd;
+            _t1.blendingMode = BlendingMode.DIFFERENCE;
+            var _adj = _comp.layers.addSolid([1, 1, 1], _L + " motion threshold", _comp.width, _comp.height, _comp.pixelAspect, _comp.duration);
+            _adj.adjustmentLayer = true;
+            var _ap = _adj.property("ADBE Effect Parade");
+            _ap.addProperty("ADBE Easy Levels2");
+            _ap.addProperty("ADBE Tint");
+            _ap.addProperty("ADBE Minimax");
+            _ap.addProperty("ADBE Box Blur2");
+            // Adding an effect invalidates references to the ones added before: fetch each again by index.
+            _ap = _adj.property("ADBE Effect Parade");
+            _setAll(_ap.property(1), ${jsxVal({
+		"Input Black": args.threshold.black,
+		"Input White": args.threshold.white
+	})}, "Levels");
+            _setAll(_ap.property(3), ${jsxVal({ Radius: args.motionGrow })}, "Minimax");
+            _setAll(_ap.property(4), ${jsxVal({
+		"Blur Radius": args.motionBlur,
+		Iterations: D.motionBlurIterations
+	})}, "Box Blur");
+            _t1.moveBefore(_t0); _adj.moveBefore(_t1);
+            var _moP = _pre([_adj.index, _t1.index, _t0.index], _L + " motion");
+            // The band: the Object Matte grown, where the take moves.
+            var _bandC = _newComp(_L + " band");
+            var _bOm = _bandC.layers.add(_omP.comp); _bOm.name = "Object Matte grown";
+            var _bMo = _bandC.layers.add(_moP.comp); _bMo.name = "motion";
+            _bOm.property("ADBE Effect Parade").addProperty("ADBE Minimax");
+            _setAll(_bOm.property("ADBE Effect Parade").property(1), ${jsxVal({
+		Radius: args.band,
+		Channel: D.bandChannel,
+		"Don't Shrink Edges": 1
+	})}, "Minimax");
+            _bOm.setTrackMatte(_bMo, TrackMatteType.LUMA);
+            _bMo.enabled = false;
+            // The motion edge, top to bottom: the outline, the band, the keyer's edge.
+            var _me = _newComp(_name);
+            var _eCk = _me.layers.add(_ckP.comp); _eCk.name = "keyer edge";
+            var _eBand = _me.layers.add(_bandC); _eBand.name = "band";
+            var _eOm = _me.layers.add(_omP.comp); _eOm.name = "Object Matte outline";
+            _eCk.setTrackMatte(_eBand, TrackMatteType.ALPHA);
+            _eBand.enabled = false;
+            // precompose left a layer of each part in the comp: only the motion edge stays.
+            _omP.layer.remove(); _ckP.layer.remove(); _moP.layer.remove();
+            var _pl = _comp.layers.add(_me);
+            _pl.name = _name;
+            var _ids = [_me.id, _bandC.id, _moP.comp.id, _ckP.comp.id, _omP.comp.id];
+            function _q(t) { var o = ""; for (var i = 0; i < t.length; i++) { var ch = t.charAt(i); if (ch === '"' || ch === '\\\\') o += '\\\\'; o += ch; } return '"' + o + '"'; }
+            _pl.comment = "{" + '"compRoom":"${MOTION_MARKER}","layer":' + _q(String(_L)) + ',"wasEnabled":' + _wasEnabled + ',"comps":[' + _ids.join(",") + '],"settings":' + ${jsxVal(JSON.stringify(settings))} + "}";
+            var _parts = [_me, _bandC, _moP.comp, _ckP.comp, _omP.comp];
+            for (var _pi = 0; _pi < _parts.length; _pi++) _parts[_pi].comment = "comp-room ${MOTION_MARKER} of " + _L;
+            _pl.moveBefore(_layer);
+            _pl.enabled = true;
+            _layer.enabled = false;
+            return { ok: true, motionLayer: _name, motionIndex: _pl.index, precomp: _me.name, precompId: _me.id, wasEnabled: _wasEnabled,
+                keyer: { matchName: _keyerMN, name: _keyerName },
+                comps: { motionEdge: _me.name, band: _bandC.name, motion: _moP.comp.name, keyer: _ckP.comp.name, objectMatte: _omP.comp.name },
+                inside: ["Object Matte outline", "band", "keyer edge"] };
+        `;
+}
+function motionEdgeUndoJsx(args) {
+	return `
+            ${jsxCompLayerPreamble(args)}
+            var _name = _layer.name + " motion edge";
+            var _pl = null;
+            for (var _li = 1; _li <= _comp.numLayers; _li++) {
+                var _l = _comp.layer(_li);
+                if (_l.name === _name && String(AE.safeGet(function () { return _l.comment; }, "")).indexOf(${jsxVal(MOTION_MARKER)}) >= 0) { _pl = _l; break; }
+            }
+            if (!_pl) return { ok: false, error: "comp " + _comp.name + " has no motion edge for layer '" + _layer.name + "'" };
+            var _st = null;
+            try { _st = eval("(" + _pl.comment + ")"); } catch (eJ) { _st = null; }
+            var _was = !(_st && _st.wasEnabled === false);
+            var _ids = (_st && _st.comps && _st.comps.length) ? _st.comps : [_pl.source.id];
+            var _comps = [];
+            for (var _ii = 0; _ii < _ids.length; _ii++) {
+                var _it = AE.safeGet(function () { return app.project.itemByID(_ids[_ii]); }, null);
+                if (_it && _it instanceof CompItem && String(AE.safeGet(function () { return _it.comment; }, "")).indexOf(${jsxVal(MOTION_MARKER)}) >= 0) _comps.push(_it);
+            }
+            var _solids = [];
+            for (var _ci = 0; _ci < _comps.length; _ci++)
+                for (var _k = 1; _k <= _comps[_ci].numLayers; _k++) {
+                    var _src = AE.safeGet(function () { return _comps[_ci].layer(_k).source; }, null);
+                    if (_src && _src.mainSource && _src.mainSource instanceof SolidSource) _solids.push(_src);
+                }
+            _pl.remove();
+            var _removed = [_name];
+            for (var _ri = 0; _ri < _comps.length; _ri++) { var _cn = _comps[_ri].name; try { _comps[_ri].remove(); _removed.push("comp " + _cn); } catch (eC) {} }
+            for (var _si = 0; _si < _solids.length; _si++) { try { if (_solids[_si].usedIn.length === 0) { _solids[_si].remove(); _removed.push("solid"); } } catch (eS) {} }
+            _layer.enabled = _was;
+            return { ok: true, removed: _removed, restored: _layer.name, enabled: _layer.enabled };
+        `;
+}
+async function runMotionEdge(args, io) {
+	const started = performance.now();
+	if (args.undo === true) {
+		const u = await io.execute(motionEdgeUndoJsx({
+			comp: args.comp,
+			layer: args.layer
+		}), {
+			label: "subject.motion_edge undo",
+			timeoutMs: 6e4
+		});
+		return u?.ok ? {
+			...u,
+			note: "The comp is back to the single matted layer."
+		} : {
+			ok: false,
+			error: u?.error ?? "the undo failed"
+		};
+	}
+	const s = motionEdgeSettings(args);
+	if (!s.ok) return s;
+	const settings = s.settings;
+	const st = await io.status();
+	if (!st?.ok) return {
+		ok: false,
+		error: st?.error ?? "subject.status failed",
+		status: st
+	};
+	const missing = needSelection(st);
+	if (missing) return {
+		ok: false,
+		error: missing
+	};
+	if (st.softEdge) return {
+		ok: false,
+		error: `the layer has a soft edge ('${st.softEdge.layer}'); the two do not combine: undo it first with subject.soften_edge { undo: true }`
+	};
+	const built = await io.execute(motionEdgeBuildJsx({
+		comp: args.comp,
+		layer: args.layer,
+		...settings
+	}), {
+		label: "subject.motion_edge",
+		timeoutMs: 12e4
+	});
+	if (!built?.ok) return {
+		ok: false,
+		error: built?.error ?? "the build failed",
+		built
+	};
+	return {
+		...built,
+		ok: true,
+		settings,
+		cost: MOTION_EDGE_COST,
+		undo: "subject.motion_edge { comp, layer, undo: true } takes the comp back to the single matted layer (it removes the motion-edge layer and its five comps and switches the matted layer back on).",
+		next: "Render a few frames where the hands move fastest and a still one (ae_render_frame over the background) and show the user the hands at twice size: a soft blur on the moving fingers, the crisp outline where the subject is still, nothing of the background near the head, gaps still open. subject.check, subject.render_cutout and subject.use_cutout do not use the motion-edge layer yet: they read the matted layer, which is now switched off. Render the comp with the motion-edge layer through the render queue to a movie with alpha, and check it with subject.check_file.",
+		timing: { totalMs: Math.round(since(started)) }
+	};
+}
+var MOTION_EDGE_COST, MOTION_MARKER;
+function init_keying_subject_motion() {
+	return (init_keying_subject_motion = __esmMin((() => {
+		init_registry();
+		init_keying_shared();
+		MOTION_EDGE_COST = "The motion edge keys every frame twice, with Object Matte and with the separately installed keyer, so a render does twice the keying work: the whole 8.9 s studio take (2176 × 3840, 30 fps) rendered in 986 s to ProRes 4444, roughly 2 minutes of render per second of 4K.";
+		MOTION_MARKER = "motion-edge";
+		registerOp({
+			name: "subject.motion_edge",
+			category: "subject",
+			description: "Give an Object Matte cut-out a soft, motion-blurred edge where the subject moves, taken from a second key by a per-pixel machine-learning keyer effect installed separately (not part of After Effects or this plugin); where the subject is still, the crisp Object Matte outline stays. Needs the matted layer with at least one selection (the user's click) and `keyerMatchName`, the keyer's match name; it refuses, building nothing, when no installed effect has that match name (app.effects). It builds five comps around the matted layer, never a copy of the user's comp: '<layer> object matte' (the matted layer as clicked), '<layer> keyer' (the take with the keyer and `keyerSettings`, such as { \"Despill Strength\": 1 }), '<layer> motion' (the take, the take again one frame later in Difference, and an adjustment layer with Levels from `threshold` black to white, Tint, Minimax `motionGrow` and Box Blur `motionBlur`, 2 iterations), '<layer> band' (the Object Matte comp with Minimax `band` px on its alpha, Don't Shrink Edges on, Luma-matted by the motion comp) and '<layer> motion edge' (the Object Matte outline over the band, switched off, over the keyer's edge, Alpha-matted by the band). The last goes in above the matted layer, which is switched off and otherwise untouched (it keeps the sound); every copy's sound is off. Use it instead of subject.soften_edge for fast hand and arm movement against a static background: soften_edge softens the hair inside a region, this follows motion anywhere. Defaults measured on a 2176 × 3840 studio take shot on a phone on a tripod: threshold 0.25 to 0.45 (lower thresholds lit every still edge, since the camera shifts slightly between frames), motionGrow 25, motionBlur 15, band 50. A plain band with no motion mask filled the gaps in a microphone mount, brought back the keyer's halo and let a plant behind the head through. Cost: twice the keying work in every render (Object Matte and the keyer): the whole 8.9 s take rendered in 986 s, roughly 2 minutes of render per second of 4K. It does not render or check itself; subject.check, subject.render_cutout and subject.use_cutout do not use its layer yet. On the layer's first frame there is no frame before, so the band there covers the whole outline. Not run in After Effects as an operation: the construction was built by hand. undo: true removes what it built and switches the matted layer back on.",
+			params: [
+				...compLayerParams,
+				{
+					name: "keyerMatchName",
+					type: "string",
+					description: "Match name of the keyer effect, a per-pixel machine-learning keyer installed separately (needed unless undo). Refused when no installed effect has it.",
+					required: false
+				},
+				{
+					name: "keyerSettings",
+					type: "object",
+					description: "Values to set on the keyer, { property name or match name: value }, such as { \"Despill Strength\": 1 }. A name the keyer does not have stops the build, which is rolled back.",
+					required: false
+				},
+				{
+					name: "threshold",
+					type: "object",
+					description: `Levels on the difference of neighbouring frames, { black, white } 0 to 1 (default ${MOTION_EDGE_DEFAULTS.threshold.black} to ${MOTION_EDGE_DEFAULTS.threshold.white}). Lower values let more motion through, and with a camera that shifts slightly, every still edge.`,
+					required: false
+				},
+				{
+					name: "motionGrow",
+					type: "number",
+					description: `Minimax radius on the motion, px (default ${MOTION_EDGE_DEFAULTS.motionGrow}).`,
+					required: false
+				},
+				{
+					name: "motionBlur",
+					type: "number",
+					description: `Box Blur radius on the motion, px, ${MOTION_EDGE_DEFAULTS.motionBlurIterations} iterations (default ${MOTION_EDGE_DEFAULTS.motionBlur}).`,
+					required: false
+				},
+				{
+					name: "band",
+					type: "number",
+					description: `How far outside the Object Matte outline the keyer's edge may show, px: Minimax on the matte's alpha (default ${MOTION_EDGE_DEFAULTS.band}).`,
+					required: false
+				},
+				{
+					name: "undo",
+					type: "boolean",
+					description: "Take the comp back to the single matted layer: remove the motion-edge layer and its five comps and switch the matted layer back on.",
+					required: false
+				}
+			],
+			toJsx() {
+				return "throw new Error('subject.motion_edge runs in Node');";
+			},
+			async run(args, transport) {
+				return runMotionEdge(args, {
+					status: liveCutoutIO(args, transport).status,
+					async execute(code, opts) {
+						const r = await transport.execute({
+							code,
+							label: opts.label,
+							timeoutMs: opts.timeoutMs ?? 6e4,
+							undoGroup: true,
+							suppressDialogs: true
+						});
+						return r.ok ? r.result : {
+							ok: false,
+							error: r.error ?? `${opts.label} failed`
+						};
+					}
+				});
+			}
+		});
+	})))();
+}
+
 // operations/keying.js
 function init_keying() {
 	return (init_keying = __esmMin((() => {
@@ -4169,6 +4529,7 @@ function init_keying() {
 		init_keying_subject_check();
 		init_keying_subject_cutout();
 		init_keying_subject_soften();
+		init_keying_subject_motion();
 		init_keying_reference();
 		init_keying_shared();
 	})))();
@@ -4666,512 +5027,4 @@ function init_layer_advanced() {
 	})))();
 }
 
-// operations/layout.js
-var LAYER_TARGET_PARAM;
-function init_layout() {
-	return (init_layout = __esmMin((() => {
-		init_registry();
-		LAYER_TARGET_PARAM = {
-			name: "layer",
-			type: "any",
-			description: "Layer index, name, { id }, 'selected', 'all', or an array of those",
-			required: true
-		};
-		registerOp({
-			name: "layer.set_anchor",
-			category: "layer",
-			description: "Move the anchor point WITHOUT moving the layer on screen (Position is compensated through Scale/Rotation; Position keyframes are all shifted). Address the anchor by preset on the layer's rendered bounds (sourceRectAtTime), by an explicit layer-space point, or by an offset from the current anchor.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				LAYER_TARGET_PARAM,
-				{
-					name: "preset",
-					type: "string",
-					description: "center | topLeft | topCenter | topRight | centerLeft | centerRight | bottomLeft | bottomCenter | bottomRight",
-					required: false
-				},
-				{
-					name: "point",
-					type: "array",
-					description: "[x, y] (or [x, y, z]) explicit anchor in layer space",
-					required: false
-				},
-				{
-					name: "offset",
-					type: "array",
-					description: "[dx, dy] added to the current anchor",
-					required: false
-				},
-				{
-					name: "time",
-					type: "number",
-					description: "Time at which the bounds are measured for a preset (default: current comp time)",
-					required: false
-				}
-			],
-			toJsx(args) {
-				if ([
-					args.preset,
-					args.point,
-					args.offset
-				].filter((v) => v !== void 0).length !== 1) return jsxFail("give exactly one of preset, point, or offset");
-				return `
-            ${jsxCompPreamble(args)}
-            var _layers = AE.resolveLayers(_comp, ${jsxVal(args.layer)});
-            if (_layers.length === 0) return { ok: false, error: "no layers matched" };
-            var _preset = ${jsxVal(args.preset ?? null)};
-            if (_preset !== null && !AE.ANCHOR_PRESETS.hasOwnProperty(_preset)) return { ok: false, error: "unknown preset '" + _preset + "'" };
-            var _point = ${jsxVal(args.point ?? null)};
-            var _offset = ${jsxVal(args.offset ?? null)};
-            var _t = ${jsxVal(args.time ?? null)};
-            if (_t === null) _t = _comp.time;
-            var _out = [];
-            var _failed = 0;
-            for (var _li = 0; _li < _layers.length; _li++) {
-                var _l = _layers[_li];
-                var _target = null;
-                try {
-                    if (_preset !== null) {
-                        var _rect = AE.layerRect(_l, _t);
-                        if (!_rect) throw new Error("layer has no measurable bounds");
-                        _target = AE.pointInRect(_rect, _preset);
-                    } else if (_point !== null) {
-                        _target = _point;
-                    } else {
-                        var _cur = _l.transform.anchorPoint.value;
-                        _target = [_cur[0] + (_offset[0] || 0), _cur[1] + (_offset[1] || 0)];
-                        if (_cur.length > 2) _target.push(_cur[2] + (_offset[2] || 0));
-                    }
-                    var _r = AE.moveAnchor(_l, _target);
-                    _out.push({ index: _l.index, name: _l.name, ok: true, anchorPoint: _r.anchorPoint, positionDelta: _r.positionDelta, positionKeysShifted: _r.positionKeysShifted, warnings: _r.warnings });
-                } catch (eA) {
-                    _failed++;
-                    _out.push({ index: _l.index, name: _l.name, ok: false, error: AE.errText(eA) });
-                }
-            }
-            return { ok: _failed === 0, error: _failed === 0 ? null : (_failed + " of " + _out.length + " layers failed"), count: _out.length, layers: _out };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.set_timing",
-			category: "layer",
-			description: "Set a layer's timing in one call: shift (relative move of the whole layer), startTime, inPoint, outPoint ('comp' = comp start / comp end — e.g. to extend a layer copied out of a shorter comp), stretch. Applied in that order; AE clamps in/out to the source for footage.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				LAYER_TARGET_PARAM,
-				{
-					name: "shift",
-					type: "number",
-					description: "Seconds to move the layer by (in/out points follow)",
-					required: false
-				},
-				{
-					name: "startTime",
-					type: "number",
-					description: "Absolute layer start",
-					required: false
-				},
-				{
-					name: "inPoint",
-					type: "any",
-					description: "In point in seconds, or 'comp' for the comp start (0)",
-					required: false
-				},
-				{
-					name: "outPoint",
-					type: "any",
-					description: "Out point in seconds, or 'comp' for the comp end (comp.duration)",
-					required: false
-				},
-				{
-					name: "stretch",
-					type: "number",
-					description: "Time stretch in percent",
-					required: false
-				}
-			],
-			toJsx(args) {
-				const sets = [];
-				if (args.shift !== void 0) sets.push(`_l.startTime = _l.startTime + ${jsxVal(args.shift)};`);
-				if (args.startTime !== void 0) sets.push(`_l.startTime = ${jsxVal(args.startTime)};`);
-				if (args.inPoint !== void 0) sets.push(`_l.inPoint = (${jsxVal(args.inPoint)} === "comp") ? 0 : ${jsxVal(args.inPoint)};`);
-				if (args.outPoint !== void 0) sets.push(`_l.outPoint = (${jsxVal(args.outPoint)} === "comp") ? _comp.duration : ${jsxVal(args.outPoint)};`);
-				if (args.stretch !== void 0) sets.push(`_l.stretch = ${jsxVal(args.stretch)};`);
-				if (sets.length === 0) return jsxFail("give at least one of shift, startTime, inPoint, outPoint, stretch");
-				const inBad = typeof args.inPoint === "string" && args.inPoint !== "comp";
-				const outBad = typeof args.outPoint === "string" && args.outPoint !== "comp";
-				if (inBad || outBad) return jsxFail("inPoint/outPoint must be a number or 'comp'");
-				return `
-            ${jsxCompPreamble(args)}
-            var _layers = AE.resolveLayers(_comp, ${jsxVal(args.layer)});
-            if (_layers.length === 0) return { ok: false, error: "no layers matched" };
-            var _out = [];
-            var _failed = 0;
-            for (var _li = 0; _li < _layers.length; _li++) {
-                var _l = _layers[_li];
-                try {
-                    ${sets.join("\n                    ")}
-                    _out.push({ index: _l.index, name: _l.name, ok: true, startTime: _l.startTime, inPoint: _l.inPoint, outPoint: _l.outPoint, stretch: _l.stretch });
-                } catch (eT) {
-                    _failed++;
-                    _out.push({ index: _l.index, name: _l.name, ok: false, error: AE.errText(eT) });
-                }
-            }
-            return { ok: _failed === 0, error: _failed === 0 ? null : (_failed + " of " + _out.length + " layers failed"), count: _out.length, layers: _out };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.set_visibility_schedule",
-			category: "layer",
-			description: "Show layers only during given time ranges — sequential pops, material swaps, flip-books — in one call. mode 'opacity' (default) writes HOLD opacity keys (on inside each range, off outside; existing opacity keys replaced); mode 'inOut' sets in/out points (one range per layer).",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "entries",
-					type: "array",
-					description: "[{ layer, ranges: [[start, end], …] }] — layer accepts the usual index | name | { id } | 'selected' | 'all' | array",
-					required: true
-				},
-				{
-					name: "mode",
-					type: "string",
-					description: "opacity|inOut (default opacity)",
-					required: false,
-					default: "opacity"
-				},
-				{
-					name: "onValue",
-					type: "number",
-					description: "Opacity inside the ranges (default 100)",
-					required: false,
-					default: 100
-				},
-				{
-					name: "offValue",
-					type: "number",
-					description: "Opacity outside the ranges (default 0)",
-					required: false,
-					default: 0
-				}
-			],
-			toJsx(args) {
-				const mode = args.mode ?? "opacity";
-				if (mode !== "opacity" && mode !== "inOut") return jsxFail("mode must be opacity|inOut");
-				const entries = Array.isArray(args.entries) ? args.entries : [];
-				for (const [i, entry] of entries.entries()) {
-					const e = entry;
-					if (!e || typeof e !== "object" || e.layer === void 0 || !Array.isArray(e.ranges)) return jsxFail(`entries[${i}] must be { layer, ranges: [[start, end], \u2026] }`);
-					for (const [j, range] of e.ranges.entries()) if (!Array.isArray(range) || range.length !== 2 || typeof range[0] !== "number" || typeof range[1] !== "number" || !(range[1] > range[0])) return jsxFail(`entries[${i}].ranges[${j}] must be [start, end] with end > start`);
-					if (mode === "inOut" && e.ranges.length !== 1) return jsxFail(`entries[${i}]: mode 'inOut' takes exactly one range per entry`);
-				}
-				return `
-            ${jsxCompPreamble(args)}
-            var _entries = ${jsxVal(entries)};
-            var _mode = ${jsxVal(mode)};
-            var _on = ${jsxVal(args.onValue ?? 100)};
-            var _off = ${jsxVal(args.offValue ?? 0)};
-            var _out = [];
-            var _failed = 0;
-            for (var _ei = 0; _ei < _entries.length; _ei++) {
-                var _e = _entries[_ei];
-                var _layers = AE.resolveLayers(_comp, _e.layer);
-                if (_layers.length === 0) { _failed++; _out.push({ entry: _ei, ok: false, error: "no layers matched " + String(_e.layer) }); continue; }
-                var _ranges = _e.ranges.slice(0);
-                _ranges.sort(function (a, b) { return a[0] - b[0]; });
-                for (var _li = 0; _li < _layers.length; _li++) {
-                    var _l = _layers[_li];
-                    try {
-                        if (_mode === "inOut") {
-                            _l.inPoint = _ranges[0][0];
-                            _l.outPoint = _ranges[0][1];
-                            _out.push({ entry: _ei, index: _l.index, name: _l.name, ok: true, inPoint: _l.inPoint, outPoint: _l.outPoint });
-                        } else {
-                            var _op = _l.transform.opacity;
-                            var _specs = [];
-                            if (_ranges[0][0] > 0) _specs.push({ time: 0, value: _off, interp: "hold" });
-                            for (var _ri = 0; _ri < _ranges.length; _ri++) {
-                                _specs.push({ time: _ranges[_ri][0], value: _on, interp: "hold" });
-                                _specs.push({ time: _ranges[_ri][1], value: _off, interp: "hold" });
-                            }
-                            var _r = AE.applyKeySpecs(_op, _specs, { replace: true });
-                            _out.push({ entry: _ei, index: _l.index, name: _l.name, ok: true, numKeys: _r.numKeys, warnings: _r.warnings });
-                        }
-                    } catch (eS) {
-                        _failed++;
-                        _out.push({ entry: _ei, index: _l.index, name: _l.name, ok: false, error: AE.errText(eS) });
-                    }
-                }
-            }
-            return { ok: _failed === 0, error: _failed === 0 ? null : (_failed + " entries failed"), count: _out.length, layers: _out };
-        `;
-			}
-		});
-		registerOp({
-			name: "comp.set_layer_order",
-			category: "comp",
-			description: "Arrange layers by listing them top to bottom. The listed layers occupy startIndex.. in that order; unlisted layers keep their relative order below (or above) them.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "layers",
-					type: "array",
-					description: "Layer references (index | name | { id }), top first",
-					required: true
-				},
-				{
-					name: "startIndex",
-					type: "number",
-					description: "1-based index the first listed layer lands on (default 1 = top)",
-					required: false,
-					default: 1
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompPreamble(args)}
-            var _refs = ${jsxVal(args.layers)};
-            var _start = ${jsxVal(args.startIndex ?? 1)};
-            var _targets = [];
-            var _seen = {};
-            for (var _ri = 0; _ri < _refs.length; _ri++) {
-                var _l = AE.findLayerInComp(_comp, _refs[_ri]);
-                if (!_l) return { ok: false, error: "no layer matching " + String(_refs[_ri]) };
-                var _key = "k" + _l.index;
-                if (_seen.hasOwnProperty(_key)) return { ok: false, error: "layer '" + _l.name + "' listed twice" };
-                _seen[_key] = true;
-                _targets.push(_l);
-            }
-            if (_start < 1 || _start + _targets.length - 1 > _comp.numLayers) return { ok: false, error: "startIndex " + _start + " leaves no room for " + _targets.length + " layers (comp has " + _comp.numLayers + ")" };
-            for (var _ti = 0; _ti < _targets.length; _ti++) AE.moveLayerToIndex(_targets[_ti], _start + _ti);
-            var _order = [];
-            for (var _oi = 1; _oi <= _comp.numLayers; _oi++) _order.push(_comp.layer(_oi).name);
-            return { ok: true, moved: _targets.length, order: _order };
-        `;
-			}
-		});
-		registerOp({
-			name: "comp.resize",
-			category: "comp",
-			description: "Change a comp's size and keep its content where it was: every unparented layer's Position (keyframes included, separated dimensions handled) is offset so the content stays pinned to `anchor` — 'center' keeps it centred, 'topLeft' keeps the top-left corner, etc. Children follow their parents. Comp accepts a name, id, pattern, or array.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name/id, pattern ('shot_*'), or array of those",
-					required: true
-				},
-				{
-					name: "width",
-					type: "number",
-					description: "New width in px",
-					required: false
-				},
-				{
-					name: "height",
-					type: "number",
-					description: "New height in px",
-					required: false
-				},
-				{
-					name: "anchor",
-					type: "string",
-					description: "Where the existing content stays pinned: center | topLeft | topCenter | topRight | centerLeft | centerRight | bottomLeft | bottomCenter | bottomRight (default center)",
-					required: false,
-					default: "center"
-				},
-				{
-					name: "offset",
-					type: "array",
-					description: "[dx, dy] explicit offset applied to every unparented layer instead of `anchor`",
-					required: false
-				}
-			],
-			toJsx(args) {
-				if (args.width === void 0 && args.height === void 0) return jsxFail("give width and/or height");
-				return `
-            var _comps = AE.findComps(${jsxVal(args.comp)});
-            if (_comps.length === 0) return { ok: false, error: "no comps matched" };
-            var _anchor = ${jsxVal(args.anchor ?? "center")};
-            if (!AE.ANCHOR_PRESETS.hasOwnProperty(_anchor)) return { ok: false, error: "unknown anchor '" + _anchor + "'" };
-            var _explicit = ${jsxVal(args.offset ?? null)};
-            var _out = [];
-            for (var _ci = 0; _ci < _comps.length; _ci++) {
-                var _c = _comps[_ci];
-                var _oldW = _c.width, _oldH = _c.height;
-                var _newW = ${jsxVal(args.width ?? null)};
-                var _newH = ${jsxVal(args.height ?? null)};
-                if (_newW === null) _newW = _oldW;
-                if (_newH === null) _newH = _oldH;
-                var _f = AE.ANCHOR_PRESETS[_anchor];
-                var _d = _explicit !== null ? [_explicit[0] || 0, _explicit[1] || 0] : [(_newW - _oldW) * _f[0], (_newH - _oldH) * _f[1]];
-                _c.width = _newW;
-                _c.height = _newH;
-                var _moved = 0;
-                var _warn = [];
-                for (var _li = 1; _li <= _c.numLayers; _li++) {
-                    var _l = _c.layer(_li);
-                    if (_l.parent) continue;
-                    var _pos = null;
-                    try { _pos = _l.transform.position; } catch (eP) {}
-                    if (!_pos) continue;
-                    try { AE.offsetValue(_pos, [_d[0], _d[1]]); _moved++; }
-                    catch (eO) { _warn.push(_l.name + ": " + AE.errText(eO)); }
-                    if (_l instanceof CameraLayer || _l instanceof LightLayer) {
-                        try { var _poi = _l.transform.pointOfInterest; if (_poi) AE.offsetValue(_poi, [_d[0], _d[1]]); } catch (ePoi) {}
-                    }
-                }
-                _out.push({ comp: _c.name, from: [_oldW, _oldH], to: [_c.width, _c.height], offset: _d, layersMoved: _moved, warnings: _warn });
-            }
-            return { ok: true, comps: _out };
-        `;
-			}
-		});
-		registerOp({
-			name: "project.rename",
-			category: "project",
-			description: "Rename project items and/or layers in bulk: an exact `map` ({ from: to }) or a regex `pattern` + `replacement` ($1 works). scope 'items' covers comps, footage and folders; 'layers' covers layers in every comp (or the comps matched by `comp`). dryRun previews without renaming.",
-			params: [
-				{
-					name: "scope",
-					type: "string",
-					description: "items|layers|all (default all)",
-					required: false,
-					default: "all"
-				},
-				{
-					name: "map",
-					type: "object",
-					description: "{ 'old name': 'new name', … }",
-					required: false
-				},
-				{
-					name: "pattern",
-					type: "string",
-					description: "Regular expression (JavaScript syntax) applied to each name",
-					required: false
-				},
-				{
-					name: "replacement",
-					type: "string",
-					description: "Replacement for `pattern` matches ($1… for groups)",
-					required: false
-				},
-				{
-					name: "flags",
-					type: "string",
-					description: "Regex flags: any of g, i, m (default 'g')",
-					required: false,
-					default: "g"
-				},
-				{
-					name: "comp",
-					type: "any",
-					description: "Restrict layer renames to these comps (name/id/pattern/array; default all)",
-					required: false
-				},
-				{
-					name: "itemTypes",
-					type: "array",
-					description: "Restrict item renames to these types: CompItem|FootageItem|FolderItem",
-					required: false
-				},
-				{
-					name: "dryRun",
-					type: "boolean",
-					description: "Report what would change without renaming (default false)",
-					required: false,
-					default: false
-				}
-			],
-			toJsx(args) {
-				const scope = args.scope ?? "all";
-				if (scope !== "items" && scope !== "layers" && scope !== "all") return jsxFail("scope must be items|layers|all");
-				const hasMap = args.map !== void 0;
-				const hasPattern = args.pattern !== void 0;
-				if (hasMap === hasPattern) return jsxFail("give exactly one of map or pattern (+ replacement)");
-				const flags = String(args.flags ?? "g");
-				if (hasPattern) {
-					if (args.replacement === void 0) return jsxFail("pattern needs a replacement");
-					if (!/^[gim]*$/.test(flags)) return jsxFail("flags may only contain g, i, m");
-					try {
-						RegExp(String(args.pattern), flags);
-					} catch (regexErr) {
-						const msg = regexErr instanceof Error ? regexErr.message : String(regexErr);
-						return jsxFail(`invalid pattern: ${msg}`);
-					}
-				}
-				return `
-            var _scope = ${jsxVal(scope)};
-            var _map = ${jsxVal(args.map ?? null)};
-            var _re = ${hasPattern ? `new RegExp(${jsxVal(args.pattern)}, ${jsxVal(flags)})` : "null"};
-            var _repl = ${jsxVal(args.replacement ?? "")};
-            var _types = ${jsxVal(args.itemTypes ?? null)};
-            var _dry = ${jsxVal(args.dryRun === true)};
-            function _next(name) {
-                if (_map !== null) return (_map.hasOwnProperty(name) && typeof _map[name] === "string") ? _map[name] : name;
-                _re.lastIndex = 0;
-                return name.replace(_re, _repl);
-            }
-            function _typeOk(t) {
-                if (_types === null) return true;
-                for (var _ti = 0; _ti < _types.length; _ti++) if (_types[_ti] === t) return true;
-                return false;
-            }
-            var _changes = [];
-            var _failed = 0;
-            if (_scope !== "layers") {
-                for (var _ii = 1; _ii <= app.project.numItems; _ii++) {
-                    var _it = app.project.item(_ii);
-                    var _t = AE.itemTypeName(_it);
-                    if (!_typeOk(_t)) continue;
-                    var _to = _next(_it.name);
-                    if (_to === _it.name) continue;
-                    var _ch = { kind: "item", type: _t, id: _it.id, from: _it.name, to: _to };
-                    if (!_dry) { try { _it.name = _to; _ch.applied = true; } catch (eI) { _failed++; _ch.applied = false; _ch.error = AE.errText(eI); } }
-                    _changes.push(_ch);
-                }
-            }
-            if (_scope !== "items") {
-                var _comps = AE.findComps(${args.comp !== void 0 ? jsxVal(args.comp) : "\"*\""});
-                for (var _ci = 0; _ci < _comps.length; _ci++) {
-                    var _c = _comps[_ci];
-                    for (var _li = 1; _li <= _c.numLayers; _li++) {
-                        var _l = _c.layer(_li);
-                        var _lto = _next(_l.name);
-                        if (_lto === _l.name) continue;
-                        var _lch = { kind: "layer", comp: _c.name, index: _li, from: _l.name, to: _lto };
-                        if (!_dry) { try { _l.name = _lto; _lch.applied = true; } catch (eL) { _failed++; _lch.applied = false; _lch.error = AE.errText(eL); } }
-                        _changes.push(_lch);
-                    }
-                }
-            }
-            return { ok: _failed === 0, error: _failed === 0 ? null : (_failed + " renames failed"), dryRun: _dry, count: _changes.length, changes: _changes };
-        `;
-			}
-		});
-	})))();
-}
-
-export { init_keying, init_layer, init_layer_advanced, init_layout };
+export { init_keying, init_layer, init_layer_advanced };
