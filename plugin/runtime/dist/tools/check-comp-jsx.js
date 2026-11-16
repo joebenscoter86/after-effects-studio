@@ -9,8 +9,9 @@
 //                 transform in a colour-managed project (_captureWithOcio,
 //                 shared with ae_render_frame).
 //   structureJsx  read-only: text layers whose bounds leave the frame (or a
-//                 safe area) while visible, missing fonts and footage, and
-//                 expressions in error.
+//                 safe area) while visible, missing fonts and footage,
+//                 expressions in error, and when something changes on each
+//                 layer (for the idle report).
 import { COMP_CORNERS_FN, LIST_MISSING_FONTS_FN, LIST_MISSING_FOOTAGE_FN, MISSING_SOURCES_FN, OCIO_CAPTURE_FN, RENDER_FRAME_FN, } from "../operations/snippets.js";
 import { jsxVal } from "../registry.js";
 /** Where inside a frame a capture is taken: a quarter in (see ae_render_frame FRAME_PICK). */
@@ -119,6 +120,14 @@ export function captureJsx(compNameOrId, frames, paths, factor, tryOcio) {
         };
     `;
 }
+/**
+ * An enabled expression whose text matches this counts as changing all the
+ * time, Source Text included. A heuristic, read from the text alone: an
+ * expression that reads another layer's keyed property (thisComp.layer("x")
+ * .position, say) changes when that layer does, but counts here as static,
+ * and an expression that names `time` but holds still counts as changing.
+ */
+export const IDLE_TIME_DRIVEN = /\btime\b|wiggle\(|loopIn|loopOut|valueAtTime|posterizeTime|Date\(/;
 /**
  * The read-only structure checks. Expressions in error are read last, and the
  * whole script runs after the capture pass. Measured live (AE 2027):
@@ -316,6 +325,166 @@ export function structureJsx(compNameOrId, o) {
             comp.time = _prevTime;
         }
 
+        // Change times for the idle report (0.4.1), per top-level layer on
+        // screen: merged intervals [a, b] in comp seconds inside the layer's
+        // span [max(inPoint, 0), min(outPoint, comp.duration)] (a === b for an
+        // instant: a key on its own, a marker), or "always". Between two keys
+        // of one property the value moves, unless the first is a hold key.
+        // Changes: keys on the layer (its effects, masks, text animators, any
+        // property), keys on the transform of every parent up the chain,
+        // layer markers, a time-driven expression (IDLE_TIME_DRIVEN), and for
+        // a precomp the keys one level down, mapped to outer time as
+        // startTime + inner * stretch / 100; a precomp with keyed time remap,
+        // or one holding footage that plays, changes all the time. Audio
+        // levels are not a change on screen. Node finds the longest gap.
+        // Exempt: cameras and lights, nulls, adjustment and guide layers,
+        // footage and audio whose source plays, and solids and stills that
+        // cover the frame with no non-exempt layer below them (grounds).
+        var _idle = { layers: [], exempt: 0, layersChecked: 0 };
+        var _timeRe = new RegExp(_o.timeDriven);
+        var _identity = function (t) { return t; };
+        function _mapper(start, stretch) {
+            return function (t) { return start + t * stretch / 100; };
+        }
+        function _drivenByTime(p) {
+            if (!AE.safeGet(function () { return p.canSetExpression && p.expressionEnabled && p.expression !== ""; }, false)) return false;
+            if (AE.safeGet(function () { return p.expressionError; }, "")) return false;
+            return _timeRe.test(AE.safeGet(function () { return p.expression; }, ""));
+        }
+        // Collects change intervals of a property tree into out; true when
+        // something in it changes all the time.
+        function _changeWalk(group, out, depth, map) {
+            if (depth > 12) return false;
+            var always = false;
+            var n = AE.safeGet(function () { return group.numProperties; }, 0);
+            for (var i = 1; i <= n; i++) {
+                var p = AE.safeGet(function () { return group.property(i); }, null);
+                if (!p) continue;
+                var mn = AE.safeGet(function () { return p.matchName; }, "");
+                if (mn === "ADBE Audio Group") continue;
+                if (AE.safeGet(function () { return p.propertyType; }, null) !== PropertyType.PROPERTY) {
+                    if (_changeWalk(p, out, depth + 1, map)) always = true;
+                    continue;
+                }
+                if (_drivenByTime(p)) always = true;
+                var nk = AE.safeGet(function () { return p.numKeys; }, 0);
+                var prev = null;
+                for (var k = 1; k <= nk; k++) {
+                    var t = map(p.keyTime(k));
+                    out.push([t, t]);
+                    var held = AE.safeGet(function () { return p.keyOutInterpolationType(k - 1) === KeyframeInterpolationType.HOLD; }, false);
+                    if (prev !== null && mn !== "ADBE Marker" && !held) out.push([Math.min(prev, t), Math.max(prev, t)]);
+                    prev = t;
+                }
+            }
+            return always;
+        }
+        function _plays(src) {
+            if (!src || src instanceof CompItem) return false;
+            if (AE.safeGet(function () { return src.mainSource.isStill; }, false)) return false;
+            return AE.safeGet(function () { return src.duration; }, 0) > 0;
+        }
+        function _idleExempt(L) {
+            if (!(L instanceof TextLayer || L instanceof ShapeLayer || L instanceof AVLayer)) return "camera or light";
+            if (AE.safeGet(function () { return L.nullLayer; }, false)) return "null";
+            if (AE.safeGet(function () { return L.adjustmentLayer; }, false)) return "adjustment layer";
+            if (AE.safeGet(function () { return L.guideLayer; }, false)) return "guide layer";
+            if (_plays(AE.safeGet(function () { return L.source; }, null))) return "footage that plays";
+            return null;
+        }
+        function _isGround(L, t) {
+            var src = AE.safeGet(function () { return L.source; }, null);
+            if (!src || src instanceof CompItem) return false;
+            var flat = AE.safeGet(function () { return src.mainSource instanceof SolidSource; }, false) ||
+                AE.safeGet(function () { return src.mainSource.isStill; }, false);
+            if (!flat) return false;
+            comp.time = t;
+            var box = null;
+            try { box = _boxAt(L, t); } catch (eBox) { box = null; }
+            if (!box || box.error) return false;
+            return box.x0 <= 0.5 && box.y0 <= 0.5 && box.x1 >= _W - 0.5 && box.y1 >= _H - 0.5;
+        }
+        function _layerChanges(L, out) {
+            var always = _changeWalk(L, out, 0, _identity);
+            var par = AE.safeGet(function () { return L.parent; }, null);
+            for (var guard = 0; par && guard < 100; guard++) {
+                var ptr = AE.safeGet(function () { return par.property("ADBE Transform Group"); }, null);
+                if (ptr && _changeWalk(ptr, out, 0, _identity)) always = true;
+                par = AE.safeGet(function () { return par.parent; }, null);
+            }
+            var src = AE.safeGet(function () { return L.source; }, null);
+            if (!(src && src instanceof CompItem)) return always;
+            if (AE.safeGet(function () { return L.timeRemapEnabled; }, false)) {
+                var tr = AE.safeGet(function () { return L.property("ADBE Time Remapping"); }, null);
+                if (AE.safeGet(function () { return tr.numKeys; }, 0) > 0) return true;
+            }
+            var start = Number(AE.safeGet(function () { return L.startTime; }, 0)) || 0;
+            var stretch = Number(AE.safeGet(function () { return L.stretch; }, 100));
+            if (!(stretch === stretch)) stretch = 100;
+            var map = _mapper(start, stretch);
+            var nIn = AE.safeGet(function () { return src.numLayers; }, 0);
+            for (var j = 1; j <= nIn; j++) {
+                var IL = AE.safeGet(function () { return src.layer(j); }, null);
+                if (!IL) continue;
+                if (_plays(AE.safeGet(function () { return IL.source; }, null))) always = true;
+                if (_changeWalk(IL, out, 0, map)) always = true;
+            }
+            return always;
+        }
+        function _mergeWithin(raw, s0, s1) {
+            var clipped = [];
+            for (var ri = 0; ri < raw.length; ri++) {
+                var a = raw[ri][0];
+                var b = raw[ri][1];
+                if (b < s0 || a > s1) continue;
+                clipped.push([Math.max(a, s0), Math.min(b, s1)]);
+            }
+            clipped.sort(function (x, y) { return x[0] - y[0]; });
+            var merged = [];
+            for (var mi = 0; mi < clipped.length; mi++) {
+                var last = merged.length > 0 ? merged[merged.length - 1] : null;
+                if (last !== null && clipped[mi][0] <= last[1] + 1e-9) {
+                    if (clipped[mi][1] > last[1]) last[1] = clipped[mi][1];
+                } else {
+                    merged.push([clipped[mi][0], clipped[mi][1]]);
+                }
+            }
+            for (var ci = 0; ci < merged.length; ci++) merged[ci] = [_r6(merged[ci][0]), _r6(merged[ci][1])];
+            return merged;
+        }
+        if (_o.idleSeconds > 0) {
+            var _idlePrevTime = comp.time;
+            var _below = false;
+            try {
+                for (var ii = comp.numLayers; ii >= 1; ii--) {
+                    var IdL = comp.layer(ii);
+                    if (!AE.safeGet(function () { return IdL.enabled; }, true)) continue;
+                    var s0 = Math.max(IdL.inPoint, 0);
+                    var s1 = Math.min(IdL.outPoint, comp.duration);
+                    if (!(s1 > s0)) continue;
+                    var idleWhy = _idleExempt(IdL);
+                    if (idleWhy === null && !_below && _isGround(IdL, s0)) idleWhy = "ground";
+                    if (idleWhy !== null) {
+                        _idle.exempt++;
+                        continue;
+                    }
+                    _below = true;
+                    _idle.layersChecked++;
+                    var raw = [];
+                    var always = _layerChanges(IdL, raw);
+                    _idle.layers.push({
+                        index: IdL.index,
+                        name: IdL.name,
+                        from: _r6(s0),
+                        to: _r6(s1),
+                        changes: always ? "always" : _mergeWithin(raw, s0, s1)
+                    });
+                }
+            } finally {
+                comp.time = _idlePrevTime;
+            }
+        }
+
         // Expressions in error, in this comp and every comp nested in it, each once.
         var _expr = { compsWalked: 0, propertiesVisited: 0, total: 0, errors: [], truncated: false };
         function _exprWalk(group, path, layerRef) {
@@ -360,7 +529,8 @@ export function structureJsx(compNameOrId, o) {
             fonts: _listMissingFonts(),
             footage: _listMissingFootage(),
             nestedCompIds: (function () { var ids = []; for (var k in _seen) { if (_seen.hasOwnProperty(k)) ids.push(Number(k.substring(1))); } return ids; })(),
-            expressions: _expr
+            expressions: _expr,
+            idle: _idle
         };
     `;
 }

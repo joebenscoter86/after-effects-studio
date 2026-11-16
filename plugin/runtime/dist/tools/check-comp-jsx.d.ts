@@ -29,7 +29,19 @@ export interface StructureOptions {
     maxItems: number;
     /** Properties visited at most while looking for expression errors. */
     maxProperties: number;
+    /** The idle report's threshold, seconds; 0 skips collecting change times. */
+    idleSeconds: number;
+    /** Source of the regex that marks an expression as time-driven (IDLE_TIME_DRIVEN). */
+    timeDriven: string;
 }
+/**
+ * An enabled expression whose text matches this counts as changing all the
+ * time, Source Text included. A heuristic, read from the text alone: an
+ * expression that reads another layer's keyed property (thisComp.layer("x")
+ * .position, say) changes when that layer does, but counts here as static,
+ * and an expression that names `time` but holds still counts as changing.
+ */
+export declare const IDLE_TIME_DRIVEN: RegExp;
 /**
  * The read-only structure checks. Expressions in error are read last, and the
  * whole script runs after the capture pass. Measured live (AE 2027):

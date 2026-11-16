@@ -9,7 +9,7 @@ Read `review`, `quality` and `failure-atlas` through `ae_library`; use `referenc
 
 When you review a finished piece, as the build skills require before hand-over, work only from the brief, the `ae_check_comp` report, the frames and the comp. Set aside any builder notes or list of fixes you were given.
 
-1. Run `ae_check_comp` on the whole delivered comp (again with `next.startFrame` until `next` is null) and look at its sheet. Judge each flag against the brief: a defect, or intended, with the reason.
+1. Run `ae_check_comp` on the whole delivered comp (again with `next.startFrame` until `next` is null) and look at its sheet. Judge each flag against the brief: a defect, or intended, with the reason. Its `structure.idle` lists layers on screen longer than `idleSeconds` (default 5 s; set it to the project's own threshold) with nothing changing on them: a report, not a fault; judge each the same way.
 2. Render full-size frames where the flags, the brief's cuts and beats, and the reading holds point. Look for what raises no flag: colour against the plate, edges round cutouts, focus, hits against their marker times, copy against the brief.
 3. Say what you reviewed (project, comp, version, times, export), then return defects most noticeable first, each with time and frame, where in the frame, what a viewer sees, the evidence (file or number) and a severity: `first-watch`, `careful-watch` or `polish`. Then say what you could not judge. `review` has the scale and the hand-over. Before handing over, run `project.lint` and deliver with `render.deliver`, as `quality`'s "Technical delivery" says.
 

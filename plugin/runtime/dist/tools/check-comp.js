@@ -26,7 +26,7 @@ import { rejectedOutputPath } from "../config.js";
 import { errorResult } from "../errors.js";
 import { readOnlyMode } from "../policy.js";
 import { colorConversion, iccManagedReason } from "./capture-shared.js";
-import { captureJsx, planJsx, structureJsx } from "./check-comp-jsx.js";
+import { captureJsx, IDLE_TIME_DRIVEN, planJsx, structureJsx } from "./check-comp-jsx.js";
 import { defineTool, jsonResult, toMcpResult } from "./define-tool.js";
 /**
  * How long the wait for a chunk goes on after the last capture finished
@@ -163,6 +163,48 @@ async function readPicture(file, target, convert) {
 /** Items listed at most per list (counts are always complete). */
 export const LIST_CAP = 20;
 const DEFAULT_MAX_TILES = 12;
+export const DEFAULT_IDLE_SECONDS = 5;
+/**
+ * The idle report: for each layer, the longest stretch of its span with
+ * nothing changing (span start to the first change, between changes, last
+ * change to span end; on a tie the later stretch), listed when longer than
+ * idleSeconds. Longest first, then by layer index.
+ */
+export function idleEntries(layers, idleSeconds) {
+    const out = [];
+    if (!(idleSeconds > 0))
+        return out;
+    for (const L of layers) {
+        if (L.changes === "always")
+            continue;
+        let best = null;
+        let cursor = L.from;
+        const consider = (a, b) => {
+            if (b - a > 1e-9 && (best === null || b - a >= best[1] - best[0] - 1e-9))
+                best = [a, b];
+        };
+        for (const [a, b] of [...L.changes].sort((x, y) => x[0] - y[0])) {
+            consider(cursor, a);
+            cursor = Math.max(cursor, b);
+        }
+        consider(cursor, L.to);
+        if (best === null)
+            continue;
+        const [from, to] = best;
+        const seconds = r6(to - from);
+        if (seconds <= idleSeconds + 1e-9)
+            continue;
+        out.push({
+            layer: L.name,
+            index: L.index,
+            from: r6(from),
+            to: r6(to),
+            seconds,
+            reading: `layer ${L.index} "${L.name}" is on screen with nothing changing on it from ${r6(from)} s to ${r6(to)} s (${seconds} s)`,
+        });
+    }
+    return out.sort((a, b) => b.seconds - a.seconds || a.index - b.index);
+}
 const r6 = (v) => Math.round(v * 1e6) / 1e6;
 const r3 = (v) => Math.round(v * 1e3) / 1e3;
 /** Pick at most `cap` items, worst first, taking turns between kinds so no kind crowds the others out. */
@@ -286,6 +328,12 @@ const CHECK_COMP_SHAPE = {
         .boolean()
         .optional()
         .describe("Run the structure checks on the call that reaches the end of the range (default true)."),
+    idleSeconds: z
+        .number()
+        .min(0)
+        .optional()
+        .describe(`The idle report (structure.idle) lists layers on screen longer than this with nothing changing on them (default ${DEFAULT_IDLE_SECONDS} s; 0 turns it off). ` +
+        "A report for the reviewer, never a fault."),
     colorManaged: z
         .enum(["auto", "off"])
         .optional()
@@ -758,6 +806,8 @@ async function runStructure(args, transport, plan, first, end, fd) {
         maxSamples: 400,
         maxItems: LIST_CAP,
         maxProperties: 50_000,
+        idleSeconds: args.idleSeconds ?? DEFAULT_IDLE_SECONDS,
+        timeDriven: IDLE_TIME_DRIVEN.source,
     };
     const res = await transport.execute({
         code: structureJsx(args.compNameOrId, opts),
@@ -784,6 +834,7 @@ async function runStructure(args, transport, plan, first, end, fd) {
     }))
         .sort((a, b) => a.from.time - b.from.time);
     const footageInComp = s.footage.items.filter((it) => it.usedInComps.length > 0);
+    const idle = opts.idleSeconds > 0 && s.idle ? idleEntries(s.idle.layers, opts.idleSeconds) : [];
     return {
         checked: true,
         safeArea: {
@@ -819,6 +870,32 @@ async function runStructure(args, transport, plan, first, end, fd) {
             ...(s.expressions.truncated ? { truncated: true } : {}),
             note: "read after the frames were rendered (expressionError is filled in when a broken expression is set; read late in case a just-opened project fills it only when evaluated)",
         },
+        // Listed last and apart: a report for the reviewer, never a fault. It adds
+        // nothing to counts, flags, stretches or the sheet.
+        idleReport: idleReportOf(s, opts.idleSeconds, idle),
+        idle,
+    };
+}
+function idleReportOf(s, idleSeconds, idle) {
+    const base = { heading: "Report (not faults)", idleSeconds, count: idle.length };
+    if (idleSeconds === 0)
+        return { ...base, reading: "the idle report is off (idleSeconds 0)" };
+    if (!s.idle)
+        return { ...base, reading: "the structure script returned no change times: the idle report was not made" };
+    return {
+        ...base,
+        layersChecked: s.idle.layersChecked,
+        exempt: s.idle.exempt,
+        reading: idle.length === 0
+            ? `no layer is on screen longer than ${idleSeconds} s with nothing changing on it`
+            : `${idle.length} layer${idle.length > 1 ? "s are" : " is"} on screen longer than ${idleSeconds} s with nothing changing on ${idle.length > 1 ? "them" : "it"}, longest first. ` +
+                "A report, not a fault: a held card can be intended; judge each against the brief. Not counted in counts or shown on the sheet.",
+        note: "top-level layers of this comp, each over its on-screen span (in to out point, inside the comp); a change is a keyframe " +
+            "on the layer (any property: effects, masks, text animators), on a parent's transform, a layer marker, a time-driven " +
+            "expression (by its text: time, wiggle, loopIn/Out, valueAtTime, posterizeTime, Date; an expression reading another " +
+            "layer counts as static), or for a precomp a keyframe one level down (keyed time remap or playing footage inside: always " +
+            "changing). Exempt: cameras, lights, nulls, adjustment and guide layers, footage and audio that plays, and solids and " +
+            "stills covering the frame with no other layer below them",
     };
 }
 /** Tile labels are short: a quarter-size portrait tile fits about 22 characters. */
