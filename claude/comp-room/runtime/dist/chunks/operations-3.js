@@ -4625,195 +4625,176 @@ function init_pref() {
 	})))();
 }
 
-// operations/shape-contents.js
+// operations/layout.js
 var LAYER_TARGET_PARAM;
-function init_shape_contents() {
-	return (init_shape_contents = __esmMin((() => {
+function init_layout() {
+	return (init_layout = __esmMin((() => {
 		init_registry();
 		LAYER_TARGET_PARAM = {
 			name: "layer",
 			type: "any",
-			description: "Layer index, name, { id }, 'selected', 'all', or an array of those (shape layers)",
+			description: "Layer index, name, { id }, 'selected', 'all', or an array of those",
 			required: true
 		};
 		registerOp({
-			name: "shape.group_bounds",
-			category: "shape",
-			readOnly: true,
-			description: "Bounds of each top-level vector group of a shape layer, in LAYER space with the group's own transform applied — what you need to split, align, or anchor per part. Geometry-based (exact for paths/rects/ellipses; strokes padded in; stars and path modifiers such as Trim/Repeater are listed in `approximate`). Also reports the whole layer's bounds.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				LAYER_TARGET_PARAM,
-				{
-					name: "time",
-					type: "number",
-					description: "Evaluate animated paths/transforms at this time (default: current value)",
-					required: false
-				},
-				{
-					name: "includeStroke",
-					type: "boolean",
-					description: "Pad by half the widest stroke (default true)",
-					required: false,
-					default: true
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompPreamble(args)}
-            var _layers = AE.resolveLayers(_comp, ${jsxVal(args.layer)});
-            if (_layers.length === 0) return { ok: false, error: "no layers matched" };
-            var _opts = { time: ${jsxVal(args.time ?? null)}, includeStroke: ${jsxVal(args.includeStroke !== false)} };
-            var _out = [];
-            for (var _li = 0; _li < _layers.length; _li++) {
-                var _l = _layers[_li];
-                if (!(_l instanceof ShapeLayer)) { _out.push({ index: _l.index, name: _l.name, ok: false, error: "not a shape layer" }); continue; }
-                var _contents = _l.property("Contents");
-                var _groups = [];
-                for (var _gi = 1; _gi <= _contents.numProperties; _gi++) {
-                    var _g = _contents.property(_gi);
-                    if (_g.matchName !== "ADBE Vector Group") continue;
-                    var _b = AE.shapeGroupBounds(_g, _opts);
-                    _b.index = _gi;
-                    _b.name = _g.name;
-                    _groups.push(_b);
-                }
-                _out.push({ index: _l.index, name: _l.name, ok: true, layer: AE.shapeLayerBounds(_l, _opts), groups: _groups });
-            }
-            return { ok: true, count: _out.length, layers: _out };
-        `;
-			}
-		});
-		registerOp({
-			name: "shape.recolor",
-			category: "shape",
-			description: "Replace fill and/or stroke colors throughout a shape layer's contents (any nesting depth). Either `color` (paint everything one color — silhouettes) or `map` ([{ from, to }] — per-color substitution, matched within `tolerance`). Colors are [r,g,b] 0-1 (alpha optional).",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				LAYER_TARGET_PARAM,
-				{
-					name: "target",
-					type: "string",
-					description: "fill|stroke|both (default both)",
-					required: false,
-					default: "both"
-				},
-				{
-					name: "color",
-					type: "array",
-					description: "[r,g,b] — set every matching fill/stroke to this color",
-					required: false
-				},
-				{
-					name: "map",
-					type: "array",
-					description: "[{ from: [r,g,b], to: [r,g,b] }, …] — replace only colors that match `from`",
-					required: false
-				},
-				{
-					name: "tolerance",
-					type: "number",
-					description: "Per-channel match tolerance for `map` (default 0.01)",
-					required: false,
-					default: .01
-				}
-			],
-			toJsx(args) {
-				if (args.color === void 0 && args.map === void 0) return jsxFail("give either color (recolor everything) or map (per-color substitution)");
-				return `
-            ${jsxCompPreamble(args)}
-            var _layers = AE.resolveLayers(_comp, ${jsxVal(args.layer)});
-            if (_layers.length === 0) return { ok: false, error: "no layers matched" };
-            var _target = ${jsxVal(args.target ?? "both")};
-            if (_target !== "fill" && _target !== "stroke" && _target !== "both") return { ok: false, error: "target must be fill|stroke|both" };
-            var _opts = { target: _target, color: ${jsxVal(args.color ?? null)}, map: ${jsxVal(args.map ?? null)}, tolerance: ${jsxVal(args.tolerance ?? .01)} };
-            var _out = [];
-            var _total = 0;
-            for (var _li = 0; _li < _layers.length; _li++) {
-                var _l = _layers[_li];
-                if (!(_l instanceof ShapeLayer)) { _out.push({ index: _l.index, name: _l.name, ok: false, error: "not a shape layer" }); continue; }
-                var _r = AE.recolorContents(_l.property("Contents"), _opts);
-                _total += _r.changed;
-                _out.push({ index: _l.index, name: _l.name, ok: true, changed: _r.changed, visited: _r.visited });
-            }
-            return { ok: true, changed: _total, layers: _out };
-        `;
-			}
-		});
-		registerOp({
-			name: "shape.signature",
-			category: "shape",
-			readOnly: true,
-			description: "Structural hash of a shape layer's contents and of each top-level group — matchNames plus rounded values, NO display names — so identical artwork hashes the same even after renaming. Use it to find duplicate layers when merging comps, or to check that a copy still matches its source.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				LAYER_TARGET_PARAM,
-				{
-					name: "precision",
-					type: "number",
-					description: "Decimal places kept when rounding values (default 2)",
-					required: false,
-					default: 2
-				},
-				{
-					name: "time",
-					type: "number",
-					description: "Evaluate animated values at this time (default: current value)",
-					required: false
-				},
-				{
-					name: "includeLayerTransform",
-					type: "boolean",
-					description: "Also hash the layer's Transform group (default false — copies usually differ only in position)",
-					required: false,
-					default: false
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompPreamble(args)}
-            var _layers = AE.resolveLayers(_comp, ${jsxVal(args.layer)});
-            if (_layers.length === 0) return { ok: false, error: "no layers matched" };
-            var _prec = ${jsxVal(args.precision ?? 2)};
-            var _t = ${jsxVal(args.time ?? null)};
-            var _withXf = ${jsxVal(args.includeLayerTransform === true)};
-            var _out = [];
-            for (var _li = 0; _li < _layers.length; _li++) {
-                var _l = _layers[_li];
-                if (!(_l instanceof ShapeLayer)) { _out.push({ index: _l.index, name: _l.name, ok: false, error: "not a shape layer" }); continue; }
-                var _contents = _l.property("Contents");
-                var _canon = AE.canonicalGroup(_contents, _prec, _t);
-                if (_withXf) _canon += "|xf:" + AE.canonicalGroup(_l.property("Transform"), _prec, _t);
-                var _groups = [];
-                for (var _gi = 1; _gi <= _contents.numProperties; _gi++) {
-                    var _g = _contents.property(_gi);
-                    _groups.push({ index: _gi, name: _g.name, matchName: _g.matchName, signature: AE.hashString(AE.canonicalGroup(_g, _prec, _t)) });
-                }
-                _out.push({ index: _l.index, name: _l.name, ok: true, signature: AE.hashString(_canon), groups: _groups });
-            }
-            return { ok: true, count: _out.length, layers: _out };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.split_groups",
+			name: "layer.set_anchor",
 			category: "layer",
-			description: "Split a shape layer into one layer per top-level vector group (letters of a word, parts of a character), keeping every group's transform, fills and strokes. New layers stack in group order directly above the original. `anchor` re-anchors each new layer to its own artwork without moving it on screen.",
+			description: "Move the anchor point WITHOUT moving the layer on screen (Position is compensated through Scale/Rotation; Position keyframes are all shifted). Address the anchor by preset on the layer's rendered bounds (sourceRectAtTime), by an explicit layer-space point, or by an offset from the current anchor.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				LAYER_TARGET_PARAM,
+				{
+					name: "preset",
+					type: "string",
+					description: "center | topLeft | topCenter | topRight | centerLeft | centerRight | bottomLeft | bottomCenter | bottomRight",
+					required: false
+				},
+				{
+					name: "point",
+					type: "array",
+					description: "[x, y] (or [x, y, z]) explicit anchor in layer space",
+					required: false
+				},
+				{
+					name: "offset",
+					type: "array",
+					description: "[dx, dy] added to the current anchor",
+					required: false
+				},
+				{
+					name: "time",
+					type: "number",
+					description: "Time at which the bounds are measured for a preset (default: current comp time)",
+					required: false
+				}
+			],
+			toJsx(args) {
+				if ([
+					args.preset,
+					args.point,
+					args.offset
+				].filter((v) => v !== void 0).length !== 1) return jsxFail("give exactly one of preset, point, or offset");
+				return `
+            ${jsxCompPreamble(args)}
+            var _layers = AE.resolveLayers(_comp, ${jsxVal(args.layer)});
+            if (_layers.length === 0) return { ok: false, error: "no layers matched" };
+            var _preset = ${jsxVal(args.preset ?? null)};
+            if (_preset !== null && !AE.ANCHOR_PRESETS.hasOwnProperty(_preset)) return { ok: false, error: "unknown preset '" + _preset + "'" };
+            var _point = ${jsxVal(args.point ?? null)};
+            var _offset = ${jsxVal(args.offset ?? null)};
+            var _t = ${jsxVal(args.time ?? null)};
+            if (_t === null) _t = _comp.time;
+            var _out = [];
+            var _failed = 0;
+            for (var _li = 0; _li < _layers.length; _li++) {
+                var _l = _layers[_li];
+                var _target = null;
+                try {
+                    if (_preset !== null) {
+                        var _rect = AE.layerRect(_l, _t);
+                        if (!_rect) throw new Error("layer has no measurable bounds");
+                        _target = AE.pointInRect(_rect, _preset);
+                    } else if (_point !== null) {
+                        _target = _point;
+                    } else {
+                        var _cur = _l.transform.anchorPoint.value;
+                        _target = [_cur[0] + (_offset[0] || 0), _cur[1] + (_offset[1] || 0)];
+                        if (_cur.length > 2) _target.push(_cur[2] + (_offset[2] || 0));
+                    }
+                    var _r = AE.moveAnchor(_l, _target);
+                    _out.push({ index: _l.index, name: _l.name, ok: true, anchorPoint: _r.anchorPoint, positionDelta: _r.positionDelta, positionKeysShifted: _r.positionKeysShifted, warnings: _r.warnings });
+                } catch (eA) {
+                    _failed++;
+                    _out.push({ index: _l.index, name: _l.name, ok: false, error: AE.errText(eA) });
+                }
+            }
+            return { ok: _failed === 0, error: _failed === 0 ? null : (_failed + " of " + _out.length + " layers failed"), count: _out.length, layers: _out };
+        `;
+			}
+		});
+		registerOp({
+			name: "layer.set_timing",
+			category: "layer",
+			description: "Set a layer's timing in one call: shift (relative move of the whole layer), startTime, inPoint, outPoint ('comp' = comp start / comp end — e.g. to extend a layer copied out of a shorter comp), stretch. Applied in that order; AE clamps in/out to the source for footage.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				LAYER_TARGET_PARAM,
+				{
+					name: "shift",
+					type: "number",
+					description: "Seconds to move the layer by (in/out points follow)",
+					required: false
+				},
+				{
+					name: "startTime",
+					type: "number",
+					description: "Absolute layer start",
+					required: false
+				},
+				{
+					name: "inPoint",
+					type: "any",
+					description: "In point in seconds, or 'comp' for the comp start (0)",
+					required: false
+				},
+				{
+					name: "outPoint",
+					type: "any",
+					description: "Out point in seconds, or 'comp' for the comp end (comp.duration)",
+					required: false
+				},
+				{
+					name: "stretch",
+					type: "number",
+					description: "Time stretch in percent",
+					required: false
+				}
+			],
+			toJsx(args) {
+				const sets = [];
+				if (args.shift !== void 0) sets.push(`_l.startTime = _l.startTime + ${jsxVal(args.shift)};`);
+				if (args.startTime !== void 0) sets.push(`_l.startTime = ${jsxVal(args.startTime)};`);
+				if (args.inPoint !== void 0) sets.push(`_l.inPoint = (${jsxVal(args.inPoint)} === "comp") ? 0 : ${jsxVal(args.inPoint)};`);
+				if (args.outPoint !== void 0) sets.push(`_l.outPoint = (${jsxVal(args.outPoint)} === "comp") ? _comp.duration : ${jsxVal(args.outPoint)};`);
+				if (args.stretch !== void 0) sets.push(`_l.stretch = ${jsxVal(args.stretch)};`);
+				if (sets.length === 0) return jsxFail("give at least one of shift, startTime, inPoint, outPoint, stretch");
+				const inBad = typeof args.inPoint === "string" && args.inPoint !== "comp";
+				const outBad = typeof args.outPoint === "string" && args.outPoint !== "comp";
+				if (inBad || outBad) return jsxFail("inPoint/outPoint must be a number or 'comp'");
+				return `
+            ${jsxCompPreamble(args)}
+            var _layers = AE.resolveLayers(_comp, ${jsxVal(args.layer)});
+            if (_layers.length === 0) return { ok: false, error: "no layers matched" };
+            var _out = [];
+            var _failed = 0;
+            for (var _li = 0; _li < _layers.length; _li++) {
+                var _l = _layers[_li];
+                try {
+                    ${sets.join("\n                    ")}
+                    _out.push({ index: _l.index, name: _l.name, ok: true, startTime: _l.startTime, inPoint: _l.inPoint, outPoint: _l.outPoint, stretch: _l.stretch });
+                } catch (eT) {
+                    _failed++;
+                    _out.push({ index: _l.index, name: _l.name, ok: false, error: AE.errText(eT) });
+                }
+            }
+            return { ok: _failed === 0, error: _failed === 0 ? null : (_failed + " of " + _out.length + " layers failed"), count: _out.length, layers: _out };
+        `;
+			}
+		});
+		registerOp({
+			name: "layer.set_visibility_schedule",
+			category: "layer",
+			description: "Show layers only during given time ranges — sequential pops, material swaps, flip-books — in one call. mode 'opacity' (default) writes HOLD opacity keys (on inside each range, off outside; existing opacity keys replaced); mode 'inOut' sets in/out points (one range per layer).",
 			params: [
 				{
 					name: "comp",
@@ -4822,187 +4803,330 @@ function init_shape_contents() {
 					required: true
 				},
 				{
-					name: "layer",
-					type: "any",
-					description: "1-based layer index, name, or { id } (a shape layer)",
+					name: "entries",
+					type: "array",
+					description: "[{ layer, ranges: [[start, end], …] }] — layer accepts the usual index | name | { id } | 'selected' | 'all' | array",
 					required: true
 				},
 				{
-					name: "groups",
+					name: "mode",
+					type: "string",
+					description: "opacity|inOut (default opacity)",
+					required: false,
+					default: "opacity"
+				},
+				{
+					name: "onValue",
+					type: "number",
+					description: "Opacity inside the ranges (default 100)",
+					required: false,
+					default: 100
+				},
+				{
+					name: "offValue",
+					type: "number",
+					description: "Opacity outside the ranges (default 0)",
+					required: false,
+					default: 0
+				}
+			],
+			toJsx(args) {
+				const mode = args.mode ?? "opacity";
+				if (mode !== "opacity" && mode !== "inOut") return jsxFail("mode must be opacity|inOut");
+				const entries = Array.isArray(args.entries) ? args.entries : [];
+				for (const [i, entry] of entries.entries()) {
+					const e = entry;
+					if (!e || typeof e !== "object" || e.layer === void 0 || !Array.isArray(e.ranges)) return jsxFail(`entries[${i}] must be { layer, ranges: [[start, end], \u2026] }`);
+					for (const [j, range] of e.ranges.entries()) if (!Array.isArray(range) || range.length !== 2 || typeof range[0] !== "number" || typeof range[1] !== "number" || !(range[1] > range[0])) return jsxFail(`entries[${i}].ranges[${j}] must be [start, end] with end > start`);
+					if (mode === "inOut" && e.ranges.length !== 1) return jsxFail(`entries[${i}]: mode 'inOut' takes exactly one range per entry`);
+				}
+				return `
+            ${jsxCompPreamble(args)}
+            var _entries = ${jsxVal(entries)};
+            var _mode = ${jsxVal(mode)};
+            var _on = ${jsxVal(args.onValue ?? 100)};
+            var _off = ${jsxVal(args.offValue ?? 0)};
+            var _out = [];
+            var _failed = 0;
+            for (var _ei = 0; _ei < _entries.length; _ei++) {
+                var _e = _entries[_ei];
+                var _layers = AE.resolveLayers(_comp, _e.layer);
+                if (_layers.length === 0) { _failed++; _out.push({ entry: _ei, ok: false, error: "no layers matched " + String(_e.layer) }); continue; }
+                var _ranges = _e.ranges.slice(0);
+                _ranges.sort(function (a, b) { return a[0] - b[0]; });
+                for (var _li = 0; _li < _layers.length; _li++) {
+                    var _l = _layers[_li];
+                    try {
+                        if (_mode === "inOut") {
+                            _l.inPoint = _ranges[0][0];
+                            _l.outPoint = _ranges[0][1];
+                            _out.push({ entry: _ei, index: _l.index, name: _l.name, ok: true, inPoint: _l.inPoint, outPoint: _l.outPoint });
+                        } else {
+                            var _op = _l.transform.opacity;
+                            var _specs = [];
+                            if (_ranges[0][0] > 0) _specs.push({ time: 0, value: _off, interp: "hold" });
+                            for (var _ri = 0; _ri < _ranges.length; _ri++) {
+                                _specs.push({ time: _ranges[_ri][0], value: _on, interp: "hold" });
+                                _specs.push({ time: _ranges[_ri][1], value: _off, interp: "hold" });
+                            }
+                            var _r = AE.applyKeySpecs(_op, _specs, { replace: true });
+                            _out.push({ entry: _ei, index: _l.index, name: _l.name, ok: true, numKeys: _r.numKeys, warnings: _r.warnings });
+                        }
+                    } catch (eS) {
+                        _failed++;
+                        _out.push({ entry: _ei, index: _l.index, name: _l.name, ok: false, error: AE.errText(eS) });
+                    }
+                }
+            }
+            return { ok: _failed === 0, error: _failed === 0 ? null : (_failed + " entries failed"), count: _out.length, layers: _out };
+        `;
+			}
+		});
+		registerOp({
+			name: "comp.set_layer_order",
+			category: "comp",
+			description: "Arrange layers by listing them top to bottom. The listed layers occupy startIndex.. in that order; unlisted layers keep their relative order below (or above) them.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				{
+					name: "layers",
 					type: "array",
-					description: "1-based indices of the groups to split out (default: every top-level group)",
+					description: "Layer references (index | name | { id }), top first",
+					required: true
+				},
+				{
+					name: "startIndex",
+					type: "number",
+					description: "1-based index the first listed layer lands on (default 1 = top)",
+					required: false,
+					default: 1
+				}
+			],
+			toJsx(args) {
+				return `
+            ${jsxCompPreamble(args)}
+            var _refs = ${jsxVal(args.layers)};
+            var _start = ${jsxVal(args.startIndex ?? 1)};
+            var _targets = [];
+            var _seen = {};
+            for (var _ri = 0; _ri < _refs.length; _ri++) {
+                var _l = AE.findLayerInComp(_comp, _refs[_ri]);
+                if (!_l) return { ok: false, error: "no layer matching " + String(_refs[_ri]) };
+                var _key = "k" + _l.index;
+                if (_seen.hasOwnProperty(_key)) return { ok: false, error: "layer '" + _l.name + "' listed twice" };
+                _seen[_key] = true;
+                _targets.push(_l);
+            }
+            if (_start < 1 || _start + _targets.length - 1 > _comp.numLayers) return { ok: false, error: "startIndex " + _start + " leaves no room for " + _targets.length + " layers (comp has " + _comp.numLayers + ")" };
+            for (var _ti = 0; _ti < _targets.length; _ti++) AE.moveLayerToIndex(_targets[_ti], _start + _ti);
+            var _order = [];
+            for (var _oi = 1; _oi <= _comp.numLayers; _oi++) _order.push(_comp.layer(_oi).name);
+            return { ok: true, moved: _targets.length, order: _order };
+        `;
+			}
+		});
+		registerOp({
+			name: "comp.resize",
+			category: "comp",
+			description: "Change a comp's size and keep its content where it was: every unparented layer's Position (keyframes included, separated dimensions handled) is offset so the content stays pinned to `anchor` — 'center' keeps it centred, 'topLeft' keeps the top-left corner, etc. Children follow their parents. Comp accepts a name, id, pattern, or array.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name/id, pattern ('shot_*'), or array of those",
+					required: true
+				},
+				{
+					name: "width",
+					type: "number",
+					description: "New width in px",
+					required: false
+				},
+				{
+					name: "height",
+					type: "number",
+					description: "New height in px",
 					required: false
 				},
 				{
 					name: "anchor",
 					type: "string",
-					description: "keep | center | topLeft | topCenter | topRight | centerLeft | centerRight | bottomLeft | bottomCenter | bottomRight — anchor each new layer on its own bounds (default keep)",
+					description: "Where the existing content stays pinned: center | topLeft | topCenter | topRight | centerLeft | centerRight | bottomLeft | bottomCenter | bottomRight (default center)",
 					required: false,
-					default: "keep"
+					default: "center"
 				},
 				{
-					name: "nameTemplate",
-					type: "string",
-					description: "Name for each new layer; tokens {group}, {layer}, {index} (default '{group}')",
-					required: false,
-					default: "{group}"
-				},
-				{
-					name: "keepOriginal",
-					type: "boolean",
-					description: "Leave the source layer in place (default false: it is removed once split)",
-					required: false,
-					default: false
+					name: "offset",
+					type: "array",
+					description: "[dx, dy] explicit offset applied to every unparented layer instead of `anchor`",
+					required: false
 				}
 			],
 			toJsx(args) {
+				if (args.width === void 0 && args.height === void 0) return jsxFail("give width and/or height");
 				return `
-            ${jsxCompLayerPreamble(args)}
-            if (!(_layer instanceof ShapeLayer)) return { ok: false, error: "not a shape layer" };
-            var _anchor = ${jsxVal(args.anchor ?? "keep")};
-            if (_anchor !== "keep" && !AE.ANCHOR_PRESETS.hasOwnProperty(_anchor)) return { ok: false, error: "unknown anchor preset '" + _anchor + "'" };
-            var _tpl = ${jsxVal(args.nameTemplate ?? "{group}")};
-            var _contents = _layer.property("Contents");
-            var _want = ${jsxVal(args.groups ?? null)};
-            var _indices = [];
-            if (_want === null) {
-                for (var _gi = 1; _gi <= _contents.numProperties; _gi++) {
-                    if (_contents.property(_gi).matchName === "ADBE Vector Group") _indices.push(_gi);
-                }
-            } else {
-                for (var _wi = 0; _wi < _want.length; _wi++) {
-                    var _w = _want[_wi];
-                    if (_w < 1 || _w > _contents.numProperties) return { ok: false, error: "group index " + _w + " out of range (layer has " + _contents.numProperties + ")" };
-                    _indices.push(_w);
-                }
-            }
-            if (_indices.length === 0) return { ok: false, error: "no vector groups to split" };
-            var _srcName = _layer.name;
-            var _created = [];
-            // duplicate() lands directly above the original, so each copy
-            // slips in BELOW the copies made before it: creating the groups in
-            // order leaves group 1 on top and the last group just above the
-            // original, matching the render order inside the layer.
-            for (var _k = 0; _k < _indices.length; _k++) {
-                var _keep = _indices[_k];
-                var _dup = _layer.duplicate();
-                var _dc = _dup.property("Contents");
-                for (var _ri = _dc.numProperties; _ri >= 1; _ri--) {
-                    if (_ri !== _keep) _dc.property(_ri).remove();
-                }
-                var _grp = _dc.property(1);
-                var _gname = _grp.name;
-                _dup.name = _tpl.replace(/\\{group\\}/g, _gname).replace(/\\{layer\\}/g, _srcName).replace(/\\{index\\}/g, String(_keep));
-                var _entry = { index: _dup.index, name: _dup.name, group: _gname, groupIndex: _keep };
-                if (_anchor !== "keep") {
-                    var _b = AE.shapeGroupBounds(_grp, {});
-                    if (_b.empty) {
-                        _entry.warning = "group has no geometry; anchor left unchanged";
-                    } else {
-                        var _pt = AE.pointInRect(_b, _anchor);
-                        var _mv = AE.moveAnchor(_dup, _pt);
-                        _entry.anchorPoint = _mv.anchorPoint;
-                        if (_mv.warnings.length) _entry.warning = _mv.warnings.join("; ");
+            var _comps = AE.findComps(${jsxVal(args.comp)});
+            if (_comps.length === 0) return { ok: false, error: "no comps matched" };
+            var _anchor = ${jsxVal(args.anchor ?? "center")};
+            if (!AE.ANCHOR_PRESETS.hasOwnProperty(_anchor)) return { ok: false, error: "unknown anchor '" + _anchor + "'" };
+            var _explicit = ${jsxVal(args.offset ?? null)};
+            var _out = [];
+            for (var _ci = 0; _ci < _comps.length; _ci++) {
+                var _c = _comps[_ci];
+                var _oldW = _c.width, _oldH = _c.height;
+                var _newW = ${jsxVal(args.width ?? null)};
+                var _newH = ${jsxVal(args.height ?? null)};
+                if (_newW === null) _newW = _oldW;
+                if (_newH === null) _newH = _oldH;
+                var _f = AE.ANCHOR_PRESETS[_anchor];
+                var _d = _explicit !== null ? [_explicit[0] || 0, _explicit[1] || 0] : [(_newW - _oldW) * _f[0], (_newH - _oldH) * _f[1]];
+                _c.width = _newW;
+                _c.height = _newH;
+                var _moved = 0;
+                var _warn = [];
+                for (var _li = 1; _li <= _c.numLayers; _li++) {
+                    var _l = _c.layer(_li);
+                    if (_l.parent) continue;
+                    var _pos = null;
+                    try { _pos = _l.transform.position; } catch (eP) {}
+                    if (!_pos) continue;
+                    try { AE.offsetValue(_pos, [_d[0], _d[1]]); _moved++; }
+                    catch (eO) { _warn.push(_l.name + ": " + AE.errText(eO)); }
+                    if (_l instanceof CameraLayer || _l instanceof LightLayer) {
+                        try { var _poi = _l.transform.pointOfInterest; if (_poi) AE.offsetValue(_poi, [_d[0], _d[1]]); } catch (ePoi) {}
                     }
                 }
-                _created.push(_entry);
+                _out.push({ comp: _c.name, from: [_oldW, _oldH], to: [_c.width, _c.height], offset: _d, layersMoved: _moved, warnings: _warn });
             }
-            if (!${jsxVal(args.keepOriginal === true)}) _layer.remove();
-            for (var _ci = 0; _ci < _created.length; _ci++) {
-                _created[_ci].index = AE.findLayerInComp(_comp, _created[_ci].name) ? AE.findLayerInComp(_comp, _created[_ci].name).index : _created[_ci].index;
-            }
-            return { ok: true, source: _srcName, created: _created.length, layers: _created };
+            return { ok: true, comps: _out };
         `;
 			}
 		});
 		registerOp({
-			name: "layer.convert_to_shapes",
-			category: "layer",
-			description: "Run 'Create Shapes from Vector Layer' on imported Illustrator/vector layers: each becomes a shape layer directly above the original (which AE switches off). By default the ' Outlines' suffix AE appends is stripped; removeSource deletes the vector layers, removeFootage also deletes their footage items when nothing else uses them. Note: the shape layers can arrive with Position dimensions SEPARATED — every write in this server handles that.",
+			name: "project.rename",
+			category: "project",
+			description: "Rename project items and/or layers in bulk: an exact `map` ({ from: to }) or a regex `pattern` + `replacement` ($1 works). scope 'items' covers comps, footage and folders; 'layers' covers layers in every comp (or the comps matched by `comp`). dryRun previews without renaming.",
 			params: [
+				{
+					name: "scope",
+					type: "string",
+					description: "items|layers|all (default all)",
+					required: false,
+					default: "all"
+				},
+				{
+					name: "map",
+					type: "object",
+					description: "{ 'old name': 'new name', … }",
+					required: false
+				},
+				{
+					name: "pattern",
+					type: "string",
+					description: "Regular expression (JavaScript syntax) applied to each name",
+					required: false
+				},
+				{
+					name: "replacement",
+					type: "string",
+					description: "Replacement for `pattern` matches ($1… for groups)",
+					required: false
+				},
+				{
+					name: "flags",
+					type: "string",
+					description: "Regex flags: any of g, i, m (default 'g')",
+					required: false,
+					default: "g"
+				},
 				{
 					name: "comp",
 					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				LAYER_TARGET_PARAM,
-				{
-					name: "stripSuffix",
-					type: "boolean",
-					description: "Rename the new layer to the original's name (drop ' Outlines' / localized suffix). Default true",
-					required: false,
-					default: true
+					description: "Restrict layer renames to these comps (name/id/pattern/array; default all)",
+					required: false
 				},
 				{
-					name: "removeSource",
-					type: "boolean",
-					description: "Delete the original vector layer after conversion (default false)",
-					required: false,
-					default: false
+					name: "itemTypes",
+					type: "array",
+					description: "Restrict item renames to these types: CompItem|FootageItem|FolderItem",
+					required: false
 				},
 				{
-					name: "removeFootage",
+					name: "dryRun",
 					type: "boolean",
-					description: "With removeSource: also delete the footage item when no other layer uses it (default false)",
+					description: "Report what would change without renaming (default false)",
 					required: false,
 					default: false
 				}
 			],
 			toJsx(args) {
+				const scope = args.scope ?? "all";
+				if (scope !== "items" && scope !== "layers" && scope !== "all") return jsxFail("scope must be items|layers|all");
+				const hasMap = args.map !== void 0;
+				const hasPattern = args.pattern !== void 0;
+				if (hasMap === hasPattern) return jsxFail("give exactly one of map or pattern (+ replacement)");
+				const flags = String(args.flags ?? "g");
+				if (hasPattern) {
+					if (args.replacement === void 0) return jsxFail("pattern needs a replacement");
+					if (!/^[gim]*$/.test(flags)) return jsxFail("flags may only contain g, i, m");
+					try {
+						RegExp(String(args.pattern), flags);
+					} catch (regexErr) {
+						const msg = regexErr instanceof Error ? regexErr.message : String(regexErr);
+						return jsxFail(`invalid pattern: ${msg}`);
+					}
+				}
 				return `
-            ${jsxCompPreamble(args)}
-            var _layers = AE.resolveLayers(_comp, ${jsxVal(args.layer)});
-            if (_layers.length === 0) return { ok: false, error: "no layers matched" };
-            var _cmd = 0;
-            try { _cmd = app.findMenuCommandId("Create Shapes from Vector Layer"); } catch (eFind) {}
-            // Menu names are localized; the id is not (3973 on every AE since CS6).
-            if (!_cmd) _cmd = 3973;
-            var _sources = [];
-            for (var _si = 0; _si < _layers.length; _si++) {
-                if (!(_layers[_si] instanceof AVLayer) || !_layers[_si].source) return { ok: false, error: "layer '" + _layers[_si].name + "' is not a footage layer" };
-                _sources.push(_layers[_si]);
+            var _scope = ${jsxVal(scope)};
+            var _map = ${jsxVal(args.map ?? null)};
+            var _re = ${hasPattern ? `new RegExp(${jsxVal(args.pattern)}, ${jsxVal(flags)})` : "null"};
+            var _repl = ${jsxVal(args.replacement ?? "")};
+            var _types = ${jsxVal(args.itemTypes ?? null)};
+            var _dry = ${jsxVal(args.dryRun === true)};
+            function _next(name) {
+                if (_map !== null) return (_map.hasOwnProperty(name) && typeof _map[name] === "string") ? _map[name] : name;
+                _re.lastIndex = 0;
+                return name.replace(_re, _repl);
             }
-            var _out = [];
-            var _strip = ${jsxVal(args.stripSuffix !== false)};
-            var _rmSrc = ${jsxVal(args.removeSource === true)};
-            var _rmFoot = ${jsxVal(args.removeFootage === true)};
-            try { _comp.openInViewer(); } catch (eV) {}
-            for (var _i = 0; _i < _sources.length; _i++) {
-                var _src = _sources[_i];
-                var _srcName = _src.name;
-                var _foot = _src.source;
-                var _snap = AE.layerIdSnapshot(_comp);
-                AE.withSelection(_comp, [_src], function () { app.executeCommand(_cmd); });
-                var _added = AE.layersSince(_comp, _snap);
-                var _shape = null;
-                for (var _ai = 0; _ai < _added.length; _ai++) {
-                    if (_added[_ai] instanceof ShapeLayer) { _shape = _added[_ai]; break; }
-                }
-                if (!_shape) { _out.push({ source: _srcName, ok: false, error: "the command created no shape layer (is the layer a vector footage layer?)" }); continue; }
-                var _entry = { source: _srcName, ok: true, index: _shape.index, name: _shape.name, originalName: _shape.name };
-                if (_strip) {
-                    var _clean = _shape.name.replace(/\\s*Outlines$/, "").replace(/\\s*(\u306E)?\u30A2\u30A6\u30C8\u30E9\u30A4\u30F3$/, "");
-                    if (_clean.length === 0) _clean = _srcName;
-                    _shape.name = _clean;
-                    _entry.name = _shape.name;
-                }
-                if (_rmSrc) {
-                    _src.remove();
-                    _entry.sourceRemoved = true;
-                    if (_rmFoot && _foot) {
-                        var _used = 0;
-                        try { _used = _foot.usedIn.length; } catch (eU) { _used = 1; }
-                        if (_used === 0) { try { _foot.remove(); _entry.footageRemoved = true; } catch (eF) { _entry.footageRemoved = false; } }
-                        else _entry.footageRemoved = false;
-                    }
-                    _entry.index = _shape.index;
-                }
-                _out.push(_entry);
+            function _typeOk(t) {
+                if (_types === null) return true;
+                for (var _ti = 0; _ti < _types.length; _ti++) if (_types[_ti] === t) return true;
+                return false;
             }
+            var _changes = [];
             var _failed = 0;
-            for (var _fi = 0; _fi < _out.length; _fi++) if (!_out[_fi].ok) _failed++;
-            return { ok: _failed === 0, error: _failed === 0 ? null : (_failed + " of " + _out.length + " layers did not convert"), converted: _out.length - _failed, layers: _out };
+            if (_scope !== "layers") {
+                for (var _ii = 1; _ii <= app.project.numItems; _ii++) {
+                    var _it = app.project.item(_ii);
+                    var _t = AE.itemTypeName(_it);
+                    if (!_typeOk(_t)) continue;
+                    var _to = _next(_it.name);
+                    if (_to === _it.name) continue;
+                    var _ch = { kind: "item", type: _t, id: _it.id, from: _it.name, to: _to };
+                    if (!_dry) { try { _it.name = _to; _ch.applied = true; } catch (eI) { _failed++; _ch.applied = false; _ch.error = AE.errText(eI); } }
+                    _changes.push(_ch);
+                }
+            }
+            if (_scope !== "items") {
+                var _comps = AE.findComps(${args.comp !== void 0 ? jsxVal(args.comp) : "\"*\""});
+                for (var _ci = 0; _ci < _comps.length; _ci++) {
+                    var _c = _comps[_ci];
+                    for (var _li = 1; _li <= _c.numLayers; _li++) {
+                        var _l = _c.layer(_li);
+                        var _lto = _next(_l.name);
+                        if (_lto === _l.name) continue;
+                        var _lch = { kind: "layer", comp: _c.name, index: _li, from: _l.name, to: _lto };
+                        if (!_dry) { try { _l.name = _lto; _lch.applied = true; } catch (eL) { _failed++; _lch.applied = false; _lch.error = AE.errText(eL); } }
+                        _changes.push(_lch);
+                    }
+                }
+            }
+            return { ok: _failed === 0, error: _failed === 0 ? null : (_failed + " renames failed"), dryRun: _dry, count: _changes.length, changes: _changes };
         `;
 			}
 		});
@@ -5661,4 +5785,4 @@ function init_sample() {
 	})))();
 }
 
-export { PARK_QUEUE_FN, QUEUE_CHANGE_NOTE, RENDER_QUEUE_UNDO_WARNING, init_look_sheet, init_marker, init_mask, init_pref, init_project, init_property, init_render, init_sample, init_shape_contents };
+export { PARK_QUEUE_FN, QUEUE_CHANGE_NOTE, RENDER_QUEUE_UNDO_WARNING, init_layout, init_look_sheet, init_marker, init_mask, init_pref, init_project, init_property, init_render, init_sample };

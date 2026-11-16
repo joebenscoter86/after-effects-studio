@@ -6,8 +6,8 @@
 // through AE.checkPropertyWrite (stage 5) for all values first, so a refused
 // value means nothing was written.
 //
-// The operations live in seven files by family, moved here unchanged (the keying split). This file imports first the
-// modules it always imported for their values (a type-only import never loaded one), in the same order, then the seven
+// The operations live in eight files by family, moved here unchanged (the keying split). This file imports first the
+// modules it always imported for their values (a type-only import never loaded one), in the same order, then the eight
 // files: every module evaluates, and every operation registers, in the order it always did. It exports what it always
 // exported.
 
@@ -28,9 +28,10 @@ import "./keying-subject-prepare.js";
 import "./keying-subject-check.js";
 import "./keying-subject-cutout.js";
 import "./keying-subject-soften.js";
+import "./keying-subject-motion.js";
 import "./keying-reference.js";
 
-export { OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, SUBJECT_WHOLE_PIECE_NOTE, CLOSE_CLICK_SHARE, CUTOUT_HOLE_LIMIT, CUTOUT_SECONDS_PER_FRAME, alikeRegions, acceptedBy, cutoutFindings, statfsFree, cacheBytesFor, aeCacheRoot, fillUnbuildJsx, fillBuildJsx, CHECK_FILE_MAX_FRAMES, SOFT_EDGE_DEFAULTS } from "./keying-shared.js";
+export { OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, SUBJECT_WHOLE_PIECE_NOTE, CLOSE_CLICK_SHARE, CUTOUT_HOLE_LIMIT, CUTOUT_SECONDS_PER_FRAME, alikeRegions, acceptedBy, cutoutFindings, statfsFree, cacheBytesFor, aeCacheRoot, fillUnbuildJsx, fillBuildJsx, CHECK_FILE_MAX_FRAMES, SOFT_EDGE_DEFAULTS, MOTION_EDGE_DEFAULTS } from "./keying-shared.js";
 export type { RegionFinding, AcceptEntry, CutoutIO, RenderTally, PixelTally, FileIO } from "./keying-shared.js";
 export { KEYLIGHT_MATCH_NAME, KEY_CLEANER_MATCH_NAME, SPILL_SUPPRESSOR_MATCH_NAME, KEYLIGHT_VIEWS, KEYLIGHT_SETTINGS, KEY_CLEANER_SETTINGS, SPILL_SUPPRESSOR_SETTINGS, keylightViewNumber } from "./keying-key.js";
 export { OBJECT_MATTE_SETTINGS, SUBJECT_ATTENDED_NOTE, SUBJECT_MATTE_NOTICE, subjectMatteSteps, selectionKind, OVERSIZE_FACTOR, sourceAdviceFor, soundAdviceFor, runSubjectPrepare, diskReport } from "./keying-subject-prepare.js";
@@ -40,4 +41,6 @@ export type { CloseClick } from "./keying-subject-check.js";
 export { HALVES_JOIN_NOTE, cutoutSpan, RENDER_MARGIN_BYTES, renderCutoutBytes, chooseAlphaTemplate, renderCutoutPlanJsx, renderCutoutJsx, runRenderCutout, CHECK_FILE_JUMP_LIMIT, checkFileFrames, SPECK_SKIN_A, SPECK_PALE_A, runCheckFile, useCutoutJsx } from "./keying-subject-cutout.js";
 export { SOFT_EDGE_COST, softRegionBottom, softenBuildJsx, softenUndoJsx, runSoftenEdge } from "./keying-subject-soften.js";
 export type { SoftenIO } from "./keying-subject-soften.js";
+export { MOTION_EDGE_COST, motionEdgeSettings, motionKeyerCheckJsx, motionEdgeBuildJsx, motionEdgeUndoJsx, runMotionEdge } from "./keying-subject-motion.js";
+export type { MotionEdgeIO, MotionEdgeSettings } from "./keying-subject-motion.js";
 export { runReferenceReport, runReferenceCompare } from "./keying-reference.js";

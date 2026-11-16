@@ -1054,6 +1054,7 @@ describe("subject matte: registration and the user's steps", () => {
       "subject.check",
       "subject.check_file",
       "subject.fill_gaps",
+      "subject.motion_edge",
       "subject.prepare",
       "subject.remove_selection",
       "subject.render_cutout",
