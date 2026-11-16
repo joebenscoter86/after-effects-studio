@@ -1,6 +1,6 @@
 {
  "vocab": "jobs-v1",
- "version": "96c4087d",
+ "version": "06a8da5a",
  "jobs": [
   "land-number",
   "count-things",
@@ -33,10 +33,10 @@
  "recipes": [
   {
    "id": "01-shadow-map-overlay",
-   "revision": "a2dfdc7d",
+   "revision": "73f75aaa",
    "name": "Window-light shadow map over a flat layout",
    "line": "Makes a flat title card or layout look as if it sits in a room with sunlight falling through a window: long soft diagonal shadows with light bands between them. Reach for it when a clean graphic looks too digital and needs contrast and a sense of place without any 3D.",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "add-depth",
    "support": [
@@ -60,14 +60,17 @@
     "document": "arsenal-picture",
     "heading": "Window-light shadow map over a flat layout"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/01-shadow-map-overlay.jpg",
+    "sha256": "8f7ed00b9fa56183d37d52f5f347014dce45db7d643eebe41d17ea5a1a464b84"
+   }
   },
   {
    "id": "02-shadow-map-wipe-on",
-   "revision": "8dc40155",
+   "revision": "81a89eb7",
    "name": "Soft diagonal wipe-on for a shadow map",
    "line": "Brings window-light shadows into a shot as if the sun had just come out: the shadow sweeps across the layout along the strips over about a second instead of popping on. Use it on the opening beat of a title card that carries a shadow map.",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "add-depth",
    "support": [
@@ -90,14 +93,17 @@
     "document": "arsenal-picture",
     "heading": "Soft diagonal wipe-on for a shadow map"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/02-shadow-map-wipe-on.jpg",
+    "sha256": "6ca482cae21f68bb9ab46d2ac0a38ab64ec3ea28739fecbaa75cd66185bd2d26"
+   }
   },
   {
    "id": "03-graphics-orbit-a-real-object",
-   "revision": "6167c17a",
+   "revision": "aa669c47",
    "name": "Graphics riding a spinning real object",
    "line": "Lets a real photographed object drive the motion: a cut-out wheel (or any round object) spins, and a ring of graphic cards fanned around its centre turns with it like a carousel. Use it for a \"meet the team\" or product-range beat that should feel physical rather than a plain slider.",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "list-items",
    "support": [
@@ -122,14 +128,17 @@
     "document": "arsenal-line",
     "heading": "Graphics riding a spinning real object"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/03-graphics-orbit-a-real-object.jpg",
+    "sha256": "b167582ad98c13fc65feccde847e5f33e9e3f47a67004006a5c193fa3485e8b0"
+   }
   },
   {
    "id": "04-swap-footage-keep-edits",
-   "revision": "223ffaa4",
+   "revision": "74f0fe70",
    "name": "Swap a layer's photo and keep everything built on it",
    "line": "A time-saver, not a look. Once one card, slot or frame is fully built (transforms, masks or mattes, parenting, keyframes, effects), you put a different photo or clip into it without rebuilding anything.",
-   "status": "unproven",
+   "status": "proven",
    "kind": "build-aid",
    "job": null,
    "support": [],
@@ -153,10 +162,10 @@
   },
   {
    "id": "05-soft-doubled-drop-shadow",
-   "revision": "7d484d90",
+   "revision": "a967c4ef",
    "name": "Seat a cut-out object with a soft, doubled drop shadow",
    "line": "When a photographed object cut out of its background (a product, a prop, a wheel) is dropped into a flat graphic scene and looks pasted on, a very soft, barely offset drop shadow gives it a dark halo that grounds it. Stack a second, even softer copy when the first is too faint.",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "add-depth",
    "support": [
@@ -179,14 +188,17 @@
     "document": "arsenal-picture",
     "heading": "Seat a cut-out object with a soft, doubled drop shadow"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/05-soft-doubled-drop-shadow.jpg",
+    "sha256": "86ffffeac5329341ea972363f65b5987cd82e212342d8ec79c86304c3095a147"
+   }
   },
   {
    "id": "06-graphics-behind-subject-object-matte",
-   "revision": "1572d05b",
+   "revision": "9703a0dd",
    "name": "Tuck graphics behind a person with an automatic object matte",
    "line": "For talking-head or presenter footage on a plain wall: cards, titles and text sit between the person and the wall, so the person stands in front of the graphics. Reach for it when overlays would otherwise cover the face or body.",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "add-depth",
    "support": [
@@ -209,14 +221,17 @@
     "document": "arsenal-picture",
     "heading": "Tuck graphics behind a person with an automatic object matte"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/06-graphics-behind-subject-object-matte.jpg",
+    "sha256": "d04b175e07f310d6d4cb536c9d9ec1104ee3d44ab86d1becfb437420de4b8562"
+   }
   },
   {
    "id": "07-key-imperfect-green-screen",
-   "revision": "2dcbae92",
+   "revision": "03ffee48",
    "name": "Key a rough, unevenly lit green backdrop with a machine-learning keyer",
    "line": "For stock or found footage shot against a coloured wall that was never meant to be keyed (uneven light, olive green, shadows), when a classic colour keyer leaves grey residue. The person comes out clean, hair included, ready to sit over graphics.",
-   "status": "unproven",
+   "status": "proven",
    "kind": "build-aid",
    "job": null,
    "support": [],
@@ -240,10 +255,10 @@
   },
   {
    "id": "08-raised-white-shapes-with-long-shadows",
-   "revision": "3aa9fdaf",
+   "revision": "2c7f4a98",
    "name": "Stacked white discs that grow out of the centre with long soft shadows",
    "line": "A title or opener background that makes a near-white frame look premium and tactile: white discs swell out from the centre one after another, each one raised off the one below with a pale rim and a long, soft shadow to one side. Reach for it when a clean white brand look needs depth and slow motion behind type.",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "fill-the-backdrop",
    "support": [
@@ -268,14 +283,17 @@
     "document": "arsenal-picture",
     "heading": "Stacked white discs that grow out of the centre with long soft shadows"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/08-raised-white-shapes-with-long-shadows.jpg",
+    "sha256": "7e80062b395cb5d593b95d1106beec5ee2113fbf30e7fb922d18d12cac424e1b"
+   }
   },
   {
    "id": "09-edge-lens-blur-and-noise-finish",
-   "revision": "2ba1df5b",
+   "revision": "8b06ca07",
    "name": "Soft lens blur at the frame sides plus fine grain",
    "line": "A last pass that makes a clean, drawn graphic look as if it was shot through a lens: the left and right sides go slightly soft while the centre stays crisp, and a little grain breaks up the flat digital fills. Use it on any finished graphic or title plate, especially pale ones where the cleanliness gives away that they are drawn.",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "finish-the-look",
    "support": [
@@ -298,14 +316,17 @@
     "document": "arsenal-picture",
     "heading": "Soft lens blur at the frame sides plus fine grain"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/09-edge-lens-blur-and-noise-finish.jpg",
+    "sha256": "75e2e0744b8dc8e6d7aa027be3b0d63d8bb8630baadd6271888d0e7b17c5a34d"
+   }
   },
   {
    "id": "10-2d-graphics-on-extruded-3d-plate",
-   "revision": "90e84f77",
+   "revision": "349107c8",
    "name": "Flat UI graphic on a glossy extruded plate",
    "line": "Turns a flat 2D card or UI panel into a solid, glossy object floating over a pale floor with a real cast shadow, while the graphic on its face keeps its exact flat colours. Reach for it when a 2D layout needs to read as a physical product shot without leaving After Effects.",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "add-depth",
    "support": [
@@ -329,14 +350,17 @@
     "document": "arsenal-picture",
     "heading": "Flat UI graphic on a glossy extruded plate"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/10-2d-graphics-on-extruded-3d-plate.jpg",
+    "sha256": "13b31d98569518ad44a93d604df5615a39acd2cc41f44d14206f0705155055f7"
+   }
   },
   {
    "id": "11-camera-depth-of-field-advanced-3d",
-   "revision": "e65caa17",
+   "revision": "5af2a365",
    "name": "Depth of field on a row of glossy plates (Advanced 3D camera)",
    "line": "Gives a 3D product-style scene a photographic lens: duplicated objects staggered in depth fall progressively out of focus, and a small camera move adds life. Use it to sell scale and depth once a scene from recipe 10 exists.",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "move-camera",
    "support": [
@@ -359,7 +383,10 @@
     "document": "arsenal-connective",
     "heading": "Depth of field on a row of glossy plates (Advanced 3D camera)"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/11-camera-depth-of-field-advanced-3d.jpg",
+    "sha256": "df9ab20cd8d641f34d1d3c37af1a1c980e30ad0d74ecff3989623173425cc76f"
+   }
   },
   {
    "id": "01-blurred-stroked-shapes-on-light-ground",

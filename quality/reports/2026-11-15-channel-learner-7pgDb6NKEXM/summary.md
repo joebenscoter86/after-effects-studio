@@ -1,16 +1,15 @@
-# Channel learner, second video (7pgDb6NKEXM): where it stands (2026-11-15, late evening)
+# Channel learner, second video (7pgDb6NKEXM): where it stands (2026-11-16)
 
 ## The short version
 
-- **11 techniques learned from one tutorial, all 11 built in After Effects on our own designed art and reviewed against the tutorial: all 11 match** (02, 07, 09, 10, 11 after fixes). None is proven: only Joe proves a recipe. Phone MP4s of each and a 65 s reel (`proof/mobile/all-11-proofs.mp4`) were sent as they landed.
+- **11 techniques learned from one tutorial, all 11 built in After Effects on our own designed art, reviewed against the tutorial, and proven: Joe accepted all 11 on 2026-11-16** ("i accept all 11"). 11 was marked after its camera move was re-measured and the build still matched. Phone MP4s of each and a 65 s reel (`proof/mobile/all-11-proofs.mp4`) were sent as they landed.
 - **Two are variants** of the first video's techniques (03 of the text carousel, 08 of the white-on-light finish); the rest are new, two of them build aids. The catalog now holds 75 recipes.
-- **The tool learned five more lessons (14 to 18)**, each as a prompt, check or code change in the same commit.
+- **The tool learned six more lessons (14 to 19)**, each as a prompt, check or code change in the same commit.
 - **Nothing is pushed.** Branch `adobe/channel-learner-7pgdb6nkexm-2ccb81`, local commits only; the repository's only remote is public.
 
 ## For Joe to decide
 
-1. **Which proofs do you accept?** (Scrub them in `proof/proofs.aep`, or watch the reel.) Each accepted one becomes `status: proven` with your words and the date.
-2. Nothing else is waiting on you. The keyer (CorridorKey, free, from its maker's own page) is installed and showed no trial watermark.
+Nothing. All 11 are proven; their stills (9; the two build aids ship none) are in the arsenal.
 
 ## Results
 
@@ -33,7 +32,7 @@
 - 02 said the shadow comes in from the lower left; it comes from the upper left (measured two ways). Corrected.
 - 11 said the plates turn "with their right side towards the camera"; the builder read it the other way, which is how the words read. The recipe now says which edge is nearer, from a measurement (Y −64 degrees shown on screen).
 - 03 overcounted the cards on screen; 05 and 10 lacked two scripting facts (Drop Shadow's opacity is 0 to 255 by script; Advanced 3D's internal name). All corrected and re-checked (rounds 4 and 5).
-- Still open: 11's recipe gives the camera move a widening of about 6 % where the shown keys predict about 30 %; worth re-measuring before 11 is proven. 07's stock-keyer first try (step 2) cannot be matched exactly on our plate with any one Screen Colour; the keyed result itself matches.
+- 11's camera move: the recipe's +6 % was read mid-drag on a picture that lagged its readout; re-measured at +44 to +50 %, which the build's +42 to +45 % matches (lesson 19). 07's stock-keyer first try (step 2) cannot be matched exactly on our plate with any one Screen Colour; the keyed result itself matches.
 
 ## What the tool learned today
 
@@ -42,6 +41,7 @@
 - 16: the alignment step now makes the 1920-wide frames every prompt reads.
 - 17: a percent typed into a 0 to 255 control.
 - 18: a wipe names the corner it reaches first, and a turned object names its nearer edge, from measurement.
+- 19: a value read while the author drags is not a key; the viewer lags its readout by 3 to 5 frames.
 - Art: a generator does not hold a figure asked for in words; measure the art against its targets before building on it (07's first plate came back far harsher than briefed).
 
 ## Where things are

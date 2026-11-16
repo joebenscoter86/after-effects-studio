@@ -85,6 +85,15 @@ The library also holds a catalog of technique recipes filed by the job a beat ne
 <!-- arsenal-stills:start -->
 Proven techniques in the arsenal, each a still of our own proof build. The ae_arsenal tool returns them with its shortlist.
 
+![Window-light shadow map over a flat layout](library/arsenal/stills/01-shadow-map-overlay.jpg)
+![Soft diagonal wipe-on for a shadow map](library/arsenal/stills/02-shadow-map-wipe-on.jpg)
+![Graphics riding a spinning real object](library/arsenal/stills/03-graphics-orbit-a-real-object.jpg)
+![Seat a cut-out object with a soft, doubled drop shadow](library/arsenal/stills/05-soft-doubled-drop-shadow.jpg)
+![Tuck graphics behind a person with an automatic object matte](library/arsenal/stills/06-graphics-behind-subject-object-matte.jpg)
+![Stacked white discs that grow out of the centre with long soft shadows](library/arsenal/stills/08-raised-white-shapes-with-long-shadows.jpg)
+![Soft lens blur at the frame sides plus fine grain](library/arsenal/stills/09-edge-lens-blur-and-noise-finish.jpg)
+![Flat UI graphic on a glossy extruded plate](library/arsenal/stills/10-2d-graphics-on-extruded-3d-plate.jpg)
+![Depth of field on a row of glossy plates (Advanced 3D camera)](library/arsenal/stills/11-camera-depth-of-field-advanced-3d.jpg)
 ![Round dots from a shape stroke](library/arsenal/stills/01-dotted-stroke.jpg)
 ![Arc with a dot at each end](library/arsenal/stills/02-line-with-end-dots.jpg)
 ![Fade both ends of an open stroke with Taper](library/arsenal/stills/03-tapered-stroke.jpg)

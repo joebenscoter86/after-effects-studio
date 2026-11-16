@@ -86,6 +86,10 @@ The first video's 25 recipes all passed the check. Building them found three rec
 - **Why.** Lesson 5's rule asks for direction from frames, but a wipe's start corner and a turned plate's near edge were each read from one frame and a phrase that reads both ways.
 - **Rule.** `distil.md`: a reveal names the corner it reaches first and last, checked on a half-way frame; a turned object names its nearer edge from a measurement. `check.md` check 10 confirms both the same way. Recipes 02 and 11 corrected and re-checked; proofs 02 and 11 rebuilt.
 
+### 19. A figure measured mid-drag, on a picture that lagged its readout (second video, 11, 2026-11-16)
+- **What happened.** Recipe 11 gave the camera move as a 6 % widening of the front face, measured from a frame showing camera Position X 1325.2. The tutorial never plays the move: the author drags with the orbit tool and the video cuts mid-drag, so 1325.2 is a value passed through, and the viewer (redrawing every 4 to 5 frames, 3 to 5 frames behind the readout) showed an earlier camera. Measured at that camera, two ways, the face widens 44 to 50 %; the proof build gave 42 %, which a review had called too much.
+- **Rule.** `distil.md`: a value read during a drag is not a key; measure the picture only where the readout has held still, and say when a move is never played. Recipe 11 corrected and re-checked.
+
 ## Still open
 - Checks 8 to 10 and the look review are new. They have not yet been run on the other four videos' 39 recipes, and the 24 "matches" on the first video were given before the look line existed.
 - Nothing yet tests the prompts themselves. A cheap test: keep technique 11's first recipe as a fixture and confirm a fresh checker fails it on check 8.

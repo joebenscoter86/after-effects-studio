@@ -103,9 +103,9 @@ unknowns: exact pivot coordinates and comp size; font size; text colour value; h
 
 ## Graphics riding a spinning real object
 id: 03-graphics-orbit-a-real-object
-revision: 6167c17a
+revision: aa669c47
 job: list-items; support: keep-it-alive, make-concrete
-status: unproven
+status: proven (accepted 2026-11-16)
 variant of: 04-carousel-by-rotation
 differs: the same mechanism as the parent: copies of one layer, each turned a fixed step further about an anchor point moved onto a shared pivot, with the ring spun by parenting it to a rotating parent. Pivot: here the centre of a photographed round object, below the frame (about 1.21 of the picture height down); in the parent an empty point inside the frame, left of the words. Copies: here twelve at 30 degrees, each a whole card (photo in a matte plus caption) gathered under its own master layer, duplicated and turned +30 degrees one at a time; in the parent 55 copies of one text layer at -6.5 degrees, spread in one drag across all selected copies. Both make about a full turn; the step is a design choice (card width against word height). Spin: here every master is parented to the object, which turns by a time expression (time * -20); in the parent the copies are parented to a null whose animation is not shown (rotation keys inferred).
 what it does for a beat: Lets a real photographed object drive the motion: a cut-out wheel (or any round object) spins, and a ring of graphic cards fanned around its centre turns with it like a carousel. Use it for a "meet the team" or product-range beat that should feel physical rather than a plain slider.

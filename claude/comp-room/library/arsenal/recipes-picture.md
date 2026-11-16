@@ -4,9 +4,9 @@ Generated from the recipe drafts; do not edit by hand. Recipes whose primary job
 
 ## Window-light shadow map over a flat layout
 id: 01-shadow-map-overlay
-revision: a2dfdc7d
+revision: 73f75aaa
 job: add-depth; support: finish-the-look, establish-place
-status: unproven
+status: proven (accepted 2026-11-16)
 what it does for a beat: Makes a flat title card or layout look as if it sits in a room with sunlight falling through a window: long soft diagonal shadows with light bands between them. Reach for it when a clean graphic looks too digital and needs contrast and a sense of place without any 3D.
 what it looks like: A pale grid-paper background with a black brush-lettered title and small logos. Two broad grey shadow strips run diagonally from upper left to lower right, a large shadow fills the upper-right corner, and the white bands of "sunlight" between them are crossed by short grey bars, like window frames. The shadow darkens everything it covers, title included, and its edges are soft.
 ingredients:
@@ -50,9 +50,9 @@ unknowns: The exact mask vertex positions, read here only from pictures. Why the
 
 ## Soft diagonal wipe-on for a shadow map
 id: 02-shadow-map-wipe-on
-revision: 8dc40155
+revision: 81a89eb7
 job: add-depth; support: reveal-headline
-status: unproven
+status: proven (accepted 2026-11-16)
 what it does for a beat: Brings window-light shadows into a shot as if the sun had just come out: the shadow sweeps across the layout along the strips over about a second instead of popping on. Use it on the opening beat of a title card that carries a shadow map.
 what it looks like: On a pale grid-paper title card, grey diagonal shadow strips and window bars spread in from the upper left with a very soft leading edge and fill the frame towards the lower right within about two-thirds of a second, while the title fades in. They end at full strength over almost the whole frame.
 ingredients:
@@ -90,9 +90,9 @@ unknowns: The value at the second keyframe: about 0% read from the picture; Effe
 
 ## Seat a cut-out object with a soft, doubled drop shadow
 id: 05-soft-doubled-drop-shadow
-revision: 7d484d90
+revision: a967c4ef
 job: add-depth; support: light-the-hero
-status: unproven
+status: proven (accepted 2026-11-16)
 what it does for a beat: When a photographed object cut out of its background (a product, a prop, a wheel) is dropped into a flat graphic scene and looks pasted on, a very soft, barely offset drop shadow gives it a dark halo that grounds it. Stack a second, even softer copy when the first is too faint.
 what it looks like: A cut-out bicycle wheel, rim and tyre seen from the side with its hub below the frame, sits on a pale blue-grey background under an arc of portrait cards. After the effect a smoky grey halo hugs the black tyre on every side, darkest right at the rubber and fading out over a few percent of the picture, slightly heavier to the lower right.
 ingredients:
@@ -121,9 +121,9 @@ unknowns: Values of the Curves effect already on the wheel; whether the cards in
 
 ## Tuck graphics behind a person with an automatic object matte
 id: 06-graphics-behind-subject-object-matte
-revision: 1572d05b
+revision: 9703a0dd
 job: add-depth; support: reveal-headline
-status: unproven
+status: proven (accepted 2026-11-16)
 what it does for a beat: For talking-head or presenter footage on a plain wall: cards, titles and text sit between the person and the wall, so the person stands in front of the graphics. Reach for it when overlays would otherwise cover the face or body.
 what it looks like: A smiling young man in a checked shirt against a flat teal studio wall. Rounded promo cards (a navy one, a white one, a peach one) and two blocks of bold text fill the frame around him; where they meet his body they pass behind his shoulders and arms, and the wall behind them is still the original footage.
 ingredients:
@@ -154,9 +154,9 @@ unknowns: When and how the matte values in step 6 were set; whether the subject 
 
 ## Soft lens blur at the frame sides plus fine grain
 id: 09-edge-lens-blur-and-noise-finish
-revision: 2ba1df5b
+revision: 8b06ca07
 job: finish-the-look; support: add-depth
-status: unproven
+status: proven (accepted 2026-11-16)
 what it does for a beat: A last pass that makes a clean, drawn graphic look as if it was shot through a lens: the left and right sides go slightly soft while the centre stays crisp, and a little grain breaks up the flat digital fills. Use it on any finished graphic or title plate, especially pale ones where the cleanliness gives away that they are drawn.
 what it looks like: The white-disc title plate from 08: the centre, where the title sits, stays sharp; the disc edges near the left and right sides of the frame are visibly softer; the whole picture carries a faint fine grain.
 ingredients:
@@ -196,9 +196,9 @@ unknowns: Whether the Blur Radius was ever left at a value other than 5.0 (the d
 
 ## Flat UI graphic on a glossy extruded plate
 id: 10-2d-graphics-on-extruded-3d-plate
-revision: 90e84f77
+revision: 349107c8
 job: add-depth; support: light-the-hero, show-real-screen
-status: unproven
+status: proven (accepted 2026-11-16)
 what it does for a beat: Turns a flat 2D card or UI panel into a solid, glossy object floating over a pale floor with a real cast shadow, while the graphic on its face keeps its exact flat colours. Reach for it when a 2D layout needs to read as a physical product shot without leaving After Effects.
 what it looks like: A black rounded-rectangle panel with three light-grey pill buttons (icon plus label) and a small header row floats over a near-white, faintly cool background. The panel is tipped back slightly; its lower part catches a warm silvery reflection, a thin dark rim shows its thickness, and a soft dark shadow lies on the floor beneath it with a clear gap between panel and shadow.
 ingredients:
@@ -595,9 +595,9 @@ unknowns: the settings of the shadow layers in this scene (effects, blur centres
 
 ## Stacked white discs that grow out of the centre with long soft shadows
 id: 08-raised-white-shapes-with-long-shadows
-revision: 3aa9fdaf
+revision: 2c7f4a98
 job: fill-the-backdrop; support: add-depth, reveal-headline
-status: unproven
+status: proven (accepted 2026-11-16)
 variant of: 11-white-on-light-finish
 differs: the same finish as the parent (Gradient Overlay, Normal, Linear, 40 degrees, Align with Layer; Bevel and Emboss Size 5, angle 120, altitude 30, highlight and shadow both white in Screen at 100 %; a black, blurred copy under each white shape as its shadow, on a pale cyan left-to-right page), applied to a different scene and in motion. Scene: about eight concentric discs grow from nothing out of the centre, one pair (styled top, shadow copy below) after another, staggered in time, instead of the parent's still stack; each shadow copy is its own layer and grows with its disc. Shadow: here its settings are shown (CC Radial Fast Blur Amount 95, centre about 2.3 disc radii out to the left, Gaussian Blur 72.6, opacity about 21 %); the parent's video never opens its shadow layers, and its figures (Gaussian about 25, opacity 16 to 27 %, centre about 2 radii out) come from another recipe and its proof build. The shadows fall to the right of each disc and pile up so the right third of the frame goes grey, where the parent's fall left and down. Gradient stops: #F1F6F8 to #D7E0E4 here, #F1F5F7 to #DAE1E7 in the parent.
 what it does for a beat: A title or opener background that makes a near-white frame look premium and tactile: white discs swell out from the centre one after another, each one raised off the one below with a pale rim and a long, soft shadow to one side. Reach for it when a clean white brand look needs depth and slow motion behind type.

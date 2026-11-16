@@ -4,9 +4,9 @@ Generated from the recipe drafts; do not edit by hand. Recipes that help a build
 
 ## Swap a layer's photo and keep everything built on it
 id: 04-swap-footage-keep-edits
-revision: 223ffaa4
+revision: 74f0fe70
 job: none (build-aid)
-status: unproven
+status: proven (accepted 2026-11-16)
 what it does for a beat: A time-saver, not a look. Once one card, slot or frame is fully built (transforms, masks or mattes, parenting, keyframes, effects), you put a different photo or clip into it without rebuilding anything.
 what it looks like: The result is a before/after swap in the viewer: in a ring of portrait cards orbiting a bicycle wheel, the photo inside one card changes from a woman in an orange cardigan to a different portrait, while the card's position, tilt, crop window and caption stay exactly where they were. The author repeats it on several cards.
 ingredients:
@@ -28,9 +28,9 @@ unknowns: The original Scale of the photo layer before the swap; whether the oth
 
 ## Key a rough, unevenly lit green backdrop with a machine-learning keyer
 id: 07-key-imperfect-green-screen
-revision: 2dcbae92
+revision: 03ffee48
 job: none (build-aid)
-status: unproven
+status: proven (accepted 2026-11-16)
 what it does for a beat: For stock or found footage shot against a coloured wall that was never meant to be keyed (uneven light, olive green, shadows), when a classic colour keyer leaves grey residue. The person comes out clean, hair included, ready to sit over graphics.
 what it looks like: A smiling woman with big curly hair making a peace sign against an olive-green studio wall that is bright on the left and falls into shadow on the right. After the key she stands alone on black with soft, natural hair edges and no green rim; her top, yellow-green before, turns peach once spill is removed. In the finished example she then stands in front of the same promo cards and text used in technique 06, on a pale blue gradient.
 ingredients:
