@@ -12,7 +12,8 @@ You run the recipe work for one video whose study folder (`STUDY`) is already ga
    - The checker then re-checks it and writes its verdict with a first line `round: 2`.
    - A point first raised in round 2 (the checker missed it, or the fix introduced it) gets one more fix and a final check of the changed lines only, first line `round: 3 (changed lines only)`.
    - A recipe that still fails is held: move its file to `STUDY/held/` and add a line to `STUDY/drafts-held.md` with the reason. Held recipes do not ship.
-5. **Assemble.** From the repository root run `node tools/channel-learner/assemble.mjs STUDY`. It writes the tracked draft and the credits line, and refuses unless every recipe left in `STUDY/recipes/` has a passing check.
+5. **Match before adding.** Once every recipe passes, match each against the catalog (`merge.md`): variants get their two merge lines and a changed-lines check that ends `merge: confirmed`; every recipe gets its tags.
+6. **Assemble.** From the repository root run `node tools/channel-learner/assemble.mjs STUDY`. It writes the tracked draft and the credits line, and refuses unless every recipe left in `STUDY/recipes/` has a passing check.
 
 ## Rules
 

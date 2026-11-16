@@ -86,6 +86,11 @@ function fakes(dir, opts = {}) {
       const keep = opts.dropFrame ? frames.slice(1) : frames;
       for (const f of keep) await writeFile(join(outDir, `f${String(f).padStart(6, '0')}.png`), 'png');
     },
+    smallFrames: async ({ images, outDir }) => {
+      count('smallFrames');
+      await mkdir(outDir, { recursive: true });
+      for (const p of images) await writeFile(join(outDir, p.split('/').pop().replace(/\.png$/, '.jpg')), 'jpg');
+    },
     readBoxes: async (images) => {
       count('readBoxes');
       const label = { t: 'Amount', c: 0.95, x: 0.1, y: 0.3, w: 0.08, h: 0.02 };
@@ -195,12 +200,14 @@ test('align writes kept frames, boxes, the timeline and the transcript check; a 
     await writeFile(join(dir, 'ignore.json'), JSON.stringify([{ x: 0.9, y: 0.9, w: 0.1, h: 0.1 }]));
     const { deps, calls } = fakes(dir);
     assert.equal(await run(['align', dir], deps), 0);
-    assert.deepEqual(calls, { measureChanges: 1, extractFrames: 1, readBoxes: 1 });
+    assert.deepEqual(calls, { measureChanges: 1, extractFrames: 1, smallFrames: 1, readBoxes: 1 });
 
     const kept = await readJson(join(dir, 'kept.json'));
     assert.deepEqual(kept.noisyCells, [1], 'the always-changing cell is found');
     assert.ok(kept.kept.length >= 2);
     for (const k of kept.kept) assert.ok(existsSync(join(dir, k.file)), k.file);
+    // the 1920-wide JPEGs every writer and checker prompt reads (LESSONS 16)
+    for (const k of kept.kept) assert.ok(existsSync(join(dir, k.file.replace(/^frames\//, 'frames-small/').replace(/\.png$/, '.jpg'))), k.file);
     assert.match(kept.kept[0].file, /^frames\/f\d{6}\.png$/);
 
     const boxLines = (await readFile(join(dir, 'boxes.jsonl'), 'utf8')).trim().split('\n');

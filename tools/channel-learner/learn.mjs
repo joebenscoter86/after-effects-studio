@@ -45,6 +45,22 @@ const AUTO_LANG = 'en-orig';
 
 // ---------- real outside actions ----------
 
+/**
+ * 1920-wide JPEG copies of full-size frames, <outDir>/<name>.jpg, for agents to look at (the prompts read
+ * frames-small/; full-size frames stay for crops). macOS `sips`, eight at a time.
+ */
+export async function smallFramesSips({ images, outDir, width = 1920, jobs = 8 }) {
+  await mkdir(outDir, { recursive: true });
+  const queue = [...images];
+  const worker = async () => {
+    for (let p = queue.shift(); p; p = queue.shift()) {
+      const out = join(outDir, p.split('/').pop().replace(/\.png$/, '.jpg'));
+      await exec('sips', ['-s', 'format', 'jpeg', '-s', 'formatOptions', '80', '--resampleWidth', String(width), p, '--out', out]);
+    }
+  };
+  await Promise.all(Array.from({ length: jobs }, worker));
+}
+
 function exec(cmd, args, { cwd } = {}) {
   return new Promise((ok, fail) => {
     const child = spawn(cmd, args, { cwd, stdio: ['ignore', 'inherit', 'pipe'] });
@@ -106,6 +122,7 @@ export const realDeps = {
     onProgress: (f) => { if (f % 6000 === 0) console.log(`  changes: ${f} frames`); },
   }),
   extractFrames: (args) => extractFramesFfmpeg(args),
+  smallFrames: (args) => smallFramesSips(args),
   readBoxes: async (images) => {
     if (!existsSync(OCR_BINARY)) throw new Error(`no OCR binary at ${OCR_BINARY}; run tools/channel-learner/ocr/build.sh`);
     return readBoxes(OCR_BINARY, images);
@@ -372,6 +389,11 @@ async function align(dir, d, redo) {
     if (todo.length) await d.extractFrames({ video, frames: todo, outDir: framesDir });
     const missing = kept.filter((k) => !existsSync(join(dir, k.file)));
     if (missing.length) throw new Error(`${missing.length} of ${kept.length} frames missing after extraction (first ${missing[0].file})`);
+    const small = (k) => join(dir, k.file.replace(/^frames\//, 'frames-small/').replace(/\.png$/, '.jpg'));
+    const toShrink = kept.filter((k) => !existsSync(small(k)));
+    if (toShrink.length) await d.smallFrames({ images: toShrink.map((k) => join(dir, k.file)), outDir: join(dir, 'frames-small') });
+    const noSmall = kept.filter((k) => !existsSync(small(k)));
+    if (noSmall.length) throw new Error(`${noSmall.length} of ${kept.length} small frames missing (first ${noSmall[0].file})`);
     return `${kept.length} frames kept from ${stats.length}; noisy cells ${noisy.length ? noisy.join(',') : 'none'}`;
   }))) return 1;
 

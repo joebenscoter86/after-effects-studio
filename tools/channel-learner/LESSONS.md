@@ -64,6 +64,19 @@ The first video's 25 recipes all passed the check. Building them found three rec
 - Verdicts were relayed to the owner before anyone had looked at a pair: look at each pair yourself before reporting it as matching, and say which ones you have not seen.
 - Recipes edited after their check: `assemble.mjs` refuses them until a check is newer than the recipe.
 
+### 14. Merge lines written from memory (second video, 7pgDb6NKEXM 03 and 08, 2026-11-15)
+- **What happened.** Matching the second video against the catalog, the orchestrator wrote the `differs:` line of both variants itself, from its memory of the parents. Both were refused by the checker: 03 said the parent's pivot was off screen (it is inside the frame; 03's is the one off screen), called the parent's wheel still (its finished example turns) and said the steps were the same (the parent spreads its rotation in one drag); 08 listed the parent's own settings (40 degrees, Bevel Size 5) as differences and presented shadow figures from another recipe's proof build as shown in the parent's video.
+- **Why.** No prompt covered matching, and nothing checked a merge: the catalog design said "a checker confirms the merge" but no check, prompt or code did.
+- **Rule.** Matching follows `prompts/merge.md`: both recipes open side by side, every claim about the parent pointing at a line of the parent's section, nothing from memory. The checker's check 11 (`check.md`) confirms or refuses the merge, and `assemble.mjs` refuses a recipe with a `variant of:` line whose check does not say `merge: confirmed` (test in `tests/assemble.test.mjs`).
+
+### 15. A finished example played in place of the build (second video, 01, 02)
+- **What happened.** 01's result line named a frame from the pre-made finished version shown at the start of the chapter: darker, steeper strips, more window bars and sharper edges than anything the steps make. 02's second keyframe was read as 15 % from a panel shown just after a jump cut; the settled picture (a fully shadowed corner) rules it out.
+- **Rule.** Already in `distil.md` ("the finished example is a different file"); this time the checker's check 8 caught both. Kept here because it is the commonest round-1 failure across both videos: writers should point the result at the build when the steps make the build, and give the pre-made version as a labelled reference with its own measurements.
+
+### 16. The tool did not make the frames its prompts read (second video, 2026-11-15)
+- **What happened.** Every writer and checker prompt reads `frames-small/` (1920-wide copies of the kept frames), but `learn.mjs align` only wrote the full-size `frames/`. On the first video they were made by hand; on the second the orchestrator noticed only because the folder was missing.
+- **Rule.** `align`'s frames step now writes `frames-small/` too and fails if any is missing (test in `tests/learn.test.mjs`).
+
 ## Still open
 - Checks 8 to 10 and the look review are new. They have not yet been run on the other four videos' 39 recipes, and the 24 "matches" on the first video were given before the look line existed.
 - Nothing yet tests the prompts themselves. A cheap test: keep technique 11's first recipe as a fixture and confirm a fresh checker fails it on check 8.

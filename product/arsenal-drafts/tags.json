@@ -1355,6 +1355,237 @@
       "difficulty": 1,
       "group": null,
       "why": "'stretches the perspective ... whenever a 3D layout looks too flat under the default view'"
+    },
+    "7pgDb6NKEXM#01": {
+      "id": "01-shadow-map-overlay",
+      "kind": "technique",
+      "job": "add-depth",
+      "support": [
+        "finish-the-look",
+        "establish-place"
+      ],
+      "mood": [
+        "light",
+        "editorial",
+        "cinematic"
+      ],
+      "needs": [
+        "type"
+      ],
+      "duration": 5,
+      "motion": "still",
+      "difficulty": 2,
+      "group": null,
+      "why": "'Makes a flat title card look as if it sits in a room with sunlight through a window': soft window shadows give a flat layout light and place"
+    },
+    "7pgDb6NKEXM#02": {
+      "id": "02-shadow-map-wipe-on",
+      "kind": "technique",
+      "job": "add-depth",
+      "support": [
+        "reveal-headline"
+      ],
+      "mood": [
+        "light",
+        "editorial",
+        "cinematic"
+      ],
+      "needs": [
+        "type"
+      ],
+      "duration": 2,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": null,
+      "why": "'the shadow sweeps across the layout ... instead of popping on': the light arrives as the title lands"
+    },
+    "7pgDb6NKEXM#03": {
+      "id": "03-graphics-orbit-a-real-object",
+      "kind": "technique",
+      "job": "list-items",
+      "support": [
+        "keep-it-alive",
+        "make-concrete"
+      ],
+      "mood": [
+        "light",
+        "playful",
+        "photo"
+      ],
+      "needs": [
+        "photo"
+      ],
+      "duration": 6,
+      "motion": "loop",
+      "difficulty": 3,
+      "group": "duplicate-and-step ring",
+      "why": "'a meet the team or product-range beat that should feel physical': a ring of cards turns with a spinning real object",
+      "variant_of": "YBeMmC43Q1U#04"
+    },
+    "7pgDb6NKEXM#04": {
+      "id": "04-swap-footage-keep-edits",
+      "kind": "build-aid",
+      "job": null,
+      "support": [],
+      "mood": [
+        "neutral",
+        "workflow"
+      ],
+      "needs": [
+        "photo"
+      ],
+      "duration": 0,
+      "motion": "still",
+      "difficulty": 1,
+      "group": null,
+      "why": "workflow: put a new photo or clip into a finished slot without rebuilding it"
+    },
+    "7pgDb6NKEXM#05": {
+      "id": "05-soft-doubled-drop-shadow",
+      "kind": "technique",
+      "job": "add-depth",
+      "support": [
+        "light-the-hero"
+      ],
+      "mood": [
+        "light",
+        "soft",
+        "photo"
+      ],
+      "needs": [
+        "photo"
+      ],
+      "duration": 4,
+      "motion": "still",
+      "difficulty": 1,
+      "group": null,
+      "why": "'a photographed object cut out ... looks pasted on': a very soft doubled shadow seats it in the scene"
+    },
+    "7pgDb6NKEXM#06": {
+      "id": "06-graphics-behind-subject-object-matte",
+      "kind": "technique",
+      "job": "add-depth",
+      "support": [
+        "reveal-headline"
+      ],
+      "mood": [
+        "light",
+        "playful",
+        "photo"
+      ],
+      "needs": [
+        "footage"
+      ],
+      "duration": 5,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": null,
+      "why": "'cards, titles and text sit between the person and the wall': overlays go behind a presenter instead of over the face"
+    },
+    "7pgDb6NKEXM#07": {
+      "id": "07-key-imperfect-green-screen",
+      "kind": "build-aid",
+      "job": null,
+      "support": [],
+      "mood": [
+        "neutral",
+        "workflow"
+      ],
+      "needs": [
+        "footage"
+      ],
+      "duration": 0,
+      "motion": "still",
+      "difficulty": 1,
+      "group": null,
+      "why": "setup: cut a person off a rough coloured wall so graphics can sit behind or around them; nothing on screen alone"
+    },
+    "7pgDb6NKEXM#08": {
+      "id": "08-raised-white-shapes-with-long-shadows",
+      "kind": "technique",
+      "job": "fill-the-backdrop",
+      "support": [
+        "add-depth",
+        "reveal-headline"
+      ],
+      "mood": [
+        "light",
+        "minimal",
+        "soft"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 6,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": null,
+      "why": "'A title or opener background that makes a near-white frame look premium': white discs swell out with long soft shadows behind type",
+      "variant_of": "YBeMmC43Q1U#11"
+    },
+    "7pgDb6NKEXM#09": {
+      "id": "09-edge-lens-blur-and-noise-finish",
+      "kind": "technique",
+      "job": "finish-the-look",
+      "support": [
+        "add-depth"
+      ],
+      "mood": [
+        "light",
+        "cinematic",
+        "soft"
+      ],
+      "needs": [
+        "none"
+      ],
+      "duration": 4,
+      "motion": "still",
+      "difficulty": 1,
+      "group": null,
+      "why": "'A last pass that makes a clean, drawn graphic look as if it was shot through a lens': soft sides and grain over a finished plate"
+    },
+    "7pgDb6NKEXM#10": {
+      "id": "10-2d-graphics-on-extruded-3d-plate",
+      "kind": "technique",
+      "job": "add-depth",
+      "support": [
+        "light-the-hero",
+        "show-real-screen"
+      ],
+      "mood": [
+        "light",
+        "3D",
+        "minimal"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 5,
+      "motion": "still",
+      "difficulty": 3,
+      "group": "shadow-catcher floor",
+      "why": "'Turns a flat 2D card or UI panel into a solid, glossy object floating over a pale floor with a real cast shadow'"
+    },
+    "7pgDb6NKEXM#11": {
+      "id": "11-camera-depth-of-field-advanced-3d",
+      "kind": "technique",
+      "job": "move-camera",
+      "support": [
+        "add-depth"
+      ],
+      "mood": [
+        "light",
+        "3D",
+        "cinematic"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 5,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "DOF camera push",
+      "why": "'duplicated objects staggered in depth fall progressively out of focus, and a small camera move adds life'"
     }
   }
 }

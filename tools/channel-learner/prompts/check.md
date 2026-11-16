@@ -19,6 +19,8 @@ You check technique recipes written by someone else from a tutorial video. You d
 9. **Settings against the picture.** Where a shown setting's effect can be measured on the result (a shadow's darkness, a blur's length, a letter's height), measure it. A setting that cannot plausibly give the measured result, or two figures in the recipe that describe the same thing at different sizes, fails unless the recipe says so itself.
 10. **Who casts it, which way it goes.** Spot-check one attribution (which object a shadow or streak starts at) and, for motion, the direction across two frames.
 
+11. **The merge, when there is one.** A recipe with `variant of:` and `differs:` lines (`merge.md`) names a parent in `product/arsenal-drafts/<video>.md`. Read the parent's section and check every claim the `differs:` line makes about it and about this recipe: is it the same mechanism, is each "difference" really different, and does each parent figure come from the parent's own video or (as it must then say) from a proof build or another recipe? Add a line `merge: confirmed` or `merge: refused`, with the false claims under `merge failures:`. (On the second video both merge lines first written failed: an off-screen pivot that was the parent's opposite, a "still" parent wheel that turns, settings listed as differences that the parent shares.)
+
 Look at no more than 8 small frames per recipe, plus the result crop; crop for detail.
 
 ## Output
