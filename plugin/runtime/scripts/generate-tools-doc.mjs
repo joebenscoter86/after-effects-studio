@@ -10,7 +10,11 @@ import { fileURLToPath } from "node:url";
 
 const repoRoot = resolve(fileURLToPath(import.meta.url), "../..");
 const outPath = join(repoRoot, "docs", "TOOLS.md");
-const distIndex = join(repoRoot, "dist", "tools", "index.js");
+// --dist <dir> reads a scratch build (npm run docs:tools:check) instead of the committed dist/,
+// whose index.js is the esbuild bundle and must not be overwritten by plain tsc.
+const distArg = process.argv.indexOf("--dist");
+const distDir = distArg > 0 ? resolve(process.argv[distArg + 1]) : join(repoRoot, "dist");
+const distIndex = join(distDir, "tools", "index.js");
 
 let ALL_TOOLS;
 try {
