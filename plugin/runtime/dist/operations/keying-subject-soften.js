@@ -5,7 +5,7 @@ import * as path from "node:path";
 import { distanceTo, furthestFrame, matteCoverage, subjectTop } from "../color/matte.js";
 import { labOf, lookCrops, measureLook, summarizeLookSeries } from "../color/sheet.js";
 import { registerOp, jsxVal, jsxCompLayerPreamble } from "../registry.js";
-import { OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, PICTURE_MARGIN_BYTES, SETTLE_MAX_MS, SOFT_EDGE_DEFAULTS, aeCacheRoot, cacheBytesFor, otherEdgeError, captureBytes, compLayerParams, liveCutoutIO, needSelection, perFrameMsOf, since, spacePlan, trackedSpan } from "./keying-shared.js";
+import { OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, PICTURE_MARGIN_BYTES, SETTLE_MAX_MS, SOFT_EDGE_DEFAULTS, aeCacheRoot, cacheBytesFor, cutoutMovieUndoGuardJsx, otherEdgeError, captureBytes, compLayerParams, liveCutoutIO, needSelection, perFrameMsOf, since, spacePlan, trackedSpan } from "./keying-shared.js";
 export const SOFT_EDGE_COST = "The soft edge is two copies of the matte, so After Effects computes Object Matte twice for every frame: a render writes about twice the disk cache and takes several times as long (on the half-size take, 320 frames at 1088 × 1920: 342 s and 9.0 GB of cache, against 65 to 92 s and about 5 GB with one matte; subject.render_cutout counts both copies).";
 /** The region's lower line: given, or `regionDepth` of the comp's height under the lowest top of the subject. */
 export function softRegionBottom(tops, compHeight, given) {
@@ -109,6 +109,7 @@ export function softenUndoJsx(args) {
                 if (_l.name === _name && String(AE.safeGet(function () { return _l.comment; }, "")).indexOf(${jsxVal(SOFT_MARKER)}) >= 0) { _pl = _l; break; }
             }
             if (!_pl) return { ok: false, error: "comp " + _comp.name + " has no soft edge for layer '" + _layer.name + "'" };
+            ${cutoutMovieUndoGuardJsx("soft edge")}
             var _was = true;
             try { var _st = eval("(" + _pl.comment + ")"); if (_st && _st.wasEnabled === false) _was = false; } catch (eJ) {}
             var _pc = _pl.source;

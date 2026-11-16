@@ -832,6 +832,17 @@ export const MOTION_EDGE_DEFAULTS = {
  * not calibrated on a live motion-edge take.
  */
 export const MOTION_EDGE_CLEAR_BELOW = 0.05;
+/**
+ * Seen through in a motion-edge file: alpha from MOTION_EDGE_CLEAR_BELOW up to 0.5, deep inside
+ * the body, instead of 0.5 to 0.95. The keyer's soft alpha where a moving arm crossed the torso
+ * read 0.75 to 0.95 (1,486 px in a 30 px strip, 4 of 24 frames of a 1920 × 1080 take,
+ * 2026-11-16): the motion edge's own blur, which is expected. A patch more than half see-through
+ * deep in the body is still a defect, and below MOTION_EDGE_CLEAR_BELOW the hole check takes over,
+ * so no alpha falls between the two. 0.5 leaves a margin of 0.25 under the lowest blur measured.
+ */
+export const MOTION_EDGE_SEEN_THROUGH = { solid: MOTION_EDGE_CLEAR_BELOW, below: 0.5 };
+/** One sentence for check_file's reading of a motion-edge file. */
+export const MOTION_EDGE_FILE_READING = `This file carries a motion edge (from its sidecar): soft alpha on moving parts is expected, so holes and openings count only under ${MOTION_EDGE_CLEAR_BELOW} alpha, and seen through only from ${MOTION_EDGE_SEEN_THROUGH.solid} to ${MOTION_EDGE_SEEN_THROUGH.below} alpha deep inside the body (on a plain cut-out, 0.5 to 0.95); the moving arm across the torso on the live take read 0.75 to 0.95.`;
 /** The layer that is the cut-out after subject.status: the soft edge, the motion edge, or the matted layer; or why there is no one answer. */
 export function cutLayerOf(st, matted) {
     const soft = typeof st?.softEdge?.layer === "string" ? st.softEdge.layer : null;
@@ -850,6 +861,17 @@ export function otherEdgeError(existing, layer) {
         ? ["a soft edge", "a motion edge", "subject.soften_edge"]
         : ["a motion edge", "a soft edge", "subject.motion_edge"];
     return `the layer already has ${has} ('${layer}'), and ${adding} does not combine with it: undo it first with ${undoOp} { comp, layer, undo: true }`;
+}
+/**
+ * JSX: refuse an edge's undo while subject.use_cutout's movie ('<layer> cut-out') is in the comp.
+ * The undo switches the matted layer back on, so with the movie still above it the subject shows twice.
+ */
+export function cutoutMovieUndoGuardJsx(edge) {
+    const tail = `, the movie subject.use_cutout put in place of the ${edge}: undoing now would switch the matted layer back on under it and show the subject twice. Remove it first (that returns the comp to the live matte), then undo.`;
+    return `
+            var _movieName = _layer.name + " cut-out";
+            for (var _mvi = 1; _mvi <= _comp.numLayers; _mvi++) if (AE.safeGet(function () { return _comp.layer(_mvi).name; }, "") === _movieName) return { ok: false, error: "comp " + _comp.name + " has '" + _movieName + "'" + ${jsxVal(tail)}, movieLayer: _movieName };
+`;
 }
 /** JSX: an expression for bothEdgesError, from the JSX variables holding the two layer names. */
 export function bothEdgesErrorJsx(softVar, motionVar) {

@@ -8,7 +8,7 @@ import { composeContactSheet, flattenOver, resample } from "../color/sheet.js";
 import { rejectedOutputPath } from "../config.js";
 import { registerOp, jsxFail, jsxVal, jsxCompLayerPreamble, jsxCompPreamble } from "../registry.js";
 import { PARK_QUEUE_FN, QUEUE_CHANGE_NOTE, RENDER_QUEUE_UNDO_WARNING } from "./render.js";
-import { CHECK_FILE_MAX_FRAMES, CUTOUT_HOLE_LIMIT, CUTOUT_OVER, GB, MOTION_EDGE_CLEAR_BELOW, NODE_ONLY, PICTURE_DEFLATE, PICTURE_MARGIN_BYTES, SETTLE_MAX_MS, SOFT_EDGE_DEFAULTS, SUBJECT_WHOLE_PIECE_NOTE, acceptedBy, aeCacheRoot, alikeRegions, bothEdgesErrorJsx, cacheBytesFor, captureBytes, compLayerParams, fileCleanupJsx, fileCompJsx, fmt, frozenAccepted, frozenFinding, frozenOpts, gb, liveFileIO, measureFrames, overParam, overPicture, parseHex, pixelTally, plural, regionsOf, renderChunked, renderTally, roundTally, since, spacePlan, spaceRefusal, statfsFree, summarize, writePng } from "./keying-shared.js";
+import { CHECK_FILE_MAX_FRAMES, CUTOUT_HOLE_LIMIT, CUTOUT_OVER, GB, MOTION_EDGE_CLEAR_BELOW, MOTION_EDGE_FILE_READING, MOTION_EDGE_SEEN_THROUGH, NODE_ONLY, PICTURE_DEFLATE, PICTURE_MARGIN_BYTES, SETTLE_MAX_MS, SOFT_EDGE_DEFAULTS, SUBJECT_WHOLE_PIECE_NOTE, acceptedBy, aeCacheRoot, alikeRegions, bothEdgesErrorJsx, cacheBytesFor, captureBytes, compLayerParams, fileCleanupJsx, fileCompJsx, fmt, frozenAccepted, frozenFinding, frozenOpts, gb, liveFileIO, measureFrames, overParam, overPicture, parseHex, pixelTally, plural, regionsOf, renderChunked, renderTally, roundTally, since, spacePlan, spaceRefusal, statfsFree, summarize, writePng } from "./keying-shared.js";
 /** How two halves of a cut-out are joined, with what the first piece measured across the join (2026-11-12). */
 export const HALVES_JOIN_NOTE = "Two halves are joined by a stream copy, nothing re-encoded: list them in order in a text file (file 'first.mov' then file 'second.mov', one per line) and run " +
     "ffmpeg -f concat -safe 0 -i halves.txt -c copy whole.mov. Empty After Effects' disk cache between the halves (it holds about a half's worth). " +
@@ -606,8 +606,11 @@ export async function runCheckFile(args, io) {
     if (file !== null) {
         try {
             const side = JSON.parse(await fs.readFile(`${file}.comp-room.json`, "utf8"));
-            if (side?.motionEdge)
+            if (side?.motionEdge) {
                 motionFile = true;
+                // The motion edge's soft alpha on moving parts is expected: only a patch more than half clear is seen through.
+                Object.assign(seenLimits, MOTION_EDGE_SEEN_THROUGH);
+            }
             if (regionLine === null && typeof side?.softEdge?.regionBottom === "number") {
                 regionLine = side.softEdge.regionBottom;
                 if (typeof side.softEdge.regionDepth === "number")
@@ -1037,9 +1040,10 @@ export async function runCheckFile(args, io) {
             neckPx: 2 * SPECK_DEFAULTS.neck,
         },
         seenThroughLimits: { ...seenLimits },
+        motionEdge: motionFile ? { reading: MOTION_EDGE_FILE_READING } : null,
         region,
         opaque,
-        inOut: `${sum.text}${jumpText}${frozenText}${speckFindings.map((f) => ` ${f.reading}`).join("")}${briefText}${seenFindings.map((f) => ` ${f.reading}`).join("")}${seenText}${region ? ` ${region.reading}` : ""}${opaqueText} ${compared}${stop && picture ? ` Look at the picture (${picture}).` : ""}`,
+        inOut: `${sum.text}${jumpText}${frozenText}${speckFindings.map((f) => ` ${f.reading}`).join("")}${briefText}${seenFindings.map((f) => ` ${f.reading}`).join("")}${seenText}${motionFile ? ` ${MOTION_EDGE_FILE_READING}` : ""}${region ? ` ${region.reading}` : ""}${opaqueText} ${compared}${stop && picture ? ` Look at the picture (${picture}).` : ""}`,
         picture,
         pictures,
         frameReadings: readings.map((r) => ({
@@ -1193,7 +1197,7 @@ registerOp({
         "A speck is a small opaque piece apart from the cut-out, or joined to it by a neck a pixel or two wide, not touching the frame edge: speckMinArea to speckMaxArea px (default 20 to 2,000, chosen on the 4K fresh-session file, where a sliver of chair 1 to 5 px off the right arm read 20 to 240 px on about 40 frames and nothing else in 320 frames was caught); findings of kind 'speck' give the frames, the longest run of frames in a row, the largest area and frame, the box, the piece's mean colour (`colour`: L*, a*, b*, CIELAB D65 from sRGB, over its opaque pixels on every frame; a pale grey remnant such as the first piece's chair read a* about +7, skin about +30) and a picture; a speck on at least speckMinFrames frames in a row (default 2) stops, since a new render keeps it, and a shorter one (a single-frame flash, a wisp of hair) goes to notes and one sentence of inOut. accept: [{ kind: 'speck', box }] takes one off. Checked through a real subject.check_file run on two files of one take (2026-11-12); the limits come from those two files. timing.speck is the pass's own cost (about 5.5 ms a 1080 x 1920 frame). " +
         "Seen through: pixels partly see-through (alpha 0.5 to 0.95) more than seenThroughDepth px (default 30) inside the cut-out's body and from the frame's edge, as where two copies of a matte meet in a seam; seenThroughMinArea px or more on a frame (default 400) on at least 2 frames read in a row is a finding of kind 'seen-through' that stops, with the frames, the largest area and frame, the box and a picture; single frames go to notes. Limits chosen on two files of the half-size take, as clicked and with subject.soften_edge (at most 82 and 41 px on every fourth frame), and a band of the soft-edge file's alpha multiplied by 0.75 (about 3,900 px a frame); not checked live: it has not run in After Effects on a file with a real seam. timing.seenThrough is its cost. " +
         "Region line: for a file from a soft-edge build, `region` gives the subject's highest and lowest top across the file against the soft edge's region line (from <movie>.comp-room.json, which subject.render_cutout writes, or `regionLine`), and a note, not a stop, names the frames where the top sits lower than the line less 12% of the height, so the lower hair crosses the line and keeps the hard edge. " +
-        `Motion edge: for a file from a motion-edge build (its <movie>.comp-room.json says so), holes and openings are read only where the alpha is under ${MOTION_EDGE_CLEAR_BELOW}, so the keyer's soft alpha on moving parts is not a finding and a clear hole still is (chosen offline, not calibrated live). ` +
+        `Motion edge: for a file from a motion-edge build (its <movie>.comp-room.json says so), holes and openings are read only where the alpha is under ${MOTION_EDGE_CLEAR_BELOW}, so the keyer's soft alpha on moving parts is not a finding and a clear hole still is (chosen offline, not calibrated live), and seen through counts only from ${MOTION_EDGE_SEEN_THROUGH.solid} to ${MOTION_EDGE_SEEN_THROUGH.below} alpha (a moving arm across the torso read 0.75 to 0.95 live); \`motionEdge.reading\` says so. ` +
         "Only true neighbours are compared, and `compared` says which. A frame that could not be read is 'not-checked' and stops. Pictures: the largest frame of each finding not accepted and both frames of each jump, full size, and a sheet of up to 24 frames; `pictures` counts them and their bytes. Each raw capture is removed once read unless keepCaptures (one run on the take had left 630 MB). The throwaway comp is removed afterwards, and the imported footage too unless keepFootage. " +
         "`outline` says how much the outline changed between neighbouring frames and over frozenGap frames (share of the frame whose alpha changed by more than 0.1, at full size); a run where it did not move is a 'frozen' finding (the selection is probably not tracking, as after replacing the layer's footage; accept: [{ kind: \"frozen\" }] for a subject that really is still). The frozen limits are not yet calibrated live. " +
         "Measured: about 0.55 s a frame reading the file. Returns stop, findings, accepted, checked, compared, opaque, outline, inOut, picture, frameReadings, timing.",

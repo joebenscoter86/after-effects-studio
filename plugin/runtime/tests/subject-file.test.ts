@@ -1624,6 +1624,38 @@ describe("the soft edge's region line, beside the file and in the file check", (
     expect(plain.findings).toContainEqual(expect.objectContaining({ kind: "hole", box: { x: 60, y: 100, width: 40, height: 40 } }));
   });
 
+  it("check_file on a motion-edge file: a moving arm's soft alpha across the body is not seen through; a half-clear patch still is", async () => {
+    /** The body with a 30 px strip deep inside at `a` (the live take: 0.75 to 0.95 where the arm crossed the torso). */
+    const strip = (a: number) => (_frame: number) => {
+      const m = new Float64Array(W * H);
+      for (let y = 60; y < H; y++) for (let x = 40; x < 160; x++) m[y * W + x] = 1;
+      for (let y = 150; y < 250; y++) for (let x = 85; x < 115; x++) m[y * W + x] = a;
+      return m;
+    };
+    const file = path.join(dir, "motion-seen.mov");
+    await fs.writeFile(file, "");
+    await fs.writeFile(`${file}.comp-room.json`, JSON.stringify({ softEdge: null, motionEdge: { layer: "raw_nogreen.mp4 motion edge", band: 50 } }));
+    const exists = async () => true;
+    const seen = (r: Any) => r.findings.filter((f: Any) => f.kind === "seen-through");
+    for (const a of [0.75, 0.85, 0.95 - 1e-3]) {
+      const arm = await runCheckFile({ path: file, outDir: dir, frozenFrames: 1e9 }, { ...fileIO({ matteAt: strip(a) }), exists });
+      expect(seen(arm)).toEqual([]);
+      expect(arm.stop).toBe(false);
+    }
+    const arm = await runCheckFile({ path: file, outDir: dir, frozenFrames: 1e9 }, { ...fileIO({ matteAt: strip(0.85) }), exists });
+    expect(arm.motionEdge?.reading).toMatch(/soft alpha on moving parts is expected/);
+    expect(arm.inOut).toMatch(/soft alpha on moving parts is expected/);
+    const patch = await runCheckFile({ path: file, outDir: dir, frozenFrames: 1e9 }, { ...fileIO({ matteAt: strip(0.25) }), exists });
+    expect(seen(patch)).toHaveLength(1);
+    expect(patch.stop).toBe(true);
+    // Without the sidecar the arm's strip is seen through, as before.
+    const plainFile = path.join(dir, "plain-seen.mov");
+    await fs.writeFile(plainFile, "");
+    const plain = await runCheckFile({ path: plainFile, outDir: dir, frozenFrames: 1e9 }, { ...fileIO({ matteAt: strip(0.85) }), exists });
+    expect(seen(plain)).toHaveLength(1);
+    expect(plain.motionEdge).toBeNull();
+  });
+
   it("takes the line as a parameter for a file rendered before the sidecar, and says nothing without one", async () => {
     const given = await runCheckFile(
       { path: "/x/cut.mov", outDir: dir, frozenFrames: 1e9, regionLine: 200 },

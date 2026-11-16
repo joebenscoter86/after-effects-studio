@@ -7,7 +7,7 @@ import { distanceTo, furthestFrame, matteCoverage, subjectTop } from "../color/m
 import { type DecodedPng } from "../color/png16.js";
 import { labOf, lookCrops, measureLook, summarizeLookSeries, type LookArgs, type Rgb } from "../color/sheet.js";
 import { registerOp, jsxVal, jsxCompLayerPreamble } from "../registry.js";
-import { OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, PICTURE_MARGIN_BYTES, SETTLE_MAX_MS, SOFT_EDGE_DEFAULTS, aeCacheRoot, cacheBytesFor, otherEdgeError, captureBytes, compLayerParams, liveCutoutIO, needSelection, perFrameMsOf, since, spacePlan, trackedSpan, type CutoutIO, type Json } from "./keying-shared.js";
+import { OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, PICTURE_MARGIN_BYTES, SETTLE_MAX_MS, SOFT_EDGE_DEFAULTS, aeCacheRoot, cacheBytesFor, cutoutMovieUndoGuardJsx, otherEdgeError, captureBytes, compLayerParams, liveCutoutIO, needSelection, perFrameMsOf, since, spacePlan, trackedSpan, type CutoutIO, type Json } from "./keying-shared.js";
 
 
 export const SOFT_EDGE_COST =
@@ -126,6 +126,7 @@ export function softenUndoJsx(args: { comp: unknown; layer: unknown }): string {
                 if (_l.name === _name && String(AE.safeGet(function () { return _l.comment; }, "")).indexOf(${jsxVal(SOFT_MARKER)}) >= 0) { _pl = _l; break; }
             }
             if (!_pl) return { ok: false, error: "comp " + _comp.name + " has no soft edge for layer '" + _layer.name + "'" };
+            ${cutoutMovieUndoGuardJsx("soft edge")}
             var _was = true;
             try { var _st = eval("(" + _pl.comment + ")"); if (_st && _st.wasEnabled === false) _was = false; } catch (eJ) {}
             var _pc = _pl.source;

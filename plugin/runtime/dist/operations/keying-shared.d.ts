@@ -385,6 +385,20 @@ export declare const MOTION_EDGE_DEFAULTS: {
  * not calibrated on a live motion-edge take.
  */
 export declare const MOTION_EDGE_CLEAR_BELOW = 0.05;
+/**
+ * Seen through in a motion-edge file: alpha from MOTION_EDGE_CLEAR_BELOW up to 0.5, deep inside
+ * the body, instead of 0.5 to 0.95. The keyer's soft alpha where a moving arm crossed the torso
+ * read 0.75 to 0.95 (1,486 px in a 30 px strip, 4 of 24 frames of a 1920 × 1080 take,
+ * 2026-11-16): the motion edge's own blur, which is expected. A patch more than half see-through
+ * deep in the body is still a defect, and below MOTION_EDGE_CLEAR_BELOW the hole check takes over,
+ * so no alpha falls between the two. 0.5 leaves a margin of 0.25 under the lowest blur measured.
+ */
+export declare const MOTION_EDGE_SEEN_THROUGH: {
+    solid: number;
+    below: number;
+};
+/** One sentence for check_file's reading of a motion-edge file. */
+export declare const MOTION_EDGE_FILE_READING: string;
 /** The layer that is the cut-out after subject.status: the soft edge, the motion edge, or the matted layer; or why there is no one answer. */
 export declare function cutLayerOf(st: Json, matted: unknown): {
     layer: unknown;
@@ -394,6 +408,11 @@ export declare function cutLayerOf(st: Json, matted: unknown): {
 };
 /** The refusal when the layer already has the other edge: soften_edge on a motion edge, motion_edge on a soft edge. */
 export declare function otherEdgeError(existing: "soft" | "motion", layer: string): string;
+/**
+ * JSX: refuse an edge's undo while subject.use_cutout's movie ('<layer> cut-out') is in the comp.
+ * The undo switches the matted layer back on, so with the movie still above it the subject shows twice.
+ */
+export declare function cutoutMovieUndoGuardJsx(edge: "soft edge" | "motion edge"): string;
 /** JSX: an expression for bothEdgesError, from the JSX variables holding the two layer names. */
 export declare function bothEdgesErrorJsx(softVar: string, motionVar: string): string;
 /** The refusal when a layer has both a soft-edge and a motion-edge layer (the two do not combine). */

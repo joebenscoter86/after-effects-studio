@@ -2819,13 +2819,20 @@ function otherEdgeError(existing, layer) {
 	];
 	return `the layer already has ${has} ('${layer}'), and ${adding} does not combine with it: undo it first with ${undoOp} { comp, layer, undo: true }`;
 }
+function cutoutMovieUndoGuardJsx(edge) {
+	const tail = `, the movie subject.use_cutout put in place of the ${edge}: undoing now would switch the matted layer back on under it and show the subject twice. Remove it first (that returns the comp to the live matte), then undo.`;
+	return `
+            var _movieName = _layer.name + " cut-out";
+            for (var _mvi = 1; _mvi <= _comp.numLayers; _mvi++) if (AE.safeGet(function () { return _comp.layer(_mvi).name; }, "") === _movieName) return { ok: false, error: "comp " + _comp.name + " has '" + _movieName + "'" + ${jsxVal(tail)}, movieLayer: _movieName };
+`;
+}
 function bothEdgesErrorJsx(softVar, motionVar) {
 	return `${jsxVal(bothEdgesError("@SOFT@", "@MOTION@"))}.replace("@SOFT@", function () { return ${softVar}; }).replace("@MOTION@", function () { return ${motionVar}; })`;
 }
 function bothEdgesError(soft, motion) {
 	return `the layer has both a soft edge ('${soft}') and a motion edge ('${motion}'), and the two do not combine: undo one first, with subject.soften_edge { comp, layer, undo: true } or subject.motion_edge { comp, layer, undo: true }`;
 }
-var compLayerParams, FX_ROOT_JSX, OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, SUBJECT_WHOLE_PIECE_NOTE, CLOSE_CLICK_SHARE, COUNT_NOTE, NEED_CLICK, subjectIndexParam, CUTOUT_HOLE_LIMIT, CUTOUT_OVER, CUTOUT_SECONDS_PER_FRAME, SETTLE_MAX_MS, THUMB, PICTURE_DEFLATE, intersects, union, fmt, boxText, plural, boxArea, iou, isFrozenEntry, GB, gb, PICTURE_MARGIN_BYTES, captureBytes, PART_NAMES, trackedSpan, FROZEN_DEFAULTS, frozenOpts, renderTally, pixelTally, since, roundTally, needSelection, perFrameMsOf, regionsOf, NODE_ONLY, overParam, SOFT_EDGE_DEFAULTS, MOTION_EDGE_DEFAULTS, MOTION_EDGE_CLEAR_BELOW;
+var compLayerParams, FX_ROOT_JSX, OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, SUBJECT_WHOLE_PIECE_NOTE, CLOSE_CLICK_SHARE, COUNT_NOTE, NEED_CLICK, subjectIndexParam, CUTOUT_HOLE_LIMIT, CUTOUT_OVER, CUTOUT_SECONDS_PER_FRAME, SETTLE_MAX_MS, THUMB, PICTURE_DEFLATE, intersects, union, fmt, boxText, plural, boxArea, iou, isFrozenEntry, GB, gb, PICTURE_MARGIN_BYTES, captureBytes, PART_NAMES, trackedSpan, FROZEN_DEFAULTS, frozenOpts, renderTally, pixelTally, since, roundTally, needSelection, perFrameMsOf, regionsOf, NODE_ONLY, overParam, SOFT_EDGE_DEFAULTS, MOTION_EDGE_DEFAULTS, MOTION_EDGE_CLEAR_BELOW, MOTION_EDGE_SEEN_THROUGH, MOTION_EDGE_FILE_READING;
 function init_keying_shared() {
 	return (init_keying_shared = __esmMin((() => {
 		init_matte();
@@ -2978,6 +2985,11 @@ function init_keying_shared() {
 			bandChannel: 2
 		};
 		MOTION_EDGE_CLEAR_BELOW = .05;
+		MOTION_EDGE_SEEN_THROUGH = {
+			solid: MOTION_EDGE_CLEAR_BELOW,
+			below: .5
+		};
+		MOTION_EDGE_FILE_READING = `This file carries a motion edge (from its sidecar): soft alpha on moving parts is expected, so holes and openings count only under ${MOTION_EDGE_CLEAR_BELOW} alpha, and seen through only from ${MOTION_EDGE_SEEN_THROUGH.solid} to ${MOTION_EDGE_SEEN_THROUGH.below} alpha deep inside the body (on a plain cut-out, 0.5 to 0.95); the moving arm across the torso on the live take read 0.75 to 0.95.`;
 	})))();
 }
 
@@ -5968,4 +5980,4 @@ function init_eval() {
 	})))();
 }
 
-export { AE_AAC_PRIMING_SAMPLES, CLOSE_CLICK_SHARE, COUNT_NOTE, CUTOUT_HOLE_LIMIT, CUTOUT_OVER, FFMPEG, FFPROBE, FX_ROOT_JSX, GB, MAX_SCRIPT_ARGS_BYTES, MAX_SCRIPT_FILE_BYTES, MOTION_EDGE_CLEAR_BELOW, MOTION_EDGE_DEFAULTS, NEED_CLICK, NODE_ONLY, OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, PICTURE_MARGIN_BYTES, REDO_COMMAND_ID, SETTLE_MAX_MS, SOFT_EDGE_DEFAULTS, SUBJECT_WHOLE_PIECE_NOTE, acceptedBy, aeCacheRoot, alignSound, alikeRegions, bothEdgesErrorJsx, cacheBytesFor, captureBytes, compLayerParams, cutLayerOf, fileCleanupJsx, fileCompJsx, fmt, frozenAccepted, frozenFinding, frozenOpts, gb, init_command, init_delivery_sound, init_eval, init_keying_key, init_keying_reference, init_keying_shared, init_operations, intersects, liveCutoutIO, liveFileIO, measureFrames, needSelection, otherEdgeError, overParam, overPicture, parseEbur128Summary, parseHex, parseVolumedetect, perFrameMsOf, pixelTally, plural, readScriptFile, readSoundSync, regionsOf, renderChunked, renderTally, roundTally, runReferenceReport, runTool, since, spacePlan, spaceRefusal, statfsFree, subjectIndexParam, summarize, trackedSpan, writePng };
+export { AE_AAC_PRIMING_SAMPLES, CLOSE_CLICK_SHARE, COUNT_NOTE, CUTOUT_HOLE_LIMIT, CUTOUT_OVER, FFMPEG, FFPROBE, FX_ROOT_JSX, GB, MAX_SCRIPT_ARGS_BYTES, MAX_SCRIPT_FILE_BYTES, MOTION_EDGE_CLEAR_BELOW, MOTION_EDGE_DEFAULTS, MOTION_EDGE_FILE_READING, MOTION_EDGE_SEEN_THROUGH, NEED_CLICK, NODE_ONLY, OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, PICTURE_MARGIN_BYTES, REDO_COMMAND_ID, SETTLE_MAX_MS, SOFT_EDGE_DEFAULTS, SUBJECT_WHOLE_PIECE_NOTE, acceptedBy, aeCacheRoot, alignSound, alikeRegions, bothEdgesErrorJsx, cacheBytesFor, captureBytes, compLayerParams, cutLayerOf, cutoutMovieUndoGuardJsx, fileCleanupJsx, fileCompJsx, fmt, frozenAccepted, frozenFinding, frozenOpts, gb, init_command, init_delivery_sound, init_eval, init_keying_key, init_keying_reference, init_keying_shared, init_operations, intersects, liveCutoutIO, liveFileIO, measureFrames, needSelection, otherEdgeError, overParam, overPicture, parseEbur128Summary, parseHex, parseVolumedetect, perFrameMsOf, pixelTally, plural, readScriptFile, readSoundSync, regionsOf, renderChunked, renderTally, roundTally, runReferenceReport, runTool, since, spacePlan, spaceRefusal, statfsFree, subjectIndexParam, summarize, trackedSpan, writePng };

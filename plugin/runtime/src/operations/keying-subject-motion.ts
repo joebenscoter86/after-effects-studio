@@ -14,6 +14,7 @@ import {
   MOTION_EDGE_DEFAULTS,
   OBJECT_MATTE_MATCH_NAME,
   compLayerParams,
+  cutoutMovieUndoGuardJsx,
   liveCutoutIO,
   needSelection,
   otherEdgeError,
@@ -301,6 +302,7 @@ export function motionEdgeUndoJsx(args: { comp: unknown; layer: unknown }): stri
                 if (_l.name === _name && String(AE.safeGet(function () { return _l.comment; }, "")).indexOf(${jsxVal(MOTION_MARKER)}) >= 0) { _pl = _l; break; }
             }
             if (!_pl) return { ok: false, error: "comp " + _comp.name + " has no motion edge for layer '" + _layer.name + "'" };
+            ${cutoutMovieUndoGuardJsx("motion edge")}
             var _st = null;
             try { _st = eval("(" + _pl.comment + ")"); } catch (eJ) { _st = null; }
             var _was = !(_st && _st.wasEnabled === false);

@@ -9,7 +9,7 @@
 // where the take moves from one frame to the next. Built by hand and judged on
 // a 4K studio take (2026-11-16); the defaults are MOTION_EDGE_DEFAULTS.
 import { registerOp, jsxVal, jsxCompLayerPreamble } from "../registry.js";
-import { MOTION_EDGE_DEFAULTS, OBJECT_MATTE_MATCH_NAME, compLayerParams, liveCutoutIO, needSelection, otherEdgeError, since, } from "./keying-shared.js";
+import { MOTION_EDGE_DEFAULTS, OBJECT_MATTE_MATCH_NAME, compLayerParams, cutoutMovieUndoGuardJsx, liveCutoutIO, needSelection, otherEdgeError, since, } from "./keying-shared.js";
 export const MOTION_EDGE_COST = "The motion edge keys every frame twice, with Object Matte and with the separately installed keyer, so a render does twice the keying work: the whole 8.9 s studio take (2176 × 3840, 30 fps) rendered in 986 s to ProRes 4444, roughly 2 minutes of render per second of 4K.";
 const MOTION_MARKER = "motion-edge";
 // The stock effects' property match names. The effects themselves are added by match name, and
@@ -268,6 +268,7 @@ export function motionEdgeUndoJsx(args) {
                 if (_l.name === _name && String(AE.safeGet(function () { return _l.comment; }, "")).indexOf(${jsxVal(MOTION_MARKER)}) >= 0) { _pl = _l; break; }
             }
             if (!_pl) return { ok: false, error: "comp " + _comp.name + " has no motion edge for layer '" + _layer.name + "'" };
+            ${cutoutMovieUndoGuardJsx("motion edge")}
             var _st = null;
             try { _st = eval("(" + _pl.comment + ")"); } catch (eJ) { _st = null; }
             var _was = !(_st && _st.wasEnabled === false);

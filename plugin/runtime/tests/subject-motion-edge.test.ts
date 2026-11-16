@@ -18,6 +18,7 @@ import {
   motionEdgeUndoJsx,
   motionKeyerCheckJsx,
   runMotionEdge,
+  softenUndoJsx,
   type MotionEdgeIO,
 } from "../src/operations/keying.js";
 import { validateOpArgs } from "../src/opschema.js";
@@ -260,6 +261,75 @@ describe("the keyer lookup", () => {
   it("comes before anything is built", () => {
     const j = build();
     expect(j.indexOf("app.effects")).toBeLessThan(j.indexOf(".duplicate()"));
+  });
+});
+
+/** Runs an undo's JSX against a made-up comp of the named layers (the matted layer is "take"). */
+function runUndo(jsx: string, names: Array<[string, string?]>) {
+  const removed: string[] = [];
+  const layers: Any[] = names.map(([name, comment]) => ({
+    name,
+    comment: comment ?? "",
+    enabled: name !== "take",
+    source: { id: 1, numLayers: 0 },
+    remove() {
+      removed.push(name);
+    },
+  }));
+  const take = layers.find((l) => l.name === "take");
+  const comp = { name: "Main", numLayers: layers.length, layer: (i: number) => layers[i - 1] };
+  const AE = {
+    findCompByNameOrId: () => comp,
+    findLayerInComp: () => take,
+    safeGet: (f: () => unknown, d: unknown) => {
+      try {
+        return f();
+      } catch {
+        return d;
+      }
+    },
+  };
+  const res = new Function("AE", "app", jsx)(AE, { project: { itemByID: () => null } });
+  return { res, removed, take };
+}
+
+describe("the undo with the cut-out movie in the comp", () => {
+  const MOTION = '{"compRoom":"motion-edge","layer":"take","wasEnabled":true,"comps":[]}';
+
+  it("refuses while subject.use_cutout's movie sits above the motion edge, naming it and removing nothing", () => {
+    const { res, removed, take } = runUndo(motionEdgeUndoJsx({ comp: "Main", layer: "take" }), [
+      ["take cut-out"],
+      ["take motion edge", MOTION],
+      ["take"],
+    ]);
+    expect(res.ok).toBe(false);
+    expect(res.error).toContain("'take cut-out'");
+    expect(res.error).toMatch(/remove it first/i);
+    expect(res.error).toMatch(/twice/);
+    expect(removed).toEqual([]);
+    expect(take.enabled).toBe(false);
+  });
+
+  it("undoes as before when there is no movie", () => {
+    const { res, removed, take } = runUndo(motionEdgeUndoJsx({ comp: "Main", layer: "take" }), [
+      ["take motion edge", MOTION],
+      ["take"],
+    ]);
+    expect(res.ok).toBe(true);
+    expect(removed).toEqual(["take motion edge"]);
+    expect(take.enabled).toBe(true);
+  });
+
+  it("subject.soften_edge's undo refuses the same way", () => {
+    const { res, removed } = runUndo(softenUndoJsx({ comp: "Main", layer: "take" }), [
+      ["take cut-out"],
+      ["take soft edge", '{"compRoom":"soft-edge","layer":"take","wasEnabled":true}'],
+      ["take"],
+    ]);
+    expect(res.ok).toBe(false);
+    expect(res.error).toContain("'take cut-out'");
+    expect(res.error).toMatch(/remove it first/i);
+    expect(removed).toEqual([]);
   });
 });
 
