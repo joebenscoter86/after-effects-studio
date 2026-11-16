@@ -372,6 +372,20 @@ describe("subject.soften_edge", () => {
     expect(twice.error).toMatch(/already/);
   });
 
+  it("refuses a layer that already has a motion edge, naming it and saying to undo it first, building nothing", async () => {
+    const io = fakeIO(() => person(), {
+      status: { motionEdge: { layer: "take motion edge", enabled: true, matteCopies: 1 } },
+    });
+    const res = await runSoftenEdge({ ...ARGS, outDir: dir }, io);
+    expect(res.ok).toBe(false);
+    expect(res.error).toContain("'take motion edge'");
+    expect(res.error).toMatch(/already has a motion edge/);
+    expect(res.error).toMatch(
+      /undo it first with subject\.motion_edge \{ comp, layer, undo: true \}/,
+    );
+    expect(io.calls.some((c: Any) => c.execute)).toBe(false);
+  });
+
   it("undoes on request in one call", async () => {
     const io = fakeIO(() => person());
     const res = await runSoftenEdge({ comp: "Main", layer: "take", undo: true }, io);

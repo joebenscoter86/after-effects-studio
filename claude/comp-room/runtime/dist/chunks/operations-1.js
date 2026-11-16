@@ -2807,6 +2807,18 @@ function cutLayerOf(st, matted) {
 		motion: false
 	};
 }
+function otherEdgeError(existing, layer) {
+	const [has, adding, undoOp] = existing === "soft" ? [
+		"a soft edge",
+		"a motion edge",
+		"subject.soften_edge"
+	] : [
+		"a motion edge",
+		"a soft edge",
+		"subject.motion_edge"
+	];
+	return `the layer already has ${has} ('${layer}'), and ${adding} does not combine with it: undo it first with ${undoOp} { comp, layer, undo: true }`;
+}
 function bothEdgesErrorJsx(softVar, motionVar) {
 	return `${jsxVal(bothEdgesError("@SOFT@", "@MOTION@"))}.replace("@SOFT@", function () { return ${softVar}; }).replace("@MOTION@", function () { return ${motionVar}; })`;
 }
@@ -5956,4 +5968,4 @@ function init_eval() {
 	})))();
 }
 
-export { AE_AAC_PRIMING_SAMPLES, CLOSE_CLICK_SHARE, COUNT_NOTE, CUTOUT_HOLE_LIMIT, CUTOUT_OVER, FFMPEG, FFPROBE, FX_ROOT_JSX, GB, MAX_SCRIPT_ARGS_BYTES, MAX_SCRIPT_FILE_BYTES, MOTION_EDGE_CLEAR_BELOW, MOTION_EDGE_DEFAULTS, NEED_CLICK, NODE_ONLY, OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, PICTURE_MARGIN_BYTES, REDO_COMMAND_ID, SETTLE_MAX_MS, SOFT_EDGE_DEFAULTS, SUBJECT_WHOLE_PIECE_NOTE, acceptedBy, aeCacheRoot, alignSound, alikeRegions, bothEdgesErrorJsx, cacheBytesFor, captureBytes, compLayerParams, cutLayerOf, fileCleanupJsx, fileCompJsx, fmt, frozenAccepted, frozenFinding, frozenOpts, gb, init_command, init_delivery_sound, init_eval, init_keying_key, init_keying_reference, init_keying_shared, init_operations, intersects, liveCutoutIO, liveFileIO, measureFrames, needSelection, overParam, overPicture, parseEbur128Summary, parseHex, parseVolumedetect, perFrameMsOf, pixelTally, plural, readScriptFile, readSoundSync, regionsOf, renderChunked, renderTally, roundTally, runReferenceReport, runTool, since, spacePlan, spaceRefusal, statfsFree, subjectIndexParam, summarize, trackedSpan, writePng };
+export { AE_AAC_PRIMING_SAMPLES, CLOSE_CLICK_SHARE, COUNT_NOTE, CUTOUT_HOLE_LIMIT, CUTOUT_OVER, FFMPEG, FFPROBE, FX_ROOT_JSX, GB, MAX_SCRIPT_ARGS_BYTES, MAX_SCRIPT_FILE_BYTES, MOTION_EDGE_CLEAR_BELOW, MOTION_EDGE_DEFAULTS, NEED_CLICK, NODE_ONLY, OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, PICTURE_MARGIN_BYTES, REDO_COMMAND_ID, SETTLE_MAX_MS, SOFT_EDGE_DEFAULTS, SUBJECT_WHOLE_PIECE_NOTE, acceptedBy, aeCacheRoot, alignSound, alikeRegions, bothEdgesErrorJsx, cacheBytesFor, captureBytes, compLayerParams, cutLayerOf, fileCleanupJsx, fileCompJsx, fmt, frozenAccepted, frozenFinding, frozenOpts, gb, init_command, init_delivery_sound, init_eval, init_keying_key, init_keying_reference, init_keying_shared, init_operations, intersects, liveCutoutIO, liveFileIO, measureFrames, needSelection, otherEdgeError, overParam, overPicture, parseEbur128Summary, parseHex, parseVolumedetect, perFrameMsOf, pixelTally, plural, readScriptFile, readSoundSync, regionsOf, renderChunked, renderTally, roundTally, runReferenceReport, runTool, since, spacePlan, spaceRefusal, statfsFree, subjectIndexParam, summarize, trackedSpan, writePng };

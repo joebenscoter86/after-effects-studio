@@ -7,7 +7,7 @@ import { distanceTo, furthestFrame, matteCoverage, subjectTop } from "../color/m
 import { type DecodedPng } from "../color/png16.js";
 import { labOf, lookCrops, measureLook, summarizeLookSeries, type LookArgs, type Rgb } from "../color/sheet.js";
 import { registerOp, jsxVal, jsxCompLayerPreamble } from "../registry.js";
-import { OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, PICTURE_MARGIN_BYTES, SETTLE_MAX_MS, SOFT_EDGE_DEFAULTS, aeCacheRoot, cacheBytesFor, captureBytes, compLayerParams, liveCutoutIO, needSelection, perFrameMsOf, since, spacePlan, trackedSpan, type CutoutIO, type Json } from "./keying-shared.js";
+import { OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, PICTURE_MARGIN_BYTES, SETTLE_MAX_MS, SOFT_EDGE_DEFAULTS, aeCacheRoot, cacheBytesFor, otherEdgeError, captureBytes, compLayerParams, liveCutoutIO, needSelection, perFrameMsOf, since, spacePlan, trackedSpan, type CutoutIO, type Json } from "./keying-shared.js";
 
 
 export const SOFT_EDGE_COST =
@@ -205,6 +205,8 @@ export async function runSoftenEdge(args: Record<string, unknown>, io: SoftenIO)
       ok: false,
       error: `the layer already has a soft edge ('${st.softEdge.layer}'); undo it first with subject.soften_edge { undo: true }`,
     };
+  if (typeof st.motionEdge?.layer === "string")
+    return { ok: false, error: otherEdgeError("motion", st.motionEdge.layer) };
   const span = st.span ?? { inFrame: 0, outFrame: 1 };
   const clicks = ((st.selections ?? []) as Json[])
     .map((s) => s.clickFrame)

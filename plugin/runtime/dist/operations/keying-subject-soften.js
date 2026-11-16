@@ -5,7 +5,7 @@ import * as path from "node:path";
 import { distanceTo, furthestFrame, matteCoverage, subjectTop } from "../color/matte.js";
 import { labOf, lookCrops, measureLook, summarizeLookSeries } from "../color/sheet.js";
 import { registerOp, jsxVal, jsxCompLayerPreamble } from "../registry.js";
-import { OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, PICTURE_MARGIN_BYTES, SETTLE_MAX_MS, SOFT_EDGE_DEFAULTS, aeCacheRoot, cacheBytesFor, captureBytes, compLayerParams, liveCutoutIO, needSelection, perFrameMsOf, since, spacePlan, trackedSpan } from "./keying-shared.js";
+import { OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, PICTURE_MARGIN_BYTES, SETTLE_MAX_MS, SOFT_EDGE_DEFAULTS, aeCacheRoot, cacheBytesFor, otherEdgeError, captureBytes, compLayerParams, liveCutoutIO, needSelection, perFrameMsOf, since, spacePlan, trackedSpan } from "./keying-shared.js";
 export const SOFT_EDGE_COST = "The soft edge is two copies of the matte, so After Effects computes Object Matte twice for every frame: a render writes about twice the disk cache and takes several times as long (on the half-size take, 320 frames at 1088 × 1920: 342 s and 9.0 GB of cache, against 65 to 92 s and about 5 GB with one matte; subject.render_cutout counts both copies).";
 /** The region's lower line: given, or `regionDepth` of the comp's height under the lowest top of the subject. */
 export function softRegionBottom(tops, compHeight, given) {
@@ -179,6 +179,8 @@ export async function runSoftenEdge(args, io) {
             ok: false,
             error: `the layer already has a soft edge ('${st.softEdge.layer}'); undo it first with subject.soften_edge { undo: true }`,
         };
+    if (typeof st.motionEdge?.layer === "string")
+        return { ok: false, error: otherEdgeError("motion", st.motionEdge.layer) };
     const span = st.span ?? { inFrame: 0, outFrame: 1 };
     const clicks = (st.selections ?? [])
         .map((s) => s.clickFrame)

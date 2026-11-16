@@ -16,6 +16,7 @@ import {
   compLayerParams,
   liveCutoutIO,
   needSelection,
+  otherEdgeError,
   since,
   type Json,
 } from "./keying-shared.js";
@@ -350,11 +351,7 @@ export async function runMotionEdge(
   if (!st?.ok) return { ok: false, error: st?.error ?? "subject.status failed", status: st };
   const missing = needSelection(st);
   if (missing) return { ok: false, error: missing };
-  if (st.softEdge)
-    return {
-      ok: false,
-      error: `the layer has a soft edge ('${st.softEdge.layer}'); the two do not combine: undo it first with subject.soften_edge { undo: true }`,
-    };
+  if (st.softEdge) return { ok: false, error: otherEdgeError("soft", String(st.softEdge.layer)) };
   const built = await io.execute(
     motionEdgeBuildJsx({ comp: args.comp, layer: args.layer, ...settings }),
     { label: "subject.motion_edge", timeoutMs: 120_000 },

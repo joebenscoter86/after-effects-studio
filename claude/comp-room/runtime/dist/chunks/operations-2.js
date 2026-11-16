@@ -1,7 +1,7 @@
 import { __esmMin } from "./rolldown-runtime.js";
 import { getOp, init_config, init_registry, jsxCompLayerPreamble, jsxCompPreamble, jsxFail, jsxVal, registerOp, rejectedOutputPath } from "./core-1.js";
 import { PARK_QUEUE_FN, QUEUE_CHANGE_NOTE, RENDER_QUEUE_UNDO_WARNING, init_render } from "./operations-3.js";
-import { CLOSE_CLICK_SHARE, COUNT_NOTE, CUTOUT_HOLE_LIMIT, CUTOUT_OVER, FX_ROOT_JSX, GB, MOTION_EDGE_CLEAR_BELOW, MOTION_EDGE_DEFAULTS, NEED_CLICK, NODE_ONLY, OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, PICTURE_MARGIN_BYTES, SETTLE_MAX_MS, SOFT_EDGE_DEFAULTS, SUBJECT_WHOLE_PIECE_NOTE, acceptedBy, aeCacheRoot, alikeRegions, bothEdgesErrorJsx, cacheBytesFor, captureBytes, compLayerParams, cutLayerOf, fileCleanupJsx, fileCompJsx, fmt, frozenAccepted, frozenFinding, frozenOpts, gb, init_keying_key, init_keying_reference, init_keying_shared, intersects, liveCutoutIO, liveFileIO, measureFrames, needSelection, overParam, overPicture, parseHex, perFrameMsOf, pixelTally, plural, regionsOf, renderChunked, renderTally, roundTally, since, spacePlan, spaceRefusal, statfsFree, subjectIndexParam, summarize, trackedSpan, writePng } from "./operations-1.js";
+import { CLOSE_CLICK_SHARE, COUNT_NOTE, CUTOUT_HOLE_LIMIT, CUTOUT_OVER, FX_ROOT_JSX, GB, MOTION_EDGE_CLEAR_BELOW, MOTION_EDGE_DEFAULTS, NEED_CLICK, NODE_ONLY, OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, PICTURE_MARGIN_BYTES, SETTLE_MAX_MS, SOFT_EDGE_DEFAULTS, SUBJECT_WHOLE_PIECE_NOTE, acceptedBy, aeCacheRoot, alikeRegions, bothEdgesErrorJsx, cacheBytesFor, captureBytes, compLayerParams, cutLayerOf, fileCleanupJsx, fileCompJsx, fmt, frozenAccepted, frozenFinding, frozenOpts, gb, init_keying_key, init_keying_reference, init_keying_shared, intersects, liveCutoutIO, liveFileIO, measureFrames, needSelection, otherEdgeError, overParam, overPicture, parseHex, perFrameMsOf, pixelTally, plural, regionsOf, renderChunked, renderTally, roundTally, since, spacePlan, spaceRefusal, statfsFree, subjectIndexParam, summarize, trackedSpan, writePng } from "./operations-1.js";
 import { COMP_CORNERS_FN, init_snippets } from "./operations-4.js";
 import { EDGE_DEFAULTS, SEEN_THROUGH_DEFAULTS, SPECK_DEFAULTS, composeContactSheet, cutoutRegions, distanceTo, enclosedHoles, encodePngGray8, encodePngSrgb8, flattenOver, furthestFrame, growMask, init_matte, init_png16, init_sheet, labOf, lookCrops, matteCoverage, measureLook, outlineTracker, resample, seenThroughInside, speckPieces, subjectTop, summarizeLookSeries } from "./color-1.js";
 import { init_capture_shared, init_render_frame } from "./tools-1.js";
@@ -2962,6 +2962,10 @@ async function runSoftenEdge(args, io) {
 		ok: false,
 		error: `the layer already has a soft edge ('${st.softEdge.layer}'); undo it first with subject.soften_edge { undo: true }`
 	};
+	if (typeof st.motionEdge?.layer === "string") return {
+		ok: false,
+		error: otherEdgeError("motion", st.motionEdge.layer)
+	};
 	const span = st.span ?? {
 		inFrame: 0,
 		outFrame: 1
@@ -3628,7 +3632,7 @@ async function runMotionEdge(args, io) {
 	};
 	if (st.softEdge) return {
 		ok: false,
-		error: `the layer has a soft edge ('${st.softEdge.layer}'); the two do not combine: undo it first with subject.soften_edge { undo: true }`
+		error: otherEdgeError("soft", String(st.softEdge.layer))
 	};
 	const built = await io.execute(motionEdgeBuildJsx({
 		comp: args.comp,

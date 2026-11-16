@@ -392,6 +392,8 @@ export declare function cutLayerOf(st: Json, matted: unknown): {
 } | {
     error: string;
 };
+/** The refusal when the layer already has the other edge: soften_edge on a motion edge, motion_edge on a soft edge. */
+export declare function otherEdgeError(existing: "soft" | "motion", layer: string): string;
 /** JSX: an expression for bothEdgesError, from the JSX variables holding the two layer names. */
 export declare function bothEdgesErrorJsx(softVar: string, motionVar: string): string;
 /** The refusal when a layer has both a soft-edge and a motion-edge layer (the two do not combine). */

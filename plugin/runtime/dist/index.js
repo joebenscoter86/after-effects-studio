@@ -52816,6 +52816,10 @@ function cutLayerOf(st, matted) {
   if (motion) return { layer: motion, motion: true };
   return { layer: matted, motion: false };
 }
+function otherEdgeError(existing, layer) {
+  const [has, adding, undoOp] = existing === "soft" ? ["a soft edge", "a motion edge", "subject.soften_edge"] : ["a motion edge", "a soft edge", "subject.motion_edge"];
+  return `the layer already has ${has} ('${layer}'), and ${adding} does not combine with it: undo it first with ${undoOp} { comp, layer, undo: true }`;
+}
 function bothEdgesErrorJsx(softVar, motionVar) {
   return `${jsxVal(bothEdgesError("@SOFT@", "@MOTION@"))}.replace("@SOFT@", function () { return ${softVar}; }).replace("@MOTION@", function () { return ${motionVar}; })`;
 }
@@ -56173,6 +56177,8 @@ async function runSoftenEdge(args, io) {
       ok: false,
       error: `the layer already has a soft edge ('${st.softEdge.layer}'); undo it first with subject.soften_edge { undo: true }`
     };
+  if (typeof st.motionEdge?.layer === "string")
+    return { ok: false, error: otherEdgeError("motion", st.motionEdge.layer) };
   const span = st.span ?? { inFrame: 0, outFrame: 1 };
   const clicks = (st.selections ?? []).map((s) => s.clickFrame).filter((f) => typeof f === "number");
   const click = clicks.length ? Math.min(...clicks) : span.inFrame;
@@ -56801,11 +56807,7 @@ async function runMotionEdge(args, io) {
   if (!st?.ok) return { ok: false, error: st?.error ?? "subject.status failed", status: st };
   const missing = needSelection(st);
   if (missing) return { ok: false, error: missing };
-  if (st.softEdge)
-    return {
-      ok: false,
-      error: `the layer has a soft edge ('${st.softEdge.layer}'); the two do not combine: undo it first with subject.soften_edge { undo: true }`
-    };
+  if (st.softEdge) return { ok: false, error: otherEdgeError("soft", String(st.softEdge.layer)) };
   const built = await io.execute(
     motionEdgeBuildJsx({ comp: args.comp, layer: args.layer, ...settings }),
     { label: "subject.motion_edge", timeoutMs: 12e4 }

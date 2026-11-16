@@ -355,7 +355,11 @@ describe("subject.motion_edge", () => {
     const io = fakeIO({ status: { softEdge: { layer: "take soft edge" } } });
     const res = await runMotionEdge(ARGS, io);
     expect(res.ok).toBe(false);
-    expect(res.error).toMatch(/soft edge/);
+    expect(res.error).toContain("'take soft edge'");
+    expect(res.error).toMatch(/already has a soft edge/);
+    expect(res.error).toMatch(
+      /undo it first with subject\.soften_edge \{ comp, layer, undo: true \}/,
+    );
     expect(io.calls.some((c: Any) => c.execute)).toBe(false);
   });
 

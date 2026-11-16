@@ -844,6 +844,13 @@ export function cutLayerOf(st, matted) {
         return { layer: motion, motion: true };
     return { layer: matted, motion: false };
 }
+/** The refusal when the layer already has the other edge: soften_edge on a motion edge, motion_edge on a soft edge. */
+export function otherEdgeError(existing, layer) {
+    const [has, adding, undoOp] = existing === "soft"
+        ? ["a soft edge", "a motion edge", "subject.soften_edge"]
+        : ["a motion edge", "a soft edge", "subject.motion_edge"];
+    return `the layer already has ${has} ('${layer}'), and ${adding} does not combine with it: undo it first with ${undoOp} { comp, layer, undo: true }`;
+}
 /** JSX: an expression for bothEdgesError, from the JSX variables holding the two layer names. */
 export function bothEdgesErrorJsx(softVar, motionVar) {
     return `${jsxVal(bothEdgesError("@SOFT@", "@MOTION@"))}.replace("@SOFT@", function () { return ${softVar}; }).replace("@MOTION@", function () { return ${motionVar}; })`;

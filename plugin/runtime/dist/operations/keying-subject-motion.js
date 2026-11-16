@@ -9,7 +9,7 @@
 // where the take moves from one frame to the next. Built by hand and judged on
 // a 4K studio take (2026-11-16); the defaults are MOTION_EDGE_DEFAULTS.
 import { registerOp, jsxVal, jsxCompLayerPreamble } from "../registry.js";
-import { MOTION_EDGE_DEFAULTS, OBJECT_MATTE_MATCH_NAME, compLayerParams, liveCutoutIO, needSelection, since, } from "./keying-shared.js";
+import { MOTION_EDGE_DEFAULTS, OBJECT_MATTE_MATCH_NAME, compLayerParams, liveCutoutIO, needSelection, otherEdgeError, since, } from "./keying-shared.js";
 export const MOTION_EDGE_COST = "The motion edge keys every frame twice, with Object Matte and with the separately installed keyer, so a render does twice the keying work: the whole 8.9 s studio take (2176 × 3840, 30 fps) rendered in 986 s to ProRes 4444, roughly 2 minutes of render per second of 4K.";
 const MOTION_MARKER = "motion-edge";
 // The stock effects' property match names. The effects themselves are added by match name, and
@@ -313,10 +313,7 @@ export async function runMotionEdge(args, io) {
     if (missing)
         return { ok: false, error: missing };
     if (st.softEdge)
-        return {
-            ok: false,
-            error: `the layer has a soft edge ('${st.softEdge.layer}'); the two do not combine: undo it first with subject.soften_edge { undo: true }`,
-        };
+        return { ok: false, error: otherEdgeError("soft", String(st.softEdge.layer)) };
     const built = await io.execute(motionEdgeBuildJsx({ comp: args.comp, layer: args.layer, ...settings }), { label: "subject.motion_edge", timeoutMs: 120_000 });
     if (!built?.ok)
         return { ok: false, error: built?.error ?? "the build failed", built };
