@@ -37,6 +37,7 @@ The build scripts were written from the recipes alone, without After Effects (`p
 - Fog 3D depths, apertures and blur centres do not carry over from the tutorial's scene: aim for the effect the recipe measures, and record the values that reached it.
 - A reviewer's suggested value is an estimate. Aim for the target it describes, measure your own render, and report when the suggestion goes the wrong way.
 - Each re-run leaves orphan solids; remove only your own.
+- Drop Shadow's Opacity reads 0 to 255 by script, not percent (a fresh effect reads 127.5; setting 50 gives 19.6 %). Convert a recipe's percent (× 2.55) and read the value back. Effect parameter names on the layer can differ from the recipe's words ("Edge Behavior", "Noise Type", "Clipping"): look them up before setting.
 - `render.preview` with `span: "comp"` on a 23.976 fps comp (duration 5.005 s, 120 frames) wrote 121 frames, the last one blank past the layers; give an explicit span instead (`timeSpanStart: 0`, `timeSpanDuration` the whole seconds, e.g. 5.0, which rounds to the comp's 120 frames) and check the frame count with ffprobe.
 
 ## Report (at most 12 lines)

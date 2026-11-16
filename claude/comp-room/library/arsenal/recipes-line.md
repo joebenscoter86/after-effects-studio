@@ -103,7 +103,7 @@ unknowns: exact pivot coordinates and comp size; font size; text colour value; h
 
 ## Graphics riding a spinning real object
 id: 03-graphics-orbit-a-real-object
-revision: 2178ea7a
+revision: 6167c17a
 job: list-items; support: keep-it-alive, make-concrete
 status: unproven
 variant of: 04-carousel-by-rotation
@@ -134,7 +134,7 @@ steps:
 layout: Measured on a frame cut from source (picture 1560 x 876 px in the full frame, x 826–2386, y 324–1200). Shares are of the picture height H unless marked W.
 - Wheel: hub at 0.51 W across and 1.21 H down (below the frame; the shown Position 974, 1316.5 gives 0.507 W, 1.219 H). Outer tyre radius about 0.62 H, so about the top 0.41 H of the wheel shows above the bottom edge. Tyre black, rim silver, thin spokes, one dark valve stem on the rim (measured with a circle fit to the tyre's top edge).
 - Cards: about 0.30–0.34 H wide and about 0.40 H tall. The photo takes the top 70 % of the card, with one rounded corner (top right, from its matte); the white tab takes the bottom 30 %. Behind each card a faint paler panel shows, offset up and to the left, and it cuts across the photo's top-left corner. It is roughly the card's size, offset about 0.02–0.03 H, and reads as white at roughly half opacity (estimated by eye). It most likely comes from the card's extra shape layer, the one stacked above the short line (inferred). Card centres sit about 0.89 H from the hub, and the inner (tab) edge about 0.68 H from it, which leaves a gap of about 0.06 H above the tyre (0.10 H in the static frame). Measured.
-- 12 cards at 30° spacing. Each is rotated so its bottom faces the hub, like spokes. About 6–7 show at once along the upper arc; the outer ones are cut off by the left and right edges.
+- 12 cards at 30° spacing. Each is rotated so its bottom faces the hub, like spokes. Five show at once along the upper arc, plus at some angles a sixth cut off at a lower corner (from a sliver to about half a card); the outer ones are cut off by the left and right edges (measured: counted on frames cut at 123.10,: 6, 5 and 6 pieces, the sixth always a corner piece).
 - No shadows, no overlap between cards, flat background. In the build every card holds the same photo and caption.
 - Motion: the wheel and cards turn together anticlockwise on screen (the valve stem and the cards move left across the top between). 20° per second gives a card speed of about 0.31 H per second at the card centres. Nothing else moves.
 - The opening clip of this chapter is a different, pre-made comp: five or more cards, each with a different person and name, on the same kind of wheel. There the cards are parented through a null rather than to the wheel, and the soft drop shadows come from technique 05. It also turns anticlockwise.

@@ -1,6 +1,6 @@
 {
   "vocab": "jobs-v1",
-  "version": "44c977d9",
+  "version": "6e98683b",
   "jobs": [
     "land-number",
     "count-things",
@@ -95,7 +95,7 @@
         "file": "7pgDb6NKEXM.md",
         "heading": "Soft diagonal wipe-on for a shadow map"
       },
-      "revision": "f446fe5d",
+      "revision": "8dc40155",
       "still": null,
       "taught_by": 1,
       "variants": []
@@ -130,7 +130,7 @@
         "file": "7pgDb6NKEXM.md",
         "heading": "Graphics riding a spinning real object"
       },
-      "revision": "2178ea7a",
+      "revision": "6167c17a",
       "still": null,
       "taught_by": 6,
       "variant_of": "04-carousel-by-rotation",
@@ -196,7 +196,7 @@
         "file": "7pgDb6NKEXM.md",
         "heading": "Seat a cut-out object with a soft, doubled drop shadow"
       },
-      "revision": "a2a75b23",
+      "revision": "7d484d90",
       "still": null,
       "taught_by": 1,
       "variants": []
@@ -366,7 +366,7 @@
         "file": "7pgDb6NKEXM.md",
         "heading": "Flat UI graphic on a glossy extruded plate"
       },
-      "revision": "2443b743",
+      "revision": "8970559a",
       "still": null,
       "taught_by": 3,
       "variants": []
@@ -400,7 +400,7 @@
         "file": "7pgDb6NKEXM.md",
         "heading": "Depth of field on a row of glossy plates (Advanced 3D camera)"
       },
-      "revision": "686415b0",
+      "revision": "e65caa17",
       "still": null,
       "taught_by": 5,
       "variants": []

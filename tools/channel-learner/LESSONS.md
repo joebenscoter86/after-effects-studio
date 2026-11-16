@@ -77,6 +77,15 @@ The first video's 25 recipes all passed the check. Building them found three rec
 - **What happened.** Every writer and checker prompt reads `frames-small/` (1920-wide copies of the kept frames), but `learn.mjs align` only wrote the full-size `frames/`. On the first video they were made by hand; on the second the orchestrator noticed only because the folder was missing.
 - **Rule.** `align`'s frames step now writes `frames-small/` too and fails if any is missing (test in `tests/learn.test.mjs`).
 
+### 17. A percent typed into a 0 to 255 control (second video, 09 and 05, 2026-11-15)
+- **What happened.** 09's builder set Drop Shadow Opacity to 19 believing it took percent; it renders at 7.5 %, so the title's shadow is far weaker than the recipe's. 05's builder set 50 on its first run and got a halo too faint to see, then found the control reads 0 to 255 by script.
+- **Rule.** `prove-run.md` ("What earlier builds learned"): convert percent to the 0 to 255 scale and read the value back. 09 rebuilt with the corrected value.
+
+### 18. A direction and an orientation that passed the check, built the wrong way (second video, 02 and 11, 2026-11-15)
+- **What happened.** 02's recipe said the shadow sweeps in from the lower left towards the upper right; the reviewer measured upper left to lower right two ways (the build, following the shown angle, went the right way despite the words). 11's recipe said the plates turn "with their right side towards the camera"; the builder put the right edge nearest, the tutorial has the left edge nearest (pills 139 px tall at the left end against 120 at the right; a frame shows Y −64°), so the cards stopped overlapping and the focus fell on the wrong side. Both had passed check 10.
+- **Why.** Lesson 5's rule asks for direction from frames, but a wipe's start corner and a turned plate's near edge were each read from one frame and a phrase that reads both ways.
+- **Rule.** `distil.md`: a reveal names the corner it reaches first and last, checked on a half-way frame; a turned object names its nearer edge from a measurement. `check.md` check 10 confirms both the same way. Recipes 02 and 11 corrected and re-checked; proofs 02 and 11 rebuilt.
+
 ## Still open
 - Checks 8 to 10 and the look review are new. They have not yet been run on the other four videos' 39 recipes, and the 24 "matches" on the first video were given before the look line existed.
 - Nothing yet tests the prompts themselves. A cheap test: keep technique 11's first recipe as a fixture and confirm a fresh checker fails it on check 8.
