@@ -9,7 +9,7 @@ import { composeContactSheet, flattenOver, resample } from "../color/sheet.js";
 import { rejectedOutputPath } from "../config.js";
 import { registerOp, jsxFail, jsxVal, jsxCompLayerPreamble, jsxCompPreamble } from "../registry.js";
 import { PARK_QUEUE_FN, QUEUE_CHANGE_NOTE, RENDER_QUEUE_UNDO_WARNING } from "./render.js";
-import { CHECK_FILE_MAX_FRAMES, CUTOUT_HOLE_LIMIT, CUTOUT_OVER, GB, NODE_ONLY, PICTURE_DEFLATE, PICTURE_MARGIN_BYTES, SETTLE_MAX_MS, SOFT_EDGE_DEFAULTS, SUBJECT_WHOLE_PIECE_NOTE, acceptedBy, aeCacheRoot, alikeRegions, cacheBytesFor, captureBytes, compLayerParams, fileCleanupJsx, fileCompJsx, fmt, frozenAccepted, frozenFinding, frozenOpts, gb, liveFileIO, measureFrames, overParam, overPicture, parseHex, pixelTally, plural, regionsOf, renderChunked, renderTally, roundTally, since, spacePlan, spaceRefusal, statfsFree, summarize, writePng, type AcceptEntry, type FileIO, type FrameReading, type Json, type KindRegion, type RegionFinding } from "./keying-shared.js";
+import { CHECK_FILE_MAX_FRAMES, CUTOUT_HOLE_LIMIT, CUTOUT_OVER, GB, MOTION_EDGE_CLEAR_BELOW, NODE_ONLY, PICTURE_DEFLATE, PICTURE_MARGIN_BYTES, SETTLE_MAX_MS, SOFT_EDGE_DEFAULTS, SUBJECT_WHOLE_PIECE_NOTE, acceptedBy, aeCacheRoot, alikeRegions, bothEdgesErrorJsx, cacheBytesFor, captureBytes, compLayerParams, fileCleanupJsx, fileCompJsx, fmt, frozenAccepted, frozenFinding, frozenOpts, gb, liveFileIO, measureFrames, overParam, overPicture, parseHex, pixelTally, plural, regionsOf, renderChunked, renderTally, roundTally, since, spacePlan, spaceRefusal, statfsFree, summarize, writePng, type AcceptEntry, type FileIO, type FrameReading, type Json, type KindRegion, type RegionFinding } from "./keying-shared.js";
 
 
 /** How two halves of a cut-out are joined, with what the first piece measured across the join (2026-11-12). */
@@ -116,7 +116,18 @@ export function renderCutoutPlanJsx(args: { comp: unknown; layer: unknown }): st
                 var _sl = _comp.layer(_si);
                 if (_sl.name === _softName && String(AE.safeGet(function () { return _sl.comment; }, "")).indexOf("soft-edge") >= 0) { _soft = _softName; _softComment = String(_sl.comment); }
             }
-            var _keep = [_soft ? _soft : _layer.name];
+            // After subject.motion_edge the cut-out is its precomp layer. Inside, the object matte comp is used twice (the
+            // outline and the band) but a comp renders once a frame, the keyer and motion copies carry no Object Matte, and
+            // the matted layer is off: one copy of the matte computes and caches.
+            var _motionName = _layer.name + " motion edge";
+            var _motion = null;
+            var _motionComment = null;
+            for (var _mi = 1; _mi <= _comp.numLayers; _mi++) {
+                var _ml = _comp.layer(_mi);
+                if (_ml.name === _motionName && String(AE.safeGet(function () { return _ml.comment; }, "")).indexOf("motion-edge") >= 0) { _motion = _motionName; _motionComment = String(_ml.comment); }
+            }
+            if (_soft && _motion) return { ok: false, error: ${bothEdgesErrorJsx("_softName", "_motionName")}, softEdge: _soft, motionEdge: _motion };
+            var _keep = [_soft ? _soft : (_motion ? _motion : _layer.name)];
             if (_fill) _keep.push(_fill);
             var _fd = _comp.frameDuration;
             var _start = Math.max(0, Math.min(_layer.inPoint, _layer.outPoint));
@@ -140,7 +151,7 @@ export function renderCutoutPlanJsx(args: { comp: unknown; layer: unknown }): st
                     if (app.preferences.havePref("Disk Cache Controls", "Folder 7", _pts[_pi])) _cacheFolder = app.preferences.getPrefAsString("Disk Cache Controls", "Folder 7", _pts[_pi]);
                 }
             } catch (ePref) {}
-            return { ok: true, layer: _layer.name, fillLayer: _fill, fillEnabled: _fillEnabled, softEdge: _soft, softEdgeComment: _softComment, matteCopies: _soft ? 2 : 1, keep: _keep, compSize: [_comp.width, _comp.height], sourceSize: _src,
+            return { ok: true, layer: _layer.name, fillLayer: _fill, fillEnabled: _fillEnabled, softEdge: _soft, softEdgeComment: _softComment, motionEdge: _motion, motionEdgeComment: _motionComment, matteCopies: _soft ? 2 : 1, keep: _keep, compSize: [_comp.width, _comp.height], sourceSize: _src,
                 aeCache: { folder: _cacheFolder || null, version: AE.safeGet(function () { return app.version; }, null) },
                 span: { start: _start, duration: _end - _start, frames: Math.round((_end - _start) / _fd), frameRate: Math.round(1000 / _fd) / 1000 },
                 templates: { output: _out, render: _rend } };
@@ -324,7 +335,8 @@ export async function runRenderCutout(args: Record<string, unknown>, io: FileIO)
     renderCutoutJsx({
       comp: args.comp,
       keep: plan.keep,
-      subject: plan.layer,
+      // The cut-out layer (the matted layer, or the soft- or motion-edge layer in its place) renders even when switched off.
+      subject: Array.isArray(plan.keep) && typeof plan.keep[0] === "string" ? plan.keep[0] : plan.layer,
       outputPath,
       outputTemplate: choice.template,
       start: span ? span.start : plan.span.start,
@@ -390,13 +402,23 @@ export async function runRenderCutout(args: Record<string, unknown>, io: FileIO)
       soft = null;
     }
   }
+  // And the motion edge's settings, so subject.check_file reads the keyer's soft alpha as expected.
+  let motion: Json = null;
+  if (typeof plan.motionEdgeComment === "string") {
+    try {
+      const m = JSON.parse(plan.motionEdgeComment);
+      motion = { layer: plan.motionEdge, ...(m.settings ?? {}) };
+    } catch {
+      motion = { layer: plan.motionEdge };
+    }
+  }
   const sidecar = `${r.outputPath}.comp-room.json`;
   let sidecarWritten: string | null = null;
   try {
     await fs.writeFile(
       sidecar,
       JSON.stringify(
-        { kind: "comp-room cut-out", comp: args.comp, layer: plan.layer, compSize: plan.compSize, fillLayer: plan.fillLayer ?? null, softEdge: soft, ...(span ? { span } : {}), renderedAt: new Date().toISOString() },
+        { kind: "comp-room cut-out", comp: args.comp, layer: plan.layer, compSize: plan.compSize, fillLayer: plan.fillLayer ?? null, softEdge: soft, motionEdge: motion, ...(span ? { span } : {}), renderedAt: new Date().toISOString() },
         null,
         1,
       ),
@@ -411,7 +433,7 @@ export async function runRenderCutout(args: Record<string, unknown>, io: FileIO)
     sidecar: sidecarWritten,
     ...(fillOff ? { fillWarning: `${fillOffText} Rendered anyway (withoutFill: true).` } : {}),
     cacheNote:
-      `This render should have added about ${gb(cacheBytes)} to After Effects' disk cache (one 16-bit frame of the source per frame${matteCopies > 1 ? `, for each of the ${matteCopies === 2 ? "two" : matteCopies} copies of the matte subject.soften_edge built` : ""}). ` +
+      `This render should have added about ${gb(cacheBytes)} to After Effects' disk cache (one 16-bit frame of the source per frame${matteCopies > 1 ? `, for each of the ${matteCopies === 2 ? "two" : matteCopies} copies of the matte subject.soften_edge built` : ""}${motion ? ", for the one copy of the matte inside the motion edge: its object matte comp is used twice but renders once a frame; what the keyer caches, if anything, is not counted" : ""}). ` +
       "Nothing was deleted and no preference was changed.",
     next:
       (fillOff
@@ -641,10 +663,13 @@ export async function runCheckFile(args: Record<string, unknown>, io: FileIO): P
   let regionLine: number | null = typeof args.regionLine === "number" ? args.regionLine : null;
   let regionDepth = SOFT_EDGE_DEFAULTS.regionDepth;
   let regionSource: string | null = regionLine !== null ? "given" : null;
-  if (regionLine === null && file !== null) {
+  // A file rendered from a motion-edge layer (its sidecar says so): the keyer's soft alpha is not a hole.
+  let motionFile = false;
+  if (file !== null) {
     try {
       const side = JSON.parse(await fs.readFile(`${file}.comp-room.json`, "utf8"));
-      if (typeof side?.softEdge?.regionBottom === "number") {
+      if (side?.motionEdge) motionFile = true;
+      if (regionLine === null && typeof side?.softEdge?.regionBottom === "number") {
         regionLine = side.softEdge.regionBottom;
         if (typeof side.softEdge.regionDepth === "number") regionDepth = side.softEdge.regionDepth;
         regionSource = "sidecar";
@@ -757,6 +782,7 @@ export async function runCheckFile(args: Record<string, unknown>, io: FileIO): P
             seenTime.ms += performance.now() - tSeen;
             seenTime.frames++;
           },
+          motionFile ? MOTION_EDGE_CLEAR_BELOW : undefined,
         )
       ).readings;
       for (const r of got) {
@@ -1165,14 +1191,21 @@ export function useCutoutJsx(args: {
             var _movieName = _layer.name + " cut-out";
             var _fillName = _layer.name + " gap fill";
             var _softName = _layer.name + " soft edge";
+            var _motionName = _layer.name + " motion edge";
             var _fill = null;
             var _soft = null;
+            var _motion = null;
             for (var _li = 1; _li <= _comp.numLayers; _li++) {
                 var _l = _comp.layer(_li);
                 if (_l.name === _movieName) return { ok: false, error: "comp " + _comp.name + " already has a layer '" + _movieName + "'; delete it first to use another file" };
                 if (_l.name === _fillName) _fill = _l;
-                if (_l.name === _softName && String(AE.safeGet(function () { return _l.comment; }, "")).indexOf("soft-edge") >= 0) _soft = _l;
+                var _lc = String(AE.safeGet(function () { return _l.comment; }, ""));
+                if (_l.name === _softName && _lc.indexOf("soft-edge") >= 0) _soft = _l;
+                if (_l.name === _motionName && _lc.indexOf("motion-edge") >= 0) _motion = _l;
             }
+            if (_soft && _motion) return { ok: false, error: ${bothEdgesErrorJsx("_softName", "_motionName")} };
+            // The layer that is the cut-out: the soft- or motion-edge layer built in place of the matted layer, else the matted layer.
+            var _edge = _soft ? _soft : _motion;
             var _item = null;
             if (${jsxVal(args.item ?? null)} !== null) {
                 _item = AE.safeGet(function () { return app.project.itemByID(${jsxVal(args.item ?? null)}); }, null);
@@ -1186,7 +1219,7 @@ export function useCutoutJsx(args: {
             var _out = Math.max(_layer.inPoint, _layer.outPoint);
             var _movie = _comp.layers.add(_item);
             _movie.name = _movieName;
-            _movie.moveBefore(_soft ? _soft : _layer);
+            _movie.moveBefore(_edge ? _edge : _layer);
             var _start = ${jsxVal(args.startTime ?? null)};
             _movie.startTime = _start === null ? Math.max(0, _in) : _start;
             var _spanError = null;
@@ -1196,7 +1229,7 @@ export function useCutoutJsx(args: {
             var _off = [];
             if (_layer.enabled) { _layer.enabled = false; _off.push(_layer.name); }
             if (_fill && _fill.enabled) { _fill.enabled = false; _off.push(_fill.name); }
-            if (_soft && _soft.enabled) { _soft.enabled = false; _off.push(_soft.name); }
+            if (_edge && _edge.enabled) { _edge.enabled = false; _off.push(_edge.name); }
             var _res = { ok: true, movieLayer: _movie.name, movieIndex: _movie.index, startTime: _movie.startTime, inPoint: _movie.inPoint, outPoint: _movie.outPoint,
                 switchedOff: _off, audio: { original: AE.safeGet(function () { return _layer.audioEnabled; }, null), movie: _movieAudio },
                 note: "The movie is in comp space: it already has the cut-out's transform, so it has none of its own and no parent. The cut-out layer and its selections stay in the project with the picture off, for a later re-click; switch its picture back on and remove the movie to go back to the live matte." };
@@ -1209,7 +1242,7 @@ registerOp({
   name: "subject.render_cutout",
   category: "subject",
   description:
-    "Render the cut-out once to a movie with alpha, so the piece is built on a file that cannot change: the layer with its gap fill when there is one, alone (every other layer's picture switched off for the render and put back afterwards, even when it fails; cameras and lights left as they are), over the layer's span, through one temporary render-queue item (other queue items are parked). " +
+    "Render the cut-out once to a movie with alpha, so the piece is built on a file that cannot change: the layer with its gap fill when there is one (after subject.soften_edge or subject.motion_edge, that layer in place of the matted one; a layer with both is refused: undo one), alone (every other layer's picture switched off for the render and put back afterwards, even when it fails; cameras and lights left as they are), over the layer's span, through one temporary render-queue item (other queue items are parked). " +
     "Picks an output template that writes a movie with alpha ('High Quality with Alpha', 'Lossless with Alpha', or another whose name says alpha; image sequences are not used) and refuses, naming the templates, when none does. " +
     "Returns outputPath, frameCount, renderSeconds, outputTemplate, templateChoice, layersSwitched, restored, sound and timing. Measured: 390 s for 320 frames of a 2176 x 3840 take, about one pass through the clip; tell the user before it runs. " +
     SUBJECT_WHOLE_PIECE_NOTE +
@@ -1278,6 +1311,7 @@ registerOp({
     "A speck is a small opaque piece apart from the cut-out, or joined to it by a neck a pixel or two wide, not touching the frame edge: speckMinArea to speckMaxArea px (default 20 to 2,000, chosen on the 4K fresh-session file, where a sliver of chair 1 to 5 px off the right arm read 20 to 240 px on about 40 frames and nothing else in 320 frames was caught); findings of kind 'speck' give the frames, the longest run of frames in a row, the largest area and frame, the box, the piece's mean colour (`colour`: L*, a*, b*, CIELAB D65 from sRGB, over its opaque pixels on every frame; a pale grey remnant such as the first piece's chair read a* about +7, skin about +30) and a picture; a speck on at least speckMinFrames frames in a row (default 2) stops, since a new render keeps it, and a shorter one (a single-frame flash, a wisp of hair) goes to notes and one sentence of inOut. accept: [{ kind: 'speck', box }] takes one off. Checked through a real subject.check_file run on two files of one take (2026-11-12); the limits come from those two files. timing.speck is the pass's own cost (about 5.5 ms a 1080 x 1920 frame). " +
     "Seen through: pixels partly see-through (alpha 0.5 to 0.95) more than seenThroughDepth px (default 30) inside the cut-out's body and from the frame's edge, as where two copies of a matte meet in a seam; seenThroughMinArea px or more on a frame (default 400) on at least 2 frames read in a row is a finding of kind 'seen-through' that stops, with the frames, the largest area and frame, the box and a picture; single frames go to notes. Limits chosen on two files of the half-size take, as clicked and with subject.soften_edge (at most 82 and 41 px on every fourth frame), and a band of the soft-edge file's alpha multiplied by 0.75 (about 3,900 px a frame); not checked live: it has not run in After Effects on a file with a real seam. timing.seenThrough is its cost. " +
     "Region line: for a file from a soft-edge build, `region` gives the subject's highest and lowest top across the file against the soft edge's region line (from <movie>.comp-room.json, which subject.render_cutout writes, or `regionLine`), and a note, not a stop, names the frames where the top sits lower than the line less 12% of the height, so the lower hair crosses the line and keeps the hard edge. " +
+    `Motion edge: for a file from a motion-edge build (its <movie>.comp-room.json says so), holes and openings are read only where the alpha is under ${MOTION_EDGE_CLEAR_BELOW}, so the keyer's soft alpha on moving parts is not a finding and a clear hole still is (chosen offline, not calibrated live). ` +
     "Only true neighbours are compared, and `compared` says which. A frame that could not be read is 'not-checked' and stops. Pictures: the largest frame of each finding not accepted and both frames of each jump, full size, and a sheet of up to 24 frames; `pictures` counts them and their bytes. Each raw capture is removed once read unless keepCaptures (one run on the take had left 630 MB). The throwaway comp is removed afterwards, and the imported footage too unless keepFootage. " +
     "`outline` says how much the outline changed between neighbouring frames and over frozenGap frames (share of the frame whose alpha changed by more than 0.1, at full size); a run where it did not move is a 'frozen' finding (the selection is probably not tracking, as after replacing the layer's footage; accept: [{ kind: \"frozen\" }] for a subject that really is still). The frozen limits are not yet calibrated live. " +
     "Measured: about 0.55 s a frame reading the file. Returns stop, findings, accepted, checked, compared, opaque, outline, inOut, picture, frameReadings, timing.",
@@ -1413,7 +1447,7 @@ registerOp({
   description:
     "Build on the checked file: add the rendered cut-out movie (path, or a footage item id) to the comp directly above the cut-out layer, named '<layer> cut-out', over the cut-out's span. " +
     "The movie is in comp space (subject.render_cutout renders the comp), so it has no transform or parent of its own. Switches the cut-out layer's and its gap fill's pictures off; they and the selections stay in the project for a later re-click. " +
-    "The original keeps its audio; the movie's audio is switched off. Returns movieLayer, switchedOff, audio and note. Refuses when the comp already has the movie.",
+    "After subject.soften_edge or subject.motion_edge the movie goes above that layer instead, and its picture is switched off too; a layer with both is refused (undo one). The original keeps its audio; the movie's audio is switched off. Returns movieLayer, switchedOff, audio and note. Refuses when the comp already has the movie.",
   params: [
     ...compLayerParams,
     {

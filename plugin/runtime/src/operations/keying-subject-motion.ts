@@ -25,6 +25,29 @@ export const MOTION_EDGE_COST =
 
 const MOTION_MARKER = "motion-edge";
 
+/** A stock effect property to set: [match name, English display name, value]. */
+type StockSetting = [string, string, number];
+
+// The stock effects' property match names. The effects themselves are added by match name, and
+// the track mattes and the Difference blend are set through After Effects' enums, which do not
+// depend on the language. The property match names are not yet confirmed in After Effects: the
+// English names are the fallback, so the motion edge is confirmed only on English After Effects.
+const LEVELS = (t: { black: number; white: number }): StockSetting[] => [
+  ["ADBE Easy Levels2-0003", "Input Black", t.black],
+  ["ADBE Easy Levels2-0004", "Input White", t.white],
+];
+const MINIMAX = (m: { radius: number; channel?: number; dontShrink?: number }): StockSetting[] => [
+  ["ADBE Minimax-0002", "Radius", m.radius],
+  ...(m.channel === undefined ? [] : [["ADBE Minimax-0003", "Channel", m.channel] as StockSetting]),
+  ...(m.dontShrink === undefined
+    ? []
+    : [["ADBE Minimax-0005", "Don't Shrink Edges", m.dontShrink] as StockSetting]),
+];
+const BOX_BLUR = (radius: number, iterations: number): StockSetting[] => [
+  ["ADBE Box Blur2-0001", "Blur Radius", radius],
+  ["ADBE Box Blur2-0002", "Iterations", iterations],
+];
+
 export interface MotionEdgeSettings {
   keyerMatchName: string;
   keyerSettings: Record<string, number | number[]>;
@@ -179,6 +202,22 @@ export function motionEdgeBuildJsx(
                     p.setValue(vals[k]);
                 }
             }
+            // Stock effects: each property as [match name, English name, value]. The match name is tried first and works
+            // in any language; the English name is the fallback when After Effects does not know the match name. The property
+            // match names are not yet confirmed in After Effects: where the English name finds a different property than the
+            // match name, the English one is set (the match name is wrong) and the pair is reported in matchNameMismatch.
+            var _mismatch = [];
+            function _setEach(fx, list, what) {
+                for (var k = 0; k < list.length; k++) {
+                    var ent = list[k];
+                    var pm = _find(fx, ent[0]);
+                    var pn = _find(fx, ent[1]);
+                    var p = pm ? pm : pn;
+                    if (pm && pn && pm.matchName !== pn.matchName) { p = pn; _mismatch.push(what + ": '" + ent[0] + "' is '" + pm.name + "', not '" + ent[1] + "' (" + pn.matchName + ")"); }
+                    if (!p) throw new Error(what + " has no property '" + ent[0] + "' ('" + ent[1] + "')");
+                    p.setValue(ent[2]);
+                }
+            }
             function _strip(l) { var r = l.property("ADBE Effect Parade"); for (var i = r.numProperties; i >= 1; i--) r.property(i).remove(); }
             function _mute(l) { if (AE.safeGet(function () { return l.hasAudio; }, false)) { try { l.audioEnabled = false; } catch (eA) {} } }
             function _pre(indices, name) {
@@ -211,9 +250,9 @@ export function motionEdgeBuildJsx(
             _ap.addProperty("ADBE Box Blur2");
             // Adding an effect invalidates references to the ones added before: fetch each again by index.
             _ap = _adj.property("ADBE Effect Parade");
-            _setAll(_ap.property(1), ${jsxVal({ "Input Black": args.threshold.black, "Input White": args.threshold.white })}, "Levels");
-            _setAll(_ap.property(3), ${jsxVal({ Radius: args.motionGrow })}, "Minimax");
-            _setAll(_ap.property(4), ${jsxVal({ "Blur Radius": args.motionBlur, Iterations: D.motionBlurIterations })}, "Box Blur");
+            _setEach(_ap.property(1), ${jsxVal(LEVELS(args.threshold))}, "Levels");
+            _setEach(_ap.property(3), ${jsxVal(MINIMAX({ radius: args.motionGrow }))}, "Minimax");
+            _setEach(_ap.property(4), ${jsxVal(BOX_BLUR(args.motionBlur, D.motionBlurIterations))}, "Box Blur");
             _t1.moveBefore(_t0); _adj.moveBefore(_t1);
             var _moP = _pre([_adj.index, _t1.index, _t0.index], _L + " motion");
             // The band: the Object Matte grown, where the take moves.
@@ -221,7 +260,7 @@ export function motionEdgeBuildJsx(
             var _bOm = _bandC.layers.add(_omP.comp); _bOm.name = "Object Matte grown";
             var _bMo = _bandC.layers.add(_moP.comp); _bMo.name = "motion";
             _bOm.property("ADBE Effect Parade").addProperty("ADBE Minimax");
-            _setAll(_bOm.property("ADBE Effect Parade").property(1), ${jsxVal({ Radius: args.band, Channel: D.bandChannel, "Don't Shrink Edges": 1 })}, "Minimax");
+            _setEach(_bOm.property("ADBE Effect Parade").property(1), ${jsxVal(MINIMAX({ radius: args.band, channel: D.bandChannel, dontShrink: 1 }))}, "Minimax");
             _bOm.setTrackMatte(_bMo, TrackMatteType.LUMA);
             _bMo.enabled = false;
             // The motion edge, top to bottom: the outline, the band, the keyer's edge.
@@ -246,7 +285,7 @@ export function motionEdgeBuildJsx(
             return { ok: true, motionLayer: _name, motionIndex: _pl.index, precomp: _me.name, precompId: _me.id, wasEnabled: _wasEnabled,
                 keyer: { matchName: _keyerMN, name: _keyerName },
                 comps: { motionEdge: _me.name, band: _bandC.name, motion: _moP.comp.name, keyer: _ckP.comp.name, objectMatte: _omP.comp.name },
-                inside: ["Object Matte outline", "band", "keyer edge"] };
+                inside: ["Object Matte outline", "band", "keyer edge"], matchNameMismatch: _mismatch };
         `;
 }
 
@@ -327,7 +366,7 @@ export async function runMotionEdge(
     settings,
     cost: MOTION_EDGE_COST,
     undo: "subject.motion_edge { comp, layer, undo: true } takes the comp back to the single matted layer (it removes the motion-edge layer and its five comps and switches the matted layer back on).",
-    next: "Render a few frames where the hands move fastest and a still one (ae_render_frame over the background) and show the user the hands at twice size: a soft blur on the moving fingers, the crisp outline where the subject is still, nothing of the background near the head, gaps still open. subject.check, subject.render_cutout and subject.use_cutout do not use the motion-edge layer yet: they read the matted layer, which is now switched off. Render the comp with the motion-edge layer through the render queue to a movie with alpha, and check it with subject.check_file.",
+    next: "Render a few frames where the hands move fastest and a still one (ae_render_frame over the background) and show the user the hands at twice size: a soft blur on the moving fingers, the crisp outline where the subject is still, nothing of the background near the head, gaps still open. subject.check, subject.render_cutout and subject.use_cutout now use the motion-edge layer in place of the matted layer (switched off): subject.check reads the keyer's soft alpha on moving parts as expected and stops only on clear holes; subject.render_cutout renders the motion-edge layer to a movie with alpha (check it with subject.check_file); subject.use_cutout puts the movie above it and switches it off.",
     timing: { totalMs: Math.round(since(started)) },
   };
 }
@@ -339,7 +378,7 @@ registerOp({
     "Give an Object Matte cut-out a soft, motion-blurred edge where the subject moves, taken from a second key by a per-pixel machine-learning keyer effect installed separately (not part of After Effects or this plugin); where the subject is still, the crisp Object Matte outline stays. Needs the matted layer with at least one selection (the user's click) and `keyerMatchName`, the keyer's match name; it refuses, building nothing, when no installed effect has that match name (app.effects). " +
     "It builds five comps around the matted layer, never a copy of the user's comp: '<layer> object matte' (the matted layer as clicked), '<layer> keyer' (the take with the keyer and `keyerSettings`, such as { \"Despill Strength\": 1 }), '<layer> motion' (the take, the take again one frame later in Difference, and an adjustment layer with Levels from `threshold` black to white, Tint, Minimax `motionGrow` and Box Blur `motionBlur`, 2 iterations), '<layer> band' (the Object Matte comp with Minimax `band` px on its alpha, Don't Shrink Edges on, Luma-matted by the motion comp) and '<layer> motion edge' (the Object Matte outline over the band, switched off, over the keyer's edge, Alpha-matted by the band). The last goes in above the matted layer, which is switched off and otherwise untouched (it keeps the sound); every copy's sound is off. " +
     "Use it instead of subject.soften_edge for fast hand and arm movement against a static background: soften_edge softens the hair inside a region, this follows motion anywhere. Defaults measured on a 2176 × 3840 studio take shot on a phone on a tripod: threshold 0.25 to 0.45 (lower thresholds lit every still edge, since the camera shifts slightly between frames), motionGrow 25, motionBlur 15, band 50. A plain band with no motion mask filled the gaps in a microphone mount, brought back the keyer's halo and let a plant behind the head through. " +
-    "Cost: twice the keying work in every render (Object Matte and the keyer): the whole 8.9 s take rendered in 986 s, roughly 2 minutes of render per second of 4K. It does not render or check itself; subject.check, subject.render_cutout and subject.use_cutout do not use its layer yet. On the layer's first frame there is no frame before, so the band there covers the whole outline. Not run in After Effects as an operation: the construction was built by hand. undo: true removes what it built and switches the matted layer back on.",
+    "Cost: twice the keying work in every render (Object Matte and the keyer): the whole 8.9 s take rendered in 986 s, roughly 2 minutes of render per second of 4K. It does not render or check itself; subject.check, subject.render_cutout and subject.use_cutout use its layer in place of the matted one. Confirmed only on English After Effects: some stock effect settings are found by their English names when their match names are not. On the layer's first frame there is no frame before, so the band there covers the whole outline. Not run in After Effects as an operation: the construction was built by hand. undo: true removes what it built and switches the matted layer back on.",
   params: [
     ...compLayerParams,
     {

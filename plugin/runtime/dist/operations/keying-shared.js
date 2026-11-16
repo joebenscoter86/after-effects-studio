@@ -393,7 +393,7 @@ export function parseHex(c) {
     return [((v >> 16) & 255) / 255, ((v >> 8) & 255) / 255, (v & 255) / 255];
 }
 /** Read each rendered frame's alpha: holes and openings, a picture over `over`, and one contact sheet. */
-export async function measureFrames(io, rendered, limit, over, sheetPath, tally = pixelTally(), pictures = true, onImage) {
+export async function measureFrames(io, rendered, limit, over, sheetPath, tally = pixelTally(), pictures = true, onImage, below) {
     const started = performance.now();
     const colour = parseHex(over);
     const readings = [];
@@ -447,7 +447,7 @@ export async function measureFrames(io, rendered, limit, over, sheetPath, tally 
         }
         tally.frames++;
         const tRegions = performance.now();
-        const regions = cutoutRegions(img.alpha, img.width, img.height);
+        const regions = cutoutRegions(img.alpha, img.width, img.height, below === undefined ? {} : { below });
         let opaquePx = 0;
         const alpha = img.alpha;
         for (let p = 0; p < alpha.length; p++)
@@ -822,4 +822,34 @@ export const MOTION_EDGE_DEFAULTS = {
     /** Minimax's Channel menu value for alpha alone. */
     bandChannel: 2,
 };
+/**
+ * In a motion-edge cut-out a hole or opening is read only where the alpha is
+ * under this (nearly clear), not under opaque as on a plain matte: the keyer's
+ * soft alpha on moving parts is the motion blur the layer is built to keep, so
+ * a soft patch is not a finding, while a clear hole (a missed microphone, a gap)
+ * still is. 0.05 rather than After Effects' 2/255 so the keyer's faint noise in
+ * a clear hole does not split it into pieces under the limit. Chosen offline,
+ * not calibrated on a live motion-edge take.
+ */
+export const MOTION_EDGE_CLEAR_BELOW = 0.05;
+/** The layer that is the cut-out after subject.status: the soft edge, the motion edge, or the matted layer; or why there is no one answer. */
+export function cutLayerOf(st, matted) {
+    const soft = typeof st?.softEdge?.layer === "string" ? st.softEdge.layer : null;
+    const motion = typeof st?.motionEdge?.layer === "string" ? st.motionEdge.layer : null;
+    if (soft && motion)
+        return { error: bothEdgesError(soft, motion) };
+    if (soft)
+        return { layer: soft, motion: false };
+    if (motion)
+        return { layer: motion, motion: true };
+    return { layer: matted, motion: false };
+}
+/** JSX: an expression for bothEdgesError, from the JSX variables holding the two layer names. */
+export function bothEdgesErrorJsx(softVar, motionVar) {
+    return `${jsxVal(bothEdgesError("@SOFT@", "@MOTION@"))}.replace("@SOFT@", function () { return ${softVar}; }).replace("@MOTION@", function () { return ${motionVar}; })`;
+}
+/** The refusal when a layer has both a soft-edge and a motion-edge layer (the two do not combine). */
+export function bothEdgesError(soft, motion) {
+    return `the layer has both a soft edge ('${soft}') and a motion edge ('${motion}'), and the two do not combine: undo one first, with subject.soften_edge { comp, layer, undo: true } or subject.motion_edge { comp, layer, undo: true }`;
+}
 //# sourceMappingURL=keying-shared.js.map

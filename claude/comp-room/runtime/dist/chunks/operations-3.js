@@ -1,11 +1,861 @@
 import { __esmMin } from "./rolldown-runtime.js";
 import { init_config, init_policy, init_registry, jsxCompLayerPreamble, jsxCompPreamble, jsxFail, jsxPropertyLookup, jsxVal, readOnlyMode, registerOp, rejectedOutputPath } from "./core-1.js";
 import { AE_AAC_PRIMING_SAMPLES, FFMPEG, FFPROBE, NODE_ONLY, REDO_COMMAND_ID, alignSound, init_command, init_delivery_sound, init_keying_reference, init_keying_shared, liveFileIO, parseEbur128Summary, parseVolumedetect, readSoundSync, runReferenceReport, runTool } from "./operations-1.js";
-import { FEW_PIECES_NOTE, LOOK_RULES, analyzeCurve, buildSheet, curveGraph, encodePngSrgb8, init_look, init_motion, init_png16, isPiece, isSheet, parseTiming, sheetMarkdown, soundOnsets, standingBase, syncReport } from "./color-1.js";
-import { init_rhythm, init_run_moves, measureRhythm, runCompareMoves } from "./video-1.js";
+import { FEW_PIECES_NOTE, LOOK_RULES, buildSheet, init_look, isPiece, isSheet, sheetMarkdown, standingBase } from "./color-1.js";
+import { init_rhythm, measureRhythm } from "./video-1.js";
 import { promises } from "node:fs";
 import os from "node:os";
 import * as path$1 from "node:path";
+
+// operations/layer.js
+function init_layer() {
+	return (init_layer = __esmMin((() => {
+		init_registry();
+		registerOp({
+			name: "layer.create_solid",
+			category: "layer",
+			description: "Create a solid layer in a composition.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				{
+					name: "name",
+					type: "string",
+					description: "Layer name",
+					required: false,
+					default: "Solid"
+				},
+				{
+					name: "color",
+					type: "array",
+					description: "[r,g,b] 0-1",
+					required: false,
+					default: [
+						1,
+						1,
+						1
+					]
+				},
+				{
+					name: "width",
+					type: "number",
+					description: "Width in px (default: comp width)",
+					required: false
+				},
+				{
+					name: "height",
+					type: "number",
+					description: "Height in px (default: comp height)",
+					required: false
+				}
+			],
+			toJsx(args) {
+				return `
+            ${jsxCompPreamble(args)}
+            var _w = ${jsxVal(args.width)} || _comp.width;
+            var _h = ${jsxVal(args.height)} || _comp.height;
+            var _layer = _comp.layers.addSolid(${jsxVal(args.color ?? [
+					1,
+					1,
+					1
+				])}, ${jsxVal(args.name ?? "Solid")}, _w, _h, _comp.pixelAspect, _comp.duration);
+            return { ok: true, index: _layer.index, name: _layer.name };
+        `;
+			}
+		});
+		registerOp({
+			name: "layer.create_adjustment",
+			category: "layer",
+			description: "Create an adjustment layer (a comp-sized solid with adjustmentLayer on) — the carrier for comp-wide effects such as Posterize Time or a color grade. Add effects with effect.add.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				{
+					name: "name",
+					type: "string",
+					description: "Layer name",
+					required: false,
+					default: "Adjustment Layer"
+				},
+				{
+					name: "width",
+					type: "number",
+					description: "Width in px (default: comp width)",
+					required: false
+				},
+				{
+					name: "height",
+					type: "number",
+					description: "Height in px (default: comp height)",
+					required: false
+				}
+			],
+			toJsx(args) {
+				return `
+            ${jsxCompPreamble(args)}
+            var _w = ${jsxVal(args.width)} || _comp.width;
+            var _h = ${jsxVal(args.height)} || _comp.height;
+            var _layer = _comp.layers.addSolid([1, 1, 1], ${jsxVal(args.name ?? "Adjustment Layer")}, _w, _h, _comp.pixelAspect, _comp.duration);
+            _layer.adjustmentLayer = true;
+            return { ok: true, index: _layer.index, name: _layer.name, adjustmentLayer: _layer.adjustmentLayer };
+        `;
+			}
+		});
+		registerOp({
+			name: "layer.create_shape",
+			category: "layer",
+			description: "Create an empty shape layer.",
+			params: [{
+				name: "comp",
+				type: "any",
+				description: "Comp name or id",
+				required: true
+			}, {
+				name: "name",
+				type: "string",
+				description: "Layer name",
+				required: false
+			}],
+			toJsx(args) {
+				return `
+            ${jsxCompPreamble(args)}
+            var _layer = _comp.layers.addShape();
+            ${args.name ? `_layer.name = ${jsxVal(args.name)};` : ""}
+            return { ok: true, index: _layer.index, name: _layer.name };
+        `;
+			}
+		});
+		registerOp({
+			name: "layer.create_text",
+			category: "layer",
+			description: "Create a text layer: point text by default, paragraph (box) text when boxSize is given, vertical when orientation='vertical' (AE 24.2+). Point<->box conversion is not scriptable, so pick the right kind here.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				{
+					name: "text",
+					type: "string",
+					description: "Text content",
+					required: false,
+					default: ""
+				},
+				{
+					name: "name",
+					type: "string",
+					description: "Layer name",
+					required: false
+				},
+				{
+					name: "boxSize",
+					type: "array",
+					description: "[width, height] — creates paragraph (box) text instead of point text",
+					required: false
+				},
+				{
+					name: "boxPosition",
+					type: "array",
+					description: "[x, y] top-left of the box in layer space (box text only)",
+					required: false
+				},
+				{
+					name: "orientation",
+					type: "string",
+					description: "horizontal|vertical (vertical needs AE 24.2+)",
+					required: false,
+					default: "horizontal"
+				}
+			],
+			toJsx(args) {
+				const boxPosJsx = !args.boxPosition ? "" : `try {
+                var _src = _layer.property("Source Text");
+                var _doc = _src.value;
+                _doc.boxTextPos = ${jsxVal(args.boxPosition)};
+                _src.setValue(_doc);
+            } catch (eBp) {}`;
+				return `
+            ${jsxCompPreamble(args)}
+            var _box = ${jsxVal(args.boxSize ?? null)};
+            var _vertical = ${jsxVal(args.orientation)} === "vertical";
+            var _layer;
+            if (_box !== null) {
+                if (_vertical) {
+                    if (typeof _comp.layers.addVerticalBoxText !== "function") return { ok: false, error: "vertical box text needs AE 24.2+" };
+                    _layer = _comp.layers.addVerticalBoxText(_box, ${jsxVal(args.text ?? "")});
+                } else {
+                    _layer = _comp.layers.addBoxText(_box, ${jsxVal(args.text ?? "")});
+                }
+            } else {
+                if (_vertical) {
+                    if (typeof _comp.layers.addVerticalText !== "function") return { ok: false, error: "vertical text needs AE 24.2+" };
+                    _layer = _comp.layers.addVerticalText(${jsxVal(args.text ?? "")});
+                } else {
+                    _layer = _comp.layers.addText(${jsxVal(args.text ?? "")});
+                }
+            }
+            ${args.name ? `_layer.name = ${jsxVal(args.name)};` : ""}
+            ${boxPosJsx}
+            return { ok: true, index: _layer.index, name: _layer.name, boxText: _box !== null, vertical: _vertical };
+        `;
+			}
+		});
+		registerOp({
+			name: "layer.create_null",
+			category: "layer",
+			description: "Create a null object layer.",
+			params: [{
+				name: "comp",
+				type: "any",
+				description: "Comp name or id",
+				required: true
+			}, {
+				name: "name",
+				type: "string",
+				description: "Layer name",
+				required: false
+			}],
+			toJsx(args) {
+				return `
+            ${jsxCompPreamble(args)}
+            var _layer = _comp.layers.addNull();
+            ${args.name ? `_layer.name = ${jsxVal(args.name)};` : ""}
+            return { ok: true, index: _layer.index, name: _layer.name };
+        `;
+			}
+		});
+		registerOp({
+			name: "layer.create_camera",
+			category: "layer",
+			description: "Create a camera layer.",
+			params: [{
+				name: "comp",
+				type: "any",
+				description: "Comp name or id",
+				required: true
+			}, {
+				name: "name",
+				type: "string",
+				description: "Layer name",
+				required: false,
+				default: "Camera"
+			}],
+			toJsx(args) {
+				return `
+            ${jsxCompPreamble(args)}
+            var _layer = _comp.layers.addCamera(${jsxVal(args.name ?? "Camera")}, [_comp.width/2, _comp.height/2]);
+            return { ok: true, index: _layer.index, name: _layer.name };
+        `;
+			}
+		});
+		registerOp({
+			name: "layer.create_light",
+			category: "layer",
+			description: "Create a light layer.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				{
+					name: "name",
+					type: "string",
+					description: "Layer name",
+					required: false,
+					default: "Light"
+				},
+				{
+					name: "lightType",
+					type: "string",
+					description: "spot|parallel|point|ambient|environment (environment needs AE 24.3+ / Advanced 3D)",
+					required: false,
+					default: "spot"
+				}
+			],
+			toJsx(args) {
+				return `
+            ${jsxCompPreamble(args)}
+            var _ltMap = {
+                "spot": LightType.SPOT,
+                "parallel": LightType.PARALLEL,
+                "point": LightType.POINT,
+                "ambient": LightType.AMBIENT
+            };
+            // 24.3+ only \u2014 probed so older hosts keep the classic four.
+            try { if (LightType.ENVIRONMENT !== undefined) _ltMap.environment = LightType.ENVIRONMENT; } catch (eEnv) {}
+            var _ltArg = ${jsxVal(args.lightType ?? "spot")};
+            if (!_ltMap.hasOwnProperty(_ltArg)) {
+                return { ok: false, error: "unknown lightType '" + _ltArg + "'" + (_ltArg === "environment" ? " \u2014 environment lights need AE 24.3+" : "") };
+            }
+            var _layer = _comp.layers.addLight(${jsxVal(args.name ?? "Light")}, [_comp.width/2, _comp.height/2]);
+            var _applied = null;
+            try { _layer.lightType = _ltMap[_ltArg]; _applied = _ltArg; } catch (eLt) {}
+            return { ok: true, index: _layer.index, name: _layer.name, lightType: _applied };
+        `;
+			}
+		});
+		registerOp({
+			name: "layer.create_parametric_mesh",
+			category: "layer",
+			description: "Create a parametric 3D mesh layer (LayerCollection.addParametricMesh, AE 26.3+): cube|sphere|plane|cylinder|cone|torus. Best rendered with the Advanced 3D renderer (comp.set_renderer).",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				{
+					name: "name",
+					type: "string",
+					description: "Layer name",
+					required: false,
+					default: "Mesh"
+				},
+				{
+					name: "meshType",
+					type: "string",
+					description: "cube|sphere|plane|cylinder|cone|torus",
+					required: true
+				}
+			],
+			toJsx(args) {
+				return `
+            ${jsxCompPreamble(args)}
+            if (typeof _comp.layers.addParametricMesh !== "function") return { ok: false, error: "addParametricMesh needs AE 26.3+" };
+            var _mtMap = {
+                "cube": ParametricMeshType.CUBE,
+                "sphere": ParametricMeshType.SPHERE,
+                "plane": ParametricMeshType.PLANE,
+                "cylinder": ParametricMeshType.CYLINDER,
+                "cone": ParametricMeshType.CONE,
+                "torus": ParametricMeshType.TORUS
+            };
+            var _mtArg = ${jsxVal(args.meshType)};
+            if (!_mtMap.hasOwnProperty(_mtArg)) return { ok: false, error: "meshType must be cube|sphere|plane|cylinder|cone|torus" };
+            var _layer = null;
+            try { _layer = _comp.layers.addParametricMesh(${jsxVal(args.name ?? "Mesh")}, _mtMap[_mtArg]); } catch (ePm) { return { ok: false, error: "addParametricMesh failed: " + AE.errText(ePm) }; }
+            return { ok: true, index: _layer.index, name: _layer.name, meshType: _mtArg };
+        `;
+			}
+		});
+		registerOp({
+			name: "layer.delete",
+			category: "layer",
+			description: "Delete layers. comp supports pattern ('review_id_*'). layer supports index, name, 'selected', 'all'.",
+			params: [{
+				name: "comp",
+				type: "any",
+				description: "Comp name/id/pattern (e.g. 'review_id_*')",
+				required: true
+			}, {
+				name: "layer",
+				type: "any",
+				description: "Layer index, name, 'selected', or 'all'",
+				required: true
+			}],
+			toJsx(args) {
+				return `
+            var _comps = AE.findComps(${jsxVal(args.comp)});
+            if (_comps.length === 0) return { ok: false, error: "no comps matched" };
+            var _removed = 0;
+            for (var _ci = 0; _ci < _comps.length; _ci++) {
+                var _layers = AE.resolveLayers(_comps[_ci], ${jsxVal(args.layer)});
+                for (var _li = _layers.length - 1; _li >= 0; _li--) {
+                    try { _layers[_li].remove(); _removed++; } catch(e) {}
+                }
+            }
+            return { ok: true, removed: _removed, comps: _comps.length };
+        `;
+			}
+		});
+		registerOp({
+			name: "layer.duplicate",
+			category: "layer",
+			description: "Duplicate a layer. Returns the new layer's index.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				{
+					name: "layer",
+					type: "any",
+					description: "1-based layer index, or the layer name",
+					required: true
+				},
+				{
+					name: "newName",
+					type: "string",
+					description: "Name for the duplicate",
+					required: false
+				}
+			],
+			toJsx(args) {
+				return `
+            ${jsxCompLayerPreamble(args)}
+            var _dup = _layer.duplicate();
+            ${args.newName ? `_dup.name = ${jsxVal(args.newName)};` : ""}
+            return { ok: true, index: _dup.index, name: _dup.name };
+        `;
+			}
+		});
+		registerOp({
+			name: "layer.set_parent",
+			category: "layer",
+			description: "Set or clear a layer's parent. By default AE compensates the child's transform so it doesn't move; jump=true skips compensation (setParentWithJump) so the child adopts the parent's space.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				{
+					name: "layer",
+					type: "any",
+					description: "1-based child layer index, or the layer name",
+					required: true
+				},
+				{
+					name: "parentLayer",
+					type: "any",
+					description: "1-based parent layer index or name. Pass null or 0 to unparent.",
+					required: true,
+					nullable: true
+				},
+				{
+					name: "jump",
+					type: "boolean",
+					description: "true = no transform compensation (setParentWithJump). Default false.",
+					required: false,
+					default: false
+				}
+			],
+			toJsx(args) {
+				const parentVal = args.parentLayer === null || args.parentLayer === 0 ? "null" : `_comp.layer(${jsxVal(args.parentLayer)})`;
+				const assign = args.jump === true ? `if (typeof _layer.setParentWithJump !== "function") return { ok: false, error: "setParentWithJump needs AE 17.1+" };
+            _layer.setParentWithJump(${parentVal});` : `_layer.parent = ${parentVal};`;
+				return `
+            ${jsxCompLayerPreamble(args)}
+            ${assign}
+            return { ok: true, parent: _layer.parent ? { index: _layer.parent.index, name: _layer.parent.name } : null };
+        `;
+			}
+		});
+		registerOp({
+			name: "layer.scene_edit_detection",
+			category: "layer",
+			description: "Run Scene Edit Detection on a video layer (Layer.doSceneEditDetection, AE 22.3+): find cuts in edited footage and mark or split at them.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				{
+					name: "layer",
+					type: "any",
+					description: "1-based layer index, or the layer name",
+					required: true
+				},
+				{
+					name: "mode",
+					type: "string",
+					description: "markers (add layer markers) | split (split layer) | splitPrecomp (split + precompose each) | none (detect only)",
+					required: true
+				}
+			],
+			toJsx(args) {
+				return `
+            ${jsxCompLayerPreamble(args)}
+            if (typeof _layer.doSceneEditDetection !== "function") return { ok: false, error: "doSceneEditDetection needs AE 22.3+" };
+            var _sdMap = {
+                "markers": SceneEditDetectionMode.MARKERS,
+                "split": SceneEditDetectionMode.SPLIT,
+                "splitPrecomp": SceneEditDetectionMode.SPLIT_PRECOMP,
+                "none": SceneEditDetectionMode.NONE
+            };
+            var _mode = ${jsxVal(args.mode)};
+            if (!_sdMap.hasOwnProperty(_mode)) return { ok: false, error: "mode must be markers|split|splitPrecomp|none" };
+            var _edits = null;
+            try { _edits = _layer.doSceneEditDetection(_sdMap[_mode]); } catch (eSd) { return { ok: false, error: "doSceneEditDetection failed: " + AE.errText(eSd) }; }
+            return { ok: true, mode: _mode, editTimes: AE.valueToJson(_edits), numLayers: _comp.numLayers };
+        `;
+			}
+		});
+		registerOp({
+			name: "layer.move",
+			category: "layer",
+			description: "Move a layer to a new stacking position (1 = top).",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				{
+					name: "layer",
+					type: "any",
+					description: "1-based current layer index, or the layer name",
+					required: true
+				},
+				{
+					name: "toIndex",
+					type: "number",
+					description: "1-based target index, within 1..numLayers",
+					required: true
+				}
+			],
+			toJsx(args) {
+				return `
+            ${jsxCompLayerPreamble(args)}
+            var _to = ${jsxVal(args.toIndex)};
+            if (typeof _to !== "number" || isNaN(_to) || _to !== Math.floor(_to)) {
+                return { ok: false, error: "toIndex must be a whole number, got " + _to };
+            }
+            if (_to < 1 || _to > _comp.numLayers) {
+                return { ok: false, error: "toIndex " + _to + " is out of range (comp has " + _comp.numLayers + " layers)" };
+            }
+            var _from = _layer.index;
+            // NOT _layer.moveTo(_to). Layer inherits moveTo from PropertyBase,
+            // so it exists and type-checks \u2014 and then throws for every layer,
+            // every time: "Can not moveTo this property, because parent is not
+            // an INDEXED_GROUP". A layer's parent is the composition, not a
+            // property group, so the inherited method never applies. Reordering
+            // layers is only expressible relative to a sibling.
+            if (_to < _from) {
+                // Upward: land directly above whoever holds _to right now.
+                _layer.moveBefore(_comp.layer(_to));
+            } else if (_to > _from) {
+                // Downward: everything between _from and _to shifts up by one
+                // as soon as _layer vacates its slot, so the layer currently at
+                // _to ends up at _to - 1 \u2014 landing AFTER it is what puts
+                // _layer at _to.
+                _layer.moveAfter(_comp.layer(_to));
+            }
+            return { ok: true, fromIndex: _from, newIndex: _layer.index, name: _layer.name };
+        `;
+			}
+		});
+		registerOp({
+			name: "layer.create_footage",
+			category: "layer",
+			description: "Add an existing project item (footage or comp) as a layer in a composition.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				{
+					name: "sourceItemId",
+					type: "number",
+					description: "Project item id to use as source",
+					required: true
+				},
+				{
+					name: "name",
+					type: "string",
+					description: "Layer name",
+					required: false
+				}
+			],
+			toJsx(args) {
+				return `
+            ${jsxCompPreamble(args)}
+            var _src = AE.findItemById(${jsxVal(args.sourceItemId)});
+            if (!_src) return { ok: false, error: "no item with id " + ${jsxVal(args.sourceItemId)} };
+            var _layer = _comp.layers.add(_src);
+            ${args.name ? `_layer.name = ${jsxVal(args.name)};` : ""}
+            return { ok: true, index: _layer.index, name: _layer.name };
+        `;
+			}
+		});
+		registerOp({
+			name: "layer.set_enabled",
+			category: "layer",
+			description: "Enable or disable a layer by name or index. Can target all comps matching a pattern.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name/id, or '*' for all comps, or 'review_id_*' for pattern match",
+					required: true
+				},
+				{
+					name: "layer",
+					type: "any",
+					description: "Layer index (number) or name (string)",
+					required: true
+				},
+				{
+					name: "enabled",
+					type: "boolean",
+					description: "true=visible, false=hidden",
+					required: true
+				}
+			],
+			toJsx(args) {
+				return `
+            var _comps = AE.findComps(${jsxVal(args.comp)});
+            var _updated = 0;
+            for (var ci = 0; ci < _comps.length; ci++) {
+                var _layer = AE.findLayerInComp(_comps[ci], ${jsxVal(args.layer)});
+                if (_layer) { _layer.enabled = ${jsxVal(!!args.enabled)}; _updated++; }
+            }
+            return { ok: true, updated: _updated };
+        `;
+			}
+		});
+		registerOp({
+			name: "layer.set_guide",
+			category: "layer",
+			description: "Set guideLayer on/off for a layer. Can target all comps matching a pattern.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name/id, or '*' for all comps, or 'review_id_*' for pattern match",
+					required: true
+				},
+				{
+					name: "layer",
+					type: "any",
+					description: "Layer index (number) or name (string)",
+					required: true
+				},
+				{
+					name: "guide",
+					type: "boolean",
+					description: "true=guide layer, false=normal",
+					required: true
+				}
+			],
+			toJsx(args) {
+				return `
+            var _comps = AE.findComps(${jsxVal(args.comp)});
+            var _updated = 0;
+            for (var ci = 0; ci < _comps.length; ci++) {
+                var _layer = AE.findLayerInComp(_comps[ci], ${jsxVal(args.layer)});
+                if (_layer) { _layer.guideLayer = ${jsxVal(!!args.guide)}; _updated++; }
+            }
+            return { ok: true, updated: _updated };
+        `;
+			}
+		});
+		registerOp({
+			name: "layer.set_props",
+			category: "layer",
+			description: "Set basic layer properties. layer can be index, name, 'selected', or 'all'. Enum-valued attributes accept string names: quality (best|draft|wireframe), samplingQuality (bilinear|bicubic), frameBlendingType (off|frameMix|pixelMotion), autoOrient (off|alongPath|cameraOrPointOfInterest|charactersTowardCamera), blendingMode, lightType (spot|parallel|point|ambient|environment).",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				{
+					name: "layer",
+					type: "any",
+					description: "Layer index, name, 'selected', or 'all'",
+					required: true
+				},
+				{
+					name: "props",
+					type: "object",
+					description: "Object with keys to set, e.g. { name: 'foo', enabled: false, label: 5, threeDLayer: true }",
+					required: true
+				}
+			],
+			toJsx(args) {
+				const props = args.props ?? {};
+				const lines = [];
+				for (const [k, v] of Object.entries(props)) lines.push(`try { _l[${jsxVal(k)}] = AE.coerceLayerPropValue(${jsxVal(k)}, ${jsxVal(v)}); } catch (e) { _w.push(${jsxVal(k)} + ": " + AE.errText(e)); }`);
+				return `
+            ${jsxCompPreamble(args)}
+            var _layers = AE.resolveLayers(_comp, ${jsxVal(args.layer)});
+            if (_layers.length === 0) return { ok: false, error: "no layers matched" };
+            var _results = [];
+            for (var _li = 0; _li < _layers.length; _li++) {
+                var _l = _layers[_li];
+                var _w = [];
+                ${lines.join("\n")}
+                _results.push({ name: _l.name, warnings: _w });
+            }
+            return { ok: true, count: _results.length, layers: _results };
+        `;
+			}
+		});
+		registerOp({
+			name: "layer.add_guide",
+			category: "layer",
+			description: "Add a ruler guide to a layer's Layer panel view (Layer.addGuide, AE 16.1+). Comp-panel guides live under comp.add_guide.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				{
+					name: "layer",
+					type: "any",
+					description: "1-based layer index, or the layer name",
+					required: true
+				},
+				{
+					name: "orientation",
+					type: "string",
+					description: "horizontal|vertical",
+					required: true
+				},
+				{
+					name: "position",
+					type: "number",
+					description: "Position in px (y for horizontal, x for vertical)",
+					required: true
+				}
+			],
+			toJsx(args) {
+				return `
+            ${jsxCompLayerPreamble(args)}
+            if (typeof _layer.addGuide !== "function") return { ok: false, error: "layer guides need AE 16.1+" };
+            var _orient = ${jsxVal(args.orientation)} === "vertical" ? 1 : 0;
+            var _idx = _layer.addGuide(_orient, ${jsxVal(args.position)});
+            return { ok: true, guideIndex: _idx, numGuides: _layer.guides.length };
+        `;
+			}
+		});
+		registerOp({
+			name: "layer.remove_guide",
+			category: "layer",
+			description: "Remove a Layer-panel ruler guide by its 0-based index (see layer.list_guides).",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				{
+					name: "layer",
+					type: "any",
+					description: "1-based layer index, or the layer name",
+					required: true
+				},
+				{
+					name: "guideIndex",
+					type: "number",
+					description: "0-based guide index",
+					required: true
+				}
+			],
+			toJsx(args) {
+				return `
+            ${jsxCompLayerPreamble(args)}
+            if (typeof _layer.removeGuide !== "function") return { ok: false, error: "layer guides need AE 16.1+" };
+            var _guides = _layer.guides;
+            if (${jsxVal(args.guideIndex)} < 0 || ${jsxVal(args.guideIndex)} >= _guides.length) {
+                return { ok: false, error: "guide index out of range (0-" + (_guides.length - 1) + ")" };
+            }
+            _layer.removeGuide(${jsxVal(args.guideIndex)});
+            return { ok: true, numGuides: _layer.guides.length };
+        `;
+			}
+		});
+		registerOp({
+			name: "layer.move_guide",
+			category: "layer",
+			description: "Move an existing Layer-panel ruler guide to a new position (Layer.setGuide). Named move_guide because layer.set_guide already means the guide-LAYER flag.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				{
+					name: "layer",
+					type: "any",
+					description: "1-based layer index, or the layer name",
+					required: true
+				},
+				{
+					name: "guideIndex",
+					type: "number",
+					description: "0-based guide index",
+					required: true
+				},
+				{
+					name: "position",
+					type: "number",
+					description: "New position in px",
+					required: true
+				}
+			],
+			toJsx(args) {
+				return `
+            ${jsxCompLayerPreamble(args)}
+            if (typeof _layer.setGuide !== "function") return { ok: false, error: "layer guides need AE 16.1+" };
+            var _guides = _layer.guides;
+            if (${jsxVal(args.guideIndex)} < 0 || ${jsxVal(args.guideIndex)} >= _guides.length) {
+                return { ok: false, error: "guide index out of range (0-" + (_guides.length - 1) + ")" };
+            }
+            _layer.setGuide(${jsxVal(args.position)}, ${jsxVal(args.guideIndex)});
+            return { ok: true, guideIndex: ${jsxVal(args.guideIndex)}, position: ${jsxVal(args.position)} };
+        `;
+			}
+		});
+		registerOp({
+			name: "layer.list_guides",
+			category: "layer",
+			readOnly: true,
+			description: "List a layer's Layer-panel ruler guides with orientation and position (AE 16.1+).",
+			params: [{
+				name: "comp",
+				type: "any",
+				description: "Comp name or id",
+				required: true
+			}, {
+				name: "layer",
+				type: "any",
+				description: "1-based layer index, or the layer name",
+				required: true
+			}],
+			toJsx(args) {
+				return `
+            ${jsxCompLayerPreamble(args)}
+            var _guides = null;
+            try { _guides = _layer.guides; } catch (eG) {}
+            if (!_guides) return { ok: false, error: "layer guides need AE 16.1+" };
+            var _out = [];
+            for (var _i = 0; _i < _guides.length; _i++) {
+                _out.push({ index: _i, orientation: _guides[_i].orientationType === 1 ? "vertical" : "horizontal", position: _guides[_i].position });
+            }
+            return { ok: true, count: _out.length, guides: _out };
+        `;
+			}
+		});
+	})))();
+}
 
 // operations/project.js
 function liveSnapshotIO(transport) {
@@ -5133,656 +5983,4 @@ function init_layout() {
 	})))();
 }
 
-// operations/sample.js
-function liveIO(transport) {
-	return { async execute(code, opts) {
-		const r = await transport.execute({
-			code,
-			label: opts.label,
-			timeoutMs: opts.timeoutMs,
-			undoGroup: opts.undoGroup ?? false,
-			suppressDialogs: true
-		});
-		return r.ok ? r.result : {
-			ok: false,
-			error: r.error ?? `${opts.label} failed`
-		};
-	} };
-}
-function propertyPath(p) {
-	if (Array.isArray(p) && p.length && p.every((x) => typeof x === "string")) return p;
-	if (typeof p === "string") return TRANSFORM.includes(p) ? ["Transform", p] : [p];
-	return null;
-}
-function curveReadJsx(args) {
-	return `
-            ${jsxCompLayerPreamble(args)}
-            var _p = AE.propertyAtPath(_layer, ${jsxVal(args.path)});
-            if (!_p || _p.propertyType !== PropertyType.PROPERTY) return { ok: false, error: "no property " + ${jsxVal(args.path.join(" > "))} + " on " + _layer.name };
-            var _fd = _comp.frameDuration;
-            var _s = ${jsxVal(args.start ?? null)};
-            var _e = ${jsxVal(args.end ?? null)};
-            if (_s === null) _s = Math.max(0, _layer.inPoint);
-            if (_e === null) _e = Math.min(_comp.duration, _layer.outPoint);
-            var _f0 = Math.round(_s / _fd);
-            var _f1 = Math.round(_e / _fd);
-            if (_f1 - _f0 > 3000) return { ok: false, error: "over 3000 frames; give start and end" };
-            var _vals = [];
-            for (var _f = _f0; _f <= _f1; _f++) {
-                var _v = AE.valueToJson(AE.readValue(_p, _f * _fd));
-                _vals.push(_v);
-            }
-            var _interp = function (v) {
-                if (v === KeyframeInterpolationType.LINEAR) return "linear";
-                if (v === KeyframeInterpolationType.BEZIER) return "bezier";
-                if (v === KeyframeInterpolationType.HOLD) return "hold";
-                return "other";
-            };
-            var _keys = [];
-            for (var _k = 1; _k <= _p.numKeys; _k++) {
-                var _kt = _p.keyTime(_k);
-                _keys.push({ time: _kt, frame: Math.round(_kt / _fd), inInterpolation: _interp(_p.keyInInterpolationType(_k)), outInterpolation: _interp(_p.keyOutInterpolationType(_k)) });
-            }
-            return { ok: true, layer: _layer.name, property: _p.name, fps: 1 / _fd, startFrame: _f0, values: _vals, keys: _keys };
-        `;
-}
-async function runCurve(args, io) {
-	const p = propertyPath(args.property);
-	if (!p) return {
-		ok: false,
-		error: "`property` must be a transform property's name or a path of names"
-	};
-	const num = (k) => typeof args[k] === "number" ? args[k] : void 0;
-	const r = await io.execute(curveReadJsx({
-		comp: args.comp,
-		layer: args.layer,
-		path: p,
-		start: num("start"),
-		end: num("end")
-	}), {
-		label: "motion.curve read",
-		timeoutMs: 12e4
-	});
-	if (!r?.ok) return {
-		ok: false,
-		error: r?.error ?? "could not read the property"
-	};
-	const samples = r.values.map((v, i) => ({
-		frame: r.startFrame + i,
-		time: (r.startFrame + i) / r.fps,
-		value: Array.isArray(v) ? v.map(Number) : [Number(v)]
-	}));
-	if (samples.some((s) => s.value.some((x) => !Number.isFinite(x)))) return {
-		ok: false,
-		error: `${r.property} is not a number or a list of numbers`
-	};
-	const report = analyzeCurve(samples, r.fps);
-	let graph = null;
-	if (typeof args.outPath === "string") {
-		if (!path$1.isAbsolute(args.outPath)) return {
-			ok: false,
-			error: "`outPath` must be absolute (.png)"
-		};
-		const g = curveGraph(report, {
-			width: 480,
-			height: 160
-		});
-		await promises.mkdir(path$1.dirname(args.outPath), { recursive: true });
-		await promises.writeFile(args.outPath, encodePngSrgb8(g.width, g.height, g.rgb));
-		graph = args.outPath;
-	}
-	return {
-		ok: true,
-		layer: r.layer,
-		property: r.property,
-		fps: r.fps,
-		span: {
-			from: samples[0]?.frame ?? null,
-			to: samples[samples.length - 1]?.frame ?? null
-		},
-		keys: r.keys,
-		moves: report.moves,
-		flags: report.flags,
-		reading: report.reading,
-		graph,
-		...args.perFrame === true ? { frames: report.frames } : {}
-	};
-}
-function amplitudeJsx(args) {
-	return `
-            ${jsxCompLayerPreamble(args)}
-            if (!_layer.hasAudio) return { ok: false, error: _layer.name + " has no audio" };
-            var _was = [];
-            for (var _i = 1; _i <= _comp.numLayers; _i++) { _was.push(_comp.layer(_i).selected); _comp.layer(_i).selected = false; }
-            var _before = _comp.numLayers;
-            _comp.openInViewer();
-            _layer.selected = true;
-            var _id = app.findMenuCommandId("Convert Audio to Keyframes");
-            if (!_id) return { ok: false, error: "After Effects has no Convert Audio to Keyframes command here" };
-            app.executeCommand(_id);
-            if (_comp.numLayers !== _before + 1) return { ok: false, error: "Convert Audio to Keyframes made no layer" };
-            var _amp = null;
-            for (var _j = 1; _j <= _comp.numLayers; _j++) { var _l = _comp.layer(_j); var _fx = _l.property("ADBE Effect Parade"); if (_fx && _fx.numProperties === 3 && _l !== _layer && _l.name.indexOf("Audio Amplitude") === 0) _amp = _l; }
-            if (!_amp) return { ok: false, error: "could not find the Audio Amplitude layer" };
-            var _fd = _comp.frameDuration;
-            var _n = Math.round(_comp.duration / _fd);
-            var _read = function (k) { var p = _amp.property("ADBE Effect Parade").property(k).property(1); var v = []; for (var f = 0; f < _n; f++) v.push(Math.round(p.valueAtTime(f * _fd, false) * 1000) / 1000); return v; };
-            var _out = { ok: true, fps: 1 / _fd, left: _read(1), right: _read(2), both: _read(3) };
-            _amp.remove();
-            for (var _r = 1; _r <= _comp.numLayers && _r <= _was.length; _r++) _comp.layer(_r).selected = _was[_r - 1];
-            return _out;
-        `;
-}
-function fpsJsx(args) {
-	return `
-            ${jsxCompPreamble(args)}
-            return { ok: true, fps: 1 / _comp.frameDuration };
-        `;
-}
-function addMarkersJsx(args) {
-	return `
-            ${jsxCompPreamble(args)}
-            var _mp = _comp.markerProperty;
-            var _removed = 0;
-            if (${jsxVal(args.replace)}) {
-                for (var _k = _mp.numKeys; _k >= 1; _k--) if (String(_mp.keyValue(_k).comment).indexOf(${jsxVal(args.prefix + ":")}) === 0) { _mp.removeKey(_k); _removed++; }
-            }
-            var _ms = ${jsxVal(args.markers)};
-            for (var _i = 0; _i < _ms.length; _i++) _mp.setValueAtTime(_ms[_i].time, new MarkerValue(_ms[_i].comment));
-            return { ok: true, added: _ms.length, removed: _removed, numMarkers: _mp.numKeys };
-        `;
-}
-async function runSoundMarkers(args, io) {
-	const prefix = typeof args.prefix === "string" && args.prefix ? args.prefix : "sound";
-	const hasTiming = typeof args.timing === "string";
-	if (hasTiming === (args.layer !== void 0)) return {
-		ok: false,
-		error: "give exactly one of `timing` (a timing file) or `layer` (a layer with sound, read by loudness)"
-	};
-	let fps;
-	let found;
-	let source;
-	if (hasTiming) {
-		const f = args.timing;
-		if (!path$1.isAbsolute(f)) return {
-			ok: false,
-			error: "`timing` must be an absolute path"
-		};
-		const r = await io.execute(fpsJsx({ comp: args.comp }), {
-			label: "sound.markers fps",
-			timeoutMs: 3e4
-		});
-		if (!r?.ok) return {
-			ok: false,
-			error: r?.error ?? "could not read the comp"
-		};
-		fps = r.fps;
-		try {
-			found = parseTiming(await promises.readFile(f, "utf8"), fps).map((m) => ({
-				...m,
-				frame: Math.round(m.time * fps)
-			}));
-		} catch (e) {
-			return {
-				ok: false,
-				error: e instanceof Error ? e.message : String(e)
-			};
-		}
-		source = {
-			kind: "timing file",
-			path: f
-		};
-	} else {
-		const r = await io.execute(amplitudeJsx({
-			comp: args.comp,
-			layer: args.layer
-		}), {
-			label: "sound.markers amplitude",
-			timeoutMs: 3e5,
-			undoGroup: true
-		});
-		if (!r?.ok) return {
-			ok: false,
-			error: r?.error ?? "Convert Audio to Keyframes failed"
-		};
-		fps = r.fps;
-		const left = r.left;
-		const right = r.right;
-		const louder = left.map((v, i) => Math.max(v, right[i] ?? 0));
-		const top = Math.max(0, ...louder);
-		if (top < .1) return {
-			ok: false,
-			error: `After Effects read this layer's sound as silence (Convert Audio to Keyframes' amplitude stays under ${SILENCE_BELOW} on every frame; its top was ${top}). A four-channel AAC take did this, though a four-channel WAV with the voice on its first channel read as left: extract the voice to a mono WAV (ffmpeg -i take.mp4 -af pan=mono|c0=c0 voice.wav), import that and read it instead, or give a timing file.`
-		};
-		found = soundOnsets(louder, fps, { share: typeof args.share === "number" ? args.share : void 0 }).map((o) => ({
-			time: o.time,
-			frame: o.frame,
-			label: "beat",
-			level: o.level
-		}));
-		source = {
-			kind: "loudness",
-			layer: args.layer,
-			channels: {
-				left: Math.max(0, ...left),
-				right: Math.max(0, ...right)
-			}
-		};
-	}
-	const add = await io.execute(addMarkersJsx({
-		comp: args.comp,
-		markers: found.map((m) => ({
-			time: m.time,
-			comment: `${prefix}: ${m.label}`
-		})),
-		prefix,
-		replace: args.replace !== false
-	}), {
-		label: "sound.markers add",
-		timeoutMs: 6e4,
-		undoGroup: true
-	});
-	if (!add?.ok) return {
-		ok: false,
-		error: add?.error ?? "could not add the markers"
-	};
-	return {
-		ok: true,
-		source,
-		fps,
-		markers: found,
-		added: add.added,
-		removed: add.removed,
-		reading: `${found.length} marker${found.length === 1 ? "" : "s"} added as '${prefix}: \u2026'${add.removed ? `, ${add.removed} earlier ones replaced` : ""}.`
-	};
-}
-function syncReadJsx(args) {
-	return `
-            ${jsxCompPreamble(args)}
-            var _mp = _comp.markerProperty;
-            var _markers = [];
-            for (var _k = 1; _k <= _mp.numKeys; _k++) _markers.push({ time: _mp.keyTime(_k), comment: String(_mp.keyValue(_k).comment) });
-            var _events = [];
-            var _keys = ${jsxVal(args.keys)};
-            for (var _i = 0; _i < _keys.length; _i++) {
-                var _l = AE.findLayerInComp(_comp, _keys[_i].layer);
-                if (!_l) return { ok: false, error: "no layer " + _keys[_i].layer };
-                var _p = AE.propertyAtPath(_l, _keys[_i].path);
-                if (!_p) return { ok: false, error: "no property " + _keys[_i].path.join(" > ") + " on " + _l.name };
-                for (var _j = 1; _j <= _p.numKeys; _j++) _events.push({ name: _l.name + " " + _p.name + " key " + _j, time: _p.keyTime(_j) });
-            }
-            var _ins = ${jsxVal(args.inPoints)};
-            for (var _n = 0; _n < _ins.length; _n++) {
-                var _li = AE.findLayerInComp(_comp, _ins[_n]);
-                if (!_li) return { ok: false, error: "no layer " + _ins[_n] };
-                _events.push({ name: _li.name + " in-point", time: _li.inPoint });
-            }
-            return { ok: true, fps: 1 / _comp.frameDuration, markers: _markers, events: _events };
-        `;
-}
-async function runSync(args, io) {
-	const keys = Array.isArray(args.keys) ? args.keys.map((k) => ({
-		layer: k.layer,
-		path: propertyPath(k.property) ?? []
-	})) : [];
-	if (keys.some((k) => !k.path.length)) return {
-		ok: false,
-		error: "each of `keys` needs { layer, property }"
-	};
-	const inPoints = Array.isArray(args.inPoints) ? args.inPoints : [];
-	const given = Array.isArray(args.events) ? args.events : [];
-	if (!keys.length && !inPoints.length && !given.length) return {
-		ok: false,
-		error: "give events: `keys`, `inPoints` or `events` ({ name, time }, for example spikes from ae_render_frame diff)"
-	};
-	const r = await io.execute(syncReadJsx({
-		comp: args.comp,
-		keys,
-		inPoints
-	}), {
-		label: "sound.sync read",
-		timeoutMs: 6e4
-	});
-	if (!r?.ok) return {
-		ok: false,
-		error: r?.error ?? "could not read the comp"
-	};
-	const prefix = typeof args.markerPrefix === "string" ? args.markerPrefix : null;
-	const markers = r.markers.filter((m) => prefix === null || m.comment.startsWith(prefix)).map((m) => ({
-		time: m.time,
-		label: m.comment
-	}));
-	const rep = syncReport([...r.events, ...given], markers, r.fps, {
-		lateFrames: typeof args.lateFrames === "number" ? args.lateFrames : void 0,
-		earlyFrames: typeof args.earlyFrames === "number" ? args.earlyFrames : void 0
-	});
-	return {
-		ok: true,
-		fps: r.fps,
-		markers: markers.length,
-		...rep
-	};
-}
-var DEFAULT_PROPERTIES, TRANSFORM, SILENCE_BELOW;
-function init_sample() {
-	return (init_sample = __esmMin((() => {
-		init_motion();
-		init_png16();
-		init_run_moves();
-		init_registry();
-		DEFAULT_PROPERTIES = [
-			["Transform", "Anchor Point"],
-			["Transform", "Position"],
-			["Transform", "Scale"],
-			["Transform", "Rotation"],
-			["Transform", "Opacity"]
-		];
-		registerOp({
-			name: "comp.sample",
-			category: "comp",
-			readOnly: true,
-			description: "Sample property values at several times across layers of one or more comps in ONE call. Each row says whether the layer is active at that time (enabled and inside its in/out span) and gives the post-expression value of every requested property (default: the five transform properties). Use it to verify motion, list what is visible when, or compare two comps for a match cut.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name/id, pattern ('shot_*'), or array of those",
-					required: true
-				},
-				{
-					name: "times",
-					type: "array",
-					description: "Times in seconds to sample",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "Layer filter: index | name | { id } | 'selected' | 'all' | array (default 'all')",
-					required: false,
-					default: "all"
-				},
-				{
-					name: "properties",
-					type: "array",
-					description: "Property paths to read, e.g. [[\"Transform\",\"Position\"], [\"Effects\",\"Slider Control\",\"Slider\"]] (default: the five transform properties)",
-					required: false
-				},
-				{
-					name: "activeOnly",
-					type: "boolean",
-					description: "Omit layers that are not active at the sampled time (default false)",
-					required: false,
-					default: false
-				}
-			],
-			toJsx(args) {
-				const times = Array.isArray(args.times) ? args.times : [];
-				if (times.length === 0 || !times.every((t) => typeof t === "number")) return jsxFail("times must be a non-empty array of numbers");
-				const props = args.properties ?? DEFAULT_PROPERTIES;
-				if (!Array.isArray(props) || !props.every((p) => Array.isArray(p) && p.length > 0)) return jsxFail("properties must be an array of property paths (arrays)");
-				return `
-            var _comps = AE.findComps(${jsxVal(args.comp)});
-            if (_comps.length === 0) return { ok: false, error: "no comps matched" };
-            var _times = ${jsxVal(times)};
-            var _paths = ${jsxVal(props)};
-            var _activeOnly = ${jsxVal(args.activeOnly === true)};
-            var _out = [];
-            for (var _ci = 0; _ci < _comps.length; _ci++) {
-                var _c = _comps[_ci];
-                var _layers = AE.resolveLayers(_c, ${jsxVal(args.layer ?? "all")});
-                var _samples = [];
-                for (var _ti = 0; _ti < _times.length; _ti++) {
-                    var _t = _times[_ti];
-                    var _rows = [];
-                    for (var _li = 0; _li < _layers.length; _li++) {
-                        var _l = _layers[_li];
-                        var _active = _l.enabled && _t >= _l.inPoint && _t < _l.outPoint;
-                        if (_activeOnly && !_active) continue;
-                        var _row = { index: _l.index, name: _l.name, active: _active, values: {} };
-                        for (var _pi = 0; _pi < _paths.length; _pi++) {
-                            var _p = AE.propertyAtPath(_l, _paths[_pi]);
-                            var _key = _paths[_pi].join("/");
-                            if (!_p || _p.propertyType !== PropertyType.PROPERTY) { _row.values[_key] = null; continue; }
-                            try { _row.values[_key] = AE.valueToJson(AE.readValue(_p, _t)); }
-                            catch (eV) { _row.values[_key] = null; }
-                        }
-                        _rows.push(_row);
-                    }
-                    _samples.push({ time: _t, layers: _rows });
-                }
-                _out.push({ comp: _c.name, id: _c.id, samples: _samples });
-            }
-            return { ok: true, comps: _out };
-        `;
-			}
-		});
-		TRANSFORM = [
-			"Anchor Point",
-			"Position",
-			"Scale",
-			"Rotation",
-			"Opacity",
-			"X Position",
-			"Y Position",
-			"Z Position",
-			"Orientation"
-		];
-		SILENCE_BELOW = .1;
-		registerOp({
-			name: "motion.curve",
-			category: "motion",
-			readOnly: true,
-			description: "How a property moves: its value at every frame over a span (default the layer's span), speed per frame (units a second), the moves (from rest to rest), and flags: a move with no ease (its first or last moving frame already at 60% or more of its middle speed), a sudden jump in speed inside a move (2.5 times from one frame to the next and a quarter of its top speed), and how far a move overshoots and how many frames it takes to settle within 1%. `outPath` draws a 480 x 160 graph (values light, speed orange, moves shaded, flags red). Keys and their interpolation come with it. Thresholds are starting points, not judgments: a mechanical, constant move is linear on purpose.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "Layer index, name or { id }",
-					required: true
-				},
-				{
-					name: "property",
-					type: "any",
-					description: "A transform property's name ('Position') or a path of names",
-					required: true
-				},
-				{
-					name: "start",
-					type: "number",
-					description: "Seconds (default the layer's in-point)",
-					required: false
-				},
-				{
-					name: "end",
-					type: "number",
-					description: "Seconds (default the layer's out-point)",
-					required: false
-				},
-				{
-					name: "outPath",
-					type: "string",
-					description: "Absolute .png path for the graph",
-					required: false
-				},
-				{
-					name: "perFrame",
-					type: "boolean",
-					description: "Include value and speed of every frame (default false)",
-					required: false
-				}
-			],
-			toJsx: () => jsxFail("motion.curve runs in Node; call it through ae_do"),
-			run: (args, transport) => runCurve(args, liveIO(transport))
-		});
-		registerOp({
-			name: "motion.compare_moves",
-			category: "motion",
-			readOnly: true,
-			description: "Compare a build's moves with moves measured from a reference (video.track's track.json): per move, its duration, distance and ease (out and in influence) or a spring's overshoot, built against measured, within or outside a tolerance (default 1 frame, 2 % of the distance, 10 influence points), in sentences such as 'move 7 (position): duration 14 frames against 12, outside tolerance'. The build is a property (comp, layer, property: read once from After Effects and fitted the way video.track fits) or a second track.json from video.track on the build's rendered file. Do both: a property can pass while the picture does not (a subject that leans under a zoom); the picture is the one that counts.",
-			params: [
-				{
-					name: "measured",
-					type: "any",
-					description: "Absolute path of the reference's track.json (or its moves)",
-					required: true
-				},
-				{
-					name: "comp",
-					type: "any",
-					description: "The build: comp name or id (with layer and property)",
-					required: false
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "The build: layer index, name or { id }",
-					required: false
-				},
-				{
-					name: "property",
-					type: "any",
-					description: "The build: a transform property's name or a path of names",
-					required: false
-				},
-				{
-					name: "start",
-					type: "number",
-					description: "Seconds (default the layer's in-point)",
-					required: false
-				},
-				{
-					name: "end",
-					type: "number",
-					description: "Seconds (default the layer's out-point)",
-					required: false
-				},
-				{
-					name: "buildTrack",
-					type: "string",
-					description: "Or the build as a track.json from video.track on its rendered file",
-					required: false
-				},
-				{
-					name: "tolerance",
-					type: "object",
-					description: "{ frames (1), distanceShare (0.02), easePoints (10) }",
-					required: false
-				},
-				{
-					name: "atFps",
-					type: "number",
-					description: "Frames at this rate (default 30)",
-					required: false
-				}
-			],
-			toJsx: () => jsxFail("motion.compare_moves runs in Node; call it through ae_do"),
-			run: (args, transport) => runCompareMoves(args, (a) => runCurve(a, liveIO(transport)))
-		});
-		registerOp({
-			name: "sound.markers",
-			category: "sound",
-			description: "Put word or beat times on the comp as markers ('<prefix>: <label>', prefix default 'sound'; earlier ones with the same prefix are replaced unless replace: false). From `timing` (a JSON list of { word|w|text|label, start|time|t in seconds, or frame }, or CSV time,label) or from `layer`'s loudness: After Effects' Convert Audio to Keyframes is run on the layer (the comp is opened in the viewer for it), the amplitude read per frame (the louder of left and right), the helper layer removed, and a beat marked where loudness rises past 30% of the way from its median to its top. Checked live on mono, stereo and four-channel WAVs (signal on channel 1 reads as left). A track After Effects reads as silence is refused with what to do.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "timing",
-					type: "string",
-					description: "Absolute path of a timing file",
-					required: false
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "A layer with sound, read by loudness",
-					required: false
-				},
-				{
-					name: "prefix",
-					type: "string",
-					description: "Marker comment prefix (default 'sound')",
-					required: false
-				},
-				{
-					name: "replace",
-					type: "boolean",
-					description: "Replace earlier markers with the prefix (default true)",
-					required: false
-				},
-				{
-					name: "share",
-					type: "number",
-					description: "Loudness threshold, share of the way from median to top (default 0.3)",
-					required: false
-				}
-			],
-			toJsx: () => jsxFail("sound.markers runs in Node; call it through ae_do"),
-			run: (args, transport) => runSoundMarkers(args, liveIO(transport))
-		});
-		registerOp({
-			name: "sound.sync",
-			category: "sound",
-			readOnly: true,
-			description: "How far named events sit from the nearest comp marker, in frames: key times of properties (`keys`: [{ layer, property }]), layers' in-points (`inPoints`), and any `events` you give ({ name, time }, for example spikes from ae_render_frame diff). Positive is after the marker. Flagged from 2 frames after or 4 before (ITU-R BT.1359's detectability thresholds, sound 45 ms early and 125 ms late, at 30 fps); `markerPrefix` keeps only markers whose comment starts with it.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "keys",
-					type: "array",
-					description: "[{ layer, property }]: each key is an event",
-					required: false
-				},
-				{
-					name: "inPoints",
-					type: "array",
-					description: "Layers whose in-points are events",
-					required: false
-				},
-				{
-					name: "events",
-					type: "array",
-					description: "[{ name, time }] in seconds",
-					required: false
-				},
-				{
-					name: "markerPrefix",
-					type: "string",
-					description: "Only markers whose comment starts with this",
-					required: false
-				},
-				{
-					name: "lateFrames",
-					type: "number",
-					description: "Flag from this many frames after (default 2)",
-					required: false
-				},
-				{
-					name: "earlyFrames",
-					type: "number",
-					description: "Flag from this many frames before (default 4)",
-					required: false
-				}
-			],
-			toJsx: () => jsxFail("sound.sync runs in Node; call it through ae_do"),
-			run: (args, transport) => runSync(args, liveIO(transport))
-		});
-	})))();
-}
-
-export { PARK_QUEUE_FN, QUEUE_CHANGE_NOTE, RENDER_QUEUE_UNDO_WARNING, init_layout, init_look_sheet, init_marker, init_mask, init_pref, init_project, init_property, init_render, init_sample };
+export { PARK_QUEUE_FN, QUEUE_CHANGE_NOTE, RENDER_QUEUE_UNDO_WARNING, init_layer, init_layout, init_look_sheet, init_marker, init_mask, init_pref, init_project, init_property, init_render };

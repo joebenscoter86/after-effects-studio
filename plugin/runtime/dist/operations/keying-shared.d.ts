@@ -248,7 +248,7 @@ export interface FrameReading {
     error?: string;
 }
 /** Read each rendered frame's alpha: holes and openings, a picture over `over`, and one contact sheet. */
-export declare function measureFrames(io: PixelIO, rendered: RenderedFrame[], limit: number, over: string, sheetPath: string, tally?: PixelTally, pictures?: boolean, onImage?: (r: FrameReading, img: DecodedPng) => void): Promise<{
+export declare function measureFrames(io: PixelIO, rendered: RenderedFrame[], limit: number, over: string, sheetPath: string, tally?: PixelTally, pictures?: boolean, onImage?: (r: FrameReading, img: DecodedPng) => void, below?: number): Promise<{
     readings: FrameReading[];
     picture: string | null;
 }>;
@@ -375,4 +375,25 @@ export declare const MOTION_EDGE_DEFAULTS: {
     /** Minimax's Channel menu value for alpha alone. */
     bandChannel: number;
 };
+/**
+ * In a motion-edge cut-out a hole or opening is read only where the alpha is
+ * under this (nearly clear), not under opaque as on a plain matte: the keyer's
+ * soft alpha on moving parts is the motion blur the layer is built to keep, so
+ * a soft patch is not a finding, while a clear hole (a missed microphone, a gap)
+ * still is. 0.05 rather than After Effects' 2/255 so the keyer's faint noise in
+ * a clear hole does not split it into pieces under the limit. Chosen offline,
+ * not calibrated on a live motion-edge take.
+ */
+export declare const MOTION_EDGE_CLEAR_BELOW = 0.05;
+/** The layer that is the cut-out after subject.status: the soft edge, the motion edge, or the matted layer; or why there is no one answer. */
+export declare function cutLayerOf(st: Json, matted: unknown): {
+    layer: unknown;
+    motion: boolean;
+} | {
+    error: string;
+};
+/** JSX: an expression for bothEdgesError, from the JSX variables holding the two layer names. */
+export declare function bothEdgesErrorJsx(softVar: string, motionVar: string): string;
+/** The refusal when a layer has both a soft-edge and a motion-edge layer (the two do not combine). */
+export declare function bothEdgesError(soft: string, motion: string): string;
 //# sourceMappingURL=keying-shared.d.ts.map

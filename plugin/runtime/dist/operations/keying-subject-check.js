@@ -6,7 +6,7 @@ import { cutoutRegions, outlineTracker, EDGE_DEFAULTS, enclosedHoles, growMask }
 import { encodePngGray8 } from "../color/png16.js";
 import { rejectedOutputPath } from "../config.js";
 import { registerOp } from "../registry.js";
-import { CLOSE_CLICK_SHARE, COUNT_NOTE, CUTOUT_HOLE_LIMIT, CUTOUT_OVER, CUTOUT_SECONDS_PER_FRAME, NODE_ONLY, PICTURE_MARGIN_BYTES, acceptedBy, aeCacheRoot, alikeRegions, cacheBytesFor, captureBytes, compLayerParams, fmt, frozenAccepted, frozenFinding, frozenOpts, intersects, liveCutoutIO, measureFrames, needSelection, overParam, overPicture, perFrameMsOf, pixelTally, plural, regionsOf, renderChunked, renderTally, roundTally, since, spacePlan, subjectIndexParam, summarize, trackedSpan, writePng } from "./keying-shared.js";
+import { CLOSE_CLICK_SHARE, COUNT_NOTE, CUTOUT_HOLE_LIMIT, CUTOUT_OVER, CUTOUT_SECONDS_PER_FRAME, MOTION_EDGE_CLEAR_BELOW, NODE_ONLY, PICTURE_MARGIN_BYTES, acceptedBy, aeCacheRoot, alikeRegions, cacheBytesFor, cutLayerOf, captureBytes, compLayerParams, fmt, frozenAccepted, frozenFinding, frozenOpts, intersects, liveCutoutIO, measureFrames, needSelection, overParam, overPicture, perFrameMsOf, pixelTally, plural, regionsOf, renderChunked, renderTally, roundTally, since, spacePlan, subjectIndexParam, summarize, trackedSpan, writePng } from "./keying-shared.js";
 const closeClickReading = (a, b, d, limit) => `${a} and ${b} were clicked ${Math.round(d)} source pixels apart (closer than ${Math.round(limit)}): ` +
     "they probably selected the same thing, so a click meant for something else (a microphone) may have landed on the subject again";
 /**
@@ -84,7 +84,7 @@ const TAKES_MINUTES = "This check can take minutes: on a 2176 x 3840 take each f
 const RECHECK_NOTE = "Each frame with a hole or opening over the limit was rendered a second time at the end. After Effects may have served the second render from its cache, so two renders that agree do not show the frame is stable; " +
     "a frame that differed between them did come out differently (on 2026-11-11 frame 0 of a take rendered once without the microphone and then with it; the cause is not known).";
 /** Render once more each frame with a region over the limit, and report the frames whose regions differ. */
-async function recheckFrames(io, readings, limit, over, outDir, perFrameMs, base, accept, renders, pixels) {
+async function recheckFrames(io, readings, limit, over, outDir, perFrameMs, base, accept, renders, pixels, below) {
     // A region the user accepted needs no second look; a frame whose regions are all accepted is not rendered again.
     const isAccepted = (x) => acceptedBy({ kind: x.kind, box: { x: x.x, y: x.y, width: x.width, height: x.height } }, accept);
     const withRegions = readings.filter((r) => r.checked && regionsOf(r).length > 0);
@@ -105,7 +105,7 @@ async function recheckFrames(io, readings, limit, over, outDir, perFrameMs, base
         };
     const rendered = await renderChunked(io, base, frames, perFrameMs, outDir, "cutout-recheck", renders);
     // Regions only: a picture is drawn afterwards for a frame that differs, not for the ones that agree.
-    const { readings: again } = await measureFrames(io, rendered, limit, over, path.join(outDir, "cutout-recheck_sheet.png"), pixels, false);
+    const { readings: again } = await measureFrames(io, rendered, limit, over, path.join(outDir, "cutout-recheck_sheet.png"), pixels, false, undefined, below);
     const unstable = [];
     const failed = [];
     let agreed = 0;
@@ -230,6 +230,13 @@ export async function runSubjectCheck(args, io) {
     const missing = needSelection(st);
     if (missing)
         return { ok: false, error: missing };
+    // After subject.soften_edge or subject.motion_edge the cut-out is that precomp layer, not the matted layer (switched off).
+    const cut = cutLayerOf(st, args.layer);
+    if ("error" in cut)
+        return { ok: false, error: cut.error };
+    const cutLayer = cut.layer;
+    // On a motion edge the keyer's soft alpha on moving parts is expected: only clear pixels make a hole or opening.
+    const below = cut.motion ? MOTION_EDGE_CLEAR_BELOW : undefined;
     const first = renderTally();
     const second = renderTally();
     const pixels = pixelTally();
@@ -259,15 +266,13 @@ export async function runSubjectCheck(args, io) {
         return checkSpace.refusal;
     // After subject.fill_gaps the delivered cut-out is the layer and its gap fill together.
     const fillLayer = typeof st.fillLayer === "string" ? st.fillLayer : null;
-    // After subject.soften_edge the cut-out is its precomp layer, not the matted layer (switched off).
-    const cutLayer = typeof st.softEdge?.layer === "string" ? st.softEdge.layer : args.layer;
     const isolate = fillLayer ? [cutLayer, fillLayer] : cutLayer;
     const outline = outlineTracker(frozenOpts(args));
     const rendered = await renderChunked(io, { compNameOrId: args.comp, isolate, channels: "rgba", edge: true }, frames, perFrameMsOf(args), outDir, "cutout", first);
     const { readings, picture } = await measureFrames(io, rendered, limit, over, path.join(outDir, "cutout_sheet.png"), pixels, true, (r, img) => {
         if (img.alpha)
             outline.add(r.frame, img.alpha, img.rgb, img.width, img.height);
-    });
+    }, below);
     const outlineResult = outline.result();
     const sum = summarize(readings, limit, accept, picture);
     const close = closeClicks(clicks, st.sourceSize ?? null);
@@ -276,7 +281,7 @@ export async function runSubjectCheck(args, io) {
         ? { skipped: true, note: "recheck: false; no frame was rendered a second time" }
         : await recheckFrames(io, readings, limit, over, outDir, perFrameMsOf(args), 
         // No edge report on the second render: only the regions are compared (edge costs about 1 s a 1080 x 1920 frame).
-        { compNameOrId: args.comp, isolate, channels: "rgba" }, accept, second, pixels);
+        { compNameOrId: args.comp, isolate, channels: "rgba" }, accept, second, pixels, below);
     if ("unstable" in recheck)
         findings.push(...recheck.unstable);
     const frozenAcceptedRuns = [];
@@ -443,6 +448,10 @@ async function fillGaps(args, io) {
     const missing = needSelection(st);
     if (missing)
         return { ok: false, error: missing };
+    // The cut-out the fill is measured with afterwards: the soft- or motion-edge layer when there is one.
+    const cut = cutLayerOf(st, args.layer);
+    if ("error" in cut)
+        return { ok: false, error: cut.error };
     const frame = typeof args.frame === "number" ? args.frame : (st.span?.inFrame ?? 0);
     const fillFrames = Array.isArray(args.frames)
         ? [frame, ...args.frames]
@@ -592,14 +601,11 @@ async function fillGaps(args, io) {
             : quickFrames(st.span, [frame]);
     const afterRendered = await renderChunked(io, {
         compNameOrId: args.comp,
-        isolate: [
-            typeof st.softEdge?.layer === "string" ? st.softEdge.layer : args.layer,
-            built.fillLayer,
-        ],
+        isolate: [cut.layer, built.fillLayer],
         channels: "rgba",
         edge: true,
     }, frames, perFrameMs, outDir, "fill-after", afterTally);
-    const measured = await measureFrames(io, afterRendered, limit, over, path.join(outDir, "fill-after_sheet.png"), pixels);
+    const measured = await measureFrames(io, afterRendered, limit, over, path.join(outDir, "fill-after_sheet.png"), pixels, true, undefined, cut.motion ? MOTION_EDGE_CLEAR_BELOW : undefined);
     const sum = summarize(measured.readings, limit, []);
     return {
         ok: true,
@@ -657,6 +663,7 @@ registerOp({
         `A hole or opening of holeLimit px or more (default ${CUTOUT_HOLE_LIMIT}, at the comp's size) is a finding; so are frames that did not render (kind 'not-checked': a frame that was not rendered is never counted as clean). Two clicks close together are a finding only when something is missing too (a click meant for it may have landed on the subject again); otherwise they are the pieces of something clicked one by one, listed in notes, and do not set stop. ` +
         "With stop true: say in your reply what is out, in plain words, and give the picture's path, before the next call. `accept` entries (earlier findings the user called fine, such as a real gap between an arm and the body) are not counted again. " +
         "Each frame with a finding is rendered once more at the end; a frame whose cut-out differs between the two renders is a finding of kind 'unstable' (seen once on 2026-11-11, cause unknown; agreement may come from the cache and does not prove a frame stable). " +
+        `After subject.soften_edge or subject.motion_edge it renders that layer in place of the matted one (a layer with both is refused: undo one); on a motion edge, holes and openings are read only where the alpha is under ${MOTION_EDGE_CLEAR_BELOW}, so the keyer's soft alpha on moving parts is not a finding while a clear hole still is (chosen offline, not calibrated live). ` +
         "A selection count is not a check. It can take minutes: 20 to 40 s a frame the first time on a 2176 x 3840 take; say so to the user before it runs. " +
         "`timing` says where the time went (status, each render's After Effects call, settle wait and Node work, the pixel work, the total) and `timeReading` says it in one sentence.",
     params: [

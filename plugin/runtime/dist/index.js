@@ -52404,7 +52404,7 @@ function parseHex(c) {
   const v = parseInt(m[1], 16);
   return [(v >> 16 & 255) / 255, (v >> 8 & 255) / 255, (v & 255) / 255];
 }
-async function measureFrames(io, rendered, limit, over, sheetPath, tally = pixelTally(), pictures = true, onImage) {
+async function measureFrames(io, rendered, limit, over, sheetPath, tally = pixelTally(), pictures = true, onImage, below) {
   const started = performance.now();
   const colour = parseHex(over);
   const readings = [];
@@ -52456,7 +52456,7 @@ async function measureFrames(io, rendered, limit, over, sheetPath, tally = pixel
     }
     tally.frames++;
     const tRegions = performance.now();
-    const regions = cutoutRegions(img.alpha, img.width, img.height);
+    const regions = cutoutRegions(img.alpha, img.width, img.height, below === void 0 ? {} : { below });
     let opaquePx = 0;
     const alpha = img.alpha;
     for (let p = 0; p < alpha.length; p++) if (alpha[p] >= EDGE_DEFAULTS.opaque) opaquePx++;
@@ -52807,6 +52807,21 @@ var MOTION_EDGE_DEFAULTS = {
   /** Minimax's Channel menu value for alpha alone. */
   bandChannel: 2
 };
+var MOTION_EDGE_CLEAR_BELOW = 0.05;
+function cutLayerOf(st, matted) {
+  const soft = typeof st?.softEdge?.layer === "string" ? st.softEdge.layer : null;
+  const motion = typeof st?.motionEdge?.layer === "string" ? st.motionEdge.layer : null;
+  if (soft && motion) return { error: bothEdgesError(soft, motion) };
+  if (soft) return { layer: soft, motion: false };
+  if (motion) return { layer: motion, motion: true };
+  return { layer: matted, motion: false };
+}
+function bothEdgesErrorJsx(softVar, motionVar) {
+  return `${jsxVal(bothEdgesError("@SOFT@", "@MOTION@"))}.replace("@SOFT@", function () { return ${softVar}; }).replace("@MOTION@", function () { return ${motionVar}; })`;
+}
+function bothEdgesError(soft, motion) {
+  return `the layer has both a soft edge ('${soft}') and a motion edge ('${motion}'), and the two do not combine: undo one first, with subject.soften_edge { comp, layer, undo: true } or subject.motion_edge { comp, layer, undo: true }`;
+}
 
 // src/operations/keying-key.ts
 var KEYLIGHT_MATCH_NAME = "Keylight 906";
@@ -53502,6 +53517,21 @@ var OBJECT_MATTE_JSX = `
                 }
                 return null;
             }
+            function _omMotionEdge() {
+                // The precomp layer subject.motion_edge built for this layer, if any (its comment carries the settings).
+                // One matte pass: its object matte comp is used twice inside but renders once a frame; the matted layer is off.
+                var want = _layer.name + " motion edge";
+                for (var i = 1; i <= _comp.numLayers; i++) {
+                    var l = _comp.layer(i);
+                    if (AE.safeGet(function () { return l.name; }, "") !== want) continue;
+                    var c = AE.safeGet(function () { return l.comment; }, "");
+                    if (c.indexOf("motion-edge") < 0) continue;
+                    var st = null;
+                    try { st = eval("(" + c + ")"); } catch (eJ) { st = null; }
+                    return { layer: want, index: i, enabled: AE.safeGet(function () { return l.enabled; }, null), matteCopies: 1, settings: st };
+                }
+                return null;
+            }
             function _omSourceSize() {
                 var w = AE.safeGet(function () { return _layer.source.width; }, null);
                 var h = AE.safeGet(function () { return _layer.source.height; }, null);
@@ -53674,7 +53704,7 @@ registerOp({
             if (_pick.error) return { ok: false, error: _pick.error };
             if (_pick.index === null) {
                 return { ok: true, layer: _layer.name, objectMatte: { present: false, effectIndex: null, count: 0 }, selections: [], settings: null,
-                    summary: _omSummary(false, []), next: ${jsxVal(`Nothing selected: ${NEED_CLICK}.`)}, effects: AE.effectOrder(_fxRoot), aeCache: _omAeCache(), softEdge: _omSoftEdge(),
+                    summary: _omSummary(false, []), next: ${jsxVal(`Nothing selected: ${NEED_CLICK}.`)}, effects: AE.effectOrder(_fxRoot), aeCache: _omAeCache(), softEdge: _omSoftEdge(), motionEdge: _omMotionEdge(),
                     sourceSize: _omSourceSize(), compSize: [_comp.width, _comp.height], span: _omSpan() };
             }
             var _fx = _fxRoot.property(_pick.index);
@@ -53698,6 +53728,7 @@ registerOp({
                 sourceSize: _src,
                 fillLayer: _omFillLayer(),
                 softEdge: _omSoftEdge(),
+                motionEdge: _omMotionEdge(),
                 aeCache: _omAeCache(),
                 compSize: [_comp.width, _comp.height],
                 span: _omSpan(),
@@ -54086,7 +54117,7 @@ function framesAcross(span, count, extra) {
 }
 var TAKES_MINUTES = "This check can take minutes: on a 2176 x 3840 take each frame took 20 to 40 s the first time (the matte is tracked from the click), well under a second once rendered; tell the user before it runs on a long or large clip.";
 var RECHECK_NOTE = "Each frame with a hole or opening over the limit was rendered a second time at the end. After Effects may have served the second render from its cache, so two renders that agree do not show the frame is stable; a frame that differed between them did come out differently (on 2026-11-11 frame 0 of a take rendered once without the microphone and then with it; the cause is not known).";
-async function recheckFrames(io, readings, limit, over, outDir, perFrameMs, base, accept, renders, pixels) {
+async function recheckFrames(io, readings, limit, over, outDir, perFrameMs, base, accept, renders, pixels, below) {
   const isAccepted = (x) => acceptedBy(
     { kind: x.kind, box: { x: x.x, y: x.y, width: x.width, height: x.height } },
     accept
@@ -54121,7 +54152,9 @@ async function recheckFrames(io, readings, limit, over, outDir, perFrameMs, base
     over,
     path13.join(outDir, "cutout-recheck_sheet.png"),
     pixels,
-    false
+    false,
+    void 0,
+    below
   );
   const unstable = [];
   const failed = [];
@@ -54216,6 +54249,10 @@ async function runSubjectCheck(args, io) {
   if (!st?.ok) return { ok: false, error: st?.error ?? "subject.status failed", status: st };
   const missing = needSelection(st);
   if (missing) return { ok: false, error: missing };
+  const cut = cutLayerOf(st, args.layer);
+  if ("error" in cut) return { ok: false, error: cut.error };
+  const cutLayer = cut.layer;
+  const below = cut.motion ? MOTION_EDGE_CLEAR_BELOW : void 0;
   const first = renderTally();
   const second = renderTally();
   const pixels = pixelTally();
@@ -54248,7 +54285,6 @@ async function runSubjectCheck(args, io) {
   );
   if (checkSpace.refusal) return checkSpace.refusal;
   const fillLayer = typeof st.fillLayer === "string" ? st.fillLayer : null;
-  const cutLayer = typeof st.softEdge?.layer === "string" ? st.softEdge.layer : args.layer;
   const isolate = fillLayer ? [cutLayer, fillLayer] : cutLayer;
   const outline = outlineTracker(frozenOpts(args));
   const rendered = await renderChunked(
@@ -54270,7 +54306,8 @@ async function runSubjectCheck(args, io) {
     true,
     (r, img) => {
       if (img.alpha) outline.add(r.frame, img.alpha, img.rgb, img.width, img.height);
-    }
+    },
+    below
   );
   const outlineResult = outline.result();
   const sum = summarize(readings, limit, accept, picture);
@@ -54287,7 +54324,8 @@ async function runSubjectCheck(args, io) {
     { compNameOrId: args.comp, isolate, channels: "rgba" },
     accept,
     second,
-    pixels
+    pixels,
+    below
   );
   if ("unstable" in recheck) findings.push(...recheck.unstable);
   const frozenAcceptedRuns = [];
@@ -54412,6 +54450,8 @@ async function fillGaps(args, io) {
   if (!st?.ok) return { ok: false, error: st?.error ?? "subject.status failed", status: st };
   const missing = needSelection(st);
   if (missing) return { ok: false, error: missing };
+  const cut = cutLayerOf(st, args.layer);
+  if ("error" in cut) return { ok: false, error: cut.error };
   const frame = typeof args.frame === "number" ? args.frame : st.span?.inFrame ?? 0;
   const fillFrames = Array.isArray(args.frames) ? [frame, ...args.frames] : args.across === true ? [st.span?.inFrame ?? 0, Math.max(0, (st.span?.outFrame ?? 1) - 1), frame] : [frame - 2, frame + 2];
   const fillSpace = await spacePlan(
@@ -54555,10 +54595,7 @@ async function fillGaps(args, io) {
     io,
     {
       compNameOrId: args.comp,
-      isolate: [
-        typeof st.softEdge?.layer === "string" ? st.softEdge.layer : args.layer,
-        built.fillLayer
-      ],
+      isolate: [cut.layer, built.fillLayer],
       channels: "rgba",
       edge: true
     },
@@ -54574,7 +54611,10 @@ async function fillGaps(args, io) {
     limit,
     over,
     path13.join(outDir, "fill-after_sheet.png"),
-    pixels
+    pixels,
+    true,
+    void 0,
+    cut.motion ? MOTION_EDGE_CLEAR_BELOW : void 0
   );
   const sum = summarize(measured.readings, limit, []);
   return {
@@ -54618,7 +54658,7 @@ var secondsPerFrameParam = {
 registerOp({
   name: "subject.check",
   category: "subject",
-  description: `Proof a subject matte after the user says done, before anything else is built. Run it while the user is still there: what it finds can need another click, and a click cannot be made unattended. Renders the cut-out with its alpha (ae_render_frame isolate, channels 'rgba'; with the layer's gap fill from subject.fill_gaps when the comp has one, reported as fillLayer) at the click frames and frames across the clip, finds holes (regions below opaque the frame edge cannot reach) and openings (regions closed off only by the subject and the frame edge: the missed microphone of 2026-11-11 ran off the bottom of the frame), draws each frame over a flat colour and one contact sheet, and returns picture (the sheet), findings, accepted, checked {frames, of}, inOut (a plain statement of what is in and what is out), frames, clicks and stop. A hole or opening of holeLimit px or more (default ${CUTOUT_HOLE_LIMIT}, at the comp's size) is a finding; so are frames that did not render (kind 'not-checked': a frame that was not rendered is never counted as clean). Two clicks close together are a finding only when something is missing too (a click meant for it may have landed on the subject again); otherwise they are the pieces of something clicked one by one, listed in notes, and do not set stop. With stop true: say in your reply what is out, in plain words, and give the picture's path, before the next call. \`accept\` entries (earlier findings the user called fine, such as a real gap between an arm and the body) are not counted again. Each frame with a finding is rendered once more at the end; a frame whose cut-out differs between the two renders is a finding of kind 'unstable' (seen once on 2026-11-11, cause unknown; agreement may come from the cache and does not prove a frame stable). A selection count is not a check. It can take minutes: 20 to 40 s a frame the first time on a 2176 x 3840 take; say so to the user before it runs. \`timing\` says where the time went (status, each render's After Effects call, settle wait and Node work, the pixel work, the total) and \`timeReading\` says it in one sentence.`,
+  description: `Proof a subject matte after the user says done, before anything else is built. Run it while the user is still there: what it finds can need another click, and a click cannot be made unattended. Renders the cut-out with its alpha (ae_render_frame isolate, channels 'rgba'; with the layer's gap fill from subject.fill_gaps when the comp has one, reported as fillLayer) at the click frames and frames across the clip, finds holes (regions below opaque the frame edge cannot reach) and openings (regions closed off only by the subject and the frame edge: the missed microphone of 2026-11-11 ran off the bottom of the frame), draws each frame over a flat colour and one contact sheet, and returns picture (the sheet), findings, accepted, checked {frames, of}, inOut (a plain statement of what is in and what is out), frames, clicks and stop. A hole or opening of holeLimit px or more (default ${CUTOUT_HOLE_LIMIT}, at the comp's size) is a finding; so are frames that did not render (kind 'not-checked': a frame that was not rendered is never counted as clean). Two clicks close together are a finding only when something is missing too (a click meant for it may have landed on the subject again); otherwise they are the pieces of something clicked one by one, listed in notes, and do not set stop. With stop true: say in your reply what is out, in plain words, and give the picture's path, before the next call. \`accept\` entries (earlier findings the user called fine, such as a real gap between an arm and the body) are not counted again. Each frame with a finding is rendered once more at the end; a frame whose cut-out differs between the two renders is a finding of kind 'unstable' (seen once on 2026-11-11, cause unknown; agreement may come from the cache and does not prove a frame stable). After subject.soften_edge or subject.motion_edge it renders that layer in place of the matted one (a layer with both is refused: undo one); on a motion edge, holes and openings are read only where the alpha is under ${MOTION_EDGE_CLEAR_BELOW}, so the keyer's soft alpha on moving parts is not a finding while a clear hole still is (chosen offline, not calibrated live). A selection count is not a check. It can take minutes: 20 to 40 s a frame the first time on a 2176 x 3840 take; say so to the user before it runs. \`timing\` says where the time went (status, each render's After Effects call, settle wait and Node work, the pixel work, the total) and \`timeReading\` says it in one sentence.`,
   params: [
     ...compLayerParams,
     {
@@ -54846,7 +54886,18 @@ function renderCutoutPlanJsx(args) {
                 var _sl = _comp.layer(_si);
                 if (_sl.name === _softName && String(AE.safeGet(function () { return _sl.comment; }, "")).indexOf("soft-edge") >= 0) { _soft = _softName; _softComment = String(_sl.comment); }
             }
-            var _keep = [_soft ? _soft : _layer.name];
+            // After subject.motion_edge the cut-out is its precomp layer. Inside, the object matte comp is used twice (the
+            // outline and the band) but a comp renders once a frame, the keyer and motion copies carry no Object Matte, and
+            // the matted layer is off: one copy of the matte computes and caches.
+            var _motionName = _layer.name + " motion edge";
+            var _motion = null;
+            var _motionComment = null;
+            for (var _mi = 1; _mi <= _comp.numLayers; _mi++) {
+                var _ml = _comp.layer(_mi);
+                if (_ml.name === _motionName && String(AE.safeGet(function () { return _ml.comment; }, "")).indexOf("motion-edge") >= 0) { _motion = _motionName; _motionComment = String(_ml.comment); }
+            }
+            if (_soft && _motion) return { ok: false, error: ${bothEdgesErrorJsx("_softName", "_motionName")}, softEdge: _soft, motionEdge: _motion };
+            var _keep = [_soft ? _soft : (_motion ? _motion : _layer.name)];
             if (_fill) _keep.push(_fill);
             var _fd = _comp.frameDuration;
             var _start = Math.max(0, Math.min(_layer.inPoint, _layer.outPoint));
@@ -54870,7 +54921,7 @@ function renderCutoutPlanJsx(args) {
                     if (app.preferences.havePref("Disk Cache Controls", "Folder 7", _pts[_pi])) _cacheFolder = app.preferences.getPrefAsString("Disk Cache Controls", "Folder 7", _pts[_pi]);
                 }
             } catch (ePref) {}
-            return { ok: true, layer: _layer.name, fillLayer: _fill, fillEnabled: _fillEnabled, softEdge: _soft, softEdgeComment: _softComment, matteCopies: _soft ? 2 : 1, keep: _keep, compSize: [_comp.width, _comp.height], sourceSize: _src,
+            return { ok: true, layer: _layer.name, fillLayer: _fill, fillEnabled: _fillEnabled, softEdge: _soft, softEdgeComment: _softComment, motionEdge: _motion, motionEdgeComment: _motionComment, matteCopies: _soft ? 2 : 1, keep: _keep, compSize: [_comp.width, _comp.height], sourceSize: _src,
                 aeCache: { folder: _cacheFolder || null, version: AE.safeGet(function () { return app.version; }, null) },
                 span: { start: _start, duration: _end - _start, frames: Math.round((_end - _start) / _fd), frameRate: Math.round(1000 / _fd) / 1000 },
                 templates: { output: _out, render: _rend } };
@@ -55030,7 +55081,8 @@ async function runRenderCutout(args, io) {
     renderCutoutJsx({
       comp: args.comp,
       keep: plan.keep,
-      subject: plan.layer,
+      // The cut-out layer (the matted layer, or the soft- or motion-edge layer in its place) renders even when switched off.
+      subject: Array.isArray(plan.keep) && typeof plan.keep[0] === "string" ? plan.keep[0] : plan.layer,
       outputPath,
       outputTemplate: choice.template,
       start: span ? span.start : plan.span.start,
@@ -55086,13 +55138,22 @@ async function runRenderCutout(args, io) {
       soft = null;
     }
   }
+  let motion = null;
+  if (typeof plan.motionEdgeComment === "string") {
+    try {
+      const m = JSON.parse(plan.motionEdgeComment);
+      motion = { layer: plan.motionEdge, ...m.settings ?? {} };
+    } catch {
+      motion = { layer: plan.motionEdge };
+    }
+  }
   const sidecar = `${r.outputPath}.comp-room.json`;
   let sidecarWritten = null;
   try {
     await fs14.writeFile(
       sidecar,
       JSON.stringify(
-        { kind: "comp-room cut-out", comp: args.comp, layer: plan.layer, compSize: plan.compSize, fillLayer: plan.fillLayer ?? null, softEdge: soft, ...span ? { span } : {}, renderedAt: (/* @__PURE__ */ new Date()).toISOString() },
+        { kind: "comp-room cut-out", comp: args.comp, layer: plan.layer, compSize: plan.compSize, fillLayer: plan.fillLayer ?? null, softEdge: soft, motionEdge: motion, ...span ? { span } : {}, renderedAt: (/* @__PURE__ */ new Date()).toISOString() },
         null,
         1
       )
@@ -55106,7 +55167,7 @@ async function runRenderCutout(args, io) {
     space,
     sidecar: sidecarWritten,
     ...fillOff ? { fillWarning: `${fillOffText} Rendered anyway (withoutFill: true).` } : {},
-    cacheNote: `This render should have added about ${gb(cacheBytes)} to After Effects' disk cache (one 16-bit frame of the source per frame${matteCopies > 1 ? `, for each of the ${matteCopies === 2 ? "two" : matteCopies} copies of the matte subject.soften_edge built` : ""}). Nothing was deleted and no preference was changed.`,
+    cacheNote: `This render should have added about ${gb(cacheBytes)} to After Effects' disk cache (one 16-bit frame of the source per frame${matteCopies > 1 ? `, for each of the ${matteCopies === 2 ? "two" : matteCopies} copies of the matte subject.soften_edge built` : ""}${motion ? ", for the one copy of the matte inside the motion edge: its object matte comp is used twice but renders once a frame; what the keyer caches, if anything, is not counted" : ""}). Nothing was deleted and no preference was changed.`,
     next: (fillOff ? "The gap fill was off, so the file has its gaps open; tell the user before building on it. " : "") + `Check the file before building on it: subject.check_file { path: "${r.outputPath}", outDir }. Then subject.use_cutout puts it in the comp in place of the live matte. Once the file is checked, the cache this work wrote is no longer needed: tell the user to purge it (Edit > Purge > All Memory & Disk Cache in After Effects); it should free about ${gb(cacheBytes)} or more.`,
     wholePiece: SUBJECT_WHOLE_PIECE_NOTE,
     ...span ? {
@@ -55270,10 +55331,12 @@ async function runCheckFile(args, io) {
   let regionLine = typeof args.regionLine === "number" ? args.regionLine : null;
   let regionDepth = SOFT_EDGE_DEFAULTS.regionDepth;
   let regionSource = regionLine !== null ? "given" : null;
-  if (regionLine === null && file2 !== null) {
+  let motionFile = false;
+  if (file2 !== null) {
     try {
       const side2 = JSON.parse(await fs14.readFile(`${file2}.comp-room.json`, "utf8"));
-      if (typeof side2?.softEdge?.regionBottom === "number") {
+      if (side2?.motionEdge) motionFile = true;
+      if (regionLine === null && typeof side2?.softEdge?.regionBottom === "number") {
         regionLine = side2.softEdge.regionBottom;
         if (typeof side2.softEdge.regionDepth === "number") regionDepth = side2.softEdge.regionDepth;
         regionSource = "sidecar";
@@ -55373,7 +55436,8 @@ async function runCheckFile(args, io) {
           }
           seenTime.ms += performance.now() - tSeen;
           seenTime.frames++;
-        }
+        },
+        motionFile ? MOTION_EDGE_CLEAR_BELOW : void 0
       )).readings;
       for (const r of got) {
         readings.push(r);
@@ -55701,14 +55765,21 @@ function useCutoutJsx(args) {
             var _movieName = _layer.name + " cut-out";
             var _fillName = _layer.name + " gap fill";
             var _softName = _layer.name + " soft edge";
+            var _motionName = _layer.name + " motion edge";
             var _fill = null;
             var _soft = null;
+            var _motion = null;
             for (var _li = 1; _li <= _comp.numLayers; _li++) {
                 var _l = _comp.layer(_li);
                 if (_l.name === _movieName) return { ok: false, error: "comp " + _comp.name + " already has a layer '" + _movieName + "'; delete it first to use another file" };
                 if (_l.name === _fillName) _fill = _l;
-                if (_l.name === _softName && String(AE.safeGet(function () { return _l.comment; }, "")).indexOf("soft-edge") >= 0) _soft = _l;
+                var _lc = String(AE.safeGet(function () { return _l.comment; }, ""));
+                if (_l.name === _softName && _lc.indexOf("soft-edge") >= 0) _soft = _l;
+                if (_l.name === _motionName && _lc.indexOf("motion-edge") >= 0) _motion = _l;
             }
+            if (_soft && _motion) return { ok: false, error: ${bothEdgesErrorJsx("_softName", "_motionName")} };
+            // The layer that is the cut-out: the soft- or motion-edge layer built in place of the matted layer, else the matted layer.
+            var _edge = _soft ? _soft : _motion;
             var _item = null;
             if (${jsxVal(args.item ?? null)} !== null) {
                 _item = AE.safeGet(function () { return app.project.itemByID(${jsxVal(args.item ?? null)}); }, null);
@@ -55722,7 +55793,7 @@ function useCutoutJsx(args) {
             var _out = Math.max(_layer.inPoint, _layer.outPoint);
             var _movie = _comp.layers.add(_item);
             _movie.name = _movieName;
-            _movie.moveBefore(_soft ? _soft : _layer);
+            _movie.moveBefore(_edge ? _edge : _layer);
             var _start = ${jsxVal(args.startTime ?? null)};
             _movie.startTime = _start === null ? Math.max(0, _in) : _start;
             var _spanError = null;
@@ -55732,7 +55803,7 @@ function useCutoutJsx(args) {
             var _off = [];
             if (_layer.enabled) { _layer.enabled = false; _off.push(_layer.name); }
             if (_fill && _fill.enabled) { _fill.enabled = false; _off.push(_fill.name); }
-            if (_soft && _soft.enabled) { _soft.enabled = false; _off.push(_soft.name); }
+            if (_edge && _edge.enabled) { _edge.enabled = false; _off.push(_edge.name); }
             var _res = { ok: true, movieLayer: _movie.name, movieIndex: _movie.index, startTime: _movie.startTime, inPoint: _movie.inPoint, outPoint: _movie.outPoint,
                 switchedOff: _off, audio: { original: AE.safeGet(function () { return _layer.audioEnabled; }, null), movie: _movieAudio },
                 note: "The movie is in comp space: it already has the cut-out's transform, so it has none of its own and no parent. The cut-out layer and its selections stay in the project with the picture off, for a later re-click; switch its picture back on and remove the movie to go back to the live matte." };
@@ -55743,7 +55814,7 @@ function useCutoutJsx(args) {
 registerOp({
   name: "subject.render_cutout",
   category: "subject",
-  description: "Render the cut-out once to a movie with alpha, so the piece is built on a file that cannot change: the layer with its gap fill when there is one, alone (every other layer's picture switched off for the render and put back afterwards, even when it fails; cameras and lights left as they are), over the layer's span, through one temporary render-queue item (other queue items are parked). Picks an output template that writes a movie with alpha ('High Quality with Alpha', 'Lossless with Alpha', or another whose name says alpha; image sequences are not used) and refuses, naming the templates, when none does. Returns outputPath, frameCount, renderSeconds, outputTemplate, templateChoice, layersSwitched, restored, sound and timing. Measured: 390 s for 320 frames of a 2176 x 3840 take, about one pass through the clip; tell the user before it runs. " + SUBJECT_WHOLE_PIECE_NOTE + " With from and to it renders only that span (clipped to the layer) and returns span (frames, times) and halves: " + HALVES_JOIN_NOTE + " It renders the matte the user clicked; it cannot make the click (subject.prepare): get that before an unattended render. The movie is in comp space. The original layer keeps the sound; whether the movie carries a sound track is not promised. The subject layer is switched on for the render even when it is off for display (subject.use_cutout leaves it off), and back afterwards. The other kept layers render switched as they are: when the gap fill layer exists and is switched off, it refuses before rendering and says so (the file would come out with the gaps open), unless withoutFill: true, and then the result's fillWarning says the gaps are open (not checked live). Before rendering it checks that each drive has room for its share, the movie and After Effects' disk cache (about one 16-bit frame of the source per frame: 19 GB measured for 320 frames of a 2176 x 3840 take), plus 3 GB; `space` and `cacheNote` give the numbers, and `next` says to purge the cache once the file is checked." + RENDER_QUEUE_UNDO_WARNING,
+  description: "Render the cut-out once to a movie with alpha, so the piece is built on a file that cannot change: the layer with its gap fill when there is one (after subject.soften_edge or subject.motion_edge, that layer in place of the matted one; a layer with both is refused: undo one), alone (every other layer's picture switched off for the render and put back afterwards, even when it fails; cameras and lights left as they are), over the layer's span, through one temporary render-queue item (other queue items are parked). Picks an output template that writes a movie with alpha ('High Quality with Alpha', 'Lossless with Alpha', or another whose name says alpha; image sequences are not used) and refuses, naming the templates, when none does. Returns outputPath, frameCount, renderSeconds, outputTemplate, templateChoice, layersSwitched, restored, sound and timing. Measured: 390 s for 320 frames of a 2176 x 3840 take, about one pass through the clip; tell the user before it runs. " + SUBJECT_WHOLE_PIECE_NOTE + " With from and to it renders only that span (clipped to the layer) and returns span (frames, times) and halves: " + HALVES_JOIN_NOTE + " It renders the matte the user clicked; it cannot make the click (subject.prepare): get that before an unattended render. The movie is in comp space. The original layer keeps the sound; whether the movie carries a sound track is not promised. The subject layer is switched on for the render even when it is off for display (subject.use_cutout leaves it off), and back afterwards. The other kept layers render switched as they are: when the gap fill layer exists and is switched off, it refuses before rendering and says so (the file would come out with the gaps open), unless withoutFill: true, and then the result's fillWarning says the gaps are open (not checked live). Before rendering it checks that each drive has room for its share, the movie and After Effects' disk cache (about one 16-bit frame of the source per frame: 19 GB measured for 320 frames of a 2176 x 3840 take), plus 3 GB; `space` and `cacheNote` give the numbers, and `next` says to purge the cache once the file is checked." + RENDER_QUEUE_UNDO_WARNING,
   params: [
     ...compLayerParams,
     {
@@ -55789,7 +55860,7 @@ registerOp({
 registerOp({
   name: "subject.check_file",
   category: "subject",
-  description: `Check a rendered cut-out movie (from subject.render_cutout) frame by frame: brings it into a throwaway comp, reads frames in batches of at most 32 (every frame up to maxFrames, default ${CHECK_FILE_MAX_FRAMES}; beyond it pairs of neighbouring frames in steps, always the first and last three), and reports holes and openings (as subject.check: holeLimit, accept), the opaque share of every frame, and a 'jump' finding when neighbouring frames differ by more than jumpLimit (default ${CHECK_FILE_JUMP_LIMIT}: on the take of 2026-11-11 the rendered cut-out ran 0.279 to 0.314 with no step over 0.012, and a dropped microphone is about 0.05). A speck is a small opaque piece apart from the cut-out, or joined to it by a neck a pixel or two wide, not touching the frame edge: speckMinArea to speckMaxArea px (default 20 to 2,000, chosen on the 4K fresh-session file, where a sliver of chair 1 to 5 px off the right arm read 20 to 240 px on about 40 frames and nothing else in 320 frames was caught); findings of kind 'speck' give the frames, the longest run of frames in a row, the largest area and frame, the box, the piece's mean colour (\`colour\`: L*, a*, b*, CIELAB D65 from sRGB, over its opaque pixels on every frame; a pale grey remnant such as the first piece's chair read a* about +7, skin about +30) and a picture; a speck on at least speckMinFrames frames in a row (default 2) stops, since a new render keeps it, and a shorter one (a single-frame flash, a wisp of hair) goes to notes and one sentence of inOut. accept: [{ kind: 'speck', box }] takes one off. Checked through a real subject.check_file run on two files of one take (2026-11-12); the limits come from those two files. timing.speck is the pass's own cost (about 5.5 ms a 1080 x 1920 frame). Seen through: pixels partly see-through (alpha 0.5 to 0.95) more than seenThroughDepth px (default 30) inside the cut-out's body and from the frame's edge, as where two copies of a matte meet in a seam; seenThroughMinArea px or more on a frame (default 400) on at least 2 frames read in a row is a finding of kind 'seen-through' that stops, with the frames, the largest area and frame, the box and a picture; single frames go to notes. Limits chosen on two files of the half-size take, as clicked and with subject.soften_edge (at most 82 and 41 px on every fourth frame), and a band of the soft-edge file's alpha multiplied by 0.75 (about 3,900 px a frame); not checked live: it has not run in After Effects on a file with a real seam. timing.seenThrough is its cost. Region line: for a file from a soft-edge build, \`region\` gives the subject's highest and lowest top across the file against the soft edge's region line (from <movie>.comp-room.json, which subject.render_cutout writes, or \`regionLine\`), and a note, not a stop, names the frames where the top sits lower than the line less 12% of the height, so the lower hair crosses the line and keeps the hard edge. Only true neighbours are compared, and \`compared\` says which. A frame that could not be read is 'not-checked' and stops. Pictures: the largest frame of each finding not accepted and both frames of each jump, full size, and a sheet of up to 24 frames; \`pictures\` counts them and their bytes. Each raw capture is removed once read unless keepCaptures (one run on the take had left 630 MB). The throwaway comp is removed afterwards, and the imported footage too unless keepFootage. \`outline\` says how much the outline changed between neighbouring frames and over frozenGap frames (share of the frame whose alpha changed by more than 0.1, at full size); a run where it did not move is a 'frozen' finding (the selection is probably not tracking, as after replacing the layer's footage; accept: [{ kind: "frozen" }] for a subject that really is still). The frozen limits are not yet calibrated live. Measured: about 0.55 s a frame reading the file. Returns stop, findings, accepted, checked, compared, opaque, outline, inOut, picture, frameReadings, timing.`,
+  description: `Check a rendered cut-out movie (from subject.render_cutout) frame by frame: brings it into a throwaway comp, reads frames in batches of at most 32 (every frame up to maxFrames, default ${CHECK_FILE_MAX_FRAMES}; beyond it pairs of neighbouring frames in steps, always the first and last three), and reports holes and openings (as subject.check: holeLimit, accept), the opaque share of every frame, and a 'jump' finding when neighbouring frames differ by more than jumpLimit (default ${CHECK_FILE_JUMP_LIMIT}: on the take of 2026-11-11 the rendered cut-out ran 0.279 to 0.314 with no step over 0.012, and a dropped microphone is about 0.05). A speck is a small opaque piece apart from the cut-out, or joined to it by a neck a pixel or two wide, not touching the frame edge: speckMinArea to speckMaxArea px (default 20 to 2,000, chosen on the 4K fresh-session file, where a sliver of chair 1 to 5 px off the right arm read 20 to 240 px on about 40 frames and nothing else in 320 frames was caught); findings of kind 'speck' give the frames, the longest run of frames in a row, the largest area and frame, the box, the piece's mean colour (\`colour\`: L*, a*, b*, CIELAB D65 from sRGB, over its opaque pixels on every frame; a pale grey remnant such as the first piece's chair read a* about +7, skin about +30) and a picture; a speck on at least speckMinFrames frames in a row (default 2) stops, since a new render keeps it, and a shorter one (a single-frame flash, a wisp of hair) goes to notes and one sentence of inOut. accept: [{ kind: 'speck', box }] takes one off. Checked through a real subject.check_file run on two files of one take (2026-11-12); the limits come from those two files. timing.speck is the pass's own cost (about 5.5 ms a 1080 x 1920 frame). Seen through: pixels partly see-through (alpha 0.5 to 0.95) more than seenThroughDepth px (default 30) inside the cut-out's body and from the frame's edge, as where two copies of a matte meet in a seam; seenThroughMinArea px or more on a frame (default 400) on at least 2 frames read in a row is a finding of kind 'seen-through' that stops, with the frames, the largest area and frame, the box and a picture; single frames go to notes. Limits chosen on two files of the half-size take, as clicked and with subject.soften_edge (at most 82 and 41 px on every fourth frame), and a band of the soft-edge file's alpha multiplied by 0.75 (about 3,900 px a frame); not checked live: it has not run in After Effects on a file with a real seam. timing.seenThrough is its cost. Region line: for a file from a soft-edge build, \`region\` gives the subject's highest and lowest top across the file against the soft edge's region line (from <movie>.comp-room.json, which subject.render_cutout writes, or \`regionLine\`), and a note, not a stop, names the frames where the top sits lower than the line less 12% of the height, so the lower hair crosses the line and keeps the hard edge. Motion edge: for a file from a motion-edge build (its <movie>.comp-room.json says so), holes and openings are read only where the alpha is under ${MOTION_EDGE_CLEAR_BELOW}, so the keyer's soft alpha on moving parts is not a finding and a clear hole still is (chosen offline, not calibrated live). Only true neighbours are compared, and \`compared\` says which. A frame that could not be read is 'not-checked' and stops. Pictures: the largest frame of each finding not accepted and both frames of each jump, full size, and a sheet of up to 24 frames; \`pictures\` counts them and their bytes. Each raw capture is removed once read unless keepCaptures (one run on the take had left 630 MB). The throwaway comp is removed afterwards, and the imported footage too unless keepFootage. \`outline\` says how much the outline changed between neighbouring frames and over frozenGap frames (share of the frame whose alpha changed by more than 0.1, at full size); a run where it did not move is a 'frozen' finding (the selection is probably not tracking, as after replacing the layer's footage; accept: [{ kind: "frozen" }] for a subject that really is still). The frozen limits are not yet calibrated live. Measured: about 0.55 s a frame reading the file. Returns stop, findings, accepted, checked, compared, opaque, outline, inOut, picture, frameReadings, timing.`,
   params: [
     {
       name: "path",
@@ -55913,7 +55984,7 @@ registerOp({
 registerOp({
   name: "subject.use_cutout",
   category: "subject",
-  description: "Build on the checked file: add the rendered cut-out movie (path, or a footage item id) to the comp directly above the cut-out layer, named '<layer> cut-out', over the cut-out's span. The movie is in comp space (subject.render_cutout renders the comp), so it has no transform or parent of its own. Switches the cut-out layer's and its gap fill's pictures off; they and the selections stay in the project for a later re-click. The original keeps its audio; the movie's audio is switched off. Returns movieLayer, switchedOff, audio and note. Refuses when the comp already has the movie.",
+  description: "Build on the checked file: add the rendered cut-out movie (path, or a footage item id) to the comp directly above the cut-out layer, named '<layer> cut-out', over the cut-out's span. The movie is in comp space (subject.render_cutout renders the comp), so it has no transform or parent of its own. Switches the cut-out layer's and its gap fill's pictures off; they and the selections stay in the project for a later re-click. After subject.soften_edge or subject.motion_edge the movie goes above that layer instead, and its picture is switched off too; a layer with both is refused (undo one). The original keeps its audio; the movie's audio is switched off. Returns movieLayer, switchedOff, audio and note. Refuses when the comp already has the movie.",
   params: [
     ...compLayerParams,
     {
@@ -56464,6 +56535,19 @@ registerOp({
 init_registry();
 var MOTION_EDGE_COST = "The motion edge keys every frame twice, with Object Matte and with the separately installed keyer, so a render does twice the keying work: the whole 8.9 s studio take (2176 \xD7 3840, 30 fps) rendered in 986 s to ProRes 4444, roughly 2 minutes of render per second of 4K.";
 var MOTION_MARKER = "motion-edge";
+var LEVELS = (t) => [
+  ["ADBE Easy Levels2-0003", "Input Black", t.black],
+  ["ADBE Easy Levels2-0004", "Input White", t.white]
+];
+var MINIMAX = (m) => [
+  ["ADBE Minimax-0002", "Radius", m.radius],
+  ...m.channel === void 0 ? [] : [["ADBE Minimax-0003", "Channel", m.channel]],
+  ...m.dontShrink === void 0 ? [] : [["ADBE Minimax-0005", "Don't Shrink Edges", m.dontShrink]]
+];
+var BOX_BLUR = (radius, iterations) => [
+  ["ADBE Box Blur2-0001", "Blur Radius", radius],
+  ["ADBE Box Blur2-0002", "Iterations", iterations]
+];
 function motionEdgeSettings(args) {
   const D2 = MOTION_EDGE_DEFAULTS;
   const fail3 = (error62) => ({ ok: false, error: error62 });
@@ -56582,6 +56666,22 @@ function motionEdgeBuildJsx(args) {
                     p.setValue(vals[k]);
                 }
             }
+            // Stock effects: each property as [match name, English name, value]. The match name is tried first and works
+            // in any language; the English name is the fallback when After Effects does not know the match name. The property
+            // match names are not yet confirmed in After Effects: where the English name finds a different property than the
+            // match name, the English one is set (the match name is wrong) and the pair is reported in matchNameMismatch.
+            var _mismatch = [];
+            function _setEach(fx, list, what) {
+                for (var k = 0; k < list.length; k++) {
+                    var ent = list[k];
+                    var pm = _find(fx, ent[0]);
+                    var pn = _find(fx, ent[1]);
+                    var p = pm ? pm : pn;
+                    if (pm && pn && pm.matchName !== pn.matchName) { p = pn; _mismatch.push(what + ": '" + ent[0] + "' is '" + pm.name + "', not '" + ent[1] + "' (" + pn.matchName + ")"); }
+                    if (!p) throw new Error(what + " has no property '" + ent[0] + "' ('" + ent[1] + "')");
+                    p.setValue(ent[2]);
+                }
+            }
             function _strip(l) { var r = l.property("ADBE Effect Parade"); for (var i = r.numProperties; i >= 1; i--) r.property(i).remove(); }
             function _mute(l) { if (AE.safeGet(function () { return l.hasAudio; }, false)) { try { l.audioEnabled = false; } catch (eA) {} } }
             function _pre(indices, name) {
@@ -56614,9 +56714,9 @@ function motionEdgeBuildJsx(args) {
             _ap.addProperty("ADBE Box Blur2");
             // Adding an effect invalidates references to the ones added before: fetch each again by index.
             _ap = _adj.property("ADBE Effect Parade");
-            _setAll(_ap.property(1), ${jsxVal({ "Input Black": args.threshold.black, "Input White": args.threshold.white })}, "Levels");
-            _setAll(_ap.property(3), ${jsxVal({ Radius: args.motionGrow })}, "Minimax");
-            _setAll(_ap.property(4), ${jsxVal({ "Blur Radius": args.motionBlur, Iterations: D2.motionBlurIterations })}, "Box Blur");
+            _setEach(_ap.property(1), ${jsxVal(LEVELS(args.threshold))}, "Levels");
+            _setEach(_ap.property(3), ${jsxVal(MINIMAX({ radius: args.motionGrow }))}, "Minimax");
+            _setEach(_ap.property(4), ${jsxVal(BOX_BLUR(args.motionBlur, D2.motionBlurIterations))}, "Box Blur");
             _t1.moveBefore(_t0); _adj.moveBefore(_t1);
             var _moP = _pre([_adj.index, _t1.index, _t0.index], _L + " motion");
             // The band: the Object Matte grown, where the take moves.
@@ -56624,7 +56724,7 @@ function motionEdgeBuildJsx(args) {
             var _bOm = _bandC.layers.add(_omP.comp); _bOm.name = "Object Matte grown";
             var _bMo = _bandC.layers.add(_moP.comp); _bMo.name = "motion";
             _bOm.property("ADBE Effect Parade").addProperty("ADBE Minimax");
-            _setAll(_bOm.property("ADBE Effect Parade").property(1), ${jsxVal({ Radius: args.band, Channel: D2.bandChannel, "Don't Shrink Edges": 1 })}, "Minimax");
+            _setEach(_bOm.property("ADBE Effect Parade").property(1), ${jsxVal(MINIMAX({ radius: args.band, channel: D2.bandChannel, dontShrink: 1 }))}, "Minimax");
             _bOm.setTrackMatte(_bMo, TrackMatteType.LUMA);
             _bMo.enabled = false;
             // The motion edge, top to bottom: the outline, the band, the keyer's edge.
@@ -56649,7 +56749,7 @@ function motionEdgeBuildJsx(args) {
             return { ok: true, motionLayer: _name, motionIndex: _pl.index, precomp: _me.name, precompId: _me.id, wasEnabled: _wasEnabled,
                 keyer: { matchName: _keyerMN, name: _keyerName },
                 comps: { motionEdge: _me.name, band: _bandC.name, motion: _moP.comp.name, keyer: _ckP.comp.name, objectMatte: _omP.comp.name },
-                inside: ["Object Matte outline", "band", "keyer edge"] };
+                inside: ["Object Matte outline", "band", "keyer edge"], matchNameMismatch: _mismatch };
         `;
 }
 function motionEdgeUndoJsx(args) {
@@ -56717,14 +56817,14 @@ async function runMotionEdge(args, io) {
     settings,
     cost: MOTION_EDGE_COST,
     undo: "subject.motion_edge { comp, layer, undo: true } takes the comp back to the single matted layer (it removes the motion-edge layer and its five comps and switches the matted layer back on).",
-    next: "Render a few frames where the hands move fastest and a still one (ae_render_frame over the background) and show the user the hands at twice size: a soft blur on the moving fingers, the crisp outline where the subject is still, nothing of the background near the head, gaps still open. subject.check, subject.render_cutout and subject.use_cutout do not use the motion-edge layer yet: they read the matted layer, which is now switched off. Render the comp with the motion-edge layer through the render queue to a movie with alpha, and check it with subject.check_file.",
+    next: "Render a few frames where the hands move fastest and a still one (ae_render_frame over the background) and show the user the hands at twice size: a soft blur on the moving fingers, the crisp outline where the subject is still, nothing of the background near the head, gaps still open. subject.check, subject.render_cutout and subject.use_cutout now use the motion-edge layer in place of the matted layer (switched off): subject.check reads the keyer's soft alpha on moving parts as expected and stops only on clear holes; subject.render_cutout renders the motion-edge layer to a movie with alpha (check it with subject.check_file); subject.use_cutout puts the movie above it and switches it off.",
     timing: { totalMs: Math.round(since(started)) }
   };
 }
 registerOp({
   name: "subject.motion_edge",
   category: "subject",
-  description: "Give an Object Matte cut-out a soft, motion-blurred edge where the subject moves, taken from a second key by a per-pixel machine-learning keyer effect installed separately (not part of After Effects or this plugin); where the subject is still, the crisp Object Matte outline stays. Needs the matted layer with at least one selection (the user's click) and `keyerMatchName`, the keyer's match name; it refuses, building nothing, when no installed effect has that match name (app.effects). It builds five comps around the matted layer, never a copy of the user's comp: '<layer> object matte' (the matted layer as clicked), '<layer> keyer' (the take with the keyer and `keyerSettings`, such as { \"Despill Strength\": 1 }), '<layer> motion' (the take, the take again one frame later in Difference, and an adjustment layer with Levels from `threshold` black to white, Tint, Minimax `motionGrow` and Box Blur `motionBlur`, 2 iterations), '<layer> band' (the Object Matte comp with Minimax `band` px on its alpha, Don't Shrink Edges on, Luma-matted by the motion comp) and '<layer> motion edge' (the Object Matte outline over the band, switched off, over the keyer's edge, Alpha-matted by the band). The last goes in above the matted layer, which is switched off and otherwise untouched (it keeps the sound); every copy's sound is off. Use it instead of subject.soften_edge for fast hand and arm movement against a static background: soften_edge softens the hair inside a region, this follows motion anywhere. Defaults measured on a 2176 \xD7 3840 studio take shot on a phone on a tripod: threshold 0.25 to 0.45 (lower thresholds lit every still edge, since the camera shifts slightly between frames), motionGrow 25, motionBlur 15, band 50. A plain band with no motion mask filled the gaps in a microphone mount, brought back the keyer's halo and let a plant behind the head through. Cost: twice the keying work in every render (Object Matte and the keyer): the whole 8.9 s take rendered in 986 s, roughly 2 minutes of render per second of 4K. It does not render or check itself; subject.check, subject.render_cutout and subject.use_cutout do not use its layer yet. On the layer's first frame there is no frame before, so the band there covers the whole outline. Not run in After Effects as an operation: the construction was built by hand. undo: true removes what it built and switches the matted layer back on.",
+  description: "Give an Object Matte cut-out a soft, motion-blurred edge where the subject moves, taken from a second key by a per-pixel machine-learning keyer effect installed separately (not part of After Effects or this plugin); where the subject is still, the crisp Object Matte outline stays. Needs the matted layer with at least one selection (the user's click) and `keyerMatchName`, the keyer's match name; it refuses, building nothing, when no installed effect has that match name (app.effects). It builds five comps around the matted layer, never a copy of the user's comp: '<layer> object matte' (the matted layer as clicked), '<layer> keyer' (the take with the keyer and `keyerSettings`, such as { \"Despill Strength\": 1 }), '<layer> motion' (the take, the take again one frame later in Difference, and an adjustment layer with Levels from `threshold` black to white, Tint, Minimax `motionGrow` and Box Blur `motionBlur`, 2 iterations), '<layer> band' (the Object Matte comp with Minimax `band` px on its alpha, Don't Shrink Edges on, Luma-matted by the motion comp) and '<layer> motion edge' (the Object Matte outline over the band, switched off, over the keyer's edge, Alpha-matted by the band). The last goes in above the matted layer, which is switched off and otherwise untouched (it keeps the sound); every copy's sound is off. Use it instead of subject.soften_edge for fast hand and arm movement against a static background: soften_edge softens the hair inside a region, this follows motion anywhere. Defaults measured on a 2176 \xD7 3840 studio take shot on a phone on a tripod: threshold 0.25 to 0.45 (lower thresholds lit every still edge, since the camera shifts slightly between frames), motionGrow 25, motionBlur 15, band 50. A plain band with no motion mask filled the gaps in a microphone mount, brought back the keyer's halo and let a plant behind the head through. Cost: twice the keying work in every render (Object Matte and the keyer): the whole 8.9 s take rendered in 986 s, roughly 2 minutes of render per second of 4K. It does not render or check itself; subject.check, subject.render_cutout and subject.use_cutout use its layer in place of the matted one. Confirmed only on English After Effects: some stock effect settings are found by their English names when their match names are not. On the layer's first frame there is no frame before, so the band there covers the whole outline. Not run in After Effects as an operation: the construction was built by hand. undo: true removes what it built and switches the matted layer back on.",
   params: [
     ...compLayerParams,
     {

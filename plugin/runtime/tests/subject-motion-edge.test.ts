@@ -85,24 +85,96 @@ describe("the build", () => {
     );
     for (const i of order) expect(i).toBeGreaterThan(0);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
-    expect(j).toMatch(/"Input Black":0\.25/);
-    expect(j).toMatch(/"Input White":0\.45/);
-    expect(j).toMatch(/"Radius":25/);
-    expect(j).toMatch(/"Blur Radius":15/);
-    expect(j).toMatch(/"Iterations":2/);
+    expect(j).toContain('["ADBE Easy Levels2-0003","Input Black",0.25]');
+    expect(j).toContain('["ADBE Easy Levels2-0004","Input White",0.45]');
+    expect(j).toContain('["ADBE Minimax-0002","Radius",25]');
+    expect(j).toContain('["ADBE Box Blur2-0001","Blur Radius",15]');
+    expect(j).toContain('["ADBE Box Blur2-0002","Iterations",2]');
+  });
+
+  it("sets the stock effects' properties by match name first, the English name only as a fallback, and says so", () => {
+    const j = build();
+    // Every stock effect is set through _setEach, never by an English name alone.
+    expect(j).not.toMatch(/_setAll\(_ap\.property/);
+    expect(j).not.toMatch(/_setAll\(_bOm/);
+    expect(j).toMatch(/function _setEach\(fx, list, what\)/);
+    // The lookup tries the match name before the English name.
+    const each = j.slice(j.indexOf("function _setEach"));
+    expect(each.indexOf("_find(fx, ent[0])")).toBeGreaterThan(0);
+    expect(each.indexOf("_find(fx, ent[1])")).toBeGreaterThan(each.indexOf("_find(fx, ent[0])"));
+    expect(j).toMatch(/English/);
+    // A match name that finds another property than the English name loses, and is reported.
+    expect(each).toMatch(/pm\.matchName !== pn\.matchName\) \{ p = pn; _mismatch\.push/);
+    expect(j).toMatch(/matchNameMismatch: _mismatch/);
+    // The keyer's settings stay keyed by the caller's own names.
+    expect(j).toMatch(/_setAll\(_ck\.property\("ADBE Effect Parade"\)\.property\(1\)/);
   });
 
   it("fetches every effect again by index after all are added (adding one invalidates earlier references)", () => {
     const j = build();
     const lastAdd = j.lastIndexOf('_ap.addProperty("ADBE Box Blur2")');
-    const firstSet = j.indexOf("_setAll(_ap.property(");
+    const firstSet = j.indexOf("_setEach(_ap.property(");
     expect(firstSet).toBeGreaterThan(lastAdd);
     expect(j.slice(lastAdd, firstSet)).toMatch(/_ap = _adj\.property\("ADBE Effect Parade"\)/);
   });
 
+  describe("the stock settings lookup, run against a made-up effect", () => {
+    const j = build();
+    const helpers = j.slice(j.indexOf("function _find("), j.indexOf("function _strip("));
+    const PROPERTY = 6212;
+    const prop = (matchName: string, name: string) => ({
+      matchName,
+      name,
+      propertyType: PROPERTY,
+      value: null as unknown,
+      setValue(v: unknown) {
+        this.value = v;
+      },
+    });
+    const effect = (props: Any[]) => ({
+      numProperties: props.length,
+      property: (k: number | string) =>
+        typeof k === "number"
+          ? props[k - 1]
+          : (props.find((p) => p.matchName === k || p.name === k) ?? null),
+    });
+    const run = (fx: Any, list: Any[]) =>
+      new Function(
+        "PropertyType",
+        `${helpers}\n_setEach(arguments[1], arguments[2], "Minimax"); return _mismatch;`,
+      )({ PROPERTY }, fx, list);
+
+    it("sets by match name in any language", () => {
+      const radius = prop("ADBE Minimax-0002", "Rayon");
+      const mismatch = run(effect([prop("ADBE Minimax-0001", "Opération"), radius]), [
+        ["ADBE Minimax-0002", "Radius", 25],
+      ]);
+      expect(radius.value).toBe(25);
+      expect(mismatch).toEqual([]);
+    });
+
+    it("falls back to the English name when the match name is unknown", () => {
+      const radius = prop("ADBE Minimax-0099", "Radius");
+      run(effect([radius]), [["ADBE Minimax-0002", "Radius", 25]]);
+      expect(radius.value).toBe(25);
+    });
+
+    it("sets the English-named property and reports it when the match name finds another", () => {
+      const channel = prop("ADBE Minimax-0002", "Channel");
+      const radius = prop("ADBE Minimax-0003", "Radius");
+      const mismatch = run(effect([channel, radius]), [["ADBE Minimax-0002", "Radius", 25]]);
+      expect(radius.value).toBe(25);
+      expect(channel.value).toBeNull();
+      expect(mismatch).toHaveLength(1);
+      expect(mismatch[0]).toMatch(/ADBE Minimax-0002/);
+    });
+  });
+
   it("grows the Object Matte's alpha by the band, with Don't Shrink Edges on", () => {
     const j = build({ band: 50 });
-    expect(j).toMatch(/"Radius":50,"Channel":2,"Don't Shrink Edges":1/);
+    expect(j).toContain(
+      '[["ADBE Minimax-0002","Radius",50],["ADBE Minimax-0003","Channel",2],["ADBE Minimax-0005","Don\'t Shrink Edges",1]]',
+    );
   });
 
   it("mattes the band by the motion as Luma, then the keyer's edge by the band as Alpha", () => {
@@ -287,6 +359,15 @@ describe("subject.motion_edge", () => {
     expect(io.calls.some((c: Any) => c.execute)).toBe(false);
   });
 
+  it("says the rest of the cut-out path now uses the motion-edge layer", async () => {
+    const res = await runMotionEdge(ARGS, fakeIO());
+    expect(res.next).not.toMatch(/do not use/);
+    expect(res.next).toMatch(/subject\.check/);
+    expect(res.next).toMatch(/subject\.render_cutout/);
+    expect(res.next).toMatch(/subject\.use_cutout/);
+    expect(getOp("subject.motion_edge")!.description).not.toMatch(/do not use its layer yet/);
+  });
+
   it("undoes on request in one call, without a keyer", async () => {
     const io = fakeIO();
     const res = await runMotionEdge({ comp: "Main", layer: "take", undo: true }, io);
@@ -395,5 +476,6 @@ describe("registration and docs", () => {
     }
     expect(keying).toMatch(/soften_edge/);
     expect(keying).toMatch(/2 minutes/);
+    expect(keying).toMatch(/confirmed only on English After Effects/);
   });
 });

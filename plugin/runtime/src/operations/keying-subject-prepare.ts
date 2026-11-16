@@ -322,6 +322,21 @@ const OBJECT_MATTE_JSX = `
                 }
                 return null;
             }
+            function _omMotionEdge() {
+                // The precomp layer subject.motion_edge built for this layer, if any (its comment carries the settings).
+                // One matte pass: its object matte comp is used twice inside but renders once a frame; the matted layer is off.
+                var want = _layer.name + " motion edge";
+                for (var i = 1; i <= _comp.numLayers; i++) {
+                    var l = _comp.layer(i);
+                    if (AE.safeGet(function () { return l.name; }, "") !== want) continue;
+                    var c = AE.safeGet(function () { return l.comment; }, "");
+                    if (c.indexOf("motion-edge") < 0) continue;
+                    var st = null;
+                    try { st = eval("(" + c + ")"); } catch (eJ) { st = null; }
+                    return { layer: want, index: i, enabled: AE.safeGet(function () { return l.enabled; }, null), matteCopies: 1, settings: st };
+                }
+                return null;
+            }
             function _omSourceSize() {
                 var w = AE.safeGet(function () { return _layer.source.width; }, null);
                 var h = AE.safeGet(function () { return _layer.source.height; }, null);
@@ -520,7 +535,7 @@ registerOp({
             if (_pick.error) return { ok: false, error: _pick.error };
             if (_pick.index === null) {
                 return { ok: true, layer: _layer.name, objectMatte: { present: false, effectIndex: null, count: 0 }, selections: [], settings: null,
-                    summary: _omSummary(false, []), next: ${jsxVal(`Nothing selected: ${NEED_CLICK}.`)}, effects: AE.effectOrder(_fxRoot), aeCache: _omAeCache(), softEdge: _omSoftEdge(),
+                    summary: _omSummary(false, []), next: ${jsxVal(`Nothing selected: ${NEED_CLICK}.`)}, effects: AE.effectOrder(_fxRoot), aeCache: _omAeCache(), softEdge: _omSoftEdge(), motionEdge: _omMotionEdge(),
                     sourceSize: _omSourceSize(), compSize: [_comp.width, _comp.height], span: _omSpan() };
             }
             var _fx = _fxRoot.property(_pick.index);
@@ -544,6 +559,7 @@ registerOp({
                 sourceSize: _src,
                 fillLayer: _omFillLayer(),
                 softEdge: _omSoftEdge(),
+                motionEdge: _omMotionEdge(),
                 aeCache: _omAeCache(),
                 compSize: [_comp.width, _comp.height],
                 span: _omSpan(),
