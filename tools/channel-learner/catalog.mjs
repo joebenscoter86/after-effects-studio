@@ -54,10 +54,39 @@ export function buildCatalog({ draftsDir, tags, jobs, proofs = {} }) {
     const t = tagged[d.key];
     if (t?.id && t.id !== d.id && t.id !== `${d.video}-${d.id}`) problems.push(`tag ${t.key}: id ${t.id} does not name the recipe there, ${d.id}`);
   }
+  // Variants (design, "One technique, one entry"): a tag's variant_of names its parent's `<video>#<nn>`, one level only,
+  // the same kind; the draft carries `variant of: <parent id> (<video> #<n>)` and `differs: ...` after its status line.
+  const draftOf = Object.fromEntries(drafts.map((d) => [d.key, d]));
+  const idAt = (k) => tagged[k]?.id || draftOf[k]?.id;
+  for (const d of drafts) {
+    const t = tagged[d.key];
+    if (!t) continue;
+    const line = d.text.match(/^variant of:\s*(\S+)/m)?.[1];
+    if (t.variant_of === undefined || t.variant_of === null) {
+      if (line) problems.push(`tag ${t.key}: the draft says "variant of: ${line}" but the tag has no variant_of`);
+      continue;
+    }
+    const pk = normKey(String(t.variant_of));
+    const parent = tagged[pk];
+    if (!parent || !draftOf[pk]) { problems.push(`tag ${t.key}: variant_of ${t.variant_of} names no recipe`); continue; }
+    if (parent.variant_of !== undefined && parent.variant_of !== null) problems.push(`tag ${t.key}: variant of ${parent.key}, which is itself a variant (one level only)`);
+    if (parent.kind !== t.kind) problems.push(`tag ${t.key}: kind ${t.kind} but its parent ${parent.key} is ${parent.kind}`);
+    const pid = idAt(pk);
+    if (!line) problems.push(`tag ${t.key}: a variant whose draft has no "variant of:" line`);
+    else if (line !== pid && line !== draftOf[pk].id) problems.push(`tag ${t.key}: the draft says "variant of: ${line}" but the tag names ${pid}`);
+    if (!/^differs:\s*\S/m.test(d.text)) problems.push(`tag ${t.key}: a variant whose draft has no "differs:" line`);
+  }
   if (problems.length) throw new Error(`refused: ${problems.join('; ')}`);
 
   const groups = {};
   for (const d of drafts) { const g = tagged[d.key].group; if (g) groups[g] = (groups[g] || 0) + 1; }
+  const variantsOf = {};
+  for (const d of drafts) { const v = tagged[d.key].variant_of; if (v !== undefined && v !== null) (variantsOf[normKey(String(v))] ??= []).push(d); }
+  // Taught by: the group's count (or 1), plus each variant not already counted in that group.
+  const taughtBy = (d) => {
+    const g = tagged[d.key].group;
+    return (g ? groups[g] : 1) + (variantsOf[d.key] || []).filter((v) => !g || tagged[v.key].group !== g).length;
+  };
 
   const recipes = drafts.map((d) => {
     const t = tagged[d.key];
@@ -71,7 +100,9 @@ export function buildCatalog({ draftsDir, tags, jobs, proofs = {} }) {
       section: { file: d.file, heading: d.name },
       revision: hash(d.text),
       still: status === 'proven' ? (proofs[t.id || d.id] ?? null) : null,
-      taught_by: t.group ? groups[t.group] : 1,
+      taught_by: taughtBy(d),
+      ...(t.variant_of !== undefined && t.variant_of !== null ? { variant_of: idAt(normKey(String(t.variant_of))) } : {}),
+      variants: (variantsOf[d.key] || []).map((v) => idAt(v.key)),
     };
   });
   const dup = recipes.map((r) => r.id).filter((id, i, all) => all.indexOf(id) !== i);
@@ -127,7 +158,8 @@ export function findTechniques(catalog, ask) {
 
   // Job match tier: 0 primary job, 1 the asked job is one of its supports, 2 it serves one of the beat's support jobs.
   const tier = (r) => (r.job === ask.job ? 0 : r.support.includes(ask.job) ? 1 : [r.job, ...r.support].some((j) => support.includes(j)) ? 2 : null);
-  const byJob = catalog.recipes.filter((r) => r.kind === 'technique' && tier(r) !== null && !exclude.has(r.id));
+  // A variant is never a candidate on its own: its parent stands for it and lists it (variants).
+  const byJob = catalog.recipes.filter((r) => r.kind === 'technique' && !r.variant_of && tier(r) !== null && !exclude.has(r.id));
 
   const pass = (r, loose) =>
     (loose.includes('status') || ask.constraints?.status === 'any' || r.status === 'proven')
@@ -164,6 +196,7 @@ export function findTechniques(catalog, ask) {
     results: ranked.map(({ r }) => ({
       id: r.id, revision: r.revision, name: r.name, line: r.line, status: r.status, needs: r.needs,
       duration: r.duration, motion: r.motion, still: r.still, section: r.section, fit: fit(r),
+      ...(r.variants?.length ? { variants: r.variants } : {}),
     })),
   };
   if (relaxed.length && out.results.length) out.relaxed = relaxed;

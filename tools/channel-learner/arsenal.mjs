@@ -158,15 +158,18 @@ export function buildArsenal({ catalog, jobs, examples, draftsDir, stills = {}, 
     return s;
   };
 
-  const byGroup = new Map();
+  // A variant ships in its parent's group file, right after its parent.
+  const byId = new Map(catalog.recipes.map((r) => [r.id, r]));
+  const home = (r) => (r.variant_of ? byId.get(r.variant_of) : r);
+  const sectionText = new Map();
   const records = [];
   const shippedStills = {};
   for (const r of catalog.recipes) {
-    const g = groupOf(r, jobs);
-    const own = textOf(r).split('\n').map(publicStatus).join('\n');
+    const g = groupOf(home(r), jobs);
+    const own = textOf(r).split('\n').map(publicStatus).map((l) => (r.variant_of && /^variant of:/.test(l) ? `variant of: ${r.variant_of}` : l)).join('\n');
     const body = scrubRecipe(own, { videos }).split('\n').filter((l, i) => i > 0 && !/^id:/.test(l)).join('\n');
     const job = r.kind === 'technique' ? `job: ${r.job}${r.support.length ? `; support: ${r.support.join(', ')}` : ''}` : `job: none (${r.kind})`;
-    (byGroup.get(g) ?? byGroup.set(g, []).get(g)).push(`## ${r.name}\nid: ${r.id}\nrevision: ${r.revision}\n${job}\n${body}\n`);
+    sectionText.set(r.id, { g, text: `## ${r.name}\nid: ${r.id}\nrevision: ${r.revision}\n${job}\n${body}\n` });
     let still = null;
     if (isStillKind(r) && stills[r.id]) {
       still = { path: `arsenal/stills/${r.id}.jpg`, sha256: sha(stills[r.id]) };
@@ -175,8 +178,16 @@ export function buildArsenal({ catalog, jobs, examples, draftsDir, stills = {}, 
     records.push({
       id: r.id, revision: r.revision, name: r.name, line: scrubLine(r.line, videos), status: r.status, kind: r.kind, job: r.job, support: r.support,
       mood: r.mood, needs: r.needs, duration: r.duration, motion: r.motion, difficulty: r.difficulty, taught_by: r.taught_by,
+      ...(r.variant_of ? { variant_of: r.variant_of } : {}), variants: r.variants ?? [],
       section: { document: docId(g), heading: r.name }, still,
     });
+  }
+  const byGroup = new Map();
+  for (const r of catalog.recipes.filter((x) => !x.variant_of)) {
+    for (const id of [r.id, ...(r.variants ?? [])]) {
+      const { g, text } = sectionText.get(id);
+      (byGroup.get(g) ?? byGroup.set(g, []).get(g)).push(text);
+    }
   }
 
   const files = new Map();
@@ -256,7 +267,10 @@ export function galleryBlock(catalog) {
   return [
     'Proven techniques in the arsenal, each a still of our own proof build. The ae_arsenal tool returns them with its shortlist.',
     '',
-    ...shown.map((r) => `![${r.name}](library/${r.still.path})`),
+    ...shown.map((r) => {
+      const n = r.variants?.length ?? 0;
+      return `![${r.name}${n ? ` (${n} variant${n === 1 ? '' : 's'})` : ''}](library/${r.still.path})`;
+    }),
   ].join('\n');
 }
 

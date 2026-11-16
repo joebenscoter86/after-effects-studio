@@ -39,11 +39,11 @@ function fixture(entries, proofs = {}) {
   const byVideo = {};
   const tags = {};
   for (const e of entries) {
-    const { slug, status, video = 'vidAAAAAAAA', ...t } = e;
-    (byVideo[video] ??= []).push({ slug, status, t });
+    const { slug, status, video = 'vidAAAAAAAA', lines, ...t } = e;
+    (byVideo[video] ??= []).push({ slug, status, lines, t });
   }
   for (const [video, list] of Object.entries(byVideo)) {
-    const sections = list.map(({ slug, status }, i) => recipe(i + 1, slug, { status: status === 'proven' ? ACCEPTED : 'status: unproven', video, name: `Name ${slug}` }));
+    const sections = list.map(({ slug, status, lines }, i) => recipe(i + 1, slug, { status: `${status === 'proven' ? ACCEPTED : 'status: unproven'}${lines ? `\n${lines}` : ''}`, video, name: `Name ${slug}` }));
     fs.writeFileSync(path.join(dir, `${video}.md`), `# Techniques\n\n${sections.join('\n')}`);
     list.forEach(({ slug, t }, i) => { tags[`${video}#${i + 1}`] = tag(`${String(i + 1).padStart(2, '0')}-${slug}`, t); });
   }
@@ -361,6 +361,59 @@ test('build: refuses a file over the 256 KiB package limit', () => {
     catalog.recipes[0].line = big;
     assert.throws(() => buildArsenal({ catalog, jobs: JOBS, examples: EXAMPLES, draftsDir: dir, stills: {}, creators: [] }), /catalog\.json is \d+ bytes, over the 262144/);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+// ---------- variants ----------
+
+// A parent in vidAAAAAAAA and a variant of it in vidBBBBBBBB whose own job is in another group.
+const FAMILY = [
+  { slug: 'parent', status: 'proven' },
+  { slug: 'other' },
+  { slug: 'var', video: 'vidBBBBBBBB', job: 'add-depth', variant_of: 'vidAAAAAAAA#1',
+    lines: 'variant of: 01-parent (vidAAAAAAAA #1)\ndiffers: Wider gap (shown f001441), and the turn is slower than in vidBBBBBBBB.' },
+];
+
+test('variants: a variant ships beside its parent, in the parent\'s job group file, right after it', () => {
+  const { files } = build(FAMILY);
+  assert.deepEqual([...files.keys()].sort(), ['catalog.json', 'index.json', 'jobs-v1.json', 'recipes-line.md'], 'no picture file: the variant follows its parent');
+  const text = files.get('recipes-line.md');
+  const order = [...text.matchAll(/^## (.+)$/gm)].map((m) => m[1]);
+  assert.deepEqual(order, ['Name parent', 'Name var', 'Name other']);
+  const cat = JSON.parse(files.get('catalog.json'));
+  const by = Object.fromEntries(cat.recipes.map((r) => [r.id, r]));
+  assert.deepEqual(by['01-var'].section, { document: 'arsenal-line', heading: 'Name var' });
+  assert.equal(by['01-var'].variant_of, '01-parent');
+  assert.equal(by['01-var'].job, 'add-depth');
+  assert.deepEqual(by['01-parent'].variants, ['01-var']);
+  assert.equal(by['01-parent'].taught_by, 2);
+  assert.deepEqual(by['02-other'].variants, []);
+  assert.equal('variant_of' in by['02-other'], false);
+});
+
+test('variants: the shipped variant names only its parent recipe and keeps its differences, scrubbed', () => {
+  const { files } = build(FAMILY);
+  const section = files.get('recipes-line.md').split(/^(?=## )/m).find((t) => t.startsWith('## Name var\n'));
+  assert.match(section, /^variant of: 01-parent$/m);
+  assert.match(section, /^differs: Wider gap \(shown\), and the turn is slower than in the source video\.$/m);
+  assert.doesNotMatch(section, /vid[AB]{8}|#1|\bf\d{4,6}\b/);
+  assert.match(section, /^job: add-depth$/m);
+});
+
+test('variants: the name guard runs on the variant lines', () => {
+  const named = (differs) => [FAMILY[0], FAMILY[1], { ...FAMILY[2], lines: `variant of: 01-parent (vidAAAAAAAA #1)\ndiffers: ${differs}` }];
+  assert.throws(() => build(named('Built the way Joe builds it.')), /recipes-line\.md names a private name: Joe/);
+  assert.throws(() => build(named('As Some Channel sets it.')), /recipes-line\.md names a creator: Some Channel/);
+});
+
+test('gallery: a recipe with variants shows how many', () => {
+  const block = galleryBlock({ recipes: [
+    { id: '01-p', name: 'Round dots', still: { path: 'arsenal/stills/01-p.jpg' }, variants: ['02-a', '03-b'] },
+    { id: '04-q', name: 'One more', still: { path: 'arsenal/stills/04-q.jpg' }, variants: ['05-c'] },
+    { id: '06-r', name: 'Plain', still: { path: 'arsenal/stills/06-r.jpg' }, variants: [] },
+  ] });
+  assert.match(block, /^!\[Round dots \(2 variants\)\]\(library\/arsenal\/stills\/01-p\.jpg\)$/m);
+  assert.match(block, /^!\[One more \(1 variant\)\]\(/m);
+  assert.match(block, /^!\[Plain\]\(/m);
 });
 
 // ---------- writeArsenal ----------
