@@ -9,7 +9,7 @@
 // where the take moves from one frame to the next. Built by hand and judged on
 // a 4K studio take (2026-11-16); the defaults are MOTION_EDGE_DEFAULTS.
 import { registerOp, jsxVal, jsxCompLayerPreamble } from "../registry.js";
-import { MOTION_EDGE_DEFAULTS, OBJECT_MATTE_MATCH_NAME, compLayerParams, liveCutoutIO, needSelection, since } from "./keying-shared.js";
+import { MOTION_EDGE_DEFAULTS, OBJECT_MATTE_MATCH_NAME, compLayerParams, liveCutoutIO, needSelection, since, } from "./keying-shared.js";
 export const MOTION_EDGE_COST = "The motion edge keys every frame twice, with Object Matte and with the separately installed keyer, so a render does twice the keying work: the whole 8.9 s studio take (2176 × 3840, 30 fps) rendered in 986 s to ProRes 4444, roughly 2 minutes of render per second of 4K.";
 const MOTION_MARKER = "motion-edge";
 /** The settings from the call's arguments, with the defaults filled in; or why they are refused. */
@@ -23,7 +23,7 @@ export function motionEdgeSettings(args) {
     if (args.keyerSettings !== undefined) {
         const ks = args.keyerSettings;
         if (typeof ks !== "object" || ks === null || Array.isArray(ks))
-            return fail("`keyerSettings` must be an object of { property name: value }, such as { \"Despill Strength\": 1 }");
+            return fail('`keyerSettings` must be an object of { property name: value }, such as { "Despill Strength": 1 }');
         for (const [k, v] of Object.entries(ks)) {
             if (typeof v === "boolean")
                 keyerSettings[k] = v ? 1 : 0;
@@ -313,7 +313,7 @@ registerOp({
         {
             name: "keyerSettings",
             type: "object",
-            description: "Values to set on the keyer, { property name or match name: value }, such as { \"Despill Strength\": 1 }. A name the keyer does not have stops the build, which is rolled back.",
+            description: 'Values to set on the keyer, { property name or match name: value }, such as { "Despill Strength": 1 }. A name the keyer does not have stops the build, which is rolled back.',
             required: false,
         },
         {

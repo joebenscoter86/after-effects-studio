@@ -10,7 +10,15 @@
 // a 4K studio take (2026-11-16); the defaults are MOTION_EDGE_DEFAULTS.
 
 import { registerOp, jsxVal, jsxCompLayerPreamble } from "../registry.js";
-import { MOTION_EDGE_DEFAULTS, OBJECT_MATTE_MATCH_NAME, compLayerParams, liveCutoutIO, needSelection, since, type Json } from "./keying-shared.js";
+import {
+  MOTION_EDGE_DEFAULTS,
+  OBJECT_MATTE_MATCH_NAME,
+  compLayerParams,
+  liveCutoutIO,
+  needSelection,
+  since,
+  type Json,
+} from "./keying-shared.js";
 
 export const MOTION_EDGE_COST =
   "The motion edge keys every frame twice, with Object Matte and with the separately installed keyer, so a render does twice the keying work: the whole 8.9 s studio take (2176 × 3840, 30 fps) rendered in 986 s to ProRes 4444, roughly 2 minutes of render per second of 4K.";
@@ -41,12 +49,15 @@ export function motionEdgeSettings(
   if (args.keyerSettings !== undefined) {
     const ks = args.keyerSettings;
     if (typeof ks !== "object" || ks === null || Array.isArray(ks))
-      return fail("`keyerSettings` must be an object of { property name: value }, such as { \"Despill Strength\": 1 }");
+      return fail(
+        '`keyerSettings` must be an object of { property name: value }, such as { "Despill Strength": 1 }',
+      );
     for (const [k, v] of Object.entries(ks as Record<string, unknown>)) {
       if (typeof v === "boolean") keyerSettings[k] = v ? 1 : 0;
       else if (isNum(v)) keyerSettings[k] = v;
       else if (Array.isArray(v) && v.length > 0 && v.every(isNum)) keyerSettings[k] = v as number[];
-      else return fail(`\`keyerSettings\`: '${k}' must be a number, a boolean or an array of numbers`);
+      else
+        return fail(`\`keyerSettings\`: '${k}' must be a number, a boolean or an array of numbers`);
     }
   }
   let threshold = { ...D.threshold };
@@ -55,7 +66,8 @@ export function motionEdgeSettings(
     if (typeof t !== "object" || t === null || Array.isArray(t))
       return fail("`threshold` must be { black, white }, each 0 to 1");
     for (const k of ["black", "white"] as const)
-      if (t[k] !== undefined && !isNum(t[k])) return fail(`\`threshold.${k}\` must be a number from 0 to 1`);
+      if (t[k] !== undefined && !isNum(t[k]))
+        return fail(`\`threshold.${k}\` must be a number from 0 to 1`);
     threshold = {
       black: isNum(t.black) ? t.black : D.threshold.black,
       white: isNum(t.white) ? t.white : D.threshold.white,
@@ -75,7 +87,8 @@ export function motionEdgeSettings(
   if (motionGrow === null) return fail("`motionGrow` must be a number of pixels, 0 or more");
   const motionBlur = size("motionBlur", 0);
   if (motionBlur === null) return fail("`motionBlur` must be a number of pixels, 0 or more");
-  const band = args.band === undefined ? D.band : isNum(args.band) && args.band > 0 ? args.band : null;
+  const band =
+    args.band === undefined ? D.band : isNum(args.band) && args.band > 0 ? args.band : null;
   if (band === null) return fail("`band` must be a number of pixels, more than 0");
   return {
     ok: true,
@@ -120,7 +133,9 @@ export function motionKeyerCheckJsx(matchName: string): string {
  * The last goes into the comp above the matted layer, which is switched off and otherwise
  * untouched (it keeps the sound); every copy's sound is off.
  */
-export function motionEdgeBuildJsx(args: { comp: unknown; layer: unknown } & MotionEdgeSettings): string {
+export function motionEdgeBuildJsx(
+  args: { comp: unknown; layer: unknown } & MotionEdgeSettings,
+): string {
   const D = MOTION_EDGE_DEFAULTS;
   const settings = {
     keyerMatchName: args.keyerMatchName,
@@ -275,7 +290,10 @@ export interface MotionEdgeIO {
   execute(code: string, opts: { label: string; timeoutMs?: number }): Promise<Json>;
 }
 
-export async function runMotionEdge(args: Record<string, unknown>, io: MotionEdgeIO): Promise<Json> {
+export async function runMotionEdge(
+  args: Record<string, unknown>,
+  io: MotionEdgeIO,
+): Promise<Json> {
   const started = performance.now();
   if (args.undo === true) {
     const u = await io.execute(motionEdgeUndoJsx({ comp: args.comp, layer: args.layer }), {
@@ -335,7 +353,7 @@ registerOp({
       name: "keyerSettings",
       type: "object",
       description:
-        "Values to set on the keyer, { property name or match name: value }, such as { \"Despill Strength\": 1 }. A name the keyer does not have stops the build, which is rolled back.",
+        'Values to set on the keyer, { property name or match name: value }, such as { "Despill Strength": 1 }. A name the keyer does not have stops the build, which is rolled back.',
       required: false,
     },
     {

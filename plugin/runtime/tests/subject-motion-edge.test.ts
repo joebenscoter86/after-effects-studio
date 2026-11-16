@@ -258,7 +258,9 @@ describe("subject.motion_edge", () => {
   });
 
   it("passes the keyer's refusal through", async () => {
-    const io = fakeIO({ build: { ok: false, error: `no installed effect has the match name '${KEYER}'` } });
+    const io = fakeIO({
+      build: { ok: false, error: `no installed effect has the match name '${KEYER}'` },
+    });
     const res = await runMotionEdge(ARGS, io);
     expect(res.ok).toBe(false);
     expect(res.error).toMatch(/no installed effect/);
@@ -299,7 +301,11 @@ describe("parameter validation", () => {
     ["no keyer", { comp: "Main", layer: 1 }, /keyerMatchName/],
     ["an empty keyer", { comp: "Main", layer: 1, keyerMatchName: " " }, /keyerMatchName/],
     ["settings not an object", { ...ARGS, keyerSettings: [1] }, /keyerSettings/],
-    ["a setting that is not a number", { ...ARGS, keyerSettings: { Mode: "fast" } }, /keyerSettings/],
+    [
+      "a setting that is not a number",
+      { ...ARGS, keyerSettings: { Mode: "fast" } },
+      /keyerSettings/,
+    ],
     ["black over white", { ...ARGS, threshold: { black: 0.5, white: 0.4 } }, /threshold/],
     ["a threshold outside 0..1", { ...ARGS, threshold: { black: -0.1, white: 0.4 } }, /threshold/],
     ["a threshold that is not an object", { ...ARGS, threshold: 0.3 }, /threshold/],
@@ -366,8 +372,7 @@ describe("registration and docs", () => {
   // The release name guard: nothing that ships names a third-party tool or its maker.
   const THIRD_PARTY =
     /Boris|\bBCC\b|Continuum|Red Giant|Maxon|Primatte|Sapphire|Mocha|Video Copilot|Foundry|Nuke|Resolve|Runway|Kognat|Rotobot/i;
-  const read = (rel: string) =>
-    readFileSync(fileURLToPath(new URL(rel, import.meta.url)), "utf8");
+  const read = (rel: string) => readFileSync(fileURLToPath(new URL(rel, import.meta.url)), "utf8");
   const section = (text: string) =>
     text
       .split("\n")

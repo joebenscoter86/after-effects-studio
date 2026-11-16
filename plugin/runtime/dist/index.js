@@ -56476,12 +56476,15 @@ function motionEdgeSettings(args) {
   if (args.keyerSettings !== void 0) {
     const ks = args.keyerSettings;
     if (typeof ks !== "object" || ks === null || Array.isArray(ks))
-      return fail3('`keyerSettings` must be an object of { property name: value }, such as { "Despill Strength": 1 }');
+      return fail3(
+        '`keyerSettings` must be an object of { property name: value }, such as { "Despill Strength": 1 }'
+      );
     for (const [k, v] of Object.entries(ks)) {
       if (typeof v === "boolean") keyerSettings[k] = v ? 1 : 0;
       else if (isNum(v)) keyerSettings[k] = v;
       else if (Array.isArray(v) && v.length > 0 && v.every(isNum)) keyerSettings[k] = v;
-      else return fail3(`\`keyerSettings\`: '${k}' must be a number, a boolean or an array of numbers`);
+      else
+        return fail3(`\`keyerSettings\`: '${k}' must be a number, a boolean or an array of numbers`);
     }
   }
   let threshold = { ...D2.threshold };
@@ -56490,7 +56493,8 @@ function motionEdgeSettings(args) {
     if (typeof t !== "object" || t === null || Array.isArray(t))
       return fail3("`threshold` must be { black, white }, each 0 to 1");
     for (const k of ["black", "white"])
-      if (t[k] !== void 0 && !isNum(t[k])) return fail3(`\`threshold.${k}\` must be a number from 0 to 1`);
+      if (t[k] !== void 0 && !isNum(t[k]))
+        return fail3(`\`threshold.${k}\` must be a number from 0 to 1`);
     threshold = {
       black: isNum(t.black) ? t.black : D2.threshold.black,
       white: isNum(t.white) ? t.white : D2.threshold.white
