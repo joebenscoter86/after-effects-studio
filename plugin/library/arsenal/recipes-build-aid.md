@@ -2,6 +2,62 @@
 
 Generated from the recipe drafts; do not edit by hand. Recipes that help a build but serve no beat, and recipes that fit no job yet. A beat query never returns them; read one by id with ae_arsenal get.
 
+## Swap a layer's photo and keep everything built on it
+id: 04-swap-footage-keep-edits
+revision: 223ffaa4
+job: none (build-aid)
+status: unproven
+what it does for a beat: A time-saver, not a look. Once one card, slot or frame is fully built (transforms, masks or mattes, parenting, keyframes, effects), you put a different photo or clip into it without rebuilding anything.
+what it looks like: The result is a before/after swap in the viewer: in a ring of portrait cards orbiting a bicycle wheel, the photo inside one card changes from a woman in an orange cardigan to a different portrait, while the card's position, tilt, crop window and caption stay exactly where they were. The author repeats it on several cards.
+ingredients:
+- Replace layer source by Alt/Option-drag from the Project panel — built-in; no menu used on screen (Layer > ... not shown)
+- Scale property of the swapped layer — built-in
+steps:
+1. In the Timeline, select the layer whose photo you want to change (the card's photo layer, which sits inside the card build and is parented to its card) (said; shown : the photo layer is highlighted in the layer list)
+2. Hold Alt (Windows) or Option (Mac) and drag the new image from the Project panel onto the selected layer in the Timeline (said; shown : drag in progress over the layer list with the add cursor; landed, where the layer's source name has changed and the card shows the new portrait)
+   - The layer keeps its place in the stack, its parent, its position and rotation, and the window the photo is clipped to (shown : the new portrait sits tilted inside the same card window; the parent column is unchanged)
+3. Because the new image has different pixel dimensions, re-fit it: open the swapped layer's Scale and scrub it until the photo fills the card window again (shown; not said)
+   - Scale: reads 16.0 % just after the swap (shown, value under the cursor) and is scrubbed to 21.0 % (shown : settled at 21.0, 21.0 % with no cursor on it)
+4. Repeat on other cards with other portraits (shown : three of the five visible cards now carry new photos; a second card's photo layer has a new source)
+layout: Measured (picture crop below, 1400 x 788). Five cards stand on an arc above a bicycle wheel. The upright centre card is about 17 % of the picture width wide and 39 % of the picture height tall (photo about 28 % of the height, white caption strip below it) (measured). The wheel's tyre is a circle about 70 % of the picture width across (fitted to the outer edge; the visible chord at the bottom edge is about 65 %), centred, its top at about 59 % of the picture height, its hub below the frame (measured). Each photo is clipped to a rounded window on its card (one corner clipped at 45 degrees); the swapped photo fills that same window after the swap (measured by eye). Background pale blue-grey. Nothing in the look is made by this tip: the cards, the arc and the wheel come from technique 03 (the orbiting graphics). The wheel has no shadow yet in this result (the background beside the tyre measures the same as open background, 241–246 against 243); the soft halo of technique 05 is added only, so do not add one to match this frame (measured).
+timing and easing: none given (no keyframes are touched; any existing keyframes stay on the layer — inferred from how Replace Footage works, not shown)
+variations: the author says it works for a photo or a video clip (said)
+pitfalls: The new image keeps the old layer's Scale, so if it is larger or smaller in pixels it no longer fits its window and Scale must be corrected (shown; not said). Alt/Option must be held while dropping; a plain drag adds a new layer instead (inferred).
+build notes: By script: `layer.replaceSource(newFootageItem, false)` on the AVLayer does what the Alt/Option-drag does; then correct `layer.property("ADBE Transform Group").property("ADBE Scale")` so the new image covers the old window (inferred, neither said nor shown: scale by old-width/new-width when the clipping window was sized for the old image). Effects, masks, track mattes, parenting and keyframes stay on the layer.
+unknowns: The original Scale of the photo layer before the swap; whether the other swapped cards needed their Scale corrected; how the photo is clipped to its card window (mask, track matte or alpha matte: the layer shows a matte-type icon but its kind is not readable); the menu equivalent (Layer > Replace Footage is not shown).
+
+## Key a rough, unevenly lit green backdrop with a machine-learning keyer
+id: 07-key-imperfect-green-screen
+revision: 8f7d770e
+job: none (build-aid)
+status: unproven
+what it does for a beat: For stock or found footage shot against a coloured wall that was never meant to be keyed (uneven light, olive green, shadows), when a classic colour keyer leaves grey residue. The person comes out clean, hair included, ready to sit over graphics.
+what it looks like: A smiling woman with big curly hair making a peace sign against an olive-green studio wall that is bright on the left and falls into shadow on the right. After the key she stands alone on black with soft, natural hair edges and no green rim; her top, yellow-green before, turns peach once spill is removed. In the finished example she then stands in front of the same promo cards and text used in technique 06, on a pale blue gradient.
+ingredients:
+- a free machine-learning green-screen keyer plugin — free third-party plugin, not stock; installed separately, it appears under its maker's own submenu in the Effect menu (shown); the narrator says it is free and links it in the description
+- substitute: no stock keyer is offered in words. On screen the author first applies After Effects' bundled colour keyer (it shows as version 1.2; menu path Effect > Keying inferred: the Keying submenu is visible but the keyer is never picked from it on screen) and removes it after it leaves residue (shown). The finished example's footage layer also carries Object Matte and Advanced Spill Suppressor, both switched off (shown)
+steps:
+1. Put the green-screen clip in the comp; hide the layers below it so the key shows against black (shown : only the top adjustment layer and the footage have their eyes on; not said)
+2. (Shown, not said) The bundled colour keyer, tried first, with its View on Final Result, Screen Gain 100.0, Screen Balance 50.0, Screen Pre-blur 0.0 and a green Screen Colour: the shadowed right side of the wall keys out, but the lit left side stays as a dark grey veil (about RGB 56,53,46 over black) (shown). Remove it (shown : the footage's Effect Controls are empty)
+3. Apply the machine-learning keyer from its submenu in the Effect menu (said: drop it onto the footage; shown : Effect menu open on the plugin's submenu)
+   - Mode: Full Frame (shown)
+   - Alpha Hint: None, with a second menu reading Source (shown)
+   - Quality: 1024 (shown)
+   - Auto Crop: on (shown)
+   - Output: Cutout (shown)
+   - Despill Strength: 0.00 (shown)
+4. Wait while the plugin loads its model the first time (shown : a loading dialog over the viewer at 40 %; not said). The key then appears: the person on black, hair edges soft, but a green glow on the outer hair and a green cast on the top (shown)
+5. Raise the spill suppression (said)
+   - Despill Strength: 1.00 (shown)
+   - Effect: the green rim on the hair goes, leaving a faint brownish halo of wispy hair; the top shifts from about RGB 204,180,111 to 214,158,121, yellow-green to peach; skin is unchanged (measured on frames)
+6. Turn the graphic layers back on to place the person over them (shown: the eyes come back on; the graphics' order is the comp's own)
+layout: Measured on the result frame (cut from source, crop 958,390,1720,968), as shares of that crop. The woman stands a little left of centre: hair from about 30 % to 59 % of the width, top of the hair about 5 % from the top, her raised hand reaching to about 29 % across, body cut by the bottom edge (measured). Background black (empty comp). Edges: hair keeps soft semi-transparent wisps with no green; a faint warm-mauve halo about 1 % of the width wide remains round the outer curls (measured on a crop at full size). The source plate : olive green, about RGB 130,160,80 on the lit left and 70–95,100–130,30–50 on the shadowed right, the right side about 0.65 as bright as the left (measured) — this unevenness is what makes it a poor screen. The finished example that plays is a separate finished comp (shown; a rendered clip layer is switched on at the top of it, so the picture may be a pre-rendered clip rather than the live layers): the same keyed woman over a pale blue-white gradient, with three rounded cards behind her (navy and peach top, white below left), text lower left passing behind her arm, and a bold two-line headline lower right whose first letter overlaps her arm, the title layer sitting above the footage in that comp (measured on frames; shown). Its graphics and gradient come from the comp, not from this tip; placing graphics behind a person is technique 06.
+timing and easing: none given for the key. The finished example's text types on over about 2 s; not built here.
+variations: none given (the narrator only says spill suppression can be raised)
+pitfalls: The plate is not a proper green screen (said). A classic colour keyer leaves the lit part of such a wall as a grey veil (shown, not said). Despill at full strength also pulls green out of the subject's own colours: the yellow top turns peach (measured; not said). The model takes a moment to load the first time (shown).
+build notes: The plugin is third-party and must be installed before any script can apply it; its match name is unknown, so apply it by its display name from the Effect menu, or by script with `layer.property("ADBE Effect Parade").addProperty("<display name>")` once installed. Set Despill Strength to 1.0 and leave the rest at the values shown. If it is not installed, the stock route is the bundled colour keyer with Screen Colour picked from the lit part of the wall, followed by Advanced Spill Suppressor; expect to fight the uneven light (on this plate the stock key left a veil), so a garbage mask, a Screen Matte clip or a second key on the lit side would be needed (inferred). Object Matte (technique 06) is the other stock route; it ignores the wall colour altogether.
+unknowns: Whether the bundled keyer's Screen Colour was picked from the plate or left as found; whether any plugin setting other than Despill Strength was changed from its default; what the second Alpha Hint menu does; whether the finished example's Object Matte and Advanced Spill Suppressor ever took part in its look (both are off there).
+
 ## Even time stagger by dragging a whole stack at once
 id: 05-stagger-layers-in-time
 revision: 9201d48e

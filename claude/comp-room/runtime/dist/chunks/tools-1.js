@@ -3894,7 +3894,7 @@ function findTechniques(catalog, ask) {
 	const exclude = new Set(ask.exclude ?? []);
 	const limit = ask.limit ?? 5;
 	const tier = (r) => r.job === ask.job ? 0 : r.support.includes(ask.job) ? 1 : [r.job, ...r.support].some((j) => j !== null && support.includes(j)) ? 2 : null;
-	const byJob = catalog.recipes.filter((r) => r.kind === "technique" && tier(r) !== null && !exclude.has(r.id));
+	const byJob = catalog.recipes.filter((r) => r.kind === "technique" && !r.variant_of && tier(r) !== null && !exclude.has(r.id));
 	const pass = (r, loose) => (loose.includes("status") || ask.constraints?.status === "any" || r.status === "proven") && (loose.includes("needs") || have === null || unmet(r.needs, have).length === 0);
 	let relaxed = [];
 	let hits = byJob.filter((r) => pass(r, relaxed));
@@ -3945,7 +3945,8 @@ function findTechniques(catalog, ask) {
 			motion: r.motion,
 			still: r.still?.path ?? null,
 			section: r.section,
-			fit: fit(r)
+			fit: fit(r),
+			...r.variants?.length ? { variants: r.variants } : {}
 		}))
 	};
 	if (relaxed.length && out.results.length) out.relaxed = relaxed;
@@ -3977,7 +3978,7 @@ function recipeReply(id, revision, root = LIBRARY) {
 `) && new RegExp(`^id: ${r.id}$`, "m").test(s));
 	if (!section) throw new Error(`the arsenal is inconsistent: ${r.section.document} has no section for ${r.id}`);
 	return [
-		`ae_arsenal recipe ${r.id}@${r.revision} (${r.status}, ${r.kind}; ${catalog.vocab}, catalog ${catalog.version}; from library document ${r.section.document})`,
+		`ae_arsenal recipe ${r.id}@${r.revision} (${r.status}, ${r.kind}; ${r.variant_of ? `variant of ${r.variant_of}; ` : ""}${catalog.vocab}, catalog ${catalog.version}; from library document ${r.section.document})`,
 		revision !== void 0 && revision !== r.revision ? `WARNING: pinned revision ${revision}; the shipped revision is ${r.revision}. The recipe changed since it was pinned: this is the shipped text, not the pinned one. Check it still fits the beat.` : null,
 		"",
 		section.trimEnd()
@@ -4058,7 +4059,7 @@ function init_arsenal() {
 			group: "document",
 			effect: "read",
 			blockedInReadOnly: false,
-			description: "Find proven After Effects techniques for a beat by the job it must do, then read the chosen recipe. Use it while planning shots, once per beat, before building. action jobs lists the job vocabulary (ids with one-line definitions). action find takes the beat (job, and optionally support, duration, mood, assets, constraints.status, exclude, limit) and returns a ranked shortlist (proven recipes only unless constraints.status is any; relaxed names any filter loosened when nothing passed; never another job) with each candidate's still from our own proof build. An unknown job is refused with the valid ids: pick one, never invent one. action get takes id (and the pinned revision) and returns the full recipe. Offline; no After Effects needed.",
+			description: "Find proven After Effects techniques for a beat by the job it must do, then read the chosen recipe. Use it while planning shots, once per beat, before building. action jobs lists the job vocabulary (ids with one-line definitions). action find takes the beat (job, and optionally support, duration, mood, assets, constraints.status, exclude, limit) and returns a ranked shortlist (proven recipes only unless constraints.status is any; relaxed names any filter loosened when nothing passed; never another job) with each candidate's still from our own proof build; a candidate taught in other ways lists their ids as variants, each readable with get. An unknown job is refused with the valid ids: pick one, never invent one. action get takes id (and the pinned revision) and returns the full recipe. Offline; no After Effects needed.",
 			inputShape: askShape,
 			handler: async (args) => {
 				try {

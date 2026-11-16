@@ -1,6 +1,6 @@
 {
  "vocab": "jobs-v1",
- "version": "dba75f7f",
+ "version": "44c977d9",
  "jobs": [
   "land-number",
   "count-things",
@@ -32,6 +32,336 @@
  ],
  "recipes": [
   {
+   "id": "01-shadow-map-overlay",
+   "revision": "a2dfdc7d",
+   "name": "Window-light shadow map over a flat layout",
+   "line": "Makes a flat title card or layout look as if it sits in a room with sunlight falling through a window: long soft diagonal shadows with light bands between them. Reach for it when a clean graphic looks too digital and needs contrast and a sense of place without any 3D.",
+   "status": "unproven",
+   "kind": "technique",
+   "job": "add-depth",
+   "support": [
+    "finish-the-look",
+    "establish-place"
+   ],
+   "mood": [
+    "light",
+    "editorial",
+    "cinematic"
+   ],
+   "needs": [
+    "type"
+   ],
+   "duration": 5,
+   "motion": "still",
+   "difficulty": 2,
+   "taught_by": 1,
+   "variants": [],
+   "section": {
+    "document": "arsenal-picture",
+    "heading": "Window-light shadow map over a flat layout"
+   },
+   "still": null
+  },
+  {
+   "id": "02-shadow-map-wipe-on",
+   "revision": "f446fe5d",
+   "name": "Soft diagonal wipe-on for a shadow map",
+   "line": "Brings window-light shadows into a shot as if the sun had just come out: the shadow sweeps across the layout along the strips over about a second instead of popping on. Use it on the opening beat of a title card that carries a shadow map.",
+   "status": "unproven",
+   "kind": "technique",
+   "job": "add-depth",
+   "support": [
+    "reveal-headline"
+   ],
+   "mood": [
+    "light",
+    "editorial",
+    "cinematic"
+   ],
+   "needs": [
+    "type"
+   ],
+   "duration": 2,
+   "motion": "one-shot",
+   "difficulty": 2,
+   "taught_by": 1,
+   "variants": [],
+   "section": {
+    "document": "arsenal-picture",
+    "heading": "Soft diagonal wipe-on for a shadow map"
+   },
+   "still": null
+  },
+  {
+   "id": "03-graphics-orbit-a-real-object",
+   "revision": "2178ea7a",
+   "name": "Graphics riding a spinning real object",
+   "line": "Lets a real photographed object drive the motion: a cut-out wheel (or any round object) spins, and a ring of graphic cards fanned around its centre turns with it like a carousel. Use it for a \"meet the team\" or product-range beat that should feel physical rather than a plain slider.",
+   "status": "unproven",
+   "kind": "technique",
+   "job": "list-items",
+   "support": [
+    "keep-it-alive",
+    "make-concrete"
+   ],
+   "mood": [
+    "light",
+    "playful",
+    "photo"
+   ],
+   "needs": [
+    "photo"
+   ],
+   "duration": 6,
+   "motion": "loop",
+   "difficulty": 3,
+   "taught_by": 6,
+   "variant_of": "04-carousel-by-rotation",
+   "variants": [],
+   "section": {
+    "document": "arsenal-line",
+    "heading": "Graphics riding a spinning real object"
+   },
+   "still": null
+  },
+  {
+   "id": "04-swap-footage-keep-edits",
+   "revision": "223ffaa4",
+   "name": "Swap a layer's photo and keep everything built on it",
+   "line": "A time-saver, not a look. Once one card, slot or frame is fully built (transforms, masks or mattes, parenting, keyframes, effects), you put a different photo or clip into it without rebuilding anything.",
+   "status": "unproven",
+   "kind": "build-aid",
+   "job": null,
+   "support": [],
+   "mood": [
+    "neutral",
+    "workflow"
+   ],
+   "needs": [
+    "photo"
+   ],
+   "duration": 0,
+   "motion": "still",
+   "difficulty": 1,
+   "taught_by": 1,
+   "variants": [],
+   "section": {
+    "document": "arsenal-build-aid",
+    "heading": "Swap a layer's photo and keep everything built on it"
+   },
+   "still": null
+  },
+  {
+   "id": "05-soft-doubled-drop-shadow",
+   "revision": "a2a75b23",
+   "name": "Seat a cut-out object with a soft, doubled drop shadow",
+   "line": "When a photographed object cut out of its background (a product, a prop, a wheel) is dropped into a flat graphic scene and looks pasted on, a very soft, barely offset drop shadow gives it a dark halo that grounds it. Stack a second, even softer copy when the first is too faint.",
+   "status": "unproven",
+   "kind": "technique",
+   "job": "add-depth",
+   "support": [
+    "light-the-hero"
+   ],
+   "mood": [
+    "light",
+    "soft",
+    "photo"
+   ],
+   "needs": [
+    "photo"
+   ],
+   "duration": 4,
+   "motion": "still",
+   "difficulty": 1,
+   "taught_by": 1,
+   "variants": [],
+   "section": {
+    "document": "arsenal-picture",
+    "heading": "Seat a cut-out object with a soft, doubled drop shadow"
+   },
+   "still": null
+  },
+  {
+   "id": "06-graphics-behind-subject-object-matte",
+   "revision": "1572d05b",
+   "name": "Tuck graphics behind a person with an automatic object matte",
+   "line": "For talking-head or presenter footage on a plain wall: cards, titles and text sit between the person and the wall, so the person stands in front of the graphics. Reach for it when overlays would otherwise cover the face or body.",
+   "status": "unproven",
+   "kind": "technique",
+   "job": "add-depth",
+   "support": [
+    "reveal-headline"
+   ],
+   "mood": [
+    "light",
+    "playful",
+    "photo"
+   ],
+   "needs": [
+    "footage"
+   ],
+   "duration": 5,
+   "motion": "one-shot",
+   "difficulty": 2,
+   "taught_by": 1,
+   "variants": [],
+   "section": {
+    "document": "arsenal-picture",
+    "heading": "Tuck graphics behind a person with an automatic object matte"
+   },
+   "still": null
+  },
+  {
+   "id": "07-key-imperfect-green-screen",
+   "revision": "8f7d770e",
+   "name": "Key a rough, unevenly lit green backdrop with a machine-learning keyer",
+   "line": "For stock or found footage shot against a coloured wall that was never meant to be keyed (uneven light, olive green, shadows), when a classic colour keyer leaves grey residue. The person comes out clean, hair included, ready to sit over graphics.",
+   "status": "unproven",
+   "kind": "build-aid",
+   "job": null,
+   "support": [],
+   "mood": [
+    "neutral",
+    "workflow"
+   ],
+   "needs": [
+    "footage"
+   ],
+   "duration": 0,
+   "motion": "still",
+   "difficulty": 1,
+   "taught_by": 1,
+   "variants": [],
+   "section": {
+    "document": "arsenal-build-aid",
+    "heading": "Key a rough, unevenly lit green backdrop with a machine-learning keyer"
+   },
+   "still": null
+  },
+  {
+   "id": "08-raised-white-shapes-with-long-shadows",
+   "revision": "3aa9fdaf",
+   "name": "Stacked white discs that grow out of the centre with long soft shadows",
+   "line": "A title or opener background that makes a near-white frame look premium and tactile: white discs swell out from the centre one after another, each one raised off the one below with a pale rim and a long, soft shadow to one side. Reach for it when a clean white brand look needs depth and slow motion behind type.",
+   "status": "unproven",
+   "kind": "technique",
+   "job": "fill-the-backdrop",
+   "support": [
+    "add-depth",
+    "reveal-headline"
+   ],
+   "mood": [
+    "light",
+    "minimal",
+    "soft"
+   ],
+   "needs": [
+    "shapes"
+   ],
+   "duration": 6,
+   "motion": "one-shot",
+   "difficulty": 2,
+   "taught_by": 1,
+   "variant_of": "11-white-on-light-finish",
+   "variants": [],
+   "section": {
+    "document": "arsenal-picture",
+    "heading": "Stacked white discs that grow out of the centre with long soft shadows"
+   },
+   "still": null
+  },
+  {
+   "id": "09-edge-lens-blur-and-noise-finish",
+   "revision": "2ba1df5b",
+   "name": "Soft lens blur at the frame sides plus fine grain",
+   "line": "A last pass that makes a clean, drawn graphic look as if it was shot through a lens: the left and right sides go slightly soft while the centre stays crisp, and a little grain breaks up the flat digital fills. Use it on any finished graphic or title plate, especially pale ones where the cleanliness gives away that they are drawn.",
+   "status": "unproven",
+   "kind": "technique",
+   "job": "finish-the-look",
+   "support": [
+    "add-depth"
+   ],
+   "mood": [
+    "light",
+    "cinematic",
+    "soft"
+   ],
+   "needs": [
+    "none"
+   ],
+   "duration": 4,
+   "motion": "still",
+   "difficulty": 1,
+   "taught_by": 1,
+   "variants": [],
+   "section": {
+    "document": "arsenal-picture",
+    "heading": "Soft lens blur at the frame sides plus fine grain"
+   },
+   "still": null
+  },
+  {
+   "id": "10-2d-graphics-on-extruded-3d-plate",
+   "revision": "2443b743",
+   "name": "Flat UI graphic on a glossy extruded plate",
+   "line": "Turns a flat 2D card or UI panel into a solid, glossy object floating over a pale floor with a real cast shadow, while the graphic on its face keeps its exact flat colours. Reach for it when a 2D layout needs to read as a physical product shot without leaving After Effects.",
+   "status": "unproven",
+   "kind": "technique",
+   "job": "add-depth",
+   "support": [
+    "light-the-hero",
+    "show-real-screen"
+   ],
+   "mood": [
+    "light",
+    "3D",
+    "minimal"
+   ],
+   "needs": [
+    "shapes"
+   ],
+   "duration": 5,
+   "motion": "still",
+   "difficulty": 3,
+   "taught_by": 3,
+   "variants": [],
+   "section": {
+    "document": "arsenal-picture",
+    "heading": "Flat UI graphic on a glossy extruded plate"
+   },
+   "still": null
+  },
+  {
+   "id": "11-camera-depth-of-field-advanced-3d",
+   "revision": "686415b0",
+   "name": "Depth of field on a row of glossy plates (Advanced 3D camera)",
+   "line": "Gives a 3D product-style scene a photographic lens: duplicated objects staggered in depth fall progressively out of focus, and a small camera move adds life. Use it to sell scale and depth once a scene from recipe 10 exists.",
+   "status": "unproven",
+   "kind": "technique",
+   "job": "move-camera",
+   "support": [
+    "add-depth"
+   ],
+   "mood": [
+    "light",
+    "3D",
+    "cinematic"
+   ],
+   "needs": [
+    "shapes"
+   ],
+   "duration": 5,
+   "motion": "one-shot",
+   "difficulty": 3,
+   "taught_by": 5,
+   "variants": [],
+   "section": {
+    "document": "arsenal-connective",
+    "heading": "Depth of field on a row of glossy plates (Advanced 3D camera)"
+   },
+   "still": null
+  },
+  {
    "id": "01-blurred-stroked-shapes-on-light-ground",
    "revision": "7620130e",
    "name": "Soft one-way blurred dark shapes with a bright stroke fringe on a pale ground",
@@ -54,6 +384,7 @@
    "motion": "still",
    "difficulty": 2,
    "taught_by": 4,
+   "variants": [],
    "section": {
     "document": "arsenal-picture",
     "heading": "Soft one-way blurred dark shapes with a bright stroke fringe on a pale ground"
@@ -84,6 +415,7 @@
    "motion": "loop",
    "difficulty": 2,
    "taught_by": 3,
+   "variants": [],
    "section": {
     "document": "arsenal-picture",
     "heading": "Breathing glow, darkest radial blur and fine grain finish for bright scenes"
@@ -114,6 +446,7 @@
    "motion": "loop",
    "difficulty": 2,
    "taught_by": 4,
+   "variants": [],
    "section": {
     "document": "arsenal-picture",
     "heading": "Drifting pockets of light from heavily blurred edge shapes"
@@ -144,6 +477,7 @@
    "motion": "loop",
    "difficulty": 2,
    "taught_by": 4,
+   "variants": [],
    "section": {
     "document": "arsenal-picture",
     "heading": "Liquid merge of outlined circles with blur and choke"
@@ -174,6 +508,7 @@
    "motion": "transition",
    "difficulty": 2,
    "taught_by": 4,
+   "variants": [],
    "section": {
     "document": "arsenal-connective",
     "heading": "A dark mass split open behind a travelling ball"
@@ -204,6 +539,7 @@
    "motion": "still",
    "difficulty": 2,
    "taught_by": 3,
+   "variants": [],
    "section": {
     "document": "arsenal-picture",
     "heading": "Turning a crude gradient disc into a grainy glowing orb"
@@ -234,6 +570,7 @@
    "motion": "loop",
    "difficulty": 2,
    "taught_by": 2,
+   "variants": [],
    "section": {
     "document": "arsenal-line",
     "heading": "Round dots from a shape stroke"
@@ -266,6 +603,7 @@
    "motion": "loop",
    "difficulty": 1,
    "taught_by": 2,
+   "variants": [],
    "section": {
     "document": "arsenal-line",
     "heading": "Arc with a dot at each end"
@@ -298,6 +636,7 @@
    "motion": "still",
    "difficulty": 1,
    "taught_by": 1,
+   "variants": [],
    "section": {
     "document": "arsenal-picture",
     "heading": "Fade both ends of an open stroke with Taper"
@@ -329,7 +668,10 @@
    "duration": 4,
    "motion": "one-shot",
    "difficulty": 2,
-   "taught_by": 5,
+   "taught_by": 6,
+   "variants": [
+    "03-graphics-orbit-a-real-object"
+   ],
    "section": {
     "document": "arsenal-line",
     "heading": "Text carousel from rotated copies around one pivot"
@@ -359,6 +701,7 @@
    "motion": "one-shot",
    "difficulty": 1,
    "taught_by": 1,
+   "variants": [],
    "section": {
     "document": "arsenal-build-aid",
     "heading": "Even time stagger by dragging a whole stack at once"
@@ -388,7 +731,8 @@
    "duration": 5,
    "motion": "loop",
    "difficulty": 2,
-   "taught_by": 5,
+   "taught_by": 6,
+   "variants": [],
    "section": {
     "document": "arsenal-connective",
     "heading": "Tilted 3D ring of discs orbiting a centre"
@@ -418,6 +762,7 @@
    "motion": "loop",
    "difficulty": 1,
    "taught_by": 1,
+   "variants": [],
    "section": {
     "document": "arsenal-build-aid",
     "heading": "Keep an orbiting 3D layer turned towards the camera"
@@ -444,6 +789,7 @@
    "motion": "one-shot",
    "difficulty": 2,
    "taught_by": 3,
+   "variants": [],
    "section": {
     "document": "arsenal-build-aid",
     "heading": "Perform puppet-pin motion live with the mouse"
@@ -474,6 +820,7 @@
    "motion": "loop",
    "difficulty": 1,
    "taught_by": 1,
+   "variants": [],
    "section": {
     "document": "arsenal-picture",
     "heading": "Slide a background endlessly with mirrored tiling"
@@ -507,6 +854,7 @@
    "motion": "loop",
    "difficulty": 2,
    "taught_by": 2,
+   "variants": [],
    "section": {
     "document": "arsenal-connective",
     "heading": "Leaf-shaped particles from any graphic"
@@ -538,7 +886,10 @@
    "duration": 4,
    "motion": "still",
    "difficulty": 2,
-   "taught_by": 1,
+   "taught_by": 2,
+   "variants": [
+    "08-raised-white-shapes-with-long-shadows"
+   ],
    "section": {
     "document": "arsenal-picture",
     "heading": "Soft embossed finish for white shapes on a pale background"
@@ -571,6 +922,7 @@
    "motion": "still",
    "difficulty": 2,
    "taught_by": 2,
+   "variants": [],
    "section": {
     "document": "arsenal-picture",
     "heading": "Long soft shadow from a radially blurred black copy"
@@ -603,6 +955,7 @@
    "motion": "still",
    "difficulty": 1,
    "taught_by": 1,
+   "variants": [],
    "section": {
     "document": "arsenal-picture",
     "heading": "Fine dot-grid background from a ball-grid effect"
@@ -635,7 +988,8 @@
    "duration": 5,
    "motion": "still",
    "difficulty": 2,
-   "taught_by": 2,
+   "taught_by": 3,
+   "variants": [],
    "section": {
     "document": "arsenal-picture",
     "heading": "Real cast shadows on an invisible 3D floor"
@@ -665,6 +1019,7 @@
    "motion": "still",
    "difficulty": 1,
    "taught_by": 2,
+   "variants": [],
    "section": {
     "document": "arsenal-build-aid",
     "heading": "Un-clip an effect with Grow Bounds"
@@ -694,7 +1049,8 @@
    "duration": 4,
    "motion": "one-shot",
    "difficulty": 1,
-   "taught_by": 4,
+   "taught_by": 5,
+   "variants": [],
    "section": {
     "document": "arsenal-connective",
     "heading": "Keep a chosen layer sharp while the camera travels"
@@ -727,6 +1083,7 @@
    "motion": "still",
    "difficulty": 1,
    "taught_by": 1,
+   "variants": [],
    "section": {
     "document": "arsenal-picture",
     "heading": "Tie a 3D scene together with depth fog over the precomp"
@@ -757,6 +1114,7 @@
    "motion": "one-shot",
    "difficulty": 2,
    "taught_by": 2,
+   "variants": [],
    "section": {
     "document": "arsenal-line",
     "heading": "Soft word-by-word rise-and-fade text reveal"
@@ -789,6 +1147,7 @@
    "motion": "loop",
    "difficulty": 2,
    "taught_by": 2,
+   "variants": [],
    "section": {
     "document": "arsenal-line",
     "heading": "Text that runs round a drawn path"
@@ -821,6 +1180,7 @@
    "motion": "still",
    "difficulty": 1,
    "taught_by": 1,
+   "variants": [],
    "section": {
     "document": "arsenal-picture",
     "heading": "Two stacked glows for a soft cinematic bloom"
@@ -854,6 +1214,7 @@
    "motion": "still",
    "difficulty": 2,
    "taught_by": 2,
+   "variants": [],
    "section": {
     "document": "arsenal-line",
     "heading": "Paper texture through a title matte, with roughened edges"
@@ -883,6 +1244,7 @@
    "motion": "still",
    "difficulty": 1,
    "taught_by": 1,
+   "variants": [],
    "section": {
     "document": "arsenal-build-aid",
     "heading": "Tuck helper layers out of the timeline with the shy switch"
@@ -909,6 +1271,7 @@
    "motion": "still",
    "difficulty": 1,
    "taught_by": 1,
+   "variants": [],
    "section": {
     "document": "arsenal-build-aid",
     "heading": "Dial motion blur strength with the comp's shutter angle"
@@ -935,6 +1298,7 @@
    "motion": "one-shot",
    "difficulty": 1,
    "taught_by": 1,
+   "variants": [],
    "section": {
     "document": "arsenal-build-aid",
     "heading": "Keep a scaled-up precomp of vector art crisp"
@@ -966,6 +1330,7 @@
    "motion": "still",
    "difficulty": 1,
    "taught_by": 2,
+   "variants": [],
    "section": {
     "document": "arsenal-line",
     "heading": "Frame video in a custom shape with a track matte"
@@ -1000,6 +1365,7 @@
    "motion": "still",
    "difficulty": 2,
    "taught_by": 2,
+   "variants": [],
    "section": {
     "document": "arsenal-line",
     "heading": "Rounded-rectangle matte card that carries its media and labels"
@@ -1029,6 +1395,7 @@
    "motion": "loop",
    "difficulty": 3,
    "taught_by": 1,
+   "variants": [],
    "section": {
     "document": "arsenal-line",
     "heading": "Card that swings round a pivot below the frame, one step at a time, forever"
@@ -1058,6 +1425,7 @@
    "motion": "loop",
    "difficulty": 2,
    "taught_by": 1,
+   "variants": [],
    "section": {
     "document": "arsenal-line",
     "heading": "Card shrinks and leans outward at the ends of its swing"
@@ -1086,7 +1454,8 @@
    "duration": 6,
    "motion": "loop",
    "difficulty": 3,
-   "taught_by": 5,
+   "taught_by": 6,
+   "variants": [],
    "section": {
     "document": "arsenal-line",
     "heading": "Chained copies of a swinging card, placed with a helper null"
@@ -1117,6 +1486,7 @@
    "motion": "loop",
    "difficulty": 3,
    "taught_by": 2,
+   "variants": [],
    "section": {
     "document": "arsenal-connective",
     "heading": "Cards orbiting an ellipse drawn as a mask"
@@ -1147,6 +1517,7 @@
    "motion": "one-shot",
    "difficulty": 2,
    "taught_by": 2,
+   "variants": [],
    "section": {
     "document": "arsenal-line",
     "heading": "Cards growing along a drawn path into a stacked trail"
@@ -1176,7 +1547,8 @@
    "duration": 5,
    "motion": "loop",
    "difficulty": 3,
-   "taught_by": 5,
+   "taught_by": 6,
+   "variants": [],
    "section": {
     "document": "arsenal-connective",
     "heading": "Spinning square box built from four 3D cards"
@@ -1207,6 +1579,7 @@
    "motion": "loop",
    "difficulty": 2,
    "taught_by": 1,
+   "variants": [],
    "section": {
     "document": "arsenal-connective",
     "heading": "Counter-spinning tunnel from stacked card boxes"
@@ -1237,7 +1610,8 @@
    "duration": 4,
    "motion": "transition",
    "difficulty": 1,
-   "taught_by": 4,
+   "taught_by": 5,
+   "variants": [],
    "section": {
     "document": "arsenal-connective",
     "heading": "Camera push into the card tunnel with depth of field"
@@ -1267,7 +1641,8 @@
    "duration": 6,
    "motion": "loop",
    "difficulty": 2,
-   "taught_by": 5,
+   "taught_by": 6,
+   "variants": [],
    "section": {
     "document": "arsenal-connective",
     "heading": "Ring of 3D photo cards seen from inside"
@@ -1296,6 +1671,7 @@
    "motion": "still",
    "difficulty": 1,
    "taught_by": 1,
+   "variants": [],
    "section": {
     "document": "arsenal-picture",
     "heading": "Wide-lens camera inside the card ring"
@@ -1326,6 +1702,7 @@
    "motion": "still",
    "difficulty": 3,
    "taught_by": 3,
+   "variants": [],
    "section": {
     "document": "arsenal-line",
     "heading": "Bevelled 3D text wrapped in a tiled material"
@@ -1355,7 +1732,8 @@
    "duration": 5,
    "motion": "one-shot",
    "difficulty": 2,
-   "taught_by": 2,
+   "taught_by": 3,
+   "variants": [],
    "section": {
     "document": "arsenal-picture",
     "heading": "Backlit environment light over a shadow-only floor"
@@ -1386,6 +1764,7 @@
    "motion": "still",
    "difficulty": 1,
    "taught_by": 1,
+   "variants": [],
    "section": {
     "document": "arsenal-picture",
     "heading": "Shadowless parallel light as an extra backlight"
@@ -1414,6 +1793,7 @@
    "motion": "still",
    "difficulty": 2,
    "taught_by": 1,
+   "variants": [],
    "section": {
     "document": "arsenal-picture",
     "heading": "Soft front fill from a point light with smooth falloff"
@@ -1444,6 +1824,7 @@
    "motion": "one-shot",
    "difficulty": 3,
    "taught_by": 2,
+   "variants": [],
    "section": {
     "document": "arsenal-line",
     "heading": "Letters tumble in from behind the camera, one after another"
@@ -1472,7 +1853,8 @@
    "duration": 5,
    "motion": "one-shot",
    "difficulty": 2,
-   "taught_by": 4,
+   "taught_by": 5,
+   "variants": [],
    "section": {
     "document": "arsenal-connective",
     "heading": "Depth-of-field camera on a null, pushed in through the shot"
@@ -1503,6 +1885,7 @@
    "motion": "still",
    "difficulty": 2,
    "taught_by": 3,
+   "variants": [],
    "section": {
     "document": "arsenal-line",
     "heading": "Warm-sided metal title: textured faces, plain tinted sides"
@@ -1533,6 +1916,7 @@
    "motion": "still",
    "difficulty": 2,
    "taught_by": 3,
+   "variants": [],
    "section": {
     "document": "arsenal-line",
     "heading": "Hollow chrome outline title: only the extruded edge renders"
@@ -1564,6 +1948,7 @@
    "motion": "loop",
    "difficulty": 3,
    "taught_by": 2,
+   "variants": [],
    "section": {
     "document": "arsenal-line",
     "heading": "Spinning ring of standing 3D letters, stackable"
@@ -1590,6 +1975,7 @@
    "motion": "still",
    "difficulty": 2,
    "taught_by": 1,
+   "variants": [],
    "section": {
     "document": "arsenal-build-aid",
     "heading": "Found vector art, one object per file, laid out as separate layers"
@@ -1619,6 +2005,7 @@
    "motion": "still",
    "difficulty": 2,
    "taught_by": 1,
+   "variants": [],
    "section": {
     "document": "arsenal-picture",
     "heading": "One mood grade for mismatched art: Tritone plus a single-point Curves, pasted to every layer"
@@ -1648,6 +2035,7 @@
    "motion": "still",
    "difficulty": 2,
    "taught_by": 2,
+   "variants": [],
    "section": {
     "document": "arsenal-picture",
     "heading": "Flat cut-outs into a deep stage: push far layers back in Z, pull near ones forward, rescale to frame"
@@ -1678,7 +2066,8 @@
    "duration": 3,
    "motion": "one-shot",
    "difficulty": 2,
-   "taught_by": 4,
+   "taught_by": 5,
+   "variants": [],
    "section": {
     "document": "arsenal-connective",
     "heading": "Depth-of-field camera locked on the subject, with a slow dolly in"
@@ -1708,6 +2097,7 @@
    "motion": "loop",
    "difficulty": 2,
    "taught_by": 1,
+   "variants": [],
    "section": {
     "document": "arsenal-connective",
     "heading": "Endless wind sway from two rotation keys and a ping-pong loop"
@@ -1737,6 +2127,7 @@
    "motion": "loop",
    "difficulty": 1,
    "taught_by": 1,
+   "variants": [],
    "section": {
     "document": "arsenal-connective",
     "heading": "Grass rippling in the wind with Wave Warp"
@@ -1767,6 +2158,7 @@
    "motion": "loop",
    "difficulty": 3,
    "taught_by": 2,
+   "variants": [],
    "section": {
     "document": "arsenal-connective",
     "heading": "Leaves blown across the frame with textured particles"
@@ -1797,6 +2189,7 @@
    "motion": "loop",
    "difficulty": 1,
    "taught_by": 1,
+   "variants": [],
    "section": {
     "document": "arsenal-picture",
     "heading": "Rain slanted to match the wind"
@@ -1827,6 +2220,7 @@
    "motion": "one-shot",
    "difficulty": 2,
    "taught_by": 3,
+   "variants": [],
    "section": {
     "document": "arsenal-connective",
     "heading": "Small body shifts on a wide-shot figure with puppet pins"
@@ -1854,6 +2248,7 @@
    "motion": "still",
    "difficulty": 1,
    "taught_by": 3,
+   "variants": [],
    "section": {
     "document": "arsenal-picture",
     "heading": "Film-stock grain and mood finish on a top adjustment layer"
@@ -1886,6 +2281,7 @@
    "motion": "still",
    "difficulty": 2,
    "taught_by": 2,
+   "variants": [],
    "section": {
     "document": "arsenal-build-aid",
     "heading": "Long-lens close-up that matches the wide shot"
@@ -1914,6 +2310,7 @@
    "motion": "one-shot",
    "difficulty": 3,
    "taught_by": 3,
+   "variants": [],
    "section": {
     "document": "arsenal-connective",
     "heading": "Wind in a still character's hair"
@@ -1944,6 +2341,7 @@
    "motion": "still",
    "difficulty": 1,
    "taught_by": 2,
+   "variants": [],
    "section": {
     "document": "arsenal-picture",
     "heading": "Side-light a face with a matted Curves layer"

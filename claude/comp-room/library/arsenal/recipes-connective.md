@@ -2,6 +2,49 @@
 
 Generated from the recipe drafts; do not edit by hand. Recipes whose primary job is in this group. Find candidates for a beat with ae_arsenal find; read one with ae_arsenal get, or a section here by its heading.
 
+## Depth of field on a row of glossy plates (Advanced 3D camera)
+id: 11-camera-depth-of-field-advanced-3d
+revision: 686415b0
+job: move-camera; support: add-depth
+status: unproven
+what it does for a beat: Gives a 3D product-style scene a photographic lens: duplicated objects staggered in depth fall progressively out of focus, and a small camera move adds life. Use it to sell scale and depth once a scene from recipe 10 exists.
+what it looks like: Three identical black panels with light-grey pill buttons stand in a diagonal row receding to the left over a near-white floor. The nearest (right) panel is only slightly soft and its labels half readable; the middle one is softer and the rear one is a blur, with soft grey shadows falling down and to the left on the floor.
+ingredients:
+- The scene from recipe 10 (extruded plate in the Advanced 3D renderer, graphics precomp parented at Z -1 with Accepts Lights off, environment light with shadows, plane mesh set to Accepts Shadows Only) — built-in
+- Camera — built-in; Layer > New > Camera (menu inferred; Camera Settings dialog shown)
+- Camera Options > Depth of Field, Aperture, Focus Distance, Focus Area Width, Near, Far Blur Level — built-in; the last two appear on cameras in the Advanced 3D renderer (shown)
+steps:
+1. Start from the finished scene of recipe 10, with these changes made on screen without narration: the plate's Scale set to 64% (shown) and the environment light's rotation set to X +7°, Y 0° (shown). Intensity 136% and Shadow Darkness 66% from recipe 10 were not shown changed (inferred unchanged).
+   - Recipe 10 essentials, so this stands alone: comp in Advanced 3D; plate = black rounded-rectangle shape layer, Extrusion Depth 26, Material: Casts Shadows On, Specular Shininess 100%, Metal 78%; graphics precomp parented to it at Position Z -1, Accepts Lights Off; Environment light, Source Default, Casts Shadows on; plane mesh rotated 90° on X, Position Y 952, Scale 888%, Accepts Shadows Only. (shown in recipe 10's frames)
+2. Duplicate the plate together with its graphics precomp twice, so there are three pairs, each graphics layer parented to its own plate. (not narrated; three pairs with parents pointing to the plate under each shown)
+3. (Before duplicating, the original plate's Position is changed to 960,459,0 (shown, cut from the source video); not narrated, covered by the final values below.) Spread the three plates in X and Z so they form a diagonal row receding to the left (not narrated; shown):
+   - Front plate: Position 1136.0,459.0,0.0 (shown)
+   - Middle plate: Position 826.0,459.0,140.0 (shown)
+   - Rear plate: Position 506.0,459.0,362 (Z being dragged; last digits partly hidden; shown)
+   - Rotation of the three plates at this point: not shown (they keep whatever the original had; see unknowns)
+4. Add a camera. (said "cameras"; dialog shown)
+   - Type: Two-Node Camera (shown)
+   - Preset: 50mm (shown); this gives Zoom 940.74 mm, Angle of View 39.60°, Film Size 36 mm, Focal Length 50 mm (shown)
+   - Enable Depth of Field: left unticked in the dialog (shown); it is switched on in the timeline next
+   - In the timeline the camera's Zoom reads 2666.7 pixels (39.6° H) (shown)
+5. In the camera's Camera Options, turn depth of field on and push the blur. (said: raise the aperture and the blur controls)
+   - Depth of Field: On (from Off) (shown)
+   - Aperture: 181.3 pixels (from 25.3) (shown)
+   - Focus Distance: 2102.7 pixels (from 2343.7) (shown)
+   - Focus Area Width: 0.0 (left at its value) (shown)
+   - Near, Far Blur Level: 462.0, 462.0% (linked; from 100.0, 100.0%) (shown)
+6. Keyframe the camera's Point of Interest and Position for a slow move. (said; keyframes shown)
+   - At comp time 0:00: Point of Interest 934.0,490.2,0.0; Position 934.0,490.2,-2388.6 (shown)
+   - At comp time 0:00:04:22 (about 4.92 s at 23.976 fps): Point of Interest 921.9,493.6,16.6; Position 1325.2,365.5,-2334.2 (shown; values set by dragging with the orbit tool in the viewer, several passing values shown)
+   - The move is a pure orbit: the camera-to-target distance is 2388.6 px at both keys, so the focus relation holds while the camera swings about 390 px right and 125 px up and the plates' faces turn more towards the viewer (computed from the two keys; direction shown →)
+   - In the tutorial's comp the graphics have not appeared yet at comp time 0:00 (bare plates, shown), because the template elements animate on; a builder keying from 0:00 with static graphics will not see that
+layout: Measured on the result frame (picture 1644 x 925 px, full-frame origin 870,324), with the blur settings of step 5 and the camera before the move is keyed (its values then are not shown; presumably those of the first key, inferred). Three plates in a row, each overlapping the one behind it: front plate x 0.565–0.735, y 0.03–0.90; middle plate x 0.37–0.565, y 0.06–0.86; rear plate x 0.20–0.37 visible (its right part hidden), y 0.10–0.84 (measured). Each plate reads tall and narrow (visible face about 17–20% of the picture width, 75–87% of its height) because the plates are turned well away from square to the camera (measured; the rotation itself is not shown). Pills: three per plate, light grey, stacked as in recipe 10 (measured). Focus: no plate is fully sharp, because the focus distance (2102.7) is about 290 px nearer than the front plate, which sits about 2390 px from the camera; the front plate's labels are half readable, the middle plate's are smeared, the rear's are unreadable (measured; distance inferred from the values). Blur, measured as the 10–90% width of pill edges: front plate about 0.3–0.7% of the picture width (left edges 4–7 px, top edges about 12 px), middle about 0.6–1.1% (9–18 px), rear about 0.9–1.3% (14–21 px); the rear plate's outer edge against the floor about 0.8%. For comparison the sharp scene of recipe 10 gives 2–4 px (measured). These per-plate blur widths are the target. The shown Aperture 181.3 px and Near, Far Blur Level 462% do not transfer as a blur size: a thin-lens estimate from the shown Zoom, Aperture and Focus Distance predicts blur discs several times to ten times larger than the picture shows, so treat 181.3 and 462% as the tutorial's own values and tune your scene until the per-plate edge widths match (inferred from the measurement and the estimate). Extruded side: along the front plate's right edge the plate's thickness shows as a grey graded strip about 3% of the picture width, lighter towards the top, so the plates are turned with their right side towards the camera (measured). Shadows: each plate casts a soft grey shadow down and to the left onto the floor, the shadows merging into one band from y about 0.84 to 0.99 that reaches left to about x 0.10; darkest about RGB 100–105 against a floor of about 237, i.e. 0.43 of the floor level (measured). The shadow is blurred further by the depth of field near the bottom of the frame (inferred). Background: near white, faintly cool, RGB about 233,239,242 on the left and 239,250,251 on the right (measured). The finished example shown and is a different, pre-made file: the plates lean back steeply and fly in with template animation, the nearest plate is sharp and the rear ones heavily blurred, the camera is parented to a null and an adjustment layer sits on top; none of its values are shown (shown).
+timing and easing: Two camera keyframes, at 0:00 and 0:00:04:22 (comp time, 23.976 fps), on Point of Interest and Position (shown). Interpolation not shown; the keys look like plain linear diamonds (inferred).
+variations: Raise the aperture and blur levels as far as the look needs (said). Animate Point of Interest and Position, or use the viewer's camera tools (orbit, pan, dolly) to shape the final move (said).
+pitfalls: none given
+build notes: In scripting, the camera's Camera Options group holds Zoom, Depth of Field, Focus Distance and Aperture (long-standing properties). Focus Area Width and Near, Far Blur Level exist only on Advanced 3D cameras in recent versions; reach them by their displayed names and check they exist before setting them. Near, Far Blur Level is a linked two-value property (462, 462). Do not copy the blur values as a size; match the measured edge widths in layout. Duplicating a plate and its graphics precomp together keeps each copy's parent pointing at the new plate; check the Parent column. The aperture and focus values are in pixels and tied to this scene's scale (a 1920 x 1080 comp, camera about 2390 px from the front plate, plates about 310 px apart in X and 140–220 px apart in Z); in another scene aim for the measured blur instead: nearest plate's edges spread over about 0.3–0.7% of the picture width with half-readable labels, middle about 0.6–1.1%, rear about 0.9–1.3% and unreadable.
+unknowns: The plates' rotation in this shot (the last reading before duplication was X -29°, Y about -45°, Z +2°, but the plates are not shown after that). The rear plate's exact Z (read as 362). Whether the light's Intensity or Shadow Darkness changed after recipe 10. The camera keyframes' interpolation. The finished example's camera, blur and null values.
+
 ## A dark mass split open behind a travelling ball
 id: 05-path-opening-split-driven-by-moving-ball
 revision: ce7f0409

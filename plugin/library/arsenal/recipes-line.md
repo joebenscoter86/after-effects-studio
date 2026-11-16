@@ -101,6 +101,49 @@ pitfalls: none given
 build notes: By script: set `layer.transform.anchorPoint` to the pivot in layer space (and compensate `position` so the text does not move), duplicate with `layer.duplicate()` N−1 times, then for the i-th layer from the top set `transform.rotation` = −i × step (step ≈ 6.5°, or 360 / N for a closed ring). The Ctrl/Cmd+Alt proportional drag itself is an interface gesture and cannot be scripted; the loop reproduces its result. To spin the carousel, parent all copies to a null placed at the pivot and keyframe the null's Rotation (inferred from the parenting shown).
 unknowns: exact pivot coordinates and comp size; font size; text colour value; how the finished carousel is animated (null rotation keyframes, speed, easing); whether the comp in the build is 1920×1080 (the comp runs at 60 fps, shown).
 
+## Graphics riding a spinning real object
+id: 03-graphics-orbit-a-real-object
+revision: 2178ea7a
+job: list-items; support: keep-it-alive, make-concrete
+status: unproven
+variant of: 04-carousel-by-rotation
+differs: the same mechanism as the parent: copies of one layer, each turned a fixed step further about an anchor point moved onto a shared pivot, with the ring spun by parenting it to a rotating parent. Pivot: here the centre of a photographed round object, below the frame (about 1.21 of the picture height down); in the parent an empty point inside the frame, left of the words. Copies: here twelve at 30 degrees, each a whole card (photo in a matte plus caption) gathered under its own master layer, duplicated and turned +30 degrees one at a time; in the parent 55 copies of one text layer at -6.5 degrees, spread in one drag across all selected copies. Both make about a full turn; the step is a design choice (card width against word height). Spin: here every master is parented to the object, which turns by a time expression (time * -20); in the parent the copies are parented to a null whose animation is not shown (rotation keys inferred).
+what it does for a beat: Lets a real photographed object drive the motion: a cut-out wheel (or any round object) spins, and a ring of graphic cards fanned around its centre turns with it like a carousel. Use it for a "meet the team" or product-range beat that should feel physical rather than a plain slider.
+what it looks like: On a very pale blue-white background, the top half of a cut-out bicycle wheel rises from the bottom edge. Portrait photo cards with white caption tabs stand around it like spokes, each tilted so its bottom points at the hub, and the whole fan turns slowly anticlockwise with the wheel.
+ingredients:
+- A cut-out photo of a round object (a bicycle wheel PNG with transparency) — your own footage
+- Expression on Rotation — built-in
+- Shape layers, text layers and a photo layer for one card — built-in
+- Parenting (pick whip / Parent & Link column) — built-in
+- Pan Behind (Anchor Point) tool — built-in
+- Duplicate — built-in; Edit > Duplicate (inferred, the command is not shown)
+steps:
+1. Comp 1920 x 1080, 23.976 fps, 15 s, with a flat pale background layer. (shown, project panel)
+   - Background: very pale cyan-white, about RGB 236–239, 238–250, 242–251 (measured on a frame cut from source)
+2. Place the wheel photo so that only its upper half shows: its hub sits below the bottom of the frame, centred left to right. (shown)
+   - Anchor Point on the hub: 3157.7, 2236.2 in the photo's own pixels (shown; this value belongs to that image, so put the anchor on your own object's centre)
+   - Position: 974.0, 1316.5; Scale: 37.0 % (shown)
+3. Spin the wheel with an expression on Rotation: Alt/Option-click the stopwatch and type `time*-20`. (said; expression shown)
+   - This turns it 20° per second, anticlockwise on screen (negative). (inferred from the expression and shown on the result: the valve stem moves about 28° in 1.45 s, top moving left, see layout)
+4. Build one card upright, centred above the wheel: a portrait photo on top and a white caption tab below it holding two lines of dark text (a bold name and a lighter role) with a short rule above them. Make the white tab the master and parent every other part of the card to it. (said "parent everything to one master graphic"; shown, all parts parented to the tab)
+   - Card parts as shown: the photo, a hidden shape used as its matte (eye off), two text layers, a short line shape, one more shape, and the white tab as master (shown)
+5. With the master selected, take the Pan Behind (Anchor Point) tool and drag the master's anchor point down onto the wheel's hub. (said "move the anchor point ... to the center of the rotation"; tool highlighted and anchor at the card centre in a frame cut from source; anchor dragged below the frame onto the hub, cut from source)
+6. Select the whole card (master and its children) and duplicate it; the copy's children follow the new master. Give the new master Rotation +30°. (said "duplicate my work and offset the rotation"; shown : copy rotated 0x+30.0°, swung clockwise to the right of the first card)
+7. Repeat until the cards go all the way round: 12 masters at 0°, 30°, 60° … 330°. (said "revolve around the entire wheel"; lists masters up to the twelfth; the intermediate angles are inferred from 12 x 30° = 360°)
+8. Select all twelve masters and parent them to the wheel layer, so they turn at exactly its speed. (said; Parent & Link column shows the wheel for every master)
+layout: Measured on a frame cut from source (picture 1560 x 876 px in the full frame, x 826–2386, y 324–1200). Shares are of the picture height H unless marked W.
+- Wheel: hub at 0.51 W across and 1.21 H down (below the frame; the shown Position 974, 1316.5 gives 0.507 W, 1.219 H). Outer tyre radius about 0.62 H, so about the top 0.41 H of the wheel shows above the bottom edge. Tyre black, rim silver, thin spokes, one dark valve stem on the rim (measured with a circle fit to the tyre's top edge).
+- Cards: about 0.30–0.34 H wide and about 0.40 H tall. The photo takes the top 70 % of the card, with one rounded corner (top right, from its matte); the white tab takes the bottom 30 %. Behind each card a faint paler panel shows, offset up and to the left, and it cuts across the photo's top-left corner. It is roughly the card's size, offset about 0.02–0.03 H, and reads as white at roughly half opacity (estimated by eye). It most likely comes from the card's extra shape layer, the one stacked above the short line (inferred). Card centres sit about 0.89 H from the hub, and the inner (tab) edge about 0.68 H from it, which leaves a gap of about 0.06 H above the tyre (0.10 H in the static frame). Measured.
+- 12 cards at 30° spacing. Each is rotated so its bottom faces the hub, like spokes. About 6–7 show at once along the upper arc; the outer ones are cut off by the left and right edges.
+- No shadows, no overlap between cards, flat background. In the build every card holds the same photo and caption.
+- Motion: the wheel and cards turn together anticlockwise on screen (the valve stem and the cards move left across the top between). 20° per second gives a card speed of about 0.31 H per second at the card centres. Nothing else moves.
+- The opening clip of this chapter is a different, pre-made comp: five or more cards, each with a different person and name, on the same kind of wheel. There the cards are parented through a null rather than to the wheel, and the soft drop shadows come from technique 05. It also turns anticlockwise.
+timing and easing: Constant speed from the expression (−20° per second, linear); no keyframes.
+variations: Any set of graphics can ride any real object that turns; the motion of the object motivates the graphics. (said)
+pitfalls: none given
+build notes: Wheel: set `rotation.expression = "time*-20"`, anchor point on the hub (for a centred PNG, `[w/2, h/2]` of the source if the wheel is centred in it), position [974, 1316.5] in a 1920 x 1080 comp, scaled so that the tyre radius is about 0.62 x 1080 ≈ 670 px. Card: make the white tab a shape layer and parent the other parts to it. Set the tab's anchor so that it lands on the hub (anchor = hub's comp position converted into the tab's layer space; with an unrotated, unscaled tab at position P and anchor A, set anchor = A + (hub − P) and position = hub). Duplicate the group 11 times by script (`layer.duplicate()` for the master and each child, then re-parent each child copy to its new master) and set the masters' rotation to 30·i. Parent the masters to the wheel last: setting `.parent` by script keeps their look at the current time, so do it at time 0, where the expression gives 0°, to keep the layer values clean.
+unknowns: The card's own sizes in pixels, its fonts, the photo matte's corner radius, the pale backing panel's size and opacity (read here only from the picture). The rotation values of copies 3–12 (inferred 60°…330°). Whether the master's tab or the photo is centred on the radius. What the adjustment-style layer at the top of the stack does, and what effects the wheel layer and the background carry (fx switches on; no shadow or grade is visible in the result). The mouse pointer is inside the picture throughout the result window, so no fully clean frame exists; it sits just left of the top card's caption tab.
+
 ## Soft word-by-word rise-and-fade text reveal
 id: 18-smooth-text-reveal
 revision: 8c8e30dd

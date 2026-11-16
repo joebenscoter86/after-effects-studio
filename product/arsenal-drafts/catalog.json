@@ -1,6 +1,6 @@
 {
   "vocab": "jobs-v1",
-  "version": "dba75f7f",
+  "version": "44c977d9",
   "jobs": [
     "land-number",
     "count-things",
@@ -32,6 +32,380 @@
   ],
   "recipes": [
     {
+      "id": "01-shadow-map-overlay",
+      "video": "7pgDb6NKEXM",
+      "n": 1,
+      "name": "Window-light shadow map over a flat layout",
+      "line": "Makes a flat title card or layout look as if it sits in a room with sunlight falling through a window: long soft diagonal shadows with light bands between them. Reach for it when a clean graphic looks too digital and needs contrast and a sense of place without any 3D.",
+      "status": "unproven",
+      "kind": "technique",
+      "job": "add-depth",
+      "support": [
+        "finish-the-look",
+        "establish-place"
+      ],
+      "mood": [
+        "light",
+        "editorial",
+        "cinematic"
+      ],
+      "needs": [
+        "type"
+      ],
+      "duration": 5,
+      "motion": "still",
+      "difficulty": 2,
+      "group": null,
+      "why": "'Makes a flat title card look as if it sits in a room with sunlight through a window': soft window shadows give a flat layout light and place",
+      "section": {
+        "file": "7pgDb6NKEXM.md",
+        "heading": "Window-light shadow map over a flat layout"
+      },
+      "revision": "a2dfdc7d",
+      "still": null,
+      "taught_by": 1,
+      "variants": []
+    },
+    {
+      "id": "02-shadow-map-wipe-on",
+      "video": "7pgDb6NKEXM",
+      "n": 2,
+      "name": "Soft diagonal wipe-on for a shadow map",
+      "line": "Brings window-light shadows into a shot as if the sun had just come out: the shadow sweeps across the layout along the strips over about a second instead of popping on. Use it on the opening beat of a title card that carries a shadow map.",
+      "status": "unproven",
+      "kind": "technique",
+      "job": "add-depth",
+      "support": [
+        "reveal-headline"
+      ],
+      "mood": [
+        "light",
+        "editorial",
+        "cinematic"
+      ],
+      "needs": [
+        "type"
+      ],
+      "duration": 2,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": null,
+      "why": "'the shadow sweeps across the layout ... instead of popping on': the light arrives as the title lands",
+      "section": {
+        "file": "7pgDb6NKEXM.md",
+        "heading": "Soft diagonal wipe-on for a shadow map"
+      },
+      "revision": "f446fe5d",
+      "still": null,
+      "taught_by": 1,
+      "variants": []
+    },
+    {
+      "id": "03-graphics-orbit-a-real-object",
+      "video": "7pgDb6NKEXM",
+      "n": 3,
+      "name": "Graphics riding a spinning real object",
+      "line": "Lets a real photographed object drive the motion: a cut-out wheel (or any round object) spins, and a ring of graphic cards fanned around its centre turns with it like a carousel. Use it for a \"meet the team\" or product-range beat that should feel physical rather than a plain slider.",
+      "status": "unproven",
+      "kind": "technique",
+      "job": "list-items",
+      "support": [
+        "keep-it-alive",
+        "make-concrete"
+      ],
+      "mood": [
+        "light",
+        "playful",
+        "photo"
+      ],
+      "needs": [
+        "photo"
+      ],
+      "duration": 6,
+      "motion": "loop",
+      "difficulty": 3,
+      "group": "duplicate-and-step ring",
+      "why": "'a meet the team or product-range beat that should feel physical': a ring of cards turns with a spinning real object",
+      "section": {
+        "file": "7pgDb6NKEXM.md",
+        "heading": "Graphics riding a spinning real object"
+      },
+      "revision": "2178ea7a",
+      "still": null,
+      "taught_by": 6,
+      "variant_of": "04-carousel-by-rotation",
+      "variants": []
+    },
+    {
+      "id": "04-swap-footage-keep-edits",
+      "video": "7pgDb6NKEXM",
+      "n": 4,
+      "name": "Swap a layer's photo and keep everything built on it",
+      "line": "A time-saver, not a look. Once one card, slot or frame is fully built (transforms, masks or mattes, parenting, keyframes, effects), you put a different photo or clip into it without rebuilding anything.",
+      "status": "unproven",
+      "kind": "build-aid",
+      "job": null,
+      "support": [],
+      "mood": [
+        "neutral",
+        "workflow"
+      ],
+      "needs": [
+        "photo"
+      ],
+      "duration": 0,
+      "motion": "still",
+      "difficulty": 1,
+      "group": null,
+      "why": "workflow: put a new photo or clip into a finished slot without rebuilding it",
+      "section": {
+        "file": "7pgDb6NKEXM.md",
+        "heading": "Swap a layer's photo and keep everything built on it"
+      },
+      "revision": "223ffaa4",
+      "still": null,
+      "taught_by": 1,
+      "variants": []
+    },
+    {
+      "id": "05-soft-doubled-drop-shadow",
+      "video": "7pgDb6NKEXM",
+      "n": 5,
+      "name": "Seat a cut-out object with a soft, doubled drop shadow",
+      "line": "When a photographed object cut out of its background (a product, a prop, a wheel) is dropped into a flat graphic scene and looks pasted on, a very soft, barely offset drop shadow gives it a dark halo that grounds it. Stack a second, even softer copy when the first is too faint.",
+      "status": "unproven",
+      "kind": "technique",
+      "job": "add-depth",
+      "support": [
+        "light-the-hero"
+      ],
+      "mood": [
+        "light",
+        "soft",
+        "photo"
+      ],
+      "needs": [
+        "photo"
+      ],
+      "duration": 4,
+      "motion": "still",
+      "difficulty": 1,
+      "group": null,
+      "why": "'a photographed object cut out ... looks pasted on': a very soft doubled shadow seats it in the scene",
+      "section": {
+        "file": "7pgDb6NKEXM.md",
+        "heading": "Seat a cut-out object with a soft, doubled drop shadow"
+      },
+      "revision": "a2a75b23",
+      "still": null,
+      "taught_by": 1,
+      "variants": []
+    },
+    {
+      "id": "06-graphics-behind-subject-object-matte",
+      "video": "7pgDb6NKEXM",
+      "n": 6,
+      "name": "Tuck graphics behind a person with an automatic object matte",
+      "line": "For talking-head or presenter footage on a plain wall: cards, titles and text sit between the person and the wall, so the person stands in front of the graphics. Reach for it when overlays would otherwise cover the face or body.",
+      "status": "unproven",
+      "kind": "technique",
+      "job": "add-depth",
+      "support": [
+        "reveal-headline"
+      ],
+      "mood": [
+        "light",
+        "playful",
+        "photo"
+      ],
+      "needs": [
+        "footage"
+      ],
+      "duration": 5,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": null,
+      "why": "'cards, titles and text sit between the person and the wall': overlays go behind a presenter instead of over the face",
+      "section": {
+        "file": "7pgDb6NKEXM.md",
+        "heading": "Tuck graphics behind a person with an automatic object matte"
+      },
+      "revision": "1572d05b",
+      "still": null,
+      "taught_by": 1,
+      "variants": []
+    },
+    {
+      "id": "07-key-imperfect-green-screen",
+      "video": "7pgDb6NKEXM",
+      "n": 7,
+      "name": "Key a rough, unevenly lit green backdrop with a machine-learning keyer",
+      "line": "For stock or found footage shot against a coloured wall that was never meant to be keyed (uneven light, olive green, shadows), when a classic colour keyer leaves grey residue. The person comes out clean, hair included, ready to sit over graphics.",
+      "status": "unproven",
+      "kind": "build-aid",
+      "job": null,
+      "support": [],
+      "mood": [
+        "neutral",
+        "workflow"
+      ],
+      "needs": [
+        "footage"
+      ],
+      "duration": 0,
+      "motion": "still",
+      "difficulty": 1,
+      "group": null,
+      "why": "setup: cut a person off a rough coloured wall so graphics can sit behind or around them; nothing on screen alone",
+      "section": {
+        "file": "7pgDb6NKEXM.md",
+        "heading": "Key a rough, unevenly lit green backdrop with a machine-learning keyer"
+      },
+      "revision": "8f7d770e",
+      "still": null,
+      "taught_by": 1,
+      "variants": []
+    },
+    {
+      "id": "08-raised-white-shapes-with-long-shadows",
+      "video": "7pgDb6NKEXM",
+      "n": 8,
+      "name": "Stacked white discs that grow out of the centre with long soft shadows",
+      "line": "A title or opener background that makes a near-white frame look premium and tactile: white discs swell out from the centre one after another, each one raised off the one below with a pale rim and a long, soft shadow to one side. Reach for it when a clean white brand look needs depth and slow motion behind type.",
+      "status": "unproven",
+      "kind": "technique",
+      "job": "fill-the-backdrop",
+      "support": [
+        "add-depth",
+        "reveal-headline"
+      ],
+      "mood": [
+        "light",
+        "minimal",
+        "soft"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 6,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": null,
+      "why": "'A title or opener background that makes a near-white frame look premium': white discs swell out with long soft shadows behind type",
+      "section": {
+        "file": "7pgDb6NKEXM.md",
+        "heading": "Stacked white discs that grow out of the centre with long soft shadows"
+      },
+      "revision": "3aa9fdaf",
+      "still": null,
+      "taught_by": 1,
+      "variant_of": "11-white-on-light-finish",
+      "variants": []
+    },
+    {
+      "id": "09-edge-lens-blur-and-noise-finish",
+      "video": "7pgDb6NKEXM",
+      "n": 9,
+      "name": "Soft lens blur at the frame sides plus fine grain",
+      "line": "A last pass that makes a clean, drawn graphic look as if it was shot through a lens: the left and right sides go slightly soft while the centre stays crisp, and a little grain breaks up the flat digital fills. Use it on any finished graphic or title plate, especially pale ones where the cleanliness gives away that they are drawn.",
+      "status": "unproven",
+      "kind": "technique",
+      "job": "finish-the-look",
+      "support": [
+        "add-depth"
+      ],
+      "mood": [
+        "light",
+        "cinematic",
+        "soft"
+      ],
+      "needs": [
+        "none"
+      ],
+      "duration": 4,
+      "motion": "still",
+      "difficulty": 1,
+      "group": null,
+      "why": "'A last pass that makes a clean, drawn graphic look as if it was shot through a lens': soft sides and grain over a finished plate",
+      "section": {
+        "file": "7pgDb6NKEXM.md",
+        "heading": "Soft lens blur at the frame sides plus fine grain"
+      },
+      "revision": "2ba1df5b",
+      "still": null,
+      "taught_by": 1,
+      "variants": []
+    },
+    {
+      "id": "10-2d-graphics-on-extruded-3d-plate",
+      "video": "7pgDb6NKEXM",
+      "n": 10,
+      "name": "Flat UI graphic on a glossy extruded plate",
+      "line": "Turns a flat 2D card or UI panel into a solid, glossy object floating over a pale floor with a real cast shadow, while the graphic on its face keeps its exact flat colours. Reach for it when a 2D layout needs to read as a physical product shot without leaving After Effects.",
+      "status": "unproven",
+      "kind": "technique",
+      "job": "add-depth",
+      "support": [
+        "light-the-hero",
+        "show-real-screen"
+      ],
+      "mood": [
+        "light",
+        "3D",
+        "minimal"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 5,
+      "motion": "still",
+      "difficulty": 3,
+      "group": "shadow-catcher floor",
+      "why": "'Turns a flat 2D card or UI panel into a solid, glossy object floating over a pale floor with a real cast shadow'",
+      "section": {
+        "file": "7pgDb6NKEXM.md",
+        "heading": "Flat UI graphic on a glossy extruded plate"
+      },
+      "revision": "2443b743",
+      "still": null,
+      "taught_by": 3,
+      "variants": []
+    },
+    {
+      "id": "11-camera-depth-of-field-advanced-3d",
+      "video": "7pgDb6NKEXM",
+      "n": 11,
+      "name": "Depth of field on a row of glossy plates (Advanced 3D camera)",
+      "line": "Gives a 3D product-style scene a photographic lens: duplicated objects staggered in depth fall progressively out of focus, and a small camera move adds life. Use it to sell scale and depth once a scene from recipe 10 exists.",
+      "status": "unproven",
+      "kind": "technique",
+      "job": "move-camera",
+      "support": [
+        "add-depth"
+      ],
+      "mood": [
+        "light",
+        "3D",
+        "cinematic"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 5,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "DOF camera push",
+      "why": "'duplicated objects staggered in depth fall progressively out of focus, and a small camera move adds life'",
+      "section": {
+        "file": "7pgDb6NKEXM.md",
+        "heading": "Depth of field on a row of glossy plates (Advanced 3D camera)"
+      },
+      "revision": "686415b0",
+      "still": null,
+      "taught_by": 5,
+      "variants": []
+    },
+    {
       "id": "01-blurred-stroked-shapes-on-light-ground",
       "video": "8oVLS0ZlKC4",
       "n": 1,
@@ -62,7 +436,8 @@
       },
       "revision": "7620130e",
       "still": null,
-      "taught_by": 4
+      "taught_by": 4,
+      "variants": []
     },
     {
       "id": "02-glow-radial-blur-noise-finish-stack",
@@ -96,7 +471,8 @@
       },
       "revision": "37c482d0",
       "still": null,
-      "taught_by": 3
+      "taught_by": 3,
+      "variants": []
     },
     {
       "id": "03-blurred-light-shapes-at-frame-edges",
@@ -130,7 +506,8 @@
       },
       "revision": "7f0e0985",
       "still": null,
-      "taught_by": 4
+      "taught_by": 4,
+      "variants": []
     },
     {
       "id": "04-blur-and-choke-gooey-morph",
@@ -164,7 +541,8 @@
       },
       "revision": "fff1d625",
       "still": null,
-      "taught_by": 4
+      "taught_by": 4,
+      "variants": []
     },
     {
       "id": "05-path-opening-split-driven-by-moving-ball",
@@ -198,7 +576,8 @@
       },
       "revision": "ce7f0409",
       "still": null,
-      "taught_by": 4
+      "taught_by": 4,
+      "variants": []
     },
     {
       "id": "06-gradient-shapes-blur-noise-glow-posterize",
@@ -232,7 +611,8 @@
       },
       "revision": "e00e3d8c",
       "still": null,
-      "taught_by": 3
+      "taught_by": 3,
+      "variants": []
     },
     {
       "id": "01-dotted-stroke",
@@ -266,7 +646,8 @@
       },
       "revision": "228e87a2",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/01/build.png",
-      "taught_by": 2
+      "taught_by": 2,
+      "variants": []
     },
     {
       "id": "02-line-with-end-dots",
@@ -299,7 +680,8 @@
       },
       "revision": "1571ddbc",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/02/build.png",
-      "taught_by": 2
+      "taught_by": 2,
+      "variants": []
     },
     {
       "id": "03-tapered-stroke",
@@ -332,7 +714,8 @@
       },
       "revision": "c61c2fb0",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/03/build.png",
-      "taught_by": 1
+      "taught_by": 1,
+      "variants": []
     },
     {
       "id": "04-carousel-by-rotation",
@@ -365,7 +748,10 @@
       },
       "revision": "3a03f5d0",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/04/build.png",
-      "taught_by": 5
+      "taught_by": 6,
+      "variants": [
+        "03-graphics-orbit-a-real-object"
+      ]
     },
     {
       "id": "05-stagger-layers-in-time",
@@ -395,7 +781,8 @@
       },
       "revision": "9201d48e",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/05/build.png",
-      "taught_by": 1
+      "taught_by": 1,
+      "variants": []
     },
     {
       "id": "06-3d-orbit-rings",
@@ -429,7 +816,8 @@
       },
       "revision": "55063a18",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/06/build.png",
-      "taught_by": 5
+      "taught_by": 6,
+      "variants": []
     },
     {
       "id": "07-face-the-camera",
@@ -459,7 +847,8 @@
       },
       "revision": "59029d99",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/07/build.png",
-      "taught_by": 1
+      "taught_by": 1,
+      "variants": []
     },
     {
       "id": "08-record-puppet-pin-motion",
@@ -489,7 +878,8 @@
       },
       "revision": "1ecba9c9",
       "still": null,
-      "taught_by": 3
+      "taught_by": 3,
+      "variants": []
     },
     {
       "id": "09-endless-background-tile",
@@ -523,7 +913,8 @@
       },
       "revision": "dff1920a",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/09/build.png",
-      "taught_by": 1
+      "taught_by": 1,
+      "variants": []
     },
     {
       "id": "10-graphic-as-particles",
@@ -557,7 +948,8 @@
       },
       "revision": "f4725be7",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/10/build.png",
-      "taught_by": 2
+      "taught_by": 2,
+      "variants": []
     },
     {
       "id": "11-white-on-light-finish",
@@ -590,7 +982,10 @@
       },
       "revision": "0f345098",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/11/build.png",
-      "taught_by": 1
+      "taught_by": 2,
+      "variants": [
+        "08-raised-white-shapes-with-long-shadows"
+      ]
     },
     {
       "id": "12-long-soft-shadow",
@@ -623,7 +1018,8 @@
       },
       "revision": "5b8fb6a4",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/12/build.png",
-      "taught_by": 2
+      "taught_by": 2,
+      "variants": []
     },
     {
       "id": "13-dot-grid-texture",
@@ -656,7 +1052,8 @@
       },
       "revision": "4222655e",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/13/build.png",
-      "taught_by": 1
+      "taught_by": 1,
+      "variants": []
     },
     {
       "id": "14-3d-floor-shadows",
@@ -690,7 +1087,8 @@
       },
       "revision": "b210d945",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/14/build.png",
-      "taught_by": 2
+      "taught_by": 3,
+      "variants": []
     },
     {
       "id": "15-grow-bounds-fix",
@@ -720,7 +1118,8 @@
       },
       "revision": "8e648131",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/15/build.png",
-      "taught_by": 2
+      "taught_by": 2,
+      "variants": []
     },
     {
       "id": "16-lock-focus-to-layer",
@@ -754,7 +1153,8 @@
       },
       "revision": "45bd25eb",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/16/build.png",
-      "taught_by": 4
+      "taught_by": 5,
+      "variants": []
     },
     {
       "id": "17-depth-fog",
@@ -787,7 +1187,8 @@
       },
       "revision": "443696ce",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/17/build.png",
-      "taught_by": 1
+      "taught_by": 1,
+      "variants": []
     },
     {
       "id": "18-smooth-text-reveal",
@@ -818,7 +1219,8 @@
       },
       "revision": "8c8e30dd",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/18/build.png",
-      "taught_by": 2
+      "taught_by": 2,
+      "variants": []
     },
     {
       "id": "19-text-on-a-path",
@@ -851,7 +1253,8 @@
       },
       "revision": "d8d51815",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/19/build.png",
-      "taught_by": 2
+      "taught_by": 2,
+      "variants": []
     },
     {
       "id": "20-two-pass-glow",
@@ -884,7 +1287,8 @@
       },
       "revision": "295cc9bc",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/20/build.png",
-      "taught_by": 1
+      "taught_by": 1,
+      "variants": []
     },
     {
       "id": "21-texture-through-a-matte",
@@ -918,7 +1322,8 @@
       },
       "revision": "c33c4c28",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/21/build.png",
-      "taught_by": 2
+      "taught_by": 2,
+      "variants": []
     },
     {
       "id": "22-hide-layers-shy",
@@ -948,7 +1353,8 @@
       },
       "revision": "ff77e41e",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/22/build.png",
-      "taught_by": 1
+      "taught_by": 1,
+      "variants": []
     },
     {
       "id": "23-shutter-angle-blur",
@@ -978,7 +1384,8 @@
       },
       "revision": "955188f5",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/23/build.png",
-      "taught_by": 1
+      "taught_by": 1,
+      "variants": []
     },
     {
       "id": "24-sharp-scaled-precomp",
@@ -1008,7 +1415,8 @@
       },
       "revision": "42775cad",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/24/build.png",
-      "taught_by": 1
+      "taught_by": 1,
+      "variants": []
     },
     {
       "id": "25-custom-media-frame",
@@ -1043,7 +1451,8 @@
       },
       "revision": "8c6d3c5f",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/25/build.png",
-      "taught_by": 2
+      "taught_by": 2,
+      "variants": []
     },
     {
       "id": "01-rounded-shape-matte-media-card",
@@ -1078,7 +1487,8 @@
       },
       "revision": "987d70ca",
       "still": null,
-      "taught_by": 2
+      "taught_by": 2,
+      "variants": []
     },
     {
       "id": "02-pivot-null-swing-loop",
@@ -1111,7 +1521,8 @@
       },
       "revision": "aef43825",
       "still": null,
-      "taught_by": 1
+      "taught_by": 1,
+      "variants": []
     },
     {
       "id": "03-tilt-and-shrink-on-swing",
@@ -1144,7 +1555,8 @@
       },
       "revision": "4dc3ff2c",
       "still": null,
-      "taught_by": 1
+      "taught_by": 1,
+      "variants": []
     },
     {
       "id": "04-duplicate-cards-round-the-pivot",
@@ -1177,7 +1589,8 @@
       },
       "revision": "c642968f",
       "still": null,
-      "taught_by": 5
+      "taught_by": 6,
+      "variants": []
     },
     {
       "id": "05-mask-path-to-position-loop",
@@ -1211,7 +1624,8 @@
       },
       "revision": "0a285402",
       "still": null,
-      "taught_by": 2
+      "taught_by": 2,
+      "variants": []
     },
     {
       "id": "06-path-trail-scale-rotate-in",
@@ -1245,7 +1659,8 @@
       },
       "revision": "8624fbb9",
       "still": null,
-      "taught_by": 2
+      "taught_by": 2,
+      "variants": []
     },
     {
       "id": "07-3d-spinning-box-of-cards",
@@ -1279,7 +1694,8 @@
       },
       "revision": "257f8710",
       "still": null,
-      "taught_by": 5
+      "taught_by": 6,
+      "variants": []
     },
     {
       "id": "08-tunnel-from-stacked-boxes",
@@ -1313,7 +1729,8 @@
       },
       "revision": "5cabc2f0",
       "still": null,
-      "taught_by": 1
+      "taught_by": 1,
+      "variants": []
     },
     {
       "id": "09-camera-fly-through-with-depth-of-field",
@@ -1348,7 +1765,8 @@
       },
       "revision": "df331963",
       "still": null,
-      "taught_by": 4
+      "taught_by": 5,
+      "variants": []
     },
     {
       "id": "10-inner-ring-carousel",
@@ -1382,7 +1800,8 @@
       },
       "revision": "6aaef1bc",
       "still": null,
-      "taught_by": 5
+      "taught_by": 6,
+      "variants": []
     },
     {
       "id": "11-wide-lens-camera-distortion",
@@ -1414,7 +1833,8 @@
       },
       "revision": "9d356f19",
       "still": null,
-      "taught_by": 1
+      "taught_by": 1,
+      "variants": []
     },
     {
       "id": "01-bevelled-3d-text-material-texture",
@@ -1448,7 +1868,8 @@
       },
       "revision": "f3337a2e",
       "still": null,
-      "taught_by": 3
+      "taught_by": 3,
+      "variants": []
     },
     {
       "id": "02-backlit-environment-light-with-shadow-floor",
@@ -1482,7 +1903,8 @@
       },
       "revision": "57bcf211",
       "still": null,
-      "taught_by": 2
+      "taught_by": 3,
+      "variants": []
     },
     {
       "id": "03-parallel-rim-light-no-shadows",
@@ -1516,7 +1938,8 @@
       },
       "revision": "fad26040",
       "still": null,
-      "taught_by": 1
+      "taught_by": 1,
+      "variants": []
     },
     {
       "id": "04-point-light-falloff-front-fill",
@@ -1548,7 +1971,8 @@
       },
       "revision": "bf8ba489",
       "still": null,
-      "taught_by": 1
+      "taught_by": 1,
+      "variants": []
     },
     {
       "id": "05-per-character-3d-fly-in-ramp-up",
@@ -1582,7 +2006,8 @@
       },
       "revision": "1e910df2",
       "still": null,
-      "taught_by": 2
+      "taught_by": 2,
+      "variants": []
     },
     {
       "id": "06-depth-of-field-camera-push-on-null",
@@ -1615,7 +2040,8 @@
       },
       "revision": "cecbb36e",
       "still": null,
-      "taught_by": 4
+      "taught_by": 5,
+      "variants": []
     },
     {
       "id": "07-gold-face-plain-sides-look",
@@ -1649,7 +2075,8 @@
       },
       "revision": "96d7263f",
       "still": null,
-      "taught_by": 3
+      "taught_by": 3,
+      "variants": []
     },
     {
       "id": "08-outline-only-3d-title",
@@ -1683,7 +2110,8 @@
       },
       "revision": "983b4b1f",
       "still": null,
-      "taught_by": 3
+      "taught_by": 3,
+      "variants": []
     },
     {
       "id": "09-rotating-3d-text-ring-loop",
@@ -1718,7 +2146,8 @@
       },
       "revision": "351145a5",
       "still": null,
-      "taught_by": 2
+      "taught_by": 2,
+      "variants": []
     },
     {
       "id": "01-vector-art-split-into-layers",
@@ -1748,7 +2177,8 @@
       },
       "revision": "d5c78a40",
       "still": null,
-      "taught_by": 1
+      "taught_by": 1,
+      "variants": []
     },
     {
       "id": "02-tritone-curves-mood-grade",
@@ -1781,7 +2211,8 @@
       },
       "revision": "b858b451",
       "still": null,
-      "taught_by": 1
+      "taught_by": 1,
+      "variants": []
     },
     {
       "id": "03-z-depth-push-and-rescale",
@@ -1814,7 +2245,8 @@
       },
       "revision": "d871fbdb",
       "still": null,
-      "taught_by": 2
+      "taught_by": 2,
+      "variants": []
     },
     {
       "id": "04-camera-depth-of-field-focus-lock-dolly",
@@ -1849,7 +2281,8 @@
       },
       "revision": "4baff6c1",
       "still": null,
-      "taught_by": 4
+      "taught_by": 5,
+      "variants": []
     },
     {
       "id": "05-looping-wind-sway-rotation",
@@ -1882,7 +2315,8 @@
       },
       "revision": "1cb03031",
       "still": null,
-      "taught_by": 1
+      "taught_by": 1,
+      "variants": []
     },
     {
       "id": "06-wave-warp-grass-wind",
@@ -1915,7 +2349,8 @@
       },
       "revision": "e6a8aee2",
       "still": null,
-      "taught_by": 1
+      "taught_by": 1,
+      "variants": []
     },
     {
       "id": "07-leaf-particles-blown-across",
@@ -1949,7 +2384,8 @@
       },
       "revision": "59d14a07",
       "still": null,
-      "taught_by": 2
+      "taught_by": 2,
+      "variants": []
     },
     {
       "id": "08-rainfall-matched-to-wind",
@@ -1983,7 +2419,8 @@
       },
       "revision": "8f1f79ee",
       "still": null,
-      "taught_by": 1
+      "taught_by": 1,
+      "variants": []
     },
     {
       "id": "09-puppet-pin-subtle-character-motion",
@@ -2017,7 +2454,8 @@
       },
       "revision": "51175c8a",
       "still": null,
-      "taught_by": 3
+      "taught_by": 3,
+      "variants": []
     },
     {
       "id": "10-film-grain-finish-stack",
@@ -2048,7 +2486,8 @@
       },
       "revision": "78d8fc73",
       "still": null,
-      "taught_by": 3
+      "taught_by": 3,
+      "variants": []
     },
     {
       "id": "11-matching-closeup-telephoto-compression",
@@ -2084,7 +2523,8 @@
       },
       "revision": "27a97373",
       "still": null,
-      "taught_by": 2
+      "taught_by": 2,
+      "variants": []
     },
     {
       "id": "12-isolated-hair-wave-and-puppet",
@@ -2116,7 +2556,8 @@
       },
       "revision": "62e1b40d",
       "still": null,
-      "taught_by": 3
+      "taught_by": 3,
+      "variants": []
     },
     {
       "id": "13-masked-curves-relight-track-matte",
@@ -2150,7 +2591,8 @@
       },
       "revision": "6dc3df1a",
       "still": null,
-      "taught_by": 2
+      "taught_by": 2,
+      "variants": []
     }
   ]
 }
