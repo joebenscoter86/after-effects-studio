@@ -1,6 +1,6 @@
 {
   "vocab": "jobs-v1",
-  "version": "6e98683b",
+  "version": "96c4087d",
   "jobs": [
     "land-number",
     "count-things",
@@ -261,7 +261,7 @@
         "file": "7pgDb6NKEXM.md",
         "heading": "Key a rough, unevenly lit green backdrop with a machine-learning keyer"
       },
-      "revision": "8f7d770e",
+      "revision": "2dcbae92",
       "still": null,
       "taught_by": 1,
       "variants": []
@@ -366,7 +366,7 @@
         "file": "7pgDb6NKEXM.md",
         "heading": "Flat UI graphic on a glossy extruded plate"
       },
-      "revision": "8970559a",
+      "revision": "90e84f77",
       "still": null,
       "taught_by": 3,
       "variants": []

@@ -1,6 +1,6 @@
 {
  "vocab": "jobs-v1",
- "version": "6e98683b",
+ "version": "96c4087d",
  "jobs": [
   "land-number",
   "count-things",
@@ -213,7 +213,7 @@
   },
   {
    "id": "07-key-imperfect-green-screen",
-   "revision": "8f7d770e",
+   "revision": "2dcbae92",
    "name": "Key a rough, unevenly lit green backdrop with a machine-learning keyer",
    "line": "For stock or found footage shot against a coloured wall that was never meant to be keyed (uneven light, olive green, shadows), when a classic colour keyer leaves grey residue. The person comes out clean, hair included, ready to sit over graphics.",
    "status": "unproven",
@@ -302,7 +302,7 @@
   },
   {
    "id": "10-2d-graphics-on-extruded-3d-plate",
-   "revision": "8970559a",
+   "revision": "90e84f77",
    "name": "Flat UI graphic on a glossy extruded plate",
    "line": "Turns a flat 2D card or UI panel into a solid, glossy object floating over a pale floor with a real cast shadow, while the graphic on its face keeps its exact flat colours. Reach for it when a 2D layout needs to read as a physical product shot without leaving After Effects.",
    "status": "unproven",
