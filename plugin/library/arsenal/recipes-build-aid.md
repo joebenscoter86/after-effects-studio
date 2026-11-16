@@ -242,7 +242,7 @@ unknowns: Precomp and comp sizes; whether the scale was keyframed (no stopwatch 
 
 ## Found vector art, one object per file, laid out as separate layers
 id: 01-vector-art-split-into-layers
-revision: 4f6aed0b
+revision: 7b170ad6
 job: none (build-aid)
 status: unproven
 what it does for a beat: The groundwork for a lit, deep 2D scene when you cannot draw: gather ready-made vector illustrations, keep only the pieces you need, and bring every object into After Effects as its own layer so each one can later be graded and placed in depth on its own. Assumes: nothing; it starts from an empty project.
@@ -278,7 +278,7 @@ layout: measured on the result frame against the picture inside the crop (the wh
 timing and easing: none given
 variations: Save each isolated object as PNG instead of an Illustrator file (said). Any layout you like (said).
 pitfalls: none given
-build notes: The browser and Illustrator stages are by hand. In After Effects, script the rest: app.project.importFile(new ImportOptions(File(...))) for each piece (for a layered .ai use importAs = ImportAsType.COMP to get its layers), comp.layers.add(item) per piece, then set layer.property("ADBE Transform Group").property("ADBE Scale"/"ADBE Position"/"ADBE Rotate Z"). Set "Continuously Rasterize" (layer.collapseTransformation = true) on .ai layers if they are scaled above 100% later. Placement is an artistic layout; only the few values above are given.
+build notes: A build aid prepared mostly outside After Effects (in a browser and a vector program; the After Effects part is only importing and placing the pieces): there is nothing of its own to prove in After Effects, so it stays unproven by design and no proof brief should expect a build of it (owner's decision, 2026-11-16). The browser and Illustrator stages are by hand. In After Effects, script the rest: app.project.importFile(new ImportOptions(File(...))) for each piece (for a layered .ai use importAs = ImportAsType.COMP to get its layers), comp.layers.add(item) per piece, then set layer.property("ADBE Transform Group").property("ADBE Scale"/"ADBE Position"/"ADBE Rotate Z"). Set "Continuously Rasterize" (layer.collapseTransformation = true) on .ai layers if they are scaled above 100% later. Placement is an artistic layout; only the few values above are given.
 unknowns: The exact stock files and how many objects were saved; whether PNGs were used for any piece made in Illustrator (the wall, ledge, city and sky arrive as .png/.jpg, source not shown); composition size and duration (1920 x 1080 inferred from a 960,540 centre seen later); Position values for most layers and Scale for most pieces (a character layer is being dragged down to about 45% but its landed value is not shown; several Scale values flash by while dragging: 46, 69, 76, 32, 37%); the content of the shape layer near the bottom of the stack; the Import dialog settings; Opacity of the pine and bare-tree layers (never shown; their pale tone matches the pine's own thumbnail, so 100% is the likely value).
 
 ## Long-lens close-up that matches the wide shot

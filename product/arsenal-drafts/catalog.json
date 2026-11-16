@@ -1,6 +1,6 @@
 {
   "vocab": "jobs-v1",
-  "version": "956579c3",
+  "version": "1cd51a08",
   "jobs": [
     "land-number",
     "count-things",
@@ -2203,7 +2203,7 @@
         "file": "il_OcNyqDOE.md",
         "heading": "Found vector art, one object per file, laid out as separate layers"
       },
-      "revision": "4f6aed0b",
+      "revision": "7b170ad6",
       "still": null,
       "taught_by": 1,
       "variants": []

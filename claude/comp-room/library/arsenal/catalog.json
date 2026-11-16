@@ -1,6 +1,6 @@
 {
  "vocab": "jobs-v1",
- "version": "956579c3",
+ "version": "1cd51a08",
  "jobs": [
   "land-number",
   "count-things",
@@ -2012,7 +2012,7 @@
   },
   {
    "id": "01-vector-art-split-into-layers",
-   "revision": "4f6aed0b",
+   "revision": "7b170ad6",
    "name": "Found vector art, one object per file, laid out as separate layers",
    "line": "The groundwork for a lit, deep 2D scene when you cannot draw: gather ready-made vector illustrations, keep only the pieces you need, and bring every object into After Effects as its own layer so each one can later be graded and placed in depth on its own. Assumes: nothing; it starts from an empty project.",
    "status": "unproven",

@@ -41,3 +41,9 @@ Study material (video, frames, transcript, timeline) is read from the old worktr
 Check rounds: 3 passed round 1 (ZqRE 01, il 02, il 13); every other recipe failed round 1 and passed in round 2 to 4 (several polish rounds on changed lines). Writers' disputes upheld against checkers about a dozen times; each was settled on frames by the checker itself.
 
 Stage 2 order (jobs with no proven technique first): light-the-hero (8oV 06, eoBE 03, eoBE 04, il 13), establish-place (il 08), hand-over (8oV 05); then the rest by job.
+
+## Stage 2
+
+- 13:12 Stage 1 committed (856988f) and the tally sent to the parent, with two questions: keep il_OcNyqDOE 01 as a never-proven build aid or drop it; After Effects for batch 1.
+- 13:15 Reference stills and clips cut for all 37 (`node tools/channel-learner/proofs/references.mjs <study> --fps 60`; the linked study folders have no state.json). Batch 1: 8oVLS0ZlKC4 05, 06; eoBEBx1PbS4 01, 03, 04; il_OcNyqDOE 02, 03, 08, 10, 13 (jobs with no proven technique first: light-the-hero, establish-place, hand-over). Three art directors started (`briefs/art-brief.md`), budget about 190 credits. One proofs project for the whole backlog: `quality/renders/channel-study/proof/backlog-proofs.aep` (to be made in After Effects at 8 bpc once the parent says it is free). Builder brief `briefs/builder-brief.md`; script folders `tools/channel-learner/proofs/<video>/` with the last run's prelude and art helpers.
+- Parent, 13:20: "keep il_OcNyqDOE 01 as a build aid, never proven, like the other build aids. Add a line saying it's done outside After Effects, so a brief never expects a proof for it." Added to its build notes; changed-line check asked. Batch 1 approved; After Effects is busy with the 0.4.1 live checks for about an hour; the parent will say when it is free; keep it until batch 1 is built and reviewed, then report.
