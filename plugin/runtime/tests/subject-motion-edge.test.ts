@@ -564,4 +564,24 @@ describe("registration and docs", () => {
     expect(keying).toMatch(/2 minutes/);
     expect(keying).toMatch(/confirmed only on English After Effects/);
   });
+
+  it("says it has run live as an operation, with its property match names confirmed", () => {
+    // Ran in After Effects 2027 on 2026-11-16 and 2026-11-19: all seven match names landed, matchNameMismatch empty.
+    const recipe4 = read("../../library/references/keying.md")
+      .split("### Recipe 4")[1]!
+      .split("\n### ")[0]!;
+    const op = getOp("subject.motion_edge")!;
+    const source = read("../src/operations/keying-subject-motion.ts");
+    for (const text of [recipe4, op.description, source]) {
+      expect(text).not.toMatch(/[Nn]ot (yet )?run in After Effects as an operation/);
+      expect(text).not.toMatch(/match names are not yet confirmed/);
+    }
+    for (const text of [recipe4, op.description]) {
+      expect(text).toMatch(/[Rr]an live in After Effects 2027/);
+      expect(text).toMatch(/match names[^.]*confirmed/);
+      expect(text).toMatch(/[Cc]onfirmed only on English After Effects/);
+    }
+    expect(recipe4).toMatch(/1920 × 1080, 24 fps/);
+    expect(recipe4).toMatch(/matchNameMismatch` was empty/);
+  });
 });

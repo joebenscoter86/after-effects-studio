@@ -32,8 +32,9 @@ type StockSetting = [string, string, number];
 
 // The stock effects' property match names. The effects themselves are added by match name, and
 // the track mattes and the Difference blend are set through After Effects' enums, which do not
-// depend on the language. The property match names are not yet confirmed in After Effects: the
-// English names are the fallback, so the motion edge is confirmed only on English After Effects.
+// depend on the language. The seven property match names were confirmed live in After Effects 2027
+// (2026-11-16 and 2026-11-19: each landed on the property meant, matchNameMismatch empty). The
+// English names stay the fallback; the motion edge is confirmed only on English After Effects.
 const LEVELS = (t: { black: number; white: number }): StockSetting[] => [
   ["ADBE Easy Levels2-0003", "Input Black", t.black],
   ["ADBE Easy Levels2-0004", "Input White", t.white],
@@ -206,7 +207,7 @@ export function motionEdgeBuildJsx(
             }
             // Stock effects: each property as [match name, English name, value]. The match name is tried first and works
             // in any language; the English name is the fallback when After Effects does not know the match name. The property
-            // match names are not yet confirmed in After Effects: where the English name finds a different property than the
+            // match names were confirmed live in After Effects 2027; should the English name find a different property than the
             // match name, the English one is set (the match name is wrong) and the pair is reported in matchNameMismatch.
             var _mismatch = [];
             function _setEach(fx, list, what) {
@@ -377,7 +378,7 @@ registerOp({
     "Give an Object Matte cut-out a soft, motion-blurred edge where the subject moves, taken from a second key by a per-pixel machine-learning keyer effect installed separately (not part of After Effects or this plugin); where the subject is still, the crisp Object Matte outline stays. Needs the matted layer with at least one selection (the user's click) and `keyerMatchName`, the keyer's match name; it refuses, building nothing, when no installed effect has that match name (app.effects), and refuses a layer that already has a soft edge (subject.soften_edge): undo that first. " +
     "It builds five comps around the matted layer, never a copy of the user's comp: '<layer> object matte' (the matted layer as clicked), '<layer> keyer' (the take with the keyer and `keyerSettings`, such as { \"Despill Strength\": 1 }), '<layer> motion' (the take, the take again one frame later in Difference, and an adjustment layer with Levels from `threshold` black to white, Tint, Minimax `motionGrow` and Box Blur `motionBlur`, 2 iterations), '<layer> band' (the Object Matte comp with Minimax `band` px on its alpha, Don't Shrink Edges on, Luma-matted by the motion comp) and '<layer> motion edge' (the Object Matte outline over the band, switched off, over the keyer's edge, Alpha-matted by the band). The last goes in above the matted layer, which is switched off and otherwise untouched (it keeps the sound); every copy's sound is off. " +
     "Use it instead of subject.soften_edge for fast hand and arm movement against a static background: soften_edge softens the hair inside a region, this follows motion anywhere. Defaults measured on a 2176 × 3840 studio take shot on a phone on a tripod: threshold 0.25 to 0.45 (lower thresholds lit every still edge, since the camera shifts slightly between frames), motionGrow 25, motionBlur 15, band 50. A plain band with no motion mask filled the gaps in a microphone mount, brought back the keyer's halo and let a plant behind the head through. " +
-    "Cost: twice the keying work in every render (Object Matte and the keyer): the whole 8.9 s take rendered in 986 s (measured on one machine), roughly 2 minutes of render per second of 4K (measured on one machine). Before the render, time a few frames on the user's machine, multiply by the frame count and tell the user. It does not render or check itself; subject.check, subject.render_cutout and subject.use_cutout use its layer in place of the matted one. Confirmed only on English After Effects: some stock effect settings are found by their English names when their match names are not. On the layer's first frame there is no frame before, so the band there covers the whole outline. Not run in After Effects as an operation: the construction was built by hand. undo: true removes what it built and switches the matted layer back on.",
+    "Cost: twice the keying work in every render (Object Matte and the keyer): the whole 8.9 s take rendered in 986 s (measured on one machine), roughly 2 minutes of render per second of 4K (measured on one machine). Before the render, time a few frames on the user's machine, multiply by the frame count and tell the user. It does not render or check itself; subject.check, subject.render_cutout and subject.use_cutout use its layer in place of the matted one. Confirmed only on English After Effects: `keyerSettings` and the fallback for stock settings use English property names. On the layer's first frame there is no frame before, so the band there covers the whole outline. Ran live in After Effects 2027 as an operation (2026-11-16 and 2026-11-19, a 1920 × 1080, 24 fps take): all seven stock property match names confirmed, matchNameMismatch empty, and undo put the comp back. undo: true removes what it built and switches the matted layer back on.",
   params: [
     ...compLayerParams,
     {

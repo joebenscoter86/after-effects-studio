@@ -97,7 +97,7 @@ describe("studio library", () => {
   });
   it("labels every shipped copy of the measured figures, and gives the user their own timing", () => {
     // 0.4.1 item 2, round 1: every shipped copy, not only the guidance.
-    const FIGURES = /986 s|2 minutes of render|390 s|279 to 390|19 GB/;
+    const FIGURES = /986 s|2 minutes of render|390 s|279 to 390|19 GB|342 s|65 to 92|9\.0 GB/;
     const files = (dir: string, ext: RegExp): string[] =>
       readdirSync(dir, { recursive: true, encoding: "utf8" })
         .filter((f) => ext.test(f))
