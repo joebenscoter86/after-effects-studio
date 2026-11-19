@@ -112,4 +112,12 @@ Proven techniques in the arsenal, each a still of our own proof build. The ae_ar
 ![Two stacked glows for a soft cinematic bloom](library/arsenal/stills/20-two-pass-glow.jpg)
 ![Paper texture through a title matte, with roughened edges](library/arsenal/stills/21-texture-through-a-matte.jpg)
 ![Frame video in a custom shape with a track matte (1 variant)](library/arsenal/stills/25-custom-media-frame.jpg)
+![Bevelled 3D text wrapped in a tiled material](library/arsenal/stills/01-bevelled-3d-text-material-texture.jpg)
+![Shadowless parallel light as an extra backlight](library/arsenal/stills/03-parallel-rim-light-no-shadows.jpg)
+![Soft front fill from a point light with smooth falloff](library/arsenal/stills/04-point-light-falloff-front-fill.jpg)
+![One mood grade for mismatched art: Tritone plus a single-point Curves, pasted to every layer](library/arsenal/stills/02-tritone-curves-mood-grade.jpg)
+![Flat cut-outs into a deep stage: push far layers back in Z, pull near ones forward, rescale to frame](library/arsenal/stills/03-z-depth-push-and-rescale.jpg)
+![Rain slanted to match the wind](library/arsenal/stills/08-rainfall-matched-to-wind.jpg)
+![Film-stock grain and mood finish on a top adjustment layer](library/arsenal/stills/10-film-grain-finish-stack.jpg)
+![Side-light a face with a matted Curves layer](library/arsenal/stills/13-masked-curves-relight-track-matte.jpg)
 <!-- arsenal-stills:end -->

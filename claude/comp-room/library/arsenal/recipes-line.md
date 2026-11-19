@@ -609,9 +609,9 @@ unknowns: the exact pen path vertices and handles (read from the screen, not fro
 
 ## Bevelled 3D text wrapped in a tiled material
 id: 01-bevelled-3d-text-material-texture
-revision: 6b3126e2
+revision: 593535c4
 job: reveal-headline; support: add-depth
-status: unproven
+status: proven (accepted 2026-11-19)
 what it does for a beat: Turns a flat title into a solid, physical object with rounded edges and a real surface (metal, stone, paint) in a few clicks; the base for any lit 3D title shot.
 what it looks like: A single short word in heavy sans-serif capitals, extruded with soft rounded front edges, every face covered in a pale-blue painted metal with rust patches; the texture is shifted per letter so no two letters show the same patch, with big rust patches up to about two strokes across, some letters far rustier than others, and rust running round the letter edges.
 ingredients:

@@ -32,5 +32,13 @@
  "08-raised-white-shapes-with-long-shadows": "quality/renders/channel-study/7pgDb6NKEXM/proof/08/build.png",
  "09-edge-lens-blur-and-noise-finish": "quality/renders/channel-study/7pgDb6NKEXM/proof/09/build.png",
  "10-2d-graphics-on-extruded-3d-plate": "quality/renders/channel-study/7pgDb6NKEXM/proof/10/build.png",
- "11-camera-depth-of-field-advanced-3d": "quality/renders/channel-study/7pgDb6NKEXM/proof/11/build.png"
+ "11-camera-depth-of-field-advanced-3d": "quality/renders/channel-study/7pgDb6NKEXM/proof/11/build.png",
+ "01-bevelled-3d-text-material-texture": "quality/renders/channel-study/eoBEBx1PbS4/proof/01/build.png",
+ "03-parallel-rim-light-no-shadows": "quality/renders/channel-study/eoBEBx1PbS4/proof/03/build.png",
+ "04-point-light-falloff-front-fill": "quality/renders/channel-study/eoBEBx1PbS4/proof/04/build.png",
+ "02-tritone-curves-mood-grade": "quality/renders/channel-study/il_OcNyqDOE/proof/02/build.png",
+ "03-z-depth-push-and-rescale": "quality/renders/channel-study/il_OcNyqDOE/proof/03/build.png",
+ "08-rainfall-matched-to-wind": "quality/renders/channel-study/il_OcNyqDOE/proof/08/build.png",
+ "10-film-grain-finish-stack": "quality/renders/channel-study/il_OcNyqDOE/proof/10/build.png",
+ "13-masked-curves-relight-track-matte": "quality/renders/channel-study/il_OcNyqDOE/proof/13/build.png"
 }

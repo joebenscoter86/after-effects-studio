@@ -931,9 +931,9 @@ unknowns: The camera's position and point of interest after creation, and whethe
 
 ## Shadowless parallel light as an extra backlight
 id: 03-parallel-rim-light-no-shadows
-revision: 75ed9ba1
+revision: 49cebea9
 job: light-the-hero; support: finish-the-look
-status: unproven
+status: proven (accepted 2026-11-19)
 what it does for a beat: A small finishing touch on a lit 3D title: a second, shadowless directional light from behind and to one side brightens the edges and tops of the letters without adding a second set of shadows.
 what it looks like: The same backlit rusty word on the pale blue floor, now with brighter right- and upper-right-facing edges, strongest on the first two letters (the first letter's right-hand curves, the second letter's stem side) and only thin bevel-edge lines on the last two; the front faces barely change and the single set of soft shadows is unchanged. The effect is subtle.
 ingredients:
@@ -961,9 +961,9 @@ unknowns: The final intensity the author settled on for this light (it is scrubb
 
 ## Soft front fill from a point light with smooth falloff
 id: 04-point-light-falloff-front-fill
-revision: accf500e
+revision: c3d7dbf6
 job: light-the-hero
-status: unproven
+status: proven (accepted 2026-11-19)
 what it does for a beat: Reach for this when lit 3D type reads as one flat wash from the front; a small, soft pool of light off to one side gives the faces a gentle gradient so the letters stop looking evenly lit.
 what it looks like: Extruded, rust-textured letters standing on a pale floor against a pale sky-blue background, backlit so their shadows fall toward the camera; the left end of the word is a touch brighter on its front faces and the brightness fades off toward the right.
 ingredients:
@@ -1010,9 +1010,9 @@ unknowns: how the light was created (menu or shortcut not on screen); whether th
 
 ## One mood grade for mismatched art: Tritone plus a single-point Curves, pasted to every layer
 id: 02-tritone-curves-mood-grade
-revision: 98273fbe
+revision: 02816449
 job: finish-the-look; support: establish-place
-status: unproven
+status: proven (accepted 2026-11-19)
 what it does for a beat: When a scene is built from stock pieces that do not match (saturated greens, different palettes), this pulls them into one night-time or moody colour world in a minute, before any lighting or depth work. Assumes: a composition in which every scene object is its own layer (technique 01).
 what it looks like: The same dusk scene turned into a cold blue-teal night: leaves, grass, trees and figures lose their bright colours and become dark blue-grey shapes, highlights are held down, and the figures read almost as silhouettes against a slightly lighter cloudy sky. Steps 1–6 alone leave the street lamp and stone wall graded too, so the lamp is a dull grey. In the later picture used as the result, the wall layer's Tritone is switched off (step 7), so the wall keeps its grey stone and the lamp glows warm orange, the only warm spot in the frame.
 ingredients:
@@ -1045,9 +1045,9 @@ unknowns: Whether the curve point was placed numerically (only the dragged shape
 
 ## Flat cut-outs into a deep stage: push far layers back in Z, pull near ones forward, rescale to frame
 id: 03-z-depth-push-and-rescale
-revision: daf37d2f
+revision: a5ee353f
 job: add-depth; support: move-camera
-status: unproven
+status: proven (accepted 2026-11-19)
 what it does for a beat: Sets up real parallax and depth of field for a 2D illustrated scene: the picture through the default view barely changes, but layers now sit thousands of pixels apart, so any later camera move or focus pull separates them. Assumes: the scene is already split into one layer per object (technique 01) and graded (technique 02), with Tritone switched off on the stone-wall layer so its lamp glows warm (off).
 what it looks like: The same blue night scene, framed almost as before: sky and skyline far behind, the two figures on the ledge in the middle, grass and two dark leafy branches large and close at the bottom and sides. The difference is structural (Z positions spread from about -1800 to about 7900), not yet visible as motion.
 ingredients:
@@ -1088,9 +1088,9 @@ unknowns: The grass, wall, figures' and ledge's Scale in this technique (not sho
 
 ## Rain slanted to match the wind
 id: 08-rainfall-matched-to-wind
-revision: a2b760b0
+revision: ce6ebd7e
 job: establish-place; support: keep-it-alive, finish-the-look
-status: unproven
+status: proven (accepted 2026-11-19)
 what it does for a beat: Adds weather on top of a wind-animated scene so the motion has a reason, with the rain leaning the same way everything else is blowing. Assumes a scene that already moves in one wind direction (techniques 05–07; here the leaves enter from the left edge).
 what it looks like: Fine, faint white rain streaks over the whole night scene, falling towards the right at about 10–18° from vertical, over the drifting leaf specks, the swaying branches and the camera's heavy depth of field.
 ingredients:
@@ -1113,9 +1113,9 @@ unknowns: whether any other CC Rainfall value was changed later; the camera's de
 
 ## Film-stock grain and mood finish on a top adjustment layer
 id: 10-film-grain-finish-stack
-revision: 081295b2
+revision: e20e6ad4
 job: finish-the-look
-status: unproven
+status: proven (accepted 2026-11-19)
 what it does for a beat: The last pass on an illustrated shot: real-film grain, one last overall curve, and an optional posterize for a rougher look, all in one layer over everything. Assumes the full scene is built beneath (techniques 01–09).
 what it looks like: The rainy night scene gets fine colourless grain over the whole frame and becomes clearly darker: measured at the same comp time and framing, the picture's mean brightness drops by about 28 %, half from the Curves and half from Posterize Level 14, which also crushes the deepest shadows to black and gathers the sky's tones into coarse steps broken up by the grain.
 ingredients:
@@ -1153,9 +1153,9 @@ unknowns: the exact Curves point (read from the graph only); whether Posterize s
 
 ## Side-light a face with a matted Curves layer
 id: 13-masked-curves-relight-track-matte
-revision: a0e2e0a2
+revision: 7dc05162
 job: light-the-hero; support: finish-the-look
-status: unproven
+status: proven (accepted 2026-11-19)
 what it does for a beat: Assumes a close-up with the character on its own layer (or pre-comp) under a scene grade (techniques 11 and 12). Adds a soft wash of differently coloured light to one side of the face and hair only, so a flat close-up gains a light direction without touching the background.
 what it looks like: The frame-right side of the girl's face (her left) and the hair falling on that side take on a cool green-cyan, slightly brighter tint that starts just right of her nose and fades in over a short soft edge; the sky, tree and city behind her are unchanged.
 ingredients:

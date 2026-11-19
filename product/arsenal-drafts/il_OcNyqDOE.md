@@ -1,22 +1,22 @@
-# Techniques from one video (11 recipes, all unproven)
+# Techniques from one video (11 recipes, 5 proven)
 
-Written by the channel learner from the video's narration and screen together, then checked against the video by a second reader. Every recipe here passed that check; none is in the plugin. `status: proven` means it was built in After Effects from the recipe alone, compared with the tutorial's own result, and accepted by Joe (0 of 11); `status: unproven` means it has not been.
+Written by the channel learner from the video's narration and screen together, then checked against the video by a second reader. Every recipe here passed that check; none is in the plugin. `status: proven` means it was built in After Effects from the recipe alone, compared with the tutorial's own result, and accepted by Joe (5 of 11); `status: unproven` means it has not been.
 
 Each step is marked `said` (narrated), `shown` (on screen; `fNNNNNN` is a frame in the local study folder, frame number divided by the video's frame rate is seconds) or `inferred` (our reading). The `source` and frame references are for checking and stay out of the plugin. Credits: `CREDITS.md`.
 
 | # | Technique | Jobs | Check passed in round | Status |
 |---|---|---|---|---|
 | 01 | Found vector art, one object per file, laid out as separate layers | workflow; layout and repetition | 4 | unproven |
-| 02 | One mood grade for mismatched art: Tritone plus a single-point Curves, pasted to every layer | glow and colour; depth and finish | 4 | unproven |
-| 03 | Flat cut-outs into a deep stage: push far layers back in Z, pull near ones forward, rescale to frame | camera and 3D; depth and finish | 2 | unproven |
+| 02 | One mood grade for mismatched art: Tritone plus a single-point Curves, pasted to every layer | glow and colour; depth and finish | 4 | proven |
+| 03 | Flat cut-outs into a deep stage: push far layers back in Z, pull near ones forward, rescale to frame | camera and 3D; depth and finish | 2 | proven |
 | 04 | Depth-of-field camera locked on the subject, with a slow dolly in | camera and 3D; depth and finish | 5 | unproven |
 | 05 | Endless wind sway from two rotation keys and a ping-pong loop | energy and impact; workflow | 2 | unproven |
 | 06 | Grass rippling in the wind with Wave Warp | energy and impact; texture | 4 | unproven |
 | 07 | Leaves blown across the frame with textured particles | B-roll scenes; layout and repetition | 5 | unproven |
-| 08 | Rain slanted to match the wind | B-roll scenes; texture | 5 | unproven |
-| 10 | Film-stock grain and mood finish on a top adjustment layer | depth and finish; texture; glow and colour | 2 | unproven |
+| 08 | Rain slanted to match the wind | B-roll scenes; texture | 5 | proven |
+| 10 | Film-stock grain and mood finish on a top adjustment layer | depth and finish; texture; glow and colour | 2 | proven |
 | 11 | Long-lens close-up that matches the wide shot | camera and 3D; depth and finish; B-roll scenes; workflow | 3 | unproven |
-| 13 | Side-light a face with a matted Curves layer | shadows and light; glow and colour; depth and finish | 3 | unproven |
+| 13 | Side-light a face with a matted Curves layer | shadows and light; glow and colour; depth and finish | 3 | proven |
 
 ## Found vector art, one object per file, laid out as separate layers
 id: 01-vector-art-split-into-layers
@@ -64,7 +64,7 @@ unknowns: The exact stock files and how many objects were saved; whether PNGs we
 
 ## One mood grade for mismatched art: Tritone plus a single-point Curves, pasted to every layer
 id: 02-tritone-curves-mood-grade
-status: unproven
+status: proven (accepted by Joe 2026-11-19: rebuilt in After Effects on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "Accept the 8 matches")
 source: il_OcNyqDOE 70.5–116.13 s
 jobs: glow and colour; depth and finish
 what it does for a beat: When a scene is built from stock pieces that do not match (saturated greens, different palettes), this pulls them into one night-time or moody colour world in a minute, before any lighting or depth work. Assumes: a composition in which every scene object is its own layer (technique 01).
@@ -102,7 +102,7 @@ unknowns: Whether the curve point was placed numerically (only the dragged shape
 
 ## Flat cut-outs into a deep stage: push far layers back in Z, pull near ones forward, rescale to frame
 id: 03-z-depth-push-and-rescale
-status: unproven
+status: proven (accepted by Joe 2026-11-19: rebuilt in After Effects on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "Accept the 8 matches")
 source: il_OcNyqDOE 151.11–191.84 s
 jobs: camera and 3D; depth and finish
 what it does for a beat: Sets up real parallax and depth of field for a 2D illustrated scene: the picture through the default view barely changes, but layers now sit thousands of pixels apart, so any later camera move or focus pull separates them. Assumes: the scene is already split into one layer per object (technique 01) and graded (technique 02), with Tritone switched off on the stone-wall layer so its lamp glows warm (off at f010901).
@@ -332,7 +332,7 @@ unknowns: how the shown values carry the leaves across the frame: in the 08 proo
 
 ## Rain slanted to match the wind
 id: 08-rainfall-matched-to-wind
-status: unproven
+status: proven (accepted by Joe 2026-11-19: rebuilt in After Effects on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "Accept the 8 matches")
 source: il_OcNyqDOE 346.7–360.4 s
 jobs: B-roll scenes; texture
 what it does for a beat: Adds weather on top of a wind-animated scene so the motion has a reason, with the rain leaning the same way everything else is blowing. Assumes a scene that already moves in one wind direction (techniques 05–07; here the leaves enter from the left edge).
@@ -360,7 +360,7 @@ unknowns: whether any other CC Rainfall value was changed later; the camera's de
 
 ## Film-stock grain and mood finish on a top adjustment layer
 id: 10-film-grain-finish-stack
-status: unproven
+status: proven (accepted by Joe 2026-11-19: rebuilt in After Effects on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "Accept the 8 matches")
 source: il_OcNyqDOE 379.6–414.2 s
 jobs: depth and finish; texture; glow and colour
 what it does for a beat: The last pass on an illustrated shot: real-film grain, one last overall curve, and an optional posterize for a rougher look, all in one layer over everything. Assumes the full scene is built beneath (techniques 01–09).
@@ -457,7 +457,7 @@ unknowns: the character layer's Z position and scale; the sky layer's position a
 
 ## Side-light a face with a matted Curves layer
 id: 13-masked-curves-relight-track-matte
-status: unproven
+status: proven (accepted by Joe 2026-11-19: rebuilt in After Effects on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "Accept the 8 matches")
 source: il_OcNyqDOE 518.45–539.7 s
 jobs: shadows and light; glow and colour; depth and finish
 what it does for a beat: Assumes a close-up with the character on its own layer (or pre-comp) under a scene grade (techniques 11 and 12). Adds a soft wash of differently coloured light to one side of the face and hair only, so a flat close-up gains a light direction without touching the background.

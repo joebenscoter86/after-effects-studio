@@ -1,15 +1,15 @@
-# Techniques from one video (9 recipes, all unproven)
+# Techniques from one video (9 recipes, 3 proven)
 
-Written by the channel learner from the video's narration and screen together, then checked against the video by a second reader. Every recipe here passed that check; none is in the plugin. `status: proven` means it was built in After Effects from the recipe alone, compared with the tutorial's own result, and accepted by Joe (0 of 9); `status: unproven` means it has not been.
+Written by the channel learner from the video's narration and screen together, then checked against the video by a second reader. Every recipe here passed that check; none is in the plugin. `status: proven` means it was built in After Effects from the recipe alone, compared with the tutorial's own result, and accepted by Joe (3 of 9); `status: unproven` means it has not been.
 
 Each step is marked `said` (narrated), `shown` (on screen; `fNNNNNN` is a frame in the local study folder, frame number divided by the video's frame rate is seconds) or `inferred` (our reading). The `source` and frame references are for checking and stay out of the plugin. Credits: `CREDITS.md`.
 
 | # | Technique | Jobs | Check passed in round | Status |
 |---|---|---|---|---|
-| 01 | Bevelled 3D text wrapped in a tiled material | type; texture; depth and finish | 6 | unproven |
+| 01 | Bevelled 3D text wrapped in a tiled material | type; texture; depth and finish | 6 | proven |
 | 02 | Backlit environment light over a shadow-only floor | shadows and light; depth and finish; camera and 3D | 2 | unproven |
-| 03 | Shadowless parallel light as an extra backlight | shadows and light; depth and finish | 4 | unproven |
-| 04 | Soft front fill from a point light with smooth falloff | shadows and light; depth and finish; camera and 3D | 2 | unproven |
+| 03 | Shadowless parallel light as an extra backlight | shadows and light; depth and finish | 4 | proven |
+| 04 | Soft front fill from a point light with smooth falloff | shadows and light; depth and finish; camera and 3D | 2 | proven |
 | 05 | Letters tumble in from just in front of the lens, one after another | type; camera and 3D; energy and impact | 3 | unproven |
 | 06 | Depth-of-field camera on a null, pushed in through the shot | camera and 3D; depth and finish | 4 | unproven |
 | 07 | Warm-sided metal title: textured faces, plain tinted sides | depth and finish; type; glow and colour | 2 | unproven |
@@ -18,7 +18,7 @@ Each step is marked `said` (narrated), `shown` (on screen; `fNNNNNN` is a frame 
 
 ## Bevelled 3D text wrapped in a tiled material
 id: 01-bevelled-3d-text-material-texture
-status: unproven
+status: proven (accepted by Joe 2026-11-19: rebuilt in After Effects on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "Accept the 8 matches"; the look is proven as a 2D stand-in for a fixed camera, since this After Effects has no Material section for 3D text, so the material route itself is not proven)
 source: eoBEBx1PbS4 23.76–84.8 s
 jobs: type; texture; depth and finish
 what it does for a beat: Turns a flat title into a solid, physical object with rounded edges and a real surface (metal, stone, paint) in a few clicks; the base for any lit 3D title shot.
@@ -121,7 +121,7 @@ unknowns: Light Settings dialog values other than type (hidden behind the open m
 
 ## Shadowless parallel light as an extra backlight
 id: 03-parallel-rim-light-no-shadows
-status: unproven
+status: proven (accepted by Joe 2026-11-19: rebuilt in After Effects on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "Accept the 8 matches")
 source: eoBEBx1PbS4 165.77–182.53 s
 jobs: shadows and light; depth and finish
 what it does for a beat: A small finishing touch on a lit 3D title: a second, shadowless directional light from behind and to one side brightens the edges and tops of the letters without adding a second set of shadows.
@@ -154,7 +154,7 @@ unknowns: The final intensity the author settled on for this light (from about 1
 
 ## Soft front fill from a point light with smooth falloff
 id: 04-point-light-falloff-front-fill
-status: unproven
+status: proven (accepted by Joe 2026-11-19: rebuilt in After Effects on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "Accept the 8 matches")
 source: eoBEBx1PbS4 182.53–205.31 s
 jobs: shadows and light; depth and finish; camera and 3D
 what it does for a beat: Reach for this when lit 3D type reads as one flat wash from the front; a small, soft pool of light off to one side gives the faces a gentle gradient so the letters stop looking evenly lit.

@@ -1,6 +1,6 @@
 {
  "vocab": "jobs-v1",
- "version": "a205ee2d",
+ "version": "1ae8cf94",
  "jobs": [
   "land-number",
   "count-things",
@@ -1731,10 +1731,10 @@
   },
   {
    "id": "01-bevelled-3d-text-material-texture",
-   "revision": "6b3126e2",
+   "revision": "593535c4",
    "name": "Bevelled 3D text wrapped in a tiled material",
    "line": "Turns a flat title into a solid, physical object with rounded edges and a real surface (metal, stone, paint) in a few clicks; the base for any lit 3D title shot.",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "reveal-headline",
    "support": [
@@ -1758,7 +1758,10 @@
     "document": "arsenal-line",
     "heading": "Bevelled 3D text wrapped in a tiled material"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/01-bevelled-3d-text-material-texture.jpg",
+    "sha256": "347aa1a938fbfd5e7cedd431cabd8320ab4774aea03664746ce1d9ac49b1d28c"
+   }
   },
   {
    "id": "02-backlit-environment-light-with-shadow-floor",
@@ -1794,10 +1797,10 @@
   },
   {
    "id": "03-parallel-rim-light-no-shadows",
-   "revision": "75ed9ba1",
+   "revision": "49cebea9",
    "name": "Shadowless parallel light as an extra backlight",
    "line": "A small finishing touch on a lit 3D title: a second, shadowless directional light from behind and to one side brightens the edges and tops of the letters without adding a second set of shadows.",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "light-the-hero",
    "support": [
@@ -1821,14 +1824,17 @@
     "document": "arsenal-picture",
     "heading": "Shadowless parallel light as an extra backlight"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/03-parallel-rim-light-no-shadows.jpg",
+    "sha256": "f8bccb2f251353659b014851d72244804c3158ebe362770dbf33d853bdced6cf"
+   }
   },
   {
    "id": "04-point-light-falloff-front-fill",
-   "revision": "accf500e",
+   "revision": "c3d7dbf6",
    "name": "Soft front fill from a point light with smooth falloff",
    "line": "Reach for this when lit 3D type reads as one flat wash from the front; a small, soft pool of light off to one side gives the faces a gentle gradient so the letters stop looking evenly lit.",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "light-the-hero",
    "support": [],
@@ -1850,7 +1856,10 @@
     "document": "arsenal-picture",
     "heading": "Soft front fill from a point light with smooth falloff"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/04-point-light-falloff-front-fill.jpg",
+    "sha256": "3b1a6f9c90c6d8ee8c26100198a5e005c9b0c7d779989f02c673fa0ddb761dd3"
+   }
   },
   {
    "id": "05-per-character-3d-fly-in-ramp-up",
@@ -2039,10 +2048,10 @@
   },
   {
    "id": "02-tritone-curves-mood-grade",
-   "revision": "98273fbe",
+   "revision": "02816449",
    "name": "One mood grade for mismatched art: Tritone plus a single-point Curves, pasted to every layer",
    "line": "When a scene is built from stock pieces that do not match (saturated greens, different palettes), this pulls them into one night-time or moody colour world in a minute, before any lighting or depth work. Assumes: a composition in which every scene object is its own layer (technique 01).",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "finish-the-look",
    "support": [
@@ -2065,14 +2074,17 @@
     "document": "arsenal-picture",
     "heading": "One mood grade for mismatched art: Tritone plus a single-point Curves, pasted to every layer"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/02-tritone-curves-mood-grade.jpg",
+    "sha256": "69e2bcf238bd0e7d2c1bc6fd48b7b1104fdb294bf31cd6c800f07ebbbd9b02c1"
+   }
   },
   {
    "id": "03-z-depth-push-and-rescale",
-   "revision": "daf37d2f",
+   "revision": "a5ee353f",
    "name": "Flat cut-outs into a deep stage: push far layers back in Z, pull near ones forward, rescale to frame",
    "line": "Sets up real parallax and depth of field for a 2D illustrated scene: the picture through the default view barely changes, but layers now sit thousands of pixels apart, so any later camera move or focus pull separates them. Assumes: the scene is already split into one layer per object (technique 01) and graded (technique 02), with Tritone switched off on the stone-wall layer so its lamp glows warm (off).",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "add-depth",
    "support": [
@@ -2095,7 +2107,10 @@
     "document": "arsenal-picture",
     "heading": "Flat cut-outs into a deep stage: push far layers back in Z, pull near ones forward, rescale to frame"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/03-z-depth-push-and-rescale.jpg",
+    "sha256": "66bc4f87e982c9ec6062d2f02cccfc8e9c7a3b8398c6010952d2d4812e0e419c"
+   }
   },
   {
    "id": "04-camera-depth-of-field-focus-lock-dolly",
@@ -2224,10 +2239,10 @@
   },
   {
    "id": "08-rainfall-matched-to-wind",
-   "revision": "a2b760b0",
+   "revision": "ce6ebd7e",
    "name": "Rain slanted to match the wind",
    "line": "Adds weather on top of a wind-animated scene so the motion has a reason, with the rain leaning the same way everything else is blowing. Assumes a scene that already moves in one wind direction (techniques 05–07; here the leaves enter from the left edge).",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "establish-place",
    "support": [
@@ -2251,14 +2266,17 @@
     "document": "arsenal-picture",
     "heading": "Rain slanted to match the wind"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/08-rainfall-matched-to-wind.jpg",
+    "sha256": "78f789ed1ad0b24f968a87cbbd2f9041ab8e0fe100741378cd5ad3c9e89bab1b"
+   }
   },
   {
    "id": "10-film-grain-finish-stack",
-   "revision": "081295b2",
+   "revision": "e20e6ad4",
    "name": "Film-stock grain and mood finish on a top adjustment layer",
    "line": "The last pass on an illustrated shot: real-film grain, one last overall curve, and an optional posterize for a rougher look, all in one layer over everything. Assumes the full scene is built beneath (techniques 01–09).",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "finish-the-look",
    "support": [],
@@ -2279,7 +2297,10 @@
     "document": "arsenal-picture",
     "heading": "Film-stock grain and mood finish on a top adjustment layer"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/10-film-grain-finish-stack.jpg",
+    "sha256": "12240cc3f3c6e16837a29ad14b9dcefe4a9c55854ccdf4edcfb4e45bfbaa96fb"
+   }
   },
   {
    "id": "11-matching-closeup-telephoto-compression",
@@ -2316,10 +2337,10 @@
   },
   {
    "id": "13-masked-curves-relight-track-matte",
-   "revision": "a0e2e0a2",
+   "revision": "7dc05162",
    "name": "Side-light a face with a matted Curves layer",
    "line": "Assumes a close-up with the character on its own layer (or pre-comp) under a scene grade (techniques 11 and 12). Adds a soft wash of differently coloured light to one side of the face and hair only, so a flat close-up gains a light direction without touching the background.",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "light-the-hero",
    "support": [
@@ -2343,7 +2364,10 @@
     "document": "arsenal-picture",
     "heading": "Side-light a face with a matted Curves layer"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/13-masked-curves-relight-track-matte.jpg",
+    "sha256": "f4bd3b19e45807f0f670d418779dc84f2d607bcef931e0863506b216918f2c30"
+   }
   }
  ]
 }

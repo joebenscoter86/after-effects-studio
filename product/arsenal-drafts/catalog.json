@@ -1,6 +1,6 @@
 {
   "vocab": "jobs-v1",
-  "version": "a205ee2d",
+  "version": "1ae8cf94",
   "jobs": [
     "land-number",
     "count-things",
@@ -1866,7 +1866,7 @@
       "n": 1,
       "name": "Bevelled 3D text wrapped in a tiled material",
       "line": "Turns a flat title into a solid, physical object with rounded edges and a real surface (metal, stone, paint) in a few clicks; the base for any lit 3D title shot.",
-      "status": "unproven",
+      "status": "proven",
       "kind": "technique",
       "job": "reveal-headline",
       "support": [
@@ -1890,8 +1890,8 @@
         "file": "eoBEBx1PbS4.md",
         "heading": "Bevelled 3D text wrapped in a tiled material"
       },
-      "revision": "6b3126e2",
-      "still": null,
+      "revision": "593535c4",
+      "still": "quality/renders/channel-study/eoBEBx1PbS4/proof/01/build.png",
       "taught_by": 3,
       "variants": []
     },
@@ -1937,7 +1937,7 @@
       "n": 3,
       "name": "Shadowless parallel light as an extra backlight",
       "line": "A small finishing touch on a lit 3D title: a second, shadowless directional light from behind and to one side brightens the edges and tops of the letters without adding a second set of shadows.",
-      "status": "unproven",
+      "status": "proven",
       "kind": "technique",
       "job": "light-the-hero",
       "support": [
@@ -1961,8 +1961,8 @@
         "file": "eoBEBx1PbS4.md",
         "heading": "Shadowless parallel light as an extra backlight"
       },
-      "revision": "75ed9ba1",
-      "still": null,
+      "revision": "49cebea9",
+      "still": "quality/renders/channel-study/eoBEBx1PbS4/proof/03/build.png",
       "taught_by": 1,
       "variants": []
     },
@@ -1972,7 +1972,7 @@
       "n": 4,
       "name": "Soft front fill from a point light with smooth falloff",
       "line": "Reach for this when lit 3D type reads as one flat wash from the front; a small, soft pool of light off to one side gives the faces a gentle gradient so the letters stop looking evenly lit.",
-      "status": "unproven",
+      "status": "proven",
       "kind": "technique",
       "job": "light-the-hero",
       "support": [],
@@ -1994,8 +1994,8 @@
         "file": "eoBEBx1PbS4.md",
         "heading": "Soft front fill from a point light with smooth falloff"
       },
-      "revision": "accf500e",
-      "still": null,
+      "revision": "c3d7dbf6",
+      "still": "quality/renders/channel-study/eoBEBx1PbS4/proof/04/build.png",
       "taught_by": 1,
       "variants": []
     },
@@ -2214,7 +2214,7 @@
       "n": 2,
       "name": "One mood grade for mismatched art: Tritone plus a single-point Curves, pasted to every layer",
       "line": "When a scene is built from stock pieces that do not match (saturated greens, different palettes), this pulls them into one night-time or moody colour world in a minute, before any lighting or depth work. Assumes: a composition in which every scene object is its own layer (technique 01).",
-      "status": "unproven",
+      "status": "proven",
       "kind": "technique",
       "job": "finish-the-look",
       "support": [
@@ -2237,8 +2237,8 @@
         "file": "il_OcNyqDOE.md",
         "heading": "One mood grade for mismatched art: Tritone plus a single-point Curves, pasted to every layer"
       },
-      "revision": "98273fbe",
-      "still": null,
+      "revision": "02816449",
+      "still": "quality/renders/channel-study/il_OcNyqDOE/proof/02/build.png",
       "taught_by": 1,
       "variants": []
     },
@@ -2248,7 +2248,7 @@
       "n": 3,
       "name": "Flat cut-outs into a deep stage: push far layers back in Z, pull near ones forward, rescale to frame",
       "line": "Sets up real parallax and depth of field for a 2D illustrated scene: the picture through the default view barely changes, but layers now sit thousands of pixels apart, so any later camera move or focus pull separates them. Assumes: the scene is already split into one layer per object (technique 01) and graded (technique 02), with Tritone switched off on the stone-wall layer so its lamp glows warm (off at f010901).",
-      "status": "unproven",
+      "status": "proven",
       "kind": "technique",
       "job": "add-depth",
       "support": [
@@ -2271,8 +2271,8 @@
         "file": "il_OcNyqDOE.md",
         "heading": "Flat cut-outs into a deep stage: push far layers back in Z, pull near ones forward, rescale to frame"
       },
-      "revision": "daf37d2f",
-      "still": null,
+      "revision": "a5ee353f",
+      "still": "quality/renders/channel-study/il_OcNyqDOE/proof/03/build.png",
       "taught_by": 2,
       "variants": []
     },
@@ -2423,7 +2423,7 @@
       "n": 8,
       "name": "Rain slanted to match the wind",
       "line": "Adds weather on top of a wind-animated scene so the motion has a reason, with the rain leaning the same way everything else is blowing. Assumes a scene that already moves in one wind direction (techniques 05–07; here the leaves enter from the left edge).",
-      "status": "unproven",
+      "status": "proven",
       "kind": "technique",
       "job": "establish-place",
       "support": [
@@ -2447,8 +2447,8 @@
         "file": "il_OcNyqDOE.md",
         "heading": "Rain slanted to match the wind"
       },
-      "revision": "a2b760b0",
-      "still": null,
+      "revision": "ce6ebd7e",
+      "still": "quality/renders/channel-study/il_OcNyqDOE/proof/08/build.png",
       "taught_by": 1,
       "variants": []
     },
@@ -2458,7 +2458,7 @@
       "n": 10,
       "name": "Film-stock grain and mood finish on a top adjustment layer",
       "line": "The last pass on an illustrated shot: real-film grain, one last overall curve, and an optional posterize for a rougher look, all in one layer over everything. Assumes the full scene is built beneath (techniques 01–09).",
-      "status": "unproven",
+      "status": "proven",
       "kind": "technique",
       "job": "finish-the-look",
       "support": [],
@@ -2479,8 +2479,8 @@
         "file": "il_OcNyqDOE.md",
         "heading": "Film-stock grain and mood finish on a top adjustment layer"
       },
-      "revision": "081295b2",
-      "still": null,
+      "revision": "e20e6ad4",
+      "still": "quality/renders/channel-study/il_OcNyqDOE/proof/10/build.png",
       "taught_by": 3,
       "variants": []
     },
@@ -2527,7 +2527,7 @@
       "n": 13,
       "name": "Side-light a face with a matted Curves layer",
       "line": "Assumes a close-up with the character on its own layer (or pre-comp) under a scene grade (techniques 11 and 12). Adds a soft wash of differently coloured light to one side of the face and hair only, so a flat close-up gains a light direction without touching the background.",
-      "status": "unproven",
+      "status": "proven",
       "kind": "technique",
       "job": "light-the-hero",
       "support": [
@@ -2551,8 +2551,8 @@
         "file": "il_OcNyqDOE.md",
         "heading": "Side-light a face with a matted Curves layer"
       },
-      "revision": "a0e2e0a2",
-      "still": null,
+      "revision": "7dc05162",
+      "still": "quality/renders/channel-study/il_OcNyqDOE/proof/13/build.png",
       "taught_by": 2,
       "variants": []
     }
