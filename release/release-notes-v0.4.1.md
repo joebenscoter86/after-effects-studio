@@ -19,6 +19,7 @@ This release fixes what a long finished build showed up: a glow that rendered a 
   - It is a report, never a fault.
   - Stretches where the layer cannot be seen (opacity or scale at 0) are skipped. Wiggle selectors and wiggle shape operators count as motion.
   - Checked live on a 29-layer comp.
+  - Known limits: it reads opacity and scale to tell whether a layer can be seen, so a fully masked or off-frame layer can still be listed; effects that animate themselves, such as particles, count as still; and a curve that overshoots between two equal keys can read as idle.
 - **Guidance:**
   - In a project with its own house style, the agent reads the motion-studio skill and the brief template first, then the project's own standard.
   - The independent reviewer runs once, before your first look at the motion, and after that only when you ask.
@@ -40,7 +41,7 @@ For visually demanding builds, use the most capable model your host offers. A lo
 The plugin is free to use for personal and paid client motion work under the included original-material license, with separate upstream notices. It runs a bundled local Node server against a licensed local After Effects installation on macOS, with Node.js 24 or newer. Comp Room targets After Effects 2027 in Claude Code or a Cowork session on the Mac. Windows and other After Effects versions are not verified product support. `ffmpeg` and `ffprobe` are optional; some footage and keying operations use them when they are installed.
 
 **Verification for this release:**
-- **Runtime tests:** 1,643 passed and 117 skipped, under a system profile that refuses to start `osascript`, so no test reached After Effects.
+- **Runtime tests:** 1,657 passed and 117 skipped, under a system profile that refuses to start `osascript`, so no test reached After Effects.
 - **Packaging:** `npm run check` (type-checks, lint, formatting, the JSX lint and the tools document), 123 release tests, the offline MCP smoke test for both packages, `claude plugin validate --strict` for the marketplace and for the package, and the public-source audit all passed. The 210-file Codex ZIP builds deterministically.
 - **Live checks:** the licence check, the motion edge and the idle report were each checked in After Effects 2027 on the development Mac, as listed above.
 - **Not run for this release:** the evals; a separate-Mac install; any Codex session; and Windows.
@@ -65,4 +66,4 @@ codex plugin add after-effects-studio@jb-technology
 
 Start a new session after installing. See the [Comp Room README](https://github.com/joebenscoter86/after-effects-studio/blob/main/claude/comp-room/README.md), the [Codex installation and permissions guide](https://github.com/joebenscoter86/after-effects-studio/blob/main/plugin/docs/local-install.md), [support](https://github.com/joebenscoter86/after-effects-studio/blob/main/release/website/support.md), [privacy information](https://github.com/joebenscoter86/after-effects-studio/blob/main/release/website/privacy.md), and [terms](https://github.com/joebenscoter86/after-effects-studio/blob/main/release/website/terms.md).
 
-The Git marketplaces install the reviewed source: Comp Room from `claude/comp-room/`, generated from `plugin/`, and After Effects Studio from `plugin/`. The attached ZIP is a curated 210-file standalone Codex package with a slim private `runtime/package.json` in place of the upstream development manifest. SHA-256 for `after-effects-studio-0.4.1+codex.20261119.zip`: `b1fe0ea00a3a1e662f0540b1b22c47bd5a5ba71b0d34bc00fed7afb2f53d313c`.
+The Git marketplaces install the reviewed source: Comp Room from `claude/comp-room/`, generated from `plugin/`, and After Effects Studio from `plugin/`. The attached ZIP is a curated 210-file standalone Codex package with a slim private `runtime/package.json` in place of the upstream development manifest. SHA-256 for `after-effects-studio-0.4.1+codex.20261119.zip`: `9612b221b6bd4d49e0b223ab583ef55adc7e8f1725945081f71f7b7992ca4d33`.
