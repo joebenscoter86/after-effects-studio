@@ -116,7 +116,7 @@ Build order: Content creates `jobs.json` (jobs v1) and teaches the brief writer 
 ## Advisor review (Fable, 2026-11-15) and what follows on this side
 
 Points for the plugin, not blocking tonight (the Content brief step guards each one):
-1. **Auto-loosening status contradicts decision 2.** `find` returns unproven candidates with `relaxed: ["status"]` when nothing proven passes. It should return none and name the near miss. Content treats `relaxed` status as device-only meanwhile. Fix in 0.4.1.
+1. **Auto-loosening status contradicts decision 2.** `find` returns unproven candidates with `relaxed: ["status"]` when nothing proven passes. It should return none and name the near miss. Content treats `relaxed` status as device-only meanwhile. Fix in 0.4.2.
 2. **Pinning is promised, not delivered.** `get` with an old revision returns current text and a warning; hash revisions change on any edit. Either keep old revisions in the shipped arsenal or stop promising reproducibility. Content's wording now says "pinned for reference".
 3. **Moods are tutorial moods** (dark, retro, glow); house moods (premium, calm, lit) rarely overlap, so mood ranking is near noise. Map recipe moods to the house list.
 4. **Ranking inside a job** favours `taught_by` over everything after status, so the most-taught trick tops every list and reels converge. Add variety (rotate ties, respect `exclude`).
