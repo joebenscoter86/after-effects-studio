@@ -711,7 +711,7 @@ export const overParam = {
     description: `The flat colour of the picture (default '${CUTOUT_OVER}').`,
     required: false,
 };
-/** Default most frames subject.check_file reads one by one; beyond it, it reads pairs in steps. About 0.55 s a frame measured. */
+/** Default most frames subject.check_file reads one by one; beyond it, it reads pairs in steps. About 0.55 s a frame, measured on one machine. */
 export const CHECK_FILE_MAX_FRAMES = 400;
 /** JSX: the movie (a file, or a footage item by id) in a throwaway comp of its own size. */
 export function fileCompJsx(args) {

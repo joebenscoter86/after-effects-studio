@@ -935,8 +935,9 @@ export const overParam = {
 // After Effects recomputes Object Matte on every capture (nine frames across
 // a 320-frame take cost 236 to 287 s on each of five identical renders), and
 // a script cannot freeze it. Rendered once to a movie with alpha (390 s, measured on one machine, for
-// all 320 frames), the cut-out reads back at about 0.55 s a frame and cannot
-// change afterwards. These three operations do that.
+// all 320 frames), the cut-out reads back
+// at about 0.55 s a frame (measured on one machine) and cannot change
+// afterwards. These three operations do that.
 
 /** What subject.render_cutout and subject.check_file need from After Effects. */
 export interface FileIO extends PixelIO {
@@ -949,7 +950,7 @@ export interface FileIO extends PixelIO {
   exists?(file: string): Promise<boolean>;
 }
 
-/** Default most frames subject.check_file reads one by one; beyond it, it reads pairs in steps. About 0.55 s a frame measured. */
+/** Default most frames subject.check_file reads one by one; beyond it, it reads pairs in steps. About 0.55 s a frame, measured on one machine. */
 export const CHECK_FILE_MAX_FRAMES = 400;
 
 /** JSX: the movie (a file, or a footage item by id) in a throwaway comp of its own size. */

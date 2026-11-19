@@ -97,7 +97,7 @@ describe("studio library", () => {
   });
   it("labels every shipped copy of the measured figures, and gives the user their own timing", () => {
     // 0.4.1 item 2, round 1: every shipped copy, not only the guidance.
-    const FIGURES = /986 s|2 minutes of render|390 s|279 to 390|19 GB|342 s|65 to 92|9\.0 GB/;
+    const FIGURES = /986 s|2 minutes of render|390 s|279 to 390|19 GB|342 s|65 to 92|9\.0 GB|0\.55 s a frame/;
     const files = (dir: string, ext: RegExp): string[] =>
       readdirSync(dir, { recursive: true, encoding: "utf8" })
         .filter((f) => ext.test(f))
@@ -133,9 +133,11 @@ describe("studio library", () => {
     const skill = readFileSync(new URL("../../skills/motion-studio/SKILL.md", import.meta.url), "utf8");
     const workflow = readLibrary("production-workflow").content!;
     const step1 = workflow.slice(workflow.indexOf("## 1."), workflow.indexOf("## 2."));
-    for (const doc of [skill, step1]) {
-      expect(doc).toMatch(/its own house style[^.]*read the motion-studio skill and the brief template first, then the project's own standard/);
-    }
+    // Outside the skill, production-workflow step 1 names the skill to read first.
+    expect(step1).toMatch(/its own house style[^.]*read the motion-studio skill and the brief template first, then the project's own standard/);
+    // Inside the skill, it reads naturally from where the reader already is.
+    expect(skill).toMatch(/its own house style[^.]*finish this skill and read the brief template before the project's own standard/);
+    expect(skill).not.toMatch(/read the motion-studio skill/);
   });
   it("runs the independent review once before the user's first look, then only on request", () => {
     // 0.4.1 item 6: a review every round added time between builds.

@@ -50,8 +50,9 @@ var AESLib = (function () {
     for (var k = 0; k < strings.length; k++) { if (k > 0 && strings[k] === strings[k - 1]) continue; ts.push((t0 || 0) + k / fps); ss.push(strings[k]); } return textKeys(layer, ts, ss); }
   function readJSON(p) { var f = new File(p); if (!f.exists) throw new Error("missing " + p); f.encoding = "UTF-8"; f.open("r"); var s = f.read(); f.close(); return eval("(" + s + ")"); }
   // effects that render a trial watermark until licensed, by match name: the product whose licence file
-  // (Application Support/com.aescripts.<product>.lic) marks a licensed install, and the name a report uses
-  var LICENSED = { PEDG2: { product: "DeepGlow2", label: "Deep Glow" } };
+  // (Application Support/com.aescripts.<product>.lic) marks a licensed install, the name a report uses, and what a
+  // build does instead when it is not licensed (fallback, optional)
+  var LICENSED = { PEDG2: { product: "DeepGlow2", label: "Deep Glow", fallback: "used the stock glow" } };
   // whether an effect can go in a build: installed, and for one in the licence table, its licence file present (o.licensed:
   // true overrides a licence stored elsewhere). An effect not in the table counts as usable when installed (licensed null).
   // Returns { usable, installed, licensed (true | false | null), reason ("" when usable) }
@@ -61,7 +62,7 @@ var AESLib = (function () {
     if (L) licensed = o.licensed === true ? true : new File(Folder.userData.fsName + "/com.aescripts." + L.product + ".lic").exists;
     var usable = installed && licensed !== false;
     if (!installed) reason = label + " is not installed";
-    else if (!usable) reason = label + " is installed but not licensed; used the stock glow";
+    else if (!usable) reason = label + " is installed but not licensed" + (L.fallback ? "; " + L.fallback : "");
     return { usable: usable, installed: installed, licensed: licensed, reason: reason }; }
   return { ease: ease, importFile: importFile, clearOwned: clearOwned, font: font, text: text, bakeText: bakeText, textKeys: textKeys, readJSON: readJSON,
     effectUsable: effectUsable };

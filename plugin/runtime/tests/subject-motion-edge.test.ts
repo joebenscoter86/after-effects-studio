@@ -7,6 +7,7 @@
 
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import vm from "node:vm";
 
 import { describe, expect, it } from "vitest";
 
@@ -341,6 +342,43 @@ describe("the undo", () => {
     expect(j).toContain("itemByID");
     expect(j).toContain(".remove()");
     expect(j).toMatch(/_layer\.enabled = _was/);
+  });
+});
+
+describe("the build's record of what it made, read back by the undo", () => {
+  // The build writes the comps it made into the motion-edge layer's comment;
+  // the undo reads it back with eval. Run both halves on a layer name with a
+  // quote, a backslash, a tab, a newline, a carriage return and another
+  // control character: all five comps must come back.
+  const roundTrip = (layerName: string) => {
+    const b = build();
+    const q = /function _q\(t\) \{.*\}\s*\n/.exec(b)?.[0];
+    const comment = /_pl\.comment = .*;\s*\n/.exec(b)?.[0];
+    const readBack = /_st = eval\("\(" \+ _pl\.comment \+ "\)"\)/.exec(
+      motionEdgeUndoJsx({ comp: "Main", layer: "take" }),
+    )?.[0];
+    expect(q && comment && readBack).toBeTruthy();
+    const ctx = vm.createContext({
+      _L: layerName,
+      _wasEnabled: true,
+      _ids: [11, 12, 13, 14, 15],
+      _pl: { comment: "" },
+      _st: null,
+    });
+    vm.runInContext(q! + comment! + readBack! + ";", ctx);
+    return (ctx as Any)._st;
+  };
+
+  it("round-trips a plain name", () => {
+    expect(roundTrip("take")).toMatchObject({ layer: "take", comps: [11, 12, 13, 14, 15] });
+  });
+
+  it("round-trips a name with control characters, so the undo removes all five comps", () => {
+    const name = 'take "A"\\b\tc\nd\re\u0001f';
+    const st = roundTrip(name);
+    expect(st.layer).toBe(name);
+    expect(st.comps).toEqual([11, 12, 13, 14, 15]);
+    expect(st.wasEnabled).toBe(true);
   });
 });
 

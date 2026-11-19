@@ -15,7 +15,10 @@ const SUPPORT = "/fake/AppSupport";
 const DEEP_LIC = SUPPORT + "/com.aescripts.DeepGlow2.lic";
 const UNLICENSED = "Deep Glow is installed but not licensed; used the stock glow";
 
-function lib(opts: { effects: string[]; files?: string[] }) {
+const TABLE =
+  'var LICENSED = { PEDG2: { product: "DeepGlow2", label: "Deep Glow", fallback: "used the stock glow" } };';
+
+function lib(opts: { effects: string[]; files?: string[]; table?: string }) {
   const present = new Set(opts.files ?? []);
   class File {
     constructor(public fsName: string) {}
@@ -29,7 +32,12 @@ function lib(opts: { effects: string[]; files?: string[] }) {
     File,
     Math,
   });
-  vm.runInContext(LIB, ctx);
+  let src = LIB;
+  if (opts.table !== undefined) {
+    if (!src.includes(TABLE)) throw new Error("licence table line changed");
+    src = src.replace(TABLE, opts.table);
+  }
+  vm.runInContext(src, ctx);
   return (ctx as any).AESLib;
 }
 
@@ -70,5 +78,21 @@ describe("AESLib.effectUsable", () => {
   it("an effect not in the licence table: usable when installed, licence unknown", () => {
     const r = lib({ effects: ["ADBE Glo2"] }).effectUsable("ADBE Glo2");
     expect(r).toMatchObject({ usable: true, installed: true, licensed: null });
+  });
+
+  it("the reason takes its fallback phrase from the table entry", () => {
+    const table =
+      'var LICENSED = { XFX1: { product: "OtherFx", label: "Other FX", fallback: "used the stock blur" }, ' +
+      'XFX2: { product: "Bare", label: "Bare FX" } };';
+    const L = lib({ effects: ["XFX1", "XFX2"], table });
+    expect(L.effectUsable("XFX1").reason).toBe(
+      "Other FX is installed but not licensed; used the stock blur",
+    );
+    expect(L.effectUsable("XFX2").reason).toBe("Bare FX is installed but not licensed");
+  });
+
+  it("the Deep Glow sentence is unchanged", () => {
+    expect(LIB).toContain(TABLE);
+    expect(lib({ effects: ["PEDG2"] }).effectUsable("PEDG2").reason).toBe(UNLICENSED);
   });
 });

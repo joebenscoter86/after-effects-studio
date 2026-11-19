@@ -55877,7 +55877,7 @@ registerOp({
 registerOp({
   name: "subject.check_file",
   category: "subject",
-  description: `Check a rendered cut-out movie (from subject.render_cutout) frame by frame: brings it into a throwaway comp, reads frames in batches of at most 32 (every frame up to maxFrames, default ${CHECK_FILE_MAX_FRAMES}; beyond it pairs of neighbouring frames in steps, always the first and last three), and reports holes and openings (as subject.check: holeLimit, accept), the opaque share of every frame, and a 'jump' finding when neighbouring frames differ by more than jumpLimit (default ${CHECK_FILE_JUMP_LIMIT}: on the take of 2026-11-11 the rendered cut-out ran 0.279 to 0.314 with no step over 0.012, and a dropped microphone is about 0.05). A speck is a small opaque piece apart from the cut-out, or joined to it by a neck a pixel or two wide, not touching the frame edge: speckMinArea to speckMaxArea px (default 20 to 2,000, chosen on the 4K fresh-session file, where a sliver of chair 1 to 5 px off the right arm read 20 to 240 px on about 40 frames and nothing else in 320 frames was caught); findings of kind 'speck' give the frames, the longest run of frames in a row, the largest area and frame, the box, the piece's mean colour (\`colour\`: L*, a*, b*, CIELAB D65 from sRGB, over its opaque pixels on every frame; a pale grey remnant such as the first piece's chair read a* about +7, skin about +30) and a picture; a speck on at least speckMinFrames frames in a row (default 2) stops, since a new render keeps it, and a shorter one (a single-frame flash, a wisp of hair) goes to notes and one sentence of inOut. accept: [{ kind: 'speck', box }] takes one off. Checked through a real subject.check_file run on two files of one take (2026-11-12); the limits come from those two files. timing.speck is the pass's own cost (about 5.5 ms a 1080 x 1920 frame). Seen through: pixels partly see-through (alpha 0.5 to 0.95) more than seenThroughDepth px (default 30) inside the cut-out's body and from the frame's edge, as where two copies of a matte meet in a seam; seenThroughMinArea px or more on a frame (default 400) on at least 2 frames read in a row is a finding of kind 'seen-through' that stops, with the frames, the largest area and frame, the box and a picture; single frames go to notes. Limits chosen on two files of the half-size take, as clicked and with subject.soften_edge (at most 82 and 41 px on every fourth frame), and a band of the soft-edge file's alpha multiplied by 0.75 (about 3,900 px a frame); not checked live: it has not run in After Effects on a file with a real seam. timing.seenThrough is its cost. Region line: for a file from a soft-edge build, \`region\` gives the subject's highest and lowest top across the file against the soft edge's region line (from <movie>.comp-room.json, which subject.render_cutout writes, or \`regionLine\`), and a note, not a stop, names the frames where the top sits lower than the line less 12% of the height, so the lower hair crosses the line and keeps the hard edge. Motion edge: for a file from a motion-edge build (its <movie>.comp-room.json says so), holes and openings are read only where the alpha is under ${MOTION_EDGE_CLEAR_BELOW}, so the keyer's soft alpha on moving parts is not a finding and a clear hole still is (chosen offline, not calibrated live), and seen through counts only from ${MOTION_EDGE_SEEN_THROUGH.solid} to ${MOTION_EDGE_SEEN_THROUGH.below} alpha (a moving arm across the torso read 0.75 to 0.95 live); \`motionEdge.reading\` says so. Only true neighbours are compared, and \`compared\` says which. A frame that could not be read is 'not-checked' and stops. Pictures: the largest frame of each finding not accepted and both frames of each jump, full size, and a sheet of up to 24 frames; \`pictures\` counts them and their bytes. Each raw capture is removed once read unless keepCaptures (one run on the take had left 630 MB). The throwaway comp is removed afterwards, and the imported footage too unless keepFootage. \`outline\` says how much the outline changed between neighbouring frames and over frozenGap frames (share of the frame whose alpha changed by more than 0.1, at full size); a run where it did not move is a 'frozen' finding (the selection is probably not tracking, as after replacing the layer's footage; accept: [{ kind: "frozen" }] for a subject that really is still). The frozen limits are not yet calibrated live. Measured: about 0.55 s a frame reading the file. Returns stop, findings, accepted, checked, compared, opaque, outline, inOut, picture, frameReadings, timing.`,
+  description: `Check a rendered cut-out movie (from subject.render_cutout) frame by frame: brings it into a throwaway comp, reads frames in batches of at most 32 (every frame up to maxFrames, default ${CHECK_FILE_MAX_FRAMES}; beyond it pairs of neighbouring frames in steps, always the first and last three), and reports holes and openings (as subject.check: holeLimit, accept), the opaque share of every frame, and a 'jump' finding when neighbouring frames differ by more than jumpLimit (default ${CHECK_FILE_JUMP_LIMIT}: on the take of 2026-11-11 the rendered cut-out ran 0.279 to 0.314 with no step over 0.012, and a dropped microphone is about 0.05). A speck is a small opaque piece apart from the cut-out, or joined to it by a neck a pixel or two wide, not touching the frame edge: speckMinArea to speckMaxArea px (default 20 to 2,000, chosen on the 4K fresh-session file, where a sliver of chair 1 to 5 px off the right arm read 20 to 240 px on about 40 frames and nothing else in 320 frames was caught); findings of kind 'speck' give the frames, the longest run of frames in a row, the largest area and frame, the box, the piece's mean colour (\`colour\`: L*, a*, b*, CIELAB D65 from sRGB, over its opaque pixels on every frame; a pale grey remnant such as the first piece's chair read a* about +7, skin about +30) and a picture; a speck on at least speckMinFrames frames in a row (default 2) stops, since a new render keeps it, and a shorter one (a single-frame flash, a wisp of hair) goes to notes and one sentence of inOut. accept: [{ kind: 'speck', box }] takes one off. Checked through a real subject.check_file run on two files of one take (2026-11-12); the limits come from those two files. timing.speck is the pass's own cost (about 5.5 ms a 1080 x 1920 frame). Seen through: pixels partly see-through (alpha 0.5 to 0.95) more than seenThroughDepth px (default 30) inside the cut-out's body and from the frame's edge, as where two copies of a matte meet in a seam; seenThroughMinArea px or more on a frame (default 400) on at least 2 frames read in a row is a finding of kind 'seen-through' that stops, with the frames, the largest area and frame, the box and a picture; single frames go to notes. Limits chosen on two files of the half-size take, as clicked and with subject.soften_edge (at most 82 and 41 px on every fourth frame), and a band of the soft-edge file's alpha multiplied by 0.75 (about 3,900 px a frame); not checked live: it has not run in After Effects on a file with a real seam. timing.seenThrough is its cost. Region line: for a file from a soft-edge build, \`region\` gives the subject's highest and lowest top across the file against the soft edge's region line (from <movie>.comp-room.json, which subject.render_cutout writes, or \`regionLine\`), and a note, not a stop, names the frames where the top sits lower than the line less 12% of the height, so the lower hair crosses the line and keeps the hard edge. Motion edge: for a file from a motion-edge build (its <movie>.comp-room.json says so), holes and openings are read only where the alpha is under ${MOTION_EDGE_CLEAR_BELOW}, so the keyer's soft alpha on moving parts is not a finding and a clear hole still is (chosen offline, not calibrated live), and seen through counts only from ${MOTION_EDGE_SEEN_THROUGH.solid} to ${MOTION_EDGE_SEEN_THROUGH.below} alpha (a moving arm across the torso read 0.75 to 0.95 live); \`motionEdge.reading\` says so. Only true neighbours are compared, and \`compared\` says which. A frame that could not be read is 'not-checked' and stops. Pictures: the largest frame of each finding not accepted and both frames of each jump, full size, and a sheet of up to 24 frames; \`pictures\` counts them and their bytes. Each raw capture is removed once read unless keepCaptures (one run on the take had left 630 MB). The throwaway comp is removed afterwards, and the imported footage too unless keepFootage. \`outline\` says how much the outline changed between neighbouring frames and over frozenGap frames (share of the frame whose alpha changed by more than 0.1, at full size); a run where it did not move is a 'frozen' finding (the selection is probably not tracking, as after replacing the layer's footage; accept: [{ kind: "frozen" }] for a subject that really is still). The frozen limits are not yet calibrated live. About 0.55 s a frame reading the file, measured on one machine. Returns stop, findings, accepted, checked, compared, opaque, outline, inOut, picture, frameReadings, timing.`,
   params: [
     {
       name: "path",
@@ -56759,7 +56759,8 @@ function motionEdgeBuildJsx(args) {
             var _pl = _comp.layers.add(_me);
             _pl.name = _name;
             var _ids = [_me.id, _bandC.id, _moP.comp.id, _ckP.comp.id, _omP.comp.id];
-            function _q(t) { var o = ""; for (var i = 0; i < t.length; i++) { var ch = t.charAt(i); if (ch === '"' || ch === '\\\\') o += '\\\\'; o += ch; } return '"' + o + '"'; }
+            // A JSON string: quote, backslash and control characters escaped, so any layer name reads back.
+            function _q(t) { var o = ""; for (var i = 0; i < t.length; i++) { var ch = t.charAt(i), c = t.charCodeAt(i); if (ch === '"' || ch === '\\\\') o += '\\\\' + ch; else if (ch === "\\n") o += "\\\\n"; else if (ch === "\\r") o += "\\\\r"; else if (ch === "\\t") o += "\\\\t"; else if (c < 32) o += "\\\\u00" + (c < 16 ? "0" : "") + c.toString(16); else o += ch; } return '"' + o + '"'; }
             _pl.comment = "{" + '"compRoom":"${MOTION_MARKER}","layer":' + _q(String(_L)) + ',"wasEnabled":' + _wasEnabled + ',"comps":[' + _ids.join(",") + '],"settings":' + ${jsxVal(JSON.stringify(settings))} + "}";
             var _parts = [_me, _bandC, _moP.comp, _ckP.comp, _omP.comp];
             for (var _pi = 0; _pi < _parts.length; _pi++) _parts[_pi].comment = "comp-room ${MOTION_MARKER} of " + _L;
@@ -64910,11 +64911,13 @@ function structureJsx(compNameOrId, o) {
         // screen: merged intervals [a, b] in comp seconds inside the layer's
         // span [max(inPoint, 0), min(outPoint, comp.duration)] (a === b for an
         // instant: a key on its own, a marker), or "always". Between two keys
-        // of one property the value moves, unless the first is a hold key.
+        // of one property the value moves, unless the first is a hold key or
+        // the two key values are equal (numbers or arrays of numbers, within
+        // a small tolerance, and no spatial curve between them).
         // Changes: keys on the layer (its effects, masks, text animators, any
         // property), keys on the transform of every parent up the chain
-        // (but not its Opacity, which does not pass to the child), layer
-        // markers, a time-driven expression (IDLE_TIME_DRIVEN), and for a
+        // (but not its Opacity, which does not pass to the child), the same
+        // on the layer's track matte, layer markers, a time-driven expression (IDLE_TIME_DRIVEN), and for a
         // precomp the keys one level down on its enabled layers (and track
         // mattes), mapped to outer time as startTime + inner * stretch / 100;
         // a precomp with keyed time remap, or one holding footage that plays,
@@ -64950,8 +64953,37 @@ function structureJsx(compNameOrId, o) {
             "ADBE Vector Filter - Roughen": true,
             "ADBE Vector Filter - Wiggler": true
         };
+        // True when two key values are the same number, or the same numbers
+        // element by element, within a small tolerance. Anything else (text
+        // documents, shapes) is not compared and counts as different.
+        function _sameNum(a, b) {
+            if (typeof a !== "number" || typeof b !== "number" || !(a === a) || !(b === b)) return false;
+            return Math.abs(a - b) <= Math.max(1e-4, 1e-6 * Math.max(Math.abs(a), Math.abs(b)));
+        }
+        function _sameValue(a, b) {
+            if (typeof a === "number") return _sameNum(a, b);
+            if (!(a instanceof Array) || !(b instanceof Array) || a.length !== b.length) return false;
+            for (var vi = 0; vi < a.length; vi++) if (!_sameNum(a[vi], b[vi])) return false;
+            return true;
+        }
+        function _zeroTangent(v) {
+            if (!(v instanceof Array)) return false;
+            for (var zi = 0; zi < v.length; zi++) if (!(typeof v[zi] === "number" && Math.abs(v[zi]) < 1e-6)) return false;
+            return true;
+        }
+        // True when the value holds still from key k0 to key k1: equal values
+        // and, on a spatial property, no curve out of k0 or into k1.
+        function _pairStill(p, k0, k1) {
+            var v0 = AE.safeGet(function () { return p.keyValue(k0); }, null);
+            var v1 = AE.safeGet(function () { return p.keyValue(k1); }, null);
+            if (!_sameValue(v0, v1)) return false;
+            if (!AE.safeGet(function () { return p.isSpatial; }, false)) return true;
+            return _zeroTangent(AE.safeGet(function () { return p.keyOutSpatialTangent(k0); }, null)) &&
+                _zeroTangent(AE.safeGet(function () { return p.keyInSpatialTangent(k1); }, null));
+        }
         // Collects change intervals of a property tree into out; true when
         // something in it changes all the time. skip: a matchName passed over.
+        // A key pair moves unless it is held or its two values are equal.
         function _changeWalk(group, out, depth, map, skip) {
             if (depth > 12) return false;
             var always = false;
@@ -64973,7 +65005,7 @@ function structureJsx(compNameOrId, o) {
                     var t = map(p.keyTime(k));
                     out.push([t, t]);
                     var held = AE.safeGet(function () { return p.keyOutInterpolationType(k - 1) === KeyframeInterpolationType.HOLD; }, false);
-                    if (prev !== null && mn !== "ADBE Marker" && !held) out.push([Math.min(prev, t), Math.max(prev, t)]);
+                    if (prev !== null && mn !== "ADBE Marker" && !held && !_pairStill(p, k - 1, k)) out.push([Math.min(prev, t), Math.max(prev, t)]);
                     prev = t;
                 }
             }
@@ -65017,13 +65049,33 @@ function structureJsx(compNameOrId, o) {
             if (!box || box.error) return false;
             return box.x0 <= 0.5 && box.y0 <= 0.5 && box.x1 >= _W - 0.5 && box.y1 >= _H - 0.5;
         }
-        function _layerChanges(L, out) {
+        // The layer that mattes L: trackMatteLayer (2023 on, may be null),
+        // or on the older API the layer above when a matte type is set.
+        function _matteOf(L) {
+            var tml = AE.safeGet(function () { return L.trackMatteLayer; }, undefined);
+            if (tml !== undefined) return tml;
+            if (!AE.safeGet(function () { return L.trackMatteType !== TrackMatteType.NO_TRACK_MATTE; }, false)) return null;
+            var idx = AE.safeGet(function () { return L.index; }, 0);
+            return idx > 1 ? AE.safeGet(function () { return comp.layer(idx - 1); }, null) : null;
+        }
+        // Changes of L and of its parents' transforms (opacity aside).
+        function _ownChanges(L, out) {
             var always = _changeWalk(L, out, 0, _identity);
             var par = AE.safeGet(function () { return L.parent; }, null);
             for (var guard = 0; par && guard < 100; guard++) {
                 var ptr = AE.safeGet(function () { return par.property("ADBE Transform Group"); }, null);
                 if (ptr && _changeWalk(ptr, out, 0, _identity, "ADBE Opacity")) always = true;
                 par = AE.safeGet(function () { return par.parent; }, null);
+            }
+            return always;
+        }
+        function _layerChanges(L, out) {
+            var always = _ownChanges(L, out);
+            // A track matte's changes show through the layer it mattes.
+            var matte = _matteOf(L);
+            if (matte && matte !== L) {
+                if (_ownChanges(matte, out)) always = true;
+                if (_plays(AE.safeGet(function () { return matte.source; }, null))) always = true;
             }
             var src = AE.safeGet(function () { return L.source; }, null);
             if (!(src && src instanceof CompItem)) return always;
@@ -65838,7 +65890,7 @@ function idleReportOf(s, idleSeconds, idle) {
     layersChecked: s.idle.layersChecked,
     exempt: s.idle.exempt,
     reading: idle.length === 0 ? `no layer is on screen longer than ${idleSeconds} s with nothing changing on it` : `${idle.length} layer${idle.length > 1 ? "s are" : " is"} on screen longer than ${idleSeconds} s with nothing changing on ${idle.length > 1 ? "them" : "it"}, longest first` + (idle.length > LIST_CAP ? ` (the first ${LIST_CAP} listed)` : "") + ". A report, not a fault: a held card can be intended; judge each against the brief. Not counted in counts or shown on the sheet.",
-    note: "top-level layers of this comp, each over its on-screen span (in to out point, inside the comp); a change is a keyframe on the layer (any property: effects, masks, text animators), on a parent's transform (not its opacity), a layer marker, a time-driven expression (by its text: time, wiggle, loopIn/Out, valueAtTime, posterizeTime, Date; an expression reading another layer counts as static), or for a precomp a keyframe one level down on an enabled layer or track matte (keyed time remap or playing footage inside: always changing). A Wiggly Selector, Wiggle Paths or Wiggle Transform counts as always changing; other effects that move with no keys (particles) count as static. A stretch where the layer cannot be seen (opacity 0, or scale 0 on it or a parent) is not listed. Exempt: cameras, lights, nulls, adjustment and guide layers, footage and audio that plays, and unmasked solids and stills covering the frame with no other layer below them"
+    note: "top-level layers of this comp, each over its on-screen span (in to out point, inside the comp); a change is a keyframe on the layer (any property: effects, masks, text animators), on a parent's transform (not its opacity), on its track matte, a layer marker, a time-driven expression (by its text: time, wiggle, loopIn/Out, valueAtTime, posterizeTime, Date; an expression reading another layer counts as static), or for a precomp a keyframe one level down on an enabled layer or track matte (keyed time remap or playing footage inside: always changing). A Wiggly Selector, Wiggle Paths or Wiggle Transform counts as always changing; other effects that move with no keys (particles) count as static. Between two keys with equal values (and no spatial curve) nothing moves. A stretch where the layer cannot be seen (opacity 0, or scale 0 on it or a parent) is not listed. Exempt: cameras, lights, nulls, adjustment and guide layers, footage and audio that plays, and unmasked solids and stills covering the frame with no other layer below them"
   };
 }
 var SHORT = {

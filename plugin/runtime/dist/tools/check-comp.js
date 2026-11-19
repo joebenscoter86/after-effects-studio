@@ -903,11 +903,12 @@ function idleReportOf(s, idleSeconds, idle) {
                 ". " +
                 "A report, not a fault: a held card can be intended; judge each against the brief. Not counted in counts or shown on the sheet.",
         note: "top-level layers of this comp, each over its on-screen span (in to out point, inside the comp); a change is a keyframe " +
-            "on the layer (any property: effects, masks, text animators), on a parent's transform (not its opacity), a layer marker, a time-driven " +
+            "on the layer (any property: effects, masks, text animators), on a parent's transform (not its opacity), on its track matte, a layer marker, a time-driven " +
             "expression (by its text: time, wiggle, loopIn/Out, valueAtTime, posterizeTime, Date; an expression reading another " +
             "layer counts as static), or for a precomp a keyframe one level down on an enabled layer or track matte (keyed time remap " +
             "or playing footage inside: always changing). A Wiggly Selector, Wiggle Paths or Wiggle Transform counts as always " +
-            "changing; other effects that move with no keys (particles) count as static. A stretch where the layer cannot be seen " +
+            "changing; other effects that move with no keys (particles) count as static. Between two keys with equal values (and no " +
+            "spatial curve) nothing moves. A stretch where the layer cannot be seen " +
             "(opacity 0, or scale 0 on it or a parent) is not listed. Exempt: cameras, lights, nulls, adjustment and guide layers, " +
             "footage and audio that plays, and unmasked solids and stills covering the frame with no other layer below them",
     };

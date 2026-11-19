@@ -38,6 +38,7 @@ class FileSource {}
 const PropertyType = { PROPERTY: 6212, INDEXED_GROUP: 6213, NAMED_GROUP: 6214 };
 const KeyframeInterpolationType = { LINEAR: 6612, BEZIER: 6613, HOLD: 6614 };
 const MaskMode = { NONE: 6812, ADD: 6813 };
+const TrackMatteType = { NO_TRACK_MATTE: 5012, ALPHA: 5013 };
 
 const AE_HELPERS = {
   safeGet: (fn: () => unknown, fallback: unknown) => {
@@ -55,12 +56,19 @@ function prop(matchName: string, extra: Record<string, unknown> = {}) {
   const keys = (extra.keys as number[] | undefined) ?? [];
   const hold = (extra.hold as number[] | undefined) ?? [];
   const valueAt = extra.valueAt as ((t: number) => unknown) | undefined;
+  // Key values: given, or a different value on every key (so a pair moves).
+  const keyValues = extra.keyValues as unknown[] | undefined;
+  const tangents = extra.tangents as Record<number, number[]> | undefined;
   return {
     name: matchName,
     matchName,
     propertyType: PropertyType.PROPERTY,
     numKeys: keys.length,
     keyTime: (k: number) => keys[k - 1],
+    keyValue: (k: number) => (keyValues ? keyValues[k - 1] : [50 + k, 50]),
+    isSpatial: extra.spatial === true,
+    keyInSpatialTangent: (k: number) => tangents?.[k] ?? [0, 0],
+    keyOutSpatialTangent: (k: number) => tangents?.[k] ?? [0, 0],
     canSetExpression: true,
     expressionEnabled: extra.expression !== undefined,
     expression: (extra.expression as string | undefined) ?? "",
@@ -91,6 +99,14 @@ interface LayerSpec {
   startTime?: number;
   stretch?: number;
   keys?: number[];
+  /** Values on the position keys (default: a different value on each). */
+  keyValues?: unknown[];
+  /** Spatial tangents (in and out) on position keys, by 1-based index. */
+  tangents?: Record<number, number[]>;
+  /** The layer that mattes this one (the 2023+ trackMatteLayer). */
+  trackMatteLayer?: Any;
+  /** The older API: a matte type, with the layer above as the matte. */
+  trackMatteType?: number;
   expression?: string;
   markers?: number[];
   parent?: Any;
@@ -123,6 +139,9 @@ function layer(s: LayerSpec): Any {
   }[s.kind ?? "shape"];
   const position = prop("ADBE Position", {
     keys: s.keys,
+    keyValues: s.keyValues,
+    tangents: s.tangents,
+    spatial: true,
     hold: s.hold,
     expression: s.expression,
     value: [50, 50],
@@ -154,6 +173,8 @@ function layer(s: LayerSpec): Any {
     adjustmentLayer: s.adjustmentLayer ?? false,
     guideLayer: s.guideLayer ?? false,
     isTrackMatte: s.isTrackMatte ?? false,
+    ...(s.trackMatteLayer !== undefined ? { trackMatteLayer: s.trackMatteLayer } : {}),
+    trackMatteType: s.trackMatteType ?? TrackMatteType.NO_TRACK_MATTE,
     threeDLayer: false,
     timeRemapEnabled: s.timeRemap !== undefined,
     hasVideo: true,
@@ -198,6 +219,7 @@ function runStructure(code: string, comp: Any) {
     "PropertyType",
     "KeyframeInterpolationType",
     "MaskMode",
+    "TrackMatteType",
     code,
   )(
     app,
@@ -214,6 +236,7 @@ function runStructure(code: string, comp: Any) {
     PropertyType,
     KeyframeInterpolationType,
     MaskMode,
+    TrackMatteType,
   );
 }
 
@@ -754,5 +777,106 @@ describe("ae_check_comp idle report: the tool description", () => {
     const structure = d.slice(d.indexOf("Structure,"), d.indexOf("One contact sheet"));
     expect(structure).toMatch(/idle/);
     expect(structure).toContain("`idleSeconds`");
+  });
+});
+
+describe("ae_check_comp idle report: final review, equal-value holds", () => {
+  it("in, equal hold, out: keys 0, 0.5, 9.5, 10 with equal values at 0.5 and 9.5 is idle 0.5-9.5", async () => {
+    const card = layer({
+      name: "Card",
+      keys: [0, 0.5, 9.5, 10],
+      keyValues: [
+        [0, 50],
+        [50, 50],
+        [50, 50],
+        [100, 50],
+      ],
+    });
+    const { res } = await check([card]);
+    expect(entries(res)).toEqual([{ layer: "Card", index: 1, from: 0.5, to: 9.5, seconds: 9 }]);
+  });
+
+  it("the same keys with different values at 0.5 and 9.5 move all the way", async () => {
+    const card = layer({
+      name: "Card",
+      keys: [0, 0.5, 9.5, 10],
+      keyValues: [
+        [0, 50],
+        [50, 50],
+        [60, 50],
+        [100, 50],
+      ],
+    });
+    const { res } = await check([card]);
+    expect(res.structure.idle).toEqual([]);
+  });
+
+  it("equal values within the tolerance still hold", async () => {
+    const card = layer({
+      name: "Card",
+      keys: [0, 0.5, 9.5, 10],
+      keyValues: [0, 50, 50.00001, 100],
+    });
+    const { res } = await check([card]);
+    expect(entries(res)).toEqual([{ layer: "Card", index: 1, from: 0.5, to: 9.5, seconds: 9 }]);
+  });
+
+  it("a spatial pair with equal values but curved tangents moves", async () => {
+    const card = layer({
+      name: "Card",
+      keys: [0, 0.5, 9.5, 10],
+      keyValues: [
+        [0, 50],
+        [50, 50],
+        [50, 50],
+        [100, 50],
+      ],
+      tangents: { 2: [20, -30], 3: [-20, 30] },
+    });
+    const { res } = await check([card]);
+    expect(res.structure.idle).toEqual([]);
+  });
+
+  it("values that are not numbers or arrays keep counting as a change", async () => {
+    const doc = { text: "Same" };
+    const text = group("ADBE Text Properties", [
+      prop("ADBE Text Document", { keys: [0, 12], keyValues: [doc, doc] }),
+    ]);
+    const { res } = await check([layer({ kind: "text", name: "Title", extra: [text] })]);
+    expect(res.structure.idle).toEqual([]);
+  });
+});
+
+describe("ae_check_comp idle report: final review, track mattes at top level", () => {
+  it("a layer matted by a keyed layer (trackMatteLayer) is not flagged", async () => {
+    const matte = layer({ name: "Matte", enabled: false, keys: [0, 12] });
+    const fill = layer({ name: "Fill", trackMatteLayer: matte });
+    const { res } = await check([matte, fill]);
+    expect(res.structure.idle).toEqual([]);
+  });
+
+  it("a layer whose trackMatteLayer is null is still flagged", async () => {
+    const above = layer({ name: "Above", enabled: false, keys: [0, 12] });
+    const fill = layer({
+      name: "Fill",
+      trackMatteLayer: null,
+      trackMatteType: TrackMatteType.ALPHA,
+    });
+    const { res } = await check([above, fill]);
+    expect(entries(res).map((e: Any) => e.layer)).toEqual(["Fill"]);
+  });
+
+  it("older API: a matte type takes the keyed layer above as the matte", async () => {
+    const matte = layer({ name: "Matte", enabled: false, keys: [0, 12] });
+    const fill = layer({ name: "Fill", trackMatteType: TrackMatteType.ALPHA });
+    const { res } = await check([matte, fill]);
+    expect(res.structure.idle).toEqual([]);
+  });
+
+  it("older API: no matte type, the keyed layer above does not count", async () => {
+    const above = layer({ name: "Above", enabled: false, keys: [0, 12] });
+    const fill = layer({ name: "Fill" });
+    const { res } = await check([above, fill]);
+    expect(entries(res).map((e: Any) => e.layer)).toEqual(["Fill"]);
   });
 });

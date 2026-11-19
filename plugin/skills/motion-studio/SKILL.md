@@ -13,7 +13,7 @@ For visually demanding builds, suggest the most capable model available in your 
 
 Read `ae_library` documents **motion-language**, **production-workflow**, and **brief-template** before designing the first scene. If the library tool is unavailable but the plugin is on disk, read `../../library/language/core.md`, `../../library/language/production-workflow.md`, and `../../library/templates/brief.md` relative to this skill directory. All required knowledge ships here; never require the original Content repo.
 
-When the project has its own house style (a style guide, brand rules or motion standards of its own), read the motion-studio skill and the brief template first, then the project's own standard. The project's standard sets the look; this foundation still sets the craft.
+When the project has its own house style (a style guide, brand rules or motion standards of its own), finish this skill and read the brief template before the project's own standard. The project's standard sets the look; this foundation still sets the craft.
 
 Inspect `ae_version_info` and `ae_context`, or run the plugin's doctor if no connection is available. Determine the target project, viewer takeaway, format, duration and real inputs. Ask only for missing information that changes the output. A blank AE project is supported: explicitly create native comps/layers. Don't assume a personal MASTER rig, asset folder, font or generation account exists.
 

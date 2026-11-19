@@ -278,7 +278,8 @@ export function motionEdgeBuildJsx(
             var _pl = _comp.layers.add(_me);
             _pl.name = _name;
             var _ids = [_me.id, _bandC.id, _moP.comp.id, _ckP.comp.id, _omP.comp.id];
-            function _q(t) { var o = ""; for (var i = 0; i < t.length; i++) { var ch = t.charAt(i); if (ch === '"' || ch === '\\\\') o += '\\\\'; o += ch; } return '"' + o + '"'; }
+            // A JSON string: quote, backslash and control characters escaped, so any layer name reads back.
+            function _q(t) { var o = ""; for (var i = 0; i < t.length; i++) { var ch = t.charAt(i), c = t.charCodeAt(i); if (ch === '"' || ch === '\\\\') o += '\\\\' + ch; else if (ch === "\\n") o += "\\\\n"; else if (ch === "\\r") o += "\\\\r"; else if (ch === "\\t") o += "\\\\t"; else if (c < 32) o += "\\\\u00" + (c < 16 ? "0" : "") + c.toString(16); else o += ch; } return '"' + o + '"'; }
             _pl.comment = "{" + '"compRoom":"${MOTION_MARKER}","layer":' + _q(String(_L)) + ',"wasEnabled":' + _wasEnabled + ',"comps":[' + _ids.join(",") + '],"settings":' + ${jsxVal(JSON.stringify(settings))} + "}";
             var _parts = [_me, _bandC, _moP.comp, _ckP.comp, _omP.comp];
             for (var _pi = 0; _pi < _parts.length; _pi++) _parts[_pi].comment = "comp-room ${MOTION_MARKER} of " + _L;

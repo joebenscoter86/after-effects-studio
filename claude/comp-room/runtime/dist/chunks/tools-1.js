@@ -1548,11 +1548,13 @@ function structureJsx(compNameOrId, o) {
         // screen: merged intervals [a, b] in comp seconds inside the layer's
         // span [max(inPoint, 0), min(outPoint, comp.duration)] (a === b for an
         // instant: a key on its own, a marker), or "always". Between two keys
-        // of one property the value moves, unless the first is a hold key.
+        // of one property the value moves, unless the first is a hold key or
+        // the two key values are equal (numbers or arrays of numbers, within
+        // a small tolerance, and no spatial curve between them).
         // Changes: keys on the layer (its effects, masks, text animators, any
         // property), keys on the transform of every parent up the chain
-        // (but not its Opacity, which does not pass to the child), layer
-        // markers, a time-driven expression (IDLE_TIME_DRIVEN), and for a
+        // (but not its Opacity, which does not pass to the child), the same
+        // on the layer's track matte, layer markers, a time-driven expression (IDLE_TIME_DRIVEN), and for a
         // precomp the keys one level down on its enabled layers (and track
         // mattes), mapped to outer time as startTime + inner * stretch / 100;
         // a precomp with keyed time remap, or one holding footage that plays,
@@ -1588,8 +1590,37 @@ function structureJsx(compNameOrId, o) {
             "ADBE Vector Filter - Roughen": true,
             "ADBE Vector Filter - Wiggler": true
         };
+        // True when two key values are the same number, or the same numbers
+        // element by element, within a small tolerance. Anything else (text
+        // documents, shapes) is not compared and counts as different.
+        function _sameNum(a, b) {
+            if (typeof a !== "number" || typeof b !== "number" || !(a === a) || !(b === b)) return false;
+            return Math.abs(a - b) <= Math.max(1e-4, 1e-6 * Math.max(Math.abs(a), Math.abs(b)));
+        }
+        function _sameValue(a, b) {
+            if (typeof a === "number") return _sameNum(a, b);
+            if (!(a instanceof Array) || !(b instanceof Array) || a.length !== b.length) return false;
+            for (var vi = 0; vi < a.length; vi++) if (!_sameNum(a[vi], b[vi])) return false;
+            return true;
+        }
+        function _zeroTangent(v) {
+            if (!(v instanceof Array)) return false;
+            for (var zi = 0; zi < v.length; zi++) if (!(typeof v[zi] === "number" && Math.abs(v[zi]) < 1e-6)) return false;
+            return true;
+        }
+        // True when the value holds still from key k0 to key k1: equal values
+        // and, on a spatial property, no curve out of k0 or into k1.
+        function _pairStill(p, k0, k1) {
+            var v0 = AE.safeGet(function () { return p.keyValue(k0); }, null);
+            var v1 = AE.safeGet(function () { return p.keyValue(k1); }, null);
+            if (!_sameValue(v0, v1)) return false;
+            if (!AE.safeGet(function () { return p.isSpatial; }, false)) return true;
+            return _zeroTangent(AE.safeGet(function () { return p.keyOutSpatialTangent(k0); }, null)) &&
+                _zeroTangent(AE.safeGet(function () { return p.keyInSpatialTangent(k1); }, null));
+        }
         // Collects change intervals of a property tree into out; true when
         // something in it changes all the time. skip: a matchName passed over.
+        // A key pair moves unless it is held or its two values are equal.
         function _changeWalk(group, out, depth, map, skip) {
             if (depth > 12) return false;
             var always = false;
@@ -1611,7 +1642,7 @@ function structureJsx(compNameOrId, o) {
                     var t = map(p.keyTime(k));
                     out.push([t, t]);
                     var held = AE.safeGet(function () { return p.keyOutInterpolationType(k - 1) === KeyframeInterpolationType.HOLD; }, false);
-                    if (prev !== null && mn !== "ADBE Marker" && !held) out.push([Math.min(prev, t), Math.max(prev, t)]);
+                    if (prev !== null && mn !== "ADBE Marker" && !held && !_pairStill(p, k - 1, k)) out.push([Math.min(prev, t), Math.max(prev, t)]);
                     prev = t;
                 }
             }
@@ -1655,13 +1686,33 @@ function structureJsx(compNameOrId, o) {
             if (!box || box.error) return false;
             return box.x0 <= 0.5 && box.y0 <= 0.5 && box.x1 >= _W - 0.5 && box.y1 >= _H - 0.5;
         }
-        function _layerChanges(L, out) {
+        // The layer that mattes L: trackMatteLayer (2023 on, may be null),
+        // or on the older API the layer above when a matte type is set.
+        function _matteOf(L) {
+            var tml = AE.safeGet(function () { return L.trackMatteLayer; }, undefined);
+            if (tml !== undefined) return tml;
+            if (!AE.safeGet(function () { return L.trackMatteType !== TrackMatteType.NO_TRACK_MATTE; }, false)) return null;
+            var idx = AE.safeGet(function () { return L.index; }, 0);
+            return idx > 1 ? AE.safeGet(function () { return comp.layer(idx - 1); }, null) : null;
+        }
+        // Changes of L and of its parents' transforms (opacity aside).
+        function _ownChanges(L, out) {
             var always = _changeWalk(L, out, 0, _identity);
             var par = AE.safeGet(function () { return L.parent; }, null);
             for (var guard = 0; par && guard < 100; guard++) {
                 var ptr = AE.safeGet(function () { return par.property("ADBE Transform Group"); }, null);
                 if (ptr && _changeWalk(ptr, out, 0, _identity, "ADBE Opacity")) always = true;
                 par = AE.safeGet(function () { return par.parent; }, null);
+            }
+            return always;
+        }
+        function _layerChanges(L, out) {
+            var always = _ownChanges(L, out);
+            // A track matte's changes show through the layer it mattes.
+            var matte = _matteOf(L);
+            if (matte && matte !== L) {
+                if (_ownChanges(matte, out)) always = true;
+                if (_plays(AE.safeGet(function () { return matte.source; }, null))) always = true;
             }
             var src = AE.safeGet(function () { return L.source; }, null);
             if (!(src && src instanceof CompItem)) return always;
@@ -2464,7 +2515,7 @@ function idleReportOf(s, idleSeconds, idle) {
 		layersChecked: s.idle.layersChecked,
 		exempt: s.idle.exempt,
 		reading: idle.length === 0 ? `no layer is on screen longer than ${idleSeconds} s with nothing changing on it` : `${idle.length} layer${idle.length > 1 ? "s are" : " is"} on screen longer than ${idleSeconds} s with nothing changing on ${idle.length > 1 ? "them" : "it"}, longest first` + (idle.length > 20 ? ` (the first ${20} listed)` : "") + ". A report, not a fault: a held card can be intended; judge each against the brief. Not counted in counts or shown on the sheet.",
-		note: "top-level layers of this comp, each over its on-screen span (in to out point, inside the comp); a change is a keyframe on the layer (any property: effects, masks, text animators), on a parent's transform (not its opacity), a layer marker, a time-driven expression (by its text: time, wiggle, loopIn/Out, valueAtTime, posterizeTime, Date; an expression reading another layer counts as static), or for a precomp a keyframe one level down on an enabled layer or track matte (keyed time remap or playing footage inside: always changing). A Wiggly Selector, Wiggle Paths or Wiggle Transform counts as always changing; other effects that move with no keys (particles) count as static. A stretch where the layer cannot be seen (opacity 0, or scale 0 on it or a parent) is not listed. Exempt: cameras, lights, nulls, adjustment and guide layers, footage and audio that plays, and unmasked solids and stills covering the frame with no other layer below them"
+		note: "top-level layers of this comp, each over its on-screen span (in to out point, inside the comp); a change is a keyframe on the layer (any property: effects, masks, text animators), on a parent's transform (not its opacity), on its track matte, a layer marker, a time-driven expression (by its text: time, wiggle, loopIn/Out, valueAtTime, posterizeTime, Date; an expression reading another layer counts as static), or for a precomp a keyframe one level down on an enabled layer or track matte (keyed time remap or playing footage inside: always changing). A Wiggly Selector, Wiggle Paths or Wiggle Transform counts as always changing; other effects that move with no keys (particles) count as static. Between two keys with equal values (and no spatial curve) nothing moves. A stretch where the layer cannot be seen (opacity 0, or scale 0 on it or a parent) is not listed. Exempt: cameras, lights, nulls, adjustment and guide layers, footage and audio that plays, and unmasked solids and stills covering the frame with no other layer below them"
 	};
 }
 async function makeSheet(source, outDir, flags, stretches, structure, fd, range, target, convert, maxTiles, thumbWidth, tag) {
