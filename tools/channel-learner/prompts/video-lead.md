@@ -2,6 +2,10 @@
 
 You run the recipe work for one video whose study folder (`STUDY`) is already gathered and aligned (it has `timeline.md`, `frames/`, `frames-small/`, `source.mp4`). You organise the work; other agents do the reading. The prompts beside this file say how each kind of agent works: `techniques.md`, `distil.md`, `check.md`.
 
+## Before anything
+
+In a fresh worktree, run `node tools/channel-learner/learn.mjs link <worktree root>` first: it points `quality/renders/channel-study` at `~/Assets/comp-room-studies/channel-study`, outside every worktree, so archiving a session cannot delete a study. Save every study there, failures included, and never overwrite an earlier build or review (`prove-run.md` step 3, `prove-review.md`).
+
 ## Steps
 
 1. **List the techniques** yourself, following `techniques.md` (text only): `STUDY/techniques.json`.

@@ -38,4 +38,4 @@ Measuring rules, from reviews that sent builders the wrong way:
 - When figures were reached by changing the stand-in art (more trees, a darker sky), say so: they no longer show the effect's strength on their own.
 - A reference clip under a second long supports direction and rough speed, little else. Say what is firm.
 
-Write only inside `PROOF/<n>/`. No git. No After Effects. Finish with one line per technique: verdict and the main reason.
+Keep every earlier review: if `review.md` or `side-by-side.*` already exist, rename them to `review-<label>.md` and `side-by-side-<label>.*` (`<label>` the first unused of `first`, `second`, ...) before you write the new ones; never overwrite or delete one. Write only inside `PROOF/<n>/`. No git. No After Effects. Finish with one line per technique: verdict and the main reason.

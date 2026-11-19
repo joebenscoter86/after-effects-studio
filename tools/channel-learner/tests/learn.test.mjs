@@ -433,3 +433,40 @@ test('extractFramesFfmpeg writes exactly the requested frames, named by frame nu
     assert.ok(!b.equals(c), 'frame 15 has the box');
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
+
+// ---------- link: study folders live outside every worktree ----------
+
+test('link points quality/renders/channel-study at the shared studies folder, and keeps a correct link', async () => {
+  const { symlink, readlink, lstat } = await import('node:fs/promises');
+  const base = await mkdtemp(join(tmpdir(), 'learn-link-'));
+  const root = join(base, 'worktree');
+  const studies = join(base, 'studies');
+  await mkdir(root, { recursive: true });
+  await mkdir(studies, { recursive: true });
+  const logs = [];
+  assert.equal(await run(['link', root, '--to', studies], { log: (m) => logs.push(m) }), 0);
+  const at = join(root, 'quality', 'renders', 'channel-study');
+  assert.ok((await lstat(at)).isSymbolicLink());
+  assert.equal(await readlink(at), studies);
+  assert.equal(await run(['link', root, '--to', studies], { log: (m) => logs.push(m) }), 0);
+  await rm(base, { recursive: true, force: true });
+});
+
+test('link refuses a real folder or a link elsewhere and changes nothing', async () => {
+  const { symlink, readlink } = await import('node:fs/promises');
+  const base = await mkdtemp(join(tmpdir(), 'learn-link-'));
+  const studies = join(base, 'studies');
+  await mkdir(studies, { recursive: true });
+  const real = join(base, 'a');
+  await mkdir(join(real, 'quality', 'renders', 'channel-study', 'vid1'), { recursive: true });
+  const logs = [];
+  assert.equal(await run(['link', real, '--to', studies], { log: (m) => logs.push(m) }), 1);
+  assert.ok(existsSync(join(real, 'quality', 'renders', 'channel-study', 'vid1')));
+  assert.match(logs.join('\n'), /real folder/);
+  const other = join(base, 'b');
+  await mkdir(join(other, 'quality', 'renders'), { recursive: true });
+  await symlink(join(base, 'elsewhere'), join(other, 'quality', 'renders', 'channel-study'));
+  assert.equal(await run(['link', other, '--to', studies], { log: (m) => logs.push(m) }), 1);
+  assert.equal(await readlink(join(other, 'quality', 'renders', 'channel-study')), join(base, 'elsewhere'));
+  await rm(base, { recursive: true, force: true });
+});

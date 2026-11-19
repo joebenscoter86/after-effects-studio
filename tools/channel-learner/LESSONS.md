@@ -99,6 +99,10 @@ The first video's 25 recipes all passed the check. Building them found three rec
 - **Merge lines that read the parent too strongly.** Written with both recipes open (lesson 14's rule), 5 of 11 merge lines were still refused: each turned something the parent marks `inferred`, `unknown` or "from a proof build" into a plain fact about the parent. Rule: `merge.md` step 3 now says an inferred or unknown parent claim stays so in the `differs:` line.
 - **A camera move nobody named.** A ring of cards was seen through the default view dollied by hand (the centre card 27 % of the width; the steps give 19 %). And "Set Focus Distance to Layer" was named where the screen showed a linked, expression-driven focus. Rule: a default-view camera move is a step with a stand-in camera layer; a command off screen is named from its visible effect, `inferred` (`distil.md`).
 
+### 21. Studies kept inside a worktree, and builds written over (owner, 2026-11-19)
+- **What happened.** Study material (videos, frames, recipes, art, proof projects, renders, reviews) lived in each session's git-ignored `quality/renders/channel-study/`, where archiving the session deletes it; the backlog's first study had to be rescued into `~/Assets`. And each rebuild or re-review wrote over the last `build.*` and `review.md`, so the failures that taught the lessons were lost.
+- **Rule.** Every study is stored, failures included. `learn.mjs link <worktree>` points `quality/renders/channel-study` at `~/Assets/comp-room-studies/channel-study` (test in `tests/learn.test.mjs`; it refuses a real folder or a link elsewhere); `video-lead.md` runs it first and `AGENTS.md` says where studies live. `prove-run.md` step 3 and `prove-review.md` rename the earlier build, before frame, side-by-side and review to `-first`, `-second`, ... instead of overwriting, and build notes gain a section per run.
+
 ## Still open
 - The 24 "matches" on the first video were given before the look line existed.
 - Nothing yet tests the prompts themselves. A cheap test: keep technique 11's first recipe as a fixture and confirm a fresh checker fails it on check 8.

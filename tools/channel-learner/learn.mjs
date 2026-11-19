@@ -4,6 +4,10 @@
 //   node tools/channel-learner/learn.mjs gather <url> --out <dir>
 //   node tools/channel-learner/learn.mjs align <dir>
 //   node tools/channel-learner/learn.mjs status <dir>
+//   node tools/channel-learner/learn.mjs link <worktree root> [--to <dir>]
+//     points <root>/quality/renders/channel-study at the shared studies folder (default
+//     ~/Assets/comp-room-studies/channel-study), outside every worktree, so archiving a session
+//     cannot delete a study; refuses a real folder or a link elsewhere and changes nothing.
 //   (gather and align take --redo <step>[,<step>] to run finished steps again)
 //
 // <dir>/state.json is the ledger:
@@ -485,9 +489,31 @@ async function status(dir, d) {
   return 0;
 }
 
+// ---------- link ----------
+
+export const STUDIES = join(homedir(), 'Assets', 'comp-room-studies', 'channel-study');
+
+async function link(root, to, d) {
+  const { lstat, readlink, symlink } = await import('node:fs/promises');
+  const at = join(root, 'quality', 'renders', 'channel-study');
+  let st = null;
+  try { st = await lstat(at); } catch { /* missing */ }
+  if (st?.isSymbolicLink()) {
+    const now = await readlink(at);
+    if (resolve(dirname(at), now) === resolve(to)) { d.log(`${at} already points at ${to}`); return 0; }
+    d.log(`refused: ${at} is a link to ${now}, not ${to}; change it by hand`);
+    return 1;
+  }
+  if (st) { d.log(`refused: ${at} is a real folder; move its studies into ${to} by hand, then link`); return 1; }
+  await mkdir(dirname(at), { recursive: true });
+  await symlink(to, at);
+  d.log(`linked ${at} -> ${to}`);
+  return 0;
+}
+
 // ---------- entry ----------
 
-const USAGE = 'usage: learn.mjs gather <url> --out <dir> | align <dir> | status <dir>   [--redo <step>[,<step>]]';
+const USAGE = 'usage: learn.mjs gather <url> --out <dir> | align <dir> | status <dir> | link <worktree root> [--to <dir>]   [--redo <step>[,<step>]]';
 
 export async function run(argv, deps = {}) {
   const d = { ...realDeps, ...deps };
@@ -499,6 +525,7 @@ export async function run(argv, deps = {}) {
     return value;
   };
   const out = take('--out');
+  const to = take('--to');
   const redo = (take('--redo') ?? '').split(',').filter(Boolean);
   const bad = redo.filter((s) => !STEPS.includes(s));
   if (bad.length) { d.log(`unknown step ${bad.join(', ')}; steps are ${STEPS.join(', ')}`); return 1; }
@@ -507,6 +534,7 @@ export async function run(argv, deps = {}) {
     if (cmd === 'gather' && target && out) return await gather(target, resolve(out), d, redo);
     if (cmd === 'align' && target) return await align(resolve(target), d, redo);
     if (cmd === 'status' && target) return await status(resolve(target), d);
+    if (cmd === 'link' && target) return await link(resolve(target), resolve(to ?? STUDIES), d);
   } catch (e) {
     d.log(`error: ${errText(e)}`);
     return 1;
