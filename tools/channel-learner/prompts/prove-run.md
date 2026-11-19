@@ -28,6 +28,9 @@ The build scripts were written from the recipes alone, without After Effects (`p
 
 ## What earlier builds learned
 
+- For a before frame of a light, set its Intensity to 0 rather than switching the light off: switched off inside a nested scene or beside a 2D layer, Advanced 3D rendered a wrong frame (one sideways shadow).
+- Before you ask the owner for a hand step, check by script that what it names exists here (list the layer's property groups and their match names) and quote what you found in the request; a material step the tutorial showed did not exist for 3D text in this After Effects.
+
 - Edit a script, confirm the edit applied, then run it: never an After Effects call in the same turn as a file edit, and never more than one After Effects call in a turn.
 - Address comps and layers by name or id in every call, never "active" or "selected": the active comp can change between calls.
 - On a comp-sized shape or text layer an effect's point control reads comp pixels; on a smaller precomp layer it reads the layer's own space. Test with a fixed value before trusting an expression (`fromComp` put a gradient off its disc and a blur centre in a corner).

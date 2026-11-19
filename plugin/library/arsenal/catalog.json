@@ -1,6 +1,6 @@
 {
  "vocab": "jobs-v1",
- "version": "1cd51a08",
+ "version": "a205ee2d",
  "jobs": [
   "land-number",
   "count-things",
@@ -516,7 +516,7 @@
   },
   {
    "id": "05-path-opening-split-driven-by-moving-ball",
-   "revision": "5554546e",
+   "revision": "1a8cfc3e",
    "name": "A dark mass split open behind a travelling ball",
    "line": "A small ball crosses the frame and a large dark form tears open behind it, revealing the light ground; good for line-led animation, progress moments or a reveal that clears space for a headline.",
    "status": "unproven",
@@ -547,7 +547,7 @@
   },
   {
    "id": "06-gradient-shapes-blur-noise-glow-posterize",
-   "revision": "c26250c8",
+   "revision": "3fd59519",
    "name": "Turning a crude gradient disc into a grainy glowing orb",
    "line": "Rescues a deliberately plain graphic (two gradient circles) into a soft, filmic hero object for a title card or an event poster background, using only blur, heavy grain, a huge glow and posterize.",
    "status": "unproven",
@@ -1731,7 +1731,7 @@
   },
   {
    "id": "01-bevelled-3d-text-material-texture",
-   "revision": "7111fca6",
+   "revision": "6b3126e2",
    "name": "Bevelled 3D text wrapped in a tiled material",
    "line": "Turns a flat title into a solid, physical object with rounded edges and a real surface (metal, stone, paint) in a few clicks; the base for any lit 3D title shot.",
    "status": "unproven",
@@ -1794,7 +1794,7 @@
   },
   {
    "id": "03-parallel-rim-light-no-shadows",
-   "revision": "0f24c9e6",
+   "revision": "75ed9ba1",
    "name": "Shadowless parallel light as an extra backlight",
    "line": "A small finishing touch on a lit 3D title: a second, shadowless directional light from behind and to one side brightens the edges and tops of the letters without adding a second set of shadows.",
    "status": "unproven",
@@ -2039,7 +2039,7 @@
   },
   {
    "id": "02-tritone-curves-mood-grade",
-   "revision": "72dcb2f7",
+   "revision": "98273fbe",
    "name": "One mood grade for mismatched art: Tritone plus a single-point Curves, pasted to every layer",
    "line": "When a scene is built from stock pieces that do not match (saturated greens, different palettes), this pulls them into one night-time or moody colour world in a minute, before any lighting or depth work. Assumes: a composition in which every scene object is its own layer (technique 01).",
    "status": "unproven",
@@ -2099,7 +2099,7 @@
   },
   {
    "id": "04-camera-depth-of-field-focus-lock-dolly",
-   "revision": "3b47a9f2",
+   "revision": "ae50b2ae",
    "name": "Depth-of-field camera locked on the subject, with a slow dolly in",
    "line": "Turns a staged 2D-in-3D layout into a filmed shot: near and far layers fall out of focus, the subject stays sharp, and a short push-in gives the opening beat life without any layer being animated.",
    "status": "unproven",
@@ -2192,7 +2192,7 @@
   },
   {
    "id": "07-leaf-particles-blown-across",
-   "revision": "00cf265a",
+   "revision": "4be15c33",
    "name": "Leaves blown across the frame with textured particles",
    "line": "Sells wind in an illustrated scene by sending a steady trickle of tumbling leaves across it from one side, without animating a single leaf by hand. Assumes a finished, graded 2D scene in a 3D comp with a camera (techniques 02–04) and the scene's Tritone plus Curves grade on a layer to copy from.",
    "status": "unproven",
@@ -2224,7 +2224,7 @@
   },
   {
    "id": "08-rainfall-matched-to-wind",
-   "revision": "be19bdd5",
+   "revision": "a2b760b0",
    "name": "Rain slanted to match the wind",
    "line": "Adds weather on top of a wind-animated scene so the motion has a reason, with the rain leaning the same way everything else is blowing. Assumes a scene that already moves in one wind direction (techniques 05–07; here the leaves enter from the left edge).",
    "status": "unproven",

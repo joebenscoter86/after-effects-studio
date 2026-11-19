@@ -107,6 +107,10 @@ The first video's 25 recipes all passed the check. Building them found three rec
 - **What happened.** Lesson 12 tells builders the art bends, not the technique, but the bend moved upstream: an art director, planning our scene, shrank recipe 03's near branches (1.9 to 1.25 times their flat size) and grass (1.45 to 1.0) so they would not cover our lantern and ledge. The builder followed the brief, so 03, 08 and 10 lost the large framing leaves that make the depth read. A builder in 8oVLS0ZlKC4 05 did the same with our title, opening the end frame 1.5 times to fit it.
 - **Rule.** `art.md` rule 2: never change the recipe's layout figures to fit the art; move or re-make the art. Reviewers already flag it (lesson 12); the art was re-laid (a free-standing lamp, a smaller wall) and the near layers put back at the recipe's sizes.
 
+### 23. A hand step that does not exist in this After Effects (backlog, eoBEBx1PbS4 01, 2026-11-19)
+- **What happened.** The recipe's material steps (Material Assignment > Add Override > All, then a Substance material in the Material dropdown) were written from the tutorial's screen. The builder found they cannot be scripted and sent the owner the clicks; with the 3D text layer selected, the owner's Properties panel showed Layer Transform, Text, Paragraph and Text Animation and no Material section. The step could not be done by hand either, so the proof was built on a scripted stand-in (the art's tile on the faces), on the owner's decision.
+- **Rule.** Before sending the owner a hand step, the builder checks by script that the panel or property it names exists on this After Effects (read the layer's property groups), and says so in the request. The recipe records where the step was unavailable (build notes, 2026-11-19).
+
 ## Still open
 - The 24 "matches" on the first video were given before the look line existed.
 - Nothing yet tests the prompts themselves. A cheap test: keep technique 11's first recipe as a fixture and confirm a fresh checker fails it on check 8.

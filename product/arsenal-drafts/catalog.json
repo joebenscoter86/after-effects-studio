@@ -1,6 +1,6 @@
 {
   "vocab": "jobs-v1",
-  "version": "1cd51a08",
+  "version": "a205ee2d",
   "jobs": [
     "land-number",
     "count-things",
@@ -577,7 +577,7 @@
         "file": "8oVLS0ZlKC4.md",
         "heading": "A dark mass split open behind a travelling ball"
       },
-      "revision": "5554546e",
+      "revision": "1a8cfc3e",
       "still": null,
       "taught_by": 4,
       "variants": []
@@ -612,7 +612,7 @@
         "file": "8oVLS0ZlKC4.md",
         "heading": "Turning a crude gradient disc into a grainy glowing orb"
       },
-      "revision": "c26250c8",
+      "revision": "3fd59519",
       "still": null,
       "taught_by": 3,
       "variants": []
@@ -1890,7 +1890,7 @@
         "file": "eoBEBx1PbS4.md",
         "heading": "Bevelled 3D text wrapped in a tiled material"
       },
-      "revision": "7111fca6",
+      "revision": "6b3126e2",
       "still": null,
       "taught_by": 3,
       "variants": []
@@ -1961,7 +1961,7 @@
         "file": "eoBEBx1PbS4.md",
         "heading": "Shadowless parallel light as an extra backlight"
       },
-      "revision": "0f24c9e6",
+      "revision": "75ed9ba1",
       "still": null,
       "taught_by": 1,
       "variants": []
@@ -2237,7 +2237,7 @@
         "file": "il_OcNyqDOE.md",
         "heading": "One mood grade for mismatched art: Tritone plus a single-point Curves, pasted to every layer"
       },
-      "revision": "72dcb2f7",
+      "revision": "98273fbe",
       "still": null,
       "taught_by": 1,
       "variants": []
@@ -2307,7 +2307,7 @@
         "file": "il_OcNyqDOE.md",
         "heading": "Depth-of-field camera locked on the subject, with a slow dolly in"
       },
-      "revision": "3b47a9f2",
+      "revision": "ae50b2ae",
       "still": null,
       "taught_by": 5,
       "variant_of": "16-lock-focus-to-layer",
@@ -2411,7 +2411,7 @@
         "file": "il_OcNyqDOE.md",
         "heading": "Leaves blown across the frame with textured particles"
       },
-      "revision": "00cf265a",
+      "revision": "4be15c33",
       "still": null,
       "taught_by": 2,
       "variant_of": "10-graphic-as-particles",
@@ -2447,7 +2447,7 @@
         "file": "il_OcNyqDOE.md",
         "heading": "Rain slanted to match the wind"
       },
-      "revision": "be19bdd5",
+      "revision": "a2b760b0",
       "still": null,
       "taught_by": 1,
       "variants": []
