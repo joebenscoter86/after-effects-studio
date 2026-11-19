@@ -83,7 +83,7 @@
       "title": "Portable cold-start production workflow",
       "path": "language/production-workflow.md",
       "kind": "foundation",
-      "sha256": "37e88ad6ec62aab6fb74cda7aee242a8da4711e6a7be30875bc83ea668c24833"
+      "sha256": "bf9d7ac053ea316114d4f7748ac80aec778d1e40792c979e79f5835f39957b12"
     },
     {
       "id": "construction",
@@ -174,14 +174,14 @@
       "title": "Review by someone who did not build the piece",
       "path": "references/review.md",
       "kind": "guidance",
-      "sha256": "3ec61fd635055ed4d29d6d07a806ccd23f271173914267e1c52720561876c84c"
+      "sha256": "8022a89887a87723877107748b7ae60e37c03d7ff76db3f8d5832ece0224159f"
     },
     {
       "id": "keying",
       "title": "Keying, compositing and sitting an element in its scene",
       "path": "references/keying.md",
       "kind": "guidance",
-      "sha256": "94a3383a5ce24a2de8e599047b30272f55d808be6b87b33f7175decdeb5f8cd8"
+      "sha256": "7686de0d37d4c6c13fc03865fd9b062ca4a1c3aa1dcf73aadfa3f2f88bec95eb"
     },
     {
       "id": "page-recording",

@@ -4,7 +4,7 @@ This process uses the user's request and assets plus the plugin. It does not exp
 
 ## 1. Orient and specify
 
-Read `motion-language` and inspect the AE host/project. Identify the target project, format, duration, message, evidence, narration, available assets and reference. Infer ordinary choices from the request and label them as chosen defaults in the brief. Keep the user-facing summary short; an ordinary creator should not have to answer an editor-level questionnaire. Ask only for information that changes the result or an asset that is genuinely required. Never close or save over unrelated unsaved work.
+Read `motion-language` and inspect the AE host/project. When the project has its own house style (a style guide, brand rules or motion standards of its own), read the motion-studio skill and the brief template first, then the project's own standard; it sets the look, and this foundation still sets the craft. Identify the target project, format, duration, message, evidence, narration, available assets and reference. Infer ordinary choices from the request and label them as chosen defaults in the brief. Keep the user-facing summary short; an ordinary creator should not have to answer an editor-level questionnaire. Ask only for information that changes the result or an asset that is genuinely required. Never close or save over unrelated unsaved work.
 
 For an empty project, create the needed compositions and native layers explicitly. Don't call house rig functions assuming JOE, BOARD, CAMERA or GRAIN exists. `motion-jsx` is portable; `house-jsx` and `joeb-motion-jsx` are optional integrations with declared dependencies.
 

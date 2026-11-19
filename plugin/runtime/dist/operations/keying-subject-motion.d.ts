@@ -1,5 +1,5 @@
 import { type Json } from "./keying-shared.js";
-export declare const MOTION_EDGE_COST = "The motion edge keys every frame twice, with Object Matte and with the separately installed keyer, so a render does twice the keying work: the whole 8.9 s studio take (2176 \u00D7 3840, 30 fps) rendered in 986 s to ProRes 4444, roughly 2 minutes of render per second of 4K.";
+export declare const MOTION_EDGE_COST = "The motion edge keys every frame twice, with Object Matte and with the separately installed keyer, so a render does twice the keying work: the whole 8.9 s studio take (2176 \u00D7 3840, 30 fps) rendered in 986 s to ProRes 4444 (measured on one machine), roughly 2 minutes of render per second of 4K (measured on one machine). Time a few frames on the user's machine for the estimate you give them.";
 export interface MotionEdgeSettings {
     keyerMatchName: string;
     keyerSettings: Record<string, number | number[]>;

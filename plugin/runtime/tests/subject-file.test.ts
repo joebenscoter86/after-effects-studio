@@ -64,6 +64,14 @@ describe("registration", () => {
     expect(getOp("subject.use_cutout")!.run).toBeUndefined();
     expect(getOp("subject.render_cutout")!.description).toMatch(/undo and rollback are refused/);
   });
+
+  it("says render_cutout blocks, so the time comes from a few frames timed on the user's machine before the call", () => {
+    const d = getOp("subject.render_cutout")!.description;
+    expect(d).toMatch(/390 s[^.]*measured on one machine/);
+    expect(d).toMatch(/19 GB[^.]*measured on one machine/);
+    expect(d).toMatch(/time a few frames on the user's machine/);
+    expect(d).toMatch(/before the call/);
+  });
 });
 
 // ------------------------------------------------------- render_cutout

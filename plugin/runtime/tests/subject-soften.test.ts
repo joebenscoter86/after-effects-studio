@@ -153,6 +153,15 @@ describe("the build and its undo", () => {
     expect(op.description).toMatch(/twice/);
     expect(op.description).toMatch(/Decontaminate/);
   });
+
+  it("says in its catalog text which layers and which undo it refuses", () => {
+    const op = getOp("subject.soften_edge")!;
+    expect(op.description).toMatch(/refuses a layer that already has a motion edge/);
+    const undo = op.params.find((p) => p.name === "undo")!.description;
+    expect(undo).toMatch(/subject\.use_cutout/);
+    expect(undo).toContain("'<layer> cut-out'");
+    expect(undo).toMatch(/remove the movie first/);
+  });
 });
 
 // ----------------------------------------------------- the run, with a fake
@@ -370,6 +379,10 @@ describe("subject.soften_edge", () => {
     );
     expect(twice.ok).toBe(false);
     expect(twice.error).toMatch(/already/);
+    // The same form as the newer refusals: the undo names its comp and layer.
+    expect(twice.error).toMatch(
+      /undo it first with subject\.soften_edge \{ comp, layer, undo: true \}/,
+    );
   });
 
   it("refuses a layer that already has a motion edge, naming it and saying to undo it first, building nothing", async () => {

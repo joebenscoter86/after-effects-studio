@@ -23,7 +23,7 @@ import {
 } from "./keying-shared.js";
 
 export const MOTION_EDGE_COST =
-  "The motion edge keys every frame twice, with Object Matte and with the separately installed keyer, so a render does twice the keying work: the whole 8.9 s studio take (2176 × 3840, 30 fps) rendered in 986 s to ProRes 4444, roughly 2 minutes of render per second of 4K.";
+  "The motion edge keys every frame twice, with Object Matte and with the separately installed keyer, so a render does twice the keying work: the whole 8.9 s studio take (2176 × 3840, 30 fps) rendered in 986 s to ProRes 4444 (measured on one machine), roughly 2 minutes of render per second of 4K (measured on one machine). Time a few frames on the user's machine for the estimate you give them.";
 
 const MOTION_MARKER = "motion-edge";
 
@@ -176,7 +176,7 @@ export function motionEdgeBuildJsx(
             ${jsxCompLayerPreamble(args as unknown as Record<string, unknown>)}
             var _L = _layer.name;
             var _name = _L + " motion edge";
-            for (var _li = 1; _li <= _comp.numLayers; _li++) if (_comp.layer(_li).name === _name) return { ok: false, error: "comp " + _comp.name + " already has a layer '" + _name + "'; undo it first (subject.motion_edge { undo: true })" };
+            for (var _li = 1; _li <= _comp.numLayers; _li++) if (_comp.layer(_li).name === _name) return { ok: false, error: "comp " + _comp.name + " already has a layer '" + _name + "'; undo it first (subject.motion_edge { comp, layer, undo: true })" };
             ${keyerCheck}
             var _fxRoot = _layer.property("ADBE Effect Parade");
             var _hasOm = false;
@@ -374,10 +374,10 @@ registerOp({
   name: "subject.motion_edge",
   category: "subject",
   description:
-    "Give an Object Matte cut-out a soft, motion-blurred edge where the subject moves, taken from a second key by a per-pixel machine-learning keyer effect installed separately (not part of After Effects or this plugin); where the subject is still, the crisp Object Matte outline stays. Needs the matted layer with at least one selection (the user's click) and `keyerMatchName`, the keyer's match name; it refuses, building nothing, when no installed effect has that match name (app.effects). " +
+    "Give an Object Matte cut-out a soft, motion-blurred edge where the subject moves, taken from a second key by a per-pixel machine-learning keyer effect installed separately (not part of After Effects or this plugin); where the subject is still, the crisp Object Matte outline stays. Needs the matted layer with at least one selection (the user's click) and `keyerMatchName`, the keyer's match name; it refuses, building nothing, when no installed effect has that match name (app.effects), and refuses a layer that already has a soft edge (subject.soften_edge): undo that first. " +
     "It builds five comps around the matted layer, never a copy of the user's comp: '<layer> object matte' (the matted layer as clicked), '<layer> keyer' (the take with the keyer and `keyerSettings`, such as { \"Despill Strength\": 1 }), '<layer> motion' (the take, the take again one frame later in Difference, and an adjustment layer with Levels from `threshold` black to white, Tint, Minimax `motionGrow` and Box Blur `motionBlur`, 2 iterations), '<layer> band' (the Object Matte comp with Minimax `band` px on its alpha, Don't Shrink Edges on, Luma-matted by the motion comp) and '<layer> motion edge' (the Object Matte outline over the band, switched off, over the keyer's edge, Alpha-matted by the band). The last goes in above the matted layer, which is switched off and otherwise untouched (it keeps the sound); every copy's sound is off. " +
     "Use it instead of subject.soften_edge for fast hand and arm movement against a static background: soften_edge softens the hair inside a region, this follows motion anywhere. Defaults measured on a 2176 × 3840 studio take shot on a phone on a tripod: threshold 0.25 to 0.45 (lower thresholds lit every still edge, since the camera shifts slightly between frames), motionGrow 25, motionBlur 15, band 50. A plain band with no motion mask filled the gaps in a microphone mount, brought back the keyer's halo and let a plant behind the head through. " +
-    "Cost: twice the keying work in every render (Object Matte and the keyer): the whole 8.9 s take rendered in 986 s, roughly 2 minutes of render per second of 4K. It does not render or check itself; subject.check, subject.render_cutout and subject.use_cutout use its layer in place of the matted one. Confirmed only on English After Effects: some stock effect settings are found by their English names when their match names are not. On the layer's first frame there is no frame before, so the band there covers the whole outline. Not run in After Effects as an operation: the construction was built by hand. undo: true removes what it built and switches the matted layer back on.",
+    "Cost: twice the keying work in every render (Object Matte and the keyer): the whole 8.9 s take rendered in 986 s (measured on one machine), roughly 2 minutes of render per second of 4K (measured on one machine). Before the render, time a few frames on the user's machine, multiply by the frame count and tell the user. It does not render or check itself; subject.check, subject.render_cutout and subject.use_cutout use its layer in place of the matted one. Confirmed only on English After Effects: some stock effect settings are found by their English names when their match names are not. On the layer's first frame there is no frame before, so the band there covers the whole outline. Not run in After Effects as an operation: the construction was built by hand. undo: true removes what it built and switches the matted layer back on.",
   params: [
     ...compLayerParams,
     {
@@ -422,7 +422,7 @@ registerOp({
       name: "undo",
       type: "boolean",
       description:
-        "Take the comp back to the single matted layer: remove the motion-edge layer and its five comps and switch the matted layer back on.",
+        "Take the comp back to the single matted layer: remove the motion-edge layer and its five comps and switch the matted layer back on. Refused while subject.use_cutout's movie ('<layer> cut-out') is in the comp, which would show the subject twice: remove the movie first.",
       required: false,
     },
   ],

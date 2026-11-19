@@ -1249,7 +1249,7 @@ registerOp({
   description:
     "Render the cut-out once to a movie with alpha, so the piece is built on a file that cannot change: the layer with its gap fill when there is one (after subject.soften_edge or subject.motion_edge, that layer in place of the matted one; a layer with both is refused: undo one), alone (every other layer's picture switched off for the render and put back afterwards, even when it fails; cameras and lights left as they are), over the layer's span, through one temporary render-queue item (other queue items are parked). " +
     "Picks an output template that writes a movie with alpha ('High Quality with Alpha', 'Lossless with Alpha', or another whose name says alpha; image sequences are not used) and refuses, naming the templates, when none does. " +
-    "Returns outputPath, frameCount, renderSeconds, outputTemplate, templateChoice, layersSwitched, restored, sound and timing. Measured: 390 s for 320 frames of a 2176 x 3840 take, about one pass through the clip; tell the user before it runs. " +
+    "Returns outputPath, frameCount, renderSeconds, outputTemplate, templateChoice, layersSwitched, restored, sound and timing. It blocks until the movie is written, so the time estimate goes to the user before the call: time a few frames on the user's machine (ae_render_frame on a few frames of the layer, or a few-second render), multiply by the frame count, tell the user, then call it. For reference only, 390 s for 320 frames of a 2176 x 3840 take, measured on one machine. " +
     SUBJECT_WHOLE_PIECE_NOTE +
     " With from and to it renders only that span (clipped to the layer) and returns span (frames, times) and halves: " +
     HALVES_JOIN_NOTE +
@@ -1257,7 +1257,7 @@ registerOp({
     "subject.prepare): get that before an unattended render. " +
     "The movie is in comp space. The original layer keeps the sound; whether the movie carries a sound track is not promised. " +
     "The subject layer is switched on for the render even when it is off for display (subject.use_cutout leaves it off), and back afterwards. The other kept layers render switched as they are: when the gap fill layer exists and is switched off, it refuses before rendering and says so (the file would come out with the gaps open), unless withoutFill: true, and then the result's fillWarning says the gaps are open (not checked live). " +
-    "Before rendering it checks that each drive has room for its share, the movie and After Effects' disk cache (about one 16-bit frame of the source per frame: 19 GB measured for 320 frames of a 2176 x 3840 take), plus 3 GB; `space` and `cacheNote` give the numbers, and `next` says to purge the cache once the file is checked." +
+    "Before rendering it checks that each drive has room for its share, the movie and After Effects' disk cache (about one 16-bit frame of the source per frame: 19 GB for 320 frames of a 2176 x 3840 take, measured on one machine), plus 3 GB; `space` and `cacheNote` give the numbers, and `next` says to purge the cache once the file is checked." +
     RENDER_QUEUE_UNDO_WARNING,
   params: [
     ...compLayerParams,

@@ -74,6 +74,50 @@ describe("studio library", () => {
     // Short enough to follow: the reviewer's skill was 18 lines before this stage.
     expect(review.split("\n").length).toBeLessThan(40);
   });
+  it("times a long subject pass on the user's machine before it starts, and labels the shipped figures", () => {
+    // 0.4.1 item 2: an agent went quiet for 25 minutes before a soft-edge pass.
+    const skill = readFileSync(new URL("../../skills/motion-studio/SKILL.md", import.meta.url), "utf8");
+    const keying = readLibrary("keying").content!;
+    const procedure = keying.slice(keying.indexOf("## Cutting a subject out with Object Matte"));
+    const guidance = procedure.slice(procedure.indexOf("### Tell the user first"));
+    for (const doc of [skill, guidance]) {
+      for (const op of ["subject.render_cutout", "subject.soften_edge", "subject.check_file", "subject.motion_edge"]) expect(doc).toContain(op);
+      expect(doc).toMatch(/time a few frames on the user's machine/);
+      expect(doc).toMatch(/multiply by the frame count/);
+      expect(doc).toMatch(/blocks[^.]*before the call/);
+      expect(doc).toMatch(/never the number you give the user/);
+      // Each shipped figure, where the guidance quotes it, says it was measured on one machine.
+      for (const line of doc.split("\n").filter((l) => /986 s|2 minutes of render|390 s|19 GB/.test(l))) {
+        for (const fig of ["986 s", "2 minutes of render", "390 s", "19 GB"]) {
+          if (line.includes(fig)) expect(line, line.slice(0, 80)).toMatch(new RegExp(`${fig}[^.;]*measured on one machine`));
+        }
+      }
+    }
+  });
+  it("reads the motion guide first when the project has its own house style", () => {
+    // 0.4.1 item 5: a host project's standard was read and the motion guide was not.
+    const skill = readFileSync(new URL("../../skills/motion-studio/SKILL.md", import.meta.url), "utf8");
+    const workflow = readLibrary("production-workflow").content!;
+    const step1 = workflow.slice(workflow.indexOf("## 1."), workflow.indexOf("## 2."));
+    for (const doc of [skill, step1]) {
+      expect(doc).toMatch(/its own house style[^.]*read the motion-studio skill and the brief template first, then the project's own standard/);
+    }
+  });
+  it("runs the independent review once before the user's first look, then only on request", () => {
+    // 0.4.1 item 6: a review every round added time between builds.
+    const skill = (name: string) => readFileSync(new URL(`../../skills/${name}/SKILL.md`, import.meta.url), "utf8");
+    for (const doc of [skill("motion-studio"), skill("motion-review"), readLibrary("review").content!]) {
+      expect(doc).toMatch(/once, before the user's first look at the motion/);
+      expect(doc).toMatch(/only when the user asks/);
+      expect(doc).toMatch(/not every round/);
+    }
+  });
+  it("says in the soft-edge recipe which layers and which undo soften_edge refuses", () => {
+    const keying = readLibrary("keying").content!;
+    const recipe3 = keying.slice(keying.indexOf("### Recipe 3"), keying.indexOf("### Recipe 4"));
+    expect(recipe3).toMatch(/refuses a layer that already has a motion edge/);
+    expect(recipe3).toMatch(/[Bb]oth undos refuse while the `subject\.use_cutout` movie \('<layer> cut-out'\) is in the comp/);
+  });
   it("rejects arbitrary paths instead of reading a user file", () => {
     expect(() => readLibrary("../../package.json")).toThrow("Unknown library");
   });

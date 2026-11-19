@@ -522,6 +522,18 @@ describe("registration and docs", () => {
     expect(op.description).toMatch(/machine-learning keyer effect installed separately/);
     expect(op.description).toMatch(/soften_edge/);
     expect(op.description).toMatch(/twice/);
+    expect(op.description).toMatch(/refuses a layer that already has a soft edge/);
+    const undo = op.params.find((p) => p.name === "undo")!.description;
+    expect(undo).toMatch(/subject\.use_cutout/);
+    expect(undo).toContain("'<layer> cut-out'");
+    expect(undo).toMatch(/remove the movie first/);
+  });
+
+  it("labels its render figure as measured on one machine and says to time the user's own", () => {
+    const op = getOp("subject.motion_edge")!;
+    expect(MOTION_EDGE_COST).toMatch(/986 s[^.]*measured on one machine/);
+    expect(op.description).toMatch(/986 s[^.]*measured on one machine/);
+    expect(op.description).toMatch(/time a few frames on the user's machine/);
   });
 
   // The release name guard: nothing that ships names a third-party tool or its maker.

@@ -1,6 +1,6 @@
 ---
 name: motion-reviewer
-description: Reviews a finished After Effects piece it did not build, from the brief, the ae_check_comp report and rendered frames, and returns the defects a viewer would notice, ranked, with times and evidence. Use before a Comp Room build is called done. Hand it only the brief, the project and comp, the report and its sheet, and frame paths, not the builder's notes or list of fixes.
+description: Reviews a finished After Effects piece it did not build, from the brief, the ae_check_comp report and rendered frames, and returns the defects a viewer would notice, ranked, with times and evidence. Use once, before the user's first look at a Comp Room build's motion, and after that only when the user asks. Hand it only the brief, the project and comp, the report and its sheet, and frame paths, not the builder's notes or list of fixes.
 # tools is the only limit here: plugin agents ignore permissionMode. The plugin's own MCP tools are written
 # mcp__plugin_<plugin>_<server>__<tool>; that form is observed in a live Claude Code session, not documented.
 # ToolSearch only loads tool definitions, in case the plugin's tools are deferred.
