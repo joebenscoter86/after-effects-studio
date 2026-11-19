@@ -29,7 +29,7 @@ The build scripts were written from the recipes alone, without After Effects (`p
 ## What earlier builds learned
 
 - For a before frame of a light, set its Intensity to 0 rather than switching the light off: switched off inside a nested scene or beside a 2D layer, Advanced 3D rendered a wrong frame (one sideways shadow).
-- Before you ask the owner for a hand step, check by script that what it names exists here (list the layer's property groups and their match names) and quote what you found in the request; a material step the tutorial showed did not exist for 3D text in this After Effects.
+- Before you ask the owner for a hand step, check by script that what it names exists on the exact comp and layer you name (list the layer's property groups and their match names), name the precomp if the layer lives in one, and quote what you found in the request. A material step was once sent naming a 2D comp whose 3D text sat in a precomp; the owner found no Material section there, though the 3D layer had one (`ADBE3D Material Parade`).
 
 - Edit a script, confirm the edit applied, then run it: never an After Effects call in the same turn as a file edit, and never more than one After Effects call in a turn.
 - Address comps and layers by name or id in every call, never "active" or "selected": the active comp can change between calls.
