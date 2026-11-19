@@ -796,7 +796,7 @@ export function sourceAdviceFor(f: PrepareFootage | null | undefined): Json | nu
     : null;
   const cache =
     atSource !== null && atDelivery !== null
-      ? `about ${gb(atSource)} of After Effects disk cache a render of the ${frames} frames at this size (an estimate; 19 GB was measured for 320 frames of a 2176 × 3840 take) against about ${gb(atDelivery)} at ${dims(delivery)}`
+      ? `about ${gb(atSource)} of After Effects disk cache a render of the ${frames} frames at this size (an estimate; 19 GB for 320 frames of a 2176 × 3840 take, measured on one machine) against about ${gb(atDelivery)} at ${dims(delivery)}`
       : `about ${ratio} times the disk cache a render needs at ${dims(delivery)}`;
   return {
     sourceSize: [sw, sh],
@@ -810,7 +810,7 @@ export function sourceAdviceFor(f: PrepareFootage | null | undefined): Json | nu
     reading:
       `This layer's footage is ${dims([sw, sh])}, shown at ${Math.round(sx)}% in a ${dims([cw, ch])} comp. ` +
       `Object Matte works on the footage's own pixels, ${ratio} times as many as the comp shows: ${cache}, and a render takes about that much longer ` +
-      "(on one take of 320 frames: 279 to 390 s at 2176 × 3840 against 65 to 92 s at 1088 × 1920, with the same edge; the two cut-outs overlapped at 0.991). " +
+      "(on one take of 320 frames, measured on one machine: 279 to 390 s at 2176 × 3840 against 65 to 92 s at 1088 × 1920, with the same edge; the two cut-outs overlapped at 0.991). " +
       `Make a ${dims(delivery)} copy of the footage first and matte that: ` +
       (copy
         ? `with ffmpeg, \`${copy}\`; without it, render the footage alone from After Effects at that size (ProRes 422 HQ). `

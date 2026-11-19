@@ -53926,7 +53926,7 @@ function sourceAdviceFor(f) {
   const atDelivery = frames ? cacheBytesFor(frames, delivery) : null;
   const ratio = Math.round(sw * sh / (delivery[0] * delivery[1]) * 10) / 10;
   const copy = f.file ? `ffmpeg -i "${f.file}" -vf "scale=${delivery[0]}:${delivery[1]}:flags=lanczos" -c:v prores_ks -profile:v 3 -c:a pcm_s16le "${stemOf(f.file)}_${delivery[0]}x${delivery[1]}.mov"` : null;
-  const cache2 = atSource !== null && atDelivery !== null ? `about ${gb(atSource)} of After Effects disk cache a render of the ${frames} frames at this size (an estimate; 19 GB was measured for 320 frames of a 2176 \xD7 3840 take) against about ${gb(atDelivery)} at ${dims(delivery)}` : `about ${ratio} times the disk cache a render needs at ${dims(delivery)}`;
+  const cache2 = atSource !== null && atDelivery !== null ? `about ${gb(atSource)} of After Effects disk cache a render of the ${frames} frames at this size (an estimate; 19 GB for 320 frames of a 2176 \xD7 3840 take, measured on one machine) against about ${gb(atDelivery)} at ${dims(delivery)}` : `about ${ratio} times the disk cache a render needs at ${dims(delivery)}`;
   return {
     sourceSize: [sw, sh],
     compSize: [cw, ch],
@@ -53936,7 +53936,7 @@ function sourceAdviceFor(f) {
     cacheAtSource: atSource,
     cacheAtDelivery: atDelivery,
     copy,
-    reading: `This layer's footage is ${dims([sw, sh])}, shown at ${Math.round(sx)}% in a ${dims([cw, ch])} comp. Object Matte works on the footage's own pixels, ${ratio} times as many as the comp shows: ${cache2}, and a render takes about that much longer (on one take of 320 frames: 279 to 390 s at 2176 \xD7 3840 against 65 to 92 s at 1088 \xD7 1920, with the same edge; the two cut-outs overlapped at 0.991). Make a ${dims(delivery)} copy of the footage first and matte that: ` + (copy ? `with ffmpeg, \`${copy}\`; without it, render the footage alone from After Effects at that size (ProRes 422 HQ). ` : "render the footage alone from After Effects at that size (ProRes 422 HQ). ") + "Import the copy, put it in the comp in this layer's place at 100% (same position and start time), switch this layer off, and run subject.prepare on the copy's layer. Do it before the click: replacing the footage under a matte freezes the matte (the outline stops following the subject), so a copy made afterwards needs the click again."
+    reading: `This layer's footage is ${dims([sw, sh])}, shown at ${Math.round(sx)}% in a ${dims([cw, ch])} comp. Object Matte works on the footage's own pixels, ${ratio} times as many as the comp shows: ${cache2}, and a render takes about that much longer (on one take of 320 frames, measured on one machine: 279 to 390 s at 2176 \xD7 3840 against 65 to 92 s at 1088 \xD7 1920, with the same edge; the two cut-outs overlapped at 0.991). Make a ${dims(delivery)} copy of the footage first and matte that: ` + (copy ? `with ffmpeg, \`${copy}\`; without it, render the footage alone from After Effects at that size (ProRes 422 HQ). ` : "render the footage alone from After Effects at that size (ProRes 422 HQ). ") + "Import the copy, put it in the comp in this layer's place at 100% (same position and start time), switch this layer off, and run subject.prepare on the copy's layer. Do it before the click: replacing the footage under a matte freezes the matte (the outline stops following the subject), so a copy made afterwards needs the click again."
   };
 }
 function soundAdviceFor(f, streams) {
@@ -55102,7 +55102,7 @@ async function runRenderCutout(args, io) {
       duration: span ? span.duration : plan.span.duration,
       overwrite: args.overwrite === true
     }),
-    // Measured: 390 s for 320 frames of a 2176 x 3840 take; allow 5 s a frame and two minutes over.
+    // 390 s for 320 frames of a 2176 x 3840 take, measured on one machine; allow 5 s a frame and two minutes over.
     { label: "subject.render_cutout", timeoutMs: 12e4 + frames * 5e3, undoGroup: true }
   );
   const renderMs = since(t1);

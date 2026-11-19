@@ -303,7 +303,7 @@ export async function spaceRefusal(
  * After Effects' disk cache written while it tracks Object Matte through
  * `frames` frames of a source this size: one 16-bit RGBA frame of the source
  * per frame (8 bytes a pixel). Measured: one render of 320 frames of a 2176 x
- * 3840 take added about 19 GB (estimate 21.4 GB).
+ * 3840 take added about 19 GB (estimate 21.4 GB), measured on one machine.
  */
 export function cacheBytesFor(
   frames: number,
@@ -934,7 +934,7 @@ export const overParam = {
 // Stage 12c: render the cut-out once, check the file, build on the file.
 // After Effects recomputes Object Matte on every capture (nine frames across
 // a 320-frame take cost 236 to 287 s on each of five identical renders), and
-// a script cannot freeze it. Rendered once to a movie with alpha (390 s for
+// a script cannot freeze it. Rendered once to a movie with alpha (390 s, measured on one machine, for
 // all 320 frames), the cut-out reads back at about 0.55 s a frame and cannot
 // change afterwards. These three operations do that.
 

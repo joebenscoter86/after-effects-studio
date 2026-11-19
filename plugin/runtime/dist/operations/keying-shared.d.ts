@@ -144,7 +144,7 @@ export declare function spaceRefusal(io: {
  * After Effects' disk cache written while it tracks Object Matte through
  * `frames` frames of a source this size: one 16-bit RGBA frame of the source
  * per frame (8 bytes a pixel). Measured: one render of 320 frames of a 2176 x
- * 3840 take added about 19 GB (estimate 21.4 GB).
+ * 3840 take added about 19 GB (estimate 21.4 GB), measured on one machine.
  */
 export declare function cacheBytesFor(frames: number, sourceSize: [number, number] | number[] | null | undefined): number;
 /** The volume holding `dir`: the device number of its nearest existing folder, or null. */

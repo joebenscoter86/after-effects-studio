@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readdirSync, readFileSync, writeFileSync, rmSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import os from "node:os";
 import path from "node:path";
 import { readLibrary } from "../src/tools/library.js";
@@ -94,6 +95,39 @@ describe("studio library", () => {
       }
     }
   });
+  it("labels every shipped copy of the measured figures, and gives the user their own timing", () => {
+    // 0.4.1 item 2, round 1: every shipped copy, not only the guidance.
+    const FIGURES = /986 s|2 minutes of render|390 s|279 to 390|19 GB/;
+    const files = (dir: string, ext: RegExp): string[] =>
+      readdirSync(dir, { recursive: true, encoding: "utf8" })
+        .filter((f) => ext.test(f))
+        .map((f) => path.join(dir, f));
+    const here = (rel: string) => fileURLToPath(new URL(rel, import.meta.url));
+    const shipped = [
+      ...files(here("../../library"), /\.md$/),
+      ...files(here("../../skills"), /\.md$/),
+      ...files(here("../src/operations"), /\.ts$/),
+    ];
+    const unlabelled: string[] = [];
+    for (const file of shipped) {
+      readFileSync(file, "utf8")
+        .split("\n")
+        .forEach((line, i) => {
+          if (FIGURES.test(line) && !/measured on one machine/.test(line)) unlabelled.push(`${path.basename(file)}:${i + 1}`);
+        });
+    }
+    expect(unlabelled).toEqual([]);
+    const skill = readFileSync(here("../../skills/motion-studio/SKILL.md"), "utf8");
+    const keying = readLibrary("keying").content!;
+    // The motion edge's cost goes to the user as twice the keying work, with their own timing to follow.
+    for (const doc of [skill, keying]) expect(doc).toMatch(/twice the keying work[^.]*time a few frames on their machine for the real estimate/);
+    // The soft edge's render time is a labelled reference too.
+    expect(skill).toMatch(/342 s against 65 to 92 s[^.]*measured on one machine/);
+    // The read list for the cut-out includes the timing section.
+    expect(skill).toContain('"Cutting a subject out with Object Matte > Before a long pass, time it on this machine"');
+    // A later round runs only the first two steps of the review.
+    expect(skill).toMatch(/until this step is complete \(on later rounds, steps 1 and 2\)/);
+  });
   it("reads the motion guide first when the project has its own house style", () => {
     // 0.4.1 item 5: a host project's standard was read and the motion guide was not.
     const skill = readFileSync(new URL("../../skills/motion-studio/SKILL.md", import.meta.url), "utf8");
@@ -106,7 +140,8 @@ describe("studio library", () => {
   it("runs the independent review once before the user's first look, then only on request", () => {
     // 0.4.1 item 6: a review every round added time between builds.
     const skill = (name: string) => readFileSync(new URL(`../../skills/${name}/SKILL.md`, import.meta.url), "utf8");
-    for (const doc of [skill("motion-studio"), skill("motion-review"), readLibrary("review").content!]) {
+    const architecture = readFileSync(new URL("../../../claude/src/docs/ARCHITECTURE.md", import.meta.url), "utf8");
+    for (const doc of [skill("motion-studio"), skill("motion-review"), readLibrary("review").content!, architecture]) {
       expect(doc).toMatch(/once, before the user's first look at the motion/);
       expect(doc).toMatch(/only when the user asks/);
       expect(doc).toMatch(/not every round/);

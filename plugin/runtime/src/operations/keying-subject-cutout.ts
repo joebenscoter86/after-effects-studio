@@ -343,7 +343,7 @@ export async function runRenderCutout(args: Record<string, unknown>, io: FileIO)
       duration: span ? span.duration : plan.span.duration,
       overwrite: args.overwrite === true,
     }),
-    // Measured: 390 s for 320 frames of a 2176 x 3840 take; allow 5 s a frame and two minutes over.
+    // 390 s for 320 frames of a 2176 x 3840 take, measured on one machine; allow 5 s a frame and two minutes over.
     { label: "subject.render_cutout", timeoutMs: 120_000 + frames * 5_000, undoGroup: true },
   );
   const renderMs = since(t1);

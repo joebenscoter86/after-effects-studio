@@ -181,7 +181,7 @@
       "title": "Keying, compositing and sitting an element in its scene",
       "path": "references/keying.md",
       "kind": "guidance",
-      "sha256": "7686de0d37d4c6c13fc03865fd9b062ca4a1c3aa1dcf73aadfa3f2f88bec95eb"
+      "sha256": "6e9f01e3388b400834f3760e208fcbb019180df03288e7a47f9303c3d95218b1"
     },
     {
       "id": "page-recording",
@@ -216,7 +216,7 @@
       "title": "Unattended runs: planning overnight and long After Effects work",
       "path": "techniques/unattended-runs.md",
       "kind": "technique",
-      "sha256": "0fb68e6c612fa845c050219e4fa398aa88275c83a4739dd17499719d2ba38f59"
+      "sha256": "0e75bea606897028e1a00cd4be1117a050bd3dcc67fe1d02365244ef8cbd358c"
     },
     {
       "id": "page-recorder-mjs",
@@ -580,7 +580,7 @@
       "title": "Pixel headline style",
       "path": "styles/pixel-headline/STYLE.md",
       "kind": "style",
-      "sha256": "985be3bc1da0adde9ea022567ef6d6597d9262c290d6377df3b77c6ad4f50747"
+      "sha256": "397580a45b86736b9a539c6882e3b1aa03a96f1d3393c1e4d46acbfca88fe543"
     },
     {
       "id": "style-pixel-headline-jsx",
