@@ -372,15 +372,27 @@ export function structureJsx(compNameOrId: string | number, o: StructureOptions)
         // instant: a key on its own, a marker), or "always". Between two keys
         // of one property the value moves, unless the first is a hold key.
         // Changes: keys on the layer (its effects, masks, text animators, any
-        // property), keys on the transform of every parent up the chain,
-        // layer markers, a time-driven expression (IDLE_TIME_DRIVEN), and for
-        // a precomp the keys one level down, mapped to outer time as
-        // startTime + inner * stretch / 100; a precomp with keyed time remap,
-        // or one holding footage that plays, changes all the time. Audio
-        // levels are not a change on screen. Node finds the longest gap.
+        // property), keys on the transform of every parent up the chain
+        // (but not its Opacity, which does not pass to the child), layer
+        // markers, a time-driven expression (IDLE_TIME_DRIVEN), and for a
+        // precomp the keys one level down on its enabled layers (and track
+        // mattes), mapped to outer time as startTime + inner * stretch / 100;
+        // a precomp with keyed time remap, or one holding footage that plays,
+        // changes all the time. Keyless motion changes all the time too: an
+        // enabled Wiggly Selector on a text animator, and the Wiggle Paths
+        // and Wiggle Transform shape operators (_selfAnimating). Other
+        // effects that move with no keys (particle systems and the like)
+        // are a known blind spot: they count as static. Audio levels are not
+        // a change on screen. Node finds the longest gap.
+        // A gap is on screen only where the layer can be seen: nothing
+        // changes inside a gap, so its held values are read once, at its
+        // midpoint; at opacity 0, or scale 0 on x or y on the layer or any
+        // parent up the chain, the gap is listed in hidden and Node passes
+        // over it. Only gaps longer than idleSeconds are read.
         // Exempt: cameras and lights, nulls, adjustment and guide layers,
-        // footage and audio whose source plays, and solids and stills that
-        // cover the frame with no non-exempt layer below them (grounds).
+        // footage and audio whose source plays, and solids and stills with no
+        // enabled mask that cover the frame with no non-exempt layer below
+        // them (grounds; a masked solid is a card).
         var _idle = { layers: [], exempt: 0, layersChecked: 0 };
         var _timeRe = new RegExp(_o.timeDriven);
         var _identity = function (t) { return t; };
@@ -392,9 +404,15 @@ export function structureJsx(compNameOrId: string | number, o: StructureOptions)
             if (AE.safeGet(function () { return p.expressionError; }, "")) return false;
             return _timeRe.test(AE.safeGet(function () { return p.expression; }, ""));
         }
+        // Groups that move with no keys and no expression while enabled.
+        var _selfAnimating = {
+            "ADBE Text Wiggly Selector": true,
+            "ADBE Vector Filter - Roughen": true,
+            "ADBE Vector Filter - Wiggler": true
+        };
         // Collects change intervals of a property tree into out; true when
-        // something in it changes all the time.
-        function _changeWalk(group, out, depth, map) {
+        // something in it changes all the time. skip: a matchName passed over.
+        function _changeWalk(group, out, depth, map, skip) {
             if (depth > 12) return false;
             var always = false;
             var n = AE.safeGet(function () { return group.numProperties; }, 0);
@@ -402,9 +420,10 @@ export function structureJsx(compNameOrId: string | number, o: StructureOptions)
                 var p = AE.safeGet(function () { return group.property(i); }, null);
                 if (!p) continue;
                 var mn = AE.safeGet(function () { return p.matchName; }, "");
-                if (mn === "ADBE Audio Group") continue;
+                if (mn === "ADBE Audio Group" || (skip && mn === skip)) continue;
                 if (AE.safeGet(function () { return p.propertyType; }, null) !== PropertyType.PROPERTY) {
-                    if (_changeWalk(p, out, depth + 1, map)) always = true;
+                    if (_selfAnimating[mn] === true && AE.safeGet(function () { return p.enabled; }, true) !== false) always = true;
+                    if (_changeWalk(p, out, depth + 1, map, skip)) always = true;
                     continue;
                 }
                 if (_drivenByTime(p)) always = true;
@@ -433,9 +452,22 @@ export function structureJsx(compNameOrId: string | number, o: StructureOptions)
             if (_plays(AE.safeGet(function () { return L.source; }, null))) return "footage that plays";
             return null;
         }
+        function _hasEnabledMask(L) {
+            var masks = AE.safeGet(function () { return L.property("ADBE Mask Parade"); }, null);
+            var nm = AE.safeGet(function () { return masks.numProperties; }, 0);
+            for (var mi = 1; mi <= nm; mi++) {
+                var m = AE.safeGet(function () { return masks.property(mi); }, null);
+                if (!m) continue;
+                if (AE.safeGet(function () { return m.enabled; }, true) === false) continue;
+                if (AE.safeGet(function () { return m.maskMode === MaskMode.NONE; }, false)) continue;
+                return true;
+            }
+            return false;
+        }
         function _isGround(L, t) {
             var src = AE.safeGet(function () { return L.source; }, null);
             if (!src || src instanceof CompItem) return false;
+            if (_hasEnabledMask(L)) return false;
             var flat = AE.safeGet(function () { return src.mainSource instanceof SolidSource; }, false) ||
                 AE.safeGet(function () { return src.mainSource.isStill; }, false);
             if (!flat) return false;
@@ -450,7 +482,7 @@ export function structureJsx(compNameOrId: string | number, o: StructureOptions)
             var par = AE.safeGet(function () { return L.parent; }, null);
             for (var guard = 0; par && guard < 100; guard++) {
                 var ptr = AE.safeGet(function () { return par.property("ADBE Transform Group"); }, null);
-                if (ptr && _changeWalk(ptr, out, 0, _identity)) always = true;
+                if (ptr && _changeWalk(ptr, out, 0, _identity, "ADBE Opacity")) always = true;
                 par = AE.safeGet(function () { return par.parent; }, null);
             }
             var src = AE.safeGet(function () { return L.source; }, null);
@@ -467,6 +499,8 @@ export function structureJsx(compNameOrId: string | number, o: StructureOptions)
             for (var j = 1; j <= nIn; j++) {
                 var IL = AE.safeGet(function () { return src.layer(j); }, null);
                 if (!IL) continue;
+                if (!AE.safeGet(function () { return IL.enabled; }, true) &&
+                    !AE.safeGet(function () { return IL.isTrackMatte; }, false)) continue;
                 if (_plays(AE.safeGet(function () { return IL.source; }, null))) always = true;
                 if (_changeWalk(IL, out, 0, map)) always = true;
             }
@@ -493,6 +527,35 @@ export function structureJsx(compNameOrId: string | number, o: StructureOptions)
             for (var ci = 0; ci < merged.length; ci++) merged[ci] = [_r6(merged[ci][0]), _r6(merged[ci][1])];
             return merged;
         }
+        // True when nothing of L can be seen at t: its opacity is 0, or its
+        // scale, or a parent's, is 0 on x or y. A parent's opacity does not
+        // pass to the child, so it is not read.
+        function _hiddenAt(L, t) {
+            var op = AE.safeGet(function () { return L.property("ADBE Transform Group").property("ADBE Opacity").valueAtTime(t, false); }, 100);
+            if (typeof op === "number" && op <= 0) return true;
+            var cur = L;
+            for (var guard = 0; cur && guard < 100; guard++) {
+                var sc = AE.safeGet(function () { return cur.property("ADBE Transform Group").property("ADBE Scale").valueAtTime(t, false); }, null);
+                if (sc && sc.length >= 2 && (Math.abs(sc[0]) < 1e-9 || Math.abs(sc[1]) < 1e-9)) return true;
+                cur = AE.safeGet(function () { return cur.parent; }, null);
+            }
+            return false;
+        }
+        // The gaps of merged inside [a0, a1] longer than idleSeconds that
+        // the viewer cannot see (the same gaps Node works out).
+        function _hiddenGaps(L, merged, a0, a1) {
+            var out = [];
+            var cursor = a0;
+            var check = function (a, b) {
+                if (b - a > _o.idleSeconds + 1e-9 && _hiddenAt(L, (a + b) / 2)) out.push([a, b]);
+            };
+            for (var gi = 0; gi < merged.length; gi++) {
+                check(cursor, merged[gi][0]);
+                if (merged[gi][1] > cursor) cursor = merged[gi][1];
+            }
+            check(cursor, a1);
+            return out;
+        }
         if (_o.idleSeconds > 0) {
             var _idlePrevTime = comp.time;
             var _below = false;
@@ -513,12 +576,14 @@ export function structureJsx(compNameOrId: string | number, o: StructureOptions)
                     _idle.layersChecked++;
                     var raw = [];
                     var always = _layerChanges(IdL, raw);
+                    var merged = always ? null : _mergeWithin(raw, s0, s1);
                     _idle.layers.push({
                         index: IdL.index,
                         name: IdL.name,
                         from: _r6(s0),
                         to: _r6(s1),
-                        changes: always ? "always" : _mergeWithin(raw, s0, s1)
+                        changes: always ? "always" : merged,
+                        hidden: always ? [] : _hiddenGaps(IdL, merged, _r6(s0), _r6(s1))
                     });
                 }
             } finally {

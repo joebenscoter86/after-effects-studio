@@ -77,6 +77,8 @@ export interface IdleLayer {
     from: number;
     to: number;
     changes: "always" | Array<[number, number]>;
+    /** Gaps between changes the viewer cannot see (opacity or scale 0): passed over. Missing in older payloads. */
+    hidden?: Array<[number, number]>;
 }
 export interface IdleEntry {
     layer: string;
@@ -91,7 +93,8 @@ export declare const DEFAULT_IDLE_SECONDS = 5;
  * The idle report: for each layer, the longest stretch of its span with
  * nothing changing (span start to the first change, between changes, last
  * change to span end; on a tie the later stretch), listed when longer than
- * idleSeconds. Longest first, then by layer index.
+ * idleSeconds. A stretch the script found hidden (opacity or scale 0) is
+ * passed over. Longest first, then by layer index.
  */
 export declare function idleEntries(layers: IdleLayer[], idleSeconds: number): IdleEntry[];
 export declare const checkCompTool: import("./define-tool.js").ToolSpec<{

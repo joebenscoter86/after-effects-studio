@@ -36,6 +36,8 @@ class FootageItem {}
 class SolidSource {}
 class FileSource {}
 const PropertyType = { PROPERTY: 6212, INDEXED_GROUP: 6213, NAMED_GROUP: 6214 };
+const KeyframeInterpolationType = { LINEAR: 6612, BEZIER: 6613, HOLD: 6614 };
+const MaskMode = { NONE: 6812, ADD: 6813 };
 
 const AE_HELPERS = {
   safeGet: (fn: () => unknown, fallback: unknown) => {
@@ -51,6 +53,8 @@ const AE_HELPERS = {
 
 function prop(matchName: string, extra: Record<string, unknown> = {}) {
   const keys = (extra.keys as number[] | undefined) ?? [];
+  const hold = (extra.hold as number[] | undefined) ?? [];
+  const valueAt = extra.valueAt as ((t: number) => unknown) | undefined;
   return {
     name: matchName,
     matchName,
@@ -60,15 +64,18 @@ function prop(matchName: string, extra: Record<string, unknown> = {}) {
     canSetExpression: true,
     expressionEnabled: extra.expression !== undefined,
     expression: (extra.expression as string | undefined) ?? "",
-    expressionError: "",
-    valueAtTime: () => (extra.value as unknown) ?? 100,
+    expressionError: (extra.expressionError as string | undefined) ?? "",
+    keyOutInterpolationType: (k: number) =>
+      hold.includes(k) ? KeyframeInterpolationType.HOLD : KeyframeInterpolationType.BEZIER,
+    valueAtTime: (t: number) => (valueAt ? valueAt(t) : ((extra.value as unknown) ?? 100)),
   };
 }
 
-function group(name: string, props: Any[]) {
+function group(name: string, props: Any[], enabled = true) {
   return {
     name,
     matchName: name,
+    enabled,
     propertyType: PropertyType.NAMED_GROUP,
     numProperties: props.length,
     property: (i: number | string) =>
@@ -93,6 +100,15 @@ interface LayerSpec {
   guideLayer?: boolean;
   enabled?: boolean;
   timeRemap?: number[];
+  /** Hold-out key indices (1-based) on the position keys. */
+  hold?: number[];
+  /** Scale: keys and a value at time (default [100, 100] throughout). */
+  scale?: { keys?: number[]; valueAt: (t: number) => number[] };
+  /** Opacity: keys and a value at time (default 100 throughout). */
+  opacity?: { keys?: number[]; valueAt: (t: number) => number };
+  /** Property groups added to the layer (effects, masks, text, contents). */
+  extra?: Any[];
+  isTrackMatte?: boolean;
   /** The layer's box in comp pixels, for the full-frame test (default: a small bar). */
   box?: [number, number, number, number];
 }
@@ -107,14 +123,22 @@ function layer(s: LayerSpec): Any {
   }[s.kind ?? "shape"];
   const position = prop("ADBE Position", {
     keys: s.keys,
+    hold: s.hold,
     expression: s.expression,
     value: [50, 50],
   });
-  const opacity = prop("ADBE Opacity", { value: 100 });
-  const transform = group("ADBE Transform Group", [position, opacity]);
+  const scale = prop("ADBE Scale", {
+    keys: s.scale?.keys,
+    valueAt: s.scale?.valueAt ?? (() => [100, 100]),
+  });
+  const opacity = prop("ADBE Opacity", {
+    keys: s.opacity?.keys,
+    valueAt: s.opacity?.valueAt ?? (() => 100),
+  });
+  const transform = group("ADBE Transform Group", [position, scale, opacity]);
   const props: Any[] = [prop("ADBE Marker", { keys: s.markers })];
   if (s.timeRemap) props.push(prop("ADBE Time Remapping", { keys: s.timeRemap }));
-  props.push(transform);
+  props.push(transform, ...(s.extra ?? []));
   const box = s.box ?? [10, 10, 60, 20];
   return Object.assign(new Cls(), {
     ...group(s.name, props),
@@ -129,6 +153,7 @@ function layer(s: LayerSpec): Any {
     nullLayer: s.nullLayer ?? false,
     adjustmentLayer: s.adjustmentLayer ?? false,
     guideLayer: s.guideLayer ?? false,
+    isTrackMatte: s.isTrackMatte ?? false,
     threeDLayer: false,
     timeRemapEnabled: s.timeRemap !== undefined,
     hasVideo: true,
@@ -171,6 +196,8 @@ function runStructure(code: string, comp: Any) {
     "SolidSource",
     "FileSource",
     "PropertyType",
+    "KeyframeInterpolationType",
+    "MaskMode",
     code,
   )(
     app,
@@ -185,6 +212,8 @@ function runStructure(code: string, comp: Any) {
     SolidSource,
     FileSource,
     PropertyType,
+    KeyframeInterpolationType,
+    MaskMode,
   );
 }
 
@@ -479,5 +508,251 @@ describe("ae_check_comp idle report: a report, never a fault", () => {
     expect(withIdle.res.sheet).toEqual(without.res.sheet);
     expect(withIdle.res.structure.idleReport.heading).toBe("Report (not faults)");
     expect(withIdle.text).toContain("Report (not faults)");
+  });
+});
+
+// Fix round 1 (task review and a live run on the proof comp).
+
+const mask = (opts: { keys?: number[]; mode?: number; enabled?: boolean } = {}) =>
+  Object.assign(
+    group("ADBE Mask Atom", [prop("ADBE Mask Shape", { keys: opts.keys })], opts.enabled ?? true),
+    { maskMode: opts.mode ?? MaskMode.ADD },
+  );
+const masks = (...m: Any[]) => group("ADBE Mask Parade", m);
+
+describe("ae_check_comp idle report: a gap the viewer cannot see is not reported", () => {
+  it("a layer held at scale 0 from 0 to 6.5 s before its first scale key: no entry for 0-6.5 s", async () => {
+    const disc = layer({
+      name: "Disc",
+      scale: { keys: [6.5, 7], valueAt: (t) => (t < 6.5 ? [0, 0] : [100, 100]) },
+      outPoint: 10,
+    });
+    const { res } = await check([disc]);
+    expect(res.structure.idle).toEqual([]);
+  });
+
+  it("a scale-0 gap is skipped but a later visible gap is still found", async () => {
+    const disc = layer({
+      name: "Disc",
+      scale: { keys: [6.5, 7], valueAt: (t) => (t < 6.5 ? [0, 0] : [100, 100]) },
+    });
+    const { res } = await check([disc], { idleSeconds: 3 });
+    expect(entries(res)).toEqual([{ layer: "Disc", index: 1, from: 7, to: 12, seconds: 5 }]);
+  });
+
+  it("scale 0 on x alone hides the layer", async () => {
+    const disc = layer({
+      name: "Sliver",
+      scale: { keys: [8, 9], valueAt: (t) => (t < 8 ? [0, 100] : [100, 100]) },
+    });
+    const { res } = await check([disc]);
+    expect(res.structure.idle).toEqual([]);
+  });
+
+  it("an opacity-0 layer before a fade: no entry for the hidden part", async () => {
+    const card = layer({
+      name: "Card",
+      opacity: { keys: [8, 9], valueAt: (t) => (t < 8 ? 0 : 100) },
+    });
+    const { res } = await check([card]);
+    expect(res.structure.idle).toEqual([]);
+  });
+
+  it("a parent at scale 0 hides its child", async () => {
+    const parent = layer({ name: "Rig", nullLayer: true, scale: { valueAt: () => [0, 0] } });
+    const child = layer({ name: "Child", parent });
+    const { res } = await check([child, parent]);
+    expect(res.structure.idle).toEqual([]);
+  });
+
+  it("a visible layer at scale 265 is still reported", async () => {
+    const big = layer({ name: "Big", scale: { valueAt: () => [265, 265] } });
+    const { res } = await check([big]);
+    expect(entries(res)).toEqual([{ layer: "Big", index: 1, from: 0, to: 12, seconds: 12 }]);
+  });
+});
+
+describe("ae_check_comp idle report: fix round 1 change sources", () => {
+  it("a parent's opacity keys do not move its child", async () => {
+    const parent = layer({
+      name: "Rig",
+      nullLayer: true,
+      opacity: { keys: [0, 12], valueAt: () => 100 },
+    });
+    const child = layer({ name: "Child", parent });
+    const { res } = await check([child, parent]);
+    expect(entries(res)).toEqual([{ layer: "Child", index: 1, from: 0, to: 12, seconds: 12 }]);
+  });
+
+  it("a hold key: the value is constant after it, so the gap counts", async () => {
+    const { res } = await check([layer({ name: "Bar", keys: [0, 8], hold: [1] })]);
+    expect(entries(res)).toEqual([{ layer: "Bar", index: 1, from: 0, to: 8, seconds: 8 }]);
+  });
+
+  it("without the hold the same keys move the layer 0-8 s", async () => {
+    const { res } = await check([layer({ name: "Bar", keys: [0, 8] })]);
+    expect(res.structure.idle).toEqual([]);
+  });
+
+  it("an expression in error is not time-driven", async () => {
+    const broken = layer({ name: "Broken" });
+    const pos = broken.property("ADBE Transform Group").property("ADBE Position");
+    Object.assign(pos, {
+      expressionEnabled: true,
+      expression: "wiggle(2, time",
+      expressionError: "SyntaxError: missing )",
+    });
+    const { res } = await check([broken]);
+    expect(entries(res)).toEqual([{ layer: "Broken", index: 1, from: 0, to: 12, seconds: 12 }]);
+  });
+
+  it("a Source Text expression using time counts as always changing", async () => {
+    const text = group("ADBE Text Properties", [
+      prop("ADBE Text Document", { expression: 'Math.floor(time * 10) + ""' }),
+    ]);
+    const { res } = await check([layer({ kind: "text", name: "Counter", extra: [text] })]);
+    expect(res.structure.idle).toEqual([]);
+  });
+
+  it("keys on a text animator count", async () => {
+    const animators = group("ADBE Text Animators", [
+      group("ADBE Text Animator", [
+        group("ADBE Text Animator Properties", [prop("ADBE Text Opacity", { keys: [0, 12] })]),
+      ]),
+    ]);
+    const { res } = await check([layer({ kind: "text", name: "Title", extra: [animators] })]);
+    expect(res.structure.idle).toEqual([]);
+  });
+
+  it("keys on an effect count", async () => {
+    const fx = group("ADBE Effect Parade", [
+      group("ADBE Gaussian Blur 2", [prop("ADBE Gaussian Blur 2-0001", { keys: [0, 12] })]),
+    ]);
+    const { res } = await check([layer({ name: "Soft", extra: [fx] })]);
+    expect(res.structure.idle).toEqual([]);
+  });
+
+  it("keys on a mask property count", async () => {
+    const { res } = await check([layer({ name: "Wipe", extra: [masks(mask({ keys: [0, 12] }))] })]);
+    expect(res.structure.idle).toEqual([]);
+  });
+});
+
+describe("ae_check_comp idle report: keyless motion counts as always changing", () => {
+  it("a text animator with a Wiggly Selector", async () => {
+    const animators = group("ADBE Text Animators", [
+      group("ADBE Text Animator", [
+        group("ADBE Text Selectors", [
+          group("ADBE Text Wiggly Selector", [prop("ADBE Text Wiggly Max Amount")]),
+        ]),
+      ]),
+    ]);
+    const { res } = await check([layer({ kind: "text", name: "Jitter", extra: [animators] })]);
+    expect(res.structure.idle).toEqual([]);
+  });
+
+  it("a Wiggle Paths operator", async () => {
+    const contents = group("ADBE Root Vectors Group", [
+      group("ADBE Vector Filter - Roughen", [prop("ADBE Vector Roughen Size")]),
+    ]);
+    const { res } = await check([layer({ name: "Squiggle", extra: [contents] })]);
+    expect(res.structure.idle).toEqual([]);
+  });
+
+  it("a Wiggle Transform operator", async () => {
+    const contents = group("ADBE Root Vectors Group", [
+      group("ADBE Vector Filter - Wiggler", [prop("ADBE Vector Wiggler Rotation")]),
+    ]);
+    const { res } = await check([layer({ name: "Shaky", extra: [contents] })]);
+    expect(res.structure.idle).toEqual([]);
+  });
+
+  it("a disabled Wiggle Transform operator does not count", async () => {
+    const contents = group("ADBE Root Vectors Group", [
+      group("ADBE Vector Filter - Wiggler", [prop("ADBE Vector Wiggler Rotation")], false),
+    ]);
+    const { res } = await check([layer({ name: "Still", extra: [contents] })]);
+    expect(entries(res).map((e: Any) => e.layer)).toEqual(["Still"]);
+  });
+});
+
+describe("ae_check_comp idle report: fix round 1 precomps, grounds and the cap", () => {
+  it("a disabled inner layer of a precomp, and its markers, do not count", async () => {
+    const inner = compOf("Inner", [
+      layer({ name: "Off", enabled: false, keys: [0, 12], markers: [6] }),
+      layer({ name: "Still" }),
+    ]);
+    const pre = layer({ kind: "av", name: "Pre", source: inner });
+    const { res } = await check([pre]);
+    expect(entries(res)).toEqual([{ layer: "Pre", index: 1, from: 0, to: 12, seconds: 12 }]);
+  });
+
+  it("a disabled inner layer that is a track matte still counts", async () => {
+    const inner = compOf("Inner", [
+      layer({ name: "Matte", enabled: false, isTrackMatte: true, keys: [0, 12] }),
+      layer({ name: "Fill" }),
+    ]);
+    const pre = layer({ kind: "av", name: "Pre", source: inner });
+    const { res } = await check([pre]);
+    expect(res.structure.idle).toEqual([]);
+  });
+
+  const solid = () =>
+    Object.assign(new FootageItem(), {
+      name: "Ground",
+      duration: 0,
+      width: W,
+      height: H,
+      mainSource: Object.assign(new SolidSource(), { isStill: true }),
+    });
+
+  it("a full-frame bottom solid with an enabled mask is a card, not a ground", async () => {
+    const { res } = await check([
+      layer({
+        kind: "av",
+        name: "Card",
+        source: solid(),
+        box: [0, 0, W, H],
+        extra: [masks(mask())],
+      }),
+    ]);
+    expect(entries(res).map((e: Any) => e.layer)).toEqual(["Card"]);
+    expect(res.structure.idleReport.exempt).toBe(0);
+  });
+
+  it("a mask set to None, or switched off, leaves the solid a ground", async () => {
+    const { res } = await check([
+      layer({
+        kind: "av",
+        name: "Ground",
+        source: solid(),
+        box: [0, 0, W, H],
+        extra: [masks(mask({ mode: MaskMode.NONE }), mask({ enabled: false }))],
+      }),
+    ]);
+    expect(res.structure.idle).toEqual([]);
+    expect(res.structure.idleReport.exempt).toBe(1);
+  });
+
+  it("caps structure.idle at 20 entries and marks the report truncated", async () => {
+    const many = Array.from({ length: 23 }, (_, i) => layer({ name: `Bar ${i + 1}` }));
+    const { res } = await check(many);
+    expect(res.structure.idle).toHaveLength(20);
+    expect(res.structure.idleReport.count).toBe(23);
+    expect(res.structure.idleReport.truncated).toBe(true);
+  });
+
+  it("is not marked truncated under the cap", async () => {
+    const { res } = await check([layer({ name: "Bar" })]);
+    expect(res.structure.idleReport.truncated).toBeUndefined();
+  });
+});
+
+describe("ae_check_comp idle report: the tool description", () => {
+  it("names the idle report and idleSeconds in the Structure sentence", () => {
+    const d = checkCompTool.description;
+    const structure = d.slice(d.indexOf("Structure,"), d.indexOf("One contact sheet"));
+    expect(structure).toMatch(/idle/);
+    expect(structure).toContain("`idleSeconds`");
   });
 });
