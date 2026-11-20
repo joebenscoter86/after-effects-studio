@@ -4,4 +4,4 @@ After Effects Studio and its Claude package, Comp Room, are published by JB Tech
 
 The upstream AE controller and bundled dependencies have separate rights and notices in [runtime/LICENSE](../../plugin/runtime/LICENSE) and [THIRD-PARTY-NOTICES.txt](../../plugin/THIRD-PARTY-NOTICES.txt). Adobe After Effects, the agent host, user assets and optional third-party tools have their own terms. You are responsible for rights to the media, fonts and artwork you supply.
 
-This page summarizes the terms for the public v0.4.1 Git release and the Comp Room package generated from the same source; it is not an additional license. See the linked original-material license and upstream notices for the actual grants and restrictions.
+This page summarizes the terms for the public v0.4.2 Git release and the Comp Room package generated from the same source; it is not an additional license. See the linked original-material license and upstream notices for the actual grants and restrictions.
