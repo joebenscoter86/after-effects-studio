@@ -7,8 +7,6 @@
 *.key
 # Developer dependencies and caches
 node_modules/
-!claude/*/runtime/node_modules/
-!claude/*/runtime/node_modules/**
 __pycache__/
 *.pyc
 coverage/
