@@ -1,6 +1,6 @@
-# Techniques from one video (11 recipes, 5 proven)
+# Techniques from one video (11 recipes, 8 proven)
 
-Written by the channel learner from the video's narration and screen together, then checked against the video by a second reader. Every recipe here passed that check; none is in the plugin. `status: proven` means it was built in After Effects from the recipe alone, compared with the tutorial's own result, and accepted by Joe (5 of 11); `status: unproven` means it has not been.
+Written by the channel learner from the video's narration and screen together, then checked against the video by a second reader. Every recipe here passed that check; none is in the plugin. `status: proven` means it was built in After Effects from the recipe alone, compared with the tutorial's own result, and accepted by Joe (8 of 11); `status: unproven` means it has not been.
 
 Each step is marked `said` (narrated), `shown` (on screen; `fNNNNNN` is a frame in the local study folder, frame number divided by the video's frame rate is seconds) or `inferred` (our reading). The `source` and frame references are for checking and stay out of the plugin. Credits: `CREDITS.md`.
 
@@ -10,12 +10,12 @@ Each step is marked `said` (narrated), `shown` (on screen; `fNNNNNN` is a frame 
 | 02 | One mood grade for mismatched art: Tritone plus a single-point Curves, pasted to every layer | glow and colour; depth and finish | 4 | proven |
 | 03 | Flat cut-outs into a deep stage: push far layers back in Z, pull near ones forward, rescale to frame | camera and 3D; depth and finish | 2 | proven |
 | 04 | Depth-of-field camera locked on the subject, with a slow dolly in | camera and 3D; depth and finish | 5 | unproven |
-| 05 | Endless wind sway from two rotation keys and a ping-pong loop | energy and impact; workflow | 6 | unproven |
-| 06 | Grass rippling in the wind with Wave Warp | energy and impact; texture | 7 | unproven |
+| 05 | Endless wind sway from two rotation keys and a ping-pong loop | energy and impact; workflow | 6 | proven |
+| 06 | Grass rippling in the wind with Wave Warp | energy and impact; texture | 7 | proven |
 | 07 | Leaves blown across the frame with textured particles | B-roll scenes; layout and repetition | 5 | unproven |
 | 08 | Rain slanted to match the wind | B-roll scenes; texture | 5 | proven |
 | 10 | Film-stock grain and mood finish on a top adjustment layer | depth and finish; texture; glow and colour | 2 | proven |
-| 11 | Long-lens close-up that matches the wide shot | camera and 3D; depth and finish; B-roll scenes; workflow | 3 | unproven |
+| 11 | Long-lens close-up that matches the wide shot | camera and 3D; depth and finish; B-roll scenes; workflow | 3 | proven |
 | 13 | Side-light a face with a matted Curves layer | shadows and light; glow and colour; depth and finish | 3 | proven |
 
 ## Found vector art, one object per file, laid out as separate layers
@@ -198,7 +198,7 @@ unknowns: why the author lowered the aperture from 80.3 to 26.3 and redid the lo
 
 ## Endless wind sway from two rotation keys and a ping-pong loop
 id: 05-looping-wind-sway-rotation
-status: unproven
+status: proven (accepted by Joe 2026-11-19: rebuilt in After Effects on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "incredible stuff. approved.")
 source: il_OcNyqDOE 232.1–268.3 s
 jobs: energy and impact; workflow
 what it does for a beat: Gives a still illustrated scene a reason to move (wind) with almost no keyframing: each branch or tree rocks back and forth forever from just two keys.
@@ -233,7 +233,7 @@ unknowns: a playing view of the sway on its own (none exists in the video, see r
 
 ## Grass rippling in the wind with Wave Warp
 id: 06-wave-warp-grass-wind
-status: unproven
+status: proven (accepted by Joe 2026-11-19: rebuilt in After Effects on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "incredible stuff. approved.")
 source: il_OcNyqDOE 268.3–289.2 s (preparation from about 264 s)
 jobs: energy and impact; texture
 what it does for a beat: Makes a field of many thin blades (grass, reeds, fur-like edges) move in the wind without animating a single blade: one effect, one setting, and it moves on its own.
@@ -403,7 +403,7 @@ unknowns: the exact Curves point (read from the graph only); whether Posterize s
 
 ## Long-lens close-up that matches the wide shot
 id: 11-matching-closeup-telephoto-compression
-status: unproven
+status: proven (accepted by Joe 2026-11-19: rebuilt in After Effects on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "incredible stuff. approved.")
 source: il_OcNyqDOE 414.2–453.4 s
 jobs: camera and 3D; depth and finish; B-roll scenes; workflow
 what it does for a beat: Assumes a finished wide scene already exists with separate 2D layers, a cold grade on each (Tritone + Curves, technique 02), a 3D camera with depth of field (04), sway on trees (05), rain and finishing adjustment layers (08, 10). Cut from an established wide scene to a close-up of the character without building a new world: reuse the wide shot's backdrop pieces, camera and finishing layers, and push the backdrop very deep so the close-up reads as shot on a long lens.

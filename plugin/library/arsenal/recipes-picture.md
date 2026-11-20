@@ -252,9 +252,9 @@ unknowns: The plate's exact Y Rotation at the result (near 0 by the picture; rea
 
 ## Soft one-way blurred dark shapes with a bright stroke fringe on a pale ground
 id: 01-blurred-stroked-shapes-on-light-ground
-revision: df5b3365
+revision: e199954e
 job: fill-the-backdrop; support: finish-the-look
-status: unproven
+status: proven (accepted 2026-11-19)
 what it does for a beat: Turns two flat, crude shapes into a soft, lens-like backdrop in under a minute. Reach for it when a title or scene needs an organic, out-of-focus base layer rather than hard vector art.
 what it looks like: Two huge near-black navy circles, one pushing in from above the frame and one from below, leave an hourglass of pale ice-blue light between them. Their edges are smeared vertically into wide soft gradients, and a saturated blue stroke on the circles shows as a soft blue band, about 80 comp px tall at half height, where dark meets light.
 ingredients:
@@ -288,9 +288,9 @@ unknowns: the exact fill colour of the dark circles (only sampled from pixels); 
 
 ## Wiggled glow, darkest radial blur and fine grain finish for bright scenes
 id: 02-glow-radial-blur-noise-finish-stack
-revision: 6623e5e6
+revision: fcca23a3
 job: finish-the-look; support: keep-it-alive
-status: unproven
+status: proven (accepted 2026-11-19)
 what it does for a beat: A three-adjustment-layer finish that makes any soft, light-backed composition bloom and gain film grit, with wiggle expressions on the glow radius and blur amount as its only source of movement. Use it over a blurred or abstract backdrop (in the tutorial, the blurred shapes of technique 01, whose figures are repeated in step 1) when the frame feels static and digital.
 what it looks like: The pale gap between two dark soft forms blooms into a near-white, faintly cyan glow whose edges turn a wider, more electric blue; near the left and right frame edges the dark masses are smeared a little further into the gap by the radial blur; a very fine monochrome grain sits over everything. The glow radius and blur amount are wiggled by expression, but the comp is never played in this part, so the motion is not seen (see `timing and easing`).
 ingredients:
@@ -344,9 +344,9 @@ unknowns: whether the second Glow differs in any value (only threshold, intensit
 
 ## Soft pockets of light from heavily blurred edge shapes
 id: 03-blurred-light-shapes-at-frame-edges
-revision: f4aa0a09
+revision: dd5607c1
 job: fill-the-backdrop; support: light-the-hero, keep-it-alive
-status: unproven
+status: proven (accepted 2026-11-19)
 what it does for a beat: Adds soft patches of lighter tone around the edges of an otherwise finished frame (with a wiggle on one blur for movement), so the dark areas are not flat and the eye is pulled toward the centre. A quick pass to make a background feel lit and alive.
 what it looks like: Inside the dark navy masses at the top and bottom of the frame, faint blue shafts and glows appear: one hazy patch spread both sideways and downwards at the top centre, and two alike vertical light columns with fairly crisp sides rising from the bottom edge and fading upwards. The base is the finished hourglass of 01 and 02 (two blurred dark circles with a glowing pale gap). One blur carries a wiggle, but the comp is never played in this part, so no motion is seen.
 ingredients:
@@ -382,9 +382,9 @@ unknowns: the light circles' fill colour (only sampled); when and how the bottom
 
 ## Liquid merge of outlined circles with blur and choke
 id: 04-blur-and-choke-gooey-morph
-revision: 93a4f9f0
+revision: d5884a3c
 job: fill-the-backdrop; support: keep-it-alive, one-to-many
-status: unproven
+status: proven (accepted 2026-11-19)
 what it does for a beat: Makes separate shapes fuse like drops of liquid when one drifts into another, so a plain layout of circles becomes an organic, slow-breathing background or a morph between two forms.
 what it looks like: Near-black navy masses on a pale cyan-white ground, each lit from inside its edge by a broad blue gradient that is brightest right at the boundary; where two circles touch they bulge into each other with a smooth neck instead of overlapping. After the finish the outer boundary stays crisp on near-vertical edges and turns soft on near-horizontal ones (vertical-only blur); grain is not visible at the viewer's scale.
 ingredients:
@@ -903,9 +903,9 @@ unknowns: the duplicate glow is never shown, so which glow carries 39 and which 
 
 ## Wide-lens camera inside the card ring
 id: 11-wide-lens-camera-distortion
-revision: 0aeddeb5
+revision: 13680b7a
 job: add-depth
-status: unproven
+status: proven (accepted 2026-11-19)
 what it does for a beat: A one-step finish for the ring of cards in 10-inner-ring-carousel: a short-focal-length camera stretches the perspective so the ring reads as a wide, immersive sweep rather than three flat cards. Use it whenever a 3D layout looks too flat under the default view.
 what it looks like: The same turning ring now shows about seven cards across the frame: the middle card is small and square-on, and the cards toward the left and right edges grow taller and lean inward, so the row bows like the inside of a drum around the viewer.
 ingredients:

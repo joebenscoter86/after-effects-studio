@@ -1,6 +1,6 @@
 {
  "vocab": "jobs-v1",
- "version": "657ff5ab",
+ "version": "6862081c",
  "jobs": [
   "land-number",
   "count-things",
@@ -393,10 +393,10 @@
   },
   {
    "id": "01-blurred-stroked-shapes-on-light-ground",
-   "revision": "df5b3365",
+   "revision": "e199954e",
    "name": "Soft one-way blurred dark shapes with a bright stroke fringe on a pale ground",
    "line": "Turns two flat, crude shapes into a soft, lens-like backdrop in under a minute. Reach for it when a title or scene needs an organic, out-of-focus base layer rather than hard vector art.",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "fill-the-backdrop",
    "support": [
@@ -419,14 +419,17 @@
     "document": "arsenal-picture",
     "heading": "Soft one-way blurred dark shapes with a bright stroke fringe on a pale ground"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/01-blurred-stroked-shapes-on-light-ground.jpg",
+    "sha256": "b5993bb6d9ad0977e0bfe6152a8a9e4be53314ff497de990f49f493e4d521fbe"
+   }
   },
   {
    "id": "02-glow-radial-blur-noise-finish-stack",
-   "revision": "6623e5e6",
+   "revision": "fcca23a3",
    "name": "Wiggled glow, darkest radial blur and fine grain finish for bright scenes",
    "line": "A three-adjustment-layer finish that makes any soft, light-backed composition bloom and gain film grit, with wiggle expressions on the glow radius and blur amount as its only source of movement. Use it over a blurred or abstract backdrop (in the tutorial, the blurred shapes of technique 01, whose figures are repeated in step 1) when the frame feels static and digital.",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "finish-the-look",
    "support": [
@@ -450,14 +453,17 @@
     "document": "arsenal-picture",
     "heading": "Wiggled glow, darkest radial blur and fine grain finish for bright scenes"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/02-glow-radial-blur-noise-finish-stack.jpg",
+    "sha256": "690150cfc4ed1e1b48a67d2855e240300a9946ee63cc2bf27f92c92e9f229771"
+   }
   },
   {
    "id": "03-blurred-light-shapes-at-frame-edges",
-   "revision": "f4aa0a09",
+   "revision": "dd5607c1",
    "name": "Soft pockets of light from heavily blurred edge shapes",
    "line": "Adds soft patches of lighter tone around the edges of an otherwise finished frame (with a wiggle on one blur for movement), so the dark areas are not flat and the eye is pulled toward the centre. A quick pass to make a background feel lit and alive.",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "fill-the-backdrop",
    "support": [
@@ -481,14 +487,17 @@
     "document": "arsenal-picture",
     "heading": "Soft pockets of light from heavily blurred edge shapes"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/03-blurred-light-shapes-at-frame-edges.jpg",
+    "sha256": "6ca8392a6221293c8d1afe251594ab09eb48af11e911055cdec75248dc087e0c"
+   }
   },
   {
    "id": "04-blur-and-choke-gooey-morph",
-   "revision": "93a4f9f0",
+   "revision": "d5884a3c",
    "name": "Liquid merge of outlined circles with blur and choke",
    "line": "Makes separate shapes fuse like drops of liquid when one drifts into another, so a plain layout of circles becomes an organic, slow-breathing background or a morph between two forms.",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "fill-the-backdrop",
    "support": [
@@ -512,14 +521,17 @@
     "document": "arsenal-picture",
     "heading": "Liquid merge of outlined circles with blur and choke"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/04-blur-and-choke-gooey-morph.jpg",
+    "sha256": "1f4fe9eeeb0a65589c25b04fca98c7a81c8fdbe56667c24c37f0e3ca89359acd"
+   }
   },
   {
    "id": "05-path-opening-split-driven-by-moving-ball",
-   "revision": "cb8d438d",
+   "revision": "6c8f7dbd",
    "name": "A dark mass split open behind a travelling ball",
    "line": "A small ball crosses the frame and a large dark form tears open behind it, revealing the light ground; good for line-led animation, progress moments or a reveal that clears space for a headline.",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "hand-over",
    "support": [
@@ -543,7 +555,10 @@
     "document": "arsenal-connective",
     "heading": "A dark mass split open behind a travelling ball"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/05-path-opening-split-driven-by-moving-ball.jpg",
+    "sha256": "0ffe2bd33b361c1814f1d9a106bde96148dd0a98fea9fec49e788037581f8dbc"
+   }
   },
   {
    "id": "06-gradient-shapes-blur-noise-glow-posterize",
@@ -1421,10 +1436,10 @@
   },
   {
    "id": "02-pivot-null-swing-loop",
-   "revision": "e8d498e7",
+   "revision": "faf0d084",
    "name": "Card that swings round a pivot below the frame, one step at a time, forever",
    "line": "Gives a card (or later a row of cards) a carousel step: it swings in from one side on a big arc, settles upright, pauses, then swings out the other side, and the step repeats endlessly from only three keyframes. Use it for product or photo carousels, list reveals, or any \"next item\" rhythm.",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "list-items",
    "support": [
@@ -1447,14 +1462,17 @@
     "document": "arsenal-line",
     "heading": "Card that swings round a pivot below the frame, one step at a time, forever"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/02-pivot-null-swing-loop.jpg",
+    "sha256": "a3cf1d07d248f07f8e864ee2f9afba3389853b20f2ce7e26a335f4b95ac73b88"
+   }
   },
   {
    "id": "03-tilt-and-shrink-on-swing",
-   "revision": "66c61d6a",
+   "revision": "27af439d",
    "name": "Card shrinks and leans outward at the ends of its swing",
    "line": "Adds a size-and-lean change on top of the pivot swing so the card is small and tipped outward while it is off to the side and full size and upright when it reaches the top. This is what makes a swinging carousel feel like it is \"resizing\" and gives the centred item its emphasis.",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "list-items",
    "support": [
@@ -1477,7 +1495,10 @@
     "document": "arsenal-line",
     "heading": "Card shrinks and leans outward at the ends of its swing"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/03-tilt-and-shrink-on-swing.jpg",
+    "sha256": "2ddda74d781f9544e881c6327d8bab1523451a6a828aaffd1d326e0008b95959"
+   }
   },
   {
    "id": "04-duplicate-cards-round-the-pivot",
@@ -1512,10 +1533,10 @@
   },
   {
    "id": "05-mask-path-to-position-loop",
-   "revision": "cc03a86c",
+   "revision": "950c5aaa",
    "name": "Cards orbiting an ellipse drawn as a mask",
    "line": "Sends a ring of photo cards round an oval forever, framing a title or product in the middle. Use it for an endless moodboard or gallery loop behind a headline, or a hold that has to run for any length.",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "keep-it-alive",
    "support": [
@@ -1539,14 +1560,17 @@
     "document": "arsenal-connective",
     "heading": "Cards orbiting an ellipse drawn as a mask"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/05-mask-path-to-position-loop.jpg",
+    "sha256": "65494f9d46e70475a3efd1b41112d115e3fbe5bcb17539555f101d111a1d5b05"
+   }
   },
   {
    "id": "06-path-trail-scale-rotate-in",
-   "revision": "261844ed",
+   "revision": "a7127f71",
    "name": "Cards growing along a drawn path into a stacked trail",
    "line": "A stream of photo cards is born as specks, grows and straightens as it sweeps along a looping path, and brakes to a stop in a fanned stack. Use it for a gallery reveal, a \"many stories\" opener, or a build-up behind a title.",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "list-items",
    "support": [
@@ -1570,7 +1594,10 @@
     "document": "arsenal-line",
     "heading": "Cards growing along a drawn path into a stacked trail"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/06-path-trail-scale-rotate-in.jpg",
+    "sha256": "44389a4e6c436ed20cb13719a70904c75aae60cdd5dd0f323583a35b63c664c5"
+   }
   },
   {
    "id": "07-3d-spinning-box-of-cards",
@@ -1606,10 +1633,10 @@
   },
   {
    "id": "08-tunnel-from-stacked-boxes",
-   "revision": "c5ca4eb3",
+   "revision": "a181bdad",
    "name": "Counter-spinning tunnel from stacked card boxes",
    "line": "Extends the spinning box (07) into a deep tunnel of photo walls whose alternate rings turn in opposite directions; a hypnotic gallery loop or the set for a camera fly-through (09).",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "keep-it-alive",
    "support": [
@@ -1633,7 +1660,10 @@
     "document": "arsenal-connective",
     "heading": "Counter-spinning tunnel from stacked card boxes"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/08-tunnel-from-stacked-boxes.jpg",
+    "sha256": "f27094a5366f3d12c4f33563ca665892bec98de1fcd377b56117e92baf44b3de"
+   }
   },
   {
    "id": "09-camera-fly-through-with-depth-of-field",
@@ -1702,10 +1732,10 @@
   },
   {
    "id": "11-wide-lens-camera-distortion",
-   "revision": "0aeddeb5",
+   "revision": "13680b7a",
    "name": "Wide-lens camera inside the card ring",
    "line": "A one-step finish for the ring of cards in 10-inner-ring-carousel: a short-focal-length camera stretches the perspective so the ring reads as a wide, immersive sweep rather than three flat cards. Use it whenever a 3D layout looks too flat under the default view.",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "add-depth",
    "support": [],
@@ -1727,7 +1757,10 @@
     "document": "arsenal-picture",
     "heading": "Wide-lens camera inside the card ring"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/11-wide-lens-camera-distortion.jpg",
+    "sha256": "6202f04a46d3bf7503c75a3d0369cd0b0802df597e820d8ec9e95f6186832cd0"
+   }
   },
   {
    "id": "01-bevelled-3d-text-material-texture",
@@ -2147,10 +2180,10 @@
   },
   {
    "id": "05-looping-wind-sway-rotation",
-   "revision": "a157684e",
+   "revision": "043cb041",
    "name": "Endless wind sway from two rotation keys and a ping-pong loop",
    "line": "Gives a still illustrated scene a reason to move (wind) with almost no keyframing: each branch or tree rocks back and forth forever from just two keys.",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "keep-it-alive",
    "support": [
@@ -2173,14 +2206,17 @@
     "document": "arsenal-connective",
     "heading": "Endless wind sway from two rotation keys and a ping-pong loop"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/05-looping-wind-sway-rotation.jpg",
+    "sha256": "1a3a3462bd73aaea66e4a516709ebb5ed2ed59e88b92e22d4f4d6ab409f12eb7"
+   }
   },
   {
    "id": "06-wave-warp-grass-wind",
-   "revision": "b9060fe4",
+   "revision": "dd4619ea",
    "name": "Grass rippling in the wind with Wave Warp",
    "line": "Makes a field of many thin blades (grass, reeds, fur-like edges) move in the wind without animating a single blade: one effect, one setting, and it moves on its own.",
-   "status": "unproven",
+   "status": "proven",
    "kind": "technique",
    "job": "keep-it-alive",
    "support": [
@@ -2203,7 +2239,10 @@
     "document": "arsenal-connective",
     "heading": "Grass rippling in the wind with Wave Warp"
    },
-   "still": null
+   "still": {
+    "path": "arsenal/stills/06-wave-warp-grass-wind.jpg",
+    "sha256": "5b858e00bd1741a1e5bed050ced3c8e9c032e3950be511f57b2f3b349a531459"
+   }
   },
   {
    "id": "07-leaf-particles-blown-across",
@@ -2304,10 +2343,10 @@
   },
   {
    "id": "11-matching-closeup-telephoto-compression",
-   "revision": "e6446569",
+   "revision": "f83795fe",
    "name": "Long-lens close-up that matches the wide shot",
    "line": "Assumes a finished wide scene already exists with separate 2D layers, a cold grade on each (Tritone + Curves, technique 02), a 3D camera with depth of field (04), sway on trees (05), rain and finishing adjustment layers (08, 10). Cut from an established wide scene to a close-up of the character without building a new world: reuse the wide shot's backdrop pieces, camera and finishing layers, and push the backdrop very deep so the close-up reads as shot on a long lens.",
-   "status": "unproven",
+   "status": "proven",
    "kind": "unmatched",
    "job": null,
    "support": [

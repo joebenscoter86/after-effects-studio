@@ -1,22 +1,22 @@
-# Techniques from one video (11 recipes, all unproven)
+# Techniques from one video (11 recipes, 6 proven)
 
-Written by the channel learner from the video's narration and screen together, then checked against the video by a second reader. Every recipe here passed that check; none is in the plugin. `status: proven` means it was built in After Effects from the recipe alone, compared with the tutorial's own result, and accepted by Joe (0 of 11); `status: unproven` means it has not been.
+Written by the channel learner from the video's narration and screen together, then checked against the video by a second reader. Every recipe here passed that check; none is in the plugin. `status: proven` means it was built in After Effects from the recipe alone, compared with the tutorial's own result, and accepted by Joe (6 of 11); `status: unproven` means it has not been.
 
 Each step is marked `said` (narrated), `shown` (on screen; `fNNNNNN` is a frame in the local study folder, frame number divided by the video's frame rate is seconds) or `inferred` (our reading). The `source` and frame references are for checking and stay out of the plugin. Credits: `CREDITS.md`.
 
 | # | Technique | Jobs | Check passed in round | Status |
 |---|---|---|---|---|
 | 01 | Rounded-rectangle matte card that carries its media and labels | layout and repetition; workflow | 2 | unproven |
-| 02 | Card that swings round a pivot below the frame, one step at a time, forever | layout and repetition; energy and impact | 3 | unproven |
-| 03 | Card shrinks and leans outward at the ends of its swing | layout and repetition; energy and impact | 2 | unproven |
+| 02 | Card that swings round a pivot below the frame, one step at a time, forever | layout and repetition; energy and impact | 3 | proven |
+| 03 | Card shrinks and leans outward at the ends of its swing | layout and repetition; energy and impact | 2 | proven |
 | 04 | Chained copies of a swinging card, placed with a helper null | layout and repetition; workflow | 4 | unproven |
-| 05 | Cards orbiting an ellipse drawn as a mask | layout and repetition; trending formats | 2 | unproven |
-| 06 | Cards growing along a drawn path into a stacked trail | layout and repetition; energy and impact; trending formats | 3 | unproven |
+| 05 | Cards orbiting an ellipse drawn as a mask | layout and repetition; trending formats | 2 | proven |
+| 06 | Cards growing along a drawn path into a stacked trail | layout and repetition; energy and impact; trending formats | 3 | proven |
 | 07 | Spinning square box built from four 3D cards | camera and 3D; layout and repetition; B-roll scenes | 2 | unproven |
-| 08 | Counter-spinning tunnel from stacked card boxes | camera and 3D; layout and repetition; B-roll scenes | 2 | unproven |
+| 08 | Counter-spinning tunnel from stacked card boxes | camera and 3D; layout and repetition; B-roll scenes | 2 | proven |
 | 09 | Camera push into the card tunnel with depth of field | camera and 3D; depth and finish; B-roll scenes | 4 | unproven |
 | 10 | Ring of 3D photo cards seen from inside | camera and 3D; layout and repetition | 3 | unproven |
-| 11 | Wide-lens camera inside the card ring | camera and 3D | 3 | unproven |
+| 11 | Wide-lens camera inside the card ring | camera and 3D | 3 | proven |
 
 ## Rounded-rectangle matte card that carries its media and labels
 id: 01-rounded-shape-matte-media-card
@@ -64,7 +64,7 @@ unknowns: exact composition size (inferred 1920x1080); how the layer was centred
 
 ## Card that swings round a pivot below the frame, one step at a time, forever
 id: 02-pivot-null-swing-loop
-status: unproven
+status: proven (accepted by Joe 2026-11-19: rebuilt in After Effects on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "incredible stuff. approved.")
 source: ZqRE3ho8iP4 79–136 s
 jobs: layout and repetition; energy and impact
 what it does for a beat: Gives a card (or later a row of cards) a carousel step: it swings in from one side on a big arc, settles upright, pauses, then swings out the other side, and the step repeats endlessly from only three keyframes. Use it for product or photo carousels, list reveals, or any "next item" rhythm.
@@ -109,7 +109,7 @@ unknowns: how the keys moved from about 20 f / 23 f to 17 f / 24 f (somewhere in
 
 ## Card shrinks and leans outward at the ends of its swing
 id: 03-tilt-and-shrink-on-swing
-status: unproven
+status: proven (accepted by Joe 2026-11-19: rebuilt in After Effects on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "incredible stuff. approved.")
 source: ZqRE3ho8iP4 136–162.2 s
 jobs: layout and repetition; energy and impact
 what it does for a beat: Adds a size-and-lean change on top of the pivot swing so the card is small and tipped outward while it is off to the side and full size and upright when it reaches the top. This is what makes a swinging carousel feel like it is "resizing" and gives the centred item its emphasis.
@@ -193,7 +193,7 @@ unknowns: how cards 3–6 were placed (helper rotations of 68°, 102°… or −
 
 ## Cards orbiting an ellipse drawn as a mask
 id: 05-mask-path-to-position-loop
-status: unproven
+status: proven (accepted by Joe 2026-11-19: rebuilt in After Effects on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "incredible stuff. approved.")
 source: ZqRE3ho8iP4 247.2–305.0 s
 jobs: layout and repetition; trending formats
 what it does for a beat: Sends a ring of photo cards round an oval forever, framing a title or product in the middle. Use it for an endless moodboard or gallery loop behind a headline, or a hold that has to run for any length.
@@ -242,7 +242,7 @@ unknowns: the original card's exact rectangle size; whether the offset per copy 
 
 ## Cards growing along a drawn path into a stacked trail
 id: 06-path-trail-scale-rotate-in
-status: unproven
+status: proven (accepted by Joe 2026-11-19: rebuilt in After Effects on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "incredible stuff. approved.")
 source: ZqRE3ho8iP4 305.0–343.0 s
 jobs: layout and repetition; energy and impact; trending formats
 what it does for a beat: A stream of photo cards is born as specks, grows and straightens as it sweeps along a looping path, and brakes to a stop in a fanned stack. Use it for a gallery reveal, a "many stories" opener, or a build-up behind a title.
@@ -337,7 +337,7 @@ unknowns: The card's Rectangle Size and Roundness values (only the on-screen siz
 
 ## Counter-spinning tunnel from stacked card boxes
 id: 08-tunnel-from-stacked-boxes
-status: unproven
+status: proven (accepted by Joe 2026-11-19: rebuilt in After Effects on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "incredible stuff. approved.")
 source: ZqRE3ho8iP4 395.7–418.0 s
 jobs: camera and 3D; layout and repetition; B-roll scenes
 what it does for a beat: Extends the spinning box (07) into a deep tunnel of photo walls whose alternate rings turn in opposite directions; a hypnotic gallery loop or the set for a camera fly-through (09).
@@ -469,7 +469,7 @@ unknowns: Exact card size in pixels (estimated about 570 x 700 from the flat car
 
 ## Wide-lens camera inside the card ring
 id: 11-wide-lens-camera-distortion
-status: unproven
+status: proven (accepted by Joe 2026-11-19: rebuilt in After Effects on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "incredible stuff. approved.")
 source: ZqRE3ho8iP4 489.0–501.0 s
 jobs: camera and 3D
 what it does for a beat: A one-step finish for the ring of cards in 10-inner-ring-carousel: a short-focal-length camera stretches the perspective so the ring reads as a wide, immersive sweep rather than three flat cards. Use it whenever a 3D layout looks too flat under the default view.

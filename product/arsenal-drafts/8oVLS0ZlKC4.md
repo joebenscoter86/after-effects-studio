@@ -1,21 +1,21 @@
-# Techniques from one video (6 recipes, all unproven)
+# Techniques from one video (6 recipes, 5 proven)
 
-Written by the channel learner from the video's narration and screen together, then checked against the video by a second reader. Every recipe here passed that check; none is in the plugin. `status: proven` means it was built in After Effects from the recipe alone, compared with the tutorial's own result, and accepted by Joe (0 of 6); `status: unproven` means it has not been.
+Written by the channel learner from the video's narration and screen together, then checked against the video by a second reader. Every recipe here passed that check; none is in the plugin. `status: proven` means it was built in After Effects from the recipe alone, compared with the tutorial's own result, and accepted by Joe (5 of 6); `status: unproven` means it has not been.
 
 Each step is marked `said` (narrated), `shown` (on screen; `fNNNNNN` is a frame in the local study folder, frame number divided by the video's frame rate is seconds) or `inferred` (our reading). The `source` and frame references are for checking and stay out of the plugin. Credits: `CREDITS.md`.
 
 | # | Technique | Jobs | Check passed in round | Status |
 |---|---|---|---|---|
-| 01 | Soft one-way blurred dark shapes with a bright stroke fringe on a pale ground | depth and finish; glow and colour; lines and shapes | 3 | unproven |
-| 02 | Wiggled glow, darkest radial blur and fine grain finish for bright scenes | glow and colour; depth and finish; texture | 4 | unproven |
-| 03 | Soft pockets of light from heavily blurred edge shapes | shadows and light; depth and finish; glow and colour | 4 | unproven |
-| 04 | Liquid merge of outlined circles with blur and choke | lines and shapes; depth and finish; B-roll scenes | 4 | unproven |
-| 05 | A dark mass split open behind a travelling ball | lines and shapes; transitions; depth and finish | 8 | unproven |
+| 01 | Soft one-way blurred dark shapes with a bright stroke fringe on a pale ground | depth and finish; glow and colour; lines and shapes | 3 | proven |
+| 02 | Wiggled glow, darkest radial blur and fine grain finish for bright scenes | glow and colour; depth and finish; texture | 4 | proven |
+| 03 | Soft pockets of light from heavily blurred edge shapes | shadows and light; depth and finish; glow and colour | 4 | proven |
+| 04 | Liquid merge of outlined circles with blur and choke | lines and shapes; depth and finish; B-roll scenes | 4 | proven |
+| 05 | A dark mass split open behind a travelling ball | lines and shapes; transitions; depth and finish | 8 | proven |
 | 06 | Turning a crude gradient disc into a grainy glowing orb | depth and finish; glow and colour; texture | 5 | unproven |
 
 ## Soft one-way blurred dark shapes with a bright stroke fringe on a pale ground
 id: 01-blurred-stroked-shapes-on-light-ground
-status: unproven
+status: proven (accepted by Joe 2026-11-19: rebuilt in After Effects on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "incredible stuff. approved.")
 source: 8oVLS0ZlKC4 13.76–61.52 s
 jobs: depth and finish; glow and colour; lines and shapes
 what it does for a beat: Turns two flat, crude shapes into a soft, lens-like backdrop in under a minute. Reach for it when a title or scene needs an organic, out-of-focus base layer rather than hard vector art.
@@ -54,7 +54,7 @@ unknowns: the exact fill colour of the dark circles (only sampled from pixels); 
 
 ## Wiggled glow, darkest radial blur and fine grain finish for bright scenes
 id: 02-glow-radial-blur-noise-finish-stack
-status: unproven
+status: proven (accepted by Joe 2026-11-19: rebuilt in After Effects on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "incredible stuff. approved.")
 source: 8oVLS0ZlKC4 61.52–127.12 s
 jobs: glow and colour; depth and finish; texture
 what it does for a beat: A three-adjustment-layer finish that makes any soft, light-backed composition bloom and gain film grit, with wiggle expressions on the glow radius and blur amount as its only source of movement. Use it over a blurred or abstract backdrop (in the tutorial, the blurred shapes of technique 01, whose figures are repeated in step 1) when the frame feels static and digital.
@@ -113,7 +113,7 @@ unknowns: whether the second Glow differs in any value (only threshold, intensit
 
 ## Soft pockets of light from heavily blurred edge shapes
 id: 03-blurred-light-shapes-at-frame-edges
-status: unproven
+status: proven (accepted by Joe 2026-11-19: rebuilt in After Effects on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "incredible stuff. approved.")
 source: 8oVLS0ZlKC4 127.12–147.12 s (the expression is finished and the result shown just after, up to 148.6 s)
 jobs: shadows and light; depth and finish; glow and colour
 what it does for a beat: Adds soft patches of lighter tone around the edges of an otherwise finished frame (with a wiggle on one blur for movement), so the dark areas are not flat and the eye is pulled toward the centre. A quick pass to make a background feel lit and alive.
@@ -154,7 +154,7 @@ unknowns: the light circles' fill colour (only sampled); when and how the bottom
 
 ## Liquid merge of outlined circles with blur and choke
 id: 04-blur-and-choke-gooey-morph
-status: unproven
+status: proven (accepted by Joe 2026-11-19: rebuilt in After Effects on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "incredible stuff. approved.")
 source: 8oVLS0ZlKC4 183.12–257.76 s
 jobs: lines and shapes; depth and finish; B-roll scenes
 what it does for a beat: Makes separate shapes fuse like drops of liquid when one drifts into another, so a plain layout of circles becomes an organic, slow-breathing background or a morph between two forms.
@@ -212,7 +212,7 @@ unknowns: Comp size (likely 1920x1080) and background colour value; exact Blur D
 
 ## A dark mass split open behind a travelling ball
 id: 05-path-opening-split-driven-by-moving-ball
-status: unproven
+status: proven (accepted by Joe 2026-11-19: rebuilt in After Effects on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "incredible stuff. approved.")
 source: 8oVLS0ZlKC4 260.0–328.8 s
 jobs: lines and shapes; transitions; depth and finish
 what it does for a beat: A small ball crosses the frame and a large dark form tears open behind it, revealing the light ground; good for line-led animation, progress moments or a reveal that clears space for a headline.

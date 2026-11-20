@@ -147,9 +147,9 @@ unknowns: frames and are not kept frames; they are cut from and saved under. The
 
 ## A dark mass split open behind a travelling ball
 id: 05-path-opening-split-driven-by-moving-ball
-revision: cb8d438d
+revision: 6c8f7dbd
 job: hand-over; support: reveal-headline, show-time
-status: unproven
+status: proven (accepted 2026-11-19)
 what it does for a beat: A small ball crosses the frame and a large dark form tears open behind it, revealing the light ground; good for line-led animation, progress moments or a reveal that clears space for a headline.
 what it looks like: A near-black navy mass fills the frame; a white dot starts at the right edge and travels left along the middle, and behind it the mass parts into two curved lobes with a glowing blue rim; a bright-blue tongue trails from the ball before the gap opens into a widening pale cyan wedge. The whole picture is soft and grainy from the finishing stack.
 ingredients:
@@ -501,9 +501,9 @@ unknowns: why the author lowered the aperture from 80.3 to 26.3 and redid the lo
 
 ## Cards orbiting an ellipse drawn as a mask
 id: 05-mask-path-to-position-loop
-revision: cc03a86c
+revision: 950c5aaa
 job: keep-it-alive; support: fill-the-backdrop, reveal-headline
-status: unproven
+status: proven (accepted 2026-11-19)
 what it does for a beat: Sends a ring of photo cards round an oval forever, framing a title or product in the middle. Use it for an endless moodboard or gallery loop behind a headline, or a hold that has to run for any length.
 what it looks like: On a warm off-white background, about fifteen or sixteen flat, square-cornered photo cards of mixed portrait and landscape shapes (flowers, portraits, a jar, interiors) travel counter-clockwise round a wide oval that fills most of the frame, overlapping slightly, with an empty middle where the example sets a dark green two-line title.
 ingredients:
@@ -547,9 +547,9 @@ unknowns: the original card's exact rectangle size; whether the offset per copy 
 
 ## Counter-spinning tunnel from stacked card boxes
 id: 08-tunnel-from-stacked-boxes
-revision: c5ca4eb3
+revision: a181bdad
 job: keep-it-alive; support: add-depth
-status: unproven
+status: proven (accepted 2026-11-19)
 what it does for a beat: Extends the spinning box (07) into a deep tunnel of photo walls whose alternate rings turn in opposite directions; a hypnotic gallery loop or the set for a camera fly-through (09).
 what it looks like: Seen end-on on a near-black frame, a square ring of four large photo walls sits in front of a smaller copy of itself further back, visible through the front ring's opening; the front ring turns clockwise and the back ring anticlockwise, so their walls slide past each other, now lined up side by side, now crossing at an angle; more rings can be stacked behind.
 ingredients:
@@ -577,9 +577,9 @@ unknowns: Z positions of rings three and four (not shown); null positions in num
 
 ## Endless wind sway from two rotation keys and a ping-pong loop
 id: 05-looping-wind-sway-rotation
-revision: a157684e
+revision: 043cb041
 job: keep-it-alive; support: establish-place
-status: unproven
+status: proven (accepted 2026-11-19)
 what it does for a beat: Gives a still illustrated scene a reason to move (wind) with almost no keyframing: each branch or tree rocks back and forth forever from just two keys.
 what it looks like: Silhouetted, out-of-focus foreground branches with leaves at the frame edges rock by about eleven degrees, clockwise then back, at a steady speed with hard turnarounds; the scene behind is not animated by this technique, but in every frame cited here technique 04's camera push is running, so the framing changes too.
 assumes: separate 3D layers per scene element (technique 01/03) and, optionally, the camera from technique 04; nothing here depends on the camera.
@@ -609,9 +609,9 @@ unknowns: a playing view of the sway on its own (none exists in the video, see r
 
 ## Grass rippling in the wind with Wave Warp
 id: 06-wave-warp-grass-wind
-revision: b9060fe4
+revision: dd4619ea
 job: keep-it-alive; support: establish-place
-status: unproven
+status: proven (accepted 2026-11-19)
 what it does for a beat: Makes a field of many thin blades (grass, reeds, fur-like edges) move in the wind without animating a single blade: one effect, one setting, and it moves on its own.
 what it looks like: A strip of dark silhouetted grass blades along the bottom of a night scene, soft with the camera's depth of field, moves in a continuous wave with no keyframes while the camera dollies in. How the blades move cannot be read in any frame; from the settings, Direction 90° sends the waves across the layer from left to right and displaces the pixels across that travel, so the blades bob up and down along a travelling wave rather than lean sideways (inferred from how Wave Warp works, not measured).
 assumes: the grass is its own layer (technique 01), already graded with the scene's Tritone and Curves (technique 02); the camera move from technique 04 is playing but is not needed.
