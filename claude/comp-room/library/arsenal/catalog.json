@@ -1,6 +1,6 @@
 {
  "vocab": "jobs-v1",
- "version": "1ae8cf94",
+ "version": "657ff5ab",
  "jobs": [
   "land-number",
   "count-things",
@@ -393,7 +393,7 @@
   },
   {
    "id": "01-blurred-stroked-shapes-on-light-ground",
-   "revision": "c83fa0bd",
+   "revision": "df5b3365",
    "name": "Soft one-way blurred dark shapes with a bright stroke fringe on a pale ground",
    "line": "Turns two flat, crude shapes into a soft, lens-like backdrop in under a minute. Reach for it when a title or scene needs an organic, out-of-focus base layer rather than hard vector art.",
    "status": "unproven",
@@ -423,7 +423,7 @@
   },
   {
    "id": "02-glow-radial-blur-noise-finish-stack",
-   "revision": "adbbcd5e",
+   "revision": "6623e5e6",
    "name": "Wiggled glow, darkest radial blur and fine grain finish for bright scenes",
    "line": "A three-adjustment-layer finish that makes any soft, light-backed composition bloom and gain film grit, with wiggle expressions on the glow radius and blur amount as its only source of movement. Use it over a blurred or abstract backdrop (in the tutorial, the blurred shapes of technique 01, whose figures are repeated in step 1) when the frame feels static and digital.",
    "status": "unproven",
@@ -454,7 +454,7 @@
   },
   {
    "id": "03-blurred-light-shapes-at-frame-edges",
-   "revision": "f4eb0a7d",
+   "revision": "f4aa0a09",
    "name": "Soft pockets of light from heavily blurred edge shapes",
    "line": "Adds soft patches of lighter tone around the edges of an otherwise finished frame (with a wiggle on one blur for movement), so the dark areas are not flat and the eye is pulled toward the centre. A quick pass to make a background feel lit and alive.",
    "status": "unproven",
@@ -485,7 +485,7 @@
   },
   {
    "id": "04-blur-and-choke-gooey-morph",
-   "revision": "37495fac",
+   "revision": "93a4f9f0",
    "name": "Liquid merge of outlined circles with blur and choke",
    "line": "Makes separate shapes fuse like drops of liquid when one drifts into another, so a plain layout of circles becomes an organic, slow-breathing background or a morph between two forms.",
    "status": "unproven",
@@ -516,7 +516,7 @@
   },
   {
    "id": "05-path-opening-split-driven-by-moving-ball",
-   "revision": "1a8cfc3e",
+   "revision": "cb8d438d",
    "name": "A dark mass split open behind a travelling ball",
    "line": "A small ball crosses the frame and a large dark form tears open behind it, revealing the light ground; good for line-led animation, progress moments or a reveal that clears space for a headline.",
    "status": "unproven",
@@ -1543,7 +1543,7 @@
   },
   {
    "id": "06-path-trail-scale-rotate-in",
-   "revision": "8a4d9a97",
+   "revision": "261844ed",
    "name": "Cards growing along a drawn path into a stacked trail",
    "line": "A stream of photo cards is born as specks, grows and straightens as it sweeps along a looping path, and brakes to a stop in a fanned stack. Use it for a gallery reveal, a \"many stories\" opener, or a build-up behind a title.",
    "status": "unproven",
@@ -2147,7 +2147,7 @@
   },
   {
    "id": "05-looping-wind-sway-rotation",
-   "revision": "b0e13bd1",
+   "revision": "a157684e",
    "name": "Endless wind sway from two rotation keys and a ping-pong loop",
    "line": "Gives a still illustrated scene a reason to move (wind) with almost no keyframing: each branch or tree rocks back and forth forever from just two keys.",
    "status": "unproven",
@@ -2177,7 +2177,7 @@
   },
   {
    "id": "06-wave-warp-grass-wind",
-   "revision": "2afa00ea",
+   "revision": "b9060fe4",
    "name": "Grass rippling in the wind with Wave Warp",
    "line": "Makes a field of many thin blades (grass, reeds, fur-like edges) move in the wind without animating a single blade: one effect, one setting, and it moves on its own.",
    "status": "unproven",

@@ -115,6 +115,10 @@ The first video's 25 recipes all passed the check. Building them found three rec
 - **What happened.** Three proofs were judged "not blue enough": 05's rim, 01's and 02's fringe. The tutorial's own no-stroke frame showed a blurred navy edge at blue minus red 46-51, which no mix of its navy and its pale ground can reach (at most 27), while the navy and the ground themselves came through unchanged. Reading the recording's values as Display-P3 converted to sRGB reproduces the gap exactly; put through that transform, 01's and 02's builds match (fringe 85 and 155 against 87 and 155). Recipes had given these hues as targets, and a build chased them with a bluer stroke.
 - **Rule.** `distil.md` and `check.md` check 9: a saturated mid-tone colour read off a recording is flagged as possibly inflated, and hue-free measures are preferred; `prove-review.md`: compare hues only after putting the build through the same transform, and say so.
 
+### 25. A layer's rendered colour given as its value (backlog, 8oVLS0ZlKC4 04, 05, 2026-11-19)
+- **What happened.** Recipes 04 and 05 gave their pale ground as the colour it shows in the finished picture (#E1FBF9, #E0F7F6). That is the solid after a Glow; the solid itself is recipe 01's #E4F4FF, its dialog on screen. The Glow, at Threshold 100 %, lifts only where the blue channel is 255, so on the after-Glow colour it did nothing: both builds lost the broad blue edge light, and 05 took four builds before the cause was found.
+- **Rule.** `distil.md`: a layer's colour is given as the value in its dialog or swatch, from the frame that shows it, and the rendered colour separately as a target.
+
 ## Still open
 - The 24 "matches" on the first video were given before the look line existed.
 - Nothing yet tests the prompts themselves. A cheap test: keep technique 11's first recipe as a fixture and confirm a fresh checker fails it on check 8.

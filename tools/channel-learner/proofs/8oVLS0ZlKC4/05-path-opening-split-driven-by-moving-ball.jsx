@@ -14,7 +14,7 @@ $.evalFile(args.prelude);
 $.evalFile(args.artLib);
 var W = 1920, H = 1080, FPS = 60, T1 = 4.9, TM = 3 + 5 / 60;
 var showType = args.showType !== false;
-var c = P.freshComp("8oVL 05 split", W, H, FPS, 5, [0.878, 0.969, 0.965]);
+var c = P.freshComp("8oVL 05 split", W, H, FPS, 5, [0.894, 0.957, 1]);
 var subs = [];
 // Remove this script's orphan solids left by earlier runs (unused solids with our names only).
 (function () {
@@ -53,7 +53,9 @@ function shapeVal(v, ins, outs) {
 }
 
 // Background solid, recipe's measured pale ground (brief: keep exact).
-var bg = P.solid(c, "BG", ART.hex("#E0F7F6"));
+// Run fifth (corrected recipe): the ground is recipe 01's solid #E4F4FF (blue at 255, so the Glow at Threshold 100 % acts);
+// #E0F7F6 was the after-Glow colour.
+var bg = P.solid(c, "BG", ART.hex(args.ground || "#E4F4FF"));
 
 // Title (brief): under the split shape, revealed by the opening.
 var title = null;
@@ -74,7 +76,7 @@ var fillHex = args.fill || "#04101F";
 var fl = P.contents(sh).addProperty("ADBE Vector Graphic - Fill");
 P.contents(sh).property(fl.propertyIndex).property("ADBE Vector Fill Color").setValue(ART.hex(fillHex).concat([1]));
 // SUBSTITUTE (run second): the rim's lift is not made by the Glow at Threshold 100 %; the recipe names a stroke of about #00A8F0.
-P.stroke(sh, ART.hex(args.stroke || "#0096FF").concat([1]), 9); // #0096FF: more blue than the named #00A8F0 (the rim reads short of the blue targets with either)
+P.stroke(sh, ART.hex(args.stroke || "#0082FF").concat([1]), 9); // run fifth: back to the shown #0082FF (the #0096FF substitute made the rim cyan)
 
 // Run third: three designed states, each a contour with the same vertex structure, keyed linearly at 0 s, 3:05 and 4.9 s.
 // SUBSTITUTE: the tutorial shows Path keys only at 0 s and about 4.9 s. Its measured 3:05 state (lobes about 92.8 % across) and its

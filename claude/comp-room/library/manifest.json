@@ -748,14 +748,14 @@
       "title": "Technique arsenal index: documents, vocabulary and counts",
       "path": "arsenal/index.json",
       "kind": "catalog",
-      "sha256": "d28b6f15ac180c44c9e54ed5567ef7cc5d79e9ed656b234b97afb7d4a02f6985"
+      "sha256": "fe289135269de05f2a231c6b0f3598e393a15c4b968c7eeb8697c017a36559aa"
     },
     {
       "id": "arsenal-catalog",
       "title": "Technique arsenal catalog: one record per recipe, queried by ae_arsenal",
       "path": "arsenal/catalog.json",
       "kind": "catalog",
-      "sha256": "b421df14254d2f9098a6d10322ce542dc214994bcaba0873fb427333e66b7110"
+      "sha256": "a347ca881a6ccfe7fab6d2448d635479e535bf775251b7e55eec4b4a696bfb9f"
     },
     {
       "id": "arsenal-jobs",
@@ -769,21 +769,21 @@
       "title": "Arsenal recipes: line jobs: what the viewer must get from this line",
       "path": "arsenal/recipes-line.md",
       "kind": "recipes",
-      "sha256": "5363a0594b082a95184a14d55ff6bafaafdb96be3e6e4b7642ac2c45e6c453ae"
+      "sha256": "426c4d0114cbe3ec02394c01b50d2990a51c4821276cf140600a9e42cc37c7a0"
     },
     {
       "id": "arsenal-picture",
       "title": "Arsenal recipes: picture jobs: how the picture has to read, whatever the line says",
       "path": "arsenal/recipes-picture.md",
       "kind": "recipes",
-      "sha256": "095db119a865b6bf6ef09544d874994a60b4aa106bc8910e5bfc442952c89924"
+      "sha256": "ad5c2e81ff4082d1de2f0cec4fed2c7e95a83b611dec92defd5f13fafd73ea5c"
     },
     {
       "id": "arsenal-connective",
       "title": "Arsenal recipes: connective jobs: between and across pictures",
       "path": "arsenal/recipes-connective.md",
       "kind": "recipes",
-      "sha256": "993d8ea9f1e95d7d8e59110f13ed1854ab512491a0730730b03a10a8b9713ab5"
+      "sha256": "dcc9f7dc8d598af66d345078e674ed067fe98ae87c93a3c16e4f6ced312c5c8a"
     },
     {
       "id": "arsenal-build-aid",

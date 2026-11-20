@@ -80,7 +80,8 @@ HW.build = function (c, opts) {
   var T = opts.v2 ? HW.LAYERS_V2 : HW.LAYERS;
   for (i = 0; i < T.length; i++) {
     row = T[i];
-    if (row[1].indexOf("cut/") === 0) item = ART.footage(HW.ART + "/cut", row[1].substr(4), HW.FOLDER);
+    if (opts.files && opts.files[row[0]]) item = ART.footage(opts.files[row[0]][0], opts.files[row[0]][1], opts.files[row[0]][2]);
+    else if (row[1].indexOf("cut/") === 0) item = ART.footage(HW.ART + "/cut", row[1].substr(4), HW.FOLDER);
     else item = ART.footage(HW.ART, row[1], HW.FOLDER);
     // ART.footage keys by file name; cut/ files are found by their own names (no clashes: cut/grass.png, cut/town.png and cut/wall.png are not used)
     l = c.layers.add(item);
@@ -197,4 +198,27 @@ HW.rain = function (c, name) {
   fx = r.property("ADBE Effect Parade").property(1);
   HW.prop(fx, "Wind").setValue(840);
   return r;
+};
+// Move a layer's anchor to `a` (layer pixels) without the art jumping: Position moves by the anchor offset,
+// scaled and turned by the layer's own Scale and Z Rotation (3D layer, no X/Y rotation, no parent).
+HW.setAnchor = function (l, a) {
+  var tf = l.property("ADBE Transform Group");
+  var ap = tf.property("ADBE Anchor Point"), po = tf.property("ADBE Position"), sc = tf.property("ADBE Scale").value;
+  var rz = tf.property("ADBE Rotate Z").value * Math.PI / 180;
+  var old = ap.value, p = po.value;
+  var dx = (a[0] - old[0]) * sc[0] / 100, dy = (a[1] - old[1]) * sc[1] / 100;
+  var rx = dx * Math.cos(rz) - dy * Math.sin(rz), ry = dx * Math.sin(rz) + dy * Math.cos(rz);
+  ap.setValue([a[0], a[1], 0]);
+  po.setValue([p[0] + rx, p[1] + ry, p[2]]);
+};
+// Recipe 05: Z Rotation keyed at 0 (its current value) and +deg at 23 frames, linear, loopOut("pingpong").
+HW.sway = function (c, l, deg, frames) {
+  var rz = l.property("ADBE Transform Group").property("ADBE Rotate Z");
+  var v0 = rz.value;
+  rz.setValueAtTime(0, v0);
+  rz.setValueAtTime(frames / c.frameRate, v0 + deg);
+  rz.setInterpolationTypeAtKey(1, KeyframeInterpolationType.LINEAR);
+  rz.setInterpolationTypeAtKey(2, KeyframeInterpolationType.LINEAR);
+  rz.expression = 'loopOut("pingpong")';
+  return rz;
 };
