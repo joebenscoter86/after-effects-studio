@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import * as os$1 from "node:os";
 import * as path$1 from "node:path";
 
-// config.js
+// server/config.js
 function findPackageRoot(startDir) {
 	let dir = startDir;
 	for (;;) {
@@ -189,7 +189,7 @@ function init_config() {
 	})))();
 }
 
-// agent-install.js
+// server/agent-install.js
 function aeProfileRoot(platform = process.platform, env = process.env, home = os$1.homedir()) {
 	if (platform === "win32") {
 		const appData = env.APPDATA ?? path$1.join(home, "AppData", "Roaming");
@@ -321,7 +321,7 @@ function init_agent_install() {
 	})))();
 }
 
-// cli.js
+// server/cli.js
 function parseCliArgs(argv) {
 	const [command = "help", ...rest] = argv;
 	const parsed = {
@@ -436,7 +436,7 @@ instance at launch by setting AE_MCP_INSTANCE in the environment that starts Aft
 	})))();
 }
 
-// errors.js
+// server/errors.js
 function isRetryable(code) {
 	return RETRYABLE.has(code);
 }
@@ -479,7 +479,7 @@ function init_errors() {
 	})))();
 }
 
-// policy.js
+// server/policy.js
 function evalRunEnabled() {
 	if (readOnlyMode()) return false;
 	return process.env.AE_MCP_ENABLE_EVAL === "1";
@@ -537,7 +537,7 @@ function init_policy() {
 	})))();
 }
 
-// registry.js
+// server/registry.js
 function registerOp(op) {
 	if (op.appConfig && !op.params.some((p) => p.name === APP_CONFIG_CONFIRM_PARAM.name)) op.params = [...op.params, APP_CONFIG_CONFIRM_PARAM];
 	operations.set(op.name, op);
@@ -641,7 +641,7 @@ function init_registry() {
 	})))();
 }
 
-// opschema.js
+// server/opschema.js
 function isPlainObject(v) {
 	return typeof v === "object" && v !== null && !Array.isArray(v);
 }
@@ -748,7 +748,7 @@ function init_opschema() {
 	return (init_opschema = __esmMin((() => {})))();
 }
 
-// validate.js
+// server/validate.js
 function validateAeProjectDoc(doc) {
 	const v = new Validator();
 	if (!v.isObject(doc)) {

@@ -555,7 +555,8 @@
       "motion": "one-shot",
       "difficulty": 2,
       "group": "shadow-catcher floor",
-      "why": "'make a textured 3D title look photographed rather than flat ... long soft shadows fall toward the viewer'"
+      "why": "'make a textured 3D title look photographed rather than flat ... long soft shadows fall toward the viewer'",
+      "variant_of": "YBeMmC43Q1U#14"
     },
     "eoBEBx1PbS4#03": {
       "id": "03-parallel-rim-light-no-shadows",
@@ -619,7 +620,8 @@
       "motion": "one-shot",
       "difficulty": 3,
       "group": "ramped range reveal",
-      "why": "'A smooth, weighty title entrance for extruded 3D type ... the word assembles itself'"
+      "why": "'A smooth, weighty title entrance for extruded 3D type ... the word assembles itself'",
+      "variant_of": "YBeMmC43Q1U#18"
     },
     "eoBEBx1PbS4#06": {
       "id": "06-depth-of-field-camera-push-on-null",
@@ -640,7 +642,8 @@
       "motion": "one-shot",
       "difficulty": 2,
       "group": "DOF camera push",
-      "why": "'make it feel filmed ... a slow camera push keeps the frame alive after the word has landed'"
+      "why": "'make it feel filmed ... a slow camera push keeps the frame alive after the word has landed'",
+      "variant_of": "7pgDb6NKEXM#11"
     },
     "eoBEBx1PbS4#07": {
       "id": "07-gold-face-plain-sides-look",
@@ -707,7 +710,8 @@
       "motion": "loop",
       "difficulty": 3,
       "group": "type on circle path",
-      "why": "'A seamless looping title or bumper ... good for intros, loops and background type'"
+      "why": "'A seamless looping title or bumper ... good for intros, loops and background type'",
+      "variant_of": "YBeMmC43Q1U#19"
     },
     "il_OcNyqDOE#01": {
       "id": "01-vector-art-split-into-layers",
@@ -790,7 +794,8 @@
       "motion": "one-shot",
       "difficulty": 2,
       "group": "DOF camera push",
-      "why": "'Turns a staged 2D-in-3D layout into a filmed shot ... a short push-in gives the opening beat life'"
+      "why": "'Turns a staged 2D-in-3D layout into a filmed shot ... a short push-in gives the opening beat life'",
+      "variant_of": "YBeMmC43Q1U#16"
     },
     "il_OcNyqDOE#05": {
       "id": "05-looping-wind-sway-rotation",
@@ -831,7 +836,7 @@
       "duration": 6,
       "motion": "loop",
       "difficulty": 1,
-      "group": "wave warp wind",
+      "group": null,
       "why": "'Makes a field of many thin blades ... move in the wind ... it moves on its own'"
     },
     "il_OcNyqDOE#07": {
@@ -854,7 +859,8 @@
       "motion": "loop",
       "difficulty": 3,
       "group": "particle drift",
-      "why": "'Sells wind in an illustrated scene by sending a steady trickle of tumbling leaves across it'"
+      "why": "'Sells wind in an illustrated scene by sending a steady trickle of tumbling leaves across it'",
+      "variant_of": "YBeMmC43Q1U#10"
     },
     "il_OcNyqDOE#08": {
       "id": "08-rainfall-matched-to-wind",
@@ -877,28 +883,6 @@
       "difficulty": 1,
       "group": null,
       "why": "'Adds weather on top of a wind-animated scene so the motion has a reason'"
-    },
-    "il_OcNyqDOE#09": {
-      "id": "09-puppet-pin-subtle-character-motion",
-      "kind": "technique",
-      "job": "keep-it-alive",
-      "support": [
-        "establish-place"
-      ],
-      "mood": [
-        "illustration",
-        "calm",
-        "subtle"
-      ],
-      "needs": [
-        "character",
-        "illustration"
-      ],
-      "duration": 5,
-      "motion": "one-shot",
-      "difficulty": 2,
-      "group": "puppet pins",
-      "why": "'Keeps a still character from looking frozen in a wide establishing shot'"
     },
     "il_OcNyqDOE#10": {
       "id": "10-film-grain-finish-stack",
@@ -943,26 +927,6 @@
       "group": "deep-Z push",
       "unmatched_need": "cut in to a matching close-up of the subject",
       "why": "'Cut from an established wide scene to a close-up of the character without building a new world': a cut-in, not a hand-over (which must not read as a cut) nor a point at a held picture"
-    },
-    "il_OcNyqDOE#12": {
-      "id": "12-isolated-hair-wave-and-puppet",
-      "kind": "technique",
-      "job": "keep-it-alive",
-      "support": [],
-      "mood": [
-        "illustration",
-        "calm",
-        "subtle"
-      ],
-      "needs": [
-        "character",
-        "illustration"
-      ],
-      "duration": 5,
-      "motion": "one-shot",
-      "difficulty": 3,
-      "group": "puppet pins",
-      "why": "'Gives a still illustrated character life in a close-up by letting only the hair drift'"
     },
     "il_OcNyqDOE#13": {
       "id": "13-masked-curves-relight-track-matte",
@@ -1027,7 +991,7 @@
       "motion": "loop",
       "difficulty": 2,
       "group": "grain-and-glow finish",
-      "why": "'makes any soft, light-backed composition bloom, pulse and gain film grit'"
+      "why": "'makes any soft, light-backed composition bloom and gain film grit'"
     },
     "8oVLS0ZlKC4#03": {
       "id": "03-blurred-light-shapes-at-frame-edges",
@@ -1138,7 +1102,8 @@
       "motion": "still",
       "difficulty": 2,
       "group": "media in shape matte",
-      "why": "'Turns any photo or clip into a tidy rounded card ... the base piece of any card carousel or media stack'"
+      "why": "'Turns any photo or clip into a tidy rounded card ... the base piece of any card carousel or media stack'",
+      "variant_of": "YBeMmC43Q1U#25"
     },
     "ZqRE3ho8iP4#02": {
       "id": "02-pivot-null-swing-loop",
@@ -1201,7 +1166,8 @@
       "motion": "loop",
       "difficulty": 3,
       "group": "duplicate-and-step ring",
-      "why": "'a carousel of several cards ... where each beat shows the next item'"
+      "why": "'a carousel of several cards ... where each beat shows the next item'",
+      "variant_of": "YBeMmC43Q1U#04"
     },
     "ZqRE3ho8iP4#05": {
       "id": "05-mask-path-to-position-loop",
@@ -1267,7 +1233,8 @@
       "motion": "loop",
       "difficulty": 3,
       "group": "duplicate-and-step ring",
-      "why": "'a rotating four-walled box ... a quick 3D showcase loop for a gallery or \"many images\" moment'"
+      "why": "'a rotating four-walled box ... a quick 3D showcase loop for a gallery or \"many images\" moment'",
+      "variant_of": "YBeMmC43Q1U#06"
     },
     "ZqRE3ho8iP4#08": {
       "id": "08-tunnel-from-stacked-boxes",
@@ -1312,7 +1279,8 @@
       "motion": "transition",
       "difficulty": 1,
       "group": "DOF camera push",
-      "why": "'Flies the viewer into the ... card tunnel ... for an immersive opener or transition through a wall of images'"
+      "why": "'Flies the viewer into the ... card tunnel ... for an immersive opener or transition through a wall of images'",
+      "variant_of": "7pgDb6NKEXM#11"
     },
     "ZqRE3ho8iP4#10": {
       "id": "10-inner-ring-carousel",
@@ -1334,7 +1302,8 @@
       "motion": "loop",
       "difficulty": 2,
       "group": "duplicate-and-step ring",
-      "why": "'Puts the viewer in the middle of a slowly turning ring of photo cards'"
+      "why": "'Puts the viewer in the middle of a slowly turning ring of photo cards'",
+      "variant_of": "YBeMmC43Q1U#06"
     },
     "ZqRE3ho8iP4#11": {
       "id": "11-wide-lens-camera-distortion",
@@ -1355,6 +1324,237 @@
       "difficulty": 1,
       "group": null,
       "why": "'stretches the perspective ... whenever a 3D layout looks too flat under the default view'"
+    },
+    "7pgDb6NKEXM#01": {
+      "id": "01-shadow-map-overlay",
+      "kind": "technique",
+      "job": "add-depth",
+      "support": [
+        "finish-the-look",
+        "establish-place"
+      ],
+      "mood": [
+        "light",
+        "editorial",
+        "cinematic"
+      ],
+      "needs": [
+        "type"
+      ],
+      "duration": 5,
+      "motion": "still",
+      "difficulty": 2,
+      "group": null,
+      "why": "'Makes a flat title card look as if it sits in a room with sunlight through a window': soft window shadows give a flat layout light and place"
+    },
+    "7pgDb6NKEXM#02": {
+      "id": "02-shadow-map-wipe-on",
+      "kind": "technique",
+      "job": "add-depth",
+      "support": [
+        "reveal-headline"
+      ],
+      "mood": [
+        "light",
+        "editorial",
+        "cinematic"
+      ],
+      "needs": [
+        "type"
+      ],
+      "duration": 2,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": null,
+      "why": "'the shadow sweeps across the layout ... instead of popping on': the light arrives as the title lands"
+    },
+    "7pgDb6NKEXM#03": {
+      "id": "03-graphics-orbit-a-real-object",
+      "kind": "technique",
+      "job": "list-items",
+      "support": [
+        "keep-it-alive",
+        "make-concrete"
+      ],
+      "mood": [
+        "light",
+        "playful",
+        "photo"
+      ],
+      "needs": [
+        "photo"
+      ],
+      "duration": 6,
+      "motion": "loop",
+      "difficulty": 3,
+      "group": "duplicate-and-step ring",
+      "why": "'a meet the team or product-range beat that should feel physical': a ring of cards turns with a spinning real object",
+      "variant_of": "YBeMmC43Q1U#04"
+    },
+    "7pgDb6NKEXM#04": {
+      "id": "04-swap-footage-keep-edits",
+      "kind": "build-aid",
+      "job": null,
+      "support": [],
+      "mood": [
+        "neutral",
+        "workflow"
+      ],
+      "needs": [
+        "photo"
+      ],
+      "duration": 0,
+      "motion": "still",
+      "difficulty": 1,
+      "group": null,
+      "why": "workflow: put a new photo or clip into a finished slot without rebuilding it"
+    },
+    "7pgDb6NKEXM#05": {
+      "id": "05-soft-doubled-drop-shadow",
+      "kind": "technique",
+      "job": "add-depth",
+      "support": [
+        "light-the-hero"
+      ],
+      "mood": [
+        "light",
+        "soft",
+        "photo"
+      ],
+      "needs": [
+        "photo"
+      ],
+      "duration": 4,
+      "motion": "still",
+      "difficulty": 1,
+      "group": null,
+      "why": "'a photographed object cut out ... looks pasted on': a very soft doubled shadow seats it in the scene"
+    },
+    "7pgDb6NKEXM#06": {
+      "id": "06-graphics-behind-subject-object-matte",
+      "kind": "technique",
+      "job": "add-depth",
+      "support": [
+        "reveal-headline"
+      ],
+      "mood": [
+        "light",
+        "playful",
+        "photo"
+      ],
+      "needs": [
+        "footage"
+      ],
+      "duration": 5,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": null,
+      "why": "'cards, titles and text sit between the person and the wall': overlays go behind a presenter instead of over the face"
+    },
+    "7pgDb6NKEXM#07": {
+      "id": "07-key-imperfect-green-screen",
+      "kind": "build-aid",
+      "job": null,
+      "support": [],
+      "mood": [
+        "neutral",
+        "workflow"
+      ],
+      "needs": [
+        "footage"
+      ],
+      "duration": 0,
+      "motion": "still",
+      "difficulty": 1,
+      "group": null,
+      "why": "setup: cut a person off a rough coloured wall so graphics can sit behind or around them; nothing on screen alone"
+    },
+    "7pgDb6NKEXM#08": {
+      "id": "08-raised-white-shapes-with-long-shadows",
+      "kind": "technique",
+      "job": "fill-the-backdrop",
+      "support": [
+        "add-depth",
+        "reveal-headline"
+      ],
+      "mood": [
+        "light",
+        "minimal",
+        "soft"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 6,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": null,
+      "why": "'A title or opener background that makes a near-white frame look premium': white discs swell out with long soft shadows behind type",
+      "variant_of": "YBeMmC43Q1U#11"
+    },
+    "7pgDb6NKEXM#09": {
+      "id": "09-edge-lens-blur-and-noise-finish",
+      "kind": "technique",
+      "job": "finish-the-look",
+      "support": [
+        "add-depth"
+      ],
+      "mood": [
+        "light",
+        "cinematic",
+        "soft"
+      ],
+      "needs": [
+        "none"
+      ],
+      "duration": 4,
+      "motion": "still",
+      "difficulty": 1,
+      "group": null,
+      "why": "'A last pass that makes a clean, drawn graphic look as if it was shot through a lens': soft sides and grain over a finished plate"
+    },
+    "7pgDb6NKEXM#10": {
+      "id": "10-2d-graphics-on-extruded-3d-plate",
+      "kind": "technique",
+      "job": "add-depth",
+      "support": [
+        "light-the-hero",
+        "show-real-screen"
+      ],
+      "mood": [
+        "light",
+        "3D",
+        "minimal"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 5,
+      "motion": "still",
+      "difficulty": 3,
+      "group": "shadow-catcher floor",
+      "why": "'Turns a flat 2D card or UI panel into a solid, glossy object floating over a pale floor with a real cast shadow'"
+    },
+    "7pgDb6NKEXM#11": {
+      "id": "11-camera-depth-of-field-advanced-3d",
+      "kind": "technique",
+      "job": "move-camera",
+      "support": [
+        "add-depth"
+      ],
+      "mood": [
+        "light",
+        "3D",
+        "cinematic"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 5,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "DOF camera push",
+      "why": "'duplicated objects staggered in depth fall progressively out of focus, and a small camera move adds life'"
     }
   }
 }

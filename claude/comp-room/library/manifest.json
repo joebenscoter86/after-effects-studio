@@ -748,14 +748,14 @@
       "title": "Technique arsenal index: documents, vocabulary and counts",
       "path": "arsenal/index.json",
       "kind": "catalog",
-      "sha256": "8f91a459054d77a8f576975db6595487397eed3652f11b6ad4815b70f1a184f4"
+      "sha256": "08af4bb467fb9267201597a22836861c2d4b09eab792958dae69063e7489e03d"
     },
     {
       "id": "arsenal-catalog",
       "title": "Technique arsenal catalog: one record per recipe, queried by ae_arsenal",
       "path": "arsenal/catalog.json",
       "kind": "catalog",
-      "sha256": "e44c84934754b4f093edd16168c16b339314f03873c7fca2aae34c56305390e9"
+      "sha256": "ec94881cbfe6eb03a49914ad6c9ffbaba44c4348ba973c3bf39acc0ad38857af"
     },
     {
       "id": "arsenal-jobs",
@@ -769,28 +769,28 @@
       "title": "Arsenal recipes: line jobs: what the viewer must get from this line",
       "path": "arsenal/recipes-line.md",
       "kind": "recipes",
-      "sha256": "2639ca05d1e5cf83dc4731fdb7c66fc59a91170ee1ba6e4fce0ff08c9e0a4b8e"
+      "sha256": "0671d4b5b694e585c1b4da7ebf062d14f9f86ca66d68dd97647fe83ef8a95596"
     },
     {
       "id": "arsenal-picture",
       "title": "Arsenal recipes: picture jobs: how the picture has to read, whatever the line says",
       "path": "arsenal/recipes-picture.md",
       "kind": "recipes",
-      "sha256": "931ac0223651281bf45757054a0e21f95f947cf46db5bdd90e5e69d93f2d4c1b"
+      "sha256": "275dbed1242d4855edce9819bd740c95a355bc238d8d02790d5ad14977910284"
     },
     {
       "id": "arsenal-connective",
       "title": "Arsenal recipes: connective jobs: between and across pictures",
       "path": "arsenal/recipes-connective.md",
       "kind": "recipes",
-      "sha256": "280bd4e62f4a7ec4f087a6ddb690a5e4b8daa59728fd9f9f232e53f42b756309"
+      "sha256": "28af3c8924a34e112cf14a88852e7bb0612aa040009875afdfb01f174cbe371c"
     },
     {
       "id": "arsenal-build-aid",
       "title": "Arsenal recipes: build aids and unmatched recipes",
       "path": "arsenal/recipes-build-aid.md",
       "kind": "recipes",
-      "sha256": "6380008e8256ffda3b6c21818e34d43ee64b854c0be087c70e6b139878e293b1"
+      "sha256": "7bc9a6ac7868fab8de2a16823e333da60d1e47e00e8972c6b52c9cb2a5a1e50a"
     }
   ]
 }

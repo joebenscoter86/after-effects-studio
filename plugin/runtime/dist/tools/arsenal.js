@@ -62,7 +62,8 @@ export function findTechniques(catalog, ask) {
     const limit = ask.limit ?? 5;
     // Job match tier: 0 primary job, 1 the asked job is one of its supports, 2 it serves one of the beat's support jobs.
     const tier = (r) => r.job === ask.job ? 0 : r.support.includes(ask.job) ? 1 : [r.job, ...r.support].some((j) => j !== null && support.includes(j)) ? 2 : null;
-    const byJob = catalog.recipes.filter((r) => r.kind === "technique" && tier(r) !== null && !exclude.has(r.id));
+    // A variant is never a candidate on its own: its parent stands for it and lists it (variants).
+    const byJob = catalog.recipes.filter((r) => r.kind === "technique" && !r.variant_of && tier(r) !== null && !exclude.has(r.id));
     const pass = (r, loose) => (loose.includes("status") || ask.constraints?.status === "any" || r.status === "proven")
         && (loose.includes("needs") || have === null || unmet(r.needs, have).length === 0);
     let relaxed = [];
@@ -97,6 +98,7 @@ export function findTechniques(catalog, ask) {
         results: ranked.map(({ r }) => ({
             id: r.id, revision: r.revision, name: r.name, line: r.line, status: r.status, needs: r.needs,
             duration: r.duration, motion: r.motion, still: r.still?.path ?? null, section: r.section, fit: fit(r),
+            ...(r.variants?.length ? { variants: r.variants } : {}),
         })),
     };
     if (relaxed.length && out.results.length)
@@ -127,7 +129,7 @@ export function recipeReply(id, revision, root = LIBRARY) {
     const section = content.split(/^(?=## )/m).find((s) => s.startsWith(`## ${r.section.heading}\n`) && new RegExp(`^id: ${r.id}$`, "m").test(s));
     if (!section)
         throw new Error(`the arsenal is inconsistent: ${r.section.document} has no section for ${r.id}`);
-    const head = `ae_arsenal recipe ${r.id}@${r.revision} (${r.status}, ${r.kind}; ${catalog.vocab}, catalog ${catalog.version}; from library document ${r.section.document})`;
+    const head = `ae_arsenal recipe ${r.id}@${r.revision} (${r.status}, ${r.kind}; ${r.variant_of ? `variant of ${r.variant_of}; ` : ""}${catalog.vocab}, catalog ${catalog.version}; from library document ${r.section.document})`;
     const warning = revision !== undefined && revision !== r.revision
         ? `WARNING: pinned revision ${revision}; the shipped revision is ${r.revision}. The recipe changed since it was pinned: this is the shipped text, not the pinned one. Check it still fits the beat.`
         : null;
@@ -177,7 +179,7 @@ export const arsenalTool = defineTool({
     name: "ae_arsenal", title: "Technique arsenal", group: "document", effect: "read", blockedInReadOnly: false,
     description: "Find proven After Effects techniques for a beat by the job it must do, then read the chosen recipe. Use it while planning shots, once per beat, before building. " +
         "action jobs lists the job vocabulary (ids with one-line definitions). action find takes the beat (job, and optionally support, duration, mood, assets, constraints.status, exclude, limit) and returns a ranked shortlist " +
-        "(proven recipes only unless constraints.status is any; relaxed names any filter loosened when nothing passed; never another job) with each candidate's still from our own proof build. " +
+        "(proven recipes only unless constraints.status is any; relaxed names any filter loosened when nothing passed; never another job) with each candidate's still from our own proof build; a candidate taught in other ways lists their ids as variants, each readable with get. " +
         "An unknown job is refused with the valid ids: pick one, never invent one. action get takes id (and the pinned revision) and returns the full recipe. Offline; no After Effects needed.",
     inputShape: askShape,
     handler: async (args) => {

@@ -1,4 +1,5 @@
 import { __esmMin } from "./rolldown-runtime.js";
+import { _enum, _null, array, boolean, init_schemas, literal, number, object as object$1, record, string as string$1, union, unknown } from "../vendor/zod-2.js";
 import { AMBIENT_CONTEXT_JSX, PACKAGE_ROOT, denyAppConfig, denyOperation, denyUnregisteredCategory, denyUnregisteredOperation, errorResult, getOp, init_config, init_errors, init_opschema, init_policy, init_registry, init_validate, jsxVal, listOps, policySummary, prepareOp, readOnlyMode, rejectedOutputPath, suggestName, summarizeParams, validateAeProjectDoc, validateOpArgs, wantsDialogSuppression, wantsRollback, wantsUndoGroup } from "./core-1.js";
 import { init_instances, instanceLabel, listInstances, resolveTarget } from "./transport-1.js";
 import { COMP_CORNERS_FN, COMP_INFO_FN, LAYER_FULL_FN, LIST_MISSING_FONTS_FN, LIST_MISSING_FOOTAGE_FN, MISSING_SOURCES_FN, OCIO_CAPTURE_FN, RENDER_FRAME_FN, init_snippets } from "./operations-4.js";
@@ -8,9 +9,8 @@ import * as os$1 from "node:os";
 import * as path$1 from "node:path";
 import path from "node:path";
 import { createHash, randomUUID } from "node:crypto";
-import { z } from "zod";
 
-// tools/capture-shared.js
+// server/tools/capture-shared.js
 function validRgb(value) {
 	return Array.isArray(value) && value.length === 3 && value.every((v) => typeof v === "number" && Number.isFinite(v)) ? [
 		value[0],
@@ -69,7 +69,7 @@ function init_capture_shared() {
 	})))();
 }
 
-// tools/define-tool.js
+// server/tools/define-tool.js
 function defineTool(spec) {
 	return spec;
 }
@@ -118,7 +118,7 @@ function init_define_tool() {
 	})))();
 }
 
-// tools/render-frame.js
+// server/tools/render-frame.js
 function frameWarnings(frames, near = NEAR_FRAME_BOUNDARY) {
 	const parts = [];
 	const firstAt = /* @__PURE__ */ new Map();
@@ -926,6 +926,7 @@ async function writeOutput(file, capture, convert, channels, backdrop, bg) {
 var STRIP_DEFAULT_MAX_DIMENSION, FRAME_PICK, NEAR_FRAME_BOUNDARY, MEASUREMENT_STAGES, HISTOGRAM_DEFAULT_BINS, layerRefSchema, regionSchema, renderFrameTool, newCallId, ISOLATE_FN;
 function init_render_frame() {
 	return (init_render_frame = __esmMin((() => {
+		init_schemas();
 		init_matte();
 		init_png16();
 		init_screen();
@@ -947,17 +948,17 @@ function init_render_frame() {
 			output: "the file as written (writtenTo), after colour conversion when colorManaged is auto, so 8-bit display values. With channels 'rgb': over the comp background as AE composited it, or over `over`. With 'rgba': the colour recovered from under the background (straight, 0 where alpha is 0), plus alpha. With 'alpha': the matte, in r = g = b. The same as the capture when colorManaged is off or the conversion failed"
 		};
 		HISTOGRAM_DEFAULT_BINS = 32;
-		layerRefSchema = z.union([
-			z.string(),
-			z.number().int().positive(),
-			z.object({ id: z.number().int() })
+		layerRefSchema = union([
+			string$1(),
+			number().int().positive(),
+			object$1({ id: number().int() })
 		]);
-		regionSchema = z.object({
-			name: z.string().min(1).describe("Label reported back with the numbers."),
-			x: z.number().int().describe("Left edge (or the point), capture pixels from the left."),
-			y: z.number().int().describe("Top edge (or the point), capture pixels from the top."),
-			width: z.number().int().positive().optional().describe("Omit with height for a single pixel."),
-			height: z.number().int().positive().optional()
+		regionSchema = object$1({
+			name: string$1().min(1).describe("Label reported back with the numbers."),
+			x: number().int().describe("Left edge (or the point), capture pixels from the left."),
+			y: number().int().describe("Top edge (or the point), capture pixels from the top."),
+			width: number().int().positive().optional().describe("Omit with height for a single pixel."),
+			height: number().int().positive().optional()
 		});
 		renderFrameTool = defineTool({
 			name: "ae_render_frame",
@@ -967,113 +968,113 @@ function init_render_frame() {
 			blockedInReadOnly: false,
 			effect: "write",
 			inputShape: {
-				compNameOrId: z.union([z.string(), z.number()]).describe("Composition name or numeric item id."),
-				time: z.number().nonnegative().optional().describe("Time in seconds to render. Give exactly one of `time`, `times`, `strip` or `frames`. Each rendered frame reports `frame` (the frame the time falls in: floor(time / frameDuration), worked out in After Effects) and `frameOffset` (where in it, 0..1); `frameWarning` says when two times land on one frame or a time sits within 2% of a frame below a boundary (a rounded time renders the frame before). Times are never moved."),
-				times: z.array(z.number().nonnegative()).min(1).max(32).optional().describe("Several times in seconds, rendered in ONE call. Files are written as <outPath stem>_<call id>_<index><ext> (a new id every call) and reported in `frames` (index-aligned) and `batch.files` (path, frame, time)."),
-				strip: z.object({
-					at: z.number().nonnegative().describe("The moment, seconds (snapped to the nearest frame)."),
-					frames: z.number().int().min(2).max(32).describe("How many consecutive frames, centred on `at` (one more after it when even)."),
-					step: z.number().int().positive().optional().describe("Frames between rendered frames. Default 1 (every frame)."),
-					maxDimension: z.number().int().min(16).max(2048).optional().describe("Longest side of each tile on the sheets, px. Default 360. The frames themselves are rendered at the comp's size.")
+				compNameOrId: union([string$1(), number()]).describe("Composition name or numeric item id."),
+				time: number().nonnegative().optional().describe("Time in seconds to render. Give exactly one of `time`, `times`, `strip` or `frames`. Each rendered frame reports `frame` (the frame the time falls in: floor(time / frameDuration), worked out in After Effects) and `frameOffset` (where in it, 0..1); `frameWarning` says when two times land on one frame or a time sits within 2% of a frame below a boundary (a rounded time renders the frame before). Times are never moved."),
+				times: array(number().nonnegative()).min(1).max(32).optional().describe("Several times in seconds, rendered in ONE call. Files are written as <outPath stem>_<call id>_<index><ext> (a new id every call) and reported in `frames` (index-aligned) and `batch.files` (path, frame, time)."),
+				strip: object$1({
+					at: number().nonnegative().describe("The moment, seconds (snapped to the nearest frame)."),
+					frames: number().int().min(2).max(32).describe("How many consecutive frames, centred on `at` (one more after it when even)."),
+					step: number().int().positive().optional().describe("Frames between rendered frames. Default 1 (every frame)."),
+					maxDimension: number().int().min(16).max(2048).optional().describe("Longest side of each tile on the sheets, px. Default 360. The frames themselves are rendered at the comp's size.")
 				}).optional().describe("'What happens around this moment' in one call: N consecutive frames around `at`, worked out from the comp's frame rate inside After Effects and rendered through the `times` path (files <stem>_<index>, listed in `frames`), tiled small into the contact sheet, with `diff` and its sheet on (pass `diff: false` to skip, or diff options to tune). The window is shifted to stay inside the comp; `strip` in the response says where it landed. Instead of `time` / `times`."),
-				frames: z.array(z.number().int().nonnegative()).min(1).max(32).optional().describe("Frame numbers (0 = the comp's first frame) instead of times: each is rendered a quarter of a frame inside it, so a time never lands on the frame before. Through the `times` path: files <stem>_<call id>_<index>, reported in `frames` and `batch.files` with their `frame`. Instead of `time` / `times` / `strip`."),
-				outPath: z.string().describe("Absolute path to write the PNG. Parent directory is created if missing. With `times`, used as the naming stem for every frame (plus a call id, new every call)."),
-				useDisplayStartTime: z.boolean().optional().describe("If true, times are interpreted relative to comp.displayStartTime. Default false."),
-				colorManaged: z.enum(["auto", "off"]).optional().describe("'auto' (default): detect the working space and return a viewer-accurate, 8-bit sRGB-tagged PNG. 'off': raw legacy output (16-bit, untagged, working-space values — dark/wrong-looking in color-managed projects)."),
-				settleTimeoutMs: z.number().int().positive().max(6e5).optional().describe("How long to wait for the captures to finish writing (saveFrameToPng writes after the script returns). Default: 15 s for one frame, plus 3 s for each further 1080×1920 frame (scaled by size, at least 1 s each). Frames that do not finish are named in `captureSettle` and marked failed in `frames`; the others are still measured."),
-				analyze: z.boolean().optional().describe("Measure each capture: uniform bands at every edge (width + transparent/color — black bars, letterboxing, empty margins), the bounding box of non-background pixels, coverage, mean RGB. Reported per frame as `analysis` (measured on the capture before color conversion)."),
-				contactSheet: z.object({
-					columns: z.number().int().positive().optional().describe("Tiles per row (default ceil(sqrt(n)))."),
-					thumbWidth: z.number().int().min(16).max(2048).optional().describe("Tile width in px, never upscaled (default 480)."),
-					outPath: z.string().optional().describe("Sheet path (default <outPath stem>_sheet.png).")
+				frames: array(number().int().nonnegative()).min(1).max(32).optional().describe("Frame numbers (0 = the comp's first frame) instead of times: each is rendered a quarter of a frame inside it, so a time never lands on the frame before. Through the `times` path: files <stem>_<call id>_<index>, reported in `frames` and `batch.files` with their `frame`. Instead of `time` / `times` / `strip`."),
+				outPath: string$1().describe("Absolute path to write the PNG. Parent directory is created if missing. With `times`, used as the naming stem for every frame (plus a call id, new every call)."),
+				useDisplayStartTime: boolean().optional().describe("If true, times are interpreted relative to comp.displayStartTime. Default false."),
+				colorManaged: _enum(["auto", "off"]).optional().describe("'auto' (default): detect the working space and return a viewer-accurate, 8-bit sRGB-tagged PNG. 'off': raw legacy output (16-bit, untagged, working-space values — dark/wrong-looking in color-managed projects)."),
+				settleTimeoutMs: number().int().positive().max(6e5).optional().describe("How long to wait for the captures to finish writing (saveFrameToPng writes after the script returns). Default: 15 s for one frame, plus 3 s for each further 1080×1920 frame (scaled by size, at least 1 s each). Frames that do not finish are named in `captureSettle` and marked failed in `frames`; the others are still measured."),
+				analyze: boolean().optional().describe("Measure each capture: uniform bands at every edge (width + transparent/color — black bars, letterboxing, empty margins), the bounding box of non-background pixels, coverage, mean RGB. Reported per frame as `analysis` (measured on the capture before color conversion)."),
+				contactSheet: object$1({
+					columns: number().int().positive().optional().describe("Tiles per row (default ceil(sqrt(n)))."),
+					thumbWidth: number().int().min(16).max(2048).optional().describe("Tile width in px, never upscaled (default 480)."),
+					outPath: string$1().optional().describe("Sheet path (default <outPath stem>_sheet.png).")
 				}).optional().describe("Tile all rendered frames into ONE labelled PNG (#index + time above each tile). Pass {} for defaults. Frames that carry alpha (channels 'rgba') are shown over a checkerboard on the sheet."),
-				channels: z.enum([
+				channels: _enum([
 					"rgb",
 					"rgba",
 					"alpha"
 				]).optional().describe("What the written file holds. 'rgb' (default): 8-bit sRGB, transparency composited over `over`. 'rgba': 8-bit sRGB with the alpha channel kept and straight colour (AE lays its capture over the comp background; that background is taken out again). 'alpha': the matte as 8-bit greyscale, white = opaque, black = transparent. Needs colorManaged 'auto'. If the capture has no alpha channel, `alphaWarning` says so."),
-				over: z.union([
-					z.enum(["background", "checkerboard"]),
-					z.string().regex(/^#[0-9a-fA-F]{6}$/),
-					z.array(z.number().min(0).max(1)).length(3)
+				over: union([
+					_enum(["background", "checkerboard"]),
+					string$1().regex(/^#[0-9a-fA-F]{6}$/),
+					array(number().min(0).max(1)).length(3)
 				]).optional().describe("With channels 'rgb': what transparent pixels are shown against. 'background' (default): the comp's background colour (`bgColor`), as AE itself composites the capture. 'checkerboard': light and dark grey squares, so transparency is visible. A colour as '#rrggbb' or [r, g, b] in 0..1 — magenta shows holes in a key. For the last two the comp background is taken out of the capture first, so soft edges show the new backdrop only."),
-				isolate: z.union([layerRefSchema, z.array(layerRefSchema).min(1)]).optional().describe("Render these layers alone: a layer (index, name, or { id }) or a list. Every other layer is switched off for the capture, adjustment layers included; camera, light and audio-only layers are left as they are; named layers are switched on even if they were off (to see a matte layer); solo is cleared. Every switch is restored afterwards, even when the render fails, and `isolation` reports it. Top-level layers of this comp only. Not available in read-only mode."),
-				sample: z.object({
-					regions: z.array(regionSchema).min(1).max(64),
-					stage: z.enum([
+				isolate: union([layerRefSchema, array(layerRefSchema).min(1)]).optional().describe("Render these layers alone: a layer (index, name, or { id }) or a list. Every other layer is switched off for the capture, adjustment layers included; camera, light and audio-only layers are left as they are; named layers are switched on even if they were off (to see a matte layer); solo is cleared. Every switch is restored afterwards, even when the render fails, and `isolation` reports it. Top-level layers of this comp only. Not available in read-only mode."),
+				sample: object$1({
+					regions: array(regionSchema).min(1).max(64),
+					stage: _enum([
 						"both",
 						"capture",
 						"output"
 					]).optional().describe("Which pixels to measure (default 'both'; see measurementStages).")
 				}).optional().describe("Read colour values. Named points ({ name, x, y }) or rectangles (+ width, height) in capture pixels (comp pixels at full resolution); regions running off the frame are clipped. Per region and stage: mean / min / max of r, g, b (0..1), alpha mean / min / max and the shares of opaque, partly covered and transparent pixels; 'output' also gives meanHex. Reported as `samples` (per frame with `times`)."),
-				histogram: z.union([z.boolean(), z.object({
-					bins: z.number().int().min(2).max(256).optional().describe("Default 32."),
-					stage: z.enum(["output", "capture"]).optional().describe("Default 'output'.")
+				histogram: union([boolean(), object$1({
+					bins: number().int().min(2).max(256).optional().describe("Default 32."),
+					stage: _enum(["output", "capture"]).optional().describe("Default 'output'.")
 				})]).optional().describe("Whole-frame per-channel histogram: pixel counts for r, g, b (and a when present) in equal bins over 0..1, 1.0 in the last bin. `true` for defaults."),
-				compare: z.object({
-					from: z.number().int().nonnegative().optional().describe("Index into `times` (default 0)."),
-					to: z.number().int().nonnegative().optional().describe("Index into `times` (default 1).")
+				compare: object$1({
+					from: number().int().nonnegative().optional().describe("Index into `times` (default 0)."),
+					to: number().int().nonnegative().optional().describe("Index into `times` (default 1).")
 				}).optional().describe("With `times` and `sample`: each region's difference between two rendered frames, to − from, per stage: meanDelta (signed average shift), meanAbsDelta and maxAbsDelta per channel, and the same for alpha. Reported as `comparison`."),
-				edge: z.union([z.boolean(), z.object({
-					from: z.enum(["alpha", "luma"]).optional().describe("Where the matte is read: 'alpha' (default, the keyed result's coverage) or 'luma' (Rec. 709 luminance of the capture), for Keylight's Screen Matte (View 5) and Combined Matte (8) views, which write the matte in grey RGB with alpha 1 everywhere. With 'luma' spill is not read and no alpha channel is needed."),
-					transparent: z.number().min(0).max(1).optional().describe("Alpha at or below counts as transparent. Default 2/255 (as `sample` counts)."),
-					opaque: z.number().min(0).max(1).optional().describe("Alpha at or above counts as opaque. Default 1 − 2/255."),
-					maxEdgeWidth: z.number().min(1).optional().describe("Widest transition still called a thin edge, px; wider partly transparent regions are reported as patches, and it is the edge band for flicker. Default 1% of the frame's shorter side, at least 4 (11 at 1080×1920)."),
-					mainAreaShare: z.number().min(0).max(1).optional().describe("An island of covered pixels at least this share of the largest is a main solid area, smaller ones are specks. Default 0.25."),
-					listed: z.number().int().min(0).max(50).optional().describe("How many holes, specks, patches and solid areas are listed (all are counted). Default 5."),
-					screen: z.enum(["green", "blue"]).optional().describe("Screen colour spill is read against. Default 'green'."),
-					spillMinAlpha: z.number().min(0).max(1).optional().describe("Partly transparent pixels below this alpha are left out of the spill colour. Default 0.1."),
-					spillThreshold: z.number().min(0).max(1).optional().describe("The soft edge leans to the screen when its screen channel exceeds the larger other channel by more than this, and by this much more than the solid area's own. Default 0.03."),
-					changeAbove: z.number().min(0).max(1).optional().describe("Flicker: an alpha change above this counts as changed. Default 0.05."),
-					patchWindow: z.number().min(1).optional().describe("Side of the square window each patch's densest part is reported in, px. Default 4 × maxEdgeWidth (44 at 1080×1920).")
+				edge: union([boolean(), object$1({
+					from: _enum(["alpha", "luma"]).optional().describe("Where the matte is read: 'alpha' (default, the keyed result's coverage) or 'luma' (Rec. 709 luminance of the capture), for Keylight's Screen Matte (View 5) and Combined Matte (8) views, which write the matte in grey RGB with alpha 1 everywhere. With 'luma' spill is not read and no alpha channel is needed."),
+					transparent: number().min(0).max(1).optional().describe("Alpha at or below counts as transparent. Default 2/255 (as `sample` counts)."),
+					opaque: number().min(0).max(1).optional().describe("Alpha at or above counts as opaque. Default 1 − 2/255."),
+					maxEdgeWidth: number().min(1).optional().describe("Widest transition still called a thin edge, px; wider partly transparent regions are reported as patches, and it is the edge band for flicker. Default 1% of the frame's shorter side, at least 4 (11 at 1080×1920)."),
+					mainAreaShare: number().min(0).max(1).optional().describe("An island of covered pixels at least this share of the largest is a main solid area, smaller ones are specks. Default 0.25."),
+					listed: number().int().min(0).max(50).optional().describe("How many holes, specks, patches and solid areas are listed (all are counted). Default 5."),
+					screen: _enum(["green", "blue"]).optional().describe("Screen colour spill is read against. Default 'green'."),
+					spillMinAlpha: number().min(0).max(1).optional().describe("Partly transparent pixels below this alpha are left out of the spill colour. Default 0.1."),
+					spillThreshold: number().min(0).max(1).optional().describe("The soft edge leans to the screen when its screen channel exceeds the larger other channel by more than this, and by this much more than the solid area's own. Default 0.03."),
+					changeAbove: number().min(0).max(1).optional().describe("Flicker: an alpha change above this counts as changed. Default 0.05."),
+					patchWindow: number().min(1).optional().describe("Side of the square window each patch's densest part is reported in, px. Default 4 × maxEdgeWidth (44 at 1080×1920).")
 				})]).optional().describe("Matte quality as numbers, measured on the capture's alpha (stage 'capture'), or with `from: 'luma'` on its luminance (Keylight's matte views); `true` for the defaults. Each report says `matteFrom`. Reported as `edge` (per frame with `times`), with the thresholds used as `edgeThresholds`: shares {opaque, partial, transparent}; width {typical (median), p90, worst, worstAt, samples, unmeasured} — px the alpha takes from transparent to opaque across the 50% contour of the main solid areas (0 = hard edge; unmeasured = the alpha never reaches transparent or opaque anywhere, as when the screen is left partly opaque); solidAreas; holes {count, area, transparentArea, largest, list} — regions below opaque enclosed by the solid area (not touching the frame edge); specks {count, area, list} — islands outside the main areas; patches {count, area, list} — partly transparent regions thicker than maxEdgeWidth, each with its box, thickest {x, y, thickness} (the deepest point and the thickness there, px) and densest {x, y, width, height, pixels, share, meanAlpha} (the patchWindow square holding most of it, so a long band's box does not hide where it is); spill {mean, solidMean, excess, solidExcess, leansToScreen, reading} — the straight colour of the partly transparent pixels (comp background taken out) against the solid just inside the edge. Boxes are {x, y, width, height} in capture pixels. With two or more `times`: `edgeFlicker` {pairs, overall} — mean / max change in alpha and the changed share and bounds, for consecutive frames, split into edge, inside (a hole opening counts here) and outside (specks); real motion counts as change too."),
-				screen: z.union([z.boolean(), z.object({
-					screen: z.enum([
+				screen: union([boolean(), object$1({
+					screen: _enum([
 						"auto",
 						"green",
 						"blue"
 					]).optional().describe("Which screen to look for. Default 'auto': green or blue, whichever has more pixels."),
-					minExcess: z.number().min(0).max(1).optional().describe("A pixel is screen when its screen channel leads the larger other channel by at least this (capture values). Default 0.04."),
-					minDominance: z.number().min(0).max(1).optional().describe("…and by at least this share of its own level. Default 0.15."),
-					minScreenShare: z.number().min(0).max(1).optional().describe("Fewer screen pixels than this share of the measured ones means no screen. Default 0.02."),
-					opaque: z.number().min(0).max(1).optional().describe("Pixels with alpha below this are left out (masked or transparent). Default 1 − 2/255."),
-					columns: z.number().int().min(1).max(64).optional().describe("Evenness grid columns. Default: four cells across the shorter side, square-ish cells."),
-					rows: z.number().int().min(1).max(64).optional().describe("Evenness grid rows. Default as columns."),
-					minCellShare: z.number().min(0).max(1).optional().describe("A cell needs this share of screen pixels to count as darkest or brightest. Default 0.25."),
-					nearSkip: z.number().min(0).optional().describe("The near-subject colour is read from screen pixels starting this many px from the subject. Default 1% of the shorter side, at least 2 (11 at 1080×1920)."),
-					nearBand: z.number().min(1).optional().describe("…in a band this many px wide. Default 5% of the shorter side, at least 4 (54 at 1080)."),
-					unevenRatio: z.number().min(1).optional().describe("A brightest / darkest level ratio above this reads as uneven. Default 1.1."),
-					grainAbove: z.number().min(0).max(1).optional().describe("A screen-channel grain standard deviation above this reads as grainy. Default 0.01.")
+					minExcess: number().min(0).max(1).optional().describe("A pixel is screen when its screen channel leads the larger other channel by at least this (capture values). Default 0.04."),
+					minDominance: number().min(0).max(1).optional().describe("…and by at least this share of its own level. Default 0.15."),
+					minScreenShare: number().min(0).max(1).optional().describe("Fewer screen pixels than this share of the measured ones means no screen. Default 0.02."),
+					opaque: number().min(0).max(1).optional().describe("Pixels with alpha below this are left out (masked or transparent). Default 1 − 2/255."),
+					columns: number().int().min(1).max(64).optional().describe("Evenness grid columns. Default: four cells across the shorter side, square-ish cells."),
+					rows: number().int().min(1).max(64).optional().describe("Evenness grid rows. Default as columns."),
+					minCellShare: number().min(0).max(1).optional().describe("A cell needs this share of screen pixels to count as darkest or brightest. Default 0.25."),
+					nearSkip: number().min(0).optional().describe("The near-subject colour is read from screen pixels starting this many px from the subject. Default 1% of the shorter side, at least 2 (11 at 1080×1920)."),
+					nearBand: number().min(1).optional().describe("…in a band this many px wide. Default 5% of the shorter side, at least 4 (54 at 1080)."),
+					unevenRatio: number().min(1).optional().describe("A brightest / darkest level ratio above this reads as uneven. Default 1.1."),
+					grainAbove: number().min(0).max(1).optional().describe("A screen-channel grain standard deviation above this reads as grainy. Default 0.01.")
 				})]).optional().describe("Measure a green or blue screen, on the capture (stage 'capture'), opaque pixels only; `true` for the defaults. Render the UN-KEYED source: set Keylight's View to 'source' (key.view) or switch the key off, and isolate the keyed layer. Reported as `screen` (per frame with `times`), with the thresholds used as `screenThresholds`: screen ('green' | 'blue' | null), chosen, measured / leftOut pixels, screenPixels, share, bounds; colour {median, mean, nearSubject {colour, pixels, band}} — the suggested Screen Colour; subject {box, area, share}; evenness {columns, rows, cells [{column, row, box, screenShare, mean, luma, level}], darkest, brightest, levelRatio, lumaRatio, uneven, extent (5th to 95th percentile of the screen pixels' positions), horizontal (right / left) and vertical (bottom / top) read across that extent, darkerSide (every side darker past unevenRatio, strongest first), reading}; grain {stdDev, level, steps8bit, samples, grainy, reading}; reading; warning; screenColourNote (capture values and what they mean for Keylight's Screen Colour)."),
-				look: z.object({
-					regions: z.array(regionSchema.extend({ role: z.enum([
+				look: object$1({
+					regions: array(regionSchema.extend({ role: _enum([
 						"neutral",
 						"skin",
 						"plate",
 						"element"
 					]).optional().describe("neutral: a surface that should read grey or white (a wall, a card, a metal grille) — its cast is named and the gains that remove it given; skin: its hue angle is read against the usual range; plate / element: for `pairs`.") })).min(1).max(64),
-					pairs: z.array(z.object({
-						element: z.string(),
-						plate: z.string()
+					pairs: array(object$1({
+						element: string$1(),
+						plate: string$1()
 					})).optional().describe("Element regions read against plate regions, by name: grain, edge width, black and white points, with what to do."),
-					minContrast: z.number().gt(0).max(1).optional().describe("Smallest luma step (0..1) read as an edge. Default 0.1."),
-					grainTolerance: z.number().gt(0).max(1).optional().describe("Default 0.25: within a quarter of the plate's grain matches."),
-					background: z.array(z.number().min(0).max(1)).length(3).optional().describe("The background the subject was cut from (the wall's mean colour, [r, g, b] 0..1, read with `sample` on the take): each region's edgeColour then says how far the soft edge's colour leans toward it."),
-					sharpnessTolerance: z.number().gt(0).max(1).optional().describe("Default 0.25: within a quarter of the plate's edge width matches.")
+					minContrast: number().gt(0).max(1).optional().describe("Smallest luma step (0..1) read as an edge. Default 0.1."),
+					grainTolerance: number().gt(0).max(1).optional().describe("Default 0.25: within a quarter of the plate's grain matches."),
+					background: array(number().min(0).max(1)).length(3).optional().describe("The background the subject was cut from (the wall's mean colour, [r, g, b] 0..1, read with `sample` on the take): each region's edgeColour then says how far the soft edge's colour leans toward it."),
+					sharpnessTolerance: number().gt(0).max(1).optional().describe("Default 0.25: within a quarter of the plate's edge width matches.")
 				}).optional().describe("Does it sit in the scene: for each named region, on the file as written (stage 'output'; with channels 'rgba' only the opaque pixels, straight colour), levels {black, white, mean per channel, lumaBlack, lumaWhite, lumaMean} (0.5th and 99.5th percentiles, 0..1), grain {spatial: per channel in 8-bit steps, the robust spread of each pixel against its 3 x 3 neighbourhood}, sharpness {edgeWidth: median 10 to 90% rise across edges with a luma step of at least minContrast, px (a hard step about 0.8, a Gaussian blur of sigma s about 2.56 s), p90 (the widest tenth), edges}, with alpha (channels 'rgba'): matte {edgeWidth, p90, edges, softBand: soft pixels (alpha 0.02 to 0.98) per pixel of outline, opaqueShare (alpha 0.99 or more) and minAlpha: a region inside the subject reads 1 and 1, so a see-through band shows} read on the alpha, and edgeColour {band, inside, difference, towardBackground, reading}: the soft edge's straight colour against the colour well inside, and with `background` how far it leans toward the background (wall colour ringing the subject); lookSeries adds matteChange (mean change in alpha over the region, frame to frame). colour (CIELAB L, a, b, chroma, hue of the mean). role 'neutral' adds cast {a, b, amount, toward, gains, channelMixer} and a reading; role 'skin' a hue reading. pairs add, per element and plate, grain, sharpness and levels compared, with readings (add grain, soften, seat the blacks). With `times` on consecutive frames, lookSeries adds frame-to-frame grain per region (a still element reads 0). Reported as `look` (per frame with `times`)."),
-				diff: z.union([z.boolean(), z.object({
-					changeAbove: z.number().min(0).max(1).optional().describe("A pixel has changed when one of its channels moved by more than this (display values). Default 0.04, about ten 8-bit steps: well above frame-to-frame grain."),
-					spikeRatio: z.number().optional().describe("A pair stands out as a spike when its change is at least this many times its neighbours' on each side it has. Default 3."),
-					holdRatio: z.number().optional().describe("A pair is a hold (a repeated frame) when its change is at most this share of the moving neighbours' on both sides. Default 0.25."),
-					quietBelow: z.number().min(0).max(1).optional().describe("Mean changes below this read as no visible change: neighbours this quiet are not moving, and a spike is measured against at least this. Default 0.002."),
-					movingShare: z.number().min(0).max(1).optional().describe("Neighbours count as moving, and a spike counts, only with at least this share of pixels changed. Default 0.0005 (about 1,000 pixels at 1080×1920)."),
-					window: z.number().int().optional().describe("Pairs on each side compared with a pair. Default 3."),
-					amplify: z.number().optional().describe("Gain of the difference images on the diff sheet. Default 8."),
-					repeatBelow: z.number().min(0).max(1).optional().describe("A pair changing this little is a repeated frame (identical frames read 0); repeats are never a reference for other pairs. Default 0.0001."),
-					sheet: z.union([z.boolean(), z.object({
-						columns: z.number().int().positive().optional(),
-						thumbWidth: z.number().int().min(16).max(2048).optional(),
-						outPath: z.string().optional().describe("Default <outPath stem>_diff.png.")
+				diff: union([boolean(), object$1({
+					changeAbove: number().min(0).max(1).optional().describe("A pixel has changed when one of its channels moved by more than this (display values). Default 0.04, about ten 8-bit steps: well above frame-to-frame grain."),
+					spikeRatio: number().optional().describe("A pair stands out as a spike when its change is at least this many times its neighbours' on each side it has. Default 3."),
+					holdRatio: number().optional().describe("A pair is a hold (a repeated frame) when its change is at most this share of the moving neighbours' on both sides. Default 0.25."),
+					quietBelow: number().min(0).max(1).optional().describe("Mean changes below this read as no visible change: neighbours this quiet are not moving, and a spike is measured against at least this. Default 0.002."),
+					movingShare: number().min(0).max(1).optional().describe("Neighbours count as moving, and a spike counts, only with at least this share of pixels changed. Default 0.0005 (about 1,000 pixels at 1080×1920)."),
+					window: number().int().optional().describe("Pairs on each side compared with a pair. Default 3."),
+					amplify: number().optional().describe("Gain of the difference images on the diff sheet. Default 8."),
+					repeatBelow: number().min(0).max(1).optional().describe("A pair changing this little is a repeated frame (identical frames read 0); repeats are never a reference for other pairs. Default 0.0001."),
+					sheet: union([boolean(), object$1({
+						columns: number().int().positive().optional(),
+						thumbWidth: number().int().min(16).max(2048).optional(),
+						outPath: string$1().optional().describe("Default <outPath stem>_diff.png.")
 					})]).optional().describe("Also write the difference images, amplified and labelled '#from>to change' ('!' on flagged pairs), tiled into one PNG beside the contact sheet. Default off; on with `strip`.")
 				})]).optional().describe("Frame-to-frame change, with `times` (two or more) or `strip`; `true` for the defaults. Measured on the written file (stage 'output', display values; `diff.picture` says what exactly: with the default rgb output the capture is already over the comp background, so transparent areas do not change). Reported as `diff` {stage, picture, pairs, series} with the thresholds used as `diffThresholds`. Each consecutive pair: from, to, change (mean absolute difference over pixels and channels, 0..1), maxAbsDelta, changedPixels, changedShare (a channel moved by more than changeAbove), changedBounds, and with `sample` the same per region. series: pairs, median, mean, largest, smallest, flags [{kind 'pop' | 'stutter' | 'cut' | 'repeat', pairs, frame or between, change, reference, ratio, atSeriesEdge?, besideRepeat?, unreliablePairs?, reading}], reading. A pop is a frame that differs from both neighbours; a stutter a frame that repeats the one before while the frames around it move; a cut one pair far above its neighbours; a repeat an unchanged pair at the start or end of the series beside motion. Repeated frames are never a reference, and the pairs beside one are named unreliable. Flags are hints from numbers: look at the frames.")
 			},
@@ -1179,7 +1180,7 @@ function init_render_frame() {
 	})))();
 }
 
-// tools/catalog.js
+// server/tools/catalog.js
 function visibleOps(category) {
 	return listOps(category).filter((op) => denyOperation(op) === null);
 }
@@ -1191,6 +1192,7 @@ function visibleCategories() {
 var catalogTool;
 function init_catalog() {
 	return (init_catalog = __esmMin((() => {
+		init_schemas();
 		init_errors();
 		init_policy();
 		init_registry();
@@ -1202,7 +1204,7 @@ function init_catalog() {
 			group: "operations",
 			blockedInReadOnly: false,
 			effect: "read",
-			inputShape: { category: z.string().optional().describe("Filter by category. Omit to list all categories with operation counts, then drill into a specific category.") },
+			inputShape: { category: string$1().optional().describe("Filter by category. Omit to list all categories with operation counts, then drill into a specific category.") },
 			handler: async (args, _transport) => {
 				if (!args.category) {
 					const summary = visibleCategories().map((c) => ({
@@ -1261,7 +1263,7 @@ function init_catalog() {
 	})))();
 }
 
-// tools/check-comp-jsx.js
+// server/tools/check-comp-jsx.js
 function planJsx(compNameOrId) {
 	return `
         ${MISSING_SOURCES_FN}
@@ -1879,7 +1881,7 @@ function init_check_comp_jsx() {
 	})))();
 }
 
-// tools/check-comp.js
+// server/tools/check-comp.js
 function frameOfCapture(file) {
 	const m = /frame-(\d+)\.png$/.exec(file);
 	return m ? Number(m[1]) : null;
@@ -2606,6 +2608,7 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
 var CAPTURE_STALL_MS, frameFile, LIST_CAP, DEFAULT_MAX_TILES, DEFAULT_IDLE_SECONDS, r6, r3, stretchSeverity, flagSeverity, thresholdsSchema, CHECK_COMP_SHAPE, checkCompTool, SHORT;
 function init_check_comp() {
 	return (init_check_comp = __esmMin((() => {
+		init_schemas();
 		init_png16();
 		init_settled_read();
 		init_sheet();
@@ -2625,32 +2628,32 @@ function init_check_comp() {
 		r3 = (v) => Math.round(v * 1e3) / 1e3;
 		stretchSeverity = (s) => s.kind === "clipped-high" || s.kind === "clipped-low" ? (s.worst?.share ?? 0) * 1e3 + s.frames : s.frames;
 		flagSeverity = (f) => f.kind === "pop" || f.kind === "cut" ? f.ratio : 1 / (f.ratio + 1e-6);
-		thresholdsSchema = z.record(z.string(), z.union([z.number(), z.null()])).optional().describe("Override any threshold (the rest keep their defaults, all reported back as `thresholds`): frozenSeconds 0.5 (a run with no visible change at least this long is a frozen stretch), frozenShare 0.00002 (a pair shows no visible change when at most this share of pixels changed by more than changeAbove), darkBelow 0.04 / lightAbove 0.96 (a pixel is near-black when its brightest channel is at or below, near-white when its darkest is at or above), blackShare 0.99 / blackMean 0.01 (a frame is near-black when that share of pixels is near-black, or its mean luma is at or below), whiteShare 0.99 / whiteMean 0.99 (the same for near-white), clipHighShare 0.005 (a frame is clipped when that share of pixels is at 255 in all three channels), clipLowShare null (the same at 0; null measures but never flags: a black background is at 0 by design), and the diff thresholds of ae_render_frame: changeAbove 0.04, spikeRatio 3, holdRatio 0.25, quietBelow 0.002, movingShare 0.0005, window 3, repeatBelow 0.0001.");
+		thresholdsSchema = record(string$1(), union([number(), _null()])).optional().describe("Override any threshold (the rest keep their defaults, all reported back as `thresholds`): frozenSeconds 0.5 (a run with no visible change at least this long is a frozen stretch), frozenShare 0.00002 (a pair shows no visible change when at most this share of pixels changed by more than changeAbove), darkBelow 0.04 / lightAbove 0.96 (a pixel is near-black when its brightest channel is at or below, near-white when its darkest is at or above), blackShare 0.99 / blackMean 0.01 (a frame is near-black when that share of pixels is near-black, or its mean luma is at or below), whiteShare 0.99 / whiteMean 0.99 (the same for near-white), clipHighShare 0.005 (a frame is clipped when that share of pixels is at 255 in all three channels), clipLowShare null (the same at 0; null measures but never flags: a black background is at 0 by design), and the diff thresholds of ae_render_frame: changeAbove 0.04, spikeRatio 3, holdRatio 0.25, quietBelow 0.002, movingShare 0.0005, window 3, repeatBelow 0.0001.");
 		CHECK_COMP_SHAPE = {
-			compNameOrId: z.union([z.string(), z.number()]).describe("Composition name or numeric item id."),
-			from: z.number().nonnegative().optional().describe("Start of the range, seconds from the comp's start (default: the work area's start)."),
-			to: z.number().positive().optional().describe("End of the range (exclusive), seconds from the comp's start (default: the work area's end)."),
-			startFrame: z.number().int().nonnegative().optional().describe("Continue a range: the `next.startFrame` an earlier call returned (same other arguments)."),
-			every: z.number().int().min(1).max(60).optional().describe("Check every Nth frame (default 1, every frame). Above 1 is faster but a one-frame pop or flash between checked frames is missed, a stutter can no longer be told from a short hold, and stretch ends are known to within N − 1 frames; the result says so in `notes`."),
-			downsample: z.number().int().min(1).max(8).optional().describe("Capture size: 1 full, 2 half, 4 quarter (default; 270×480 for 1080×1920). Applied through the comp's resolutionFactor before saveFrameToPng and put back afterwards, even when the script fails. Whether saveFrameToPng honours it is measured on the PNG that comes back (`capture`): a full-size capture is shrunk in Node to the asked size, so the numbers mean the same either way."),
-			maxFrames: z.number().int().min(1).max(2e3).optional().describe("Frames checked per call at most (default 300); the rest is left for `next`."),
-			chunkFrames: z.number().int().min(1).max(300).optional().describe("Frames per After Effects script (default 100). A script returns as soon as it has asked for the frames; the files arrive over the following seconds. The next chunk is asked for only once every capture of this one has finished, so After Effects never holds more than one chunk in its queue."),
+			compNameOrId: union([string$1(), number()]).describe("Composition name or numeric item id."),
+			from: number().nonnegative().optional().describe("Start of the range, seconds from the comp's start (default: the work area's start)."),
+			to: number().positive().optional().describe("End of the range (exclusive), seconds from the comp's start (default: the work area's end)."),
+			startFrame: number().int().nonnegative().optional().describe("Continue a range: the `next.startFrame` an earlier call returned (same other arguments)."),
+			every: number().int().min(1).max(60).optional().describe("Check every Nth frame (default 1, every frame). Above 1 is faster but a one-frame pop or flash between checked frames is missed, a stutter can no longer be told from a short hold, and stretch ends are known to within N − 1 frames; the result says so in `notes`."),
+			downsample: number().int().min(1).max(8).optional().describe("Capture size: 1 full, 2 half, 4 quarter (default; 270×480 for 1080×1920). Applied through the comp's resolutionFactor before saveFrameToPng and put back afterwards, even when the script fails. Whether saveFrameToPng honours it is measured on the PNG that comes back (`capture`): a full-size capture is shrunk in Node to the asked size, so the numbers mean the same either way."),
+			maxFrames: number().int().min(1).max(2e3).optional().describe("Frames checked per call at most (default 300); the rest is left for `next`."),
+			chunkFrames: number().int().min(1).max(300).optional().describe("Frames per After Effects script (default 100). A script returns as soon as it has asked for the frames; the files arrive over the following seconds. The next chunk is asked for only once every capture of this one has finished, so After Effects never holds more than one chunk in its queue."),
 			thresholds: thresholdsSchema,
-			safeArea: z.object({
-				percent: z.number().min(0).max(45).optional().describe("Inset on each side, as a percent of the frame's width (left/right) and height (top/bottom)."),
-				px: z.number().min(0).optional().describe("Inset on each side, comp pixels.")
+			safeArea: object$1({
+				percent: number().min(0).max(45).optional().describe("Inset on each side, as a percent of the frame's width (left/right) and height (top/bottom)."),
+				px: number().min(0).optional().describe("Inset on each side, comp pixels.")
 			}).optional().describe("Check bounds against a safe area instead of the frame edge (default: the frame)."),
-			boundsOf: z.enum(["text", "all"]).optional().describe("Which layers the bounds check measures: 'text' (default) or 'all' visible layers with pixels. Other layer types are opt-in because backgrounds and shapes bleed off frame on purpose."),
-			boundsStep: z.number().positive().optional().describe("Bounds are sampled at every keyframe time and every boundsStep seconds (default 0.1)."),
-			structure: z.boolean().optional().describe("Run the structure checks on the call that reaches the end of the range (default true)."),
-			idleSeconds: z.number().min(0).optional().describe(`The idle report (structure.idle) lists layers on screen longer than this with nothing changing on them (default ${5} s; 0 turns it off). A report for the reviewer, never a fault.`),
-			colorManaged: z.enum(["auto", "off"]).optional().describe("'auto' (default) measures the picture after colour conversion, as ae_render_frame; 'off' the raw capture."),
-			settleTimeoutMs: z.number().int().positive().optional().describe("How long to wait for the first captures of each chunk (default: grows with the chunk). The wait then goes on for as long as captures keep finishing, so a long or heavy comp is not cut off by it."),
-			stallTimeoutMs: z.number().int().positive().optional().describe(`After Effects is taken to have stopped writing when no capture has finished for this long (default ${CAPTURE_STALL_MS / 1e3} s). The check then queues nothing more, keeps the capture folder (After Effects may still write into it) and says how many captures were outstanding and where to continue.`),
-			outDir: z.string().optional().describe("Folder for the contact sheet and its frames (default: a new folder under the system temp folder)."),
-			sheet: z.union([z.boolean(), z.object({
-				maxTiles: z.number().int().min(1).max(48).optional(),
-				thumbWidth: z.number().int().min(64).max(1024).optional()
+			boundsOf: _enum(["text", "all"]).optional().describe("Which layers the bounds check measures: 'text' (default) or 'all' visible layers with pixels. Other layer types are opt-in because backgrounds and shapes bleed off frame on purpose."),
+			boundsStep: number().positive().optional().describe("Bounds are sampled at every keyframe time and every boundsStep seconds (default 0.1)."),
+			structure: boolean().optional().describe("Run the structure checks on the call that reaches the end of the range (default true)."),
+			idleSeconds: number().min(0).optional().describe(`The idle report (structure.idle) lists layers on screen longer than this with nothing changing on them (default ${5} s; 0 turns it off). A report for the reviewer, never a fault.`),
+			colorManaged: _enum(["auto", "off"]).optional().describe("'auto' (default) measures the picture after colour conversion, as ae_render_frame; 'off' the raw capture."),
+			settleTimeoutMs: number().int().positive().optional().describe("How long to wait for the first captures of each chunk (default: grows with the chunk). The wait then goes on for as long as captures keep finishing, so a long or heavy comp is not cut off by it."),
+			stallTimeoutMs: number().int().positive().optional().describe(`After Effects is taken to have stopped writing when no capture has finished for this long (default ${CAPTURE_STALL_MS / 1e3} s). The check then queues nothing more, keeps the capture folder (After Effects may still write into it) and says how many captures were outstanding and where to continue.`),
+			outDir: string$1().optional().describe("Folder for the contact sheet and its frames (default: a new folder under the system temp folder)."),
+			sheet: union([boolean(), object$1({
+				maxTiles: number().int().min(1).max(48).optional(),
+				thumbWidth: number().int().min(64).max(1024).optional()
 			})]).optional().describe("The contact sheet of flagged moments (default on, at most 12 tiles; the rest are counted).")
 		};
 		checkCompTool = defineTool({
@@ -2685,10 +2688,11 @@ function init_check_comp() {
 	})))();
 }
 
-// tools/comp-info.js
+// server/tools/comp-info.js
 var compInfoTool;
 function init_comp_info() {
 	return (init_comp_info = __esmMin((() => {
+		init_schemas();
 		init_snippets();
 		init_registry();
 		init_define_tool();
@@ -2699,10 +2703,10 @@ function init_comp_info() {
 			group: "inspect",
 			blockedInReadOnly: false,
 			effect: "read",
-			inputShape: { nameOrId: z.union([
-				z.string(),
-				z.number(),
-				z.array(z.union([z.string(), z.number()])).min(1)
+			inputShape: { nameOrId: union([
+				string$1(),
+				number(),
+				array(union([string$1(), number()])).min(1)
 			]).describe("Composition name (exact match) or numeric item id — or an array of either to batch several comps into one round trip. If you don't know any, call ae_project_info first.") },
 			handler: async (args, transport) => {
 				const targets = Array.isArray(args.nameOrId) ? args.nameOrId : null;
@@ -2738,7 +2742,7 @@ function init_comp_info() {
 	})))();
 }
 
-// tools/context.js
+// server/tools/context.js
 var CODE$1, contextTool;
 function init_context() {
 	return (init_context = __esmMin((() => {
@@ -2916,7 +2920,7 @@ function init_context() {
 	})))();
 }
 
-// tools/do.js
+// server/tools/do.js
 function rollbackSentence(rb) {
 	if (!rb) return "";
 	const errors = rb.aeErrors?.length ? ` After Effects reported during the undo: ${rb.aeErrors.join(" | ")}.` : "";
@@ -2971,6 +2975,7 @@ function callerLineMessage(message, line, location) {
 var doTool, NEW_FUNCTION_HEADER_LINES;
 function init_do() {
 	return (init_do = __esmMin((() => {
+		init_schemas();
 		init_errors();
 		/* @__PURE__ */ init_opschema();
 		init_policy();
@@ -2984,9 +2989,9 @@ function init_do() {
 			blockedInReadOnly: false,
 			effect: "destructive",
 			inputShape: {
-				operation: z.string().describe("Operation name from ae_catalog (e.g. 'layer.create_solid', 'keyframe.add')."),
-				args: z.record(z.string(), z.unknown()).optional().describe("Arguments for the operation. Validated against ae_catalog's declared params: missing required args, wrong types, and unknown keys are rejected before AE is contacted. Omit for zero-param operations."),
-				timeoutMs: z.number().int().positive().optional().describe("Per-call timeout in milliseconds (default 60000). Raise for long operations like render.start or big batch.run calls.")
+				operation: string$1().describe("Operation name from ae_catalog (e.g. 'layer.create_solid', 'keyframe.add')."),
+				args: record(string$1(), unknown()).optional().describe("Arguments for the operation. Validated against ae_catalog's declared params: missing required args, wrong types, and unknown keys are rejected before AE is contacted. Omit for zero-param operations."),
+				timeoutMs: number().int().positive().optional().describe("Per-call timeout in milliseconds (default 60000). Raise for long operations like render.start or big batch.run calls.")
 			},
 			handler: async (doArgs, transport) => {
 				const op = getOp(doArgs.operation);
@@ -3130,10 +3135,11 @@ function init_do() {
 	})))();
 }
 
-// tools/layer-info.js
+// server/tools/layer-info.js
 var layerInfoTool;
 function init_layer_info() {
 	return (init_layer_info = __esmMin((() => {
+		init_schemas();
 		init_snippets();
 		init_registry();
 		init_define_tool();
@@ -3145,14 +3151,14 @@ function init_layer_info() {
 			blockedInReadOnly: false,
 			effect: "read",
 			inputShape: {
-				compNameOrId: z.union([z.string(), z.number()]).describe("Composition name (exact match) or numeric item id."),
-				layerIndex: z.union([
-					z.number().int().positive(),
-					z.array(z.number().int().positive()).min(1),
-					z.literal("all")
+				compNameOrId: union([string$1(), number()]).describe("Composition name (exact match) or numeric item id."),
+				layerIndex: union([
+					number().int().positive(),
+					array(number().int().positive()).min(1),
+					literal("all")
 				]).describe("1-based layer index — or an array of indices, or 'all' for every layer in the comp, returned together in one round trip."),
-				includeProperties: z.boolean().optional().describe("Include the full property tree (Transform/Effects/Masks/Text). Default true."),
-				detail: z.enum(["full", "summary"]).optional().describe("'summary' omits properties still at their default value (no keyframes, no expression, never touched) — typically 5-10x smaller. Group skeletons are kept, so effects/masks still show. Default 'full'.")
+				includeProperties: boolean().optional().describe("Include the full property tree (Transform/Effects/Masks/Text). Default true."),
+				detail: _enum(["full", "summary"]).optional().describe("'summary' omits properties still at their default value (no keyframes, no expression, never touched) — typically 5-10x smaller. Group skeletons are kept, so effects/masks still show. Default 'full'.")
 			},
 			handler: async (args, transport) => {
 				const multi = typeof args.layerIndex !== "number";
@@ -3204,10 +3210,11 @@ function init_layer_info() {
 	})))();
 }
 
-// tools/project-export.js
+// server/tools/project-export.js
 var projectExportTool;
 function init_project_export() {
 	return (init_project_export = __esmMin((() => {
+		init_schemas();
 		init_config();
 		init_errors();
 		init_define_tool();
@@ -3219,8 +3226,8 @@ function init_project_export() {
 			blockedInReadOnly: false,
 			effect: "write",
 			inputShape: {
-				outPath: z.string().optional().describe("If set, write the exported JSON to this absolute path on disk. If omitted, the JSON is returned inline in the tool response (can get large)."),
-				pretty: z.boolean().optional().describe("Pretty-print the JSON (2-space indent). Default: true when writing to disk, false otherwise.")
+				outPath: string$1().optional().describe("If set, write the exported JSON to this absolute path on disk. If omitted, the JSON is returned inline in the tool response (can get large)."),
+				pretty: boolean().optional().describe("Pretty-print the JSON (2-space indent). Default: true when writing to disk, false otherwise.")
 			},
 			handler: async (args, transport) => {
 				if (args.outPath) {
@@ -3280,7 +3287,7 @@ function init_project_export() {
 	})))();
 }
 
-// tools/project-import.js
+// server/tools/project-import.js
 function summarizePlan(doc) {
 	const items = doc.items ?? [];
 	let folders = 0, comps = 0, solids = 0, files = 0, layers = 0;
@@ -3304,6 +3311,7 @@ function summarizePlan(doc) {
 var projectImportTool;
 function init_project_import() {
 	return (init_project_import = __esmMin((() => {
+		init_schemas();
 		init_errors();
 		init_validate();
 		init_define_tool();
@@ -3315,11 +3323,11 @@ function init_project_import() {
 			blockedInReadOnly: true,
 			effect: "destructive",
 			inputShape: {
-				inPath: z.string().optional().describe("Absolute path to a JSON document produced by ae_project_export_json. Mutually exclusive with `json`."),
-				json: z.unknown().optional().describe("Inline JSON document (object, not string). Mutually exclusive with `inPath`."),
-				clearFirst: z.boolean().optional().describe("Remove all existing items from the current project before importing. Default: false (appends)."),
-				dryRun: z.boolean().optional().describe("If true, validate the document and return a plan without touching AE. Useful for debugging malformed exports."),
-				skipValidation: z.boolean().optional().describe("Skip Node-side schema validation. Only use if you trust the input and want to hand broken data to AE for diagnosis.")
+				inPath: string$1().optional().describe("Absolute path to a JSON document produced by ae_project_export_json. Mutually exclusive with `json`."),
+				json: unknown().optional().describe("Inline JSON document (object, not string). Mutually exclusive with `inPath`."),
+				clearFirst: boolean().optional().describe("Remove all existing items from the current project before importing. Default: false (appends)."),
+				dryRun: boolean().optional().describe("If true, validate the document and return a plan without touching AE. Useful for debugging malformed exports."),
+				skipValidation: boolean().optional().describe("Skip Node-side schema validation. Only use if you trust the input and want to hand broken data to AE for diagnosis.")
 			},
 			handler: async (args, transport) => {
 				let doc;
@@ -3371,7 +3379,7 @@ function init_project_import() {
 	})))();
 }
 
-// tools/project-info.js
+// server/tools/project-info.js
 function projectInfoCode(args) {
 	const limit = Math.max(1, Math.min(1e3, Math.floor(args.limit ?? 100)));
 	const offset = Math.max(0, Math.floor(args.offset ?? 0));
@@ -3406,6 +3414,7 @@ function projectInfoCode(args) {
 var PROJECT_INFO_DEFAULT_LIMIT, projectInfoTool;
 function init_project_info() {
 	return (init_project_info = __esmMin((() => {
+		init_schemas();
 		init_registry();
 		init_define_tool();
 		PROJECT_INFO_DEFAULT_LIMIT = 100;
@@ -3417,8 +3426,8 @@ function init_project_info() {
 			blockedInReadOnly: false,
 			effect: "read",
 			inputShape: {
-				limit: z.number().int().min(1).max(1e3).optional().describe(`Items to list (default ${100}; about 400 characters each).`),
-				offset: z.number().int().min(0).optional().describe("Items to skip before listing (default 0).")
+				limit: number().int().min(1).max(1e3).optional().describe(`Items to list (default ${100}; about 400 characters each).`),
+				offset: number().int().min(0).optional().describe("Items to skip before listing (default 0).")
 			},
 			handler: async (args, transport) => {
 				const result = await transport.execute({
@@ -3431,10 +3440,11 @@ function init_project_info() {
 	})))();
 }
 
-// tools/save-project.js
+// server/tools/save-project.js
 var saveProjectTool;
 function init_save_project() {
 	return (init_save_project = __esmMin((() => {
+		init_schemas();
 		init_registry();
 		init_define_tool();
 		saveProjectTool = defineTool({
@@ -3444,7 +3454,7 @@ function init_save_project() {
 			group: "document",
 			blockedInReadOnly: true,
 			effect: "destructive",
-			inputShape: { path: z.string().optional().describe("Optional absolute path to save the project to (Save As). If omitted, save to the existing path — errors if the project has never been saved.") },
+			inputShape: { path: string$1().optional().describe("Optional absolute path to save the project to (Save As). If omitted, save to the existing path — errors if the project has never been saved.") },
 			handler: async (args, transport) => {
 				const code = `
         var _path = ${jsxVal(args.path ?? null)};
@@ -3474,7 +3484,7 @@ function init_save_project() {
 	})))();
 }
 
-// tools/version-info.js
+// server/tools/version-info.js
 var CODE, versionInfoTool;
 function init_version_info() {
 	return (init_version_info = __esmMin((() => {
@@ -3548,7 +3558,7 @@ function init_version_info() {
 	})))();
 }
 
-// tools/index.js
+// server/tools/index.js
 function bindTransportToInstance(transport, instance) {
 	return {
 		execute: (req) => transport.execute({
@@ -3577,6 +3587,7 @@ function withInstanceParam(tool) {
 var INSTANCE_PARAM, INSTANCE_FREE_TOOLS, ALL_TOOLS;
 function init_tools() {
 	return (init_tools = __esmMin((() => {
+		init_schemas();
 		init_instances();
 		init_catalog();
 		init_check_comp();
@@ -3590,7 +3601,7 @@ function init_tools() {
 		init_render_frame();
 		init_save_project();
 		init_version_info();
-		INSTANCE_PARAM = z.string().optional().describe("After Effects instance to address for this call, when several are running (AfterFX.exe -m): an instance id (its AE_MCP_INSTANCE at launch, or the `name` given to instance.start) or the name of the project file it has open. Omit to use this server's default (AE_MCP_INSTANCE, else the single live instance). ae_context and ae_do instance.list show what is live.");
+		INSTANCE_PARAM = string$1().optional().describe("After Effects instance to address for this call, when several are running (AfterFX.exe -m): an instance id (its AE_MCP_INSTANCE at launch, or the `name` given to instance.start) or the name of the project file it has open. Omit to use this server's default (AE_MCP_INSTANCE, else the single live instance). ae_context and ae_do instance.list show what is live.");
 		INSTANCE_FREE_TOOLS = /* @__PURE__ */ new Set(["ae_catalog"]);
 		ALL_TOOLS = [
 			projectInfoTool,
@@ -3609,7 +3620,7 @@ function init_tools() {
 	})))();
 }
 
-// tools/library-modules.js
+// server/tools/library-modules.js
 function object(value) {
 	return !!value && typeof value === "object" && !Array.isArray(value);
 }
@@ -3737,7 +3748,7 @@ function init_library_modules() {
 	return (init_library_modules = __esmMin((() => {})))();
 }
 
-// tools/library-parts.js
+// server/tools/library-parts.js
 function nameSections(doc) {
 	const all = allSections(doc);
 	const count = /* @__PURE__ */ new Map();
@@ -4067,7 +4078,7 @@ function init_library_parts() {
 	})))();
 }
 
-// tools/library.js
+// server/tools/library.js
 function boundedFile(base, relative) {
 	const candidate = path.resolve(base, relative);
 	const inside = (file2) => {
@@ -4173,6 +4184,7 @@ function libraryDocumentReply(document, section, root) {
 var libraryTool;
 function init_library() {
 	return (init_library = __esmMin((() => {
+		init_schemas();
 		init_config();
 		init_define_tool();
 		init_errors();
@@ -4186,9 +4198,9 @@ function init_library() {
 			blockedInReadOnly: false,
 			description: `Read the bundled production-derived motion language, detailed choreography/camera/material modules, worked scenes and native JSX. Begin every After Effects motion task with motion-language, production-workflow and brief-template. Craft applies to all styles; JoeB appearance is optional. Offline; no AE, original repo or account required. Omit document to list IDs and startHere; query filters the index. Pass an ID to read a document: whole when it fits in one reply (${REPLY_CHARS} characters), otherwise its outline and opening only, which say so on their first line; then pass section (a heading's exact text or the name the outline shows, or a list of them) to read those sections, several in one call while they fit. Read the sections a job needs before relying on a long document.`,
 			inputShape: {
-				document: z.string().optional(),
-				query: z.string().optional(),
-				section: z.union([z.string(), z.array(z.string())]).optional().describe("With document: a section's name from its outline, or a list of them")
+				document: string$1().optional(),
+				query: string$1().optional(),
+				section: union([string$1(), array(string$1())]).optional().describe("With document: a section's name from its outline, or a list of them")
 			},
 			handler: async ({ document, query, section }) => {
 				try {
@@ -4211,7 +4223,7 @@ function init_library() {
 	})))();
 }
 
-// tools/arsenal.js
+// server/tools/arsenal.js
 function assetKinds(assets) {
 	if (assets === void 0 || assets === null) return null;
 	if (assets === "none") return [];
@@ -4234,7 +4246,7 @@ function findTechniques(catalog, ask) {
 	const exclude = new Set(ask.exclude ?? []);
 	const limit = ask.limit ?? 5;
 	const tier = (r) => r.job === ask.job ? 0 : r.support.includes(ask.job) ? 1 : [r.job, ...r.support].some((j) => j !== null && support.includes(j)) ? 2 : null;
-	const byJob = catalog.recipes.filter((r) => r.kind === "technique" && tier(r) !== null && !exclude.has(r.id));
+	const byJob = catalog.recipes.filter((r) => r.kind === "technique" && !r.variant_of && tier(r) !== null && !exclude.has(r.id));
 	const pass = (r, loose) => (loose.includes("status") || ask.constraints?.status === "any" || r.status === "proven") && (loose.includes("needs") || have === null || unmet(r.needs, have).length === 0);
 	let relaxed = [];
 	let hits = byJob.filter((r) => pass(r, relaxed));
@@ -4285,7 +4297,8 @@ function findTechniques(catalog, ask) {
 			motion: r.motion,
 			still: r.still?.path ?? null,
 			section: r.section,
-			fit: fit(r)
+			fit: fit(r),
+			...r.variants?.length ? { variants: r.variants } : {}
 		}))
 	};
 	if (relaxed.length && out.results.length) out.relaxed = relaxed;
@@ -4317,7 +4330,7 @@ function recipeReply(id, revision, root = LIBRARY) {
 `) && new RegExp(`^id: ${r.id}$`, "m").test(s));
 	if (!section) throw new Error(`the arsenal is inconsistent: ${r.section.document} has no section for ${r.id}`);
 	return [
-		`ae_arsenal recipe ${r.id}@${r.revision} (${r.status}, ${r.kind}; ${catalog.vocab}, catalog ${catalog.version}; from library document ${r.section.document})`,
+		`ae_arsenal recipe ${r.id}@${r.revision} (${r.status}, ${r.kind}; ${r.variant_of ? `variant of ${r.variant_of}; ` : ""}${catalog.vocab}, catalog ${catalog.version}; from library document ${r.section.document})`,
 		revision !== void 0 && revision !== r.revision ? `WARNING: pinned revision ${revision}; the shipped revision is ${r.revision}. The recipe changed since it was pinned: this is the shipped text, not the pinned one. Check it still fits the beat.` : null,
 		"",
 		section.trimEnd()
@@ -4346,6 +4359,7 @@ function stillContent(r, root = LIBRARY) {
 var LIBRARY, ArsenalRefusal, MET_BY, lower, unmet, askShape, arsenalTool;
 function init_arsenal() {
 	return (init_arsenal = __esmMin((() => {
+		init_schemas();
 		init_config();
 		init_errors();
 		init_define_tool();
@@ -4365,32 +4379,32 @@ function init_arsenal() {
 		lower = (xs) => (xs ?? []).map((x) => String(x).toLowerCase());
 		unmet = (needs, have) => lower(needs).filter((n) => MET_BY[n] && !MET_BY[n].some((a) => have.includes(a)));
 		askShape = {
-			action: z.enum([
+			action: _enum([
 				"find",
 				"get",
 				"jobs"
 			]).describe("find: a shortlist for one beat; get: one recipe's full text; jobs: the job vocabulary"),
-			vocab: z.string().optional().describe("find: the job vocabulary the beat was written against (e.g. jobs-v1); omitted means the shipped one"),
-			job: z.string().optional().describe("find: the beat's job id, from action jobs (e.g. add-depth, land-number, hand-over)"),
-			support: z.array(z.string()).optional().describe("find: up to two support job ids"),
-			duration: z.number().optional().describe("find: the beat's length in seconds"),
-			takeaway: z.string().optional().describe("find: what the viewer must get from the beat (carried for the record; not ranked on)"),
-			mood: z.array(z.string()).optional().describe("find: mood words, matched softly against each recipe's mood tags"),
-			assets: z.union([
-				z.record(z.string(), z.unknown()),
-				z.array(z.string()),
-				z.literal("none")
+			vocab: string$1().optional().describe("find: the job vocabulary the beat was written against (e.g. jobs-v1); omitted means the shipped one"),
+			job: string$1().optional().describe("find: the beat's job id, from action jobs (e.g. add-depth, land-number, hand-over)"),
+			support: array(string$1()).optional().describe("find: up to two support job ids"),
+			duration: number().optional().describe("find: the beat's length in seconds"),
+			takeaway: string$1().optional().describe("find: what the viewer must get from the beat (carried for the record; not ranked on)"),
+			mood: array(string$1()).optional().describe("find: mood words, matched softly against each recipe's mood tags"),
+			assets: union([
+				record(string$1(), unknown()),
+				array(string$1()),
+				literal("none")
 			]).optional().describe("find: what the beat has on hand, by kind (footage, screen, photo, logo, voice, library, type), or \"none\"; omitted means needs are not filtered"),
-			constraints: z.object({
-				aspect: z.string().optional(),
-				theme: z.string().optional(),
-				palette: z.string().optional(),
-				status: z.enum(["proven", "any"]).optional().describe("proven (the default) or any, to let unproven recipes through")
+			constraints: object$1({
+				aspect: string$1().optional(),
+				theme: string$1().optional(),
+				palette: string$1().optional(),
+				status: _enum(["proven", "any"]).optional().describe("proven (the default) or any, to let unproven recipes through")
 			}).optional(),
-			exclude: z.array(z.string()).optional().describe("find: recipe ids already used or ruled out"),
-			limit: z.number().int().positive().max(20).optional().describe("find: how many candidates, default 5"),
-			id: z.string().optional().describe("get: the recipe id from find"),
-			revision: z.string().optional().describe("get: the revision the brief pinned; a different shipped revision is answered with a warning")
+			exclude: array(string$1()).optional().describe("find: recipe ids already used or ruled out"),
+			limit: number().int().positive().max(20).optional().describe("find: how many candidates, default 5"),
+			id: string$1().optional().describe("get: the recipe id from find"),
+			revision: string$1().optional().describe("get: the revision the brief pinned; a different shipped revision is answered with a warning")
 		};
 		arsenalTool = defineTool({
 			name: "ae_arsenal",
@@ -4398,7 +4412,7 @@ function init_arsenal() {
 			group: "document",
 			effect: "read",
 			blockedInReadOnly: false,
-			description: "Find proven After Effects techniques for a beat by the job it must do, then read the chosen recipe. Use it while planning shots, once per beat, before building. action jobs lists the job vocabulary (ids with one-line definitions). action find takes the beat (job, and optionally support, duration, mood, assets, constraints.status, exclude, limit) and returns a ranked shortlist (proven recipes only unless constraints.status is any; relaxed names any filter loosened when nothing passed; never another job) with each candidate's still from our own proof build. An unknown job is refused with the valid ids: pick one, never invent one. action get takes id (and the pinned revision) and returns the full recipe. Offline; no After Effects needed.",
+			description: "Find proven After Effects techniques for a beat by the job it must do, then read the chosen recipe. Use it while planning shots, once per beat, before building. action jobs lists the job vocabulary (ids with one-line definitions). action find takes the beat (job, and optionally support, duration, mood, assets, constraints.status, exclude, limit) and returns a ranked shortlist (proven recipes only unless constraints.status is any; relaxed names any filter loosened when nothing passed; never another job) with each candidate's still from our own proof build; a candidate taught in other ways lists their ids as variants, each readable with get. An unknown job is refused with the valid ids: pick one, never invent one. action get takes id (and the pinned revision) and returns the full recipe. Offline; no After Effects needed.",
 			inputShape: askShape,
 			handler: async (args) => {
 				try {

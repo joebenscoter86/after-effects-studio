@@ -167,19 +167,9 @@ test('check mode detects drift', async () => {
 
 // ---- Task 2: readable runtime -------------------------------------------------
 
-const LICENSE_NAMES = ['LICENSE', 'LICENSE.md', 'LICENSE.txt', 'LICENSE-MIT', 'license', 'license.md'];
-
-async function vendoredPackageDirs(nodeModules) {
-  const dirs = [];
-  for (const rel of await listFiles(nodeModules)) {
-    if (!rel.endsWith('/package.json')) continue;
-    const dir = path.posix.dirname(rel);
-    // A package root sits directly under node_modules, or under a scope folder.
-    if (/(^|\/node_modules\/)(@[^/]+\/)?[^/@][^/]*$/.test(dir)) dirs.push(dir);
-  }
-  return dirs;
-}
-
+// The runtime is bundled (decided 2026-11-19): the own code in dist/index.js and dist/chunks/, the dependencies in a few
+// readable chunks in dist/vendor/, each dependency's license in licenses/. No node_modules/ ships, so the Claude
+// package stays under the directory's 512-file limit with room for the arsenal's stills.
 test('runtime is readable and within limits', async () => {
   const { outDir } = await sharedBuild();
   const runtimeFiles = await listFiles(path.join(outDir, 'runtime'));
@@ -187,44 +177,119 @@ test('runtime is readable and within limits', async () => {
     const { size } = await fs.stat(path.join(outDir, 'runtime', rel));
     assert.ok(size <= 262_144, `runtime/${rel} is ${size} bytes`);
   }
+  assert.ok(runtimeFiles.length <= 60, `runtime has ${runtimeFiles.length} files; the bundle should hold it to a few dozen`);
+  assert.ok(!runtimeFiles.some((f) => f.startsWith('node_modules/')), 'no node_modules/ ships: the dependencies are bundled');
   const entry = await fs.readFile(path.join(outDir, 'runtime/dist/index.js'), 'utf8');
   assert.match(entry, /registerTool/);
   // The own code is packed into a handful of readable chunks (the 512-file limit): real export names, no local paths.
   const chunks = runtimeFiles.filter((f) => f.startsWith('dist/chunks/'));
   assert.ok(chunks.length >= 5 && chunks.length <= 20, `own code in ${chunks.length} chunks: ${chunks.join(', ')}`);
-  assert.ok(!runtimeFiles.some((f) => f.startsWith('dist/') && !f.startsWith('dist/chunks/') && f !== 'dist/index.js'), 'own code lives in dist/index.js and dist/chunks/');
-  for (const rel of ['dist/index.js', ...chunks]) {
+  const vendor = runtimeFiles.filter((f) => f.startsWith('dist/vendor/'));
+  assert.ok(vendor.length >= 3 && vendor.length <= 20, `dependencies in ${vendor.length} chunks: ${vendor.join(', ')}`);
+  assert.ok(!runtimeFiles.some((f) => f.startsWith('dist/') && !f.startsWith('dist/chunks/') && !f.startsWith('dist/vendor/') && f !== 'dist/index.js'), 'the runtime lives in dist/index.js, dist/chunks/ and dist/vendor/');
+  for (const rel of ['dist/index.js', ...chunks, ...vendor]) {
     const text = await fs.readFile(path.join(outDir, 'runtime', rel), 'utf8');
     assert.ok(!/\bimport \{[^}]*\b[A-Za-z]{1,2} as \w/.test(text), `${rel} imports by minified names`);
     assert.ok(!text.includes(os.homedir()) && !/\/(private\/)?tmp\//.test(text), `${rel} names a local folder`);
     if (text.length > 5000) assert.ok(text.split('\n').length > 10, `${rel} is one line: minified`);
   }
+  // A dependency chunk holds one package's code only, so its license sits beside a known name.
+  for (const rel of vendor) assert.match(path.posix.basename(rel), /^[a-z0-9.-]+-\d+\.js$/, `${rel} is not named <package>-<n>.js`);
+});
+
+test('the runtime imports nothing but Node built-ins and its own files', async () => {
+  const { outDir } = await sharedBuild();
+  const { builtinModules } = await import('node:module');
+  const builtins = new Set(builtinModules);
+  const bad = [];
+  for (const rel of (await listFiles(path.join(outDir, 'runtime'))).filter((f) => f.endsWith('.js'))) {
+    const text = await fs.readFile(path.join(outDir, 'runtime', rel), 'utf8');
+    const specs = [
+      ...text.matchAll(/^\s*(?:import|export)\b[^\n]*?\bfrom\s*["']([^"']+)["']/gm),
+      ...text.matchAll(/^\s*import\s*["']([^"']+)["']/gm),
+      ...text.matchAll(/(?<![.\w$])import\s*\(\s*["']([^"']+)["']/g),   // not ObjC.import("Cocoa") in an osascript string
+      // not ajv's `require("ajv/dist/...")` code strings, written only into standalone validators it never builds here
+      ...text.matchAll(/(?<![.\w$`])(?:__require|require)\s*\(\s*["']([^"']+)["']/g),
+    ].map((m) => m[1]);
+    for (const spec of specs) {
+      if (spec.startsWith('./') || spec.startsWith('../')) continue;
+      if (spec.startsWith('node:') || builtins.has(spec) || builtins.has(spec.split('/')[0])) continue;
+      bad.push(`${rel}: ${spec}`);
+    }
+  }
+  assert.deepEqual(bad, [], 'every dependency must be bundled');
 });
 
 test('every path is one the Claude app accepts in an uploaded plugin', async () => {
   const { outDir } = await sharedBuild();
   const bad = (await listFiles(outDir)).filter((rel) => /[^A-Za-z0-9._\/-]/.test(rel));
   assert.deepEqual(bad, []);
-  const imports = [];
-  for (const rel of (await listFiles(path.join(outDir, 'runtime'))).filter((f) => f.endsWith('.js'))) {
-    const text = await fs.readFile(path.join(outDir, 'runtime', rel), 'utf8');
-    for (const m of text.matchAll(/^\s*(?:(?:import|export)\b[^\n]*?\bfrom\s*|import\s*\(\s*)["'](@[^"']+)["']/gm)) imports.push(`${rel}: ${m[1]}`);
-  }
-  assert.deepEqual(imports, [], 'no runtime file imports a scoped package name');
 });
 
-test('every vendored package has a license and a notice', async () => {
+test('every bundled package has a license and a notice', async () => {
   const { outDir } = await sharedBuild();
   const notices = await fs.readFile(path.join(outDir, 'THIRD-PARTY-NOTICES.txt'), 'utf8');
-  const nodeModules = path.join(outDir, 'runtime/node_modules');
-  const dirs = await vendoredPackageDirs(nodeModules);
-  assert.ok(dirs.includes('zod') && dirs.includes('modelcontextprotocol-sdk'), `vendored: ${dirs.join(', ')}`);
-  for (const dir of dirs) {
-    const { name } = JSON.parse(await fs.readFile(path.join(nodeModules, dir, 'package.json'), 'utf8'));
-    const entries = await fs.readdir(path.join(nodeModules, dir));
-    assert.ok(LICENSE_NAMES.some((n) => entries.includes(n)), `${dir} has no license file`);
-    assert.ok(notices.includes(`${name}@`), `${name} missing from THIRD-PARTY-NOTICES.txt`);
+  const licenses = (await listFiles(path.join(outDir, 'runtime/licenses'))).sort();
+  const names = [];
+  for (const rel of licenses) {
+    assert.match(rel, /^[a-z0-9.-]+\.txt$/, `licenses/${rel} is not named <package>.txt`);
+    const text = await fs.readFile(path.join(outDir, 'runtime/licenses', rel), 'utf8');
+    const head = text.split('\n')[0];
+    assert.match(head, /^@?[a-z0-9./-]+@\d+\.\d+\.\d+\S*$/, `licenses/${rel} does not open with name@version`);
+    assert.ok(text.length > head.length + 100, `licenses/${rel} holds no license text`);
+    const name = head.slice(0, head.lastIndexOf('@'));
+    names.push(name);
+    assert.ok(notices.includes(`${head}\n`), `${head} missing from THIRD-PARTY-NOTICES.txt`);
   }
+  assert.ok(names.includes('zod') && names.includes('@modelcontextprotocol/sdk') && names.includes('ajv'), `licensed: ${names.join(', ')}`);
+  // Every package whose code is bundled is licensed: the dependency chunks are named after their package.
+  const flat = new Set(names.map((n) => n.replace(/^@/, '').replace('/', '-')));
+  for (const rel of (await listFiles(path.join(outDir, 'runtime/dist/vendor')))) {
+    const pkg = rel.replace(/-\d+\.js$/, '');
+    assert.ok(flat.has(pkg), `dist/vendor/${rel} bundles ${pkg}, which has no license file`);
+  }
+});
+
+// Requests a session makes, answered without After Effects. The bundled Claude runtime must answer them exactly as
+// the Codex runtime (one esbuild bundle of the same source) does: same tools, same schemas, same replies.
+function serverReplies(entry, extraEnv = {}) {
+  const calls = [
+    ['tools/list', {}],
+    ['tools/call', { name: 'ae_arsenal', arguments: { action: 'jobs' } }],
+    ['tools/call', { name: 'ae_arsenal', arguments: { action: 'find', job: 'add-depth', limit: 20 } }],
+    ['tools/call', { name: 'ae_arsenal', arguments: { action: 'find', job: 'keep-it-alive', constraints: { status: 'any' }, limit: 20 } }],
+    ['tools/call', { name: 'ae_arsenal', arguments: { action: 'get', id: '04-carousel-by-rotation' } }],
+    ['tools/call', { name: 'ae_arsenal', arguments: { action: 'find', job: 'no-such-job' } }],
+    ['tools/call', { name: 'ae_catalog', arguments: {} }],
+    ['tools/call', { name: 'ae_library', arguments: {} }],
+    ['tools/call', { name: 'ae_library', arguments: { document: 'motion-language' } }],
+    ['tools/call', { name: 'ae_render_frame', arguments: { nonsense: true } }],
+  ];
+  const input = [
+    { jsonrpc: '2.0', id: 0, method: 'initialize', params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 't', version: '1' } } },
+    { jsonrpc: '2.0', method: 'notifications/initialized' },
+    ...calls.map(([method, params], k) => ({ jsonrpc: '2.0', id: k + 1, method, params })),
+  ].map((m) => JSON.stringify(m)).join('\n') + '\n';
+  const env = { ...process.env, AE_MCP_READONLY: '0', AE_MCP_ENABLE_EVAL: '1', ...extraEnv };
+  const r = spawnSync(process.execPath, [entry], { cwd: os.tmpdir(), env, input, encoding: 'utf8', timeout: 60_000 });
+  const replies = new Map(r.stdout.split('\n').filter(Boolean).map((l) => JSON.parse(l)).map((m) => [m.id, m]));
+  return calls.map((c, k) => {
+    const reply = replies.get(k + 1);
+    assert.ok(reply, `${entry}: no reply to ${JSON.stringify(c)}: ${r.stderr}`);
+    return reply.result ?? reply.error;
+  });
+}
+
+test('the bundled runtime serves exactly what the Codex runtime serves', async () => {
+  const { outDir } = await sharedBuild();
+  const codex = serverReplies(path.join(PLUGIN, 'runtime/dist/index.js'));
+  const claude = serverReplies(path.join(outDir, 'runtime/dist/index.js'));
+  assert.ok(codex[0].tools.length >= 14, `${codex[0].tools.length} tools`);
+  assert.deepEqual(claude[0].tools.map((t) => t.name), codex[0].tools.map((t) => t.name));
+  for (let k = 0; k < codex.length; k++) assert.deepEqual(claude[k], codex[k], `reply ${k} differs`);
+  // The arsenal answers from the shipped catalog: a find returns proven candidates with their stills.
+  const find = JSON.parse(claude[2].content[0].text);
+  assert.ok(find.results.length > 0 && find.results.every((c) => c.status === 'proven' && c.still), 'add-depth candidates are proven, with stills');
 });
 
 test('notices credit the style library source', async () => {
@@ -243,11 +308,6 @@ test('no file of the built package is ignored by git', async () => {
   const input = files.map((f) => `claude/${name}/${f}`).join('\n') + '\n';
   const r = spawnSync('git', ['check-ignore', '--stdin', '--no-index'], { cwd: ROOT, input, encoding: 'utf8' });
   assert.equal(r.stdout, '', 'these files would be dropped from a Git-based install');
-});
-
-test('a renamed package keeps its vendored runtime in git', () => {
-  const r = spawnSync('git', ['check-ignore', '-q', '--no-index', 'claude/renamed-plugin/runtime/node_modules/zod/package.json'], { cwd: ROOT });
-  assert.equal(r.status, 1, 'the ignore exception must not depend on the plugin name');
 });
 
 test('the committed package matches a fresh build', () => {
@@ -374,7 +434,7 @@ test('no shipped file names the old product', async () => {
   const exempt = new Set(['LICENSE', 'license.md']);
   const hits = [];
   for (const rel of files) {
-    if (exempt.has(rel) || rel.startsWith('runtime/node_modules/')) continue;
+    if (exempt.has(rel) || rel.startsWith('runtime/dist/vendor/') || rel.startsWith('runtime/licenses/')) continue;
     // The runtime is shared: the Codex package's server name stays the fallback, and this package's serverName overrides it.
     const text = (await fs.readFile(path.join(outDir, rel), 'utf8'))
       .replaceAll('joebenscoter86/after-effects-studio', '').replace('serverName ?? "after-effects-studio"', '');
@@ -394,7 +454,7 @@ test('bundled images follow the directory image rule', async () => {
   assert.deepEqual(unshown, [], 'bundled images missing from the README');
   const named = [];
   for (const rel of files) {
-    if (rel.startsWith('runtime/node_modules/') || !/\.(md|txt|json|mjs|js|jsx)$/.test(rel)) continue;
+    if (rel.startsWith('runtime/dist/vendor/') || rel.startsWith('runtime/licenses/') || !/\.(md|txt|json|mjs|js|jsx)$/.test(rel)) continue;
     const text = await fs.readFile(path.join(outDir, rel), 'utf8');
     const spans = [...text.matchAll(/```[\s\S]*?```|`[^`\n]*`/g)].map((m) => m[0]);
     for (const img of images) {

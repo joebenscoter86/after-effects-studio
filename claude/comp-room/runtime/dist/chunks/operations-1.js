@@ -11,7 +11,7 @@ import { execFile, spawn } from "node:child_process";
 import { promises, readFileSync, realpathSync, statSync } from "node:fs";
 import * as path$1 from "node:path";
 
-// operations/keyframe.js
+// server/operations/keyframe.js
 function init_keyframe() {
 	return (init_keyframe = __esmMin((() => {
 		init_registry();
@@ -895,7 +895,7 @@ function init_keyframe() {
 	})))();
 }
 
-// operations/expression.js
+// server/operations/expression.js
 function init_expression() {
 	return (init_expression = __esmMin((() => {
 		init_registry();
@@ -1072,7 +1072,7 @@ function init_expression() {
 	})))();
 }
 
-// operations/effect.js
+// server/operations/effect.js
 var DROPDOWN_MENU_LOOKUP_JSX;
 function init_effect() {
 	return (init_effect = __esmMin((() => {
@@ -1493,7 +1493,7 @@ function init_effect() {
 	})))();
 }
 
-// operations/comp.js
+// server/operations/comp.js
 var RENDERER_RESOLVE_JSX;
 function init_comp() {
 	return (init_comp = __esmMin((() => {
@@ -1845,7 +1845,7 @@ function init_comp() {
 	})))();
 }
 
-// operations/command.js
+// server/operations/command.js
 function isUndoRedoCommandId(id) {
 	return id === 16 || id === 2035;
 }
@@ -1944,7 +1944,7 @@ function init_command() {
 	})))();
 }
 
-// operations/delivery-sound.js
+// server/operations/delivery-sound.js
 function runTool(cands, argv, timeoutMs = 12e4) {
 	return new Promise((resolve) => {
 		const tryAt = (i) => {
@@ -2201,7 +2201,7 @@ function init_delivery_sound() {
 	})))();
 }
 
-// operations/keying-shared.js
+// server/operations/keying-shared.js
 function alikeRegions(a, b) {
 	if (iou(a, b) >= .5) return true;
 	if (!intersects(a, b)) return false;
@@ -2993,7 +2993,7 @@ function init_keying_shared() {
 	})))();
 }
 
-// operations/keying-key.js
+// server/operations/keying-key.js
 function readMap(settings, extra = {}) {
 	const out = { ...extra };
 	for (const [k, s] of Object.entries(settings)) out[k] = s.matchName;
@@ -3461,7 +3461,7 @@ function init_keying_key() {
 	})))();
 }
 
-// operations/keying-reference.js
+// server/operations/keying-reference.js
 function reportForReply(r) {
 	const { map: _map, ...motion } = r.motion;
 	return {
@@ -3878,7 +3878,7 @@ function init_keying_reference() {
 	})))();
 }
 
-// operations/batch.js
+// server/operations/batch.js
 function denialText(denial) {
 	return denial.hint ? `${denial.message} \u2014 ${denial.hint}` : denial.message;
 }
@@ -4027,7 +4027,7 @@ function init_batch() {
 	})))();
 }
 
-// operations/inspect.js
+// server/operations/inspect.js
 function init_inspect() {
 	return (init_inspect = __esmMin((() => {
 		init_config();
@@ -4144,7 +4144,7 @@ function init_inspect() {
 	})))();
 }
 
-// operations/footage.js
+// server/operations/footage.js
 function jsxFootagePreamble(args) {
 	return `
         var _item = AE.findItem(${jsxVal(args.item)});
@@ -4538,7 +4538,7 @@ function init_footage() {
 	})))();
 }
 
-// operations/item.js
+// server/operations/item.js
 function init_item() {
 	return (init_item = __esmMin((() => {
 		init_registry();
@@ -4737,7 +4737,7 @@ function init_item() {
 	})))();
 }
 
-// operations/font.js
+// server/operations/font.js
 var FONT_INFO_JSX, CT_SCRIPT_MAP_JSX;
 function init_font() {
 	return (init_font = __esmMin((() => {
@@ -5114,7 +5114,7 @@ function init_font() {
 	})))();
 }
 
-// operations/egp.js
+// server/operations/egp.js
 function init_egp() {
 	return (init_egp = __esmMin((() => {
 		init_registry();
@@ -5405,7 +5405,7 @@ function init_egp() {
 	})))();
 }
 
-// operations/instance.js
+// server/operations/instance.js
 function nodeOnly(name) {
 	return jsxFail(`${name} runs on the Node side (it manages After Effects processes) \u2014 call it as its own ae_do, not inside batch.run`);
 }
@@ -5787,7 +5787,7 @@ function init_instance() {
 	})))();
 }
 
-// operations/index.js
+// server/operations/index.js
 function init_operations() {
 	return (init_operations = __esmMin((async () => {
 		init_policy();
@@ -5826,7 +5826,7 @@ function init_operations() {
 	})))();
 }
 
-// operations/eval.js
+// server/operations/eval.js
 function realOrResolved(p) {
 	try {
 		return realpathSync(p);

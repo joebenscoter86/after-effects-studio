@@ -2,7 +2,8 @@
 // Collect a video's checked recipes into one tracked draft and add the video to the credits.
 //   node tools/channel-learner/assemble.mjs <study dir> [--out product/arsenal-drafts]
 // Refuses unless every recipe passes recipeProblems: checks/<n>.md says "verdict: pass" and,
-// when it has a "recipe:" line, names this recipe; checks/layout-<n>.md, when there,
+// when it has a "recipe:" line, names this recipe; a recipe with "variant of:" has "merge: confirmed" in it;
+// checks/layout-<n>.md, when there,
 // says "layout verdict: pass"; and the newest of those is no older than the recipe.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -40,6 +41,9 @@ export function recipeProblems(study) {
       const status = statusOf(fs.readFileSync(path.join(study, 'recipes', f), 'utf8'));
       if (status.proven && !status.accepted) reason = 'proven without a recorded acceptance';
     }
+    // A variant's merge lines are checked against its parent (check.md check 11; LESSONS 14).
+    if (!reason && /^variant of:/m.test(fs.readFileSync(path.join(study, 'recipes', f), 'utf8'))
+      && !/^merge:\s*confirmed/m.test(check)) reason = 'variant without a confirmed merge';
     if (reason) out.push({ recipe: f, reason });
   }
   return out;

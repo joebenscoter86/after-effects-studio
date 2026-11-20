@@ -14,6 +14,10 @@ export type ArsenalRecipe = {
     motion: string | null;
     difficulty: number | null;
     taught_by: number;
+    /** Only on a variant: the id of the entry it is a variant of. */
+    variant_of?: string;
+    /** The ids of this entry's variants; empty when it has none. */
+    variants: string[];
     section: {
         document: string;
         heading: string;
@@ -49,6 +53,7 @@ export type BeatAsk = {
 export type Candidate = Pick<ArsenalRecipe, "id" | "revision" | "name" | "line" | "status" | "needs" | "duration" | "motion" | "section"> & {
     still: string | null;
     fit: string;
+    variants?: string[];
 };
 export type FindAnswer = {
     vocab: string;
