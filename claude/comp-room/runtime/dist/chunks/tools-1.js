@@ -1544,6 +1544,282 @@ function structureJsx(compNameOrId, o) {
             comp.time = _prevTime;
         }
 
+        // Change times for the idle report (0.4.1), per top-level layer on
+        // screen: merged intervals [a, b] in comp seconds inside the layer's
+        // span [max(inPoint, 0), min(outPoint, comp.duration)] (a === b for an
+        // instant: a key on its own, a marker), or "always". Between two keys
+        // of one property the value moves, unless the first is a hold key or
+        // the two key values are equal (numbers or arrays of numbers, within
+        // a small tolerance, and no spatial curve between them).
+        // Changes: keys on the layer (its effects, masks, text animators, any
+        // property), keys on the transform of every parent up the chain
+        // (but not its Opacity, which does not pass to the child), the same
+        // on the layer's track matte, layer markers, a time-driven expression (IDLE_TIME_DRIVEN), and for a
+        // precomp the keys one level down on its enabled layers (and track
+        // mattes), mapped to outer time as startTime + inner * stretch / 100;
+        // a precomp with keyed time remap, or one holding footage that plays,
+        // changes all the time. Keyless motion changes all the time too: an
+        // enabled Wiggly Selector on a text animator, and the Wiggle Paths
+        // and Wiggle Transform shape operators (_selfAnimating). Other
+        // effects that move with no keys (particle systems and the like)
+        // are a known blind spot: they count as static. Audio levels are not
+        // a change on screen. Node finds the longest gap.
+        // A gap is on screen only where the layer can be seen: nothing
+        // changes inside a gap, so its held values are read once, at its
+        // midpoint; at opacity 0, or scale 0 on x or y on the layer or any
+        // parent up the chain, the gap is listed in hidden and Node passes
+        // over it. Only gaps longer than idleSeconds are read.
+        // Exempt: cameras and lights, nulls, adjustment and guide layers,
+        // footage and audio whose source plays, and solids and stills with no
+        // enabled mask that cover the frame with no non-exempt layer below
+        // them (grounds; a masked solid is a card).
+        var _idle = { layers: [], exempt: 0, layersChecked: 0 };
+        var _timeRe = new RegExp(_o.timeDriven);
+        var _identity = function (t) { return t; };
+        function _mapper(start, stretch) {
+            return function (t) { return start + t * stretch / 100; };
+        }
+        function _drivenByTime(p) {
+            if (!AE.safeGet(function () { return p.canSetExpression && p.expressionEnabled && p.expression !== ""; }, false)) return false;
+            if (AE.safeGet(function () { return p.expressionError; }, "")) return false;
+            return _timeRe.test(AE.safeGet(function () { return p.expression; }, ""));
+        }
+        // Groups that move with no keys and no expression while enabled.
+        var _selfAnimating = {
+            "ADBE Text Wiggly Selector": true,
+            "ADBE Vector Filter - Roughen": true,
+            "ADBE Vector Filter - Wiggler": true
+        };
+        // True when two key values are the same number, or the same numbers
+        // element by element, within a small tolerance. Anything else (text
+        // documents, shapes) is not compared and counts as different.
+        function _sameNum(a, b) {
+            if (typeof a !== "number" || typeof b !== "number" || !(a === a) || !(b === b)) return false;
+            return Math.abs(a - b) <= Math.max(1e-4, 1e-6 * Math.max(Math.abs(a), Math.abs(b)));
+        }
+        function _sameValue(a, b) {
+            if (typeof a === "number") return _sameNum(a, b);
+            if (!(a instanceof Array) || !(b instanceof Array) || a.length !== b.length) return false;
+            for (var vi = 0; vi < a.length; vi++) if (!_sameNum(a[vi], b[vi])) return false;
+            return true;
+        }
+        function _zeroTangent(v) {
+            if (!(v instanceof Array)) return false;
+            for (var zi = 0; zi < v.length; zi++) if (!(typeof v[zi] === "number" && Math.abs(v[zi]) < 1e-6)) return false;
+            return true;
+        }
+        // True when the value holds still from key k0 to key k1: equal values
+        // and, on a spatial property, no curve out of k0 or into k1.
+        function _pairStill(p, k0, k1) {
+            var v0 = AE.safeGet(function () { return p.keyValue(k0); }, null);
+            var v1 = AE.safeGet(function () { return p.keyValue(k1); }, null);
+            if (!_sameValue(v0, v1)) return false;
+            if (!AE.safeGet(function () { return p.isSpatial; }, false)) return true;
+            return _zeroTangent(AE.safeGet(function () { return p.keyOutSpatialTangent(k0); }, null)) &&
+                _zeroTangent(AE.safeGet(function () { return p.keyInSpatialTangent(k1); }, null));
+        }
+        // Collects change intervals of a property tree into out; true when
+        // something in it changes all the time. skip: a matchName passed over.
+        // A key pair moves unless it is held or its two values are equal.
+        function _changeWalk(group, out, depth, map, skip) {
+            if (depth > 12) return false;
+            var always = false;
+            var n = AE.safeGet(function () { return group.numProperties; }, 0);
+            for (var i = 1; i <= n; i++) {
+                var p = AE.safeGet(function () { return group.property(i); }, null);
+                if (!p) continue;
+                var mn = AE.safeGet(function () { return p.matchName; }, "");
+                if (mn === "ADBE Audio Group" || (skip && mn === skip)) continue;
+                if (AE.safeGet(function () { return p.propertyType; }, null) !== PropertyType.PROPERTY) {
+                    if (_selfAnimating[mn] === true && AE.safeGet(function () { return p.enabled; }, true) !== false) always = true;
+                    if (_changeWalk(p, out, depth + 1, map, skip)) always = true;
+                    continue;
+                }
+                if (_drivenByTime(p)) always = true;
+                var nk = AE.safeGet(function () { return p.numKeys; }, 0);
+                var prev = null;
+                for (var k = 1; k <= nk; k++) {
+                    var t = map(p.keyTime(k));
+                    out.push([t, t]);
+                    var held = AE.safeGet(function () { return p.keyOutInterpolationType(k - 1) === KeyframeInterpolationType.HOLD; }, false);
+                    if (prev !== null && mn !== "ADBE Marker" && !held && !_pairStill(p, k - 1, k)) out.push([Math.min(prev, t), Math.max(prev, t)]);
+                    prev = t;
+                }
+            }
+            return always;
+        }
+        function _plays(src) {
+            if (!src || src instanceof CompItem) return false;
+            if (AE.safeGet(function () { return src.mainSource.isStill; }, false)) return false;
+            return AE.safeGet(function () { return src.duration; }, 0) > 0;
+        }
+        function _idleExempt(L) {
+            if (!(L instanceof TextLayer || L instanceof ShapeLayer || L instanceof AVLayer)) return "camera or light";
+            if (AE.safeGet(function () { return L.nullLayer; }, false)) return "null";
+            if (AE.safeGet(function () { return L.adjustmentLayer; }, false)) return "adjustment layer";
+            if (AE.safeGet(function () { return L.guideLayer; }, false)) return "guide layer";
+            if (_plays(AE.safeGet(function () { return L.source; }, null))) return "footage that plays";
+            return null;
+        }
+        function _hasEnabledMask(L) {
+            var masks = AE.safeGet(function () { return L.property("ADBE Mask Parade"); }, null);
+            var nm = AE.safeGet(function () { return masks.numProperties; }, 0);
+            for (var mi = 1; mi <= nm; mi++) {
+                var m = AE.safeGet(function () { return masks.property(mi); }, null);
+                if (!m) continue;
+                if (AE.safeGet(function () { return m.enabled; }, true) === false) continue;
+                if (AE.safeGet(function () { return m.maskMode === MaskMode.NONE; }, false)) continue;
+                return true;
+            }
+            return false;
+        }
+        function _isGround(L, t) {
+            var src = AE.safeGet(function () { return L.source; }, null);
+            if (!src || src instanceof CompItem) return false;
+            if (_hasEnabledMask(L)) return false;
+            var flat = AE.safeGet(function () { return src.mainSource instanceof SolidSource; }, false) ||
+                AE.safeGet(function () { return src.mainSource.isStill; }, false);
+            if (!flat) return false;
+            comp.time = t;
+            var box = null;
+            try { box = _boxAt(L, t); } catch (eBox) { box = null; }
+            if (!box || box.error) return false;
+            return box.x0 <= 0.5 && box.y0 <= 0.5 && box.x1 >= _W - 0.5 && box.y1 >= _H - 0.5;
+        }
+        // The layer that mattes L: trackMatteLayer (2023 on, may be null),
+        // or on the older API the layer above when a matte type is set.
+        function _matteOf(L) {
+            var tml = AE.safeGet(function () { return L.trackMatteLayer; }, undefined);
+            if (tml !== undefined) return tml;
+            if (!AE.safeGet(function () { return L.trackMatteType !== TrackMatteType.NO_TRACK_MATTE; }, false)) return null;
+            var idx = AE.safeGet(function () { return L.index; }, 0);
+            return idx > 1 ? AE.safeGet(function () { return comp.layer(idx - 1); }, null) : null;
+        }
+        // Changes of L and of its parents' transforms (opacity aside).
+        function _ownChanges(L, out) {
+            var always = _changeWalk(L, out, 0, _identity);
+            var par = AE.safeGet(function () { return L.parent; }, null);
+            for (var guard = 0; par && guard < 100; guard++) {
+                var ptr = AE.safeGet(function () { return par.property("ADBE Transform Group"); }, null);
+                if (ptr && _changeWalk(ptr, out, 0, _identity, "ADBE Opacity")) always = true;
+                par = AE.safeGet(function () { return par.parent; }, null);
+            }
+            return always;
+        }
+        function _layerChanges(L, out) {
+            var always = _ownChanges(L, out);
+            // A track matte's changes show through the layer it mattes.
+            var matte = _matteOf(L);
+            if (matte && matte !== L) {
+                if (_ownChanges(matte, out)) always = true;
+                if (_plays(AE.safeGet(function () { return matte.source; }, null))) always = true;
+            }
+            var src = AE.safeGet(function () { return L.source; }, null);
+            if (!(src && src instanceof CompItem)) return always;
+            if (AE.safeGet(function () { return L.timeRemapEnabled; }, false)) {
+                var tr = AE.safeGet(function () { return L.property("ADBE Time Remapping"); }, null);
+                if (AE.safeGet(function () { return tr.numKeys; }, 0) > 0) return true;
+            }
+            var start = Number(AE.safeGet(function () { return L.startTime; }, 0)) || 0;
+            var stretch = Number(AE.safeGet(function () { return L.stretch; }, 100));
+            if (!(stretch === stretch)) stretch = 100;
+            var map = _mapper(start, stretch);
+            var nIn = AE.safeGet(function () { return src.numLayers; }, 0);
+            for (var j = 1; j <= nIn; j++) {
+                var IL = AE.safeGet(function () { return src.layer(j); }, null);
+                if (!IL) continue;
+                if (!AE.safeGet(function () { return IL.enabled; }, true) &&
+                    !AE.safeGet(function () { return IL.isTrackMatte; }, false)) continue;
+                if (_plays(AE.safeGet(function () { return IL.source; }, null))) always = true;
+                if (_changeWalk(IL, out, 0, map)) always = true;
+            }
+            return always;
+        }
+        function _mergeWithin(raw, s0, s1) {
+            var clipped = [];
+            for (var ri = 0; ri < raw.length; ri++) {
+                var a = raw[ri][0];
+                var b = raw[ri][1];
+                if (b < s0 || a > s1) continue;
+                clipped.push([Math.max(a, s0), Math.min(b, s1)]);
+            }
+            clipped.sort(function (x, y) { return x[0] - y[0]; });
+            var merged = [];
+            for (var mi = 0; mi < clipped.length; mi++) {
+                var last = merged.length > 0 ? merged[merged.length - 1] : null;
+                if (last !== null && clipped[mi][0] <= last[1] + 1e-9) {
+                    if (clipped[mi][1] > last[1]) last[1] = clipped[mi][1];
+                } else {
+                    merged.push([clipped[mi][0], clipped[mi][1]]);
+                }
+            }
+            for (var ci = 0; ci < merged.length; ci++) merged[ci] = [_r6(merged[ci][0]), _r6(merged[ci][1])];
+            return merged;
+        }
+        // True when nothing of L can be seen at t: its opacity is 0, or its
+        // scale, or a parent's, is 0 on x or y. A parent's opacity does not
+        // pass to the child, so it is not read.
+        function _hiddenAt(L, t) {
+            var op = AE.safeGet(function () { return L.property("ADBE Transform Group").property("ADBE Opacity").valueAtTime(t, false); }, 100);
+            if (typeof op === "number" && op <= 0) return true;
+            var cur = L;
+            for (var guard = 0; cur && guard < 100; guard++) {
+                var sc = AE.safeGet(function () { return cur.property("ADBE Transform Group").property("ADBE Scale").valueAtTime(t, false); }, null);
+                if (sc && sc.length >= 2 && (Math.abs(sc[0]) < 1e-9 || Math.abs(sc[1]) < 1e-9)) return true;
+                cur = AE.safeGet(function () { return cur.parent; }, null);
+            }
+            return false;
+        }
+        // The gaps of merged inside [a0, a1] longer than idleSeconds that
+        // the viewer cannot see (the same gaps Node works out).
+        function _hiddenGaps(L, merged, a0, a1) {
+            var out = [];
+            var cursor = a0;
+            var check = function (a, b) {
+                if (b - a > _o.idleSeconds + 1e-9 && _hiddenAt(L, (a + b) / 2)) out.push([a, b]);
+            };
+            for (var gi = 0; gi < merged.length; gi++) {
+                check(cursor, merged[gi][0]);
+                if (merged[gi][1] > cursor) cursor = merged[gi][1];
+            }
+            check(cursor, a1);
+            return out;
+        }
+        if (_o.idleSeconds > 0) {
+            var _idlePrevTime = comp.time;
+            var _below = false;
+            try {
+                for (var ii = comp.numLayers; ii >= 1; ii--) {
+                    var IdL = comp.layer(ii);
+                    if (!AE.safeGet(function () { return IdL.enabled; }, true)) continue;
+                    var s0 = Math.max(IdL.inPoint, 0);
+                    var s1 = Math.min(IdL.outPoint, comp.duration);
+                    if (!(s1 > s0)) continue;
+                    var idleWhy = _idleExempt(IdL);
+                    if (idleWhy === null && !_below && _isGround(IdL, s0)) idleWhy = "ground";
+                    if (idleWhy !== null) {
+                        _idle.exempt++;
+                        continue;
+                    }
+                    _below = true;
+                    _idle.layersChecked++;
+                    var raw = [];
+                    var always = _layerChanges(IdL, raw);
+                    var merged = always ? null : _mergeWithin(raw, s0, s1);
+                    _idle.layers.push({
+                        index: IdL.index,
+                        name: IdL.name,
+                        from: _r6(s0),
+                        to: _r6(s1),
+                        changes: always ? "always" : merged,
+                        hidden: always ? [] : _hiddenGaps(IdL, merged, _r6(s0), _r6(s1))
+                    });
+                }
+            } finally {
+                comp.time = _idlePrevTime;
+            }
+        }
+
         // Expressions in error, in this comp and every comp nested in it, each once.
         var _expr = { compsWalked: 0, propertiesVisited: 0, total: 0, errors: [], truncated: false };
         function _exprWalk(group, path, layerRef) {
@@ -1588,16 +1864,18 @@ function structureJsx(compNameOrId, o) {
             fonts: _listMissingFonts(),
             footage: _listMissingFootage(),
             nestedCompIds: (function () { var ids = []; for (var k in _seen) { if (_seen.hasOwnProperty(k)) ids.push(Number(k.substring(1))); } return ids; })(),
-            expressions: _expr
+            expressions: _expr,
+            idle: _idle
         };
     `;
 }
-var CHECK_FRAME_PICK;
+var CHECK_FRAME_PICK, IDLE_TIME_DRIVEN;
 function init_check_comp_jsx() {
 	return (init_check_comp_jsx = __esmMin((() => {
 		init_snippets();
 		init_registry();
 		CHECK_FRAME_PICK = .25;
+		IDLE_TIME_DRIVEN = /\btime\b|wiggle\(|loopIn|loopOut|valueAtTime|posterizeTime|Date\(/;
 	})))();
 }
 
@@ -1722,6 +2000,38 @@ async function readPicture(file, target, convert) {
 		height,
 		captured: [img.width, img.height]
 	};
+}
+function idleEntries(layers, idleSeconds) {
+	const out = [];
+	if (!(idleSeconds > 0)) return out;
+	for (const L of layers) {
+		if (L.changes === "always") continue;
+		let best = null;
+		let cursor = L.from;
+		const hidden = L.hidden ?? [];
+		const consider = (a, b) => {
+			if (hidden.some(([h0, h1]) => Math.abs(h0 - a) < 1e-6 && Math.abs(h1 - b) < 1e-6)) return;
+			if (b - a > 1e-9 && (best === null || b - a >= best[1] - best[0] - 1e-9)) best = [a, b];
+		};
+		for (const [a, b] of [...L.changes].sort((x, y) => x[0] - y[0])) {
+			consider(cursor, a);
+			cursor = Math.max(cursor, b);
+		}
+		consider(cursor, L.to);
+		if (best === null) continue;
+		const [from, to] = best;
+		const seconds = r6(to - from);
+		if (seconds <= idleSeconds + 1e-9) continue;
+		out.push({
+			layer: L.name,
+			index: L.index,
+			from: r6(from),
+			to: r6(to),
+			seconds,
+			reading: `layer ${L.index} "${L.name}" is on screen with nothing changing on it from ${r6(from)} s to ${r6(to)} s (${seconds} s)`
+		});
+	}
+	return out.sort((a, b) => b.seconds - a.seconds || a.index - b.index);
 }
 function capWorst(items, kindOf, severity, cap) {
 	const byKind = /* @__PURE__ */ new Map();
@@ -2094,7 +2404,9 @@ async function runStructure(args, transport, plan, first, end, fd) {
 		boundsOf: args.boundsOf ?? "text",
 		maxSamples: 400,
 		maxItems: 20,
-		maxProperties: 5e4
+		maxProperties: 5e4,
+		idleSeconds: args.idleSeconds ?? 5,
+		timeDriven: IDLE_TIME_DRIVEN.source
 	};
 	const res = await transport.execute({
 		code: structureJsx(args.compNameOrId, opts),
@@ -2135,6 +2447,7 @@ async function runStructure(args, transport, plan, first, end, fd) {
 		reading: `${f.type} layer ${f.index} "${f.name}" ${f.extent === "wholly" ? "is wholly" : "is partly"} past the ${f.edge} edge of the ${margins.some((m) => m > 0) ? "safe area" : "frame"} from ${r6(f.from)} s to ${r6(f.to)} s while visible, by up to ${f.byPx} px (at ${r6(f.at)} s)`
 	})).sort((a, b) => a.from.time - b.from.time);
 	const footageInComp = s.footage.items.filter((it) => it.usedInComps.length > 0);
+	const idle = opts.idleSeconds > 0 && s.idle ? idleEntries(s.idle.layers, opts.idleSeconds) : [];
 	return {
 		checked: true,
 		safeArea: {
@@ -2177,7 +2490,32 @@ async function runStructure(args, transport, plan, first, end, fd) {
 			propertiesVisited: s.expressions.propertiesVisited,
 			...s.expressions.truncated ? { truncated: true } : {},
 			note: "read after the frames were rendered (expressionError is filled in when a broken expression is set; read late in case a just-opened project fills it only when evaluated)"
-		}
+		},
+		idleReport: idleReportOf(s, opts.idleSeconds, idle),
+		idle: idle.slice(0, 20)
+	};
+}
+function idleReportOf(s, idleSeconds, idle) {
+	const base = {
+		heading: "Report (not faults)",
+		idleSeconds,
+		count: idle.length,
+		...idle.length > 20 ? { truncated: true } : {}
+	};
+	if (idleSeconds === 0) return {
+		...base,
+		reading: "the idle report is off (idleSeconds 0)"
+	};
+	if (!s.idle) return {
+		...base,
+		reading: "the structure script returned no change times: the idle report was not made"
+	};
+	return {
+		...base,
+		layersChecked: s.idle.layersChecked,
+		exempt: s.idle.exempt,
+		reading: idle.length === 0 ? `no layer is on screen longer than ${idleSeconds} s with nothing changing on it` : `${idle.length} layer${idle.length > 1 ? "s are" : " is"} on screen longer than ${idleSeconds} s with nothing changing on ${idle.length > 1 ? "them" : "it"}, longest first` + (idle.length > 20 ? ` (the first ${20} listed)` : "") + ". A report, not a fault: a held card can be intended; judge each against the brief. Not counted in counts or shown on the sheet.",
+		note: "top-level layers of this comp, each over its on-screen span (in to out point, inside the comp); a change is a keyframe on the layer (any property: effects, masks, text animators), on a parent's transform (not its opacity), on its track matte, a layer marker, a time-driven expression (by its text: time, wiggle, loopIn/Out, valueAtTime, posterizeTime, Date; an expression reading another layer counts as static), or for a precomp a keyframe one level down on an enabled layer or track matte (keyed time remap or playing footage inside: always changing). A Wiggly Selector, Wiggle Paths or Wiggle Transform counts as always changing; other effects that move with no keys (particles) count as static. Between two keys with equal values (and no spatial curve) nothing moves. A stretch where the layer cannot be seen (opacity 0, or scale 0 on it or a parent) is not listed. Exempt: cameras, lights, nulls, adjustment and guide layers, footage and audio that plays, and unmasked solids and stills covering the frame with no other layer below them"
 	};
 }
 async function makeSheet(source, outDir, flags, stretches, structure, fd, range, target, convert, maxTiles, thumbWidth, tag) {
@@ -2265,7 +2603,7 @@ async function makeSheet(source, outDir, flags, stretches, structure, fd, range,
 		outstanding: res.outstanding
 	};
 }
-var CAPTURE_STALL_MS, frameFile, LIST_CAP, DEFAULT_MAX_TILES, r6, r3, stretchSeverity, flagSeverity, thresholdsSchema, CHECK_COMP_SHAPE, checkCompTool, SHORT;
+var CAPTURE_STALL_MS, frameFile, LIST_CAP, DEFAULT_MAX_TILES, DEFAULT_IDLE_SECONDS, r6, r3, stretchSeverity, flagSeverity, thresholdsSchema, CHECK_COMP_SHAPE, checkCompTool, SHORT;
 function init_check_comp() {
 	return (init_check_comp = __esmMin((() => {
 		init_png16();
@@ -2282,6 +2620,7 @@ function init_check_comp() {
 		frameFile = (dir, frame) => path$1.join(dir, `frame-${frame}.png`).replace(/\\/g, "/");
 		LIST_CAP = 20;
 		DEFAULT_MAX_TILES = 12;
+		DEFAULT_IDLE_SECONDS = 5;
 		r6 = (v) => Math.round(v * 1e6) / 1e6;
 		r3 = (v) => Math.round(v * 1e3) / 1e3;
 		stretchSeverity = (s) => s.kind === "clipped-high" || s.kind === "clipped-low" ? (s.worst?.share ?? 0) * 1e3 + s.frames : s.frames;
@@ -2304,6 +2643,7 @@ function init_check_comp() {
 			boundsOf: z.enum(["text", "all"]).optional().describe("Which layers the bounds check measures: 'text' (default) or 'all' visible layers with pixels. Other layer types are opt-in because backgrounds and shapes bleed off frame on purpose."),
 			boundsStep: z.number().positive().optional().describe("Bounds are sampled at every keyframe time and every boundsStep seconds (default 0.1)."),
 			structure: z.boolean().optional().describe("Run the structure checks on the call that reaches the end of the range (default true)."),
+			idleSeconds: z.number().min(0).optional().describe(`The idle report (structure.idle) lists layers on screen longer than this with nothing changing on them (default ${5} s; 0 turns it off). A report for the reviewer, never a fault.`),
 			colorManaged: z.enum(["auto", "off"]).optional().describe("'auto' (default) measures the picture after colour conversion, as ae_render_frame; 'off' the raw capture."),
 			settleTimeoutMs: z.number().int().positive().optional().describe("How long to wait for the first captures of each chunk (default: grows with the chunk). The wait then goes on for as long as captures keep finishing, so a long or heavy comp is not cut off by it."),
 			stallTimeoutMs: z.number().int().positive().optional().describe(`After Effects is taken to have stopped writing when no capture has finished for this long (default ${CAPTURE_STALL_MS / 1e3} s). The check then queues nothing more, keeps the capture folder (After Effects may still write into it) and says how many captures were outstanding and where to continue.`),
@@ -2316,7 +2656,7 @@ function init_check_comp() {
 		checkCompTool = defineTool({
 			name: "ae_check_comp",
 			title: "Check comp",
-			description: "Check a whole comp the way a viewer would watch it, in one call: walks the work area (or `from`..`to`), renders every frame (or every `every`th) at a reduced size, measures each in Node and lists what stands out. Flagged moments (`flags`, sorted by time): a one-frame pop or flash, a cut or jump, a stutter (a frame repeated while the frames around move) and a repeat at the edge of the range — the `diff` flags of ae_render_frame over the whole piece. Stretches: frozen (no visible change for at least frozenSeconds; a held title is legitimate, the report states the fact), near-black and near-white frames, and clipping (pixels at 255 in all three channels, with the box where they sit; per-channel shares alongside). Structure, read from the project on the call that reaches the end of the range: text layers whose bounds leave the frame (or `safeArea`) while visible — layer, time range, edge, by how many pixels, partly or wholly outside — missing fonts and footage, and expressions in error (in nested comps too). One contact sheet tiles the flagged moments, labelled with time and kind; the frames on it are kept beside it, every other capture is deleted as soon as it is measured. A clean comp returns empty lists and no sheet. Bounded: at most `maxFrames` frames a call (default 300); when the range is not finished the result says where to continue (`next.startFrame`): call again with the same arguments plus that startFrame. Captures are asked of After Effects a chunk at a time, the next chunk only once every capture of the last has finished writing, and the wait follows After Effects' pace (it goes on while captures keep arriving), so a long comp is not cut off part way. The check never returns with its captures still queued unless After Effects stopped writing (none finished for `stallTimeoutMs`): it then asks for nothing more, keeps the capture folder instead of deleting it, and says so in `captureQueue`; `coverage` says how many of the call's frames were measured. Numbers are display values of the picture the viewer sees (stage 'output', after colour conversion, as ae_render_frame writes the file), with the thresholds used; it never says pass or fail. Times are seconds from the comp's start (frame × frame duration), ignoring the display start time.",
+			description: "Check a whole comp the way a viewer would watch it, in one call: walks the work area (or `from`..`to`), renders every frame (or every `every`th) at a reduced size, measures each in Node and lists what stands out. Flagged moments (`flags`, sorted by time): a one-frame pop or flash, a cut or jump, a stutter (a frame repeated while the frames around move) and a repeat at the edge of the range — the `diff` flags of ae_render_frame over the whole piece. Stretches: frozen (no visible change for at least frozenSeconds; a held title is legitimate, the report states the fact), near-black and near-white frames, and clipping (pixels at 255 in all three channels, with the box where they sit; per-channel shares alongside). Structure, read from the project on the call that reaches the end of the range: text layers whose bounds leave the frame (or `safeArea`) while visible — layer, time range, edge, by how many pixels, partly or wholly outside — missing fonts and footage, expressions in error (in nested comps too), and a report (not faults) of layers on screen and visible with nothing changing on them for longer than `idleSeconds`. One contact sheet tiles the flagged moments, labelled with time and kind; the frames on it are kept beside it, every other capture is deleted as soon as it is measured. A clean comp returns empty lists and no sheet. Bounded: at most `maxFrames` frames a call (default 300); when the range is not finished the result says where to continue (`next.startFrame`): call again with the same arguments plus that startFrame. Captures are asked of After Effects a chunk at a time, the next chunk only once every capture of the last has finished writing, and the wait follows After Effects' pace (it goes on while captures keep arriving), so a long comp is not cut off part way. The check never returns with its captures still queued unless After Effects stopped writing (none finished for `stallTimeoutMs`): it then asks for nothing more, keeps the capture folder instead of deleting it, and says so in `captureQueue`; `coverage` says how many of the call's frames were measured. Numbers are display values of the picture the viewer sees (stage 'output', after colour conversion, as ae_render_frame writes the file), with the thresholds used; it never says pass or fail. Times are seconds from the comp's start (frame × frame duration), ignoring the display start time.",
 			group: "render",
 			blockedInReadOnly: false,
 			effect: "write",

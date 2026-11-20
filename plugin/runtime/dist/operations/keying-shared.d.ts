@@ -144,7 +144,7 @@ export declare function spaceRefusal(io: {
  * After Effects' disk cache written while it tracks Object Matte through
  * `frames` frames of a source this size: one 16-bit RGBA frame of the source
  * per frame (8 bytes a pixel). Measured: one render of 320 frames of a 2176 x
- * 3840 take added about 19 GB (estimate 21.4 GB).
+ * 3840 take added about 19 GB (estimate 21.4 GB), measured on one machine.
  */
 export declare function cacheBytesFor(frames: number, sourceSize: [number, number] | number[] | null | undefined): number;
 /** The volume holding `dir`: the device number of its nearest existing folder, or null. */
@@ -248,7 +248,7 @@ export interface FrameReading {
     error?: string;
 }
 /** Read each rendered frame's alpha: holes and openings, a picture over `over`, and one contact sheet. */
-export declare function measureFrames(io: PixelIO, rendered: RenderedFrame[], limit: number, over: string, sheetPath: string, tally?: PixelTally, pictures?: boolean, onImage?: (r: FrameReading, img: DecodedPng) => void): Promise<{
+export declare function measureFrames(io: PixelIO, rendered: RenderedFrame[], limit: number, over: string, sheetPath: string, tally?: PixelTally, pictures?: boolean, onImage?: (r: FrameReading, img: DecodedPng) => void, below?: number): Promise<{
     readings: FrameReading[];
     picture: string | null;
 }>;
@@ -310,7 +310,7 @@ export interface FileIO extends PixelIO {
     /** Whether a file exists on this machine (default: fs.access). */
     exists?(file: string): Promise<boolean>;
 }
-/** Default most frames subject.check_file reads one by one; beyond it, it reads pairs in steps. About 0.55 s a frame measured. */
+/** Default most frames subject.check_file reads one by one; beyond it, it reads pairs in steps. About 0.55 s a frame, measured on one machine. */
 export declare const CHECK_FILE_MAX_FRAMES = 400;
 /** JSX: the movie (a file, or a footage item by id) in a throwaway comp of its own size. */
 export declare function fileCompJsx(args: {
@@ -352,4 +352,69 @@ export declare const SOFT_EDGE_DEFAULTS: {
     /** Face colour against the matte as clicked, CIELAB difference allowed. */
     colourLimit: number;
 };
+/**
+ * The motion edge's defaults, measured by hand on a studio take (2176 × 3840,
+ * 30 fps, a phone camera on a tripod that shifts slightly from frame to frame,
+ * 2026-11-16): Levels on the difference of neighbouring frames from 0.25 to
+ * 0.45 (lower thresholds, 0.03 to 0.10 and then 0.12 to 0.30, lit every still
+ * edge because of the camera's shift), the motion grown 25 px and blurred
+ * 15 px (Box Blur, 2 iterations), and the matte grown 50 px into the band
+ * where the keyer's edge shows. A plain 50 px band with no motion mask filled
+ * the gaps in a microphone mount, brought back the keyer's halo and let a
+ * plant behind the head through.
+ */
+export declare const MOTION_EDGE_DEFAULTS: {
+    threshold: {
+        black: number;
+        white: number;
+    };
+    motionGrow: number;
+    motionBlur: number;
+    motionBlurIterations: number;
+    band: number;
+    /** Minimax's Channel menu value for alpha alone. */
+    bandChannel: number;
+};
+/**
+ * In a motion-edge cut-out a hole or opening is read only where the alpha is
+ * under this (nearly clear), not under opaque as on a plain matte: the keyer's
+ * soft alpha on moving parts is the motion blur the layer is built to keep, so
+ * a soft patch is not a finding, while a clear hole (a missed microphone, a gap)
+ * still is. 0.05 rather than After Effects' 2/255 so the keyer's faint noise in
+ * a clear hole does not split it into pieces under the limit. Chosen offline,
+ * not calibrated on a live motion-edge take.
+ */
+export declare const MOTION_EDGE_CLEAR_BELOW = 0.05;
+/**
+ * Seen through in a motion-edge file: alpha from MOTION_EDGE_CLEAR_BELOW up to 0.5, deep inside
+ * the body, instead of 0.5 to 0.95. The keyer's soft alpha where a moving arm crossed the torso
+ * read 0.75 to 0.95 (1,486 px in a 30 px strip, 4 of 24 frames of a 1920 × 1080 take,
+ * 2026-11-16): the motion edge's own blur, which is expected. A patch more than half see-through
+ * deep in the body is still a defect, and below MOTION_EDGE_CLEAR_BELOW the hole check takes over,
+ * so no alpha falls between the two. 0.5 leaves a margin of 0.25 under the lowest blur measured.
+ */
+export declare const MOTION_EDGE_SEEN_THROUGH: {
+    solid: number;
+    below: number;
+};
+/** One sentence for check_file's reading of a motion-edge file. */
+export declare const MOTION_EDGE_FILE_READING: string;
+/** The layer that is the cut-out after subject.status: the soft edge, the motion edge, or the matted layer; or why there is no one answer. */
+export declare function cutLayerOf(st: Json, matted: unknown): {
+    layer: unknown;
+    motion: boolean;
+} | {
+    error: string;
+};
+/** The refusal when the layer already has the other edge: soften_edge on a motion edge, motion_edge on a soft edge. */
+export declare function otherEdgeError(existing: "soft" | "motion", layer: string): string;
+/**
+ * JSX: refuse an edge's undo while subject.use_cutout's movie ('<layer> cut-out') is in the comp.
+ * The undo switches the matted layer back on, so with the movie still above it the subject shows twice.
+ */
+export declare function cutoutMovieUndoGuardJsx(edge: "soft edge" | "motion edge"): string;
+/** JSX: an expression for bothEdgesError, from the JSX variables holding the two layer names. */
+export declare function bothEdgesErrorJsx(softVar: string, motionVar: string): string;
+/** The refusal when a layer has both a soft-edge and a motion-edge layer (the two do not combine). */
+export declare function bothEdgesError(soft: string, motion: string): string;
 //# sourceMappingURL=keying-shared.d.ts.map

@@ -64,6 +64,14 @@ describe("registration", () => {
     expect(getOp("subject.use_cutout")!.run).toBeUndefined();
     expect(getOp("subject.render_cutout")!.description).toMatch(/undo and rollback are refused/);
   });
+
+  it("says render_cutout blocks, so the time comes from a few frames timed on the user's machine before the call", () => {
+    const d = getOp("subject.render_cutout")!.description;
+    expect(d).toMatch(/390 s[^.]*measured on one machine/);
+    expect(d).toMatch(/19 GB[^.]*measured on one machine/);
+    expect(d).toMatch(/time a few frames on the user's machine/);
+    expect(d).toMatch(/before the call/);
+  });
 });
 
 // ------------------------------------------------------- render_cutout
@@ -175,6 +183,125 @@ describe("subject.render_cutout on a softened edge", () => {
     const j = renderCutoutPlanJsx({ comp: "Main", layer: 1 });
     expect(j).toContain('" soft edge"');
     expect(j).toContain("matteCopies");
+  });
+});
+
+const MOTION_COMMENT =
+  '{"compRoom":"motion-edge","layer":"raw_nogreen.mp4","wasEnabled":true,"comps":[11,12,13,14,15],"settings":{"keyerMatchName":"XYZ Made Up Keyer","keyerSettings":{},"threshold":{"black":0.25,"white":0.45},"motionGrow":25,"motionBlur":15,"band":50}}';
+
+/** Runs renderCutoutPlanJsx against a made-up comp: the matted layer and whatever else is given. */
+function runPlan(others: Array<{ name: string; comment?: string; enabled?: boolean }>) {
+  const cut: Any = {
+    name: "raw_nogreen.mp4",
+    enabled: false,
+    inPoint: 0,
+    outPoint: 10,
+    source: { width: 2176, height: 3840 },
+  };
+  const layers: Any[] = [...others.map((o) => ({ enabled: true, ...o })), cut];
+  const comp: Any = {
+    name: "Main",
+    width: 1080,
+    height: 1920,
+    duration: 10,
+    frameDuration: 1 / 30,
+    numLayers: layers.length,
+    layer: (i: number) => layers[i - 1],
+  };
+  const app = {
+    version: "27.0x52",
+    project: {
+      renderQueue: {
+        rendering: false,
+        items: {
+          add: () => ({
+            templates: ["Best Settings"],
+            outputModule: () => ({ templates: ["High Quality with Alpha"] }),
+            remove() {},
+          }),
+        },
+      },
+    },
+  };
+  const AE = loadAE();
+  AE.findCompByNameOrId = () => comp;
+  AE.findLayerInComp = () => cut;
+  return new Function("AE", "app", renderCutoutPlanJsx({ comp: "Main", layer: 1 }))(AE, app);
+}
+
+describe("subject.render_cutout after a motion edge", () => {
+  it("plans to render the motion-edge layer, not the switched-off matted layer, with one copy of the matte", () => {
+    const plan = runPlan([{ name: "raw_nogreen.mp4 motion edge", comment: MOTION_COMMENT }]);
+    expect(plan.ok).toBe(true);
+    expect(plan.keep).toEqual(["raw_nogreen.mp4 motion edge"]);
+    expect(plan.motionEdge).toBe("raw_nogreen.mp4 motion edge");
+    expect(plan.motionEdgeComment).toBe(MOTION_COMMENT);
+    expect(plan.softEdge).toBeNull();
+    // The object matte comp is used twice inside, but a comp renders once a frame; the matted layer is off.
+    expect(plan.matteCopies).toBe(1);
+  });
+
+  it("ignores a layer of that name that subject.motion_edge did not build", () => {
+    const plan = runPlan([{ name: "raw_nogreen.mp4 motion edge", comment: "" }]);
+    expect(plan.keep).toEqual(["raw_nogreen.mp4"]);
+    expect(plan.motionEdge).toBeNull();
+  });
+
+  it("still plans the soft-edge layer, with two copies of the matte", () => {
+    const plan = runPlan([
+      { name: "raw_nogreen.mp4 soft edge", comment: '{"compRoom":"soft-edge","layer":"raw_nogreen.mp4"}' },
+    ]);
+    expect(plan.keep).toEqual(["raw_nogreen.mp4 soft edge"]);
+    expect(plan.matteCopies).toBe(2);
+    expect(plan.motionEdge).toBeNull();
+  });
+
+  it("refuses when the layer has both a soft edge and a motion edge, naming both", () => {
+    const plan = runPlan([
+      { name: "raw_nogreen.mp4 soft edge", comment: '{"compRoom":"soft-edge","layer":"raw_nogreen.mp4"}' },
+      { name: "raw_nogreen.mp4 motion edge", comment: MOTION_COMMENT },
+    ]);
+    expect(plan.ok).toBe(false);
+    expect(plan.error).toContain("raw_nogreen.mp4 soft edge");
+    expect(plan.error).toContain("raw_nogreen.mp4 motion edge");
+    expect(plan.error).toMatch(/undo one/);
+  });
+
+  const MOTION_PLAN = {
+    ...PLAN,
+    keep: ["raw_nogreen.mp4 motion edge", "raw_nogreen.mp4 gap fill"],
+    softEdge: null,
+    motionEdge: "raw_nogreen.mp4 motion edge",
+    motionEdgeComment: MOTION_COMMENT,
+    matteCopies: 1,
+  };
+
+  it("renders the motion-edge layer, counts its one matte copy, and writes motionEdge beside the movie", async () => {
+    const out = path.join(dir, "cut.mov");
+    const io = renderIO(MOTION_PLAN);
+    const res = await runRenderCutout({ comp: "Main", layer: 1, outputPath: out }, io);
+    expect(res.ok).toBe(true);
+    expect(res.layers).toEqual(["raw_nogreen.mp4 motion edge", "raw_nogreen.mp4 gap fill"]);
+    const r = io.calls[1];
+    expect(r.code).toContain('"raw_nogreen.mp4 motion edge"');
+    // The cut-out layer renders even when switched off (subject.use_cutout leaves it off).
+    expect(r.code).toContain('var _subject = "raw_nogreen.mp4 motion edge"');
+    expect(res.space.parts.cache).toBe(cacheBytesFor(320, [2176, 3840]));
+    expect(res.cacheNote).toMatch(/motion edge/);
+    const side = JSON.parse(await fs.readFile(`${out}.comp-room.json`, "utf8"));
+    expect(side.softEdge).toBeNull();
+    expect(side.motionEdge).toMatchObject({
+      layer: "raw_nogreen.mp4 motion edge",
+      band: 50,
+      threshold: { black: 0.25, white: 0.45 },
+      motionGrow: 25,
+      motionBlur: 15,
+    });
+    const plain = await runRenderCutout(
+      { comp: "Main", layer: 1, outputPath: path.join(dir, "plain.mov") },
+      renderIO(),
+    );
+    expect(JSON.parse(await fs.readFile(plain.sidecar, "utf8")).motionEdge).toBeNull();
   });
 });
 
@@ -577,7 +704,7 @@ describe("subject.check_file", () => {
 
 // ------------------------------------------------------- use_cutout
 
-function useWorld({ taken = false, soft = false } = {}) {
+function useWorld({ taken = false, soft = false, motion = false } = {}) {
   const layers: Any[] = [];
   const mk = (name: string, extra: Any = {}) => {
     const l: Any = {
@@ -615,6 +742,17 @@ function useWorld({ taken = false, soft = false } = {}) {
       0,
       mk("raw_nogreen.mp4 soft edge", {
         comment: '{"compRoom":"soft-edge","layer":"raw_nogreen.mp4"}',
+        hasAudio: false,
+      }),
+    );
+  }
+  if (motion) {
+    cut.enabled = false;
+    layers.splice(
+      1,
+      0,
+      mk("raw_nogreen.mp4 motion edge", {
+        comment: MOTION_COMMENT,
         hasAudio: false,
       }),
     );
@@ -704,6 +842,33 @@ describe("subject.use_cutout", () => {
     ]);
     expect(w.layers[2].enabled).toBe(false);
     expect(res.switchedOff).toContain("raw_nogreen.mp4 soft edge");
+  });
+
+  it("with a motion edge, puts the movie above the motion-edge layer and switches it off; the original keeps the sound", () => {
+    const w = useWorld({ motion: true });
+    const res = runUse(w);
+    expect(res.ok).toBe(true);
+    expect(w.layers.map((l: Any) => l.name).slice(0, 4)).toEqual([
+      "Title",
+      "raw_nogreen.mp4 cut-out",
+      "raw_nogreen.mp4 motion edge",
+      "raw_nogreen.mp4",
+    ]);
+    expect(w.layers[2].enabled).toBe(false);
+    expect(res.switchedOff).toContain("raw_nogreen.mp4 motion edge");
+    expect(w.cut.audioEnabled).toBe(true);
+    expect(w.layers[1].audioEnabled).toBe(false);
+  });
+
+  it("refuses, adding nothing, when the layer has both a soft edge and a motion edge", () => {
+    const w = useWorld({ soft: true, motion: true });
+    const before = w.layers.map((l: Any) => l.name);
+    const res = runUse(w);
+    expect(res.ok).toBe(false);
+    expect(res.error).toContain("raw_nogreen.mp4 soft edge");
+    expect(res.error).toContain("raw_nogreen.mp4 motion edge");
+    expect(res.error).toMatch(/undo one/);
+    expect(w.layers.map((l: Any) => l.name)).toEqual(before);
   });
 
   it("starts the movie where the render started when told", () => {
@@ -1440,6 +1605,63 @@ describe("the soft edge's region line, beside the file and in the file check", (
     expect(res.notes).toContainEqual(expect.objectContaining({ kind: "region line" }));
     expect(res.inOut).toMatch(/region line at y 100/);
     expect(res.findings.filter((f: Any) => f.kind === "region line")).toEqual([]);
+  });
+
+  it("check_file on a motion-edge file: the keyer's soft alpha is not a hole; a clear hole still is", async () => {
+    /** The body with an enclosed soft patch (alpha 0.4) and, when `hard`, an enclosed clear one. */
+    const blurred = (hard: boolean) => (_frame: number) => {
+      const a = new Float64Array(W * H);
+      for (let y = 60; y < H; y++) for (let x = 40; x < 160; x++) a[y * W + x] = 1;
+      for (let y = 100; y < 140; y++) for (let x = 60; x < 100; x++) a[y * W + x] = 0.4;
+      if (hard) for (let y = 200; y < 240; y++) for (let x = 110; x < 150; x++) a[y * W + x] = 0;
+      return a;
+    };
+    const file = path.join(dir, "motion.mov");
+    await fs.writeFile(file, "");
+    await fs.writeFile(`${file}.comp-room.json`, JSON.stringify({ softEdge: null, motionEdge: { layer: "raw_nogreen.mp4 motion edge", band: 50 } }));
+    const exists = async () => true;
+    const clean = await runCheckFile({ path: file, outDir: dir, frozenFrames: 1e9, holeLimit: 1000 }, { ...fileIO({ matteAt: blurred(false) }), exists });
+    expect(clean.findings.filter((f: Any) => f.kind === "hole")).toEqual([]);
+    const flawed = await runCheckFile({ path: file, outDir: dir, frozenFrames: 1e9, holeLimit: 1000 }, { ...fileIO({ matteAt: blurred(true) }), exists });
+    expect(flawed.findings).toContainEqual(expect.objectContaining({ kind: "hole", box: { x: 110, y: 200, width: 40, height: 40 } }));
+    expect(flawed.findings.filter((f: Any) => f.kind === "hole")).toHaveLength(1);
+    // Without the sidecar the soft patch is a hole, as before.
+    const plainFile = path.join(dir, "plain.mov");
+    await fs.writeFile(plainFile, "");
+    const plain = await runCheckFile({ path: plainFile, outDir: dir, frozenFrames: 1e9, holeLimit: 1000 }, { ...fileIO({ matteAt: blurred(false) }), exists });
+    expect(plain.findings).toContainEqual(expect.objectContaining({ kind: "hole", box: { x: 60, y: 100, width: 40, height: 40 } }));
+  });
+
+  it("check_file on a motion-edge file: a moving arm's soft alpha across the body is not seen through; a half-clear patch still is", async () => {
+    /** The body with a 30 px strip deep inside at `a` (the live take: 0.75 to 0.95 where the arm crossed the torso). */
+    const strip = (a: number) => (_frame: number) => {
+      const m = new Float64Array(W * H);
+      for (let y = 60; y < H; y++) for (let x = 40; x < 160; x++) m[y * W + x] = 1;
+      for (let y = 150; y < 250; y++) for (let x = 85; x < 115; x++) m[y * W + x] = a;
+      return m;
+    };
+    const file = path.join(dir, "motion-seen.mov");
+    await fs.writeFile(file, "");
+    await fs.writeFile(`${file}.comp-room.json`, JSON.stringify({ softEdge: null, motionEdge: { layer: "raw_nogreen.mp4 motion edge", band: 50 } }));
+    const exists = async () => true;
+    const seen = (r: Any) => r.findings.filter((f: Any) => f.kind === "seen-through");
+    for (const a of [0.75, 0.85, 0.95 - 1e-3]) {
+      const arm = await runCheckFile({ path: file, outDir: dir, frozenFrames: 1e9 }, { ...fileIO({ matteAt: strip(a) }), exists });
+      expect(seen(arm)).toEqual([]);
+      expect(arm.stop).toBe(false);
+    }
+    const arm = await runCheckFile({ path: file, outDir: dir, frozenFrames: 1e9 }, { ...fileIO({ matteAt: strip(0.85) }), exists });
+    expect(arm.motionEdge?.reading).toMatch(/soft alpha on moving parts is expected/);
+    expect(arm.inOut).toMatch(/soft alpha on moving parts is expected/);
+    const patch = await runCheckFile({ path: file, outDir: dir, frozenFrames: 1e9 }, { ...fileIO({ matteAt: strip(0.25) }), exists });
+    expect(seen(patch)).toHaveLength(1);
+    expect(patch.stop).toBe(true);
+    // Without the sidecar the arm's strip is seen through, as before.
+    const plainFile = path.join(dir, "plain-seen.mov");
+    await fs.writeFile(plainFile, "");
+    const plain = await runCheckFile({ path: plainFile, outDir: dir, frozenFrames: 1e9 }, { ...fileIO({ matteAt: strip(0.85) }), exists });
+    expect(seen(plain)).toHaveLength(1);
+    expect(plain.motionEdge).toBeNull();
   });
 
   it("takes the line as a parameter for a file rendered before the sidecar, and says nothing without one", async () => {

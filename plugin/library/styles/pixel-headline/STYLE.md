@@ -33,7 +33,7 @@ These are requirements. A piece without them is not in this style.
 | **The user's click comes first** | The cut-out needs one click from the user, which cannot be made unattended. Get it before they leave. | The first piece's first version was built on the room because the user was asleep. |
 | A cut-out for a whole piece | Scale the take to delivery size first (1088 × 1920 for a 1080 frame). Render it in halves (`subject.render_cutout({ from, to })`), emptying After Effects' cache between them, and join the two movies with a stream copy. | Two halves of 43.5 s took about 4.3 minutes and 12 GB of cache each. |
 | No remnants of the room | Every piece of chair or wall left inside the matte comes out. Look on frames spread across the piece. | A clean ground shows every remnant. Take each out by brightness and colour together (`speaker({ remnants })`): keyed on brightness alone, one hole also took the hand. |
-| Disk | Check free space before each render. Under 14 GB free, purge After Effects' cache. | An Object Matte cache can reach about 19 GB per 10 s of 4K. |
+| Disk | Check free space before each render. Under 14 GB free, purge After Effects' cache. | An Object Matte cache can reach about 19 GB per 10 s of 4K (measured on one machine). |
 | The cut-out's own pitfalls | Use the builder's blend modes, not nested track mattes, which do not work. A hole keyed by colour needs Lab a* in Color Range: Linear Color Key on chroma or hue could not split skin from a chair under the same cast. A layer used only as a matte must be switched off, or it adds its own pixels. A render with `isolate` shows matte layers, so judge the outline on a full render. | All hit on the first piece (proven) |
 | The project's colour settings | Working space None, 8 bpc. `stage` reports the working space and warns otherwise. | A working space carries over from the last project; an ACEScg space rendered one take at a gamma of about 1.8. The plugin's colour readings refuse a colour-managed project for their own reasons (`quality`, "Colour-managed and 32 bpc projects"). |
 | The voice on its own track | Some cameras put the voice on channel one of four, and After Effects renders such a take silent. Extract a mono WAV of that channel first (technique `word-timing`). | |
@@ -304,7 +304,7 @@ Limits: a giant word of up to about eight letters keeps its size, longer ones sh
   words: [{ text, t }], stressed: index, split: [leadEnd, tailStart] (optional),
   clips: [{ item: FootageItem, start: seconds }], side: "left" | "right",
   accent: [r, g, b], ground: [r, g, b], grade: { mixer, inBlack, inWhite, gamma, saturation },
-  glow: "auto" | "deep" | "stock", exposure (optional), seed, push: true | false,
+  glow: "auto" | "deep" | "stock", licensed: true (optional), exposure (optional), seed, push: true | false,
   cutout: FootageItem (the speaker built from the rendered cut-out; with take beside it), look, remnants,
   tone: "light" | "dark", tuck: { hairY, depth }, tailSize, leadBaseline, wordBaseline, tailBaseline,
   exitAt: seconds (when the beat starts to leave; checked for a hold) }
@@ -312,11 +312,11 @@ Limits: a giant word of up to about eight letters keeps its size, longer ones sh
 
 ## 6. What the build reports back
 
-`beat` returns W, which glow it used (`deep` or `stock`), the cards' first frames, the push's start and whether the speaker's sway was divided out, the word's settled box and size, the card scale and positions, the drawn line's path, the number of pixel blocks, and warnings: cards that cannot clear the face, a line that cannot land before `exitAt`, a hold under 10 frames, a line of more than five words, text inside a reel's margins, a giant phrase, the project's working space, and the footage used as the ground. After a render, check: the face clear on every frame; text inside the frame; the giant word within a frame of the spoken stress; each pop's peak, low and settle against section 3; the file check.
+`beat` returns W, which glow it used (`deep` or `stock`), the cards' first frames, the push's start and whether the speaker's sway was divided out, the word's settled box and size, the card scale and positions, the drawn line's path, the number of pixel blocks, and warnings: cards that cannot clear the face, a line that cannot land before `exitAt`, a hold under 10 frames, a line of more than five words, text inside a reel's margins, a giant phrase, the project's working space, the footage used as the ground, and a Deep Glow installed but not licensed. After a render, check: the face clear on every frame; text inside the frame; the giant word within a frame of the spoken stress; each pop's peak, low and settle against section 3; the file check.
 
 ## 7. Dependencies
 
-A rendered cut-out of the speaker (D1). Inter Bold (OFL, from Google Fonts; `fontOK()` stops the build when it is missing). The text reveal is a native text animator with two sliders; it needs no plugin. The glow uses Deep Glow (`PEDG2`) when it is installed and two stock Glows otherwise; `beat` reports which. The stock pair matches the haze near the word and falls short further out.
+A rendered cut-out of the speaker (D1). Inter Bold (OFL, from Google Fonts; `fontOK()` stops the build when it is missing). The text reveal is a native text animator with two sliders; it needs no plugin. The glow uses Deep Glow (`PEDG2`) when it is installed and licensed, and two stock Glows otherwise; `beat` reports which. An installed Deep Glow without its licence file (`com.aescripts.DeepGlow2.lic` in Application Support) renders a trial watermark, so `glow: "auto"` takes the stock pair and the report says "Deep Glow is installed but not licensed; used the stock glow". A licence stored elsewhere: pass `licensed: true` (in the brief or to `heroWord`). Asking for `glow: "deep"` on an unlicensed install still uses Deep Glow, and the report warns that the trial watermark will render. The stock pair matches the haze near the word and falls short further out.
 
 ## 8. How far it is tested
 

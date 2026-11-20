@@ -1,863 +1,13 @@
 import { __esmMin } from "./rolldown-runtime.js";
 import { getOp, init_config, init_registry, jsxCompLayerPreamble, jsxCompPreamble, jsxFail, jsxVal, registerOp, rejectedOutputPath } from "./core-1.js";
-import { CLOSE_CLICK_SHARE, COUNT_NOTE, CUTOUT_HOLE_LIMIT, CUTOUT_OVER, FX_ROOT_JSX, GB, NEED_CLICK, NODE_ONLY, OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, PICTURE_MARGIN_BYTES, SETTLE_MAX_MS, SOFT_EDGE_DEFAULTS, SUBJECT_WHOLE_PIECE_NOTE, acceptedBy, aeCacheRoot, alikeRegions, cacheBytesFor, captureBytes, compLayerParams, fileCleanupJsx, fileCompJsx, fmt, frozenAccepted, frozenFinding, frozenOpts, gb, init_keying_key, init_keying_reference, init_keying_shared, intersects, liveCutoutIO, liveFileIO, measureFrames, needSelection, overParam, overPicture, parseHex, perFrameMsOf, pixelTally, plural, regionsOf, renderChunked, renderTally, roundTally, since, spacePlan, spaceRefusal, statfsFree, subjectIndexParam, summarize, trackedSpan, writePng } from "./operations-1.js";
-import { COMP_CORNERS_FN, init_snippets } from "./operations-4.js";
 import { PARK_QUEUE_FN, QUEUE_CHANGE_NOTE, RENDER_QUEUE_UNDO_WARNING, init_render } from "./operations-3.js";
+import { CLOSE_CLICK_SHARE, COUNT_NOTE, CUTOUT_HOLE_LIMIT, CUTOUT_OVER, FX_ROOT_JSX, GB, MOTION_EDGE_CLEAR_BELOW, MOTION_EDGE_DEFAULTS, MOTION_EDGE_FILE_READING, MOTION_EDGE_SEEN_THROUGH, NEED_CLICK, NODE_ONLY, OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, PICTURE_MARGIN_BYTES, SETTLE_MAX_MS, SOFT_EDGE_DEFAULTS, SUBJECT_WHOLE_PIECE_NOTE, acceptedBy, aeCacheRoot, alikeRegions, bothEdgesErrorJsx, cacheBytesFor, captureBytes, compLayerParams, cutLayerOf, cutoutMovieUndoGuardJsx, fileCleanupJsx, fileCompJsx, fmt, frozenAccepted, frozenFinding, frozenOpts, gb, init_keying_key, init_keying_reference, init_keying_shared, intersects, liveCutoutIO, liveFileIO, measureFrames, needSelection, otherEdgeError, overParam, overPicture, parseHex, perFrameMsOf, pixelTally, plural, regionsOf, renderChunked, renderTally, roundTally, since, spacePlan, spaceRefusal, statfsFree, subjectIndexParam, summarize, trackedSpan, writePng } from "./operations-1.js";
+import { COMP_CORNERS_FN, init_snippets } from "./operations-4.js";
 import { EDGE_DEFAULTS, SEEN_THROUGH_DEFAULTS, SPECK_DEFAULTS, composeContactSheet, cutoutRegions, distanceTo, enclosedHoles, encodePngGray8, encodePngSrgb8, flattenOver, furthestFrame, growMask, init_matte, init_png16, init_sheet, labOf, lookCrops, matteCoverage, measureLook, outlineTracker, resample, seenThroughInside, speckPieces, subjectTop, summarizeLookSeries } from "./color-1.js";
 import { init_capture_shared, init_render_frame } from "./tools-1.js";
 import { execFile } from "node:child_process";
 import { promises } from "node:fs";
 import * as path$1 from "node:path";
-
-// operations/layer.js
-function init_layer() {
-	return (init_layer = __esmMin((() => {
-		init_registry();
-		registerOp({
-			name: "layer.create_solid",
-			category: "layer",
-			description: "Create a solid layer in a composition.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "name",
-					type: "string",
-					description: "Layer name",
-					required: false,
-					default: "Solid"
-				},
-				{
-					name: "color",
-					type: "array",
-					description: "[r,g,b] 0-1",
-					required: false,
-					default: [
-						1,
-						1,
-						1
-					]
-				},
-				{
-					name: "width",
-					type: "number",
-					description: "Width in px (default: comp width)",
-					required: false
-				},
-				{
-					name: "height",
-					type: "number",
-					description: "Height in px (default: comp height)",
-					required: false
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompPreamble(args)}
-            var _w = ${jsxVal(args.width)} || _comp.width;
-            var _h = ${jsxVal(args.height)} || _comp.height;
-            var _layer = _comp.layers.addSolid(${jsxVal(args.color ?? [
-					1,
-					1,
-					1
-				])}, ${jsxVal(args.name ?? "Solid")}, _w, _h, _comp.pixelAspect, _comp.duration);
-            return { ok: true, index: _layer.index, name: _layer.name };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.create_adjustment",
-			category: "layer",
-			description: "Create an adjustment layer (a comp-sized solid with adjustmentLayer on) — the carrier for comp-wide effects such as Posterize Time or a color grade. Add effects with effect.add.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "name",
-					type: "string",
-					description: "Layer name",
-					required: false,
-					default: "Adjustment Layer"
-				},
-				{
-					name: "width",
-					type: "number",
-					description: "Width in px (default: comp width)",
-					required: false
-				},
-				{
-					name: "height",
-					type: "number",
-					description: "Height in px (default: comp height)",
-					required: false
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompPreamble(args)}
-            var _w = ${jsxVal(args.width)} || _comp.width;
-            var _h = ${jsxVal(args.height)} || _comp.height;
-            var _layer = _comp.layers.addSolid([1, 1, 1], ${jsxVal(args.name ?? "Adjustment Layer")}, _w, _h, _comp.pixelAspect, _comp.duration);
-            _layer.adjustmentLayer = true;
-            return { ok: true, index: _layer.index, name: _layer.name, adjustmentLayer: _layer.adjustmentLayer };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.create_shape",
-			category: "layer",
-			description: "Create an empty shape layer.",
-			params: [{
-				name: "comp",
-				type: "any",
-				description: "Comp name or id",
-				required: true
-			}, {
-				name: "name",
-				type: "string",
-				description: "Layer name",
-				required: false
-			}],
-			toJsx(args) {
-				return `
-            ${jsxCompPreamble(args)}
-            var _layer = _comp.layers.addShape();
-            ${args.name ? `_layer.name = ${jsxVal(args.name)};` : ""}
-            return { ok: true, index: _layer.index, name: _layer.name };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.create_text",
-			category: "layer",
-			description: "Create a text layer: point text by default, paragraph (box) text when boxSize is given, vertical when orientation='vertical' (AE 24.2+). Point<->box conversion is not scriptable, so pick the right kind here.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "text",
-					type: "string",
-					description: "Text content",
-					required: false,
-					default: ""
-				},
-				{
-					name: "name",
-					type: "string",
-					description: "Layer name",
-					required: false
-				},
-				{
-					name: "boxSize",
-					type: "array",
-					description: "[width, height] — creates paragraph (box) text instead of point text",
-					required: false
-				},
-				{
-					name: "boxPosition",
-					type: "array",
-					description: "[x, y] top-left of the box in layer space (box text only)",
-					required: false
-				},
-				{
-					name: "orientation",
-					type: "string",
-					description: "horizontal|vertical (vertical needs AE 24.2+)",
-					required: false,
-					default: "horizontal"
-				}
-			],
-			toJsx(args) {
-				const boxPosJsx = !args.boxPosition ? "" : `try {
-                var _src = _layer.property("Source Text");
-                var _doc = _src.value;
-                _doc.boxTextPos = ${jsxVal(args.boxPosition)};
-                _src.setValue(_doc);
-            } catch (eBp) {}`;
-				return `
-            ${jsxCompPreamble(args)}
-            var _box = ${jsxVal(args.boxSize ?? null)};
-            var _vertical = ${jsxVal(args.orientation)} === "vertical";
-            var _layer;
-            if (_box !== null) {
-                if (_vertical) {
-                    if (typeof _comp.layers.addVerticalBoxText !== "function") return { ok: false, error: "vertical box text needs AE 24.2+" };
-                    _layer = _comp.layers.addVerticalBoxText(_box, ${jsxVal(args.text ?? "")});
-                } else {
-                    _layer = _comp.layers.addBoxText(_box, ${jsxVal(args.text ?? "")});
-                }
-            } else {
-                if (_vertical) {
-                    if (typeof _comp.layers.addVerticalText !== "function") return { ok: false, error: "vertical text needs AE 24.2+" };
-                    _layer = _comp.layers.addVerticalText(${jsxVal(args.text ?? "")});
-                } else {
-                    _layer = _comp.layers.addText(${jsxVal(args.text ?? "")});
-                }
-            }
-            ${args.name ? `_layer.name = ${jsxVal(args.name)};` : ""}
-            ${boxPosJsx}
-            return { ok: true, index: _layer.index, name: _layer.name, boxText: _box !== null, vertical: _vertical };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.create_null",
-			category: "layer",
-			description: "Create a null object layer.",
-			params: [{
-				name: "comp",
-				type: "any",
-				description: "Comp name or id",
-				required: true
-			}, {
-				name: "name",
-				type: "string",
-				description: "Layer name",
-				required: false
-			}],
-			toJsx(args) {
-				return `
-            ${jsxCompPreamble(args)}
-            var _layer = _comp.layers.addNull();
-            ${args.name ? `_layer.name = ${jsxVal(args.name)};` : ""}
-            return { ok: true, index: _layer.index, name: _layer.name };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.create_camera",
-			category: "layer",
-			description: "Create a camera layer.",
-			params: [{
-				name: "comp",
-				type: "any",
-				description: "Comp name or id",
-				required: true
-			}, {
-				name: "name",
-				type: "string",
-				description: "Layer name",
-				required: false,
-				default: "Camera"
-			}],
-			toJsx(args) {
-				return `
-            ${jsxCompPreamble(args)}
-            var _layer = _comp.layers.addCamera(${jsxVal(args.name ?? "Camera")}, [_comp.width/2, _comp.height/2]);
-            return { ok: true, index: _layer.index, name: _layer.name };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.create_light",
-			category: "layer",
-			description: "Create a light layer.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "name",
-					type: "string",
-					description: "Layer name",
-					required: false,
-					default: "Light"
-				},
-				{
-					name: "lightType",
-					type: "string",
-					description: "spot|parallel|point|ambient|environment (environment needs AE 24.3+ / Advanced 3D)",
-					required: false,
-					default: "spot"
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompPreamble(args)}
-            var _ltMap = {
-                "spot": LightType.SPOT,
-                "parallel": LightType.PARALLEL,
-                "point": LightType.POINT,
-                "ambient": LightType.AMBIENT
-            };
-            // 24.3+ only \u2014 probed so older hosts keep the classic four.
-            try { if (LightType.ENVIRONMENT !== undefined) _ltMap.environment = LightType.ENVIRONMENT; } catch (eEnv) {}
-            var _ltArg = ${jsxVal(args.lightType ?? "spot")};
-            if (!_ltMap.hasOwnProperty(_ltArg)) {
-                return { ok: false, error: "unknown lightType '" + _ltArg + "'" + (_ltArg === "environment" ? " \u2014 environment lights need AE 24.3+" : "") };
-            }
-            var _layer = _comp.layers.addLight(${jsxVal(args.name ?? "Light")}, [_comp.width/2, _comp.height/2]);
-            var _applied = null;
-            try { _layer.lightType = _ltMap[_ltArg]; _applied = _ltArg; } catch (eLt) {}
-            return { ok: true, index: _layer.index, name: _layer.name, lightType: _applied };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.create_parametric_mesh",
-			category: "layer",
-			description: "Create a parametric 3D mesh layer (LayerCollection.addParametricMesh, AE 26.3+): cube|sphere|plane|cylinder|cone|torus. Best rendered with the Advanced 3D renderer (comp.set_renderer).",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "name",
-					type: "string",
-					description: "Layer name",
-					required: false,
-					default: "Mesh"
-				},
-				{
-					name: "meshType",
-					type: "string",
-					description: "cube|sphere|plane|cylinder|cone|torus",
-					required: true
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompPreamble(args)}
-            if (typeof _comp.layers.addParametricMesh !== "function") return { ok: false, error: "addParametricMesh needs AE 26.3+" };
-            var _mtMap = {
-                "cube": ParametricMeshType.CUBE,
-                "sphere": ParametricMeshType.SPHERE,
-                "plane": ParametricMeshType.PLANE,
-                "cylinder": ParametricMeshType.CYLINDER,
-                "cone": ParametricMeshType.CONE,
-                "torus": ParametricMeshType.TORUS
-            };
-            var _mtArg = ${jsxVal(args.meshType)};
-            if (!_mtMap.hasOwnProperty(_mtArg)) return { ok: false, error: "meshType must be cube|sphere|plane|cylinder|cone|torus" };
-            var _layer = null;
-            try { _layer = _comp.layers.addParametricMesh(${jsxVal(args.name ?? "Mesh")}, _mtMap[_mtArg]); } catch (ePm) { return { ok: false, error: "addParametricMesh failed: " + AE.errText(ePm) }; }
-            return { ok: true, index: _layer.index, name: _layer.name, meshType: _mtArg };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.delete",
-			category: "layer",
-			description: "Delete layers. comp supports pattern ('review_id_*'). layer supports index, name, 'selected', 'all'.",
-			params: [{
-				name: "comp",
-				type: "any",
-				description: "Comp name/id/pattern (e.g. 'review_id_*')",
-				required: true
-			}, {
-				name: "layer",
-				type: "any",
-				description: "Layer index, name, 'selected', or 'all'",
-				required: true
-			}],
-			toJsx(args) {
-				return `
-            var _comps = AE.findComps(${jsxVal(args.comp)});
-            if (_comps.length === 0) return { ok: false, error: "no comps matched" };
-            var _removed = 0;
-            for (var _ci = 0; _ci < _comps.length; _ci++) {
-                var _layers = AE.resolveLayers(_comps[_ci], ${jsxVal(args.layer)});
-                for (var _li = _layers.length - 1; _li >= 0; _li--) {
-                    try { _layers[_li].remove(); _removed++; } catch(e) {}
-                }
-            }
-            return { ok: true, removed: _removed, comps: _comps.length };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.duplicate",
-			category: "layer",
-			description: "Duplicate a layer. Returns the new layer's index.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "1-based layer index, or the layer name",
-					required: true
-				},
-				{
-					name: "newName",
-					type: "string",
-					description: "Name for the duplicate",
-					required: false
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompLayerPreamble(args)}
-            var _dup = _layer.duplicate();
-            ${args.newName ? `_dup.name = ${jsxVal(args.newName)};` : ""}
-            return { ok: true, index: _dup.index, name: _dup.name };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.set_parent",
-			category: "layer",
-			description: "Set or clear a layer's parent. By default AE compensates the child's transform so it doesn't move; jump=true skips compensation (setParentWithJump) so the child adopts the parent's space.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "1-based child layer index, or the layer name",
-					required: true
-				},
-				{
-					name: "parentLayer",
-					type: "any",
-					description: "1-based parent layer index or name. Pass null or 0 to unparent.",
-					required: true,
-					nullable: true
-				},
-				{
-					name: "jump",
-					type: "boolean",
-					description: "true = no transform compensation (setParentWithJump). Default false.",
-					required: false,
-					default: false
-				}
-			],
-			toJsx(args) {
-				const parentVal = args.parentLayer === null || args.parentLayer === 0 ? "null" : `_comp.layer(${jsxVal(args.parentLayer)})`;
-				const assign = args.jump === true ? `if (typeof _layer.setParentWithJump !== "function") return { ok: false, error: "setParentWithJump needs AE 17.1+" };
-            _layer.setParentWithJump(${parentVal});` : `_layer.parent = ${parentVal};`;
-				return `
-            ${jsxCompLayerPreamble(args)}
-            ${assign}
-            return { ok: true, parent: _layer.parent ? { index: _layer.parent.index, name: _layer.parent.name } : null };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.scene_edit_detection",
-			category: "layer",
-			description: "Run Scene Edit Detection on a video layer (Layer.doSceneEditDetection, AE 22.3+): find cuts in edited footage and mark or split at them.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "1-based layer index, or the layer name",
-					required: true
-				},
-				{
-					name: "mode",
-					type: "string",
-					description: "markers (add layer markers) | split (split layer) | splitPrecomp (split + precompose each) | none (detect only)",
-					required: true
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompLayerPreamble(args)}
-            if (typeof _layer.doSceneEditDetection !== "function") return { ok: false, error: "doSceneEditDetection needs AE 22.3+" };
-            var _sdMap = {
-                "markers": SceneEditDetectionMode.MARKERS,
-                "split": SceneEditDetectionMode.SPLIT,
-                "splitPrecomp": SceneEditDetectionMode.SPLIT_PRECOMP,
-                "none": SceneEditDetectionMode.NONE
-            };
-            var _mode = ${jsxVal(args.mode)};
-            if (!_sdMap.hasOwnProperty(_mode)) return { ok: false, error: "mode must be markers|split|splitPrecomp|none" };
-            var _edits = null;
-            try { _edits = _layer.doSceneEditDetection(_sdMap[_mode]); } catch (eSd) { return { ok: false, error: "doSceneEditDetection failed: " + AE.errText(eSd) }; }
-            return { ok: true, mode: _mode, editTimes: AE.valueToJson(_edits), numLayers: _comp.numLayers };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.move",
-			category: "layer",
-			description: "Move a layer to a new stacking position (1 = top).",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "1-based current layer index, or the layer name",
-					required: true
-				},
-				{
-					name: "toIndex",
-					type: "number",
-					description: "1-based target index, within 1..numLayers",
-					required: true
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompLayerPreamble(args)}
-            var _to = ${jsxVal(args.toIndex)};
-            if (typeof _to !== "number" || isNaN(_to) || _to !== Math.floor(_to)) {
-                return { ok: false, error: "toIndex must be a whole number, got " + _to };
-            }
-            if (_to < 1 || _to > _comp.numLayers) {
-                return { ok: false, error: "toIndex " + _to + " is out of range (comp has " + _comp.numLayers + " layers)" };
-            }
-            var _from = _layer.index;
-            // NOT _layer.moveTo(_to). Layer inherits moveTo from PropertyBase,
-            // so it exists and type-checks \u2014 and then throws for every layer,
-            // every time: "Can not moveTo this property, because parent is not
-            // an INDEXED_GROUP". A layer's parent is the composition, not a
-            // property group, so the inherited method never applies. Reordering
-            // layers is only expressible relative to a sibling.
-            if (_to < _from) {
-                // Upward: land directly above whoever holds _to right now.
-                _layer.moveBefore(_comp.layer(_to));
-            } else if (_to > _from) {
-                // Downward: everything between _from and _to shifts up by one
-                // as soon as _layer vacates its slot, so the layer currently at
-                // _to ends up at _to - 1 \u2014 landing AFTER it is what puts
-                // _layer at _to.
-                _layer.moveAfter(_comp.layer(_to));
-            }
-            return { ok: true, fromIndex: _from, newIndex: _layer.index, name: _layer.name };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.create_footage",
-			category: "layer",
-			description: "Add an existing project item (footage or comp) as a layer in a composition.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "sourceItemId",
-					type: "number",
-					description: "Project item id to use as source",
-					required: true
-				},
-				{
-					name: "name",
-					type: "string",
-					description: "Layer name",
-					required: false
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompPreamble(args)}
-            var _src = AE.findItemById(${jsxVal(args.sourceItemId)});
-            if (!_src) return { ok: false, error: "no item with id " + ${jsxVal(args.sourceItemId)} };
-            var _layer = _comp.layers.add(_src);
-            ${args.name ? `_layer.name = ${jsxVal(args.name)};` : ""}
-            return { ok: true, index: _layer.index, name: _layer.name };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.set_enabled",
-			category: "layer",
-			description: "Enable or disable a layer by name or index. Can target all comps matching a pattern.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name/id, or '*' for all comps, or 'review_id_*' for pattern match",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "Layer index (number) or name (string)",
-					required: true
-				},
-				{
-					name: "enabled",
-					type: "boolean",
-					description: "true=visible, false=hidden",
-					required: true
-				}
-			],
-			toJsx(args) {
-				return `
-            var _comps = AE.findComps(${jsxVal(args.comp)});
-            var _updated = 0;
-            for (var ci = 0; ci < _comps.length; ci++) {
-                var _layer = AE.findLayerInComp(_comps[ci], ${jsxVal(args.layer)});
-                if (_layer) { _layer.enabled = ${jsxVal(!!args.enabled)}; _updated++; }
-            }
-            return { ok: true, updated: _updated };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.set_guide",
-			category: "layer",
-			description: "Set guideLayer on/off for a layer. Can target all comps matching a pattern.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name/id, or '*' for all comps, or 'review_id_*' for pattern match",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "Layer index (number) or name (string)",
-					required: true
-				},
-				{
-					name: "guide",
-					type: "boolean",
-					description: "true=guide layer, false=normal",
-					required: true
-				}
-			],
-			toJsx(args) {
-				return `
-            var _comps = AE.findComps(${jsxVal(args.comp)});
-            var _updated = 0;
-            for (var ci = 0; ci < _comps.length; ci++) {
-                var _layer = AE.findLayerInComp(_comps[ci], ${jsxVal(args.layer)});
-                if (_layer) { _layer.guideLayer = ${jsxVal(!!args.guide)}; _updated++; }
-            }
-            return { ok: true, updated: _updated };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.set_props",
-			category: "layer",
-			description: "Set basic layer properties. layer can be index, name, 'selected', or 'all'. Enum-valued attributes accept string names: quality (best|draft|wireframe), samplingQuality (bilinear|bicubic), frameBlendingType (off|frameMix|pixelMotion), autoOrient (off|alongPath|cameraOrPointOfInterest|charactersTowardCamera), blendingMode, lightType (spot|parallel|point|ambient|environment).",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "Layer index, name, 'selected', or 'all'",
-					required: true
-				},
-				{
-					name: "props",
-					type: "object",
-					description: "Object with keys to set, e.g. { name: 'foo', enabled: false, label: 5, threeDLayer: true }",
-					required: true
-				}
-			],
-			toJsx(args) {
-				const props = args.props ?? {};
-				const lines = [];
-				for (const [k, v] of Object.entries(props)) lines.push(`try { _l[${jsxVal(k)}] = AE.coerceLayerPropValue(${jsxVal(k)}, ${jsxVal(v)}); } catch (e) { _w.push(${jsxVal(k)} + ": " + AE.errText(e)); }`);
-				return `
-            ${jsxCompPreamble(args)}
-            var _layers = AE.resolveLayers(_comp, ${jsxVal(args.layer)});
-            if (_layers.length === 0) return { ok: false, error: "no layers matched" };
-            var _results = [];
-            for (var _li = 0; _li < _layers.length; _li++) {
-                var _l = _layers[_li];
-                var _w = [];
-                ${lines.join("\n")}
-                _results.push({ name: _l.name, warnings: _w });
-            }
-            return { ok: true, count: _results.length, layers: _results };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.add_guide",
-			category: "layer",
-			description: "Add a ruler guide to a layer's Layer panel view (Layer.addGuide, AE 16.1+). Comp-panel guides live under comp.add_guide.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "1-based layer index, or the layer name",
-					required: true
-				},
-				{
-					name: "orientation",
-					type: "string",
-					description: "horizontal|vertical",
-					required: true
-				},
-				{
-					name: "position",
-					type: "number",
-					description: "Position in px (y for horizontal, x for vertical)",
-					required: true
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompLayerPreamble(args)}
-            if (typeof _layer.addGuide !== "function") return { ok: false, error: "layer guides need AE 16.1+" };
-            var _orient = ${jsxVal(args.orientation)} === "vertical" ? 1 : 0;
-            var _idx = _layer.addGuide(_orient, ${jsxVal(args.position)});
-            return { ok: true, guideIndex: _idx, numGuides: _layer.guides.length };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.remove_guide",
-			category: "layer",
-			description: "Remove a Layer-panel ruler guide by its 0-based index (see layer.list_guides).",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "1-based layer index, or the layer name",
-					required: true
-				},
-				{
-					name: "guideIndex",
-					type: "number",
-					description: "0-based guide index",
-					required: true
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompLayerPreamble(args)}
-            if (typeof _layer.removeGuide !== "function") return { ok: false, error: "layer guides need AE 16.1+" };
-            var _guides = _layer.guides;
-            if (${jsxVal(args.guideIndex)} < 0 || ${jsxVal(args.guideIndex)} >= _guides.length) {
-                return { ok: false, error: "guide index out of range (0-" + (_guides.length - 1) + ")" };
-            }
-            _layer.removeGuide(${jsxVal(args.guideIndex)});
-            return { ok: true, numGuides: _layer.guides.length };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.move_guide",
-			category: "layer",
-			description: "Move an existing Layer-panel ruler guide to a new position (Layer.setGuide). Named move_guide because layer.set_guide already means the guide-LAYER flag.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "layer",
-					type: "any",
-					description: "1-based layer index, or the layer name",
-					required: true
-				},
-				{
-					name: "guideIndex",
-					type: "number",
-					description: "0-based guide index",
-					required: true
-				},
-				{
-					name: "position",
-					type: "number",
-					description: "New position in px",
-					required: true
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompLayerPreamble(args)}
-            if (typeof _layer.setGuide !== "function") return { ok: false, error: "layer guides need AE 16.1+" };
-            var _guides = _layer.guides;
-            if (${jsxVal(args.guideIndex)} < 0 || ${jsxVal(args.guideIndex)} >= _guides.length) {
-                return { ok: false, error: "guide index out of range (0-" + (_guides.length - 1) + ")" };
-            }
-            _layer.setGuide(${jsxVal(args.position)}, ${jsxVal(args.guideIndex)});
-            return { ok: true, guideIndex: ${jsxVal(args.guideIndex)}, position: ${jsxVal(args.position)} };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.list_guides",
-			category: "layer",
-			readOnly: true,
-			description: "List a layer's Layer-panel ruler guides with orientation and position (AE 16.1+).",
-			params: [{
-				name: "comp",
-				type: "any",
-				description: "Comp name or id",
-				required: true
-			}, {
-				name: "layer",
-				type: "any",
-				description: "1-based layer index, or the layer name",
-				required: true
-			}],
-			toJsx(args) {
-				return `
-            ${jsxCompLayerPreamble(args)}
-            var _guides = null;
-            try { _guides = _layer.guides; } catch (eG) {}
-            if (!_guides) return { ok: false, error: "layer guides need AE 16.1+" };
-            var _out = [];
-            for (var _i = 0; _i < _guides.length; _i++) {
-                _out.push({ index: _i, orientation: _guides[_i].orientationType === 1 ? "vertical" : "horizontal", position: _guides[_i].position });
-            }
-            return { ok: true, count: _out.length, guides: _out };
-        `;
-			}
-		});
-	})))();
-}
 
 // operations/keying-subject-prepare.js
 function subjectMatteSteps(opts = {}) {
@@ -897,7 +47,7 @@ function sourceAdviceFor(f) {
 	const atDelivery = frames ? cacheBytesFor(frames, delivery) : null;
 	const ratio = Math.round(sw * sh / (delivery[0] * delivery[1]) * 10) / 10;
 	const copy = f.file ? `ffmpeg -i "${f.file}" -vf "scale=${delivery[0]}:${delivery[1]}:flags=lanczos" -c:v prores_ks -profile:v 3 -c:a pcm_s16le "${stemOf(f.file)}_${delivery[0]}x${delivery[1]}.mov"` : null;
-	const cache = atSource !== null && atDelivery !== null ? `about ${gb(atSource)} of After Effects disk cache a render of the ${frames} frames at this size (an estimate; 19 GB was measured for 320 frames of a 2176 \xD7 3840 take) against about ${gb(atDelivery)} at ${dims(delivery)}` : `about ${ratio} times the disk cache a render needs at ${dims(delivery)}`;
+	const cache = atSource !== null && atDelivery !== null ? `about ${gb(atSource)} of After Effects disk cache a render of the ${frames} frames at this size (an estimate; 19 GB for 320 frames of a 2176 \xD7 3840 take, measured on one machine) against about ${gb(atDelivery)} at ${dims(delivery)}` : `about ${ratio} times the disk cache a render needs at ${dims(delivery)}`;
 	return {
 		sourceSize: [sw, sh],
 		compSize: [cw, ch],
@@ -907,7 +57,7 @@ function sourceAdviceFor(f) {
 		cacheAtSource: atSource,
 		cacheAtDelivery: atDelivery,
 		copy,
-		reading: `This layer's footage is ${dims([sw, sh])}, shown at ${Math.round(sx)}% in a ${dims([cw, ch])} comp. Object Matte works on the footage's own pixels, ${ratio} times as many as the comp shows: ${cache}, and a render takes about that much longer (on one take of 320 frames: 279 to 390 s at 2176 \xD7 3840 against 65 to 92 s at 1088 \xD7 1920, with the same edge; the two cut-outs overlapped at 0.991). Make a ${dims(delivery)} copy of the footage first and matte that: ` + (copy ? `with ffmpeg, \`${copy}\`; without it, render the footage alone from After Effects at that size (ProRes 422 HQ). ` : "render the footage alone from After Effects at that size (ProRes 422 HQ). ") + "Import the copy, put it in the comp in this layer's place at 100% (same position and start time), switch this layer off, and run subject.prepare on the copy's layer. Do it before the click: replacing the footage under a matte freezes the matte (the outline stops following the subject), so a copy made afterwards needs the click again."
+		reading: `This layer's footage is ${dims([sw, sh])}, shown at ${Math.round(sx)}% in a ${dims([cw, ch])} comp. Object Matte works on the footage's own pixels, ${ratio} times as many as the comp shows: ${cache}, and a render takes about that much longer (on one take of 320 frames, measured on one machine: 279 to 390 s at 2176 \xD7 3840 against 65 to 92 s at 1088 \xD7 1920, with the same edge; the two cut-outs overlapped at 0.991). Make a ${dims(delivery)} copy of the footage first and matte that: ` + (copy ? `with ffmpeg, \`${copy}\`; without it, render the footage alone from After Effects at that size (ProRes 422 HQ). ` : "render the footage alone from After Effects at that size (ProRes 422 HQ). ") + "Import the copy, put it in the comp in this layer's place at 100% (same position and start time), switch this layer off, and run subject.prepare on the copy's layer. Do it before the click: replacing the footage under a matte freezes the matte (the outline stops following the subject), so a copy made afterwards needs the click again."
 	};
 }
 function soundAdviceFor(f, streams) {
@@ -1261,6 +411,21 @@ function init_keying_subject_prepare() {
                 }
                 return null;
             }
+            function _omMotionEdge() {
+                // The precomp layer subject.motion_edge built for this layer, if any (its comment carries the settings).
+                // One matte pass: its object matte comp is used twice inside but renders once a frame; the matted layer is off.
+                var want = _layer.name + " motion edge";
+                for (var i = 1; i <= _comp.numLayers; i++) {
+                    var l = _comp.layer(i);
+                    if (AE.safeGet(function () { return l.name; }, "") !== want) continue;
+                    var c = AE.safeGet(function () { return l.comment; }, "");
+                    if (c.indexOf("motion-edge") < 0) continue;
+                    var st = null;
+                    try { st = eval("(" + c + ")"); } catch (eJ) { st = null; }
+                    return { layer: want, index: i, enabled: AE.safeGet(function () { return l.enabled; }, null), matteCopies: 1, settings: st };
+                }
+                return null;
+            }
             function _omSourceSize() {
                 var w = AE.safeGet(function () { return _layer.source.width; }, null);
                 var h = AE.safeGet(function () { return _layer.source.height; }, null);
@@ -1439,7 +604,7 @@ function init_keying_subject_prepare() {
             if (_pick.error) return { ok: false, error: _pick.error };
             if (_pick.index === null) {
                 return { ok: true, layer: _layer.name, objectMatte: { present: false, effectIndex: null, count: 0 }, selections: [], settings: null,
-                    summary: _omSummary(false, []), next: ${jsxVal(`Nothing selected: ${NEED_CLICK}.`)}, effects: AE.effectOrder(_fxRoot), aeCache: _omAeCache(), softEdge: _omSoftEdge(),
+                    summary: _omSummary(false, []), next: ${jsxVal(`Nothing selected: ${NEED_CLICK}.`)}, effects: AE.effectOrder(_fxRoot), aeCache: _omAeCache(), softEdge: _omSoftEdge(), motionEdge: _omMotionEdge(),
                     sourceSize: _omSourceSize(), compSize: [_comp.width, _comp.height], span: _omSpan() };
             }
             var _fx = _fxRoot.property(_pick.index);
@@ -1463,6 +628,7 @@ function init_keying_subject_prepare() {
                 sourceSize: _src,
                 fillLayer: _omFillLayer(),
                 softEdge: _omSoftEdge(),
+                motionEdge: _omMotionEdge(),
                 aeCache: _omAeCache(),
                 compSize: [_comp.width, _comp.height],
                 span: _omSpan(),
@@ -1669,7 +835,7 @@ function framesAcross(span, count, extra) {
 	for (const e of extra) if (typeof e === "number" && e >= a && e < b) set.add(Math.round(e));
 	return [...set].sort((x, y) => x - y).slice(0, 64);
 }
-async function recheckFrames(io, readings, limit, over, outDir, perFrameMs, base, accept, renders, pixels) {
+async function recheckFrames(io, readings, limit, over, outDir, perFrameMs, base, accept, renders, pixels, below) {
 	const isAccepted = (x) => acceptedBy({
 		kind: x.kind,
 		box: {
@@ -1693,7 +859,7 @@ async function recheckFrames(io, readings, limit, over, outDir, perFrameMs, base
 		note: skippedAccepted ? `No frame was rendered a second time: the regions on ${plural(skippedAccepted, "frame")} were all accepted.` : "No frame had a hole or opening over the limit, so none was rendered a second time."
 	};
 	const rendered = await renderChunked(io, base, frames, perFrameMs, outDir, "cutout-recheck", renders);
-	const { readings: again } = await measureFrames(io, rendered, limit, over, path$1.join(outDir, "cutout-recheck_sheet.png"), pixels, false);
+	const { readings: again } = await measureFrames(io, rendered, limit, over, path$1.join(outDir, "cutout-recheck_sheet.png"), pixels, false, void 0, below);
 	const unstable = [];
 	const failed = [];
 	let agreed = 0;
@@ -1806,6 +972,13 @@ async function runSubjectCheck(args, io) {
 		ok: false,
 		error: missing
 	};
+	const cut = cutLayerOf(st, args.layer);
+	if ("error" in cut) return {
+		ok: false,
+		error: cut.error
+	};
+	const cutLayer = cut.layer;
+	const below = cut.motion ? MOTION_EDGE_CLEAR_BELOW : void 0;
 	const first = renderTally();
 	const second = renderTally();
 	const pixels = pixelTally();
@@ -1828,7 +1001,6 @@ async function runSubjectCheck(args, io) {
 	}], PICTURE_MARGIN_BYTES, "this check");
 	if (checkSpace.refusal) return checkSpace.refusal;
 	const fillLayer = typeof st.fillLayer === "string" ? st.fillLayer : null;
-	const cutLayer = typeof st.softEdge?.layer === "string" ? st.softEdge.layer : args.layer;
 	const isolate = fillLayer ? [cutLayer, fillLayer] : cutLayer;
 	const outline = outlineTracker(frozenOpts(args));
 	const rendered = await renderChunked(io, {
@@ -1839,7 +1011,7 @@ async function runSubjectCheck(args, io) {
 	}, frames, perFrameMsOf(args), outDir, "cutout", first);
 	const { readings, picture } = await measureFrames(io, rendered, limit, over, path$1.join(outDir, "cutout_sheet.png"), pixels, true, (r, img) => {
 		if (img.alpha) outline.add(r.frame, img.alpha, img.rgb, img.width, img.height);
-	});
+	}, below);
 	const outlineResult = outline.result();
 	const sum = summarize(readings, limit, accept, picture);
 	const close = closeClicks(clicks, st.sourceSize ?? null);
@@ -1851,7 +1023,7 @@ async function runSubjectCheck(args, io) {
 		compNameOrId: args.comp,
 		isolate,
 		channels: "rgba"
-	}, accept, second, pixels);
+	}, accept, second, pixels, below);
 	if ("unstable" in recheck) findings.push(...recheck.unstable);
 	const frozenAcceptedRuns = [];
 	for (const run of outlineResult.frozen) {
@@ -1977,6 +1149,11 @@ async function fillGaps(args, io) {
 	if (missing) return {
 		ok: false,
 		error: missing
+	};
+	const cut = cutLayerOf(st, args.layer);
+	if ("error" in cut) return {
+		ok: false,
+		error: cut.error
 	};
 	const frame = typeof args.frame === "number" ? args.frame : st.span?.inFrame ?? 0;
 	const fillFrames = Array.isArray(args.frames) ? [frame, ...args.frames] : args.across === true ? [
@@ -2118,11 +1295,11 @@ async function fillGaps(args, io) {
 	const frames = Array.isArray(args.frames) ? args.frames.slice().sort((a, b) => a - b) : args.across === true ? framesAcross(st.span, typeof args.count === "number" ? args.count : CUTOUT_FRAMES, [frame]) : quickFrames(st.span, [frame]);
 	const afterRendered = await renderChunked(io, {
 		compNameOrId: args.comp,
-		isolate: [typeof st.softEdge?.layer === "string" ? st.softEdge.layer : args.layer, built.fillLayer],
+		isolate: [cut.layer, built.fillLayer],
 		channels: "rgba",
 		edge: true
 	}, frames, perFrameMs, outDir, "fill-after", afterTally);
-	const measured = await measureFrames(io, afterRendered, limit, over, path$1.join(outDir, "fill-after_sheet.png"), pixels);
+	const measured = await measureFrames(io, afterRendered, limit, over, path$1.join(outDir, "fill-after_sheet.png"), pixels, true, void 0, cut.motion ? MOTION_EDGE_CLEAR_BELOW : void 0);
 	const sum = summarize(measured.readings, limit, []);
 	return {
 		ok: true,
@@ -2189,7 +1366,7 @@ function init_keying_subject_check() {
 		registerOp({
 			name: "subject.check",
 			category: "subject",
-			description: `Proof a subject matte after the user says done, before anything else is built. Run it while the user is still there: what it finds can need another click, and a click cannot be made unattended. Renders the cut-out with its alpha (ae_render_frame isolate, channels 'rgba'; with the layer's gap fill from subject.fill_gaps when the comp has one, reported as fillLayer) at the click frames and frames across the clip, finds holes (regions below opaque the frame edge cannot reach) and openings (regions closed off only by the subject and the frame edge: the missed microphone of 2026-11-11 ran off the bottom of the frame), draws each frame over a flat colour and one contact sheet, and returns picture (the sheet), findings, accepted, checked {frames, of}, inOut (a plain statement of what is in and what is out), frames, clicks and stop. A hole or opening of holeLimit px or more (default ${CUTOUT_HOLE_LIMIT}, at the comp's size) is a finding; so are frames that did not render (kind 'not-checked': a frame that was not rendered is never counted as clean). Two clicks close together are a finding only when something is missing too (a click meant for it may have landed on the subject again); otherwise they are the pieces of something clicked one by one, listed in notes, and do not set stop. With stop true: say in your reply what is out, in plain words, and give the picture's path, before the next call. \`accept\` entries (earlier findings the user called fine, such as a real gap between an arm and the body) are not counted again. Each frame with a finding is rendered once more at the end; a frame whose cut-out differs between the two renders is a finding of kind 'unstable' (seen once on 2026-11-11, cause unknown; agreement may come from the cache and does not prove a frame stable). A selection count is not a check. It can take minutes: 20 to 40 s a frame the first time on a 2176 x 3840 take; say so to the user before it runs. \`timing\` says where the time went (status, each render's After Effects call, settle wait and Node work, the pixel work, the total) and \`timeReading\` says it in one sentence.`,
+			description: `Proof a subject matte after the user says done, before anything else is built. Run it while the user is still there: what it finds can need another click, and a click cannot be made unattended. Renders the cut-out with its alpha (ae_render_frame isolate, channels 'rgba'; with the layer's gap fill from subject.fill_gaps when the comp has one, reported as fillLayer) at the click frames and frames across the clip, finds holes (regions below opaque the frame edge cannot reach) and openings (regions closed off only by the subject and the frame edge: the missed microphone of 2026-11-11 ran off the bottom of the frame), draws each frame over a flat colour and one contact sheet, and returns picture (the sheet), findings, accepted, checked {frames, of}, inOut (a plain statement of what is in and what is out), frames, clicks and stop. A hole or opening of holeLimit px or more (default ${CUTOUT_HOLE_LIMIT}, at the comp's size) is a finding; so are frames that did not render (kind 'not-checked': a frame that was not rendered is never counted as clean). Two clicks close together are a finding only when something is missing too (a click meant for it may have landed on the subject again); otherwise they are the pieces of something clicked one by one, listed in notes, and do not set stop. With stop true: say in your reply what is out, in plain words, and give the picture's path, before the next call. \`accept\` entries (earlier findings the user called fine, such as a real gap between an arm and the body) are not counted again. Each frame with a finding is rendered once more at the end; a frame whose cut-out differs between the two renders is a finding of kind 'unstable' (seen once on 2026-11-11, cause unknown; agreement may come from the cache and does not prove a frame stable). After subject.soften_edge or subject.motion_edge it renders that layer in place of the matted one (a layer with both is refused: undo one); on a motion edge, holes and openings are read only where the alpha is under ${MOTION_EDGE_CLEAR_BELOW}, so the keyer's soft alpha on moving parts is not a finding while a clear hole still is (chosen offline, not calibrated live). A selection count is not a check. It can take minutes: 20 to 40 s a frame the first time on a 2176 x 3840 take; say so to the user before it runs. \`timing\` says where the time went (status, each render's After Effects call, settle wait and Node work, the pixel work, the total) and \`timeReading\` says it in one sentence.`,
 			params: [
 				...compLayerParams,
 				{
@@ -2408,7 +1585,18 @@ function renderCutoutPlanJsx(args) {
                 var _sl = _comp.layer(_si);
                 if (_sl.name === _softName && String(AE.safeGet(function () { return _sl.comment; }, "")).indexOf("soft-edge") >= 0) { _soft = _softName; _softComment = String(_sl.comment); }
             }
-            var _keep = [_soft ? _soft : _layer.name];
+            // After subject.motion_edge the cut-out is its precomp layer. Inside, the object matte comp is used twice (the
+            // outline and the band) but a comp renders once a frame, the keyer and motion copies carry no Object Matte, and
+            // the matted layer is off: one copy of the matte computes and caches.
+            var _motionName = _layer.name + " motion edge";
+            var _motion = null;
+            var _motionComment = null;
+            for (var _mi = 1; _mi <= _comp.numLayers; _mi++) {
+                var _ml = _comp.layer(_mi);
+                if (_ml.name === _motionName && String(AE.safeGet(function () { return _ml.comment; }, "")).indexOf("motion-edge") >= 0) { _motion = _motionName; _motionComment = String(_ml.comment); }
+            }
+            if (_soft && _motion) return { ok: false, error: ${bothEdgesErrorJsx("_softName", "_motionName")}, softEdge: _soft, motionEdge: _motion };
+            var _keep = [_soft ? _soft : (_motion ? _motion : _layer.name)];
             if (_fill) _keep.push(_fill);
             var _fd = _comp.frameDuration;
             var _start = Math.max(0, Math.min(_layer.inPoint, _layer.outPoint));
@@ -2432,7 +1620,7 @@ function renderCutoutPlanJsx(args) {
                     if (app.preferences.havePref("Disk Cache Controls", "Folder 7", _pts[_pi])) _cacheFolder = app.preferences.getPrefAsString("Disk Cache Controls", "Folder 7", _pts[_pi]);
                 }
             } catch (ePref) {}
-            return { ok: true, layer: _layer.name, fillLayer: _fill, fillEnabled: _fillEnabled, softEdge: _soft, softEdgeComment: _softComment, matteCopies: _soft ? 2 : 1, keep: _keep, compSize: [_comp.width, _comp.height], sourceSize: _src,
+            return { ok: true, layer: _layer.name, fillLayer: _fill, fillEnabled: _fillEnabled, softEdge: _soft, softEdgeComment: _softComment, motionEdge: _motion, motionEdgeComment: _motionComment, matteCopies: _soft ? 2 : 1, keep: _keep, compSize: [_comp.width, _comp.height], sourceSize: _src,
                 aeCache: { folder: _cacheFolder || null, version: AE.safeGet(function () { return app.version; }, null) },
                 span: { start: _start, duration: _end - _start, frames: Math.round((_end - _start) / _fd), frameRate: Math.round(1000 / _fd) / 1000 },
                 templates: { output: _out, render: _rend } };
@@ -2606,7 +1794,7 @@ async function runRenderCutout(args, io) {
 	const r = await io.execute(renderCutoutJsx({
 		comp: args.comp,
 		keep: plan.keep,
-		subject: plan.layer,
+		subject: Array.isArray(plan.keep) && typeof plan.keep[0] === "string" ? plan.keep[0] : plan.layer,
 		outputPath,
 		outputTemplate: choice.template,
 		start: span ? span.start : plan.span.start,
@@ -2662,6 +1850,16 @@ async function runRenderCutout(args, io) {
 	} catch {
 		soft = null;
 	}
+	let motion = null;
+	if (typeof plan.motionEdgeComment === "string") try {
+		const m = JSON.parse(plan.motionEdgeComment);
+		motion = {
+			layer: plan.motionEdge,
+			...m.settings ?? {}
+		};
+	} catch {
+		motion = { layer: plan.motionEdge };
+	}
 	const sidecar = `${r.outputPath}.comp-room.json`;
 	let sidecarWritten = null;
 	try {
@@ -2672,6 +1870,7 @@ async function runRenderCutout(args, io) {
 			compSize: plan.compSize,
 			fillLayer: plan.fillLayer ?? null,
 			softEdge: soft,
+			motionEdge: motion,
 			...span ? { span } : {},
 			renderedAt: (/* @__PURE__ */ new Date()).toISOString()
 		}, null, 1));
@@ -2684,7 +1883,7 @@ async function runRenderCutout(args, io) {
 		space,
 		sidecar: sidecarWritten,
 		...fillOff ? { fillWarning: `${fillOffText} Rendered anyway (withoutFill: true).` } : {},
-		cacheNote: `This render should have added about ${gb(cacheBytes)} to After Effects' disk cache (one 16-bit frame of the source per frame${matteCopies > 1 ? `, for each of the ${matteCopies === 2 ? "two" : matteCopies} copies of the matte subject.soften_edge built` : ""}). Nothing was deleted and no preference was changed.`,
+		cacheNote: `This render should have added about ${gb(cacheBytes)} to After Effects' disk cache (one 16-bit frame of the source per frame${matteCopies > 1 ? `, for each of the ${matteCopies === 2 ? "two" : matteCopies} copies of the matte subject.soften_edge built` : ""}${motion ? ", for the one copy of the matte inside the motion edge: its object matte comp is used twice but renders once a frame; what the keyer caches, if anything, is not counted" : ""}). Nothing was deleted and no preference was changed.`,
 		next: (fillOff ? "The gap fill was off, so the file has its gaps open; tell the user before building on it. " : "") + `Check the file before building on it: subject.check_file { path: "${r.outputPath}", outDir }. Then subject.use_cutout puts it in the comp in place of the live matte. Once the file is checked, the cache this work wrote is no longer needed: tell the user to purge it (Edit > Purge > All Memory & Disk Cache in After Effects); it should free about ${gb(cacheBytes)} or more.`,
 		wholePiece: SUBJECT_WHOLE_PIECE_NOTE,
 		...span ? {
@@ -2880,9 +2079,14 @@ async function runCheckFile(args, io) {
 	let regionLine = typeof args.regionLine === "number" ? args.regionLine : null;
 	let regionDepth = SOFT_EDGE_DEFAULTS.regionDepth;
 	let regionSource = regionLine !== null ? "given" : null;
-	if (regionLine === null && file !== null) try {
+	let motionFile = false;
+	if (file !== null) try {
 		const side = JSON.parse(await promises.readFile(`${file}.comp-room.json`, "utf8"));
-		if (typeof side?.softEdge?.regionBottom === "number") {
+		if (side?.motionEdge) {
+			motionFile = true;
+			Object.assign(seenLimits, MOTION_EDGE_SEEN_THROUGH);
+		}
+		if (regionLine === null && typeof side?.softEdge?.regionBottom === "number") {
 			regionLine = side.softEdge.regionBottom;
 			if (typeof side.softEdge.regionDepth === "number") regionDepth = side.softEdge.regionDepth;
 			regionSource = "sidecar";
@@ -2972,7 +2176,7 @@ async function runCheckFile(args, io) {
 				}
 				seenTime.ms += performance.now() - tSeen;
 				seenTime.frames++;
-			})).readings;
+			}, motionFile ? MOTION_EDGE_CLEAR_BELOW : void 0)).readings;
 			for (const r of got) {
 				readings.push(r);
 				if (!r.checked || !r.file) continue;
@@ -3299,9 +2503,10 @@ async function runCheckFile(args, io) {
 			neckPx: 2 * SPECK_DEFAULTS.neck
 		},
 		seenThroughLimits: { ...seenLimits },
+		motionEdge: motionFile ? { reading: MOTION_EDGE_FILE_READING } : null,
 		region,
 		opaque,
-		inOut: `${sum.text}${jumpText}${frozenText}${speckFindings.map((f) => ` ${f.reading}`).join("")}${briefText}${seenFindings.map((f) => ` ${f.reading}`).join("")}${seenText}${region ? ` ${region.reading}` : ""}${opaqueText} ${compared}${stop && picture ? ` Look at the picture (${picture}).` : ""}`,
+		inOut: `${sum.text}${jumpText}${frozenText}${speckFindings.map((f) => ` ${f.reading}`).join("")}${briefText}${seenFindings.map((f) => ` ${f.reading}`).join("")}${seenText}${motionFile ? ` ${MOTION_EDGE_FILE_READING}` : ""}${region ? ` ${region.reading}` : ""}${opaqueText} ${compared}${stop && picture ? ` Look at the picture (${picture}).` : ""}`,
 		picture,
 		pictures,
 		frameReadings: readings.map((r) => ({
@@ -3335,14 +2540,21 @@ function useCutoutJsx(args) {
             var _movieName = _layer.name + " cut-out";
             var _fillName = _layer.name + " gap fill";
             var _softName = _layer.name + " soft edge";
+            var _motionName = _layer.name + " motion edge";
             var _fill = null;
             var _soft = null;
+            var _motion = null;
             for (var _li = 1; _li <= _comp.numLayers; _li++) {
                 var _l = _comp.layer(_li);
                 if (_l.name === _movieName) return { ok: false, error: "comp " + _comp.name + " already has a layer '" + _movieName + "'; delete it first to use another file" };
                 if (_l.name === _fillName) _fill = _l;
-                if (_l.name === _softName && String(AE.safeGet(function () { return _l.comment; }, "")).indexOf("soft-edge") >= 0) _soft = _l;
+                var _lc = String(AE.safeGet(function () { return _l.comment; }, ""));
+                if (_l.name === _softName && _lc.indexOf("soft-edge") >= 0) _soft = _l;
+                if (_l.name === _motionName && _lc.indexOf("motion-edge") >= 0) _motion = _l;
             }
+            if (_soft && _motion) return { ok: false, error: ${bothEdgesErrorJsx("_softName", "_motionName")} };
+            // The layer that is the cut-out: the soft- or motion-edge layer built in place of the matted layer, else the matted layer.
+            var _edge = _soft ? _soft : _motion;
             var _item = null;
             if (${jsxVal(args.item ?? null)} !== null) {
                 _item = AE.safeGet(function () { return app.project.itemByID(${jsxVal(args.item ?? null)}); }, null);
@@ -3356,7 +2568,7 @@ function useCutoutJsx(args) {
             var _out = Math.max(_layer.inPoint, _layer.outPoint);
             var _movie = _comp.layers.add(_item);
             _movie.name = _movieName;
-            _movie.moveBefore(_soft ? _soft : _layer);
+            _movie.moveBefore(_edge ? _edge : _layer);
             var _start = ${jsxVal(args.startTime ?? null)};
             _movie.startTime = _start === null ? Math.max(0, _in) : _start;
             var _spanError = null;
@@ -3366,7 +2578,7 @@ function useCutoutJsx(args) {
             var _off = [];
             if (_layer.enabled) { _layer.enabled = false; _off.push(_layer.name); }
             if (_fill && _fill.enabled) { _fill.enabled = false; _off.push(_fill.name); }
-            if (_soft && _soft.enabled) { _soft.enabled = false; _off.push(_soft.name); }
+            if (_edge && _edge.enabled) { _edge.enabled = false; _off.push(_edge.name); }
             var _res = { ok: true, movieLayer: _movie.name, movieIndex: _movie.index, startTime: _movie.startTime, inPoint: _movie.inPoint, outPoint: _movie.outPoint,
                 switchedOff: _off, audio: { original: AE.safeGet(function () { return _layer.audioEnabled; }, null), movie: _movieAudio },
                 note: "The movie is in comp space: it already has the cut-out's transform, so it has none of its own and no parent. The cut-out layer and its selections stay in the project with the picture off, for a later re-click; switch its picture back on and remove the movie to go back to the live matte." };
@@ -3396,7 +2608,7 @@ function init_keying_subject_cutout() {
 		registerOp({
 			name: "subject.render_cutout",
 			category: "subject",
-			description: "Render the cut-out once to a movie with alpha, so the piece is built on a file that cannot change: the layer with its gap fill when there is one, alone (every other layer's picture switched off for the render and put back afterwards, even when it fails; cameras and lights left as they are), over the layer's span, through one temporary render-queue item (other queue items are parked). Picks an output template that writes a movie with alpha ('High Quality with Alpha', 'Lossless with Alpha', or another whose name says alpha; image sequences are not used) and refuses, naming the templates, when none does. Returns outputPath, frameCount, renderSeconds, outputTemplate, templateChoice, layersSwitched, restored, sound and timing. Measured: 390 s for 320 frames of a 2176 x 3840 take, about one pass through the clip; tell the user before it runs. " + SUBJECT_WHOLE_PIECE_NOTE + " With from and to it renders only that span (clipped to the layer) and returns span (frames, times) and halves: Two halves are joined by a stream copy, nothing re-encoded: list them in order in a text file (file 'first.mov' then file 'second.mov', one per line) and run ffmpeg -f concat -safe 0 -i halves.txt -c copy whole.mov. Empty After Effects' disk cache between the halves (it holds about a half's worth). On the first piece the halves were frames 600 to 1304, then 0 to 599, and the outline's step across the join was 0.002 of the frame, no different from any other pair of neighbouring frames. Check the joined file with subject.check_file, and give subject.use_cutout the first half's start. It renders the matte the user clicked; it cannot make the click (subject.prepare): get that before an unattended render. The movie is in comp space. The original layer keeps the sound; whether the movie carries a sound track is not promised. The subject layer is switched on for the render even when it is off for display (subject.use_cutout leaves it off), and back afterwards. The other kept layers render switched as they are: when the gap fill layer exists and is switched off, it refuses before rendering and says so (the file would come out with the gaps open), unless withoutFill: true, and then the result's fillWarning says the gaps are open (not checked live). Before rendering it checks that each drive has room for its share, the movie and After Effects' disk cache (about one 16-bit frame of the source per frame: 19 GB measured for 320 frames of a 2176 x 3840 take), plus 3 GB; `space` and `cacheNote` give the numbers, and `next` says to purge the cache once the file is checked." + RENDER_QUEUE_UNDO_WARNING,
+			description: "Render the cut-out once to a movie with alpha, so the piece is built on a file that cannot change: the layer with its gap fill when there is one (after subject.soften_edge or subject.motion_edge, that layer in place of the matted one; a layer with both is refused: undo one), alone (every other layer's picture switched off for the render and put back afterwards, even when it fails; cameras and lights left as they are), over the layer's span, through one temporary render-queue item (other queue items are parked). Picks an output template that writes a movie with alpha ('High Quality with Alpha', 'Lossless with Alpha', or another whose name says alpha; image sequences are not used) and refuses, naming the templates, when none does. Returns outputPath, frameCount, renderSeconds, outputTemplate, templateChoice, layersSwitched, restored, sound and timing. It blocks until the movie is written, so the time estimate goes to the user before the call: time a few frames on the user's machine (ae_render_frame on a few frames of the layer, or a few-second render), multiply by the frame count, tell the user, then call it. For reference only, 390 s for 320 frames of a 2176 x 3840 take, measured on one machine. " + SUBJECT_WHOLE_PIECE_NOTE + " With from and to it renders only that span (clipped to the layer) and returns span (frames, times) and halves: Two halves are joined by a stream copy, nothing re-encoded: list them in order in a text file (file 'first.mov' then file 'second.mov', one per line) and run ffmpeg -f concat -safe 0 -i halves.txt -c copy whole.mov. Empty After Effects' disk cache between the halves (it holds about a half's worth). On the first piece the halves were frames 600 to 1304, then 0 to 599, and the outline's step across the join was 0.002 of the frame, no different from any other pair of neighbouring frames. Check the joined file with subject.check_file, and give subject.use_cutout the first half's start. It renders the matte the user clicked; it cannot make the click (subject.prepare): get that before an unattended render. The movie is in comp space. The original layer keeps the sound; whether the movie carries a sound track is not promised. The subject layer is switched on for the render even when it is off for display (subject.use_cutout leaves it off), and back afterwards. The other kept layers render switched as they are: when the gap fill layer exists and is switched off, it refuses before rendering and says so (the file would come out with the gaps open), unless withoutFill: true, and then the result's fillWarning says the gaps are open (not checked live). Before rendering it checks that each drive has room for its share, the movie and After Effects' disk cache (about one 16-bit frame of the source per frame: 19 GB for 320 frames of a 2176 x 3840 take, measured on one machine), plus 3 GB; `space` and `cacheNote` give the numbers, and `next` says to purge the cache once the file is checked." + RENDER_QUEUE_UNDO_WARNING,
 			params: [
 				...compLayerParams,
 				{
@@ -3442,7 +2654,7 @@ function init_keying_subject_cutout() {
 		registerOp({
 			name: "subject.check_file",
 			category: "subject",
-			description: `Check a rendered cut-out movie (from subject.render_cutout) frame by frame: brings it into a throwaway comp, reads frames in batches of at most 32 (every frame up to maxFrames, default ${400}; beyond it pairs of neighbouring frames in steps, always the first and last three), and reports holes and openings (as subject.check: holeLimit, accept), the opaque share of every frame, and a 'jump' finding when neighbouring frames differ by more than jumpLimit (default ${CHECK_FILE_JUMP_LIMIT}: on the take of 2026-11-11 the rendered cut-out ran 0.279 to 0.314 with no step over 0.012, and a dropped microphone is about 0.05). A speck is a small opaque piece apart from the cut-out, or joined to it by a neck a pixel or two wide, not touching the frame edge: speckMinArea to speckMaxArea px (default 20 to 2,000, chosen on the 4K fresh-session file, where a sliver of chair 1 to 5 px off the right arm read 20 to 240 px on about 40 frames and nothing else in 320 frames was caught); findings of kind 'speck' give the frames, the longest run of frames in a row, the largest area and frame, the box, the piece's mean colour (\`colour\`: L*, a*, b*, CIELAB D65 from sRGB, over its opaque pixels on every frame; a pale grey remnant such as the first piece's chair read a* about +7, skin about +30) and a picture; a speck on at least speckMinFrames frames in a row (default 2) stops, since a new render keeps it, and a shorter one (a single-frame flash, a wisp of hair) goes to notes and one sentence of inOut. accept: [{ kind: 'speck', box }] takes one off. Checked through a real subject.check_file run on two files of one take (2026-11-12); the limits come from those two files. timing.speck is the pass's own cost (about 5.5 ms a 1080 x 1920 frame). Seen through: pixels partly see-through (alpha 0.5 to 0.95) more than seenThroughDepth px (default 30) inside the cut-out's body and from the frame's edge, as where two copies of a matte meet in a seam; seenThroughMinArea px or more on a frame (default 400) on at least 2 frames read in a row is a finding of kind 'seen-through' that stops, with the frames, the largest area and frame, the box and a picture; single frames go to notes. Limits chosen on two files of the half-size take, as clicked and with subject.soften_edge (at most 82 and 41 px on every fourth frame), and a band of the soft-edge file's alpha multiplied by 0.75 (about 3,900 px a frame); not checked live: it has not run in After Effects on a file with a real seam. timing.seenThrough is its cost. Region line: for a file from a soft-edge build, \`region\` gives the subject's highest and lowest top across the file against the soft edge's region line (from <movie>.comp-room.json, which subject.render_cutout writes, or \`regionLine\`), and a note, not a stop, names the frames where the top sits lower than the line less 12% of the height, so the lower hair crosses the line and keeps the hard edge. Only true neighbours are compared, and \`compared\` says which. A frame that could not be read is 'not-checked' and stops. Pictures: the largest frame of each finding not accepted and both frames of each jump, full size, and a sheet of up to 24 frames; \`pictures\` counts them and their bytes. Each raw capture is removed once read unless keepCaptures (one run on the take had left 630 MB). The throwaway comp is removed afterwards, and the imported footage too unless keepFootage. \`outline\` says how much the outline changed between neighbouring frames and over frozenGap frames (share of the frame whose alpha changed by more than 0.1, at full size); a run where it did not move is a 'frozen' finding (the selection is probably not tracking, as after replacing the layer's footage; accept: [{ kind: "frozen" }] for a subject that really is still). The frozen limits are not yet calibrated live. Measured: about 0.55 s a frame reading the file. Returns stop, findings, accepted, checked, compared, opaque, outline, inOut, picture, frameReadings, timing.`,
+			description: `Check a rendered cut-out movie (from subject.render_cutout) frame by frame: brings it into a throwaway comp, reads frames in batches of at most 32 (every frame up to maxFrames, default ${400}; beyond it pairs of neighbouring frames in steps, always the first and last three), and reports holes and openings (as subject.check: holeLimit, accept), the opaque share of every frame, and a 'jump' finding when neighbouring frames differ by more than jumpLimit (default ${CHECK_FILE_JUMP_LIMIT}: on the take of 2026-11-11 the rendered cut-out ran 0.279 to 0.314 with no step over 0.012, and a dropped microphone is about 0.05). A speck is a small opaque piece apart from the cut-out, or joined to it by a neck a pixel or two wide, not touching the frame edge: speckMinArea to speckMaxArea px (default 20 to 2,000, chosen on the 4K fresh-session file, where a sliver of chair 1 to 5 px off the right arm read 20 to 240 px on about 40 frames and nothing else in 320 frames was caught); findings of kind 'speck' give the frames, the longest run of frames in a row, the largest area and frame, the box, the piece's mean colour (\`colour\`: L*, a*, b*, CIELAB D65 from sRGB, over its opaque pixels on every frame; a pale grey remnant such as the first piece's chair read a* about +7, skin about +30) and a picture; a speck on at least speckMinFrames frames in a row (default 2) stops, since a new render keeps it, and a shorter one (a single-frame flash, a wisp of hair) goes to notes and one sentence of inOut. accept: [{ kind: 'speck', box }] takes one off. Checked through a real subject.check_file run on two files of one take (2026-11-12); the limits come from those two files. timing.speck is the pass's own cost (about 5.5 ms a 1080 x 1920 frame). Seen through: pixels partly see-through (alpha 0.5 to 0.95) more than seenThroughDepth px (default 30) inside the cut-out's body and from the frame's edge, as where two copies of a matte meet in a seam; seenThroughMinArea px or more on a frame (default 400) on at least 2 frames read in a row is a finding of kind 'seen-through' that stops, with the frames, the largest area and frame, the box and a picture; single frames go to notes. Limits chosen on two files of the half-size take, as clicked and with subject.soften_edge (at most 82 and 41 px on every fourth frame), and a band of the soft-edge file's alpha multiplied by 0.75 (about 3,900 px a frame); not checked live: it has not run in After Effects on a file with a real seam. timing.seenThrough is its cost. Region line: for a file from a soft-edge build, \`region\` gives the subject's highest and lowest top across the file against the soft edge's region line (from <movie>.comp-room.json, which subject.render_cutout writes, or \`regionLine\`), and a note, not a stop, names the frames where the top sits lower than the line less 12% of the height, so the lower hair crosses the line and keeps the hard edge. Motion edge: for a file from a motion-edge build (its <movie>.comp-room.json says so), holes and openings are read only where the alpha is under ${MOTION_EDGE_CLEAR_BELOW}, so the keyer's soft alpha on moving parts is not a finding and a clear hole still is (chosen offline, not calibrated live), and seen through counts only from ${MOTION_EDGE_SEEN_THROUGH.solid} to ${MOTION_EDGE_SEEN_THROUGH.below} alpha (a moving arm across the torso read 0.75 to 0.95 live); \`motionEdge.reading\` says so. Only true neighbours are compared, and \`compared\` says which. A frame that could not be read is 'not-checked' and stops. Pictures: the largest frame of each finding not accepted and both frames of each jump, full size, and a sheet of up to 24 frames; \`pictures\` counts them and their bytes. Each raw capture is removed once read unless keepCaptures (one run on the take had left 630 MB). The throwaway comp is removed afterwards, and the imported footage too unless keepFootage. \`outline\` says how much the outline changed between neighbouring frames and over frozenGap frames (share of the frame whose alpha changed by more than 0.1, at full size); a run where it did not move is a 'frozen' finding (the selection is probably not tracking, as after replacing the layer's footage; accept: [{ kind: "frozen" }] for a subject that really is still). The frozen limits are not yet calibrated live. About 0.55 s a frame reading the file, measured on one machine. Returns stop, findings, accepted, checked, compared, opaque, outline, inOut, picture, frameReadings, timing.`,
 			params: [
 				{
 					name: "path",
@@ -3566,7 +2778,7 @@ function init_keying_subject_cutout() {
 		registerOp({
 			name: "subject.use_cutout",
 			category: "subject",
-			description: "Build on the checked file: add the rendered cut-out movie (path, or a footage item id) to the comp directly above the cut-out layer, named '<layer> cut-out', over the cut-out's span. The movie is in comp space (subject.render_cutout renders the comp), so it has no transform or parent of its own. Switches the cut-out layer's and its gap fill's pictures off; they and the selections stay in the project for a later re-click. The original keeps its audio; the movie's audio is switched off. Returns movieLayer, switchedOff, audio and note. Refuses when the comp already has the movie.",
+			description: "Build on the checked file: add the rendered cut-out movie (path, or a footage item id) to the comp directly above the cut-out layer, named '<layer> cut-out', over the cut-out's span. The movie is in comp space (subject.render_cutout renders the comp), so it has no transform or parent of its own. Switches the cut-out layer's and its gap fill's pictures off; they and the selections stay in the project for a later re-click. After subject.soften_edge or subject.motion_edge the movie goes above that layer instead, and its picture is switched off too; a layer with both is refused (undo one). The original keeps its audio; the movie's audio is switched off. Returns movieLayer, switchedOff, audio and note. Refuses when the comp already has the movie.",
 			params: [
 				...compLayerParams,
 				{
@@ -3616,7 +2828,7 @@ function softenBuildJsx(args) {
 	return `
             ${jsxCompLayerPreamble(args)}
             var _name = _layer.name + " soft edge";
-            for (var _li = 1; _li <= _comp.numLayers; _li++) if (_comp.layer(_li).name === _name) return { ok: false, error: "comp " + _comp.name + " already has a layer '" + _name + "'; undo it first (subject.soften_edge { undo: true })" };
+            for (var _li = 1; _li <= _comp.numLayers; _li++) if (_comp.layer(_li).name === _name) return { ok: false, error: "comp " + _comp.name + " already has a layer '" + _name + "'; undo it first (subject.soften_edge { comp, layer, undo: true })" };
             var _fxRoot = _layer.property("ADBE Effect Parade");
             var _om = null;
             for (var _fi = 1; _fi <= _fxRoot.numProperties; _fi++) if (_fxRoot.property(_fi).matchName === ${jsxVal(OBJECT_MATTE_MATCH_NAME)}) { _om = _fi; break; }
@@ -3685,6 +2897,7 @@ function softenUndoJsx(args) {
                 if (_l.name === _name && String(AE.safeGet(function () { return _l.comment; }, "")).indexOf(${jsxVal(SOFT_MARKER)}) >= 0) { _pl = _l; break; }
             }
             if (!_pl) return { ok: false, error: "comp " + _comp.name + " has no soft edge for layer '" + _layer.name + "'" };
+            ${cutoutMovieUndoGuardJsx("soft edge")}
             var _was = true;
             try { var _st = eval("(" + _pl.comment + ")"); if (_st && _st.wasEnabled === false) _was = false; } catch (eJ) {}
             var _pc = _pl.source;
@@ -3752,7 +2965,11 @@ async function runSoftenEdge(args, io) {
 	};
 	if (st.softEdge) return {
 		ok: false,
-		error: `the layer already has a soft edge ('${st.softEdge.layer}'); undo it first with subject.soften_edge { undo: true }`
+		error: `the layer already has a soft edge ('${st.softEdge.layer}'); undo it first with subject.soften_edge { comp, layer, undo: true }`
+	};
+	if (typeof st.motionEdge?.layer === "string") return {
+		ok: false,
+		error: otherEdgeError("motion", st.motionEdge.layer)
 	};
 	const span = st.span ?? {
 		inFrame: 0,
@@ -4023,7 +3240,7 @@ function init_keying_subject_soften() {
 		init_sheet();
 		init_registry();
 		init_keying_shared();
-		SOFT_EDGE_COST = "The soft edge is two copies of the matte, so After Effects computes Object Matte twice for every frame: a render writes about twice the disk cache and takes several times as long (on the half-size take, 320 frames at 1088 × 1920: 342 s and 9.0 GB of cache, against 65 to 92 s and about 5 GB with one matte; subject.render_cutout counts both copies).";
+		SOFT_EDGE_COST = "The soft edge is two copies of the matte, so After Effects computes Object Matte twice for every frame: a render writes about twice the disk cache and takes several times as long (on the half-size take, 320 frames at 1088 × 1920: 342 s and 9.0 GB of cache, against 65 to 92 s and about 5 GB with one matte, measured on one machine; subject.render_cutout counts both copies).";
 		SOFT_MARKER = "soft-edge";
 		meanLab = (img, pick) => {
 			const sum = [
@@ -4046,7 +3263,7 @@ function init_keying_subject_soften() {
 		registerOp({
 			name: "subject.soften_edge",
 			category: "subject",
-			description: "Soften a subject matte's edge inside a region (usually the hair) and prove it: builds keying.md fact 38's construction from the matted layer (Object Matte, ADBE Samurai): two copies of it in a precomp '<layer> soft edge', the upper with Refine Edge (Base Refine Edge Radius, the refine group's Smooth and Chatter Reduction), the lower as clicked, both with Decontaminate Edge Colors, split by one feathered matte over the region (the upper copy's Alpha track matte, the lower's Alpha Inverted, the upper in Alpha Add). The matted layer is switched off and otherwise untouched; it keeps the sound. Defaults: look C, the user's choice on the half-size take (radius 8, Smooth 0, Chatter Reduction 2, Decontaminate on, feather 60). The region is everything above a line: `regionBottom` (comp pixels), or by default 12% of the comp's height under the lowest top of the subject on the sampled frames. Then it runs the closing check on the click frame and the frame furthest from it (the least overlap of the outline with the click frame's, from the sampled frames: by default the click frame and every 10th frame of the 60 after it): no pixel solid in the matte as clicked and more than 30 px inside its edge may drop under 0.99, the colour inside the subject must match the matte as clicked within 1 (CIELAB), and no more than `outsideLimit` px may spread over 10 px outside the outline. On any failure it undoes the build and says so; the fallback is Decontaminate Edge Colors alone (subject.settings). Reports look before and after on the region's top and sides and on the outline below it (edge width and widest tenth on the alpha, soft band, the share of `background`'s colour in the edge when given, the change from frame to frame over five held frames), the region and how it was chosen, and the whole frames after as pictures. After it, subject.check, subject.fill_gaps, subject.render_cutout and subject.use_cutout use the soft-edge layer. Two copies of the matte mean Object Matte is computed twice for every frame: a render writes about twice the disk cache and takes several times as long (on the half-size take, 342 s and 9.0 GB against 65 to 92 s and about 5 GB with one matte). The result's `sampling` says which frames were read and what that leaves out; subject.check_file reads every frame of the render: it reports see-through inside the cut-out, which means undo the soft edge and render again with the fallback, and notes the frames where the subject sits low enough for its hair to cross the region's line (subject.render_cutout writes the line beside the file). undo: true takes the comp back to the single matted layer. Ran in After Effects 27.0 on the half-size take with the default sampling (frames 0 to 50): 34 s, 1.6 GB of disk cache.",
+			description: "Soften a subject matte's edge inside a region (usually the hair) and prove it: builds keying.md fact 38's construction from the matted layer (Object Matte, ADBE Samurai): two copies of it in a precomp '<layer> soft edge', the upper with Refine Edge (Base Refine Edge Radius, the refine group's Smooth and Chatter Reduction), the lower as clicked, both with Decontaminate Edge Colors, split by one feathered matte over the region (the upper copy's Alpha track matte, the lower's Alpha Inverted, the upper in Alpha Add). The matted layer is switched off and otherwise untouched; it keeps the sound. Defaults: look C, the user's choice on the half-size take (radius 8, Smooth 0, Chatter Reduction 2, Decontaminate on, feather 60). The region is everything above a line: `regionBottom` (comp pixels), or by default 12% of the comp's height under the lowest top of the subject on the sampled frames. Then it runs the closing check on the click frame and the frame furthest from it (the least overlap of the outline with the click frame's, from the sampled frames: by default the click frame and every 10th frame of the 60 after it): no pixel solid in the matte as clicked and more than 30 px inside its edge may drop under 0.99, the colour inside the subject must match the matte as clicked within 1 (CIELAB), and no more than `outsideLimit` px may spread over 10 px outside the outline. On any failure it undoes the build and says so; the fallback is Decontaminate Edge Colors alone (subject.settings). Reports look before and after on the region's top and sides and on the outline below it (edge width and widest tenth on the alpha, soft band, the share of `background`'s colour in the edge when given, the change from frame to frame over five held frames), the region and how it was chosen, and the whole frames after as pictures. After it, subject.check, subject.fill_gaps, subject.render_cutout and subject.use_cutout use the soft-edge layer. Two copies of the matte mean Object Matte is computed twice for every frame: a render writes about twice the disk cache and takes several times as long (on the half-size take, 342 s and 9.0 GB against 65 to 92 s and about 5 GB with one matte, measured on one machine). The result's `sampling` says which frames were read and what that leaves out; subject.check_file reads every frame of the render: it reports see-through inside the cut-out, which means undo the soft edge and render again with the fallback, and notes the frames where the subject sits low enough for its hair to cross the region's line (subject.render_cutout writes the line beside the file). undo: true takes the comp back to the single matted layer. It refuses a layer that already has a motion edge (subject.motion_edge): undo that first. Its self-check renders take seconds near the click; on a long or large take, time a few frames on the user's machine first and tell the user the estimate. Ran in After Effects 27.0 on the half-size take with the default sampling (frames 0 to 50): 34 s, 1.6 GB of disk cache.",
 			params: [
 				...compLayerParams,
 				{
@@ -4124,7 +3341,7 @@ function init_keying_subject_soften() {
 				{
 					name: "undo",
 					type: "boolean",
-					description: "Take the comp back to the single matted layer: remove the soft-edge precomp and switch the matted layer back on.",
+					description: "Take the comp back to the single matted layer: remove the soft-edge precomp and switch the matted layer back on. Refused while subject.use_cutout's movie ('<layer> cut-out') is in the comp, which would show the subject twice: remove the movie first.",
 					required: false
 				}
 			],
@@ -4137,6 +3354,413 @@ function init_keying_subject_soften() {
 					status: cut.status,
 					render: cut.render,
 					readImage: cut.readImage,
+					async execute(code, opts) {
+						const r = await transport.execute({
+							code,
+							label: opts.label,
+							timeoutMs: opts.timeoutMs ?? 6e4,
+							undoGroup: true,
+							suppressDialogs: true
+						});
+						return r.ok ? r.result : {
+							ok: false,
+							error: r.error ?? `${opts.label} failed`
+						};
+					}
+				});
+			}
+		});
+	})))();
+}
+
+// operations/keying-subject-motion.js
+function motionEdgeSettings(args) {
+	const D = MOTION_EDGE_DEFAULTS;
+	const fail = (error) => ({
+		ok: false,
+		error
+	});
+	const isNum = (v) => typeof v === "number" && Number.isFinite(v);
+	if (typeof args.keyerMatchName !== "string" || args.keyerMatchName.trim() === "") return fail("`keyerMatchName` must be the match name of the keyer effect (a per-pixel machine-learning keyer installed separately): ask the user which keyer they have, and read its match name from the effect on a layer (ae_layer_info) or from app.effects");
+	const keyerSettings = {};
+	if (args.keyerSettings !== void 0) {
+		const ks = args.keyerSettings;
+		if (typeof ks !== "object" || ks === null || Array.isArray(ks)) return fail("`keyerSettings` must be an object of { property name: value }, such as { \"Despill Strength\": 1 }");
+		for (const [k, v] of Object.entries(ks)) if (typeof v === "boolean") keyerSettings[k] = v ? 1 : 0;
+		else if (isNum(v)) keyerSettings[k] = v;
+		else if (Array.isArray(v) && v.length > 0 && v.every(isNum)) keyerSettings[k] = v;
+		else return fail(`\`keyerSettings\`: '${k}' must be a number, a boolean or an array of numbers`);
+	}
+	let threshold = { ...D.threshold };
+	if (args.threshold !== void 0) {
+		const t = args.threshold;
+		if (typeof t !== "object" || t === null || Array.isArray(t)) return fail("`threshold` must be { black, white }, each 0 to 1");
+		for (const k of ["black", "white"]) if (t[k] !== void 0 && !isNum(t[k])) return fail(`\`threshold.${k}\` must be a number from 0 to 1`);
+		threshold = {
+			black: isNum(t.black) ? t.black : D.threshold.black,
+			white: isNum(t.white) ? t.white : D.threshold.white
+		};
+	}
+	if (threshold.black < 0 || threshold.white > 1 || threshold.black >= threshold.white) return fail(`\`threshold\` must have 0 <= black < white <= 1 (given black ${threshold.black}, white ${threshold.white}; default ${D.threshold.black} to ${D.threshold.white})`);
+	const size = (k, min) => {
+		const v = args[k];
+		if (v === void 0) return D[k];
+		if (!isNum(v) || v < min) return null;
+		return v;
+	};
+	const motionGrow = size("motionGrow", 0);
+	if (motionGrow === null) return fail("`motionGrow` must be a number of pixels, 0 or more");
+	const motionBlur = size("motionBlur", 0);
+	if (motionBlur === null) return fail("`motionBlur` must be a number of pixels, 0 or more");
+	const band = args.band === void 0 ? D.band : isNum(args.band) && args.band > 0 ? args.band : null;
+	if (band === null) return fail("`band` must be a number of pixels, more than 0");
+	return {
+		ok: true,
+		settings: {
+			keyerMatchName: args.keyerMatchName.trim(),
+			keyerSettings,
+			threshold,
+			motionGrow,
+			motionBlur,
+			band
+		}
+	};
+}
+function motionKeyerCheckJsx(matchName) {
+	return `
+            var _keyerMN = ${jsxVal(matchName)};
+            var _keyerName = null;
+            var _fxList = null;
+            try { _fxList = app.effects; } catch (eFx) { _fxList = null; }
+            if (!_fxList) return { ok: false, error: "could not read the installed effects (app.effects), so the keyer '" + _keyerMN + "' could not be checked" };
+            for (var _ei = 0; _ei < _fxList.length; _ei++) if (_fxList[_ei] && _fxList[_ei].matchName === _keyerMN) { _keyerName = _fxList[_ei].displayName; break; }
+            if (_keyerName === null) return { ok: false, error: "no installed effect has the match name '" + _keyerMN + "' (" + _fxList.length + " effects installed). subject.motion_edge needs a per-pixel machine-learning keyer effect installed separately: install it, or pass the match name of the keyer that is installed." };
+`;
+}
+function motionEdgeBuildJsx(args) {
+	const D = MOTION_EDGE_DEFAULTS;
+	const settings = {
+		keyerMatchName: args.keyerMatchName,
+		keyerSettings: args.keyerSettings,
+		threshold: args.threshold,
+		motionGrow: args.motionGrow,
+		motionBlur: args.motionBlur,
+		band: args.band
+	};
+	const keyerCheck = motionKeyerCheckJsx(args.keyerMatchName);
+	return `
+            ${jsxCompLayerPreamble(args)}
+            var _L = _layer.name;
+            var _name = _L + " motion edge";
+            for (var _li = 1; _li <= _comp.numLayers; _li++) if (_comp.layer(_li).name === _name) return { ok: false, error: "comp " + _comp.name + " already has a layer '" + _name + "'; undo it first (subject.motion_edge { comp, layer, undo: true })" };
+            ${keyerCheck}
+            var _fxRoot = _layer.property("ADBE Effect Parade");
+            var _hasOm = false;
+            if (_fxRoot) for (var _fi = 1; _fi <= _fxRoot.numProperties; _fi++) if (_fxRoot.property(_fi).matchName === ${jsxVal(OBJECT_MATTE_MATCH_NAME)}) { _hasOm = true; break; }
+            if (!_hasOm) return { ok: false, error: "layer '" + _L + "' has no Object Matte" };
+            function _find(fx, key) {
+                var p = null;
+                try { p = fx.property(key); } catch (eP) { p = null; }
+                if (p) return p;
+                function walk(g) {
+                    for (var k = 1; k <= g.numProperties; k++) {
+                        var q = g.property(k);
+                        if (q.matchName === key || q.name === key) return q;
+                        if (q.propertyType !== PropertyType.PROPERTY) { var r = walk(q); if (r) return r; }
+                    }
+                    return null;
+                }
+                return walk(fx);
+            }
+            function _setAll(fx, vals, what) {
+                for (var k in vals) {
+                    if (!vals.hasOwnProperty(k)) continue;
+                    var p = _find(fx, k);
+                    if (!p) throw new Error(what + " has no property '" + k + "'");
+                    p.setValue(vals[k]);
+                }
+            }
+            // Stock effects: each property as [match name, English name, value]. The match name is tried first and works
+            // in any language; the English name is the fallback when After Effects does not know the match name. The property
+            // match names were confirmed live in After Effects 2027; should the English name find a different property than the
+            // match name, the English one is set (the match name is wrong) and the pair is reported in matchNameMismatch.
+            var _mismatch = [];
+            function _setEach(fx, list, what) {
+                for (var k = 0; k < list.length; k++) {
+                    var ent = list[k];
+                    var pm = _find(fx, ent[0]);
+                    var pn = _find(fx, ent[1]);
+                    var p = pm ? pm : pn;
+                    if (pm && pn && pm.matchName !== pn.matchName) { p = pn; _mismatch.push(what + ": '" + ent[0] + "' is '" + pm.name + "', not '" + ent[1] + "' (" + pn.matchName + ")"); }
+                    if (!p) throw new Error(what + " has no property '" + ent[0] + "' ('" + ent[1] + "')");
+                    p.setValue(ent[2]);
+                }
+            }
+            function _strip(l) { var r = l.property("ADBE Effect Parade"); for (var i = r.numProperties; i >= 1; i--) r.property(i).remove(); }
+            function _mute(l) { if (AE.safeGet(function () { return l.hasAudio; }, false)) { try { l.audioEnabled = false; } catch (eA) {} } }
+            function _pre(indices, name) {
+                var pc = _comp.layers.precompose(indices, name, true);
+                for (var i = 1; i <= _comp.numLayers; i++) if (AE.safeGet(function () { return _comp.layer(i).source; }, null) === pc) return { comp: pc, layer: _comp.layer(i) };
+                throw new Error("the precomp layer of '" + name + "' was not found after precompose");
+            }
+            function _newComp(name) { return app.project.items.addComp(name, _comp.width, _comp.height, _comp.pixelAspect, _comp.duration, _comp.frameRate); }
+            var _wasEnabled = _layer.enabled;
+            var _fd = _comp.frameDuration;
+            // The Object Matte comp: the matted layer as clicked.
+            var _om = _layer.duplicate(); _om.name = _L + " object matte"; _om.enabled = true; _mute(_om);
+            var _omP = _pre([_om.index], _L + " object matte");
+            // The keyer comp: the take with the keyer and nothing else.
+            var _ck = _layer.duplicate(); _ck.name = _L + " keyer"; _ck.enabled = true; _mute(_ck); _strip(_ck);
+            if (!_ck.property("ADBE Effect Parade").addProperty(_keyerMN)) throw new Error("the keyer '" + _keyerMN + "' could not be added to the layer");
+            _setAll(_ck.property("ADBE Effect Parade").property(1), ${jsxVal(args.keyerSettings)}, "the keyer");
+            var _ckP = _pre([_ck.index], _L + " keyer");
+            // The motion comp: the take against itself one frame later, thresholded, grown and blurred.
+            var _t0 = _layer.duplicate(); _t0.name = _L + " this frame"; _t0.enabled = true; _mute(_t0); _strip(_t0);
+            var _t1 = _layer.duplicate(); _t1.name = _L + " frame before"; _t1.enabled = true; _mute(_t1); _strip(_t1);
+            _t1.startTime = _t1.startTime + _fd;
+            _t1.blendingMode = BlendingMode.DIFFERENCE;
+            var _adj = _comp.layers.addSolid([1, 1, 1], _L + " motion threshold", _comp.width, _comp.height, _comp.pixelAspect, _comp.duration);
+            _adj.adjustmentLayer = true;
+            var _ap = _adj.property("ADBE Effect Parade");
+            _ap.addProperty("ADBE Easy Levels2");
+            _ap.addProperty("ADBE Tint");
+            _ap.addProperty("ADBE Minimax");
+            _ap.addProperty("ADBE Box Blur2");
+            // Adding an effect invalidates references to the ones added before: fetch each again by index.
+            _ap = _adj.property("ADBE Effect Parade");
+            _setEach(_ap.property(1), ${jsxVal(LEVELS(args.threshold))}, "Levels");
+            _setEach(_ap.property(3), ${jsxVal(MINIMAX({ radius: args.motionGrow }))}, "Minimax");
+            _setEach(_ap.property(4), ${jsxVal(BOX_BLUR(args.motionBlur, D.motionBlurIterations))}, "Box Blur");
+            _t1.moveBefore(_t0); _adj.moveBefore(_t1);
+            var _moP = _pre([_adj.index, _t1.index, _t0.index], _L + " motion");
+            // The band: the Object Matte grown, where the take moves.
+            var _bandC = _newComp(_L + " band");
+            var _bOm = _bandC.layers.add(_omP.comp); _bOm.name = "Object Matte grown";
+            var _bMo = _bandC.layers.add(_moP.comp); _bMo.name = "motion";
+            _bOm.property("ADBE Effect Parade").addProperty("ADBE Minimax");
+            _setEach(_bOm.property("ADBE Effect Parade").property(1), ${jsxVal(MINIMAX({
+		radius: args.band,
+		channel: D.bandChannel,
+		dontShrink: 1
+	}))}, "Minimax");
+            _bOm.setTrackMatte(_bMo, TrackMatteType.LUMA);
+            _bMo.enabled = false;
+            // The motion edge, top to bottom: the outline, the band, the keyer's edge.
+            var _me = _newComp(_name);
+            var _eCk = _me.layers.add(_ckP.comp); _eCk.name = "keyer edge";
+            var _eBand = _me.layers.add(_bandC); _eBand.name = "band";
+            var _eOm = _me.layers.add(_omP.comp); _eOm.name = "Object Matte outline";
+            _eCk.setTrackMatte(_eBand, TrackMatteType.ALPHA);
+            _eBand.enabled = false;
+            // precompose left a layer of each part in the comp: only the motion edge stays.
+            _omP.layer.remove(); _ckP.layer.remove(); _moP.layer.remove();
+            var _pl = _comp.layers.add(_me);
+            _pl.name = _name;
+            var _ids = [_me.id, _bandC.id, _moP.comp.id, _ckP.comp.id, _omP.comp.id];
+            // A JSON string: quote, backslash and control characters escaped, so any layer name reads back.
+            function _q(t) { var o = ""; for (var i = 0; i < t.length; i++) { var ch = t.charAt(i), c = t.charCodeAt(i); if (ch === '"' || ch === '\\\\') o += '\\\\' + ch; else if (ch === "\\n") o += "\\\\n"; else if (ch === "\\r") o += "\\\\r"; else if (ch === "\\t") o += "\\\\t"; else if (c < 32) o += "\\\\u00" + (c < 16 ? "0" : "") + c.toString(16); else o += ch; } return '"' + o + '"'; }
+            _pl.comment = "{" + '"compRoom":"${MOTION_MARKER}","layer":' + _q(String(_L)) + ',"wasEnabled":' + _wasEnabled + ',"comps":[' + _ids.join(",") + '],"settings":' + ${jsxVal(JSON.stringify(settings))} + "}";
+            var _parts = [_me, _bandC, _moP.comp, _ckP.comp, _omP.comp];
+            for (var _pi = 0; _pi < _parts.length; _pi++) _parts[_pi].comment = "comp-room ${MOTION_MARKER} of " + _L;
+            _pl.moveBefore(_layer);
+            _pl.enabled = true;
+            _layer.enabled = false;
+            return { ok: true, motionLayer: _name, motionIndex: _pl.index, precomp: _me.name, precompId: _me.id, wasEnabled: _wasEnabled,
+                keyer: { matchName: _keyerMN, name: _keyerName },
+                comps: { motionEdge: _me.name, band: _bandC.name, motion: _moP.comp.name, keyer: _ckP.comp.name, objectMatte: _omP.comp.name },
+                inside: ["Object Matte outline", "band", "keyer edge"], matchNameMismatch: _mismatch };
+        `;
+}
+function motionEdgeUndoJsx(args) {
+	return `
+            ${jsxCompLayerPreamble(args)}
+            var _name = _layer.name + " motion edge";
+            var _pl = null;
+            for (var _li = 1; _li <= _comp.numLayers; _li++) {
+                var _l = _comp.layer(_li);
+                if (_l.name === _name && String(AE.safeGet(function () { return _l.comment; }, "")).indexOf(${jsxVal(MOTION_MARKER)}) >= 0) { _pl = _l; break; }
+            }
+            if (!_pl) return { ok: false, error: "comp " + _comp.name + " has no motion edge for layer '" + _layer.name + "'" };
+            ${cutoutMovieUndoGuardJsx("motion edge")}
+            var _st = null;
+            try { _st = eval("(" + _pl.comment + ")"); } catch (eJ) { _st = null; }
+            var _was = !(_st && _st.wasEnabled === false);
+            var _ids = (_st && _st.comps && _st.comps.length) ? _st.comps : [_pl.source.id];
+            var _comps = [];
+            for (var _ii = 0; _ii < _ids.length; _ii++) {
+                var _it = AE.safeGet(function () { return app.project.itemByID(_ids[_ii]); }, null);
+                if (_it && _it instanceof CompItem && String(AE.safeGet(function () { return _it.comment; }, "")).indexOf(${jsxVal(MOTION_MARKER)}) >= 0) _comps.push(_it);
+            }
+            var _solids = [];
+            for (var _ci = 0; _ci < _comps.length; _ci++)
+                for (var _k = 1; _k <= _comps[_ci].numLayers; _k++) {
+                    var _src = AE.safeGet(function () { return _comps[_ci].layer(_k).source; }, null);
+                    if (_src && _src.mainSource && _src.mainSource instanceof SolidSource) _solids.push(_src);
+                }
+            _pl.remove();
+            var _removed = [_name];
+            for (var _ri = 0; _ri < _comps.length; _ri++) { var _cn = _comps[_ri].name; try { _comps[_ri].remove(); _removed.push("comp " + _cn); } catch (eC) {} }
+            for (var _si = 0; _si < _solids.length; _si++) { try { if (_solids[_si].usedIn.length === 0) { _solids[_si].remove(); _removed.push("solid"); } } catch (eS) {} }
+            _layer.enabled = _was;
+            return { ok: true, removed: _removed, restored: _layer.name, enabled: _layer.enabled };
+        `;
+}
+async function runMotionEdge(args, io) {
+	const started = performance.now();
+	if (args.undo === true) {
+		const u = await io.execute(motionEdgeUndoJsx({
+			comp: args.comp,
+			layer: args.layer
+		}), {
+			label: "subject.motion_edge undo",
+			timeoutMs: 6e4
+		});
+		return u?.ok ? {
+			...u,
+			note: "The comp is back to the single matted layer."
+		} : {
+			ok: false,
+			error: u?.error ?? "the undo failed"
+		};
+	}
+	const s = motionEdgeSettings(args);
+	if (!s.ok) return s;
+	const settings = s.settings;
+	const st = await io.status();
+	if (!st?.ok) return {
+		ok: false,
+		error: st?.error ?? "subject.status failed",
+		status: st
+	};
+	const missing = needSelection(st);
+	if (missing) return {
+		ok: false,
+		error: missing
+	};
+	if (st.softEdge) return {
+		ok: false,
+		error: otherEdgeError("soft", String(st.softEdge.layer))
+	};
+	const built = await io.execute(motionEdgeBuildJsx({
+		comp: args.comp,
+		layer: args.layer,
+		...settings
+	}), {
+		label: "subject.motion_edge",
+		timeoutMs: 12e4
+	});
+	if (!built?.ok) return {
+		ok: false,
+		error: built?.error ?? "the build failed",
+		built
+	};
+	return {
+		...built,
+		ok: true,
+		settings,
+		cost: MOTION_EDGE_COST,
+		undo: "subject.motion_edge { comp, layer, undo: true } takes the comp back to the single matted layer (it removes the motion-edge layer and its five comps and switches the matted layer back on).",
+		next: "Render a few frames where the hands move fastest and a still one (ae_render_frame over the background) and show the user the hands at twice size: a soft blur on the moving fingers, the crisp outline where the subject is still, nothing of the background near the head, gaps still open. subject.check, subject.render_cutout and subject.use_cutout now use the motion-edge layer in place of the matted layer (switched off): subject.check reads the keyer's soft alpha on moving parts as expected and stops only on clear holes; subject.render_cutout renders the motion-edge layer to a movie with alpha (check it with subject.check_file); subject.use_cutout puts the movie above it and switches it off.",
+		timing: { totalMs: Math.round(since(started)) }
+	};
+}
+var MOTION_EDGE_COST, MOTION_MARKER, LEVELS, MINIMAX, BOX_BLUR;
+function init_keying_subject_motion() {
+	return (init_keying_subject_motion = __esmMin((() => {
+		init_registry();
+		init_keying_shared();
+		MOTION_EDGE_COST = "The motion edge keys every frame twice, with Object Matte and with the separately installed keyer, so a render does twice the keying work: the whole 8.9 s studio take (2176 × 3840, 30 fps) rendered in 986 s to ProRes 4444 (measured on one machine), roughly 2 minutes of render per second of 4K (measured on one machine). Time a few frames on the user's machine for the estimate you give them.";
+		MOTION_MARKER = "motion-edge";
+		LEVELS = (t) => [[
+			"ADBE Easy Levels2-0003",
+			"Input Black",
+			t.black
+		], [
+			"ADBE Easy Levels2-0004",
+			"Input White",
+			t.white
+		]];
+		MINIMAX = (m) => [
+			[
+				"ADBE Minimax-0002",
+				"Radius",
+				m.radius
+			],
+			...m.channel === void 0 ? [] : [[
+				"ADBE Minimax-0003",
+				"Channel",
+				m.channel
+			]],
+			...m.dontShrink === void 0 ? [] : [[
+				"ADBE Minimax-0005",
+				"Don't Shrink Edges",
+				m.dontShrink
+			]]
+		];
+		BOX_BLUR = (radius, iterations) => [[
+			"ADBE Box Blur2-0001",
+			"Blur Radius",
+			radius
+		], [
+			"ADBE Box Blur2-0002",
+			"Iterations",
+			iterations
+		]];
+		registerOp({
+			name: "subject.motion_edge",
+			category: "subject",
+			description: "Give an Object Matte cut-out a soft, motion-blurred edge where the subject moves, taken from a second key by a per-pixel machine-learning keyer effect installed separately (not part of After Effects or this plugin); where the subject is still, the crisp Object Matte outline stays. Needs the matted layer with at least one selection (the user's click) and `keyerMatchName`, the keyer's match name; it refuses, building nothing, when no installed effect has that match name (app.effects), and refuses a layer that already has a soft edge (subject.soften_edge): undo that first. It builds five comps around the matted layer, never a copy of the user's comp: '<layer> object matte' (the matted layer as clicked), '<layer> keyer' (the take with the keyer and `keyerSettings`, such as { \"Despill Strength\": 1 }), '<layer> motion' (the take, the take again one frame later in Difference, and an adjustment layer with Levels from `threshold` black to white, Tint, Minimax `motionGrow` and Box Blur `motionBlur`, 2 iterations), '<layer> band' (the Object Matte comp with Minimax `band` px on its alpha, Don't Shrink Edges on, Luma-matted by the motion comp) and '<layer> motion edge' (the Object Matte outline over the band, switched off, over the keyer's edge, Alpha-matted by the band). The last goes in above the matted layer, which is switched off and otherwise untouched (it keeps the sound); every copy's sound is off. Use it instead of subject.soften_edge for fast hand and arm movement against a static background: soften_edge softens the hair inside a region, this follows motion anywhere. Defaults measured on a 2176 × 3840 studio take shot on a phone on a tripod: threshold 0.25 to 0.45 (lower thresholds lit every still edge, since the camera shifts slightly between frames), motionGrow 25, motionBlur 15, band 50. A plain band with no motion mask filled the gaps in a microphone mount, brought back the keyer's halo and let a plant behind the head through. Cost: twice the keying work in every render (Object Matte and the keyer): the whole 8.9 s take rendered in 986 s (measured on one machine), roughly 2 minutes of render per second of 4K (measured on one machine). Before the render, time a few frames on the user's machine, multiply by the frame count and tell the user. It does not render or check itself; subject.check, subject.render_cutout and subject.use_cutout use its layer in place of the matted one. Confirmed only on English After Effects: `keyerSettings` and the fallback for stock settings use English property names. On the layer's first frame there is no frame before, so the band there covers the whole outline. Ran live in After Effects 2027 as an operation (2026-11-16 and 2026-11-19, a 1920 × 1080, 24 fps take): all seven stock property match names confirmed, matchNameMismatch empty, and undo put the comp back. undo: true removes what it built and switches the matted layer back on.",
+			params: [
+				...compLayerParams,
+				{
+					name: "keyerMatchName",
+					type: "string",
+					description: "Match name of the keyer effect, a per-pixel machine-learning keyer installed separately (needed unless undo). Refused when no installed effect has it.",
+					required: false
+				},
+				{
+					name: "keyerSettings",
+					type: "object",
+					description: "Values to set on the keyer, { property name or match name: value }, such as { \"Despill Strength\": 1 }. A name the keyer does not have stops the build, which is rolled back.",
+					required: false
+				},
+				{
+					name: "threshold",
+					type: "object",
+					description: `Levels on the difference of neighbouring frames, { black, white } 0 to 1 (default ${MOTION_EDGE_DEFAULTS.threshold.black} to ${MOTION_EDGE_DEFAULTS.threshold.white}). Lower values let more motion through, and with a camera that shifts slightly, every still edge.`,
+					required: false
+				},
+				{
+					name: "motionGrow",
+					type: "number",
+					description: `Minimax radius on the motion, px (default ${MOTION_EDGE_DEFAULTS.motionGrow}).`,
+					required: false
+				},
+				{
+					name: "motionBlur",
+					type: "number",
+					description: `Box Blur radius on the motion, px, ${MOTION_EDGE_DEFAULTS.motionBlurIterations} iterations (default ${MOTION_EDGE_DEFAULTS.motionBlur}).`,
+					required: false
+				},
+				{
+					name: "band",
+					type: "number",
+					description: `How far outside the Object Matte outline the keyer's edge may show, px: Minimax on the matte's alpha (default ${MOTION_EDGE_DEFAULTS.band}).`,
+					required: false
+				},
+				{
+					name: "undo",
+					type: "boolean",
+					description: "Take the comp back to the single matted layer: remove the motion-edge layer and its five comps and switch the matted layer back on. Refused while subject.use_cutout's movie ('<layer> cut-out') is in the comp, which would show the subject twice: remove the movie first.",
+					required: false
+				}
+			],
+			toJsx() {
+				return "throw new Error('subject.motion_edge runs in Node');";
+			},
+			async run(args, transport) {
+				return runMotionEdge(args, {
+					status: liveCutoutIO(args, transport).status,
 					async execute(code, opts) {
 						const r = await transport.execute({
 							code,
@@ -4169,6 +3793,7 @@ function init_keying() {
 		init_keying_subject_check();
 		init_keying_subject_cutout();
 		init_keying_subject_soften();
+		init_keying_subject_motion();
 		init_keying_reference();
 		init_keying_shared();
 	})))();
@@ -4666,512 +4291,4 @@ function init_layer_advanced() {
 	})))();
 }
 
-// operations/layout.js
-var LAYER_TARGET_PARAM;
-function init_layout() {
-	return (init_layout = __esmMin((() => {
-		init_registry();
-		LAYER_TARGET_PARAM = {
-			name: "layer",
-			type: "any",
-			description: "Layer index, name, { id }, 'selected', 'all', or an array of those",
-			required: true
-		};
-		registerOp({
-			name: "layer.set_anchor",
-			category: "layer",
-			description: "Move the anchor point WITHOUT moving the layer on screen (Position is compensated through Scale/Rotation; Position keyframes are all shifted). Address the anchor by preset on the layer's rendered bounds (sourceRectAtTime), by an explicit layer-space point, or by an offset from the current anchor.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				LAYER_TARGET_PARAM,
-				{
-					name: "preset",
-					type: "string",
-					description: "center | topLeft | topCenter | topRight | centerLeft | centerRight | bottomLeft | bottomCenter | bottomRight",
-					required: false
-				},
-				{
-					name: "point",
-					type: "array",
-					description: "[x, y] (or [x, y, z]) explicit anchor in layer space",
-					required: false
-				},
-				{
-					name: "offset",
-					type: "array",
-					description: "[dx, dy] added to the current anchor",
-					required: false
-				},
-				{
-					name: "time",
-					type: "number",
-					description: "Time at which the bounds are measured for a preset (default: current comp time)",
-					required: false
-				}
-			],
-			toJsx(args) {
-				if ([
-					args.preset,
-					args.point,
-					args.offset
-				].filter((v) => v !== void 0).length !== 1) return jsxFail("give exactly one of preset, point, or offset");
-				return `
-            ${jsxCompPreamble(args)}
-            var _layers = AE.resolveLayers(_comp, ${jsxVal(args.layer)});
-            if (_layers.length === 0) return { ok: false, error: "no layers matched" };
-            var _preset = ${jsxVal(args.preset ?? null)};
-            if (_preset !== null && !AE.ANCHOR_PRESETS.hasOwnProperty(_preset)) return { ok: false, error: "unknown preset '" + _preset + "'" };
-            var _point = ${jsxVal(args.point ?? null)};
-            var _offset = ${jsxVal(args.offset ?? null)};
-            var _t = ${jsxVal(args.time ?? null)};
-            if (_t === null) _t = _comp.time;
-            var _out = [];
-            var _failed = 0;
-            for (var _li = 0; _li < _layers.length; _li++) {
-                var _l = _layers[_li];
-                var _target = null;
-                try {
-                    if (_preset !== null) {
-                        var _rect = AE.layerRect(_l, _t);
-                        if (!_rect) throw new Error("layer has no measurable bounds");
-                        _target = AE.pointInRect(_rect, _preset);
-                    } else if (_point !== null) {
-                        _target = _point;
-                    } else {
-                        var _cur = _l.transform.anchorPoint.value;
-                        _target = [_cur[0] + (_offset[0] || 0), _cur[1] + (_offset[1] || 0)];
-                        if (_cur.length > 2) _target.push(_cur[2] + (_offset[2] || 0));
-                    }
-                    var _r = AE.moveAnchor(_l, _target);
-                    _out.push({ index: _l.index, name: _l.name, ok: true, anchorPoint: _r.anchorPoint, positionDelta: _r.positionDelta, positionKeysShifted: _r.positionKeysShifted, warnings: _r.warnings });
-                } catch (eA) {
-                    _failed++;
-                    _out.push({ index: _l.index, name: _l.name, ok: false, error: AE.errText(eA) });
-                }
-            }
-            return { ok: _failed === 0, error: _failed === 0 ? null : (_failed + " of " + _out.length + " layers failed"), count: _out.length, layers: _out };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.set_timing",
-			category: "layer",
-			description: "Set a layer's timing in one call: shift (relative move of the whole layer), startTime, inPoint, outPoint ('comp' = comp start / comp end — e.g. to extend a layer copied out of a shorter comp), stretch. Applied in that order; AE clamps in/out to the source for footage.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				LAYER_TARGET_PARAM,
-				{
-					name: "shift",
-					type: "number",
-					description: "Seconds to move the layer by (in/out points follow)",
-					required: false
-				},
-				{
-					name: "startTime",
-					type: "number",
-					description: "Absolute layer start",
-					required: false
-				},
-				{
-					name: "inPoint",
-					type: "any",
-					description: "In point in seconds, or 'comp' for the comp start (0)",
-					required: false
-				},
-				{
-					name: "outPoint",
-					type: "any",
-					description: "Out point in seconds, or 'comp' for the comp end (comp.duration)",
-					required: false
-				},
-				{
-					name: "stretch",
-					type: "number",
-					description: "Time stretch in percent",
-					required: false
-				}
-			],
-			toJsx(args) {
-				const sets = [];
-				if (args.shift !== void 0) sets.push(`_l.startTime = _l.startTime + ${jsxVal(args.shift)};`);
-				if (args.startTime !== void 0) sets.push(`_l.startTime = ${jsxVal(args.startTime)};`);
-				if (args.inPoint !== void 0) sets.push(`_l.inPoint = (${jsxVal(args.inPoint)} === "comp") ? 0 : ${jsxVal(args.inPoint)};`);
-				if (args.outPoint !== void 0) sets.push(`_l.outPoint = (${jsxVal(args.outPoint)} === "comp") ? _comp.duration : ${jsxVal(args.outPoint)};`);
-				if (args.stretch !== void 0) sets.push(`_l.stretch = ${jsxVal(args.stretch)};`);
-				if (sets.length === 0) return jsxFail("give at least one of shift, startTime, inPoint, outPoint, stretch");
-				const inBad = typeof args.inPoint === "string" && args.inPoint !== "comp";
-				const outBad = typeof args.outPoint === "string" && args.outPoint !== "comp";
-				if (inBad || outBad) return jsxFail("inPoint/outPoint must be a number or 'comp'");
-				return `
-            ${jsxCompPreamble(args)}
-            var _layers = AE.resolveLayers(_comp, ${jsxVal(args.layer)});
-            if (_layers.length === 0) return { ok: false, error: "no layers matched" };
-            var _out = [];
-            var _failed = 0;
-            for (var _li = 0; _li < _layers.length; _li++) {
-                var _l = _layers[_li];
-                try {
-                    ${sets.join("\n                    ")}
-                    _out.push({ index: _l.index, name: _l.name, ok: true, startTime: _l.startTime, inPoint: _l.inPoint, outPoint: _l.outPoint, stretch: _l.stretch });
-                } catch (eT) {
-                    _failed++;
-                    _out.push({ index: _l.index, name: _l.name, ok: false, error: AE.errText(eT) });
-                }
-            }
-            return { ok: _failed === 0, error: _failed === 0 ? null : (_failed + " of " + _out.length + " layers failed"), count: _out.length, layers: _out };
-        `;
-			}
-		});
-		registerOp({
-			name: "layer.set_visibility_schedule",
-			category: "layer",
-			description: "Show layers only during given time ranges — sequential pops, material swaps, flip-books — in one call. mode 'opacity' (default) writes HOLD opacity keys (on inside each range, off outside; existing opacity keys replaced); mode 'inOut' sets in/out points (one range per layer).",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "entries",
-					type: "array",
-					description: "[{ layer, ranges: [[start, end], …] }] — layer accepts the usual index | name | { id } | 'selected' | 'all' | array",
-					required: true
-				},
-				{
-					name: "mode",
-					type: "string",
-					description: "opacity|inOut (default opacity)",
-					required: false,
-					default: "opacity"
-				},
-				{
-					name: "onValue",
-					type: "number",
-					description: "Opacity inside the ranges (default 100)",
-					required: false,
-					default: 100
-				},
-				{
-					name: "offValue",
-					type: "number",
-					description: "Opacity outside the ranges (default 0)",
-					required: false,
-					default: 0
-				}
-			],
-			toJsx(args) {
-				const mode = args.mode ?? "opacity";
-				if (mode !== "opacity" && mode !== "inOut") return jsxFail("mode must be opacity|inOut");
-				const entries = Array.isArray(args.entries) ? args.entries : [];
-				for (const [i, entry] of entries.entries()) {
-					const e = entry;
-					if (!e || typeof e !== "object" || e.layer === void 0 || !Array.isArray(e.ranges)) return jsxFail(`entries[${i}] must be { layer, ranges: [[start, end], \u2026] }`);
-					for (const [j, range] of e.ranges.entries()) if (!Array.isArray(range) || range.length !== 2 || typeof range[0] !== "number" || typeof range[1] !== "number" || !(range[1] > range[0])) return jsxFail(`entries[${i}].ranges[${j}] must be [start, end] with end > start`);
-					if (mode === "inOut" && e.ranges.length !== 1) return jsxFail(`entries[${i}]: mode 'inOut' takes exactly one range per entry`);
-				}
-				return `
-            ${jsxCompPreamble(args)}
-            var _entries = ${jsxVal(entries)};
-            var _mode = ${jsxVal(mode)};
-            var _on = ${jsxVal(args.onValue ?? 100)};
-            var _off = ${jsxVal(args.offValue ?? 0)};
-            var _out = [];
-            var _failed = 0;
-            for (var _ei = 0; _ei < _entries.length; _ei++) {
-                var _e = _entries[_ei];
-                var _layers = AE.resolveLayers(_comp, _e.layer);
-                if (_layers.length === 0) { _failed++; _out.push({ entry: _ei, ok: false, error: "no layers matched " + String(_e.layer) }); continue; }
-                var _ranges = _e.ranges.slice(0);
-                _ranges.sort(function (a, b) { return a[0] - b[0]; });
-                for (var _li = 0; _li < _layers.length; _li++) {
-                    var _l = _layers[_li];
-                    try {
-                        if (_mode === "inOut") {
-                            _l.inPoint = _ranges[0][0];
-                            _l.outPoint = _ranges[0][1];
-                            _out.push({ entry: _ei, index: _l.index, name: _l.name, ok: true, inPoint: _l.inPoint, outPoint: _l.outPoint });
-                        } else {
-                            var _op = _l.transform.opacity;
-                            var _specs = [];
-                            if (_ranges[0][0] > 0) _specs.push({ time: 0, value: _off, interp: "hold" });
-                            for (var _ri = 0; _ri < _ranges.length; _ri++) {
-                                _specs.push({ time: _ranges[_ri][0], value: _on, interp: "hold" });
-                                _specs.push({ time: _ranges[_ri][1], value: _off, interp: "hold" });
-                            }
-                            var _r = AE.applyKeySpecs(_op, _specs, { replace: true });
-                            _out.push({ entry: _ei, index: _l.index, name: _l.name, ok: true, numKeys: _r.numKeys, warnings: _r.warnings });
-                        }
-                    } catch (eS) {
-                        _failed++;
-                        _out.push({ entry: _ei, index: _l.index, name: _l.name, ok: false, error: AE.errText(eS) });
-                    }
-                }
-            }
-            return { ok: _failed === 0, error: _failed === 0 ? null : (_failed + " entries failed"), count: _out.length, layers: _out };
-        `;
-			}
-		});
-		registerOp({
-			name: "comp.set_layer_order",
-			category: "comp",
-			description: "Arrange layers by listing them top to bottom. The listed layers occupy startIndex.. in that order; unlisted layers keep their relative order below (or above) them.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name or id",
-					required: true
-				},
-				{
-					name: "layers",
-					type: "array",
-					description: "Layer references (index | name | { id }), top first",
-					required: true
-				},
-				{
-					name: "startIndex",
-					type: "number",
-					description: "1-based index the first listed layer lands on (default 1 = top)",
-					required: false,
-					default: 1
-				}
-			],
-			toJsx(args) {
-				return `
-            ${jsxCompPreamble(args)}
-            var _refs = ${jsxVal(args.layers)};
-            var _start = ${jsxVal(args.startIndex ?? 1)};
-            var _targets = [];
-            var _seen = {};
-            for (var _ri = 0; _ri < _refs.length; _ri++) {
-                var _l = AE.findLayerInComp(_comp, _refs[_ri]);
-                if (!_l) return { ok: false, error: "no layer matching " + String(_refs[_ri]) };
-                var _key = "k" + _l.index;
-                if (_seen.hasOwnProperty(_key)) return { ok: false, error: "layer '" + _l.name + "' listed twice" };
-                _seen[_key] = true;
-                _targets.push(_l);
-            }
-            if (_start < 1 || _start + _targets.length - 1 > _comp.numLayers) return { ok: false, error: "startIndex " + _start + " leaves no room for " + _targets.length + " layers (comp has " + _comp.numLayers + ")" };
-            for (var _ti = 0; _ti < _targets.length; _ti++) AE.moveLayerToIndex(_targets[_ti], _start + _ti);
-            var _order = [];
-            for (var _oi = 1; _oi <= _comp.numLayers; _oi++) _order.push(_comp.layer(_oi).name);
-            return { ok: true, moved: _targets.length, order: _order };
-        `;
-			}
-		});
-		registerOp({
-			name: "comp.resize",
-			category: "comp",
-			description: "Change a comp's size and keep its content where it was: every unparented layer's Position (keyframes included, separated dimensions handled) is offset so the content stays pinned to `anchor` — 'center' keeps it centred, 'topLeft' keeps the top-left corner, etc. Children follow their parents. Comp accepts a name, id, pattern, or array.",
-			params: [
-				{
-					name: "comp",
-					type: "any",
-					description: "Comp name/id, pattern ('shot_*'), or array of those",
-					required: true
-				},
-				{
-					name: "width",
-					type: "number",
-					description: "New width in px",
-					required: false
-				},
-				{
-					name: "height",
-					type: "number",
-					description: "New height in px",
-					required: false
-				},
-				{
-					name: "anchor",
-					type: "string",
-					description: "Where the existing content stays pinned: center | topLeft | topCenter | topRight | centerLeft | centerRight | bottomLeft | bottomCenter | bottomRight (default center)",
-					required: false,
-					default: "center"
-				},
-				{
-					name: "offset",
-					type: "array",
-					description: "[dx, dy] explicit offset applied to every unparented layer instead of `anchor`",
-					required: false
-				}
-			],
-			toJsx(args) {
-				if (args.width === void 0 && args.height === void 0) return jsxFail("give width and/or height");
-				return `
-            var _comps = AE.findComps(${jsxVal(args.comp)});
-            if (_comps.length === 0) return { ok: false, error: "no comps matched" };
-            var _anchor = ${jsxVal(args.anchor ?? "center")};
-            if (!AE.ANCHOR_PRESETS.hasOwnProperty(_anchor)) return { ok: false, error: "unknown anchor '" + _anchor + "'" };
-            var _explicit = ${jsxVal(args.offset ?? null)};
-            var _out = [];
-            for (var _ci = 0; _ci < _comps.length; _ci++) {
-                var _c = _comps[_ci];
-                var _oldW = _c.width, _oldH = _c.height;
-                var _newW = ${jsxVal(args.width ?? null)};
-                var _newH = ${jsxVal(args.height ?? null)};
-                if (_newW === null) _newW = _oldW;
-                if (_newH === null) _newH = _oldH;
-                var _f = AE.ANCHOR_PRESETS[_anchor];
-                var _d = _explicit !== null ? [_explicit[0] || 0, _explicit[1] || 0] : [(_newW - _oldW) * _f[0], (_newH - _oldH) * _f[1]];
-                _c.width = _newW;
-                _c.height = _newH;
-                var _moved = 0;
-                var _warn = [];
-                for (var _li = 1; _li <= _c.numLayers; _li++) {
-                    var _l = _c.layer(_li);
-                    if (_l.parent) continue;
-                    var _pos = null;
-                    try { _pos = _l.transform.position; } catch (eP) {}
-                    if (!_pos) continue;
-                    try { AE.offsetValue(_pos, [_d[0], _d[1]]); _moved++; }
-                    catch (eO) { _warn.push(_l.name + ": " + AE.errText(eO)); }
-                    if (_l instanceof CameraLayer || _l instanceof LightLayer) {
-                        try { var _poi = _l.transform.pointOfInterest; if (_poi) AE.offsetValue(_poi, [_d[0], _d[1]]); } catch (ePoi) {}
-                    }
-                }
-                _out.push({ comp: _c.name, from: [_oldW, _oldH], to: [_c.width, _c.height], offset: _d, layersMoved: _moved, warnings: _warn });
-            }
-            return { ok: true, comps: _out };
-        `;
-			}
-		});
-		registerOp({
-			name: "project.rename",
-			category: "project",
-			description: "Rename project items and/or layers in bulk: an exact `map` ({ from: to }) or a regex `pattern` + `replacement` ($1 works). scope 'items' covers comps, footage and folders; 'layers' covers layers in every comp (or the comps matched by `comp`). dryRun previews without renaming.",
-			params: [
-				{
-					name: "scope",
-					type: "string",
-					description: "items|layers|all (default all)",
-					required: false,
-					default: "all"
-				},
-				{
-					name: "map",
-					type: "object",
-					description: "{ 'old name': 'new name', … }",
-					required: false
-				},
-				{
-					name: "pattern",
-					type: "string",
-					description: "Regular expression (JavaScript syntax) applied to each name",
-					required: false
-				},
-				{
-					name: "replacement",
-					type: "string",
-					description: "Replacement for `pattern` matches ($1… for groups)",
-					required: false
-				},
-				{
-					name: "flags",
-					type: "string",
-					description: "Regex flags: any of g, i, m (default 'g')",
-					required: false,
-					default: "g"
-				},
-				{
-					name: "comp",
-					type: "any",
-					description: "Restrict layer renames to these comps (name/id/pattern/array; default all)",
-					required: false
-				},
-				{
-					name: "itemTypes",
-					type: "array",
-					description: "Restrict item renames to these types: CompItem|FootageItem|FolderItem",
-					required: false
-				},
-				{
-					name: "dryRun",
-					type: "boolean",
-					description: "Report what would change without renaming (default false)",
-					required: false,
-					default: false
-				}
-			],
-			toJsx(args) {
-				const scope = args.scope ?? "all";
-				if (scope !== "items" && scope !== "layers" && scope !== "all") return jsxFail("scope must be items|layers|all");
-				const hasMap = args.map !== void 0;
-				const hasPattern = args.pattern !== void 0;
-				if (hasMap === hasPattern) return jsxFail("give exactly one of map or pattern (+ replacement)");
-				const flags = String(args.flags ?? "g");
-				if (hasPattern) {
-					if (args.replacement === void 0) return jsxFail("pattern needs a replacement");
-					if (!/^[gim]*$/.test(flags)) return jsxFail("flags may only contain g, i, m");
-					try {
-						RegExp(String(args.pattern), flags);
-					} catch (regexErr) {
-						const msg = regexErr instanceof Error ? regexErr.message : String(regexErr);
-						return jsxFail(`invalid pattern: ${msg}`);
-					}
-				}
-				return `
-            var _scope = ${jsxVal(scope)};
-            var _map = ${jsxVal(args.map ?? null)};
-            var _re = ${hasPattern ? `new RegExp(${jsxVal(args.pattern)}, ${jsxVal(flags)})` : "null"};
-            var _repl = ${jsxVal(args.replacement ?? "")};
-            var _types = ${jsxVal(args.itemTypes ?? null)};
-            var _dry = ${jsxVal(args.dryRun === true)};
-            function _next(name) {
-                if (_map !== null) return (_map.hasOwnProperty(name) && typeof _map[name] === "string") ? _map[name] : name;
-                _re.lastIndex = 0;
-                return name.replace(_re, _repl);
-            }
-            function _typeOk(t) {
-                if (_types === null) return true;
-                for (var _ti = 0; _ti < _types.length; _ti++) if (_types[_ti] === t) return true;
-                return false;
-            }
-            var _changes = [];
-            var _failed = 0;
-            if (_scope !== "layers") {
-                for (var _ii = 1; _ii <= app.project.numItems; _ii++) {
-                    var _it = app.project.item(_ii);
-                    var _t = AE.itemTypeName(_it);
-                    if (!_typeOk(_t)) continue;
-                    var _to = _next(_it.name);
-                    if (_to === _it.name) continue;
-                    var _ch = { kind: "item", type: _t, id: _it.id, from: _it.name, to: _to };
-                    if (!_dry) { try { _it.name = _to; _ch.applied = true; } catch (eI) { _failed++; _ch.applied = false; _ch.error = AE.errText(eI); } }
-                    _changes.push(_ch);
-                }
-            }
-            if (_scope !== "items") {
-                var _comps = AE.findComps(${args.comp !== void 0 ? jsxVal(args.comp) : "\"*\""});
-                for (var _ci = 0; _ci < _comps.length; _ci++) {
-                    var _c = _comps[_ci];
-                    for (var _li = 1; _li <= _c.numLayers; _li++) {
-                        var _l = _c.layer(_li);
-                        var _lto = _next(_l.name);
-                        if (_lto === _l.name) continue;
-                        var _lch = { kind: "layer", comp: _c.name, index: _li, from: _l.name, to: _lto };
-                        if (!_dry) { try { _l.name = _lto; _lch.applied = true; } catch (eL) { _failed++; _lch.applied = false; _lch.error = AE.errText(eL); } }
-                        _changes.push(_lch);
-                    }
-                }
-            }
-            return { ok: _failed === 0, error: _failed === 0 ? null : (_failed + " renames failed"), dryRun: _dry, count: _changes.length, changes: _changes };
-        `;
-			}
-		});
-	})))();
-}
-
-export { init_keying, init_layer, init_layer_advanced, init_layout };
+export { init_keying, init_layer_advanced };

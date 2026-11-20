@@ -83,7 +83,7 @@
       "title": "Portable cold-start production workflow",
       "path": "language/production-workflow.md",
       "kind": "foundation",
-      "sha256": "37e88ad6ec62aab6fb74cda7aee242a8da4711e6a7be30875bc83ea668c24833"
+      "sha256": "bf9d7ac053ea316114d4f7748ac80aec778d1e40792c979e79f5835f39957b12"
     },
     {
       "id": "construction",
@@ -174,14 +174,14 @@
       "title": "Review by someone who did not build the piece",
       "path": "references/review.md",
       "kind": "guidance",
-      "sha256": "3ec61fd635055ed4d29d6d07a806ccd23f271173914267e1c52720561876c84c"
+      "sha256": "8022a89887a87723877107748b7ae60e37c03d7ff76db3f8d5832ece0224159f"
     },
     {
       "id": "keying",
       "title": "Keying, compositing and sitting an element in its scene",
       "path": "references/keying.md",
       "kind": "guidance",
-      "sha256": "39b8dcf61aa433a3a8a57f2b29af608fed85afc72a0c8aa602f974a939be6fa6"
+      "sha256": "57cb5251b841d1c741673edc99dcb1b8acd4e0cb3a6a835d069e791f2417eb1e"
     },
     {
       "id": "page-recording",
@@ -216,7 +216,7 @@
       "title": "Unattended runs: planning overnight and long After Effects work",
       "path": "techniques/unattended-runs.md",
       "kind": "technique",
-      "sha256": "0fb68e6c612fa845c050219e4fa398aa88275c83a4739dd17499719d2ba38f59"
+      "sha256": "0e75bea606897028e1a00cd4be1117a050bd3dcc67fe1d02365244ef8cbd358c"
     },
     {
       "id": "page-recorder-mjs",
@@ -307,7 +307,7 @@
       "title": "Shared ES3 helpers for every style (AESLib)",
       "path": "styles/aes-lib.jsx",
       "kind": "code",
-      "sha256": "5a66f4849c37a71642e5e295e9b47f888732f8c3d8c15337448dd932e1325bb9"
+      "sha256": "5792330ffce3491abdffc4f8b04e5dcbbaa293c9f9f04c4822176c4408e8164d"
     },
     {
       "id": "style-art-deco",
@@ -580,14 +580,14 @@
       "title": "Pixel headline style",
       "path": "styles/pixel-headline/STYLE.md",
       "kind": "style",
-      "sha256": "a1af4bb21591126b3b8a52073ba674acbe7b26b85392773dd61966e15bbb9dbf"
+      "sha256": "397580a45b86736b9a539c6882e3b1aa03a96f1d3393c1e4d46acbfca88fe543"
     },
     {
       "id": "style-pixel-headline-jsx",
       "title": "Pixel headline helpers (AESPixelHeadline)",
       "path": "styles/pixel-headline/pixelheadline.jsx",
       "kind": "code",
-      "sha256": "6700c7f96d788b2eac7a373fc42ede36345a0988e635dab3bd2cdf27a49185dd"
+      "sha256": "15c06561dbad0f9523be5b368284f39456f8c83969291b0b667df168dc926ed5"
     },
     {
       "id": "style-risograph",

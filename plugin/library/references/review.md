@@ -2,6 +2,10 @@
 
 A builder knows what each moment was meant to show and sees that. A fresh viewer sees what is there. Before a build is called done, a reviewer who did not build it looks at the delivered comp from the evidence below and nothing else. This is the procedure for both sides.
 
+## When it runs
+
+The review runs once, before the user's first look at the motion. After that, only when the user asks for another review, not every round of changes: each pass adds time between builds. On later rounds the builder checks its own changes with `ae_check_comp` and frames, and says what it checked.
+
 ## Who reviews
 
 - Where the host can start a fresh agent, hand the review to one. In Claude Code that is the plugin's reviewer agent, `comp-room:motion-reviewer`: it can read files, render frames and run the whole-piece check, and cannot change the project. In another host, start a fresh agent with the motion-review skill and the hand-over packet below.
@@ -49,8 +53,8 @@ Some defects raise no flag: a colour cast, a soft background, a fringe and a bea
 
 1. Builder: run `ae_check_comp` on the delivered comp, render the frames, hand over the packet.
 2. Reviewer: return the list.
-3. Builder: fix what it decides to fix, re-run `ae_check_comp`, re-render the changed moments, and hand over fresh evidence (to a fresh reviewer, or the same one with the new evidence and its last list).
-4. Stop after two review passes, or sooner when the latest list has nothing at `first-watch` or `careful-watch`. Report what is left rather than starting a third pass.
+3. Builder: fix what it decides to fix, re-run `ae_check_comp`, re-render the changed moments and check them against the list; then the user's first look.
+4. When the user asks for another review, hand over fresh evidence (to a fresh reviewer, or the same one with the new evidence and its last list). Stop after two review passes, or sooner when the latest list has nothing at `first-watch` or `careful-watch`. Report what is left rather than starting a third pass.
 
 ## The hand-over message
 

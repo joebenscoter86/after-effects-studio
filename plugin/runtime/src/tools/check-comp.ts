@@ -37,7 +37,7 @@ import { errorResult } from "../errors.js";
 import { readOnlyMode } from "../policy.js";
 import type { AeTransport } from "../transport/AeTransport.js";
 import { colorConversion, iccManagedReason, type ColorPayload, type Convert } from "./capture-shared.js";
-import { captureJsx, planJsx, structureJsx, type StructureOptions } from "./check-comp-jsx.js";
+import { captureJsx, IDLE_TIME_DRIVEN, planJsx, structureJsx, type StructureOptions } from "./check-comp-jsx.js";
 import { defineTool, jsonResult, toMcpResult, type ArgsOf } from "./define-tool.js";
 
 // ---------------------------------------------------------------------------
@@ -310,6 +310,74 @@ interface StructurePayload {
     truncated: boolean;
     errors: Array<{ comp: string; layer: string; index: number; property: string; error: string }>;
   };
+  /** Missing when the script predates the idle report. */
+  idle?: {
+    layers: IdleLayer[];
+    exempt: number;
+    layersChecked: number;
+  };
+}
+
+/** One layer's on-screen span and its merged change intervals, as the structure script reads them. */
+export interface IdleLayer {
+  index: number;
+  name: string;
+  from: number;
+  to: number;
+  changes: "always" | Array<[number, number]>;
+  /** Gaps between changes the viewer cannot see (opacity or scale 0): passed over. Missing in older payloads. */
+  hidden?: Array<[number, number]>;
+}
+
+export interface IdleEntry {
+  layer: string;
+  index: number;
+  from: number;
+  to: number;
+  seconds: number;
+  reading: string;
+}
+
+export const DEFAULT_IDLE_SECONDS = 5;
+
+/**
+ * The idle report: for each layer, the longest stretch of its span with
+ * nothing changing (span start to the first change, between changes, last
+ * change to span end; on a tie the later stretch), listed when longer than
+ * idleSeconds. A stretch the script found hidden (opacity or scale 0) is
+ * passed over. Longest first, then by layer index.
+ */
+export function idleEntries(layers: IdleLayer[], idleSeconds: number): IdleEntry[] {
+  const out: IdleEntry[] = [];
+  if (!(idleSeconds > 0)) return out;
+  for (const L of layers) {
+    if (L.changes === "always") continue;
+    let best: [number, number] | null = null;
+    let cursor = L.from;
+    const hidden = L.hidden ?? [];
+    const consider = (a: number, b: number) => {
+      if (hidden.some(([h0, h1]) => Math.abs(h0 - a) < 1e-6 && Math.abs(h1 - b) < 1e-6)) return;
+      if (b - a > 1e-9 && (best === null || b - a >= best[1] - best[0] - 1e-9)) best = [a, b];
+    };
+    for (const [a, b] of [...L.changes].sort((x, y) => x[0] - y[0])) {
+      consider(cursor, a);
+      cursor = Math.max(cursor, b);
+    }
+    consider(cursor, L.to);
+    if (best === null) continue;
+    const [from, to] = best as [number, number];
+    const seconds = r6(to - from);
+    if (seconds <= idleSeconds + 1e-9) continue;
+    out.push({
+      layer: L.name,
+      index: L.index,
+      from: r6(from),
+      to: r6(to),
+      seconds,
+      reading: `layer ${L.index} "${L.name}" is on screen with nothing changing on it from ${r6(from)} s to ${r6(to)} s (${seconds} s)`,
+    });
+  }
+  return out.sort((a, b) => b.seconds - a.seconds || a.index - b.index);
 }
 
 const r6 = (v: number) => Math.round(v * 1e6) / 1e6;
@@ -447,6 +515,14 @@ const CHECK_COMP_SHAPE = {
     .boolean()
     .optional()
     .describe("Run the structure checks on the call that reaches the end of the range (default true)."),
+  idleSeconds: z
+    .number()
+    .min(0)
+    .optional()
+    .describe(
+      `The idle report (structure.idle) lists layers on screen longer than this with nothing changing on them (default ${DEFAULT_IDLE_SECONDS} s; 0 turns it off). ` +
+        "A report for the reviewer, never a fault.",
+    ),
   colorManaged: z
     .enum(["auto", "off"])
     .optional()
@@ -501,7 +577,8 @@ export const checkCompTool = defineTool({
     "(pixels at 255 in all three channels, with the box where they sit; per-channel shares alongside). " +
     "Structure, read from the project on the call that reaches the end of the range: text layers whose bounds " +
     "leave the frame (or `safeArea`) while visible — layer, time range, edge, by how many pixels, partly or " +
-    "wholly outside — missing fonts and footage, and expressions in error (in nested comps too). One contact " +
+    "wholly outside — missing fonts and footage, expressions in error (in nested comps too), and a report (not " +
+    "faults) of layers on screen and visible with nothing changing on them for longer than `idleSeconds`. One contact " +
     "sheet tiles the flagged moments, labelled with time and kind; the frames on it are kept beside it, every " +
     "other capture is deleted as soon as it is measured. A clean comp returns empty lists and no sheet. " +
     "Bounded: at most `maxFrames` frames a call (default 300); when the range is not finished the result " +
@@ -983,6 +1060,8 @@ async function runStructure(
     maxSamples: 400,
     maxItems: LIST_CAP,
     maxProperties: 50_000,
+    idleSeconds: args.idleSeconds ?? DEFAULT_IDLE_SECONDS,
+    timeDriven: IDLE_TIME_DRIVEN.source,
   };
   const res = await transport.execute({
     code: structureJsx(args.compNameOrId, opts),
@@ -1008,6 +1087,7 @@ async function runStructure(
     }))
     .sort((a, b) => a.from.time - b.from.time);
   const footageInComp = s.footage.items.filter((it) => it.usedInComps.length > 0);
+  const idle = opts.idleSeconds > 0 && s.idle ? idleEntries(s.idle.layers, opts.idleSeconds) : [];
   return {
     checked: true,
     safeArea: {
@@ -1046,6 +1126,43 @@ async function runStructure(
       ...(s.expressions.truncated ? { truncated: true } : {}),
       note: "read after the frames were rendered (expressionError is filled in when a broken expression is set; read late in case a just-opened project fills it only when evaluated)",
     },
+    // Listed last and apart: a report for the reviewer, never a fault. It adds
+    // nothing to counts, flags, stretches or the sheet.
+    idleReport: idleReportOf(s, opts.idleSeconds, idle),
+    idle: idle.slice(0, LIST_CAP),
+  };
+}
+
+function idleReportOf(s: StructurePayload, idleSeconds: number, idle: IdleEntry[]): Record<string, unknown> {
+  const base = {
+    heading: "Report (not faults)",
+    idleSeconds,
+    count: idle.length,
+    ...(idle.length > LIST_CAP ? { truncated: true } : {}),
+  };
+  if (idleSeconds === 0) return { ...base, reading: "the idle report is off (idleSeconds 0)" };
+  if (!s.idle) return { ...base, reading: "the structure script returned no change times: the idle report was not made" };
+  return {
+    ...base,
+    layersChecked: s.idle.layersChecked,
+    exempt: s.idle.exempt,
+    reading:
+      idle.length === 0
+        ? `no layer is on screen longer than ${idleSeconds} s with nothing changing on it`
+        : `${idle.length} layer${idle.length > 1 ? "s are" : " is"} on screen longer than ${idleSeconds} s with nothing changing on ${idle.length > 1 ? "them" : "it"}, longest first` +
+          (idle.length > LIST_CAP ? ` (the first ${LIST_CAP} listed)` : "") +
+          ". " +
+          "A report, not a fault: a held card can be intended; judge each against the brief. Not counted in counts or shown on the sheet.",
+    note:
+      "top-level layers of this comp, each over its on-screen span (in to out point, inside the comp); a change is a keyframe " +
+      "on the layer (any property: effects, masks, text animators), on a parent's transform (not its opacity), on its track matte, a layer marker, a time-driven " +
+      "expression (by its text: time, wiggle, loopIn/Out, valueAtTime, posterizeTime, Date; an expression reading another " +
+      "layer counts as static), or for a precomp a keyframe one level down on an enabled layer or track matte (keyed time remap " +
+      "or playing footage inside: always changing). A Wiggly Selector, Wiggle Paths or Wiggle Transform counts as always " +
+      "changing; other effects that move with no keys (particles) count as static. Between two keys with equal values (and no " +
+      "spatial curve) nothing moves. A stretch where the layer cannot be seen " +
+      "(opacity 0, or scale 0 on it or a parent) is not listed. Exempt: cameras, lights, nulls, adjustment and guide layers, " +
+      "footage and audio that plays, and unmasked solids and stills covering the frame with no other layer below them",
   };
 }
 

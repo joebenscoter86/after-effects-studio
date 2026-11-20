@@ -70,6 +70,33 @@ export declare function aeFrameSource(transport: AeTransport, comp: string | num
 }): FrameSource;
 /** Items listed at most per list (counts are always complete). */
 export declare const LIST_CAP = 20;
+/** One layer's on-screen span and its merged change intervals, as the structure script reads them. */
+export interface IdleLayer {
+    index: number;
+    name: string;
+    from: number;
+    to: number;
+    changes: "always" | Array<[number, number]>;
+    /** Gaps between changes the viewer cannot see (opacity or scale 0): passed over. Missing in older payloads. */
+    hidden?: Array<[number, number]>;
+}
+export interface IdleEntry {
+    layer: string;
+    index: number;
+    from: number;
+    to: number;
+    seconds: number;
+    reading: string;
+}
+export declare const DEFAULT_IDLE_SECONDS = 5;
+/**
+ * The idle report: for each layer, the longest stretch of its span with
+ * nothing changing (span start to the first change, between changes, last
+ * change to span end; on a tie the later stretch), listed when longer than
+ * idleSeconds. A stretch the script found hidden (opacity or scale 0) is
+ * passed over. Longest first, then by layer index.
+ */
+export declare function idleEntries(layers: IdleLayer[], idleSeconds: number): IdleEntry[];
 export declare const checkCompTool: import("./define-tool.js").ToolSpec<{
     compNameOrId: z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>;
     from: z.ZodOptional<z.ZodNumber>;
@@ -90,6 +117,7 @@ export declare const checkCompTool: import("./define-tool.js").ToolSpec<{
     }>>;
     boundsStep: z.ZodOptional<z.ZodNumber>;
     structure: z.ZodOptional<z.ZodBoolean>;
+    idleSeconds: z.ZodOptional<z.ZodNumber>;
     colorManaged: z.ZodOptional<z.ZodEnum<{
         auto: "auto";
         off: "off";

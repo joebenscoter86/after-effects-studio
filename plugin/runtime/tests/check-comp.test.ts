@@ -19,7 +19,7 @@ import { decodePng, encodePngSrgb8 } from "../src/color/png16.js";
 import { checkCompTool } from "../src/tools/check-comp.js";
 // @ts-expect-error: a plain .mjs module without types (the eval's scene, shared with its setup script)
 import { FINISH, REVIEW } from "../../evals/picture/scenes.mjs";
-import { captureJsx, structureJsx } from "../src/tools/check-comp-jsx.js";
+import { captureJsx, IDLE_TIME_DRIVEN, structureJsx } from "../src/tools/check-comp-jsx.js";
 import type { AeTransport, EvalRequest, EvalResult } from "../src/transport/AeTransport.js";
 
 const CW = 1080;
@@ -498,7 +498,7 @@ describe("structure script", () => {
     return comp;
   }
 
-  const OPTS = { from: 0, to: 2, step: 0.1, margins: [0, 0, 0, 0] as [number, number, number, number], boundsOf: "text" as const, maxSamples: 400, maxItems: 20, maxProperties: 50000 };
+  const OPTS = { from: 0, to: 2, step: 0.1, margins: [0, 0, 0, 0] as [number, number, number, number], boundsOf: "text" as const, maxSamples: 400, maxItems: 20, maxProperties: 50000, idleSeconds: 5, timeDriven: IDLE_TIME_DRIVEN.source };
 
   it("reports the title past the right edge while visible: when, by how much, partly then wholly", () => {
     const comp = mockComp();

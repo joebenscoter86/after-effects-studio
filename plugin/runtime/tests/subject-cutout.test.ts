@@ -1473,3 +1473,68 @@ describe("subject.check on a softened edge", () => {
     expect(renders(io)[0].isolate).toBe("raw_nogreen.mp4 soft edge");
   });
 });
+
+describe("subject.check after a motion edge", () => {
+  const MOTION = {
+    ...APART,
+    motionEdge: { layer: "raw_nogreen.mp4 motion edge", enabled: true, matteCopies: 1 },
+  };
+  /** The body with the keyer's soft alpha (0.4) enclosed at MIC and, when `hard`, a clear hole at HARD. */
+  const HARD: [number, number, number, number] = [50, 240, 40, 40]; // 1,600 px
+  const blurred = (hard: boolean) => () => {
+    const a = matte(hard ? [HARD] : []);
+    const [x0, y0, w, h] = MIC;
+    for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) a[y * W + x] = 0.4;
+    return a;
+  };
+
+  it("renders the motion-edge layer in place of the matted layer", async () => {
+    const io = fakeIO(() => matte(), { status: async () => MOTION as Any });
+    await runSubjectCheck({ comp: "Main", layer: 1, outDir: dir, frozenFrames: 1e9 }, io);
+    expect(renders(io)[0].isolate).toBe("raw_nogreen.mp4 motion edge");
+  });
+
+  it("does not flag the keyer's soft alpha on moving parts, and still flags a clear hole", async () => {
+    const soft = await runSubjectCheck(
+      { comp: "Main", layer: 1, outDir: dir, frozenFrames: 1e9, holeLimit: 1000 },
+      fakeIO(blurred(false), { status: async () => MOTION as Any }),
+    );
+    expect(soft.stop).toBe(false);
+    expect(soft.findings).toEqual([]);
+    const flawed = await runSubjectCheck(
+      { comp: "Main", layer: 1, outDir: dir, frozenFrames: 1e9, holeLimit: 1000 },
+      fakeIO(blurred(true), { status: async () => MOTION as Any }),
+    );
+    expect(flawed.stop).toBe(true);
+    expect(flawed.findings).toEqual([
+      expect.objectContaining({ kind: "hole", box: { x: 50, y: 240, width: 40, height: 40 } }),
+    ]);
+    // On the plain matte the same soft patch is a hole, as before.
+    const plain = await runSubjectCheck(
+      { comp: "Main", layer: 1, outDir: dir, frozenFrames: 1e9, holeLimit: 1000 },
+      fakeIO(blurred(false), { status: async () => APART as Any }),
+    );
+    expect(plain.findings).toContainEqual(
+      expect.objectContaining({ kind: "hole", box: { x: 80, y: 150, width: 40, height: 60 } }),
+    );
+  });
+
+  it("refuses before rendering when the layer has both a soft edge and a motion edge, naming both", async () => {
+    const io = fakeIO(() => matte(), {
+      status: async () =>
+        ({
+          ...MOTION,
+          softEdge: { layer: "raw_nogreen.mp4 soft edge", enabled: true, matteCopies: 2 },
+        }) as Any,
+    });
+    const res = await runSubjectCheck(
+      { comp: "Main", layer: 1, outDir: dir, frozenFrames: 1e9 },
+      io,
+    );
+    expect(res.ok).toBe(false);
+    expect(res.error).toContain("raw_nogreen.mp4 soft edge");
+    expect(res.error).toContain("raw_nogreen.mp4 motion edge");
+    expect(res.error).toMatch(/undo one/);
+    expect(renders(io)).toEqual([]);
+  });
+});

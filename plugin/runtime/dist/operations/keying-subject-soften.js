@@ -5,8 +5,8 @@ import * as path from "node:path";
 import { distanceTo, furthestFrame, matteCoverage, subjectTop } from "../color/matte.js";
 import { labOf, lookCrops, measureLook, summarizeLookSeries } from "../color/sheet.js";
 import { registerOp, jsxVal, jsxCompLayerPreamble } from "../registry.js";
-import { OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, PICTURE_MARGIN_BYTES, SETTLE_MAX_MS, SOFT_EDGE_DEFAULTS, aeCacheRoot, cacheBytesFor, captureBytes, compLayerParams, liveCutoutIO, needSelection, perFrameMsOf, since, spacePlan, trackedSpan } from "./keying-shared.js";
-export const SOFT_EDGE_COST = "The soft edge is two copies of the matte, so After Effects computes Object Matte twice for every frame: a render writes about twice the disk cache and takes several times as long (on the half-size take, 320 frames at 1088 × 1920: 342 s and 9.0 GB of cache, against 65 to 92 s and about 5 GB with one matte; subject.render_cutout counts both copies).";
+import { OBJECT_MATTE_MATCH_NAME, OBJECT_MATTE_SELECTIONS_MATCH_NAME, PICTURE_MARGIN_BYTES, SETTLE_MAX_MS, SOFT_EDGE_DEFAULTS, aeCacheRoot, cacheBytesFor, cutoutMovieUndoGuardJsx, otherEdgeError, captureBytes, compLayerParams, liveCutoutIO, needSelection, perFrameMsOf, since, spacePlan, trackedSpan } from "./keying-shared.js";
+export const SOFT_EDGE_COST = "The soft edge is two copies of the matte, so After Effects computes Object Matte twice for every frame: a render writes about twice the disk cache and takes several times as long (on the half-size take, 320 frames at 1088 × 1920: 342 s and 9.0 GB of cache, against 65 to 92 s and about 5 GB with one matte, measured on one machine; subject.render_cutout counts both copies).";
 /** The region's lower line: given, or `regionDepth` of the comp's height under the lowest top of the subject. */
 export function softRegionBottom(tops, compHeight, given) {
     if (typeof given === "number" && Number.isFinite(given))
@@ -39,7 +39,7 @@ export function softenBuildJsx(args) {
     return `
             ${jsxCompLayerPreamble(args)}
             var _name = _layer.name + " soft edge";
-            for (var _li = 1; _li <= _comp.numLayers; _li++) if (_comp.layer(_li).name === _name) return { ok: false, error: "comp " + _comp.name + " already has a layer '" + _name + "'; undo it first (subject.soften_edge { undo: true })" };
+            for (var _li = 1; _li <= _comp.numLayers; _li++) if (_comp.layer(_li).name === _name) return { ok: false, error: "comp " + _comp.name + " already has a layer '" + _name + "'; undo it first (subject.soften_edge { comp, layer, undo: true })" };
             var _fxRoot = _layer.property("ADBE Effect Parade");
             var _om = null;
             for (var _fi = 1; _fi <= _fxRoot.numProperties; _fi++) if (_fxRoot.property(_fi).matchName === ${jsxVal(OBJECT_MATTE_MATCH_NAME)}) { _om = _fi; break; }
@@ -109,6 +109,7 @@ export function softenUndoJsx(args) {
                 if (_l.name === _name && String(AE.safeGet(function () { return _l.comment; }, "")).indexOf(${jsxVal(SOFT_MARKER)}) >= 0) { _pl = _l; break; }
             }
             if (!_pl) return { ok: false, error: "comp " + _comp.name + " has no soft edge for layer '" + _layer.name + "'" };
+            ${cutoutMovieUndoGuardJsx("soft edge")}
             var _was = true;
             try { var _st = eval("(" + _pl.comment + ")"); if (_st && _st.wasEnabled === false) _was = false; } catch (eJ) {}
             var _pc = _pl.source;
@@ -177,8 +178,10 @@ export async function runSoftenEdge(args, io) {
     if (st.softEdge)
         return {
             ok: false,
-            error: `the layer already has a soft edge ('${st.softEdge.layer}'); undo it first with subject.soften_edge { undo: true }`,
+            error: `the layer already has a soft edge ('${st.softEdge.layer}'); undo it first with subject.soften_edge { comp, layer, undo: true }`,
         };
+    if (typeof st.motionEdge?.layer === "string")
+        return { ok: false, error: otherEdgeError("motion", st.motionEdge.layer) };
     const span = st.span ?? { inFrame: 0, outFrame: 1 };
     const clicks = (st.selections ?? [])
         .map((s) => s.clickFrame)
@@ -457,7 +460,7 @@ registerOp({
         "Defaults: look C, the user's choice on the half-size take (radius 8, Smooth 0, Chatter Reduction 2, Decontaminate on, feather 60). The region is everything above a line: `regionBottom` (comp pixels), or by default 12% of the comp's height under the lowest top of the subject on the sampled frames. " +
         "Then it runs the closing check on the click frame and the frame furthest from it (the least overlap of the outline with the click frame's, from the sampled frames: by default the click frame and every 10th frame of the 60 after it): no pixel solid in the matte as clicked and more than 30 px inside its edge may drop under 0.99, the colour inside the subject must match the matte as clicked within 1 (CIELAB), and no more than `outsideLimit` px may spread over 10 px outside the outline. On any failure it undoes the build and says so; the fallback is Decontaminate Edge Colors alone (subject.settings). " +
         "Reports look before and after on the region's top and sides and on the outline below it (edge width and widest tenth on the alpha, soft band, the share of `background`'s colour in the edge when given, the change from frame to frame over five held frames), the region and how it was chosen, and the whole frames after as pictures. " +
-        "After it, subject.check, subject.fill_gaps, subject.render_cutout and subject.use_cutout use the soft-edge layer. Two copies of the matte mean Object Matte is computed twice for every frame: a render writes about twice the disk cache and takes several times as long (on the half-size take, 342 s and 9.0 GB against 65 to 92 s and about 5 GB with one matte). The result's `sampling` says which frames were read and what that leaves out; subject.check_file reads every frame of the render: it reports see-through inside the cut-out, which means undo the soft edge and render again with the fallback, and notes the frames where the subject sits low enough for its hair to cross the region's line (subject.render_cutout writes the line beside the file). undo: true takes the comp back to the single matted layer. Ran in After Effects 27.0 on the half-size take with the default sampling (frames 0 to 50): 34 s, 1.6 GB of disk cache.",
+        "After it, subject.check, subject.fill_gaps, subject.render_cutout and subject.use_cutout use the soft-edge layer. Two copies of the matte mean Object Matte is computed twice for every frame: a render writes about twice the disk cache and takes several times as long (on the half-size take, 342 s and 9.0 GB against 65 to 92 s and about 5 GB with one matte, measured on one machine). The result's `sampling` says which frames were read and what that leaves out; subject.check_file reads every frame of the render: it reports see-through inside the cut-out, which means undo the soft edge and render again with the fallback, and notes the frames where the subject sits low enough for its hair to cross the region's line (subject.render_cutout writes the line beside the file). undo: true takes the comp back to the single matted layer. It refuses a layer that already has a motion edge (subject.motion_edge): undo that first. Its self-check renders take seconds near the click; on a long or large take, time a few frames on the user's machine first and tell the user the estimate. Ran in After Effects 27.0 on the half-size take with the default sampling (frames 0 to 50): 34 s, 1.6 GB of disk cache.",
     params: [
         ...compLayerParams,
         {
@@ -535,7 +538,7 @@ registerOp({
         {
             name: "undo",
             type: "boolean",
-            description: "Take the comp back to the single matted layer: remove the soft-edge precomp and switch the matted layer back on.",
+            description: "Take the comp back to the single matted layer: remove the soft-edge precomp and switch the matted layer back on. Refused while subject.use_cutout's movie ('<layer> cut-out') is in the comp, which would show the subject twice: remove the movie first.",
             required: false,
         },
     ],

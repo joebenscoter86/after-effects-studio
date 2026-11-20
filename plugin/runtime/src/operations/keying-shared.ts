@@ -303,7 +303,7 @@ export async function spaceRefusal(
  * After Effects' disk cache written while it tracks Object Matte through
  * `frames` frames of a source this size: one 16-bit RGBA frame of the source
  * per frame (8 bytes a pixel). Measured: one render of 320 frames of a 2176 x
- * 3840 take added about 19 GB (estimate 21.4 GB).
+ * 3840 take added about 19 GB (estimate 21.4 GB), measured on one machine.
  */
 export function cacheBytesFor(
   frames: number,
@@ -558,6 +558,7 @@ export async function measureFrames(
   tally: PixelTally = pixelTally(),
   pictures = true,
   onImage?: (r: FrameReading, img: DecodedPng) => void,
+  below?: number,
 ): Promise<{ readings: FrameReading[]; picture: string | null }> {
   const started = performance.now();
   const colour = parseHex(over);
@@ -610,7 +611,7 @@ export async function measureFrames(
     }
     tally.frames++;
     const tRegions = performance.now();
-    const regions = cutoutRegions(img.alpha, img.width, img.height);
+    const regions = cutoutRegions(img.alpha, img.width, img.height, below === undefined ? {} : { below });
     let opaquePx = 0;
     const alpha = img.alpha;
     for (let p = 0; p < alpha.length; p++) if (alpha[p] >= EDGE_DEFAULTS.opaque) opaquePx++;
@@ -933,9 +934,10 @@ export const overParam = {
 // Stage 12c: render the cut-out once, check the file, build on the file.
 // After Effects recomputes Object Matte on every capture (nine frames across
 // a 320-frame take cost 236 to 287 s on each of five identical renders), and
-// a script cannot freeze it. Rendered once to a movie with alpha (390 s for
-// all 320 frames), the cut-out reads back at about 0.55 s a frame and cannot
-// change afterwards. These three operations do that.
+// a script cannot freeze it. Rendered once to a movie with alpha (390 s, measured on one machine, for
+// all 320 frames), the cut-out reads back
+// at about 0.55 s a frame (measured on one machine) and cannot change
+// afterwards. These three operations do that.
 
 /** What subject.render_cutout and subject.check_file need from After Effects. */
 export interface FileIO extends PixelIO {
@@ -948,7 +950,7 @@ export interface FileIO extends PixelIO {
   exists?(file: string): Promise<boolean>;
 }
 
-/** Default most frames subject.check_file reads one by one; beyond it, it reads pairs in steps. About 0.55 s a frame measured. */
+/** Default most frames subject.check_file reads one by one; beyond it, it reads pairs in steps. About 0.55 s a frame, measured on one machine. */
 export const CHECK_FILE_MAX_FRAMES = 400;
 
 /** JSX: the movie (a file, or a footage item by id) in a throwaway comp of its own size. */
@@ -1049,3 +1051,94 @@ export const SOFT_EDGE_DEFAULTS = {
   /** Face colour against the matte as clicked, CIELAB difference allowed. */
   colourLimit: 1,
 };
+
+// ---------------------------------------------------------------------------
+// subject.motion_edge: a motion-blurred edge where the subject moves, from a second keyer
+// ---------------------------------------------------------------------------
+
+/**
+ * The motion edge's defaults, measured by hand on a studio take (2176 × 3840,
+ * 30 fps, a phone camera on a tripod that shifts slightly from frame to frame,
+ * 2026-11-16): Levels on the difference of neighbouring frames from 0.25 to
+ * 0.45 (lower thresholds, 0.03 to 0.10 and then 0.12 to 0.30, lit every still
+ * edge because of the camera's shift), the motion grown 25 px and blurred
+ * 15 px (Box Blur, 2 iterations), and the matte grown 50 px into the band
+ * where the keyer's edge shows. A plain 50 px band with no motion mask filled
+ * the gaps in a microphone mount, brought back the keyer's halo and let a
+ * plant behind the head through.
+ */
+export const MOTION_EDGE_DEFAULTS = {
+  threshold: { black: 0.25, white: 0.45 },
+  motionGrow: 25,
+  motionBlur: 15,
+  motionBlurIterations: 2,
+  band: 50,
+  /** Minimax's Channel menu value for alpha alone. */
+  bandChannel: 2,
+};
+
+/**
+ * In a motion-edge cut-out a hole or opening is read only where the alpha is
+ * under this (nearly clear), not under opaque as on a plain matte: the keyer's
+ * soft alpha on moving parts is the motion blur the layer is built to keep, so
+ * a soft patch is not a finding, while a clear hole (a missed microphone, a gap)
+ * still is. 0.05 rather than After Effects' 2/255 so the keyer's faint noise in
+ * a clear hole does not split it into pieces under the limit. Chosen offline,
+ * not calibrated on a live motion-edge take.
+ */
+export const MOTION_EDGE_CLEAR_BELOW = 0.05;
+
+/**
+ * Seen through in a motion-edge file: alpha from MOTION_EDGE_CLEAR_BELOW up to 0.5, deep inside
+ * the body, instead of 0.5 to 0.95. The keyer's soft alpha where a moving arm crossed the torso
+ * read 0.75 to 0.95 (1,486 px in a 30 px strip, 4 of 24 frames of a 1920 × 1080 take,
+ * 2026-11-16): the motion edge's own blur, which is expected. A patch more than half see-through
+ * deep in the body is still a defect, and below MOTION_EDGE_CLEAR_BELOW the hole check takes over,
+ * so no alpha falls between the two. 0.5 leaves a margin of 0.25 under the lowest blur measured.
+ */
+export const MOTION_EDGE_SEEN_THROUGH = { solid: MOTION_EDGE_CLEAR_BELOW, below: 0.5 };
+
+/** One sentence for check_file's reading of a motion-edge file. */
+export const MOTION_EDGE_FILE_READING =
+  `This file carries a motion edge (from its sidecar): soft alpha on moving parts is expected, so holes and openings count only under ${MOTION_EDGE_CLEAR_BELOW} alpha, and seen through only from ${MOTION_EDGE_SEEN_THROUGH.solid} to ${MOTION_EDGE_SEEN_THROUGH.below} alpha deep inside the body (on a plain cut-out, 0.5 to 0.95); the moving arm across the torso on the live take read 0.75 to 0.95.`;
+
+/** The layer that is the cut-out after subject.status: the soft edge, the motion edge, or the matted layer; or why there is no one answer. */
+export function cutLayerOf(st: Json, matted: unknown): { layer: unknown; motion: boolean } | { error: string } {
+  const soft = typeof st?.softEdge?.layer === "string" ? (st.softEdge.layer as string) : null;
+  const motion = typeof st?.motionEdge?.layer === "string" ? (st.motionEdge.layer as string) : null;
+  if (soft && motion) return { error: bothEdgesError(soft, motion) };
+  if (soft) return { layer: soft, motion: false };
+  if (motion) return { layer: motion, motion: true };
+  return { layer: matted, motion: false };
+}
+
+/** The refusal when the layer already has the other edge: soften_edge on a motion edge, motion_edge on a soft edge. */
+export function otherEdgeError(existing: "soft" | "motion", layer: string): string {
+  const [has, adding, undoOp] =
+    existing === "soft"
+      ? ["a soft edge", "a motion edge", "subject.soften_edge"]
+      : ["a motion edge", "a soft edge", "subject.motion_edge"];
+  return `the layer already has ${has} ('${layer}'), and ${adding} does not combine with it: undo it first with ${undoOp} { comp, layer, undo: true }`;
+}
+
+/**
+ * JSX: refuse an edge's undo while subject.use_cutout's movie ('<layer> cut-out') is in the comp.
+ * The undo switches the matted layer back on, so with the movie still above it the subject shows twice.
+ */
+export function cutoutMovieUndoGuardJsx(edge: "soft edge" | "motion edge"): string {
+  const tail = `, the movie subject.use_cutout put in place of the ${edge}: undoing now would switch the matted layer back on under it and show the subject twice. Remove it first (that returns the comp to the live matte), then undo.`;
+  return `
+            var _movieName = _layer.name + " cut-out";
+            for (var _mvi = 1; _mvi <= _comp.numLayers; _mvi++) if (AE.safeGet(function () { return _comp.layer(_mvi).name; }, "") === _movieName) return { ok: false, error: "comp " + _comp.name + " has '" + _movieName + "'" + ${jsxVal(tail)}, movieLayer: _movieName };
+`;
+}
+
+/** JSX: an expression for bothEdgesError, from the JSX variables holding the two layer names. */
+export function bothEdgesErrorJsx(softVar: string, motionVar: string): string {
+  return `${jsxVal(bothEdgesError("@SOFT@", "@MOTION@"))}.replace("@SOFT@", function () { return ${softVar}; }).replace("@MOTION@", function () { return ${motionVar}; })`;
+}
+
+/** The refusal when a layer has both a soft-edge and a motion-edge layer (the two do not combine). */
+export function bothEdgesError(soft: string, motion: string): string {
+  return `the layer has both a soft edge ('${soft}') and a motion edge ('${motion}'), and the two do not combine: undo one first, with subject.soften_edge { comp, layer, undo: true } or subject.motion_edge { comp, layer, undo: true }`;
+}

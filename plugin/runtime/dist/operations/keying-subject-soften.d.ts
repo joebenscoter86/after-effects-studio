@@ -1,6 +1,6 @@
 import { type DecodedPng } from "../color/png16.js";
 import { type Json } from "./keying-shared.js";
-export declare const SOFT_EDGE_COST = "The soft edge is two copies of the matte, so After Effects computes Object Matte twice for every frame: a render writes about twice the disk cache and takes several times as long (on the half-size take, 320 frames at 1088 \u00D7 1920: 342 s and 9.0 GB of cache, against 65 to 92 s and about 5 GB with one matte; subject.render_cutout counts both copies).";
+export declare const SOFT_EDGE_COST = "The soft edge is two copies of the matte, so After Effects computes Object Matte twice for every frame: a render writes about twice the disk cache and takes several times as long (on the half-size take, 320 frames at 1088 \u00D7 1920: 342 s and 9.0 GB of cache, against 65 to 92 s and about 5 GB with one matte, measured on one machine; subject.render_cutout counts both copies).";
 /** The region's lower line: given, or `regionDepth` of the comp's height under the lowest top of the subject. */
 export declare function softRegionBottom(tops: number[], compHeight: number, given?: number): number;
 /**

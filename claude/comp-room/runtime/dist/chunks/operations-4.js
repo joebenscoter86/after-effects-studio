@@ -1,6 +1,9 @@
 import { __esmMin } from "./rolldown-runtime.js";
 import { init_registry, jsxCompLayerPreamble, jsxCompPreamble, jsxFail, jsxVal, registerOp } from "./core-1.js";
-import { init_run_moves, init_run_shots_census, init_run_track, runCensus, runMoves, runShots, runTrack } from "./video-1.js";
+import { analyzeCurve, curveGraph, encodePngSrgb8, init_motion, init_png16, parseTiming, soundOnsets, syncReport } from "./color-1.js";
+import { init_run_moves, init_run_shots_census, init_run_track, runCensus, runCompareMoves, runMoves, runShots, runTrack } from "./video-1.js";
+import { promises } from "node:fs";
+import * as path$1 from "node:path";
 
 // operations/transform.js
 function init_transform() {
@@ -2453,6 +2456,1042 @@ function init_viewer() {
 	})))();
 }
 
+// operations/shape-contents.js
+var LAYER_TARGET_PARAM;
+function init_shape_contents() {
+	return (init_shape_contents = __esmMin((() => {
+		init_registry();
+		LAYER_TARGET_PARAM = {
+			name: "layer",
+			type: "any",
+			description: "Layer index, name, { id }, 'selected', 'all', or an array of those (shape layers)",
+			required: true
+		};
+		registerOp({
+			name: "shape.group_bounds",
+			category: "shape",
+			readOnly: true,
+			description: "Bounds of each top-level vector group of a shape layer, in LAYER space with the group's own transform applied — what you need to split, align, or anchor per part. Geometry-based (exact for paths/rects/ellipses; strokes padded in; stars and path modifiers such as Trim/Repeater are listed in `approximate`). Also reports the whole layer's bounds.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				LAYER_TARGET_PARAM,
+				{
+					name: "time",
+					type: "number",
+					description: "Evaluate animated paths/transforms at this time (default: current value)",
+					required: false
+				},
+				{
+					name: "includeStroke",
+					type: "boolean",
+					description: "Pad by half the widest stroke (default true)",
+					required: false,
+					default: true
+				}
+			],
+			toJsx(args) {
+				return `
+            ${jsxCompPreamble(args)}
+            var _layers = AE.resolveLayers(_comp, ${jsxVal(args.layer)});
+            if (_layers.length === 0) return { ok: false, error: "no layers matched" };
+            var _opts = { time: ${jsxVal(args.time ?? null)}, includeStroke: ${jsxVal(args.includeStroke !== false)} };
+            var _out = [];
+            for (var _li = 0; _li < _layers.length; _li++) {
+                var _l = _layers[_li];
+                if (!(_l instanceof ShapeLayer)) { _out.push({ index: _l.index, name: _l.name, ok: false, error: "not a shape layer" }); continue; }
+                var _contents = _l.property("Contents");
+                var _groups = [];
+                for (var _gi = 1; _gi <= _contents.numProperties; _gi++) {
+                    var _g = _contents.property(_gi);
+                    if (_g.matchName !== "ADBE Vector Group") continue;
+                    var _b = AE.shapeGroupBounds(_g, _opts);
+                    _b.index = _gi;
+                    _b.name = _g.name;
+                    _groups.push(_b);
+                }
+                _out.push({ index: _l.index, name: _l.name, ok: true, layer: AE.shapeLayerBounds(_l, _opts), groups: _groups });
+            }
+            return { ok: true, count: _out.length, layers: _out };
+        `;
+			}
+		});
+		registerOp({
+			name: "shape.recolor",
+			category: "shape",
+			description: "Replace fill and/or stroke colors throughout a shape layer's contents (any nesting depth). Either `color` (paint everything one color — silhouettes) or `map` ([{ from, to }] — per-color substitution, matched within `tolerance`). Colors are [r,g,b] 0-1 (alpha optional).",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				LAYER_TARGET_PARAM,
+				{
+					name: "target",
+					type: "string",
+					description: "fill|stroke|both (default both)",
+					required: false,
+					default: "both"
+				},
+				{
+					name: "color",
+					type: "array",
+					description: "[r,g,b] — set every matching fill/stroke to this color",
+					required: false
+				},
+				{
+					name: "map",
+					type: "array",
+					description: "[{ from: [r,g,b], to: [r,g,b] }, …] — replace only colors that match `from`",
+					required: false
+				},
+				{
+					name: "tolerance",
+					type: "number",
+					description: "Per-channel match tolerance for `map` (default 0.01)",
+					required: false,
+					default: .01
+				}
+			],
+			toJsx(args) {
+				if (args.color === void 0 && args.map === void 0) return jsxFail("give either color (recolor everything) or map (per-color substitution)");
+				return `
+            ${jsxCompPreamble(args)}
+            var _layers = AE.resolveLayers(_comp, ${jsxVal(args.layer)});
+            if (_layers.length === 0) return { ok: false, error: "no layers matched" };
+            var _target = ${jsxVal(args.target ?? "both")};
+            if (_target !== "fill" && _target !== "stroke" && _target !== "both") return { ok: false, error: "target must be fill|stroke|both" };
+            var _opts = { target: _target, color: ${jsxVal(args.color ?? null)}, map: ${jsxVal(args.map ?? null)}, tolerance: ${jsxVal(args.tolerance ?? .01)} };
+            var _out = [];
+            var _total = 0;
+            for (var _li = 0; _li < _layers.length; _li++) {
+                var _l = _layers[_li];
+                if (!(_l instanceof ShapeLayer)) { _out.push({ index: _l.index, name: _l.name, ok: false, error: "not a shape layer" }); continue; }
+                var _r = AE.recolorContents(_l.property("Contents"), _opts);
+                _total += _r.changed;
+                _out.push({ index: _l.index, name: _l.name, ok: true, changed: _r.changed, visited: _r.visited });
+            }
+            return { ok: true, changed: _total, layers: _out };
+        `;
+			}
+		});
+		registerOp({
+			name: "shape.signature",
+			category: "shape",
+			readOnly: true,
+			description: "Structural hash of a shape layer's contents and of each top-level group — matchNames plus rounded values, NO display names — so identical artwork hashes the same even after renaming. Use it to find duplicate layers when merging comps, or to check that a copy still matches its source.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				LAYER_TARGET_PARAM,
+				{
+					name: "precision",
+					type: "number",
+					description: "Decimal places kept when rounding values (default 2)",
+					required: false,
+					default: 2
+				},
+				{
+					name: "time",
+					type: "number",
+					description: "Evaluate animated values at this time (default: current value)",
+					required: false
+				},
+				{
+					name: "includeLayerTransform",
+					type: "boolean",
+					description: "Also hash the layer's Transform group (default false — copies usually differ only in position)",
+					required: false,
+					default: false
+				}
+			],
+			toJsx(args) {
+				return `
+            ${jsxCompPreamble(args)}
+            var _layers = AE.resolveLayers(_comp, ${jsxVal(args.layer)});
+            if (_layers.length === 0) return { ok: false, error: "no layers matched" };
+            var _prec = ${jsxVal(args.precision ?? 2)};
+            var _t = ${jsxVal(args.time ?? null)};
+            var _withXf = ${jsxVal(args.includeLayerTransform === true)};
+            var _out = [];
+            for (var _li = 0; _li < _layers.length; _li++) {
+                var _l = _layers[_li];
+                if (!(_l instanceof ShapeLayer)) { _out.push({ index: _l.index, name: _l.name, ok: false, error: "not a shape layer" }); continue; }
+                var _contents = _l.property("Contents");
+                var _canon = AE.canonicalGroup(_contents, _prec, _t);
+                if (_withXf) _canon += "|xf:" + AE.canonicalGroup(_l.property("Transform"), _prec, _t);
+                var _groups = [];
+                for (var _gi = 1; _gi <= _contents.numProperties; _gi++) {
+                    var _g = _contents.property(_gi);
+                    _groups.push({ index: _gi, name: _g.name, matchName: _g.matchName, signature: AE.hashString(AE.canonicalGroup(_g, _prec, _t)) });
+                }
+                _out.push({ index: _l.index, name: _l.name, ok: true, signature: AE.hashString(_canon), groups: _groups });
+            }
+            return { ok: true, count: _out.length, layers: _out };
+        `;
+			}
+		});
+		registerOp({
+			name: "layer.split_groups",
+			category: "layer",
+			description: "Split a shape layer into one layer per top-level vector group (letters of a word, parts of a character), keeping every group's transform, fills and strokes. New layers stack in group order directly above the original. `anchor` re-anchors each new layer to its own artwork without moving it on screen.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				{
+					name: "layer",
+					type: "any",
+					description: "1-based layer index, name, or { id } (a shape layer)",
+					required: true
+				},
+				{
+					name: "groups",
+					type: "array",
+					description: "1-based indices of the groups to split out (default: every top-level group)",
+					required: false
+				},
+				{
+					name: "anchor",
+					type: "string",
+					description: "keep | center | topLeft | topCenter | topRight | centerLeft | centerRight | bottomLeft | bottomCenter | bottomRight — anchor each new layer on its own bounds (default keep)",
+					required: false,
+					default: "keep"
+				},
+				{
+					name: "nameTemplate",
+					type: "string",
+					description: "Name for each new layer; tokens {group}, {layer}, {index} (default '{group}')",
+					required: false,
+					default: "{group}"
+				},
+				{
+					name: "keepOriginal",
+					type: "boolean",
+					description: "Leave the source layer in place (default false: it is removed once split)",
+					required: false,
+					default: false
+				}
+			],
+			toJsx(args) {
+				return `
+            ${jsxCompLayerPreamble(args)}
+            if (!(_layer instanceof ShapeLayer)) return { ok: false, error: "not a shape layer" };
+            var _anchor = ${jsxVal(args.anchor ?? "keep")};
+            if (_anchor !== "keep" && !AE.ANCHOR_PRESETS.hasOwnProperty(_anchor)) return { ok: false, error: "unknown anchor preset '" + _anchor + "'" };
+            var _tpl = ${jsxVal(args.nameTemplate ?? "{group}")};
+            var _contents = _layer.property("Contents");
+            var _want = ${jsxVal(args.groups ?? null)};
+            var _indices = [];
+            if (_want === null) {
+                for (var _gi = 1; _gi <= _contents.numProperties; _gi++) {
+                    if (_contents.property(_gi).matchName === "ADBE Vector Group") _indices.push(_gi);
+                }
+            } else {
+                for (var _wi = 0; _wi < _want.length; _wi++) {
+                    var _w = _want[_wi];
+                    if (_w < 1 || _w > _contents.numProperties) return { ok: false, error: "group index " + _w + " out of range (layer has " + _contents.numProperties + ")" };
+                    _indices.push(_w);
+                }
+            }
+            if (_indices.length === 0) return { ok: false, error: "no vector groups to split" };
+            var _srcName = _layer.name;
+            var _created = [];
+            // duplicate() lands directly above the original, so each copy
+            // slips in BELOW the copies made before it: creating the groups in
+            // order leaves group 1 on top and the last group just above the
+            // original, matching the render order inside the layer.
+            for (var _k = 0; _k < _indices.length; _k++) {
+                var _keep = _indices[_k];
+                var _dup = _layer.duplicate();
+                var _dc = _dup.property("Contents");
+                for (var _ri = _dc.numProperties; _ri >= 1; _ri--) {
+                    if (_ri !== _keep) _dc.property(_ri).remove();
+                }
+                var _grp = _dc.property(1);
+                var _gname = _grp.name;
+                _dup.name = _tpl.replace(/\\{group\\}/g, _gname).replace(/\\{layer\\}/g, _srcName).replace(/\\{index\\}/g, String(_keep));
+                var _entry = { index: _dup.index, name: _dup.name, group: _gname, groupIndex: _keep };
+                if (_anchor !== "keep") {
+                    var _b = AE.shapeGroupBounds(_grp, {});
+                    if (_b.empty) {
+                        _entry.warning = "group has no geometry; anchor left unchanged";
+                    } else {
+                        var _pt = AE.pointInRect(_b, _anchor);
+                        var _mv = AE.moveAnchor(_dup, _pt);
+                        _entry.anchorPoint = _mv.anchorPoint;
+                        if (_mv.warnings.length) _entry.warning = _mv.warnings.join("; ");
+                    }
+                }
+                _created.push(_entry);
+            }
+            if (!${jsxVal(args.keepOriginal === true)}) _layer.remove();
+            for (var _ci = 0; _ci < _created.length; _ci++) {
+                _created[_ci].index = AE.findLayerInComp(_comp, _created[_ci].name) ? AE.findLayerInComp(_comp, _created[_ci].name).index : _created[_ci].index;
+            }
+            return { ok: true, source: _srcName, created: _created.length, layers: _created };
+        `;
+			}
+		});
+		registerOp({
+			name: "layer.convert_to_shapes",
+			category: "layer",
+			description: "Run 'Create Shapes from Vector Layer' on imported Illustrator/vector layers: each becomes a shape layer directly above the original (which AE switches off). By default the ' Outlines' suffix AE appends is stripped; removeSource deletes the vector layers, removeFootage also deletes their footage items when nothing else uses them. Note: the shape layers can arrive with Position dimensions SEPARATED — every write in this server handles that.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				LAYER_TARGET_PARAM,
+				{
+					name: "stripSuffix",
+					type: "boolean",
+					description: "Rename the new layer to the original's name (drop ' Outlines' / localized suffix). Default true",
+					required: false,
+					default: true
+				},
+				{
+					name: "removeSource",
+					type: "boolean",
+					description: "Delete the original vector layer after conversion (default false)",
+					required: false,
+					default: false
+				},
+				{
+					name: "removeFootage",
+					type: "boolean",
+					description: "With removeSource: also delete the footage item when no other layer uses it (default false)",
+					required: false,
+					default: false
+				}
+			],
+			toJsx(args) {
+				return `
+            ${jsxCompPreamble(args)}
+            var _layers = AE.resolveLayers(_comp, ${jsxVal(args.layer)});
+            if (_layers.length === 0) return { ok: false, error: "no layers matched" };
+            var _cmd = 0;
+            try { _cmd = app.findMenuCommandId("Create Shapes from Vector Layer"); } catch (eFind) {}
+            // Menu names are localized; the id is not (3973 on every AE since CS6).
+            if (!_cmd) _cmd = 3973;
+            var _sources = [];
+            for (var _si = 0; _si < _layers.length; _si++) {
+                if (!(_layers[_si] instanceof AVLayer) || !_layers[_si].source) return { ok: false, error: "layer '" + _layers[_si].name + "' is not a footage layer" };
+                _sources.push(_layers[_si]);
+            }
+            var _out = [];
+            var _strip = ${jsxVal(args.stripSuffix !== false)};
+            var _rmSrc = ${jsxVal(args.removeSource === true)};
+            var _rmFoot = ${jsxVal(args.removeFootage === true)};
+            try { _comp.openInViewer(); } catch (eV) {}
+            for (var _i = 0; _i < _sources.length; _i++) {
+                var _src = _sources[_i];
+                var _srcName = _src.name;
+                var _foot = _src.source;
+                var _snap = AE.layerIdSnapshot(_comp);
+                AE.withSelection(_comp, [_src], function () { app.executeCommand(_cmd); });
+                var _added = AE.layersSince(_comp, _snap);
+                var _shape = null;
+                for (var _ai = 0; _ai < _added.length; _ai++) {
+                    if (_added[_ai] instanceof ShapeLayer) { _shape = _added[_ai]; break; }
+                }
+                if (!_shape) { _out.push({ source: _srcName, ok: false, error: "the command created no shape layer (is the layer a vector footage layer?)" }); continue; }
+                var _entry = { source: _srcName, ok: true, index: _shape.index, name: _shape.name, originalName: _shape.name };
+                if (_strip) {
+                    var _clean = _shape.name.replace(/\\s*Outlines$/, "").replace(/\\s*(\u306E)?\u30A2\u30A6\u30C8\u30E9\u30A4\u30F3$/, "");
+                    if (_clean.length === 0) _clean = _srcName;
+                    _shape.name = _clean;
+                    _entry.name = _shape.name;
+                }
+                if (_rmSrc) {
+                    _src.remove();
+                    _entry.sourceRemoved = true;
+                    if (_rmFoot && _foot) {
+                        var _used = 0;
+                        try { _used = _foot.usedIn.length; } catch (eU) { _used = 1; }
+                        if (_used === 0) { try { _foot.remove(); _entry.footageRemoved = true; } catch (eF) { _entry.footageRemoved = false; } }
+                        else _entry.footageRemoved = false;
+                    }
+                    _entry.index = _shape.index;
+                }
+                _out.push(_entry);
+            }
+            var _failed = 0;
+            for (var _fi = 0; _fi < _out.length; _fi++) if (!_out[_fi].ok) _failed++;
+            return { ok: _failed === 0, error: _failed === 0 ? null : (_failed + " of " + _out.length + " layers did not convert"), converted: _out.length - _failed, layers: _out };
+        `;
+			}
+		});
+	})))();
+}
+
+// operations/sample.js
+function liveIO(transport) {
+	return { async execute(code, opts) {
+		const r = await transport.execute({
+			code,
+			label: opts.label,
+			timeoutMs: opts.timeoutMs,
+			undoGroup: opts.undoGroup ?? false,
+			suppressDialogs: true
+		});
+		return r.ok ? r.result : {
+			ok: false,
+			error: r.error ?? `${opts.label} failed`
+		};
+	} };
+}
+function propertyPath(p) {
+	if (Array.isArray(p) && p.length && p.every((x) => typeof x === "string")) return p;
+	if (typeof p === "string") return TRANSFORM.includes(p) ? ["Transform", p] : [p];
+	return null;
+}
+function curveReadJsx(args) {
+	return `
+            ${jsxCompLayerPreamble(args)}
+            var _p = AE.propertyAtPath(_layer, ${jsxVal(args.path)});
+            if (!_p || _p.propertyType !== PropertyType.PROPERTY) return { ok: false, error: "no property " + ${jsxVal(args.path.join(" > "))} + " on " + _layer.name };
+            var _fd = _comp.frameDuration;
+            var _s = ${jsxVal(args.start ?? null)};
+            var _e = ${jsxVal(args.end ?? null)};
+            if (_s === null) _s = Math.max(0, _layer.inPoint);
+            if (_e === null) _e = Math.min(_comp.duration, _layer.outPoint);
+            var _f0 = Math.round(_s / _fd);
+            var _f1 = Math.round(_e / _fd);
+            if (_f1 - _f0 > 3000) return { ok: false, error: "over 3000 frames; give start and end" };
+            var _vals = [];
+            for (var _f = _f0; _f <= _f1; _f++) {
+                var _v = AE.valueToJson(AE.readValue(_p, _f * _fd));
+                _vals.push(_v);
+            }
+            var _interp = function (v) {
+                if (v === KeyframeInterpolationType.LINEAR) return "linear";
+                if (v === KeyframeInterpolationType.BEZIER) return "bezier";
+                if (v === KeyframeInterpolationType.HOLD) return "hold";
+                return "other";
+            };
+            var _keys = [];
+            for (var _k = 1; _k <= _p.numKeys; _k++) {
+                var _kt = _p.keyTime(_k);
+                _keys.push({ time: _kt, frame: Math.round(_kt / _fd), inInterpolation: _interp(_p.keyInInterpolationType(_k)), outInterpolation: _interp(_p.keyOutInterpolationType(_k)) });
+            }
+            return { ok: true, layer: _layer.name, property: _p.name, fps: 1 / _fd, startFrame: _f0, values: _vals, keys: _keys };
+        `;
+}
+async function runCurve(args, io) {
+	const p = propertyPath(args.property);
+	if (!p) return {
+		ok: false,
+		error: "`property` must be a transform property's name or a path of names"
+	};
+	const num = (k) => typeof args[k] === "number" ? args[k] : void 0;
+	const r = await io.execute(curveReadJsx({
+		comp: args.comp,
+		layer: args.layer,
+		path: p,
+		start: num("start"),
+		end: num("end")
+	}), {
+		label: "motion.curve read",
+		timeoutMs: 12e4
+	});
+	if (!r?.ok) return {
+		ok: false,
+		error: r?.error ?? "could not read the property"
+	};
+	const samples = r.values.map((v, i) => ({
+		frame: r.startFrame + i,
+		time: (r.startFrame + i) / r.fps,
+		value: Array.isArray(v) ? v.map(Number) : [Number(v)]
+	}));
+	if (samples.some((s) => s.value.some((x) => !Number.isFinite(x)))) return {
+		ok: false,
+		error: `${r.property} is not a number or a list of numbers`
+	};
+	const report = analyzeCurve(samples, r.fps);
+	let graph = null;
+	if (typeof args.outPath === "string") {
+		if (!path$1.isAbsolute(args.outPath)) return {
+			ok: false,
+			error: "`outPath` must be absolute (.png)"
+		};
+		const g = curveGraph(report, {
+			width: 480,
+			height: 160
+		});
+		await promises.mkdir(path$1.dirname(args.outPath), { recursive: true });
+		await promises.writeFile(args.outPath, encodePngSrgb8(g.width, g.height, g.rgb));
+		graph = args.outPath;
+	}
+	return {
+		ok: true,
+		layer: r.layer,
+		property: r.property,
+		fps: r.fps,
+		span: {
+			from: samples[0]?.frame ?? null,
+			to: samples[samples.length - 1]?.frame ?? null
+		},
+		keys: r.keys,
+		moves: report.moves,
+		flags: report.flags,
+		reading: report.reading,
+		graph,
+		...args.perFrame === true ? { frames: report.frames } : {}
+	};
+}
+function amplitudeJsx(args) {
+	return `
+            ${jsxCompLayerPreamble(args)}
+            if (!_layer.hasAudio) return { ok: false, error: _layer.name + " has no audio" };
+            var _was = [];
+            for (var _i = 1; _i <= _comp.numLayers; _i++) { _was.push(_comp.layer(_i).selected); _comp.layer(_i).selected = false; }
+            var _before = _comp.numLayers;
+            _comp.openInViewer();
+            _layer.selected = true;
+            var _id = app.findMenuCommandId("Convert Audio to Keyframes");
+            if (!_id) return { ok: false, error: "After Effects has no Convert Audio to Keyframes command here" };
+            app.executeCommand(_id);
+            if (_comp.numLayers !== _before + 1) return { ok: false, error: "Convert Audio to Keyframes made no layer" };
+            var _amp = null;
+            for (var _j = 1; _j <= _comp.numLayers; _j++) { var _l = _comp.layer(_j); var _fx = _l.property("ADBE Effect Parade"); if (_fx && _fx.numProperties === 3 && _l !== _layer && _l.name.indexOf("Audio Amplitude") === 0) _amp = _l; }
+            if (!_amp) return { ok: false, error: "could not find the Audio Amplitude layer" };
+            var _fd = _comp.frameDuration;
+            var _n = Math.round(_comp.duration / _fd);
+            var _read = function (k) { var p = _amp.property("ADBE Effect Parade").property(k).property(1); var v = []; for (var f = 0; f < _n; f++) v.push(Math.round(p.valueAtTime(f * _fd, false) * 1000) / 1000); return v; };
+            var _out = { ok: true, fps: 1 / _fd, left: _read(1), right: _read(2), both: _read(3) };
+            _amp.remove();
+            for (var _r = 1; _r <= _comp.numLayers && _r <= _was.length; _r++) _comp.layer(_r).selected = _was[_r - 1];
+            return _out;
+        `;
+}
+function fpsJsx(args) {
+	return `
+            ${jsxCompPreamble(args)}
+            return { ok: true, fps: 1 / _comp.frameDuration };
+        `;
+}
+function addMarkersJsx(args) {
+	return `
+            ${jsxCompPreamble(args)}
+            var _mp = _comp.markerProperty;
+            var _removed = 0;
+            if (${jsxVal(args.replace)}) {
+                for (var _k = _mp.numKeys; _k >= 1; _k--) if (String(_mp.keyValue(_k).comment).indexOf(${jsxVal(args.prefix + ":")}) === 0) { _mp.removeKey(_k); _removed++; }
+            }
+            var _ms = ${jsxVal(args.markers)};
+            for (var _i = 0; _i < _ms.length; _i++) _mp.setValueAtTime(_ms[_i].time, new MarkerValue(_ms[_i].comment));
+            return { ok: true, added: _ms.length, removed: _removed, numMarkers: _mp.numKeys };
+        `;
+}
+async function runSoundMarkers(args, io) {
+	const prefix = typeof args.prefix === "string" && args.prefix ? args.prefix : "sound";
+	const hasTiming = typeof args.timing === "string";
+	if (hasTiming === (args.layer !== void 0)) return {
+		ok: false,
+		error: "give exactly one of `timing` (a timing file) or `layer` (a layer with sound, read by loudness)"
+	};
+	let fps;
+	let found;
+	let source;
+	if (hasTiming) {
+		const f = args.timing;
+		if (!path$1.isAbsolute(f)) return {
+			ok: false,
+			error: "`timing` must be an absolute path"
+		};
+		const r = await io.execute(fpsJsx({ comp: args.comp }), {
+			label: "sound.markers fps",
+			timeoutMs: 3e4
+		});
+		if (!r?.ok) return {
+			ok: false,
+			error: r?.error ?? "could not read the comp"
+		};
+		fps = r.fps;
+		try {
+			found = parseTiming(await promises.readFile(f, "utf8"), fps).map((m) => ({
+				...m,
+				frame: Math.round(m.time * fps)
+			}));
+		} catch (e) {
+			return {
+				ok: false,
+				error: e instanceof Error ? e.message : String(e)
+			};
+		}
+		source = {
+			kind: "timing file",
+			path: f
+		};
+	} else {
+		const r = await io.execute(amplitudeJsx({
+			comp: args.comp,
+			layer: args.layer
+		}), {
+			label: "sound.markers amplitude",
+			timeoutMs: 3e5,
+			undoGroup: true
+		});
+		if (!r?.ok) return {
+			ok: false,
+			error: r?.error ?? "Convert Audio to Keyframes failed"
+		};
+		fps = r.fps;
+		const left = r.left;
+		const right = r.right;
+		const louder = left.map((v, i) => Math.max(v, right[i] ?? 0));
+		const top = Math.max(0, ...louder);
+		if (top < .1) return {
+			ok: false,
+			error: `After Effects read this layer's sound as silence (Convert Audio to Keyframes' amplitude stays under ${SILENCE_BELOW} on every frame; its top was ${top}). A four-channel AAC take did this, though a four-channel WAV with the voice on its first channel read as left: extract the voice to a mono WAV (ffmpeg -i take.mp4 -af pan=mono|c0=c0 voice.wav), import that and read it instead, or give a timing file.`
+		};
+		found = soundOnsets(louder, fps, { share: typeof args.share === "number" ? args.share : void 0 }).map((o) => ({
+			time: o.time,
+			frame: o.frame,
+			label: "beat",
+			level: o.level
+		}));
+		source = {
+			kind: "loudness",
+			layer: args.layer,
+			channels: {
+				left: Math.max(0, ...left),
+				right: Math.max(0, ...right)
+			}
+		};
+	}
+	const add = await io.execute(addMarkersJsx({
+		comp: args.comp,
+		markers: found.map((m) => ({
+			time: m.time,
+			comment: `${prefix}: ${m.label}`
+		})),
+		prefix,
+		replace: args.replace !== false
+	}), {
+		label: "sound.markers add",
+		timeoutMs: 6e4,
+		undoGroup: true
+	});
+	if (!add?.ok) return {
+		ok: false,
+		error: add?.error ?? "could not add the markers"
+	};
+	return {
+		ok: true,
+		source,
+		fps,
+		markers: found,
+		added: add.added,
+		removed: add.removed,
+		reading: `${found.length} marker${found.length === 1 ? "" : "s"} added as '${prefix}: \u2026'${add.removed ? `, ${add.removed} earlier ones replaced` : ""}.`
+	};
+}
+function syncReadJsx(args) {
+	return `
+            ${jsxCompPreamble(args)}
+            var _mp = _comp.markerProperty;
+            var _markers = [];
+            for (var _k = 1; _k <= _mp.numKeys; _k++) _markers.push({ time: _mp.keyTime(_k), comment: String(_mp.keyValue(_k).comment) });
+            var _events = [];
+            var _keys = ${jsxVal(args.keys)};
+            for (var _i = 0; _i < _keys.length; _i++) {
+                var _l = AE.findLayerInComp(_comp, _keys[_i].layer);
+                if (!_l) return { ok: false, error: "no layer " + _keys[_i].layer };
+                var _p = AE.propertyAtPath(_l, _keys[_i].path);
+                if (!_p) return { ok: false, error: "no property " + _keys[_i].path.join(" > ") + " on " + _l.name };
+                for (var _j = 1; _j <= _p.numKeys; _j++) _events.push({ name: _l.name + " " + _p.name + " key " + _j, time: _p.keyTime(_j) });
+            }
+            var _ins = ${jsxVal(args.inPoints)};
+            for (var _n = 0; _n < _ins.length; _n++) {
+                var _li = AE.findLayerInComp(_comp, _ins[_n]);
+                if (!_li) return { ok: false, error: "no layer " + _ins[_n] };
+                _events.push({ name: _li.name + " in-point", time: _li.inPoint });
+            }
+            return { ok: true, fps: 1 / _comp.frameDuration, markers: _markers, events: _events };
+        `;
+}
+async function runSync(args, io) {
+	const keys = Array.isArray(args.keys) ? args.keys.map((k) => ({
+		layer: k.layer,
+		path: propertyPath(k.property) ?? []
+	})) : [];
+	if (keys.some((k) => !k.path.length)) return {
+		ok: false,
+		error: "each of `keys` needs { layer, property }"
+	};
+	const inPoints = Array.isArray(args.inPoints) ? args.inPoints : [];
+	const given = Array.isArray(args.events) ? args.events : [];
+	if (!keys.length && !inPoints.length && !given.length) return {
+		ok: false,
+		error: "give events: `keys`, `inPoints` or `events` ({ name, time }, for example spikes from ae_render_frame diff)"
+	};
+	const r = await io.execute(syncReadJsx({
+		comp: args.comp,
+		keys,
+		inPoints
+	}), {
+		label: "sound.sync read",
+		timeoutMs: 6e4
+	});
+	if (!r?.ok) return {
+		ok: false,
+		error: r?.error ?? "could not read the comp"
+	};
+	const prefix = typeof args.markerPrefix === "string" ? args.markerPrefix : null;
+	const markers = r.markers.filter((m) => prefix === null || m.comment.startsWith(prefix)).map((m) => ({
+		time: m.time,
+		label: m.comment
+	}));
+	const rep = syncReport([...r.events, ...given], markers, r.fps, {
+		lateFrames: typeof args.lateFrames === "number" ? args.lateFrames : void 0,
+		earlyFrames: typeof args.earlyFrames === "number" ? args.earlyFrames : void 0
+	});
+	return {
+		ok: true,
+		fps: r.fps,
+		markers: markers.length,
+		...rep
+	};
+}
+var DEFAULT_PROPERTIES, TRANSFORM, SILENCE_BELOW;
+function init_sample() {
+	return (init_sample = __esmMin((() => {
+		init_motion();
+		init_png16();
+		init_run_moves();
+		init_registry();
+		DEFAULT_PROPERTIES = [
+			["Transform", "Anchor Point"],
+			["Transform", "Position"],
+			["Transform", "Scale"],
+			["Transform", "Rotation"],
+			["Transform", "Opacity"]
+		];
+		registerOp({
+			name: "comp.sample",
+			category: "comp",
+			readOnly: true,
+			description: "Sample property values at several times across layers of one or more comps in ONE call. Each row says whether the layer is active at that time (enabled and inside its in/out span) and gives the post-expression value of every requested property (default: the five transform properties). Use it to verify motion, list what is visible when, or compare two comps for a match cut.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name/id, pattern ('shot_*'), or array of those",
+					required: true
+				},
+				{
+					name: "times",
+					type: "array",
+					description: "Times in seconds to sample",
+					required: true
+				},
+				{
+					name: "layer",
+					type: "any",
+					description: "Layer filter: index | name | { id } | 'selected' | 'all' | array (default 'all')",
+					required: false,
+					default: "all"
+				},
+				{
+					name: "properties",
+					type: "array",
+					description: "Property paths to read, e.g. [[\"Transform\",\"Position\"], [\"Effects\",\"Slider Control\",\"Slider\"]] (default: the five transform properties)",
+					required: false
+				},
+				{
+					name: "activeOnly",
+					type: "boolean",
+					description: "Omit layers that are not active at the sampled time (default false)",
+					required: false,
+					default: false
+				}
+			],
+			toJsx(args) {
+				const times = Array.isArray(args.times) ? args.times : [];
+				if (times.length === 0 || !times.every((t) => typeof t === "number")) return jsxFail("times must be a non-empty array of numbers");
+				const props = args.properties ?? DEFAULT_PROPERTIES;
+				if (!Array.isArray(props) || !props.every((p) => Array.isArray(p) && p.length > 0)) return jsxFail("properties must be an array of property paths (arrays)");
+				return `
+            var _comps = AE.findComps(${jsxVal(args.comp)});
+            if (_comps.length === 0) return { ok: false, error: "no comps matched" };
+            var _times = ${jsxVal(times)};
+            var _paths = ${jsxVal(props)};
+            var _activeOnly = ${jsxVal(args.activeOnly === true)};
+            var _out = [];
+            for (var _ci = 0; _ci < _comps.length; _ci++) {
+                var _c = _comps[_ci];
+                var _layers = AE.resolveLayers(_c, ${jsxVal(args.layer ?? "all")});
+                var _samples = [];
+                for (var _ti = 0; _ti < _times.length; _ti++) {
+                    var _t = _times[_ti];
+                    var _rows = [];
+                    for (var _li = 0; _li < _layers.length; _li++) {
+                        var _l = _layers[_li];
+                        var _active = _l.enabled && _t >= _l.inPoint && _t < _l.outPoint;
+                        if (_activeOnly && !_active) continue;
+                        var _row = { index: _l.index, name: _l.name, active: _active, values: {} };
+                        for (var _pi = 0; _pi < _paths.length; _pi++) {
+                            var _p = AE.propertyAtPath(_l, _paths[_pi]);
+                            var _key = _paths[_pi].join("/");
+                            if (!_p || _p.propertyType !== PropertyType.PROPERTY) { _row.values[_key] = null; continue; }
+                            try { _row.values[_key] = AE.valueToJson(AE.readValue(_p, _t)); }
+                            catch (eV) { _row.values[_key] = null; }
+                        }
+                        _rows.push(_row);
+                    }
+                    _samples.push({ time: _t, layers: _rows });
+                }
+                _out.push({ comp: _c.name, id: _c.id, samples: _samples });
+            }
+            return { ok: true, comps: _out };
+        `;
+			}
+		});
+		TRANSFORM = [
+			"Anchor Point",
+			"Position",
+			"Scale",
+			"Rotation",
+			"Opacity",
+			"X Position",
+			"Y Position",
+			"Z Position",
+			"Orientation"
+		];
+		SILENCE_BELOW = .1;
+		registerOp({
+			name: "motion.curve",
+			category: "motion",
+			readOnly: true,
+			description: "How a property moves: its value at every frame over a span (default the layer's span), speed per frame (units a second), the moves (from rest to rest), and flags: a move with no ease (its first or last moving frame already at 60% or more of its middle speed), a sudden jump in speed inside a move (2.5 times from one frame to the next and a quarter of its top speed), and how far a move overshoots and how many frames it takes to settle within 1%. `outPath` draws a 480 x 160 graph (values light, speed orange, moves shaded, flags red). Keys and their interpolation come with it. Thresholds are starting points, not judgments: a mechanical, constant move is linear on purpose.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				{
+					name: "layer",
+					type: "any",
+					description: "Layer index, name or { id }",
+					required: true
+				},
+				{
+					name: "property",
+					type: "any",
+					description: "A transform property's name ('Position') or a path of names",
+					required: true
+				},
+				{
+					name: "start",
+					type: "number",
+					description: "Seconds (default the layer's in-point)",
+					required: false
+				},
+				{
+					name: "end",
+					type: "number",
+					description: "Seconds (default the layer's out-point)",
+					required: false
+				},
+				{
+					name: "outPath",
+					type: "string",
+					description: "Absolute .png path for the graph",
+					required: false
+				},
+				{
+					name: "perFrame",
+					type: "boolean",
+					description: "Include value and speed of every frame (default false)",
+					required: false
+				}
+			],
+			toJsx: () => jsxFail("motion.curve runs in Node; call it through ae_do"),
+			run: (args, transport) => runCurve(args, liveIO(transport))
+		});
+		registerOp({
+			name: "motion.compare_moves",
+			category: "motion",
+			readOnly: true,
+			description: "Compare a build's moves with moves measured from a reference (video.track's track.json): per move, its duration, distance and ease (out and in influence) or a spring's overshoot, built against measured, within or outside a tolerance (default 1 frame, 2 % of the distance, 10 influence points), in sentences such as 'move 7 (position): duration 14 frames against 12, outside tolerance'. The build is a property (comp, layer, property: read once from After Effects and fitted the way video.track fits) or a second track.json from video.track on the build's rendered file. Do both: a property can pass while the picture does not (a subject that leans under a zoom); the picture is the one that counts.",
+			params: [
+				{
+					name: "measured",
+					type: "any",
+					description: "Absolute path of the reference's track.json (or its moves)",
+					required: true
+				},
+				{
+					name: "comp",
+					type: "any",
+					description: "The build: comp name or id (with layer and property)",
+					required: false
+				},
+				{
+					name: "layer",
+					type: "any",
+					description: "The build: layer index, name or { id }",
+					required: false
+				},
+				{
+					name: "property",
+					type: "any",
+					description: "The build: a transform property's name or a path of names",
+					required: false
+				},
+				{
+					name: "start",
+					type: "number",
+					description: "Seconds (default the layer's in-point)",
+					required: false
+				},
+				{
+					name: "end",
+					type: "number",
+					description: "Seconds (default the layer's out-point)",
+					required: false
+				},
+				{
+					name: "buildTrack",
+					type: "string",
+					description: "Or the build as a track.json from video.track on its rendered file",
+					required: false
+				},
+				{
+					name: "tolerance",
+					type: "object",
+					description: "{ frames (1), distanceShare (0.02), easePoints (10) }",
+					required: false
+				},
+				{
+					name: "atFps",
+					type: "number",
+					description: "Frames at this rate (default 30)",
+					required: false
+				}
+			],
+			toJsx: () => jsxFail("motion.compare_moves runs in Node; call it through ae_do"),
+			run: (args, transport) => runCompareMoves(args, (a) => runCurve(a, liveIO(transport)))
+		});
+		registerOp({
+			name: "sound.markers",
+			category: "sound",
+			description: "Put word or beat times on the comp as markers ('<prefix>: <label>', prefix default 'sound'; earlier ones with the same prefix are replaced unless replace: false). From `timing` (a JSON list of { word|w|text|label, start|time|t in seconds, or frame }, or CSV time,label) or from `layer`'s loudness: After Effects' Convert Audio to Keyframes is run on the layer (the comp is opened in the viewer for it), the amplitude read per frame (the louder of left and right), the helper layer removed, and a beat marked where loudness rises past 30% of the way from its median to its top. Checked live on mono, stereo and four-channel WAVs (signal on channel 1 reads as left). A track After Effects reads as silence is refused with what to do.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				{
+					name: "timing",
+					type: "string",
+					description: "Absolute path of a timing file",
+					required: false
+				},
+				{
+					name: "layer",
+					type: "any",
+					description: "A layer with sound, read by loudness",
+					required: false
+				},
+				{
+					name: "prefix",
+					type: "string",
+					description: "Marker comment prefix (default 'sound')",
+					required: false
+				},
+				{
+					name: "replace",
+					type: "boolean",
+					description: "Replace earlier markers with the prefix (default true)",
+					required: false
+				},
+				{
+					name: "share",
+					type: "number",
+					description: "Loudness threshold, share of the way from median to top (default 0.3)",
+					required: false
+				}
+			],
+			toJsx: () => jsxFail("sound.markers runs in Node; call it through ae_do"),
+			run: (args, transport) => runSoundMarkers(args, liveIO(transport))
+		});
+		registerOp({
+			name: "sound.sync",
+			category: "sound",
+			readOnly: true,
+			description: "How far named events sit from the nearest comp marker, in frames: key times of properties (`keys`: [{ layer, property }]), layers' in-points (`inPoints`), and any `events` you give ({ name, time }, for example spikes from ae_render_frame diff). Positive is after the marker. Flagged from 2 frames after or 4 before (ITU-R BT.1359's detectability thresholds, sound 45 ms early and 125 ms late, at 30 fps); `markerPrefix` keeps only markers whose comment starts with it.",
+			params: [
+				{
+					name: "comp",
+					type: "any",
+					description: "Comp name or id",
+					required: true
+				},
+				{
+					name: "keys",
+					type: "array",
+					description: "[{ layer, property }]: each key is an event",
+					required: false
+				},
+				{
+					name: "inPoints",
+					type: "array",
+					description: "Layers whose in-points are events",
+					required: false
+				},
+				{
+					name: "events",
+					type: "array",
+					description: "[{ name, time }] in seconds",
+					required: false
+				},
+				{
+					name: "markerPrefix",
+					type: "string",
+					description: "Only markers whose comment starts with this",
+					required: false
+				},
+				{
+					name: "lateFrames",
+					type: "number",
+					description: "Flag from this many frames after (default 2)",
+					required: false
+				},
+				{
+					name: "earlyFrames",
+					type: "number",
+					description: "Flag from this many frames before (default 4)",
+					required: false
+				}
+			],
+			toJsx: () => jsxFail("sound.sync runs in Node; call it through ae_do"),
+			run: (args, transport) => runSync(args, liveIO(transport))
+		});
+	})))();
+}
+
 // operations/video.js
 var common, ffmpegNote;
 function init_video() {
@@ -2639,4 +3678,4 @@ function init_video() {
 	})))();
 }
 
-export { COMP_CORNERS_FN, COMP_INFO_FN, LAYER_FULL_FN, LIST_MISSING_FONTS_FN, LIST_MISSING_FOOTAGE_FN, MISSING_SOURCES_FN, OCIO_CAPTURE_FN, RENDER_FRAME_FN, init_shape, init_snippets, init_text, init_timeline, init_transform, init_video, init_viewer };
+export { COMP_CORNERS_FN, COMP_INFO_FN, LAYER_FULL_FN, LIST_MISSING_FONTS_FN, LIST_MISSING_FOOTAGE_FN, MISSING_SOURCES_FN, OCIO_CAPTURE_FN, RENDER_FRAME_FN, init_sample, init_shape, init_shape_contents, init_snippets, init_text, init_timeline, init_transform, init_video, init_viewer };

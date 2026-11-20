@@ -2,11 +2,11 @@
 
 The plugin is free to use for personal and commercial motion work. Joe's original plugin and motion-library materials may not be repackaged or resold; see [the original-material license](license.md) and [source provenance](plugin/PROVENANCE.md). Upstream components keep their separate licenses.
 
-Create and revise editable motion graphics in After Effects with plain-language direction, guided by a detailed production-derived motion language. The latest release is v0.4.0, for Codex and as Comp Room for Claude; broader public-v1 and OpenAI directory work remain separate.
+Create and revise editable motion graphics in After Effects with plain-language direction, guided by a detailed production-derived motion language. The latest release is v0.4.1, for Codex and as Comp Room for Claude; broader public-v1 and OpenAI directory work remain separate.
 
 Open this repository in Codex and describe the work you want to do. [AGENTS.md](AGENTS.md) routes the task to the right workspace.
 
-Public release information: [product](release/website/index.md), [support](release/website/support.md), [privacy](release/website/privacy.md), and [terms](release/website/terms.md). The [installation guide](plugin/docs/local-install.md) gives the public Git marketplace route. The [v0.4.0 release](https://github.com/joebenscoter86/after-effects-studio/releases/tag/v0.4.0) is published. A separate-Mac native journey passed for an earlier public-Git candidate. v0.4.0 was built and checked on the development Mac in Claude; no Codex session has run its new operations, and a separate-Mac installation is not yet verified.
+Public release information: [product](release/website/index.md), [support](release/website/support.md), [privacy](release/website/privacy.md), and [terms](release/website/terms.md). The [installation guide](plugin/docs/local-install.md) gives the public Git marketplace route. The [v0.4.1 release](https://github.com/joebenscoter86/after-effects-studio/releases/tag/v0.4.1) is published. A separate-Mac native journey passed for an earlier public-Git candidate. v0.4.1 was built and checked on the development Mac in Claude; no Codex session has run its new operations, and a separate-Mac installation is not yet verified.
 
 - [Product brief](product/brief.md): audience, promise and scope.
 - [PRD](product/prd.md): required v1 behavior and acceptance evidence.

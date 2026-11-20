@@ -947,6 +947,7 @@ function world({
   file = null as string | null,
   hasAudio = false,
   softEdge = false,
+  motionEdge = false,
 } = {}): World {
   const calls: string[] = [];
   const parade = new Parade();
@@ -990,7 +991,15 @@ function world({
         comment:
           '{"compRoom":"soft-edge","layer":"presenter.mov","radius":8,"smooth":0,"regionBottom":1022,"feather":60}',
       }
-    : { name: "BG", selected: true };
+    : motionEdge
+      ? {
+          name: "presenter.mov motion edge",
+          selected: true,
+          enabled: true,
+          comment:
+            '{"compRoom":"motion-edge","layer":"presenter.mov","wasEnabled":true,"comps":[1,2,3,4,5],"settings":{"keyerMatchName":"XYZ Made Up Keyer","band":50}}',
+        }
+      : { name: "BG", selected: true };
   const comp: Any = {
     name: "Main",
     numLayers: 2,
@@ -1054,6 +1063,7 @@ describe("subject matte: registration and the user's steps", () => {
       "subject.check",
       "subject.check_file",
       "subject.fill_gaps",
+      "subject.motion_edge",
       "subject.prepare",
       "subject.remove_selection",
       "subject.render_cutout",
@@ -1297,6 +1307,19 @@ describe("subject.status: a softened edge", () => {
 
   it("reports none on a plain comp", () => {
     const res = runIn("subject.status", {}, world({ effects: [objectMatte(["Add Object 1"])] }));
+    expect(res.softEdge).toBeNull();
+    expect(res.motionEdge).toBeNull();
+  });
+
+  it("reports the motion-edge layer subject.motion_edge built, with its settings and one matte pass", () => {
+    const w = world({ effects: [objectMatte(["Add Object 1"])], motionEdge: true });
+    const res = runIn("subject.status", {}, w);
+    expect(res.motionEdge).toMatchObject({
+      layer: "presenter.mov motion edge",
+      enabled: true,
+      matteCopies: 1,
+      settings: { compRoom: "motion-edge", settings: { band: 50 } },
+    });
     expect(res.softEdge).toBeNull();
   });
 });
