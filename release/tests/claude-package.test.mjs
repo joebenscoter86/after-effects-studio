@@ -167,7 +167,7 @@ test('check mode detects drift', async () => {
 
 // ---- Task 2: readable runtime -------------------------------------------------
 
-// The runtime is bundled (Joe, 2026-11-19): the own code in dist/index.js and dist/chunks/, the dependencies in a few
+// The runtime is bundled (decided 2026-11-19): the own code in dist/index.js and dist/chunks/, the dependencies in a few
 // readable chunks in dist/vendor/, each dependency's license in licenses/. No node_modules/ ships, so the Claude
 // package stays under the directory's 512-file limit with room for the arsenal's stills.
 test('runtime is readable and within limits', async () => {
