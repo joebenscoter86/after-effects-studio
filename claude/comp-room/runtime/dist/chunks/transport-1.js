@@ -5,7 +5,7 @@ import { mkdirSync, promises, unlinkSync, writeFileSync } from "node:fs";
 import * as path$1 from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 
-// transport/launcher.js
+// server/transport/launcher.js
 function jsxPath(p) {
 	return `'${p.replace(/\\/g, "/").replace(/'/g, "\\'")}'`;
 }
@@ -68,7 +68,7 @@ function init_launcher() {
 	})))();
 }
 
-// transport/instances.js
+// server/transport/instances.js
 function isAlive(heartbeat, now = Date.now()) {
 	if (heartbeat === null || typeof heartbeat.ts !== "number") return false;
 	return now - heartbeat.ts < (heartbeat.busy ? HEARTBEAT_BUSY_STALE_MS : HEARTBEAT_STALE_MS);
@@ -197,7 +197,7 @@ function init_instances() {
 	})))();
 }
 
-// transport/dialogs.js
+// server/transport/dialogs.js
 function scriptProgressMatch(d) {
 	if (SCRIPT_PROGRESS_NAME.test(d.title ?? "") || SCRIPT_PROGRESS_NAME.test(d.text)) return "name";
 	const shape = SCRIPT_PROGRESS_SHAPE;
@@ -579,7 +579,7 @@ if (mode === 'dismiss') {
 	})))();
 }
 
-// transport/launch-lock.js
+// server/transport/launch-lock.js
 function launchLockPath(dir, afterFxPath) {
 	const key = createHash("sha256").update(appBundlePath(afterFxPath)).digest("hex").slice(0, 12);
 	return path$1.join(dir, `launch-${key}.lock`);
@@ -717,7 +717,7 @@ function init_launch_lock() {
 	})))();
 }
 
-// transport/FileIpcTransport.js
+// server/transport/FileIpcTransport.js
 async function sweepOrphanTmpFiles(dir, now = Date.now()) {
 	const removed = [];
 	let entries;

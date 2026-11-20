@@ -7,7 +7,7 @@ import { promises } from "node:fs";
 import os from "node:os";
 import * as path$1 from "node:path";
 
-// operations/layer.js
+// server/operations/layer.js
 function init_layer() {
 	return (init_layer = __esmMin((() => {
 		init_registry();
@@ -857,7 +857,7 @@ function init_layer() {
 	})))();
 }
 
-// operations/project.js
+// server/operations/project.js
 function liveSnapshotIO(transport) {
 	return { async execute(code, opts) {
 		const r = await transport.execute({
@@ -2127,7 +2127,7 @@ function init_project() {
 	})))();
 }
 
-// operations/mask.js
+// server/operations/mask.js
 function maskGeometryParams() {
 	return [
 		{
@@ -2609,7 +2609,7 @@ function init_mask() {
 	})))();
 }
 
-// operations/render.js
+// server/operations/render.js
 function jsxRqItemPreamble(args) {
 	return `
         var rq = app.project.renderQueue;
@@ -4237,7 +4237,7 @@ function init_render() {
 	})))();
 }
 
-// operations/look-sheet.js
+// server/operations/look-sheet.js
 function typeJsx(comp) {
 	return `var c = AE.findCompByNameOrId(${jsxVal(comp)});
 if (!c) return { ok: false, error: "no comp " + ${jsxVal(String(comp))} };
@@ -4518,7 +4518,7 @@ function init_look_sheet() {
 	})))();
 }
 
-// operations/property.js
+// server/operations/property.js
 function init_property() {
 	return (init_property = __esmMin((() => {
 		init_registry();
@@ -4906,7 +4906,7 @@ function init_property() {
 	})))();
 }
 
-// operations/marker.js
+// server/operations/marker.js
 function jsxMarkerPreamble(args) {
 	if (args.layer !== void 0 && args.layer !== null) return `
         ${jsxCompLayerPreamble(args)}
@@ -5234,7 +5234,7 @@ function init_marker() {
 	})))();
 }
 
-// operations/pref.js
+// server/operations/pref.js
 function jsxPrefTypePreamble(args) {
 	return `
         var _ptArg = ${jsxVal(args.prefType ?? null)};
@@ -5475,7 +5475,7 @@ function init_pref() {
 	})))();
 }
 
-// operations/layout.js
+// server/operations/layout.js
 var LAYER_TARGET_PARAM;
 function init_layout() {
 	return (init_layout = __esmMin((() => {

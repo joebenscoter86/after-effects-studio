@@ -283,9 +283,9 @@ unknowns: The exact stock files and how many objects were saved; whether PNGs we
 
 ## Long-lens close-up that matches the wide shot
 id: 11-matching-closeup-telephoto-compression
-revision: e6446569
+revision: f83795fe
 job: none (unmatched)
-status: unproven
+status: proven (accepted 2026-11-19)
 what it does for a beat: Assumes a finished wide scene already exists with separate 2D layers, a cold grade on each (Tritone + Curves, technique 02), a 3D camera with depth of field (04), sway on trees (05), rain and finishing adjustment layers (08, 10). Cut from an established wide scene to a close-up of the character without building a new world: reuse the wide shot's backdrop pieces, camera and finishing layers, and push the backdrop very deep so the close-up reads as shot on a long lens.
 what it looks like: A head-and-shoulders anime-style girl fills the frame, sharp, graded almost colourless and very dark (a neutral, faintly warm grey; her brightest whites sit at about 30 % grey); behind her a dark blue-grey pine silhouette, a faint distant city skyline and a stormy blue sky sit far back, soft and large, under falling rain. The sky and city carry no effects: their blue is the photo's own, so the only cold colour in the frame is the backdrop, not the girl.
 ingredients:

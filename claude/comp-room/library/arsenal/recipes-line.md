@@ -488,9 +488,9 @@ unknowns: exact composition size (inferred 1920x1080); how the layer was centred
 
 ## Card that swings round a pivot below the frame, one step at a time, forever
 id: 02-pivot-null-swing-loop
-revision: e8d498e7
+revision: faf0d084
 job: list-items; support: keep-it-alive
-status: unproven
+status: proven (accepted 2026-11-19)
 what it does for a beat: Gives a card (or later a row of cards) a carousel step: it swings in from one side on a big arc, settles upright, pauses, then swings out the other side, and the step repeats endlessly from only three keyframes. Use it for product or photo carousels, list reveals, or any "next item" rhythm.
 what it looks like: The rounded photo card from 01-rounded-shape-matte-media-card arrives from the lower right tilted about 34 degrees, rocks up into the centre on a wide arc and holds upright; the next step carries it on the same arc to the mirror of where it started, lower left and tilted about −34°, where it holds again with its lower-left corner about 6% of the picture height below the frame's bottom edge, the card cut by that edge along about 8% of the picture width; only the step after that (−68°) takes it mostly out of frame, one corner still showing at the lower left. Each cycle adds another −34°, so a single card never comes back.
 ingredients:
@@ -530,9 +530,9 @@ unknowns: how the keys moved from about 20 f / 23 f to 17 f / 24 f (somewhere in
 
 ## Card shrinks and leans outward at the ends of its swing
 id: 03-tilt-and-shrink-on-swing
-revision: 66c61d6a
+revision: 27af439d
 job: list-items; support: point-at-detail
-status: unproven
+status: proven (accepted 2026-11-19)
 what it does for a beat: Adds a size-and-lean change on top of the pivot swing so the card is small and tipped outward while it is off to the side and full size and upright when it reaches the top. This is what makes a swinging carousel feel like it is "resizing" and gives the centred item its emphasis.
 what it looks like: The rounded photo card enters from the lower right at about two-thirds size and leaning hard outward, grows to full size as it rises upright into the centre, holds, then shrinks and leans outward again as it falls away to the lower left.
 ingredients:
@@ -567,9 +567,9 @@ unknowns: the influence of every handle (the first key's outgoing 86.23% was rea
 
 ## Cards growing along a drawn path into a stacked trail
 id: 06-path-trail-scale-rotate-in
-revision: 261844ed
+revision: a7127f71
 job: list-items; support: reveal-headline, one-to-many
-status: unproven
+status: proven (accepted 2026-11-19)
 what it does for a beat: A stream of photo cards is born as specks, grows and straightens as it sweeps along a looping path, and brakes to a stop in a fanned stack. Use it for a gallery reveal, a "many stories" opener, or a build-up behind a title.
 what it looks like: On a pale grey background, flat square-cornered photo cards (portraits, fashion, interiors) appear as specks near the lower left of centre, tilted counter-clockwise, grow fast — already about half size by the time they reach the left bend and nearly full size across the top — and straighten as they sweep up the left side and across the top, and brake into a stack at the lower right. The first card to arrive stays full size in front; each later card arrives behind it, so the cards still braking show as strips fanned above and behind the front card, arcing round a centred dark green two-line title.
 ingredients:

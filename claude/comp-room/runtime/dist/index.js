@@ -1,14 +1,13 @@
 #!/usr/bin/env node
 import { __esmMin } from "./chunks/rolldown-runtime.js";
+import { McpServer, StdioServerTransport, init_mcp, init_stdio } from "./vendor/modelcontextprotocol-sdk-1.js";
 import { RUNTIME_DIR, denyTool, errorResult, init_cli, init_config, init_errors, init_policy, instanceTargetFromEnv, policySummary, readOnlyMode, runCli } from "./chunks/core-1.js";
 import { FileIpcTransport, init_FileIpcTransport, init_launcher, pushRouteBanner } from "./chunks/transport-1.js";
 import { init_operations } from "./chunks/operations-1.js";
 import { ALL_TOOLS, arsenalTool, init_arsenal, init_library, init_tools, libraryTool } from "./chunks/tools-1.js";
 import { createRequire } from "node:module";
-import { McpServer } from "modelcontextprotocol-sdk/server/mcp.js";
-import { StdioServerTransport } from "modelcontextprotocol-sdk/server/stdio.js";
 
-// index.js
+// server/index.js
 function annotationsFor(tool) {
 	switch (tool.effect) {
 		case "read": return { readOnlyHint: true };
@@ -59,6 +58,8 @@ async function main() {
 var version, serverName, transport, server, skipped;
 function init_server() {
 	return (init_server = __esmMin((async () => {
+		init_mcp();
+		init_stdio();
 		init_cli();
 		init_config();
 		init_errors();

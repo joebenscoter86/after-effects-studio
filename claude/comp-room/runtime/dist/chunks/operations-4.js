@@ -5,7 +5,7 @@ import { init_run_moves, init_run_shots_census, init_run_track, runCensus, runCo
 import { promises } from "node:fs";
 import * as path$1 from "node:path";
 
-// operations/transform.js
+// server/operations/transform.js
 function init_transform() {
 	return (init_transform = __esmMin((() => {
 		init_registry();
@@ -90,7 +90,7 @@ function init_transform() {
 	})))();
 }
 
-// operations/shape.js
+// server/operations/shape.js
 function jsxShapeGroupPreamble(args) {
 	return `
         var _contents = _layer.property("Contents");
@@ -1045,7 +1045,7 @@ function init_shape() {
 	})))();
 }
 
-// operations/text.js
+// server/operations/text.js
 function jsxDocSet(target, attr, value, note = "") {
 	return `try { ${target}.${attr} = ${jsxVal(value)}; } catch(e) { _w.push("${attr}${note}: "+AE.errText(e)); }`;
 }
@@ -2064,7 +2064,7 @@ function init_text() {
 	})))();
 }
 
-// operations/snippets.js
+// server/operations/snippets.js
 var COMP_INFO_FN, LAYER_FULL_FN, RENDER_FRAME_FN, MISSING_SOURCES_FN, OCIO_CAPTURE_FN, LIST_MISSING_FONTS_FN, LIST_MISSING_FOOTAGE_FN, COMP_CORNERS_FN;
 function init_snippets() {
 	return (init_snippets = __esmMin((() => {
@@ -2220,7 +2220,7 @@ function init_snippets() {
 	})))();
 }
 
-// operations/timeline.js
+// server/operations/timeline.js
 function init_timeline() {
 	return (init_timeline = __esmMin((() => {
 		init_registry();
@@ -2309,7 +2309,7 @@ function init_timeline() {
 	})))();
 }
 
-// operations/viewer.js
+// server/operations/viewer.js
 function init_viewer() {
 	return (init_viewer = __esmMin((() => {
 		init_registry();
@@ -2456,7 +2456,7 @@ function init_viewer() {
 	})))();
 }
 
-// operations/shape-contents.js
+// server/operations/shape-contents.js
 var LAYER_TARGET_PARAM;
 function init_shape_contents() {
 	return (init_shape_contents = __esmMin((() => {
@@ -2840,7 +2840,7 @@ function init_shape_contents() {
 	})))();
 }
 
-// operations/sample.js
+// server/operations/sample.js
 function liveIO(transport) {
 	return { async execute(code, opts) {
 		const r = await transport.execute({
@@ -3492,7 +3492,7 @@ function init_sample() {
 	})))();
 }
 
-// operations/video.js
+// server/operations/video.js
 var common, ffmpegNote;
 function init_video() {
 	return (init_video = __esmMin((() => {

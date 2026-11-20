@@ -6,7 +6,7 @@ import { promises } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-// video/decode.js
+// server/video/decode.js
 function rate(s) {
 	if (!s) return NaN;
 	const [a, b] = s.split("/").map(Number);
@@ -178,7 +178,7 @@ function init_decode() {
 	})))();
 }
 
-// video/movie-rgb.js
+// server/video/movie-rgb.js
 async function movieColour(file, tools = VIDEO_TOOLS) {
 	const r = await runTool(tools.ffprobe, [
 		"-v",
@@ -315,7 +315,7 @@ function init_movie_rgb() {
 	})))();
 }
 
-// video/census.js
+// server/video/census.js
 function censusStep(a, b, w, h, y0, y1, rules = CENSUS_RULES) {
 	let changedPx = 0, total = 0;
 	for (let y = y0; y < y1; y++) for (let x = 0; x < w; x++) {
@@ -432,7 +432,7 @@ function init_census() {
 	})))();
 }
 
-// video/ink.js
+// server/video/ink.js
 function luma(r, g, b) {
 	return .299 * r + .587 * g + .114 * b;
 }
@@ -607,7 +607,7 @@ function init_ink() {
 	})))();
 }
 
-// video/fit.js
+// server/video/fit.js
 function nelderMead(f, x0, steps, iterations = 600) {
 	const n = x0.length;
 	let simplex = [x0.slice(), ...x0.map((_, i) => x0.map((v, j) => j === i ? v + steps[i] : v))].map((x) => ({
@@ -973,7 +973,7 @@ function init_fit() {
 	})))();
 }
 
-// video/measure-move.js
+// server/video/measure-move.js
 function movesOfChannel(samples, o) {
 	if (samples.length < 4) return [];
 	const { fps, atFps } = o, moving = o.movingSpeed ?? .02, gap = 2.5 / fps, at = (t) => r2$2(t * atFps);
@@ -1186,7 +1186,7 @@ function init_measure_move() {
 	})))();
 }
 
-// video/shots.js
+// server/video/shots.js
 function registerShift(a, b, w, h, o = {}) {
 	const maxDx = o.maxDx ?? Math.floor(w / 2), maxDy = o.maxDy ?? Math.floor(h / 2), minOverlap = o.minOverlap ?? .25;
 	let best = null;
@@ -1392,7 +1392,7 @@ function init_shots() {
 	})))();
 }
 
-// video/track.js
+// server/video/track.js
 function fft(re, im, inv = false) {
 	const n = re.length;
 	for (let i = 1, j = 0; i < n; i++) {
@@ -1584,7 +1584,7 @@ function init_track() {
 	})))();
 }
 
-// video/run-track.js
+// server/video/run-track.js
 function regionPx(r, w, h) {
 	const a = Array.isArray(r) ? r.map(Number) : r && typeof r === "object" ? [
 		"x",
@@ -2288,7 +2288,7 @@ function init_run_track() {
 	})))();
 }
 
-// video/run-shots-census.js
+// server/video/run-shots-census.js
 async function open(args, tools) {
 	if (typeof args.file !== "string" || !path.isAbsolute(args.file)) return { error: "`file` must be an absolute path to a video file" };
 	if (typeof args.outDir !== "string" || !path.isAbsolute(args.outDir)) return { error: "`outDir` must be an absolute folder path" };
@@ -2569,7 +2569,7 @@ function init_run_shots_census() {
 	})))();
 }
 
-// video/rhythm.js
+// server/video/rhythm.js
 async function measureRhythm(file) {
 	const tmp = await promises.mkdtemp(path.join(os.tmpdir(), "look-rhythm-"));
 	try {
@@ -2621,7 +2621,7 @@ function init_rhythm() {
 	})))();
 }
 
-// video/run-moves.js
+// server/video/run-moves.js
 async function readJson(p, what) {
 	if (typeof p !== "string" || !path.isAbsolute(p)) return { error: `${what} must be an absolute path to a JSON file` };
 	try {

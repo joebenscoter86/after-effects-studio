@@ -9,7 +9,7 @@ import { execFile } from "node:child_process";
 import { promises } from "node:fs";
 import * as path$1 from "node:path";
 
-// operations/keying-subject-prepare.js
+// server/operations/keying-subject-prepare.js
 function subjectMatteSteps(opts = {}) {
 	const clip = opts.clip === void 0 ? "the clip's name" : `"${opts.clip}"`;
 	const given = opts.subject?.trim();
@@ -793,7 +793,7 @@ function init_keying_subject_prepare() {
 	})))();
 }
 
-// operations/keying-subject-check.js
+// server/operations/keying-subject-check.js
 function closeClicks(clicks, sourceSize, minDistance) {
 	const limit = minDistance ?? (sourceSize ? Math.round(.05 * Math.min(sourceSize[0], sourceSize[1]) * 100) / 100 : null);
 	if (limit === null) return [];
@@ -1520,7 +1520,7 @@ function init_keying_subject_check() {
 	})))();
 }
 
-// operations/keying-subject-cutout.js
+// server/operations/keying-subject-cutout.js
 function cutoutSpan(layerSpan, from, to) {
 	const rate = layerSpan.frameRate || 30;
 	const snap = (t) => Math.round(t * rate) / rate;
@@ -2808,7 +2808,7 @@ function init_keying_subject_cutout() {
 	})))();
 }
 
-// operations/keying-subject-soften.js
+// server/operations/keying-subject-soften.js
 function softRegionBottom(tops, compHeight, given) {
 	if (typeof given === "number" && Number.isFinite(given)) return Math.round(given);
 	const valid = tops.filter((t) => t >= 0);
@@ -3373,7 +3373,7 @@ function init_keying_subject_soften() {
 	})))();
 }
 
-// operations/keying-subject-motion.js
+// server/operations/keying-subject-motion.js
 function motionEdgeSettings(args) {
 	const D = MOTION_EDGE_DEFAULTS;
 	const fail = (error) => ({
@@ -3780,7 +3780,7 @@ function init_keying_subject_motion() {
 	})))();
 }
 
-// operations/keying.js
+// server/operations/keying.js
 function init_keying() {
 	return (init_keying = __esmMin((() => {
 		init_png16();
@@ -3799,7 +3799,7 @@ function init_keying() {
 	})))();
 }
 
-// operations/layer-advanced.js
+// server/operations/layer-advanced.js
 function init_layer_advanced() {
 	return (init_layer_advanced = __esmMin((() => {
 		init_registry();

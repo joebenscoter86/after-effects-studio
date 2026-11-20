@@ -6,7 +6,7 @@ import * as path$1 from "node:path";
 import { randomUUID } from "node:crypto";
 import * as zlib from "node:zlib";
 
-// color/motion.js
+// server/color/motion.js
 function resolveDiffThresholds(args = {}) {
 	const out = { ...DIFF_DEFAULTS };
 	for (const key of Object.keys(DIFF_DEFAULTS)) {
@@ -783,7 +783,7 @@ function init_motion() {
 	})))();
 }
 
-// color/sheet.js
+// server/color/sheet.js
 function px(img, x, y) {
 	const i = (y * img.width + x) * 3;
 	return [
@@ -2846,7 +2846,7 @@ function init_sheet() {
 	})))();
 }
 
-// color/matte.js
+// server/color/matte.js
 function autoMaxEdgeWidth(width, height) {
 	return Math.max(4, Math.round(.01 * Math.min(width, height)));
 }
@@ -4175,7 +4175,7 @@ function init_matte() {
 	})))();
 }
 
-// color/png16.js
+// server/color/png16.js
 function readChunks(buf) {
 	if (!buf.subarray(0, 8).equals(PNG_SIGNATURE)) throw new Error("not a PNG file");
 	const chunks = [];
@@ -4362,7 +4362,7 @@ function init_png16() {
 	})))();
 }
 
-// color/screen.js
+// server/color/screen.js
 function autoGrid(width, height) {
 	const short = Math.min(width, height);
 	const across = 4;
@@ -4851,7 +4851,7 @@ function init_screen() {
 	})))();
 }
 
-// color/settled-read.js
+// server/color/settled-read.js
 function sleep(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -4991,7 +4991,7 @@ function init_settled_read() {
 	})))();
 }
 
-// color/calibration.js
+// server/color/calibration.js
 function calibrationKey(projectFile, workingSpace, bitsPerChannel) {
 	return `${projectFile ?? "(unsaved)"}|${workingSpace}|${bitsPerChannel}`;
 }
@@ -5095,7 +5095,7 @@ function init_calibration() {
 	})))();
 }
 
-// color/transform.js
+// server/color/transform.js
 function srgbEncode(x) {
 	const v = Math.min(1, Math.max(0, x));
 	return v <= .0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - .055;
@@ -5233,7 +5233,7 @@ function init_transform() {
 	})))();
 }
 
-// color/look.js
+// server/color/look.js
 function pieceMeasures(p) {
 	const r = p.report, out = [];
 	const add = (def, v) => {
@@ -5546,7 +5546,7 @@ function init_look() {
 	})))();
 }
 
-// color/watch.js
+// server/color/watch.js
 function resolveWatchThresholds(args = {}) {
 	const out = { ...WATCH_DEFAULTS };
 	for (const key of Object.keys(WATCH_DEFAULTS)) {
