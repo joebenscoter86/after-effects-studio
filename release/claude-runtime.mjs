@@ -4,7 +4,7 @@
 // transport) and dist/vendor/ (the dependencies, one or more chunks per package, named after it). Every chunk is under
 // the directory's 256 KiB limit and unminified, with the real export names. Each bundled package's license is written
 // to licenses/<package>.txt. Nothing installs at startup and no node_modules/ ships: bundling the dependencies keeps
-// the package under the directory's 512-file limit (Joe, 2026-11-19: 289 runtime files became a few dozen).
+// the package under the directory's 512-file limit (decided 2026-11-19: 289 runtime files became 42).
 import fs from 'node:fs/promises';
 import { existsSync, readFileSync } from 'node:fs';
 import { builtinModules } from 'node:module';
