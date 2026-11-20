@@ -1,7 +1,7 @@
 // Shared scene for eoBEBx1PbS4 techniques 01, 03 and 04 (art set "TIDES"). Loaded after the prelude.
 // ExtendScript (ES3).
 var TIDES = {};
-TIDES.ART = "/Users/joeb/after-effects-studio/.claude/worktrees/agent-eyes-stage-7-f1d606/quality/renders/channel-study/eoBEBx1PbS4/proof/01/art";
+TIDES.ART = "~/Assets/comp-room-studies/channel-study/eoBEBx1PbS4/proof/01/art";
 TIDES.FPS = 23.976;
 // Property of `group` by display name; throws when missing.
 TIDES.prop = function (group, name) {

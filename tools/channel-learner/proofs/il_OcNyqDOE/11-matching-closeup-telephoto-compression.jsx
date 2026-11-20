@@ -11,8 +11,8 @@
 $.evalFile(args.prelude);
 $.evalFile(args.artLib);
 $.evalFile(args.scene);
-var A11 = "/Users/joeb/after-effects-studio/.claude/worktrees/agent-eyes-stage-7-f1d606/quality/renders/channel-study/il_OcNyqDOE/proof/11/art";
-var A13 = "/Users/joeb/after-effects-studio/.claude/worktrees/agent-eyes-stage-7-f1d606/quality/renders/channel-study/il_OcNyqDOE/proof/13/art/cut";
+var A11 = "~/Assets/comp-room-studies/channel-study/il_OcNyqDOE/proof/11/art";
+var A13 = "~/Assets/comp-room-studies/channel-study/il_OcNyqDOE/proof/13/art/cut";
 var c = HW.comp("il_O 11 closeup", 4);
 function put(item, name, z, x, y, s, mirror) {
   var l = c.layers.add(item);

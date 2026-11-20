@@ -12,7 +12,7 @@
 $.evalFile(args.prelude);
 $.evalFile(args.artLib);
 $.evalFile(args.scene);
-var DIR = "/Users/joeb/after-effects-studio/.claude/worktrees/agent-eyes-stage-7-f1d606/quality/renders/channel-study/il_OcNyqDOE/proof/13/art";
+var DIR = "~/Assets/comp-room-studies/channel-study/il_OcNyqDOE/proof/13/art";
 var c = HW.comp("il_O 13 relight", 4);
 var bd = c.layers.add(ART.footage(DIR, "backdrop.png", "art il_O 13"));
 bd.name = "Backdrop";

@@ -1,7 +1,7 @@
 // Shared "Harbour Watch" scene for il_OcNyqDOE techniques 02, 03, 08 and 10. Loaded after the prelude and art.jsx.
 // ExtendScript (ES3). Values from proof/02/art/brief.md + layout.json (2D) and proof/03/art/brief.md (3D).
 var HW = {};
-HW.ART = "/Users/joeb/after-effects-studio/.claude/worktrees/agent-eyes-stage-7-f1d606/quality/renders/channel-study/il_OcNyqDOE/proof/02/art";
+HW.ART = "~/Assets/comp-room-studies/channel-study/il_OcNyqDOE/proof/02/art";
 HW.FOLDER = "art il_O 02"; // shared files, imported once; 03, 08 and 10 reuse them
 HW.FPS = 23.976;
 // name, file, flat x, y, scale, Z, 3D X, Y, scale, mirrored, grade ("full", "curves" or "none")

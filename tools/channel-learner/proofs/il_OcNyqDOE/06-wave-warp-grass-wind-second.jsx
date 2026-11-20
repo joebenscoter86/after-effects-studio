@@ -8,7 +8,7 @@
 $.evalFile(args.prelude);
 $.evalFile(args.artLib);
 $.evalFile(args.scene);
-var G = "/Users/joeb/after-effects-studio/.claude/worktrees/agent-eyes-stage-7-f1d606/quality/renders/channel-study/il_OcNyqDOE/proof/06/art";
+var G = "~/Assets/comp-room-studies/channel-study/il_OcNyqDOE/proof/06/art";
 var files = { "Grass 1": [G, "grass-thin.png", "art il_O 06"], "Grass 2": [G, "grass-thin.png", "art il_O 06"], "Grass 3": [G, "grass-thin.png", "art il_O 06"] };
 var c = HW.comp("il_O 06 grass", 72 / 23.976);
 var L = HW.build(c, { depth: true, grade: true, prefix: "", v2: true, override: args.override, files: files });

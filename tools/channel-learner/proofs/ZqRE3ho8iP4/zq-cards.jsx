@@ -1,7 +1,7 @@
 // ZqRE3ho8iP4 card helpers (recipe 01's shape-matte card), loaded after prelude.jsx and art.jsx.
 // ExtendScript (ES3). Candidate for the prelude: ZC.ease (a KeyframeEase for any property's dimension count).
 var ZC = {};
-ZC.ART = "/Users/joeb/after-effects-studio/.claude/worktrees/agent-eyes-stage-7-f1d606/quality/renders/channel-study/ZqRE3ho8iP4/proof";
+ZC.ART = "~/Assets/comp-room-studies/channel-study/ZqRE3ho8iP4/proof";
 ZC.FPS = 23.976;
 ZC.f = function (frames) { return frames / ZC.FPS; };
 

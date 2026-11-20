@@ -6,7 +6,7 @@ $.evalFile(args.scene);
 var c = HW.comp("il_O probe wave", 2);
 if (args.remove) { c.remove(); return "removed"; }
 c.bgColor = [0.5, 0.5, 0.5];
-var l = c.layers.add(ART.footage("/Users/joeb/after-effects-studio/.claude/worktrees/agent-eyes-stage-7-f1d606/quality/renders/channel-study/il_OcNyqDOE/proof/06/art", "grass-thin.png", "art il_O 06"));
+var l = c.layers.add(ART.footage("~/Assets/comp-room-studies/channel-study/il_OcNyqDOE/proof/06/art", "grass-thin.png", "art il_O 06"));
 P.tf(l, "ADBE Position").setValue([960, 540]);
 var w = P.effect(l, "ADBE Wave Warp");
 w = l.property("ADBE Effect Parade").property(1);
