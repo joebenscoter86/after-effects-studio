@@ -160,6 +160,97 @@ test('build: refuses a tag whose id does not name the recipe at that place', () 
   });
 });
 
+// ---------- variants ----------
+
+// A variant's status line followed by the two lines a variant's draft carries.
+const variantLines = (parent, where, { status = 'status: unproven', differs = 'Uses a wider gap and a slower turn.' } = {}) =>
+  `${status}\nvariant of: ${parent} (${where})\ndiffers: ${differs}`;
+
+test('variants: a variant keeps its own id, revision, section and status and names its parent; the parent lists it', () => {
+  withDir({ 'vidA.md': [recipe(1, 'a', { status: ACCEPTED })], 'vidB.md': [recipe(1, 'b', { status: variantLines('01-a', 'vidA #1') })] }, (dir) => {
+    const cat = buildCatalog({ draftsDir: dir, jobs: JOBS, tags: tagsOf({
+      'vidA#1': tag('01-a'),
+      'vidB#1': tag('01-b', { variant_of: 'vidA#1', job: 'add-depth' }),
+    }) });
+    const [a, b] = cat.recipes;
+    assert.equal(b.id, '01-b');
+    assert.equal(b.variant_of, '01-a');
+    assert.equal(b.status, 'unproven');
+    assert.equal(b.job, 'add-depth', 'a variant keeps its own job; nothing is inherited');
+    assert.deepEqual(b.section, { file: 'vidB.md', heading: 'Technique b' });
+    assert.match(b.revision, /^[0-9a-f]{8}$/);
+    assert.notEqual(b.revision, a.revision);
+    assert.deepEqual(a.variants, ['01-b']);
+    assert.deepEqual(b.variants, []);
+    assert.equal('variant_of' in a, false, 'only a variant carries variant_of');
+  });
+});
+
+test('variants: every record carries variants, empty when it has none', () => {
+  withDir({ 'vidA.md': [recipe(1, 'a'), recipe(2, 'b')] }, (dir) => {
+    const cat = buildCatalog({ draftsDir: dir, jobs: JOBS, tags: tagsOf({ 'vidA#1': tag('01-a'), 'vidA#2': tag('02-b') }) });
+    assert.deepEqual(cat.recipes.map((r) => r.variants), [[], []]);
+    assert.equal(cat.recipes.some((r) => 'variant_of' in r), false);
+  });
+});
+
+test('variants: the parent is taught by itself, its variants and its group, a variant in the same group counted once', () => {
+  withDir({
+    'vidA.md': [recipe(1, 'a'), recipe(2, 'g')],
+    'vidB.md': [recipe(1, 'v1', { status: variantLines('01-a', 'vidA #1') }), recipe(2, 'v2', { status: variantLines('01-a', 'vidA #1') })],
+    'vidC.md': [recipe(1, 'solo'), recipe(2, 'sv', { status: variantLines('01-solo', 'vidC #1') })],
+  }, (dir) => {
+    const cat = buildCatalog({ draftsDir: dir, jobs: JOBS, tags: tagsOf({
+      'vidA#1': tag('01-a', { group: 'shadow' }), 'vidA#2': tag('02-g', { group: 'shadow' }),
+      'vidB#1': tag('01-v1', { variant_of: 'vidA#1', group: 'shadow' }), 'vidB#2': tag('02-v2', { variant_of: 'vidA#01' }),
+      'vidC#1': tag('01-solo'), 'vidC#2': tag('02-sv', { variant_of: 'vidC#1' }),
+    }) });
+    const by = Object.fromEntries(cat.recipes.map((r) => [r.id, r]));
+    assert.equal(by['01-a'].taught_by, 4, 'group shadow (a, g, v1) plus v2, v1 not counted twice');
+    assert.deepEqual(by['01-a'].variants, ['01-v1', '02-v2']);
+    assert.equal(by['01-solo'].taught_by, 2);
+    assert.equal(by['02-g'].taught_by, 3, 'a group member keeps its group count');
+  });
+});
+
+test('variants: refuses a variant_of that names no recipe, a parent that is itself a variant, and a kind that differs', () => {
+  withDir({
+    'vidA.md': [recipe(1, 'a'), recipe(2, 'aid')],
+    'vidB.md': [recipe(1, 'b', { status: variantLines('01-a', 'vidA #1') }), recipe(2, 'c', { status: variantLines('01-b', 'vidB #1') }),
+      recipe(3, 'd', { status: variantLines('09-z', 'vidZ #9') }), recipe(4, 'e', { status: variantLines('02-aid', 'vidA #2') })],
+  }, (dir) => {
+    assert.throws(() => buildCatalog({ draftsDir: dir, jobs: JOBS, tags: tagsOf({
+      'vidA#1': tag('01-a'), 'vidA#2': tag('02-aid', { kind: 'build-aid', job: null }),
+      'vidB#1': tag('01-b', { variant_of: 'vidA#1' }), 'vidB#2': tag('02-c', { variant_of: 'vidB#1' }),
+      'vidB#3': tag('03-d', { variant_of: 'vidZ#9' }), 'vidB#4': tag('04-e', { variant_of: 'vidA#2' }),
+    }) }), (e) => /vidB#2.*variant of vidB#1, which is itself a variant/.test(e.message)
+      && /vidB#3.*variant_of vidZ#9 names no recipe/.test(e.message)
+      && /vidB#4.*kind technique.*parent vidA#2 is build-aid/.test(e.message)
+      && !/vidB#1/.test(e.message.replace(/variant of vidB#1/g, '')));
+  });
+});
+
+test('variants: a variant\'s own job and support tags still validate against the vocabulary', () => {
+  withDir({ 'vidA.md': [recipe(1, 'a'), recipe(2, 'b', { status: variantLines('01-a', 'vidA #1') })] }, (dir) => {
+    assert.throws(() => buildCatalog({ draftsDir: dir, jobs: JOBS, tags: tagsOf({
+      'vidA#1': tag('01-a'), 'vidA#2': tag('02-b', { variant_of: 'vidA#1', job: 'make-it-pop' }),
+    }) }), /vidA#2.*make-it-pop/);
+  });
+});
+
+test('variants: the draft lines and the tag must agree on the parent', () => {
+  withDir({ 'vidA.md': [recipe(1, 'a'), recipe(2, 'b', { status: variantLines('01-a', 'vidA #1') }), recipe(3, 'c'), recipe(4, 'd', { status: 'status: unproven\nvariant of: 01-a (vidA #1)' })] }, (dir) => {
+    assert.throws(() => buildCatalog({ draftsDir: dir, jobs: JOBS, tags: tagsOf({
+      'vidA#1': tag('01-a'), 'vidA#2': tag('02-b'), 'vidA#3': tag('03-c', { variant_of: 'vidA#1' }), 'vidA#4': tag('04-d', { variant_of: 'vidA#1' }),
+    }) }), (e) => /vidA#2.*variant of: 01-a.*no variant_of/.test(e.message)
+      && /vidA#3.*no "variant of:" line/.test(e.message)
+      && /vidA#4.*no "differs:" line/.test(e.message));
+    assert.throws(() => buildCatalog({ draftsDir: dir, jobs: JOBS, tags: tagsOf({
+      'vidA#1': tag('01-a'), 'vidA#2': tag('02-b', { variant_of: 'vidA#3' }), 'vidA#3': tag('03-c'), 'vidA#4': tag('04-d'),
+    }) }), /vidA#2.*"variant of: 01-a" but the tag names 03-c/);
+  });
+});
+
 // ---------- findTechniques ----------
 
 // A ready catalog for query tests: built from fixtures once.
@@ -290,6 +381,20 @@ test('find: relaxes needs only after status, and never the job or the exclusions
 test('find: a full answer carries no relaxed field', () => {
   const cat = catalogOf([{ slug: 'a', status: 'proven' }]);
   assert.equal('relaxed' in findTechniques(cat, ask({})), false);
+});
+
+test('find: never returns a variant on its own; its parent carries the variant ids', () => {
+  withDir({ 'vidA.md': [recipe(1, 'a', { status: ACCEPTED }), recipe(2, 'v', { status: variantLines('01-a', 'vidA #1', { status: ACCEPTED }) }), recipe(3, 'plain', { status: ACCEPTED })] }, (dir) => {
+    const cat = buildCatalog({ draftsDir: dir, jobs: JOBS, tags: tagsOf({
+      'vidA#1': tag('01-a', { duration: 12 }), 'vidA#2': tag('02-v', { variant_of: 'vidA#1', duration: 2 }), 'vidA#3': tag('03-plain', { duration: 2 }),
+    }) });
+    const out = findTechniques(cat, ask({ duration: 2 }));
+    assert.deepEqual(out.results.map((r) => r.id), ['01-a', '03-plain'], 'the parent ranks first: taught twice');
+    assert.deepEqual(out.results[0].variants, ['02-v']);
+    assert.equal('variants' in out.results[1], false, 'a candidate with no variants carries no variants field');
+    assert.match(out.results[0].fit, /taught 2 times/);
+    assert.deepEqual(findTechniques(cat, ask({ exclude: ['01-a'] })).results.map((r) => r.id), ['03-plain']);
+  });
 });
 
 // ---------- CLI ----------

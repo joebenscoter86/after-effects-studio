@@ -1,7 +1,9 @@
 // The technique arsenal: the per-beat query (the same rules as tools/channel-learner/catalog.mjs findTechniques, whose
 // tests these mirror), reading a recipe by id and pinned revision, the job list, and the ae_arsenal tool's replies.
 // Offline: nothing here contacts After Effects.
-import { readFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -16,7 +18,7 @@ function rec(i: number, slug: string, o: Partial<ArsenalRecipe> = {}): ArsenalRe
   return {
     id: `${String(i).padStart(2, "0")}-${slug}`, revision: `rev${slug}`.padEnd(8, "0").slice(0, 8), name: `Name ${slug}`, line: `Line ${slug}.`,
     status: "unproven", kind: "technique", job: "before-after", support: [], mood: [], needs: [], duration: 2, motion: "one-shot",
-    difficulty: 1, taught_by: 1, section: { document: "arsenal-line", heading: `Name ${slug}` }, still: null, ...o,
+    difficulty: 1, taught_by: 1, variants: [], section: { document: "arsenal-line", heading: `Name ${slug}` }, still: null, ...o,
   };
 }
 // entries: [{ slug, group?, ...record fields }]; taught_by counts the entries sharing a group, as the builder does.
@@ -143,6 +145,20 @@ describe("findTechniques: the rules of catalog.mjs", () => {
   it("a full answer carries no relaxed field", () => {
     expect("relaxed" in findTechniques(catalogOf([{ slug: "a", ...P }]), ask())).toBe(false);
   });
+
+  it("never returns a variant on its own; its parent carries the variant ids", () => {
+    const cat = catalogOf([
+      { slug: "a", ...P, duration: 12, taught_by: 2, variants: ["02-v"] },
+      { slug: "v", ...P, duration: 2, variant_of: "01-a" },
+      { slug: "plain", ...P, duration: 2 },
+    ]);
+    const out = findTechniques(cat, ask({ duration: 2 }));
+    expect(out.results.map((r) => r.id)).toEqual(["01-a", "03-plain"]);
+    expect(out.results[0].variants).toEqual(["02-v"]);
+    expect("variants" in out.results[1]).toBe(false);
+    expect(out.results[0].fit).toMatch(/taught 2 times/);
+    expect(findTechniques(cat, ask({ exclude: ["01-a"] })).results.map((r) => r.id)).toEqual(["03-plain"]);
+  });
 });
 
 describe("the shipped arsenal", () => {
@@ -202,6 +218,34 @@ describe("reading a recipe", () => {
 
   it("refuses an unknown id", () => {
     expect(() => recipeReply("99-nope", undefined, LIB)).toThrow(/unknown recipe "99-nope"/);
+  });
+});
+
+describe("reading a variant", () => {
+  // A small library holding a parent and its variant, laid out and hashed as the shipped one is.
+  function library(): string {
+    const root = mkdtempSync(path.join(tmpdir(), "arsenal-variant-"));
+    mkdirSync(path.join(root, "arsenal"));
+    const recipes = "# Arsenal recipes: Line jobs\n\n## Name a\nid: 01-a\nrevision: reva0000\njob: before-after\nstatus: unproven\nsteps:\n1. Do a.\n\n"
+      + "## Name v\nid: 02-v\nrevision: revv0000\njob: before-after\nstatus: unproven\nvariant of: 01-a\ndiffers: Slower.\nsteps:\n1. Do v.\n";
+    const catalog = JSON.stringify({ vocab: "jobs-v1", version: "abcdef12", jobs: JOBS, recipes: [
+      rec(1, "a", { revision: "reva0000", taught_by: 2, variants: ["02-v"] }),
+      rec(2, "v", { revision: "revv0000", variant_of: "01-a" }),
+    ] });
+    const docs = [["arsenal-catalog", "arsenal/catalog.json", catalog], ["arsenal-line", "arsenal/recipes-line.md", recipes]] as const;
+    for (const [, p, text] of docs) writeFileSync(path.join(root, p), text);
+    writeFileSync(path.join(root, "manifest.json"), JSON.stringify({ documents: docs.map(([id, p, text]) => ({ id, path: p, kind: "catalog", sha256: createHash("sha256").update(text).digest("hex") })) }));
+    return root;
+  }
+
+  it("get works for a variant id, and the reply head names its parent", () => {
+    const root = library();
+    try {
+      const text = recipeReply("02-v", undefined, root);
+      expect(text.split("\n")[0]).toMatch(/^ae_arsenal recipe 02-v@revv0000 \(unproven, technique; variant of 01-a;/);
+      expect(text).toMatch(/^differs: Slower\.$/m);
+      expect(recipeReply("01-a", undefined, root).split("\n")[0]).not.toMatch(/variant of/);
+    } finally { rmSync(root, { recursive: true, force: true }); }
   });
 });
 

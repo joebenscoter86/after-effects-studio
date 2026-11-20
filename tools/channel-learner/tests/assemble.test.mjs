@@ -90,3 +90,24 @@ test('assemble: proven recipes are counted, and proven needs a recorded acceptan
     assert.deepEqual(recipeProblems(dir), [{ recipe: '03-c.md', reason: 'proven without a recorded acceptance' }]);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
+
+test('assemble: a variant needs its merge confirmed by the check (LESSONS 14)', () => {
+  const dir = study({ '01-a': { check: pass('01-a') }, '02-b': { check: pass('02-b') }, '03-c': { check: pass('03-c') } });
+  const variant = (id, checkText) => {
+    const p = path.join(dir, 'recipes', `${id}.md`);
+    fs.writeFileSync(p, `## Technique ${id.slice(0, 2)}\nstatus: unproven\nvariant of: 04-parent (vid0 #04)\ndiffers: here x; in the parent y.\njobs: test\n`);
+    fs.utimesSync(p, at(0), at(0));
+    const c = path.join(dir, 'checks', `${id.slice(0, 2)}.md`);
+    fs.writeFileSync(c, checkText);
+    fs.utimesSync(c, at(1), at(1));
+  };
+  try {
+    variant('01-a', `${pass('01-a')}merge: confirmed\n`);
+    variant('02-b', `${pass('02-b')}merge: refused\nmerge failures:\n- wrong\n`);
+    variant('03-c', pass('03-c'));
+    assert.deepEqual(recipeProblems(dir), [
+      { recipe: '02-b.md', reason: 'variant without a confirmed merge' },
+      { recipe: '03-c.md', reason: 'variant without a confirmed merge' },
+    ]);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});

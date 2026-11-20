@@ -86,6 +86,11 @@ function fakes(dir, opts = {}) {
       const keep = opts.dropFrame ? frames.slice(1) : frames;
       for (const f of keep) await writeFile(join(outDir, `f${String(f).padStart(6, '0')}.png`), 'png');
     },
+    smallFrames: async ({ images, outDir }) => {
+      count('smallFrames');
+      await mkdir(outDir, { recursive: true });
+      for (const p of images) await writeFile(join(outDir, p.split('/').pop().replace(/\.png$/, '.jpg')), 'jpg');
+    },
     readBoxes: async (images) => {
       count('readBoxes');
       const label = { t: 'Amount', c: 0.95, x: 0.1, y: 0.3, w: 0.08, h: 0.02 };
@@ -195,12 +200,14 @@ test('align writes kept frames, boxes, the timeline and the transcript check; a 
     await writeFile(join(dir, 'ignore.json'), JSON.stringify([{ x: 0.9, y: 0.9, w: 0.1, h: 0.1 }]));
     const { deps, calls } = fakes(dir);
     assert.equal(await run(['align', dir], deps), 0);
-    assert.deepEqual(calls, { measureChanges: 1, extractFrames: 1, readBoxes: 1 });
+    assert.deepEqual(calls, { measureChanges: 1, extractFrames: 1, smallFrames: 1, readBoxes: 1 });
 
     const kept = await readJson(join(dir, 'kept.json'));
     assert.deepEqual(kept.noisyCells, [1], 'the always-changing cell is found');
     assert.ok(kept.kept.length >= 2);
     for (const k of kept.kept) assert.ok(existsSync(join(dir, k.file)), k.file);
+    // the 1920-wide JPEGs every writer and checker prompt reads (LESSONS 16)
+    for (const k of kept.kept) assert.ok(existsSync(join(dir, k.file.replace(/^frames\//, 'frames-small/').replace(/\.png$/, '.jpg'))), k.file);
     assert.match(kept.kept[0].file, /^frames\/f\d{6}\.png$/);
 
     const boxLines = (await readFile(join(dir, 'boxes.jsonl'), 'utf8')).trim().split('\n');
@@ -425,4 +432,41 @@ test('extractFramesFfmpeg writes exactly the requested frames, named by frame nu
     assert.ok(a.equals(b), 'frames 0 and 14 are both plain black');
     assert.ok(!b.equals(c), 'frame 15 has the box');
   } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+// ---------- link: study folders live outside every worktree ----------
+
+test('link points quality/renders/channel-study at the shared studies folder, and keeps a correct link', async () => {
+  const { symlink, readlink, lstat } = await import('node:fs/promises');
+  const base = await mkdtemp(join(tmpdir(), 'learn-link-'));
+  const root = join(base, 'worktree');
+  const studies = join(base, 'studies');
+  await mkdir(root, { recursive: true });
+  await mkdir(studies, { recursive: true });
+  const logs = [];
+  assert.equal(await run(['link', root, '--to', studies], { log: (m) => logs.push(m) }), 0);
+  const at = join(root, 'quality', 'renders', 'channel-study');
+  assert.ok((await lstat(at)).isSymbolicLink());
+  assert.equal(await readlink(at), studies);
+  assert.equal(await run(['link', root, '--to', studies], { log: (m) => logs.push(m) }), 0);
+  await rm(base, { recursive: true, force: true });
+});
+
+test('link refuses a real folder or a link elsewhere and changes nothing', async () => {
+  const { symlink, readlink } = await import('node:fs/promises');
+  const base = await mkdtemp(join(tmpdir(), 'learn-link-'));
+  const studies = join(base, 'studies');
+  await mkdir(studies, { recursive: true });
+  const real = join(base, 'a');
+  await mkdir(join(real, 'quality', 'renders', 'channel-study', 'vid1'), { recursive: true });
+  const logs = [];
+  assert.equal(await run(['link', real, '--to', studies], { log: (m) => logs.push(m) }), 1);
+  assert.ok(existsSync(join(real, 'quality', 'renders', 'channel-study', 'vid1')));
+  assert.match(logs.join('\n'), /real folder/);
+  const other = join(base, 'b');
+  await mkdir(join(other, 'quality', 'renders'), { recursive: true });
+  await symlink(join(base, 'elsewhere'), join(other, 'quality', 'renders', 'channel-study'));
+  assert.equal(await run(['link', other, '--to', studies], { log: (m) => logs.push(m) }), 1);
+  assert.equal(await readlink(join(other, 'quality', 'renders', 'channel-study')), join(base, 'elsewhere'));
+  await rm(base, { recursive: true, force: true });
 });
