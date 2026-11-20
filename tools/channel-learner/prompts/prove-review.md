@@ -34,6 +34,7 @@ Measuring rules, from reviews that sent builders the wrong way:
 - An angle, a direction of travel or a speed in `to fix` must be measured by two independent methods that agree (for example an outline's axis and an edge-on element's lean; frame-by-frame steps of a near element and of a far one). One review read a 16 degree roll as 6 and missed that the orbit ran the other way; the builder did as told and it cost two rounds.
 - Trace a shadow, streak or glow to the object it starts at before saying who casts it. One review took a bar's shadow for a word's; the builder added ten shadows the reference does not have.
 - Measure the reference and the build the same way, at the same place. A figure taken at 79 % down in one and 89 % in the other produced a difference that was not there.
+- Colours read off the tutorial's recording can be more saturated than its render was (a wide-gamut display recorded as sRGB). Before calling a hue or saturation gap, put the build through the same transform (treat its sRGB values as Display-P3 and convert to sRGB) and compare again; say which comparison you used.
 - A fix you have not seen work is `untested`: write it as a target to reach (what the render should measure), not only as a setting to type.
 - When figures were reached by changing the stand-in art (more trees, a darker sky), say so: they no longer show the effect's strength on their own.
 - A reference clip under a second long supports direction and rough speed, little else. Say what is firm.
