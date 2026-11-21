@@ -69,36 +69,45 @@ export async function buildClaudePackage({ outDir, runtime = buildReadableRuntim
       throw new Error(`refusing to clear ${out}: it is not empty and holds no previous plugin build`);
     }
   }
+  // Build beside the output and swap it in only when complete, so a build that fails part way
+  // (runtime dependencies not installed, say) leaves the previous build as it was.
+  const stage = assertSafeOutDir(`${out}.building-${process.pid}`, path.resolve(claudeSrc));
+  await fs.rm(stage, { recursive: true, force: true });
+  await fs.mkdir(stage, { recursive: true });
+  try {
+    for (const rel of FILES) await copy(path.join(PLUGIN, rel), path.join(stage, rel));
+    for (const tree of TREES) {
+      for (const rel of await listTree(path.join(PLUGIN, tree))) {
+        if (CLAUDE_SKIP.has(`${tree}/${rel}`)) continue;
+        await copy(path.join(PLUGIN, tree, rel), path.join(stage, tree, rel));
+      }
+    }
+
+    await runtime(path.join(PLUGIN, 'runtime'), path.join(stage, 'runtime'));
+    const { version } = JSON.parse(await fs.readFile(path.join(PLUGIN, 'runtime', 'package.json'), 'utf8'));
+    await fs.writeFile(path.join(stage, 'runtime', 'package.json'),
+      `${JSON.stringify({ name: `${manifest.name}-runtime`, version, private: true, type: 'module', serverName: manifest.name })}\n`);
+
+    await copy(path.join(claudeSrc, 'plugin.json'), path.join(stage, '.claude-plugin', 'plugin.json'));
+    await copy(path.join(claudeSrc, 'mcp.json'), path.join(stage, '.mcp.json'));
+    await copy(path.join(claudeSrc, 'start.mjs'), path.join(stage, 'start.mjs'));
+    await copy(path.join(PLUGIN, 'license.md'), path.join(stage, 'LICENSE'));
+    if (await exists(path.join(claudeSrc, 'README.md'))) {
+      await copy(path.join(claudeSrc, 'README.md'), path.join(stage, 'README.md'));
+    }
+    // docs/ adds Claude-only pages; agents/ holds the plugin's subagent definitions (the reviewer), Claude only.
+    for (const tree of ['docs', 'agents']) {
+      if (!(await exists(path.join(claudeSrc, tree)))) continue;
+      for (const rel of await listTree(path.join(claudeSrc, tree))) {
+        await copy(path.join(claudeSrc, tree, rel), path.join(stage, tree, rel));
+      }
+    }
+  } catch (err) {
+    await fs.rm(stage, { recursive: true, force: true });
+    throw err;
+  }
   await fs.rm(out, { recursive: true, force: true });
-  await fs.mkdir(out, { recursive: true });
-
-  for (const rel of FILES) await copy(path.join(PLUGIN, rel), path.join(out, rel));
-  for (const tree of TREES) {
-    for (const rel of await listTree(path.join(PLUGIN, tree))) {
-      if (CLAUDE_SKIP.has(`${tree}/${rel}`)) continue;
-      await copy(path.join(PLUGIN, tree, rel), path.join(out, tree, rel));
-    }
-  }
-
-  await runtime(path.join(PLUGIN, 'runtime'), path.join(out, 'runtime'));
-  const { version } = JSON.parse(await fs.readFile(path.join(PLUGIN, 'runtime', 'package.json'), 'utf8'));
-  await fs.writeFile(path.join(out, 'runtime', 'package.json'),
-    `${JSON.stringify({ name: `${manifest.name}-runtime`, version, private: true, type: 'module', serverName: manifest.name })}\n`);
-
-  await copy(path.join(claudeSrc, 'plugin.json'), path.join(out, '.claude-plugin', 'plugin.json'));
-  await copy(path.join(claudeSrc, 'mcp.json'), path.join(out, '.mcp.json'));
-  await copy(path.join(claudeSrc, 'start.mjs'), path.join(out, 'start.mjs'));
-  await copy(path.join(PLUGIN, 'license.md'), path.join(out, 'LICENSE'));
-  if (await exists(path.join(claudeSrc, 'README.md'))) {
-    await copy(path.join(claudeSrc, 'README.md'), path.join(out, 'README.md'));
-  }
-  // docs/ adds Claude-only pages; agents/ holds the plugin's subagent definitions (the reviewer), Claude only.
-  for (const tree of ['docs', 'agents']) {
-    if (!(await exists(path.join(claudeSrc, tree)))) continue;
-    for (const rel of await listTree(path.join(claudeSrc, tree))) {
-      await copy(path.join(claudeSrc, tree, rel), path.join(out, tree, rel));
-    }
-  }
+  await fs.rename(stage, out);
 
   const files = (await listTree(out)).sort();
   return { outDir: out, files, violations: await checkPackage(out) };

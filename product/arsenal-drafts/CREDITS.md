@@ -10,3 +10,4 @@ The recipes in this folder were learned from public tutorials. The techniques ar
 | `8oVLS0ZlKC4.md` | [SonduckFilm](https://www.youtube.com/channel/UC5DmsBrVi62DWBASLK5gMEw) | [5 Hyper-Cinematic Effects You Should Know in After Effects](https://www.youtube.com/watch?v=8oVLS0ZlKC4) |
 | `ZqRE3ho8iP4.md` | [SonduckFilm](https://www.youtube.com/channel/UC5DmsBrVi62DWBASLK5gMEw) | [Make Trendy Carousel Motion Graphics in After Effects](https://www.youtube.com/watch?v=ZqRE3ho8iP4) |
 | `7pgDb6NKEXM.md` | [SonduckFilm](https://www.youtube.com/channel/UC5DmsBrVi62DWBASLK5gMEw) | [5 Motion Design Skills All After Effects Users Should Know](https://www.youtube.com/watch?v=7pgDb6NKEXM) |
+| `SKU3QdqKLOs.md` | [SonduckFilm](https://www.youtube.com/channel/UC5DmsBrVi62DWBASLK5gMEw) | [5 Infographic Edits You Should Know in After Effects](https://www.youtube.com/watch?v=SKU3QdqKLOs) |

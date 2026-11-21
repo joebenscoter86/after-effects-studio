@@ -1,6 +1,6 @@
 {
  "vocab": "jobs-v1",
- "version": "6862081c",
+ "version": "cb6cdc4e",
  "jobs": [
   "land-number",
   "count-things",
@@ -590,6 +590,174 @@
     "heading": "Turning a crude gradient disc into a grainy glowing orb"
    },
    "still": null
+  },
+  {
+   "id": "01-value-driven-counter",
+   "revision": "bec7b246",
+   "name": "Counter driven by one slider on a control null",
+   "line": "A stat that counts up (or down) to a figure, so a number lands with weight. The same slider later drives a ring (02-ring-fills-to-value) and bars (03-bars-grow-to-values), so one keyframed value moves the number and its graphic together.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "land-number",
+   "support": [],
+   "mood": [
+    "dark",
+    "bold",
+    "clean"
+   ],
+   "needs": [
+    "type"
+   ],
+   "duration": 3,
+   "motion": "one-shot",
+   "difficulty": 1,
+   "taught_by": 4,
+   "variants": [],
+   "section": {
+    "document": "arsenal-line",
+    "heading": "Counter driven by one slider on a control null"
+   },
+   "still": {
+    "path": "arsenal/stills/01-value-driven-counter.jpg",
+    "sha256": "a93961812b6f0d2ef99d0239e329e821417a5cd97c74581c51dde633798876c5"
+   }
+  },
+  {
+   "id": "02-ring-fills-to-value",
+   "revision": "05485478",
+   "name": "Ring that fills to the counter's value",
+   "line": "A percentage stat shown as a donut that draws on to the same figure the number counts to, so the graphic and the number can never disagree. Builds on 01-value-driven-counter: it reuses that recipe's null and slider.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "land-number",
+   "support": [
+    "show-proof",
+    "keep-it-alive"
+   ],
+   "mood": [
+    "dark",
+    "bold",
+    "clean"
+   ],
+   "needs": [
+    "shapes",
+    "type"
+   ],
+   "duration": 3,
+   "motion": "one-shot",
+   "difficulty": 1,
+   "taught_by": 4,
+   "variants": [],
+   "section": {
+    "document": "arsenal-line",
+    "heading": "Ring that fills to the counter's value"
+   },
+   "still": {
+    "path": "arsenal/stills/02-ring-fills-to-value.jpg",
+    "sha256": "cf0e1034fd5da5871f80bcfec00d1890b8693442e5cd0ad3b83eba23ece807ff"
+   }
+  },
+  {
+   "id": "03-bars-grow-to-values",
+   "revision": "19e03b63",
+   "name": "Round-capped bars that grow to their own values",
+   "line": "A comparison beat: several figures rise side by side, each to its own value, so the viewer reads which is biggest. Builds on 01-value-driven-counter (a null whose sliders hold the values) and 02-ring-fills-to-value (dim track under a coloured copy, Trim Paths End linked to a slider).",
+   "status": "proven",
+   "kind": "technique",
+   "job": "compare",
+   "support": [
+    "show-proof"
+   ],
+   "mood": [
+    "dark",
+    "clean",
+    "editorial"
+   ],
+   "needs": [
+    "shapes",
+    "type"
+   ],
+   "duration": 4,
+   "motion": "one-shot",
+   "difficulty": 2,
+   "taught_by": 4,
+   "variants": [],
+   "section": {
+    "document": "arsenal-line",
+    "heading": "Round-capped bars that grow to their own values"
+   },
+   "still": {
+    "path": "arsenal/stills/03-bars-grow-to-values.jpg",
+    "sha256": "17ed3342c2db636c84b6b0f9f85ed7c8fae23a6852e003328dd573b67e643c38"
+   }
+  },
+  {
+   "id": "04-icon-fills-to-value",
+   "revision": "b09ebf07",
+   "name": "Icon that fills up to a value",
+   "line": "Turns a flat icon into a gauge: a bright copy of the icon rises from the bottom over a dim copy and stops at a figure, so a stat reads as \"how full\". Reach for it beside a counter when a percentage needs a picture.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "land-number",
+   "support": [
+    "make-concrete"
+   ],
+   "mood": [
+    "dark",
+    "bold",
+    "clean"
+   ],
+   "needs": [
+    "shapes",
+    "illustration"
+   ],
+   "duration": 3,
+   "motion": "one-shot",
+   "difficulty": 2,
+   "taught_by": 4,
+   "variants": [],
+   "section": {
+    "document": "arsenal-line",
+    "heading": "Icon that fills up to a value"
+   },
+   "still": {
+    "path": "arsenal/stills/04-icon-fills-to-value.jpg",
+    "sha256": "5107d122c27a0137cf94f16e722aeea3d162b031c22e4006c47c939b50cc1ec9"
+   }
+  },
+  {
+   "id": "05-map-regions-fade-up",
+   "revision": "59a59810",
+   "name": "Map regions that fade up one by one",
+   "line": "Marks places on a map: chosen regions light up in colour over a grey base map, each with a numbered list entry, so a viewer reads \"these places\" in order. Use it for coverage, rankings or \"where\" beats.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "point-at-detail",
+   "support": [
+    "establish-place",
+    "list-items"
+   ],
+   "mood": [
+    "light",
+    "clean",
+    "editorial"
+   ],
+   "needs": [
+    "illustration"
+   ],
+   "duration": 4,
+   "motion": "one-shot",
+   "difficulty": 1,
+   "taught_by": 1,
+   "variants": [],
+   "section": {
+    "document": "arsenal-line",
+    "heading": "Map regions that fade up one by one"
+   },
+   "still": {
+    "path": "arsenal/stills/05-map-regions-fade-up.jpg",
+    "sha256": "be42d3beee355fc1631a1533636c9f89fbbc38bdbde836443439bd9084248597"
+   }
   },
   {
    "id": "01-dotted-stroke",

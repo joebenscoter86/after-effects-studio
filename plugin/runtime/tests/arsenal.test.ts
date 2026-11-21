@@ -179,8 +179,10 @@ describe("the shipped arsenal", () => {
     expect(out.relaxed).toBeUndefined();
   });
 
-  it("land-number returns none", () => {
-    expect(findTechniques(loadCatalog(LIB), { vocab: "jobs-v1", job: "land-number" }).results).toEqual([]);
+  // An empty job returns an empty list, not an error. count-things is still empty after
+  // explainer cookbook piece 1 filled land-number; move this to another empty job when it fills.
+  it("count-things returns none", () => {
+    expect(findTechniques(loadCatalog(LIB), { vocab: "jobs-v1", job: "count-things" }).results).toEqual([]);
   });
 
   it("make-it-pop is refused with the valid job ids", () => {

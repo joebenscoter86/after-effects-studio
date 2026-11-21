@@ -119,6 +119,10 @@ The first video's 25 recipes all passed the check. Building them found three rec
 - **What happened.** Recipes 04 and 05 gave their pale ground as the colour it shows in the finished picture (#E1FBF9, #E0F7F6). That is the solid after a Glow; the solid itself is recipe 01's #E4F4FF, its dialog on screen. The Glow, at Threshold 100 %, lifts only where the blue channel is 255, so on the after-Glow colour it did nothing: both builds lost the broad blue edge light, and 05 took four builds before the cause was found.
 - **Rule.** `distil.md`: a layer's colour is given as the value in its dialog or swatch, from the frame that shows it, and the rendered colour separately as a target.
 
+### 26. The package build cleared its folder, then failed (explainer piece 1, SKU3QdqKLOs, 2026-11-21)
+- **What happened.** After the cookbook rebuild, `node release/build-claude-package.mjs` ran in a fresh worktree with no `plugin/runtime/node_modules`. It cleared `claude/comp-room/` and copied the library, then stopped at the runtime step ("runtime dependencies are not installed"). That left 38 tracked files deleted and no `.claude-plugin/plugin.json`, so the next run, after `npm ci`, refused to clear the half-written folder as "not a previous build". The package was restored from git and rebuilt.
+- **Rule.** `build-claude-package.mjs` builds in a staging folder beside the output and swaps it in only when the build is complete; a failure removes the staging folder and leaves the previous build as it was (test in `release/tests/claude-package.test.mjs`). A fresh worktree also needs `tools/channel-learner/ocr/build.sh` once before `align` (it stops at the text step and says so) and `npm ci --ignore-scripts` in `plugin/runtime` before the package build.
+
 ## Still open
 - The 24 "matches" on the first video were given before the look line existed.
 - Nothing yet tests the prompts themselves. A cheap test: keep technique 11's first recipe as a fixture and confirm a fresh checker fails it on check 8.
