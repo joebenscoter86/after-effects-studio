@@ -748,14 +748,14 @@
       "title": "Technique arsenal index: documents, vocabulary and counts",
       "path": "arsenal/index.json",
       "kind": "catalog",
-      "sha256": "df1a8c9aef79a2bf4b73cebc720f5399ea790e7ea298074349b21f802e88869a"
+      "sha256": "7d8dab232e6bf45877fce349e9ff5e2419e6c7fbc662f0afe01af8168207b204"
     },
     {
       "id": "arsenal-catalog",
       "title": "Technique arsenal catalog: one record per recipe, queried by ae_arsenal",
       "path": "arsenal/catalog.json",
       "kind": "catalog",
-      "sha256": "5ec84dd2564f65f86f26aa2e85c28dafc5ddd6fb17b952ee4652f8c9f0865126"
+      "sha256": "25a4e6a5896f51009b4e77df77f0efa4bc3b29cb8ce475c9d43367c5a63f0f86"
     },
     {
       "id": "arsenal-jobs",
@@ -766,24 +766,38 @@
     },
     {
       "id": "arsenal-line",
-      "title": "Arsenal recipes: line jobs: what the viewer must get from this line",
+      "title": "Arsenal recipes: line jobs: what the viewer must get from this line (part 1 of 2)",
       "path": "arsenal/recipes-line.md",
       "kind": "recipes",
-      "sha256": "77e9e9196d239403fd5b6b3853f20a4f2172664b84f5c44a076beaf035daae6d"
+      "sha256": "6fc7519d4912bda0efb22567d993c61d27dfa1ddd2b94259a8fd9f394e873959"
+    },
+    {
+      "id": "arsenal-line-2",
+      "title": "Arsenal recipes: line jobs: what the viewer must get from this line (part 2 of 2)",
+      "path": "arsenal/recipes-line-2.md",
+      "kind": "recipes",
+      "sha256": "bd84e5b2d81659e3c693dc87daf5f16bf35e18841a8791c01e637c36d28aae25"
     },
     {
       "id": "arsenal-picture",
-      "title": "Arsenal recipes: picture jobs: how the picture has to read, whatever the line says",
+      "title": "Arsenal recipes: picture jobs: how the picture has to read, whatever the line says (part 1 of 2)",
       "path": "arsenal/recipes-picture.md",
       "kind": "recipes",
       "sha256": "ded27fdd3715a58ecbfbfdccfd1fba621c93e7379b3a7da76623b6f8e07f5089"
+    },
+    {
+      "id": "arsenal-picture-2",
+      "title": "Arsenal recipes: picture jobs: how the picture has to read, whatever the line says (part 2 of 2)",
+      "path": "arsenal/recipes-picture-2.md",
+      "kind": "recipes",
+      "sha256": "cf8747631a7ab6ab9bf5765cd80800e5394f5a36ac948c1ba4fbe3344d2e96a1"
     },
     {
       "id": "arsenal-connective",
       "title": "Arsenal recipes: connective jobs: between and across pictures",
       "path": "arsenal/recipes-connective.md",
       "kind": "recipes",
-      "sha256": "2b4b96b74e2fd3ae8c7e1c998efe284b9570ba43b8493e289f08f4f897280409"
+      "sha256": "e12f9510c13e9acb6e481b445ce812a92add90caee7ec8e5c97576530d9da0ad"
     },
     {
       "id": "arsenal-build-aid",

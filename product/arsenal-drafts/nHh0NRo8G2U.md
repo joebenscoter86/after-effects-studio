@@ -1,30 +1,30 @@
-# Techniques from one video (15 recipes, all unproven)
+# Techniques from one video (15 recipes, 15 proven)
 
-Written by the channel learner from the video's narration and screen together, then checked against the video by a second reader. Every recipe here passed that check; none is in the plugin. `status: proven` means it was built in After Effects from the recipe alone, compared with the tutorial's own result, and accepted by Joe (0 of 15); `status: unproven` means it has not been.
+Written by the channel learner from the video's narration and screen together, then checked against the video by a second reader. Every recipe here passed that check; none is in the plugin. `status: proven` means it was built in After Effects from the recipe alone, compared with the tutorial's own result, and accepted by Joe (15 of 15); `status: unproven` means it has not been.
 
 Each step is marked `said` (narrated), `shown` (on screen; `fNNNNNN` is a frame in the local study folder, frame number divided by the video's frame rate is seconds) or `inferred` (our reading). The `source` and frame references are for checking and stay out of the plugin. Credits: `CREDITS.md`.
 
 | # | Technique | Jobs | Check passed in round | Status |
 |---|---|---|---|---|
-| 01 | Two-colour phase bar that draws on segment after segment | lines and shapes; layout and repetition | 2 | unproven |
-| 02 | Labels that rise out of their own bar segment | type; transitions | 2 | unproven |
-| 03 | Step pictures that pop in one after another with a small bounce | energy and impact; layout and repetition | 2 | unproven |
-| 04 | Small swept-head arrow that draws itself between steps | lines and shapes; layout and repetition | 3 | unproven |
-| 05 | Stepped jitter and black-and-white photos for a hand-made finish | texture; energy and impact; glow and colour | 3 | unproven |
-| 06 | Faint graph-paper backdrop | texture; layout and repetition | 3 | unproven |
-| 07 | Bar chart of thick strokes that grow up in a ladder, with value labels sliding in beside them | lines and shapes; layout and repetition; type | 2 | unproven |
-| 08 | Chart baseline that draws outward from its middle | lines and shapes | 2 | unproven |
-| 09 | Faint grid held inside the chart's box, and the whole chart stepped to 12 fps | texture; layout and repetition; lines and shapes | 2 | unproven |
-| 10 | Pie chart from one fat stroke, with the share pushed out | lines and shapes | 2 | unproven |
-| 11 | Value label that rises in one word at a time | type | 2 | unproven |
-| 12 | Photo pyramid that dips, then splits into tiers to reveal labels | depth and finish; energy and impact | 3 | unproven |
-| 13 | Cut mid-move to a close-up, carried by a shared upward drift | transitions | 2 | unproven |
-| 14 | Pinned instant photos swaying on a grey map | layout and repetition; depth and finish; texture; B-roll scenes | 3 | unproven |
-| 15 | Ink-blend place highlights and a self-drawing border on a grey map | lines and shapes; glow and colour; texture; B-roll scenes | 2 | unproven |
+| 01 | Two-colour phase bar that draws on segment after segment | lines and shapes; layout and repetition | 2 | proven |
+| 02 | Labels that rise out of their own bar segment | type; transitions | 2 | proven |
+| 03 | Step pictures that pop in one after another with a small bounce | energy and impact; layout and repetition | 2 | proven |
+| 04 | Small swept-head arrow that draws itself between steps | lines and shapes; layout and repetition | 3 | proven |
+| 05 | Stepped jitter and black-and-white photos for a hand-made finish | texture; energy and impact; glow and colour | 3 | proven |
+| 06 | Faint graph-paper backdrop | texture; layout and repetition | 3 | proven |
+| 07 | Bar chart of thick strokes that grow up in a ladder, with value labels sliding in beside them | lines and shapes; layout and repetition; type | 2 | proven |
+| 08 | Chart baseline that draws outward from its middle | lines and shapes | 2 | proven |
+| 09 | Faint grid held inside the chart's box, and the whole chart stepped to 12 fps | texture; layout and repetition; lines and shapes | 2 | proven |
+| 10 | Pie chart from one fat stroke, with the share pushed out | lines and shapes | 2 | proven |
+| 11 | Value label that rises in one word at a time | type | 2 | proven |
+| 12 | Photo pyramid that dips, then splits into tiers to reveal labels | depth and finish; energy and impact | 3 | proven |
+| 13 | Cut mid-move to a close-up, carried by a shared upward drift | transitions | 2 | proven |
+| 14 | Pinned instant photos swaying on a grey map | layout and repetition; depth and finish; texture; B-roll scenes | 3 | proven |
+| 15 | Ink-blend place highlights and a self-drawing border on a grey map | lines and shapes; glow and colour; texture; B-roll scenes | 2 | proven |
 
 ## Two-colour phase bar that draws on segment after segment
 id: 01-segmented-progress-bar-draws-in-order
-status: unproven
+status: proven (accepted by Joe 2026-11-21: rebuilt in After Effects at 9:16 on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "Accept all 15")
 source: nHh0NRo8G2U 43–396 s
 jobs: lines and shapes; layout and repetition
 what it does for a beat: A process or timeline beat ("first this phase, then that one"): one straight bar split into coloured phases that fill left to right, the second phase starting just as the first slows down, with step pictures lined up underneath.
@@ -70,7 +70,7 @@ unknowns: The blue's typed colour value (only its render is measured). The comp'
 
 ## Labels that rise out of their own bar segment
 id: 02-labels-rise-from-behind-the-bar
-status: unproven
+status: proven (accepted by Joe 2026-11-21: rebuilt in After Effects at 9:16 on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "Accept all 15")
 source: nHh0NRo8G2U 396–464 s
 jobs: type; transitions
 what it does for a beat: Names each phase of a progress bar as that phase fills: the word slides up out of the bar as if it was tucked behind it, timed to its segment.
@@ -101,7 +101,7 @@ unknowns: Whether After Effects' own ease would be re-tuned by Flow for a spatia
 
 ## Step pictures that pop in one after another with a small bounce
 id: 03-step-icons-pop-with-bounce-in-sequence
-status: unproven
+status: proven (accepted by Joe 2026-11-21: rebuilt in After Effects at 9:16 on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "Accept all 15")
 source: nHh0NRo8G2U 464–547 s
 jobs: energy and impact; layout and repetition
 what it does for a beat: Brings in a row of step pictures under a timeline one by one, each growing from nothing with a slight overshoot and settle, so the eye walks the process left to right.
@@ -147,7 +147,7 @@ unknowns: The expression's lines after `freq = 2.0;` (form and decay 2.0 inferre
 
 ## Small swept-head arrow that draws itself between steps
 id: 04-curved-arrow-draws-between-steps
-status: unproven
+status: proven (accepted by Joe 2026-11-21: rebuilt in After Effects at 9:16 on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "Accept all 15")
 source: nHh0NRo8G2U 547–705 s
 jobs: lines and shapes; layout and repetition
 what it does for a beat: Ties a row of step images into a process: a tiny arrow draws itself between each pair just as the next step appears, so the eye is led left to right one step at a time.
@@ -187,7 +187,7 @@ unknowns: The barbs' exact vertex and handle positions (only their drawn result 
 
 ## Stepped jitter and black-and-white photos for a hand-made finish
 id: 05-stop-motion-jitter-and-mono-finish
-status: unproven
+status: proven (accepted by Joe 2026-11-21: rebuilt in After Effects at 9:16 on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "Accept all 15")
 source: nHh0NRo8G2U 705–804 s
 jobs: texture; energy and impact; glow and colour
 what it does for a beat: Takes a clean, flat infographic and gives it a cut-out, stop-motion feel: photos go monochrome, each one twitches on its own a few times a second, the whole frame shakes slightly and all motion steps at a low frame rate. Reach for it when a data beat looks too slick or digital.
@@ -235,7 +235,7 @@ unknowns: The transform layer's finished expression is never fully on screen (",
 
 ## Faint graph-paper backdrop
 id: 06-faint-graph-paper-backdrop
-status: unproven
+status: proven (accepted by Joe 2026-11-21: rebuilt in After Effects at 9:16 on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "Accept all 15")
 source: nHh0NRo8G2U 804–858 s
 jobs: texture; layout and repetition
 what it does for a beat: Swaps a plain black ground for an off-white sheet ruled with tiny pale-blue squares, like school exercise paper, so a flat infographic reads as hand-made and educational rather than digital.
@@ -282,7 +282,7 @@ unknowns: Grid Feather; the grid solid's own colour; exactly how far the content
 
 ## Bar chart of thick strokes that grow up in a ladder, with value labels sliding in beside them
 id: 07-stroked-bars-grow-in-stagger-with-value-labels
-status: unproven
+status: proven (accepted by Joe 2026-11-21: rebuilt in After Effects at 9:16 on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "Accept all 15")
 source: nHh0NRo8G2U 864–1086 s
 jobs: lines and shapes; layout and repetition; type
 what it does for a beat: A quick "how big is each one" moment: four bars rise one after another from a shared baseline, left to right, tallest first, while each value label slides in from the left. Use it when a narrated figure needs a chart that builds as the voice lists the numbers.
@@ -336,7 +336,7 @@ unknowns: The baseline's stroke width (about 3 px measured, never shown). The la
 
 ## Chart baseline that draws outward from its middle
 id: 08-baseline-draws-out-from-centre
-status: unproven
+status: proven (accepted by Joe 2026-11-21: rebuilt in After Effects at 9:16 on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "Accept all 15")
 source: nHh0NRo8G2U 1086–1127 s
 jobs: lines and shapes
 what it does for a beat: Opens a chart (or any divider) with a line that grows out to both ends at once from its centre, a calm, balanced first move before the data arrives.
@@ -370,7 +370,7 @@ unknowns: The line's stroke width and cap (about 3 px and square ends, measured)
 
 ## Faint grid held inside the chart's box, and the whole chart stepped to 12 fps
 id: 09-grid-clipped-to-the-chart-area
-status: unproven
+status: proven (accepted by Joe 2026-11-21: rebuilt in After Effects at 9:16 on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "Accept all 15")
 source: nHh0NRo8G2U 1127–1201 s
 jobs: texture; layout and repetition; lines and shapes
 what it does for a beat: Gives a bar chart a quiet graph-paper backing that stops at the chart's edges, and a slightly hand-made, stepped motion, so a plain data beat reads as designed rather than default.
@@ -409,7 +409,7 @@ unknowns: The rectangle layer's Position and whether its size was changed after 
 
 ## Pie chart from one fat stroke, with the share pushed out
 id: 10-pie-slice-from-a-stroked-ring
-status: unproven
+status: proven (accepted by Joe 2026-11-21: rebuilt in After Effects at 9:16 on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "Accept all 15")
 source: nHh0NRo8G2U 1224–1371 s
 jobs: lines and shapes
 what it does for a beat: A single-statistic beat ("X % of all ..."): a pie sweeps round from twelve o'clock, then the highlighted share slides out from the centre so the number has a piece to point at.
@@ -457,7 +457,7 @@ unknowns: The stroke's line cap and line join settings (not opened). The exact p
 
 ## Value label that rises in one word at a time
 id: 11-label-rises-word-by-word
-status: unproven
+status: proven (accepted by Joe 2026-11-21: rebuilt in After Effects at 9:16 on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "Accept all 15")
 source: nHh0NRo8G2U 1371–1452 s
 jobs: type
 what it does for a beat: Puts a short stat sentence next to a chart's highlighted piece ("18% of all ..."). The words pop up one after another two frames apart, so the line reads as it lands.
@@ -500,7 +500,7 @@ unknowns: How DecomposeText's position expression offsets each word (not shown).
 
 ## Photo pyramid that dips, then splits into tiers to reveal labels
 id: 12-pyramid-tiers-spread-to-reveal-labels
-status: unproven
+status: proven (accepted by Joe 2026-11-21: rebuilt in After Effects at 9:16 on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "Accept all 15")
 source: nHh0NRo8G2U 1640–1796 s
 jobs: depth and finish; energy and impact
 what it does for a beat: A hierarchy or "levels" beat. A real-looking pyramid sits whole, gathers itself, then pulls apart into three tiers, and a label appears in each opening gap.
@@ -565,7 +565,7 @@ unknowns: The bounce expression's lines after `freq = 2.0;` (decay 2.0 inferred)
 
 ## Cut mid-move to a close-up, carried by a shared upward drift
 id: 13-match-cut-carried-by-movement
-status: unproven
+status: proven (accepted by Joe 2026-11-21: rebuilt in After Effects at 9:16 on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "Accept all 15")
 source: nHh0NRo8G2U 1796–1872 s
 jobs: transitions
 what it does for a beat: Moves from an overview to a detail without a visible transition. At the fastest moment of an animation, the shot cuts to a doubled-size view of the same animation. Both shots drift upward through the cut, so the eye reads one continuous move. A later slide down then visits the next detail.
@@ -613,7 +613,7 @@ unknowns: The ease on the drift keys (eased icons and the S-curve preset are vis
 
 ## Pinned instant photos swaying on a grey map
 id: 14-pinned-photos-swaying-on-a-map
-status: unproven
+status: proven (accepted by Joe 2026-11-21: rebuilt in After Effects at 9:16 on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "Accept all 15")
 source: nHh0NRo8G2U 1877–2107 s
 jobs: layout and repetition; depth and finish; texture; B-roll scenes
 what it does for a beat: Marks a few places on a map with small pinned instant photos that hang and sway a little, so a travel or "where it happened" beat feels hand-made and alive while the camera holds or moves over it.
@@ -668,7 +668,7 @@ unknowns: The exact anchor-point values and each null's position and scale. The 
 
 ## Ink-blend place highlights and a self-drawing border on a grey map
 id: 15-map-highlights-and-border-trace
-status: unproven
+status: proven (accepted by Joe 2026-11-21: rebuilt in After Effects at 9:16 on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "Accept all 15")
 source: nHh0NRo8G2U 2107–2234 s
 jobs: lines and shapes; glow and colour; texture; B-roll scenes
 what it does for a beat: Points at a region on an old map with soft coloured blobs that look printed into the paper, and draws a country's outline on cue, for "here is where it happened" beats in a travel or history piece.

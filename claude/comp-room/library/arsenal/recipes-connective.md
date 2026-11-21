@@ -689,3 +689,48 @@ variations: Wave Width is the value to adjust (said); none else given.
 pitfalls: none given.
 build notes: `layer.property("ADBE Effect Parade").addProperty("ADBE Wave Warp")`, then set "Wave Width" to 65; leave Wave Type Sine, Wave Height 10, Direction 90°, Wave Speed 1.0, Pinning None, Phase 0 (defaults). Duplicate with `layer.duplicate()`. Soloing (`layer.solo = true/false`) is only for looking.
 unknowns: the duplication and the other changes in the jump (tree layer reordered, a switch turned on for seven layers, the far scenery now defocused) are not shown being made or explained, and the result playback comes after them; the camera's Aperture and other depth-of-field values after the cut; the blades' on-screen direction, amplitude and speed (never readable); whether the grass copy was offset, scaled or given different Wave Warp values; whether Pinning was meant to stay None (the layer's edges are free to move); the ripple is not readable in any frame (see result).
+
+## Cut mid-move to a close-up, carried by a shared upward drift
+id: 13-match-cut-carried-by-movement
+revision: e19a4084
+job: hand-over; support: move-camera, point-at-detail
+status: proven (accepted 2026-11-21)
+what it does for a beat: Moves from an overview to a detail without a visible transition. At the fastest moment of an animation, the shot cuts to a doubled-size view of the same animation. Both shots drift upward through the cut, so the eye reads one continuous move. A later slide down then visits the next detail.
+what it looks like: A whole black-and-white photo pyramid starts splitting into tiers. At the instant the tiers fly apart, the picture jumps to a close-up about twice as big. The close-up shows the left half of one opening gap, with a white label ("level 1") in the left third of the frame between two big stone slabs. Before the cut the wide shot is sliding up, and after it the close-up keeps sliding up, then eases to rest. Under the upper slab's stone edge, a wide flat grey band (the tier's painted cut face) makes the slab read as a solid block. About a second later, the close-up glides straight down in one smooth S-curve move to the next gap and its label ("level 2"). The whole thing steps at a low frame rate, like stop-motion. The glide and the stepping are what the keys and settings give; neither is seen played here (the glide is only scrubbed, and the stepping is pasted after the only playback).
+ingredients:
+- A precomp with the animation to cut inside: recipe 12-pyramid-tiers-spread-to-reveal-labels. — built-in precomp. What the close-up needs from it:
+  - Three registered tier images of a stone pyramid photo. Closed, they span x 351–1571, y 239–840. The middle tier stays at 960, 540; the top moves 960, 540 → 555 → 315 and the base 960, 540 → 521 → 761, at 0, 13 and 35 f. The burst peaks at about 1850 px/s at 24 f, and an inertial bounce adds about 2 px past the key.
+  - Settled boxes at 1:12: top y 13–258, x 753–1210; middle y 399–663, x 513–1401; base y 821–1064, x 351–1568.
+  - Each upper tier carries a painted flat dark band along its lower edge as its cut face. It renders flat grey about level 44/255 after the grade, and the tier below hides it while closed.
+  - Grade on an adjustment layer: Hue/Saturation Master Saturation −100; Levels Input Black 27, Input White 196 in 8-bit terms (3469.6 / 25186.4 in the 16 bpc project), gamma 1.0. The result is black-and-white with crushed blacks.
+  - White bold lower-case labels sit inside the precomp in the gaps, below the tiers in the stack, trimmed to start at about 17 f: "level 2" at comp y 312–342 and "level 1" at y 744–774, both centred near x 960.
+- Split Layer (Edit > Split Layer, Cmd/Ctrl+Shift+D) — built-in (said "split the layer"; menu inferred)
+- Position and Scale keys — built-in
+- A keyframe-easing extension — paid; only applies an S-curve ease, given below as numbers
+- An adjustment layer with Posterize Time — stock (Effect > Time > Posterize Time)
+steps:
+1. Comp: 1920 x 1080 at 23.976 fps, black. The precomp layer is at Position 960, 540, Scale 100 %. (1920 x 1080 said; 23.976 shown in the timeline)
+2. Split the precomp layer at 1:01 (25 f), the moment the inner animation is moving fastest. (said; time display 0:00:01:01 shown, first tile)
+   - Lower layer ("first piece"): 0 f to 1:01. Upper layer ("second piece"): 1:01 onward. (shown, layer bars)
+3. Scale the second piece to 206 % and move it so the close-up frames the left half of the lower gap with its label. (said "scale it up and position it over to the side"; Scale shown, scrubbed 100 → 110 → 206.0 %)
+   - Rest Position of the second piece: 352, 134 (shown)
+   - The first piece keeps Scale 100 % (not changed on screen; inferred).
+4. Key Position on both pieces at 0:18 (18 f) and 1:10 (34 f). That puts the cut at 25 f, inside both moves. (said "keyframe it to both"; key times read from ruler pixels, ±1 f)
+   - First piece: 960, 540 → 960, 387 (153 px up) (shown)
+   - Second piece: 352, 333 → 352, 134 (199 px up) (shown, values at 0:00 and 1:23)
+   - So before the cut the wide shot is drifting up, and after the cut the close-up is also drifting up. That is the "upward flow" that hides the cut. (said, in effect)
+   - Both moves look eased (hourglass key icons, shown). The extension panel beside them shows the same S-curve 0.88, 0.14, 0.12, 0.86 selected (shown), but applying it is not shown. (preset inferred)
+5. Put a Posterize Time adjustment layer on top of the comp, pasted from another comp: Frame Rate 12. (said "posturized time"; one pasted layer, "Adjustment Layer 2", shown at the top of the stack; in the comp it was copied from, the layer of that name is Posterize Time at 12.0, shown)
+   - Only this one layer is pasted. The jitter Transform layer in that comp ("Adjustment Layer 3") is not. (shown)
+6. Optional second stop: add two more Position keys on the second piece to slide down to the next label. (said; shown)
+   - 2:21 (69 f): 352, 134 (a copy of the rest value, a hold key)
+   - 3:18 (90 f): 352, 1024 (890 px down, over 21 f) (shown; first dragged to 352, 1030, then set to 1024)
+   - 890 px is exactly the gap between the two labels inside the precomp (744 − 312 = 432 px) × 2.06. So the move lands "level 2" where "level 1" was. (computed)
+   - Ease both keys with cubic-bezier 0.88, 0.14, 0.12, 0.86. (said "60 speed"; numbers shown, with Apply under the cursor)
+   - In After Effects terms: Influence 88 % in and out; speed at each key 0.159 × (890 px / 21 f ≈ 1016 px/s) ≈ 162 px/s. (inferred conversion)
+layout: Measured (viewer at 50 %; comp edges at small-frame x 821–1685, y 137–623, so 0.45 small px per comp px). Close-up at rest (1:23): "level 1" spans comp x 242–458, y 551–618: the label is in the left quarter of the frame, a little below centre, and about 62 px tall (5.7 % of the height). The upper slab (the middle tier) fills the top of the frame. Its stone ends at y ≈ 273 at the left. Below that runs its cut-face band, flat mid-grey: y 274–402 at x 100 (about 127 px, 12 % of the frame height), 325–397 at x 600 (72 px) and 374–389 at x 1100 (16 px). The slab's lower edge, band included, runs from y ≈ 403 at the left to ≈ 390 near its right tip (x ≈ 1264). (column profile) The lower slab (the base) rises from the bottom to a top edge from y ≈ 733 at the left to ≈ 855 at its right tip (x ≈ 1498). Black beyond the tips on the right. Check: 352 + 2.06 × (909 − 960) = 247, and 134 + 2.06 × (744 − 540) = 554, which matches the measured label. Wide shot before the cut: the whole pyramid centred, 1220 × 601 px when closed. Faint dotted stray pixels from the art's cut edges show in the black to the right of the slab tips; they come from the precomp's art, not from a step. Everything is grey-scale with deep blacks (from the precomp's grade). Motion blur: not seen on.
+timing and easing: Cut at 25 f. Upward drift keys 18 f → 34 f on both pieces (16 f), the cut 7 frames into the drift. The inner tier burst peaks at 24 f, one frame before the cut. Hold until 69 f, then slide down 890 px over 69 → 90 f with the S-curve. Posterize Time 12 fps over all of it (value shown in the source comp).
+variations: Cut to any second framing of the same precomp (other label, other side). The drift can go in any direction, as long as both pieces share it. (inferred)
+pitfalls: The cut must land while things are moving fast. If it lands on a still moment, it reads as a jump cut. (said, in effect: "pretty rough cut" before the drift was added) The two pieces must drift the same way, or the cut breaks. (said, in effect)
+build notes: Split by script: `var b = layer.duplicate(); layer.outPoint = t; b.inPoint = t;` (equivalent to Split Layer) with t = 25/23.976 s. Second piece: `transform.scale.setValue([206,206])`. Position keys as above, then `setTemporalEaseAtKey(k, [new KeyframeEase(s, 88)], [new KeyframeEase(s, 88)])`. The drift keys' speeds are not shown; use the S-curve conversion (s = 0.159 × 153/16 × 23.976 ≈ 36 px/s for the first piece and 0.159 × 199/16 × 23.976 ≈ 47 px/s for the second). Posterize Time match name "ADBE Posterize Time" (Frame Rate 12).
+unknowns: The ease on the drift keys (eased icons and the S-curve preset are visible, but applying it is not shown). The drift key times are read from the ruler (±1 f). The comp's duration and work area. A full real-time playback of the finished cut with the slide down is not shown.
