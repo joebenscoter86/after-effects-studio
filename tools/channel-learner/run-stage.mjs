@@ -359,8 +359,15 @@ async function runOne(stage, unit, ctx, deps, runUsd) {
     const minutes = RUN_MINUTES[stage] ?? RUN_MINUTES.default;
     const out = await deps.claude(claudeArgs(stage, { runUsd, addDirs }), buildPrompt(stage, unit, ctx), { cwd, minutes });
     const r = parseStream(out.stdout);
+    // keep the run's raw output beside the results, for diagnosing a failure without re-running it
+    const streamFile = path.join(path.dirname(ctx.results), 'runs', `${stage}-${unit}-${base.at.replace(/[:.]/g, '-')}.jsonl`);
+    try {
+      fs.mkdirSync(path.dirname(streamFile), { recursive: true });
+      fs.writeFileSync(streamFile, `${out.stdout}${out.stderr ? `\n${JSON.stringify({ type: 'stderr', text: out.stderr })}\n` : ''}`);
+    } catch { /* the record matters more than its log */ }
     rec = { ...base, pass: false, note: '', costUsd: r.costUsd || 0, turns: r.turns ?? null, peakContext: r.peakContext, minutes: Math.round((Date.now() - started) / 600) / 100 };
     if (r.models?.length) rec.models = r.models;
+    rec.stream = streamFile;
     if (out.timedOut) { rec.limit = 'time'; rec.note = `stopped after ${minutes} minutes`; }
     else if (r.subtype === 'error_max_turns') { rec.limit = 'turns'; rec.note = `hit the turn limit (${s.maxTurns})`; }
     else if (r.subtype === 'error_max_budget_usd') { rec.limit = 'budget'; rec.note = `hit the run budget (${money(runUsd)})`; }

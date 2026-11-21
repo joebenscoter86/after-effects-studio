@@ -110,6 +110,7 @@ test('one fresh run per recipe: each prompt names one technique and nothing is r
   assert.deepEqual(lines.map((l) => [l.stage, l.unit, l.pass, l.model]),
     [['distil', '01', true, 'sonnet'], ['distil', '02', true, 'sonnet'], ['distil', '03', true, 'sonnet']]);
   assert.equal(lines[0].peakContext, 21500);
+  assert.ok(fs.readFileSync(lines[0].stream, 'utf8').includes('"type":"result"'), 'raw output kept beside the results');
   assert.equal(lines[0].costUsd, 0.5);
   assert.equal(out.ran.length, 3);
 });
