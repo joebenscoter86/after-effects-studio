@@ -37,7 +37,7 @@ The picks were chosen from titles, chapter lists and descriptions. Nobody has wa
 |---|---|---|---|---|---|
 | 1 | SonduckFilm, [5 Infographic Edits You Should Know](https://www.youtube.com/watch?v=SKU3QdqKLOs) | land-number, compare, show-proof (not count-things) | 5 min | low | done: 5 written, 5 proven (accepted by Joe 2026-11-21), 0 held |
 | 2 | Mavi Design, [Animate a Simple Call-To-Action Button Scene](https://www.youtube.com/watch?v=Tf0EiCGOEYs) | call-to-action | 15 min | low | done: 8 written, 8 proven (accepted by Joe 2026-11-21), 0 held |
-| 3 | Mapal, [How To Animate Infographics Like VOX](https://www.youtube.com/watch?v=nHh0NRo8G2U) | step-through-process, show-proof, compare | 41 min | medium | recipes checked: 15 written, 0 proven, 1 held; proofs next |
+| 3 | Mapal, [How To Animate Infographics Like VOX](https://www.youtube.com/watch?v=nHh0NRo8G2U) | step-through-process, show-proof, compare | 41 min | medium | proofs built: 15 written, 15 reviewed as matching, 0 proven (waiting on Joe), 1 held |
 | 4 | TomsProject, [SaaS Motion Graphics Masterclass](https://www.youtube.com/watch?v=tYRvoI04pJk) | introduce-tool, flag-a-problem, make-concrete | 52 min | medium | not started |
 | 5 | Move Shapes, [Simple Before & After Transition](https://www.youtube.com/watch?v=SSAsTdXmKl0) | before-after | 3 min | low | not started |
 | 6 | Flat Pack FX, [Stylized Timeline Animation](https://www.youtube.com/watch?v=9AtjrBHF560) | step-through-process | 14 min | low | not started |
@@ -97,6 +97,8 @@ The picks were chosen from titles, chapter lists and descriptions. Nobody has wa
   - Groups: "trim paths draw-on" (01, 04, 07, 08, 10, 15, new), "time stagger" (03, 11), "stop-motion jitter" and "graph-paper grid" (new).
   - The checks caught eases converted to zero speed when the curve (0.88, 0.14, 0.12, 0.86) keeps about 16 % of the average speed at each key; a speed-graph value read mid-drag (the checker's own round-1 suggestion, caught in round 2); result windows that did not hold; and recipes that leaned on another recipe's figures.
   - **Held:** 16 tilted 3D map tour with shallow focus. One figure was still wrong after round 3 (the Europe print's width at its key). The reason is in the study's `drafts-held.md`; one change and a changed-lines check would revive it.
+- **Proofs (2026-11-21):** all fifteen built at 9:16 on generated art: "The life of a pair of jeans" (process bar, water bar chart, pie), a limestone pyramid and an engraved island chart. Reviews: 01–05 and 07–12 matched on the first build. 06 matched once its grey grid lines turned out to be the recording's 4:2:0 encoding (lesson 33). 13–15 came back "partly" on framing (lesson 34) and matched once reframed. Phone MP4s sent; waiting for Joe's word. The build scripts are in `tools/channel-learner/proofs/nHh0NRo8G2U`.
+- **Open:** 12's recipe gives an anticipation speed graph (a 150 px/s hump) that its own key values (15–19 px over 13 frames) cannot reach. That line should be marked unreliable.
 - **Not filled:** count-things. Nothing here shows a quantity as objects to count.
 
 ### 4. TomsProject, SaaS masterclass

@@ -28,6 +28,7 @@ The build scripts were written from the recipes alone, without After Effects (`p
 
 ## What earlier builds learned
 
+- Framing a 16:9 scene in a 9:16 proof: first frame it to show what the reference shot shows (how many objects in view, a whole loop, one detail filling the frame), then size items within that. Never enlarge a whole scene to make one object bigger: a map scaled 3.21 times for its prints left one print on empty paper and washes three-quarters of the frame wide.
 - For a before frame of a light, set its Intensity to 0 rather than switching the light off: switched off inside a nested scene or beside a 2D layer, Advanced 3D rendered a wrong frame (one sideways shadow).
 - Before you ask the owner for a hand step, check by script that what it names exists on the exact comp and layer you name (list the layer's property groups and their match names), name the precomp if the layer lives in one, and quote what you found in the request. A material step was once sent naming a 2D comp whose 3D text sat in a precomp; the owner found no Material section there, though the 3D layer had one (`ADBE3D Material Parade`).
 

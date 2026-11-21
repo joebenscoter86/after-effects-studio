@@ -35,6 +35,7 @@ Measuring rules, from reviews that sent builders the wrong way:
 - Trace a shadow, streak or glow to the object it starts at before saying who casts it. One review took a bar's shadow for a word's; the builder added ten shadows the reference does not have.
 - Measure the reference and the build the same way, at the same place. A figure taken at 79 % down in one and 89 % in the other produced a difference that was not there.
 - Colours read off the tutorial's recording can be more saturated than its render was (a wide-gamut display recorded as sRGB). Before calling a hue or saturation gap, put the build through the same transform (treat its sRGB values as Display-P3 and convert to sRGB) and compare again; say which comparison you used.
+- A thin coloured line (a grid, a hairline, small type) loses its colour in 4:2:0 video: its brightness survives but its hue is averaged into its neighbours, so a pale blue grid reads grey on faintly tinted cells. Before calling a thin line's colour wrong, put the build through the same encoding (scale it to the reference's pixel scale, encode yuv420p, scale back) and compare again. A grid's "grey" was once nothing more than this.
 - A fix you have not seen work is `untested`: write it as a target to reach (what the render should measure), not only as a setting to type.
 - When figures were reached by changing the stand-in art (more trees, a darker sky), say so: they no longer show the effect's strength on their own.
 - A reference clip under a second long supports direction and rough speed, little else. Say what is firm.

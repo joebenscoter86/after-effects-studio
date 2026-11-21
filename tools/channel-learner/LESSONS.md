@@ -147,6 +147,14 @@ The first video's 25 recipes all passed the check. Building them found three rec
 - **What happened.** In round 1 the checker told the writer that a speed-graph tooltip (41.61 px/s, 29.48 %) was the key's value. It was read while the author was still dragging; the settled graph starts at 0 px/s and 24.6 %. The writer applied it, and the same checker caught it in round 2. A further round went to undoing the checker's own mistake.
 - **Rule.** `check.md`: a value a checker suggests meets the same test as the recipe's own: cite the frame where it has landed, not one taken while it is still changing.
 
+### 33. A grid's grey was the recording's encoding (explainer piece 3, nHh0NRo8G2U 06, 2026-11-21)
+- **What happened.** The review called 06's graph-paper proof "partly": its lines rendered pale blue where the tutorial's read grey on faintly blue cells, a gap the recipe had already listed as unknown. Put through 4:2:0 encoding at the reference's pixel scale, the build's lines measured 227, 231, 233 against the reference's 227, 233, 235. Thin lines keep their brightness but lose their colour to the cells around them. The recipe's Grid colour was right.
+- **Rule.** `prove-review.md`: before calling a thin line's colour wrong, encode the build the way the recording was (scale, yuv420p, scale back) and compare again.
+
+### 34. Enlarged for one object, the shot lost what it was (explainer piece 3, nHh0NRo8G2U 13, 14, 15, 2026-11-21)
+- **What happened.** Fitting 16:9 scenes into the 9:16 frame, I told the runner to scale the map scene until its instant prints were 180–240 px wide. That took a factor of 3.21: one print in view on empty paper (14), washes 71 % of the frame wide and a border never seen as a loop (15). The pyramid close-up (13) went the other way: at the recipe's factor in a tall frame it showed both labels and a black band, not a detail. All three techniques worked; the reviews came back "partly" on the look.
+- **Rule.** `prove-run.md`: frame a tall proof so it shows what the reference's shot shows (how many objects are in view, a whole loop, one detail), and only then size items within that. A size target for one object never overrides the framing.
+
 ## Still open
 - The 24 "matches" on the first video were given before the look line existed.
 - Nothing yet tests the prompts themselves. A cheap test: keep technique 11's first recipe as a fixture and confirm a fresh checker fails it on check 8.
