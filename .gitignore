@@ -25,3 +25,5 @@ release/packages/*
 
 # Channel learner build output
 tools/channel-learner/.build/
+# Swift build cache left at the root by the OCR build
+/.build/
