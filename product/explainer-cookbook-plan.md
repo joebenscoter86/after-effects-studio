@@ -36,7 +36,7 @@ The picks were chosen from titles, chapter lists and descriptions. Nobody has wa
 | # | Tutorial | Fills | Length | Risk | Status |
 |---|---|---|---|---|---|
 | 1 | SonduckFilm, [5 Infographic Edits You Should Know](https://www.youtube.com/watch?v=SKU3QdqKLOs) | land-number, compare, show-proof (not count-things) | 5 min | low | done: 5 written, 5 proven (accepted by Joe 2026-11-21), 0 held |
-| 2 | Mavi Design, [Animate a Simple Call-To-Action Button Scene](https://www.youtube.com/watch?v=Tf0EiCGOEYs) | call-to-action | 15 min | low | not started |
+| 2 | Mavi Design, [Animate a Simple Call-To-Action Button Scene](https://www.youtube.com/watch?v=Tf0EiCGOEYs) | call-to-action | 15 min | low | recipes: 8 written and checked, 0 proven, 0 held |
 | 3 | Mapal, [How To Animate Infographics Like VOX](https://www.youtube.com/watch?v=nHh0NRo8G2U) | step-through-process, show-proof, compare | 41 min | medium | not started |
 | 4 | TomsProject, [SaaS Motion Graphics Masterclass](https://www.youtube.com/watch?v=tYRvoI04pJk) | introduce-tool, flag-a-problem, make-concrete | 52 min | medium | not started |
 | 5 | Move Shapes, [Simple Before & After Transition](https://www.youtube.com/watch?v=SSAsTdXmKl0) | before-after | 3 min | low | not started |
@@ -67,6 +67,21 @@ The picks were chosen from titles, chapter lists and descriptions. Nobody has wa
 - **Why second:** almost every reel ends with an ask, and the cookbook has nothing for it. It's a single short technique, so it's a cheap win.
 - **Chapters:** button made from a rounded rectangle, text, drop shadow, white background, button click.
 - **Watch for:** it's a single scene, so expect one to three recipes. Make sure the ask's keyword stays readable at phone size when proving it at 9:16.
+- **Done so far (2026-11-21):** the video has no narration, only music, which broke the timeline (lesson 27; the learner now builds a screen-only timeline from the chapters). Eight recipes:
+  - 01 pill button in its own comp (call-to-action)
+  - 02 soft lift shadow (add-depth; a variant of 7pgDb6NKEXM #05)
+  - 03 end-card stack (call-to-action)
+  - 04 tap cursor with rings (point-at-detail)
+  - 05 staggered slide-in (call-to-action)
+  - 06 cursor travels and taps the button (call-to-action)
+  - 07 curved cursor route (call-to-action)
+  - 08 staggered slide-out exit (hand-over)
+
+  Groups: "tap cursor" holds 04, 06 and 07; "time stagger" holds 05 and 08. All eight passed in round 2. The checks caught:
+  - recipes that leaned on 02 and 03 for the card's figures
+  - a curve handle put on the wrong key, which would bend the wrong leg
+  - cursor tones compared against white when the cursor sits on the button's blue shadow
+- **Next:** proofs (step 5) at 9:16. The keyword has to stay readable at phone size.
 
 ### 3. Mapal, infographics like VOX
 

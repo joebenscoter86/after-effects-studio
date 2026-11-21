@@ -1,6 +1,6 @@
 {
   "vocab": "jobs-v1",
-  "tagged": "2026-11-14",
+  "tagged": "2026-11-21",
   "recipes": {
     "YBeMmC43Q1U#01": {
       "id": "01-dotted-stroke",
@@ -1663,6 +1663,183 @@
       "difficulty": 1,
       "group": null,
       "why": "chosen regions light up in colour over a grey base map with a numbered list, so a viewer reads these places in order"
+    },
+    "Tf0EiCGOEYs#01": {
+      "id": "01-pill-button-in-own-comp",
+      "kind": "technique",
+      "job": "call-to-action",
+      "support": [
+        "show-real-screen"
+      ],
+      "mood": [
+        "light",
+        "clean",
+        "minimal"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 3,
+      "motion": "still",
+      "difficulty": 2,
+      "group": null,
+      "why": "'the call-to-action button for an end card or app demo', kept in its own comp so the scene can place, slide and press it as one layer"
+    },
+    "Tf0EiCGOEYs#02": {
+      "id": "02-button-soft-lift-shadow",
+      "kind": "technique",
+      "job": "add-depth",
+      "support": [
+        "call-to-action"
+      ],
+      "mood": [
+        "light",
+        "soft",
+        "clean"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 3,
+      "motion": "still",
+      "difficulty": 2,
+      "group": null,
+      "why": "'lifts a flat UI button off a white page so it reads as a pressable object': a very soft drop shadow in the button's own blue",
+      "variant_of": "7pgDb6NKEXM#05"
+    },
+    "Tf0EiCGOEYs#03": {
+      "id": "03-end-card-stack",
+      "kind": "technique",
+      "job": "call-to-action",
+      "support": [
+        "reveal-headline"
+      ],
+      "mood": [
+        "light",
+        "clean",
+        "minimal"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 4,
+      "motion": "still",
+      "difficulty": 2,
+      "group": null,
+      "why": "'the closing card of a social ad or product promo': headline, button and web address on one centred axis"
+    },
+    "Tf0EiCGOEYs#04": {
+      "id": "04-tap-cursor-with-rings",
+      "kind": "technique",
+      "job": "point-at-detail",
+      "support": [
+        "show-real-screen",
+        "call-to-action"
+      ],
+      "mood": [
+        "light",
+        "clean",
+        "minimal"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 2,
+      "motion": "still",
+      "difficulty": 3,
+      "group": "tap cursor",
+      "why": "'a stand-in for a finger or touch point in a UI demo' that marks where on the screen without hiding the button under it"
+    },
+    "Tf0EiCGOEYs#05": {
+      "id": "05-staggered-slide-in",
+      "kind": "technique",
+      "job": "call-to-action",
+      "support": [
+        "list-items"
+      ],
+      "mood": [
+        "light",
+        "clean",
+        "bold"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 1,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "time stagger",
+      "why": "'builds an end card or call-to-action screen in a quick, readable cascade': headline, then button, then address"
+    },
+    "Tf0EiCGOEYs#06": {
+      "id": "06-cursor-travels-and-taps-button",
+      "kind": "technique",
+      "job": "call-to-action",
+      "support": [
+        "point-at-detail",
+        "show-real-screen"
+      ],
+      "mood": [
+        "light",
+        "clean",
+        "minimal"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 2,
+      "motion": "one-shot",
+      "difficulty": 1,
+      "group": "tap cursor",
+      "why": "'shows a tap on a UI element': the marker lands on the button and the button dips and springs back, so the ask reads as pressed"
+    },
+    "Tf0EiCGOEYs#07": {
+      "id": "07-curved-cursor-route",
+      "kind": "technique",
+      "job": "call-to-action",
+      "support": [
+        "point-at-detail",
+        "show-real-screen"
+      ],
+      "mood": [
+        "light",
+        "clean",
+        "playful"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 3,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "tap cursor",
+      "why": "'makes a touch marker move like a hand, not a robot': it arcs in, holds on the button for the tap, then arcs out"
+    },
+    "Tf0EiCGOEYs#08": {
+      "id": "08-staggered-slide-out-exit",
+      "kind": "technique",
+      "job": "hand-over",
+      "support": [
+        "call-to-action"
+      ],
+      "mood": [
+        "light",
+        "clean",
+        "bold"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 1,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "time stagger",
+      "why": "'clears an end card ... with the same cascade it arrived with', so the card reads as passing through the frame"
     }
   }
 }
