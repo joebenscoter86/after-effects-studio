@@ -1,6 +1,6 @@
 {
   "vocab": "jobs-v1",
-  "version": "cb6cdc4e",
+  "version": "e9551509",
   "jobs": [
     "land-number",
     "count-things",
@@ -198,8 +198,10 @@
       },
       "revision": "a967c4ef",
       "still": "quality/renders/channel-study/7pgDb6NKEXM/proof/05/build.png",
-      "taught_by": 1,
-      "variants": []
+      "taught_by": 2,
+      "variants": [
+        "02-button-soft-lift-shadow"
+      ]
     },
     {
       "id": "06-graphics-behind-subject-object-matte",
@@ -791,6 +793,287 @@
       "variants": []
     },
     {
+      "id": "01-pill-button-in-own-comp",
+      "video": "Tf0EiCGOEYs",
+      "n": 1,
+      "name": "A pill button built in its own comp",
+      "line": "The call-to-action button for an end card or app demo: a flat, fully rounded pill with a centred caps label, kept in its own comp so the scene can place, scale, slide and \"press\" it as one layer.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "call-to-action",
+      "support": [
+        "show-real-screen"
+      ],
+      "mood": [
+        "light",
+        "clean",
+        "minimal"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 3,
+      "motion": "still",
+      "difficulty": 2,
+      "group": null,
+      "why": "'the call-to-action button for an end card or app demo', kept in its own comp so the scene can place, slide and press it as one layer",
+      "section": {
+        "file": "Tf0EiCGOEYs.md",
+        "heading": "A pill button built in its own comp"
+      },
+      "revision": "33b5d2bd",
+      "still": "quality/renders/channel-study/Tf0EiCGOEYs/proof/01/build.png",
+      "taught_by": 1,
+      "variants": []
+    },
+    {
+      "id": "02-button-soft-lift-shadow",
+      "video": "Tf0EiCGOEYs",
+      "n": 2,
+      "name": "A soft coloured lift under a button, and an inset label",
+      "line": "Lifts a flat UI button off a white page so it reads as a pressable object, with a long, very soft glow-like shadow in the button's own colour straight underneath, and gives the label a slight pressed-in feel with two tiny shadows.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "add-depth",
+      "support": [
+        "call-to-action"
+      ],
+      "mood": [
+        "light",
+        "soft",
+        "clean"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 3,
+      "motion": "still",
+      "difficulty": 2,
+      "group": null,
+      "why": "'lifts a flat UI button off a white page so it reads as a pressable object': a very soft drop shadow in the button's own blue",
+      "section": {
+        "file": "Tf0EiCGOEYs.md",
+        "heading": "A soft coloured lift under a button, and an inset label"
+      },
+      "revision": "14b43551",
+      "still": "quality/renders/channel-study/Tf0EiCGOEYs/proof/02/build.png",
+      "taught_by": 1,
+      "variant_of": "05-soft-doubled-drop-shadow",
+      "variants": []
+    },
+    {
+      "id": "03-end-card-stack",
+      "video": "Tf0EiCGOEYs",
+      "n": 3,
+      "name": "Headline, button and web address stacked on a white square",
+      "line": "The closing card of a social ad or product promo: one line of headline, one button and a quiet web address, on a clean white square, centred on one vertical axis and ready to be animated in.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "call-to-action",
+      "support": [
+        "reveal-headline"
+      ],
+      "mood": [
+        "light",
+        "clean",
+        "minimal"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 4,
+      "motion": "still",
+      "difficulty": 2,
+      "group": null,
+      "why": "'the closing card of a social ad or product promo': headline, button and web address on one centred axis",
+      "section": {
+        "file": "Tf0EiCGOEYs.md",
+        "heading": "Headline, button and web address stacked on a white square"
+      },
+      "revision": "33ec8bcf",
+      "still": "quality/renders/channel-study/Tf0EiCGOEYs/proof/03/build.png",
+      "taught_by": 1,
+      "variants": []
+    },
+    {
+      "id": "04-tap-cursor-with-rings",
+      "video": "Tf0EiCGOEYs",
+      "n": 4,
+      "name": "Tap cursor built from two translucent discs",
+      "line": "A stand-in for a finger or touch point in a UI demo. It is a soft, translucent touch marker that reads on a white screen without hiding the button under it.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "point-at-detail",
+      "support": [
+        "show-real-screen",
+        "call-to-action"
+      ],
+      "mood": [
+        "light",
+        "clean",
+        "minimal"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 2,
+      "motion": "still",
+      "difficulty": 3,
+      "group": "tap cursor",
+      "why": "'a stand-in for a finger or touch point in a UI demo' that marks where on the screen without hiding the button under it",
+      "section": {
+        "file": "Tf0EiCGOEYs.md",
+        "heading": "Tap cursor built from two translucent discs"
+      },
+      "revision": "f0079c1a",
+      "still": "quality/renders/channel-study/Tf0EiCGOEYs/proof/04/build.png",
+      "taught_by": 3,
+      "variants": []
+    },
+    {
+      "id": "05-staggered-slide-in",
+      "video": "Tf0EiCGOEYs",
+      "n": 5,
+      "name": "Card elements slide in from the left, one after another",
+      "line": "Builds an end card or call-to-action screen in a quick, readable cascade: each element arrives from off the left edge and lands in place a few frames after the one above it, so the eye reads headline, then button, then address.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "call-to-action",
+      "support": [
+        "list-items"
+      ],
+      "mood": [
+        "light",
+        "clean",
+        "bold"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 1,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "time stagger",
+      "why": "'builds an end card or call-to-action screen in a quick, readable cascade': headline, then button, then address",
+      "section": {
+        "file": "Tf0EiCGOEYs.md",
+        "heading": "Card elements slide in from the left, one after another"
+      },
+      "revision": "3e9d01cb",
+      "still": "quality/renders/channel-study/Tf0EiCGOEYs/proof/05/build.png",
+      "taught_by": 3,
+      "variants": []
+    },
+    {
+      "id": "06-cursor-travels-and-taps-button",
+      "video": "Tf0EiCGOEYs",
+      "n": 6,
+      "name": "Cursor glides in and taps the button",
+      "line": "Shows a tap on a UI element. A touch marker slides in from off screen and stops on a button, and the button dips in scale and springs back, so the viewer reads \"pressed\".",
+      "status": "proven",
+      "kind": "technique",
+      "job": "call-to-action",
+      "support": [
+        "point-at-detail",
+        "show-real-screen"
+      ],
+      "mood": [
+        "light",
+        "clean",
+        "minimal"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 2,
+      "motion": "one-shot",
+      "difficulty": 1,
+      "group": "tap cursor",
+      "why": "'shows a tap on a UI element': the marker lands on the button and the button dips and springs back, so the ask reads as pressed",
+      "section": {
+        "file": "Tf0EiCGOEYs.md",
+        "heading": "Cursor glides in and taps the button"
+      },
+      "revision": "2a41799f",
+      "still": "quality/renders/channel-study/Tf0EiCGOEYs/proof/06/build.png",
+      "taught_by": 3,
+      "variants": []
+    },
+    {
+      "id": "07-curved-cursor-route",
+      "video": "Tf0EiCGOEYs",
+      "n": 7,
+      "name": "Curved, eased cursor route in and out",
+      "line": "Makes a touch marker move like a hand, not a robot. It arcs in, pauses on the button for the tap, then arcs out and off screen, with eased starts and stops.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "call-to-action",
+      "support": [
+        "point-at-detail",
+        "show-real-screen"
+      ],
+      "mood": [
+        "light",
+        "clean",
+        "playful"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 3,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "tap cursor",
+      "why": "'makes a touch marker move like a hand, not a robot': it arcs in, holds on the button for the tap, then arcs out",
+      "section": {
+        "file": "Tf0EiCGOEYs.md",
+        "heading": "Curved, eased cursor route in and out"
+      },
+      "revision": "79ba15a2",
+      "still": "quality/renders/channel-study/Tf0EiCGOEYs/proof/07/build.png",
+      "taught_by": 3,
+      "variants": []
+    },
+    {
+      "id": "08-staggered-slide-out-exit",
+      "video": "Tf0EiCGOEYs",
+      "n": 8,
+      "name": "Card elements slide out to the right in the same cascade",
+      "line": "Clears an end card or call-to-action screen with the same cascade it arrived with, carried on in the same direction: the elements leave off the right edge one after another, so the card reads as passing through the frame. Also a pass to even out the gaps between entrance, tap and exit.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "hand-over",
+      "support": [
+        "call-to-action"
+      ],
+      "mood": [
+        "light",
+        "clean",
+        "bold"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 1,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "time stagger",
+      "why": "'clears an end card ... with the same cascade it arrived with', so the card reads as passing through the frame",
+      "section": {
+        "file": "Tf0EiCGOEYs.md",
+        "heading": "Card elements slide out to the right in the same cascade"
+      },
+      "revision": "b061556e",
+      "still": "quality/renders/channel-study/Tf0EiCGOEYs/proof/08/build.png",
+      "taught_by": 3,
+      "variants": []
+    },
+    {
       "id": "01-dotted-stroke",
       "video": "YBeMmC43Q1U",
       "n": 1,
@@ -958,7 +1241,7 @@
       },
       "revision": "9201d48e",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/05/build.png",
-      "taught_by": 1,
+      "taught_by": 3,
       "variants": []
     },
     {

@@ -36,7 +36,7 @@ The picks were chosen from titles, chapter lists and descriptions. Nobody has wa
 | # | Tutorial | Fills | Length | Risk | Status |
 |---|---|---|---|---|---|
 | 1 | SonduckFilm, [5 Infographic Edits You Should Know](https://www.youtube.com/watch?v=SKU3QdqKLOs) | land-number, compare, show-proof (not count-things) | 5 min | low | done: 5 written, 5 proven (accepted by Joe 2026-11-21), 0 held |
-| 2 | Mavi Design, [Animate a Simple Call-To-Action Button Scene](https://www.youtube.com/watch?v=Tf0EiCGOEYs) | call-to-action | 15 min | low | recipes: 8 written and checked, 0 proven, 0 held |
+| 2 | Mavi Design, [Animate a Simple Call-To-Action Button Scene](https://www.youtube.com/watch?v=Tf0EiCGOEYs) | call-to-action | 15 min | low | done: 8 written, 8 proven (accepted by Joe 2026-11-21), 0 held |
 | 3 | Mapal, [How To Animate Infographics Like VOX](https://www.youtube.com/watch?v=nHh0NRo8G2U) | step-through-process, show-proof, compare | 41 min | medium | not started |
 | 4 | TomsProject, [SaaS Motion Graphics Masterclass](https://www.youtube.com/watch?v=tYRvoI04pJk) | introduce-tool, flag-a-problem, make-concrete | 52 min | medium | not started |
 | 5 | Move Shapes, [Simple Before & After Transition](https://www.youtube.com/watch?v=SSAsTdXmKl0) | before-after | 3 min | low | not started |
@@ -46,7 +46,7 @@ The picks were chosen from titles, chapter lists and descriptions. Nobody has wa
 | 9 | SonduckFilm, [Create Callout Titles](https://www.youtube.com/watch?v=VZuHQVaC7oA) | flag-a-problem | 8 min | high | not started |
 | 10 | fail-then-fix, built from pieces 4, 5 and 9 | fail-then-fix | none | none | not started |
 
-**After piece 1, 9 of the 11 empty jobs are still empty. After pieces 1–4, only before-after and fail-then-fix are.** If you only have time for a few, do those four.
+**After piece 2, 8 of the 11 empty jobs are still empty (call-to-action is filled).** **After piece 1, 9 of the 11 empty jobs were still empty. After pieces 1–4, only before-after and fail-then-fix are.** If you only have time for a few, do those four.
 
 ## The pieces
 
@@ -77,11 +77,12 @@ The picks were chosen from titles, chapter lists and descriptions. Nobody has wa
   - 07 curved cursor route (call-to-action)
   - 08 staggered slide-out exit (hand-over)
 
-  Groups: "tap cursor" holds 04, 06 and 07; "time stagger" holds 05 and 08. All eight passed in round 2. The checks caught:
+  Groups: "tap cursor" holds 04, 06 and 07; "time stagger" holds 05 and 08. All eight passed in round 2 (05 and 08 again in round 3, 07 in round 4, after the proofs). The checks caught:
   - recipes that leaned on 02 and 03 for the card's figures
   - a curve handle put on the wrong key, which would bend the wrong leg
   - cursor tones compared against white when the cursor sits on the button's blue shadow
-- **Next:** proofs (step 5) at 9:16. The keyword has to stay readable at phone size.
+- **Proofs (2026-11-21):** all eight built at 9:16 on generated art (a "Driftday" end card, Montserrat ExtraBold and SemiBold installed for it) and accepted by Joe ("i approve"). 01–04 and 06 matched on the first build. 05, 07 and 08 came back "partly": the recipes left motion blur as a bare switch (lesson 28; rebuilt at a 680° shutter), and 07's entry route was read from a handle mid-drag and bowed nearly three times too deep (lesson 29; re-tracked by outline, now within 2 px). The build scripts are in `tools/channel-learner/proofs/Tf0EiCGOEYs`.
+- **Left as is:** 07's cursor runs up to 4 frames behind the reference mid-entry, and its smear is about 40 px against 60–70, because the keys spread the move over about 20 frames where the recording takes 16. The reviewer called it barely visible and Joe accepted it. Front-loading the entry (x 405 by frame 110, x 563 by 114) would close it.
 
 ### 3. Mapal, infographics like VOX
 

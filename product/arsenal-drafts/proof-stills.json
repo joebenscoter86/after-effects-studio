@@ -59,5 +59,13 @@
  "02-ring-fills-to-value": "quality/renders/channel-study/SKU3QdqKLOs/proof/02/build.png",
  "03-bars-grow-to-values": "quality/renders/channel-study/SKU3QdqKLOs/proof/03/build.png",
  "04-icon-fills-to-value": "quality/renders/channel-study/SKU3QdqKLOs/proof/04/build.png",
- "05-map-regions-fade-up": "quality/renders/channel-study/SKU3QdqKLOs/proof/05/build.png"
+ "05-map-regions-fade-up": "quality/renders/channel-study/SKU3QdqKLOs/proof/05/build.png",
+ "01-pill-button-in-own-comp": "quality/renders/channel-study/Tf0EiCGOEYs/proof/01/build.png",
+ "02-button-soft-lift-shadow": "quality/renders/channel-study/Tf0EiCGOEYs/proof/02/build.png",
+ "03-end-card-stack": "quality/renders/channel-study/Tf0EiCGOEYs/proof/03/build.png",
+ "04-tap-cursor-with-rings": "quality/renders/channel-study/Tf0EiCGOEYs/proof/04/build.png",
+ "05-staggered-slide-in": "quality/renders/channel-study/Tf0EiCGOEYs/proof/05/build.png",
+ "06-cursor-travels-and-taps-button": "quality/renders/channel-study/Tf0EiCGOEYs/proof/06/build.png",
+ "07-curved-cursor-route": "quality/renders/channel-study/Tf0EiCGOEYs/proof/07/build.png",
+ "08-staggered-slide-out-exit": "quality/renders/channel-study/Tf0EiCGOEYs/proof/08/build.png"
 }

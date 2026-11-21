@@ -192,6 +192,260 @@ pitfalls: none given
 build notes: The After Effects part is only an opacity fade per layer and fully scriptable: layer.opacity.setValueAtTime(t, 0) / setValueAtTime(t + 0.5, 100), offset per region (or set layer.inPoint). The region separation is an Illustrator step a script cannot follow, and we do not need it: our route is generated map art delivered as separate, pre-aligned region layers — one full-frame PNG with alpha per highlighted region (the region in its colour, no label), with all region names on their own always-visible labels layer above the regions — in the finished example the white names sit on a separate Names layer and show before their regions fade in (: GERMANY and ITALY white over grey). Below the regions goes one base map with every region grey, and the numbered list comes as one layer per row so each row can fade with its region. Import each as footage, stack at the comp centre, and key the fades. If shape layers are wanted instead, an SVG/AI per region can be imported and converted with Layer > Create > Create Shapes from Vector Layer (a menu command; check how it can be called by script before relying on it).
 unknowns: The exact import type; the second opacity key's value and easing in the build; how the finished example fades each region (in-point plus opacity, or keys only) and the per-region times beyond the five measured in-points; which layer holds which region in the finished example; how the list is split there. The build's own fade is never played on screen; the result shows the finished example.
 
+## A pill button built in its own comp
+id: 01-pill-button-in-own-comp
+revision: 33b5d2bd
+job: call-to-action; support: show-real-screen
+status: proven (accepted 2026-11-21)
+what it does for a beat: The call-to-action button for an end card or app demo: a flat, fully rounded pill with a centred caps label, kept in its own comp so the scene can place, scale, slide and "press" it as one layer.
+what it looks like: A saturated blue pill, about four times as wide as it is tall, with half-round ends and a short two-word all-caps label in heavy white sans set with very wide letter spacing, centred in the pill. Flat: no stroke, no gradient, no shadow at this stage. The comp around it is white and leaves a wide margin on every side.
+ingredients:
+- Composition (Composition > New Composition; Composition Settings dialog) — built-in
+- Rectangle Tool shape layer (Rectangle Path, Fill, Stroke) — built-in
+- Horizontal Type Tool text layer with the Character and Paragraph panels — built-in
+- Font Montserrat ExtraBold — free (Google Fonts); any heavy geometric sans stands in
+steps:
+1. The scene this button goes into is a square comp (shown : Project panel lists it).
+   - Width × Height: 1080 × 1080 px (shown)
+   - Frame Rate: 60 fps; Duration 0:00:20:30 (shown)
+2. Make a new comp for the button (shown : Composition Settings dialog open over the empty scene).
+   - Width: 800 px, Height: 800 px (shown crop: Height being typed as 800 with Width already 800 px; the 800 × 800 comp is listed)
+   - Pixel Aspect Ratio: Square Pixels; Frame Rate: 60; Duration: 0:00:20:30; Resolution: Third (shown)
+   - Background Color: White (shown). The comp's background colour does not render when the comp is nested; it only makes the white page visible while working (inferred).
+3. With the Rectangle Tool, drag a rounded box roughly across the middle of the comp (shown : a rounded rectangle path with handles, Contents > Rectangle 1 > Rectangle Path 1).
+   - Size at that point: 631.8, 165.9 (shown)
+   - Roundness: 451.0 (shown). This is far more than half the box's height, so After Effects clamps it and the ends become full semicircles (inferred; the pill has half-round ends).
+   - Rectangle Path Position: 0,0; Transform: Rectangle 1 Position 0,0, Scale 100 %, Rotation 0 (shown)
+4. Turn the stroke off and the fill on (shown : Fill 1 has its eye on, Stroke 1's eye is off; toolbar Fill is a solid swatch and Stroke shows the red "none" slash; it was the reverse, a 10 px white stroke and no fill).
+5. Set the fill colour in the Shape Fill Color dialog (shown : dialog open at 000000; the hue is then dragged into blue).
+   - Fill Color: #0036FF (R 0, G 54, B 255; H 227°, S 100 %, B 100 %) (shown; OK pressed with the same values, scratch frame cut from the source video)
+6. Type the rectangle's size exactly (shown).
+   - Size: 700.0, 170.0 (shown)
+7. With the Type tool, click and type a two-word all-caps label; centre the paragraph (shown : Paragraph panel with Center text selected; the first, oversized letters spill past the pill).
+   - Font: Montserrat, style ExtraBold (shown crop)
+   - Size: 60 px; Leading 0 px (shown crop and the cut; it does not change a single-line label); Fill colour white, no stroke (shown crop)
+   - Vertical and horizontal scale 100 % (shown)
+   - Tracking: 157 (shown mid-drag at 84; settled at 157 on, crops cut from the source video; the timeline's "157" reading of the tracking field is the same)
+8. Move the label into the middle of the pill (shown : text Position 394.3, 424.0; then : 399.1, 421.0 with the Align panel open, "Align Layers to: Composition"). Whether the author used the Align buttons or nudged by hand is not visible (inferred: aligned to the comp's centre, since the measured label centre sits on the pill centre within a pixel).
+9. Resize the comp around the button in Composition Settings (height down from 800, width up from 800), leaving a margin (shown : Height scrubbed to 531 with Width 800; the cut from shows 1034 × 531; final size).
+   - Final comp size: 1040 × 530 px (shown crop of the Project panel)
+   - Every layer kept its place relative to the comp's centre: the label's Position went from 399.1, 421.0 to 399.1, 286.5 (−134.5, half of 800 − 531) and then to 519.1, 286.0 (shown). So the comp was resized about its centre, After Effects' default anchor (inferred).
+   - The margin left is 170 px each side and 180 px above and below the pill (inferred from the figures). The next tip's soft shadow reaches about 140 px below the pill and fits inside this margin (see layout).
+layout: Measured on the result frame (comp 1040 × 530 shown at 72.4 %, calibrated on the comp's white edges, 634–1386 × 120–503 on screen). Pill: 700 × 170 comp px (measured 498–507 screen px wide), so 67.3 % of the comp's width and 32.1 % of its height, centred both ways (measured). Placed at 100 % in a 1080 square scene it is 64.8 % of the picture's width and 15.7 % of its height (inferred from the figures; recipe 03 measures exactly that). Ends: full semicircles. Label: cap height 44 comp px, 25.9 % of the pill's height (measured; consistent with 60 px Montserrat); width about 505 comp px, 72 % of the pill's width (measured, 828–1193 on screen); centred on the pill within 1 px horizontally and vertically (measured). Letter gaps are wide: tracking 157 adds 0.157 em, about 9.4 px at 60 px, to every letter gap (inferred from the setting); the gap between the two words reads about one letter wide (measured by eye). Colour as rendered in the recording: pill about (52, 42, 252), label white about (253, 253, 253). The typed value is #0036FF; the recording reads more violet, the wide-gamut display shift described in the lessons, so build with #0036FF. No stroke, no shadow, no gradient on anything at this stage.
+timing and easing: none given (nothing animates in this tip).
+variations: none given.
+pitfalls: none given. Seen on screen: the first comp is far too big, so the button is resized after the label is set (step 9), and the label's position shifts with each resize because After Effects keeps layers centred.
+build notes: Comp: app.project.items.addComp(name, 1040, 530, 1, 20.5, 60) (white bgColor only for viewing). Shape layer: comp.layers.addShape(); Contents add "ADBE Vector Group" > "ADBE Vector Shape - Rect" with "ADBE Vector Rect Size" [700,170] and "ADBE Vector Rect Roundness" 451 (any value of 85 or more gives full round ends); add "ADBE Vector Graphic - Fill" with "ADBE Vector Fill Color" [0, 54/255, 1]; no stroke group. Layer at the comp's centre [520, 265]. Text: comp.layers.addText("…"), TextDocument font "Montserrat-ExtraBold" (PostScript name; check app.fonts or substitute a heavy geometric sans and match cap height 44 px), fontSize 60, fillColor [1,1,1], applyFill true, applyStroke false, tracking 157, justification ParagraphJustification.CENTER_JUSTIFY; then centre the layer on the pill by its sourceRectAtTime bounds (the author's Position was 519.1, 286.0 with the anchor at the baseline). Building straight at 1040 × 530 skips steps 2 and 9 and gives the same picture.
+unknowns: The shape layer's own Transform (layer Position, Anchor Point) is never opened; the pill is measured centred. Whether the label was centred with the Align panel or dragged. The reason for a 1040 × 530 comp rather than one cropped tight to the pill is not stated (the margin is inferred to be room for the shadow of recipe 02). Whether the hue was typed or dragged to #0036FF (it was dragged through 0048FF first).
+
+## Headline, button and web address stacked on a white square
+id: 03-end-card-stack
+revision: 33ec8bcf
+job: call-to-action; support: reveal-headline
+status: proven (accepted 2026-11-21)
+what it does for a beat: The closing card of a social ad or product promo: one line of headline, one button and a quiet web address, on a clean white square, centred on one vertical axis and ready to be animated in.
+what it looks like: A white 1:1 frame. Near the top, a short three-word headline in sentence case, medium-heavy blue sans. In the middle, a blue pill button with a white spaced-out caps label and a soft blue haze beneath it. Near the bottom, a small, widely spaced web address in pale blue (the same blue at 40 %). Everything is centred left to right; the web address sits well below the button, so the stack is not evenly spaced.
+ingredients:
+- Rectangle Tool shape layer as the background — built-in
+- The button comp of recipes 01 and 02, nested (figures repeated below so this recipe stands alone)
+- Horizontal Type Tool text layers, Character panel, Align panel — built-in
+- Font Montserrat (ExtraBold and SemiBold) — free (Google Fonts)
+steps:
+1. The scene comp: 1080 × 1080 px, 60 fps, duration 0:00:20:30, white background colour (shown in the Project panel; white background set in its dialog, timeline "Background Color: Light Gray → White" at 0:28).
+2. Draw a rectangle in the scene comp and make it fill the frame (shown : a rectangle drawn; : Size being typed; : it fills the comp).
+   - Rectangle Path Size: 1080.0, 1080.0 (shown)
+   - Rectangle Path Position 0, 0; Roundness 0.0 (shown)
+   - Transform: Rectangle 1 Position typed back to 0, 0 (shown being edited; centred)
+   - The group also carries a white 10 px Stroke 1 set to "Below Previous in Same Group" (shown); it sits on the frame's edge and changes nothing visible.
+3. Rename the layer as the background (shown) and set its fill to white with the toolbar's Fill swatch (shown : Shape Fill Color dialog at 0036FF; : FFFFFF being typed; : the square is white).
+   - Fill Color: #FFFFFF (shown)
+   - Why a white shape over a white comp background: the comp's background colour does not render when the comp is nested or rendered with alpha, the shape does (inferred).
+4. Drag the button comp from the Project panel into the scene, above the background (shown : the button sits in the middle of the square; at 100 % zoom).
+   - Button comp (recipes 01 and 02, shown there): 1040 × 530 px; a 700 × 170 pill with full half-round ends, Fill #0036FF, no stroke, centred; label Montserrat ExtraBold 60 px, white, tracking 157, centred; the pill carries Drop Shadow #0036FF, Opacity 50 %, Direction 180°, Distance 48, Softness 248; the label carries Drop Shadow black 40 %, 180°, 4, 0 and a second Drop Shadow #FFFFFF 24 %, 0°, 9, 52.
+   - Layer Position and Scale are never opened; it lands at the comp's centre, and the measured pill is 700 px wide and centred, so Scale 100 % and Position 540, 540 (inferred, measured).
+5. Add the web address: Type tool, click in the lower part of the frame and type a placeholder address (shown cursor, text).
+   - Fill colour: #0036FF (shown : Text Color dialog, H 227°, R 0, G 54, B 255)
+   - Font: Montserrat ExtraBold (shown)
+   - Size: 40 px (shown; it started at 60 px, and was typed to 40)
+   - Tracking: 160 (shown; it started at 157 and passed 80, and was typed)
+   - Vertical scale 100 %, horizontal scale 99 % (shown; set by hand, where the scrub cursor is on that field)
+   - Paragraph centred (inferred: carried over from the button label, shown centred; the measured address centre is on the comp's centre)
+   - Position: 541.2, 959.6 (shown on the duplicate made from it before it was moved, cut from the source video; the text reader's 844.6 is a misreading)
+   - Opacity: 40 % (shown; passed through 20 %)
+   - Horizontal centring with the Align panel, "Align Layers to: Composition", is open (the click itself is not seen; inferred).
+6. Duplicate the address layer to start the headline (shown : a second copy above; Edit > Duplicate inferred), move it to the top (shown : Position 541.2, 122.2), retype it as a three-word headline and rename it (shown).
+7. Style the headline (shown : font style menu; : Bold, 98 px; : final).
+   - Font: Montserrat SemiBold (shown; tried Bold)
+   - Size: 98 px (shown; scrubbed to 98)
+   - Tracking: 20 (shown; it was 40)
+   - Fill colour: #0036FF, kept from the copy (shown swatch)
+   - Opacity: 100 % (shown; it had inherited 40 %)
+8. Set the headline's height by trial (shown: Position 541.2, 243.2 and 245.2 in the 5:44 window, 215.2 at 5:51, 195.7 at 5:59), ending at:
+   - Position: 541.2, 255.7 (shown)
+layout: Measured on the result frame (the whole 1080 square at 33.3 %, calibrated on the white frame's own edges, 830–1189 × 132–491 on screen; comp px = 3 × screen px, so figures are ± 3 px). All three elements are centred left to right on x ≈ 540 (measured). Headline: glyphs from y 180 to 255 (16.7 % to 23.6 % of the height; baseline 255.7), letters about 75 px tall from ascender to baseline (about 7 % of the height), the line about 660 px wide (210–870, 61 % of the width). Button pill: x 192–888, y 456–624, so 700 × 170 (64.8 % of the width, 15.7 % of the height), centred at 540, 540 (measured). Pill label: caps about 44 px tall (4.1 % of the height), about 505 px wide, centred in the pill. Pill shadow: straight down, the page reads about (158, 169, 249) just under the pill against (253, 253, 253), (201, 207, 253) about 55 px under, (224, 229, 254) about 80 px under, and is gone about 126 px under (y ≈ 750, measured), blue-tinted (red and green drop, blue stays), with a faint halo on the sides. Web address: glyphs from y about 924 to 960 (85.6 % to 88.9 %; baseline 959.6), tall lowercase letters (b, t) about 30 px from top to baseline (2.8 %; the address is all lower case), line about 330 px wide (375–705, 30.6 % of the width), pale blue: the typed blue at 40 % over white gives about (153, 175, 255) (inferred from the settings; the 33 % view smears the thin letters so it cannot be read reliably). Spacing: headline baseline to pill top 200 px (18.5 % of the height); pill bottom to address cap top about 300 px (27.8 %); the address sits 120 px from the bottom edge and the headline top 180 px from the top edge (measured). Background: flat white (253, 253, 253 in the recording), no gradient, vignette or grain. Stacking, top to bottom in the timeline: headline, address, button comp, background (shown). The blue reads about (52, 42, 252) in the recording against the typed #0036FF; the wide-gamut shift in the lessons applies, so build with #0036FF. The pill shows a one-pixel darker rim in the recording at 33 % and 50 %; no stroke is on (recipe 01), so it is taken as the viewer's scaling, not a build trait (inferred).
+timing and easing: none given (the card is still; the next tips animate it).
+variations: none given. Seen on screen: the headline tried Bold and tracking 40 before SemiBold and 20, and several heights between y 195.7 and 255.7.
+pitfalls: none given.
+build notes: Background: comp.layers.addShape() with "ADBE Vector Shape - Rect" Size [1080,1080] and "ADBE Vector Graphic - Fill" [1,1,1] (or a 1080 × 1080 white solid; the picture is the same). Button: comp.layers.add(buttonComp) at [540,540], scale 100. Text layers: TextDocument font "Montserrat-ExtraBold" / "Montserrat-SemiBold" (check app.fonts; substitute and match the measured heights if missing), fontSize 40 / 98, tracking 160 / 20, fillColor [0, 54/255, 1], justification CENTER_JUSTIFY, horizontalScale 0.99 on the address (it carries to the headline copy too); layer Positions [541.2, 959.6] and [541.2, 255.7] with the anchor at the baseline as the Type tool makes it; address Opacity 40, headline 100. Check against the measured glyph boxes with sourceRectAtTime, since a substitute font shifts them.
+unknowns: The button layer's Position and Scale are never opened (measured centred at 100 %). The Align-panel clicks are not seen. The headline's horizontal scale is shown at 99 % but may be an unintended carry-over. The address's exact rendered colour cannot be read at 33 % zoom. Why the headline was settled at 255.7 (the stack is not evenly spaced) is not given.
+
+## Tap cursor built from two translucent discs
+id: 04-tap-cursor-with-rings
+revision: f0079c1a
+job: point-at-detail; support: show-real-screen, call-to-action
+status: proven (accepted 2026-11-21)
+what it does for a beat: A stand-in for a finger or touch point in a UI demo. It is a soft, translucent touch marker that reads on a white screen without hiding the button under it.
+what it looks like: A small round touch marker. It is a see-through darkening ring around a paler see-through disc. It sits over the lower-left edge of a blue pill button on a white end card, which also carries a blue headline at the top and a pale blue web address at the bottom.
+ingredients:
+- Shape layer, Ellipse tool — built-in; toolbar Ellipse tool
+- Shape Fill (and Stroke, which ends with no visible effect) — built-in; layer Contents > Ellipse 1 > Fill 1 / Stroke 1
+- Shape Fill Color dialog — built-in; opened from the toolbar Fill swatch
+- Precomposition: own 200x200 comp nested into the main comp — built-in
+steps:
+1. Make a new comp for the cursor (shown)
+   - Width x Height: 200 x 200 (shown)
+   - Frame rate: 60 fps (shown)
+   - Duration: 0:00:20:30 (shown)
+   - Background Color: White at first (shown)
+2. Change the comp background to black as a working aid so white shapes show. It does not render into the main comp (shown →)
+3. Draw an ellipse shape layer with the Ellipse tool and type its size (shown)
+   - Ellipse Path 1 > Size: 200,200 (shown)
+   - Stroke 1 at first: white, width 10, Opacity 100 %, Composite Below Previous in Same Group, Butt Cap, Miter Join (shown). This stroke does not show in the finished cursor; see step 12.
+   - Fill 1 > Color: white, Opacity 100 % (shown)
+   - Fill 1 > Composite: Below Previous in Same Group; Fill Rule: Non-Zero Winding (shown)
+4. Centre the ellipse in the 200x200 comp: the ellipse group's Transform Position goes to 0,0 (centred circle shown)
+5. Duplicate the layer and rename both, an inner disc on top and an outer disc below (two layers shown; the duplicate command itself is inferred)
+6. Give the inner layer a black fill through the toolbar Fill swatch (shown, cut from into)
+7. Shrink the inner disc
+   - Inner Ellipse Path 1 > Size: trials 147 and 152 (shown), settled on 142,142 (shown, cut from into)
+8. Set both layers' Opacity to 20 % (shown)
+9. Drag the cursor comp into the main 1080x1080 comp as the top layer. On the white card it is almost invisible (shown)
+10. Recolour for a white background (shown; cut from into)
+   - Outer layer Fill 1 > Color: #000000, typed into the Shape Fill Color dialog (shown)
+   - Inner layer Fill 1 > Color: #FFFFFF (shown)
+11. Tune the layer opacities until it reads on white (shown; cut from into)
+   - Outer layer Opacity: 40 % → 30 % → final 25 % (shown)
+   - Inner layer Opacity: final 40 % (shown)
+12. Strokes: turn them off on both ellipses (inferred from the result). The finished cursor has no visible stroke. The ring is a flat 0.75 × ground right up to the inner disc's edge at 71 comp px. A white 10 px stroke on the 40 % inner layer would draw a light rim at radius 71–76, and none is there (measured). The inner disc also shows no halo on black.
+layout: measured (cut from into), with the cursor layer at 100 % scale. Cursor: outer disc diameter about 198–200 comp px, about 18 % of the picture width (measured). Inner disc radius about 71 comp px, about 0.70 of the outer diameter (measured). The ring band between them is about 29 comp px, about 2.7 % of the width (measured). The centre sits at about comp (298, 640), about 28 % across and 59 % down (measured). That puts it half over the button's lower-left edge and half over the button's blue shadow, stacked above both. The tones follow the opacities exactly when read against the ground underneath (measured against the same region before the cursor existed). The ring is 25 % black over the ground: ring = 0.75 × ground (measured 0.71–0.76 all round; 249 gives 190, 69 gives 49). The inner disc is 40 % white over the 25 % black: disc = 0.45 × ground + 102 (measured: 202 gives 192, 178 gives 183, the blue button at 69 gives about 128). On plain white (250) that is a ring of about 188 and a disc of about 215. Both are neutral, with no tint, and the cursor casts no shadow of its own. Scene (all from technique 03, figures measured there; also visible in this result crop). The card is a flat white 1080 square, about 253 in the recording. The headline is a three-word sentence-case line in #0036FF, Montserrat SemiBold 98 px, tracking 20, centred. Its baseline is at y 255.7, glyphs y 180–255, about 61–62 % of the width wide, its centre about 20 % down. The button pill is 700 × 170 (65 % × 16 %), #0036FF, centred at (540, 540), with a white all-caps label. The pill carries Drop Shadow #0036FF, Opacity 50 %, Direction 180°, Distance 48, Softness 248 (technique 02). That makes a blue haze straight below the pill, gone about 126 px under; the cursor's lower half sits in it. The web address is a lower-case placeholder in #0036FF at layer Opacity 40 % (pale blue), Montserrat ExtraBold 40 px, tracking 160, centred. Its baseline is at y 959.6, about 31 % of the width wide, about 87 % down. Stacking, top to bottom: cursor, headline, address, button, background.
+timing and easing: none given (the cursor is static in this section)
+variations: none given. Shown only as trial and error: black or white fills, a range of inner sizes (147, 152, 142) and of opacities (20, 25, 30, 40 %)
+pitfalls: none given in words. Shown: white discs at 20 % vanish on a white screen, so the fills are swapped (black outer, white inner) and the opacities raised; this has its own chapter at 7:30. Judge the tones against the ground under the cursor (the button and its shadow), not against open white.
+build notes: Make a 200x200 comp with two shape layers, each holding one ellipse group ("ADBE Vector Group" > "ADBE Vector Shape - Ellipse" Size, "ADBE Vector Graphic - Fill"). Outer layer: Size [200,200], Fill [0,0,0], layer Opacity 25. Inner layer, above it: Size [142,142], Fill [1,1,1], layer Opacity 40. Leave out "ADBE Vector Graphic - Stroke", or set it to enabled = false. Shapes are centred at group Position [0,0]. The black comp background is only a viewing aid. Nest the comp in the main comp with layers.add(comp) as the top layer, at about (298, 640) for this still. Check the result against ring = 0.75 × ground and disc = 0.45 × ground + 102. Everything here can be done by script.
+unknowns: How the strokes were removed is not shown; their absence is inferred from the picture. How the layer was duplicated (menu or shortcut) is not shown. The very first drawn size is read only from the window's text, not from a cited frame, so it is left out.
+
+## Card elements slide in from the left, one after another
+id: 05-staggered-slide-in
+revision: 3e9d01cb
+job: call-to-action; support: list-items
+status: proven (accepted 2026-11-21)
+what it does for a beat: Builds an end card or call-to-action screen in a quick, readable cascade: each element arrives from off the left edge and lands in place a few frames after the one above it, so the eye reads headline, then button, then address.
+what it looks like: On a plain white square, a blue headline, a blue pill button and a small pale-blue web address each whip in from the left with motion blur, decelerate hard and settle centred; the headline lands first, the button 5 frames later, the address 10 frames after the headline.
+ingredients:
+- Position keyframes on three layers (two text layers and one precomp layer) — built-in
+- Keyframe easing, influence 65 % out of the first key and 65 % into the second — built-in (Animation > Keyframe Velocity); in the video it is set with a third-party easing panel (two linked influence sliders), price not shown
+- Drop Shadow on the pill and two on its label — built-in; Effect > Perspective > Drop Shadow
+- Font Montserrat (ExtraBold, SemiBold) — free (Google Fonts)
+- Motion blur (layer switch and the timeline's Enable Motion Blur button) — built-in
+steps:
+0. Park the tap cursor out of the picture first: at the chapter's start it sits on the button (Position 300, 642; shown); the author moves it to 1208, 980, below and right of the comp, with no keys (shown). It stays there through the entrance (technique 06 keys it later).
+1. Start from the finished still layout in a 1080 x 1080, 60 fps comp on a white background: headline, button (its own precomp) and web address, all centred horizontally. (shown)
+   - Headline Position: 541.2, 255.7 (shown)
+   - Button Position: 540, 540 (shown)
+   - Web address Position: 541.2, 959.6 (shown)
+   - Web address Opacity: 40 % (shown)
+2. With all three layers selected, set Position keys at their resting values and place those resting keys at frame 30 (0:00:00:30); there is a second key at frame 0. (shown)
+3. Go to frame 0 and drag the X value of the three selected layers together to the left until each sits fully off the left edge. All three move by the same amount, 1063 px (98.4 % of the comp width); Y is untouched. (shown; the drag passes through values such as -401.8)
+   - Headline start Position: -521.8, 255.7 (shown)
+   - Web address start Position: -521.8, 959.6 (shown)
+   - Button start Position: -523, 540 (shown)
+4. Select all six keys and ease them: influence 65 % on the outgoing side of the first key and 65 % on the incoming side of the second, speed 0 at both. The panel's sliders read 65 and 65 (shown) and the keys turn to hourglass icons (shown). That speed is 0 is inferred, and confirmed: the shown readouts at frames 2, 5 and 27 (-520.2, -510.9, 217.2 for the headline; -322.5 and -86.7 for the address and button at frame 27) are exactly what a 0-speed, 65 % / 65 % curve over 47 frames gives. Built-in route: Animation > Keyframe Velocity, Incoming and Outgoing Influence 65 %, Speed 0 (inferred).
+5. Drag the three resting keys later, from frame 30 to frame 47, so each move lasts 47 frames (0.78 s). (shown moving; landed and measured at 47 on the zoomed ruler)
+6. Stagger the layers by sliding whole layer bars along the timeline (keys travel with them): the button layer starts 5 frames later, the web address layer 10 frames later; the headline stays at frame 0. (shown button at 5 f, address bar starting at 10 f, final)
+   - Headline keys: frame 0 → 47 (measured)
+   - Button keys: frame 5 → 52 (measured)
+   - Web address keys: frame 10 → 57 (measured)
+7. Motion blur is on for the three layers and for the comp (switch on in each layer row and the timeline's motion-blur button lit). It was already on before this chapter. (shown)
+layout: Artwork (figures from recipes 01, 02 and 03, re-read here on their frames so this recipe stands alone): background a full-frame white shape (#FFFFFF, 1080 x 1080). Button: a precomp 1040 x 530 holding a 700 x 170 pill (Rectangle Path, Roundness 451, so full half-round ends), Fill #0036FF as typed in its dialog, no stroke, centred; placed at 540, 540, Scale 100 %. The pill carries Drop Shadow: Shadow Color #0036FF, Opacity 50 %, Direction 180° (straight down), Distance 48, Softness 248, Shadow Only off (shown). Label inside the pill: two words in caps, Montserrat ExtraBold 60 px, white, tracking 157, centred (shown); it carries Drop Shadow black, Opacity 40 %, Direction 180°, Distance 4, Softness 0, and Drop Shadow 2 #FFFFFF, Opacity 24 %, Direction 0° (up), Distance 9, Softness 52 (shown). Headline: three words in sentence case, Montserrat SemiBold 98 px, tracking 20, horizontal scale 99 %, Fill #0036FF, Opacity 100 %, centred paragraph (shown); it is a lighter weight than the ExtraBold label. Web address: Montserrat ExtraBold 40 px, tracking 160, horizontal scale 99 %, Fill #0036FF, layer Opacity 40 %, centred (shown). All text anchors sit on the baseline (Type tool default). Measured on the result frame (picture 360 x 360 px in the recording = the 1080 comp). Background plain near-white (253, 253, 253) (measured). Headline: one line of blue Montserrat SemiBold (lighter than the ExtraBold label), letters spanning y 16.7–23.6 % of the picture height (cap-to-baseline about 7 % of the height), x 18.9–80.8 % (62 % of the width), centred (measured). Button: blue pill, body y 42.5–57.8 % (15 % of the height) and x 17.8–81.9 % (64 % of the width), centred, white spaced capitals inside (measured). Build its fill as #0036FF; the recording shows about (56, 52, 255), more violet, the wide-gamut shift of the lessons. Under the pill the Drop Shadow below makes a blue haze: on the (253, 253, 253) page it reads about (158, 169, 254) just under the pill's lower edge, about (216, 219, 253) 25 px (comp 75 px) under, and fades out (about 240) by roughly 10 % of the picture height below the edge; red and green drop while blue stays near 252, so it reads as blue, not grey; a faint tint (about 245) reaches about 1 % of the height above the pill and the haze spreads a little past the pill's ends (measured; recipe 02 measures the same in the button comp). Web address: small spaced pale-blue lowercase text at 40 % opacity, y 85.8–89.4 %, 30 % of the width, centred (measured). Motion: every element travels horizontally from left to right only, starting fully outside the left edge (rest X minus 1063 px, 98.4 % of the width). Speed from the keys (the recording's preview ran at about real time: the comp's time display reads 0:00 and 57 frames, but take speed from the keys anyway): each move averages 22.6 px per comp frame (126 % of the width per second) and peaks at about 2.9 times that, about 6 % of the width per frame, near the middle of its move; at 25 % of its duration an element has covered only 7 % of the distance and at 75 % it has covered 93 %, so it whips through the middle and eases hard into place. The headline is settled at frame 47, the button at 52, the address at 57; after that all three hold still. Order on screen is top to bottom: headline, button, address (shown in the preview, cut frames). Motion blur strength (measured on the source preview, every recording frame a fresh comp frame there: the pill's edge advances about 21 px of the 360 px view per frame at peak, matching the keys' 62–65 comp px per frame, and no frame repeats): on the button's entrance (pill top row, view y 162, cut frames) the leading right edge's 10–90 % ramp reads 31–32 view px at 20–21 px of travel per frame, and the full ramp from 0.02 to 0.98 of the pill's darkness is about 40 px; a settled edge reads 5–6 px. The measured smear is a linear ramp, so a moving edge smears over about 1.8–1.9 frames of its travel (the 10–90 % ramp alone spans about 1.5 frames); at peak speed that is about 120 comp px of full ramp, about 95 comp px from 10 to 90 %, against a still edge's 12–18 comp px. Mid-flight no letter is readable: the headline and label become streaks (cut frame for the exit, for the entrance). This is about four times After Effects' default 180° blur (half a frame). Shutter: the comp's motion-blur settings (Composition Settings > Advanced, Shutter Angle and Phase) are never shown; a shutter angle of about 650–720° would give a 1.8–2 frame smear (inferred; 720° is After Effects' maximum), so start at 680° and compare the leading edge's ramp at peak speed with the figures above. Samples per frame are not shown; the ramp reads smooth.
+timing and easing: 60 fps. Each element: two Position keys 47 frames apart, X only, offset -1063 px at the first key. Starts at frames 0, 5 and 10 (headline, button, address); landings at 47, 52 and 57. Influence 65 % out of the first key and 65 % into the second, speed 0 at both (65/65 shown; speed 0 inferred and matched to the readouts).
+variations: none given (no narration). The author first tried a 30-frame move and then lengthened it to 47 frames (shown).
+pitfalls: none given.
+build notes: Motion blur: `comp.shutterAngle = 680` (range 0–720) and check the smear against layout; the default 180° gives about a quarter of the measured smear. Artwork: Drop Shadow is "ADBE Drop Shadow"; by script its Opacity is on a 0–255 scale (50 % = 127.5, 40 % = 102, 24 % = 61.2; read it back); Shadow Color [0, 54/255, 1] for the pill; the label's second instance is "Drop Shadow 2". Fonts by PostScript name "Montserrat-ExtraBold" and "Montserrat-SemiBold" (check app.fonts; substitute and match the measured glyph boxes if missing). Script: for each layer, `layer.property("ADBE Transform Group").property("ADBE Position")`; `setValueAtTime(0, [restX-1063, y])` and `setValueAtTime(47/60, [restX, y])`; then shift the button layer's `startTime` by 5/60 s and the address layer's by 10/60 s (moving the layer moves its keys, which is how the video does it), or add the offsets to the key times instead. Easing: `setTemporalEaseAtKey(k, [new KeyframeEase(0, 65)], [new KeyframeEase(0, 65)])` on both keys (Position is spatial, so one KeyframeEase per side) and `setInterpolationTypeAtKey(k, KeyframeInterpolationType.BEZIER)`. Motion blur: `layer.motionBlur = true` for the three layers and `comp.motionBlur = true`; the shutter angle is not shown; see the first line of these notes. Check by reading Position at frame 27: headline X should be 217.2.
+unknowns: Whether the panel applies speed exactly 0 (the readouts match it to 0.1 px, so this is near certain). Motion blur shutter angle, phase and samples (never shown; the angle is inferred from the measured smear, see layout). Whether the first keys were made at frame 0 and copied or the rest keys moved from 0 to 30 (the frames show the result, not the gesture). The opening clip (0:00–0:12) shows the same comp presented on a rounded white card over a soft blue backdrop; that framing is the finished presentation, not part of this build, and its timing was not measured.
+
+## Cursor glides in and taps the button
+id: 06-cursor-travels-and-taps-button
+revision: 2a41799f
+job: call-to-action; support: point-at-detail, show-real-screen
+status: proven (accepted 2026-11-21)
+what it does for a beat: Shows a tap on a UI element. A touch marker slides in from off screen and stops on a button, and the button dips in scale and springs back, so the viewer reads "pressed".
+what it looks like: A translucent grey touch marker flies in from below left, off screen, to rest on a blue pill button in the centre of a white end card, between a blue headline at the top and a pale blue web address at the bottom. The button then shrinks briefly to about 85 % and returns to full size; its lettering smears with motion blur as it does.
+ingredients:
+- Position keyframes on the cursor layer — built-in; layer Transform > Position
+- Scale keyframes on the button layer — built-in; layer Transform > Scale
+- Motion Blur layer switches and the comp's Motion Blur button — built-in; timeline Switches column and timeline top bar (already on when this section starts)
+- A cursor comp: two translucent discs (technique 04; summarised in layout) — built-in
+- A pill button in its own comp (technique 01) with a soft shadow (technique 02) — built-in
+steps:
+1. Set the cursor layer's Scale to a static 80 % and leave it unkeyed (shown)
+   - Scale: 80,80 % (shown)
+2. At 0:00:01:29 (frame 89) set the cursor Position off screen, below left (value typed, shown with the stopwatch still off). Then key it (keys shown)
+   - Position: -106,1180 (shown)
+3. At 0:00:02:07 (frame 127) key the cursor Position on the button (shown)
+   - Position: 694,590 (shown)
+   - Both keys linear: two diamonds at about frames 88 and 128 on the ruler (shown)
+4. No further cursor keys in this section. The cursor holds on the button after frame 127 (shown)
+5. Key the button layer's Scale to dip and return
+   - First set at frames 153 / 163 / 173, 10 frames apart, still reading 100 % (shown)
+   - Retimed to 153 / 159 / 165, 6 frames apart, the middle value being dragged at 95 (shown)
+   - Frame 153: Scale 100 % (shown)
+   - Frame 159: Scale 85 %, passing 95 and 90, landing at 85 (shown; 85,0,85,0 % on the key at 0:00:02:39, cut from the source video)
+   - Frame 165: Scale 100 % (shown)
+   - Linear keys, diamonds (shown)
+layout: Measured (cut from into) and the clean frames. Cursor: two neutral translucent discs at 80 % layer scale, so about 160 comp px across, about 15 % of the picture width (inferred from technique 04's 198–200 px at 100 %). The outer disc is black at 25 % layer opacity, so the ring = 0.75 × the ground. The inner disc, about 0.70 of the diameter, is white at 40 %, so it = 0.45 × ground + 102. On plain white that is about 188 and 215 (technique 04, measured there). The cursor rests at comp (694, 590), right of centre and just below the middle, over the button's right half, stacked above everything (shown). Button: at rest about 64–65 % of the picture width and 15–16 % of its height, centred at (540, 540). It is a #0036FF pill (700 × 170) with a white all-caps label, Montserrat ExtraBold 60 px, tracking 157 (technique 01). It carries Drop Shadow #0036FF, Opacity 50 %, Direction 180°, Distance 48, Softness 248 (technique 02), a blue haze straight below, gone about 126 px under. At the deepest press its width is about 0.86 of its rest width (measured: 199 against 231 px in a 360 px view). The press smears the label's lettering with motion blur, from the switches already on. Scene (technique 03, figures measured there; visible in this result crop). The card is a flat white 1080 square, about 253 in the recording. The headline is a three-word sentence-case line in #0036FF, Montserrat SemiBold 98 px, tracking 20, centred. Its baseline is at y 255.7, about 61–62 % of the width wide, centred about 20 % down. The web address is a lower-case placeholder in #0036FF at layer Opacity 40 %, Montserrat ExtraBold 40 px, tracking 160, centred. Its baseline is at y 959.6, about 31 % of the width wide, about 87 % down. Stacking, top to bottom: cursor, headline, address, button, background (shown). Motion, from the key spacing, not a played result: the cursor travels from below left, off screen, up-right to the button. That is about 994 comp px in 38 frames (0.63 s), about 1.45 picture widths per second, constant speed, in a straight line.
+timing and easing: cursor Position keys at frame 89 (-106,1180) and frame 127 (694,590), 38 frames, linear. Button Scale keys at 153 (100 %), 159 (85 %) and 165 (100 %), 12 frames in all, linear. The press starts 26 frames after the cursor lands. At 60 fps.
+variations: none given. Shown only: the press spacing was first 10 frames (153/163/173), then tightened to 6 frames.
+pitfalls: none given
+build notes: cursorLayer.transform.scale.setValue([80,80]). cursorLayer.transform.position.setValueAtTime(89/60,[-106,1180]) and setValueAtTime(127/60,[694,590]). Then buttonLayer.transform.scale.setValueAtTime at 153/60, 159/60 and 165/60 with [100,100], [85,85] and [100,100]. Keys stay linear (KeyframeInterpolationType.LINEAR). Set layer.motionBlur = true on every layer and comp.motionBlur = true; both are lit, before this section starts. Everything here can be done by script.
+unknowns: The cursor "shrink" in the technique list is not shown. Scale is a static 80 %, never keyed. The result window comes from technique 07's later preview. During the press both builds hold the cursor at (694,590), so the picture is the same. This section's own straight, linear travel is never played clean; its span shows the press only with layer handles on screen, so the travel figures come from key spacing. Motion blur shutter settings are not shown. The scale anchor is not shown, though the dip looks centred.
+
+## Curved, eased cursor route in and out
+id: 07-curved-cursor-route
+revision: 79ba15a2
+job: call-to-action; support: point-at-detail, show-real-screen
+status: proven (accepted 2026-11-21)
+what it does for a beat: Makes a touch marker move like a hand, not a robot. It arcs in, pauses on the button for the tap, then arcs out and off screen, with eased starts and stops.
+what it looks like: A translucent grey touch marker streaks in from the bottom-left corner of a white end card as a long grey smear, on a shallow curve that bows slightly up and left. It settles on a centred blue pill button and holds while the button dips. Then it sweeps right and curls up and out through the right edge, blurred while it moves fast. A blue headline sits at the top and a pale blue web address at the bottom throughout.
+ingredients:
+- Position keyframes on the cursor layer — built-in; layer Transform > Position
+- Convert Vertex Tool on the motion path — built-in; toolbar Pen tool group
+- Easy Ease — built-in; Animation > Keyframe Assistant > Easy Ease (how it was applied is not seen)
+- Motion Blur layer switches and the comp's Motion Blur button — built-in; timeline Switches column; shutter angle in Composition Settings > Advanced (the value is not shown, inferred 360–540°)
+- A cursor comp: two translucent discs at 80 % scale (techniques 04 and 06; summarised in layout) — built-in
+steps:
+1. Start from technique 06's route: cursor keys at frame 89 (-106,1180) and frame 127 (694,590), linear and straight (shown)
+2. First attempt: add an exit key at 0:00:03:10 (frame 190) and drag it off to the right, then pull a handle with the Convert Vertex Tool (shown)
+   - Position at 3:10: dragged through 1262 → 1742,190 → 1662,190 (shown)
+3. Rebuild instead: retype the 3:10 key to the button position, so frames 127 to 190 are a hold (shown)
+   - Position at frame 190: 694,590 (shown)
+4. Add an exit key at 0:00:04:11 (frame 251), drag it right and then up (shown)
+   - Position: 1504,590 → 1474,590 → 1474,80 (shown)
+5. Drag that key earlier, to 0:00:03:53 (frame 233) (shown; display reads 3:53 at 1474,80)
+6. With the Convert Vertex Tool, pull the end key's (frame 233, at 1474,80) incoming handle down and left, back toward the button (shown)
+   - End key in-tangent about −222, +399 comp px, about 456 px long (measured during the drag, : from viewer (991,99) to (917,232) at 33.3 %)
+7. Pan the viewer up, still at 33.3 % zoom, to reach the off-screen start key (shown)
+8. Pull the start key's (frame 89) outgoing handle straight up (shown)
+   - Mid-drag reading: about +39, −564 comp px, from viewer (489,318) to (502,130) at 33.3 % (shown). The played route does not follow a handle that long; see layout. The value it ends at is not shown. A fit to the tracked played path gives about (136, −296) when key 2's in-tangent is (−87, 50) (inferred).
+9. Marquee-select all four cursor Position keys and apply Easy Ease (selection shown; hourglass keys at about frames 90, 128, 190 and 234 on the ruler; the command itself is inferred)
+10. Leave the button's Scale keys (153 / 159 / 165, 100 / 85 / 100 %) linear (shown)
+11. Preview with motion blur on, at Third resolution (shown)
+layout: Measured on the path frame and the preview frames (the three preview frames cut from into). Cursor: two neutral translucent discs at 80 % layer scale, about 160 comp px across, about 15 % of the picture width (inferred from technique 04). The outer disc is black at 25 %, giving a ring of 0.75 × the ground. The inner disc, about 0.70 of the diameter, is white at 40 %, giving 0.45 × ground + 102. On plain white that is about 188 and 215 (technique 04, measured). The cursor stacks above everything. Button: a #0036FF pill, 700 × 170 (about 65 % × 16 %), centred at (540, 540), with a white all-caps label, Montserrat ExtraBold 60 px, tracking 157 (technique 01). It carries Drop Shadow #0036FF, Opacity 50 %, Direction 180°, Distance 48, Softness 248 (technique 02), a blue haze straight below, gone about 126 px under. During the press the label's lettering smears with motion blur. Scene (technique 03, figures measured there; visible in this result crop throughout). The card is a flat white 1080 square, about 253 in the recording. The headline is a three-word sentence-case line in #0036FF, Montserrat SemiBold 98 px, tracking 20, centred. Its baseline is at y 255.7, about 61–62 % of the width wide, centred about 20 % down. The web address is a lower-case placeholder in #0036FF at layer Opacity 40 %, Montserrat ExtraBold 40 px, tracking 160, centred. Its baseline is at y 959.6, about 31 % of the width wide, about 87 % down. Played path, entry (measured: cursor centroids tracked on as the disc's outline, the largest blob where any RGB channel differs from the empty card by more than 12, holes filled. This catches the part over the blue button, where the inner disc lightens rather than darkens; crop 836,141,360,360, comp px = 3.01 × crop px). The entry is a shallow curve, not a deep S. It comes in through the left edge about 94–96 % down (comp y about 1020–1040). Points, comp px, as targets: (76, 961); (230, 843) at 762.07; (291, 804) at 762.10; (408, 736) at 762.12; (456, 713) at 762.15; (497, 691) at 762.17; (565, 655) at 762.18; (589, 645) at 762.22; (610, 633) at 762.23; (645, 617) at 762.27; (666, 606) at 762.30. An earlier lightness-only track read the last three of the first eight 17–34 px low; it lost the disc over the button. These corrected points agree with the checker's (499, 689), (565, 652) and (588, 641). It settles at (694, 590). The near-edge points read slightly inward because part of the disc is off screen. It bows up and left of the straight start-to-button chord by at most about 72 comp px, about 7 % of the picture, near x 70–290. The bow is 52 at x 408, 36 at x 497, 18 at x 589 and 4 at x 666. The cursor arrives heading up-right, about 28–30° above horizontal (measured from (645, 617) to (666, 606)), not level. This agrees with the proof review, which found 78 px, about 95 % down, and the same points within a few px. It disagrees with my earlier reading of the drawn path (a bow of about 17 %, crossing about 82 % down). Use the played points: the drawn path is seen at 33.3 % and its final handles are never read clean. Played path, exit (the proof build matched the reference here): from the button it runs right, almost level, for about a quarter of the picture, then turns steeply up-right to (1474, 80). It crosses the right edge about 40–42 % down. Motion blur (measured on the same tracked frames): the moving cursor is a capsule-shaped smear. Across the motion it is 161–169 comp px wide, the disc itself at 80 %. Along the motion it is 268 px at the fastest frames, so about 100–105 px longer than the disc. It is still 220–240 px (60–80 px of smear) as it slows. At its fastest the cursor travels about 70–100 comp px per frame: 205 px over the three display frames from 762.07 to 762.12, and about 98 px per frame just before. The preview drops some frames, so this is ± a frame. The smear is therefore about 1–1.4 frames of travel; at peak speed the ring is no longer visible inside it. Motion (measured from): the cursor is in the picture, a heavy motion-blur smear while fast, slowing into the button. It holds while the button dips (762.85–763.05). Then it accelerates right and up: comp x 694 → 730 → 852 → 950 → 1051, and is gone. The preview is at Third resolution, so the result looks softer than a full render.
+timing and easing: cursor Position keys at frames 89 (-106,1180), 127 (694,590), 190 (694,590) and 233 (1474,80), all Easy Ease. Entry 38 frames, hold 63 frames, exit 43 frames over a chord of about 930 comp px. Button Scale keys at 153 / 159 / 165, linear. At 60 fps.
+variations: none given. Shown only: the exit key first at 3:10 then rebuilt at 4:11 and moved to 3:53, and the exit end first to the right (y 590) then up (y 80).
+pitfalls: none given in words. Shown: pulling a handle on an exit key with no hold before it bent the arrival too, so the route was rebuilt with a hold key (step 3).
+build notes: pos.setValueAtTime for frames 89, 127, 190 and 233 (divide by 60). Curve the path with spatial tangents, pos.setSpatialTangentsAtKey(k, inTangent, outTangent). Key 1 (frame 89): out-tangent about [136,-296]. Key 2 (frame 127): in-tangent about [-87,50], about 100 px pointing back down-left so the entry arrives up-right at about 30°. Both are inferred from a fit to the eleven corrected points: RMS error 1.3 px, bow 73 px, left-edge crossing y 1031. A level [-100,0] in-tangent cannot fit them: its best fit misses by 6 px RMS and bends wrongly. Do not use the mid-drag [39,-564] or the earlier [-51,-89]. Pairs along the same family also fit within about 2.5 px, for example [-54,25] with [74,-249]. Key 3 (frame 190): out-tangent about [100,0] (inferred). The proof runner found 250 too long for both and 100 close. Key 4 (frame 233): in-tangent about [-222,399] (measured mid-drag), so the exit leg curls up into the end; the proof build's exit matched with it. Judge the result by the path, not the handle values: render the entry and check it passes within about 15 px of (230,843), (408,736), (497,691) and (589,645), crosses x 0 at y about 1020–1040 and bows no more than about 75 px from its chord. Use setSpatialContinuousAtKey(false) on keys 2 and 3 so the hold does not overshoot. Motion blur: comp.shutterAngle about 360–540 (inferred from a smear of 1–1.4 frames of travel; the 180° default gives half a frame, about a third of the reference smear, which the proof build showed). comp.shutterPhase about −180 to −270 (inferred, centred). Check that the cursor at its fastest smears about 100 px past its 160 px disc. Easy Ease is setTemporalEaseAtKey with new KeyframeEase(0, 33.33) in and out on all four keys (Easy Ease's defaults). Set layer.motionBlur = true on all layers and comp.motionBlur = true. Everything here can be scripted. Pulling handles with the Convert Vertex Tool is the interface way.
+unknowns: The final start handle is not shown. The mid-drag reading (39, −564) does not match the played path, so the handle was probably released shorter or changed later. The played points are the target, and the handle is inferred from them. The hold keys' tangents are never shown; about 100 px is inferred from the proof. The end key's in-tangent is a mid-drag reading. Why the drawn path read deeper than the played one is not resolved. How Easy Ease was applied (menu or F9) is not seen, nor whether its influence differs from the default 33.33 %. Shutter angle and phase are not shown; 360–540° is inferred from the smear. The preview drops frames, so per-frame speeds are ± one frame.
+
 ## Round dots from a shape stroke
 id: 01-dotted-stroke
 revision: 228e87a2

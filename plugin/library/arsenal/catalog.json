@@ -1,6 +1,6 @@
 {
  "vocab": "jobs-v1",
- "version": "cb6cdc4e",
+ "version": "e9551509",
  "jobs": [
   "land-number",
   "count-things",
@@ -182,8 +182,10 @@
    "duration": 4,
    "motion": "still",
    "difficulty": 1,
-   "taught_by": 1,
-   "variants": [],
+   "taught_by": 2,
+   "variants": [
+    "02-button-soft-lift-shadow"
+   ],
    "section": {
     "document": "arsenal-picture",
     "heading": "Seat a cut-out object with a soft, doubled drop shadow"
@@ -760,6 +762,279 @@
    }
   },
   {
+   "id": "01-pill-button-in-own-comp",
+   "revision": "33b5d2bd",
+   "name": "A pill button built in its own comp",
+   "line": "The call-to-action button for an end card or app demo: a flat, fully rounded pill with a centred caps label, kept in its own comp so the scene can place, scale, slide and \"press\" it as one layer.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "call-to-action",
+   "support": [
+    "show-real-screen"
+   ],
+   "mood": [
+    "light",
+    "clean",
+    "minimal"
+   ],
+   "needs": [
+    "shapes",
+    "type"
+   ],
+   "duration": 3,
+   "motion": "still",
+   "difficulty": 2,
+   "taught_by": 1,
+   "variants": [],
+   "section": {
+    "document": "arsenal-line",
+    "heading": "A pill button built in its own comp"
+   },
+   "still": {
+    "path": "arsenal/stills/01-pill-button-in-own-comp.jpg",
+    "sha256": "63b67e6d55be83d00f2c2ddb5a7cb143474917e3553453b37f9bd38b4c998b0b"
+   }
+  },
+  {
+   "id": "02-button-soft-lift-shadow",
+   "revision": "14b43551",
+   "name": "A soft coloured lift under a button, and an inset label",
+   "line": "Lifts a flat UI button off a white page so it reads as a pressable object, with a long, very soft glow-like shadow in the button's own colour straight underneath, and gives the label a slight pressed-in feel with two tiny shadows.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "add-depth",
+   "support": [
+    "call-to-action"
+   ],
+   "mood": [
+    "light",
+    "soft",
+    "clean"
+   ],
+   "needs": [
+    "shapes",
+    "type"
+   ],
+   "duration": 3,
+   "motion": "still",
+   "difficulty": 2,
+   "taught_by": 1,
+   "variant_of": "05-soft-doubled-drop-shadow",
+   "variants": [],
+   "section": {
+    "document": "arsenal-picture",
+    "heading": "A soft coloured lift under a button, and an inset label"
+   },
+   "still": {
+    "path": "arsenal/stills/02-button-soft-lift-shadow.jpg",
+    "sha256": "193564d5d31893f81a0f5b31c41132bbea21e352fb9034170f9b87a87013cf6f"
+   }
+  },
+  {
+   "id": "03-end-card-stack",
+   "revision": "33ec8bcf",
+   "name": "Headline, button and web address stacked on a white square",
+   "line": "The closing card of a social ad or product promo: one line of headline, one button and a quiet web address, on a clean white square, centred on one vertical axis and ready to be animated in.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "call-to-action",
+   "support": [
+    "reveal-headline"
+   ],
+   "mood": [
+    "light",
+    "clean",
+    "minimal"
+   ],
+   "needs": [
+    "shapes",
+    "type"
+   ],
+   "duration": 4,
+   "motion": "still",
+   "difficulty": 2,
+   "taught_by": 1,
+   "variants": [],
+   "section": {
+    "document": "arsenal-line",
+    "heading": "Headline, button and web address stacked on a white square"
+   },
+   "still": {
+    "path": "arsenal/stills/03-end-card-stack.jpg",
+    "sha256": "25f968c9694266d05a66ce137a3cf98410a1e1231b0ac7123ceefb63608a82d5"
+   }
+  },
+  {
+   "id": "04-tap-cursor-with-rings",
+   "revision": "f0079c1a",
+   "name": "Tap cursor built from two translucent discs",
+   "line": "A stand-in for a finger or touch point in a UI demo. It is a soft, translucent touch marker that reads on a white screen without hiding the button under it.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "point-at-detail",
+   "support": [
+    "show-real-screen",
+    "call-to-action"
+   ],
+   "mood": [
+    "light",
+    "clean",
+    "minimal"
+   ],
+   "needs": [
+    "shapes"
+   ],
+   "duration": 2,
+   "motion": "still",
+   "difficulty": 3,
+   "taught_by": 3,
+   "variants": [],
+   "section": {
+    "document": "arsenal-line",
+    "heading": "Tap cursor built from two translucent discs"
+   },
+   "still": {
+    "path": "arsenal/stills/04-tap-cursor-with-rings.jpg",
+    "sha256": "28b4b3eaead770100ee629af145e0e8c842efcec74f0f8039b9d6adca45db906"
+   }
+  },
+  {
+   "id": "05-staggered-slide-in",
+   "revision": "3e9d01cb",
+   "name": "Card elements slide in from the left, one after another",
+   "line": "Builds an end card or call-to-action screen in a quick, readable cascade: each element arrives from off the left edge and lands in place a few frames after the one above it, so the eye reads headline, then button, then address.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "call-to-action",
+   "support": [
+    "list-items"
+   ],
+   "mood": [
+    "light",
+    "clean",
+    "bold"
+   ],
+   "needs": [
+    "shapes",
+    "type"
+   ],
+   "duration": 1,
+   "motion": "one-shot",
+   "difficulty": 2,
+   "taught_by": 3,
+   "variants": [],
+   "section": {
+    "document": "arsenal-line",
+    "heading": "Card elements slide in from the left, one after another"
+   },
+   "still": {
+    "path": "arsenal/stills/05-staggered-slide-in.jpg",
+    "sha256": "664b72f4d62dbc26edcf98dcc9331a7fcfde92491d8b782ba2c5765868b114a4"
+   }
+  },
+  {
+   "id": "06-cursor-travels-and-taps-button",
+   "revision": "2a41799f",
+   "name": "Cursor glides in and taps the button",
+   "line": "Shows a tap on a UI element. A touch marker slides in from off screen and stops on a button, and the button dips in scale and springs back, so the viewer reads \"pressed\".",
+   "status": "proven",
+   "kind": "technique",
+   "job": "call-to-action",
+   "support": [
+    "point-at-detail",
+    "show-real-screen"
+   ],
+   "mood": [
+    "light",
+    "clean",
+    "minimal"
+   ],
+   "needs": [
+    "shapes"
+   ],
+   "duration": 2,
+   "motion": "one-shot",
+   "difficulty": 1,
+   "taught_by": 3,
+   "variants": [],
+   "section": {
+    "document": "arsenal-line",
+    "heading": "Cursor glides in and taps the button"
+   },
+   "still": {
+    "path": "arsenal/stills/06-cursor-travels-and-taps-button.jpg",
+    "sha256": "61ddda841477f1c52bb59939ffc60f31c36140ed7b8f0c0d0df0128616692fdf"
+   }
+  },
+  {
+   "id": "07-curved-cursor-route",
+   "revision": "79ba15a2",
+   "name": "Curved, eased cursor route in and out",
+   "line": "Makes a touch marker move like a hand, not a robot. It arcs in, pauses on the button for the tap, then arcs out and off screen, with eased starts and stops.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "call-to-action",
+   "support": [
+    "point-at-detail",
+    "show-real-screen"
+   ],
+   "mood": [
+    "light",
+    "clean",
+    "playful"
+   ],
+   "needs": [
+    "shapes"
+   ],
+   "duration": 3,
+   "motion": "one-shot",
+   "difficulty": 3,
+   "taught_by": 3,
+   "variants": [],
+   "section": {
+    "document": "arsenal-line",
+    "heading": "Curved, eased cursor route in and out"
+   },
+   "still": {
+    "path": "arsenal/stills/07-curved-cursor-route.jpg",
+    "sha256": "2cacdd86906f4abd4901dbd69d83507b3ee156c61c15aa859b7533a952cf48ea"
+   }
+  },
+  {
+   "id": "08-staggered-slide-out-exit",
+   "revision": "b061556e",
+   "name": "Card elements slide out to the right in the same cascade",
+   "line": "Clears an end card or call-to-action screen with the same cascade it arrived with, carried on in the same direction: the elements leave off the right edge one after another, so the card reads as passing through the frame. Also a pass to even out the gaps between entrance, tap and exit.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "hand-over",
+   "support": [
+    "call-to-action"
+   ],
+   "mood": [
+    "light",
+    "clean",
+    "bold"
+   ],
+   "needs": [
+    "shapes",
+    "type"
+   ],
+   "duration": 1,
+   "motion": "one-shot",
+   "difficulty": 3,
+   "taught_by": 3,
+   "variants": [],
+   "section": {
+    "document": "arsenal-connective",
+    "heading": "Card elements slide out to the right in the same cascade"
+   },
+   "still": {
+    "path": "arsenal/stills/08-staggered-slide-out-exit.jpg",
+    "sha256": "51b141ffc5ff427331727603a5630defdc4f0fed3f8c2ca3a513b6bc4d0072ec"
+   }
+  },
+  {
    "id": "01-dotted-stroke",
    "revision": "228e87a2",
    "name": "Round dots from a shape stroke",
@@ -914,7 +1189,7 @@
    "duration": 0,
    "motion": "one-shot",
    "difficulty": 1,
-   "taught_by": 1,
+   "taught_by": 3,
    "variants": [],
    "section": {
     "document": "arsenal-build-aid",
