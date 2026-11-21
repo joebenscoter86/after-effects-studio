@@ -8,7 +8,7 @@ This repository is the canonical development workspace. Read this map first, the
 
 ## Workspaces
 
-- product/: context.md, brief.md, prd.md, roadmap.md, build-plan.md, backlog.md and decisions.md. Scope, requirements, staged execution, ticket mapping and decisions.
+- product/: context.md, brief.md, prd.md, roadmap.md, build-plan.md, backlog.md and decisions.md. Scope, requirements, staged execution, ticket mapping and decisions. explainer-cookbook-plan.md ranks the tutorials still to learn for the cookbook's empty explainer jobs, one per session.
 - plugin/: context.md and the complete installable package. The existing .codex-plugin/ and .mcp.json identify the plugin; runtime/ contains src/, jsx/, tests/, fixtures/, docs/, scripts/ and dist/. library/ contains language/, references/, recipes/, examples/, templates/, scripts/ and presets/, plus its manifest and source map. skills/ contains motion-studio/, ae-control/ and motion-review/. scripts/, tests/, evals/, examples/, assets/, docs/ and verification/ support packaging and evidence. README.md, PROVENANCE.md and THIRD-PARTY-NOTICES.txt describe requirements and attribution.
 - quality/: context.md, release-criteria.md, fixtures/, reports/ and renders/. Reproducible scenarios and inspected evidence. The canonical skill test prompts remain in plugin/evals/.
 - release/: context.md, release-plan.md, listing-draft.md, submission/, website/ and packages/. Public distribution and launch materials.
