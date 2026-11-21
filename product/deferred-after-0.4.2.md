@@ -29,7 +29,7 @@ Written 2026-11-19. Joe's plan: ship 0.4.2 (the 57 proven cookbook recipes plus 
 
 ## Learning
 
-10. **New tutorials, chosen to fill the 14 jobs with no proven technique.** Also the nightly learner at a few videos a night (YouTube's bot check limits downloads).
+10. **New tutorials, chosen to fill the 14 jobs with no proven technique.** Also the nightly learner at a few videos a night (YouTube's bot check limits downloads). The ranked plan, one tutorial per session, is `product/explainer-cookbook-plan.md`.
 
 ## Content repo (house style)
 
