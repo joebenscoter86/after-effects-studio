@@ -135,6 +135,18 @@ The first video's 25 recipes all passed the check. Building them found three rec
 - **What happened.** Recipe 07 took the cursor's start handle from a reading made while the author dragged it (+39, −564) and its shape from the drawn motion path. The route the preview plays bows about a third as much. The first build bowed 19 % of its chord against the reference's 7 %. The first re-track took the cursor's centre from its lightness alone, and the translucent disc over a shaded corner pulled it 17–34 px low near the button. Tracked by the disc's outline, eleven points gave handles of about (136, −296) and (−87, 50), and the rebuild sits within 2 px of the played route.
 - **Rule.** `distil.md`: a curved path's target is the route that plays, tracked on six or more preview frames by the object's outline; handles are inferred from those points. `check.md` item 10: check one of the given points on a played frame.
 
+### 30. The cookbook outgrew a package file (explainer piece 3, nHh0NRo8G2U, 2026-11-21)
+- **What happened.** With the 15 recipes from piece 3 in the drafts, the arsenal build refused: `recipes-line.md` came to 321 KB and `recipes-picture.md` to 281 KB, over the 256 KB limit on a non-image file in the Claude package. The guard test in `tests/arsenal.test.mjs` caught it before any release.
+- **Rule.** `arsenal.mjs` splits a job group into numbered parts (`recipes-line.md`, `recipes-line-2.md`, ...) when one file would pass the limit. A parent and its variants stay in one part, and each catalog record names the part that holds it, so `ae_arsenal get` and the manifest need no change. Test in `tests/arsenal.test.mjs`.
+
+### 31. An S-curve ease written as zero speed (explainer piece 3, nHh0NRo8G2U 04, 07, 08, 15, 16, 2026-11-21)
+- **What happened.** The tutorial eases with an extension whose curve reads 0.88, 0.14, 0.12, 0.86 on screen. Four writers turned it into `KeyframeEase(0, 88)`. The curve's slope at each end is 0.14 ÷ 0.88, so the move keeps about 16 % of its average speed at each key; zero speed gives a harder ease than the one that plays. The checkers caught it each time by tracking the played frames against both curves.
+- **Rule.** `distil.md`: a cubic-bezier ease is converted to After Effects speed and influence from its end slopes (speed = slope × the property's average speed over the segment, influence = the handle's x share), marked inferred, and checked against played frames.
+
+### 32. A checker's own suggestion was a mid-drag reading (explainer piece 3, nHh0NRo8G2U 12, 2026-11-21)
+- **What happened.** In round 1 the checker told the writer that a speed-graph tooltip (41.61 px/s, 29.48 %) was the key's value. It was read while the author was still dragging; the settled graph starts at 0 px/s and 24.6 %. The writer applied it, and the same checker caught it in round 2. A further round went to undoing the checker's own mistake.
+- **Rule.** `check.md`: a value a checker suggests meets the same test as the recipe's own: cite the frame where it has landed, not one taken while it is still changing.
+
 ## Still open
 - The 24 "matches" on the first video were given before the look line existed.
 - Nothing yet tests the prompts themselves. A cheap test: keep technique 11's first recipe as a fixture and confirm a fresh checker fails it on check 8.

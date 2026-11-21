@@ -37,7 +37,7 @@ The picks were chosen from titles, chapter lists and descriptions. Nobody has wa
 |---|---|---|---|---|---|
 | 1 | SonduckFilm, [5 Infographic Edits You Should Know](https://www.youtube.com/watch?v=SKU3QdqKLOs) | land-number, compare, show-proof (not count-things) | 5 min | low | done: 5 written, 5 proven (accepted by Joe 2026-11-21), 0 held |
 | 2 | Mavi Design, [Animate a Simple Call-To-Action Button Scene](https://www.youtube.com/watch?v=Tf0EiCGOEYs) | call-to-action | 15 min | low | done: 8 written, 8 proven (accepted by Joe 2026-11-21), 0 held |
-| 3 | Mapal, [How To Animate Infographics Like VOX](https://www.youtube.com/watch?v=nHh0NRo8G2U) | step-through-process, show-proof, compare | 41 min | medium | not started |
+| 3 | Mapal, [How To Animate Infographics Like VOX](https://www.youtube.com/watch?v=nHh0NRo8G2U) | step-through-process, show-proof, compare | 41 min | medium | recipes checked: 15 written, 0 proven, 1 held; proofs next |
 | 4 | TomsProject, [SaaS Motion Graphics Masterclass](https://www.youtube.com/watch?v=tYRvoI04pJk) | introduce-tool, flag-a-problem, make-concrete | 52 min | medium | not started |
 | 5 | Move Shapes, [Simple Before & After Transition](https://www.youtube.com/watch?v=SSAsTdXmKl0) | before-after | 3 min | low | not started |
 | 6 | Flat Pack FX, [Stylized Timeline Animation](https://www.youtube.com/watch?v=9AtjrBHF560) | step-through-process | 14 min | low | not started |
@@ -88,6 +88,16 @@ The picks were chosen from titles, chapter lists and descriptions. Nobody has wa
 
 - **Why:** the strongest teacher of steps lighting up in order (its "phase animation" and animated arrow), plus a box chart, pie chart, pyramid and map.
 - **Watch for:** it's long, so expect 8–12 recipes and possibly two sessions. Split the work at "Box Chart Animation" (14:18). It uses two free plugins, Motion Tools and DecomposeText, which we can install. Design is done in Illustrator and Photoshop. Those design steps are build aids at most; generated art replaces them.
+- **Done so far (2026-11-21):** the video teaches what its chapters say. Sixteen techniques, fifteen recipes passed, one held. All are new entries (no catalog parent).
+  - Phase comp: 01 segmented progress bar draws in order (step-through-process), 02 labels rise from behind the bar through an inverted matte, 03 step pictures pop with a bounce in a 10-frame stagger, 04 curved arrow draws between steps, 05 stop-motion jitter with a black-and-white finish (finish-the-look), 06 faint graph-paper backdrop.
+  - Bar chart: 07 stroked bars grow in a stagger with value labels (compare; show-proof), 08 baseline draws out from its centre, 09 grid clipped to the chart area.
+  - Pie: 10 pie slice from a fat stroked ring (show-proof; land-number, compare), 11 label rises word by word (land-number).
+  - Pyramid: 12 tiers spread to reveal labels (make-concrete), 13 match cut carried by movement (hand-over).
+  - Map: 14 pinned photos sway on a map, 15 map washes and a self-drawing border (point-at-detail).
+  - Groups: "trim paths draw-on" (01, 04, 07, 08, 10, 15, new), "time stagger" (03, 11), "stop-motion jitter" and "graph-paper grid" (new).
+  - The checks caught eases converted to zero speed when the curve (0.88, 0.14, 0.12, 0.86) keeps about 16 % of the average speed at each key; a speed-graph value read mid-drag (the checker's own round-1 suggestion, caught in round 2); result windows that did not hold; and recipes that leaned on another recipe's figures.
+  - **Held:** 16 tilted 3D map tour with shallow focus. One figure was still wrong after round 3 (the Europe print's width at its key). The reason is in the study's `drafts-held.md`; one change and a changed-lines check would revive it.
+- **Not filled:** count-things. Nothing here shows a quantity as objects to count.
 
 ### 4. TomsProject, SaaS masterclass
 
