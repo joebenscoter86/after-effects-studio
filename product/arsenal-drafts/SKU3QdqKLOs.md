@@ -1,20 +1,20 @@
-# Techniques from one video (5 recipes, all unproven)
+# Techniques from one video (5 recipes, 5 proven)
 
-Written by the channel learner from the video's narration and screen together, then checked against the video by a second reader. Every recipe here passed that check; none is in the plugin. `status: proven` means it was built in After Effects from the recipe alone, compared with the tutorial's own result, and accepted by Joe (0 of 5); `status: unproven` means it has not been.
+Written by the channel learner from the video's narration and screen together, then checked against the video by a second reader. Every recipe here passed that check; none is in the plugin. `status: proven` means it was built in After Effects from the recipe alone, compared with the tutorial's own result, and accepted by Joe (5 of 5); `status: unproven` means it has not been.
 
 Each step is marked `said` (narrated), `shown` (on screen; `fNNNNNN` is a frame in the local study folder, frame number divided by the video's frame rate is seconds) or `inferred` (our reading). The `source` and frame references are for checking and stay out of the plugin. Credits: `CREDITS.md`.
 
 | # | Technique | Jobs | Check passed in round | Status |
 |---|---|---|---|---|
-| 01 | Counter driven by one slider on a control null | type; workflow | 2 | unproven |
-| 02 | Ring that fills to the counter's value | lines and shapes; workflow | 3 | unproven |
-| 03 | Round-capped bars that grow to their own values | lines and shapes; layout and repetition | 2 | unproven |
-| 04 | Icon that fills up to a value | lines and shapes; layout and repetition | 3 | unproven |
-| 05 | Map regions that fade up one by one | layout and repetition; transitions | 4 | unproven |
+| 01 | Counter driven by one slider on a control null | type; workflow | 2 | proven |
+| 02 | Ring that fills to the counter's value | lines and shapes; workflow | 3 | proven |
+| 03 | Round-capped bars that grow to their own values | lines and shapes; layout and repetition | 2 | proven |
+| 04 | Icon that fills up to a value | lines and shapes; layout and repetition | 3 | proven |
+| 05 | Map regions that fade up one by one | layout and repetition; transitions | 4 | proven |
 
 ## Counter driven by one slider on a control null
 id: 01-value-driven-counter
-status: unproven
+status: proven (accepted by Joe 2026-11-21: rebuilt in After Effects at 9:16 on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "Accept all five")
 source: SKU3QdqKLOs 15.2–93.4 s (the prefix and suffix tip runs to 89.6 s and belongs here)
 jobs: type; workflow
 what it does for a beat: A stat that counts up (or down) to a figure, so a number lands with weight. The same slider later drives a ring (02-ring-fills-to-value) and bars (03-bars-grow-to-values), so one keyframed value moves the number and its graphic together.
@@ -51,7 +51,7 @@ unknowns: The text layer's anchor and position in pixels (left edge at about 431
 
 ## Ring that fills to the counter's value
 id: 02-ring-fills-to-value
-status: unproven
+status: proven (accepted by Joe 2026-11-21: rebuilt in After Effects at 9:16 on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "Accept all five")
 source: SKU3QdqKLOs 93.4–153.0 s (the wiggle trick at 142.9–153 s belongs here; the template advert from 153 s is left out)
 jobs: lines and shapes; workflow
 what it does for a beat: A percentage stat shown as a donut that draws on to the same figure the number counts to, so the graphic and the number can never disagree. Builds on 01-value-driven-counter: it reuses that recipe's null and slider.
@@ -92,7 +92,7 @@ unknowns: Ellipse size as typed (only measured share); whether the 100 % influen
 
 ## Round-capped bars that grow to their own values
 id: 03-bars-grow-to-values
-status: unproven
+status: proven (accepted by Joe 2026-11-21: rebuilt in After Effects at 9:16 on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "Accept all five")
 source: SKU3QdqKLOs 180.8–230.5 s
 jobs: lines and shapes; layout and repetition
 what it does for a beat: A comparison beat: several figures rise side by side, each to its own value, so the viewer reads which is biggest. Builds on 01-value-driven-counter (a null whose sliders hold the values) and 02-ring-fills-to-value (dim track under a coloured copy, Trim Paths End linked to a slider).
@@ -132,7 +132,7 @@ unknowns: The Easy Ease influence in this comp; the start value of the sliders (
 
 ## Icon that fills up to a value
 id: 04-icon-fills-to-value
-status: unproven
+status: proven (accepted by Joe 2026-11-21: rebuilt in After Effects at 9:16 on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "Accept all five")
 source: SKU3QdqKLOs 230.5–269.5 s
 jobs: lines and shapes; layout and repetition
 what it does for a beat: Turns a flat icon into a gauge: a bright copy of the icon rises from the bottom over a dim copy and stops at a figure, so a stat reads as "how full". Reach for it beside a counter when a percentage needs a picture.
@@ -181,7 +181,7 @@ unknowns: The second slider key's typed value: not readable on any frame; build 
 
 ## Map regions that fade up one by one
 id: 05-map-regions-fade-up
-status: unproven
+status: proven (accepted by Joe 2026-11-21: rebuilt in After Effects at 9:16 on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "Accept all five")
 source: SKU3QdqKLOs 269.5–324.6 s
 jobs: layout and repetition; transitions
 what it does for a beat: Marks places on a map: chosen regions light up in colour over a grey base map, each with a numbered list entry, so a viewer reads "these places" in order. Use it for coverage, rankings or "where" beats.

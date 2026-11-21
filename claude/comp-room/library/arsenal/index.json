@@ -2,7 +2,7 @@
  "arsenal": "Technique recipes for beats, filed under the job vocabulary. Ask ae_arsenal per beat by job (find), read the chosen recipe (get), list the jobs (jobs).",
  "tool": "ae_arsenal",
  "vocab": "jobs-v1",
- "version": "e6db1fb0",
+ "version": "cb6cdc4e",
  "documents": [
   {
    "id": "arsenal-index",
@@ -49,7 +49,7 @@
  ],
  "counts": {
   "recipes": 78,
-  "proven": 57,
-  "stills": 48
+  "proven": 62,
+  "stills": 53
  }
 }

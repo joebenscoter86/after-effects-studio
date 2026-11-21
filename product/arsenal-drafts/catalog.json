@@ -1,6 +1,6 @@
 {
   "vocab": "jobs-v1",
-  "version": "e6db1fb0",
+  "version": "cb6cdc4e",
   "jobs": [
     "land-number",
     "count-things",
@@ -623,7 +623,7 @@
       "n": 1,
       "name": "Counter driven by one slider on a control null",
       "line": "A stat that counts up (or down) to a figure, so a number lands with weight. The same slider later drives a ring (02-ring-fills-to-value) and bars (03-bars-grow-to-values), so one keyframed value moves the number and its graphic together.",
-      "status": "unproven",
+      "status": "proven",
       "kind": "technique",
       "job": "land-number",
       "support": [],
@@ -644,8 +644,8 @@
         "file": "SKU3QdqKLOs.md",
         "heading": "Counter driven by one slider on a control null"
       },
-      "revision": "aea65897",
-      "still": null,
+      "revision": "bec7b246",
+      "still": "quality/renders/channel-study/SKU3QdqKLOs/proof/01/build.png",
       "taught_by": 4,
       "variants": []
     },
@@ -655,7 +655,7 @@
       "n": 2,
       "name": "Ring that fills to the counter's value",
       "line": "A percentage stat shown as a donut that draws on to the same figure the number counts to, so the graphic and the number can never disagree. Builds on 01-value-driven-counter: it reuses that recipe's null and slider.",
-      "status": "unproven",
+      "status": "proven",
       "kind": "technique",
       "job": "land-number",
       "support": [
@@ -680,8 +680,8 @@
         "file": "SKU3QdqKLOs.md",
         "heading": "Ring that fills to the counter's value"
       },
-      "revision": "9f9a4a1d",
-      "still": null,
+      "revision": "05485478",
+      "still": "quality/renders/channel-study/SKU3QdqKLOs/proof/02/build.png",
       "taught_by": 4,
       "variants": []
     },
@@ -691,7 +691,7 @@
       "n": 3,
       "name": "Round-capped bars that grow to their own values",
       "line": "A comparison beat: several figures rise side by side, each to its own value, so the viewer reads which is biggest. Builds on 01-value-driven-counter (a null whose sliders hold the values) and 02-ring-fills-to-value (dim track under a coloured copy, Trim Paths End linked to a slider).",
-      "status": "unproven",
+      "status": "proven",
       "kind": "technique",
       "job": "compare",
       "support": [
@@ -715,8 +715,8 @@
         "file": "SKU3QdqKLOs.md",
         "heading": "Round-capped bars that grow to their own values"
       },
-      "revision": "09695ae4",
-      "still": null,
+      "revision": "19e03b63",
+      "still": "quality/renders/channel-study/SKU3QdqKLOs/proof/03/build.png",
       "taught_by": 4,
       "variants": []
     },
@@ -726,7 +726,7 @@
       "n": 4,
       "name": "Icon that fills up to a value",
       "line": "Turns a flat icon into a gauge: a bright copy of the icon rises from the bottom over a dim copy and stops at a figure, so a stat reads as \"how full\". Reach for it beside a counter when a percentage needs a picture.",
-      "status": "unproven",
+      "status": "proven",
       "kind": "technique",
       "job": "land-number",
       "support": [
@@ -750,8 +750,8 @@
         "file": "SKU3QdqKLOs.md",
         "heading": "Icon that fills up to a value"
       },
-      "revision": "16ac9235",
-      "still": null,
+      "revision": "b09ebf07",
+      "still": "quality/renders/channel-study/SKU3QdqKLOs/proof/04/build.png",
       "taught_by": 4,
       "variants": []
     },
@@ -761,7 +761,7 @@
       "n": 5,
       "name": "Map regions that fade up one by one",
       "line": "Marks places on a map: chosen regions light up in colour over a grey base map, each with a numbered list entry, so a viewer reads \"these places\" in order. Use it for coverage, rankings or \"where\" beats.",
-      "status": "unproven",
+      "status": "proven",
       "kind": "technique",
       "job": "point-at-detail",
       "support": [
@@ -785,8 +785,8 @@
         "file": "SKU3QdqKLOs.md",
         "heading": "Map regions that fade up one by one"
       },
-      "revision": "420e5ff4",
-      "still": null,
+      "revision": "59a59810",
+      "still": "quality/renders/channel-study/SKU3QdqKLOs/proof/05/build.png",
       "taught_by": 1,
       "variants": []
     },

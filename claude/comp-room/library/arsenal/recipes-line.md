@@ -4,9 +4,9 @@ Generated from the recipe drafts; do not edit by hand. Recipes whose primary job
 
 ## Counter driven by one slider on a control null
 id: 01-value-driven-counter
-revision: aea65897
+revision: bec7b246
 job: land-number
-status: unproven
+status: proven (accepted 2026-11-21)
 what it does for a beat: A stat that counts up (or down) to a figure, so a number lands with weight. The same slider later drives a ring (02-ring-fills-to-value) and bars (03-bars-grow-to-values), so one keyframed value moves the number and its graphic together.
 what it looks like: A large heavy white number on a flat near-black ground counts from 0% to 83% in whole steps, sitting left of centre beside a heading and a short paragraph.
 ingredients:
@@ -38,9 +38,9 @@ unknowns: The text layer's anchor and position in pixels (left edge at about 431
 
 ## Ring that fills to the counter's value
 id: 02-ring-fills-to-value
-revision: 9f9a4a1d
+revision: 05485478
 job: land-number; support: show-proof, keep-it-alive
-status: unproven
+status: proven (accepted 2026-11-21)
 what it does for a beat: A percentage stat shown as a donut that draws on to the same figure the number counts to, so the graphic and the number can never disagree. Builds on 01-value-driven-counter: it reuses that recipe's null and slider.
 what it looks like: A thick yellow arc grows clockwise from twelve o'clock over a dim full ring until it covers 83 % of the circle, with the white counter centred in the ring's hole; with the optional wiggle the arc and the number keep drifting a few percent after they land.
 ingredients:
@@ -76,9 +76,9 @@ unknowns: Ellipse size as typed (only measured share); whether the 100 % influen
 
 ## Round-capped bars that grow to their own values
 id: 03-bars-grow-to-values
-revision: 09695ae4
+revision: 19e03b63
 job: compare; support: show-proof
-status: unproven
+status: proven (accepted 2026-11-21)
 what it does for a beat: A comparison beat: several figures rise side by side, each to its own value, so the viewer reads which is biggest. Builds on 01-value-driven-counter (a null whose sliders hold the values) and 02-ring-fills-to-value (dim track under a coloured copy, Trim Paths End linked to a slider).
 what it looks like: Thick yellow pill-ended bars rise from a common baseline inside dim full-height tracks of the same width, on a near-black ground with a percent scale at left, month labels below and a value above each bar. The build makes two bars (54 % and 64 %); the finished example plays twelve.
 ingredients:
@@ -113,9 +113,9 @@ unknowns: The Easy Ease influence in this comp; the start value of the sliders (
 
 ## Icon that fills up to a value
 id: 04-icon-fills-to-value
-revision: 16ac9235
+revision: b09ebf07
 job: land-number; support: make-concrete
-status: unproven
+status: proven (accepted 2026-11-21)
 what it does for a beat: Turns a flat icon into a gauge: a bright copy of the icon rises from the bottom over a dim copy and stops at a figure, so a stat reads as "how full". Reach for it beside a counter when a percentage needs a picture.
 what it looks like: A dim slate-blue rocket icon on a near-black ground; a golden-yellow copy of the same icon fills it from the bottom edge upward with a hard horizontal edge, stopping at about 86 % of the icon's height, next to a large white figure with a small caption (the figure finishes counting before the fill starts to rise).
 ingredients:
@@ -159,9 +159,9 @@ unknowns: The second slider key's typed value: not readable on any frame; build 
 
 ## Map regions that fade up one by one
 id: 05-map-regions-fade-up
-revision: 420e5ff4
+revision: 59a59810
 job: point-at-detail; support: establish-place, list-items
-status: unproven
+status: proven (accepted 2026-11-21)
 what it does for a beat: Marks places on a map: chosen regions light up in colour over a grey base map, each with a numbered list entry, so a viewer reads "these places" in order. Use it for coverage, rankings or "where" beats.
 what it looks like: A pale grey map of a continent on an off-white ground, with a numbered list down the left third. Six regions, each a different saturated colour (amber, orange, coral red, navy, sky blue, light cyan) with its name in white, fade up one after another over the grey map, each together with its matching numbered entry.
 ingredients:

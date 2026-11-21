@@ -54,5 +54,10 @@
  "02-glow-radial-blur-noise-finish-stack": "quality/renders/channel-study/8oVLS0ZlKC4/proof/02/build.png",
  "03-blurred-light-shapes-at-frame-edges": "quality/renders/channel-study/8oVLS0ZlKC4/proof/03/build.png",
  "04-blur-and-choke-gooey-morph": "quality/renders/channel-study/8oVLS0ZlKC4/proof/04/build.png",
- "05-path-opening-split-driven-by-moving-ball": "quality/renders/channel-study/8oVLS0ZlKC4/proof/05/build.png"
+ "05-path-opening-split-driven-by-moving-ball": "quality/renders/channel-study/8oVLS0ZlKC4/proof/05/build.png",
+ "01-value-driven-counter": "quality/renders/channel-study/SKU3QdqKLOs/proof/01/build.png",
+ "02-ring-fills-to-value": "quality/renders/channel-study/SKU3QdqKLOs/proof/02/build.png",
+ "03-bars-grow-to-values": "quality/renders/channel-study/SKU3QdqKLOs/proof/03/build.png",
+ "04-icon-fills-to-value": "quality/renders/channel-study/SKU3QdqKLOs/proof/04/build.png",
+ "05-map-regions-fade-up": "quality/renders/channel-study/SKU3QdqKLOs/proof/05/build.png"
 }
