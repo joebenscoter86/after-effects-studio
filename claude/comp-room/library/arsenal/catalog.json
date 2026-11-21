@@ -1,6 +1,6 @@
 {
  "vocab": "jobs-v1",
- "version": "6862081c",
+ "version": "e6db1fb0",
  "jobs": [
   "land-number",
   "count-things",
@@ -588,6 +588,159 @@
    "section": {
     "document": "arsenal-picture",
     "heading": "Turning a crude gradient disc into a grainy glowing orb"
+   },
+   "still": null
+  },
+  {
+   "id": "01-value-driven-counter",
+   "revision": "aea65897",
+   "name": "Counter driven by one slider on a control null",
+   "line": "A stat that counts up (or down) to a figure, so a number lands with weight. The same slider later drives a ring (02-ring-fills-to-value) and bars (03-bars-grow-to-values), so one keyframed value moves the number and its graphic together.",
+   "status": "unproven",
+   "kind": "technique",
+   "job": "land-number",
+   "support": [],
+   "mood": [
+    "dark",
+    "bold",
+    "clean"
+   ],
+   "needs": [
+    "type"
+   ],
+   "duration": 3,
+   "motion": "one-shot",
+   "difficulty": 1,
+   "taught_by": 4,
+   "variants": [],
+   "section": {
+    "document": "arsenal-line",
+    "heading": "Counter driven by one slider on a control null"
+   },
+   "still": null
+  },
+  {
+   "id": "02-ring-fills-to-value",
+   "revision": "9f9a4a1d",
+   "name": "Ring that fills to the counter's value",
+   "line": "A percentage stat shown as a donut that draws on to the same figure the number counts to, so the graphic and the number can never disagree. Builds on 01-value-driven-counter: it reuses that recipe's null and slider.",
+   "status": "unproven",
+   "kind": "technique",
+   "job": "land-number",
+   "support": [
+    "show-proof",
+    "keep-it-alive"
+   ],
+   "mood": [
+    "dark",
+    "bold",
+    "clean"
+   ],
+   "needs": [
+    "shapes",
+    "type"
+   ],
+   "duration": 3,
+   "motion": "one-shot",
+   "difficulty": 1,
+   "taught_by": 4,
+   "variants": [],
+   "section": {
+    "document": "arsenal-line",
+    "heading": "Ring that fills to the counter's value"
+   },
+   "still": null
+  },
+  {
+   "id": "03-bars-grow-to-values",
+   "revision": "09695ae4",
+   "name": "Round-capped bars that grow to their own values",
+   "line": "A comparison beat: several figures rise side by side, each to its own value, so the viewer reads which is biggest. Builds on 01-value-driven-counter (a null whose sliders hold the values) and 02-ring-fills-to-value (dim track under a coloured copy, Trim Paths End linked to a slider).",
+   "status": "unproven",
+   "kind": "technique",
+   "job": "compare",
+   "support": [
+    "show-proof"
+   ],
+   "mood": [
+    "dark",
+    "clean",
+    "editorial"
+   ],
+   "needs": [
+    "shapes",
+    "type"
+   ],
+   "duration": 4,
+   "motion": "one-shot",
+   "difficulty": 2,
+   "taught_by": 4,
+   "variants": [],
+   "section": {
+    "document": "arsenal-line",
+    "heading": "Round-capped bars that grow to their own values"
+   },
+   "still": null
+  },
+  {
+   "id": "04-icon-fills-to-value",
+   "revision": "16ac9235",
+   "name": "Icon that fills up to a value",
+   "line": "Turns a flat icon into a gauge: a bright copy of the icon rises from the bottom over a dim copy and stops at a figure, so a stat reads as \"how full\". Reach for it beside a counter when a percentage needs a picture.",
+   "status": "unproven",
+   "kind": "technique",
+   "job": "land-number",
+   "support": [
+    "make-concrete"
+   ],
+   "mood": [
+    "dark",
+    "bold",
+    "clean"
+   ],
+   "needs": [
+    "shapes",
+    "illustration"
+   ],
+   "duration": 3,
+   "motion": "one-shot",
+   "difficulty": 2,
+   "taught_by": 4,
+   "variants": [],
+   "section": {
+    "document": "arsenal-line",
+    "heading": "Icon that fills up to a value"
+   },
+   "still": null
+  },
+  {
+   "id": "05-map-regions-fade-up",
+   "revision": "420e5ff4",
+   "name": "Map regions that fade up one by one",
+   "line": "Marks places on a map: chosen regions light up in colour over a grey base map, each with a numbered list entry, so a viewer reads \"these places\" in order. Use it for coverage, rankings or \"where\" beats.",
+   "status": "unproven",
+   "kind": "technique",
+   "job": "point-at-detail",
+   "support": [
+    "establish-place",
+    "list-items"
+   ],
+   "mood": [
+    "light",
+    "clean",
+    "editorial"
+   ],
+   "needs": [
+    "illustration"
+   ],
+   "duration": 4,
+   "motion": "one-shot",
+   "difficulty": 1,
+   "taught_by": 1,
+   "variants": [],
+   "section": {
+    "document": "arsenal-line",
+    "heading": "Map regions that fade up one by one"
    },
    "still": null
   },

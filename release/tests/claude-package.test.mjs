@@ -315,6 +315,18 @@ test('the committed package matches a fresh build', () => {
   assert.equal(r.status, 0, `rebuild with node release/build-claude-package.mjs and commit:\n${r.stdout}`);
 });
 
+test('a build that fails part way leaves the previous build untouched', async () => {
+  const outDir = path.join(await tmp('claude-halfbuilt-'), 'comp-room');
+  await buildClaudePackage({ outDir });
+  const before = (await fs.readdir(outDir, { recursive: true })).sort();
+  const runtime = async () => { throw new Error('runtime dependencies are not installed'); };
+  await assert.rejects(buildClaudePackage({ outDir, runtime }), /not installed/);
+  assert.deepEqual((await fs.readdir(outDir, { recursive: true })).sort(), before);
+  assert.deepEqual((await fs.readdir(path.dirname(outDir))), ['comp-room'], 'no staging folder left behind');
+  // and the next build still runs: the guard sees a previous build, not a half-written folder
+  await buildClaudePackage({ outDir });
+});
+
 test('refuses to clear a folder that is not a previous build', async () => {
   const outDir = await tmp('claude-userdir-');
   await write(outDir, 'notes.txt', 'mine\n');

@@ -748,14 +748,14 @@
       "title": "Technique arsenal index: documents, vocabulary and counts",
       "path": "arsenal/index.json",
       "kind": "catalog",
-      "sha256": "08af4bb467fb9267201597a22836861c2d4b09eab792958dae69063e7489e03d"
+      "sha256": "4452870aa653b97a648755fe894ec60c62987f9971745f5ddddeca0db8bdd7f3"
     },
     {
       "id": "arsenal-catalog",
       "title": "Technique arsenal catalog: one record per recipe, queried by ae_arsenal",
       "path": "arsenal/catalog.json",
       "kind": "catalog",
-      "sha256": "ec94881cbfe6eb03a49914ad6c9ffbaba44c4348ba973c3bf39acc0ad38857af"
+      "sha256": "8033ddd194c7de51771533d04e18d1577b607fe96ec25c583e84b1107af91907"
     },
     {
       "id": "arsenal-jobs",
@@ -769,7 +769,7 @@
       "title": "Arsenal recipes: line jobs: what the viewer must get from this line",
       "path": "arsenal/recipes-line.md",
       "kind": "recipes",
-      "sha256": "0671d4b5b694e585c1b4da7ebf062d14f9f86ca66d68dd97647fe83ef8a95596"
+      "sha256": "768d8feefed4f680bac2c84aafbde9ffe87c867e92e6e620eb593c383109c151"
     },
     {
       "id": "arsenal-picture",

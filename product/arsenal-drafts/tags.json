@@ -1555,6 +1555,114 @@
       "difficulty": 3,
       "group": "DOF camera push",
       "why": "'duplicated objects staggered in depth fall progressively out of focus, and a small camera move adds life'"
+    },
+    "SKU3QdqKLOs#01": {
+      "id": "01-value-driven-counter",
+      "kind": "technique",
+      "job": "land-number",
+      "support": [],
+      "mood": [
+        "dark",
+        "bold",
+        "clean"
+      ],
+      "needs": [
+        "type"
+      ],
+      "duration": 3,
+      "motion": "one-shot",
+      "difficulty": 1,
+      "group": "value slider rig",
+      "why": "a stat that counts up to a figure so a number lands with weight; one keyed slider drives it"
+    },
+    "SKU3QdqKLOs#02": {
+      "id": "02-ring-fills-to-value",
+      "kind": "technique",
+      "job": "land-number",
+      "support": [
+        "show-proof",
+        "keep-it-alive"
+      ],
+      "mood": [
+        "dark",
+        "bold",
+        "clean"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 3,
+      "motion": "one-shot",
+      "difficulty": 1,
+      "group": "value slider rig",
+      "why": "a donut that draws on to the same figure the number counts to; optional wiggle keeps it drifting after it lands"
+    },
+    "SKU3QdqKLOs#03": {
+      "id": "03-bars-grow-to-values",
+      "kind": "technique",
+      "job": "compare",
+      "support": [
+        "show-proof"
+      ],
+      "mood": [
+        "dark",
+        "clean",
+        "editorial"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 4,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "value slider rig",
+      "why": "several figures rise side by side, each to its own value, so the viewer reads which is biggest"
+    },
+    "SKU3QdqKLOs#04": {
+      "id": "04-icon-fills-to-value",
+      "kind": "technique",
+      "job": "land-number",
+      "support": [
+        "make-concrete"
+      ],
+      "mood": [
+        "dark",
+        "bold",
+        "clean"
+      ],
+      "needs": [
+        "shapes",
+        "illustration"
+      ],
+      "duration": 3,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "value slider rig",
+      "why": "a flat icon fills from the bottom to a figure, so a stat reads as how full; a gauge, not countable objects"
+    },
+    "SKU3QdqKLOs#05": {
+      "id": "05-map-regions-fade-up",
+      "kind": "technique",
+      "job": "point-at-detail",
+      "support": [
+        "establish-place",
+        "list-items"
+      ],
+      "mood": [
+        "light",
+        "clean",
+        "editorial"
+      ],
+      "needs": [
+        "illustration"
+      ],
+      "duration": 4,
+      "motion": "one-shot",
+      "difficulty": 1,
+      "group": null,
+      "why": "chosen regions light up in colour over a grey base map with a numbered list, so a viewer reads these places in order"
     }
   }
 }

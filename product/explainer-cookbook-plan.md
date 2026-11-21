@@ -35,7 +35,7 @@ The picks were chosen from titles, chapter lists and descriptions. Nobody has wa
 
 | # | Tutorial | Fills | Length | Risk | Status |
 |---|---|---|---|---|---|
-| 1 | SonduckFilm, [5 Infographic Edits You Should Know](https://www.youtube.com/watch?v=SKU3QdqKLOs) | land-number, count-things, compare, show-proof | 5 min | low | not started |
+| 1 | SonduckFilm, [5 Infographic Edits You Should Know](https://www.youtube.com/watch?v=SKU3QdqKLOs) | land-number, compare, show-proof (not count-things) | 5 min | low | recipes in: 5 written, 5 passed checks, 0 held; proofs not built |
 | 2 | Mavi Design, [Animate a Simple Call-To-Action Button Scene](https://www.youtube.com/watch?v=Tf0EiCGOEYs) | call-to-action | 15 min | low | not started |
 | 3 | Mapal, [How To Animate Infographics Like VOX](https://www.youtube.com/watch?v=nHh0NRo8G2U) | step-through-process, show-proof, compare | 41 min | medium | not started |
 | 4 | TomsProject, [SaaS Motion Graphics Masterclass](https://www.youtube.com/watch?v=tYRvoI04pJk) | introduce-tool, flag-a-problem, make-concrete | 52 min | medium | not started |
@@ -55,6 +55,10 @@ The picks were chosen from titles, chapter lists and descriptions. Nobody has wa
 - **Why first:** one short video fills four of the most-used explainer jobs. It's the same channel as all six tutorials learned so far, so the learner already handles its style well.
 - **Chapters:** counter, shape infographic, bar chart, icon infographic, map infographic.
 - **Watch for:** the map chapter uses Illustrator artwork. The art step can generate a map instead. If the map depends on Illustrator in a way a script can't follow, hold that recipe and keep the other four.
+- **Done so far (2026-11-21):** five recipes, all new entries (no catalog parent): 01 counter on a slider (land-number), 02 ring fills to the value (land-number; show-proof, keep-it-alive), 03 bars grow to values (compare; show-proof), 04 icon fills to a value (land-number; make-concrete), 05 map regions fade up (point-at-detail; establish-place, list-items). 01–04 share the group "value slider rig". Checks passed in round 2 (01, 03) and round 3 or 4 (02, 04, 05); the misses were sizes calibrated on a punched-in shot (04), Easy Ease at 100 % influence rather than the default (02) and a moved counter (02).
+- **Not filled:** count-things. The icon fills like a gauge; it does not show objects to count, so it is tagged land-number. count-things stays empty.
+- **Map:** the After Effects part is only an opacity fade; region separation is an Illustrator step, so the proof needs generated art delivered as separate region layers with the names on their own layer.
+- **Next:** proofs (step 5) for all five at 9:16, on generated art.
 
 ### 2. Mavi Design, call-to-action button scene
 
