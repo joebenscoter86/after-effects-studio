@@ -4,7 +4,7 @@ A proof build shows a technique working. Built on plain shapes, a technique can 
 
 ## What you are given
 
-- `PROOF/<n>/`: `reference.png` (the tutorial's result), `side-by-side.png` (tutorial left, current build right), `build.png`, `review.md`, `review-look.md` (a look-first review with an `art:` line), `build-notes.md`.
+- `PROOF/<n>/`: `reference.png` (the tutorial's result), `sheet.png` (512 wide: the tutorial's result above the current build; look at this, not the full-size `reference.png`, `side-by-side.png` or `build.png`, and crop a full-size file only to read one detail), `build.png`, `review.md`, `review-look.md` (a look-first review with an `art:` line), `build-notes.md`.
 - The recipe: `STUDY/recipes/<n>-*.md`. Its `what it looks like` and `layout:` lines say what the composition must contain.
 - Higgsfield image generation through MCP tools. Load them with ToolSearch: `select:mcp__af2a5bee-d258-4aa6-8bf9-8eb2060db0e2__generate_image,mcp__af2a5bee-d258-4aa6-8bf9-8eb2060db0e2__generate_image_batch,mcp__af2a5bee-d258-4aa6-8bf9-8eb2060db0e2__jobs_wait,mcp__af2a5bee-d258-4aa6-8bf9-8eb2060db0e2__remove_background`.
 

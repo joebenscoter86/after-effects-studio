@@ -4,12 +4,19 @@ A builder rebuilt a technique in After Effects from its written recipe, without 
 
 ## What you are given
 
-For each technique `<n>` in `PROOF/<n>/`: `reference.png` (the tutorial's result, cropped) and, when the result is animated, `reference.mp4`; `build.png`, sometimes `before.png` and `build.mov`; `build-notes.md` (what the builder did and assumed). The recipe is in `STUDY/recipes/`. `SCRIPTS/../side-by-side.mjs` exists but plain ffmpeg is fine.
+For each technique `<n>` in `PROOF/<n>/`: `reference.png` (the tutorial's result, cropped) and, when the result is animated, `reference.mp4`; `build.png`, sometimes `before.png` and `build.mov`; `build-notes.md` (what the builder did and assumed). The recipe is in `STUDY/recipes/`.
 
-## For each technique
+The pictures you look at are made for you before you start, small on purpose (the runner calls `proofs/contact-sheet.mjs`, beside the prompts folder; run it on `PROOF/<n>` yourself only if a sheet is missing):
+- `sheet.png`: the tutorial's result above the build, each 512 wide.
+- `sheet-motion.png`, when both movies exist: four matching moments (1/8, 3/8, 5/8 and 7/8 of each clip), one per row, the tutorial left and the build right, each 256 wide.
+- `side-by-side.png` and `side-by-side.mp4` are the full-size pairs for the owner. Do not open them, and do not open `reference.png`, `build.png` or a movie frame whole: look at the sheets, and cut crops for figures (measuring rules below).
 
-1. Make the pair: `PROOF/<n>/side-by-side.png` with the reference on the left and the build on the right, both scaled to the same height (`ffmpeg -loglevel error -y -i reference.png -i build.png -filter_complex "[0:v]scale=-2:540[a];[1:v]scale=-2:540[b];[a][b]hstack" side-by-side.png`). When both movies exist, also `side-by-side.mp4` the same way (scale each to height 540, `-r 30`, shortest input ends it, `-c:v libx264 -crf 18 -pix_fmt yuv420p -an`).
-2. Look at the still pair. For a moving technique, also look at three or four matching moments from the two movies (cut frames at the same share of each clip's length).
+You judge one technique per run; the next technique gets a fresh run.
+
+## For your technique
+
+1. Look at `sheet.png`. For a moving technique, also look at `sheet-motion.png`.
+2. When a judgement needs a figure the sheet cannot show (an angle, a shadow's darkness, a gap, a fray's width), take it from the full-size files, one crop per figure: cut the same place, as a share of each picture, from `reference.png` and from `build.png` (`ffmpeg -loglevel error -y -i PROOF/<n>/reference.png -vf crop=W:H:X:Y PROOF/<n>/crop-<name>-ref.png`, and the same for the build), each crop at most 400 by 400, and look at those two crops. A level or colour can be read as numbers without looking (`-vf crop=W:H:X:Y,signalstats,metadata=print -f null -`). For movement, cut the one moment you need from `reference.mp4` and `build.mov` with `-ss` and crop it the same way.
 3. Give two judgements, in this order.
    - **The look.** Before measuring anything, look at the pair the way the owner will: at arm's length, for two seconds. Does the build read as the same kind of thing as the reference? Write down, in his sort of words, what the reference looks like and what the build looks like ("3D discs that stack" against "white circles with a tint"). The build uses plain stand-in art on purpose, so ignore subject matter, illustration and colour scheme; do not ignore anything that makes the effect read: every object that should carry it, shadows, overlaps, depth, softness, the background's shading.
    - **The mechanism.** Is what the recipe teaches visibly at work, with the same character (shape, count, spacing, direction, softness, order, timing) as in the reference? Measure.
@@ -37,5 +44,6 @@ Measuring rules, from reviews that sent builders the wrong way:
 - A fix you have not seen work is `untested`: write it as a target to reach (what the render should measure), not only as a setting to type.
 - When figures were reached by changing the stand-in art (more trees, a darker sky), say so: they no longer show the effect's strength on their own.
 - A reference clip under a second long supports direction and rough speed, little else. Say what is firm.
+- The sheets are for the look and for what is plainly there or missing. Every figure you write in `what differs in the technique` or `to fix` comes from a full-size crop or from numbers, never from the 512-px sheet; say which crop.
 
-Write only inside `PROOF/<n>/`. No git. No After Effects. Finish with one line per technique: verdict and the main reason.
+Write only inside `PROOF/<n>/`. No git. No After Effects. Finish with one line: verdict and the main reason.
