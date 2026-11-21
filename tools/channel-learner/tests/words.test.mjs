@@ -5,6 +5,8 @@ import {
   parseWhisperJson,
   toSentences,
   compareTranscripts,
+  isSpeech,
+  screenOnlySentences,
 } from '../lib/words.mjs';
 
 const close = (a, b, msg) => assert.ok(Math.abs(a - b) < 1e-9, `${msg}: ${a} != ${b}`);
@@ -139,4 +141,41 @@ test('parseWhisperJson gives words in seconds, trimmed', () => {
 
 test('parseWhisperJson copes with no transcription', () => {
   assert.deepEqual(parseWhisperJson({}), []);
+});
+
+// A music-only video (Tf0EiCGOEYs): whisper splits "(soft music)" into two segments,
+// and YouTube's automatic captions hold "[Music]", "[Applause]" and stray words.
+test('parseWhisperJson drops a marker split across segments', () => {
+  const seg = (from, text) => ({ offsets: { from, to: from + 400 }, text });
+  const w = parseWhisperJson({ transcription: [
+    seg(0, ' (soft'), seg(400, ' music)'), seg(800, ' Open'), seg(1200, ' [BLANK_AUDIO]'), seg(1600, ' [soft'), seg(2000, ' music]'), seg(2400, ' it.'),
+  ] });
+  assert.deepEqual(w.map((x) => x.text), ['Open', 'it.']);
+});
+
+test('parseJson3 drops [Music] and other bracketed markers', () => {
+  const w = parseJson3({ events: [
+    { tStartMs: 0, dDurationMs: 900, segs: [{ utf8: '[Music]' }] },
+    { tStartMs: 1000, dDurationMs: 900, segs: [{ utf8: 'so' }, { utf8: ' [Applause]', tOffsetMs: 300 }] },
+  ] });
+  assert.deepEqual(w.map((x) => x.text), ['so']);
+});
+
+test('isSpeech needs about ten words a minute', () => {
+  const words = (n) => Array.from({ length: n }, (_, i) => ({ t: i, end: i + 0.5, text: 'w' }));
+  assert.equal(isSpeech(words(2), 919), false, 'two stray words in 15 minutes');
+  assert.equal(isSpeech(words(160), 919), true);
+  assert.equal(isSpeech(words(6), 6), true, 'a short clip with a few words');
+  assert.equal(isSpeech([], 6), false);
+  assert.equal(isSpeech(words(3), undefined), true, 'no duration: any words count');
+});
+
+test('screenOnlySentences cuts each chapter into windows of at most 8 s', () => {
+  const s = screenOnlySentences([{ start: 0, end: 12 }, { start: 12, end: 36 }, { start: 36, end: 40 }], 40);
+  assert.deepEqual(s.map((x) => [x.start, x.end]), [[0, 6], [6, 12], [12, 20], [20, 28], [28, 36], [36, 40]]);
+  assert.ok(s.every((x, i) => x.i === i && x.text === '(no speech)' && x.words.length === 0));
+});
+
+test('screenOnlySentences without chapters windows the whole video', () => {
+  assert.deepEqual(screenOnlySentences([], 10).map((x) => [x.start, x.end]), [[0, 5], [5, 10]]);
 });

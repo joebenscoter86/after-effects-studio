@@ -119,6 +119,51 @@ pitfalls: The author keeps it subtle: large distance only in the sense of moving
 build notes: Effect "Drop Shadow" (match name "ADBE Drop Shadow"); properties Shadow Color, Opacity, Direction, Distance, Softness, Shadow Only, as After Effects shows them. Add it twice to the wheel layer; set the first to Distance 37, Softness 262 and the second to Distance 37, Softness 1051, both Opacity 50 % and Direction 135°. By script, Drop Shadow's Opacity runs 0–255, not 0–100: 50 % is `setValue(127.5)` (a fresh Drop Shadow reads 127.5; setting 50 gives about 19.6 %; found in proof build 05, whose first render came out far too light). These values assume a layer image scaled to 37 % in a 1920 x 1080 comp; on a layer at 100 % scale, aim for the measured halo instead (about 14 px offset, darkness 0.6 of the background at the edge, fading out by about 6–8 % of the picture width), which is roughly Distance 14, Softness 100 and 390 (inferred). Check the halo against the layout figures after placing the art. Set Softness by value; whether the slider reaches 1051 or it was scrubbed past the slider range is not shown.
 unknowns: Values of the Curves effect already on the wheel; whether the cards in the finished example carry any shadow of their own (none measures in the build); the menu path for Drop Shadow (it was found by search); how the duplicate was made.
 
+## A soft coloured lift under a button, and an inset label
+id: 02-button-soft-lift-shadow
+revision: 14b43551
+job: add-depth; support: call-to-action
+status: proven (accepted 2026-11-21)
+variant of: 05-soft-doubled-drop-shadow
+differs: the same mechanism as the parent: one Drop Shadow effect on the object's own layer, Opacity left at the default 50 %, Distance raised off the default and Softness pushed into the hundreds, so a wide soft haze follows the layer's outline and seats it on a flat ground (parent steps 1–3, the source video.md L198–L205). Colour: here #0036FF, the pill's own blue sampled with the dialog's eyedropper; in the parent black, the default (L199). Direction: here 180°, straight down; in the parent 135°, the default, left unchanged (L201). Distance and Softness: here 48 and 248 on a shape layer at 100 % in its own 1040 × 530 comp; in the parent 37 and 262 on a photo layer scaled to 37 %, which the parent infers is about 14 and 97 comp pixels (L203, L205, L210). Result: here a blue haze mostly below the pill, gone about 150 px under it, with a faint tint some 25 px above; in the parent an all-round grey halo with a slight lower-right bias, gone by about 8 % of the picture width from the tyre (L210). Second copy: here the pill carries one shadow only; in the parent a duplicated Drop Shadow 2 with Softness 1051 is added for extra darkness, and the parent calls it optional (L206–L209, L212). Extra step here: two small Drop Shadows on the label (black 40 %, 180°, 4, 0; white 24 %, 0°, 9, 52) for a pressed-in look; in the parent only the one object carries a shadow, the cards above it have none (L210). Object: here a flat vector pill button on a white page; in the parent a cut-out photographed wheel on a pale blue-grey ground (L191–L192).
+what it does for a beat: Lifts a flat UI button off a white page so it reads as a pressable object, with a long, very soft glow-like shadow in the button's own colour straight underneath, and gives the label a slight pressed-in feel with two tiny shadows.
+what it looks like: A blue pill button on white with a wide, soft blue haze spreading mostly downward (strongest just under the pill, gone about one pill-height below it), and a faint halo on the sides and top. The white caps label has a hairline dark edge under each letter and a barely visible soft light haze above it.
+ingredients:
+- Drop Shadow — built-in; Effect > Perspective > Drop Shadow (shown : found by typing "drop" in Effects & Presets, under Perspective)
+- The pill button of recipe 01 (figures repeated below so this recipe stands alone)
+- Font Montserrat ExtraBold — free (Google Fonts)
+steps:
+1. Start from the button comp (figures from recipe 01, all shown there; seen again here): comp 1040 × 530 px, 60 fps, white background colour (does not render when nested). Shape layer: Rectangle Path Size 700 × 170, Roundness 451 (full half-round ends), Fill #0036FF, stroke off, centred in the comp. Text layer above it: a two-word all-caps label, Montserrat ExtraBold 60 px, white fill, tracking 157, centred paragraph, centred on the pill (Position 519.1, 286.0, shown).
+2. Apply Drop Shadow to the shape layer (shown : Drop Shadow dragged from the Effects & Presets panel; shows Effect Controls for the shape layer with Drop Shadow).
+3. Set the shape's shadow colour to the button's own blue by sampling the pill's fill with the dialog's eyedropper (shown : Shadow Color dialog opened at 000000; : the eyedropper over the pill, tooltip "Eyedropper", dialog reading #0036FF).
+   - Shadow Color: #0036FF (R 0, G 54, B 255) (shown)
+4. Point the shadow straight down and make it long and very soft (shown, values settled; show Distance passing through 59 and Softness through 242 while dragging).
+   - Opacity: 50 % (shown; the effect's default, left unchanged)
+   - Direction: 0x +180.0° (straight down) (shown; changed from the default 135° in the 2:46 window)
+   - Distance: 48.0 (shown)
+   - Softness: 248.0 (shown)
+   - Shadow Only: off (shown)
+5. Apply Drop Shadow to the text layer too (shown : Effect Controls for the label with Drop Shadow, black swatch).
+   - Shadow Color: black (shown swatch; the hex is never opened; black is the effect's default)
+   - Direction: 0x +180.0° (shown; passed through 188° while dragging)
+   - Distance: 4.0 (shown; it was 5.0)
+   - Softness: 0.0 (shown)
+   - Opacity: 40 % (shown; it stayed at the default 50 % until 3:44, typed)
+6. Apply Drop Shadow to the label a second time; After Effects names it "Drop Shadow 2" and it starts at the effect's defaults: black, Opacity 50 %, Direction 135°, Distance 5.0, Softness 0.0, while the first one reads 180° and 4.0 (shown in cuts from at 198.2). Turn it into a soft light from above.
+   - Direction: 0x +0.0° (straight up) (shown; dragged from 135° through −2°)
+   - Shadow Color: #FFFFFF (shown : dialog reads H 0, S 0 %, B 100 %, R/G/B 255, FFFFFF)
+   - Distance: 9.0 (shown; passed through 5 and 14)
+   - Softness: 52.0 (shown; passed through 36)
+   - Opacity: 24 % (shown; passed through 19, 3 and 15 while dragging)
+   - Shadow Only: off (shown)
+7. Final settings, all on screen together: (label: black 40 %, 180°, 4, 0; white 24 %, 0°, 9, 52) and (pill: #0036FF 50 %, 180°, 48, 248).
+layout: Measured on the result frame (the button comp at 50 %, calibrated on the comp's white edges, 750–1269 × 179–443 on screen; comp px = 2 × screen px). Pill 700 × 170 at the comp's centre (67.3 % × 32.1 % of the comp), as in recipe 01; label cap height 44 px, centred. The pill's shadow (traced to the pill: it starts at the pill's edge, follows its outline and is the pill's own blue): straight below the pill it reads about (161, 168, 251) on a (253, 253, 253) page 2 px under the pill's bottom edge, (200, 205, 250) about 50 px under, (236, 240, 251) about 100 px under, (250, 252, 254) about 140 px under, and is gone by about 150 px, so it fades out over roughly 0.85 of the pill's height (measured). Only red and green drop; blue stays near 252, so it reads as a blue haze, not a grey shadow. To the sides it spreads about 60–80 px past the pill's ends (measured at the pill's centre line, x 870 to about 945), and above the pill a faint tint (about 245 on 253) reaches some 25 px (measured). Strongest under the centre, fading evenly to the sides. In the 1080 square scene the same figures hold in pixels (recipe 03 measures R ≈ 158 just under the pill, gone about 126 px under). The comp's 180 px margin below the pill is just enough; a tighter comp would cut the shadow off at the comp's edge (inferred). Label shadows (traced to the letters): a hard dark edge 4 px under each letter, black at 40 %, which shows as a thin darker line along the bottoms of the letters against the blue; and a white, 52-softness haze 9 px above the letters at 24 %, which faintly lightens the blue just above and around the letter tops (seen at 200 % with the white shadow at 50 %; at 24 % it is subtle, measured by eye). Recording colours: pill about (52, 42, 252) against the typed #0036FF; the wide-gamut shift in the lessons applies, so aim for the typed value and compare darkness by the red/green drop.
+timing and easing: none given (nothing animates).
+variations: none given. Seen on screen: the white second shadow was tried at 50 %, 19 %, 3 % and 15 % before 24 %, and the black one went from 50 % to 40 %.
+pitfalls: none given.
+build notes: Effect match name "ADBE Drop Shadow"; properties as After Effects shows them: Shadow Color, Opacity, Direction, Distance, Softness, Shadow Only. By script Opacity is on a 0–255 scale (lesson 17): 50 % = 127.5, 40 % = 102, 24 % = 61.2; read it back. Direction in degrees (180 = down, 0 = up). Two instances on the text layer: addProperty("ADBE Drop Shadow") twice; the second is named "Drop Shadow 2". Shadow Color is RGB 0–1: [0, 54/255, 1] for the pill, [0,0,0] and [1,1,1] for the label. The effects act on the layer's own alpha, so the pill's shadow follows the half-round ends.
+unknowns: The black label shadow's hex is never opened. The look of the white label shadow at its final 24 % is only seen at 50 % viewer zoom.
+
 ## Tuck graphics behind a person with an automatic object matte
 id: 06-graphics-behind-subject-object-matte
 revision: 9703a0dd
