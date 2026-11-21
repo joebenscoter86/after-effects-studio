@@ -58,7 +58,9 @@ The picks were chosen from titles, chapter lists and descriptions. Nobody has wa
 - **Done so far (2026-11-21):** five recipes, all new entries (no catalog parent): 01 counter on a slider (land-number), 02 ring fills to the value (land-number; show-proof, keep-it-alive), 03 bars grow to values (compare; show-proof), 04 icon fills to a value (land-number; make-concrete), 05 map regions fade up (point-at-detail; establish-place, list-items). 01–04 share the group "value slider rig". Checks passed in round 2 (01, 03) and round 3 or 4 (02, 04, 05); the misses were sizes calibrated on a punched-in shot (04), Easy Ease at 100 % influence rather than the default (02) and a moved counter (02).
 - **Not filled:** count-things. The icon fills like a gauge; it does not show objects to count, so it is tagged land-number. count-things stays empty.
 - **Map:** the After Effects part is only an opacity fade; region separation is an Illustrator step, so the proof needs generated art delivered as separate region layers with the names on their own layer.
-- **Next:** proofs (step 5) for all five at 9:16, on generated art.
+- **Proofs (2026-11-21):** all five built at 9:16 on generated art and accepted by Joe ("Accept all five").
+- **Still open: count-things.** No proven recipe fills it, and no piece below targets it. Needs a tutorial that builds an icon array, pictogram grid or unit chart ("1 in 10 people"). Check piece 3's technique list first, then search for one and add it as a new piece.
+- **Parked:** the 05 map proof's art. Neighbouring lit provinces in near coral tones merge at phone size (the tutorial keeps unlit countries between lit ones). The recipe is proven; only the proof still and its art would change. Joe chose to leave it for now.
 
 ### 2. Mavi Design, call-to-action button scene
 
